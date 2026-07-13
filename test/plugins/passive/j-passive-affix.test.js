@@ -1,226 +1,295 @@
 //region plugins/passive/j-passive-affix.test.js
-import vm from 'node:vm';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import {
+  installPassiveHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPassive,
+} from './fixtures/install-passive-host-globals.js';
+import {
+  installPassiveAffixHostGlobals,
+  setPluginContextToJPassiveAffix,
+} from './fixtures/install-passive-affix-host-globals.js';
+import { installPluginManagerWithParams } from '../../setup/install-plugin-manager-with-params.js';
 
-import { clearRpgManagerCacheInVm } from '../../setup/shipped-plugin-vm.js';
-import { loadPassiveAffixPluginVm } from './passive-affix-vm.js';
-
-/**
- * {@link RPG_State} is a lexical class in the shipped bundle; expose the prototype for Object.create-based fixtures.
- *
- * @param {object} sandbox
- * @returns {object}
- */
-function passiveAffixRpgStatePrototype(sandbox)
+describe('J-Passive-Affix (direct src import)', () =>
 {
-  return vm.runInContext('RPG_State.prototype', sandbox);
-}
+  let JPassiveAffix_PluginMetadata;
 
-describe('J-Passive-Affix (out/passive/ext/J-Passive-Affix.js)', () =>
-{
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadPassiveAffixPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installPassiveHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_Enemy } = await import('../../../src/plugins/_base/database/implementations/RPG_Enemy.js'));
+    ({ default: globalThis.RPG_State } = await import('../../../src/plugins/_base/database/implementations/RPG_State.js'));
+
+    setPluginContextToJPassive();
+    await import('../../../src/plugins/passive/core/_metadata/initialization.js');
+
+    installPassiveAffixHostGlobals();
+
+    setPluginContextToJPassiveAffix();
+    await import('../../../src/plugins/passive/ext/affix/_metadata/initialization.js');
+
+    // patches the real RPG_*/Game_Event.prototype chain and JABS_AiManager stand-in directly.
+    await import('../../../src/plugins/passive/ext/affix/database/RPG_Enemy.js');
+    await import('../../../src/plugins/passive/ext/affix/database/RPG_State.js');
+    await import('../../../src/plugins/passive/ext/affix/managers/JABS_AiManager.js');
+    await import('../../../src/plugins/passive/ext/affix/managers/JABS_Battler.js');
+    await import('../../../src/plugins/passive/ext/affix/managers/JABS_Engine.js');
+    await import('../../../src/plugins/passive/ext/affix/objects/Game_Enemy.js');
+    await import('../../../src/plugins/passive/ext/affix/objects/Game_Event.js');
+    await import('../../../src/plugins/passive/ext/affix/scenes/Scene_Boot.js');
+    await import('../../../src/plugins/passive/ext/affix/sprites/Sprite_Character.js');
+
+    ({ default: JPassiveAffix_PluginMetadata } = await import('../../../src/plugins/passive/ext/affix/_metadata/_pluginMetadata.js'));
   });
 
   beforeEach(() =>
   {
-    clearRpgManagerCacheInVm(sandbox);
+    globalThis.RPGManager.clearCache();
   });
 
-  it('metadata reads default affix chances from plugin parameters', () =>
+  describe('metadata', () =>
   {
-    expect(sandbox.J.PASSIVE.EXT.AFFIX.Metadata.defaultPrefixChance).toBe(33);
-    expect(sandbox.J.PASSIVE.EXT.AFFIX.Metadata.defaultSuffixChance).toBe(33);
-  });
-
-  it('RPG_State#tierColorHex is null when the tier hex tag is absent', () =>
-  {
-    const state = Object.create(passiveAffixRpgStatePrototype(sandbox));
-    state.id = 1;
-    state.note = '<enemy-prefix>';
-
-    expect(state.tierColorHex).toBe(null);
-  });
-
-  it('RPG_State#tierColorHex returns the captured hex when the tag is present', () =>
-  {
-    const state = Object.create(passiveAffixRpgStatePrototype(sandbox));
-    state.id = 2;
-    state.note = '<enemy-prefix>\n<tier-color-hex:#aabbcc>';
-
-    expect(state.tierColorHex).toBe('#aabbcc');
-  });
-
-  it('RPG_Enemy#noRngPassives reads <no-rng-passives> on the enemy note', () =>
-  {
-    const enemy = Object.create(sandbox.RPG_Enemy.prototype);
-    enemy.note = '<no-rng-passives>';
-
-    expect(enemy.noRngPassives).toBe(true);
-  });
-
-  it('JABS_AiManager.shouldBlockPassivePrefixRng blocks when the enemy has noRngPassives', () =>
-  {
-    const enemyData = { noRngPassives: true, noRngPrefixes: false };
-    const character = { eventCommentsDisablePassiveAffixPrefixRng() { return false; } };
-
-    expect(sandbox.JABS_AiManager.shouldBlockPassivePrefixRng(character, enemyData)).toBe(true);
-  });
-
-  it('JABS_AiManager.shouldBlockPassiveSuffixRng blocks when the enemy has noRngPassives', () =>
-  {
-    const enemyData = { noRngPassives: true, noRngSuffixes: false };
-    const character = { eventCommentsDisablePassiveAffixSuffixRng() { return false; } };
-
-    expect(sandbox.JABS_AiManager.shouldBlockPassiveSuffixRng(character, enemyData)).toBe(true);
-  });
-
-  it('JABS_AiManager.shouldBlockPassivePrefixRng still allows prefix when only the slot tag is absent', () =>
-  {
-    const enemyData = { noRngPassives: false, noRngPrefixes: false };
-    const character = { eventCommentsDisablePassiveAffixPrefixRng() { return false; } };
-
-    expect(sandbox.JABS_AiManager.shouldBlockPassivePrefixRng(character, enemyData)).toBe(false);
-  });
-
-  it('resolvePassiveTierStripeColorHex returns empty when the first prefix state has no tier hex tag', () =>
-  {
-    const prefixState = Object.create(passiveAffixRpgStatePrototype(sandbox));
-    prefixState.id = 50;
-    prefixState.note = '<enemy-prefix>';
-    prefixState.name = 'Tier';
-
-    const battler = {
-      isEnemy()
-      {
-        return true;
-      },
-      getPassiveStateIds()
-      {
-        return [ 50 ];
-      },
-      state(stateId)
-      {
-        if (stateId === 50) return prefixState;
-        return null;
-      },
-    };
-
-    const hex = sandbox.J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex(battler);
-
-    expect(hex).toBe('');
-  });
-
-  it('resolvePassiveTierStripeColorHex returns the hex when the prefix state defines tier-color-hex', () =>
-  {
-    const prefixState = Object.create(passiveAffixRpgStatePrototype(sandbox));
-    prefixState.id = 51;
-    prefixState.note = '<enemy-prefix>\n<tier-color-hex:#ff00aa>';
-    prefixState.name = 'Tier';
-
-    const battler = {
-      isEnemy()
-      {
-        return true;
-      },
-      getPassiveStateIds()
-      {
-        return [ 51 ];
-      },
-      state(stateId)
-      {
-        if (stateId === 51) return prefixState;
-        return null;
-      },
-    };
-
-    const hex = sandbox.J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex(battler);
-
-    expect(hex).toBe('#ff00aa');
-  });
-
-  it('Game_Event#getResolvedPassiveAffixPrefixChance prefers the last event comment tag over the enemy note', () =>
-  {
-    const enemyData = Object.create(sandbox.RPG_Enemy.prototype);
-    enemyData.note = '<passive-affix-prefix-chance:10>';
-
-    const ev = new sandbox.Game_Event();
-    ev.getValidCommentCommands = function()
+    it('reads the default prefix chance from plugin parameters', () =>
     {
-      return [
-        { parameters: [ '<passive-affix-prefix-chance:25>' ] },
-        { parameters: [ '<passive-affix-prefix-chance:40>' ] },
-      ];
-    };
+      // Arrange & Act
+      const result = globalThis.J.PASSIVE.EXT.AFFIX.Metadata.defaultPrefixChance;
 
-    const chance = ev.getResolvedPassiveAffixPrefixChance(enemyData);
+      // Assert
+      expect(result).toBe(33);
+    });
 
-    expect(chance).toBe(40);
-  });
-
-  it('Game_Event#getResolvedPassiveAffixPrefixChance falls back to metadata default when no overrides apply', () =>
-  {
-    const enemyData = Object.create(sandbox.RPG_Enemy.prototype);
-    enemyData.note = '';
-
-    const ev = new sandbox.Game_Event();
-    ev.getValidCommentCommands = function()
+    it('reads the default suffix chance from plugin parameters', () =>
     {
-      return [];
-    };
+      // Arrange & Act
+      const result = globalThis.J.PASSIVE.EXT.AFFIX.Metadata.defaultSuffixChance;
 
-    const chance = ev.getResolvedPassiveAffixPrefixChance(enemyData);
-
-    expect(chance).toBe(33);
-  });
-});
-
-describe('J-Passive-Affix metadata with custom plugin parameters', () =>
-{
-  let sandboxB;
-
-  beforeAll(() =>
-  {
-    sandboxB = { console };
-    loadPassiveAffixPluginVm(sandboxB, {
-      'default-prefix-chance': '12',
-      'default-suffix-chance': '88',
+      // Assert
+      expect(result).toBe(33);
     });
   });
 
-  afterAll(() =>
+  describe('RPG_State#tierColorHex', () =>
   {
-    sandboxB = null;
-  });
-
-  it('honors custom default prefix and suffix chances', () =>
-  {
-    expect(sandboxB.J.PASSIVE.EXT.AFFIX.Metadata.defaultPrefixChance).toBe(12);
-    expect(sandboxB.J.PASSIVE.EXT.AFFIX.Metadata.defaultSuffixChance).toBe(88);
-  });
-
-  it('Game_Event#getResolvedPassiveAffixPrefixChance uses the custom default when applicable', () =>
-  {
-    const enemyData = Object.create(sandboxB.RPG_Enemy.prototype);
-    enemyData.note = '';
-
-    const ev = new sandboxB.Game_Event();
-    ev.getValidCommentCommands = function()
+    it('is null when the tier hex tag is absent', () =>
     {
-      return [];
-    };
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.id = 1;
+      state.note = '<enemy-prefix>';
 
-    expect(ev.getResolvedPassiveAffixPrefixChance(enemyData)).toBe(12);
+      // Act
+      const result = state.tierColorHex;
+
+      // Assert
+      expect(result).toBe(null);
+    });
+
+    it('returns the captured hex when the tag is present', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.id = 2;
+      state.note = '<enemy-prefix>\n<tier-color-hex:#aabbcc>';
+
+      // Act
+      const result = state.tierColorHex;
+
+      // Assert
+      expect(result).toBe('#aabbcc');
+    });
+  });
+
+  describe('RPG_Enemy#noRngPassives', () =>
+  {
+    it('reads <no-rng-passives> on the enemy note', () =>
+    {
+      // Arrange
+      const enemy = Object.create(globalThis.RPG_Enemy.prototype);
+      enemy.note = '<no-rng-passives>';
+
+      // Act
+      const result = enemy.noRngPassives;
+
+      // Assert
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('JABS_AiManager.shouldBlockPassivePrefixRng', () =>
+  {
+    it('blocks when the enemy has noRngPassives', () =>
+    {
+      // Arrange
+      const enemyData = { noRngPassives: true, noRngPrefixes: false };
+      const character = { eventCommentsDisablePassiveAffixPrefixRng: () => false };
+
+      // Act
+      const result = globalThis.JABS_AiManager.shouldBlockPassivePrefixRng(character, enemyData);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('still allows prefix when only the slot tag is absent', () =>
+    {
+      // Arrange
+      const enemyData = { noRngPassives: false, noRngPrefixes: false };
+      const character = { eventCommentsDisablePassiveAffixPrefixRng: () => false };
+
+      // Act
+      const result = globalThis.JABS_AiManager.shouldBlockPassivePrefixRng(character, enemyData);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('JABS_AiManager.shouldBlockPassiveSuffixRng', () =>
+  {
+    it('blocks when the enemy has noRngPassives', () =>
+    {
+      // Arrange
+      const enemyData = { noRngPassives: true, noRngSuffixes: false };
+      const character = { eventCommentsDisablePassiveAffixSuffixRng: () => false };
+
+      // Act
+      const result = globalThis.JABS_AiManager.shouldBlockPassiveSuffixRng(character, enemyData);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex', () =>
+  {
+    it('returns empty when the first prefix state has no tier hex tag', () =>
+    {
+      // Arrange
+      const prefixState = Object.create(globalThis.RPG_State.prototype);
+      prefixState.id = 50;
+      prefixState.note = '<enemy-prefix>';
+      prefixState.name = 'Tier';
+      const battler = {
+        isEnemy: () => true,
+        getPassiveStateIds: () => [ 50 ],
+        state: (stateId) => (stateId === 50 ? prefixState : null),
+      };
+
+      // Act
+      const hex = globalThis.J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex(battler);
+
+      // Assert
+      expect(hex).toBe('');
+    });
+
+    it('returns the hex when the prefix state defines tier-color-hex', () =>
+    {
+      // Arrange
+      const prefixState = Object.create(globalThis.RPG_State.prototype);
+      prefixState.id = 51;
+      prefixState.note = '<enemy-prefix>\n<tier-color-hex:#ff00aa>';
+      prefixState.name = 'Tier';
+      const battler = {
+        isEnemy: () => true,
+        getPassiveStateIds: () => [ 51 ],
+        state: (stateId) => (stateId === 51 ? prefixState : null),
+      };
+
+      // Act
+      const hex = globalThis.J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex(battler);
+
+      // Assert
+      expect(hex).toBe('#ff00aa');
+    });
+  });
+
+  describe('Game_Event#getResolvedPassiveAffixPrefixChance', () =>
+  {
+    it('prefers the last event comment tag over the enemy note', () =>
+    {
+      // Arrange
+      const enemyData = Object.create(globalThis.RPG_Enemy.prototype);
+      enemyData.note = '<passive-affix-prefix-chance:10>';
+      const ev = new globalThis.Game_Event();
+      ev.getValidCommentCommands = () => [
+        { parameters: [ '<passive-affix-prefix-chance:25>' ] },
+        { parameters: [ '<passive-affix-prefix-chance:40>' ] },
+      ];
+
+      // Act
+      const chance = ev.getResolvedPassiveAffixPrefixChance(enemyData);
+
+      // Assert
+      expect(chance).toBe(40);
+    });
+
+    it('falls back to the metadata default when no overrides apply', () =>
+    {
+      // Arrange
+      const enemyData = Object.create(globalThis.RPG_Enemy.prototype);
+      enemyData.note = '';
+      const ev = new globalThis.Game_Event();
+      ev.getValidCommentCommands = () => [];
+
+      // Act
+      const chance = ev.getResolvedPassiveAffixPrefixChance(enemyData);
+
+      // Assert
+      expect(chance).toBe(33);
+    });
+  });
+
+  describe('metadata with custom plugin parameters', () =>
+  {
+    let scenarioCounter = 0;
+
+    /**
+     * Builds a fresh J.PASSIVE.EXT.AFFIX.Metadata instance from custom plugin parameters, using a
+     * distinct plugin name each time- PluginMetadata's append-only static registry throws on a
+     * repeat registration of the same name.
+     * @param {Record<string, string>} params
+     * @returns {object}
+     */
+    function buildCustomMetadata(params)
+    {
+      scenarioCounter += 1;
+      const name = `J-Passive-Affix-test-custom-${scenarioCounter}`;
+      installPluginManagerWithParams(globalThis, name, params);
+      return new JPassiveAffix_PluginMetadata(name, '1.0.0');
+    }
+
+    it('honors a custom default prefix chance', () =>
+    {
+      // Arrange & Act
+      const metadata = buildCustomMetadata({
+        'default-prefix-chance': '12',
+        'default-suffix-chance': '88',
+      });
+
+      // Assert
+      expect(metadata.defaultPrefixChance).toBe(12);
+    });
+
+    it('honors a custom default suffix chance', () =>
+    {
+      // Arrange & Act
+      const metadata = buildCustomMetadata({
+        'default-prefix-chance': '12',
+        'default-suffix-chance': '88',
+      });
+
+      // Assert
+      expect(metadata.defaultSuffixChance).toBe(88);
+    });
   });
 });
 //endregion plugins/passive/j-passive-affix.test.js

@@ -1,34 +1,45 @@
 //region plugins/level/game-action-damage.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadLevelPluginVm } from './level-vm.js';
+import {
+  installLevelHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJLevel,
+} from './fixtures/install-level-host-globals.js';
 
-describe('J-LevelMaster Game_Action.makeDamageValue (out/J-LevelMaster.js)', () =>
+describe('J-LevelMaster Game_Action.makeDamageValue (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadLevelPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installLevelHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJLevel();
+    await import('../../../src/plugins/level/core/_metadata/initialization.js');
+
+    await import('../../../src/plugins/level/core/objects/Game_System.js');
+
+    // patches globalThis.Game_Action.prototype directly, no vm involved.
+    await import('../../../src/plugins/level/core/objects/Game_Action.js');
   });
 
   it('multiplies base damage by LevelScaling for subject vs target levels', () =>
   {
-    sandbox.$gameSystem = new sandbox.Game_System();
-    sandbox.$gameSystem.initialize();
-
-    const action = new sandbox.Game_Action();
+    // Arrange
+    globalThis.$gameSystem = new globalThis.Game_System();
+    globalThis.$gameSystem.initialize();
+    const action = new globalThis.Game_Action();
     action.__subject = { level: 20 };
-
     const target = { level: 10 };
+
+    // Act
     const scaled = action.makeDamageValue(target, false);
 
+    // Assert
     expect(scaled).toBe(190);
   });
 });

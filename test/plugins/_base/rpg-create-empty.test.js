@@ -1,71 +1,122 @@
 //region plugins/_base/rpg-create-empty.test.js
-import vm from 'node:vm';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { beforeAll, describe, expect, it } from 'vitest';
+import { installJBaseHostGlobals } from './fixtures/install-j-base-host-globals.js';
 
-import { evaluateJBaseOnlyForTests } from '../../setup/shipped-plugin-vm.js';
-
-describe('J-Base RPG_* createEmpty (out/J-Base.js)', () =>
+describe('RPG_* createEmpty', () =>
 {
-  let sandbox;
+  let RPG_Weapon;
+  let RPG_Armor;
+  let RPG_Item;
+  let RPG_Skill;
+  let RPG_State;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
+    // fresh module registry so re-running this file doesn't double-apply the String.empty/Array.empty
+    // sentinel augmentations RPG_* createEmpty() relies on.
+    vi.resetModules();
 
-    evaluateJBaseOnlyForTests({
-      sandbox,
+    installJBaseHostGlobals();
+
+    // real production code- installs the String.empty/Array.empty sentinels onto their global prototypes.
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: RPG_Weapon } = await import('../../../src/plugins/_base/database/implementations/RPG_Weapon.js'));
+    ({ default: RPG_Armor } = await import('../../../src/plugins/_base/database/implementations/RPG_Armor.js'));
+    ({ default: RPG_Item } = await import('../../../src/plugins/_base/database/implementations/RPG_Item.js'));
+    ({ default: RPG_Skill } = await import('../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+    ({ default: RPG_State } = await import('../../../src/plugins/_base/database/implementations/RPG_State.js'));
+  });
+
+  describe('RPG_Weapon.createEmpty', () =>
+  {
+    it('returns a blank hydrated weapon at the requested index', () =>
+    {
+      // Arrange
+      const index = 2005;
+
+      // Act
+      const weapon = RPG_Weapon.createEmpty(index);
+
+      // Assert
+      expect(weapon.id).toBe(2005);
+      expect(weapon.index).toBe(2005);
+      expect(weapon.name).toBe('');
+      expect(weapon.traits.length).toBe(0);
+      expect(weapon.params.every(v => v === 0)).toBe(true);
+      expect(weapon.isWeapon()).toBe(true);
     });
   });
 
-  it('RPG_Weapon.createEmpty returns a blank hydrated weapon at the requested index', () =>
+  describe('RPG_Armor.createEmpty', () =>
   {
-    const w = vm.runInContext('RPG_Weapon.createEmpty(2005)', sandbox);
+    it('returns a blank hydrated armor at the requested index', () =>
+    {
+      // Arrange
+      const index = 2005;
 
-    expect(w.id).toBe(2005);
-    expect(w.index).toBe(2005);
-    expect(w.name).toBe('');
-    expect(w.traits.length).toBe(0);
-    expect(w.params.every(v => v === 0)).toBe(true);
-    expect(w.isWeapon()).toBe(true);
+      // Act
+      const armor = RPG_Armor.createEmpty(index);
+
+      // Assert
+      expect(armor.id).toBe(2005);
+      expect(armor.index).toBe(2005);
+      expect(armor.name).toBe('');
+      expect(armor.traits.length).toBe(0);
+      expect(armor.isArmor()).toBe(true);
+    });
   });
 
-  it('RPG_Armor.createEmpty returns a blank hydrated armor at the requested index', () =>
+  describe('RPG_Item.createEmpty', () =>
   {
-    const a = vm.runInContext('RPG_Armor.createEmpty(2005)', sandbox);
+    it('returns a blank item wrapper at the requested index', () =>
+    {
+      // Arrange
+      const index = 111;
 
-    expect(a.id).toBe(2005);
-    expect(a.index).toBe(2005);
-    expect(a.name).toBe('');
-    expect(a.traits.length).toBe(0);
-    expect(a.isArmor()).toBe(true);
+      // Act
+      const item = RPG_Item.createEmpty(index);
+
+      // Assert
+      expect(item.id).toBe(111);
+      expect(item.effects.length).toBe(0);
+      expect(item.isItem()).toBe(true);
+    });
   });
 
-  it('RPG_Item.createEmpty returns a blank item wrapper', () =>
+  describe('RPG_Skill.createEmpty', () =>
   {
-    const item = vm.runInContext('RPG_Item.createEmpty(111)', sandbox);
+    it('returns a blank skill wrapper at the requested index', () =>
+    {
+      // Arrange
+      const index = 92;
 
-    expect(item.id).toBe(111);
-    expect(item.effects.length).toBe(0);
-    expect(item.isItem()).toBe(true);
+      // Act
+      const skill = RPG_Skill.createEmpty(index);
+
+      // Assert
+      expect(skill.id).toBe(92);
+      expect(skill.effects.length).toBe(0);
+      expect(skill.isSkill()).toBe(true);
+    });
   });
 
-  it('RPG_Skill.createEmpty returns a blank skill wrapper', () =>
+  describe('RPG_State.createEmpty', () =>
   {
-    const skill = vm.runInContext('RPG_Skill.createEmpty(92)', sandbox);
+    it('returns a blank state wrapper at the requested index', () =>
+    {
+      // Arrange
+      const index = 89;
 
-    expect(skill.id).toBe(92);
-    expect(skill.effects.length).toBe(0);
-    expect(skill.isSkill()).toBe(true);
-  });
+      // Act
+      const state = RPG_State.createEmpty(index);
 
-  it('RPG_State.createEmpty returns a blank state wrapper', () =>
-  {
-    const state = vm.runInContext('RPG_State.createEmpty(89)', sandbox);
-
-    expect(state.id).toBe(89);
-    expect(state.traits.length).toBe(0);
-    expect(state.isState()).toBe(true);
+      // Assert
+      expect(state.id).toBe(89);
+      expect(state.traits.length).toBe(0);
+      expect(state.isState()).toBe(true);
+    });
   });
 });
 //endregion plugins/_base/rpg-create-empty.test.js

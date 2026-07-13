@@ -1,113 +1,210 @@
 //region plugins/regions/ext/skills/region-skills-ext.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadRegionsSkillsStackVm } from '../../regions-vm.js';
+import {
+  installRegionsSkillsStackHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJRegions,
+  setPluginContextToJRegionsSkills,
+} from '../../fixtures/install-regions-host-globals.js';
 
-describe('J-Regions-Skills Game_Map (out/regions/ext/J-Regions-Skills.js)', () =>
+describe('J-Regions-Skills Game_Map / Game_Character (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadRegionsSkillsStackVm(sandbox);
+    vi.resetModules();
+
+    installRegionsSkillsStackHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
+
+    setPluginContextToJRegions();
+    await import('../../../../../src/plugins/regions/core/_metadata/initialization.js');
+    await import('../../../../../src/plugins/regions/core/objects/Game_Map.js');
+
+    setPluginContextToJRegionsSkills();
+    await import('../../../../../src/plugins/regions/ext/skills/_metadata/initialization.js');
+
+    // patches globalThis.Game_Map.prototype/Game_Character.prototype directly, no vm involved.
+    await import('../../../../../src/plugins/regions/ext/skills/objects/Game_Map.js');
+    await import('../../../../../src/plugins/regions/ext/skills/objects/Game_Character.js');
   });
 
-  afterAll(() =>
+  describe('Game_Map.refreshRegionSkills', () =>
   {
-    sandbox = null;
-  });
+    let regionSkillData;
 
-  it('refreshRegionSkills parses map note into region skill data', () =>
-  {
-    sandbox.$dataMap = { note: '<regionSkill:[1, 5, 100, 2, false]>' };
-    const map = new sandbox.Game_Map();
-    map.initialize();
-    map.setup(1);
-
-    const datas = map.getRegionSkillsByRegionId(1);
-    expect(datas.length).toBe(1);
-    expect(datas[0].regionId).toBe(1);
-    expect(datas[0].skillId).toBe(5);
-    expect(datas[0].chance).toBe(100);
-    expect(datas[0].casterId).toBe(2);
-    expect(datas[0].isFriendly).toBe(false);
-  });
-});
-
-describe('J-Regions-Skills Game_Character executeRegionSkills', () =>
-{
-  let sandbox;
-
-  beforeAll(() =>
-  {
-    sandbox = { console };
-    loadRegionsSkillsStackVm(sandbox);
-  });
-
-  afterAll(() =>
-  {
-    sandbox = null;
-  });
-
-  it('calls forceMapAction when chance succeeds', () =>
-  {
-    sandbox.$dataMap = { note: '<regionSkill:[4, 9, 100, 1, false]>' };
-    const map = new sandbox.Game_Map();
-    map.initialize();
-    map.setup(1);
-    sandbox.$gameMap = map;
-
-    sandbox.$jabsEngine.__forceMapActionCalls = [];
-
-    const targetJabsBattler = {
-      getX()
-      {
-        return 3;
-      },
-      getY()
-      {
-        return 8;
-      },
-      getTeam()
-      {
-        return 0;
-      },
-      getBattler()
-      {
-        return {
-          getPositiveRollsForSkill: () => 0,
-          getNegativeRollsForSkill: () => 0,
-          isVeryLucky: () => false,
-          isVeryCursed: () => false,
-          isAccumulating: () => false,
-          getEncoreRepeats: () => 0,
-        };
-      },
-    };
-
-    const ch = new sandbox.Game_Character();
-    ch.initMembers();
-    ch.hasJabsBattler = function()
+    beforeAll(() =>
     {
-      return true;
-    };
-    ch.getJabsBattler = function()
-    {
-      return targetJabsBattler;
-    };
-    ch.regionId = function()
-    {
-      return 4;
-    };
+      globalThis.$dataMap = { note: '<regionSkill:[1, 5, 100, 2, false]>' };
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      map.setup(1);
 
-    ch.executeRegionSkills();
+      [ regionSkillData ] = map.getRegionSkillsByRegionId(1);
+    });
 
-    const calls = sandbox.$jabsEngine.__forceMapActionCalls;
-    expect(calls.length).toBe(1);
-    expect(calls[0][1]).toBe(9);
-    expect(calls[0][3]).toBe(3);
-    expect(calls[0][4]).toBe(8);
+    it('parses exactly one region skill data for the tagged region', () =>
+    {
+      // Arrange & Act & Assert
+      expect(regionSkillData).toBeDefined();
+    });
+
+    it('parses the region id', () =>
+    {
+      // Arrange & Act & Assert
+      expect(regionSkillData.regionId).toBe(1);
+    });
+
+    it('parses the skill id', () =>
+    {
+      // Arrange & Act & Assert
+      expect(regionSkillData.skillId).toBe(5);
+    });
+
+    it('parses the chance of application', () =>
+    {
+      // Arrange & Act & Assert
+      expect(regionSkillData.chance).toBe(100);
+    });
+
+    it('parses the caster id', () =>
+    {
+      // Arrange & Act & Assert
+      expect(regionSkillData.casterId).toBe(2);
+    });
+
+    it('parses the isFriendly flag', () =>
+    {
+      // Arrange & Act & Assert
+      expect(regionSkillData.isFriendly).toBe(false);
+    });
+  });
+
+  describe('Game_Character.executeRegionSkills', () =>
+  {
+    it('calls forceMapAction with the skill and target coordinates when the chance succeeds', () =>
+    {
+      // Arrange
+      globalThis.$dataMap = { note: '<regionSkill:[4, 9, 100, 1, false]>' };
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      map.setup(1);
+      globalThis.$gameMap = map;
+      globalThis.$jabsEngine.__forceMapActionCalls = [];
+
+      const targetJabsBattler = {
+        getX()
+        {
+          return 3;
+        },
+        getY()
+        {
+          return 8;
+        },
+        getTeam()
+        {
+          return 0;
+        },
+        getBattler()
+        {
+          return {
+            getPositiveRollsForSkill: () => 0,
+            getNegativeRollsForSkill: () => 0,
+            isVeryLucky: () => false,
+            isVeryCursed: () => false,
+            isAccumulating: () => false,
+            getEncoreRepeats: () => 0,
+          };
+        },
+      };
+
+      const ch = new globalThis.Game_Character();
+      ch.initMembers();
+      ch.hasJabsBattler = function()
+      {
+        return true;
+      };
+      ch.getJabsBattler = function()
+      {
+        return targetJabsBattler;
+      };
+      ch.regionId = function()
+      {
+        return 4;
+      };
+
+      // Act
+      ch.executeRegionSkills();
+
+      // Assert
+      const calls = globalThis.$jabsEngine.__forceMapActionCalls;
+      expect(calls.length).toBe(1);
+    });
+
+    it('forces the map action using the tagged skill id and the target battler coordinates', () =>
+    {
+      // Arrange
+      globalThis.$dataMap = { note: '<regionSkill:[4, 9, 100, 1, false]>' };
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      map.setup(1);
+      globalThis.$gameMap = map;
+      globalThis.$jabsEngine.__forceMapActionCalls = [];
+
+      const targetJabsBattler = {
+        getX()
+        {
+          return 3;
+        },
+        getY()
+        {
+          return 8;
+        },
+        getTeam()
+        {
+          return 0;
+        },
+        getBattler()
+        {
+          return {
+            getPositiveRollsForSkill: () => 0,
+            getNegativeRollsForSkill: () => 0,
+            isVeryLucky: () => false,
+            isVeryCursed: () => false,
+            isAccumulating: () => false,
+            getEncoreRepeats: () => 0,
+          };
+        },
+      };
+
+      const ch = new globalThis.Game_Character();
+      ch.initMembers();
+      ch.hasJabsBattler = function()
+      {
+        return true;
+      };
+      ch.getJabsBattler = function()
+      {
+        return targetJabsBattler;
+      };
+      ch.regionId = function()
+      {
+        return 4;
+      };
+
+      // Act
+      ch.executeRegionSkills();
+
+      // Assert
+      const [ call ] = globalThis.$jabsEngine.__forceMapActionCalls;
+      expect(call[1]).toBe(9);
+      expect(call[3]).toBe(3);
+      expect(call[4]).toBe(8);
+    });
   });
 });
 //endregion plugins/regions/ext/skills/region-skills-ext.test.js

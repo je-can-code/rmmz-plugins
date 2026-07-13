@@ -1,26 +1,35 @@
 //region plugins/regions/ext/skills/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadRegionsSkillsStackVm } from '../../regions-vm.js';
+import {
+  installRegionsSkillsStackHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJRegions,
+  setPluginContextToJRegionsSkills,
+} from '../../fixtures/install-regions-host-globals.js';
 
-describe('J-Regions-Skills stack metadata (out/regions/ext/J-Regions-Skills.js)', () =>
+describe('J-Regions-Skills stack metadata (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadRegionsSkillsStackVm(sandbox);
+    vi.resetModules();
+
+    installRegionsSkillsStackHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJRegions();
+    await import('../../../../../src/plugins/regions/core/_metadata/initialization.js');
+
+    setPluginContextToJRegionsSkills();
+    await import('../../../../../src/plugins/regions/ext/skills/_metadata/initialization.js');
   });
 
-  afterAll(() =>
+  it('exposes the skills extension execution delay from plugin parameters', () =>
   {
-    sandbox = null;
-  });
-
-  it('exposes skills extension metadata delay', () =>
-  {
-    expect(Number(sandbox.J.REGIONS.EXT.SKILLS.Metadata.delayBetweenExecutions)).toBe(60);
+    // Arrange & Act & Assert
+    expect(Number(globalThis.J.REGIONS.EXT.SKILLS.Metadata.delayBetweenExecutions)).toBe(60);
   });
 });
 //endregion plugins/regions/ext/skills/metadata.test.js

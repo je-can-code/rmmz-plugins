@@ -1,65 +1,214 @@
 //region plugins/_base/parse-plugin-int.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { evaluateJBaseOnlyForTests } from '../../setup/shipped-plugin-vm.js';
+import { installJBaseHostGlobals } from './fixtures/install-j-base-host-globals.js';
 
-describe('J.BASE.Helpers.parsePluginInt (out/J-Base.js)', () =>
+describe('J.BASE.Helpers.parsePluginInt', () =>
 {
-  let sandbox;
   let parsePluginInt;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    evaluateJBaseOnlyForTests({ sandbox });
-    parsePluginInt = sandbox.J.BASE.Helpers.parsePluginInt;
+    // fresh module registry so re-running this file doesn't double-apply J.BASE setup.
+    vi.resetModules();
+
+    installJBaseHostGlobals();
+
+    // real production code- populates globalThis.J.BASE.Helpers.parsePluginInt.
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    parsePluginInt = globalThis.J.BASE.Helpers.parsePluginInt;
   });
 
-  afterAll(() =>
+  describe('when the value is undefined, null, or an empty string', () =>
   {
-    sandbox = null;
-    parsePluginInt = null;
+    it('returns the fallback for undefined', () =>
+    {
+      // Arrange
+      const value = undefined;
+      const fallback = 42;
+
+      // Act
+      const result = parsePluginInt(value, fallback);
+
+      // Assert
+      expect(result).toBe(42);
+    });
+
+    it('returns the fallback for null', () =>
+    {
+      // Arrange
+      const value = null;
+      const fallback = -1;
+
+      // Act
+      const result = parsePluginInt(value, fallback);
+
+      // Assert
+      expect(result).toBe(-1);
+    });
+
+    it('returns the fallback for an empty string', () =>
+    {
+      // Arrange
+      const value = '';
+      const fallback = 99;
+
+      // Act
+      const result = parsePluginInt(value, fallback);
+
+      // Assert
+      expect(result).toBe(99);
+    });
   });
 
-  it('returns fallback for undefined, null, and empty string', () =>
+  describe('when the value parses to a finite integer', () =>
   {
-    expect(parsePluginInt(undefined, 0)).toBe(0);
-    expect(parsePluginInt(undefined, 42)).toBe(42);
-    expect(parsePluginInt(null, -1)).toBe(-1);
-    expect(parsePluginInt('', 99)).toBe(99);
+    it('parses "0"', () =>
+    {
+      // Arrange
+      const value = '0';
+      const fallback = 7;
+
+      // Act
+      const result = parsePluginInt(value, fallback);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('parses a positive integer string', () =>
+    {
+      // Arrange
+      const value = '42';
+      const fallback = 0;
+
+      // Act
+      const result = parsePluginInt(value, fallback);
+
+      // Assert
+      expect(result).toBe(42);
+    });
+
+    it('parses a negative integer string, preserving the sign', () =>
+    {
+      // Arrange
+      const value = '-3';
+      const fallback = 0;
+
+      // Act
+      const result = parsePluginInt(value, fallback);
+
+      // Assert
+      expect(result).toBe(-3);
+    });
+
+    it('trims surrounding whitespace before parsing', () =>
+    {
+      // Arrange
+      const value = '  12  ';
+      const fallback = 0;
+
+      // Act
+      const result = parsePluginInt(value, fallback);
+
+      // Assert
+      expect(result).toBe(12);
+    });
+
+    it('coerces a finite number by stringifying it first', () =>
+    {
+      // Arrange
+      const value = 8;
+      const fallback = 0;
+
+      // Act
+      const result = parsePluginInt(value, fallback);
+
+      // Assert
+      expect(result).toBe(8);
+    });
+
+    it('truncates a float number to its integer part', () =>
+    {
+      // Arrange
+      const value = 3.9;
+      const fallback = 0;
+
+      // Act
+      const result = parsePluginInt(value, fallback);
+
+      // Assert
+      expect(result).toBe(3);
+    });
+
+    it('uses radix 10, so a hex-looking string parses as 0, not 16', () =>
+    {
+      // Arrange
+      const value = '0x10';
+      const fallback = 0;
+
+      // Act
+      const result = parsePluginInt(value, fallback);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('parses the leading digits and ignores trailing non-digit junk', () =>
+    {
+      // Arrange
+      const value = '99abc';
+      const fallback = 0;
+
+      // Act
+      const result = parsePluginInt(value, fallback);
+
+      // Assert
+      expect(result).toBe(99);
+    });
   });
 
-  it('parses base-10 integers from strings and preserves sign', () =>
+  describe('when the value does not parse to a finite integer', () =>
   {
-    expect(parsePluginInt('0', 7)).toBe(0);
-    expect(parsePluginInt('42', 0)).toBe(42);
-    expect(parsePluginInt('-3', 0)).toBe(-3);
-    expect(parsePluginInt('  12  ', 0)).toBe(12);
-  });
+    it('returns the fallback for a non-numeric string', () =>
+    {
+      // Arrange
+      const value = 'not-a-number';
+      const fallback = 0;
 
-  it('coerces finite numbers via stringification', () =>
-  {
-    expect(parsePluginInt(8, 0)).toBe(8);
-    expect(parsePluginInt(3.9, 0)).toBe(3);
-  });
+      // Act
+      const result = parsePluginInt(value, fallback);
 
-  it('returns fallback when parse result is not finite', () =>
-  {
-    expect(parsePluginInt('not-a-number', 0)).toBe(0);
-    expect(parsePluginInt('not-a-number', -5)).toBe(-5);
-    expect(Number.isNaN(parsePluginInt('x', NaN))).toBe(true);
-    expect(Number.isNaN(parsePluginInt('', NaN))).toBe(true);
-    expect(Number.isNaN(parsePluginInt(null, NaN))).toBe(true);
-  });
+      // Assert
+      expect(result).toBe(0);
+    });
 
-  it('uses radix 10 so hex-looking strings do not read as hex', () =>
-  {
-    expect(parsePluginInt('0x10', 0)).toBe(0);
-  });
+    it('returns a negative fallback unchanged for a non-numeric string', () =>
+    {
+      // Arrange
+      const value = 'not-a-number';
+      const fallback = -5;
 
-  it('matches parseInt partial suffix behavior for trailing junk', () =>
-  {
-    expect(parsePluginInt('99abc', 0)).toBe(99);
+      // Act
+      const result = parsePluginInt(value, fallback);
+
+      // Assert
+      expect(result).toBe(-5);
+    });
+
+    it('returns a NaN fallback when the fallback itself is NaN', () =>
+    {
+      // Arrange
+      const value = 'x';
+      const fallback = NaN;
+
+      // Act
+      const result = parsePluginInt(value, fallback);
+
+      // Assert
+      expect(Number.isNaN(result)).toBe(true);
+    });
   });
 });
 //endregion plugins/_base/parse-plugin-int.test.js

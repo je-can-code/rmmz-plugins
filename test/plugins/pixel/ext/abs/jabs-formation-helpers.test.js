@@ -1,42 +1,70 @@
 //region plugins/pixel/ext/abs/jabs-formation-helpers.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadPixelAbsStackPluginVm } from '../../pixel-vm.js';
+import {
+  installPixelAbsExtHostGlobals,
+  installPixelCoreHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPixel,
+  setPluginContextToJPixelAbsExt,
+} from '../../fixtures/install-pixel-host-globals.js';
 
-describe('J-ABS-Pixelistics formation helpers on JABS_AiManager', () =>
+describe('J-ABS-Pixelistics formation helpers on JABS_AiManager (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadPixelAbsStackPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installPixelCoreHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJPixel();
+    await import('../../../../../src/plugins/pixel/core/_metadata/initialization.js');
+
+    installPixelAbsExtHostGlobals();
+
+    setPluginContextToJPixelAbsExt();
+    await import('../../../../../src/plugins/pixel/ext/abs/_metadata/initialization.js');
+
+    // patches the fake JABS_AiManager stand-in directly, no vm involved.
+    await import('../../../../../src/plugins/pixel/ext/abs/managers/JABS_AiManager.js');
   });
 
   it('calculateFormationSlotCoordinates offsets by half a tile toward centers', () =>
   {
-    const [sx, sy] = sandbox.JABS_AiManager.calculateFormationSlotCoordinates(1, 0.5, 2, -0.5);
+    // Arrange & Act
+    const [ sx, sy ] = globalThis.JABS_AiManager.calculateFormationSlotCoordinates(1, 0.5, 2, -0.5);
 
+    // Assert
     expect(sx).toBe(2);
     expect(sy).toBe(2);
   });
 
-  it('isWithinTolerance uses Euclidean distance on fractional coordinates', () =>
+  describe('isWithinTolerance', () =>
   {
     const ally = {
-      getCharacter()
-      {
-        return { x: 0.3, y: 0 };
-      },
+      getCharacter: () => ({ x: 0.3, y: 0 }),
     };
 
-    expect(sandbox.JABS_AiManager.isWithinTolerance(ally, 0, 0, 0.5)).toBe(true);
-    expect(sandbox.JABS_AiManager.isWithinTolerance(ally, 2, 0, 0.5)).toBe(false);
+    it('is true when the Euclidean distance is within tolerance', () =>
+    {
+      // Arrange & Act
+      const result = globalThis.JABS_AiManager.isWithinTolerance(ally, 0, 0, 0.5);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('is false when the Euclidean distance exceeds tolerance', () =>
+    {
+      // Arrange & Act
+      const result = globalThis.JABS_AiManager.isWithinTolerance(ally, 2, 0, 0.5);
+
+      // Assert
+      expect(result).toBe(false);
+    });
   });
 });
 //endregion plugins/pixel/ext/abs/jabs-formation-helpers.test.js

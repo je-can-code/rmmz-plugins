@@ -1,89 +1,94 @@
 //region plugins/pixel/core/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { DEFAULT_PIXEL_CORE_PLUGIN_PARAMS } from '../fixtures/pixel-plugin-params.js';
-import { loadPixelCorePluginVm } from '../pixel-vm.js';
+import {
+  installPixelCoreHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPixel,
+} from '../fixtures/install-pixel-host-globals.js';
+import { installPluginManagerWithParams } from '../../../setup/install-plugin-manager-with-params.js';
 
-describe('J-Pixelistics (core) metadata', () =>
+describe('J-Pixelistics (core) metadata (direct src import)', () =>
 {
-  let sandbox;
+  let JPixelistics_PluginMetadata;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadPixelCorePluginVm(sandbox);
+    vi.resetModules();
+
+    installPixelCoreHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJPixel();
+
+    // the class itself, not the initialization.js side-effect file- lets each scenario below build
+    // a fresh J_PixelisticsPluginMetadata instance from different plugin params without needing to
+    // re-run _base's initialization.js (which defines non-configurable properties like Array.empty
+    // that throw if defined a second time against the same globalThis).
+    ({ default: JPixelistics_PluginMetadata } = await import('../../../../src/plugins/pixel/core/_metadata/_pluginMetadata.js'));
   });
 
-  afterAll(() =>
+  let scenarioCounter = 0;
+
+  /**
+   * Builds a fresh J.PIXEL.Metadata instance from the given plugin parameters. Each call uses a
+   * distinct plugin name- PluginMetadata keeps an append-only static registry keyed by name and
+   * throws on a repeat registration, so re-using "J-Pixelistics" across scenarios in one file
+   * would collide with the first scenario's registration.
+   * @param {Record<string, string>} coreParams
+   * @returns {object}
+   */
+  function buildMetadata(coreParams)
   {
-    sandbox = null;
-  });
+    scenarioCounter += 1;
+    const name = `J-Pixelistics-test-${scenarioCounter}`;
+    installPluginManagerWithParams(globalThis, name, coreParams);
+    return new JPixelistics_PluginMetadata(name, '1.0.1');
+  }
 
   it('parses plugin params into J.PIXEL.Metadata', () =>
   {
-    expect(sandbox.J.PIXEL.Metadata.CollisionStepCount).toBe(4);
-    expect(sandbox.J.PIXEL.Metadata.CollisionRadius).toBe(0.30);
-    expect(sandbox.J.PIXEL.Metadata.VectorMovementEnabled).toBe(false);
-    expect(sandbox.J.PIXEL.Metadata.OverlayInitiallyVisible).toBe(false);
-  });
-});
+    // Arrange & Act
+    const metadata = buildMetadata(DEFAULT_PIXEL_CORE_PLUGIN_PARAMS);
 
-describe('J-Pixelistics metadata with custom scalar and boolean params', () =>
-{
-  let sandbox;
-
-  beforeAll(() =>
-  {
-    sandbox = { console };
-    loadPixelCorePluginVm(sandbox, {
-      coreParams: {
-        ...DEFAULT_PIXEL_CORE_PLUGIN_PARAMS,
-        collisionStepCount: '2',
-        collisionRadius: '0.15',
-        vectorMovementEnabled: 'true',
-        overlayInitiallyVisible: 'true',
-      },
-    });
-  });
-
-  afterAll(() =>
-  {
-    sandbox = null;
+    // Assert
+    expect(metadata.CollisionStepCount).toBe(4);
+    expect(metadata.CollisionRadius).toBe(0.30);
+    expect(metadata.VectorMovementEnabled).toBe(false);
+    expect(metadata.OverlayInitiallyVisible).toBe(false);
   });
 
   it('reflects overridden numerics and flags', () =>
   {
-    expect(sandbox.J.PIXEL.Metadata.CollisionStepCount).toBe(2);
-    expect(sandbox.J.PIXEL.Metadata.CollisionRadius).toBe(0.15);
-    expect(sandbox.J.PIXEL.Metadata.VectorMovementEnabled).toBe(true);
-    expect(sandbox.J.PIXEL.Metadata.OverlayInitiallyVisible).toBe(true);
-  });
-});
-
-describe('J-Pixelistics metadata collision step fallback', () =>
-{
-  let sandbox;
-
-  beforeAll(() =>
-  {
-    sandbox = { console };
-    loadPixelCorePluginVm(sandbox, {
-      coreParams: {
-        ...DEFAULT_PIXEL_CORE_PLUGIN_PARAMS,
-        collisionStepCount: 'not-a-number',
-      },
+    // Arrange & Act
+    const metadata = buildMetadata({
+      ...DEFAULT_PIXEL_CORE_PLUGIN_PARAMS,
+      collisionStepCount: '2',
+      collisionRadius: '0.15',
+      vectorMovementEnabled: 'true',
+      overlayInitiallyVisible: 'true',
     });
-  });
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    // Assert
+    expect(metadata.CollisionStepCount).toBe(2);
+    expect(metadata.CollisionRadius).toBe(0.15);
+    expect(metadata.VectorMovementEnabled).toBe(true);
+    expect(metadata.OverlayInitiallyVisible).toBe(true);
   });
 
   it('defaults CollisionStepCount when parseInt yields NaN', () =>
   {
-    expect(sandbox.J.PIXEL.Metadata.CollisionStepCount).toBe(4);
+    // Arrange & Act
+    const metadata = buildMetadata({
+      ...DEFAULT_PIXEL_CORE_PLUGIN_PARAMS,
+      collisionStepCount: 'not-a-number',
+    });
+
+    // Assert
+    expect(metadata.CollisionStepCount).toBe(4);
   });
 });
 //endregion plugins/pixel/core/metadata.test.js
-

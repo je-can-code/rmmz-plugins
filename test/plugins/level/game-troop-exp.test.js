@@ -1,58 +1,66 @@
 //region plugins/level/game-troop-exp.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadLevelPluginVm } from './level-vm.js';
+import {
+  installLevelHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJLevel,
+} from './fixtures/install-level-host-globals.js';
 
-describe('J-LevelMaster Game_Troop experience scaling (out/J-LevelMaster.js)', () =>
+describe('J-LevelMaster Game_Troop experience scaling (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadLevelPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installLevelHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../src/plugins/_base/managers/RPGManager.js'));
+    await import('../../../src/plugins/_base/objects/Game_BattlerBase.js');
+    await import('../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../src/plugins/_base/objects/Game_Actor.js');
+
+    setPluginContextToJLevel();
+    await import('../../../src/plugins/level/core/_metadata/initialization.js');
+
+    await import('../../../src/plugins/level/core/objects/Game_BattlerBase.js');
+    await import('../../../src/plugins/level/core/objects/Game_Battler.js');
+    await import('../../../src/plugins/level/core/objects/Game_Actor.js');
+    await import('../../../src/plugins/level/core/objects/Game_Party.js');
+    await import('../../../src/plugins/level/core/objects/Game_System.js');
+    await import('../../../src/plugins/level/core/objects/Game_Troop.js');
   });
 
   it('scales total exp from dead enemies using party average level vs each enemy level', () =>
   {
-    sandbox.$gameSystem = new sandbox.Game_System();
-    sandbox.$gameSystem.initialize();
-
-    const a = new sandbox.Game_Actor();
+    // Arrange
+    globalThis.$gameSystem = new globalThis.Game_System();
+    globalThis.$gameSystem.initialize();
+    const a = new globalThis.Game_Actor();
     a.initMembers();
     a._level = 14;
-
-    const b = new sandbox.Game_Actor();
+    const b = new globalThis.Game_Actor();
     b.initMembers();
     b._level = 16;
-
-    sandbox.$gameParty = new sandbox.Game_Party();
-    sandbox.$gameParty.battleMembers = function()
+    globalThis.$gameParty = new globalThis.Game_Party();
+    globalThis.$gameParty.battleMembers = function()
     {
       return [ a, b ];
     };
-
-    const enemy = {
-      level: 5,
-      exp()
-      {
-        return 100;
-      },
-    };
-
-    const troop = Object.create(sandbox.Game_Troop.prototype);
+    const enemy = { level: 5, exp: () => 100 };
+    const troop = Object.create(globalThis.Game_Troop.prototype);
     troop.deadMembers = function()
     {
       return [ enemy ];
     };
 
-    const total = sandbox.Game_Troop.prototype.getScaledExpResult.call(troop);
+    // Act
+    const total = globalThis.Game_Troop.prototype.getScaledExpResult.call(troop);
 
+    // Assert
     expect(total).toBe(190);
   });
 });

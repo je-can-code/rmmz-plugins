@@ -1,45 +1,24 @@
 //region plugins/popups/abs/combat-resource-popup-layout.test.js
-import fs from 'node:fs';
-import path from 'node:path';
-import vm from 'node:vm';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { describe, expect, it } from 'vitest';
-
-import { repoRoot } from '../../../setup/repo-root.js';
-
-/**
- * Loads core {@link PopupLayoutHelper} then applies the ABS combat stagger augment.
- *
- * @returns {object} VM sandbox globals.
- */
-function loadCombatResourcePopupLayoutVm()
+describe('CombatResourcePopupLayout (direct src import)', () =>
 {
-  const coreHelperPath = path.join(
-    repoRoot,
-    'src/plugins/popups/core/helpers/PopupLayoutHelper.js',
-  );
-  const augmentPath = path.join(
-    repoRoot,
-    'src/plugins/popups/ext/abs/helpers/CombatResourcePopupLayout.js',
-  );
+  let PopupLayoutHelper;
 
-  const coreHelperSource = fs.readFileSync(coreHelperPath, 'utf8')
-    .replace(/import Map_TextPop from '\.\/\.\.\/_models\/Map_TextPop\.js';\r?\n/, '')
-    .replace(/\nexport default PopupLayoutHelper;\r?\n/, '\n');
-  const augmentSource = fs.readFileSync(augmentPath, 'utf8')
-    .replace(/\nexport default CombatResourcePopupLayout;\r?\n/, '\n');
+  beforeAll(async () =>
+  {
+    vi.resetModules();
 
-  const sandbox = {
-    console,
-    Map_TextPop: {
+    globalThis.Map_TextPop = {
       Types: {
         HpDamage: 'hp-damage',
         MpDamage: 'mp-damage',
         TpDamage: 'tp-damage',
       },
       LayoutRings: {},
-    },
-    J: {
+    };
+
+    globalThis.J = {
       POPUPS: {
         EXT: {
           ABS: {
@@ -57,54 +36,80 @@ function loadCombatResourcePopupLayoutVm()
           ResetDuration: 120,
         },
       },
-    },
-    Graphics: {
-      frameCount: 0,
-    },
-  };
+    };
 
-  vm.createContext(sandbox);
-  vm.runInContext(
-    `${coreHelperSource}\nPopupLayoutHelper.initializeRingLayouts();\nthis.PopupLayoutHelper = PopupLayoutHelper;`,
-    sandbox,
-  );
-  vm.runInContext(augmentSource, sandbox);
+    globalThis.Graphics = { frameCount: 0 };
 
-  return sandbox;
-}
+    // load core PopupLayoutHelper first (bare-global convention: no import statement, patched onto globalThis).
+    ({ default: PopupLayoutHelper } = await import('../../../../src/plugins/popups/core/helpers/PopupLayoutHelper.js'));
+    globalThis.PopupLayoutHelper = PopupLayoutHelper;
+    PopupLayoutHelper.initializeRingLayouts();
 
-describe('CombatResourcePopupLayout', () =>
-{
-  it('staggers HP/MP/TP vertically for harm and heal combat resource streams', () =>
+    // the ABS augment overwrites PopupLayoutHelper.resolveMotionOffset with the combat-stagger variant.
+    await import('../../../../src/plugins/popups/ext/abs/helpers/CombatResourcePopupLayout.js');
+  });
+
+  describe('resolveMotionOffset', () =>
   {
-    const { PopupLayoutHelper } = loadCombatResourcePopupLayoutVm();
+    it('staggers a harm hp popup upward off the base row', () =>
+    {
+      // Arrange
+      const params = { healing: false, popupType: 'hp-damage' };
 
-    const hpHarm = PopupLayoutHelper.resolveMotionOffset({
-      healing: false,
-      popupType: 'hp-damage',
-    });
-    const mpHarm = PopupLayoutHelper.resolveMotionOffset({
-      healing: false,
-      popupType: 'mp-damage',
-    });
-    const tpHarm = PopupLayoutHelper.resolveMotionOffset({
-      healing: false,
-      popupType: 'tp-damage',
-    });
-    const hpHeal = PopupLayoutHelper.resolveMotionOffset({
-      healing: true,
-      popupType: 'hp-damage',
-    });
-    const tpHeal = PopupLayoutHelper.resolveMotionOffset({
-      healing: true,
-      popupType: 'tp-damage',
+      // Act
+      const result = PopupLayoutHelper.resolveMotionOffset(params);
+
+      // Assert
+      expect(result).toEqual({ x: 24, y: -16 });
     });
 
-    expect(hpHarm).toEqual({ x: 24, y: -16 });
-    expect(mpHarm).toEqual({ x: 24, y: 0 });
-    expect(tpHarm).toEqual({ x: 24, y: 16 });
-    expect(hpHeal).toEqual({ x: -24, y: -16 });
-    expect(tpHeal).toEqual({ x: -24, y: 16 });
+    it('keeps a harm mp popup on the base row', () =>
+    {
+      // Arrange
+      const params = { healing: false, popupType: 'mp-damage' };
+
+      // Act
+      const result = PopupLayoutHelper.resolveMotionOffset(params);
+
+      // Assert
+      expect(result).toEqual({ x: 24, y: 0 });
+    });
+
+    it('staggers a harm tp popup downward off the base row', () =>
+    {
+      // Arrange
+      const params = { healing: false, popupType: 'tp-damage' };
+
+      // Act
+      const result = PopupLayoutHelper.resolveMotionOffset(params);
+
+      // Assert
+      expect(result).toEqual({ x: 24, y: 16 });
+    });
+
+    it('staggers a heal hp popup upward off the base row on the opposite side', () =>
+    {
+      // Arrange
+      const params = { healing: true, popupType: 'hp-damage' };
+
+      // Act
+      const result = PopupLayoutHelper.resolveMotionOffset(params);
+
+      // Assert
+      expect(result).toEqual({ x: -24, y: -16 });
+    });
+
+    it('staggers a heal tp popup downward off the base row on the opposite side', () =>
+    {
+      // Arrange
+      const params = { healing: true, popupType: 'tp-damage' };
+
+      // Act
+      const result = PopupLayoutHelper.resolveMotionOffset(params);
+
+      // Assert
+      expect(result).toEqual({ x: -24, y: 16 });
+    });
   });
 });
 //endregion plugins/popups/abs/combat-resource-popup-layout.test.js

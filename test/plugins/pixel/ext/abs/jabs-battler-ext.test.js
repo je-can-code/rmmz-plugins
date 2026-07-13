@@ -1,153 +1,208 @@
 //region plugins/pixel/ext/abs/jabs-battler-ext.test.js
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadPixelAbsStackPluginVm } from '../../pixel-vm.js';
+import {
+  installPixelAbsExtHostGlobals,
+  installPixelCoreHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPixel,
+  setPluginContextToJPixelAbsExt,
+} from '../../fixtures/install-pixel-host-globals.js';
 
-describe('J-ABS-Pixelistics JABS_Battler extensions', () =>
+describe('J-ABS-Pixelistics JABS_Battler extensions (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeEach(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadPixelAbsStackPluginVm(sandbox);
+    vi.resetModules();
+
+    installPixelCoreHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJPixel();
+    await import('../../../../../src/plugins/pixel/core/_metadata/initialization.js');
+
+    ({ default: globalThis.PIXEL_CollisionManager } = await import('../../../../../src/plugins/pixel/core/managers/PIXEL_CollisionManager.js'));
+    globalThis.PIXEL_CollisionManager.initConfig();
+    globalThis.PIXEL_CollisionManager.setupCollision();
+
+    installPixelAbsExtHostGlobals();
+
+    setPluginContextToJPixelAbsExt();
+    await import('../../../../../src/plugins/pixel/ext/abs/_metadata/initialization.js');
+
+    // patches the fake JABS_Battler stand-in directly, no vm involved.
+    await import('../../../../../src/plugins/pixel/ext/abs/objects/JABS_Battler.js');
   });
 
-  afterEach(() =>
+  it('initIdleInfo seeds the pixel idle destination to null', () =>
   {
-    sandbox = null;
-  });
+    // Arrange
+    const b = new globalThis.JABS_Battler();
 
-  it('initIdleInfo seeds pixel idle wander fields', () =>
-  {
-    const b = new sandbox.JABS_Battler();
-
+    // Act
     b.initIdleInfo();
 
+    // Assert
     expect(b._pixelIdleDest).toBe(null);
+  });
+
+  it('initIdleInfo seeds the pixel idle wait counter to 0', () =>
+  {
+    // Arrange
+    const b = new globalThis.JABS_Battler();
+
+    // Act
+    b.initIdleInfo();
+
+    // Assert
     expect(b._pixelIdleWait).toBe(0);
+  });
+
+  it('initIdleInfo seeds the pixel idle stuck-frame counter to 0', () =>
+  {
+    // Arrange
+    const b = new globalThis.JABS_Battler();
+
+    // Act
+    b.initIdleInfo();
+
+    // Assert
     expect(b._pixelIdleStuckFrames).toBe(0);
   });
 
-  it('isHome uses distanceToHome under half a tile', () =>
+  describe('isHome', () =>
   {
-    const b = new sandbox.JABS_Battler();
-
-    b.__distHome = 0.49;
-    expect(b.isHome()).toBe(true);
-
-    b.__distHome = 0.51;
-    expect(b.isHome()).toBe(false);
-  });
-
-  it('destroy rebuilds collision when an enemy battler is removed', () =>
-  {
-    let setups = 0;
-    const orig = sandbox.PIXEL_CollisionManager.setupCollision;
-
-    sandbox.PIXEL_CollisionManager.setupCollision = function()
+    it('is true when distanceToHome is under half a tile', () =>
     {
-      setups++;
-      return orig.apply(this, arguments);
-    };
+      // Arrange
+      const b = new globalThis.JABS_Battler();
+      b.__distHome = 0.49;
 
-    const b = new sandbox.JABS_Battler();
+      // Act
+      const result = b.isHome();
 
-    b.__battlerSubject = { isActor: () => false };
-    b.destroy();
+      // Assert
+      expect(result).toBe(true);
+    });
 
-    expect(setups).toBeGreaterThanOrEqual(1);
-
-    sandbox.PIXEL_CollisionManager.setupCollision = orig;
-  });
-
-  it('destroy skips collision rebuild for actor battlers', () =>
-  {
-    let setups = 0;
-    const orig = sandbox.PIXEL_CollisionManager.setupCollision;
-
-    sandbox.PIXEL_CollisionManager.setupCollision = function()
+    it('is false when distanceToHome is over half a tile', () =>
     {
-      setups++;
-      return orig.apply(this, arguments);
-    };
+      // Arrange
+      const b = new globalThis.JABS_Battler();
+      b.__distHome = 0.51;
 
-    const b = new sandbox.JABS_Battler();
+      // Act
+      const result = b.isHome();
 
-    b.__battlerSubject = { isActor: () => true };
-    b.destroy();
-
-    expect(setups).toBe(0);
-
-    sandbox.PIXEL_CollisionManager.setupCollision = orig;
+      // Assert
+      expect(result).toBe(false);
+    });
   });
 
-  it('getProjectileSpawnBaseDirection maps leader vector input to 8-dir', () =>
+  describe('destroy', () =>
   {
-    const fakePlayer = {
-      getVectorInputAngle()
+    it('rebuilds collision when an enemy battler is removed', () =>
+    {
+      // Arrange
+      let setups = 0;
+      const orig = globalThis.PIXEL_CollisionManager.setupCollision;
+      globalThis.PIXEL_CollisionManager.setupCollision = function()
       {
-        return 45;
-      },
-      isDirectionFixed()
+        setups++;
+        return orig.apply(this, arguments);
+      };
+      const b = new globalThis.JABS_Battler();
+      b.__battlerSubject = { isActor: () => false };
+
+      // Act
+      b.destroy();
+
+      // Assert
+      expect(setups).toBeGreaterThanOrEqual(1);
+      globalThis.PIXEL_CollisionManager.setupCollision = orig;
+    });
+
+    it('skips the collision rebuild for actor battlers', () =>
+    {
+      // Arrange
+      let setups = 0;
+      const orig = globalThis.PIXEL_CollisionManager.setupCollision;
+      globalThis.PIXEL_CollisionManager.setupCollision = function()
       {
-        return false;
-      },
-    };
-    sandbox.$gamePlayer = fakePlayer;
+        setups++;
+        return orig.apply(this, arguments);
+      };
+      const b = new globalThis.JABS_Battler();
+      b.__battlerSubject = { isActor: () => true };
 
-    const b = new sandbox.JABS_Battler();
-    b.getCharacter = () => fakePlayer;
+      // Act
+      b.destroy();
 
-    expect(b.getProjectileSpawnBaseDirection()).toBe(sandbox.J.ABS.Directions.LOWERRIGHT);
+      // Assert
+      expect(setups).toBe(0);
+      globalThis.PIXEL_CollisionManager.setupCollision = orig;
+    });
   });
 
-  it('getProjectileSpawnBaseDirection falls back when vector input is null', () =>
+  describe('getProjectileSpawnBaseDirection', () =>
   {
-    const fakePlayer = {
-      getVectorInputAngle()
-      {
-        return null;
-      },
-      direction()
-      {
-        return 8;
-      },
-      isDirectionFixed()
-      {
-        return false;
-      },
-    };
-    sandbox.$gamePlayer = fakePlayer;
+    it('maps the leader\'s vector input angle to an 8-directional facing', () =>
+    {
+      // Arrange
+      const fakePlayer = {
+        getVectorInputAngle: () => 45,
+        isDirectionFixed: () => false,
+      };
+      globalThis.$gamePlayer = fakePlayer;
+      const b = new globalThis.JABS_Battler();
+      b.getCharacter = () => fakePlayer;
 
-    const b = new sandbox.JABS_Battler();
-    b.getCharacter = () => fakePlayer;
+      // Act
+      const result = b.getProjectileSpawnBaseDirection();
 
-    expect(b.getProjectileSpawnBaseDirection()).toBe(8);
-  });
+      // Assert
+      expect(result).toBe(globalThis.J.ABS.Directions.LOWERRIGHT);
+    });
 
-  it('getProjectileSpawnBaseDirection uses facing when direction fix (strafe) is active, not movement vector', () =>
-  {
-    const fakePlayer = {
-      getVectorInputAngle()
-      {
-        return 180;
-      },
-      isDirectionFixed()
-      {
-        return true;
-      },
-      direction()
-      {
-        return 6;
-      },
-    };
-    sandbox.$gamePlayer = fakePlayer;
+    it('falls back to the character\'s facing when vector input is null', () =>
+    {
+      // Arrange
+      const fakePlayer = {
+        getVectorInputAngle: () => null,
+        direction: () => 8,
+        isDirectionFixed: () => false,
+      };
+      globalThis.$gamePlayer = fakePlayer;
+      const b = new globalThis.JABS_Battler();
+      b.getCharacter = () => fakePlayer;
 
-    const b = new sandbox.JABS_Battler();
-    b.getCharacter = () => fakePlayer;
+      // Act
+      const result = b.getProjectileSpawnBaseDirection();
 
-    expect(b.getProjectileSpawnBaseDirection()).toBe(6);
+      // Assert
+      expect(result).toBe(8);
+    });
+
+    it('uses facing when direction fix (strafe) is active, not the movement vector', () =>
+    {
+      // Arrange
+      const fakePlayer = {
+        getVectorInputAngle: () => 180,
+        isDirectionFixed: () => true,
+        direction: () => 6,
+      };
+      globalThis.$gamePlayer = fakePlayer;
+      const b = new globalThis.JABS_Battler();
+      b.getCharacter = () => fakePlayer;
+
+      // Act
+      const result = b.getProjectileSpawnBaseDirection();
+
+      // Assert
+      expect(result).toBe(6);
+    });
   });
 });
 //endregion plugins/pixel/ext/abs/jabs-battler-ext.test.js

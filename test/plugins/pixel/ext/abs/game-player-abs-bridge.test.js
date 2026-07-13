@@ -1,139 +1,109 @@
 //region plugins/pixel/ext/abs/game-player-abs-bridge.test.js
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadPixelAbsStackPluginVm } from '../../pixel-vm.js';
+import {
+  installPixelAbsExtHostGlobals,
+  installPixelCoreHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPixel,
+  setPluginContextToJPixelAbsExt,
+} from '../../fixtures/install-pixel-host-globals.js';
 
-describe('J-ABS-Pixelistics Game_Player bridge', () =>
+describe('J-ABS-Pixelistics Game_Player bridge (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeEach(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadPixelAbsStackPluginVm(sandbox);
+    vi.resetModules();
+
+    installPixelCoreHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/objects/Game_Character.js');
+    await import('../../../../../src/plugins/_base/objects/Game_Event.js');
+
+    setPluginContextToJPixel();
+    await import('../../../../../src/plugins/pixel/core/_metadata/initialization.js');
+
+    await import('../../../../../src/plugins/pixel/core/objects/Game_CharacterBase.js');
+    await import('../../../../../src/plugins/pixel/core/objects/Game_Character.js');
+    await import('../../../../../src/plugins/pixel/core/objects/Game_Player.js');
+
+    installPixelAbsExtHostGlobals();
+
+    setPluginContextToJPixelAbsExt();
+    await import('../../../../../src/plugins/pixel/ext/abs/_metadata/initialization.js');
+
+    // patches globalThis.Game_Player.prototype directly, no vm involved.
+    await import('../../../../../src/plugins/pixel/ext/abs/objects/Game_CharacterBase.js');
+    await import('../../../../../src/plugins/pixel/ext/abs/objects/Game_Player.js');
   });
 
-  afterEach(() =>
+  it('updateDashing clears dash state while the pivot-guard blocks motion', () =>
   {
-    sandbox = null;
-  });
-
-  it('updateDashing clears dash state while pivot-guard blocks motion', () =>
-  {
+    // Arrange
     const p = {};
-
     p._dashing = true;
-    p.isMoving = function()
-    {
-      return false;
-    };
-    p.isMovePressed = function()
-    {
-      return false;
-    };
-    p.canMove = function()
-    {
-      return true;
-    };
-    p.isInVehicle = function()
-    {
-      return false;
-    };
-    p.isDashButtonPressed = function()
-    {
-      return false;
-    };
+    p.isMoving = () => false;
+    p.isMovePressed = () => false;
+    p.canMove = () => true;
+    p.isInVehicle = () => false;
+    p.isDashButtonPressed = () => false;
 
-    sandbox.$jabsEngine = {
+    globalThis.$jabsEngine = {
       getPlayer1()
       {
         return {
-          getCharacter()
-          {
-            return p;
-          },
-          canBattlerMove()
-          {
-            return false;
-          },
-          guarding()
-          {
-            return false;
-          },
+          getCharacter: () => p,
+          canBattlerMove: () => false,
+          guarding: () => false,
         };
       },
     };
 
-    sandbox.Game_Player.prototype.updateDashing.call(p);
+    // Act
+    globalThis.Game_Player.prototype.updateDashing.call(p);
 
+    // Assert
     expect(p._dashing).toBe(false);
   });
 
-  it('moveByInput applies facing while pivot-guard blocks translation', () =>
+  it('moveByInput applies facing while the pivot-guard blocks translation', () =>
   {
-    const p = new sandbox.Game_Player();
-
+    // Arrange
+    const p = new globalThis.Game_Player();
     p.initMembers();
 
     let faced = 0;
 
-    p.getVectorInputAngle = function()
-    {
-      return null;
-    };
-    p.dir8ToAngle = function()
-    {
-      return 0;
-    };
-    p.angleToNearestDirection = function()
-    {
-      return sandbox.J.PIXEL.Directions.RIGHT;
-    };
-    p.setDirection = function(d)
-    {
-      faced = d;
-    };
-    p.checkEventTriggerTouchFront = function()
-    {
-    };
-    p.stopFollowersPixelMoving = function()
-    {
-    };
-    p.setMovePressed = function()
-    {
-    };
-    p.setMovementSuccess = function()
-    {
-    };
+    p.getVectorInputAngle = () => null;
+    p.dir8ToAngle = () => 0;
+    p.angleToNearestDirection = () => globalThis.J.PIXEL.Directions.RIGHT;
+    p.setDirection = (d) => { faced = d; };
+    p.checkEventTriggerTouchFront = () => {};
+    p.stopFollowersPixelMoving = () => {};
+    p.setMovePressed = () => {};
+    p.setMovementSuccess = () => {};
 
-    sandbox.Input.dir8 = sandbox.J.PIXEL.Directions.RIGHT;
-    sandbox.$gameTemp.clearDestination = function()
-    {
-    };
+    globalThis.Input.dir8 = globalThis.J.PIXEL.Directions.RIGHT;
+    globalThis.$gameTemp.clearDestination = () => {};
 
-    sandbox.$jabsEngine = {
+    globalThis.$jabsEngine = {
       getPlayer1()
       {
         return {
-          getCharacter()
-          {
-            return p;
-          },
-          canBattlerMove()
-          {
-            return false;
-          },
-          guarding()
-          {
-            return false;
-          },
+          getCharacter: () => p,
+          canBattlerMove: () => false,
+          guarding: () => false,
         };
       },
     };
 
-    sandbox.Game_Player.prototype.moveByInput.call(p);
+    // Act
+    globalThis.Game_Player.prototype.moveByInput.call(p);
 
-    expect(faced).toBe(sandbox.J.PIXEL.Directions.RIGHT);
+    // Assert
+    expect(faced).toBe(globalThis.J.PIXEL.Directions.RIGHT);
   });
 });
 //endregion plugins/pixel/ext/abs/game-player-abs-bridge.test.js

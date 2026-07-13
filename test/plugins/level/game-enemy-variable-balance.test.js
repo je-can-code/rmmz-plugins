@@ -1,52 +1,68 @@
 //region plugins/level/game-enemy-variable-balance.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { clearRpgManagerCacheInVm } from '../../setup/shipped-plugin-vm.js';
-import { loadLevelPluginVm, resetLevelPluginSandbox } from './level-vm.js';
+import {
+  installLevelHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJLevel,
+} from './fixtures/install-level-host-globals.js';
 
-describe('J-LevelMaster Game_Enemy variable balancer (out/J-LevelMaster.js)', () =>
+describe('J-LevelMaster Game_Enemy variable balancer (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadLevelPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installLevelHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../src/plugins/_base/managers/RPGManager.js'));
+    await import('../../../src/plugins/_base/objects/Game_BattlerBase.js');
+    await import('../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../src/plugins/_base/objects/Game_Enemy.js');
+
+    setPluginContextToJLevel();
+    await import('../../../src/plugins/level/core/_metadata/initialization.js');
+
+    await import('../../../src/plugins/level/core/objects/Game_BattlerBase.js');
+    await import('../../../src/plugins/level/core/objects/Game_Battler.js');
+    await import('../../../src/plugins/level/core/objects/Game_Enemy.js');
   });
 
   beforeEach(() =>
   {
-    resetLevelPluginSandbox(sandbox);
+    globalThis.$gameVariables._data = [];
+    globalThis.RPGManager.clearCache();
+  });
+
+  it('uses only the note-derived level when the balance variable is unset', () =>
+  {
+    // Arrange
+    const base = new globalThis.Game_Enemy();
+    base._enemyDb = { note: '<level:4>', actions: [] };
+    base.initMembers();
+
+    // Act
+    globalThis.Game_Enemy.prototype.setup.call(base, 1);
+
+    // Assert
+    expect(base.level).toBe(4);
   });
 
   it('adds the enemy balance variable to the note-derived base level', () =>
   {
-    const base = new sandbox.Game_Enemy();
-    base._enemyDb = {
-      note: '<level:4>',
-      actions: [],
-    };
-    base.initMembers();
-    sandbox.Game_Enemy.prototype.setup.call(base, 1);
-
-    expect(base.level).toBe(4);
-
-    sandbox.$gameVariables.setValue(142, 3);
-    clearRpgManagerCacheInVm(sandbox);
-
-    const adjusted = new sandbox.Game_Enemy();
-    adjusted._enemyDb = {
-      note: '<level:4>',
-      actions: [],
-    };
+    // Arrange
+    globalThis.$gameVariables.setValue(142, 3);
+    const adjusted = new globalThis.Game_Enemy();
+    adjusted._enemyDb = { note: '<level:4>', actions: [] };
     adjusted.initMembers();
-    sandbox.Game_Enemy.prototype.setup.call(adjusted, 1);
 
+    // Act
+    globalThis.Game_Enemy.prototype.setup.call(adjusted, 1);
+
+    // Assert
     expect(adjusted.level).toBe(7);
   });
 });

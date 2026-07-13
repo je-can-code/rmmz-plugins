@@ -1,19 +1,23 @@
 //region plugins/abs/ext/tools/pull-forward.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { clearRpgManagerCacheInVm } from '../../../../setup/shipped-plugin-vm.js';
-import { loadAbsToolsPluginVm } from './tools-vm.js';
+import {
+  installAbsHostGlobals,
+  setPluginContextToJAbs,
+  setPluginContextToJAbsTools,
+  setPluginContextToJBase,
+} from '../../fixtures/install-abs-host-globals.js';
+import { installPluginManagerWithParams } from '../../../../setup/install-plugin-manager-with-params.js';
 
 /**
  * Builds a minimal note-source stub carrying the given tag string, backed by the real
  * RPG_Skill prototype so `jabsPullForward`/`jabsIgnoreTerrain`/`jabsRespectTerrain` parse for real.
- * @param {object} sandbox
  * @param {string} note
  * @returns {object}
  */
-function buildSkillRow(sandbox, note)
+function buildSkillRow(note)
 {
-  const row = Object.create(sandbox.RPG_Skill.prototype);
+  const row = Object.create(globalThis.RPG_Skill.prototype);
   row.id = 1;
   row.note = note;
   row.meta = {};
@@ -24,11 +28,10 @@ function buildSkillRow(sandbox, note)
 /**
  * Builds a plain duck-typed "character" carrying only what pull-forward touches: a position,
  * an effective radius, a controllable passability predicate, and jump/isJumping tracking.
- * @param {object} sandbox
  * @param {object} [overrides]
  * @returns {object}
  */
-function buildCharacter(sandbox, overrides = {})
+function buildCharacter(overrides = {})
 {
   const character = {
     x: 0,
@@ -55,7 +58,7 @@ function buildCharacter(sandbox, overrides = {})
     {
       return this.y - y0;
     },
-    walkInDirectionClamped: sandbox.Game_CharacterBase.prototype.walkInDirectionClamped,
+    walkInDirectionClamped: globalThis.Game_CharacterBase.prototype.walkInDirectionClamped,
     ...overrides,
   };
 
@@ -65,68 +68,114 @@ function buildCharacter(sandbox, overrides = {})
 /**
  * Builds a plain duck-typed "JABS_Battler" carrying only what pull-forward touches.
  * @param {object} character
- * @param {object} [battlerNotes]
+ * @param {string[]} [notes]
  * @returns {object}
  */
-function buildJabsBattler(sandbox, character, notes = [])
+function buildJabsBattler(character, notes = [])
 {
   return {
     getCharacter: () => character,
     getX: () => character.x,
     getY: () => character.y,
     getBattler: () => ({
-      getAllNotes: () => notes.map(note => buildSkillRow(sandbox, note)),
+      getAllNotes: () => notes.map(note => buildSkillRow(note)),
     }),
-    resolvePullVector: sandbox.JABS_Battler.prototype.resolvePullVector,
-    pullToCaster: sandbox.JABS_Battler.prototype.pullToCaster,
+    resolvePullVector: globalThis.JABS_Battler.prototype.resolvePullVector,
+    pullToCaster: globalThis.JABS_Battler.prototype.pullToCaster,
   };
 }
 
-describe('J-ABS-Tools pull-forward (out/abs/ext/J-ABS-Tools.js)', () =>
+describe('J-ABS-Tools pull-forward (direct src import)', () =>
 {
-  /** @type {object} */
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadAbsToolsPluginVm(sandbox);
+    vi.resetModules();
 
-    // the shared harness's Math stub is deliberately minimal (no sqrt) for determinism
-    // elsewhere; resolvePullVector needs real sqrt, so patch it in for this sandbox only.
-    sandbox.Math.sqrt = Math.sqrt;
-  });
+    installAbsHostGlobals();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    setPluginContextToJBase();
+    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_Skill } = await import('../../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+
+    setPluginContextToJAbs();
+    await import('../../../../../src/plugins/abs/core/_metadata/initialization.js');
+
+    await import('../../../../../src/plugins/abs/core/objects/Game_CharacterBase.js');
+    await import('../../../../../src/plugins/abs/core/database/RPG_Skill.js');
+    ({ default: globalThis.JABS_Battler } = await import('../../../../../src/plugins/abs/core/models/JABS_Battler.js'));
+
+    // J-ABS-Tools requires its own plugin parameters (grabThrowEnabled/directionFixAlways).
+    installPluginManagerWithParams(globalThis, 'J-ABS-Tools', {});
+
+    setPluginContextToJAbsTools();
+    await import('../../../../../src/plugins/abs/ext/tools/_metadata/initialization.js');
+
+    // patches globalThis.JABS_Battler.prototype with resolvePullVector/pullToCaster, no vm involved.
+    await import('../../../../../src/plugins/abs/ext/tools/_models/JABS_Battler.js');
+
+    // patches globalThis.RPG_Skill.prototype with jabsPullForward/jabsRespectTerrain getters.
+    await import('../../../../../src/plugins/abs/ext/tools/database/RPG_Skill.js');
   });
 
   beforeEach(() =>
   {
-    clearRpgManagerCacheInVm(sandbox);
+    globalThis.RPGManager.clearCache();
+
+    // resolvePullVector needs real sqrt; the shared fixture's Math stub omits it for determinism
+    // elsewhere, so patch it in for this file only.
+    globalThis.Math.sqrt = Math.sqrt;
   });
 
   describe('RPG_Skill tag getters', () =>
   {
     it('jabsPullForward reads the tile magnitude', () =>
     {
-      const skill = buildSkillRow(sandbox, '<pullForward:4>');
+      // Arrange
+      const skill = buildSkillRow('<pullForward:4>');
 
-      expect(skill.jabsPullForward).toBe(4);
+      // Act
+      const result = skill.jabsPullForward;
+
+      // Assert
+      expect(result).toBe(4);
     });
 
     it('jabsPullForward is null when absent', () =>
     {
-      const skill = buildSkillRow(sandbox, '<knockback:4>');
+      // Arrange
+      const skill = buildSkillRow('<knockback:4>');
 
-      expect(skill.jabsPullForward).toBeNull();
+      // Act
+      const result = skill.jabsPullForward;
+
+      // Assert
+      expect(result).toBeNull();
     });
 
-    it('jabsRespectTerrain is true only when tagged', () =>
+    it('jabsRespectTerrain is true when tagged', () =>
     {
-      expect(buildSkillRow(sandbox, '<respectTerrain>').jabsRespectTerrain).toBe(true);
-      expect(buildSkillRow(sandbox, '<gapClose:foo>').jabsRespectTerrain).toBe(false);
+      // Arrange
+      const skill = buildSkillRow('<respectTerrain>');
+
+      // Act
+      const result = skill.jabsRespectTerrain;
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('jabsRespectTerrain is false when not tagged', () =>
+    {
+      // Arrange
+      const skill = buildSkillRow('<gapClose:foo>');
+
+      // Act
+      const result = skill.jabsRespectTerrain;
+
+      // Assert
+      expect(result).toBe(false);
     });
   });
 
@@ -134,42 +183,47 @@ describe('J-ABS-Tools pull-forward (out/abs/ext/J-ABS-Tools.js)', () =>
   {
     it('points the unit vector from the target toward the caster', () =>
     {
-      const target = buildCharacter(sandbox, { x: 0, y: 0 });
-      const jabsTarget = buildJabsBattler(sandbox, target);
+      // Arrange
+      const target = buildCharacter({ x: 0, y: 0 });
+      const jabsTarget = buildJabsBattler(target);
+      const caster = buildCharacter({ x: 5, y: 0 });
+      const jabsCaster = buildJabsBattler(caster);
 
-      const caster = buildCharacter(sandbox, { x: 5, y: 0 });
-      const jabsCaster = buildJabsBattler(sandbox, caster);
-
+      // Act
       const { unitX, unitY } = jabsTarget.resolvePullVector(jabsCaster);
 
+      // Assert
       expect(unitX).toBeCloseTo(1);
       expect(unitY).toBeCloseTo(0);
     });
 
     it('clamps maxPullDistance short of the caster edge, never past it', () =>
     {
-      const target = buildCharacter(sandbox, { x: 0, y: 0, getEffectiveRadius: () => 0.5 });
-      const jabsTarget = buildJabsBattler(sandbox, target);
+      // Arrange- distance 3, minus both 0.5 radii, minus the 0.05 buffer.
+      const target = buildCharacter({ x: 0, y: 0, getEffectiveRadius: () => 0.5 });
+      const jabsTarget = buildJabsBattler(target);
+      const caster = buildCharacter({ x: 3, y: 0, getEffectiveRadius: () => 0.5 });
+      const jabsCaster = buildJabsBattler(caster);
 
-      const caster = buildCharacter(sandbox, { x: 3, y: 0, getEffectiveRadius: () => 0.5 });
-      const jabsCaster = buildJabsBattler(sandbox, caster);
-
+      // Act
       const { maxPullDistance } = jabsTarget.resolvePullVector(jabsCaster);
 
-      // distance 3, minus both 0.5 radii, minus the 0.05 buffer.
+      // Assert
       expect(maxPullDistance).toBeCloseTo(1.95);
     });
 
     it('never returns a negative maxPullDistance when already adjacent', () =>
     {
-      const target = buildCharacter(sandbox, { x: 0, y: 0, getEffectiveRadius: () => 1 });
-      const jabsTarget = buildJabsBattler(sandbox, target);
+      // Arrange
+      const target = buildCharacter({ x: 0, y: 0, getEffectiveRadius: () => 1 });
+      const jabsTarget = buildJabsBattler(target);
+      const caster = buildCharacter({ x: 1, y: 0, getEffectiveRadius: () => 1 });
+      const jabsCaster = buildJabsBattler(caster);
 
-      const caster = buildCharacter(sandbox, { x: 1, y: 0, getEffectiveRadius: () => 1 });
-      const jabsCaster = buildJabsBattler(sandbox, caster);
-
+      // Act
       const { maxPullDistance } = jabsTarget.resolvePullVector(jabsCaster);
 
+      // Assert
       expect(maxPullDistance).toBe(0);
     });
   });
@@ -178,117 +232,124 @@ describe('J-ABS-Tools pull-forward (out/abs/ext/J-ABS-Tools.js)', () =>
   {
     it('does nothing when the skill has no <pullForward> tag', () =>
     {
-      const target = buildCharacter(sandbox, { x: 0, y: 0 });
-      const jabsTarget = buildJabsBattler(sandbox, target);
-      const jabsCaster = buildJabsBattler(sandbox, buildCharacter(sandbox, { x: 5, y: 0 }));
+      // Arrange
+      const target = buildCharacter({ x: 0, y: 0 });
+      const jabsTarget = buildJabsBattler(target);
+      const jabsCaster = buildJabsBattler(buildCharacter({ x: 5, y: 0 }));
+      const action = { getBaseSkill: () => buildSkillRow('<knockback:5>') };
 
-      const action = { getBaseSkill: () => buildSkillRow(sandbox, '<knockback:5>') };
-
+      // Act
       jabsTarget.pullToCaster(action, jabsCaster);
 
+      // Assert
       expect(target.lastJump).toBeNull();
     });
 
     it('does nothing when already being displaced', () =>
     {
-      const target = buildCharacter(sandbox, { x: 0, y: 0, _jumping: true });
-      const jabsTarget = buildJabsBattler(sandbox, target);
-      const jabsCaster = buildJabsBattler(sandbox, buildCharacter(sandbox, { x: 5, y: 0 }));
+      // Arrange
+      const target = buildCharacter({ x: 0, y: 0, _jumping: true });
+      const jabsTarget = buildJabsBattler(target);
+      const jabsCaster = buildJabsBattler(buildCharacter({ x: 5, y: 0 }));
+      const action = { getBaseSkill: () => buildSkillRow('<pullForward:3>') };
 
-      const action = { getBaseSkill: () => buildSkillRow(sandbox, '<pullForward:3>') };
-
+      // Act
       jabsTarget.pullToCaster(action, jabsCaster);
 
+      // Assert
       expect(target.lastJump).toBeNull();
     });
 
     it('pulls the target toward the caster by the tagged magnitude', () =>
     {
-      const target = buildCharacter(sandbox, { x: 0, y: 0 });
-      const jabsTarget = buildJabsBattler(sandbox, target);
-      const jabsCaster = buildJabsBattler(sandbox, buildCharacter(sandbox, { x: 10, y: 0 }));
+      // Arrange
+      const target = buildCharacter({ x: 0, y: 0 });
+      const jabsTarget = buildJabsBattler(target);
+      const jabsCaster = buildJabsBattler(buildCharacter({ x: 10, y: 0 }));
+      const action = { getBaseSkill: () => buildSkillRow('<pullForward:3>') };
 
-      const action = { getBaseSkill: () => buildSkillRow(sandbox, '<pullForward:3>') };
-
+      // Act
       jabsTarget.pullToCaster(action, jabsCaster);
 
+      // Assert
       expect(target.lastJump).toEqual([ 3, 0 ]);
     });
 
     it('clamps the pull so the target cannot overshoot past the caster', () =>
     {
-      // caster is only 2 tiles away with nonzero hitbox radii on both sides; a pull of 50
+      // Arrange- caster is only 2 tiles away with nonzero hitbox radii on both sides; a pull of 50
       // must stop flush against the caster's edge, never reaching or passing its tile.
-      const target = buildCharacter(sandbox, { x: 0, y: 0, getEffectiveRadius: () => 0.5 });
-      const jabsTarget = buildJabsBattler(sandbox, target);
-      const caster = buildCharacter(sandbox, { x: 2, y: 0, getEffectiveRadius: () => 0.5 });
-      const jabsCaster = buildJabsBattler(sandbox, caster);
+      // distance 2, minus both 0.5 radii, minus the 0.05 buffer = 0.95, rounded to 1 tile.
+      const target = buildCharacter({ x: 0, y: 0, getEffectiveRadius: () => 0.5 });
+      const jabsTarget = buildJabsBattler(target);
+      const caster = buildCharacter({ x: 2, y: 0, getEffectiveRadius: () => 0.5 });
+      const jabsCaster = buildJabsBattler(caster);
+      const action = { getBaseSkill: () => buildSkillRow('<pullForward:50>') };
 
-      const action = { getBaseSkill: () => buildSkillRow(sandbox, '<pullForward:50>') };
-
+      // Act
       jabsTarget.pullToCaster(action, jabsCaster);
 
-      // distance 2, minus both 0.5 radii, minus the 0.05 buffer = 0.95, rounded to 1 tile.
+      // Assert
       expect(target.lastJump).toEqual([ 1, 0 ]);
     });
 
     it('is dampened by knockbackResist on the target', () =>
     {
-      const target = buildCharacter(sandbox, { x: 0, y: 0 });
-      const jabsTarget = buildJabsBattler(sandbox, target, [ '<knockbackResist:50>' ]);
-      const jabsCaster = buildJabsBattler(sandbox, buildCharacter(sandbox, { x: 10, y: 0 }));
+      // Arrange
+      const target = buildCharacter({ x: 0, y: 0 });
+      const jabsTarget = buildJabsBattler(target, [ '<knockbackResist:50>' ]);
+      const jabsCaster = buildJabsBattler(buildCharacter({ x: 10, y: 0 }));
+      const action = { getBaseSkill: () => buildSkillRow('<pullForward:4>') };
 
-      const action = { getBaseSkill: () => buildSkillRow(sandbox, '<pullForward:4>') };
-
+      // Act
       jabsTarget.pullToCaster(action, jabsCaster);
 
+      // Assert
       expect(target.lastJump).toEqual([ 2, 0 ]);
     });
 
     it('is fully negated by 100 knockbackResist', () =>
     {
-      const target = buildCharacter(sandbox, { x: 0, y: 0 });
-      const jabsTarget = buildJabsBattler(sandbox, target, [ '<knockbackResist:100>' ]);
-      const jabsCaster = buildJabsBattler(sandbox, buildCharacter(sandbox, { x: 10, y: 0 }));
+      // Arrange
+      const target = buildCharacter({ x: 0, y: 0 });
+      const jabsTarget = buildJabsBattler(target, [ '<knockbackResist:100>' ]);
+      const jabsCaster = buildJabsBattler(buildCharacter({ x: 10, y: 0 }));
+      const action = { getBaseSkill: () => buildSkillRow('<pullForward:4>') };
 
-      const action = { getBaseSkill: () => buildSkillRow(sandbox, '<pullForward:4>') };
-
+      // Act
       jabsTarget.pullToCaster(action, jabsCaster);
 
+      // Assert
       expect(target.lastJump).toBeNull();
     });
 
     it('stops at the last passable tile by default', () =>
     {
-      const target = buildCharacter(sandbox, {
-        x: 0,
-        y: 0,
-        canPass: (x) => x < 2,
-      });
-      const jabsTarget = buildJabsBattler(sandbox, target);
-      const jabsCaster = buildJabsBattler(sandbox, buildCharacter(sandbox, { x: 10, y: 0 }));
+      // Arrange
+      const target = buildCharacter({ x: 0, y: 0, canPass: (x) => x < 2 });
+      const jabsTarget = buildJabsBattler(target);
+      const jabsCaster = buildJabsBattler(buildCharacter({ x: 10, y: 0 }));
+      const action = { getBaseSkill: () => buildSkillRow('<pullForward:5>') };
 
-      const action = { getBaseSkill: () => buildSkillRow(sandbox, '<pullForward:5>') };
-
+      // Act
       jabsTarget.pullToCaster(action, jabsCaster);
 
+      // Assert
       expect(target.lastJump).toEqual([ 1, 0 ]);
     });
 
     it('sails through blocked tiles when the skill carries <ignoreTerrain>', () =>
     {
-      const target = buildCharacter(sandbox, {
-        x: 0,
-        y: 0,
-        canPass: () => false,
-      });
-      const jabsTarget = buildJabsBattler(sandbox, target);
-      const jabsCaster = buildJabsBattler(sandbox, buildCharacter(sandbox, { x: 10, y: 0 }));
+      // Arrange
+      const target = buildCharacter({ x: 0, y: 0, canPass: () => false });
+      const jabsTarget = buildJabsBattler(target);
+      const jabsCaster = buildJabsBattler(buildCharacter({ x: 10, y: 0 }));
+      const action = { getBaseSkill: () => buildSkillRow('<pullForward:5>\n<ignoreTerrain>') };
 
-      const action = { getBaseSkill: () => buildSkillRow(sandbox, '<pullForward:5>\n<ignoreTerrain>') };
-
+      // Act
       jabsTarget.pullToCaster(action, jabsCaster);
 
+      // Assert
       expect(target.lastJump).toEqual([ 5, 0 ]);
     });
   });

@@ -1,184 +1,127 @@
 //region plugins/popups/merge-controller-keys.test.js
-import fs from 'node:fs';
-import path from 'node:path';
-import vm from 'node:vm';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { describe, expect, it } from 'vitest';
-
-import { repoRoot } from '../../setup/repo-root.js';
-
-/**
- * Reads merge-controller source for VM eval (strips ESM export the browser ship does not use in isolation).
- *
- * @returns {string}
- */
-function readMergeControllerSourceForVm()
+describe('JABS_PopupMergeController (direct src import)', () =>
 {
-  const mergePath = path.join(
-    repoRoot,
-    'src/plugins/popups/ext/abs/managers/JABS_PopupMergeController.js',
-  );
+  let JABS_PopupMergeController;
 
-  return fs.readFileSync(mergePath, 'utf8')
-    .replace(/\nexport default JABS_PopupMergeController;\r?\n/, '\n');
-}
+  beforeAll(async () =>
+  {
+    vi.resetModules();
 
-/**
- * Minimal host surface so {@link src/plugins/popups/ext/abs/managers/JABS_PopupMergeController.js}
- * evaluates in isolation (merge key helpers + `start()` wiring).
- *
- * @param {object} sandbox VM global object.
- */
-function installMergeControllerHarness(sandbox)
-{
-  sandbox.Graphics = {
-    frameCount: 0,
-  };
-  sandbox.TextPopManager = {
-    show()
-    {
-    },
-  };
-  sandbox.TextPopSpriteManager = {
-    convert()
-    {
-      return {
-        releaseAccumulatePhase: null,
-        destroyed: false,
-        refreshDisplayedValue: null,
-        _j: {
-          _popups: {
-            _sourcePopup: {
-              value: '',
+    // minimal host surface so this file evaluates in isolation (merge key helpers + start() wiring),
+    // matching this file's pre-existing convention of not booting the whole J-Base/J-Popups stack.
+    globalThis.Graphics = { frameCount: 0 };
+    globalThis.TextPopManager = { show() {} };
+    globalThis.TextPopSpriteManager = {
+      convert()
+      {
+        return {
+          releaseAccumulatePhase: null,
+          destroyed: false,
+          refreshDisplayedValue: null,
+          _j: { _popups: { _sourcePopup: { value: '' } } },
+        };
+      },
+    };
+    globalThis.J = {
+      POPUPS: {
+        Helpers: {
+          PopupEmitter: { on() {} },
+        },
+        EventNames: {
+          MergeFlushAll: 'popups/merge-flush-all',
+          ComboChainCleared: 'popups/combo-chain-cleared',
+        },
+        EXT: {
+          ABS: {
+            Metadata: {
+              mergeParams: { idleFlushFrames: 90 },
             },
           },
         },
-      };
-    },
-  };
-
-  sandbox.J = {
-    POPUPS: {
-      Helpers: {
-        PopupEmitter: {
-          on()
-          {
-          },
+        Layout: {
+          Motion: { Enabled: false },
         },
+        resolveMotionOffset: () => ({ x: 0, y: 0 }),
+        consumeLayoutRingOffset: () => ({ x: 0, y: 0 }),
+        findSpriteCharacterForGameCharacter: () => null,
       },
-      EventNames: {
-        MergeFlushAll: 'popups/merge-flush-all',
-        ComboChainCleared: 'popups/combo-chain-cleared',
-      },
-      EXT: {
-        ABS: {
-          Metadata: {
-            mergeParams: {
-              idleFlushFrames: 90,
-            },
-          },
-        },
-      },
-      Layout: {
-        Motion: {
-          Enabled: false,
-        },
-      },
-      resolveMotionOffset()
-      {
-        return {
-          x: 0,
-          y: 0,
-        };
-      },
-      consumeLayoutRingOffset()
-      {
-        return {
-          x: 0,
-          y: 0,
-        };
-      },
-      findSpriteCharacterForGameCharacter()
-      {
-        return null;
-      },
-    },
-  };
-}
-
-describe('JABS_PopupMergeController (evaluated from src)', () =>
-{
-  it('buildStrikeMergeKey groups one aggregate lane per popup type + heal/harm', () =>
-  {
-    const sandbox = {
-      console,
     };
 
-    installMergeControllerHarness(sandbox);
-    vm.createContext(sandbox);
-
-    const code = `${readMergeControllerSourceForVm()
-    }\nglobalThis.__jabsMergeControllerExport = JABS_PopupMergeController;\n`;
-
-    vm.runInContext(code, sandbox, {
-      filename: path.join(repoRoot, 'src/plugins/popups/ext/abs/managers/JABS_PopupMergeController.js'),
-    });
-
-    const Merge = sandbox.__jabsMergeControllerExport;
-
-    expect(Merge.buildStrikeMergeKey({ popupType: 'hp-damage', healing: false })).toBe(
-      'strike|hp-damage|harm',
-    );
-    expect(Merge.buildStrikeMergeKey({ popupType: 'hp-damage', healing: true })).toBe(
-      'strike|hp-damage|heal',
-    );
-    expect(Merge.buildStrikeMergeKey({ popupType: 'mp-damage', healing: false })).toBe(
-      'strike|mp-damage|harm',
-    );
+    ({ default: JABS_PopupMergeController } = await import('../../../src/plugins/popups/ext/abs/managers/JABS_PopupMergeController.js'));
   });
 
-  it('buildSlipMergeKey mirrors strike polarity split on slip streams', () =>
+  describe('buildStrikeMergeKey', () =>
   {
-    const sandbox = {
-      console,
-    };
+    it('groups a harm hp-damage popup into its own aggregate lane', () =>
+    {
+      // Arrange & Act
+      const result = JABS_PopupMergeController.buildStrikeMergeKey({ popupType: 'hp-damage', healing: false });
 
-    installMergeControllerHarness(sandbox);
-    vm.createContext(sandbox);
-
-    const code = `${readMergeControllerSourceForVm()
-    }\nglobalThis.__jabsMergeControllerExport = JABS_PopupMergeController;\n`;
-
-    vm.runInContext(code, sandbox, {
-      filename: path.join(repoRoot, 'src/plugins/popups/ext/abs/managers/JABS_PopupMergeController.js'),
+      // Assert
+      expect(result).toBe('strike|hp-damage|harm');
     });
 
-    const Merge = sandbox.__jabsMergeControllerExport;
+    it('splits a heal hp-damage popup into a distinct lane from harm', () =>
+    {
+      // Arrange & Act
+      const result = JABS_PopupMergeController.buildStrikeMergeKey({ popupType: 'hp-damage', healing: true });
 
-    expect(Merge.buildSlipMergeKey({ popupType: 'slip', healing: false })).toBe('slip|slip|harm');
-    expect(Merge.buildSlipMergeKey({ popupType: 'slip', healing: true })).toBe('slip|slip|heal');
+      // Assert
+      expect(result).toBe('strike|hp-damage|heal');
+    });
+
+    it('groups a harm mp-damage popup into its own aggregate lane', () =>
+    {
+      // Arrange & Act
+      const result = JABS_PopupMergeController.buildStrikeMergeKey({ popupType: 'mp-damage', healing: false });
+
+      // Assert
+      expect(result).toBe('strike|mp-damage|harm');
+    });
   });
 
-  it('buildMitigationMergeKey and buildRewardMergeKey are stable stream ids', () =>
+  describe('buildSlipMergeKey', () =>
   {
-    const sandbox = {
-      console,
-    };
+    it('mirrors the strike harm/heal polarity split for a harm slip', () =>
+    {
+      // Arrange & Act
+      const result = JABS_PopupMergeController.buildSlipMergeKey({ popupType: 'slip', healing: false });
 
-    installMergeControllerHarness(sandbox);
-    vm.createContext(sandbox);
-
-    const code = `${readMergeControllerSourceForVm()
-    }\nglobalThis.__jabsMergeControllerExport = JABS_PopupMergeController;\n`;
-
-    vm.runInContext(code, sandbox, {
-      filename: path.join(repoRoot, 'src/plugins/popups/ext/abs/managers/JABS_PopupMergeController.js'),
+      // Assert
+      expect(result).toBe('slip|slip|harm');
     });
 
-    const Merge = sandbox.__jabsMergeControllerExport;
+    it('mirrors the strike harm/heal polarity split for a heal slip', () =>
+    {
+      // Arrange & Act
+      const result = JABS_PopupMergeController.buildSlipMergeKey({ popupType: 'slip', healing: true });
 
-    expect(Merge.buildMitigationMergeKey('parry')).toBe('mitigation|parry');
-    expect(Merge.buildRewardMergeKey('sdp')).toBe('reward|sdp');
+      // Assert
+      expect(result).toBe('slip|slip|heal');
+    });
+  });
+
+  describe('buildMitigationMergeKey / buildRewardMergeKey', () =>
+  {
+    it('builds a stable mitigation stream id', () =>
+    {
+      // Arrange & Act
+      const result = JABS_PopupMergeController.buildMitigationMergeKey('parry');
+
+      // Assert
+      expect(result).toBe('mitigation|parry');
+    });
+
+    it('builds a stable reward stream id', () =>
+    {
+      // Arrange & Act
+      const result = JABS_PopupMergeController.buildRewardMergeKey('sdp');
+
+      // Assert
+      expect(result).toBe('reward|sdp');
+    });
   });
 });
 //endregion plugins/popups/merge-controller-keys.test.js

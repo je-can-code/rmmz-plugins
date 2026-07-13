@@ -1,73 +1,131 @@
 //region plugins/level/level-scaling.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadLevelPluginVm } from './level-vm.js';
+import {
+  installLevelHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJLevel,
+} from './fixtures/install-level-host-globals.js';
 
-describe('J-LevelMaster LevelScaling (out/J-LevelMaster.js)', () =>
+describe('J-LevelMaster LevelScaling (direct src import)', () =>
 {
-  let sandbox;
+  let LevelScaling;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadLevelPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installLevelHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJLevel();
+    await import('../../../src/plugins/level/core/_metadata/initialization.js');
+
+    // patches globalThis.Game_System.prototype directly, no vm involved.
+    await import('../../../src/plugins/level/core/objects/Game_System.js');
+
+    ({ default: LevelScaling } = await import('../../../src/plugins/level/core/managers/LevelScaling.js'));
   });
 
   it('returns 1 inside the invariant band for default metadata', () =>
   {
-    expect(sandbox.LevelScaling.calculate(1)).toBe(1);
+    // Arrange & Act
+    const result = LevelScaling.calculate(1);
+
+    // Assert
+    expect(result).toBe(1);
   });
 
   it('clamps upward growth to the configured maximum multiplier', () =>
   {
-    expect(sandbox.LevelScaling.calculate(20)).toBe(2);
-  });
+    // Arrange & Act
+    const result = LevelScaling.calculate(20);
 
-  it('returns 1 when scaling is disabled on the game system', () =>
-  {
-    sandbox.$gameSystem = new sandbox.Game_System();
-    sandbox.$gameSystem.initialize();
-    sandbox.$gameSystem.disableLevelScaling();
-    expect(sandbox.LevelScaling.multiplier(10, 10)).toBe(1);
-  });
-
-  it('applies multiplier when scaling is enabled on the game system', () =>
-  {
-    sandbox.$gameSystem = new sandbox.Game_System();
-    sandbox.$gameSystem.initialize();
-    sandbox.$gameSystem.enableLevelScaling();
-    const m = sandbox.LevelScaling.multiplier(20, 10);
-    expect(m).toBeGreaterThan(1);
-    expect(m).toBeLessThanOrEqual(2);
-  });
-
-  it('returns 1 when either level input is zero (non-level battler)', () =>
-  {
-    sandbox.$gameSystem = new sandbox.Game_System();
-    sandbox.$gameSystem.initialize();
-    sandbox.$gameSystem.enableLevelScaling();
-    expect(sandbox.LevelScaling.multiplier(0, 10)).toBe(1);
-    expect(sandbox.LevelScaling.multiplier(10, 0)).toBe(1);
+    // Assert
+    expect(result).toBe(2);
   });
 
   it('clamps large negative level differences to the minimum multiplier', () =>
   {
-    expect(sandbox.LevelScaling.calculate(-30)).toBe(0.1);
+    // Arrange & Act
+    const result = LevelScaling.calculate(-30);
+
+    // Assert
+    expect(result).toBe(0.1);
   });
 
-  it('uses reward clamp profile when scope is REWARD', () =>
+  it('returns 1 when scaling is disabled on the game system', () =>
   {
-    sandbox.$gameSystem = new sandbox.Game_System();
-    sandbox.$gameSystem.initialize();
-    sandbox.$gameSystem.enableLevelScaling();
-    sandbox.J.LEVEL.Metadata.rewardMaximumMultiplier = 1.5;
-    const combatMul = sandbox.LevelScaling.multiplier(20, 10, sandbox.LevelScaling.Scope.COMBAT);
-    const rewardMul = sandbox.LevelScaling.multiplier(20, 10, sandbox.LevelScaling.Scope.REWARD);
+    // Arrange
+    globalThis.$gameSystem = new globalThis.Game_System();
+    globalThis.$gameSystem.initialize();
+    globalThis.$gameSystem.disableLevelScaling();
+
+    // Act
+    const result = LevelScaling.multiplier(10, 10);
+
+    // Assert
+    expect(result).toBe(1);
+  });
+
+  it('applies a multiplier greater than 1 when scaling is enabled and the level gap favors it', () =>
+  {
+    // Arrange
+    globalThis.$gameSystem = new globalThis.Game_System();
+    globalThis.$gameSystem.initialize();
+    globalThis.$gameSystem.enableLevelScaling();
+
+    // Act
+    const result = LevelScaling.multiplier(20, 10);
+
+    // Assert
+    expect(result).toBeGreaterThan(1);
+    expect(result).toBeLessThanOrEqual(2);
+  });
+
+  it('returns 1 when the subject level is zero (non-level battler)', () =>
+  {
+    // Arrange
+    globalThis.$gameSystem = new globalThis.Game_System();
+    globalThis.$gameSystem.initialize();
+    globalThis.$gameSystem.enableLevelScaling();
+
+    // Act
+    const result = LevelScaling.multiplier(0, 10);
+
+    // Assert
+    expect(result).toBe(1);
+  });
+
+  it('returns 1 when the target level is zero (non-level battler)', () =>
+  {
+    // Arrange
+    globalThis.$gameSystem = new globalThis.Game_System();
+    globalThis.$gameSystem.initialize();
+    globalThis.$gameSystem.enableLevelScaling();
+
+    // Act
+    const result = LevelScaling.multiplier(10, 0);
+
+    // Assert
+    expect(result).toBe(1);
+  });
+
+  it('uses the reward clamp profile when scope is REWARD, distinct from COMBAT scope', () =>
+  {
+    // Arrange
+    globalThis.$gameSystem = new globalThis.Game_System();
+    globalThis.$gameSystem.initialize();
+    globalThis.$gameSystem.enableLevelScaling();
+    globalThis.J.LEVEL.Metadata.rewardMaximumMultiplier = 1.5;
+
+    // Act
+    const combatMul = LevelScaling.multiplier(20, 10, LevelScaling.Scope.COMBAT);
+    const rewardMul = LevelScaling.multiplier(20, 10, LevelScaling.Scope.REWARD);
+
+    // Assert
     expect(combatMul).toBe(1.9);
     expect(rewardMul).toBe(1.5);
   });

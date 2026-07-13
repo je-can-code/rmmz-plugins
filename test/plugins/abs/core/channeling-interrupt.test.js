@@ -1,19 +1,21 @@
 //region plugins/abs/core/channeling-interrupt.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { clearRpgManagerCacheInVm } from '../../../setup/shipped-plugin-vm.js';
-import { loadAbsPluginVm } from '../abs-vm.js';
+import {
+  installAbsHostGlobals,
+  setPluginContextToJAbs,
+  setPluginContextToJBase,
+} from '../fixtures/install-abs-host-globals.js';
 
 /**
  * Builds a minimal note-source stub carrying the given tag string, backed by the real
- * RPG_Skill prototype so the new channel/interrupt getters parse for real.
- * @param {object} sandbox
+ * RPG_Skill prototype so the channel/interrupt getters parse for real.
  * @param {string} note
  * @returns {object}
  */
-function buildSkillRow(sandbox, note)
+function buildSkillRow(note)
 {
-  const row = Object.create(sandbox.RPG_Skill.prototype);
+  const row = Object.create(globalThis.RPG_Skill.prototype);
   row.id = 1;
   row.note = note;
   row.meta = {};
@@ -25,12 +27,11 @@ function buildSkillRow(sandbox, note)
  * Builds a fake `JABS_Action` exposing only what the channel/interrupt machinery touches.
  * A frozen target location is always supplied so `resolveActionTargetCoordinates` never falls
  * through to the much heavier live-resolution machinery.
- * @param {object} sandbox
  * @param {object} skill The backing skill row.
  * @param {object} [overrides]
  * @returns {object}
  */
-function buildAction(sandbox, skill, overrides = {})
+function buildAction(skill, overrides = {})
 {
   return {
     getBaseSkill: () => skill,
@@ -46,14 +47,13 @@ function buildAction(sandbox, skill, overrides = {})
 
 /**
  * Builds a plain duck-typed "JABS_Battler" carrying only what channeling/interruption touches,
- * borrowing the real prototype methods under test directly from the compiled plugin.
- * @param {object} sandbox
+ * borrowing the real prototype methods under test directly from the real class.
  * @param {string[]} [notes] Battler-wide note sources for immunity checks.
  * @returns {object}
  */
-function buildJabsBattler(sandbox, notes = [])
+function buildJabsBattler(notes = [])
 {
-  const proto = sandbox.JABS_Battler.prototype;
+  const proto = globalThis.JABS_Battler.prototype;
 
   return {
     _casting: false,
@@ -66,8 +66,8 @@ function buildJabsBattler(sandbox, notes = [])
     _decidedAction: null,
     getUuid: () => 'test-uuid',
     getBattler: () => ({
-      getAllNotes: () => notes.map(note => buildSkillRow(sandbox, note)),
-      isImmuneToInterrupt: sandbox.Game_Battler.prototype.isImmuneToInterrupt,
+      getAllNotes: () => notes.map(note => buildSkillRow(note)),
+      isImmuneToInterrupt: globalThis.Game_Battler.prototype.isImmuneToInterrupt,
     }),
     isCasting: proto.isCasting,
     getCastTimeCountdown: proto.getCastTimeCountdown,
@@ -90,58 +90,78 @@ function buildJabsBattler(sandbox, notes = [])
   };
 }
 
-describe('J-ABS channeling and interruption (out/abs/J-ABS.js)', () =>
+describe('J-ABS channeling and interruption (direct src import)', () =>
 {
-  /** @type {object} */
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadAbsPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installAbsHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_Skill } = await import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+
+    // RPG_UsableItem.js (abs) patches this bare global's prototype- must be the same module instance
+    // RPG_Skill extends, so jabsInterruptMagnifier lands on RPG_Skill's real prototype chain.
+    ({ default: globalThis.RPG_UsableItem } = await import('../../../../src/plugins/_base/database/core/RPG_UsableItem.js'));
+
+    setPluginContextToJAbs();
+    await import('../../../../src/plugins/abs/core/_metadata/initialization.js');
+
+    // patches globalThis.RPG_Skill.prototype with the channel/onChannelComplete tag getters.
+    await import('../../../../src/plugins/abs/core/database/RPG_Skill.js');
+
+    // patches globalThis.RPG_UsableItem.prototype with jabsInterruptMagnifier and other shared tags.
+    await import('../../../../src/plugins/abs/core/database/RPG_UsableItem.js');
+
+    // patches globalThis.Game_Battler.prototype directly, no vm involved.
+    await import('../../../../src/plugins/abs/core/objects/Game_Battler.js');
+
+    // the real JABS_Battler/JABS_Engine classes- not prototype patches, but genuine classes with
+    // beginChannel/processChannelingTimer/interrupt/checkInterrupt defined directly in their bodies.
+    ({ default: globalThis.JABS_Battler } = await import('../../../../src/plugins/abs/core/models/JABS_Battler.js'));
+    ({ default: globalThis.JABS_Engine } = await import('../../../../src/plugins/abs/core/managers/JABS_Engine.js'));
   });
 
   beforeEach(() =>
   {
-    clearRpgManagerCacheInVm(sandbox);
+    globalThis.RPGManager.clearCache();
 
     // the real plugin script declares `$jabsEngine` itself (starting out null), clobbering
     // whatever the harness's stub set it to- so (re)build the whole global fresh per test with
     // call-tracking mocks for everything channeling/interruption touches.
-    sandbox.$jabsEngine = {
+    globalThis.$jabsEngine = {
       __forceMapActionCalls: [],
       forceMapAction(caster, skillId, isRetaliation, targetX, targetY)
       {
-        sandbox.$jabsEngine.__forceMapActionCalls.push({ skillId, targetX, targetY });
+        globalThis.$jabsEngine.__forceMapActionCalls.push({ skillId, targetX, targetY });
       },
 
       __paySkillCostsCalls: [],
       paySkillCosts(caster, action)
       {
-        sandbox.$jabsEngine.__paySkillCostsCalls.push(action);
+        globalThis.$jabsEngine.__paySkillCostsCalls.push(action);
       },
 
       __logSkillExecutionCalls: [],
       logSkillExecution(uuid, skillId, stypeId)
       {
-        sandbox.$jabsEngine.__logSkillExecutionCalls.push({ uuid, skillId, stypeId });
+        globalThis.$jabsEngine.__logSkillExecutionCalls.push({ uuid, skillId, stypeId });
       },
 
       __applyCooldownCountersCalls: [],
       applyCooldownCounters(caster, action)
       {
-        sandbox.$jabsEngine.__applyCooldownCountersCalls.push(action);
+        globalThis.$jabsEngine.__applyCooldownCountersCalls.push(action);
       },
 
       __applyCooldownValueForSkillCalls: [],
       applyCooldownValueForSkill(caster, action, cooldownValue)
       {
-        sandbox.$jabsEngine.__applyCooldownValueForSkillCalls.push({ action, cooldownValue });
+        globalThis.$jabsEngine.__applyCooldownValueForSkillCalls.push({ action, cooldownValue });
       },
     };
   });
@@ -150,60 +170,158 @@ describe('J-ABS channeling and interruption (out/abs/J-ABS.js)', () =>
   {
     it('jabsChannel parses the [skillId, duration] pair', () =>
     {
-      const skill = buildSkillRow(sandbox, '<channel:[25, 180]>');
+      // Arrange
+      const skill = buildSkillRow('<channel:[25, 180]>');
 
-      expect(skill.jabsChannel).toEqual([ 25, 180 ]);
+      // Act
+      const result = skill.jabsChannel;
+
+      // Assert
+      expect(result).toEqual([ 25, 180 ]);
     });
 
     it('jabsChannel defaults to an empty array when absent', () =>
     {
-      const skill = buildSkillRow(sandbox, '<castTime:60>');
+      // Arrange
+      const skill = buildSkillRow('<castTime:60>');
 
-      expect(skill.jabsChannel).toEqual([]);
+      // Act
+      const result = skill.jabsChannel;
+
+      // Assert
+      expect(result).toEqual([]);
     });
 
     it('jabsChannelTickSpeed reads an explicit override', () =>
     {
-      const skill = buildSkillRow(sandbox, '<channelTickSpeed:15>');
+      // Arrange
+      const skill = buildSkillRow('<channelTickSpeed:15>');
 
-      expect(skill.jabsChannelTickSpeed).toBe(15);
+      // Act
+      const result = skill.jabsChannelTickSpeed;
+
+      // Assert
+      expect(result).toBe(15);
     });
 
     it('jabsChannelTickSpeed falls back to the plugin default when omitted', () =>
     {
-      const skill = buildSkillRow(sandbox, '<channel:[25, 180]>');
+      // Arrange
+      const skill = buildSkillRow('<channel:[25, 180]>');
 
-      expect(skill.jabsChannelTickSpeed).toBe(sandbox.J.ABS.Metadata.DefaultChannelTickSpeed);
+      // Act
+      const result = skill.jabsChannelTickSpeed;
+
+      // Assert
+      expect(result).toBe(globalThis.J.ABS.Metadata.DefaultChannelTickSpeed);
     });
 
-    it('jabsOnChannelComplete parses one or more skill ids', () =>
+    it('jabsOnChannelComplete parses a single skill id', () =>
     {
-      const single = buildSkillRow(sandbox, '<onChannelComplete:[36]>');
-      const multiple = buildSkillRow(sandbox, '<onChannelComplete:[36, 37, 38]>');
+      // Arrange
+      const skill = buildSkillRow('<onChannelComplete:[36]>');
 
-      expect(single.jabsOnChannelComplete).toEqual([ 36 ]);
-      expect(multiple.jabsOnChannelComplete).toEqual([ 36, 37, 38 ]);
+      // Act
+      const result = skill.jabsOnChannelComplete;
+
+      // Assert
+      expect(result).toEqual([ 36 ]);
+    });
+
+    it('jabsOnChannelComplete parses multiple skill ids', () =>
+    {
+      // Arrange
+      const skill = buildSkillRow('<onChannelComplete:[36, 37, 38]>');
+
+      // Act
+      const result = skill.jabsOnChannelComplete;
+
+      // Assert
+      expect(result).toEqual([ 36, 37, 38 ]);
     });
 
     it('jabsOnChannelComplete defaults to an empty array when absent', () =>
     {
-      const skill = buildSkillRow(sandbox, '<channel:[25, 180]>');
+      // Arrange
+      const skill = buildSkillRow('<channel:[25, 180]>');
 
-      expect(skill.jabsOnChannelComplete).toEqual([]);
+      // Act
+      const result = skill.jabsOnChannelComplete;
+
+      // Assert
+      expect(result).toEqual([]);
     });
 
-    it('jabsCannotMoveToInterrupt and jabsThisCannotBeInterrupted are true only when tagged', () =>
+    it('jabsCannotMoveToInterrupt is true when tagged', () =>
     {
-      expect(buildSkillRow(sandbox, '<cannotMoveToInterrupt>').jabsCannotMoveToInterrupt).toBe(true);
-      expect(buildSkillRow(sandbox, '<castTime:60>').jabsCannotMoveToInterrupt).toBe(false);
-      expect(buildSkillRow(sandbox, '<thisCannotBeInterrupted>').jabsThisCannotBeInterrupted).toBe(true);
-      expect(buildSkillRow(sandbox, '<castTime:60>').jabsThisCannotBeInterrupted).toBe(false);
+      // Arrange
+      const skill = buildSkillRow('<cannotMoveToInterrupt>');
+
+      // Act
+      const result = skill.jabsCannotMoveToInterrupt;
+
+      // Assert
+      expect(result).toBe(true);
     });
 
-    it('jabsInterruptMagnifier reads the percent, defaulting to 0 (no interrupt capability)', () =>
+    it('jabsCannotMoveToInterrupt is false when not tagged', () =>
     {
-      expect(buildSkillRow(sandbox, '<interrupt:200>').jabsInterruptMagnifier).toBe(200);
-      expect(buildSkillRow(sandbox, '<knockback:4>').jabsInterruptMagnifier).toBe(0);
+      // Arrange
+      const skill = buildSkillRow('<castTime:60>');
+
+      // Act
+      const result = skill.jabsCannotMoveToInterrupt;
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('jabsThisCannotBeInterrupted is true when tagged', () =>
+    {
+      // Arrange
+      const skill = buildSkillRow('<thisCannotBeInterrupted>');
+
+      // Act
+      const result = skill.jabsThisCannotBeInterrupted;
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('jabsThisCannotBeInterrupted is false when not tagged', () =>
+    {
+      // Arrange
+      const skill = buildSkillRow('<castTime:60>');
+
+      // Act
+      const result = skill.jabsThisCannotBeInterrupted;
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('jabsInterruptMagnifier reads the tagged percent', () =>
+    {
+      // Arrange
+      const skill = buildSkillRow('<interrupt:200>');
+
+      // Act
+      const result = skill.jabsInterruptMagnifier;
+
+      // Assert
+      expect(result).toBe(200);
+    });
+
+    it('jabsInterruptMagnifier defaults to 0 (no interrupt capability) when absent', () =>
+    {
+      // Arrange
+      const skill = buildSkillRow('<knockback:4>');
+
+      // Act
+      const result = skill.jabsInterruptMagnifier;
+
+      // Assert
+      expect(result).toBe(0);
     });
   });
 
@@ -211,18 +329,28 @@ describe('J-ABS channeling and interruption (out/abs/J-ABS.js)', () =>
   {
     it('is true when any note source carries <cannotBeInterrupted>', () =>
     {
-      const notes = [ buildSkillRow(sandbox, '<cannotBeInterrupted>') ];
+      // Arrange
+      const notes = [ buildSkillRow('<cannotBeInterrupted>') ];
       const battler = { getAllNotes: () => notes };
 
-      expect(sandbox.Game_Battler.prototype.isImmuneToInterrupt.call(battler)).toBe(true);
+      // Act
+      const result = globalThis.Game_Battler.prototype.isImmuneToInterrupt.call(battler);
+
+      // Assert
+      expect(result).toBe(true);
     });
 
     it('is false when no note source carries the tag', () =>
     {
-      const notes = [ buildSkillRow(sandbox, '<knockback:4>') ];
+      // Arrange
+      const notes = [ buildSkillRow('<knockback:4>') ];
       const battler = { getAllNotes: () => notes };
 
-      expect(sandbox.Game_Battler.prototype.isImmuneToInterrupt.call(battler)).toBe(false);
+      // Act
+      const result = globalThis.Game_Battler.prototype.isImmuneToInterrupt.call(battler);
+
+      // Assert
+      expect(result).toBe(false);
     });
   });
 
@@ -230,83 +358,107 @@ describe('J-ABS channeling and interruption (out/abs/J-ABS.js)', () =>
   {
     it('pays cost once, logs the execution, and begins channeling without firing an immediate tick', () =>
     {
-      const skill = buildSkillRow(sandbox, '<channel:[25, 180]>\n<channelTickSpeed:30>');
-      const action = buildAction(sandbox, skill);
-      const battler = buildJabsBattler(sandbox);
+      // Arrange
+      const skill = buildSkillRow('<channel:[25, 180]>\n<channelTickSpeed:30>');
+      const action = buildAction(skill);
+      const battler = buildJabsBattler();
 
+      // Act
       battler.beginChannel(action);
 
-      expect(sandbox.$jabsEngine.__paySkillCostsCalls).toHaveLength(1);
-      expect(sandbox.$jabsEngine.__logSkillExecutionCalls).toHaveLength(1);
+      // Assert
+      expect(globalThis.$jabsEngine.__paySkillCostsCalls).toHaveLength(1);
+      expect(globalThis.$jabsEngine.__logSkillExecutionCalls).toHaveLength(1);
       expect(battler.isChanneling()).toBe(true);
       expect(battler.getChannelDurationRemaining()).toBe(180);
-      expect(sandbox.$jabsEngine.__forceMapActionCalls).toHaveLength(0);
+      expect(globalThis.$jabsEngine.__forceMapActionCalls).toHaveLength(0);
     });
   });
 
   describe('processChannelingTimer', () =>
   {
-    it('fires the child skill only after the tick interval elapses, not on the first frame', () =>
+    it('does not fire the child skill before the tick interval elapses', () =>
     {
-      const skill = buildSkillRow(sandbox, '<channel:[25, 180]>\n<channelTickSpeed:30>');
-      const action = buildAction(sandbox, skill);
-      const battler = buildJabsBattler(sandbox);
+      // Arrange
+      const skill = buildSkillRow('<channel:[25, 180]>\n<channelTickSpeed:30>');
+      const action = buildAction(skill);
+      const battler = buildJabsBattler();
       battler.beginChannel(action);
 
-      // 29 frames: not yet a tick.
+      // Act- 29 frames: not yet a tick.
       for (let i = 0; i < 29; i++) battler.processChannelingTimer();
-      expect(sandbox.$jabsEngine.__forceMapActionCalls).toHaveLength(0);
 
-      // the 30th frame fires the first tick, targeting the frozen location.
+      // Assert
+      expect(globalThis.$jabsEngine.__forceMapActionCalls).toHaveLength(0);
+    });
+
+    it('fires the child skill at the frozen target location once the tick interval elapses', () =>
+    {
+      // Arrange
+      const skill = buildSkillRow('<channel:[25, 180]>\n<channelTickSpeed:30>');
+      const action = buildAction(skill);
+      const battler = buildJabsBattler();
+      battler.beginChannel(action);
+      for (let i = 0; i < 29; i++) battler.processChannelingTimer();
+
+      // Act- the 30th frame fires the first tick.
       battler.processChannelingTimer();
-      expect(sandbox.$jabsEngine.__forceMapActionCalls).toEqual([
+
+      // Assert
+      expect(globalThis.$jabsEngine.__forceMapActionCalls).toEqual([
         { skillId: 25, targetX: 7, targetY: 9 },
       ]);
     });
 
     it('fires exactly floor(duration / tickSpeed) ticks over the full duration', () =>
     {
-      const skill = buildSkillRow(sandbox, '<channel:[25, 180]>\n<channelTickSpeed:30>');
-      const action = buildAction(sandbox, skill);
-      const battler = buildJabsBattler(sandbox);
+      // Arrange
+      const skill = buildSkillRow('<channel:[25, 180]>\n<channelTickSpeed:30>');
+      const action = buildAction(skill);
+      const battler = buildJabsBattler();
       battler.beginChannel(action);
 
+      // Act
       for (let i = 0; i < 180; i++) battler.processChannelingTimer();
 
-      expect(sandbox.$jabsEngine.__forceMapActionCalls).toHaveLength(6);
+      // Assert
+      expect(globalThis.$jabsEngine.__forceMapActionCalls).toHaveLength(6);
       expect(battler.isChanneling()).toBe(false);
     });
 
     it('fires the <onChannelComplete> payoff exactly once, only on natural completion', () =>
     {
-      const skill = buildSkillRow(
-        sandbox,
-        '<channel:[25, 60]>\n<channelTickSpeed:30>\n<onChannelComplete:[36]>');
-      const action = buildAction(sandbox, skill);
-      const battler = buildJabsBattler(sandbox);
+      // Arrange
+      const skill = buildSkillRow('<channel:[25, 60]>\n<channelTickSpeed:30>\n<onChannelComplete:[36]>');
+      const action = buildAction(skill);
+      const battler = buildJabsBattler();
       battler.beginChannel(action);
 
+      // Act
       for (let i = 0; i < 60; i++) battler.processChannelingTimer();
 
-      // 2 ticks of skill 25, then 1 payoff execution of skill 36.
-      expect(sandbox.$jabsEngine.__forceMapActionCalls).toEqual([
+      // Assert- 2 ticks of skill 25, then 1 payoff execution of skill 36.
+      expect(globalThis.$jabsEngine.__forceMapActionCalls).toEqual([
         { skillId: 25, targetX: 7, targetY: 9 },
         { skillId: 25, targetX: 7, targetY: 9 },
         { skillId: 36, targetX: 7, targetY: 9 },
       ]);
-      expect(sandbox.$jabsEngine.__applyCooldownCountersCalls).toHaveLength(1);
+      expect(globalThis.$jabsEngine.__applyCooldownCountersCalls).toHaveLength(1);
     });
 
     it('does not fire any payoff when the skill omits <onChannelComplete>', () =>
     {
-      const skill = buildSkillRow(sandbox, '<channel:[25, 30]>\n<channelTickSpeed:30>');
-      const action = buildAction(sandbox, skill);
-      const battler = buildJabsBattler(sandbox);
+      // Arrange
+      const skill = buildSkillRow('<channel:[25, 30]>\n<channelTickSpeed:30>');
+      const action = buildAction(skill);
+      const battler = buildJabsBattler();
       battler.beginChannel(action);
 
+      // Act
       for (let i = 0; i < 30; i++) battler.processChannelingTimer();
 
-      expect(sandbox.$jabsEngine.__forceMapActionCalls).toEqual([
+      // Assert
+      expect(globalThis.$jabsEngine.__forceMapActionCalls).toEqual([
         { skillId: 25, targetX: 7, targetY: 9 },
       ]);
     });
@@ -316,77 +468,89 @@ describe('J-ABS channeling and interruption (out/abs/J-ABS.js)', () =>
   {
     it('does nothing when the battler is neither casting nor channeling', () =>
     {
-      const battler = buildJabsBattler(sandbox);
+      // Arrange
+      const battler = buildJabsBattler();
 
+      // Act
       battler.interrupt(200, false);
 
-      expect(sandbox.$jabsEngine.__applyCooldownValueForSkillCalls).toHaveLength(0);
+      // Assert
+      expect(globalThis.$jabsEngine.__applyCooldownValueForSkillCalls).toHaveLength(0);
     });
 
     it('self-interrupt (moving) applies the full effective cooldown, regardless of magnifier', () =>
     {
-      const skill = buildSkillRow(sandbox, '<channel:[25, 180]>\n<channelTickSpeed:30>');
-      const action = buildAction(sandbox, skill, { getCooldown: () => 75 });
-      const battler = buildJabsBattler(sandbox);
+      // Arrange
+      const skill = buildSkillRow('<channel:[25, 180]>\n<channelTickSpeed:30>');
+      const action = buildAction(skill, { getCooldown: () => 75 });
+      const battler = buildJabsBattler();
       battler.beginChannel(action);
 
+      // Act
       battler.interrupt(200, true);
 
+      // Assert
       expect(battler.isChanneling()).toBe(false);
-      expect(sandbox.$jabsEngine.__applyCooldownValueForSkillCalls).toEqual([
+      expect(globalThis.$jabsEngine.__applyCooldownValueForSkillCalls).toEqual([
         { action, cooldownValue: 75 },
       ]);
       // no payoff, no further ticks: interrupting is not natural completion.
-      expect(sandbox.$jabsEngine.__forceMapActionCalls).toHaveLength(0);
-      expect(sandbox.$jabsEngine.__applyCooldownCountersCalls).toHaveLength(0);
+      expect(globalThis.$jabsEngine.__forceMapActionCalls).toHaveLength(0);
+      expect(globalThis.$jabsEngine.__applyCooldownCountersCalls).toHaveLength(0);
     });
 
     it('external interrupt scales the cooldown penalty by the magnifier (75 * 200% = 150)', () =>
     {
-      const skill = buildSkillRow(sandbox, '<channel:[25, 180]>\n<channelTickSpeed:30>');
-      const action = buildAction(sandbox, skill, { getCooldown: () => 75 });
-      const battler = buildJabsBattler(sandbox);
+      // Arrange
+      const skill = buildSkillRow('<channel:[25, 180]>\n<channelTickSpeed:30>');
+      const action = buildAction(skill, { getCooldown: () => 75 });
+      const battler = buildJabsBattler();
       battler.beginChannel(action);
 
+      // Act
       battler.interrupt(200, false);
 
-      expect(sandbox.$jabsEngine.__applyCooldownValueForSkillCalls).toEqual([
+      // Assert
+      expect(globalThis.$jabsEngine.__applyCooldownValueForSkillCalls).toEqual([
         { action, cooldownValue: 150 },
       ]);
     });
 
     it('interrupting a cast discards the decided action so it never executes', () =>
     {
-      const skill = buildSkillRow(sandbox, '<castTime:60>');
-      const action = buildAction(sandbox, skill, { getCooldown: () => 40 });
-      const battler = buildJabsBattler(sandbox);
+      // Arrange
+      const skill = buildSkillRow('<castTime:60>');
+      const action = buildAction(skill, { getCooldown: () => 40 });
+      const battler = buildJabsBattler();
       battler._casting = true;
       battler._castTimeCountdown = 30;
       battler.setDecidedAction([ action ]);
 
+      // Act
       battler.interrupt(100, false);
 
+      // Assert
       expect(battler.isCasting()).toBe(false);
       expect(battler.isActionDecided()).toBe(false);
-      expect(sandbox.$jabsEngine.__applyCooldownValueForSkillCalls).toEqual([
+      expect(globalThis.$jabsEngine.__applyCooldownValueForSkillCalls).toEqual([
         { action, cooldownValue: 40 },
       ]);
     });
 
     it('already-fired ticks stand when a channel is interrupted mid-way', () =>
     {
-      const skill = buildSkillRow(sandbox, '<channel:[25, 180]>\n<channelTickSpeed:30>');
-      const action = buildAction(sandbox, skill);
-      const battler = buildJabsBattler(sandbox);
+      // Arrange
+      const skill = buildSkillRow('<channel:[25, 180]>\n<channelTickSpeed:30>');
+      const action = buildAction(skill);
+      const battler = buildJabsBattler();
       battler.beginChannel(action);
-
       for (let i = 0; i < 30; i++) battler.processChannelingTimer();
-      expect(sandbox.$jabsEngine.__forceMapActionCalls).toHaveLength(1);
 
+      // Act
       battler.interrupt(100, true);
 
-      // the one tick that already fired is not undone, but no more follow.
-      expect(sandbox.$jabsEngine.__forceMapActionCalls).toHaveLength(1);
+      // Assert- the one tick that already fired is not undone, but no more follow.
+      expect(globalThis.$jabsEngine.__forceMapActionCalls).toHaveLength(1);
     });
   });
 
@@ -398,7 +562,7 @@ describe('J-ABS channeling and interruption (out/abs/J-ABS.js)', () =>
      */
     function buildEngine()
     {
-      return { checkInterrupt: sandbox.JABS_Engine.prototype.checkInterrupt };
+      return { checkInterrupt: globalThis.JABS_Engine.prototype.checkInterrupt };
     }
 
     /**
@@ -410,7 +574,7 @@ describe('J-ABS channeling and interruption (out/abs/J-ABS.js)', () =>
     {
       const {
         busy = true,
-        inFlightSkill = buildSkillRow(sandbox, '<castTime:60>'),
+        inFlightSkill = buildSkillRow('<castTime:60>'),
         immune = false,
       } = options;
 
@@ -429,56 +593,71 @@ describe('J-ABS channeling and interruption (out/abs/J-ABS.js)', () =>
 
     it('does nothing when the target is not casting or channeling', () =>
     {
+      // Arrange
       const engine = buildEngine();
       const target = buildTarget({ busy: false });
-      const action = buildAction(sandbox, buildSkillRow(sandbox, '<interrupt:200>'));
+      const action = buildAction(buildSkillRow('<interrupt:200>'));
 
+      // Act
       engine.checkInterrupt(action, target);
 
+      // Assert
       expect(target.__interruptCalls).toHaveLength(0);
     });
 
     it('does nothing when the attacking skill carries no <interrupt> tag', () =>
     {
+      // Arrange
       const engine = buildEngine();
       const target = buildTarget();
-      const action = buildAction(sandbox, buildSkillRow(sandbox, '<knockback:4>'));
+      const action = buildAction(buildSkillRow('<knockback:4>'));
 
+      // Act
       engine.checkInterrupt(action, target);
 
+      // Assert
       expect(target.__interruptCalls).toHaveLength(0);
     });
 
     it('interrupts with the attacking skill\'s magnifier when nothing blocks it', () =>
     {
+      // Arrange
       const engine = buildEngine();
       const target = buildTarget();
-      const action = buildAction(sandbox, buildSkillRow(sandbox, '<interrupt:200>'));
+      const action = buildAction(buildSkillRow('<interrupt:200>'));
 
+      // Act
       engine.checkInterrupt(action, target);
 
+      // Assert
       expect(target.__interruptCalls).toEqual([ { magnifier: 200, isSelf: false } ]);
     });
 
     it('is blocked by <thisCannotBeInterrupted> on the target\'s own in-flight skill', () =>
     {
+      // Arrange
       const engine = buildEngine();
-      const target = buildTarget({ inFlightSkill: buildSkillRow(sandbox, '<thisCannotBeInterrupted>') });
-      const action = buildAction(sandbox, buildSkillRow(sandbox, '<interrupt:200>'));
+      const target = buildTarget({ inFlightSkill: buildSkillRow('<thisCannotBeInterrupted>') });
+      const action = buildAction(buildSkillRow('<interrupt:200>'));
 
+      // Act
       engine.checkInterrupt(action, target);
 
+      // Assert
       expect(target.__interruptCalls).toHaveLength(0);
     });
 
     it('is blocked by battler-wide <cannotBeInterrupted> immunity', () =>
     {
+      // Arrange
       const engine = buildEngine();
       const target = buildTarget({ immune: true });
-      const action = buildAction(sandbox, buildSkillRow(sandbox, '<interrupt:200>'));
+      const action = buildAction(buildSkillRow('<interrupt:200>'));
 
+      // Act
       engine.checkInterrupt(action, target);
 
+      // Assert
       expect(target.__interruptCalls).toHaveLength(0);
     });
   });

@@ -1,27 +1,46 @@
 //region plugins/popups/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadPopupsPluginVm } from './popups-vm.js';
+import {
+  installPopupsHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPopups,
+} from './fixtures/install-popups-host-globals.js';
 
-describe('J-Popups metadata (out/popups/J-Popups.js)', () =>
+describe('J-Popups metadata (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadPopupsPluginVm(sandbox);
+    vi.resetModules();
+
+    installPopupsHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    // real J-Base class- extends PIXI.utils.EventEmitter, so must be imported after PIXI is stubbed.
+    ({ default: globalThis.J_EventEmitter } = await import('../../../src/plugins/_base/models/J_EventEmitter.js'));
+
+    setPluginContextToJPopups();
+    await import('../../../src/plugins/popups/core/_metadata/initialization.js');
   });
 
-  afterAll(() =>
+  it('initializes J.POPUPS.Metadata.name', () =>
   {
-    sandbox = null;
+    // Arrange & Act
+    const result = globalThis.J.POPUPS.Metadata.name;
+
+    // Assert
+    expect(result).toBe('J-Popups');
   });
 
-  it('initializes J.POPUPS metadata', () =>
+  it('initializes J.POPUPS.Metadata.disablePopups', () =>
   {
-    expect(sandbox.J.POPUPS.Metadata.name).toBe('J-Popups');
-    expect(sandbox.J.POPUPS.Metadata.disablePopups).toBe(false);
+    // Arrange & Act
+    const result = globalThis.J.POPUPS.Metadata.disablePopups;
+
+    // Assert
+    expect(result).toBe(false);
   });
 });
 //endregion plugins/popups/metadata.test.js

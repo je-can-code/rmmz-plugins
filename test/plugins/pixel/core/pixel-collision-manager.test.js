@@ -1,184 +1,293 @@
 //region plugins/pixel/core/pixel-collision-manager.test.js
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { DEFAULT_PIXEL_CORE_PLUGIN_PARAMS } from '../fixtures/pixel-plugin-params.js';
-import { loadPixelCorePluginVm } from '../pixel-vm.js';
+import {
+  buildDefaultPixelGameMap,
+  installPixelCoreHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPixel,
+} from '../fixtures/install-pixel-host-globals.js';
 
-function freshOpenCollision(sandbox)
+function freshOpenCollision()
 {
-  sandbox.PIXEL_CollisionManager.initConfig();
-  sandbox.PIXEL_CollisionManager.setupCollision();
+  globalThis.PIXEL_CollisionManager.initConfig();
+  globalThis.PIXEL_CollisionManager.setupCollision();
 }
 
-describe('J-Pixelistics PIXEL_CollisionManager', () =>
+describe('J-Pixelistics PIXEL_CollisionManager (direct src import)', () =>
 {
-  let sandbox;
+  beforeAll(async () =>
+  {
+    vi.resetModules();
+
+    installPixelCoreHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJPixel();
+    await import('../../../../src/plugins/pixel/core/_metadata/initialization.js');
+
+    ({ default: globalThis.PIXEL_CollisionManager } = await import('../../../../src/plugins/pixel/core/managers/PIXEL_CollisionManager.js'));
+  });
 
   beforeEach(() =>
   {
-    sandbox = { console };
-    loadPixelCorePluginVm(sandbox);
-  });
-
-  afterEach(() =>
-  {
-    sandbox = null;
+    globalThis.$gameMap = buildDefaultPixelGameMap();
+    globalThis.J.PIXEL.Metadata.CollisionStepCount = 4;
   });
 
   it('initConfig runs without throwing', () =>
   {
-    expect(() => sandbox.PIXEL_CollisionManager.initConfig()).not.toThrow();
+    // Arrange & Act
+    const act = () => globalThis.PIXEL_CollisionManager.initConfig();
+
+    // Assert
+    expect(act).not.toThrow();
   });
 
   it('setupCollision builds an open map and isPositionPassable returns true inside bounds', () =>
   {
-    freshOpenCollision(sandbox);
+    // Arrange
+    freshOpenCollision();
 
-    expect(sandbox.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, sandbox.J.PIXEL.Directions.DOWN)).toBe(true);
+    // Act
+    const result = globalThis.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, globalThis.J.PIXEL.Directions.DOWN);
+
+    // Assert
+    expect(result).toBe(true);
   });
 
   it('marks every subcell solid when tile passability never allows entry', () =>
   {
-    sandbox.$gameMap.isPassable = function()
+    // Arrange
+    globalThis.$gameMap.isPassable = function()
     {
       return false;
     };
-    freshOpenCollision(sandbox);
+    freshOpenCollision();
 
-    expect(sandbox.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, sandbox.J.PIXEL.Directions.RIGHT)).toBe(false);
+    // Act
+    const result = globalThis.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, globalThis.J.PIXEL.Directions.RIGHT);
+
+    // Assert
+    expect(result).toBe(false);
   });
 
-  it('returns false for positions outside the map', () =>
+  it('returns false for a position left of the map', () =>
   {
-    freshOpenCollision(sandbox);
+    // Arrange
+    freshOpenCollision();
 
-    expect(sandbox.PIXEL_CollisionManager.isPositionPassable(-1, 0.5, sandbox.J.PIXEL.Directions.RIGHT)).toBe(
-      false,
-    );
-    expect(sandbox.PIXEL_CollisionManager.isPositionPassable(5, 0.5, sandbox.J.PIXEL.Directions.RIGHT)).toBe(
-      false,
-    );
+    // Act
+    const result = globalThis.PIXEL_CollisionManager.isPositionPassable(-1, 0.5, globalThis.J.PIXEL.Directions.RIGHT);
+
+    // Assert
+    expect(result).toBe(false);
+  });
+
+  it('returns false for a position right of the map', () =>
+  {
+    // Arrange
+    freshOpenCollision();
+
+    // Act
+    const result = globalThis.PIXEL_CollisionManager.isPositionPassable(5, 0.5, globalThis.J.PIXEL.Directions.RIGHT);
+
+    // Assert
+    expect(result).toBe(false);
   });
 
   it('skips rebuilding when $gameMap is missing', () =>
   {
-    const prev = sandbox.$gameMap;
+    // Arrange
+    globalThis.$gameMap = null;
 
-    sandbox.$gameMap = null;
-    expect(() => sandbox.PIXEL_CollisionManager.setupCollision()).not.toThrow();
-    sandbox.$gameMap = prev;
+    // Act
+    const act = () => globalThis.PIXEL_CollisionManager.setupCollision();
+
+    // Assert
+    expect(act).not.toThrow();
   });
 
   it('skips rebuilding when $dataMap is missing', () =>
   {
-    const prev = sandbox.$dataMap;
+    // Arrange
+    const prevDataMap = globalThis.$dataMap;
+    globalThis.$dataMap = null;
 
-    sandbox.$dataMap = null;
-    expect(() => sandbox.PIXEL_CollisionManager.setupCollision()).not.toThrow();
-    sandbox.$dataMap = prev;
+    // Act
+    const act = () => globalThis.PIXEL_CollisionManager.setupCollision();
+
+    // Assert
+    expect(act).not.toThrow();
+    globalThis.$dataMap = prevDataMap;
   });
 
-  it('sizes the subcell table by collisionStepCount on a 2×2 map', () =>
+  describe('subcell table sizing by collisionStepCount', () =>
   {
-    const tableLen = (step) =>
+    it('sizes a 1-step table to 4 entries on a 2x2 map', () =>
     {
-      sandbox = { console };
-      loadPixelCorePluginVm(sandbox, {
-        coreParams: {
-          ...DEFAULT_PIXEL_CORE_PLUGIN_PARAMS,
-          collisionStepCount: `${step}`,
-        },
-      });
-      freshOpenCollision(sandbox);
+      // Arrange
+      globalThis.J.PIXEL.Metadata.CollisionStepCount = 1;
 
-      return sandbox.PIXEL_CollisionManager._table.length;
-    };
+      // Act
+      freshOpenCollision();
 
-    expect(tableLen(1)).toBe(4);
-    expect(tableLen(2)).toBe(16);
-    expect(tableLen(4)).toBe(64);
+      // Assert
+      expect(globalThis.PIXEL_CollisionManager._table.length).toBe(4);
+    });
+
+    it('sizes a 2-step table to 16 entries on a 2x2 map', () =>
+    {
+      // Arrange
+      globalThis.J.PIXEL.Metadata.CollisionStepCount = 2;
+
+      // Act
+      freshOpenCollision();
+
+      // Assert
+      expect(globalThis.PIXEL_CollisionManager._table.length).toBe(16);
+    });
+
+    it('sizes a 4-step table to 64 entries on a 2x2 map', () =>
+    {
+      // Arrange
+      globalThis.J.PIXEL.Metadata.CollisionStepCount = 4;
+
+      // Act
+      freshOpenCollision();
+
+      // Assert
+      expect(globalThis.PIXEL_CollisionManager._table.length).toBe(64);
+    });
   });
 
   it('derives collisionSize from collisionStepCount', () =>
   {
-    sandbox = { console };
-    loadPixelCorePluginVm(sandbox, {
-      coreParams: {
-        ...DEFAULT_PIXEL_CORE_PLUGIN_PARAMS,
-        collisionStepCount: '2',
-      },
+    // Arrange
+    globalThis.J.PIXEL.Metadata.CollisionStepCount = 2;
+
+    // Act
+    globalThis.PIXEL_CollisionManager.initConfig();
+
+    // Assert
+    expect(globalThis.PIXEL_CollisionManager.collisionStepCount).toBe(2);
+    expect(globalThis.PIXEL_CollisionManager.collisionSize).toBe(0.5);
+  });
+
+  describe('table codes', () =>
+  {
+    it('VerticalLine blocks vertical entry', () =>
+    {
+      // Arrange
+      const Codes = globalThis.PIXEL_CollisionManager.Codes;
+      freshOpenCollision();
+      globalThis.PIXEL_CollisionManager._set(0.5, 0.5, Codes.VerticalLine);
+
+      // Act
+      const result = globalThis.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, globalThis.J.PIXEL.Directions.UP);
+
+      // Assert
+      expect(result).toBe(false);
     });
-    sandbox.PIXEL_CollisionManager.initConfig();
 
-    expect(sandbox.PIXEL_CollisionManager.collisionStepCount).toBe(2);
-    expect(sandbox.PIXEL_CollisionManager.collisionSize).toBe(0.5);
-  });
+    it('VerticalLine does not block horizontal entry', () =>
+    {
+      // Arrange
+      const Codes = globalThis.PIXEL_CollisionManager.Codes;
+      freshOpenCollision();
+      globalThis.PIXEL_CollisionManager._set(0.5, 0.5, Codes.VerticalLine);
 
-  it('treats VerticalLine as blocking vertical entry only', () =>
-  {
-    const Codes = sandbox.PIXEL_CollisionManager.Codes;
+      // Act
+      const result = globalThis.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, globalThis.J.PIXEL.Directions.RIGHT);
 
-    freshOpenCollision(sandbox);
-    sandbox.PIXEL_CollisionManager._set(0.5, 0.5, Codes.VerticalLine);
+      // Assert
+      expect(result).toBe(true);
+    });
 
-    expect(sandbox.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, sandbox.J.PIXEL.Directions.UP)).toBe(
-      false,
-    );
-    expect(sandbox.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, sandbox.J.PIXEL.Directions.RIGHT)).toBe(
-      true,
-    );
-  });
+    it('HorizontalLine blocks horizontal entry', () =>
+    {
+      // Arrange
+      const Codes = globalThis.PIXEL_CollisionManager.Codes;
+      freshOpenCollision();
+      globalThis.PIXEL_CollisionManager._set(0.5, 0.5, Codes.HorizontalLine);
 
-  it('treats HorizontalLine as blocking horizontal entry only', () =>
-  {
-    const Codes = sandbox.PIXEL_CollisionManager.Codes;
+      // Act
+      const result = globalThis.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, globalThis.J.PIXEL.Directions.LEFT);
 
-    freshOpenCollision(sandbox);
-    sandbox.PIXEL_CollisionManager._set(0.5, 0.5, Codes.HorizontalLine);
+      // Assert
+      expect(result).toBe(false);
+    });
 
-    expect(sandbox.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, sandbox.J.PIXEL.Directions.LEFT)).toBe(
-      false,
-    );
-    expect(sandbox.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, sandbox.J.PIXEL.Directions.DOWN)).toBe(
-      true,
-    );
-  });
+    it('HorizontalLine does not block vertical entry', () =>
+    {
+      // Arrange
+      const Codes = globalThis.PIXEL_CollisionManager.Codes;
+      freshOpenCollision();
+      globalThis.PIXEL_CollisionManager._set(0.5, 0.5, Codes.HorizontalLine);
 
-  it('blocks movement into corners from every direction', () =>
-  {
-    const Codes = sandbox.PIXEL_CollisionManager.Codes;
+      // Act
+      const result = globalThis.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, globalThis.J.PIXEL.Directions.DOWN);
 
-    freshOpenCollision(sandbox);
-    sandbox.PIXEL_CollisionManager._set(0.25, 0.25, Codes.CornerTopLeft);
+      // Assert
+      expect(result).toBe(true);
+    });
 
-    expect(sandbox.PIXEL_CollisionManager.isPositionPassable(0.25, 0.25, sandbox.J.PIXEL.Directions.RIGHT)).toBe(
-      false,
-    );
-  });
+    it('CornerTopLeft blocks movement into it from every direction', () =>
+    {
+      // Arrange
+      const Codes = globalThis.PIXEL_CollisionManager.Codes;
+      freshOpenCollision();
+      globalThis.PIXEL_CollisionManager._set(0.25, 0.25, Codes.CornerTopLeft);
 
-  it('respects EdgeLeft for directionally blocked approach', () =>
-  {
-    const Codes = sandbox.PIXEL_CollisionManager.Codes;
+      // Act
+      const result = globalThis.PIXEL_CollisionManager.isPositionPassable(0.25, 0.25, globalThis.J.PIXEL.Directions.RIGHT);
 
-    freshOpenCollision(sandbox);
-    sandbox.PIXEL_CollisionManager._set(0.5, 0.5, Codes.EdgeLeft);
+      // Assert
+      expect(result).toBe(false);
+    });
 
-    expect(sandbox.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, sandbox.J.PIXEL.Directions.LEFT)).toBe(
-      false,
-    );
-    expect(sandbox.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, sandbox.J.PIXEL.Directions.RIGHT)).toBe(
-      true,
-    );
-  });
+    it('EdgeLeft blocks the directionally-matching approach', () =>
+    {
+      // Arrange
+      const Codes = globalThis.PIXEL_CollisionManager.Codes;
+      freshOpenCollision();
+      globalThis.PIXEL_CollisionManager._set(0.5, 0.5, Codes.EdgeLeft);
 
-  it('defaults unknown table codes to passable', () =>
-  {
-    freshOpenCollision(sandbox);
-    sandbox.PIXEL_CollisionManager._set(0.5, 0.5, 99999);
+      // Act
+      const result = globalThis.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, globalThis.J.PIXEL.Directions.LEFT);
 
-    expect(sandbox.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, sandbox.J.PIXEL.Directions.DOWN)).toBe(
-      true,
-    );
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('EdgeLeft does not block the opposite approach', () =>
+    {
+      // Arrange
+      const Codes = globalThis.PIXEL_CollisionManager.Codes;
+      freshOpenCollision();
+      globalThis.PIXEL_CollisionManager._set(0.5, 0.5, Codes.EdgeLeft);
+
+      // Act
+      const result = globalThis.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, globalThis.J.PIXEL.Directions.RIGHT);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('defaults unknown table codes to passable', () =>
+    {
+      // Arrange
+      freshOpenCollision();
+      globalThis.PIXEL_CollisionManager._set(0.5, 0.5, 99999);
+
+      // Act
+      const result = globalThis.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, globalThis.J.PIXEL.Directions.DOWN);
+
+      // Assert
+      expect(result).toBe(true);
+    });
   });
 });
 //endregion plugins/pixel/core/pixel-collision-manager.test.js

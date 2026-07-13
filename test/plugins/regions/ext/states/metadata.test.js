@@ -1,26 +1,35 @@
 //region plugins/regions/ext/states/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadRegionsStatesStackVm } from '../../regions-vm.js';
+import {
+  installRegionsStatesStackHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJRegions,
+  setPluginContextToJRegionsStates,
+} from '../../fixtures/install-regions-host-globals.js';
 
-describe('J-Regions-States stack metadata (out/regions/ext/J-Regions-States.js)', () =>
+describe('J-Regions-States stack metadata (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadRegionsStatesStackVm(sandbox);
+    vi.resetModules();
+
+    installRegionsStatesStackHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJRegions();
+    await import('../../../../../src/plugins/regions/core/_metadata/initialization.js');
+
+    setPluginContextToJRegionsStates();
+    await import('../../../../../src/plugins/regions/ext/states/_metadata/initialization.js');
   });
 
-  afterAll(() =>
+  it('exposes the states extension application delay from plugin parameters', () =>
   {
-    sandbox = null;
-  });
-
-  it('exposes states extension metadata delay', () =>
-  {
-    expect(Number(sandbox.J.REGIONS.EXT.STATES.Metadata.delayBetweenApplications)).toBe(15);
+    // Arrange & Act & Assert
+    expect(Number(globalThis.J.REGIONS.EXT.STATES.Metadata.delayBetweenApplications)).toBe(15);
   });
 });
 //endregion plugins/regions/ext/states/metadata.test.js

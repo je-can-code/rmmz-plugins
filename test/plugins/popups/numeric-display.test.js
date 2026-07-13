@@ -1,46 +1,124 @@
 //region plugins/popups/numeric-display.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadPopupsPluginVm } from './popups-vm.js';
+import {
+  installPopupsHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPopups,
+} from './fixtures/install-popups-host-globals.js';
 
-describe('PopupNumericDisplay.formatNumericPopupDisplayString (out/popups/J-Popups.js)', () =>
+describe('PopupNumericDisplay.formatNumericPopupDisplayString (direct src import)', () =>
 {
-  let sandbox;
+  let PopupNumericDisplay;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadPopupsPluginVm(sandbox);
+    vi.resetModules();
+
+    installPopupsHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.J_EventEmitter } = await import('../../../src/plugins/_base/models/J_EventEmitter.js'));
+
+    setPluginContextToJPopups();
+    await import('../../../src/plugins/popups/core/_metadata/initialization.js');
+
+    ({ default: PopupNumericDisplay } = await import('../../../src/plugins/popups/core/helpers/PopupNumericDisplay.js'));
   });
 
-  afterAll(() =>
+  describe('rounds float dust', () =>
   {
-    sandbox = null;
+    it('rounds a plain decimal string', () =>
+    {
+      // Arrange & Act
+      const result = PopupNumericDisplay.formatNumericPopupDisplayString('12.000000000000001');
+
+      // Assert
+      expect(result).toBe('12');
+    });
+
+    it('rounds a plain decimal number', () =>
+    {
+      // Arrange & Act
+      const result = PopupNumericDisplay.formatNumericPopupDisplayString(11.9999999999998);
+
+      // Assert
+      expect(result).toBe('12');
+    });
   });
 
-  it('rounds float dust on plain decimals', () =>
+  describe('preserves letter-bearing labels', () =>
   {
-    expect(sandbox.PopupNumericDisplay.formatNumericPopupDisplayString('12.000000000000001')).toBe('12');
-    expect(sandbox.PopupNumericDisplay.formatNumericPopupDisplayString(11.9999999999998)).toBe('12');
+    it('leaves a "PARRY x3" label untouched', () =>
+    {
+      // Arrange & Act
+      const result = PopupNumericDisplay.formatNumericPopupDisplayString('PARRY x3');
+
+      // Assert
+      expect(result).toBe('PARRY x3');
+    });
+
+    it('leaves a "Missed" label untouched', () =>
+    {
+      // Arrange & Act
+      const result = PopupNumericDisplay.formatNumericPopupDisplayString('Missed');
+
+      // Assert
+      expect(result).toBe('Missed');
+    });
   });
 
-  it('preserves letter-bearing labels', () =>
+  describe('normalizes signed integers', () =>
   {
-    expect(sandbox.PopupNumericDisplay.formatNumericPopupDisplayString('PARRY x3')).toBe('PARRY x3');
-    expect(sandbox.PopupNumericDisplay.formatNumericPopupDisplayString('Missed')).toBe('Missed');
+    it('leaves a clean negative integer as-is', () =>
+    {
+      // Arrange & Act
+      const result = PopupNumericDisplay.formatNumericPopupDisplayString('-9');
+
+      // Assert
+      expect(result).toBe('-9');
+    });
+
+    it('rounds float dust on a negative decimal', () =>
+    {
+      // Arrange & Act
+      const result = PopupNumericDisplay.formatNumericPopupDisplayString('-9.000000000000002');
+
+      // Assert
+      expect(result).toBe('-9');
+    });
   });
 
-  it('normalizes signed integers', () =>
+  describe('healing/regen display (isHealing flag)', () =>
   {
-    expect(sandbox.PopupNumericDisplay.formatNumericPopupDisplayString('-9')).toBe('-9');
-    expect(sandbox.PopupNumericDisplay.formatNumericPopupDisplayString('-9.000000000000002')).toBe('-9');
-  });
+    it('flips a negative value to +magnitude', () =>
+    {
+      // Arrange & Act
+      const result = PopupNumericDisplay.formatNumericPopupDisplayString('-9', true);
 
-  it('shows healing/regen as +magnitude when flagged', () =>
-  {
-    expect(sandbox.PopupNumericDisplay.formatNumericPopupDisplayString('-9', true)).toBe('+9');
-    expect(sandbox.PopupNumericDisplay.formatNumericPopupDisplayString('9', true)).toBe('+9');
-    expect(sandbox.PopupNumericDisplay.formatNumericPopupDisplayString('-9.000000000000002', true)).toBe('+9');
+      // Assert
+      expect(result).toBe('+9');
+    });
+
+    it('prefixes an already-positive value with +', () =>
+    {
+      // Arrange & Act
+      const result = PopupNumericDisplay.formatNumericPopupDisplayString('9', true);
+
+      // Assert
+      expect(result).toBe('+9');
+    });
+
+    it('rounds float dust before flipping the sign', () =>
+    {
+      // Arrange & Act
+      const result = PopupNumericDisplay.formatNumericPopupDisplayString('-9.000000000000002', true);
+
+      // Assert
+      expect(result).toBe('+9');
+    });
   });
 });
 //endregion plugins/popups/numeric-display.test.js

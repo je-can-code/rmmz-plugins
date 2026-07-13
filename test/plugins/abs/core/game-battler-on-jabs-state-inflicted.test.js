@@ -1,17 +1,18 @@
 //region plugins/abs/core/game-battler-on-jabs-state-inflicted.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { clearRpgManagerCacheInVm } from '../../../setup/shipped-plugin-vm.js';
-import { loadAbsPluginVm } from '../abs-vm.js';
+import {
+  installAbsHostGlobals,
+  setPluginContextToJAbs,
+  setPluginContextToJBase,
+} from '../fixtures/install-abs-host-globals.js';
 
 /**
  * Builds a minimal battler stub exposing only what {@link Game_Battler#handleAddingJabsState}
  * touches, so the hook can be exercised without a full JABS_State/JABS_Engine pipeline.
- *
- * @param {object} sandbox
  * @returns {object}
  */
-function buildMinimalBattler(sandbox)
+function buildMinimalBattler()
 {
   const battler = {
     isStateAddable: () => true,
@@ -25,42 +26,42 @@ function buildMinimalBattler(sandbox)
   };
 
   // bind the real handleAddingJabsState implementation onto this plain mock object.
-  battler.handleAddingJabsState = sandbox.Game_Battler.prototype.handleAddingJabsState;
+  battler.handleAddingJabsState = globalThis.Game_Battler.prototype.handleAddingJabsState;
 
   return battler;
 }
 
-describe('J-ABS Game_Battler#onJabsStateInflicted (out/abs/J-ABS.js)', () =>
+describe('J-ABS Game_Battler#onJabsStateInflicted (direct src import)', () =>
 {
-  /** @type {object} */
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadAbsPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
-  });
+    installAbsHostGlobals();
 
-  beforeEach(() =>
-  {
-    clearRpgManagerCacheInVm(sandbox);
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+
+    setPluginContextToJAbs();
+    await import('../../../../src/plugins/abs/core/_metadata/initialization.js');
+
+    // patches globalThis.Game_Battler.prototype directly, no vm involved.
+    await import('../../../../src/plugins/abs/core/objects/Game_Battler.js');
   });
 
   it('fires onJabsStateInflicted with the state id and attacker after tracking is settled', () =>
   {
-    const battler = buildMinimalBattler(sandbox);
+    // Arrange
+    const battler = buildMinimalBattler();
     const attacker = { name: 'attacker' };
 
+    // Act
     battler.handleAddingJabsState(14, attacker);
 
+    // Assert- fired after JABS tracking is registered, not before.
     expect(battler.onJabsStateInflicted).toHaveBeenCalledWith(14, attacker);
-
-    // fired after JABS tracking is registered, not before.
     const inflictedOrder = battler.onJabsStateInflicted.mock.invocationCallOrder[0];
     const trackedOrder = battler.addJabsState.mock.invocationCallOrder[0];
     expect(inflictedOrder).toBeGreaterThan(trackedOrder);
@@ -68,29 +69,30 @@ describe('J-ABS Game_Battler#onJabsStateInflicted (out/abs/J-ABS.js)', () =>
 
   it('fires again on reapplication, unlike a first-application-only hook', () =>
   {
-    const battler = buildMinimalBattler(sandbox);
-
-    // simulate the state already being affected (a reapplication, not a first application).
+    // Arrange- simulate the state already being affected (a reapplication, not a first application).
+    const battler = buildMinimalBattler();
     battler.isStateAffected = () => true;
-
     const attacker = { name: 'attacker' };
 
+    // Act
     battler.handleAddingJabsState(14, attacker);
     battler.handleAddingJabsState(14, attacker);
 
+    // Assert- addNewState is only for first applications; reapplication should skip it entirely.
     expect(battler.onJabsStateInflicted).toHaveBeenCalledTimes(2);
-
-    // addNewState is only for first applications; reapplication should skip it entirely.
     expect(battler.addNewState).not.toHaveBeenCalled();
   });
 
   it('does not fire when the state is not addable', () =>
   {
-    const battler = buildMinimalBattler(sandbox);
+    // Arrange
+    const battler = buildMinimalBattler();
     battler.isStateAddable = () => false;
 
+    // Act
     battler.handleAddingJabsState(14, { name: 'attacker' });
 
+    // Assert
     expect(battler.onJabsStateInflicted).not.toHaveBeenCalled();
   });
 });

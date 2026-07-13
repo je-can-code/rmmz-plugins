@@ -1,58 +1,146 @@
 //region plugins/popups/game-character-textpops.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadPopupsPluginVm } from './popups-vm.js';
+import {
+  installPopupsHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPopups,
+} from './fixtures/install-popups-host-globals.js';
 
-describe('J-Popups Game_Character integration (out/popups/J-Popups.js)', () =>
+describe('J-Popups Game_Character integration (direct src import)', () =>
 {
-  let sandbox;
+  let TextPopBuilder;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadPopupsPluginVm(sandbox);
+    vi.resetModules();
+
+    installPopupsHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.J_EventEmitter } = await import('../../../src/plugins/_base/models/J_EventEmitter.js'));
+
+    setPluginContextToJPopups();
+    await import('../../../src/plugins/popups/core/_metadata/initialization.js');
+
+    ({ default: TextPopBuilder } = await import('../../../src/plugins/popups/core/_models/TextPopBuilder.js'));
+
+    // patches globalThis.Game_Character.prototype directly, no vm involved.
+    await import('../../../src/plugins/popups/core/objects/Game_Character.js');
   });
 
-  afterAll(() =>
+  describe('when popups are not disabled', () =>
   {
-    sandbox = null;
+    beforeAll(() =>
+    {
+      globalThis.J.POPUPS.Metadata.disablePopups = false;
+    });
+
+    it('hasTextPops is false before any pop is requested', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_Character();
+      ch.initMembers();
+
+      // Act
+      const result = ch.hasTextPops();
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('requestTextPop flags hasTextPops as true', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_Character();
+      ch.initMembers();
+
+      // Act
+      ch.requestTextPop();
+
+      // Assert
+      expect(ch.hasTextPops()).toBe(true);
+    });
+
+    it('addTextPop queues the built popup', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_Character();
+      ch.initMembers();
+      const popup = new TextPopBuilder('x').build();
+
+      // Act
+      ch.addTextPop(popup);
+
+      // Assert
+      expect(ch.getTextPops().length).toBe(1);
+    });
+
+    it('acknowledgeTextPops clears the hasTextPops flag', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_Character();
+      ch.initMembers();
+      ch.requestTextPop();
+
+      // Act
+      ch.acknowledgeTextPops();
+
+      // Assert
+      expect(ch.hasTextPops()).toBe(false);
+    });
+
+    it('emptyDamagePops clears the queued popups', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_Character();
+      ch.initMembers();
+      const popup = new TextPopBuilder('x').build();
+      ch.addTextPop(popup);
+
+      // Act
+      ch.emptyDamagePops();
+
+      // Assert
+      expect(ch.getTextPops().length).toBe(0);
+    });
   });
 
-  it('request/add/acknowledge flow tracks pops when not disabled', () =>
+  describe('when disablePopups is true', () =>
   {
-    sandbox.J.POPUPS.Metadata.disablePopups = false;
+    beforeAll(() =>
+    {
+      globalThis.J.POPUPS.Metadata.disablePopups = true;
+    });
 
-    const ch = new sandbox.Game_Character();
-    ch.initMembers();
+    it('requestTextPop does not flag hasTextPops', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_Character();
+      ch.initMembers();
 
-    expect(ch.hasTextPops()).toBe(false);
-    ch.requestTextPop();
-    expect(ch.hasTextPops()).toBe(true);
+      // Act
+      ch.requestTextPop();
 
-    const popup = new sandbox.TextPopBuilder('x').build();
-    ch.addTextPop(popup);
-    expect(ch.getTextPops().length).toBe(1);
+      // Assert
+      expect(ch.hasTextPops()).toBe(false);
+    });
 
-    ch.acknowledgeTextPops();
-    expect(ch.hasTextPops()).toBe(false);
+    it('addTextPop does not queue the popup', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_Character();
+      ch.initMembers();
+      const popup = new TextPopBuilder('x').build();
 
-    ch.emptyDamagePops();
-    expect(ch.getTextPops().length).toBe(0);
-  });
+      // Act
+      ch.addTextPop(popup);
 
-  it('does not track pops when disablePopups is true', () =>
-  {
-    sandbox.J.POPUPS.Metadata.disablePopups = true;
-
-    const ch = new sandbox.Game_Character();
-    ch.initMembers();
-
-    ch.requestTextPop();
-    expect(ch.hasTextPops()).toBe(false);
-
-    const popup = new sandbox.TextPopBuilder('x').build();
-    ch.addTextPop(popup);
-    expect(ch.getTextPops().length).toBe(0);
+      // Assert
+      expect(ch.getTextPops().length).toBe(0);
+    });
   });
 });
 //endregion plugins/popups/game-character-textpops.test.js

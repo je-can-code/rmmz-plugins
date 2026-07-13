@@ -1,240 +1,236 @@
 //region plugins/regions/ext/states/region-states-ext.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadRegionsStatesStackVm } from '../../regions-vm.js';
+import {
+  installRegionsStatesStackHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJRegions,
+  setPluginContextToJRegionsStates,
+} from '../../fixtures/install-regions-host-globals.js';
 
-describe('J-Regions-States Game_Map (out/regions/ext/J-Regions-States.js)', () =>
+/**
+ * Builds a battler stand-in with the state-tracking + roll-threading surface applyRegionStates() relies on.
+ * @param {Array<{stateId: number, attacker: object}>} added Tracks addState calls.
+ * @param {Array<{stateId: number, attacker: object}>} reset Tracks resetStateCounts calls.
+ * @returns {object}
+ */
+function buildRegionStatesBattler(added, reset)
 {
-  let sandbox;
-
-  beforeAll(() =>
-  {
-    sandbox = { console };
-    loadRegionsStatesStackVm(sandbox);
-  });
-
-  afterAll(() =>
-  {
-    sandbox = null;
-  });
-
-  it('refreshRegionStates parses map note into region state data', () =>
-  {
-    sandbox.$dataMap = { note: '<regionAddState:[1, 3, 100, 0]>' };
-    const map = new sandbox.Game_Map();
-    map.initialize();
-    map.setup(1);
-
-    const datas = map.getRegionStatesByRegionId(1);
-    expect(datas.length).toBe(1);
-    expect(datas[0].regionId).toBe(1);
-    expect(datas[0].stateId).toBe(3);
-    expect(datas[0].chance).toBe(100);
-    expect(datas[0].animationId).toBe(0);
-  });
-});
-
-describe('J-Regions-States Game_Character applyRegionStates', () =>
-{
-  let sandbox;
-
-  beforeAll(() =>
-  {
-    sandbox = { console };
-    loadRegionsStatesStackVm(sandbox);
-  });
-
-  afterAll(() =>
-  {
-    sandbox = null;
-  });
-
-  it('applies states when chance succeeds', () =>
-  {
-    sandbox.$dataMap = { note: '<regionAddState:[7, 12, 100, 0]>' };
-    const map = new sandbox.Game_Map();
-    map.initialize();
-    map.setup(1);
-    sandbox.$gameMap = map;
-
-    const added = [];
-    const reset = [];
-    const battler = {
-      stateRate()
-      {
-        return 1;
-      },
-      isStateAffected(stateId)
-      {
-        return added.some(entry => entry.stateId === stateId);
-      },
-      addState(stateId, attacker)
-      {
-        added.push({ stateId, attacker });
-      },
-      resetStateCounts(stateId, attacker)
-      {
-        reset.push({ stateId, attacker });
-      },
-      getPositiveRollsForSkill()
-      {
-        return 0;
-      },
-      getNegativeRollsForSkill()
-      {
-        return 0;
-      },
-      isVeryLucky()
-      {
-        return false;
-      },
-      isVeryCursed()
-      {
-        return false;
-      },
-      isAccumulating()
-      {
-        return false;
-      },
-      getEncoreRepeats()
-      {
-        return 0;
-      },
-    };
-
-    const jabsBattler = {
-      getBattler()
-      {
-        return battler;
-      },
-    };
-
-    const ch = new sandbox.Game_Character();
-    ch.initMembers();
-    ch.hasJabsBattler = function()
+  return {
+    stateRate()
     {
-      return true;
-    };
-    ch.getJabsBattler = function()
+      return 1;
+    },
+    isStateAffected(stateId)
     {
-      return jabsBattler;
-    };
-    ch.regionId = function()
+      return added.some(entry => entry.stateId === stateId);
+    },
+    addState(stateId, attacker)
     {
-      return 7;
-    };
-    ch.requestAnimation = function()
+      added.push({ stateId, attacker });
+    },
+    resetStateCounts(stateId, attacker)
     {
-    };
-
-    ch.applyRegionStates();
-
-    expect(added).toEqual([ { stateId: 12, attacker: battler } ]);
-  });
-
-  it('skips region states when the character is not visible', () =>
-  {
-    const ch = new sandbox.Game_Character();
-    ch.initMembers();
-    ch.isVehicle = function()
+      reset.push({ stateId, attacker });
+    },
+    getPositiveRollsForSkill()
+    {
+      return 0;
+    },
+    getNegativeRollsForSkill()
+    {
+      return 0;
+    },
+    isVeryLucky()
     {
       return false;
-    };
-    ch.isVisible = function()
+    },
+    isVeryCursed()
     {
       return false;
-    };
-    ch.hasJabsBattler = function()
+    },
+    isAccumulating()
     {
-      return true;
-    };
+      return false;
+    },
+    getEncoreRepeats()
+    {
+      return 0;
+    },
+  };
+}
 
-    expect(ch.canHandleRegionStates()).toBe(false);
+describe('J-Regions-States Game_Map / Game_Character (direct src import)', () =>
+{
+  beforeAll(async () =>
+  {
+    vi.resetModules();
+
+    installRegionsStatesStackHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
+
+    setPluginContextToJRegions();
+    await import('../../../../../src/plugins/regions/core/_metadata/initialization.js');
+    await import('../../../../../src/plugins/regions/core/objects/Game_Map.js');
+
+    setPluginContextToJRegionsStates();
+    await import('../../../../../src/plugins/regions/ext/states/_metadata/initialization.js');
+
+    // patches globalThis.Game_Map.prototype/Game_Character.prototype directly, no vm involved.
+    await import('../../../../../src/plugins/regions/ext/states/objects/Game_Map.js');
+    await import('../../../../../src/plugins/regions/ext/states/objects/Game_Character.js');
   });
 
-  it('reapplies states on each timer cycle', () =>
+  describe('Game_Map.refreshRegionStates', () =>
   {
-    sandbox.$dataMap = { note: '<regionAddState:[7, 12, 100, 0]>' };
-    const map = new sandbox.Game_Map();
-    map.initialize();
-    map.setup(1);
-    sandbox.$gameMap = map;
+    let regionStateData;
 
-    const added = [];
-    const reset = [];
-    const battler = {
-      stateRate()
+    beforeAll(() =>
+    {
+      globalThis.$dataMap = { note: '<regionAddState:[1, 3, 100, 0]>' };
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      map.setup(1);
+
+      [ regionStateData ] = map.getRegionStatesByRegionId(1);
+    });
+
+    it('parses exactly one region state data for the tagged region', () =>
+    {
+      // Arrange & Act & Assert
+      expect(regionStateData).toBeDefined();
+    });
+
+    it('parses the region id', () =>
+    {
+      // Arrange & Act & Assert
+      expect(regionStateData.regionId).toBe(1);
+    });
+
+    it('parses the state id', () =>
+    {
+      // Arrange & Act & Assert
+      expect(regionStateData.stateId).toBe(3);
+    });
+
+    it('parses the chance of application', () =>
+    {
+      // Arrange & Act & Assert
+      expect(regionStateData.chance).toBe(100);
+    });
+
+    it('parses the animation id', () =>
+    {
+      // Arrange & Act & Assert
+      expect(regionStateData.animationId).toBe(0);
+    });
+  });
+
+  describe('Game_Character.applyRegionStates', () =>
+  {
+    it('applies the tagged state when the chance succeeds', () =>
+    {
+      // Arrange
+      globalThis.$dataMap = { note: '<regionAddState:[7, 12, 100, 0]>' };
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      map.setup(1);
+      globalThis.$gameMap = map;
+
+      const added = [];
+      const battler = buildRegionStatesBattler(added, []);
+      const jabsBattler = { getBattler: () => battler };
+
+      const ch = new globalThis.Game_Character();
+      ch.initMembers();
+      ch.hasJabsBattler = function()
       {
-        return 1;
-      },
-      isStateAffected(stateId)
+        return true;
+      };
+      ch.getJabsBattler = function()
       {
-        return added.some(entry => entry.stateId === stateId);
-      },
-      addState(stateId, attacker)
+        return jabsBattler;
+      };
+      ch.regionId = function()
       {
-        added.push({ stateId, attacker });
-      },
-      resetStateCounts(stateId, attacker)
+        return 7;
+      };
+      ch.requestAnimation = function()
       {
-        reset.push({ stateId, attacker });
-      },
-      getPositiveRollsForSkill()
-      {
-        return 0;
-      },
-      getNegativeRollsForSkill()
-      {
-        return 0;
-      },
-      isVeryLucky()
+      };
+
+      // Act
+      ch.applyRegionStates();
+
+      // Assert
+      expect(added).toEqual([ { stateId: 12, attacker: battler } ]);
+    });
+
+    it('skips region states when the character is not visible', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_Character();
+      ch.initMembers();
+      ch.isVehicle = function()
       {
         return false;
-      },
-      isVeryCursed()
+      };
+      ch.isVisible = function()
       {
         return false;
-      },
-      isAccumulating()
+      };
+      ch.hasJabsBattler = function()
       {
-        return false;
-      },
-      getEncoreRepeats()
+        return true;
+      };
+
+      // Act & Assert
+      expect(ch.canHandleRegionStates()).toBe(false);
+    });
+
+    it('reapplies the state (resetStateCounts) on a second applyRegionStates cycle', () =>
+    {
+      // Arrange
+      globalThis.$dataMap = { note: '<regionAddState:[7, 12, 100, 0]>' };
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      map.setup(1);
+      globalThis.$gameMap = map;
+
+      const added = [];
+      const reset = [];
+      const battler = buildRegionStatesBattler(added, reset);
+      const jabsBattler = { getBattler: () => battler };
+
+      const ch = new globalThis.Game_Character();
+      ch.initMembers();
+      ch.hasJabsBattler = function()
       {
-        return 0;
-      },
-    };
-
-    const jabsBattler = {
-      getBattler()
+        return true;
+      };
+      ch.getJabsBattler = function()
       {
-        return battler;
-      },
-    };
+        return jabsBattler;
+      };
+      ch.regionId = function()
+      {
+        return 7;
+      };
+      ch.requestAnimation = function()
+      {
+      };
 
-    const ch = new sandbox.Game_Character();
-    ch.initMembers();
-    ch.hasJabsBattler = function()
-    {
-      return true;
-    };
-    ch.getJabsBattler = function()
-    {
-      return jabsBattler;
-    };
-    ch.regionId = function()
-    {
-      return 7;
-    };
-    ch.requestAnimation = function()
-    {
-    };
+      // Act
+      ch.applyRegionStates();
+      ch.applyRegionStates();
 
-    ch.applyRegionStates();
-    ch.applyRegionStates();
-
-    expect(added).toEqual([ { stateId: 12, attacker: battler } ]);
-    expect(reset).toEqual([ { stateId: 12, attacker: battler } ]);
+      // Assert
+      expect(reset).toEqual([ { stateId: 12, attacker: battler } ]);
+    });
   });
 });
 //endregion plugins/regions/ext/states/region-states-ext.test.js

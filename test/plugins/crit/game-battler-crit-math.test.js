@@ -1,29 +1,38 @@
 //region plugins/crit/game-battler-crit-math.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadCriticalFactorsPluginVm } from './crit-vm.js';
-import { clearRpgManagerCacheInVm } from '../../setup/shipped-plugin-vm.js';
-import { resetNaturalGrowthPluginSandbox } from '../natural/natural-vm.js';
+import {
+  installCritHostGlobals,
+  installNaturalCompanionStubs,
+  setPluginContextToJBase,
+  setPluginContextToJCrit,
+} from './fixtures/install-crit-host-globals.js';
 
-describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.js)', () =>
+describe('J-CriticalFactors Game_Battler crit math (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadCriticalFactorsPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
-  });
+    installCritHostGlobals();
 
-  beforeEach(() =>
-  {
-    resetNaturalGrowthPluginSandbox(sandbox);
-    clearRpgManagerCacheInVm(sandbox);
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../src/plugins/_base/managers/RPGManager.js'));
+
+    await import('../../../src/plugins/_base/objects/Game_BattlerBase.js');
+    await import('../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../src/plugins/_base/objects/Game_Actor.js');
+
+    installNaturalCompanionStubs();
+
+    setPluginContextToJCrit();
+    await import('../../../src/plugins/crit/core/_metadata/initialization.js');
+
+    await import('../../../src/plugins/crit/core/objects/Game_BattlerBase.js');
+    await import('../../../src/plugins/crit/core/objects/Game_Battler.js');
+    await import('../../../src/plugins/crit/core/objects/Game_Actor.js');
   });
 
   /**
@@ -32,54 +41,72 @@ describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.j
    */
   function buildActor()
   {
-    const actor = new sandbox.Game_Actor();
+    const actor = new globalThis.Game_Actor();
     actor.getSdpBonusForParameterKey = () => 0;
     actor.initMembers();
     return actor;
   }
 
-  describe('cdmPlus/modCdmPlus and cdmRate/modCdmRate', () =>
+  describe('cdmPlus/modCdmPlus', () =>
   {
     it('accumulates repeated modCdmPlus calls', () =>
     {
+      // Arrange
       const actor = buildActor();
 
+      // Act
       actor.modCdmPlus(5);
       actor.modCdmPlus(3);
 
+      // Assert
       expect(actor.cdmPlus()).toBe(8);
     });
+  });
 
+  describe('cdmRate/modCdmRate', () =>
+  {
     it('accumulates repeated modCdmRate calls', () =>
     {
+      // Arrange
       const actor = buildActor();
 
+      // Act
       actor.modCdmRate(10);
       actor.modCdmRate(-2);
 
+      // Assert
       expect(actor.cdmRate()).toBe(8);
     });
   });
 
-  describe('ctrPlus/modCtrPlus and ctrRate/modCtrRate', () =>
+  describe('ctrPlus/modCtrPlus', () =>
   {
     it('accumulates repeated modCtrPlus calls', () =>
     {
+      // Arrange
       const actor = buildActor();
 
+      // Act
       actor.modCtrPlus(4);
       actor.modCtrPlus(6);
 
+      // Assert
       expect(actor.ctrPlus()).toBe(10);
     });
+  });
 
+  describe('ctrRate/modCtrRate', () =>
+  {
     it('accumulates repeated modCtrRate calls', () =>
     {
+      // Arrange
       const actor = buildActor();
 
+      // Act
       actor.modCtrRate(20);
       actor.modCtrRate(5);
 
+      // Assert
       expect(actor.ctrRate()).toBe(25);
     });
   });
@@ -88,17 +115,21 @@ describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.j
   {
     it('sums all critMultiplierBase tags across note sources and divides by 100', () =>
     {
+      // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [ { note: '<critMultiplierBase: 40>' }, { note: '<critMultiplierBase: 10>' } ];
 
+      // Act & Assert
       expect(actor.baseCriticalMultiplier()).toBe(0.5);
     });
 
     it('is 0 when there are no critMultiplierBase tags', () =>
     {
+      // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [];
 
+      // Act & Assert
       expect(actor.baseCriticalMultiplier()).toBe(0);
     });
   });
@@ -107,9 +138,11 @@ describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.j
   {
     it('sums all critReductionBase tags across note sources and divides by 100', () =>
     {
+      // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [ { note: '<critReductionBase: 30>' } ];
 
+      // Act & Assert
       expect(actor.baseCriticalReduction()).toBe(0.3);
     });
   });
@@ -118,9 +151,11 @@ describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.j
   {
     it('sums all critMultiplier tags across note sources without dividing', () =>
     {
+      // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [ { note: '<critMultiplier: 15>' }, { note: '<critMultiplier: 5>' } ];
 
+      // Act & Assert
       expect(actor.getCriticalDamageMultiplier()).toBe(20);
     });
   });
@@ -129,9 +164,11 @@ describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.j
   {
     it('sums all critReduction tags across note sources without dividing', () =>
     {
+      // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [ { note: '<critReduction: 12>' } ];
 
+      // Act & Assert
       expect(actor.getCriticalDamageReduction()).toBe(12);
     });
   });
@@ -140,9 +177,11 @@ describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.j
   {
     it('combines note bonuses, natural bonuses, and sdp bonuses into a single /100 factor', () =>
     {
+      // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [ { note: '<critMultiplier: 20>' } ];
 
+      // Act & Assert
       // no natural growths/buffs applied (cdmPlus/cdmRate remain 0 from initMembers), sdp stubbed to 0.
       expect(actor.criticalDamageMultiplier()).toBe(0.2);
     });
@@ -152,9 +191,11 @@ describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.j
   {
     it('combines note bonuses, natural bonuses, and sdp bonuses into a single /100 factor', () =>
     {
+      // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [ { note: '<critReduction: 40>' } ];
 
+      // Act & Assert
       expect(actor.criticalDamageReduction()).toBe(0.4);
     });
   });
@@ -163,21 +204,25 @@ describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.j
   {
     it('is 0 when J.NATURAL is not loaded', () =>
     {
+      // Arrange
       const actor = buildActor();
-      const savedNatural = sandbox.J.NATURAL;
-      delete sandbox.J.NATURAL;
+      const savedNatural = globalThis.J.NATURAL;
+      delete globalThis.J.NATURAL;
 
+      // Act & Assert
       expect(actor.cdmNaturalBonuses()).toBe(0);
 
-      sandbox.J.NATURAL = savedNatural;
+      globalThis.J.NATURAL = savedNatural;
     });
 
     it('sums natural buffs and natural growths when J.NATURAL is loaded', () =>
     {
+      // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [ { note: '<cdmBuffPlus:[10]>' } ];
       actor.modCdmPlus(5);
 
+      // Act & Assert
       // buff: calculatePlusRate(base=0, plus=10, rate=0) = (0+10)*1 - 0 = 10.
       // growth: calculatePlusRate(base=0, plus=5, rate=0) = (0+5)*1 - 0 = 5.
       expect(actor.cdmNaturalBonuses()).toBe(15);
@@ -188,14 +233,17 @@ describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.j
   {
     it('is 0 when there are no cdm buff tags', () =>
     {
+      // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [];
 
+      // Act & Assert
       expect(actor.cdmNaturalBuffs()).toBe(0);
     });
 
     it('applies calculatePlusRate against the base cdm using the parsed buff formulas', () =>
     {
+      // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [
         { note: '<critMultiplierBase: 100>' },
@@ -203,6 +251,7 @@ describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.j
         { note: '<cdmBuffRate:[50]>' },
       ];
 
+      // Act & Assert
       // base = 100/100 = 1. calculatePlusRate(1, 20, 50) = (1+20)*(150/100) - 1 = 31.5 - 1 = 30.5.
       expect(actor.cdmNaturalBuffs()).toBeCloseTo(30.5, 5);
     });
@@ -212,18 +261,22 @@ describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.j
   {
     it('is 0 when there are no accumulated cdm growths', () =>
     {
+      // Arrange
       const actor = buildActor();
 
+      // Act & Assert
       expect(actor.cdmNaturalGrowths()).toBe(0);
     });
 
     it('applies calculatePlusRate against the base cdm using accumulated growth state', () =>
     {
+      // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [ { note: '<critMultiplierBase: 100>' } ];
       actor.modCdmPlus(20);
       actor.modCdmRate(50);
 
+      // Act & Assert
       // base = 1. calculatePlusRate(1, 20, 50) = (1+20)*1.5 - 1 = 30.5.
       expect(actor.cdmNaturalGrowths()).toBeCloseTo(30.5, 5);
     });
@@ -233,21 +286,25 @@ describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.j
   {
     it('is 0 when J.NATURAL is not loaded', () =>
     {
+      // Arrange
       const actor = buildActor();
-      const savedNatural = sandbox.J.NATURAL;
-      delete sandbox.J.NATURAL;
+      const savedNatural = globalThis.J.NATURAL;
+      delete globalThis.J.NATURAL;
 
+      // Act & Assert
       expect(actor.ctrNaturalBonuses()).toBe(0);
 
-      sandbox.J.NATURAL = savedNatural;
+      globalThis.J.NATURAL = savedNatural;
     });
 
     it('sums natural buffs and natural growths when J.NATURAL is loaded', () =>
     {
+      // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [ { note: '<ctrBuffPlus:[8]>' } ];
       actor.modCtrPlus(2);
 
+      // Act & Assert
       // buff: calculatePlusRate(0, 8, 0) = 8. growth: calculatePlusRate(0, 2, 0) = 2.
       expect(actor.ctrNaturalBonuses()).toBe(10);
     });
@@ -257,12 +314,14 @@ describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.j
   {
     it('applies calculatePlusRate against the base ctr using the parsed buff formulas', () =>
     {
+      // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [
         { note: '<critReductionBase: 50>' },
         { note: '<ctrBuffPlus:[10]>' },
       ];
 
+      // Act & Assert
       // base = 50/100 = 0.5. calculatePlusRate(0.5, 10, 0) = (0.5+10)*1 - 0.5 = 10.
       expect(actor.ctrNaturalBuffs()).toBeCloseTo(10, 5);
     });
@@ -272,10 +331,12 @@ describe('J-CriticalFactors Game_Battler crit math (out/crit/J-CriticalFactors.j
   {
     it('applies calculatePlusRate against the base ctr using accumulated growth state', () =>
     {
+      // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [ { note: '<critReductionBase: 50>' } ];
       actor.modCtrPlus(10);
 
+      // Act & Assert
       // base = 0.5. calculatePlusRate(0.5, 10, 0) = 10.5 - 0.5 = 10.
       expect(actor.ctrNaturalGrowths()).toBeCloseTo(10, 5);
     });

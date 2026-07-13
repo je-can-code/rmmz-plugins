@@ -60,147 +60,418 @@ describe('J-TIME event page + choice conditionals (direct src import)', () =>
     };
   }
 
-  it('Game_Event.meetsConditions respects timeRangePage tag', () =>
+  describe('Game_Event.meetsConditions', () =>
   {
-    const ev = new globalThis.Game_Event();
-
-    // 08:30 inside the range.
-    globalThis.$gameTime.setTime(0, 30, 8, 1, 6, 2024);
-    const page = pageWithComments([ '<timeRangePage:8:00-9:00>' ]);
-    expect(ev.meetsConditions(page)).toBe(true);
-
-    // 07:59 outside the range.
-    globalThis.$gameTime.setTime(0, 59, 7, 1, 6, 2024);
-    expect(ev.meetsConditions(page)).toBe(false);
-  });
-
-  it('Game_Event.meetsConditions respects seasonOfYearPage tag', () =>
-  {
-    const ev = new globalThis.Game_Event();
-
-    // june should be summer in the shipped mapping.
-    globalThis.$gameTime.setTime(0, 0, 12, 1, 6, 2024);
-    const page = pageWithComments([ '<seasonOfYearPage:summer>' ]);
-    expect(ev.meetsConditions(page)).toBe(true);
-
-    // january should not be summer.
-    globalThis.$gameTime.setTime(0, 0, 12, 1, 1, 2024);
-    expect(ev.meetsConditions(page)).toBe(false);
-  });
-
-  it('Game_Event.meetsConditions respects direct minutePage/dayPage/monthPage/yearPage tags', () =>
-  {
-    const ev = new globalThis.Game_Event();
-
-    // 2024-06-01, minute 30.
-    globalThis.$gameTime.setTime(0, 30, 12, 1, 6, 2024);
-    expect(ev.meetsConditions(pageWithComments([ '<minutePage:30>' ]))).toBe(true);
-    expect(ev.meetsConditions(pageWithComments([ '<minutePage:31>' ]))).toBe(false);
-
-    expect(ev.meetsConditions(pageWithComments([ '<dayPage:1>' ]))).toBe(true);
-    expect(ev.meetsConditions(pageWithComments([ '<dayPage:2>' ]))).toBe(false);
-
-    expect(ev.meetsConditions(pageWithComments([ '<monthPage:6>' ]))).toBe(true);
-    expect(ev.meetsConditions(pageWithComments([ '<monthPage:7>' ]))).toBe(false);
-
-    expect(ev.meetsConditions(pageWithComments([ '<yearPage:2024>' ]))).toBe(true);
-    expect(ev.meetsConditions(pageWithComments([ '<yearPage:2025>' ]))).toBe(false);
-  });
-
-  it('Game_Event.meetsConditions respects timeOfDayPage tag by both numeric id and name', () =>
-  {
-    const ev = new globalThis.Game_Event();
-
-    globalThis.$gameTime.setTime(0, 0, 9, 1, 6, 2024);
-    expect(ev.meetsConditions(pageWithComments([ '<timeOfDayPage:2>' ]))).toBe(true);
-    expect(ev.meetsConditions(pageWithComments([ '<timeOfDayPage:morning>' ]))).toBe(true);
-    expect(ev.meetsConditions(pageWithComments([ '<timeOfDayPage:night>' ]))).toBe(false);
-  });
-
-  it('Game_Event.meetsConditions respects range page tags (hourRangePage) across a boundary', () =>
-  {
-    const ev = new globalThis.Game_Event();
-    const page = pageWithComments([ '<hourRangePage:8-9>' ]);
-
-    globalThis.$gameTime.setTime(0, 30, 8, 1, 6, 2024);
-    expect(ev.meetsConditions(page)).toBe(true);
-
-    globalThis.$gameTime.setTime(0, 30, 10, 1, 6, 2024);
-    expect(ev.meetsConditions(page)).toBe(false);
-  });
-
-  it('Game_Event.meetsConditions respects fullDateRangePage tag across the full range', () =>
-  {
-    const ev = new globalThis.Game_Event();
-
-    // bracket order is [minutes, hours, days, months, years] per TimeMapper.fullDateRangeToConditional.
-    const page = pageWithComments([ '<fullDateRangePage:[0,0,1,1,2024]-[0,0,31,12,2024]>' ]);
-
-    globalThis.$gameTime.setTime(0, 0, 12, 15, 6, 2024);
-    expect(ev.meetsConditions(page)).toBe(true);
-
-    globalThis.$gameTime.setTime(0, 0, 12, 15, 6, 2025);
-    expect(ev.meetsConditions(page)).toBe(false);
-  });
-
-  it('Game_Interpreter.shouldHideChoiceBranch hides when choice conditional not met', () =>
-  {
-    const interp = new globalThis.Game_Interpreter();
-
-    globalThis.$gameTime.setTime(0, 0, 12, 1, 6, 2024);
-
-    const commands = [
-      { code: 108, indent: 0, parameters: [ '<hourChoice:7>' ] },
-    ];
-
-    globalThis.$gameMap = {
-      event()
+    describe('timeRangePage tag', () =>
+    {
+      it('returns true when the current time is inside the range', () =>
       {
-        return { page: () => ({ list: commands }) };
-      },
-    };
-    interp.eventId = () => 1;
-    interp.currentCommand = () => ({ indent: 0 });
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        const page = pageWithComments([ '<timeRangePage:8:00-9:00>' ]);
+        globalThis.$gameTime.setTime(0, 30, 8, 1, 6, 2024);
 
-    expect(interp.shouldHideChoiceBranch(0)).toBe(true);
+        // Act
+        const result = ev.meetsConditions(page);
 
-    globalThis.$gameTime.setTime(0, 0, 7, 1, 6, 2024);
-    expect(interp.shouldHideChoiceBranch(0)).toBe(false);
+        // Assert
+        expect(result).toBe(true);
+      });
+
+      it('returns false when the current time is outside the range', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        const page = pageWithComments([ '<timeRangePage:8:00-9:00>' ]);
+        globalThis.$gameTime.setTime(0, 59, 7, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(page);
+
+        // Assert
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('seasonOfYearPage tag', () =>
+    {
+      it('returns true when the current month falls within the tagged season', () =>
+      {
+        // Arrange- june should be summer in the shipped mapping.
+        const ev = new globalThis.Game_Event();
+        const page = pageWithComments([ '<seasonOfYearPage:summer>' ]);
+        globalThis.$gameTime.setTime(0, 0, 12, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(page);
+
+        // Assert
+        expect(result).toBe(true);
+      });
+
+      it('returns false when the current month does not fall within the tagged season', () =>
+      {
+        // Arrange- january should not be summer.
+        const ev = new globalThis.Game_Event();
+        const page = pageWithComments([ '<seasonOfYearPage:summer>' ]);
+        globalThis.$gameTime.setTime(0, 0, 12, 1, 1, 2024);
+
+        // Act
+        const result = ev.meetsConditions(page);
+
+        // Assert
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('minutePage tag', () =>
+    {
+      it('returns true when the current minute matches', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        globalThis.$gameTime.setTime(0, 30, 12, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(pageWithComments([ '<minutePage:30>' ]));
+
+        // Assert
+        expect(result).toBe(true);
+      });
+
+      it('returns false when the current minute does not match', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        globalThis.$gameTime.setTime(0, 30, 12, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(pageWithComments([ '<minutePage:31>' ]));
+
+        // Assert
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('dayPage tag', () =>
+    {
+      it('returns true when the current day matches', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        globalThis.$gameTime.setTime(0, 30, 12, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(pageWithComments([ '<dayPage:1>' ]));
+
+        // Assert
+        expect(result).toBe(true);
+      });
+
+      it('returns false when the current day does not match', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        globalThis.$gameTime.setTime(0, 30, 12, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(pageWithComments([ '<dayPage:2>' ]));
+
+        // Assert
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('monthPage tag', () =>
+    {
+      it('returns true when the current month matches', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        globalThis.$gameTime.setTime(0, 30, 12, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(pageWithComments([ '<monthPage:6>' ]));
+
+        // Assert
+        expect(result).toBe(true);
+      });
+
+      it('returns false when the current month does not match', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        globalThis.$gameTime.setTime(0, 30, 12, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(pageWithComments([ '<monthPage:7>' ]));
+
+        // Assert
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('yearPage tag', () =>
+    {
+      it('returns true when the current year matches', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        globalThis.$gameTime.setTime(0, 30, 12, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(pageWithComments([ '<yearPage:2024>' ]));
+
+        // Assert
+        expect(result).toBe(true);
+      });
+
+      it('returns false when the current year does not match', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        globalThis.$gameTime.setTime(0, 30, 12, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(pageWithComments([ '<yearPage:2025>' ]));
+
+        // Assert
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('timeOfDayPage tag', () =>
+    {
+      it('returns true when tagged by numeric time-of-day id', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        globalThis.$gameTime.setTime(0, 0, 9, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(pageWithComments([ '<timeOfDayPage:2>' ]));
+
+        // Assert
+        expect(result).toBe(true);
+      });
+
+      it('returns true when tagged by time-of-day name', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        globalThis.$gameTime.setTime(0, 0, 9, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(pageWithComments([ '<timeOfDayPage:morning>' ]));
+
+        // Assert
+        expect(result).toBe(true);
+      });
+
+      it('returns false when the current time-of-day does not match the tag', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        globalThis.$gameTime.setTime(0, 0, 9, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(pageWithComments([ '<timeOfDayPage:night>' ]));
+
+        // Assert
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('hourRangePage tag', () =>
+    {
+      it('returns true when the current hour is inside the range', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        const page = pageWithComments([ '<hourRangePage:8-9>' ]);
+        globalThis.$gameTime.setTime(0, 30, 8, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(page);
+
+        // Assert
+        expect(result).toBe(true);
+      });
+
+      it('returns false when the current hour is outside the range', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        const page = pageWithComments([ '<hourRangePage:8-9>' ]);
+        globalThis.$gameTime.setTime(0, 30, 10, 1, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(page);
+
+        // Assert
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('fullDateRangePage tag', () =>
+    {
+      // bracket order is [minutes, hours, days, months, years] per TimeMapper.fullDateRangeToConditional.
+      const page = pageWithComments([ '<fullDateRangePage:[0,0,1,1,2024]-[0,0,31,12,2024]>' ]);
+
+      it('returns true when the current date is inside the full range', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        globalThis.$gameTime.setTime(0, 0, 12, 15, 6, 2024);
+
+        // Act
+        const result = ev.meetsConditions(page);
+
+        // Assert
+        expect(result).toBe(true);
+      });
+
+      it('returns false when the current date is outside the full range', () =>
+      {
+        // Arrange
+        const ev = new globalThis.Game_Event();
+        globalThis.$gameTime.setTime(0, 0, 12, 15, 6, 2025);
+
+        // Act
+        const result = ev.meetsConditions(page);
+
+        // Assert
+        expect(result).toBe(false);
+      });
+    });
   });
 
-  it('Game_Interpreter.shouldHideChoiceBranch respects dayChoice and seasonOfYearChoice tags', () =>
+  describe('Game_Interpreter.shouldHideChoiceBranch', () =>
   {
-    const interp = new globalThis.Game_Interpreter();
-    interp.eventId = () => 1;
-    interp.currentCommand = () => ({ indent: 0 });
-
-    globalThis.$gameMap = {
-      event()
+    describe('hourChoice tag', () =>
+    {
+      function interpreterWithCommand(comment)
       {
-        return { page: () => ({ list: [ { code: 108, indent: 0, parameters: [ '<dayChoice:1>' ] } ] }) };
-      },
-    };
-
-    globalThis.$gameTime.setTime(0, 0, 12, 1, 6, 2024);
-    expect(interp.shouldHideChoiceBranch(0)).toBe(false);
-
-    globalThis.$gameTime.setTime(0, 0, 12, 2, 6, 2024);
-    expect(interp.shouldHideChoiceBranch(0)).toBe(true);
-
-    globalThis.$gameMap = {
-      event()
-      {
-        return {
-          page: () => ({ list: [ { code: 108, indent: 0, parameters: [ '<seasonOfYearChoice:summer>' ] } ] }),
+        const interp = new globalThis.Game_Interpreter();
+        interp.eventId = () => 1;
+        interp.currentCommand = () => ({ indent: 0 });
+        globalThis.$gameMap = {
+          event: () => ({ page: () => ({ list: [ { code: 108, indent: 0, parameters: [ comment ] } ] }) }),
         };
-      },
-    };
 
-    globalThis.$gameTime.setTime(0, 0, 12, 1, 6, 2024);
-    expect(interp.shouldHideChoiceBranch(0)).toBe(false);
+        return interp;
+      }
 
-    globalThis.$gameTime.setTime(0, 0, 12, 1, 1, 2024);
-    expect(interp.shouldHideChoiceBranch(0)).toBe(true);
+      it('hides the choice branch when the tagged hour does not match the current hour', () =>
+      {
+        // Arrange
+        const interp = interpreterWithCommand('<hourChoice:7>');
+        globalThis.$gameTime.setTime(0, 0, 12, 1, 6, 2024);
+
+        // Act
+        const result = interp.shouldHideChoiceBranch(0);
+
+        // Assert
+        expect(result).toBe(true);
+      });
+
+      it('shows the choice branch when the tagged hour matches the current hour', () =>
+      {
+        // Arrange
+        const interp = interpreterWithCommand('<hourChoice:7>');
+        globalThis.$gameTime.setTime(0, 0, 7, 1, 6, 2024);
+
+        // Act
+        const result = interp.shouldHideChoiceBranch(0);
+
+        // Assert
+        expect(result).toBe(false);
+      });
+    });
+
+    describe('dayChoice tag', () =>
+    {
+      function interpreterWithDayChoice()
+      {
+        const interp = new globalThis.Game_Interpreter();
+        interp.eventId = () => 1;
+        interp.currentCommand = () => ({ indent: 0 });
+        globalThis.$gameMap = {
+          event: () => ({ page: () => ({ list: [ { code: 108, indent: 0, parameters: [ '<dayChoice:1>' ] } ] }) }),
+        };
+
+        return interp;
+      }
+
+      it('shows the choice branch when the tagged day matches the current day', () =>
+      {
+        // Arrange
+        const interp = interpreterWithDayChoice();
+        globalThis.$gameTime.setTime(0, 0, 12, 1, 6, 2024);
+
+        // Act
+        const result = interp.shouldHideChoiceBranch(0);
+
+        // Assert
+        expect(result).toBe(false);
+      });
+
+      it('hides the choice branch when the tagged day does not match the current day', () =>
+      {
+        // Arrange
+        const interp = interpreterWithDayChoice();
+        globalThis.$gameTime.setTime(0, 0, 12, 2, 6, 2024);
+
+        // Act
+        const result = interp.shouldHideChoiceBranch(0);
+
+        // Assert
+        expect(result).toBe(true);
+      });
+    });
+
+    describe('seasonOfYearChoice tag', () =>
+    {
+      function interpreterWithSeasonChoice()
+      {
+        const interp = new globalThis.Game_Interpreter();
+        interp.eventId = () => 1;
+        interp.currentCommand = () => ({ indent: 0 });
+        globalThis.$gameMap = {
+          event: () => ({
+            page: () => ({ list: [ { code: 108, indent: 0, parameters: [ '<seasonOfYearChoice:summer>' ] } ] }),
+          }),
+        };
+
+        return interp;
+      }
+
+      it('shows the choice branch when the current month falls within the tagged season', () =>
+      {
+        // Arrange
+        const interp = interpreterWithSeasonChoice();
+        globalThis.$gameTime.setTime(0, 0, 12, 1, 6, 2024);
+
+        // Act
+        const result = interp.shouldHideChoiceBranch(0);
+
+        // Assert
+        expect(result).toBe(false);
+      });
+
+      it('hides the choice branch when the current month does not fall within the tagged season', () =>
+      {
+        // Arrange
+        const interp = interpreterWithSeasonChoice();
+        globalThis.$gameTime.setTime(0, 0, 12, 1, 1, 2024);
+
+        // Act
+        const result = interp.shouldHideChoiceBranch(0);
+
+        // Assert
+        expect(result).toBe(true);
+      });
+    });
   });
 });
 //endregion plugins/time/event-page-and-choice-conditionals-direct.test.js

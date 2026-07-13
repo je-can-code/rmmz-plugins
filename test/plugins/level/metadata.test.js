@@ -1,32 +1,72 @@
 //region plugins/level/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { DEFAULT_LEVEL_CONFIG } from './fixtures/engine-stubs.js';
-import { loadLevelPluginVm } from './level-vm.js';
+import {
+  installLevelHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJLevel,
+} from './fixtures/install-level-host-globals.js';
 
-describe('J-LevelMaster metadata (out/J-LevelMaster.js)', () =>
+describe('J-LevelMaster metadata (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadLevelPluginVm(sandbox);
+    vi.resetModules();
+
+    installLevelHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJLevel();
+    await import('../../../src/plugins/level/core/_metadata/initialization.js');
   });
 
-  afterAll(() =>
+  it('maps data/config.level.json name/enabled onto J.LEVEL.Metadata', () =>
   {
-    sandbox = null;
+    // Arrange & Act
+    const metadata = globalThis.J.LEVEL.Metadata;
+
+    // Assert
+    expect(metadata.name).toBe('J-LevelMaster');
+    expect(metadata.enabled).toBe(true);
   });
 
-  it('maps data/config.level.json onto J.LEVEL.Metadata', () =>
+  it('maps minimumMultiplier from the config', () =>
   {
-    expect(sandbox.J.LEVEL.Metadata.name).toBe('J-LevelMaster');
-    expect(sandbox.J.LEVEL.Metadata.enabled).toBe(true);
-    expect(sandbox.J.LEVEL.Metadata.minimumMultiplier).toBe(DEFAULT_LEVEL_CONFIG.minMultiplier);
-    expect(sandbox.J.LEVEL.Metadata.maximumMultiplier).toBe(DEFAULT_LEVEL_CONFIG.maxMultiplier);
-    expect(sandbox.J.LEVEL.Metadata.growthMultiplier).toBe(DEFAULT_LEVEL_CONFIG.growthMultiplier);
-    expect(sandbox.J.LEVEL.Metadata.trueMaxLevel).toBe(DEFAULT_LEVEL_CONFIG.trueMaxLevel);
+    // Arrange & Act
+    const result = globalThis.J.LEVEL.Metadata.minimumMultiplier;
+
+    // Assert
+    expect(result).toBe(DEFAULT_LEVEL_CONFIG.minMultiplier);
+  });
+
+  it('maps maximumMultiplier from the config', () =>
+  {
+    // Arrange & Act
+    const result = globalThis.J.LEVEL.Metadata.maximumMultiplier;
+
+    // Assert
+    expect(result).toBe(DEFAULT_LEVEL_CONFIG.maxMultiplier);
+  });
+
+  it('maps growthMultiplier from the config', () =>
+  {
+    // Arrange & Act
+    const result = globalThis.J.LEVEL.Metadata.growthMultiplier;
+
+    // Assert
+    expect(result).toBe(DEFAULT_LEVEL_CONFIG.growthMultiplier);
+  });
+
+  it('maps trueMaxLevel from the config', () =>
+  {
+    // Arrange & Act
+    const result = globalThis.J.LEVEL.Metadata.trueMaxLevel;
+
+    // Assert
+    expect(result).toBe(DEFAULT_LEVEL_CONFIG.trueMaxLevel);
   });
 });
 //endregion plugins/level/metadata.test.js

@@ -1,141 +1,205 @@
 //region plugins/pixel/core/game-character-base-pixel.test.js
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { loadPixelCorePluginVm } from '../pixel-vm.js';
+import {
+  buildDefaultPixelGameMap,
+  installPixelCoreHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPixel,
+} from '../fixtures/install-pixel-host-globals.js';
 
-describe('J-Pixelistics Game_CharacterBase pixel movement helpers', () =>
+describe('J-Pixelistics Game_CharacterBase pixel movement helpers (direct src import)', () =>
 {
-  let sandbox;
+  beforeAll(async () =>
+  {
+    vi.resetModules();
+
+    installPixelCoreHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    // patches globalThis.Game_CharacterBase.prototype with isStraightDirection/isDiagonalDirection,
+    // which pixel core's own Game_CharacterBase.js relies on.
+    await import('../../../../src/plugins/_base/objects/Game_CharacterBase.js');
+
+    setPluginContextToJPixel();
+    await import('../../../../src/plugins/pixel/core/_metadata/initialization.js');
+
+    // patches globalThis.Game_CharacterBase.prototype directly, no vm involved.
+    await import('../../../../src/plugins/pixel/core/objects/Game_CharacterBase.js');
+
+    ({ default: globalThis.PIXEL_CollisionManager } = await import('../../../../src/plugins/pixel/core/managers/PIXEL_CollisionManager.js'));
+  });
 
   beforeEach(() =>
   {
-    sandbox = { console };
-    loadPixelCorePluginVm(sandbox);
-    sandbox.PIXEL_CollisionManager.initConfig();
-    sandbox.PIXEL_CollisionManager.setupCollision();
+    // a fresh $gameMap every test- some tests replace it outright (regionId) or override a single
+    // method (movePixelDistance's isPassable override), and neither should leak into the next test.
+    globalThis.$gameMap = buildDefaultPixelGameMap();
+    globalThis.PIXEL_CollisionManager.initConfig();
+    globalThis.PIXEL_CollisionManager.setupCollision();
   });
 
-  afterEach(() =>
+  it('initMembers wires up the _j._pixel step counter', () =>
   {
-    sandbox = null;
-  });
+    // Arrange
+    const ch = new globalThis.Game_CharacterBase();
 
-  it('initMembers wires initPixelMovementMembers state', () =>
-  {
-    const ch = new sandbox.Game_CharacterBase();
-
+    // Act
     ch.initMembers();
 
+    // Assert
     expect(ch._j._pixel._steps).toBe(0);
+  });
+
+  it('initMembers wires up the pixel move cooldown state', () =>
+  {
+    // Arrange
+    const ch = new globalThis.Game_CharacterBase();
+
+    // Act
+    ch.initMembers();
+
+    // Assert
     expect(ch._pixelState()._moveCooldown).toBe(0);
   });
 
-  it('setPixelMoveCooldown and cooldown queries round-trip', () =>
+  it('setPixelMoveCooldown flags the character as on cooldown', () =>
   {
-    const ch = new sandbox.Game_CharacterBase();
+    // Arrange
+    const ch = new globalThis.Game_CharacterBase();
+    ch.initMembers();
 
+    // Act
+    ch.setPixelMoveCooldown(2);
+
+    // Assert
+    expect(ch.isPixelOnCooldown()).toBe(true);
+  });
+
+  it('decrementPixelMoveCooldown reduces the remaining cooldown by one', () =>
+  {
+    // Arrange
+    const ch = new globalThis.Game_CharacterBase();
     ch.initMembers();
     ch.setPixelMoveCooldown(2);
 
-    expect(ch.isPixelOnCooldown()).toBe(true);
+    // Act
     ch.decrementPixelMoveCooldown();
+
+    // Assert
     expect(ch.getPixelMoveCooldown()).toBe(1);
   });
 
   it('movePixelDistance advances logical X on an open map', () =>
   {
-    const ch = new sandbox.Game_CharacterBase();
-
+    // Arrange
+    const ch = new globalThis.Game_CharacterBase();
     ch.initMembers();
     ch.relocate(0.5, 0.5);
-    ch.movePixelDistance(sandbox.J.PIXEL.Directions.RIGHT, 0.1);
 
+    // Act
+    ch.movePixelDistance(globalThis.J.PIXEL.Directions.RIGHT, 0.1);
+
+    // Assert
     expect(ch._x).toBeGreaterThan(0.5);
   });
 
   it('movePixelDistance reverts when overlapping solid subcells', () =>
   {
-    sandbox.$gameMap.isPassable = function()
+    // Arrange
+    globalThis.$gameMap.isPassable = function()
     {
       return false;
     };
-    sandbox.PIXEL_CollisionManager.setupCollision();
-
-    const ch = new sandbox.Game_CharacterBase();
-
+    globalThis.PIXEL_CollisionManager.setupCollision();
+    const ch = new globalThis.Game_CharacterBase();
     ch.initMembers();
     ch.relocate(0.5, 0.5);
     const before = ch._x;
 
-    ch.movePixelDistance(sandbox.J.PIXEL.Directions.RIGHT, 0.2);
+    // Act
+    ch.movePixelDistance(globalThis.J.PIXEL.Directions.RIGHT, 0.2);
 
+    // Assert
     expect(ch._x).toBe(before);
   });
 
-  it('stopPixelMoving syncs _realX/_realY to logical tiles', () =>
+  it('stopPixelMoving syncs _realX/_realY to the logical tile position', () =>
   {
-    const ch = new sandbox.Game_CharacterBase();
-
+    // Arrange
+    const ch = new globalThis.Game_CharacterBase();
     ch.initMembers();
     ch._x = 1.25;
     ch._y = 0.75;
     ch._realX = 9;
     ch._realY = 8;
+
+    // Act
     ch.stopPixelMoving();
 
+    // Assert
     expect(ch._realX).toBe(1.25);
     expect(ch._realY).toBe(0.75);
   });
 
   it('regionId samples the collision pivot tile when _x/_y are fractional', () =>
   {
+    // Arrange
     let capturedX = -1;
     let capturedY = -1;
-
-    sandbox.$gameMap = {
+    globalThis.$gameMap = {
       regionId(x, y)
       {
         capturedX = x;
         capturedY = y;
-
         return 1;
       },
     };
-
-    const ch = new sandbox.Game_CharacterBase();
-
+    const ch = new globalThis.Game_CharacterBase();
     ch.initMembers();
     ch._x = 10.5356952975542;
     ch._y = 7.857090246365618;
 
-    expect(ch.regionId()).toBe(1);
+    // Act
+    const result = ch.regionId();
+
+    // Assert
+    expect(result).toBe(1);
     expect(capturedX).toBe(11);
     expect(capturedY).toBe(8);
   });
 
   it('recordPixelPosition appends fractional points when distance warrants', () =>
   {
-    const ch = new sandbox.Game_CharacterBase();
-
+    // Arrange
+    const ch = new globalThis.Game_CharacterBase();
     ch.initMembers();
     ch._x = 0;
     ch._y = 0;
     ch.recordPixelPosition();
     ch._x = 0.2;
     ch._y = 0;
+
+    // Act
     ch.recordPixelPosition();
 
+    // Assert
     expect(ch.positionalRecords().length).toBe(2);
   });
 
-  it('update ticks down pixel move cooldown after the engine hook', () =>
+  it('update ticks down the pixel move cooldown after the engine hook', () =>
   {
-    const ch = new sandbox.Game_CharacterBase();
-
+    // Arrange
+    const ch = new globalThis.Game_CharacterBase();
     ch.initMembers();
     ch.setPixelMoveCooldown(1);
+
+    // Act
     ch.update();
 
+    // Assert
     expect(ch.getPixelMoveCooldown()).toBe(0);
   });
 });

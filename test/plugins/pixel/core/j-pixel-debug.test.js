@@ -1,50 +1,71 @@
 //region plugins/pixel/core/j-pixel-debug.test.js
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { loadPixelCorePluginVm } from '../pixel-vm.js';
+import {
+  installPixelCoreHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPixel,
+} from '../fixtures/install-pixel-host-globals.js';
 
-describe('PixelDebugSampler sampling helpers', () =>
+describe('PixelDebugSampler sampling helpers (direct src import)', () =>
 {
-  let sandbox;
+  beforeAll(async () =>
+  {
+    vi.resetModules();
+
+    installPixelCoreHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJPixel();
+    await import('../../../../src/plugins/pixel/core/_metadata/initialization.js');
+
+    ({ default: globalThis.PixelDebugSampler } = await import('../../../../src/plugins/pixel/core/_models/PixelDebugSampler.js'));
+  });
 
   beforeEach(() =>
   {
-    sandbox = { console };
-    loadPixelCorePluginVm(sandbox);
-  });
-
-  afterEach(() =>
-  {
-    sandbox = null;
+    globalThis.PixelDebugSampler.clear();
   });
 
   it('does not enqueue samples while disabled', () =>
   {
-    sandbox.PixelDebugSampler.enabled = false;
-    sandbox.PixelDebugSampler.samples.length = 0;
-    sandbox.PixelDebugSampler.push(1, 2, 'rgba(0,0,0,0.5)');
+    // Arrange
+    globalThis.PixelDebugSampler.enabled = false;
 
-    expect(sandbox.PixelDebugSampler.samples.length).toBe(0);
+    // Act
+    globalThis.PixelDebugSampler.push(1, 2, 'rgba(0,0,0,0.5)');
+
+    // Assert
+    expect(globalThis.PixelDebugSampler.samples.length).toBe(0);
   });
 
   it('enqueues samples while enabled', () =>
   {
-    sandbox.PixelDebugSampler.enabled = true;
-    sandbox.PixelDebugSampler.clear();
-    sandbox.PixelDebugSampler.push(0.5, 0.25, 'rgba(1,2,3,0.4)');
+    // Arrange
+    globalThis.PixelDebugSampler.enabled = true;
 
-    expect(sandbox.PixelDebugSampler.samples.length).toBe(1);
-    expect(sandbox.PixelDebugSampler.samples[0].x).toBe(0.5);
-    expect(sandbox.PixelDebugSampler.samples[0].y).toBe(0.25);
+    // Act
+    globalThis.PixelDebugSampler.push(0.5, 0.25, 'rgba(1,2,3,0.4)');
+
+    // Assert
+    expect(globalThis.PixelDebugSampler.samples.length).toBe(1);
+    expect(globalThis.PixelDebugSampler.samples[0].x).toBe(0.5);
+    expect(globalThis.PixelDebugSampler.samples[0].y).toBe(0.25);
   });
 
   it('clear removes queued samples', () =>
   {
-    sandbox.PixelDebugSampler.enabled = true;
-    sandbox.PixelDebugSampler.push(0, 0, 'rgba(0,0,0,1)');
-    sandbox.PixelDebugSampler.clear();
+    // Arrange
+    globalThis.PixelDebugSampler.enabled = true;
+    globalThis.PixelDebugSampler.push(0, 0, 'rgba(0,0,0,1)');
 
-    expect(sandbox.PixelDebugSampler.samples.length).toBe(0);
+    // Act
+    globalThis.PixelDebugSampler.clear();
+
+    // Assert
+    expect(globalThis.PixelDebugSampler.samples.length).toBe(0);
   });
 });
 //endregion plugins/pixel/core/j-pixel-debug.test.js

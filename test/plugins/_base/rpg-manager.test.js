@@ -2,464 +2,883 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { installJabsOnChanceEffectGlobalStub } from './fixtures/install-jabs-onchance-stub.js';
-import { clearRpgManagerCacheInVm, evaluateJBaseOnlyForTests } from '../../setup/shipped-plugin-vm.js';
+import { installJBaseHostGlobals } from './fixtures/install-j-base-host-globals.js';
 
-describe('J-Base RPGManager (out/J-Base.js)', () =>
+describe('RPGManager', () =>
 {
-  let sandbox;
+  let RPGManager;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    evaluateJBaseOnlyForTests({
-      sandbox,
-      afterHostGlobalsInstall: installJabsOnChanceEffectGlobalStub,
-    });
+    // fresh module registry so re-running this file doesn't double-apply J.BASE setup.
+    vi.resetModules();
+
+    installJBaseHostGlobals();
+
+    // resolveHitTypeString() reads these off the bare Game_Action global- the shared placeholder has
+    // no statics of its own, so give it the real values from project/js/rmmz_objects.js directly.
+    globalThis.Game_Action.HITTYPE_CERTAIN = 0;
+    globalThis.Game_Action.HITTYPE_PHYSICAL = 1;
+    globalThis.Game_Action.HITTYPE_MAGICAL = 2;
+
+    // getOnChanceEffectsFromDatabaseObject() instantiates JABS_OnChanceEffect, which lives in JABS, not J-Base.
+    installJabsOnChanceEffectGlobalStub(globalThis);
+
+    // real production code- sets up globalThis.J, J.BASE.Aliased maps, and the String.empty/Array.empty
+    // sentinel augmentations relied on elsewhere in this codebase.
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    // the file under test- a pure class with real imports, no prototype patching involved.
+    ({ default: RPGManager } = await import('../../../src/plugins/_base/managers/RPGManager.js'));
   });
 
   afterAll(() =>
   {
-    sandbox = null;
+    vi.unstubAllGlobals();
   });
 
   beforeEach(() =>
   {
-    clearRpgManagerCacheInVm(sandbox);
-    sandbox.$gameVariables._data = [];
+    RPGManager.clearCache();
+    globalThis.$gameVariables._data = [];
   });
 
   describe('caching', () =>
   {
-    it('returns stale getNumberFromNoteByRegex after note changes until invalidate', () =>
+    it('returns the freshly parsed value on the first read (cache miss)', () =>
     {
+      // Arrange
       const data = { note: '<k:1>' };
       const re = /<k:(\d+)>/;
 
-      expect(sandbox.RPGManager.getNumberFromNoteByRegex(data, re)).toBe(1);
+      // Act
+      const result = RPGManager.getNumberFromNoteByRegex(data, re);
 
-      data.note = '<k:99>';
-
-      expect(sandbox.RPGManager.getNumberFromNoteByRegex(data, re)).toBe(1);
-
-      sandbox.RPGManager.invalidate(data);
-
-      expect(sandbox.RPGManager.getNumberFromNoteByRegex(data, re)).toBe(99);
+      // Assert
+      expect(result).toBe(1);
     });
 
-    it('clearCache drops entries so the next read recomputes', () =>
+    it('returns the stale cached value after the note changes, before invalidate is called (cache hit)', () =>
     {
+      // Arrange
+      const data = { note: '<k:1>' };
+      const re = /<k:(\d+)>/;
+      RPGManager.getNumberFromNoteByRegex(data, re);
+      data.note = '<k:99>';
+
+      // Act
+      const result = RPGManager.getNumberFromNoteByRegex(data, re);
+
+      // Assert
+      expect(result).toBe(1);
+    });
+
+    it('returns the freshly parsed value once invalidate() clears this object\'s cache entry', () =>
+    {
+      // Arrange
+      const data = { note: '<k:1>' };
+      const re = /<k:(\d+)>/;
+      RPGManager.getNumberFromNoteByRegex(data, re);
+      data.note = '<k:99>';
+      RPGManager.invalidate(data);
+
+      // Act
+      const result = RPGManager.getNumberFromNoteByRegex(data, re);
+
+      // Assert
+      expect(result).toBe(99);
+    });
+
+    it('clearCache() drops every entry so the next read recomputes for every object', () =>
+    {
+      // Arrange
       const a = { note: '<k:2>' };
       const b = { note: '<k:3>' };
       const re = /<k:(\d+)>/;
-
-      expect(sandbox.RPGManager.getNumberFromNoteByRegex(a, re)).toBe(2);
-      expect(sandbox.RPGManager.getNumberFromNoteByRegex(b, re)).toBe(3);
-
-      clearRpgManagerCacheInVm(sandbox);
-
+      RPGManager.getNumberFromNoteByRegex(a, re);
+      RPGManager.getNumberFromNoteByRegex(b, re);
       a.note = '<k:20>';
       b.note = '<k:30>';
 
-      expect(sandbox.RPGManager.getNumberFromNoteByRegex(a, re)).toBe(20);
-      expect(sandbox.RPGManager.getNumberFromNoteByRegex(b, re)).toBe(30);
+      // Act
+      RPGManager.clearCache();
+
+      // Assert
+      expect(RPGManager.getNumberFromNoteByRegex(a, re)).toBe(20);
+      expect(RPGManager.getNumberFromNoteByRegex(b, re)).toBe(30);
     });
   });
 
-  describe('getStringFromNoteByRegex / getStringsFromNoteByRegex', () =>
+  describe('getStringFromNoteByRegex', () =>
   {
-    it('getString keeps last match across lines; getStrings collects all', () =>
+    it('keeps the last match when multiple lines match', () =>
     {
+      // Arrange
       const data = { note: '<id:a>\n<id:b>' };
       const re = /<id:(\w+)>/;
 
-      expect(sandbox.RPGManager.getStringFromNoteByRegex(data, re)).toBe('b');
-      expect(sandbox.RPGManager.getStringsFromNoteByRegex(data, re)).toEqual([ 'a', 'b' ]);
+      // Act
+      const result = RPGManager.getStringFromNoteByRegex(data, re);
+
+      // Assert
+      expect(result).toBe('b');
     });
 
-    it('returns String.empty or null when missing (nullIfEmpty)', () =>
+    it('returns String.empty when missing and nullIfEmpty is false', () =>
     {
-      const empty = { note: '' };
+      // Arrange
+      const data = { note: '' };
       const re = /<id:(\w+)>/;
 
-      expect(sandbox.RPGManager.getStringFromNoteByRegex(empty, re, false)).toBe('');
-      expect(sandbox.RPGManager.getStringFromNoteByRegex(empty, re, true)).toBe(null);
-      expect(sandbox.RPGManager.getStringsFromNoteByRegex(empty, re, false)).toEqual([]);
-      expect(sandbox.RPGManager.getStringsFromNoteByRegex(empty, re, true)).toBe(null);
+      // Act
+      const result = RPGManager.getStringFromNoteByRegex(data, re, false);
+
+      // Assert
+      expect(result).toBe('');
     });
 
-    it('rejects non-parseable databaseData', () =>
+    it('returns null when missing and nullIfEmpty is true', () =>
     {
+      // Arrange
+      const data = { note: '' };
       const re = /<id:(\w+)>/;
 
-      expect(sandbox.RPGManager.getStringFromNoteByRegex(null, re, true)).toBe(null);
-      expect(sandbox.RPGManager.getStringFromNoteByRegex({ }, re, true)).toBe(null);
+      // Act
+      const result = RPGManager.getStringFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toBe(null);
+    });
+
+    it('returns null for a null databaseData when nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const data = null;
+      const re = /<id:(\w+)>/;
+
+      // Act
+      const result = RPGManager.getStringFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toBe(null);
+    });
+
+    it('returns null for a databaseData with no note property when nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const data = {};
+      const re = /<id:(\w+)>/;
+
+      // Act
+      const result = RPGManager.getStringFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toBe(null);
     });
   });
 
-  describe('getNumberFromNoteByRegex / getSumFromAllNotesByRegex', () =>
+  describe('getStringsFromNoteByRegex', () =>
   {
-    it('uses last match and parses decimals', () =>
+    it('collects every matching line', () =>
     {
+      // Arrange
+      const data = { note: '<id:a>\n<id:b>' };
+      const re = /<id:(\w+)>/;
+
+      // Act
+      const result = RPGManager.getStringsFromNoteByRegex(data, re);
+
+      // Assert
+      expect(result).toEqual([ 'a', 'b' ]);
+    });
+
+    it('returns an empty array when missing and nullIfEmpty is false', () =>
+    {
+      // Arrange
+      const data = { note: '' };
+      const re = /<id:(\w+)>/;
+
+      // Act
+      const result = RPGManager.getStringsFromNoteByRegex(data, re, false);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it('returns null when missing and nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const data = { note: '' };
+      const re = /<id:(\w+)>/;
+
+      // Act
+      const result = RPGManager.getStringsFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toBe(null);
+    });
+  });
+
+  describe('getNumberFromNoteByRegex', () =>
+  {
+    it('uses the last match and parses decimals', () =>
+    {
+      // Arrange
       const data = { note: '<n:1>\n<n:2.5>' };
       const re = /<n:([\d.]+)>/;
 
-      expect(sandbox.RPGManager.getNumberFromNoteByRegex(data, re)).toBe(2.5);
-    });
+      // Act
+      const result = RPGManager.getNumberFromNoteByRegex(data, re);
 
-    it('getSumFromAllNotesByRegex sums per-object last values', () =>
+      // Assert
+      expect(result).toBe(2.5);
+    });
+  });
+
+  describe('getSumFromAllNotesByRegex', () =>
+  {
+    it('sums the last value from each database object', () =>
     {
+      // Arrange
       const re = /<n:(\d+)>/;
       const rows = [
         { note: '<n:4>' },
         { note: '<n:5>' },
       ];
 
-      expect(sandbox.RPGManager.getSumFromAllNotesByRegex(rows, re)).toBe(9);
+      // Act
+      const result = RPGManager.getSumFromAllNotesByRegex(rows, re);
+
+      // Assert
+      expect(result).toBe(9);
     });
 
-    it('empty collection returns 0 or null with nullIfEmpty', () =>
+    it('returns 0 for an empty collection when nullIfEmpty is false', () =>
     {
+      // Arrange
       const re = /<n:(\d+)>/;
 
-      expect(sandbox.RPGManager.getSumFromAllNotesByRegex([], re, false)).toBe(0);
-      expect(sandbox.RPGManager.getSumFromAllNotesByRegex([], re, true)).toBe(null);
+      // Act
+      const result = RPGManager.getSumFromAllNotesByRegex([], re, false);
+
+      // Assert
+      expect(result).toBe(0);
     });
 
-    it('all zeros with nullIfEmpty returns null', () =>
+    it('returns null for an empty collection when nullIfEmpty is true', () =>
     {
+      // Arrange
+      const re = /<n:(\d+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromAllNotesByRegex([], re, true);
+
+      // Assert
+      expect(result).toBe(null);
+    });
+
+    it('returns null when every row sums to zero and nullIfEmpty is true', () =>
+    {
+      // Arrange
       const re = /<n:(\d+)>/;
       const rows = [ { note: '' }, { note: '' } ];
 
-      expect(sandbox.RPGManager.getSumFromAllNotesByRegex(rows, re, true)).toBe(null);
+      // Act
+      const result = RPGManager.getSumFromAllNotesByRegex(rows, re, true);
+
+      // Assert
+      expect(result).toBe(null);
     });
   });
 
   describe('getNumbersFromNoteByRegex', () =>
   {
-    it('parses bracket list from capture group', () =>
+    it('parses a bracketed list from the capture group', () =>
     {
+      // Arrange
       const data = { note: '<nums:[1,2,3]>' };
       const re = /<nums:(\[[^\]]+\])>/;
 
-      expect(sandbox.RPGManager.getNumbersFromNoteByRegex(data, re)).toEqual([ 1, 2, 3 ]);
+      // Act
+      const result = RPGManager.getNumbersFromNoteByRegex(data, re);
+
+      // Assert
+      expect(result).toEqual([ 1, 2, 3 ]);
     });
   });
 
-  describe('getResultFromNoteByRegex / getResultsFromAllNotesByRegex', () =>
+  describe('getResultFromNoteByRegex', () =>
   {
-    it('evaluates b and sums multiple lines', () =>
+    it('evaluates the formula against the base param and sums multiple lines', () =>
     {
+      // Arrange
       const data = { note: '<f:b+1>\n<f:b*2>' };
       const re = /<f:([^>]+)>/;
 
-      expect(sandbox.RPGManager.getResultFromNoteByRegex(data, re, 10, null, false)).toBe(31);
+      // Act
+      const result = RPGManager.getResultFromNoteByRegex(data, re, 10, null, false);
+
+      // Assert
+      expect(result).toBe(31);
     });
 
-    it('exposes a from context and v from $gameVariables._data', () =>
+    it('exposes "a" from the context and "v" from $gameVariables._data', () =>
     {
-      sandbox.$gameVariables._data[5] = 7;
+      // Arrange
+      globalThis.$gameVariables._data[5] = 7;
       const data = { note: '<f:a.level + v[5]>' };
       const re = /<f:([^>]+)>/;
       const ctx = { level: 3, getLevel() { return this.level; } };
 
-      expect(sandbox.RPGManager.getResultFromNoteByRegex(data, re, 0, ctx, false)).toBe(10);
+      // Act
+      const result = RPGManager.getResultFromNoteByRegex(data, re, 0, ctx, false);
+
+      // Assert
+      expect(result).toBe(10);
     });
 
-    it('re-evaluates formulas when battler context level changes', () =>
+    it('re-evaluates the formula against the battler context\'s current level on each call', () =>
     {
+      // Arrange
       const data = { note: '<f:15 + (a.level * 4)>' };
       const re = /<f:([^>]+)>/;
       const ctx = { level: 1, getLevel() { return this.level; } };
-
-      expect(sandbox.RPGManager.getResultFromNoteByRegex(data, re, 0, ctx, false)).toBe(19);
-
+      RPGManager.getResultFromNoteByRegex(data, re, 0, ctx, false);
       ctx.level = 2;
 
-      expect(sandbox.RPGManager.getResultFromNoteByRegex(data, re, 0, ctx, false)).toBe(23);
+      // Act
+      const result = RPGManager.getResultFromNoteByRegex(data, re, 0, ctx, false);
+
+      // Assert
+      expect(result).toBe(23);
     });
 
-    it('swallows bad formulas and still returns finite sum', () =>
+    it('swallows a bad formula, logs it, and still returns a finite sum', () =>
     {
-      const err = vi.spyOn(sandbox.console, 'error').mockImplementation(() => {});
+      // Arrange
+      const err = vi.spyOn(globalThis.console, 'error').mockImplementation(() => {});
       const data = { note: '<f:not_a_js_expr_@@@>' };
       const re = /<f:([^>]+)>/;
 
-      expect(sandbox.RPGManager.getResultFromNoteByRegex(data, re, 0, null, false)).toBe(0);
+      // Act
+      const result = RPGManager.getResultFromNoteByRegex(data, re, 0, null, false);
 
+      // Assert
+      expect(result).toBe(0);
       err.mockRestore();
     });
+  });
 
-    it('getResultsFromAllNotesByRegex aggregates objects', () =>
+  describe('getResultsFromAllNotesByRegex', () =>
+  {
+    it('aggregates the evaluated result across multiple database objects', () =>
     {
+      // Arrange
       const re = /<f:([^>]+)>/;
       const rows = [
         { note: '<f:b>' },
         { note: '<f:b+2>' },
       ];
 
-      expect(sandbox.RPGManager.getResultsFromAllNotesByRegex(rows, re, 5, null, false)).toBe(12);
+      // Act
+      const result = RPGManager.getResultsFromAllNotesByRegex(rows, re, 5, null, false);
+
+      // Assert
+      expect(result).toBe(12);
     });
   });
 
-  describe('checkForBooleanFromNoteByRegex / checkForBooleanFromAllNotesByRegex', () =>
+  describe('checkForBooleanFromNoteByRegex', () =>
   {
-    it('detects tag presence on a single object', () =>
+    it('returns true when the tag is present', () =>
     {
-      const yes = { note: '<hidden>' };
-      const no = { note: '' };
+      // Arrange
+      const data = { note: '<hidden>' };
       const re = /<hidden>/;
 
-      expect(sandbox.RPGManager.checkForBooleanFromNoteByRegex(yes, re, false)).toBe(true);
-      expect(sandbox.RPGManager.checkForBooleanFromNoteByRegex(no, re, false)).toBe(false);
-      expect(sandbox.RPGManager.checkForBooleanFromNoteByRegex(no, re, true)).toBe(null);
+      // Act
+      const result = RPGManager.checkForBooleanFromNoteByRegex(data, re, false);
+
+      // Assert
+      expect(result).toBe(true);
     });
 
-    it('OR semantics across objects for all-notes helper', () =>
+    it('returns false when the tag is absent and nullIfEmpty is false', () =>
     {
+      // Arrange
+      const data = { note: '' };
+      const re = /<hidden>/;
+
+      // Act
+      const result = RPGManager.checkForBooleanFromNoteByRegex(data, re, false);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('returns null when the tag is absent and nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const data = { note: '' };
+      const re = /<hidden>/;
+
+      // Act
+      const result = RPGManager.checkForBooleanFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toBe(null);
+    });
+  });
+
+  describe('checkForBooleanFromAllNotesByRegex', () =>
+  {
+    it('returns false when the tag is absent from every object', () =>
+    {
+      // Arrange
+      const re = /<tag>/;
+      const a = { note: '' };
+
+      // Act
+      const result = RPGManager.checkForBooleanFromAllNotesByRegex([ a, a ], re, false);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('returns true when at least one object has the tag (OR semantics)', () =>
+    {
+      // Arrange
       const re = /<tag>/;
       const a = { note: '' };
       const b = { note: '<tag>' };
 
-      expect(sandbox.RPGManager.checkForBooleanFromAllNotesByRegex([ a, a ], re, false)).toBe(false);
-      expect(sandbox.RPGManager.checkForBooleanFromAllNotesByRegex([ a, b ], re, false)).toBe(true);
+      // Act
+      const result = RPGManager.checkForBooleanFromAllNotesByRegex([ a, b ], re, false);
+
+      // Assert
+      expect(result).toBe(true);
     });
 
-    it('all-notes with nullIfEmpty returns null when no truthy match', () =>
+    it('returns null when no object has the tag and nullIfEmpty is true', () =>
     {
+      // Arrange
       const re = /<tag>/;
 
-      expect(sandbox.RPGManager.checkForBooleanFromAllNotesByRegex([ { note: '' } ], re, true)).toBe(null);
+      // Act
+      const result = RPGManager.checkForBooleanFromAllNotesByRegex([ { note: '' } ], re, true);
+
+      // Assert
+      expect(result).toBe(null);
     });
   });
 
-  describe('getArrayFromNotesByRegex / getArraysFromNotesByRegex', () =>
+  describe('getArrayFromNotesByRegex', () =>
   {
-    it('getArray parses one bracket capture with tryParse', () =>
+    it('parses one bracketed capture with tryParse enabled', () =>
     {
+      // Arrange
       const data = { note: '<arr:[10,20]>' };
       const re = /<arr:(\[[^\]]+\])>/;
 
-      expect(sandbox.RPGManager.getArrayFromNotesByRegex(data, re, true, false)).toEqual([ 10, 20 ]);
-    });
+      // Act
+      const result = RPGManager.getArrayFromNotesByRegex(data, re, true, false);
 
-    it('getArrays collects multiple lines', () =>
-    {
-      const data = { note: '<a:[1]>\n<a:[2,3]>' };
-      const re = /<a:(\[[^\]]+\])>/;
-      const out = sandbox.RPGManager.getArraysFromNotesByRegex(data, re, true, false);
-
-      expect(out).toEqual([
-        [ 1 ],
-        [ 2, 3 ],
-      ]);
+      // Assert
+      expect(result).toEqual([ 10, 20 ]);
     });
   });
 
-  describe('getAllCapturesFromNoteByRegex / getAllCapturesFromAllNotesByRegex', () =>
+  describe('getArraysFromNotesByRegex', () =>
   {
-    it('returns capture groups per matching line', () =>
+    it('collects one array per matching line', () =>
     {
+      // Arrange
+      const data = { note: '<a:[1]>\n<a:[2,3]>' };
+      const re = /<a:(\[[^\]]+\])>/;
+
+      // Act
+      const result = RPGManager.getArraysFromNotesByRegex(data, re, true, false);
+
+      // Assert
+      expect(result).toEqual([ [ 1 ], [ 2, 3 ] ]);
+    });
+  });
+
+  describe('getAllCapturesFromNoteByRegex', () =>
+  {
+    it('returns the capture groups for each matching line', () =>
+    {
+      // Arrange
       const data = { note: '<x:hit:self:[a]>' };
       const re = /<x:(\w+):(\w+):\[([^\]]+)\]>/;
 
-      expect(sandbox.RPGManager.getAllCapturesFromNoteByRegex(data, re, false)).toEqual([
-        [ 'hit', 'self', 'a' ],
-      ]);
+      // Act
+      const result = RPGManager.getAllCapturesFromNoteByRegex(data, re, false);
+
+      // Assert
+      expect(result).toEqual([ [ 'hit', 'self', 'a' ] ]);
     });
 
-    it('concatenates captures from multiple database rows', () =>
+    it('returns null when nothing matches and nullIfEmpty is true', () =>
     {
+      // Arrange
+      const data = { note: '' };
+      const re = /<none:(\d)>/;
+
+      // Act
+      const result = RPGManager.getAllCapturesFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toBe(null);
+    });
+  });
+
+  describe('getAllCapturesFromAllNotesByRegex', () =>
+  {
+    it('concatenates captures across multiple database rows', () =>
+    {
+      // Arrange
       const re = /<c:(\d)>/;
       const rows = [
         { note: '<c:1>' },
         { note: '<c:2>' },
       ];
 
-      expect(sandbox.RPGManager.getAllCapturesFromAllNotesByRegex(rows, re, false)).toEqual([
-        [ '1' ],
-        [ '2' ],
-      ]);
-    });
+      // Act
+      const result = RPGManager.getAllCapturesFromAllNotesByRegex(rows, re, false);
 
-    it('nullIfEmpty when nothing matches', () =>
-    {
-      const re = /<none:(\d)>/;
-
-      expect(sandbox.RPGManager.getAllCapturesFromNoteByRegex({ note: '' }, re, true)).toBe(null);
+      // Assert
+      expect(result).toEqual([ [ '1' ], [ '2' ] ]);
     });
   });
 
-  describe('getOnChanceEffectsFromDatabaseObject(s)', () =>
+  describe('getOnChanceEffectsFromDatabaseObject', () =>
   {
-    it('maps parsed bracket pairs to stub JABS_OnChanceEffect instances', () =>
+    it('maps a parsed bracket pair to a stub JABS_OnChanceEffect instance', () =>
     {
+      // Arrange
       const data = { note: '<jeOC:[7, 55]>' };
       const re = /<jeOC:(\[[0-9]+,\s*[0-9]+\])>/;
-      const list = sandbox.RPGManager.getOnChanceEffectsFromDatabaseObject(data, re);
 
+      // Act
+      const list = RPGManager.getOnChanceEffectsFromDatabaseObject(data, re);
+
+      // Assert
       expect(list.length).toBe(1);
       expect(list[0].skillId).toBe(7);
       expect(list[0].chance).toBe(55);
       expect(typeof list[0].key).toBe('string');
     });
 
-    it('flattens multiple objects via getOnChanceEffectsFromDatabaseObjects', () =>
+    it('returns an empty array when the note has no matches', () =>
     {
+      // Arrange
+      const data = { note: '' };
+      const re = /<jeOC:(\[[0-9]+,\s*[0-9]+\])>/;
+
+      // Act
+      const list = RPGManager.getOnChanceEffectsFromDatabaseObject(data, re);
+
+      // Assert
+      expect(list).toEqual([]);
+    });
+  });
+
+  describe('getOnChanceEffectsFromDatabaseObjects', () =>
+  {
+    it('flattens the on-chance effects found across multiple objects', () =>
+    {
+      // Arrange
       const re = /<jeOC:(\[[0-9]+,\s*[0-9]+\])>/;
       const rows = [
         { note: '<jeOC:[1, 10]>' },
         { note: '<jeOC:[2, 20]>' },
       ];
-      const list = sandbox.RPGManager.getOnChanceEffectsFromDatabaseObjects(rows, re);
 
+      // Act
+      const list = RPGManager.getOnChanceEffectsFromDatabaseObjects(rows, re);
+
+      // Assert
       expect(list.map(e => e.skillId)).toEqual([ 1, 2 ]);
-    });
-
-    it('returns empty array when note has no matches', () =>
-    {
-      const re = /<jeOC:(\[[0-9]+,\s*[0-9]+\])>/;
-
-      expect(sandbox.RPGManager.getOnChanceEffectsFromDatabaseObject({ note: '' }, re)).toEqual([]);
     });
   });
 
   describe('chanceIn100', () =>
   {
-    it('returns false when percentOfSuccess is 0 or negative', () =>
+    it('returns false when percentOfSuccess is 0', () =>
     {
-      expect(sandbox.RPGManager.chanceIn100(0)).toBe(false);
-      expect(sandbox.RPGManager.chanceIn100(-5)).toBe(false);
+      // Arrange
+      const percentOfSuccess = 0;
+
+      // Act
+      const result = RPGManager.chanceIn100(percentOfSuccess);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
-    it('respects deterministic Math.randomInt', () =>
+    it('returns false when percentOfSuccess is negative', () =>
     {
-      const prev = sandbox.Math.randomInt;
+      // Arrange
+      const percentOfSuccess = -5;
 
-      sandbox.Math.randomInt = function()
-      {
-        return 40;
-      };
+      // Act
+      const result = RPGManager.chanceIn100(percentOfSuccess);
 
-      expect(sandbox.RPGManager.chanceIn100(50, 1, 0)).toBe(true);
-
-      sandbox.Math.randomInt = function()
-      {
-        return 60;
-      };
-
-      expect(sandbox.RPGManager.chanceIn100(50, 1, 0)).toBe(false);
-
-      sandbox.Math.randomInt = prev;
+      // Assert
+      expect(result).toBe(false);
     });
 
-    it('negative rerolls can undo success', () =>
+    it('returns true when the positive roll lands within the success threshold', () =>
     {
-      const prev = sandbox.Math.randomInt;
+      // Arrange
+      const prev = globalThis.Math.randomInt;
+      globalThis.Math.randomInt = () => 40;
+
+      // Act
+      const result = RPGManager.chanceIn100(50, 1, 0);
+
+      // Assert
+      expect(result).toBe(true);
+      globalThis.Math.randomInt = prev;
+    });
+
+    it('returns false when the positive roll lands outside the success threshold', () =>
+    {
+      // Arrange
+      const prev = globalThis.Math.randomInt;
+      globalThis.Math.randomInt = () => 60;
+
+      // Act
+      const result = RPGManager.chanceIn100(50, 1, 0);
+
+      // Assert
+      expect(result).toBe(false);
+      globalThis.Math.randomInt = prev;
+    });
+
+    it('a failing negative reroll undoes an earlier positive success', () =>
+    {
+      // Arrange
+      const prev = globalThis.Math.randomInt;
       let n = 0;
-
-      sandbox.Math.randomInt = function()
+      globalThis.Math.randomInt = () =>
       {
         n++;
-        if (n === 1)
-        {
-          return 10;
-        }
-
-        return 80;
+        return n === 1 ? 10 : 80;
       };
 
-      expect(sandbox.RPGManager.chanceIn100(50, 1, 1)).toBe(false);
+      // Act
+      const result = RPGManager.chanceIn100(50, 1, 1);
 
-      sandbox.Math.randomInt = prev;
+      // Assert
+      expect(result).toBe(false);
+      globalThis.Math.randomInt = prev;
     });
   });
 
   describe('global RegExp flag regression', () =>
   {
-    it('does not leak lastIndex across note lines when input uses /g', () =>
+    it('does not leak lastIndex across note lines when the input regex uses the /g flag', () =>
     {
+      // Arrange
       const data = { note: '<g:1>\n<g:2>\n<g:3>' };
       const re = /<g:(\d+)>/g;
 
-      expect(sandbox.RPGManager.getStringsFromNoteByRegex(data, re)).toEqual([ '1', '2', '3' ]);
+      // Act
+      const result = RPGManager.getStringsFromNoteByRegex(data, re);
+
+      // Assert
+      expect(result).toEqual([ '1', '2', '3' ]);
     });
   });
 
   describe('weightedMapChoice', () =>
   {
-    it('returns null when totalWeight is zero or negative', () =>
+    it('returns null when totalWeight is zero', () =>
     {
+      // Arrange
       const map = new Map([ [ 'a', 1 ] ]);
 
-      expect(sandbox.RPGManager.weightedMapChoice(map, 0)).toBeNull();
-      expect(sandbox.RPGManager.weightedMapChoice(map, -5)).toBeNull();
+      // Act
+      const result = RPGManager.weightedMapChoice(map, 0);
+
+      // Assert
+      expect(result).toBeNull();
     });
 
-    it('picks the key whose weight bucket contains the rolled value', () =>
+    it('returns null when totalWeight is negative', () =>
     {
-      // buckets: 'a' covers [0, 10), 'b' covers [10, 30), 'c' covers [30, 60).
+      // Arrange
+      const map = new Map([ [ 'a', 1 ] ]);
+
+      // Act
+      const result = RPGManager.weightedMapChoice(map, -5);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('picks the first bucket when the roll lands in its range', () =>
+    {
+      // Arrange- buckets: 'a' covers [0, 10), 'b' covers [10, 30), 'c' covers [30, 60).
       const map = new Map([ [ 'a', 10 ], [ 'b', 20 ], [ 'c', 30 ] ]);
-      const prevRandom = sandbox.Math.random;
+      const prevRandom = globalThis.Math.random;
+      globalThis.Math.random = () => 5 / 60;
 
-      // Math.random() * 60 === 5 -> falls in 'a' bucket.
-      sandbox.Math.random = () => 5 / 60;
-      expect(sandbox.RPGManager.weightedMapChoice(map, 60)).toBe('a');
+      // Act
+      const result = RPGManager.weightedMapChoice(map, 60);
 
-      // Math.random() * 60 === 15 -> falls in 'b' bucket.
-      sandbox.Math.random = () => 15 / 60;
-      expect(sandbox.RPGManager.weightedMapChoice(map, 60)).toBe('b');
+      // Assert
+      expect(result).toBe('a');
+      globalThis.Math.random = prevRandom;
+    });
 
-      // Math.random() * 60 === 45 -> falls in 'c' bucket.
-      sandbox.Math.random = () => 45 / 60;
-      expect(sandbox.RPGManager.weightedMapChoice(map, 60)).toBe('c');
+    it('picks a middle bucket when the roll lands in its range', () =>
+    {
+      // Arrange
+      const map = new Map([ [ 'a', 10 ], [ 'b', 20 ], [ 'c', 30 ] ]);
+      const prevRandom = globalThis.Math.random;
+      globalThis.Math.random = () => 15 / 60;
 
-      sandbox.Math.random = prevRandom;
+      // Act
+      const result = RPGManager.weightedMapChoice(map, 60);
+
+      // Assert
+      expect(result).toBe('b');
+      globalThis.Math.random = prevRandom;
+    });
+
+    it('picks the last bucket when the roll lands in its range', () =>
+    {
+      // Arrange
+      const map = new Map([ [ 'a', 10 ], [ 'b', 20 ], [ 'c', 30 ] ]);
+      const prevRandom = globalThis.Math.random;
+      globalThis.Math.random = () => 45 / 60;
+
+      // Act
+      const result = RPGManager.weightedMapChoice(map, 60);
+
+      // Assert
+      expect(result).toBe('c');
+      globalThis.Math.random = prevRandom;
     });
 
     it('skips entries with zero or negative weight', () =>
     {
+      // Arrange
       const map = new Map([ [ 'a', 0 ], [ 'b', -5 ], [ 'c', 10 ] ]);
-      const prevRandom = sandbox.Math.random;
+      const prevRandom = globalThis.Math.random;
+      globalThis.Math.random = () => 0.5;
 
-      // regardless of roll, only 'c' has any positive weight to land in.
-      sandbox.Math.random = () => 0.5;
-      expect(sandbox.RPGManager.weightedMapChoice(map, 10)).toBe('c');
+      // Act
+      const result = RPGManager.weightedMapChoice(map, 10);
 
-      sandbox.Math.random = prevRandom;
+      // Assert- regardless of the roll, only 'c' has any positive weight to land in.
+      expect(result).toBe('c');
+      globalThis.Math.random = prevRandom;
     });
 
-    it('returns null if the roll overshoots every bucket', () =>
+    it('returns null when the roll overshoots every bucket', () =>
     {
-      // totalWeight overstates the map's actual weight sum, leaving a gap the roll can land in.
+      // Arrange- totalWeight overstates the map's actual weight sum, leaving a gap the roll can land in.
       const map = new Map([ [ 'a', 10 ] ]);
-      const prevRandom = sandbox.Math.random;
+      const prevRandom = globalThis.Math.random;
+      globalThis.Math.random = () => 0.99;
 
-      sandbox.Math.random = () => 0.99;
-      expect(sandbox.RPGManager.weightedMapChoice(map, 100)).toBeNull();
+      // Act
+      const result = RPGManager.weightedMapChoice(map, 100);
 
-      sandbox.Math.random = prevRandom;
+      // Assert
+      expect(result).toBeNull();
+      globalThis.Math.random = prevRandom;
     });
   });
 
   describe('resolveHitTypeString', () =>
   {
-    it('returns null for falsy input', () =>
+    it('returns null for undefined input', () =>
     {
-      expect(sandbox.RPGManager.resolveHitTypeString(undefined)).toBeNull();
-      expect(sandbox.RPGManager.resolveHitTypeString('')).toBeNull();
+      // Arrange
+      const input = undefined;
+
+      // Act
+      const result = RPGManager.resolveHitTypeString(input);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('returns null for an empty string', () =>
+    {
+      // Arrange
+      const input = '';
+
+      // Act
+      const result = RPGManager.resolveHitTypeString(input);
+
+      // Assert
+      expect(result).toBeNull();
     });
 
     it('returns null for an unrecognized string', () =>
     {
-      expect(sandbox.RPGManager.resolveHitTypeString('nonsense')).toBeNull();
+      // Arrange
+      const input = 'nonsense';
+
+      // Act
+      const result = RPGManager.resolveHitTypeString(input);
+
+      // Assert
+      expect(result).toBeNull();
     });
 
-    it('maps known hit type strings case-insensitively to their Game_Action constants', () =>
+    it('maps "physical" to Game_Action.HITTYPE_PHYSICAL', () =>
     {
-      expect(sandbox.RPGManager.resolveHitTypeString('physical')).toBe(sandbox.Game_Action.HITTYPE_PHYSICAL);
-      expect(sandbox.RPGManager.resolveHitTypeString('PHYSICAL')).toBe(sandbox.Game_Action.HITTYPE_PHYSICAL);
-      expect(sandbox.RPGManager.resolveHitTypeString('Magical')).toBe(sandbox.Game_Action.HITTYPE_MAGICAL);
-      expect(sandbox.RPGManager.resolveHitTypeString('certain')).toBe(sandbox.Game_Action.HITTYPE_CERTAIN);
+      // Arrange
+      const input = 'physical';
+
+      // Act
+      const result = RPGManager.resolveHitTypeString(input);
+
+      // Assert
+      expect(result).toBe(1);
+    });
+
+    it('maps "PHYSICAL" to Game_Action.HITTYPE_PHYSICAL, case-insensitively', () =>
+    {
+      // Arrange
+      const input = 'PHYSICAL';
+
+      // Act
+      const result = RPGManager.resolveHitTypeString(input);
+
+      // Assert
+      expect(result).toBe(1);
+    });
+
+    it('maps "Magical" to Game_Action.HITTYPE_MAGICAL, case-insensitively', () =>
+    {
+      // Arrange
+      const input = 'Magical';
+
+      // Act
+      const result = RPGManager.resolveHitTypeString(input);
+
+      // Assert
+      expect(result).toBe(2);
+    });
+
+    it('maps "certain" to Game_Action.HITTYPE_CERTAIN', () =>
+    {
+      // Arrange
+      const input = 'certain';
+
+      // Act
+      const result = RPGManager.resolveHitTypeString(input);
+
+      // Assert
+      expect(result).toBe(0);
     });
   });
 });

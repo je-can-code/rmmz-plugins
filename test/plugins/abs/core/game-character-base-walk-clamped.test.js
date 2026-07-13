@@ -1,19 +1,21 @@
 //region plugins/abs/core/game-character-base-walk-clamped.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { clearRpgManagerCacheInVm } from '../../../setup/shipped-plugin-vm.js';
-import { loadAbsPluginVm } from '../abs-vm.js';
+import {
+  installAbsHostGlobals,
+  setPluginContextToJAbs,
+  setPluginContextToJBase,
+} from '../fixtures/install-abs-host-globals.js';
 
 /**
  * Builds a minimal note-source stub carrying the given tag string, backed by the real
  * RPG_Skill prototype so its `jabsIgnoreTerrain`/`jabsKnockback` getters parse for real.
- * @param {object} sandbox
  * @param {string} note
  * @returns {object}
  */
-function buildSkillRow(sandbox, note)
+function buildSkillRow(note)
 {
-  const row = Object.create(sandbox.RPG_Skill.prototype);
+  const row = Object.create(globalThis.RPG_Skill.prototype);
   row.id = 1;
   row.note = note;
   row.meta = {};
@@ -21,98 +23,155 @@ function buildSkillRow(sandbox, note)
   return row;
 }
 
-describe('J-ABS Game_CharacterBase.walkInDirectionClamped (out/abs/J-ABS.js)', () =>
+/**
+ * Builds a plain duck-typed "character" carrying only what the walker touches: a position
+ * and a controllable passability predicate. The real method is borrowed via `.call()` so no
+ * actual Game_CharacterBase construction (and its vanilla RMMZ dependencies) is needed.
+ * @param {(x: number, y: number, direction: number) => boolean} canPassImpl
+ * @returns {object}
+ */
+function buildWalker(canPassImpl)
 {
-  /** @type {object} */
-  let sandbox;
+  return {
+    x: 0,
+    y: 0,
+    canPass: canPassImpl,
+    walkInDirectionClamped: globalThis.Game_CharacterBase.prototype.walkInDirectionClamped,
+  };
+}
 
-  beforeAll(() =>
+describe('J-ABS Game_CharacterBase.walkInDirectionClamped (direct src import)', () =>
+{
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadAbsPluginVm(sandbox);
+    vi.resetModules();
+
+    installAbsHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_Skill } = await import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+
+    setPluginContextToJAbs();
+    await import('../../../../src/plugins/abs/core/_metadata/initialization.js');
+
+    // patches globalThis.Game_CharacterBase.prototype directly, no vm involved.
+    await import('../../../../src/plugins/abs/core/objects/Game_CharacterBase.js');
+
+    // patches globalThis.RPG_Skill.prototype with jabsIgnoreTerrain/jabsKnockback getters.
+    await import('../../../../src/plugins/abs/core/database/RPG_Skill.js');
   });
-
-  afterAll(() =>
-  {
-    sandbox = null;
-  });
-
-  beforeEach(() =>
-  {
-    clearRpgManagerCacheInVm(sandbox);
-  });
-
-  /**
-   * Builds a plain duck-typed "character" carrying only what the walker touches: a position
-   * and a controllable passability predicate. The real method is borrowed via `.call()` so no
-   * actual Game_CharacterBase construction (and its vanilla RMMZ dependencies) is needed.
-   * @param {object} sandbox
-   * @param {(x: number, y: number, direction: number) => boolean} canPassImpl
-   * @returns {object}
-   */
-  function buildWalker(sandboxRef, canPassImpl)
-  {
-    return {
-      x: 0,
-      y: 0,
-      canPass: canPassImpl,
-      walkInDirectionClamped: sandboxRef.Game_CharacterBase.prototype.walkInDirectionClamped,
-    };
-  }
 
   it('walks the full distance when nothing blocks the way', () =>
   {
-    const walker = buildWalker(sandbox, () => true);
+    // Arrange
+    const walker = buildWalker(() => true);
 
-    const [ dx, dy ] = walker.walkInDirectionClamped(sandbox.J.ABS.Directions.RIGHT, 5);
+    // Act
+    const [ dx, dy ] = walker.walkInDirectionClamped(globalThis.J.ABS.Directions.RIGHT, 5);
 
+    // Assert
     expect([ dx, dy ]).toEqual([ 5, 0 ]);
   });
 
-  it('walks in all four compass directions', () =>
+  describe('compass directions', () =>
   {
-    const { UP, DOWN, LEFT, RIGHT } = sandbox.J.ABS.Directions;
+    it('walks up (negative y)', () =>
+    {
+      // Arrange
+      const walker = buildWalker(() => true);
 
-    expect(buildWalker(sandbox, () => true).walkInDirectionClamped(UP, 3)).toEqual([ 0, -3 ]);
-    expect(buildWalker(sandbox, () => true).walkInDirectionClamped(DOWN, 3)).toEqual([ 0, 3 ]);
-    expect(buildWalker(sandbox, () => true).walkInDirectionClamped(LEFT, 3)).toEqual([ -3, 0 ]);
-    expect(buildWalker(sandbox, () => true).walkInDirectionClamped(RIGHT, 3)).toEqual([ 3, 0 ]);
+      // Act
+      const result = walker.walkInDirectionClamped(globalThis.J.ABS.Directions.UP, 3);
+
+      // Assert
+      expect(result).toEqual([ 0, -3 ]);
+    });
+
+    it('walks down (positive y)', () =>
+    {
+      // Arrange
+      const walker = buildWalker(() => true);
+
+      // Act
+      const result = walker.walkInDirectionClamped(globalThis.J.ABS.Directions.DOWN, 3);
+
+      // Assert
+      expect(result).toEqual([ 0, 3 ]);
+    });
+
+    it('walks left (negative x)', () =>
+    {
+      // Arrange
+      const walker = buildWalker(() => true);
+
+      // Act
+      const result = walker.walkInDirectionClamped(globalThis.J.ABS.Directions.LEFT, 3);
+
+      // Assert
+      expect(result).toEqual([ -3, 0 ]);
+    });
+
+    it('walks right (positive x)', () =>
+    {
+      // Arrange
+      const walker = buildWalker(() => true);
+
+      // Act
+      const result = walker.walkInDirectionClamped(globalThis.J.ABS.Directions.RIGHT, 3);
+
+      // Assert
+      expect(result).toEqual([ 3, 0 ]);
+    });
   });
 
   it('stops at the last passable tile when something blocks midway', () =>
   {
-    // block everything from x=3 onward, allowing tiles 1 and 2.
-    const walker = buildWalker(sandbox, (x) => x < 3);
+    // Arrange- block everything from x=3 onward, allowing tiles 1 and 2.
+    const walker = buildWalker((x) => x < 3);
 
-    const [ dx, dy ] = walker.walkInDirectionClamped(sandbox.J.ABS.Directions.RIGHT, 10);
+    // Act
+    const [ dx, dy ] = walker.walkInDirectionClamped(globalThis.J.ABS.Directions.RIGHT, 10);
 
+    // Assert
     expect([ dx, dy ]).toEqual([ 2, 0 ]);
   });
 
   it('returns [0, 0] when immediately blocked', () =>
   {
-    const walker = buildWalker(sandbox, () => false);
+    // Arrange
+    const walker = buildWalker(() => false);
 
-    const [ dx, dy ] = walker.walkInDirectionClamped(sandbox.J.ABS.Directions.DOWN, 5);
+    // Act
+    const [ dx, dy ] = walker.walkInDirectionClamped(globalThis.J.ABS.Directions.DOWN, 5);
 
+    // Assert
     expect([ dx, dy ]).toEqual([ 0, 0 ]);
   });
 
   it('rounds a fractional distance before walking', () =>
   {
-    const walker = buildWalker(sandbox, () => true);
+    // Arrange
+    const walker = buildWalker(() => true);
 
-    const [ dx, dy ] = walker.walkInDirectionClamped(sandbox.J.ABS.Directions.RIGHT, 2.6);
+    // Act
+    const [ dx, dy ] = walker.walkInDirectionClamped(globalThis.J.ABS.Directions.RIGHT, 2.6);
 
+    // Assert
     expect([ dx, dy ]).toEqual([ 3, 0 ]);
   });
 
   it('walks zero tiles when distance is zero', () =>
   {
-    const walker = buildWalker(sandbox, () => true);
+    // Arrange
+    const walker = buildWalker(() => true);
 
-    const [ dx, dy ] = walker.walkInDirectionClamped(sandbox.J.ABS.Directions.RIGHT, 0);
+    // Act
+    const [ dx, dy ] = walker.walkInDirectionClamped(globalThis.J.ABS.Directions.RIGHT, 0);
 
+    // Assert
     expect([ dx, dy ]).toEqual([ 0, 0 ]);
   });
 
@@ -120,16 +179,26 @@ describe('J-ABS Game_CharacterBase.walkInDirectionClamped (out/abs/J-ABS.js)', (
   {
     it('is true when the skill carries <ignoreTerrain>', () =>
     {
-      const skill = buildSkillRow(sandbox, '<ignoreTerrain>');
+      // Arrange
+      const skill = buildSkillRow('<ignoreTerrain>');
 
-      expect(skill.jabsIgnoreTerrain).toBe(true);
+      // Act
+      const result = skill.jabsIgnoreTerrain;
+
+      // Assert
+      expect(result).toBe(true);
     });
 
     it('is false when the tag is absent', () =>
     {
-      const skill = buildSkillRow(sandbox, '<knockback:5>');
+      // Arrange
+      const skill = buildSkillRow('<knockback:5>');
 
-      expect(skill.jabsIgnoreTerrain).toBe(false);
+      // Act
+      const result = skill.jabsIgnoreTerrain;
+
+      // Assert
+      expect(result).toBe(false);
     });
   });
 });

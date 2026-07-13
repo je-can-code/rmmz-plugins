@@ -1,19 +1,21 @@
 //region plugins/abs/core/accumulate-encore.test.js
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { clearRpgManagerCacheInVm } from '../../../setup/shipped-plugin-vm.js';
-import { loadAbsPluginVm } from '../abs-vm.js';
+import {
+  installAbsHostGlobals,
+  setPluginContextToJAbs,
+  setPluginContextToJBase,
+} from '../fixtures/install-abs-host-globals.js';
 
 /**
  * Builds a minimal note-source stub carrying the given tag string, backed by the real
  * RPG_Skill prototype so formula/boolean tags parse for real.
- * @param {object} sandbox
  * @param {string} note
  * @returns {object}
  */
-function buildNoteRow(sandbox, note)
+function buildNoteRow(note)
 {
-  const row = Object.create(sandbox.RPG_Skill.prototype);
+  const row = Object.create(globalThis.RPG_Skill.prototype);
   row.id = 1;
   row.note = note;
   row.meta = {};
@@ -21,56 +23,123 @@ function buildNoteRow(sandbox, note)
   return row;
 }
 
-describe('Accumulate Mode / Encore (out/abs/J-ABS.js)', () =>
+describe('Accumulate Mode / Encore (direct src import)', () =>
 {
-  /** @type {object} */
-  let sandbox;
+  let RPGManager;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadAbsPluginVm(sandbox);
+    vi.resetModules();
+
+    installAbsHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    globalThis.RPGManager = RPGManager;
+
+    ({ default: globalThis.RPG_Skill } = await import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+    ({ default: globalThis.JABS_OnChanceEffect } = await import('../../../../src/plugins/abs/core/models/JABS_OnChanceEffect.js'));
+
+    // real production code- sets up J.ABS.RegExp.Accumulate/EncoreRepeats and J.ABS.Metadata.
+    setPluginContextToJAbs();
+    await import('../../../../src/plugins/abs/core/_metadata/initialization.js');
+
+    // patches globalThis.Game_Battler.prototype directly, no vm involved.
+    await import('../../../../src/plugins/abs/core/objects/Game_Battler.js');
+
+    // patches globalThis.Game_Action.prototype directly, no vm involved.
+    await import('../../../../src/plugins/abs/core/objects/Game_Action.js');
   });
 
   afterAll(() =>
   {
-    sandbox = null;
+    globalThis.RPGManager.clearCache();
   });
 
   beforeEach(() =>
   {
-    clearRpgManagerCacheInVm(sandbox);
+    globalThis.RPGManager.clearCache();
   });
 
-  describe('Game_Battler.isAccumulating / getEncoreRepeats', () =>
+  describe('Game_Battler.isAccumulating', () =>
   {
     function buildBattler(notes = [])
     {
       return {
         getLevel: () => 1,
         getAllNotes: () => notes,
-        isAccumulating: sandbox.Game_Battler.prototype.isAccumulating,
-        refreshEncoreRepeats: sandbox.Game_Battler.prototype.refreshEncoreRepeats,
-        setEncoreRepeats: sandbox.Game_Battler.prototype.setEncoreRepeats,
-        getEncoreRepeats: sandbox.Game_Battler.prototype.getEncoreRepeats,
+        isAccumulating: globalThis.Game_Battler.prototype.isAccumulating,
+      };
+    }
+
+    it('is true when a note source carries <accumulate>', () =>
+    {
+      // Arrange
+      const battler = buildBattler([ buildNoteRow('<accumulate>') ]);
+
+      // Act
+      const result = battler.isAccumulating();
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('is false when no note source carries <accumulate>', () =>
+    {
+      // Arrange
+      const battler = buildBattler([ buildNoteRow('<knockback:4>') ]);
+
+      // Act
+      const result = battler.isAccumulating();
+
+      // Assert
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('Game_Battler.getEncoreRepeats / refreshEncoreRepeats', () =>
+  {
+    function buildBattler(notes = [])
+    {
+      return {
+        getLevel: () => 1,
+        getAllNotes: () => notes,
+        refreshEncoreRepeats: globalThis.Game_Battler.prototype.refreshEncoreRepeats,
+        setEncoreRepeats: globalThis.Game_Battler.prototype.setEncoreRepeats,
+        getEncoreRepeats: globalThis.Game_Battler.prototype.getEncoreRepeats,
         _j: { _abs: { _encoreRepeats: 0 } },
       };
     }
 
-    it('isAccumulating is true only when a note source carries <accumulate>', () =>
+    it('defaults to 0 before any refresh has run', () =>
     {
-      expect(buildBattler([ buildNoteRow(sandbox, '<accumulate>') ]).isAccumulating()).toBe(true);
-      expect(buildBattler([ buildNoteRow(sandbox, '<knockback:4>') ]).isAccumulating()).toBe(false);
-    });
-
-    it('getEncoreRepeats sums <encoreRepeats:[FORMULA]> across note sources after a refresh', () => {
+      // Arrange
       const battler = buildBattler([
-        buildNoteRow(sandbox, '<encoreRepeats:[1]>'),
-        buildNoteRow(sandbox, '<encoreRepeats:[2]>'),
+        buildNoteRow('<encoreRepeats:[1]>'),
+        buildNoteRow('<encoreRepeats:[2]>'),
       ]);
 
-      expect(battler.getEncoreRepeats()).toBe(0);
+      // Act
+      const result = battler.getEncoreRepeats();
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('sums <encoreRepeats:[FORMULA]> across note sources after a refresh', () =>
+    {
+      // Arrange
+      const battler = buildBattler([
+        buildNoteRow('<encoreRepeats:[1]>'),
+        buildNoteRow('<encoreRepeats:[2]>'),
+      ]);
+
+      // Act
       battler.refreshEncoreRepeats();
+
+      // Assert
       expect(battler.getEncoreRepeats()).toBe(3);
     });
   });
@@ -79,12 +148,28 @@ describe('Accumulate Mode / Encore (out/abs/J-ABS.js)', () =>
   {
     it('never counts a success at 0% chance, regardless of attempts', () =>
     {
-      expect(sandbox.RPGManager.countSuccessesIn100(0, 10)).toBe(0);
+      // Arrange
+      const percentOfSuccess = 0;
+      const attempts = 10;
+
+      // Act
+      const result = RPGManager.countSuccessesIn100(percentOfSuccess, attempts);
+
+      // Assert
+      expect(result).toBe(0);
     });
 
     it('counts every attempt as a success at 100% chance', () =>
     {
-      expect(sandbox.RPGManager.countSuccessesIn100(100, 5)).toBe(5);
+      // Arrange
+      const percentOfSuccess = 100;
+      const attempts = 5;
+
+      // Act
+      const result = RPGManager.countSuccessesIn100(percentOfSuccess, attempts);
+
+      // Assert
+      expect(result).toBe(5);
     });
   });
 
@@ -92,16 +177,26 @@ describe('Accumulate Mode / Encore (out/abs/J-ABS.js)', () =>
   {
     it('counts every attempt as a success when very lucky, even at 0% chance', () =>
     {
+      // Arrange
       const roller = { isVeryLucky: () => true, isVeryCursed: () => false };
 
-      expect(sandbox.RPGManager.countSuccessesFateOf100(roller, 0, 7)).toBe(7);
+      // Act
+      const result = RPGManager.countSuccessesFateOf100(roller, 0, 7);
+
+      // Assert
+      expect(result).toBe(7);
     });
 
     it('counts zero successes when very cursed, even at 100% chance', () =>
     {
+      // Arrange
       const roller = { isVeryLucky: () => false, isVeryCursed: () => true };
 
-      expect(sandbox.RPGManager.countSuccessesFateOf100(roller, 100, 7)).toBe(0);
+      // Act
+      const result = RPGManager.countSuccessesFateOf100(roller, 100, 7);
+
+      // Assert
+      expect(result).toBe(0);
     });
   });
 
@@ -120,46 +215,74 @@ describe('Accumulate Mode / Encore (out/abs/J-ABS.js)', () =>
 
     it('is 0 at 0% chance with no fate override', () =>
     {
+      // Arrange
       const roller = buildRoller();
 
-      expect(sandbox.RPGManager.resolveProcCount(roller, 0, 1, 0)).toBe(0);
+      // Act
+      const result = RPGManager.resolveProcCount(roller, 0, 1, 0);
+
+      // Assert
+      expect(result).toBe(0);
     });
 
     it('is 1 at 100% chance with no encore', () =>
     {
+      // Arrange
       const roller = buildRoller();
 
-      expect(sandbox.RPGManager.resolveProcCount(roller, 100, 1, 0)).toBe(1);
+      // Act
+      const result = RPGManager.resolveProcCount(roller, 100, 1, 0);
+
+      // Assert
+      expect(result).toBe(1);
     });
 
     it('doubles the single success when encoreRepeats is 1', () =>
     {
+      // Arrange
       const roller = buildRoller({ getEncoreRepeats: () => 1 });
 
-      expect(sandbox.RPGManager.resolveProcCount(roller, 100, 1, 0)).toBe(2);
+      // Act
+      const result = RPGManager.resolveProcCount(roller, 100, 1, 0);
+
+      // Assert
+      expect(result).toBe(2);
     });
 
     it('is 0 even with encore when the roll fails outright', () =>
     {
+      // Arrange
       const roller = buildRoller({ getEncoreRepeats: () => 1 });
 
-      expect(sandbox.RPGManager.resolveProcCount(roller, 0, 1, 0)).toBe(0);
+      // Act
+      const result = RPGManager.resolveProcCount(roller, 0, 1, 0);
+
+      // Assert
+      expect(result).toBe(0);
     });
 
     it('multiplies Accumulate Mode\'s success count by (1 + encoreRepeats)', () =>
     {
+      // Arrange- 100% chance, 3 attempts -> 3 successes, each echoed once -> 6.
       const roller = buildRoller({ isAccumulating: () => true, getEncoreRepeats: () => 1 });
 
-      // 100% chance, 3 attempts -> 3 successes, each echoed once -> 6.
-      expect(sandbox.RPGManager.resolveProcCount(roller, 100, 3, 0)).toBe(6);
+      // Act
+      const result = RPGManager.resolveProcCount(roller, 100, 3, 0);
+
+      // Assert
+      expect(result).toBe(6);
     });
 
     it('very lucky short-circuits to guaranteed success before encore multiplies it', () =>
     {
+      // Arrange- guaranteed success (1) * (1 + 2 encore) = 3.
       const roller = buildRoller({ isVeryLucky: () => true, getEncoreRepeats: () => 2 });
 
-      // guaranteed success (1) * (1 + 2 encore) = 3.
-      expect(sandbox.RPGManager.resolveProcCount(roller, 0, 1, 0)).toBe(3);
+      // Act
+      const result = RPGManager.resolveProcCount(roller, 0, 1, 0);
+
+      // Assert
+      expect(result).toBe(3);
     });
   });
 
@@ -167,7 +290,8 @@ describe('Accumulate Mode / Encore (out/abs/J-ABS.js)', () =>
   {
     it('delegates to RPGManager.resolveProcCount when a positiveRoller is provided', () =>
     {
-      const effect = new sandbox.JABS_OnChanceEffect(1, 100, 'test-key');
+      // Arrange- 100% chance, encore 1 -> 2 executions.
+      const effect = new globalThis.JABS_OnChanceEffect(1, 100, 'test-key');
       const roller = {
         isVeryLucky: () => false,
         isVeryCursed: () => false,
@@ -175,15 +299,23 @@ describe('Accumulate Mode / Encore (out/abs/J-ABS.js)', () =>
         getEncoreRepeats: () => 1,
       };
 
-      // 100% chance, encore 1 -> 2 executions.
-      expect(effect.resolveProcCount(1, 0, roller)).toBe(2);
+      // Act
+      const result = effect.resolveProcCount(1, 0, roller);
+
+      // Assert
+      expect(result).toBe(2);
     });
 
     it('falls back to a plain boolean-as-count roll with no positiveRoller', () =>
     {
-      const effect = new sandbox.JABS_OnChanceEffect(1, 100, 'test-key');
+      // Arrange
+      const effect = new globalThis.JABS_OnChanceEffect(1, 100, 'test-key');
 
-      expect(effect.resolveProcCount(1, 0)).toBe(1);
+      // Act
+      const result = effect.resolveProcCount(1, 0);
+
+      // Assert
+      expect(result).toBe(1);
     });
   });
 
@@ -194,35 +326,42 @@ describe('Accumulate Mode / Encore (out/abs/J-ABS.js)', () =>
 
     beforeEach(() =>
     {
-      originalResolveProcCount = sandbox.RPGManager.resolveProcCount;
+      originalResolveProcCount = globalThis.RPGManager.resolveProcCount;
     });
 
     afterEach(() =>
     {
-      sandbox.RPGManager.resolveProcCount = originalResolveProcCount;
+      globalThis.RPGManager.resolveProcCount = originalResolveProcCount;
     });
 
-    it('applies the state once per resolved proc count', () =>
+    function buildAction(attacker)
     {
-      sandbox.RPGManager.resolveProcCount = () => 3;
-
-      const target = { addState: () => {}, __calls: [] };
-      target.addState = function(stateId, attacker)
-      {
-        this.__calls.push({ stateId, attacker });
-      };
-
-      const attacker = { getPositiveRollsForSkill: () => 0 };
-      target.getNegativeRolls = () => 0;
-      const action = Object.create(sandbox.Game_Action.prototype);
+      const action = Object.create(globalThis.Game_Action.prototype);
       action.subject = () => attacker;
       action.item = () => ({});
       action.shouldTargetApplyResistances = () => false;
       action.lukEffectRate = () => 1;
       action.makeSuccess = () => {};
+      return action;
+    }
 
+    it('applies the state once per resolved proc count', () =>
+    {
+      // Arrange
+      globalThis.RPGManager.resolveProcCount = () => 3;
+      const target = { __calls: [] };
+      target.addState = function(stateId, attacker)
+      {
+        this.__calls.push({ stateId, attacker });
+      };
+      target.getNegativeRolls = () => 0;
+      const attacker = { getPositiveRollsForSkill: () => 0 };
+      const action = buildAction(attacker);
+
+      // Act
       action.handleApplyState(target, 5, 1.0, false);
 
+      // Assert
       expect(target.__calls).toEqual([
         { stateId: 5, attacker },
         { stateId: 5, attacker },
@@ -232,19 +371,18 @@ describe('Accumulate Mode / Encore (out/abs/J-ABS.js)', () =>
 
     it('does not apply the state at all when the proc count is 0', () =>
     {
-      sandbox.RPGManager.resolveProcCount = () => 0;
-
+      // Arrange
+      globalThis.RPGManager.resolveProcCount = () => 0;
       const target = { addState: () => { throw new Error('should not be called'); } };
-      const attacker = { getPositiveRollsForSkill: () => 0 };
       target.getNegativeRolls = () => 0;
-      const action = Object.create(sandbox.Game_Action.prototype);
-      action.subject = () => attacker;
-      action.item = () => ({});
-      action.shouldTargetApplyResistances = () => false;
-      action.lukEffectRate = () => 1;
-      action.makeSuccess = () => {};
+      const attacker = { getPositiveRollsForSkill: () => 0 };
+      const action = buildAction(attacker);
 
-      expect(() => action.handleApplyState(target, 5, 1.0, false)).not.toThrow();
+      // Act
+      const act = () => action.handleApplyState(target, 5, 1.0, false);
+
+      // Assert
+      expect(act).not.toThrow();
     });
   });
 });

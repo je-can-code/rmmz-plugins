@@ -1,45 +1,86 @@
 //region plugins/pixel/core/directions-and-character-constants.test.js
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadPixelCorePluginVm } from '../pixel-vm.js';
+import {
+  installPixelCoreHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPixel,
+} from '../fixtures/install-pixel-host-globals.js';
 
-describe('J-Pixelistics direction and route constants', () =>
+describe('J-Pixelistics direction and route constants (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeEach(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadPixelCorePluginVm(sandbox);
+    vi.resetModules();
+
+    installPixelCoreHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJPixel();
+    await import('../../../../src/plugins/pixel/core/_metadata/initialization.js');
+
+    // patches globalThis.Game_Character with the static pixelRepeatableMoveCommandCodes list.
+    await import('../../../../src/plugins/pixel/core/objects/Game_Character.js');
   });
 
-  afterEach(() =>
+  describe('J.PIXEL.Directions', () =>
   {
-    sandbox = null;
+    it('matches RMMZ-style numeric constants for all eight compass directions', () =>
+    {
+      // Arrange & Act
+      const D = globalThis.J.PIXEL.Directions;
+
+      // Assert
+      expect(D.DOWN).toBe(2);
+      expect(D.LEFT).toBe(4);
+      expect(D.RIGHT).toBe(6);
+      expect(D.UP).toBe(8);
+      expect(D.LOWERLEFT).toBe(1);
+      expect(D.LOWERRIGHT).toBe(3);
+      expect(D.UPPERLEFT).toBe(7);
+      expect(D.UPPERRIGHT).toBe(9);
+    });
   });
 
-  it('J.PIXEL.Directions matches RMMZ-style numeric constants', () =>
+  describe('Game_Character.pixelRepeatableMoveCommandCodes', () =>
   {
-    const D = sandbox.J.PIXEL.Directions;
+    it('is an array of route opcode ids', () =>
+    {
+      // Arrange & Act
+      const codes = globalThis.Game_Character.pixelRepeatableMoveCommandCodes;
 
-    expect(D.DOWN).toBe(2);
-    expect(D.LEFT).toBe(4);
-    expect(D.RIGHT).toBe(6);
-    expect(D.UP).toBe(8);
-    expect(D.LOWERLEFT).toBe(1);
-    expect(D.LOWERRIGHT).toBe(3);
-    expect(D.UPPERLEFT).toBe(7);
-    expect(D.UPPERRIGHT).toBe(9);
-  });
+      // Assert
+      expect(Array.isArray(codes)).toBe(true);
+    });
 
-  it('Game_Character.pixelRepeatableMoveCommandCodes lists expected route opcode ids', () =>
-  {
-    const codes = sandbox.Game_Character.pixelRepeatableMoveCommandCodes;
+    it('includes the move-down opcode id', () =>
+    {
+      // Arrange & Act
+      const codes = globalThis.Game_Character.pixelRepeatableMoveCommandCodes;
 
-    expect(Array.isArray(codes)).toBe(true);
-    expect(codes.includes(1)).toBe(true);
-    expect(codes.includes(9)).toBe(true);
-    expect(codes.includes(13)).toBe(true);
+      // Assert
+      expect(codes.includes(1)).toBe(true);
+    });
+
+    it('includes the turn-down opcode id', () =>
+    {
+      // Arrange & Act
+      const codes = globalThis.Game_Character.pixelRepeatableMoveCommandCodes;
+
+      // Assert
+      expect(codes.includes(9)).toBe(true);
+    });
+
+    it('includes the jump opcode id', () =>
+    {
+      // Arrange & Act
+      const codes = globalThis.Game_Character.pixelRepeatableMoveCommandCodes;
+
+      // Assert
+      expect(codes.includes(13)).toBe(true);
+    });
   });
 });
 //endregion plugins/pixel/core/directions-and-character-constants.test.js

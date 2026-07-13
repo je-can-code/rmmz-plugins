@@ -1,11 +1,18 @@
 //region plugins/passive/core/auto-apply-state-display.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadPassiveConditionalPluginVm } from '../passive-conditional-vm.js';
+import {
+  installPassiveHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPassive,
+} from '../fixtures/install-passive-host-globals.js';
+import {
+  installPassiveConditionalHostGlobals,
+  setPluginContextToJPassiveConditional,
+} from '../fixtures/install-passive-conditional-host-globals.js';
 
 /**
  * Minimal {@link Window_Base} text helpers for formatter tests.
- *
  * @returns {{ boldenText: Function, italicizeText: Function, colorizeText: Function }}
  */
 function createTextHelperStub()
@@ -26,52 +33,84 @@ function createTextHelperStub()
   };
 }
 
-describe('AutoApplyStateDisplay (J-Passive-Conditional)', () =>
+describe('AutoApplyStateDisplay (direct src import)', () =>
 {
-  let sandbox;
   let textHelper;
+  let AutoApplyStateDisplay;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadPassiveConditionalPluginVm(sandbox);
+    vi.resetModules();
+
+    installPassiveHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_State } = await import('../../../../src/plugins/_base/database/implementations/RPG_State.js'));
+
+    setPluginContextToJPassive();
+    await import('../../../../src/plugins/passive/core/_metadata/initialization.js');
+
+    installPassiveConditionalHostGlobals();
+
+    setPluginContextToJPassiveConditional();
+    await import('../../../../src/plugins/passive/ext/conditional/_metadata/initialization.js');
+
+    ({ default: AutoApplyStateDisplay } = await import('../../../../src/plugins/passive/ext/conditional/models/AutoApplyStateDisplay.js'));
+
     textHelper = createTextHelperStub();
   });
 
-  afterAll(() =>
+  describe('formatTimeProse', () =>
   {
-    sandbox = null;
+    it('formats time-based autoApplyState prose with a state text code', () =>
+    {
+      // Arrange
+      const stateId = 1001;
+      const frames = 3600;
+
+      // Act
+      const prose = AutoApplyStateDisplay.formatTimeProse(stateId, frames, textHelper);
+
+      // Assert
+      expect(prose).toBe('Every \\C[6]\\*\\_60 seconds\\_\\*\\C[0], gain \\state[1001].');
+    });
   });
 
-  it('formats Wraith tier-1 time autoApplyState prose with state text code', () =>
+  describe('collectTimeProseLines', () =>
   {
-    expect(sandbox.AutoApplyStateDisplay.formatTimeProse(1001, 3600, textHelper))
-      .toBe('Every \\C[6]\\*\\_60 seconds\\_\\*\\C[0], gain \\state[1001].');
-  });
+    it('ignores non-time conditions', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<autoApplyState:[1001, time, 3600]>\n<autoApplyState:[1002, hpDmg, 60]>';
 
-  it('collectTimeProseLines ignores non-time conditions', () =>
-  {
-    const state = Object.create(sandbox.RPG_State.prototype);
-    state.note = '<autoApplyState:[1001, time, 3600]>\n<autoApplyState:[1002, hpDmg, 60]>';
+      // Act
+      const lines = AutoApplyStateDisplay.collectTimeProseLines(state, textHelper);
 
-    const lines = sandbox.AutoApplyStateDisplay.collectTimeProseLines(state, textHelper);
+      // Assert
+      expect(lines.length).toBe(1);
+      expect(lines[0]).toContain('\\state[1001]');
+      expect(lines[0]).not.toContain('\\state[1002]');
+    });
 
-    expect(lines.length).toBe(1);
-    expect(lines[0]).toContain('\\state[1001]');
-    expect(lines[0]).not.toContain('\\state[1002]');
-  });
+    it('reads every time tag on a state row', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<autoApplyState:[1001, time, 3600]>\n<autoApplyState:[1010, time, 900]>';
 
-  it('collectTimeProseLines reads every time tag on a state row', () =>
-  {
-    const state = Object.create(sandbox.RPG_State.prototype);
-    state.note = '<autoApplyState:[1001, time, 3600]>\n<autoApplyState:[1010, time, 900]>';
+      // Act
+      const lines = AutoApplyStateDisplay.collectTimeProseLines(state, textHelper);
 
-    const lines = sandbox.AutoApplyStateDisplay.collectTimeProseLines(state, textHelper);
-
-    expect(lines.length).toBe(2);
-    expect(lines[0]).toContain('\\state[1001]');
-    expect(lines[1]).toContain('\\state[1010]');
-    expect(lines[1]).toContain('\\*\\_15 seconds\\_\\*');
+      // Assert
+      expect(lines.length).toBe(2);
+      expect(lines[0]).toContain('\\state[1001]');
+      expect(lines[1]).toContain('\\state[1010]');
+      expect(lines[1]).toContain('\\*\\_15 seconds\\_\\*');
+    });
   });
 });
 //endregion plugins/passive/core/auto-apply-state-display.test.js

@@ -1,5 +1,5 @@
 //region plugins/time/time-mapper-direct.test.js
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import TimeMapper from '../../../src/plugins/time/core/objects/TimeMapper.js';
 
@@ -19,115 +19,234 @@ const YearRangeChoice = /<yearRangeChoice:[ ]?(\d+)-(\d+)>/i;
 
 describe('TimeMapper (direct import)', () =>
 {
-  it('parses scalar time tags from comments', () =>
+  afterEach(() =>
   {
-    const c = TimeMapper.minuteToConditional('<minuteChoice: 42>', MinuteChoice);
-    expect(c.minutes).toBe(42);
-
-    expect(TimeMapper.hourToConditional('<hourChoice:7>', HourChoice).hours).toBe(7);
-  });
-
-  it('timeOfDayToConditional accepts numeric or name', () =>
-  {
-    const c = TimeMapper.timeOfDayToConditional('<timeOfDayChoice:evening>', TimeOfDayChoice);
-    expect(c.timeOfDay).toBe(4);
-
-    const numeric = TimeMapper.timeOfDayToConditional('<timeOfDayChoice:3>', TimeOfDayChoice);
-    expect(numeric.timeOfDay).toBe(3);
-  });
-
-  it('timeRangeToConditional builds clock ranges', () =>
-  {
-    const c = TimeMapper.timeRangeToConditional('<timeRangeChoice:8:30-16:45>', TimeRangeChoice);
-    expect(c.isTimeRange).toBe(true);
-    expect(c.startRange).toEqual([ 8, 30 ]);
-    expect(c.endRange).toEqual([ 16, 45 ]);
-  });
-
-  it('fullDateRangeToConditional prepends seconds and parses json segments', () =>
-  {
-    const raw = '<fullDateRangeChoice:[0,12,1,6,2024]-[30,18,15,6,2024]>';
-    const c = TimeMapper.fullDateRangeToConditional(raw, FullDateRangeChoice);
-    expect(c.isFullDateRange).toBe(true);
-    expect(c.startRange[0]).toBe(0);
-    expect(c.startRange[3]).toBe(1);
-    expect(c.endRange[0]).toBe(59);
-    expect(c.endRange[3]).toBe(15);
-  });
-
-  it('minuteRangeToConditional uses current global $gameTime snapshot hours', () =>
-  {
-    globalThis.$gameTime = {
-      currentTime()
-      {
-        return { hours: 14 };
-      },
-    };
-
-    const c = TimeMapper.minuteRangeToConditional('<minuteRangeChoice:10-50>', MinuteRangeChoice);
-    expect(c.startRange).toEqual([ 14, 10 ]);
-    expect(c.endRange).toEqual([ 14, 50 ]);
-
     delete globalThis.$gameTime;
   });
 
-  it('parses direct day/month/year scalar tags from comments', () =>
+  describe('minuteToConditional', () =>
   {
-    expect(TimeMapper.dayToConditional('<dayChoice:15>', DayChoice).days).toBe(15);
-    expect(TimeMapper.monthToConditional('<monthChoice:9>', MonthChoice).months).toBe(9);
-    expect(TimeMapper.yearToConditional('<yearChoice:2025>', YearChoice).years).toBe(2025);
+    it('parses a scalar minute tag from a comment', () =>
+    {
+      // Arrange
+      const comment = '<minuteChoice: 42>';
+
+      // Act
+      const conditional = TimeMapper.minuteToConditional(comment, MinuteChoice);
+
+      // Assert
+      expect(conditional.minutes).toBe(42);
+    });
   });
 
-  it('hourRangeToConditional builds an hour-only range', () =>
+  describe('hourToConditional', () =>
   {
-    const c = TimeMapper.hourRangeToConditional('<hourRangeChoice:8-17>', HourRangeChoice);
-    expect(c.isTimeRange).toBe(true);
-    expect(c.startRange).toEqual([ 8, 0 ]);
-    expect(c.endRange).toEqual([ 17, 0 ]);
+    it('parses a scalar hour tag from a comment', () =>
+    {
+      // Arrange
+      const comment = '<hourChoice:7>';
+
+      // Act
+      const conditional = TimeMapper.hourToConditional(comment, HourChoice);
+
+      // Assert
+      expect(conditional.hours).toBe(7);
+    });
   });
 
-  it('dayRangeToConditional builds a full date range using the current month/year', () =>
+  describe('timeOfDayToConditional', () =>
   {
-    globalThis.$gameTime = {
-      currentTime()
-      {
-        return { months: 6, years: 2024 };
-      },
-    };
+    it('accepts a named time-of-day value', () =>
+    {
+      // Arrange
+      const comment = '<timeOfDayChoice:evening>';
 
-    // end day after start day- same month, no rollover.
-    const c = TimeMapper.dayRangeToConditional('<dayRangeChoice:1-15>', DayRangeChoice);
-    expect(c.isFullDateRange).toBe(true);
-    expect(c.startRange).toEqual([ 0, 0, 0, 1, 6, 2024 ]);
-    expect(c.endRange).toEqual([ 59, 59, 23, 15, 6, 2024 ]);
+      // Act
+      const conditional = TimeMapper.timeOfDayToConditional(comment, TimeOfDayChoice);
 
-    delete globalThis.$gameTime;
+      // Assert
+      expect(conditional.timeOfDay).toBe(4);
+    });
+
+    it('accepts a numeric time-of-day value', () =>
+    {
+      // Arrange
+      const comment = '<timeOfDayChoice:3>';
+
+      // Act
+      const conditional = TimeMapper.timeOfDayToConditional(comment, TimeOfDayChoice);
+
+      // Assert
+      expect(conditional.timeOfDay).toBe(3);
+    });
   });
 
-  it('monthRangeToConditional builds a full date range using the current year', () =>
+  describe('timeRangeToConditional', () =>
   {
-    globalThis.$gameTime = {
-      currentTime()
-      {
-        return { years: 2024 };
-      },
-    };
+    it('builds a clock range from a comment', () =>
+    {
+      // Arrange
+      const comment = '<timeRangeChoice:8:30-16:45>';
 
-    // end month before start month- rolls into next year.
-    const c = TimeMapper.monthRangeToConditional('<monthRangeChoice:10-2>', MonthRangeChoice);
-    expect(c.isFullDateRange).toBe(true);
-    expect(c.startRange).toEqual([ 0, 0, 0, 1, 10, 2024 ]);
-    expect(c.endRange).toEqual([ 59, 59, 23, 30, 2, 2025 ]);
+      // Act
+      const conditional = TimeMapper.timeRangeToConditional(comment, TimeRangeChoice);
 
-    delete globalThis.$gameTime;
+      // Assert
+      expect(conditional.isTimeRange).toBe(true);
+      expect(conditional.startRange).toEqual([ 8, 30 ]);
+      expect(conditional.endRange).toEqual([ 16, 45 ]);
+    });
   });
 
-  it('yearRangeToConditional builds a full date range spanning whole years', () =>
+  describe('fullDateRangeToConditional', () =>
   {
-    const c = TimeMapper.yearRangeToConditional('<yearRangeChoice:2020-2025>', YearRangeChoice);
-    expect(c.isFullDateRange).toBe(true);
-    expect(c.startRange).toEqual([ 0, 0, 0, 1, 1, 2020 ]);
-    expect(c.endRange).toEqual([ 0, 0, 0, 1, 1, 2025 ]);
+    it('prepends seconds and parses the bracketed date-array segments', () =>
+    {
+      // Arrange
+      const comment = '<fullDateRangeChoice:[0,12,1,6,2024]-[30,18,15,6,2024]>';
+
+      // Act
+      const conditional = TimeMapper.fullDateRangeToConditional(comment, FullDateRangeChoice);
+
+      // Assert
+      expect(conditional.isFullDateRange).toBe(true);
+      expect(conditional.startRange[0]).toBe(0);
+      expect(conditional.startRange[3]).toBe(1);
+      expect(conditional.endRange[0]).toBe(59);
+      expect(conditional.endRange[3]).toBe(15);
+    });
+  });
+
+  describe('minuteRangeToConditional', () =>
+  {
+    it('uses the current global $gameTime snapshot hour for both ends of the range', () =>
+    {
+      // Arrange
+      globalThis.$gameTime = { currentTime: () => ({ hours: 14 }) };
+      const comment = '<minuteRangeChoice:10-50>';
+
+      // Act
+      const conditional = TimeMapper.minuteRangeToConditional(comment, MinuteRangeChoice);
+
+      // Assert
+      expect(conditional.startRange).toEqual([ 14, 10 ]);
+      expect(conditional.endRange).toEqual([ 14, 50 ]);
+    });
+  });
+
+  describe('dayToConditional', () =>
+  {
+    it('parses a scalar day tag from a comment', () =>
+    {
+      // Arrange
+      const comment = '<dayChoice:15>';
+
+      // Act
+      const conditional = TimeMapper.dayToConditional(comment, DayChoice);
+
+      // Assert
+      expect(conditional.days).toBe(15);
+    });
+  });
+
+  describe('monthToConditional', () =>
+  {
+    it('parses a scalar month tag from a comment', () =>
+    {
+      // Arrange
+      const comment = '<monthChoice:9>';
+
+      // Act
+      const conditional = TimeMapper.monthToConditional(comment, MonthChoice);
+
+      // Assert
+      expect(conditional.months).toBe(9);
+    });
+  });
+
+  describe('yearToConditional', () =>
+  {
+    it('parses a scalar year tag from a comment', () =>
+    {
+      // Arrange
+      const comment = '<yearChoice:2025>';
+
+      // Act
+      const conditional = TimeMapper.yearToConditional(comment, YearChoice);
+
+      // Assert
+      expect(conditional.years).toBe(2025);
+    });
+  });
+
+  describe('hourRangeToConditional', () =>
+  {
+    it('builds an hour-only range with :00 minutes on both ends', () =>
+    {
+      // Arrange
+      const comment = '<hourRangeChoice:8-17>';
+
+      // Act
+      const conditional = TimeMapper.hourRangeToConditional(comment, HourRangeChoice);
+
+      // Assert
+      expect(conditional.isTimeRange).toBe(true);
+      expect(conditional.startRange).toEqual([ 8, 0 ]);
+      expect(conditional.endRange).toEqual([ 17, 0 ]);
+    });
+  });
+
+  describe('dayRangeToConditional', () =>
+  {
+    it('builds a full date range using the current month/year when the end day is after the start day', () =>
+    {
+      // Arrange- end day after start day: same month, no rollover.
+      globalThis.$gameTime = { currentTime: () => ({ months: 6, years: 2024 }) };
+      const comment = '<dayRangeChoice:1-15>';
+
+      // Act
+      const conditional = TimeMapper.dayRangeToConditional(comment, DayRangeChoice);
+
+      // Assert
+      expect(conditional.isFullDateRange).toBe(true);
+      expect(conditional.startRange).toEqual([ 0, 0, 0, 1, 6, 2024 ]);
+      expect(conditional.endRange).toEqual([ 59, 59, 23, 15, 6, 2024 ]);
+    });
+  });
+
+  describe('monthRangeToConditional', () =>
+  {
+    it('rolls into the next year when the end month is before the start month', () =>
+    {
+      // Arrange- end month before start month: rolls into next year.
+      globalThis.$gameTime = { currentTime: () => ({ years: 2024 }) };
+      const comment = '<monthRangeChoice:10-2>';
+
+      // Act
+      const conditional = TimeMapper.monthRangeToConditional(comment, MonthRangeChoice);
+
+      // Assert
+      expect(conditional.isFullDateRange).toBe(true);
+      expect(conditional.startRange).toEqual([ 0, 0, 0, 1, 10, 2024 ]);
+      expect(conditional.endRange).toEqual([ 59, 59, 23, 30, 2, 2025 ]);
+    });
+  });
+
+  describe('yearRangeToConditional', () =>
+  {
+    it('builds a full date range spanning whole years', () =>
+    {
+      // Arrange
+      const comment = '<yearRangeChoice:2020-2025>';
+
+      // Act
+      const conditional = TimeMapper.yearRangeToConditional(comment, YearRangeChoice);
+
+      // Assert
+      expect(conditional.isFullDateRange).toBe(true);
+      expect(conditional.startRange).toEqual([ 0, 0, 0, 1, 1, 2020 ]);
+      expect(conditional.endRange).toEqual([ 0, 0, 0, 1, 1, 2025 ]);
+    });
   });
 });
 //endregion plugins/time/time-mapper-direct.test.js

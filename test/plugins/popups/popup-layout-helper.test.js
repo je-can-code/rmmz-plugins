@@ -1,96 +1,104 @@
 //region plugins/popups/popup-layout-helper.test.js
-import fs from 'node:fs';
-import path from 'node:path';
-import vm from 'node:vm';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { describe, expect, it } from 'vitest';
-
-import { repoRoot } from '../../setup/repo-root.js';
-
-/**
- * Evaluates {@link PopupLayoutHelper} from source with minimal J.POPUPS layout stubs.
- *
- * @returns {object} VM sandbox with PopupLayoutHelper.
- */
-function loadPopupLayoutHelperVm()
+describe('PopupLayoutHelper.resolveMotionOffset (direct src import)', () =>
 {
-  const helperPath = path.join(
-    repoRoot,
-    'src/plugins/popups/core/helpers/PopupLayoutHelper.js',
-  );
+  let PopupLayoutHelper;
 
-  const helperSource = fs.readFileSync(helperPath, 'utf8')
-    .replace(/import Map_TextPop from '\.\/\.\.\/_models\/Map_TextPop\.js';\r?\n/, '')
-    .replace(/\nexport default PopupLayoutHelper;\r?\n/, '\n');
+  beforeAll(async () =>
+  {
+    vi.resetModules();
 
-  const sandbox = {
-    console,
-    Map_TextPop: {
+    globalThis.J = globalThis.J || {};
+    globalThis.J.POPUPS = {
+      Layout: {
+        PaddingX: 24,
+        PaddingY: 0,
+        VerticalOffset: 0,
+        RingStepX: 8,
+        RingStepY: 8,
+        ResetDuration: 120,
+      },
+    };
+    globalThis.Graphics = globalThis.Graphics || { frameCount: 0 };
+
+    // the real Map_TextPop.js patches its own prototype from _base globals we don't need here-
+    // this helper only reads Map_TextPop.Types/.LayoutRings, so a minimal stand-in is enough and
+    // matches this file's pre-existing convention of not booting the whole J-Base/J-Popups stack.
+    globalThis.Map_TextPop = {
       Types: {
         HpDamage: 'hp-damage',
         MpDamage: 'mp-damage',
         TpDamage: 'tp-damage',
       },
       LayoutRings: {},
-    },
-    J: {
-      POPUPS: {
-        Layout: {
-          PaddingX: 24,
-          PaddingY: 0,
-          VerticalOffset: 0,
-          RingStepX: 8,
-          RingStepY: 8,
-          ResetDuration: 120,
-        },
-      },
-    },
-    Graphics: {
-      frameCount: 0,
-    },
-  };
+    };
 
-  vm.createContext(sandbox);
-  vm.runInContext(
-    `${helperSource}\nPopupLayoutHelper.initializeRingLayouts();\nthis.PopupLayoutHelper = PopupLayoutHelper;`,
-    sandbox,
-  );
+    ({ default: PopupLayoutHelper } = await import('../../../src/plugins/popups/core/helpers/PopupLayoutHelper.js'));
+    PopupLayoutHelper.initializeRingLayouts();
+  });
 
-  return sandbox.PopupLayoutHelper;
-}
-
-describe('PopupLayoutHelper.resolveMotionOffset (core)', () =>
-{
-  it('keeps harm resource pops on one row and staggers heal resource pops vertically', () =>
+  describe('resolveMotionOffset', () =>
   {
-    const PopupLayoutHelper = loadPopupLayoutHelperVm();
+    it('keeps hp harm pops on the base row', () =>
+    {
+      // Arrange
+      const params = { healing: false, popupType: 'hp-damage' };
 
-    const hpHarm = PopupLayoutHelper.resolveMotionOffset({
-      healing: false,
-      popupType: 'hp-damage',
-    });
-    const mpHarm = PopupLayoutHelper.resolveMotionOffset({
-      healing: false,
-      popupType: 'mp-damage',
-    });
-    const tpHarm = PopupLayoutHelper.resolveMotionOffset({
-      healing: false,
-      popupType: 'tp-damage',
-    });
-    const hpHeal = PopupLayoutHelper.resolveMotionOffset({
-      healing: true,
-      popupType: 'hp-damage',
-    });
-    const tpHeal = PopupLayoutHelper.resolveMotionOffset({
-      healing: true,
-      popupType: 'tp-damage',
+      // Act
+      const result = PopupLayoutHelper.resolveMotionOffset(params);
+
+      // Assert
+      expect(result).toEqual({ x: 24, y: 0 });
     });
 
-    expect(hpHarm).toEqual({ x: 24, y: 0 });
-    expect(mpHarm).toEqual({ x: 24, y: 0 });
-    expect(tpHarm).toEqual({ x: 24, y: 0 });
-    expect(hpHeal).toEqual({ x: -24, y: -16 });
-    expect(tpHeal).toEqual({ x: -24, y: 16 });
+    it('keeps mp harm pops on the base row', () =>
+    {
+      // Arrange
+      const params = { healing: false, popupType: 'mp-damage' };
+
+      // Act
+      const result = PopupLayoutHelper.resolveMotionOffset(params);
+
+      // Assert
+      expect(result).toEqual({ x: 24, y: 0 });
+    });
+
+    it('keeps tp harm pops on the base row', () =>
+    {
+      // Arrange
+      const params = { healing: false, popupType: 'tp-damage' };
+
+      // Act
+      const result = PopupLayoutHelper.resolveMotionOffset(params);
+
+      // Assert
+      expect(result).toEqual({ x: 24, y: 0 });
+    });
+
+    it('staggers hp heal pops upward off the base row', () =>
+    {
+      // Arrange
+      const params = { healing: true, popupType: 'hp-damage' };
+
+      // Act
+      const result = PopupLayoutHelper.resolveMotionOffset(params);
+
+      // Assert
+      expect(result).toEqual({ x: -24, y: -16 });
+    });
+
+    it('staggers tp heal pops downward off the base row', () =>
+    {
+      // Arrange
+      const params = { healing: true, popupType: 'tp-damage' };
+
+      // Act
+      const result = PopupLayoutHelper.resolveMotionOffset(params);
+
+      // Assert
+      expect(result).toEqual({ x: -24, y: 16 });
+    });
   });
 });
 //endregion plugins/popups/popup-layout-helper.test.js

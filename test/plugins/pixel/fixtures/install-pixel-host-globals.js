@@ -1,22 +1,50 @@
-//region engine-stubs
-import vm from 'node:vm';
-
+//region install-pixel-host-globals
+import { installJBaseHostGlobals } from '../../_base/fixtures/install-j-base-host-globals.js';
 import { installPluginManagerWithParams } from '../../../setup/install-plugin-manager-with-params.js';
-
-const hostMath = Math;
-
-import {
-  DEFAULT_PIXEL_ABS_EXT_PLUGIN_PARAMS,
-  DEFAULT_PIXEL_CORE_PLUGIN_PARAMS,
-} from './pixel-plugin-params.js';
+import PluginMetadata from '../../../../src/plugins/_base/models/PluginMetadata.js';
+import { DEFAULT_PIXEL_ABS_EXT_PLUGIN_PARAMS, DEFAULT_PIXEL_CORE_PLUGIN_PARAMS } from './pixel-plugin-params.js';
 
 const noop = function()
 {
 };
 
 /**
- * RMMZ-shaped {@link Game_CharacterBase} hooks required before {@link out/pixel/J-Pixelistics.js} aliases run.
- *
+ * `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` are bare identifiers read once, at import time, by both
+ * _base/_metadata/initialization.js and pixel/core/_metadata/initialization.js.
+ * Call this right before importing J-Base's initialization.js.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ */
+export function setPluginContextToJBase(sandbox = globalThis)
+{
+  sandbox.__PLUGIN_NAME__ = 'J-Base';
+  sandbox.__PLUGIN_VERSION__ = '3.0.0';
+}
+
+/**
+ * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-Pixelistics's own identity. Call
+ * this right before importing pixel/core/_metadata/initialization.js.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ */
+export function setPluginContextToJPixel(sandbox = globalThis)
+{
+  sandbox.__PLUGIN_NAME__ = 'J-Pixelistics';
+  sandbox.__PLUGIN_VERSION__ = '1.0.1';
+}
+
+/**
+ * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-ABS-Pixelistics's own identity.
+ * Call this right before importing pixel/ext/abs/_metadata/initialization.js.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ */
+export function setPluginContextToJPixelAbsExt(sandbox = globalThis)
+{
+  sandbox.__PLUGIN_NAME__ = 'J-ABS-Pixelistics';
+  sandbox.__PLUGIN_VERSION__ = '1.0.0';
+}
+
+/**
+ * RMMZ-shaped {@link Game_CharacterBase}/{@link Game_Character}/{@link Game_Player}/{@link Game_Event}
+ * prototype chain required before pixel core's own prototype-patch files run.
  * @param {object} sandbox
  */
 function installMinimalGameCharacterBasePrototypes(sandbox)
@@ -61,9 +89,7 @@ function installMinimalGameCharacterBasePrototypes(sandbox)
     },
   });
 
-  GCB.prototype.update = function()
-  {
-  };
+  GCB.prototype.update = noop;
 
   GCB.prototype.screenX = function()
   {
@@ -135,9 +161,7 @@ function installMinimalGameCharacterBasePrototypes(sandbox)
     this._validCommentCommands = [];
   };
 
-  sandbox.Game_Event.prototype.setupPageSettings = function()
-  {
-  };
+  sandbox.Game_Event.prototype.setupPageSettings = noop;
 
   sandbox.Game_Event.prototype.isErased = function()
   {
@@ -190,60 +214,14 @@ function installMinimalGameCharacterBasePrototypes(sandbox)
 }
 
 /**
- * Minimal globals so {@link out/pixel/J-Pixelistics.js} can evaluate after {@link out/J-Base.js}.
- *
- * @param {object} sandbox
- * @param {Record<string, string>} [coreParams]
+ * Builds a fresh minimal `$gameMap` stub. Exported so tests that mutate `$gameMap` (replacing it
+ * outright, or overriding a single method like `isPassable`) can restore a clean one in their own
+ * `beforeEach`, instead of that mutation silently leaking into whichever test happens to run next.
+ * @returns {object}
  */
-export function installPixelCoreEngineStubs(sandbox, coreParams = DEFAULT_PIXEL_CORE_PLUGIN_PARAMS)
+export function buildDefaultPixelGameMap()
 {
-  installPluginManagerWithParams(sandbox, 'J-Pixelistics', coreParams);
-
-  installMinimalGameCharacterBasePrototypes(sandbox);
-
-  sandbox.Math.sqrt = hostMath.sqrt;
-  sandbox.Math.hypot = hostMath.hypot;
-
-  vm.runInContext(`
-if (typeof Array.prototype.contains !== 'function')
-{
-  Array.prototype.contains = function(entry)
-  {
-    return this.indexOf(entry) >= 0;
-  };
-}
-`, sandbox);
-
-  sandbox.Input = sandbox.Input || {};
-  sandbox.Input.dir8 = 0;
-  sandbox.Input.keyMapper = sandbox.Input.keyMapper || {};
-  sandbox.Input.isTriggered = function()
-  {
-    return false;
-  };
-
-  sandbox.navigator = {
-    getGamepads()
-    {
-      return [];
-    },
-  };
-
-  function Bitmap()
-  {
-  }
-
-  sandbox.Bitmap = Bitmap;
-
-  function Spriteset_Map()
-  {
-  }
-
-  Spriteset_Map.prototype.createUpperLayer = noop;
-
-  sandbox.Spriteset_Map = Spriteset_Map;
-
-  sandbox.$gameMap = {
+  return {
     width()
     {
       return 2;
@@ -301,6 +279,77 @@ if (typeof Array.prototype.contains !== 'function')
     },
     requestRefresh: noop,
   };
+}
+
+/**
+ * Globals required for J-Pixelistics core's prototype-patch source files to evaluate when
+ * direct-imported into the real Vitest realm instead of a nested vm context.
+ * @param {object} [sandbox] Defaults to `globalThis` so direct-import tests can call this with no target arg.
+ * @param {Record<string, string>} [coreParams]
+ */
+export function installPixelCoreHostGlobals(sandbox = globalThis, coreParams = DEFAULT_PIXEL_CORE_PLUGIN_PARAMS)
+{
+  if (sandbox.__pixelCoreHostGlobalsInstalled === true)
+  {
+    return;
+  }
+
+  sandbox.__pixelCoreHostGlobalsInstalled = true;
+
+  installJBaseHostGlobals(sandbox);
+
+  sandbox.PluginMetadata ??= PluginMetadata;
+
+  installPluginManagerWithParams(sandbox, 'J-Pixelistics', coreParams);
+
+  installMinimalGameCharacterBasePrototypes(sandbox);
+
+  sandbox.Math.sqrt = Math.sqrt;
+  sandbox.Math.hypot = Math.hypot;
+
+  if (typeof sandbox.Array.prototype.contains !== 'function')
+  {
+    sandbox.Array.prototype.contains = function(entry)
+    {
+      return this.indexOf(entry) >= 0;
+    };
+  }
+
+  sandbox.Input = sandbox.Input || {};
+  sandbox.Input.dir8 = 0;
+  sandbox.Input.keyMapper = sandbox.Input.keyMapper || {};
+  sandbox.Input.isTriggered = function()
+  {
+    return false;
+  };
+
+  // globalThis.navigator is a real read-only getter in modern Node, so a plain assignment throws-
+  // redefine the property itself instead of assigning to it.
+  Object.defineProperty(sandbox, 'navigator', {
+    configurable: true,
+    value: {
+      getGamepads()
+      {
+        return [];
+      },
+    },
+  });
+
+  function Bitmap()
+  {
+  }
+
+  sandbox.Bitmap = Bitmap;
+
+  function Spriteset_Map()
+  {
+  }
+
+  Spriteset_Map.prototype.createUpperLayer = noop;
+
+  sandbox.Spriteset_Map = Spriteset_Map;
+
+  sandbox.$gameMap = buildDefaultPixelGameMap();
 
   sandbox.$dataMap = {
     width: 2,
@@ -329,12 +378,14 @@ if (typeof Array.prototype.contains !== 'function')
 }
 
 /**
- * Merges {@link PluginManager.parameters} for {@link out/pixel/ext/J-Pixel-ABS.js} after core is loaded.
- *
- * @param {object} sandbox
+ * Merges additional globals required for J-ABS-Pixelistics's prototype-patch source files to
+ * evaluate after pixel core is loaded. Uses hand-rolled duck-typed JABS_Battler/JABS_Engine/
+ * JABS_AiManager stand-ins (not the real J-ABS classes)- this extension pack's own tests were
+ * designed to exercise its logic in isolation from the real abs plugin.
+ * @param {object} [sandbox] Defaults to `globalThis`.
  * @param {Record<string, string>} [extParams]
  */
-export function installPixelAbsExtensionEngineStubs(sandbox, extParams = DEFAULT_PIXEL_ABS_EXT_PLUGIN_PARAMS)
+export function installPixelAbsExtHostGlobals(sandbox = globalThis, extParams = DEFAULT_PIXEL_ABS_EXT_PLUGIN_PARAMS)
 {
   const prevPm = sandbox.PluginManager;
 
@@ -348,27 +399,22 @@ export function installPixelAbsExtensionEngineStubs(sandbox, extParams = DEFAULT
 
       return prevPm.parameters(name);
     },
-
-    registerCommand()
-    {
-    },
+    registerCommand: noop,
   };
 
-  vm.runInContext(`
-globalThis.J = globalThis.J || {};
-globalThis.J.ABS = globalThis.J.ABS || {};
-globalThis.J.ABS.Directions = {
-  DOWN: 2,
-  LEFT: 4,
-  RIGHT: 6,
-  UP: 8,
-  LOWERLEFT: 1,
-  LOWERRIGHT: 3,
-  UPPERLEFT: 7,
-  UPPERRIGHT: 9,
-};
-globalThis.J.ABS.EXT = globalThis.J.ABS.EXT || {};
-`, sandbox);
+  sandbox.J = sandbox.J || {};
+  sandbox.J.ABS = sandbox.J.ABS || {};
+  sandbox.J.ABS.Directions = {
+    DOWN: 2,
+    LEFT: 4,
+    RIGHT: 6,
+    UP: 8,
+    LOWERLEFT: 1,
+    LOWERRIGHT: 3,
+    UPPERLEFT: 7,
+    UPPERRIGHT: 9,
+  };
+  sandbox.J.ABS.EXT = sandbox.J.ABS.EXT || {};
 
   if (typeof sandbox.JABS_AiManager !== 'function')
   {
@@ -544,4 +590,4 @@ globalThis.J.ABS.EXT = globalThis.J.ABS.EXT || {};
 
   sandbox.JABS_Battler = JABS_Battler;
 }
-//endregion engine-stubs
+//endregion install-pixel-host-globals

@@ -1,41 +1,85 @@
 //region plugins/passive/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadPassivePluginVm } from './passive-vm.js';
+import {
+  installPassiveHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPassive,
+} from './fixtures/install-passive-host-globals.js';
 
-describe('J-Passive metadata and regex (out/J-Passive.js)', () =>
+describe('J-Passive metadata and regex (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadPassivePluginVm(sandbox);
+    vi.resetModules();
+
+    installPassiveHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJPassive();
+    await import('../../../src/plugins/passive/core/_metadata/initialization.js');
   });
 
-  afterAll(() =>
+  describe('J.PASSIVE namespace and versioned metadata', () =>
   {
-    sandbox = null;
+    it('exposes the plugin name', () =>
+    {
+      // Arrange & Act
+      const result = globalThis.J.PASSIVE.Metadata.name;
+
+      // Assert
+      expect(result).toBe('J-Passive');
+    });
+
+    it('exposes the plugin version', () =>
+    {
+      // Arrange & Act
+      const result = globalThis.J.PASSIVE.Metadata.version.version();
+
+      // Assert
+      expect(result).toBe('2.1.0');
+    });
   });
 
-  it('exposes J.PASSIVE namespace and versioned metadata', () =>
+  describe('passive tag regex', () =>
   {
-    expect(sandbox.J.PASSIVE.Metadata.name).toBe('J-Passive');
-    expect(sandbox.J.PASSIVE.Metadata.version.version()).toBe('2.1.0');
-  });
+    it('PassiveStateIds captures a bracketed id list', () =>
+    {
+      // Arrange
+      const { PassiveStateIds } = globalThis.J.PASSIVE.RegExp;
 
-  it('passive tag regex captures bracketed id lists', () =>
-  {
-    const m = sandbox.J.PASSIVE.RegExp.PassiveStateIds.exec('<passive:[12, 13]>');
-    expect(m[1]).toBe('[12, 13]');
-  });
+      // Act
+      const result = PassiveStateIds.exec('<passive:[12, 13]>');
 
-  it('unique passive and equipped variants parse consistently', () =>
-  {
-    const u = sandbox.J.PASSIVE.RegExp.UniquePassiveStateIds.exec('<uniquePassive:[7]>');
-    expect(u[1]).toBe('[7]');
-    const e = sandbox.J.PASSIVE.RegExp.EquippedPassiveStateIds.exec('<equippedPassive:[3, 4]>');
-    expect(e[1]).toBe('[3, 4]');
+      // Assert
+      expect(result[1]).toBe('[12, 13]');
+    });
+
+    it('UniquePassiveStateIds captures a bracketed id list', () =>
+    {
+      // Arrange
+      const { UniquePassiveStateIds } = globalThis.J.PASSIVE.RegExp;
+
+      // Act
+      const result = UniquePassiveStateIds.exec('<uniquePassive:[7]>');
+
+      // Assert
+      expect(result[1]).toBe('[7]');
+    });
+
+    it('EquippedPassiveStateIds captures a bracketed id list', () =>
+    {
+      // Arrange
+      const { EquippedPassiveStateIds } = globalThis.J.PASSIVE.RegExp;
+
+      // Act
+      const result = EquippedPassiveStateIds.exec('<equippedPassive:[3, 4]>');
+
+      // Assert
+      expect(result[1]).toBe('[3, 4]');
+    });
   });
 });
 //endregion plugins/passive/metadata.test.js

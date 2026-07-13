@@ -1,53 +1,65 @@
 //region plugins/regions/ext/states/region-states-roll-threading.test.js
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { loadRegionsStatesStackVm } from '../../regions-vm.js';
+import {
+  installRegionsStatesStackHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJRegions,
+  setPluginContextToJRegionsStates,
+} from '../../fixtures/install-regions-host-globals.js';
 
-describe('J-Regions-States roll threading (out/regions/ext/J-Regions-States.js)', () =>
+describe('J-Regions-States roll threading (direct src import)', () =>
 {
-  /** @type {object} */
-  let sandbox;
-
-  /** @type {Function} */
   let originalChanceIn100;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadRegionsStatesStackVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installRegionsStatesStackHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
+
+    setPluginContextToJRegions();
+    await import('../../../../../src/plugins/regions/core/_metadata/initialization.js');
+    await import('../../../../../src/plugins/regions/core/objects/Game_Map.js');
+
+    setPluginContextToJRegionsStates();
+    await import('../../../../../src/plugins/regions/ext/states/_metadata/initialization.js');
+    await import('../../../../../src/plugins/regions/ext/states/objects/Game_Map.js');
+    await import('../../../../../src/plugins/regions/ext/states/objects/Game_Character.js');
   });
 
   beforeEach(() =>
   {
-    originalChanceIn100 = sandbox.RPGManager.chanceIn100;
-    sandbox.$dataStates = sandbox.$dataStates || [];
-    sandbox.$dataStates[12] = { id: 12, note: '' };
+    originalChanceIn100 = globalThis.RPGManager.chanceIn100;
+    globalThis.$dataStates = globalThis.$dataStates || [];
+    globalThis.$dataStates[12] = { id: 12, note: '' };
   });
 
   afterEach(() =>
   {
-    sandbox.RPGManager.chanceIn100 = originalChanceIn100;
+    globalThis.RPGManager.chanceIn100 = originalChanceIn100;
   });
 
-  it('the one stepping on the region is both the roller and the recipient', () =>
+  it('threads the walker as both the roller and the recipient of the region-state roll', () =>
   {
+    // Arrange
     const calls = [];
-    sandbox.RPGManager.chanceIn100 = function(percent, rollForPositive, rollForNegative)
+    globalThis.RPGManager.chanceIn100 = function(percent, rollForPositive, rollForNegative)
     {
       calls.push({ percent, rollForPositive, rollForNegative });
       return true;
     };
 
-    sandbox.$dataMap = { note: '<regionAddState:[7, 12, 100, 0]>' };
-    const map = new sandbox.Game_Map();
+    globalThis.$dataMap = { note: '<regionAddState:[7, 12, 100, 0]>' };
+    const map = new globalThis.Game_Map();
     map.initialize();
     map.setup(1);
-    sandbox.$gameMap = map;
+    globalThis.$gameMap = map;
 
     const battler = {
       stateRate: () => 1,
@@ -63,15 +75,17 @@ describe('J-Regions-States roll threading (out/regions/ext/J-Regions-States.js)'
     };
     const jabsBattler = { getBattler: () => battler };
 
-    const ch = new sandbox.Game_Character();
+    const ch = new globalThis.Game_Character();
     ch.initMembers();
     ch.hasJabsBattler = () => true;
     ch.getJabsBattler = () => jabsBattler;
     ch.regionId = () => 7;
     ch.requestAnimation = () => {};
 
+    // Act
     ch.applyRegionStates();
 
+    // Assert
     expect(calls).toEqual([ { percent: 100, rollForPositive: 5, rollForNegative: 2 } ]);
   });
 });

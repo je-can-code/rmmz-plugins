@@ -1,21 +1,23 @@
 //region plugins/abs/core/luck-curse-rolls.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { clearRpgManagerCacheInVm } from '../../../setup/shipped-plugin-vm.js';
-import { loadAbsPluginVm } from '../abs-vm.js';
+import {
+  installAbsHostGlobals,
+  setPluginContextToJAbs,
+  setPluginContextToJBase,
+} from '../fixtures/install-abs-host-globals.js';
 
 /**
  * Builds a minimal note-source stub carrying the given tag string, backed by the real
  * RPG_Skill prototype so formula tags parse and eval for real. Plain regex/eval reads (as used
  * by luckyRolls/cursedRolls) don't depend on any particular prototype chain, so this doubles as
  * a stand-in for any note source (state, equip, class, actor, or skill).
- * @param {object} sandbox
  * @param {string} note
  * @returns {object}
  */
-function buildNoteRow(sandbox, note)
+function buildNoteRow(note)
 {
-  const row = Object.create(sandbox.RPG_Skill.prototype);
+  const row = Object.create(globalThis.RPG_Skill.prototype);
   row.id = 1;
   row.note = note;
   row.meta = {};
@@ -23,89 +25,108 @@ function buildNoteRow(sandbox, note)
   return row;
 }
 
-describe('J-ABS luck/curse rolls (out/abs/J-ABS.js)', () =>
+/**
+ * Builds a plain duck-typed battler carrying only what these getters touch, borrowed directly
+ * from the real prototype so no full Game_Battler construction is needed. Mirrors the real
+ * cache field this all reads/writes through (`_j._abs._positiveRolls`/`_negativeRolls`).
+ * @param {object[]} notes Note sources returned by getAllNotes().
+ * @returns {object}
+ */
+function buildBattler(notes = [])
 {
-  /** @type {object} */
-  let sandbox;
+  return {
+    _j: { _abs: { _positiveRolls: 0, _negativeRolls: 0 } },
+    getLevel: () => 1,
+    getAllNotes: () => notes,
+    getRawPositiveRolls: globalThis.Game_Battler.prototype.getRawPositiveRolls,
+    setPositiveRolls: globalThis.Game_Battler.prototype.setPositiveRolls,
+    refreshPositiveRolls: globalThis.Game_Battler.prototype.refreshPositiveRolls,
+    getPositiveRolls: globalThis.Game_Battler.prototype.getPositiveRolls,
+    getRawNegativeRolls: globalThis.Game_Battler.prototype.getRawNegativeRolls,
+    setNegativeRolls: globalThis.Game_Battler.prototype.setNegativeRolls,
+    refreshNegativeRolls: globalThis.Game_Battler.prototype.refreshNegativeRolls,
+    getNegativeRolls: globalThis.Game_Battler.prototype.getNegativeRolls,
+    getPositiveRollsForSkill: globalThis.Game_Battler.prototype.getPositiveRollsForSkill,
+    getNegativeRollsForSkill: globalThis.Game_Battler.prototype.getNegativeRollsForSkill,
+  };
+}
 
-  beforeAll(() =>
+describe('J-ABS luck/curse rolls (direct src import)', () =>
+{
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadAbsPluginVm(sandbox);
+    vi.resetModules();
+
+    installAbsHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_Skill } = await import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+
+    setPluginContextToJAbs();
+    await import('../../../../src/plugins/abs/core/_metadata/initialization.js');
+
+    // patches globalThis.Game_Battler.prototype directly, no vm involved.
+    await import('../../../../src/plugins/abs/core/objects/Game_Battler.js');
   });
-
-  afterAll(() =>
-  {
-    sandbox = null;
-  });
-
-  beforeEach(() =>
-  {
-    clearRpgManagerCacheInVm(sandbox);
-  });
-
-  /**
-   * Builds a plain duck-typed battler carrying only what these getters touch, borrowed directly
-   * from the real prototype so no full Game_Battler construction is needed. Mirrors the real
-   * cache field this all reads/writes through (`_j._abs._positiveRolls`/`_negativeRolls`).
-   * @param {object[]} notes Note sources returned by getAllNotes().
-   * @returns {object}
-   */
-  function buildBattler(notes = [])
-  {
-    return {
-      _j: { _abs: { _positiveRolls: 0, _negativeRolls: 0 } },
-      getLevel: () => 1,
-      getAllNotes: () => notes,
-      getRawPositiveRolls: sandbox.Game_Battler.prototype.getRawPositiveRolls,
-      setPositiveRolls: sandbox.Game_Battler.prototype.setPositiveRolls,
-      refreshPositiveRolls: sandbox.Game_Battler.prototype.refreshPositiveRolls,
-      getPositiveRolls: sandbox.Game_Battler.prototype.getPositiveRolls,
-      getRawNegativeRolls: sandbox.Game_Battler.prototype.getRawNegativeRolls,
-      setNegativeRolls: sandbox.Game_Battler.prototype.setNegativeRolls,
-      refreshNegativeRolls: sandbox.Game_Battler.prototype.refreshNegativeRolls,
-      getNegativeRolls: sandbox.Game_Battler.prototype.getNegativeRolls,
-      getPositiveRollsForSkill: sandbox.Game_Battler.prototype.getPositiveRollsForSkill,
-      getNegativeRollsForSkill: sandbox.Game_Battler.prototype.getNegativeRollsForSkill,
-    };
-  }
 
   describe('caching', () =>
   {
     it('reads 0 from a cold cache before any refresh has run', () =>
     {
-      const battler = buildBattler([ buildNoteRow(sandbox, '<luckyRolls:[5]>') ]);
+      // Arrange- the tag is present, but nothing has told the battler to recompute its cache yet.
+      const battler = buildBattler([ buildNoteRow('<luckyRolls:[5]>') ]);
 
-      // the tag is present, but nothing has told the battler to recompute its cache yet.
-      expect(battler.getPositiveRolls()).toBe(0);
+      // Act
+      const result = battler.getPositiveRolls();
+
+      // Assert
+      expect(result).toBe(0);
     });
 
     it('reflects the note sources only after refreshPositiveRolls/refreshNegativeRolls runs', () =>
     {
-      const battler = buildBattler([
-        buildNoteRow(sandbox, '<luckyRolls:[5]>\n<cursedRolls:[2]>'),
-      ]);
+      // Arrange
+      const battler = buildBattler([ buildNoteRow('<luckyRolls:[5]>\n<cursedRolls:[2]>') ]);
 
+      // Act
       battler.refreshPositiveRolls();
       battler.refreshNegativeRolls();
 
+      // Assert
       expect(battler.getPositiveRolls()).toBe(5);
       expect(battler.getNegativeRolls()).toBe(2);
     });
 
     it('does not recompute on its own when note sources change without a refresh call', () =>
     {
-      const notes = [ buildNoteRow(sandbox, '<luckyRolls:[5]>') ];
+      // Arrange
+      const notes = [ buildNoteRow('<luckyRolls:[5]>') ];
       const battler = buildBattler(notes);
       battler.refreshPositiveRolls();
-      expect(battler.getPositiveRolls()).toBe(5);
+      notes.push(buildNoteRow('<luckyRolls:[100]>'));
 
-      // simulate a battler-data change (new state applied) without telling the cache to refresh.
-      notes.push(buildNoteRow(sandbox, '<luckyRolls:[100]>'));
-      expect(battler.getPositiveRolls()).toBe(5);
+      // Act- simulate a battler-data change (new state applied) without telling the cache to refresh.
+      const result = battler.getPositiveRolls();
 
-      // only after refreshing again does the new source get picked up.
+      // Assert
+      expect(result).toBe(5);
+    });
+
+    it('picks up new note sources only after refreshing again', () =>
+    {
+      // Arrange
+      const notes = [ buildNoteRow('<luckyRolls:[5]>') ];
+      const battler = buildBattler(notes);
       battler.refreshPositiveRolls();
+      notes.push(buildNoteRow('<luckyRolls:[100]>'));
+
+      // Act
+      battler.refreshPositiveRolls();
+
+      // Assert
       expect(battler.getPositiveRolls()).toBe(105);
     });
   });
@@ -114,31 +135,45 @@ describe('J-ABS luck/curse rolls (out/abs/J-ABS.js)', () =>
   {
     it('is 0 when no note source carries a luckyRolls tag', () =>
     {
-      const battler = buildBattler([ buildNoteRow(sandbox, '<knockback:4>') ]);
+      // Arrange
+      const battler = buildBattler([ buildNoteRow('<knockback:4>') ]);
       battler.refreshPositiveRolls();
 
-      expect(battler.getPositiveRolls()).toBe(0);
+      // Act
+      const result = battler.getPositiveRolls();
+
+      // Assert
+      expect(result).toBe(0);
     });
 
     it('evaluates the formula with "a" bound to the battler', () =>
     {
-      const battler = buildBattler([ buildNoteRow(sandbox, '<luckyRolls:[a.luk / 10]>') ]);
+      // Arrange
+      const battler = buildBattler([ buildNoteRow('<luckyRolls:[a.luk / 10]>') ]);
       battler.luk = 35;
       battler.refreshPositiveRolls();
 
-      expect(battler.getPositiveRolls()).toBe(3);
+      // Act
+      const result = battler.getPositiveRolls();
+
+      // Assert
+      expect(result).toBe(3);
     });
 
     it('sums contributions across multiple note sources, floored once at the end', () =>
     {
+      // Arrange- 1.6 + 1.6 = 3.2, floored once -> 3 (not floor(1.6) + floor(1.6) = 2).
       const battler = buildBattler([
-        buildNoteRow(sandbox, '<luckyRolls:[1.6]>'),
-        buildNoteRow(sandbox, '<luckyRolls:[1.6]>'),
+        buildNoteRow('<luckyRolls:[1.6]>'),
+        buildNoteRow('<luckyRolls:[1.6]>'),
       ]);
       battler.refreshPositiveRolls();
 
-      // 1.6 + 1.6 = 3.2, floored once -> 3 (not floor(1.6) + floor(1.6) = 2).
-      expect(battler.getPositiveRolls()).toBe(3);
+      // Act
+      const result = battler.getPositiveRolls();
+
+      // Assert
+      expect(result).toBe(3);
     });
   });
 
@@ -146,21 +181,31 @@ describe('J-ABS luck/curse rolls (out/abs/J-ABS.js)', () =>
   {
     it('is 0 when no note source carries a cursedRolls tag', () =>
     {
-      const battler = buildBattler([ buildNoteRow(sandbox, '<knockback:4>') ]);
+      // Arrange
+      const battler = buildBattler([ buildNoteRow('<knockback:4>') ]);
       battler.refreshNegativeRolls();
 
-      expect(battler.getNegativeRolls()).toBe(0);
+      // Act
+      const result = battler.getNegativeRolls();
+
+      // Assert
+      expect(result).toBe(0);
     });
 
     it('sums cursedRolls formulas across all note sources', () =>
     {
+      // Arrange
       const battler = buildBattler([
-        buildNoteRow(sandbox, '<cursedRolls:[2]>'),
-        buildNoteRow(sandbox, '<cursedRolls:[1]>'),
+        buildNoteRow('<cursedRolls:[2]>'),
+        buildNoteRow('<cursedRolls:[1]>'),
       ]);
       battler.refreshNegativeRolls();
 
-      expect(battler.getNegativeRolls()).toBe(3);
+      // Act
+      const result = battler.getNegativeRolls();
+
+      // Assert
+      expect(result).toBe(3);
     });
   });
 
@@ -168,30 +213,44 @@ describe('J-ABS luck/curse rolls (out/abs/J-ABS.js)', () =>
   {
     it('combines the cached battler-wide luckyRolls with the skill\'s own thisLuckyRolls', () =>
     {
-      const battler = buildBattler([ buildNoteRow(sandbox, '<luckyRolls:[2]>') ]);
+      // Arrange
+      const battler = buildBattler([ buildNoteRow('<luckyRolls:[2]>') ]);
       battler.refreshPositiveRolls();
-      const skill = buildNoteRow(sandbox, '<thisLuckyRolls:[3]>');
+      const skill = buildNoteRow('<thisLuckyRolls:[3]>');
 
-      expect(battler.getPositiveRollsForSkill(skill)).toBe(5);
+      // Act
+      const result = battler.getPositiveRollsForSkill(skill);
+
+      // Assert
+      expect(result).toBe(5);
     });
 
     it('floors the combined total once, not each contribution separately', () =>
     {
-      const battler = buildBattler([ buildNoteRow(sandbox, '<luckyRolls:[1.6]>') ]);
+      // Arrange- 1.6 + 1.6 = 3.2, floored once -> 3.
+      const battler = buildBattler([ buildNoteRow('<luckyRolls:[1.6]>') ]);
       battler.refreshPositiveRolls();
-      const skill = buildNoteRow(sandbox, '<thisLuckyRolls:[1.6]>');
+      const skill = buildNoteRow('<thisLuckyRolls:[1.6]>');
 
-      // 1.6 + 1.6 = 3.2, floored once -> 3.
-      expect(battler.getPositiveRollsForSkill(skill)).toBe(3);
+      // Act
+      const result = battler.getPositiveRollsForSkill(skill);
+
+      // Assert
+      expect(result).toBe(3);
     });
 
     it('falls back to only the cached battler-wide total when the skill has no thisLuckyRolls tag', () =>
     {
-      const battler = buildBattler([ buildNoteRow(sandbox, '<luckyRolls:[4]>') ]);
+      // Arrange
+      const battler = buildBattler([ buildNoteRow('<luckyRolls:[4]>') ]);
       battler.refreshPositiveRolls();
-      const skill = buildNoteRow(sandbox, '<knockback:4>');
+      const skill = buildNoteRow('<knockback:4>');
 
-      expect(battler.getPositiveRollsForSkill(skill)).toBe(4);
+      // Act
+      const result = battler.getPositiveRollsForSkill(skill);
+
+      // Assert
+      expect(result).toBe(4);
     });
   });
 
@@ -199,11 +258,16 @@ describe('J-ABS luck/curse rolls (out/abs/J-ABS.js)', () =>
   {
     it('combines the cached battler-wide cursedRolls with the skill\'s own thisCursedRolls', () =>
     {
-      const battler = buildBattler([ buildNoteRow(sandbox, '<cursedRolls:[1]>') ]);
+      // Arrange
+      const battler = buildBattler([ buildNoteRow('<cursedRolls:[1]>') ]);
       battler.refreshNegativeRolls();
-      const skill = buildNoteRow(sandbox, '<thisCursedRolls:[2]>');
+      const skill = buildNoteRow('<thisCursedRolls:[2]>');
 
-      expect(battler.getNegativeRollsForSkill(skill)).toBe(3);
+      // Act
+      const result = battler.getNegativeRollsForSkill(skill);
+
+      // Assert
+      expect(result).toBe(3);
     });
   });
 });

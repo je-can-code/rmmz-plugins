@@ -1,63 +1,116 @@
 //region plugins/passive/lifecycle-hooks.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { loadPassivePluginVm, resetPassivePluginSandbox } from './passive-vm.js';
+import {
+  installPassiveHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPassive,
+} from './fixtures/install-passive-host-globals.js';
 
-describe('J-Passive lifecycle hooks (out/J-Passive.js)', () =>
+describe('J-Passive lifecycle hooks (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadPassivePluginVm(sandbox);
+    vi.resetModules();
+
+    installPassiveHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJPassive();
+    await import('../../../src/plugins/passive/core/_metadata/initialization.js');
+
+    // patches globalThis.Game_Actor.prototype/Game_Party.prototype directly, no vm involved.
+    await import('../../../src/plugins/passive/core/objects/Game_Actor.js');
+    await import('../../../src/plugins/passive/core/objects/Game_Party.js');
 
     // isolate these extension points from host behavior.
-    sandbox.J.PASSIVE.Aliased.Game_Actor.set('onEquipChange', function()
-    {
-    });
-    sandbox.J.PASSIVE.Aliased.Game_Actor.set('onClassChange', function()
-    {
-    });
-    sandbox.J.PASSIVE.Aliased.Game_Party.set('gainItem', function()
-    {
-    });
-  });
-
-  afterAll(() =>
-  {
-    sandbox = null;
+    globalThis.J.PASSIVE.Aliased.Game_Actor.set('onEquipChange', function() {});
+    globalThis.J.PASSIVE.Aliased.Game_Actor.set('onClassChange', function() {});
+    globalThis.J.PASSIVE.Aliased.Game_Party.set('gainItem', function() {});
   });
 
   beforeEach(() =>
   {
-    resetPassivePluginSandbox(sandbox);
+    globalThis.RPGManager?.clearCache();
   });
 
-  it('Game_Actor lifecycle hooks trigger refreshPassiveStates', () =>
+  describe('Game_Actor', () =>
   {
-    const actor = new sandbox.Game_Actor();
-    actor.initMembers();
-    actor.refreshPassiveStates = vi.fn();
+    it('onLearnNewSkill (direct hook call) does not trigger refreshPassiveStates', () =>
+    {
+      // Arrange- passive only wraps learnSkill/forgetSkill, not the raw onLearnNewSkill/
+      // onForgetSkill hooks, since those fire too early (before the skill list actually changes).
+      const actor = new globalThis.Game_Actor();
+      actor.initMembers();
+      actor.refreshPassiveStates = vi.fn();
 
-    actor.onLearnNewSkill(1);
-    actor.onForgetSkill(1);
-    actor.onEquipChange();
-    actor.onClassChange();
+      // Act
+      actor.onLearnNewSkill(1);
 
-    expect(actor.refreshPassiveStates).toHaveBeenCalledTimes(2);
+      // Assert
+      expect(actor.refreshPassiveStates).not.toHaveBeenCalled();
+    });
+
+    it('onForgetSkill (direct hook call) does not trigger refreshPassiveStates', () =>
+    {
+      // Arrange
+      const actor = new globalThis.Game_Actor();
+      actor.initMembers();
+      actor.refreshPassiveStates = vi.fn();
+
+      // Act
+      actor.onForgetSkill(1);
+
+      // Assert
+      expect(actor.refreshPassiveStates).not.toHaveBeenCalled();
+    });
+
+    it('onEquipChange triggers refreshPassiveStates', () =>
+    {
+      // Arrange
+      const actor = new globalThis.Game_Actor();
+      actor.initMembers();
+      actor.refreshPassiveStates = vi.fn();
+
+      // Act
+      actor.onEquipChange();
+
+      // Assert
+      expect(actor.refreshPassiveStates).toHaveBeenCalledTimes(1);
+    });
+
+    it('onClassChange triggers refreshPassiveStates', () =>
+    {
+      // Arrange
+      const actor = new globalThis.Game_Actor();
+      actor.initMembers();
+      actor.refreshPassiveStates = vi.fn();
+
+      // Act
+      actor.onClassChange();
+
+      // Assert
+      expect(actor.refreshPassiveStates).toHaveBeenCalledTimes(1);
+    });
   });
 
-  it('Game_Party.gainItem triggers refreshPassiveStates', () =>
+  describe('Game_Party', () =>
   {
-    const party = new sandbox.Game_Party();
-    party.initialize();
-    party.refreshPassiveStates = vi.fn();
+    it('gainItem triggers refreshPassiveStates', () =>
+    {
+      // Arrange
+      const party = new globalThis.Game_Party();
+      party.initialize();
+      party.refreshPassiveStates = vi.fn();
 
-    party.gainItem({ id: 1 }, 1, false);
+      // Act
+      party.gainItem({ id: 1 }, 1, false);
 
-    expect(party.refreshPassiveStates).toHaveBeenCalledTimes(1);
+      // Assert
+      expect(party.refreshPassiveStates).toHaveBeenCalledTimes(1);
+    });
   });
 });
 //endregion plugins/passive/lifecycle-hooks.test.js
-

@@ -1,80 +1,146 @@
 //region plugins/jafting/jafting-core.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadJaftingCorePluginVm } from './jafting-core-vm.js';
+import { installJBaseHostGlobals } from '../_base/fixtures/install-j-base-host-globals.js';
+import { installMinimalMenuUiStubs } from '../../setup/install-minimal-menu-ui-stubs.js';
+import PluginMetadata from '../../../src/plugins/_base/models/PluginMetadata.js';
 
-describe('J-JAFTING core (built plugin)', () =>
+describe('J-JAFTING core (direct src import)', () =>
 {
-  let sandbox;
+  let Window_JaftingList;
+  let Scene_Jafting;
+  let Scene_JaftingSalvage;
+  let JaftingSalvageManager;
+  let JaftingSalvageLedgerRow;
+  let JaftingSalvageLedgerSnapshot;
+  let JaftingSalvagePartyLedgerBag;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadJaftingCorePluginVm(sandbox);
+    vi.resetModules();
+
+    installJBaseHostGlobals();
+    installMinimalMenuUiStubs(globalThis);
+
+    globalThis.__PLUGIN_NAME__ = 'J-Base';
+    globalThis.__PLUGIN_VERSION__ = '3.0.0';
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    // J-JAFTING's _pluginMetadata.js subclasses this real J-Base class.
+    globalThis.PluginMetadata = PluginMetadata;
+
+    // Window_JaftingList.buildSalvageHubCommand() reads this real _base bare global.
+    ({ default: globalThis.WindowCommandBuilder } = await import('../../../src/plugins/_base/models/WindowCommandBuilder.js'));
+
+    globalThis.__PLUGIN_NAME__ = 'J-JAFTING';
+    globalThis.__PLUGIN_VERSION__ = '1.0.0';
+    await import('../../../src/plugins/jafting/core/_metadata/initialization.js');
+
+    ({ default: Window_JaftingList } = await import('../../../src/plugins/jafting/core/windows/Window_JaftingList.js'));
+    ({ default: Scene_Jafting } = await import('../../../src/plugins/jafting/core/scenes/Scene_Jafting.js'));
+    ({ default: Scene_JaftingSalvage } = await import('../../../src/plugins/jafting/core/scenes/Scene_JaftingSalvage.js'));
+    ({ default: JaftingSalvageManager } = await import('../../../src/plugins/jafting/core/managers/JaftingSalvageManager.js'));
+    ({ default: JaftingSalvageLedgerRow } = await import('../../../src/plugins/jafting/core/__models/JaftingSalvageLedgerRow.js'));
+    ({ default: JaftingSalvageLedgerSnapshot } = await import('../../../src/plugins/jafting/core/__models/JaftingSalvageLedgerSnapshot.js'));
+    ({ default: JaftingSalvagePartyLedgerBag } = await import('../../../src/plugins/jafting/core/__models/JaftingSalvagePartyLedgerBag.js'));
   });
 
-  afterAll(() =>
+  describe('J.JAFTING.Metadata', () =>
   {
-    sandbox = null;
+    it('sets the metadata name to J-JAFTING', () =>
+    {
+      // Arrange & Act & Assert
+      expect(globalThis.J.JAFTING.Metadata.name).toBe('J-JAFTING');
+    });
+
+    it('defaults materialArmorTypeId to 5', () =>
+    {
+      // Arrange & Act & Assert
+      expect(globalThis.J.JAFTING.Metadata.materialArmorTypeId).toBe(5);
+    });
+
+    it('defaults materialWeaponTypeId to -1', () =>
+    {
+      // Arrange & Act & Assert
+      expect(globalThis.J.JAFTING.Metadata.materialWeaponTypeId).toBe(-1);
+    });
   });
 
-  it('exposes umbrella metadata on J.JAFTING.Metadata', () =>
+  it('reserves J.JAFTING.EXT as an object for extensions', () =>
   {
-    const md = sandbox.J.JAFTING.Metadata;
-
-    expect(md.name).toBe('J-JAFTING');
-    expect(md.materialArmorTypeId).toBe(5);
-    expect(md.materialWeaponTypeId).toBe(-1);
+    // Arrange & Act & Assert
+    expect(typeof globalThis.J.JAFTING.EXT).toBe('object');
   });
 
-  it('reserves J.JAFTING.EXT for extensions', () =>
+  describe('Window_JaftingList', () =>
   {
-    expect(sandbox.J.JAFTING.EXT).toBeDefined();
-    expect(typeof sandbox.J.JAFTING.EXT).toBe('object');
+    it('builds exactly one hub command', () =>
+    {
+      // Arrange
+      const rect = new globalThis.Rectangle(0, 0, 200, 200);
+      const hub = new Window_JaftingList(rect);
+
+      // Act
+      const commands = hub.buildCommands();
+
+      // Assert
+      expect(commands.length).toBe(1);
+    });
+
+    it('builds the Salvage hub command keyed to Scene_JaftingSalvage', () =>
+    {
+      // Arrange
+      const rect = new globalThis.Rectangle(0, 0, 200, 200);
+      const hub = new Window_JaftingList(rect);
+
+      // Act
+      const [ command ] = hub.buildCommands();
+
+      // Assert
+      expect(command.symbol).toBe(Scene_JaftingSalvage.KEY);
+    });
   });
 
-  it('defines the hub Window_JaftingList with Salvage plus extension hooks', () =>
+  describe('Scene_Jafting', () =>
   {
-    const { Window_JaftingList, Scene_JaftingSalvage } = sandbox.__JAFT_VM;
-
-    expect(typeof Window_JaftingList).toBe('function');
-
-    const rect = new sandbox.Rectangle(0, 0, 200, 200);
-    const hub = new Window_JaftingList(rect);
-    const commands = hub.buildCommands();
-
-    expect(Array.isArray(commands)).toBe(true);
-    expect(commands.length).toBe(1);
-    expect(commands[0].symbol).toBe(Scene_JaftingSalvage.KEY);
+    it('is defined as a menu scene subclass', () =>
+    {
+      // Arrange & Act & Assert
+      expect(Scene_Jafting.prototype.constructor).toBe(Scene_Jafting);
+    });
   });
 
-  it('defines Scene_Jafting as a menu scene subclass', () =>
+  describe('Scene_JaftingSalvage and salvage models', () =>
   {
-    const { Scene_Jafting } = sandbox.__JAFT_VM;
+    it('defines Scene_JaftingSalvage', () =>
+    {
+      // Arrange & Act & Assert
+      expect(typeof Scene_JaftingSalvage).toBe('function');
+    });
 
-    expect(typeof Scene_Jafting).toBe('function');
-    expect(Scene_Jafting.prototype.constructor).toBe(Scene_Jafting);
-  });
+    it('defines JaftingSalvageManager', () =>
+    {
+      // Arrange & Act & Assert
+      expect(typeof JaftingSalvageManager).toBe('function');
+    });
 
-  it('defines Scene_JaftingSalvage and JaftingSalvageManager', () =>
-  {
-    const { Scene_JaftingSalvage, JaftingSalvageManager } = sandbox.__JAFT_VM;
+    it('defines JaftingSalvageLedgerRow', () =>
+    {
+      // Arrange & Act & Assert
+      expect(typeof JaftingSalvageLedgerRow).toBe('function');
+    });
 
-    expect(typeof Scene_JaftingSalvage).toBe('function');
-    expect(typeof JaftingSalvageManager).toBe('function');
-  });
+    it('defines JaftingSalvageLedgerSnapshot', () =>
+    {
+      // Arrange & Act & Assert
+      expect(typeof JaftingSalvageLedgerSnapshot).toBe('function');
+    });
 
-  it('defines concrete salvage ledger model classes', () =>
-  {
-    const {
-      JaftingSalvageLedgerRow,
-      JaftingSalvageLedgerSnapshot,
-      JaftingSalvagePartyLedgerBag,
-    } = sandbox.__JAFT_VM;
-
-    expect(typeof JaftingSalvageLedgerRow).toBe('function');
-    expect(typeof JaftingSalvageLedgerSnapshot).toBe('function');
-    expect(typeof JaftingSalvagePartyLedgerBag).toBe('function');
+    it('defines JaftingSalvagePartyLedgerBag', () =>
+    {
+      // Arrange & Act & Assert
+      expect(typeof JaftingSalvagePartyLedgerBag).toBe('function');
+    });
   });
 });
 //endregion plugins/jafting/jafting-core.test.js

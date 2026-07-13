@@ -1,5 +1,5 @@
 //region plugins/time/jabs-input-adapter-and-controller-direct.test.js
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { installTimeHostGlobals } from './fixtures/install-time-host-globals.js';
 
@@ -27,8 +27,6 @@ describe('J-TIME JABS_InputAdapter + JABS_StandardController time window action 
 
     // patches globalThis.JABS_StandardController.prototype directly, no vm involved.
     await import('../../../src/plugins/time/core/objects/JABS_InputController.js');
-
-    globalThis.$gameTime = new Game_Time();
   });
 
   afterAll(() =>
@@ -36,65 +34,129 @@ describe('J-TIME JABS_InputAdapter + JABS_StandardController time window action 
     vi.unstubAllGlobals();
   });
 
-  it('JABS_InputAdapter.performTimeWindowAction toggles the time window when allowed', () =>
+  beforeEach(() =>
   {
-    const startingVisibility = globalThis.$gameTime.isMapWindowVisible();
-
-    globalThis.JABS_InputAdapter.performTimeWindowAction();
-
-    expect(globalThis.$gameTime.isMapWindowVisible()).toBe(!startingVisibility);
+    globalThis.$gameTime = new Game_Time();
   });
 
-  it('JABS_InputAdapter._canPerformTimeWindowAction currently always allows the toggle', () =>
+  describe('JABS_InputAdapter.performTimeWindowAction', () =>
   {
-    expect(globalThis.JABS_InputAdapter._canPerformTimeWindowAction()).toBe(true);
+    it('toggles the time window visibility when allowed', () =>
+    {
+      // Arrange
+      const startingVisibility = globalThis.$gameTime.isMapWindowVisible();
+
+      // Act
+      globalThis.JABS_InputAdapter.performTimeWindowAction();
+
+      // Assert
+      expect(globalThis.$gameTime.isMapWindowVisible()).toBe(!startingVisibility);
+    });
   });
 
-  it('isTimeWindowActionTriggered reflects the L3 input state', () =>
+  describe('JABS_InputAdapter._canPerformTimeWindowAction', () =>
   {
-    const controller = new globalThis.JABS_StandardController();
+    it('currently always allows the toggle', () =>
+    {
+      // Arrange & Act
+      const result = globalThis.JABS_InputAdapter._canPerformTimeWindowAction();
 
-    globalThis.Input.isTriggered = () => false;
-    expect(controller.isTimeWindowActionTriggered()).toBe(false);
-
-    globalThis.Input.isTriggered = symbol => symbol === globalThis.J.ABS.EXT.INPUT.Symbols.L3;
-    expect(controller.isTimeWindowActionTriggered()).toBe(true);
+      // Assert
+      expect(result).toBe(true);
+    });
   });
 
-  it('performTimeWindowAction delegates to JABS_InputAdapter', () =>
+  describe('JABS_StandardController.isTimeWindowActionTriggered', () =>
   {
-    const controller = new globalThis.JABS_StandardController();
-    const startingVisibility = globalThis.$gameTime.isMapWindowVisible();
+    it('returns false when the L3 input is not triggered', () =>
+    {
+      // Arrange
+      const controller = new globalThis.JABS_StandardController();
+      globalThis.Input.isTriggered = () => false;
 
-    controller.performTimeWindowAction();
+      // Act
+      const result = controller.isTimeWindowActionTriggered();
 
-    expect(globalThis.$gameTime.isMapWindowVisible()).toBe(!startingVisibility);
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('returns true when the L3 input is triggered', () =>
+    {
+      // Arrange
+      const controller = new globalThis.JABS_StandardController();
+      globalThis.Input.isTriggered = symbol => symbol === globalThis.J.ABS.EXT.INPUT.Symbols.L3;
+
+      // Act
+      const result = controller.isTimeWindowActionTriggered();
+
+      // Assert
+      expect(result).toBe(true);
+    });
   });
 
-  it('updateTimeWindowAction only performs the action when triggered', () =>
+  describe('JABS_StandardController.performTimeWindowAction', () =>
   {
-    const controller = new globalThis.JABS_StandardController();
-    const startingVisibility = globalThis.$gameTime.isMapWindowVisible();
+    it('delegates to JABS_InputAdapter and toggles the time window visibility', () =>
+    {
+      // Arrange
+      const controller = new globalThis.JABS_StandardController();
+      const startingVisibility = globalThis.$gameTime.isMapWindowVisible();
 
-    globalThis.Input.isTriggered = () => false;
-    controller.updateTimeWindowAction();
-    expect(globalThis.$gameTime.isMapWindowVisible()).toBe(startingVisibility);
+      // Act
+      controller.performTimeWindowAction();
 
-    globalThis.Input.isTriggered = symbol => symbol === globalThis.J.ABS.EXT.INPUT.Symbols.L3;
-    controller.updateTimeWindowAction();
-    expect(globalThis.$gameTime.isMapWindowVisible()).toBe(!startingVisibility);
+      // Assert
+      expect(globalThis.$gameTime.isMapWindowVisible()).toBe(!startingVisibility);
+    });
   });
 
-  it('update calls through to the aliased original and then updateTimeWindowAction', () =>
+  describe('JABS_StandardController.updateTimeWindowAction', () =>
   {
-    const controller = new globalThis.JABS_StandardController();
-    const startingVisibility = globalThis.$gameTime.isMapWindowVisible();
+    it('does not perform the action when the input is not triggered', () =>
+    {
+      // Arrange
+      const controller = new globalThis.JABS_StandardController();
+      const startingVisibility = globalThis.$gameTime.isMapWindowVisible();
+      globalThis.Input.isTriggered = () => false;
 
-    globalThis.Input.isTriggered = symbol => symbol === globalThis.J.ABS.EXT.INPUT.Symbols.L3;
+      // Act
+      controller.updateTimeWindowAction();
 
-    controller.update();
+      // Assert
+      expect(globalThis.$gameTime.isMapWindowVisible()).toBe(startingVisibility);
+    });
 
-    expect(globalThis.$gameTime.isMapWindowVisible()).toBe(!startingVisibility);
+    it('performs the action when the input is triggered', () =>
+    {
+      // Arrange
+      const controller = new globalThis.JABS_StandardController();
+      const startingVisibility = globalThis.$gameTime.isMapWindowVisible();
+      globalThis.Input.isTriggered = symbol => symbol === globalThis.J.ABS.EXT.INPUT.Symbols.L3;
+
+      // Act
+      controller.updateTimeWindowAction();
+
+      // Assert
+      expect(globalThis.$gameTime.isMapWindowVisible()).toBe(!startingVisibility);
+    });
+  });
+
+  describe('JABS_StandardController.update', () =>
+  {
+    it('calls through to the aliased original and then updateTimeWindowAction', () =>
+    {
+      // Arrange
+      const controller = new globalThis.JABS_StandardController();
+      const startingVisibility = globalThis.$gameTime.isMapWindowVisible();
+      globalThis.Input.isTriggered = symbol => symbol === globalThis.J.ABS.EXT.INPUT.Symbols.L3;
+
+      // Act
+      controller.update();
+
+      // Assert
+      expect(globalThis.$gameTime.isMapWindowVisible()).toBe(!startingVisibility);
+    });
   });
 });
 //endregion plugins/time/jabs-input-adapter-and-controller-direct.test.js

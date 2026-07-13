@@ -1,54 +1,66 @@
 //region plugins/regions/ext/skills/region-skills-roll-threading.test.js
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { loadRegionsSkillsStackVm } from '../../regions-vm.js';
+import {
+  installRegionsSkillsStackHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJRegions,
+  setPluginContextToJRegionsSkills,
+} from '../../fixtures/install-regions-host-globals.js';
 
-describe('J-Regions-Skills roll threading (out/regions/ext/J-Regions-Skills.js)', () =>
+describe('J-Regions-Skills roll threading (direct src import)', () =>
 {
-  /** @type {object} */
-  let sandbox;
-
-  /** @type {Function} */
   let originalChanceIn100;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadRegionsSkillsStackVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installRegionsSkillsStackHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
+
+    setPluginContextToJRegions();
+    await import('../../../../../src/plugins/regions/core/_metadata/initialization.js');
+    await import('../../../../../src/plugins/regions/core/objects/Game_Map.js');
+
+    setPluginContextToJRegionsSkills();
+    await import('../../../../../src/plugins/regions/ext/skills/_metadata/initialization.js');
+    await import('../../../../../src/plugins/regions/ext/skills/objects/Game_Map.js');
+    await import('../../../../../src/plugins/regions/ext/skills/objects/Game_Character.js');
   });
 
   beforeEach(() =>
   {
-    originalChanceIn100 = sandbox.RPGManager.chanceIn100;
-    sandbox.$dataSkills = sandbox.$dataSkills || [];
-    sandbox.$dataSkills[9] = { id: 9, note: '' };
-    sandbox.$jabsEngine.__forceMapActionCalls = [];
+    originalChanceIn100 = globalThis.RPGManager.chanceIn100;
+    globalThis.$dataSkills = globalThis.$dataSkills || [];
+    globalThis.$dataSkills[9] = { id: 9, note: '' };
+    globalThis.$jabsEngine.__forceMapActionCalls = [];
   });
 
   afterEach(() =>
   {
-    sandbox.RPGManager.chanceIn100 = originalChanceIn100;
+    globalThis.RPGManager.chanceIn100 = originalChanceIn100;
   });
 
-  it('the one stepping on the region is both the roller and the recipient', () =>
+  it('threads the walker as both the roller and the recipient of the region-skill roll', () =>
   {
+    // Arrange
     const calls = [];
-    sandbox.RPGManager.chanceIn100 = function(percent, rollForPositive, rollForNegative)
+    globalThis.RPGManager.chanceIn100 = function(percent, rollForPositive, rollForNegative)
     {
       calls.push({ percent, rollForPositive, rollForNegative });
       return true;
     };
 
-    sandbox.$dataMap = { note: '<regionSkill:[4, 9, 100, 1, false]>' };
-    const map = new sandbox.Game_Map();
+    globalThis.$dataMap = { note: '<regionSkill:[4, 9, 100, 1, false]>' };
+    const map = new globalThis.Game_Map();
     map.initialize();
     map.setup(1);
-    sandbox.$gameMap = map;
+    globalThis.$gameMap = map;
 
     const walkerBattler = {
       getPositiveRollsForSkill: () => 2,
@@ -65,14 +77,16 @@ describe('J-Regions-Skills roll threading (out/regions/ext/J-Regions-Skills.js)'
       getBattler: () => walkerBattler,
     };
 
-    const ch = new sandbox.Game_Character();
+    const ch = new globalThis.Game_Character();
     ch.initMembers();
     ch.hasJabsBattler = () => true;
     ch.getJabsBattler = () => targetJabsBattler;
     ch.regionId = () => 4;
 
+    // Act
     ch.executeRegionSkills();
 
+    // Assert
     expect(calls).toEqual([ { percent: 100, rollForPositive: 3, rollForNegative: 1 } ]);
   });
 });

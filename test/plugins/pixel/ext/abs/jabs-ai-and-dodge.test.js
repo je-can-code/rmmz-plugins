@@ -1,42 +1,65 @@
 //region plugins/pixel/ext/abs/jabs-ai-and-dodge.test.js
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { DEFAULT_PIXEL_CORE_PLUGIN_PARAMS } from '../../fixtures/pixel-plugin-params.js';
-import { loadPixelAbsStackPluginVm } from '../../pixel-vm.js';
+import {
+  installPixelAbsExtHostGlobals,
+  installPixelCoreHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPixel,
+  setPluginContextToJPixelAbsExt,
+} from '../../fixtures/install-pixel-host-globals.js';
 
-describe('J-ABS-Pixelistics JABS integration', () =>
+describe('J-ABS-Pixelistics JABS integration (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeEach(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadPixelAbsStackPluginVm(sandbox, {
-      coreParams: {
-        ...DEFAULT_PIXEL_CORE_PLUGIN_PARAMS,
-        collisionStepCount: '4',
-      },
+    vi.resetModules();
+
+    installPixelCoreHostGlobals(globalThis, {
+      ...DEFAULT_PIXEL_CORE_PLUGIN_PARAMS,
+      collisionStepCount: '4',
     });
+
+    setPluginContextToJBase();
+    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJPixel();
+    await import('../../../../../src/plugins/pixel/core/_metadata/initialization.js');
+
+    ({ default: globalThis.PIXEL_CollisionManager } = await import('../../../../../src/plugins/pixel/core/managers/PIXEL_CollisionManager.js'));
+
+    installPixelAbsExtHostGlobals();
+
+    setPluginContextToJPixelAbsExt();
+    await import('../../../../../src/plugins/pixel/ext/abs/_metadata/initialization.js');
+
+    // patches the fake JABS_AiManager/JABS_Battler stand-ins directly, no vm involved.
+    await import('../../../../../src/plugins/pixel/ext/abs/managers/JABS_AiManager.js');
+    await import('../../../../../src/plugins/pixel/ext/abs/objects/JABS_Battler.js');
   });
 
-  afterEach(() =>
+  it('canMoveIdly returns true after the extension override', () =>
   {
-    sandbox = null;
-  });
-
-  it('canMoveIdly returns true after extension override', () =>
-  {
+    // Arrange
     const a = {};
 
-    expect(sandbox.JABS_AiManager.canMoveIdly(a)).toBe(true);
+    // Act
+    const result = globalThis.JABS_AiManager.canMoveIdly(a);
+
+    // Assert
+    expect(result).toBe(true);
   });
 
-  it('scales dodge steps by collision step count', () =>
+  it('scales dodge steps by the collision step count', () =>
   {
-    const battler = new sandbox.JABS_Battler();
+    // Arrange
+    const battler = new globalThis.JABS_Battler();
 
+    // Act
     battler.setDodgeSteps(3);
 
+    // Assert
     expect(battler.__lastDodgeSteps).toBe(12);
   });
 });

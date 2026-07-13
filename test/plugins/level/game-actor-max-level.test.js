@@ -1,44 +1,56 @@
 //region plugins/level/game-actor-max-level.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { loadLevelPluginVm, resetLevelPluginSandbox } from './level-vm.js';
+import {
+  installLevelHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJLevel,
+} from './fixtures/install-level-host-globals.js';
 
-describe('J-LevelMaster Game_Actor max level (out/J-LevelMaster.js)', () =>
+describe('J-LevelMaster Game_Actor max level (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadLevelPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installLevelHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../src/plugins/_base/managers/RPGManager.js'));
+    await import('../../../src/plugins/_base/objects/Game_BattlerBase.js');
+    await import('../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../src/plugins/_base/objects/Game_Actor.js');
+
+    setPluginContextToJLevel();
+    await import('../../../src/plugins/level/core/_metadata/initialization.js');
+
+    await import('../../../src/plugins/level/core/objects/Game_BattlerBase.js');
+    await import('../../../src/plugins/level/core/objects/Game_Battler.js');
+    await import('../../../src/plugins/level/core/objects/Game_Actor.js');
   });
 
   beforeEach(() =>
   {
-    resetLevelPluginSandbox(sandbox);
+    globalThis.$gameVariables._data = [];
+    globalThis.RPGManager.clearCache();
   });
 
-  it('raises real max level from maxLevelBoost notes capped by plugin trueMaxLevel', () =>
+  it('raises real max level from maxLevelBoost notes, capped by the plugin trueMaxLevel', () =>
   {
-    const actor = new sandbox.Game_Actor();
-    actor.__actorDb = {
-      id: 1,
-      name: '',
-      note: '',
-      classId: 1,
-      maxLevel: 99,
-      traits: [],
-    };
+    // Arrange
+    const actor = new globalThis.Game_Actor();
+    actor.__actorDb = { id: 1, name: '', note: '', classId: 1, maxLevel: 99, traits: [] };
     actor.__testNoteSources = [ { note: '<maxLevelBoost:+25>' } ];
     actor.initMembers();
     actor.onBattlerDataChange();
 
-    expect(actor.getRealMaxLevel()).toBe(280);
+    // Act
+    const result = actor.getRealMaxLevel();
+
+    // Assert
+    expect(result).toBe(280);
   });
 });
 //endregion plugins/level/game-actor-max-level.test.js

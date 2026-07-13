@@ -1,26 +1,32 @@
 //region plugins/crit/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadCriticalFactorsPluginVm } from './crit-vm.js';
+import { installJBaseHostGlobals } from '../_base/fixtures/install-j-base-host-globals.js';
+import PluginMetadata from '../../../src/plugins/_base/models/PluginMetadata.js';
 
-describe('J-CriticalFactors metadata (out/crit/J-CriticalFactors.js)', () =>
+describe('J-CriticalFactors metadata (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadCriticalFactorsPluginVm(sandbox);
+    vi.resetModules();
+
+    installJBaseHostGlobals();
+    globalThis.PluginMetadata = PluginMetadata;
+    globalThis.PluginManager = { parameters: () => ({}) };
+
+    globalThis.__PLUGIN_NAME__ = 'J-Base';
+    globalThis.__PLUGIN_VERSION__ = '3.0.0';
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    globalThis.__PLUGIN_NAME__ = 'J-CriticalFactors';
+    globalThis.__PLUGIN_VERSION__ = '1.0.0';
+    await import('../../../src/plugins/crit/core/_metadata/initialization.js');
   });
 
-  afterAll(() =>
+  it('sets the metadata name to J-CriticalFactors', () =>
   {
-    sandbox = null;
-  });
-
-  it('initializes metadata and regex objects', () =>
-  {
-    expect(sandbox.J.CRIT.Metadata.name).toBe('J-CriticalFactors');
+    // Arrange & Act & Assert
+    expect(globalThis.J.CRIT.Metadata.name).toBe('J-CriticalFactors');
   });
 });
 //endregion plugins/crit/metadata.test.js

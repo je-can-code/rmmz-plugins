@@ -1,72 +1,101 @@
 //region plugins/crit/game-battler-base.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-
-import { loadCriticalFactorsPluginVm } from './crit-vm.js';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 /**
- * Exercises Game_BattlerBase.js's own additions directly against `new sandbox.Game_BattlerBase()`,
- * distinct from game-battler.test.js/game-battler-crit-math.test.js which exercise the
- * Game_Battler.prototype overrides that actors/enemies actually use in practice. Game_BattlerBase's
- * versions are the engine-wide fallback for any battler type that doesn't get Game_Battler.js's
- * richer note/natural/sdp-aware implementations.
+ * Exercises Game_BattlerBase.js's own additions directly against `new Game_BattlerBase()`, distinct
+ * from game-battler.test.js/game-battler-crit-math.test.js which exercise the Game_Battler.prototype
+ * overrides that actors/enemies actually use in practice. Game_BattlerBase's versions are the
+ * engine-wide fallback for any battler type that doesn't get Game_Battler.js's richer
+ * note/natural/sdp-aware implementations.
  */
-describe('J-CriticalFactors Game_BattlerBase (out/crit/J-CriticalFactors.js)', () =>
+describe('J-CriticalFactors Game_BattlerBase (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadCriticalFactorsPluginVm(sandbox);
+    vi.resetModules();
+
+    function Game_BattlerBase()
+    {
+    }
+
+    globalThis.Game_BattlerBase = Game_BattlerBase;
+
+    // patches globalThis.Game_BattlerBase.prototype directly, no vm involved.
+    await import('../../../src/plugins/crit/core/objects/Game_BattlerBase.js');
   });
 
-  afterAll(() =>
+  describe('baseCriticalMultiplier', () =>
   {
-    sandbox = null;
+    it('defaults to 0.5', () =>
+    {
+      // Arrange
+      const battler = new globalThis.Game_BattlerBase();
+
+      // Act & Assert
+      expect(battler.baseCriticalMultiplier()).toBe(0.5);
+    });
   });
 
-  it('baseCriticalMultiplier defaults to 0.5', () =>
+  describe('criticalDamageMultiplier', () =>
   {
-    const battler = new sandbox.Game_BattlerBase();
+    it('defaults to 0.0', () =>
+    {
+      // Arrange
+      const battler = new globalThis.Game_BattlerBase();
 
-    expect(battler.baseCriticalMultiplier()).toBe(0.5);
+      // Act & Assert
+      expect(battler.criticalDamageMultiplier()).toBe(0.0);
+    });
   });
 
-  it('criticalDamageMultiplier defaults to 0.0', () =>
+  describe('baseCriticalReduction', () =>
   {
-    const battler = new sandbox.Game_BattlerBase();
+    it('defaults to 0.5', () =>
+    {
+      // Arrange
+      const battler = new globalThis.Game_BattlerBase();
 
-    expect(battler.criticalDamageMultiplier()).toBe(0.0);
+      // Act & Assert
+      expect(battler.baseCriticalReduction()).toBe(0.5);
+    });
   });
 
-  it('baseCriticalReduction defaults to 0.5', () =>
+  describe('criticalDamageReduction', () =>
   {
-    const battler = new sandbox.Game_BattlerBase();
+    it('defaults to 0.0', () =>
+    {
+      // Arrange
+      const battler = new globalThis.Game_BattlerBase();
 
-    expect(battler.baseCriticalReduction()).toBe(0.5);
+      // Act & Assert
+      expect(battler.criticalDamageReduction()).toBe(0.0);
+    });
   });
 
-  it('criticalDamageReduction defaults to 0.0', () =>
+  describe('cdm', () =>
   {
-    const battler = new sandbox.Game_BattlerBase();
+    it('delegates to criticalDamageMultiplier()', () =>
+    {
+      // Arrange
+      const battler = new globalThis.Game_BattlerBase();
+      battler.criticalDamageMultiplier = () => 0.75;
 
-    expect(battler.criticalDamageReduction()).toBe(0.0);
+      // Act & Assert
+      expect(battler.cdm).toBe(0.75);
+    });
   });
 
-  it('cdm getter delegates to criticalDamageMultiplier()', () =>
+  describe('ctr', () =>
   {
-    const battler = new sandbox.Game_BattlerBase();
-    battler.criticalDamageMultiplier = () => 0.75;
+    it('delegates to criticalDamageReduction()', () =>
+    {
+      // Arrange
+      const battler = new globalThis.Game_BattlerBase();
+      battler.criticalDamageReduction = () => 0.35;
 
-    expect(battler.cdm).toBe(0.75);
-  });
-
-  it('ctr getter delegates to criticalDamageReduction()', () =>
-  {
-    const battler = new sandbox.Game_BattlerBase();
-    battler.criticalDamageReduction = () => 0.35;
-
-    expect(battler.ctr).toBe(0.35);
+      // Act & Assert
+      expect(battler.ctr).toBe(0.35);
+    });
   });
 });
 //endregion plugins/crit/game-battler-base.test.js

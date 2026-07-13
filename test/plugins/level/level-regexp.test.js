@@ -1,53 +1,145 @@
 //region plugins/level/level-regexp.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadLevelPluginVm } from './level-vm.js';
+import {
+  installLevelHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJLevel,
+} from './fixtures/install-level-host-globals.js';
 
-describe('J-LevelMaster J.LEVEL.RegExp (out/J-LevelMaster.js)', () =>
+describe('J-LevelMaster J.LEVEL.RegExp (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadLevelPluginVm(sandbox);
+    vi.resetModules();
+
+    installLevelHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJLevel();
+    await import('../../../src/plugins/level/core/_metadata/initialization.js');
   });
 
-  afterAll(() =>
+  describe('Level', () =>
   {
-    sandbox = null;
+    it('accepts the "level" key', () =>
+    {
+      // Arrange
+      const { Level } = globalThis.J.LEVEL.RegExp;
+
+      // Act
+      const result = Level.exec('<level:5>');
+
+      // Assert
+      expect(result[1]).toBe('5');
+    });
+
+    it('accepts the "lvl" key with an explicit positive sign', () =>
+    {
+      // Arrange
+      const { Level } = globalThis.J.LEVEL.RegExp;
+
+      // Act
+      const result = Level.exec('<lvl:+12>');
+
+      // Assert
+      expect(result[1]).toBe('+12');
+    });
+
+    it('accepts the "LV" key case-insensitively with a negative sign', () =>
+    {
+      // Arrange
+      const { Level } = globalThis.J.LEVEL.RegExp;
+
+      // Act
+      const result = Level.exec('<LV:-3>');
+
+      // Assert
+      expect(result[1]).toBe('-3');
+    });
   });
 
-  it('Level accepts lv, lvl, and level keys with optional sign', () =>
+  describe('Learning', () =>
   {
-    const { Level } = sandbox.J.LEVEL.RegExp;
+    it('captures a bracket pair of ids', () =>
+    {
+      // Arrange
+      const { Learning } = globalThis.J.LEVEL.RegExp;
 
-    expect(Level.exec('<level:5>')[1]).toBe('5');
-    expect(Level.exec('<lvl:+12>')[1]).toBe('+12');
-    expect(Level.exec('<LV:-3>')[1]).toBe('-3');
+      // Act
+      const result = Learning.exec('<learning:[99, 10]>');
+
+      // Assert
+      expect(result[1]).toBe('[99, 10]');
+    });
   });
 
-  it('Learning captures a bracket pair of ids', () =>
+  describe('MaxLevelBoost', () =>
   {
-    const { Learning } = sandbox.J.LEVEL.RegExp;
-    const m = Learning.exec('<learning:[99, 10]>');
+    it('captures an explicit positive signed integer', () =>
+    {
+      // Arrange
+      const { MaxLevelBoost } = globalThis.J.LEVEL.RegExp;
 
-    expect(m[1]).toBe('[99, 10]');
+      // Act
+      const result = MaxLevelBoost.exec('<maxLevelBoost:+25>');
+
+      // Assert
+      expect(result[1]).toBe('+25');
+    });
+
+    it('captures a negative signed integer with surrounding whitespace', () =>
+    {
+      // Arrange
+      const { MaxLevelBoost } = globalThis.J.LEVEL.RegExp;
+
+      // Act
+      const result = MaxLevelBoost.exec('<maxLevelBoost: -7>');
+
+      // Assert
+      expect(result[1]).toBe('-7');
+    });
   });
 
-  it('MaxLevelBoost captures signed integers', () =>
+  describe('HideLevel', () =>
   {
-    const { MaxLevelBoost } = sandbox.J.LEVEL.RegExp;
+    it('matches the lowercase tag name', () =>
+    {
+      // Arrange
+      const { HideLevel } = globalThis.J.LEVEL.RegExp;
 
-    expect(MaxLevelBoost.exec('<maxLevelBoost:+25>')[1]).toBe('+25');
-    expect(MaxLevelBoost.exec('<maxLevelBoost: -7>')[1]).toBe('-7');
-  });
+      // Act
+      const result = HideLevel.test('<hideLevel>');
 
-  it('HideLevel matches the tag name only', () =>
-  {
-    expect(sandbox.J.LEVEL.RegExp.HideLevel.test('<hideLevel>')).toBe(true);
-    expect(sandbox.J.LEVEL.RegExp.HideLevel.test('<HideLevel>')).toBe(true);
-    expect(sandbox.J.LEVEL.RegExp.HideLevel.test('<level:1>')).toBe(false);
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('matches the tag name case-insensitively', () =>
+    {
+      // Arrange
+      const { HideLevel } = globalThis.J.LEVEL.RegExp;
+
+      // Act
+      const result = HideLevel.test('<HideLevel>');
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('does not match an unrelated tag', () =>
+    {
+      // Arrange
+      const { HideLevel } = globalThis.J.LEVEL.RegExp;
+
+      // Act
+      const result = HideLevel.test('<level:1>');
+
+      // Assert
+      expect(result).toBe(false);
+    });
   });
 });
 //endregion plugins/level/level-regexp.test.js

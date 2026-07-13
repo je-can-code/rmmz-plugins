@@ -1,20 +1,22 @@
 //region plugins/abs/core/proximity-knockback.test.js
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { clearRpgManagerCacheInVm } from '../../../setup/shipped-plugin-vm.js';
-import { loadAbsPluginVm } from '../abs-vm.js';
+import {
+  installAbsHostGlobals,
+  setPluginContextToJAbs,
+  setPluginContextToJBase,
+} from '../fixtures/install-abs-host-globals.js';
 
 /**
  * Builds a minimal note-source stub carrying the given tag string. The regex-parsing helpers
  * this tag relies on (getArraysFromNotesByRegex) only need a `.note` string, not any particular
  * prototype chain, so a plain RPG_Skill-backed stub works fine as a generic note source.
- * @param {object} sandbox
  * @param {string} note
  * @returns {object}
  */
-function buildNoteSource(sandbox, note)
+function buildNoteSource(note)
 {
-  const row = Object.create(sandbox.RPG_Skill.prototype);
+  const row = Object.create(globalThis.RPG_Skill.prototype);
   row.id = 1;
   row.note = note;
   row.meta = {};
@@ -22,176 +24,210 @@ function buildNoteSource(sandbox, note)
   return row;
 }
 
-describe('J-ABS proximity knockback (out/abs/J-ABS.js)', () =>
+/**
+ * Builds a plain duck-typed "JABS_Engine" carrying only getProximityKnockbackBonusPct,
+ * borrowed directly from the real prototype.
+ * @returns {object}
+ */
+function buildEngine()
 {
-  /** @type {object} */
-  let sandbox;
+  return {
+    getProximityKnockbackBonusPct: globalThis.JABS_Engine.prototype.getProximityKnockbackBonusPct,
+  };
+}
 
+/**
+ * Builds a plain duck-typed "JABS_Battler" (caster) exposing only getBattler().getAllNotes().
+ * @param {string[]} notes
+ * @returns {object}
+ */
+function buildCaster(notes = [])
+{
+  return {
+    getBattler: () => ({
+      getAllNotes: () => notes.map(note => buildNoteSource(note)),
+    }),
+  };
+}
+
+/**
+ * Stubs JABS_AiManager.getOpposingBattlersWithinRange to report a fixed enemy count for
+ * every radius queried, regardless of the caster passed in.
+ * @param {number} count
+ */
+function stubNearbyEnemyCount(count)
+{
+  globalThis.JABS_AiManager.getOpposingBattlersWithinRange = () => new Array(count).fill({});
+}
+
+/**
+ * Stubs JABS_AiManager.getOpposingBattlersWithinRange to report a different enemy count
+ * per radius, keyed by radius value.
+ * @param {Record<number, number>} countsByRadius
+ */
+function stubNearbyEnemyCountByRadius(countsByRadius)
+{
+  globalThis.JABS_AiManager.getOpposingBattlersWithinRange = (caster, radius) =>
+    new Array(countsByRadius[radius] ?? 0).fill({});
+}
+
+describe('J-ABS proximity knockback (direct src import)', () =>
+{
   /** @type {(caster: object, radius: number) => object[]} */
   let originalGetOpposingBattlersWithinRange;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadAbsPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installAbsHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_Skill } = await import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+
+    setPluginContextToJAbs();
+    await import('../../../../src/plugins/abs/core/_metadata/initialization.js');
+
+    ({ default: globalThis.JABS_AiManager } = await import('../../../../src/plugins/abs/core/managers/JABS_AiManager.js'));
+    ({ default: globalThis.JABS_Engine } = await import('../../../../src/plugins/abs/core/managers/JABS_Engine.js'));
   });
 
   beforeEach(() =>
   {
-    clearRpgManagerCacheInVm(sandbox);
-    originalGetOpposingBattlersWithinRange = sandbox.JABS_AiManager.getOpposingBattlersWithinRange;
+    globalThis.RPGManager.clearCache();
+    originalGetOpposingBattlersWithinRange = globalThis.JABS_AiManager.getOpposingBattlersWithinRange;
   });
 
   afterEach(() =>
   {
-    sandbox.JABS_AiManager.getOpposingBattlersWithinRange = originalGetOpposingBattlersWithinRange;
+    globalThis.JABS_AiManager.getOpposingBattlersWithinRange = originalGetOpposingBattlersWithinRange;
   });
-
-  /**
-   * Builds a plain duck-typed "JABS_Engine" carrying only getProximityKnockbackBonusPct,
-   * borrowed directly from the real prototype.
-   * @returns {object}
-   */
-  function buildEngine()
-  {
-    return {
-      getProximityKnockbackBonusPct: sandbox.JABS_Engine.prototype.getProximityKnockbackBonusPct,
-    };
-  }
-
-  /**
-   * Builds a plain duck-typed "JABS_Battler" (caster) exposing only getBattler().getAllNotes().
-   * @param {object} sandboxRef
-   * @param {string[]} notes
-   * @returns {object}
-   */
-  function buildCaster(sandboxRef, notes = [])
-  {
-    return {
-      getBattler: () => ({
-        getAllNotes: () => notes.map(note => buildNoteSource(sandboxRef, note)),
-      }),
-    };
-  }
-
-  /**
-   * Stubs JABS_AiManager.getOpposingBattlersWithinRange to report a fixed enemy count for
-   * every radius queried, regardless of the caster passed in.
-   * @param {number} count
-   */
-  function stubNearbyEnemyCount(count)
-  {
-    sandbox.JABS_AiManager.getOpposingBattlersWithinRange = () => new Array(count).fill({});
-  }
-
-  /**
-   * Stubs JABS_AiManager.getOpposingBattlersWithinRange to report a different enemy count
-   * per radius, keyed by radius value.
-   * @param {Record<number, number>} countsByRadius
-   */
-  function stubNearbyEnemyCountByRadius(countsByRadius)
-  {
-    sandbox.JABS_AiManager.getOpposingBattlersWithinRange = (caster, radius) =>
-      new Array(countsByRadius[radius] ?? 0).fill({});
-  }
 
   it('returns 0 when the caster has no proximityKnockback tags', () =>
   {
+    // Arrange
     stubNearbyEnemyCount(3);
     const engine = buildEngine();
-    const caster = buildCaster(sandbox, []);
+    const caster = buildCaster([]);
 
-    expect(engine.getProximityKnockbackBonusPct(caster)).toBe(0);
+    // Act
+    const result = engine.getProximityKnockbackBonusPct(caster);
+
+    // Assert
+    expect(result).toBe(0);
   });
 
   it('returns 0 when tagged but no enemies are nearby', () =>
   {
+    // Arrange
     stubNearbyEnemyCount(0);
     const engine = buildEngine();
-    const caster = buildCaster(sandbox, [ '<proximityKnockback:[4, 25]>' ]);
+    const caster = buildCaster([ '<proximityKnockback:[4, 25]>' ]);
 
-    expect(engine.getProximityKnockbackBonusPct(caster)).toBe(0);
+    // Act
+    const result = engine.getProximityKnockbackBonusPct(caster);
+
+    // Assert
+    expect(result).toBe(0);
   });
 
   it('scales the percent by the number of nearby enemies', () =>
   {
+    // Arrange- 3 enemies * 25% = 75%.
     stubNearbyEnemyCount(3);
     const engine = buildEngine();
-    const caster = buildCaster(sandbox, [ '<proximityKnockback:[4, 25]>' ]);
+    const caster = buildCaster([ '<proximityKnockback:[4, 25]>' ]);
 
-    // 3 enemies * 25% = 75%.
-    expect(engine.getProximityKnockbackBonusPct(caster)).toBe(75);
+    // Act
+    const result = engine.getProximityKnockbackBonusPct(caster);
+
+    // Assert
+    expect(result).toBe(75);
   });
 
   it('queries the AI manager using the tag\'s own radius', () =>
   {
+    // Arrange
     let queriedRadius = null;
-    sandbox.JABS_AiManager.getOpposingBattlersWithinRange = (caster, radius) =>
+    globalThis.JABS_AiManager.getOpposingBattlersWithinRange = (caster, radius) =>
     {
       queriedRadius = radius;
       return [ {}, {} ];
     };
     const engine = buildEngine();
-    const caster = buildCaster(sandbox, [ '<proximityKnockback:[6, 10]>' ]);
+    const caster = buildCaster([ '<proximityKnockback:[6, 10]>' ]);
 
+    // Act
     engine.getProximityKnockbackBonusPct(caster);
 
+    // Assert
     expect(queriedRadius).toBe(6);
   });
 
   it('sums contributions from multiple tags with different radii independently', () =>
   {
+    // Arrange- (2 enemies * 10%) + (1 enemy * 50%) = 70%.
     stubNearbyEnemyCountByRadius({ 3: 2, 8: 1 });
     const engine = buildEngine();
-    const caster = buildCaster(sandbox, [
-      '<proximityKnockback:[3, 10]>\n<proximityKnockback:[8, 50]>',
-    ]);
+    const caster = buildCaster([ '<proximityKnockback:[3, 10]>\n<proximityKnockback:[8, 50]>' ]);
 
-    // (2 enemies * 10%) + (1 enemy * 50%) = 70%.
-    expect(engine.getProximityKnockbackBonusPct(caster)).toBe(70);
+    // Act
+    const result = engine.getProximityKnockbackBonusPct(caster);
+
+    // Assert
+    expect(result).toBe(70);
   });
 
   it('sums contributions across multiple note sources', () =>
   {
+    // Arrange- 2 enemies * (25% + 15%) = 80%.
     stubNearbyEnemyCount(2);
     const engine = buildEngine();
-    const caster = buildCaster(sandbox, [
+    const caster = buildCaster([
       '<proximityKnockback:[4, 25]>',
       '<proximityKnockback:[4, 15]>',
     ]);
 
-    // 2 enemies * (25% + 15%) = 80%.
-    expect(engine.getProximityKnockbackBonusPct(caster)).toBe(80);
+    // Act
+    const result = engine.getProximityKnockbackBonusPct(caster);
+
+    // Assert
+    expect(result).toBe(80);
   });
 
   it('supports a negative percent to dampen knockback near enemies', () =>
   {
+    // Arrange- 4 enemies * -10% = -40%.
     stubNearbyEnemyCount(4);
     const engine = buildEngine();
-    const caster = buildCaster(sandbox, [ '<proximityKnockback:[4, -10]>' ]);
+    const caster = buildCaster([ '<proximityKnockback:[4, -10]>' ]);
 
-    // 4 enemies * -10% = -40%.
-    expect(engine.getProximityKnockbackBonusPct(caster)).toBe(-40);
+    // Act
+    const result = engine.getProximityKnockbackBonusPct(caster);
+
+    // Assert
+    expect(result).toBe(-40);
   });
 
   it('supports a decimal radius', () =>
   {
+    // Arrange
     let queriedRadius = null;
-    sandbox.JABS_AiManager.getOpposingBattlersWithinRange = (caster, radius) =>
+    globalThis.JABS_AiManager.getOpposingBattlersWithinRange = (caster, radius) =>
     {
       queriedRadius = radius;
       return [ {} ];
     };
     const engine = buildEngine();
-    const caster = buildCaster(sandbox, [ '<proximityKnockback:[4.5, 20]>' ]);
+    const caster = buildCaster([ '<proximityKnockback:[4.5, 20]>' ]);
 
+    // Act
     engine.getProximityKnockbackBonusPct(caster);
 
+    // Assert
     expect(queriedRadius).toBe(4.5);
   });
 });

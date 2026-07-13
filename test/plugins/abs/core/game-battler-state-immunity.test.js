@@ -1,8 +1,11 @@
 //region plugins/abs/core/game-battler-state-immunity.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { clearRpgManagerCacheInVm } from '../../../setup/shipped-plugin-vm.js';
-import { loadAbsPluginVm } from '../abs-vm.js';
+import {
+  installAbsHostGlobals,
+  setPluginContextToJAbs,
+  setPluginContextToJBase,
+} from '../fixtures/install-abs-host-globals.js';
 
 const NEGATIVE_STATE_ID = 30;
 const POSITIVE_STATE_ID = 31;
@@ -11,13 +14,12 @@ const DEATH_STATE_ID = 1;
 
 /**
  * Builds a minimal note-source stub carrying the given tag string.
- * @param {object} sandbox
  * @param {string} note
  * @returns {object}
  */
-function buildNoteSource(sandbox, note)
+function buildNoteSource(note)
 {
-  const row = Object.create(sandbox.RPG_Skill.prototype);
+  const row = Object.create(globalThis.RPG_Skill.prototype);
   row.id = 1;
   row.note = note;
   row.meta = {};
@@ -27,14 +29,13 @@ function buildNoteSource(sandbox, note)
 
 /**
  * Registers a state row with the given polarity and type classifiers.
- * @param {object} sandbox
  * @param {number} stateId
  * @param {object} fields
  * @returns {object}
  */
-function registerStateRow(sandbox, stateId, fields = {})
+function registerStateRow(stateId, fields = {})
 {
-  const row = Object.create(sandbox.RPG_State.prototype);
+  const row = Object.create(globalThis.RPG_State.prototype);
   row.id = stateId;
   row.note = fields.note ?? '';
   row.meta = {};
@@ -42,108 +43,211 @@ function registerStateRow(sandbox, stateId, fields = {})
   row.iconIndex = 0;
   row._original = function() { return this; };
 
-  sandbox.$dataStates[stateId] = row;
+  globalThis.$dataStates[stateId] = row;
 
   return row;
 }
 
 /**
  * Builds a real Game_Battler-backed instance with controllable notes for immunity tests.
- * @param {object} sandbox
  * @param {string[]} notes
  * @returns {object}
  */
-function buildBattler(sandbox, notes = [])
+function buildBattler(notes = [])
 {
-  const battler = Object.create(sandbox.Game_Battler.prototype);
+  const battler = Object.create(globalThis.Game_Battler.prototype);
   battler.initMembers();
   battler._hp = 1;
-  battler.getAllNotes = () => notes.map(note => buildNoteSource(sandbox, note));
+  battler.getAllNotes = () => notes.map(note => buildNoteSource(note));
   battler.deathStateId = () => DEATH_STATE_ID;
   return battler;
 }
 
-describe('J-ABS Game_Battler state-application immunity (out/abs/J-ABS.js)', () =>
+describe('J-ABS Game_Battler state-application immunity (direct src import)', () =>
 {
-  /** @type {object} */
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadAbsPluginVm(sandbox);
+    vi.resetModules();
 
-    // this test VM has no vanilla RMMZ scripts loaded, so the "original" isStateAddable
+    installAbsHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_Skill } = await import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+    ({ default: globalThis.RPG_State } = await import('../../../../src/plugins/_base/database/implementations/RPG_State.js'));
+
+    setPluginContextToJAbs();
+    await import('../../../../src/plugins/abs/core/_metadata/initialization.js');
+
+    // patches globalThis.Game_Battler.prototype directly, no vm involved.
+    await import('../../../../src/plugins/abs/core/objects/Game_Battler.js');
+
+    // patches globalThis.RPG_State.prototype with the jabsNegative getter isStateAddable reads.
+    await import('../../../../src/plugins/abs/core/database/RPG_State.js');
+
+    // this test realm has no vanilla RMMZ scripts loaded, so the "original" isStateAddable
     // captured at alias time is undefined- stub it so fallthrough tests exercise only the
     // new immunity logic, not vanilla eligibility rules that don't exist in this harness.
-    sandbox.J.ABS.Aliased.Game_Battler.set('isStateAddable', () => true);
-  });
-
-  afterAll(() =>
-  {
-    sandbox = null;
+    globalThis.J.ABS.Aliased.Game_Battler.set('isStateAddable', () => true);
   });
 
   beforeEach(() =>
   {
-    clearRpgManagerCacheInVm(sandbox);
-    sandbox.$dataStates = [ null ];
+    globalThis.RPGManager.clearCache();
+    globalThis.$dataStates = [ null ];
 
-    registerStateRow(sandbox, NEGATIVE_STATE_ID, { note: '<negative>' });
-    registerStateRow(sandbox, POSITIVE_STATE_ID, {});
-    registerStateRow(sandbox, CC_TYPED_STATE_ID, { note: '<type:cc>' });
-    registerStateRow(sandbox, DEATH_STATE_ID, {});
+    registerStateRow(NEGATIVE_STATE_ID, { note: '<negative>' });
+    registerStateRow(POSITIVE_STATE_ID, {});
+    registerStateRow(CC_TYPED_STATE_ID, { note: '<type:cc>' });
+    registerStateRow(DEATH_STATE_ID, {});
   });
 
   describe('isStateAddable priority order', () =>
   {
-    it('blocks everything, including the death state, under <immuneToAll>', () =>
+    it('blocks a positive state under <immuneToAll>', () =>
     {
-      const battler = buildBattler(sandbox, [ '<immuneToAll>' ]);
+      // Arrange
+      const battler = buildBattler([ '<immuneToAll>' ]);
 
-      expect(battler.isStateAddable(POSITIVE_STATE_ID)).toBe(false);
-      expect(battler.isStateAddable(DEATH_STATE_ID)).toBe(false);
+      // Act
+      const result = battler.isStateAddable(POSITIVE_STATE_ID);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
-    it('blocks everything except the death state under <immuneToStates>', () =>
+    it('blocks even the death state under <immuneToAll>', () =>
     {
-      const battler = buildBattler(sandbox, [ '<immuneToStates>' ]);
+      // Arrange
+      const battler = buildBattler([ '<immuneToAll>' ]);
 
-      expect(battler.isStateAddable(POSITIVE_STATE_ID)).toBe(false);
-      expect(battler.isStateAddable(NEGATIVE_STATE_ID)).toBe(false);
-      expect(battler.isStateAddable(DEATH_STATE_ID)).toBe(true);
+      // Act
+      const result = battler.isStateAddable(DEATH_STATE_ID);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
-    it('blocks only <negative>-tagged states under <immuneToNegatives>', () =>
+    it('blocks a positive state under <immuneToStates>', () =>
     {
-      const battler = buildBattler(sandbox, [ '<immuneToNegatives>' ]);
+      // Arrange
+      const battler = buildBattler([ '<immuneToStates>' ]);
 
-      expect(battler.isStateAddable(NEGATIVE_STATE_ID)).toBe(false);
-      expect(battler.isStateAddable(POSITIVE_STATE_ID)).toBe(true);
+      // Act
+      const result = battler.isStateAddable(POSITIVE_STATE_ID);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
-    it('blocks only states carrying a matching type under <stateTypeImmune:TYPE>', () =>
+    it('blocks a negative state under <immuneToStates>', () =>
     {
-      const battler = buildBattler(sandbox, [ '<stateTypeImmune:cc>' ]);
+      // Arrange
+      const battler = buildBattler([ '<immuneToStates>' ]);
 
-      expect(battler.isStateAddable(CC_TYPED_STATE_ID)).toBe(false);
-      expect(battler.isStateAddable(POSITIVE_STATE_ID)).toBe(true);
-      expect(battler.isStateAddable(NEGATIVE_STATE_ID)).toBe(true);
+      // Act
+      const result = battler.isStateAddable(NEGATIVE_STATE_ID);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('does not block the death state under <immuneToStates>', () =>
+    {
+      // Arrange
+      const battler = buildBattler([ '<immuneToStates>' ]);
+
+      // Act
+      const result = battler.isStateAddable(DEATH_STATE_ID);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('blocks a <negative>-tagged state under <immuneToNegatives>', () =>
+    {
+      // Arrange
+      const battler = buildBattler([ '<immuneToNegatives>' ]);
+
+      // Act
+      const result = battler.isStateAddable(NEGATIVE_STATE_ID);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('does not block a positive state under <immuneToNegatives>', () =>
+    {
+      // Arrange
+      const battler = buildBattler([ '<immuneToNegatives>' ]);
+
+      // Act
+      const result = battler.isStateAddable(POSITIVE_STATE_ID);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('blocks a state carrying a matching type under <stateTypeImmune:TYPE>', () =>
+    {
+      // Arrange
+      const battler = buildBattler([ '<stateTypeImmune:cc>' ]);
+
+      // Act
+      const result = battler.isStateAddable(CC_TYPED_STATE_ID);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('does not block a state with no matching type under <stateTypeImmune:TYPE>', () =>
+    {
+      // Arrange
+      const battler = buildBattler([ '<stateTypeImmune:cc>' ]);
+
+      // Act
+      const result = battler.isStateAddable(POSITIVE_STATE_ID);
+
+      // Assert
+      expect(result).toBe(true);
     });
 
     it('type matching is case-insensitive', () =>
     {
-      const battler = buildBattler(sandbox, [ '<stateTypeImmune:CC>' ]);
+      // Arrange
+      const battler = buildBattler([ '<stateTypeImmune:CC>' ]);
 
-      expect(battler.isStateAddable(CC_TYPED_STATE_ID)).toBe(false);
+      // Act
+      const result = battler.isStateAddable(CC_TYPED_STATE_ID);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
-    it('falls through to normal eligibility when no immunity tag matches', () =>
+    it('falls through to normal eligibility for a positive state when no immunity tag matches', () =>
     {
-      const battler = buildBattler(sandbox, []);
+      // Arrange
+      const battler = buildBattler([]);
 
-      expect(battler.isStateAddable(POSITIVE_STATE_ID)).toBe(true);
-      expect(battler.isStateAddable(NEGATIVE_STATE_ID)).toBe(true);
+      // Act
+      const result = battler.isStateAddable(POSITIVE_STATE_ID);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('falls through to normal eligibility for a negative state when no immunity tag matches', () =>
+    {
+      // Arrange
+      const battler = buildBattler([]);
+
+      // Act
+      const result = battler.isStateAddable(NEGATIVE_STATE_ID);
+
+      // Assert
+      expect(result).toBe(true);
     });
   });
 
@@ -151,46 +255,74 @@ describe('J-ABS Game_Battler state-application immunity (out/abs/J-ABS.js)', () 
   {
     it('returns 1.0 (no resistance) when the state has no type classifiers', () =>
     {
-      const battler = buildBattler(sandbox, [ '<stateTypeResist:[cc, 50]>' ]);
+      // Arrange
+      const battler = buildBattler([ '<stateTypeResist:[cc, 50]>' ]);
 
-      expect(battler.stateTypeResistRate(POSITIVE_STATE_ID)).toBe(1.0);
+      // Act
+      const result = battler.stateTypeResistRate(POSITIVE_STATE_ID);
+
+      // Assert
+      expect(result).toBe(1.0);
     });
 
     it('returns 1.0 when no stateTypeResist tags are present', () =>
     {
-      const battler = buildBattler(sandbox, []);
+      // Arrange
+      const battler = buildBattler([]);
 
-      expect(battler.stateTypeResistRate(CC_TYPED_STATE_ID)).toBe(1.0);
+      // Act
+      const result = battler.stateTypeResistRate(CC_TYPED_STATE_ID);
+
+      // Assert
+      expect(result).toBe(1.0);
     });
 
     it('reduces the rate by the tagged percent for a matching type', () =>
     {
-      const battler = buildBattler(sandbox, [ '<stateTypeResist:[cc, 50]>' ]);
+      // Arrange
+      const battler = buildBattler([ '<stateTypeResist:[cc, 50]>' ]);
 
-      expect(battler.stateTypeResistRate(CC_TYPED_STATE_ID)).toBeCloseTo(0.5);
+      // Act
+      const result = battler.stateTypeResistRate(CC_TYPED_STATE_ID);
+
+      // Assert
+      expect(result).toBeCloseTo(0.5);
     });
 
     it('stacks additively across multiple tags for the same type', () =>
     {
-      const battler = buildBattler(sandbox, [
-        '<stateTypeResist:[cc, 40]>\n<stateTypeResist:[cc, 40]>',
-      ]);
+      // Arrange
+      const battler = buildBattler([ '<stateTypeResist:[cc, 40]>\n<stateTypeResist:[cc, 40]>' ]);
 
-      expect(battler.stateTypeResistRate(CC_TYPED_STATE_ID)).toBeCloseTo(0.2);
+      // Act
+      const result = battler.stateTypeResistRate(CC_TYPED_STATE_ID);
+
+      // Assert
+      expect(result).toBeCloseTo(0.2);
     });
 
     it('clamps the rate at 0 rather than going negative', () =>
     {
-      const battler = buildBattler(sandbox, [ '<stateTypeResist:[cc, 150]>' ]);
+      // Arrange
+      const battler = buildBattler([ '<stateTypeResist:[cc, 150]>' ]);
 
-      expect(battler.stateTypeResistRate(CC_TYPED_STATE_ID)).toBe(0);
+      // Act
+      const result = battler.stateTypeResistRate(CC_TYPED_STATE_ID);
+
+      // Assert
+      expect(result).toBe(0);
     });
 
     it('ignores tags for a non-matching type', () =>
     {
-      const battler = buildBattler(sandbox, [ '<stateTypeResist:[poison, 50]>' ]);
+      // Arrange
+      const battler = buildBattler([ '<stateTypeResist:[poison, 50]>' ]);
 
-      expect(battler.stateTypeResistRate(CC_TYPED_STATE_ID)).toBe(1.0);
+      // Act
+      const result = battler.stateTypeResistRate(CC_TYPED_STATE_ID);
+
+      // Assert
+      expect(result).toBe(1.0);
     });
   });
 });

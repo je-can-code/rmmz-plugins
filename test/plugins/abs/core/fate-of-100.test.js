@@ -1,19 +1,21 @@
 //region plugins/abs/core/fate-of-100.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { clearRpgManagerCacheInVm } from '../../../setup/shipped-plugin-vm.js';
-import { loadAbsPluginVm } from '../abs-vm.js';
+import {
+  installAbsHostGlobals,
+  setPluginContextToJAbs,
+  setPluginContextToJBase,
+} from '../fixtures/install-abs-host-globals.js';
 
 /**
  * Builds a minimal note-source stub carrying the given tag string, backed by the real
  * RPG_Skill prototype so boolean tags parse for real.
- * @param {object} sandbox
  * @param {string} note
  * @returns {object}
  */
-function buildNoteRow(sandbox, note)
+function buildNoteRow(note)
 {
-  const row = Object.create(sandbox.RPG_Skill.prototype);
+  const row = Object.create(globalThis.RPG_Skill.prototype);
   row.id = 1;
   row.note = note;
   row.meta = {};
@@ -21,65 +23,108 @@ function buildNoteRow(sandbox, note)
   return row;
 }
 
-describe('fateOf100 / isVeryLucky / isVeryCursed (out/abs/J-ABS.js)', () =>
+describe('fateOf100 / isVeryLucky / isVeryCursed (direct src import)', () =>
 {
-  /** @type {object} */
-  let sandbox;
+  let RPGManager;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadAbsPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installAbsHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    globalThis.RPGManager = RPGManager;
+    ({ default: globalThis.RPG_Skill } = await import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+    ({ default: globalThis.JABS_OnChanceEffect } = await import('../../../../src/plugins/abs/core/models/JABS_OnChanceEffect.js'));
+
+    setPluginContextToJAbs();
+    await import('../../../../src/plugins/abs/core/_metadata/initialization.js');
+
+    // patches globalThis.Game_Battler.prototype directly, no vm involved.
+    await import('../../../../src/plugins/abs/core/objects/Game_Battler.js');
   });
 
   beforeEach(() =>
   {
-    clearRpgManagerCacheInVm(sandbox);
+    globalThis.RPGManager.clearCache();
   });
 
-  describe('Game_Battler.isVeryLucky / isVeryCursed', () =>
+  describe('Game_Battler.isVeryLucky', () =>
   {
-    /**
-     * Builds a plain duck-typed battler exposing only isVeryLucky/isVeryCursed, borrowed
-     * directly from the real prototype.
-     * @param {object[]} notes
-     * @returns {object}
-     */
     function buildBattler(notes = [])
     {
       return {
         getAllNotes: () => notes,
-        isVeryLucky: sandbox.Game_Battler.prototype.isVeryLucky,
-        isVeryCursed: sandbox.Game_Battler.prototype.isVeryCursed,
+        isVeryLucky: globalThis.Game_Battler.prototype.isVeryLucky,
       };
     }
 
-    it('isVeryLucky is true only when a note source carries <veryLucky>', () =>
+    it('is true when a note source carries <veryLucky>', () =>
     {
-      expect(buildBattler([ buildNoteRow(sandbox, '<veryLucky>') ]).isVeryLucky()).toBe(true);
-      expect(buildBattler([ buildNoteRow(sandbox, '<knockback:4>') ]).isVeryLucky()).toBe(false);
+      // Arrange
+      const battler = buildBattler([ buildNoteRow('<veryLucky>') ]);
+
+      // Act
+      const result = battler.isVeryLucky();
+
+      // Assert
+      expect(result).toBe(true);
     });
 
-    it('isVeryCursed is true only when a note source carries <veryCursed>', () =>
+    it('is false when no note source carries the tag', () =>
     {
-      expect(buildBattler([ buildNoteRow(sandbox, '<veryCursed>') ]).isVeryCursed()).toBe(true);
-      expect(buildBattler([ buildNoteRow(sandbox, '<knockback:4>') ]).isVeryCursed()).toBe(false);
+      // Arrange
+      const battler = buildBattler([ buildNoteRow('<knockback:4>') ]);
+
+      // Act
+      const result = battler.isVeryLucky();
+
+      // Assert
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('Game_Battler.isVeryCursed', () =>
+  {
+    function buildBattler(notes = [])
+    {
+      return {
+        getAllNotes: () => notes,
+        isVeryCursed: globalThis.Game_Battler.prototype.isVeryCursed,
+      };
+    }
+
+    it('is true when a note source carries <veryCursed>', () =>
+    {
+      // Arrange
+      const battler = buildBattler([ buildNoteRow('<veryCursed>') ]);
+
+      // Act
+      const result = battler.isVeryCursed();
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('is false when no note source carries the tag', () =>
+    {
+      // Arrange
+      const battler = buildBattler([ buildNoteRow('<knockback:4>') ]);
+
+      // Act
+      const result = battler.isVeryCursed();
+
+      // Assert
+      expect(result).toBe(false);
     });
   });
 
   describe('RPGManager.fateOf100', () =>
   {
-    /**
-     * Builds a plain duck-typed positive-roller with controllable fate-override flags.
-     * @param {boolean} veryLucky
-     * @param {boolean} veryCursed
-     * @returns {object}
-     */
     function buildRoller(veryLucky = false, veryCursed = false)
     {
       return {
@@ -90,33 +135,62 @@ describe('fateOf100 / isVeryLucky / isVeryCursed (out/abs/J-ABS.js)', () =>
 
     it('short-circuits to true when the roller is very lucky, even at 0% chance', () =>
     {
+      // Arrange
       const roller = buildRoller(true, false);
 
-      expect(sandbox.RPGManager.fateOf100(roller, 0, 1, 0)).toBe(true);
+      // Act
+      const result = RPGManager.fateOf100(roller, 0, 1, 0);
+
+      // Assert
+      expect(result).toBe(true);
     });
 
     it('short-circuits to false when the roller is very cursed, even at 100% chance', () =>
     {
+      // Arrange
       const roller = buildRoller(false, true);
 
-      expect(sandbox.RPGManager.fateOf100(roller, 100, 1, 0)).toBe(false);
+      // Act
+      const result = RPGManager.fateOf100(roller, 100, 1, 0);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
     it('very lucky takes priority if somehow both flags are set', () =>
     {
+      // Arrange
       const roller = buildRoller(true, true);
 
-      expect(sandbox.RPGManager.fateOf100(roller, 0, 1, 0)).toBe(true);
+      // Act
+      const result = RPGManager.fateOf100(roller, 0, 1, 0);
+
+      // Assert
+      expect(result).toBe(true);
     });
 
-    it('falls through to a normal chanceIn100 roll when neither flag is set', () =>
+    it('succeeds at 100% chance with neither flag set, like a normal chanceIn100 roll', () =>
     {
+      // Arrange
       const roller = buildRoller(false, false);
 
-      // 100% with no fate override should behave exactly like chanceIn100.
-      expect(sandbox.RPGManager.fateOf100(roller, 100, 1, 0)).toBe(true);
-      // 0% with no fate override should still fail normally.
-      expect(sandbox.RPGManager.fateOf100(roller, 0, 1, 0)).toBe(false);
+      // Act
+      const result = RPGManager.fateOf100(roller, 100, 1, 0);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('fails at 0% chance with neither flag set, like a normal chanceIn100 roll', () =>
+    {
+      // Arrange
+      const roller = buildRoller(false, false);
+
+      // Act
+      const result = RPGManager.fateOf100(roller, 0, 1, 0);
+
+      // Assert
+      expect(result).toBe(false);
     });
   });
 
@@ -124,25 +198,40 @@ describe('fateOf100 / isVeryLucky / isVeryCursed (out/abs/J-ABS.js)', () =>
   {
     it('is guaranteed to succeed when the positiveRoller is very lucky, regardless of chance', () =>
     {
-      const effect = new sandbox.JABS_OnChanceEffect(1, 0, 'test-key');
+      // Arrange
+      const effect = new globalThis.JABS_OnChanceEffect(1, 0, 'test-key');
       const roller = { isVeryLucky: () => true, isVeryCursed: () => false };
 
-      expect(effect.shouldTrigger(1, 0, roller)).toBe(true);
+      // Act
+      const result = effect.shouldTrigger(1, 0, roller);
+
+      // Assert
+      expect(result).toBe(true);
     });
 
     it('is guaranteed to fail when the positiveRoller is very cursed, regardless of chance', () =>
     {
-      const effect = new sandbox.JABS_OnChanceEffect(1, 100, 'test-key');
+      // Arrange
+      const effect = new globalThis.JABS_OnChanceEffect(1, 100, 'test-key');
       const roller = { isVeryLucky: () => false, isVeryCursed: () => true };
 
-      expect(effect.shouldTrigger(1, 0, roller)).toBe(false);
+      // Act
+      const result = effect.shouldTrigger(1, 0, roller);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
     it('rolls normally when no positiveRoller is provided', () =>
     {
-      const effect = new sandbox.JABS_OnChanceEffect(1, 100, 'test-key');
+      // Arrange
+      const effect = new globalThis.JABS_OnChanceEffect(1, 100, 'test-key');
 
-      expect(effect.shouldTrigger(1, 0)).toBe(true);
+      // Act
+      const result = effect.shouldTrigger(1, 0);
+
+      // Assert
+      expect(result).toBe(true);
     });
   });
 });

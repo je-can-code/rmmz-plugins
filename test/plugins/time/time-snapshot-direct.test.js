@@ -5,66 +5,335 @@ import Time_Snapshot from '../../../src/plugins/time/core/_models/Time_Snapshot.
 
 describe('Time_Snapshot (direct import)', () =>
 {
-  it('static name and id helpers round-trip known values', () =>
+  describe('TimesOfDayName', () =>
   {
-    expect(Time_Snapshot.TimesOfDayName(2)).toBe('Morning');
-    expect(Time_Snapshot.TimesOfDayId('TWILIGHT')).toBe(5);
-    expect(Time_Snapshot.SeasonsName(0)).toBe('Spring');
-    expect(Time_Snapshot.SeasonsId('Fall')).toBe(2);
+    it('returns the name for a known time-of-day id', () =>
+    {
+      // Arrange
+      const id = 2;
+
+      // Act
+      const result = Time_Snapshot.TimesOfDayName(id);
+
+      // Assert
+      expect(result).toBe('Morning');
+    });
+
+    it('returns null for an unknown time-of-day id', () =>
+    {
+      // Arrange
+      const id = 99;
+
+      // Act
+      const result = Time_Snapshot.TimesOfDayName(id);
+
+      // Assert
+      expect(result).toBeNull();
+    });
   });
 
-  it('static name and id helpers report and fall back on invalid ids/names', () =>
+  describe('TimesOfDayId', () =>
   {
-    expect(Time_Snapshot.TimesOfDayName(99)).toBeNull();
-    expect(Time_Snapshot.TimesOfDayId('nonsense')).toBe(-1);
-    expect(Time_Snapshot.SeasonsName(99)).toBeNull();
-    expect(Time_Snapshot.SeasonsId('nonsense')).toBe(-1);
+    it('returns the id for a known time-of-day name, case-insensitively', () =>
+    {
+      // Arrange
+      const name = 'TWILIGHT';
+
+      // Act
+      const result = Time_Snapshot.TimesOfDayId(name);
+
+      // Assert
+      expect(result).toBe(5);
+    });
+
+    it('returns -1 for an unknown time-of-day name', () =>
+    {
+      // Arrange
+      const name = 'nonsense';
+
+      // Act
+      const result = Time_Snapshot.TimesOfDayId(name);
+
+      // Assert
+      expect(result).toBe(-1);
+    });
   });
 
-  it('static icon helpers return the expected indices', () =>
+  describe('SeasonsName', () =>
   {
-    expect(Time_Snapshot.SeasonsIconIndex(1)).toBe(888);
-    expect(Time_Snapshot.TimesOfDayIcon(4)).toBe(2257);
+    it('returns the name for a known season id', () =>
+    {
+      // Arrange
+      const id = 0;
+
+      // Act
+      const result = Time_Snapshot.SeasonsName(id);
+
+      // Assert
+      expect(result).toBe('Spring');
+    });
+
+    it('returns null for an unknown season id', () =>
+    {
+      // Arrange
+      const id = 99;
+
+      // Act
+      const result = Time_Snapshot.SeasonsName(id);
+
+      // Assert
+      expect(result).toBeNull();
+    });
   });
 
-  it('exposes season/time-of-day name and icon getters derived from its own ids', () =>
+  describe('SeasonsId', () =>
   {
-    const snapshot = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
-    expect(snapshot.timeOfDayName).toBe('Morning');
-    expect(snapshot.timeOfDayIcon).toBe(2261);
-    expect(snapshot.seasonOfTheYearName).toBe('Winter');
-    expect(snapshot.seasonOfTheYearIcon).toBe(890);
+    it('returns the id for a known season name', () =>
+    {
+      // Arrange
+      const name = 'Fall';
+
+      // Act
+      const result = Time_Snapshot.SeasonsId(name);
+
+      // Assert
+      expect(result).toBe(2);
+    });
+
+    it('returns -1 for an unknown season name', () =>
+    {
+      // Arrange
+      const name = 'nonsense';
+
+      // Act
+      const result = Time_Snapshot.SeasonsId(name);
+
+      // Assert
+      expect(result).toBe(-1);
+    });
   });
 
-  it('equals, isAfter, and isBefore compare calendar ordering', () =>
+  describe('SeasonsIconIndex', () =>
   {
-    const early = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
-    const late = new Time_Snapshot(0, 0, 10, 1, 1, 2020, 2, 3);
-    expect(early.equals(late)).toBe(false);
-    expect(early.equals(early)).toBe(true);
-    expect(late.isAfter(early)).toBe(true);
-    expect(early.isAfter(late)).toBe(false);
-    expect(early.isBefore(late)).toBe(true);
-    expect(late.isBefore(early)).toBe(false);
+    it('returns the icon index for a known season id', () =>
+    {
+      // Arrange
+      const id = 1;
+
+      // Act
+      const result = Time_Snapshot.SeasonsIconIndex(id);
+
+      // Assert
+      expect(result).toBe(888);
+    });
   });
 
-  it('isBetweenSnapshots respects inclusive/exclusive boundaries', () =>
+  describe('TimesOfDayIcon', () =>
   {
-    const early = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
-    const middle = new Time_Snapshot(0, 30, 9, 1, 1, 2020, 2, 3);
-    const late = new Time_Snapshot(0, 0, 10, 1, 1, 2020, 2, 3);
+    it('returns the icon index for a known time-of-day id', () =>
+    {
+      // Arrange
+      const id = 4;
 
-    // middle is strictly between early and late.
-    expect(middle.isBetweenSnapshots(early, late)).toBe(true);
+      // Act
+      const result = Time_Snapshot.TimesOfDayIcon(id);
 
-    // the boundary itself is excluded by default.
-    expect(late.isBetweenSnapshots(early, early, true, false)).toBe(false);
+      // Assert
+      expect(result).toBe(2257);
+    });
+  });
 
-    // an inclusive end boundary includes an exact match on the end.
-    expect(late.isBetweenSnapshots(early, late, false, true)).toBe(true);
+  describe('instance getters derived from its own ids', () =>
+  {
+    it('timeOfDayName reflects the constructed timeOfDay id', () =>
+    {
+      // Arrange
+      const snapshot = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
 
-    // an exclusive end boundary excludes an exact match on the end.
-    expect(late.isBetweenSnapshots(early, late, false, false)).toBe(false);
+      // Act
+      const result = snapshot.timeOfDayName;
+
+      // Assert
+      expect(result).toBe('Morning');
+    });
+
+    it('timeOfDayIcon reflects the constructed timeOfDay id', () =>
+    {
+      // Arrange
+      const snapshot = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
+
+      // Act
+      const result = snapshot.timeOfDayIcon;
+
+      // Assert
+      expect(result).toBe(2261);
+    });
+
+    it('seasonOfTheYearName reflects the constructed season id', () =>
+    {
+      // Arrange
+      const snapshot = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
+
+      // Act
+      const result = snapshot.seasonOfTheYearName;
+
+      // Assert
+      expect(result).toBe('Winter');
+    });
+
+    it('seasonOfTheYearIcon reflects the constructed season id', () =>
+    {
+      // Arrange
+      const snapshot = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
+
+      // Act
+      const result = snapshot.seasonOfTheYearIcon;
+
+      // Assert
+      expect(result).toBe(890);
+    });
+  });
+
+  describe('equals', () =>
+  {
+    it('returns false for two snapshots at different times', () =>
+    {
+      // Arrange
+      const early = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
+      const late = new Time_Snapshot(0, 0, 10, 1, 1, 2020, 2, 3);
+
+      // Act
+      const result = early.equals(late);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('returns true for a snapshot compared to itself', () =>
+    {
+      // Arrange
+      const early = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
+
+      // Act
+      const result = early.equals(early);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('isAfter', () =>
+  {
+    it('returns true when this snapshot is later than the compared one', () =>
+    {
+      // Arrange
+      const early = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
+      const late = new Time_Snapshot(0, 0, 10, 1, 1, 2020, 2, 3);
+
+      // Act
+      const result = late.isAfter(early);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('returns false when this snapshot is earlier than the compared one', () =>
+    {
+      // Arrange
+      const early = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
+      const late = new Time_Snapshot(0, 0, 10, 1, 1, 2020, 2, 3);
+
+      // Act
+      const result = early.isAfter(late);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('isBefore', () =>
+  {
+    it('returns true when this snapshot is earlier than the compared one', () =>
+    {
+      // Arrange
+      const early = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
+      const late = new Time_Snapshot(0, 0, 10, 1, 1, 2020, 2, 3);
+
+      // Act
+      const result = early.isBefore(late);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('returns false when this snapshot is later than the compared one', () =>
+    {
+      // Arrange
+      const early = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
+      const late = new Time_Snapshot(0, 0, 10, 1, 1, 2020, 2, 3);
+
+      // Act
+      const result = late.isBefore(early);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+  });
+
+  describe('isBetweenSnapshots', () =>
+  {
+    it('returns true when strictly between the start and end snapshots', () =>
+    {
+      // Arrange
+      const early = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
+      const middle = new Time_Snapshot(0, 30, 9, 1, 1, 2020, 2, 3);
+      const late = new Time_Snapshot(0, 0, 10, 1, 1, 2020, 2, 3);
+
+      // Act
+      const result = middle.isBetweenSnapshots(early, late);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('excludes an exact match on the start boundary by default', () =>
+    {
+      // Arrange
+      const early = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
+      const late = new Time_Snapshot(0, 0, 10, 1, 1, 2020, 2, 3);
+
+      // Act
+      const result = late.isBetweenSnapshots(early, early, true, false);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('includes an exact match on the end boundary when the end is marked inclusive', () =>
+    {
+      // Arrange
+      const early = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
+      const late = new Time_Snapshot(0, 0, 10, 1, 1, 2020, 2, 3);
+
+      // Act
+      const result = late.isBetweenSnapshots(early, late, false, true);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('excludes an exact match on the end boundary when the end is marked exclusive', () =>
+    {
+      // Arrange
+      const early = new Time_Snapshot(0, 0, 9, 1, 1, 2020, 2, 3);
+      const late = new Time_Snapshot(0, 0, 10, 1, 1, 2020, 2, 3);
+
+      // Act
+      const result = late.isBetweenSnapshots(early, late, false, false);
+
+      // Assert
+      expect(result).toBe(false);
+    });
   });
 });
 //endregion plugins/time/time-snapshot-direct.test.js

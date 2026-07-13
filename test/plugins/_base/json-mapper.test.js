@@ -1,69 +1,185 @@
 //region plugins/_base/json-mapper.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { describe, expect, it } from 'vitest';
 
-import { evaluateJBaseOnlyForTests } from '../../setup/shipped-plugin-vm.js';
+import JsonMapper from '../../../src/plugins/_base/_utilities/JsonMapper.js';
 
-describe('J-Base JsonMapper (out/J-Base.js)', () =>
+describe('JsonMapper', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  describe('parseObject', () =>
   {
-    sandbox = { console };
-    evaluateJBaseOnlyForTests({ sandbox });
+    it('returns null for a null input', () =>
+    {
+      // Arrange
+      const input = null;
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toBe(null);
+    });
+
+    it('returns null for an undefined input', () =>
+    {
+      // Arrange
+      const input = undefined;
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toBe(null);
+    });
+
+    it('delegates a bracketed string to parseArrayFromString', () =>
+    {
+      // Arrange
+      const input = '[1, 2, 3]';
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toEqual([ 1, 2, 3 ]);
+    });
+
+    it('delegates a non-bracketed string to parseString', () =>
+    {
+      // Arrange
+      const input = 'hello';
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toBe('hello');
+    });
+
+    it('recursively parses each element of an array', () =>
+    {
+      // Arrange
+      const input = [ '1', 'true', 'x' ];
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toEqual([ 1, true, 'x' ]);
+    });
+
+    it('passes a number through unchanged', () =>
+    {
+      // Arrange
+      const input = 42;
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toBe(42);
+    });
+
+    it('passes a boolean through unchanged', () =>
+    {
+      // Arrange
+      const input = true;
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toBe(true);
+    });
   });
 
-  afterAll(() =>
+  describe('parseString (reached via parseObject)', () =>
   {
-    sandbox = null;
+    it('maps "true" to boolean true, case-insensitively', () =>
+    {
+      // Arrange
+      const input = 'true';
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('maps "FALSE" to boolean false, case-insensitively', () =>
+    {
+      // Arrange
+      const input = 'FALSE';
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('parses a numeric string via parseFloat', () =>
+    {
+      // Arrange
+      const input = '3.5';
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toBe(3.5);
+    });
+
+    it('parses a negative numeric string via parseFloat', () =>
+    {
+      // Arrange
+      const input = '-2';
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toBe(-2);
+    });
+
+    it('leaves a non-numeric, non-boolean token as a string', () =>
+    {
+      // Arrange
+      const input = 'hello';
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toBe('hello');
+    });
   });
 
-  it('parseObject returns null for null or undefined', () =>
+  describe('parseArrayFromString (reached via parseObject)', () =>
   {
-    expect(sandbox.JsonMapper.parseObject(null)).toBe(null);
-    expect(sandbox.JsonMapper.parseObject(undefined)).toBe(null);
-  });
+    it('splits a flat bracketed list into its top-level comma segments', () =>
+    {
+      // Arrange
+      const input = '[1, 2, 3]';
 
-  it('parseString maps boolean literals case-insensitively', () =>
-  {
-    expect(sandbox.JsonMapper.parseObject('true')).toBe(true);
-    expect(sandbox.JsonMapper.parseObject('FALSE')).toBe(false);
-  });
+      // Act
+      const result = JsonMapper.parseObject(input);
 
-  it('parseString maps numeric strings with parseFloat', () =>
-  {
-    expect(sandbox.JsonMapper.parseObject('3.5')).toBe(3.5);
-    expect(sandbox.JsonMapper.parseObject('-2')).toBe(-2);
-  });
+      // Assert
+      expect(result).toEqual([ 1, 2, 3 ]);
+    });
 
-  it('parseString leaves other tokens as strings', () =>
-  {
-    expect(sandbox.JsonMapper.parseObject('hello')).toBe('hello');
-  });
+    it('splices one nested bracket segment back in as an inner array', () =>
+    {
+      // Arrange
+      const input = '[1, [2, 3], 4]';
 
-  it('parseObject maps arrays with recursive parseObject', () =>
-  {
-    expect(sandbox.JsonMapper.parseObject([ '1', 'true', 'x' ])).toEqual([ 1, true, 'x' ]);
-  });
+      // Act
+      const result = JsonMapper.parseObject(input);
 
-  it('parseArrayFromString splits top-level comma segments', () =>
-  {
-    const out = sandbox.JsonMapper.parseObject('[1, 2, 3]');
-
-    expect(out).toEqual([ 1, 2, 3 ]);
-  });
-
-  it('parseArrayFromString splices one inner bracket segment', () =>
-  {
-    const out = sandbox.JsonMapper.parseObject('[1, [2, 3], 4]');
-
-    expect(out).toEqual([ 1, [ 2, 3 ], 4 ]);
-  });
-
-  it('passes through numbers and booleans unchanged', () =>
-  {
-    expect(sandbox.JsonMapper.parseObject(42)).toBe(42);
-    expect(sandbox.JsonMapper.parseObject(true)).toBe(true);
+      // Assert
+      expect(result).toEqual([ 1, [ 2, 3 ], 4 ]);
+    });
   });
 });
 //endregion plugins/_base/json-mapper.test.js

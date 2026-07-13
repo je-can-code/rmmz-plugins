@@ -1,11 +1,18 @@
 //region plugins/passive/core/auto-inflict-state-display.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadPassiveConditionalPluginVm } from '../passive-conditional-vm.js';
+import {
+  installPassiveHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPassive,
+} from '../fixtures/install-passive-host-globals.js';
+import {
+  installPassiveConditionalHostGlobals,
+  setPluginContextToJPassiveConditional,
+} from '../fixtures/install-passive-conditional-host-globals.js';
 
 /**
  * Minimal {@link Window_Base} text helpers for formatter tests.
- *
  * @returns {{ boldenText: Function, italicizeText: Function, colorizeText: Function }}
  */
 function createTextHelperStub()
@@ -26,71 +33,165 @@ function createTextHelperStub()
   };
 }
 
-describe('AutoInflictStateDisplay (J-Passive-Conditional)', () =>
+describe('AutoInflictStateDisplay (direct src import)', () =>
 {
-  let sandbox;
   let textHelper;
+  let AutoInflictStateDisplay;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadPassiveConditionalPluginVm(sandbox);
+    vi.resetModules();
+
+    installPassiveHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_State } = await import('../../../../src/plugins/_base/database/implementations/RPG_State.js'));
+
+    setPluginContextToJPassive();
+    await import('../../../../src/plugins/passive/core/_metadata/initialization.js');
+
+    installPassiveConditionalHostGlobals();
+
+    setPluginContextToJPassiveConditional();
+    await import('../../../../src/plugins/passive/ext/conditional/_metadata/initialization.js');
+
+    ({ default: AutoInflictStateDisplay } = await import('../../../../src/plugins/passive/ext/conditional/models/AutoInflictStateDisplay.js'));
+
     textHelper = createTextHelperStub();
   });
 
-  afterAll(() =>
+  describe('formatNegativeInflictProse', () =>
   {
-    sandbox = null;
+    it('omits the cooldown clause when cooldown is 0', () =>
+    {
+      // Arrange
+      const stateId = 70;
+      const frames = 0;
+
+      // Act
+      const prose = AutoInflictStateDisplay.formatNegativeInflictProse(stateId, frames, textHelper);
+
+      // Assert
+      expect(prose).toBe(
+        'Whenever this battler inflicts a negative state on a foe, also inflict \\C[6]\\*\\_\\state[70]\\_\\*\\C[0].',
+      );
+    });
   });
 
-  it('formats negaStateInflicted prose without a cooldown clause when cooldown is 0', () =>
+  describe('formatPositiveInflictProse', () =>
   {
-    expect(sandbox.AutoInflictStateDisplay.formatNegativeInflictProse(70, 0, textHelper))
-      .toBe('Whenever this battler inflicts a negative state on a foe, also inflict \\C[6]\\*\\_\\state[70]\\_\\*\\C[0].');
+    it('includes a cooldown clause when cooldown is positive', () =>
+    {
+      // Arrange
+      const stateId = 71;
+      const frames = 3600;
+
+      // Act
+      const prose = AutoInflictStateDisplay.formatPositiveInflictProse(stateId, frames, textHelper);
+
+      // Assert
+      expect(prose).toContain('Whenever this battler inflicts a positive state on someone, also inflict');
+      expect(prose).toContain('\\state[71]');
+      expect(prose).toContain('(at most once every');
+      expect(prose).toContain('60 seconds');
+    });
   });
 
-  it('formats posiStateInflicted prose with a cooldown clause when cooldown is positive', () =>
+  describe('formatAnyInflictProse', () =>
   {
-    const result = sandbox.AutoInflictStateDisplay.formatPositiveInflictProse(71, 3600, textHelper);
+    it('formats prose regardless of polarity', () =>
+    {
+      // Arrange
+      const stateId = 72;
+      const frames = 0;
 
-    expect(result).toContain('Whenever this battler inflicts a positive state on someone, also inflict');
-    expect(result).toContain('\\state[71]');
-    expect(result).toContain('(at most once every');
-    expect(result).toContain('60 seconds');
+      // Act
+      const prose = AutoInflictStateDisplay.formatAnyInflictProse(stateId, frames, textHelper);
+
+      // Assert
+      expect(prose).toBe(
+        'Whenever this battler inflicts any state on someone, also inflict \\C[6]\\*\\_\\state[72]\\_\\*\\C[0].',
+      );
+    });
   });
 
-  it('formats anyStateInflicted prose regardless of polarity', () =>
+  describe('collectProseLines', () =>
   {
-    expect(sandbox.AutoInflictStateDisplay.formatAnyInflictProse(72, 0, textHelper))
-      .toBe('Whenever this battler inflicts any state on someone, also inflict \\C[6]\\*\\_\\state[72]\\_\\*\\C[0].');
-  });
+    it('reads a negaStateInflicted tag and describes it as negative', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<autoInflictState:[70, negaStateInflicted, 0]>';
 
-  it('collectProseLines reads every autoInflictState tag on a state row, by condition', () =>
-  {
-    const state = Object.create(sandbox.RPG_State.prototype);
-    state.note = '<autoInflictState:[70, negaStateInflicted, 0]>\n'
-      + '<autoInflictState:[71, posiStateInflicted, 60]>\n'
-      + '<autoInflictState:[72, anyStateInflicted, 0]>';
+      // Act
+      const lines = AutoInflictStateDisplay.collectProseLines(state, textHelper);
 
-    const lines = sandbox.AutoInflictStateDisplay.collectProseLines(state, textHelper);
+      // Assert
+      expect(lines.length).toBe(1);
+      expect(lines[0]).toContain('negative state');
+      expect(lines[0]).toContain('\\state[70]');
+    });
 
-    expect(lines.length).toBe(3);
-    expect(lines[0]).toContain('negative state');
-    expect(lines[0]).toContain('\\state[70]');
-    expect(lines[1]).toContain('positive state');
-    expect(lines[1]).toContain('\\state[71]');
-    expect(lines[2]).toContain('any state');
-    expect(lines[2]).toContain('\\state[72]');
-  });
+    it('reads a posiStateInflicted tag and describes it as positive', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<autoInflictState:[71, posiStateInflicted, 60]>';
 
-  it('collectProseLines ignores tags with an unrecognized condition', () =>
-  {
-    const state = Object.create(sandbox.RPG_State.prototype);
-    state.note = '<autoInflictState:[70, someOtherCondition, 0]>';
+      // Act
+      const lines = AutoInflictStateDisplay.collectProseLines(state, textHelper);
 
-    const lines = sandbox.AutoInflictStateDisplay.collectProseLines(state, textHelper);
+      // Assert
+      expect(lines.length).toBe(1);
+      expect(lines[0]).toContain('positive state');
+      expect(lines[0]).toContain('\\state[71]');
+    });
 
-    expect(lines.length).toBe(0);
+    it('reads an anyStateInflicted tag and describes it as any', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<autoInflictState:[72, anyStateInflicted, 0]>';
+
+      // Act
+      const lines = AutoInflictStateDisplay.collectProseLines(state, textHelper);
+
+      // Assert
+      expect(lines.length).toBe(1);
+      expect(lines[0]).toContain('any state');
+      expect(lines[0]).toContain('\\state[72]');
+    });
+
+    it('reads all three tags on the same row independently, in order', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<autoInflictState:[70, negaStateInflicted, 0]>\n'
+        + '<autoInflictState:[71, posiStateInflicted, 60]>\n'
+        + '<autoInflictState:[72, anyStateInflicted, 0]>';
+
+      // Act
+      const lines = AutoInflictStateDisplay.collectProseLines(state, textHelper);
+
+      // Assert
+      expect(lines.length).toBe(3);
+    });
+
+    it('ignores tags with an unrecognized condition', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<autoInflictState:[70, someOtherCondition, 0]>';
+
+      // Act
+      const lines = AutoInflictStateDisplay.collectProseLines(state, textHelper);
+
+      // Assert
+      expect(lines.length).toBe(0);
+    });
   });
 });
 //endregion plugins/passive/core/auto-inflict-state-display.test.js

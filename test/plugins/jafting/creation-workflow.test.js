@@ -1,157 +1,289 @@
 //region plugins/jafting/creation-workflow.test.js
-import vm from 'node:vm';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import {
-  installJaftingVmGamePartyBootstrap,
-  seedJaftingCreationDatabaseItems,
-  VITEST_MINIMAL_CRAFTING_JSON,
-} from './fixtures/engine-stubs.js';
-import { loadJaftingCreationPluginVm } from './jafting-creation-vm.js';
+import { installJBaseHostGlobals } from '../_base/fixtures/install-j-base-host-globals.js';
+import { installMinimalMenuUiStubs } from '../../setup/install-minimal-menu-ui-stubs.js';
+import PluginMetadata from '../../../src/plugins/_base/models/PluginMetadata.js';
+import ExternalJsonConfigLoader from '../../../src/plugins/_base/managers/ExternalJsonConfigLoader.js';
+import ExternalJsonConfigLoaderOptions from '../../../src/plugins/_base/models/ExternalJsonConfigLoaderOptions.js';
+import PluginVersion from '../../../src/plugins/_base/models/PluginVersion.js';
+import CraftingCreationSession from '../../../src/plugins/jafting/ext/create/__models/CraftingCreationSession.js';
 
-describe('J-JAFTING-Creation workflow & layout (built plugins)', () =>
+/**
+ * CraftingCreationSession's own branch coverage is pure ESM with no bare-global dependency- it doesn't
+ * need any boot. CraftingRecipe/CraftingComponent branch coverage already lives in
+ * create-crafting-recipe-direct.test.js/create-crafting-component-direct.test.js via hand-built fakes, so
+ * this file only re-exercises them here for the parts unique to a real recipesMap wired through a real
+ * plugin boot (tool-gating, masking/name reveal against the real config). Window_RecipeDetails' layout
+ * helpers are pure math needing only a placeholder Window_Base to construct against.
+ */
+const VITEST_MINIMAL_CRAFTING_JSON = JSON.stringify({
+  recipes: [
+    {
+      name: 'Vitest Recipe',
+      key: 'vitest_recipe',
+      categoryKeys: [ 'vitest_cat' ],
+      iconIndex: 1,
+      description: 'vitest recipe description',
+      unlockedByDefault: true,
+      maskedUntilCrafted: false,
+      tools: [],
+      ingredients: [ { id: 1, type: 'i', count: 1 } ],
+      outputs: [ { id: 2, type: 'i', count: 1 } ],
+    },
+  ],
+  categories: [
+    {
+      name: 'Vitest Category',
+      key: 'vitest_cat',
+      iconIndex: 0,
+      description: 'vitest category description',
+      unlockedByDefault: true,
+    },
+  ],
+});
+
+describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
 {
-  let sandbox;
-  let VM;
-
-  beforeAll(() =>
-  {
-    sandbox = { console };
-    loadJaftingCreationPluginVm(sandbox);
-    VM = sandbox.__JAFT_VM;
-    installJaftingVmGamePartyBootstrap(sandbox);
-    seedJaftingCreationDatabaseItems(sandbox);
-
-    vm.runInContext(`
-      const party = new Game_Party();
-      party.initialize();
-      party.__testItemContainer = {};
-      $gameParty = party;
-      JaftingSalvageManager.initPartySalvageStorage();
-    `, sandbox);
-  });
-
-  afterAll(() =>
-  {
-    sandbox = null;
-  });
-
   describe('CraftingCreationSession', () =>
   {
     it('starts in category browsing with no category key', () =>
     {
-      const session = new VM.CraftingCreationSession();
+      // Arrange & Act
+      const session = new CraftingCreationSession();
 
-      expect(session.getPhase()).toBe(VM.CraftingCreationSession.Phase.BrowsingCategories);
+      // Assert
+      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingCategories);
+    });
+
+    it('starts with a null category key', () =>
+    {
+      // Arrange & Act
+      const session = new CraftingCreationSession();
+
+      // Assert
       expect(session.getCategoryKey()).toBe(null);
+    });
+
+    it('starts with a null last craft outcome', () =>
+    {
+      // Arrange & Act
+      const session = new CraftingCreationSession();
+
+      // Assert
       expect(session.getLastCraftOutcome()).toBe(null);
     });
 
-    it('reset clears phase, category, and last craft outcome', () =>
+    it('reset clears phase, category, and last craft outcome back to their initial values', () =>
     {
-      const session = new VM.CraftingCreationSession();
-
+      // Arrange
+      const session = new CraftingCreationSession();
       session.enterRecipeBrowsing('vitest_cat');
       session.tryCraftRecipe(null);
+
+      // Act
       session.reset();
 
-      expect(session.getPhase()).toBe(VM.CraftingCreationSession.Phase.BrowsingCategories);
+      // Assert
+      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingCategories);
       expect(session.getCategoryKey()).toBe(null);
       expect(session.getLastCraftOutcome()).toBe(null);
     });
 
-    it('enterRecipeBrowsing locks phase and category key', () =>
+    it('enterRecipeBrowsing locks the phase to browsing recipes', () =>
     {
-      const session = new VM.CraftingCreationSession();
+      // Arrange
+      const session = new CraftingCreationSession();
 
+      // Act
       session.enterRecipeBrowsing('vitest_cat');
 
-      expect(session.getPhase()).toBe(VM.CraftingCreationSession.Phase.BrowsingRecipes);
+      // Assert
+      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingRecipes);
+    });
+
+    it('enterRecipeBrowsing locks the category key', () =>
+    {
+      // Arrange
+      const session = new CraftingCreationSession();
+
+      // Act
+      session.enterRecipeBrowsing('vitest_cat');
+
+      // Assert
       expect(session.getCategoryKey()).toBe('vitest_cat');
+    });
+
+    it('returnToCategoryBrowsing returns to category browsing phase', () =>
+    {
+      // Arrange
+      const session = new CraftingCreationSession();
+      session.enterRecipeBrowsing('vitest_cat');
+
+      // Act
+      session.returnToCategoryBrowsing();
+
+      // Assert
+      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingCategories);
     });
 
     it('returnToCategoryBrowsing clears the category key', () =>
     {
-      const session = new VM.CraftingCreationSession();
-
+      // Arrange
+      const session = new CraftingCreationSession();
       session.enterRecipeBrowsing('vitest_cat');
+
+      // Act
       session.returnToCategoryBrowsing();
 
-      expect(session.getPhase()).toBe(VM.CraftingCreationSession.Phase.BrowsingCategories);
+      // Assert
       expect(session.getCategoryKey()).toBe(null);
     });
 
     it('tryCraftRecipe records no_recipe when recipe is null', () =>
     {
-      const session = new VM.CraftingCreationSession();
+      // Arrange
+      const session = new CraftingCreationSession();
+
+      // Act
       const out = session.tryCraftRecipe(null);
 
-      expect(out.crafted).toBe(false);
-      expect(out.playedSuccessSound).toBe(false);
-      expect(out.reason).toBe('no_recipe');
+      // Assert
+      expect(out).toEqual({ crafted: false, playedSuccessSound: false, reason: 'no_recipe' });
+    });
+
+    it('tryCraftRecipe stores the no_recipe outcome as the last craft outcome', () =>
+    {
+      // Arrange
+      const session = new CraftingCreationSession();
+
+      // Act
+      const out = session.tryCraftRecipe(null);
+
+      // Assert
       expect(session.getLastCraftOutcome()).toBe(out);
     });
 
     it('tryCraftRecipe records requirements_not_met when canCraft is false', () =>
     {
-      const session = new VM.CraftingCreationSession();
-      const recipe = sandbox.J.JAFTING.EXT.CREATE.Metadata.recipesMap.get('vitest_recipe');
+      // Arrange
+      const session = new CraftingCreationSession();
+      const recipe = { canCraft: () => false };
 
+      // Act
       const out = session.tryCraftRecipe(recipe);
 
-      expect(out.crafted).toBe(false);
-      expect(out.reason).toBe('requirements_not_met');
+      // Assert
+      expect(out).toEqual({ crafted: false, playedSuccessSound: false, reason: 'requirements_not_met' });
     });
 
-    it('tryCraftRecipe consumes ingredients, grants outputs, and bumps proficiency when requirements are met', () =>
+    it('tryCraftRecipe crafts and records a successful outcome when canCraft is true', () =>
     {
-      const session = new VM.CraftingCreationSession();
-      const recipe = sandbox.J.JAFTING.EXT.CREATE.Metadata.recipesMap.get('vitest_recipe');
+      // Arrange
+      const session = new CraftingCreationSession();
+      const craft = vi.fn();
+      const recipe = { canCraft: () => true, craft };
 
-      vm.runInContext(`
-        const ing = $dataItems[1];
-        const outItem = $dataItems[2];
-        $gameParty.gainItem(ing, 1);
-        const beforeOut = $gameParty.numItems(outItem);
-        const track = $gameParty.getRecipeTrackingByKey('vitest_recipe');
-        const beforeProf = track.craftingProficiency();
-      `, sandbox);
-
+      // Act
       const out = session.tryCraftRecipe(recipe);
 
-      expect(out.crafted).toBe(true);
-      expect(out.playedSuccessSound).toBe(true);
-      expect(out.reason).toBe(null);
-
-      vm.runInContext(`
-        globalThis.__vitestAfterIng = $gameParty.numItems($dataItems[1]);
-        globalThis.__vitestAfterOut = $gameParty.numItems($dataItems[2]);
-        globalThis.__vitestAfterProf = $gameParty.getRecipeTrackingByKey('vitest_recipe').craftingProficiency();
-      `, sandbox);
-
-      expect(sandbox.__vitestAfterIng).toBe(0);
-      expect(sandbox.__vitestAfterOut).toBe(1);
-      expect(sandbox.__vitestAfterProf).toBe(1);
+      // Assert
+      expect(craft).toHaveBeenCalledTimes(1);
+      expect(out).toEqual({ crafted: true, playedSuccessSound: true, reason: null });
     });
 
-    it('snapshot reflects phase, category, and last outcome', () =>
+    it('snapshot reflects the current phase, category, and last outcome', () =>
     {
-      const session = new VM.CraftingCreationSession();
-
+      // Arrange
+      const session = new CraftingCreationSession();
       session.enterRecipeBrowsing('vitest_cat');
       session.tryCraftRecipe(null);
+
+      // Act
       const snap = session.snapshot();
 
-      expect(snap.phase).toBe(VM.CraftingCreationSession.Phase.BrowsingRecipes);
+      // Assert
+      expect(snap.phase).toBe(CraftingCreationSession.Phase.BrowsingRecipes);
       expect(snap.categoryKey).toBe('vitest_cat');
       expect(snap.lastCraftOutcome.reason).toBe('no_recipe');
     });
   });
 
-  describe('CraftingRecipe with party + database', () =>
+  describe('CraftingRecipe wired against a real plugin boot', () =>
   {
-    it('canCraft requires tools as well as ingredients', () =>
+    let Game_Party;
+    let recipesMap;
+
+    beforeAll(async () =>
     {
+      vi.resetModules();
+
+      installJBaseHostGlobals();
+      globalThis.PluginMetadata = PluginMetadata;
+      globalThis.ExternalJsonConfigLoader = ExternalJsonConfigLoader;
+      globalThis.ExternalJsonConfigLoaderOptions = ExternalJsonConfigLoaderOptions;
+      globalThis.PluginVersion = PluginVersion;
+      globalThis.StorageManager.fsReadFile = () => VITEST_MINIMAL_CRAFTING_JSON;
+      globalThis.PluginManager = {
+        parameters: name => (name === 'J-JAFTING-Creation' ? {} : {}),
+        registerCommand()
+        {
+        },
+      };
+      globalThis.JaftingSalvageManager = { applyCraftRecipeOutputs: vi.fn() };
+
+      globalThis.__PLUGIN_NAME__ = 'J-Base';
+      globalThis.__PLUGIN_VERSION__ = '3.0.0';
+      await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+      globalThis.__PLUGIN_NAME__ = 'J-JAFTING';
+      globalThis.__PLUGIN_VERSION__ = '2.1.0';
+      await import('../../../src/plugins/jafting/core/_metadata/initialization.js');
+
+      globalThis.__PLUGIN_NAME__ = 'J-JAFTING-Creation';
+      globalThis.__PLUGIN_VERSION__ = '2.1.0';
+      await import('../../../src/plugins/jafting/ext/create/_metadata/initialization.js');
+
+      recipesMap = globalThis.J.JAFTING.EXT.CREATE.Metadata.recipesMap;
+
+      // $dataItems: id 1 = ingredient, id 2 = output, id 3 = tool (real RPGManager-note-free rows);
+      // a real array so CraftingComponent's $dataItems.at(id) lookup works like the vanilla engine's.
+      globalThis.$dataItems = [];
+      globalThis.$dataItems[1] = { id: 1, name: 'Vitest Ingredient' };
+      globalThis.$dataItems[2] = { id: 2, name: 'Vitest Output' };
+      globalThis.$dataItems[3] = { id: 3, name: 'Vitest Tool' };
+
+      function Game_PartyCtor()
+      {
+      }
+
+      Game_PartyCtor.prototype.initialize = function()
+      {
+        this._counts = {};
+      };
+
+      Game_PartyCtor.prototype.numItems = function(item)
+      {
+        return this._counts[item.id] ?? 0;
+      };
+
+      Game_PartyCtor.prototype.gainItem = function(item, amount)
+      {
+        this._counts[item.id] = (this._counts[item.id] ?? 0) + amount;
+      };
+
+      Game_PartyCtor.prototype.loseItem = function(item, amount)
+      {
+        this._counts[item.id] = (this._counts[item.id] ?? 0) - amount;
+      };
+
+      globalThis.Game_Party = Game_PartyCtor;
+      Game_Party = Game_PartyCtor;
+    });
+
+    it('canCraft is false without the required tool even when ingredients are held', () =>
+    {
+      // Arrange
       const wideJson = JSON.stringify({
         recipes: [
           {
@@ -169,120 +301,174 @@ describe('J-JAFTING-Creation workflow & layout (built plugins)', () =>
         ],
         categories: JSON.parse(VITEST_MINIMAL_CRAFTING_JSON).categories,
       });
+      globalThis.J.JAFTING.EXT.CREATE.Metadata.recipesMap = new Map(
+        globalThis.J.JAFTING.EXT.CREATE.Metadata.constructor.classify(JSON.parse(wideJson)).recipes()
+          .map(recipe => [ recipe.key, recipe ]),
+      );
+      const party = new Game_Party();
+      party.initialize();
+      globalThis.$gameParty = party;
+      party.gainItem($dataItems[1], 1);
 
-      const s2 = { console };
-      loadJaftingCreationPluginVm(s2, { craftingJson: wideJson });
-      installJaftingVmGamePartyBootstrap(s2);
-      seedJaftingCreationDatabaseItems(s2);
+      const recipe = globalThis.J.JAFTING.EXT.CREATE.Metadata.recipesMap.get('needs_tool');
 
-      vm.runInContext(`
-        const party = new Game_Party();
-        party.initialize();
-        party.__testItemContainer = {};
-        $gameParty = party;
-        JaftingSalvageManager.initPartySalvageStorage();
-        const ing = $dataItems[1];
-        $gameParty.gainItem(ing, 1);
-        const recipe = J.JAFTING.EXT.CREATE.Metadata.recipesMap.get('needs_tool');
-        globalThis.__vitestCanWithoutTool = recipe.canCraft();
-        const tool = $dataItems[3];
-        $gameParty.gainItem(tool, 1);
-        globalThis.__vitestCanWithTool = recipe.canCraft();
-      `, s2);
-
-      expect(s2.__vitestCanWithoutTool).toBe(false);
-      expect(s2.__vitestCanWithTool).toBe(true);
+      // Act & Assert
+      expect(recipe.canCraft()).toBe(false);
     });
 
-    it('needsMasking and naming follow maskedUntilCrafted and craft history', () =>
+    it('canCraft becomes true once the required tool is also held', () =>
     {
-      const s3 = { console };
-      loadJaftingCreationPluginVm(s3, { craftingJson: VITEST_MINIMAL_CRAFTING_JSON });
-      installJaftingVmGamePartyBootstrap(s3);
-      seedJaftingCreationDatabaseItems(s3);
+      // Arrange
+      const wideJson = JSON.stringify({
+        recipes: [
+          {
+            name: 'Needs Tool',
+            key: 'needs_tool',
+            categoryKeys: [ 'vitest_cat' ],
+            iconIndex: 1,
+            description: 'x',
+            unlockedByDefault: true,
+            maskedUntilCrafted: false,
+            tools: [ { id: 3, type: 'i', count: 1 } ],
+            ingredients: [ { id: 1, type: 'i', count: 1 } ],
+            outputs: [ { id: 2, type: 'i', count: 1 } ],
+          },
+        ],
+        categories: JSON.parse(VITEST_MINIMAL_CRAFTING_JSON).categories,
+      });
+      globalThis.J.JAFTING.EXT.CREATE.Metadata.recipesMap = new Map(
+        globalThis.J.JAFTING.EXT.CREATE.Metadata.constructor.classify(JSON.parse(wideJson)).recipes()
+          .map(recipe => [ recipe.key, recipe ]),
+      );
+      const party = new Game_Party();
+      party.initialize();
+      globalThis.$gameParty = party;
+      party.gainItem($dataItems[1], 1);
+      party.gainItem($dataItems[3], 1);
 
-      vm.runInContext(`
-        const party = new Game_Party();
-        party.initialize();
-        party.__testItemContainer = {};
-        $gameParty = party;
-        JaftingSalvageManager.initPartySalvageStorage();
-        const recipe = J.JAFTING.EXT.CREATE.Metadata.recipesMap.get('vitest_recipe');
-        recipe.maskedUntilCrafted = true;
-        globalThis.__vitestMaskedBefore = recipe.needsMasking();
-        globalThis.__vitestNameBefore = recipe.getRecipeName();
-        const ing = $dataItems[1];
-        $gameParty.gainItem(ing, 1);
-        recipe.craft();
-        globalThis.__vitestMaskedAfter = recipe.needsMasking();
-        globalThis.__vitestNameAfter = recipe.getRecipeName();
-      `, s3);
+      const recipe = globalThis.J.JAFTING.EXT.CREATE.Metadata.recipesMap.get('needs_tool');
 
-      expect(s3.__vitestMaskedBefore).toBe(true);
-      expect(s3.__vitestNameBefore).toMatch(/\?/);
-      expect(s3.__vitestMaskedAfter).toBe(false);
-      expect(s3.__vitestNameAfter).toBe('Vitest Recipe');
+      // Act & Assert
+      expect(recipe.canCraft()).toBe(true);
     });
-  });
 
-  describe('J.JAFTING.EXT.CREATE.Metadata', () =>
-  {
-    it('reports the shipped Creation plugin version', () =>
+    it('needsMasking is true before the recipe has ever been crafted', () =>
     {
-      const md = sandbox.J.JAFTING.EXT.CREATE.Metadata;
+      // Arrange
+      const party = new Game_Party();
+      party.initialize();
+      party.getRecipeTrackingByKey = () => ({ hasBeenCrafted: () => false, craftingProficiency: () => 0 });
+      globalThis.$gameParty = party;
 
-      expect(md.name).toBe('J-JAFTING-Creation');
+      const recipe = recipesMap.get('vitest_recipe');
+      recipe.maskedUntilCrafted = true;
+
+      // Act & Assert
+      expect(recipe.needsMasking()).toBe(true);
+    });
+
+    it('getRecipeName masks the name with question marks while masking is needed', () =>
+    {
+      // Arrange
+      const party = new Game_Party();
+      party.initialize();
+      party.getRecipeTrackingByKey = () => ({ hasBeenCrafted: () => false, craftingProficiency: () => 0 });
+      globalThis.$gameParty = party;
+
+      const recipe = recipesMap.get('vitest_recipe');
+      recipe.maskedUntilCrafted = true;
+
+      // Act & Assert
+      expect(recipe.getRecipeName()).toMatch(/\?/);
+    });
+
+    it('reveals the real name once craft() records a first-time craft', () =>
+    {
+      // Arrange
+      const party = new Game_Party();
+      party.initialize();
+      const tracking = { crafted: false, hasBeenCrafted() { return this.crafted; }, improveProficiency() { this.crafted = true; } };
+      party.getRecipeTrackingByKey = () => tracking;
+      globalThis.$gameParty = party;
+
+      const recipe = recipesMap.get('vitest_recipe');
+      recipe.maskedUntilCrafted = true;
+
+      // Act
+      recipe.craft();
+
+      // Assert
+      expect(recipe.getRecipeName()).toBe('Vitest Recipe');
     });
   });
 
   describe('Window_RecipeDetails layout helpers', () =>
   {
-    it('quarterWidthsFromInner floors width into four bands with remainder on the last', () =>
-    {
-      const { cw, remainder } = VM.Window_RecipeDetails.quarterWidthsFromInner(350);
+    let Window_RecipeDetails;
 
-      expect(cw).toBe(87);
-      expect(remainder).toBe(350 - cw * 4);
-      expect(cw * 4 + remainder).toBe(350);
+    beforeAll(async () =>
+    {
+      vi.resetModules();
+
+      installJBaseHostGlobals();
+      installMinimalMenuUiStubs(globalThis);
+
+      ({ default: Window_RecipeDetails } = await import(
+        '../../../src/plugins/jafting/ext/create/windows/Window_RecipeDetails.js'
+      ));
     });
 
-    it('quarterWidthsFromInner clamps each band to at least 80px', () =>
+    describe('quarterWidthsFromInner', () =>
     {
-      const { cw } = VM.Window_RecipeDetails.quarterWidthsFromInner(100);
+      it('floors width into four bands with remainder on the last', () =>
+      {
+        // Arrange & Act
+        const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(350);
 
-      expect(cw).toBe(80);
+        // Assert
+        expect(cw).toBe(87);
+        expect(remainder).toBe(350 - cw * 4);
+      });
+
+      it('accounts for every pixel of the inner width across the four bands plus remainder', () =>
+      {
+        // Arrange & Act
+        const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(350);
+
+        // Assert
+        expect(cw * 4 + remainder).toBe(350);
+      });
+
+      it('clamps each band to at least 80px for a narrow inner width', () =>
+      {
+        // Arrange & Act
+        const { cw } = Window_RecipeDetails.quarterWidthsFromInner(100);
+
+        // Assert
+        expect(cw).toBe(80);
+      });
     });
 
-    it('componentListRowsInnerStartY matches the tallest of the three header stacks', () =>
+    describe('componentListRowsInnerStartY', () =>
     {
-      const details = new VM.Window_RecipeDetails(new sandbox.Rectangle(0, 0, 520, 300));
+      it('starts below the tallest of the three header stacks', () =>
+      {
+        // Arrange
+        const details = new Window_RecipeDetails(new globalThis.Rectangle(0, 0, 520, 300));
+        details.innerWidth = 480;
+        details.lineHeight = () => 24;
+        details.textWidth = text => text.length * 6;
+        details.resetFontSettings = () => {};
+        details.modFontSize = () => {};
+        details.toggleBold = () => {};
+        details.toggleItalics = () => {};
 
-      details.innerWidth = 480;
-      details.lineHeight = function()
-      {
-        return 24;
-      };
-      details.textWidth = function(text)
-      {
-        return text.length * 6;
-      };
-      details.resetFontSettings = function()
-      {
-      };
-      details.modFontSize = function()
-      {
-      };
-      details.toggleBold = function()
-      {
-      };
-      details.toggleItalics = function()
-      {
-      };
+        // Act
+        const y = details.componentListRowsInnerStartY();
 
-      const y = details.componentListRowsInnerStartY();
-
-      expect(typeof y).toBe('number');
-      expect(y).toBeGreaterThan(24 * 2);
+        // Assert
+        expect(y).toBeGreaterThan(24 * 2);
+      });
     });
   });
 });
