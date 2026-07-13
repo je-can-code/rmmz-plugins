@@ -2,6 +2,7 @@ import './_metadata/initialization.js';
 import './_metadata/pluginCommands.js';
 
 import './managers/DataManager.js';
+import './managers/GrowthCurveFormula.js';
 import './managers/JABS_AiManager.js';
 import './managers/LevelScaling.js';
 

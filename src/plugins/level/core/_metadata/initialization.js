@@ -74,5 +74,31 @@ J.LEVEL.RegExp = {
    * @type {RegExp}
    */
   MaxLevelBoost: /<maxLevelBoost: ?(-?\+?\d+)>/i,
+
+  /**
+   * The regexes for the 8 base parameters' `GrowthCurve` tags, indexed by base paramId (0-7:
+   * mhp/mmp/atk/def/mat/mdf/agi/luk). Authored via the jmz-data-editor's Classes board and read by
+   * {@link GrowthCurveFormula.readForClass} to derive beyond-level-99 growth directly from the formula
+   * instead of {@link Game_Temp.buildBeyondMaxDataForClass}'s slope-extrapolation fallback.
+   * @type {RegExp[]}
+   */
+  GrowthCurveByParamId: [
+    /<mhpGrowthCurve:\[([+\-*/ ().\w]+)]>/gi,
+    /<mmpGrowthCurve:\[([+\-*/ ().\w]+)]>/gi,
+    /<atkGrowthCurve:\[([+\-*/ ().\w]+)]>/gi,
+    /<defGrowthCurve:\[([+\-*/ ().\w]+)]>/gi,
+    /<matGrowthCurve:\[([+\-*/ ().\w]+)]>/gi,
+    /<mdfGrowthCurve:\[([+\-*/ ().\w]+)]>/gi,
+    /<agiGrowthCurve:\[([+\-*/ ().\w]+)]>/gi,
+    /<lukGrowthCurve:\[([+\-*/ ().\w]+)]>/gi,
+  ],
+
+  /**
+   * The regex for MTP's `GrowthCurve` tag. Unlike the 8 base params, MTP has no `params[]` array in
+   * Classes.json (it's a J-Base/J-NaturalGrowth note-tag-only stat), so when present this formula is
+   * evaluated live for every level, not just beyond 99- see {@link Game_Actor.maxTp}.
+   * @type {RegExp}
+   */
+  MtpGrowthCurve: /<mtpGrowthCurve:\[([+\-*/ ().\w]+)]>/gi,
 };
 //endregion initialization

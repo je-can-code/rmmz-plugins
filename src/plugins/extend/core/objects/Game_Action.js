@@ -273,6 +273,45 @@ Game_Action.prototype.applyItemUserEffect = function(target)
 };
 
 /**
+ * Toggles all {@code <toggleOnExecute:STATE_ID>} states on the caster: for each tagged state id,
+ * removes it if the caster currently has it, or adds it if they don't. Fires once at press-time
+ * (see {@link JABS_Engine#handleOnCastStateEffects}), same as the on-cast self-state family below.
+ * There is no chance roll; this always triggers when the skill executes.
+ */
+Game_Action.prototype.applyToggleOnExecuteStates = function()
+{
+  // grab the caster; this is a self-only toggle, so the caster is always both actor and target.
+  const caster = this.subject();
+
+  // toggle each tagged state independently.
+  this.toggleOnExecuteStateIds()
+    .forEach(stateId =>
+    {
+      // if the caster already has this state, toggling it off means removing it.
+      if (caster.isStateAffected(stateId))
+      {
+        caster.removeState(stateId);
+      }
+      // otherwise, toggling it on means adding it, attributed to the caster.
+      else
+      {
+        caster.addState(stateId, caster);
+      }
+    });
+};
+
+/**
+ * Gets all state ids tagged with {@code <toggleOnExecute:STATE_ID>} on the executing skill.
+ * Skill-scoped only; a skill may carry multiple tags to toggle multiple states in one execution.
+ * @returns {number[]}
+ */
+Game_Action.prototype.toggleOnExecuteStateIds = function()
+{
+  // this tag is skill-scoped, so only the executing skill's own note is read.
+  return RPGManager.getNumbersFromNoteByRegex(this.item(), J.EXTEND.RegExp.ToggleOnExecute);
+};
+
+/**
  * Applies all applicable on-cast self states.
  */
 Game_Action.prototype.applyOnCastSelfStates = function()

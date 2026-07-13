@@ -284,4 +284,25 @@ J.EXTEND.RegExp.ThisApplyState = /<thisApplyState:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)
  * @type {RegExp}
  */
 J.EXTEND.RegExp.ApplyState = /<applyState:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+){0,2}])>/gi;
+
+/**
+ * The structure of a skill-scoped toggle-state tag. Reads from the executing skill only
+ * ({@code this.item()}). Fires once at press-time (same as the on-cast self-state tags), not on hit.
+ *
+ * <pre>
+ * Structure:
+ *  <toggleOnExecute:STATE_ID>
+ *
+ * Example (a stance skill that flips two states at once):
+ *  <toggleOnExecute:12>
+ *  <toggleOnExecute:13>
+ *
+ * Translation:
+ *  On execution, for each tagged STATE_ID: if the caster already has it, remove it;
+ *  if the caster does not have it, add it. Repeatable — one STATE_ID per tag/line, each
+ *  toggled independently. No chance roll; this always triggers.
+ * </pre>
+ * @type {RegExp}
+ */
+J.EXTEND.RegExp.ToggleOnExecute = /<toggleOnExecute:[ ]?(\d+)>/gi;
 //endregion Metadata

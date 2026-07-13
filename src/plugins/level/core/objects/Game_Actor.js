@@ -1,3 +1,5 @@
+import GrowthCurveFormula from "../managers/GrowthCurveFormula.js";
+
 //region Game_Actor
 /**
  * Extends {@link #initMembers}.<br/>
@@ -138,6 +140,30 @@ Game_Actor.prototype.paramBase = function(paramId)
   const beyondRow = params[paramId];
   const beyondIdx = Math.min(rawLevel, beyondRow.length - 1);
   return beyondRow[beyondIdx];
+};
+
+/**
+ * Extends {@link #maxTp}.<br/>
+ * When the actor's current class carries an `<mtpGrowthCurve:[formula]>` tag, that formula is the
+ * sole source of this actor's MTP at every level- it replaces J-Base's flat `base + tag-sum`
+ * calculation entirely (no additive stacking with `<maxTp:N>`/`<mtpBuffPlus:[...]>`), since MTP has no
+ * `params[]` array to defer to for any level range the way the 8 base params do. Falls through to the
+ * original calculation unchanged when the current class has no such tag.
+ * @returns {number}
+ */
+J.LEVEL.Aliased.Game_Actor.set('maxTp', Game_Actor.prototype.maxTp);
+Game_Actor.prototype.maxTp = function()
+{
+  const growthCurveFormula = GrowthCurveFormula.readMtpForClass(this.currentClass());
+
+  if (growthCurveFormula)
+  {
+    return Math.max(0, Math.round(GrowthCurveFormula.evaluate(growthCurveFormula, this.getLevel())));
+  }
+
+  // perform original logic.
+  return J.LEVEL.Aliased.Game_Actor.get('maxTp')
+    .call(this);
 };
 
 /**

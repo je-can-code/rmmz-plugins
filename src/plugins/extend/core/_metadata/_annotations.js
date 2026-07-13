@@ -279,7 +279,44 @@
  *  <applyState:[12, 30]>
  * On every hit, 30% chance to apply state id 12 with the state's default duration.
  * ============================================================================
+ * TOGGLE STATE ON EXECUTE:
+ * Have you ever wanted a "stance" skill — one that flips a state on when it's off,
+ * and flips it off when it's on, using the same skill both ways? This tag does
+ * exactly that: it fires once when the skill executes (not per-hit), checks
+ * whether the caster currently has the tagged state, and toggles it.
+ *
+ * NOTE 1:
+ * This fires once at press-time, the same as the on-cast self-state tags above —
+ * it does not require (or care about) a successful hit against a target.
+ *
+ * NOTE 2:
+ * There is no chance roll; this always triggers when the skill executes.
+ *
+ * NOTE 3:
+ * A skill may carry multiple <toggleOnExecute> tags to flip several states in a
+ * single execution. Each STATE_ID is evaluated independently: if the caster has
+ * it, it's removed; if not, it's added.
+ *
+ * TAG USAGE:
+ * - Skills only.
+ *
+ * TAG FORMAT:
+ *  <toggleOnExecute:STATE_ID>
+ * Where STATE_ID is the id of the state to toggle on the caster.
+ *
+ * TAG EXAMPLES:
+ *  <toggleOnExecute:12>
+ * Executing this skill removes state id 12 from the caster if they have it,
+ * or adds it if they don't — toggling a stance on/off with one skill.
+ *
+ *  <toggleOnExecute:12>
+ *  <toggleOnExecute:13>
+ * Executing this skill independently toggles both state id 12 and state id 13.
+ * ============================================================================
  * CHANGELOG:
+ * - 1.5.0
+ *    Added <toggleOnExecute:STATE_ID> — a skill-scoped, press-time state toggle
+ *    for stance-style skills (add if absent, remove if present). Repeatable.
  * - 1.4.1
  *    Fixed Game_Actor#hasSkill to compare by skill id rather than object reference.
  *    Vanilla uses includes($dataSkills[id]) which breaks the moment the overlay system

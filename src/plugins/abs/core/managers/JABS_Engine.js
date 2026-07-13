@@ -1944,6 +1944,9 @@ class JABS_Engine
 
     // remove any on-cast lose-states from the caster exactly once, at the moment of press.
     gameAction.applyOnCastLoseStates();
+
+    // toggle any <toggleOnExecute> states on the caster exactly once, at the moment of press.
+    gameAction.applyToggleOnExecuteStates();
   }
 
   /**

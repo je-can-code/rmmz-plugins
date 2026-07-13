@@ -221,6 +221,7 @@
     "Game_Vehicle": "writable",
     "GaugeOptionsBuilder": "writable",
     "Graphics": "writable",
+    "GrowthCurveFormula": "writable",
     "HealEventManager": "writable",
     "HudManager": "writable",
     "IconManager": "writable",
