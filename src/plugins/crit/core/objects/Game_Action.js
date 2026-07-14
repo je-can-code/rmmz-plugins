@@ -308,11 +308,17 @@ Game_Action.prototype.itemCri = function(target)
 
 /**
  * Calculates this action's own bonus to crit damage multipliers.
+ * Formula context: `a` is this action's subject (the attacker), `b` is 0 (no meaningful
+ * per-skill base value to expose), `v` is `$gameVariables._data`.
  * @returns {number}
  */
 Game_Action.prototype.ownCriticalDamageMultiplier = function()
 {
-  return RPGManager.getSumFromAllNotesByRegex([ this.item() ], J.CRIT.RegExp.ThisCritDamageMultiplier) / 100;
+  return RPGManager.getResultsFromAllNotesByRegex(
+    [ this.item() ],
+    J.CRIT.RegExp.ThisCritDamageMultiplier,
+    0,
+    this.subject()) / 100;
 };
 
 /**
@@ -362,11 +368,17 @@ Game_Action.prototype.isGuaranteedCritVsTarget = function(target)
 
 /**
  * Calculates this action's own bonus to crit chance.
+ * Formula context: `a` is this action's subject (the attacker), `b` is 0 (no meaningful
+ * per-skill base value to expose), `v` is `$gameVariables._data`.
  * @returns {number}
  */
 Game_Action.prototype.ownCriticalChanceBonus = function()
 {
-  return RPGManager.getSumFromAllNotesByRegex([ this.item() ], J.CRIT.RegExp.ThisCritDamageChance) / 100;
+  return RPGManager.getResultsFromAllNotesByRegex(
+    [ this.item() ],
+    J.CRIT.RegExp.ThisCritDamageChance,
+    0,
+    this.subject()) / 100;
 };
 
 /**

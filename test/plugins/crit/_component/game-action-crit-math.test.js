@@ -167,10 +167,25 @@ describe('J-CriticalFactors Game_Action crit math (direct src import)', () =>
 
   describe('ownCriticalDamageMultiplier', () =>
   {
-    it('sums thisCritMultiplier tags on the item and divides by 100', () =>
+    it('evaluates a flat-number thisCritMultiplier tag on the item and divides by 100', () =>
     {
       // Arrange
-      const action = buildAction({ item: () => ({ note: '<thisCritMultiplier:[25]>' }) });
+      const action = buildAction({
+        item: () => ({ note: '<thisCritMultiplier:[25]>' }),
+        subject: () => ({}),
+      });
+
+      // Act & Assert
+      expect(action.ownCriticalDamageMultiplier()).toBeCloseTo(0.25, 5);
+    });
+
+    it('evaluates a real formula using the "a" binding for the attacker, and divides by 100', () =>
+    {
+      // Arrange
+      const action = buildAction({
+        item: () => ({ note: '<thisCritMultiplier:[10 + a.agi]>' }),
+        subject: () => ({ agi: 15 }),
+      });
 
       // Act & Assert
       expect(action.ownCriticalDamageMultiplier()).toBeCloseTo(0.25, 5);
@@ -179,13 +194,28 @@ describe('J-CriticalFactors Game_Action crit math (direct src import)', () =>
 
   describe('ownCriticalChanceBonus', () =>
   {
-    it('sums thisCritChance tags on the item and divides by 100', () =>
+    it('evaluates a flat-number thisCritChance tag on the item and divides by 100', () =>
     {
       // Arrange
-      const action = buildAction({ item: () => ({ note: '<thisCritChance:[10]>' }) });
+      const action = buildAction({
+        item: () => ({ note: '<thisCritChance:[10]>' }),
+        subject: () => ({}),
+      });
 
       // Act & Assert
       expect(action.ownCriticalChanceBonus()).toBeCloseTo(0.1, 5);
+    });
+
+    it('evaluates a real formula using the "a" binding for the attacker, and divides by 100', () =>
+    {
+      // Arrange
+      const action = buildAction({
+        item: () => ({ note: '<thisCritChance:[a.luk * 2]>' }),
+        subject: () => ({ luk: 12 }),
+      });
+
+      // Act & Assert
+      expect(action.ownCriticalChanceBonus()).toBeCloseTo(0.24, 5);
     });
   });
 

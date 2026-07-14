@@ -33,34 +33,39 @@
  * modifier? Well now you can! By applying the appropriate tag to the database
  * objects in question, you can control the critical chance and critical
  * damage modifiers for a specific skill's execution!
- * 
+ *
  * NOTE:
  * This stacks additively with other crit effects.
- * 
+ *
  * NOTE:
  * The effects of these tags do not apply to skills that cannot crit, so be
  * sure to make certain the critical dropdown is set to "YES" in the damage
- * formula box for the given skill. 
- * 
+ * formula box for the given skill.
+ *
+ * Formula context:
+ *   a = this action's subject (the attacker)
+ *   b = 0 (unused; present for formula consistency)
+ *   v = $gameVariables._data
+ *
  * TAG USAGE:
  * - Items
  * - Skills
- * 
+ *
  * TAG FORMAT:
  *  <thisCritChance:[FORMULA]>
- *  <thisCritDamageMultiplier:[FORMULA]>
+ *  <thisCritMultiplier:[FORMULA]>
  *  <thisCritsAlways>
- * 
+ *
  * TAG EXAMPLES:
  *  <thisCritChance:[25]>
  * Increases the critical chance of this particular skill by 25%.
- * 
- *  <thisCritDamageMultiplier:[10 + a.agi]>
+ *
+ *  <thisCritMultiplier:[10 + a.agi]>
  * Increases the critical damage multiplier by 10% plus the battler's agility.
- * 
+ *
  *  <thisCritsAlways>
  * The skill or item with this tag will ALWAYS crit.
- * 
+ *
  * ============================================================================
  * CRITICAL DAMAGE MULTIPLIER:
  * Have you ever wanted to have any amount of control over critical damage?
@@ -183,10 +188,19 @@
  *
  * TAG FORMAT:
  *  <(PARAM)(BUFF|GROWTH)(PLUS|RATE):[FORMULA]>
- * Where (PARAM) is the (base/sp/ex) parameter shorthand.
+ * Where (PARAM) is literally one of either "cdm" (crit damage multiplier) or
+ * "ctr" (crit taken rate- internally this is the same stat the critReduction
+ * tags above feed into, just spelled differently here for consistency with
+ * how J-NaturalGrowths names its own tag families).
  * Where (BUFF|GROWTH) is literally one of either "Buff" or "Growth".
  * Where (PLUS|RATE) is literally one of either "Plus" or "Rate".
- * Where [FORMULA] is the formula to produce the amount.
+ * Where [FORMULA] is a real formula this time (unlike the thisCritChance/
+ * thisCritMultiplier tags above)- it runs through the standard evaluator with:
+ *   a = the battler these bonuses are being calculated for
+ *   b = the battler's base value for this parameter (baseCriticalMultiplier()
+ *       for cdm tags, baseCriticalReduction() for ctr tags- 0.5 by default
+ *       for both)
+ *   v = $gameVariables._data
  *
  * EXAMPLE:
  *  <cdmGrowthRate:[5]>
@@ -194,8 +208,8 @@
  * This would result in gaining an ever-increasing amount of crit damage
  * multiplier per level.
  *
- *  <cdrBuffPlus:[25]>
- * Gain a flat 25 crit damage reduction (cdr) while this tag is applied to
+ *  <ctrBuffPlus:[25]>
+ * Gain a flat 25 crit taken rate reduction (ctr) while this tag is applied to
  * this battler.
  * This would be lost if the object this tag lived on was removed.
  *
@@ -276,6 +290,41 @@
  *  <onCritSelf:[20, 50]>
  * Whenever this battler lands any critical hit, there is a 50% chance to apply
  * state id 20 to themselves.
+ *
+ * ============================================================================
+ * FORCING ON-CRIT PROCS:
+ * Have you ever wanted an on-crit state application to land every single time,
+ * no exceptions, without having to touch your Accumulate/Encore/luck systems
+ * to get there? Well now you can! Applying this tag to the attacker's own note
+ * sources forces every "thisCrit"/"onCrit" state-application roll from above
+ * to succeed, as if the attacker had rolled a guaranteed positive result.
+ *
+ * NOTE:
+ * This ONLY affects the on-crit state application roll (thisCritApply,
+ * thisCritSelf, onCritApply, onCritSelf). It does not change whether the hit
+ * itself crits, and it does not touch the attacker's real isVeryLucky() or
+ * isVeryCursed() flags anywhere else- Accumulate Mode and Encore both still
+ * read the attacker's real values and stack normally on top of this.
+ *
+ * TAG USAGE:
+ * - Actors
+ * - Classes
+ * - Skills
+ * - Weapons
+ * - Armors
+ * - Enemies
+ * - States
+ *
+ * TAG FORMAT:
+ *  <forceCritProcs>
+ *
+ * TAG EXAMPLES:
+ *  <forceCritProcs>
+ * Any battler with this tag applied to one of their note sources will always
+ * succeed their on-crit state application rolls- a mastery capstone state with
+ * this tag turns an "onCritApply:[5, 25]" (25% chance) into a guaranteed
+ * application on every critical hit, without inflating crit chance itself or
+ * touching luck elsewhere.
  *
  * ============================================================================
  * CONDITIONAL CRITICAL CHANCE BY TARGET STATE:
