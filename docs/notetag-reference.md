@@ -3807,3 +3807,223 @@ cases (per the plugin's own warning).
 ```
 A player using "Actor1" swaps to "Actor1-spell" (0th/upper-left cell) for 25 frames (~half a
 second) while this skill executes.
+
+---
+
+## J-ABS-Shield (`src/plugins/abs/ext/shield/`)
+
+State-based HP shields for JABS. States own the shield; when a shield breaks (reduced to 0) its
+state is removed, and when the owning state expires the shield goes with it. Stacked shield
+states are consumed stack-by-stack until damage is absorbed (unless `<shieldProtect>` is also
+present, which caps consumption to one stack per hit). Slip damage (DoT) is NOT currently
+mitigated by shields — it bypasses them entirely.
+
+### `<shield:[FORMULA]>`
+
+**Applies to:**
+States
+
+**Formula context:**
+`a` = the battler applying the shield state, `b` = the battler receiving it, `s` = the
+`RPG_State` object of the shield state itself.
+
+**When:**
+the state is applied or refreshes
+
+**Effect:**
+calculates the shield's absorb amount. Recalculated on every application/refresh — the current
+shield amount carries over and adds to the new base amount, while the cap is simply replaced.
+After evaluation, the result is multiplied by the applier's `sar` and the receiver's `ser`
+factors (see below).
+
+```
+<shield:[(a.mat * 3) + s.stepsToRemove]>
+```
+A shield sized at triple the caster's MAT plus the state's own "steps to remove" database field.
+
+**See also:** `<shieldCap>`, `<sar>`, `<ser>`
+
+---
+
+### `<shieldCap:[FORMULA]>`
+
+**Applies to:**
+States
+
+**Formula context:**
+same as `<shield>` — `a` = applier, `b` = receiver, `s` = the RPG_State object.
+
+**When:**
+the state is applied or refreshes
+
+**Effect:**
+sets the maximum the shield can hold. If omitted, the cap defaults to the initial shield amount
+— add this tag to let a reapplied state top the shield back up past its original size.
+
+```
+<shieldCap:[(a.mat * 3) + s.stepsToRemove]>
+```
+The shield can be topped up to (caster's MAT × 3) + the state's stepsToRemove value.
+
+**See also:** `<shield>`
+
+---
+
+### `<sar:PERCENT_POINTS>` / `<ser:PERCENT_POINTS>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States
+
+**When:**
+always (summed across all active note sources, also contributed to by SDP panel investment)
+
+**Effect:**
+`sar` (Shield Amplification Rate) scales shields THIS battler grants when applying a shield state
+to anyone, including themselves. `ser` (Shield Effectiveness Rate) scales shields THIS battler
+receives, regardless of who applied them. Both are percent-point sums converted to a multiplier
+against a 100 baseline (100 = 1.0x, neutral).
+
+```
+<sar:25>
+```
+Shields this battler applies to others (or themselves) come out 25% larger.
+
+**See also:** `<shield>`
+
+---
+
+### `<shieldPriority:PRIORITY>`
+
+**Applies to:**
+States
+
+**When:**
+multiple shield states are active simultaneously
+
+**Effect:**
+higher PRIORITY shields are consumed first. Ties are broken by application timestamp (earlier
+wins).
+
+```
+<shieldPriority:10>
+```
+This shield state is consumed before any shield state with a lower priority value.
+
+---
+
+### `<shieldProtect>`
+
+**Applies to:**
+States
+
+**When:**
+this shield breaks from a hit larger than its remaining points
+
+**Effect:**
+nullifies the overflow damage that would otherwise carry through to HP once the shield breaks,
+instead of letting it pass through. Without this tag, a 150-damage hit against a 100-point shield
+leaves 50 overflow damage to HP; with it, that 50 is nullified entirely.
+
+```
+<shieldProtect>
+```
+This shield fully absorbs its capacity and negates any overflow beyond it.
+
+---
+
+### `<shieldType:[TYPES...]>`
+
+**Applies to:**
+States
+
+**When:**
+damage of a matching element type is incoming
+
+**Effect:**
+restricts this shield to only absorb damage carrying one of the listed element ids. Without this
+tag a shield absorbs any damage type by default (implicitly).
+
+```
+<shieldType:[1,2,3]>
+```
+This shield only absorbs damage of elements 1, 2, or 3 — damage of any other element passes
+straight through to HP.
+
+**See also:** `<shieldBypass>`
+
+---
+
+### `<shieldBypass>` / `<shieldBypass:[TYPES...]>`
+
+**Applies to:**
+Skills
+
+**When:**
+this skill deals damage to a shielded target
+
+**Effect:**
+bare `<shieldBypass>` ignores all shields entirely, no exceptions. `<shieldBypass:[TYPES...]>`
+only bypasses shields whose `<shieldType>` intersects with the listed element ids — a shield with
+no matching type is unaffected and still absorbs normally.
+
+```
+<shieldBypass>
+```
+This skill's damage always lands directly on HP, ignoring any shields on the target.
+
+**See also:** `<shieldType>`
+
+---
+
+### `<shieldDamage:[FORMULA]>`
+
+**Applies to:**
+Skills
+
+**Formula context:**
+`a` = the attacker executing the skill, `b` = the target with the shield, `o` = the pre-shielded
+(original) damage amount.
+
+**When:**
+this skill deals damage to a shielded target
+
+**Effect:**
+adds bonus damage specifically against the shield, on top of the skill's normal damage — good for
+"shield breaker" skills. Multiple tags on one skill sum together.
+
+```
+<shieldDamage:[o * 3]>
+```
+This skill deals an additional 3x its own original damage as bonus shield-only damage.
+
+```
+<shieldDamage:[b.currentShieldValue() / 2]>
+```
+This skill deals bonus shield damage equal to half the target's current shield value.
+
+---
+
+### `<shieldBreak:[SKILL_IDS...]>`
+
+**Applies to:**
+Actors, Classes, Weapons, Armors, Enemies, States
+
+**Formula context (for the payload skill's own damage formula):**
+`s` = the broken shield's original cap value (0 for any non-shield-break action; never persists
+across frames).
+
+**When:**
+a shield on this battler breaks (reduced to 0)
+
+**Effect:**
+fires every listed skill id when any shield breaks. Contributions from all applicable sources
+(the battler itself, plus the specific state that broke) are combined and de-duplicated — a skill
+id appearing on both the battler and the breaking state's tag fires only once. The payload
+skill's own damage formula can reference `s` directly (e.g. `s * 0.30`) to deal damage scaled off
+the broken shield's cap.
+
+```
+<shieldBreak:[12]>
+```
+Payload skill 12's formula written as `s * 0.5` deals damage equal to 50% of this shield's cap
+the moment it breaks.

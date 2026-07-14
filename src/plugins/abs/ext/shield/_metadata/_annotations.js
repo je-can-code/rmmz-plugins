@@ -88,6 +88,47 @@
  * A shield based on triple the caster's magic attack parameter as well as the
  * value in the "steps to remove" field on the shield state.
  *
+ * NOTE ABOUT SAR/SER SCALING:
+ * After the formula is evaluated, the result is multiplied by the applying
+ * battler's "sar" (Shield Amplification Rate) and the receiving battler's
+ * "ser" (Shield Effectiveness Rate) factors. See the SHIELD AMPLIFICATION/
+ * EFFECTIVENESS section below for how those factors are built.
+ *
+ * ============================================================================
+ * SHIELD AMPLIFICATION / EFFECTIVENESS:
+ * Two percent-point stats scale every shield this battler is involved with,
+ * summed from all of a battler's note sources (actor, class, weapons,
+ * armors, states) and also contributed to by SDP panel investment.
+ *
+ * SAR (Shield Amplification Rate) scales shields THIS battler grants when
+ * applying a shield state to someone (including themselves). SER (Shield
+ * Effectiveness Rate) scales shields THIS battler receives, regardless of
+ * who applied them. Both default to a neutral 100 (1.0x multiplier).
+ *
+ * TAG USAGE:
+ * - Actors
+ * - Classes
+ * - Enemies
+ * - Weapons
+ * - Armors
+ * - States
+ *
+ * TAG FORMAT:
+ *  <sar:PERCENT_POINTS>
+ *  <ser:PERCENT_POINTS>
+ *    Where PERCENT_POINTS is a signed integer offset from the 100 baseline.
+ *    All matching sources are summed before being converted to a multiplier.
+ *
+ * TAG EXAMPLES:
+ *  <sar:25>
+ * This source grants +25 percent-points of Shield Amplification, meaning
+ * shields this battler applies to others (or themselves) come out 25%
+ * larger.
+ *
+ *  <ser:-50>
+ * This source grants -50 percent-points of Shield Effectiveness, meaning
+ * any shield this battler receives is worth half as much.
+ *
  * ============================================================================
  * SHIELD CAPS:
  * Have you ever wanted to have a cap on shields that was higher than the
