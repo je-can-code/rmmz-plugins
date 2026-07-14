@@ -3556,3 +3556,69 @@ Overstuffed chain. Tail-phase re-feeding always rescues regardless of this tag.
 <overstuffedImpervious>
 ```
 This actor/passive prevents the Overstuffed chain from ever triggering on re-feed.
+
+---
+
+## J-ABS-Formula (`src/plugins/abs/ext/formula/`)
+
+Lets a single skill fire additional "packets" — inline formulas or child-skill executions —
+timed to on-use or on-hit, targeting a chosen recipient group. Skills only; items are not parsed.
+
+### `<on-(hit|use):to-(self|target|allies|enemies|all):by-formula:for-(hp|mp|tp):[FORMULA]>`
+
+**Applies to:**
+Skills
+
+**When:**
+`hit`: after the parent skill successfully hits a target. `use`: immediately when the parent
+skill is used, even on a miss.
+
+**Formula context:**
+`a` = source (the user/subject), `b` = recipient (the current entity being affected), `v` =
+`$gameVariables._data`, `i` = the parent RPG_Skill.
+
+**Effect:**
+applies an inline formula result to the RR resource (hp/mp/tp) of every battler in the AA
+recipient group (`self`/`target` [falls back to self]/`allies`/`enemies`/`all`, animate+alive
+only). **Sign is inverted from a normal damage formula**: positive result = loss/damage, negative
+result = gain/heal, zero = no effect. Damage-path results get element rate, on-hit crit mirroring,
+phys/mag rate, guard, variance, and JABS guard/parry reductions applied automatically;
+heal-path results get element rate, phys/mag rate, variance, REC (recipient), and HAR (caster).
+Multiple packets of the same timing apply in note order.
+
+```
+<on-hit:to-target:by-formula:for-hp:[a.atk * 2 - b.def]>
+```
+On hit, deals HP damage to the target equal to the user's ATK×2 minus the target's DEF.
+
+```
+<on-hit:to-allies:by-formula:for-hp:[-(a.mhp * 0.10)]>
+```
+On hit, heals all allies for 10% of the user's max HP (negative result = heal).
+
+**See also:** `<on-(hit|use):...:by-skill>`
+
+---
+
+### `<on-(hit|use):to-(self|target|allies|enemies|all):by-skill:[SKILL_ID]>`
+
+**Applies to:**
+Skills
+
+**When:**
+same trigger timing as the by-formula variant above
+
+**Effect:**
+executes SKILL_ID as a child JABS action against every battler in the AA recipient group.
+Child execution consumes no cost, applies no cooldown, runs no common events, and does not
+cascade further formula/skill packets (one level of nesting only). Animations/effects/collisions/
+logs/threat all apply normally; on-hit child packets can mirror the parent's crit state. For
+target/allies/enemies/all, position bias uses the recipient's current location — useful for
+ground-targeted child skills.
+
+```
+<on-use:to-self:by-skill:[77]>
+```
+On use, immediately fires skill 77 (e.g. an aura effect) centered on the caster, for free.
+
+**See also:** `<on-(hit|use):...:by-formula>`
