@@ -3964,5 +3964,387 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion updates: timers/channeling/interrupt/engagement
+
+  //region updates: dodge movement / death handling
+  describe('updateDodging', () =>
+  {
+    it('does nothing when dodge cannot currently be updated', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.canUpdateDodge = () => false;
+      jabsBattler.handleDodgeCancel = vi.fn();
+      jabsBattler.handleDodgeMovement = vi.fn();
+      jabsBattler.handleDodgeEnd = vi.fn();
+
+      jabsBattler.updateDodging();
+
+      expect(jabsBattler.handleDodgeCancel).not.toHaveBeenCalled();
+    });
+
+    it('processes cancel, movement, and end when dodging can be updated', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.canUpdateDodge = () => true;
+      jabsBattler.handleDodgeCancel = vi.fn();
+      jabsBattler.handleDodgeMovement = vi.fn();
+      jabsBattler.handleDodgeEnd = vi.fn();
+
+      jabsBattler.updateDodging();
+
+      expect(jabsBattler.handleDodgeCancel).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.handleDodgeMovement).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.handleDodgeEnd).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('canUpdateDodge', () =>
+  {
+    it('reflects whether the battler is dodging', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isDodging = () => false;
+      expect(jabsBattler.canUpdateDodge()).toBe(false);
+
+      jabsBattler.isDodging = () => true;
+      expect(jabsBattler.canUpdateDodge()).toBe(true);
+    });
+  });
+
+  describe('handleDodgeCancel / shouldCancelDodge', () =>
+  {
+    it('does not end the dodge when it should not be canceled', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.shouldCancelDodge = () => false;
+      jabsBattler.endDodge = vi.fn();
+
+      jabsBattler.handleDodgeCancel();
+
+      expect(jabsBattler.endDodge).not.toHaveBeenCalled();
+    });
+
+    it('ends the dodge when it should be canceled', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.shouldCancelDodge = () => true;
+      jabsBattler.endDodge = vi.fn();
+
+      jabsBattler.handleDodgeCancel();
+
+      expect(jabsBattler.endDodge).toHaveBeenCalledTimes(1);
+    });
+
+    it('shouldCancelDodge is true when the battler cannot move', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.canBattlerMove = () => false;
+
+      expect(jabsBattler.shouldCancelDodge()).toBe(true);
+    });
+
+    it('shouldCancelDodge is false when the battler can move', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.canBattlerMove = () => true;
+
+      expect(jabsBattler.shouldCancelDodge()).toBe(false);
+    });
+  });
+
+  describe('updateDodgeIFrames', () =>
+  {
+    it('does nothing while not dodging', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isDodging = () => false;
+      jabsBattler.incrementDodgeFrame = vi.fn();
+
+      jabsBattler.updateDodgeIFrames();
+
+      expect(jabsBattler.incrementDodgeFrame).not.toHaveBeenCalled();
+    });
+
+    it('does not touch invincibility without an iframe window', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isDodging = () => true;
+      jabsBattler.incrementDodgeFrame = vi.fn();
+      jabsBattler.getDodgeIFrames = () => null;
+      jabsBattler.setInvincible = vi.fn();
+
+      jabsBattler.updateDodgeIFrames();
+
+      expect(jabsBattler.setInvincible).not.toHaveBeenCalled();
+    });
+
+    it('sets invincible true while the current frame is within the iframe window', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isDodging = () => true;
+      jabsBattler.incrementDodgeFrame = vi.fn();
+      jabsBattler.getDodgeIFrames = () => [ 2, 5 ];
+      jabsBattler.getDodgeFrame = () => 3;
+      jabsBattler.setInvincible = vi.fn();
+
+      jabsBattler.updateDodgeIFrames();
+
+      expect(jabsBattler.setInvincible).toHaveBeenCalledWith(true);
+    });
+
+    it('sets invincible false outside the iframe window', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isDodging = () => true;
+      jabsBattler.incrementDodgeFrame = vi.fn();
+      jabsBattler.getDodgeIFrames = () => [ 2, 5 ];
+      jabsBattler.getDodgeFrame = () => 10;
+      jabsBattler.setInvincible = vi.fn();
+
+      jabsBattler.updateDodgeIFrames();
+
+      expect(jabsBattler.setInvincible).toHaveBeenCalledWith(false);
+    });
+  });
+
+  describe('canDodgeMove', () =>
+  {
+    function buildDodgeableBattler(overrides = {})
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isMoving: () => false });
+      jabsBattler.canBattlerMove = () => true;
+      jabsBattler.getDodgeSteps = () => 3;
+      jabsBattler.isDodging = () => true;
+      Object.assign(jabsBattler, overrides);
+      return jabsBattler;
+    }
+
+    it('is false while the character is already moving', () =>
+    {
+      const jabsBattler = buildDodgeableBattler({ getCharacter: () => ({ isMoving: () => true }) });
+      expect(jabsBattler.canDodgeMove()).toBe(false);
+    });
+
+    it('is false when the battler cannot move', () =>
+    {
+      expect(buildDodgeableBattler({ canBattlerMove: () => false }).canDodgeMove()).toBe(false);
+    });
+
+    it('is false when out of dodge steps', () =>
+    {
+      expect(buildDodgeableBattler({ getDodgeSteps: () => 0 }).canDodgeMove()).toBe(false);
+    });
+
+    it('is false when not dodging', () =>
+    {
+      expect(buildDodgeableBattler({ isDodging: () => false }).canDodgeMove()).toBe(false);
+    });
+
+    it('is true otherwise', () =>
+    {
+      expect(buildDodgeableBattler().canDodgeMove()).toBe(true);
+    });
+  });
+
+  describe('executeDodgeMovement', () =>
+  {
+    it('moves diagonally for a diagonal dodge direction', () =>
+    {
+      const moveDiagonally = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isDiagonalDirection: () => true, moveDiagonally });
+      jabsBattler.getDodgeDirection = () => 9;
+      jabsBattler.decrementDodgeSteps = vi.fn();
+
+      jabsBattler.executeDodgeMovement();
+
+      expect(moveDiagonally).toHaveBeenCalledWith(9);
+      expect(jabsBattler.decrementDodgeSteps).toHaveBeenCalledTimes(1);
+    });
+
+    it('moves straight for a cardinal dodge direction', () =>
+    {
+      const moveStraight = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({
+        isDiagonalDirection: () => false, isStraightDirection: () => true, moveStraight,
+      });
+      jabsBattler.getDodgeDirection = () => 8;
+      jabsBattler.decrementDodgeSteps = vi.fn();
+
+      jabsBattler.executeDodgeMovement();
+
+      expect(moveStraight).toHaveBeenCalledWith(8);
+    });
+
+    it('decrements dodge steps regardless of movement direction validity', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isDiagonalDirection: () => false, isStraightDirection: () => false });
+      jabsBattler.getDodgeDirection = () => 0;
+      jabsBattler.decrementDodgeSteps = vi.fn();
+
+      jabsBattler.executeDodgeMovement();
+
+      expect(jabsBattler.decrementDodgeSteps).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('handleDodgeEnd / shouldEndDodge', () =>
+  {
+    it('always re-evaluates iframes before checking whether to end', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.updateDodgeIFrames = vi.fn();
+      jabsBattler.shouldEndDodge = () => false;
+      jabsBattler.endDodge = vi.fn();
+
+      jabsBattler.handleDodgeEnd();
+
+      expect(jabsBattler.updateDodgeIFrames).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.endDodge).not.toHaveBeenCalled();
+    });
+
+    it('ends the dodge when shouldEndDodge is true', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.updateDodgeIFrames = vi.fn();
+      jabsBattler.shouldEndDodge = () => true;
+      jabsBattler.endDodge = vi.fn();
+
+      jabsBattler.handleDodgeEnd();
+
+      expect(jabsBattler.endDodge).toHaveBeenCalledTimes(1);
+    });
+
+    it('shouldEndDodge is true when out of steps and no longer moving', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getDodgeSteps = () => 0;
+      jabsBattler.getCharacter = () => ({ isMoving: () => false });
+
+      expect(jabsBattler.shouldEndDodge()).toBe(true);
+    });
+
+    it('shouldEndDodge is false while still moving', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getDodgeSteps = () => 0;
+      jabsBattler.getCharacter = () => ({ isMoving: () => true });
+
+      expect(jabsBattler.shouldEndDodge()).toBe(false);
+    });
+
+    it('shouldEndDodge is false while steps remain', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getDodgeSteps = () => 3;
+      jabsBattler.getCharacter = () => ({ isMoving: () => false });
+
+      expect(jabsBattler.shouldEndDodge()).toBe(false);
+    });
+  });
+
+  describe('endDodge', () =>
+  {
+    it('resets all dodge-related state', () =>
+    {
+      const setDodgeModifier = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ setDodgeModifier });
+      jabsBattler.setDodging = vi.fn();
+      jabsBattler.setDodgeSteps = vi.fn();
+      jabsBattler.setInvincible = vi.fn();
+      jabsBattler.setDodgeFrame = vi.fn();
+      jabsBattler.setDodgeIFrames = vi.fn();
+
+      jabsBattler.endDodge();
+
+      expect(jabsBattler.setDodging).toHaveBeenCalledWith(false);
+      expect(jabsBattler.setDodgeSteps).toHaveBeenCalledWith(0);
+      expect(jabsBattler.setInvincible).toHaveBeenCalledWith(false);
+      expect(setDodgeModifier).toHaveBeenCalledWith(0);
+      expect(jabsBattler.setDodgeFrame).toHaveBeenCalledWith(0);
+      expect(jabsBattler.setDodgeIFrames).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('updateDeathHandling', () =>
+  {
+    function buildDeathCandidate(overrides = {})
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isActor = () => false;
+      jabsBattler.isWaiting = () => false;
+      jabsBattler.getCharacter = () => ({ isErased: () => false });
+      jabsBattler.isDying = () => false;
+      jabsBattler.destroy = vi.fn();
+      Object.assign(jabsBattler, overrides);
+      return jabsBattler;
+    }
+
+    it('does nothing for actors/the player', () =>
+    {
+      globalThis.$gameMap = { isEventRunning: () => false };
+      const jabsBattler = buildDeathCandidate({ isActor: () => true, isDying: () => true });
+
+      jabsBattler.updateDeathHandling();
+
+      expect(jabsBattler.destroy).not.toHaveBeenCalled();
+    });
+
+    it('does nothing while waiting', () =>
+    {
+      globalThis.$gameMap = { isEventRunning: () => false };
+      const jabsBattler = buildDeathCandidate({ isWaiting: () => true, isDying: () => true });
+
+      jabsBattler.updateDeathHandling();
+
+      expect(jabsBattler.destroy).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when the event is already erased', () =>
+    {
+      globalThis.$gameMap = { isEventRunning: () => false };
+      const jabsBattler = buildDeathCandidate({
+        getCharacter: () => ({ isErased: () => true }), isDying: () => true,
+      });
+
+      jabsBattler.updateDeathHandling();
+
+      expect(jabsBattler.destroy).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when not dying', () =>
+    {
+      globalThis.$gameMap = { isEventRunning: () => false };
+      const jabsBattler = buildDeathCandidate({ isDying: () => false });
+
+      jabsBattler.updateDeathHandling();
+
+      expect(jabsBattler.destroy).not.toHaveBeenCalled();
+    });
+
+    it('does not self-destruct while an event is running', () =>
+    {
+      globalThis.$gameMap = { isEventRunning: () => true };
+      const jabsBattler = buildDeathCandidate({ isDying: () => true });
+
+      jabsBattler.updateDeathHandling();
+
+      expect(jabsBattler.destroy).not.toHaveBeenCalled();
+    });
+
+    it('self-destructs when dying, no event running, and not waiting/erased/actor', () =>
+    {
+      globalThis.$gameMap = { isEventRunning: () => false };
+      const jabsBattler = buildDeathCandidate({ isDying: () => true });
+
+      jabsBattler.updateDeathHandling();
+
+      expect(jabsBattler.destroy).toHaveBeenCalledTimes(1);
+    });
+  });
+  //endregion updates: dodge movement / death handling
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
