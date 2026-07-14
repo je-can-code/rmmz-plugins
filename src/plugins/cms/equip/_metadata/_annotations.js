@@ -14,4 +14,8 @@
  * You can also now press the square button (or equivalent of) to view the
  * detailed information relating to JABS (if applicable).
  * ============================================================================
+ * NOTE ABOUT NOTETAGS:
+ * This plugin has no notetags of its own- it is purely a scene/window
+ * redesign of the native equip menu.
+ * ============================================================================
  */

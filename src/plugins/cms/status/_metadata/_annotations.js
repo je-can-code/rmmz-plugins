@@ -32,6 +32,11 @@
  * edge-cases outside of how I use this.
  *
  * ============================================================================
+ * NOTE ABOUT NOTETAGS:
+ * This plugin has no notetags of its own- it is purely a scene/window
+ * redesign of the status menu that renders parameters sourced from the
+ * other listed plugins (which own their own respective tags).
+ * ============================================================================
  * CHANGELOG
  * ----------------------------------------------------------------------------
  * - 1.1.0
