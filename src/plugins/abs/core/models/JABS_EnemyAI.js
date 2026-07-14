@@ -413,12 +413,6 @@ class JABS_EnemyAI
     // leaders cannot lead other leaders.
     if (follower.getBattlerRole().leader) return false;
 
-    if (follower.hasLeader() && follower.getLeader() !== leader.getUuid())
-    {
-      leader.removeFollower(follower.getUuid());
-      return false;
-    }
-
     return true;
   }
 

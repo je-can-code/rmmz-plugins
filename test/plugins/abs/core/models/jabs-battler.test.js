@@ -764,24 +764,6 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       errorSpy.mockRestore();
     });
 
-    it('removeFollower does not remove a tracked follower since indexOf never matches a function', () =>
-    {
-      // KNOWN BUG: removeFollower calls this._followers.indexOf(uuid => uuid === oldFollowerUuid)-
-      // Array.prototype.indexOf searches for a value by strict equality, not a predicate, so it
-      // never matches an arrow function against string uuids in the array. This means the "found"
-      // branch (splice) is unreachable in practice; the method always falls through to the
-      // console.error branch below, even for a uuid that is genuinely tracked.
-      const jabsBattler = buildBattler();
-      jabsBattler._followers = [ 'tracked-follower' ];
-      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
-
-      jabsBattler.removeFollower('tracked-follower');
-
-      expect(jabsBattler._followers).toEqual([ 'tracked-follower' ]);
-      expect(errorSpy).toHaveBeenCalled();
-      errorSpy.mockRestore();
-    });
-
     it('clearFollowers clears leader data for each follower then empties the collection', () =>
     {
       globalThis.$gameMap = { clearLeaderDataByUuid: vi.fn() };

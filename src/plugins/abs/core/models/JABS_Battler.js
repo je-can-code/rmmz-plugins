@@ -944,24 +944,6 @@ class JABS_Battler
   };
 
   /**
-   * Removes the follower from
-   * @param {string} oldFollowerUuid The `uuid` of the follower to remove from tracking.
-   */
-  removeFollower(oldFollowerUuid)
-  {
-    const index = this._followers.indexOf(uuid => uuid === oldFollowerUuid);
-    if (index !== -1)
-    {
-      this._followers.splice(index, 1);
-    }
-    // otherwise fall back to the alternate path.
-    else
-    {
-      console.error('could not find follower to remove from the list.', oldFollowerUuid);
-    }
-  };
-
-  /**
    * Clears all current followers from this battler.
    */
   clearFollowers()
