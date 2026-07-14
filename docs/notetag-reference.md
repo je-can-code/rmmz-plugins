@@ -2541,3 +2541,158 @@ them.
 +2 tiles then 1.5x, but only on AoE splash radius — targeting reach and line/wall width untouched.
 
 **See also:** `<rangeBuff>`, `<rangeRate>`
+
+---
+
+### `<perDebuffBuff:N>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States
+
+**When:**
+the caster's action resolves against a target
+
+**Effect:**
+adds N% bonus damage per `<negative>`-tagged state currently active on the target — total is N ×
+debuff count, not a flat addition. Multiple tags sum their N first, then multiply by count.
+Negative N acts as a penalty against debuffed targets instead. Applied before guard reduction
+(guard still mitigates the amplified value, just less completely).
+
+```
+<perDebuffBuff:5>
+```
++5% damage per negative-tagged state on the target — three debuffs active = +15%.
+
+**See also:** `<bonusDamageIfState>`, `<negative>`
+
+---
+
+### `<bonusDamageIfState:[STATE_ID, PCT]>` / `<thisBonusDamageIfState:[STATE_ID, PCT]>`
+
+**Applies to:**
+`bonusDamageIfState`: Actors, Classes, Enemies, Weapons, Armors, States. `thisBonusDamageIfState`:
+Skills, Items.
+
+**When:**
+the caster's action resolves against a target carrying STATE_ID
+
+**Effect:**
+adds PCT% bonus damage if the target has this specific state active. Multiple tags for the same
+state id stack additively; different state ids each contribute independently. The `this*` variant
+is skill-scoped instead of caster-wide, so the bonus doesn't leak across the rest of the kit.
+
+```
+<bonusDamageIfState:[13, 25]>
+<bonusDamageIfState:[14, 25]>
+```
++25% each if the target is paralyzed (13) and/or rooted (14) — up to +50% if both are active.
+
+**See also:** `<perDebuffBuff>`, `<bonusDamageIfStateType>`
+
+---
+
+### `<thisBonusDamage:PCT>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+this specific skill is the action being resolved
+
+**Effect:**
+an unconditional flat percent damage bonus with no target-state requirement — just a per-skill
+multiplier. Multiple tags on the same skill stack additively. Useful for boosting one skill's
+damage without touching its formula.
+
+```
+<thisBonusDamage:20>
+```
+This skill always deals +20% damage, regardless of target state.
+
+---
+
+### `<bonusDamageIfStateType:[TYPE, PCT]>` / `<bonusDamagePerStateType:[TYPE, PCT]>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States
+
+**When:**
+the caster's action resolves against a target carrying a state with a matching `<type:TYPE>`
+classifier
+
+**Effect:**
+`bonusDamageIfStateType` is a presence check — PCT applies once if the target has ANY state
+carrying TYPE, regardless of how many. `bonusDamagePerStateType` instead multiplies PCT by the
+count of distinct matching states. Both match TYPE case-insensitively; multiple tags for
+different TYPEs contribute independently.
+
+```
+<bonusDamagePerStateType:[poison, 10]>
+```
++10% per distinct poison-typed state on the target — two active poison states = +20%.
+
+**See also:** `<stateTypeResist>`, `<stateTypeImmune>`
+
+---
+
+### `<bonusDamageIfSelfState:[STATE_ID, PCT]>` / `<thisBonusDamageIfSelfState:[STATE_ID, PCT]>`
+
+**Applies to:**
+`bonusDamageIfSelfState`: Actors, Classes, Enemies, Weapons, Armors, States.
+`thisBonusDamageIfSelfState`: Skills, Items.
+
+**When:**
+the caster's action resolves while the caster itself carries STATE_ID
+
+**Effect:**
+sibling to `<bonusDamageIfState>` but checks the caster's own active states instead of the
+target's — "empowered while buffed" kits. The `this*` variant is skill-scoped, layering on top of
+the caster-wide tag rather than replacing it.
+
+```
+<thisBonusDamageIfSelfState:[22, 40]>
+```
+This skill deals +40% damage only while the caster carries state 22 (e.g. a "Shadow Form" buff).
+
+---
+
+### `<bonusDamagePerStateStack:[STATE_ID, PCT]>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States
+
+**When:**
+the caster's action resolves against a target currently tracked as afflicted by STATE_ID
+
+**Effect:**
+adds PCT% bonus damage per current stack of that exact state on the target — stack depth, not
+distinct-state count. Contributes nothing if the target isn't currently tracked as afflicted by
+STATE_ID.
+
+```
+<bonusDamagePerStateStack:[8, 8]>
+```
++8% per stack of state 8 (e.g. Bleed) — 3 stacks = +24% bonus damage on this hit.
+
+**See also:** `<bonusDamagePerStateType>`, `<stackMax>`
+
+---
+
+### `<bonusDamageForMyStateCount:PCT>` / `<thisBonusDamageForMyStateCount:PCT>`
+
+**Applies to:**
+`bonusDamageForMyStateCount`: Actors, Classes, Enemies, Weapons, Armors, States.
+`thisBonusDamageForMyStateCount`: Skills, Items.
+
+**When:**
+the caster's action resolves against a target carrying states this exact caster applied
+
+**Effect:**
+adds PCT% bonus damage per distinct state on the target that this caster (specifically) is the
+source of — always live regardless of which skill is executing. The `this*` variant reads only
+from the executing skill's own note, stacking on top of the caster-wide tag.
+
+```
+<thisBonusDamageForMyStateCount:15>
+```
++15% per distinct state this caster personally applied to the target — 3 such states = +45%.
