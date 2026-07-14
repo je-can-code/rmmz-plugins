@@ -2015,3 +2015,191 @@ both axes. All projectiles from one skill share the same hitbox shape.
 A 120-degree forward wedge reaching 3 tiles.
 
 **See also:** `<radius>`, `<degrees>`
+
+---
+
+### `<degrees:VAL>` / `<thickness:VAL>` / `<innerRadius:VAL>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+always (shape-modifier tags)
+
+**Effect:**
+`degrees` (1-359) sets the angular width of an `arc` hitbox only (ignored elsewhere) — 180+
+becomes a full forward hemisphere. `thickness` adds perpendicular width to `line` (sideways) or
+`wall` (up/down) hitboxes only. `innerRadius` carves a universal dead zone out of the middle of
+any hitbox shape (a donut), measured from the target's center point; keep `radius - innerRadius`
+at least 0.5 tiles since targeting precision bottoms out around there.
+
+```
+<hitbox:circle>
+<radius:4>
+<innerRadius:2>
+```
+A ring-shaped hitbox: hits between 2 and 4 tiles from the origin, nothing closer.
+
+**See also:** `<hitbox>`, `<radius>`
+
+---
+
+### `<castTime:VAL>` / `<castAnimation:VAL>` / `<selfAnimationId:VAL>` / `<onCastAnimationId:VAL>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+before/during/at the moment of execution
+
+**Effect:**
+`castTime` is frames the battler must wait before the skill fires; `castAnimation` loops on the
+caster during that wait. `selfAnimationId` plays on the caster once the skill's hit lands.
+`onCastAnimationId` plays exactly once at the moment casting completes and the skill fires
+(distinct from the looping cast animation) — good for a "release" flourish after a "charge-up".
+
+```
+<castTime:60>
+<castAnimation:40>
+<onCastAnimationId:41>
+```
+A 1-second cast that loops animation 40, then plays animation 41 once as the skill fires.
+
+---
+
+### `<channel:[SKILL_ID, TOTAL_DURATION]>` / `<channelTickSpeed:VAL>` / `<onChannelComplete:[SKILL_ID, ...]>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+execution — turns this skill into a "vessel" instead of running its own effects
+
+**Effect:**
+pays this skill's own cost once, then repeatedly executes SKILL_ID every `channelTickSpeed`
+frames (default from plugin param) for TOTAL_DURATION frames total. The first tick fires after
+the first interval elapses, not immediately. `onChannelComplete` fires one or more skills for
+free, once, only if the channel runs its full duration uninterrupted.
+
+```
+<channel:[25, 180]>
+<channelTickSpeed:30>
+<onChannelComplete:[36]>
+```
+Fires skill 25 every 30 frames for 180 frames (6 executions total), then fires skill 36 for free
+if nothing interrupted the channel.
+
+---
+
+### `<cannotMoveToInterrupt>` / `<interrupt:MAGNIFIER>` / `<thisCannotBeInterrupted>` / `<cannotBeInterrupted>`
+
+**Applies to:**
+`cannotMoveToInterrupt` and `thisCannotBeInterrupted`: Skills, Items (the casting/channeling
+skill itself). `interrupt`: Skills, Items (an attacking skill). `cannotBeInterrupted`: Actors,
+Classes, Enemies, Weapons, Armors, States (battler-wide).
+
+**When:**
+during another battler's cast/channel window
+
+**Effect:**
+casting/channeling is normally interruptible by self-movement or by getting hit with an
+`<interrupt:MAGNIFIER>` skill — either way the in-flight skill never fires and a cooldown penalty
+stamps onto its slot (full effective cooldown for self-interrupt, or that cooldown ×
+MAGNIFIER/100 for an external interrupt). `cannotMoveToInterrupt` roots the caster in place so
+movement can never self-interrupt. `interrupt:MAGNIFIER` is what an attacker needs to interrupt
+someone else's cast on hit. `thisCannotBeInterrupted` makes one specific cast immune to external
+interrupts. `cannotBeInterrupted` is a battler-wide immunity read from any of the battler's own
+note sources, covering whatever it's casting.
+
+```
+<interrupt:200>
+```
+Landing this hit against a casting target doubles the cooldown penalty stamped on their
+interrupted skill.
+
+---
+
+### `<pierce:[TIMES, DELAY]>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+execution — governs collision resolution
+
+**Effect:**
+TIMES is the total connection budget (including the first hit); DELAY is frames to wait between
+connections. A skill can register at most one new connection per frame, so `DELAY:0` connects
+every frame its hitbox overlaps valid targets. JABS ignores the database "repeats" field entirely
+for both pierce and per-connection bonus hits.
+
+```
+<pierce:[3, 10]>
+```
+This skill can connect up to 3 times, with at least 10 frames between each connection.
+
+**See also:** `<bonus-hits>`
+
+---
+
+### `<bonus-hits:VAL>` / `<bonus-hits:[FORMULA]>`
+
+**Applies to:**
+Skills, Items
+
+**Formula context:**
+`a` = the caster at the moment the action is created, `b` = 0, `v` = `$gameVariables._data`.
+
+**When:**
+each pierce-step connection
+
+**Effect:**
+adds extra battle-effect applications per target on a connection, stacking with the battler-side
+`bonus-hits-*` family below. Accepts either a flat non-negative integer or a bracketed formula.
+The combined total across every bonus-hits source is floored once at the very end — formulas
+don't need their own `floor()`. If a parry triggers on the first application in a bundle, the
+rest of that bundle is skipped for that target; guard runs (and mitigates) every application.
+
+```
+<bonus-hits:[a.luk / 10]>
+```
+Grants extra hit applications per connection scaled off the caster's own LUK.
+
+**See also:** `<pierce>`
+
+---
+
+### `<knockback:VAL>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+on hit
+
+**Effect:**
+knocks the target back VAL tiles. See `<ignoreTerrain>` for how forced displacement handles
+obstacles along the push path, and `<knockbackResist>`/`<proximityKnockback>` for defensive
+counters.
+
+**See also:** `<ignoreTerrain>`, `<knockbackResist>`, `<proximityKnockback>`
+
+---
+
+### `<delay:[DURATION, TOUCHABLE]>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+execution — the action sits on the map before triggering
+
+**Effect:**
+DURATION is frames the action waits on the map before detonating (-1 = never auto-detonates —
+must be paired with TOUCHABLE:true or it sits forever). TOUCHABLE (true/false) controls whether
+walking into it triggers it early.
+
+```
+<delay:[300, true]>
+```
+Sits on the map for ~5 seconds; anyone who walks into it triggers it early.
