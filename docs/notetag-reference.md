@@ -3467,3 +3467,92 @@ event-level tag overrides whatever the database note or plugin default would oth
 <noDangerIndicator>
 ```
 This enemy never shows a danger indicator, even if the plugin default has it enabled globally.
+
+---
+
+## J-ABS-Food (`src/plugins/abs/ext/food/`)
+
+Adds food group chain states, a dedicated R2 food slot, and a JABS quick-menu Equip Food screen.
+Chain progression itself is authored via J-ABS core's `<applyStateOnExpire>`, not a tag from this
+plugin.
+
+### `<food:TYPE>`
+
+**Applies to:**
+Items
+
+**When:**
+always
+
+**Effect:**
+designates this item as a food item belonging to chain group TYPE (lowercase, e.g. `protein`,
+`vegetable`, `fruit`). Food items route to the dedicated R2 food slot and are excluded from the
+tool slot.
+
+```
+<food:protein>
+```
+This item is a Protein-group food, equippable in the R2 food slot.
+
+---
+
+### `<foodChain:TYPE>`
+
+**Applies to:**
+States
+
+**When:**
+always
+
+**Effect:**
+marks this state as belonging to food chain group TYPE — every phase state in one arc shares the
+same TYPE. The actual progression (which phase expires into which) is authored via J-ABS core's
+`<applyStateOnExpire>`, not this tag; this tag only identifies group membership for the HUD/logic
+that needs to know "is this a food-chain state, and which arc."
+
+```
+<foodChain:protein>
+<applyStateOnExpire:[90, 100]>
+```
+"Well Fed (Protein)" — part of the protein arc, always expires into state 90 ("Pumped").
+
+**See also:** `<applyStateOnExpire>`, `<foodGroupColor>`
+
+---
+
+### `<foodGroupColor:#RRGGBB>`
+
+**Applies to:**
+States
+
+**When:**
+always
+
+**Effect:**
+sets the hex color used for this phase state's segment in the food chain HUD bar. A phase state
+with no color tag renders as neutral grey instead.
+
+```
+<foodGroupColor:#44cc44>
+```
+This phase's segment renders in a green shade in the food chain bar.
+
+---
+
+### `<overstuffedImpervious>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States (any note-bearing source via `getAllNotes()`)
+
+**When:**
+re-feeding mid-arc
+
+**Effect:**
+"Field Medic" mastery — with this tag active on the leader, re-feeding during any phase
+(including Well Fed and peak phases) snaps straight to a fresh Well Fed instead of triggering the
+Overstuffed chain. Tail-phase re-feeding always rescues regardless of this tag.
+
+```
+<overstuffedImpervious>
+```
+This actor/passive prevents the Overstuffed chain from ever triggering on re-feed.
