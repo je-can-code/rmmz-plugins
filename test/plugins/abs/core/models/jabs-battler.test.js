@@ -75,12 +75,27 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
         constructor(uuid)
         {
           this._uuid = uuid;
-          this._aggro = 0;
+          this.aggro = 0;
         }
 
         uuid()
         {
           return this._uuid;
+        }
+
+        setAggro(value)
+        {
+          this.aggro = value;
+        }
+
+        modAggro(value)
+        {
+          this.aggro += value;
+        }
+
+        resetAggro()
+        {
+          this.aggro = 0;
         }
       },
     }));
@@ -4346,5 +4361,478 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion updates: dodge movement / death handling
+
+  //region aggro
+  describe('getAllAggros / getAggrosSortedHighestToLowest', () =>
+  {
+    it('getAllAggros returns the tracked aggro list', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._aggros = [ 'a', 'b' ];
+
+      expect(jabsBattler.getAllAggros()).toEqual([ 'a', 'b' ]);
+    });
+
+    it('sorts aggros from highest to lowest', () =>
+    {
+      const jabsBattler = buildBattler();
+      const low = { aggro: 1 };
+      const high = { aggro: 10 };
+      const mid = { aggro: 5 };
+      jabsBattler._aggros = [ low, high, mid ];
+
+      expect(jabsBattler.getAggrosSortedHighestToLowest()).toEqual([ high, mid, low ]);
+    });
+  });
+
+  describe('getHighestAggro', () =>
+  {
+    it('returns null when there are no aggros', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._aggros = [];
+
+      expect(jabsBattler.getHighestAggro()).toBeNull();
+    });
+
+    it('returns the single tracked aggro', () =>
+    {
+      const jabsBattler = buildBattler();
+      const only = { aggro: 5 };
+      jabsBattler._aggros = [ only ];
+
+      expect(jabsBattler.getHighestAggro()).toBe(only);
+    });
+
+    it('returns the clear highest of two distinct aggros', () =>
+    {
+      const jabsBattler = buildBattler();
+      const high = { aggro: 10 };
+      const low = { aggro: 5 };
+      jabsBattler._aggros = [ high, low ];
+
+      expect(jabsBattler.getHighestAggro()).toBe(high);
+    });
+
+    it('bumps the top aggro by 1 to break a tie with the second-highest', () =>
+    {
+      const jabsBattler = buildBattler();
+      const first = { aggro: 5, modAggro: vi.fn(function(amount) { this.aggro += amount; }) };
+      const second = { aggro: 5, modAggro: vi.fn() };
+      jabsBattler._aggros = [ first, second ];
+
+      const result = jabsBattler.getHighestAggro();
+
+      expect(first.modAggro).toHaveBeenCalledWith(1, true);
+      expect(result).toBe(first);
+    });
+  });
+
+  describe('aggro validity / removal', () =>
+  {
+    it('isAggroInvalid is true when the battler cannot be found', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => null);
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.isAggroInvalid('uuid')).toBe(true);
+    });
+
+    it('isAggroInvalid is true when the battler is dead', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ isDead: () => true }));
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.isAggroInvalid('uuid')).toBe(true);
+    });
+
+    it('isAggroInvalid is true when the battler is out of range', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ isDead: () => false, outOfRange: () => true }));
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.isAggroInvalid('uuid')).toBe(true);
+    });
+
+    it('isAggroInvalid is false for a valid, alive, in-range battler', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ isDead: () => false, outOfRange: () => false }));
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.isAggroInvalid('uuid')).toBe(false);
+    });
+
+    it('removeAggroIfInvalid removes aggro only when invalid', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isAggroInvalid = () => false;
+      jabsBattler.removeAggro = vi.fn();
+      jabsBattler.removeAggroIfInvalid('uuid');
+      expect(jabsBattler.removeAggro).not.toHaveBeenCalled();
+
+      jabsBattler.isAggroInvalid = () => true;
+      jabsBattler.removeAggroIfInvalid('uuid');
+      expect(jabsBattler.removeAggro).toHaveBeenCalledWith('uuid');
+    });
+
+    it('removeAggro does nothing for an untracked uuid', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._aggros = [];
+      jabsBattler.disengageTarget = vi.fn();
+
+      jabsBattler.removeAggro('uuid');
+
+      expect(jabsBattler.disengageTarget).not.toHaveBeenCalled();
+      expect(jabsBattler._aggros).toEqual([]);
+    });
+
+    it('removeAggro disengages when removing the aggro of the current target', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._aggros = [ { uuid: () => 'target-uuid' } ];
+      jabsBattler.setTarget({ getUuid: () => 'target-uuid' });
+      jabsBattler.disengageTarget = vi.fn();
+
+      jabsBattler.removeAggro('target-uuid');
+
+      expect(jabsBattler.disengageTarget).toHaveBeenCalledTimes(1);
+      expect(jabsBattler._aggros).toEqual([]);
+    });
+
+    it('removeAggro removes without disengaging when the uuid is not the current target', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._aggros = [ { uuid: () => 'other-uuid' } ];
+      jabsBattler.setTarget({ getUuid: () => 'target-uuid' });
+      jabsBattler.disengageTarget = vi.fn();
+
+      jabsBattler.removeAggro('other-uuid');
+
+      expect(jabsBattler.disengageTarget).not.toHaveBeenCalled();
+      expect(jabsBattler._aggros).toEqual([]);
+    });
+  });
+
+  describe('addUpdateAggro / resetOneAggro / resetAllAggro / aggroExists', () =>
+  {
+    function buildAggroableBattler(overrides = {})
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isAggroLocked: () => false });
+      Object.assign(jabsBattler, overrides);
+      return jabsBattler;
+    }
+
+    it('addUpdateAggro does nothing when locked and not forced', () =>
+    {
+      const jabsBattler = buildAggroableBattler({ getBattler: () => ({ isAggroLocked: () => true }) });
+
+      jabsBattler.addUpdateAggro('uuid', 5);
+
+      expect(jabsBattler.getAllAggros()).toEqual([]);
+    });
+
+    it('addUpdateAggro bypasses the lock when forced', () =>
+    {
+      const jabsBattler = buildAggroableBattler({ getBattler: () => ({ isAggroLocked: () => true }) });
+
+      jabsBattler.addUpdateAggro('uuid', 5, true);
+
+      expect(jabsBattler.getAllAggros()).toHaveLength(1);
+    });
+
+    it('addUpdateAggro creates a new aggro tracker for an unseen uuid', () =>
+    {
+      const jabsBattler = buildAggroableBattler();
+
+      jabsBattler.addUpdateAggro('uuid', 5);
+
+      const [ created ] = jabsBattler.getAllAggros();
+      expect(created.uuid()).toBe('uuid');
+      expect(created.aggro).toBe(5);
+    });
+
+    it('addUpdateAggro updates an existing aggro tracker', () =>
+    {
+      const jabsBattler = buildAggroableBattler();
+      jabsBattler.addUpdateAggro('uuid', 5);
+
+      jabsBattler.addUpdateAggro('uuid', 3);
+
+      expect(jabsBattler.getAllAggros()).toHaveLength(1);
+      expect(jabsBattler.getAllAggros()[0].aggro).toBe(8);
+    });
+
+    it('aggroExists finds a tracked aggro by uuid', () =>
+    {
+      const jabsBattler = buildAggroableBattler();
+      jabsBattler.addUpdateAggro('uuid', 5);
+
+      expect(jabsBattler.aggroExists('uuid')).toBeDefined();
+      expect(jabsBattler.aggroExists('other')).toBeUndefined();
+    });
+
+    it('resetOneAggro does nothing when locked and not forced', () =>
+    {
+      const jabsBattler = buildAggroableBattler({ getBattler: () => ({ isAggroLocked: () => true }) });
+      jabsBattler.addUpdateAggro = vi.fn();
+
+      jabsBattler.resetOneAggro('uuid');
+
+      expect(jabsBattler.addUpdateAggro).not.toHaveBeenCalled();
+    });
+
+    it('resetOneAggro resets an existing tracked aggro', () =>
+    {
+      const jabsBattler = buildAggroableBattler();
+      jabsBattler.addUpdateAggro('uuid', 5);
+
+      jabsBattler.resetOneAggro('uuid');
+
+      expect(jabsBattler.getAllAggros()[0].aggro).toBe(0);
+    });
+
+    it('resetOneAggro does nothing for an empty uuid with no existing tracker', () =>
+    {
+      const jabsBattler = buildAggroableBattler();
+
+      jabsBattler.resetOneAggro('');
+
+      expect(jabsBattler.getAllAggros()).toEqual([]);
+    });
+
+    it('resetOneAggro creates a fresh zero-aggro tracker for an untracked, non-empty uuid', () =>
+    {
+      const jabsBattler = buildAggroableBattler();
+
+      jabsBattler.resetOneAggro('uuid');
+
+      expect(jabsBattler.getAllAggros()).toHaveLength(1);
+      expect(jabsBattler.getAllAggros()[0].aggro).toBe(0);
+    });
+
+    it('resetAllAggro does nothing when locked and not forced', () =>
+    {
+      const jabsBattler = buildAggroableBattler({ getBattler: () => ({ isAggroLocked: () => true }) });
+      jabsBattler.resetOneAggro = vi.fn();
+
+      jabsBattler.resetAllAggro('uuid');
+
+      expect(jabsBattler.resetOneAggro).not.toHaveBeenCalled();
+    });
+
+    it('resetAllAggro resets the triggering uuid and every tracked aggro', () =>
+    {
+      const jabsBattler = buildAggroableBattler();
+      jabsBattler.addUpdateAggro('a', 5);
+      jabsBattler.addUpdateAggro('b', 7);
+
+      jabsBattler.resetAllAggro('a');
+
+      expect(jabsBattler.getAllAggros().every(aggro => aggro.aggro === 0)).toBe(true);
+    });
+  });
+
+  describe('adjustTargetByAggro', () =>
+  {
+    it('does nothing for inanimate battlers', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => true;
+      jabsBattler.getHighestAggro = vi.fn();
+
+      jabsBattler.adjustTargetByAggro();
+
+      expect(jabsBattler.getHighestAggro).not.toHaveBeenCalled();
+    });
+
+    it('adopts the highest-aggro battler as the target when there is no current target', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const newTarget = { id: 'new-target' };
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => newTarget);
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+
+      jabsBattler.adjustTargetByAggro();
+
+      expect(jabsBattler.getTarget()).toBe(newTarget);
+    });
+
+    it('leaves the target unset when no battler is found without a current target', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => null);
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+
+      jabsBattler.adjustTargetByAggro();
+
+      expect(jabsBattler.getTarget()).toBeNull();
+    });
+
+    it('disengages when the current target has no remaining aggros', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+      jabsBattler.setTarget({ getUuid: () => 'target-uuid' });
+      jabsBattler.removeAggroIfInvalid = vi.fn();
+      jabsBattler.getAggrosSortedHighestToLowest = () => [];
+      jabsBattler.disengageTarget = vi.fn();
+
+      jabsBattler.adjustTargetByAggro();
+
+      expect(jabsBattler.disengageTarget).toHaveBeenCalledTimes(1);
+    });
+
+    it('switches to the sole remaining aggro target when it differs from the current target', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const newTarget = { id: 'new-target' };
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => newTarget);
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+      jabsBattler.setTarget({ getUuid: () => 'current-uuid' });
+      jabsBattler.removeAggroIfInvalid = vi.fn();
+      jabsBattler.getAggrosSortedHighestToLowest = () => [ { uuid: () => 'sole-uuid' } ];
+
+      jabsBattler.adjustTargetByAggro();
+
+      expect(jabsBattler.getTarget()).toBe(newTarget);
+    });
+
+    it('purges the sole remaining aggro when its battler cannot be found', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => null);
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+      jabsBattler.setTarget({ getUuid: () => 'current-uuid' });
+      jabsBattler.removeAggroIfInvalid = vi.fn();
+      jabsBattler.getAggrosSortedHighestToLowest = () => [ { uuid: () => 'sole-uuid' } ];
+      jabsBattler.removeAggro = vi.fn();
+
+      jabsBattler.adjustTargetByAggro();
+
+      expect(jabsBattler.removeAggro).toHaveBeenCalledWith('sole-uuid');
+    });
+
+    it('keeps the current target when it already matches the sole remaining aggro', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+      const target = { getUuid: () => 'sole-uuid' };
+      jabsBattler.setTarget(target);
+      jabsBattler.removeAggroIfInvalid = vi.fn();
+      jabsBattler.getAggrosSortedHighestToLowest = () => [ { uuid: () => 'sole-uuid' } ];
+
+      jabsBattler.adjustTargetByAggro();
+
+      expect(jabsBattler.getTarget()).toBe(target);
+    });
+
+    it('gives up with multiple aggros when there is no current target', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+      jabsBattler.removeAggroIfInvalid = vi.fn();
+      jabsBattler.getAggrosSortedHighestToLowest = () => [ { uuid: () => 'a' }, { uuid: () => 'b' } ];
+      jabsBattler.setTarget(null);
+
+      expect(() => jabsBattler.adjustTargetByAggro()).not.toThrow();
+    });
+
+    it('does not adjust targets when all aggro\'d targets are out of pursuit range', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ id: 'far' }));
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+      const target = { getUuid: () => 'current-uuid' };
+      jabsBattler.setTarget(target);
+      jabsBattler.removeAggroIfInvalid = vi.fn();
+      jabsBattler.getAggrosSortedHighestToLowest = () => [ { uuid: () => 'a' }, { uuid: () => 'b' } ];
+      jabsBattler.getPursuitRadius = () => 5;
+      jabsBattler.distanceToDesignatedTarget = () => 10;
+
+      jabsBattler.adjustTargetByAggro();
+
+      expect(jabsBattler.getTarget()).toBe(target);
+    });
+
+    it('engages the highest in-range aggro target when it differs from the current target', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const newTarget = { id: 'new-target' };
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => newTarget);
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+      jabsBattler.setTarget({ getUuid: () => 'current-uuid' });
+      jabsBattler.removeAggroIfInvalid = vi.fn();
+      jabsBattler.getAggrosSortedHighestToLowest = () => [ { uuid: () => 'a' }, { uuid: () => 'b' } ];
+      jabsBattler.getPursuitRadius = () => 100;
+      jabsBattler.distanceToDesignatedTarget = () => 1;
+      jabsBattler.engageTarget = vi.fn();
+
+      jabsBattler.adjustTargetByAggro();
+
+      expect(jabsBattler.engageTarget).toHaveBeenCalledWith(newTarget);
+    });
+
+    it('purges the highest in-range aggro when its battler cannot be found', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn()
+        .mockReturnValueOnce({ id: 'existence-check' })
+        .mockReturnValueOnce(null);
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+      jabsBattler.setTarget({ getUuid: () => 'current-uuid' });
+      jabsBattler.removeAggroIfInvalid = vi.fn();
+      jabsBattler.getAggrosSortedHighestToLowest = () => [ { uuid: () => 'a' }, { uuid: () => 'b' } ];
+      jabsBattler.getPursuitRadius = () => 100;
+      jabsBattler.distanceToDesignatedTarget = () => 1;
+      jabsBattler.removeAggro = vi.fn();
+
+      jabsBattler.adjustTargetByAggro();
+
+      expect(jabsBattler.removeAggro).toHaveBeenCalledWith('a');
+    });
+
+    it('leaves the target alone when it already matches the highest in-range aggro', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+      const target = { getUuid: () => 'a' };
+      jabsBattler.setTarget(target);
+      jabsBattler.removeAggroIfInvalid = vi.fn();
+      jabsBattler.getAggrosSortedHighestToLowest = () => [ { uuid: () => 'a' }, { uuid: () => 'b' } ];
+      jabsBattler.getPursuitRadius = () => 100;
+      jabsBattler.distanceToDesignatedTarget = () => 1;
+      jabsBattler.engageTarget = vi.fn();
+
+      jabsBattler.adjustTargetByAggro();
+
+      expect(jabsBattler.engageTarget).not.toHaveBeenCalled();
+      expect(jabsBattler.getTarget()).toBe(target);
+    });
+  });
+  //endregion aggro
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
