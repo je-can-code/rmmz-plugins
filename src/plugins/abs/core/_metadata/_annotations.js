@@ -759,6 +759,29 @@
  *    <gcd:FRAMES>
  *  Overrides default GCD length for this skill when it triggers GCD.
  *
+ * COOLDOWN REDUCTION (CDR):
+ * A battler-wide stat that shrinks how long the global cooldown lasts once
+ * it's triggered. This is not a per-skill tag -- it's summed from every note
+ * source on the battler (actor, class, weapons, armors, states) and cached
+ * as a single percent-point value, same as a stat like ATK would be.
+ *    <cdr:[FORMULA]>
+ *  Where FORMULA resolves to the percent-points of cooldown reduction this
+ *  source contributes. All matching sources are summed together.
+ *
+ * Formula context: a = the battler being evaluated, b = 0, v = $gameVariables._data.
+ *
+ * EXAMPLE:
+ *    <cdr:[10]>
+ *  This source grants a flat +10 percent-points of CDR.
+ *
+ *    <cdr:[a.luk * 0.1]>
+ *  This source grants CDR scaled off the battler's own LUK.
+ *
+ * NOTE: The final summed value is converted from percent-points to a decimal
+ * before use (e.g. 25 percent-points becomes 0.25) and clamped at 0 on the
+ * low end by the GCD length math (Math.max(0, baseFrames * (1 - cdr))). A
+ * total of 100 or more percent-points reduces GCD length to zero frames.
+ *
  * ----------------------------------------------------------------------------
  * RADIUS:
  * How large the hitbox of this skill is, using tiles as measurement.
@@ -856,6 +879,26 @@
  *
  * NOTE: There is no hard cap, but keep the count reasonable to avoid
  * performance issues.
+ *
+ * PROJECTILE DURATION:
+ * A battler-wide percent-point modifier against how long ALL of this
+ * battler's map actions (projectiles, hitboxes, everything with a
+ * <duration:FRAMES> tag) persist on the map. This is not a per-skill tag --
+ * it's summed from every note source on the battler (actor, class,
+ * weapons, armors, states), same as CDR/PER above.
+ *    <projectileDuration:PERCENT_POINTS>
+ *  Where PERCENT_POINTS is the percent-point offset from the 100 baseline.
+ *  All matching sources are summed together before being applied.
+ *
+ * EXAMPLE:
+ *    <projectileDuration:50>
+ *  This source makes this battler's map actions last 150% as long (100 + 50).
+ *
+ *    <projectileDuration:-40>
+ *  This source makes this battler's map actions last 60% as long (100 - 40).
+ *
+ * NOTE: The combined total is clamped so the resulting multiplier never
+ * drops below 0 (a total of -100 or less reduces duration to nothing).
  *
  * ----------------------------------------------------------------------------
  * FORMATION:
@@ -1102,6 +1145,14 @@
  *    <knockback:VAL>
  *  Where VAL is the distance the target will be knocked back.
  *
+ * IGNORE TERRAIN:
+ * By default, forced displacement (knockback, pull, etc.) walks the target
+ * tile-by-tile toward the destination and stops early at the last passable
+ * tile if terrain blocks the rest of the way. With this tag, the target
+ * instead jumps straight to the computed destination, sailing over pits,
+ * gaps, or anything else that would normally halt the walk.
+ *    <ignoreTerrain>
+ *
  * ----------------------------------------------------------------------------
  * DELAY:
  * Allows a skill to sit on the map for a duration before triggering.
@@ -1240,6 +1291,29 @@
  * Makes a skill unable to be parried under any circumstances.
  *    <unparryable>
  *
+ * PARRY EXTENSION RATE (PER):
+ * A battler-wide stat that widens the parry window (see PARRY above). This
+ * is not a per-skill tag -- it's summed from every note source on the
+ * battler (actor, class, weapons, armors, states) and cached as a single
+ * percent-point value, same as CDR above.
+ *    <per:[FORMULA]>
+ *  Where FORMULA resolves to the percent-points of parry extension this
+ *  source contributes. All matching sources are summed together.
+ *
+ * Formula context: a = the battler being evaluated, b = 0, v = $gameVariables._data.
+ *
+ * EXAMPLE:
+ *    <per:[15]>
+ *  This source grants a flat +15 percent-points of parry window extension.
+ *
+ *    <per:[a.agi * 0.2]>
+ *  This source extends the parry window scaled off the battler's own AGI.
+ *
+ * NOTE: The final summed value is converted from percent-points to a decimal
+ * (e.g. 50 percent-points becomes 0.50) and applied as a multiplier against
+ * the skill's parry window: Math.floor((1 + per) * parryDuration). A total
+ * of 50 percent-points makes the parry window 1.5x as long.
+ *
  * ============================================================================
  * ON-CHANCE EFFECTS:
  * These tags define skills that can fire under special circumstances.
@@ -1333,6 +1407,81 @@
  *
  * Use this for counter-attacks, gap-closers, or any skill that should
  * trigger automatically when the battler successfully evades.
+ *
+ * ============================================================================
+ * ON-CHANCE ROLL MANIPULATION (LUCKY/CURSED ROLLS):
+ * Nearly every on-chance roll in JABS (hit, crit, state application, and
+ * skill procs) isn't a single roll -- it's a "best of N" roll for the party
+ * rolling toward success and a "best of N" roll for the party rolling
+ * toward failure, where N defaults to 1 for each side. These tags let you
+ * add extra rolls to either side of that contest.
+ *
+ * Formula context: a = the battler being evaluated, b = 0, v = $gameVariables._data.
+ *
+ * LUCKY ROLLS:
+ * Battler-wide extra positive rerolls, summed from all note sources. This
+ * battler gets an extra roll toward success any time IT is the one trying
+ * to succeed (landing a hit, applying a state, scoring a crit, proccing a
+ * bonus-hit or retaliate check).
+ *    <luckyRolls:[FORMULA]>
+ *  Where FORMULA resolves to the number of bonus positive rolls to grant.
+ *
+ * THIS LUCKY ROLLS:
+ * Skill-scoped variant. Adds on top of the battler-wide total, but only
+ * while this specific skill is executing.
+ *    <thisLuckyRolls:[FORMULA]>
+ *
+ * CURSED ROLLS:
+ * Battler-wide extra negative rerolls, summed from all note sources. This
+ * battler gets an extra roll toward failure any time it is on the
+ * receiving end of a chance roll (an incoming hit trying to land, an
+ * incoming state trying to apply).
+ *    <cursedRolls:[FORMULA]>
+ *  Where FORMULA resolves to the number of bonus negative rolls to grant.
+ *
+ * THIS CURSED ROLLS:
+ * Skill-scoped variant, layered on top of the battler-wide total. Applies
+ * while the target is defending against this specific incoming skill.
+ *    <thisCursedRolls:[FORMULA]>
+ *
+ * EXAMPLE:
+ *    <luckyRolls:[Math.floor(a.luk / 20)]>
+ *  Grants one bonus positive roll per 20 points of this battler's own LUK.
+ *
+ * VERY LUCKY / VERY CURSED:
+ * Boolean bypass flags rather than reroll counts. These short-circuit the
+ * roll contest entirely instead of adding more dice to it.
+ *    <veryLucky>
+ *  This battler's on-chance rolls always succeed when it is the roller.
+ *    <veryCursed>
+ *  This battler's on-chance rolls always fail when it is the roller.
+ *
+ * NOTE: veryLucky/veryCursed are checked before any reroll math runs, so a
+ * battler with both tags present resolves to whichever the engine checks
+ * first (lucky wins ties) -- avoid stacking both on the same battler.
+ *
+ * ----------------------------------------------------------------------------
+ * ENCORE REPEATS (BONUS PROC EXECUTIONS):
+ * A battler-wide bonus to how many times a successful on-chance proc (bonus
+ * hits, retaliate, on-evade, on-defeat, etc.) actually executes once it
+ * succeeds. A proc that would normally fire once instead fires
+ * 1 + encoreRepeats times.
+ *    <encoreRepeats:[FORMULA]>
+ *  Where FORMULA resolves to the number of bonus executions per success.
+ *
+ * Formula context: a = the battler being evaluated, b = 0, v = $gameVariables._data.
+ *
+ * ACCUMULATE MODE:
+ * By default, a chance-roll contest stops rolling the instant it finds one
+ * success (or exhausts all rolls without one). With <accumulate>, every
+ * single positive roll in the contest is counted instead of stopping at
+ * the first success, and that count feeds into how many times the proc
+ * executes -- stacking with (not replacing) ENCORE REPEATS above.
+ *    <accumulate>
+ *
+ * Use ACCUMULATE MODE for "the luckier you get, the more it snowballs"
+ * builds; use plain LUCKY ROLLS/ENCORE REPEATS for a steady, predictable
+ * bonus instead.
  *
  * ============================================================================
  * SKILL HISTORY BONUS:
@@ -1641,6 +1790,59 @@
  * If the target has two different poison-typed states active simultaneously,
  * typeCountBonusPct from this tag = 10 * 2 = 20%.
  *
+ * ----------------------------------------------------------------------------
+ * BONUS DAMAGE IF SELF STATE:
+ * Sibling to BONUS DAMAGE IF STATE above, but checks the caster's own active
+ * states instead of the target's. Great for "empowered while buffed" kits.
+ *    <bonusDamageIfSelfState:[STATE_ID, PCT]>
+ *  Where STATE_ID is the state that must be active on the caster.
+ *  Where PCT is the integer percent bonus to add while that state is active.
+ *
+ * THIS BONUS DAMAGE IF SELF STATE:
+ * Skill-scoped variant. Only applies while this exact skill is executing,
+ * layering on top of the caster-wide <bonusDamageIfSelfState> tag rather
+ * than replacing it.
+ *    <thisBonusDamageIfSelfState:[STATE_ID, PCT]>
+ *
+ * Example — a rogue's "Shadow Form" empowers only their finishers:
+ *    <thisBonusDamageIfSelfState:[STATE_SHADOW_FORM_ID, 40]>
+ *
+ * ----------------------------------------------------------------------------
+ * BONUS DAMAGE PER STATE STACK:
+ * Adds PCT% bonus damage per current stack of a specific named state active
+ * on the target. Unlike BONUS DAMAGE PER STATE TYPE, which counts distinct
+ * states of a type, this counts the stack depth of one exact state id.
+ *    <bonusDamagePerStateStack:[STATE_ID, PCT]>
+ *  Where STATE_ID is the exact state id to read stacks from.
+ *  Where PCT is the integer percent bonus to add per stack.
+ *
+ * Example — "Exploit Wounds": +8% damage per stack of Bleed on the target:
+ *    <bonusDamagePerStateStack:[STATE_BLEED_ID, 8]>
+ * A target with 3 stacks of Bleed takes +24% bonus damage from this hit.
+ *
+ * NOTE: If the target is not currently tracked as afflicted by STATE_ID
+ * (state absent, or somehow untracked), this tag contributes nothing.
+ *
+ * ----------------------------------------------------------------------------
+ * BONUS DAMAGE FOR MY STATE COUNT:
+ * Adds PCT% bonus damage for every distinct state on the target that this
+ * exact caster is the one who applied. This lives entirely on the caster's
+ * own notes (actor/class/weapon/armor/state), not on the skill — it's a
+ * passive that's always live regardless of which skill is executing.
+ *    <bonusDamageForMyStateCount:PCT>
+ *  Where PCT is the integer percent bonus per distinct caster-authored state.
+ *
+ * THIS BONUS DAMAGE FOR MY STATE COUNT:
+ * Skill-scoped variant. Reads only from the executing skill's own note,
+ * stacking on top of the caster-wide tag above rather than replacing it.
+ *    <thisBonusDamageForMyStateCount:PCT>
+ *
+ * Example — a debuffer whose finisher scales off their own handiwork:
+ *    <thisBonusDamageForMyStateCount:15>
+ *  If this caster personally applied 3 different states currently active on
+ *  the target (regardless of who else also has states on it), this skill
+ *  gains +45% bonus damage (15 * 3).
+ *
  * ============================================================================
  * APPLY STATE ON EXPIRE:
  * When a state expires by its natural frame-counter reaching zero, this tag
@@ -1666,6 +1868,37 @@
  *
  * Only one <applyStateOnExpire> tag per state is read (the first match).
  * The follow-up state inherits the same source battler as the expiring state.
+ *
+ * ----------------------------------------------------------------------------
+ * PURGE STATES:
+ * A cleanse/dispel effect placed on a SKILL. When this skill lands a hit
+ * (parried and evaded actions do not trigger it), it strips one or more
+ * states off the target by priority, highest-priority state first.
+ *    <purgeStates:[TYPE, ALLOW_DEATH, COUNT]>
+ *  Where TYPE is one of "negative" (only <negative>-tagged states,
+ *    default), "positive" (only states NOT tagged <negative>), or "all"
+ *    (no polarity filter).
+ *  Where ALLOW_DEATH is true/false for whether the death state (id 1) is
+ *    eligible for removal (default false).
+ *  Where COUNT is how many states to strip, highest priority first
+ *    (default 1).
+ *
+ * All three parameters are optional and fall back to their defaults if
+ * omitted or malformed.
+ *
+ * EXAMPLES:
+ *    <purgeStates:[negative, false, 1]>
+ *  Strips the single highest-priority negative state from the target.
+ *  Equivalent to the tag's own defaults.
+ *
+ *    <purgeStates:[all, false, 3]>
+ *  A "cleanse burst" that strips up to 3 states (any polarity, never
+ *  death) from the target, highest priority first.
+ *
+ * NO LOGS:
+ * Place on a STATE to suppress its own removal from being written to the
+ * `Map_TextLog` when it is stripped via <purgeStates>.
+ *    <noLogs>
  *
  * ============================================================================
  * STATE SPREADING:
@@ -1828,6 +2061,18 @@
  * Like equipment, assign a SKILL_ID to them to make them usable:
  *    <skillId:SKILL_ID>
  *  Where SKILL_ID is the skill to perform from the tool slot.
+ *
+ * WHICH ITEMS QUALIFY AS TOOLS:
+ * Place this tag on the item itself to mark it as belonging in the tool
+ * slot (hookshots, bombs, and other equippable-from-the-menu items):
+ *    <jabsTool>
+ *  Without this tag, an item is instead treated as a consumable and shows
+ *  up in the usable-item slot's list instead of the tool slot's list.
+ *
+ * NOTE: The tag alone is not the whole story -- the item's Item Type must
+ * also be "Regular Item" and Occasion must be "Always" for it to actually
+ * populate either the tool or usable-item menu. <jabsTool> only decides
+ * which of those two menus a qualifying item lands in.
  *
  * ----------------------------------------------------------------------------
  * DODGE SLOT:
@@ -2123,13 +2368,23 @@
  *  Where VAL is the % of max value to gain or lose per 5 seconds.
  *
  * FORMULA:
- * Allows damage that scales with battler stats. "a" is the afflicted
- * battler, "b" is the one who applied the state, "v" is variables,
- * and "s" is the state object.
+ * Allows damage that scales with battler stats.
  *    <hpFormula:[FORMULA]>
  *    <mpFormula:[FORMULA]>
  *    <tpFormula:[FORMULA]>
  *  Where FORMULA is a damage-like formula to calculate VAL per 5 sec.
+ *
+ * Formula context: "a" is the battler who applied the state (the source),
+ * "b" is the battler afflicted by the state (the one ticking), "v" is
+ * variables, and "s" is the state object itself. If the state was applied
+ * to oneself (self-inflicted), a and b are the same battler.
+ *
+ * NOTE ABOUT SIGN: write this formula the same way you would a normal
+ * damage formula, where a positive result means "harm". The engine negates
+ * the formula's output internally before adding it to the slip total, so a
+ * positive formula result becomes a loss and a negative formula result
+ * becomes a gain -- this is the opposite convention from FLAT and PERCENT
+ * above, where positive VAL is explicitly a gain.
  *
  * EXAMPLES:
  *    <hpFlat:-100>
@@ -2138,12 +2393,66 @@
  *    <mpPercent:50>
  *  Lose 50% max MP over five seconds (2.5% per tick).
  *
- *    <tpFormula:[(a.atk * 2)]>
- *  Gain TP equal to 200% of own ATK over five seconds.
+ *    <tpFormula:[-(a.atk * 2)]>
+ *  Gain TP equal to 200% of the source's ATK over five seconds (negative
+ *  formula result = gain, per the sign note above).
+ *
+ *    <hpFormula:[(a.mat * 3)]>
+ *  Lose HP equal to 300% of the source's MAT over five seconds (positive
+ *  formula result = harm, just like a damage formula).
  *
  * NOTE ABOUT VAL OUTPUT:
  * Multiples of 20 are a handy mental shortcut: val 20 = 1 per tick,
  * val 40 = 2 per tick, and so on.
+ *
+ * TICK SPEED:
+ * Slip/regen effects don't tick every frame -- they tick on an interval
+ * (5-second base for state slips, a separate configurable interval for
+ * natural HP/MP/TP regen). These tags are battler-wide modifiers against
+ * that interval, summed from every note source on the battler (actor,
+ * class, weapons, armors, states).
+ *
+ *    <tickSpeedFlat:VAL>
+ *  Where VAL is a flat number of frames added to (or, if negative,
+ *  subtracted from) the base tick interval. Positive VAL = slower ticks
+ *  (longer wait between them); negative VAL = faster ticks.
+ *
+ *    <tickSpeedPercent:VAL>
+ *  Where VAL is a percent applied against the interval as a divisor:
+ *  interval / (1 + VAL / 100). Positive VAL = faster ticks (shorter
+ *  interval); negative VAL = slower ticks. Note this is the OPPOSITE sign
+ *  convention from tickSpeedFlat above -- a positive flat value slows ticks
+ *  down, but a positive percent value speeds them up.
+ *
+ *    <tickSpeedTypePercent:[TYPE, VAL]>
+ *  A percent modifier scoped to a single <type:TYPE> classifier (the same
+ *  classifier family used by <stateTypeResist>/<stateTypeImmune> above)
+ *  rather than applying universally. Only contributes when the state or
+ *  regen source actually carries a matching <type:TYPE> tag. Same sign
+ *  convention as tickSpeedPercent (positive = faster).
+ *
+ * Both flat and percent modifiers apply together: the flat offset is added
+ * to the base interval first, then the combined percent divides the result.
+ * The final interval is floored at a small minimum (the plugin's
+ * "Minimum State Tick Interval" parameter, never below 1 frame) so ticks
+ * can never be reduced to zero or negative frames.
+ *
+ * PER-STATE TICK SPEED OVERRIDE:
+ * Independent of the modifiers above, an individual state can declare its
+ * own fixed tick interval rather than using the shared base interval:
+ *    <thisTickSpeed:FRAMES>
+ *  Where FRAMES is this state's own tick interval, ignoring the plugin
+ *  parameter default entirely. The flat/percent modifiers above still
+ *  apply on top of this override the same way they would the default.
+ *
+ * EXAMPLE:
+ *    <tickSpeedPercent:100>
+ *  This source doubles this battler's slip/regen tick frequency (ticks
+ *  twice as often).
+ *
+ *    <tickSpeedTypePercent:[poison, 50]>
+ *  This source ticks poison-typed states 50% faster, but has no effect on
+ *  any other state.
  *
  * STATE DURATIONS (map / ABS):
  * J-ABS does not use MZ "Remove by Walking" for map timers. That checkbox only
@@ -2182,10 +2491,17 @@
  *  Where VAL is the % of base duration to add (can be negative).
  *
  * FORMULA:
- *    <stateDurationForm:[FORMULA]>
+ *    <stateDurationFormula:[FORMULA]>
  *  Where FORMULA calculates bonus frames to add to the base duration.
- *  "a" is the afflicted battler, "b" is the base duration, "v" is
- *  the variable store.
+ *
+ * Formula context: a = the assailant applying the state (whose notes are
+ * being summed), b = the base duration in frames before any boosts,
+ * v = $gameVariables._data.
+ *
+ * EXAMPLE:
+ *    <stateDurationFormula:[a.luk * 2]>
+ *  Adds bonus frames to every state this battler applies, scaled off their
+ *  own LUK.
  *
  * ============================================================================
  * PER-STATE REAPPLY OVERRIDES:
@@ -2222,6 +2538,15 @@
  *    <loseAllStacksAtOnce>
  *  If present, all stacks are lost at once upon expiration rather
  *  than losing one stack and refreshing.
+ *
+ *    <stackOnExpire>
+ *  Inverts the normal expiration behavior entirely: instead of losing a
+ *  stack when duration runs out, the state GAINS a stack and re-arms its
+ *  own duration indefinitely, with no external reapplication needed. This
+ *  is a self-perpetuating "ticking clock" state -- once applied, it keeps
+ *  building stacks on its own timer until something else removes it
+ *  outright (dispel, death, script call). Takes precedence over
+ *  <loseAllStacksAtOnce>, since stacks are never lost via this path.
  *
  *    <stacksConvertToState:[NEW_STATE_ID, STACKS_REQUIRED]>
  *  When this state's stack count reaches STACKS_REQUIRED (checked on every

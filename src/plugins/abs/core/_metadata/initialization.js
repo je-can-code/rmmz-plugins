@@ -862,7 +862,7 @@ J.ABS.RegExp = {
   ConfigShowStates: /<jabsConfig:[ ]?showStates>/i,
   ConfigHideStates: /<jabsConfig:[ ]?hideStates>/i,
   ConfigInanimate: /<jabsConfig:[ ]?inanimate>/i,
-  ConfigNotInanimate: /<jabsConfig[ ]?:notInanimate>/i,
+  ConfigNotInanimate: /<jabsConfig:[ ]?notInanimate>/i,
   ConfigInvincible: /<jabsConfig:[ ]?invincible>/i,
   ConfigNotInvincible: /<jabsConfig:[ ]?notInvincible>/i,
   ConfigNoName: /<jabsConfig:[ ]?noName>/i,
