@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import vm from 'node:vm';
 
-import { installJBaseHostGlobals } from '../plugins/_base/fixtures/install-j-base-host-globals.js';
+import { installJBaseHostGlobals } from '../plugins/_base/_component/fixtures/install-j-base-host-globals.js';
 import { repoRoot } from './repo-root.js';
 import { finishPluginVmHarness } from './finish-plugin-vm-harness.js';
 import { evaluateJBaseInSandboxOnce } from './j-base-vm-script.js';
