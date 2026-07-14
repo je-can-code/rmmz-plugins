@@ -4662,3 +4662,52 @@ independently in one execution.
 <toggleOnExecute:12>
 ```
 Executing this skill flips state 12 on the caster — removes it if present, adds it if absent.
+
+---
+
+## J-HUD-TargetFrame (`src/plugins/hud/ext/target/`)
+
+A HUD frame that displays the player's current JABS battle target: name, optional subtext, an
+optional icon, and HP/MP/TP gauges.
+
+### `<targetFrameText:TEXT>` / `<targetFrameIcon:ICON_INDEX>`
+
+**Applies to:**
+Enemies (database note); Events on the map (JABS battler events only)
+
+**When:**
+this enemy is the player's current target
+
+**Effect:**
+`targetFrameText` shows TEXT as a subtext line between the name and gauges; `targetFrameIcon`
+shows the icon at ICON_INDEX beside the gauges. If the same enemy is tagged both in the database
+and on its map event, the event tag wins. Without text, gauges shift up slightly to fill the gap;
+without an icon, gauges shift left.
+
+```
+<targetFrameText:I'm the coolest ghosty ever.>
+<targetFrameIcon:25>
+```
+Targeting this enemy shows its custom subtext and icon 25 in the target frame.
+
+---
+
+### `<hideTargetFrame>` / `<hideTargetFrameText>` / `<hideTargetHpBar>` / `<hideTargetMpBar>` / `<hideTargetTpBar>`
+
+**Applies to:**
+Enemies (database note); Events on the map (JABS battler events only)
+
+**When:**
+this enemy is the player's current target
+
+**Effect:**
+selectively hides target-frame elements for this specific enemy. `hideTargetFrame` hides the
+entire frame (text and all gauges); the others hide just their named element. Hiding the whole
+frame takes priority over any individual-element tag. An event-level hide tag takes priority over
+any show/hide from the database.
+
+```
+<hideTargetMpBar>
+<hideTargetTpBar>
+```
+This enemy's target frame shows only the HP gauge (and name/text/icon if present).
