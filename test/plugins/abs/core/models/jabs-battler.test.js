@@ -4859,19 +4859,17 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     });
 
-    it('KNOWN BUG: setDodgeIFrames writes _dodgeIFrames but getDodgeIFrames/init read _dodgeIframes (case mismatch)', () =>
+    it('setDodgeIFrames updates what getDodgeIFrames returns', () =>
     {
-      // setDodgeIFrames(frames) sets this._dodgeIFrames (capital F), while getDodgeIFrames()
-      // and the constructor's initDodgeInfo() both read this._dodgeIframes (lowercase f). This
-      // means setDodgeIFrames never actually updates what getDodgeIFrames returns- the iframe
-      // window parsed off a dodge skill (executeDodgeSkill) or reset on dodge end (endDodge)
-      // silently never takes effect.
+      // FIXED: setDodgeIFrames(frames) previously set this._dodgeIFrames (capital F) while
+      // getDodgeIFrames()/initDodgeInfo() read this._dodgeIframes (lowercase f), so the setter
+      // silently never updated the getter- a dodge skill's parsed iframe window (executeDodgeSkill)
+      // or its reset (endDodge) never actually took effect. Both now agree on _dodgeIframes.
       const jabsBattler = buildBattler();
 
       jabsBattler.setDodgeIFrames([ 1, 5 ]);
 
-      expect(jabsBattler.getDodgeIFrames()).toBeNull();
-      expect(jabsBattler._dodgeIFrames).toEqual([ 1, 5 ]);
+      expect(jabsBattler.getDodgeIFrames()).toEqual([ 1, 5 ]);
     });
   });
 
@@ -4960,17 +4958,15 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.executeGuard).not.toHaveBeenCalled();
     });
 
-    it('applies invincibility, dodge speed, and step count from the skill', () =>
+    it('applies iframes, invincibility, dodge speed, and step count from the skill', () =>
     {
-      // note: does not assert on getDodgeIFrames()- see the KNOWN BUG documented under
-      // "dodge state accessors" (setDodgeIFrames/getDodgeIFrames case-mismatch means this
-      // call never actually takes effect).
       const setDodgeModifier = vi.fn();
       const jabsBattler = buildDodgingBattler();
       jabsBattler.getCharacter = () => ({ setDodgeModifier });
 
       jabsBattler.executeDodgeSkill(buildDodgeSkill());
 
+      expect(jabsBattler.getDodgeIFrames()).toEqual([ 1, 5 ]);
       expect(jabsBattler.isInvincible()).toBe(true);
       expect(setDodgeModifier).toHaveBeenCalledWith(2);
       expect(jabsBattler.getDodgeSteps()).toBe(3);

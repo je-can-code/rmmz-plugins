@@ -4254,7 +4254,7 @@ class JABS_Battler
    */
   setDodgeIFrames(frames)
   {
-    this._dodgeIFrames = frames;
+    this._dodgeIframes = frames;
   };
 
   /**
