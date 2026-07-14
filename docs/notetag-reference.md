@@ -4077,3 +4077,28 @@ map (id 110). Read via RPG Maker's native `$dataMap.meta` parsing.
 <battleMap:112>
 ```
 Encounters on this map transfer the player to map 112 instead of the default.
+
+---
+
+## J-ABS-Targeting (`src/plugins/abs/ext/targeting/`)
+
+Adds a cursor-driven tactical target-selection mode to JABS. Flagged skills pause combat (the
+same soft-pause the JABS quick menu uses) and let the player aim a reticle at allies or enemies
+before the action fires.
+
+### `<targeted>`
+
+**Applies to:**
+Skills
+
+**When:**
+this skill is selected for execution
+
+**Effect:**
+marks the skill as requiring the tactical targeting UX instead of firing immediately — combat
+pauses and a reticle appears for the player to aim before the skill executes.
+
+```
+<targeted>
+```
+This skill pauses combat and prompts for a target before executing.
