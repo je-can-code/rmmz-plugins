@@ -5095,3 +5095,90 @@ still applies — only the visual popup is hidden.
 <noSlipPopup>
 ```
 This state's HP/MP/TP slip ticks never show a floating popup, even though they still apply.
+
+---
+
+## J-RegionEffects (`src/plugins/regions/core/`)
+
+Controls map passage by region id.
+
+### `<allowRegions:[REGION_IDS]>` / `<denyRegions:[REGION_IDS]>`
+
+**Applies to:**
+Maps (Map Properties note box)
+
+**When:**
+always
+
+**Effect:**
+`allowRegions` force-permits passage on tiles marked with any of the listed region ids;
+`denyRegions` force-restricts passage on tiles marked with any listed region id. If the same
+region id appears in both tags on one map, deny wins. Plugin-parameter "global" allow/deny lists
+are concatenated in alongside whatever's found in these tags.
+
+```
+<denyRegions:[2,3,4]>
+```
+Tiles marked with region 2, 3, or 4 become impassable on this map.
+
+---
+
+## J-RegionEffects-Skills (`src/plugins/regions/ext/skills/`)
+
+Auto-executes skills against characters standing on tagged region ids, via a temporary dummy
+enemy battler powering the skill.
+
+### `<regionSkill:[REGION_ID, SKILL_ID, CHANCE, CASTER_ENEMY_ID, IS_FRIENDLY]>`
+
+**Applies to:**
+Maps (Map Properties note box)
+
+**When:**
+on a timer tick (plugin param "Execute Skill Delay", default 60 frames), for any J-ABS-eligible
+character standing on REGION_ID
+
+**Effect:**
+CHANCE percent chance per tick to execute SKILL_ID as a real J-ABS map action, using a dummy
+battler built from CASTER_ENEMY_ID for stats/elements. IS_FRIENDLY (`true`/`false`, lowercase)
+sets whether the dummy is hostile or friendly to the target's team. All five fields are required
+— none can be omitted. Duplicate tags for the same region stack as independent execution attempts
+(not a combined roll).
+
+```
+<regionSkill:[1, 12, 100, 3, false]>
+```
+Region 1 always attempts to fire skill 12 (using enemy 3's stats, hostile) against whoever stands
+on it, each tick.
+
+---
+
+## J-RegionEffects-States (`src/plugins/regions/ext/states/`)
+
+Auto-applies states to characters standing on tagged region ids.
+
+### `<regionAddState:[REGION_ID, STATE_ID, CHANCE?, ANIMATION_ID?]>`
+
+**Applies to:**
+Maps (Map Properties note box)
+
+**When:**
+on a timer tick (plugin param "Apply State Delay", default 15 frames), for any character
+standing on REGION_ID
+
+**Effect:**
+attempts to apply STATE_ID with CHANCE percent chance (default 100 if omitted), optionally
+playing ANIMATION_ID on success (default none if omitted). CHANCE is the tag's base roll only —
+it does not account for the target's own state resistances/weaknesses, which layer on top.
+Duplicate tags for the same region (even the same state id) stack as independent application
+attempts, not a combined roll.
+
+```
+<regionAddState:[12, 40]>
+```
+Region 12 applies state 40 at the default 100% chance, no animation, while a character stands on
+it.
+
+```
+<regionAddState:[1, 3, 25, 4]>
+```
+Region 1 applies state 3 at 25% chance, playing animation 4 on success.

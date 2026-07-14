@@ -130,6 +130,42 @@ describe('J-Regions-States Game_Map / Game_Character (direct src import)', () =>
     });
   });
 
+  describe('Game_Map.refreshRegionStates with optional trailing args', () =>
+  {
+    it('parses a 3-arg tag (no animationId) and defaults animationId to 0', () =>
+    {
+      // Arrange
+      globalThis.$dataMap = { note: '<regionAddState:[2, 5, 25]>' };
+      const map = new globalThis.Game_Map();
+      map.initialize();
+
+      // Act
+      map.setup(1);
+      const [ regionStateData ] = map.getRegionStatesByRegionId(2);
+
+      // Assert
+      expect(regionStateData.chance).toBe(25);
+      expect(regionStateData.animationId).toBe(0);
+    });
+
+    it('parses a 2-arg tag (no chance/animationId) and defaults chance to 100', () =>
+    {
+      // Arrange
+      globalThis.$dataMap = { note: '<regionAddState:[12, 40]>' };
+      const map = new globalThis.Game_Map();
+      map.initialize();
+
+      // Act
+      map.setup(1);
+      const [ regionStateData ] = map.getRegionStatesByRegionId(12);
+
+      // Assert
+      expect(regionStateData.stateId).toBe(40);
+      expect(regionStateData.chance).toBe(100);
+      expect(regionStateData.animationId).toBe(0);
+    });
+  });
+
   describe('Game_Character.applyRegionStates', () =>
   {
     it('applies the tagged state when the chance succeeds', () =>
