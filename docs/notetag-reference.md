@@ -3026,3 +3026,135 @@ transfer regardless of this tag (intentional).
 ```
 A heart-drop-style item that's used the instant it's picked up, and despawns after 30 seconds if
 left uncollected.
+
+---
+
+### `<negative>` / `<rooted>` / `<disabled>` / `<muted>` / `<paralyzed>`
+
+**Applies to:**
+States
+
+**When:**
+the state is active on a battler
+
+**Effect:**
+`negative` doesn't change mechanics — it's an AI hint that healer/support allies should try to
+remove this state. `rooted` locks movement (including dodge skills for actors). `disabled` locks
+basic attacks (mainhand/offhand for actors, the basic-attack trait skill for enemies). `muted`
+locks combat skills (the four combat slots for actors, anything non-basic for enemies).
+`paralyzed` is rooted + disabled + muted combined.
+
+```
+<negative>
+<paralyzed>
+```
+A fully incapacitating debuff that AI healers will prioritize removing.
+
+**See also:** `<perDebuffBuff>`, `<purgeStates>`
+
+---
+
+### `<immuneToAll>` / `<immuneToStates>` / `<immuneToNegatives>` / `<stateTypeImmune:TYPE>` / `<stateTypeResist:[TYPE, PCT]>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States (read from the TARGET's own notes, not the
+state being applied)
+
+**When:**
+a state application is attempted against this battler
+
+**Effect:**
+checked in priority order in `Game_Battler#isStateAddable`, each fully blocking application
+before any chance roll: `immuneToAll` blocks everything including death; `immuneToStates` blocks
+everything except death; `immuneToNegatives` blocks any `<negative>`-tagged state;
+`stateTypeImmune:TYPE` blocks any state carrying a matching `<type:TYPE>`. `stateTypeResist` is
+different — it doesn't block outright, it reduces the chance a matching-type state lands, folded
+into the normal per-id application roll. Multiple resist tags for the same TYPE stack
+additively.
+
+```
+<stateTypeResist:[cc, 50]>
+```
+Halves the application chance of any state carrying the "cc" (crowd-control) type classifier.
+
+---
+
+### `<skillTransform:[BASE, OVERRIDE]>`
+
+**Applies to:**
+Actors, Enemies, Classes, Weapons, Armors, States
+
+**When:**
+any equipped slot (combat, dodge, offhand — not tool) whose base skill id matches BASE
+
+**Effect:**
+transforms BASE into OVERRIDE at runtime for execution and display, without mutating the slot's
+stored id. The battler doesn't need to have formally learned OVERRIDE — the tag itself is
+implicit permission; only BASE needs the normal hasSkill check. Precedence when multiple sources
+define a transform for the same BASE (first match wins): active states (highest priority first)
+> equipped items (actors only) > current class (actors only) > actor/enemy database row.
+
+```
+<skillTransform:[151, 152]>
+```
+While this note is active anywhere, any slot whose base skill is 151 executes and displays as
+152 instead.
+
+**See also:** `<skillId>`, `<offhandSkillId>`
+
+---
+
+### `<hpFlat:VAL>` / `<mpFlat:VAL>` / `<tpFlat:VAL>` / `<hpPercent:VAL>` / `<mpPercent:VAL>` / `<tpPercent:VAL>`
+
+**Applies to:**
+States
+
+**When:**
+while the state is active, on the state's tick interval
+
+**Effect:**
+slip damage-over-time/regen. All values are "per 5 seconds," spread over 20 ticks
+(VAL / 20 = amount per tick). `flat` is a flat amount; `percent` eats/restores a percent of the
+battler's max value per tick. Positive VAL = gain (regen/meditation); negative VAL = loss
+(poison/exhaustion).
+
+```
+<hpFlat:-100>
+<mpPercent:50>
+```
+Loses 100 HP and 50% max MP over 5 seconds (5 HP and 2.5% MP per tick).
+
+**See also:** `<hpFormula>`, `<thisTickSpeed>`, `<tickSpeedPercent>`
+
+---
+
+### `<hpFormula:[FORMULA]>` / `<mpFormula:[FORMULA]>` / `<tpFormula:[FORMULA]>`
+
+**Applies to:**
+States
+
+**Formula context:**
+`a` = the battler who applied the state (the source), `b` = the battler afflicted by the state
+(the one ticking — same battler as `a` if self-inflicted), `v` = `$gameVariables._data`, `s` =
+the state object itself.
+
+**When:**
+while the state is active, on the state's tick interval
+
+**Effect:**
+formula-based slip damage/regen, same "per 5 seconds" convention as FLAT/PERCENT above. **Sign is
+inverted from FLAT/PERCENT**: write this like a normal damage formula (positive = harm) — the
+engine negates the result internally, so a positive formula becomes a loss and a negative formula
+becomes a gain.
+
+```
+<tpFormula:[-(a.atk * 2)]>
+```
+Gains TP equal to 200% of the source's ATK over five seconds (negative formula result = gain).
+
+```
+<hpFormula:[(a.mat * 3)]>
+```
+Loses HP equal to 300% of the source's MAT over five seconds (positive formula result = harm).
+
+**See also:** `<hpFlat>`, `<stateDurationFormula>`
