@@ -6011,5 +6011,425 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion map: connection/scope/action-building
+
+  //region map: tool/item effects
+  describe('applyToolEffects', () =>
+  {
+    function buildToolItem(overrides = {})
+    {
+      return Object.assign({ id: 5, scope: 1, jabsCooldown: 0, jabsSkillId: 0 }, overrides);
+    }
+
+    function buildToolableBattler(overrides = {})
+    {
+      const jabsBattler = buildBattler();
+      const clearSlot = vi.fn();
+      const flagSkillSlotForRefresh = vi.fn();
+      jabsBattler.getBattler = () => ({
+        consumeItem: vi.fn(),
+        getSkillSlotManager: () => ({
+          getToolSlot: () => ({ flagSkillSlotForRefresh }),
+          clearSlot,
+        }),
+      });
+      jabsBattler.createToolLog = vi.fn();
+      jabsBattler.applyToolToPlayer = vi.fn();
+      jabsBattler.applyToolForAllAllies = vi.fn();
+      jabsBattler.applyToolForAllOpponents = vi.fn();
+      jabsBattler.applyToolForOneOpponent = vi.fn();
+      jabsBattler.modCooldownCounter = vi.fn();
+      Object.assign(jabsBattler, overrides);
+      return jabsBattler;
+    }
+
+    function buildGameActionMock(overrides = {})
+    {
+      const gameAction = Object.assign({
+        setItem: vi.fn(),
+        item: () => ({ scope: 1 }),
+        isForUser: () => false,
+        isForFriend: () => false,
+        isForOpponent: () => false,
+        isForOne: () => false,
+        isForAll: () => false,
+        isForEveryone: () => false,
+        applyGlobal: vi.fn(),
+      }, overrides);
+      globalThis.Game_Action = vi.fn(function() { return gameAction; });
+      return gameAction;
+    }
+
+    beforeEach(() =>
+    {
+      globalThis.$dataItems = [];
+      globalThis.$dataItems[5] = buildToolItem();
+      globalThis.$gameParty = { items: () => [] };
+      globalThis.J.ABS.DefaultValues = { CooldownlessItems: 60 };
+      globalThis.LootLogBuilder = vi.fn(function()
+      {
+        this.setupUsedLastItem = vi.fn().mockReturnThis();
+        this.build = vi.fn(() => ({ built: true }));
+      });
+      globalThis.$lootLogManager = { addLog: vi.fn() };
+    });
+
+    it('applies to self for a self-scoped tool', () =>
+    {
+      buildGameActionMock({ isForUser: () => true });
+      const jabsBattler = buildToolableBattler();
+
+      jabsBattler.applyToolEffects(5);
+
+      expect(jabsBattler.applyToolToPlayer).toHaveBeenCalledWith(5);
+    });
+
+    it('applies to self for a single-ally-scoped tool', () =>
+    {
+      buildGameActionMock({ isForOne: () => true, isForFriend: () => true });
+      const jabsBattler = buildToolableBattler();
+
+      jabsBattler.applyToolEffects(5);
+
+      expect(jabsBattler.applyToolToPlayer).toHaveBeenCalledWith(5);
+    });
+
+    it('applies to all allies and all opponents for an everyone-scoped tool', () =>
+    {
+      buildGameActionMock({ isForEveryone: () => true });
+      const jabsBattler = buildToolableBattler();
+
+      jabsBattler.applyToolEffects(5);
+
+      expect(jabsBattler.applyToolForAllAllies).toHaveBeenCalledWith(5);
+      expect(jabsBattler.applyToolForAllOpponents).toHaveBeenCalledWith(5);
+    });
+
+    it('applies to one opponent for a single-opponent-scoped tool', () =>
+    {
+      buildGameActionMock({ isForOne: () => true, isForOpponent: () => true });
+      const jabsBattler = buildToolableBattler();
+
+      jabsBattler.applyToolEffects(5);
+
+      expect(jabsBattler.applyToolForOneOpponent).toHaveBeenCalledWith(5);
+    });
+
+    it('applies to all allies for an all-ally-scoped tool', () =>
+    {
+      buildGameActionMock({ isForAll: () => true, isForFriend: () => true });
+      const jabsBattler = buildToolableBattler();
+
+      jabsBattler.applyToolEffects(5);
+
+      expect(jabsBattler.applyToolForAllAllies).toHaveBeenCalledWith(5);
+    });
+
+    it('applies to all opponents for an all-opponent-scoped tool', () =>
+    {
+      buildGameActionMock({ isForAll: () => true, isForOpponent: () => true });
+      const jabsBattler = buildToolableBattler();
+
+      jabsBattler.applyToolEffects(5);
+
+      expect(jabsBattler.applyToolForAllOpponents).toHaveBeenCalledWith(5);
+    });
+
+    it('does nothing extra for a no-scope tool relying purely on its skill id', () =>
+    {
+      buildGameActionMock({ item: () => ({ scope: 0 }) });
+      const jabsBattler = buildToolableBattler();
+
+      expect(() => jabsBattler.applyToolEffects(5)).not.toThrow();
+      expect(jabsBattler.applyToolToPlayer).not.toHaveBeenCalled();
+    });
+
+    it('warns about an unhandled scope combination', () =>
+    {
+      buildGameActionMock({ item: () => ({ scope: 99 }) });
+      const jabsBattler = buildToolableBattler();
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      jabsBattler.applyToolEffects(5);
+
+      expect(warnSpy).toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
+
+    it('executes an attached skill and stamps the tool cooldown type', () =>
+    {
+      buildGameActionMock({ isForUser: () => true });
+      globalThis.$dataItems[5] = buildToolItem({ jabsSkillId: 7 });
+      globalThis.$jabsEngine = { executeMapAction: vi.fn() };
+      const action = { setCooldownType: vi.fn() };
+      const jabsBattler = buildToolableBattler();
+      jabsBattler.createJabsActionFromSkill = vi.fn(() => [ action ]);
+
+      jabsBattler.applyToolEffects(5);
+
+      expect(action.setCooldownType).toHaveBeenCalledWith(JABS_Button.Tool);
+      expect(globalThis.$jabsEngine.executeMapAction).toHaveBeenCalledWith(jabsBattler, action);
+    });
+
+    it('clears the tool slot and logs when the last copy of the item was consumed', () =>
+    {
+      buildGameActionMock({ isForUser: () => true });
+      globalThis.$gameParty = { items: () => [] };
+      const clearSlot = vi.fn();
+      const jabsBattler = buildToolableBattler();
+      jabsBattler.getBattler = () => ({
+        consumeItem: vi.fn(),
+        getSkillSlotManager: () => ({ getToolSlot: () => ({ flagSkillSlotForRefresh: vi.fn() }), clearSlot }),
+      });
+
+      jabsBattler.applyToolEffects(5);
+
+      expect(clearSlot).toHaveBeenCalledWith(JABS_Button.Tool);
+      expect(globalThis.$lootLogManager.addLog).toHaveBeenCalledWith({ built: true });
+    });
+
+    it('applies the item\'s custom cooldown when copies remain and it is not loot', () =>
+    {
+      buildGameActionMock({ isForUser: () => true });
+      globalThis.$dataItems[5] = buildToolItem({ jabsCooldown: 30 });
+      globalThis.$gameParty = { items: () => [ globalThis.$dataItems[5] ] };
+      const jabsBattler = buildToolableBattler();
+
+      jabsBattler.applyToolEffects(5, false);
+
+      expect(jabsBattler.modCooldownCounter).toHaveBeenCalledWith(JABS_Button.Tool, 30);
+    });
+
+    it('does not apply a cooldown for loot pickups even with copies remaining', () =>
+    {
+      buildGameActionMock({ isForUser: () => true });
+      globalThis.$dataItems[5] = buildToolItem({ jabsCooldown: 30 });
+      globalThis.$gameParty = { items: () => [ globalThis.$dataItems[5] ] };
+      const jabsBattler = buildToolableBattler();
+
+      jabsBattler.applyToolEffects(5, true);
+
+      expect(jabsBattler.modCooldownCounter).not.toHaveBeenCalled();
+    });
+
+    it('applies the default cooldownless-item cooldown when there is neither a skill nor a custom cooldown', () =>
+    {
+      buildGameActionMock({ isForUser: () => true });
+      globalThis.$gameParty = { items: () => [ globalThis.$dataItems[5] ] };
+      const jabsBattler = buildToolableBattler();
+
+      jabsBattler.applyToolEffects(5, false);
+
+      expect(jabsBattler.modCooldownCounter).toHaveBeenCalledWith(JABS_Button.Tool, 60);
+    });
+  });
+
+  describe('applyUsableItemEffects', () =>
+  {
+    it('mirrors applyToolEffects using the UsableItem button instead of Tool', () =>
+    {
+      globalThis.$dataItems = [];
+      globalThis.$dataItems[6] = { id: 6, scope: 1, jabsCooldown: 0, jabsSkillId: 0 };
+      globalThis.$gameParty = { items: () => [ globalThis.$dataItems[6] ] };
+      globalThis.J.ABS.DefaultValues = { CooldownlessItems: 60 };
+      globalThis.Game_Action = vi.fn(function()
+      {
+        this.setItem = vi.fn();
+        this.item = () => ({ scope: 1 });
+        this.isForUser = () => true;
+        this.isForFriend = () => false;
+        this.isForOpponent = () => false;
+        this.isForOne = () => false;
+        this.isForAll = () => false;
+        this.isForEveryone = () => false;
+        this.applyGlobal = vi.fn();
+      });
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({
+        consumeItem: vi.fn(),
+        getSkillSlotManager: () => ({
+          getUsableItemSlot: () => ({ flagSkillSlotForRefresh: vi.fn() }),
+          clearSlot: vi.fn(),
+        }),
+      });
+      jabsBattler.createToolLog = vi.fn();
+      jabsBattler.applyToolToPlayer = vi.fn();
+      jabsBattler.modCooldownCounter = vi.fn();
+
+      jabsBattler.applyUsableItemEffects(6, false);
+
+      expect(jabsBattler.applyToolToPlayer).toHaveBeenCalledWith(6);
+      expect(jabsBattler.modCooldownCounter).toHaveBeenCalledWith(JABS_Button.UsableItem, 60);
+    });
+  });
+
+  describe('applyToolToPlayer', () =>
+  {
+    it('applies the item action to self and shows the item\'s animation', () =>
+    {
+      globalThis.$dataItems = [];
+      globalThis.$dataItems[5] = { animationId: 42 };
+      const apply = vi.fn();
+      globalThis.Game_Action = vi.fn(function()
+      {
+        this.setItem = vi.fn();
+        this.apply = apply;
+      });
+      const jabsBattler = buildBattler();
+      jabsBattler.onItemApplied = vi.fn();
+      jabsBattler.showAnimation = vi.fn();
+
+      jabsBattler.applyToolToPlayer(5);
+
+      expect(apply).toHaveBeenCalledWith(jabsBattler.getBattler());
+      expect(jabsBattler.onItemApplied).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.showAnimation).toHaveBeenCalledWith(42);
+    });
+  });
+
+  describe('onItemApplied', () =>
+  {
+    it('is a no-op', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(() => jabsBattler.onItemApplied('action', 5)).not.toThrow();
+    });
+  });
+
+  describe('applyToolForAllAllies', () =>
+  {
+    it('applies to the player alone when the party has only one battle member', () =>
+    {
+      globalThis.$gameParty = { battleMembers: () => [ 'leader' ] };
+      const jabsBattler = buildBattler();
+      jabsBattler.applyToolToPlayer = vi.fn();
+
+      jabsBattler.applyToolForAllAllies(5);
+
+      expect(jabsBattler.applyToolToPlayer).toHaveBeenCalledWith(5);
+    });
+
+    it('applies to each non-leader ally and then the player', () =>
+    {
+      const apply = vi.fn();
+      globalThis.Game_Action = vi.fn(function() { this.setItem = vi.fn(); this.apply = apply; });
+      const ally1 = {};
+      const ally2 = {};
+      globalThis.$gameParty = { battleMembers: () => [ 'leader', ally1, ally2 ] };
+      const jabsBattler = buildBattler();
+      jabsBattler.applyToolToPlayer = vi.fn();
+
+      jabsBattler.applyToolForAllAllies(5);
+
+      expect(apply).toHaveBeenCalledWith(ally1);
+      expect(apply).toHaveBeenCalledWith(ally2);
+      expect(jabsBattler.applyToolToPlayer).toHaveBeenCalledWith(5);
+    });
+  });
+
+  describe('applyToolForOneOpponent', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$dataItems = { 5: {} };
+      globalThis.Game_Action = vi.fn(function() { this.apply = vi.fn(); });
+    });
+
+    it('does nothing without a target or last-hit battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getTarget = () => null;
+      jabsBattler.getBattlerLastHit = () => null;
+      jabsBattler.onItemApplied = vi.fn();
+
+      jabsBattler.applyToolForOneOpponent(5);
+
+      expect(jabsBattler.onItemApplied).not.toHaveBeenCalled();
+    });
+
+    it('applies to the current target when present', () =>
+    {
+      const targetBattler = {};
+      const target = { getBattler: () => targetBattler };
+      const jabsBattler = buildBattler();
+      jabsBattler.getTarget = () => target;
+      jabsBattler.onItemApplied = vi.fn();
+
+      jabsBattler.applyToolForOneOpponent(5);
+
+      expect(jabsBattler.onItemApplied).toHaveBeenCalledWith(expect.anything(), 5, target);
+    });
+
+    it('falls back to the last-hit battler without a current target', () =>
+    {
+      const lastHitBattler = {};
+      const lastHit = { getBattler: () => lastHitBattler };
+      const jabsBattler = buildBattler();
+      jabsBattler.getTarget = () => null;
+      jabsBattler.getBattlerLastHit = () => lastHit;
+      jabsBattler.onItemApplied = vi.fn();
+
+      jabsBattler.applyToolForOneOpponent(5);
+
+      expect(jabsBattler.onItemApplied).toHaveBeenCalledWith(expect.anything(), 5, lastHit);
+    });
+  });
+
+  describe('applyToolForAllOpponents', () =>
+  {
+    it('applies the tool to every enemy battler', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const enemy1Battler = {};
+      const enemy2Battler = {};
+      const enemy1 = { getBattler: () => enemy1Battler };
+      const enemy2 = { getBattler: () => enemy2Battler };
+      JABS_AiManager.getEnemyBattlers = vi.fn(() => [ enemy1, enemy2 ]);
+      const apply = vi.fn();
+      globalThis.Game_Action = vi.fn(function() { this.apply = apply; });
+      const jabsBattler = buildBattler();
+      jabsBattler.onItemApplied = vi.fn();
+
+      jabsBattler.applyToolForAllOpponents(5);
+
+      expect(apply).toHaveBeenCalledWith(enemy1Battler);
+      expect(apply).toHaveBeenCalledWith(enemy2Battler);
+      expect(jabsBattler.onItemApplied).toHaveBeenCalledTimes(2);
+    });
+  });
+
+  describe('createToolLog', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.LootLogBuilder = vi.fn(function()
+      {
+        this.setupUsedItem = vi.fn().mockReturnThis();
+        this.build = vi.fn(() => ({ built: true }));
+      });
+      globalThis.$lootLogManager = { addLog: vi.fn() };
+    });
+
+    it('does nothing when logging is disabled', () =>
+    {
+      globalThis.J.LOG = false;
+      const jabsBattler = buildBattler();
+
+      jabsBattler.createToolLog({ id: 1 });
+
+      expect(globalThis.$lootLogManager.addLog).not.toHaveBeenCalled();
+      globalThis.J.LOG = true;
+    });
+
+    it('logs the tool usage when logging is enabled', () =>
+    {
+      globalThis.J.LOG = true;
+      const jabsBattler = buildBattler();
+
+      jabsBattler.createToolLog({ id: 1 });
+
+      expect(globalThis.$lootLogManager.addLog).toHaveBeenCalledWith({ built: true });
+    });
+  });
+  //endregion map: tool/item effects
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
