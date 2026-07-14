@@ -4711,3 +4711,70 @@ any show/hide from the database.
 <hideTargetTpBar>
 ```
 This enemy's target frame shows only the HP gauge (and name/text/icon if present).
+
+---
+
+## J-JAFTING-Refine (`src/plugins/jafting/ext/refine/`)
+
+The "refine" extension of JAFTING — transfers all traits below the "Collapse Effect" divider
+from a material equip onto a base equip. Requires J-JAFTING core.
+
+### `<noRefine>` / `<notRefinementBase>` / `<notRefinementMaterial>`
+
+**Applies to:**
+Weapons, Armors
+
+**When:**
+always
+
+**Effect:**
+`noRefine` removes the equip from the refinement menu's lists entirely (unavailable as base or
+material). `notRefinementBase` disables it as a "base" selection only (still usable as material)
+— good for fragile equipment. `notRefinementMaterial` disables it as a "material" selection only
+(still usable as a base) — good for protecting story-critical gear from being sacrificed.
+
+```
+<notRefinementMaterial>
+```
+This unique story item can be used as a refinement base, but can never be sacrificed as a
+material.
+
+---
+
+### `<maxRefineCount:NUM>`
+
+**Applies to:**
+Weapons, Armors
+
+**When:**
+this equip is selected as a refinement base
+
+**Effect:**
+caps how many times this equip can be used as a base for refinement to NUM. An already-refined
+equip used as a MATERIAL still counts toward the base's remaining refinement budget even if the
+material itself is beyond its own cap — the base's own remaining count is what's checked.
+
+```
+<maxRefineCount:3>
+```
+This equip can only be refined (used as a base) 3 times total.
+
+---
+
+### `<maxTraitCount:NUM>`
+
+**Applies to:**
+Weapons, Armors
+
+**When:**
+this equip is selected as a refinement base
+
+**Effect:**
+caps the number of combined trait slots this equip can hold as a base to NUM — refining beyond
+the cap is blocked even with refinement counts remaining, though same-trait stacking and
+powering up existing traits is still allowed.
+
+```
+<maxTraitCount:3>
+```
+This equip can hold at most 3 unique traits total.
