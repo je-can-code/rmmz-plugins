@@ -63,7 +63,3 @@ J.ABS.EXT.STAR.Aliased = {
   Game_Troop: new Map(),
   Scene_Map: new Map(),
 };
-
-J.ABS.EXT.STAR.Regexp = {
-  BattleMapId: /<battleMapId:(\d+)>/gi,
-};

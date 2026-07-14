@@ -4051,3 +4051,29 @@ stack additively. No upper limit; clamped at an arbitrary -90% lower limit.
 <speedBoost:40>
 ```
 This battler's movement speed is increased by ~40%.
+
+---
+
+## J-ABS-StarBattles (`src/plugins/abs/ext/star/`)
+
+Converts standard RMMZ random encounters into on-the-map, real-time JABS field battles: instead
+of transitioning to a turn-based battle scene, the player teleports to a dedicated battle map
+where enemies are generated and fought live, then returns to their original map/position when
+the battle concludes.
+
+### `<battleMap:MAP_ID>`
+
+**Applies to:**
+Maps (the map's own note field, not an event comment)
+
+**When:**
+a random encounter triggers while the player is on this map
+
+**Effect:**
+transfers the player to MAP_ID as the star battlefield instead of the plugin-wide default battle
+map (id 110). Read via RPG Maker's native `$dataMap.meta` parsing.
+
+```
+<battleMap:112>
+```
+Encounters on this map transfer the player to map 112 instead of the default.
