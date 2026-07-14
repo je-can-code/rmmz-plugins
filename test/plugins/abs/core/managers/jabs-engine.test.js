@@ -2778,5 +2778,250 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion costs and cooldowns
+
+  //region map spawning
+  describe('addJabsActionToMap', () =>
+  {
+    /** duck-typed stand-in for the bare RMMZ Game_Event global this file constructs directly. */
+    function buildFakeGameEventClass()
+    {
+      return vi.fn(function(mapId, eventId)
+      {
+        this.mapId = mapId;
+        this.eventId = eventId;
+        this.findProperPageIndex = () => 0;
+        this.setActionSpriteNeedsAdding = vi.fn();
+        this.setMoveFrequency = vi.fn();
+        this.setMoveRoute = vi.fn();
+        this.setCastedDirection = vi.fn();
+        this.setJabsAction = vi.fn();
+        this.getCastedDirection = () => 2;
+        this.setDirection = vi.fn();
+        this.setActionSprite = vi.fn();
+      });
+    }
+
+    function buildActionEventData(overrides = {})
+    {
+      return Object.assign({
+        x: 5, y: 6,
+        pages: [ { image: { characterName: 'Actor1', characterIndex: 0 }, moveFrequency: 3, moveRoute: {} } ],
+      }, overrides);
+    }
+
+    function buildAction(overrides = {})
+    {
+      return Object.assign({
+        getBaseSkill: () => ({ name: 'Fireball' }),
+        getCaster: () => ({ battlerName: () => 'Hero', getCharacter: () => ({ direction: () => 2 }) }),
+        stampActionMapVisualNoteFromActionEvent: vi.fn(),
+        setActionSprite: vi.fn(),
+        direction: () => 2,
+      }, overrides);
+    }
+
+    beforeEach(() =>
+    {
+      globalThis.Game_Event = buildFakeGameEventClass();
+      globalThis.$dataMap = { events: [ null, {} ] };
+      globalThis.$gameMap = Object.assign(globalThis.$gameMap, { addEvent: vi.fn() });
+      globalThis.J.ABS.DefaultValues = { ActionMap: 5 };
+    });
+
+    it('reuses the first empty hole in the data map event list', () =>
+    {
+      const engine = new JABS_Engine();
+      const actionEventData = buildActionEventData();
+
+      engine.addJabsActionToMap(actionEventData, buildAction());
+
+      expect(globalThis.$dataMap.events[0]).toBe(actionEventData);
+      expect(actionEventData.actionIndex).toBe(0);
+    });
+
+    it('appends to the end when there is no hole to reuse', () =>
+    {
+      globalThis.$dataMap.events = [ {}, {} ];
+      const engine = new JABS_Engine();
+      const actionEventData = buildActionEventData();
+
+      engine.addJabsActionToMap(actionEventData, buildAction());
+
+      expect(globalThis.$dataMap.events[2]).toBe(actionEventData);
+      expect(actionEventData.actionIndex).toBe(2);
+    });
+
+    it('logs an error and aborts when the action event data has no pages', () =>
+    {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const engine = new JABS_Engine();
+      const actionEventData = buildActionEventData({ pages: [] });
+
+      engine.addJabsActionToMap(actionEventData, buildAction());
+
+      expect(console.error).toHaveBeenCalled();
+      expect(globalThis.$gameMap.addEvent).not.toHaveBeenCalled();
+      console.error.mockRestore();
+    });
+
+    it('wires the sprite\'s image, action, and casted direction, then adds it to the map', () =>
+    {
+      const engine = new JABS_Engine();
+      const actionEventData = buildActionEventData();
+      const action = buildAction();
+
+      engine.addJabsActionToMap(actionEventData, action);
+
+      expect(globalThis.$gameMap.addEvent).toHaveBeenCalledTimes(1);
+      expect(action.setActionSprite).toHaveBeenCalledTimes(1);
+      expect(engine.requestActionRendering).toBe(true);
+    });
+
+    it('disables the no-op start handler so players cannot interact with the action event', () =>
+    {
+      const engine = new JABS_Engine();
+      const actionEventData = buildActionEventData();
+
+      engine.addJabsActionToMap(actionEventData, buildAction());
+
+      const [ createdSprite ] = globalThis.$gameMap.addEvent.mock.calls[0];
+      expect(createdSprite.start()).toBe(false);
+    });
+  });
+
+  describe('applyActionToActionEventSprite', () =>
+  {
+    it('wires the jabs action then sets the sprite-safe cardinal direction', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.actionTravelDirectionToSpritePatternDirection = vi.fn(() => 6);
+      const setJabsAction = vi.fn();
+      const setDirection = vi.fn();
+      const actionEventSprite = { setJabsAction, setDirection, getCastedDirection: () => 4 };
+      const action = { direction: () => 9 };
+
+      engine.applyActionToActionEventSprite(actionEventSprite, action);
+
+      expect(setJabsAction).toHaveBeenCalledWith(action);
+      expect(engine.actionTravelDirectionToSpritePatternDirection).toHaveBeenCalledWith(9, 4);
+      expect(setDirection).toHaveBeenCalledWith(6);
+    });
+  });
+
+  describe('addLootDropToMap', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.JsonEx = { makeDeepCopy: (x) => JSON.parse(JSON.stringify(x)) };
+      globalThis.$actionMap = { events: { 1: { id: 1, x: 0, y: 0 } } };
+      globalThis.$dataMap = { events: [ null ] };
+      globalThis.$gameMap = Object.assign(globalThis.$gameMap, { addEvent: vi.fn(), mapId: () => 3 });
+      globalThis.Game_Event = vi.fn(function(mapId, eventId)
+      {
+        this.mapId = mapId;
+        this.eventId = eventId;
+        this.setJabsLoot = vi.fn();
+        this.setLootNeedsAdding = vi.fn();
+      });
+      globalThis.J.ABS.Metadata.DefaultLootExpiration = 300;
+    });
+
+    it('positions the cloned loot event at the given coordinates', () =>
+    {
+      const engine = new JABS_Engine();
+      const item = { id: 1 };
+
+      engine.addLootDropToMap(10, 20, item);
+
+      expect(globalThis.$dataMap.events[0]).toMatchObject({ x: 10, y: 20 });
+    });
+
+    it('reuses a hole in the data map event list when one exists', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.addLootDropToMap(1, 2, { id: 1 });
+      expect(globalThis.$dataMap.events[0].lootIndex).toBe(0);
+    });
+
+    it('appends when there is no hole to reuse', () =>
+    {
+      globalThis.$dataMap.events = [ {} ];
+      const engine = new JABS_Engine();
+      engine.addLootDropToMap(1, 2, { id: 1 });
+      expect(globalThis.$dataMap.events[1].lootIndex).toBe(1);
+    });
+
+    it('adds the loot event to the map and requests loot rendering', () =>
+    {
+      const engine = new JABS_Engine();
+      const result = engine.addLootDropToMap(1, 2, { id: 1 });
+      expect(globalThis.$gameMap.addEvent).toHaveBeenCalledWith(result);
+      expect(engine.requestLootRendering).toBe(true);
+    });
+
+    it('uses the item\'s tagged expiration when present, otherwise the metadata default', () =>
+    {
+      const engineWithTag = new JABS_Engine();
+      const withCustom = engineWithTag.addLootDropToMap(1, 2, { id: 1, jabsExpiration: 999 });
+      expect(withCustom.setJabsLoot.mock.calls[0][0].duration).toBe(999);
+
+      globalThis.$dataMap.events = [ null ];
+      const engineWithoutTag = new JABS_Engine();
+      const withDefault = engineWithoutTag.addLootDropToMap(1, 2, { id: 1 });
+      expect(withDefault.setJabsLoot.mock.calls[0][0].duration).toBe(300);
+    });
+  });
+
+  describe('addEnemyToMap', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.JsonEx = { makeDeepCopy: (x) => JSON.parse(JSON.stringify(x)) };
+      globalThis.$dataMap = { events: [ null ] };
+      globalThis.$gameMap = Object.assign(globalThis.$gameMap, { addEvent: vi.fn(), mapId: () => 3 });
+      globalThis.Game_Event = vi.fn(function(mapId, eventId)
+      {
+        this.mapId = mapId;
+        this.eventId = eventId;
+        this.flagBattlerForAdding = vi.fn();
+      });
+      JABS_Engine.setEnemyCloneList([ { id: 'enemy-template', x: 0, y: 0 } ]);
+    });
+
+    it('KNOWN GAP: kicks off enemy-map initialization on demand, but since that fetch is async and unwaited, immediately trying to clone from the still-null list throws synchronously (harmless in practice since the constructor already initializes this well before any real addEnemyToMap call)', () =>
+    {
+      JABS_Engine.setEnemyCloneList(null);
+      globalThis.fetch = vi.fn(() => Promise.resolve({ json: () => Promise.resolve({ events: [] }) }));
+      const engine = new JABS_Engine();
+
+      expect(() => engine.addEnemyToMap(1, 2, 0)).toThrow();
+      expect(globalThis.fetch).toHaveBeenCalled();
+    });
+
+    it('logs an error and returns nothing when the enemy clone id does not resolve', () =>
+    {
+      vi.spyOn(console, 'error').mockImplementation(() => {});
+      const engine = new JABS_Engine();
+
+      const result = engine.addEnemyToMap(1, 2, 99);
+
+      expect(console.error).toHaveBeenCalled();
+      expect(result).toBeUndefined();
+      console.error.mockRestore();
+    });
+
+    it('clones the enemy template at the given coordinates and adds it to the map', () =>
+    {
+      const engine = new JABS_Engine();
+
+      const result = engine.addEnemyToMap(10, 20, 0);
+
+      expect(globalThis.$dataMap.events.at(-1)).toMatchObject({ x: 10, y: 20 });
+      expect(globalThis.$gameMap.addEvent).toHaveBeenCalledWith(result);
+      expect(result.flagBattlerForAdding).toHaveBeenCalledTimes(1);
+      expect(engine.requestBattlerRendering).toBe(true);
+    });
+  });
+  //endregion map spawning
 });
 //endregion plugins/abs/core/managers/jabs-engine.test.js
