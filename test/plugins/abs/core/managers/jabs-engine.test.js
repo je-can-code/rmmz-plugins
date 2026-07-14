@@ -149,7 +149,15 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_LootDrop.js', () => ({ default: class {} }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Location.js', () => ({ default: class {} }));
-    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_InputAdapter.js', () => ({ default: class {} }));
+    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_InputAdapter.js', () => ({
+      default: class
+      {
+        static hasControllers()
+        {
+          return true;
+        }
+      },
+    }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_GlobalCooldown.js', () => ({ default: class {} }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Battler.js', () => ({ default: class {} }));
     vi.doMock('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js', () => ({ default: class {} }));
@@ -1389,5 +1397,443 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion skill execution log
+
+  //region update ai battlers
+  describe('updateAiBattlers', () =>
+  {
+    it('does nothing when ai battler updates are not allowed', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlersWithinRange = vi.fn();
+      const engine = new JABS_Engine();
+      engine.canUpdateAiBattlers = () => false;
+
+      engine.updateAiBattlers();
+
+      expect(JABS_AiManager.getBattlersWithinRange).not.toHaveBeenCalled();
+    });
+
+    it('updates every on-screen battler within range of player 1', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const player1 = { id: 'player1' };
+      const other = { id: 'other' };
+      JABS_AiManager.getBattlersWithinRange = vi.fn(() => [ other ]);
+      const engine = new JABS_Engine();
+      engine.setPlayer1(player1);
+      engine.performAiBattlerUpdate = vi.fn();
+
+      engine.updateAiBattlers();
+
+      expect(JABS_AiManager.getBattlersWithinRange).toHaveBeenCalledWith(player1, 30);
+      expect(engine.performAiBattlerUpdate).toHaveBeenCalledWith(other, 0, [ other ]);
+    });
+  });
+
+  describe('canUpdateAiBattlers', () =>
+  {
+    it('is always true', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.canUpdateAiBattlers()).toBe(true);
+    });
+  });
+
+  describe('performAiBattlerUpdate', () =>
+  {
+    it('does not update the player battler a second time when it appears in the ai collection', () =>
+    {
+      const engine = new JABS_Engine();
+      const player1 = { update: vi.fn() };
+      engine.setPlayer1(player1);
+
+      engine.performAiBattlerUpdate(player1);
+
+      expect(player1.update).not.toHaveBeenCalled();
+    });
+
+    it('updates a non-player battler', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.setPlayer1({ id: 'player1' });
+      const battler = { update: vi.fn() };
+      engine.shouldHandleDefeatedTarget = () => false;
+
+      engine.performAiBattlerUpdate(battler);
+
+      expect(battler.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('handles defeat when the battler qualifies as defeated after updating', () =>
+    {
+      const engine = new JABS_Engine();
+      const player1 = { id: 'player1' };
+      engine.setPlayer1(player1);
+      engine.shouldHandleDefeatedTarget = () => true;
+      engine.handleDefeatedTarget = vi.fn();
+      const battler = { update: vi.fn(), setInvincible: vi.fn() };
+
+      engine.performAiBattlerUpdate(battler);
+
+      expect(battler.setInvincible).toHaveBeenCalledTimes(1);
+      expect(engine.handleDefeatedTarget).toHaveBeenCalledWith(battler, player1);
+    });
+
+    it('does not handle defeat when the battler does not qualify', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.setPlayer1({ id: 'player1' });
+      engine.shouldHandleDefeatedTarget = () => false;
+      engine.handleDefeatedTarget = vi.fn();
+      const battler = { update: vi.fn(), setInvincible: vi.fn() };
+
+      engine.performAiBattlerUpdate(battler);
+
+      expect(battler.setInvincible).not.toHaveBeenCalled();
+      expect(engine.handleDefeatedTarget).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('shouldHandleDefeatedTarget', () =>
+  {
+    it('is false when the target is not dead', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = { isDead: () => false };
+      expect(engine.shouldHandleDefeatedTarget(target)).toBe(false);
+    });
+
+    it('is false while the target is still in its dying animation', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = { isDead: () => true, isDying: () => true };
+      expect(engine.shouldHandleDefeatedTarget(target)).toBe(false);
+    });
+
+    it('is false for an enemy whose character has already been erased (already handled)', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = {
+        isDead: () => true,
+        isDying: () => false,
+        isEnemy: () => true,
+        getCharacter: () => ({ isErased: () => true }),
+      };
+      expect(engine.shouldHandleDefeatedTarget(target)).toBe(false);
+    });
+
+    it('is true for a dead, non-dying enemy whose character is not yet erased', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = {
+        isDead: () => true,
+        isDying: () => false,
+        isEnemy: () => true,
+        getCharacter: () => ({ isErased: () => false }),
+      };
+      expect(engine.shouldHandleDefeatedTarget(target)).toBe(true);
+    });
+
+    it('is true for a dead, non-dying non-enemy (the enemy-erased check is skipped)', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = { isDead: () => true, isDying: () => false, isEnemy: () => false };
+      expect(engine.shouldHandleDefeatedTarget(target)).toBe(true);
+    });
+  });
+  //endregion update ai battlers
+
+  //region update input
+  describe('updateInput', () =>
+  {
+    it('does nothing when input updates are not allowed', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canUpdateInput = () => false;
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      engine.updateInput();
+      expect(console.warn).not.toHaveBeenCalled();
+      console.warn.mockRestore();
+    });
+
+    it('warns when no input controllers have been registered', async () =>
+    {
+      const { default: JABS_InputAdapter } = await import('../../../../../src/plugins/abs/core/models/JABS_InputAdapter.js');
+      JABS_InputAdapter.hasControllers = () => false;
+      const engine = new JABS_Engine();
+      engine.canUpdateInput = () => true;
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      engine.updateInput();
+
+      expect(console.warn).toHaveBeenCalled();
+      console.warn.mockRestore();
+      JABS_InputAdapter.hasControllers = () => true;
+    });
+
+    it('does not warn once at least one controller is registered', async () =>
+    {
+      const { default: JABS_InputAdapter } = await import('../../../../../src/plugins/abs/core/models/JABS_InputAdapter.js');
+      JABS_InputAdapter.hasControllers = () => true;
+      const engine = new JABS_Engine();
+      engine.canUpdateInput = () => true;
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      engine.updateInput();
+
+      expect(console.warn).not.toHaveBeenCalled();
+      console.warn.mockRestore();
+    });
+  });
+
+  describe('canUpdateInput', () =>
+  {
+    function withGates(overrides = {})
+    {
+      globalThis.$gameMap = Object.assign(globalThis.$gameMap, { isEventRunning: () => false });
+      globalThis.$gameMessage = { isBusy: () => false };
+      globalThis.$jabsEngine = { requestAbsMenu: false, absPause: false, absEnabled: true, ...overrides };
+    }
+
+    it('is false while a map event is running', () =>
+    {
+      withGates();
+      globalThis.$gameMap.isEventRunning = () => true;
+      const engine = new JABS_Engine();
+      expect(engine.canUpdateInput()).toBe(false);
+    });
+
+    it('is false while the message window is busy', () =>
+    {
+      withGates();
+      globalThis.$gameMessage.isBusy = () => true;
+      const engine = new JABS_Engine();
+      expect(engine.canUpdateInput()).toBe(false);
+    });
+
+    it('is false while the jabs menu is requested', () =>
+    {
+      withGates({ requestAbsMenu: true });
+      const engine = new JABS_Engine();
+      expect(engine.canUpdateInput()).toBe(false);
+    });
+
+    it('is false while jabs is paused', () =>
+    {
+      withGates({ absPause: true });
+      const engine = new JABS_Engine();
+      expect(engine.canUpdateInput()).toBe(false);
+    });
+
+    it('is false while jabs is disabled', () =>
+    {
+      withGates({ absEnabled: false });
+      const engine = new JABS_Engine();
+      expect(engine.canUpdateInput()).toBe(false);
+    });
+
+    it('is true when every gate passes', () =>
+    {
+      withGates();
+      const engine = new JABS_Engine();
+      expect(engine.canUpdateInput()).toBe(true);
+    });
+  });
+  //endregion update input
+
+  //region party cycling
+  describe('party cycling', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.J.LOG = false;
+    });
+
+    describe('performPartyCycling', () =>
+    {
+      it('does nothing when party cycling is not currently possible', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.canPerformPartyCycling = () => false;
+        engine.prePartyCycling = vi.fn();
+
+        engine.performPartyCycling();
+
+        expect(engine.prePartyCycling).not.toHaveBeenCalled();
+      });
+
+      it('runs the full cycling pipeline in order when allowed', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.canPerformPartyCycling = () => true;
+        const callOrder = [];
+        engine.prePartyCycling = vi.fn(() => callOrder.push('pre'));
+        engine.handlePartyCycleMemberChanges = vi.fn(() => callOrder.push('handleChanges'));
+        engine.onPartyCycling = vi.fn(() => callOrder.push('on'));
+        engine.postPartyCycling = vi.fn(() => callOrder.push('post'));
+
+        engine.performPartyCycling();
+
+        expect(callOrder).toEqual([ 'pre', 'handleChanges', 'on', 'post' ]);
+      });
+    });
+
+    describe('canPerformPartyCycling', () =>
+    {
+      it('is false when no other party member is eligible to cycle to', () =>
+      {
+        globalThis.$gameParty = { _actors: [ 1 ] };
+        const engine = new JABS_Engine();
+        engine.canCycleToAlly = () => false;
+        expect(engine.canPerformPartyCycling()).toBe(false);
+      });
+
+      it('is true when at least one other party member is eligible', () =>
+      {
+        globalThis.$gameParty = { _actors: [ 1, 2 ] };
+        const engine = new JABS_Engine();
+        engine.canCycleToAlly = (actorId, index) => index === 1;
+        expect(engine.canPerformPartyCycling()).toBe(true);
+      });
+    });
+
+    describe('canCycleToAlly', () =>
+    {
+      it('is false for the party leader (index 0)', () =>
+      {
+        const engine = new JABS_Engine();
+        expect(engine.canCycleToAlly(1, 0)).toBe(false);
+      });
+
+      it('is false for a dead candidate', () =>
+      {
+        globalThis.$gameActors = { actor: () => ({ isDead: () => true, switchLocked: () => false }) };
+        const engine = new JABS_Engine();
+        expect(engine.canCycleToAlly(2, 1)).toBe(false);
+      });
+
+      it('is false for a switch-locked candidate', () =>
+      {
+        globalThis.$gameActors = { actor: () => ({ isDead: () => false, switchLocked: () => true }) };
+        const engine = new JABS_Engine();
+        expect(engine.canCycleToAlly(2, 1)).toBe(false);
+      });
+
+      it('is true for a living, unlocked non-leader candidate', () =>
+      {
+        globalThis.$gameActors = { actor: () => ({ isDead: () => false, switchLocked: () => false }) };
+        const engine = new JABS_Engine();
+        expect(engine.canCycleToAlly(2, 1)).toBe(true);
+      });
+    });
+
+    describe('handlePartyCycleMemberChanges', () =>
+    {
+      it('rotates the party array until landing on a living, unlocked member', () =>
+      {
+        // Arrange- 3 actors; actor 1 (self, skipped), actor 2 (dead, skipped), actor 3 (eligible).
+        globalThis.$gameParty = { _actors: [ 1, 2, 3 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
+        globalThis.$gameActors = {
+          actor: (id) => ({
+            isDead: () => id === 2,
+            switchLocked: () => false,
+          }),
+        };
+        globalThis.$gamePlayer = { refresh: vi.fn() };
+        const engine = new JABS_Engine();
+        engine.refreshPlayer1Data = vi.fn();
+
+        engine.handlePartyCycleMemberChanges();
+
+        // rotation stops once actor 3 lands at the front (after 2 rotations: [2,3,1] then [3,1,2]).
+        expect(globalThis.$gameParty._actors[0]).toBe(3);
+        expect(globalThis.$gamePlayer.refresh).toHaveBeenCalledTimes(1);
+        expect(engine.refreshPlayer1Data).toHaveBeenCalledTimes(1);
+      });
+
+      it('triggers onBattlerDataChange for the new leader', () =>
+      {
+        globalThis.$gameParty = { _actors: [ 1 ], leader: vi.fn(() => ({ onBattlerDataChange: vi.fn() })) };
+        globalThis.$gameActors = { actor: () => ({ isDead: () => false, switchLocked: () => false }) };
+        globalThis.$gamePlayer = { refresh: vi.fn() };
+        const engine = new JABS_Engine();
+        engine.refreshPlayer1Data = vi.fn();
+        const leaderBattler = { onBattlerDataChange: vi.fn() };
+        globalThis.$gameParty.leader = () => leaderBattler;
+
+        engine.handlePartyCycleMemberChanges();
+
+        expect(leaderBattler.onBattlerDataChange).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('onPartyCycling / partyCyclingEffects', () =>
+    {
+      it('runs the animation then the logging effect', () =>
+      {
+        const engine = new JABS_Engine();
+        const callOrder = [];
+        engine.partyCycleAnimation = vi.fn(() => callOrder.push('animation'));
+        engine.partyCycleLogging = vi.fn(() => callOrder.push('logging'));
+
+        engine.onPartyCycling();
+
+        expect(callOrder).toEqual([ 'animation', 'logging' ]);
+      });
+    });
+
+    describe('partyCycleAnimation', () =>
+    {
+      it('requests the party-cycle animation on player 1\'s character', () =>
+      {
+        const engine = new JABS_Engine();
+        const requestAnimation = vi.fn();
+        engine.setPlayer1({ getCharacter: () => ({ requestAnimation }) });
+
+        engine.partyCycleAnimation();
+
+        expect(requestAnimation).toHaveBeenCalledWith(40);
+      });
+    });
+
+    describe('partyCycleLogging', () =>
+    {
+      it('does nothing when the logging plugin is not present', () =>
+      {
+        globalThis.J.LOG = false;
+        const engine = new JABS_Engine();
+        expect(() => engine.partyCycleLogging()).not.toThrow();
+      });
+
+      it('builds and submits a party-cycle log entry when logging is available', () =>
+      {
+        globalThis.J.LOG = true;
+        globalThis.ActionLogBuilder = vi.fn(function()
+        {
+          this.setupPartyCycle = vi.fn().mockReturnThis();
+          this.build = vi.fn(() => ({ built: true }));
+        });
+        globalThis.$actionLogManager = { addLog: vi.fn() };
+        const engine = new JABS_Engine();
+        engine.setPlayer1({ battlerName: () => 'Hero' });
+
+        engine.partyCycleLogging();
+
+        expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith({ built: true });
+      });
+    });
+
+    describe('postPartyCycling', () =>
+    {
+      it('requests party rotation and a sprite refresh', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.postPartyCycling();
+        expect(engine.requestPartyRotation).toBe(true);
+        expect(engine.requestSpriteRefresh).toBe(true);
+      });
+    });
+  });
+  //endregion party cycling
 });
 //endregion plugins/abs/core/managers/jabs-engine.test.js
