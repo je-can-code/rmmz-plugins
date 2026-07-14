@@ -381,5 +381,497 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion initialization
+
+  //region _reference
+  describe('setCharacter', () =>
+  {
+    it('reassigns the character', () =>
+    {
+      const jabsBattler = buildBattler();
+      const newCharacter = { id: 'new' };
+
+      jabsBattler.setCharacter(newCharacter);
+
+      expect(jabsBattler.getCharacter()).toBe(newCharacter);
+    });
+  });
+
+  describe('battlerName', () =>
+  {
+    it('returns the database name of the underlying battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattlerDatabaseData = () => ({ name: 'Slime' });
+
+      expect(jabsBattler.battlerName()).toBe('Slime');
+    });
+  });
+
+  describe('hasEventActions', () =>
+  {
+    it('is false for a non-event battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEvent = () => false;
+
+      expect(jabsBattler.hasEventActions()).toBe(false);
+    });
+
+    it('is false for an event with no valid page index', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEvent = () => true;
+      jabsBattler.getCharacter = () => ({ _pageIndex: -1 });
+
+      expect(jabsBattler.hasEventActions()).toBe(false);
+    });
+
+    it('is true for an event with a valid page index', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEvent = () => true;
+      jabsBattler.getCharacter = () => ({ _pageIndex: 0 });
+
+      expect(jabsBattler.hasEventActions()).toBe(true);
+    });
+  });
+
+  describe('destroy', () =>
+  {
+    it('sets invincible, unregisters from the ai manager, and erases the character', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.removeBattler = vi.fn();
+      const character = { erase: vi.fn(), setActionSpriteNeedsRemoving: vi.fn() };
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => character;
+
+      jabsBattler.destroy();
+
+      expect(jabsBattler.isInvincible()).toBe(true);
+      expect(JABS_AiManager.removeBattler).toHaveBeenCalledWith(jabsBattler);
+      expect(character.erase).toHaveBeenCalledTimes(1);
+      expect(character.setActionSpriteNeedsRemoving).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('revealHiddenBattler / hideBattler / isHidden', () =>
+  {
+    it('toggles the hidden flag', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.isHidden()).toBe(false);
+
+      jabsBattler.hideBattler();
+      expect(jabsBattler.isHidden()).toBe(true);
+
+      jabsBattler.revealHiddenBattler();
+      expect(jabsBattler.isHidden()).toBe(false);
+    });
+  });
+
+  describe('isDying / setDying', () =>
+  {
+    it('tracks the dying state', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.isDying()).toBe(false);
+
+      jabsBattler.setDying(true);
+
+      expect(jabsBattler.isDying()).toBe(true);
+    });
+  });
+
+  describe('inPursuitRange', () =>
+  {
+    it('is true when the distance is within the vision-modified pursuit radius', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getPursuitRadius = () => 5;
+      const target = { getBattler: () => ({ getVisionModifier: () => 1 }) };
+
+      expect(jabsBattler.inPursuitRange(target, 5)).toBe(true);
+    });
+
+    it('is false when the distance exceeds the vision-modified pursuit radius', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getPursuitRadius = () => 5;
+      const target = { getBattler: () => ({ getVisionModifier: () => 1 }) };
+
+      expect(jabsBattler.inPursuitRange(target, 6)).toBe(false);
+    });
+
+    it('scales the pursuit radius by the target\'s vision modifier', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getPursuitRadius = () => 5;
+      const target = { getBattler: () => ({ getVisionModifier: () => 2 }) };
+
+      expect(jabsBattler.inPursuitRange(target, 9)).toBe(true);
+    });
+  });
+
+  describe('applyVisionMultiplier', () =>
+  {
+    it('scales the given radius by the target\'s vision modifier', () =>
+    {
+      const jabsBattler = buildBattler();
+      const target = { getBattler: () => ({ getVisionModifier: () => 1.5 }) };
+
+      expect(jabsBattler.applyVisionMultiplier(target, 10)).toBe(15);
+    });
+  });
+
+  describe('inSightRange', () =>
+  {
+    it('is true when the distance is within the modified sight radius', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getSightRadius = () => 4;
+      jabsBattler.applyVisionMultiplier = vi.fn(() => 4);
+
+      expect(jabsBattler.inSightRange('target', 4)).toBe(true);
+    });
+
+    it('is false when the distance exceeds the modified sight radius', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getSightRadius = () => 4;
+      jabsBattler.applyVisionMultiplier = vi.fn(() => 4);
+
+      expect(jabsBattler.inSightRange('target', 5)).toBe(false);
+    });
+  });
+
+  describe('outOfRange', () =>
+  {
+    it('is true when there is no target', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.outOfRange(null)).toBe(true);
+    });
+
+    it('is true when the target exceeds the ai manager\'s max range', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.maxAiRange = 20;
+      const jabsBattler = buildBattler();
+      jabsBattler.distanceToDesignatedTarget = () => 21;
+
+      expect(jabsBattler.outOfRange('target')).toBe(true);
+    });
+
+    it('is false when the target is within the ai manager\'s max range', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.maxAiRange = 20;
+      const jabsBattler = buildBattler();
+      jabsBattler.distanceToDesignatedTarget = () => 10;
+
+      expect(jabsBattler.outOfRange('target')).toBe(false);
+    });
+  });
+
+  describe('getUuid', () =>
+  {
+    it('returns empty when there is no underlying battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => null;
+
+      expect(jabsBattler.getUuid()).toBe(String.empty);
+    });
+
+    it('delegates to the underlying battler\'s uuid', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getUuid: () => 'uuid-1' });
+
+      expect(jabsBattler.getUuid()).toBe('uuid-1');
+    });
+  });
+
+  describe('leader-decided actions', () =>
+  {
+    it('hasLeaderDecidedActions is false without a leader', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.hasLeader = () => false;
+
+      expect(jabsBattler.hasLeaderDecidedActions()).toBe(false);
+    });
+
+    it('hasLeaderDecidedActions reflects the queued action when there is a leader', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.hasLeader = () => true;
+      jabsBattler._leaderDecidedAction = 7;
+
+      expect(jabsBattler.hasLeaderDecidedActions()).toBe(7);
+    });
+
+    it('getNextLeaderDecidedAction returns and clears the queued action', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._leaderDecidedAction = 7;
+
+      expect(jabsBattler.getNextLeaderDecidedAction()).toBe(7);
+      expect(jabsBattler._leaderDecidedAction).toBeNull();
+    });
+
+    it('setLeaderDecidedAction stores the skill id', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setLeaderDecidedAction(9);
+
+      expect(jabsBattler._leaderDecidedAction).toBe(9);
+    });
+
+    it('clearLeaderDecidedActionsQueue clears the queued action', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._leaderDecidedAction = 9;
+
+      jabsBattler.clearLeaderDecidedActionsQueue();
+
+      expect(jabsBattler._leaderDecidedAction).toBeNull();
+    });
+  });
+
+  describe('leader / follower management', () =>
+  {
+    it('getLeader returns the tracked leader uuid', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._leaderUuid = 'leader-uuid';
+
+      expect(jabsBattler.getLeader()).toBe('leader-uuid');
+    });
+
+    it('getLeaderBattler returns null when there is no leader uuid', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._leaderUuid = String.empty;
+
+      expect(jabsBattler.getLeaderBattler()).toBeNull();
+    });
+
+    it('getLeaderBattler resolves the leader battler by uuid', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const leaderBattler = { id: 'leader' };
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => leaderBattler);
+      const jabsBattler = buildBattler();
+      jabsBattler._leaderUuid = 'leader-uuid';
+
+      expect(jabsBattler.getLeaderBattler()).toBe(leaderBattler);
+    });
+
+    it('setLeader does nothing when the leader cannot be resolved', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => null);
+      const jabsBattler = buildBattler();
+
+      jabsBattler.setLeader('leader-uuid');
+
+      expect(jabsBattler._leaderUuid).toBe(String.empty);
+    });
+
+    it('setLeader adopts the leader and registers itself as a follower', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const addFollower = vi.fn();
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ addFollower }));
+      const jabsBattler = buildBattler();
+      jabsBattler.getUuid = () => 'follower-uuid';
+
+      jabsBattler.setLeader('leader-uuid');
+
+      expect(jabsBattler._leaderUuid).toBe('leader-uuid');
+      expect(addFollower).toHaveBeenCalledWith('follower-uuid');
+    });
+
+    it('hasLeader reflects whether a leader uuid is tracked', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.hasLeader()).toBe(false);
+
+      jabsBattler._leaderUuid = 'leader-uuid';
+      expect(jabsBattler.hasLeader()).toBe(true);
+    });
+
+    it('getFollowers returns the tracked follower uuids', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._followers = [ 'a', 'b' ];
+
+      expect(jabsBattler.getFollowers()).toEqual([ 'a', 'b' ]);
+    });
+
+    it('getFollowerByUuid returns null when there are no followers', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.hasFollowers = () => false;
+
+      expect(jabsBattler.getFollowerByUuid('a')).toBeNull();
+    });
+
+    it('getFollowerByUuid returns null when the uuid is not tracked', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.hasFollowers = () => true;
+      jabsBattler._followers = [ 'a' ];
+
+      expect(jabsBattler.getFollowerByUuid('b')).toBeNull();
+    });
+
+    it('getFollowerByUuid resolves the matching follower battler', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const followerBattler = { id: 'follower' };
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => followerBattler);
+      const jabsBattler = buildBattler();
+      jabsBattler.hasFollowers = () => true;
+      jabsBattler._followers = [ 'a' ];
+
+      expect(jabsBattler.getFollowerByUuid('a')).toBe(followerBattler);
+    });
+
+    it('addFollower appends a new follower uuid', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getFollowerByUuid = vi.fn(() => null);
+      jabsBattler._followers = [];
+
+      jabsBattler.addFollower('new-follower');
+
+      expect(jabsBattler._followers).toEqual([ 'new-follower' ]);
+    });
+
+    it('addFollower does not duplicate an already-tracked follower', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getFollowerByUuid = vi.fn(() => ({ id: 'existing' }));
+      jabsBattler._followers = [ 'existing-follower' ];
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      jabsBattler.addFollower('existing-follower');
+
+      expect(jabsBattler._followers).toEqual([ 'existing-follower' ]);
+      errorSpy.mockRestore();
+    });
+
+    it('removeFollower does not remove a tracked follower since indexOf never matches a function', () =>
+    {
+      // KNOWN BUG: removeFollower calls this._followers.indexOf(uuid => uuid === oldFollowerUuid)-
+      // Array.prototype.indexOf searches for a value by strict equality, not a predicate, so it
+      // never matches an arrow function against string uuids in the array. This means the "found"
+      // branch (splice) is unreachable in practice; the method always falls through to the
+      // console.error branch below, even for a uuid that is genuinely tracked.
+      const jabsBattler = buildBattler();
+      jabsBattler._followers = [ 'tracked-follower' ];
+      const errorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+
+      jabsBattler.removeFollower('tracked-follower');
+
+      expect(jabsBattler._followers).toEqual([ 'tracked-follower' ]);
+      expect(errorSpy).toHaveBeenCalled();
+      errorSpy.mockRestore();
+    });
+
+    it('clearFollowers clears leader data for each follower then empties the collection', () =>
+    {
+      globalThis.$gameMap = { clearLeaderDataByUuid: vi.fn() };
+      const jabsBattler = buildBattler();
+      jabsBattler._followers = [ 'a', 'b' ];
+
+      jabsBattler.clearFollowers();
+
+      expect(globalThis.$gameMap.clearLeaderDataByUuid).toHaveBeenCalledWith('a');
+      expect(globalThis.$gameMap.clearLeaderDataByUuid).toHaveBeenCalledWith('b');
+      expect(jabsBattler._followers).toEqual([]);
+    });
+
+    it('clearLeader does nothing when there is no leader uuid', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getLeader = () => String.empty;
+      jabsBattler.getUuid = vi.fn();
+
+      jabsBattler.clearLeader();
+
+      expect(jabsBattler.getUuid).not.toHaveBeenCalled();
+    });
+
+    it('clearLeader does nothing when this battler has no uuid of its own', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getLeader = () => 'leader-uuid';
+      jabsBattler.getUuid = () => String.empty;
+
+      expect(() => jabsBattler.clearLeader()).not.toThrow();
+    });
+
+    it('clearLeader does nothing when the leader battler cannot be resolved', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => null);
+      const jabsBattler = buildBattler();
+      jabsBattler.getLeader = () => 'leader-uuid';
+      jabsBattler.getUuid = () => 'my-uuid';
+
+      expect(() => jabsBattler.clearLeader()).not.toThrow();
+    });
+
+    it('clearLeader removes this battler from its leader\'s follower list', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const removeFollowerByUuid = vi.fn();
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ removeFollowerByUuid }));
+      const jabsBattler = buildBattler();
+      jabsBattler.getLeader = () => 'leader-uuid';
+      jabsBattler.getUuid = () => 'my-uuid';
+
+      jabsBattler.clearLeader();
+
+      expect(removeFollowerByUuid).toHaveBeenCalledWith('my-uuid');
+    });
+
+    it('removeFollowerByUuid removes a tracked follower', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._followers = [ 'a', 'b' ];
+
+      jabsBattler.removeFollowerByUuid('a');
+
+      expect(jabsBattler._followers).toEqual([ 'b' ]);
+    });
+
+    it('removeFollowerByUuid does nothing for an untracked follower', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._followers = [ 'a' ];
+
+      jabsBattler.removeFollowerByUuid('b');
+
+      expect(jabsBattler._followers).toEqual([ 'a' ]);
+    });
+
+    it('clearLeaderData clears both the leader uuid and the decided-actions queue', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setLeader = vi.fn();
+      jabsBattler.clearLeaderDecidedActionsQueue = vi.fn();
+
+      jabsBattler.clearLeaderData();
+
+      expect(jabsBattler.setLeader).toHaveBeenCalledWith('');
+      expect(jabsBattler.clearLeaderDecidedActionsQueue).toHaveBeenCalledTimes(1);
+    });
+  });
+  //endregion _reference
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
