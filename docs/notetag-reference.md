@@ -4389,3 +4389,52 @@ one map note all sum together.
 <damagePerc:5>
 ```
 Stepping anywhere on this map deals 10 flat HP damage plus 5% of the actor's max HP, every step.
+
+---
+
+## J-Escribe (`src/plugins/escribe/core/`)
+
+Enables "describing" a map event with floating text and/or an icon, optionally only visible
+within a proximity distance.
+
+### `<text:EVENT_TEXT>` / `<icon:ICON_INDEX>`
+
+**Applies to:**
+Events (comment)
+
+**When:**
+always (subject to proximity gating if present)
+
+**Effect:**
+`text` shows EVENT_TEXT floating above the event; `icon` shows the icon at ICON_INDEX. Either or
+both can be present on the same event.
+
+```
+<text:A rusty old chest.>
+<icon:208>
+```
+This event shows both descriptive text and an icon above it.
+
+---
+
+### `<proximityText:DISTANCE>` / `<proximityIcon:DISTANCE>`
+
+**Applies to:**
+Events (comment)
+
+**When:**
+gates visibility of `<text>`/`<icon>` respectively
+
+**Effect:**
+DISTANCE is the tile radius the player must be within for the text/icon to become visible.
+DISTANCE is required — there is no bare `<proximityText>`/`<proximityIcon>` form; to require the
+player stand directly on the event, use `<proximityText:0>` explicitly. Without either proximity
+tag, the paired text/icon is always visible whenever the event itself is visible on the map.
+
+```
+<text:A hidden switch.>
+<proximityText:2>
+```
+This event's text only becomes visible once the player is within 2 tiles.
+
+**See also:** `<text>`, `<icon>`
