@@ -2203,3 +2203,214 @@ walking into it triggers it early.
 <delay:[300, true]>
 ```
 Sits on the map for ~5 seconds; anyone who walks into it triggers it early.
+
+---
+
+### `<combo:[COMBO_SKILL_ID, LINK_TIME?, EXPIRE_FRAMES?]>` / `<comboStarter>` / `<freeCombo>` / `<aiSkillExclusion>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+after this skill executes (combo), or at AI skill-selection time (starter/exclusion)
+
+**Effect:**
+`combo` makes COMBO_SKILL_ID pressable LINK_TIME frames after this skill fires (default 0), with
+the window auto-clearing after EXPIRE_FRAMES from the opener's fire time (default 0 = no expiry,
+stays open until the slot's base cooldown resets). By default a combo only opens on a landed hit;
+`freeCombo` opens it immediately regardless of hit. AI ignores combo-tagged skills unless
+`comboStarter` is present; `aiSkillExclusion` removes a skill from AI's random pool entirely
+(good for combo-enders that should only be reachable via the chain). The opener's own cooldown
+must exceed LINK_TIME or the combo is unreachable.
+
+```
+<combo:[5, 8, 60]>
+<comboStarter>
+```
+An AI-usable opener that makes skill 5 pressable after 8 frames, auto-clearing after 60 total.
+
+---
+
+### `<guard:[FLAT, PERCENT]>` / `<parry:VAL>`
+
+**Applies to:**
+Skills, Items with the configured "Guard Skill Type"
+
+**When:**
+while guarding is held (guard) / in the window right after guard is raised (parry)
+
+**Effect:**
+`guard` reduces incoming damage by FLAT (applied first) then PERCENT (both usually negative).
+`parry` opens a VAL-frame "just guard" window that fully mitigates one incoming hit — window opens
+when guarding starts and counts down; a successful parry stops guarding entirely (re-press to
+parry again). Explicit parry (this tag) is distinct from JABS's implicit/passive parry
+(attacker-pressure-vs-defender-pressure math that runs when not guarding/casting/dashing).
+
+```
+<guard:[-10, -25]>
+<parry:12>
+```
+Guarding cuts 10 flat damage then 25% off the remainder; the first 12 frames of guard are a full
+parry window.
+
+**See also:** `<unparryable>`, `<per>`, `<ignoreParry>`
+
+---
+
+### `<counterGuard:[SKILL, CHANCE]>` / `<counterParry:[SKILL, CHANCE]>` / `<unparryable>`
+
+**Applies to:**
+Skills, Items (counterGuard/counterParry); Skills, Items (unparryable, on the attacking skill)
+
+**When:**
+a hit is guarded or parried
+
+**Effect:**
+fires SKILL back at CHANCE percent per guarded/parried hit. If both are available on the same
+hit, counter-parry takes precedence over counter-guard. `unparryable` makes a skill impossible to
+parry under any circumstance, regardless of the defender's parry window.
+
+```
+<counterParry:[7, 100]>
+```
+Every successfully parried hit fires skill 7 back at the attacker.
+
+**See also:** `<parry>`, `<guard>`
+
+---
+
+### `<per:[FORMULA]>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States
+
+**When:**
+always (battler-wide, summed across all active note sources)
+
+**Formula context:**
+`a` = the battler being evaluated, `b` = 0, `v` = `$gameVariables._data`.
+
+**Effect:**
+sums to a single percent-point Parry Extension Rate stat that widens the `<parry:VAL>` window:
+`Math.floor((1 + per / 100) * parryDuration)`.
+
+```
+<per:[a.agi * 0.2]>
+```
+Extends this battler's parry window scaled off their own AGI.
+
+**See also:** `<parry>`, `<cdr>`
+
+---
+
+### `<retaliate:[SKILL_ID, CHANCE, TYPE?]>`
+
+**Applies to:**
+States, Skills, Items, Actors, Classes, Enemies, Weapons, Armors
+
+**When:**
+this battler is struck
+
+**Effect:**
+fires SKILL_ID immediately at CHANCE percent chance. Optional TYPE (`physical`/`magical`/
+`certain`) filters which incoming hit types trigger it; omitted = any type. The payload skill's
+damage formula gets three extra variables: `d`/`m`/`t` — the HP/MP/TP damage dealt by the
+triggering hit (all default 0 outside a retaliation context, so referencing them is always safe).
+
+```
+<retaliate:[30, 100, physical]>
+```
+Payload skill formula `d * 0.3`, tagged `<unparryable>` — classic thorns: reflects 30% of
+incoming physical HP damage back at the attacker.
+
+---
+
+### `<onOwnDefeat:[SKILL_ID, CHANCE]>` / `<onTargetDefeat:[SKILL_ID, CHANCE]>` / `<onDefeatedTarget>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States (onOwnDefeat/onTargetDefeat); Skills, Items
+(onDefeatedTarget)
+
+**When:**
+this battler is defeated (onOwnDefeat) / this battler defeats a target (onTargetDefeat)
+
+**Effect:**
+fires SKILL_ID at CHANCE percent. `onOwnDefeat` is a parting shot on self-death (explode-on-death
+enemies). `onTargetDefeat` is an execute/kill-flourish skill. `onDefeatedTarget`, placed on the
+onTargetDefeat payload skill, spawns its action event at the defeated target's last position
+instead of at the caster.
+
+```
+<onOwnDefeat:[66, 100]>
+```
+This enemy always detonates a parting skill when defeated.
+
+---
+
+### `<onEvadeApply:[STATE_ID, CHANCE]>` / `<onEvadeApplySelf:[STATE_ID, CHANCE]>` / `<onEvadeExecute:[SKILL_ID, CHANCE]>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States
+
+**When:**
+this battler evades an incoming attack
+
+**Effect:**
+`onEvadeApply` inflicts STATE_ID on the attacker who missed (retributive). `onEvadeApplySelf`
+inflicts STATE_ID on the evader itself (rewards dodging). `onEvadeExecute` fires SKILL_ID with
+the attacker seeded as the target (an AoE/self-scope skill ignores the seed).
+
+```
+<onEvadeApplySelf:[9, 100]>
+```
+Successfully evading always grants this battler a self-buff state.
+
+---
+
+### `<luckyRolls:[FORMULA]>` / `<thisLuckyRolls:[FORMULA]>` / `<cursedRolls:[FORMULA]>` / `<thisCursedRolls:[FORMULA]>`
+
+**Applies to:**
+`luckyRolls`/`cursedRolls`: Actors, Classes, Enemies, Weapons, Armors, States. `thisLuckyRolls`/
+`thisCursedRolls`: Skills, Items.
+
+**When:**
+any on-chance roll involving this battler (hit, crit, state application, procs)
+
+**Formula context:**
+`a` = the battler being evaluated, `b` = 0, `v` = `$gameVariables._data`.
+
+**Effect:**
+most JABS on-chance rolls are a "best of N" contest per side. These tags add extra rolls: lucky
+rolls help this battler succeed when it's the one rolling for success (landing hits, applying
+states, crits, procs); cursed rolls help this battler fail when it's on the defending end
+(incoming hits/states). The `this*` variants are skill-scoped, stacking on top of the
+battler-wide total.
+
+```
+<luckyRolls:[Math.floor(a.luk / 20)]>
+```
+Grants one bonus positive roll per 20 points of this battler's own LUK.
+
+**See also:** `<veryLucky>`, `<encoreRepeats>`, `<accumulate>`
+
+---
+
+### `<veryLucky>` / `<veryCursed>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States
+
+**When:**
+any on-chance roll where this battler is the roller
+
+**Effect:**
+boolean bypass flags rather than reroll counts — short-circuit the entire roll contest instead
+of adding dice. `veryLucky` always succeeds; `veryCursed` always fails. Checked before reroll math
+runs; if both are present on the same battler, lucky wins the tie (avoid stacking both).
+
+```
+<veryLucky>
+```
+This battler's on-chance rolls (as the roller) always succeed, no dice involved.
+
+**See also:** `<luckyRolls>`
