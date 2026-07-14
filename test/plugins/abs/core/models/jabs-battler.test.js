@@ -6779,5 +6779,574 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion movement
+
+  //region readiness
+  describe('initializeCooldown', () =>
+  {
+    it('does nothing without a resolved skill slot', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getSkillSlot: () => null });
+
+      expect(() => jabsBattler.initializeCooldown('mainhand', 60)).not.toThrow();
+    });
+
+    it('sets the cooldown frames on the resolved slot', () =>
+    {
+      const setFrames = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getSkillSlot: () => ({ getCooldown: () => ({ setFrames }) }) });
+
+      jabsBattler.initializeCooldown('mainhand', 60);
+
+      expect(setFrames).toHaveBeenCalledWith(60);
+    });
+  });
+
+  describe('getCooldown', () =>
+  {
+    it('warns and returns null without a resolved skill slot', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getSkillSlot: () => null });
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      expect(jabsBattler.getCooldown('mainhand')).toBeNull();
+      warnSpy.mockRestore();
+    });
+
+    it('returns the resolved slot\'s cooldown', () =>
+    {
+      const cooldown = {};
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getSkillSlot: () => ({ getCooldown: () => cooldown }) });
+
+      expect(jabsBattler.getCooldown('mainhand')).toBe(cooldown);
+    });
+  });
+
+  describe('getActionKeyData', () =>
+  {
+    it('returns null when the cooldown could not be resolved', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCooldown = () => null;
+      jabsBattler.getBattler = () => ({ getSkillSlot: () => ({}) });
+
+      expect(jabsBattler.getActionKeyData('mainhand')).toBeNull();
+    });
+
+    it('returns null when the skill slot could not be resolved', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCooldown = () => ({});
+      jabsBattler.getBattler = () => ({ getSkillSlot: () => null });
+
+      expect(jabsBattler.getActionKeyData('mainhand')).toBeNull();
+    });
+
+    it('returns the cooldown and skillslot pair when both resolve', () =>
+    {
+      const cooldown = {};
+      const skillslot = {};
+      const jabsBattler = buildBattler();
+      jabsBattler.getCooldown = () => cooldown;
+      jabsBattler.getBattler = () => ({ getSkillSlot: () => skillslot });
+
+      expect(jabsBattler.getActionKeyData('mainhand')).toEqual({ cooldown, skillslot });
+    });
+  });
+
+  describe('isPostActionCooldownComplete', () =>
+  {
+    it('is immediately true once already flagged complete', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._postActionCooldownComplete = true;
+
+      expect(jabsBattler.isPostActionCooldownComplete()).toBe(true);
+    });
+
+    it('increments the counter and reports false while still charging', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._postActionCooldownComplete = false;
+      jabsBattler._postActionCooldown = 0;
+      jabsBattler._postActionCooldownMax = 5;
+
+      expect(jabsBattler.isPostActionCooldownComplete()).toBe(false);
+      expect(jabsBattler._postActionCooldown).toBe(1);
+    });
+
+    it('flags complete and resets the counter once the max is exceeded', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._postActionCooldownComplete = false;
+      jabsBattler._postActionCooldown = 10;
+      jabsBattler._postActionCooldownMax = 5;
+
+      expect(jabsBattler.isPostActionCooldownComplete()).toBe(true);
+      expect(jabsBattler._postActionCooldownComplete).toBe(true);
+      expect(jabsBattler._postActionCooldown).toBe(0);
+    });
+  });
+
+  describe('startPostActionCooldown', () =>
+  {
+    it('resets and arms the post-action cooldown', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.startPostActionCooldown(30);
+
+      expect(jabsBattler._postActionCooldownComplete).toBe(false);
+      expect(jabsBattler._postActionCooldown).toBe(0);
+      expect(jabsBattler._postActionCooldownMax).toBe(30);
+    });
+  });
+
+  describe('isIdle / setIdle', () =>
+  {
+    it('tracks the idle flag', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.isIdle()).toBe(true);
+
+      jabsBattler.setIdle(false);
+
+      expect(jabsBattler.isIdle()).toBe(false);
+    });
+  });
+
+  describe('isIdleActionReady', () =>
+  {
+    it('is immediately true once already flagged ready', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._idleActionReady = true;
+
+      expect(jabsBattler.isIdleActionReady()).toBe(true);
+    });
+
+    it('increments the counter and reports false while still charging', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._idleActionReady = false;
+      jabsBattler._idleActionCount = 0;
+      jabsBattler._idleActionCountMax = 5;
+
+      expect(jabsBattler.isIdleActionReady()).toBe(false);
+      expect(jabsBattler._idleActionCount).toBe(1);
+    });
+
+    it('flags ready and resets the counter once the max is exceeded', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._idleActionReady = false;
+      jabsBattler._idleActionCount = 10;
+      jabsBattler._idleActionCountMax = 5;
+
+      expect(jabsBattler.isIdleActionReady()).toBe(true);
+      expect(jabsBattler._idleActionReady).toBe(true);
+      expect(jabsBattler._idleActionCount).toBe(0);
+    });
+  });
+
+  describe('isSkillTypeCooldownReady', () =>
+  {
+    it('delegates to the skill slot manager', () =>
+    {
+      const isAnyCooldownReadyForSlot = vi.fn(() => true);
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getSkillSlotManager: () => ({ isAnyCooldownReadyForSlot }) });
+
+      expect(jabsBattler.isSkillTypeCooldownReady('mainhand')).toBe(true);
+      expect(isAnyCooldownReadyForSlot).toHaveBeenCalledWith('mainhand');
+    });
+  });
+
+  describe('cooldown/combo mutation delegates', () =>
+  {
+    it('modCooldownCounter delegates to modBaseFrames', () =>
+    {
+      const modBaseFrames = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getCooldown = () => ({ modBaseFrames });
+
+      jabsBattler.modCooldownCounter('mainhand', 10);
+
+      expect(modBaseFrames).toHaveBeenCalledWith(10);
+    });
+
+    it('setCooldownCounter delegates to setFrames', () =>
+    {
+      const setFrames = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getCooldown = () => ({ setFrames });
+
+      jabsBattler.setCooldownCounter('mainhand', 10);
+
+      expect(setFrames).toHaveBeenCalledWith(10);
+    });
+
+    it('resetComboData delegates to resetCombo on the resolved skill slot', () =>
+    {
+      const resetCombo = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({
+        getSkillSlotManager: () => ({ getSkillSlotByKey: () => ({ resetCombo }) }),
+      });
+
+      jabsBattler.resetComboData('mainhand');
+
+      expect(resetCombo).toHaveBeenCalledTimes(1);
+    });
+
+    it('setComboFrames delegates to the cooldown', () =>
+    {
+      const setComboFrames = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getCooldown = () => ({ setComboFrames });
+
+      jabsBattler.setComboFrames('mainhand', 10);
+
+      expect(setComboFrames).toHaveBeenCalledWith(10);
+    });
+
+    it('setComboExpireFrames delegates to the cooldown', () =>
+    {
+      const setComboExpireFrames = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getCooldown = () => ({ setComboExpireFrames });
+
+      jabsBattler.setComboExpireFrames('mainhand', 10);
+
+      expect(setComboExpireFrames).toHaveBeenCalledWith(10);
+    });
+  });
+
+  describe('isActionReady', () =>
+  {
+    it('is immediately true once already flagged ready', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._prepareReady = true;
+
+      expect(jabsBattler.isActionReady()).toBe(true);
+    });
+
+    it('increments the counter and reports false while still charging', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._prepareReady = false;
+      jabsBattler._prepareCounter = 0;
+      jabsBattler._prepareMax = 5;
+
+      expect(jabsBattler.isActionReady()).toBe(false);
+      expect(jabsBattler._prepareCounter).toBe(1);
+    });
+
+    it('flags ready and resets the counter once the max is reached', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._prepareReady = false;
+      jabsBattler._prepareCounter = 5;
+      jabsBattler._prepareMax = 5;
+
+      expect(jabsBattler.isActionReady()).toBe(true);
+      expect(jabsBattler._prepareReady).toBe(true);
+      expect(jabsBattler._prepareCounter).toBe(0);
+    });
+  });
+
+  describe('getPrepareTime', () =>
+  {
+    it('delegates to the underlying battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ prepareTime: () => 42 });
+
+      expect(jabsBattler.getPrepareTime()).toBe(42);
+    });
+  });
+
+  describe('getCooldownKeyBySkillId', () =>
+  {
+    it('resolves a semantic slot for an enemy when one exists', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => true;
+      jabsBattler.getBattler = () => ({ findSlotForSkillId: () => ({ key: 'dodge' }) });
+
+      expect(jabsBattler.getCooldownKeyBySkillId(1)).toBe('dodge');
+    });
+
+    it('falls back to an arbitrary id-name key for an enemy with no slot', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => true;
+      jabsBattler.getBattler = () => ({ findSlotForSkillId: () => null });
+      jabsBattler.getSkill = () => ({ id: 5, name: 'Fireball' });
+
+      expect(jabsBattler.getCooldownKeyBySkillId(5)).toBe('5-Fireball');
+    });
+
+    it('returns null for an enemy with no slot and no resolvable skill', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => true;
+      jabsBattler.getBattler = () => ({ findSlotForSkillId: () => null });
+      jabsBattler.getSkill = () => null;
+
+      expect(jabsBattler.getCooldownKeyBySkillId(5)).toBeNull();
+    });
+
+    it('resolves the slot key for an actor', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.isActor = () => true;
+      jabsBattler.getBattler = () => ({ findSlotForSkillId: () => ({ key: 'mainhand' }) });
+
+      expect(jabsBattler.getCooldownKeyBySkillId(1)).toBe('mainhand');
+    });
+
+    it('returns null for an actor with no matching slot', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.isActor = () => true;
+      jabsBattler.getBattler = () => ({ findSlotForSkillId: () => null });
+
+      expect(jabsBattler.getCooldownKeyBySkillId(1)).toBeNull();
+    });
+
+    it('falls back to the global cooldown key for neither actor nor enemy', () =>
+    {
+      J.ABS.Globals = { GlobalCooldownKey: 'gcd' };
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.isActor = () => false;
+
+      expect(jabsBattler.getCooldownKeyBySkillId(1)).toBe('gcd');
+    });
+  });
+
+  describe('isSkillIdBasicAttack', () =>
+  {
+    it('is true when the skill id matches the enemy basic attack', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => true;
+      jabsBattler.getEnemyBasicAttack = () => 1;
+
+      expect(jabsBattler.isSkillIdBasicAttack(1)).toBe(true);
+    });
+
+    it('is false when the skill id does not match the enemy basic attack', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => true;
+      jabsBattler.getEnemyBasicAttack = () => 1;
+
+      expect(jabsBattler.isSkillIdBasicAttack(2)).toBe(false);
+    });
+
+    it('is false for an actor with no matching slot', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.isActor = () => true;
+      jabsBattler.getBattler = () => ({ findSlotForSkillId: () => null });
+
+      expect(jabsBattler.isSkillIdBasicAttack(1)).toBe(false);
+    });
+
+    it('is true for an actor whose skill lives in the mainhand slot', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.isActor = () => true;
+      jabsBattler.getBattler = () => ({ findSlotForSkillId: () => ({ key: JABS_Button.Mainhand }) });
+
+      expect(jabsBattler.isSkillIdBasicAttack(1)).toBe(true);
+    });
+
+    it('is true for an actor whose skill lives in the offhand slot', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.isActor = () => true;
+      jabsBattler.getBattler = () => ({ findSlotForSkillId: () => ({ key: JABS_Button.Offhand }) });
+
+      expect(jabsBattler.isSkillIdBasicAttack(1)).toBe(true);
+    });
+
+    it('warns and returns false for neither actor nor enemy', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.isActor = () => false;
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      expect(jabsBattler.isSkillIdBasicAttack(1)).toBe(false);
+      warnSpy.mockRestore();
+    });
+  });
+
+  describe('getSkill', () =>
+  {
+    it('returns null without a skill id', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.getSkill(0)).toBeNull();
+    });
+
+    it('delegates to the underlying battler for a valid skill id', () =>
+    {
+      const skill = { id: 1 };
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ skill: () => skill });
+
+      expect(jabsBattler.getSkill(1)).toBe(skill);
+    });
+  });
+
+  describe('canPaySkillCost', () =>
+  {
+    it('is false when the battler cannot pay the cost', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getSkill = () => ({ id: 1 });
+      jabsBattler.getBattler = () => ({ canPaySkillCost: () => false });
+
+      expect(jabsBattler.canPaySkillCost(1)).toBe(false);
+    });
+
+    it('is true when the battler can pay the cost', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getSkill = () => ({ id: 1 });
+      jabsBattler.getBattler = () => ({ canPaySkillCost: () => true });
+
+      expect(jabsBattler.canPaySkillCost(1)).toBe(true);
+    });
+  });
+
+  describe('canExecuteSkill', () =>
+  {
+    function buildExecutableBattler(overrides = {})
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.canBattlerUseSkills = () => true;
+      jabsBattler.canBattlerUseAttacks = () => true;
+      jabsBattler.isSkillIdBasicAttack = () => false;
+      jabsBattler.canPaySkillCost = () => true;
+      jabsBattler.getCooldownKeyBySkillId = () => 'mainhand';
+      jabsBattler.getCooldown = () => ({ isBaseReady: () => true });
+      jabsBattler.getBattler = () => ({ getSkillSlot: () => ({ comboId: 0 }) });
+      Object.assign(jabsBattler, overrides);
+      return jabsBattler;
+    }
+
+    beforeEach(async () =>
+    {
+      const { default: JABS_GlobalCooldown } = await import('../../../../../src/plugins/abs/core/models/JABS_GlobalCooldown.js');
+      JABS_GlobalCooldown.isGlobalBlockingSkillId = vi.fn(() => false);
+    });
+
+    it('is false without a chosen skill id', () =>
+    {
+      expect(buildExecutableBattler().canExecuteSkill(0)).toBe(false);
+    });
+
+    it('is false when neither skills nor attacks can be used', () =>
+    {
+      const jabsBattler = buildExecutableBattler({
+        canBattlerUseSkills: () => false, canBattlerUseAttacks: () => false,
+      });
+
+      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+    });
+
+    it('is false for a basic attack when attacks are blocked', () =>
+    {
+      const jabsBattler = buildExecutableBattler({
+        canBattlerUseAttacks: () => false, isSkillIdBasicAttack: () => true,
+      });
+
+      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+    });
+
+    it('is false for a non-basic-attack skill when skills are blocked', () =>
+    {
+      const jabsBattler = buildExecutableBattler({
+        canBattlerUseSkills: () => false, isSkillIdBasicAttack: () => false,
+      });
+
+      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+    });
+
+    it('is false when the cost cannot be paid', () =>
+    {
+      const jabsBattler = buildExecutableBattler({ canPaySkillCost: () => false });
+
+      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+    });
+
+    it('is false without a resolvable cooldown key', () =>
+    {
+      const jabsBattler = buildExecutableBattler({ getCooldownKeyBySkillId: () => null });
+
+      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+    });
+
+    it('warns and is false when the resolved key has no cooldown', () =>
+    {
+      const jabsBattler = buildExecutableBattler({ getCooldown: () => null });
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const traceSpy = vi.spyOn(console, 'trace').mockImplementation(() => {});
+
+      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+      warnSpy.mockRestore();
+      traceSpy.mockRestore();
+    });
+
+    it('is false when the base cooldown is not ready and this is not a combo', () =>
+    {
+      const jabsBattler = buildExecutableBattler({
+        getCooldown: () => ({ isBaseReady: () => false }),
+      });
+
+      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+    });
+
+    it('is true for a combo skill even when the base cooldown is not ready', () =>
+    {
+      const jabsBattler = buildExecutableBattler({
+        getCooldown: () => ({ isBaseReady: () => false }),
+        getBattler: () => ({ getSkillSlot: () => ({ comboId: 1 }) }),
+      });
+
+      expect(jabsBattler.canExecuteSkill(1)).toBe(true);
+    });
+
+    it('is false when the global cooldown is blocking this skill', async () =>
+    {
+      const { default: JABS_GlobalCooldown } = await import('../../../../../src/plugins/abs/core/models/JABS_GlobalCooldown.js');
+      JABS_GlobalCooldown.isGlobalBlockingSkillId = vi.fn(() => true);
+      const jabsBattler = buildExecutableBattler();
+
+      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+    });
+
+    it('is true when every gate passes', () =>
+    {
+      const jabsBattler = buildExecutableBattler();
+
+      expect(jabsBattler.canExecuteSkill(1)).toBe(true);
+    });
+  });
+  //endregion readiness
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
