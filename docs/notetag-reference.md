@@ -3158,3 +3158,138 @@ Gains TP equal to 200% of the source's ATK over five seconds (negative formula r
 Loses HP equal to 300% of the source's MAT over five seconds (positive formula result = harm).
 
 **See also:** `<hpFlat>`, `<stateDurationFormula>`
+
+---
+
+### `<tickSpeedFlat:VAL>` / `<tickSpeedPercent:VAL>` / `<tickSpeedTypePercent:[TYPE, VAL]>` / `<thisTickSpeed:FRAMES>`
+
+**Applies to:**
+`tickSpeedFlat`/`tickSpeedPercent`/`tickSpeedTypePercent`: Actors, Classes, Enemies, Weapons,
+Armors, States. `thisTickSpeed`: States.
+
+**When:**
+always (battler-wide, summed across all active note sources) — modifies the interval between
+slip/regen ticks
+
+**Effect:**
+`tickSpeedFlat` adds/subtracts frames from the base tick interval directly (positive = slower
+ticks). `tickSpeedPercent` divides the interval instead: `interval / (1 + VAL/100)` (positive =
+faster ticks — **opposite sign convention from flat**). `tickSpeedTypePercent` is the same
+percent math but scoped to sources carrying a matching `<type:TYPE>` classifier. Flat applies
+first, then the combined percent divides the result; floored at a small per-plugin minimum (never
+below 1 frame). `thisTickSpeed`, placed directly on a state, overrides that state's own base tick
+interval entirely, independent of the plugin default — flat/percent modifiers still layer on top.
+
+```
+<tickSpeedPercent:100>
+```
+Doubles this battler's slip/regen tick frequency (ticks twice as often).
+
+**See also:** `<hpFormula>`, `<stateTypeResist>`
+
+---
+
+### `<stateDuration:FRAMES>` / `<stateDurationSec:SECONDS>` / `<indefiniteState>`
+
+**Applies to:**
+States
+
+**When:**
+always (map-timer configuration, not RMMZ's native "Remove by Walking")
+
+**Effect:**
+sets how long the state persists on the map. `stateDuration` is frames; `stateDurationSec` is
+seconds (× 60 = frames). `indefiniteState` makes it never expire on the map. J-ABS ignores RMMZ's
+native stepsToRemove field entirely (which also caps at 9999 in the editor UI, ~2.8 min) — use
+these tags instead. Food chain HUD segments read the same duration getter.
+
+```
+<stateDurationSec:30>
+```
+This state lasts 30 seconds on the map.
+
+**See also:** `<stateDurationFlat>`, `<stateDurationFormula>`
+
+---
+
+### `<stateDurationFlat:VAL>` / `<stateDurationPerc:VAL>` / `<stateDurationFormula:[FORMULA]>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States (whoever is APPLYING the state — outgoing only,
+does not shorten/extend incoming states on this battler)
+
+**Formula context (stateDurationFormula):**
+`a` = the assailant applying the state (whose notes are being summed), `b` = the base duration in
+frames before any boosts, `v` = `$gameVariables._data`.
+
+**When:**
+a state is applied by this battler to any target
+
+**Effect:**
+extends (or shortens, with negative values) the outgoing duration of every state this battler
+applies. `Flat` adds frames directly; `Perc` adds a percent of base duration; `Formula` computes
+bonus frames from an expression. Multiple tags across all applicable sources sum together.
+
+```
+<stateDurationFormula:[a.luk * 2]>
+```
+Every state this battler applies gets bonus frames scaled off their own LUK.
+
+**See also:** `<stateDuration>`
+
+---
+
+### `<stackType:refresh|extend|stack>` / `<stateRefreshDiminish:VAL>` / `<stateRefreshReset:VAL>` / `<stackExtendAmount:VAL>` / `<stackExtendMax:VAL>` / `<stackMax:VAL>` / `<applyStacks:VAL>` / `<loseAllStacksAtOnce>`
+
+**Applies to:**
+States
+
+**When:**
+this specific state is reapplied while already active
+
+**Effect:**
+overrides the plugin-wide default reapply strategy per-state. `stackType` picks the strategy.
+`stateRefreshDiminish`/`stateRefreshReset` tune the "refresh" strategy's diminishing-returns
+timer. `stackExtendAmount`/`stackExtendMax` tune the "extend" strategy's per-application frame
+gain and cap. `stackMax` caps stack count for the "stack" strategy; `applyStacks` sets how many
+stacks land per hit (default 1); `loseAllStacksAtOnce` makes expiry drop every stack at once
+instead of one-at-a-time-with-refresh.
+
+```
+<stackType:stack>
+<stackMax:5>
+<applyStacks:1>
+```
+This state stacks up to 5 times, gaining 1 stack per application.
+
+**See also:** `<stackOnExpire>`, `<stacksConvertToState>`
+
+---
+
+### `<stacksConvertToState:[NEW_STATE_ID, STACKS_REQUIRED]>` / `<removeOnConvert>` / `<convertUsesCaster>`
+
+**Applies to:**
+States
+
+**When:**
+this state's stack count reaches STACKS_REQUIRED (checked on every application, `>=` so
+overshoot is safe)
+
+**Effect:**
+applies NEW_STATE_ID to the battler as a fresh application (starting at 1 stack regardless of the
+source count) once the threshold is hit; only the first `stacksConvertToState` tag is read. If
+the converted state is already active, it's re-applied per its own reapplication type. Without
+`removeOnConvert` the source state stays active alongside the new one (intentional for escalation
+patterns — e.g. base poison persists while lethal dose also applies); with it, the source state is
+fully removed on conversion. By default conversion data is read from the TARGET's perceived
+version of the state; `convertUsesCaster` (placed on the base state) reads it from the CASTER's
+perceived version instead — required when the conversion tag is added via a caster-side extension
+passive the target otherwise wouldn't see.
+
+```
+<stacksConvertToState:[9, 20]>
+<removeOnConvert>
+```
+At 20 stacks, this state is replaced entirely by state 9.
+
+**See also:** `<stackMax>`, `<applyStacks>`
