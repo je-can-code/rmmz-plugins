@@ -5020,3 +5020,53 @@ objective is in STATE — one of `inactive`/`active`/`completed`/`failed`/`misse
 <pageQuestCondition:[herbalist_delivery, 2, completed]>
 ```
 This event page is only active once objective 2 of the "herbalist_delivery" quest is completed.
+
+---
+
+## J-ABS-Pixelistics (`src/plugins/pixel/ext/abs/`)
+
+JABS integration layer for J-Pixelistics (sub-tile pixel-accurate movement). Adapts ally AI
+formation, battler hitbox queries, and dodge distance to the fractional-coordinate system.
+
+### `<hitboxSize:N>` / `<hitboxSize:[W, H]>`
+
+**Applies to:**
+Enemies (database note); Events on the map (battler page comment)
+
+**When:**
+always
+
+**Effect:**
+overrides this enemy's collision/targeting hitbox, shared across PIXEL movement, JABS targeting,
+and hitbox overlays. Centered horizontally, anchored to feet vertically. Bare N is a square
+shorthand (width = height = N tiles); `[W, H]` sets width and height independently. Precedence:
+event comment > enemy note > plugin parameter default.
+
+```
+<hitboxSize:[0.8, 0.5]>
+```
+This enemy's hitbox is 0.8 tiles wide and 0.5 tiles tall.
+
+**See also:** `<hitboxReveal>`
+
+---
+
+### `<hitboxReveal:N>`
+
+**Applies to:**
+Enemies (database note); Events on the map (battler page comment)
+
+**When:**
+the player is within N tiles
+
+**Effect:**
+reveals a faint outline of this enemy's hitbox while the player is within N tiles. Precedence:
+event comment > enemy note > plugin parameter default. A default range of 0 disables
+proximity-based reveal unless the "Outline Always Active" plugin parameter is enabled.
+
+```
+<hitboxReveal:4.5>
+```
+This enemy's hitbox outline becomes visible once the player is within 4.5 tiles.
+
+**See also:** `<hitboxSize>`
