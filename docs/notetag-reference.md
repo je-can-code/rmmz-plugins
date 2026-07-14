@@ -4778,3 +4778,74 @@ powering up existing traits is still allowed.
 <maxTraitCount:3>
 ```
 This equip can hold at most 3 unique traits total.
+
+---
+
+## J-Minimap (`src/plugins/map/core/`)
+
+Renders a passability-driven minimap on screen showing the player, followers, and (with J-ABS)
+enemy battlers and dropped loot.
+
+### `<minimap:MARKER_TYPE>` / `<mm:MARKER_TYPE>`
+
+**Applies to:**
+Events on the map (comment)
+
+**When:**
+always
+
+**Effect:**
+marks this event with a minimap marker of MARKER_TYPE: `npc` (purple circle), `loot` (green
+diamond), `object` (yellow diamond), `teleport` (hollow light-blue square, stretchable via
+`<areaEvent>`), `questOffer` (yellow square), `questProgress` (blue diamond), or `questTurnIn`
+(green circle). `mm` is a shorthand alias for `minimap`. If multiple marker tags are present on
+one event, the last one found wins.
+
+```
+<minimap:loot>
+```
+This event shows up as a green diamond loot marker on the minimap.
+
+**See also:** `<areaEvent>`
+
+---
+
+### `<areaEvent:WIDTHxHEIGHT>`
+
+**Applies to:**
+Events on the map (comment), typically alongside `<minimap:teleport>`
+
+**When:**
+always
+
+**Effect:**
+stretches this event's minimap marker to a WIDTHxHEIGHT tile rectangle instead of the default
+single-tile marker — used to represent multi-tile teleport zones accurately on the minimap.
+Defaults to 1x1 if absent or malformed.
+
+```
+<minimap:teleport>
+<areaEvent:3x2>
+```
+This teleport event's minimap marker is stretched to a 3-wide by 2-tall hollow square.
+
+**See also:** `<minimap>`
+
+---
+
+### `<blockMinimap>`
+
+**Applies to:**
+Maps (the map's own note field)
+
+**When:**
+always
+
+**Effect:**
+suppresses the minimap entirely while the player is on this map, regardless of the plugin's
+"Start Visible" default or any toggle plugin command.
+
+```
+<blockMinimap>
+```
+The minimap never renders on this map.
