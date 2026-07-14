@@ -1,11 +1,10 @@
 //region plugins/_base/_component/fixtures/install-jabs-onchance-stub.js
 /**
  * {@link RPGManager.getOnChanceEffectsFromDatabaseObject} instantiates {@link JABS_OnChanceEffect}, which lives in
- * JABS, not J-Base. Tests that exercise on-chance helpers must define a minimal global before {@link out/J-Base.js}
- * evaluates.
+ * JABS, not J-Base. Tests that exercise on-chance helpers must define a minimal global before J-Base's own source
+ * files import.
  *
- * @param {object} sandbox VM global object (before or after `vm.createContext`; assign properties on the same object
- *   passed into the context).
+ * @param {object} sandbox The host-globals object (typically `globalThis`) to assign the stub onto.
  */
 export function installJabsOnChanceEffectGlobalStub(sandbox)
 {

@@ -4,11 +4,10 @@ const noop = function()
 };
 
 /**
- * Globals required for J-Base source to evaluate, whether that's {@link out/J-Base.js} running in a VM
- * (discovered via host probe) or individual `src/plugins/_base/**` files imported directly into the real
- * test realm. Game/Window/Sprite constructors are placeholders; tests should replace key classes
- * (e.g. {@link Game_Battler}) before J-Base runs via {@link evaluateShippedPlugin}'s `afterHostGlobalsInstall`
- * hook, or by mutating `globalThis` directly before a direct `import()` of the target file.
+ * Globals required for J-Base source to evaluate, for individual `src/plugins/_base/**` files imported
+ * directly into the real test realm. Game/Window/Sprite constructors are placeholders; tests should replace
+ * key classes (e.g. {@link Game_Battler}) by mutating `globalThis` directly before a direct `import()` of the
+ * target file.
  *
  * @param {object} [sandbox] Defaults to `globalThis` so direct-import tests can call this with no target arg.
  * @param {Record<string, string>} jBasePluginParameterStrings Values as RMMZ would provide for `J-Base`.
