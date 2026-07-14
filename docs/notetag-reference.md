@@ -470,3 +470,142 @@ rate.
 <goldMultiplier:100>
 ```
 Three stacked tags sum to +175% gold from defeated enemies.
+
+---
+
+## J-Elementalistics (`src/plugins/elem/core/`)
+
+### `<attackElements:[NUM]>` / `<attackElements:[NUM,NUM,...]>`
+
+**Applies to:**
+Skills only
+
+**When:**
+skill's elemental calculation is performed
+
+**Effect:**
+adds one or more extra attack elements to a skill, on top of whatever element the skill's damage
+formula already specifies. If the skill's base element is "Normal Attack," all of the attacker's
+weapon elements apply too, in addition to the tag's elements.
+
+```
+<attackElements:[1,2,5]>
+```
+Adds elements 1, 2, and 5 to the skill, in addition to any other attack elements the skill has.
+
+**See also:** `<absorbElements>`, `<strictElements>`
+
+---
+
+### `<absorbElements:[NUM]>` / `<absorbElements:[NUM,NUM,...]>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, Enemies, States
+
+**When:**
+target's elemental calculation is performed
+
+**Effect:**
+lists elements this battler absorbs (heals from instead of taking damage). If a skill's elements
+overlap with any absorbed element, ALL non-absorbed elements on that skill are dropped from
+consideration and the rates of only the absorbed elements are multiplied together — absorption takes
+priority over both weakness and 0%-rate immunity. Same element defined on multiple sources doesn't
+stack extra.
+
+```
+<absorbElements:[10,18]>
+```
+This battler now absorbs elements 10 and 18.
+
+**Worked example:** enemy is weak to fire but absorbs ice; hit with a fire+ice skill — the fire
+weakness is ignored entirely and the whole hit is absorbed at ice's rate.
+
+**See also:** `<attackElements>`, `<strictElements>`, `<pierceElement>` (pierce explicitly never
+touches absorbed elements)
+
+---
+
+### `<boostElement:ELEMENT_ID:PERCENT_BOOST>`
+
+**Applies to:**
+Actors, Enemies, Weapons, Armors, Skills, States, Classes
+
+**When:**
+caster's elemental calculation is performed, for skills bearing ELEMENT_ID
+
+**Effect:**
+multiplies damage of skills bearing ELEMENT_ID by (1 + PERCENT_BOOST/100), on top of absorb/null/
+strict rules. PERCENT_BOOST accepts negative numbers for a penalty instead of a boost (e.g. a
+curse/debuff state). Multiple elements on one skill multiply their individual boosts together.
+
+```
+<boostElement:1:50>
+```
++50% damage on skills bearing element id 1.
+
+```
+<boostElement:1:-30>
+```
+-30% damage on skills bearing element id 1 — useful for a curse/debuff state rather than a buff.
+
+**See also:** `<pierceElement>` (a different mechanic — pierce nudges a *resistance* toward neutral;
+boost multiplies the *final* rate regardless of resistance/weakness)
+
+---
+
+### `<strictElements:[NUM]>` / `<strictElements:[NUM,NUM,...]>`
+
+**Applies to:**
+Actors, Enemies, Weapons, Armors, States, Classes
+
+**When:**
+target's elemental calculation is performed
+
+**Effect:**
+whitelists the only elements this battler can take damage from. If no `strictElements` tag exists
+anywhere on the battler, every element is allowed by default (i.e. this is opt-in). Same element
+defined on multiple sources doesn't stack extra. Equivalent in effect to a 0%-rate on every element
+except the whitelisted ones, without needing to configure every single element by hand.
+
+```
+<strictElements:[3,5,6]>
+```
+This battler now can only receive damage from skills that include element id 3, 5, or 6.
+
+**See also:** `<absorbElements>`, `<attackElements>`
+
+---
+
+### `<pierceElement:[ELEMENT_ID, PIERCE_PERCENT]>` / `<thisPierceElement:[ELEMENT_ID, PIERCE_PERCENT]>`
+
+**Applies to:**
+`pierceElement` — Actors, Enemies, Classes, Skills (passively grants pierce on all casts while known),
+Weapons, Armors, States (any note source on the attacker, read via `getAllNotes()`).
+`thisPierceElement` — Skills only, and only for that specific skill being cast right now.
+
+**When:**
+attacker's elemental calculation is performed against a resisted (not weak, not absorbed) element
+
+**Effect:**
+sums all pierce contributions for the element being used and raises the target's effective element
+rate toward 1.0 (neutral), hard-capped there — never past it into bonus-damage territory. Applied
+*before* the attacker's `<boostElement>` multiplier. Never affects weaknesses (rate ≥ 1.0) or
+absorbed elements — pierce has nothing to "pierce through" on either of those. Multiple tags on the
+same element sum together across both scopes.
+
+```
+<pierceElement:[4, 30]>
+```
+The attacker pierces 30% of the target's fire (element 4) resistance on all skills. On a passive
+mastery state, this is always active while the state is applied.
+
+```
+<thisPierceElement:[4, 40]>
+```
+Combined with `<pierceElement:[4, 30]>` from a state elsewhere on the attacker: 70 total fire pierce
+on this skill specifically (40 skill-specific + 30 passive global).
+
+**Worked example:** target has 0% fire rate (immune), attacker has 50 total fire pierce → effective
+rate = min(1.0, 0.0 + 0.50) = 0.50, target takes 50% fire damage.
+
+**See also:** `<boostElement>`, `<absorbElements>`
