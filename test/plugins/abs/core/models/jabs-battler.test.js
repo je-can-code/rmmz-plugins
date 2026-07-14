@@ -224,7 +224,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
   function buildEvent(overrides = {})
   {
-    return Object.assign({ _x: 3, _y: 4 }, overrides);
+    return Object.assign({ _x: 3, _y: 4, isPlayer: () => false }, overrides);
   }
 
   function buildGameBattler(overrides = {})
@@ -1202,6 +1202,452 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.isAlerted = () => true;
 
       expect(jabsBattler.getPursuitRadius()).toBe(9);
+    });
+  });
+
+  describe('getGuardRange', () =>
+  {
+    it('returns the tracked guard range', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._guardRange = 5;
+
+      expect(jabsBattler.getGuardRange()).toBe(5);
+    });
+  });
+
+  describe('setEngaged / isEngaged', () =>
+  {
+    it('tracks the engaged flag', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.isEngaged()).toBe(false);
+
+      jabsBattler.setEngaged(true);
+
+      expect(jabsBattler.isEngaged()).toBe(true);
+    });
+  });
+
+  describe('engageTarget', () =>
+  {
+    function buildEngageableBattler(overrides = {})
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEngagementLocked = () => false;
+      jabsBattler.setIdle = vi.fn();
+      jabsBattler.addUpdateAggro = vi.fn();
+      jabsBattler.clearAlert = vi.fn();
+      jabsBattler.onEngage = vi.fn();
+      jabsBattler.isActor = () => false;
+      Object.assign(jabsBattler, overrides);
+      return jabsBattler;
+    }
+
+    it('does nothing when engagement is locked', () =>
+    {
+      const jabsBattler = buildEngageableBattler({ isEngagementLocked: () => true });
+
+      jabsBattler.engageTarget('target');
+
+      expect(jabsBattler.isEngaged()).toBe(false);
+      expect(jabsBattler.onEngage).not.toHaveBeenCalled();
+    });
+
+    it('sets idle false, engages, and targets the given battler', () =>
+    {
+      const jabsBattler = buildEngageableBattler();
+      const target = { getUuid: () => 'target-uuid' };
+
+      jabsBattler.engageTarget(target);
+
+      expect(jabsBattler.setIdle).toHaveBeenCalledWith(false);
+      expect(jabsBattler.isEngaged()).toBe(true);
+      expect(jabsBattler.getTarget()).toBe(target);
+      expect(jabsBattler.addUpdateAggro).toHaveBeenCalledWith('target-uuid', 0);
+    });
+
+    it('disables through-walls for an actor-based battler', () =>
+    {
+      const setThrough = vi.fn();
+      const jabsBattler = buildEngageableBattler({ isActor: () => true });
+      jabsBattler.getCharacter = () => ({ setThrough });
+      const target = { getUuid: () => 'target-uuid' };
+
+      jabsBattler.engageTarget(target);
+
+      expect(setThrough).toHaveBeenCalledWith(false);
+    });
+
+    it('clears the alert state and performs the on-engage hook', () =>
+    {
+      const jabsBattler = buildEngageableBattler();
+      const target = { getUuid: () => 'target-uuid' };
+
+      jabsBattler.engageTarget(target);
+
+      expect(jabsBattler.clearAlert).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.onEngage).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('onEngage', () =>
+  {
+    it('shows the exclamation balloon', () =>
+    {
+      J.ABS.Balloons = { Exclamation: 1 };
+      const jabsBattler = buildBattler();
+      jabsBattler.showBalloon = vi.fn();
+
+      jabsBattler.onEngage();
+
+      expect(jabsBattler.showBalloon).toHaveBeenCalledWith(1);
+    });
+  });
+
+  describe('disengageTarget', () =>
+  {
+    function buildDisengageableBattler()
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.onDisengage = vi.fn();
+      jabsBattler.clearAlert = vi.fn();
+      jabsBattler.clearFollowers = vi.fn();
+      jabsBattler.clearLeaderData = vi.fn();
+      jabsBattler.resetPhases = vi.fn();
+      return jabsBattler;
+    }
+
+    it('fires the on-disengage hook before clearing state', () =>
+    {
+      const jabsBattler = buildDisengageableBattler();
+      jabsBattler.onDisengage = vi.fn(() => { expect(jabsBattler.isEngaged()).toBe(true); });
+      jabsBattler.setEngaged(true);
+
+      jabsBattler.disengageTarget();
+
+      expect(jabsBattler.onDisengage).toHaveBeenCalledTimes(1);
+    });
+
+    it('clears targeting, engagement, alert, leader/follower data, decided action, and phases', () =>
+    {
+      const jabsBattler = buildDisengageableBattler();
+      jabsBattler.setTarget('target');
+      jabsBattler.setAllyTarget('ally');
+      jabsBattler.setEngaged(true);
+      jabsBattler.setDecidedAction([ 'action' ]);
+
+      jabsBattler.disengageTarget();
+
+      expect(jabsBattler.getTarget()).toBeNull();
+      expect(jabsBattler.getAllyTarget()).toBeNull();
+      expect(jabsBattler.isEngaged()).toBe(false);
+      expect(jabsBattler.clearAlert).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.clearFollowers).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.clearLeaderData).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.isActionDecided()).toBe(false);
+      expect(jabsBattler.resetPhases).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('onDisengage', () =>
+  {
+    it('does nothing when not currently engaged', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEngaged = () => false;
+      jabsBattler.showBalloon = vi.fn();
+
+      jabsBattler.onDisengage();
+
+      expect(jabsBattler.showBalloon).not.toHaveBeenCalled();
+    });
+
+    it('does not show a balloon when disabled via metadata', () =>
+    {
+      J.ABS.Metadata.ShowDisengageBalloon = false;
+      const jabsBattler = buildBattler();
+      jabsBattler.isEngaged = () => true;
+      jabsBattler.showBalloon = vi.fn();
+
+      jabsBattler.onDisengage();
+
+      expect(jabsBattler.showBalloon).not.toHaveBeenCalled();
+      J.ABS.Metadata.ShowDisengageBalloon = true;
+    });
+
+    it('shows the disengage balloon when engaged and enabled', () =>
+    {
+      J.ABS.Metadata.ShowDisengageBalloon = true;
+      J.ABS.Metadata.DisengageBalloonId = 5;
+      const jabsBattler = buildBattler();
+      jabsBattler.isEngaged = () => true;
+      jabsBattler.showBalloon = vi.fn();
+
+      jabsBattler.onDisengage();
+
+      expect(jabsBattler.showBalloon).toHaveBeenCalledWith(5);
+    });
+  });
+
+  describe('engagement locking', () =>
+  {
+    it('tracks the engagement lock flag', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.isEngagementLocked()).toBe(false);
+
+      jabsBattler.lockEngagement();
+      expect(jabsBattler.isEngagementLocked()).toBe(true);
+
+      jabsBattler.unlockEngagement();
+      expect(jabsBattler.isEngagementLocked()).toBe(false);
+    });
+  });
+
+  describe('getTarget / setTarget', () =>
+  {
+    it('tracks the current target', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.getTarget()).toBeNull();
+
+      jabsBattler.setTarget('target');
+
+      expect(jabsBattler.getTarget()).toBe('target');
+    });
+  });
+
+  describe('battler-last-hit tracking', () =>
+  {
+    it('getBattlerLastHit clears and returns null when the last hit battler is dead', () =>
+    {
+      const jabsBattler = buildBattler();
+      const deadBattler = { isDead: () => true };
+      jabsBattler._lastHit = deadBattler;
+
+      expect(jabsBattler.getBattlerLastHit()).toBeNull();
+    });
+
+    it('getBattlerLastHit returns a still-alive last-hit battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      const aliveBattler = { isDead: () => false };
+      jabsBattler._lastHit = aliveBattler;
+
+      expect(jabsBattler.getBattlerLastHit()).toBe(aliveBattler);
+    });
+
+    it('setBattlerLastHit also sets the current target for the player', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isPlayer = () => true;
+      const battler = { isDead: () => false };
+
+      jabsBattler.setBattlerLastHit(battler);
+
+      expect(jabsBattler.getTarget()).toBe(battler);
+    });
+
+    it('setBattlerLastHit does not touch the target for a non-player', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isPlayer = () => false;
+      const battler = { isDead: () => false };
+
+      jabsBattler.setBattlerLastHit(battler);
+
+      expect(jabsBattler.getTarget()).toBeNull();
+    });
+
+    it('hasBattlerLastHit reflects whether a last-hit battler is tracked', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.hasBattlerLastHit()).toBe(false);
+
+      jabsBattler.setBattlerLastHit({ isDead: () => false });
+
+      expect(jabsBattler.hasBattlerLastHit()).toBe(true);
+    });
+
+    it('clearBattlerLastHit clears the last hit, the countdown, and the player\'s target', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isPlayer = () => true;
+      jabsBattler.setBattlerLastHit({ isDead: () => false });
+      jabsBattler.setLastBattlerHitCountdown(500);
+
+      jabsBattler.clearBattlerLastHit();
+
+      expect(jabsBattler.hasBattlerLastHit()).toBe(false);
+      expect(jabsBattler._lastHitCountdown).toBe(0);
+      expect(jabsBattler.getTarget()).toBeNull();
+    });
+
+    it('setLastBattlerHitCountdown defaults to 900 frames', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setLastBattlerHitCountdown();
+
+      expect(jabsBattler._lastHitCountdown).toBe(900);
+    });
+
+    it('countdownLastHit clears the last-hit battler once the countdown reaches 0', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setBattlerLastHit({ isDead: () => false });
+      jabsBattler._lastHitCountdown = 0;
+
+      jabsBattler.countdownLastHit();
+
+      expect(jabsBattler.hasBattlerLastHit()).toBe(false);
+    });
+
+    it('countdownLastHit decrements the countdown while positive', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._lastHitCountdown = 5;
+
+      jabsBattler.countdownLastHit();
+
+      expect(jabsBattler._lastHitCountdown).toBe(4);
+    });
+  });
+
+  describe('isDead', () =>
+  {
+    it('is true when there is no underlying battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => null;
+
+      expect(jabsBattler.isDead()).toBe(true);
+    });
+
+    it('is true when the battler is not tracked on the map', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => null);
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getUuid: () => 'uuid', isDead: () => false });
+
+      expect(jabsBattler.isDead()).toBe(true);
+    });
+
+    it('is true when the underlying battler reports dead', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({}));
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getUuid: () => 'uuid', isDead: () => true });
+      jabsBattler.isDying = () => false;
+
+      expect(jabsBattler.isDead()).toBe(true);
+    });
+
+    it('is true when this battler is dying, even if the underlying battler is not dead', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({}));
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getUuid: () => 'uuid', isDead: () => false });
+      jabsBattler.isDying = () => true;
+
+      expect(jabsBattler.isDead()).toBe(true);
+    });
+
+    it('is false for a tracked, alive, non-dying battler', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({}));
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getUuid: () => 'uuid', isDead: () => false });
+      jabsBattler.isDying = () => false;
+
+      expect(jabsBattler.isDead()).toBe(false);
+    });
+  });
+
+  describe('getAllyTarget / setAllyTarget', () =>
+  {
+    it('tracks the ally target', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.getAllyTarget()).toBeNull();
+
+      jabsBattler.setAllyTarget('ally');
+
+      expect(jabsBattler.getAllyTarget()).toBe('ally');
+    });
+  });
+
+  describe('distance calculations', () =>
+  {
+    it('distanceToPoint returns null when both coordinates are null', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.distanceToPoint(null, null)).toBeNull();
+    });
+
+    it('distanceToPoint computes the rounded euclidean distance', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getX = () => 0;
+      jabsBattler.getY = () => 0;
+
+      expect(jabsBattler.distanceToPoint(3, 4)).toBe(5);
+    });
+
+    it('distanceToDesignatedTarget returns null without a target', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.distanceToDesignatedTarget(null)).toBeNull();
+    });
+
+    it('distanceToDesignatedTarget delegates to distanceToPoint using the target\'s coordinates', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getX = () => 0;
+      jabsBattler.getY = () => 0;
+      const target = { getX: () => 3, getY: () => 4 };
+
+      expect(jabsBattler.distanceToDesignatedTarget(target)).toBe(5);
+    });
+
+    it('distanceToCurrentTarget returns null without a current target', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.distanceToCurrentTarget()).toBeNull();
+    });
+
+    it('distanceToCurrentTarget computes distance to the current target', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getX = () => 0;
+      jabsBattler.getY = () => 0;
+      jabsBattler.setTarget({ getX: () => 3, getY: () => 4 });
+
+      expect(jabsBattler.distanceToCurrentTarget()).toBe(5);
+    });
+
+    it('distanceToAllyTarget returns null without an ally target', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.distanceToAllyTarget()).toBeNull();
+    });
+
+    it('distanceToAllyTarget computes distance to the ally target', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getX = () => 0;
+      jabsBattler.getY = () => 0;
+      jabsBattler.setAllyTarget({ getX: () => 3, getY: () => 4 });
+
+      expect(jabsBattler.distanceToAllyTarget()).toBe(5);
     });
   });
   //endregion _reference
