@@ -104,6 +104,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
           LOWERLEFT: 1, LOWERRIGHT: 3, UPPERLEFT: 7, UPPERRIGHT: 9,
         },
         ProjectileFormations: { Line: 'line', Spray: 'spray', Cross: 'cross', Xburst: 'xburst', Nova: 'nova' },
+        Globals: { GlobalCooldownKey: 'gcd' },
       },
       LEVEL: false,
     };
@@ -180,7 +181,25 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         }
       },
     }));
-    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_GlobalCooldown.js', () => ({ default: class {} }));
+    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_GlobalCooldown.js', () => ({
+      default: class
+      {
+        static skillIsSubjectToGlobalCooldown()
+        {
+          return false;
+        }
+
+        static framesForSkill()
+        {
+          return 0;
+        }
+
+        static reducedFramesForCaster()
+        {
+          return 0;
+        }
+      },
+    }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Battler.js', () => ({
       default: class
       {
@@ -2556,5 +2575,208 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion action geometry
+
+  //region costs and cooldowns
+  describe('isBasicAttack', () =>
+  {
+    it('is true for the mainhand cooldown key', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.isBasicAttack('mainhand')).toBe(true);
+    });
+
+    it('is true for the offhand cooldown key', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.isBasicAttack('offhand')).toBe(true);
+    });
+
+    it('is false for any other cooldown key', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.isBasicAttack('combat1')).toBe(false);
+    });
+  });
+
+  describe('paySkillCosts', () =>
+  {
+    it('pays the skill cost against the caster\'s underlying battler', () =>
+    {
+      const engine = new JABS_Engine();
+      const paySkillCost = vi.fn();
+      const caster = { getBattler: () => ({ paySkillCost }) };
+      const skill = { id: 5 };
+      const action = { getBaseSkill: () => skill };
+
+      engine.paySkillCosts(caster, action);
+
+      expect(paySkillCost).toHaveBeenCalledWith(skill);
+    });
+  });
+
+  describe('applyCooldownCounters', () =>
+  {
+    it('delegates to applyPlayerCooldowns', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.applyPlayerCooldowns = vi.fn();
+      engine.applyCooldownCounters('caster', 'action');
+      expect(engine.applyPlayerCooldowns).toHaveBeenCalledWith('caster', 'action');
+    });
+  });
+
+  describe('applyPlayerCooldowns', () =>
+  {
+    it('applies the skill\'s own effective cooldown value', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.applyCooldownValueForSkill = vi.fn();
+      const action = { getBaseSkill: () => ({ id: 5 }), getCooldown: () => 42 };
+
+      engine.applyPlayerCooldowns('caster', action);
+
+      expect(engine.applyCooldownValueForSkill).toHaveBeenCalledWith('caster', action, 42);
+    });
+
+    it('does not stamp the global cooldown when the skill is not subject to it', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.applyCooldownValueForSkill = vi.fn();
+      const caster = { setCooldownCounter: vi.fn() };
+      const action = { getBaseSkill: () => ({ id: 5 }), getCooldown: () => 42 };
+
+      engine.applyPlayerCooldowns(caster, action);
+
+      expect(caster.setCooldownCounter).not.toHaveBeenCalled();
+    });
+
+    it('stamps the reduced global cooldown frames when the skill is subject to it', async () =>
+    {
+      const { default: JABS_GlobalCooldown } = await import('../../../../../src/plugins/abs/core/models/JABS_GlobalCooldown.js');
+      JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown = () => true;
+      JABS_GlobalCooldown.framesForSkill = () => 100;
+      JABS_GlobalCooldown.reducedFramesForCaster = () => 80;
+      const engine = new JABS_Engine();
+      engine.applyCooldownValueForSkill = vi.fn();
+      const caster = { setCooldownCounter: vi.fn() };
+      const action = { getBaseSkill: () => ({ id: 5 }), getCooldown: () => 42 };
+
+      engine.applyPlayerCooldowns(caster, action);
+
+      expect(caster.setCooldownCounter).toHaveBeenCalledWith('gcd', 80);
+      JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown = () => false;
+    });
+  });
+
+  describe('applyCooldownValueForSkill', () =>
+  {
+    it('stamps only the executed slot for a uniquely-cooldowned skill', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.applyComboModeForSkill = vi.fn();
+      const caster = { setCooldownCounter: vi.fn(), getBattler: vi.fn() };
+      const action = { getCooldownType: () => 'combat1', getBaseSkill: () => ({ jabsUniqueCooldown: true }) };
+
+      engine.applyCooldownValueForSkill(caster, action, 30);
+
+      expect(caster.setCooldownCounter).toHaveBeenCalledWith('combat1', 30);
+      expect(caster.getBattler).not.toHaveBeenCalled();
+    });
+
+    it('stamps only the executed slot for a basic attack, even without the unique-cooldown tag', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.applyComboModeForSkill = vi.fn();
+      const caster = { setCooldownCounter: vi.fn(), getBattler: vi.fn() };
+      const action = { getCooldownType: () => 'mainhand', getBaseSkill: () => ({ jabsUniqueCooldown: false }) };
+
+      engine.applyCooldownValueForSkill(caster, action, 30);
+
+      expect(caster.setCooldownCounter).toHaveBeenCalledWith('mainhand', 30);
+      expect(caster.getBattler).not.toHaveBeenCalled();
+    });
+
+    it('stamps every equipped slot resolving to the same executed skill for a shared-cooldown skill', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.applyComboModeForSkill = vi.fn();
+      const skill = { id: 5, jabsUniqueCooldown: false };
+      const slots = [ { id: 1, key: 'combat1' }, { id: 2, key: 'combat2' } ];
+      const battler = {
+        getAllEquippedSkills: () => slots,
+        resolveEquippedSkillId: (id) => (id === 1 ? 5 : 6),
+      };
+      const caster = { setCooldownCounter: vi.fn(), getBattler: () => battler };
+      const action = { getCooldownType: () => 'combat1', getBaseSkill: () => skill };
+
+      engine.applyCooldownValueForSkill(caster, action, 30);
+
+      expect(caster.setCooldownCounter).toHaveBeenCalledTimes(1);
+      expect(caster.setCooldownCounter).toHaveBeenCalledWith('combat1', 30);
+    });
+
+    it('stamps the combo mode for every slot it touches', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.applyComboModeForSkill = vi.fn();
+      const skill = { jabsUniqueCooldown: true };
+      const caster = { setCooldownCounter: vi.fn() };
+      const action = { getCooldownType: () => 'mainhand', getBaseSkill: () => skill };
+
+      engine.applyCooldownValueForSkill(caster, action, 30);
+
+      expect(engine.applyComboModeForSkill).toHaveBeenCalledWith(caster, 'mainhand', skill);
+    });
+  });
+
+  describe('applyComboModeForSkill', () =>
+  {
+    it('does nothing when the caster has no cooldown for the given key', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = { getCooldown: () => null };
+      expect(() => engine.applyComboModeForSkill(caster, 'mainhand', {})).not.toThrow();
+    });
+
+    it('sets combo mode to "none" when the skill has no combo tag', () =>
+    {
+      const engine = new JABS_Engine();
+      const cooldown = { setComboMode: vi.fn(), setComboFrames: vi.fn(), setComboExpireFrames: vi.fn() };
+      const caster = { getCooldown: () => cooldown };
+
+      engine.applyComboModeForSkill(caster, 'mainhand', { jabsComboAction: null });
+
+      expect(cooldown.setComboMode).toHaveBeenCalledWith('none');
+    });
+
+    it('sets combo mode to "expiring" and pre-arms both timers when the combo has an expiry window', () =>
+    {
+      const engine = new JABS_Engine();
+      const cooldown = { setComboMode: vi.fn(), setComboFrames: vi.fn(), setComboExpireFrames: vi.fn() };
+      const caster = { getCooldown: () => cooldown };
+      const skill = { jabsComboAction: {}, jabsComboExpire: 30, jabsComboDelay: 10 };
+
+      engine.applyComboModeForSkill(caster, 'mainhand', skill);
+
+      expect(cooldown.setComboMode).toHaveBeenCalledWith('expiring');
+      expect(cooldown.setComboFrames).toHaveBeenCalledWith(10);
+      expect(cooldown.setComboExpireFrames).toHaveBeenCalledWith(30);
+    });
+
+    it('sets combo mode to "infinite" and pre-arms only the delay when the combo has no expiry', () =>
+    {
+      const engine = new JABS_Engine();
+      const cooldown = { setComboMode: vi.fn(), setComboFrames: vi.fn(), setComboExpireFrames: vi.fn() };
+      const caster = { getCooldown: () => cooldown };
+      const skill = { jabsComboAction: {}, jabsComboExpire: 0, jabsComboDelay: 10 };
+
+      engine.applyComboModeForSkill(caster, 'mainhand', skill);
+
+      expect(cooldown.setComboMode).toHaveBeenCalledWith('infinite');
+      expect(cooldown.setComboFrames).toHaveBeenCalledWith(10);
+      expect(cooldown.setComboExpireFrames).not.toHaveBeenCalled();
+    });
+  });
+  //endregion costs and cooldowns
 });
 //endregion plugins/abs/core/managers/jabs-engine.test.js
