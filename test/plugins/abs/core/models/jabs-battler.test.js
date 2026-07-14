@@ -6699,5 +6699,85 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion map: defeat/evade effects
+
+  //region movement
+  describe('isMovementLocked / setMovementLock', () =>
+  {
+    it('tracks the movement lock flag, defaulting to true', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.isMovementLocked()).toBe(false);
+
+      jabsBattler.setMovementLock();
+
+      expect(jabsBattler.isMovementLocked()).toBe(true);
+
+      jabsBattler.setMovementLock(false);
+
+      expect(jabsBattler.isMovementLocked()).toBe(false);
+    });
+  });
+
+  describe('canBattlerMove / isMovementLockedByState', () =>
+  {
+    it('is false when explicitly movement-locked', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isMovementLocked = () => true;
+
+      expect(jabsBattler.canBattlerMove()).toBe(false);
+    });
+
+    it('is false when locked by state', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isMovementLocked = () => false;
+      jabsBattler.isMovementLockedByState = () => true;
+
+      expect(jabsBattler.canBattlerMove()).toBe(false);
+    });
+
+    it('is true otherwise', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isMovementLocked = () => false;
+      jabsBattler.isMovementLockedByState = () => false;
+
+      expect(jabsBattler.canBattlerMove()).toBe(true);
+    });
+
+    it('isMovementLockedByState is false with no states', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ states: () => [] });
+
+      expect(jabsBattler.isMovementLockedByState()).toBe(false);
+    });
+
+    it('isMovementLockedByState is true when rooted', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ states: () => [ { jabsRooted: true } ] });
+
+      expect(jabsBattler.isMovementLockedByState()).toBe(true);
+    });
+
+    it('isMovementLockedByState is true when paralyzed', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ states: () => [ { jabsParalyzed: true } ] });
+
+      expect(jabsBattler.isMovementLockedByState()).toBe(true);
+    });
+
+    it('isMovementLockedByState is false when states are present but none lock movement', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ states: () => [ {} ] });
+
+      expect(jabsBattler.isMovementLockedByState()).toBe(false);
+    });
+  });
+  //endregion movement
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
