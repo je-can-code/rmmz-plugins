@@ -6213,5 +6213,756 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion collision
+
+  //region defeated target aftermath
+  describe('handleDefeatedTarget', () =>
+  {
+    it('runs predefeat before the type-specific handler and postdefeat after it', () =>
+    {
+      const engine = new JABS_Engine();
+      const callOrder = [];
+      engine.predefeatHandler = vi.fn(() => callOrder.push('pre'));
+      engine.handleDefeatedPlayer = vi.fn(() => callOrder.push('player'));
+      engine.postDefeatHandler = vi.fn(() => callOrder.push('post'));
+      const target = { isPlayer: () => true, isActor: () => true, isDying: () => false, isEnemy: () => false };
+
+      engine.handleDefeatedTarget(target, 'caster');
+
+      expect(callOrder).toEqual([ 'pre', 'player', 'post' ]);
+    });
+
+    it('handles a dying player', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.predefeatHandler = vi.fn();
+      engine.postDefeatHandler = vi.fn();
+      engine.handleDefeatedPlayer = vi.fn();
+      engine.handleDefeatedAlly = vi.fn();
+      engine.handleDefeatedEnemy = vi.fn();
+      const target = { isPlayer: () => true, isActor: () => true, isDying: () => false, isEnemy: () => false };
+
+      engine.handleDefeatedTarget(target, 'caster');
+
+      expect(engine.handleDefeatedPlayer).toHaveBeenCalledTimes(1);
+      expect(engine.handleDefeatedAlly).not.toHaveBeenCalled();
+      expect(engine.handleDefeatedEnemy).not.toHaveBeenCalled();
+    });
+
+    it('handles a non-dying actor ally', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.predefeatHandler = vi.fn();
+      engine.postDefeatHandler = vi.fn();
+      engine.handleDefeatedPlayer = vi.fn();
+      engine.handleDefeatedAlly = vi.fn();
+      engine.handleDefeatedEnemy = vi.fn();
+      const target = { isPlayer: () => false, isActor: () => true, isDying: () => false, isEnemy: () => false };
+
+      engine.handleDefeatedTarget(target, 'caster');
+
+      expect(engine.handleDefeatedAlly).toHaveBeenCalledWith(target);
+      expect(engine.handleDefeatedPlayer).not.toHaveBeenCalled();
+    });
+
+    it('does not re-handle an actor ally that is already dying', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.predefeatHandler = vi.fn();
+      engine.postDefeatHandler = vi.fn();
+      engine.handleDefeatedAlly = vi.fn();
+      engine.handleDefeatedEnemy = vi.fn();
+      const target = { isPlayer: () => false, isActor: () => true, isDying: () => true, isEnemy: () => false };
+
+      engine.handleDefeatedTarget(target, 'caster');
+
+      expect(engine.handleDefeatedAlly).not.toHaveBeenCalled();
+      expect(engine.handleDefeatedEnemy).not.toHaveBeenCalled();
+    });
+
+    it('handles a defeated enemy', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.predefeatHandler = vi.fn();
+      engine.postDefeatHandler = vi.fn();
+      engine.handleDefeatedAlly = vi.fn();
+      engine.handleDefeatedEnemy = vi.fn();
+      const target = { isPlayer: () => false, isActor: () => false, isDying: () => false, isEnemy: () => true };
+
+      engine.handleDefeatedTarget(target, 'caster');
+
+      expect(engine.handleDefeatedEnemy).toHaveBeenCalledWith(target, 'caster');
+    });
+  });
+
+  describe('predefeatHandler', () =>
+  {
+    it('delegates to the target\'s predefeat effects', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = { performPredefeatEffects: vi.fn() };
+
+      engine.predefeatHandler(target, 'caster');
+
+      expect(target.performPredefeatEffects).toHaveBeenCalledWith('caster');
+    });
+  });
+
+  describe('postDefeatHandler', () =>
+  {
+    it('delegates to the target\'s postdefeat effects', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = { performPostdefeatEffects: vi.fn() };
+
+      engine.postDefeatHandler(target, 'caster');
+
+      expect(target.performPostdefeatEffects).toHaveBeenCalledWith('caster');
+    });
+  });
+
+  describe('handleDefeatedPlayer', () =>
+  {
+    it('triggers party cycling', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.performPartyCycling = vi.fn();
+
+      engine.handleDefeatedPlayer();
+
+      expect(engine.performPartyCycling).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('handleDefeatedEnemy', () =>
+  {
+    function buildDefeatedTarget(overrides = {})
+    {
+      return Object.assign({
+        clearFollowers: vi.fn(),
+        clearLeader: vi.fn(),
+        getCharacter: () => ({ start: vi.fn() }),
+        isInanimate: () => false,
+        hasEventActions: () => false,
+        getBattler: () => ({}),
+        setDying: vi.fn(),
+      }, overrides);
+    }
+
+    beforeEach(() =>
+    {
+      globalThis.SoundManager = { playEnemyCollapse: vi.fn() };
+    });
+
+    it('clears followers and leader data', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = buildDefeatedTarget();
+
+      engine.handleDefeatedEnemy(target, null);
+
+      expect(target.clearFollowers).toHaveBeenCalledTimes(1);
+      expect(target.clearLeader).toHaveBeenCalledTimes(1);
+    });
+
+    it('plays the death cry for an animate target', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = buildDefeatedTarget({ isInanimate: () => false });
+
+      engine.handleDefeatedEnemy(target, null);
+
+      expect(globalThis.SoundManager.playEnemyCollapse).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not play a death cry for an inanimate target', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = buildDefeatedTarget({ isInanimate: () => true });
+
+      engine.handleDefeatedEnemy(target, null);
+
+      expect(globalThis.SoundManager.playEnemyCollapse).not.toHaveBeenCalled();
+    });
+
+    it('starts the death-control event when the target has event actions', () =>
+    {
+      const engine = new JABS_Engine();
+      const start = vi.fn();
+      const target = buildDefeatedTarget({ hasEventActions: () => true, getCharacter: () => ({ start }) });
+
+      engine.handleDefeatedEnemy(target, null);
+
+      expect(start).toHaveBeenCalledTimes(1);
+    });
+
+    it('grants rewards and loot when the caster is an actor', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.gainBasicRewards = vi.fn();
+      engine.createLootDrops = vi.fn();
+      const target = buildDefeatedTarget();
+      const caster = { isActor: () => true };
+
+      engine.handleDefeatedEnemy(target, caster);
+
+      expect(engine.gainBasicRewards).toHaveBeenCalledWith(target.getBattler(), caster);
+      expect(engine.createLootDrops).toHaveBeenCalledWith(target, caster);
+    });
+
+    it('does not grant rewards when there is no caster', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.gainBasicRewards = vi.fn();
+      engine.createLootDrops = vi.fn();
+      const target = buildDefeatedTarget();
+
+      engine.handleDefeatedEnemy(target, null);
+
+      expect(engine.gainBasicRewards).not.toHaveBeenCalled();
+      expect(engine.createLootDrops).not.toHaveBeenCalled();
+    });
+
+    it('does not grant rewards when the caster is not an actor', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.gainBasicRewards = vi.fn();
+      engine.createLootDrops = vi.fn();
+      const target = buildDefeatedTarget();
+      const caster = { isActor: () => false };
+
+      engine.handleDefeatedEnemy(target, caster);
+
+      expect(engine.gainBasicRewards).not.toHaveBeenCalled();
+      expect(engine.createLootDrops).not.toHaveBeenCalled();
+    });
+
+    it('flags the target as dying', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = buildDefeatedTarget();
+
+      engine.handleDefeatedEnemy(target, null);
+
+      expect(target.setDying).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe('gainBasicRewards', () =>
+  {
+    it('determines and gains both experience and gold, then logs the rewards', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.determineExperienceGained = vi.fn(() => 100);
+      engine.gainExperienceReward = vi.fn();
+      engine.determineGoldGained = vi.fn(() => 50);
+      engine.gainGoldReward = vi.fn();
+      engine.createRewardsLog = vi.fn();
+      const actorCharacter = {};
+      const actorBattler = {};
+      const actor = { getCharacter: () => actorCharacter, getBattler: () => actorBattler };
+      const enemy = {};
+
+      engine.gainBasicRewards(enemy, actor);
+
+      expect(engine.determineExperienceGained).toHaveBeenCalledWith(enemy, actorBattler);
+      expect(engine.gainExperienceReward).toHaveBeenCalledWith(100, actorCharacter);
+      expect(engine.determineGoldGained).toHaveBeenCalledWith(enemy, actorBattler);
+      expect(engine.gainGoldReward).toHaveBeenCalledWith(50, actorCharacter);
+      expect(engine.createRewardsLog).toHaveBeenCalledWith(100, 50, actor);
+    });
+  });
+
+  describe('canGainReward', () =>
+  {
+    it('is true by default', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.canGainReward('enemy', 'actor')).toBe(true);
+    });
+  });
+
+  describe('determineExperienceGained', () =>
+  {
+    it('returns 0 when the reward policy gate rejects rewards', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canGainReward = vi.fn(() => false);
+      const enemy = { exp: () => 100 };
+
+      expect(engine.determineExperienceGained(enemy, 'actor')).toBe(0);
+    });
+
+    it('scales the yielded experience by the reward multiplier', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canGainReward = vi.fn(() => true);
+      engine.getRewardScalingMultiplier = vi.fn(() => 2);
+      const enemy = { exp: () => 100 };
+
+      expect(engine.determineExperienceGained(enemy, 'actor')).toBe(200);
+    });
+
+    it('normalizes negative scaled experience to 0', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canGainReward = vi.fn(() => true);
+      engine.getRewardScalingMultiplier = vi.fn(() => -1);
+      const enemy = { exp: () => 100 };
+
+      expect(engine.determineExperienceGained(enemy, 'actor')).toBe(0);
+    });
+  });
+
+  describe('determineGoldGained', () =>
+  {
+    it('returns 0 when the reward policy gate rejects rewards', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canGainReward = vi.fn(() => false);
+      const enemy = { gold: () => 100 };
+
+      expect(engine.determineGoldGained(enemy, 'actor')).toBe(0);
+    });
+
+    it('scales the yielded gold by the reward multiplier', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canGainReward = vi.fn(() => true);
+      engine.getRewardScalingMultiplier = vi.fn(() => 2);
+      const enemy = { gold: () => 100 };
+
+      expect(engine.determineGoldGained(enemy, 'actor')).toBe(200);
+    });
+
+    it('normalizes negative scaled gold to 0', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canGainReward = vi.fn(() => true);
+      engine.getRewardScalingMultiplier = vi.fn(() => -1);
+      const enemy = { gold: () => 100 };
+
+      expect(engine.determineGoldGained(enemy, 'actor')).toBe(0);
+    });
+  });
+
+  describe('getRewardScalingMultiplier', () =>
+  {
+    it('defaults to a 1x multiplier when level scaling is unavailable', () =>
+    {
+      J.LEVEL = false;
+      const engine = new JABS_Engine();
+
+      expect(engine.getRewardScalingMultiplier({ level: 5 }, { level: 5 })).toBe(1.0);
+    });
+
+    it('defaults to a 1x multiplier when level scaling is available but disabled', () =>
+    {
+      J.LEVEL = true;
+      globalThis.$gameSystem = { isLevelScalingEnabled: () => false };
+      const engine = new JABS_Engine();
+
+      expect(engine.getRewardScalingMultiplier({ level: 5 }, { level: 5 })).toBe(1.0);
+      J.LEVEL = false;
+    });
+
+    it('uses the level-scaling multiplier when level scaling is enabled', () =>
+    {
+      J.LEVEL = true;
+      globalThis.$gameSystem = { isLevelScalingEnabled: () => true };
+      globalThis.LevelScaling = { Scope: { REWARD: 'reward' }, multiplier: vi.fn(() => 3) };
+      const engine = new JABS_Engine();
+
+      const result = engine.getRewardScalingMultiplier({ level: 10 }, { level: 5 });
+
+      expect(result).toBe(3);
+      expect(globalThis.LevelScaling.multiplier).toHaveBeenCalledWith(10, 5, 'reward');
+      J.LEVEL = false;
+    });
+  });
+
+  describe('gainExperienceReward', () =>
+  {
+    it('does nothing when there is no experience to grant', () =>
+    {
+      globalThis.$gameParty = { battleMembers: vi.fn(() => []) };
+      const engine = new JABS_Engine();
+
+      engine.gainExperienceReward(0, {});
+
+      expect(globalThis.$gameParty.battleMembers).not.toHaveBeenCalled();
+    });
+
+    it('grants experience to every battle member', () =>
+    {
+      const member1 = { gainExp: vi.fn() };
+      const member2 = { gainExp: vi.fn() };
+      globalThis.$gameParty = { battleMembers: () => [ member1, member2 ] };
+      const engine = new JABS_Engine();
+
+      engine.gainExperienceReward(100, {});
+
+      expect(member1.gainExp).toHaveBeenCalledWith(100);
+      expect(member2.gainExp).toHaveBeenCalledWith(100);
+    });
+  });
+
+  describe('gainGoldReward', () =>
+  {
+    it('does nothing when there is no gold to grant', () =>
+    {
+      globalThis.$gameParty = { gainGold: vi.fn() };
+      const engine = new JABS_Engine();
+
+      engine.gainGoldReward(0, {});
+
+      expect(globalThis.$gameParty.gainGold).not.toHaveBeenCalled();
+    });
+
+    it('grants the gold to the party', () =>
+    {
+      globalThis.$gameParty = { gainGold: vi.fn() };
+      const engine = new JABS_Engine();
+
+      engine.gainGoldReward(50, {});
+
+      expect(globalThis.$gameParty.gainGold).toHaveBeenCalledWith(50);
+    });
+  });
+
+  describe('createRewardsLog', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.ActionLogBuilder = vi.fn(function()
+      {
+        this.setupExperienceGained = vi.fn().mockReturnThis();
+        this.build = vi.fn(() => ({ builtExp: true }));
+      });
+      globalThis.LootLogBuilder = vi.fn(function()
+      {
+        this.setupGoldFound = vi.fn().mockReturnThis();
+        this.build = vi.fn(() => ({ builtGold: true }));
+      });
+      globalThis.$actionLogManager = { addLog: vi.fn() };
+      globalThis.$lootLogManager = { addLog: vi.fn() };
+    });
+
+    it('does nothing when logging is disabled', () =>
+    {
+      globalThis.J.LOG = false;
+      const engine = new JABS_Engine();
+
+      engine.createRewardsLog(100, 50, { getBattlerDatabaseData: () => ({ name: 'Hero' }) });
+
+      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$lootLogManager.addLog).not.toHaveBeenCalled();
+      globalThis.J.LOG = true;
+    });
+
+    it('logs experience gained when experience is non-zero', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const caster = { getBattlerDatabaseData: () => ({ name: 'Hero' }) };
+
+      engine.createRewardsLog(100, 0, caster);
+
+      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith({ builtExp: true });
+      expect(globalThis.$lootLogManager.addLog).not.toHaveBeenCalled();
+    });
+
+    it('logs gold found when gold is non-zero', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const caster = { getBattlerDatabaseData: () => ({ name: 'Hero' }) };
+
+      engine.createRewardsLog(0, 50, caster);
+
+      expect(globalThis.$lootLogManager.addLog).toHaveBeenCalledWith({ builtGold: true });
+      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('createLootDrops', () =>
+  {
+    it('does not drop loot for an actor target', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.addLootDropToMap = vi.fn();
+      const target = { isActor: () => true };
+
+      engine.createLootDrops(target, 'caster');
+
+      expect(engine.addLootDropToMap).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when the enemy has no drops', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.addLootDropToMap = vi.fn();
+      const target = { isActor: () => false, getBattler: () => ({ makeDropItems: () => [] }) };
+      const caster = { getBattler: () => ({}) };
+
+      engine.createLootDrops(target, caster);
+
+      expect(engine.addLootDropToMap).not.toHaveBeenCalled();
+    });
+
+    it('adds a loot drop to the map for each item dropped', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.addLootDropToMap = vi.fn();
+      const items = [ { id: 1 }, { id: 2 } ];
+      const casterBattler = {};
+      const target = {
+        isActor: () => false,
+        getBattler: () => ({ makeDropItems: vi.fn((cb) => { expect(cb).toBe(casterBattler); return items; }) }),
+        getX: () => 5,
+        getY: () => 6,
+      };
+      const caster = { getBattler: () => casterBattler };
+
+      engine.createLootDrops(target, caster);
+
+      expect(engine.addLootDropToMap).toHaveBeenCalledWith(5, 6, items[0]);
+      expect(engine.addLootDropToMap).toHaveBeenCalledWith(5, 6, items[1]);
+    });
+  });
+
+  describe('createLootLog', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.LootLogBuilder = vi.fn(function()
+      {
+        this.setupLootObtained = vi.fn().mockReturnThis();
+        this.build = vi.fn(() => ({ built: true }));
+      });
+      globalThis.$lootLogManager = { addLog: vi.fn() };
+    });
+
+    it('does nothing when logging is disabled', () =>
+    {
+      globalThis.J.LOG = false;
+      const engine = new JABS_Engine();
+
+      engine.createLootLog({ id: 1, itypeId: 1 });
+
+      expect(globalThis.$lootLogManager.addLog).not.toHaveBeenCalled();
+      globalThis.J.LOG = true;
+    });
+
+    it('logs an armor drop', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+
+      engine.createLootLog({ id: 1, atypeId: 2 });
+
+      expect(globalThis.LootLogBuilder.mock.results[0].value.setupLootObtained).toHaveBeenCalledWith('armor', 1);
+    });
+
+    it('logs a weapon drop', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+
+      engine.createLootLog({ id: 1, wtypeId: 3 });
+
+      expect(globalThis.LootLogBuilder.mock.results[0].value.setupLootObtained).toHaveBeenCalledWith('weapon', 1);
+    });
+
+    it('logs an item drop', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+
+      engine.createLootLog({ id: 1, itypeId: 4 });
+
+      expect(globalThis.LootLogBuilder.mock.results[0].value.setupLootObtained).toHaveBeenCalledWith('item', 1);
+    });
+  });
+
+  describe('onItemPickedUp', () =>
+  {
+    it('is a no-op', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(() => engine.onItemPickedUp([ 'item' ], {})).not.toThrow();
+    });
+  });
+
+  describe('battlerLevelup', () =>
+  {
+    it('does nothing when no battler is found for the uuid', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => null);
+      const engine = new JABS_Engine();
+      engine.playLevelUpAnimation = vi.fn();
+      engine.createLevelUpLog = vi.fn();
+
+      engine.battlerLevelup('uuid');
+
+      expect(engine.playLevelUpAnimation).not.toHaveBeenCalled();
+      expect(engine.createLevelUpLog).not.toHaveBeenCalled();
+    });
+
+    it('plays the level-up animation and logs the level-up when the battler is found', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const character = {};
+      const battler = { getCharacter: () => character };
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => battler);
+      const engine = new JABS_Engine();
+      engine.playLevelUpAnimation = vi.fn();
+      engine.createLevelUpLog = vi.fn();
+
+      engine.battlerLevelup('uuid');
+
+      expect(engine.playLevelUpAnimation).toHaveBeenCalledWith(character);
+      expect(engine.createLevelUpLog).toHaveBeenCalledWith(battler);
+    });
+  });
+
+  describe('createLevelUpLog', () =>
+  {
+    it('does nothing when logging is disabled', () =>
+    {
+      globalThis.J.LOG = false;
+      const engine = new JABS_Engine();
+      engine.configureLevelUpLog = vi.fn();
+      const jabsBattler = { getBattler: () => ({ name: () => 'Hero', level: 5 }) };
+
+      engine.createLevelUpLog(jabsBattler);
+
+      expect(engine.configureLevelUpLog).not.toHaveBeenCalled();
+      globalThis.J.LOG = true;
+    });
+
+    it('configures and logs the level-up when logging is enabled', () =>
+    {
+      globalThis.J.LOG = true;
+      globalThis.$actionLogManager = { addLog: vi.fn() };
+      const engine = new JABS_Engine();
+      engine.configureLevelUpLog = vi.fn(() => ({ built: true }));
+      const jabsBattler = { getBattler: () => ({ name: () => 'Hero', level: 5 }) };
+
+      engine.createLevelUpLog(jabsBattler);
+
+      expect(engine.configureLevelUpLog).toHaveBeenCalledWith('Hero', 5);
+      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith({ built: true });
+    });
+  });
+
+  describe('configureLevelUpLog', () =>
+  {
+    it('builds a level-up log entry', () =>
+    {
+      globalThis.ActionLogBuilder = vi.fn(function()
+      {
+        this.setupLevelUp = vi.fn().mockReturnThis();
+        this.build = vi.fn(() => ({ built: true }));
+      });
+      const engine = new JABS_Engine();
+
+      const result = engine.configureLevelUpLog('Hero', 5);
+
+      expect(globalThis.ActionLogBuilder.mock.results[0].value.setupLevelUp).toHaveBeenCalledWith('Hero', 5);
+      expect(result).toEqual({ built: true });
+    });
+  });
+
+  describe('playLevelUpAnimation', () =>
+  {
+    it('requests the level-up animation on the character', () =>
+    {
+      const engine = new JABS_Engine();
+      const character = { requestAnimation: vi.fn() };
+
+      engine.playLevelUpAnimation(character);
+
+      expect(character.requestAnimation).toHaveBeenCalledWith(49);
+    });
+  });
+
+  describe('battlerSkillLearn', () =>
+  {
+    it('does nothing when no battler is found for the uuid', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => null);
+      const engine = new JABS_Engine();
+      engine.createSkillLearnLog = vi.fn();
+
+      engine.battlerSkillLearn({ id: 1 }, 'uuid');
+
+      expect(engine.createSkillLearnLog).not.toHaveBeenCalled();
+    });
+
+    it('logs the skill learn when the battler is found', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const battler = { getCharacter: () => ({}) };
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => battler);
+      const engine = new JABS_Engine();
+      engine.createSkillLearnLog = vi.fn();
+      const skill = { id: 1 };
+
+      engine.battlerSkillLearn(skill, 'uuid');
+
+      expect(engine.createSkillLearnLog).toHaveBeenCalledWith(skill, battler);
+    });
+  });
+
+  describe('createSkillLearnLog', () =>
+  {
+    it('does nothing when logging is disabled', () =>
+    {
+      globalThis.J.LOG = false;
+      const engine = new JABS_Engine();
+      engine.configureSkillLearnLog = vi.fn();
+      const player = { getBattlerDatabaseData: () => ({ name: 'Hero' }) };
+
+      engine.createSkillLearnLog({ id: 1 }, player);
+
+      expect(engine.configureSkillLearnLog).not.toHaveBeenCalled();
+      globalThis.J.LOG = true;
+    });
+
+    it('configures and logs the skill learn when logging is enabled', () =>
+    {
+      globalThis.J.LOG = true;
+      globalThis.$actionLogManager = { addLog: vi.fn() };
+      const engine = new JABS_Engine();
+      engine.configureSkillLearnLog = vi.fn(() => ({ built: true }));
+      const player = { getBattlerDatabaseData: () => ({ name: 'Hero' }) };
+
+      engine.createSkillLearnLog({ id: 7 }, player);
+
+      expect(engine.configureSkillLearnLog).toHaveBeenCalledWith('Hero', 7);
+      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith({ built: true });
+    });
+  });
+
+  describe('configureSkillLearnLog', () =>
+  {
+    it('builds a skill-learn log entry', () =>
+    {
+      globalThis.ActionLogBuilder = vi.fn(function()
+      {
+        this.setupSkillLearn = vi.fn().mockReturnThis();
+        this.build = vi.fn(() => ({ built: true }));
+      });
+      const engine = new JABS_Engine();
+
+      const result = engine.configureSkillLearnLog('Hero', 7);
+
+      expect(globalThis.ActionLogBuilder.mock.results[0].value.setupSkillLearn).toHaveBeenCalledWith('Hero', 7);
+      expect(result).toEqual({ built: true });
+    });
+  });
+  //endregion defeated target aftermath
 });
 //endregion plugins/abs/core/managers/jabs-engine.test.js
