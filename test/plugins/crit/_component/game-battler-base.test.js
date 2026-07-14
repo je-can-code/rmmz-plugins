@@ -20,19 +20,28 @@ describe('J-CriticalFactors Game_BattlerBase (direct src import)', () =>
 
     globalThis.Game_BattlerBase = Game_BattlerBase;
 
+    // stand-in for the plugin-configured floor values normally parsed off the plugin parameters
+    // by J_CriticalFactorsPluginMetadata; Game_BattlerBase.js reads these directly.
+    globalThis.J = globalThis.J || {};
+    globalThis.J.CRIT = { Metadata: { baseCdmFactor: 0.5, baseCtrFactor: 0.5 } };
+
     // patches globalThis.Game_BattlerBase.prototype directly, no vm involved.
     await import('../../../../src/plugins/crit/core/objects/Game_BattlerBase.js');
   });
 
   describe('baseCriticalMultiplier', () =>
   {
-    it('defaults to 0.5', () =>
+    it('reads the configured floor straight off J.CRIT.Metadata.baseCdmFactor', () =>
     {
       // Arrange
       const battler = new globalThis.Game_BattlerBase();
+      const savedFactor = globalThis.J.CRIT.Metadata.baseCdmFactor;
+      globalThis.J.CRIT.Metadata.baseCdmFactor = 0.75;
 
       // Act & Assert
-      expect(battler.baseCriticalMultiplier()).toBe(0.5);
+      expect(battler.baseCriticalMultiplier()).toBe(0.75);
+
+      globalThis.J.CRIT.Metadata.baseCdmFactor = savedFactor;
     });
   });
 
@@ -50,13 +59,17 @@ describe('J-CriticalFactors Game_BattlerBase (direct src import)', () =>
 
   describe('baseCriticalReduction', () =>
   {
-    it('defaults to 0.5', () =>
+    it('reads the configured floor straight off J.CRIT.Metadata.baseCtrFactor', () =>
     {
       // Arrange
       const battler = new globalThis.Game_BattlerBase();
+      const savedFactor = globalThis.J.CRIT.Metadata.baseCtrFactor;
+      globalThis.J.CRIT.Metadata.baseCtrFactor = 0.25;
 
       // Act & Assert
-      expect(battler.baseCriticalReduction()).toBe(0.5);
+      expect(battler.baseCriticalReduction()).toBe(0.25);
+
+      globalThis.J.CRIT.Metadata.baseCtrFactor = savedFactor;
     });
   });
 

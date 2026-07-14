@@ -1256,3 +1256,56 @@ key, if J-SDP is loaded. Values can be negative to reduce gain.
 Combined: +50% AP gain (80 - 30 = 50).
 
 **See also:** `<ap>`, `<sdpMultiplier>` (J-SDP — same pattern, different resource)
+
+---
+
+## J-Aptitude-Typed (`src/plugins/apt/ext/typed/`)
+
+### `<aptitudeTyped:[SKILL_ID, REQUIRED_AP, DOMAIN, ID_OR_NAME]>`
+
+**Applies to:**
+Actors, Classes, Weapons, Armor, States
+
+**When:**
+same activation rules as core `<aptitude>` — only currently-active sources receive typed AP
+
+**Effect:**
+same as `<aptitude>`, but REQUIRED_AP must be earned specifically as DOMAIN/ID_OR_NAME-typed AP, not
+plain AP. DOMAIN is one of `element`, `weapontype`, `skilltype`; ID_OR_NAME is that domain's id or
+name. Doesn't matter whether the typed AP came from explicit `<apTyped>` tags or implicit inference —
+both count identically toward the requirement.
+
+```
+<aptitudeTyped:[12, 150, element, fire]>
+```
+Enables learning skill 12 once the owner gains 150 points of "fire" element AP specifically.
+
+**See also:** `<apTyped>`, `<aptitude>` (J-Aptitude core)
+
+---
+
+### `<apTyped:[AMOUNT, DOMAIN, ID_OR_NAME]>`
+
+**Applies to:**
+Enemies only
+
+**When:**
+enemy is defeated
+
+**Effect:**
+explicit typed AP grant — AMOUNT of DOMAIN/ID_OR_NAME-typed AP, independent of (and in addition to)
+any implicit typed AP inferred from how the enemy was fought. Repeatable — multiple tags on one
+enemy each grant independently.
+
+**Bug history:** this tag's regex required 4 comma-separated values through a copy-paste from
+`<aptitudeTyped>`'s regex, while the code and every documented example used only 3 — meaning the
+documented form never matched at all, and the 4-value form that *did* match got destructured
+incorrectly (values shifted by one slot, domain/id resolution garbled). Fixed the regex to the
+correct 3-value shape; the documented examples below were always accurate, only the regex was wrong.
+
+```
+<apTyped:[6, element, fire]>
+```
+This enemy yields 6 fire-element AP upon defeat.
+
+**See also:** `<aptitudeTyped>`, `<ap>` (J-Aptitude core — untyped equivalent)

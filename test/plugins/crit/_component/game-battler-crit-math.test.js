@@ -113,37 +113,39 @@ describe('J-CriticalFactors Game_Battler crit math (direct src import)', () =>
 
   describe('baseCriticalMultiplier', () =>
   {
-    it('sums all critMultiplierBase tags across note sources and divides by 100', () =>
+    it('adds all critMultiplierBase tags on top of the plugin-configured floor', () =>
     {
       // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [ { note: '<critMultiplierBase: 40>' }, { note: '<critMultiplierBase: 10>' } ];
 
       // Act & Assert
-      expect(actor.baseCriticalMultiplier()).toBe(0.5);
+      // floor (unconfigured plugin param default) = 0.5; tags sum to 50/100 = 0.5; total = 1.0.
+      expect(actor.baseCriticalMultiplier()).toBe(1);
     });
 
-    it('is 0 when there are no critMultiplierBase tags', () =>
+    it('is just the plugin-configured floor when there are no critMultiplierBase tags', () =>
     {
       // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [];
 
       // Act & Assert
-      expect(actor.baseCriticalMultiplier()).toBe(0);
+      expect(actor.baseCriticalMultiplier()).toBe(0.5);
     });
   });
 
   describe('baseCriticalReduction', () =>
   {
-    it('sums all critReductionBase tags across note sources and divides by 100', () =>
+    it('adds all critReductionBase tags on top of the plugin-configured floor', () =>
     {
       // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [ { note: '<critReductionBase: 30>' } ];
 
       // Act & Assert
-      expect(actor.baseCriticalReduction()).toBe(0.3);
+      // floor (unconfigured plugin param default) = 0.5; tag = 30/100 = 0.3; total = 0.8.
+      expect(actor.baseCriticalReduction()).toBeCloseTo(0.8, 5);
     });
   });
 
@@ -252,8 +254,8 @@ describe('J-CriticalFactors Game_Battler crit math (direct src import)', () =>
       ];
 
       // Act & Assert
-      // base = 100/100 = 1. calculatePlusRate(1, 20, 50) = (1+20)*(150/100) - 1 = 31.5 - 1 = 30.5.
-      expect(actor.cdmNaturalBuffs()).toBeCloseTo(30.5, 5);
+      // base = floor(0.5) + 100/100 = 1.5. calculatePlusRate(1.5, 20, 50) = (1.5+20)*1.5 - 1.5 = 30.75.
+      expect(actor.cdmNaturalBuffs()).toBeCloseTo(30.75, 5);
     });
   });
 
@@ -277,8 +279,8 @@ describe('J-CriticalFactors Game_Battler crit math (direct src import)', () =>
       actor.modCdmRate(50);
 
       // Act & Assert
-      // base = 1. calculatePlusRate(1, 20, 50) = (1+20)*1.5 - 1 = 30.5.
-      expect(actor.cdmNaturalGrowths()).toBeCloseTo(30.5, 5);
+      // base = floor(0.5) + 100/100 = 1.5. calculatePlusRate(1.5, 20, 50) = (1.5+20)*1.5 - 1.5 = 30.75.
+      expect(actor.cdmNaturalGrowths()).toBeCloseTo(30.75, 5);
     });
   });
 
@@ -322,7 +324,7 @@ describe('J-CriticalFactors Game_Battler crit math (direct src import)', () =>
       ];
 
       // Act & Assert
-      // base = 50/100 = 0.5. calculatePlusRate(0.5, 10, 0) = (0.5+10)*1 - 0.5 = 10.
+      // base = floor(0.5) + 50/100 = 1.0. calculatePlusRate(1.0, 10, 0) = (1+10)*1 - 1 = 10.
       expect(actor.ctrNaturalBuffs()).toBeCloseTo(10, 5);
     });
   });
@@ -337,7 +339,7 @@ describe('J-CriticalFactors Game_Battler crit math (direct src import)', () =>
       actor.modCtrPlus(10);
 
       // Act & Assert
-      // base = 0.5. calculatePlusRate(0.5, 10, 0) = 10.5 - 0.5 = 10.
+      // base = floor(0.5) + 50/100 = 1.0. calculatePlusRate(1.0, 10, 0) = 11 - 1 = 10.
       expect(actor.ctrNaturalGrowths()).toBeCloseTo(10, 5);
     });
   });

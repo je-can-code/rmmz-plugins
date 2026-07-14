@@ -33,11 +33,13 @@ Object.defineProperties(Game_BattlerBase.prototype, {
  * A battler's critical damage multiplier acts as the base bonus multiplier for all
  * critical hits. The individual battler's `cdm` is added to this amount to calculate
  * the damage a critical hit can potentially deal.
+ * Sourced from the plugin parameter so designers can retune the default without
+ * touching code- see {@link J_CriticalFactorsPluginMetadata#baseCdmFactor}.
  * @returns {number} The base multiplier for this battler.
  */
 Game_BattlerBase.prototype.baseCriticalMultiplier = function()
 {
-  return 0.5;
+  return J.CRIT.Metadata.baseCdmFactor;
 };
 
 /**
@@ -54,11 +56,13 @@ Game_BattlerBase.prototype.criticalDamageMultiplier = function()
  * A battler's critical taken rate acts as the base crit reduction for all incoming
  * critical hits. The individual battler's `ctr` is added to this amount to calculate
  * the damage a critical hit can potentially deal.
+ * Sourced from the plugin parameter so designers can retune the default without
+ * touching code- see {@link J_CriticalFactorsPluginMetadata#baseCtrFactor}.
  * @returns {number} The base reduction for this battler.
  */
 Game_BattlerBase.prototype.baseCriticalReduction = function()
 {
-  return 0.5;
+  return J.CRIT.Metadata.baseCtrFactor;
 };
 
 /**

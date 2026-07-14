@@ -516,6 +516,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Added plugin parameters for the base CDM/CTR defaults (previously a
+ *    hard-coded, unreachable 50% baked into Game_BattlerBase).
  * - 1.1.0
  *    Added on-crit state application tags:
  *    <thisCritApply>, <thisCritSelf> (skill-scoped) and
@@ -528,15 +531,77 @@
  * - 1.0.0
  *    Initial release.
  * ============================================================================
+ *
+ * @param critMultiplierBaseDefault
+ * @type number
+ * @decimals 2
+ * @min 0
+ * @text Base Critical Damage Multiplier
+ * @desc The default bonus critical damage (%) for battlers with no <critMultiplierBase> tags. 50 = +50% (x1.5 total).
+ * @default 50.00
+ *
+ * @param critReductionBaseDefault
+ * @type number
+ * @decimals 2
+ * @min 0
+ * @text Base Critical Damage Reduction
+ * @desc The default critical damage reduction (%) for battlers with no <critReductionBase> tags. 50 = -50% of the bonus.
+ * @default 50.00
  */
 
 //#region src/plugins/crit/core/_metadata/_pluginMetadata.js
-var J_CriticalFactorsPluginMetadata = class extends PluginMetadata {
+var J_CriticalFactorsPluginMetadata = class J_CriticalFactorsPluginMetadata extends PluginMetadata {
+	/**
+	* The default critical damage multiplier factor applied to every battler that carries no
+	* `<critMultiplierBase:NUM>` notetags. Parsed from the `critMultiplierBaseDefault` plugin
+	* parameter, a percent-point value (e.g. `50` becomes the `0.5` factor).
+	* @type {number}
+	*/
+	baseCdmFactor = .5;
+	/**
+	* The default critical damage reduction factor applied to every battler that carries no
+	* `<critReductionBase:NUM>` notetags. Parsed from the `critReductionBaseDefault` plugin
+	* parameter, a percent-point value (e.g. `50` becomes the `0.5` factor).
+	* @type {number}
+	*/
+	baseCtrFactor = .5;
 	/**
 	* Constructor.
 	*/
 	constructor(name, version) {
 		super(name, version);
+	}
+	/**
+	*  Extends {@link #postInitialize}.<br>
+	*  Includes translation of plugin parameters.
+	*/
+	postInitialize() {
+		super.postInitialize();
+		this.initializeMetadata();
+	}
+	/**
+	* Initializes the metadata associated with this plugin.
+	*/
+	initializeMetadata() {
+		const { parsedPluginParameters: p } = this;
+		this.baseCdmFactor = J_CriticalFactorsPluginMetadata.#parsePercentFactorOr(p["critMultiplierBaseDefault"], this.baseCdmFactor);
+		this.baseCtrFactor = J_CriticalFactorsPluginMetadata.#parsePercentFactorOr(p["critReductionBaseDefault"], this.baseCtrFactor);
+	}
+	/**
+	* Parses a percent-point plugin parameter (e.g. `"50.00"`) into its `/100` factor.
+	* @param {string|number|undefined|null} value The raw plugin parameter value.
+	* @param {number} fallback The fallback factor to use when the value is absent or invalid.
+	* @returns {number}
+	*/
+	static #parsePercentFactorOr(value, fallback) {
+		if (value === undefined || value === null || value === "") {
+			return fallback;
+		}
+		const parsed = Number.parseFloat(value);
+		if (!Number.isFinite(parsed)) {
+			return fallback;
+		}
+		return parsed / 100;
 	}
 };
 
@@ -1073,6 +1138,71 @@ var CritParameterRegistration = class {
 };
 
 //#endregion
+//#region src/plugins/crit/core/objects/Game_BattlerBase.js
+Object.defineProperties(Game_BattlerBase.prototype, {
+	/**
+	* The battler's critical damage multiplier.
+	* Critical hits are multiplied by this amount to determine the total critical hit damage.
+	* @type {number}
+	*/
+	cdm: {
+		get: function() {
+			return this.criticalDamageMultiplier();
+		},
+		configurable: true
+	},
+	/**
+	* The battler's critical taken rate.
+	* Critical hit damage is reduced by this percent before being applied.
+	* @type {number}
+	*/
+	ctr: {
+		get: function() {
+			return this.criticalDamageReduction();
+		},
+		configurable: true
+	}
+});
+/**
+* The base critical damage multiplier.
+* A battler's critical damage multiplier acts as the base bonus multiplier for all
+* critical hits. The individual battler's `cdm` is added to this amount to calculate
+* the damage a critical hit can potentially deal.
+* Sourced from the plugin parameter so designers can retune the default without
+* touching code- see {@link J_CriticalFactorsPluginMetadata#baseCdmFactor}.
+* @returns {number} The base multiplier for this battler.
+*/
+Game_BattlerBase.prototype.baseCriticalMultiplier = function() {
+	return J.CRIT.Metadata.baseCdmFactor;
+};
+/**
+* Gets the multiplier for this battler's critical hits.
+* @returns {number}
+*/
+Game_BattlerBase.prototype.criticalDamageMultiplier = function() {
+	return 0;
+};
+/**
+* The base critical taken rate.
+* A battler's critical taken rate acts as the base crit reduction for all incoming
+* critical hits. The individual battler's `ctr` is added to this amount to calculate
+* the damage a critical hit can potentially deal.
+* Sourced from the plugin parameter so designers can retune the default without
+* touching code- see {@link J_CriticalFactorsPluginMetadata#baseCtrFactor}.
+* @returns {number} The base reduction for this battler.
+*/
+Game_BattlerBase.prototype.baseCriticalReduction = function() {
+	return J.CRIT.Metadata.baseCtrFactor;
+};
+/**
+* Gets the reduction factor for when this battler receives a critical hit.
+* @returns {number}
+*/
+Game_BattlerBase.prototype.criticalDamageReduction = function() {
+	return 0;
+};
+
+//#endregion
 //#region src/plugins/crit/core/objects/Game_Battler.js
 /**
 * Extends `.initNaturalGrowthParameters()` to include the new critical damage parameters as growth-ready.
@@ -1167,14 +1297,19 @@ Game_Battler.prototype.modCtrRate = function(amount) {
 	this._j._natural._ctrRate += amount;
 };
 /**
-* Gets the base multiplier for this battler's critical hits.
-* @returns {number}
+* Extends {@link Game_BattlerBase#baseCriticalMultiplier}.<br/>
+* Adds any `<critMultiplierBase:NUM>` notetag contributions on top of the plugin-configured
+* floor value inherited from {@link Game_BattlerBase}, instead of replacing it outright-
+* without this alias, every battler without a notetag would floor out at 0 instead of the
+* designer-configured default.
 */
+J.CRIT.Aliased.Game_Battler.set("baseCriticalMultiplier", Game_Battler.prototype.baseCriticalMultiplier);
 Game_Battler.prototype.baseCriticalMultiplier = function() {
+	const baseFactor = J.CRIT.Aliased.Game_Battler.get("baseCriticalMultiplier").call(this);
 	const objectsToCheck = this.getAllNotes();
 	const baseCriticalMultiplier = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.CRIT.RegExp.CritDamageMultiplierBase);
 	const baseCdmFactor = baseCriticalMultiplier / 100;
-	return baseCdmFactor;
+	return baseFactor + baseCdmFactor;
 };
 /**
 * Calculates this battler's current critical damage multiplier.
@@ -1230,14 +1365,19 @@ Game_Battler.prototype.cdmNaturalGrowths = function() {
 	return this.calculatePlusRate(baseCdm, growthPlus, growthRate);
 };
 /**
-* Gets the base reduction for this battler's critical hits.
-* @returns {number}
+* Extends {@link Game_BattlerBase#baseCriticalReduction}.<br/>
+* Adds any `<critReductionBase:NUM>` notetag contributions on top of the plugin-configured
+* floor value inherited from {@link Game_BattlerBase}, instead of replacing it outright-
+* without this alias, every battler without a notetag would floor out at 0 instead of the
+* designer-configured default.
 */
+J.CRIT.Aliased.Game_Battler.set("baseCriticalReduction", Game_Battler.prototype.baseCriticalReduction);
 Game_Battler.prototype.baseCriticalReduction = function() {
+	const baseFactor = J.CRIT.Aliased.Game_Battler.get("baseCriticalReduction").call(this);
 	const objectsToCheck = this.getAllNotes();
 	const baseCriticalReduction = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.CRIT.RegExp.CritDamageReductionBase);
-	const baseCdmFactor = baseCriticalReduction / 100;
-	return baseCdmFactor;
+	const baseCdrFactor = baseCriticalReduction / 100;
+	return baseFactor + baseCdrFactor;
 };
 /**
 * Gets the reduction factor for when this battler receives a critical hit.
@@ -1302,67 +1442,6 @@ Game_Battler.prototype.ctrNaturalGrowths = function() {
 */
 Game_Battler.prototype.isForceCritProcs = function() {
 	return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.CRIT.RegExp.ForceCritProcs) === true;
-};
-
-//#endregion
-//#region src/plugins/crit/core/objects/Game_BattlerBase.js
-Object.defineProperties(Game_BattlerBase.prototype, {
-	/**
-	* The battler's critical damage multiplier.
-	* Critical hits are multiplied by this amount to determine the total critical hit damage.
-	* @type {number}
-	*/
-	cdm: {
-		get: function() {
-			return this.criticalDamageMultiplier();
-		},
-		configurable: true
-	},
-	/**
-	* The battler's critical taken rate.
-	* Critical hit damage is reduced by this percent before being applied.
-	* @type {number}
-	*/
-	ctr: {
-		get: function() {
-			return this.criticalDamageReduction();
-		},
-		configurable: true
-	}
-});
-/**
-* The base critical damage multiplier.
-* A battler's critical damage multiplier acts as the base bonus multiplier for all
-* critical hits. The individual battler's `cdm` is added to this amount to calculate
-* the damage a critical hit can potentially deal.
-* @returns {number} The base multiplier for this battler.
-*/
-Game_BattlerBase.prototype.baseCriticalMultiplier = function() {
-	return .5;
-};
-/**
-* Gets the multiplier for this battler's critical hits.
-* @returns {number}
-*/
-Game_BattlerBase.prototype.criticalDamageMultiplier = function() {
-	return 0;
-};
-/**
-* The base critical taken rate.
-* A battler's critical taken rate acts as the base crit reduction for all incoming
-* critical hits. The individual battler's `ctr` is added to this amount to calculate
-* the damage a critical hit can potentially deal.
-* @returns {number} The base reduction for this battler.
-*/
-Game_BattlerBase.prototype.baseCriticalReduction = function() {
-	return .5;
-};
-/**
-* Gets the reduction factor for when this battler receives a critical hit.
-* @returns {number}
-*/
-Game_BattlerBase.prototype.criticalDamageReduction = function() {
-	return 0;
 };
 
 //#endregion

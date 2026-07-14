@@ -516,6 +516,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Added plugin parameters for the base CDM/CTR defaults (previously a
+ *    hard-coded, unreachable 50% baked into Game_BattlerBase).
  * - 1.1.0
  *    Added on-crit state application tags:
  *    <thisCritApply>, <thisCritSelf> (skill-scoped) and
@@ -528,4 +531,20 @@
  * - 1.0.0
  *    Initial release.
  * ============================================================================
+ *
+ * @param critMultiplierBaseDefault
+ * @type number
+ * @decimals 2
+ * @min 0
+ * @text Base Critical Damage Multiplier
+ * @desc The default bonus critical damage (%) for battlers with no <critMultiplierBase> tags. 50 = +50% (x1.5 total).
+ * @default 50.00
+ *
+ * @param critReductionBaseDefault
+ * @type number
+ * @decimals 2
+ * @min 0
+ * @text Base Critical Damage Reduction
+ * @desc The default critical damage reduction (%) for battlers with no <critReductionBase> tags. 50 = -50% of the bonus.
+ * @default 50.00
  */

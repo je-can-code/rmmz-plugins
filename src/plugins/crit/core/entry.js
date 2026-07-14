@@ -6,6 +6,6 @@ import './managers/TextManager.js';
 import './objects/Game_Action.js';
 import './objects/Game_Actor.js';
 import './core/registerCritParameters.js';
-import './objects/Game_Battler.js';
 import './objects/Game_BattlerBase.js';
+import './objects/Game_Battler.js';
 import './scenes/Scene_Boot.js';

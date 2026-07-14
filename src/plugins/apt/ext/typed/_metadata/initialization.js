@@ -63,6 +63,6 @@ J.APT.EXT.TYPED.RegExp = {
    * </pre>
    * @type {RegExp}
    */
-  ApTypedReward: /<apTyped:[ ]?(\[\d+,[ ]?\d+,[ ]?[A-Za-z]+,[ ]?[A-Za-z0-9_\- ]+])>/gi,
+  ApTypedReward: /<apTyped:[ ]?(\[\d+,[ ]?[A-Za-z]+,[ ]?[A-Za-z0-9_\- ]+])>/gi,
 };
 //endregion initialization

@@ -65,14 +65,15 @@ describe('J-CriticalFactors Game_Battler (direct src import)', () =>
 
   describe('baseCriticalMultiplier', () =>
   {
-    it('derives the base critical multiplier from critMultiplierBase notes', () =>
+    it('adds critMultiplierBase notes on top of the plugin-configured floor', () =>
     {
       // Arrange
       const actor = buildActor();
       actor.__testNoteSources = [ { note: '<critMultiplierBase: 40>' } ];
 
       // Act & Assert
-      expect(actor.baseCriticalMultiplier()).toBe(0.4);
+      // floor (unconfigured plugin param default) = 0.5; tag = 40/100 = 0.4; total = 0.9.
+      expect(actor.baseCriticalMultiplier()).toBeCloseTo(0.9, 5);
     });
   });
 

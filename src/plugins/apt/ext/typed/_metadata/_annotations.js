@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A plugin that does cool stuff.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Adds typed (element/weapon type/skill type) AP gains and teachables.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

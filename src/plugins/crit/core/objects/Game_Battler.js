@@ -122,11 +122,19 @@ Game_Battler.prototype.modCtrRate = function(amount)
 //endregion properties
 
 /**
- * Gets the base multiplier for this battler's critical hits.
- * @returns {number}
+ * Extends {@link Game_BattlerBase#baseCriticalMultiplier}.<br/>
+ * Adds any `<critMultiplierBase:NUM>` notetag contributions on top of the plugin-configured
+ * floor value inherited from {@link Game_BattlerBase}, instead of replacing it outright-
+ * without this alias, every battler without a notetag would floor out at 0 instead of the
+ * designer-configured default.
  */
+J.CRIT.Aliased.Game_Battler.set('baseCriticalMultiplier', Game_Battler.prototype.baseCriticalMultiplier);
 Game_Battler.prototype.baseCriticalMultiplier = function()
 {
+  // perform original logic to grab the configured floor value shared by all battlers.
+  const baseFactor = J.CRIT.Aliased.Game_Battler.get('baseCriticalMultiplier')
+    .call(this);
+
   // grab everything with notes.
   const objectsToCheck = this.getAllNotes();
 
@@ -139,8 +147,8 @@ Game_Battler.prototype.baseCriticalMultiplier = function()
   // calculate the factor for the CDM.
   const baseCdmFactor = baseCriticalMultiplier / 100;
 
-  // return the factor.
-  return baseCdmFactor;
+  // return the floor plus any additional notetag-driven bonus.
+  return baseFactor + baseCdmFactor;
 };
 
 /**
@@ -258,11 +266,19 @@ Game_Battler.prototype.cdmNaturalGrowths = function()
 };
 
 /**
- * Gets the base reduction for this battler's critical hits.
- * @returns {number}
+ * Extends {@link Game_BattlerBase#baseCriticalReduction}.<br/>
+ * Adds any `<critReductionBase:NUM>` notetag contributions on top of the plugin-configured
+ * floor value inherited from {@link Game_BattlerBase}, instead of replacing it outright-
+ * without this alias, every battler without a notetag would floor out at 0 instead of the
+ * designer-configured default.
  */
+J.CRIT.Aliased.Game_Battler.set('baseCriticalReduction', Game_Battler.prototype.baseCriticalReduction);
 Game_Battler.prototype.baseCriticalReduction = function()
 {
+  // perform original logic to grab the configured floor value shared by all battlers.
+  const baseFactor = J.CRIT.Aliased.Game_Battler.get('baseCriticalReduction')
+    .call(this);
+
   // grab everything with notes.
   const objectsToCheck = this.getAllNotes();
 
@@ -273,10 +289,10 @@ Game_Battler.prototype.baseCriticalReduction = function()
   );
 
   // calculate the factor for the CDR.
-  const baseCdmFactor = baseCriticalReduction / 100;
+  const baseCdrFactor = baseCriticalReduction / 100;
 
-  // return the factor.
-  return baseCdmFactor;
+  // return the floor plus any additional notetag-driven bonus.
+  return baseFactor + baseCdrFactor;
 };
 
 /**
