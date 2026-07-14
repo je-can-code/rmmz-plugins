@@ -1183,3 +1183,76 @@ These two tags on the same state grant 1.5x gold and 1.25x drop chance when the 
 **See also:** `<dropMultiplier>` (J-DropsControl core — composes additively with itself and the
 party's bonuses into one base multiplier; this plugin's `<rewardMultiplier:[drops, ...]>` then
 multiplies on top of that whole base, verified in the aliased `getDropMultiplierBonus` override)
+
+---
+
+## J-Aptitude (`src/plugins/apt/core/`)
+
+### `<aptitude:[SKILL_ID, REQUIRED_AP]>`
+
+**Applies to:**
+Actors, Classes, Weapons, Armor, States
+
+**When:**
+this source is currently active on the actor (equipped/afflicted/currently-applied class) — swapping
+gear/class/states changes which sources are actively receiving AP
+
+**Effect:**
+this source becomes a "teacher" for SKILL_ID: as AP flows into it, once REQUIRED_AP is reached the
+skill is learned. Multiple sources can teach the same skill independently — progress is tracked
+per-source, and learning happens the moment ANY one source's requirement is crossed.
+
+```
+<aptitude:[12,150]>
+```
+This source enables learning skill id 12 once the owner accumulates 150 AP through it.
+
+**See also:** `<ap>`, `<aptMultiplier>`
+
+---
+
+### `<ap:AMOUNT>`
+
+**Applies to:**
+Enemies only
+
+**When:**
+enemy is defeated
+
+**Effect:**
+grants AMOUNT raw AP to the party (before `<aptMultiplier>` rate scaling), distributed into whichever
+sources are currently active per actor. Gated by a level-difference threshold (plugin parameter,
+`-1` disables the gate entirely) — if the killing actor is too many levels above the enemy, this is an
+all-or-nothing block on the whole gain, not a partial scaling reduction. Also requires J-LevelMaster
+loaded with level scaling enabled for the gate to apply at all.
+
+```
+<ap:6>
+```
+This enemy yields 6 AP upon defeat.
+
+**See also:** `<aptitude>`, `<aptMultiplier>`
+
+---
+
+### `<aptMultiplier:AMOUNT>` / `<aptMultiplier:-AMOUNT>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, States
+
+**When:**
+every AP gain, as a rate applied to the raw amount
+
+**Effect:**
+same pattern as J-SDP's `sdpMultiplier` — AMOUNT is a whole-number percent (not a literal multiplier
+like 1.3), all matching tags across the actor's active note sources sum together into one rate, then
+apply once against the raw AP amount. Also stacks with any SDP panel bonus for the `apr` parameter
+key, if J-SDP is loaded. Values can be negative to reduce gain.
+
+```
+<aptMultiplier:80>
+<aptMultiplier:-30>
+```
+Combined: +50% AP gain (80 - 30 = 50).
+
+**See also:** `<ap>`, `<sdpMultiplier>` (J-SDP — same pattern, different resource)
