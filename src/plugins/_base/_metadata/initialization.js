@@ -136,7 +136,7 @@ J.BASE.RegExp = {};
 /**
  * The basic structure for the maximum count of a number of items holdable is.
  */
-J.BASE.RegExp.MaxItems = /<max:(d+)>/gi;
+J.BASE.RegExp.MaxItems = /<max:(\d+)>/gi;
 
 /**
  * Outgoing heal potency multiplier — the sender-side counterpart to REC (`<har:25>` = +25%).

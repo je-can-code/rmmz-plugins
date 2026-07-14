@@ -4269,3 +4269,97 @@ caster gap-closes to wherever the target ends up, so the two meet partway.
 On hit, pulls the target 3 tiles toward the caster (before knockbackResist reduction).
 
 **See also:** `<gapClose>`, `<knockbackResist>`
+
+---
+
+## J-Base (`src/plugins/_base/`)
+
+The foundation plugin required by every other J-plugin in this repo. Adds shared managers,
+lifecycle hooks, database wrapper classes, and a handful of its own notetags.
+
+### `<max:VALUE>`
+
+**Applies to:**
+Items, Weapons, Armors
+
+**When:**
+always
+
+**Effect:**
+sets the maximum holdable quantity of this database entry, overriding the default (999).
+
+```
+<max:15>
+```
+The maximum amount of this item the party can hold is 15.
+
+---
+
+### `<maxTp:VALUE>`
+
+**Applies to:**
+Actors, Classes, Weapons, Armors, Enemies, States
+
+**When:**
+always (summed across all active note sources)
+
+**Effect:**
+adds VALUE to this battler's max TP, on top of the plugin-param base TP (default 0 for actors,
+100 for enemies). Additive across all matching sources; VALUE can be negative for "cursed"
+equipment/states that reduce max TP.
+
+```
+<maxTp:25>    (on state)
+<maxTp:100>   (on weapon)
+```
+Both active together add +125 max TP on top of the base.
+
+---
+
+### `<type:CLASSIFIER>`
+
+**Applies to:**
+States
+
+**When:**
+always
+
+**Effect:**
+classifies a state under a named category (e.g. `poison`, `bleed`) so other plugins/tags can
+react to "any state of this category" instead of a hardcoded state id. A state may carry multiple
+`<type:CLASSIFIER>` tags and belongs to every classifier listed. Consumers compare classifier
+strings case-insensitively (e.g. J-ABS's type-based damage bonus tags).
+
+```
+<type:poison>
+<type:bleed>
+```
+This state is classified as both "poison" and "bleed".
+
+**See also:** J-ABS's `<stateTypeResist>`, `<stateTypeImmune>`, `<bonusDamagePerStateType>`
+
+---
+
+### `<har:VALUE>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, Enemies, States
+
+**When:**
+always (summed across all active note sources)
+
+**Effect:**
+HAR (Healing Rate) — the sender-side counterpart to REC. VALUE is a percent bonus/penalty to
+outgoing healing potency this battler deals out (not healing received). Applies everywhere REC
+already applies on the giving side: Damage-tab "HP/MP Recover" skills, Effects-tab "Recover
+HP/MP" entries, and J-ABS-Formula's custom heal pipeline if installed.
+
+```
+<har:25>    (on actor)
+```
+This battler's outgoing healing is 125% effective.
+
+```
+<har:-50>   (on state)
+```
+While afflicted, this battler's outgoing healing is only 50% effective.
