@@ -5251,5 +5251,405 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion dodging
+
+  //region guarding
+  describe('parrying / setParryWindow', () =>
+  {
+    it('parrying reflects a positive parry window', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._parryWindow = 0;
+      expect(jabsBattler.parrying()).toBe(false);
+
+      jabsBattler._parryWindow = 5;
+      expect(jabsBattler.parrying()).toBe(true);
+    });
+
+    it('setParryWindow clamps negative values to 0', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setParryWindow(-5);
+
+      expect(jabsBattler._parryWindow).toBe(0);
+    });
+
+    it('setParryWindow stores non-negative values as-is', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setParryWindow(10);
+
+      expect(jabsBattler._parryWindow).toBe(10);
+    });
+  });
+
+  describe('guarding flag and reductions', () =>
+  {
+    it('tracks the guarding flag', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.guarding()).toBe(false);
+
+      jabsBattler.setGuarding(true);
+
+      expect(jabsBattler.guarding()).toBe(true);
+    });
+
+    it('flatGuardReduction is 0 while not guarding', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setFlatGuardReduction(5);
+      jabsBattler.setGuarding(false);
+
+      expect(jabsBattler.flatGuardReduction()).toBe(0);
+    });
+
+    it('flatGuardReduction returns the tracked value while guarding', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setFlatGuardReduction(5);
+      jabsBattler.setGuarding(true);
+
+      expect(jabsBattler.flatGuardReduction()).toBe(5);
+    });
+
+    it('percGuardReduction is 0 while not guarding', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setPercGuardReduction(50);
+      jabsBattler.setGuarding(false);
+
+      expect(jabsBattler.percGuardReduction()).toBe(0);
+    });
+
+    it('percGuardReduction returns the tracked value while guarding', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setPercGuardReduction(50);
+      jabsBattler.setGuarding(true);
+
+      expect(jabsBattler.percGuardReduction()).toBe(50);
+    });
+  });
+
+  describe('counter-guard / counter-parry ids', () =>
+  {
+    it('counterGuard is empty while not guarding', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setCounterGuard([ 1, 2 ]);
+      jabsBattler.setGuarding(false);
+
+      expect(jabsBattler.counterGuard()).toEqual([]);
+    });
+
+    it('counterGuard returns the tracked ids while guarding', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setCounterGuard([ 1, 2 ]);
+      jabsBattler.setGuarding(true);
+
+      expect(jabsBattler.counterGuard()).toEqual([ 1, 2 ]);
+    });
+
+    it('counterParry is empty while not guarding', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setCounterParry([ 3 ]);
+      jabsBattler.setGuarding(false);
+
+      expect(jabsBattler.counterParry()).toEqual([]);
+    });
+
+    it('counterParry returns the tracked ids while guarding', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setCounterParry([ 3 ]);
+      jabsBattler.setGuarding(true);
+
+      expect(jabsBattler.counterParry()).toEqual([ 3 ]);
+    });
+  });
+
+  describe('getGuardSkillId / setGuardSkillId', () =>
+  {
+    it('tracks the guard skill id', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setGuardSkillId(7);
+
+      expect(jabsBattler.getGuardSkillId()).toBe(7);
+    });
+  });
+
+  describe('getGuardData', () =>
+  {
+    it('returns null without a resolved skill id', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 0 });
+
+      expect(jabsBattler.getGuardData('offhand')).toBeNull();
+    });
+
+    it('returns null when the resolved skill is not a guard skill', () =>
+    {
+      JABS_Battler.isGuardSkillById = vi.fn(() => false);
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 1 });
+
+      expect(jabsBattler.getGuardData('offhand')).toBeNull();
+    });
+
+    it('returns null when the skill conditions are not met', () =>
+    {
+      JABS_Battler.isGuardSkillById = vi.fn(() => true);
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({
+        getResolvedSkillId: () => 1, meetsSkillConditions: () => false,
+      });
+      jabsBattler.getSkill = () => ({ jabsGuardData: 'guard-data' });
+
+      expect(jabsBattler.getGuardData('offhand')).toBeNull();
+    });
+
+    it('returns the skill\'s guard data when everything checks out', () =>
+    {
+      JABS_Battler.isGuardSkillById = vi.fn(() => true);
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({
+        getResolvedSkillId: () => 1, meetsSkillConditions: () => true,
+      });
+      jabsBattler.getSkill = () => ({ jabsGuardData: 'guard-data' });
+
+      expect(jabsBattler.getGuardData('offhand')).toBe('guard-data');
+    });
+  });
+
+  describe('isGuardSkillByKey', () =>
+  {
+    it('is false without a resolved skill id', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 0 });
+
+      expect(jabsBattler.isGuardSkillByKey('offhand')).toBe(false);
+    });
+
+    it('is false when the resolved skill is not a guard skill', () =>
+    {
+      JABS_Battler.isGuardSkillById = vi.fn(() => false);
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 1 });
+
+      expect(jabsBattler.isGuardSkillByKey('offhand')).toBe(false);
+    });
+
+    it('is true for a resolved guard skill', () =>
+    {
+      JABS_Battler.isGuardSkillById = vi.fn(() => true);
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 1 });
+
+      expect(jabsBattler.isGuardSkillByKey('offhand')).toBe(true);
+    });
+  });
+
+  describe('executeGuard', () =>
+  {
+    it('does nothing when already guarding and asked to guard again', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.guarding = () => true;
+      jabsBattler.endGuarding = vi.fn();
+      jabsBattler.startGuarding = vi.fn();
+
+      jabsBattler.executeGuard(true, 'offhand');
+
+      expect(jabsBattler.endGuarding).not.toHaveBeenCalled();
+      expect(jabsBattler.startGuarding).not.toHaveBeenCalled();
+    });
+
+    it('ends guarding when asked to stop while currently guarding', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.guarding = () => true;
+      jabsBattler.endGuarding = vi.fn();
+      jabsBattler.startGuarding = vi.fn();
+
+      jabsBattler.executeGuard(false, 'offhand');
+
+      expect(jabsBattler.endGuarding).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.startGuarding).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when asked to stop while already not guarding', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.guarding = () => false;
+      jabsBattler.endGuarding = vi.fn();
+      jabsBattler.startGuarding = vi.fn();
+
+      jabsBattler.executeGuard(false, 'offhand');
+
+      expect(jabsBattler.endGuarding).not.toHaveBeenCalled();
+    });
+
+    it('does not start guarding without valid guard data', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.guarding = () => false;
+      jabsBattler.getGuardData = () => null;
+      jabsBattler.startGuarding = vi.fn();
+
+      jabsBattler.executeGuard(true, 'offhand');
+
+      expect(jabsBattler.startGuarding).not.toHaveBeenCalled();
+    });
+
+    it('does not start guarding when the guard data reports it cannot guard', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.guarding = () => false;
+      jabsBattler.getGuardData = () => ({ canGuard: () => false });
+      jabsBattler.startGuarding = vi.fn();
+
+      jabsBattler.executeGuard(true, 'offhand');
+
+      expect(jabsBattler.startGuarding).not.toHaveBeenCalled();
+    });
+
+    it('starts guarding when not currently guarding and the guard data allows it', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.guarding = () => false;
+      jabsBattler.getGuardData = () => ({ canGuard: () => true });
+      jabsBattler.startGuarding = vi.fn();
+
+      jabsBattler.executeGuard(true, 'offhand');
+
+      expect(jabsBattler.startGuarding).toHaveBeenCalledWith('offhand');
+    });
+  });
+
+  describe('startGuarding', () =>
+  {
+    function buildGuardData(overrides = {})
+    {
+      return Object.assign({
+        flatGuardReduction: 5,
+        percGuardReduction: 50,
+        counterGuardIds: [ 1 ],
+        counterParryIds: [ 2 ],
+        skillId: 7,
+        parryDuration: 10,
+        canParry: () => false,
+      }, overrides);
+    }
+
+    it('applies all guard data fields to the battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      const guardData = buildGuardData();
+      jabsBattler.getGuardData = () => guardData;
+      jabsBattler.getBonusParryFrames = () => 0;
+
+      jabsBattler.startGuarding('offhand');
+
+      expect(jabsBattler.guarding()).toBe(true);
+      expect(jabsBattler.flatGuardReduction()).toBe(5);
+      expect(jabsBattler.percGuardReduction()).toBe(50);
+      expect(jabsBattler.counterGuard()).toEqual([ 1 ]);
+      expect(jabsBattler.counterParry()).toEqual([ 2 ]);
+      expect(jabsBattler.getGuardSkillId()).toBe(7);
+    });
+
+    it('applies the parry window when the guard data supports parrying', () =>
+    {
+      const jabsBattler = buildBattler();
+      const guardData = buildGuardData({ canParry: () => true, parryDuration: 10 });
+      jabsBattler.getGuardData = () => guardData;
+      jabsBattler.getBonusParryFrames = () => 5;
+
+      jabsBattler.startGuarding('offhand');
+
+      expect(jabsBattler._parryWindow).toBe(15);
+    });
+
+    it('does not apply a parry window when the guard data does not support parrying', () =>
+    {
+      const jabsBattler = buildBattler();
+      const guardData = buildGuardData({ canParry: () => false });
+      jabsBattler.getGuardData = () => guardData;
+      jabsBattler.getBonusParryFrames = () => 5;
+
+      jabsBattler.startGuarding('offhand');
+
+      expect(jabsBattler._parryWindow).toBe(0);
+    });
+  });
+
+  describe('endGuarding', () =>
+  {
+    it('clears guarding, ally guard timing, and parry window, and stops posing', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setGuarding(true);
+      jabsBattler._aiAllyGuardRaiseFrame = 100;
+      jabsBattler._parryWindow = 10;
+      jabsBattler.endAnimation = vi.fn();
+
+      jabsBattler.endGuarding();
+
+      expect(jabsBattler.guarding()).toBe(false);
+      expect(jabsBattler._aiAllyGuardRaiseFrame).toBe(0);
+      expect(jabsBattler._parryWindow).toBe(0);
+      expect(jabsBattler.endAnimation).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getBonusParryFrames', () =>
+  {
+    it('scales parry duration by 1 plus the battler\'s per stat', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ per: 0.5 });
+
+      expect(jabsBattler.getBonusParryFrames({ parryDuration: 10 })).toBe(15);
+    });
+  });
+
+  describe('countdownParryWindow', () =>
+  {
+    it('decrements the parry window while parrying', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._parryWindow = 5;
+
+      jabsBattler.countdownParryWindow();
+
+      expect(jabsBattler._parryWindow).toBe(4);
+    });
+
+    it('does not decrement when not parrying', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._parryWindow = 0;
+
+      jabsBattler.countdownParryWindow();
+
+      expect(jabsBattler._parryWindow).toBe(0);
+    });
+
+    it('clamps to 0 if it somehow goes negative', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._parryWindow = -1;
+
+      jabsBattler.countdownParryWindow();
+
+      expect(jabsBattler._parryWindow).toBe(0);
+    });
+  });
+  //endregion guarding
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
