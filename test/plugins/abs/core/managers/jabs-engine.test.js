@@ -4110,5 +4110,518 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion aggro & on-hit effects
+
+  //region combo sequence
+  describe('canUpdateComboSequence', () =>
+  {
+    it('is false when the skill has no combo follow-up', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = { getBattler: () => ({ hasSkill: () => true }) };
+      const action = { getBaseSkill: () => ({ jabsComboAction: false }) };
+
+      expect(engine.canUpdateComboSequence(caster, action)).toBe(false);
+    });
+
+    it('is false when the caster has not learned the combo skill', () =>
+    {
+      const engine = new JABS_Engine();
+      const hasSkill = vi.fn(() => false);
+      const caster = { getBattler: () => ({ hasSkill }) };
+      const action = { getBaseSkill: () => ({ jabsComboAction: true, jabsComboSkillId: 42 }) };
+
+      expect(engine.canUpdateComboSequence(caster, action)).toBe(false);
+      expect(hasSkill).toHaveBeenCalledWith(42);
+    });
+
+    it('is true when the skill combos into a follow-up the caster knows', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = { getBattler: () => ({ hasSkill: () => true }) };
+      const action = { getBaseSkill: () => ({ jabsComboAction: true, jabsComboSkillId: 42 }) };
+
+      expect(engine.canUpdateComboSequence(caster, action)).toBe(true);
+    });
+  });
+
+  describe('updateComboSequence', () =>
+  {
+    function buildCaster(overrides = {})
+    {
+      return Object.assign({
+        getComboNextActionId: () => 0,
+        setPhase: vi.fn(),
+        setComboFrames: vi.fn(),
+        setComboNextActionId: vi.fn(),
+        setComboExpireFrames: vi.fn(),
+        setAiComboHumanizedReadyFrame: vi.fn(),
+      }, overrides);
+    }
+
+    function buildAction(overrides = {})
+    {
+      return Object.assign({
+        getBaseSkill: () => ({ jabsComboSkillId: 42, jabsComboDelay: 10, jabsComboExpire: 60 }),
+        getCooldownType: () => 'mainhand',
+      }, overrides);
+    }
+
+    it('advances the caster to the action phase when combo-ing into a new step', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = buildCaster({ getComboNextActionId: () => 0 });
+      const action = buildAction();
+
+      engine.updateComboSequence(caster, action);
+
+      expect(caster.setPhase).toHaveBeenCalledWith(2);
+    });
+
+    it('does not force a phase change when already on the same combo step', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = buildCaster({ getComboNextActionId: () => 42 });
+      const action = buildAction();
+
+      engine.updateComboSequence(caster, action);
+
+      expect(caster.setPhase).not.toHaveBeenCalled();
+    });
+
+    it('stores the combo delay, next skill id, and expiry window on the cooldown slot', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = buildCaster();
+      const action = buildAction();
+
+      engine.updateComboSequence(caster, action);
+
+      expect(caster.setComboFrames).toHaveBeenCalledWith('mainhand', 10);
+      expect(caster.setComboNextActionId).toHaveBeenCalledWith('mainhand', 42);
+      expect(caster.setComboExpireFrames).toHaveBeenCalledWith('mainhand', 60);
+    });
+
+    it('arms the humanized ai-combo ready frame using the skill', () =>
+    {
+      JABS_Engine.computeAiComboHumanizedReadyFrameForSkill = vi.fn(() => 123);
+      const engine = new JABS_Engine();
+      const caster = buildCaster();
+      const action = buildAction();
+
+      engine.updateComboSequence(caster, action);
+
+      expect(caster.setAiComboHumanizedReadyFrame).toHaveBeenCalledWith(123);
+    });
+  });
+
+  describe('tryClearComboWhenChainCannotAdvance', () =>
+  {
+    function buildCaster(overrides = {})
+    {
+      return Object.assign({
+        getComboNextActionId: () => 42,
+        setComboNextActionId: vi.fn(),
+        clearAiComboHumanizedReadyFrame: vi.fn(),
+        setComboExpireFrames: vi.fn(),
+      }, overrides);
+    }
+
+    function buildAction(overrides = {})
+    {
+      return Object.assign({
+        getBaseSkill: () => ({ id: 42 }),
+        getCooldownType: () => 'mainhand',
+      }, overrides);
+    }
+
+    it('leaves the combo slot alone when nothing is pending on it', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = buildCaster({ getComboNextActionId: () => 0 });
+      const action = buildAction();
+
+      engine.tryClearComboWhenChainCannotAdvance(caster, action);
+
+      expect(caster.setComboNextActionId).not.toHaveBeenCalled();
+    });
+
+    it('leaves the combo slot alone when the pending id does not match the executed skill', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = buildCaster({ getComboNextActionId: () => 7 });
+      const action = buildAction({ getBaseSkill: () => ({ id: 42 }) });
+
+      engine.tryClearComboWhenChainCannotAdvance(caster, action);
+
+      expect(caster.setComboNextActionId).not.toHaveBeenCalled();
+    });
+
+    it('clears the combo slot back to starter routing when the executed skill consumed it', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = buildCaster({ getComboNextActionId: () => 42 });
+      const action = buildAction({ getBaseSkill: () => ({ id: 42 }) });
+
+      engine.tryClearComboWhenChainCannotAdvance(caster, action);
+
+      expect(caster.setComboNextActionId).toHaveBeenCalledWith('mainhand', 0);
+      expect(caster.clearAiComboHumanizedReadyFrame).toHaveBeenCalledTimes(1);
+      expect(caster.setComboExpireFrames).toHaveBeenCalledWith('mainhand', 0);
+    });
+  });
+
+  describe('checkComboSequence', () =>
+  {
+    it('updates the combo sequence when the skill can combo further', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canUpdateComboSequence = vi.fn(() => true);
+      engine.updateComboSequence = vi.fn();
+      engine.tryClearComboWhenChainCannotAdvance = vi.fn();
+
+      engine.checkComboSequence('caster', 'action');
+
+      expect(engine.updateComboSequence).toHaveBeenCalledWith('caster', 'action');
+      expect(engine.tryClearComboWhenChainCannotAdvance).not.toHaveBeenCalled();
+    });
+
+    it('tries to clear the combo slot when the skill cannot combo further', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canUpdateComboSequence = vi.fn(() => false);
+      engine.updateComboSequence = vi.fn();
+      engine.tryClearComboWhenChainCannotAdvance = vi.fn();
+
+      engine.checkComboSequence('caster', 'action');
+
+      expect(engine.tryClearComboWhenChainCannotAdvance).toHaveBeenCalledWith('caster', 'action');
+      expect(engine.updateComboSequence).not.toHaveBeenCalled();
+    });
+  });
+  //endregion combo sequence
+
+  //region implicit parry / glancing blow / alert
+  describe('isParryPossible', () =>
+  {
+    function buildCaster(overrides = {})
+    {
+      return Object.assign({
+        isFacingTarget: () => true,
+        getBattler: () => ({ ignoreAllParry: () => false }),
+      }, overrides);
+    }
+
+    function buildTarget(overrides = {})
+    {
+      return Object.assign({
+        getCharacter: () => ({}),
+        getBattler: () => ({ grd: 10 }),
+      }, overrides);
+    }
+
+    it('is false when the caster is not facing the target', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = buildCaster({ isFacingTarget: () => false });
+      const target = buildTarget();
+
+      expect(engine.isParryPossible(caster, target)).toBe(false);
+    });
+
+    it('is false when the target has no grd to parry with', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = buildCaster();
+      const target = buildTarget({ getBattler: () => ({ grd: 0 }) });
+
+      expect(engine.isParryPossible(caster, target)).toBe(false);
+    });
+
+    it('is false when the caster has a state that ignores all parry', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = buildCaster({ getBattler: () => ({ ignoreAllParry: () => true }) });
+      const target = buildTarget();
+
+      expect(engine.isParryPossible(caster, target)).toBe(false);
+    });
+
+    it('is true otherwise', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = buildCaster();
+      const target = buildTarget();
+
+      expect(engine.isParryPossible(caster, target)).toBe(true);
+    });
+  });
+
+  describe('checkImplicitFullParry', () =>
+  {
+    function buildTarget(overrides = {})
+    {
+      const targetBattler = { getPositiveRolls: () => 0 };
+      return Object.assign({ getBattler: () => targetBattler }, overrides);
+    }
+
+    function buildCaster(overrides = {})
+    {
+      return Object.assign({
+        getBattler: () => ({ getNegativeRollsForSkill: () => 0 }),
+      }, overrides);
+    }
+
+    function buildAction(overrides = {})
+    {
+      return Object.assign({
+        getBaseSkill: () => ({ jabsIgnoreParry: 0 }),
+      }, overrides);
+    }
+
+    it('is false when the parry prerequisites are not met', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.isParryPossible = vi.fn(() => false);
+
+      expect(engine.checkImplicitFullParry(buildCaster(), buildTarget(), buildAction())).toBe(false);
+      expect(globalThis.RPGManager.fateOf100).not.toHaveBeenCalled();
+    });
+
+    it('rolls the scaled-down full-parry chance when prerequisites are met', () =>
+    {
+      J.ABS.Metadata.ImplicitParryScaleFactor = 0.5;
+      JABS_Engine.implicitParryChancePercent = vi.fn(() => 40);
+      globalThis.RPGManager.fateOf100.mockReturnValue(true);
+      const engine = new JABS_Engine();
+      engine.isParryPossible = vi.fn(() => true);
+      const target = buildTarget();
+      const caster = buildCaster();
+      const action = buildAction();
+
+      const result = engine.checkImplicitFullParry(caster, target, action);
+
+      expect(result).toBe(true);
+      // rawChance(40) * scaleFactor(0.5) = 20, rounded.
+      expect(globalThis.RPGManager.fateOf100).toHaveBeenCalledWith(target.getBattler(), 20, 1, 0);
+    });
+  });
+
+  describe('checkGlancingBlow', () =>
+  {
+    function buildTarget(overrides = {})
+    {
+      const targetBattler = { getPositiveRolls: () => 0 };
+      return Object.assign({ getBattler: () => targetBattler }, overrides);
+    }
+
+    function buildCaster(overrides = {})
+    {
+      return Object.assign({
+        getBattler: () => ({ getNegativeRollsForSkill: () => 0 }),
+      }, overrides);
+    }
+
+    function buildAction(overrides = {})
+    {
+      return Object.assign({
+        getBaseSkill: () => ({ jabsIgnoreParry: 0 }),
+      }, overrides);
+    }
+
+    it('is false when the parry prerequisites are not met', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.isParryPossible = vi.fn(() => false);
+
+      expect(engine.checkGlancingBlow(buildCaster(), buildTarget(), buildAction())).toBe(false);
+      expect(globalThis.RPGManager.fateOf100).not.toHaveBeenCalled();
+    });
+
+    it('rolls the glancing-blow chance when prerequisites are met', () =>
+    {
+      JABS_Engine.glancingBlowChancePercent = vi.fn(() => 30);
+      globalThis.RPGManager.fateOf100.mockReturnValue(true);
+      const engine = new JABS_Engine();
+      engine.isParryPossible = vi.fn(() => true);
+      const target = buildTarget();
+      const caster = buildCaster();
+      const action = buildAction();
+
+      const result = engine.checkGlancingBlow(caster, target, action);
+
+      expect(result).toBe(true);
+      expect(globalThis.RPGManager.fateOf100).toHaveBeenCalledWith(target.getBattler(), 30, 1, 0);
+    });
+  });
+
+  describe('canAttemptImplicitParry', () =>
+  {
+    it('is false while the target is guarding', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = { guarding: () => true };
+
+      expect(engine.canAttemptImplicitParry(target)).toBe(false);
+    });
+
+    it('is false while the target is casting or channeling', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = { guarding: () => false, isCastingOrChanneling: () => true };
+
+      expect(engine.canAttemptImplicitParry(target)).toBe(false);
+    });
+
+    it('is false while the target is dashing', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = {
+        guarding: () => false,
+        isCastingOrChanneling: () => false,
+        getCharacter: () => ({ isDashing: () => true }),
+      };
+
+      expect(engine.canAttemptImplicitParry(target)).toBe(false);
+    });
+
+    it('is true otherwise', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = {
+        guarding: () => false,
+        isCastingOrChanneling: () => false,
+        getCharacter: () => ({ isDashing: () => false }),
+      };
+
+      expect(engine.canAttemptImplicitParry(target)).toBe(true);
+    });
+  });
+
+  describe('canBeAlerted', () =>
+  {
+    function buildAttacker(overrides = {})
+    {
+      return Object.assign({ isInanimate: () => false, getTeam: () => 'attacker-team' }, overrides);
+    }
+
+    function buildBattler(overrides = {})
+    {
+      return Object.assign({
+        getTeam: () => 'target-team',
+        isPlayer: () => false,
+        isEngaged: () => false,
+        isInanimate: () => false,
+      }, overrides);
+    }
+
+    it('is false for an inanimate attacker', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.canBeAlerted(buildAttacker({ isInanimate: () => true }), buildBattler())).toBe(false);
+    });
+
+    it('is false when the attacker and battler are on friendly teams', async () =>
+    {
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isFriendly = vi.fn(() => true);
+      const engine = new JABS_Engine();
+
+      expect(engine.canBeAlerted(buildAttacker(), buildBattler())).toBe(false);
+      JABS_TeamRules.isFriendly = vi.fn(() => false);
+    });
+
+    it('is false for the player', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.canBeAlerted(buildAttacker(), buildBattler({ isPlayer: () => true }))).toBe(false);
+    });
+
+    it('is false for an already-engaged battler', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.canBeAlerted(buildAttacker(), buildBattler({ isEngaged: () => true }))).toBe(false);
+    });
+
+    it('is false for an inanimate battler', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.canBeAlerted(buildAttacker(), buildBattler({ isInanimate: () => true }))).toBe(false);
+    });
+
+    it('is true otherwise', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.canBeAlerted(buildAttacker(), buildBattler())).toBe(true);
+    });
+  });
+
+  describe('triggerAlert', () =>
+  {
+    function buildTarget(overrides = {})
+    {
+      return Object.assign({
+        showBalloon: vi.fn(),
+        setAlertedCoordinates: vi.fn(),
+        getAlertDuration: () => 90,
+        setAlertedCounter: vi.fn(),
+        isAlerted: () => false,
+        setWaitCountdown: vi.fn(),
+      }, overrides);
+    }
+
+    function buildAttacker(overrides = {})
+    {
+      return Object.assign({ getX: () => 3, getY: () => 4 }, overrides);
+    }
+
+    it('does nothing when the target cannot be alerted', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canBeAlerted = vi.fn(() => false);
+      const target = buildTarget();
+
+      engine.triggerAlert(buildAttacker(), target);
+
+      expect(target.showBalloon).not.toHaveBeenCalled();
+    });
+
+    it('alerts the target at the attacker\'s coordinates for the configured duration', () =>
+    {
+      J.ABS.Balloons = { Question: 2 };
+      const engine = new JABS_Engine();
+      engine.canBeAlerted = vi.fn(() => true);
+      const target = buildTarget();
+      const attacker = buildAttacker();
+
+      engine.triggerAlert(attacker, target);
+
+      expect(target.showBalloon).toHaveBeenCalledWith(2);
+      expect(target.setAlertedCoordinates).toHaveBeenCalledWith(3, 4);
+      expect(target.setAlertedCounter).toHaveBeenCalledWith(90);
+    });
+
+    it('pauses briefly the first time entering the alerted state', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canBeAlerted = vi.fn(() => true);
+      const target = buildTarget({ isAlerted: () => false });
+
+      engine.triggerAlert(buildAttacker(), target);
+
+      expect(target.setWaitCountdown).toHaveBeenCalledWith(45);
+    });
+
+    it('does not re-pause when already alerted', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canBeAlerted = vi.fn(() => true);
+      const target = buildTarget({ isAlerted: () => true });
+
+      engine.triggerAlert(buildAttacker(), target);
+
+      expect(target.setWaitCountdown).not.toHaveBeenCalled();
+    });
+  });
+  //endregion implicit parry / glancing blow / alert
 });
 //endregion plugins/abs/core/managers/jabs-engine.test.js
