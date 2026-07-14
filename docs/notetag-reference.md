@@ -343,3 +343,130 @@ While this note source is active, all actions always crit against targets with a
 "bleed".
 
 **See also:** `<critAlwaysIfState>`
+
+---
+
+## J-DropsControl (`src/plugins/drops/core/`)
+
+### `<drops:[TYPE,ID,CHANCE]>`
+
+**Applies to:**
+Enemies only
+
+**When:**
+enemy is defeated
+
+**Effect:**
+adds an additional drop beyond the editor's native 3-drop limit. TYPE is `i`/`item`, `w`/`weapon`, or
+`a`/`armor` (short and long forms both work); ID is the database id; CHANCE is a percent (this plugin
+also reinterprets the editor's native "Probability" field as a #/100 percent instead of vanilla's
+denominator system — that's a required, always-on side effect of installing this plugin, not
+optional). Additive with native editor-configured drops. Multiple `<drops>` tags — even duplicates
+for the same item — are each rolled independently.
+
+```
+<drops:[i,3,10]>
+```
+10% chance to drop item id 3.
+
+```
+<drops:[w,12,65]>
+<drops:[w,12,15]>
+<drops:[a,5,100]>
+```
+Three independent rolls: 65% chance at weapon 12, a separate 15% chance at another weapon 12, and a
+guaranteed (100%) armor 5.
+
+**See also:** `<dropMultiplier>`
+
+---
+
+### `<dropMultiplier:NUM>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, States
+
+**When:**
+always (contributes to the party's standing drop-rate multiplier)
+
+**Effect:**
+NUM is a flat percent added to drop chance, multiplicatively applied to each drop's own percentage
+(not a flat percentage-point add). Every party member's tags sum together into one party-wide rate.
+Party Ability "Drop Item Double" doubles the *entire* multiplier once, regardless of how many copies
+of that ability are present.
+
+```
+<dropMultiplier:50>
+```
++50% drop chance. A 40% drop becomes 60% (50% of 40 is 20, added on). A 4% drop becomes 6% (50% of 4
+is 2, added on).
+
+```
+<dropMultiplier:10>
+<dropMultiplier:40>
+<dropMultiplier:200>
+```
+Three stacked tags sum to +250% drop chance. A 40% drop becomes 140%; a 4% drop becomes 14%.
+
+**See also:** `<drops>`, `<dorBuffPlus>` family (below)
+
+---
+
+### J-NaturalGrowths + SDP compat: `<dorBuffPlus>` / `<dorBuffRate>` / `<dorGrowthPlus>` / `<dorGrowthRate>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, States
+
+**When:**
+J-NaturalGrowth is also loaded; silently ignored without it
+
+**Formula context:**
+`a` = the battler these bonuses are being calculated for,
+`b` = 0 (dor's base is always 0 — avoids re-entering the note lookup these formulas already live
+inside),
+`v` = `$gameVariables._data`.
+
+**Effect:**
+a second, independent drop-rate bonus from `<dropMultiplier>` above — this one lives on its own
+registered parameter (key `dor`), is SDP-panel-earnable, and follows J-NaturalGrowths' Buff (temporary,
+lost when the source is removed) / Growth (permanent, accumulates per level) × Plus (flat) / Rate
+(percent-of-base) pattern instead of a flat additive number.
+
+```
+<dorGrowthPlus:[a.level * 0.5]>
+```
+Permanently gain (level × 0.5)% drop rate per level.
+
+```
+<dorBuffPlus:[15]>
+```
+Gain a flat 15% drop rate while this tag's source is applied; lost if the source is removed.
+
+**See also:** `<dropMultiplier>`
+
+---
+
+### `<goldMultiplier:NUM>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, States
+
+**When:**
+always (contributes to the party's standing gold-rate multiplier)
+
+**Effect:**
+NUM is a flat percent added to gold earned from defeating enemies. Does not apply to gold from other
+sources (events, scripts, plugin commands). Every party member's tags sum together into one party-wide
+rate.
+
+```
+<goldMultiplier:50>
+```
++50% gold from defeated enemies.
+
+```
+<goldMultiplier:65>
+<goldMultiplier:10>
+<goldMultiplier:100>
+```
+Three stacked tags sum to +175% gold from defeated enemies.
