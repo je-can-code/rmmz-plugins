@@ -233,7 +233,18 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Action.js', () => ({ default: class {} }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Aabb.js', () => ({ default: FakeAabb }));
-    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_DeathContext.js', () => ({ default: class {} }));
+    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_DeathContext.js', () => ({
+      default: class
+      {
+        constructor(elementIds, hitType, stypeId, killerUuid)
+        {
+          this.elementIds = elementIds;
+          this.hitType = hitType;
+          this.stypeId = stypeId;
+          this.killerUuid = killerUuid;
+        }
+      },
+    }));
 
     ({ default: JABS_Engine } = await import('../../../../../src/plugins/abs/core/managers/JABS_Engine.js'));
   });
@@ -3023,5 +3034,292 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion map spawning
+
+  //region battle effects
+  describe('applyPrimaryBattleEffects', () =>
+  {
+    it('runs the full battle-effects pipeline in order', () =>
+    {
+      const engine = new JABS_Engine();
+      const callOrder = [];
+      engine.executeSkillEffects = vi.fn(() => callOrder.push('execute'));
+      engine.applyOnHitEffects = vi.fn(() => callOrder.push('onHit'));
+      engine.continuedPrimaryBattleEffects = vi.fn(() => callOrder.push('continued'));
+      engine.postPrimaryBattleEffects = vi.fn(() => callOrder.push('post'));
+
+      engine.applyPrimaryBattleEffects('action', 'target');
+
+      expect(callOrder).toEqual([ 'execute', 'onHit', 'continued', 'post' ]);
+    });
+  });
+
+  describe('executeSkillEffects', () =>
+  {
+    function buildResult(overrides = {})
+    {
+      return Object.assign({ clear: vi.fn() }, overrides);
+    }
+
+    function buildTargetBattler(result)
+    {
+      return { result: () => result, isDead: () => false };
+    }
+
+    function buildTarget(overrides = {})
+    {
+      return Object.assign({
+        guarding: () => false,
+        setDeathContext: vi.fn(),
+      }, overrides);
+    }
+
+    function buildAction(overrides = {})
+    {
+      const gameAction = { apply: vi.fn() };
+      return Object.assign({
+        isUnparryable: () => true,
+        isHealing: () => false,
+        getCaster: () => ({ getBattler: () => ({ getUuid: () => 'caster-uuid' }) }),
+        getAction: () => gameAction,
+      }, overrides);
+    }
+
+    it('clears the target\'s result before and delegates to pre/post execution hooks', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      const result = buildResult();
+      const targetBattler = buildTargetBattler(result);
+      const target = buildTarget({ getBattler: () => targetBattler });
+      const action = buildAction();
+
+      engine.executeSkillEffects(action, target);
+
+      expect(result.clear).toHaveBeenCalled();
+      expect(engine.preExecuteSkillEffects).toHaveBeenCalledWith(action, target);
+      expect(engine.postExecuteSkillEffects).toHaveBeenCalledWith(action, target);
+    });
+
+    it('applies the underlying game action against the target battler', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      const result = buildResult();
+      const targetBattler = buildTargetBattler(result);
+      const target = buildTarget({ getBattler: () => targetBattler });
+      const action = buildAction();
+
+      engine.executeSkillEffects(action, target);
+
+      expect(action.getAction().apply).toHaveBeenCalledWith(targetBattler);
+    });
+
+    it('flags the result as guarded when the target is guarding', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      const result = buildResult();
+      const targetBattler = buildTargetBattler(result);
+      const target = buildTarget({ getBattler: () => targetBattler, guarding: () => true });
+      const action = buildAction();
+
+      engine.executeSkillEffects(action, target);
+
+      expect(result.guarded).toBe(true);
+    });
+
+    it('does not attempt any defensive check when the action is unparryable', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      engine.canAttemptImplicitParry = vi.fn();
+      const target = buildTarget({ getBattler: () => buildTargetBattler(buildResult()) });
+      const action = buildAction({ isUnparryable: () => true });
+
+      engine.executeSkillEffects(action, target);
+
+      expect(engine.canAttemptImplicitParry).not.toHaveBeenCalled();
+    });
+
+    it('treats healing actions as unparryable regardless of the tag', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      engine.canAttemptImplicitParry = vi.fn();
+      const target = buildTarget({ getBattler: () => buildTargetBattler(buildResult()) });
+      const action = buildAction({ isUnparryable: () => false, isHealing: () => true });
+
+      engine.executeSkillEffects(action, target);
+
+      expect(engine.canAttemptImplicitParry).not.toHaveBeenCalled();
+    });
+
+    it('does not check for parry/glance when the target cannot attempt implicit parry', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      engine.canAttemptImplicitParry = () => false;
+      engine.checkImplicitFullParry = vi.fn();
+      const target = buildTarget({ getBattler: () => buildTargetBattler(buildResult()) });
+      const action = buildAction({ isUnparryable: () => false });
+
+      engine.executeSkillEffects(action, target);
+
+      expect(engine.checkImplicitFullParry).not.toHaveBeenCalled();
+    });
+
+    it('fully negates the action and flags parried when the full parry check succeeds', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      engine.canAttemptImplicitParry = () => true;
+      engine.checkImplicitFullParry = () => true;
+      engine.checkGlancingBlow = vi.fn();
+      const result = buildResult();
+      const target = buildTarget({ getBattler: () => buildTargetBattler(result) });
+      const action = buildAction({ isUnparryable: () => false });
+
+      engine.executeSkillEffects(action, target);
+
+      expect(result.parried).toBe(true);
+      expect(result.clear).toHaveBeenCalledTimes(2);
+      expect(engine.checkGlancingBlow).not.toHaveBeenCalled();
+    });
+
+    it('flags glancing when the full parry fails but the glancing check succeeds', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      engine.canAttemptImplicitParry = () => true;
+      engine.checkImplicitFullParry = () => false;
+      engine.checkGlancingBlow = () => true;
+      const result = buildResult();
+      const target = buildTarget({ getBattler: () => buildTargetBattler(result) });
+      const action = buildAction({ isUnparryable: () => false });
+
+      engine.executeSkillEffects(action, target);
+
+      expect(result.glancing).toBe(true);
+    });
+
+    it('neither parries nor glances when both defensive checks fail', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      engine.canAttemptImplicitParry = () => true;
+      engine.checkImplicitFullParry = () => false;
+      engine.checkGlancingBlow = () => false;
+      const result = buildResult();
+      const target = buildTarget({ getBattler: () => buildTargetBattler(result) });
+      const action = buildAction({ isUnparryable: () => false });
+
+      engine.executeSkillEffects(action, target);
+
+      expect(result.parried).toBeUndefined();
+      expect(result.glancing).toBeUndefined();
+    });
+
+    it('does not snapshot a death context when the target survives', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      const target = buildTarget({ getBattler: () => buildTargetBattler(buildResult()) });
+      const action = buildAction();
+
+      engine.executeSkillEffects(action, target);
+
+      expect(target.setDeathContext).not.toHaveBeenCalled();
+    });
+
+    it('snapshots a physical death context when the killing action is physical', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      const gameAction = {
+        apply: vi.fn(),
+        getApplicableElements: () => [ 1, 2 ],
+        isPhysical: () => true,
+        isMagical: () => false,
+        item: () => ({ stypeId: 3 }),
+      };
+      const targetBattler = { result: () => buildResult(), isDead: () => true, setDeathContext: vi.fn() };
+      const target = buildTarget({ getBattler: () => targetBattler });
+      const action = buildAction({ getAction: () => gameAction });
+
+      engine.executeSkillEffects(action, target);
+
+      expect(targetBattler.setDeathContext).toHaveBeenCalledWith(expect.objectContaining({
+        elementIds: [ 1, 2 ], hitType: 'physical', stypeId: 3, killerUuid: 'caster-uuid',
+      }));
+    });
+
+    it('snapshots a magical death context when the killing action is magical', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      const gameAction = {
+        apply: vi.fn(), getApplicableElements: () => [], isPhysical: () => false, isMagical: () => true,
+        item: () => ({ stypeId: 3 }),
+      };
+      const targetBattler = { result: () => buildResult(), isDead: () => true, setDeathContext: vi.fn() };
+      const target = buildTarget({ getBattler: () => targetBattler });
+      const action = buildAction({ getAction: () => gameAction });
+
+      engine.executeSkillEffects(action, target);
+
+      expect(targetBattler.setDeathContext).toHaveBeenCalledWith(expect.objectContaining({ hitType: 'magical' }));
+    });
+
+    it('snapshots a certain-hit death context when the killing action is neither physical nor magical', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      const gameAction = {
+        apply: vi.fn(), getApplicableElements: () => [], isPhysical: () => false, isMagical: () => false,
+        item: () => ({ stypeId: 3 }),
+      };
+      const targetBattler = { result: () => buildResult(), isDead: () => true, setDeathContext: vi.fn() };
+      const target = buildTarget({ getBattler: () => targetBattler });
+      const action = buildAction({ getAction: () => gameAction });
+
+      engine.executeSkillEffects(action, target);
+
+      expect(targetBattler.setDeathContext).toHaveBeenCalledWith(expect.objectContaining({ hitType: 'certain' }));
+    });
+  });
+
+  describe('preExecuteSkillEffects', () =>
+  {
+    it('is a no-op', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(() => engine.preExecuteSkillEffects('action', 'target')).not.toThrow();
+    });
+  });
+
+  describe('postExecuteSkillEffects', () =>
+  {
+    it('applies aggro effects unconditionally', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.applyAggroEffects = vi.fn();
+      engine.postExecuteSkillEffects('action', 'target');
+      expect(engine.applyAggroEffects).toHaveBeenCalledWith('action', 'target');
+    });
+  });
+  //endregion battle effects
 });
 //endregion plugins/abs/core/managers/jabs-engine.test.js
