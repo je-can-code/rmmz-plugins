@@ -2132,6 +2132,359 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.canBattlerUseSkills()).toBe(false);
     });
   });
+
+  describe('last used skill/slot tracking', () =>
+  {
+    it('tracks the last used skill id', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setLastUsedSkillId(5);
+
+      expect(jabsBattler.getLastUsedSkillId()).toBe(5);
+    });
+
+    it('tracks the last used slot key', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setLastUsedSlot('mainhand');
+
+      expect(jabsBattler.getLastUsedSlot()).toBe('mainhand');
+    });
+  });
+
+  describe('combo skill slot delegation', () =>
+  {
+    it('getComboNextActionId reads from the skill slot manager', () =>
+    {
+      const getSlotComboId = vi.fn(() => 7);
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getSkillSlotManager: () => ({ getSlotComboId }) });
+
+      expect(jabsBattler.getComboNextActionId('mainhand')).toBe(7);
+      expect(getSlotComboId).toHaveBeenCalledWith('mainhand');
+    });
+
+    it('setComboNextActionId writes to the skill slot manager', () =>
+    {
+      const setSlotComboId = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getSkillSlotManager: () => ({ setSlotComboId }) });
+
+      jabsBattler.setComboNextActionId('mainhand', 7);
+
+      expect(setSlotComboId).toHaveBeenCalledWith('mainhand', 7);
+    });
+
+    it('hasComboReady is true when at least one slot has a pending combo id', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({
+        getSkillSlotManager: () => ({ getAllSlots: () => [ { comboId: 0 }, { comboId: 5 } ] }),
+      });
+
+      expect(jabsBattler.hasComboReady()).toBe(true);
+    });
+
+    it('hasComboReady is false when no slots have a pending combo id', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({
+        getSkillSlotManager: () => ({ getAllSlots: () => [ { comboId: 0 } ] }),
+      });
+
+      expect(jabsBattler.hasComboReady()).toBe(false);
+    });
+  });
+
+  describe('ai combo humanized timing', () =>
+  {
+    it('sets and clears the ready frame', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setAiComboHumanizedReadyFrame(500);
+      expect(jabsBattler._aiComboHumanizedReadyFrame).toBe(500);
+
+      jabsBattler.clearAiComboHumanizedReadyFrame();
+      expect(jabsBattler._aiComboHumanizedReadyFrame).toBe(0);
+    });
+
+    it('isAiComboHumanizationTimingReady is true when no gate is armed', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._aiComboHumanizedReadyFrame = 0;
+
+      expect(jabsBattler.isAiComboHumanizationTimingReady()).toBe(true);
+    });
+
+    it('isAiComboHumanizationTimingReady is false before the armed frame', () =>
+    {
+      globalThis.Graphics.frameCount = 100;
+      const jabsBattler = buildBattler();
+      jabsBattler._aiComboHumanizedReadyFrame = 200;
+
+      expect(jabsBattler.isAiComboHumanizationTimingReady()).toBe(false);
+    });
+
+    it('isAiComboHumanizationTimingReady is true once the current frame reaches the armed frame', () =>
+    {
+      globalThis.Graphics.frameCount = 200;
+      const jabsBattler = buildBattler();
+      jabsBattler._aiComboHumanizedReadyFrame = 200;
+
+      expect(jabsBattler.isAiComboHumanizationTimingReady()).toBe(true);
+    });
+  });
+
+  describe('enemy skill pool', () =>
+  {
+    it('getSkillIdsFromEnemy filters actions through the ai skill filter', () =>
+    {
+      const jabsBattler = buildBattler();
+      const skill1 = { id: 1 };
+      const skill2 = { id: 2 };
+      jabsBattler.getBattler = () => ({
+        enemy: () => ({ actions: [ { skillId: 1 }, { skillId: 2 } ] }),
+        skill: (id) => (id === 1 ? skill1 : skill2),
+      });
+      jabsBattler.aiSkillFilter = (skill) => skill === skill1;
+
+      expect(jabsBattler.getSkillIdsFromEnemy()).toEqual([ 1 ]);
+    });
+
+    it('aiSkillFilter excludes explicitly-excluded skills', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.aiSkillFilter({ jabsAiSkillExclusion: true })).toBe(false);
+    });
+
+    it('aiSkillFilter excludes non-starter combo-chain skills', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.aiSkillFilter({ jabsComboAction: true, jabsComboStarter: false })).toBe(false);
+    });
+
+    it('aiSkillFilter includes combo-starter skills', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.aiSkillFilter({ jabsComboAction: true, jabsComboStarter: true })).toBe(true);
+    });
+
+    it('aiSkillFilter includes normal non-combo skills', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.aiSkillFilter({})).toBe(true);
+    });
+
+    it('getEnemyBasicAttack delegates to the underlying battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ basicAttackSkillId: () => 1 });
+
+      expect(jabsBattler.getEnemyBasicAttack()).toBe(1);
+    });
+
+    it('getAllSkillIdsFromEnemy appends the basic attack to the enemy skill pool', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getSkillIdsFromEnemy = () => [ 10, 11 ];
+      jabsBattler.getEnemyBasicAttack = () => 1;
+
+      expect(jabsBattler.getAllSkillIdsFromEnemy()).toEqual([ 10, 11, 1 ]);
+    });
+  });
+
+  describe('balloons/animations', () =>
+  {
+    it('showBalloon requests a balloon on the underlying event', () =>
+    {
+      globalThis.$gameTemp = { requestBalloon: vi.fn() };
+      const jabsBattler = buildBattler();
+
+      jabsBattler.showBalloon(3);
+
+      expect(globalThis.$gameTemp.requestBalloon).toHaveBeenCalledWith(jabsBattler._event, 3);
+    });
+
+    it('showAnimation requests an animation on the character', () =>
+    {
+      const requestAnimation = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ requestAnimation });
+
+      jabsBattler.showAnimation(5);
+
+      expect(requestAnimation).toHaveBeenCalledWith(5);
+    });
+
+    it('isShowingAnimation delegates to the character', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isAnimationPlaying: () => true });
+
+      expect(jabsBattler.isShowingAnimation()).toBe(true);
+    });
+  });
+
+  describe('in-combat tracking', () =>
+  {
+    it('enterCombat sets the countdown to the combat window max', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCombatWindowMax = () => 600;
+
+      jabsBattler.enterCombat();
+
+      expect(jabsBattler.getInCombatCountdown()).toBe(600);
+    });
+
+    it('getInCombatCountdown defaults to 0 for a falsy countdown', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._inCombatCountdown = undefined;
+
+      expect(jabsBattler.getInCombatCountdown()).toBe(0);
+    });
+
+    it('getCombatSecondsRemaining converts frames to seconds with one decimal', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setInCombatCountdown(90);
+
+      expect(jabsBattler.getCombatSecondsRemaining()).toBe(1.5);
+    });
+
+    it('isInCombat is true when forced combat is active regardless of countdown', () =>
+    {
+      globalThis.$jabsEngine = { forcedCombat: true };
+      const jabsBattler = buildBattler();
+      jabsBattler._inCombatCountdown = 0;
+
+      expect(jabsBattler.isInCombat()).toBe(true);
+    });
+
+    it('isInCombat is true while the countdown is positive', () =>
+    {
+      globalThis.$jabsEngine = { forcedCombat: false };
+      const jabsBattler = buildBattler();
+      jabsBattler._inCombatCountdown = 5;
+
+      expect(jabsBattler.isInCombat()).toBe(true);
+    });
+
+    it('isInCombat is false when neither forced nor counting down', () =>
+    {
+      globalThis.$jabsEngine = { forcedCombat: false };
+      const jabsBattler = buildBattler();
+      jabsBattler._inCombatCountdown = 0;
+
+      expect(jabsBattler.isInCombat()).toBe(false);
+    });
+
+    it('getCombatWindowMax falls back to 600 for a falsy configured value', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._inCombatWindowMax = 0;
+
+      expect(jabsBattler.getCombatWindowMax()).toBe(600);
+    });
+
+    it('setCombatWindowMax clamps to a zero minimum', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setCombatWindowMax(-5);
+
+      expect(jabsBattler._inCombatWindowMax).toBe(0);
+    });
+
+    it('setInCombatCountdown clamps to a zero minimum', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setInCombatCountdown(-5);
+
+      expect(jabsBattler.getInCombatCountdown()).toBe(0);
+    });
+
+    describe('countdownCombat', () =>
+    {
+      it('clamps to 0 and stops once the countdown reaches 0', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler._inCombatCountdown = 0;
+        jabsBattler._maybeShortenCombatTail = vi.fn();
+
+        jabsBattler.countdownCombat();
+
+        expect(jabsBattler._inCombatCountdown).toBe(0);
+        expect(jabsBattler._maybeShortenCombatTail).not.toHaveBeenCalled();
+      });
+
+      it('attempts to shorten the combat tail then decrements while positive', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler._inCombatCountdown = 10;
+        jabsBattler._maybeShortenCombatTail = vi.fn();
+
+        jabsBattler.countdownCombat();
+
+        expect(jabsBattler._maybeShortenCombatTail).toHaveBeenCalledWith(120);
+        expect(jabsBattler._inCombatCountdown).toBe(9);
+      });
+    });
+
+    describe('_maybeShortenCombatTail', () =>
+    {
+      it('does not shorten when the countdown is already within the tail window', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler._inCombatCountdown = 100;
+
+        jabsBattler._maybeShortenCombatTail(120);
+
+        expect(jabsBattler._inCombatCountdown).toBe(100);
+      });
+
+      it('does not shorten while still within the post-engage grace window', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.getCombatWindowMax = () => 600;
+        jabsBattler._inCombatCountdown = 590;
+
+        jabsBattler._maybeShortenCombatTail(120);
+
+        expect(jabsBattler._inCombatCountdown).toBe(590);
+      });
+
+      it('compresses the tail when nobody is aggroed to the party', async () =>
+      {
+        const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+        JABS_AiManager.anyLivingEnemiesAggroedToParty = vi.fn(() => false);
+        const jabsBattler = buildBattler();
+        jabsBattler.getCombatWindowMax = () => 600;
+        jabsBattler._inCombatCountdown = 300;
+
+        jabsBattler._maybeShortenCombatTail(120);
+
+        expect(jabsBattler._inCombatCountdown).toBe(120);
+      });
+
+      it('does not compress the tail while an enemy remains aggroed to the party', async () =>
+      {
+        const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+        JABS_AiManager.anyLivingEnemiesAggroedToParty = vi.fn(() => true);
+        const jabsBattler = buildBattler();
+        jabsBattler.getCombatWindowMax = () => 600;
+        jabsBattler._inCombatCountdown = 300;
+
+        jabsBattler._maybeShortenCombatTail(120);
+
+        expect(jabsBattler._inCombatCountdown).toBe(300);
+      });
+    });
+  });
   //endregion _reference
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
