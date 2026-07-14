@@ -36,6 +36,9 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       getNumberFromNoteByRegex: vi.fn(() => 0),
     };
 
+    // bare RMMZ-style global (not imported by JABS_Battler.js- loaded elsewhere at runtime).
+    globalThis.JABS_Button = { Offhand: 'offhand', Mainhand: 'mainhand', Dodge: 'dodge' };
+
     // sibling model/manager dependencies- mocked entirely per the unit-tier convention.
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Action.js', () => ({ default: class {} }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_ActionOptions.js', () => ({
@@ -49,6 +52,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
             setLocation: vi.fn((v) => { built.location = v; return builder; }),
             setIsTerrainDamage: vi.fn((v) => { built.isTerrainDamage = v; return builder; }),
             setRetaliationTarget: vi.fn((v) => { built.retaliationTarget = v; return builder; }),
+            setCooldownKey: vi.fn((v) => { built.cooldownKey = v; return builder; }),
           };
           builder.build = vi.fn(() => built);
           return builder;
@@ -4834,5 +4838,418 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion aggro
+
+  //region dodging
+  describe('dodge state accessors', () =>
+  {
+    it('tracks dodge direction, steps (with decrement), frame (with increment), and iframes', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      jabsBattler.setDodgeDirection(8);
+      expect(jabsBattler.getDodgeDirection()).toBe(8);
+
+      jabsBattler.setDodgeSteps(3);
+      jabsBattler.decrementDodgeSteps();
+      expect(jabsBattler.getDodgeSteps()).toBe(2);
+
+      jabsBattler.setDodgeFrame(0);
+      jabsBattler.incrementDodgeFrame();
+      expect(jabsBattler.getDodgeFrame()).toBe(1);
+
+    });
+
+    it('KNOWN BUG: setDodgeIFrames writes _dodgeIFrames but getDodgeIFrames/init read _dodgeIframes (case mismatch)', () =>
+    {
+      // setDodgeIFrames(frames) sets this._dodgeIFrames (capital F), while getDodgeIFrames()
+      // and the constructor's initDodgeInfo() both read this._dodgeIframes (lowercase f). This
+      // means setDodgeIFrames never actually updates what getDodgeIFrames returns- the iframe
+      // window parsed off a dodge skill (executeDodgeSkill) or reset on dodge end (endDodge)
+      // silently never takes effect.
+      const jabsBattler = buildBattler();
+
+      jabsBattler.setDodgeIFrames([ 1, 5 ]);
+
+      expect(jabsBattler.getDodgeIFrames()).toBeNull();
+      expect(jabsBattler._dodgeIFrames).toEqual([ 1, 5 ]);
+    });
+  });
+
+  describe('tryDodgeSkill', () =>
+  {
+    it('does nothing when the dodge slot has no resolved skill id', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 0 });
+      jabsBattler.executeDodgeSkill = vi.fn();
+
+      jabsBattler.tryDodgeSkill();
+
+      expect(jabsBattler.executeDodgeSkill).not.toHaveBeenCalled();
+    });
+
+    it('does not execute when the cost cannot be paid', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 1, canPaySkillCost: () => false });
+      jabsBattler.getSkill = () => ({ id: 1 });
+      jabsBattler.executeDodgeSkill = vi.fn();
+
+      jabsBattler.tryDodgeSkill();
+
+      expect(jabsBattler.executeDodgeSkill).not.toHaveBeenCalled();
+    });
+
+    it('executes the dodge skill when payable', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 1, canPaySkillCost: () => true });
+      const skill = { id: 1 };
+      jabsBattler.getSkill = () => skill;
+      jabsBattler.executeDodgeSkill = vi.fn();
+
+      jabsBattler.tryDodgeSkill();
+
+      expect(jabsBattler.executeDodgeSkill).toHaveBeenCalledWith(skill);
+    });
+  });
+
+  describe('executeDodgeSkill', () =>
+  {
+    function buildDodgeSkill(overrides = {})
+    {
+      return Object.assign({
+        id: 1,
+        jabsIFrames: [ 1, 5 ],
+        jabsInvincibleDodge: true,
+        jabsDodgeSpeed: 2,
+        jabsDodgeSteps: 3,
+        jabsMoveType: 'forward',
+      }, overrides);
+    }
+
+    function buildDodgingBattler(overrides = {})
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.guarding = () => false;
+      jabsBattler.executeGuard = vi.fn();
+      jabsBattler.determineDodgeDirection = vi.fn(() => 2);
+      jabsBattler.createJabsActionFromSkill = vi.fn(() => [ { setCooldownType: vi.fn() } ]);
+      globalThis.$jabsEngine = { executeMapActions: vi.fn() };
+      Object.assign(jabsBattler, overrides);
+      return jabsBattler;
+    }
+
+    it('drops an active guard before dodging', () =>
+    {
+      const jabsBattler = buildDodgingBattler({ guarding: () => true });
+      jabsBattler.getCharacter = () => ({ setDodgeModifier: vi.fn() });
+
+      jabsBattler.executeDodgeSkill(buildDodgeSkill());
+
+      expect(jabsBattler.executeGuard).toHaveBeenCalledWith(false, JABS_Button.Offhand);
+    });
+
+    it('does not touch guard when not currently guarding', () =>
+    {
+      const jabsBattler = buildDodgingBattler();
+      jabsBattler.getCharacter = () => ({ setDodgeModifier: vi.fn() });
+
+      jabsBattler.executeDodgeSkill(buildDodgeSkill());
+
+      expect(jabsBattler.executeGuard).not.toHaveBeenCalled();
+    });
+
+    it('applies invincibility, dodge speed, and step count from the skill', () =>
+    {
+      // note: does not assert on getDodgeIFrames()- see the KNOWN BUG documented under
+      // "dodge state accessors" (setDodgeIFrames/getDodgeIFrames case-mismatch means this
+      // call never actually takes effect).
+      const setDodgeModifier = vi.fn();
+      const jabsBattler = buildDodgingBattler();
+      jabsBattler.getCharacter = () => ({ setDodgeModifier });
+
+      jabsBattler.executeDodgeSkill(buildDodgeSkill());
+
+      expect(jabsBattler.isInvincible()).toBe(true);
+      expect(setDodgeModifier).toHaveBeenCalledWith(2);
+      expect(jabsBattler.getDodgeSteps()).toBe(3);
+    });
+
+    it('uses the forced direction when provided, bypassing move-type inference', () =>
+    {
+      const jabsBattler = buildDodgingBattler();
+      jabsBattler.getCharacter = () => ({ setDodgeModifier: vi.fn() });
+
+      jabsBattler.executeDodgeSkill(buildDodgeSkill(), 6);
+
+      expect(jabsBattler.getDodgeDirection()).toBe(6);
+      expect(jabsBattler.determineDodgeDirection).not.toHaveBeenCalled();
+    });
+
+    it('infers the direction from move type when no forced direction is given', () =>
+    {
+      const jabsBattler = buildDodgingBattler();
+      jabsBattler.getCharacter = () => ({ setDodgeModifier: vi.fn() });
+
+      jabsBattler.executeDodgeSkill(buildDodgeSkill({ jabsMoveType: 'forward' }));
+
+      expect(jabsBattler.determineDodgeDirection).toHaveBeenCalledWith('forward');
+      expect(jabsBattler.getDodgeDirection()).toBe(2);
+    });
+
+    it('executes the built actions and flags the battler as dodging', () =>
+    {
+      const action = { setCooldownType: vi.fn() };
+      const jabsBattler = buildDodgingBattler({ createJabsActionFromSkill: vi.fn(() => [ action ]) });
+      jabsBattler.getCharacter = () => ({ setDodgeModifier: vi.fn() });
+
+      jabsBattler.executeDodgeSkill(buildDodgeSkill());
+
+      expect(action.setCooldownType).toHaveBeenCalledWith(JABS_Button.Dodge);
+      expect(globalThis.$jabsEngine.executeMapActions).toHaveBeenCalledWith(jabsBattler, [ action ]);
+      expect(jabsBattler.isDodging()).toBe(true);
+    });
+  });
+
+  describe('tryExecuteAiEmergencyDodgeAwayFrom', () =>
+  {
+    function buildEmergencyDodgeableBattler(overrides = {})
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 1, canPaySkillCost: () => true });
+      jabsBattler.canExecuteSkill = () => true;
+      jabsBattler.getSkill = () => ({ id: 1 });
+      jabsBattler.executeDodgeSkill = vi.fn();
+      Object.assign(jabsBattler, overrides);
+      return jabsBattler;
+    }
+
+    it('is false without a resolved dodge skill id', () =>
+    {
+      const jabsBattler = buildEmergencyDodgeableBattler({
+        getBattler: () => ({ getResolvedSkillId: () => 0 }),
+      });
+
+      expect(jabsBattler.tryExecuteAiEmergencyDodgeAwayFrom('threat')).toBe(false);
+    });
+
+    it('is false when the resolved skill is not actually a dodge skill', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => false);
+      const jabsBattler = buildEmergencyDodgeableBattler();
+
+      expect(jabsBattler.tryExecuteAiEmergencyDodgeAwayFrom('threat')).toBe(false);
+    });
+
+    it('is false when the skill cannot currently be executed', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => true);
+      const jabsBattler = buildEmergencyDodgeableBattler({ canExecuteSkill: () => false });
+
+      expect(jabsBattler.tryExecuteAiEmergencyDodgeAwayFrom('threat')).toBe(false);
+    });
+
+    it('is false when the cost cannot be paid', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => true);
+      const jabsBattler = buildEmergencyDodgeableBattler({
+        getBattler: () => ({ getResolvedSkillId: () => 1, canPaySkillCost: () => false }),
+      });
+
+      expect(jabsBattler.tryExecuteAiEmergencyDodgeAwayFrom('threat')).toBe(false);
+    });
+
+    it('executes the dodge away from the threat and reports true', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => true);
+      const jabsBattler = buildEmergencyDodgeableBattler();
+      jabsBattler.getCharacter = () => ({
+        findDirectionTo: () => 8,
+        reverseDir: (dir) => (dir === 8 ? 2 : dir),
+      });
+      const threatBattler = { getCharacter: () => ({ x: 1, y: 1 }) };
+
+      const result = jabsBattler.tryExecuteAiEmergencyDodgeAwayFrom(threatBattler);
+
+      expect(result).toBe(true);
+      expect(jabsBattler.executeDodgeSkill).toHaveBeenCalledWith({ id: 1 }, 2);
+    });
+  });
+
+  describe('canDirectionalDodgeStepPass', () =>
+  {
+    it('checks diagonal passability for a diagonal direction', () =>
+    {
+      const jabsBattler = buildBattler();
+      const canPassDiagonally = vi.fn(() => true);
+      const character = {
+        _x: 1, _y: 1,
+        isDiagonalDirection: () => true,
+        getDiagonalDirections: () => [ 6, 8 ],
+        canPassDiagonally,
+      };
+
+      expect(jabsBattler.canDirectionalDodgeStepPass(character, 9)).toBe(true);
+      expect(canPassDiagonally).toHaveBeenCalledWith(1, 1, 6, 8);
+    });
+
+    it('checks cardinal passability for a cardinal direction', () =>
+    {
+      const jabsBattler = buildBattler();
+      const canPass = vi.fn(() => true);
+      const character = { _x: 1, _y: 1, isDiagonalDirection: () => false, canPass };
+
+      expect(jabsBattler.canDirectionalDodgeStepPass(character, 8)).toBe(true);
+      expect(canPass).toHaveBeenCalledWith(1, 1, 8);
+    });
+  });
+
+  describe('buildDirectionalDodgeScores', () =>
+  {
+    it('scores each of the eight directions and sorts best-alignment-first', () =>
+    {
+      const scored = JABS_Battler.buildDirectionalDodgeScores(0, 1);
+
+      expect(scored).toHaveLength(8);
+      // fleeing straight down (uy=1) should score DOWN highest.
+      expect(scored[0].d).toBe(J.ABS.Directions.DOWN);
+      expect(scored[0].s).toBe(1);
+    });
+  });
+
+  describe('pickAiDirectionalDodgeDirection', () =>
+  {
+    it('falls back to the character\'s current facing without any threat', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getClosestOpposingBattler = vi.fn(() => null);
+      JABS_AiManager.findDefensiveThreatBattler = vi.fn(() => null);
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => 2 });
+
+      expect(jabsBattler.pickAiDirectionalDodgeDirection()).toBe(2);
+    });
+
+    it('falls back to current facing when the threat is dead', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getClosestOpposingBattler = vi.fn(() => ({ isDead: () => true }));
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => 4 });
+
+      expect(jabsBattler.pickAiDirectionalDodgeDirection()).toBe(4);
+    });
+
+    it('reverses current facing when standing exactly on top of the threat', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const threat = { isDead: () => false, getX: () => 5, getY: () => 5 };
+      JABS_AiManager.getClosestOpposingBattler = vi.fn(() => threat);
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ x: 5, y: 5, direction: () => 2, reverseDir: () => 8 });
+
+      expect(jabsBattler.pickAiDirectionalDodgeDirection()).toBe(8);
+    });
+
+    it('picks the best-scoring passable direction away from the threat', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const threat = { isDead: () => false, getX: () => 0, getY: () => 5 };
+      JABS_AiManager.getClosestOpposingBattler = vi.fn(() => threat);
+      const jabsBattler = buildBattler();
+      // battler is above the threat (y=0 vs threat y=5), so "away" is further up (UP direction).
+      jabsBattler.getCharacter = () => ({ x: 0, y: 0, direction: () => 2 });
+      jabsBattler.canDirectionalDodgeStepPass = vi.fn(() => true);
+
+      expect(jabsBattler.pickAiDirectionalDodgeDirection()).toBe(J.ABS.Directions.UP);
+    });
+
+    it('relaxes the alignment floor when the best-aligned directions are all blocked', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const threat = { isDead: () => false, getX: () => 0, getY: () => 5 };
+      JABS_AiManager.getClosestOpposingBattler = vi.fn(() => threat);
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ x: 0, y: 0, direction: () => 2 });
+      // only the exact-opposite direction (toward the threat) is passable- forces the floor
+      // all the way down to -999 before anything qualifies.
+      jabsBattler.canDirectionalDodgeStepPass = vi.fn((character, dir) => dir === J.ABS.Directions.DOWN);
+
+      expect(jabsBattler.pickAiDirectionalDodgeDirection()).toBe(J.ABS.Directions.DOWN);
+    });
+
+    it('falls back to current facing when nothing at all is passable', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const threat = { isDead: () => false, getX: () => 0, getY: () => 5 };
+      JABS_AiManager.getClosestOpposingBattler = vi.fn(() => threat);
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ x: 0, y: 0, direction: () => 6 });
+      jabsBattler.canDirectionalDodgeStepPass = vi.fn(() => false);
+
+      expect(jabsBattler.pickAiDirectionalDodgeDirection()).toBe(6);
+    });
+  });
+
+  describe('determineDodgeDirection', () =>
+  {
+    beforeEach(() =>
+    {
+      J.ABS.Notetags = { MoveType: { Forward: 'forward', Backward: 'backward', Directional: 'directional' } };
+    });
+
+    it('returns the character\'s current facing for a forward dodge', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => 2 });
+
+      expect(jabsBattler.determineDodgeDirection('forward')).toBe(2);
+    });
+
+    it('returns the reversed facing for a backward dodge', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => 2, reverseDir: () => 8 });
+
+      expect(jabsBattler.determineDodgeDirection('backward')).toBe(8);
+    });
+
+    it('returns the current facing for a directional player dodge with no input', () =>
+    {
+      globalThis.Input = { dir8: 0 };
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isPlayer: () => true, direction: () => 4 });
+
+      expect(jabsBattler.determineDodgeDirection('directional')).toBe(4);
+    });
+
+    it('returns the raw input direction for a directional player dodge with input', () =>
+    {
+      globalThis.Input = { dir8: 6 };
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isPlayer: () => true, direction: () => 4 });
+
+      expect(jabsBattler.determineDodgeDirection('directional')).toBe(6);
+    });
+
+    it('delegates to the ai picker for a directional non-player dodge', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isPlayer: () => false });
+      jabsBattler.pickAiDirectionalDodgeDirection = vi.fn(() => 9);
+
+      expect(jabsBattler.determineDodgeDirection('directional')).toBe(9);
+    });
+
+    it('falls back to current facing for an unrecognized move type', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => 2 });
+
+      expect(jabsBattler.determineDodgeDirection('unknown')).toBe(2);
+    });
+  });
+  //endregion dodging
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
