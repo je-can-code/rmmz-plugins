@@ -67,5 +67,35 @@ describe('J-NaturalGrowth Game_Enemy (direct src import)', () =>
     // Assert
     expect(enemy.paramBase(3)).toBe(8);
   });
+
+  it('reproduces the reported Wolftrap sdpPlus bug: real note tag, real level-based formula, real sdpPoints:3 base', () =>
+  {
+    // Arrange: this is Wolftrap's (enemy 301) actual note verbatim from
+    // ca/chef-adventure/data/Enemies.json, isolated to the one line that matters here, plus the
+    // level tag its formula depends on.
+    globalThis.J.SDP = {};
+    const enemy = new globalThis.Game_Enemy();
+    enemy._enemyDb = {
+      exp: 0, gold: 0, sdpPoints: 3, actions: [],
+    };
+    enemy.__testNoteSources = [
+      { note: '<level:5>\n<sdpPlus:[(a.level ** 1.5 * 1)]>\n<sdpPoints:3>' },
+    ];
+    enemy.initMembers();
+
+    // real level tag is parsed by J-Level in production; this fixture's Game_Battler stubs
+    // getLevel() as `this.level ?? 1`, so set the own-property directly rather than pull in the
+    // whole Level plugin just to prove Natural/SDP's own wiring.
+    enemy.level = 5;
+
+    // Act: mirrors what J-NaturalGrowth's aliased Game_Enemy.setup does on troop/JABS spawn.
+    globalThis.Game_Enemy.prototype.setup.call(enemy, 1, 0, 0);
+
+    // Assert: base 3 + (5 ** 1.5 * 1) rounded to 3 decimals by the formula evaluator = 3 + 11.18.
+    expect(enemy.sdpsPlus()).toBeCloseTo(11.18, 2);
+    expect(enemy.sdpPoints()).toBeCloseTo(14.18, 2);
+
+    delete globalThis.J.SDP;
+  });
 });
 //endregion plugins/natural/_component/game-enemy.test.js

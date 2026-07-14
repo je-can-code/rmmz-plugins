@@ -1,9 +1,22 @@
 ---
-status: open
+status: done
 area: bug
 ---
 
 # J-NaturalGrowths `sdpPlus` reward bonus not applying
+
+## Resolution (2026-07-14)
+
+Verified fixed (or never-broken as currently written — no matching commit found, likely fixed
+incidentally in unrelated work and this doc never got moved). Reproduced the exact Wolftrap note
+tags (`<level:5>`, `<sdpPlus:[(a.level ** 1.5 * 1)]>`, `<sdpPoints:3>`) against the real
+`src/plugins/natural/core/objects/Game_Enemy.js` source in
+`test/plugins/natural/_component/game-enemy.test.js` — `sdpPoints()` correctly returns base + bonus
+(~14.18, not 3). Confirmed in the actual shipped `plugins.js` that J-SDP loads before J-NaturalGrowth
+(so aliasing captures the right base method), the JABS enemy spawn path
+(`J-ABS.js` `new Game_Enemy(...)`) goes through the same aliased `setup()` chain as troop battles,
+and none of the three suspected causes in this doc reproduce. Left the original bug write-up below
+for reference.
 
 ## Symptom
 
