@@ -4849,3 +4849,52 @@ suppresses the minimap entirely while the player is on this map, regardless of t
 <blockMinimap>
 ```
 The minimap never renders on this map.
+
+---
+
+## J-MessageTextCodes (`src/plugins/message/core/`)
+
+Adds new `\Code[ID]` text codes for database entries (not covered here — this reference is for
+`<tag>` notetags only) and a family of `<tag>` conditionals for hiding/showing "Show Choices"
+branches.
+
+### `<leaderChoiceCondition:ACTOR_ID>` / `<notLeaderChoiceCondition:ACTOR_ID>`
+
+**Applies to:**
+Event Commands (inside a "Show Choices" branch/choice comment)
+
+**When:**
+the "Show Choices" command is evaluated
+
+**Effect:**
+`leaderChoiceCondition` shows the choice only while ACTOR_ID is the current party leader;
+`notLeaderChoiceCondition` hides the choice only while ACTOR_ID is the current leader. Nesting
+multiple "Show Choices" commands with these tags is untested and best avoided.
+
+```
+<leaderChoiceCondition:4>
+```
+This choice is only visible while actor 4 is the party leader.
+
+**See also:** `<switchOnChoiceCondition>`, `<switchOffChoiceCondition>`
+
+---
+
+### `<switchOnChoiceCondition:SWITCH_ID>` / `<switchOffChoiceCondition:SWITCH_ID>`
+
+**Applies to:**
+Event Commands (inside a "Show Choices" branch/choice comment)
+
+**When:**
+the "Show Choices" command is evaluated
+
+**Effect:**
+`switchOnChoiceCondition` shows the choice only while SWITCH_ID is ON;
+`switchOffChoiceCondition` shows the choice only while SWITCH_ID is OFF.
+
+```
+<switchOnChoiceCondition:222>
+```
+This choice is only visible while switch 222 is ON.
+
+**See also:** `<leaderChoiceCondition>`, `<notLeaderChoiceCondition>`
