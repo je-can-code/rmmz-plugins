@@ -3781,3 +3781,29 @@ type ids. A `default` row is mandatory in the config as the fallback.
 <jabsJuiceWeaponStyle:heavy>
 ```
 This skill's swing uses the `heavy` tilt/swing multiplier row instead of the inferred one.
+
+---
+
+## J-ABS-Poses (`src/plugins/abs/ext/poses/`)
+
+Enables "action poses" — swapping a battler's character sprite file/index for a duration when
+they take an action, cycling through its stepping animation to fake a pseudo-animated pose.
+
+### `<poseSuffix:[SUFFIX, INDEX, DURATION]>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+this skill/item is executed
+
+**Effect:**
+swaps the caster's character sprite to `<originalFilename><SUFFIX>` at character-sheet INDEX for
+DURATION frames, then reverts. Not a highly tested feature — may not work as intended in all
+cases (per the plugin's own warning).
+
+```
+<poseSuffix:[-spell,0,25]>
+```
+A player using "Actor1" swaps to "Actor1-spell" (0th/upper-left cell) for 25 frames (~half a
+second) while this skill executes.
