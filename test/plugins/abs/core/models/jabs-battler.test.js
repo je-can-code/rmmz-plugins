@@ -1650,6 +1650,488 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.distanceToAllyTarget()).toBe(5);
     });
   });
+
+  describe('distanceToHome', () =>
+  {
+    it('computes distance to the home coordinates', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._homeX = 3;
+      jabsBattler._homeY = 4;
+      jabsBattler.getX = () => 0;
+      jabsBattler.getY = () => 0;
+
+      expect(jabsBattler.distanceToHome()).toBe(5);
+    });
+  });
+
+  describe('simple display/behavior flags', () =>
+  {
+    it('canIdle/showHpBar/showStates/showBattlerName reflect the core-data-derived fields', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._canIdle = false;
+      jabsBattler._showHpBar = false;
+      jabsBattler._showStates = false;
+      jabsBattler._showBattlerName = false;
+
+      expect(jabsBattler.canIdle()).toBe(false);
+      expect(jabsBattler.showHpBar()).toBe(false);
+      expect(jabsBattler.showStates()).toBe(false);
+      expect(jabsBattler.showBattlerName()).toBe(false);
+    });
+  });
+
+  describe('alerted state', () =>
+  {
+    it('isAlerted/setAlerted track the flag, defaulting to true', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.isAlerted()).toBe(false);
+
+      jabsBattler.setAlerted();
+
+      expect(jabsBattler.isAlerted()).toBe(true);
+    });
+
+    it('getAlertDuration returns the tracked duration', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._alertDuration = 300;
+
+      expect(jabsBattler.getAlertDuration()).toBe(300);
+    });
+
+    it('setAlertedCounter clears idle and sets alerted when the counter is positive', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setIdle = vi.fn();
+
+      jabsBattler.setAlertedCounter(60);
+
+      expect(jabsBattler.setIdle).toHaveBeenCalledWith(false);
+      expect(jabsBattler.isAlerted()).toBe(true);
+    });
+
+    it('setAlertedCounter clears alerted when the counter is 0 or less', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setAlerted(true);
+
+      jabsBattler.setAlertedCounter(0);
+
+      expect(jabsBattler.isAlerted()).toBe(false);
+    });
+
+    it('getAlertedCoordinates/setAlertedCoordinates track the alerter\'s position', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      jabsBattler.setAlertedCoordinates(3, 4);
+
+      expect(jabsBattler.getAlertedCoordinates()).toEqual([ 3, 4 ]);
+    });
+  });
+
+  describe('home/position tracking', () =>
+  {
+    it('isHome is true when the event is at its home coordinates', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._event.x = 3;
+      jabsBattler._event.y = 4;
+      jabsBattler._homeX = 3;
+      jabsBattler._homeY = 4;
+
+      expect(jabsBattler.isHome()).toBe(true);
+    });
+
+    it('isHome is false when the event has moved from home', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._event.x = 5;
+      jabsBattler._event.y = 4;
+      jabsBattler._homeX = 3;
+      jabsBattler._homeY = 4;
+
+      expect(jabsBattler.isHome()).toBe(false);
+    });
+
+    it('getHomeX/getHomeY return the tracked home coordinates', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._homeX = 3;
+      jabsBattler._homeY = 4;
+
+      expect(jabsBattler.getHomeX()).toBe(3);
+      expect(jabsBattler.getHomeY()).toBe(4);
+    });
+
+    it('getX/getY read the real-pixel coordinates from the character', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ _realX: 3, _realY: 4 });
+
+      expect(jabsBattler.getX()).toBe(3);
+      expect(jabsBattler.getY()).toBe(4);
+    });
+  });
+
+  describe('getAiMode / getBattlerRole / getLeaderAiMode', () =>
+  {
+    it('getAiMode returns the tracked ai mode', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._aiMode = 'ai-mode';
+
+      expect(jabsBattler.getAiMode()).toBe('ai-mode');
+    });
+
+    it('getBattlerRole returns the tracked role', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._battlerRole = 'role';
+
+      expect(jabsBattler.getBattlerRole()).toBe('role');
+    });
+
+    it('getLeaderAiMode is null without a leader', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.hasLeader = () => false;
+
+      expect(jabsBattler.getLeaderAiMode()).toBeNull();
+    });
+
+    it('getLeaderAiMode is null when the leader cannot be resolved', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => null);
+      const jabsBattler = buildBattler();
+      jabsBattler.hasLeader = () => true;
+
+      expect(jabsBattler.getLeaderAiMode()).toBeNull();
+    });
+
+    it('getLeaderAiMode resolves the leader\'s own ai mode', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ getAiMode: () => 'leader-ai' }));
+      const jabsBattler = buildBattler();
+      jabsBattler.hasLeader = () => true;
+
+      expect(jabsBattler.getLeaderAiMode()).toBe('leader-ai');
+    });
+  });
+
+  describe('movement helpers', () =>
+  {
+    describe('moveAwayFromTarget', () =>
+    {
+      it('does nothing without a target', () =>
+      {
+        const moveAwayFromCharacter = vi.fn();
+        const jabsBattler = buildBattler();
+        jabsBattler.getCharacter = () => ({ moveAwayFromCharacter });
+
+        jabsBattler.moveAwayFromTarget();
+
+        expect(moveAwayFromCharacter).not.toHaveBeenCalled();
+      });
+
+      it('moves the character away from the target\'s character', () =>
+      {
+        const moveAwayFromCharacter = vi.fn();
+        const jabsBattler = buildBattler();
+        jabsBattler.getCharacter = () => ({ moveAwayFromCharacter });
+        const targetCharacter = {};
+        jabsBattler.setTarget({ getCharacter: () => targetCharacter });
+
+        jabsBattler.moveAwayFromTarget();
+
+        expect(moveAwayFromCharacter).toHaveBeenCalledWith(targetCharacter);
+      });
+    });
+
+    describe('smartMoveAwayFromTarget', () =>
+    {
+      function buildMovableBattler(overrides = {})
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isDodging = () => false;
+        jabsBattler.guarding = () => false;
+        Object.assign(jabsBattler, overrides);
+        return jabsBattler;
+      }
+
+      it('does nothing without a target', () =>
+      {
+        const moveAwayFromCharacter = vi.fn();
+        const jabsBattler = buildMovableBattler();
+        jabsBattler.getCharacter = () => ({ moveAwayFromCharacter });
+
+        jabsBattler.smartMoveAwayFromTarget();
+
+        expect(moveAwayFromCharacter).not.toHaveBeenCalled();
+      });
+
+      it('does nothing while dodging', () =>
+      {
+        const moveAwayFromCharacter = vi.fn();
+        const jabsBattler = buildMovableBattler({ isDodging: () => true });
+        jabsBattler.getCharacter = () => ({ moveAwayFromCharacter });
+        jabsBattler.setTarget({ getCharacter: () => ({}) });
+
+        jabsBattler.smartMoveAwayFromTarget();
+
+        expect(moveAwayFromCharacter).not.toHaveBeenCalled();
+      });
+
+      it('does nothing while guarding', () =>
+      {
+        const moveAwayFromCharacter = vi.fn();
+        const jabsBattler = buildMovableBattler({ guarding: () => true });
+        jabsBattler.getCharacter = () => ({ moveAwayFromCharacter });
+        jabsBattler.setTarget({ getCharacter: () => ({}) });
+
+        jabsBattler.smartMoveAwayFromTarget();
+
+        expect(moveAwayFromCharacter).not.toHaveBeenCalled();
+      });
+
+      it('moves away from the target and does not wiggle when movement succeeded', () =>
+      {
+        const moveStraight = vi.fn();
+        const jabsBattler = buildMovableBattler();
+        jabsBattler.getCharacter = () => ({
+          moveAwayFromCharacter: vi.fn(),
+          isMovementSucceeded: () => true,
+          moveStraight,
+        });
+        jabsBattler.setTarget({ getCharacter: () => ({}) });
+
+        jabsBattler.smartMoveAwayFromTarget();
+
+        expect(moveStraight).not.toHaveBeenCalled();
+      });
+
+      it('wiggles in a different direction when the direct move away failed', () =>
+      {
+        Math.randomInt = (max) => Math.floor(Math.random() * max);
+        const moveStraight = vi.fn();
+        const jabsBattler = buildMovableBattler();
+        jabsBattler.getCharacter = () => ({
+          moveAwayFromCharacter: vi.fn(),
+          isMovementSucceeded: () => false,
+          reverseDir: () => 2,
+          direction: () => 8,
+          moveStraight,
+        });
+        jabsBattler.setTarget({ getCharacter: () => ({}) });
+
+        jabsBattler.smartMoveAwayFromTarget();
+
+        expect(moveStraight).toHaveBeenCalledTimes(1);
+        expect(moveStraight.mock.calls[0][0]).not.toBe(2);
+      });
+    });
+
+    describe('smartMoveTowardTarget / smartMoveTowardAllyTarget', () =>
+    {
+      it('smartMoveTowardTarget does nothing without a target', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.smartMoveTowardCoordinates = vi.fn();
+
+        jabsBattler.smartMoveTowardTarget();
+
+        expect(jabsBattler.smartMoveTowardCoordinates).not.toHaveBeenCalled();
+      });
+
+      it('smartMoveTowardTarget delegates to smartMoveTowardCoordinates using the target\'s position', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.smartMoveTowardCoordinates = vi.fn();
+        jabsBattler.setTarget({ getX: () => 3, getY: () => 4 });
+
+        jabsBattler.smartMoveTowardTarget();
+
+        expect(jabsBattler.smartMoveTowardCoordinates).toHaveBeenCalledWith(3, 4);
+      });
+
+      it('smartMoveTowardAllyTarget does nothing without an ally target', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.smartMoveTowardCoordinates = vi.fn();
+
+        jabsBattler.smartMoveTowardAllyTarget();
+
+        expect(jabsBattler.smartMoveTowardCoordinates).not.toHaveBeenCalled();
+      });
+
+      it('smartMoveTowardAllyTarget delegates to smartMoveTowardCoordinates using the ally target\'s position', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.smartMoveTowardCoordinates = vi.fn();
+        jabsBattler.setAllyTarget({ getX: () => 3, getY: () => 4 });
+
+        jabsBattler.smartMoveTowardAllyTarget();
+
+        expect(jabsBattler.smartMoveTowardCoordinates).toHaveBeenCalledWith(3, 4);
+      });
+    });
+
+    describe('smartMoveTowardCoordinates', () =>
+    {
+      function buildMovableBattler(overrides = {})
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isDodging = () => false;
+        jabsBattler.guarding = () => false;
+        Object.assign(jabsBattler, overrides);
+        return jabsBattler;
+      }
+
+      it('does nothing while dodging', () =>
+      {
+        const moveStraight = vi.fn();
+        const jabsBattler = buildMovableBattler({ isDodging: () => true });
+        jabsBattler.getCharacter = () => ({ moveStraight });
+
+        jabsBattler.smartMoveTowardCoordinates(1, 1);
+
+        expect(moveStraight).not.toHaveBeenCalled();
+      });
+
+      it('does nothing while guarding', () =>
+      {
+        const moveStraight = vi.fn();
+        const jabsBattler = buildMovableBattler({ guarding: () => true });
+        jabsBattler.getCharacter = () => ({ moveStraight });
+
+        jabsBattler.smartMoveTowardCoordinates(1, 1);
+
+        expect(moveStraight).not.toHaveBeenCalled();
+      });
+
+      it('moves diagonally when the next direction is diagonal', () =>
+      {
+        const moveDiagonally = vi.fn();
+        const jabsBattler = buildMovableBattler();
+        jabsBattler.getCharacter = () => ({
+          findDiagonalDirectionTo: () => 9,
+          isDiagonalDirection: () => true,
+          getDiagonalDirections: () => [ 6, 8 ],
+          moveDiagonally,
+        });
+
+        jabsBattler.smartMoveTowardCoordinates(1, 1);
+
+        expect(moveDiagonally).toHaveBeenCalledWith(6, 8);
+      });
+
+      it('moves straight when the next direction is cardinal', () =>
+      {
+        const moveStraight = vi.fn();
+        const jabsBattler = buildMovableBattler();
+        jabsBattler.getCharacter = () => ({
+          findDiagonalDirectionTo: () => 8,
+          isDiagonalDirection: () => false,
+          moveStraight,
+        });
+
+        jabsBattler.smartMoveTowardCoordinates(1, 1);
+
+        expect(moveStraight).toHaveBeenCalledWith(8);
+      });
+    });
+
+    describe('turnTowardTarget', () =>
+    {
+      it('does nothing without a target', () =>
+      {
+        const turnTowardCharacter = vi.fn();
+        const jabsBattler = buildBattler();
+        jabsBattler.getCharacter = () => ({ turnTowardCharacter });
+
+        jabsBattler.turnTowardTarget();
+
+        expect(turnTowardCharacter).not.toHaveBeenCalled();
+      });
+
+      it('turns the character toward the target\'s character', () =>
+      {
+        const turnTowardCharacter = vi.fn();
+        const jabsBattler = buildBattler();
+        jabsBattler.getCharacter = () => ({ turnTowardCharacter });
+        const targetCharacter = {};
+        jabsBattler.setTarget({ getCharacter: () => targetCharacter });
+
+        jabsBattler.turnTowardTarget();
+
+        expect(turnTowardCharacter).toHaveBeenCalledWith(targetCharacter);
+      });
+    });
+  });
+
+  describe('canBattlerUseAttacks / canBattlerUseSkills', () =>
+  {
+    it('canBattlerUseAttacks is true with no states at all', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ states: () => [] });
+
+      expect(jabsBattler.canBattlerUseAttacks()).toBe(true);
+    });
+
+    it('canBattlerUseAttacks is false when disarmed', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ states: () => [ { jabsDisarmed: true } ] });
+
+      expect(jabsBattler.canBattlerUseAttacks()).toBe(false);
+    });
+
+    it('canBattlerUseAttacks is false when paralyzed', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ states: () => [ { jabsParalyzed: true } ] });
+
+      expect(jabsBattler.canBattlerUseAttacks()).toBe(false);
+    });
+
+    it('canBattlerUseAttacks is true when states are present but none disable attacking', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ states: () => [ {} ] });
+
+      expect(jabsBattler.canBattlerUseAttacks()).toBe(true);
+    });
+
+    it('canBattlerUseSkills is true with no states at all', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ states: () => [] });
+
+      expect(jabsBattler.canBattlerUseSkills()).toBe(true);
+    });
+
+    it('canBattlerUseSkills is false when muted', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ states: () => [ { jabsMuted: true } ] });
+
+      expect(jabsBattler.canBattlerUseSkills()).toBe(false);
+    });
+
+    it('canBattlerUseSkills is false when paralyzed', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ states: () => [ { jabsParalyzed: true } ] });
+
+      expect(jabsBattler.canBattlerUseSkills()).toBe(false);
+    });
+  });
   //endregion _reference
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
