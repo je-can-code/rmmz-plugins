@@ -3442,3 +3442,28 @@ release).
 7 charge tiers (3-6 auto-generated at 30 frames each). Releasing after tier 1 (60 frames) fires
 skill 125; releasing between tiers 2-6 also fires skill 125 (tier 2 sets 0); releasing at tier 7
 (after ~10.5 seconds total) fires skill 90 instead.
+
+---
+
+## J-ABS-DangerIndicator (`src/plugins/abs/ext/danger/`)
+
+Displays a level-difference danger icon beside enemy HP gauges on the map. Requires J-ABS,
+otherwise plug-n-play.
+
+### `<noDangerIndicator>` / `<showDangerIndicator>`
+
+**Applies to:**
+Enemies (database note); Enemy events (comment, overrides the database default for that event)
+
+**When:**
+always
+
+**Effect:**
+overrides the plugin-parameter default ("Show Indicator by Default") on a per-enemy basis.
+`noDangerIndicator` suppresses the indicator; `showDangerIndicator` forces it to show. An
+event-level tag overrides whatever the database note or plugin default would otherwise decide.
+
+```
+<noDangerIndicator>
+```
+This enemy never shows a danger indicator, even if the plugin default has it enabled globally.
