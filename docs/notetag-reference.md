@@ -778,3 +778,262 @@ on the granted State's own Traits — this plugin does not patch param/xparam/sp
 Consuming this item permanently grants both State 42 and State 55 to the actor who consumed it.
 
 **See also:** `<passive>` (J-Passive core)
+
+---
+
+## J-Passive-Conditional (`src/plugins/passive/ext/conditional/`)
+
+Requires J-ABS. Map battlers re-check gate/count rules on a throttled timer (configurable, default
+15 frames); any passive refresh also re-evaluates immediately.
+
+### `<passiveSourceRule:[KIND, PARAM?]>`
+
+**Applies to:**
+any database row that can carry a `<passive>` grant (skills, states, equip, class, actor, enemy)
+
+**When:**
+every passive-rule reconcile pass for the bearer
+
+**Effect:**
+gates EVERY passive this source grants behind KIND's condition — if the condition fails, none of this
+source's passives apply. Threshold kinds use `*Above` (>=) / `*Below` (<=): `hp`/`mp`/`tp` are current
+resource percent, `mhp`/`mmp`/`mtp` are flat max values, `{registryKey}Above/Below` are flat or
+hundred-scale per the parameter registry, `allAllies{key}Above/Below` requires every allied JABS
+battler (including self) to pass. Discrete kinds: `alliesNearby`, `enemiesNearby`, `hasState`,
+`negativeStateCount`, `slotOnCooldown`/`slotOffCooldown`/`allOnCooldown`/`allOffCooldown`,
+`sinceLastMoved`/`Hit`/`Attacked`, `movedWithin`/`hitWithin`/`attackedWithin` (frames).
+
+```
+<passiveSourceRule:[allOffCooldown]>
+```
+
+**See also:** `<passiveStateRule>`, `<passiveStateCount>`
+
+---
+
+### `<passiveStateRule:[STATE_ID, KIND, PARAM?]>`
+
+**Applies to:**
+same as `<passiveSourceRule>`
+
+**When:**
+same as `<passiveSourceRule>`
+
+**Effect:**
+same KIND vocabulary as `<passiveSourceRule>`, but scoped to gating just ONE state id from this
+source instead of every passive the source grants.
+
+```
+<passiveStateRule:[12, hpBelow, 25]>
+```
+State 12 only applies from this source while the bearer's HP is at or below 25%.
+
+**See also:** `<passiveSourceRule>`, `<passiveStateCount>`
+
+---
+
+### `<passiveStateCount:[STATE_ID, KIND, PARAM]>`
+
+**Applies to:**
+same as `<passiveSourceRule>`
+
+**When:**
+same as `<passiveSourceRule>`
+
+**Effect:**
+instead of gating on/off, contributes a variable STACK COUNT to STATE_ID based on KIND: `negativeStateCount`,
+`alliesNearby` (excludes self), `lessIsMoreHp`/`Mp`/`Tp` (more stacks the lower the resource),
+`moreIsMoreHp`/`Mp`/`Tp` (more stacks the higher the resource), or `per-{registryKey}` (integer points
+per stack from a parameter registry value).
+
+```
+<passiveStateCount:[12, lessIsMoreHp, 25]>
+```
+
+**See also:** `<passiveSourceRule>`, `<passiveStateRule>`
+
+---
+
+### `<autoApplyState:[STATE_ID, CONDITION, PARAM]>`
+
+**Applies to:**
+any database row that can carry a `<passive>` grant
+
+**When:**
+depends on CONDITION — see list below. PARAM is always the minimum frames between applies for that
+source+state+condition combination, tracked per-bearer.
+
+**Effect:**
+applies a REAL JABS combat state (not a passive grant — do not also list the same state id in
+`<passive:[...]>` on the same row, they're independent mechanisms) to the rule bearer whenever
+CONDITION fires and the cooldown has elapsed. Conditions:
+`time` (periodic while on the ABS map, interval = PARAM),
+`hpDmg`/`mpDmg`/`tpDmg` (combat loss via `gain*` going negative — not skill MP/TP cost payment),
+`anyDmg` (any of HP/MP/TP takes combat damage),
+`whenCrit` (this battler is critically hit as the victim — not `onCritApply`),
+`negaStateAdded`/`posiStateAdded`/`anyStateAdded` (a `<negative>`-tagged / non-negative / any combat
+state is added to this battler),
+`onHealHp`/`Mp`/`Tp` (this battler's own resource is restored),
+`onAllyHeal` (a battler within proximity of this one is healed, any resource),
+`onKill` (this battler defeats an enemy),
+`onDamageDealt` (this battler lands damage on an opposing battler),
+`move` (PARAM = whole tiles moved per apply; requires J-Pixelistics),
+`stand` (PARAM = frames standing still on the map before applying).
+
+```
+<autoApplyState:[50, time, 900]>
+<autoApplyState:[57, onKill, 0]>
+<autoApplyState:[BUFF_ID, stand, 120]>
+```
+
+**See also:** `<autoApplyStateOnNearby>`, `<removeStateOnMove>` (the "stand" condition's natural pair)
+
+---
+
+### `<autoApplyStateOnNearby:[STATE_ID, KIND, MIN_COUNT, COOLDOWN_FRAMES, TRIGGER_TILES?]>`
+
+**Applies to:**
+same as `<autoApplyState>`
+
+**When:**
+pulse timer gated by COOLDOWN_FRAMES (tracked on the bearer) and a minimum nearby-battler count
+
+**Effect:**
+aura-style sibling of `<autoApplyState>` — instead of applying STATE_ID to the rule bearer, redirects
+onto every battler currently in proximity. Only two KIND values do anything (every other
+`<autoApplyState>` CONDITION has no proximity set to iterate and simply won't fire): `enemiesNearby`
+targets nearby enemy JABS battlers, `alliesNearby` targets nearby allies excluding the bearer itself.
+MIN_COUNT is the minimum number of battlers in range required for the pulse to fire at all — the
+pulse then hits everyone currently in range, not just MIN_COUNT of them. Optional fifth TRIGGER_TILES
+overrides the plugin's default proximity radius for this rule's gate only.
+
+```
+<autoApplyStateOnNearby:[60, enemiesNearby, 1, 120]>
+```
+Every 120 frames, if at least 1 enemy is within the default proximity radius, apply state 60 to every
+nearby enemy.
+
+**See also:** `<autoApplyState>`
+
+---
+
+### `<autoExecuteSkill:[SKILL_ID, CONDITION, PARAM]>`
+
+**Applies to:**
+same as `<autoApplyState>`
+
+**When:**
+same CONDITION vocabulary as `<autoApplyState>`, plus `enemiesNearby` as a 4- or 5-value tuple:
+`<autoExecuteSkill:[SKILL_ID, enemiesNearby, MIN_COUNT, FRAMES]>` with an optional fifth
+TRIGGER_TILES overriding the default proximity radius for this rule's gate only.
+
+**Effect:**
+fires SKILL_ID as a real map skill through JABS `forceMapAction` — no MP/TP cost, no skill cooldown.
+Victims may parry and retaliate normally. The payload skill owns its own radius, hitbox, and damage
+formula. Do not tag the payload skill itself with `<autoExecuteSkill>` (depth-guarded, but still —
+don't).
+
+```
+<autoExecuteSkill:[1022, enemiesNearby, 1, 60]>
+```
+
+**See also:** `<autoApplyState>`, `<autoInflictState>`
+
+---
+
+### `<autoInflictState:[STATE_ID, CONDITION, COOLDOWN_FRAMES]>`
+
+**Applies to:**
+same as `<autoApplyState>`
+
+**When:**
+`negaStateInflicted`/`posiStateInflicted`/`anyStateInflicted` (this battler inflicts a
+negative-tagged / non-negative / any state onto someone else), `onKnockback` (this battler knocks an
+enemy back). COOLDOWN_FRAMES is the minimum frames between dispatches for this rule; 0 means every
+time.
+
+**Effect:**
+unlike `<autoApplyState>` (targets the rule bearer) and `<autoApplyStateOnNearby>` (targets
+proximity), this fires from an event involving an EXTERNAL battler — the rule bearer doing something
+to someone else — and applies STATE_ID onto that same someone else. The bearer's own state-tracking
+still credits the bearer as the inflictor of STATE_ID, matching who actually did it. Depth-guarded in
+case STATE_ID is itself negative-tagged and would otherwise re-trigger this same rule on its own
+application.
+
+```
+<autoInflictState:[70, negaStateInflicted, 0]>
+```
+
+**See also:** `<autoApplyState>`, `<autoExecuteSkill>`
+
+---
+
+### `<removeOnSkillExecution:[STYPE_ID, CHANCE]>`
+
+**Applies to:**
+States only — tag lives on the state that may be removed, not on skills/equip
+
+**When:**
+this battler executes a map skill
+
+**Effect:**
+rolls CHANCE (1–100). STYPE_ID 0 matches any skill type. On success, peels a stack via
+`decrementStateStacks` (respects `loseAllStacksAtOnce` on this state row). Fires at the moment of
+execution — before damage resolves.
+
+```
+<removeOnSkillExecution:[7, 100]>
+```
+Guaranteed stack peel whenever this battler executes any skill of type 7.
+
+**See also:** `<removeOnSkillResolution>` (fires later, at action expiry, not execution)
+
+---
+
+### `<removeOnSkillResolution:[STYPE_ID, CHANCE]>`
+
+**Applies to:**
+States only — tag lives on the state that may be removed, not on skills/equip
+
+**When:**
+the action fired by this battler fully expires — after its last hit lands, or after it travels its
+full duration without contacting any target
+
+**Effect:**
+same roll/peel mechanics as `<removeOnSkillExecution>`, but the timing difference matters: because
+removal happens at expiry (after damage is already resolved), state traits such as ATK bonuses are
+still present during the damage calculation for that cast — `<removeOnSkillExecution>` would have
+already stripped them before damage.
+
+```
+<removeOnSkillResolution:[0, 25]>
+```
+25% chance to peel a stack when any fired action from this battler fully expires.
+
+**See also:** `<removeOnSkillExecution>`
+
+---
+
+### `<removeStateOnMove:[STATE_ID]>`
+
+**Applies to:**
+States only — tag lives on the state doing the peeling
+
+**When:**
+the instant the bearer moves on the map
+
+**Effect:**
+unconditionally peels one stack from STATE_ID (or all stacks at once, if that state row has
+`loseAllStacksAtOnce` set) — no chance roll, no stype filter, fires every single time the bearer
+moves. Typically pairs with an `<autoApplyState>` `stand` rule for the same state id on the same
+row: standing still builds the stack, moving strips it instantly, and the stand cooldown resets to a
+full interval the moment you move again so the buildup can't restart immediately either.
+
+```
+<autoApplyState:[80, stand, 60]>
+<removeStateOnMove:[80]>
+```
+On this same state row: standing still for 60 frames applies a stack of state 80. Taking even a
+single step immediately strips it and resets the stand timer.
+
+**See also:** `<autoApplyState>` (the `stand` condition)

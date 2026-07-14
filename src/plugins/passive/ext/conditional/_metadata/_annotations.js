@@ -21,12 +21,16 @@
  * Unconditional passives are simply grants with no rules.
  *
  * Tag families on database rows (skills, states, equip, class, actor, enemy, etc.):
- *  passiveSourceRule  — gates every passive from this source
- *  passiveStateRule   — gates one state id from this source
- *  passiveStateCount  — stack contribution for one state id from this source
- *  autoApplyState     — applies a real combat state on a timer or combat event
- *  autoExecuteSkill   — executes a map skill on a timer or combat event
- *  autoInflictState   — applies a real combat state onto whoever this battler just inflicted a state upon
+ *  passiveSourceRule       — gates every passive from this source
+ *  passiveStateRule        — gates one state id from this source
+ *  passiveStateCount       — stack contribution for one state id from this source
+ *  autoApplyState          — applies a real combat state on a timer or combat event
+ *  autoApplyStateOnNearby  — same as autoApplyState, but aura-style onto nearby battlers instead of the bearer
+ *  autoExecuteSkill        — executes a map skill on a timer or combat event
+ *  autoInflictState        — applies a real combat state onto whoever this battler just inflicted a state upon
+ *  removeOnSkillExecution  — chance to strip a stack from this state when the bearer executes a map skill
+ *  removeOnSkillResolution — chance to strip a stack from this state when the bearer's fired action expires
+ *  removeStateOnMove       — strips this state the instant the bearer moves (pairs with autoApplyState's "stand")
  *
  * Map battlers re-check on a throttled timer; any passive refresh re-evaluates.
  * ============================================================================
@@ -89,6 +93,34 @@
  *  <autoApplyState:[59, onAllyHeal, 0]>
  *  <autoApplyState:[MOMENTUM_ID, move, 2]>
  *  <autoApplyState:[BUFF_ID, stand, 120]>
+ * ============================================================================
+ * AUTO-APPLY STATE ON NEARBY TAG
+ *  <autoApplyStateOnNearby:[STATE_ID, KIND, MIN_COUNT, COOLDOWN_FRAMES, TRIGGER_TILES?]>
+ *
+ * Aura-style sibling of autoApplyState: instead of applying STATE_ID to the rule bearer,
+ * it redirects onto every battler currently in proximity- enemies or allies depending on
+ * KIND. Good fit for "afflicts nearby enemies" or "buffs nearby allies" passive auras.
+ *
+ * Only two KIND values do anything here (every other autoApplyState CONDITION has no
+ * proximity set to iterate and simply won't fire):
+ *  enemiesNearby — targets nearby enemy JABS battlers
+ *  alliesNearby  — targets nearby allied JABS battlers, excluding the bearer itself
+ *
+ * MIN_COUNT is the minimum number of battlers that must be in range for the pulse to fire
+ * at all (the pulse still hits everyone in range, not just MIN_COUNT of them).
+ * COOLDOWN_FRAMES is tracked on the bearer, so the pulse cadence is consistent regardless
+ * of how many targets are currently in range.
+ * The optional fifth TRIGGER_TILES overrides the plugin's default proximity radius for
+ * this rule's gate only.
+ *
+ * EXAMPLES:
+ *  <autoApplyStateOnNearby:[60, enemiesNearby, 1, 120]>
+ *    Every 120 frames, if at least 1 enemy is within the default proximity radius, apply
+ *    state 60 to every nearby enemy.
+ *
+ *  <autoApplyStateOnNearby:[61, alliesNearby, 2, 300, 8]>
+ *    Every 300 frames, if at least 2 allies (excluding the bearer) are within 8 tiles,
+ *    apply state 61 to every nearby ally.
  * ============================================================================
  * AUTO-EXECUTE SKILL TAG
  *  <autoExecuteSkill:[SKILL_ID, CONDITION, PARAM]>
@@ -157,6 +189,24 @@
  * EXAMPLES:
  *  <removeOnSkillResolution:[7, 100]>
  *  <removeOnSkillResolution:[0, 25]>
+ * ============================================================================
+ * REMOVE STATE ON MOVE (state note only)
+ *  <removeStateOnMove:[STATE_ID]>
+ *
+ * The instant the bearer moves on the map, unconditionally peels one stack from STATE_ID
+ * (or all stacks at once if that state row has loseAllStacksAtOnce set). No chance roll,
+ * no stype filter- this fires every single time the bearer moves, full stop. Tag lives on
+ * the state doing the peeling- typically the SAME state also carries an autoApplyState
+ * "stand" rule for the very state id it removes, since this pairing is what makes a
+ * "charge up while standing still, lose it the moment you move" mechanic work: standing
+ * still builds the stack, moving strips it instantly, and the stand cooldown is reset to a
+ * full interval the moment you move again so the buildup can't restart instantly either.
+ *
+ * EXAMPLES:
+ *  <autoApplyState:[80, stand, 60]>
+ *  <removeStateOnMove:[80]>
+ *    On this same state row: standing still for 60 frames applies a stack of state 80.
+ *    Taking even a single step immediately strips it and resets the stand timer.
  * ============================================================================
  * CHANGELOG:
  * - 1.0.0
