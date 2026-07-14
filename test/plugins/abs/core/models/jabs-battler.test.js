@@ -104,10 +104,33 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       {
         static Builder()
         {
-          const built = {};
-          const builder = {};
+          // build() returns a fully-shaped core-data fixture so callers like
+          // JABS_Battler.createPlayer() can construct a real JABS_Battler from it.
+          let battlerId = 0;
+          const built = {
+            battlerId: () => battlerId,
+            team: () => 0,
+            sightRange: () => 4,
+            alertedSightBoost: () => 2,
+            pursuitRange: () => 6,
+            alertedPursuitBoost: () => 2,
+            alertDuration: () => 300,
+            guardRange: () => null,
+            ai: () => ({}),
+            canIdle: () => true,
+            showHpBar: () => true,
+            showStates: () => true,
+            showBattlerName: () => true,
+            isInvincible: () => false,
+            isInanimate: () => false,
+            battlerRole: () => ({}),
+          };
+          const builder = {
+            isPlayer: vi.fn(() => builder),
+            setBattlerId: vi.fn((value) => { battlerId = value; return builder; }),
+          };
           [
-            'setBattlerId', 'setTeam', 'setAiCode', 'setSightRange', 'setAlertedSightBoost',
+            'setTeam', 'setAiCode', 'setSightRange', 'setAlertedSightBoost',
             'setPursuitRange', 'setAlertedPursuitBoost', 'setAlertDuration', 'setCanIdle',
             'setShowHpBar', 'setShowBattlerName', 'setShowStates', 'setIsInvincible', 'setIsInanimate',
           ].forEach(method => { builder[method] = vi.fn(() => builder); });
@@ -2486,5 +2509,194 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion _reference
+
+  //region statics
+  describe('createPlayer', () =>
+  {
+    it('builds a player battler using the party leader\'s actor id', () =>
+    {
+      const battler = { actorId: () => 1, prepareTime: () => 0, getSkillSlotManager: () => ({ setupSlots: vi.fn() }) };
+      globalThis.$gameParty = { leader: () => battler };
+      globalThis.$gamePlayer = { id: 'player-event', _x: 0, _y: 0 };
+
+      const player = JABS_Battler.createPlayer();
+
+      expect(player.getBattlerId()).toBe(1);
+      expect(player.getCharacter()).toBe(globalThis.$gamePlayer);
+      expect(player.getBattler()).toBe(battler);
+    });
+
+    it('defaults the actor id to 0 when there is no party leader', () =>
+    {
+      globalThis.$gameParty = { leader: () => null };
+      globalThis.$gamePlayer = { id: 'player-event', _x: 0, _y: 0 };
+      // with no leader, the underlying battler passed to the constructor is null, and both
+      // initFromNotes() and initCooldowns() would dereference it- stub them out since this
+      // test only cares about the actor-id-defaulting branch, not the (separately-tested)
+      // init pipeline.
+      const originalInitFromNotes = JABS_Battler.prototype.initFromNotes;
+      const originalInitCooldowns = JABS_Battler.prototype.initCooldowns;
+      JABS_Battler.prototype.initFromNotes = function() {};
+      JABS_Battler.prototype.initCooldowns = function() {};
+
+      const player = JABS_Battler.createPlayer();
+
+      expect(player.getBattlerId()).toBe(0);
+      JABS_Battler.prototype.initFromNotes = originalInitFromNotes;
+      JABS_Battler.prototype.initCooldowns = originalInitCooldowns;
+    });
+  });
+
+  describe('distance classification', () =>
+  {
+    it('isClose is true at or under the close-distance threshold', () =>
+    {
+      expect(JABS_Battler.isClose(JABS_Battler.closeDistance)).toBe(true);
+      expect(JABS_Battler.isClose(JABS_Battler.closeDistance + 0.1)).toBe(false);
+    });
+
+    it('isSafe is true strictly between close and far distance', () =>
+    {
+      expect(JABS_Battler.isSafe(JABS_Battler.closeDistance)).toBe(false);
+      expect(JABS_Battler.isSafe(JABS_Battler.closeDistance + 0.1)).toBe(true);
+      expect(JABS_Battler.isSafe(JABS_Battler.farDistance)).toBe(true);
+      expect(JABS_Battler.isSafe(JABS_Battler.farDistance + 0.1)).toBe(false);
+    });
+
+    it('isFar is true beyond the far-distance threshold', () =>
+    {
+      expect(JABS_Battler.isFar(JABS_Battler.farDistance)).toBe(false);
+      expect(JABS_Battler.isFar(JABS_Battler.farDistance + 0.1)).toBe(true);
+    });
+  });
+
+  describe('skill type classification', () =>
+  {
+    beforeEach(() =>
+    {
+      J.ABS.DefaultValues = { GuardSkillTypeId: 1, DodgeSkillTypeId: 2, WeaponSkillTypeId: 3 };
+    });
+
+    it('isGuardSkillById is false without an id', () =>
+    {
+      expect(JABS_Battler.isGuardSkillById(0)).toBe(false);
+    });
+
+    it('isGuardSkillById is true for a matching stype', () =>
+    {
+      globalThis.$dataSkills = { 1: { stypeId: 1 } };
+      expect(JABS_Battler.isGuardSkillById(1)).toBe(true);
+    });
+
+    it('isGuardSkillById is false for a non-matching stype', () =>
+    {
+      globalThis.$dataSkills = { 1: { stypeId: 9 } };
+      expect(JABS_Battler.isGuardSkillById(1)).toBe(false);
+    });
+
+    it('isDodgeSkillById is false without an id', () =>
+    {
+      expect(JABS_Battler.isDodgeSkillById(0)).toBe(false);
+    });
+
+    it('isDodgeSkillById is true for a matching stype', () =>
+    {
+      globalThis.$dataSkills = { 1: { stypeId: 2 } };
+      expect(JABS_Battler.isDodgeSkillById(1)).toBe(true);
+    });
+
+    it('isWeaponSkillById is false without an id', () =>
+    {
+      expect(JABS_Battler.isWeaponSkillById(0)).toBe(false);
+    });
+
+    it('isWeaponSkillById is true for a matching stype', () =>
+    {
+      globalThis.$dataSkills = { 1: { stypeId: 3 } };
+      expect(JABS_Battler.isWeaponSkillById(1)).toBe(true);
+    });
+  });
+
+  describe('menu visibility classification', () =>
+  {
+    it('isSkillVisibleInCombatMenu is false for a null skill', () =>
+    {
+      expect(JABS_Battler.isSkillVisibleInCombatMenu(null)).toBe(false);
+    });
+
+    it('isSkillVisibleInCombatMenu is false for a menu-hidden skill', () =>
+    {
+      expect(JABS_Battler.isSkillVisibleInCombatMenu({ jabsHiddenFromMenus: true })).toBe(false);
+    });
+
+    it('isSkillVisibleInCombatMenu is false for a dodge/guard/weapon skill', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => true);
+      expect(JABS_Battler.isSkillVisibleInCombatMenu({ id: 1 })).toBe(false);
+      JABS_Battler.isDodgeSkillById = vi.fn(() => false);
+    });
+
+    it('isSkillVisibleInCombatMenu is false for an offhand-eligible skill', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => false);
+      JABS_Battler.isGuardSkillById = vi.fn(() => false);
+      JABS_Battler.isWeaponSkillById = vi.fn(() => false);
+      expect(JABS_Battler.isSkillVisibleInCombatMenu({ id: 1, jabsOffhandEligible: true })).toBe(false);
+    });
+
+    it('isSkillVisibleInCombatMenu is true for a normal skill', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => false);
+      JABS_Battler.isGuardSkillById = vi.fn(() => false);
+      JABS_Battler.isWeaponSkillById = vi.fn(() => false);
+      expect(JABS_Battler.isSkillVisibleInCombatMenu({ id: 1 })).toBe(true);
+    });
+
+    it('isSkillVisibleInOffhandMenu is false for a null skill', () =>
+    {
+      expect(JABS_Battler.isSkillVisibleInOffhandMenu(null)).toBe(false);
+    });
+
+    it('isSkillVisibleInOffhandMenu requires the offhand-eligible flag to be exactly true', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => false);
+      JABS_Battler.isGuardSkillById = vi.fn(() => false);
+      JABS_Battler.isWeaponSkillById = vi.fn(() => false);
+      expect(JABS_Battler.isSkillVisibleInOffhandMenu({ id: 1, jabsOffhandEligible: 1 })).toBe(false);
+      expect(JABS_Battler.isSkillVisibleInOffhandMenu({ id: 1, jabsOffhandEligible: true })).toBe(true);
+    });
+
+    it('isSkillVisibleInDodgeMenu is false for a non-dodge skill', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => false);
+      expect(JABS_Battler.isSkillVisibleInDodgeMenu({ id: 1 })).toBe(false);
+    });
+
+    it('isSkillVisibleInDodgeMenu is true for a dodge skill', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => true);
+      expect(JABS_Battler.isSkillVisibleInDodgeMenu({ id: 1 })).toBe(true);
+    });
+  });
+
+  describe('team id constants', () =>
+  {
+    it('exposes ally/enemy/neutral team ids', () =>
+    {
+      expect(JABS_Battler.allyTeamId()).toBe(0);
+      expect(JABS_Battler.enemyTeamId()).toBe(1);
+      expect(JABS_Battler.neutralTeamId()).toBe(2);
+    });
+  });
+
+  describe('allyRubberbandRange', () =>
+  {
+    it('adds the metadata adjustment to the base of 10', () =>
+    {
+      J.ABS.Metadata.AllyRubberbandAdjustment = 2;
+      expect(JABS_Battler.allyRubberbandRange()).toBe(12);
+    });
+  });
+  //endregion statics
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
