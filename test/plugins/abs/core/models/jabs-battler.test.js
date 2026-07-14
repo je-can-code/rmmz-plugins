@@ -3293,5 +3293,676 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion updates: targeting resolution
+
+  //region updates: timers/channeling/interrupt/engagement
+  describe('per-timer processing hooks', () =>
+  {
+    it('processWaitTimer updates the wait timer', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.processWaitTimer();
+
+      expect(jabsBattler._waitTimer.updateCalled).toBe(true);
+    });
+
+    it('processAlertTimer counts down only while alerted', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isAlerted = () => false;
+      jabsBattler.countdownAlert = vi.fn();
+      jabsBattler.processAlertTimer();
+      expect(jabsBattler.countdownAlert).not.toHaveBeenCalled();
+
+      jabsBattler.isAlerted = () => true;
+      jabsBattler.processAlertTimer();
+      expect(jabsBattler.countdownAlert).toHaveBeenCalledTimes(1);
+    });
+
+    it('processParryTimer animates and counts down only while parrying', () =>
+    {
+      const requestAnimation = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ requestAnimation });
+      jabsBattler.parrying = () => false;
+      jabsBattler.countdownParryWindow = vi.fn();
+      jabsBattler.processParryTimer();
+      expect(requestAnimation).not.toHaveBeenCalled();
+
+      jabsBattler.parrying = () => true;
+      jabsBattler.processParryTimer();
+      expect(requestAnimation).toHaveBeenCalledWith(131);
+      expect(jabsBattler.countdownParryWindow).toHaveBeenCalledTimes(1);
+    });
+
+    it('processLastHitTimer counts down only when there is a last-hit battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.hasBattlerLastHit = () => false;
+      jabsBattler.countdownLastHit = vi.fn();
+      jabsBattler.processLastHitTimer();
+      expect(jabsBattler.countdownLastHit).not.toHaveBeenCalled();
+
+      jabsBattler.hasBattlerLastHit = () => true;
+      jabsBattler.processLastHitTimer();
+      expect(jabsBattler.countdownLastHit).toHaveBeenCalledTimes(1);
+    });
+
+    it('processCombatTimer counts down only while in combat', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isInCombat = () => false;
+      jabsBattler.countdownCombat = vi.fn();
+      jabsBattler.processCombatTimer();
+      expect(jabsBattler.countdownCombat).not.toHaveBeenCalled();
+
+      jabsBattler.isInCombat = () => true;
+      jabsBattler.processCombatTimer();
+      expect(jabsBattler.countdownCombat).toHaveBeenCalledTimes(1);
+    });
+
+    it('processEngagementTimer updates the engagement timer', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.processEngagementTimer();
+
+      expect(jabsBattler._engagementTimer.updateCalled).toBe(true);
+    });
+  });
+
+  describe('processCastingTimer / onCastComplete', () =>
+  {
+    it('does nothing while not casting', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isCasting = () => false;
+      jabsBattler.countdownCastTime = vi.fn();
+
+      jabsBattler.processCastingTimer();
+
+      expect(jabsBattler.countdownCastTime).not.toHaveBeenCalled();
+    });
+
+    it('counts down but does not complete while still casting afterward', () =>
+    {
+      const jabsBattler = buildBattler();
+      let stillCasting = true;
+      jabsBattler.isCasting = () => stillCasting;
+      jabsBattler.countdownCastTime = vi.fn();
+      jabsBattler.onCastComplete = vi.fn();
+
+      jabsBattler.processCastingTimer();
+
+      expect(jabsBattler.countdownCastTime).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.onCastComplete).not.toHaveBeenCalled();
+    });
+
+    it('fires onCastComplete once the countdown finishes casting', () =>
+    {
+      const jabsBattler = buildBattler();
+      let callCount = 0;
+      jabsBattler.isCasting = () => { callCount++; return callCount === 1; };
+      jabsBattler.countdownCastTime = vi.fn();
+      jabsBattler.onCastComplete = vi.fn();
+
+      jabsBattler.processCastingTimer();
+
+      expect(jabsBattler.onCastComplete).toHaveBeenCalledTimes(1);
+    });
+
+    it('onCastComplete does nothing without a decided action', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getDecidedAction = () => null;
+
+      expect(() => jabsBattler.onCastComplete()).not.toThrow();
+    });
+
+    it('onCastComplete flags the primary decided action\'s cast as complete', () =>
+    {
+      const jabsBattler = buildBattler();
+      const completeCast = vi.fn();
+      jabsBattler.setDecidedAction([ { completeCast } ]);
+
+      jabsBattler.onCastComplete();
+
+      expect(completeCast).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('channeling', () =>
+  {
+    function buildSkillWithChannel(overrides = {})
+    {
+      return Object.assign({
+        jabsChannel: [ 5, 180 ],
+        jabsChannelTickSpeed: 30,
+        stypeId: 1,
+      }, overrides);
+    }
+
+    beforeEach(() =>
+    {
+      globalThis.$jabsEngine = {
+        paySkillCosts: vi.fn(),
+        logSkillExecution: vi.fn(),
+        forceMapAction: vi.fn(),
+        applyCooldownCounters: vi.fn(),
+      };
+    });
+
+    describe('beginChannel', () =>
+    {
+      it('pays costs once, logs execution, and arms the channel state', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.getUuid = () => 'uuid';
+        const skill = buildSkillWithChannel();
+        const action = { getBaseSkill: () => skill, id: 'skill-7' };
+
+        jabsBattler.beginChannel(action);
+
+        expect(globalThis.$jabsEngine.paySkillCosts).toHaveBeenCalledWith(jabsBattler, action);
+        expect(globalThis.$jabsEngine.logSkillExecution).toHaveBeenCalledWith('uuid', undefined, 1);
+        expect(jabsBattler._channelSourceAction).toBe(action);
+        expect(jabsBattler._channelSkillId).toBe(5);
+        expect(jabsBattler._channelDurationRemaining).toBe(180);
+        expect(jabsBattler._channelTickCountdown).toBe(30);
+        expect(jabsBattler.isChanneling()).toBe(true);
+      });
+    });
+
+    describe('processChannelingTimer', () =>
+    {
+      it('does nothing when not channeling', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isChanneling = () => false;
+        jabsBattler.executeChannelTick = vi.fn();
+
+        jabsBattler.processChannelingTimer();
+
+        expect(jabsBattler.executeChannelTick).not.toHaveBeenCalled();
+      });
+
+      it('does not tick or complete while both counters have frames remaining', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isChanneling = () => true;
+        jabsBattler._channelTickCountdown = 5;
+        jabsBattler._channelDurationRemaining = 100;
+        jabsBattler.executeChannelTick = vi.fn();
+        jabsBattler.onChannelComplete = vi.fn();
+
+        jabsBattler.processChannelingTimer();
+
+        expect(jabsBattler.executeChannelTick).not.toHaveBeenCalled();
+        expect(jabsBattler.onChannelComplete).not.toHaveBeenCalled();
+        expect(jabsBattler._channelTickCountdown).toBe(4);
+        expect(jabsBattler._channelDurationRemaining).toBe(99);
+      });
+
+      it('executes a tick and resets the tick countdown when it reaches zero', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isChanneling = () => true;
+        jabsBattler._channelTickCountdown = 1;
+        jabsBattler._channelDurationRemaining = 100;
+        jabsBattler._channelSourceAction = { getBaseSkill: () => ({ jabsChannelTickSpeed: 30 }) };
+        jabsBattler.executeChannelTick = vi.fn();
+        jabsBattler.onChannelComplete = vi.fn();
+
+        jabsBattler.processChannelingTimer();
+
+        expect(jabsBattler.executeChannelTick).toHaveBeenCalledTimes(1);
+        expect(jabsBattler._channelTickCountdown).toBe(30);
+      });
+
+      it('completes the channel once the duration expires', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isChanneling = () => true;
+        jabsBattler._channelTickCountdown = 5;
+        jabsBattler._channelDurationRemaining = 1;
+        jabsBattler.executeChannelTick = vi.fn();
+        jabsBattler.onChannelComplete = vi.fn();
+
+        jabsBattler.processChannelingTimer();
+
+        expect(jabsBattler.onChannelComplete).toHaveBeenCalledTimes(1);
+      });
+    });
+
+    describe('executeChannelTick', () =>
+    {
+      it('resolves target coordinates and forces the channel skill', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler._channelSourceAction = 'source-action';
+        jabsBattler._channelSkillId = 5;
+        jabsBattler.resolveActionTargetCoordinates = vi.fn(() => [ 3, 4 ]);
+
+        jabsBattler.executeChannelTick();
+
+        expect(jabsBattler.resolveActionTargetCoordinates).toHaveBeenCalledWith('source-action');
+        expect(globalThis.$jabsEngine.forceMapAction).toHaveBeenCalledWith(jabsBattler, 5, false, 3, 4);
+      });
+    });
+
+    describe('onChannelComplete', () =>
+    {
+      it('ends the channel, fires each payoff skill, applies cooldown, and clears the decided action', () =>
+      {
+        const jabsBattler = buildBattler();
+        const sourceAction = {
+          getBaseSkill: () => ({ jabsOnChannelComplete: [ 10, 11 ] }),
+        };
+        jabsBattler._channelSourceAction = sourceAction;
+        jabsBattler.endChannel = vi.fn();
+        jabsBattler.resolveActionTargetCoordinates = vi.fn(() => [ 1, 2 ]);
+        jabsBattler.setDecidedAction([ 'action' ]);
+
+        jabsBattler.onChannelComplete();
+
+        expect(jabsBattler.endChannel).toHaveBeenCalledTimes(1);
+        expect(globalThis.$jabsEngine.forceMapAction).toHaveBeenCalledWith(jabsBattler, 10, false, 1, 2);
+        expect(globalThis.$jabsEngine.forceMapAction).toHaveBeenCalledWith(jabsBattler, 11, false, 1, 2);
+        expect(globalThis.$jabsEngine.applyCooldownCounters).toHaveBeenCalledWith(jabsBattler, sourceAction);
+        expect(jabsBattler.isActionDecided()).toBe(false);
+      });
+    });
+
+    describe('endChannel', () =>
+    {
+      it('tears down all channel state', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler._channeling = true;
+        jabsBattler._channelSkillId = 5;
+        jabsBattler._channelTickCountdown = 10;
+        jabsBattler._channelDurationRemaining = 100;
+
+        jabsBattler.endChannel();
+
+        expect(jabsBattler.isChanneling()).toBe(false);
+        expect(jabsBattler._channelSkillId).toBe(0);
+        expect(jabsBattler._channelTickCountdown).toBe(0);
+        expect(jabsBattler._channelDurationRemaining).toBe(0);
+      });
+    });
+
+    describe('getChannelDurationRemaining', () =>
+    {
+      it('returns the tracked duration', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler._channelDurationRemaining = 42;
+
+        expect(jabsBattler.getChannelDurationRemaining()).toBe(42);
+      });
+    });
+
+    describe('isCastingOrChanneling', () =>
+    {
+      it('is true while casting', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isCasting = () => true;
+        jabsBattler.isChanneling = () => false;
+
+        expect(jabsBattler.isCastingOrChanneling()).toBe(true);
+      });
+
+      it('is true while channeling', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isCasting = () => false;
+        jabsBattler.isChanneling = () => true;
+
+        expect(jabsBattler.isCastingOrChanneling()).toBe(true);
+      });
+
+      it('is false when neither', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isCasting = () => false;
+        jabsBattler.isChanneling = () => false;
+
+        expect(jabsBattler.isCastingOrChanneling()).toBe(false);
+      });
+    });
+
+    describe('hasUninterruptibleMovementLock', () =>
+    {
+      it('is false when not casting or channeling', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isCastingOrChanneling = () => false;
+
+        expect(jabsBattler.hasUninterruptibleMovementLock()).toBe(false);
+      });
+
+      it('is false without a decided action', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isCastingOrChanneling = () => true;
+        jabsBattler.getDecidedAction = () => null;
+
+        expect(jabsBattler.hasUninterruptibleMovementLock()).toBe(false);
+      });
+
+      it('reflects the in-flight skill\'s own root tag', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isCastingOrChanneling = () => true;
+        jabsBattler.setDecidedAction([ { getBaseSkill: () => ({ jabsCannotMoveToInterrupt: true }) } ]);
+
+        expect(jabsBattler.hasUninterruptibleMovementLock()).toBe(true);
+      });
+    });
+  });
+
+  describe('interrupt', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$jabsEngine = { applyCooldownValueForSkill: vi.fn() };
+    });
+
+    it('does nothing when neither casting nor channeling', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isChanneling = () => false;
+      jabsBattler.isCasting = () => false;
+      jabsBattler.clearDecidedAction = vi.fn();
+
+      jabsBattler.interrupt();
+
+      expect(globalThis.$jabsEngine.applyCooldownValueForSkill).not.toHaveBeenCalled();
+      expect(jabsBattler.clearDecidedAction).not.toHaveBeenCalled();
+    });
+
+    it('tears down an in-flight channel and applies the full penalty for a self-interrupt', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isChanneling = () => true;
+      const sourceAction = { getCooldown: () => 100 };
+      jabsBattler._channelSourceAction = sourceAction;
+      jabsBattler.endChannel = vi.fn();
+
+      jabsBattler.interrupt(50, true);
+
+      expect(jabsBattler.endChannel).toHaveBeenCalledTimes(1);
+      expect(globalThis.$jabsEngine.applyCooldownValueForSkill).toHaveBeenCalledWith(jabsBattler, sourceAction, 100);
+    });
+
+    it('tears down an in-flight cast and scales the penalty by the magnifier for an external interrupt', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isChanneling = () => false;
+      jabsBattler.isCasting = () => true;
+      const primaryAction = { getCooldown: () => 100 };
+      jabsBattler.setDecidedAction([ primaryAction ]);
+
+      jabsBattler.interrupt(50, false);
+
+      expect(jabsBattler._casting).toBe(false);
+      expect(globalThis.$jabsEngine.applyCooldownValueForSkill).toHaveBeenCalledWith(jabsBattler, primaryAction, 50);
+    });
+
+    it('clears the decided action after interrupting', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isChanneling = () => false;
+      jabsBattler.isCasting = () => true;
+      jabsBattler.setDecidedAction([ { getCooldown: () => 0 } ]);
+
+      jabsBattler.interrupt();
+
+      expect(jabsBattler.isActionDecided()).toBe(false);
+    });
+  });
+
+  describe('engagement update pipeline', () =>
+  {
+    describe('canUpdateEngagement', () =>
+    {
+      function buildEngageableCandidate(overrides = {})
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isPlayer = () => false;
+        jabsBattler.isInanimate = () => false;
+        jabsBattler.isEngaged = () => false;
+        jabsBattler.isEngagementLocked = () => false;
+        jabsBattler._engagementTimer._complete = true;
+        Object.assign(jabsBattler, overrides);
+        return jabsBattler;
+      }
+
+      it('is false while jabs is paused', () =>
+      {
+        globalThis.$jabsEngine = { absPause: true };
+        expect(buildEngageableCandidate().canUpdateEngagement()).toBe(false);
+      });
+
+      it('is false for the player', () =>
+      {
+        globalThis.$jabsEngine = { absPause: false };
+        expect(buildEngageableCandidate({ isPlayer: () => true }).canUpdateEngagement()).toBe(false);
+      });
+
+      it('is false for an inanimate battler', () =>
+      {
+        globalThis.$jabsEngine = { absPause: false };
+        expect(buildEngageableCandidate({ isInanimate: () => true }).canUpdateEngagement()).toBe(false);
+      });
+
+      it('is false while the engagement timer is not yet complete', () =>
+      {
+        globalThis.$jabsEngine = { absPause: false };
+        const jabsBattler = buildEngageableCandidate();
+        jabsBattler._engagementTimer._complete = false;
+
+        expect(jabsBattler.canUpdateEngagement()).toBe(false);
+      });
+
+      it('is false while already engaged', () =>
+      {
+        globalThis.$jabsEngine = { absPause: false };
+        expect(buildEngageableCandidate({ isEngaged: () => true }).canUpdateEngagement()).toBe(false);
+      });
+
+      it('is false while engagement is locked', () =>
+      {
+        globalThis.$jabsEngine = { absPause: false };
+        expect(buildEngageableCandidate({ isEngagementLocked: () => true }).canUpdateEngagement()).toBe(false);
+      });
+
+      it('is true otherwise', () =>
+      {
+        globalThis.$jabsEngine = { absPause: false };
+        expect(buildEngageableCandidate().canUpdateEngagement()).toBe(true);
+      });
+    });
+
+    describe('canEngageTarget', () =>
+    {
+      it('is false without a target', () =>
+      {
+        const jabsBattler = buildBattler();
+        expect(jabsBattler.canEngageTarget(null)).toBe(false);
+      });
+
+      it('is false when the target is itself', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.getUuid = () => 'uuid';
+
+        expect(jabsBattler.canEngageTarget({ getUuid: () => 'uuid' })).toBe(false);
+      });
+
+      it('is true for a distinct target', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.getUuid = () => 'uuid';
+
+        expect(jabsBattler.canEngageTarget({ getUuid: () => 'other-uuid' })).toBe(true);
+      });
+    });
+
+    describe('updateEngagement', () =>
+    {
+      it('does nothing when engagement cannot currently be updated', async () =>
+      {
+        const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+        JABS_AiManager.getClosestOpposingBattler = vi.fn();
+        const jabsBattler = buildBattler();
+        jabsBattler.canUpdateEngagement = () => false;
+
+        jabsBattler.updateEngagement();
+
+        expect(JABS_AiManager.getClosestOpposingBattler).not.toHaveBeenCalled();
+      });
+
+      it('does nothing when the closest target cannot be engaged', async () =>
+      {
+        const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+        JABS_AiManager.getClosestOpposingBattler = vi.fn(() => 'target');
+        const jabsBattler = buildBattler();
+        jabsBattler.canUpdateEngagement = () => true;
+        jabsBattler.canEngageTarget = () => false;
+        jabsBattler.handleEngagement = vi.fn();
+
+        jabsBattler.updateEngagement();
+
+        expect(jabsBattler.handleEngagement).not.toHaveBeenCalled();
+      });
+
+      it('handles engagement and resets the engagement timer when a target can be engaged', async () =>
+      {
+        const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+        const target = {};
+        JABS_AiManager.getClosestOpposingBattler = vi.fn(() => target);
+        const jabsBattler = buildBattler();
+        jabsBattler.canUpdateEngagement = () => true;
+        jabsBattler.canEngageTarget = () => true;
+        jabsBattler.distanceToDesignatedTarget = () => 5;
+        jabsBattler.handleEngagement = vi.fn();
+
+        jabsBattler.updateEngagement();
+
+        expect(jabsBattler.handleEngagement).toHaveBeenCalledWith(target, 5);
+        expect(jabsBattler._engagementTimer.resetCalled).toBe(true);
+      });
+    });
+
+    describe('handleEngagement', () =>
+    {
+      it('disengages when already engaged and shouldDisengage is true', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isEngaged = () => true;
+        jabsBattler.shouldDisengage = () => true;
+        jabsBattler.disengageTarget = vi.fn();
+        jabsBattler.engageTarget = vi.fn();
+
+        jabsBattler.handleEngagement('target', 5);
+
+        expect(jabsBattler.disengageTarget).toHaveBeenCalledTimes(1);
+        expect(jabsBattler.engageTarget).not.toHaveBeenCalled();
+      });
+
+      it('stays engaged when already engaged and shouldDisengage is false', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isEngaged = () => true;
+        jabsBattler.shouldDisengage = () => false;
+        jabsBattler.disengageTarget = vi.fn();
+
+        jabsBattler.handleEngagement('target', 5);
+
+        expect(jabsBattler.disengageTarget).not.toHaveBeenCalled();
+      });
+
+      it('engages when not engaged and shouldEngage is true', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isEngaged = () => false;
+        jabsBattler.shouldEngage = () => true;
+        jabsBattler.engageTarget = vi.fn();
+
+        jabsBattler.handleEngagement('target', 5);
+
+        expect(jabsBattler.engageTarget).toHaveBeenCalledWith('target');
+      });
+
+      it('stays disengaged when not engaged and shouldEngage is false', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.isEngaged = () => false;
+        jabsBattler.shouldEngage = () => false;
+        jabsBattler.engageTarget = vi.fn();
+
+        jabsBattler.handleEngagement('target', 5);
+
+        expect(jabsBattler.engageTarget).not.toHaveBeenCalled();
+      });
+    });
+
+    describe('shouldDisengage', () =>
+    {
+      it('reflects the inverse of inPursuitRange', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.inPursuitRange = () => true;
+        expect(jabsBattler.shouldDisengage('target', 5)).toBe(false);
+
+        jabsBattler.inPursuitRange = () => false;
+        expect(jabsBattler.shouldDisengage('target', 5)).toBe(true);
+      });
+    });
+
+    describe('shouldEngage', () =>
+    {
+      it('is false when out of sight range', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.inSightRange = () => false;
+
+        expect(jabsBattler.shouldEngage('target', 5)).toBe(false);
+      });
+
+      it('is true in sight range for a non-sentinel battler', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.inSightRange = () => true;
+        jabsBattler.getBattlerRole = () => ({ sentinel: false });
+
+        expect(jabsBattler.shouldEngage('target', 5)).toBe(true);
+      });
+
+      it('is false for a sentinel when the target is beyond home-leash range', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.inSightRange = () => true;
+        jabsBattler.getBattlerRole = () => ({ sentinel: true });
+        jabsBattler.getSightRadius = () => 5;
+        const target = { distanceToPoint: () => 10 };
+
+        expect(jabsBattler.shouldEngage(target, 5)).toBe(false);
+      });
+
+      it('is true for a sentinel when the target is within home-leash range', () =>
+      {
+        const jabsBattler = buildBattler();
+        jabsBattler.inSightRange = () => true;
+        jabsBattler.getBattlerRole = () => ({ sentinel: true });
+        jabsBattler.getSightRadius = () => 5;
+        const target = { distanceToPoint: () => 3 };
+
+        expect(jabsBattler.shouldEngage(target, 5)).toBe(true);
+      });
+    });
+  });
+  //endregion updates: timers/channeling/interrupt/engagement
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
