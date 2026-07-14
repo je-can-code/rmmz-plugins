@@ -28,11 +28,6 @@ class J_HUD_Quest_PluginMetadata
    */
   initializeMetadata()
   {
-    /**
-     * The id of a switch that represents whether or not this system is accessible in the menu.
-     * @type {number}
-     */
-    this.menuSwitchId = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['menu-switch'], 0);
   }
 }
 

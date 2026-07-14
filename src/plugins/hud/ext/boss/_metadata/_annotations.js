@@ -20,6 +20,10 @@
  * JABS. It generates a window on the map displaying a single target at a much
  * bigger scale than the J-HUD-TargetFrame does.
  * ============================================================================
+ * NOTE ABOUT NOTETAGS:
+ * This plugin has no notetags of its own- it displays whichever battler is
+ * the player's current target, not a specially-tagged "boss".
+ * ============================================================================
  * CHANGELOG:
  * - 1.0.0
  *    Initial release.

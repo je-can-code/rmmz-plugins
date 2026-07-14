@@ -45,10 +45,4 @@ J.HUD.EXT.QUEST.Aliased.Scene_Questopedia = new Map();
 J.HUD.EXT.QUEST.Aliased.TrackedOmniQuest = new Map();
 J.HUD.EXT.QUEST.Aliased.TrackedOmniObjective = new Map();
 J.HUD.EXT.QUEST.Aliased.HudManager = new Map();
-
-/**
- * All regular expressions used by this plugin.
- */
-J.HUD.EXT.QUEST.RegExp = {};
-J.HUD.EXT.QUEST.RegExp.Points = /<tag:[ ]?(\d+)>/i;
 //endregion initialization
