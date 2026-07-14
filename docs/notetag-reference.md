@@ -4967,3 +4967,56 @@ is effectively the "base" the formula adds onto. No `Rate` variant exists for re
 <expPlus:[5 + a.lvl * 50]>
 ```
 Defeating this enemy grants 5 + (level × 50) bonus experience on top of its database base amount.
+
+---
+
+## J-Omnipedia-Monster (`src/plugins/omni/ext/monster/`)
+
+Extends the Omnipedia with a Monsterpedia entry — a bestiary of encountered enemies.
+
+### `<hideFromMonsterpedia>` / `<monsterFamilyIcon:ICON_INDEX>` / `<descriptionLine:TEXT>`
+
+**Applies to:**
+Enemies
+
+**When:**
+always
+
+**Effect:**
+`hideFromMonsterpedia` excludes this enemy from the Monsterpedia listing entirely.
+`monsterFamilyIcon` sets the family/category icon shown in the listing. `descriptionLine` adds
+one line of flavor text to the enemy's detail view; multiple tags on the same enemy each add
+another line, in note order.
+
+```
+<descriptionLine:A lumbering beast of the northern peaks.>
+<descriptionLine:Known to hoard shiny objects.>
+```
+This enemy's Monsterpedia entry shows both description lines.
+
+---
+
+## J-Omnipedia-Quest (`src/plugins/omni/ext/quest/`)
+
+Extends the Omnipedia with a Questopedia entry. Quest data itself is authored entirely in an
+external `data/config.quest.json` file (use the rmmz-data-editor app), not via notetags — but
+this plugin adds tags that gate event pages and message choices behind quest/objective state.
+
+### `<pageQuestCondition:[...]>` / `<choiceQuestCondition:[...]>`
+
+**Applies to:**
+Event pages (comment, gates the whole page); "Show Choices" branches (comment, gates one choice)
+
+**When:**
+page condition evaluation / choice list building
+
+**Effect:**
+gates visibility behind quest state. Accepts one of three array shapes: `[QUEST_KEY]` (valid
+while the quest is active in any objective), `[QUEST_KEY, OBJECTIVE_ID]` (valid while that
+specific objective is active), or `[QUEST_KEY, OBJECTIVE_ID, STATE]` (valid only while that
+objective is in STATE — one of `inactive`/`active`/`completed`/`failed`/`missed`).
+
+```
+<pageQuestCondition:[herbalist_delivery, 2, completed]>
+```
+This event page is only active once objective 2 of the "herbalist_delivery" quest is completed.
