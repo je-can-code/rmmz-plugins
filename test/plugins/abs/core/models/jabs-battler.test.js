@@ -6431,5 +6431,273 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion map: tool/item effects
+
+  //region map: defeat/evade effects
+  describe('performPredefeatEffects', () =>
+  {
+    it('runs death animations, own-defeat skills, then target-defeat skills in order', () =>
+    {
+      const jabsBattler = buildBattler();
+      const callOrder = [];
+      jabsBattler.handleOnDeathAnimations = vi.fn(() => callOrder.push('animations'));
+      jabsBattler.handleOnOwnDefeatSkills = vi.fn(() => callOrder.push('own'));
+      jabsBattler.handleOnTargetDefeatSkills = vi.fn(() => callOrder.push('target'));
+
+      jabsBattler.performPredefeatEffects('victor');
+
+      expect(callOrder).toEqual([ 'animations', 'own', 'target' ]);
+      expect(jabsBattler.handleOnOwnDefeatSkills).toHaveBeenCalledWith('victor');
+      expect(jabsBattler.handleOnTargetDefeatSkills).toHaveBeenCalledWith('victor');
+    });
+  });
+
+  describe('handleOnDeathAnimations', () =>
+  {
+    it('plays the actor death animation for an actor needing the death effect', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isActor: () => true, needsDeathEffect: () => true });
+      jabsBattler.handleActorOnDeathAnimation = vi.fn();
+      jabsBattler.handleEnemyOnDeathAnimation = vi.fn();
+
+      jabsBattler.handleOnDeathAnimations();
+
+      expect(jabsBattler.handleActorOnDeathAnimation).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.handleEnemyOnDeathAnimation).not.toHaveBeenCalled();
+    });
+
+    it('does not re-play the actor death animation once already performed', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isActor: () => true, needsDeathEffect: () => false, isEnemy: () => false });
+      jabsBattler.handleActorOnDeathAnimation = vi.fn();
+      jabsBattler.handleEnemyOnDeathAnimation = vi.fn();
+
+      jabsBattler.handleOnDeathAnimations();
+
+      expect(jabsBattler.handleActorOnDeathAnimation).not.toHaveBeenCalled();
+      expect(jabsBattler.handleEnemyOnDeathAnimation).not.toHaveBeenCalled();
+    });
+
+    it('plays the enemy death animation for an enemy', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isActor: () => false, isEnemy: () => true });
+      jabsBattler.handleActorOnDeathAnimation = vi.fn();
+      jabsBattler.handleEnemyOnDeathAnimation = vi.fn();
+
+      jabsBattler.handleOnDeathAnimations();
+
+      expect(jabsBattler.handleEnemyOnDeathAnimation).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('handleActorOnDeathAnimation / handleEnemyOnDeathAnimation', () =>
+  {
+    it('shows animation 152 and toggles the death effect for an actor', () =>
+    {
+      const toggleDeathEffect = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ toggleDeathEffect });
+      jabsBattler.showAnimation = vi.fn();
+
+      jabsBattler.handleActorOnDeathAnimation();
+
+      expect(jabsBattler.showAnimation).toHaveBeenCalledWith(152);
+      expect(toggleDeathEffect).toHaveBeenCalledTimes(1);
+    });
+
+    it('shows animation 151 for an enemy', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.showAnimation = vi.fn();
+
+      jabsBattler.handleEnemyOnDeathAnimation();
+
+      expect(jabsBattler.showAnimation).toHaveBeenCalledWith(151);
+    });
+  });
+
+  describe('handleOnOwnDefeatSkills', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$jabsEngine = { forceMapAction: vi.fn() };
+    });
+
+    it('does not trigger a skill that fails its own roll', () =>
+    {
+      const jabsBattler = buildBattler();
+      const skill = { skillId: 1, shouldTrigger: () => false };
+      jabsBattler.getBattler = () => ({ onOwnDefeatSkillIds: () => [ skill ] });
+
+      jabsBattler.handleOnOwnDefeatSkills({});
+
+      expect(globalThis.$jabsEngine.forceMapAction).not.toHaveBeenCalled();
+    });
+
+    it('casts from the target position when the skill appears on the target', () =>
+    {
+      const jabsBattler = buildBattler();
+      const skill = { skillId: 1, shouldTrigger: () => true, appearOnTarget: () => true };
+      jabsBattler.getBattler = () => ({ onOwnDefeatSkillIds: () => [ skill ] });
+      const victor = { getX: () => 3, getY: () => 4 };
+
+      jabsBattler.handleOnOwnDefeatSkills(victor);
+
+      expect(globalThis.$jabsEngine.forceMapAction).toHaveBeenCalledWith(jabsBattler, 1, false, 3, 4);
+    });
+
+    it('casts from the caster when the skill does not appear on the target', () =>
+    {
+      const jabsBattler = buildBattler();
+      const skill = { skillId: 1, shouldTrigger: () => true, appearOnTarget: () => false };
+      jabsBattler.getBattler = () => ({ onOwnDefeatSkillIds: () => [ skill ] });
+
+      jabsBattler.handleOnOwnDefeatSkills({});
+
+      expect(globalThis.$jabsEngine.forceMapAction).toHaveBeenCalledWith(jabsBattler, 1, false);
+    });
+  });
+
+  describe('handleOnTargetDefeatSkills', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$jabsEngine = { forceMapAction: vi.fn() };
+    });
+
+    it('does not trigger a skill that fails its own roll', () =>
+    {
+      const jabsBattler = buildBattler();
+      const skill = { skillId: 1, shouldTrigger: () => false };
+      const victor = { getBattler: () => ({ onTargetDefeatSkillIds: () => [ skill ] }) };
+
+      jabsBattler.handleOnTargetDefeatSkills(victor);
+
+      expect(globalThis.$jabsEngine.forceMapAction).not.toHaveBeenCalled();
+    });
+
+    it('casts from the (defeated) target position when the skill appears on the target', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getX = () => 3;
+      jabsBattler.getY = () => 4;
+      const skill = { skillId: 1, shouldTrigger: () => true, appearOnTarget: () => true };
+      const victor = { getBattler: () => ({ onTargetDefeatSkillIds: () => [ skill ] }) };
+
+      jabsBattler.handleOnTargetDefeatSkills(victor);
+
+      expect(globalThis.$jabsEngine.forceMapAction).toHaveBeenCalledWith(victor, 1, false, 3, 4);
+    });
+
+    it('casts from the victor when the skill does not appear on the target', () =>
+    {
+      const jabsBattler = buildBattler();
+      const skill = { skillId: 1, shouldTrigger: () => true, appearOnTarget: () => false };
+      const victor = { getBattler: () => ({ onTargetDefeatSkillIds: () => [ skill ] }) };
+
+      jabsBattler.handleOnTargetDefeatSkills(victor);
+
+      expect(globalThis.$jabsEngine.forceMapAction).toHaveBeenCalledWith(victor, 1, false);
+    });
+  });
+
+  describe('handleOnEvadeSkills', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$jabsEngine = { forceMapAction: vi.fn() };
+    });
+
+    it('does nothing when there are no on-evade effects', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ onEvadeExecuteEffects: () => [] });
+
+      jabsBattler.handleOnEvadeSkills(null);
+
+      expect(globalThis.$jabsEngine.forceMapAction).not.toHaveBeenCalled();
+    });
+
+    it('fires the skill toward the attacker\'s position when an attacker is provided', () =>
+    {
+      const evaderBattler = {
+        getPositiveRollsForSkill: () => 0, getNegativeRollsForSkill: () => 0,
+      };
+      const effect = {
+        skillId: 1,
+        baseSkill: () => ({}),
+        resolveProcCount: () => 1,
+      };
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => Object.assign(evaderBattler, { onEvadeExecuteEffects: () => [ effect ] });
+      const attacker = { getX: () => 3, getY: () => 4 };
+
+      jabsBattler.handleOnEvadeSkills(attacker);
+
+      expect(globalThis.$jabsEngine.forceMapAction).toHaveBeenCalledWith(jabsBattler, 1, false, 3, 4);
+    });
+
+    it('fires without a seed target when there is no attacker reference', () =>
+    {
+      const evaderBattler = {
+        getPositiveRollsForSkill: () => 0, getNegativeRollsForSkill: () => 0,
+      };
+      const effect = {
+        skillId: 1,
+        baseSkill: () => ({}),
+        resolveProcCount: () => 1,
+      };
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => Object.assign(evaderBattler, { onEvadeExecuteEffects: () => [ effect ] });
+
+      jabsBattler.handleOnEvadeSkills(null);
+
+      expect(globalThis.$jabsEngine.forceMapAction).toHaveBeenCalledWith(jabsBattler, 1, false);
+    });
+
+    it('fires the skill once per resolved proc count', () =>
+    {
+      const evaderBattler = {
+        getPositiveRollsForSkill: () => 0, getNegativeRollsForSkill: () => 0,
+      };
+      const effect = {
+        skillId: 1,
+        baseSkill: () => ({}),
+        resolveProcCount: () => 3,
+      };
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => Object.assign(evaderBattler, { onEvadeExecuteEffects: () => [ effect ] });
+
+      jabsBattler.handleOnEvadeSkills(null);
+
+      expect(globalThis.$jabsEngine.forceMapAction).toHaveBeenCalledTimes(3);
+    });
+  });
+
+  describe('performPostdefeatEffects', () =>
+  {
+    it('flags an actor as dying', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isActor = () => true;
+
+      jabsBattler.performPostdefeatEffects('victor');
+
+      expect(jabsBattler.isDying()).toBe(true);
+    });
+
+    it('does not flag a non-actor as dying', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isActor = () => false;
+
+      jabsBattler.performPostdefeatEffects('victor');
+
+      expect(jabsBattler.isDying()).toBe(false);
+    });
+  });
+  //endregion map: defeat/evade effects
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
