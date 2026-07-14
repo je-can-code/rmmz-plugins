@@ -1492,3 +1492,526 @@ underleveled ones that cap-only mode would otherwise leave alone.
 Real level 90 fights as 50; real level 30 also fights as 50 (boosted) — exact sync.
 
 **See also:** `<levelSync>`
+
+---
+
+## J-ABS (`src/plugins/abs/core/`)
+
+JABS: J's Action Battle System — real-time combat on the map. This is the largest plugin in the
+repo; tags are grouped the same way `_annotations.js` groups them (enemy setup, skill setup,
+combat resolution, states, AI, etc.) rather than alphabetically.
+
+### `<enemyId:ENEMY_ID>`
+
+**Applies to:**
+Map events (comment command)
+
+**When:**
+the event is set up as a JABS enemy
+
+**Effect:**
+associates this event with the database enemy ENEMY_ID. Required for any event that should act as
+an enemy — this is one of only two tags (with move speed) that isn't optional.
+
+```
+<enemyId:12>
+```
+This event acts as enemy id 12 from the database.
+
+**See also:** `<sight>`, `<pursuit>`, `<moveSpeed>`
+
+---
+
+### `<sight:RADIUS>`
+
+**Applies to:**
+Enemy events, Enemies (database default)
+
+**When:**
+always (passive perception check)
+
+**Effect:**
+RADIUS is the tile distance at which this enemy notices and engages the player. Ignores walls and
+obstacles (x-ray vision). Event tag overrides database default.
+
+```
+<sight:4>
+```
+This enemy notices the player within 4 tiles, regardless of walls.
+
+**See also:** `<pursuit>`, `<alertedSightBoost>`, `<visionMultiplier>`
+
+---
+
+### `<pursuit:RADIUS>`
+
+**Applies to:**
+Enemy events, Enemies (database default)
+
+**When:**
+while actively engaged in combat
+
+**Effect:**
+RADIUS is the tile distance this enemy will chase an engaged target — effectively "sight after
+aggro." Typically larger than sight so enemies don't trivially disengage from one backward step.
+
+```
+<pursuit:8>
+```
+Once engaged, this enemy chases within 8 tiles before giving up.
+
+**See also:** `<sight>`, `<alertedPursuitBoost>`, `<aiRole:sentinel>` (uses pursuit as home range)
+
+---
+
+### `<prepare:FRAMES>`
+
+**Applies to:**
+Enemy events, Enemies (database default)
+
+**When:**
+before the enemy's first action
+
+**Effect:**
+overrides the "Attack Speed" trait's implied wait timer with an explicit frame count before this
+enemy takes its first action.
+
+```
+<prepare:60>
+```
+This enemy waits 60 frames (~1 second) before acting for the first time.
+
+---
+
+### `<alertDuration:DURATION>` / `<alertedSightBoost:RADIUS_BOOST>` / `<alertedPursuitBoost:RADIUS_BOOST>`
+
+**Applies to:**
+Enemy events, Enemies (database default)
+
+**When:**
+the enemy is struck from outside its sight/pursuit range
+
+**Effect:**
+triggers an "alerted" state for DURATION frames, during which sight and pursuit are boosted by the
+given amounts so the enemy can navigate toward the attacker's believed location. Without this,
+enemies can be cheaply picked off from outside their normal range.
+
+```
+<alertDuration:180>
+<alertedSightBoost:6>
+<alertedPursuitBoost:6>
+```
+Being struck from outside normal range alerts this enemy for 3 seconds, temporarily adding 6 tiles
+to both sight and pursuit.
+
+---
+
+### `<visionMultiplier:VAL>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States
+
+**When:**
+always (sums across all active note sources)
+
+**Effect:**
+scales this battler's sight and pursuit radii by a percent offset from 100. VAL 50 = +50%, VAL -50
+= half. Clamped so the result never drops below zero.
+
+```
+<visionMultiplier:50>
+```
+An enemy with base sight 4 wearing/afflicted-by this sees as if sight were 6.
+
+---
+
+### `<moveSpeed:SPEED>`
+
+**Applies to:**
+Enemy events, Enemies (database default)
+
+**When:**
+always
+
+**Effect:**
+overrides the native RMMZ event page move speed with a decimal value (e.g. 3.7), letting you tune
+speed between the integer steps the editor allows. This is the second tag (with enemyId) that
+isn't optional for enemy events.
+
+```
+<moveSpeed:3.7>
+```
+This enemy moves at speed 3.7, between the "3" and "4" native options.
+
+---
+
+### `<aiTrait:TRAIT>`
+
+**Applies to:**
+Enemy events, Enemies (database default)
+
+**When:**
+always (shapes skill selection every decision)
+
+**Effect:**
+tunes how this enemy chooses and uses skills. TRAIT is one of: `careful` (avoids elementally
+ineffective skills, generally smarter), `executor` (maximizes damage, targets weak spots),
+`reckless` (never basic-attacks, spams learned skills), `healer` (prioritizes healing nearby
+allies), `cleanser` (removes negative states from allies), `buffer` (applies positive states to
+allies before attacking), `tactical` (repositions to optimal range before using a skill), or
+`berserker` (goes all-out below an HP threshold, ignoring range/cooldown/efficiency). Multiple
+traits can stack on one enemy; careful/reckless amplify the judgment of other traits when
+combined. `follower`/`leader` are also accepted as backward-compatible aliases for the AI ROLE
+tags below.
+
+```
+<aiTrait:careful>
+<aiTrait:healer>
+```
+A careful healer: avoids bad elemental matchups and picks the best-fit heal for the situation
+rather than just the strongest one.
+
+**See also:** `<aiRole:...>`
+
+---
+
+### `<aiRole:leader|follower|guardian|ward|solo|sentinel>`
+
+**Applies to:**
+Enemy events, Enemies (database default)
+
+**When:**
+always (governs coordination with teammates, not skill choice)
+
+**Effect:**
+defines how a battler coordinates with its team, distinct from AI traits (which govern skill
+choice). A battler should only hold one role.
+- `leader` — makes skill decisions on behalf of nearby followers using its own AI traits.
+- `follower` — restricted to basic attack only until a leader is nearby, at which point the
+  leader decides its skills for it.
+- `guardian` — passive until a ward-role ally is struck, then engages the attacker. Engagement
+  range defaults to the largest nearby ward's pursuit radius, or override with `<guardRange:N>`.
+- `ward` — a passive trigger; no behavior of its own, just makes guardians react when it's hit.
+- `solo` — ignores all coordination logic entirely.
+- `sentinel` — engages within sight, but disengages and returns to its spawn point once the
+  target leaves pursuit range of "home."
+
+```
+<aiRole: guardian>
+<guardRange:6>
+```
+This guardian ignores fights until a ward is struck, then engages from up to 6 tiles away.
+
+**See also:** `<aiTrait>`
+
+---
+
+### `<teamId:TEAM>`
+
+**Applies to:**
+Enemy events, Enemies (database default)
+
+**When:**
+always
+
+**Effect:**
+assigns this battler to team TEAM, whose friendly/opposing relationships are defined in the
+required `data/config.jabs.json` file (not the plugin params). Default assignment without this
+tag: actors/party = team 0, enemies = team 1, inanimate battlers = team 2.
+
+```
+<teamId:2>
+```
+This battler is assigned to team 2 (inanimate by default convention).
+
+---
+
+### `<jabsConfig:noIdle|canIdle|noHpBar|showHpBar|hideStates|showStates|noName|showName|invincible|notInvincible|inanimate|notInanimate>`
+
+**Applies to:**
+Enemy events, Enemies (database default)
+
+**When:**
+always
+
+**Effect:**
+a family of boolean config-override tags for cosmetic/behavioral defaults: idle wandering
+(default: 2-tile radius idle), HP bar visibility, active-state icon strip visibility, name label
+visibility, invincibility (skills never connect), and `inanimate` (disables AI, movement,
+knockback, and HP bar all at once — for pots, crates, environmental objects that shouldn't
+think or move).
+
+```
+<jabsConfig:inanimate>
+```
+This event behaves as a non-thinking, non-moving prop rather than a combatant.
+
+---
+
+### `<actionId:EVENT_ID>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+the skill is executed on the map
+
+**Effect:**
+associates the skill with EVENT_ID on the configured "action map" — the visual/collision
+representation of the skill on the field.
+
+```
+<actionId:14>
+```
+Executing this skill spawns event 14 from the action map.
+
+---
+
+### `<duration:FRAMES>` / `<linger:FRAMES>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+while the skill's action event is alive on the map
+
+**Effect:**
+`duration` is how many frames the action event persists before expiring (minimum 8 frames,
+regardless of the tag value). `linger` is how many frames the event spends fading out after
+expiry instead of vanishing instantly (collision disabled during linger); default linger is 10
+frames if omitted, 0 for instant disappearance.
+
+```
+<duration:30>
+<linger:15>
+```
+This action's hitbox is live for 30 frames, then fades out over 15 more.
+
+---
+
+### `<cooldown:VAL>` / `<uniqueCooldown>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+after the skill is used
+
+**Effect:**
+`cooldown` is the frame count before the skill can be used again. By default, every equipped slot
+carrying the same skill id shares that cooldown; `<uniqueCooldown>` makes each slot track its own
+cooldown independently even if the skill id matches another slot.
+
+```
+<cooldown:120>
+<uniqueCooldown>
+```
+This skill has a 2-second cooldown tracked per-slot, not shared across slots.
+
+---
+
+### `<noGlobalCooldown>` / `<ogcd>` / `<gcd:FRAMES>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+the skill triggers or is exempt from the optional battler-wide Global Cooldown (GCD)
+
+**Effect:**
+GCD is an optional lockout after using any skill whose skill type is in the plugin's whitelist
+(dodge/tool always exempt). `<noGlobalCooldown>`/`<ogcd>` (same meaning) mark a skill as exempt
+from stamping or being blocked by GCD. `<gcd:FRAMES>` overrides the default GCD length for this
+specific skill when it does trigger GCD.
+
+```
+<gcd:90>
+```
+Using this skill locks out other GCD-participating skills for 90 frames instead of the default.
+
+**See also:** `<cdr>`
+
+---
+
+### `<cdr:[FORMULA]>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States
+
+**When:**
+always (battler-wide, summed across all active note sources)
+
+**Formula context:**
+`a` = the battler being evaluated, `b` = 0, `v` = `$gameVariables._data`.
+
+**Effect:**
+sums to a single percent-point Cooldown Reduction stat that shrinks Global Cooldown length:
+`Math.max(0, gcdFrames * (1 - cdr / 100))`. 100+ combined percent-points reduces GCD to 0 frames.
+
+```
+<cdr:[a.luk * 0.1]>
+```
+Grants CDR scaled off the battler's own LUK.
+
+**See also:** `<gcd>`, `<per>`
+
+---
+
+### `<radius:VAL>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+always
+
+**Effect:**
+sets the tile-measured size of the skill's hitbox. Must be positive. Interpreted differently
+depending on the `<hitbox:...>` shape (side length for square, line length for line, etc.).
+
+```
+<radius:2>
+```
+A radius-2 hitbox — exact meaning depends on the hitbox shape in use.
+
+**See also:** `<hitbox>`
+
+---
+
+### `<proximity:VAL>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+AI decision-making, and target resolution for `<direct>` skills
+
+**Effect:**
+the maximum tile distance a battler-to-target gap can be for this skill to be attempted (AI gate),
+and — for `<direct>` skills — the search radius used to lock onto a target. Mandatory on every
+`<direct>` skill. `<proximity:0>` matches nothing, it is not "uncapped."
+
+```
+<proximity:3>
+<direct>
+```
+This direct skill only locks onto targets within 3 tiles.
+
+**See also:** `<direct>`
+
+---
+
+### `<direct>` / `<directLock>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+execution — replaces the flying-projectile spawn behavior
+
+**Effect:**
+locks onto the nearest valid target within `<proximity:N>` and spawns the hitbox at the target's
+tile instead of firing a projectile. `<direct>` snapshots the target's position at decision time
+(gives a dodge window if the target moves during cast); `<directLock>` instead resolves position
+at the moment of firing, removing that window. The two are mutually exclusive — `<directLock>`
+wins if both are present. Target priority: `<directStateTarget>` match > explicit/last-hit target
+> closest opponent > inanimate fallback. Direct skills can still be parried.
+
+```
+<proximity:4>
+<directLock>
+```
+This skill always lands exactly where the target currently stands, with no dodge window.
+
+**See also:** `<proximity>`, `<directStateTarget>`
+
+---
+
+### `<directStateTarget:STATE_ID>`
+
+**Applies to:**
+Skills, Items (requires `<direct>` and `<proximity:N>` on the same skill)
+
+**When:**
+target resolution for a `<direct>` skill
+
+**Effect:**
+prioritizes any in-proximity opponent afflicted with STATE_ID above all other targeting
+candidates — the mechanism for "mark and follow-up" combo chains. Falls through to normal
+priority once the state expires, is cleansed, or the target leaves proximity.
+
+```
+<direct>
+<proximity:5>
+<directStateTarget:12>
+```
+This skill snaps to whoever is marked with state 12, as long as they're within 5 tiles.
+
+**See also:** `<direct>`
+
+---
+
+### `<projectile:VAL>` / `<formation:line|spray|cross|xburst|nova>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+execution (non-direct skills)
+
+**Effect:**
+`projectile` sets how many projectiles fire in parallel toward the caster's facing. `formation`
+sets the direction pattern: line (straight), spray (W-shaped), cross (4 cardinal), xburst (4
+diagonal), nova (all 8). No hard cap on projectile count, but keep it reasonable for performance.
+
+```
+<projectile:8>
+<formation:nova>
+```
+Fires 8 projectiles outward in all 8 directions simultaneously.
+
+---
+
+### `<projectileDuration:PERCENT_POINTS>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States
+
+**When:**
+always (battler-wide, summed across all active note sources)
+
+**Effect:**
+a percent-point offset from the 100 baseline applied against how long ALL of this battler's map
+actions persist, i.e. every `<duration:FRAMES>` skill this battler fires. Clamped to never drop
+the resulting multiplier below 0.
+
+```
+<projectileDuration:50>
+```
+This battler's map actions last 150% as long as their base `<duration>` value.
+
+---
+
+### `<hitbox:circle|rhombus|arc|square|line|wall|cross>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+always
+
+**Effect:**
+the collision shape used by the skill's action event, always centered on the action event with
+some exceptions. `circle`/`rhombus` grow with radius; `arc` is a forward wedge whose width is set
+by `<degrees:VAL>` (default 90°); `square` uses radius as side length; `line` uses radius as
+length (1 tile wide); `wall` is an inverted line (1 tile tall, radius as width); `cross` combines
+both axes. All projectiles from one skill share the same hitbox shape.
+
+```
+<hitbox:arc>
+<degrees:120>
+<radius:3>
+```
+A 120-degree forward wedge reaching 3 tiles.
+
+**See also:** `<radius>`, `<degrees>`
