@@ -105,14 +105,45 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
     // sibling model/manager dependencies- mocked entirely per the unit-tier convention.
     vi.doMock('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js', () => ({ default: class {} }));
-    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_SkillExecution.js', () => ({ default: class {} }));
-    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_State.js', () => ({ default: class {} }));
+    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_SkillExecution.js', () => ({
+      default: class
+      {
+        constructor(skillId, skillTypeId)
+        {
+          this.skillId = skillId;
+          this.skillTypeId = skillTypeId;
+        }
+      },
+    }));
+    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_State.js', () => ({
+      default: class
+      {
+        static reapplicationType = { Refresh: 'refresh', Extend: 'extend', Stack: 'stack' };
+      },
+    }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Timer.js', () => ({
       default: class
       {
         constructor(maxTime)
         {
           this.maxTime = maxTime;
+          this._complete = false;
+        }
+
+        update()
+        {
+          this.updateCalled = true;
+        }
+
+        isTimerComplete()
+        {
+          return this._complete;
+        }
+
+        reset()
+        {
+          this.resetCalled = true;
+          this._complete = false;
         }
       },
     }));
@@ -757,5 +788,606 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion init
+
+  //region state tracking
+  describe('state tracking', () =>
+  {
+    function buildTrackedState(overrides = {})
+    {
+      return Object.assign({
+        expired: false,
+        stateId: 1,
+        battler: { deathStateId: () => 99, state: () => ({ jabsNegative: false }) },
+      }, overrides);
+    }
+
+    describe('getJabsStatesByUuid', () =>
+    {
+      it('lazily initializes an empty map for a battler never seen before', () =>
+      {
+        const engine = new JABS_Engine();
+        const result = engine.getJabsStatesByUuid('uuid-1');
+        expect(result).toBeInstanceOf(Map);
+        expect(result.size).toBe(0);
+      });
+
+      it('returns the same map on repeated calls for the same uuid', () =>
+      {
+        const engine = new JABS_Engine();
+        const first = engine.getJabsStatesByUuid('uuid-1');
+        const second = engine.getJabsStatesByUuid('uuid-1');
+        expect(second).toBe(first);
+      });
+    });
+
+    describe('getPositiveJabsStatesByUuid / getNegativeJabsStatesByUuid', () =>
+    {
+      it('excludes expired states from both positive and negative results', () =>
+      {
+        const engine = new JABS_Engine();
+        const expiredState = buildTrackedState({ expired: true });
+        engine.addJabsStateByUuid('uuid-1', expiredState);
+        expect(engine.getPositiveJabsStatesByUuid('uuid-1')).toEqual([]);
+        expect(engine.getNegativeJabsStatesByUuid('uuid-1')).toEqual([]);
+      });
+
+      it('excludes the battler\'s death state from both positive and negative results', () =>
+      {
+        const engine = new JABS_Engine();
+        const deathState = buildTrackedState({ stateId: 99 });
+        engine.addJabsStateByUuid('uuid-1', deathState);
+        expect(engine.getPositiveJabsStatesByUuid('uuid-1')).toEqual([]);
+        expect(engine.getNegativeJabsStatesByUuid('uuid-1')).toEqual([]);
+      });
+
+      it('classifies a non-negative-tagged state as positive', () =>
+      {
+        const engine = new JABS_Engine();
+        const positiveState = buildTrackedState({
+          battler: { deathStateId: () => 99, state: () => ({ jabsNegative: false }) },
+        });
+        engine.addJabsStateByUuid('uuid-1', positiveState);
+        expect(engine.getPositiveJabsStatesByUuid('uuid-1')).toEqual([ positiveState ]);
+        expect(engine.getNegativeJabsStatesByUuid('uuid-1')).toEqual([]);
+      });
+
+      it('classifies a negative-tagged state as negative', () =>
+      {
+        const engine = new JABS_Engine();
+        const negativeState = buildTrackedState({
+          battler: { deathStateId: () => 99, state: () => ({ jabsNegative: true }) },
+        });
+        engine.addJabsStateByUuid('uuid-1', negativeState);
+        expect(engine.getNegativeJabsStatesByUuid('uuid-1')).toEqual([ negativeState ]);
+        expect(engine.getPositiveJabsStatesByUuid('uuid-1')).toEqual([]);
+      });
+    });
+
+    describe('hasJabsStateByUuid / getJabsStateByUuidAndStateId', () =>
+    {
+      it('is false/undefined for an unapplied state', () =>
+      {
+        const engine = new JABS_Engine();
+        expect(engine.hasJabsStateByUuid('uuid-1', 5)).toBe(false);
+        expect(engine.getJabsStateByUuidAndStateId('uuid-1', 5)).toBeUndefined();
+      });
+
+      it('is true/defined once a state has been applied', () =>
+      {
+        const engine = new JABS_Engine();
+        const trackedState = buildTrackedState({ stateId: 5 });
+        engine.addJabsStateByUuid('uuid-1', trackedState);
+        expect(engine.hasJabsStateByUuid('uuid-1', 5)).toBe(true);
+        expect(engine.getJabsStateByUuidAndStateId('uuid-1', 5)).toBe(trackedState);
+      });
+    });
+
+    describe('addOrUpdateStateByUuid', () =>
+    {
+      it('adds the state anew when the battler does not already have it', () =>
+      {
+        const engine = new JABS_Engine();
+        const jabsState = buildTrackedState({ stateId: 5 });
+        engine.addOrUpdateStateByUuid('uuid-1', jabsState);
+        expect(engine.getJabsStateByUuidAndStateId('uuid-1', 5)).toBe(jabsState);
+      });
+
+      it('updates (not replaces) the existing tracked state when the battler already has it', () =>
+      {
+        const engine = new JABS_Engine();
+        const existing = buildTrackedState({ stateId: 5 });
+        engine.addJabsStateByUuid('uuid-1', existing);
+        engine.updateJabsStateByUuid = vi.fn();
+
+        const incoming = buildTrackedState({ stateId: 5 });
+        engine.addOrUpdateStateByUuid('uuid-1', incoming);
+
+        expect(engine.updateJabsStateByUuid).toHaveBeenCalledWith('uuid-1', incoming);
+        // the tracked map entry is untouched by addOrUpdateStateByUuid itself- updateJabsStateByUuid
+        // (mocked away here) owns replacing it.
+        expect(engine.getJabsStateByUuidAndStateId('uuid-1', 5)).toBe(existing);
+      });
+    });
+
+    describe('updateJabsStateByUuid / handleJabsStateUpdate', () =>
+    {
+      it('dispatches to refreshJabsState for the Refresh reapply type', async () =>
+      {
+        const { default: JABS_State } = await import('../../../../../src/plugins/abs/core/models/JABS_State.js');
+        const engine = new JABS_Engine();
+        const oldState = { stateId: 5, battler: { state: () => ({ jabsStateReapplyType: JABS_State.reapplicationType.Refresh }) } };
+        engine.addJabsStateByUuid('uuid-1', oldState);
+        engine.refreshJabsState = vi.fn();
+        const newState = { stateId: 5 };
+
+        engine.updateJabsStateByUuid('uuid-1', newState);
+
+        expect(engine.refreshJabsState).toHaveBeenCalledWith(oldState, newState);
+      });
+
+      it('dispatches to extendJabsState for the Extend reapply type', async () =>
+      {
+        const { default: JABS_State } = await import('../../../../../src/plugins/abs/core/models/JABS_State.js');
+        const engine = new JABS_Engine();
+        const oldState = { stateId: 5, battler: { state: () => ({ jabsStateReapplyType: JABS_State.reapplicationType.Extend }) } };
+        engine.addJabsStateByUuid('uuid-1', oldState);
+        engine.extendJabsState = vi.fn();
+        const newState = { stateId: 5 };
+
+        engine.updateJabsStateByUuid('uuid-1', newState);
+
+        expect(engine.extendJabsState).toHaveBeenCalledWith(oldState, newState);
+      });
+
+      it('dispatches to stackJabsState for the Stack reapply type', async () =>
+      {
+        const { default: JABS_State } = await import('../../../../../src/plugins/abs/core/models/JABS_State.js');
+        const engine = new JABS_Engine();
+        const oldState = { stateId: 5, battler: { state: () => ({ jabsStateReapplyType: JABS_State.reapplicationType.Stack }) } };
+        engine.addJabsStateByUuid('uuid-1', oldState);
+        engine.stackJabsState = vi.fn();
+        const newState = { stateId: 5 };
+
+        engine.updateJabsStateByUuid('uuid-1', newState);
+
+        expect(engine.stackJabsState).toHaveBeenCalledWith(oldState, newState);
+      });
+
+      it('falls back to the default metadata reapply type when the state has none tagged', () =>
+      {
+        globalThis.J.ABS.Metadata.DefaultStateReapplyType = 'refresh';
+        const engine = new JABS_Engine();
+        const oldState = { stateId: 5, battler: { state: () => ({ jabsStateReapplyType: undefined }) } };
+        engine.addJabsStateByUuid('uuid-1', oldState);
+        engine.refreshJabsState = vi.fn();
+        const newState = { stateId: 5 };
+
+        engine.updateJabsStateByUuid('uuid-1', newState);
+
+        expect(engine.refreshJabsState).toHaveBeenCalledWith(oldState, newState);
+      });
+    });
+
+    describe('refreshJabsState', () =>
+    {
+      it('applies refresh-diminishment scaled by how many times it has already refreshed', () =>
+      {
+        const engine = new JABS_Engine();
+        const jabsState = {
+          battler: { state: () => ({ jabsStateRefreshDiminish: 5, jabsStateRefreshReset: 100 }) },
+          timesRefreshed: 3,
+          refreshRefreshResetCounter: vi.fn(),
+          refreshDuration: vi.fn(),
+        };
+        const newJabsState = { duration: 100 };
+
+        engine.refreshJabsState(jabsState, newJabsState);
+
+        // diminishment = 3 * 5 = 15; refreshAmount = 100 - 15 = 85.
+        expect(jabsState.refreshDuration).toHaveBeenCalledWith(85);
+        expect(jabsState.refreshRefreshResetCounter).toHaveBeenCalledWith(100);
+      });
+
+      it('never refreshes to a duration below -1', () =>
+      {
+        const engine = new JABS_Engine();
+        const jabsState = {
+          battler: { state: () => ({ jabsStateRefreshDiminish: 1000, jabsStateRefreshReset: 100 }) },
+          timesRefreshed: 5,
+          refreshRefreshResetCounter: vi.fn(),
+          refreshDuration: vi.fn(),
+        };
+        const newJabsState = { duration: 10 };
+
+        engine.refreshJabsState(jabsState, newJabsState);
+
+        expect(jabsState.refreshDuration).toHaveBeenCalledWith(-1);
+      });
+    });
+
+    describe('extendJabsState', () =>
+    {
+      it('adds the extend amount to the current duration', () =>
+      {
+        const engine = new JABS_Engine();
+        const jabsState = {
+          duration: 100,
+          battler: { state: () => ({ jabsStateExtendAmount: 50, jabsStateExtendMax: 500 }) },
+          refreshDuration: vi.fn(),
+        };
+
+        engine.extendJabsState(jabsState, { stateId: 5 });
+
+        expect(jabsState.refreshDuration).toHaveBeenCalledWith(150);
+      });
+
+      it('caps the extended duration at the configured maximum', () =>
+      {
+        const engine = new JABS_Engine();
+        const jabsState = {
+          duration: 400,
+          battler: { state: () => ({ jabsStateExtendAmount: 500, jabsStateExtendMax: 500 }) },
+          refreshDuration: vi.fn(),
+        };
+
+        engine.extendJabsState(jabsState, { stateId: 5 });
+
+        expect(jabsState.refreshDuration).toHaveBeenCalledWith(500);
+      });
+    });
+
+    describe('stackJabsState', () =>
+    {
+      it('applies stack gain, updates the base duration, and refreshes the state', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.refreshJabsState = vi.fn();
+        const jabsState = { applyStackGain: vi.fn(), setBaseDuration: vi.fn() };
+        const newJabsState = { stackCount: 3, duration: 200 };
+
+        engine.stackJabsState(jabsState, newJabsState);
+
+        expect(jabsState.applyStackGain).toHaveBeenCalledWith(3);
+        expect(jabsState.setBaseDuration).toHaveBeenCalledWith(200);
+        expect(engine.refreshJabsState).toHaveBeenCalledWith(jabsState, newJabsState);
+      });
+    });
+
+    describe('checkStackConversion', () =>
+    {
+      function buildConversionState(overrides = {})
+      {
+        return Object.assign({
+          stateId: 5,
+          stackCount: 3,
+          source: { state: () => ({ jabsConvertUsesCaster: false }) },
+          battler: {
+            state: () => ({ jabsStacksConvertToState: { stateId: 9, stacksRequired: 3 }, jabsRemoveOnConvert: false }),
+            addState: vi.fn(),
+          },
+          removeFromBattler: vi.fn(),
+        }, overrides);
+      }
+
+      it('does nothing when there is no conversion data at all', () =>
+      {
+        const engine = new JABS_Engine();
+        const jabsState = buildConversionState({
+          battler: { state: () => ({ jabsStacksConvertToState: null }), addState: vi.fn() },
+        });
+
+        engine.checkStackConversion(jabsState);
+
+        expect(jabsState.battler.addState).not.toHaveBeenCalled();
+      });
+
+      it('does nothing when the stack count has not yet reached the threshold', () =>
+      {
+        const engine = new JABS_Engine();
+        const jabsState = buildConversionState({ stackCount: 2 });
+
+        engine.checkStackConversion(jabsState);
+
+        expect(jabsState.battler.addState).not.toHaveBeenCalled();
+      });
+
+      it('converts the state once the threshold is reached', () =>
+      {
+        const engine = new JABS_Engine();
+        const jabsState = buildConversionState();
+
+        engine.checkStackConversion(jabsState);
+
+        expect(jabsState.battler.addState).toHaveBeenCalledWith(9, jabsState.battler);
+        expect(jabsState.removeFromBattler).not.toHaveBeenCalled();
+      });
+
+      it('removes the source state after conversion when configured to do so', () =>
+      {
+        const engine = new JABS_Engine();
+        const jabsState = buildConversionState({
+          battler: {
+            state: () => ({
+              jabsStacksConvertToState: { stateId: 9, stacksRequired: 3 },
+              jabsRemoveOnConvert: true,
+            }),
+            addState: vi.fn(),
+          },
+        });
+
+        engine.checkStackConversion(jabsState);
+
+        expect(jabsState.removeFromBattler).toHaveBeenCalledTimes(1);
+      });
+
+      it('reads conversion data from the caster\'s perceived state when convertUsesCaster is tagged', () =>
+      {
+        const engine = new JABS_Engine();
+        const jabsState = buildConversionState({
+          source: {
+            state: () => ({
+              jabsConvertUsesCaster: true,
+              jabsStacksConvertToState: { stateId: 42, stacksRequired: 3 },
+              jabsRemoveOnConvert: false,
+            }),
+          },
+          battler: { state: () => ({ jabsStacksConvertToState: { stateId: 9, stacksRequired: 3 } }), addState: vi.fn() },
+        });
+
+        engine.checkStackConversion(jabsState);
+
+        expect(jabsState.battler.addState).toHaveBeenCalledWith(42, jabsState.battler);
+      });
+    });
+
+    describe('removeJabsStateByUuid', () =>
+    {
+      it('deletes the tracked state entry entirely', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.addJabsStateByUuid('uuid-1', buildTrackedState({ stateId: 5 }));
+        engine.removeJabsStateByUuid('uuid-1', 5);
+        expect(engine.hasJabsStateByUuid('uuid-1', 5)).toBe(false);
+      });
+    });
+
+    describe('updateJabsStates', () =>
+    {
+      it('updates every tracked state for every battler', () =>
+      {
+        const engine = new JABS_Engine();
+        const state1 = { update: vi.fn() };
+        const state2 = { update: vi.fn() };
+        engine.getJabsStates()
+          .set('uuid-1', new Map([ [ 1, state1 ] ]));
+        engine.getJabsStates()
+          .set('uuid-2', new Map([ [ 2, state2 ] ]));
+
+        engine.updateJabsStates();
+
+        expect(state1.update).toHaveBeenCalledTimes(1);
+        expect(state2.update).toHaveBeenCalledTimes(1);
+      });
+    });
+  });
+  //endregion state tracking
+
+  //region skill execution log
+  describe('skill execution log', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.J.ABS.Metadata.SkillExecutionExcludedSkillTypeSet = new Set();
+    });
+
+    describe('getSkillExecutionLogByUuid', () =>
+    {
+      it('lazily initializes an empty array for a battler never seen before', () =>
+      {
+        const engine = new JABS_Engine();
+        expect(engine.getSkillExecutionLogByUuid('uuid-1')).toEqual([]);
+      });
+
+      it('returns the same array on repeated calls', () =>
+      {
+        const engine = new JABS_Engine();
+        const first = engine.getSkillExecutionLogByUuid('uuid-1');
+        const second = engine.getSkillExecutionLogByUuid('uuid-1');
+        expect(second).toBe(first);
+      });
+    });
+
+    describe('logSkillExecution', () =>
+    {
+      it('appends a new execution entry to the battler\'s log', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.logSkillExecution('uuid-1', 5, 1);
+        const log = engine.getSkillExecutionLogByUuid('uuid-1');
+        expect(log).toHaveLength(1);
+        expect(log[0]).toMatchObject({ skillId: 5, skillTypeId: 1 });
+      });
+
+      it('silently ignores skill types in the excluded set', () =>
+      {
+        globalThis.J.ABS.Metadata.SkillExecutionExcludedSkillTypeSet = new Set([ 1 ]);
+        const engine = new JABS_Engine();
+        engine.logSkillExecution('uuid-1', 5, 1);
+        expect(engine.getSkillExecutionLogByUuid('uuid-1')).toEqual([]);
+      });
+    });
+
+    describe('querySkillExecutionLog', () =>
+    {
+      function buildEntry(overrides = {})
+      {
+        return Object.assign({
+          skillId: 5,
+          skillTypeId: 1,
+          isWithinWindow: () => true,
+          matchesSkillId: () => true,
+          matchesTypeId: () => true,
+        }, overrides);
+      }
+
+      it('counts all matching entries within the window for the "all" mode', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.getSkillExecutionLog()
+          .set('uuid-1', [ buildEntry(), buildEntry() ]);
+        expect(engine.querySkillExecutionLog('uuid-1', 5, 1, 10, 'all')).toBe(2);
+      });
+
+      it('defaults to "all" semantics for an unrecognized count mode', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.getSkillExecutionLog()
+          .set('uuid-1', [ buildEntry() ]);
+        expect(engine.querySkillExecutionLog('uuid-1', 5, 1, 10, 'bogus-mode')).toBe(1);
+      });
+
+      it('excludes entries outside the time window', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.getSkillExecutionLog()
+          .set('uuid-1', [ buildEntry({ isWithinWindow: () => false }) ]);
+        expect(engine.querySkillExecutionLog('uuid-1', 5, 1, 10, 'all')).toBe(0);
+      });
+
+      it('excludes entries that do not match the skill id filter', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.getSkillExecutionLog()
+          .set('uuid-1', [ buildEntry({ matchesSkillId: () => false }) ]);
+        expect(engine.querySkillExecutionLog('uuid-1', 5, 1, 10, 'all')).toBe(0);
+      });
+
+      it('excludes entries that do not match the type id filter', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.getSkillExecutionLog()
+          .set('uuid-1', [ buildEntry({ matchesTypeId: () => false }) ]);
+        expect(engine.querySkillExecutionLog('uuid-1', 5, 1, 10, 'all')).toBe(0);
+      });
+
+      it('counts distinct skill ids for the "unique" mode', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.getSkillExecutionLog()
+          .set('uuid-1', [ buildEntry({ skillId: 5 }), buildEntry({ skillId: 5 }), buildEntry({ skillId: 6 }) ]);
+        expect(engine.querySkillExecutionLog('uuid-1', 0, 0, 10, 'unique')).toBe(2);
+      });
+
+      it('counts distinct skill type ids for the "distinct_types" mode', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.getSkillExecutionLog()
+          .set('uuid-1', [ buildEntry({ skillTypeId: 1 }), buildEntry({ skillTypeId: 1 }), buildEntry({ skillTypeId: 2 }) ]);
+        expect(engine.querySkillExecutionLog('uuid-1', 0, 0, 10, 'distinct_types')).toBe(2);
+      });
+
+    });
+
+    describe('streak counting (via querySkillExecutionLog countMode "streak")', () =>
+    {
+      function buildEntry(overrides = {})
+      {
+        return Object.assign({
+          isWithinWindow: () => true,
+          matchesSkillId: () => true,
+          matchesTypeId: () => true,
+        }, overrides);
+      }
+
+      it('counts consecutive matching entries from the tail backward', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.getSkillExecutionLog()
+          .set('uuid-1', [ buildEntry(), buildEntry(), buildEntry() ]);
+        expect(engine.querySkillExecutionLog('uuid-1', 5, 1, 10, 'streak')).toBe(3);
+      });
+
+      it('stops the streak at the first entry outside the time window', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.getSkillExecutionLog()
+          .set('uuid-1', [ buildEntry({ isWithinWindow: () => false }), buildEntry(), buildEntry() ]);
+        expect(engine.querySkillExecutionLog('uuid-1', 5, 1, 10, 'streak')).toBe(2);
+      });
+
+      it('stops the streak at the first entry that does not match the skill id filter', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.getSkillExecutionLog()
+          .set('uuid-1', [ buildEntry({ matchesSkillId: () => false }), buildEntry() ]);
+        expect(engine.querySkillExecutionLog('uuid-1', 5, 1, 10, 'streak')).toBe(1);
+      });
+
+      it('stops the streak at the first entry that does not match the type id filter', () =>
+      {
+        const engine = new JABS_Engine();
+        engine.getSkillExecutionLog()
+          .set('uuid-1', [ buildEntry({ matchesTypeId: () => false }), buildEntry() ]);
+        expect(engine.querySkillExecutionLog('uuid-1', 5, 1, 10, 'streak')).toBe(1);
+      });
+
+      it('is zero for an empty log', () =>
+      {
+        const engine = new JABS_Engine();
+        expect(engine.querySkillExecutionLog('uuid-1', 5, 1, 10, 'streak')).toBe(0);
+      });
+    });
+
+    describe('updateSkillExecutionLog', () =>
+    {
+      beforeEach(() =>
+      {
+        globalThis.J.ABS.Metadata.SkillExecutionMaxWindowSeconds = 60;
+      });
+
+      it('ticks the throttle timer every call, but only ages/prunes once the timer completes', () =>
+      {
+        const engine = new JABS_Engine();
+        engine._skillExecutionTimer._complete = false;
+        const entry = { tick: vi.fn(), isExpired: () => false };
+        engine.getSkillExecutionLog()
+          .set('uuid-1', [ entry ]);
+
+        engine.updateSkillExecutionLog();
+
+        expect(engine._skillExecutionTimer.updateCalled).toBe(true);
+        expect(entry.tick).not.toHaveBeenCalled();
+      });
+
+      it('ages every entry and resets the throttle timer once it completes', () =>
+      {
+        const engine = new JABS_Engine();
+        engine._skillExecutionTimer._complete = true;
+        const entry = { tick: vi.fn(), isExpired: () => false };
+        engine.getSkillExecutionLog()
+          .set('uuid-1', [ entry ]);
+
+        engine.updateSkillExecutionLog();
+
+        expect(entry.tick).toHaveBeenCalledTimes(1);
+        expect(engine._skillExecutionTimer.resetCalled).toBe(true);
+      });
+
+      it('prunes entries that have exceeded the global max window', () =>
+      {
+        const engine = new JABS_Engine();
+        engine._skillExecutionTimer._complete = true;
+        const expiredEntry = { tick: vi.fn(), isExpired: () => true };
+        const freshEntry = { tick: vi.fn(), isExpired: () => false };
+        engine.getSkillExecutionLog()
+          .set('uuid-1', [ expiredEntry, freshEntry ]);
+
+        engine.updateSkillExecutionLog();
+
+        expect(engine.getSkillExecutionLog().get('uuid-1')).toEqual([ freshEntry ]);
+      });
+    });
+  });
+  //endregion skill execution log
 });
 //endregion plugins/abs/core/managers/jabs-engine.test.js
