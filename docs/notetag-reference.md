@@ -5373,3 +5373,124 @@ amount as MP (self only).
 ```
 "Empathic Bond" — whenever an ally within 4 tiles receives HP healing, this battler also gains
 30% of that heal amount as HP.
+
+---
+
+## J-SDP (`src/plugins/sdp/core/`)
+
+The Skill Development Panel (SDP) system — actors invest earned SDP points into panels for
+permanent stat growth. Panels themselves are defined in an external `config.sdp.json` file, not
+via notetags.
+
+### `<sdpPoints:VALUE>`
+
+**Applies to:**
+Enemies, Items
+
+**When:**
+enemy defeat (reward) / item use on an actor (grant or consume)
+
+**Effect:**
+on an enemy, VALUE is a straight SDP-point reward yielded on defeat (same mechanism as exp/gold).
+On an item, using it on an actor target grants VALUE points (or consumes them if VALUE is
+negative); items can only affect actors, and skills are never eligible regardless of any tag.
+
+```
+<sdpPoints:250>
+```
+This enemy yields 250 SDP points on defeat.
+
+```
+<sdpPoints:-50>
+```
+Using this item on an actor consumes 50 of their SDP points.
+
+**See also:** `<sdpMultiplier>`, `<sdpBonusFormula>`
+
+---
+
+### `<sdpDropData:[SDP_KEY, DROP_CHANCE]>`
+
+**Applies to:**
+Enemies
+
+**When:**
+enemy defeat
+
+**Effect:**
+drops SDP_KEY as a physical field pickup at DROP_CHANCE percent (JABS-oriented; loot is generated
+dynamically with no database backing). Non-JABS projects should use `<sdpUnlock>` on an item drop
+instead for equivalent functionality.
+
+```
+<sdpDropData:[ORC_1, 5]>
+```
+This enemy has a 5% chance to drop the "ORC_1" SDP on defeat.
+
+**See also:** `<sdpUnlock>`
+
+---
+
+### `<sdpUnlock:SDP_KEY>`
+
+**Applies to:**
+Items
+
+**When:**
+the item is used
+
+**Effect:**
+unlocks the panel identified by SDP_KEY for the party, in addition to whatever else the item
+does.
+
+```
+<sdpUnlock:ORC_1>
+```
+Using this item unlocks the "ORC_1" panel.
+
+**See also:** `<sdpDropData>`
+
+---
+
+### `<sdpMultiplier:AMOUNT>` / `<sdpMultiplier:-AMOUNT>`
+
+**Applies to:**
+Actors, Classes, Weapons, Armors, Enemies, States (any valid note source; summed across all)
+
+**When:**
+always
+
+**Effect:**
+SDR (SDP rate) — a percent modifier against SDP points gained, positive or negative.
+
+```
+<sdpMultiplier:25>
+```
+This source grants +25% more SDP points gained.
+
+**See also:** `<sdpBonusFormula>`
+
+---
+
+### `<sdpBonusFormula:[FORMULA]>`
+
+**Applies to:**
+Any valid notetag source
+
+**Formula context:**
+`a` = the actor gaining SDP points, `b` = 0 (unused), `v` = `$gameVariables._data`. Useful
+helpers: `a.getMasteryCount()` (mastered subgroup count), `a.level`, `a.getTotalSdpRanks()`.
+
+**When:**
+always, evaluated after the `<sdpMultiplier>` (SDR) step
+
+**Effect:**
+the formula's result is treated as an additional bonus fraction (0.20 = +20% more points).
+Multiple tags across sources sum their bonus fractions together before the final multiply.
+
+```
+<sdpBonusFormula:[a.getMasteryCount() * 0.01]>
+```
+An actor with 20 mastered subgroups gains an extra 20% SDP points on top of `<sdpMultiplier>`.
+
+**See also:** `<sdpMultiplier>`
