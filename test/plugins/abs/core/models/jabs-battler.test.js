@@ -7959,5 +7959,198 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion regeneration
+
+  //region timers
+  describe('setWaitCountdown / isWaiting', () =>
+  {
+    it('resets and re-arms the wait timer', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._waitTimer.setMaxTime = vi.fn();
+
+      jabsBattler.setWaitCountdown(30);
+
+      expect(jabsBattler._waitTimer.resetCalled).toBe(true);
+      expect(jabsBattler._waitTimer.setMaxTime).toHaveBeenCalledWith(30);
+    });
+
+    it('isWaiting reflects the inverse of timer completion', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._waitTimer._complete = false;
+      expect(jabsBattler.isWaiting()).toBe(true);
+
+      jabsBattler._waitTimer._complete = true;
+      expect(jabsBattler.isWaiting()).toBe(false);
+    });
+  });
+
+  describe('countdownCastTime', () =>
+  {
+    it('performs the cast animation every tick', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.performCastAnimation = vi.fn();
+      jabsBattler._castTimeCountdown = 5;
+
+      jabsBattler.countdownCastTime();
+
+      expect(jabsBattler.performCastAnimation).toHaveBeenCalledTimes(1);
+    });
+
+    it('decrements the countdown while positive without ending the cast', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.performCastAnimation = vi.fn();
+      jabsBattler._castTimeCountdown = 5;
+      jabsBattler._casting = true;
+
+      jabsBattler.countdownCastTime();
+
+      expect(jabsBattler._castTimeCountdown).toBe(4);
+      expect(jabsBattler.isCasting()).toBe(true);
+    });
+
+    it('ends the cast once the countdown reaches 0', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.performCastAnimation = vi.fn();
+      jabsBattler._castTimeCountdown = 0;
+      jabsBattler._casting = true;
+
+      jabsBattler.countdownCastTime();
+
+      expect(jabsBattler.isCasting()).toBe(false);
+      expect(jabsBattler._castTimeCountdown).toBe(0);
+    });
+  });
+
+  describe('performCastAnimation / canPerformCastAnimation', () =>
+  {
+    it('does not show an animation when it cannot perform one', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.canPerformCastAnimation = () => false;
+      jabsBattler.showAnimation = vi.fn();
+
+      jabsBattler.performCastAnimation();
+
+      expect(jabsBattler.showAnimation).not.toHaveBeenCalled();
+    });
+
+    it('shows the decided action\'s cast animation when able', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.canPerformCastAnimation = () => true;
+      jabsBattler.showAnimation = vi.fn();
+      jabsBattler.setDecidedAction([ { getCastAnimation: () => 42 } ]);
+
+      jabsBattler.performCastAnimation();
+
+      expect(jabsBattler.showAnimation).toHaveBeenCalledWith(42);
+    });
+
+    it('canPerformCastAnimation is false without a decided action', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getDecidedAction = () => null;
+
+      expect(jabsBattler.canPerformCastAnimation()).toBe(false);
+    });
+
+    it('canPerformCastAnimation is false when the skill has no cast animation', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setDecidedAction([ { getCastAnimation: () => 0 } ]);
+
+      expect(jabsBattler.canPerformCastAnimation()).toBe(false);
+    });
+
+    it('canPerformCastAnimation is false while another animation is already showing', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setDecidedAction([ { getCastAnimation: () => 42 } ]);
+      jabsBattler.isShowingAnimation = () => true;
+
+      expect(jabsBattler.canPerformCastAnimation()).toBe(false);
+    });
+
+    it('canPerformCastAnimation is true otherwise', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setDecidedAction([ { getCastAnimation: () => 42 } ]);
+      jabsBattler.isShowingAnimation = () => false;
+
+      expect(jabsBattler.canPerformCastAnimation()).toBe(true);
+    });
+  });
+
+  describe('setCastCountdown / isCasting / cast time countdown accessors', () =>
+  {
+    it('flags casting true when the given cast time is positive', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setCastCountdown(10);
+
+      expect(jabsBattler.isCasting()).toBe(true);
+      expect(jabsBattler.getCastTimeCountdown()).toBe(10);
+    });
+
+    it('flags casting false and zeroes the countdown for a non-positive cast time', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setCastCountdown(0);
+
+      expect(jabsBattler.isCasting()).toBe(false);
+      expect(jabsBattler.getCastTimeCountdown()).toBe(0);
+    });
+
+    it('setCastTimeCountdown/getCastTimeCountdown track the raw value', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setCastTimeCountdown(15);
+
+      expect(jabsBattler.getCastTimeCountdown()).toBe(15);
+    });
+  });
+
+  describe('countdownAlert / clearAlert', () =>
+  {
+    it('decrements the alerted counter while positive', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._alertedCounter = 5;
+      jabsBattler.clearAlert = vi.fn();
+
+      jabsBattler.countdownAlert();
+
+      expect(jabsBattler._alertedCounter).toBe(4);
+      expect(jabsBattler.clearAlert).not.toHaveBeenCalled();
+    });
+
+    it('clears the alert once the counter reaches 0', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._alertedCounter = 0;
+      jabsBattler.clearAlert = vi.fn();
+
+      jabsBattler.countdownAlert();
+
+      expect(jabsBattler.clearAlert).toHaveBeenCalledTimes(1);
+    });
+
+    it('clearAlert resets the alerted flag and counter', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setAlerted(true);
+      jabsBattler._alertedCounter = 10;
+
+      jabsBattler.clearAlert();
+
+      expect(jabsBattler.isAlerted()).toBe(false);
+      expect(jabsBattler._alertedCounter).toBe(0);
+    });
+  });
+  //endregion timers
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
