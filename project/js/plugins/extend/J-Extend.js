@@ -698,12 +698,12 @@ var OverlayManager = class OverlayManager {
 		unsupported: "unsupported"
 	};
 	/**
-	* A cache for caster-skill extensions.
-	* This is effectively a map of maps, where the parent map is keyed by the caster, while the child map is keyed by
-	* a combination of the skill id and its extension skill ids.
-	* @type {WeakMap<Game_Actor|Game_Enemy, Map<string, RPG_Skill>>}
+	* The cache for caster-skill extensions. Keyed by the caster alone- extension results are
+	* wholesale-invalidated on any learnSkill/forgetSkill via {@link invalidate}, so the skill id
+	* is a stable key within one cache lifetime with no need to encode the overlay set.
+	* @type {JCache}
 	*/
-	static _casterExtendCache = new WeakMap();
+	static _skillCache = JCache.battlerScoped({ name: "overlay:caster-skill" });
 	/**
 	* Tracks skill ids currently mid-resolution per caster to detect circular extension data
 	* (e.g. skill 2 extends skill 1 AND skill 1 extends skill 2, direct or indirect).
@@ -713,82 +713,30 @@ var OverlayManager = class OverlayManager {
 	*/
 	static #resolving = new WeakMap();
 	/**
-	* A cache for battler-state extensions, parallel to {@link _casterExtendCache} for skills.
-	* @type {WeakMap<Game_Battler, Map<number, RPG_State>>}
+	* The cache for battler-state extensions, parallel to {@link _skillCache} for skills.
+	* @type {JCache}
 	*/
-	static _stateExtendCache = new WeakMap();
+	static _stateCache = JCache.battlerScoped({ name: "overlay:battler-state" });
 	/**
 	* Tracks state ids currently mid-resolution per battler to detect circular state extension data.
 	* @type {WeakMap<Game_Battler, Set<number>>}
 	*/
 	static #resolvingState = new WeakMap();
 	/**
-	* The metrics for this manager.
-	* @type {{ hits: number, misses: number }}
-	*/
-	static _metrics = {
-		hits: 0,
-		misses: 0
-	};
-	/**
 	* Invalidates the cache for the given battler.
 	* @param {Game_Actor|Game_Enemy} battler The battler to invalidate the cache for.
 	* @returns {boolean} True if the cache was invalidated, false otherwise.
 	*/
 	static invalidate(battler) {
-		this._casterExtendCache.delete(battler);
-		this._stateExtendCache.delete(battler);
+		this._skillCache.invalidate(battler);
+		this._stateCache.invalidate(battler);
 	}
 	/**
 	* Clears the cache for all objects.
 	*/
 	static clearCache() {
-		this._casterExtendCache = new WeakMap();
-		this._stateExtendCache = new WeakMap();
-	}
-	/**
-	* Gets the existing cache of a caster's skill extensions.
-	* If a cache does not yet exist for the caster, it'll be created.
-	* @param {Game_Actor|Game_Enemy} caster The caster of the skill.
-	* @returns {Map<string, RPG_Skill>}
-	*/
-	static getOrCreateCacheForCaster(caster) {
-		const cacheHit = this._casterExtendCache.get(caster);
-		if (cacheHit) return cacheHit;
-		const newCasterCache = new Map();
-		this._casterExtendCache.set(caster, newCasterCache);
-		return newCasterCache;
-	}
-	/**
-	* Gets the existing state-extension cache for a battler, or creates it.
-	* @param {Game_Battler} battler The battler.
-	* @returns {Map<number, RPG_State>}
-	*/
-	static #getOrCreateStateCacheForBattler(battler) {
-		const hit = this._stateExtendCache.get(battler);
-		if (hit) return hit;
-		const newCache = new Map();
-		this._stateExtendCache.set(battler, newCache);
-		return newCache;
-	}
-	/**
-	* Retrieves a cached value for this caster/key, or computes and stores it.
-	*
-	* @param {Game_Actor|Game_Enemy} caster - The caster whose cache bucket to use.
-	* @param {string} key - Stable key representing the computed value (ex: base skill id + overlay ids).
-	* @param {Function} computeFn - A no-arg function that computes the value on a cache miss.
-	* @returns {RPG_Skill} - The cached or newly computed extended skill.
-	*/
-	static cached(caster, key, computeFn) {
-		const perCaster = this.getOrCreateCacheForCaster(caster);
-		if (perCaster.has(key)) {
-			this._metrics.hits++;
-			return perCaster.get(key);
-		}
-		const value = computeFn();
-		perCaster.set(key, value);
-		this._metrics.misses++;
-		return value;
+		this._skillCache.clear();
+		this._stateCache.clear();
 	}
 	/**
 	* Gets the extended skill based on the caster's learned skills.
@@ -799,35 +747,29 @@ var OverlayManager = class OverlayManager {
 	static getExtendedSkill(caster, skillId) {
 		if (skillId <= 0) throw new Error("Invalid skill extension id.");
 		if (!caster) return $dataSkills[skillId];
-		const perCaster = this.getOrCreateCacheForCaster(caster);
-		if (perCaster.has(skillId)) {
-			this._metrics.hits++;
-			return perCaster.get(skillId);
-		}
-		const knownIds = caster.skillIds();
-		const overlayIds = knownIds.filter((id) => {
-			const skill = $dataSkills[id];
-			return skill && this.#isOverlayForBase(skill, skillId);
-		}).sort((a, b) => a - b);
-		let inProgress = this.#resolving.get(caster);
-		if (!inProgress) {
-			inProgress = new Set();
-			this.#resolving.set(caster, inProgress);
-		}
-		if (inProgress.has(skillId)) {
-			throw new Error(`Circular skill extension detected on skill ${skillId}! Please stop recursing the universe 💢`);
-		}
-		inProgress.add(skillId);
-		try {
-			const resolvedOverlays = overlayIds.map((id) => this.getExtendedSkill(caster, id));
-			const value = this.#getExtendedSkill(resolvedOverlays, skillId);
-			perCaster.set(skillId, value);
-			this._metrics.misses++;
-			return value;
-		} finally {
-			inProgress.delete(skillId);
-			if (inProgress.size === 0) this.#resolving.delete(caster);
-		}
+		return this._skillCache.get(caster, String(skillId), () => {
+			const knownIds = caster.skillIds();
+			const overlayIds = knownIds.filter((id) => {
+				const skill = $dataSkills[id];
+				return skill && this.#isOverlayForBase(skill, skillId);
+			}).sort((a, b) => a - b);
+			let inProgress = this.#resolving.get(caster);
+			if (!inProgress) {
+				inProgress = new Set();
+				this.#resolving.set(caster, inProgress);
+			}
+			if (inProgress.has(skillId)) {
+				throw new Error(`Circular skill extension detected on skill ${skillId}! Please stop recursing the universe 💢`);
+			}
+			inProgress.add(skillId);
+			try {
+				const resolvedOverlays = overlayIds.map((id) => this.getExtendedSkill(caster, id));
+				return this.#getExtendedSkill(resolvedOverlays, skillId);
+			} finally {
+				inProgress.delete(skillId);
+				if (inProgress.size === 0) this.#resolving.delete(caster);
+			}
+		});
 	}
 	/**
 	* Gets the extended state for the given battler and state id.
@@ -847,50 +789,44 @@ var OverlayManager = class OverlayManager {
 	static getExtendedState(battler, stateId) {
 		if (stateId <= 0) throw new Error("Invalid state id for extension.");
 		if (!battler) return $dataStates[stateId];
-		const perBattler = this.#getOrCreateStateCacheForBattler(battler);
-		if (perBattler.has(stateId)) {
-			this._metrics.hits++;
-			return perBattler.get(stateId);
-		}
-		const allIds = battler.allStateIds();
-		const targetState = $dataStates[stateId];
-		const targetTypes = targetState ? targetState.stateTypes() : [];
-		const typeCandidates = [];
-		const idCandidates = [];
-		for (const id of allIds) {
-			if (id === stateId) continue;
-			const candidate = $dataStates[id];
-			if (!candidate || !candidate.isStateExtension) continue;
-			if (targetTypes.length > 0 && ArrayHelper.hasAnyIntersection(targetTypes, candidate.getStateExtensionTypes)) {
-				typeCandidates.push(id);
-				continue;
+		return this._stateCache.get(battler, String(stateId), () => {
+			const allIds = battler.allStateIds();
+			const targetState = $dataStates[stateId];
+			const targetTypes = targetState ? targetState.stateTypes() : [];
+			const typeCandidates = [];
+			const idCandidates = [];
+			for (const id of allIds) {
+				if (id === stateId) continue;
+				const candidate = $dataStates[id];
+				if (!candidate || !candidate.isStateExtension) continue;
+				if (targetTypes.length > 0 && ArrayHelper.hasAnyIntersection(targetTypes, candidate.getStateExtensionTypes)) {
+					typeCandidates.push(id);
+					continue;
+				}
+				if (candidate.getStateExtensions.includes(stateId)) {
+					idCandidates.push(id);
+				}
 			}
-			if (candidate.getStateExtensions.includes(stateId)) {
-				idCandidates.push(id);
+			typeCandidates.sort((a, b) => a - b);
+			idCandidates.sort((a, b) => a - b);
+			const overlayIds = [...typeCandidates, ...idCandidates];
+			let inProgressState = this.#resolvingState.get(battler);
+			if (!inProgressState) {
+				inProgressState = new Set();
+				this.#resolvingState.set(battler, inProgressState);
 			}
-		}
-		typeCandidates.sort((a, b) => a - b);
-		idCandidates.sort((a, b) => a - b);
-		const overlayIds = [...typeCandidates, ...idCandidates];
-		let inProgressState = this.#resolvingState.get(battler);
-		if (!inProgressState) {
-			inProgressState = new Set();
-			this.#resolvingState.set(battler, inProgressState);
-		}
-		if (inProgressState.has(stateId)) {
-			throw new Error(`Circular state extension detected on state ${stateId}! Please stop recursing the universe 💢`);
-		}
-		inProgressState.add(stateId);
-		try {
-			const resolvedOverlays = overlayIds.map((id) => this.getExtendedState(battler, id));
-			const value = this.#getExtendedState(resolvedOverlays, stateId);
-			perBattler.set(stateId, value);
-			this._metrics.misses++;
-			return value;
-		} finally {
-			inProgressState.delete(stateId);
-			if (inProgressState.size === 0) this.#resolvingState.delete(battler);
-		}
+			if (inProgressState.has(stateId)) {
+				throw new Error(`Circular state extension detected on state ${stateId}! Please stop recursing the universe 💢`);
+			}
+			inProgressState.add(stateId);
+			try {
+				const resolvedOverlays = overlayIds.map((id) => this.getExtendedState(battler, id));
+				return this.#getExtendedState(resolvedOverlays, stateId);
+			} finally {
+				inProgressState.delete(stateId);
+				if (inProgressState.size === 0) this.#resolvingState.delete(battler);
+			}
+		});
 	}
 	/**
 	* Checks if a given skill is an extension skill that can overlay the given base skill.

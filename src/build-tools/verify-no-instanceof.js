@@ -23,6 +23,8 @@
  *                            data-conversion boundary; native Map/Set have no semantic predicate
  *                            and cannot be registered with SerializableRegistry, same root cause
  *                            as the JABS_StandardController.js entry above.
+ *   JCache.js              — `instanceof RPG_Base` resolving clones to their _original() for
+ *                            cache keying; same root cause as the RPGManager.js entry above.
  *
  * Usage:
  *   node src/build-tools/verify-no-instanceof.js
@@ -46,6 +48,7 @@ const ALLOWLIST = [
   path.normalize('src/plugins/time/core/scenes/Scene_Base.js'),
   path.normalize('src/plugins/_base/core/ParameterRegistry.js'),
   path.normalize('src/plugins/_base/core/JsonEx.js'),
+  path.normalize('src/plugins/_base/core/JCache.js'),
 ];
 
 /**

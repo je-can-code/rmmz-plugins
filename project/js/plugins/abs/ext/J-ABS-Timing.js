@@ -555,7 +555,7 @@ Game_Battler.prototype.setCastSpeedRate = function(amount) {
 * Updates the cached cast speed rate value with the latest.
 */
 Game_Battler.prototype.updateCastSpeedRate = function() {
-	const currentCastSpeedRate = this.castSpeedFlat();
+	const currentCastSpeedRate = this.castSpeedRate();
 	this.setCastSpeedRate(currentCastSpeedRate);
 };
 /**

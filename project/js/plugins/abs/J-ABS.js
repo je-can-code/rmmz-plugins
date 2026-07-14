@@ -7158,10 +7158,6 @@ var JABS_EnemyAI = class extends JABS_AI {
 		if (leader === follower) return false;
 		if (!follower) return false;
 		if (follower.getBattlerRole().leader) return false;
-		if (follower.hasLeader() && follower.getLeader() !== leader.getUuid()) {
-			leader.removeFollower(follower.getUuid());
-			return false;
-		}
 		return true;
 	}
 	/**
@@ -11134,18 +11130,6 @@ var JABS_Battler = class JABS_Battler {
 		}
 	}
 	/**
-	* Removes the follower from
-	* @param {string} oldFollowerUuid The `uuid` of the follower to remove from tracking.
-	*/
-	removeFollower(oldFollowerUuid) {
-		const index = this._followers.indexOf((uuid) => uuid === oldFollowerUuid);
-		if (index !== -1) {
-			this._followers.splice(index, 1);
-		} else {
-			console.error("could not find follower to remove from the list.", oldFollowerUuid);
-		}
-	}
-	/**
 	* Clears all current followers from this battler.
 	*/
 	clearFollowers() {
@@ -13245,7 +13229,7 @@ var JABS_Battler = class JABS_Battler {
 	* @param {number} frames The number of iframes.
 	*/
 	setDodgeIFrames(frames) {
-		this._dodgeIFrames = frames;
+		this._dodgeIframes = frames;
 	}
 	/**
 	* Tries to execute the battler's dodge skill.
@@ -28526,6 +28510,23 @@ Game_Interpreter.prototype.command204 = function(params) {
 	}
 };
 /**
+* Enables changing the weather with JABS.
+* Removed the check for seeing if the player is in-battle, because the player is
+* technically ALWAYS in-battle while the ABS is enabled.
+*/
+J.ABS.Aliased.Game_Interpreter.set("command236", Game_Interpreter.prototype.command236);
+Game_Interpreter.prototype.command236 = function(params) {
+	if ($jabsEngine.absEnabled) {
+		$gameScreen.changeWeather(params[0], params[1], params[2]);
+		if (params[3]) {
+			this.wait(params[2]);
+		}
+		return true;
+	} else {
+		return J.ABS.Aliased.Game_Interpreter.get("command236").call(this, params);
+	}
+};
+/**
 * Enables default battles with JABS.
 * Removed the check for seeing if the player is in-battle, because the player
 * is technically ALWAYS in-battle while the ABS is enabled.
@@ -28594,6 +28595,21 @@ Game_Interpreter.prototype.command303 = function(params) {
 		return true;
 	}
 	return J.ABS.Aliased.Game_Interpreter.get("command303").call(this, params);
+};
+/**
+* Enables opening the menu screen with JABS.
+* Removed the check for seeing if the player is in-battle, because the player is
+* technically ALWAYS in-battle while the ABS is enabled.
+*/
+J.ABS.Aliased.Game_Interpreter.set("command351", Game_Interpreter.prototype.command351);
+Game_Interpreter.prototype.command351 = function() {
+	if ($jabsEngine.absEnabled) {
+		SceneManager.push(Scene_Menu);
+		Window_MenuCommand.initCommandPosition();
+		return true;
+	} else {
+		return J.ABS.Aliased.Game_Interpreter.get("command351").call(this);
+	}
 };
 /**
 * Enables saving with JABS.

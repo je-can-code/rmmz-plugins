@@ -3485,37 +3485,190 @@ ColorManager.colorIndexFromHex = function(hexString) {
 };
 
 //#endregion
+//#region src/plugins/_base/core/JCache.js
+/**
+* A unified typed-cache primitive. A cache declares an ordered list of "weak dimensions" at
+* construction (e.g. `['battler']`, `['object']`, `['battler', 'object']`), and `get()` requires
+* one weak key per declared dimension before the stable string key. This makes cache *scope* a
+* visible, reviewable choice at construction time instead of an implicit default buried in a
+* generic memoize helper - the exact class of bug this primitive was built to prevent (a
+* battler-context eval result silently cached on an object-scoped structure).
+*/
+var JCache = class JCache {
+	/**
+	* Every JCache instance that declared a `'battler'` dimension, so a single bus call
+	* ({@link JCache.invalidateAllForBattler}) can clear every battler-scoped cache in the game
+	* without each caller needing to know the full list of caches that exist.
+	* @type {Set<JCache>}
+	*/
+	static _battlerCaches = new Set();
+	/**
+	* Drops every battler-scoped cache entry for the given battler, across every registered
+	* {@link JCache} instance that declared a `'battler'` dimension. Intended to be called once,
+	* from {@link Game_Battler#onBattlerDataChange}, so individual managers never need their own
+	* bespoke invalidation wiring into that method.
+	* @param {Game_Battler} battler The battler whose cached entries should be dropped.
+	*/
+	static invalidateAllForBattler(battler) {
+		for (const cache of this._battlerCaches) {
+			cache.invalidate(battler);
+		}
+	}
+	/**
+	* Builds an object-scoped cache: one weak dimension, keyed by the database object being parsed.
+	* Use for results that depend only on immutable note text (no runtime battler context).
+	* @param {{ name: string, resolveOriginal?: boolean }} o Construction options (see {@link constructor}).
+	* @returns {JCache}
+	*/
+	static objectScoped(o) {
+		return new JCache({
+			...o,
+			dims: ["object"]
+		});
+	}
+	/**
+	* Builds a battler-scoped cache: one weak dimension, keyed by the battler. Use for results that
+	* depend only on the battler's own live state (no distinct database object per entry).
+	* @param {{ name: string, resolveOriginal?: boolean }} o Construction options (see {@link constructor}).
+	* @returns {JCache}
+	*/
+	static battlerScoped(o) {
+		return new JCache({
+			...o,
+			dims: ["battler"]
+		});
+	}
+	/**
+	* Builds a battler-then-object-scoped cache: two weak dimensions, battler outermost then the
+	* database object. Use for eval results that read both a battler's live state ("a" in a
+	* formula) and a specific database object's note text.
+	* @param {{ name: string, resolveOriginal?: boolean }} o Construction options (see {@link constructor}).
+	* @returns {JCache}
+	*/
+	static battlerThenObject(o) {
+		return new JCache({
+			...o,
+			dims: ["battler", "object"]
+		});
+	}
+	/**
+	* @param {object} options Construction options.
+	* @param {string} options.name A human-readable identifier for this cache, used for metrics/debugging.
+	* @param {string[]} options.dims The ordered weak dimensions, e.g. `['battler', 'object']`.
+	* @param {boolean} [options.resolveOriginal] When true, an `'object'` dimension key that is an
+	* {@link RPG_Base} clone resolves to its {@link RPG_Base#_original} so clones share a bucket
+	* with their source object.
+	*/
+	constructor({ name, dims, resolveOriginal = false }) {
+		this.name = name;
+		this.dims = dims;
+		this.resolveOriginal = resolveOriginal;
+		this._root = new WeakMap();
+		this._metrics = {
+			hits: 0,
+			misses: 0
+		};
+		if (dims.includes("battler")) {
+			JCache._battlerCaches.add(this);
+		}
+	}
+	/**
+	* Resolves a single dimension's key to its actual cache-bucket identity.
+	* @param {string} dim The dimension name being resolved ('battler' or 'object').
+	* @param {object} key The raw key passed in for this dimension.
+	* @returns {object} The key to actually use as the WeakMap/Map key for this dimension.
+	*/
+	#resolve(dim, key) {
+		return dim === "object" && this.resolveOriginal && key instanceof RPG_Base ? key._original() : key;
+	}
+	/**
+	* Reads the cached value for the given dimension keys + string key, computing and storing it on
+	* a miss. Call shape is `get(...weakKeys, stringKey, computeFn)`, where `weakKeys.length` must
+	* equal `this.dims.length`.
+	* @param {...*} args The weak dimension keys, followed by the string key, followed by the compute function.
+	* @returns {any} The cached or freshly computed value.
+	*/
+	get(...args) {
+		const computeFn = args.pop();
+		const stringKey = args.pop();
+		let node = this._root;
+		for (let i = 0; i < this.dims.length; i++) {
+			const k = this.#resolve(this.dims[i], args[i]);
+			let next = node.get(k);
+			if (!next) {
+				next = i === this.dims.length - 1 ? new Map() : new WeakMap();
+				node.set(k, next);
+			}
+			node = next;
+		}
+		if (node.has(stringKey) === false) {
+			this._metrics.misses++;
+			node.set(stringKey, computeFn());
+		} else {
+			this._metrics.hits++;
+		}
+		return node.get(stringKey);
+	}
+	/**
+	* Drops the cached subtree at the given dimension-key prefix. `invalidate(battler)` (a
+	* one-element prefix) is the common case: it drops every entry nested under that battler,
+	* regardless of how many further dimensions this cache declares. Calling with zero arguments
+	* clears the entire cache.
+	* @param {...object} prefix The dimension keys identifying the subtree to drop, outermost first.
+	* @returns {boolean} True if something was found and removed at that prefix, false otherwise.
+	*/
+	invalidate(...prefix) {
+		if (prefix.length === 0) {
+			this.clear();
+			return true;
+		}
+		let node = this._root;
+		for (let i = 0; i < prefix.length - 1; i++) {
+			node = node.get(this.#resolve(this.dims[i], prefix[i]));
+			if (!node) return false;
+		}
+		const last = prefix.length - 1;
+		return node.delete(this.#resolve(this.dims[last], prefix[last]));
+	}
+	/**
+	* Drops every entry in this cache by discarding the root weak dimension bucket outright.
+	*/
+	clear() {
+		this._root = new WeakMap();
+	}
+	/**
+	* @returns {{ hits: number, misses: number }} A shallow copy of this cache's hit/miss counters.
+	*/
+	get metrics() {
+		return { ...this._metrics };
+	}
+};
+
+//#endregion
 //#region src/plugins/_base/managers/RPGManager.js
 /**
 * A utility class for handling common database-related translations.
 */
 var RPGManager = class RPGManager {
 	/**
-	* The cache for storing parsed note data.
-	* @type {WeakMap<object, Map<string, any>>}
+	* The cache for storing parsed note-text results (string/number/boolean/array/captures). Keyed
+	* by the database object alone- note text is immutable, so no battler dimension is needed.
+	* @type {JCache}
 	*/
-	static _cache = new WeakMap();
+	static _noteCache = JCache.objectScoped({
+		name: "rpg:note-text",
+		resolveOriginal: true
+	});
 	/**
-	* The metrics for this manager.
-	* @type {{ hits: number, misses: number }}
+	* The cache for storing eval'd formula results. Keyed by battler (the formula's live "a") then
+	* by database object, so two battlers sharing a note object never collide and a battler's
+	* entries can be dropped wholesale via the {@link JCache.invalidateAllForBattler} bus.
+	* @type {JCache}
 	*/
-	static _metrics = {
-		hits: 0,
-		misses: 0
-	};
-	/**
-	* Gets or initializes the cache for the given object.
-	* @param {object} object The object to get or initialize the cache for.
-	* @returns {Map<string, any>} The cache for the object.
-	*/
-	static getOrCreateCacheForObject(object) {
-		const cacheTarget = object instanceof RPG_Base ? object._original() : object;
-		const cacheHit = this._cache.get(cacheTarget);
-		if (cacheHit) return cacheHit;
-		const newCache = new Map();
-		this._cache.set(cacheTarget, newCache);
-		return newCache;
-	}
+	static _evalCache = JCache.battlerThenObject({
+		name: "rpg:eval",
+		resolveOriginal: true
+	});
 	/**
 	* Gets the cached data for the given object and tag key.
 	* @param {object} object The object to get the cached data for.
@@ -3524,15 +3677,20 @@ var RPGManager = class RPGManager {
 	* @returns {any} The cached data for the object and tag key.
 	*/
 	static cached(object, tagKey, computeFn) {
-		const cache = this.getOrCreateCacheForObject(object);
-		if (cache.has(tagKey) === false) {
-			this._metrics.misses++;
-			const data = computeFn();
-			cache.set(tagKey, data);
-		} else {
-			this._metrics.hits++;
-		}
-		return cache.get(tagKey);
+		return this._noteCache.get(object, tagKey, computeFn);
+	}
+	/**
+	* Battler-scoped variant of {@link cached}: results are bucketed by the battler whose live
+	* state the formula reads, then by database object, so two battlers never share an entry and a
+	* battler's entries can be dropped wholesale on a data change.
+	* @param {Game_Battler} battler The formula context (the `a`).
+	* @param {object} object The database object being parsed.
+	* @param {string} tagKey The stable key for this regex/options set (NO battler, NO level).
+	* @param {Function} computeFn Producer run on a miss.
+	* @returns {any}
+	*/
+	static cachedForBattler(battler, object, tagKey, computeFn) {
+		return this._evalCache.get(battler, object, tagKey, computeFn);
 	}
 	/**
 	* Invalidates the cache for the given object.
@@ -3540,14 +3698,23 @@ var RPGManager = class RPGManager {
 	* @returns {boolean} True if the cache was invalidated, false otherwise.
 	*/
 	static invalidate(object) {
-		const cacheTarget = object instanceof RPG_Base ? object._original() : object;
-		return this._cache.delete(cacheTarget);
+		return this._noteCache.invalidate(object);
+	}
+	/**
+	* Drops all cached eval results for one battler. Called from Game_Battler#onBattlerDataChange
+	* (via the {@link JCache.invalidateAllForBattler} bus); kept for any direct callers.
+	* @param {Game_Battler} battler
+	* @returns {boolean}
+	*/
+	static invalidateBattlerEval(battler) {
+		return this._evalCache.invalidate(battler);
 	}
 	/**
 	* Clears the cache for all objects.
 	*/
 	static clearCache() {
-		this._cache = new WeakMap();
+		this._noteCache.clear();
+		this._evalCache.clear();
 	}
 	/**
 	* A quick and re-usable means of rolling for a chance of success.
@@ -3871,18 +4038,10 @@ var RPGManager = class RPGManager {
 		if (this.#canParsedatabaseData(databaseData) === false) {
 			return nullIfEmpty ? null : 0;
 		}
-		const key = `eval:${structure.source}::${structure.flags}::${baseParam}${this.#getEvalCacheContextSuffix(context)}::nullIfEmpty=${nullIfEmpty}`;
-		return this.cached(databaseData, key, () => this.#getResultFromNoteByRegex(databaseData, structure, baseParam, context, nullIfEmpty));
-	}
-	/**
-	* Builds a cache-key fragment for formula evaluation when battler context can change.
-	* Without this, {@code a.level} (and similar) would stay frozen at the first value cached per note object.
-	* @param {RPG_BaseBattler|null} context The formula context ("a").
-	* @returns {string} Suffix to append to eval cache keys, or empty when there is no context.
-	*/
-	static #getEvalCacheContextSuffix(context) {
-		if (!context) return "";
-		return `::ctxLvl=${context.getLevel()}`;
+		const key = `eval:${structure.source}::${structure.flags}::${baseParam}::nullIfEmpty=${nullIfEmpty}`;
+		const compute = () => this.#getResultFromNoteByRegex(databaseData, structure, baseParam, context, nullIfEmpty);
+		if (context) return this.cachedForBattler(context, databaseData, key, compute);
+		return this.cached(databaseData, key, compute);
 	}
 	/**
 	* Get the eval'd formula of all matching values from the notes of a single database object.
@@ -8152,6 +8311,7 @@ Game_Battler.prototype.onBattlerDataChange = function() {
 	this.setCachedAllTraits(null);
 	this.setCachedMaxTpBonuses(null);
 	this.setCachedHarFactor(null);
+	JCache.invalidateAllForBattler(this);
 };
 /**
 * Gets the state associated with the given state id.

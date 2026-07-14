@@ -102,6 +102,31 @@ Game_Interpreter.prototype.command204 = function(params)
 };
 
 /**
+ * Enables changing the weather with JABS.
+ * Removed the check for seeing if the player is in-battle, because the player is
+ * technically ALWAYS in-battle while the ABS is enabled.
+ */
+J.ABS.Aliased.Game_Interpreter.set('command236', Game_Interpreter.prototype.command236);
+Game_Interpreter.prototype.command236 = function(params)
+{
+  if ($jabsEngine.absEnabled)
+  {
+    $gameScreen.changeWeather(params[0], params[1], params[2]);
+    if (params[3])
+    {
+      this.wait(params[2]);
+    }
+
+    return true;
+  }
+  else
+  {
+    // perform original logic.
+    return J.ABS.Aliased.Game_Interpreter.get('command236').call(this, params);
+  }
+};
+
+/**
  * Enables default battles with JABS.
  * Removed the check for seeing if the player is in-battle, because the player
  * is technically ALWAYS in-battle while the ABS is enabled.
@@ -199,6 +224,27 @@ Game_Interpreter.prototype.command303 = function(params)
   // perform original logic.
   // perform original logic.
   return J.ABS.Aliased.Game_Interpreter.get('command303').call(this, params);
+};
+
+/**
+ * Enables opening the menu screen with JABS.
+ * Removed the check for seeing if the player is in-battle, because the player is
+ * technically ALWAYS in-battle while the ABS is enabled.
+ */
+J.ABS.Aliased.Game_Interpreter.set('command351', Game_Interpreter.prototype.command351);
+Game_Interpreter.prototype.command351 = function()
+{
+  if ($jabsEngine.absEnabled)
+  {
+    SceneManager.push(Scene_Menu);
+    Window_MenuCommand.initCommandPosition();
+    return true;
+  }
+  else
+  {
+    // perform original logic.
+    return J.ABS.Aliased.Game_Interpreter.get('command351').call(this);
+  }
 };
 
 /**
