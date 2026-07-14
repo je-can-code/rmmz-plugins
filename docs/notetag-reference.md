@@ -5494,3 +5494,51 @@ Multiple tags across sources sum their bonus fractions together before the final
 An actor with 20 mastered subgroups gains an extra 20% SDP points on top of `<sdpMultiplier>`.
 
 **See also:** `<sdpMultiplier>`
+
+---
+
+## J-SkillSlots (`src/plugins/sks/core/`)
+
+Lets actors equip skills into dedicated skill slots using a point-budget system. Skills of
+non-equippable types (per plugin param) and skills tagged `<unslotted>` are implicitly always
+active without consuming a slot.
+
+### `<slotCost:AMOUNT>` / `<unslotted>`
+
+**Applies to:**
+Skills
+
+**When:**
+always
+
+**Effect:**
+`slotCost` sets how many slot points this skill consumes when equipped. `unslotted` makes the
+skill perpetually active without occupying a slot at all — it never appears in the equip scene.
+
+```
+<slotCost:2>
+```
+This skill costs 2 slot points to equip.
+
+**See also:** `<slotCostModifier>`
+
+---
+
+### `<slotCostModifier:AMOUNT>`
+
+**Applies to:**
+Actors, Classes, Weapons, Armors, States
+
+**When:**
+always (summed across all active note sources)
+
+**Effect:**
+AMOUNT is a flat modifier applied to the effective slot cost of ALL skills for that actor.
+Negative reduces cost, positive increases it.
+
+```
+<slotCostModifier:-1>
+```
+While active, all skills cost 1 fewer slot point to equip.
+
+**See also:** `<slotCost>`
