@@ -4167,3 +4167,105 @@ cooldown above.
 All cast times are reduced by 2 frames per level.
 
 **See also:** `<baseFastCooldown>`, `<fastCooldownFlat>`, `<fastCooldownRate>`
+
+---
+
+## J-ABS-Tools (`src/plugins/abs/ext/tools/`)
+
+Adds tool-like functionality to skills: keyed gap-closing ("hookshot"), pull-forward (the
+inverse), and a plugin-parameter-only grab-and-throw toggle (no notetags of its own).
+
+### `<gapClose:key>` / `<gapCloseTarget:key>` / `<gapCloseAny>` / `<blockGapClose>`
+
+**Applies to:**
+`gapClose`/`gapCloseAny`: Skills. `gapCloseTarget`/`blockGapClose`: primarily Events, Enemies;
+secondarily Actors, Classes, Skills, Weapons, Armors, States.
+
+**When:**
+a gap-closing skill lands a hit
+
+**Effect:**
+`gapClose:key` marks a skill as gap-closing; the caster warps to the target only if the target
+carries a matching `gapCloseTarget:key`. Keys namespace independent gap-close mechanics so they
+never cross-trigger. `gapCloseAny` skips key-matching entirely — gap closes to whatever single
+target the hitbox connects with, no pre-tagging required (melee gap-closers). `blockGapClose`
+makes a battler immune to ALL gap closing, including `gapCloseAny` — the only way to opt out of
+an "any" gapcloser.
+
+```
+<gapClose:hookshot>
+```
+On skill 25; paired with `<gapCloseTarget:hookshot>` on a grapple-anchor event, using skill 25
+against it pulls the player to it.
+
+**See also:** `<gapCloseMode>`, `<gapClosePosition>`, `<respectTerrain>`
+
+---
+
+### `<gapCloseMode:blink|jump|travel>` / `<gapClosePosition:infront|behind|same>` / `<respectTerrain>`
+
+**Applies to:**
+Skills (the gap-closing skill)
+
+**When:**
+a gap close resolves
+
+**Effect:**
+`gapCloseMode` controls HOW the caster travels: `blink` (instant), `jump` (arcing hop, default),
+or `travel` (tile-by-tile, respecting collision en route). `gapClosePosition` controls WHERE the
+caster lands relative to the target: `infront` (adjacent, facing target), `behind` (adjacent, far
+side), or `same` (directly on the target's tile, default). `respectTerrain` cancels the gap close
+entirely if the caster can't legally reach the computed destination — without it, gap close
+bypasses terrain checks like all modes normally do.
+
+```
+<gapCloseMode:travel>
+<gapClosePosition:infront>
+<respectTerrain>
+```
+The caster walks tile-by-tile to land in front of the target, and the gap close is cancelled
+outright if that tile is unreachable.
+
+---
+
+### `<thisOnGapCloseEnd:[SKILL_IDS...]>` / `<onGapCloseEnd:[SKILL_IDS...]>`
+
+**Applies to:**
+`thisOnGapCloseEnd`: Skills (the gap-closing skill itself). `onGapCloseEnd`: Actors, Classes,
+Weapons, Armors, States.
+
+**When:**
+the caster arrives at the gap-close destination
+
+**Effect:**
+fires the listed skill ids for free the instant the caster lands. `thisOnGapCloseEnd` is scoped
+to the specific gap-closing skill; `onGapCloseEnd` fires on every gap close this battler performs
+regardless of which skill triggered it. IDs from both are merged and de-duplicated before firing.
+
+```
+<thisOnGapCloseEnd:[40]>
+```
+A follow-up strike (skill 40) fires immediately once this hookshot connects.
+
+---
+
+### `<pullForward:MAGNITUDE>`
+
+**Applies to:**
+Skills
+
+**When:**
+this skill lands a hit
+
+**Effect:**
+pulls the target MAGNITUDE tiles toward the caster — the inverse of gap close. NOT key-gated;
+behaves like reverse knockback, so any target without enough `<knockbackResist>` to fully negate
+it gets pulled. If a skill also carries a gap-close tag, the target is pulled first, then the
+caster gap-closes to wherever the target ends up, so the two meet partway.
+
+```
+<pullForward:3>
+```
+On hit, pulls the target 3 tiles toward the caster (before knockbackResist reduction).
+
+**See also:** `<gapClose>`, `<knockbackResist>`
