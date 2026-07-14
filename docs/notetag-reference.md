@@ -4898,3 +4898,72 @@ the "Show Choices" command is evaluated
 This choice is only visible while switch 222 is ON.
 
 **See also:** `<leaderChoiceCondition>`, `<notLeaderChoiceCondition>`
+
+---
+
+## J-NaturalGrowths (`src/plugins/natural/core/`)
+
+Level-based and equipment/state-based formulaic growth for every base/ex/sp parameter, plus a
+custom max-TP and HAR (Healing Rate) pair, plus enemy reward bonuses. This is one tag FORMAT
+applied across ~30 parameter shorthands — see the shorthand table below rather than a
+per-parameter entry for each.
+
+### `<(PARAM)(Buff|Growth)(Plus|Rate):[FORMULA]>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, Enemies, States
+
+**Formula context:**
+`a` = the battler itself, `b` = 0, `v` = `$gameVariables._data`.
+
+**When:**
+`Buff` variants: continuously, only while the tagged object (equip/state/etc.) is active —
+lost the moment it's removed. `Growth` variants: applied permanently once per level gained (does
+NOT reverse if level later decreases, and re-applies if the level increases again through the
+same range).
+
+**Effect:**
+`Plus` is a flat bonus added to the base parameter; `Rate` is a percent multiplier against
+`(base + all Plus bonuses)`. PARAM is one of the shorthands below:
+
+- **Base params:** `mhp`, `mmp`, `atk`, `def`, `mat`, `mdf`, `agi`, `luk`
+- **Ex params:** `hit`, `eva`, `cri`, `cev`, `mev`, `mrf`, `cnt`, `hrg`, `mrg`, `trg` (tp regen)
+- **Sp params:** `tgr` (targeting), `grd`, `rec`, `pha`, `mcr`, `tcr`, `pdr`, `mdr`, `fdr`, `exr`
+- **Custom params (require their own plugins):** `mtp` (max TP), `har` (healing rate, requires
+  J-Base 3.5.0+)
+
+```
+<atkGrowthPlus:[a.level * 3]>
+```
+Every level gained permanently adds `(level × 3)` flat ATK.
+
+```
+<exrBuffPlus:[25]>
+```
++25 flat experience rate while this tagged object is active — lost when removed.
+
+**See also:** J-CriticalFactors' equivalent `<cdmGrowthPlus>`/`<ctrGrowthPlus>` family (same
+convention, different plugin)
+
+---
+
+### `<expPlus:[FORMULA]>` / `<goldPlus:[FORMULA]>` / `<sdpPlus:[FORMULA]>`
+
+**Applies to:**
+Enemies, States
+
+**Formula context:**
+`a` = the enemy itself, `b` = 0, `v` = `$gameVariables._data`.
+
+**When:**
+this enemy is defeated
+
+**Effect:**
+adds FORMULA on top of the database's static base value for the given reward — the static value
+is effectively the "base" the formula adds onto. No `Rate` variant exists for rewards, only
+`Plus`.
+
+```
+<expPlus:[5 + a.lvl * 50]>
+```
+Defeating this enemy grants 5 + (level × 50) bonus experience on top of its database base amount.
