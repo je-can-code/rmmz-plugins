@@ -5542,3 +5542,112 @@ Negative reduces cost, positive increases it.
 While active, all skills cost 1 fewer slot point to equip.
 
 **See also:** `<slotCost>`
+
+---
+
+## J-TIME (`src/plugins/time/core/`)
+
+A configurable time-tracking system (real or artificial), with time-of-day/season concepts, screen
+tone shifts, and a large family of time-gated event page/choice conditions.
+
+### `<noToneChange>` / `<timeBlock>`
+
+**Applies to:**
+Maps (native `.meta` map-note parsing)
+
+**When:**
+always
+
+**Effect:**
+`noToneChange` prevents the TIME system from auto-adjusting screen tone while on this map.
+`timeBlock` (artificial time only) halts the flow of TIME entirely while the player is on this
+map.
+
+```
+<timeBlock>
+```
+TIME does not advance while the player is on this map.
+
+---
+
+### `<{unit}Page:VALUE>` / `<{unit}Choice:VALUE>`
+
+**Applies to:**
+Event pages (comment, `Page` variant, gates the whole page); "Show Choices" branches (comment,
+`Choice` variant, gates one choice)
+
+**When:**
+page condition evaluation / choice list building
+
+**Effect:**
+gates visibility to an exact time value. `{unit}` is one of: `minute`, `hour`, `day`, `month`,
+`year`, `timeOfDay` (0-5 index or name: night/dawn/morning/afternoon/evening/twilight), or
+`seasonOfYear` (0-3 index or name: spring/summer/autumn/winter).
+
+```
+<timeOfDayPage:morning>
+```
+This event page is only active while it's currently morning.
+
+**See also:** `<{unit}RangePage>`, `<{unit}RangeChoice>`
+
+---
+
+### `<{unit}RangePage:START-END>` / `<{unit}RangeChoice:START-END>`
+
+**Applies to:**
+Event pages (comment, `RangePage`); "Show Choices" branches (comment, `RangeChoice`)
+
+**When:**
+page condition evaluation / choice list building
+
+**Effect:**
+same as the exact-value family, but gates on an inclusive START-END span instead of one value.
+`{unit}` is one of: `minute`, `hour`, `day`, `month`, `year`.
+
+```
+<hourRangePage:9-17>
+```
+This event page is only active between hour 9 and hour 17, inclusive.
+
+**See also:** `<{unit}Page>`, `<timeRangePage>`
+
+---
+
+### `<timeRangePage:HH:MM-HH:MM>` / `<timeRangeChoice:HH:MM-HH:MM>`
+
+**Applies to:**
+Event pages (comment); "Show Choices" branches (comment)
+
+**When:**
+page condition evaluation / choice list building
+
+**Effect:**
+shortcut for gating on an hour:minute clock-time span within a single day.
+
+```
+<timeRangeChoice:9:00-17:30>
+```
+This choice is only shown between 9:00am and 5:30pm.
+
+**See also:** `<fullDateRangePage>`
+
+---
+
+### `<fullDateRangePage:[MINUTE,HOUR,DAY,MONTH,YEAR]-[...]>` / `<fullDateRangeChoice:[...]-[...]>`
+
+**Applies to:**
+Event pages (comment); "Show Choices" branches (comment)
+
+**When:**
+page condition evaluation / choice list building
+
+**Effect:**
+the most precise gate: an inclusive span across a full calendar date+time. Seconds are always
+treated as 0 at the start of the range and 59 at the end (not independently configurable).
+
+```
+<fullDateRangePage:[0,9,29,5,2021]-[0,17,29,5,2021]>
+```
+This event page is only active from 9:00am to 5:00pm on day 29, month 5, year 2021 — nowhere else
+on the calendar.
