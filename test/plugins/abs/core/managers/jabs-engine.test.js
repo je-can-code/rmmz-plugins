@@ -255,6 +255,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
             setIsRetaliation: vi.fn((v) => { built.isRetaliation = v; return builder; }),
             setLocation: vi.fn((v) => { built.location = v; return builder; }),
             setIsTerrainDamage: vi.fn((v) => { built.isTerrainDamage = v; return builder; }),
+            setRetaliationTarget: vi.fn((v) => { built.retaliationTarget = v; return builder; }),
           };
           builder.build = vi.fn(() => built);
           return builder;
@@ -5052,6 +5053,137 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.handleEnemyRetaliation(enemy, 'triggeringAction');
 
       expect(engine.executeRetaliationSkills).toHaveBeenCalledWith(enemy, retaliationSkills, 'triggeringAction');
+    });
+  });
+
+  describe('executeRetaliationSkills', () =>
+  {
+    function buildRetaliationAction(overrides = {})
+    {
+      const gameAction = { setTriggerDamage: vi.fn() };
+      return Object.assign({
+        getAction: () => gameAction,
+        isDirectAction: () => false,
+        getProximity: () => 5,
+        setActionOptions: vi.fn(),
+      }, overrides);
+    }
+
+    function buildRetaliator(retaliationActions, overrides = {})
+    {
+      const retaliatorBattler = {
+        result: () => ({ hpDamage: 1, mpDamage: 2, tpDamage: 3 }),
+        getPositiveRollsForSkill: () => 0,
+        getNegativeRollsForSkill: () => 0,
+      };
+      return Object.assign({
+        getBattler: () => retaliatorBattler,
+        createJabsActionFromSkill: vi.fn(() => retaliationActions),
+        distanceToDesignatedTarget: () => 10,
+      }, overrides);
+    }
+
+    function buildSkillChance(overrides = {})
+    {
+      return Object.assign({
+        matchesHitType: () => true,
+        baseSkill: () => ({}),
+        resolveProcCount: () => 1,
+        skillId: 7,
+      }, overrides);
+    }
+
+    function buildTriggeringAction(overrides = {})
+    {
+      return Object.assign({
+        getBaseSkill: () => ({ hitType: 1 }),
+        getCaster: () => ({ getX: () => 3, getY: () => 4 }),
+      }, overrides);
+    }
+
+    it('skips a retaliation skill whose hit-type filter does not match the incoming hit', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canExecuteMapActions = vi.fn(() => true);
+      engine.executeMapAction = vi.fn();
+      const retaliator = buildRetaliator([]);
+      const skillChance = buildSkillChance({ matchesHitType: () => false });
+
+      engine.executeRetaliationSkills(retaliator, [ skillChance ], buildTriggeringAction());
+
+      expect(retaliator.createJabsActionFromSkill).not.toHaveBeenCalled();
+    });
+
+    it('fires the retaliation action and stamps the triggering damage onto it', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canExecuteMapActions = vi.fn(() => true);
+      engine.executeMapAction = vi.fn();
+      const retaliationAction = buildRetaliationAction();
+      const retaliator = buildRetaliator([ retaliationAction ]);
+      const skillChance = buildSkillChance();
+
+      engine.executeRetaliationSkills(retaliator, [ skillChance ], buildTriggeringAction());
+
+      expect(retaliationAction.getAction().setTriggerDamage).toHaveBeenCalledWith(1, 2, 3);
+      expect(engine.executeMapAction).toHaveBeenCalledWith(retaliator, retaliationAction, null, null);
+    });
+
+    it('does not fire when canExecuteMapActions reports the actions cannot execute', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canExecuteMapActions = vi.fn(() => false);
+      engine.executeMapAction = vi.fn();
+      const retaliationAction = buildRetaliationAction();
+      const retaliator = buildRetaliator([ retaliationAction ]);
+      const skillChance = buildSkillChance();
+
+      engine.executeRetaliationSkills(retaliator, [ skillChance ], buildTriggeringAction());
+
+      expect(engine.executeMapAction).not.toHaveBeenCalled();
+    });
+
+    it('fires once per resolved proc count', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canExecuteMapActions = vi.fn(() => true);
+      engine.executeMapAction = vi.fn();
+      const retaliator = buildRetaliator([ buildRetaliationAction() ]);
+      const skillChance = buildSkillChance({ resolveProcCount: () => 3 });
+
+      engine.executeRetaliationSkills(retaliator, [ skillChance ], buildTriggeringAction());
+
+      expect(retaliator.createJabsActionFromSkill).toHaveBeenCalledTimes(3);
+    });
+
+    it('blocks a direct retaliation when the attacker is out of its proximity range', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canExecuteMapActions = vi.fn(() => true);
+      engine.executeMapAction = vi.fn();
+      const directAction = buildRetaliationAction({ isDirectAction: () => true, getProximity: () => 2 });
+      const retaliator = buildRetaliator([ directAction ], { distanceToDesignatedTarget: () => 10 });
+      const skillChance = buildSkillChance();
+
+      engine.executeRetaliationSkills(retaliator, [ skillChance ], buildTriggeringAction());
+
+      expect(engine.executeMapAction).not.toHaveBeenCalled();
+    });
+
+    it('freezes the target location to the attacker for a direct retaliation within range', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canExecuteMapActions = vi.fn(() => true);
+      engine.executeMapAction = vi.fn();
+      const directAction = buildRetaliationAction({ isDirectAction: () => true, getProximity: () => 20 });
+      const retaliator = buildRetaliator([ directAction ], { distanceToDesignatedTarget: () => 10 });
+      const skillChance = buildSkillChance();
+      const triggeringAction = buildTriggeringAction();
+
+      engine.executeRetaliationSkills(retaliator, [ skillChance ], triggeringAction);
+
+      expect(directAction.setActionOptions).toHaveBeenCalledTimes(1);
+      expect(engine.executeMapAction).toHaveBeenCalledWith(retaliator, directAction, 3, 4);
     });
   });
   //endregion retaliation
