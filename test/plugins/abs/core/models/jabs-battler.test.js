@@ -7348,5 +7348,616 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion readiness
+
+  //region regeneration
+  describe('updateRegen', () =>
+  {
+    it('does nothing when regen cannot currently be updated', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.canUpdateRegen = () => false;
+      jabsBattler.performRegeneration = vi.fn();
+
+      jabsBattler.updateRegen();
+
+      expect(jabsBattler.performRegeneration).not.toHaveBeenCalled();
+    });
+
+    it('performs regeneration then resets the counter to the resolved tick interval', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.canUpdateRegen = () => true;
+      jabsBattler.performRegeneration = vi.fn();
+      jabsBattler.getNaturalRegenTickInterval = () => 90;
+
+      jabsBattler.updateRegen();
+
+      expect(jabsBattler.performRegeneration).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.getRegenCounter()).toBe(90);
+    });
+  });
+
+  describe('getNaturalRegenTickInterval', () =>
+  {
+    it('resolves the interval from base/flat/percent modifiers, floored at the tunable minimum', () =>
+    {
+      J.ABS.Metadata.NaturalRegenTickType = 'natural';
+      J.ABS.Metadata.DefaultStateTickInterval = 300;
+      J.ABS.Metadata.MinimumStateTickInterval = 30;
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({
+        tickSpeedFlatModifier: () => 0,
+        tickSpeedPercentModifier: () => 0,
+      });
+
+      expect(jabsBattler.getNaturalRegenTickInterval()).toBe(300);
+    });
+
+    it('applies the flat modifier before the percent modifier', () =>
+    {
+      J.ABS.Metadata.NaturalRegenTickType = 'natural';
+      J.ABS.Metadata.DefaultStateTickInterval = 100;
+      J.ABS.Metadata.MinimumStateTickInterval = 1;
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({
+        tickSpeedFlatModifier: () => 100,
+        tickSpeedPercentModifier: () => 100,
+      });
+
+      // (100 + 100) / (1 + 100/100) = 100.
+      expect(jabsBattler.getNaturalRegenTickInterval()).toBe(100);
+    });
+
+    it('never drops below the tunable floor', () =>
+    {
+      J.ABS.Metadata.NaturalRegenTickType = 'natural';
+      J.ABS.Metadata.DefaultStateTickInterval = 10;
+      J.ABS.Metadata.MinimumStateTickInterval = 30;
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({
+        tickSpeedFlatModifier: () => 0,
+        tickSpeedPercentModifier: () => 1000,
+      });
+
+      expect(jabsBattler.getNaturalRegenTickInterval()).toBe(30);
+    });
+  });
+
+  describe('canUpdateRegen / isRegenReady / regen counter accessors', () =>
+  {
+    it('canUpdateRegen is false when regen is not ready', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isRegenReady = () => false;
+
+      expect(jabsBattler.canUpdateRegen()).toBe(false);
+    });
+
+    it('canUpdateRegen is false when the battler is dead', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isRegenReady = () => true;
+      jabsBattler.getBattler = () => ({ isDead: () => true });
+
+      expect(jabsBattler.canUpdateRegen()).toBe(false);
+    });
+
+    it('canUpdateRegen is true when ready and alive', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isRegenReady = () => true;
+      jabsBattler.getBattler = () => ({ isDead: () => false });
+
+      expect(jabsBattler.canUpdateRegen()).toBe(true);
+    });
+
+    it('isRegenReady clamps to 0 and reports true once the counter reaches 0', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setRegenCounter(-5);
+
+      expect(jabsBattler.isRegenReady()).toBe(true);
+      expect(jabsBattler.getRegenCounter()).toBe(0);
+    });
+
+    it('isRegenReady decrements and reports false while still counting down', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setRegenCounter(5);
+
+      expect(jabsBattler.isRegenReady()).toBe(false);
+      expect(jabsBattler.getRegenCounter()).toBe(4);
+    });
+  });
+
+  describe('performRegeneration', () =>
+  {
+    it('does nothing without an underlying battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => null;
+      jabsBattler.processNaturalRegens = vi.fn();
+
+      jabsBattler.performRegeneration();
+
+      expect(jabsBattler.processNaturalRegens).not.toHaveBeenCalled();
+    });
+
+    it('processes natural regens and skips state cleanup with no states', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ allStates: () => [] });
+      jabsBattler.processNaturalRegens = vi.fn();
+      jabsBattler.shouldProcessState = vi.fn();
+
+      jabsBattler.performRegeneration();
+
+      expect(jabsBattler.processNaturalRegens).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.shouldProcessState).not.toHaveBeenCalled();
+    });
+
+    it('runs shouldProcessState for every tracked state for cleanup side effects', () =>
+    {
+      const jabsBattler = buildBattler();
+      const states = [ { id: 1 }, { id: 2 } ];
+      jabsBattler.getBattler = () => ({ allStates: () => states });
+      jabsBattler.processNaturalRegens = vi.fn();
+      jabsBattler.shouldProcessState = vi.fn();
+
+      jabsBattler.performRegeneration();
+
+      expect(jabsBattler.shouldProcessState).toHaveBeenCalledWith(states[0], 0, states);
+      expect(jabsBattler.shouldProcessState).toHaveBeenCalledWith(states[1], 1, states);
+    });
+  });
+
+  describe('processNaturalRegens', () =>
+  {
+    it('processes hp/mp/tp regen with the resolved reduction flag', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isNaturalRegenReduced = () => true;
+      jabsBattler.processNaturalHpRegen = vi.fn();
+      jabsBattler.processNaturalMpRegen = vi.fn();
+      jabsBattler.processNaturalTpRegen = vi.fn();
+
+      jabsBattler.processNaturalRegens();
+
+      expect(jabsBattler.processNaturalHpRegen).toHaveBeenCalledWith(true);
+      expect(jabsBattler.processNaturalMpRegen).toHaveBeenCalledWith(true);
+      expect(jabsBattler.processNaturalTpRegen).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe('isNaturalRegenReduced', () =>
+  {
+    it('is false for enemies regardless of anything else', () =>
+    {
+      globalThis.$jabsEngine = { forcedCombat: true };
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => true;
+
+      expect(jabsBattler.isNaturalRegenReduced()).toBe(false);
+    });
+
+    it('is true when combat is globally forced for a non-enemy', () =>
+    {
+      globalThis.$jabsEngine = { forcedCombat: true };
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+
+      expect(jabsBattler.isNaturalRegenReduced()).toBe(true);
+    });
+
+    it('is true for an in-combat actor', () =>
+    {
+      globalThis.$jabsEngine = { forcedCombat: false };
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.isActor = () => true;
+      jabsBattler.isInCombat = () => true;
+
+      expect(jabsBattler.isNaturalRegenReduced()).toBe(true);
+    });
+
+    it('is false for an out-of-combat actor with no forced combat', () =>
+    {
+      globalThis.$jabsEngine = { forcedCombat: false };
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.isActor = () => true;
+      jabsBattler.isInCombat = () => false;
+
+      expect(jabsBattler.isNaturalRegenReduced()).toBe(false);
+    });
+  });
+
+  describe('calculatedRegen', () =>
+  {
+    it('computes 5% of the base value scaled to per-100', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.calculatedRegen(1)).toBe(5);
+    });
+
+    it('reduces to 20% of the normal value when reduced', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.calculatedRegen(1, true)).toBe(1);
+    });
+  });
+
+  describe('processNaturalHpRegen / MpRegen / TpRegen', () =>
+  {
+    it('processNaturalHpRegen gains hp scaled by rec when below max', () =>
+    {
+      const gainHp = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ hp: 1, mhp: 100, hrg: 1, rec: 2, gainHp });
+      jabsBattler.calculatedRegen = () => 5;
+
+      jabsBattler.processNaturalHpRegen(false);
+
+      expect(gainHp).toHaveBeenCalledWith(10);
+    });
+
+    it('processNaturalHpRegen does nothing at full hp', () =>
+    {
+      const gainHp = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ hp: 100, mhp: 100, hrg: 1, rec: 2, gainHp });
+
+      jabsBattler.processNaturalHpRegen(false);
+
+      expect(gainHp).not.toHaveBeenCalled();
+    });
+
+    it('processNaturalMpRegen gains mp scaled by rec when below max', () =>
+    {
+      const gainMp = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ mp: 1, mmp: 100, mrg: 1, rec: 2, gainMp });
+      jabsBattler.calculatedRegen = () => 5;
+
+      jabsBattler.processNaturalMpRegen(false);
+
+      expect(gainMp).toHaveBeenCalledWith(10);
+    });
+
+    it('processNaturalMpRegen does nothing at full mp', () =>
+    {
+      const gainMp = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ mp: 100, mmp: 100, mrg: 1, rec: 2, gainMp });
+
+      jabsBattler.processNaturalMpRegen(false);
+
+      expect(gainMp).not.toHaveBeenCalled();
+    });
+
+    it('processNaturalTpRegen gains tp scaled by rec when below max', () =>
+    {
+      const gainTp = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ tp: 1, maxTp: () => 100, trg: 1, rec: 2, gainTp });
+      jabsBattler.calculatedRegen = () => 5;
+
+      jabsBattler.processNaturalTpRegen(false);
+
+      expect(gainTp).toHaveBeenCalledWith(10);
+    });
+
+    it('processNaturalTpRegen does nothing at full tp', () =>
+    {
+      const gainTp = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ tp: 100, maxTp: () => 100, trg: 1, rec: 2, gainTp });
+
+      jabsBattler.processNaturalTpRegen(false);
+
+      expect(gainTp).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('processStateTick', () =>
+  {
+    it('does nothing without a battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => null;
+      jabsBattler.applySlipEffect = vi.fn();
+
+      jabsBattler.processStateTick({ id: 1 });
+
+      expect(jabsBattler.applySlipEffect).not.toHaveBeenCalled();
+    });
+
+    it('does nothing for a dead battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isDead: () => true });
+      jabsBattler.applySlipEffect = vi.fn();
+
+      jabsBattler.processStateTick({ id: 1 });
+
+      expect(jabsBattler.applySlipEffect).not.toHaveBeenCalled();
+    });
+
+    it('skips a zero slip value for a given resource', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 1 });
+      jabsBattler.stateSlipHp = () => 0;
+      jabsBattler.stateSlipMp = () => 0;
+      jabsBattler.stateSlipTp = () => 0;
+      jabsBattler.applySlipEffect = vi.fn();
+      jabsBattler.onSlipRegenTick = vi.fn();
+
+      jabsBattler.processStateTick({ id: 1 });
+
+      expect(jabsBattler.applySlipEffect).not.toHaveBeenCalled();
+    });
+
+    it('scales a positive (healing) slip value by rec, but not a negative (damage) one', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 2 });
+      jabsBattler.stateSlipHp = () => 5;
+      jabsBattler.stateSlipMp = () => -5;
+      jabsBattler.stateSlipTp = () => 0;
+      jabsBattler.applySlipEffect = vi.fn();
+      jabsBattler.onSlipRegenTick = vi.fn();
+
+      jabsBattler.processStateTick({ id: 1 });
+
+      expect(jabsBattler.applySlipEffect).toHaveBeenCalledWith(10, 0);
+      expect(jabsBattler.applySlipEffect).toHaveBeenCalledWith(-5, 1);
+    });
+
+    it('fires the slip-tick hook with the sign-normalized display amount and state id', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 1 });
+      jabsBattler.stateSlipHp = () => 5;
+      jabsBattler.stateSlipMp = () => 0;
+      jabsBattler.stateSlipTp = () => 0;
+      jabsBattler.applySlipEffect = vi.fn();
+      jabsBattler.onSlipRegenTick = vi.fn();
+
+      jabsBattler.processStateTick({ id: 7 });
+
+      expect(jabsBattler.onSlipRegenTick).toHaveBeenCalledWith(-5, 0, 7);
+    });
+  });
+
+  describe('shouldProcessState', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$jabsEngine = { getJabsStateByUuidAndStateId: vi.fn() };
+    });
+
+    it('is true for an untracked passive state', () =>
+    {
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId = vi.fn(() => null);
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({
+        getUuid: () => 'uuid', isPassiveState: () => true, removeState: vi.fn(),
+      });
+
+      expect(jabsBattler.shouldProcessState({ id: 1 })).toBe(true);
+    });
+
+    it('removes and returns false for an untracked, non-passive state', () =>
+    {
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId = vi.fn(() => null);
+      const removeState = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({
+        getUuid: () => 'uuid', isPassiveState: () => false, removeState,
+      });
+
+      expect(jabsBattler.shouldProcessState({ id: 1 })).toBe(false);
+      expect(removeState).toHaveBeenCalledWith(1);
+    });
+
+    it('is false for a tracked state with no metadata', () =>
+    {
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId = vi.fn(() => ({}));
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getUuid: () => 'uuid' });
+
+      expect(jabsBattler.shouldProcessState({ id: 1, meta: null })).toBe(false);
+    });
+
+    it('is true for a tracked state with metadata', () =>
+    {
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId = vi.fn(() => ({}));
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ getUuid: () => 'uuid' });
+
+      expect(jabsBattler.shouldProcessState({ id: 1, meta: {} })).toBe(true);
+    });
+  });
+
+  describe('stateSlipHp / stateSlipMp / stateSlipTp', () =>
+  {
+    it('stateSlipHp sums flat, percent-of-mhp, and formula contributions', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ mhp: 100 });
+      jabsBattler.calculateStateSlipFormula = () => 3;
+      const state = {
+        jabsSlipHpFlatPerFive: 5, jabsSlipHpPercentPerFive: 10, jabsSlipHpFormulaPerFive: 'a.atk',
+      };
+
+      // 5 + (100 * 0.10) + 3 = 18.
+      expect(jabsBattler.stateSlipHp(state)).toBe(18);
+    });
+
+    it('stateSlipHp skips the formula contribution when untagged', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ mhp: 100 });
+      jabsBattler.calculateStateSlipFormula = vi.fn();
+      const state = { jabsSlipHpFlatPerFive: 5, jabsSlipHpPercentPerFive: 0, jabsSlipHpFormulaPerFive: null };
+
+      expect(jabsBattler.stateSlipHp(state)).toBe(5);
+      expect(jabsBattler.calculateStateSlipFormula).not.toHaveBeenCalled();
+    });
+
+    it('stateSlipMp sums flat, percent-of-mmp, and formula contributions', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ mmp: 50 });
+      jabsBattler.calculateStateSlipFormula = () => 2;
+      const state = {
+        jabsSlipMpFlatPerFive: 1, jabsSlipMpPercentPerFive: 10, jabsSlipMpFormulaPerFive: 'a.mat',
+      };
+
+      // 1 + (50 * 0.10) + 2 = 8.
+      expect(jabsBattler.stateSlipMp(state)).toBe(8);
+    });
+
+    it('stateSlipTp sums flat, percent-of-maxTp, and formula contributions', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ maxTp: () => 20 });
+      jabsBattler.calculateStateSlipFormula = () => 1;
+      const state = {
+        jabsSlipTpFlatPerFive: 2, jabsSlipTpPercentPerFive: 50, jabsSlipTpFormulaPerFive: 'a.def',
+      };
+
+      // 2 + (20 * 0.50) + 1 = 13.
+      expect(jabsBattler.stateSlipTp(state)).toBe(13);
+    });
+  });
+
+  describe('calculateStateSlipFormula', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$jabsEngine = { getJabsStateByUuidAndStateId: vi.fn() };
+    });
+
+    it('uses the battler as both source and afflicted when no tracked state exists', () =>
+    {
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId = vi.fn(() => null);
+      const battler = { getUuid: () => 'uuid' };
+      const jabsBattler = buildBattler();
+      jabsBattler.slipEval = vi.fn(() => 5);
+
+      jabsBattler.calculateStateSlipFormula('a.atk', battler, { id: 1 });
+
+      expect(jabsBattler.slipEval).toHaveBeenCalledWith('a.atk', battler, battler, { id: 1 });
+    });
+
+    it('uses the tracked state\'s source/battler when a tracked state exists', () =>
+    {
+      const source = {};
+      const afflicted = {};
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId = vi.fn(() => ({ source, battler: afflicted }));
+      const battler = { getUuid: () => 'uuid' };
+      const jabsBattler = buildBattler();
+      jabsBattler.slipEval = vi.fn(() => 5);
+
+      jabsBattler.calculateStateSlipFormula('a.atk', battler, { id: 1 });
+
+      expect(jabsBattler.slipEval).toHaveBeenCalledWith('a.atk', source, afflicted, { id: 1 });
+    });
+  });
+
+  describe('slipEval', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$gameVariables = { _data: [ 0, 10 ] };
+    });
+
+    it('evaluates the formula with a/b/v/s bindings, negated and rounded', () =>
+    {
+      const jabsBattler = buildBattler();
+      const source = { atk: 10 };
+      const afflicted = {};
+      const state = { id: 1 };
+
+      const result = jabsBattler.slipEval('a.atk', source, afflicted, state);
+
+      expect(result).toBe(-10);
+    });
+
+    it('throws for a formula that produces non-finite output', () =>
+    {
+      const jabsBattler = buildBattler();
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const traceSpy = vi.spyOn(console, 'trace').mockImplementation(() => {});
+
+      expect(() => jabsBattler.slipEval('1/0 - Infinity', {}, {}, {})).toThrow();
+
+      warnSpy.mockRestore();
+      traceSpy.mockRestore();
+    });
+
+    it('throws and logs for an invalid formula expression', () =>
+    {
+      const jabsBattler = buildBattler();
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const traceSpy = vi.spyOn(console, 'trace').mockImplementation(() => {});
+
+      expect(() => jabsBattler.slipEval('this is not valid js;;;', {}, {}, {})).toThrow();
+
+      expect(warnSpy).toHaveBeenCalled();
+      warnSpy.mockRestore();
+      traceSpy.mockRestore();
+    });
+  });
+
+  describe('applySlipEffect', () =>
+  {
+    it('gains hp for type 0', () =>
+    {
+      const gainHp = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ gainHp });
+
+      jabsBattler.applySlipEffect(10, 0);
+
+      expect(gainHp).toHaveBeenCalledWith(10);
+    });
+
+    it('gains mp for type 1', () =>
+    {
+      const gainMp = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ gainMp });
+
+      jabsBattler.applySlipEffect(10, 1);
+
+      expect(gainMp).toHaveBeenCalledWith(10);
+    });
+
+    it('gains tp for type 2', () =>
+    {
+      const gainTp = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ gainTp });
+
+      jabsBattler.applySlipEffect(10, 2);
+
+      expect(gainTp).toHaveBeenCalledWith(10);
+    });
+  });
+
+  describe('onSlipRegenTick', () =>
+  {
+    it('is a no-op', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(() => jabsBattler.onSlipRegenTick(-5, 0, 1)).not.toThrow();
+    });
+  });
+  //endregion regeneration
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
