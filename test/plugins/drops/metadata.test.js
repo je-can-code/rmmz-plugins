@@ -1,31 +1,27 @@
 //region plugins/drops/metadata.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadDropsControlPluginVm, resetDropsControlPluginSandbox } from './drops-vm.js';
+import { installDropsHostGlobals, setPluginContextToJBase, setPluginContextToJDrops } from './fixtures/install-drops-host-globals.js';
 
-describe('J-DropsControl metadata (out/drops/J-DropsControl.js)', () =>
+describe('J-DropsControl metadata (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadDropsControlPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
-  });
+    installDropsHostGlobals();
 
-  beforeEach(() =>
-  {
-    resetDropsControlPluginSandbox(sandbox);
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJDrops();
+    await import('../../../src/plugins/drops/core/_metadata/initialization.js');
   });
 
   it('exposes plugin name on J.DROPS.Metadata', () =>
   {
-    expect(sandbox.J.DROPS.Metadata.name).toBe('J-DropsControl');
+    // Arrange & Act & Assert
+    expect(globalThis.J.DROPS.Metadata.name).toBe('J-DropsControl');
   });
 });
 //endregion plugins/drops/metadata.test.js

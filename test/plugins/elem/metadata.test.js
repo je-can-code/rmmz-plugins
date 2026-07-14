@@ -1,39 +1,46 @@
 //region plugins/elem/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadElemPluginVm } from './elem-vm.js';
+import { installElemHostGlobals, setPluginContextToJBase, setPluginContextToJElem } from './fixtures/install-elem-host-globals.js';
 
-describe('J-Elementalistics metadata and regex (out/elem/J-Elementalistics.js)', () =>
+describe('J-Elementalistics metadata and regex (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadElemPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installElemHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJElem();
+    await import('../../../src/plugins/elem/core/_metadata/initialization.js');
   });
 
   it('exposes J.ELEM.Metadata', () =>
   {
-    expect(sandbox.J.ELEM.Metadata.name).toBe('J-Elementalistics');
+    // Arrange & Act & Assert
+    expect(globalThis.J.ELEM.Metadata.name).toBe('J-Elementalistics');
   });
 
   it('attack and absorb tag regexes capture bracketed id lists', () =>
   {
-    const a = sandbox.J.ELEM.RegExp.AttackElementIds.exec('<attackElements:[3, 4]>');
+    // Arrange & Act
+    const a = globalThis.J.ELEM.RegExp.AttackElementIds.exec('<attackElements:[3, 4]>');
+    const b = globalThis.J.ELEM.RegExp.AbsorbElementIds.exec('<absorbElements:[1]>');
+
+    // Assert
     expect(a[1]).toBe('[3, 4]');
-    const b = sandbox.J.ELEM.RegExp.AbsorbElementIds.exec('<absorbElements:[1]>');
     expect(b[1]).toBe('[1]');
   });
 
   it('boost tag regex captures element id and signed value', () =>
   {
-    const m = sandbox.J.ELEM.RegExp.BoostElement.exec('<boostElement:2:+50>');
+    // Arrange & Act
+    const m = globalThis.J.ELEM.RegExp.BoostElement.exec('<boostElement:2:+50>');
+
+    // Assert
     expect(m[1]).toBe('2');
     expect(m[2]).toBe('+50');
   });

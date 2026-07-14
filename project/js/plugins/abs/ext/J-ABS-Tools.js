@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.0 TOOLS] Enable new tool-like tags for use with skills.
+ * [v1.0.3 TOOLS] Enable new tool-like tags for use with skills.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -73,6 +73,22 @@
  * An enemy hit by skill 34 receives state 4.
  * Using skill 34 again against that pinned enemy will pull the player to it.
  * Hookshot anchors are unaffected because their key does not match.
+ *
+ * GAP CLOSE ANY:
+ *  <gapCloseAny>
+ * Put this on a skill instead of <gapClose:key> to skip key-matching
+ * entirely. A skill with this tag gap closes to whatever single target its
+ * hitbox connects with, no matter what (or whether) that target carries a
+ * <gapCloseTarget:key> of its own. Intended for melee gap-closers that just
+ * need to close distance to whatever they hit — no pre-tagging required.
+ *
+ * BLOCK GAP CLOSE:
+ *  <blockGapClose>
+ * Put this on an enemy, state, or equipment to make that battler immune to
+ * ALL gap closing, including <gapCloseAny> skills. This is the only way to
+ * opt a target out of an "any" gapcloser — useful for bosses, flying units,
+ * or holding a hookshot-only chasm as a genuine traversal gate instead of
+ * letting a combat gapcloser trivialize it.
  * ============================================================================
  * CHANGELOG:
  * - 1.1.0
@@ -181,6 +197,7 @@ J.ABS.EXT.TOOLS.Aliased = {
 */
 J.ABS.EXT.TOOLS.RegExp = {
 	GapClose: /<gapClose:(\w+)>/i,
+	GapCloseAny: /<gapCloseAny>/i,
 	GapCloseTarget: /<gapCloseTarget:(\w+)>/i,
 	GapCloseMode: /<gapCloseMode:(blink|jump|travel)>/i,
 	GapClosePosition: /<gapClosePosition:(infront|behind|same)>/i,
@@ -206,8 +223,8 @@ J.ABS.EXT.TOOLS.GapCloseModes = {
 	*/
 	Jump: "jump",
 	/**
-	* Using pathing, will attempt to walk to the destination.
-	* While traveling, "through" will be enabled.
+	* Glides to the target- same destination as a jump, but renders as a flat ground-level
+	* slide instead of a parabolic hop.
 	*/
 	Travel: "travel"
 };
@@ -357,24 +374,14 @@ JABS_Battler.prototype.isGapClosable = function() {
 */
 JABS_Battler.prototype.gapCloseToTarget = function(action, target) {
 	if (this.isGapClosing()) return;
-	this.beginGapClosing();
-	this._gapCloseSourceSkillId = action.getBaseSkill().id;
 	let { jabsGapCloseMode, jabsGapClosePosition } = action.getBaseSkill();
 	const { jabsRespectTerrain } = action.getBaseSkill();
 	jabsGapClosePosition ??= J.ABS.EXT.TOOLS.GapClosePositions.Same;
-	let [x, y] = this.determineGapCloseCoordinates(target, jabsGapClosePosition);
+	const [x, y] = this.determineGapCloseCoordinates(target, jabsGapClosePosition);
 	const casterCharacter = this.getCharacter();
-	if (jabsRespectTerrain) {
-		const horizontalDominant = Math.abs(x) >= Math.abs(y);
-		let direction;
-		if (horizontalDominant) {
-			direction = x >= 0 ? J.ABS.Directions.RIGHT : J.ABS.Directions.LEFT;
-		} else {
-			direction = y >= 0 ? J.ABS.Directions.DOWN : J.ABS.Directions.UP;
-		}
-		const rawDistance = Math.max(Math.abs(x), Math.abs(y));
-		[x, y] = casterCharacter.walkInDirectionClamped(direction, rawDistance);
-	}
+	if (jabsRespectTerrain && !casterCharacter.canReachTileDelta(x, y)) return;
+	this.beginGapClosing();
+	this._gapCloseSourceSkillId = action.getBaseSkill().id;
 	this.setGapCloseDestination([this.getX() + x, this.getY() + y]);
 	jabsGapCloseMode ??= J.ABS.EXT.TOOLS.GapCloseModes.Jump;
 	switch (jabsGapCloseMode) {
@@ -382,10 +389,10 @@ JABS_Battler.prototype.gapCloseToTarget = function(action, target) {
 			casterCharacter.jump(x, y);
 			break;
 		case J.ABS.EXT.TOOLS.GapCloseModes.Blink:
-			casterCharacter.locate(target.getX(), target.getY());
+			casterCharacter.locate(casterCharacter.x + x, casterCharacter.y + y);
 			break;
 		case J.ABS.EXT.TOOLS.GapCloseModes.Travel:
-			casterCharacter.jump(x, y);
+			casterCharacter.glideTo(x, y);
 			break;
 	}
 };
@@ -485,7 +492,9 @@ JABS_Battler.prototype.determineGapCloseCoordinates = function(target, position)
 	const unitX = magnitude > 0 ? goalX / magnitude : 0;
 	const unitY = magnitude > 0 ? goalY / magnitude : 0;
 	const casterCharacter = this.getCharacter();
-	const edgeOffset = targetCharacter.getEffectiveRadius() + casterCharacter.getEffectiveRadius() + .05;
+	const radiiSum = targetCharacter.getEffectiveRadius() + casterCharacter.getEffectiveRadius() + .05;
+	const dominantAxisComponent = Math.max(Math.abs(unitX), Math.abs(unitY));
+	const edgeOffset = dominantAxisComponent > 0 ? radiiSum / dominantAxisComponent : 0;
 	if (position === J.ABS.EXT.TOOLS.GapClosePositions.Infront) {
 		return [goalX - unitX * edgeOffset, goalY - unitY * edgeOffset];
 	}
@@ -532,6 +541,15 @@ Object.defineProperty(RPG_Skill.prototype, "jabsGapClose", { get: function() {
 	return RPGManager.getStringFromNoteByRegex(this, J.ABS.EXT.TOOLS.RegExp.GapClose, true);
 } });
 /**
+* Whether this skill gap closes to whatever single target it hits, regardless of that target's
+* own gap close key- skips the key-matching gate entirely. A target carrying <blockGapClose>
+* still blocks this, so bosses/environmental holdouts can opt out even of an "any" gapcloser.
+* @type {boolean}
+*/
+Object.defineProperty(RPG_Skill.prototype, "jabsGapCloseAny", { get: function() {
+	return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.EXT.TOOLS.RegExp.GapCloseAny);
+} });
+/**
 * The type of gap close mode this skill uses.
 * If there is no gap close mode available, then it'll be null instead.
 * @type {J.ABS.EXT.TOOLS.GapCloseModes|null}
@@ -557,8 +575,9 @@ Object.defineProperty(RPG_Skill.prototype, "jabsThisOnGapCloseEnd", { get: funct
 } });
 /**
 * Whether this skill's gap close should respect terrain passability instead of its default
-* unconditional bypass- when true, the caster stops at the last passable tile along the way
-* instead of blinking/jumping straight through walls.
+* unconditional bypass. When true, the full tile-by-tile path to the target is validated
+* first- if every tile along the way is passable, the caster jumps straight to the target as
+* normal; if any tile blocks the path, the gap close doesn't happen at all.
 * @type {boolean}
 */
 Object.defineProperty(RPG_Skill.prototype, "jabsRespectTerrain", { get: function() {
@@ -613,7 +632,10 @@ JABS_Engine.prototype.handlePullForward = function(action, target) {
 * @returns {boolean} True if the skill and target keys match, false otherwise.
 */
 JABS_Engine.prototype.canGapClose = function(action, target) {
-	const skillKey = action.getBaseSkill().jabsGapClose;
+	if (target.getBattler().isGapCloseBlocked()) return false;
+	const skill = action.getBaseSkill();
+	if (skill.jabsGapCloseAny) return true;
+	const skillKey = skill.jabsGapClose;
 	if (skillKey === null) return false;
 	const targetKey = target.isGapClosable();
 	if (targetKey === null) return false;
@@ -634,6 +656,15 @@ Game_Battler.prototype.gapCloseKey = function() {
 		if (key !== null) return key;
 	}
 	return null;
+};
+/**
+* Whether this battler is immune to gap closing, regardless of the key-matching outcome or
+* whether the initiating skill carries <gapCloseAny>. Checked across all note sources so a
+* state alone can grant temporary immunity (e.g. a boss phase, a hookshot-only chasm guard).
+* @returns {boolean} True if any note source carries the <blockGapClose> tag.
+*/
+Game_Battler.prototype.isGapCloseBlocked = function() {
+	return this.getAllNotes().some((note) => RPGManager.checkForBooleanFromNoteByRegex(note, J.ABS.EXT.TOOLS.RegExp.BlockGapClose));
 };
 /**
 * Collects all skill IDs from the <onGapCloseEnd> tag across all of this battler's note sources.

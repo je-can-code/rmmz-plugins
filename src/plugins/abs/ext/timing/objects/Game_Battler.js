@@ -245,7 +245,7 @@ Game_Battler.prototype.setCastSpeedRate = function(amount)
 Game_Battler.prototype.updateCastSpeedRate = function()
 {
   // get the current cast speed rate modifier.
-  const currentCastSpeedRate = this.castSpeedFlat();
+  const currentCastSpeedRate = this.castSpeedRate();
 
   // update the cast speed rate modifier.
   this.setCastSpeedRate(currentCastSpeedRate);

@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v3.0.0 ALLYAI] Grants your allies AI to fight alongside the player.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Grants your allies AI to fight alongside the player.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

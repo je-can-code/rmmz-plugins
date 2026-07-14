@@ -1,41 +1,39 @@
 //region plugins/natural/metadata.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import {
   DEFAULT_NATURAL_PLUGIN_PARAMS,
-  loadNaturalGrowthPluginVm,
-  resetNaturalGrowthPluginSandbox,
-} from './natural-vm.js';
+  installNaturalHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJNatural,
+} from './fixtures/install-natural-host-globals.js';
 
-describe('J-NaturalGrowth metadata (out/natural/J-NaturalGrowth.js)', () =>
+describe('J-NaturalGrowth metadata (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadNaturalGrowthPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
-  });
+    installNaturalHostGlobals();
 
-  beforeEach(() =>
-  {
-    resetNaturalGrowthPluginSandbox(sandbox);
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJNatural();
+    await import('../../../src/plugins/natural/core/_metadata/initialization.js');
   });
 
   it('initializes PluginMetadata name and version', () =>
   {
-    expect(sandbox.J.NATURAL.Metadata.name).toBe('J-NaturalGrowth');
+    // Arrange & Act & Assert
+    expect(globalThis.J.NATURAL.Metadata.name).toBe('J-NaturalGrowth');
   });
 
   it('maps PluginManager parameters into J.NATURAL.Metadata base TP fields', () =>
   {
-    expect(sandbox.J.NATURAL.Metadata.BaseTpMaxActors).toBe(Number(DEFAULT_NATURAL_PLUGIN_PARAMS.actorBaseTp));
-    expect(sandbox.J.NATURAL.Metadata.BaseTpMaxEnemies).toBe(Number(DEFAULT_NATURAL_PLUGIN_PARAMS.enemyBaseTp));
+    // Arrange & Act & Assert
+    expect(globalThis.J.NATURAL.Metadata.BaseTpMaxActors).toBe(Number(DEFAULT_NATURAL_PLUGIN_PARAMS.actorBaseTp));
+    expect(globalThis.J.NATURAL.Metadata.BaseTpMaxEnemies).toBe(Number(DEFAULT_NATURAL_PLUGIN_PARAMS.enemyBaseTp));
   });
 });
 //endregion plugins/natural/metadata.test.js

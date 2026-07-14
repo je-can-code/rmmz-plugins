@@ -1,29 +1,41 @@
 //region plugins/log/map-log-manager.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadLogPluginVm } from './log-vm.js';
+import { installLogHostGlobals, setPluginContextToJBase, setPluginContextToJLog } from './fixtures/install-log-host-globals.js';
 
-describe('J-Log MapLogManager (out/J-Log.js)', () =>
+describe('J-Log MapLogManager (direct src import)', () =>
 {
-  let sandbox;
+  /** @type {typeof import('../../../src/plugins/log/core/managers/MapLogManager.js').default} */
+  let MapLogManager;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadLogPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installLogHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJLog();
+    await import('../../../src/plugins/log/core/_metadata/initialization.js');
+
+    ({ default: MapLogManager } = await import('../../../src/plugins/log/core/managers/MapLogManager.js'));
+
+    // patches globalThis.DataManager directly, no vm involved; must share MapLogManager's module
+    // instance, so import it after the line above (same post-reset registry epoch).
+    await import('../../../src/plugins/log/core/managers/DataManager.js');
   });
 
   it('adds logs, caps size, and flags/acknowledges processing', () =>
   {
-    const mgr = new sandbox.MapLogManager();
+    // Arrange
+    const mgr = new MapLogManager();
     mgr.setMaxLogCount(2);
 
+    // Act & Assert
     expect(mgr.needsProcessing()).toBe(false);
+
     mgr.addLog({ id: 1 });
     mgr.addLog({ id: 2 });
     mgr.addLog({ id: 3 });
@@ -42,26 +54,34 @@ describe('J-Log MapLogManager (out/J-Log.js)', () =>
 
   it('tracks visible/hidden state', () =>
   {
-    const mgr = new sandbox.MapLogManager();
+    // Arrange
+    const mgr = new MapLogManager();
+
+    // Act & Assert
     expect(mgr.isVisible()).toBe(true);
     expect(mgr.isHidden()).toBe(false);
+
     mgr.hideLog();
     expect(mgr.isVisible()).toBe(false);
     expect(mgr.isHidden()).toBe(true);
+
     mgr.showLog();
     expect(mgr.isVisible()).toBe(true);
   });
 
   it('DataManager.createGameObjects installs managers with max log counts', () =>
   {
-    sandbox.DataManager.createGameObjects();
+    // Arrange
+    globalThis.DataManager.createGameObjects();
 
+    // Act
     for (let i = 0; i < 40; i++)
     {
-      sandbox.$actionLogManager.addLog({ id: i });
+      globalThis.$actionLogManager.addLog({ id: i });
     }
 
-    expect(sandbox.$actionLogManager.getLogs().length).toBe(30);
+    // Assert
+    expect(globalThis.$actionLogManager.getLogs().length).toBe(30);
   });
 });
 //endregion plugins/log/map-log-manager.test.js

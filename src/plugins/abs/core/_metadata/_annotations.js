@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.12.4 JABS] Enables combat to be carried out on the map.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

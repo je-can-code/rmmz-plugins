@@ -53,6 +53,7 @@ J.ABS.EXT.TOOLS.Aliased = {
  */
 J.ABS.EXT.TOOLS.RegExp = {
   GapClose: /<gapClose:(\w+)>/i,
+  GapCloseAny: /<gapCloseAny>/i,
   GapCloseTarget: /<gapCloseTarget:(\w+)>/i,
   GapCloseMode: /<gapCloseMode:(blink|jump|travel)>/i,
   GapClosePosition: /<gapClosePosition:(infront|behind|same)>/i,
@@ -81,8 +82,8 @@ J.ABS.EXT.TOOLS.GapCloseModes = {
   Jump: "jump",
 
   /**
-   * Using pathing, will attempt to walk to the destination.
-   * While traveling, "through" will be enabled.
+   * Glides to the target- same destination as a jump, but renders as a flat ground-level
+   * slide instead of a parabolic hop.
    */
   Travel: "travel",
 };

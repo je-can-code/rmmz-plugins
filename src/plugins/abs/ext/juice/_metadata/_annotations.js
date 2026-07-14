@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.1 ABS-JUICE] Procedural map battler motion juice for JABS (squish, tilt, casting pulse, weapon swing).
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Procedural map battler motion juice for JABS (squish, tilt, casting pulse, weapon swing).
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

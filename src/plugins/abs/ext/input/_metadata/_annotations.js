@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.2.2 INPUT] A manager for overseeing the input of JABS.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A manager for overseeing the input of JABS.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-ABS

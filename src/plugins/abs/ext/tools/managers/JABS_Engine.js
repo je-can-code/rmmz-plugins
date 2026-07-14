@@ -63,8 +63,17 @@ JABS_Engine.prototype.handlePullForward = function(action, target)
  */
 JABS_Engine.prototype.canGapClose = function(action, target)
 {
+  // a target carrying <blockGapClose> is immune outright, even to <gapCloseAny> skills.
+  if (target.getBattler().isGapCloseBlocked()) return false;
+
+  const skill = action.getBaseSkill();
+
+  // <gapCloseAny> skips key-matching entirely: whatever single target this hits is the
+  // destination, since the skill itself carries no key to check against.
+  if (skill.jabsGapCloseAny) return true;
+
   // grab the skill's gap close key.
-  const skillKey = action.getBaseSkill().jabsGapClose;
+  const skillKey = skill.jabsGapClose;
 
   // if the skill has no key, it is not a gap close skill.
   if (skillKey === null) return false;

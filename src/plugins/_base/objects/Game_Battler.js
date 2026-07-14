@@ -1,5 +1,6 @@
 //region Game_Battler
 import RPGManager from './../managers/RPGManager.js';
+import JCache from './../core/JCache.js';
 import ParameterRegistry from './../core/ParameterRegistry.js';
 import RPG_State from './../database/implementations/RPG_State.js';
 import RPG_Skill from './../database/implementations/RPG_Skill.js';
@@ -271,6 +272,10 @@ Game_Battler.prototype.onBattlerDataChange = function()
 
   // invalidate the HAR factor cache so the next baseHarFactor() call recomputes.
   this.setCachedHarFactor(null);
+
+  // drop every battler-scoped cache entry for this battler in one bus call- covers the RPGManager
+  // eval cache, both OverlayManager caches, and any future battler-dimensioned JCache.
+  JCache.invalidateAllForBattler(this);
 };
 
 //region state management

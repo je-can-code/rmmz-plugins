@@ -1,28 +1,29 @@
 //region plugins/camods/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadCamodsPluginVm } from './camods-vm.js';
+import { installCamodsHostGlobals, setPluginContextToJBase, setPluginContextToJCamods } from './fixtures/install-camods-host-globals.js';
 
-describe('J-CA-Mods metadata (out/ca-mods/J-CA-Mods.js)', () =>
+describe('J-CA-Mods metadata (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadCamodsPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installCamodsHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJCamods();
+    await import('../../../src/plugins/__ca-mods/core/_metadata/initialization.js');
   });
 
   it('initializes tracking constants', () =>
   {
-    expect(sandbox.J.CAMods.Metadata.name).toBe('J-CA-Mods');
-    expect(sandbox.J.CAMods.Tracking.EnemiesDefeated).toBe(101);
-    expect(sandbox.J.CAMods.Tracking.NumberOfDeaths).toBe(117);
+    // Arrange & Act & Assert
+    expect(globalThis.J.CAMods.Metadata.name).toBe('J-CA-Mods');
+    expect(globalThis.J.CAMods.Tracking.EnemiesDefeated).toBe(101);
+    expect(globalThis.J.CAMods.Tracking.NumberOfDeaths).toBe(117);
   });
 });
 //endregion plugins/camods/metadata.test.js

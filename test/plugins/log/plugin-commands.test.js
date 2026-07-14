@@ -1,48 +1,56 @@
 //region plugins/log/plugin-commands.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadLogPluginVm } from './log-vm.js';
+import { installLogHostGlobals, setPluginContextToJBase, setPluginContextToJLog } from './fixtures/install-log-host-globals.js';
 
-describe('J-Log plugin commands mutate managers (out/J-Log.js)', () =>
+describe('J-Log plugin commands mutate managers (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadLogPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installLogHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJLog();
+    await import('../../../src/plugins/log/core/_metadata/initialization.js');
+
+    // DataManager.js and pluginCommands.js both need to share the same $actionLogManager instance,
+    // so DataManager.createGameObjects() (called in the test) must come from this same import batch.
+    await import('../../../src/plugins/log/core/managers/DataManager.js');
+
+    // registers the plugin commands as an import-time side effect, no vm involved.
+    await import('../../../src/plugins/log/core/_metadata/pluginCommands.js');
   });
 
   it('show/hide commands toggle visibility, add/clear mutate logs', () =>
   {
-    // create managers.
-    sandbox.DataManager.createGameObjects();
+    // Arrange
+    globalThis.DataManager.createGameObjects();
+    const show = globalThis.__logPluginCommands.get('J-Log:showActionLog');
+    const hide = globalThis.__logPluginCommands.get('J-Log:hideActionLog');
+    const add = globalThis.__logPluginCommands.get('J-Log:addActionLog');
+    const clear = globalThis.__logPluginCommands.get('J-Log:clearActionLog');
 
-    const show = sandbox.__logPluginCommands.get('J-Log:showActionLog');
-    const hide = sandbox.__logPluginCommands.get('J-Log:hideActionLog');
-    const add = sandbox.__logPluginCommands.get('J-Log:addActionLog');
-    const clear = sandbox.__logPluginCommands.get('J-Log:clearActionLog');
-
+    // Act & Assert
     expect(typeof show).toBe('function');
     expect(typeof hide).toBe('function');
     expect(typeof add).toBe('function');
     expect(typeof clear).toBe('function');
 
     show();
-    expect(sandbox.$actionLogManager.isVisible()).toBe(true);
+    expect(globalThis.$actionLogManager.isVisible()).toBe(true);
+
     hide();
-    expect(sandbox.$actionLogManager.isHidden()).toBe(true);
+    expect(globalThis.$actionLogManager.isHidden()).toBe(true);
 
     add({ text: 'hello' });
-    expect(sandbox.$actionLogManager.getLogs().length).toBe(1);
+    expect(globalThis.$actionLogManager.getLogs().length).toBe(1);
 
     clear();
-    expect(sandbox.$actionLogManager.getLogs().length).toBe(0);
+    expect(globalThis.$actionLogManager.getLogs().length).toBe(0);
   });
 });
 //endregion plugins/log/plugin-commands.test.js

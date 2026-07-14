@@ -1,28 +1,32 @@
 //region plugins/extend/game-action-state-roll-threading.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { loadSkillExtendPluginVm } from './extend-vm.js';
-import { clearRpgManagerCacheInVm } from '../../setup/shipped-plugin-vm.js';
+import { installExtendHostGlobals, setPluginContextToJBase, setPluginContextToJExtend } from './fixtures/install-extend-host-globals.js';
 
-describe('J-SkillExtend Game_Action state roll threading (out/extend/J-SkillExtend.js)', () =>
+describe('J-SkillExtend Game_Action state roll threading (direct src import)', () =>
 {
-  /** @type {object} */
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadSkillExtendPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installExtendHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.JCache } = await import('../../../src/plugins/_base/core/JCache.js'));
+
+    setPluginContextToJExtend();
+    await import('../../../src/plugins/extend/core/_metadata/initialization.js');
+
+    // patches globalThis.Game_Action.prototype directly, no vm involved.
+    await import('../../../src/plugins/extend/core/objects/Game_Action.js');
   });
 
   beforeEach(() =>
   {
-    clearRpgManagerCacheInVm(sandbox);
+    globalThis.RPGManager.clearCache();
   });
 
   /**
@@ -57,7 +61,7 @@ describe('J-SkillExtend Game_Action state roll threading (out/extend/J-SkillExte
    */
   function buildAction(attacker)
   {
-    const action = Object.create(sandbox.Game_Action.prototype);
+    const action = Object.create(globalThis.Game_Action.prototype);
     action.subject = () => attacker;
     action.loseState = () => {};
     action.stripState = () => {};
@@ -88,41 +92,53 @@ describe('J-SkillExtend Game_Action state roll threading (out/extend/J-SkillExte
 
   it('applyStates: attacker positive (+1 baseline), target negative', () =>
   {
+    // Arrange
     const effect = buildEffect();
     const action = buildAction(attacker);
 
+    // Act
     action.applyStates(buildTarget(2), [ effect ]);
 
+    // Assert
     expect(effect.__calls).toEqual([ { rollForPositive: 4, rollForNegative: 2 } ]);
   });
 
   it('loseStates: attacker positive (+1 baseline), target negative', () =>
   {
+    // Arrange
     const effect = buildEffect();
     const action = buildAction(attacker);
 
+    // Act
     action.loseStates(buildTarget(1), [ effect ]);
 
+    // Assert
     expect(effect.__calls).toEqual([ { rollForPositive: 4, rollForNegative: 1 } ]);
   });
 
   it('stripStates: attacker positive (+1 baseline), target negative', () =>
   {
+    // Arrange
     const effect = buildEffect();
     const action = buildAction(attacker);
 
+    // Act
     action.stripStates(buildTarget(5), [ effect ]);
 
+    // Assert
     expect(effect.__calls).toEqual([ { rollForPositive: 4, rollForNegative: 5 } ]);
   });
 
   it('removeStates: attacker positive (+1 baseline), target negative', () =>
   {
+    // Arrange
     const effect = buildEffect();
     const action = buildAction(attacker);
 
+    // Act
     action.removeStates(buildTarget(0), [ effect ]);
 
+    // Assert
     expect(effect.__calls).toEqual([ { rollForPositive: 4, rollForNegative: 0 } ]);
   });
 });

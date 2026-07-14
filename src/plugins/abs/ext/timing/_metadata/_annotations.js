@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.2 TIMING] Enable modifying cooldowns/casting for actions.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Enable modifying cooldowns/casting for actions.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-ABS

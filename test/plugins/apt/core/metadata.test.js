@@ -1,30 +1,27 @@
 //region plugins/apt/core/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { DEFAULT_APT_PLUGIN_PARAMS } from './fixtures/engine-stubs.js';
-import { loadAptPluginVm } from './apt-vm.js';
+import { installAptHostGlobals } from './fixtures/install-apt-host-globals.js';
 
-describe('J-Aptitude metadata (out/apt/J-Aptitude.js)', () =>
+describe('J-Aptitude metadata (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadAptPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    await installAptHostGlobals(globalThis, {
+      'menu-switch': '0',
+      'max-level-threshold': '-1',
+    });
   });
 
   it('maps plugin parameters onto J.APT.Metadata', () =>
   {
-    expect(sandbox.J.APT.Metadata.name).toBe('J-Aptitude');
-    expect(sandbox.J.APT.Metadata.menuSwitchId).toBe(Number(DEFAULT_APT_PLUGIN_PARAMS['menu-switch']));
-    expect(sandbox.J.APT.Metadata.maxLevelThreshold).toBe(-1);
-    expect(sandbox.J.APT.Metadata.usingLevelThresholdLimit).toBe(false);
+    // Arrange & Act & Assert
+    expect(globalThis.J.APT.Metadata.name).toBe('J-Aptitude');
+    expect(globalThis.J.APT.Metadata.menuSwitchId).toBe(0);
+    expect(globalThis.J.APT.Metadata.maxLevelThreshold).toBe(-1);
+    expect(globalThis.J.APT.Metadata.usingLevelThresholdLimit).toBe(false);
   });
 });
 //endregion plugins/apt/core/metadata.test.js

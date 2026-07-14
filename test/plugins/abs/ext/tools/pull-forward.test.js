@@ -1,12 +1,8 @@
 //region plugins/abs/ext/tools/pull-forward.test.js
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import {
-  installAbsHostGlobals,
-  setPluginContextToJAbs,
-  setPluginContextToJAbsTools,
-  setPluginContextToJBase,
-} from '../../fixtures/install-abs-host-globals.js';
+import { installAbsHostGlobals, setPluginContextToJAbs, setPluginContextToJBase } from '../../fixtures/install-abs-host-globals.js';
+import { setPluginContextToJabsTools } from './fixtures/install-abs-tools-host-globals.js';
 import { installPluginManagerWithParams } from '../../../../setup/install-plugin-manager-with-params.js';
 
 /**
@@ -109,7 +105,7 @@ describe('J-ABS-Tools pull-forward (direct src import)', () =>
     // J-ABS-Tools requires its own plugin parameters (grabThrowEnabled/directionFixAlways).
     installPluginManagerWithParams(globalThis, 'J-ABS-Tools', {});
 
-    setPluginContextToJAbsTools();
+    setPluginContextToJabsTools();
     await import('../../../../../src/plugins/abs/ext/tools/_metadata/initialization.js');
 
     // patches globalThis.JABS_Battler.prototype with resolvePullVector/pullToCaster, no vm involved.

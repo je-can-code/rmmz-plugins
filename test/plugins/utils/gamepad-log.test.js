@@ -1,35 +1,39 @@
 //region plugins/utils/gamepad-log.test.js
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadUtilsPluginVm } from './utils-vm.js';
+import { installUtilsHostGlobals, setPluginContextToJBase, setPluginContextToJUtils } from './fixtures/install-utils-host-globals.js';
 
-describe('J-SystemUtilities gamepad fresh press logging (out/utils/J-SystemUtilities.js)', () =>
+describe('J-SystemUtilities gamepad fresh press logging (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadUtilsPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installUtilsHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJUtils();
+    await import('../../../src/plugins/utils/core/_metadata/initialization.js');
+
+    // patches globalThis.Input directly, no vm involved.
+    await import('../../../src/plugins/utils/core/managers/Input.js');
   });
 
   it('logs only fresh presses when enabled', () =>
   {
+    // Arrange
     const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    globalThis.J.UTILS.GamepadLog.enabled = true;
+    globalThis.Input.gamepadMapper[0] = 'ok';
+    globalThis.Input._gamepadStates[0] = [ false ];
 
-    sandbox.J.UTILS.GamepadLog.enabled = true;
-    sandbox.Input.gamepadMapper[0] = 'ok';
-    sandbox.Input._gamepadStates[0] = [ false ];
+    // Act
+    globalThis.Input._updateGamepadState({ index: 0 });
 
-    sandbox.Input._updateGamepadState({ index: 0 });
-
+    // Assert
     expect(logSpy.mock.calls.flat().join(' ')).toContain('ok');
-
     logSpy.mockRestore();
   });
 });

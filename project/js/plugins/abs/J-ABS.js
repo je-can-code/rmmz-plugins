@@ -27354,6 +27354,13 @@ Game_CharacterBase.prototype.initMembers = function() {
 	* @type {number}
 	*/
 	this._j._abs._dodgeBoost = 0;
+	/**
+	* Whether the current jump (if any) should suppress its parabolic hop and render flat-
+	* see {@link Game_CharacterBase.glideTo}. Reset to false at the start of every jump so a
+	* normal jump afterward always renders its usual arc.
+	* @type {boolean}
+	*/
+	this._j._abs._noJumpArc = false;
 };
 /**
 * Gets the current true move speed associated with this character.
@@ -27474,6 +27481,119 @@ Game_CharacterBase.prototype.walkInDirectionClamped = function(direction, distan
 		if (canPass) stepsTaken++;
 	}
 	return [realX - this.x, realY - this.y];
+};
+/**
+* Terrain-only counterpart to vanilla {@link Game_CharacterBase.canPass}- identical except it
+* omits the character-collision check. A destination tile with a battler standing on it (the
+* normal case for gap closing, since the whole point is to reach that battler) would otherwise
+* always fail vanilla's collision check and report as unreachable.
+* @param {number} x The origin tile's X coordinate.
+* @param {number} y The origin tile's Y coordinate.
+* @param {number} d The compass direction of the step being probed.
+* @returns {boolean} True if the step is terrain-passable, ignoring any character occupying it.
+*/
+Game_CharacterBase.prototype.canPassTerrainOnly = function(x, y, d) {
+	const x2 = $gameMap.roundXWithDirection(x, d);
+	const y2 = $gameMap.roundYWithDirection(y, d);
+	if (!$gameMap.isValid(x2, y2)) return false;
+	if (this.isThrough() || this.isDebugThrough()) return true;
+	return this.isMapPassable(x, y, d);
+};
+/**
+* Terrain-only counterpart to vanilla {@link Game_CharacterBase.canPassDiagonally}- mirrors its
+* corner-cut-safe L-shaped probing (a diagonal step is valid if either of the two orthogonal
+* paths around the corner is clear), but built on {@link canPassTerrainOnly} so it shares the
+* same character-collision exemption.
+* @param {number} x The origin tile's X coordinate.
+* @param {number} y The origin tile's Y coordinate.
+* @param {number} horz The horizontal compass direction (4/6) of the diagonal step.
+* @param {number} vert The vertical compass direction (2/8) of the diagonal step.
+* @returns {boolean} True if either orthogonal path around the corner is terrain-passable.
+*/
+Game_CharacterBase.prototype.canPassDiagonallyTerrainOnly = function(x, y, horz, vert) {
+	const x2 = $gameMap.roundXWithDirection(x, horz);
+	const y2 = $gameMap.roundYWithDirection(y, vert);
+	if (this.canPassTerrainOnly(x, y, vert) && this.canPassTerrainOnly(x, y2, horz)) return true;
+	if (this.canPassTerrainOnly(x, y, horz) && this.canPassTerrainOnly(x2, y, vert)) return true;
+	return false;
+};
+/**
+* Probes whether this character could walk the full tile-by-tile path to a delta destination
+* without moving it- unlike {@link walkInDirectionClamped}, which stops early and reports
+* however far it got, this is all-or-nothing: the moment any step along the way is blocked,
+* the whole path counts as unreachable. Steps diagonally first (using the same corner-cut-safe
+* diagonal passability vanilla RMMZ uses for player movement) for as long as both axes still
+* have distance remaining, then finishes out whichever axis is left with straight steps.
+* Uses terrain-only passability throughout, since the destination is expected to have a
+* battler standing on it- that is the entire point of gap closing.
+* @param {number} dx The destination delta on the X axis, in tiles (fractional values are rounded).
+* @param {number} dy The destination delta on the Y axis, in tiles (fractional values are rounded).
+* @returns {boolean} True if every tile along the path to the rounded delta is terrain-passable.
+*/
+Game_CharacterBase.prototype.canReachTileDelta = function(dx, dy) {
+	let remainingX = Math.round(dx);
+	let remainingY = Math.round(dy);
+	let probeX = Math.round(this.x);
+	let probeY = Math.round(this.y);
+	while (remainingX !== 0 || remainingY !== 0) {
+		let stepX = 0;
+		if (remainingX > 0) stepX = J.ABS.Directions.RIGHT;
+		else if (remainingX < 0) stepX = J.ABS.Directions.LEFT;
+		let stepY = 0;
+		if (remainingY > 0) stepY = J.ABS.Directions.DOWN;
+		else if (remainingY < 0) stepY = J.ABS.Directions.UP;
+		if (stepX !== 0 && stepY !== 0) {
+			if (!this.canPassDiagonallyTerrainOnly(probeX, probeY, stepX, stepY)) return false;
+			probeX = $gameMap.roundXWithDirection(probeX, stepX);
+			probeY = $gameMap.roundYWithDirection(probeY, stepY);
+			remainingX -= Math.sign(remainingX);
+			remainingY -= Math.sign(remainingY);
+		} else if (stepX !== 0) {
+			if (!this.canPassTerrainOnly(probeX, probeY, stepX)) return false;
+			probeX = $gameMap.roundXWithDirection(probeX, stepX);
+			remainingX -= Math.sign(remainingX);
+		} else {
+			if (!this.canPassTerrainOnly(probeX, probeY, stepY)) return false;
+			probeY = $gameMap.roundYWithDirection(probeY, stepY);
+			remainingY -= Math.sign(remainingY);
+		}
+	}
+	return true;
+};
+/**
+* Extends {@link Game_CharacterBase.jump}.<br/>
+* Always resets arc suppression first, so a normal jump call after a glide still hops as
+* usual- only {@link glideTo} re-enables suppression, and only for the jump it triggers.
+*/
+J.ABS.Aliased.Game_CharacterBase.set("jump", Game_CharacterBase.prototype.jump);
+Game_CharacterBase.prototype.jump = function(xPlus, yPlus) {
+	this._j._abs._noJumpArc = false;
+	J.ABS.Aliased.Game_CharacterBase.get("jump").call(this, xPlus, yPlus);
+};
+/**
+* Extends {@link Game_CharacterBase.jumpHeight}.<br/>
+* Flattens the jump arc to zero while arc suppression is active, without touching the
+* underlying `_jumpCount`/`_jumpPeak` timing- every other system that keys off
+* {@link Game_CharacterBase.isJumping} (render sync, gap-close arrival, pixel movement's
+* mid-jump guard) still behaves exactly as it does for a normal jump.
+* @returns {number} The vertical hop offset in pixels, or 0 while suppressed.
+*/
+J.ABS.Aliased.Game_CharacterBase.set("jumpHeight", Game_CharacterBase.prototype.jumpHeight);
+Game_CharacterBase.prototype.jumpHeight = function() {
+	if (this._j._abs._noJumpArc) return 0;
+	return J.ABS.Aliased.Game_CharacterBase.get("jumpHeight").call(this);
+};
+/**
+* Moves this character to a delta destination exactly like {@link Game_CharacterBase.jump},
+* reusing all of its position/timing/facing machinery, but renders as a flat ground-level
+* glide instead of a parabolic hop- a "slide" with none of the kangaroo-bounce of a jump and
+* none of the jarring pop of an instant teleport.
+* @param {number} xPlus The destination delta on the X axis.
+* @param {number} yPlus The destination delta on the Y axis.
+*/
+Game_CharacterBase.prototype.glideTo = function(xPlus, yPlus) {
+	this.jump(xPlus, yPlus);
+	this._j._abs._noJumpArc = true;
 };
 
 //#endregion

@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.3 DIAG] Enables diagonal movement.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Enables diagonal movement.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

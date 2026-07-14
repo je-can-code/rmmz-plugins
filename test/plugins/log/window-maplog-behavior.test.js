@@ -1,21 +1,27 @@
 //region plugins/log/window-maplog-behavior.test.js
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadLogPluginVm } from './log-vm.js';
+import { installLogHostGlobals, setPluginContextToJBase, setPluginContextToJLog } from './fixtures/install-log-host-globals.js';
 
-describe('J-Log Window_MapLog behavior (out/J-Log.js)', () =>
+describe('J-Log Window_MapLog behavior (direct src import)', () =>
 {
-  let sandbox;
+  /** @type {typeof import('../../../src/plugins/log/core/windows/_Window_MapLog.js').default} */
+  let Window_MapLog;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadLogPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installLogHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJLog();
+    await import('../../../src/plugins/log/core/_metadata/initialization.js');
+
+    // patches globalThis.Window_Command directly via `extends`, no vm involved.
+    ({ default: Window_MapLog } = await import('../../../src/plugins/log/core/windows/_Window_MapLog.js'));
   });
 
   function makeManager()
@@ -34,26 +40,21 @@ describe('J-Log Window_MapLog behavior (out/J-Log.js)', () =>
       acknowledgeProcessing: vi.fn(),
       getLogs()
       {
-        return [
-          {
-            message()
-            {
-              return 'hi';
-            },
-          },
-        ];
+        return [ { message: () => 'hi' } ];
       },
     };
   }
 
   it('updateVisibility hides when manager hidden, fades when timer low, interference dims, otherwise shows', () =>
   {
+    // Arrange
     const mgr = makeManager();
-    const rect = new sandbox.Rectangle(0, 0, 300, 100);
-    const win = new sandbox.Window_MapLog(rect, mgr);
+    const rect = new globalThis.Rectangle(0, 0, 300, 100);
+    const win = new Window_MapLog(rect, mgr);
     win.contentsOpacity = 255;
     win.setInactivityTimer(120);
 
+    // Act & Assert
     // when manager hidden, window hides immediately.
     mgr._hidden = true;
     win.updateVisibility();
@@ -71,14 +72,8 @@ describe('J-Log Window_MapLog behavior (out/J-Log.js)', () =>
     // player interference dims toward 64.
     win.contentsOpacity = 200;
     win.setInactivityTimer(120);
-    sandbox.$gamePlayer.screenX = function()
-    {
-      return 10;
-    };
-    sandbox.$gamePlayer.screenY = function()
-    {
-      return 10;
-    };
+    globalThis.$gamePlayer.screenX = () => 10;
+    globalThis.$gamePlayer.screenY = () => 10;
     win.x = 0;
     win.y = 0;
     win.width = 100;
@@ -87,14 +82,8 @@ describe('J-Log Window_MapLog behavior (out/J-Log.js)', () =>
     expect(win.contentsOpacity).toBe(185);
 
     // non-interference shows and refreshes inactivity timer.
-    sandbox.$gamePlayer.screenX = function()
-    {
-      return 9999;
-    };
-    sandbox.$gamePlayer.screenY = function()
-    {
-      return 9999;
-    };
+    globalThis.$gamePlayer.screenX = () => 9999;
+    globalThis.$gamePlayer.screenY = () => 9999;
     win.contentsOpacity = 0;
     win.setInactivityTimer(120);
     win.updateVisibility();
@@ -105,15 +94,18 @@ describe('J-Log Window_MapLog behavior (out/J-Log.js)', () =>
 
   it('processDrawIcon shifts textState y and x for smaller icons', () =>
   {
+    // Arrange
     const mgr = makeManager();
-    const rect = new sandbox.Rectangle(0, 0, 300, 100);
-    const win = new sandbox.Window_MapLog(rect, mgr);
-
+    const rect = new globalThis.Rectangle(0, 0, 300, 100);
+    const win = new Window_MapLog(rect, mgr);
     const textState = { x: 0, y: 0 };
+
+    // Act
     win.processDrawIcon(1, textState);
+
+    // Assert
     expect(textState.y).toBe(0);
     expect(textState.x).toBe(-16);
   });
 });
 //endregion plugins/log/window-maplog-behavior.test.js
-

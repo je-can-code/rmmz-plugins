@@ -28,12 +28,12 @@ class OverlayManager
 
   //region caching
   /**
-   * A cache for caster-skill extensions.
-   * This is effectively a map of maps, where the parent map is keyed by the caster, while the child map is keyed by
-   * a combination of the skill id and its extension skill ids.
-   * @type {WeakMap<Game_Actor|Game_Enemy, Map<string, RPG_Skill>>}
+   * The cache for caster-skill extensions. Keyed by the caster alone- extension results are
+   * wholesale-invalidated on any learnSkill/forgetSkill via {@link invalidate}, so the skill id
+   * is a stable key within one cache lifetime with no need to encode the overlay set.
+   * @type {JCache}
    */
-  static _casterExtendCache = new WeakMap();
+  static _skillCache = JCache.battlerScoped({ name: 'overlay:caster-skill' });
 
   /**
    * Tracks skill ids currently mid-resolution per caster to detect circular extension data
@@ -45,10 +45,10 @@ class OverlayManager
   static #resolving = new WeakMap();
 
   /**
-   * A cache for battler-state extensions, parallel to {@link _casterExtendCache} for skills.
-   * @type {WeakMap<Game_Battler, Map<number, RPG_State>>}
+   * The cache for battler-state extensions, parallel to {@link _skillCache} for skills.
+   * @type {JCache}
    */
-  static _stateExtendCache = new WeakMap();
+  static _stateCache = JCache.battlerScoped({ name: 'overlay:battler-state' });
 
   /**
    * Tracks state ids currently mid-resolution per battler to detect circular state extension data.
@@ -57,23 +57,14 @@ class OverlayManager
   static #resolvingState = new WeakMap();
 
   /**
-   * The metrics for this manager.
-   * @type {{ hits: number, misses: number }}
-   */
-  static _metrics = {
-    hits: 0,
-    misses: 0,
-  };
-
-  /**
    * Invalidates the cache for the given battler.
    * @param {Game_Actor|Game_Enemy} battler The battler to invalidate the cache for.
    * @returns {boolean} True if the cache was invalidated, false otherwise.
    */
   static invalidate(battler)
   {
-    this._casterExtendCache.delete(battler);
-    this._stateExtendCache.delete(battler);
+    this._skillCache.invalidate(battler);
+    this._stateCache.invalidate(battler);
   }
 
   /**
@@ -81,81 +72,8 @@ class OverlayManager
    */
   static clearCache()
   {
-    this._casterExtendCache = new WeakMap();
-    this._stateExtendCache = new WeakMap();
-  }
-
-  /**
-   * Gets the existing cache of a caster's skill extensions.
-   * If a cache does not yet exist for the caster, it'll be created.
-   * @param {Game_Actor|Game_Enemy} caster The caster of the skill.
-   * @returns {Map<string, RPG_Skill>}
-   */
-  static getOrCreateCacheForCaster(caster)
-  {
-    // check if the cache for this caster already exists.
-    const cacheHit = this._casterExtendCache.get(caster);
-
-    // if it does exist, return it.
-    if (cacheHit) return cacheHit;
-
-    // it doesn't exist yet, so create it.
-    const newCasterCache = new Map();
-    this._casterExtendCache.set(caster, newCasterCache);
-
-    // return the newly created cache.
-    return newCasterCache;
-  }
-
-  /**
-   * Gets the existing state-extension cache for a battler, or creates it.
-   * @param {Game_Battler} battler The battler.
-   * @returns {Map<number, RPG_State>}
-   */
-  static #getOrCreateStateCacheForBattler(battler)
-  {
-    const hit = this._stateExtendCache.get(battler);
-    if (hit) return hit;
-
-    const newCache = new Map();
-    this._stateExtendCache.set(battler, newCache);
-    return newCache;
-  }
-
-  /**
-   * Retrieves a cached value for this caster/key, or computes and stores it.
-   *
-   * @param {Game_Actor|Game_Enemy} caster - The caster whose cache bucket to use.
-   * @param {string} key - Stable key representing the computed value (ex: base skill id + overlay ids).
-   * @param {Function} computeFn - A no-arg function that computes the value on a cache miss.
-   * @returns {RPG_Skill} - The cached or newly computed extended skill.
-   */
-  static cached(caster, key, computeFn)
-  {
-    // get or create the per-caster cache map from the WeakMap.
-    const perCaster = this.getOrCreateCacheForCaster(caster);
-
-    // if we already have this key cached, return it and track a hit.
-    if (perCaster.has(key))
-    {
-      // increment metrics for visibility while iterating on this.
-      this._metrics.hits++;
-
-      // return the cached value.
-      return perCaster.get(key);
-    }
-
-    // we do not yet have a cached value; compute it now.
-    const value = computeFn();
-
-    // store the computed value in the per-caster cache.
-    perCaster.set(key, value);
-
-    // increment miss counter.
-    this._metrics.misses++;
-
-    // return the computed value.
-    return value;
+    this._skillCache.clear();
+    this._stateCache.clear();
   }
 
   //endregion caching
@@ -174,66 +92,56 @@ class OverlayManager
     // if we don't have a caster for some reason, don't process anything.
     if (!caster) return $dataSkills[skillId];
 
-    // fast-path: check the per-caster cache before doing any work at all.
-    // the cache is always invalidated wholesale via invalidate(battler) on any
-    // learnSkill / forgetSkill call, so skillId alone is a stable key within one
-    // cache lifetime — encoding the overlay set in the key is redundant overhead.
-    const perCaster = this.getOrCreateCacheForCaster(caster);
-    if (perCaster.has(skillId))
+    // fast-path: JCache.get() itself checks the per-caster bucket before running the compute
+    // function below, so a cache hit never allocates, filters, or touches the re-entrancy guard.
+    // the cache is always invalidated wholesale via invalidate(battler) on any learnSkill /
+    // forgetSkill call, so skillId alone is a stable key within one cache lifetime — encoding the
+    // overlay set in the key is redundant overhead.
+    return this._skillCache.get(caster, String(skillId), () =>
     {
-      // increment hit counter and return immediately — no array allocation, no filter.
-      this._metrics.hits++;
-      return perCaster.get(skillId);
-    }
+      // cache miss: now do the work to compute the overlay candidates.
+      const knownIds = caster.skillIds();
 
-    // cache miss: now do the work to compute the overlay candidates.
-    const knownIds = caster.skillIds();
+      // find all overlay candidates for this skill from the raw id list, then sort deterministically.
+      const overlayIds = knownIds
+        .filter(id =>
+        {
+          const skill = $dataSkills[id];
+          return skill && this.#isOverlayForBase(skill, skillId);
+        })
+        .sort((a, b) => a - b);
 
-    // find all overlay candidates for this skill from the raw id list, then sort deterministically.
-    const overlayIds = knownIds
-      .filter(id =>
+      // get or create the set of skill ids currently being resolved for this caster.
+      let inProgress = this.#resolving.get(caster);
+      if (!inProgress)
       {
-        const skill = $dataSkills[id];
-        return skill && this.#isOverlayForBase(skill, skillId);
-      })
-      .sort((a, b) => a - b);
+        inProgress = new Set();
+        this.#resolving.set(caster, inProgress);
+      }
 
-    // get or create the set of skill ids currently being resolved for this caster.
-    let inProgress = this.#resolving.get(caster);
-    if (!inProgress)
-    {
-      inProgress = new Set();
-      this.#resolving.set(caster, inProgress);
-    }
+      // a skill id already in the set means we have walked back to it — bad extension data.
+      if (inProgress.has(skillId))
+      {
+        // circular extension detected — this is bad data, not a recoverable state.
+        throw new Error(`Circular skill extension detected on skill ${skillId}! Please stop recursing the universe 💢`);
+      }
 
-    // a skill id already in the set means we have walked back to it — bad extension data.
-    if (inProgress.has(skillId))
-    {
-      // circular extension detected — this is bad data, not a recoverable state.
-      throw new Error(`Circular skill extension detected on skill ${skillId}! Please stop recursing the universe 💢`);
-    }
+      // mark this skill as in-flight before recursing into overlay resolution.
+      inProgress.add(skillId);
 
-    // mark this skill as in-flight before recursing into overlay resolution.
-    inProgress.add(skillId);
-
-    try
-    {
-      // recursively resolve each overlay to its own fully-extended form before applying it.
-      const resolvedOverlays = overlayIds.map(id => this.getExtendedSkill(caster, id));
-      const value = this.#getExtendedSkill(resolvedOverlays, skillId);
-
-      // store under skillId as key — simple and correct given wholesale cache invalidation.
-      perCaster.set(skillId, value);
-      this._metrics.misses++;
-
-      return value;
-    }
-    finally
-    {
-      // always remove the skill from in-flight so sibling and future calls proceed normally.
-      inProgress.delete(skillId);
-      if (inProgress.size === 0) this.#resolving.delete(caster);
-    }
+      try
+      {
+        // recursively resolve each overlay to its own fully-extended form before applying it.
+        const resolvedOverlays = overlayIds.map(id => this.getExtendedSkill(caster, id));
+        return this.#getExtendedSkill(resolvedOverlays, skillId);
+      }
+      finally
+      {
+        // always remove the skill from in-flight so sibling and future calls proceed normally.
+        inProgress.delete(skillId);
+        if (inProgress.size === 0) this.#resolving.delete(caster);
+      }
+    });
   }
 
   //region state extension
@@ -260,91 +168,83 @@ class OverlayManager
     // if we don't have a battler for some reason, don't process anything.
     if (!battler) return $dataStates[stateId];
 
-    // fast-path: check the per-battler state cache before doing any work at all.
-    const perBattler = this.#getOrCreateStateCacheForBattler(battler);
-    if (perBattler.has(stateId))
+    // fast-path: JCache.get() itself checks the per-battler bucket before running the compute
+    // function below, so a cache hit never allocates, walks allStateIds, or touches the guard.
+    return this._stateCache.get(battler, String(stateId), () =>
     {
-      this._metrics.hits++;
-      return perBattler.get(stateId);
-    }
+      // cache miss: get all raw state ids, preserving stacks and duplicates.
+      const allIds = battler.allStateIds();
 
-    // cache miss: get all raw state ids, preserving stacks and duplicates.
-    const allIds = battler.allStateIds();
+      // get the target state's type classifiers for type-based candidate matching.
+      const targetState = $dataStates[stateId];
+      const targetTypes = targetState
+        ? targetState.stateTypes()
+        : [];
 
-    // get the target state's type classifiers for type-based candidate matching.
-    const targetState = $dataStates[stateId];
-    const targetTypes = targetState
-      ? targetState.stateTypes()
-      : [];
+      // bucket candidates: type-based first (familial), id-based second (specific).
+      const typeCandidates = [];
+      const idCandidates = [];
 
-    // bucket candidates: type-based first (familial), id-based second (specific).
-    const typeCandidates = [];
-    const idCandidates = [];
-
-    for (const id of allIds)
-    {
-      // skip the target itself.
-      if (id === stateId) continue;
-
-      // skip invalid or non-extension states.
-      const candidate = $dataStates[id];
-      if (!candidate || !candidate.isStateExtension) continue;
-
-      // type-based: candidate declares a type that intersects with the target's types.
-      if (targetTypes.length > 0 && ArrayHelper.hasAnyIntersection(targetTypes, candidate.getStateExtensionTypes))
+      for (const id of allIds)
       {
-        typeCandidates.push(id);
-        continue;
+        // skip the target itself.
+        if (id === stateId) continue;
+
+        // skip invalid or non-extension states.
+        const candidate = $dataStates[id];
+        if (!candidate || !candidate.isStateExtension) continue;
+
+        // type-based: candidate declares a type that intersects with the target's types.
+        if (targetTypes.length > 0 && ArrayHelper.hasAnyIntersection(targetTypes, candidate.getStateExtensionTypes))
+        {
+          typeCandidates.push(id);
+          continue;
+        }
+
+        // id-based: candidate explicitly lists this stateId as a target.
+        if (candidate.getStateExtensions.includes(stateId))
+        {
+          idCandidates.push(id);
+        }
       }
 
-      // id-based: candidate explicitly lists this stateId as a target.
-      if (candidate.getStateExtensions.includes(stateId))
+      // sort each bucket ascending by id (duplicate stacks of the same id remain consecutive).
+      typeCandidates.sort((a, b) => a - b);
+      idCandidates.sort((a, b) => a - b);
+
+      // combine: type-based overlays first, id-based overlays second.
+      const overlayIds = [ ...typeCandidates, ...idCandidates ];
+
+      // get or create the circular-guard set for this battler.
+      let inProgressState = this.#resolvingState.get(battler);
+      if (!inProgressState)
       {
-        idCandidates.push(id);
+        inProgressState = new Set();
+        this.#resolvingState.set(battler, inProgressState);
       }
-    }
 
-    // sort each bucket ascending by id (duplicate stacks of the same id remain consecutive).
-    typeCandidates.sort((a, b) => a - b);
-    idCandidates.sort((a, b) => a - b);
+      // a stateId already in the set means we have walked back to it — circular data.
+      if (inProgressState.has(stateId))
+      {
+        throw new Error(`Circular state extension detected on state ${stateId}! Please stop recursing the universe 💢`);
+      }
 
-    // combine: type-based overlays first, id-based overlays second.
-    const overlayIds = [ ...typeCandidates, ...idCandidates ];
+      // mark this state as in-flight before recursing into overlay resolution.
+      inProgressState.add(stateId);
 
-    // get or create the circular-guard set for this battler.
-    let inProgressState = this.#resolvingState.get(battler);
-    if (!inProgressState)
-    {
-      inProgressState = new Set();
-      this.#resolvingState.set(battler, inProgressState);
-    }
-
-    // a stateId already in the set means we have walked back to it — circular data.
-    if (inProgressState.has(stateId))
-    {
-      throw new Error(`Circular state extension detected on state ${stateId}! Please stop recursing the universe 💢`);
-    }
-
-    // mark this state as in-flight before recursing into overlay resolution.
-    inProgressState.add(stateId);
-
-    try
-    {
-      // recursively resolve each overlay to its own fully-extended form before applying it.
-      const resolvedOverlays = overlayIds.map(id => this.getExtendedState(battler, id));
-      const value = this.#getExtendedState(resolvedOverlays, stateId);
-
-      perBattler.set(stateId, value);
-      this._metrics.misses++;
-
-      return value;
-    }
-    finally
-    {
-      // always clear the in-flight marker so siblings and future calls proceed normally.
-      inProgressState.delete(stateId);
-      if (inProgressState.size === 0) this.#resolvingState.delete(battler);
-    }
+      try
+      {
+        // recursively resolve each overlay to its own fully-extended form before applying it.
+        const resolvedOverlays = overlayIds.map(id => this.getExtendedState(battler, id));
+        return this.#getExtendedState(resolvedOverlays, stateId);
+      }
+      finally
+      {
+        // always clear the in-flight marker so siblings and future calls proceed normally.
+        inProgressState.delete(stateId);
+        if (inProgressState.size === 0) this.#resolvingState.delete(battler);
+      }
+    });
   }
   //endregion state extension
 

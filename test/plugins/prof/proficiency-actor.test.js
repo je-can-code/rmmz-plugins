@@ -1,45 +1,58 @@
 //region plugins/prof/proficiency-actor.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { loadProfPluginVm, resetProfPluginSandbox } from './prof-vm.js';
+import {
+  actorData,
+  initializeProficiencies,
+  installProfHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJProf,
+  skillData,
+} from './fixtures/install-prof-host-globals.js';
 
-describe('J-Proficiency Game_Actor proficiency (out/prof/J-Proficiency.js)', () =>
+describe('J-Proficiency Game_Actor proficiency (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadProfPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installProfHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../src/plugins/_base/managers/RPGManager.js'));
+
+    await import('../../../src/plugins/_base/objects/Game_BattlerBase.js');
+    await import('../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../src/plugins/_base/objects/Game_Action.js');
+    await import('../../../src/plugins/_base/objects/Game_Actor.js');
+
+    setPluginContextToJProf();
+    await import('../../../src/plugins/prof/core/_metadata/initialization.js');
+
+    globalThis.$dataActors = [];
+    initializeProficiencies();
+
+    await import('../../../src/plugins/prof/core/objects/Game_Battler.js');
+    await import('../../../src/plugins/prof/core/objects/Game_Actor.js');
   });
 
   beforeEach(() =>
   {
-    resetProfPluginSandbox(sandbox);
-    const { skillData } = sandbox.__profTestFixtures;
-    sandbox.$dataSkills = [ null ];
-    sandbox.$dataSkills[10] = skillData({
-      id: 10,
-      name: 'Track',
-      note: '',
-      damage: { elementId: 0 },
+    globalThis.RPGManager.clearCache();
+    globalThis.$dataSkills = [ null ];
+    globalThis.$dataSkills[10] = skillData({
+      id: 10, name: 'Track', note: '', damage: { elementId: 0 },
     });
-    sandbox.$dataSkills[99] = skillData({
-      id: 99,
-      name: 'Reward',
-      note: '',
-      damage: { elementId: 0 },
+    globalThis.$dataSkills[99] = skillData({
+      id: 99, name: 'Reward', note: '', damage: { elementId: 0 },
     });
   });
 
-  function makeActor(s)
+  function makeActor()
   {
-    const actor = new s.Game_Actor();
+    const actor = new globalThis.Game_Actor();
     actor.initMembers();
     actor.learnSkill(10);
     return actor;
@@ -47,10 +60,16 @@ describe('J-Proficiency Game_Actor proficiency (out/prof/J-Proficiency.js)', () 
 
   it('increaseSkillProficiency accumulates and unlocks conditional skill rewards', () =>
   {
-    const actor = makeActor(sandbox);
+    // Arrange
+    const actor = makeActor();
+
+    // Act
     actor.increaseSkillProficiency(10, 1);
     actor.increaseSkillProficiency(10, 1);
+
+    // Assert
     expect(actor.skillProficiencyBySkillId(10).proficiency).toBe(2);
+
     actor.increaseSkillProficiency(10, 1);
     expect(actor.skillProficiencyBySkillId(10).proficiency).toBe(3);
     expect(actor.isConditionalUnlocked('vitest_unlock_skill')).toBe(true);
@@ -59,35 +78,36 @@ describe('J-Proficiency Game_Actor proficiency (out/prof/J-Proficiency.js)', () 
 
   it('canGainProficiency is false when proficiencyGainingBlock is present on actor notes', () =>
   {
-    const actor = makeActor(sandbox);
+    // Arrange
+    const actor = makeActor();
     const blocked = {
-      id: 1,
-      name: '',
-      note: '<proficiencyGainingBlock>',
-      classId: 1,
-      traits: [],
+      id: 1, name: '', note: '<proficiencyGainingBlock>', classId: 1, traits: [],
     };
     actor.actor = function()
     {
       return blocked;
     };
+
+    // Act
     actor.onBattlerDataChange();
+
+    // Assert
     expect(actor.canGainProficiency()).toBe(false);
   });
 
   it('updateBonusSkillProficiencyGains reads proficiencyBonus from actor notes', () =>
   {
-    const { actorData } = sandbox.__profTestFixtures;
-    const actor = new sandbox.Game_Actor();
+    // Arrange
+    const actor = new globalThis.Game_Actor();
     actor.__actorDb = actorData({
-      id: 1,
-      name: '',
-      note: '<proficiencyBonus:3>',
-      classId: 1,
-      traits: [],
+      id: 1, name: '', note: '<proficiencyBonus:3>', classId: 1, traits: [],
     });
     actor.initMembers();
+
+    // Act
     actor.updateBonusSkillProficiencyGains();
+
+    // Assert
     expect(actor.prof).toBe(3);
   });
 });

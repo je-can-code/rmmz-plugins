@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 FOOD] A JABS extension enabling food group chain states and a dedicated R2 food slot.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A JABS extension enabling food group chain states and a dedicated R2 food slot.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

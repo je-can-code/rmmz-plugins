@@ -1,47 +1,50 @@
 //region plugins/drops/drop-chance-roll-threading.test.js
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { loadDropsControlPluginVm, resetDropsControlPluginSandbox } from './drops-vm.js';
+import { installDropsHostGlobals, setPluginContextToJBase, setPluginContextToJDrops } from './fixtures/install-drops-host-globals.js';
 
-describe('J-DropsControl killer roll threading (out/drops/J-DropsControl.js)', () =>
+describe('J-DropsControl killer roll threading (direct src import)', () =>
 {
-  /** @type {object} */
-  let sandbox;
-
-  /** @type {Function} */
   let originalChanceIn100;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadDropsControlPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installDropsHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../src/plugins/_base/managers/RPGManager.js'));
+
+    await import('../../../src/plugins/_base/objects/Game_BattlerBase.js');
+    await import('../../../src/plugins/_base/objects/Game_Battler.js');
+
+    setPluginContextToJDrops();
+    await import('../../../src/plugins/drops/core/_metadata/initialization.js');
+
+    await import('../../../src/plugins/drops/core/objects/Game_Battler.js');
+    await import('../../../src/plugins/drops/core/objects/Game_Actor.js');
+    await import('../../../src/plugins/drops/core/objects/Game_Party.js');
+    await import('../../../src/plugins/drops/core/objects/Game_Enemy.js');
   });
 
   beforeEach(() =>
   {
-    resetDropsControlPluginSandbox(sandbox);
-    originalChanceIn100 = sandbox.RPGManager.chanceIn100;
+    globalThis.RPGManager.clearCache();
+    originalChanceIn100 = globalThis.RPGManager.chanceIn100;
   });
 
   afterEach(() =>
   {
-    sandbox.RPGManager.chanceIn100 = originalChanceIn100;
+    globalThis.RPGManager.chanceIn100 = originalChanceIn100;
   });
 
-  /**
-   * Stubs RPGManager.chanceIn100 to record every argument and return a fixed outcome.
-   * @param {boolean} outcome
-   * @returns {{percent: number, rollForPositive: number, rollForNegative: number}[]}
-   */
   function stubChanceIn100(outcome)
   {
     const calls = [];
-    sandbox.RPGManager.chanceIn100 = function(percent, rollForPositive, rollForNegative)
+    globalThis.RPGManager.chanceIn100 = function(percent, rollForPositive, rollForNegative)
     {
       calls.push({ percent, rollForPositive, rollForNegative });
       return outcome;
@@ -51,19 +54,23 @@ describe('J-DropsControl killer roll threading (out/drops/J-DropsControl.js)', (
 
   it('defaults to a plain roll (no bonus) when no killer is provided', () =>
   {
+    // Arrange
     const calls = stubChanceIn100(true);
-    const enemy = new sandbox.Game_Enemy();
+    const enemy = new globalThis.Game_Enemy();
     enemy.initMembers();
 
+    // Act
     enemy.didFindLoot(40);
 
+    // Assert
     expect(calls).toEqual([ { percent: 40, rollForPositive: 1, rollForNegative: 0 } ]);
   });
 
   it('feeds the killer\'s own positive and negative rolls- the killer is both the roller and the recipient', () =>
   {
+    // Arrange
     const calls = stubChanceIn100(true);
-    const enemy = new sandbox.Game_Enemy();
+    const enemy = new globalThis.Game_Enemy();
     enemy.initMembers();
     const killer = {
       getPositiveRolls: () => 2,
@@ -72,8 +79,10 @@ describe('J-DropsControl killer roll threading (out/drops/J-DropsControl.js)', (
       isVeryCursed: () => false,
     };
 
+    // Act
     enemy.didFindLoot(40, killer);
 
+    // Assert
     expect(calls).toEqual([ { percent: 40, rollForPositive: 3, rollForNegative: 3 } ]);
   });
 });

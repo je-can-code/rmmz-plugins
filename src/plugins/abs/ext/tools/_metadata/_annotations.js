@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.0 TOOLS] Enable new tool-like tags for use with skills.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Enable new tool-like tags for use with skills.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -73,6 +73,22 @@
  * An enemy hit by skill 34 receives state 4.
  * Using skill 34 again against that pinned enemy will pull the player to it.
  * Hookshot anchors are unaffected because their key does not match.
+ *
+ * GAP CLOSE ANY:
+ *  <gapCloseAny>
+ * Put this on a skill instead of <gapClose:key> to skip key-matching
+ * entirely. A skill with this tag gap closes to whatever single target its
+ * hitbox connects with, no matter what (or whether) that target carries a
+ * <gapCloseTarget:key> of its own. Intended for melee gap-closers that just
+ * need to close distance to whatever they hit — no pre-tagging required.
+ *
+ * BLOCK GAP CLOSE:
+ *  <blockGapClose>
+ * Put this on an enemy, state, or equipment to make that battler immune to
+ * ALL gap closing, including <gapCloseAny> skills. This is the only way to
+ * opt a target out of an "any" gapcloser — useful for bosses, flying units,
+ * or holding a hookshot-only chasm as a genuine traversal gate instead of
+ * letting a combat gapcloser trivialize it.
  * ============================================================================
  * CHANGELOG:
  * - 1.1.0

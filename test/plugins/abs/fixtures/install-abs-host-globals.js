@@ -40,20 +40,6 @@ export function setPluginContextToJAbs(sandbox = globalThis)
 }
 
 /**
- * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-ABS-Tools's own identity. Call this
- * right before importing abs/ext/tools/_metadata/initialization.js, after {@link setPluginContextToJAbs}
- * and the J-ABS initialization.js import it guards (ext/tools requires both J-Base and J-ABS at minimum
- * versions).
- *
- * @param {object} [sandbox] Defaults to `globalThis`.
- */
-export function setPluginContextToJAbsTools(sandbox = globalThis)
-{
-  sandbox.__PLUGIN_NAME__ = 'J-ABS-Tools';
-  sandbox.__PLUGIN_VERSION__ = '1.0.3';
-}
-
-/**
  * Globals required for J-ABS's prototype-patch source files (core/objects/*.js, core/managers/*.js) to
  * evaluate when direct-imported into the real Vitest realm instead of a nested vm context. Mirrors the
  * shape of {@link installAbsEngineStubs} in engine-stubs.js (used by the VM path), but targets

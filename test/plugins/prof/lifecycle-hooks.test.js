@@ -1,63 +1,82 @@
 //region plugins/prof/lifecycle-hooks.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { loadProfPluginVm, resetProfPluginSandbox } from './prof-vm.js';
+import {
+  actorData,
+  initializeProficiencies,
+  installProfHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJProf,
+} from './fixtures/install-prof-host-globals.js';
 
-describe('J-Proficiency lifecycle hooks (out/prof/J-Proficiency.js)', () =>
+describe('J-Proficiency lifecycle hooks (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadProfPluginVm(sandbox);
+    vi.resetModules();
 
-    // isolate these extension points from host behavior.
-    sandbox.J.PROF.Aliased.Game_Actor.set('onLearnNewSkill', function()
+    installProfHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../src/plugins/_base/managers/RPGManager.js'));
+
+    await import('../../../src/plugins/_base/objects/Game_BattlerBase.js');
+    await import('../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../src/plugins/_base/objects/Game_Action.js');
+    await import('../../../src/plugins/_base/objects/Game_Actor.js');
+
+    setPluginContextToJProf();
+    await import('../../../src/plugins/prof/core/_metadata/initialization.js');
+
+    globalThis.$dataActors = [];
+    initializeProficiencies();
+
+    await import('../../../src/plugins/prof/core/objects/Game_Battler.js');
+    await import('../../../src/plugins/prof/core/objects/Game_Actor.js');
+
+    // isolate these extension points from host behavior (real _base onLearnNewSkill/onBattlerDataChange).
+    globalThis.J.PROF.Aliased.Game_Actor.set('onLearnNewSkill', function()
     {
     });
-    sandbox.J.PROF.Aliased.Game_Actor.set('onBattlerDataChange', function()
+    globalThis.J.PROF.Aliased.Game_Actor.set('onBattlerDataChange', function()
     {
     });
-  });
-
-  afterAll(() =>
-  {
-    sandbox = null;
   });
 
   beforeEach(() =>
   {
-    resetProfPluginSandbox(sandbox);
+    globalThis.RPGManager.clearCache();
   });
 
   it('onLearnNewSkill creates a new skill proficiency record', () =>
   {
-    const actor = new sandbox.Game_Actor();
+    // Arrange
+    const actor = new globalThis.Game_Actor();
     actor.initMembers();
 
+    // Act & Assert
     expect(actor.skillProficiencyBySkillId(10)).toBeUndefined();
+
     actor.onLearnNewSkill(10);
     expect(actor.skillProficiencyBySkillId(10)).toBeDefined();
   });
 
   it('onBattlerDataChange refreshes bonus skill proficiency gains', () =>
   {
-    const { actorData } = sandbox.__profTestFixtures;
-    const actor = new sandbox.Game_Actor();
+    // Arrange
+    const actor = new globalThis.Game_Actor();
     actor.__actorDb = actorData({
-      id: 1,
-      name: '',
-      note: '<proficiencyBonus:3>',
-      classId: 1,
-      traits: [],
+      id: 1, name: '', note: '<proficiencyBonus:3>', classId: 1, traits: [],
     });
     actor.initMembers();
 
+    // Act & Assert
     expect(actor.prof).toBe(0);
+
     actor.onBattlerDataChange();
     expect(actor.prof).toBe(3);
   });
 });
 //endregion plugins/prof/lifecycle-hooks.test.js
-

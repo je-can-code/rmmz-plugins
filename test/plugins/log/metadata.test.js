@@ -1,27 +1,28 @@
 //region plugins/log/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadLogPluginVm } from './log-vm.js';
+import { installLogHostGlobals, setPluginContextToJBase, setPluginContextToJLog } from './fixtures/install-log-host-globals.js';
 
-describe('J-Log metadata (out/log/J-Log.js)', () =>
+describe('J-Log metadata (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadLogPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installLogHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJLog();
+    await import('../../../src/plugins/log/core/_metadata/initialization.js');
   });
 
   it('initializes J.LOG metadata and inactivity duration from parameters', () =>
   {
-    expect(sandbox.J.LOG.Metadata.name).toBe('J-Log');
-    expect(sandbox.J.LOG.Metadata.InactivityTimerDuration).toBe(60);
+    // Arrange & Act & Assert
+    expect(globalThis.J.LOG.Metadata.name).toBe('J-Log');
+    expect(globalThis.J.LOG.Metadata.InactivityTimerDuration).toBe(60);
   });
 });
 //endregion plugins/log/metadata.test.js

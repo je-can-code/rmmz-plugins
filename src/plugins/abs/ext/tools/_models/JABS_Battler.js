@@ -184,12 +184,6 @@ JABS_Battler.prototype.gapCloseToTarget = function(action, target)
   // do not try to gap close if we are already gap closing.
   if (this.isGapClosing()) return;
 
-  // begin the gap closing procedure.
-  this.beginGapClosing();
-
-  // store the initiating skill ID so the landing hook can read its <thisOnGapCloseEnd> tag.
-  this._gapCloseSourceSkillId = action.getBaseSkill().id;
-
   // extract the gap close details from the skill.
   let {
     jabsGapCloseMode,
@@ -201,32 +195,22 @@ JABS_Battler.prototype.gapCloseToTarget = function(action, target)
   jabsGapClosePosition ??= J.ABS.EXT.TOOLS.GapClosePositions.Same;
 
   // determine the destination delta coordinates based on the position mode.
-  let [ x, y ] = this.determineGapCloseCoordinates(target, jabsGapClosePosition);
+  const [ x, y ] = this.determineGapCloseCoordinates(target, jabsGapClosePosition);
 
   // grab the underlying character for access to movement.
   const casterCharacter = this.getCharacter();
 
-  // gap close normally bypasses terrain entirely- <respectTerrain> opts into walking the same
-  // tile-by-tile clamped path every other forced-displacement mechanic uses, snapping the raw
-  // fractional edge-offset coordinates down to the nearest whole tile in the process.
-  if (jabsRespectTerrain)
-  {
-    const horizontalDominant = Math.abs(x) >= Math.abs(y);
+  // gap close normally bypasses terrain entirely- <respectTerrain> opts into validating the
+  // full tile-by-tile path first. this is all-or-nothing by design: a target that's reachable
+  // gets a clean, unobstructed jump straight to it, while a target that isn't reachable doesn't
+  // gap close at all- no partial slide toward it along whichever axis happened to be clearer.
+  if (jabsRespectTerrain && !casterCharacter.canReachTileDelta(x, y)) return;
 
-    let direction;
-    if (horizontalDominant)
-    {
-      direction = x >= 0 ? J.ABS.Directions.RIGHT : J.ABS.Directions.LEFT;
-    }
-    else
-    {
-      direction = y >= 0 ? J.ABS.Directions.DOWN : J.ABS.Directions.UP;
-    }
+  // begin the gap closing procedure.
+  this.beginGapClosing();
 
-    const rawDistance = Math.max(Math.abs(x), Math.abs(y));
-
-    [ x, y ] = casterCharacter.walkInDirectionClamped(direction, rawDistance);
-  }
+  // store the initiating skill ID so the landing hook can read its <thisOnGapCloseEnd> tag.
+  this._gapCloseSourceSkillId = action.getBaseSkill().id;
 
   // store the actual landing coordinates (not the raw target tile) so the arrival check resolves correctly.
   this.setGapCloseDestination([ this.getX() + x, this.getY() + y ]);
@@ -242,13 +226,14 @@ JABS_Battler.prototype.gapCloseToTarget = function(action, target)
       break;
     case J.ABS.EXT.TOOLS.GapCloseModes.Blink:
       // TODO: update player locate to be less visually jarring? (see: parallax background)
-      // note: <respectTerrain> has no effect on blink- it lands exactly on the target's own
-      // tile, which is already guaranteed passable since the target is standing there.
-      casterCharacter.locate(target.getX(), target.getY());
+      // uses the same computed delta as jump/travel so <gapClosePosition> is honored here too-
+      // an instant teleport straight onto the target's own tile would otherwise land the caster
+      // directly inside the target's collision volume regardless of the requested position.
+      casterCharacter.locate(casterCharacter.x + x, casterCharacter.y + y);
       break;
     case J.ABS.EXT.TOOLS.GapCloseModes.Travel:
-      // TODO: pathfind instead.
-      casterCharacter.jump(x, y)
+      // a flat ground-level glide- same destination math as jump, no parabolic hop.
+      casterCharacter.glideTo(x, y);
       break;
   }
 };
@@ -418,10 +403,16 @@ JABS_Battler.prototype.determineGapCloseCoordinates = function(target, position)
   const unitX = magnitude > 0 ? goalX / magnitude : 0;
   const unitY = magnitude > 0 ? goalY / magnitude : 0;
 
-  // compute how far to offset from the target's center: both hitbox radii plus a thin buffer.
-  // this places the caster's edge flush against the target's edge without overlapping.
+  // hitboxes are square AABBs, not circles- true separation is measured along whichever
+  // single axis is dominant (Chebyshev distance), not the diagonal's Euclidean hypotenuse.
+  // dividing the target radii sum by that dominant axis's unit component guarantees the
+  // offset actually applied along X or Y (whichever is larger) equals exactly radii + buffer
+  // at any approach angle- a pure diagonal no longer under-separates by spreading a
+  // Euclidean-sized offset across both axes at once.
   const casterCharacter = this.getCharacter();
-  const edgeOffset = targetCharacter.getEffectiveRadius() + casterCharacter.getEffectiveRadius() + 0.05;
+  const radiiSum = targetCharacter.getEffectiveRadius() + casterCharacter.getEffectiveRadius() + 0.05;
+  const dominantAxisComponent = Math.max(Math.abs(unitX), Math.abs(unitY));
+  const edgeOffset = dominantAxisComponent > 0 ? radiiSum / dominantAxisComponent : 0;
 
   if (position === J.ABS.EXT.TOOLS.GapClosePositions.Infront)
   {

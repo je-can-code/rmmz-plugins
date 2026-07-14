@@ -337,7 +337,7 @@ describe('RPGManager', () =>
       expect(result).toBe(10);
     });
 
-    it('re-evaluates the formula against the battler context\'s current level on each call', () =>
+    it('keeps the cached result after the context\'s level changes without invalidation (caching-is-correct)', () =>
     {
       // Arrange
       const data = { note: '<f:15 + (a.level * 4)>' };
@@ -350,7 +350,41 @@ describe('RPGManager', () =>
       const result = RPGManager.getResultFromNoteByRegex(data, re, 0, ctx, false);
 
       // Assert
+      expect(result).toBe(19);
+    });
+
+    it('re-evaluates the formula once invalidateBattlerEval() drops the context\'s cache entry', () =>
+    {
+      // Arrange
+      const data = { note: '<f:15 + (a.level * 4)>' };
+      const re = /<f:([^>]+)>/;
+      const ctx = { level: 1, getLevel() { return this.level; } };
+      RPGManager.getResultFromNoteByRegex(data, re, 0, ctx, false);
+      ctx.level = 2;
+      RPGManager.invalidateBattlerEval(ctx);
+
+      // Act
+      const result = RPGManager.getResultFromNoteByRegex(data, re, 0, ctx, false);
+
+      // Assert
       expect(result).toBe(23);
+    });
+
+    it('keeps two different battler contexts on the same object independent of each other', () =>
+    {
+      // Arrange
+      const data = { note: '<f:a.atk * 0.5>' };
+      const re = /<f:([^>]+)>/;
+      const battlerA = { atk: 200, getLevel: () => 10 };
+      const battlerB = { atk: 40, getLevel: () => 10 };
+
+      // Act
+      const resultA = RPGManager.getResultFromNoteByRegex(data, re, 0, battlerA, false);
+      const resultB = RPGManager.getResultFromNoteByRegex(data, re, 0, battlerB, false);
+
+      // Assert
+      expect(resultA).toBe(100);
+      expect(resultB).toBe(20);
     });
 
     it('swallows a bad formula, logs it, and still returns a finite sum', () =>

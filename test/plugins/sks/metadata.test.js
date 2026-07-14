@@ -1,37 +1,42 @@
 //region plugins/sks/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadSksPluginVm } from './sks-vm.js';
+import { installSksHostGlobals, setPluginContextToJBase, setPluginContextToJSks } from './fixtures/install-sks-host-globals.js';
 
-describe('J-SkillSlots metadata and regex (out/sks/J-SkillSlots.js)', () =>
+describe('J-SkillSlots metadata and regex (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadSksPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installSksHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJSks();
+    await import('../../../src/plugins/sks/core/_metadata/initialization.js');
   });
 
   it('exposes J.SKS namespace and versioned metadata', () =>
   {
-    expect(sandbox.J.SKS.Metadata.name).toBe('J-SkillSlots');
+    // Arrange & Act & Assert
+    expect(globalThis.J.SKS.Metadata.name).toBe('J-SkillSlots');
   });
 
   it('slotCost regex parses signed integers from skill notes', () =>
   {
-    const m = sandbox.J.SKS.RegExp.SlotCost.exec('<slotCost:2>');
+    // Arrange & Act
+    const m = globalThis.J.SKS.RegExp.SlotCost.exec('<slotCost:2>');
+
+    // Assert
     expect(m[1]).toBe('2');
   });
 
   it('defaults equippable type list to empty so all skill types remain eligible', () =>
   {
-    expect(sandbox.J.SKS.Metadata.equippableSkillTypeIds.length).toBe(0);
+    // Arrange & Act & Assert
+    expect(globalThis.J.SKS.Metadata.equippableSkillTypeIds.length).toBe(0);
   });
 });
 //endregion plugins/sks/metadata.test.js

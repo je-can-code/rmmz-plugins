@@ -1,26 +1,27 @@
 //region plugins/extend/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadSkillExtendPluginVm } from './extend-vm.js';
+import { installExtendHostGlobals, setPluginContextToJBase, setPluginContextToJExtend } from './fixtures/install-extend-host-globals.js';
 
-describe('J-Extend metadata (out/extend/J-Extend.js)', () =>
+describe('J-Extend metadata (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadSkillExtendPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installExtendHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJExtend();
+    await import('../../../src/plugins/extend/core/_metadata/initialization.js');
   });
 
   it('exposes plugin name on J.EXTEND.Metadata', () =>
   {
-    expect(sandbox.J.EXTEND.Metadata.name).toBe('J-Extend');
+    // Arrange & Act & Assert
+    expect(globalThis.J.EXTEND.Metadata.name).toBe('J-Extend');
   });
 });
 //endregion plugins/extend/metadata.test.js

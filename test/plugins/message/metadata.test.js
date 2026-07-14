@@ -1,29 +1,29 @@
 //region plugins/message/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadMessagePluginVm } from './message-vm.js';
+import { installMessageHostGlobals, setPluginContextToJBase, setPluginContextToJMessage } from './fixtures/install-message-host-globals.js';
 
-describe('J-MessageTextCodes metadata (out/message/J-MessageTextCodes.js)', () =>
+describe('J-MessageTextCodes metadata (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadMessagePluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installMessageHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJMessage();
+    await import('../../../src/plugins/message/core/_metadata/initialization.js');
   });
 
   it('initializes J.MESSAGE metadata and regex', () =>
   {
-    expect(sandbox.J.MESSAGE.Metadata.name).toBe('J-MessageTextCodes');
-
-    expect(sandbox.J.MESSAGE.RegExp.LeaderChoiceConditional.test('<leaderChoiceCondition: 3>')).toBe(true);
-    expect(sandbox.J.MESSAGE.RegExp.SwitchOffChoiceConditional.test('<switchOffChoiceCondition:2>')).toBe(true);
+    // Arrange & Act & Assert
+    expect(globalThis.J.MESSAGE.Metadata.name).toBe('J-MessageTextCodes');
+    expect(globalThis.J.MESSAGE.RegExp.LeaderChoiceConditional.test('<leaderChoiceCondition: 3>')).toBe(true);
+    expect(globalThis.J.MESSAGE.RegExp.SwitchOffChoiceConditional.test('<switchOffChoiceCondition:2>')).toBe(true);
   });
 });
 //endregion plugins/message/metadata.test.js

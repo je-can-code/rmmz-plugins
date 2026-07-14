@@ -1,45 +1,50 @@
 //region plugins/map/datamanager-input-registration.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadMapPluginVm } from './map-vm.js';
+import { installMapHostGlobals, setPluginContextToJBase, setPluginContextToJMap } from './fixtures/install-map-host-globals.js';
 
-describe('J-MAP DataManager.createGameObjects registers minimap inputs (out/J-Map.js)', () =>
+describe('J-MAP DataManager.createGameObjects registers minimap inputs (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadMapPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installMapHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJMap();
+    await import('../../../src/plugins/map/core/_metadata/initialization.js');
+
+    // patches globalThis.DataManager directly, no vm involved.
+    await import('../../../src/plugins/map/core/managers/DataManager.js');
   });
 
   it('registers actions and seeds default bindings', () =>
   {
+    // Arrange
     const actions = [];
     const seeded = [];
     let gotBindings = false;
-
-    sandbox.Input.registerAction = function(namespace, action)
+    globalThis.Input.registerAction = function(namespace, action)
     {
       actions.push({ namespace, action });
     };
-    sandbox.Input.seedDefaultBindings = function(namespace, defaults)
+    globalThis.Input.seedDefaultBindings = function(namespace, defaults)
     {
       seeded.push({ namespace, defaults });
     };
-    sandbox.Input.getAllBindings = function(namespace)
+    globalThis.Input.getAllBindings = function(namespace)
     {
       gotBindings = (namespace === 'J.MAP');
       return [];
     };
 
-    sandbox.DataManager.createGameObjects();
+    // Act
+    globalThis.DataManager.createGameObjects();
 
+    // Assert
     expect(actions.length).toBe(2);
     expect(actions[0].namespace).toBe('J.MAP');
     expect(actions[0].action.key).toBe('minimap-toggle');

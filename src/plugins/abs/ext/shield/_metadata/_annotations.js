@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.2 SHIELD] A JABS extension that provides state-based HP shields.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A JABS extension that provides state-based HP shields.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base

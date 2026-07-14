@@ -1,55 +1,63 @@
 //region plugins/camods/jabs-engine-tracking.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadCamodsPluginVm } from './camods-vm.js';
+import { installCamodsHostGlobals, setPluginContextToJBase, setPluginContextToJCamods } from './fixtures/install-camods-host-globals.js';
 
-describe('J-CA-Mods JABS_Engine tracking hooks (out/ca-mods/J-CA-Mods.js)', () =>
+describe('J-CA-Mods JABS_Engine tracking hooks (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadCamodsPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installCamodsHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJCamods();
+    await import('../../../src/plugins/__ca-mods/core/_metadata/initialization.js');
+
+    // patches globalThis.JABS_Engine.prototype directly, no vm involved.
+    await import('../../../src/plugins/__ca-mods/core/managers/JABS_Engine.js');
   });
 
   it('handleDefeatedEnemy tracks inanimate vs animate as different variables', () =>
   {
+    // Arrange
     const calls = [];
-    sandbox.J.BASE.Helpers.modVariable = function(variableId, amount)
+    globalThis.J.BASE.Helpers.modVariable = function(variableId, amount)
     {
       calls.push({ variableId, amount });
     };
+    const engine = new globalThis.JABS_Engine();
 
-    const engine = new sandbox.JABS_Engine();
-
+    // Act
     engine.handleDefeatedEnemy({ isInanimate: () => true }, null);
     engine.handleDefeatedEnemy({ isInanimate: () => false }, null);
 
+    // Assert
     expect(calls).toEqual([
-      { variableId: sandbox.J.CAMods.Tracking.DestructiblesDestroyed, amount: 1 },
-      { variableId: sandbox.J.CAMods.Tracking.EnemiesDefeated, amount: 1 },
+      { variableId: globalThis.J.CAMods.Tracking.DestructiblesDestroyed, amount: 1 },
+      { variableId: globalThis.J.CAMods.Tracking.EnemiesDefeated, amount: 1 },
     ]);
   });
 
   it('handleDefeatedPlayer increments deaths variable', () =>
   {
+    // Arrange
     const calls = [];
-    sandbox.J.BASE.Helpers.modVariable = function(variableId, amount)
+    globalThis.J.BASE.Helpers.modVariable = function(variableId, amount)
     {
       calls.push({ variableId, amount });
     };
+    const engine = new globalThis.JABS_Engine();
 
-    const engine = new sandbox.JABS_Engine();
+    // Act
     engine.handleDefeatedPlayer();
 
+    // Assert
     expect(calls).toEqual([
-      { variableId: sandbox.J.CAMods.Tracking.NumberOfDeaths, amount: 1 },
+      { variableId: globalThis.J.CAMods.Tracking.NumberOfDeaths, amount: 1 },
     ]);
   });
 });

@@ -1,5 +1,5 @@
 //region RPGManager
-import RPG_Base from './../database/base/RPG_Base.js';
+import JCache from './../core/JCache.js';
 import JsonMapper from './../_utilities/JsonMapper.js';
 import ArrayHelper from './../_utilities/ArrayHelper.js';
 
@@ -10,45 +10,19 @@ class RPGManager
 {
   //region caching
   /**
-   * The cache for storing parsed note data.
-   * @type {WeakMap<object, Map<string, any>>}
+   * The cache for storing parsed note-text results (string/number/boolean/array/captures). Keyed
+   * by the database object alone- note text is immutable, so no battler dimension is needed.
+   * @type {JCache}
    */
-  static _cache = new WeakMap();
+  static _noteCache = JCache.objectScoped({ name: 'rpg:note-text', resolveOriginal: true });
 
   /**
-   * The metrics for this manager.
-   * @type {{ hits: number, misses: number }}
+   * The cache for storing eval'd formula results. Keyed by battler (the formula's live "a") then
+   * by database object, so two battlers sharing a note object never collide and a battler's
+   * entries can be dropped wholesale via the {@link JCache.invalidateAllForBattler} bus.
+   * @type {JCache}
    */
-  static _metrics = {
-    hits: 0,
-    misses: 0,
-  };
-
-  /**
-   * Gets or initializes the cache for the given object.
-   * @param {object} object The object to get or initialize the cache for.
-   * @returns {Map<string, any>} The cache for the object.
-   */
-  static getOrCreateCacheForObject(object)
-  {
-    // resolve to the underlying source object so clones share a cache entry with their original.
-    const cacheTarget = object instanceof RPG_Base
-      ? object._original()
-      : object;
-
-    // check if the cache for this object already exists.
-    const cacheHit = this._cache.get(cacheTarget);
-
-    // if it does exist, return it.
-    if (cacheHit) return cacheHit;
-
-    // it doesn't exist yet, so create it.
-    const newCache = new Map();
-    this._cache.set(cacheTarget, newCache);
-
-    // return the newly created cache.
-    return newCache;
-  }
+  static _evalCache = JCache.battlerThenObject({ name: 'rpg:eval', resolveOriginal: true });
 
   /**
    * Gets the cached data for the given object and tag key.
@@ -59,25 +33,24 @@ class RPGManager
    */
   static cached(object, tagKey, computeFn)
   {
-    // grab the cache for this object.
-    const cache = this.getOrCreateCacheForObject(object);
+    // the note-text cache has no battler dimension, so this is just object + tagKey.
+    return this._noteCache.get(object, tagKey, computeFn);
+  }
 
-    // check if the cache is missing this tag.
-    if (cache.has(tagKey) === false)
-    {
-      this._metrics.misses++;
-
-      // compute the data and cache it.
-      const data = computeFn();
-      cache.set(tagKey, data);
-    }
-    else
-    {
-      this._metrics.hits++;
-    }
-
-    // return the cached data.
-    return cache.get(tagKey);
+  /**
+   * Battler-scoped variant of {@link cached}: results are bucketed by the battler whose live
+   * state the formula reads, then by database object, so two battlers never share an entry and a
+   * battler's entries can be dropped wholesale on a data change.
+   * @param {Game_Battler} battler The formula context (the `a`).
+   * @param {object} object The database object being parsed.
+   * @param {string} tagKey The stable key for this regex/options set (NO battler, NO level).
+   * @param {Function} computeFn Producer run on a miss.
+   * @returns {any}
+   */
+  static cachedForBattler(battler, object, tagKey, computeFn)
+  {
+    // the eval cache is dimensioned battler-then-object, so all three keys are required in order.
+    return this._evalCache.get(battler, object, tagKey, computeFn);
   }
 
   /**
@@ -87,11 +60,21 @@ class RPGManager
    */
   static invalidate(object)
   {
-    // resolve to the same cache key used by getOrCreateCacheForObject so the delete actually hits.
-    const cacheTarget = object instanceof RPG_Base
-      ? object._original()
-      : object;
-    return this._cache.delete(cacheTarget);
+    // drop this object's note-text bucket; used by OverlayManager whenever an overlay changes a
+    // base skill/state's effective note.
+    return this._noteCache.invalidate(object);
+  }
+
+  /**
+   * Drops all cached eval results for one battler. Called from Game_Battler#onBattlerDataChange
+   * (via the {@link JCache.invalidateAllForBattler} bus); kept for any direct callers.
+   * @param {Game_Battler} battler
+   * @returns {boolean}
+   */
+  static invalidateBattlerEval(battler)
+  {
+    // drop every database object's eval entry nested under this battler.
+    return this._evalCache.invalidate(battler);
   }
 
   /**
@@ -99,7 +82,9 @@ class RPGManager
    */
   static clearCache()
   {
-    this._cache = new WeakMap();
+    // drop every cached note-text and eval result, across every object and every battler.
+    this._noteCache.clear();
+    this._evalCache.clear();
   }
 
   //endregion caching
@@ -713,29 +698,15 @@ class RPGManager
     }
 
     // define the unique key for this regex and option set.
-    const key = `eval:${structure.source}::${structure.flags}::${baseParam}${this.#getEvalCacheContextSuffix(context)}::nullIfEmpty=${nullIfEmpty}`;
+    // NO ctxLvl suffix: battler-scoped caching + onBattlerDataChange invalidation covers level AND every other stat.
+    const key = `eval:${structure.source}::${structure.flags}::${baseParam}::nullIfEmpty=${nullIfEmpty}`;
+    const compute = () => this.#getResultFromNoteByRegex(databaseData, structure, baseParam, context, nullIfEmpty);
 
-    // grab the result (potentially cached).
-    return this.cached(
-      databaseData,
-      key,
-      () => this.#getResultFromNoteByRegex(databaseData, structure, baseParam, context, nullIfEmpty)
-    );
-  }
+    // battler-context results depend on the battler's live state -> per-battler cache.
+    if (context) return this.cachedForBattler(context, databaseData, key, compute);
 
-  /**
-   * Builds a cache-key fragment for formula evaluation when battler context can change.
-   * Without this, {@code a.level} (and similar) would stay frozen at the first value cached per note object.
-   * @param {RPG_BaseBattler|null} context The formula context ("a").
-   * @returns {string} Suffix to append to eval cache keys, or empty when there is no context.
-   */
-  static #getEvalCacheContextSuffix(context)
-  {
-    // no context means no level-sensitive cache busting is needed.
-    if (!context) return '';
-
-    // all battlers expose getLevel() via J-Level; append it to bust the cache per level.
-    return `::ctxLvl=${context.getLevel()}`;
+    // no context -> result depends only on note text + baseParam; the object-scoped cache is sound.
+    return this.cached(databaseData, key, compute);
   }
 
   /**

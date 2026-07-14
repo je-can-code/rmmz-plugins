@@ -293,6 +293,7 @@
     "JAptitudeTyped_PluginMetadata": "writable",
     "JAptitude_PluginMetadata": "writable",
     "JCMS_ParameterKvp": "writable",
+    "JCache": "writable",
     "JExtendAbs_PluginMetadata": "writable",
     "JExtendSks_PluginMetadata": "writable",
     "JFORMULA_PluginMetadata": "writable",

@@ -1,79 +1,90 @@
 //region plugins/extend/game-action-skill-layering.test.js
-import vm from 'node:vm';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { installExtendHostGlobals, setPluginContextToJBase, setPluginContextToJExtend } from './fixtures/install-extend-host-globals.js';
 
-import { loadSkillExtendPluginVm } from './extend-vm.js';
-import { clearRpgManagerCacheInVm } from '../../setup/shipped-plugin-vm.js';
-
-describe('J-SkillExtend Game_Action skill layering (out/extend/J-SkillExtend.js)', () =>
+describe('J-SkillExtend Game_Action skill layering (direct src import)', () =>
 {
-  let sandbox;
+  /** @type {typeof import('../../../src/plugins/_base/database/implementations/RPG_Skill.js').default} */
+  let RPG_Skill;
 
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadSkillExtendPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installExtendHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import('../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.JCache } = await import('../../../src/plugins/_base/core/JCache.js'));
+    ({ default: RPG_Skill } = await import('../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+    globalThis.RPG_Skill = RPG_Skill;
+
+    setPluginContextToJExtend();
+    await import('../../../src/plugins/extend/core/_metadata/initialization.js');
+
+    await import('../../../src/plugins/extend/core/database/RPG_Skill.js');
+
+    // OverlayManager.getExtendedSkill() is what extend's own Game_Action.js#setSkill calls into.
+    ({ default: globalThis.OverlayManager } = await import('../../../src/plugins/extend/core/managers/OverlayManager.js'));
+
+    // patches globalThis.Game_Action.prototype directly, no vm involved.
+    await import('../../../src/plugins/extend/core/objects/Game_Action.js');
   });
 
   beforeEach(() =>
   {
-    vm.runInContext(`
-      (() =>
-      {
-        function dataSkill(id, note, extras)
-        {
-          const row = Object.create(RPG_Skill.prototype);
-          row.id = id;
-          row.stypeId = 1;
-          row.name = 'skill';
-          row.note = note;
-          row.meta = {};
-          row.damage = { elementId: 0, type: 1, formula: '0' };
-          row.effects = [];
-          row.message1 = '';
-          row.message2 = '';
-          row.tpCost = 0;
-          row.mpCost = 0;
-          row.hitType = 0;
-          row.speed = 0;
-          row.successRate = 100;
-          row.repeats = 1;
-          if (extras)
-          {
-            Object.assign(row, extras);
-          }
-          return row;
-        }
+    globalThis.RPGManager.clearCache();
+    globalThis.OverlayManager.clearCache();
 
-        $dataSkills[1] = dataSkill(1, '', { mpCost: 1, damage: { elementId: 0, type: 1, formula: '0' } });
-        $dataSkills[2] = dataSkill(2, '<extend:[1]>', { mpCost: 5 });
-        $dataSkills[3] = dataSkill(3, '<extend:[1]>', { damage: { elementId: 0, type: 1, formula: '1+1' }, effects: [ { code: 11 } ] });
-      })()
-    `, sandbox);
-    clearRpgManagerCacheInVm(sandbox);
+    function dataSkill(id, note, extras)
+    {
+      const row = Object.create(RPG_Skill.prototype);
+      row.id = id;
+      row.stypeId = 1;
+      row.name = 'skill';
+      row.note = note;
+      row.meta = {};
+      row.damage = { elementId: 0, type: 1, formula: '0' };
+      row.effects = [];
+      row.message1 = '';
+      row.message2 = '';
+      row.tpCost = 0;
+      row.mpCost = 0;
+      row.hitType = 0;
+      row.speed = 0;
+      row.successRate = 100;
+      row.repeats = 1;
+      if (extras)
+      {
+        Object.assign(row, extras);
+      }
+      return row;
+    }
+
+    globalThis.$dataSkills[1] = dataSkill(1, '', { mpCost: 1, damage: { elementId: 0, type: 1, formula: '0' } });
+    globalThis.$dataSkills[2] = dataSkill(2, '<extend:[1]>', { mpCost: 5 });
+    globalThis.$dataSkills[3] = dataSkill(3, '<extend:[1]>', {
+      damage: { elementId: 0, type: 1, formula: '1+1' }, effects: [ { code: 11 } ],
+    });
   });
 
   it('setSkill uses OverlayManager.getExtendedSkill when a subject exists', () =>
   {
-    // a minimal caster for overlay resolution.
+    // Arrange: a minimal caster for overlay resolution.
     const caster = {
       skills()
       {
-        return [ sandbox.$dataSkills[2], sandbox.$dataSkills[3] ];
+        return [ globalThis.$dataSkills[2], globalThis.$dataSkills[3] ];
       },
       skillIds()
       {
         return [ 2, 3 ];
       },
     };
-
-    const action = new sandbox.Game_Action();
+    const action = new globalThis.Game_Action();
     action._subject = caster;
     action.subject = function()
     {
@@ -81,25 +92,25 @@ describe('J-SkillExtend Game_Action skill layering (out/extend/J-SkillExtend.js)
     };
 
     // verify the overlay skills are detected as such.
-    expect(sandbox.$dataSkills[2].isSkillExtension).toBe(true);
-    expect(sandbox.$dataSkills[2].getSkillExtensions).toContain(1);
-    expect(sandbox.$dataSkills[3].isSkillExtension).toBe(true);
-    expect(sandbox.$dataSkills[3].getSkillExtensions).toContain(1);
+    expect(globalThis.$dataSkills[2].isSkillExtension).toBe(true);
+    expect(globalThis.$dataSkills[2].getSkillExtensions).toContain(1);
+    expect(globalThis.$dataSkills[3].isSkillExtension).toBe(true);
+    expect(globalThis.$dataSkills[3].getSkillExtensions).toContain(1);
 
+    // Act
     action.setSkill(1);
-
-    // the skill stored on the action should be an extended clone, not the base db skill.
     const item = action.item();
+
+    // Assert: the skill stored on the action should be an extended clone, not the base db skill.
     expect(item).toBeDefined();
     expect(item.id).toBe(1);
-    expect(item).not.toBe(sandbox.$dataSkills[1]);
+    expect(item).not.toBe(globalThis.$dataSkills[1]);
     expect(item.damage.formula).toBe('1+1');
     expect(item.effects.length).toBe(1);
 
     // and the database skill should remain untouched.
-    expect(sandbox.$dataSkills[1].damage.formula).toBe('0');
-    expect(sandbox.$dataSkills[1].effects.length).toBe(0);
+    expect(globalThis.$dataSkills[1].damage.formula).toBe('0');
+    expect(globalThis.$dataSkills[1].effects.length).toBe(0);
   });
 });
 //endregion plugins/extend/game-action-skill-layering.test.js
-

@@ -1,5 +1,6 @@
 //region install-apt-host-globals
 import { installJBaseHostGlobals } from '../../../_base/fixtures/install-j-base-host-globals.js';
+import { installPluginManagerWithParams } from '../../../../setup/install-plugin-manager-with-params.js';
 
 /**
  * Globals required for J-Aptitude `src/plugins/apt/core/**` files to evaluate when imported
@@ -12,9 +13,11 @@ import { installJBaseHostGlobals } from '../../../_base/fixtures/install-j-base-
  * they do in the shipped plugin.
  *
  * @param {object} [sandbox] Defaults to `globalThis` so direct-import tests can call this with no target arg.
+ * @param {Record<string, string>} [aptPluginParameterStrings] `PluginManager.parameters('J-Aptitude')` shape;
+ * defaults to empty (matching every existing caller) so J.APT.Metadata falls back to its own defaults.
  * @returns {Promise<void>} Resolves once both plugins' initialization modules have been imported.
  */
-export async function installAptHostGlobals(sandbox = globalThis)
+export async function installAptHostGlobals(sandbox = globalThis, aptPluginParameterStrings = {})
 {
   // J-Aptitude's boot check requires J-Base to report a version satisfying >= 3.0.0; the shared
   // fixture's default ('0.0.0-test') would fail that check, so set it before installing.
@@ -22,6 +25,10 @@ export async function installAptHostGlobals(sandbox = globalThis)
 
   // lay down the shared RMMZ placeholder constructors, $data arrays, and engine singletons.
   installJBaseHostGlobals(sandbox);
+
+  // must run after installJBaseHostGlobals (which unconditionally overwrites PluginManager) and
+  // before apt/core/_metadata/initialization.js consumes PluginManager.parameters('J-Aptitude').
+  installPluginManagerWithParams(sandbox, 'J-Aptitude', aptPluginParameterStrings);
 
   // Game_Troop isn't part of J-Base's placeholder set (J-Base itself doesn't patch it), but
   // apt/core/objects/Game_Troop.js does, so provide a minimal placeholder here.
@@ -52,6 +59,10 @@ export async function installAptHostGlobals(sandbox = globalThis)
     },
   };
 
+  // __PLUGIN_NAME__/__PLUGIN_VERSION__ are bare identifiers read once, at import time, by
+  // _base/_metadata/initialization.js.
+  sandbox.__PLUGIN_NAME__ = 'J-Base';
+
   // real production code- establishes J.BASE.Helpers, J.BASE.Metadata, and RPGManager's dependents.
   await import('../../../../../src/plugins/_base/_metadata/initialization.js');
 
@@ -63,6 +74,9 @@ export async function installAptHostGlobals(sandbox = globalThis)
   // global the shipped build provides after J-Base loads.
   const { default: PluginMetadata } = await import('../../../../../src/plugins/_base/models/PluginMetadata.js');
   sandbox.PluginMetadata = PluginMetadata;
+
+  // flip the bare __PLUGIN_NAME__ to J-Aptitude's own identity before its initialization.js reads it.
+  sandbox.__PLUGIN_NAME__ = 'J-Aptitude';
 
   // real production code- establishes J.APT.Metadata, J.APT.Aliased maps, and J.APT.RegExp patterns.
   await import('../../../../../src/plugins/apt/core/_metadata/initialization.js');

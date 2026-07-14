@@ -1,35 +1,43 @@
 //region plugins/diff/game-actor-param.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadDiffPluginVm } from './diff-vm.js';
+import { installDiffHostGlobals, setPluginContextToJBase, setPluginContextToJDiff } from './fixtures/install-diff-host-globals.js';
 
-describe('J-Difficulty Game_Actor.param (out/diff/J-Difficulty.js)', () =>
+describe('J-Difficulty Game_Actor.param (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadDiffPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installDiffHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJDiff();
+    await import('../../../src/plugins/diff/core/_metadata/initialization.js');
+
+    // patches globalThis.Game_System/Game_Temp/Game_Actor prototypes directly, no vm involved.
+    await import('../../../src/plugins/diff/core/objects/Game_System.js');
+    await import('../../../src/plugins/diff/core/objects/Game_Temp.js');
+    await import('../../../src/plugins/diff/core/objects/Game_Actor.js');
   });
 
   it('scales base param by the default difficulty actor bparam rates', () =>
   {
-    sandbox.$gameSystem = new sandbox.Game_System();
-    sandbox.$gameSystem.initialize();
-
-    sandbox.$gameTemp = new sandbox.Game_Temp();
-    sandbox.$gameTemp.initMembers();
-
-    const actor = new sandbox.Game_Actor();
+    // Arrange
+    globalThis.$gameSystem = new globalThis.Game_System();
+    globalThis.$gameSystem.initialize();
+    globalThis.$gameTemp = new globalThis.Game_Temp();
+    globalThis.$gameTemp.initMembers();
+    const actor = new globalThis.Game_Actor();
     actor.initMembers();
 
-    expect(actor.param(0)).toBe(80);
+    // Act
+    const result = actor.param(0);
+
+    // Assert
+    expect(result).toBe(80);
   });
 });
 //endregion plugins/diff/game-actor-param.test.js

@@ -12,6 +12,21 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsGapClose', {
 });
 //endregion gapClose
 
+//region gapCloseAny
+/**
+ * Whether this skill gap closes to whatever single target it hits, regardless of that target's
+ * own gap close key- skips the key-matching gate entirely. A target carrying <blockGapClose>
+ * still blocks this, so bosses/environmental holdouts can opt out even of an "any" gapcloser.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsGapCloseAny', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.EXT.TOOLS.RegExp.GapCloseAny);
+  },
+});
+//endregion gapCloseAny
+
 //region gapCloseMode
 /**
  * The type of gap close mode this skill uses.
@@ -57,8 +72,9 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsThisOnGapCloseEnd', {
 //region respectTerrain
 /**
  * Whether this skill's gap close should respect terrain passability instead of its default
- * unconditional bypass- when true, the caster stops at the last passable tile along the way
- * instead of blinking/jumping straight through walls.
+ * unconditional bypass. When true, the full tile-by-tile path to the target is validated
+ * first- if every tile along the way is passable, the caster jumps straight to the target as
+ * normal; if any tile blocks the path, the gap close doesn't happen at all.
  * @type {boolean}
  */
 Object.defineProperty(RPG_Skill.prototype, 'jabsRespectTerrain', {

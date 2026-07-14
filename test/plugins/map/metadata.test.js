@@ -1,30 +1,30 @@
 //region plugins/map/metadata.test.js
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { loadMapPluginVm } from './map-vm.js';
+import { installMapHostGlobals, setPluginContextToJBase, setPluginContextToJMap } from './fixtures/install-map-host-globals.js';
 
-describe('J-MAP metadata (out/map/J-Map.js)', () =>
+describe('J-MAP metadata (direct src import)', () =>
 {
-  let sandbox;
-
-  beforeAll(() =>
+  beforeAll(async () =>
   {
-    sandbox = { console };
-    loadMapPluginVm(sandbox);
-  });
+    vi.resetModules();
 
-  afterAll(() =>
-  {
-    sandbox = null;
+    installMapHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJMap();
+    await import('../../../src/plugins/map/core/_metadata/initialization.js');
   });
 
   it('initializes metadata with parsed params', () =>
   {
-    expect(sandbox.J.MAP.Metadata.name).toBe('J-MAP');
-
-    expect(sandbox.J.MAP.Metadata.startVisible).toBe(true);
-    expect(sandbox.J.MAP.Metadata.respectHudHide).toBe(true);
-    expect(sandbox.J.MAP.Metadata.overlapOpacity).toBe(0.4);
+    // Arrange & Act & Assert
+    expect(globalThis.J.MAP.Metadata.name).toBe('J-MAP');
+    expect(globalThis.J.MAP.Metadata.startVisible).toBe(true);
+    expect(globalThis.J.MAP.Metadata.respectHudHide).toBe(true);
+    expect(globalThis.J.MAP.Metadata.overlapOpacity).toBe(0.4);
   });
 });
 //endregion plugins/map/metadata.test.js

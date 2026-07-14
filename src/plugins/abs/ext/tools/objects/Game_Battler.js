@@ -19,6 +19,20 @@ Game_Battler.prototype.gapCloseKey = function()
   // no gap close target tag found on any note source.
   return null;
 };
+
+/**
+ * Whether this battler is immune to gap closing, regardless of the key-matching outcome or
+ * whether the initiating skill carries <gapCloseAny>. Checked across all note sources so a
+ * state alone can grant temporary immunity (e.g. a boss phase, a hookshot-only chasm guard).
+ * @returns {boolean} True if any note source carries the <blockGapClose> tag.
+ */
+Game_Battler.prototype.isGapCloseBlocked = function()
+{
+  // a match on any single note source is enough to grant immunity.
+  return this.getAllNotes()
+    .some(note => RPGManager.checkForBooleanFromNoteByRegex(note, J.ABS.EXT.TOOLS.RegExp.BlockGapClose));
+};
+
 /**
  * Collects all skill IDs from the <onGapCloseEnd> tag across all of this battler's note sources.
  * Unlike {@link jabsThisOnGapCloseEnd}, this aggregates across actor/enemy, equipment, and states.
