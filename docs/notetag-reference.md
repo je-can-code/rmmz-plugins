@@ -2414,3 +2414,130 @@ runs; if both are present on the same battler, lucky wins the tie (avoid stackin
 This battler's on-chance rolls (as the roller) always succeed, no dice involved.
 
 **See also:** `<luckyRolls>`
+
+---
+
+### `<encoreRepeats:[FORMULA]>` / `<accumulate>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States
+
+**When:**
+a successful on-chance proc (bonus hits, retaliate, on-evade, on-defeat, etc.) fires
+
+**Formula context:**
+`a` = the battler being evaluated, `b` = 0, `v` = `$gameVariables._data`.
+
+**Effect:**
+`encoreRepeats` is a battler-wide bonus to how many times a successful proc executes: normally 1,
+becomes `1 + encoreRepeats`. `accumulate` changes how the underlying roll contest is scored — by
+default it stops at the first success, but with this tag every positive roll in the contest is
+counted, and that count feeds proc executions on top of (not instead of) encoreRepeats.
+
+```
+<encoreRepeats:[1]>
+<accumulate>
+```
+Every successful proc fires at least twice, and gets extra executions per lucky roll beyond the
+first success.
+
+**See also:** `<luckyRolls>`
+
+---
+
+### `<skillHistoryBonus:[TYPE_ID, WINDOW, PCT, COUNT_MODE]>` / `<thisSkillHistoryBonus:[WINDOW, PCT, COUNT_MODE]>`
+
+**Applies to:**
+`skillHistoryBonus`: Actors, Classes, Enemies, Weapons, Armors, States. `thisSkillHistoryBonus`:
+Skills, Items.
+
+**When:**
+every attack by the bearer (skillHistoryBonus) / only when this exact skill executes
+(thisSkillHistoryBonus)
+
+**Effect:**
+scales damage by `1 + (PCT * COUNT / 100)`, where COUNT is read from a lookback WINDOW (seconds)
+of this battler's recent skill execution history per COUNT_MODE: `all` (total matching
+executions), `unique` (distinct skill ids), `streak` (consecutive matches from most recent,
+stopping at the first non-match), or `distinct_types` (distinct skill type ids — pair with
+TYPE_ID 0 for "any type"). `skillHistoryBonus` filters by TYPE_ID (0 = no filter);
+`thisSkillHistoryBonus` is implicitly scoped to this skill's own id only.
+
+```
+<skillHistoryBonus:[7, 5, 5, streak]>
+```
++5% damage per consecutive weapon-type-7 skill execution within the last 5 seconds.
+
+---
+
+### `<castTimeDamageBonus:N>` / `<thisCastTimeDamageBonus:N>`
+
+**Applies to:**
+`castTimeDamageBonus`: Actors, Classes, Enemies, Weapons, Armors, States. `thisCastTimeDamageBonus`:
+Skills, Items.
+
+**When:**
+a skill with a resolved cast time > 0 lands direct HP/MP damage
+
+**Effect:**
+`bonusPct = sum(all N-per-second tags) × (resolvedCastFrames / 60)`, then
+`finalDamage = round(baseDamage × (1 + bonusPct / 100))`. No cap. Does NOT apply to healing,
+recovery, slip DoT ticks, or state-only skills. Faster cast speed (e.g. via J-ABS-Timing) reduces
+the resolved cast duration and therefore reduces the bonus. The two tags stack additively.
+
+```
+<castTime:180>
+<thisCastTimeDamageBonus:20>
+```
+A 3-second cast on this skill alone grants +60% damage from this tag (before any passive
+castTimeDamageBonus also stacks on top).
+
+---
+
+### `<rangeBuff:N>` / `<rangeRate:N>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States (also accepted on a skill directly, but then
+affects ALL of the bearer's outgoing actions, not just that skill)
+
+**When:**
+always — scales radius, proximity, AND thickness simultaneously for every action the bearer fires
+
+**Effect:**
+`rangeBuff` adds N tiles (flat, can be negative) before the rate multiplier. `rangeRate` is the
+rate itself, not a delta — each tag contributes `(N - 1.0)` to an additive rate accumulator so
+multiple rate tags stack additively rather than compounding: `finalValue = max(0, (base +
+buffs) * (1.0 + sum(rate - 1.0)))`. Skipped entirely on any dimension the skill has no tag for
+(a skill with no `<proximity>` is unaffected on that axis).
+
+```
+<rangeBuff:2>
+<rangeRate:1.5>
+```
++2 tiles flat, then 1.5x, applied to radius, proximity, and thickness on every outgoing action.
+
+**See also:** `<radiusBuff>`, `<proximityBuff>`, `<thicknessBuff>`
+
+---
+
+### `<radiusBuff:N>` / `<radiusRate:N>` / `<proximityBuff:N>` / `<proximityRate:N>` / `<thicknessBuff:N>` / `<thicknessRate:N>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States
+
+**When:**
+always — same stacking math as `<rangeBuff>`/`<rangeRate>` but scoped to a single dimension
+
+**Effect:**
+axis-specific counterparts to `<rangeBuff>`/`<rangeRate>`: radius affects AoE splash only,
+proximity affects direct-skill targeting reach only, thickness affects LINE/WALL width only. Each
+stacks additively on top of any shared `<rangeBuff>`/`<rangeRate>` tags rather than replacing
+them.
+
+```
+<radiusBuff:2>
+<radiusRate:1.5>
+```
++2 tiles then 1.5x, but only on AoE splash radius — targeting reach and line/wall width untouched.
+
+**See also:** `<rangeBuff>`, `<rangeRate>`
