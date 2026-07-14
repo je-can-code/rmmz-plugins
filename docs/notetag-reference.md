@@ -3293,3 +3293,91 @@ passive the target otherwise wouldn't see.
 At 20 stacks, this state is replaced entirely by state 9.
 
 **See also:** `<stackMax>`, `<applyStacks>`
+
+---
+
+### `<noSwitch>`
+
+**Applies to:**
+Actors
+
+**When:**
+always
+
+**Effect:**
+prevents the player from switching to this actor as party leader via the JABS party-rotate
+command. Use for permanent support members or story actors that should never be
+player-controlled.
+
+---
+
+### `<visOffset:[X, Y]>` / directional `<visOffsetU/D/L/R/UR/UL/DR/DL:[X, Y]>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+always — purely cosmetic, no effect on hitboxes or physics
+
+**Effect:**
+shifts the action sprite by a fixed pixel offset from the action event's center. X positive =
+right, Y positive = down. Directional variants apply a different offset depending on the action's
+travel direction and take precedence over the plain `<visOffset>` when a direction-specific tag
+matches.
+
+```
+<visOffset:[0, -8]>
+```
+Shifts this skill's sprite 8 pixels up from center, for every direction that has no more specific
+directional override.
+
+---
+
+### `<visAnchor:[AX, AY]>` / `<visRotate>` / `<visScale:[SX, SY]>` / `<visZ:VAL>` / `<visDebug>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+always — cosmetic sprite properties, no effect on hitboxes/physics
+
+**Effect:**
+`visAnchor` overrides the sprite's anchor point (0.0-1.0 per axis, [0.5,0.5] = center).
+`visRotate` makes the sprite rotate to face its travel direction (arrows, beams). `visScale`
+overrides sprite stretch (1.0 = normal). `visZ` overrides render order (higher = on top).
+`visDebug` renders a center-point gizmo for diagnosing offset/anchor issues during development —
+remove before shipping.
+
+```
+<visRotate>
+<visAnchor:[0.5, 0.9]>
+```
+A projectile sprite that rotates to face its travel direction, anchored near its base rather than
+center.
+
+**See also:** `<visOffset>`
+
+---
+
+### `<noCastPreview>` / `<castPreviewWarnAt:FRAMES>` / `<noCastPreviews>`
+
+**Applies to:**
+`noCastPreview`/`castPreviewWarnAt`: Skills, Items. `noCastPreviews`: Actors, Enemies (event
+comment or database).
+
+**When:**
+while a battler is casting a skill and the hitbox preview overlay is enabled
+
+**Effect:**
+`noCastPreview` disables the hitbox preview for this one skill's cast. `castPreviewWarnAt` delays
+the preview until only the last FRAMES of the cast remain, for a "flash warning" telegraph
+instead of full-cast visibility. `noCastPreviews` disables previews for every skill a given
+battler executes — good for bosses whose telegraphs should come from animation/sound instead of a
+hitbox overlay.
+
+```
+<castTime:120>
+<castPreviewWarnAt:20>
+```
+The hitbox preview only appears for the final 20 frames of this 2-second cast — most of the cast
+gives no visual warning.
