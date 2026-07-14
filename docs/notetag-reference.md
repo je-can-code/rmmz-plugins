@@ -1037,3 +1037,149 @@ On this same state row: standing still for 60 frames applies a stack of state 80
 single step immediately strips it and resets the stand timer.
 
 **See also:** `<autoApplyState>` (the `stand` condition)
+
+---
+
+## J-Passive-Affix (`src/plugins/passive/ext/affix/`)
+
+Requires J-ABS. Policy layer: if a spawn event explicitly lists affix state ids via `<passive:[...]>`,
+those win outright and no random rolling occurs for that spawn. Otherwise prefix/suffix are rolled
+independently by chance + weighted pool.
+
+### `<enemy-prefix>` / `<enemy-suffix>`
+
+**Applies to:**
+States only
+
+**When:**
+affix pool construction, at random-roll time for a spawned enemy
+
+**Effect:**
+marks this state as eligible to be selected as a random prefix (`enemy-prefix`) or suffix
+(`enemy-suffix`) affix. A state needs one of these tags to be in the roll pool at all.
+
+```
+<enemy-prefix>
+```
+
+**See also:** `<affix-weight>`, `<tier-color-hex>`
+
+---
+
+### `<affix-weight:N>`
+
+**Applies to:**
+States (the prefix/suffix pool states)
+
+**When:**
+weighted random selection among pool members
+
+**Effect:**
+N is a positive integer weight — higher means more likely to be picked relative to other pool
+members. Unweighted/untagged pool members presumably default to a weight of 1.
+
+```
+<affix-weight:10>
+```
+Ten times as likely as an affix with weight 1.
+
+**See also:** `<enemy-prefix>`/`<enemy-suffix>`
+
+---
+
+### `<tier-color-hex:#RRGGBB>`
+
+**Applies to:**
+States (typically prefix-pool states)
+
+**When:**
+presentation only — map nameplate stripe, optionally HUD name row
+
+**Effect:**
+tints the map nameplate stripe (and optionally the HUD) when this prefix state is the selected tier
+prefix on a spawned enemy. No tag means no stripe tint at all — this is opt-in presentation, not a
+mechanical effect.
+
+```
+<tier-color-hex:#FF0000>
+```
+
+**See also:** `<enemy-prefix>`
+
+---
+
+### `<no-rng-passives>` / `<no-rng-passive-prefixes>` / `<no-rng-passive-suffixes>`
+
+**Applies to:**
+Enemies
+
+**When:**
+affix roll gate, before either slot rolls
+
+**Effect:**
+`no-rng-passives` blocks both prefix and suffix rolling entirely for this enemy. The two split
+variants block just their one slot, leaving the other free to roll normally.
+
+```
+<no-rng-passive-prefixes>
+```
+Prevents rolling prefixes for this enemy, but suffixes may still roll.
+
+**See also:** `<passive-affix-prefix-chance>`/`<passive-affix-suffix-chance>`
+
+---
+
+### `<passive-affix-prefix-chance:PERCENT>` / `<passive-affix-suffix-chance:PERCENT>`
+
+**Applies to:**
+Enemies, Events (comment commands)
+
+**When:**
+affix roll, for the slot the tag names
+
+**Formula context:**
+not a formula — PERCENT is 0–100, decimals allowed.
+
+**Effect:**
+overrides the percent chance for that slot's roll. Resolution order (traced through
+`getResolvedPassiveAffixPrefixChance`): event comment override wins if present, otherwise the enemy
+note override, otherwise the plugin's default parameter. Within a single event page, if multiple
+chance tags for the same slot are present, the LAST one (by comment iteration order) wins — verified
+against the actual resolution code, not just asserted.
+
+```
+<passive-affix-prefix-chance:100>
+```
+Always rolls a prefix (unless blocked by `<no-rng-passive-prefixes>`/`<no-rng-passives>`, or
+preempted by an explicit `<passive:[...]>` list).
+
+**See also:** `<no-rng-passives>` family
+
+---
+
+### `<rewardMultiplier:[TYPE, VALUE]>`
+
+**Applies to:**
+States (affix states or any other state on the enemy), Enemies
+
+**When:**
+enemy is defeated, reward calculation
+
+**Effect:**
+TYPE is one of `exp`, `gold`, `sdp`, `ap`, `drops`; VALUE is a decimal multiplier (2.0 = double).
+Multiple tags per note are supported, one per reward type. When an enemy has multipliers from both
+its own note AND its states, they stack MULTIPLICATIVELY (verified in `getRewardMultiplierByType`:
+starts at 1.0, multiplies in the enemy note's value if present, then multiplies in each state's value
+in turn) — e.g. 1.5x from note × 2.0x from a prefix state = 3.0x total, not 3.5x. The `drops` type
+specifically multiplies the drop CHANCE percentage (verified: folds into `getDropMultiplierBonus`,
+which is applied against `drop.denominator` used as a percent), not the number of items rolled.
+
+```
+<rewardMultiplier:[gold, 1.5]>
+<rewardMultiplier:[drops, 1.25]>
+```
+These two tags on the same state grant 1.5x gold and 1.25x drop chance when the enemy is defeated.
+
+**See also:** `<dropMultiplier>` (J-DropsControl core — composes additively with itself and the
+party's bonuses into one base multiplier; this plugin's `<rewardMultiplier:[drops, ...]>` then
+multiplies on top of that whole base, verified in the aliased `getDropMultiplierBonus` override)
