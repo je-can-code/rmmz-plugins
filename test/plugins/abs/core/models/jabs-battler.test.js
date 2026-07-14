@@ -854,6 +854,356 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.clearLeaderDecidedActionsQueue).toHaveBeenCalledTimes(1);
     });
   });
+
+  describe('hasFollowers', () =>
+  {
+    it('is false when the battler is not a leader', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattlerRole = () => ({ leader: false });
+      jabsBattler._followers = [ 'a' ];
+
+      expect(jabsBattler.hasFollowers()).toBe(false);
+    });
+
+    it('is false for a leader with no followers', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattlerRole = () => ({ leader: true });
+      jabsBattler._followers = [];
+
+      expect(jabsBattler.hasFollowers()).toBe(false);
+    });
+
+    it('is true for a leader with tracked followers', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattlerRole = () => ({ leader: true });
+      jabsBattler._followers = [ 'a' ];
+
+      expect(jabsBattler.hasFollowers()).toBe(true);
+    });
+  });
+
+  describe('getBattlerDatabaseData', () =>
+  {
+    it('returns an empty object when there is no underlying battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => null;
+
+      expect(jabsBattler.getBattlerDatabaseData()).toEqual({});
+    });
+
+    it('delegates to the underlying battler\'s database data', () =>
+    {
+      const databaseData = { name: 'Slime' };
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ databaseData: () => databaseData });
+
+      expect(jabsBattler.getBattlerDatabaseData()).toBe(databaseData);
+    });
+  });
+
+  describe('isFacingTarget', () =>
+  {
+    it('is true when facing down and the target faces up', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => J.ABS.Directions.DOWN });
+
+      expect(jabsBattler.isFacingTarget({ direction: () => J.ABS.Directions.UP })).toBe(true);
+    });
+
+    it('is true when facing up and the target faces down', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => J.ABS.Directions.UP });
+
+      expect(jabsBattler.isFacingTarget({ direction: () => J.ABS.Directions.DOWN })).toBe(true);
+    });
+
+    it('is true when facing left and the target faces right', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => J.ABS.Directions.LEFT });
+
+      expect(jabsBattler.isFacingTarget({ direction: () => J.ABS.Directions.RIGHT })).toBe(true);
+    });
+
+    it('is true when facing right and the target faces left', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => J.ABS.Directions.RIGHT });
+
+      expect(jabsBattler.isFacingTarget({ direction: () => J.ABS.Directions.LEFT })).toBe(true);
+    });
+
+    it('is false when facing the same direction as the target', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => J.ABS.Directions.DOWN });
+
+      expect(jabsBattler.isFacingTarget({ direction: () => J.ABS.Directions.DOWN })).toBe(false);
+    });
+
+    it('is false for a diagonal facing not covered by the cardinal switch', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => J.ABS.Directions.LOWERLEFT });
+
+      expect(jabsBattler.isFacingTarget({ direction: () => J.ABS.Directions.UPPERRIGHT })).toBe(false);
+    });
+  });
+
+  describe('isPlayer / isActor / isFollower / isEnemy / isEvent', () =>
+  {
+    it('isPlayer delegates to the character', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isPlayer: () => true });
+
+      expect(jabsBattler.isPlayer()).toBe(true);
+    });
+
+    it('isActor is true for the player regardless of the underlying battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isPlayer = () => true;
+      jabsBattler.getBattler = () => ({ isActor: () => false });
+
+      expect(jabsBattler.isActor()).toBe(true);
+    });
+
+    it('isActor delegates to the underlying battler for a non-player', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isPlayer = () => false;
+      jabsBattler.getBattler = () => ({ isActor: () => true });
+
+      expect(jabsBattler.isActor()).toBe(true);
+    });
+
+    it('isFollower delegates to the character', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isFollower: () => true });
+
+      expect(jabsBattler.isFollower()).toBe(true);
+    });
+
+    it('isEnemy delegates to the underlying battler', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isEnemy: () => true });
+
+      expect(jabsBattler.isEnemy()).toBe(true);
+    });
+
+    it('isEvent delegates to the character', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isEvent: () => true });
+
+      expect(jabsBattler.isEvent()).toBe(true);
+    });
+  });
+
+  describe('team comparisons', () =>
+  {
+    it('isSameTeam compares against this battler\'s team', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._team = 1;
+
+      expect(jabsBattler.isSameTeam(1)).toBe(true);
+      expect(jabsBattler.isSameTeam(2)).toBe(false);
+    });
+
+    it('isFriendlyTeam delegates to JABS_TeamRules.isFriendly', async () =>
+    {
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isFriendly = vi.fn(() => true);
+      const jabsBattler = buildBattler();
+      jabsBattler._team = 1;
+
+      expect(jabsBattler.isFriendlyTeam(2)).toBe(true);
+      expect(JABS_TeamRules.isFriendly).toHaveBeenCalledWith(1, 2);
+    });
+
+    it('isOpposingTeam delegates to JABS_TeamRules.isOpposed', async () =>
+    {
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isOpposed = vi.fn(() => true);
+      const jabsBattler = buildBattler();
+      jabsBattler._team = 1;
+
+      expect(jabsBattler.isOpposingTeam(2)).toBe(true);
+      expect(JABS_TeamRules.isOpposed).toHaveBeenCalledWith(1, 2);
+    });
+  });
+
+  describe('phase management', () =>
+  {
+    it('getPhase/setPhase track the current phase', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.getPhase()).toBe(1);
+
+      jabsBattler.setPhase(2);
+
+      expect(jabsBattler.getPhase()).toBe(2);
+    });
+
+    it('resetPhases resets phase, prepare tracking, and decided/position/combo state', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setPhase(3);
+      jabsBattler._prepareReady = true;
+      jabsBattler._prepareCounter = 5;
+      jabsBattler._postActionCooldownComplete = true;
+      jabsBattler.setDecidedAction = vi.fn();
+      jabsBattler.setAllyTarget = vi.fn();
+      jabsBattler.setInPosition = vi.fn();
+      jabsBattler.clearAiComboHumanizedReadyFrame = vi.fn();
+      jabsBattler._aiDefensiveDodgeReadyFrame = 10;
+      jabsBattler._aiAllyDefensiveGuardReadyFrame = 10;
+      jabsBattler._aiAllyGuardRaiseFrame = 10;
+
+      jabsBattler.resetPhases();
+
+      expect(jabsBattler.getPhase()).toBe(1);
+      expect(jabsBattler._prepareReady).toBe(false);
+      expect(jabsBattler._prepareCounter).toBe(0);
+      expect(jabsBattler._postActionCooldownComplete).toBe(false);
+      expect(jabsBattler.setDecidedAction).toHaveBeenCalledWith(null);
+      expect(jabsBattler.setAllyTarget).toHaveBeenCalledWith(null);
+      expect(jabsBattler.setInPosition).toHaveBeenCalledWith(false);
+      expect(jabsBattler.clearAiComboHumanizedReadyFrame).toHaveBeenCalledTimes(1);
+      expect(jabsBattler._aiDefensiveDodgeReadyFrame).toBe(0);
+      expect(jabsBattler._aiAllyDefensiveGuardReadyFrame).toBe(0);
+      expect(jabsBattler._aiAllyGuardRaiseFrame).toBe(0);
+    });
+  });
+
+  describe('in-position tracking', () =>
+  {
+    it('isInPosition/setInPosition track the flag, defaulting to true', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.isInPosition()).toBe(false);
+
+      jabsBattler.setInPosition();
+
+      expect(jabsBattler.isInPosition()).toBe(true);
+
+      jabsBattler.setInPosition(false);
+
+      expect(jabsBattler.isInPosition()).toBe(false);
+    });
+  });
+
+  describe('decided action tracking', () =>
+  {
+    it('isActionDecided reflects whether an action has been set', () =>
+    {
+      const jabsBattler = buildBattler();
+      expect(jabsBattler.isActionDecided()).toBe(false);
+
+      jabsBattler.setDecidedAction([ 'action' ]);
+
+      expect(jabsBattler.isActionDecided()).toBe(true);
+      expect(jabsBattler.getDecidedAction()).toEqual([ 'action' ]);
+
+      jabsBattler.clearDecidedAction();
+
+      expect(jabsBattler.isActionDecided()).toBe(false);
+    });
+  });
+
+  describe('resetIdleAction', () =>
+  {
+    it('resets the idle-action-ready flag', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._idleActionReady = true;
+
+      jabsBattler.resetIdleAction();
+
+      expect(jabsBattler._idleActionReady).toBe(false);
+    });
+  });
+
+  describe('isEventReady', () =>
+  {
+    it('is false for the player', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isPlayer: () => true });
+
+      expect(jabsBattler.isEventReady()).toBe(false);
+    });
+
+    it('is false when the underlying event is not yet loaded', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isPlayer: () => false, event: () => null });
+
+      expect(jabsBattler.isEventReady()).toBe(false);
+    });
+
+    it('is true when the underlying event is loaded', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isPlayer: () => false, event: () => ({}) });
+
+      expect(jabsBattler.isEventReady()).toBe(true);
+    });
+  });
+
+  describe('getSightRadius', () =>
+  {
+    it('returns the base sight radius when not alerted', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._sightRadius = 4;
+      jabsBattler.isAlerted = () => false;
+
+      expect(jabsBattler.getSightRadius()).toBe(4);
+    });
+
+    it('adds the alerted sight boost when alerted', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._sightRadius = 4;
+      jabsBattler._alertedSightBoost = 2;
+      jabsBattler.isAlerted = () => true;
+
+      expect(jabsBattler.getSightRadius()).toBe(6);
+    });
+  });
+
+  describe('getPursuitRadius', () =>
+  {
+    it('returns the base pursuit radius when not alerted', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._pursuitRadius = 6;
+      jabsBattler.isAlerted = () => false;
+
+      expect(jabsBattler.getPursuitRadius()).toBe(6);
+    });
+
+    it('adds the alerted pursuit boost when alerted', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._pursuitRadius = 6;
+      jabsBattler._alertedPursuitBoost = 3;
+      jabsBattler.isAlerted = () => true;
+
+      expect(jabsBattler.getPursuitRadius()).toBe(9);
+    });
+  });
   //endregion _reference
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
