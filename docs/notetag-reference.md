@@ -4363,3 +4363,29 @@ This battler's outgoing healing is 125% effective.
 <har:-50>   (on state)
 ```
 While afflicted, this battler's outgoing healing is only 50% effective.
+
+---
+
+## J-CAMods (`src/plugins/__ca-mods/core/`)
+
+Chef Adventure-exclusive code modifications against core scripts and other J-plugins. Not a
+publicly supported plugin — unversioned, can change without notice.
+
+### `<damageFlat:VALUE>` / `<damagePerc:VALUE>`
+
+**Applies to:**
+Maps (the map's own note field)
+
+**When:**
+the actor steps while on this map (extends the native "basic floor damage" hook)
+
+**Effect:**
+a minimal tag-driven damage-floor system. `damageFlat` deals a flat HP amount per step;
+`damagePerc` deals a percent of the actor's max HP per step. Multiple tags of the same kind on
+one map note all sum together.
+
+```
+<damageFlat:10>
+<damagePerc:5>
+```
+Stepping anywhere on this map deals 10 flat HP damage plus 5% of the actor's max HP, every step.
