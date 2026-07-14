@@ -3381,3 +3381,29 @@ hitbox overlay.
 ```
 The hitbox preview only appears for the final 20 frames of this 2-second cast — most of the cast
 gives no visual warning.
+
+---
+
+## J-ABS-AllyAI (`src/plugins/abs/ext/allyai/`)
+
+Grants party followers AI so they fight alongside the player. Requires J-ABS and followers
+enabled.
+
+### `<defaultAi:PRESET>`
+
+**Applies to:**
+Actors, Classes
+
+**When:**
+game start / actor initialization
+
+**Effect:**
+sets this ally's default AI preset, snapping all three behavior axes (risk, support, spacing) to
+a coherent archetype. PRESET is one of: `berserker`, `guardian`, `vanguard`, `war-priest`,
+`skirmisher`, `generalist` (default if untagged), `cleric`, `artillery`, `wizard`, `medic`. Class
+tags take priority over actor tags when both are present.
+
+```
+<defaultAi:medic>
+```
+This ally defaults to Medic (careful risk / support-focused / backline spacing).
