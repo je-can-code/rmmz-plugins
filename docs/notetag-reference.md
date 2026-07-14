@@ -3674,3 +3674,110 @@ if untagged.
 This battler never experiences hitstop when hit, regardless of the attacking skill's tags.
 
 **See also:** `<hitstop>`
+
+---
+
+## J-ABS-Juice (`src/plugins/abs/ext/juice/`)
+
+Procedural map-battler motion "juice" for JABS: target hit-reaction squish, caster strike/dodge/
+heal pulses, casting shimmer, and optional IconSet weapon-swing overlays. Has no plugin
+parameters — all base tuning lives in a required `juice` block in `data/config.jabs.json` (the
+plugin throws at startup if it's missing or malformed). These skill tags are the per-skill
+adjustment surface on top of that base config.
+
+### `<jabsJuiceIcon:N>`
+
+**Applies to:**
+Skills
+
+**When:**
+this skill executes with a weapon-swing overlay motion
+
+**Effect:**
+forces the IconSet overlay to icon index N. Without this tag, the icon is inferred from the
+actor's equipped gear (dual-wield offhand → weapon slot 2; single offhand → matching armor icon).
+
+---
+
+### `<noJuice>` / `<juiceMotion:NAME>`
+
+**Applies to:**
+Skills
+
+**When:**
+this skill executes
+
+**Effect:**
+`noJuice` suppresses all juice motion on the caster (equivalent to `<juiceMotion:none>`). NAME
+selects a preset motion: weapon overlay (`arc`, `arc-reverse`, `arc-oscillate`, `bash`, `present`,
+`recoil`, `spin`, `spin-reverse`, `stab-forward`), caster-body (`squish`, `pulse`, `flip`,
+`flip-reverse`), or `none` to suppress. Legacy aliases: `swing-top-down`→arc,
+`swing-bottom-up`→arc-reverse, `spin-360`/`spin-720`→spin, `spin-360-reverse`→spin-reverse.
+`present` lifts the icon on screen for a "brandish" pose. On healing skills, omitting this tag
+keeps caster-only support squish; any `juiceMotion` tag opts into full strike juice instead.
+
+```
+<juiceMotion:arc-oscillate>
+<juiceSpan:150>
+<juiceRepeatCount:3>
+```
+A 150-degree arc that sweeps back and forth 3 times, alternating direction each sweep.
+
+**See also:** `<juiceSpan>`, `<juiceRepeatCount>`, `<juiceDuration>`
+
+---
+
+### `<juiceSpan:N>` / `<juiceRepeatCount:N>` / `<juiceDuration:N>`
+
+**Applies to:**
+Skills
+
+**When:**
+this skill executes with an arc/arc-reverse/arc-oscillate motion (span), any motion (repeat
+count/duration)
+
+**Effect:**
+`juiceSpan` sets arc width in degrees for arc-family motions (default 120, typical 30-300).
+`juiceRepeatCount` sets how many times the motion repeats within the juice duration (default 1):
+full rotations for spin/spin-reverse, alternating sweeps for arc-oscillate, full replays for
+everything else. `juiceDuration` overrides the swing animation length in frames (default:
+`weaponSwingFrames * 2` from config).
+
+---
+
+### `<juiceStabTipDegrees:N>` / `<juiceProfileGun>`
+
+**Applies to:**
+Skills
+
+**When:**
+this skill executes with a stab/bash/recoil motion (juiceStabTipDegrees), or any weapon overlay
+motion (juiceProfileGun)
+
+**Effect:**
+`juiceStabTipDegrees` sets the bore/tip bearing in degrees from Pixi's +x axis at rotation 0
+(stab defaults to sword diagonal; bash/recoil default toward -x). `juiceProfileGun` switches a
+side-profile firearm icon to mirror east/west instead of the usual ~180° rotation, keeping the
+grip from reading upside-down.
+
+---
+
+### `<jabsJuiceWeaponStyle:key>`
+
+**Applies to:**
+Skills
+
+**When:**
+this skill executes with a weapon overlay motion
+
+**Effect:**
+selects a tilt/swing multiplier row (`key`) from the `profiles` map in `config.jabs.json`'s
+`juice` block. The key must already exist in that map. Without this tag, the key is inferred
+from the swing icon: weapon rows use the string weapon type id (e.g. wtypeId 1 → `"1"`); armor
+rows use `"a" + armorTypeId` (e.g. atypeId 4 → `"a4"`) so armor buckets never collide with weapon
+type ids. A `default` row is mandatory in the config as the fallback.
+
+```
+<jabsJuiceWeaponStyle:heavy>
+```
+This skill's swing uses the `heavy` tilt/swing multiplier row instead of the inferred one.
