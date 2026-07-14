@@ -5617,5 +5617,601 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion post-primary battle effects & logging
+
+  //region collision
+  // shared origin helper: with $gameMap tiles at 48x48 and a down-facing (default) action event
+  // at screenX=0/screenY=8, getActionOriginPixels resolves to exactly (0, 0)- see the already-
+  // tested math in the "getActionOriginPixels" describe block above (facing 2: lift=18, oy=10).
+  function buildOriginAction(overrides = {})
+  {
+    return Object.assign({
+      getJabsAction: () => ({ direction: () => J.ABS.Directions.DOWN, getThicknessTiles: () => 1 }),
+      screenX: () => 0,
+      screenY: () => 8,
+    }, overrides);
+  }
+
+  // places the target's AABB center at (cx, cy)- getBattlerAabbModel builds a 48x48 box one tile
+  // above the character's feet, so feetY = cy + 24 recovers the desired center.
+  function buildTargetAt(cx, cy)
+  {
+    return { screenX: () => cx, screenY: () => cy + 24 };
+  }
+
+  describe('getActionDegrees', () =>
+  {
+    it('returns null when no degrees tag is present', () =>
+    {
+      const engine = new JABS_Engine();
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(null);
+      const actionEvent = { getJabsAction: () => ({ getBaseSkill: () => ({}) }) };
+
+      expect(engine.getActionDegrees(actionEvent)).toBeNull();
+    });
+
+    it('returns null when the tag resolves to exactly 0', () =>
+    {
+      const engine = new JABS_Engine();
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(0);
+      const actionEvent = { getJabsAction: () => ({ getBaseSkill: () => ({}) }) };
+
+      expect(engine.getActionDegrees(actionEvent)).toBeNull();
+    });
+
+    it('clamps the found degrees to the [0, 360] range', () =>
+    {
+      const engine = new JABS_Engine();
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(500);
+      const actionEvent = { getJabsAction: () => ({ getBaseSkill: () => ({}) }) };
+
+      expect(engine.getActionDegrees(actionEvent)).toBe(360);
+    });
+
+    it('returns the found degrees unmodified when already in range', () =>
+    {
+      const engine = new JABS_Engine();
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(90);
+      const actionEvent = { getJabsAction: () => ({ getBaseSkill: () => ({}) }) };
+
+      expect(engine.getActionDegrees(actionEvent)).toBe(90);
+    });
+  });
+
+  describe('getActionThicknessTiles', () =>
+  {
+    it('delegates to the action event\'s jabs action', () =>
+    {
+      const engine = new JABS_Engine();
+      const getThicknessTiles = vi.fn(() => 3);
+      const actionEvent = { getJabsAction: () => ({ getThicknessTiles }) };
+
+      expect(engine.getActionThicknessTiles(actionEvent)).toBe(3);
+    });
+  });
+
+  describe('dir8ToUnitVector', () =>
+  {
+    it('maps each cardinal and diagonal direction to its normalized unit vector', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.dir8ToUnitVector(J.ABS.Directions.DOWN)).toEqual({ x: 0, y: 1 });
+      expect(engine.dir8ToUnitVector(J.ABS.Directions.UP)).toEqual({ x: 0, y: -1 });
+      expect(engine.dir8ToUnitVector(J.ABS.Directions.RIGHT)).toEqual({ x: 1, y: 0 });
+      expect(engine.dir8ToUnitVector(J.ABS.Directions.LEFT)).toEqual({ x: -1, y: 0 });
+
+      const sqrt2Inv = 1 / Math.sqrt(2);
+      expect(engine.dir8ToUnitVector(J.ABS.Directions.LOWERRIGHT)).toEqual({ x: sqrt2Inv, y: sqrt2Inv });
+      expect(engine.dir8ToUnitVector(J.ABS.Directions.LOWERLEFT)).toEqual({ x: -sqrt2Inv, y: sqrt2Inv });
+      expect(engine.dir8ToUnitVector(J.ABS.Directions.UPPERRIGHT)).toEqual({ x: sqrt2Inv, y: -sqrt2Inv });
+      expect(engine.dir8ToUnitVector(J.ABS.Directions.UPPERLEFT)).toEqual({ x: -sqrt2Inv, y: -sqrt2Inv });
+    });
+
+    it('defaults to a downward unit vector for an unrecognized direction', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.dir8ToUnitVector(0)).toEqual({ x: 0, y: 1 });
+    });
+  });
+
+  describe('collisionCircle', () =>
+  {
+    it('is true for a target overlapping the origin', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(0, 0);
+
+      expect(engine.collisionCircle(target, action, 1)).toBe(true);
+    });
+
+    it('is false for a target far outside the radius', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(1000, 1000);
+
+      expect(engine.collisionCircle(target, action, 1)).toBe(false);
+    });
+
+    it('honors the range-to-pixel conversion, so a larger range reaches a farther target', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(200, 0);
+
+      expect(engine.collisionCircle(target, action, 1)).toBe(false);
+      expect(engine.collisionCircle(target, action, 5)).toBe(true);
+    });
+  });
+
+  describe('collisionSquare', () =>
+  {
+    it('is true for a target within the centered square', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(0, 0);
+
+      expect(engine.collisionSquare(target, action, 1)).toBe(true);
+    });
+
+    it('is false for a target outside the square', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(1000, 1000);
+
+      expect(engine.collisionSquare(target, action, 1)).toBe(false);
+    });
+  });
+
+  describe('collisionRhombus', () =>
+  {
+    it('is true for a target within the diamond\'s Manhattan distance', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      // 1 tile diagonally in each direction- well within a 2-tile rhombus (L1 distance ~2 tiles).
+      const target = buildTargetAt(48, 48);
+
+      expect(engine.collisionRhombus(target, action, 2)).toBe(true);
+    });
+
+    it('is false for a target outside the diamond even though it would be inside a same-radius circle', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      // far enough diagonally that Manhattan (L1) distance exceeds the range even though it's
+      // closer than the range in straight-line (L2) terms- this is what distinguishes a rhombus
+      // from a circle of the same nominal range.
+      const target = buildTargetAt(90, 90);
+
+      expect(engine.collisionRhombus(target, action, 2)).toBe(false);
+    });
+  });
+
+  describe('collisionCross', () =>
+  {
+    it('is true for a target far out along the horizontal arm', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(48, 0);
+
+      expect(engine.collisionCross(target, action, 1)).toBe(true);
+    });
+
+    it('is true for a target far out along the vertical arm', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(0, 48);
+
+      expect(engine.collisionCross(target, action, 1)).toBe(true);
+    });
+
+    it('is false for a target off of both arms entirely', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(1000, 1000);
+
+      expect(engine.collisionCross(target, action, 1)).toBe(false);
+    });
+  });
+
+  describe('collisionOrientedRectFromOrigin', () =>
+  {
+    it('is true for a target ahead of the origin within the forward span and breadth band', () =>
+    {
+      const engine = new JABS_Engine();
+      const targetRect = { cx: 0, cy: 50, w: 10, h: 10 };
+
+      expect(engine.collisionOrientedRectFromOrigin(targetRect, 0, 0, J.ABS.Directions.DOWN, 100, 20)).toBe(true);
+    });
+
+    it('is false for a target behind the origin (outside the forward span)', () =>
+    {
+      const engine = new JABS_Engine();
+      const targetRect = { cx: 0, cy: -50, w: 10, h: 10 };
+
+      expect(engine.collisionOrientedRectFromOrigin(targetRect, 0, 0, J.ABS.Directions.DOWN, 100, 20)).toBe(false);
+    });
+
+    it('is false for a target ahead but outside the lateral breadth band', () =>
+    {
+      const engine = new JABS_Engine();
+      const targetRect = { cx: 200, cy: 50, w: 10, h: 10 };
+
+      expect(engine.collisionOrientedRectFromOrigin(targetRect, 0, 0, J.ABS.Directions.DOWN, 100, 20)).toBe(false);
+    });
+  });
+
+  describe('collisionLine', () =>
+  {
+    it('delegates to collisionOrientedRectFromOrigin with a length derived from range and default thickness', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.getActionThicknessTiles = vi.fn(() => 1);
+      engine.collisionOrientedRectFromOrigin = vi.fn(() => true);
+      const action = buildOriginAction();
+      const target = buildTargetAt(0, 40);
+
+      const result = engine.collisionLine(target, action, 2, J.ABS.Directions.DOWN);
+
+      expect(result).toBe(true);
+      expect(engine.collisionOrientedRectFromOrigin).toHaveBeenCalledWith(
+        expect.anything(), 0, 0, J.ABS.Directions.DOWN, expect.any(Number), expect.any(Number),
+      );
+    });
+  });
+
+  describe('collisionWall', () =>
+  {
+    it('delegates to collisionOrientedRectFromOrigin with a breadth spanning the range', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.getActionThicknessTiles = vi.fn(() => 1);
+      engine.collisionOrientedRectFromOrigin = vi.fn(() => true);
+      const action = buildOriginAction();
+      const target = buildTargetAt(0, 40);
+
+      const result = engine.collisionWall(target, action, 2, J.ABS.Directions.DOWN);
+
+      expect(result).toBe(true);
+      expect(engine.collisionOrientedRectFromOrigin).toHaveBeenCalledWith(
+        expect.anything(), 0, 0, J.ABS.Directions.DOWN, expect.any(Number), expect.any(Number),
+      );
+    });
+  });
+
+  describe('collisionSector', () =>
+  {
+    it('is true immediately for a full 360-degree sweep once the circle test passes', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(0, 0);
+
+      expect(engine.collisionSector(target, action, 1, J.ABS.Directions.DOWN, 360)).toBe(true);
+    });
+
+    it('is false when the circle fast-reject fails outright', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(1000, 1000);
+
+      expect(engine.collisionSector(target, action, 1, J.ABS.Directions.DOWN, 90)).toBe(false);
+    });
+
+    it('is true for a target within the wedge angle', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      // straight down from the origin, well within a facing-down 90 degree wedge.
+      const target = buildTargetAt(0, 40);
+
+      expect(engine.collisionSector(target, action, 1, J.ABS.Directions.DOWN, 90)).toBe(true);
+    });
+
+    it('is false for a target within range but outside the wedge angle', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      // directly behind (up) a down-facing narrow wedge, but still within the circle radius.
+      const target = buildTargetAt(0, -40);
+
+      expect(engine.collisionSector(target, action, 1, J.ABS.Directions.DOWN, 30)).toBe(false);
+    });
+  });
+
+  describe('isTargetWithinRange', () =>
+  {
+    function buildEngineWithShapeMocks()
+    {
+      const engine = new JABS_Engine();
+      engine.collisionCircle = vi.fn(() => 'circle');
+      engine.collisionRhombus = vi.fn(() => 'rhombus');
+      engine.collisionSquare = vi.fn(() => 'square');
+      engine.collisionCross = vi.fn(() => 'cross');
+      engine.collisionLine = vi.fn(() => 'line');
+      engine.collisionSector = vi.fn(() => 'sector');
+      engine.collisionWall = vi.fn(() => 'wall');
+      engine.getActionDegrees = vi.fn(() => null);
+      return engine;
+    }
+
+    beforeEach(() =>
+    {
+      J.ABS.Shapes = {
+        Circle: 'circle', Rhombus: 'rhombus', Square: 'square', Cross: 'cross',
+        Line: 'line', Arc: 'arc', Wall: 'wall',
+      };
+    });
+
+    it('dispatches to collisionCircle for the circle shape', () =>
+    {
+      const engine = buildEngineWithShapeMocks();
+      expect(engine.isTargetWithinRange(2, 'target', 'action', 1, J.ABS.Shapes.Circle)).toBe('circle');
+    });
+
+    it('dispatches to collisionRhombus for the rhombus shape', () =>
+    {
+      const engine = buildEngineWithShapeMocks();
+      expect(engine.isTargetWithinRange(2, 'target', 'action', 1, J.ABS.Shapes.Rhombus)).toBe('rhombus');
+    });
+
+    it('dispatches to collisionSquare for the square shape', () =>
+    {
+      const engine = buildEngineWithShapeMocks();
+      expect(engine.isTargetWithinRange(2, 'target', 'action', 1, J.ABS.Shapes.Square)).toBe('square');
+    });
+
+    it('dispatches to collisionCross for the cross shape', () =>
+    {
+      const engine = buildEngineWithShapeMocks();
+      expect(engine.isTargetWithinRange(2, 'target', 'action', 1, J.ABS.Shapes.Cross)).toBe('cross');
+    });
+
+    it('dispatches to collisionLine for the line shape, passing along facing', () =>
+    {
+      const engine = buildEngineWithShapeMocks();
+      expect(engine.isTargetWithinRange(2, 'target', 'action', 1, J.ABS.Shapes.Line)).toBe('line');
+    });
+
+    it('dispatches to collisionWall for the wall shape, passing along facing', () =>
+    {
+      const engine = buildEngineWithShapeMocks();
+      expect(engine.isTargetWithinRange(2, 'target', 'action', 1, J.ABS.Shapes.Wall)).toBe('wall');
+    });
+
+    it('dispatches to collisionSector for the arc shape, defaulting degrees to 180 when untagged', () =>
+    {
+      const engine = buildEngineWithShapeMocks();
+      engine.getActionDegrees = vi.fn(() => null);
+
+      engine.isTargetWithinRange(2, 'target', 'action', 1, J.ABS.Shapes.Arc);
+
+      expect(engine.collisionSector).toHaveBeenCalledWith('target', 'action', 1, 2, 180);
+    });
+
+    it('uses the tagged degrees for the arc shape when present', () =>
+    {
+      const engine = buildEngineWithShapeMocks();
+      engine.getActionDegrees = vi.fn(() => 45);
+
+      engine.isTargetWithinRange(2, 'target', 'action', 1, J.ABS.Shapes.Arc);
+
+      expect(engine.collisionSector).toHaveBeenCalledWith('target', 'action', 1, 2, 45);
+    });
+
+    it('falls back to collisionCircle for an unrecognized shape', () =>
+    {
+      const engine = buildEngineWithShapeMocks();
+      expect(engine.isTargetWithinRange(2, 'target', 'action', 1, 'unknown-shape')).toBe('circle');
+    });
+
+    it('excludes a target centered within the inner-radius dead zone regardless of shape', () =>
+    {
+      const engine = buildEngineWithShapeMocks();
+      const action = buildOriginAction();
+      const target = buildTargetAt(0, 0);
+
+      const result = engine.isTargetWithinRange(2, target, action, 5, J.ABS.Shapes.Circle, 1);
+
+      expect(result).toBe(false);
+      expect(engine.collisionCircle).not.toHaveBeenCalled();
+    });
+
+    it('does not apply the dead zone when innerRadius is 0', () =>
+    {
+      const engine = buildEngineWithShapeMocks();
+      const action = buildOriginAction();
+      const target = buildTargetAt(0, 0);
+
+      engine.isTargetWithinRange(2, target, action, 5, J.ABS.Shapes.Circle, 0);
+
+      expect(engine.collisionCircle).toHaveBeenCalled();
+    });
+  });
+
+  describe('getCollisionTargets', () =>
+  {
+    function buildJabsAction(overrides = {})
+    {
+      return Object.assign({
+        getAction: () => ({ isForUser: () => false, isForOne: () => false }),
+        getCaster: () => ({ getAllyTarget: () => null, isEnemy: () => false }),
+        getActionOptions: () => null,
+        getActionSprite: () => null,
+        getRange: () => 1,
+        isDirectAction: () => false,
+        getShape: () => 'circle',
+        getInnerRadius: () => 0,
+      }, overrides);
+    }
+
+    it('returns only the caster for a self-targeting action', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = { id: 'caster' };
+      const jabsAction = buildJabsAction({
+        getAction: () => ({ isForUser: () => true }),
+        getCaster: () => caster,
+      });
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([ caster ]);
+    });
+
+    it('returns only the ally target for a single-target ally-targeted action that can connect', () =>
+    {
+      const engine = new JABS_Engine();
+      const allyTarget = { canActionConnect: () => true, isWithinScope: () => true };
+      const jabsAction = buildJabsAction({
+        getAction: () => ({ isForUser: () => false, isForOne: () => true }),
+        getCaster: () => ({ getAllyTarget: () => allyTarget, isEnemy: () => false }),
+      });
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([ allyTarget ]);
+    });
+
+    it('falls through past an ally target that cannot connect', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getAllBattlers = vi.fn(() => []);
+      const engine = new JABS_Engine();
+      const allyTarget = { canActionConnect: () => false, isWithinScope: () => true };
+      const jabsAction = buildJabsAction({
+        getAction: () => ({ isForUser: () => false, isForOne: () => true }),
+        getCaster: () => ({ getAllyTarget: () => allyTarget, isEnemy: () => false }),
+      });
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([]);
+    });
+
+    it('returns only the retaliation target for a single-target retaliation that can connect', () =>
+    {
+      const engine = new JABS_Engine();
+      const retaliationTarget = { canActionConnect: () => true, isWithinScope: () => true };
+      const jabsAction = buildJabsAction({
+        getAction: () => ({ isForUser: () => false, isForOne: () => true }),
+        getActionOptions: () => ({ getRetaliationTarget: () => retaliationTarget }),
+      });
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([ retaliationTarget ]);
+    });
+
+    it('filters out candidates that cannot connect with the action', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const untargetable = { canActionConnect: () => false, isWithinScope: () => true, isInanimate: () => false };
+      JABS_AiManager.getAllBattlers = vi.fn(() => [ untargetable ]);
+      const engine = new JABS_Engine();
+      const jabsAction = buildJabsAction();
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([]);
+    });
+
+    it('excludes inanimate candidates when the caster is an enemy', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const inanimateCandidate = { canActionConnect: () => true, isWithinScope: () => true, isInanimate: () => true };
+      JABS_AiManager.getAllBattlers = vi.fn(() => [ inanimateCandidate ]);
+      const engine = new JABS_Engine();
+      const jabsAction = buildJabsAction({ getCaster: () => ({ getAllyTarget: () => null, isEnemy: () => true }) });
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([]);
+    });
+
+    it('collects candidates that pass a non-direct action\'s spatial collision check', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const character = {};
+      const candidate = {
+        canActionConnect: () => true,
+        isWithinScope: () => true,
+        isInanimate: () => false,
+        getCharacter: () => character,
+      };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ candidate ]);
+      const engine = new JABS_Engine();
+      engine.isTargetWithinRange = vi.fn(() => true);
+      const actionSprite = { _realX: 0, _realY: 0, getJabsAction: () => ({ direction: () => 2 }) };
+      const jabsAction = buildJabsAction({ getActionSprite: () => actionSprite });
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([ candidate ]);
+    });
+
+    it('excludes candidates that fail a non-direct action\'s spatial collision check', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const candidate = {
+        canActionConnect: () => true,
+        isWithinScope: () => true,
+        isInanimate: () => false,
+        getCharacter: () => ({}),
+      };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ candidate ]);
+      const engine = new JABS_Engine();
+      engine.isTargetWithinRange = vi.fn(() => false);
+      const actionSprite = { _realX: 0, _realY: 0, getJabsAction: () => ({ direction: () => 2 }) };
+      const jabsAction = buildJabsAction({ getActionSprite: () => actionSprite });
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([]);
+    });
+
+    it('hits a direct, non-spatial candidate within proximity', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const candidate = { canActionConnect: () => true, isWithinScope: () => true, isInanimate: () => false };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ candidate ]);
+      const engine = new JABS_Engine();
+      const distanceToDesignatedTarget = vi.fn(() => 2);
+      const jabsAction = buildJabsAction({
+        isDirectAction: () => true,
+        getProximity: () => 5,
+        getCaster: () => ({
+          getAllyTarget: () => null, isEnemy: () => false, getX: () => 0, getY: () => 0, distanceToDesignatedTarget,
+        }),
+      });
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([ candidate ]);
+    });
+
+    it('excludes a direct, non-spatial candidate outside proximity', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const candidate = { canActionConnect: () => true, isWithinScope: () => true, isInanimate: () => false };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ candidate ]);
+      const engine = new JABS_Engine();
+      const distanceToDesignatedTarget = vi.fn(() => 10);
+      const jabsAction = buildJabsAction({
+        isDirectAction: () => true,
+        getProximity: () => 5,
+        getCaster: () => ({
+          getAllyTarget: () => null, isEnemy: () => false, getX: () => 0, getY: () => 0, distanceToDesignatedTarget,
+        }),
+      });
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([]);
+    });
+
+    it('uses spatial collision for a direct action that has an action sprite', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const candidate = {
+        canActionConnect: () => true, isWithinScope: () => true, isInanimate: () => false, getCharacter: () => ({}),
+      };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ candidate ]);
+      const engine = new JABS_Engine();
+      engine.isTargetWithinRange = vi.fn(() => true);
+      const actionSprite = { _realX: 0, _realY: 0, getJabsAction: () => ({ direction: () => 2 }) };
+      const jabsAction = buildJabsAction({ isDirectAction: () => true, getActionSprite: () => actionSprite });
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([ candidate ]);
+    });
+  });
+  //endregion collision
 });
 //endregion plugins/abs/core/managers/jabs-engine.test.js
