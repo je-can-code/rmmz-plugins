@@ -98,6 +98,14 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
           ImplicitParryDominanceMultiplier: 2,
           GlancingBlowDominanceMultiplier: 1.5,
           HitboxOverlaysInitiallyVisible: false,
+          BaseAggro: 5,
+          AggroPerHp: 1,
+          AggroPerMp: 2,
+          AggroPerTp: 10,
+          AggroDrain: 3,
+          AggroParryFlatAmount: -50,
+          AggroParryUserGain: 25,
+          AggroPlayerReduction: 0.5,
         },
         Directions: {
           UP: 8, RIGHT: 6, LEFT: 4, DOWN: 2,
@@ -105,15 +113,37 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         },
         ProjectileFormations: { Line: 'line', Spray: 'spray', Cross: 'cross', Xburst: 'xburst', Nova: 'nova' },
         Globals: { GlobalCooldownKey: 'gcd' },
+        RegExp: { KnockbackResist: /knockbackResist/i, ProximityKnockback: /proximityKnockback/i },
       },
       LEVEL: false,
+    };
+
+    // bare RMMZ-adjacent global (not imported by JABS_Engine.js- referenced directly as a static utility).
+    globalThis.RPGManager = {
+      getSumFromAllNotesByRegex: vi.fn(() => 0),
+      getArraysFromNotesByRegex: vi.fn(() => []),
+      fateOf100: vi.fn(() => false),
+      getNumberFromNoteByRegex: vi.fn(() => 0),
     };
 
     // bare RMMZ-style global (not imported by JABS_Engine.js- loaded elsewhere at runtime).
     globalThis.JABS_Button = { Offhand: 'offhand', Mainhand: 'mainhand' };
 
     // sibling model/manager dependencies- mocked entirely per the unit-tier convention.
-    vi.doMock('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js', () => ({ default: class {} }));
+    vi.doMock('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js', () => ({
+      default: class
+      {
+        static isFriendly()
+        {
+          return false;
+        }
+
+        static isOpposed()
+        {
+          return true;
+        }
+      },
+    }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_SkillExecution.js', () => ({
       default: class
       {
@@ -260,6 +290,10 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     // constructor's initializeEnemyMap() fetch- default it to a harmless no-op response so tests
     // that don't care about enemy-map bootstrapping (i.e. almost all of them) don't need their own.
     globalThis.fetch = vi.fn(() => Promise.resolve({ json: () => Promise.resolve({ events: [] }) }));
+    globalThis.RPGManager.getSumFromAllNotesByRegex.mockReset().mockReturnValue(0);
+    globalThis.RPGManager.getArraysFromNotesByRegex.mockReset().mockReturnValue([]);
+    globalThis.RPGManager.fateOf100.mockReset().mockReturnValue(false);
+    globalThis.RPGManager.getNumberFromNoteByRegex.mockReset().mockReturnValue(0);
   });
 
   //region static: enemy clone list
@@ -3321,5 +3355,760 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion battle effects
+
+  //region aggro & on-hit effects
+  describe('applyAggroEffects', () =>
+  {
+    function buildAttacker(overrides = {})
+    {
+      return Object.assign({
+        getTeam: () => 'attacker-team',
+        getUuid: () => 'attacker-uuid',
+        getBattler: () => ({ states: () => [], tgr: 1 }),
+        isPlayer: () => false,
+        addUpdateAggro: vi.fn(),
+      }, overrides);
+    }
+
+    function buildAggroResult(overrides = {})
+    {
+      return Object.assign({
+        hpDamage: 0, mpDamage: 0, tpDamage: 0, drain: false, parried: false,
+      }, overrides);
+    }
+
+    function buildTarget(result, overrides = {})
+    {
+      return Object.assign({
+        getTeam: () => 'target-team',
+        getUuid: () => 'target-uuid',
+        getBattler: () => ({ result: () => result, states: () => [] }),
+        addUpdateAggro: vi.fn(),
+      }, overrides);
+    }
+
+    function buildAction(attacker, overrides = {})
+    {
+      return Object.assign({
+        getCaster: () => attacker,
+        bonusAggro: () => 0,
+        aggroMultiplier: () => 1,
+      }, overrides);
+    }
+
+    it('does not apply any aggro when the attacker and target are on friendly teams', async () =>
+    {
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isFriendly = vi.fn(() => true);
+      const engine = new JABS_Engine();
+      const attacker = buildAttacker();
+      const target = buildTarget(buildAggroResult());
+      const action = buildAction(attacker);
+
+      engine.applyAggroEffects(action, target);
+
+      expect(target.addUpdateAggro).not.toHaveBeenCalled();
+      JABS_TeamRules.isFriendly = vi.fn(() => false);
+    });
+
+    it('applies the base aggro alone when nothing else contributes', () =>
+    {
+      const engine = new JABS_Engine();
+      const attacker = buildAttacker();
+      const target = buildTarget(buildAggroResult());
+      const action = buildAction(attacker);
+
+      engine.applyAggroEffects(action, target);
+
+      expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 5);
+    });
+
+    it('adds hp-damage aggro on top of the base', () =>
+    {
+      const engine = new JABS_Engine();
+      const attacker = buildAttacker();
+      const target = buildTarget(buildAggroResult({ hpDamage: 10 }));
+      const action = buildAction(attacker);
+
+      engine.applyAggroEffects(action, target);
+
+      expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 15);
+    });
+
+    it('adds mp-damage aggro on top of the base', () =>
+    {
+      const engine = new JABS_Engine();
+      const attacker = buildAttacker();
+      const target = buildTarget(buildAggroResult({ mpDamage: 10 }));
+      const action = buildAction(attacker);
+
+      engine.applyAggroEffects(action, target);
+
+      expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 25);
+    });
+
+    it('adds tp-damage aggro on top of the base', () =>
+    {
+      const engine = new JABS_Engine();
+      const attacker = buildAttacker();
+      const target = buildTarget(buildAggroResult({ tpDamage: 3 }));
+      const action = buildAction(attacker);
+
+      engine.applyAggroEffects(action, target);
+
+      expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 35);
+    });
+
+    it('adds bonus drain aggro on top of the hp-damage aggro when the hit drained hp', () =>
+    {
+      const engine = new JABS_Engine();
+      const attacker = buildAttacker();
+      const target = buildTarget(buildAggroResult({ hpDamage: 10, drain: true }));
+      const action = buildAction(attacker);
+
+      engine.applyAggroEffects(action, target);
+
+      // base(5) + hp(10) + drain(10 * 3) = 45.
+      expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 45);
+    });
+
+    it('reduces the target\'s aggro on a parry while flipping aggro onto the attacker instead', () =>
+    {
+      const engine = new JABS_Engine();
+      const attacker = buildAttacker();
+      const target = buildTarget(buildAggroResult({ parried: true }));
+      const action = buildAction(attacker);
+
+      engine.applyAggroEffects(action, target);
+
+      // base(5) + parryFlat(-50) = -45.
+      expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', -45);
+      expect(attacker.addUpdateAggro).toHaveBeenCalledWith('target-uuid', 25);
+    });
+
+    it('applies the skill\'s bonus aggro before the skill\'s aggro multiplier', () =>
+    {
+      const engine = new JABS_Engine();
+      const attacker = buildAttacker();
+      const target = buildTarget(buildAggroResult());
+      const action = buildAction(attacker, { bonusAggro: () => 10, aggroMultiplier: () => 2 });
+
+      engine.applyAggroEffects(action, target);
+
+      // (base(5) + bonus(10)) * multiplier(2) = 30.
+      expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 30);
+    });
+
+    it('amplifies outgoing aggro for each attacker state with a non-negative jabsAggroOutAmp', () =>
+    {
+      const engine = new JABS_Engine();
+      const attacker = buildAttacker({
+        getBattler: () => ({
+          states: () => [ { jabsAggroOutAmp: 2 }, { jabsAggroOutAmp: -1 } ],
+          tgr: 1,
+        }),
+      });
+      const target = buildTarget(buildAggroResult());
+      const action = buildAction(attacker);
+
+      engine.applyAggroEffects(action, target);
+
+      // base(5) * outAmp(2) only- the negative-tagged state is ignored.
+      expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 10);
+    });
+
+    it('reduces incoming aggro for a target state with a non-negative jabsAggroInAmp', () =>
+    {
+      const engine = new JABS_Engine();
+      const attacker = buildAttacker();
+      const target = buildTarget(buildAggroResult(), {
+        getBattler: () => ({ result: () => buildAggroResult(), states: () => [ { jabsAggroInAmp: 0.5 } ] }),
+      });
+      const action = buildAction(attacker);
+
+      engine.applyAggroEffects(action, target);
+
+      expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 2.5);
+    });
+
+    it('multiplies the final aggro by the attacker\'s tgr', () =>
+    {
+      const engine = new JABS_Engine();
+      const attacker = buildAttacker({ getBattler: () => ({ states: () => [], tgr: 2 }) });
+      const target = buildTarget(buildAggroResult());
+      const action = buildAction(attacker);
+
+      engine.applyAggroEffects(action, target);
+
+      expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 10);
+    });
+
+    it('reduces aggro dealt by the player to compensate for their faster attack pace', () =>
+    {
+      const engine = new JABS_Engine();
+      const attacker = buildAttacker({ isPlayer: () => true });
+      const target = buildTarget(buildAggroResult());
+      const action = buildAction(attacker);
+
+      engine.applyAggroEffects(action, target);
+
+      // base(5) * playerReduction(0.5) = 2.5.
+      expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 2.5);
+    });
+  });
+
+  describe('applyOnHitEffects', () =>
+  {
+    function buildTarget(result)
+    {
+      return { getBattler: () => ({ result: () => result }) };
+    }
+
+    it('does not process on-hit effects when the result is neither a hit nor a parry', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.processOnHitEffects = vi.fn();
+      const target = buildTarget({ isHit: () => false, parried: false });
+
+      engine.applyOnHitEffects('action', target);
+
+      expect(engine.processOnHitEffects).not.toHaveBeenCalled();
+    });
+
+    it('processes on-hit effects when the result is a hit', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.processOnHitEffects = vi.fn();
+      const target = buildTarget({ isHit: () => true, parried: false });
+
+      engine.applyOnHitEffects('action', target);
+
+      expect(engine.processOnHitEffects).toHaveBeenCalledWith('action', target);
+    });
+
+    it('processes on-hit effects when the result was parried', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.processOnHitEffects = vi.fn();
+      const target = buildTarget({ isHit: () => false, parried: true });
+
+      engine.applyOnHitEffects('action', target);
+
+      expect(engine.processOnHitEffects).toHaveBeenCalledWith('action', target);
+    });
+  });
+
+  describe('processOnHitEffects', () =>
+  {
+    function buildEngine(overrides = {})
+    {
+      const engine = new JABS_Engine();
+      engine.getAnimationId = vi.fn(() => 999);
+      engine.checkComboSequence = vi.fn();
+      engine.checkKnockback = vi.fn();
+      engine.checkInterrupt = vi.fn();
+      engine.triggerAlert = vi.fn();
+      return Object.assign(engine, overrides);
+    }
+
+    function buildCaster(overrides = {})
+    {
+      return Object.assign({
+        getTeam: () => 'caster-team',
+        setBattlerLastHit: vi.fn(),
+        enterCombat: vi.fn(),
+      }, overrides);
+    }
+
+    function buildTarget(result, overrides = {})
+    {
+      return Object.assign({
+        getTeam: () => 'target-team',
+        getCharacter: () => ({ requestAnimation: vi.fn() }),
+        getBattler: () => ({ result: () => result }),
+        isInanimate: () => false,
+        enterCombat: vi.fn(),
+      }, overrides);
+    }
+
+    function buildAction(caster, overrides = {})
+    {
+      return Object.assign({
+        getCaster: () => caster,
+        getBaseSkill: () => ({}),
+        hasSelfAnimationId: () => false,
+        performSelfAnimation: vi.fn(),
+        isHealing: () => false,
+      }, overrides);
+    }
+
+    it('requests the skill\'s animation on the target when the hit was not parried', () =>
+    {
+      const engine = buildEngine();
+      const caster = buildCaster();
+      const targetCharacter = { requestAnimation: vi.fn() };
+      const target = buildTarget({ isHit: () => true, parried: false }, { getCharacter: () => targetCharacter });
+      const action = buildAction(caster);
+
+      engine.processOnHitEffects(action, target);
+
+      expect(targetCharacter.requestAnimation).toHaveBeenCalledWith(999);
+    });
+
+    it('requests the parry-flash animation instead of the skill\'s animation when parried', () =>
+    {
+      const engine = buildEngine();
+      const caster = buildCaster();
+      const targetCharacter = { requestAnimation: vi.fn() };
+      const target = buildTarget({ isHit: () => false, parried: true }, { getCharacter: () => targetCharacter });
+      const action = buildAction(caster);
+
+      engine.processOnHitEffects(action, target);
+
+      expect(targetCharacter.requestAnimation).toHaveBeenCalledWith(122);
+    });
+
+    it('performs the self-animation when the skill has one', () =>
+    {
+      const engine = buildEngine();
+      const caster = buildCaster();
+      const target = buildTarget({ isHit: () => true, parried: false });
+      const action = buildAction(caster, { hasSelfAnimationId: () => true });
+
+      engine.processOnHitEffects(action, target);
+
+      expect(action.performSelfAnimation).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not perform a self-animation when the skill has none', () =>
+    {
+      const engine = buildEngine();
+      const caster = buildCaster();
+      const target = buildTarget({ isHit: () => true, parried: false });
+      const action = buildAction(caster, { hasSelfAnimationId: () => false });
+
+      engine.processOnHitEffects(action, target);
+
+      expect(action.performSelfAnimation).not.toHaveBeenCalled();
+    });
+
+    it('checks the combo sequence when the skill is not a free-combo skill', () =>
+    {
+      const engine = buildEngine();
+      const caster = buildCaster();
+      const target = buildTarget({ isHit: () => true, parried: false });
+      const action = buildAction(caster, { getBaseSkill: () => ({ jabsFreeCombo: false }) });
+
+      engine.processOnHitEffects(action, target);
+
+      expect(engine.checkComboSequence).toHaveBeenCalledWith(caster, action);
+    });
+
+    it('skips the combo sequence check when the skill already free-combos', () =>
+    {
+      const engine = buildEngine();
+      const caster = buildCaster();
+      const target = buildTarget({ isHit: () => true, parried: false });
+      const action = buildAction(caster, { getBaseSkill: () => ({ jabsFreeCombo: true }) });
+
+      engine.processOnHitEffects(action, target);
+
+      expect(engine.checkComboSequence).not.toHaveBeenCalled();
+    });
+
+    it('always delegates to checkKnockback, checkInterrupt, and triggerAlert', () =>
+    {
+      const engine = buildEngine();
+      const caster = buildCaster();
+      const target = buildTarget({ isHit: () => true, parried: false });
+      const action = buildAction(caster);
+
+      engine.processOnHitEffects(action, target);
+
+      expect(engine.checkKnockback).toHaveBeenCalledWith(action, target);
+      expect(engine.checkInterrupt).toHaveBeenCalledWith(action, target);
+      expect(engine.triggerAlert).toHaveBeenCalledWith(caster, target);
+    });
+
+    it('does not mark last-hit or enter combat when the caster and target are not opposed', async () =>
+    {
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isOpposed = vi.fn(() => false);
+      const engine = buildEngine();
+      const caster = buildCaster();
+      const target = buildTarget({ isHit: () => true, parried: false });
+      const action = buildAction(caster);
+
+      engine.processOnHitEffects(action, target);
+
+      expect(caster.setBattlerLastHit).not.toHaveBeenCalled();
+      JABS_TeamRules.isOpposed = vi.fn(() => true);
+    });
+
+    it('marks the target as the caster\'s last hit when opposed', () =>
+    {
+      const engine = buildEngine();
+      const caster = buildCaster();
+      const target = buildTarget({ isHit: () => true, parried: false });
+      const action = buildAction(caster);
+
+      engine.processOnHitEffects(action, target);
+
+      expect(caster.setBattlerLastHit).toHaveBeenCalledWith(target);
+    });
+
+    it('enters both battlers into combat on a real, non-healing hit against an animate target', () =>
+    {
+      const engine = buildEngine();
+      const caster = buildCaster();
+      const target = buildTarget({ isHit: () => true, parried: false });
+      const action = buildAction(caster, { isHealing: () => false });
+
+      engine.processOnHitEffects(action, target);
+
+      expect(caster.enterCombat).toHaveBeenCalledTimes(1);
+      expect(target.enterCombat).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not enter combat when the action was a healing action', () =>
+    {
+      const engine = buildEngine();
+      const caster = buildCaster();
+      const target = buildTarget({ isHit: () => true, parried: false });
+      const action = buildAction(caster, { isHealing: () => true });
+
+      engine.processOnHitEffects(action, target);
+
+      expect(caster.enterCombat).not.toHaveBeenCalled();
+      expect(target.enterCombat).not.toHaveBeenCalled();
+    });
+
+    it('does not enter combat when the target is inanimate', () =>
+    {
+      const engine = buildEngine();
+      const caster = buildCaster();
+      const target = buildTarget({ isHit: () => true, parried: false }, { isInanimate: () => true });
+      const action = buildAction(caster);
+
+      engine.processOnHitEffects(action, target);
+
+      expect(caster.enterCombat).not.toHaveBeenCalled();
+      expect(target.enterCombat).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('canBeKnockedBack', () =>
+  {
+    it('is false while the target is already jumping', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = { getCharacter: () => ({ isJumping: () => true }), getBattler: () => ({ result: () => ({ parried: false }) }) };
+
+      expect(engine.canBeKnockedBack('action', target)).toBe(false);
+    });
+
+    it('is false when the hit was parried', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = { getCharacter: () => ({ isJumping: () => false }), getBattler: () => ({ result: () => ({ parried: true }) }) };
+
+      expect(engine.canBeKnockedBack('action', target)).toBe(false);
+    });
+
+    it('is true otherwise', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = { getCharacter: () => ({ isJumping: () => false }), getBattler: () => ({ result: () => ({ parried: false }) }) };
+
+      expect(engine.canBeKnockedBack('action', target)).toBe(true);
+    });
+  });
+
+  describe('getProximityKnockbackBonusPct', () =>
+  {
+    function buildCaster(notes)
+    {
+      return { getBattler: () => ({ getAllNotes: () => notes }) };
+    }
+
+    it('returns 0 when the caster has no proximity-knockback tags at all', () =>
+    {
+      const engine = new JABS_Engine();
+      globalThis.RPGManager.getArraysFromNotesByRegex.mockReturnValue([]);
+      const caster = buildCaster([ { note: '' } ]);
+
+      expect(engine.getProximityKnockbackBonusPct(caster)).toBe(0);
+    });
+
+    it('sums each tag\'s percent scaled by however many opposing battlers are within its radius', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getOpposingBattlersWithinRange = vi.fn()
+        .mockReturnValueOnce([ 'enemy1', 'enemy2' ])
+        .mockReturnValueOnce([ 'enemy1' ]);
+      globalThis.RPGManager.getArraysFromNotesByRegex.mockReturnValue([ [ 3, 10 ], [ 5, 20 ] ]);
+      const engine = new JABS_Engine();
+      const caster = buildCaster([ { note: '<proximityKnockback>' } ]);
+
+      const result = engine.getProximityKnockbackBonusPct(caster);
+
+      // (10 * 2) + (20 * 1) = 40.
+      expect(result).toBe(40);
+    });
+  });
+
+  describe('checkKnockback', () =>
+  {
+    function buildEngine(overrides = {})
+    {
+      const engine = new JABS_Engine();
+      engine.canBeKnockedBack = vi.fn(() => true);
+      engine.getProximityKnockbackBonusPct = vi.fn(() => 0);
+      return Object.assign(engine, overrides);
+    }
+
+    function buildTargetSprite(overrides = {})
+    {
+      return Object.assign({
+        jump: vi.fn(),
+        walkInDirectionClamped: vi.fn(() => [ 0, 0 ]),
+      }, overrides);
+    }
+
+    function buildTarget(targetSprite, overrides = {})
+    {
+      return Object.assign({
+        getBattler: () => ({ getAllNotes: () => [] }),
+        getCharacter: () => targetSprite,
+      }, overrides);
+    }
+
+    function buildAction(overrides = {})
+    {
+      return Object.assign({
+        isHealing: () => false,
+        getKnockback: () => 3,
+        getCaster: () => ({}),
+        isDirectAction: () => false,
+        getActionSprite: () => ({ direction: () => J.ABS.Directions.DOWN }),
+        getBaseSkill: () => ({ jabsIgnoreTerrain: false }),
+      }, overrides);
+    }
+
+    it('does not process knockback when the target cannot be knocked back', () =>
+    {
+      const engine = buildEngine({ canBeKnockedBack: vi.fn(() => false) });
+      const targetSprite = buildTargetSprite();
+      const target = buildTarget(targetSprite);
+      const action = buildAction();
+
+      engine.checkKnockback(action, target);
+
+      expect(targetSprite.jump).not.toHaveBeenCalled();
+    });
+
+    it('does not process knockback for a healing action', () =>
+    {
+      const engine = buildEngine();
+      const targetSprite = buildTargetSprite();
+      const target = buildTarget(targetSprite);
+      const action = buildAction({ isHealing: () => true });
+
+      engine.checkKnockback(action, target);
+
+      expect(targetSprite.jump).not.toHaveBeenCalled();
+    });
+
+    it('does not process knockback when the target has full (100%+) knockback resist', () =>
+    {
+      globalThis.RPGManager.getSumFromAllNotesByRegex.mockReturnValue(100);
+      const engine = buildEngine();
+      const targetSprite = buildTargetSprite();
+      const target = buildTarget(targetSprite);
+      const action = buildAction();
+
+      engine.checkKnockback(action, target);
+
+      expect(targetSprite.jump).not.toHaveBeenCalled();
+    });
+
+    it('does not process knockback when the skill has no knockback value', () =>
+    {
+      const engine = buildEngine();
+      const targetSprite = buildTargetSprite();
+      const target = buildTarget(targetSprite);
+      const action = buildAction({ getKnockback: () => null });
+
+      engine.checkKnockback(action, target);
+
+      expect(targetSprite.jump).not.toHaveBeenCalled();
+    });
+
+    it('hops the target in place when the computed knockback is 0', () =>
+    {
+      const engine = buildEngine();
+      const targetSprite = buildTargetSprite();
+      const target = buildTarget(targetSprite);
+      const action = buildAction({ getKnockback: () => 0 });
+
+      engine.checkKnockback(action, target);
+
+      expect(targetSprite.jump).toHaveBeenCalledWith(0, 0);
+    });
+
+    it('hops the target in place for a direct action regardless of knockback value', () =>
+    {
+      const engine = buildEngine();
+      const targetSprite = buildTargetSprite();
+      const target = buildTarget(targetSprite);
+      const action = buildAction({ isDirectAction: () => true });
+
+      engine.checkKnockback(action, target);
+
+      expect(targetSprite.jump).toHaveBeenCalledWith(0, 0);
+    });
+
+    it('reduces the effective knockback distance by the target\'s resist percentage', () =>
+    {
+      globalThis.RPGManager.getSumFromAllNotesByRegex.mockReturnValue(50);
+      const engine = buildEngine();
+      const targetSprite = buildTargetSprite();
+      const target = buildTarget(targetSprite);
+      const action = buildAction({ getKnockback: () => 10, getBaseSkill: () => ({ jabsIgnoreTerrain: true }) });
+
+      engine.checkKnockback(action, target);
+
+      // knockback(10) * (100 - resist(50)) / 100 = 5, direction DOWN means yPlus += ceil(5).
+      expect(targetSprite.jump).toHaveBeenCalledWith(0, 5);
+    });
+
+    it('amplifies the knockback distance by the proximity bonus percent', () =>
+    {
+      const engine = buildEngine({ getProximityKnockbackBonusPct: vi.fn(() => 100) });
+      const targetSprite = buildTargetSprite();
+      const target = buildTarget(targetSprite);
+      const action = buildAction({ getKnockback: () => 5, getBaseSkill: () => ({ jabsIgnoreTerrain: true }) });
+
+      engine.checkKnockback(action, target);
+
+      // knockback(5) * (1 + 100/100) = 10, direction DOWN means yPlus += ceil(10).
+      expect(targetSprite.jump).toHaveBeenCalledWith(0, 10);
+    });
+
+    it('jumps straight to the computed destination for a skill tagged to ignore terrain', () =>
+    {
+      const engine = buildEngine();
+      const targetSprite = buildTargetSprite();
+      const target = buildTarget(targetSprite);
+      const action = buildAction({ getKnockback: () => 4, getBaseSkill: () => ({ jabsIgnoreTerrain: true }) });
+
+      engine.checkKnockback(action, target);
+
+      expect(targetSprite.jump).toHaveBeenCalledWith(0, 4);
+      expect(targetSprite.walkInDirectionClamped).not.toHaveBeenCalled();
+    });
+
+    it('walks tile-by-tile toward the destination, stopping at the last passable tile, for a terrain-respecting skill', () =>
+    {
+      const engine = buildEngine();
+      const targetSprite = buildTargetSprite({ walkInDirectionClamped: vi.fn(() => [ 0, 2 ]) });
+      const target = buildTarget(targetSprite);
+      const action = buildAction({ getKnockback: () => 4, getBaseSkill: () => ({ jabsIgnoreTerrain: false }) });
+
+      engine.checkKnockback(action, target);
+
+      expect(targetSprite.walkInDirectionClamped).toHaveBeenCalledWith(J.ABS.Directions.DOWN, 4);
+      expect(targetSprite.jump).toHaveBeenCalledWith(0, 2);
+    });
+  });
+
+  describe('checkInterrupt', () =>
+  {
+    function buildTarget(overrides = {})
+    {
+      return Object.assign({
+        isCastingOrChanneling: () => true,
+        getDecidedAction: () => null,
+        getBattler: () => ({ isImmuneToInterrupt: () => false }),
+        interrupt: vi.fn(),
+      }, overrides);
+    }
+
+    function buildAction(overrides = {})
+    {
+      return Object.assign({
+        getBaseSkill: () => ({ jabsInterruptMagnifier: 2 }),
+      }, overrides);
+    }
+
+    it('does nothing when the target is not casting or channeling', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = buildTarget({ isCastingOrChanneling: () => false });
+      const action = buildAction();
+
+      engine.checkInterrupt(action, target);
+
+      expect(target.interrupt).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when the attacking skill carries no interrupt magnifier', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = buildTarget();
+      const action = buildAction({ getBaseSkill: () => ({ jabsInterruptMagnifier: 0 }) });
+
+      engine.checkInterrupt(action, target);
+
+      expect(target.interrupt).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when the interrupted skill is itself immune to interruption', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = buildTarget({
+        getDecidedAction: () => [ { getBaseSkill: () => ({ jabsThisCannotBeInterrupted: true }) } ],
+      });
+      const action = buildAction();
+
+      engine.checkInterrupt(action, target);
+
+      expect(target.interrupt).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when the target battler is wholly immune to interruption', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = buildTarget({ getBattler: () => ({ isImmuneToInterrupt: () => true }) });
+      const action = buildAction();
+
+      engine.checkInterrupt(action, target);
+
+      expect(target.interrupt).not.toHaveBeenCalled();
+    });
+
+    it('interrupts the target with the skill\'s magnifier otherwise', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = buildTarget();
+      const action = buildAction();
+
+      engine.checkInterrupt(action, target);
+
+      expect(target.interrupt).toHaveBeenCalledWith(2, false);
+    });
+
+    it('still interrupts when there is no in-flight decided action to check for skill-specific immunity', () =>
+    {
+      const engine = new JABS_Engine();
+      const target = buildTarget({ getDecidedAction: () => null });
+      const action = buildAction();
+
+      engine.checkInterrupt(action, target);
+
+      expect(target.interrupt).toHaveBeenCalledWith(2, false);
+    });
+  });
+  //endregion aggro & on-hit effects
 });
 //endregion plugins/abs/core/managers/jabs-engine.test.js
