@@ -3407,3 +3407,38 @@ tags take priority over actor tags when both are present.
 <defaultAi:medic>
 ```
 This ally defaults to Medic (careful risk / support-focused / backline spacing).
+
+---
+
+## J-ABS-Charge (`src/plugins/abs/ext/charge/`)
+
+Lets skills be "charged" by holding the input for their slot, releasing a different skill at
+each charge tier reached — a JABS take on Zelda's charge-swing. Requires J-ABS. Only chargeable
+in mainhand/offhand/combat-skill 1-4 slots; dodge and tool slots can never charge, and tools/guard
+skills are never valid even if tagged.
+
+### `<chargeTier:[TIER, DURATION, RELEASED_SKILL, CHARGE_ANIM?, DONE_ANIM?]>`
+
+**Applies to:**
+Skills
+
+**When:**
+the input for this skill's slot is held down
+
+**Effect:**
+defines one charge tier. TIER is this tier's number; DURATION is frames the input must be held to
+reach it; RELEASED_SKILL is the skill executed if released once this tier is reached (0 = no
+skill). CHARGE_ANIM (optional) loops while charging this tier; DONE_ANIM (optional) plays once
+this tier completes — both fall back to plugin-param defaults if omitted. Multiple tags on one
+skill define multiple tiers; gaps between explicitly defined tiers are auto-generated at 30
+frames each with no releasable skill (falling through to the nearest lower tier's skill on
+release).
+
+```
+<chargeTier:[1,60,125]>
+<chargeTier:[2,300,0]>
+<chargeTier:[7,150,90]>
+```
+7 charge tiers (3-6 auto-generated at 30 frames each). Releasing after tier 1 (60 frames) fires
+skill 125; releasing between tiers 2-6 also fires skill 125 (tier 2 sets 0); releasing at tier 7
+(after ~10.5 seconds total) fires skill 90 instead.
