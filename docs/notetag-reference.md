@@ -2696,3 +2696,152 @@ from the executing skill's own note, stacking on top of the caster-wide tag.
 <thisBonusDamageForMyStateCount:15>
 ```
 +15% per distinct state this caster personally applied to the target — 3 such states = +45%.
+
+---
+
+### `<applyStateOnExpire:[STATE_ID, CHANCE]>`
+
+**Applies to:**
+States
+
+**When:**
+the state expires naturally (frame-counter reaches zero) — NOT forced removal (dispel, script
+call, KO, food-chain strip)
+
+**Effect:**
+applies STATE_ID to the same battler at CHANCE percent, inheriting the same source battler as the
+expiring state. This distinction (natural vs. forced) is intentional — removing a chain state
+early does not cascade the chain forward. Only the first tag per state is read.
+
+```
+<applyStateOnExpire:[15, 50]>
+```
+A "Burning" state that naturally expiring has a 50% chance to leave behind state 15 (e.g.
+"Scorched").
+
+---
+
+### `<purgeStates:[TYPE, ALLOW_DEATH, COUNT]>` / `<noLogs>`
+
+**Applies to:**
+`purgeStates`: Skills, Items. `noLogs`: States.
+
+**When:**
+a `<purgeStates>` skill lands a hit (parried/evaded hits do not trigger it)
+
+**Effect:**
+strips COUNT states from the target, highest priority first. TYPE filters by polarity: `negative`
+(default, only `<negative>`-tagged states), `positive` (states not tagged `<negative>`), or `all`.
+ALLOW_DEATH (default false) controls whether the death state (id 1) is eligible. All three
+parameters are optional with sensible defaults. `<noLogs>`, placed on a state, suppresses that
+specific state's removal from being written to the text log when purged.
+
+```
+<purgeStates:[all, false, 3]>
+```
+A cleanse burst: strips up to 3 states of any polarity (never death) from the target.
+
+---
+
+### `<spread:[CHANCE, RANGE]>` / `<viral>` / `<spreadTick:FRAMES>` / `<spreadPerTick:N>` / `<spreadPreferUnafflicted>` / `<spreadSkipAfflicted>`
+
+**Applies to:**
+States
+
+**When:**
+on a spread pulse cadence, independent of slip/regen ticks
+
+**Effect:**
+tracked states can spread to nearby battlers (buffs and debuffs both qualify). CHANCE is rolled
+independently per candidate each pulse; RANGE is tile distance. Spread uses the original source
+battler from when the state was first applied. `viral` widens candidates to all battlers in range
+instead of just same-side allies. `spreadTick` sets frames between pulses (default from plugin
+param, usually 30). `spreadPerTick` caps successful spreads per pulse. `spreadPreferUnafflicted`
+tries unafflicted battlers first (closest-first); `spreadSkipAfflicted` never re-spreads to a
+battler that already has the state.
+
+```
+<spread:[25, 3]>
+<spreadTick:60>
+<spreadSkipAfflicted>
+```
+A contagion state: 25% chance per nearby battler within 3 tiles every second, never re-infecting
+someone who already has it.
+
+---
+
+### `<skillId:SKILL_ID>` / `<offhandSkillId:SKILL_ID>` / `<offhandEligible>`
+
+**Applies to:**
+Weapons, Armors (skillId, offhandSkillId); Skills (offhandEligible)
+
+**When:**
+equip-slot resolution / offhand assignment
+
+**Effect:**
+`skillId` designates what skill an equipped item grants to its slot. `offhandSkillId`, placed on
+a mainhand weapon, overrides what the offhand slot resolves to for two-handed-but-still-active
+weapons (also bypasses RMMZ's "Seal Equip: Offhand" trait, unlike a bare seal). Offhand
+resolution precedence: native offhand seal (unless overridden) > player pin > mainhand's
+offhandSkillId > offhand item's own skillId > nothing. `offhandEligible`, placed on a skill, opts
+it into the player-assignable offhand pin list regardless of skill type — generic learned weapon
+skills are NOT eligible by default.
+
+```
+<skillId:14>
+<offhandSkillId:15>
+```
+This weapon grants skill 14 to mainhand, and overrides the offhand to skill 15 (e.g. a spear that
+keeps a thrust action even while two-handed).
+
+**See also:** `<skillTransform>`
+
+---
+
+### `<knockbackResist:VAL>` / `<proximityKnockback:[RADIUS, PCT]>`
+
+**Applies to:**
+Weapons, Armors (knockbackResist); Actors, Classes, Enemies, Weapons, Armors, States
+(proximityKnockback)
+
+**When:**
+receiving knockback (resist) / dealing knockback (proximityKnockback)
+
+**Effect:**
+`knockbackResist` cancels VAL tiles of any incoming knockback. `proximityKnockback` amplifies
+this battler's outgoing knockback by PCT percent per opposing battler found within RADIUS tiles,
+evaluated fresh against the live battlefield each hit. Allies within RADIUS don't count; multiple
+tags (different sources/radii) sum independently.
+
+```
+<proximityKnockback:[4, 25]>
+```
++25% outgoing knockback per opposing battler within 4 tiles of this caster.
+
+**See also:** `<knockback>`, `<ignoreTerrain>`
+
+---
+
+### `<bonus-hits-global:VAL>` / `<bonus-hits-basic:VAL>` / `<bonus-hits-skill:VAL>` (+ formula variants)
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States
+
+**Formula context (bracketed variant):**
+`a` = the battler carrying the tag, `b` = 0, `v` = `$gameVariables._data`.
+
+**When:**
+every pierce-step connection, stacking with `<bonus-hits:VAL>` on the executing skill
+
+**Effect:**
+battler-wide counterparts to the skill-note `<bonus-hits>` tag: `global` applies to every JABS
+action; `basic` applies only to basic attacks (mainhand/offhand for actors, the enemy's
+designated basic attack); `skill` applies only to non-basic skills. All three accept a flat
+integer or a bracketed formula, same floor-once-at-the-end behavior as the skill-note variant.
+
+```
+<bonus-hits-basic:[a.luk / 10]>
+```
+Basic attacks only get extra hit applications per connection scaled off this battler's own LUK.
+
+**See also:** `<bonus-hits>`, `<pierce>`
