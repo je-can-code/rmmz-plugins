@@ -2698,5 +2698,600 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion statics
+
+  //region updates: targeting resolution
+  describe('updateSelfInterruptOnMove', () =>
+  {
+    function buildInterruptibleBattler(overrides = {})
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isPlayer = () => true;
+      jabsBattler.isCastingOrChanneling = () => true;
+      jabsBattler.hasUninterruptibleMovementLock = () => false;
+      jabsBattler.interrupt = vi.fn();
+      Object.assign(jabsBattler, overrides);
+      return jabsBattler;
+    }
+
+    beforeEach(() =>
+    {
+      globalThis.Input = { dir8: 0 };
+      globalThis.$gameTemp = { isDestinationValid: () => false };
+    });
+
+    it('does nothing for a non-player battler', () =>
+    {
+      const jabsBattler = buildInterruptibleBattler({ isPlayer: () => false });
+
+      jabsBattler.updateSelfInterruptOnMove();
+
+      expect(jabsBattler.interrupt).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when not casting or channeling', () =>
+    {
+      const jabsBattler = buildInterruptibleBattler({ isCastingOrChanneling: () => false });
+
+      jabsBattler.updateSelfInterruptOnMove();
+
+      expect(jabsBattler.interrupt).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when the active cast/channel has an uninterruptible movement lock', () =>
+    {
+      const jabsBattler = buildInterruptibleBattler({ hasUninterruptibleMovementLock: () => true });
+
+      jabsBattler.updateSelfInterruptOnMove();
+
+      expect(jabsBattler.interrupt).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when there is no movement intent', () =>
+    {
+      const jabsBattler = buildInterruptibleBattler();
+
+      jabsBattler.updateSelfInterruptOnMove();
+
+      expect(jabsBattler.interrupt).not.toHaveBeenCalled();
+    });
+
+    it('interrupts when directional input signals movement intent', () =>
+    {
+      globalThis.Input.dir8 = 8;
+      const jabsBattler = buildInterruptibleBattler();
+
+      jabsBattler.updateSelfInterruptOnMove();
+
+      expect(jabsBattler.interrupt).toHaveBeenCalledWith(100, true);
+    });
+
+    it('interrupts when a click-to-move destination is queued', () =>
+    {
+      globalThis.$gameTemp.isDestinationValid = () => true;
+      const jabsBattler = buildInterruptibleBattler();
+
+      jabsBattler.updateSelfInterruptOnMove();
+
+      expect(jabsBattler.interrupt).toHaveBeenCalledWith(100, true);
+    });
+  });
+
+  describe('canProcessQueuedActions', () =>
+  {
+    function buildBaseBattler(overrides = {})
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isActionDecided = () => true;
+      jabsBattler.isCasting = () => false;
+      jabsBattler.isChanneling = () => false;
+      jabsBattler.isPlayer = () => true;
+      jabsBattler.isInPosition = () => false;
+      Object.assign(jabsBattler, overrides);
+      return jabsBattler;
+    }
+
+    it('is false without a decided action', () =>
+    {
+      expect(buildBaseBattler({ isActionDecided: () => false }).canProcessQueuedActions()).toBe(false);
+    });
+
+    it('is false while casting', () =>
+    {
+      expect(buildBaseBattler({ isCasting: () => true }).canProcessQueuedActions()).toBe(false);
+    });
+
+    it('is false while channeling', () =>
+    {
+      expect(buildBaseBattler({ isChanneling: () => true }).canProcessQueuedActions()).toBe(false);
+    });
+
+    it('is false for a non-player not yet in position', () =>
+    {
+      expect(buildBaseBattler({ isPlayer: () => false, isInPosition: () => false }).canProcessQueuedActions())
+        .toBe(false);
+    });
+
+    it('is true for a non-player already in position', () =>
+    {
+      expect(buildBaseBattler({ isPlayer: () => false, isInPosition: () => true }).canProcessQueuedActions())
+        .toBe(true);
+    });
+
+    it('is true for the player regardless of in-position status', () =>
+    {
+      expect(buildBaseBattler({ isPlayer: () => true, isInPosition: () => false }).canProcessQueuedActions())
+        .toBe(true);
+    });
+  });
+
+  describe('processQueuedActions', () =>
+  {
+    function buildPrimaryAction(overrides = {})
+    {
+      return Object.assign({
+        getBaseSkill: () => ({ id: 7, jabsChannel: [] }),
+        getCooldownType: () => 'mainhand',
+      }, overrides);
+    }
+
+    it('does nothing when queued actions cannot currently be processed', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.canProcessQueuedActions = () => false;
+      globalThis.$jabsEngine = { executeMapActions: vi.fn() };
+
+      jabsBattler.processQueuedActions();
+
+      expect(globalThis.$jabsEngine.executeMapActions).not.toHaveBeenCalled();
+    });
+
+    it('tracks the last used skill id and slot', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.canProcessQueuedActions = () => true;
+      jabsBattler.resolveActionTargetCoordinates = () => [ null, null ];
+      globalThis.$jabsEngine = { executeMapActions: vi.fn() };
+      jabsBattler.setDecidedAction([ buildPrimaryAction() ]);
+
+      jabsBattler.processQueuedActions();
+
+      expect(jabsBattler.getLastUsedSkillId()).toBe(7);
+      expect(jabsBattler.getLastUsedSlot()).toBe('mainhand');
+    });
+
+    it('begins a channel and retains the decided action for a channel-tagged skill', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.canProcessQueuedActions = () => true;
+      jabsBattler.beginChannel = vi.fn();
+      globalThis.$jabsEngine = { executeMapActions: vi.fn() };
+      const primaryAction = buildPrimaryAction({ getBaseSkill: () => ({ id: 7, jabsChannel: [ 1 ] }) });
+      jabsBattler.setDecidedAction([ primaryAction ]);
+
+      jabsBattler.processQueuedActions();
+
+      expect(jabsBattler.beginChannel).toHaveBeenCalledWith(primaryAction);
+      expect(globalThis.$jabsEngine.executeMapActions).not.toHaveBeenCalled();
+      expect(jabsBattler.isActionDecided()).toBe(true);
+    });
+
+    it('executes the resolved map action and clears the decided action for a normal skill', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.canProcessQueuedActions = () => true;
+      jabsBattler.resolveActionTargetCoordinates = () => [ 3, 4 ];
+      globalThis.$jabsEngine = { executeMapActions: vi.fn() };
+      const decidedActions = [ buildPrimaryAction() ];
+      jabsBattler.setDecidedAction(decidedActions);
+
+      jabsBattler.processQueuedActions();
+
+      expect(globalThis.$jabsEngine.executeMapActions).toHaveBeenCalledWith(jabsBattler, decidedActions, 3, 4);
+      expect(jabsBattler.isActionDecided()).toBe(false);
+    });
+  });
+
+  describe('resolveActionTargetCoordinates', () =>
+  {
+    it('returns [null, null] without an action', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.resolveActionTargetCoordinates(null)).toEqual([ null, null ]);
+    });
+
+    it('prefers a frozen target location from the action options', () =>
+    {
+      const jabsBattler = buildBattler();
+      const action = {
+        getActionOptions: () => ({ getTargetLocation: () => ({ getX: () => 3, getY: () => 4 }) }),
+      };
+
+      expect(jabsBattler.resolveActionTargetCoordinates(action)).toEqual([ 3, 4 ]);
+    });
+
+    it('falls back to live direct-action resolution without a frozen location', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.resolveDirectActionTargetCoordinates = vi.fn(() => [ 5, 6 ]);
+      const action = { getActionOptions: () => null };
+
+      expect(jabsBattler.resolveActionTargetCoordinates(action)).toEqual([ 5, 6 ]);
+    });
+  });
+
+  describe('resolveDirectActionTargetCoordinates', () =>
+  {
+    it('returns [null, null] without a direct action', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.resolveDirectActionTargetCoordinates({ isDirectAction: () => false })).toEqual([
+        null, null,
+      ]);
+    });
+
+    it('spatializes onto the caster for a self-targeting action', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getX = () => 1;
+      jabsBattler.getY = () => 2;
+      const action = { isDirectAction: () => true, getAction: () => ({ isForUser: () => true }) };
+
+      expect(jabsBattler.resolveDirectActionTargetCoordinates(action)).toEqual([ 1, 2 ]);
+    });
+
+    it('resolves onto the ally target for an ally-targeting action', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setAllyTarget({ getX: () => 3, getY: () => 4 });
+      const action = {
+        isDirectAction: () => true,
+        getAction: () => ({ isForUser: () => false, isForFriend: () => true }),
+      };
+
+      expect(jabsBattler.resolveDirectActionTargetCoordinates(action)).toEqual([ 3, 4 ]);
+    });
+
+    it('falls through to the opponent priority chain otherwise', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.resolveDirectOpponentTarget = vi.fn(() => ({ getX: () => 7, getY: () => 8 }));
+      const skill = { id: 1 };
+      const action = {
+        isDirectAction: () => true,
+        getAction: () => ({ isForUser: () => false, isForFriend: () => false }),
+        getBaseSkill: () => skill,
+      };
+
+      expect(jabsBattler.resolveDirectActionTargetCoordinates(action)).toEqual([ 7, 8 ]);
+      expect(jabsBattler.resolveDirectOpponentTarget).toHaveBeenCalledWith(skill);
+    });
+
+    it('returns nulls when the opponent chain finds nothing', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.resolveDirectOpponentTarget = vi.fn(() => null);
+      const action = {
+        isDirectAction: () => true,
+        getAction: () => ({ isForUser: () => false, isForFriend: () => false }),
+        getBaseSkill: () => ({}),
+      };
+
+      expect(jabsBattler.resolveDirectActionTargetCoordinates(action)).toEqual([ null, null ]);
+    });
+  });
+
+  describe('resolveDirectActionTargetCoordinatesForSkill', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.Game_Action = vi.fn(function()
+      {
+        this.setSkill = vi.fn();
+      });
+    });
+
+    it('returns [null, null] for a non-direct skill', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.resolveDirectActionTargetCoordinatesForSkill({ jabsDirect: false })).toEqual([
+        null, null,
+      ]);
+    });
+
+    it('spatializes onto the caster for a self-targeting skill', () =>
+    {
+      globalThis.Game_Action = vi.fn(function()
+      {
+        this.setSkill = vi.fn();
+        this.isForUser = () => true;
+      });
+      const jabsBattler = buildBattler();
+      jabsBattler.getX = () => 1;
+      jabsBattler.getY = () => 2;
+
+      expect(jabsBattler.resolveDirectActionTargetCoordinatesForSkill({ jabsDirect: true, id: 1 })).toEqual([
+        1, 2,
+      ]);
+    });
+
+    it('resolves onto the ally target for an ally-targeting skill', () =>
+    {
+      globalThis.Game_Action = vi.fn(function()
+      {
+        this.setSkill = vi.fn();
+        this.isForUser = () => false;
+        this.isForFriend = () => true;
+      });
+      const jabsBattler = buildBattler();
+      jabsBattler.setAllyTarget({ getX: () => 3, getY: () => 4 });
+
+      expect(jabsBattler.resolveDirectActionTargetCoordinatesForSkill({ jabsDirect: true, id: 1 })).toEqual([
+        3, 4,
+      ]);
+    });
+
+    it('returns nulls for ally-targeting without a selected ally target, without guessing', () =>
+    {
+      globalThis.Game_Action = vi.fn(function()
+      {
+        this.setSkill = vi.fn();
+        this.isForUser = () => false;
+        this.isForFriend = () => true;
+      });
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.resolveDirectActionTargetCoordinatesForSkill({ jabsDirect: true, id: 1 })).toEqual([
+        null, null,
+      ]);
+    });
+
+    it('falls through to the opponent priority chain otherwise', () =>
+    {
+      globalThis.Game_Action = vi.fn(function()
+      {
+        this.setSkill = vi.fn();
+        this.isForUser = () => false;
+        this.isForFriend = () => false;
+      });
+      const jabsBattler = buildBattler();
+      jabsBattler.resolveDirectOpponentTarget = vi.fn(() => ({ getX: () => 7, getY: () => 8 }));
+      const skill = { jabsDirect: true, id: 1 };
+
+      expect(jabsBattler.resolveDirectActionTargetCoordinatesForSkill(skill)).toEqual([ 7, 8 ]);
+      expect(jabsBattler.resolveDirectOpponentTarget).toHaveBeenCalledWith(skill);
+    });
+  });
+
+  describe('resolveDirectOpponentTarget', () =>
+  {
+    it('performs no spatial scan when the skill has no proximity', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlersWithinRange = vi.fn(() => [ 'candidate' ]);
+      const jabsBattler = buildBattler();
+      jabsBattler.resolveDirectTargetByState = vi.fn(() => null);
+      jabsBattler.resolveDirectTargetNonInanimate = vi.fn(() => null);
+      jabsBattler.resolveDirectTargetViaScan = vi.fn(() => null);
+      jabsBattler.resolveDirectTargetInanimateFallback = vi.fn(() => null);
+      jabsBattler.resolveDirectTargetInanimateScan = vi.fn(() => null);
+
+      jabsBattler.resolveDirectOpponentTarget({});
+
+      expect(JABS_AiManager.getBattlersWithinRange).not.toHaveBeenCalled();
+      expect(jabsBattler.resolveDirectTargetViaScan).toHaveBeenCalledWith([]);
+    });
+
+    it('walks the five-tier chain in priority order, short-circuiting on the first hit', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlersWithinRange = vi.fn(() => [ 'candidate' ]);
+      const jabsBattler = buildBattler();
+      const winner = { id: 'winner' };
+      jabsBattler.resolveDirectTargetByState = vi.fn(() => null);
+      jabsBattler.resolveDirectTargetNonInanimate = vi.fn(() => winner);
+      jabsBattler.resolveDirectTargetViaScan = vi.fn();
+      jabsBattler.resolveDirectTargetInanimateFallback = vi.fn();
+      jabsBattler.resolveDirectTargetInanimateScan = vi.fn();
+
+      const result = jabsBattler.resolveDirectOpponentTarget({ jabsProximity: 5 });
+
+      expect(result).toBe(winner);
+      expect(jabsBattler.resolveDirectTargetViaScan).not.toHaveBeenCalled();
+      expect(jabsBattler.resolveDirectTargetInanimateFallback).not.toHaveBeenCalled();
+      expect(jabsBattler.resolveDirectTargetInanimateScan).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('resolveDirectTargetByState', () =>
+  {
+    it('returns null when no state id is configured', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.resolveDirectTargetByState(null, [ 'candidate' ])).toBeNull();
+    });
+
+    function buildCandidate(overrides = {})
+    {
+      return Object.assign({
+        isEnemy: () => true,
+        getBattler: () => ({ isStateAffected: () => true }),
+      }, overrides);
+    }
+
+    it('skips itself and same-team candidates', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => true;
+      const sameTeam = buildCandidate({ isEnemy: () => true });
+
+      expect(jabsBattler.resolveDirectTargetByState(1, [ jabsBattler, sameTeam ])).toBeNull();
+    });
+
+    it('skips candidates not afflicted with the target state', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      const unafflicted = buildCandidate({ getBattler: () => ({ isStateAffected: () => false }) });
+
+      expect(jabsBattler.resolveDirectTargetByState(1, [ unafflicted ])).toBeNull();
+    });
+
+    it('returns the closest afflicted opponent', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.distanceToDesignatedTarget = vi.fn()
+        .mockReturnValueOnce(10)
+        .mockReturnValueOnce(3);
+      const far = buildCandidate();
+      const near = buildCandidate();
+
+      expect(jabsBattler.resolveDirectTargetByState(1, [ far, near ])).toBe(near);
+    });
+  });
+
+  describe('resolveDirectTargetNonInanimate', () =>
+  {
+    it('returns null when neither target nor last-hit exist', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.resolveDirectTargetNonInanimate(0)).toBeNull();
+    });
+
+    it('skips an inanimate known target', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setTarget({ isInanimate: () => true });
+
+      expect(jabsBattler.resolveDirectTargetNonInanimate(0)).toBeNull();
+    });
+
+    it('skips a known target outside the proximity limit', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setTarget({ isInanimate: () => false });
+      jabsBattler.distanceToDesignatedTarget = () => 10;
+
+      expect(jabsBattler.resolveDirectTargetNonInanimate(5)).toBeNull();
+    });
+
+    it('prefers getTarget() over getBattlerLastHit()', () =>
+    {
+      const jabsBattler = buildBattler();
+      const target = { isInanimate: () => false };
+      jabsBattler.setTarget(target);
+      jabsBattler.setBattlerLastHit({ isInanimate: () => false, isDead: () => false });
+      jabsBattler.distanceToDesignatedTarget = () => 0;
+
+      expect(jabsBattler.resolveDirectTargetNonInanimate(0)).toBe(target);
+    });
+
+    it('falls back to getBattlerLastHit() when there is no current target', () =>
+    {
+      const jabsBattler = buildBattler();
+      const lastHit = { isInanimate: () => false, isDead: () => false };
+      jabsBattler.setBattlerLastHit(lastHit);
+      jabsBattler.distanceToDesignatedTarget = () => 0;
+
+      expect(jabsBattler.resolveDirectTargetNonInanimate(0)).toBe(lastHit);
+    });
+  });
+
+  describe('resolveDirectTargetViaScan', () =>
+  {
+    it('returns the closest non-inanimate opponent', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.distanceToDesignatedTarget = vi.fn()
+        .mockReturnValueOnce(10)
+        .mockReturnValueOnce(3);
+      const far = { isInanimate: () => false, isEnemy: () => true };
+      const near = { isInanimate: () => false, isEnemy: () => true };
+
+      expect(jabsBattler.resolveDirectTargetViaScan([ far, near ])).toBe(near);
+    });
+
+    it('skips inanimate and same-team candidates', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      const inanimate = { isInanimate: () => true, isEnemy: () => true };
+      const sameTeam = { isInanimate: () => false, isEnemy: () => false };
+
+      expect(jabsBattler.resolveDirectTargetViaScan([ inanimate, sameTeam ])).toBeNull();
+    });
+  });
+
+  describe('resolveDirectTargetInanimateScan', () =>
+  {
+    it('returns the closest inanimate opponent', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.distanceToDesignatedTarget = vi.fn()
+        .mockReturnValueOnce(10)
+        .mockReturnValueOnce(3);
+      const far = { isInanimate: () => true, isEnemy: () => true };
+      const near = { isInanimate: () => true, isEnemy: () => true };
+
+      expect(jabsBattler.resolveDirectTargetInanimateScan([ far, near ])).toBe(near);
+    });
+
+    it('skips non-inanimate and same-team candidates', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      const animate = { isInanimate: () => false, isEnemy: () => true };
+      const sameTeam = { isInanimate: () => true, isEnemy: () => false };
+
+      expect(jabsBattler.resolveDirectTargetInanimateScan([ animate, sameTeam ])).toBeNull();
+    });
+  });
+
+  describe('resolveDirectTargetInanimateFallback', () =>
+  {
+    it('returns null without a known candidate', () =>
+    {
+      const jabsBattler = buildBattler();
+
+      expect(jabsBattler.resolveDirectTargetInanimateFallback(0)).toBeNull();
+    });
+
+    it('returns null when the candidate is outside the proximity limit', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setTarget({});
+      jabsBattler.distanceToDesignatedTarget = () => 10;
+
+      expect(jabsBattler.resolveDirectTargetInanimateFallback(5)).toBeNull();
+    });
+
+    it('returns the known candidate regardless of inanimate status when in range', () =>
+    {
+      const jabsBattler = buildBattler();
+      const target = {};
+      jabsBattler.setTarget(target);
+      jabsBattler.distanceToDesignatedTarget = () => 3;
+
+      expect(jabsBattler.resolveDirectTargetInanimateFallback(5)).toBe(target);
+    });
+
+    it('falls back to getBattlerLastHit() when there is no current target', () =>
+    {
+      const jabsBattler = buildBattler();
+      const lastHit = { isDead: () => false };
+      jabsBattler.setBattlerLastHit(lastHit);
+      jabsBattler.distanceToDesignatedTarget = () => 3;
+
+      expect(jabsBattler.resolveDirectTargetInanimateFallback(5)).toBe(lastHit);
+    });
+  });
+  //endregion updates: targeting resolution
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
