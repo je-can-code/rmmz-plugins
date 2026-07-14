@@ -4102,3 +4102,68 @@ pauses and a reticle appears for the player to aim before the skill executes.
 <targeted>
 ```
 This skill pauses combat and prompts for a target before executing.
+
+---
+
+## J-ABS-Timing (`src/plugins/abs/ext/timing/`)
+
+Enables battler-wide modifiers against JABS cast time and cooldown, computed identically for both
+(base → flat → rate) and cached, refreshed on state add/remove and (for actors) equip/level
+changes.
+
+**Combination order (same for both cooldown and cast speed):** base is summed first (defaults to
+the plugin's configured base parameter if no tags found or they sum to zero); flat is summed
+second (a direct frame offset); rate is summed third (a percent factor multiplier against the
+action's original cast/cooldown time). Final value = `(originalTime * rateFactor) + flatSum`,
+rounded and clamped to a configurable minimum (default 0 frames for both).
+
+### `<baseFastCooldown:[FORMULA]>` / `<fastCooldownFlat:[FORMULA]>` / `<fastCooldownRate:[FORMULA]>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, Enemies, States
+
+**Formula context:**
+`a` = the battler itself, `b` = the base parameter (defaults to the plugin's "Base Fast Cooldown"
+param unless otherwise calculated).
+
+**When:**
+always (summed across all active note sources, cached and refreshed on state/equip/level
+changes)
+
+**Effect:**
+modifies JABS action cooldown. **Negative formula result = faster (shorter) cooldown; positive =
+slower.** Minimum cooldown floor is 0 frames.
+
+```
+<fastCooldownFlat:[(a.level * -2)]>
+```
+All cooldowns are reduced by 2 frames per level.
+
+**See also:** `<baseCastTime>`, `<castTimeFlat>`, `<castSpeedRate>`
+
+---
+
+### `<baseCastTime:[FORMULA]>` / `<castTimeFlat:[FORMULA]>` / `<castSpeedRate:[FORMULA]>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, Enemies, States
+
+**Formula context:**
+`a` = the battler itself, `b` = the base parameter (defaults to the plugin's "Base Cast Speed"
+param unless otherwise calculated).
+
+**When:**
+always (summed across all active note sources, cached and refreshed on state/equip/level
+changes)
+
+**Effect:**
+modifies JABS action cast time. **Negative formula result = faster (shorter) cast; positive =
+slower.** Minimum cast time floor is 0 frames. Same base→flat→rate combination order as fast
+cooldown above.
+
+```
+<castTimeFlat:[(a.level * 2) * -1]>
+```
+All cast times are reduced by 2 frames per level.
+
+**See also:** `<baseFastCooldown>`, `<fastCooldownFlat>`, `<fastCooldownRate>`
