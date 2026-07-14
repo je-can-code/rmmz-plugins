@@ -40,6 +40,30 @@
  *
  *  <extend:[7,8,9,10,11]>
  * This skill/state will act as an extension to all skills/states of id 7, 8, 9, 10, and 11.
+ *
+ * STATE EXTENSION BY TYPE:
+ * As an alternative to id-based state extension, a state can instead extend
+ * EVERY state carrying a matching <type:CLASSIFIER> tag (see J-Base), without
+ * having to list each target state id individually.
+ *
+ * TAG USAGE:
+ * - States only.
+ *
+ * TAG FORMAT:
+ *  <extendStateType:CLASSIFIER>
+ * Where CLASSIFIER is the type classifier string to match against (see
+ * J-Base's <type:CLASSIFIER> tag).
+ *
+ * TAG EXAMPLES:
+ *  <extendStateType:poison>
+ * This state acts as an extension to every currently active state that
+ * carries <type:poison>, regardless of that state's specific id.
+ *
+ * NOTE ABOUT RESOLUTION ORDER:
+ * When a battler has both type-based and id-based extension candidates for
+ * the same base state, type-based overlays are applied first (in ascending
+ * state id order), then id-based overlays are applied second (also ascending
+ * state id order) — id-based extensions win on conflict since they apply last.
  * ============================================================================
  * WHAT DOES "ACT AS AN EXTENSION" MEAN?
  * ============================================================================
@@ -167,6 +191,11 @@
  * projectiles.
  * When using non-JABS, this applies when a skill successfully hits a
  * target. Misses, evades, and parries do not trigger this.
+ *
+ *  <onCastSelfStateIfAfflicted:[42,100,19]>
+ * On cast, if the caster currently has state id 19 (STATE_REQUIREMENT) active,
+ * apply state id 42 (STATE_TO_APPLY) to oneself at 100% chance. If the caster
+ * does not have state 19, this tag does nothing- no roll occurs at all.
  *
  *  <onCastLoseState:[6,100]>
  * The caster has a 100% (always) chance of losing one stack of state id 6 from oneself.

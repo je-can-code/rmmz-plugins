@@ -4438,3 +4438,227 @@ tag, the paired text/icon is always visible whenever the event itself is visible
 This event's text only becomes visible once the player is within 2 tiles.
 
 **See also:** `<text>`, `<icon>`
+
+---
+
+## J-SkillExtend (`src/plugins/extend/core/`)
+
+Lets skills gain additional effects as a battler learns more skills, by having one skill "extend"
+another as an override/augment applied before execution. Also adds a family of on-cast/on-hit
+self-state and target-state reaction effects.
+
+### `<extend:[NUM]>` / `<extend:[NUM,NUM,...]>`
+
+**Applies to:**
+Skills, States
+
+**When:**
+resolved whenever the base skill/state is looked up (recursively, so chains resolve fully)
+
+**Effect:**
+marks this skill/state as an extension of the listed skill/state ids. When the battler knows (or
+is affected by) both the base and the extension, the extension's data overlays the base's before
+execution: replaces crit flag, element id, variance, formula (if non-empty), scope, MP/TP cost,
+hit type (unless "certain"), and both message lines; adds repeats (+1 offset), speed, TP gain, and
+success (if not 100); merges effects and meta; appends notes (extension wins on duplicate keys).
+Occasion is never changeable. The extend tag itself is stripped from the merged note to prevent
+recursive re-triggering during this execution only.
+
+```
+<extend:[40]>
+```
+This skill/state acts as an extension to skill/state 40.
+
+**See also:** `<extendStateType>`
+
+---
+
+### `<extendStateType:CLASSIFIER>`
+
+**Applies to:**
+States
+
+**When:**
+resolved whenever a matching-type state is looked up
+
+**Effect:**
+an alternative to id-based `<extend>` for states — extends EVERY currently active state carrying
+a matching J-Base `<type:CLASSIFIER>` tag, without listing each target id individually. When a
+battler has both type-based and id-based candidates for the same base state, type-based overlays
+apply first (ascending id order), then id-based overlays apply second and win any conflict.
+
+```
+<extendStateType:poison>
+```
+This state extends every active state carrying `<type:poison>`, regardless of specific id.
+
+**See also:** `<extend>`, J-Base's `<type>`
+
+---
+
+### `<onCastSelfState:[STATE_ID, CHANCE]>` / `<onHitSelfState:[STATE_ID, CHANCE]>`
+
+**Applies to:**
+Skills
+
+**When:**
+`onCast`: the skill executes (press-time, no hit required). `onHit`: the skill successfully hits
+a target (misses/evades/parries never trigger it; multiple projectiles/repeats/JABS hits each
+trigger it independently).
+
+**Effect:**
+CHANCE percent chance to apply STATE_ID to the caster. State resistance is NOT factored into
+CHANCE — the tag's percent is treated as the full, final chance.
+
+```
+<onHitSelfState:[19,100]>
+```
+Always applies state 19 to the caster the moment this skill lands a hit.
+
+**See also:** `<onCastSelfStateIfAfflicted>`, `<applyState>`
+
+---
+
+### `<onCastSelfStateIfAfflicted:[STATE_TO_APPLY, CHANCE, STATE_REQUIREMENT]>`
+
+**Applies to:**
+Skills
+
+**When:**
+the skill executes (press-time, no hit required)
+
+**Effect:**
+conditional variant of `<onCastSelfState>` — only rolls CHANCE to apply STATE_TO_APPLY to the
+caster if the caster currently has STATE_REQUIREMENT active. If the requirement state is absent,
+this tag does nothing at all — not even a failed roll.
+
+```
+<onCastSelfStateIfAfflicted:[42,100,19]>
+```
+On cast, if the caster has state 19 active, always applies state 42 to themself. No effect if
+state 19 is absent.
+
+**See also:** `<onCastSelfState>`
+
+---
+
+### `<onCastLoseState:[STATE_ID, CHANCE]>` / `<onHitLoseState:[STATE_ID, CHANCE]>`
+
+**Applies to:**
+Skills
+
+**When:**
+same timing as the SelfState pair above
+
+**Effect:**
+CHANCE percent chance the caster loses one stack of STATE_ID from themself.
+
+```
+<onCastLoseState:[6,100]>
+```
+Always strips one stack of state 6 from the caster when the skill is executed.
+
+---
+
+### `<onCastStripState:[STATE_ID, CHANCE]>` / `<onHitStripState:[STATE_ID, CHANCE]>`
+
+**Applies to:**
+Skills
+
+**When:**
+same timing as the SelfState pair above, but against the TARGET
+
+**Effect:**
+CHANCE percent chance the target loses one stack of STATE_ID.
+
+```
+<onHitStripState:[9,40]>
+```
+40% chance to strip one stack of state 9 from the target on a successful hit.
+
+---
+
+### `<onCastRemoveState:[STATE_ID, CHANCE]>` / `<onHitRemoveState:[STATE_ID, CHANCE]>`
+
+**Applies to:**
+Skills
+
+**When:**
+same timing as the SelfState pair above, but against the TARGET
+
+**Effect:**
+CHANCE percent chance to fully remove STATE_ID from the target (all stacks at once, not just one).
+
+```
+<onCastRemoveState:[10,100]>
+```
+Always fully removes state 10 from the target when the skill is executed.
+
+---
+
+### `<thisApplyState:[STATE_ID, CHANCE, DURATION?, STACKS?]>`
+
+**Applies to:**
+Skills
+
+**When:**
+this specific skill lands a hit
+
+**Effect:**
+applies STATE_ID to the target with a custom DURATION (frames) and/or STACKS, overriding the
+state's own defaults for this application only. Both DURATION and STACKS are optional — omitting
+either falls back to the state's own default. Target state resistances still apply; CHANCE only
+rolls if the state could actually land. A skill may carry multiple tags to apply different states
+on one hit. If both `<thisApplyState>` and `<applyState>` target the same state id on the same
+hit, `<thisApplyState>` fires last and wins. Overridden DURATION replaces the state's base
+duration only — attacker duration-boost tags (`stateDurationFlat`/`Perc`/`Formula`) still layer
+on top.
+
+```
+<thisApplyState:[8, 50, 120, 2]>
+```
+50% chance to apply state 8 for 120 frames with 2 starting stacks, on this skill only.
+
+**See also:** `<applyState>`, J-ABS's `<stateDurationFlat>`
+
+---
+
+### `<applyState:[STATE_ID, CHANCE, DURATION?, STACKS?]>`
+
+**Applies to:**
+Skills, States, Weapons, Armors, Actors, Enemies, Classes
+
+**When:**
+the caster lands any hit (caster-wide, not scoped to one skill)
+
+**Effect:**
+same mechanics as `<thisApplyState>` above, but reads from ALL of the caster's note sources — a
+poisoned-blade state, a cursed accessory, a base actor trait — firing on every hit the battler
+lands rather than one specific skill.
+
+```
+<applyState:[12, 30]>
+```
+Every hit this battler lands has a 30% chance to apply state 12 with its own default duration.
+
+**See also:** `<thisApplyState>`
+
+---
+
+### `<toggleOnExecute:STATE_ID>`
+
+**Applies to:**
+Skills
+
+**When:**
+the skill executes (press-time, no hit required)
+
+**Effect:**
+a "stance" toggle: if the caster currently has STATE_ID, it's removed; if not, it's added. No
+chance roll — always triggers. A skill may carry multiple tags to toggle several states
+independently in one execution.
+
+```
+<toggleOnExecute:12>
+```
+Executing this skill flips state 12 on the caster — removes it if present, adds it if absent.
