@@ -103,6 +103,9 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       LEVEL: false,
     };
 
+    // bare RMMZ-style global (not imported by JABS_Engine.js- loaded elsewhere at runtime).
+    globalThis.JABS_Button = { Offhand: 'offhand', Mainhand: 'mainhand' };
+
     // sibling model/manager dependencies- mocked entirely per the unit-tier convention.
     vi.doMock('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js', () => ({ default: class {} }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_SkillExecution.js', () => ({
@@ -148,7 +151,21 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       },
     }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_LootDrop.js', () => ({ default: class {} }));
-    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Location.js', () => ({ default: class {} }));
+    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Location.js', () => ({
+      default: class
+      {
+        static Builder()
+        {
+          const built = {};
+          const builder = {
+            setX: vi.fn((x) => { built.x = x; return builder; }),
+            setY: vi.fn((y) => { built.y = y; return builder; }),
+          };
+          builder.build = vi.fn(() => ({ getX: () => built.x, getY: () => built.y }));
+          return builder;
+        }
+      },
+    }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_InputAdapter.js', () => ({
       default: class
       {
@@ -159,9 +176,37 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       },
     }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_GlobalCooldown.js', () => ({ default: class {} }));
-    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Battler.js', () => ({ default: class {} }));
+    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Battler.js', () => ({
+      default: class
+      {
+        static isGuardSkillById()
+        {
+          return false;
+        }
+
+        static createPlayer()
+        {
+          return {};
+        }
+      },
+    }));
     vi.doMock('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js', () => ({ default: class {} }));
-    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_ActionOptions.js', () => ({ default: class {} }));
+    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_ActionOptions.js', () => ({
+      default: class
+      {
+        static Builder()
+        {
+          const built = {};
+          const builder = {
+            setIsRetaliation: vi.fn((v) => { built.isRetaliation = v; return builder; }),
+            setLocation: vi.fn((v) => { built.location = v; return builder; }),
+            setIsTerrainDamage: vi.fn((v) => { built.isTerrainDamage = v; return builder; }),
+          };
+          builder.build = vi.fn(() => built);
+          return builder;
+        }
+      },
+    }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Action.js', () => ({ default: class {} }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Aabb.js', () => ({ default: FakeAabb }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_DeathContext.js', () => ({ default: class {} }));
@@ -1835,5 +1880,385 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion party cycling
+
+  //region actions: update/execute
+  describe('updateActions', () =>
+  {
+    it('does nothing when there are no tracked actions', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(() => engine.updateActions()).not.toThrow();
+    });
+
+    it('updates every tracked action', () =>
+    {
+      const engine = new JABS_Engine();
+      const action1 = { update: vi.fn() };
+      const action2 = { update: vi.fn() };
+      engine.setAllActionEvents([ action1, action2 ]);
+
+      engine.updateActions();
+
+      expect(action1.update).toHaveBeenCalledTimes(1);
+      expect(action2.update).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('forceMapAction', () =>
+  {
+    it('builds location/options then executes each generated action against the caster', () =>
+    {
+      const engine = new JABS_Engine();
+      const action1 = { id: 'action1' };
+      const action2 = { id: 'action2' };
+      const caster = { createJabsActionFromSkill: vi.fn(() => [ action1, action2 ]) };
+      engine.executeMapAction = vi.fn();
+
+      engine.forceMapAction(caster, 5, true, 3, 4, true);
+
+      const [ , actualOptions ] = caster.createJabsActionFromSkill.mock.calls[0];
+      expect(actualOptions.isRetaliation).toBe(true);
+      expect(actualOptions.isTerrainDamage).toBe(true);
+      expect(actualOptions.location.getX()).toBe(3);
+      expect(actualOptions.location.getY()).toBe(4);
+      expect(engine.executeMapAction).toHaveBeenCalledWith(caster, action1, 3, 4);
+      expect(engine.executeMapAction).toHaveBeenCalledWith(caster, action2, 3, 4);
+    });
+
+    it('does not execute anything when the generated actions cannot be executed', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = { createJabsActionFromSkill: () => [] };
+      engine.executeMapAction = vi.fn();
+
+      engine.forceMapAction(caster, 5);
+
+      expect(engine.executeMapAction).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('canExecuteMapActions', () =>
+  {
+    it('is false for an empty actions collection', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.canExecuteMapActions({}, [])).toBe(false);
+    });
+
+    it('is true for a non-empty actions collection', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.canExecuteMapActions({}, [ {} ])).toBe(true);
+    });
+  });
+
+  describe('executeMapActions', () =>
+  {
+    function buildAction(overrides = {})
+    {
+      return Object.assign({
+        getBaseSkill: () => ({ id: 5 }),
+        getActionOptions: () => null,
+      }, overrides);
+    }
+
+    it('does nothing when the actions cannot be executed', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.applyOnExecutionEffects = vi.fn();
+      engine.executeMapActions({}, []);
+      expect(engine.applyOnExecutionEffects).not.toHaveBeenCalled();
+    });
+
+    it('drops held guard before an offensive strike when the caster is guarding with a non-guard skill', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.applyOnExecutionEffects = vi.fn();
+      engine.executeMapAction = vi.fn();
+      const caster = { guarding: () => true, executeGuard: vi.fn() };
+
+      engine.executeMapActions(caster, [ buildAction() ], 1, 2);
+
+      expect(caster.executeGuard).toHaveBeenCalledWith(false, 'offhand');
+    });
+
+    it('does not drop guard when the strike skill is itself a guard skill', async () =>
+    {
+      const { default: JABS_Battler } = await import('../../../../../src/plugins/abs/core/models/JABS_Battler.js');
+      JABS_Battler.isGuardSkillById = () => true;
+      const engine = new JABS_Engine();
+      engine.applyOnExecutionEffects = vi.fn();
+      engine.executeMapAction = vi.fn();
+      const caster = { guarding: () => true, executeGuard: vi.fn() };
+
+      engine.executeMapActions(caster, [ buildAction() ], 1, 2);
+
+      expect(caster.executeGuard).not.toHaveBeenCalled();
+      JABS_Battler.isGuardSkillById = () => false;
+    });
+
+    it('does not touch guard when the caster is not guarding', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.applyOnExecutionEffects = vi.fn();
+      engine.executeMapAction = vi.fn();
+      const caster = { guarding: () => false, executeGuard: vi.fn() };
+
+      engine.executeMapActions(caster, [ buildAction() ], 1, 2);
+
+      expect(caster.executeGuard).not.toHaveBeenCalled();
+    });
+
+    it('executes every action using the explicitly provided coordinates', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.applyOnExecutionEffects = vi.fn();
+      engine.executeMapAction = vi.fn();
+      const caster = { guarding: () => false };
+      const action = buildAction();
+
+      engine.executeMapActions(caster, [ action ], 10, 20);
+
+      expect(engine.executeMapAction).toHaveBeenCalledWith(caster, action, 10, 20);
+    });
+
+    it('falls back to the primary action\'s frozen target location when coordinates are omitted', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.applyOnExecutionEffects = vi.fn();
+      engine.executeMapAction = vi.fn();
+      const caster = { guarding: () => false };
+      const frozenLocation = { getX: () => 7, getY: () => 8 };
+      const action = buildAction({
+        getActionOptions: () => ({ getTargetLocation: () => frozenLocation }),
+      });
+
+      engine.executeMapActions(caster, [ action ], null, null);
+
+      expect(engine.executeMapAction).toHaveBeenCalledWith(caster, action, 7, 8);
+    });
+
+    it('leaves coordinates null when omitted and there is no frozen target location', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.applyOnExecutionEffects = vi.fn();
+      engine.executeMapAction = vi.fn();
+      const caster = { guarding: () => false };
+      const action = buildAction({ getActionOptions: () => null });
+
+      engine.executeMapActions(caster, [ action ], null, null);
+
+      expect(engine.executeMapAction).toHaveBeenCalledWith(caster, action, null, null);
+    });
+  });
+
+  describe('applyOnExecutionEffects', () =>
+  {
+    it('does nothing for a retaliation action', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.paySkillCosts = vi.fn();
+      const action = { isRetaliation: () => true };
+
+      engine.applyOnExecutionEffects({}, action);
+
+      expect(engine.paySkillCosts).not.toHaveBeenCalled();
+    });
+
+    it('pays costs, applies cooldowns, and logs skill execution for a non-retaliation action', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.paySkillCosts = vi.fn();
+      engine.applyCooldownCounters = vi.fn();
+      engine.logSkillExecution = vi.fn();
+      const caster = { getUuid: () => 'caster-uuid' };
+      const action = { isRetaliation: () => false, getBaseSkill: () => ({ id: 5, stypeId: 2 }) };
+
+      engine.applyOnExecutionEffects(caster, action);
+
+      expect(engine.paySkillCosts).toHaveBeenCalledWith(caster, action);
+      expect(engine.applyCooldownCounters).toHaveBeenCalledWith(caster, action);
+      expect(engine.logSkillExecution).toHaveBeenCalledWith('caster-uuid', 5, 2);
+    });
+  });
+
+  describe('executeMapAction', () =>
+  {
+    it('handles combo, fires on-execute effects, then handles action generation in order', () =>
+    {
+      const engine = new JABS_Engine();
+      const callOrder = [];
+      engine.handleActionCombo = vi.fn(() => callOrder.push('combo'));
+      engine.onExecuteMapAction = vi.fn(() => callOrder.push('onExecute'));
+      engine.handleActionGeneration = vi.fn(() => callOrder.push('generation'));
+
+      engine.executeMapAction('caster', 'action', 1, 2);
+
+      expect(callOrder).toEqual([ 'combo', 'onExecute', 'generation' ]);
+      expect(engine.handleActionGeneration).toHaveBeenCalledWith('caster', 'action', 1, 2);
+    });
+  });
+
+  describe('handleActionCombo', () =>
+  {
+    it('checks the combo sequence when the skill is tagged for free combo', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.checkComboSequence = vi.fn();
+      const action = { getBaseSkill: () => ({ jabsFreeCombo: true }) };
+
+      engine.handleActionCombo('caster', action);
+
+      expect(engine.checkComboSequence).toHaveBeenCalledWith('caster', action);
+    });
+
+    it('does nothing when the skill is not tagged for free combo', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.checkComboSequence = vi.fn();
+      const action = { getBaseSkill: () => ({ jabsFreeCombo: false }) };
+
+      engine.handleActionCombo('caster', action);
+
+      expect(engine.checkComboSequence).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('onExecuteMapAction', () =>
+  {
+    it('runs cast animation, on-cast animation, then on-cast state effects in order', () =>
+    {
+      const engine = new JABS_Engine();
+      const callOrder = [];
+      engine.handleActionCastAnimation = vi.fn(() => callOrder.push('castAnimation'));
+      engine.handleActionOnCastAnimation = vi.fn(() => callOrder.push('onCastAnimation'));
+      engine.handleOnCastStateEffects = vi.fn(() => callOrder.push('onCastStateEffects'));
+
+      engine.onExecuteMapAction('caster', 'action');
+
+      expect(callOrder).toEqual([ 'castAnimation', 'onCastAnimation', 'onCastStateEffects' ]);
+    });
+  });
+
+  describe('handleActionCastAnimation', () =>
+  {
+    it('does nothing when the action has no cast animation', () =>
+    {
+      const engine = new JABS_Engine();
+      const requestAnimation = vi.fn();
+      const caster = { getCharacter: () => ({ requestAnimation }) };
+      const action = { getCastAnimation: () => null };
+
+      engine.handleActionCastAnimation(caster, action);
+
+      expect(requestAnimation).not.toHaveBeenCalled();
+    });
+
+    it('requests the cast animation on the caster\'s character when one exists', () =>
+    {
+      const engine = new JABS_Engine();
+      const requestAnimation = vi.fn();
+      const caster = { getCharacter: () => ({ requestAnimation }) };
+      const action = { getCastAnimation: () => 42 };
+
+      engine.handleActionCastAnimation(caster, action);
+
+      expect(requestAnimation).toHaveBeenCalledWith(42);
+    });
+  });
+
+  describe('handleActionOnCastAnimation', () =>
+  {
+    it('does nothing when there is no on-cast animation id', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = { hasOnCastAnimationId: () => false, performOnCastAnimation: vi.fn() };
+
+      engine.handleActionOnCastAnimation('caster', action);
+
+      expect(action.performOnCastAnimation).not.toHaveBeenCalled();
+    });
+
+    it('plays the on-cast animation once when configured', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = { id: 'caster' };
+      const action = { hasOnCastAnimationId: () => true, performOnCastAnimation: vi.fn() };
+
+      engine.handleActionOnCastAnimation(caster, action);
+
+      expect(action.performOnCastAnimation).toHaveBeenCalledWith(caster);
+    });
+  });
+
+  describe('handleOnCastStateEffects', () =>
+  {
+    it('applies all four on-cast state effect hooks against the underlying Game_Action', () =>
+    {
+      const engine = new JABS_Engine();
+      const gameAction = {
+        applyOnCastSelfStates: vi.fn(),
+        applyOnCastSelfStatesIfAfflicted: vi.fn(),
+        applyOnCastLoseStates: vi.fn(),
+        applyToggleOnExecuteStates: vi.fn(),
+      };
+      const action = { getAction: () => gameAction };
+
+      engine.handleOnCastStateEffects('caster', action);
+
+      expect(gameAction.applyOnCastSelfStates).toHaveBeenCalledTimes(1);
+      expect(gameAction.applyOnCastSelfStatesIfAfflicted).toHaveBeenCalledTimes(1);
+      expect(gameAction.applyOnCastLoseStates).toHaveBeenCalledTimes(1);
+      expect(gameAction.applyToggleOnExecuteStates).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('handleActionGeneration', () =>
+  {
+    it('creates a map event and tracks it for a non-direct action', () =>
+    {
+      const engine = new JABS_Engine();
+      const eventData = { id: 'event-data' };
+      engine.buildActionEventData = vi.fn(() => eventData);
+      engine.addJabsActionToMap = vi.fn();
+      engine.addActionEvent = vi.fn();
+      const action = { isDirectAction: () => false };
+
+      engine.handleActionGeneration('caster', action, null, null);
+
+      expect(engine.addJabsActionToMap).toHaveBeenCalledWith(eventData, action);
+      expect(engine.addActionEvent).toHaveBeenCalledWith(action, eventData);
+    });
+
+    it('creates a map event for a direct action when coordinates are provided', () =>
+    {
+      const engine = new JABS_Engine();
+      const eventData = { id: 'event-data' };
+      engine.buildActionEventData = vi.fn(() => eventData);
+      engine.addJabsActionToMap = vi.fn();
+      engine.addActionEvent = vi.fn();
+      const action = { isDirectAction: () => true };
+
+      engine.handleActionGeneration('caster', action, 3, 4);
+
+      expect(engine.addJabsActionToMap).toHaveBeenCalledWith(eventData, action);
+    });
+
+    it('does not create a map event for a direct action with no coordinates, but still tracks it', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.buildActionEventData = vi.fn();
+      engine.addJabsActionToMap = vi.fn();
+      engine.addActionEvent = vi.fn();
+      const action = { isDirectAction: () => true };
+
+      engine.handleActionGeneration('caster', action, null, null);
+
+      expect(engine.buildActionEventData).not.toHaveBeenCalled();
+      expect(engine.addJabsActionToMap).not.toHaveBeenCalled();
+      expect(engine.addActionEvent).toHaveBeenCalledWith(action, null);
+    });
+  });
+  //endregion actions: update/execute
 });
 //endregion plugins/abs/core/managers/jabs-engine.test.js
