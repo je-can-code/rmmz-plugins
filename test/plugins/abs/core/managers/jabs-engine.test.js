@@ -4623,5 +4623,437 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion implicit parry / glancing blow / alert
+
+  //region retaliation
+  describe('continuedPrimaryBattleEffects', () =>
+  {
+    it('delegates to checkRetaliate', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.checkRetaliate = vi.fn();
+
+      engine.continuedPrimaryBattleEffects('action', 'target');
+
+      expect(engine.checkRetaliate).toHaveBeenCalledWith('action', 'target');
+    });
+  });
+
+  describe('checkRetaliate', () =>
+  {
+    function buildAction(overrides = {})
+    {
+      return Object.assign({
+        isRetaliation: () => false,
+        getCaster: () => ({ getTeam: () => 'caster-team' }),
+      }, overrides);
+    }
+
+    function buildTargetBattler(overrides = {})
+    {
+      return Object.assign({ getTeam: () => 'target-team', isActor: () => true }, overrides);
+    }
+
+    it('does not retaliate against another battler\'s retaliation', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.handleActorRetaliation = vi.fn();
+      engine.handleEnemyRetaliation = vi.fn();
+      const action = buildAction({ isRetaliation: () => true });
+
+      engine.checkRetaliate(action, buildTargetBattler());
+
+      expect(engine.handleActorRetaliation).not.toHaveBeenCalled();
+      expect(engine.handleEnemyRetaliation).not.toHaveBeenCalled();
+    });
+
+    it('does not retaliate against friendly-team hits', async () =>
+    {
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isFriendly = vi.fn(() => true);
+      const engine = new JABS_Engine();
+      engine.handleActorRetaliation = vi.fn();
+      engine.handleEnemyRetaliation = vi.fn();
+
+      engine.checkRetaliate(buildAction(), buildTargetBattler());
+
+      expect(engine.handleActorRetaliation).not.toHaveBeenCalled();
+      expect(engine.handleEnemyRetaliation).not.toHaveBeenCalled();
+      JABS_TeamRules.isFriendly = vi.fn(() => false);
+    });
+
+    it('handles actor retaliation for an actor target', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.handleActorRetaliation = vi.fn();
+      engine.handleEnemyRetaliation = vi.fn();
+      const action = buildAction();
+      const target = buildTargetBattler({ isActor: () => true });
+
+      engine.checkRetaliate(action, target);
+
+      expect(engine.handleActorRetaliation).toHaveBeenCalledWith(target, action);
+      expect(engine.handleEnemyRetaliation).not.toHaveBeenCalled();
+    });
+
+    it('handles enemy retaliation for a non-actor target', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.handleActorRetaliation = vi.fn();
+      engine.handleEnemyRetaliation = vi.fn();
+      const action = buildAction();
+      const target = buildTargetBattler({ isActor: () => false });
+
+      engine.checkRetaliate(action, target);
+
+      expect(engine.handleEnemyRetaliation).toHaveBeenCalledWith(target, action);
+      expect(engine.handleActorRetaliation).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('canBattlerParry', () =>
+  {
+    it('is false when the battler has no counter-parry ids', () =>
+    {
+      const engine = new JABS_Engine();
+      const battler = { counterParry: () => [] };
+
+      expect(engine.canBattlerParry(battler)).toBe(false);
+    });
+
+    it('is true when the battler has counter-parry ids', () =>
+    {
+      const engine = new JABS_Engine();
+      const battler = { counterParry: () => [ 1 ] };
+
+      expect(engine.canBattlerParry(battler)).toBe(true);
+    });
+  });
+
+  describe('handleCounterParry', () =>
+  {
+    it('does nothing and reports false when the battler cannot parry', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canBattlerParry = vi.fn(() => false);
+      engine.doCounterParry = vi.fn();
+
+      expect(engine.handleCounterParry('battler')).toBe(false);
+      expect(engine.doCounterParry).not.toHaveBeenCalled();
+    });
+
+    it('performs the counterparry with the offhand slot and reports true', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canBattlerParry = vi.fn(() => true);
+      engine.doCounterParry = vi.fn();
+
+      expect(engine.handleCounterParry('battler')).toBe(true);
+      expect(engine.doCounterParry).toHaveBeenCalledWith('battler', JABS_Button.Offhand);
+    });
+  });
+
+  describe('handleCounterGuard', () =>
+  {
+    it('does nothing when the battler already counter-parried', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.doCounterGuard = vi.fn();
+      const battler = { guarding: () => true, counterGuard: () => [ 1 ] };
+
+      expect(engine.handleCounterGuard(battler, true)).toBe(false);
+      expect(engine.doCounterGuard).not.toHaveBeenCalled();
+    });
+
+    it('does not counter-guard when the battler is not guarding', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.doCounterGuard = vi.fn();
+      const battler = { guarding: () => false, counterGuard: () => [ 1 ] };
+
+      expect(engine.handleCounterGuard(battler, false)).toBe(false);
+      expect(engine.doCounterGuard).not.toHaveBeenCalled();
+    });
+
+    it('does not counter-guard when the battler has no counter-guard skills', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.doCounterGuard = vi.fn();
+      const battler = { guarding: () => true, counterGuard: () => [] };
+
+      expect(engine.handleCounterGuard(battler, false)).toBe(false);
+      expect(engine.doCounterGuard).not.toHaveBeenCalled();
+    });
+
+    it('performs the counterguard with the offhand slot and reports true', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.doCounterGuard = vi.fn();
+      const battler = { guarding: () => true, counterGuard: () => [ 1 ] };
+
+      expect(engine.handleCounterGuard(battler, false)).toBe(true);
+      expect(engine.doCounterGuard).toHaveBeenCalledWith(battler, JABS_Button.Offhand);
+    });
+  });
+
+  describe('canAutoCounter', () =>
+  {
+    it('is false when there is no guard data for the offhand slot', () =>
+    {
+      const engine = new JABS_Engine();
+      const battler = { getGuardData: () => null };
+
+      expect(engine.canAutoCounter(battler)).toBe(false);
+    });
+
+    it('is false when the guard data cannot counter', () =>
+    {
+      const engine = new JABS_Engine();
+      const battler = { getGuardData: () => ({ canCounter: () => false }) };
+
+      expect(engine.canAutoCounter(battler)).toBe(false);
+    });
+
+    it('is true when the guard data can counter', () =>
+    {
+      const engine = new JABS_Engine();
+      const battler = { getGuardData: () => ({ canCounter: () => true }) };
+
+      expect(engine.canAutoCounter(battler)).toBe(true);
+    });
+  });
+
+  describe('handleAutoCounter', () =>
+  {
+    it('does not roll or counter when the battler cannot auto-counter', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canAutoCounter = vi.fn(() => false);
+      engine.doAutoCounter = vi.fn();
+      const battler = { getBattler: () => ({}) };
+
+      engine.handleAutoCounter(battler);
+
+      expect(globalThis.RPGManager.fateOf100).not.toHaveBeenCalled();
+      expect(engine.doAutoCounter).not.toHaveBeenCalled();
+    });
+
+    it('does not auto-counter when the roll fails', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canAutoCounter = vi.fn(() => true);
+      engine.doAutoCounter = vi.fn();
+      globalThis.RPGManager.fateOf100.mockReturnValue(false);
+      const counterBattler = { getPositiveRolls: () => 0, getNegativeRolls: () => 0, cnt: 0.3 };
+      const battler = { getBattler: () => counterBattler };
+
+      engine.handleAutoCounter(battler);
+
+      expect(globalThis.RPGManager.fateOf100).toHaveBeenCalledWith(counterBattler, 30, 1, 0);
+      expect(engine.doAutoCounter).not.toHaveBeenCalled();
+    });
+
+    it('auto-counters with the offhand slot when the roll succeeds', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.canAutoCounter = vi.fn(() => true);
+      engine.doAutoCounter = vi.fn();
+      globalThis.RPGManager.fateOf100.mockReturnValue(true);
+      const counterBattler = { getPositiveRolls: () => 0, getNegativeRolls: () => 0, cnt: 0.3 };
+      const battler = { getBattler: () => counterBattler };
+
+      engine.handleAutoCounter(battler);
+
+      expect(engine.doAutoCounter).toHaveBeenCalledWith(battler, JABS_Button.Offhand);
+    });
+  });
+
+  describe('doAutoCounter', () =>
+  {
+    it('performs both counterparry and counterguard with the given slot', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.doCounterParry = vi.fn();
+      engine.doCounterGuard = vi.fn();
+
+      engine.doAutoCounter('battler', 'offhand-slot');
+
+      expect(engine.doCounterParry).toHaveBeenCalledWith('battler', 'offhand-slot');
+      expect(engine.doCounterGuard).toHaveBeenCalledWith('battler', 'offhand-slot');
+    });
+  });
+
+  describe('doCounterGuard', () =>
+  {
+    it('does nothing when there are no counter-guard skill ids for the slot', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.forceMapAction = vi.fn();
+      const battler = { getGuardData: () => ({ counterGuardIds: [] }) };
+
+      engine.doCounterGuard(battler);
+
+      expect(engine.forceMapAction).not.toHaveBeenCalled();
+    });
+
+    it('forces a map action for every counter-guard skill id', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.forceMapAction = vi.fn();
+      const battler = { getGuardData: () => ({ counterGuardIds: [ 10, 20 ] }) };
+
+      engine.doCounterGuard(battler);
+
+      expect(engine.forceMapAction).toHaveBeenCalledWith(battler, 10, true);
+      expect(engine.forceMapAction).toHaveBeenCalledWith(battler, 20, true);
+    });
+  });
+
+  describe('doCounterParry', () =>
+  {
+    it('does nothing when there are no counter-parry skill ids for the slot', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.forceMapAction = vi.fn();
+      const battler = { getGuardData: () => ({ counterParryIds: [] }) };
+
+      engine.doCounterParry(battler);
+
+      expect(engine.forceMapAction).not.toHaveBeenCalled();
+    });
+
+    it('forces a map action for every counter-parry skill id', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.forceMapAction = vi.fn();
+      const battler = { getGuardData: () => ({ counterParryIds: [ 30 ] }) };
+
+      engine.doCounterParry(battler);
+
+      expect(engine.forceMapAction).toHaveBeenCalledWith(battler, 30, true);
+    });
+  });
+
+  describe('handleActorRetaliation', () =>
+  {
+    function buildBattler(overrides = {})
+    {
+      return Object.assign({
+        getBattler: () => ({ result: () => ({ parried: false }), retaliationSkills: () => [] }),
+        parrying: () => false,
+      }, overrides);
+    }
+
+    it('counter-parries on a parried result and skips counter-guard/auto-counter', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.handleCounterParry = vi.fn(() => true);
+      engine.handleCounterGuard = vi.fn(() => false);
+      engine.handleAutoCounter = vi.fn();
+      engine.executeRetaliationSkills = vi.fn();
+      const battler = buildBattler({ getBattler: () => ({ result: () => ({ parried: true }), retaliationSkills: () => [] }) });
+
+      engine.handleActorRetaliation(battler, 'triggeringAction');
+
+      expect(engine.handleCounterParry).toHaveBeenCalledWith(battler);
+      expect(engine.handleAutoCounter).not.toHaveBeenCalled();
+    });
+
+    it('counter-parries when the battler is actively parrying, even without a parried result', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.handleCounterParry = vi.fn(() => true);
+      engine.handleCounterGuard = vi.fn(() => false);
+      engine.handleAutoCounter = vi.fn();
+      const battler = buildBattler({ parrying: () => true });
+
+      engine.handleActorRetaliation(battler, 'triggeringAction');
+
+      expect(engine.handleCounterParry).toHaveBeenCalledWith(battler);
+    });
+
+    it('auto-counters when neither counterparry nor counterguard fired', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.handleCounterParry = vi.fn(() => false);
+      engine.handleCounterGuard = vi.fn(() => false);
+      engine.handleAutoCounter = vi.fn();
+      const battler = buildBattler();
+
+      engine.handleActorRetaliation(battler, 'triggeringAction');
+
+      expect(engine.handleAutoCounter).toHaveBeenCalledWith(battler);
+    });
+
+    it('does not auto-counter when counterguard already fired', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.handleCounterParry = vi.fn(() => false);
+      engine.handleCounterGuard = vi.fn(() => true);
+      engine.handleAutoCounter = vi.fn();
+      const battler = buildBattler();
+
+      engine.handleActorRetaliation(battler, 'triggeringAction');
+
+      expect(engine.handleAutoCounter).not.toHaveBeenCalled();
+    });
+
+    it('executes any passive retaliation skills the battler has', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.handleCounterParry = vi.fn(() => false);
+      engine.handleCounterGuard = vi.fn(() => false);
+      engine.handleAutoCounter = vi.fn();
+      engine.executeRetaliationSkills = vi.fn();
+      const retaliationSkills = [ 'skill1' ];
+      const battler = buildBattler({
+        getBattler: () => ({ result: () => ({ parried: false }), retaliationSkills: () => retaliationSkills }),
+      });
+
+      engine.handleActorRetaliation(battler, 'triggeringAction');
+
+      expect(engine.executeRetaliationSkills).toHaveBeenCalledWith(battler, retaliationSkills, 'triggeringAction');
+    });
+
+    it('does not attempt to execute retaliation skills when there are none', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.handleCounterParry = vi.fn(() => false);
+      engine.handleCounterGuard = vi.fn(() => false);
+      engine.handleAutoCounter = vi.fn();
+      engine.executeRetaliationSkills = vi.fn();
+      const battler = buildBattler();
+
+      engine.handleActorRetaliation(battler, 'triggeringAction');
+
+      expect(engine.executeRetaliationSkills).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('handleEnemyRetaliation', () =>
+  {
+    it('does not execute anything when the enemy has no retaliation skills', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.executeRetaliationSkills = vi.fn();
+      const enemy = { getBattler: () => ({ retaliationSkills: () => [] }) };
+
+      engine.handleEnemyRetaliation(enemy, 'triggeringAction');
+
+      expect(engine.executeRetaliationSkills).not.toHaveBeenCalled();
+    });
+
+    it('executes any passive retaliation skills the enemy has', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.executeRetaliationSkills = vi.fn();
+      const retaliationSkills = [ 'skill1' ];
+      const enemy = { getBattler: () => ({ retaliationSkills: () => retaliationSkills }) };
+
+      engine.handleEnemyRetaliation(enemy, 'triggeringAction');
+
+      expect(engine.executeRetaliationSkills).toHaveBeenCalledWith(enemy, retaliationSkills, 'triggeringAction');
+    });
+  });
+  //endregion retaliation
 });
 //endregion plugins/abs/core/managers/jabs-engine.test.js
