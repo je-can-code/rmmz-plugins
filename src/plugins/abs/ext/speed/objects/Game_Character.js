@@ -21,8 +21,8 @@ Game_Character.prototype.distancePerFrame = function()
   // seriously, disable this line and get the result to be negative and see what happens.
   const constrainedTotal = Math.max(total, this.minimumDistancePerFrame());
 
-  // return the sum.
-  return total;
+  // return the constrained sum.
+  return constrainedTotal;
 };
 
 /**

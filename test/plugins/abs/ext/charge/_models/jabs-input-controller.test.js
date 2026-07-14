@@ -324,13 +324,12 @@ describe('J-ABS-Charge JABS_StandardController (unit, all downstream dependencie
       expect(globalThis.JABS_InputAdapter.performOffhandActionCharging).toHaveBeenCalledWith(true, 'player1');
     });
 
-    it('performOffhandChargeAlterAction cancels charging without resetting the timer', () =>
+    it('performOffhandChargeAlterAction cancels charging and resets the delay timer', () =>
     {
-      // this is a deliberate asymmetry from mainhand's alter-action- offhand's does not reset its timer.
       const controller = buildController();
       controller.performOffhandChargeAlterAction();
       expect(globalThis.JABS_InputAdapter.performOffhandActionCharging).toHaveBeenCalledWith(false, 'player1');
-      expect(controller.getChargeInputDelayBySlot('offhand').resetCount).toBe(0);
+      expect(controller.getChargeInputDelayBySlot('offhand').resetCount).toBe(1);
     });
   });
 

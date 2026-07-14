@@ -278,7 +278,7 @@ JABS_Battler.prototype.executeChargeAction = function(slot, charging)
   if (isStillCharging) return;
 
   // shorthand for switching slots to charge, aka restarting.
-  const isSwitchingChargingSlot = isStillCharging && !isSameSlot;
+  const isSwitchingChargingSlot = isCurrentlyCharging && !isSameSlot;
 
   // check if we're trying to switch slots to charge.
   if (isSwitchingChargingSlot)

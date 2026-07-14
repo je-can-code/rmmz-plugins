@@ -137,9 +137,9 @@ describe('J-ABS-AllyAI JABS_Engine (unit, all downstream dependencies mocked)', 
 
   describe('applyBattleMemories', () =>
   {
-    it('KNOWN BUG: the guard is inverted (`if (this.canApplyBattleMemories(target)) return;`), so memories are built and applied exactly when canApplyBattleMemories is FALSE- i.e. for enemies, not allies, backwards from both the comment ("only apply if allowed") and the feature\'s intent', () =>
+    it('does nothing for an enemy target, since canApplyBattleMemories is false for enemies', () =>
     {
-      // Arrange- an "enemy" target, for which canApplyBattleMemories legitimately returns false.
+      // Arrange
       const attacker = { applyBattleMemories: vi.fn() };
       const action = {
         getBaseSkill: () => ({ id: 7 }),
@@ -152,24 +152,28 @@ describe('J-ABS-AllyAI JABS_Engine (unit, all downstream dependencies mocked)', 
       // Act
       engine.applyBattleMemories({ hpDamage: 10 }, action, target);
 
-      // Assert- a memory WAS built and applied, despite target being an enemy.
-      expect(attacker.applyBattleMemories).toHaveBeenCalledTimes(1);
-      expect(globalThis.JABS_BattleMemory).toHaveBeenCalledWith(42, 7, 1.5, 10);
+      // Assert
+      expect(attacker.applyBattleMemories).not.toHaveBeenCalled();
     });
 
-    it('KNOWN BUG (inverse case): does nothing for an ally target, for which canApplyBattleMemories legitimately returns true- the intended case this feature exists for', () =>
+    it('builds and applies a memory for an ally target, since canApplyBattleMemories is true for allies', () =>
     {
-      // Arrange- an "ally" (non-enemy) target, for which canApplyBattleMemories returns true.
+      // Arrange
       const attacker = { applyBattleMemories: vi.fn() };
-      const action = { getBaseSkill: () => ({ id: 7 }), getAction: () => ({}), getCaster: () => attacker };
+      const action = {
+        getBaseSkill: () => ({ id: 7 }),
+        getAction: () => ({ calculateRawElementRate: () => 1.5 }),
+        getCaster: () => attacker,
+      };
       const target = { isEnemy: () => false, getBattlerId: () => 1, getBattler: () => ({}) };
       const engine = buildEngine();
 
       // Act
       engine.applyBattleMemories({ hpDamage: 10 }, action, target);
 
-      // Assert- no memory applied, despite this being the intended "should apply" case.
-      expect(attacker.applyBattleMemories).not.toHaveBeenCalled();
+      // Assert
+      expect(attacker.applyBattleMemories).toHaveBeenCalledTimes(1);
+      expect(globalThis.JABS_BattleMemory).toHaveBeenCalledWith(1, 7, 1.5, 10);
     });
   });
 

@@ -395,7 +395,7 @@ describe('J-ABS-Charge JABS_Battler (unit, all downstream dependencies mocked)',
       expect(battler.endCharging).not.toHaveBeenCalled();
     });
 
-    it('does nothing when charging a different slot while already charging (known bug: isSwitchingChargingSlot is dead code, always false, since it ANDs isStillCharging with its own negated precondition- so the intended endCharging() never fires; the fallback setupCharging call is then itself blocked by its own already-charging guard)', () =>
+    it('ends the current charge when switching to charge a different slot', () =>
     {
       const battler = buildActionBattler();
       battler.setupCharging('mainhand', battler.getChargingTiers());
@@ -403,8 +403,8 @@ describe('J-ABS-Charge JABS_Battler (unit, all downstream dependencies mocked)',
 
       battler.executeChargeAction('offhand', true);
 
-      expect(battler.endCharging).not.toHaveBeenCalled();
-      expect(battler.getChargingSlot()).toBe('mainhand');
+      expect(battler.endCharging).toHaveBeenCalledTimes(1);
+      expect(battler.setupCharging).not.toHaveBeenCalled();
     });
 
     it('does nothing when starting fresh but there are no charging tiers for the slot', () =>

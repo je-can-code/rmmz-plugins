@@ -311,7 +311,11 @@ JABS_StandardController.prototype.performOffhandChargeAction = function()
  */
 JABS_StandardController.prototype.performOffhandChargeAlterAction = function()
 {
-  JABS_InputAdapter.performOffhandActionCharging(false, $jabsEngine.getPlayer1())
+  // execute the alter-action- aka stop charging and release if applicable.
+  JABS_InputAdapter.performOffhandActionCharging(false, $jabsEngine.getPlayer1());
+
+  // reset the slot's charging input delay.
+  this.resetChargeInputDelayBySlot(JABS_Button.Offhand);
 };
 //endregion offhand
 

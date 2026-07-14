@@ -78,7 +78,7 @@ JABS_Engine.prototype.continuedPrimaryBattleEffects = function(action, target)
 JABS_Engine.prototype.applyBattleMemories = function(result, action, target)
 {
   // only apply if allowed.
-  if (this.canApplyBattleMemories(target)) return;
+  if (!this.canApplyBattleMemories(target)) return;
 
   // generate the new battle memory of the action and its result for the target.
   const newMemory = new JABS_BattleMemory(target.getBattlerId(), action.getBaseSkill().id, action.getAction()

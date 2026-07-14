@@ -53,13 +53,13 @@ Game_Followers.prototype.jumpAll = function()
   for (const follower of this._data)
   {
     // skip followers that don't exist.
-    if (!follower || !follower.isVisible()) return;
+    if (!follower || !follower.isVisible()) continue;
 
     // grab the follower's battler.
     const battler = follower.getJabsBattler();
 
     // only jump if the battler isn't engaged, and there is no event running.
-    if (battler.isEngaged() || !$gameMap._interpreter.isRunning()) return;
+    if (battler.isEngaged() || !$gameMap._interpreter.isRunning()) continue;
 
     // determine coordinates to jump to.
     const sx = $gamePlayer.deltaXFrom(follower.x);

@@ -51,10 +51,10 @@ describe('J-ABS-Speed Game_Character (unit, all downstream dependencies mocked)'
       expect(result).toBeCloseTo(0.3);
     });
 
-    it('does NOT actually clamp the result to the minimum distance despite computing it (known bug: the clamped value is discarded, `total` is returned instead of `constrainedTotal`)', () =>
+    it('clamps the result up to the minimum distance when the bonus pushes it too low', () =>
     {
-      // Arrange- a steep negative bonus would normally need clamping to the minimum distance, but
-      // the source computes constrainedTotal and then returns the unclamped `total` regardless.
+      // Arrange- a steep negative bonus needs clamping to the minimum distance so movement never
+      // goes negative ("moonwalking").
       originalDistancePerFrame.mockReturnValue(0.2);
       const character = buildCharacter();
       character.calculateSpeedBoostBonus = () => -0.19;
@@ -63,9 +63,8 @@ describe('J-ABS-Speed Game_Character (unit, all downstream dependencies mocked)'
       // Act
       const result = character.distancePerFrame();
 
-      // Assert- 0.2 + (-0.19) = 0.01, which is below the minimum (0.015625) and should have been
-      // clamped up to it, but isn't.
-      expect(result).toBeCloseTo(0.01);
+      // Assert- 0.2 + (-0.19) = 0.01, which is below the minimum (0.015625), so it clamps up to it.
+      expect(result).toBeCloseTo(0.015625);
     });
   });
 

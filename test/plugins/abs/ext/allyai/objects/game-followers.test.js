@@ -101,7 +101,7 @@ describe('J-ABS-AllyAI Game_Followers (unit, all downstream dependencies mocked)
       expect(follower2.jump).toHaveBeenCalledWith(1, 2);
     });
 
-    it('KNOWN BUG: an invisible/missing follower aborts the ENTIRE jumpAll pass, not just that one follower- the skip checks use `return` instead of `continue` inside the for-of loop', () =>
+    it('skips an invisible/missing follower without aborting the rest of the pass', () =>
     {
       const invisibleFollower = buildFollower({ isVisible: () => false });
       const eligibleFollower = buildFollower();
@@ -110,10 +110,10 @@ describe('J-ABS-AllyAI Game_Followers (unit, all downstream dependencies mocked)
 
       followers.jumpAll();
 
-      expect(eligibleFollower.jump).not.toHaveBeenCalled();
+      expect(eligibleFollower.jump).toHaveBeenCalledWith(1, 2);
     });
 
-    it('KNOWN BUG: an engaged follower earlier in the list also aborts jumps for every follower after it', () =>
+    it('skips an engaged follower without aborting jumps for followers after it', () =>
     {
       const engagedFollower = buildFollower({ getJabsBattler: () => ({ isEngaged: () => true }) });
       const eligibleFollower = buildFollower();
@@ -122,7 +122,8 @@ describe('J-ABS-AllyAI Game_Followers (unit, all downstream dependencies mocked)
 
       followers.jumpAll();
 
-      expect(eligibleFollower.jump).not.toHaveBeenCalled();
+      expect(engagedFollower.jump).not.toHaveBeenCalled();
+      expect(eligibleFollower.jump).toHaveBeenCalledWith(1, 2);
     });
   });
 
