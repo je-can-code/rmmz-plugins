@@ -2845,3 +2845,184 @@ integer or a bracketed formula, same floor-once-at-the-end behavior as the skill
 Basic attacks only get extra hit applications per connection scaled off this battler's own LUK.
 
 **See also:** `<bonus-hits>`, `<pierce>`
+
+---
+
+### `<hideFromJabsMenu>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+the JABS quick menu's dodge/combat/tool assignment lists are built
+
+**Effect:**
+excludes this skill/item from the slot-assignment menu it would otherwise appear in. Still
+appears normally in the main menu; only the JABS quick-menu assignment list is affected.
+
+```
+<hideFromJabsMenu>
+```
+This skill can't be assigned via the quick menu, but is unaffected everywhere else.
+
+---
+
+### `<jabsTool>`
+
+**Applies to:**
+Items
+
+**When:**
+the JABS quick menu's tool vs. usable-item lists are built
+
+**Effect:**
+marks an item as belonging in the tool slot (hookshots, bombs) rather than the usable-item slot.
+Without this tag an item is a consumable by default. The tag alone isn't sufficient — Item Type
+must also be "Regular Item" and Occasion must be "Always" for the item to populate either menu at
+all; `<jabsTool>` only decides which of the two qualifying menus it lands in.
+
+```
+<jabsTool>
+```
+This item shows up in the tool-slot assignment list instead of the usable-item list.
+
+---
+
+### `<moveType:forward|backward|directional>` / `<dodge:DISTANCE>` / `<dodgeSpeed:MODIFIER>`
+
+**Applies to:**
+Skills (the dodge-slot skill type, defined in plugin params)
+
+**When:**
+the dodge skill executes
+
+**Effect:**
+`moveType` sets dodge direction: `forward` (facing), `backward` (opposite facing), or
+`directional` (whatever direction is currently pressed). `dodge` is the forced-move distance in
+tiles. `dodgeSpeed` adds to (or, if negative, subtracts from) the player's current move speed
+during the dodge (decimal allowed). The dodge skill still runs through the full JABS action
+pipeline — it can deal damage, apply states, fire projectiles, etc., not just move.
+
+```
+<moveType:directional>
+<dodge:2>
+<dodgeSpeed:1.5>
+```
+A directional dash 2 tiles in whatever direction is held, at +1.5 move speed.
+
+**See also:** `<invincibleDodge>`, `<iframes>`
+
+---
+
+### `<invincibleDodge>` / `<iframes:[START_FRAME, END_FRAME]>`
+
+**Applies to:**
+Skills (the dodge-slot skill type)
+
+**When:**
+during the dodge's execution window
+
+**Effect:**
+`invincibleDodge` makes the player fully invincible for the entire dodge duration.
+`iframes` instead grants partial invincibility only between START_FRAME and END_FRAME of the
+dodge (a window that extends past the dodge's own duration is simply clipped to the overlap).
+
+```
+<iframes:[4, 12]>
+```
+The player is invincible only from frame 4 through frame 12 of this dodge — not the whole thing.
+
+---
+
+### `<autoAssignSkills>` / `<autoUpgradeSkills>` / `<noAutoAssignType:[TYPE_IDS...]>` / `<noAutoAssign>` / `<upgradeOverSkill:NUM>` / `<onlyUpgrade>` / `<noUpgrade>`
+
+**Applies to:**
+`autoAssignSkills`/`autoUpgradeSkills`: Actors, Classes. The rest: Skills.
+
+**When:**
+a skill is learned
+
+**Effect:**
+governs whether newly learned skills auto-populate the four combat slots (never
+mainhand/offhand/dodge/tool). `autoAssignSkills` opts an actor/class into the feature entirely;
+without it nothing below applies. Full gate for a given skill: actor/class has
+`autoAssignSkills`, the actor doesn't already have the skill equipped, there's an empty combat
+slot, the skill isn't `<noAutoAssign>`'d, isn't `<onlyUpgrade>`-restricted, and its skill type
+isn't in a `<noAutoAssignType:[...]>` blacklist. `autoUpgradeSkills` (actor/class) additionally
+allows auto-learned skills to replace already-equipped ones. `<upgradeOverSkill:NUM>` makes this
+newly learned skill replace skill NUM in its slot if equipped (auto-assigns normally if NUM
+isn't equipped, unless blocked). `<onlyUpgrade>` prevents a skill from being freely auto-assigned
+— it can only arrive via someone else's `upgradeOverSkill`. `<noUpgrade>` prevents a skill from
+ever being replaced by another skill's upgrade tag.
+
+```
+<upgradeOverSkill:12>
+<onlyUpgrade>
+```
+Learning this skill silently replaces skill 12 in its slot if equipped; otherwise this skill
+never auto-assigns on its own.
+
+---
+
+### `<aggro:VAL>` / `<aggroMultiplier:VAL>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+the skill lands
+
+**Effect:**
+`aggro` adds VAL flat aggro (or removes it if negative) as one step in JABS's aggro calculation
+chain (base → HP/MP/TP damage → HP drain → parry → bonus aggro → bonus rate → attacker-state
+multipliers → target-state multipliers → attacker TGR → player-unique multiplier).
+`aggroMultiplier` (default 1.0) multiplies the whole chain's result for this skill.
+
+```
+<aggro:50>
+<aggroMultiplier:2.0>
+```
+This skill adds 50 flat aggro, then doubles the entire calculated total.
+
+---
+
+### `<aggroLock>` / `<aggroOutAmp:VAL>` / `<aggroInAmp:VAL>`
+
+**Applies to:**
+States
+
+**When:**
+the state is active on a battler
+
+**Effect:**
+`aggroLock` freezes this battler's own aggro value while active — they can still affect others'
+aggro, but theirs can't change. `aggroOutAmp` multiplies all aggro this battler generates while
+the state is active; `aggroInAmp` multiplies all aggro this battler receives while active.
+
+```
+<aggroOutAmp:2.0>
+```
+While this state is active, everything this battler does generates double aggro.
+
+---
+
+### `<useOnPickup>` / `<expires:DURATION>`
+
+**Applies to:**
+Items (droppable loot)
+
+**When:**
+the item is dropped on the map / picked up
+
+**Effect:**
+`useOnPickup` immediately performs the item's effect on the picker-upper the instant it's
+collected (the Zelda "heart drop" pattern) rather than adding it to inventory. `expires`
+overrides the default loot duration in frames before it despawns. All loot is erased on map
+transfer regardless of this tag (intentional).
+
+```
+<useOnPickup>
+<expires:1800>
+```
+A heart-drop-style item that's used the instant it's picked up, and despawns after 30 seconds if
+left uncollected.
