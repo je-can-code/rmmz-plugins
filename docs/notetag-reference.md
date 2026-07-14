@@ -1441,3 +1441,54 @@ This class's max TP is always `level * 2`, evaluated live at every level, not ju
 
 **See also:** `<maxLevelBoost>` (controls how far past 99 an actor can go; this controls what stats
 look like once they're there)
+
+---
+
+## J-Level-Sync (`src/plugins/level/ext/sync/`)
+
+Requires J-LevelMaster (hooks `getLevel()`). Real `_level`/EXP/save data are never mutated — sync is
+purely an overlay on the computed level. A plugin-command session (if active) always wins over a map
+note, and only persists/clears explicitly — it survives map transfers.
+
+### `<levelSync:N>`
+
+**Applies to:**
+Map notes
+
+**When:**
+map setup, if no sync session is currently active (a session ignores map notes entirely)
+
+**Effect:**
+activates content sync at level N (N must be > 0) for the duration of the map. Default mode is
+cap-only: actors above N get clamped down to N for `getLevel()` purposes; actors already below N are
+unaffected. Clears automatically on leaving a map that doesn't have this tag, provided no session is
+running.
+
+```
+<levelSync:50>
+```
+Real level 90 fights as 50; real level 30 fights as 30 (unchanged) — cap-only.
+
+**See also:** `<levelSyncUp>`
+
+---
+
+### `<levelSyncUp>`
+
+**Applies to:**
+Map notes — paired with `<levelSync:N>` on the same note, has no effect alone
+
+**When:**
+same activation window as `<levelSync:N>`
+
+**Effect:**
+switches from cap-only to uplevel (exact sync) mode: ALL actors fight at exactly N, including
+underleveled ones that cap-only mode would otherwise leave alone.
+
+```
+<levelSync:50>
+<levelSyncUp>
+```
+Real level 90 fights as 50; real level 30 also fights as 50 (boosted) — exact sync.
+
+**See also:** `<levelSync>`
