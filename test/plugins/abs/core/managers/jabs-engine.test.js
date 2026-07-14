@@ -5187,5 +5187,435 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion retaliation
+
+  //region post-primary battle effects & logging
+  describe('postPrimaryBattleEffects', () =>
+  {
+    it('creates the attack log then processes purge states', () =>
+    {
+      const engine = new JABS_Engine();
+      const callOrder = [];
+      engine.createAttackLog = vi.fn(() => callOrder.push('log'));
+      engine.processPurgeStates = vi.fn(() => callOrder.push('purge'));
+
+      engine.postPrimaryBattleEffects('action', 'target');
+
+      expect(callOrder).toEqual([ 'log', 'purge' ]);
+      expect(engine.createAttackLog).toHaveBeenCalledWith('action', 'target');
+      expect(engine.processPurgeStates).toHaveBeenCalledWith('action', 'target');
+    });
+  });
+
+  describe('processPurgeStates', () =>
+  {
+    function buildTarget(overrides = {})
+    {
+      return Object.assign({
+        getBattler: () => ({ result: () => ({ isHit: () => true }), removeStatesByPriority: vi.fn(() => []) }),
+      }, overrides);
+    }
+
+    it('does not purge states on a non-hit result', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.createPurgeStateLogs = vi.fn();
+      const target = buildTarget({ getBattler: () => ({ result: () => ({ isHit: () => false }) }) });
+      const action = { getBaseSkill: () => ({ jabsPurgeStatesParams: [ 'negative', false, 1 ] }) };
+
+      engine.processPurgeStates(action, target);
+
+      expect(engine.createPurgeStateLogs).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when the skill has no purgeStates tag', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.createPurgeStateLogs = vi.fn();
+      const target = buildTarget();
+      const action = { getBaseSkill: () => ({ jabsPurgeStatesParams: null }) };
+
+      engine.processPurgeStates(action, target);
+
+      expect(engine.createPurgeStateLogs).not.toHaveBeenCalled();
+    });
+
+    it('defaults type to negative, allowDeath to false, and count to 1 when omitted', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.createPurgeStateLogs = vi.fn();
+      const removeStatesByPriority = vi.fn(() => []);
+      const target = buildTarget({
+        getBattler: () => ({ result: () => ({ isHit: () => true }), removeStatesByPriority }),
+      });
+      const action = { getBaseSkill: () => ({ jabsPurgeStatesParams: [ undefined, undefined, undefined ] }) };
+
+      engine.processPurgeStates(action, target);
+
+      expect(removeStatesByPriority).toHaveBeenCalledWith('negative', false, 1);
+    });
+
+    it('parses explicit type, allowDeath, and count from the tag', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.createPurgeStateLogs = vi.fn();
+      const removeStatesByPriority = vi.fn(() => []);
+      const target = buildTarget({
+        getBattler: () => ({ result: () => ({ isHit: () => true }), removeStatesByPriority }),
+      });
+      const action = { getBaseSkill: () => ({ jabsPurgeStatesParams: [ 'positive', true, '3' ] }) };
+
+      engine.processPurgeStates(action, target);
+
+      expect(removeStatesByPriority).toHaveBeenCalledWith('positive', true, 3);
+    });
+
+    it('logs whatever states were actually purged', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.createPurgeStateLogs = vi.fn();
+      const purged = [ { id: 5 } ];
+      const target = buildTarget({
+        getBattler: () => ({ result: () => ({ isHit: () => true }), removeStatesByPriority: () => purged }),
+      });
+      const action = { getBaseSkill: () => ({ jabsPurgeStatesParams: [ 'negative', false, 1 ] }) };
+
+      engine.processPurgeStates(action, target);
+
+      expect(engine.createPurgeStateLogs).toHaveBeenCalledWith(target, purged);
+    });
+  });
+
+  describe('createPurgeStateLogs', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.ActionLogBuilder = vi.fn(function()
+      {
+        this.setupStatePurged = vi.fn().mockReturnThis();
+        this.build = vi.fn(() => ({ built: true }));
+      });
+      globalThis.$actionLogManager = { addLog: vi.fn() };
+    });
+
+    it('does nothing when logging is disabled', () =>
+    {
+      globalThis.J.LOG = false;
+      const engine = new JABS_Engine();
+      const target = { getBattlerDatabaseData: () => ({ name: 'Slime' }) };
+
+      engine.createPurgeStateLogs(target, [ { id: 1 } ]);
+
+      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      globalThis.J.LOG = true;
+    });
+
+    it('does nothing when nothing was purged', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const target = { getBattlerDatabaseData: () => ({ name: 'Slime' }) };
+
+      engine.createPurgeStateLogs(target, []);
+
+      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+    });
+
+    it('emits one log entry per purged state', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const target = { getBattlerDatabaseData: () => ({ name: 'Slime' }) };
+
+      engine.createPurgeStateLogs(target, [ { id: 1 }, { id: 2 } ]);
+
+      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledTimes(2);
+    });
+
+    it('skips logging for a state explicitly tagged to suppress logs', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const target = { getBattlerDatabaseData: () => ({ name: 'Slime' }) };
+
+      engine.createPurgeStateLogs(target, [ { id: 1, jabsNoLogs: true }, { id: 2 } ]);
+
+      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('createAttackLog', () =>
+  {
+    function buildActionLogBuilderMock()
+    {
+      const instance = {};
+      globalThis.ActionLogBuilder = vi.fn(function()
+      {
+        Object.assign(this, instance);
+        [
+          'setupParry', 'setupDodge', 'setupRetaliation', 'setupUndamaged',
+          'setupTerrainDamage', 'setupExecution', 'setupTargetDefeated', 'setupStateAfflicted',
+        ].forEach(method => { this[method] = vi.fn().mockReturnThis(); });
+        this.build = vi.fn(() => ({ built: true }));
+      });
+    }
+
+    function buildResult(overrides = {})
+    {
+      return Object.assign({
+        parried: false, evaded: false, hpDamage: 0, mpDamage: 0, tpDamage: 0,
+        reduced: 0, critical: false, addedStates: [],
+      }, overrides);
+    }
+
+    function buildTargetBattler(result, overrides = {})
+    {
+      return Object.assign({
+        result: () => result,
+        deathStateId: () => 1,
+        state: () => ({}),
+        name: 'Slime',
+      }, overrides);
+    }
+
+    function buildTarget(targetBattler, overrides = {})
+    {
+      return Object.assign({
+        getBattler: () => targetBattler,
+        getBattlerDatabaseData: () => ({ name: 'Slime' }),
+        parrying: () => false,
+      }, overrides);
+    }
+
+    function buildAction(overrides = {})
+    {
+      return Object.assign({
+        getCaster: () => ({ getBattlerDatabaseData: () => ({ name: 'Hero' }) }),
+        getBaseSkill: () => ({ id: 7, damage: { type: 1 } }),
+        isRetaliation: () => false,
+        isTerrainDamage: () => false,
+      }, overrides);
+    }
+
+    beforeEach(() =>
+    {
+      buildActionLogBuilderMock();
+      globalThis.$actionLogManager = { addLog: vi.fn() };
+    });
+
+    it('does nothing when logging is disabled', () =>
+    {
+      globalThis.J.LOG = false;
+      const engine = new JABS_Engine();
+      const target = buildTarget(buildTargetBattler(buildResult()));
+
+      engine.createAttackLog(buildAction(), target);
+
+      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      globalThis.J.LOG = true;
+    });
+
+    it('logs a parry and stops processing further branches', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const target = buildTarget(buildTargetBattler(buildResult({ parried: true })));
+
+      engine.createAttackLog(buildAction(), target);
+
+      expect(globalThis.ActionLogBuilder.mock.results[0].value.setupParry)
+        .toHaveBeenCalledWith('Slime', 'Hero', 7, false);
+      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledTimes(1);
+    });
+
+    it('logs an evasion and stops processing further branches', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const target = buildTarget(buildTargetBattler(buildResult({ evaded: true })));
+
+      engine.createAttackLog(buildAction(), target);
+
+      expect(globalThis.ActionLogBuilder.mock.results[0].value.setupDodge)
+        .toHaveBeenCalledWith('Slime', 'Hero', 7);
+      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledTimes(1);
+    });
+
+    it('logs a retaliation and falls through to damage/state processing', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const target = buildTarget(buildTargetBattler(buildResult({ hpDamage: 5 })));
+      const action = buildAction({ isRetaliation: () => true });
+
+      engine.createAttackLog(action, target);
+
+      expect(globalThis.ActionLogBuilder.mock.results[0].value.setupRetaliation)
+        .toHaveBeenCalledWith('Hero');
+      // 2 logs: retaliation + the fallthrough damage entry.
+      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledTimes(2);
+    });
+
+    it('logs an undamaged hit when no damage or states landed', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const target = buildTarget(buildTargetBattler(buildResult()));
+
+      engine.createAttackLog(buildAction(), target);
+
+      expect(globalThis.ActionLogBuilder.mock.results[0].value.setupUndamaged)
+        .toHaveBeenCalledWith('Slime', 'Hero', 7);
+    });
+
+    it('suppresses the undamaged log for a no-damage-type (support) skill', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const target = buildTarget(buildTargetBattler(buildResult()));
+      const action = buildAction({ getBaseSkill: () => ({ id: 7, damage: { type: 0 } }) });
+
+      engine.createAttackLog(action, target);
+
+      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+    });
+
+    it('logs the standard execution entry for hp damage', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const target = buildTarget(buildTargetBattler(buildResult({ hpDamage: 12, reduced: 3 })));
+
+      engine.createAttackLog(buildAction(), target);
+
+      expect(globalThis.ActionLogBuilder.mock.results[0].value.setupExecution)
+        .toHaveBeenCalledWith('Slime', 'Hero', 7, 12, '(3)', false, false);
+    });
+
+    it('logs a terrain-damage entry instead of a normal execution entry for terrain damage', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const target = buildTarget(buildTargetBattler(buildResult({ hpDamage: 8 })));
+      const action = buildAction({ isTerrainDamage: () => true });
+
+      engine.createAttackLog(action, target);
+
+      expect(globalThis.ActionLogBuilder.mock.results[0].value.setupTerrainDamage)
+        .toHaveBeenCalledWith('Slime', 7, 8, String.empty, false, false);
+    });
+
+    it('logs a target-defeated entry when the added state is the death state', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const targetBattler = buildTargetBattler(buildResult({ hpDamage: 999, addedStates: [ 1 ] }), { deathStateId: () => 1 });
+      const target = buildTarget(targetBattler);
+
+      engine.createAttackLog(buildAction(), target);
+
+      expect(globalThis.ActionLogBuilder.mock.results[1].value.setupTargetDefeated)
+        .toHaveBeenCalledWith('Slime');
+    });
+
+    it('logs a state-afflicted entry for each non-death added state', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const targetBattler = buildTargetBattler(
+        buildResult({ hpDamage: 5, addedStates: [ 2 ] }),
+        { deathStateId: () => 1, state: () => ({ jabsNoLogs: false }) },
+      );
+      const target = buildTarget(targetBattler);
+
+      engine.createAttackLog(buildAction(), target);
+
+      expect(globalThis.ActionLogBuilder.mock.results[1].value.setupStateAfflicted)
+        .toHaveBeenCalledWith('Slime', 2);
+    });
+
+    it('skips a state-afflicted entry when the state explicitly forbids logging', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const targetBattler = buildTargetBattler(
+        buildResult({ hpDamage: 5, addedStates: [ 2 ] }),
+        { deathStateId: () => 1, state: () => ({ jabsNoLogs: true }) },
+      );
+      const target = buildTarget(targetBattler);
+
+      engine.createAttackLog(buildAction(), target);
+
+      // only the damage-execution log fires; the state-afflicted entry is suppressed.
+      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('determineElementalIcon', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.DataManager = { isItem: vi.fn(() => false) };
+      globalThis.$dataItems = [];
+    });
+
+    it('returns 0 when elemental icons are not in use', () =>
+    {
+      J.ABS.Metadata.UseElementalIcons = false;
+      const engine = new JABS_Engine();
+      const skill = { damage: { elementId: 3 } };
+
+      expect(engine.determineElementalIcon(skill, {})).toBe(0);
+    });
+
+    it('returns the item icon index for an item-based skill', () =>
+    {
+      J.ABS.Metadata.UseElementalIcons = true;
+      globalThis.DataManager.isItem = vi.fn(() => true);
+      globalThis.$dataItems = { 7: { iconIndex: 55 } };
+      const engine = new JABS_Engine();
+      const skill = { id: 7, damage: { elementId: 3 } };
+
+      expect(engine.determineElementalIcon(skill, {})).toBe(55);
+    });
+
+    it('resolves the weapon\'s first attack element for an actor using a weapon-based skill', () =>
+    {
+      J.ABS.Metadata.UseElementalIcons = true;
+      J.ABS.Metadata.ElementalIcons = [ { element: 5, icon: 99 } ];
+      const engine = new JABS_Engine();
+      const skill = { damage: { elementId: -1 } };
+      const caster = {
+        isActor: () => true,
+        getBattler: () => ({ attackElements: () => [ 5 ] }),
+      };
+
+      expect(engine.determineElementalIcon(skill, caster)).toBe(99);
+    });
+
+    it('falls back to elementId 0 for a weapon-based skill with no attack elements', () =>
+    {
+      J.ABS.Metadata.UseElementalIcons = true;
+      J.ABS.Metadata.ElementalIcons = [ { element: 0, icon: 11 } ];
+      const engine = new JABS_Engine();
+      const skill = { damage: { elementId: -1 } };
+      const caster = {
+        isActor: () => true,
+        getBattler: () => ({ attackElements: () => [] }),
+      };
+
+      expect(engine.determineElementalIcon(skill, caster)).toBe(11);
+    });
+
+    it('returns 0 when no configured icon matches the resolved element', () =>
+    {
+      J.ABS.Metadata.UseElementalIcons = true;
+      J.ABS.Metadata.ElementalIcons = [ { element: 5, icon: 99 } ];
+      const engine = new JABS_Engine();
+      const skill = { damage: { elementId: 3 } };
+
+      expect(engine.determineElementalIcon(skill, {})).toBe(0);
+    });
+  });
+  //endregion post-primary battle effects & logging
 });
 //endregion plugins/abs/core/managers/jabs-engine.test.js
