@@ -668,3 +668,86 @@ The battler that has this tag will not GAIN proficiency from any battlers that t
 skills against.
 
 **See also:** `<proficiencyBonus>`
+
+---
+
+## J-Passive (`src/plugins/passive/core/`)
+
+### `<passive:[STATE_IDS]>` / `<uniquePassive:[STATE_IDS]>`
+
+**Applies to:**
+Actors, Classes, Enemies, Skills, Items, Weapons, Armors, States — plus map event comment commands
+(for injecting passives onto a specific spawned battler without a duplicate database enemy).
+
+**When:**
+depends on the source: skills apply as long as the battler *knows* the skill (not just has it
+equipped/slotted); items/weapons/armors apply to the whole party just by being in the party's
+possession; actors/classes/enemies/states apply to just that battler while the source is
+active/equipped/afflicted/leveled-into.
+
+**Effect:**
+applies STATE_IDS (comma-delimited) as passive states — always active regardless of the state's
+database duration, cannot be removed by normal means while the source persists. `passive` stacks:
+the same state id from two different sources is applied twice (real double-application, distinct
+"instances" tracked). `uniquePassive` collapses to one application no matter how many sources tag the
+same state id — and a `uniquePassive` tag anywhere always wins over a `passive` tag for the same
+state id (unique is resolved and committed first every refresh pass).
+
+```
+<passive:[10]>
+<passive:[10,11,12]>
+```
+Two separate sources each carrying one of these tags: state 10 applies twice (once per source), 11
+and 12 apply once each.
+
+```
+<uniquePassive:[10]>
+<passive:[10,11,12]>
+```
+Same state ids, but the first source uses `uniquePassive`: state 10 now applies only once (unique
+wins), 11 and 12 still apply once each.
+
+**See also:** `<equippedPassive>`/`<uniqueEquippedPassive>`, `<hideFromPassiveList>`
+
+---
+
+### `<equippedPassive:[STATE_IDS]>` / `<uniqueEquippedPassive:[STATE_IDS]>`
+
+**Applies to:**
+equippable items (weapons, armors) only
+
+**When:**
+only while the item is actually equipped — removing the equipment removes the passive immediately,
+unlike the always-on `passive`/`uniquePassive` family for non-equip sources
+
+**Effect:**
+identical stacking/uniqueness rules to `<passive>`/`<uniquePassive>` above, scoped to equip-while-worn
+instead of possess-while-in-inventory.
+
+```
+<equippedPassive:[10,11]>
+```
+While this equipment is equipped, state ids 10 and 11 are applied. Unequipping it removes them.
+
+**See also:** `<passive>`/`<uniquePassive>`
+
+---
+
+### `<hideFromPassiveList>`
+
+**Applies to:**
+States only
+
+**When:**
+always, for the state carrying the tag
+
+**Effect:**
+excludes the state from the player-facing Passives menu list while it still fully contributes its
+traits in combat. Intended for implementation-only passive duplicates (e.g. stack amplifiers) that
+shouldn't clutter the player's view.
+
+```
+<hideFromPassiveList>
+```
+
+**See also:** `<passive>`
