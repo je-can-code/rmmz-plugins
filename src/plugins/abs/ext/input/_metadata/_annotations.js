@@ -36,6 +36,12 @@
  * mapping back to defaults via script call if necessary).
  *
  * ============================================================================
+ * NOTE ABOUT NOTETAGS:
+ * This plugin has no notetags of its own. Everything here is exposed via
+ * plugin parameters (input remapping) and a Game_System script call for
+ * resetting mappings to default- there's nothing to tag on database
+ * objects.
+ * ============================================================================
  * CHANGELOG
  * ----------------------------------------------------------------------------
  * - 2.2.2
