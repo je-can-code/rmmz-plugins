@@ -609,3 +609,62 @@ on this skill specifically (40 skill-specific + 30 passive global).
 rate = min(1.0, 0.0 + 0.50) = 0.50, target takes 50% fire damage.
 
 **See also:** `<boostElement>`, `<absorbElements>`
+
+---
+
+## J-Proficiency (`src/plugins/prof/core/`)
+
+### `<proficiencyBonus:NUM>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, States
+
+**Watch out:** Enemies track their own skill proficiencies same as actors do, but the bonus-gain
+wiring this tag feeds into (`Game_Actor.prototype.prof`) was only ever built for actors — the base
+`Game_BattlerBase.prototype.prof` getter enemies inherit always returns `0`. A `<proficiencyBonus>`
+tag on an enemy or an enemy-applicable source is inert. This is a known, current-behavior gap, not a
+documentation choice — it's staying this way for now.
+
+**When:**
+battler gains skill proficiency from using a skill
+
+**Effect:**
+NUM is a flat bonus (not a percentage) added on top of the base proficiency gain, for every skill use.
+
+```
+<proficiencyBonus:3>
+```
+The attacker now gains +3 bonus proficiency for any skill used.
+
+**See also:** `<proficiencyGivingBlock>`, `<proficiencyGainingBlock>`
+
+---
+
+### `<proficiencyGivingBlock>` / `<proficiencyGainingBlock>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, Enemies, States
+
+**When:**
+always, for whichever battler carries the tag
+
+**Effect:**
+`proficiencyGivingBlock` prevents this battler from GIVING proficiency to whoever hits it with skills
+(commonly placed on enemies or enemy-only states). `proficiencyGainingBlock` prevents this battler
+from GAINING proficiency when it uses skills against others (commonly placed on actors or actor-only
+states). Either tag works on anything — the source split above is just the common case, not an
+enforced rule.
+
+```
+<proficiencyGivingBlock>
+```
+The battler that has this tag will not GIVE proficiency to any opposing battlers that hit this battler
+with skills.
+
+```
+<proficiencyGainingBlock>
+```
+The battler that has this tag will not GAIN proficiency from any battlers that this battler uses
+skills against.
+
+**See also:** `<proficiencyBonus>`
