@@ -5651,5 +5651,365 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion guarding
+
+  //region map: connection/scope/action-building
+  describe('canActionConnect', () =>
+  {
+    function buildConnectableBattler(overrides = {})
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isInvincible = () => false;
+      jabsBattler.getCharacter = () => ({ isJabsAction: () => false });
+      jabsBattler.isFollower = () => false;
+      Object.assign(jabsBattler, overrides);
+      return jabsBattler;
+    }
+
+    it('is false while invincible', () =>
+    {
+      expect(buildConnectableBattler({ isInvincible: () => true }).canActionConnect()).toBe(false);
+    });
+
+    it('is false for a jabs action event itself', () =>
+    {
+      const jabsBattler = buildConnectableBattler();
+      jabsBattler.getCharacter = () => ({ isJabsAction: () => true });
+
+      expect(jabsBattler.canActionConnect()).toBe(false);
+    });
+
+    it('is false for an invisible follower', () =>
+    {
+      const jabsBattler = buildConnectableBattler({ isFollower: () => true });
+      jabsBattler.getCharacter = () => ({ isJabsAction: () => false, isVisible: () => false });
+
+      expect(jabsBattler.canActionConnect()).toBe(false);
+    });
+
+    it('is true for a visible follower', () =>
+    {
+      const jabsBattler = buildConnectableBattler({ isFollower: () => true });
+      jabsBattler.getCharacter = () => ({ isJabsAction: () => false, isVisible: () => true });
+
+      expect(jabsBattler.canActionConnect()).toBe(true);
+    });
+
+    it('is true otherwise', () =>
+    {
+      expect(buildConnectableBattler().canActionConnect()).toBe(true);
+    });
+  });
+
+  describe('isWithinScope', () =>
+  {
+    function buildGameAction(overrides = {})
+    {
+      return Object.assign({
+        isForFriend: () => false,
+        isForOpponent: () => false,
+        isForOne: () => false,
+        isForUser: () => false,
+        isForAll: () => false,
+        isForEveryone: () => false,
+      }, overrides);
+    }
+
+    function buildActionAndUser(gameActionOverrides = {}, userOverrides = {})
+    {
+      const user = Object.assign({ getUuid: () => 'user-uuid', getTeam: () => 0 }, userOverrides);
+      const gameAction = buildGameAction(gameActionOverrides);
+      const action = {
+        getCaster: () => user,
+        getAction: () => gameAction,
+        isDirectAction: () => false,
+      };
+      return { action, user, gameAction };
+    }
+
+    it('is false for a single-scope action that already hit one target', () =>
+    {
+      const jabsBattler = buildBattler();
+      const { action } = buildActionAndUser({ isForOne: () => true });
+      const target = { getUuid: () => 'target-uuid', isInanimate: () => false };
+
+      expect(jabsBattler.isWithinScope(action, target, true)).toBe(false);
+    });
+
+    it('is true when the target is the caster and the scope is self', () =>
+    {
+      const jabsBattler = buildBattler();
+      const { action, user } = buildActionAndUser({ isForUser: () => true });
+
+      expect(jabsBattler.isWithinScope(action, user)).toBe(true);
+    });
+
+    it('is true for an ally target from a same-team caster, excluding inanimate direct hits', async () =>
+    {
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isFriendly = vi.fn(() => true);
+      const jabsBattler = buildBattler();
+      jabsBattler._team = 0;
+      const { action } = buildActionAndUser({ isForFriend: () => true });
+      const target = { getUuid: () => 'target-uuid', isInanimate: () => false };
+
+      expect(jabsBattler.isWithinScope(action, target)).toBe(true);
+      JABS_TeamRules.isFriendly = vi.fn(() => false);
+    });
+
+    it('excludes an inanimate target from a direct ally-scoped action', async () =>
+    {
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isFriendly = vi.fn(() => true);
+      const jabsBattler = buildBattler();
+      const { gameAction } = buildActionAndUser({ isForFriend: () => true });
+      const action = {
+        getCaster: () => ({ getUuid: () => 'user-uuid', getTeam: () => 0 }),
+        getAction: () => gameAction,
+        isDirectAction: () => true,
+      };
+      const target = { getUuid: () => 'target-uuid', isInanimate: () => true };
+
+      expect(jabsBattler.isWithinScope(action, target)).toBe(false);
+      JABS_TeamRules.isFriendly = vi.fn(() => false);
+    });
+
+    it('is true for an opponent target when the caster is opposed and scope is opponent', async () =>
+    {
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isFriendly = vi.fn(() => false);
+      JABS_TeamRules.isOpposed = vi.fn(() => true);
+      const jabsBattler = buildBattler();
+      const { action } = buildActionAndUser({ isForOpponent: () => true });
+      const target = { getUuid: () => 'target-uuid', isInanimate: () => false };
+
+      expect(jabsBattler.isWithinScope(action, target)).toBe(true);
+      JABS_TeamRules.isOpposed = vi.fn(() => true);
+    });
+
+    it('is false when nothing about the target/scope combination qualifies', async () =>
+    {
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isFriendly = vi.fn(() => false);
+      JABS_TeamRules.isOpposed = vi.fn(() => false);
+      const jabsBattler = buildBattler();
+      const { action } = buildActionAndUser({ isForOpponent: () => true });
+      const target = { getUuid: () => 'target-uuid', isInanimate: () => false };
+
+      expect(jabsBattler.isWithinScope(action, target)).toBe(false);
+    });
+  });
+
+  describe('createJabsActionFromSkill', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.Game_Action = vi.fn(function()
+      {
+        this.setSkill = vi.fn();
+        this.setResolvedCastTimeFrames = vi.fn();
+      });
+      globalThis.$jabsEngine = {
+        resolveProjectileFormationForSkill: vi.fn(() => 'line'),
+        resolveProjectileCountForSkill: vi.fn(() => 1),
+        determineActionDirections: vi.fn(() => [ 2 ]),
+      };
+    });
+
+    it('builds actions via the projectile direction conversion pipeline', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getSkill = () => ({ id: 1 });
+      jabsBattler.getProjectileSpawnBaseDirection = () => 2;
+      const builtAction = { getCastTime: () => 10 };
+      jabsBattler.convertProjectileDirectionsToActions = vi.fn(() => [ builtAction ]);
+
+      const result = jabsBattler.createJabsActionFromSkill(1);
+
+      expect(result).toEqual([ builtAction ]);
+    });
+
+    it('stamps the resolved cast time from the first generated action', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getSkill = () => ({ id: 1 });
+      jabsBattler.getProjectileSpawnBaseDirection = () => 2;
+      const gameActionInstance = new globalThis.Game_Action();
+      globalThis.Game_Action = vi.fn(function() { return gameActionInstance; });
+      const builtAction = { getCastTime: () => 42 };
+      jabsBattler.convertProjectileDirectionsToActions = vi.fn(() => [ builtAction ]);
+
+      jabsBattler.createJabsActionFromSkill(1);
+
+      expect(gameActionInstance.setResolvedCastTimeFrames).toHaveBeenCalledWith(42);
+    });
+
+    it('stamps 0 cast time when no actions were generated', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getSkill = () => ({ id: 1 });
+      jabsBattler.getProjectileSpawnBaseDirection = () => 2;
+      const gameActionInstance = new globalThis.Game_Action();
+      globalThis.Game_Action = vi.fn(function() { return gameActionInstance; });
+      jabsBattler.convertProjectileDirectionsToActions = vi.fn(() => []);
+
+      jabsBattler.createJabsActionFromSkill(1);
+
+      expect(gameActionInstance.setResolvedCastTimeFrames).toHaveBeenCalledWith(0);
+    });
+  });
+
+  describe('convertProjectileDirectionsToActions', () =>
+  {
+    it('delegates to JABS_ActionSpawner.buildVolley', async () =>
+    {
+      const { default: JABS_ActionSpawner } = await import('../../../../../src/plugins/abs/core/managers/JABS_ActionSpawner.js');
+      JABS_ActionSpawner.buildVolley = vi.fn(() => [ 'built-action' ]);
+      const jabsBattler = buildBattler();
+
+      const result = jabsBattler.convertProjectileDirectionsToActions([ 2, 4 ], 'action', 'options');
+
+      expect(result).toEqual([ 'built-action' ]);
+      expect(JABS_ActionSpawner.buildVolley).toHaveBeenCalledWith(jabsBattler, [ 2, 4 ], 'action', 'options');
+    });
+  });
+
+  describe('getProjectileSpawnBaseDirection', () =>
+  {
+    it('reads the character\'s current facing', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => 6 });
+
+      expect(jabsBattler.getProjectileSpawnBaseDirection()).toBe(6);
+    });
+  });
+
+  describe('battlerHasPermissionForSlot / getSkillIdForAction', () =>
+  {
+    it('battlerHasPermissionForSlot is true when a combo follow-up is queued', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getComboNextActionId = () => 5;
+
+      expect(jabsBattler.battlerHasPermissionForSlot('mainhand')).toBe(true);
+    });
+
+    it('battlerHasPermissionForSlot checks the raw equipped skill for the base slot', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getComboNextActionId = () => 0;
+      jabsBattler.getBattler = () => ({
+        getEquippedSkillId: () => 3, hasSkill: (id) => id === 3,
+      });
+
+      expect(jabsBattler.battlerHasPermissionForSlot('mainhand')).toBe(true);
+    });
+
+    it('getSkillIdForAction returns the queued combo id when present', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getComboNextActionId = () => 5;
+
+      expect(jabsBattler.getSkillIdForAction('mainhand')).toBe(5);
+    });
+
+    it('getSkillIdForAction resolves via the battler when no combo is queued', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getComboNextActionId = () => 0;
+      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 9 });
+
+      expect(jabsBattler.getSkillIdForAction('mainhand')).toBe(9);
+    });
+  });
+
+  describe('getAttackData', () =>
+  {
+    function buildAttackableBattler(overrides = {})
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({
+        meetsSkillConditions: () => true, skill: () => ({}),
+      });
+      jabsBattler.getSkillIdForAction = () => 1;
+      jabsBattler.battlerHasPermissionForSlot = () => true;
+      jabsBattler.getSkill = () => ({ id: 1, jabsDirect: false });
+      jabsBattler.createJabsActionFromSkill = vi.fn(() => [ 'built-action' ]);
+      Object.assign(jabsBattler, overrides);
+      return jabsBattler;
+    }
+
+    it('returns an empty array without a resolved skill id', () =>
+    {
+      const jabsBattler = buildAttackableBattler({ getSkillIdForAction: () => 0 });
+
+      expect(jabsBattler.getAttackData('mainhand')).toEqual([]);
+    });
+
+    it('returns an empty array when skill conditions are not met', () =>
+    {
+      const jabsBattler = buildAttackableBattler();
+      jabsBattler.getBattler = () => ({ meetsSkillConditions: () => false, skill: () => ({}) });
+
+      expect(jabsBattler.getAttackData('mainhand')).toEqual([]);
+    });
+
+    it('returns an empty array without slot permission', () =>
+    {
+      const jabsBattler = buildAttackableBattler({ battlerHasPermissionForSlot: () => false });
+
+      expect(jabsBattler.getAttackData('mainhand')).toEqual([]);
+    });
+
+    it('builds the action from the resolved skill id and options', () =>
+    {
+      const jabsBattler = buildAttackableBattler();
+
+      const result = jabsBattler.getAttackData('mainhand');
+
+      expect(result).toEqual([ 'built-action' ]);
+      expect(jabsBattler.createJabsActionFromSkill).toHaveBeenCalledWith(1, expect.anything());
+    });
+
+    it('freezes a direct-skill location when decision-time coordinates resolve', () =>
+    {
+      const jabsBattler = buildAttackableBattler({
+        getSkill: () => ({ id: 1, jabsDirect: true, jabsDirectLock: false }),
+      });
+      jabsBattler.resolveDirectActionTargetCoordinatesForSkill = vi.fn(() => [ 3, 4 ]);
+
+      jabsBattler.getAttackData('mainhand');
+
+      const [ , actionOptions ] = jabsBattler.createJabsActionFromSkill.mock.calls[0];
+      expect(actionOptions.location.getX()).toBe(3);
+      expect(actionOptions.location.getY()).toBe(4);
+    });
+
+    it('does not freeze a location for a direct-locked skill', () =>
+    {
+      const jabsBattler = buildAttackableBattler({
+        getSkill: () => ({ id: 1, jabsDirect: true, jabsDirectLock: true }),
+      });
+      jabsBattler.resolveDirectActionTargetCoordinatesForSkill = vi.fn();
+
+      jabsBattler.getAttackData('mainhand');
+
+      expect(jabsBattler.resolveDirectActionTargetCoordinatesForSkill).not.toHaveBeenCalled();
+    });
+
+    it('does not freeze a location when decision-time coordinates fail to resolve', () =>
+    {
+      const jabsBattler = buildAttackableBattler({
+        getSkill: () => ({ id: 1, jabsDirect: true, jabsDirectLock: false }),
+      });
+      jabsBattler.resolveDirectActionTargetCoordinatesForSkill = vi.fn(() => [ null, null ]);
+
+      jabsBattler.getAttackData('mainhand');
+
+      const [ , actionOptions ] = jabsBattler.createJabsActionFromSkill.mock.calls[0];
+      expect(actionOptions.location).toBeUndefined();
+    });
+  });
+  //endregion map: connection/scope/action-building
 });
 //endregion plugins/abs/core/models/jabs-battler.test.js
