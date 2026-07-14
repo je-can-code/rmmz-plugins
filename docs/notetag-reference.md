@@ -4027,3 +4027,27 @@ the broken shield's cap.
 ```
 Payload skill 12's formula written as `s * 0.5` deals damage equal to 50% of this shield's cap
 the moment it breaks.
+
+---
+
+## J-ABS-MoveSpeed (`src/plugins/abs/ext/speed/`)
+
+Enables percent-based move speed modifiers for battlers on the map.
+
+### `<speedBoost:NUM>`
+
+**Applies to:**
+Actors, Classes, Skills (learned skills only — read from the battler's note-source pool, not
+whichever skill is currently executing), Weapons, Armors, Enemies, States
+
+**When:**
+always (summed across all active note sources)
+
+**Effect:**
+NUM is a signed percent modifier against base move speed. Multiple tags across multiple sources
+stack additively. No upper limit; clamped at an arbitrary -90% lower limit.
+
+```
+<speedBoost:40>
+```
+This battler's movement speed is increased by ~40%.
