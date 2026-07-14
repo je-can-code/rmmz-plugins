@@ -35,7 +35,7 @@ J.RESOURCES.Aliased.Game_Battler = new Map();
  * All regular expressions used by this plugin.
  */
 J.RESOURCES.RegExp = {};
-J.RESOURCES.RegExp.HpCostReduction = /<hrc:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.RegExp.HpCostReduction = /<hcr:\[([+\-*/ ().\w]+)]>/gi;
 
 J.RESOURCES.RegExp.HpCostFlat = /<hp-cost:(\d+)>/gi;
 J.RESOURCES.RegExp.HpCostPercent = /<hp-cost:(\d+)%>/gi;

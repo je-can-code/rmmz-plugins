@@ -5182,3 +5182,194 @@ it.
 <regionAddState:[1, 3, 25, 4]>
 ```
 Region 1 applies state 3 at 25% chance, playing animation 4 on success.
+
+---
+
+## J-Resources (`src/plugins/resources/core/`)
+
+Extends the skill cost/gain system to support HP costs and gains, and tag-based flat/percent/
+formula costs and gains for MP and TP layered on top of the editor's native fields.
+
+### `<hp-cost:VALUE>` / `<hp-cost:PERCENT%>` / `<hp-cost:[FORMULA]>`
+
+**Applies to:**
+Skills
+
+**Formula context:**
+`a` = the battler executing the skill.
+
+**When:**
+the skill is executed
+
+**Effect:**
+deducts HP as a skill cost, alongside (or instead of) MP/TP. By default a battler cannot cast a
+skill whose HP cost would kill them — see `<hp-cost-can-kill>` to override.
+
+```
+<hp-cost:[a.mhp / 4]>
+```
+Costs 25% of the caster's max HP via formula.
+
+**See also:** `<hp-cost-can-kill>`, `<hcr>`, `<hp-gain>`
+
+---
+
+### `<hp-cost-can-kill>`
+
+**Applies to:**
+Skills
+
+**When:**
+the skill's HP cost would reduce the caster to 0 or below
+
+**Effect:**
+allows the skill to be cast anyway (normally blocked by a lethal HP cost).
+
+---
+
+### `<hcr:[VALUE]>`
+
+**Applies to:**
+Actors, Enemies, Classes, Weapons, Armors, States
+
+**When:**
+always (summed across all active note sources)
+
+**Effect:**
+HP Cost Reduction — additive subtraction from the 100 baseline applied against `<hp-cost>`
+amounts (unlike MCR/TCR, which are multipliers). VALUE must be a literal numeric expression — this
+formula is evaluated per note source with no live battler context (`a` is unavailable), so only
+plain numbers/arithmetic are safe (e.g. `[5]`, `[10 - 2]`).
+
+```
+<hcr:[5]>
+```
+Reduces all HP skill costs by 5 percentage points.
+
+---
+
+### `<hp-gain:VALUE>` / `<mp-cost:VALUE>` / `<mp-gain:VALUE>` / `<tp-cost:VALUE>` / `<tp-gain:VALUE>` (+ `%` and `[FORMULA]` variants)
+
+**Applies to:**
+Skills
+
+**Formula context:**
+`a` = the battler executing the skill.
+
+**When:**
+the skill is executed
+
+**Effect:**
+the same flat/percent/formula tag system as `<hp-cost>`, applied to MP and TP costs (layered on
+top of the editor's native cost fields, not replacing them) and to HP/MP/TP gains (restoring the
+resource to the caster on use).
+
+```
+<mp-gain:[a.level]>
+```
+Restores MP equal to the caster's level every time this skill is used.
+
+---
+
+## J-Resources-ABS (`src/plugins/resources/ext/abs/`)
+
+Damage-linked HP/MP/TP resource effects for JABS: on-attack gains, when-hit gains, steal rates,
+and cross-battler heal-event cascades.
+
+### `<on-attack-hp-gain:VALUE>` / `<on-attack-mp-gain:VALUE>` / `<on-attack-tp-gain:VALUE>` (+ `%` and `[FORMULA]` variants)
+
+**Applies to:**
+Skills
+
+**Formula context:**
+`a` = the caster battler, `b` = the accumulated flat+percent base before the formula is applied.
+
+**When:**
+this skill lands a hit on the map
+
+**Effect:**
+grants HP/MP/TP to the caster every time the skill connects. Gains are scaled by the caster's REC
+stat.
+
+```
+<on-attack-tp-gain:[a.level / 10]>
+```
+Restores TP equal to one-tenth the caster's level per hit.
+
+**See also:** `<when-hit-hp-gain>`, `<lst>`
+
+---
+
+### `<when-hit-hp-gain:VALUE>` / `<when-hit-mp-gain:VALUE>` / `<when-hit-tp-gain:VALUE>` (+ `%` and `[FORMULA]` variants)
+
+**Applies to:**
+Actors, Enemies, Classes, Weapons, Armors, States
+
+**Formula context:**
+`a` = the target battler, `b` = the raw HP damage dealt by the hit (not an accumulated base —
+lets you write damage-proportional expressions like `b * 0.05`).
+
+**When:**
+this battler takes HP damage on the map
+
+**Effect:**
+grants HP/MP/TP to the battler being hit, summed across all tagged sources. Gains are scaled by
+the target's REC stat.
+
+```
+<when-hit-tp-gain:[b * 0.05]>
+```
+Gains TP equal to 5% of the damage taken — scales with how hard the hit was.
+
+**See also:** `<on-attack-hp-gain>`
+
+---
+
+### `<lst:VALUE>` / `<mst:VALUE>` / `<tst:VALUE>`
+
+**Applies to:**
+Actors, Classes, Weapons, Armors, Enemies, States
+
+**When:**
+always (battler-wide, summed across all active note sources, plus any SDP panel bonus)
+
+**Effect:**
+Lifesteal/Manasteal/Techsteal — VALUE percent of HP damage this battler deals is recovered as
+HP/MP/TP respectively, every hit. The three rates are independent and can stack simultaneously.
+
+```
+<lst:10>
+```
+This battler recovers 10% of all HP damage they deal as HP.
+
+---
+
+### `<onSelf{Trigger}Heal{Output}:[PERCENT, RANGE, MAX_DEPTH?]>` / `<onAlly{Trigger}Heal{Output}:[PERCENT, RANGE, MAX_DEPTH?]>`
+
+**Applies to:**
+Actors, Enemies, Classes, Weapons, Armors, States, Skills
+
+**When:**
+this battler (onSelf) or an ally within RANGE (onAlly) receives positive HP/MP/TP recovery
+matching Trigger
+
+**Effect:**
+triggers a secondary heal cascade. `onSelf`: when THIS battler's Trigger resource is healed, also
+heal PERCENT% of that amount as Output — self always receives it, allies within RANGE tiles also
+receive it if RANGE > 0. `onAlly`: when an ally within RANGE has their Trigger resource healed,
+this battler (the observer) receives PERCENT% of that heal as Output. Trigger is one of
+Hp/Mp/Tp/Any; Output is one of Hp/Mp/Tp. Secondary heals themselves re-trigger onHeal, so chains
+propagate up to MAX_DEPTH (default: the `healChainDepth` plugin parameter) — a tag never echoes
+itself on the same battler regardless of depth.
+
+```
+<onSelfHpHealMp:[50, 0]>
+```
+"Jelly Mana Transfusion" — when this battler receives HP healing, also recover 50% of that
+amount as MP (self only).
+
+```
+<onAllyHpHealHp:[30, 4]>
+```
+"Empathic Bond" — whenever an ally within 4 tiles receives HP healing, this battler also gains
+30% of that heal amount as HP.
