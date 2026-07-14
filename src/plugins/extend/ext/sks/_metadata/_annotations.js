@@ -18,5 +18,9 @@
  * It causes the skill equip detail window to display the overlayed skill
  * rather than the base skill when J-Extend is active.
  * ============================================================================
+ * NOTE ABOUT NOTETAGS:
+ * This plugin has no notetags of its own- it is pure integration glue
+ * between J-Extend and J-SKS's skill equip detail window.
+ * ============================================================================
  */
 //endregion annotations

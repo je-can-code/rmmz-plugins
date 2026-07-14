@@ -17,5 +17,9 @@
  * This plugin is an extension of J-Extend for J-ABS.
  * It prevents the JABS AI from selecting skill-extension skills as actions.
  * ============================================================================
+ * NOTE ABOUT NOTETAGS:
+ * This plugin has no notetags of its own- it is pure integration glue
+ * between J-Extend and J-ABS's AI skill-selection logic.
+ * ============================================================================
  */
 //endregion annotations
