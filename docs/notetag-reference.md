@@ -1309,3 +1309,135 @@ correct 3-value shape; the documented examples below were always accurate, only 
 This enemy yields 6 fire-element AP upon defeat.
 
 **See also:** `<aptitudeTyped>`, `<ap>` (J-Aptitude core — untyped equivalent)
+
+---
+
+## J-LevelMaster (`src/plugins/level/core/`)
+
+Config (scaling multipliers, invariance ranges, level balancers, max level settings) lives in
+`data/config.level.json`, not plugin parameters — required, boots crash without it. Author via
+jmz-data-editor's Level board.
+
+### `<lv:NUM>` / `<lvl:NUM>` / `<level:NUM>`
+
+**Applies to:**
+Enemies, States, Events (w/ JABS) — Actors, Classes, Skills, Weapons, Armors, States
+
+**When:**
+level computation for the bearer
+
+**Effect:**
+NUM can be negative. On an enemy directly: sets base level. On a state/class/skill/weapon/armor:
+grants a +/- modifier stacked against the base level. On a JABS map event: overrides whatever level
+the spawned enemy's database note would otherwise provide — the event is authoritative, the database
+note is just the default. Level `0` is special: a battler at level 0 is treated as a "non-level," and
+every scaling multiplier to/from it is forced to 1.0x regardless of the other party's level.
+
+```
+<level:4>
+```
+On an enemy directly, sets base level to 4. On a state applied to an enemy, grants +4 to base level.
+On a JABS spawn event, overrides the enemy's level entirely.
+
+**See also:** `<hideLevel>`, `<maxLevelBoost>`
+
+---
+
+### `<hideLevel>`
+
+**Applies to:**
+Enemies, Events (w/ JABS) — no effect on States
+
+**When:**
+level display, not level calculation
+
+**Effect:**
+displays `???` instead of the numeric level in the battler name. Purely cosmetic — doesn't affect any
+scaling math.
+
+```
+<hideLevel>
+```
+
+**See also:** `<level>`
+
+---
+
+### `<learning:[SKILL_ID, LEVEL_LEARNED]>`
+
+**Applies to:**
+Enemies only
+
+**When:**
+the enemy's skill list is built
+
+**Effect:**
+gates SKILL_ID out of the enemy's available actions until the enemy reaches LEVEL_LEARNED. The skill
+must still be present in the enemy's actions list in the database — this tag is a level-check guard
+on top of that, not a way to grant skills the enemy doesn't otherwise have. Reliant on JABS-specific
+skill-list resolution; won't work as-intended outside JABS without a compatible extension.
+
+```
+<learning:[210, 10]>
+```
+Skill 210 becomes available once this enemy is level 10 or higher.
+
+**See also:** `<level>`
+
+---
+
+### `<maxLevelBoost:AMOUNT>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, States
+
+**When:**
+computing the actor's max level ceiling (beyond the database's 99 cap)
+
+**Effect:**
+AMOUNT (signed) modifies the actor's base "beyond max level" value, clamped at the configured
+absolute cap (`trueMaxLevel`). Multiple tags across sources sum together.
+
+```
+<maxLevelBoost:+100> (on the actor)
+<maxLevelBoost:-25> (on an equipped weapon)
+```
+Combined: +75 to base max level (100 - 25 = 75), still capped at the config's absolute max.
+
+**See also:** `<mhpGrowthCurve>` family (below — the formulas that actually drive stat values once
+you're past 99, this tag only controls how far past 99 you can go)
+
+---
+
+### `<mhpGrowthCurve:[FORMULA]>` … `<lukGrowthCurve:[FORMULA]>` (8 base params) / `<mtpGrowthCurve:[FORMULA]>`
+
+**Applies to:**
+Classes only
+
+**When:**
+the 8 base-param tags: only evaluated beyond level 99 (levels 1–99 stay driven by the class's baked
+`params[]` array from the database). `mtpGrowthCurve`: evaluated LIVE at every level, since MTP has no
+`params[]` array at all — it's a J-Base/J-NaturalGrowth note-tag-only stat.
+
+**Formula context:**
+`a.level` only — no `b`, no `v`, unlike most other formula tags in this ecosystem.
+
+**Effect:**
+when present, the formula becomes the source of truth for that class/param's value at the given
+level, replacing `Game_Temp.buildBeyondMaxDataForClass`'s slope-extrapolation fallback entirely for
+that combination. Untagged class/param pairs still fall through to the extrapolation guess. Primarily
+authored via jmz-data-editor's Classes board (whose preview evaluates the identical formula/level
+pairing the runtime does), but hand-authoring directly on a class note works too.
+
+```
+<atkGrowthCurve:[20 + (a.level * 3)]>
+```
+Beyond level 99, this class's ATK follows `20 + (level * 3)` instead of the extrapolation fallback.
+
+```
+<mtpGrowthCurve:[a.level * 2]>
+```
+This class's max TP is always `level * 2`, evaluated live at every level, not just beyond 99.
+
+**See also:** `<maxLevelBoost>` (controls how far past 99 an actor can go; this controls what stats
+look like once they're there)
