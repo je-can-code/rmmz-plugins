@@ -3622,3 +3622,55 @@ ground-targeted child skills.
 On use, immediately fires skill 77 (e.g. an aura effect) centered on the caster, for free.
 
 **See also:** `<on-(hit|use):...:by-formula>`
+
+---
+
+## J-ABS-Hitstop (`src/plugins/abs/ext/hitstop/`)
+
+Adds a brief freeze-frame pause ("hitstop") to the attacker, target, and delivering action event
+the instant a hit connects — a classic impact-frame trick for making hits feel heavier without
+touching damage numbers. All base tuning is hardcoded in the plugin (no editable plugin
+parameters); these three tags are the only per-skill/per-battler adjustment surface.
+
+### `<hitstop:FRAMES>` / `<noHitstop>`
+
+**Applies to:**
+Skills
+
+**When:**
+this skill's hits connect
+
+**Effect:**
+`hitstop` sets the base freeze-frame duration for this skill's hits, before crit/guard/
+target-scale adjustments (falls back to the plugin's hardcoded default when omitted).
+`noHitstop` fully disables hitstop for this skill regardless of the default or any `<hitstop>`
+tag present. A parried hit always resolves to zero hitstop regardless of either tag.
+
+```
+<hitstop:8>
+```
+This skill's hits apply 8 base frames of freeze before crit/guard adjustments.
+
+**See also:** `<hitstopScale>`
+
+---
+
+### `<hitstopScale:P%>`
+
+**Applies to:**
+Actors, Enemies
+
+**When:**
+this battler is the one being hit
+
+**Effect:**
+scales the resolved hitstop duration by P percent when this battler is on the receiving end —
+read from the TARGET's own database data, not the attacking skill. Defaults to 100% (no scaling)
+if untagged.
+
+```
+<hitstopScale:0%>
+```
+This battler never experiences hitstop when hit, regardless of the attacking skill's tags.
+
+**See also:** `<hitstop>`
