@@ -751,3 +751,30 @@ shouldn't clutter the player's view.
 ```
 
 **See also:** `<passive>`
+
+---
+
+## J-Passive-OTIB (`src/plugins/passive/ext/otib/`)
+
+### `<otib:[STATE_ID]>` / `<otib:[STATE_ID, STATE_ID, ...]>`
+
+**Applies to:**
+Items (consumable — needs some occasion other than "Never" to actually be usable)
+
+**When:**
+the item is consumed (fires off the vanilla `consumeItem` hook)
+
+**Effect:**
+permanently grants the actor who consumed the item all listed STATE_IDs as passive states (fed
+through J-Passive's own pipeline, so they're visible in Scene_Passive alongside every other passive
+source). One-time only per item id, per actor — consuming a second copy of the same item does
+nothing further (`isOtibUnlocked` guards re-granting). Enemies and other non-actor battlers never
+participate; consuming an OTIB item on their behalf is a no-op by design. Stat effects live entirely
+on the granted State's own Traits — this plugin does not patch param/xparam/sparam directly.
+
+```
+<otib:[42, 55]>
+```
+Consuming this item permanently grants both State 42 and State 55 to the actor who consumed it.
+
+**See also:** `<passive>` (J-Passive core)
