@@ -2656,10 +2656,11 @@ This skill deals +40% damage only while the caster carries state 22 (e.g. a "Sha
 
 ---
 
-### `<bonusDamagePerStateStack:[STATE_ID, PCT]>`
+### `<bonusDamagePerStateStack:[STATE_ID, PCT]>` / `<thisBonusDamagePerStateStack:[STATE_ID, PCT]>`
 
 **Applies to:**
-Actors, Classes, Enemies, Weapons, Armors, States
+`bonusDamagePerStateStack`: Actors, Classes, Enemies, Weapons, Armors, States.
+`thisBonusDamagePerStateStack`: Skills, Items.
 
 **When:**
 the caster's action resolves against a target currently tracked as afflicted by STATE_ID
@@ -2667,12 +2668,19 @@ the caster's action resolves against a target currently tracked as afflicted by 
 **Effect:**
 adds PCT% bonus damage per current stack of that exact state on the target — stack depth, not
 distinct-state count. Contributes nothing if the target isn't currently tracked as afflicted by
-STATE_ID.
+STATE_ID. The `this*` variant is skill-scoped — it reads only from the executing skill's own
+note, layering on top of the caster-wide tag rather than replacing it.
 
 ```
 <bonusDamagePerStateStack:[8, 8]>
 ```
 +8% per stack of state 8 (e.g. Bleed) — 3 stacks = +24% bonus damage on this hit.
+
+```
+<thisBonusDamagePerStateStack:[8, 15]>
+```
+A finisher that punishes stacked Bleed harder than the caster's baseline kit does: +15% per
+stack, but only on this skill.
 
 **See also:** `<bonusDamagePerStateType>`, `<stackMax>`
 
