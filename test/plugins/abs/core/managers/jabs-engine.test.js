@@ -99,6 +99,11 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
           GlancingBlowDominanceMultiplier: 1.5,
           HitboxOverlaysInitiallyVisible: false,
         },
+        Directions: {
+          UP: 8, RIGHT: 6, LEFT: 4, DOWN: 2,
+          LOWERLEFT: 1, LOWERRIGHT: 3, UPPERLEFT: 7, UPPERRIGHT: 9,
+        },
+        ProjectileFormations: { Line: 'line', Spray: 'spray', Cross: 'cross', Xburst: 'xburst', Nova: 'nova' },
       },
       LEVEL: false,
     };
@@ -2260,5 +2265,296 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
   //endregion actions: update/execute
+
+  //region action geometry
+  describe('buildActionEventData', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.JsonEx = { makeDeepCopy: (x) => JSON.parse(JSON.stringify(x)) };
+      globalThis.$actionMap = { events: { 7: { id: 7, x: 0, y: 0 } } };
+    });
+
+    function buildAction(overrides = {})
+    {
+      return Object.assign({
+        getActionId: () => 7,
+        getActionOptions: () => null,
+        getUuid: () => 'action-uuid',
+      }, overrides);
+    }
+
+    it('spawns at the caster\'s position when no coordinates are provided', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = { getX: () => 5, getY: () => 6 };
+      const result = engine.buildActionEventData(caster, buildAction(), null, null);
+      expect(result.x).toBe(5);
+      expect(result.y).toBe(6);
+    });
+
+    it('spawns at the explicitly provided coordinates when given', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = { getX: () => 5, getY: () => 6 };
+      const result = engine.buildActionEventData(caster, buildAction(), 10, 20);
+      expect(result.x).toBe(10);
+      expect(result.y).toBe(20);
+    });
+
+    it('applies the per-projectile spawn offset when action options are present', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = { getX: () => 5, getY: () => 6 };
+      const action = buildAction({
+        getActionOptions: () => ({ getSpawnOffsetX: () => 2, getSpawnOffsetY: () => -1 }),
+      });
+      const result = engine.buildActionEventData(caster, action, null, null);
+      expect(result.x).toBe(7);
+      expect(result.y).toBe(5);
+    });
+
+    it('flags the copied event as an action, bumps its id, and stamps the action uuid', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = { getX: () => 0, getY: () => 0 };
+      const result = engine.buildActionEventData(caster, buildAction(), null, null);
+      expect(result.isAction).toBe(true);
+      expect(result.id).toBe(1007);
+      expect(result.uniqueId).toBe('action-uuid');
+      expect(result.actionDeleted).toBe(false);
+    });
+  });
+
+  describe('determineActionDirections', () =>
+  {
+    it('repeats each spoke direction "count" times for a per-spoke formation', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.resolveFormationSpokes = () => [ 8, 6 ];
+      engine.isPerSpokeFormation = () => true;
+      expect(engine.determineActionDirections(8, 'cross', 2)).toEqual([ 8, 8, 6, 6 ]);
+    });
+
+    it('repeats only the first spoke "count" times for a total-count formation', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.resolveFormationSpokes = () => [ 8 ];
+      engine.isPerSpokeFormation = () => false;
+      expect(engine.determineActionDirections(8, 'line', 3)).toEqual([ 8, 8, 8 ]);
+    });
+
+    it('falls back to the facing when a total-count formation resolves no spokes at all', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.resolveFormationSpokes = () => [];
+      engine.isPerSpokeFormation = () => false;
+      expect(engine.determineActionDirections(6, 'line', 2)).toEqual([ 6, 6 ]);
+    });
+  });
+
+  describe('resolveFormationSpokes', () =>
+  {
+    it('resolves the Line formation to a single forward spoke', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.resolveFormationSpokes(8, 'line')).toEqual([ 8 ]);
+    });
+
+    it('resolves the Cross formation to the four cardinals, rotated to the facing', () =>
+    {
+      const engine = new JABS_Engine();
+      const result = engine.resolveFormationSpokes(8, 'cross');
+      expect(result).toEqual([ 8, 6, 2, 4 ]);
+    });
+
+    it('resolves the Spray formation to forward + both forward diagonals', () =>
+    {
+      const engine = new JABS_Engine();
+      const result = engine.resolveFormationSpokes(8, 'spray');
+      expect(result).toEqual([ 8, 9, 7 ]);
+    });
+
+    it('resolves the Xburst formation to the four diagonals', () =>
+    {
+      const engine = new JABS_Engine();
+      const result = engine.resolveFormationSpokes(8, 'xburst');
+      expect(result).toEqual([ 9, 3, 1, 7 ]);
+    });
+
+    it('resolves the Nova formation to all eight directions', () =>
+    {
+      const engine = new JABS_Engine();
+      const result = engine.resolveFormationSpokes(8, 'nova');
+      expect(result).toHaveLength(8);
+    });
+
+    it('rotates canonical spokes to match a non-up facing', () =>
+    {
+      const engine = new JABS_Engine();
+      // canonical Line spoke is UP(8); facing RIGHT(6) should rotate it to 6.
+      expect(engine.resolveFormationSpokes(6, 'line')).toEqual([ 6 ]);
+    });
+  });
+
+  describe('isPerSpokeFormation', () =>
+  {
+    it.each([
+      [ 'spray', true ], [ 'cross', true ], [ 'xburst', true ], [ 'nova', true ], [ 'line', false ],
+    ])('formation %s is per-spoke: %s', (formation, expected) =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.isPerSpokeFormation(formation)).toBe(expected);
+    });
+  });
+
+  describe('rotateSpokeFromUpToFacing', () =>
+  {
+    it('returns the canonical direction unchanged when facing is already UP', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.rotateSpokeFromUpToFacing(6, 8)).toBe(6);
+    });
+
+    it('returns the canonical direction unchanged for an unrecognized facing', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.rotateSpokeFromUpToFacing(6, 999)).toBe(6);
+    });
+
+    it('rotates the canonical direction clockwise by the facing\'s step count from UP', () =>
+    {
+      const engine = new JABS_Engine();
+      // facing RIGHT(6) is 2 steps clockwise from UP; canonical UP(8) rotates 2 steps -> RIGHT(6).
+      expect(engine.rotateSpokeFromUpToFacing(8, 6)).toBe(6);
+    });
+  });
+
+  describe('actionTravelDirectionToSpritePatternDirection', () =>
+  {
+    it.each([ 2, 4, 6, 8 ])('returns cardinal travel direction %i unchanged', (dir) =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.actionTravelDirectionToSpritePatternDirection(dir, 2)).toBe(dir);
+    });
+
+    it('falls back to a valid casted cardinal for an unrecognized travel direction', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.actionTravelDirectionToSpritePatternDirection(999, 6)).toBe(6);
+    });
+
+    it('falls back to DOWN when both travel direction and casted cardinal are unrecognized', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.actionTravelDirectionToSpritePatternDirection(999, 999)).toBe(2);
+    });
+
+    it.each([
+      [ 2, 1, 2 ], [ 2, 3, 2 ], [ 2, 7, 8 ], [ 2, 9, 8 ],
+      [ 4, 1, 4 ], [ 4, 7, 4 ], [ 4, 3, 6 ], [ 4, 9, 6 ],
+      [ 6, 3, 6 ], [ 6, 9, 6 ], [ 6, 1, 4 ], [ 6, 7, 4 ],
+      [ 8, 7, 8 ], [ 8, 9, 8 ], [ 8, 1, 2 ], [ 8, 3, 2 ],
+    ])('resolves diagonal travel dir %i with casted cardinal %i to %i', (casted, travelDir, expected) =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.actionTravelDirectionToSpritePatternDirection(travelDir, casted)).toBe(expected);
+    });
+  });
+
+  describe('resolveProjectileFormationForSkill', () =>
+  {
+    it('returns the tagged formation when present', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.resolveProjectileFormationForSkill({ jabsProjectileFormation: 'nova' })).toBe('nova');
+    });
+
+    it('defaults to Line when untagged', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.resolveProjectileFormationForSkill({ jabsProjectileFormation: undefined })).toBe('line');
+    });
+  });
+
+  describe('resolveProjectileCountForSkill', () =>
+  {
+    it('returns the tagged count when present', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.resolveProjectileCountForSkill({ jabsProjectile: 5 })).toBe(5);
+    });
+
+    it('defaults to 1 when untagged', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.resolveProjectileCountForSkill({ jabsProjectile: undefined })).toBe(1);
+    });
+  });
+
+  describe('rotate45degrees', () =>
+  {
+    it.each([
+      [ 8, true, 9 ], [ 8, false, 7 ],
+      [ 6, true, 3 ], [ 6, false, 9 ],
+      [ 4, true, 7 ], [ 4, false, 1 ],
+      [ 2, true, 1 ], [ 2, false, 3 ],
+      [ 1, true, 4 ], [ 1, false, 2 ],
+      [ 3, true, 2 ], [ 3, false, 6 ],
+      [ 7, true, 8 ], [ 7, false, 4 ],
+      [ 9, true, 6 ], [ 9, false, 8 ],
+    ])('rotates %i (%s clockwise) to %i', (direction, clockwise, expected) =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.rotate45degrees(direction, clockwise)).toBe(expected);
+    });
+  });
+
+  describe('rotate90degrees', () =>
+  {
+    it.each([
+      [ 8, true, 6 ], [ 8, false, 4 ],
+      [ 6, true, 2 ], [ 6, false, 8 ],
+      [ 4, true, 8 ], [ 4, false, 2 ],
+      [ 2, true, 4 ], [ 2, false, 6 ],
+      [ 1, true, 7 ], [ 1, false, 3 ],
+      [ 3, true, 1 ], [ 3, false, 9 ],
+      [ 7, true, 9 ], [ 7, false, 1 ],
+      [ 9, true, 3 ], [ 9, false, 7 ],
+    ])('rotates %i (%s clockwise) to %i', (direction, clockwise, expected) =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.rotate90degrees(direction, clockwise)).toBe(expected);
+    });
+
+    it('warns and leaves the direction unchanged for a non-dir8 value', () =>
+    {
+      const engine = new JABS_Engine();
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      expect(engine.rotate90degrees(99, true)).toBe(99);
+      console.warn.mockRestore();
+    });
+  });
+
+  describe('rotate180degrees', () =>
+  {
+    it.each([
+      [ 8, 2 ], [ 6, 4 ], [ 4, 6 ], [ 2, 8 ],
+      [ 1, 9 ], [ 3, 7 ], [ 7, 3 ], [ 9, 1 ],
+    ])('rotates %i to its opposite %i', (direction, expected) =>
+    {
+      const engine = new JABS_Engine();
+      expect(engine.rotate180degrees(direction)).toBe(expected);
+    });
+
+    it('warns and leaves the direction unchanged for a non-dir8 value', () =>
+    {
+      const engine = new JABS_Engine();
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+      expect(engine.rotate180degrees(99)).toBe(99);
+      console.warn.mockRestore();
+    });
+  });
+  //endregion action geometry
 });
 //endregion plugins/abs/core/managers/jabs-engine.test.js
