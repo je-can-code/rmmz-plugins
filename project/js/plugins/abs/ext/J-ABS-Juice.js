@@ -124,17 +124,20 @@
  *
  * <juiceMotion:NAME>
  *   Selects a preset weapon/caster motion. Valid values:
- *   Weapon overlay:  arc | arc-reverse | bash | present | recoil | spin | spin-reverse | stab-forward
+ *   Weapon overlay:  arc | arc-reverse | arc-oscillate | bash | present | recoil | spin |
+ *                    spin-reverse | stab-forward
  *   Caster-body:     squish | pulse | flip | flip-reverse
  *   Suppress:        none  (equivalent to <noJuice>)
  *   Legacy keys: swing-top-down → arc; swing-bottom-up → arc-reverse; spin-360 → spin;
  *   spin-720 → spin; spin-360-reverse → spin-reverse.
  *   present lifts the icon upward on screen (screen-stable "brandish"; uses facing-up card).
+ *   arc-oscillate sweeps the arc back and forth, alternating direction on each sweep (see
+ *   juiceRepeatCount below for sweep count).
  *   On healing skills, omitting juiceMotion keeps caster-only support squish; any juiceMotion
  *   tag opts into full strike juice.
  *
  * <juiceSpan:N>
- *   Arc span in degrees for arc / arc-reverse (default 120; typical range 30–300).
+ *   Arc span in degrees for arc / arc-reverse / arc-oscillate (default 120; typical range 30–300).
  *
  * <juiceRepeatCount:N>
  *   Number of times to repeat the motion within the juice duration (default 1).

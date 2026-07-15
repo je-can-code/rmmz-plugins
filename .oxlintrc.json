@@ -365,7 +365,6 @@
     "J_TimingPluginMetadata": "writable",
     "J_ToolsPluginMetadata": "writable",
     "J_UtilsPluginMetadata": "writable",
-    "J__TEMPLATE___PluginMetadata": "writable",
     "JabsInputSymbols": "writable",
     "JaftingManager": "writable",
     "JaftingSalvageLedger": "writable",

@@ -1823,6 +1823,16 @@
  * NOTE: If the target is not currently tracked as afflicted by STATE_ID
  * (state absent, or somehow untracked), this tag contributes nothing.
  *
+ * THIS BONUS DAMAGE PER STATE STACK:
+ * Skill-scoped variant. Only applies while this exact skill is executing,
+ * layering on top of the caster-wide <bonusDamagePerStateStack> tag rather
+ * than replacing it.
+ *    <thisBonusDamagePerStateStack:[STATE_ID, PCT]>
+ *
+ * Example — a finisher that punishes stacked Bleed harder than the caster's
+ * baseline kit does: +15% per stack of Bleed, but only on this skill:
+ *    <thisBonusDamagePerStateStack:[STATE_BLEED_ID, 15]>
+ *
  * ----------------------------------------------------------------------------
  * BONUS DAMAGE FOR MY STATE COUNT:
  * Adds PCT% bonus damage for every distinct state on the target that this

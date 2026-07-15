@@ -89,6 +89,71 @@
  * opt a target out of an "any" gapcloser — useful for bosses, flying units,
  * or holding a hookshot-only chasm as a genuine traversal gate instead of
  * letting a combat gapcloser trivialize it.
+ *
+ * GAP CLOSE MODE:
+ *  <gapCloseMode:MODE>
+ * Put this on the gap-closing skill to control HOW the caster travels to
+ * the resolved destination. MODE is one of: blink (instant teleport), jump
+ * (arcing hop- the default when omitted), or travel (steps tile-by-tile,
+ * respecting collision along the way). All modes bypass terrain by default
+ * unless the skill also carries <respectTerrain>.
+ *
+ * GAP CLOSE POSITION:
+ *  <gapClosePosition:POSITION>
+ * Put this on the gap-closing skill to control WHERE relative to the target
+ * the caster lands. POSITION is one of: infront (adjacent, facing the
+ * target), behind (adjacent, on the target's far side), or same (directly
+ * on the target's tile- the default when omitted).
+ *
+ * RESPECT TERRAIN:
+ *  <respectTerrain>
+ * Put this on the gap-closing skill to cancel the gap close entirely if the
+ * caster cannot legally reach the computed destination tile (blocked by
+ * impassible terrain). Without this tag, gap close bypasses terrain checks
+ * the way all gap-close modes normally do.
+ *
+ * ON GAP CLOSE END:
+ *  <thisOnGapCloseEnd:[SKILL_IDS...]>
+ * Put this on the gap-closing skill itself to fire the listed skill ids
+ * immediately once the caster arrives at the destination- useful for a
+ * follow-up strike the instant a hookshot connects.
+ *
+ *  <onGapCloseEnd:[SKILL_IDS...]>
+ * Put this on any of the caster's note sources (actor, class, weapon,
+ * armor, state) to fire the listed skill ids on every gap close this
+ * battler performs, regardless of which skill triggered it. IDs from both
+ * this tag and <thisOnGapCloseEnd> are merged and de-duplicated before
+ * firing.
+ *
+ * ============================================================================
+ * PULL FORWARD:
+ * The inverse of gap close: instead of the caster traveling to the target,
+ * the target is pulled toward the caster. Unlike gap close, this is NOT
+ * key-gated- it behaves like knockback in reverse, and any target without
+ * enough <knockbackResist> to fully negate it gets pulled.
+ *
+ * If a skill carries both a pull-forward tag and a gap-close tag, the
+ * target is pulled first, then the caster gap-closes to wherever the
+ * target ends up- the two meet partway instead of gap-close eating the
+ * entire distance.
+ *
+ * TAG USAGE:
+ * - Skills
+ *
+ * TAG FORMAT:
+ *  <pullForward:MAGNITUDE>
+ * Where MAGNITUDE is the number of tiles to pull the target toward the
+ * caster.
+ *
+ * TAG EXAMPLES:
+ *  <pullForward:3>
+ * On hit, this skill pulls the target 3 tiles toward the caster (before any
+ * knockbackResist reduction).
+ * ============================================================================
+ * GRAB AND THROW:
+ * A separate, plugin-parameter-only feature (no notetags of its own) for
+ * globally toggling grab-and-throw behavior and whether throw direction is
+ * always fixed. See the plugin parameters below.
  * ============================================================================
  * CHANGELOG:
  * - 1.1.0

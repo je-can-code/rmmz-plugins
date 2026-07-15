@@ -1058,6 +1058,26 @@ J.ABS.RegExp = {
   BonusDamagePerStateStack: /<bonusDamagePerStateStack:[ ]?(\[\d+,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
 
   /**
+   * Percent damage bonus per stack of one specific state currently active on the target.
+   * Reads from this.item() only — fires only when this specific skill is the action being
+   * resolved, unlike BonusDamagePerStateStack which reads from the caster's getAllNotes().
+   * No stack cap is enforced here- whatever cap the state itself carries is the only ceiling.
+   *
+   * <pre>
+   * Structure:
+   *  <thisBonusDamagePerStateStack:[STATE_ID, PCT]>
+   *
+   * Example:
+   *  <thisBonusDamagePerStateStack:[14, 2]>
+   *
+   * Translation:
+   *  +2% damage per stack of state 14 currently on the target, from this skill only.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisBonusDamagePerStateStack: /<thisBonusDamagePerStateStack:[ ]?(\[\d+,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+
+  /**
    * Flat percent damage bonus per distinct state currently on the target that this battler
    * personally applied. Counts distinct authored states, not stack depth of any one state-
    * distinct from BonusDamagePerStateStack above. Lives on a passive state; always active
