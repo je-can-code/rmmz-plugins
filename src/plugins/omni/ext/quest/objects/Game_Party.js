@@ -148,7 +148,7 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
   });
 
   // sort the quests by their key, in-place.
-  trackings.sort((a, b) => a.key - b.key);
+  trackings.sort((a, b) => a.key.localeCompare(b.key));
 };
 
 /**
