@@ -17,7 +17,7 @@ describe('J.BASE.Helpers.parsePluginInt', () =>
     // real production code- populates globalThis.J.BASE.Helpers.parsePluginInt.
     await import('../../../../src/plugins/_base/_metadata/initialization.js');
 
-    parsePluginInt = globalThis.J.BASE.Helpers.parsePluginInt;
+    ({ parsePluginInt } = globalThis.J.BASE.Helpers);
   });
 
   describe('when the value is undefined, null, or an empty string', () =>

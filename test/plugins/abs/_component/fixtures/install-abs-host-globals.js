@@ -40,84 +40,12 @@ export function setPluginContextToJAbs(sandbox = globalThis)
 }
 
 /**
- * Globals required for J-ABS's prototype-patch source files (core/objects/*.js, core/managers/*.js) to
- * evaluate when direct-imported into the real Vitest realm instead of a nested vm context. Mirrors the
- * shape of {@link installAbsEngineStubs} in engine-stubs.js (used by the VM path), but targets
- * `globalThis` by default so bare-global identifiers resolve the same way they would in a real RPG Maker
- * script-concatenation runtime.
- *
- * @param {object} [sandbox] Defaults to `globalThis` so direct-import tests can call this with no target arg.
- * @param {Record<string, string>|null} [jAbsPluginParameterStrings]
+ * Seeds placeholder engine classes (sprites, Scene_Map, Input, etc.), plus the $gameMap/$jabsEngine/
+ * JABS_AiManager bare globals J-ABS's core files read from, for direct-import tests.
+ * @param {object} sandbox The sandbox to install onto.
  */
-export function installAbsHostGlobals(sandbox = globalThis, jAbsPluginParameterStrings = null)
+function installAbsEnginePlaceholderGlobals(sandbox)
 {
-  if (sandbox.__absHostGlobalsInstalled === true)
-  {
-    return;
-  }
-
-  sandbox.__absHostGlobalsInstalled = true;
-
-  // J-ABS requires J-Base to already be loaded- same as the shipped runtime's script concatenation order.
-  installJBaseHostGlobals(sandbox);
-
-  // J-ABS's own _pluginMetadata.js reads PIXI.BLEND_MODES.ADD/NORMAL for its hitbox overlay style config.
-  sandbox.PIXI.BLEND_MODES ??= { NORMAL: 0, ADD: 1 };
-
-  // J-ABS's _pluginMetadata.js subclasses this real J-Base class- the shipped runtime concatenates
-  // J-Base ahead of every extension plugin, so PluginMetadata is always a bare global by then.
-  sandbox.PluginMetadata ??= PluginMetadata;
-
-  // J.ABS.Helpers.loadExternalConfig() reads data/config.jabs.json via these two real J-Base bare globals.
-  sandbox.ExternalJsonConfigLoader ??= ExternalJsonConfigLoader;
-  sandbox.ExternalJsonConfigLoaderOptions ??= ExternalJsonConfigLoaderOptions;
-
-  // several abs/core/models/*.js files register themselves against this bare global as an import-time
-  // side effect (e.g. JABS_BattleMemory, JABS_HitstopData)- the shipped bundle concatenates every _base/abs
-  // file into one top-level script scope, so this works there without an import.
-  sandbox.SerializableRegistry ??= SerializableRegistry;
-
-  // J-ABS's own _pluginMetadata.js hoists these namespace slices ahead of initialization.js evaluating.
-  sandbox.J ||= {};
-  sandbox.J.ABS = sandbox.J.ABS || {
-    Directions: {
-      UP: 8,
-      RIGHT: 6,
-      LEFT: 4,
-      DOWN: 2,
-      LOWERLEFT: 1,
-      LOWERRIGHT: 3,
-      UPPERLEFT: 7,
-      UPPERRIGHT: 9,
-    },
-    Shapes: {
-      Circle: 'circle',
-      Rhombus: 'rhombus',
-      Square: 'square',
-      Line: 'line',
-      Arc: 'arc',
-    },
-  };
-
-  installMinimalMenuUiStubs(sandbox);
-
-  const strings = jAbsPluginParameterStrings ?? {
-    defaultStateSpreadTickInterval: '30',
-    maxAiUpdateRange: '20',
-  };
-
-  installPluginManagerWithParams(sandbox, 'J-ABS', strings);
-
-  sandbox.StorageManager.fsReadFile = function(path)
-  {
-    if (path === 'data/config.jabs.json')
-    {
-      return JSON.stringify({ teams: [] });
-    }
-
-    return null;
-  };
-
   const extraEnginePlaceholders = [
     'Game_Interpreter',
     'Game_Switches',
@@ -209,5 +137,87 @@ export function installAbsHostGlobals(sandbox = globalThis, jAbsPluginParameterS
     {
       return [];
     };
+}
+
+/**
+ * Globals required for J-ABS's prototype-patch source files (core/objects, core/managers) to
+ * evaluate when direct-imported into the real Vitest realm instead of a nested vm context. Mirrors the
+ * shape of {@link installAbsEngineStubs} in engine-stubs.js (used by the VM path), but targets
+ * `globalThis` by default so bare-global identifiers resolve the same way they would in a real RPG Maker
+ * script-concatenation runtime.
+ *
+ * @param {object} [sandbox] Defaults to `globalThis` so direct-import tests can call this with no target arg.
+ * @param {Record<string, string>|null} [jAbsPluginParameterStrings]
+ */
+export function installAbsHostGlobals(sandbox = globalThis, jAbsPluginParameterStrings = null)
+{
+  if (sandbox.__absHostGlobalsInstalled === true)
+  {
+    return;
+  }
+
+  sandbox.__absHostGlobalsInstalled = true;
+
+  // J-ABS requires J-Base to already be loaded- same as the shipped runtime's script concatenation order.
+  installJBaseHostGlobals(sandbox);
+
+  // J-ABS's own _pluginMetadata.js reads PIXI.BLEND_MODES.ADD/NORMAL for its hitbox overlay style config.
+  sandbox.PIXI.BLEND_MODES ??= { NORMAL: 0, ADD: 1 };
+
+  // J-ABS's _pluginMetadata.js subclasses this real J-Base class- the shipped runtime concatenates
+  // J-Base ahead of every extension plugin, so PluginMetadata is always a bare global by then.
+  sandbox.PluginMetadata ??= PluginMetadata;
+
+  // J.ABS.Helpers.loadExternalConfig() reads data/config.jabs.json via these two real J-Base bare globals.
+  sandbox.ExternalJsonConfigLoader ??= ExternalJsonConfigLoader;
+  sandbox.ExternalJsonConfigLoaderOptions ??= ExternalJsonConfigLoaderOptions;
+
+  // several abs/core/models/*.js files register themselves against this bare global as an import-time
+  // side effect (e.g. JABS_BattleMemory, JABS_HitstopData)- the shipped bundle concatenates every _base/abs
+  // file into one top-level script scope, so this works there without an import.
+  sandbox.SerializableRegistry ??= SerializableRegistry;
+
+  // J-ABS's own _pluginMetadata.js hoists these namespace slices ahead of initialization.js evaluating.
+  sandbox.J ||= {};
+  sandbox.J.ABS = sandbox.J.ABS || {
+    Directions: {
+      UP: 8,
+      RIGHT: 6,
+      LEFT: 4,
+      DOWN: 2,
+      LOWERLEFT: 1,
+      LOWERRIGHT: 3,
+      UPPERLEFT: 7,
+      UPPERRIGHT: 9,
+    },
+    Shapes: {
+      Circle: 'circle',
+      Rhombus: 'rhombus',
+      Square: 'square',
+      Line: 'line',
+      Arc: 'arc',
+    },
+  };
+
+  installMinimalMenuUiStubs(sandbox);
+
+  const strings = jAbsPluginParameterStrings ?? {
+    defaultStateSpreadTickInterval: '30',
+    maxAiUpdateRange: '20',
+  };
+
+  installPluginManagerWithParams(sandbox, 'J-ABS', strings);
+
+  sandbox.StorageManager.fsReadFile = function(path)
+  {
+    if (path === 'data/config.jabs.json')
+    {
+      return JSON.stringify({ teams: [] });
+    }
+
+    return null;
+  };
+
+  installAbsEnginePlaceholderGlobals(sandbox);
 }
 //endregion plugins/abs/_component/fixtures/install-abs-host-globals.js

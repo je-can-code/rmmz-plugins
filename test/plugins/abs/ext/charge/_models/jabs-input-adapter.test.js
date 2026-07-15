@@ -1,5 +1,5 @@
 //region plugins/abs/ext/charge/_models/jabs-input-adapter.test.js
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 describe('J-ABS-Charge JABS_InputAdapter (unit, all downstream dependencies mocked)', () =>
 {

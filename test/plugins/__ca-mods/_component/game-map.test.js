@@ -102,7 +102,7 @@ describe('CAMods Game_Map (real engine direct import)', () =>
       expect(originalSetupMock).toHaveBeenCalledWith(7);
       expect(setValue).toHaveBeenCalledTimes(1);
 
-      const [ variableId, value ] = setValue.mock.calls[0];
+      const [ [ variableId, value ] ] = setValue.mock.calls;
       expect(variableId).toBe(13);
       expect(value).toBeGreaterThanOrEqual(1);
       expect(value).toBeLessThanOrEqual(100);

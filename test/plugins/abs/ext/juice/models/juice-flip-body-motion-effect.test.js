@@ -33,7 +33,8 @@ describe('J-ABS-Juice JuiceFlipBodyMotionEffect (unit, all downstream dependenci
     it('re-centers the anchor to the visual midpoint for in-place rotation', () =>
     {
       const sprite = buildSprite();
-      new JuiceFlipBodyMotionEffect(sprite, 1, 10);
+      const effect = new JuiceFlipBodyMotionEffect(sprite, 1, 10);
+      expect(effect).toBeInstanceOf(JuiceFlipBodyMotionEffect);
       expect(sprite.anchor.x).toBe(0.5);
       expect(sprite.anchor.y).toBe(0.5);
     });

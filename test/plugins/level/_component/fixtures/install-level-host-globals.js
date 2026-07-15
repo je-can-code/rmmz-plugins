@@ -132,7 +132,7 @@ export function installLevelHostGlobals(sandbox = globalThis, levelConfigJson = 
   };
   sandbox.Game_Actor.prototype.currentClass = function()
   {
-    const classId = this.actor().classId;
+    const { classId } = this.actor();
     const row = sandbox.$dataClasses && sandbox.$dataClasses[classId];
     return row ?? { id: classId, note: '', params: [ [], [], [], [], [], [], [], [] ] };
   };

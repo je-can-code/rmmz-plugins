@@ -50,7 +50,7 @@ describe('J-ABS-Input Scene_Menu (unit, all downstream dependencies mocked)', ()
       expect(setHandler).toHaveBeenCalledWith('jabsRemap', expect.any(Function));
 
       // Act again- invoke the registered handler and confirm it pushes the remap scene.
-      const [ , handler ] = setHandler.mock.calls[0];
+      const [ [ , handler ] ] = setHandler.mock.calls;
       handler();
 
       // Assert

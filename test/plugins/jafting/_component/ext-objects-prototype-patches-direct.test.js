@@ -45,7 +45,7 @@ describe('JAFTING extension object prototype patches (direct src import)', () =>
       {
       }
 
-      Game_Party.prototype.initialize = vi.fn(function original()
+      Game_Party.prototype.initialize = vi.fn(() =>
       {
         aliasedCalls.push('initialize');
       });
@@ -197,7 +197,7 @@ describe('JAFTING extension object prototype patches (direct src import)', () =>
       {
       }
 
-      Game_Item.prototype.setObject = vi.fn(function original()
+      Game_Item.prototype.setObject = vi.fn(() =>
       {
       });
 
@@ -245,7 +245,7 @@ describe('JAFTING extension object prototype patches (direct src import)', () =>
       {
       }
 
-      Game_Party.prototype.initialize = vi.fn(function original()
+      Game_Party.prototype.initialize = vi.fn(() =>
       {
         aliasedCalls.push('initialize');
       });

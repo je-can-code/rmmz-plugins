@@ -27,11 +27,11 @@ describe('JAFTING core prototype patches (direct src import)', () =>
       globalThis.J = { JAFTING: { Aliased: { DataManager: new Map() } } };
 
       globalThis.DataManager = {
-        createGameObjects: vi.fn(function original()
+        createGameObjects: vi.fn(() =>
         {
           aliasedGetCalls.push('createGameObjects');
         }),
-        extractSaveContents: vi.fn(function original(contents)
+        extractSaveContents: vi.fn((contents) =>
         {
           aliasedGetCalls.push([ 'extractSaveContents', contents ]);
         }),
@@ -85,11 +85,11 @@ describe('JAFTING core prototype patches (direct src import)', () =>
       {
       }
 
-      Game_Party.prototype.gainItem = vi.fn(function original(item, amount)
+      Game_Party.prototype.gainItem = vi.fn((item, amount) =>
       {
         aliasedGetCalls.push([ 'gainItem', item, amount ]);
       });
-      Game_Party.prototype.loseItem = vi.fn(function original(item, amount)
+      Game_Party.prototype.loseItem = vi.fn((item, amount) =>
       {
         aliasedGetCalls.push([ 'loseItem', item, amount ]);
       });

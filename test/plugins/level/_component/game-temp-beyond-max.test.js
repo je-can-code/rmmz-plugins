@@ -48,7 +48,7 @@ describe('J-LevelMaster beyond-max param curves (direct src import)', () =>
     actor.__actorDb = { id: 1, name: '', note: '', classId: 1, maxLevel: 99, traits: [] };
     actor.initMembers();
     actor._level = 100;
-    const editor99 = actor.currentClass().params[3][99];
+    const editor99 = actor.currentClass().params[3].at(99);
 
     // Act
     const valueAt100 = actor.paramBase(3);
@@ -72,10 +72,10 @@ describe('J-LevelMaster beyond-max param curves (direct src import)', () =>
     }
 
     // Act
-    const beyondRow = globalThis.$gameTemp.getBeyondMaxData(1)[3];
+    const beyondRow = globalThis.$gameTemp.getBeyondMaxData(1).at(3);
 
     // Assert
-    expect(valueAt100).toBe(beyondRow[100]);
+    expect(valueAt100).toBe(beyondRow.at(100));
   });
 
   it('paramBase clamps the beyond-max index to the extrapolated row length', () =>
@@ -92,7 +92,7 @@ describe('J-LevelMaster beyond-max param curves (direct src import)', () =>
     {
       globalThis.$gameTemp.buildBeyondMaxData();
     }
-    const beyondRow = globalThis.$gameTemp.getBeyondMaxData(1)[2];
+    const beyondRow = globalThis.$gameTemp.getBeyondMaxData(1).at(2);
     const expected = beyondRow[beyondRow.length - 1];
 
     // Act
@@ -109,7 +109,7 @@ describe('J-LevelMaster beyond-max param curves (direct src import)', () =>
 
     // Assert
     expect(globalThis.$gameTemp.hasCachedBeyondMaxData()).toBe(true);
-    const row = globalThis.$gameTemp.getBeyondMaxData(1)[0];
+    const row = globalThis.$gameTemp.getBeyondMaxData(1).at(0);
     expect(row.length).toBeGreaterThanOrEqual(1000);
     expect(row[999]).toBeDefined();
   });

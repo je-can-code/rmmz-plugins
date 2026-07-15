@@ -26,9 +26,9 @@ describe('J-Passive lifecycle hooks (direct src import)', () =>
     await import('../../../../src/plugins/passive/core/objects/Game_Party.js');
 
     // isolate these extension points from host behavior.
-    globalThis.J.PASSIVE.Aliased.Game_Actor.set('onEquipChange', function() {});
-    globalThis.J.PASSIVE.Aliased.Game_Actor.set('onClassChange', function() {});
-    globalThis.J.PASSIVE.Aliased.Game_Party.set('gainItem', function() {});
+    globalThis.J.PASSIVE.Aliased.Game_Actor.set('onEquipChange', () => {});
+    globalThis.J.PASSIVE.Aliased.Game_Actor.set('onClassChange', () => {});
+    globalThis.J.PASSIVE.Aliased.Game_Party.set('gainItem', () => {});
   });
 
   beforeEach(() =>

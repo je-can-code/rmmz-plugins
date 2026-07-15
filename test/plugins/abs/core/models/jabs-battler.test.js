@@ -3404,7 +3404,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('counts down but does not complete while still casting afterward', () =>
     {
       const jabsBattler = buildBattler();
-      let stillCasting = true;
+      const stillCasting = true;
       jabsBattler.isCasting = () => stillCasting;
       jabsBattler.countdownCastTime = vi.fn();
       jabsBattler.onCastComplete = vi.fn();
@@ -5830,7 +5830,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getSkill = () => ({ id: 1 });
       jabsBattler.getProjectileSpawnBaseDirection = () => 2;
       const gameActionInstance = new globalThis.Game_Action();
-      globalThis.Game_Action = vi.fn(function() { return gameActionInstance; });
+      globalThis.Game_Action = vi.fn(function() { return gameActionInstance; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
       const builtAction = { getCastTime: () => 42 };
       jabsBattler.convertProjectileDirectionsToActions = vi.fn(() => [ builtAction ]);
 
@@ -5845,7 +5845,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getSkill = () => ({ id: 1 });
       jabsBattler.getProjectileSpawnBaseDirection = () => 2;
       const gameActionInstance = new globalThis.Game_Action();
-      globalThis.Game_Action = vi.fn(function() { return gameActionInstance; });
+      globalThis.Game_Action = vi.fn(function() { return gameActionInstance; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
       jabsBattler.convertProjectileDirectionsToActions = vi.fn(() => []);
 
       jabsBattler.createJabsActionFromSkill(1);
@@ -5976,7 +5976,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       jabsBattler.getAttackData('mainhand');
 
-      const [ , actionOptions ] = jabsBattler.createJabsActionFromSkill.mock.calls[0];
+      const [ [ , actionOptions ] ] = jabsBattler.createJabsActionFromSkill.mock.calls;
       expect(actionOptions.location.getX()).toBe(3);
       expect(actionOptions.location.getY()).toBe(4);
     });
@@ -6002,7 +6002,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       jabsBattler.getAttackData('mainhand');
 
-      const [ , actionOptions ] = jabsBattler.createJabsActionFromSkill.mock.calls[0];
+      const [ [ , actionOptions ] ] = jabsBattler.createJabsActionFromSkill.mock.calls;
       expect(actionOptions.location).toBeUndefined();
     });
   });
@@ -6051,7 +6051,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
         isForEveryone: () => false,
         applyGlobal: vi.fn(),
       }, overrides);
-      globalThis.Game_Action = vi.fn(function() { return gameAction; });
+      globalThis.Game_Action = vi.fn(function() { return gameAction; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
       return gameAction;
     }
 

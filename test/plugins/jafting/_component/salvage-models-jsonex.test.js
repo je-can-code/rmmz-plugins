@@ -1,5 +1,5 @@
 //region plugins/jafting/_component/salvage-models-jsonex.test.js
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
 
 import { installJBaseHostGlobals } from '../../_base/_component/fixtures/install-j-base-host-globals.js';
 import JaftingSalvageLedgerRow from '../../../../src/plugins/jafting/core/__models/JaftingSalvageLedgerRow.js';

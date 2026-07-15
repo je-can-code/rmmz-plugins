@@ -244,7 +244,7 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
       globalThis.__PLUGIN_VERSION__ = '2.1.0';
       await import('../../../../src/plugins/jafting/ext/create/_metadata/initialization.js');
 
-      recipesMap = globalThis.J.JAFTING.EXT.CREATE.Metadata.recipesMap;
+      ({ recipesMap } = globalThis.J.JAFTING.EXT.CREATE.Metadata);
 
       // $dataItems: id 1 = ingredient, id 2 = output, id 3 = tool (real RPGManager-note-free rows);
       // a real array so CraftingComponent's $dataItems.at(id) lookup works like the vanilla engine's.

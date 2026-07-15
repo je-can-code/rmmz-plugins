@@ -26,11 +26,14 @@ describe('J-ABS-Juice JuiceMotionManager (unit, all downstream dependencies mock
 
     // plain (non-arrow) functions invoked with `new` return their explicit object return value
     // instead of `this`- that lets these mocks work as constructors while still being vi.fn()s
-    // whose per-call return value can be swapped out via mockImplementationOnce.
+    // whose per-call return value can be swapped out via mockImplementationOnce. Arrow functions
+    // cannot be used with `new`, so these intentionally stay as function expressions.
+    /* eslint-disable prefer-arrow-callback */
     FakeTilt = vi.fn(function() { return buildFakeEffect(); });
     FakeSquish = vi.fn(function() { return buildFakeEffect(); });
     FakeCastingPulse = vi.fn(function() { return buildFakeEffect(); });
     FakeFlipBody = vi.fn(function() { return buildFakeEffect(); });
+    /* eslint-enable prefer-arrow-callback */
 
     vi.doMock('../../../../../../src/plugins/abs/ext/juice/models/JuiceTiltMotionEffect.js', () => ({ default: FakeTilt }));
     vi.doMock('../../../../../../src/plugins/abs/ext/juice/models/JuiceSquishMotionEffect.js', () => ({ default: FakeSquish }));
@@ -76,7 +79,7 @@ describe('J-ABS-Juice JuiceMotionManager (unit, all downstream dependencies mock
     {
       const sprite = {};
       const priorEffect = buildFakeEffect();
-      FakeTilt.mockImplementationOnce(function() { return priorEffect; });
+      FakeTilt.mockImplementationOnce(function() { return priorEffect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
 
       JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
       JuiceMotionManager.scheduleSquish(sprite, 0.1, 10);
@@ -91,7 +94,7 @@ describe('J-ABS-Juice JuiceMotionManager (unit, all downstream dependencies mock
     {
       const sprite = {};
       const effect = buildFakeEffect();
-      FakeTilt.mockImplementationOnce(function() { return effect; });
+      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
       JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
 
       JuiceMotionManager.cancelForSprite(sprite);
@@ -129,7 +132,7 @@ describe('J-ABS-Juice JuiceMotionManager (unit, all downstream dependencies mock
     {
       const sprite = {};
       const effect = buildFakeEffect();
-      FakeTilt.mockImplementationOnce(function() { return effect; });
+      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
       JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
 
       JuiceMotionManager.frameTick();
@@ -141,7 +144,7 @@ describe('J-ABS-Juice JuiceMotionManager (unit, all downstream dependencies mock
     {
       const sprite = {};
       const effect = buildFakeEffect({ isSpriteAlive: () => false });
-      FakeTilt.mockImplementationOnce(function() { return effect; });
+      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
       JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
 
       JuiceMotionManager.frameTick();
@@ -153,7 +156,7 @@ describe('J-ABS-Juice JuiceMotionManager (unit, all downstream dependencies mock
     {
       const sprite = {};
       const effect = buildFakeEffect({ tick: vi.fn(() => true) });
-      FakeTilt.mockImplementationOnce(function() { return effect; });
+      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
       JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
 
       JuiceMotionManager.frameTick();
@@ -166,7 +169,7 @@ describe('J-ABS-Juice JuiceMotionManager (unit, all downstream dependencies mock
     {
       const sprite = {};
       const effect = buildFakeEffect({ tick: vi.fn(() => false) });
-      FakeTilt.mockImplementationOnce(function() { return effect; });
+      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
       JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
 
       JuiceMotionManager.frameTick();
@@ -182,7 +185,7 @@ describe('J-ABS-Juice JuiceMotionManager (unit, all downstream dependencies mock
     {
       const sprite = {};
       const effect = buildFakeEffect();
-      FakeTilt.mockImplementationOnce(function() { return effect; });
+      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
       JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
 
       JuiceMotionManager.clearAll();
@@ -195,7 +198,7 @@ describe('J-ABS-Juice JuiceMotionManager (unit, all downstream dependencies mock
     {
       const sprite = {};
       const effect = buildFakeEffect();
-      FakeTilt.mockImplementationOnce(function() { return effect; });
+      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
       JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
 
       JuiceMotionManager.clearAll();
@@ -211,7 +214,7 @@ describe('J-ABS-Juice JuiceMotionManager (unit, all downstream dependencies mock
     {
       const sprite = {};
       const effect = buildFakeEffect();
-      FakeTilt.mockImplementationOnce(function() { return effect; });
+      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
       JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
 
       JuiceMotionManager.relinquishSpriteLock(sprite);

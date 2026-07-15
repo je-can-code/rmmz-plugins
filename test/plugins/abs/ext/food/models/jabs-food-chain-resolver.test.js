@@ -183,7 +183,15 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
 
       // map the intended phase to the specific segment stateId that should read as active-
       // plan has 2 segments, so index 0 is 'wellFed' and index 1 is 'tail'.
-      const activeStateId = currentPhase === 'tail' ? 11 : (currentPhase === 'wellFed' ? 10 : null);
+      let activeStateId = null;
+      if (currentPhase === 'tail')
+      {
+        activeStateId = 11;
+      }
+      else if (currentPhase === 'wellFed')
+      {
+        activeStateId = 10;
+      }
       const leader = {
         addState: vi.fn(),
         states: () => (currentChainType ? [ { jabsFoodChainType: currentChainType } ] : []),

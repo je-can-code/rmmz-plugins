@@ -14,7 +14,7 @@ describe('RPG_State (src/plugins/sks/core/database/RPG_State.js)', () =>
     // J.SKS.RegExp.SlotCostModifier as bare (undeclared) globals rather than importing them. Stub
     // those globals before the dynamic import evaluates the module, since a static import would be
     // hoisted ahead of any setup.
-    globalThis.RPG_State = class RPG_State
+    globalThis.RPG_State = class RPG_StateStub
     {
     };
 
@@ -31,7 +31,7 @@ describe('RPG_State (src/plugins/sks/core/database/RPG_State.js)', () =>
 
     await import('../../../../src/plugins/sks/core/database/RPG_State.js');
 
-    RPG_State = globalThis.RPG_State;
+    ({ RPG_State } = globalThis);
   });
 
   afterAll(() =>

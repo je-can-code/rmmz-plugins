@@ -70,7 +70,7 @@ export function installPopupsHostGlobals(sandbox = globalThis)
     loadSystem()
     {
       return {
-        blt(source, sx, sy, pw, ph, dx, dy)
+        blt(_source, _sx, _sy, _pw, _ph, _dx, _dy)
         {
         },
       };
@@ -123,13 +123,13 @@ export function installPopupsHostGlobals(sandbox = globalThis)
       anchor: { x: 0, y: 0 },
       scale: { x: 1, y: 1 },
       bitmap: {
-        blt(bitmap, sx, sy, pw, ph, dx, dy)
+        blt(_bitmap, _sx, _sy, _pw, _ph, _dx, _dy)
         {
         },
-        drawText(text, x, y, w, h, align)
+        drawText(_text, _x, _y, _w, _h, _align)
         {
         },
-        measureTextWidth(text)
+        measureTextWidth(_text)
         {
           return 0;
         },

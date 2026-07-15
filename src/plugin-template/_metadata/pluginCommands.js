@@ -5,7 +5,7 @@
 PluginManager.registerCommand(
   J.__TEMPLATE__.Metadata.name,
   "do-the-thing",
-  args =>
+  _args =>
   {
     console.log('did the thing.');
   });

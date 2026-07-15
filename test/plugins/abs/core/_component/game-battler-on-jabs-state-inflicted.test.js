@@ -62,8 +62,8 @@ describe('J-ABS Game_Battler#onJabsStateInflicted (direct src import)', () =>
 
     // Assert- fired after JABS tracking is registered, not before.
     expect(battler.onJabsStateInflicted).toHaveBeenCalledWith(14, attacker);
-    const inflictedOrder = battler.onJabsStateInflicted.mock.invocationCallOrder[0];
-    const trackedOrder = battler.addJabsState.mock.invocationCallOrder[0];
+    const [ inflictedOrder ] = battler.onJabsStateInflicted.mock.invocationCallOrder;
+    const [ trackedOrder ] = battler.addJabsState.mock.invocationCallOrder;
     expect(inflictedOrder).toBeGreaterThan(trackedOrder);
   });
 

@@ -212,7 +212,7 @@ describe('JCache', () =>
       cache.get({}, 'k', () => 'value');
 
       // Act
-      const metrics = cache.metrics;
+      const { metrics } = cache;
       metrics.hits = 999;
 
       // Assert

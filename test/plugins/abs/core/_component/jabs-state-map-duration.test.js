@@ -237,7 +237,7 @@ describe('J-ABS map state duration (direct src import)', () =>
 
       // Assert
       expect(globalThis.$jabsEngine.addOrUpdateStateByUuid).toHaveBeenCalledTimes(1);
-      const jabsState = globalThis.$jabsEngine.addOrUpdateStateByUuid.mock.calls[0][1];
+      const [ [ , jabsState ] ] = globalThis.$jabsEngine.addOrUpdateStateByUuid.mock.calls;
       expect(jabsState.duration).toBe(120);
     });
 
@@ -251,7 +251,7 @@ describe('J-ABS map state duration (direct src import)', () =>
       battler.addJabsState(21, battler);
 
       // Assert
-      const jabsState = globalThis.$jabsEngine.addOrUpdateStateByUuid.mock.calls[0][1];
+      const [ [ , jabsState ] ] = globalThis.$jabsEngine.addOrUpdateStateByUuid.mock.calls;
       expect(jabsState.duration).toBe(-1);
     });
 
@@ -268,7 +268,7 @@ describe('J-ABS map state duration (direct src import)', () =>
       battler.addJabsState(22, battler);
 
       // Assert
-      const jabsState = globalThis.$jabsEngine.addOrUpdateStateByUuid.mock.calls[0][1];
+      const [ [ , jabsState ] ] = globalThis.$jabsEngine.addOrUpdateStateByUuid.mock.calls;
       expect(jabsState.duration).toBe(-1);
     });
   });

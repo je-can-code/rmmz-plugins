@@ -90,7 +90,7 @@ export function installEscribeHostGlobals(sandbox = globalThis)
       const match = regex.exec(comment);
       if (!match) continue;
 
-      const value = match[1];
+      const [ , value ] = match;
       if (typeof defaultValue === 'number')
       {
         return Number(value);

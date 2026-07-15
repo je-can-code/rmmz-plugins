@@ -33,6 +33,60 @@ export function setPluginContextToJLog(sandbox = globalThis)
 }
 
 /**
+ * Seeds the placeholder Window_Command class (not one of installJBaseHostGlobals's placeholders)
+ * with every prototype method J-Log's Window_MapLog.js touches.
+ * @param {object} sandbox The sandbox to install onto.
+ */
+function installLogWindowCommandGlobals(sandbox)
+{
+  function Window_Command()
+  {
+  }
+
+  Window_Command.prototype = Object.create(sandbox.Window_Base.prototype);
+  Window_Command.prototype.constructor = Window_Command;
+  sandbox.Window_Command = sandbox.Window_Command || Window_Command;
+
+  const proto = sandbox.Window_Command.prototype;
+  proto.initialize ||= noop;
+  proto.isScrollEnabled ||= () => true;
+  proto.smoothScrollTo ||= noop;
+  proto.itemRectWithPadding ||= () => ({ x: 0 });
+  proto.processDrawIcon ||= noop;
+  proto.update ||= noop;
+  proto.clearCommandList ||= noop;
+  proto.addBuiltCommand ||= noop;
+  proto.commandList ||= () => [];
+  proto.smoothScrollDown ||= noop;
+  proto.refresh ||= noop;
+  proto.hasCommands ||= () => true;
+}
+
+/**
+ * Seeds Scene_Map/Window_Base placeholder lifecycle methods plus the $gameMessage/$gamePlayer
+ * globals J-Log's Window_MapLog.js reads from.
+ * @param {object} sandbox The sandbox to install onto.
+ */
+function installLogSceneAndWindowGlobals(sandbox)
+{
+  sandbox.Scene_Map.prototype.initialize = noop;
+  sandbox.Scene_Map.prototype.createAllWindows = noop;
+  sandbox.Scene_Map.prototype.addWindow = noop;
+
+  sandbox.Window_Base.prototype.initialize ||= noop;
+  sandbox.Window_Base.prototype.update ||= noop;
+
+  installLogWindowCommandGlobals(sandbox);
+
+  sandbox.$gameMessage = sandbox.$gameMessage || {};
+  sandbox.$gameMessage.isBusy = () => false;
+
+  sandbox.$gamePlayer = sandbox.$gamePlayer || {};
+  sandbox.$gamePlayer.screenX = () => 0;
+  sandbox.$gamePlayer.screenY = () => 0;
+}
+
+/**
  * Globals required for J-Log's DataManager/pluginCommands/Window_MapLog.js to evaluate when
  * direct-imported into the real Vitest realm instead of a nested vm context.
  * @param {object} [sandbox] Defaults to `globalThis` so direct-import tests can call this with no target arg.
@@ -88,41 +142,6 @@ export function installLogHostGlobals(sandbox = globalThis)
   sandbox.ImageManager.iconHeight = 32;
   sandbox.ImageManager.loadSystem = () => ({});
 
-  sandbox.Scene_Map.prototype.initialize = noop;
-  sandbox.Scene_Map.prototype.createAllWindows = noop;
-  sandbox.Scene_Map.prototype.addWindow = noop;
-
-  sandbox.Window_Base.prototype.initialize = sandbox.Window_Base.prototype.initialize || noop;
-  sandbox.Window_Base.prototype.update = sandbox.Window_Base.prototype.update || noop;
-
-  // Window_Command is not one of installJBaseHostGlobals's placeholder classes.
-  function Window_Command()
-  {
-  }
-
-  Window_Command.prototype = Object.create(sandbox.Window_Base.prototype);
-  Window_Command.prototype.constructor = Window_Command;
-  sandbox.Window_Command = sandbox.Window_Command || Window_Command;
-
-  sandbox.Window_Command.prototype.initialize = sandbox.Window_Command.prototype.initialize || noop;
-  sandbox.Window_Command.prototype.isScrollEnabled = sandbox.Window_Command.prototype.isScrollEnabled || (() => true);
-  sandbox.Window_Command.prototype.smoothScrollTo = sandbox.Window_Command.prototype.smoothScrollTo || noop;
-  sandbox.Window_Command.prototype.itemRectWithPadding = sandbox.Window_Command.prototype.itemRectWithPadding
-    || (() => ({ x: 0 }));
-  sandbox.Window_Command.prototype.processDrawIcon = sandbox.Window_Command.prototype.processDrawIcon || noop;
-  sandbox.Window_Command.prototype.update = sandbox.Window_Command.prototype.update || noop;
-  sandbox.Window_Command.prototype.clearCommandList = sandbox.Window_Command.prototype.clearCommandList || noop;
-  sandbox.Window_Command.prototype.addBuiltCommand = sandbox.Window_Command.prototype.addBuiltCommand || noop;
-  sandbox.Window_Command.prototype.commandList = sandbox.Window_Command.prototype.commandList || (() => []);
-  sandbox.Window_Command.prototype.smoothScrollDown = sandbox.Window_Command.prototype.smoothScrollDown || noop;
-  sandbox.Window_Command.prototype.refresh = sandbox.Window_Command.prototype.refresh || noop;
-  sandbox.Window_Command.prototype.hasCommands = sandbox.Window_Command.prototype.hasCommands || (() => true);
-
-  sandbox.$gameMessage = sandbox.$gameMessage || {};
-  sandbox.$gameMessage.isBusy = () => false;
-
-  sandbox.$gamePlayer = sandbox.$gamePlayer || {};
-  sandbox.$gamePlayer.screenX = () => 0;
-  sandbox.$gamePlayer.screenY = () => 0;
+  installLogSceneAndWindowGlobals(sandbox);
 }
 //endregion plugins/log/_component/fixtures/install-log-host-globals.js

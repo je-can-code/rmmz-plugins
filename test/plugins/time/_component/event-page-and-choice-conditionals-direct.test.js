@@ -36,16 +36,10 @@ describe('J-TIME event page + choice conditionals (direct src import)', () =>
     globalThis.$gameTime = new Game_Time();
 
     // provide a default implementation for non-time page conditions.
-    globalThis.J.TIME.Aliased.Game_Event.set('meetsConditions', function()
-    {
-      return true;
-    });
+    globalThis.J.TIME.Aliased.Game_Event.set('meetsConditions', () => true);
 
     // provide a default implementation for non-time choice visibility.
-    globalThis.J.TIME.Aliased.Game_Interpreter.set('shouldHideChoiceBranch', function()
-    {
-      return false;
-    });
+    globalThis.J.TIME.Aliased.Game_Interpreter.set('shouldHideChoiceBranch', () => false);
   });
 
   afterAll(() =>

@@ -1,5 +1,5 @@
 //region plugins/jafting/_component/salvage-expand-material-armor.test.js
-import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import JaftingSalvageManager from '../../../../src/plugins/jafting/core/managers/JaftingSalvageManager.js';
 import RPG_Armor from '../../../../src/plugins/_base/database/implementations/RPG_Armor.js';

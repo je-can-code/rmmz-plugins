@@ -181,7 +181,7 @@ describe('J-Pixelistics PIXEL_CollisionManager (direct src import)', () =>
     it('VerticalLine blocks vertical entry', () =>
     {
       // Arrange
-      const Codes = globalThis.PIXEL_CollisionManager.Codes;
+      const { Codes } = globalThis.PIXEL_CollisionManager;
       freshOpenCollision();
       globalThis.PIXEL_CollisionManager._set(0.5, 0.5, Codes.VerticalLine);
 
@@ -195,7 +195,7 @@ describe('J-Pixelistics PIXEL_CollisionManager (direct src import)', () =>
     it('VerticalLine does not block horizontal entry', () =>
     {
       // Arrange
-      const Codes = globalThis.PIXEL_CollisionManager.Codes;
+      const { Codes } = globalThis.PIXEL_CollisionManager;
       freshOpenCollision();
       globalThis.PIXEL_CollisionManager._set(0.5, 0.5, Codes.VerticalLine);
 
@@ -209,7 +209,7 @@ describe('J-Pixelistics PIXEL_CollisionManager (direct src import)', () =>
     it('HorizontalLine blocks horizontal entry', () =>
     {
       // Arrange
-      const Codes = globalThis.PIXEL_CollisionManager.Codes;
+      const { Codes } = globalThis.PIXEL_CollisionManager;
       freshOpenCollision();
       globalThis.PIXEL_CollisionManager._set(0.5, 0.5, Codes.HorizontalLine);
 
@@ -223,7 +223,7 @@ describe('J-Pixelistics PIXEL_CollisionManager (direct src import)', () =>
     it('HorizontalLine does not block vertical entry', () =>
     {
       // Arrange
-      const Codes = globalThis.PIXEL_CollisionManager.Codes;
+      const { Codes } = globalThis.PIXEL_CollisionManager;
       freshOpenCollision();
       globalThis.PIXEL_CollisionManager._set(0.5, 0.5, Codes.HorizontalLine);
 
@@ -237,7 +237,7 @@ describe('J-Pixelistics PIXEL_CollisionManager (direct src import)', () =>
     it('CornerTopLeft blocks movement into it from every direction', () =>
     {
       // Arrange
-      const Codes = globalThis.PIXEL_CollisionManager.Codes;
+      const { Codes } = globalThis.PIXEL_CollisionManager;
       freshOpenCollision();
       globalThis.PIXEL_CollisionManager._set(0.25, 0.25, Codes.CornerTopLeft);
 
@@ -251,7 +251,7 @@ describe('J-Pixelistics PIXEL_CollisionManager (direct src import)', () =>
     it('EdgeLeft blocks the directionally-matching approach', () =>
     {
       // Arrange
-      const Codes = globalThis.PIXEL_CollisionManager.Codes;
+      const { Codes } = globalThis.PIXEL_CollisionManager;
       freshOpenCollision();
       globalThis.PIXEL_CollisionManager._set(0.5, 0.5, Codes.EdgeLeft);
 
@@ -265,7 +265,7 @@ describe('J-Pixelistics PIXEL_CollisionManager (direct src import)', () =>
     it('EdgeLeft does not block the opposite approach', () =>
     {
       // Arrange
-      const Codes = globalThis.PIXEL_CollisionManager.Codes;
+      const { Codes } = globalThis.PIXEL_CollisionManager;
       freshOpenCollision();
       globalThis.PIXEL_CollisionManager._set(0.5, 0.5, Codes.EdgeLeft);
 

@@ -29,7 +29,7 @@ describe('J-Escriptions Game_Event escription parsing (direct src import)', () =
     await import('../../../../src/plugins/escribe/core/objects/Game_Character.js');
     await import('../../../../src/plugins/escribe/core/objects/Game_Event.js');
 
-    Game_Event = globalThis.Game_Event;
+    ({ Game_Event } = globalThis);
   });
 
   it('builds Escription from comment tags and flags for addition', () =>

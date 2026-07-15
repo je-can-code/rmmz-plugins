@@ -321,7 +321,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       // flush the microtask queue past the two chained .then() hops- a macrotask boundary
       // guarantees every pending microtask (including the flattened nested promise from
       // data.json()) has settled before we assert.
-      await new Promise((resolve) => setTimeout(resolve, 0));
+      await new Promise((resolve) => { setTimeout(resolve, 0); });
 
       // Assert
       expect(globalThis.fetch).toHaveBeenCalledWith('data/Map005.json');
@@ -1986,7 +1986,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.forceMapAction(caster, 5, true, 3, 4, true);
 
-      const [ , actualOptions ] = caster.createJabsActionFromSkill.mock.calls[0];
+      const [ [ , actualOptions ] ] = caster.createJabsActionFromSkill.mock.calls;
       expect(actualOptions.isRetaliation).toBe(true);
       expect(actualOptions.isTerrainDamage).toBe(true);
       expect(actualOptions.location.getX()).toBe(3);
@@ -2930,7 +2930,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.addJabsActionToMap(actionEventData, buildAction());
 
-      const [ createdSprite ] = globalThis.$gameMap.addEvent.mock.calls[0];
+      const [ [ createdSprite ] ] = globalThis.$gameMap.addEvent.mock.calls;
       expect(createdSprite.start()).toBe(false);
     });
   });

@@ -257,11 +257,11 @@ export function buildDefaultPixelGameMap()
     {
       return tx >= 0 && ty >= 0 && tx < this.width() && ty < this.height();
     },
-    roundXWithDirection(x, d)
+    roundXWithDirection(x, _d)
     {
       return x;
     },
-    roundYWithDirection(y, d)
+    roundYWithDirection(y, _d)
     {
       return y;
     },

@@ -14,7 +14,7 @@ describe('RPG_Skill (src/plugins/sks/core/database/RPG_Skill.js)', () =>
     // J.SKS.RegExp/J.SKS.Metadata as bare (undeclared) globals rather than importing them, exactly
     // as the concatenated RMMZ plugin runtime would provide them. Stub those globals before the
     // dynamic import evaluates the module, since a static import would be hoisted ahead of any setup.
-    globalThis.RPG_Skill = class RPG_Skill
+    globalThis.RPG_Skill = class RPG_SkillStub
     {
     };
 
@@ -41,7 +41,7 @@ describe('RPG_Skill (src/plugins/sks/core/database/RPG_Skill.js)', () =>
     // Object.defineProperty calls against the real RPG_Skill.prototype stub above.
     await import('../../../../src/plugins/sks/core/database/RPG_Skill.js');
 
-    RPG_Skill = globalThis.RPG_Skill;
+    ({ RPG_Skill } = globalThis);
   });
 
   afterAll(() =>

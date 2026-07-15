@@ -37,12 +37,8 @@ describe('J-Proficiency lifecycle hooks (direct src import)', () =>
     await import('../../../../src/plugins/prof/core/objects/Game_Actor.js');
 
     // isolate these extension points from host behavior (real _base onLearnNewSkill/onBattlerDataChange).
-    globalThis.J.PROF.Aliased.Game_Actor.set('onLearnNewSkill', function()
-    {
-    });
-    globalThis.J.PROF.Aliased.Game_Actor.set('onBattlerDataChange', function()
-    {
-    });
+    globalThis.J.PROF.Aliased.Game_Actor.set('onLearnNewSkill', () => {});
+    globalThis.J.PROF.Aliased.Game_Actor.set('onBattlerDataChange', () => {});
   });
 
   beforeEach(() =>
