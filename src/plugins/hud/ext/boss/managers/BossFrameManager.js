@@ -160,7 +160,7 @@ class BossFrameManager
       .currentHpPercent100();
 
     // determine if the boss is within the threshold.
-    const withinThreshold = lowerRange <= hpPercent <= upperRange;
+    const withinThreshold = hpPercent >= lowerRange && hpPercent <= upperRange;
 
     // return the result.
     return withinThreshold;
