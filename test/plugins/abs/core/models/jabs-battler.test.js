@@ -2624,6 +2624,12 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(JABS_Battler.isDodgeSkillById(1)).toBe(true);
     });
 
+    it('isDodgeSkillById is false for a non-matching stype', () =>
+    {
+      globalThis.$dataSkills = { 1: { stypeId: 9 } };
+      expect(JABS_Battler.isDodgeSkillById(1)).toBe(false);
+    });
+
     it('isWeaponSkillById is false without an id', () =>
     {
       expect(JABS_Battler.isWeaponSkillById(0)).toBe(false);
@@ -2633,6 +2639,12 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     {
       globalThis.$dataSkills = { 1: { stypeId: 3 } };
       expect(JABS_Battler.isWeaponSkillById(1)).toBe(true);
+    });
+
+    it('isWeaponSkillById is false for a non-matching stype', () =>
+    {
+      globalThis.$dataSkills = { 1: { stypeId: 9 } };
+      expect(JABS_Battler.isWeaponSkillById(1)).toBe(false);
     });
   });
 
@@ -2648,11 +2660,28 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(JABS_Battler.isSkillVisibleInCombatMenu({ jabsHiddenFromMenus: true })).toBe(false);
     });
 
-    it('isSkillVisibleInCombatMenu is false for a dodge/guard/weapon skill', () =>
+    it('isSkillVisibleInCombatMenu is false for a dodge skill', () =>
     {
       JABS_Battler.isDodgeSkillById = vi.fn(() => true);
       expect(JABS_Battler.isSkillVisibleInCombatMenu({ id: 1 })).toBe(false);
       JABS_Battler.isDodgeSkillById = vi.fn(() => false);
+    });
+
+    it('isSkillVisibleInCombatMenu is false for a guard skill', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => false);
+      JABS_Battler.isGuardSkillById = vi.fn(() => true);
+      expect(JABS_Battler.isSkillVisibleInCombatMenu({ id: 1 })).toBe(false);
+      JABS_Battler.isGuardSkillById = vi.fn(() => false);
+    });
+
+    it('isSkillVisibleInCombatMenu is false for a weapon skill', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => false);
+      JABS_Battler.isGuardSkillById = vi.fn(() => false);
+      JABS_Battler.isWeaponSkillById = vi.fn(() => true);
+      expect(JABS_Battler.isSkillVisibleInCombatMenu({ id: 1 })).toBe(false);
+      JABS_Battler.isWeaponSkillById = vi.fn(() => false);
     });
 
     it('isSkillVisibleInCombatMenu is false for an offhand-eligible skill', () =>
@@ -2676,6 +2705,35 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(JABS_Battler.isSkillVisibleInOffhandMenu(null)).toBe(false);
     });
 
+    it('isSkillVisibleInOffhandMenu is false for a menu-hidden skill', () =>
+    {
+      expect(JABS_Battler.isSkillVisibleInOffhandMenu({ id: 1, jabsHiddenFromMenus: true })).toBe(false);
+    });
+
+    it('isSkillVisibleInOffhandMenu is false for a dodge skill', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => true);
+      expect(JABS_Battler.isSkillVisibleInOffhandMenu({ id: 1 })).toBe(false);
+      JABS_Battler.isDodgeSkillById = vi.fn(() => false);
+    });
+
+    it('isSkillVisibleInOffhandMenu is false for a guard skill', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => false);
+      JABS_Battler.isGuardSkillById = vi.fn(() => true);
+      expect(JABS_Battler.isSkillVisibleInOffhandMenu({ id: 1 })).toBe(false);
+      JABS_Battler.isGuardSkillById = vi.fn(() => false);
+    });
+
+    it('isSkillVisibleInOffhandMenu is false for a weapon skill', () =>
+    {
+      JABS_Battler.isDodgeSkillById = vi.fn(() => false);
+      JABS_Battler.isGuardSkillById = vi.fn(() => false);
+      JABS_Battler.isWeaponSkillById = vi.fn(() => true);
+      expect(JABS_Battler.isSkillVisibleInOffhandMenu({ id: 1 })).toBe(false);
+      JABS_Battler.isWeaponSkillById = vi.fn(() => false);
+    });
+
     it('isSkillVisibleInOffhandMenu requires the offhand-eligible flag to be exactly true', () =>
     {
       JABS_Battler.isDodgeSkillById = vi.fn(() => false);
@@ -2683,6 +2741,16 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       JABS_Battler.isWeaponSkillById = vi.fn(() => false);
       expect(JABS_Battler.isSkillVisibleInOffhandMenu({ id: 1, jabsOffhandEligible: 1 })).toBe(false);
       expect(JABS_Battler.isSkillVisibleInOffhandMenu({ id: 1, jabsOffhandEligible: true })).toBe(true);
+    });
+
+    it('isSkillVisibleInDodgeMenu is false for a null skill', () =>
+    {
+      expect(JABS_Battler.isSkillVisibleInDodgeMenu(null)).toBe(false);
+    });
+
+    it('isSkillVisibleInDodgeMenu is false for a menu-hidden skill', () =>
+    {
+      expect(JABS_Battler.isSkillVisibleInDodgeMenu({ id: 1, jabsHiddenFromMenus: true })).toBe(false);
     });
 
     it('isSkillVisibleInDodgeMenu is false for a non-dodge skill', () =>
@@ -3036,6 +3104,20 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.resolveDirectOpponentTarget).toHaveBeenCalledWith(skill);
     });
 
+    it('falls through to the opponent priority chain for ally-targeting without a selected ally target', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.resolveDirectOpponentTarget = vi.fn(() => ({ getX: () => 7, getY: () => 8 }));
+      const skill = { id: 1 };
+      const action = {
+        isDirectAction: () => true,
+        getAction: () => ({ isForUser: () => false, isForFriend: () => true }),
+        getBaseSkill: () => skill,
+      };
+
+      expect(jabsBattler.resolveDirectActionTargetCoordinates(action)).toEqual([ 7, 8 ]);
+    });
+
     it('returns nulls when the opponent chain finds nothing', () =>
     {
       const jabsBattler = buildBattler();
@@ -3130,6 +3212,22 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       expect(jabsBattler.resolveDirectActionTargetCoordinatesForSkill(skill)).toEqual([ 7, 8 ]);
       expect(jabsBattler.resolveDirectOpponentTarget).toHaveBeenCalledWith(skill);
+    });
+
+    it('returns nulls when the opponent chain finds nothing', () =>
+    {
+      globalThis.Game_Action = vi.fn(function()
+      {
+        this.setSkill = vi.fn();
+        this.isForUser = () => false;
+        this.isForFriend = () => false;
+      });
+      const jabsBattler = buildBattler();
+      jabsBattler.resolveDirectOpponentTarget = vi.fn(() => null);
+
+      expect(jabsBattler.resolveDirectActionTargetCoordinatesForSkill({ jabsDirect: true, id: 1 })).toEqual([
+        null, null,
+      ]);
     });
   });
 
@@ -3285,6 +3383,19 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.resolveDirectTargetViaScan([ far, near ])).toBe(near);
     });
 
+    it('does not let a farther-away later candidate replace the current closest', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.distanceToDesignatedTarget = vi.fn()
+        .mockReturnValueOnce(3)
+        .mockReturnValueOnce(10);
+      const near = { isInanimate: () => false, isEnemy: () => true };
+      const far = { isInanimate: () => false, isEnemy: () => true };
+
+      expect(jabsBattler.resolveDirectTargetViaScan([ near, far ])).toBe(near);
+    });
+
     it('skips inanimate and same-team candidates', () =>
     {
       const jabsBattler = buildBattler();
@@ -3309,6 +3420,19 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       const near = { isInanimate: () => true, isEnemy: () => true };
 
       expect(jabsBattler.resolveDirectTargetInanimateScan([ far, near ])).toBe(near);
+    });
+
+    it('does not let a farther-away later candidate replace the current closest', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.distanceToDesignatedTarget = vi.fn()
+        .mockReturnValueOnce(3)
+        .mockReturnValueOnce(10);
+      const near = { isInanimate: () => true, isEnemy: () => true };
+      const far = { isInanimate: () => true, isEnemy: () => true };
+
+      expect(jabsBattler.resolveDirectTargetInanimateScan([ near, far ])).toBe(near);
     });
 
     it('skips non-inanimate and same-team candidates', () =>
