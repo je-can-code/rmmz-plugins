@@ -4161,6 +4161,34 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('handleDodgeMovement', () =>
+  {
+    it('updates the iframes then does not move when the battler cannot dodge-move', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.updateDodgeIFrames = vi.fn();
+      jabsBattler.canDodgeMove = () => false;
+      jabsBattler.executeDodgeMovement = vi.fn();
+
+      jabsBattler.handleDodgeMovement();
+
+      expect(jabsBattler.updateDodgeIFrames).toHaveBeenCalledTimes(1);
+      expect(jabsBattler.executeDodgeMovement).not.toHaveBeenCalled();
+    });
+
+    it('updates the iframes then executes the movement when the battler can dodge-move', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.updateDodgeIFrames = vi.fn();
+      jabsBattler.canDodgeMove = () => true;
+      jabsBattler.executeDodgeMovement = vi.fn();
+
+      jabsBattler.handleDodgeMovement();
+
+      expect(jabsBattler.executeDodgeMovement).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('updateDodgeIFrames', () =>
   {
     it('does nothing while not dodging', () =>
@@ -5276,6 +5304,23 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.canDirectionalDodgeStepPass = vi.fn(() => false);
 
       expect(jabsBattler.pickAiDirectionalDodgeDirection()).toBe(6);
+    });
+
+    it('settles for the middle relaxed-alignment tier (-0.2 floor) when the best-aligned directions are all blocked but a perpendicular direction is passable', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const threat = { isDead: () => false, getX: () => 5, getY: () => 0 };
+      JABS_AiManager.getClosestOpposingBattler = vi.fn(() => threat);
+      const jabsBattler = buildBattler();
+      // battler is left of the threat (x=0 vs threat x=5), so "away" is pure -x: LEFT/UPPERLEFT/
+      // LOWERLEFT score highest (1), UP/DOWN score 0 (perpendicular), RIGHT-ish score lowest (-1).
+      jabsBattler.getCharacter = () => ({ x: 0, y: 0, direction: () => 6 });
+      // block every top-scoring (best-aligned) direction, but leave the perpendicular UP passable-
+      // this forces the floor down to -0.2 (since UP's score of 0 fails the initial 0.01 floor)
+      // without ever reaching the final -999 floor.
+      jabsBattler.canDirectionalDodgeStepPass = vi.fn((character, dir) => dir === J.ABS.Directions.UP);
+
+      expect(jabsBattler.pickAiDirectionalDodgeDirection()).toBe(J.ABS.Directions.UP);
     });
   });
 
@@ -8121,6 +8166,61 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       // 2 + (20 * 0.50) + 1 = 13.
       expect(jabsBattler.stateSlipTp(state)).toBe(13);
+    });
+  });
+
+  describe('calculateModifiedSlipAmount', () =>
+  {
+    it('applies the healing-over-time amp for a positive (HoT) original amount', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.applyHealingOverTimeAmp = vi.fn(() => 10);
+      jabsBattler.applyDamageOverTimeAmp = vi.fn();
+      const jabsState = {};
+
+      const result = jabsBattler.calculateModifiedSlipAmount(5, jabsState);
+
+      expect(jabsBattler.applyHealingOverTimeAmp).toHaveBeenCalledWith(5, jabsState);
+      expect(result).toEqual(10);
+    });
+
+    it('applies the damage-over-time amp for a negative (DoT) original amount', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.applyHealingOverTimeAmp = vi.fn();
+      jabsBattler.applyDamageOverTimeAmp = vi.fn(() => -8);
+      const jabsState = {};
+
+      const result = jabsBattler.calculateModifiedSlipAmount(-5, jabsState);
+
+      expect(jabsBattler.applyDamageOverTimeAmp).toHaveBeenCalledWith(-5, jabsState);
+      expect(result).toEqual(-8);
+    });
+
+    it('returns the original value unmodified when it is exactly zero', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.applyHealingOverTimeAmp = vi.fn();
+      jabsBattler.applyDamageOverTimeAmp = vi.fn();
+
+      const result = jabsBattler.calculateModifiedSlipAmount(0, {});
+
+      expect(jabsBattler.applyHealingOverTimeAmp).not.toHaveBeenCalled();
+      expect(jabsBattler.applyDamageOverTimeAmp).not.toHaveBeenCalled();
+      expect(result).toEqual(0);
+    });
+
+    it('returns the original value unmodified when it is NaN (fails both the HoT and DoT checks)', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.applyHealingOverTimeAmp = vi.fn();
+      jabsBattler.applyDamageOverTimeAmp = vi.fn();
+
+      const result = jabsBattler.calculateModifiedSlipAmount(NaN, {});
+
+      expect(jabsBattler.applyHealingOverTimeAmp).not.toHaveBeenCalled();
+      expect(jabsBattler.applyDamageOverTimeAmp).not.toHaveBeenCalled();
+      expect(result).toBeNaN();
     });
   });
 
