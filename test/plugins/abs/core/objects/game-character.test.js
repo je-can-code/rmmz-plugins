@@ -460,8 +460,18 @@ describe('J-ABS Game_Character (unit, all downstream dependencies mocked)', () =
       globalThis.$gameMap = {
         width: () => 10,
         distance: (x1, y1, x2, y2) => Math.abs(x2 - x1) + Math.abs(y2 - y1),
-        roundXWithDirection: (x, dir) => (dir === 6 ? x + 1 : dir === 4 ? x - 1 : x),
-        roundYWithDirection: (y, dir) => (dir === 2 ? y + 1 : dir === 8 ? y - 1 : y),
+        roundXWithDirection: (x, dir) =>
+        {
+          if (dir === 6) return x + 1;
+          if (dir === 4) return x - 1;
+          return x;
+        },
+        roundYWithDirection: (y, dir) =>
+        {
+          if (dir === 2) return y + 1;
+          if (dir === 8) return y - 1;
+          return y;
+        },
         deltaX: (a, b) => a - b,
         deltaY: (a, b) => a - b,
       };
