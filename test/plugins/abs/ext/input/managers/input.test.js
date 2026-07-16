@@ -308,18 +308,13 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
 
   describe('bootstrapAllKeyboardKeysForCapture()', () =>
   {
-    it('does not register capture for a pre-existing keyMapper entry, even a non-reserved one', () =>
+    it('registers a capture symbol/label for an existing non-reserved keyMapper entry', () =>
     {
-      // the "considering existingMap" pass seeds `reserved` from every symbol already present in
-      // keyMapper (including this one's own entry) before the main loop runs, so this branch's
-      // `reserved.has(s) === false` condition can never be true for a pre-existing mapping- the
-      // symbol always ends up reserving itself first. Documenting the real (if seemingly dead)
-      // behavior here rather than the naively-expected one.
       globalThis.Input.keyMapper[219] = 'jabs-custom';
 
       globalThis.Input.bootstrapAllKeyboardKeysForCapture();
 
-      expect(globalThis.Input.getRemapCaptureSymbols()).not.toContain('jabs-custom');
+      expect(globalThis.Input.getRemapCaptureSymbols()).toContain('jabs-custom');
 
       delete globalThis.Input.keyMapper[219];
     });
@@ -573,7 +568,9 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
   {
     it('coerces pressed d-pad buttons into both state bags', () =>
     {
-      const gamepad = { buttons: [ ,,,,,,,,,,,,{ pressed: true }, { pressed: false }, { pressed: true }, { pressed: false } ] };
+      const buttons = new Array(12).fill(undefined);
+      buttons.push({ pressed: true }, { pressed: false }, { pressed: true }, { pressed: false });
+      const gamepad = { buttons };
       const s = {};
       const padState = {};
 

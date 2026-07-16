@@ -423,27 +423,15 @@ Input.ensureRemapBootstrapped = function()
  */
 Input.bootstrapAllKeyboardKeysForCapture = function()
 {
-  // collect a snapshot of engine/core-reserved symbols to avoid overriding them.
+  // collect the fixed set of engine/core-reserved symbols to avoid overriding them. This must stay
+  // a literal list, not derived from the live keyMapper- a derived set would include the very
+  // symbol being checked at each keycode, permanently reserving it against itself and making the
+  // "existing non-engine mapping" capture branch below unreachable.
   const reserved = new Set([
     // core engine actions and directions.
     'ok', 'cancel', 'menu', 'escape', 'tab', 'pageup', 'pagedown', 'shift', 'control', 'up', 'down', 'left', 'right',
     'l2', 'r2',
   ]);
-
-  // also consider whatever the current keyMapper already resolves to.
-  const existingMap = Object.assign({}, Input.keyMapper);
-  Object.keys(existingMap)
-    .forEach(code =>
-    {
-      // read the mapped symbol for this code.
-      const sym = existingMap[code];
-
-      // if mapped to a core-like word, add to the reserved set for safety.
-      if (sym)
-      {
-        reserved.add(sym);
-      }
-    });
 
   // iterate a reasonable range of DOM KeyboardEvent.keyCode values.
   for (let code = 8; code <= 222; code++)
