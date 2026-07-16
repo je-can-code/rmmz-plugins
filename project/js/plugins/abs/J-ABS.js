@@ -10987,7 +10987,6 @@ var JABS_Battler = class JABS_Battler {
 		this.initBattleInfo();
 		this.initIdleInfo();
 		this.initCooldowns();
-		this.initPoseInfo();
 	}
 	/**
 	* Initializes the battler's core data from the comments.
@@ -14323,15 +14322,18 @@ var JABS_Battler = class JABS_Battler {
 		return battler.getResolvedSkillId(slot);
 	}
 	/**
-	* Consumes an item and performs its effects.
+	* Consumes an item and performs its effects. Shared by both the dedicated tool slot and the
+	* dedicated usable-item slot; the slot manipulated, the skill/action cooldown type stamped, and
+	* the cooldown tracked are all driven entirely by the button type provided.
 	* @param {number} toolId The id of the tool/item to be used.
+	* @param {string} buttonType The {@link JABS_Button} slot key this item was used from.
 	* @param {boolean} isLoot Whether or not this is a loot pickup.
 	*/
-	applyToolEffects(toolId, isLoot = false) {
+	applyToolItemEffects(toolId, buttonType, isLoot = false) {
 		const item = $dataItems.at(toolId);
 		const battler = this.getBattler();
 		battler.consumeItem(item);
-		battler.getSkillSlotManager().getToolSlot().flagSkillSlotForRefresh();
+		battler.getSkillSlotManager().getSkillSlotByKey(buttonType).flagSkillSlotForRefresh();
 		const gameAction = new Game_Action(battler, false);
 		gameAction.setItem(toolId);
 		const scopeNone = gameAction.item().scope === 0;
@@ -14365,84 +14367,32 @@ var JABS_Battler = class JABS_Battler {
 		if (itemSkillId) {
 			const mapAction = this.createJabsActionFromSkill(itemSkillId);
 			mapAction.forEach((action) => {
-				action.setCooldownType(JABS_Button.Tool);
+				action.setCooldownType(buttonType);
 				$jabsEngine.executeMapAction(this, action);
 			});
 		}
 		if (!isLoot && !$gameParty.items().includes(item)) {
-			battler.getSkillSlotManager().clearSlot(JABS_Button.Tool);
+			battler.getSkillSlotManager().clearSlot(buttonType);
 			const lastUsedItemLog = new LootLogBuilder().setupUsedLastItem(item.id).build();
 			$lootLogManager.addLog(lastUsedItemLog);
 		} else {
 			if (itemCooldown) {
-				if (!isLoot) this.modCooldownCounter(JABS_Button.Tool, itemCooldown);
+				if (!isLoot) this.modCooldownCounter(buttonType, itemCooldown);
 			}
 			if (!itemCooldown && !itemSkillId && !isLoot) {
-				this.modCooldownCounter(JABS_Button.Tool, J.ABS.DefaultValues.CooldownlessItems);
+				this.modCooldownCounter(buttonType, J.ABS.DefaultValues.CooldownlessItems);
 			}
 		}
 	}
 	/**
 	* Consumes an item from the usable-item slot and performs its effects.
-	* Mirrors {@link applyToolEffects} exactly but operates on {@link JABS_Button.UsableItem}
-	* instead of {@link JABS_Button.Tool}.
+	* Thin wrapper around {@link applyToolItemEffects} bound to {@link JABS_Button.UsableItem},
+	* preserved as its own hookable method for extensions that alias this specific slot's usage.
 	* @param {number} itemId The id of the item to be used.
 	* @param {boolean} isLoot Whether or not this is a loot pickup.
 	*/
 	applyUsableItemEffects(itemId, isLoot = false) {
-		const item = $dataItems.at(itemId);
-		const battler = this.getBattler();
-		battler.consumeItem(item);
-		battler.getSkillSlotManager().getUsableItemSlot().flagSkillSlotForRefresh();
-		const gameAction = new Game_Action(battler, false);
-		gameAction.setItem(itemId);
-		const scopeNone = gameAction.item().scope === 0;
-		const scopeSelf = gameAction.isForUser();
-		const scopeAlly = gameAction.isForFriend();
-		const scopeOpponent = gameAction.isForOpponent();
-		const scopeSingle = gameAction.isForOne();
-		const scopeAll = gameAction.isForAll();
-		const scopeEverything = gameAction.isForEveryone();
-		const scopeAllAllies = scopeEverything || scopeAll && scopeAlly;
-		const scopeAllOpponents = scopeEverything || scopeAll && scopeOpponent;
-		const scopeOneAlly = scopeSingle && scopeAlly;
-		const scopeOneOpponent = scopeSingle && scopeOpponent;
-		if (scopeSelf || scopeOneAlly) {
-			this.applyToolToPlayer(itemId);
-		} else if (scopeEverything) {
-			this.applyToolForAllAllies(itemId);
-			this.applyToolForAllOpponents(itemId);
-		} else if (scopeOneOpponent) {
-			this.applyToolForOneOpponent(itemId);
-		} else if (scopeAllAllies) {
-			this.applyToolForAllAllies(itemId);
-		} else if (scopeAllOpponents) {
-			this.applyToolForAllOpponents(itemId);
-		} else if (scopeNone) {} else {
-			console.warn(`unhandled scope for usable item: [ ${gameAction.item().scope} ]!`);
-		}
-		gameAction.applyGlobal();
-		this.createToolLog(item);
-		const { jabsCooldown: itemCooldown, jabsSkillId: itemSkillId } = item;
-		if (itemSkillId) {
-			const mapAction = this.createJabsActionFromSkill(itemSkillId);
-			mapAction.forEach((action) => {
-				action.setCooldownType(JABS_Button.UsableItem);
-				$jabsEngine.executeMapAction(this, action);
-			});
-		}
-		if (!isLoot && !$gameParty.items().includes(item)) {
-			battler.getSkillSlotManager().clearSlot(JABS_Button.UsableItem);
-			const lastUsedItemLog = new LootLogBuilder().setupUsedLastItem(item.id).build();
-			$lootLogManager.addLog(lastUsedItemLog);
-		} else {
-			if (itemCooldown) {
-				if (!isLoot) this.modCooldownCounter(JABS_Button.UsableItem, itemCooldown);
-			}
-			if (!itemCooldown && !itemSkillId && !isLoot) {
-				this.modCooldownCounter(JABS_Button.UsableItem, J.ABS.DefaultValues.CooldownlessItems);
-			}
-		}
+		this.applyToolItemEffects(itemId, JABS_Button.UsableItem, isLoot);
 	}
 	/**
 	* Applies the effects of the tool against the leader.
@@ -16522,7 +16472,7 @@ var JABS_InputAdapter = class JABS_InputAdapter {
 	static performToolAction(jabsBattler) {
 		if (!this.#canPerformToolAction(jabsBattler)) return;
 		const toolId = jabsBattler.getBattler().getEquippedSkillId(JABS_Button.Tool);
-		jabsBattler.applyToolEffects(toolId);
+		jabsBattler.applyToolItemEffects(toolId, JABS_Button.Tool);
 	}
 	/**
 	* Determines whether or not the player can execute the tool action.
@@ -29952,7 +29902,7 @@ Game_Player.prototype.pickupLoot = function(lootEvent) {
 */
 Game_Player.prototype.useOnPickup = function(lootData) {
 	const player = $jabsEngine.getPlayer1();
-	player.applyToolEffects(lootData.id, true);
+	player.applyToolItemEffects(lootData.id, JABS_Button.Tool, true);
 };
 /**
 * Picks up the loot and stores it in the player's inventory.

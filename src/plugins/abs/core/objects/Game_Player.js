@@ -258,7 +258,7 @@ Game_Player.prototype.pickupLoot = function(lootEvent)
 Game_Player.prototype.useOnPickup = function(lootData)
 {
   const player = $jabsEngine.getPlayer1();
-  player.applyToolEffects(lootData.id, true);
+  player.applyToolItemEffects(lootData.id, JABS_Button.Tool, true);
 };
 
 /**

@@ -457,25 +457,6 @@ describe('J-ABS-Shield Game_Action (unit, all downstream dependencies mocked)', 
       expect(result).toEqual(0);
     });
 
-    it('does not show a popup when the pool reads as exhausted at the absorb calculation despite passing the initial guard', () =>
-    {
-      // Arrange
-      const action = buildAction();
-      const target = buildTarget();
-      // getCurrent() is read twice per tick (the initial <=0 guard, then again as `before`); simulate
-      // it dropping to zero between those two reads so `absorbed` computes to zero for this tick.
-      const shield = buildShield({ getCurrent: vi.fn().mockReturnValueOnce(5).mockReturnValue(0) });
-      const shieldState = { shield };
-      vi.spyOn(action, 'onShieldDamageAbsorbed');
-
-      // Act
-      const result = action.absorbDamageIntoShield(shieldState, target, 10, 0);
-
-      // Assert
-      expect(action.onShieldDamageAbsorbed).not.toHaveBeenCalled();
-      expect(result).toEqual(10);
-    });
-
     it('breaks the shield, shows a break popup, and returns 0 when the broken shield is protected', () =>
     {
       // Arrange

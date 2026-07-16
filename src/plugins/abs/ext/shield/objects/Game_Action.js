@@ -227,13 +227,19 @@ Game_Action.prototype.absorbDamageIntoShield = function(shieldState, target, ove
     const { shield: updatedShield } = shieldState;
 
     // if there is no shield to absorb, stop processing this state.
-    if (!updatedShield || updatedShield.getCurrent() <= 0)
+    if (!updatedShield)
     {
       break;
     }
 
     // how much could be absorbed this iteration when considering the bonus?
     const before = updatedShield.getCurrent();
+
+    // if the pool is already empty, stop processing this state.
+    if (before <= 0)
+    {
+      break;
+    }
 
     // the maximum absorb this tick is limited by the pool.
     const maxAbsorbThisTick = before;

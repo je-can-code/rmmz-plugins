@@ -69,7 +69,6 @@ class JABS_Battler
     this.initBattleInfo();
     this.initIdleInfo();
     this.initCooldowns();
-    this.initPoseInfo();
   };
 
   /**
@@ -5167,12 +5166,15 @@ class JABS_Battler
   };
 
   /**
-   * Consumes an item and performs its effects.
+   * Consumes an item and performs its effects. Shared by both the dedicated tool slot and the
+   * dedicated usable-item slot; the slot manipulated, the skill/action cooldown type stamped, and
+   * the cooldown tracked are all driven entirely by the button type provided.
    * @param {number} toolId The id of the tool/item to be used.
+   * @param {string} buttonType The {@link JABS_Button} slot key this item was used from.
    * @param {boolean} isLoot Whether or not this is a loot pickup.
    */
   // eslint-disable-next-line complexity
-  applyToolEffects(toolId, isLoot = false)
+  applyToolItemEffects(toolId, buttonType, isLoot = false)
   {
     // grab the item data.
     const item = $dataItems.at(toolId);
@@ -5185,7 +5187,7 @@ class JABS_Battler
 
     // flag the slot for refresh.
     battler.getSkillSlotManager()
-      .getToolSlot()
+      .getSkillSlotByKey(buttonType)
       .flagSkillSlotForRefresh();
 
     // also generate an action based on this tool.
@@ -5255,7 +5257,7 @@ class JABS_Battler
       const mapAction = this.createJabsActionFromSkill(itemSkillId);
       mapAction.forEach(action =>
       {
-        action.setCooldownType(JABS_Button.Tool);
+        action.setCooldownType(buttonType);
         $jabsEngine.executeMapAction(this, action);
       });
     }
@@ -5266,7 +5268,7 @@ class JABS_Battler
     {
       // remove the item from the slot.
       battler.getSkillSlotManager()
-        .clearSlot(JABS_Button.Tool);
+        .clearSlot(buttonType);
 
       // build a lot for it.
       const lastUsedItemLog = new LootLogBuilder()
@@ -5279,141 +5281,27 @@ class JABS_Battler
       // it is an item with a custom cooldown.
       if (itemCooldown)
       {
-        if (!isLoot) this.modCooldownCounter(JABS_Button.Tool, itemCooldown);
+        if (!isLoot) this.modCooldownCounter(buttonType, itemCooldown);
       }
 
       // it was an item, didn't have a skill attached, and didn't have a cooldown.
       if (!itemCooldown && !itemSkillId && !isLoot)
       {
-        this.modCooldownCounter(JABS_Button.Tool, J.ABS.DefaultValues.CooldownlessItems);
+        this.modCooldownCounter(buttonType, J.ABS.DefaultValues.CooldownlessItems);
       }
     }
   };
 
   /**
    * Consumes an item from the usable-item slot and performs its effects.
-   * Mirrors {@link applyToolEffects} exactly but operates on {@link JABS_Button.UsableItem}
-   * instead of {@link JABS_Button.Tool}.
+   * Thin wrapper around {@link applyToolItemEffects} bound to {@link JABS_Button.UsableItem},
+   * preserved as its own hookable method for extensions that alias this specific slot's usage.
    * @param {number} itemId The id of the item to be used.
    * @param {boolean} isLoot Whether or not this is a loot pickup.
    */
-  // eslint-disable-next-line complexity
   applyUsableItemEffects(itemId, isLoot = false)
   {
-    // grab the item data.
-    const item = $dataItems.at(itemId);
-
-    // grab this battler.
-    const battler = this.getBattler();
-
-    // force the player to use the item.
-    battler.consumeItem(item);
-
-    // flag the slot for refresh.
-    battler.getSkillSlotManager()
-      .getUsableItemSlot()
-      .flagSkillSlotForRefresh();
-
-    // also generate an action based on this item.
-    const gameAction = new Game_Action(battler, false);
-    gameAction.setItem(itemId);
-
-    // handle scopes of the item.
-    const scopeNone = gameAction.item().scope === 0;
-    const scopeSelf = gameAction.isForUser();
-    const scopeAlly = gameAction.isForFriend();
-    const scopeOpponent = gameAction.isForOpponent();
-    const scopeSingle = gameAction.isForOne();
-    const scopeAll = gameAction.isForAll();
-    const scopeEverything = gameAction.isForEveryone();
-
-    const scopeAllAllies = scopeEverything || (scopeAll && scopeAlly);
-    const scopeAllOpponents = scopeEverything || (scopeAll && scopeOpponent);
-    const scopeOneAlly = (scopeSingle && scopeAlly);
-    const scopeOneOpponent = (scopeSingle && scopeOpponent);
-
-    // apply item effects based on scope.
-    if (scopeSelf || scopeOneAlly)
-    {
-      this.applyToolToPlayer(itemId);
-    }
-    else if (scopeEverything)
-    {
-      this.applyToolForAllAllies(itemId);
-      this.applyToolForAllOpponents(itemId);
-    }
-    else if (scopeOneOpponent)
-    {
-      this.applyToolForOneOpponent(itemId);
-    }
-    else if (scopeAllAllies)
-    {
-      this.applyToolForAllAllies(itemId);
-    }
-    else if (scopeAllOpponents)
-    {
-      this.applyToolForAllOpponents(itemId);
-    }
-    else if (scopeNone)
-    {
-      // do nothing, the item has no scope and must be relying purely on the skillId.
-    }
-    else
-    {
-      console.warn(`unhandled scope for usable item: [ ${gameAction.item().scope} ]!`);
-    }
-
-    // applies common events that may be a part of the item's effect.
-    gameAction.applyGlobal();
-
-    // create the log for the item use.
-    this.createToolLog(item);
-
-    // extract the cooldown and skill id from the item.
-    const {
-      jabsCooldown: itemCooldown,
-      jabsSkillId: itemSkillId
-    } = item;
-
-    // it was an item with a skill attached.
-    if (itemSkillId)
-    {
-      const mapAction = this.createJabsActionFromSkill(itemSkillId);
-      mapAction.forEach(action =>
-      {
-        action.setCooldownType(JABS_Button.UsableItem);
-        $jabsEngine.executeMapAction(this, action);
-      });
-    }
-
-    // if the last item was consumed, unequip it.
-    if (!isLoot && !$gameParty.items()
-      .includes(item))
-    {
-      // remove the item from the slot.
-      battler.getSkillSlotManager()
-        .clearSlot(JABS_Button.UsableItem);
-
-      // build a log for it.
-      const lastUsedItemLog = new LootLogBuilder()
-        .setupUsedLastItem(item.id)
-        .build();
-      $lootLogManager.addLog(lastUsedItemLog);
-    }
-    else
-    {
-      // it is an item with a custom cooldown.
-      if (itemCooldown)
-      {
-        if (!isLoot) this.modCooldownCounter(JABS_Button.UsableItem, itemCooldown);
-      }
-
-      // it was an item, didn't have a skill attached, and didn't have a cooldown.
-      if (!itemCooldown && !itemSkillId && !isLoot)
-      {
-        this.modCooldownCounter(JABS_Button.UsableItem, J.ABS.DefaultValues.CooldownlessItems);
-      }
-    }
+    this.applyToolItemEffects(itemId, JABS_Button.UsableItem, isLoot);
   };
 
   /**

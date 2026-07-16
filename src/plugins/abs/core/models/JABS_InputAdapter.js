@@ -192,7 +192,7 @@ class JABS_InputAdapter
       .getEquippedSkillId(JABS_Button.Tool);
 
     // perform tool effects!
-    jabsBattler.applyToolEffects(toolId);
+    jabsBattler.applyToolItemEffects(toolId, JABS_Button.Tool);
   }
 
   /**

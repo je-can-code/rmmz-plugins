@@ -1314,10 +1314,13 @@ Game_Action.prototype.absorbDamageIntoShield = function(shieldState, target, ove
 	let pendingBonusDamage = bonusDamage;
 	while (remainingDamage > 0 || pendingBonusDamage > 0) {
 		const { shield: updatedShield } = shieldState;
-		if (!updatedShield || updatedShield.getCurrent() <= 0) {
+		if (!updatedShield) {
 			break;
 		}
 		const before = updatedShield.getCurrent();
+		if (before <= 0) {
+			break;
+		}
 		const maxAbsorbThisTick = before;
 		const absorbPower = remainingDamage + pendingBonusDamage;
 		const absorbed = Math.min(absorbPower, maxAbsorbThisTick);

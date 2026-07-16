@@ -20,6 +20,9 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
       },
     };
 
+    // bare RMMZ-style global (not imported by Game_Player.js- loaded elsewhere at runtime).
+    globalThis.JABS_Button = { Tool: 'Tool' };
+
     function Game_Player()
     {
     }
@@ -553,19 +556,19 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
 
   describe('useOnPickup', () =>
   {
-    it('applies tool effects to player1', () =>
+    it('applies tool-item effects to player1 using the Tool button', () =>
     {
       // Arrange
       const player = buildPlayer();
-      const applyToolEffects = vi.fn();
-      globalThis.$jabsEngine.getPlayer1.mockReturnValue({ applyToolEffects });
+      const applyToolItemEffects = vi.fn();
+      globalThis.$jabsEngine.getPlayer1.mockReturnValue({ applyToolItemEffects });
       const lootData = { id: 7 };
 
       // Act
       player.useOnPickup(lootData);
 
       // Assert
-      expect(applyToolEffects).toHaveBeenCalledWith(7, true);
+      expect(applyToolItemEffects).toHaveBeenCalledWith(7, JABS_Button.Tool, true);
     });
   });
 
