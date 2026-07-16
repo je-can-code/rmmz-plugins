@@ -272,28 +272,16 @@ Game_System.prototype.resolveJabsControllerKey = function(controller, index)
  */
 Game_System.prototype.initializeJabsInputForLegacySaveIfMissing = function()
 {
-  // Ensure the JABS input scaffolding exists on loaded saves.
+  // Ensure the JABS input scaffolding exists on loaded saves- this unconditionally seeds
+  // this._j._abs._input._mappings/._bindings to {} when missing, so both reads below are always
+  // real (possibly-empty) objects, never null/undefined.
   this.initJabsInputConfigMembers();
 
-  // Read the mappings dictionary if available, otherwise null.
-  const mappingsDict = (this._j && this._j._abs && this._j._abs._input)
-    ? this._j._abs._input._mappings
-    : null;
-
-  // Read the bindings dictionary if available, otherwise null.
-  const bindingsDict = (this._j && this._j._abs && this._j._abs._input)
-    ? this._j._abs._input._bindings
-    : null;
-
   // Determine if any mappings exist in the save.
-  const hasMappings = mappingsDict
-    ? Object.keys(mappingsDict).length > 0
-    : false;
+  const hasMappings = Object.keys(this._j._abs._input._mappings).length > 0;
 
   // Determine if any bindings exist in the save.
-  const hasBindings = bindingsDict
-    ? Object.keys(bindingsDict).length > 0
-    : false;
+  const hasBindings = Object.keys(this._j._abs._input._bindings).length > 0;
 
   // If neither mappings nor bindings exist, initialize defaults for old saves.
   if (hasMappings === false && hasBindings === false)

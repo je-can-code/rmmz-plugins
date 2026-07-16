@@ -4,10 +4,10 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 /**
  * JABS_AllyAI.js is a genuine ES `class` extending the bare-global `JABS_AI` (the shipped runtime
  * concatenates core/abs ahead of this ext pack, so it's a bare global here, not an import).
- * `JABS_Battler`, `RPGManager`, and `SerializableRegistry` are also bare globals this file reads,
- * stubbed directly per the unit-tier convention.
+ * `RPGManager` and `SerializableRegistry` are also bare globals this file reads, stubbed directly
+ * per the unit-tier convention.
  */
-describe('JABS_AllyAI (unit, JABS_AI/JABS_Battler/RPGManager stubbed)', () =>
+describe('JABS_AllyAI (unit, JABS_AI/RPGManager stubbed)', () =>
 {
   /** @type {typeof import('../../../../../../src/plugins/abs/ext/allyai/_models/JABS_AllyAI.js').default} */
   let JABS_AllyAI;
@@ -57,7 +57,6 @@ describe('JABS_AllyAI (unit, JABS_AI/JABS_Battler/RPGManager stubbed)', () =>
     };
     globalThis.JABS_AI = JABS_AI;
 
-    globalThis.JABS_Battler = { closeDistance: 1.5, farDistance: 3.5 };
     globalThis.RPGManager = { chanceIn100: vi.fn(() => false) };
     globalThis.Math.randomInt = vi.fn(() => 0);
     globalThis.SerializableRegistry = { register: vi.fn() };
@@ -234,34 +233,6 @@ describe('JABS_AllyAI (unit, JABS_AI/JABS_Battler/RPGManager stubbed)', () =>
       expect(ai.getLeashMultiplier()).toEqual(0.6);
     });
 
-    // _spacing can only ever be 0/1/2 through this class's own public API (applyPreset/initMembers
-    // always assign a valid Spacing enum value), so these `?? fallback` branches are unreachable
-    // through normal usage- but this class is JsonEx-serialized into actor save data, so a
-    // corrupted or stale save could plausibly restore an out-of-range value directly onto the
-    // instance property. Testing the defensive fallback itself, not a normal-usage path.
-    it('getCloseDistance() falls back to the JABS_Battler default for an out-of-range spacing value', () =>
-    {
-      const ai = new JABS_AllyAI();
-      ai._spacing = 99;
-
-      expect(ai.getCloseDistance()).toEqual(1.5);
-    });
-
-    it('getFarDistance() falls back to the JABS_Battler default for an out-of-range spacing value', () =>
-    {
-      const ai = new JABS_AllyAI();
-      ai._spacing = 99;
-
-      expect(ai.getFarDistance()).toEqual(3.5);
-    });
-
-    it('getLeashMultiplier() falls back to a neutral 1.0 for an out-of-range spacing value', () =>
-    {
-      const ai = new JABS_AllyAI();
-      ai._spacing = 99;
-
-      expect(ai.getLeashMultiplier()).toEqual(1.0);
-    });
   });
 
   describe('wrapSupportSkillId()', () =>

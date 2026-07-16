@@ -368,7 +368,7 @@ class JABS_AllyAI
   getCloseDistance()
   {
     if (this._doNothing) return JABS_AllyAI.DoNothingCloseDistance;
-    return JABS_AllyAI.CloseDistances[this._spacing] ?? JABS_Battler.closeDistance;
+    return JABS_AllyAI.CloseDistances[this._spacing];
   }
 
   /**
@@ -379,7 +379,7 @@ class JABS_AllyAI
   getFarDistance()
   {
     if (this._doNothing) return JABS_AllyAI.DoNothingFarDistance;
-    return JABS_AllyAI.FarDistances[this._spacing] ?? JABS_Battler.farDistance;
+    return JABS_AllyAI.FarDistances[this._spacing];
   }
 
   /**
@@ -390,7 +390,7 @@ class JABS_AllyAI
   getLeashMultiplier()
   {
     if (this._doNothing) return JABS_AllyAI.DoNothingLeashMultiplier;
-    return JABS_AllyAI.LeashMultipliers[this._spacing] ?? 1.0;
+    return JABS_AllyAI.LeashMultipliers[this._spacing];
   }
   //endregion spacing helpers
 

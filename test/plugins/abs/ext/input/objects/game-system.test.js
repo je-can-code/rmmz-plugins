@@ -345,10 +345,10 @@ describe('J-ABS-Input Game_System (unit, all downstream dependencies mocked)', (
       expect(globalThis.Input.ensureRemapBootstrapped).not.toHaveBeenCalled();
     });
 
-    it('treats an uninitialized _j namespace as having no mappings or bindings', () =>
+    it('seeds defaults from a completely uninitialized instance (no _j namespace at all yet)', () =>
     {
-      // a legacy save's Game_System row won't have `_j` at all until this method runs, so this
-      // covers the ternary's false branch for both the mappings and bindings reads.
+      // covers the method running on a genuinely fresh instance, before its own
+      // initJabsInputConfigMembers() call has ever seeded the _j._abs._input namespace.
       const system = buildSystem();
       globalThis.JABS_InputAdapter.getAllControllers.mockReturnValue([]);
 
