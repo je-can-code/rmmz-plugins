@@ -1,5 +1,5 @@
 ---
-status: open
+status: done
 area: architecture
 ---
 
@@ -156,3 +156,50 @@ Today slip ignores shields. Revisit during revamp:
   at 2 ticks/sec — reconcile during revamp so authored "per 5 seconds" matches player-visible DPS.
 - CA food chain tail states may use slip-like tags; ensure revamp does not break food regen semantics
   (food uses state tags + expire chains, not this hook).
+
+## Resolution
+
+Shipped, in a narrower form than the original proposal. The tick-interval refactor referenced in this doc's
+"Source" section had already happened by the time this was picked back up — `processStateRegens` /
+`STATE_SLIP_PER_TICK_DIVISOR` no longer exist; ticking is per-`JABS_State`, dynamically resolved via
+`getTickInterval()`. That refactor's own docs had gone stale, which is what triggered this pass:
+
+- **Docs/math reconciled**: confirmed slip VAL applies in full every tick (no hidden division) — this was
+  intentional, not a bug (the old "per five seconds / 20 ticks" cookbook prose was simply never updated).
+  Rewrote the SLIP DAMAGE / TICK SPEED sections in `_annotations.js` and `docs/notetag-reference.md` to
+  match. Bumped the shipped `defaultStateTickInterval` default from 30 to 60 frames (1 tick/sec).
+- **Naming cleanup**: removed the misleading `PerFive` suffix from every slip getter/local
+  (`jabsSlipHpFlatPerFive` → `jabsSlipHpFlat`, etc.) across `RPG_State.js`, `JABS_Battler.js`,
+  `Window_PassiveDetail.js` (which was also displaying a stale `"/ 5s"` to players — fixed to `"/ tick"`).
+- **DoT/HoT amplification shipped** (the core ask of "Amplification tag families"): `<dotAmpRate:N>` /
+  `<hotAmpRate:N>` (battler-wide, summed off the *source's* notes) and `<thisDotAmpRate:N>` /
+  `<thisHotAmpRate:N>` (skill-scoped). `applyDamageOverTimeAmp`/`applyHealingOverTimeAmp` in
+  `JABS_Battler.js` are real now, not TODO stubs.
+- **`sourceSkill` on `JABS_State`**: a live skill-object reference (not just an id, so `<skillTransform>`
+  overlays are captured correctly), stamped at `Game_Action.applyStateEffect` and threaded through
+  `JABS_StateBuilder`. Confirmed `$jabsEngine`/`JABS_State` are pure runtime state (never serialized into
+  saves), so holding a live reference is safe. Expire-chain follow-ups, viral spread, and stack-conversion
+  all correctly inherit the originating `sourceSkill` — verified each call site individually.
+- **Natural regen (HRG/MRG/TRG) got the same treatment as a side effect**: `calculatedRegen`'s hardcoded
+  `×0.05` (1/20, assuming a stale "20 ticks per 5 seconds" cadence) was removed — natural regen now applies
+  in full every tick, consistent with slip's philosophy. This is a real ~20x balance jump at today's tick
+  rate; confirmed correct against live playtest numbers (including the in-combat reduction multiplier).
+  The tick-interval formula was extracted to `Game_Battler.prototype.getNaturalRegenTickInterval()` so both
+  `JABS_Battler` and status-menu UI share one source of truth.
+- **UI fixes**: `Window_StatusStatBreakdown.js` (drill-down panel) and `_base/models/ParameterDefinition.js`
+  (`prettyValue`, the compact grid's `"X.X/s"` label) both had independent, mutually-inconsistent stale
+  `/5` math — neither matched the runtime nor each other. Both now compute a true per-second value from the
+  actor's actual resolved tick interval.
+
+**Deferred, not done** (descoped after discussion, not forgotten):
+
+- Per-instance `sourceCastTimeFrames` / `dotPotencyRate` stamping, and the cast-time → DoT-potency tag
+  family (`<castTimeDotPotency:N>`) — no concrete skill needed this yet; `sourceSkill` alone unblocks the
+  skill-scoped amp tags without the heavier stamping machinery.
+- `<viralInheritsPotency>` for P3-3 plague spread — moot until potency stamping (above) exists.
+- Shield/DoT interaction policy (Option A vs B) — untouched, still unshielded by default.
+- Splitting DoT/regen into fully separate popup/log channels — slip ticks still share `onSlipRegenTick`.
+
+If any of those become load-bearing for a real skill/mastery, they should be a fresh backlog item rather
+than reopening this one — this item's actual friction point (stale docs blocking confident DoT amp design)
+is resolved.
