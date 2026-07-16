@@ -2515,6 +2515,14 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(engine.actionTravelDirectionToSpritePatternDirection(999, 999)).toBe(2);
     });
 
+    it('falls back to DOWN when the travel direction is a valid diagonal but the casted cardinal is unrecognized', () =>
+    {
+      // travelDir=1 passes the early diagonal guard and reaches the switch(casted), but casted=999
+      // matches none of the 2/4/6/8 cases- exercises the switch's outer default arm.
+      const engine = new JABS_Engine();
+      expect(engine.actionTravelDirectionToSpritePatternDirection(1, 999)).toBe(2);
+    });
+
     it.each([
       [ 2, 1, 2 ], [ 2, 3, 2 ], [ 2, 7, 8 ], [ 2, 9, 8 ],
       [ 4, 1, 4 ], [ 4, 7, 4 ], [ 4, 3, 6 ], [ 4, 9, 6 ],
@@ -3858,6 +3866,67 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('getFlatKnockbackAmpPct', () =>
+  {
+    it('sums the caster\'s knockbackAmp note tags', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = { getBattler: () => ({ getAllNotes: () => 'notes' }) };
+      globalThis.RPGManager.getSumFromAllNotesByRegex.mockReturnValue(15);
+
+      expect(engine.getFlatKnockbackAmpPct(caster)).toBe(15);
+    });
+
+    it('defaults to 0 when untagged', () =>
+    {
+      const engine = new JABS_Engine();
+      const caster = { getBattler: () => ({ getAllNotes: () => 'notes' }) };
+      globalThis.RPGManager.getSumFromAllNotesByRegex.mockReturnValue(null);
+
+      expect(engine.getFlatKnockbackAmpPct(caster)).toBe(0);
+    });
+  });
+
+  describe('getThisKnockbackAmpPct', () =>
+  {
+    it('reads the thisKnockbackAmp tag from the base skill', () =>
+    {
+      const engine = new JABS_Engine();
+      const skill = {};
+      const action = { getBaseSkill: () => skill };
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(25);
+
+      expect(engine.getThisKnockbackAmpPct(action)).toBe(25);
+    });
+
+    it('defaults to 0 when untagged', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = { getBaseSkill: () => ({}) };
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(null);
+
+      expect(engine.getThisKnockbackAmpPct(action)).toBe(0);
+    });
+  });
+
+  describe('getKnockbackAmplificationPct', () =>
+  {
+    it('sums the flat, this-skill, and proximity knockback bonuses', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.getFlatKnockbackAmpPct = vi.fn(() => 10);
+      engine.getThisKnockbackAmpPct = vi.fn(() => 20);
+      engine.getProximityKnockbackBonusPct = vi.fn(() => 30);
+      const caster = {};
+      const action = {};
+
+      expect(engine.getKnockbackAmplificationPct(caster, action)).toBe(60);
+      expect(engine.getFlatKnockbackAmpPct).toHaveBeenCalledWith(caster);
+      expect(engine.getThisKnockbackAmpPct).toHaveBeenCalledWith(action);
+      expect(engine.getProximityKnockbackBonusPct).toHaveBeenCalledWith(caster);
+    });
+  });
+
   describe('checkKnockback', () =>
   {
     function buildEngine(overrides = {})
@@ -4007,6 +4076,38 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       expect(targetSprite.jump).toHaveBeenCalledWith(0, 4);
       expect(targetSprite.walkInDirectionClamped).not.toHaveBeenCalled();
+    });
+
+    it('computes a negative x offset for a LEFT-facing knockback', () =>
+    {
+      const engine = buildEngine();
+      const targetSprite = buildTargetSprite();
+      const target = buildTarget(targetSprite);
+      const action = buildAction({
+        getKnockback: () => 4,
+        getBaseSkill: () => ({ jabsIgnoreTerrain: true }),
+        getActionSprite: () => ({ direction: () => J.ABS.Directions.LEFT }),
+      });
+
+      engine.checkKnockback(action, target);
+
+      expect(targetSprite.jump).toHaveBeenCalledWith(-4, 0);
+    });
+
+    it('computes a positive x offset for a RIGHT-facing knockback', () =>
+    {
+      const engine = buildEngine();
+      const targetSprite = buildTargetSprite();
+      const target = buildTarget(targetSprite);
+      const action = buildAction({
+        getKnockback: () => 4,
+        getBaseSkill: () => ({ jabsIgnoreTerrain: true }),
+        getActionSprite: () => ({ direction: () => J.ABS.Directions.RIGHT }),
+      });
+
+      engine.checkKnockback(action, target);
+
+      expect(targetSprite.jump).toHaveBeenCalledWith(4, 0);
     });
 
     it('walks tile-by-tile toward the destination, stopping at the last passable tile, for a terrain-respecting skill', () =>
