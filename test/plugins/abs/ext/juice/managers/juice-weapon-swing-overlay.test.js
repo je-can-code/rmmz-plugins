@@ -335,13 +335,6 @@ describe('JuiceWeaponSwingOverlay (unit, all downstream dependencies mocked)', (
       expect(() => JuiceWeaponSwingOverlay.play(parentSprite, 5, 0.5, 20, 'bash', 120, dir)).not.toThrow();
     });
 
-    it('uses the wider spacing constants for non-tight-orbit motions', () =>
-    {
-      const parentSprite = buildParentSprite();
-
-      expect(() => JuiceWeaponSwingOverlay.play(parentSprite, 5, 0.5, 20, 'stab-forward', 120, 4)).not.toThrow();
-    });
-
     it('falls back to the left-facing profile when even the character facing is invalid', () =>
     {
       // an invalid swingDirection argument falls back to parentSprite._character.direction()-

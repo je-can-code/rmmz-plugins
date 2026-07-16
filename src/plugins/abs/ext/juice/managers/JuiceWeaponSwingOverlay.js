@@ -43,23 +43,24 @@ class JuiceWeaponSwingOverlay
 
   /**
    * Derives a direction-aware overlay placement so the icon reads like it's coming from the hand.
-   * Used for spin / stab (arc presets use orbit math instead).
+   * Used for spin / stab (arc presets use orbit math instead- this is only ever called from play()'s
+   * non-arc branch, so no motion-type parameter is needed here).
    * @param {Sprite_Character} parentSprite The character sprite receiving the overlay.
-   * @param {string} motionType Preset key (kebab-case).
    * @param {number} direction RMMZ 8-dir (same snapshot as the swing arc uses).
    * @returns {{ x: number, y: number, scale: number }}
    */
-  static #buildSwingProfile(parentSprite, motionType, direction)
+  static #buildSwingProfile(parentSprite, direction)
   {
+    // this method is only ever reached from play()'s non-arc branch- #isArcMotion() has already
+    // routed Arc/ArcReverse through the orbit-pose math instead, so `motionType` here can never be
+    // one of those two. The "tight orbit" spacing constants that used to key off that comparison
+    // were therefore dead code; collapsed to the (only reachable) wide-spacing values directly.
     const ph = parentSprite.patternHeight();
 
-    const tightOrbit = motionType === JuiceWeaponSwingMotionEffect.MotionTypes.Arc
-      || motionType === JuiceWeaponSwingMotionEffect.MotionTypes.ArcReverse;
-
-    const tw = tightOrbit ? 20 : 26;
-    const ySide = -ph * (tightOrbit ? 0.48 : 0.52);
-    const yDown = -ph * (tightOrbit ? 0.18 : 0.22);
-    const yUp = -ph * (tightOrbit ? 0.76 : 0.82);
+    const tw = 26;
+    const ySide = -ph * 0.52;
+    const yDown = -ph * 0.22;
+    const yUp = -ph * 0.82;
 
     const card = (horiz, vert, sc) =>
     {
@@ -79,7 +80,7 @@ class JuiceWeaponSwingOverlay
 
     const left = card(-tw, ySide, 1.65);
     const right = card(tw, ySide, 1.65);
-    const down = card(tightOrbit ? 6 : 10, yDown, 1.5);
+    const down = card(10, yDown, 1.5);
     const up = card(0, yUp, 1.5);
 
     // continue the routine with the next policy step.
@@ -223,7 +224,7 @@ class JuiceWeaponSwingOverlay
     }
     else
     {
-      const profile = JuiceWeaponSwingOverlay.#buildSwingProfile(parentSprite, motionType, swingDir);
+      const profile = JuiceWeaponSwingOverlay.#buildSwingProfile(parentSprite, swingDir);
       const juiceDy = J.ABS.EXT.JUICE.Metadata.spriteJuiceVerticalOffsetPixels;
       const neutralX = profile.x;
       const neutralY = profile.y + juiceDy;
@@ -278,7 +279,7 @@ class JuiceWeaponSwingOverlay
       }
       else if (motionType === JuiceWeaponSwingMotionEffect.MotionTypes.Present)
       {
-        const presentProf = JuiceWeaponSwingOverlay.#buildSwingProfile(parentSprite, motionType, 8);
+        const presentProf = JuiceWeaponSwingOverlay.#buildSwingProfile(parentSprite, 8);
         const presentJuiceDy = J.ABS.EXT.JUICE.Metadata.spriteJuiceVerticalOffsetPixels;
         const px = presentProf.x;
         const py = presentProf.y + presentJuiceDy;
