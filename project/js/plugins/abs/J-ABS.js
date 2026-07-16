@@ -19341,9 +19341,6 @@ var JABS_Engine = class JABS_Engine {
 	getCollisionTargets(jabsAction) {
 		const gameAction = jabsAction.getAction();
 		const casterJabsBattler = jabsAction.getCaster();
-		if (gameAction.isForUser()) {
-			return [casterJabsBattler];
-		}
 		const allyTarget = casterJabsBattler.getAllyTarget();
 		if (allyTarget && gameAction.isForOne()) {
 			if (allyTarget.canActionConnect() && allyTarget.isWithinScope(jabsAction, allyTarget, false)) {

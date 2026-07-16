@@ -4363,13 +4363,6 @@ class JABS_Engine
     const gameAction = jabsAction.getAction();
     const casterJabsBattler = jabsAction.getCaster();
 
-    // self-targeting takes FIRST PRIORITY.
-    if (gameAction.isForUser())
-    {
-      // return only the caster as the target.
-      return [ casterJabsBattler ];
-    }
-
     // grab the allied target selected by the caster of this action.
     const allyTarget = casterJabsBattler.getAllyTarget();
 

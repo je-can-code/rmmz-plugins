@@ -6153,16 +6153,36 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       }, overrides);
     }
 
-    it('returns only the caster for a self-targeting action', () =>
+    it('hits an in-range candidate for a self-targeting, direct, non-spatial action', async () =>
     {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const caster = { canActionConnect: () => true, isWithinScope: () => true, isInanimate: () => false, id: 'caster' };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ caster ]);
       const engine = new JABS_Engine();
-      const caster = { id: 'caster' };
       const jabsAction = buildJabsAction({
-        getAction: () => ({ isForUser: () => true }),
-        getCaster: () => caster,
+        getAction: () => ({ isForUser: () => true, isForOne: () => true }),
+        isDirectAction: () => true,
+        getProximity: () => 0,
+        getCaster: () => ({ getAllyTarget: () => null, isEnemy: () => false, getX: () => 0, getY: () => 0 }),
       });
 
       expect(engine.getCollisionTargets(jabsAction)).toEqual([ caster ]);
+    });
+
+    it('does not hit a candidate that fails the scope check for a self-targeting, direct, non-spatial action', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const bystander = { canActionConnect: () => true, isWithinScope: () => false, isInanimate: () => false };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ bystander ]);
+      const engine = new JABS_Engine();
+      const jabsAction = buildJabsAction({
+        getAction: () => ({ isForUser: () => true, isForOne: () => true }),
+        isDirectAction: () => true,
+        getProximity: () => 0,
+        getCaster: () => ({ getAllyTarget: () => null, isEnemy: () => false, getX: () => 0, getY: () => 0 }),
+      });
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([]);
     });
 
     it('returns only the ally target for a single-target ally-targeted action that can connect', () =>
