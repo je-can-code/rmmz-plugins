@@ -96,7 +96,7 @@ class Window_SdpParameterList
       ? definition.description()
       : [ String.empty ];
     const prettyValue = definition
-      ? definition.prettyValue(paramValue, false)
+      ? definition.prettyValue(paramValue, false, this.currentActor)
       : Math.trunc(paramValue).toString();
 
     // determine the modifier data to display.

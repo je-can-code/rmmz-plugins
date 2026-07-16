@@ -119,7 +119,7 @@ class Window_StatusStatBreakdown
     const color = ColorManager.parameterColor(parameterKey);
 
     // final value mirrors Page 1 formatting.
-    const finalValue = new StatusParameter(actor.parameter(parameterKey), parameterKey).prettyValue(false);
+    const finalValue = new StatusParameter(actor.parameter(parameterKey), parameterKey, actor).prettyValue(false);
 
     // layout.
     const gutter = 16;
@@ -393,7 +393,9 @@ class Window_StatusStatBreakdown
 
   /**
    * Renders the xparam breakdown for the three repurposed regen stats (HRG/MRG/TRG).
-   * These use flat native units and are displayed as "per 5s" values for readability.
+   * These use flat native units and are displayed as "per second" values for readability, using
+   * this actor's own currently-resolved tick interval so the preview stays accurate regardless of
+   * tick speed modifiers.
    * The section includes Baseline, Natural (growth), Natural (buffs), Traits (+), and SDP (Panels).
    * @param {Game_Actor} actor The actor whose regen xparam is being explained.
    * @param {number} xId The xparam id (7=HRG, 8=MRG, 9=TRG).
@@ -443,29 +445,29 @@ class Window_StatusStatBreakdown
     // Begin drawing regen layout.
     let cursorY = y;
 
-    // Baseline section: explicit “per 5s” labeling and a 0 baseline.
+    // Baseline section: explicit “per second” labeling and a 0 baseline.
     cursorY = this.drawSectionTitle(x, cursorY, w, 'Baseline');
-    this.drawKeyValue(x + 12, cursorY, w - 12, 'Baseline', this.formatPerFiveFlat(0), 'left');
+    this.drawKeyValue(x + 12, cursorY, w - 12, 'Baseline', this.formatPerSecondFlat(0, actor), 'left');
     cursorY += this.lineHeight() + 6;
 
-    // Natural (Growths): only if non-zero. Show delta as flat-per-5s.
+    // Natural (Growths): only if non-zero. Show delta as flat-per-second.
     if (natGrowthDeltaNative !== 0)
     {
       cursorY = this.drawSectionTitle(x, cursorY, w, 'Natural');
-      const growthText = this.formatPlusRatePerFive(natGrowthDeltaNative, actor.xParamGrowthRate(xId));
+      const growthText = this.formatPlusRatePerSecond(natGrowthDeltaNative, actor.xParamGrowthRate(xId), actor);
       this.drawKeyValue(x + 12, cursorY, w - 12, '+ Natural (Growths)', growthText, 'left');
       cursorY += this.lineHeight() + 6;
     }
 
-    // Natural (Buffs): only if non-zero. Show delta as flat-per-5s.
+    // Natural (Buffs): only if non-zero. Show delta as flat-per-second.
     if (natBuffDeltaNative !== 0)
     {
-      const buffText = this.formatSignedFlatPerFive(natBuffDeltaNative);
+      const buffText = this.formatSignedFlatPerSecond(natBuffDeltaNative, actor);
       this.drawKeyValue(x + 12, cursorY, w - 12, '+ Natural (Buffs)', buffText, 'left');
       cursorY += this.lineHeight() + 6;
     }
 
-    // Traits (+) section: convert editor decimals to native (*100) and draw per‑5s.
+    // Traits (+) section: convert editor decimals to native (*100) and draw per‑second.
     const traitRows = [
       {
         key: '+ Actor',
@@ -487,16 +489,16 @@ class Window_StatusStatBreakdown
       .filter(r => r.valueNative !== 0)
       .map(r => ({
         key: r.key,
-        value: this.formatPerFiveFlat(r.valueNative)
+        value: this.formatPerSecondFlat(r.valueNative, actor)
       }));
 
     cursorY = this.drawSectionWithRows(x, cursorY, w, 'Traits (+)', traitRows);
 
-    // SDP (Panels) for regen — draw in flat-per-5s terms.
+    // SDP (Panels) for regen — draw in flat-per-second terms.
     if (sdpPanelDeltas.length > 0 && sdpTotalFlat !== 0)
     {
-      const totalText = this.formatSignedFlatPerFive(sdpTotalFlat);
-      cursorY = this.drawSdpPanelsFlatPerFiveSection(x, cursorY, w, totalText, sdpPanelDeltas);
+      const totalText = this.formatSignedFlatPerSecond(sdpTotalFlat, actor);
+      cursorY = this.drawSdpPanelsFlatPerSecondSection(x, cursorY, w, totalText, sdpPanelDeltas, actor);
     }
 
     // Return small tailing gap.
@@ -1279,7 +1281,7 @@ class Window_StatusStatBreakdown
         const { perRank } = pp;
         const curRank = ranking.currentRank;
 
-        // if flat, keep native units (no /100). Example: +3 regen per 5s is represented natively.
+        // if flat, keep native units (no /100). Example: +3 regen per tick is represented natively.
         if (isFlat)
         {
           const add = (curRank * perRank);
@@ -1502,15 +1504,16 @@ class Window_StatusStatBreakdown
   }
 
   /**
-   * An SDP (Panels) section renderer for regen showing flat values per 5s.
+   * An SDP (Panels) section renderer for regen showing flat values per second.
    * @param {number} x The x coordinate.
    * @param {number} y The y coordinate to start drawing.
    * @param {number} w The width.
-   * @param {string} totalValueText The right-aligned signed total in per‑5s units.
+   * @param {string} totalValueText The right-aligned signed total in per‑second units.
    * @param {{ name:string, iconIndex:number, rarity:number, delta:number }[]} panels The per-panel rows.
+   * @param {Game_Actor} actor The actor whose tick cadence resolves the per‑second conversion.
    * @returns {number} The next y after drawing (or unchanged if skipped).
    */
-  drawSdpPanelsFlatPerFiveSection(x, y, w, totalValueText, panels)
+  drawSdpPanelsFlatPerSecondSection(x, y, w, totalValueText, panels, actor)
   {
     // Determine if the section is relevant at all.
     const anyPanels = panels && panels.length > 0;
@@ -1522,11 +1525,11 @@ class Window_StatusStatBreakdown
     // Draw the section title.
     let cursorY = this.drawSectionTitle(x, y, w, 'SDP (Panels)');
 
-    // Draw the total row as flat-per-5s.
+    // Draw the total row as flat-per-second.
     this.drawKeyValue(x + 12, cursorY, w - 12, '+ Total ', totalValueText, 'left');
     cursorY += this.lineHeight();
 
-    // Draw each panel entry formatted as flat-per-5s.
+    // Draw each panel entry formatted as flat-per-second.
     panels.forEach(panel =>
     {
       const { name } = panel;
@@ -1539,12 +1542,12 @@ class Window_StatusStatBreakdown
       if (panel.rateDec)
       {
         const pctText = StatusHelper.toPercentString(panel.rateDec * 100, true);
-        const flatText = this.formatSignedFlatPerFive(panel.delta);
+        const flatText = this.formatSignedFlatPerSecond(panel.delta, actor);
         valueText = `${pctText} (${flatText})`;
       }
       else
       {
-        valueText = this.formatSignedFlatPerFive(panel.delta);
+        valueText = this.formatSignedFlatPerSecond(panel.delta, actor);
       }
 
       // Draw the panel line with icon and rarity coloring.
@@ -1562,54 +1565,65 @@ class Window_StatusStatBreakdown
   }
 
   /**
-   * Formats a native flat value as a per‑5s display string, with simple rounding.
-   * Example: native 6 → "1.2" (per 5 seconds).
-   * @param {number} nativeFlat The native flat amount (pre‑division).
+   * Formats a native flat value (a per-tick amount, in the same units {@link JABS_Battler
+   * #calculatedRegen} applies in full on every natural regen tick) as a per‑second display
+   * string. Converts using this actor's own currently-resolved tick interval- rather than
+   * assuming a fixed tick count- so the preview stays accurate regardless of tick speed
+   * modifiers from gear/passives/states.
+   * Example: native 6 (per tick) at the default 60-frame (1 tick/sec) interval → "6.0" (per second).
+   * @param {number} nativeFlat The native flat per-tick amount.
+   * @param {Game_Actor} actor The actor whose tick cadence resolves the conversion.
    * @returns {string}
    */
-  formatPerFiveFlat(nativeFlat)
+  formatPerSecondFlat(nativeFlat, actor)
   {
-    // Convert native units to a per‑5s value.
-    const perFive = nativeFlat / 5;
+    // resolve this actor's actual tick interval, then convert frames-per-tick to ticks-per-second.
+    const intervalFrames = actor.getNaturalRegenTickInterval();
+    const ticksPerSecond = 60 / intervalFrames;
 
-    // Show to one decimal place for readability (ex: 2.4 per 5s).
-    const text = perFive.toFixed(1);
+    // scale the fixed per-tick amount by how many ticks land in one second.
+    const perSecond = nativeFlat * ticksPerSecond;
+
+    // show to one decimal place for readability (ex: 2.4 per second).
+    const text = perSecond.toFixed(1);
     return text;
   }
 
   /**
-   * Formats a native flat delta as a signed per‑5s string (ex: "+1.2").
-   * @param {number} nativeFlat The native flat delta (pre‑division).
+   * Formats a native flat delta as a signed per‑second string (ex: "+1.2").
+   * @param {number} nativeFlat The native flat per-tick delta.
+   * @param {Game_Actor} actor The actor whose tick cadence resolves the conversion.
    * @returns {string}
    */
-  formatSignedFlatPerFive(nativeFlat)
+  formatSignedFlatPerSecond(nativeFlat, actor)
   {
     // Determine sign character.
     const sign = nativeFlat >= 0
       ? '+'
       : String.empty;
 
-    // Convert to per‑5s with one decimal using the shared formatter.
-    const absPerFive = this.formatPerFiveFlat(Math.abs(nativeFlat));
+    // Convert to per‑second with one decimal using the shared formatter.
+    const absPerSecond = this.formatPerSecondFlat(Math.abs(nativeFlat), actor);
 
     // Prepend the sign to the absolute value.
-    return `${sign}${absPerFive}`;
+    return `${sign}${absPerSecond}`;
   }
 
   /**
-   * Formats NATURAL growth for regen as "<rate%> → +<per5s>" where the delta
-   * is expressed as per‑5s. Example: "+20% → +0.6".
+   * Formats NATURAL growth for regen as "<rate%> → +<perSecond>" where the delta
+   * is expressed as per‑second. Example: "+20% → +0.6".
    * @param {number} deltaNative The computed delta in native flat units.
    * @param {number} ratePercent The growth rate percent (for display only).
+   * @param {Game_Actor} actor The actor whose tick cadence resolves the conversion.
    * @returns {string}
    */
-  formatPlusRatePerFive(deltaNative, ratePercent)
+  formatPlusRatePerSecond(deltaNative, ratePercent, actor)
   {
     // Render the rate as a percent string (signed).
     const rateText = StatusHelper.toPercentString(ratePercent, true);
 
-    // Convert native delta to per‑5s text with sign.
-    const deltaText = this.formatSignedFlatPerFive(deltaNative);
+    // Convert native delta to per‑second text with sign.
+    const deltaText = this.formatSignedFlatPerSecond(deltaNative, actor);
 
     // Keep the regen NATURAL line concise.
     return `${rateText} → ${deltaText}`;

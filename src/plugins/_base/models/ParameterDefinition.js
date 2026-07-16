@@ -279,9 +279,12 @@ class ParameterDefinition
    * padding, and percent suffixes as dictated by the format and display policy.
    * @param {number} value The raw battler value to format.
    * @param {boolean=} withPadding True to apply zero-padding for styled stat columns; defaults to false.
+   * @param {Game_Battler=} actor The battler whose tick cadence resolves REGEN_PER_SECOND's
+   * conversion. Optional so `_base` stays decoupled from J-ABS; when omitted (or J-ABS isn't
+   * loaded), falls back to a neutral 1 tick/sec assumption rather than crashing.
    * @returns {string}
    */
-  prettyValue(value, withPadding = false)
+  prettyValue(value, withPadding = false, actor = null)
   {
     const sentinel = this.resolveDisplaySentinel(value);
 
@@ -295,9 +298,15 @@ class ParameterDefinition
 
     if (this.format === ParameterFormat.REGEN_PER_SECOND)
     {
-      const perSecond = (num / 5);
+      // num is a per-tick amount (see JABS_Battler#calculatedRegen)- convert to per-second using
+      // this actor's actual resolved tick interval rather than assuming a fixed tick count, so the
+      // preview stays accurate regardless of tick speed modifiers from gear/passives/states.
+      const ticksPerSecond = (actor && actor.getNaturalRegenTickInterval)
+        ? (60 / actor.getNaturalRegenTickInterval())
+        : 1;
+      const perSecond = num * ticksPerSecond;
 
-      // always one decimal so 4/s and 0.0/s read consistently on the status grid.
+      // always one decimal so 4.0/s and 0.0/s read consistently on the status grid.
       return `${perSecond.toFixed(1)}/s`;
     }
 

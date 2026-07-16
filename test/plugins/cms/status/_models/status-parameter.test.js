@@ -147,7 +147,7 @@ describe('StatusParameter (direct src import)', () =>
       const result = parameter.prettyValue(true);
 
       // Assert
-      expect(fakeDefinition.prettyValue).toHaveBeenCalledWith(100, true);
+      expect(fakeDefinition.prettyValue).toHaveBeenCalledWith(100, true, null);
       expect(result).toEqual('100');
     });
 

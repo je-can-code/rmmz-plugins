@@ -84,7 +84,8 @@ class AutoRuleManager
   }
 
   /**
-   * Evaluates every {@code enemiesNearby} rule on this battler while on the ABS map.
+   * Evaluates every {@code enemiesNearby} and {@code enemiesNearbyBelow} rule on this battler
+   * while on the ABS map.
    * @param {Game_Actor|Game_Enemy} battler - The battler whose rules may fire.
    */
   static processEnemiesNearbyRules(battler)
@@ -94,10 +95,14 @@ class AutoRuleManager
 
     // delegate to the main dispatch loop with the enemiesNearby condition kind.
     this.tryDispatch(battler, 'enemiesNearby');
+
+    // delegate to the main dispatch loop with the inverse enemiesNearbyBelow condition kind.
+    this.tryDispatch(battler, 'enemiesNearbyBelow');
   }
 
   /**
-   * Evaluates every {@code alliesNearby} rule on this battler while on the ABS map.
+   * Evaluates every {@code alliesNearby} and {@code alliesNearbyBelow} rule on this battler
+   * while on the ABS map.
    * @param {Game_Actor|Game_Enemy} battler - The battler whose rules may fire.
    */
   static processAlliesNearbyRules(battler)
@@ -107,6 +112,9 @@ class AutoRuleManager
 
     // delegate to the main dispatch loop with the alliesNearby condition kind.
     this.tryDispatch(battler, 'alliesNearby');
+
+    // delegate to the main dispatch loop with the inverse alliesNearbyBelow condition kind.
+    this.tryDispatch(battler, 'alliesNearbyBelow');
   }
 
   /**
@@ -322,7 +330,7 @@ class AutoRuleManager
       if (kind === 'move') continue;
 
       // proximity rules use a wider 4/5-tuple shape and require special handling.
-      if (kind === 'enemiesNearby' || kind === 'alliesNearby')
+      if (this.isProximityKind(kind))
       {
         // delegate proximity parsing and gate evaluation to the dedicated helper.
         this._tryDispatchProximityRule(battler, source, tupleIndex, id, kind, tuple);
@@ -397,17 +405,18 @@ class AutoRuleManager
   }
 
   /**
-   * Handles the 4/5-tuple proximity branch for {@code enemiesNearby} and {@code alliesNearby} conditions.
+   * Handles the 4/5-tuple proximity branch for {@code enemiesNearby}/{@code alliesNearby} and
+   * their {@code *Below} counterparts.
    * @param {Game_Actor|Game_Enemy} battler - The battler whose proximity is evaluated.
    * @param {RPG_BaseItem} source - The database row that declared the rule.
    * @param {number} tupleIndex - Zero-based index of this tuple on the source row.
    * @param {number} id - State id or skill id for this rule.
-   * @param {string} kind - The proximity condition kind (enemiesNearby or alliesNearby).
+   * @param {string} kind - The proximity condition kind; see {@link isProximityKind}.
    * @param {any[]} tuple - The full parsed tuple array from the authored tag.
    */
   static _tryDispatchProximityRule(battler, source, tupleIndex, id, kind, tuple)
   {
-    // parse the minimum nearby battler count required to trigger this rule.
+    // parse the count threshold that gates this rule.
     const minCount = Number(tuple[2]);
 
     // parse the cooldown in frames between dispatches for this rule.
@@ -421,22 +430,65 @@ class AutoRuleManager
       ? triggerTilesRaw
       : null;
 
-    // skip tuples that declare an invalid or zero minimum count.
+    // skip tuples that declare an invalid or zero count threshold.
     if (Number.isNaN(minCount) || minCount < 1) return;
 
     // skip tuples with invalid cooldown values.
     if (Number.isNaN(cooldownFrames) || cooldownFrames < 0) return;
 
     // count opposing or allied battlers in range depending on the condition kind.
-    const nearbyCount = kind === 'enemiesNearby'
-      ? PassiveRuleJabsAccess.nearbyEnemies(battler, triggerTiles).length
-      : PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler).length;
+    const nearbyCount = this.nearbyBattlersForKind(battler, kind, triggerTiles).length;
 
-    // the proximity gate fails — not enough battlers are in range yet.
-    if (nearbyCount < minCount) return;
+    // the proximity gate fails when this kind's comparison direction is not satisfied.
+    if (this.proximityGatePasses(nearbyCount, minCount, kind) === false) return;
 
     // the gate passed — attempt to dispatch through the frame-cooldown gate.
     this._tryDispatchRule(battler, source, tupleIndex, id, kind, cooldownFrames);
+  }
+
+  /**
+   * Whether a condition kind string is one of the proximity-gated kinds handled by
+   * {@link _tryDispatchProximityRule} instead of the standard frame-cooldown path.
+   * @param {string} kind - The condition kind to test.
+   * @returns {boolean} - True for enemiesNearby, alliesNearby, and their Below counterparts.
+   */
+  static isProximityKind(kind)
+  {
+    return kind === 'enemiesNearby' || kind === 'alliesNearby'
+      || kind === 'enemiesNearbyBelow' || kind === 'alliesNearbyBelow';
+  }
+
+  /**
+   * Resolves the JABS battler set a proximity kind counts/targets — opposing battlers for the
+   * enemy kinds, allied battlers (excluding self) for the ally kinds. The {@code Below} suffix
+   * only affects the gate comparison direction, not which set is measured.
+   * @param {Game_Actor|Game_Enemy} battler - The evaluating battler.
+   * @param {string} kind - The proximity condition kind; see {@link isProximityKind}.
+   * @param {number|null} triggerTiles - Optional explicit tile radius override.
+   * @returns {JABS_Battler[]} - The resolved battler set for this kind.
+   */
+  static nearbyBattlersForKind(battler, kind, triggerTiles)
+  {
+    return (kind === 'enemiesNearby' || kind === 'enemiesNearbyBelow')
+      ? PassiveRuleJabsAccess.nearbyEnemies(battler, triggerTiles)
+      : PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler);
+  }
+
+  /**
+   * Compares a resolved nearby-battler count against the tuple's threshold, honoring the
+   * {@code Below} suffix as an inversion of the default at-least-COUNT comparison.
+   * @param {number} nearbyCount - Battlers currently resolved in range.
+   * @param {number} minCount - The count threshold authored on the tuple.
+   * @param {string} kind - The proximity condition kind; see {@link isProximityKind}.
+   * @returns {boolean} - True when the gate for this kind passes.
+   */
+  static proximityGatePasses(nearbyCount, minCount, kind)
+  {
+    // *Below kinds pass while strictly under the threshold — the "nobody/nothing nearby" gates.
+    if (kind === 'enemiesNearbyBelow' || kind === 'alliesNearbyBelow') return nearbyCount < minCount;
+
+    // default kinds pass at or above the threshold.
+    return nearbyCount >= minCount;
   }
 
   /**

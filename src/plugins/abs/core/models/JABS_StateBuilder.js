@@ -54,6 +54,12 @@ class JABS_StateBuilder
    */
   #source = null;
 
+  /**
+   * The skill that was executing when the state was applied, if any.
+   * @type {RPG_Skill|null}
+   */
+  #sourceSkill = null;
+
   //endregion private fields
 
   /**
@@ -81,6 +87,7 @@ class JABS_StateBuilder
       this.#duration,
       this.#startingStacks,
       this.#source,
+      this.#sourceSkill,
     );
 
     // return the fully constructed state instance.
@@ -138,6 +145,20 @@ class JABS_StateBuilder
   {
     // assign the source battler.
     this.#source = source;
+
+    // return this for chaining.
+    return this;
+  }
+
+  /**
+   * Sets the skill that was executing when the state was applied.
+   * @param {RPG_Skill} sourceSkill The skill in scope at the moment of application.
+   * @returns {JABS_StateBuilder} This builder for chaining.
+   */
+  setSourceSkill(sourceSkill)
+  {
+    // assign the source skill.
+    this.#sourceSkill = sourceSkill;
 
     // return this for chaining.
     return this;

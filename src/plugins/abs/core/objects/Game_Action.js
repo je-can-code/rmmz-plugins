@@ -780,8 +780,8 @@ Game_Action.prototype.shouldTargetApplyResistances = function()
  */
 Game_Action.prototype.applyStateEffect = function(target, stateId)
 {
-  // apply the state with the attacker.
-  target.addState(stateId, this.subject());
+  // apply the state with the attacker and the skill/item currently executing.
+  target.addState(stateId, this.subject(), this.item());
 
   // flag the result as "success" of applying a state.
   this.makeSuccess(target);
@@ -794,8 +794,10 @@ Game_Action.prototype.applyStateEffect = function(target, stateId)
  * Combines perDebuffBuff (per-negative-state bonus), bonusDamageIfState (specific-state bonus),
  * bonusDamageIfStateType (type-classifier presence bonus), bonusDamagePerStateType
  * (type-classifier count bonus), bonusDamagePerStateStack (named-state stack-depth bonus),
- * thisBonusDamagePerStateStack (skill-scoped named-state stack-depth bonus), and
- * bonusDamageForMyStateCount (authored-distinct-state count bonus).
+ * thisBonusDamagePerStateStack (skill-scoped named-state stack-depth bonus),
+ * bonusDamageForMyStateCount (authored-distinct-state count bonus), bonusDamage (unconditional
+ * caster-wide bonus), thisBonusDamage (unconditional skill-scoped bonus), and
+ * bonusDamageIfTargetHpBelow/thisBonusDamageIfTargetHpBelow (target-missing-hp execute bonus).
  * Applied before guard effects so flat guard reduction cannot fully cancel the state-exploitation bonus.
  * @param {number} baseDamage The damage value before state multipliers.
  * @param {Game_Battler} target The target whose states are evaluated.
@@ -812,6 +814,7 @@ Game_Action.prototype.applyStateDamageMultipliers = function(baseDamage, target)
   const thisSpecificPct = this.calculateThisBonusDamageIfStatePct(target);
   const selfStatePct = this.calculateBonusIfSelfStatePct();
   const thisSelfStatePct = this.calculateThisBonusDamageIfSelfStatePct();
+  const flatPct = this.calculateBonusDamagePct();
   const thisFlatPct = this.calculateThisBonusDamagePct();
   const typePresencePct = this.calculateBonusIfStateTypePct(target);
   const typeCountPct = this.calculatePerStateTypePct(target);
@@ -819,10 +822,12 @@ Game_Action.prototype.applyStateDamageMultipliers = function(baseDamage, target)
   const thisStackDepthPct = this.calculateThisBonusDamagePerStateStackPct(target);
   const myStateCountPct = this.calculateBonusForMyStateCountPct(target);
   const thisMyStateCountPct = this.calculateThisBonusForMyStateCountPct(target);
+  const targetHpBelowPct = this.calculateBonusIfTargetHpBelowPct(target);
+  const thisTargetHpBelowPct = this.calculateThisBonusDamageIfTargetHpBelowPct(target);
 
   const combinedPct = debuffPct + specificPct + thisSpecificPct + selfStatePct + thisSelfStatePct
-    + thisFlatPct + typePresencePct + typeCountPct + stackDepthPct + thisStackDepthPct
-    + myStateCountPct + thisMyStateCountPct;
+    + flatPct + thisFlatPct + typePresencePct + typeCountPct + stackDepthPct + thisStackDepthPct
+    + myStateCountPct + thisMyStateCountPct + targetHpBelowPct + thisTargetHpBelowPct;
 
   // if no source contributed a bonus, return damage unchanged.
   if (combinedPct === 0) return baseDamage;
@@ -989,6 +994,23 @@ Game_Action.prototype.calculateThisBonusDamageIfSelfStatePct = function()
 };
 
 /**
+ * Calculates the unconditional flat percent damage bonus from bonusDamage tags on the caster's
+ * notes. Fires on every action the caster performs, with no target-state or self-state check.
+ * Reads from getAllNotes() (actor, class, equips, states), so it applies caster-wide rather than
+ * being scoped to one skill — the sibling tag for that is thisBonusDamage.
+ * @returns {number} The total bonus percent from all bonusDamage tags on the caster, or 0.
+ */
+Game_Action.prototype.calculateBonusDamagePct = function()
+{
+  // sum all bonusDamage:PCT values from every note source on the caster.
+  return RPGManager.getSumFromAllNotesByRegex(
+    this.subject()
+      .getAllNotes(),
+    J.ABS.RegExp.BonusDamage
+  ) ?? 0;
+};
+
+/**
  * Calculates the unconditional flat percent damage bonus from the thisBonusDamage tag on this
  * action's skill. Fires whenever this skill is the action being resolved, with no state check.
  * Reads from this.item() only — does not affect any other skill in the caster's kit.
@@ -1008,6 +1030,93 @@ Game_Action.prototype.calculateThisBonusDamagePct = function()
   if (pct === null) return 0;
 
   return pct;
+};
+
+/**
+ * Resolves a battler's current HP as a whole-number percent of their max HP.
+ * Rounded to match the same convention used by J-Passive-Conditional's hp threshold gates.
+ * @param {Game_Battler} battler The battler whose hp percent is resolved.
+ * @returns {number} A rounded percent 0-100; zero when max hp is zero or less.
+ */
+Game_Action.prototype.resolveHpPercent = function(battler)
+{
+  // guard divide-by-zero on dead or zero-max battlers.
+  if (battler.mhp <= 0) return 0;
+
+  return Math.round((battler.hp / battler.mhp) * 100);
+};
+
+/**
+ * Calculates the total damage bonus percent from bonusDamageIfTargetHpBelow tags on the
+ * caster's notes. Each tag opens its gate once the target's current hp percent is at or under
+ * THRESHOLD_PCT, then scales its contribution by PCT_PER_POINT for every percentage point the
+ * target is currently under that threshold- an "execute" style bonus that grows continuously as
+ * the target's hp keeps dropping, not a flat one-time bonus. Multiple tags each fire independently
+ * and stack additively.
+ * @param {Game_Battler} target The target whose current hp percent is checked.
+ * @returns {number} The total bonus percent from all matching target-hp tags.
+ */
+Game_Action.prototype.calculateBonusIfTargetHpBelowPct = function(target)
+{
+  // collect all [THRESHOLD_PCT, PCT_PER_POINT] pairs from every note source on the caster.
+  const allPairs = this.subject()
+    .getAllNotes()
+    .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamageIfTargetHpBelow));
+
+  // if no tags are present anywhere, there is nothing to sum.
+  if (!allPairs.length) return 0;
+
+  // resolve the target's current hp once- every tag's gate check reads the same snapshot.
+  const targetHpPct = this.resolveHpPercent(target);
+
+  // accumulate the scaled percent from each tag whose threshold the target is currently under.
+  let totalPct = 0;
+  allPairs.forEach(([ thresholdPct, pctPerPoint ]) =>
+  {
+    // this tag's gate hasn't opened- target hp is still at or above the threshold.
+    if (targetHpPct > thresholdPct) return;
+
+    // scale the bonus by how many percentage points below the threshold the target currently is.
+    totalPct += pctPerPoint * (thresholdPct - targetHpPct);
+  });
+
+  return totalPct;
+};
+
+/**
+ * Calculates the total damage bonus percent from thisBonusDamageIfTargetHpBelow tags on this
+ * action's skill. Reads from this.item() only — fires only when this specific skill is the
+ * action being resolved. Same gate-then-scale behavior as {@link calculateBonusIfTargetHpBelowPct},
+ * scoped to one skill instead of the caster's whole kit.
+ * @param {Game_Battler} target The target whose current hp percent is checked.
+ * @returns {number} The total bonus percent from all matching target-hp tags on this skill.
+ */
+Game_Action.prototype.calculateThisBonusDamageIfTargetHpBelowPct = function(target)
+{
+  // read all [THRESHOLD_PCT, PCT_PER_POINT] pairs from the executing skill's own note only.
+  const allPairs = RPGManager.getArraysFromNotesByRegex(
+    this.item(),
+    J.ABS.RegExp.ThisBonusDamageIfTargetHpBelow
+  );
+
+  // if no tags are present on this skill, there is no bonus.
+  if (!allPairs.length) return 0;
+
+  // resolve the target's current hp once- every tag's gate check reads the same snapshot.
+  const targetHpPct = this.resolveHpPercent(target);
+
+  // accumulate the scaled percent from each tag whose threshold the target is currently under.
+  let totalPct = 0;
+  allPairs.forEach(([ thresholdPct, pctPerPoint ]) =>
+  {
+    // this tag's gate hasn't opened- target hp is still at or above the threshold.
+    if (targetHpPct > thresholdPct) return;
+
+    // scale the bonus by how many percentage points below the threshold the target currently is.
+    totalPct += pctPerPoint * (thresholdPct - targetHpPct);
+  });
+
+  return totalPct;
 };
 
 /**

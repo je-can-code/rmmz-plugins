@@ -1221,7 +1221,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
         engine.checkStackConversion(jabsState);
 
-        expect(jabsState.battler.addState).toHaveBeenCalledWith(9, jabsState.battler);
+        expect(jabsState.battler.addState).toHaveBeenCalledWith(9, jabsState.battler, jabsState.sourceSkill);
         expect(jabsState.removeFromBattler).not.toHaveBeenCalled();
       });
 
@@ -1259,7 +1259,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
         engine.checkStackConversion(jabsState);
 
-        expect(jabsState.battler.addState).toHaveBeenCalledWith(42, jabsState.battler);
+        expect(jabsState.battler.addState).toHaveBeenCalledWith(42, jabsState.battler, jabsState.sourceSkill);
       });
     });
 
@@ -3864,7 +3864,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     {
       const engine = new JABS_Engine();
       engine.canBeKnockedBack = vi.fn(() => true);
-      engine.getProximityKnockbackBonusPct = vi.fn(() => 0);
+      engine.getKnockbackAmplificationPct = vi.fn(() => 0);
       return Object.assign(engine, overrides);
     }
 
@@ -3983,9 +3983,9 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(targetSprite.jump).toHaveBeenCalledWith(0, 5);
     });
 
-    it('amplifies the knockback distance by the proximity bonus percent', () =>
+    it('amplifies the knockback distance by the combined amplification percent', () =>
     {
-      const engine = buildEngine({ getProximityKnockbackBonusPct: vi.fn(() => 100) });
+      const engine = buildEngine({ getKnockbackAmplificationPct: vi.fn(() => 100) });
       const targetSprite = buildTargetSprite();
       const target = buildTarget(targetSprite);
       const action = buildAction({ getKnockback: () => 5, getBaseSkill: () => ({ jabsIgnoreTerrain: true }) });

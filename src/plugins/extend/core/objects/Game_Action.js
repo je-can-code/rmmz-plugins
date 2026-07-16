@@ -249,7 +249,7 @@ Game_Action.prototype.applyOnHitApplyStates = function(target)
     const overrides = new JABS_StateOverrides(duration, stacks);
 
     // apply the state to the target with the overrides; resistance is checked inside.
-    target.addStateWithOverrides(stateId, attacker, overrides);
+    target.addStateWithOverrides(stateId, attacker, overrides, this.item());
   });
 };
 
@@ -492,7 +492,7 @@ Game_Action.prototype.applyStates = function(target, jabsOnChanceEffects)
     // apply the given state once per success, with the caster as the attacker.
     for (let i = 0; i < procCount; i++)
     {
-      target.addState(jabsOnChanceEffect.skillId, attacker);
+      target.addState(jabsOnChanceEffect.skillId, attacker, skill);
     }
   });
 };

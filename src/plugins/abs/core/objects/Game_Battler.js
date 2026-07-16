@@ -465,6 +465,34 @@ Game_Battler.prototype.tickSpeedPercentModifier = function(types = [])
 };
 
 /**
+ * Resolves how many frames elapse between natural HRG/MRG/TRG regeneration ticks for this
+ * battler. Uses the same base-plus-flat-then-percent formula as per-state slip ticking, typed
+ * as the plugin-configured natural regen tick type so type-scoped modifiers can reach it.
+ * Shared by {@link JABS_Battler#getNaturalRegenTickInterval} (the live map ticking loop) and any
+ * UI wanting to preview the same cadence without a live map/JABS_Battler context- this only reads
+ * notes and static plugin metadata off the battler itself.
+ * @returns {number} The resolved tick interval, in frames.
+ */
+Game_Battler.prototype.getNaturalRegenTickInterval = function()
+{
+  // shorthand the configured natural regen type classifier.
+  const naturalRegenType = J.ABS.Metadata.NaturalRegenTickType;
+
+  // resolve the base interval and layer on this battler's own flat/percent modifiers.
+  const baseInterval = J.ABS.Metadata.DefaultStateTickInterval;
+  const flatModifier = this.tickSpeedFlatModifier();
+  const percentModifier = this.tickSpeedPercentModifier([ naturalRegenType ]);
+
+  // apply the flat modifier first, then the combined percent modifier.
+  const modifiedInterval = (baseInterval + flatModifier) / (1 + (percentModifier / 100));
+
+  // never let the interval drop below the tunable floor, and never below 1 frame regardless.
+  const tunableFloor = Math.max(J.ABS.Metadata.MinimumStateTickInterval, 1);
+
+  return Math.max(Math.round(modifiedInterval), tunableFloor);
+};
+
+/**
  * All battlers have a default alerted pursuit boost.
  * @returns {number}
  */
@@ -1032,9 +1060,10 @@ Game_Battler.prototype.stackCount = function(stateId)
  * now relevant to the state being applied.
  * @param {number} stateId The state id to potentially apply.
  * @param {Game_Battler} attacker The battler who is applying this state.
+ * @param {RPG_Skill=} sourceSkill The skill that was executing when this state was applied, if any.
  */
 J.ABS.Aliased.Game_Battler.set('addState', Game_Battler.prototype.addState);
-Game_Battler.prototype.addState = function(stateId, attacker)
+Game_Battler.prototype.addState = function(stateId, attacker, sourceSkill = null)
 {
   // if we're missing an attacker or the engine is disabled, perform as usual.
   if (!attacker || !$jabsEngine.absEnabled)
@@ -1048,7 +1077,7 @@ Game_Battler.prototype.addState = function(stateId, attacker)
   }
 
   // hand-off the state handling to JABS.
-  this.handleAddingJabsState(stateId, attacker);
+  this.handleAddingJabsState(stateId, attacker, null, sourceSkill);
 };
 
 //region state-application immunity
@@ -1201,8 +1230,9 @@ Game_Battler.prototype.isStateAddable = function(stateId)
  * @param {Game_Actor|Game_Enemy|Game_Battler} attacker The assailant applying the state.
  * @param {JABS_StateOverrides|null} overrides Optional skill-authored overrides for duration and stacks.
  * When null, the state's own database values are used.
+ * @param {RPG_Skill=} sourceSkill The skill that was executing when this state was applied, if any.
  */
-Game_Battler.prototype.handleAddingJabsState = function(stateId, attacker, overrides = null)
+Game_Battler.prototype.handleAddingJabsState = function(stateId, attacker, overrides = null, sourceSkill = null)
 {
   // if the state isn't addable, then don't add it.
   if (!this.isStateAddable(stateId)) return;
@@ -1221,7 +1251,7 @@ Game_Battler.prototype.handleAddingJabsState = function(stateId, attacker, overr
   this.resetStateCounts(stateId, attacker);
 
   // track the state in the JABS engine now that vanilla tracking is settled.
-  this.addJabsState(stateId, attacker, overrides);
+  this.addJabsState(stateId, attacker, overrides, sourceSkill);
 
   // notify hooks that this attacker just inflicted a state, now that tracking is fully settled.
   // fires on every application, first or repeat- unlike onStateAdded, which only fires once.
@@ -1386,8 +1416,9 @@ Game_Battler.prototype.isRemovableCandidate = function(state, type, allowDeath)
  * @param {Game_Battler|Game_Actor|Game_Enemy} attacker The battler who is applying this state.
  * @param {JABS_StateOverrides|null} overrides Optional skill-authored overrides for duration and stacks.
  * When null, the state's own database values are used for both.
+ * @param {RPG_Skill=} sourceSkill The skill that was executing when this state was applied, if any.
  */
-Game_Battler.prototype.addJabsState = function(stateId, attacker, overrides = null)
+Game_Battler.prototype.addJabsState = function(stateId, attacker, overrides = null, sourceSkill = null)
 {
   // reassign the incoming parameter because we are good developers.
   let assailant = attacker;
@@ -1433,7 +1464,7 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker, overrides = nu
   }
 
   // populate the state builder.
-  const builder = this.createJabsState(this, stateId, iconIndex, totalDuration, stateStacks, assailant);
+  const builder = this.createJabsState(this, stateId, iconIndex, totalDuration, stateStacks, assailant, sourceSkill);
 
   // build the state.
   const jabsState = builder.build();
@@ -1457,8 +1488,9 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker, overrides = nu
  * @param {number} stateId The id of the state to apply.
  * @param {Game_Battler} attacker The battler applying the state.
  * @param {JABS_StateOverrides} overrides The skill-authored duration and/or stack overrides.
+ * @param {RPG_Skill=} sourceSkill The skill that was executing when this state was applied, if any.
  */
-Game_Battler.prototype.addStateWithOverrides = function(stateId, attacker, overrides)
+Game_Battler.prototype.addStateWithOverrides = function(stateId, attacker, overrides, sourceSkill = null)
 {
   // if JABS is disabled, fall back to vanilla state application since overrides are JABS-only.
   if (!$jabsEngine.absEnabled)
@@ -1471,7 +1503,7 @@ Game_Battler.prototype.addStateWithOverrides = function(stateId, attacker, overr
   }
 
   // apply the state via the JABS handler with the provided overrides.
-  this.handleAddingJabsState(stateId, attacker, overrides);
+  this.handleAddingJabsState(stateId, attacker, overrides, sourceSkill);
 };
 
 /**
@@ -1483,15 +1515,17 @@ Game_Battler.prototype.addStateWithOverrides = function(stateId, attacker, overr
  * @param {number} totalDuration The total duration in frames of the state being applied.
  * @param {number} stacks The number of stacks of the state being applied.
  * @param {Game_Battler} attacker The battler applying the state.
+ * @param {RPG_Skill=} sourceSkill The skill that was executing when this state was applied, if any.
  * @returns {JABS_StateBuilder} The builder with all the parameters of the state being applied.
  */
-Game_Battler.prototype.createJabsState = function(target, stateId, iconIndex, totalDuration, stacks, attacker)
+Game_Battler.prototype.createJabsState = function(target, stateId, iconIndex, totalDuration, stacks, attacker, sourceSkill = null)
 {
   return JABS_State.Builder(target, stateId)
     .setIconIndex(iconIndex)
     .setDuration(totalDuration)
     .setStartingStacks(stacks)
-    .setSource(attacker);
+    .setSource(attacker)
+    .setSourceSkill(sourceSkill);
 };
 
 /**
@@ -1530,6 +1564,17 @@ Game_Battler.prototype.getStateDurationBoost = function(baseDuration)
 
   // return the total state duration boost.
   return formattedDurationBoost;
+};
+
+/**
+ * Sums this battler's {@code <stackMaxBoost:VAL>} tags from every note source (actor, class,
+ * equips, states). A blanket bonus applied to the stack cap of every state this battler stacks,
+ * regardless of which state it is.
+ * @returns {number} The total bonus to add to any state's stack cap.
+ */
+Game_Battler.prototype.getStackMaxBoost = function()
+{
+  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.StackMaxBoost);
 };
 //endregion JABS state management
 

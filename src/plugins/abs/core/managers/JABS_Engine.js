@@ -1156,8 +1156,9 @@ class JABS_Engine
     // if the stack count hasn't reached the required threshold yet, nothing to do.
     if (jabsState.stackCount < conversionData.stacksRequired) return;
 
-    // apply the converted state to the battler; the battler is its own attacker for this self-transformation.
-    jabsState.battler.addState(conversionData.stateId, jabsState.battler);
+    // apply the converted state to the battler; the battler is its own attacker for this self-transformation,
+    // but the originating skill (if any) still carries over from the state that triggered the conversion.
+    jabsState.battler.addState(conversionData.stateId, jabsState.battler, jabsState.sourceSkill);
 
     // if the resolved state is configured to be removed on conversion, remove it now.
     if (conversionPerceivedState.jabsRemoveOnConvert)
@@ -3291,12 +3292,13 @@ class JABS_Engine
     // multiply the knockback by the remaining effectiveness (100 - resistance).
     knockback *= ((100 - targetKnockbackResist) / 100);
 
-    // amplify by however many nearby enemies the caster's own proximity tags detect.
+    // amplify by the caster's unconditional flat amp, this skill's own amp, and however many
+    // nearby enemies the caster's own proximity tags detect- all three sum into one multiplier.
     const caster = action.getCaster();
-    const proximityBonusPct = this.getProximityKnockbackBonusPct(caster);
-    if (proximityBonusPct !== 0)
+    const totalAmpPct = this.getKnockbackAmplificationPct(caster, action);
+    if (totalAmpPct !== 0)
     {
-      knockback *= (1 + (proximityBonusPct / 100));
+      knockback *= (1 + (totalAmpPct / 100));
     }
 
     const targetSprite = target.getCharacter();
@@ -3398,6 +3400,54 @@ class JABS_Engine
 
     // being knocked back is possible.
     return true;
+  }
+
+  /**
+   * Computes the total outgoing knockback percent bonus from every amplification source: the
+   * caster's unconditional `<knockbackAmp:PCT>` tags, this specific skill's `<thisKnockbackAmp:PCT>`
+   * tag, and the caster's conditional `<proximityKnockback:[RADIUS, PCT]>` tags. All three sum
+   * into one final multiplier applied once to outgoing knockback.
+   * @param {JABS_Battler} caster The battler executing the knockback-dealing action.
+   * @param {JABS_Action} action The action potentially knocking the target back.
+   * @returns {number} The total percent bonus to apply to outgoing knockback; 0 if untagged.
+   */
+  getKnockbackAmplificationPct(caster, action)
+  {
+    return this.getFlatKnockbackAmpPct(caster)
+      + this.getThisKnockbackAmpPct(action)
+      + this.getProximityKnockbackBonusPct(caster);
+  }
+
+  /**
+   * Sums every `<knockbackAmp:PCT>` tag from the caster's own note sources- an unconditional
+   * amplifier with no proximity requirement, unlike `<proximityKnockback>`.
+   * @param {JABS_Battler} caster The battler executing the knockback-dealing action.
+   * @returns {number} The total flat percent bonus to apply to outgoing knockback; 0 if untagged.
+   */
+  getFlatKnockbackAmpPct(caster)
+  {
+    const casterNotes = caster.getBattler()
+      .getAllNotes();
+
+    return RPGManager.getSumFromAllNotesByRegex(casterNotes, J.ABS.RegExp.KnockbackAmp) ?? 0;
+  }
+
+  /**
+   * Reads the `<thisKnockbackAmp:PCT>` tag from the executing skill's own note only- fires only
+   * when this specific skill is the one dealing the knockback, independent of the caster-wide
+   * `<knockbackAmp>` tag.
+   * @param {JABS_Action} action The action potentially knocking the target back.
+   * @returns {number} The percent bonus to apply to outgoing knockback; 0 if untagged.
+   */
+  getThisKnockbackAmpPct(action)
+  {
+    const pct = RPGManager.getNumberFromNoteByRegex(
+      action.getBaseSkill(),
+      J.ABS.RegExp.ThisKnockbackAmp,
+      true
+    );
+
+    return pct ?? 0;
   }
 
   /**

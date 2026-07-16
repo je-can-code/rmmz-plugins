@@ -1158,14 +1158,24 @@
  * Allows a skill to sit on the map for a duration before triggering.
  * Think time bombs or landmines. Set DURATION to -1 to never detonate
  * until touched.
- *    <delay:[DURATION,TOUCHABLE]>
+ *    <delay:[DURATION,TOUCHABLE,TRIGGER_RADIUS?]>
  *  Where DURATION is frames to exist before detonating.
  *  Where TOUCHABLE is true/false for whether touching it triggers it.
+ *  Where TRIGGER_RADIUS (optional) is a tile radius used ONLY for touch-arming
+ *  during the delay window. When omitted, touch-triggering falls back to the
+ *  action's normal hitbox. This lets the touch-trigger space be smaller (or
+ *  larger) than the eventual detonation/hitbox size- e.g. a mine that's only
+ *  steppable-on within 1 tile, but explodes across a much bigger AoE once it
+ *  actually goes off.
  *
  * EXAMPLE:
  *      <delay:[300,true]>
  * Sits on the map for 300 frames (~5 seconds). Any enemy who walks
- * into it triggers the action.
+ * into it (within the action's normal hitbox) triggers the action.
+ *
+ *      <delay:[300,true,1]>
+ * Same as above, but only touch-arms within 1 tile- the detonation itself
+ * still uses whatever AoE the skill's own hitbox tags define.
  *
  * WARNING ABOUT INDEFINITE DELAY:
  * If DURATION is -1, set TOUCHABLE to true, or the action will sit
@@ -1723,16 +1733,23 @@
  * If the target has all three, specificStateBonusPct = 75 (each fires independently).
  *
  * ----------------------------------------------------------------------------
- * THIS BONUS DAMAGE:
- * Skill-scoped unconditional flat percent damage bonus. Fires whenever THIS skill
- * is the action being resolved, with no target state requirement. Useful for
- * prof extend rows that need to boost a specific skill's damage without touching
- * its formula or leaking the bonus to the rest of the caster's kit.
- * Multiple tags on the same skill stack additively.
+ * BONUS DAMAGE / THIS BONUS DAMAGE:
+ * Unconditional flat percent damage bonus- no target state requirement at all.
+ * bonusDamage reads from the caster's notes (actor, class, equips, states), so
+ * it applies to EVERY action the caster performs- good fit for a passive state
+ * that just says "you deal X% more damage" while it's active. thisBonusDamage
+ * is the skill-scoped sibling: fires only when THIS skill is the action being
+ * resolved, useful for prof extend rows that boost one specific skill without
+ * touching its formula or leaking the bonus to the rest of the caster's kit.
+ * Multiple tags of either kind, on any number of sources, stack additively.
+ *    <bonusDamage:PCT>
  *    <thisBonusDamage:PCT>
  *  Where PCT is the integer (or decimal) percent bonus to add unconditionally.
  *
  * Example:
+ *  A "Berserk" state that grants +15% damage on everything while active:
+ *    <bonusDamage:15>
+ *
  *  Blade of the Mouse row 6 — +20% damage on mainchain skills:
  *    placed on the extend skill targeting [11,12,13]:
  *    <thisBonusDamage:20>
@@ -1852,6 +1869,29 @@
  *  If this caster personally applied 3 different states currently active on
  *  the target (regardless of who else also has states on it), this skill
  *  gains +45% bonus damage (15 * 3).
+ *
+ * ----------------------------------------------------------------------------
+ * BONUS DAMAGE IF TARGET HP BELOW / THIS BONUS DAMAGE IF TARGET HP BELOW:
+ * Execute-style bonus that SCALES CONTINUOUSLY as the target's hp keeps
+ * dropping- not a flat one-time bonus. The gate opens once the target's
+ * current hp% is at or under THRESHOLD_PCT; once open, the bonus grows by
+ * PCT_PER_POINT for every percentage point the target is under that
+ * threshold. bonusDamageIfTargetHpBelow reads from the caster's notes
+ * (actor, class, equips, states)- good fit for a "the lower they are, the
+ * harder you hit" passive. thisBonusDamageIfTargetHpBelow is the skill-scoped
+ * sibling, useful for a dedicated execute/finisher skill.
+ * Multiple tags of either kind, on any number of sources (including multiple
+ * thresholds on the same source), stack additively.
+ *    <bonusDamageIfTargetHpBelow:[THRESHOLD_PCT, PCT_PER_POINT]>
+ *    <thisBonusDamageIfTargetHpBelow:[THRESHOLD_PCT, PCT_PER_POINT]>
+ *  Where THRESHOLD_PCT is the hp% ceiling that opens the gate.
+ *  Where PCT_PER_POINT is the percent bonus added per percentage point the
+ *  target is currently under THRESHOLD_PCT.
+ *
+ * Example — "the big red button": meaningful at 70%, ugly at 30% or lower:
+ *    <bonusDamageIfTargetHpBelow:[50, 2]>
+ *  At 51% hp: +0% (gate not open). At 50%: +0% (just crossed). At 30%:
+ *  +40% (20 points under 50, times 2). At 10%: +80% (40 points under 50).
  *
  * ============================================================================
  * APPLY STATE ON EXPIRE:
@@ -2033,6 +2073,24 @@
  * NOTE: Only opposing battlers count -- allies within RADIUS are ignored.
  * NOTE: Multiple tags (different sources, different radii) all contribute
  * independently and sum together.
+ *
+ * ----------------------------------------------------------------------------
+ * KNOCKBACK AMP / THIS KNOCKBACK AMP:
+ * Unconditional outgoing knockback amplifier- no proximity requirement,
+ * unlike PROXIMITY KNOCKBACK above. knockbackAmp reads from any of the
+ * caster's note sources (actor, class, equips, states) and applies to every
+ * knockback this battler deals. thisKnockbackAmp is the skill-scoped
+ * sibling, read from the executing skill's own note only. Both sum
+ * additively with each other AND with proximityKnockback into one combined
+ * percent, applied as a single multiplier to outgoing knockback.
+ *    <knockbackAmp:PCT>
+ *    <thisKnockbackAmp:PCT>
+ *  Where PCT is the percent bonus (or penalty, if negative) to apply.
+ *
+ * Example: a battler who always knocks back 50% farther, plus a signature
+ * skill that adds another +20% on top when it specifically lands:
+ *    <knockbackAmp:50>
+ *    (placed on the signature skill itself) <thisKnockbackAmp:20>
  *
  * ----------------------------------------------------------------------------
  * PER-CONNECTION BONUS HITS (ACTOR / CLASS / EQUIPMENT / STATES):
@@ -2346,10 +2404,14 @@
  * ----------------------------------------------------------------------------
  * SLIP DAMAGE:
  * "Slip damage" is an alternative name for damage over time. There are
- * three types: flat, percent, and formula-based. All values are expressed
- * as "this much per 5 seconds" and are spread over 20 ticks (4/second).
- * The math:
- *    VAL / 20 = AMOUNT_PER_TICK
+ * three types: flat, percent, and formula-based. VAL is applied in full on
+ * every tick -- there is no per-tick division. A tick's length is governed
+ * by the tick interval (see TICK SPEED below), so the authored VAL is
+ * effectively "this much per tick", and the actual per-second/per-duration
+ * total depends entirely on how fast this battler's ticks are resolving.
+ * This is intentional: speeding up ticks (via tickSpeed tags) is what makes
+ * a slip effect hit harder over time, since the same VAL just lands more
+ * often.
  *
  * ----------------------------------------------------------------------------
  * SLIP DAMAGE AS A CONCEPT:
@@ -2368,21 +2430,22 @@
  *    <hpFlat:VAL>
  *    <mpFlat:VAL>
  *    <tpFlat:VAL>
- *  Where VAL is the flat amount to gain or lose per 5 seconds.
+ *  Where VAL is the flat amount to gain or lose, applied in full every tick.
  *
  * PERCENT:
  * Eats a portion of the battler's max value per tick. Use with care!
  *    <hpPercent:VAL>
  *    <mpPercent:VAL>
  *    <tpPercent:VAL>
- *  Where VAL is the % of max value to gain or lose per 5 seconds.
+ *  Where VAL is the % of max value to gain or lose, applied in full every tick.
  *
  * FORMULA:
  * Allows damage that scales with battler stats.
  *    <hpFormula:[FORMULA]>
  *    <mpFormula:[FORMULA]>
  *    <tpFormula:[FORMULA]>
- *  Where FORMULA is a damage-like formula to calculate VAL per 5 sec.
+ *  Where FORMULA is a damage-like formula to calculate VAL, applied in full
+ *  every tick.
  *
  * Formula context: "a" is the battler who applied the state (the source),
  * "b" is the battler afflicted by the state (the one ticking), "v" is
@@ -2398,29 +2461,28 @@
  *
  * EXAMPLES:
  *    <hpFlat:-100>
- *  Lose 100 HP over five seconds (5 per tick).
+ *  Lose 100 HP on every tick this state is active.
  *
  *    <mpPercent:50>
- *  Lose 50% max MP over five seconds (2.5% per tick).
+ *  Lose 50% max MP on every tick this state is active.
  *
  *    <tpFormula:[-(a.atk * 2)]>
- *  Gain TP equal to 200% of the source's ATK over five seconds (negative
+ *  Gain TP equal to 200% of the source's ATK on every tick (negative
  *  formula result = gain, per the sign note above).
  *
  *    <hpFormula:[(a.mat * 3)]>
- *  Lose HP equal to 300% of the source's MAT over five seconds (positive
+ *  Lose HP equal to 300% of the source's MAT on every tick (positive
  *  formula result = harm, just like a damage formula).
- *
- * NOTE ABOUT VAL OUTPUT:
- * Multiples of 20 are a handy mental shortcut: val 20 = 1 per tick,
- * val 40 = 2 per tick, and so on.
  *
  * TICK SPEED:
  * Slip/regen effects don't tick every frame -- they tick on an interval
- * (5-second base for state slips, a separate configurable interval for
- * natural HP/MP/TP regen). These tags are battler-wide modifiers against
- * that interval, summed from every note source on the battler (actor,
- * class, weapons, armors, states).
+ * (the "Default State Tick Interval" plugin parameter as the base for state
+ * slips, a separate configurable interval for natural HP/MP/TP regen).
+ * Because slip VAL is applied in full every tick (see SLIP DAMAGE above),
+ * making ticks fire more often is what makes a slip effect deal more total
+ * damage over time -- there is no rescaling to compensate. These tags are
+ * battler-wide modifiers against that interval, summed from every note
+ * source on the battler (actor, class, weapons, armors, states).
  *
  *    <tickSpeedFlat:VAL>
  *  Where VAL is a flat number of frames added to (or, if negative,
@@ -2463,6 +2525,38 @@
  *    <tickSpeedTypePercent:[poison, 50]>
  *  This source ticks poison-typed states 50% faster, but has no effect on
  *  any other state.
+ *
+ * SLIP AMPLIFICATION:
+ * Independent of tick speed, the VAL of a single tick can be amplified
+ * directly. Amplification is always sourced from the battler who APPLIED
+ * the slip effect (the source), not the battler suffering/receiving it --
+ * a Ring of Melting worn by the poisoner makes their poison hit harder, it
+ * does nothing for the poisoner's own poison resistance. Healing-over-time
+ * additionally still applies the afflicted battler's own REC trait first,
+ * exactly as before; these tags layer on top of that.
+ *
+ *    <dotAmpRate:VAL>
+ *    <hotAmpRate:VAL>
+ *  Battler-wide percent amplification against every DoT/HoT this battler
+ *  applies, summed from every note source on the source (actor, class,
+ *  weapons, armors, states). VAL is a percent: 100 = double tick damage/
+ *  healing, -50 = half.
+ *
+ *    <thisDotAmpRate:VAL>
+ *    <thisHotAmpRate:VAL>
+ *  Skill-scoped percent amplification, read from the skill that was
+ *  executing when the state was applied (not the bearer's other skills).
+ *  Adds on top of the battler-wide rate above; a state applied with no
+ *  skill in scope (ambient/self-inflicted effects) never consults this.
+ *
+ * EXAMPLE:
+ *    <dotAmpRate:100>
+ *  (Ring of Melting) Doubles the tick damage of every DoT this battler's
+ *  wearer applies to anyone.
+ *
+ *    <thisDotAmpRate:50>
+ *  (on a specific poison skill) Adds another 50% on top of that, but only
+ *  for poison applied by this exact skill.
  *
  * STATE DURATIONS (map / ABS):
  * J-ABS does not use MZ "Remove by Walking" for map timers. That checkbox only
@@ -2541,6 +2635,24 @@
  * STACK CONFIG OVERRIDES:
  *    <stackMax:VAL>
  *  Maximum number of stacks this state can accumulate.
+ *
+ *    <stackMaxBoost:VAL>
+ *  A blanket bonus to the stack cap of every state this battler stacks, regardless
+ *  of which state it is. Read from every note source on the battler applying the
+ *  stack (actor, class, equips, states) and summed together. Place on gear or a
+ *  passive state for a "stacks build up further, period" effect.
+ *
+ *    <thisStackMaxBoost:VAL>
+ *  A bonus to this specific state's own stack cap, read from this state's own note
+ *  only (not summed from the battler's other sources). On its own this is nothing
+ *  you couldn't do by just raising <stackMax:VAL> directly- its purpose is to ride
+ *  along on a J-Extend overlay state. When another active state carries
+ *  <extend:[STATE_ID]> or <extendStateType:TYPE> targeting this state, J-Extend
+ *  merges the overlay's note (and thus its <thisStackMaxBoost:VAL> tag) into this
+ *  state's resolved note before this tag is read- so a single overlay state (e.g.
+ *  an equipment-granted passive) can raise the stack cap of one specific state, or
+ *  of every state sharing a <type:TYPE> classifier, without touching the target
+ *  state(s) directly.
  *
  *    <applyStacks:VAL>
  *  Number of stacks applied per hit (default 1).
@@ -3105,7 +3217,7 @@
  * @type number
  * @text Default Tick Interval
  * @desc Frames between slip/regen ticks when a state omits <thisTickSpeed:N>. (60 frames = 1 second)
- * @default 30
+ * @default 60
  *
  * @param minimumStateTickInterval
  * @parent tickConfigs

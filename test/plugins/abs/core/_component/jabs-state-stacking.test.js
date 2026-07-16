@@ -337,6 +337,77 @@ describe('J-ABS state stacking (direct src import)', () =>
     });
   });
 
+  describe('stack cap boosts (stackMaxBoost / thisStackMaxBoost)', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$jabsEngine = {
+        absEnabled: true,
+        getJabsStatesByUuid: () => new Map(),
+        checkStackConversion: vi.fn(),
+      };
+    });
+
+    it('adds <thisStackMaxBoost:VAL> from the state\'s own note to the cap', () =>
+    {
+      // Arrange- base cap of 2, boosted by 4 from the state's own note, for a cap of 6.
+      registerStateRow(STATE_ID, '<stackMax:2><thisStackMaxBoost:4>');
+      const battler = buildGameBattler('carrier');
+      const jabsState = new globalThis.JABS_State(battler, STATE_ID, 0, 100, 1);
+
+      // Act
+      jabsState.incrementStacks(10);
+
+      // Assert
+      expect(jabsState.stackCount).toBe(6);
+    });
+
+    it('adds <stackMaxBoost:VAL> summed from the source battler\'s note sources to the cap', () =>
+    {
+      // Arrange- base cap of 2, boosted by 3 from the caster's equipment/passives, for a cap of 5.
+      registerStateRow(STATE_ID, '<stackMax:2>');
+      const battler = buildGameBattler('carrier');
+      battler.__testNoteSources = [ { note: '<stackMaxBoost:3>' } ];
+      const jabsState = new globalThis.JABS_State(battler, STATE_ID, 0, 100, 1);
+
+      // Act
+      jabsState.incrementStacks(10);
+
+      // Assert
+      expect(jabsState.stackCount).toBe(5);
+    });
+
+    it('combines <thisStackMaxBoost:VAL> and <stackMaxBoost:VAL> additively', () =>
+    {
+      // Arrange- base cap of 2, +1 from the state's own note, +2 from the caster's sources, for 5.
+      registerStateRow(STATE_ID, '<stackMax:2><thisStackMaxBoost:1>');
+      const battler = buildGameBattler('carrier');
+      battler.__testNoteSources = [ { note: '<stackMaxBoost:2>' } ];
+      const jabsState = new globalThis.JABS_State(battler, STATE_ID, 0, 100, 1);
+
+      // Act
+      jabsState.incrementStacks(10);
+
+      // Assert
+      expect(jabsState.stackCount).toBe(5);
+    });
+
+    it('leaves the cap at its base value when neither boost tag is present', () =>
+    {
+      // Arrange- no boost tags anywhere, so the cap stays at the state's own <stackMax:2>.
+      registerStateRow(STATE_ID, '<stackMax:2>');
+      const battler = buildGameBattler('carrier');
+      battler.__testNoteSources = [];
+      const jabsState = new globalThis.JABS_State(battler, STATE_ID, 0, 100, 1);
+
+      // Act
+      jabsState.incrementStacks(10);
+
+      // Assert
+      expect(jabsState.stackCount).toBe(2);
+    });
+  });
+
   describe('stack-conversion threshold (checkStackConversion)', () =>
   {
     let engine;
@@ -365,7 +436,7 @@ describe('J-ABS state stacking (direct src import)', () =>
       engine.checkStackConversion(jabsState);
 
       // Assert
-      expect(battler.addState).toHaveBeenCalledWith(CONVERTED_STATE_ID, battler);
+      expect(battler.addState).toHaveBeenCalledWith(CONVERTED_STATE_ID, battler, null);
     });
 
     it('does not convert before the stack threshold is reached', () =>
@@ -420,7 +491,7 @@ describe('J-ABS state stacking (direct src import)', () =>
 
       // Assert
       expect(jabsState.stackCount).toBe(2);
-      expect(battler.addState).toHaveBeenCalledWith(CONVERTED_STATE_ID, battler);
+      expect(battler.addState).toHaveBeenCalledWith(CONVERTED_STATE_ID, battler, null);
     });
   });
 });

@@ -720,6 +720,10 @@ J.ABS.RegExp = {
 
   // on-hit state purge.
   PurgeStates: /<purgeStates:[ ]?(\[.*?])>/i,
+
+  // slip amplification scoped to states applied by this skill specifically.
+  ThisDotAmpRate: /<thisDotAmpRate:[ ]?(-?\d+)%?>/gi,
+  ThisHotAmpRate: /<thisHotAmpRate:[ ]?(-?\d+)%?>/gi,
   //endregion ON SKILLS
 
   //region ON EQUIPS
@@ -730,6 +734,13 @@ J.ABS.RegExp = {
   // knockback-related.
   KnockbackResist: /<knockbackResist:[ ]?(\d+)>/gi,
   ProximityKnockback: /<proximityKnockback:[ ]?(\[(?:0|[1-9][0-9]*)(?:\.[0-9]+)?,[ ]?-?(?:0|[1-9][0-9]*)])>/gi,
+
+  // unconditional outgoing knockback amplification- no proximity requirement, unlike ProximityKnockback.
+  // KnockbackAmp reads from the caster's getAllNotes() (any source); ThisKnockbackAmp is skill-scoped,
+  // read from the executing skill's own note only. Both sum additively with each other and with
+  // ProximityKnockback into one final outgoing-knockback multiplier.
+  KnockbackAmp: /<knockbackAmp:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+  ThisKnockbackAmp: /<thisKnockbackAmp:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
 
   // parry-related.
   IgnoreParry: /<ignoreParry:[ ]?(\d+)>/gi,
@@ -768,6 +779,8 @@ J.ABS.RegExp = {
   ReapplyExtendMax: /<stackExtendMax:[ ]?(\d+)>/gi,
 
   ReapplyStackMax: /<stackMax:[ ]?(\d+)>/gi,
+  StackMaxBoost: /<stackMaxBoost:[ ]?([-+]?\d+)>/gi,
+  ThisStackMaxBoost: /<thisStackMaxBoost:[ ]?([-+]?\d+)>/gi,
   StateApplicationAmount: /<applyStacks:[ ]?(\d+)>/gi,
   LoseAllStacksAtOnce: /<loseAllStacksAtOnce>/gi,
   StackOnExpire: /<stackOnExpire>/gi,
@@ -811,6 +824,11 @@ J.ABS.RegExp = {
   TickSpeedFlat: /<tickSpeedFlat:[ ]?(-?\d+)>/gi,
   TickSpeedPercent: /<tickSpeedPercent:[ ]?(-?\d+)%?>/gi,
   TickSpeedTypePercent: /<tickSpeedTypePercent:(\[[a-zA-Z][a-zA-Z0-9_-]*,[ ]?-?\d+])>/gi,
+
+  // slip amplification-related; battler-wide, summed across every note source (actor/class/
+  // weapon/armor/state) on the battler applying the slip.
+  DotAmpRate: /<dotAmpRate:[ ]?(-?\d+)%?>/gi,
+  HotAmpRate: /<hotAmpRate:[ ]?(-?\d+)%?>/gi,
   //endregion ON STATES
 
   //region ON BATTLERS
@@ -979,6 +997,26 @@ J.ABS.RegExp = {
   ThisBonusDamageIfSelfState: /<thisBonusDamageIfSelfState:[ ]?(\[\d+,[ ]?\d+])>/gi,
 
   /**
+   * Unconditional flat percent damage bonus applied to every action the caster performs.
+   * Reads from the caster's getAllNotes() sources (actor, class, equips, states) — unlike
+   * thisBonusDamage, this is not scoped to one skill; it applies caster-wide. All values found
+   * across every note source are summed. Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamage:PCT>
+   *
+   * Example:
+   *  <bonusDamage:15>
+   *
+   * Translation:
+   *  This battler always deals +15% damage with every action, regardless of target state.
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamage: /<bonusDamage:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
    * Unconditional flat percent damage bonus applied when THIS skill is the action being resolved.
    * Reads from this.item() only — does not read from getAllNotes() and does not affect other skills.
    * Applied before guard reduction in the damage pipeline.
@@ -1114,6 +1152,47 @@ J.ABS.RegExp = {
    * @type {RegExp}
    */
   ThisBonusDamageForMyStateCount: /<thisBonusDamageForMyStateCount:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Execute-style percent damage bonus that scales with how far under a hp threshold the target
+   * currently is. Reads from getAllNotes() (actor, class, equips, states). The gate opens once
+   * target hp% <= THRESHOLD_PCT, then the bonus scales by PCT_PER_POINT for every percentage
+   * point the target is under that threshold- not a flat one-time bonus.
+   * Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamageIfTargetHpBelow:[THRESHOLD_PCT, PCT_PER_POINT]>
+   *
+   * Example:
+   *  <bonusDamageIfTargetHpBelow:[50, 2]>
+   *
+   * Translation:
+   *  Once the target is at or under 50% hp, gain +2% damage for every percentage point they are
+   *  under 50%- +40% at 30% hp, +80% at 10% hp.
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamageIfTargetHpBelow: /<bonusDamageIfTargetHpBelow:[ ]?(\[-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+
+  /**
+   * Skill-scoped counterpart to BonusDamageIfTargetHpBelow- applies only when this specific
+   * skill is the action being resolved. Reads from this.item() only.
+   *
+   * <pre>
+   * Structure:
+   *  <thisBonusDamageIfTargetHpBelow:[THRESHOLD_PCT, PCT_PER_POINT]>
+   *
+   * Example:
+   *  <thisBonusDamageIfTargetHpBelow:[50, 2]>
+   *
+   * Translation:
+   *  When this skill lands on a target at or under 50% hp, gain +2% damage from this skill for
+   *  every percentage point they are under 50%.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisBonusDamageIfTargetHpBelow: /<thisBonusDamageIfTargetHpBelow:[ ]?(\[-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
 
   /**
    * Flat tile addition applied to radius, proximity, and thickness before the rate multiplier.

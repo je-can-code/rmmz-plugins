@@ -7375,47 +7375,12 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
   describe('getNaturalRegenTickInterval', () =>
   {
-    it('resolves the interval from base/flat/percent modifiers, floored at the tunable minimum', () =>
+    it('delegates to the battler, which owns the actual base/flat/percent/floor math', () =>
     {
-      J.ABS.Metadata.NaturalRegenTickType = 'natural';
-      J.ABS.Metadata.DefaultStateTickInterval = 300;
-      J.ABS.Metadata.MinimumStateTickInterval = 30;
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({
-        tickSpeedFlatModifier: () => 0,
-        tickSpeedPercentModifier: () => 0,
-      });
+      jabsBattler.getBattler = () => ({ getNaturalRegenTickInterval: () => 42 });
 
-      expect(jabsBattler.getNaturalRegenTickInterval()).toBe(300);
-    });
-
-    it('applies the flat modifier before the percent modifier', () =>
-    {
-      J.ABS.Metadata.NaturalRegenTickType = 'natural';
-      J.ABS.Metadata.DefaultStateTickInterval = 100;
-      J.ABS.Metadata.MinimumStateTickInterval = 1;
-      const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({
-        tickSpeedFlatModifier: () => 100,
-        tickSpeedPercentModifier: () => 100,
-      });
-
-      // (100 + 100) / (1 + 100/100) = 100.
-      expect(jabsBattler.getNaturalRegenTickInterval()).toBe(100);
-    });
-
-    it('never drops below the tunable floor', () =>
-    {
-      J.ABS.Metadata.NaturalRegenTickType = 'natural';
-      J.ABS.Metadata.DefaultStateTickInterval = 10;
-      J.ABS.Metadata.MinimumStateTickInterval = 30;
-      const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({
-        tickSpeedFlatModifier: () => 0,
-        tickSpeedPercentModifier: () => 1000,
-      });
-
-      expect(jabsBattler.getNaturalRegenTickInterval()).toBe(30);
+      expect(jabsBattler.getNaturalRegenTickInterval()).toBe(42);
     });
   });
 
@@ -7570,18 +7535,18 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
   describe('calculatedRegen', () =>
   {
-    it('computes 5% of the base value scaled to per-100', () =>
+    it('applies the full base value in full every tick, scaled to per-100', () =>
     {
       const jabsBattler = buildBattler();
 
-      expect(jabsBattler.calculatedRegen(1)).toBe(5);
+      expect(jabsBattler.calculatedRegen(1)).toBe(100);
     });
 
     it('reduces to 20% of the normal value when reduced', () =>
     {
       const jabsBattler = buildBattler();
 
-      expect(jabsBattler.calculatedRegen(1, true)).toBe(1);
+      expect(jabsBattler.calculatedRegen(1, true)).toBe(20);
     });
   });
 
@@ -7659,6 +7624,25 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
   describe('processStateTick', () =>
   {
+    /**
+     * Builds a fake tracked {@link JABS_State} for the engine lookup to hand back mid-tick.
+     * Defaults to no amplification sources so existing rec-only assertions stay unaffected;
+     * override `source`/`sourceSkill` per-test to exercise amp behavior.
+     */
+    function buildJabsState(overrides = {})
+    {
+      return Object.assign({
+        stateId: 1,
+        source: { getAllNotes: () => [] },
+        sourceSkill: null,
+      }, overrides);
+    }
+
+    beforeEach(() =>
+    {
+      globalThis.$jabsEngine = { getJabsStateByUuidAndStateId: vi.fn(() => buildJabsState()) };
+    });
+
     it('does nothing without a battler', () =>
     {
       const jabsBattler = buildBattler();
@@ -7684,7 +7668,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('skips a zero slip value for a given resource', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 1 });
+      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 1, getUuid: () => 'uuid' });
       jabsBattler.stateSlipHp = () => 0;
       jabsBattler.stateSlipMp = () => 0;
       jabsBattler.stateSlipTp = () => 0;
@@ -7699,7 +7683,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('scales a positive (healing) slip value by rec, but not a negative (damage) one', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 2 });
+      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 2, getUuid: () => 'uuid' });
       jabsBattler.stateSlipHp = () => 5;
       jabsBattler.stateSlipMp = () => -5;
       jabsBattler.stateSlipTp = () => 0;
@@ -7715,16 +7699,82 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('fires the slip-tick hook with the sign-normalized display amount and state id', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 1 });
+      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 1, getUuid: () => 'uuid' });
       jabsBattler.stateSlipHp = () => 5;
       jabsBattler.stateSlipMp = () => 0;
       jabsBattler.stateSlipTp = () => 0;
       jabsBattler.applySlipEffect = vi.fn();
       jabsBattler.onSlipRegenTick = vi.fn();
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId = vi.fn(() => buildJabsState({ stateId: 7 }));
 
       jabsBattler.processStateTick({ id: 7 });
 
       expect(jabsBattler.onSlipRegenTick).toHaveBeenCalledWith(-5, 0, 7);
+    });
+
+    it('amplifies a healing slip value by the combined battler-wide and skill-scoped HoT amp rate', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 1, getUuid: () => 'uuid' });
+      jabsBattler.stateSlipHp = () => 10;
+      jabsBattler.stateSlipMp = () => 0;
+      jabsBattler.stateSlipTp = () => 0;
+      jabsBattler.applySlipEffect = vi.fn();
+      jabsBattler.onSlipRegenTick = vi.fn();
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId = vi.fn(() => buildJabsState({
+        source: { getAllNotes: () => [ 'ring-of-mending' ] },
+        sourceSkill: 'heal-skill',
+      }));
+      RPGManager.getSumFromAllNotesByRegex.mockReturnValueOnce(50);
+      RPGManager.getNumberFromNoteByRegex.mockReturnValueOnce(25);
+
+      jabsBattler.processStateTick({ id: 1 });
+
+      // rec (1) * (1 + (50 + 25) / 100) = 1.75; 10 * 1.75 = 17.5.
+      expect(jabsBattler.applySlipEffect).toHaveBeenCalledWith(17.5, 0);
+    });
+
+    it('amplifies a damage slip value by the combined battler-wide and skill-scoped DoT amp rate', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 1, getUuid: () => 'uuid' });
+      jabsBattler.stateSlipHp = () => -10;
+      jabsBattler.stateSlipMp = () => 0;
+      jabsBattler.stateSlipTp = () => 0;
+      jabsBattler.applySlipEffect = vi.fn();
+      jabsBattler.onSlipRegenTick = vi.fn();
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId = vi.fn(() => buildJabsState({
+        source: { getAllNotes: () => [ 'ring-of-melting' ] },
+        sourceSkill: 'poison-skill',
+      }));
+      RPGManager.getSumFromAllNotesByRegex.mockReturnValueOnce(100);
+      RPGManager.getNumberFromNoteByRegex.mockReturnValueOnce(0);
+
+      jabsBattler.processStateTick({ id: 1 });
+
+      // -10 * (1 + 100 / 100) = -20; no REC involvement on the harm side.
+      expect(jabsBattler.applySlipEffect).toHaveBeenCalledWith(-20, 0);
+    });
+
+    it('does not consult the skill-scoped amp tag when no source skill is on record', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 1, getUuid: () => 'uuid' });
+      jabsBattler.stateSlipHp = () => -10;
+      jabsBattler.stateSlipMp = () => 0;
+      jabsBattler.stateSlipTp = () => 0;
+      jabsBattler.applySlipEffect = vi.fn();
+      jabsBattler.onSlipRegenTick = vi.fn();
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId = vi.fn(() => buildJabsState({ sourceSkill: null }));
+
+      // this mock's call history accumulates across the whole file, so clear it immediately
+      // before the action under test to make the "not called" assertion below trustworthy.
+      RPGManager.getNumberFromNoteByRegex.mockClear();
+
+      jabsBattler.processStateTick({ id: 1 });
+
+      expect(RPGManager.getNumberFromNoteByRegex).not.toHaveBeenCalled();
+      expect(jabsBattler.applySlipEffect).toHaveBeenCalledWith(-10, 0);
     });
   });
 
@@ -7786,7 +7836,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getBattler = () => ({ mhp: 100 });
       jabsBattler.calculateStateSlipFormula = () => 3;
       const state = {
-        jabsSlipHpFlatPerFive: 5, jabsSlipHpPercentPerFive: 10, jabsSlipHpFormulaPerFive: 'a.atk',
+        jabsSlipHpFlat: 5, jabsSlipHpPercent: 10, jabsSlipHpFormula: 'a.atk',
       };
 
       // 5 + (100 * 0.10) + 3 = 18.
@@ -7798,7 +7848,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       const jabsBattler = buildBattler();
       jabsBattler.getBattler = () => ({ mhp: 100 });
       jabsBattler.calculateStateSlipFormula = vi.fn();
-      const state = { jabsSlipHpFlatPerFive: 5, jabsSlipHpPercentPerFive: 0, jabsSlipHpFormulaPerFive: null };
+      const state = { jabsSlipHpFlat: 5, jabsSlipHpPercent: 0, jabsSlipHpFormula: null };
 
       expect(jabsBattler.stateSlipHp(state)).toBe(5);
       expect(jabsBattler.calculateStateSlipFormula).not.toHaveBeenCalled();
@@ -7810,7 +7860,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getBattler = () => ({ mmp: 50 });
       jabsBattler.calculateStateSlipFormula = () => 2;
       const state = {
-        jabsSlipMpFlatPerFive: 1, jabsSlipMpPercentPerFive: 10, jabsSlipMpFormulaPerFive: 'a.mat',
+        jabsSlipMpFlat: 1, jabsSlipMpPercent: 10, jabsSlipMpFormula: 'a.mat',
       };
 
       // 1 + (50 * 0.10) + 2 = 8.
@@ -7823,7 +7873,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getBattler = () => ({ maxTp: () => 20 });
       jabsBattler.calculateStateSlipFormula = () => 1;
       const state = {
-        jabsSlipTpFlatPerFive: 2, jabsSlipTpPercentPerFive: 50, jabsSlipTpFormulaPerFive: 'a.def',
+        jabsSlipTpFlat: 2, jabsSlipTpPercent: 50, jabsSlipTpFormula: 'a.def',
       };
 
       // 2 + (20 * 0.50) + 1 = 13.

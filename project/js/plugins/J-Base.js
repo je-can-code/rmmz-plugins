@@ -3116,16 +3116,20 @@ var ParameterDefinition = class ParameterDefinition {
 	* padding, and percent suffixes as dictated by the format and display policy.
 	* @param {number} value The raw battler value to format.
 	* @param {boolean=} withPadding True to apply zero-padding for styled stat columns; defaults to false.
+	* @param {Game_Battler=} actor The battler whose tick cadence resolves REGEN_PER_SECOND's
+	* conversion. Optional so `_base` stays decoupled from J-ABS; when omitted (or J-ABS isn't
+	* loaded), falls back to a neutral 1 tick/sec assumption rather than crashing.
 	* @returns {string}
 	*/
-	prettyValue(value, withPadding = false) {
+	prettyValue(value, withPadding = false, actor = null) {
 		const sentinel = this.resolveDisplaySentinel(value);
 		if (sentinel) {
 			return sentinel;
 		}
 		const num = this.clampDisplayMagnitude(this.displayMagnitude(value));
 		if (this.format === ParameterFormat.REGEN_PER_SECOND) {
-			const perSecond = num / 5;
+			const ticksPerSecond = actor && actor.getNaturalRegenTickInterval ? 60 / actor.getNaturalRegenTickInterval() : 1;
+			const perSecond = num * ticksPerSecond;
 			return `${perSecond.toFixed(1)}/s`;
 		}
 		let base = Number.isInteger(num) ? num.toString() : num.toFixed(1);

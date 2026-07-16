@@ -10,20 +10,34 @@ describe('AutoApplyStateOnNearbyManager (direct src import)', () =>
   {
     vi.resetModules();
 
+    FakePassiveRuleJabsAccess = {
+      nearbyEnemies: vi.fn().mockReturnValue([]),
+      nearbyAlliesExcludingSelf: vi.fn().mockReturnValue([]),
+    };
+    vi.doMock('../../../../../../src/plugins/passive/ext/conditional/helpers/PassiveRuleJabsAccess.js', () => ({ default: FakePassiveRuleJabsAccess }));
+
     class FakeAutoRuleManager
     {
       static buildRuleKey(source, tupleIndex, id, condition)
       {
         return `${source.constructor.name}:${source.id}:${tupleIndex}:${id}:${condition}`;
       }
+
+      static nearbyBattlersForKind(battler, kind, triggerTiles)
+      {
+        return (kind === 'enemiesNearby' || kind === 'enemiesNearbyBelow')
+          ? FakePassiveRuleJabsAccess.nearbyEnemies(battler, triggerTiles)
+          : FakePassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler);
+      }
+
+      static proximityGatePasses(nearbyCount, minCount, kind)
+      {
+        if (kind === 'enemiesNearbyBelow' || kind === 'alliesNearbyBelow') return nearbyCount < minCount;
+
+        return nearbyCount >= minCount;
+      }
     }
     vi.doMock('../../../../../../src/plugins/passive/ext/conditional/managers/AutoRuleManager.js', () => ({ default: FakeAutoRuleManager }));
-
-    FakePassiveRuleJabsAccess = {
-      nearbyEnemies: vi.fn().mockReturnValue([]),
-      nearbyAlliesExcludingSelf: vi.fn().mockReturnValue([]),
-    };
-    vi.doMock('../../../../../../src/plugins/passive/ext/conditional/helpers/PassiveRuleJabsAccess.js', () => ({ default: FakePassiveRuleJabsAccess }));
 
     ({ default: AutoApplyStateOnNearbyManager } = await import('../../../../../../src/plugins/passive/ext/conditional/managers/AutoApplyStateOnNearbyManager.js'));
   });
@@ -212,6 +226,39 @@ describe('AutoApplyStateOnNearbyManager (direct src import)', () =>
 
       // Assert
       expect(FakePassiveRuleJabsAccess.nearbyEnemies).toHaveBeenCalledWith(battler, 3);
+    });
+
+    it('dispatches enemiesNearbyBelow onto the straggler still under the threshold', () =>
+    {
+      // Arrange
+      const battler = makeBattler();
+      const source = { constructor: { name: 'RPG_State' }, id: 1 };
+      const straggler = makeBattler();
+      FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([ { getBattler: () => straggler } ]);
+
+      // Act
+      AutoApplyStateOnNearbyManager._tryDispatchProximityRule(
+        battler, source, 0, 5, 'enemiesNearbyBelow', [ 5, 'enemiesNearbyBelow', 2, 60 ],
+      );
+
+      // Assert
+      expect(straggler.addState).toHaveBeenCalledWith(5, straggler);
+    });
+
+    it('gate-passes but applies to nobody when enemiesNearbyBelow requires zero targets', () =>
+    {
+      // Arrange — threshold of 1 only passes at zero nearby enemies, which is also the target set.
+      const battler = makeBattler();
+      const source = { constructor: { name: 'RPG_State' }, id: 1 };
+      FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([]);
+
+      // Act
+      AutoApplyStateOnNearbyManager._tryDispatchProximityRule(
+        battler, source, 0, 5, 'enemiesNearbyBelow', [ 5, 'enemiesNearbyBelow', 1, 60 ],
+      );
+
+      // Assert — nothing to dispatch to, so the cooldown never stamps either.
+      expect(battler.setAutoRuleLastFrame).not.toHaveBeenCalled();
     });
   });
 });

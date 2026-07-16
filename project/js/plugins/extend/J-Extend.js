@@ -1570,7 +1570,7 @@ Game_Action.prototype.applyOnHitApplyStates = function(target) {
 	allEntries.forEach(([stateId, chance, duration = null, stacks = null]) => {
 		if (!RPGManager.chanceIn100(chance)) return;
 		const overrides = new JABS_StateOverrides(duration, stacks);
-		target.addStateWithOverrides(stateId, attacker, overrides);
+		target.addStateWithOverrides(stateId, attacker, overrides, this.item());
 	});
 };
 /**
@@ -1706,7 +1706,7 @@ Game_Action.prototype.applyStates = function(target, jabsOnChanceEffects) {
 		const negativeRolls = target.getNegativeRolls();
 		const procCount = jabsOnChanceEffect.resolveProcCount(positiveRolls, negativeRolls, attacker);
 		for (let i = 0; i < procCount; i++) {
-			target.addState(jabsOnChanceEffect.skillId, attacker);
+			target.addState(jabsOnChanceEffect.skillId, attacker, skill);
 		}
 	});
 };

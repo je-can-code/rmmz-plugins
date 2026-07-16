@@ -617,6 +617,7 @@ class JABS_Battler
     battler.getSkillSlotManager()
       .setupSlots(battler);
   };
+
   //endregion initialization
 
   //region _reference
@@ -1070,7 +1071,8 @@ class JABS_Battler
    */
   isActor()
   {
-    return (this.isPlayer() || this.getBattler().isActor());
+    return (this.isPlayer() || this.getBattler()
+      .isActor());
   };
 
   /**
@@ -1089,7 +1091,8 @@ class JABS_Battler
    */
   isEnemy()
   {
-    return (this.getBattler().isEnemy());
+    return (this.getBattler()
+      .isEnemy());
   };
 
   /**
@@ -2393,6 +2396,7 @@ class JABS_Battler
       this._inCombatCountdown = tailFrames;
     }
   };
+
   //endregion _reference
 
   //region statics
@@ -2630,6 +2634,7 @@ class JABS_Battler
   {
     return parseFloat(10 + J.ABS.Metadata.AllyRubberbandAdjustment);
   };
+
   //endregion statics
 
   //region updates
@@ -2935,11 +2940,9 @@ class JABS_Battler
       : [];
 
     // walk the five-tier priority chain.
-    return this.resolveDirectTargetByState(stateTargetId, candidates)
-      ?? this.resolveDirectTargetNonInanimate(proximityLimit)
-      ?? this.resolveDirectTargetViaScan(candidates)
-      ?? this.resolveDirectTargetInanimateFallback(proximityLimit)
-      ?? this.resolveDirectTargetInanimateScan(candidates);
+    return this.resolveDirectTargetByState(stateTargetId, candidates) ?? this.resolveDirectTargetNonInanimate(
+      proximityLimit) ?? this.resolveDirectTargetViaScan(candidates) ?? this.resolveDirectTargetInanimateFallback(
+      proximityLimit) ?? this.resolveDirectTargetInanimateScan(candidates);
   };
 
   /**
@@ -2967,7 +2970,11 @@ class JABS_Battler
       if (candidate.isEnemy() === this.isEnemy()) continue;
 
       // skip battlers not afflicted with the target state.
-      if (!candidate.getBattler().isStateAffected(stateId)) continue;
+      if (!candidate.getBattler()
+        .isStateAffected(stateId))
+      {
+        continue;
+      }
 
       // track the closest qualifying candidate.
       const distance = this.distanceToDesignatedTarget(candidate);
@@ -3301,7 +3308,8 @@ class JABS_Battler
 
     // fire each payoff skill for free, resolved the same way the channel's ticks were.
     const [ targetX, targetY ] = this.resolveActionTargetCoordinates(sourceAction);
-    sourceAction.getBaseSkill().jabsOnChannelComplete
+    sourceAction.getBaseSkill()
+      .jabsOnChannelComplete
       .forEach(skillId => $jabsEngine.forceMapAction(this, skillId, false, targetX, targetY));
 
     // apply the vessel's own normal effective cooldown, same as any other skill finishing.
@@ -3365,7 +3373,8 @@ class JABS_Battler
     // consult the in-flight skill's own opt-in root tag.
     const decidedActions = this.getDecidedAction();
     const skill = decidedActions
-      ? decidedActions.at(0).getBaseSkill()
+      ? decidedActions.at(0)
+        .getBaseSkill()
       : null;
     return skill
       ? skill.jabsCannotMoveToInterrupt
@@ -3399,7 +3408,9 @@ class JABS_Battler
     else if (this.isCasting())
     {
       const decidedActions = this.getDecidedAction();
-      sourceAction = decidedActions ? decidedActions.at(0) : null;
+      sourceAction = decidedActions
+        ? decidedActions.at(0)
+        : null;
       this._casting = false;
       this.setCastTimeCountdown(0);
     }
@@ -3760,7 +3771,8 @@ class JABS_Battler
     this.setInvincible(false);
 
     // explicitly clear the dodge speed modifier to avoid residual boosts.
-    this.getCharacter().setDodgeModifier(0);
+    this.getCharacter()
+      .setDodgeModifier(0);
 
     // reset the dodge frames.
     this.setDodgeFrame(0);
@@ -3793,6 +3805,7 @@ class JABS_Battler
       this.destroy();
     }
   };
+
   //endregion updates
 
   //region aggro
@@ -4148,6 +4161,7 @@ class JABS_Battler
   {
     return this._aggros.find(aggro => aggro.uuid() === uuid);
   };
+
   //endregion aggro
 
   //region dodging
@@ -4413,17 +4427,46 @@ class JABS_Battler
   static buildDirectionalDodgeScores(ux, uy)
   {
     const rows = [
-      { d: J.ABS.Directions.UP, vx: 0, vy: -1 },
-      { d: J.ABS.Directions.DOWN, vx: 0, vy: 1 },
-      { d: J.ABS.Directions.LEFT, vx: -1, vy: 0 },
-      { d: J.ABS.Directions.RIGHT, vx: 1, vy: 0 },
-      { d: J.ABS.Directions.UPPERLEFT, vx: -1, vy: -1 },
-      { d: J.ABS.Directions.UPPERRIGHT, vx: 1, vy: -1 },
-      { d: J.ABS.Directions.LOWERLEFT, vx: -1, vy: 1 },
-      { d: J.ABS.Directions.LOWERRIGHT, vx: 1, vy: 1 },
+      {
+        d: J.ABS.Directions.UP,
+        vx: 0,
+        vy: -1
+      }, {
+        d: J.ABS.Directions.DOWN,
+        vx: 0,
+        vy: 1
+      }, {
+        d: J.ABS.Directions.LEFT,
+        vx: -1,
+        vy: 0
+      }, {
+        d: J.ABS.Directions.RIGHT,
+        vx: 1,
+        vy: 0
+      }, {
+        d: J.ABS.Directions.UPPERLEFT,
+        vx: -1,
+        vy: -1
+      }, {
+        d: J.ABS.Directions.UPPERRIGHT,
+        vx: 1,
+        vy: -1
+      }, {
+        d: J.ABS.Directions.LOWERLEFT,
+        vx: -1,
+        vy: 1
+      }, {
+        d: J.ABS.Directions.LOWERRIGHT,
+        vx: 1,
+        vy: 1
+      },
     ];
 
-    const scored = rows.map(({ d, vx, vy }) => ({
+    const scored = rows.map(({
+                               d,
+                               vx,
+                               vy
+                             }) => ({
       d,
       s: vx * ux + vy * uy,
     }));
@@ -4442,8 +4485,7 @@ class JABS_Battler
   pickAiDirectionalDodgeDirection()
   {
     const character = this.getCharacter();
-    const threat = JABS_AiManager.getClosestOpposingBattler(this)
-      || JABS_AiManager.findDefensiveThreatBattler(this);
+    const threat = JABS_AiManager.getClosestOpposingBattler(this) || JABS_AiManager.findDefensiveThreatBattler(this);
 
     if (!threat || threat.isDead())
     {
@@ -4541,6 +4583,7 @@ class JABS_Battler
         return character.direction();
     }
   };
+
   //endregion dodging
 
   //region guarding
@@ -4858,6 +4901,7 @@ class JABS_Battler
       this._parryWindow = 0;
     }
   };
+
   //endregion guarding
 
   //region map
@@ -4879,7 +4923,11 @@ class JABS_Battler
     }
 
     // invisible followers are not combat-eligible; actions pass through them.
-    if (this.isFollower() && this.getCharacter().isVisible() === false) return false;
+    if (this.isFollower() && this.getCharacter()
+      .isVisible() === false)
+    {
+      return false;
+    }
 
     // passes all the criteria.
     return true;
@@ -4893,11 +4941,7 @@ class JABS_Battler
    * @param {boolean} alreadyHitOne Whether or not this action has already hit a target.
    */
   // eslint-disable-next-line complexity
-  isWithinScope(
-    action,
-    target,
-    alreadyHitOne = false
-  )
+  isWithinScope(action, target, alreadyHitOne = false)
   {
     const user = action.getCaster();
     const gameAction = action.getAction();
@@ -4929,8 +4973,7 @@ class JABS_Battler
 
     // action is from one of the target's allies.
     // inanimate battlers cannot be targeted by their allies with direct skills.
-    if (actionIsSameTeam && (scopeAlly || scopeAllAllies || scopeEverything)
-      && !(action.isDirectAction() && target.isInanimate()))
+    if (actionIsSameTeam && (scopeAlly || scopeAllAllies || scopeEverything) && !(action.isDirectAction() && target.isInanimate()))
     {
       return true;
     }
@@ -4951,10 +4994,7 @@ class JABS_Battler
    * @param {JABS_ActionOptions=} actionOptions The options associated with this action.
    * @returns {JABS_Action[]} The JABS actions based on the skill id provided.
    */
-  createJabsActionFromSkill(
-    skillId,
-    actionOptions = JABS_ActionOptions.Default()
-  )
+  createJabsActionFromSkill(skillId, actionOptions = JABS_ActionOptions.Default())
   {
     // create the underlying skill for the action.
     const action = new Game_Action(this.getBattler(), false);
@@ -4982,7 +5022,9 @@ class JABS_Battler
 
     // stamp resolved cast duration on the shared game action so every hit tick can scale damage.
     // uses JABS_Action.getCastTime() (includes J-ABS-Timing cast speed when that ext is loaded).
-    const castFrames = actions.length > 0 ? actions[0].getCastTime() : 0;
+    const castFrames = actions.length > 0
+      ? actions[0].getCastTime()
+      : 0;
     action.setResolvedCastTimeFrames(castFrames);
 
     // return the generated actions.
@@ -4998,11 +5040,7 @@ class JABS_Battler
    * @param {JABS_ActionOptions} actionOptions The options for this action.
    * @returns {JABS_Action[]}
    */
-  convertProjectileDirectionsToActions(
-    projectileDirections,
-    action,
-    actionOptions
-  )
+  convertProjectileDirectionsToActions(projectileDirections, action, actionOptions)
   {
     // delegate to the shared action spawner for volley construction.
     return JABS_ActionSpawner.buildVolley(this, projectileDirections, action, actionOptions);
@@ -5037,12 +5075,12 @@ class JABS_Battler
     // if there isn't one, then we don't do anything.
     if (!skillId) return [];
 
-  // check costs against the resolved skill — that is what will actually fire.
-  if (!battler.meetsSkillConditions(battler.skill(skillId))) return [];
+    // check costs against the resolved skill — that is what will actually fire.
+    if (!battler.meetsSkillConditions(battler.skill(skillId))) return [];
 
-  // check that the battler has permission to use this slot.
-  // the raw base slot id is checked so transforms do not require learning the target skill.
-  if (!this.battlerHasPermissionForSlot(cooldownKey)) return [];
+    // check that the battler has permission to use this slot.
+    // the raw base slot id is checked so transforms do not require learning the target skill.
+    if (!this.battlerHasPermissionForSlot(cooldownKey)) return [];
 
     // build action options with the cooldown key.
     const builder = JABS_ActionOptions.Builder()
@@ -5134,10 +5172,7 @@ class JABS_Battler
    * @param {boolean} isLoot Whether or not this is a loot pickup.
    */
   // eslint-disable-next-line complexity
-  applyToolEffects(
-    toolId,
-    isLoot = false
-  )
+  applyToolEffects(toolId, isLoot = false)
   {
     // grab the item data.
     const item = $dataItems.at(toolId);
@@ -5263,10 +5298,7 @@ class JABS_Battler
    * @param {boolean} isLoot Whether or not this is a loot pickup.
    */
   // eslint-disable-next-line complexity
-  applyUsableItemEffects(
-    itemId,
-    isLoot = false
-  )
+  applyUsableItemEffects(itemId, isLoot = false)
   {
     // grab the item data.
     const item = $dataItems.at(itemId);
@@ -5411,7 +5443,8 @@ class JABS_Battler
    * @param {JABS_Battler} target The target for calculating damage; defaults to self.
    */
   onItemApplied(_gameAction, _itemId, _target = this)
-  {};
+  {
+  };
 
   /**
    * Applies the effects of the tool against all allies on the team.
@@ -5665,7 +5698,8 @@ class JABS_Battler
   handleOnEvadeSkills(jabsAttacker)
   {
     // grab all the execute-on-evade skills from the underlying battler's notes.
-    const executeEffects = this.getBattler().onEvadeExecuteEffects();
+    const executeEffects = this.getBattler()
+      .onEvadeExecuteEffects();
 
     // if there are none, there is nothing to do.
     if (executeEffects.length === 0) return;
@@ -5719,6 +5753,7 @@ class JABS_Battler
       this.setDying(true);
     }
   };
+
   //endregion map
 
   //region movement
@@ -5776,6 +5811,7 @@ class JABS_Battler
     // return what we found.
     return lockedByState;
   };
+
   //endregion movement
 
   //region readiness
@@ -6244,6 +6280,7 @@ class JABS_Battler
     // we can pay the cost!
     return true;
   };
+
   //endregion readiness
 
   //region regeneration
@@ -6263,30 +6300,14 @@ class JABS_Battler
   };
 
   /**
-   * Resolves how many frames elapse between natural regeneration ticks for this battler.<br/>
-   * Uses the same base-plus-flat-then-percent formula as per-state slip ticking, evaluated
-   * against this battler itself (natural regen has no external "source" to speak of), and typed
-   * as the plugin-configured natural regen tick type so type-scoped modifiers can reach it.
+   * Resolves how many frames elapse between natural regeneration ticks for this battler.
+   * Delegates to {@link Game_Battler#getNaturalRegenTickInterval} so the same formula is
+   * available to any UI wanting to preview this cadence outside a live map context.
    * @returns {number}
    */
   getNaturalRegenTickInterval()
   {
-    // shorthand the battler and the configured natural regen type.
-    const battler = this.getBattler();
-    const naturalRegenType = J.ABS.Metadata.NaturalRegenTickType;
-
-    // resolve the base interval and layer on this battler's own flat/percent modifiers.
-    const baseInterval = J.ABS.Metadata.DefaultStateTickInterval;
-    const flatModifier = battler.tickSpeedFlatModifier();
-    const percentModifier = battler.tickSpeedPercentModifier([ naturalRegenType ]);
-
-    // apply the flat modifier first, then the combined percent modifier.
-    const modifiedInterval = (baseInterval + flatModifier) / (1 + (percentModifier / 100));
-
-    // never let the interval drop below the tunable floor, and never below 1 frame regardless.
-    const tunableFloor = Math.max(J.ABS.Metadata.MinimumStateTickInterval, 1);
-
-    return Math.max(Math.round(modifiedInterval), tunableFloor);
+    return this.getBattler().getNaturalRegenTickInterval();
   };
 
   /**
@@ -6409,16 +6430,19 @@ class JABS_Battler
   };
 
   /**
-   * Calculate the per5seconds regeneration rate and reduce it if applicable. By default, this should be roughly 5% of
-   * the base100 regeneration value, and 20% of that value if reduced.
-   * @param {number} baseValue The base regeneration value.
+   * Calculate the per-tick regeneration amount and reduce it if applicable. Applied in full on
+   * every natural regen tick- no per-tick division- matching the same philosophy as slip damage/
+   * regen: tick speed alone controls total throughput, there is no fixed divisor to keep in sync
+   * with the resolved tick interval.
+   * @param {number} baseValue The base regeneration value (raw x-param fraction, e.g. 0.01 = 1%).
    * @param {boolean} isReduced Whether or not this regeneration value should be reduced.
    * @returns {number}
    */
   calculatedRegen(baseValue, isReduced = false)
   {
-    // calculate the amount applied each regen tick; tick rate is resolved dynamically (see getNaturalRegenTickInterval).
-    let calculatedValue = (baseValue * 100) * 0.05;
+    // convert the raw x-param fraction to percentage-points; tick rate is resolved dynamically
+    // (see getNaturalRegenTickInterval) and applies this full amount every tick.
+    let calculatedValue = baseValue * 100;
     if (isReduced)
     {
       // only 20% of your natural HP regen is available while reduced.
@@ -6447,10 +6471,10 @@ class JABS_Battler
       } = battler;
 
       // calculate the per-tick bonus; total DPS now scales with however fast this battler's natural regen ticks.
-      const naturalHp5 = this.calculatedRegen(hrg, isReduced) * rec;
+      const naturalHp = this.calculatedRegen(hrg, isReduced) * rec;
 
       // execute the gain.
-      battler.gainHp(naturalHp5);
+      battler.gainHp(naturalHp);
     }
   };
 
@@ -6472,10 +6496,10 @@ class JABS_Battler
       } = battler;
 
       // calculate the per-tick bonus; total DPS now scales with however fast this battler's natural regen ticks.
-      const naturalMp5 = this.calculatedRegen(mrg, isReduced) * rec;
+      const naturalMp = this.calculatedRegen(mrg, isReduced) * rec;
 
       // execute the gain.
-      battler.gainMp(naturalMp5);
+      battler.gainMp(naturalMp);
     }
   };
 
@@ -6497,10 +6521,10 @@ class JABS_Battler
       } = battler;
 
       // calculate the per-tick bonus; total DPS now scales with however fast this battler's natural regen ticks.
-      const naturalTp5 = this.calculatedRegen(trg, isReduced) * rec;
+      const naturalTp = this.calculatedRegen(trg, isReduced) * rec;
 
       // execute the gain.
-      battler.gainTp(naturalTp5);
+      battler.gainTp(naturalTp);
     }
   };
 
@@ -6513,37 +6537,164 @@ class JABS_Battler
    */
   processStateTick(state)
   {
+    // if we cannot process the state tick, do not.
+    if (this.canProcessStateTick() === false) return;
+
+    // default the regenerations to the battler's innate regens.
+    const slipResources = [ this.stateSlipHp(state), this.stateSlipMp(state), this.stateSlipTp(state) ];
+
+    // grab the state tracker from the engine.
+    const jabsState = $jabsEngine.getJabsStateByUuidAndStateId(this.getBattler().getUuid(), state.id);
+
+    // iterate the resources to apply slip to.
+    slipResources.forEach((slipAmount, index) => this.processSlipEffect(slipAmount, index, jabsState), this);
+  }
+
+  /**
+   * Checks if the state can process the tick.
+   * @returns {boolean}
+   */
+  canProcessStateTick()
+  {
     // grab the battler we're working with.
     const battler = this.getBattler();
 
-    // a dead battler has nothing left to slip/regen.
-    if (!battler || battler.isDead()) return;
+    // a non/dead battler has nothing to slip.
+    if (!battler || battler.isDead()) return false;
 
-    // default the regenerations to the battler's innate regens.
-    const { rec } = battler;
-    const perResource = [ this.stateSlipHp(state), this.stateSlipMp(state), this.stateSlipTp(state) ];
+    // process the state tick!
+    return true;
+  }
 
-    for (let index = 0; index < 3; index++)
+  /**
+   * Process the effects of the slip.
+   * @param {number} slipAmount The slip amount itself to be processed.
+   * @param {0|1|2} index The type of resource this slip represents.
+   * @param {JABS_State} jabsState The state tracker that owns the slip.
+   */
+  processSlipEffect(slipAmount, index, jabsState)
+  {
+    // if we cannot process this slip amount, then do not.
+    if (this.canProcessSlipEffect(slipAmount) === false) return;
+
+    // calculate the modified slip amount based on other factors.
+    const modifiedSlipAmount = this.calculateModifiedSlipAmount(slipAmount, jabsState);
+
+    // actually apply the slip effect.
+    this.applySlipEffect(modifiedSlipAmount, index);
+
+    // invert the sign so slip effects are displayed right.
+    const displayAmount = -modifiedSlipAmount;
+
+    // render the visual for the slip effect.
+    this.onSlipRegenTick(displayAmount, index, jabsState.stateId);
+  }
+
+  /**
+   * Determines whether the slip can be processed.
+   * @param {number} slipAmount The amount to slip.
+   * @returns {boolean}
+   */
+  canProcessSlipEffect(slipAmount)
+  {
+    // don't process nothing-slips.
+    if (slipAmount === 0) return false;
+
+    // process the slip!
+    return true;
+  }
+
+  /**
+   * Calculate the slip amount against any additional modifiers.
+   * @param {number} original The original slip amount.
+   * @param {JABS_State} jabsState The state tracker that owns the slip.
+   * @returns {number}
+   */
+  calculateModifiedSlipAmount(original, jabsState)
+  {
+    // check if we're working with a HoT.
+    if (original > 0)
     {
-      let regen = perResource[index];
-
-      if (!regen)
-      {
-        continue;
-      }
-
-      if (regen > 0)
-      {
-        regen *= rec;
-      }
-
-      this.applySlipEffect(regen, index);
-
-      const displayAmount = -regen;
-
-      this.onSlipRegenTick(displayAmount, index, state.id);
+      // apply the amps against the HoT.
+      return this.applyHealingOverTimeAmp(original, jabsState);
     }
-  };
+
+    // check if we're working with a DoT.
+    if (original < 0)
+    {
+      // apply the amps against the DoT.
+      return this.applyDamageOverTimeAmp(original, jabsState);
+    }
+
+    // somehow we landed with 0 or NaN, so return that back; TODO: should we throw?
+    return original;
+  }
+
+  /**
+   * Applies any amplification against healing-based slip effects.
+   * Layers the afflicted battler's own REC trait together with any {@link J.ABS.RegExp.HotAmpRate}/
+   * {@link J.ABS.RegExp.ThisHotAmpRate} tags carried by the source of the heal.
+   * @param {number} original The original healing tick amount.
+   * @param {JABS_State} jabsState The state tracker that owns the slip.
+   * @returns {number}
+   */
+  applyHealingOverTimeAmp(original, jabsState)
+  {
+    // capture the REC-amplified regen.
+    const amplifiedRegen = original * this.getBattler().rec;
+
+    // layer on the source's HoT-specific amp rate, battler-wide and skill-scoped combined.
+    const ampRate = this.calculateSlipAmpRate(jabsState, J.ABS.RegExp.HotAmpRate, J.ABS.RegExp.ThisHotAmpRate);
+
+    // return the fully-amplified regen.
+    return amplifiedRegen * (1 + (ampRate / 100));
+  }
+
+  /**
+   * Applies any amplification against the damage-based slip effects.
+   * Unlike healing, damage-over-time has no target-side trait counterpart (no vanilla "REC" for
+   * harm); amplification here is entirely sourced from the applier via
+   * {@link J.ABS.RegExp.DotAmpRate}/{@link J.ABS.RegExp.ThisDotAmpRate}.
+   * @param {number} original The original damage tick amount.
+   * @param {JABS_State} jabsState The state tracker that owns the slip.
+   * @returns {number}
+   */
+  applyDamageOverTimeAmp(original, jabsState)
+  {
+    // gather the source's DoT-specific amp rate, battler-wide and skill-scoped combined.
+    const ampRate = this.calculateSlipAmpRate(jabsState, J.ABS.RegExp.DotAmpRate, J.ABS.RegExp.ThisDotAmpRate);
+
+    // return the amplified damage.
+    return original * (1 + (ampRate / 100));
+  }
+
+  /**
+   * Calculates the combined slip amplification rate for a tick, summing the battler-wide rate
+   * from every note source on the applier (actor/class/weapon/armor/state) with the skill-scoped
+   * rate from the skill that was executing when the state was applied, if any.
+   * @param {JABS_State} jabsState The state tracker that owns the slip.
+   * @param {RegExp} battlerWideRegex The battler-wide tag to sum from the source's notes.
+   * @param {RegExp} skillScopedRegex The skill-scoped tag to read from the source skill's note.
+   * @returns {number} The combined percent amplification rate.
+   */
+  calculateSlipAmpRate(jabsState, battlerWideRegex, skillScopedRegex)
+  {
+    // the battler who applied this slip effect is the one whose gear/passives can amplify it.
+    const { source } = jabsState;
+
+    // sum the battler-wide amp rate from every note source the applier carries.
+    let ampRate = RPGManager.getSumFromAllNotesByRegex(source.getAllNotes(), battlerWideRegex);
+
+    // layer on the skill-scoped amp rate if a skill was executing when this state was applied.
+    const { sourceSkill } = jabsState;
+    if (sourceSkill)
+    {
+      ampRate += RPGManager.getNumberFromNoteByRegex(sourceSkill, skillScopedRegex);
+    }
+
+    // return the combined percent rate.
+    return ampRate;
+  }
 
   /**
    * Determines if a state should be processed or not for slip effects.
@@ -6588,31 +6739,31 @@ class JABS_Battler
     // grab the battler we're working with.
     const battler = this.getBattler();
 
-    // the running total of the hp-per-5 amount from states.
-    let tagHp5 = 0;
+    // the running total of the per-tick hp amount from states.
+    let tagHp = 0;
 
     // deconstruct the data out of the state.
     const {
-      jabsSlipHpFlatPerFive: hpPerFiveFlat,
-      jabsSlipHpPercentPerFive: hpPerFivePercent,
-      jabsSlipHpFormulaPerFive: hpPerFiveFormula,
+      jabsSlipHpFlat: hpFlat,
+      jabsSlipHpPercent: hpPercent,
+      jabsSlipHpFormula: hpFormula,
     } = state;
 
     // if the flat tag exists, use it.
-    tagHp5 += hpPerFiveFlat;
+    tagHp += hpFlat;
 
     // if the percent tag exists, use it.
-    tagHp5 += battler.mhp * (hpPerFivePercent / 100);
+    tagHp += battler.mhp * (hpPercent / 100);
 
     // if the formula tag exists, use it.
-    if (hpPerFiveFormula)
+    if (hpFormula)
     {
       // add the slip formula to the running total.
-      tagHp5 += this.calculateStateSlipFormula(hpPerFiveFormula, battler, state);
+      tagHp += this.calculateStateSlipFormula(hpFormula, battler, state);
     }
 
-    // return the per-five.
-    return tagHp5;
+    // return the per-tick total.
+    return tagHp;
   };
 
   /**
@@ -6625,31 +6776,31 @@ class JABS_Battler
     // grab the battler we're working with.
     const battler = this.getBattler();
 
-    // the running total of the mp-per-5 amount from states.
-    let tagMp5 = 0;
+    // the running total of the per-tick mp amount from states.
+    let tagMp = 0;
 
     // deconstruct the data out of the state.
     const {
-      jabsSlipMpFlatPerFive: mpPerFiveFlat,
-      jabsSlipMpPercentPerFive: mpPerFivePercent,
-      jabsSlipMpFormulaPerFive: mpPerFiveFormula,
+      jabsSlipMpFlat: mpFlat,
+      jabsSlipMpPercent: mpPercent,
+      jabsSlipMpFormula: mpFormula,
     } = state;
 
     // if the flat tag exists, use it.
-    tagMp5 += mpPerFiveFlat;
+    tagMp += mpFlat;
 
     // if the percent tag exists, use it.
-    tagMp5 += battler.mmp * (mpPerFivePercent / 100);
+    tagMp += battler.mmp * (mpPercent / 100);
 
     // if the formula tag exists, use it.
-    if (mpPerFiveFormula)
+    if (mpFormula)
     {
       // add the slip formula to the running total.
-      tagMp5 += this.calculateStateSlipFormula(mpPerFiveFormula, battler, state);
+      tagMp += this.calculateStateSlipFormula(mpFormula, battler, state);
     }
 
-    // return the per-five.
-    return tagMp5;
+    // return the per-tick total.
+    return tagMp;
   };
 
   /**
@@ -6663,30 +6814,30 @@ class JABS_Battler
     const battler = this.getBattler();
 
     // default slip to zero.
-    let tagTp5 = 0;
+    let tagTp = 0;
 
     // deconstruct the data out of the state.
     const {
-      jabsSlipTpFlatPerFive: tpPerFiveFlat,
-      jabsSlipTpPercentPerFive: tpPerFivePercent,
-      jabsSlipTpFormulaPerFive: tpPerFiveFormula,
+      jabsSlipTpFlat: tpFlat,
+      jabsSlipTpPercent: tpPercent,
+      jabsSlipTpFormula: tpFormula,
     } = state;
 
     // if the flat tag exists, use it.
-    tagTp5 += tpPerFiveFlat;
+    tagTp += tpFlat;
 
     // if the percent tag exists, use it.
-    tagTp5 += battler.maxTp() * (tpPerFivePercent / 100);
+    tagTp += battler.maxTp() * (tpPercent / 100);
 
     // if the formula tag exists, use it.
-    if (tpPerFiveFormula)
+    if (tpFormula)
     {
       // add the slip formula to the running total.
-      tagTp5 += this.calculateStateSlipFormula(tpPerFiveFormula, battler, state);
+      tagTp += this.calculateStateSlipFormula(tpFormula, battler, state);
     }
 
-    // return the per-five.
-    return tagTp5;
+    // return the per-tick total.
+    return tagTp;
   };
 
   /**
@@ -6801,13 +6952,14 @@ class JABS_Battler
 
   /**
    * Hook after slip/regen math is applied; extensions may show pops or other feedback.
-   * @param {number} displayAmount Amount passed to popup builders after sign normalization.
-   * @param {0|1|2} type HP / MP / TP index.
-   * @param {number} [stateId] Database state id when this tick came from {@link #processStateTick}.
+   * @param {number} _displayAmount Amount passed to popup builders after sign normalization.
+   * @param {0|1|2} _type HP / MP / TP index.
+   * @param {number} [_stateId] Database state id when this tick came from {@link #processStateTick}.
    */
   onSlipRegenTick(_displayAmount, _type, _stateId)
   {
   };
+
   //endregion regeneration
 
   //region timers
@@ -6965,6 +7117,7 @@ class JABS_Battler
     //   this.showBalloon(J.ABS.Balloons.Silence);
     // }
   };
+
   //endregion timers
 }
 

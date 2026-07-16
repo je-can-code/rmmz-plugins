@@ -147,24 +147,26 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
   if (state.jabsNegative)  rows.push({ icon: 0, label: 'Negative',  value: '(AI tries to remove)' });
 
   // slip damage/regen — percent-based takes priority over formula-based.
-  const slipHpPct  = state.jabsSlipHpPercentPerFive;
-  const slipMpPct  = state.jabsSlipMpPercentPerFive;
-  const slipTpPct  = state.jabsSlipTpPercentPerFive;
-  const slipHpForm = state.jabsSlipHpFormulaPerFive;
-  const slipMpForm = state.jabsSlipMpFormulaPerFive;
-  const slipTpForm = state.jabsSlipTpFormulaPerFive;
+  const slipHpPct  = state.jabsSlipHpPercent;
+  const slipMpPct  = state.jabsSlipMpPercent;
+  const slipTpPct  = state.jabsSlipTpPercent;
+  const slipHpForm = state.jabsSlipHpFormula;
+  const slipMpForm = state.jabsSlipMpFormula;
+  const slipTpForm = state.jabsSlipTpFormula;
 
   // percent-based values are already a plain number; formula-based values are evaluated
   // against the current actor so the player sees an actual quantity, not raw code.
   // In JABS slip convention, negative values are healing and positive values are damage.
   // TraitManager.slipName/slipIcon handle direction via sign; the displayed value is
-  // always shown as a positive magnitude so regen reads as "+55 / 5s" not "-55 / 5s".
+  // always shown as a positive magnitude so regen reads as "+55 / tick" not "-55 / tick".
+  // VAL applies in full every tick (no per-tick division), so "/ tick" is the honest unit-
+  // actual per-second throughput depends on this battler's current tick speed.
   if (slipHpPct)
   {
     rows.push({
       icon:  TraitManager.slipIcon('hp', slipHpPct),
       label: TraitManager.slipName('hp', slipHpPct),
-      value: `+${Math.abs(slipHpPct)}% / 5s`,
+      value: `+${Math.abs(slipHpPct)}% / tick`,
     });
   }
   else if (slipHpForm)
@@ -173,7 +175,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
     rows.push({
       icon:  TraitManager.slipIcon('hp', Number(hpEval)),
       label: TraitManager.slipName('hp', Number(hpEval)),
-      value: `+${Math.abs(Number(hpEval))} / 5s`,
+      value: `+${Math.abs(Number(hpEval))} / tick`,
     });
   }
 
@@ -182,7 +184,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
     rows.push({
       icon:  TraitManager.slipIcon('mp', slipMpPct),
       label: TraitManager.slipName('mp', slipMpPct),
-      value: `+${Math.abs(slipMpPct)}% / 5s`,
+      value: `+${Math.abs(slipMpPct)}% / tick`,
     });
   }
   else if (slipMpForm)
@@ -191,7 +193,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
     rows.push({
       icon:  TraitManager.slipIcon('mp', Number(mpEval)),
       label: TraitManager.slipName('mp', Number(mpEval)),
-      value: `+${Math.abs(Number(mpEval))} / 5s`,
+      value: `+${Math.abs(Number(mpEval))} / tick`,
     });
   }
 
@@ -200,7 +202,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
     rows.push({
       icon:  TraitManager.slipIcon('tp', slipTpPct),
       label: TraitManager.slipName('tp', slipTpPct),
-      value: `+${Math.abs(slipTpPct)}% / 5s`,
+      value: `+${Math.abs(slipTpPct)}% / tick`,
     });
   }
   else if (slipTpForm)
@@ -209,7 +211,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
     rows.push({
       icon:  TraitManager.slipIcon('tp', Number(tpEval)),
       label: TraitManager.slipName('tp', Number(tpEval)),
-      value: `+${Math.abs(Number(tpEval))} / 5s`,
+      value: `+${Math.abs(Number(tpEval))} / tick`,
     });
   }
 

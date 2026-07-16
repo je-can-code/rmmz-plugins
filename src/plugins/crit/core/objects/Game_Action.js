@@ -148,7 +148,7 @@ Game_Action.prototype.rollAndApplyCritStates = function(recipient, onChanceEffec
 
     for (let i = 0; i < procCount; i++)
     {
-      recipient.addState(effect.skillId, attacker);
+      recipient.addState(effect.skillId, attacker, skill);
     }
   });
 };

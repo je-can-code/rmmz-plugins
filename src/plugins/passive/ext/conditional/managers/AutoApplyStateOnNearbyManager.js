@@ -1,6 +1,5 @@
 //region AutoApplyStateOnNearbyManager
 import AutoRuleManager from './AutoRuleManager.js';
-import PassiveRuleJabsAccess from '../helpers/PassiveRuleJabsAccess.js';
 
 /**
  * Schedules real JABS state applications onto nearby battlers from
@@ -11,8 +10,12 @@ import PassiveRuleJabsAccess from '../helpers/PassiveRuleJabsAccess.js';
  * on the condition kind. This enables aura-style effects where the bearer passively afflicts
  * surrounding targets on a pulse timer.
  *
- * Only {@code enemiesNearby} and {@code alliesNearby} conditions are meaningful here; other
- * condition kinds have no proximity target set to iterate and will not fire.
+ * Only proximity condition kinds ({@code enemiesNearby}/{@code alliesNearby} and their
+ * {@code Below} counterparts) are meaningful here; other condition kinds have no proximity
+ * target set to iterate and will not fire. Note that a {@code *Below} tuple with a threshold
+ * of 1 (the "nothing nearby" case) can gate-pass while resolving zero targets — that pulse
+ * simply applies to nobody. Thresholds of 2+ still land on the stragglers under the count
+ * (e.g. "not swarmed by 5+ enemies, but hit whichever 1-2 are still around").
  */
 class AutoApplyStateOnNearbyManager extends AutoRuleManager
 {
@@ -52,12 +55,12 @@ class AutoApplyStateOnNearbyManager extends AutoRuleManager
    * @param {RPG_BaseItem} source - The database row that declared the rule.
    * @param {number} tupleIndex - Zero-based index of this tuple on the source row.
    * @param {number} id - The state id to apply to nearby battlers.
-   * @param {string} kind - The proximity condition kind (enemiesNearby or alliesNearby).
+   * @param {string} kind - The proximity condition kind; see {@link AutoRuleManager.isProximityKind}.
    * @param {any[]} tuple - The full parsed tuple array from the authored tag.
    */
   static _tryDispatchProximityRule(battler, source, tupleIndex, id, kind, tuple)
   {
-    // parse the minimum nearby battler count required to trigger this rule.
+    // parse the count threshold that gates this rule.
     const minCount = Number(tuple[2]);
 
     // parse the cooldown in frames between pulses, tracked on the bearer.
@@ -71,19 +74,17 @@ class AutoApplyStateOnNearbyManager extends AutoRuleManager
       ? triggerTilesRaw
       : null;
 
-    // skip tuples that declare an invalid or zero minimum count.
+    // skip tuples that declare an invalid or zero count threshold.
     if (Number.isNaN(minCount) || minCount < 1) return;
 
     // skip tuples with invalid cooldown values.
     if (Number.isNaN(cooldownFrames) || cooldownFrames < 0) return;
 
-    // collect the nearby battlers that will receive the state.
-    const nearbyJabsBattlers = kind === 'enemiesNearby'
-      ? PassiveRuleJabsAccess.nearbyEnemies(battler, triggerTiles)
-      : PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler);
+    // collect the nearby battlers that will receive the state — this is also the set the gate counts.
+    const nearbyJabsBattlers = this.nearbyBattlersForKind(battler, kind, triggerTiles);
 
-    // the proximity gate fails — not enough battlers are in range yet.
-    if (nearbyJabsBattlers.length < minCount) return;
+    // the proximity gate fails when this kind's comparison direction is not satisfied.
+    if (this.proximityGatePasses(nearbyJabsBattlers.length, minCount, kind) === false) return;
 
     // build the cooldown key against the bearer so pulse rate is bearer-scoped.
     const ruleKey = this.buildRuleKey(source, tupleIndex, id, kind);

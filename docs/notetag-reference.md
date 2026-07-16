@@ -802,10 +802,16 @@ hundred-scale per the parameter registry, `allAllies{key}Above/Below` requires e
 battler (including self) to pass. Discrete kinds: `alliesNearby`, `enemiesNearby`, `hasState`,
 `negativeStateCount`, `slotOnCooldown`/`slotOffCooldown`/`allOnCooldown`/`allOffCooldown`,
 `sinceLastMoved`/`Hit`/`Attacked`, `movedWithin`/`hitWithin`/`attackedWithin` (frames).
+`alliesNearby`/`enemiesNearby` take `[COUNT, RADIUS?]` and pass when at least COUNT are in range
+(`>=`); `alliesNearbyBelow`/`enemiesNearbyBelow` take the same slots but pass when UNDER COUNT
+(`<`) — use these for "nobody nearby" gates. RADIUS defaults to the plugin's
+`default-proximity-tiles` param when omitted.
 
 ```
 <passiveSourceRule:[allOffCooldown]>
+<passiveSourceRule:[enemiesNearbyBelow, 1, 1]>
 ```
+The second example gates on "no enemies within 1 tile" (melee range).
 
 **See also:** `<passiveStateRule>`, `<passiveStateCount>`
 
@@ -878,13 +884,17 @@ state is added to this battler),
 `onKill` (this battler defeats an enemy),
 `onDamageDealt` (this battler lands damage on an opposing battler),
 `move` (PARAM = whole tiles moved per apply; requires J-Pixelistics),
-`stand` (PARAM = frames standing still on the map before applying).
+`stand` (PARAM = frames standing still on the map before applying),
+`enemiesNearby`/`alliesNearby`/`enemiesNearbyBelow`/`alliesNearbyBelow` — 4/5-value proximity
+tuples, same shape and semantics as `<autoExecuteSkill>`'s proximity form below.
 
 ```
 <autoApplyState:[50, time, 900]>
 <autoApplyState:[57, onKill, 0]>
 <autoApplyState:[BUFF_ID, stand, 120]>
+<autoApplyState:[ACCURACY_BUFF_ID, enemiesNearbyBelow, 1, 30, 1]>
 ```
+The last example applies a self-buff every 30 frames while no enemy is within 1 tile (melee range).
 
 **See also:** `<autoApplyStateOnNearby>`, `<removeStateOnMove>` (the "stand" condition's natural pair)
 
@@ -900,18 +910,26 @@ pulse timer gated by COOLDOWN_FRAMES (tracked on the bearer) and a minimum nearb
 
 **Effect:**
 aura-style sibling of `<autoApplyState>` — instead of applying STATE_ID to the rule bearer, redirects
-onto every battler currently in proximity. Only two KIND values do anything (every other
+onto every battler currently in proximity. Only four KIND values do anything (every other
 `<autoApplyState>` CONDITION has no proximity set to iterate and simply won't fire): `enemiesNearby`
 targets nearby enemy JABS battlers, `alliesNearby` targets nearby allies excluding the bearer itself.
 MIN_COUNT is the minimum number of battlers in range required for the pulse to fire at all — the
 pulse then hits everyone currently in range, not just MIN_COUNT of them. Optional fifth TRIGGER_TILES
 overrides the plugin's default proximity radius for this rule's gate only.
 
+`enemiesNearbyBelow`/`alliesNearbyBelow` invert the gate — the pulse fires while UNDER MIN_COUNT
+instead of at or above it — but the target set is the same proximity list the gate counts. A
+MIN_COUNT of 1 (the "nothing nearby" case) can therefore gate-pass while resolving zero targets,
+in which case the pulse applies to nobody that tick. MIN_COUNT 2+ still lands on whatever stragglers
+remain under the threshold.
+
 ```
 <autoApplyStateOnNearby:[60, enemiesNearby, 1, 120]>
+<autoApplyStateOnNearby:[61, enemiesNearbyBelow, 3, 120]>
 ```
-Every 120 frames, if at least 1 enemy is within the default proximity radius, apply state 60 to every
-nearby enemy.
+The first: every 120 frames, if at least 1 enemy is within the default proximity radius, apply state
+60 to every nearby enemy. The second: every 120 frames, if fewer than 3 enemies are within range,
+apply state 61 to whichever enemies (0–2 of them) are still around.
 
 **See also:** `<autoApplyState>`
 
@@ -923,9 +941,12 @@ nearby enemy.
 same as `<autoApplyState>`
 
 **When:**
-same CONDITION vocabulary as `<autoApplyState>`, plus `enemiesNearby` as a 4- or 5-value tuple:
-`<autoExecuteSkill:[SKILL_ID, enemiesNearby, MIN_COUNT, FRAMES]>` with an optional fifth
-TRIGGER_TILES overriding the default proximity radius for this rule's gate only.
+same CONDITION vocabulary as `<autoApplyState>`, plus proximity kinds as a 4- or 5-value tuple:
+`<autoExecuteSkill:[SKILL_ID, KIND, COUNT, FRAMES]>` with an optional fifth TRIGGER_TILES overriding
+the default proximity radius for this rule's gate only. KIND is `enemiesNearby`/`alliesNearby`
+(fires at or above COUNT in range) or `enemiesNearbyBelow`/`alliesNearbyBelow` (fires strictly under
+COUNT — e.g. `[SKILL_ID, enemiesNearbyBelow, 1, FRAMES]` casts SKILL_ID only while no enemy is in
+range).
 
 **Effect:**
 fires SKILL_ID as a real map skill through JABS `forceMapAction` — no MP/TP cost, no skill cooldown.
@@ -935,7 +956,9 @@ don't).
 
 ```
 <autoExecuteSkill:[1022, enemiesNearby, 1, 60]>
+<autoExecuteSkill:[1023, enemiesNearbyBelow, 1, 60, 1]>
 ```
+The second casts skill 1023 every 60 frames while no enemy is within 1 tile.
 
 **See also:** `<autoApplyState>`, `<autoInflictState>`
 
@@ -2186,7 +2209,7 @@ counters.
 
 ---
 
-### `<delay:[DURATION, TOUCHABLE]>`
+### `<delay:[DURATION, TOUCHABLE, TRIGGER_RADIUS?]>`
 
 **Applies to:**
 Skills, Items
@@ -2197,12 +2220,19 @@ execution — the action sits on the map before triggering
 **Effect:**
 DURATION is frames the action waits on the map before detonating (-1 = never auto-detonates —
 must be paired with TOUCHABLE:true or it sits forever). TOUCHABLE (true/false) controls whether
-walking into it triggers it early.
+walking into it triggers it early. Optional third value TRIGGER_RADIUS is a tile radius used
+ONLY for touch-arming during the delay window — when omitted, touch-triggering falls back to the
+action's normal hitbox. This lets a delayed action have a small touch-trigger space independent
+of its actual detonation/hitbox size (e.g. a mine that's only steppable-on within 1 tile, but
+explodes across a much larger AoE once it goes off).
 
 ```
 <delay:[300, true]>
+<delay:[300, true, 1]>
 ```
-Sits on the map for ~5 seconds; anyone who walks into it triggers it early.
+The first sits on the map for ~5 seconds, triggerable early by touch anywhere within the skill's
+normal hitbox. The second does the same, but touch-arming only works within 1 tile — the
+detonation itself still uses whatever AoE the skill's own hitbox tags define.
 
 ---
 
@@ -2591,23 +2621,61 @@ is skill-scoped instead of caster-wide, so the bonus doesn't leak across the res
 
 ---
 
-### `<thisBonusDamage:PCT>`
+### `<bonusDamage:PCT>` / `<thisBonusDamage:PCT>`
 
 **Applies to:**
-Skills, Items
+`bonusDamage`: Actors, Classes, Enemies, Weapons, Armors, States. `thisBonusDamage`: Skills, Items.
 
 **When:**
-this specific skill is the action being resolved
+`bonusDamage`: every action the caster performs. `thisBonusDamage`: this specific skill is the
+action being resolved.
 
 **Effect:**
-an unconditional flat percent damage bonus with no target-state requirement — just a per-skill
-multiplier. Multiple tags on the same skill stack additively. Useful for boosting one skill's
-damage without touching its formula.
+an unconditional flat percent damage bonus — no target-state or self-state requirement, just a
+straight multiplier. `bonusDamage` reads from the caster's notes (actor, class, equips, states),
+so a state authored with this tag boosts every action the caster performs while it's active;
+`thisBonusDamage` is scoped to one skill instead. Multiple tags of either kind stack additively.
 
 ```
+<bonusDamage:15>
 <thisBonusDamage:20>
 ```
-This skill always deals +20% damage, regardless of target state.
+The first — authored on a state, say — gives the caster +15% damage on everything while that
+state is active. The second makes one specific skill always deal +20% damage, regardless of
+target state.
+
+**See also:** `<bonusDamageIfState>`, `<bonusDamageIfSelfState>`
+
+---
+
+### `<bonusDamageIfTargetHpBelow:[THRESHOLD_PCT, PCT_PER_POINT]>` / `<thisBonusDamageIfTargetHpBelow:[THRESHOLD_PCT, PCT_PER_POINT]>`
+
+**Applies to:**
+`bonusDamageIfTargetHpBelow`: Actors, Classes, Enemies, Weapons, Armors, States.
+`thisBonusDamageIfTargetHpBelow`: Skills, Items.
+
+**When:**
+the caster's action resolves against a target whose current HP is at or under THRESHOLD_PCT
+(rounded whole-number percent of max HP)
+
+**Effect:**
+an execute-style bonus that scales continuously, not a flat one-time bonus. The gate opens once
+the target's HP% is at or under THRESHOLD_PCT; once open, the bonus is PCT_PER_POINT × how many
+percentage points under THRESHOLD_PCT the target currently is. `thisBonusDamageIfTargetHpBelow`
+is skill-scoped instead of caster-wide. Multiple tags of either kind stack additively — including
+multiple thresholds on the same source, e.g. a gentler ramp below 50% and a steeper one below 25%.
+
+```
+<bonusDamageIfTargetHpBelow:[50, 2]>
+```
+| Target HP | Bonus |
+|---|---|
+| 51% | 0% (gate not open) |
+| 50% | 0% (just crossed) |
+| 30% | +40% |
+| 10% | +80% |
+
+**See also:** `<bonusDamage>`, `<bonusDamageIfState>`
 
 ---
 
@@ -2806,25 +2874,33 @@ keeps a thrust action even while two-handed).
 
 ---
 
-### `<knockbackResist:VAL>` / `<proximityKnockback:[RADIUS, PCT]>`
+### `<knockbackResist:VAL>` / `<proximityKnockback:[RADIUS, PCT]>` / `<knockbackAmp:PCT>` / `<thisKnockbackAmp:PCT>`
 
 **Applies to:**
 Weapons, Armors (knockbackResist); Actors, Classes, Enemies, Weapons, Armors, States
-(proximityKnockback)
+(proximityKnockback, knockbackAmp); Skills, Items (thisKnockbackAmp)
 
 **When:**
-receiving knockback (resist) / dealing knockback (proximityKnockback)
+receiving knockback (resist) / dealing knockback (the other three)
 
 **Effect:**
-`knockbackResist` cancels VAL tiles of any incoming knockback. `proximityKnockback` amplifies
-this battler's outgoing knockback by PCT percent per opposing battler found within RADIUS tiles,
-evaluated fresh against the live battlefield each hit. Allies within RADIUS don't count; multiple
-tags (different sources/radii) sum independently.
+`knockbackResist` cancels VAL tiles of any incoming knockback. The other three all amplify
+outgoing knockback and sum into one combined percent before being applied as a single multiplier:
+`proximityKnockback` scales by PCT percent per opposing battler found within RADIUS tiles,
+evaluated fresh against the live battlefield each hit (allies within RADIUS don't count);
+`knockbackAmp` is an unconditional flat PCT, no proximity requirement, read from any of the
+caster's note sources; `thisKnockbackAmp` is the skill-scoped sibling of `knockbackAmp`, read
+from the executing skill's own note only. Multiple tags of any of these three (different
+sources/radii) all sum independently.
 
 ```
 <proximityKnockback:[4, 25]>
+<knockbackAmp:50>
+<thisKnockbackAmp:20>
 ```
-+25% outgoing knockback per opposing battler within 4 tiles of this caster.
++25% outgoing knockback per opposing battler within 4 tiles of this caster, plus an unconditional
++50% from the caster-wide tag, plus +20% more whenever this specific skill lands — all three sum
+into one multiplier for that hit.
 
 **See also:** `<knockback>`, `<ignoreTerrain>`
 
@@ -3121,18 +3197,20 @@ States
 while the state is active, on the state's tick interval
 
 **Effect:**
-slip damage-over-time/regen. All values are "per 5 seconds," spread over 20 ticks
-(VAL / 20 = amount per tick). `flat` is a flat amount; `percent` eats/restores a percent of the
-battler's max value per tick. Positive VAL = gain (regen/meditation); negative VAL = loss
-(poison/exhaustion).
+slip damage-over-time/regen. VAL is applied in full on every tick — there is no per-tick division.
+`flat` is a flat amount; `percent` eats/restores a percent of the battler's max value, both applied
+in full each tick. Positive VAL = gain (regen/meditation); negative VAL = loss (poison/exhaustion).
+Because the full VAL lands every tick, speeding up the tick interval (see `<tickSpeedPercent>`
+below) is what makes a slip effect deal more total damage/healing over time — there is no
+rescaling to compensate.
 
 ```
 <hpFlat:-100>
 <mpPercent:50>
 ```
-Loses 100 HP and 50% max MP over 5 seconds (5 HP and 2.5% MP per tick).
+Loses 100 HP and 50% max MP on every tick this state is active.
 
-**See also:** `<hpFormula>`, `<thisTickSpeed>`, `<tickSpeedPercent>`
+**See also:** `<hpFormula>`, `<thisTickSpeed>`, `<tickSpeedPercent>`, `<dotAmpRate>`
 
 ---
 
@@ -3150,7 +3228,7 @@ the state object itself.
 while the state is active, on the state's tick interval
 
 **Effect:**
-formula-based slip damage/regen, same "per 5 seconds" convention as FLAT/PERCENT above. **Sign is
+formula-based slip damage/regen, applied in full every tick, same as FLAT/PERCENT above. **Sign is
 inverted from FLAT/PERCENT**: write this like a normal damage formula (positive = harm) — the
 engine negates the result internally, so a positive formula becomes a loss and a negative formula
 becomes a gain.
@@ -3158,12 +3236,12 @@ becomes a gain.
 ```
 <tpFormula:[-(a.atk * 2)]>
 ```
-Gains TP equal to 200% of the source's ATK over five seconds (negative formula result = gain).
+Gains TP equal to 200% of the source's ATK on every tick (negative formula result = gain).
 
 ```
 <hpFormula:[(a.mat * 3)]>
 ```
-Loses HP equal to 300% of the source's MAT over five seconds (positive formula result = harm).
+Loses HP equal to 300% of the source's MAT on every tick (positive formula result = harm).
 
 **See also:** `<hpFlat>`, `<stateDurationFormula>`
 
@@ -3194,6 +3272,41 @@ interval entirely, independent of the plugin default — flat/percent modifiers 
 Doubles this battler's slip/regen tick frequency (ticks twice as often).
 
 **See also:** `<hpFormula>`, `<stateTypeResist>`
+
+---
+
+### `<dotAmpRate:VAL>` / `<hotAmpRate:VAL>` / `<thisDotAmpRate:VAL>` / `<thisHotAmpRate:VAL>`
+
+**Applies to:**
+`dotAmpRate`/`hotAmpRate`: Actors, Classes, Enemies, Weapons, Armors, States.
+`thisDotAmpRate`/`thisHotAmpRate`: Skills.
+
+**When:**
+every slip tick this battler applies to anyone (including themselves)
+
+**Effect:**
+amplifies the per-tick VAL of a slip effect. Always sourced from the battler who **applied** the
+slip effect, not the battler suffering/receiving it — a `<dotAmpRate>` on the poisoner makes their
+poison hit harder, it does nothing for the poisoner's own resistance to poison. `dotAmpRate`/
+`hotAmpRate` are battler-wide, summed from every note source on the applier. `thisDotAmpRate`/
+`thisHotAmpRate` are skill-scoped, read from the skill that was executing when the state was
+applied (states applied with no skill in scope — ambient/self-inflicted effects — never consult
+these) and stack additively on top of the battler-wide rate. VAL is a percent: 100 = double tick
+amount, -50 = half. Healing-over-time still applies the afflicted battler's own REC trait first,
+same as always; these tags layer on top of that.
+
+```
+<dotAmpRate:100>
+```
+(Ring of Melting) Doubles the tick damage of every DoT this battler's wearer applies to anyone.
+
+```
+<thisDotAmpRate:50>
+```
+(on a specific poison skill) Adds another 50% on top of the battler-wide rate, but only for
+poison applied by this exact skill.
+
+**See also:** `<hpFlat>`, `<hpFormula>`
 
 ---
 
@@ -3274,6 +3387,77 @@ This state stacks up to 5 times, gaining 1 stack per application.
 
 ---
 
+### `<stackOnExpire>`
+
+**Applies to:**
+States
+
+**When:**
+this state's duration timer reaches zero (natural expiry only)
+
+**Effect:**
+inverts normal expiration entirely: instead of losing a stack (or all stacks, with
+`<loseAllStacksAtOnce>`) when duration runs out, the state GAINS a stack and re-arms its own
+duration, with no external reapplication needed. This makes the state self-perpetuating — once
+applied, it keeps ticking up stacks on its own timer indefinitely, until something else removes
+it outright (dispel, script call, death). Takes precedence over `<loseAllStacksAtOnce>`, since
+stacks are never lost through this path at all. Presence-only tag, no parameters.
+
+```
+<stackType:stack>
+<stackMax:10>
+<stateDurationSec:5>
+<stackOnExpire>
+```
+A "Festering Wound" that gains a stack every 5 seconds on its own once applied, capping at 10 —
+no need to keep re-hitting the target to keep it climbing.
+
+**See also:** `<stackType>`, `<stacksConvertToState>` (a natural pairing — let `stackOnExpire`
+climb toward a `<stacksConvertToState>` threshold on its own)
+
+---
+
+### `<stackMaxBoost:VAL>` / `<thisStackMaxBoost:VAL>`
+
+**Applies to:**
+`stackMaxBoost`: any note source on the battler applying the stack (actor, class, equips, states).
+`thisStackMaxBoost`: States only.
+
+**When:**
+a state using the "stack" reapplication strategy gains a stack
+
+**Effect:**
+both add to a state's stack cap on top of its own `<stackMax:VAL>`. `stackMaxBoost` is a blanket
+bonus summed across every note source on the caster, applying to every state that caster stacks
+regardless of which one it is. `thisStackMaxBoost` is read from a single state's own note only —
+on its own it's redundant with just raising `<stackMax:VAL>` directly, but it's designed to ride
+along on a J-Extend overlay: when another active state carries `<extend:[STATE_ID]>` or
+`<extendStateType:TYPE>` targeting this state, J-Extend merges the overlay's note into this
+state's resolved note before this tag is read, so one overlay state (e.g. an equipment-granted
+passive) can raise the cap of one specific state, or of every state sharing a `<type:TYPE>`
+classifier, without editing the target state(s) directly.
+
+```
+<stackMaxBoost:5>
+```
+Placed directly on a "Bracelet of Stacking" armor's note: every stackable state this wearer
+applies gets +5 to its cap, period. `stackMaxBoost` is read from any note source, equips included.
+
+```
+<thisStackMaxBoost:3>
+<extendStateType:poison>
+```
+Placed on a passive state granted by a "Ring of Bountiful Poison" (e.g. via J-Passive's
+equipment-granted-state tags). `extend`/`extendStateType` are only picked up from currently
+*active states* (including passive-injected ones) — never read directly off an equip's own note —
+so `thisStackMaxBoost` must live on the granted state, not the ring's note itself. While the
+wearer has this passive state active, every state carrying `<type:poison>` that they apply gets
++3 to its cap.
+
+**See also:** `<stackMax>`, `<extend>`, `<extendStateType>`
+
+---
+
 ### `<stacksConvertToState:[NEW_STATE_ID, STACKS_REQUIRED]>` / `<removeOnConvert>` / `<convertUsesCaster>`
 
 **Applies to:**
@@ -3300,7 +3484,7 @@ passive the target otherwise wouldn't see.
 ```
 At 20 stacks, this state is replaced entirely by state 9.
 
-**See also:** `<stackMax>`, `<applyStacks>`
+**See also:** `<stackMax>`, `<applyStacks>`, `<stackOnExpire>`
 
 ---
 

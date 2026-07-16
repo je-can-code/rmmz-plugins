@@ -36,17 +36,29 @@ class StatusParameter
   colorIndex = 0;
 
   /**
+   * The battler this parameter belongs to, if known. Threaded through to
+   * {@link ParameterDefinition#prettyValue} so REGEN_PER_SECOND can convert using this
+   * battler's actual tick cadence instead of assuming a fixed tick count.
+   * @type {Game_Battler|null}
+   */
+  actor = null;
+
+  /**
    * Constructor.
    * @param {number} value The value of the parameter.
    * @param {string} parameterKey The registry key this value represents.
+   * @param {Game_Battler=} actor The battler this parameter belongs to, if known.
    */
-  constructor(value, parameterKey)
+  constructor(value, parameterKey, actor = null)
   {
     // assign the raw numeric value of the parameter.
     this.value = value;
 
     // assign the registry key that describes how this value should be displayed.
     this.parameterKey = parameterKey;
+
+    // assign the owning battler, if provided.
+    this.actor = actor;
 
     // refresh the derived display data for this parameter.
     this.refresh();
@@ -112,7 +124,7 @@ class StatusParameter
       return this.value.toString();
     }
 
-    return definition.prettyValue(this.value, withPadding);
+    return definition.prettyValue(this.value, withPadding, this.actor);
   }
 }
 

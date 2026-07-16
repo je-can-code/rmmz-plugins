@@ -9,14 +9,15 @@ import JABS_Shield from './../_models/JABS_Shield.js';
  * @param {number} totalDuration The total duration in frames of the state being applied.
  * @param {number} stacks The number of stacks of the state being applied.
  * @param {Game_Battler} attacker The battler applying the state.
+ * @param {RPG_Skill=} sourceSkill The skill that was executing when this state was applied, if any.
  * @returns {JABS_StateBuilder} The builder with all the parameters of the state being applied.
  */
 J.ABS.EXT.SHIELD.Aliased.Game_Battler.set('createJabsState', Game_Battler.prototype.createJabsState);
-Game_Battler.prototype.createJabsState = function(target, stateId, iconIndex, totalDuration, stacks, attacker)
+Game_Battler.prototype.createJabsState = function(target, stateId, iconIndex, totalDuration, stacks, attacker, sourceSkill = null)
 {
   // perform original logic.
   const builder = J.ABS.EXT.SHIELD.Aliased.Game_Battler.get('createJabsState')
-    .call(this, target, stateId, iconIndex, totalDuration, stacks, attacker);
+    .call(this, target, stateId, iconIndex, totalDuration, stacks, attacker, sourceSkill);
 
   // determine the shield.
   const shield = JABS_Shield.fromStateId(stateId, target);

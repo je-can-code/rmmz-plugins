@@ -32,6 +32,12 @@ class PassiveGateEvaluator
       case 'enemiesNearby':
         return PassiveRuleJabsAccess.nearbyEnemies(battler, scope ? Number(scope) : null).length >= Number(param);
 
+      // inverse proximity gates — same slots, but pass while UNDER the count (e.g. "no enemies in melee range").
+      case 'alliesNearbyBelow':
+        return PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler, scope ? Number(scope) : null).length < Number(param);
+      case 'enemiesNearbyBelow':
+        return PassiveRuleJabsAccess.nearbyEnemies(battler, scope ? Number(scope) : null).length < Number(param);
+
       // resource threshold gates — [threshold, scope?, range?].
       // scope: self (default), anyAlly, allAllies, anyEnemy, allEnemies.
       // range: tile radius; defaults to plugin default-proximity-tiles when scope is not self.

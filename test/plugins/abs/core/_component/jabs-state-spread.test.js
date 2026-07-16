@@ -294,7 +294,8 @@ describe('J-ABS state spread (direct src import)', () =>
       setupSpreadPulse({ alliedCandidates: [ jabsTarget ] });
 
       // Assert
-      expect(target.addState).toHaveBeenCalledWith(SPREAD_STATE_ID, expect.objectContaining({ _uuid: 'source' }));
+      expect(target.addState)
+        .toHaveBeenCalledWith(SPREAD_STATE_ID, expect.objectContaining({ _uuid: 'source' }), null);
     });
 
     it('uses source battler as attacker, not the afflicted carrier', () =>
@@ -307,8 +308,8 @@ describe('J-ABS state spread (direct src import)', () =>
       const { sourceGame, carrierGame } = setupSpreadPulse({ alliedCandidates: [ jabsTarget ] });
 
       // Assert
-      expect(target.addState).toHaveBeenCalledWith(SPREAD_STATE_ID, sourceGame);
-      expect(target.addState).not.toHaveBeenCalledWith(SPREAD_STATE_ID, carrierGame);
+      expect(target.addState).toHaveBeenCalledWith(SPREAD_STATE_ID, sourceGame, null);
+      expect(target.addState).not.toHaveBeenCalledWith(SPREAD_STATE_ID, carrierGame, null);
     });
 
     it('rolls chance independently per candidate', () =>

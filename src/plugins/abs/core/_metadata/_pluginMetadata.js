@@ -178,7 +178,7 @@ class J_AbsPluginMetadata
     this.DefaultStateSpreadTickInterval = Number(this.parsedPluginParameters['defaultStateSpreadTickInterval']) || 30;
 
     // assign the default/minimum state tick interval and natural regen type on this instance for callers.
-    this.DefaultStateTickInterval = Number(this.parsedPluginParameters['defaultStateTickInterval']) || 30;
+    this.DefaultStateTickInterval = Number(this.parsedPluginParameters['defaultStateTickInterval']) || 60;
     this.MinimumStateTickInterval = Number(this.parsedPluginParameters['minimumStateTickInterval']) || 4;
     this.NaturalRegenTickType = this.parsedPluginParameters['naturalRegenTickType'] || 'regen';
 

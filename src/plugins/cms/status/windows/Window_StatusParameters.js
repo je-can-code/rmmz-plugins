@@ -625,7 +625,7 @@ class Window_StatusParameters
     const value = this.actor.parameter(parameterKey);
 
     // return a newly constructed status parameter.
-    return new StatusParameter(value, parameterKey);
+    return new StatusParameter(value, parameterKey, this.actor);
   }
 
   /**

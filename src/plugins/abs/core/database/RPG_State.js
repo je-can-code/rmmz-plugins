@@ -231,6 +231,22 @@ Object.defineProperty(RPG_State.prototype, 'jabsStateStackMax', {
 });
 
 /**
+ * A bonus to this state's stack cap, read from this state's own note only.<br/>
+ * When J-Extend is active and another active state carries `<extend:[...]>` or
+ * `<extendStateType:TYPE>` targeting this state, that overlay's note (and thus its own
+ * `<thisStackMaxBoost:VAL>` tag, if any) is merged into this note before this getter runs-
+ * so this is effectively "one state raising the stack cap of another it extends."<br/>
+ * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Stack}.
+ * @type {number}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsThisStackMaxBoost', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.ThisStackMaxBoost);
+  },
+});
+
+/**
  * How many stacks of a state will be applied upon stacking.<br/>
  * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Stack}.<br/>
  * Will either return the custom number of stacks defined on the state, or the default from configuration.
@@ -451,10 +467,10 @@ Object.defineProperty(RPG_State.prototype, 'jabsSpreadSkipAfflicted', {
 
 //region slipHp
 /**
- * The flat slip hp amount- per 5 seconds.
+ * The flat slip hp amount, applied in full on every tick.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, 'jabsSlipHpFlatPerFive', {
+Object.defineProperty(RPG_State.prototype, 'jabsSlipHpFlat', {
   get: function()
   {
     return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.SlipHpFlat);
@@ -462,10 +478,10 @@ Object.defineProperty(RPG_State.prototype, 'jabsSlipHpFlatPerFive', {
 });
 
 /**
- * The percent slip hp amount- per 5 seconds.
+ * The percent slip hp amount, applied in full on every tick.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, 'jabsSlipHpPercentPerFive', {
+Object.defineProperty(RPG_State.prototype, 'jabsSlipHpPercent', {
   get: function()
   {
     return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.SlipHpPercent);
@@ -473,12 +489,12 @@ Object.defineProperty(RPG_State.prototype, 'jabsSlipHpPercentPerFive', {
 });
 
 /**
- * The formula slip hp amount- per 5 seconds.
+ * The formula slip hp amount, applied in full on every tick.
  * This does NOT `eval()` the formula, as there is no additional variables
  * available for context.
  * @type {string|null}
  */
-Object.defineProperty(RPG_State.prototype, 'jabsSlipHpFormulaPerFive', {
+Object.defineProperty(RPG_State.prototype, 'jabsSlipHpFormula', {
   get: function()
   {
     return RPGManager.getStringFromNoteByRegex(this, J.ABS.RegExp.SlipHpFormula);
@@ -488,10 +504,10 @@ Object.defineProperty(RPG_State.prototype, 'jabsSlipHpFormulaPerFive', {
 
 //region slipMp
 /**
- * The flat slip mp amount- per 5 seconds.
+ * The flat slip mp amount, applied in full on every tick.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, 'jabsSlipMpFlatPerFive', {
+Object.defineProperty(RPG_State.prototype, 'jabsSlipMpFlat', {
   get: function()
   {
     return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.SlipMpFlat);
@@ -499,10 +515,10 @@ Object.defineProperty(RPG_State.prototype, 'jabsSlipMpFlatPerFive', {
 });
 
 /**
- * The percent slip mp amount- per 5 seconds.
+ * The percent slip mp amount, applied in full on every tick.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, 'jabsSlipMpPercentPerFive', {
+Object.defineProperty(RPG_State.prototype, 'jabsSlipMpPercent', {
   get: function()
   {
     return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.SlipMpPercent);
@@ -510,12 +526,12 @@ Object.defineProperty(RPG_State.prototype, 'jabsSlipMpPercentPerFive', {
 });
 
 /**
- * The formula slip mp amount- per 5 seconds.
+ * The formula slip mp amount, applied in full on every tick.
  * This does NOT `eval()` the formula, as there is no additional variables
  * available for context.
  * @type {string|null}
  */
-Object.defineProperty(RPG_State.prototype, 'jabsSlipMpFormulaPerFive', {
+Object.defineProperty(RPG_State.prototype, 'jabsSlipMpFormula', {
   get: function()
   {
     return RPGManager.getStringFromNoteByRegex(this, J.ABS.RegExp.SlipMpFormula);
@@ -525,10 +541,10 @@ Object.defineProperty(RPG_State.prototype, 'jabsSlipMpFormulaPerFive', {
 
 //region slipTp
 /**
- * The flat slip tp amount- per 5 seconds.
+ * The flat slip tp amount, applied in full on every tick.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, 'jabsSlipTpFlatPerFive', {
+Object.defineProperty(RPG_State.prototype, 'jabsSlipTpFlat', {
   get: function()
   {
     return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.SlipTpFlat);
@@ -536,10 +552,10 @@ Object.defineProperty(RPG_State.prototype, 'jabsSlipTpFlatPerFive', {
 });
 
 /**
- * The percent slip tp amount- per 5 seconds.
+ * The percent slip tp amount, applied in full on every tick.
  * @type {number}
  */
-Object.defineProperty(RPG_State.prototype, 'jabsSlipTpPercentPerFive', {
+Object.defineProperty(RPG_State.prototype, 'jabsSlipTpPercent', {
   get: function()
   {
     return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.SlipTpPercent);
@@ -547,12 +563,12 @@ Object.defineProperty(RPG_State.prototype, 'jabsSlipTpPercentPerFive', {
 });
 
 /**
- * The formula slip tp amount- per 5 seconds.
+ * The formula slip tp amount, applied in full on every tick.
  * This does NOT `eval()` the formula, as there is no additional variables
  * available for context.
  * @type {string|null}
  */
-Object.defineProperty(RPG_State.prototype, 'jabsSlipTpFormulaPerFive', {
+Object.defineProperty(RPG_State.prototype, 'jabsSlipTpFormula', {
   get: function()
   {
     return RPGManager.getStringFromNoteByRegex(this, J.ABS.RegExp.SlipTpFormula);

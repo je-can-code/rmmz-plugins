@@ -78,6 +78,16 @@ class JABS_State
   source = null;
 
   /**
+   * The skill that was executing when this state was applied, if any. This is a live reference
+   * to the actual `$dataSkills` entry that was resolved at application time- including any
+   * `<skillTransform>` redirect already baked in- rather than a raw id, so downstream amp tags
+   * scoped to "the skill that applied this" don't need to re-derive anything. Null when the state
+   * was applied without a skill in scope (food chains, ambient/self-inflicted conversions, etc.).
+   * @type {RPG_Skill|null}
+   */
+  sourceSkill = null;
+
+  /**
    * The number of stacks of this state applied to the tracker.
    * @type {number}
    */
@@ -118,8 +128,9 @@ class JABS_State
    * @param {number} duration The duration in frames that this state will remain.
    * @param {number=} startingStacks The number of stacks to start out with; defaults to 1.
    * @param {Game_Battler=} source The battler who afflicted the state; defaults to self.
+   * @param {RPG_Skill=} sourceSkill The skill that was executing when the state was applied; defaults to null.
    */
-  constructor(battler, stateId, iconIndex, duration, startingStacks = 1, source = battler)
+  constructor(battler, stateId, iconIndex, duration, startingStacks = 1, source = battler, sourceSkill = null)
   {
     // initialize the values of the tracker.
     this.battler = battler;
@@ -128,6 +139,7 @@ class JABS_State
     this.duration = duration;
     this.stackCount = startingStacks;
     this.source = source;
+    this.sourceSkill = sourceSkill;
 
     // mirror the duration as base duration for stacks.
     this.setBaseDuration(duration);
@@ -417,8 +429,8 @@ class JABS_State
     // roll the chance; if it doesn't pass, the follow-up does not fire.
     if (!RPGManager.chanceIn100(chance)) return;
 
-    // apply the follow-up state, inheriting the source of the expiring state.
-    this.battler.addState(nextStateId, this.source);
+    // apply the follow-up state, inheriting the source and source skill of the expiring state.
+    this.battler.addState(nextStateId, this.source, this.sourceSkill);
   }
 
   /**
@@ -440,8 +452,15 @@ class JABS_State
    */
   incrementStacks(stackIncrease = 1)
   {
-    // grab the max number of stacks for this state.
-    const maxStacks = this.battler.state(this.stateId).jabsStateStackMax;
+    // grab the (possibly extension-merged) database row backing this tracked state.
+    const stateRow = this.battler.state(this.stateId);
+
+    // grab the base max number of stacks for this state, plus any state-scoped boost baked into
+    // its own note (including one merged in from an <extend>/<extendStateType> overlay state),
+    // plus any blanket boost the caster carries from their own equipment/passives/etc.
+    const maxStacks = stateRow.jabsStateStackMax
+      + stateRow.jabsThisStackMaxBoost
+      + this.source.getStackMaxBoost();
 
     // check if we still have room to add more stacks.
     if (this.stackCount < maxStacks)
@@ -745,8 +764,8 @@ class JABS_State
 
       if (RPGManager.chanceIn100(chance) === false) continue;
 
-      // always attribute spreads to the original applier, not the current carrier.
-      targetBattler.addState(this.stateId, this.source);
+      // always attribute spreads to the original applier and their skill, not the current carrier.
+      targetBattler.addState(this.stateId, this.source, this.sourceSkill);
       successCount++;
     }
   }

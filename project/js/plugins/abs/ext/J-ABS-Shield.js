@@ -1075,11 +1075,12 @@ Game_Battler.prototype.baseSerFactor = function() {
 * @param {number} totalDuration The total duration in frames of the state being applied.
 * @param {number} stacks The number of stacks of the state being applied.
 * @param {Game_Battler} attacker The battler applying the state.
+* @param {RPG_Skill=} sourceSkill The skill that was executing when this state was applied, if any.
 * @returns {JABS_StateBuilder} The builder with all the parameters of the state being applied.
 */
 J.ABS.EXT.SHIELD.Aliased.Game_Battler.set("createJabsState", Game_Battler.prototype.createJabsState);
-Game_Battler.prototype.createJabsState = function(target, stateId, iconIndex, totalDuration, stacks, attacker) {
-	const builder = J.ABS.EXT.SHIELD.Aliased.Game_Battler.get("createJabsState").call(this, target, stateId, iconIndex, totalDuration, stacks, attacker);
+Game_Battler.prototype.createJabsState = function(target, stateId, iconIndex, totalDuration, stacks, attacker, sourceSkill = null) {
+	const builder = J.ABS.EXT.SHIELD.Aliased.Game_Battler.get("createJabsState").call(this, target, stateId, iconIndex, totalDuration, stacks, attacker, sourceSkill);
 	const shield = JABS_Shield.fromStateId(stateId, target);
 	builder.setShield(shield);
 	return builder;

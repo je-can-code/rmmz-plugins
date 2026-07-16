@@ -43,14 +43,19 @@
  *  {registryKey}Above/Below — flat or hundred-scale per ParameterRegistry
  *  allAllies{Key}Above/Below — every allied JABS battler (incl. self) must pass
  *
- * Discrete kinds include alliesNearby, enemiesNearby, hasState, negativeStateCount,
- * slotOnCooldown, slotOffCooldown, allOnCooldown, allOffCooldown,
+ * Discrete kinds include alliesNearby, enemiesNearby, alliesNearbyBelow, enemiesNearbyBelow,
+ * hasState, negativeStateCount, slotOnCooldown, slotOffCooldown, allOnCooldown, allOffCooldown,
  * sinceLastMoved/Hit/Attacked, movedWithin/hitWithin/attackedWithin (frames).
+ *
+ * alliesNearby/enemiesNearby pass at COUNT or more in range (>=); the *Below counterparts pass
+ * under COUNT (<) — use them for "nobody nearby" gates, e.g. [enemiesNearbyBelow, 1, 1] for
+ * "no enemies within melee range" (1 tile).
  *
  * EXAMPLES:
  *  <passive:[12]>
  *  <passiveStateRule:[12, hpBelow, 25]>
  *  <passiveSourceRule:[allOffCooldown]>
+ *  <passiveSourceRule:[enemiesNearbyBelow, 1, 1]>
  * ============================================================================
  * STACK COUNT TAG
  *  <passiveStateCount:[STATE_ID, KIND, PARAM]>
@@ -79,6 +84,8 @@
  *  onDamageDealt   — when this battler lands damage on an opposing battler (JABS_Engine#postExecuteSkillEffects)
  *  move            — PARAM = whole TILES per apply (Pixelistics updatePixelStepping; requires J-Pixelistics)
  *  stand           — PARAM = frames between applies while standing still on the map
+ *  enemiesNearby / alliesNearby / enemiesNearbyBelow / alliesNearbyBelow — 4/5-value proximity
+ *    tuples, same shape and semantics as autoExecuteSkill's proximity form below.
  *
  * EXAMPLES:
  *  <autoApplyState:[50, time, 900]>
@@ -93,6 +100,8 @@
  *  <autoApplyState:[59, onAllyHeal, 0]>
  *  <autoApplyState:[MOMENTUM_ID, move, 2]>
  *  <autoApplyState:[BUFF_ID, stand, 120]>
+ *  <autoApplyState:[ACCURACY_BUFF_ID, enemiesNearbyBelow, 1, 30, 1]>
+ *    Every 30 frames, apply the accuracy buff while no enemy is within 1 tile (melee range).
  * ============================================================================
  * AUTO-APPLY STATE ON NEARBY TAG
  *  <autoApplyStateOnNearby:[STATE_ID, KIND, MIN_COUNT, COOLDOWN_FRAMES, TRIGGER_TILES?]>
@@ -101,13 +110,19 @@
  * it redirects onto every battler currently in proximity- enemies or allies depending on
  * KIND. Good fit for "afflicts nearby enemies" or "buffs nearby allies" passive auras.
  *
- * Only two KIND values do anything here (every other autoApplyState CONDITION has no
+ * Only four KIND values do anything here (every other autoApplyState CONDITION has no
  * proximity set to iterate and simply won't fire):
- *  enemiesNearby — targets nearby enemy JABS battlers
- *  alliesNearby  — targets nearby allied JABS battlers, excluding the bearer itself
+ *  enemiesNearby      — targets nearby enemy JABS battlers
+ *  alliesNearby       — targets nearby allied JABS battlers, excluding the bearer itself
+ *  enemiesNearbyBelow — same target set as enemiesNearby, gate inverted (see below)
+ *  alliesNearbyBelow  — same target set as alliesNearby, gate inverted (see below)
  *
- * MIN_COUNT is the minimum number of battlers that must be in range for the pulse to fire
- * at all (the pulse still hits everyone in range, not just MIN_COUNT of them).
+ * MIN_COUNT is the count threshold that gates the pulse. For enemiesNearby/alliesNearby the
+ * pulse fires at MIN_COUNT or more in range; for the Below variants it fires strictly UNDER
+ * MIN_COUNT. Either way the pulse then hits everyone CURRENTLY in range, not just MIN_COUNT
+ * of them- so a Below rule with MIN_COUNT 1 (the "nothing nearby" case) can gate-pass while
+ * resolving zero targets, applying to nobody that tick. MIN_COUNT 2+ still lands on whatever
+ * stragglers remain under the threshold.
  * COOLDOWN_FRAMES is tracked on the bearer, so the pulse cadence is consistent regardless
  * of how many targets are currently in range.
  * The optional fifth TRIGGER_TILES overrides the plugin's default proximity radius for
@@ -121,6 +136,10 @@
  *  <autoApplyStateOnNearby:[61, alliesNearby, 2, 300, 8]>
  *    Every 300 frames, if at least 2 allies (excluding the bearer) are within 8 tiles,
  *    apply state 61 to every nearby ally.
+ *
+ *  <autoApplyStateOnNearby:[62, enemiesNearbyBelow, 3, 120]>
+ *    Every 120 frames, if fewer than 3 enemies are within range, apply state 62 to
+ *    whichever enemies (0-2 of them) are still around.
  * ============================================================================
  * AUTO-EXECUTE SKILL TAG
  *  <autoExecuteSkill:[SKILL_ID, CONDITION, PARAM]>
@@ -129,15 +148,20 @@
  * Victims may parry and retaliate. Payload skill owns radius, hitbox, and formula.
  * Do not tag the payload skill with autoExecuteSkill (depth guard).
  * PARAM meaning matches autoApplyState CONDITIONS, plus:
- *  enemiesNearby — four- or five-value tuple:
- *    <autoExecuteSkill:[SKILL_ID, enemiesNearby, MIN_COUNT, FRAMES]>
+ *  enemiesNearby / alliesNearby / enemiesNearbyBelow / alliesNearbyBelow — four- or
+ *  five-value tuple:
+ *    <autoExecuteSkill:[SKILL_ID, KIND, COUNT, FRAMES]>
  *    optional fifth TRIGGER_TILES overrides default-proximity-tiles for the gate only.
+ *    enemiesNearby/alliesNearby fire at or above COUNT; the Below variants fire strictly
+ *    under COUNT.
  *
  * EXAMPLES:
  *  <autoExecuteSkill:[1021, time, 60]>
  *  <autoExecuteSkill:[1022, enemiesNearby, 1, 60]>
  *  <autoExecuteSkill:[1023, move, 1]>
  *  <autoExecuteSkill:[1024, stand, 120]>
+ *  <autoExecuteSkill:[1025, enemiesNearbyBelow, 1, 60, 1]>
+ *    Casts skill 1025 every 60 frames while no enemy is within 1 tile.
  * ============================================================================
  * AUTO-INFLICT STATE TAG
  *  <autoInflictState:[STATE_ID, CONDITION, COOLDOWN_FRAMES]>
