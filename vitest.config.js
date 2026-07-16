@@ -18,9 +18,13 @@ export default defineConfig({
         '**/*.d.ts',
         '**/*.test.*',
         'test/**',
+        '**/src/plugins/**/scenes/**',
+        '**/src/plugins/**/sprites/**',
+        '**/src/plugins/**/windows/**',
       ],
       all: true,
       clean: true,
+      excludeAfterRemap: true,
     },
   },
 });
