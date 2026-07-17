@@ -43,12 +43,6 @@ Game_Actor.prototype.initSkillSlotsMembers = function()
    * @type {Map<number, number>}
    */
   this._j._sks._slotMap = new Map();
-
-  /**
-   * The maximum number of slot points this actor can spend across all slots.
-   * @type {number}
-   */
-  this._j._sks._maxSlotPoints = J.SKS.Metadata.defaultMaxSkillSlotPoints;
 };
 //endregion init
 
@@ -115,35 +109,46 @@ Game_Actor.prototype.getEquippedSkillIndex = function(skillId)
 };
 
 /**
+ * Gets the maximum number of skill slots available to this actor.
+ * Baseline comes from a {@link J.SKS.RegExp.BaseSlots} tag on the actor or class, falling back to
+ * the plugin's configured default when neither carries the tag. Bonus amounts from
+ * {@link J.SKS.RegExp.MaxSlots} tags anywhere in {@link #getAllNotes} stack on top of that baseline.
+ * @returns {number}
+ */
+Game_Actor.prototype.maxSlots = function()
+{
+  // resolve the baseline from the actor/class only, falling back to the plugin default when absent.
+  const baseline = RPGManager.getResultsFromAllNotesByRegex(
+    this.getActorNotes(), J.SKS.RegExp.BaseSlots, 0, this, true) ?? J.SKS.Metadata.defaultMaxSkillSlots;
+
+  // sum every bonus tag found across the actor's full note sources.
+  const bonus = RPGManager.getResultsFromAllNotesByRegex(
+    this.getAllNotes(), J.SKS.RegExp.MaxSlots, 0, this, false);
+
+  // combine baseline and bonus, never going below zero.
+  return Math.max(0, baseline + bonus);
+};
+
+/**
  * Gets the maximum number of slot points available to this actor.
+ * Baseline comes from a {@link J.SKS.RegExp.BaseSlotPoints} tag on the actor or class, falling back
+ * to the plugin's configured default when neither carries the tag. Bonus amounts from
+ * {@link J.SKS.RegExp.MaxSlotPoints} tags anywhere in {@link #getAllNotes} stack on top of that
+ * baseline.
  * @returns {number}
  */
 Game_Actor.prototype.maxSlotPoints = function()
 {
-  return this._j._sks._maxSlotPoints;
-};
+  // resolve the baseline from the actor/class only, falling back to the plugin default when absent.
+  const baseline = RPGManager.getResultsFromAllNotesByRegex(
+    this.getActorNotes(), J.SKS.RegExp.BaseSlotPoints, 0, this, true) ?? J.SKS.Metadata.defaultMaxSkillSlotPoints;
 
-/**
- * Sets the maximum number of slot points available to this actor.
- * @param {number} points - The new maximum slot points value.
- */
-Game_Actor.prototype.setMaxSlotPoints = function(points)
-{
-  this._j._sks._maxSlotPoints = points;
-};
+  // sum every bonus tag found across the actor's full note sources.
+  const bonus = RPGManager.getResultsFromAllNotesByRegex(
+    this.getAllNotes(), J.SKS.RegExp.MaxSlotPoints, 0, this, false);
 
-/**
- * Modifies the maximum number of slot points for this actor by the given amount.
- * The result is clamped to a minimum of 0.
- * @param {number} amount - The amount to modify by. Negative values reduce the maximum.
- */
-Game_Actor.prototype.modifyMaxSlotPoints = function(amount)
-{
-  // compute the new maximum after applying the modifier.
-  const newMax = this.maxSlotPoints() + amount;
-
-  // clamp to a minimum of 0 and assign.
-  this.setMaxSlotPoints(Math.max(0, newMax));
+  // combine baseline and bonus, never going below zero.
+  return Math.max(0, baseline + bonus);
 };
 
 /**

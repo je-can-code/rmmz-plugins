@@ -10985,7 +10985,7 @@ var JABS_SkillSlot = class {
 	* @returns {this} Returns `this` for fluent chaining.
 	*/
 	setLock(locked) {
-		if (!this.canBeLocked()) {
+		if (this.canBeLocked()) {
 			this.locked = locked;
 		}
 		return this;
@@ -15182,7 +15182,7 @@ var JABS_Battler = class JABS_Battler {
 		if (isReduced) {
 			calculatedValue *= .2;
 		}
-		return parseFloat(calculatedValue.toFixed(2)) ?? 0;
+		return parseFloat(calculatedValue.toFixed(2));
 	}
 	/**
 	* Processes the natural HRG for this battler.
@@ -19694,6 +19694,59 @@ var JABS_Engine = class JABS_Engine {
 		}
 	}
 	/**
+	* Checks a small circular radius around the action sprite for potential targets
+	* solely to determine whether an action should arm during its delay phase.
+	*
+	* This does not apply damage; it only identifies whether any valid battlers are
+	* within the supplied radius.
+	*
+	* @param {JABS_Action} jabsAction The action to evaluate.
+	* @param {number} radius The trigger radius in tiles.
+	* @returns {JABS_Battler[]} A list of potential targets inside the trigger radius.
+	*/
+	getTriggerTouchTargets(jabsAction, radius) {
+		const casterJabsBattler = jabsAction.getCaster();
+		const actionSprite = jabsAction.getActionSprite();
+		if (!actionSprite) {
+			return [];
+		}
+		/**
+		* Basic candidate filter: can be hit, in-scope for the action, and not
+		* an inanimate target (when the caster is an enemy).
+		* @param {JABS_Battler} battler The candidate battler.
+		* @returns {boolean} True if valid for proximity trigger, false otherwise.
+		*/
+		const canActionConnectWithBattler = (battler) => {
+			if (!battler.canActionConnect()) {
+				return false;
+			}
+			if (!battler.isWithinScope(jabsAction, battler, false)) {
+				return false;
+			}
+			if (casterJabsBattler.isEnemy() && battler.isInanimate()) {
+				return false;
+			}
+			return true;
+		};
+		const cx = actionSprite._realX;
+		const cy = actionSprite._realY;
+		const minX = Math.floor(cx - radius);
+		const minY = Math.floor(cy - radius);
+		const maxX = Math.ceil(cx + radius);
+		const maxY = Math.ceil(cy + radius);
+		const candidates = JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
+		const targets = [];
+		const actionDirection = jabsAction.direction();
+		candidates.filter(canActionConnectWithBattler, this).forEach((battler) => {
+			const sprite = battler.getCharacter();
+			const inCircle = this.isTargetWithinRange(actionDirection, sprite, actionSprite, radius, J.ABS.Shapes.Circle);
+			if (inCircle) {
+				targets.push(battler);
+			}
+		}, this);
+		return targets;
+	}
+	/**
 	* Reads the <degrees:N> tag from the action’s underlying skill notes.
 	* Will return null if nothing is found.
 	* @param {Game_Event} actionEvent The action event that carries the JABS_Action.
@@ -20979,59 +21032,6 @@ var JABS_Action = class JABS_Action {
 	*/
 	getTriggerRadius() {
 		return this._delay._triggerRadius ?? null;
-	}
-	/**
-	* Checks a small circular radius around the action sprite for potential targets
-	* solely to determine whether an action should arm during its delay phase.
-	*
-	* This does not apply damage; it only identifies whether any valid battlers are
-	* within the supplied radius.
-	*
-	* @param {JABS_Action} jabsAction The action to evaluate.
-	* @param {number} radius The trigger radius in tiles.
-	* @returns {JABS_Battler[]} A list of potential targets inside the trigger radius.
-	*/
-	getTriggerTouchTargets(jabsAction, radius) {
-		const casterJabsBattler = jabsAction.getCaster();
-		const actionSprite = jabsAction.getActionSprite();
-		if (!actionSprite) {
-			return [];
-		}
-		/**
-		* Basic candidate filter: can be hit, in-scope for the action, and not
-		* an inanimate target (when the caster is an enemy).
-		* @param {JABS_Battler} battler The candidate battler.
-		* @returns {boolean} True if valid for proximity trigger, false otherwise.
-		*/
-		const canActionConnectWithBattler = (battler) => {
-			if (!battler.canActionConnect()) {
-				return false;
-			}
-			if (!battler.isWithinScope(jabsAction, battler, false)) {
-				return false;
-			}
-			if (casterJabsBattler.isEnemy() && battler.isInanimate()) {
-				return false;
-			}
-			return true;
-		};
-		const cx = actionSprite._realX;
-		const cy = actionSprite._realY;
-		const minX = Math.floor(cx - radius);
-		const minY = Math.floor(cy - radius);
-		const maxX = Math.ceil(cx + radius);
-		const maxY = Math.ceil(cy + radius);
-		const candidates = JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
-		const targets = [];
-		const actionDirection = jabsAction.direction();
-		candidates.filter(canActionConnectWithBattler, this).forEach((battler) => {
-			const sprite = battler.getCharacter();
-			const inCircle = this.isTargetWithinRange(actionDirection, sprite, actionSprite, radius, J.ABS.Shapes.Circle);
-			if (inCircle) {
-				targets.push(battler);
-			}
-		}, this);
-		return targets;
 	}
 	/**
 	* Gets the number of times this action can potentially hit a target.

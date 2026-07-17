@@ -1550,6 +1550,15 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       expect(jabsBattler._lastHitCountdown).toBe(4);
     });
+
+    it('countdownLastHit does not clear anything when there was no last-hit battler tracked', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._lastHitCountdown = 0;
+
+      expect(() => jabsBattler.countdownLastHit()).not.toThrow();
+      expect(jabsBattler.hasBattlerLastHit()).toBe(false);
+    });
   });
 
   describe('isDead', () =>
@@ -1759,6 +1768,18 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.setAlertedCounter(0);
 
       expect(jabsBattler.isAlerted()).toBe(false);
+    });
+
+    it('setAlertedCounter touches neither idle nor alerted for a NaN counter (neither comparison is true)', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.setIdle = vi.fn();
+      jabsBattler.setAlerted(true);
+
+      jabsBattler.setAlertedCounter(NaN);
+
+      expect(jabsBattler.setIdle).not.toHaveBeenCalled();
+      expect(jabsBattler.isAlerted()).toBe(true);
     });
 
     it('getAlertedCoordinates/setAlertedCoordinates track the alerter\'s position', () =>
@@ -1971,6 +1992,29 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
         expect(moveStraight).toHaveBeenCalledTimes(1);
         expect(moveStraight.mock.calls[0][0]).not.toBe(2);
+      });
+
+      it('re-rolls the wiggle direction when the first roll lands on the threat direction', () =>
+      {
+        // force the first roll to reproduce the threat direction (2), then a different one (4),
+        // to deterministically exercise the while-loop's re-roll body.
+        const rolls = [ 0, 1 ];
+        Math.randomInt = vi.fn(() => rolls.shift());
+        const moveStraight = vi.fn();
+        const jabsBattler = buildMovableBattler();
+        jabsBattler.getCharacter = () => ({
+          moveAwayFromCharacter: vi.fn(),
+          isMovementSucceeded: () => false,
+          reverseDir: () => 2,
+          direction: () => 8,
+          moveStraight,
+        });
+        jabsBattler.setTarget({ getCharacter: () => ({}) });
+
+        jabsBattler.smartMoveAwayFromTarget();
+
+        expect(Math.randomInt).toHaveBeenCalledTimes(2);
+        expect(moveStraight).toHaveBeenCalledWith(4);
       });
     });
 
@@ -3314,6 +3358,19 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       expect(jabsBattler.resolveDirectTargetByState(1, [ far, near ])).toBe(near);
     });
+
+    it('keeps the earlier closer candidate when a later one is not actually closer', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.distanceToDesignatedTarget = vi.fn()
+        .mockReturnValueOnce(3)
+        .mockReturnValueOnce(10);
+      const near = buildCandidate();
+      const far = buildCandidate();
+
+      expect(jabsBattler.resolveDirectTargetByState(1, [ near, far ])).toBe(near);
+    });
   });
 
   describe('resolveDirectTargetNonInanimate', () =>
@@ -3401,6 +3458,14 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       expect(jabsBattler.resolveDirectTargetViaScan([ inanimate, sameTeam ])).toBeNull();
     });
+
+    it('skips itself when it appears in the candidate list', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+
+      expect(jabsBattler.resolveDirectTargetViaScan([ jabsBattler ])).toBeNull();
+    });
   });
 
   describe('resolveDirectTargetInanimateScan', () =>
@@ -3439,6 +3504,14 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       const sameTeam = { isInanimate: () => true, isEnemy: () => false };
 
       expect(jabsBattler.resolveDirectTargetInanimateScan([ animate, sameTeam ])).toBeNull();
+    });
+
+    it('skips itself when it appears in the candidate list', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+
+      expect(jabsBattler.resolveDirectTargetInanimateScan([ jabsBattler ])).toBeNull();
     });
   });
 
@@ -3949,6 +4022,18 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.interrupt();
 
       expect(jabsBattler.isActionDecided()).toBe(false);
+    });
+
+    it('does nothing further when casting with no decided action to tear down', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.isChanneling = () => false;
+      jabsBattler.isCasting = () => true;
+
+      jabsBattler.interrupt();
+
+      expect(jabsBattler._casting).toBe(false);
+      expect(globalThis.$jabsEngine.applyCooldownValueForSkill).not.toHaveBeenCalled();
     });
   });
 
@@ -4970,6 +5055,25 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.removeAggro).toHaveBeenCalledWith('sole-uuid');
     });
 
+    it('stops with a sole remaining aggro when the target becomes unset partway through the tick', () =>
+    {
+      // a defensive re-check: getTarget() is truthy for the earlier gates (so we actually reach
+      // the sole-aggro branch) but reports unset by the time the inner guard runs.
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+      jabsBattler.removeAggroIfInvalid = vi.fn();
+      jabsBattler.getAggrosSortedHighestToLowest = () => [ { uuid: () => 'sole-uuid' } ];
+      const target = { getUuid: () => 'current-uuid' };
+      jabsBattler.getTarget = vi.fn()
+        .mockReturnValueOnce(target)
+        .mockReturnValueOnce(target)
+        .mockReturnValueOnce(null);
+
+      expect(() => jabsBattler.adjustTargetByAggro()).not.toThrow();
+      expect(jabsBattler.getTarget).toHaveBeenCalledTimes(3);
+    });
+
     it('keeps the current target when it already matches the sole remaining aggro', () =>
     {
       const jabsBattler = buildBattler();
@@ -4997,6 +5101,25 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(() => jabsBattler.adjustTargetByAggro()).not.toThrow();
     });
 
+    it('gives up with multiple aggros when the target becomes unset partway through the tick', () =>
+    {
+      // a defensive re-check: getTarget() is truthy for the earlier gates (so we actually reach
+      // the multi-aggro branch) but reports unset by the time the second guard runs.
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+      jabsBattler.removeAggroIfInvalid = vi.fn();
+      jabsBattler.getAggrosSortedHighestToLowest = () => [ { uuid: () => 'a' }, { uuid: () => 'b' } ];
+      const target = { getUuid: () => 'current-uuid' };
+      jabsBattler.getTarget = vi.fn()
+        .mockReturnValueOnce(target)
+        .mockReturnValueOnce(target)
+        .mockReturnValueOnce(null);
+
+      expect(() => jabsBattler.adjustTargetByAggro()).not.toThrow();
+      expect(jabsBattler.getTarget).toHaveBeenCalledTimes(3);
+    });
+
     it('does not adjust targets when all aggro\'d targets are out of pursuit range', async () =>
     {
       const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
@@ -5013,6 +5136,27 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       jabsBattler.adjustTargetByAggro();
 
+      expect(jabsBattler.getTarget()).toBe(target);
+    });
+
+    it('keeps the current target when it already matches the highest in-range aggro', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ id: 'existence-check' }));
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+      const target = { getUuid: () => 'a' };
+      jabsBattler.setTarget(target);
+      jabsBattler.removeAggroIfInvalid = vi.fn();
+      jabsBattler.getAggrosSortedHighestToLowest = () => [ { uuid: () => 'a' }, { uuid: () => 'b' } ];
+      jabsBattler.getPursuitRadius = () => 100;
+      jabsBattler.distanceToDesignatedTarget = () => 1;
+      jabsBattler.engageTarget = vi.fn();
+
+      jabsBattler.adjustTargetByAggro();
+
+      expect(jabsBattler.engageTarget).not.toHaveBeenCalled();
       expect(jabsBattler.getTarget()).toBe(target);
     });
 
@@ -5995,6 +6139,14 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.isWithinScope(action, user)).toBe(true);
     });
 
+    it('is true when the target is the caster and the scope is everyone, with no other scope flag set', () =>
+    {
+      const jabsBattler = buildBattler();
+      const { action, user } = buildActionAndUser({ isForEveryone: () => true });
+
+      expect(jabsBattler.isWithinScope(action, user)).toBe(true);
+    });
+
     it('is true for an ally target from a same-team caster, excluding inanimate direct hits', async () =>
     {
       const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
@@ -6022,6 +6174,18 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       const target = { getUuid: () => 'target-uuid', isInanimate: () => true };
 
       expect(jabsBattler.isWithinScope(action, target)).toBe(false);
+      JABS_TeamRules.isFriendly = vi.fn(() => false);
+    });
+
+    it('is true for a same-team target when the caster is friendly and scope is everyone, with no ally flag set', async () =>
+    {
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isFriendly = vi.fn(() => true);
+      const jabsBattler = buildBattler();
+      const { action } = buildActionAndUser({ isForEveryone: () => true });
+      const target = { getUuid: () => 'target-uuid', isInanimate: () => false };
+
+      expect(jabsBattler.isWithinScope(action, target)).toBe(true);
       JABS_TeamRules.isFriendly = vi.fn(() => false);
     });
 
@@ -8118,6 +8282,17 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.stateSlipMp(state)).toBe(8);
     });
 
+    it('stateSlipMp skips the formula contribution when untagged', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ mmp: 50 });
+      jabsBattler.calculateStateSlipFormula = vi.fn();
+      const state = { jabsSlipMpFlat: 1, jabsSlipMpPercent: 0, jabsSlipMpFormula: null };
+
+      expect(jabsBattler.stateSlipMp(state)).toBe(1);
+      expect(jabsBattler.calculateStateSlipFormula).not.toHaveBeenCalled();
+    });
+
     it('stateSlipTp sums flat, percent-of-maxTp, and formula contributions', () =>
     {
       const jabsBattler = buildBattler();
@@ -8129,6 +8304,17 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       // 2 + (20 * 0.50) + 1 = 13.
       expect(jabsBattler.stateSlipTp(state)).toBe(13);
+    });
+
+    it('stateSlipTp skips the formula contribution when untagged', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.getBattler = () => ({ maxTp: () => 20 });
+      jabsBattler.calculateStateSlipFormula = vi.fn();
+      const state = { jabsSlipTpFlat: 2, jabsSlipTpPercent: 0, jabsSlipTpFormula: null };
+
+      expect(jabsBattler.stateSlipTp(state)).toBe(2);
+      expect(jabsBattler.calculateStateSlipFormula).not.toHaveBeenCalled();
     });
   });
 
@@ -8375,6 +8561,18 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.isCasting()).toBe(false);
       expect(jabsBattler._castTimeCountdown).toBe(0);
     });
+
+    it('does not end the cast for a NaN countdown (neither comparison is true)', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler.performCastAnimation = vi.fn();
+      jabsBattler._castTimeCountdown = NaN;
+      jabsBattler._casting = true;
+
+      jabsBattler.countdownCastTime();
+
+      expect(jabsBattler.isCasting()).toBe(true);
+    });
   });
 
   describe('performCastAnimation / canPerformCastAnimation', () =>
@@ -8489,6 +8687,17 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.countdownAlert();
 
       expect(jabsBattler.clearAlert).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not clear the alert for a NaN counter (neither comparison is true)', () =>
+    {
+      const jabsBattler = buildBattler();
+      jabsBattler._alertedCounter = NaN;
+      jabsBattler.clearAlert = vi.fn();
+
+      jabsBattler.countdownAlert();
+
+      expect(jabsBattler.clearAlert).not.toHaveBeenCalled();
     });
 
     it('clearAlert resets the alerted flag and counter', () =>

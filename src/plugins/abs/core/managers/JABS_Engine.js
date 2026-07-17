@@ -4717,6 +4717,103 @@ class JABS_Engine
   }
 
   /**
+   * Checks a small circular radius around the action sprite for potential targets
+   * solely to determine whether an action should arm during its delay phase.
+   *
+   * This does not apply damage; it only identifies whether any valid battlers are
+   * within the supplied radius.
+   *
+   * @param {JABS_Action} jabsAction The action to evaluate.
+   * @param {number} radius The trigger radius in tiles.
+   * @returns {JABS_Battler[]} A list of potential targets inside the trigger radius.
+   */
+  getTriggerTouchTargets(jabsAction, radius)
+  {
+    // read core references for filtering.
+    const casterJabsBattler = jabsAction.getCaster();
+
+    // we only support spatial checks around an action sprite.
+    const actionSprite = jabsAction.getActionSprite();
+    if (!actionSprite)
+    {
+      return [];
+    }
+
+    /**
+     * Basic candidate filter: can be hit, in-scope for the action, and not
+     * an inanimate target (when the caster is an enemy).
+     * @param {JABS_Battler} battler The candidate battler.
+     * @returns {boolean} True if valid for proximity trigger, false otherwise.
+     */
+    const canActionConnectWithBattler = battler =>
+    {
+      // this battler is untargetable.
+      if (!battler.canActionConnect())
+      {
+        return false;
+      }
+
+      // respect core scope constraints (friend/enemy/grounding, etc.).
+      if (!battler.isWithinScope(jabsAction, battler, false))
+      {
+        return false;
+      }
+
+      // enemies should not react to inanimate targets.
+      if (casterJabsBattler.isEnemy() && battler.isInanimate())
+      {
+        return false;
+      }
+
+      // this candidate is valid.
+      return true;
+    };
+
+    // anchor the AABB on the action sprite’s continuous map coords (tile getters round under pixel movement).
+    const cx = actionSprite._realX;
+    const cy = actionSprite._realY;
+
+    // compute inclusive bounds for the spatial index query.
+    const minX = Math.floor(cx - radius);
+    const minY = Math.floor(cy - radius);
+    const maxX = Math.ceil(cx + radius);
+    const maxY = Math.ceil(cy + radius);
+
+    // query spatial candidates from the index.
+    const candidates = JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
+
+    // check circle distance for each candidate relative to the action sprite.
+    const targets = [];
+    // circle collision ignores facing, but keep logical dir8 for parity with shaped actions.
+    const actionDirection = jabsAction.direction();
+    candidates
+      .filter(canActionConnectWithBattler, this)
+      .forEach(battler =>
+      {
+        // retrieve the battler's character for spatial testing.
+        const sprite = battler.getCharacter();
+
+        // reuse the engine's circle collision helper.
+        const inCircle = this.isTargetWithinRange(
+          actionDirection,
+          sprite,
+          actionSprite,
+          radius,
+          J.ABS.Shapes.Circle,
+        );
+
+        // collect if inside the trigger radius.
+        if (inCircle)
+        {
+          targets.push(battler);
+        }
+      }, this);
+
+    // return any battlers that were inside the trigger radius.
+    return targets;
+  }
+
+  /**
    * Reads the <degrees:N> tag from the action’s underlying skill notes.
    * Will return null if nothing is found.
    * @param {Game_Event} actionEvent The action event that carries the JABS_Action.

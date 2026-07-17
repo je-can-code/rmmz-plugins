@@ -202,14 +202,14 @@ class Window_SkillEquipSlots
 
   /**
    * Computes how many slot rows to render.
-   * Uses the max of: highest equipped slot index + 1, and max slot points.
+   * Uses the max of: highest equipped slot index + 1, and max slots.
    * Guarantees at least 1 row.
    * @returns {number}
    */
   computeRenderableSlotCount()
   {
-    // start with a baseline derived from points (temporary capacity until a dedicated stat exists).
-    const baseline = Number(this.actor().maxSlotPoints()) || 0;
+    // start with the actor's dedicated slot-count stat.
+    const baseline = Number(this.actor().maxSlots()) || 0;
 
     // find the highest equipped slot index, if any.
     let highest = -1;

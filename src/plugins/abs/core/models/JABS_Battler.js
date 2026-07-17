@@ -6338,7 +6338,7 @@ class JABS_Battler
     }
 
     // fix the value to two decimal places.
-    return parseFloat(calculatedValue.toFixed(2)) ?? 0;
+    return parseFloat(calculatedValue.toFixed(2));
   };
 
   /**

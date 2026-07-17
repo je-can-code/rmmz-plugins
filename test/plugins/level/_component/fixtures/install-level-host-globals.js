@@ -33,6 +33,17 @@ export function setPluginContextToJLevel(sandbox = globalThis)
 }
 
 /**
+ * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-LEVEL-Flat's own identity. Call this
+ * right before importing level/ext/flat/_metadata/initialization.js.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ */
+export function setPluginContextToJLevelFlat(sandbox = globalThis)
+{
+  sandbox.__PLUGIN_NAME__ = 'J-LEVEL-Flat';
+  sandbox.__PLUGIN_VERSION__ = '1.0.0';
+}
+
+/**
  * Globals required for J-LevelMaster's prototype-patch source files (core/objects/*.js,
  * core/managers/*.js) to evaluate when direct-imported into the real Vitest realm instead of a nested
  * vm context. Mirrors the shape of {@link installLevelEngineStubs} in engine-stubs.js (used by the VM

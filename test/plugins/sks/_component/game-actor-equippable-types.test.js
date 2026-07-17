@@ -70,6 +70,8 @@ describe('J-SkillSlots equippable skill types (direct src import)', () =>
   {
     // Arrange
     const actor = makeActorWithSkills([ 1, 2 ]);
+    actor.getActorNotes = () => [ { note: '<baseSlotPoints:[4]>' } ];
+    actor.getAllNotes = () => [];
 
     // Act
     actor.equipSkillToSlot(0, 2);

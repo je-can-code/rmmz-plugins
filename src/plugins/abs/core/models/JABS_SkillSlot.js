@@ -421,7 +421,7 @@ class JABS_SkillSlot
    */
   setLock(locked)
   {
-    if (!this.canBeLocked())
+    if (this.canBeLocked())
     {
       this.locked = locked;
     }

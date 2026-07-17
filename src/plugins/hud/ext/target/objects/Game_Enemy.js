@@ -17,7 +17,7 @@ Game_Enemy.prototype.targetFrameText = function()
 Game_Enemy.prototype.targetFrameIcon = function()
 {
   // extract the target icon from this enemy.
-  return RPGManager.getNumberFromNoteByRegex(this.enemy(), J.HUD.EXT.TARGET.RegExp.TargetFrameText);
+  return RPGManager.getNumberFromNoteByRegex(this.enemy(), J.HUD.EXT.TARGET.RegExp.TargetFrameIcon);
 };
 
 /**

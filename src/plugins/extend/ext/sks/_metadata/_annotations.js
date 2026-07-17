@@ -6,10 +6,10 @@
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
- * @base J-SKS
+ * @base J-SkillSlots
  * @base J-Extend
  * @orderAfter J-Base
- * @orderAfter J-SKS
+ * @orderAfter J-SkillSlots
  * @orderAfter J-Extend
  * @help
  * ============================================================================

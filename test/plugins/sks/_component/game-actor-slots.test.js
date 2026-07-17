@@ -71,6 +71,19 @@ describe('J-SkillSlots Game_Actor slots (direct src import)', () =>
     return actor;
   }
 
+  /**
+   * Stubs the actor's note sources so `maxSlotPoints()` resolves to a specific budget, bypassing
+   * the removed `setMaxSlotPoints` scaffolding. Mirrors the `getAllNotes` stub pattern already used
+   * for `apr` in test/plugins/apt/core/_component/game-battler-objects-direct.test.js.
+   * @param {Game_Actor} actor The actor to stub.
+   * @param {number} amount The baseline slot point value to bake into the actor's notes.
+   */
+  function withMaxSlotPoints(actor, amount)
+  {
+    actor.getActorNotes = () => [ { note: `<baseSlotPoints:[${amount}]>` } ];
+    actor.getAllNotes = () => [];
+  }
+
   it('slotCost and unslotted reflect skill notetags', () =>
   {
     // Arrange & Act & Assert
@@ -81,11 +94,58 @@ describe('J-SkillSlots Game_Actor slots (direct src import)', () =>
     expect(globalThis.$dataSkills[1].unslotted).toBe(false);
   });
 
+  describe('maxSlots', () =>
+  {
+    it('falls back to the plugin default when neither the actor nor class carries a baseline tag', () =>
+    {
+      // Arrange
+      const actor = makeActorWithSkills([]);
+      actor.getActorNotes = () => [];
+      actor.getAllNotes = () => [];
+
+      // Act & Assert
+      expect(actor.maxSlots()).toBe(4);
+    });
+
+    it('resolves the baseline from a <baseSlots:[FORMULA]> tag on the actor/class', () =>
+    {
+      // Arrange
+      const actor = makeActorWithSkills([]);
+      actor.getActorNotes = () => [ { note: '<baseSlots:[6]>' } ];
+      actor.getAllNotes = () => [];
+
+      // Act & Assert
+      expect(actor.maxSlots()).toBe(6);
+    });
+
+    it('adds bonus <maxSlots:[FORMULA]> tags from getAllNotes on top of the baseline', () =>
+    {
+      // Arrange
+      const actor = makeActorWithSkills([]);
+      actor.getActorNotes = () => [ { note: '<baseSlots:[4]>' } ];
+      actor.getAllNotes = () => [ { note: '<maxSlots:[1]>' } ];
+
+      // Act & Assert
+      expect(actor.maxSlots()).toBe(5);
+    });
+
+    it('clamps the combined total to a minimum of zero', () =>
+    {
+      // Arrange
+      const actor = makeActorWithSkills([]);
+      actor.getActorNotes = () => [ { note: '<baseSlots:[1]>' } ];
+      actor.getAllNotes = () => [ { note: '<maxSlots:[-10]>' } ];
+
+      // Act & Assert
+      expect(actor.maxSlots()).toBe(0);
+    });
+  });
+
   it('equipSkillToSlot spends points and blocks when over budget', () =>
   {
     // Arrange
     const actor = makeActorWithSkills([ 2, 5 ]);
-    actor.setMaxSlotPoints(4);
+    withMaxSlotPoints(actor, 4);
 
     // Act
     actor.equipSkillToSlot(0, 2);
@@ -101,7 +161,7 @@ describe('J-SkillSlots Game_Actor slots (direct src import)', () =>
   {
     // Arrange
     const actor = makeActorWithSkills([ 1, 2 ]);
-    actor.setMaxSlotPoints(4);
+    withMaxSlotPoints(actor, 4);
     actor.equipSkillToSlot(0, 1);
 
     // Act
@@ -116,6 +176,7 @@ describe('J-SkillSlots Game_Actor slots (direct src import)', () =>
   {
     // Arrange
     const actor = makeActorWithSkills([ 1, 3, 4 ]);
+    withMaxSlotPoints(actor, 4);
     actor.equipSkillToSlot(0, 1);
 
     // Act
@@ -129,7 +190,7 @@ describe('J-SkillSlots Game_Actor slots (direct src import)', () =>
   {
     // Arrange
     const actor = makeActorWithSkills([ 2 ]);
-    actor.setMaxSlotPoints(4);
+    withMaxSlotPoints(actor, 4);
     actor.equipSkillToSlot(2, 2);
 
     // Act
@@ -154,7 +215,7 @@ describe('J-SkillSlots Game_Actor slots (direct src import)', () =>
   {
     // Arrange
     const actor = makeActorWithSkills([ 1 ]);
-    actor.setMaxSlotPoints(4);
+    withMaxSlotPoints(actor, 4);
     actor.equipSkillToSlot(0, 1);
 
     // Act
@@ -169,7 +230,7 @@ describe('J-SkillSlots Game_Actor slots (direct src import)', () =>
   {
     // Arrange
     const actor = makeActorWithSkills([ 1, 2 ]);
-    actor.setMaxSlotPoints(4);
+    withMaxSlotPoints(actor, 4);
     actor.equipSkillToSlot(1, 1);
 
     // Act

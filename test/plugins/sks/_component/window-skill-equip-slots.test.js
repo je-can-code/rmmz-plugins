@@ -45,19 +45,19 @@ describe('Window_SkillEquipSlots (src/plugins/sks/core/windows/Window_SkillEquip
 
   /**
    * Builds a fake actor exposing just the surface Window_SkillEquipSlots reads from a Game_Actor:
-   * `getSkillIdInSlot()`, `skillSlotCost()`, `maxSlotPoints()`, and `slotMap()`.
+   * `getSkillIdInSlot()`, `skillSlotCost()`, `maxSlots()`, and `slotMap()`.
    * @param {object} shape The behavior to back this fake actor with.
    * @param {Map<number, number>} shape.slotMap The slot index -> skill id map.
-   * @param {number} shape.maxSlotPoints The value returned by `maxSlotPoints()`.
+   * @param {number} shape.maxSlots The value returned by `maxSlots()`.
    * @param {(skillId: number, slotIndex: number) => number} [shape.skillSlotCost] Cost resolver.
    * @returns {object}
    */
-  function makeActor({ slotMap, maxSlotPoints, skillSlotCost = () => 1 })
+  function makeActor({ slotMap, maxSlots, skillSlotCost = () => 1 })
   {
     return {
       getSkillIdInSlot: slotIndex => slotMap.get(slotIndex) ?? 0,
       skillSlotCost,
-      maxSlotPoints: () => maxSlotPoints,
+      maxSlots: () => maxSlots,
       slotMap: () => slotMap,
     };
   }
@@ -71,34 +71,34 @@ describe('Window_SkillEquipSlots (src/plugins/sks/core/windows/Window_SkillEquip
 
   describe('computeRenderableSlotCount', () =>
   {
-    it('renders at least 1 row even with 0 max points and no equipped slots', () =>
+    it('renders at least 1 row even with 0 max slots and no equipped slots', () =>
     {
       const slots = new Window_SkillEquipSlots({});
-      const actor = makeActor({ slotMap: new Map(), maxSlotPoints: 0 });
+      const actor = makeActor({ slotMap: new Map(), maxSlots: 0 });
 
       slots.setActor(actor);
 
       expect(slots.commandList().length).toBe(1);
     });
 
-    it('renders maxSlotPoints rows when no slot index exceeds that baseline', () =>
+    it('renders maxSlots rows when no slot index exceeds that baseline', () =>
     {
       const slots = new Window_SkillEquipSlots({});
-      const actor = makeActor({ slotMap: new Map([ [ 0, 1 ] ]), maxSlotPoints: 4 });
+      const actor = makeActor({ slotMap: new Map([ [ 0, 1 ] ]), maxSlots: 4 });
 
       slots.setActor(actor);
 
       expect(slots.commandList().length).toBe(4);
     });
 
-    it('renders through the highest occupied slot index when it exceeds maxSlotPoints', () =>
+    it('renders through the highest occupied slot index when it exceeds maxSlots', () =>
     {
       const slots = new Window_SkillEquipSlots({});
-      const actor = makeActor({ slotMap: new Map([ [ 5, 1 ] ]), maxSlotPoints: 2 });
+      const actor = makeActor({ slotMap: new Map([ [ 5, 1 ] ]), maxSlots: 2 });
 
       slots.setActor(actor);
 
-      // highest occupied index is 5, so rows 0..5 must render (6 rows), even though max points is only 2.
+      // highest occupied index is 5, so rows 0..5 must render (6 rows), even though max slots is only 2.
       expect(slots.commandList().length).toBe(6);
     });
   });
@@ -108,7 +108,7 @@ describe('Window_SkillEquipSlots (src/plugins/sks/core/windows/Window_SkillEquip
     it('labels an empty slot with the placeholder name, a zero icon, and "0" cost', () =>
     {
       const slots = new Window_SkillEquipSlots({});
-      const actor = makeActor({ slotMap: new Map(), maxSlotPoints: 1 });
+      const actor = makeActor({ slotMap: new Map(), maxSlots: 1 });
 
       slots.setActor(actor);
       const [ command ] = slots.commandList();
@@ -124,7 +124,7 @@ describe('Window_SkillEquipSlots (src/plugins/sks/core/windows/Window_SkillEquip
       const slots = new Window_SkillEquipSlots({});
       const actor = makeActor({
         slotMap: new Map([ [ 0, 2 ] ]),
-        maxSlotPoints: 1,
+        maxSlots: 1,
         skillSlotCost: () => 3,
       });
 
@@ -149,7 +149,7 @@ describe('Window_SkillEquipSlots (src/plugins/sks/core/windows/Window_SkillEquip
     it('returns the { index, skillId } payload for the current selection', () =>
     {
       const slots = new Window_SkillEquipSlots({});
-      const actor = makeActor({ slotMap: new Map([ [ 0, 2 ] ]), maxSlotPoints: 1 });
+      const actor = makeActor({ slotMap: new Map([ [ 0, 2 ] ]), maxSlots: 1 });
       slots.setActor(actor);
 
       slots.select(0);

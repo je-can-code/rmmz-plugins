@@ -10,4 +10,3 @@ import './windows/Window_SkillEquipSlots.js';
 import './windows/Window_SkillEquipList.js';
 import './windows/Window_SkillEquipDetail.js';
 import './scenes/Scene_SkillEquip.js';
-import './_metadata/pluginCommands.js';

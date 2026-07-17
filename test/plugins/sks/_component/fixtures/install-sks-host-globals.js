@@ -8,6 +8,8 @@ import RPG_Weapon from '../../../../../src/plugins/_base/database/implementation
 export const DEFAULT_SKS_PLUGIN_PARAMS = {
   'menu-switch': '101',
   'equippable-skill-type-ids': '[]',
+  'default-max-slots': '4',
+  'default-max-slot-points': '4',
 };
 
 /**

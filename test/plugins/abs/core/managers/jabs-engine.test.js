@@ -6301,6 +6301,174 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('getTriggerTouchTargets', () =>
+  {
+    /** builds a minimal JABS_Action-shaped object for the delay-arm proximity check. */
+    function buildTriggerJabsAction(overrides = {})
+    {
+      return Object.assign({
+        getCaster: () => ({ isEnemy: () => false }),
+        getActionSprite: () => ({ _realX: 0, _realY: 0 }),
+        direction: () => 2,
+      }, overrides);
+    }
+
+    beforeEach(() =>
+    {
+      J.ABS.Shapes = {
+        Circle: 'circle', Rhombus: 'rhombus', Square: 'square', Cross: 'cross',
+        Line: 'line', Arc: 'arc', Wall: 'wall',
+      };
+    });
+
+    it('returns no targets when the action has no action sprite yet', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const jabsAction = buildTriggerJabsAction({ getActionSprite: () => null });
+
+      // Act
+      const result = engine.getTriggerTouchTargets(jabsAction, 3);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it('queries the spatial index using an AABB anchored on the action sprite, padded by the radius', async () =>
+    {
+      // Arrange
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => []);
+      const engine = new JABS_Engine();
+      const jabsAction = buildTriggerJabsAction({ getActionSprite: () => ({ _realX: 10, _realY: 20 }) });
+
+      // Act
+      engine.getTriggerTouchTargets(jabsAction, 3);
+
+      // Assert
+      expect(JABS_AiManager.queryBattlersInAabb).toHaveBeenCalledWith(7, 17, 13, 23);
+    });
+
+    it('excludes a candidate that cannot connect with the action', async () =>
+    {
+      // Arrange
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const candidate = { canActionConnect: () => false, isWithinScope: () => true, isInanimate: () => false };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ candidate ]);
+      const engine = new JABS_Engine();
+      const jabsAction = buildTriggerJabsAction();
+
+      // Act
+      const result = engine.getTriggerTouchTargets(jabsAction, 3);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it('excludes a candidate that fails the scope check', async () =>
+    {
+      // Arrange
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const candidate = { canActionConnect: () => true, isWithinScope: () => false, isInanimate: () => false };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ candidate ]);
+      const engine = new JABS_Engine();
+      const jabsAction = buildTriggerJabsAction();
+
+      // Act
+      const result = engine.getTriggerTouchTargets(jabsAction, 3);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it('excludes an inanimate candidate when the caster is an enemy', async () =>
+    {
+      // Arrange
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const candidate = { canActionConnect: () => true, isWithinScope: () => true, isInanimate: () => true };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ candidate ]);
+      const engine = new JABS_Engine();
+      const jabsAction = buildTriggerJabsAction({ getCaster: () => ({ isEnemy: () => true }) });
+
+      // Act
+      const result = engine.getTriggerTouchTargets(jabsAction, 3);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it('includes an inanimate candidate when the caster is not an enemy', async () =>
+    {
+      // Arrange
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const character = {};
+      const candidate = {
+        canActionConnect: () => true,
+        isWithinScope: () => true,
+        isInanimate: () => true,
+        getCharacter: () => character,
+      };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ candidate ]);
+      const engine = new JABS_Engine();
+      engine.isTargetWithinRange = vi.fn(() => true);
+      const jabsAction = buildTriggerJabsAction({ getCaster: () => ({ isEnemy: () => false }) });
+
+      // Act
+      const result = engine.getTriggerTouchTargets(jabsAction, 3);
+
+      // Assert
+      expect(result).toEqual([ candidate ]);
+    });
+
+    it('collects a candidate whose character falls within the trigger circle', async () =>
+    {
+      // Arrange
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const character = {};
+      const candidate = {
+        canActionConnect: () => true,
+        isWithinScope: () => true,
+        isInanimate: () => false,
+        getCharacter: () => character,
+      };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ candidate ]);
+      const engine = new JABS_Engine();
+      engine.isTargetWithinRange = vi.fn(() => true);
+      const actionSprite = { _realX: 0, _realY: 0 };
+      const jabsAction = buildTriggerJabsAction({ getActionSprite: () => actionSprite });
+
+      // Act
+      const result = engine.getTriggerTouchTargets(jabsAction, 3);
+
+      // Assert: this method now correctly resolves against JABS_Engine's own isTargetWithinRange-
+      // it used to live on JABS_Action, which does not define that method, and would throw.
+      expect(engine.isTargetWithinRange).toHaveBeenCalledWith(2, character, actionSprite, 3, J.ABS.Shapes.Circle);
+      expect(result).toEqual([ candidate ]);
+    });
+
+    it('excludes a candidate whose character falls outside the trigger circle', async () =>
+    {
+      // Arrange
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const candidate = {
+        canActionConnect: () => true,
+        isWithinScope: () => true,
+        isInanimate: () => false,
+        getCharacter: () => ({}),
+      };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ candidate ]);
+      const engine = new JABS_Engine();
+      engine.isTargetWithinRange = vi.fn(() => false);
+      const jabsAction = buildTriggerJabsAction();
+
+      // Act
+      const result = engine.getTriggerTouchTargets(jabsAction, 3);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+  });
+
   describe('getCollisionTargets', () =>
   {
     function buildJabsAction(overrides = {})

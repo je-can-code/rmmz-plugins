@@ -34,4 +34,8 @@ J.SKS.RegExp = {};
 J.SKS.RegExp.SlotCost = /<slotCost:[ ]?(-?\d+)>/i;
 J.SKS.RegExp.Unslotted = /<unslotted>/i;
 J.SKS.RegExp.SlotCostModifier = /<slotCostModifier:[ ]?(-?\d+)>/i;
+J.SKS.RegExp.BaseSlots = /<baseSlots:\[([+\-*/ ().\w]+)]>/gi;
+J.SKS.RegExp.BaseSlotPoints = /<baseSlotPoints:\[([+\-*/ ().\w]+)]>/gi;
+J.SKS.RegExp.MaxSlots = /<maxSlots:\[([+\-*/ ().\w]+)]>/gi;
+J.SKS.RegExp.MaxSlotPoints = /<maxSlotPoints:\[([+\-*/ ().\w]+)]>/gi;
 //endregion initialization

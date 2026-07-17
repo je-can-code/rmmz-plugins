@@ -44,10 +44,18 @@ class JSkillSlots_PluginMetadata
       .map(id => J.BASE.Helpers.parsePluginInt(id, 0));
 
     /**
-     * The default maximum number of skill slot points for an actor.
+     * The baseline number of skill slots an actor has when neither the actor nor their class
+     * carries a {@link J.SKS.RegExp.BaseSlots} tag.
      * @type {number}
      */
-    this.defaultMaxSkillSlotPoints = 4; // TODO: get from plugin parameters.
+    this.defaultMaxSkillSlots = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['default-max-slots'], 4);
+
+    /**
+     * The baseline slot point budget an actor has when neither the actor nor their class
+     * carries a {@link J.SKS.RegExp.BaseSlotPoints} tag.
+     * @type {number}
+     */
+    this.defaultMaxSkillSlotPoints = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['default-max-slot-points'], 4);
 
     /**
      * The default cost of a skill for a skill slot.
