@@ -3184,6 +3184,87 @@ class JABS_Engine
 
     // apply the aggro to the target.
     target.addUpdateAggro(attacker.getUuid(), aggro);
+
+    // apply any percent scaling of the attacker's own now-current standing aggro.
+    this.applyAggroPercentEffect(action, attacker, target);
+
+    // apply any "not my aggro" redirection from the underlying skill.
+    this.applyNotMyAggroEffects(action, attacker, target);
+  }
+
+  /**
+   * Applies any {@code <aggroPercent:VAL>} scaling from the underlying skill to the attacker's own
+   * already-standing aggro entry on the target. Unlike {@code <aggroMultiplier>}, which scales the
+   * newly-computed chain result for just this hit, this scales the entry's full current total-
+   * including everything accumulated from prior hits.
+   * @param {JABS_Action} action The JABS action containing the action data.
+   * @param {JABS_Battler} attacker The battler that executed the action.
+   * @param {JABS_Battler} target The target having the action applied against.
+   */
+  applyAggroPercentEffect(action, attacker, target)
+  {
+    // grab the percent scaling amount from the underlying skill.
+    const percent = action.aggroPercent();
+
+    // if it's not present, there is nothing to scale.
+    if (percent === 0) return;
+
+    // usually already exists- addUpdateAggro() just created or updated it- but a locked aggro that
+    // never previously existed is skipped by addUpdateAggro entirely, so this can still be absent.
+    const ownAggro = target.aggroExists(attacker.getUuid());
+    if (!ownAggro) return;
+
+    // scale the entry's current total: aggro *= (1 + percent/100).
+    ownAggro.modAggro(ownAggro.aggro * (percent / 100));
+  }
+
+  /**
+   * Applies any {@code <notMyAggro:VAL>}/{@code <notMyAggroPercent:VAL>} redirection from the
+   * underlying skill to every OTHER battler's standing aggro on the target- same team as the
+   * attacker, attacker's own entry excluded. Unlike {@code <aggroMultiplier>} (a single scalar
+   * applied once to the attacker's own newly-computed aggro), this walks N distinct existing
+   * aggro entries and adjusts each independently off its own current value.
+   * @param {JABS_Action} action The JABS action containing the action data.
+   * @param {JABS_Battler} attacker The battler that executed the action.
+   * @param {JABS_Battler} target The target having the action applied against.
+   */
+  applyNotMyAggroEffects(action, attacker, target)
+  {
+    // grab the flat and percent redirection amounts from the underlying skill.
+    const flat = action.notMyAggro();
+    const percent = action.notMyAggroPercent();
+
+    // if neither is present, there is nothing to redirect.
+    if (flat === 0 && percent === 0) return;
+
+    // walk every aggro entry currently tracked on the target.
+    target.getAllAggros()
+      .forEach(otherAggro =>
+      {
+        // skip the attacker's own entry- this effect only touches OTHER battlers' aggro.
+        if (otherAggro.uuid() === attacker.getUuid()) return;
+
+        // resolve the battler behind this aggro entry to check team membership.
+        const otherBattler = JABS_AiManager.getBattlerByUuid(otherAggro.uuid());
+
+        // skip stale entries whose battler no longer exists.
+        if (!otherBattler) return;
+
+        // only redirect aggro belonging to the attacker's own team.
+        if (JABS_TeamRules.isFriendly(attacker.getTeam(), otherBattler.getTeam()) === false) return;
+
+        // apply the flat adjustment first.
+        if (flat !== 0)
+        {
+          otherAggro.modAggro(flat);
+        }
+
+        // apply the percent adjustment against the now-current value: aggro *= (1 + percent/100).
+        if (percent !== 0)
+        {
+          otherAggro.modAggro(otherAggro.aggro * (percent / 100));
+        }
+      });
   }
 
   /**

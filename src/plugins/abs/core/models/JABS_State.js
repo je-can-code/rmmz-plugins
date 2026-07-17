@@ -456,7 +456,7 @@ class JABS_State
     const stateRow = this.battler.state(this.stateId);
 
     // grab the base max number of stacks for this state, plus any state-scoped boost baked into
-    // its own note (including one merged in from an <extend>/<extendStateType> overlay state),
+    // its own note (including one merged in from an <extend>/<extendType> overlay state),
     // plus any blanket boost the caster carries from their own equipment/passives/etc.
     const maxStacks = stateRow.jabsStateStackMax
       + stateRow.jabsThisStackMaxBoost
@@ -661,7 +661,7 @@ class JABS_State
     // tick speed modifiers are evaluated against the source, not the afflicted battler-
     // Festering/Exsanguination-style passives speed up the ticks of states their owner inflicts.
     const flatModifier = this.source.tickSpeedFlatModifier();
-    const percentModifier = this.source.tickSpeedPercentModifier(stateRow.stateTypes());
+    const percentModifier = this.source.tickSpeedPercentModifier(stateRow.types());
 
     // apply the flat modifier first, then the combined percent modifier.
     const modifiedInterval = (baseInterval + flatModifier) / (1 + (percentModifier / 100));

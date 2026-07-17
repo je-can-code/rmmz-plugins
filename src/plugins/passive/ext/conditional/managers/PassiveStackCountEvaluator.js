@@ -52,6 +52,8 @@ class PassiveStackCountEvaluator
         return Math.floor(PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler, proximityTiles).length / Number(param));
       case 'enemiesNearby':
         return Math.floor(PassiveRuleJabsAccess.nearbyEnemies(battler, proximityTiles).length / Number(param));
+      case 'enemiesTargetingMe':
+        return Math.floor(PassiveRuleJabsAccess.enemiesTargetingMe(battler).length / Number(param));
 
       // lessIsMore* — missing resource percent drives stacks (low hp → more stacks).
       case 'lessIsMoreHp':

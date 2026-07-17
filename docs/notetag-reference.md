@@ -799,19 +799,24 @@ gates EVERY passive this source grants behind KIND's condition — if the condit
 source's passives apply. Threshold kinds use `*Above` (>=) / `*Below` (<=): `hp`/`mp`/`tp` are current
 resource percent, `mhp`/`mmp`/`mtp` are flat max values, `{registryKey}Above/Below` are flat or
 hundred-scale per the parameter registry, `allAllies{key}Above/Below` requires every allied JABS
-battler (including self) to pass. Discrete kinds: `alliesNearby`, `enemiesNearby`, `hasState`,
-`negativeStateCount`, `slotOnCooldown`/`slotOffCooldown`/`allOnCooldown`/`allOffCooldown`,
+battler (including self) to pass. Discrete kinds: `alliesNearby`, `enemiesNearby`,
+`enemiesTargetingMe`, `hasState`, `negativeStateCount`,
+`slotOnCooldown`/`slotOffCooldown`/`allOnCooldown`/`allOffCooldown`,
 `sinceLastMoved`/`Hit`/`Attacked`, `movedWithin`/`hitWithin`/`attackedWithin` (frames).
 `alliesNearby`/`enemiesNearby` take `[COUNT, RADIUS?]` and pass when at least COUNT are in range
 (`>=`); `alliesNearbyBelow`/`enemiesNearbyBelow` take the same slots but pass when UNDER COUNT
 (`<`) — use these for "nobody nearby" gates. RADIUS defaults to the plugin's
-`default-proximity-tiles` param when omitted.
+`default-proximity-tiles` param when omitted. `enemiesTargetingMe`/`enemiesTargetingMeBelow` use
+the same `>=`/`<` split but are NOT proximity-scoped — they count opposing battlers that currently
+have this battler as their live AI target, regardless of tile distance, so there is no RADIUS slot.
 
 ```
 <passiveSourceRule:[allOffCooldown]>
 <passiveSourceRule:[enemiesNearbyBelow, 1, 1]>
+<passiveSourceRule:[enemiesTargetingMe, 1]>
 ```
-The second example gates on "no enemies within 1 tile" (melee range).
+The second example gates on "no enemies within 1 tile" (melee range). The third gates on "at
+least one enemy currently has me targeted," independent of distance.
 
 **See also:** `<passiveStateRule>`, `<passiveStateCount>`
 
@@ -848,13 +853,18 @@ same as `<passiveSourceRule>`
 
 **Effect:**
 instead of gating on/off, contributes a variable STACK COUNT to STATE_ID based on KIND: `negativeStateCount`,
-`alliesNearby` (excludes self), `lessIsMoreHp`/`Mp`/`Tp` (more stacks the lower the resource),
+`alliesNearby` (excludes self), `enemiesNearby`, `enemiesTargetingMe` (not proximity-scoped — see
+`<passiveSourceRule>`), `lessIsMoreHp`/`Mp`/`Tp` (more stacks the lower the resource),
 `moreIsMoreHp`/`Mp`/`Tp` (more stacks the higher the resource), or `per-{registryKey}` (integer points
 per stack from a parameter registry value).
 
 ```
 <passiveStateCount:[12, lessIsMoreHp, 25]>
+<passiveStateCount:[70, enemiesTargetingMe, 1]>
 ```
+The second example grants state 70 one stack per enemy currently targeting this battler — pair it
+with a state carrying a flat `pdr`/`mdr` param-rate trait so each stack chips away at incoming
+damage, scaling automatically as enemies engage or disengage.
 
 **See also:** `<passiveSourceRule>`, `<passiveStateRule>`
 
@@ -2574,6 +2584,36 @@ them.
 
 ---
 
+### `<thisRangeBuff:N>` / `<thisRangeRate:N>` / `<thisRadiusBuff:N>` / `<thisRadiusRate:N>` / `<thisProximityBuff:N>` / `<thisProximityRate:N>` / `<thisThicknessBuff:N>` / `<thisThicknessRate:N>`
+
+**Applies to:**
+Skills, Items only (read from this skill/item's own note — never the caster's `getAllNotes()`)
+
+**When:**
+always — same axes and stacking math as `<rangeBuff>`/`<rangeRate>` and their per-axis
+counterparts, just scoped to a single skill
+
+**Effect:**
+self-scoped counterparts to `<rangeBuff>`/`<rangeRate>`/`<radiusBuff>`/`<radiusRate>`/
+`<proximityBuff>`/`<proximityRate>`/`<thicknessBuff>`/`<thicknessRate>` — same "shared axis (all
+three dimensions) vs per-axis" split, same additive-rate accumulator (`finalRate = 1.0 +
+sum(rate - 1.0)` across every applicable tag, caster-wide and this-scoped combined), but read only
+from the acting skill's own note instead of every note source on the caster. Stacks additively with
+the caster-wide versions rather than replacing them — same "this"-tag pattern as
+`<thisCastTimeDamageBonus>`.
+
+```
+<proximity:2>
+<thisRangeBuff:2>
+```
+This skill alone reaches 2 extra tiles of targeting proximity (and radius/thickness, if tagged),
+on top of whatever `<rangeBuff>` the caster carries from equipment/passives/etc.
+
+**See also:** `<rangeBuff>`, `<rangeRate>`, `<radiusBuff>`, `<proximityBuff>`, `<thicknessBuff>`,
+`<thisCastTimeDamageBonus>`
+
+---
+
 ### `<perDebuffBuff:N>`
 
 **Applies to:**
@@ -3068,6 +3108,63 @@ multipliers → target-state multipliers → attacker TGR → player-unique mult
 ```
 This skill adds 50 flat aggro, then doubles the entire calculated total.
 
+**See also:** `<aggroPercent>`, `<notMyAggro>`, `<notMyAggroPercent>`
+
+---
+
+### `<aggroPercent:VAL>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+the skill executes (fires regardless of hit/miss/parry, same as the rest of JABS's aggro effects)
+
+**Effect:**
+scales the caster's own aggro entry on the target by its *entire current total*, not just this
+hit's contribution — `entry *= (1 + VAL/100)`, applied after the normal `<aggro>`/`<aggroMultiplier>`
+chain has already updated that entry for this hit. Contrast with `<aggroMultiplier>`, which only
+scales the newly-computed delta for this one hit before it's added; `<aggroPercent>` scales
+everything the caster has already accumulated on this target across prior hits too.
+
+```
+<aggroPercent:100>
+```
+If the caster already has 1000 standing aggro on the target, landing this skill doubles it to
+2000 (after also adding whatever this hit's own `<aggro>`/`<aggroMultiplier>` chain contributed).
+
+**See also:** `<aggro>`, `<aggroMultiplier>`
+
+---
+
+### `<notMyAggro:VAL>` / `<notMyAggroPercent:VAL>`
+
+**Applies to:**
+Skills, Items
+
+**When:**
+the skill executes (fires regardless of hit/miss/parry, same as the rest of JABS's aggro effects)
+
+**Effect:**
+unlike `<aggro>`/`<aggroMultiplier>` (which adjust the caster's own single aggro entry on the
+target), these redirect OTHER battlers' *existing* aggro entries on the same target — every
+battler that also has standing aggro on the target, sharing the caster's team, excluding the
+caster's own entry. `notMyAggro` adds VAL flat to each of those entries independently (can be
+negative). `notMyAggroPercent` scales each of those entries independently as `entry *= (1 +
+VAL/100)` — negative VAL shrinks, positive VAL grows. Flat applies before percent, per entry.
+Aggro locks on individual entries are still respected (a locked entry is skipped for that entry
+only).
+
+```
+<notMyAggro:-50>
+<notMyAggroPercent:-25>
+```
+On landing, every ally's standing aggro on this target drops by 50 flat, then by another 25% of
+whatever remains — a taunt: threat is pulled toward the caster and away from everyone else on
+their team who's also fighting this target.
+
+**See also:** `<aggro>`, `<aggroMultiplier>`
+
 ---
 
 ### `<aggroLock>` / `<aggroOutAmp:VAL>` / `<aggroInAmp:VAL>`
@@ -3360,6 +3457,43 @@ Every state this battler applies gets bonus frames scaled off their own LUK.
 
 ---
 
+### `<thisStateDurationFlat:VAL>` / `<thisStateDurationPerc:VAL>` / `<thisStateDurationFormula:[FORMULA]>`
+
+**Applies to:**
+States only (read from a single state's own note — never the caster directly)
+
+**Formula context (thisStateDurationFormula):**
+`b` = the base duration in frames before any boosts. No battler context (`a`) is available, since
+this boost is state-scoped rather than caster-scoped.
+
+**When:**
+this state's own outgoing map-timer duration is resolved (`jabsStateHasMapTimer` true)
+
+**Effect:**
+a state-scoped counterpart to `<stateDurationFlat/Perc/Formula>` — those apply to *every* state a
+battler applies (summed from every note source on the caster), which is too broad when you only
+want to boost states sharing a classifier. `thisStateDurationFlat/Perc/Formula` are read only from
+the state's own note, but that note can be someone else's: when another active state carries
+`<extend:[STATE_ID]>` or `<extendType:TYPE>` targeting this state, J-Extend merges the
+overlay's note into this state's resolved note before this boost is read, so one passive state
+(e.g. an equipment-granted passive) can extend the duration of one specific state, or of every
+state sharing a `<type:TYPE>` classifier, without editing the target state(s) directly. This is the
+same "this"-scoped riding-along pattern as `<thisStackMaxBoost>`, applied to duration instead of
+stack cap.
+
+```
+<extendType:low-effort>
+<thisStateDurationPerc:100>
+```
+Placed on a passive state (e.g. granted by J-Passive's equipment-granted-state tags). While this
+passive is active, every currently active state carrying `<type:low-effort>` has its outgoing map
+duration doubled — other states this battler applies (or that don't carry the `low-effort`
+classifier) are untouched.
+
+**See also:** `<stateDurationFlat>`, `<extendType>`, `<thisStackMaxBoost>`
+
+---
+
 ### `<stackType:refresh|extend|stack>` / `<stateRefreshDiminish:VAL>` / `<stateRefreshReset:VAL>` / `<stackExtendAmount:VAL>` / `<stackExtendMax:VAL>` / `<stackMax:VAL>` / `<applyStacks:VAL>` / `<loseAllStacksAtOnce>`
 
 **Applies to:**
@@ -3432,7 +3566,7 @@ bonus summed across every note source on the caster, applying to every state tha
 regardless of which one it is. `thisStackMaxBoost` is read from a single state's own note only —
 on its own it's redundant with just raising `<stackMax:VAL>` directly, but it's designed to ride
 along on a J-Extend overlay: when another active state carries `<extend:[STATE_ID]>` or
-`<extendStateType:TYPE>` targeting this state, J-Extend merges the overlay's note into this
+`<extendType:TYPE>` targeting this state, J-Extend merges the overlay's note into this
 state's resolved note before this tag is read, so one overlay state (e.g. an equipment-granted
 passive) can raise the cap of one specific state, or of every state sharing a `<type:TYPE>`
 classifier, without editing the target state(s) directly.
@@ -3445,16 +3579,16 @@ applies gets +5 to its cap, period. `stackMaxBoost` is read from any note source
 
 ```
 <thisStackMaxBoost:3>
-<extendStateType:poison>
+<extendType:poison>
 ```
 Placed on a passive state granted by a "Ring of Bountiful Poison" (e.g. via J-Passive's
-equipment-granted-state tags). `extend`/`extendStateType` are only picked up from currently
+equipment-granted-state tags). `extend`/`extendType` are only picked up from currently
 *active states* (including passive-injected ones) — never read directly off an equip's own note —
 so `thisStackMaxBoost` must live on the granted state, not the ring's note itself. While the
 wearer has this passive state active, every state carrying `<type:poison>` that they apply gets
 +3 to its cap.
 
-**See also:** `<stackMax>`, `<extend>`, `<extendStateType>`
+**See also:** `<stackMax>`, `<extend>`, `<extendType>`
 
 ---
 
@@ -4661,28 +4795,38 @@ recursive re-triggering during this execution only.
 ```
 This skill/state acts as an extension to skill/state 40.
 
-**See also:** `<extendStateType>`
+**See also:** `<extendType>`
 
 ---
 
-### `<extendStateType:CLASSIFIER>`
+### `<extendType:CLASSIFIER>`
 
 **Applies to:**
-States
+Skills, States
 
 **When:**
-resolved whenever a matching-type state is looked up
+resolved whenever a matching-type skill/state is looked up
 
 **Effect:**
-an alternative to id-based `<extend>` for states — extends EVERY currently active state carrying
-a matching J-Base `<type:CLASSIFIER>` tag, without listing each target id individually. When a
-battler has both type-based and id-based candidates for the same base state, type-based overlays
-apply first (ascending id order), then id-based overlays apply second and win any conflict.
+an alternative to id-based `<extend>` — extends EVERY candidate carrying a matching J-Base
+`<type:CLASSIFIER>` tag, without listing each target id individually. The candidate pool differs
+by type: for states, every currently *active* state on the battler (including passive-injected
+ones); for skills, every skill the caster has *learned* (same candidate pool id-based `<extend>`
+already used for skills — a skill overlay never applies unless the caster actually knows it). When
+a candidate pool has both type-based and id-based candidates for the same base skill/state,
+type-based overlays apply first (ascending id order), then id-based overlays apply second and win
+any conflict.
 
 ```
-<extendStateType:poison>
+<extendType:poison>
 ```
 This state extends every active state carrying `<type:poison>`, regardless of specific id.
+
+```
+<extendType:low-effort>
+```
+This skill extends every skill the caster knows carrying `<type:low-effort>`, regardless of
+specific id.
 
 **See also:** `<extend>`, J-Base's `<type>`
 

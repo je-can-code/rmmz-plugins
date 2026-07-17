@@ -1062,7 +1062,7 @@ Game_Action.prototype.critChanceIfStateBonus = function(target) {
 * @returns {boolean} True if any active state on the target carries this type.
 */
 Game_Action.prototype.targetHasActiveStateType = function(target, type) {
-	return target.states().some((state) => state.stateTypes().some((stateType) => stateType.toLowerCase() === type.toLowerCase()));
+	return target.states().some((state) => state.types().some((stateType) => stateType.toLowerCase() === type.toLowerCase()));
 };
 
 //#endregion

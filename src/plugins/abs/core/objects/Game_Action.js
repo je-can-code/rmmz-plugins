@@ -1130,7 +1130,7 @@ Game_Action.prototype.targetHasActiveStateType = function(target, type)
 {
   // check the target's active states for a case-insensitive type classifier match.
   return target.states()
-    .some(state => state.stateTypes()
+    .some(state => state.types()
       .some(stateType => stateType.toLowerCase() === type.toLowerCase()));
 };
 
@@ -1191,7 +1191,7 @@ Game_Action.prototype.calculatePerStateTypePct = function(target)
   {
     // count the target's distinct active states that carry this type classifier.
     const matchingStateCount = target.states()
-      .filter(state => state.stateTypes()
+      .filter(state => state.types()
         .some(stateType => stateType.toLowerCase() === type.toLowerCase()))
       .length;
 

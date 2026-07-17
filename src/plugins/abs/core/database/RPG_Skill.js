@@ -284,6 +284,45 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsAggroMultiplier', {
     return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.AggroMultiplier, true);
   },
 });
+
+/**
+ * The percent adjustment this skill applies to the CASTER's own already-standing aggro on the
+ * target (not the newly-computed chain result- see {@code <aggroMultiplier>} for that). Resolved
+ * as `aggro *= (1 + VAL/100)` against whatever the caster's aggro entry already totals. Can be
+ * negative.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsAggroPercent', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.AggroPercent, true);
+  },
+});
+
+/**
+ * The flat aggro adjustment this skill applies to every OTHER battler's standing aggro on the
+ * target (same team as the caster, caster's own entry excluded). Can be negative.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsNotMyAggro', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.NotMyAggro, true);
+  },
+});
+
+/**
+ * The percent aggro adjustment this skill applies to every OTHER battler's standing aggro on the
+ * target (same team as the caster, caster's own entry excluded). Resolved as `aggro *= (1 +
+ * VAL/100)` per entry, so negative values reduce and positive values amplify. Can be negative.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsNotMyAggroPercent', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.NotMyAggroPercent, true);
+  },
+});
 //endregion aggro
 
 //region jabsGuardData

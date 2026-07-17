@@ -70,21 +70,25 @@ J.EXTEND.RegExp = {};
 J.EXTEND.RegExp.Extend = /<extend:[ ]?(\[[ ]?\d+(?:,[ ]?\d+)*[ ]?])>/i;
 
 /**
- * The structure of a state-type extension tag.
+ * The structure of a type-based extension tag.
  *
  * <pre>
  * Structure:
- *  <extendStateType:TYPE>
+ *  <extendType:TYPE>
  *
- * Example:
- *  <extendStateType:poison>
+ * Example (on a state):
+ *  <extendType:poison>
+ *
+ * Example (on a skill):
+ *  <extendType:low-effort>
  *
  * Translation:
- *  Extends all states bearing the type classifier "poison".
+ *  Extends every currently-active state (or every known skill) bearing the {@code <type:TYPE>}
+ *  classifier "poison"/"low-effort", without listing each target id individually.
  * </pre>
  * @type {RegExp}
  */
-J.EXTEND.RegExp.StateExtendType = /<extendStateType:[ ]?(.+?)>/i;
+J.EXTEND.RegExp.ExtendType = /<extendType:[ ]?(.+?)>/i;
 
 /**
  * The structure of an on-hit self-state application tag.

@@ -38,6 +38,13 @@ class PassiveGateEvaluator
       case 'enemiesNearbyBelow':
         return PassiveRuleJabsAccess.nearbyEnemies(battler, scope ? Number(scope) : null).length < Number(param);
 
+      // targeting gates — not proximity-scoped; counts opposing battlers with this battler as
+      // their live AI target, regardless of tile distance.
+      case 'enemiesTargetingMe':
+        return PassiveRuleJabsAccess.enemiesTargetingMe(battler).length >= Number(param);
+      case 'enemiesTargetingMeBelow':
+        return PassiveRuleJabsAccess.enemiesTargetingMe(battler).length < Number(param);
+
       // resource threshold gates — [threshold, scope?, range?].
       // scope: self (default), anyAlly, allAllies, anyEnemy, allEnemies.
       // range: tile radius; defaults to plugin default-proximity-tiles when scope is not self.

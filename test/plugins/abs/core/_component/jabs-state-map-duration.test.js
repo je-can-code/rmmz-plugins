@@ -219,6 +219,54 @@ describe('J-ABS map state duration (direct src import)', () =>
       // Assert
       expect(result).toBe(240);
     });
+
+    it('jabsThisStateDurationBoost adds flat frames from its own thisStateDurationFlat tag', () =>
+    {
+      // Arrange
+      const row = registerStateRow(13, '<thisStateDurationFlat:30>');
+
+      // Act
+      const result = row.jabsThisStateDurationBoost(100);
+
+      // Assert
+      expect(result).toBe(30);
+    });
+
+    it('jabsThisStateDurationBoost adds a percent-of-base bonus from its own thisStateDurationPerc tag', () =>
+    {
+      // Arrange
+      const row = registerStateRow(14, '<thisStateDurationPerc:100>');
+
+      // Act
+      const result = row.jabsThisStateDurationBoost(100);
+
+      // Assert
+      expect(result).toBe(100);
+    });
+
+    it('jabsThisStateDurationBoost adds a formula-driven bonus from its own thisStateDurationFormula tag', () =>
+    {
+      // Arrange
+      const row = registerStateRow(15, '<thisStateDurationFormula:[b * 0.5]>');
+
+      // Act
+      const result = row.jabsThisStateDurationBoost(100);
+
+      // Assert
+      expect(result).toBe(50);
+    });
+
+    it('jabsThisStateDurationBoost is zero when the state carries no thisStateDuration tags', () =>
+    {
+      // Arrange
+      const row = registerStateRow(16, '<stateDuration:100>');
+
+      // Act
+      const result = row.jabsThisStateDurationBoost(100);
+
+      // Assert
+      expect(result).toBe(0);
+    });
   });
 
   describe('Game_Battler.addJabsState', () =>
@@ -270,6 +318,23 @@ describe('J-ABS map state duration (direct src import)', () =>
       // Assert
       const [ [ , jabsState ] ] = globalThis.$jabsEngine.addOrUpdateStateByUuid.mock.calls;
       expect(jabsState.duration).toBe(-1);
+    });
+
+    it('doubles the outgoing duration when the state carries its own thisStateDurationPerc tag', () =>
+    {
+      // Arrange
+      registerStateRow(23, '<stateDuration:100>\n<thisStateDurationPerc:100>', {
+        removeByWalking: false,
+        stepsToRemove: 100,
+      });
+      const battler = buildGameBattler('test-uuid-4');
+
+      // Act
+      battler.addJabsState(23, battler);
+
+      // Assert
+      const [ [ , jabsState ] ] = globalThis.$jabsEngine.addOrUpdateStateByUuid.mock.calls;
+      expect(jabsState.duration).toBe(200);
     });
   });
 });

@@ -1151,7 +1151,7 @@ Game_Battler.prototype.isImmuneToStateByType = function(state)
   if (!immuneTypes.length) return false;
 
   // check whether any of the state's own classifiers match an immune type, case-insensitively.
-  return state.stateTypes()
+  return state.types()
     .some(stateType => immuneTypes.some(immuneType => immuneType.toLowerCase() === stateType.toLowerCase()));
 };
 
@@ -1168,7 +1168,7 @@ Game_Battler.prototype.stateTypeResistRate = function(stateId)
   const state = $dataStates[stateId];
 
   // states with no classifiers cannot match any stateTypeResist tag.
-  if (!state || !state.stateTypes().length) return 1.0;
+  if (!state || !state.types().length) return 1.0;
 
   // collect all [TYPE, PCT] pairs from every note source on this battler.
   const allPairs = this.getAllNotes()
@@ -1178,7 +1178,7 @@ Game_Battler.prototype.stateTypeResistRate = function(stateId)
   if (!allPairs.length) return 1.0;
 
   // sum the resist percent for every tag whose type matches one of the state's own classifiers.
-  const stateTypes = state.stateTypes();
+  const stateTypes = state.types();
   let totalPercent = 0;
   allPairs.forEach(([ type, percent ]) =>
   {
@@ -1460,7 +1460,12 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker, overrides = nu
   if (hasMapTimer)
   {
     // extend outgoing duration per the battler applying this state, using the effective base.
-    totalDuration = stateDuration + assailant.getStateDurationBoost(stateDuration);
+    // also fold in any state-scoped boost baked into this state's own (possibly extension-merged)
+    // note, so a passive like <extendType:low-effort><thisStateDurationPerc:100> can double
+    // the duration of every matching state without touching the caster-wide boost tags above.
+    totalDuration = stateDuration
+      + assailant.getStateDurationBoost(stateDuration)
+      + state.jabsThisStateDurationBoost(stateDuration);
   }
 
   // populate the state builder.

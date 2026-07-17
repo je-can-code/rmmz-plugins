@@ -60,7 +60,7 @@ describe('Window_SkillEquipList (src/plugins/sks/core/windows/Window_SkillEquipL
       null,
       { id: 1, name: 'Slash', iconIndex: 10, unslotted: false },
       { id: 2, name: 'Perpetual', iconIndex: 11, unslotted: true },
-      { id: 3, name: 'ExtSkill', iconIndex: 12, unslotted: false, isSkillExtension: true },
+      { id: 3, name: 'ExtSkill', iconIndex: 12, unslotted: false, isExtension: true },
     ];
   });
 

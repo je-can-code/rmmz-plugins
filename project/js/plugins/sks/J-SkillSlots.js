@@ -810,7 +810,7 @@ var Window_SkillEquipList = class extends Window_Command {
 		const filtered = learned.filter((skill) => {
 			if (!skill) return false;
 			if (skill.unslotted) return false;
-			if (J.EXTEND && skill.isSkillExtension) return false;
+			if (J.EXTEND && skill.isExtension) return false;
 			return true;
 		}).sort((a, b) => {
 			const costA = this.actor().skillSlotCost(a.id, this.slotContext());

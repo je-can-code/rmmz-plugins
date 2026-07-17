@@ -183,17 +183,6 @@ class RPG_State
   }
 
   /**
-   * Gets all type classifiers assigned to this state via notetag.
-   * Returns every value matched by a {@code <type:CLASSIFIER>} tag in the notebox.
-   * Multiple tags on the same state are all collected and returned together.
-   * @returns {string[]} The array of classifier strings, or an empty array if none are defined.
-   */
-  stateTypes()
-  {
-    return RPGManager.getStringsFromNoteByRegex(this, J.BASE.RegExp.StateType);
-  }
-
-  /**
    * Hydrated blank state row—symmetry with other DB wrappers when a slot must read as "unused but valid".
    *
    * @param {number} index database id and `$dataStates` index for this row

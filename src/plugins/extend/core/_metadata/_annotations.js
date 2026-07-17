@@ -41,29 +41,39 @@
  *  <extend:[7,8,9,10,11]>
  * This skill/state will act as an extension to all skills/states of id 7, 8, 9, 10, and 11.
  *
- * STATE EXTENSION BY TYPE:
- * As an alternative to id-based state extension, a state can instead extend
- * EVERY state carrying a matching <type:CLASSIFIER> tag (see J-Base), without
- * having to list each target state id individually.
+ * EXTENSION BY TYPE:
+ * As an alternative to id-based extension, a skill or state can instead extend
+ * EVERY skill/state carrying a matching <type:CLASSIFIER> tag (see J-Base), without
+ * having to list each target id individually.
  *
  * TAG USAGE:
- * - States only.
+ * - Skills and states.
  *
  * TAG FORMAT:
- *  <extendStateType:CLASSIFIER>
+ *  <extendType:CLASSIFIER>
  * Where CLASSIFIER is the type classifier string to match against (see
  * J-Base's <type:CLASSIFIER> tag).
  *
  * TAG EXAMPLES:
- *  <extendStateType:poison>
+ *  <extendType:poison>
  * This state acts as an extension to every currently active state that
  * carries <type:poison>, regardless of that state's specific id.
  *
+ *  <extendType:low-effort>
+ * This skill acts as an extension to every skill the caster knows that
+ * carries <type:low-effort>, regardless of that skill's specific id.
+ *
+ * NOTE ABOUT CANDIDATE POOLS:
+ * States draw type/id candidates from the battler's currently ACTIVE states
+ * (including passive-injected ones). Skills draw candidates from the caster's
+ * KNOWN/learned skills — a skill overlay never applies unless the caster has
+ * actually learned it, same as id-based skill extension already worked.
+ *
  * NOTE ABOUT RESOLUTION ORDER:
- * When a battler has both type-based and id-based extension candidates for
- * the same base state, type-based overlays are applied first (in ascending
- * state id order), then id-based overlays are applied second (also ascending
- * state id order) — id-based extensions win on conflict since they apply last.
+ * When a candidate pool has both type-based and id-based extension candidates
+ * for the same base skill/state, type-based overlays are applied first (in
+ * ascending id order), then id-based overlays are applied second (also
+ * ascending id order) — id-based extensions win on conflict since they apply last.
  * ============================================================================
  * WHAT DOES "ACT AS AN EXTENSION" MEAN?
  * ============================================================================

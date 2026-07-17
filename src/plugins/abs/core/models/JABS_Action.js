@@ -1540,8 +1540,8 @@ class JABS_Action
   {
     // ask the caster for each modifier component — shared buff/rate plus radius-axis extras.
     const caster = this.getAction().subject();
-    const totalBuff = caster.getRangeBuff() + caster.getRadiusBuff();
-    const totalRate = caster.getRangeRate() + caster.getRadiusRate();
+    const totalBuff = caster.getRangeBuff() + caster.getRadiusBuff() + this.getThisRangeBuff() + this.getThisRadiusBuff();
+    const totalRate = caster.getRangeRate() + caster.getRadiusRate() + this.getThisRangeRate() + this.getThisRadiusRate();
 
     // floor at 0 — a negative tile value breaks collision geometry.
     return Math.max(0, (base + totalBuff) * totalRate);
@@ -1556,8 +1556,8 @@ class JABS_Action
   {
     // ask the caster for each modifier component — shared buff/rate plus proximity-axis extras.
     const caster = this.getAction().subject();
-    const totalBuff = caster.getRangeBuff() + caster.getProximityBuff();
-    const totalRate = caster.getRangeRate() + caster.getProximityRate();
+    const totalBuff = caster.getRangeBuff() + caster.getProximityBuff() + this.getThisRangeBuff() + this.getThisProximityBuff();
+    const totalRate = caster.getRangeRate() + caster.getProximityRate() + this.getThisRangeRate() + this.getThisProximityRate();
 
     // floor at 0 — a negative tile value breaks collision geometry.
     return Math.max(0, (base + totalBuff) * totalRate);
@@ -1572,11 +1572,98 @@ class JABS_Action
   {
     // ask the caster for each modifier component — shared buff/rate plus thickness-axis extras.
     const caster = this.getAction().subject();
-    const totalBuff = caster.getRangeBuff() + caster.getThicknessBuff();
-    const totalRate = caster.getRangeRate() + caster.getThicknessRate();
+    const totalBuff = caster.getRangeBuff() + caster.getThicknessBuff() + this.getThisRangeBuff() + this.getThisThicknessBuff();
+    const totalRate = caster.getRangeRate() + caster.getThicknessRate() + this.getThisRangeRate() + this.getThisThicknessRate();
 
     // floor at 0 — a negative tile value breaks collision geometry.
     return Math.max(0, (base + totalBuff) * totalRate);
+  }
+
+  /**
+   * Gets the flat tile bonus applied to all dimensions of this skill alone, read from this skill's
+   * own note only (not the caster's getAllNotes()). Stacks additively with {@link Game_Battler#getRangeBuff}.
+   * @returns {number}
+   */
+  getThisRangeBuff()
+  {
+    return RPGManager.getSumFromAllNotesByRegex([ this.getBaseSkill() ], J.ABS.RegExp.ThisRangeBuff) ?? 0;
+  }
+
+  /**
+   * Gets the multiplicative rate applied to all dimensions of this skill alone, read from this
+   * skill's own note only. Contributes (N - 1.0) deltas on top of {@link Game_Battler#getRangeRate}.
+   * @returns {number}
+   */
+  getThisRangeRate()
+  {
+    const captures = RPGManager.getAllCapturesFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisRangeRate);
+    return (captures ?? []).reduce((acc, capture) => acc + (Number(capture[0]) - 1.0), 0);
+  }
+
+  /**
+   * Gets the flat tile bonus applied only to this skill's own radius, read from this skill's own
+   * note only. Stacks additively with {@link Game_Battler#getRadiusBuff} and {@link #getThisRangeBuff}.
+   * @returns {number}
+   */
+  getThisRadiusBuff()
+  {
+    return RPGManager.getSumFromAllNotesByRegex([ this.getBaseSkill() ], J.ABS.RegExp.ThisRadiusBuff) ?? 0;
+  }
+
+  /**
+   * Gets the multiplicative rate applied only to this skill's own radius, read from this skill's
+   * own note only. Contributes (N - 1.0) deltas on top of {@link Game_Battler#getRadiusRate} and
+   * {@link #getThisRangeRate}.
+   * @returns {number}
+   */
+  getThisRadiusRate()
+  {
+    const captures = RPGManager.getAllCapturesFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisRadiusRate);
+    return (captures ?? []).reduce((acc, capture) => acc + (Number(capture[0]) - 1.0), 0);
+  }
+
+  /**
+   * Gets the flat tile bonus applied only to this skill's own proximity, read from this skill's own
+   * note only. Stacks additively with {@link Game_Battler#getProximityBuff} and {@link #getThisRangeBuff}.
+   * @returns {number}
+   */
+  getThisProximityBuff()
+  {
+    return RPGManager.getSumFromAllNotesByRegex([ this.getBaseSkill() ], J.ABS.RegExp.ThisProximityBuff) ?? 0;
+  }
+
+  /**
+   * Gets the multiplicative rate applied only to this skill's own proximity, read from this skill's
+   * own note only. Contributes (N - 1.0) deltas on top of {@link Game_Battler#getProximityRate} and
+   * {@link #getThisRangeRate}.
+   * @returns {number}
+   */
+  getThisProximityRate()
+  {
+    const captures = RPGManager.getAllCapturesFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisProximityRate);
+    return (captures ?? []).reduce((acc, capture) => acc + (Number(capture[0]) - 1.0), 0);
+  }
+
+  /**
+   * Gets the flat tile bonus applied only to this skill's own thickness, read from this skill's own
+   * note only. Stacks additively with {@link Game_Battler#getThicknessBuff} and {@link #getThisRangeBuff}.
+   * @returns {number}
+   */
+  getThisThicknessBuff()
+  {
+    return RPGManager.getSumFromAllNotesByRegex([ this.getBaseSkill() ], J.ABS.RegExp.ThisThicknessBuff) ?? 0;
+  }
+
+  /**
+   * Gets the multiplicative rate applied only to this skill's own thickness, read from this skill's
+   * own note only. Contributes (N - 1.0) deltas on top of {@link Game_Battler#getThicknessRate} and
+   * {@link #getThisRangeRate}.
+   * @returns {number}
+   */
+  getThisThicknessRate()
+  {
+    const captures = RPGManager.getAllCapturesFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisThicknessRate);
+    return (captures ?? []).reduce((acc, capture) => acc + (Number(capture[0]) - 1.0), 0);
   }
 
   /**
@@ -1634,6 +1721,36 @@ class JABS_Action
   aggroMultiplier()
   {
     return this.getBaseSkill().jabsAggroMultiplier ?? 1.0;
+  }
+
+  /**
+   * Gets the percent adjustment this skill applies to the caster's own already-standing aggro
+   * on the target (see {@link JABS_Engine#applyAggroPercentEffect}).
+   * @returns {number}
+   */
+  aggroPercent()
+  {
+    return this.getBaseSkill().jabsAggroPercent ?? 0;
+  }
+
+  /**
+   * Gets the flat aggro adjustment this skill applies to every OTHER battler's standing aggro
+   * on the target (see {@link JABS_Engine#applyNotMyAggroEffects}).
+   * @returns {number}
+   */
+  notMyAggro()
+  {
+    return this.getBaseSkill().jabsNotMyAggro ?? 0;
+  }
+
+  /**
+   * Gets the percent aggro adjustment this skill applies to every OTHER battler's standing aggro
+   * on the target (see {@link JABS_Engine#applyNotMyAggroEffects}).
+   * @returns {number}
+   */
+  notMyAggroPercent()
+  {
+    return this.getBaseSkill().jabsNotMyAggroPercent ?? 0;
   }
 
   /**

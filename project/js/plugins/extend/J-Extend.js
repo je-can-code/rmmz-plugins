@@ -41,29 +41,39 @@
  *  <extend:[7,8,9,10,11]>
  * This skill/state will act as an extension to all skills/states of id 7, 8, 9, 10, and 11.
  *
- * STATE EXTENSION BY TYPE:
- * As an alternative to id-based state extension, a state can instead extend
- * EVERY state carrying a matching <type:CLASSIFIER> tag (see J-Base), without
- * having to list each target state id individually.
+ * EXTENSION BY TYPE:
+ * As an alternative to id-based extension, a skill or state can instead extend
+ * EVERY skill/state carrying a matching <type:CLASSIFIER> tag (see J-Base), without
+ * having to list each target id individually.
  *
  * TAG USAGE:
- * - States only.
+ * - Skills and states.
  *
  * TAG FORMAT:
- *  <extendStateType:CLASSIFIER>
+ *  <extendType:CLASSIFIER>
  * Where CLASSIFIER is the type classifier string to match against (see
  * J-Base's <type:CLASSIFIER> tag).
  *
  * TAG EXAMPLES:
- *  <extendStateType:poison>
+ *  <extendType:poison>
  * This state acts as an extension to every currently active state that
  * carries <type:poison>, regardless of that state's specific id.
  *
+ *  <extendType:low-effort>
+ * This skill acts as an extension to every skill the caster knows that
+ * carries <type:low-effort>, regardless of that skill's specific id.
+ *
+ * NOTE ABOUT CANDIDATE POOLS:
+ * States draw type/id candidates from the battler's currently ACTIVE states
+ * (including passive-injected ones). Skills draw candidates from the caster's
+ * KNOWN/learned skills — a skill overlay never applies unless the caster has
+ * actually learned it, same as id-based skill extension already worked.
+ *
  * NOTE ABOUT RESOLUTION ORDER:
- * When a battler has both type-based and id-based extension candidates for
- * the same base state, type-based overlays are applied first (in ascending
- * state id order), then id-based overlays are applied second (also ascending
- * state id order) — id-based extensions win on conflict since they apply last.
+ * When a candidate pool has both type-based and id-based extension candidates
+ * for the same base skill/state, type-based overlays are applied first (in
+ * ascending id order), then id-based overlays are applied second (also
+ * ascending id order) — id-based extensions win on conflict since they apply last.
  * ============================================================================
  * WHAT DOES "ACT AS AN EXTENSION" MEAN?
  * ============================================================================
@@ -477,21 +487,25 @@ J.EXTEND.RegExp = {};
 */
 J.EXTEND.RegExp.Extend = /<extend:[ ]?(\[[ ]?\d+(?:,[ ]?\d+)*[ ]?])>/i;
 /**
-* The structure of a state-type extension tag.
+* The structure of a type-based extension tag.
 *
 * <pre>
 * Structure:
-*  <extendStateType:TYPE>
+*  <extendType:TYPE>
 *
-* Example:
-*  <extendStateType:poison>
+* Example (on a state):
+*  <extendType:poison>
+*
+* Example (on a skill):
+*  <extendType:low-effort>
 *
 * Translation:
-*  Extends all states bearing the type classifier "poison".
+*  Extends every currently-active state (or every known skill) bearing the {@code <type:TYPE>}
+*  classifier "poison"/"low-effort", without listing each target id individually.
 * </pre>
 * @type {RegExp}
 */
-J.EXTEND.RegExp.StateExtendType = /<extendStateType:[ ]?(.+?)>/i;
+J.EXTEND.RegExp.ExtendType = /<extendType:[ ]?(.+?)>/i;
 /**
 * The structure of an on-hit self-state application tag.
 *
@@ -769,6 +783,15 @@ var OverlayManager = class OverlayManager {
 	}
 	/**
 	* Gets the extended skill based on the caster's learned skills.
+	*
+	* Extension candidates are gathered from the caster's full {@link Game_Battler#skillIds} list
+	* (learned skills only — unlike states, a skill overlay never applies unless the caster has
+	* actually learned it) and applied in two passes:
+	* 1. Type-based overlays ({@code <extendType:TYPE>}) in ascending skill-id order — familial.
+	* 2. Id-based overlays ({@code <extend:[IDs]>}) in ascending skill-id order — specific.
+	*
+	* Each candidate is itself recursively resolved before being applied, so extension chains work.
+	* Mirrors {@link getExtendedState}; see that method for the parallel state-side implementation.
 	* @param caster {Game_Actor|Game_Enemy} The caster of the skill.
 	* @param skillId {number} The base skill to extend.
 	* @returns {RPG_Skill}
@@ -778,10 +801,25 @@ var OverlayManager = class OverlayManager {
 		if (!caster) return $dataSkills[skillId];
 		return this._skillCache.get(caster, String(skillId), () => {
 			const knownIds = caster.skillIds();
-			const overlayIds = knownIds.filter((id) => {
-				const skill = $dataSkills[id];
-				return skill && this.#isOverlayForBase(skill, skillId);
-			}).sort((a, b) => a - b);
+			const targetSkill = $dataSkills[skillId];
+			const targetTypes = targetSkill ? targetSkill.types() : [];
+			const typeCandidates = [];
+			const idCandidates = [];
+			for (const id of knownIds) {
+				if (id === skillId) continue;
+				const candidate = $dataSkills[id];
+				if (!candidate || !candidate.isExtension) continue;
+				if (targetTypes.length > 0 && ArrayHelper.hasAnyIntersection(targetTypes, candidate.getExtensionTypes)) {
+					typeCandidates.push(id);
+					continue;
+				}
+				if (candidate.getExtensions.includes(skillId)) {
+					idCandidates.push(id);
+				}
+			}
+			typeCandidates.sort((a, b) => a - b);
+			idCandidates.sort((a, b) => a - b);
+			const overlayIds = [...typeCandidates, ...idCandidates];
 			let inProgress = this.#resolving.get(caster);
 			if (!inProgress) {
 				inProgress = new Set();
@@ -805,7 +843,7 @@ var OverlayManager = class OverlayManager {
 	*
 	* Extension states are gathered from the battler's full {@link Game_Battler#allStateIds} list
 	* (preserving passive stacks/duplicates) and applied in two passes:
-	* 1. Type-based overlays ({@code <extendStateType:TYPE>}) in ascending state-id order — familial.
+	* 1. Type-based overlays ({@code <extendType:TYPE>}) in ascending state-id order — familial.
 	* 2. Id-based overlays ({@code <extend:[IDs]>}) in ascending state-id order — specific.
 	*
 	* Each candidate is itself recursively resolved before being applied, so extension chains work.
@@ -821,18 +859,18 @@ var OverlayManager = class OverlayManager {
 		return this._stateCache.get(battler, String(stateId), () => {
 			const allIds = battler.allStateIds();
 			const targetState = $dataStates[stateId];
-			const targetTypes = targetState ? targetState.stateTypes() : [];
+			const targetTypes = targetState ? targetState.types() : [];
 			const typeCandidates = [];
 			const idCandidates = [];
 			for (const id of allIds) {
 				if (id === stateId) continue;
 				const candidate = $dataStates[id];
-				if (!candidate || !candidate.isStateExtension) continue;
-				if (targetTypes.length > 0 && ArrayHelper.hasAnyIntersection(targetTypes, candidate.getStateExtensionTypes)) {
+				if (!candidate || !candidate.isExtension) continue;
+				if (targetTypes.length > 0 && ArrayHelper.hasAnyIntersection(targetTypes, candidate.getExtensionTypes)) {
 					typeCandidates.push(id);
 					continue;
 				}
-				if (candidate.getStateExtensions.includes(stateId)) {
+				if (candidate.getExtensions.includes(stateId)) {
 					idCandidates.push(id);
 				}
 			}
@@ -856,16 +894,6 @@ var OverlayManager = class OverlayManager {
 				if (inProgressState.size === 0) this.#resolvingState.delete(battler);
 			}
 		});
-	}
-	/**
-	* Checks if a given skill is an extension skill that can overlay the given base skill.
-	* @param {RPG_Skill} skill The skill that potentially is the overlay.
-	* @param {number} skillId The id of the base skill to check for overlay compatibility.
-	* @returns {boolean} Whether or not the skill is an overlay for the base skill.
-	*/
-	static #isOverlayForBase(skill, skillId) {
-		if (skill.isSkillExtension === false) return false;
-		return skill.getSkillExtensions.includes(skillId);
 	}
 	/**
 	* Extends the base skill with the given overlay skills in sequential order.
@@ -1040,13 +1068,15 @@ var OverlayManager = class OverlayManager {
 		}
 	}
 	/**
-	* Purges all references to the skill extend tag from the `baseSkill`.
+	* Purges all references to the skill extension tags from the `baseSkill`.
 	* @param baseSkill {RPG_Skill} The base skill.
 	* @returns {RPG_Skill} The overlayed base skill.
 	*/
 	static sanitizeExtensions(baseSkill) {
 		delete baseSkill.meta["extend"];
+		delete baseSkill.meta["extendType"];
 		baseSkill.note = baseSkill.note.replace(J.EXTEND.RegExp.Extend, String.empty);
+		baseSkill.note = baseSkill.note.replace(J.EXTEND.RegExp.ExtendType, String.empty);
 		baseSkill.note = baseSkill.note.replace(/\n\n/gim, "\n");
 		baseSkill.note = baseSkill.note.replace(/\r\r/gim, "\r");
 		RPGManager.invalidate(baseSkill);
@@ -1142,7 +1172,7 @@ var OverlayManager = class OverlayManager {
 	*/
 	static sanitizeStateExtensions(baseState) {
 		baseState.note = baseState.note.replace(J.EXTEND.RegExp.Extend, String.empty);
-		baseState.note = baseState.note.replace(J.EXTEND.RegExp.StateExtendType, String.empty);
+		baseState.note = baseState.note.replace(J.EXTEND.RegExp.ExtendType, String.empty);
 		baseState.note = baseState.note.replace(/\n\n/gim, "\n");
 		baseState.note = baseState.note.replace(/\r\r/gim, "\r");
 		RPGManager.invalidate(baseState);
@@ -1355,47 +1385,36 @@ var OverlayManager = class OverlayManager {
 };
 
 //#endregion
-//#region src/plugins/extend/core/database/RPG_Skill.js
+//#region src/plugins/extend/core/database/RPG_Base.js
 /**
-* Determines whether or not there are any skill extensions on this skill.
+* Whether this database object bears any extension tags.
+* True when either {@code <extend:[IDs]>} or {@code <extendType:TYPE>} is present.
+* Generic across every database object type ({@link RPG_Base} subclasses) since {@code <type:>}
+* itself lives on {@link RPG_Base} — skills and states are the only types with an overlay
+* consumer today ({@link OverlayManager}), but weapons/armors/actors/classes/etc. get this
+* detection for free the moment a consumer wants it.
+* @type {boolean}
 */
-Object.defineProperty(RPG_Skill.prototype, "isSkillExtension", { get: function() {
-	return !!RPGManager.getArrayFromNotesByRegex(this, J.EXTEND.RegExp.Extend, true, true);
-} });
-/**
-* Gets all skill extensions for this skill- if any.
-* Will return an empty array if none are present.
-*/
-Object.defineProperty(RPG_Skill.prototype, "getSkillExtensions", { get: function() {
-	return RPGManager.getArrayFromNotesByRegex(this, J.EXTEND.RegExp.Extend, true);
-} });
-
-//#endregion
-//#region src/plugins/extend/core/database/RPG_State.js
-/**
-* Whether this state bears any state extension tags.
-* True when either {@code <extend:[IDs]>} or {@code <extendStateType:TYPE>} is present.
-*/
-Object.defineProperty(RPG_State.prototype, "isStateExtension", { get: function() {
+Object.defineProperty(RPG_Base.prototype, "isExtension", { get: function() {
 	const hasIdExtension = !!RPGManager.getArrayFromNotesByRegex(this, J.EXTEND.RegExp.Extend, true, true);
-	const hasTypeExtension = !!RPGManager.getStringsFromNoteByRegex(this, J.EXTEND.RegExp.StateExtendType, true);
+	const hasTypeExtension = !!RPGManager.getStringsFromNoteByRegex(this, J.EXTEND.RegExp.ExtendType, true);
 	return hasIdExtension || hasTypeExtension;
 } });
 /**
-* Gets all state ids this state targets via {@code <extend:[IDs]>}.
+* Gets all ids this database object targets via {@code <extend:[IDs]>}.
 * Returns an empty array when the tag is absent.
 * @type {number[]}
 */
-Object.defineProperty(RPG_State.prototype, "getStateExtensions", { get: function() {
+Object.defineProperty(RPG_Base.prototype, "getExtensions", { get: function() {
 	return RPGManager.getArrayFromNotesByRegex(this, J.EXTEND.RegExp.Extend, true);
 } });
 /**
-* Gets all type classifiers this state extends via {@code <extendStateType:TYPE>}.
+* Gets all type classifiers this database object extends via {@code <extendType:TYPE>}.
 * Returns an empty array when the tag is absent.
 * @type {string[]}
 */
-Object.defineProperty(RPG_State.prototype, "getStateExtensionTypes", { get: function() {
-	return RPGManager.getStringsFromNoteByRegex(this, J.EXTEND.RegExp.StateExtendType);
+Object.defineProperty(RPG_Base.prototype, "getExtensionTypes", { get: function() {
+	return RPGManager.getStringsFromNoteByRegex(this, J.EXTEND.RegExp.ExtendType);
 } });
 
 //#endregion
@@ -1972,7 +1991,7 @@ JABS_SkillSlotManager.prototype.filterActionSkills = function(enemy, action) {
 	const originalLogic = J.EXTEND.Aliased.JABS_SkillSlotManager.get("filterActionSkills").call(this, enemy, action);
 	if (originalLogic === false) return false;
 	const skill = enemy.skill(action.skillId);
-	return skill.isSkillExtension === false;
+	return skill.isExtension === false;
 };
 
 //#endregion

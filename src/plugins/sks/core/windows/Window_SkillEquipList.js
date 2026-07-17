@@ -159,7 +159,7 @@ class Window_SkillEquipList
       if (skill.unslotted) return false;
 
       // exclude extension skills when J.EXTEND exists.
-      if (J.EXTEND && skill.isSkillExtension) return false;
+      if (J.EXTEND && skill.isExtension) return false;
 
       // include others.
       return true;

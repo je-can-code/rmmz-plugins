@@ -233,7 +233,7 @@ Object.defineProperty(RPG_State.prototype, 'jabsStateStackMax', {
 /**
  * A bonus to this state's stack cap, read from this state's own note only.<br/>
  * When J-Extend is active and another active state carries `<extend:[...]>` or
- * `<extendStateType:TYPE>` targeting this state, that overlay's note (and thus its own
+ * `<extendType:TYPE>` targeting this state, that overlay's note (and thus its own
  * `<thisStackMaxBoost:VAL>` tag, if any) is merged into this note before this getter runs-
  * so this is effectively "one state raising the stack cap of another it extends."<br/>
  * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Stack}.
@@ -698,4 +698,44 @@ Object.defineProperty(RPG_State.prototype, 'jabsStateDurationFrames', {
   },
 });
 //endregion stateDurationFrames
+
+//region thisStateDurationBoost
+/**
+ * A bonus to this state's own outgoing map-timer duration, read from this state's own note only.<br/>
+ * When J-Extend is active and another active state carries `<extend:[...]>` or
+ * `<extendType:TYPE>` targeting this state, that overlay's note (and thus its own
+ * `<thisStateDurationFlat/Perc/Formula>` tags, if any) is merged into this note before this
+ * getter runs- so this is effectively "one state doubling the duration of another it extends,"
+ * without touching the caster-wide {@code <stateDurationFlat/Perc/Formula>} tags (which apply to
+ * every state a battler applies, not just ones sharing a classifier).<br/>
+ * Mirrors {@link Game_Battler#getStateDurationBoost}, but sourced from a single (possibly
+ * extension-merged) state note instead of every note source on the applying battler.
+ * @param {number} baseDuration The base duration (in frames) to compute percent/formula bonuses off of.
+ * @returns {number} The bonus frames to add to this state's own outgoing duration.
+ */
+RPG_State.prototype.jabsThisStateDurationBoost = function(baseDuration)
+{
+  // grab the flat frame bonus from this state's own note.
+  const flat = RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.ThisStateDurationFlatPlus);
+
+  // grab the percent-of-base bonus from this state's own note.
+  const percent = RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.ThisStateDurationPercentPlus);
+
+  // resolve the percent bonus into frames against the base duration.
+  const percentBoost = Math.round(baseDuration * (percent / 100));
+
+  // grab the formula-driven bonus from this state's own note; no battler context is available here
+  // since this boost is state-scoped rather than caster-scoped, so "a" resolves to null in-formula.
+  const formulaBoost = RPGManager.getResultFromNoteByRegex(
+    this,
+    J.ABS.RegExp.ThisStateDurationFormulaPlus,
+    baseDuration);
+
+  // sum the boosts together to get the total boost.
+  const durationBoost = flat + percentBoost + formulaBoost;
+
+  // format it kindly because javascript floating point numbers suck.
+  return parseFloat(durationBoost.toFixed(2));
+};
+//endregion thisStateDurationBoost
 //endregion RPG_State effects

@@ -492,6 +492,9 @@ J.ABS.RegExp = {
   // aggro-related.
   BonusAggro: /<aggro:[ ]?(-?\d+)>/gi,
   AggroMultiplier: /<aggroMultiplier:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+  AggroPercent: /<aggroPercent:[ ]?(-?\d+)>/gi,
+  NotMyAggro: /<notMyAggro:[ ]?(-?\d+)>/gi,
+  NotMyAggroPercent: /<notMyAggroPercent:[ ]?(-?\d+)>/gi,
 
   // hits-related.
   Unparryable: /<unparryable>/gi,
@@ -818,6 +821,9 @@ J.ABS.RegExp = {
   StateDurationFlatPlus: /<stateDurationFlat:[ ]?([-+]?\d+)>/gi,
   StateDurationPercentPlus: /<stateDurationPerc:[ ]?([-+]?\d+)>/gi,
   StateDurationFormulaPlus: /<stateDurationFormula:\[([+\-*/ ().\w]+)]>/gi,
+  ThisStateDurationFlatPlus: /<thisStateDurationFlat:[ ]?([-+]?\d+)>/gi,
+  ThisStateDurationPercentPlus: /<thisStateDurationPerc:[ ]?([-+]?\d+)>/gi,
+  ThisStateDurationFormulaPlus: /<thisStateDurationFormula:\[([+\-*/ ().\w]+)]>/gi,
 
   // tick speed-related.
   ThisTickSpeed: /<thisTickSpeed:[ ]?(\d+)>/gi,
@@ -1348,6 +1354,152 @@ J.ABS.RegExp = {
    * @type {RegExp}
    */
   ThicknessRate: /<thicknessRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to rangeBuff: flat tile addition to radius, proximity, and thickness,
+   * read only from this skill's own note (this.getBaseSkill()), not the caster's getAllNotes().
+   * Stacks additively with rangeBuff.
+   *
+   * <pre>
+   * Structure:
+   *  <thisRangeBuff:N>
+   *
+   * Example:
+   *  <thisRangeBuff:2>
+   *
+   * Translation:
+   *  This skill alone gets +2 tiles flat to radius, proximity, and thickness.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisRangeBuff: /<thisRangeBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to rangeRate: multiplicative rate applied to radius, proximity, and
+   * thickness, read only from this skill's own note. Base-1.0 delta model, same as rangeRate.
+   * Stacks additively with rangeRate.
+   *
+   * <pre>
+   * Structure:
+   *  <thisRangeRate:N>
+   *
+   * Example:
+   *  <thisRangeRate:1.5>
+   *
+   * Translation:
+   *  This skill alone has 1.5x radius, proximity, and thickness.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisRangeRate: /<thisRangeRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to radiusBuff, read only from this skill's own note.
+   * Stacks additively with radiusBuff (and thisRangeBuff).
+   *
+   * <pre>
+   * Structure:
+   *  <thisRadiusBuff:N>
+   *
+   * Example:
+   *  <thisRadiusBuff:2>
+   *
+   * Translation:
+   *  This skill alone gets +2 tiles flat to radius only (not proximity or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisRadiusBuff: /<thisRadiusBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to radiusRate, read only from this skill's own note.
+   * Stacks additively with radiusRate (and thisRangeRate).
+   *
+   * <pre>
+   * Structure:
+   *  <thisRadiusRate:N>
+   *
+   * Example:
+   *  <thisRadiusRate:1.5>
+   *
+   * Translation:
+   *  This skill alone has 1.5x radius only (not proximity or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisRadiusRate: /<thisRadiusRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to proximityBuff, read only from this skill's own note.
+   * Stacks additively with proximityBuff (and thisRangeBuff).
+   *
+   * <pre>
+   * Structure:
+   *  <thisProximityBuff:N>
+   *
+   * Example:
+   *  <thisProximityBuff:2>
+   *
+   * Translation:
+   *  This skill alone gets +2 tiles flat to proximity only (not radius or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisProximityBuff: /<thisProximityBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to proximityRate, read only from this skill's own note.
+   * Stacks additively with proximityRate (and thisRangeRate).
+   *
+   * <pre>
+   * Structure:
+   *  <thisProximityRate:N>
+   *
+   * Example:
+   *  <thisProximityRate:1.5>
+   *
+   * Translation:
+   *  This skill alone has 1.5x proximity only (not radius or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisProximityRate: /<thisProximityRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to thicknessBuff, read only from this skill's own note.
+   * Stacks additively with thicknessBuff (and thisRangeBuff).
+   *
+   * <pre>
+   * Structure:
+   *  <thisThicknessBuff:N>
+   *
+   * Example:
+   *  <thisThicknessBuff:1>
+   *
+   * Translation:
+   *  This skill alone gets +1 tile flat to thickness only (not radius or proximity).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisThicknessBuff: /<thisThicknessBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to thicknessRate, read only from this skill's own note.
+   * Stacks additively with thicknessRate (and thisRangeRate).
+   *
+   * <pre>
+   * Structure:
+   *  <thisThicknessRate:N>
+   *
+   * Example:
+   *  <thisThicknessRate:1.5>
+   *
+   * Translation:
+   *  This skill alone has 1.5x thickness only (not radius or proximity).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisThicknessRate: /<thisThicknessRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
 
   /**
    * Passive/state/equip skill history damage bonus.

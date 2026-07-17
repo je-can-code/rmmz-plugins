@@ -18,13 +18,15 @@ describe('J-SkillExtend JABS_SkillSlotManager (direct src import)', () =>
     await import('../../../../src/plugins/_base/_metadata/initialization.js');
 
     ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_Base } = await import('../../../../src/plugins/_base/database/base/RPG_Base.js'));
     ({ default: RPG_Skill } = await import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
     globalThis.RPG_Skill = RPG_Skill;
 
     setPluginContextToJExtend();
     await import('../../../../src/plugins/extend/core/_metadata/initialization.js');
 
-    await import('../../../../src/plugins/extend/core/database/RPG_Skill.js');
+    // patches globalThis.RPG_Base.prototype directly (RPG_Skill inherits it), no vm involved.
+    await import('../../../../src/plugins/extend/core/database/RPG_Base.js');
 
     // patches globalThis.JABS_SkillSlotManager.prototype directly, no vm involved.
     await import('../../../../src/plugins/extend/core/managers/JABS_SkillSlotManager.js');

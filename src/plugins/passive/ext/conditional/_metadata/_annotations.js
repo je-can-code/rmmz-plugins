@@ -44,24 +44,37 @@
  *  allAllies{Key}Above/Below — every allied JABS battler (incl. self) must pass
  *
  * Discrete kinds include alliesNearby, enemiesNearby, alliesNearbyBelow, enemiesNearbyBelow,
- * hasState, negativeStateCount, slotOnCooldown, slotOffCooldown, allOnCooldown, allOffCooldown,
- * sinceLastMoved/Hit/Attacked, movedWithin/hitWithin/attackedWithin (frames).
+ * enemiesTargetingMe, enemiesTargetingMeBelow, hasState, negativeStateCount, slotOnCooldown,
+ * slotOffCooldown, allOnCooldown, allOffCooldown, sinceLastMoved/Hit/Attacked,
+ * movedWithin/hitWithin/attackedWithin (frames).
  *
  * alliesNearby/enemiesNearby pass at COUNT or more in range (>=); the *Below counterparts pass
  * under COUNT (<) — use them for "nobody nearby" gates, e.g. [enemiesNearbyBelow, 1, 1] for
  * "no enemies within melee range" (1 tile).
+ *
+ * enemiesTargetingMe/enemiesTargetingMeBelow work the same way but are NOT proximity-scoped-
+ * they count opposing battlers that currently have this battler as their live AI target,
+ * regardless of tile distance. No radius param; PARAM is just the count threshold.
  *
  * EXAMPLES:
  *  <passive:[12]>
  *  <passiveStateRule:[12, hpBelow, 25]>
  *  <passiveSourceRule:[allOffCooldown]>
  *  <passiveSourceRule:[enemiesNearbyBelow, 1, 1]>
+ *  <passiveSourceRule:[enemiesTargetingMe, 1]>
+ *    Only grants this source's passives while at least one enemy has this battler targeted.
  * ============================================================================
  * STACK COUNT TAG
  *  <passiveStateCount:[STATE_ID, KIND, PARAM]>
  *
- * Kinds: negativeStateCount, alliesNearby (excludes self), lessIsMoreHp/Mp/Tp,
- * moreIsMoreHp/Mp/Tp, per-{registryKey} (integer points per stack).
+ * Kinds: negativeStateCount, alliesNearby (excludes self), enemiesNearby, enemiesTargetingMe
+ * (not proximity-scoped- see above), lessIsMoreHp/Mp/Tp, moreIsMoreHp/Mp/Tp, per-{registryKey}
+ * (integer points per stack).
+ *
+ * EXAMPLE:
+ *  <passiveStateCount:[70, enemiesTargetingMe, 1]>
+ *    State 70 gains 1 stack per enemy currently targeting this battler- pair with a state
+ *  carrying a flat pdr/mdr param-rate trait so each stack chips away at incoming damage.
  * ============================================================================
  * AUTO-APPLY STATE TAG
  *  <autoApplyState:[STATE_ID, CONDITION, PARAM]>

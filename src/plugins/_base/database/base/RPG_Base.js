@@ -1,4 +1,6 @@
 //region RPG_Base
+import RPGManager from "../../managers/RPGManager.js";
+
 /**
  * A class representing the foundation of all database objects.
  * In addition to doing all the things that a database object normally does,
@@ -245,6 +247,17 @@ class RPG_Base
   implementationType()
   {
     return '@base';
+  }
+
+  /**
+   * Gets all type classifiers assigned to this state via notetag.
+   * Returns every value matched by a {@code <type:CLASSIFIER>} tag in the notebox.
+   * Multiple tags on the same state are all collected and returned together.
+   * @returns {string[]} The array of classifier strings, or an empty array if none are defined.
+   */
+  types()
+  {
+    return RPGManager.getStringsFromNoteByRegex(this, J.BASE.RegExp.ClassifierType);
   }
   //endregion typing
 }

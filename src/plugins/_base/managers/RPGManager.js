@@ -10,11 +10,32 @@ class RPGManager
 {
   //region caching
   /**
+   * Backing field for {@link _noteCache}, built lazily on first access rather than as an eager
+   * static-field initializer. RPG_Base now imports this class (for its {@code types()} method),
+   * and JCache imports RPG_Base (for its {@code instanceof} clone-resolution check) — a real
+   * three-file import cycle (RPG_Base -> RPGManager -> JCache -> RPG_Base). Eager static fields
+   * evaluate at module-load time, so their result depends on which file the cycle happens to be
+   * entered from; a lazy getter defers construction until the first real call, by which point the
+   * whole module graph has finished loading regardless of entry order.
+   * @type {JCache|null}
+   */
+  static #noteCache = null;
+
+  /**
    * The cache for storing parsed note-text results (string/number/boolean/array/captures). Keyed
    * by the database object alone- note text is immutable, so no battler dimension is needed.
    * @type {JCache}
    */
-  static _noteCache = JCache.objectScoped({ name: 'rpg:note-text', resolveOriginal: true });
+  static get _noteCache()
+  {
+    return this.#noteCache ??= JCache.objectScoped({ name: 'rpg:note-text', resolveOriginal: true });
+  }
+
+  /**
+   * Backing field for {@link _evalCache}; see {@link #noteCache} for why this is lazy.
+   * @type {JCache|null}
+   */
+  static #evalCache = null;
 
   /**
    * The cache for storing eval'd formula results. Keyed by battler (the formula's live "a") then
@@ -22,7 +43,10 @@ class RPGManager
    * entries can be dropped wholesale via the {@link JCache.invalidateAllForBattler} bus.
    * @type {JCache}
    */
-  static _evalCache = JCache.battlerThenObject({ name: 'rpg:eval', resolveOriginal: true });
+  static get _evalCache()
+  {
+    return this.#evalCache ??= JCache.battlerThenObject({ name: 'rpg:eval', resolveOriginal: true });
+  }
 
   /**
    * Gets the cached data for the given object and tag key.

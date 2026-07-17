@@ -178,7 +178,7 @@ J.BASE.RegExp.MaxTp = /<maxTp: ?(-?\d+)>/i;
  * </pre>
  * @type {RegExp}
  */
-J.BASE.RegExp.StateType = /<type:[ ]?([a-zA-Z][a-zA-Z0-9_-]*)>/gi;
+J.BASE.RegExp.ClassifierType = /<type:[ ]?([a-zA-Z][a-zA-Z0-9_-]*)>/gi;
 
 /**
  * A collection of all aliased methods for this plugin.

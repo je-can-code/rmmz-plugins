@@ -357,7 +357,7 @@ describe('J-CriticalFactors Game_Action crit math (direct src import)', () =>
     {
       // Arrange
       const action = buildAction();
-      const target = { states: () => [ { stateTypes: () => [ 'Poison' ] } ] };
+      const target = { states: () => [ { types: () => [ 'Poison' ] } ] };
 
       // Act & Assert
       expect(action.targetHasActiveStateType(target, 'poison')).toBe(true);
@@ -367,7 +367,7 @@ describe('J-CriticalFactors Game_Action crit math (direct src import)', () =>
     {
       // Arrange
       const action = buildAction();
-      const target = { states: () => [ { stateTypes: () => [ 'burn' ] } ] };
+      const target = { states: () => [ { types: () => [ 'burn' ] } ] };
 
       // Act & Assert
       expect(action.targetHasActiveStateType(target, 'poison')).toBe(false);

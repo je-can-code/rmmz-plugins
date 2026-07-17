@@ -44,24 +44,37 @@
  *  allAllies{Key}Above/Below — every allied JABS battler (incl. self) must pass
  *
  * Discrete kinds include alliesNearby, enemiesNearby, alliesNearbyBelow, enemiesNearbyBelow,
- * hasState, negativeStateCount, slotOnCooldown, slotOffCooldown, allOnCooldown, allOffCooldown,
- * sinceLastMoved/Hit/Attacked, movedWithin/hitWithin/attackedWithin (frames).
+ * enemiesTargetingMe, enemiesTargetingMeBelow, hasState, negativeStateCount, slotOnCooldown,
+ * slotOffCooldown, allOnCooldown, allOffCooldown, sinceLastMoved/Hit/Attacked,
+ * movedWithin/hitWithin/attackedWithin (frames).
  *
  * alliesNearby/enemiesNearby pass at COUNT or more in range (>=); the *Below counterparts pass
  * under COUNT (<) — use them for "nobody nearby" gates, e.g. [enemiesNearbyBelow, 1, 1] for
  * "no enemies within melee range" (1 tile).
+ *
+ * enemiesTargetingMe/enemiesTargetingMeBelow work the same way but are NOT proximity-scoped-
+ * they count opposing battlers that currently have this battler as their live AI target,
+ * regardless of tile distance. No radius param; PARAM is just the count threshold.
  *
  * EXAMPLES:
  *  <passive:[12]>
  *  <passiveStateRule:[12, hpBelow, 25]>
  *  <passiveSourceRule:[allOffCooldown]>
  *  <passiveSourceRule:[enemiesNearbyBelow, 1, 1]>
+ *  <passiveSourceRule:[enemiesTargetingMe, 1]>
+ *    Only grants this source's passives while at least one enemy has this battler targeted.
  * ============================================================================
  * STACK COUNT TAG
  *  <passiveStateCount:[STATE_ID, KIND, PARAM]>
  *
- * Kinds: negativeStateCount, alliesNearby (excludes self), lessIsMoreHp/Mp/Tp,
- * moreIsMoreHp/Mp/Tp, per-{registryKey} (integer points per stack).
+ * Kinds: negativeStateCount, alliesNearby (excludes self), enemiesNearby, enemiesTargetingMe
+ * (not proximity-scoped- see above), lessIsMoreHp/Mp/Tp, moreIsMoreHp/Mp/Tp, per-{registryKey}
+ * (integer points per stack).
+ *
+ * EXAMPLE:
+ *  <passiveStateCount:[70, enemiesTargetingMe, 1]>
+ *    State 70 gains 1 stack per enemy currently targeting this battler- pair with a state
+ *  carrying a flat pdr/mdr param-rate trait so each stack chips away at incoming damage.
  * ============================================================================
  * AUTO-APPLY STATE TAG
  *  <autoApplyState:[STATE_ID, CONDITION, PARAM]>
@@ -883,6 +896,24 @@ var PassiveRuleJabsAccess = class {
 		if (!jabsBattler) return [];
 		const proximity = proximityTiles ?? this.defaultProximity();
 		return JABS_AiManager.getOpposingBattlersWithinRange(jabsBattler, proximity);
+	}
+	/**
+	* Opposing battlers that currently have this battler as their live AI target- not a proximity
+	* check, unlike {@link nearbyEnemies}. An enemy counts here the moment it engages this battler
+	* as its target, regardless of tile distance, and stops counting the moment it disengages or
+	* retargets someone else.<br/>
+	* Used by {@code enemiesTargetingMe} gate and stack-count rules.
+	* @param {Game_Battler} battler The battler whose "being focused" status we measure.
+	* @returns {JABS_Battler[]} Opposing JABS battlers currently targeting this battler.
+	*/
+	static enemiesTargetingMe(battler) {
+		const jabsBattler = this.getJabsBattler(battler);
+		if (!jabsBattler) return [];
+		return JABS_AiManager.getOpposingBattlers(jabsBattler).filter((enemy) => {
+			const enemyTarget = enemy.getTarget();
+			if (!enemyTarget) return false;
+			return enemyTarget.getUuid() === jabsBattler.getUuid();
+		});
 	}
 	/**
 	* Allied battlers for {@code allAllies*} threshold checks (includes self when on the map).<br/>
@@ -1735,6 +1766,8 @@ var PassiveGateEvaluator = class {
 			case "enemiesNearby": return PassiveRuleJabsAccess.nearbyEnemies(battler, scope ? Number(scope) : null).length >= Number(param);
 			case "alliesNearbyBelow": return PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler, scope ? Number(scope) : null).length < Number(param);
 			case "enemiesNearbyBelow": return PassiveRuleJabsAccess.nearbyEnemies(battler, scope ? Number(scope) : null).length < Number(param);
+			case "enemiesTargetingMe": return PassiveRuleJabsAccess.enemiesTargetingMe(battler).length >= Number(param);
+			case "enemiesTargetingMeBelow": return PassiveRuleJabsAccess.enemiesTargetingMe(battler).length < Number(param);
 			case "hpAbove": return this.#evaluateResourceThreshold(battler, "hp", "above", Number(param), scope, range);
 			case "hpBelow": return this.#evaluateResourceThreshold(battler, "hp", "below", Number(param), scope, range);
 			case "mpAbove": return this.#evaluateResourceThreshold(battler, "mp", "above", Number(param), scope, range);
@@ -1959,6 +1992,7 @@ var PassiveStackCountEvaluator = class {
 			case "negativeStateCount": return Math.floor(PassiveGateEvaluator.countNegativeStates(battler) / Number(param));
 			case "alliesNearby": return Math.floor(PassiveRuleJabsAccess.nearbyAlliesExcludingSelf(battler, proximityTiles).length / Number(param));
 			case "enemiesNearby": return Math.floor(PassiveRuleJabsAccess.nearbyEnemies(battler, proximityTiles).length / Number(param));
+			case "enemiesTargetingMe": return Math.floor(PassiveRuleJabsAccess.enemiesTargetingMe(battler).length / Number(param));
 			case "lessIsMoreHp": return Math.floor(this.#missingResourcePercent(battler, "hp") / Number(param));
 			case "lessIsMoreMp": return Math.floor(this.#missingResourcePercent(battler, "mp") / Number(param));
 			case "lessIsMoreTp": return Math.floor(this.#missingResourcePercent(battler, "tp") / Number(param));

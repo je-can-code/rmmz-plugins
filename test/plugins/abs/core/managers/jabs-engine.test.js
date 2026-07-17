@@ -3402,6 +3402,9 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         getCaster: () => attacker,
         bonusAggro: () => 0,
         aggroMultiplier: () => 1,
+        aggroPercent: () => 0,
+        notMyAggro: () => 0,
+        notMyAggroPercent: () => 0,
       }, overrides);
     }
 
@@ -3563,6 +3566,167 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       // base(5) * playerReduction(0.5) = 2.5.
       expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 2.5);
+    });
+
+    describe('applyAggroPercentEffect', () =>
+    {
+      it('does nothing when aggroPercent is 0', () =>
+      {
+        const engine = new JABS_Engine();
+        const attacker = buildAttacker();
+        const target = buildTarget(buildAggroResult(), { aggroExists: vi.fn() });
+        const action = buildAction(attacker, { aggroPercent: () => 0 });
+
+        engine.applyAggroPercentEffect(action, attacker, target);
+
+        expect(target.aggroExists).not.toHaveBeenCalled();
+      });
+
+      it('does nothing when the attacker has no existing aggro entry to scale', () =>
+      {
+        const engine = new JABS_Engine();
+        const attacker = buildAttacker();
+        const target = buildTarget(buildAggroResult(), { aggroExists: vi.fn(() => undefined) });
+        const action = buildAction(attacker, { aggroPercent: () => 100 });
+
+        expect(() => engine.applyAggroPercentEffect(action, attacker, target)).not.toThrow();
+      });
+
+      it('scales the attacker\'s existing aggro entry by (1 + percent/100)', () =>
+      {
+        const engine = new JABS_Engine();
+        const attacker = buildAttacker();
+        const ownAggro = { aggro: 1000, modAggro: vi.fn() };
+        const target = buildTarget(buildAggroResult(), { aggroExists: vi.fn(() => ownAggro) });
+        const action = buildAction(attacker, { aggroPercent: () => 100 });
+
+        engine.applyAggroPercentEffect(action, attacker, target);
+
+        expect(ownAggro.modAggro).toHaveBeenCalledWith(1000);
+      });
+
+      it('scales down the attacker\'s existing aggro entry with a negative percent', () =>
+      {
+        const engine = new JABS_Engine();
+        const attacker = buildAttacker();
+        const ownAggro = { aggro: 1000, modAggro: vi.fn() };
+        const target = buildTarget(buildAggroResult(), { aggroExists: vi.fn(() => ownAggro) });
+        const action = buildAction(attacker, { aggroPercent: () => -50 });
+
+        engine.applyAggroPercentEffect(action, attacker, target);
+
+        expect(ownAggro.modAggro).toHaveBeenCalledWith(-500);
+      });
+    });
+
+    describe('applyNotMyAggroEffects', () =>
+    {
+      it('does nothing when both notMyAggro and notMyAggroPercent are 0', () =>
+      {
+        const engine = new JABS_Engine();
+        const attacker = buildAttacker();
+        const target = buildTarget(buildAggroResult(), { getAllAggros: vi.fn() });
+        const action = buildAction(attacker);
+
+        engine.applyNotMyAggroEffects(action, attacker, target);
+
+        expect(target.getAllAggros).not.toHaveBeenCalled();
+      });
+
+      it('skips the attacker\'s own aggro entry', async () =>
+      {
+        const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+        const engine = new JABS_Engine();
+        const attacker = buildAttacker();
+        const ownAggro = { uuid: () => 'attacker-uuid', aggro: 100, modAggro: vi.fn() };
+        const target = buildTarget(buildAggroResult(), { getAllAggros: () => [ ownAggro ] });
+        const action = buildAction(attacker, { notMyAggro: () => -50 });
+        JABS_AiManager.getBattlerByUuid = vi.fn();
+
+        engine.applyNotMyAggroEffects(action, attacker, target);
+
+        expect(JABS_AiManager.getBattlerByUuid).not.toHaveBeenCalled();
+        expect(ownAggro.modAggro).not.toHaveBeenCalled();
+      });
+
+      it('skips an entry whose battler no longer exists', async () =>
+      {
+        const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+        const engine = new JABS_Engine();
+        const attacker = buildAttacker();
+        const otherAggro = { uuid: () => 'stale-uuid', aggro: 100, modAggro: vi.fn() };
+        const target = buildTarget(buildAggroResult(), { getAllAggros: () => [ otherAggro ] });
+        const action = buildAction(attacker, { notMyAggro: () => -50 });
+        JABS_AiManager.getBattlerByUuid = vi.fn(() => undefined);
+
+        engine.applyNotMyAggroEffects(action, attacker, target);
+
+        expect(otherAggro.modAggro).not.toHaveBeenCalled();
+      });
+
+      it('skips an entry belonging to a non-friendly team', async () =>
+      {
+        const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+        const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+        const engine = new JABS_Engine();
+        const attacker = buildAttacker();
+        const otherAggro = { uuid: () => 'other-uuid', aggro: 100, modAggro: vi.fn() };
+        const target = buildTarget(buildAggroResult(), { getAllAggros: () => [ otherAggro ] });
+        const action = buildAction(attacker, { notMyAggro: () => -50 });
+        JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ getTeam: () => 'other-team' }));
+        JABS_TeamRules.isFriendly = vi.fn(() => false);
+
+        engine.applyNotMyAggroEffects(action, attacker, target);
+
+        expect(otherAggro.modAggro).not.toHaveBeenCalled();
+        JABS_TeamRules.isFriendly = vi.fn(() => false);
+      });
+
+      it('applies the flat adjustment to a same-team other entry', async () =>
+      {
+        const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+        const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+        const engine = new JABS_Engine();
+        const attacker = buildAttacker();
+        const otherAggro = { uuid: () => 'other-uuid', aggro: 100, modAggro: vi.fn() };
+        const target = buildTarget(buildAggroResult(), { getAllAggros: () => [ otherAggro ] });
+        const action = buildAction(attacker, { notMyAggro: () => -50 });
+        JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ getTeam: () => 'attacker-team' }));
+        JABS_TeamRules.isFriendly = vi.fn(() => true);
+
+        engine.applyNotMyAggroEffects(action, attacker, target);
+
+        expect(otherAggro.modAggro).toHaveBeenCalledWith(-50);
+        JABS_TeamRules.isFriendly = vi.fn(() => false);
+      });
+
+      it('applies the percent adjustment off the entry\'s current value, after any flat adjustment', async () =>
+      {
+        const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+        const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+        const engine = new JABS_Engine();
+        const attacker = buildAttacker();
+        // modAggro mutates .aggro in place, same as the real JABS_Aggro#modAggro.
+        const otherAggro = {
+          uuid: () => 'other-uuid',
+          aggro: 100,
+          modAggro: vi.fn(function(delta)
+          {
+            this.aggro += delta;
+          }),
+        };
+        const target = buildTarget(buildAggroResult(), { getAllAggros: () => [ otherAggro ] });
+        const action = buildAction(attacker, { notMyAggro: () => -50, notMyAggroPercent: () => -50 });
+        JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ getTeam: () => 'attacker-team' }));
+        JABS_TeamRules.isFriendly = vi.fn(() => true);
+
+        engine.applyNotMyAggroEffects(action, attacker, target);
+
+        // flat: 100 - 50 = 50. percent: 50 * (-50/100) = -25. total delta calls: -50, then -25.
+        expect(otherAggro.modAggro).toHaveBeenNthCalledWith(1, -50);
+        expect(otherAggro.modAggro).toHaveBeenNthCalledWith(2, -25);
+        JABS_TeamRules.isFriendly = vi.fn(() => false);
+      });
     });
   });
 

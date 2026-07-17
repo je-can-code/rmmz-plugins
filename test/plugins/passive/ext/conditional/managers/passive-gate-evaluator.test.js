@@ -13,6 +13,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
     FakePassiveRuleJabsAccess = {
       nearbyEnemies: vi.fn().mockReturnValue([]),
       nearbyAlliesExcludingSelf: vi.fn().mockReturnValue([]),
+      enemiesTargetingMe: vi.fn().mockReturnValue([]),
     };
     vi.doMock('../../../../../../src/plugins/passive/ext/conditional/helpers/PassiveRuleJabsAccess.js', () => ({ default: FakePassiveRuleJabsAccess }));
 
@@ -24,6 +25,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
     vi.clearAllMocks();
     FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([]);
     FakePassiveRuleJabsAccess.nearbyAlliesExcludingSelf.mockReturnValue([]);
+    FakePassiveRuleJabsAccess.enemiesTargetingMe.mockReturnValue([]);
   });
 
   function makeBattler()
@@ -165,6 +167,76 @@ describe('PassiveGateEvaluator (direct src import)', () =>
 
       // Act
       const result = PassiveGateEvaluator.evaluate(battler, 'alliesNearbyBelow', 1);
+
+      // Assert
+      expect(result).toEqual(false);
+    });
+  });
+
+  describe('enemiesTargetingMe', () =>
+  {
+    it('fails when fewer opposing battlers are targeting this battler than the required count', () =>
+    {
+      // Arrange
+      const battler = makeBattler();
+      FakePassiveRuleJabsAccess.enemiesTargetingMe.mockReturnValue([]);
+
+      // Act
+      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMe', 1);
+
+      // Assert
+      expect(result).toEqual(false);
+    });
+
+    it('passes when at least the required count of opposing battlers are targeting this battler', () =>
+    {
+      // Arrange
+      const battler = makeBattler();
+      FakePassiveRuleJabsAccess.enemiesTargetingMe.mockReturnValue([ {}, {} ]);
+
+      // Act
+      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMe', 2);
+
+      // Assert
+      expect(result).toEqual(true);
+    });
+
+    it('never forwards a radius param- this kind is not proximity-scoped', () =>
+    {
+      // Arrange
+      const battler = makeBattler();
+
+      // Act
+      PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMe', 1, 3);
+
+      // Assert
+      expect(FakePassiveRuleJabsAccess.enemiesTargetingMe).toHaveBeenCalledWith(battler);
+    });
+  });
+
+  describe('enemiesTargetingMeBelow', () =>
+  {
+    it('passes when zero enemies are targeting this battler and the threshold is 1', () =>
+    {
+      // Arrange
+      const battler = makeBattler();
+      FakePassiveRuleJabsAccess.enemiesTargetingMe.mockReturnValue([]);
+
+      // Act
+      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMeBelow', 1);
+
+      // Assert
+      expect(result).toEqual(true);
+    });
+
+    it('fails once the number of enemies targeting this battler meets the threshold', () =>
+    {
+      // Arrange
+      const battler = makeBattler();
+      FakePassiveRuleJabsAccess.enemiesTargetingMe.mockReturnValue([ {} ]);
+
+      // Act
+      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMeBelow', 1);
 
       // Assert
       expect(result).toEqual(false);

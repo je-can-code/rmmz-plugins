@@ -2256,6 +2256,11 @@
  * 9. Attacker TGR stat multiplier.
  * 10. Player-unique multiplier, if applicable.
  *
+ * Steps 1-10 above produce a single delta that gets written to the caster's
+ * own aggro entry on the target. aggroPercent and notMyAggro/notMyAggroPercent
+ * (below) are separate post-processing steps that run AFTER that write,
+ * operating on already-stored aggro entries rather than this hit's delta.
+ *
  * ----------------------------------------------------------------------------
  * AGGRO TAGS FOR SKILLS:
  * BONUS AGGRO:
@@ -2267,6 +2272,39 @@
  *  Where VAL is a decimal multiplier applied on top of all other aggro.
  *
  * NOTE: Default is 1.0. A value of 0.5 halves aggro; 2.0 doubles it.
+ *
+ * AGGRO PERCENT (own existing aggro):
+ *    <aggroPercent:VAL>
+ *  Where VAL is a percent adjustment applied to the caster's own ALREADY-
+ *  STANDING aggro total on the target- not just this hit's contribution.
+ *  Resolved as aggro *= (1 + VAL/100). Contrast with aggroMultiplier above,
+ *  which only scales this one hit's newly-computed amount before it's added.
+ *
+ * TAG EXAMPLE:
+ *    <aggroPercent:100>
+ *  If the caster already has 1000 standing aggro on the target, landing
+ *  this skill doubles it to 2000 (in addition to whatever this hit's own
+ *  <aggro>/<aggroMultiplier> chain contributes).
+ *
+ * NOT MY AGGRO (redirect threat to yourself):
+ *    <notMyAggro:VAL>
+ *    <notMyAggroPercent:VAL>
+ *  Unlike the tags above (which only touch the caster's own aggro entry),
+ *  these adjust every OTHER battler's standing aggro on the same target-
+ *  battlers sharing the caster's team, excluding the caster's own entry.
+ *  notMyAggro adds VAL flat to each of those entries independently (can be
+ *  negative). notMyAggroPercent scales each of those entries independently
+ *  as entry *= (1 + VAL/100). Flat applies before percent, per entry.
+ *
+ * TAG EXAMPLE:
+ *    <notMyAggro:-50>
+ *    <notMyAggroPercent:-25>
+ *  On landing, every ally's standing aggro on this target drops by 50
+ *  flat, then by another 25% of whatever remains- a taunt that pulls
+ *  threat toward the caster and away from teammates fighting the same foe.
+ *
+ * NOTE: All aggro tags above fire regardless of hit/miss/parry, same as
+ * the base aggro calculation chain.
  *
  * ----------------------------------------------------------------------------
  * AGGRO TAGS FOR STATES:
@@ -2647,7 +2685,7 @@
  *  only (not summed from the battler's other sources). On its own this is nothing
  *  you couldn't do by just raising <stackMax:VAL> directly- its purpose is to ride
  *  along on a J-Extend overlay state. When another active state carries
- *  <extend:[STATE_ID]> or <extendStateType:TYPE> targeting this state, J-Extend
+ *  <extend:[STATE_ID]> or <extendType:TYPE> targeting this state, J-Extend
  *  merges the overlay's note (and thus its <thisStackMaxBoost:VAL> tag) into this
  *  state's resolved note before this tag is read- so a single overlay state (e.g.
  *  an equipment-granted passive) can raise the stack cap of one specific state, or
@@ -4482,6 +4520,9 @@ J.ABS.RegExp = {
 	OffhandEligible: /<offhandEligible>/i,
 	BonusAggro: /<aggro:[ ]?(-?\d+)>/gi,
 	AggroMultiplier: /<aggroMultiplier:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+	AggroPercent: /<aggroPercent:[ ]?(-?\d+)>/gi,
+	NotMyAggro: /<notMyAggro:[ ]?(-?\d+)>/gi,
+	NotMyAggroPercent: /<notMyAggroPercent:[ ]?(-?\d+)>/gi,
 	Unparryable: /<unparryable>/gi,
 	/**
 	* Extra battle-effect applications per target per pierce tick, from the executing skill note only.
@@ -4736,6 +4777,9 @@ J.ABS.RegExp = {
 	StateDurationFlatPlus: /<stateDurationFlat:[ ]?([-+]?\d+)>/gi,
 	StateDurationPercentPlus: /<stateDurationPerc:[ ]?([-+]?\d+)>/gi,
 	StateDurationFormulaPlus: /<stateDurationFormula:\[([+\-*/ ().\w]+)]>/gi,
+	ThisStateDurationFlatPlus: /<thisStateDurationFlat:[ ]?([-+]?\d+)>/gi,
+	ThisStateDurationPercentPlus: /<thisStateDurationPerc:[ ]?([-+]?\d+)>/gi,
+	ThisStateDurationFormulaPlus: /<thisStateDurationFormula:\[([+\-*/ ().\w]+)]>/gi,
 	ThisTickSpeed: /<thisTickSpeed:[ ]?(\d+)>/gi,
 	TickSpeedFlat: /<tickSpeedFlat:[ ]?(-?\d+)>/gi,
 	TickSpeedPercent: /<tickSpeedPercent:[ ]?(-?\d+)%?>/gi,
@@ -5216,6 +5260,144 @@ J.ABS.RegExp = {
 	* @type {RegExp}
 	*/
 	ThicknessRate: /<thicknessRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+	/**
+	* Self-scoped counterpart to rangeBuff: flat tile addition to radius, proximity, and thickness,
+	* read only from this skill's own note (this.getBaseSkill()), not the caster's getAllNotes().
+	* Stacks additively with rangeBuff.
+	*
+	* <pre>
+	* Structure:
+	*  <thisRangeBuff:N>
+	*
+	* Example:
+	*  <thisRangeBuff:2>
+	*
+	* Translation:
+	*  This skill alone gets +2 tiles flat to radius, proximity, and thickness.
+	* </pre>
+	* @type {RegExp}
+	*/
+	ThisRangeBuff: /<thisRangeBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+	/**
+	* Self-scoped counterpart to rangeRate: multiplicative rate applied to radius, proximity, and
+	* thickness, read only from this skill's own note. Base-1.0 delta model, same as rangeRate.
+	* Stacks additively with rangeRate.
+	*
+	* <pre>
+	* Structure:
+	*  <thisRangeRate:N>
+	*
+	* Example:
+	*  <thisRangeRate:1.5>
+	*
+	* Translation:
+	*  This skill alone has 1.5x radius, proximity, and thickness.
+	* </pre>
+	* @type {RegExp}
+	*/
+	ThisRangeRate: /<thisRangeRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+	/**
+	* Self-scoped counterpart to radiusBuff, read only from this skill's own note.
+	* Stacks additively with radiusBuff (and thisRangeBuff).
+	*
+	* <pre>
+	* Structure:
+	*  <thisRadiusBuff:N>
+	*
+	* Example:
+	*  <thisRadiusBuff:2>
+	*
+	* Translation:
+	*  This skill alone gets +2 tiles flat to radius only (not proximity or thickness).
+	* </pre>
+	* @type {RegExp}
+	*/
+	ThisRadiusBuff: /<thisRadiusBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+	/**
+	* Self-scoped counterpart to radiusRate, read only from this skill's own note.
+	* Stacks additively with radiusRate (and thisRangeRate).
+	*
+	* <pre>
+	* Structure:
+	*  <thisRadiusRate:N>
+	*
+	* Example:
+	*  <thisRadiusRate:1.5>
+	*
+	* Translation:
+	*  This skill alone has 1.5x radius only (not proximity or thickness).
+	* </pre>
+	* @type {RegExp}
+	*/
+	ThisRadiusRate: /<thisRadiusRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+	/**
+	* Self-scoped counterpart to proximityBuff, read only from this skill's own note.
+	* Stacks additively with proximityBuff (and thisRangeBuff).
+	*
+	* <pre>
+	* Structure:
+	*  <thisProximityBuff:N>
+	*
+	* Example:
+	*  <thisProximityBuff:2>
+	*
+	* Translation:
+	*  This skill alone gets +2 tiles flat to proximity only (not radius or thickness).
+	* </pre>
+	* @type {RegExp}
+	*/
+	ThisProximityBuff: /<thisProximityBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+	/**
+	* Self-scoped counterpart to proximityRate, read only from this skill's own note.
+	* Stacks additively with proximityRate (and thisRangeRate).
+	*
+	* <pre>
+	* Structure:
+	*  <thisProximityRate:N>
+	*
+	* Example:
+	*  <thisProximityRate:1.5>
+	*
+	* Translation:
+	*  This skill alone has 1.5x proximity only (not radius or thickness).
+	* </pre>
+	* @type {RegExp}
+	*/
+	ThisProximityRate: /<thisProximityRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+	/**
+	* Self-scoped counterpart to thicknessBuff, read only from this skill's own note.
+	* Stacks additively with thicknessBuff (and thisRangeBuff).
+	*
+	* <pre>
+	* Structure:
+	*  <thisThicknessBuff:N>
+	*
+	* Example:
+	*  <thisThicknessBuff:1>
+	*
+	* Translation:
+	*  This skill alone gets +1 tile flat to thickness only (not radius or proximity).
+	* </pre>
+	* @type {RegExp}
+	*/
+	ThisThicknessBuff: /<thisThicknessBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+	/**
+	* Self-scoped counterpart to thicknessRate, read only from this skill's own note.
+	* Stacks additively with thicknessRate (and thisRangeRate).
+	*
+	* <pre>
+	* Structure:
+	*  <thisThicknessRate:N>
+	*
+	* Example:
+	*  <thisThicknessRate:1.5>
+	*
+	* Translation:
+	*  This skill alone has 1.5x thickness only (not radius or proximity).
+	* </pre>
+	* @type {RegExp}
+	*/
+	ThisThicknessRate: /<thisThicknessRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
 	/**
 	* Passive/state/equip skill history damage bonus.
 	* Reads from getAllNotes(); applies to every attack by the bearer.
@@ -16088,7 +16270,7 @@ var JABS_State = class {
 		const stateRow = this.source.state(this.stateId);
 		const baseInterval = stateRow.jabsThisTickSpeed > 0 ? stateRow.jabsThisTickSpeed : J.ABS.Metadata.DefaultStateTickInterval;
 		const flatModifier = this.source.tickSpeedFlatModifier();
-		const percentModifier = this.source.tickSpeedPercentModifier(stateRow.stateTypes());
+		const percentModifier = this.source.tickSpeedPercentModifier(stateRow.types());
 		const modifiedInterval = (baseInterval + flatModifier) / (1 + percentModifier / 100);
 		const tunableFloor = Math.max(J.ABS.Metadata.MinimumStateTickInterval, 1);
 		return Math.max(Math.round(modifiedInterval), tunableFloor);
@@ -18672,6 +18854,51 @@ var JABS_Engine = class JABS_Engine {
 			aggro *= J.ABS.Metadata.AggroPlayerReduction;
 		}
 		target.addUpdateAggro(attacker.getUuid(), aggro);
+		this.applyAggroPercentEffect(action, attacker, target);
+		this.applyNotMyAggroEffects(action, attacker, target);
+	}
+	/**
+	* Applies any {@code <aggroPercent:VAL>} scaling from the underlying skill to the attacker's own
+	* already-standing aggro entry on the target. Unlike {@code <aggroMultiplier>}, which scales the
+	* newly-computed chain result for just this hit, this scales the entry's full current total-
+	* including everything accumulated from prior hits.
+	* @param {JABS_Action} action The JABS action containing the action data.
+	* @param {JABS_Battler} attacker The battler that executed the action.
+	* @param {JABS_Battler} target The target having the action applied against.
+	*/
+	applyAggroPercentEffect(action, attacker, target) {
+		const percent = action.aggroPercent();
+		if (percent === 0) return;
+		const ownAggro = target.aggroExists(attacker.getUuid());
+		if (!ownAggro) return;
+		ownAggro.modAggro(ownAggro.aggro * (percent / 100));
+	}
+	/**
+	* Applies any {@code <notMyAggro:VAL>}/{@code <notMyAggroPercent:VAL>} redirection from the
+	* underlying skill to every OTHER battler's standing aggro on the target- same team as the
+	* attacker, attacker's own entry excluded. Unlike {@code <aggroMultiplier>} (a single scalar
+	* applied once to the attacker's own newly-computed aggro), this walks N distinct existing
+	* aggro entries and adjusts each independently off its own current value.
+	* @param {JABS_Action} action The JABS action containing the action data.
+	* @param {JABS_Battler} attacker The battler that executed the action.
+	* @param {JABS_Battler} target The target having the action applied against.
+	*/
+	applyNotMyAggroEffects(action, attacker, target) {
+		const flat = action.notMyAggro();
+		const percent = action.notMyAggroPercent();
+		if (flat === 0 && percent === 0) return;
+		target.getAllAggros().forEach((otherAggro) => {
+			if (otherAggro.uuid() === attacker.getUuid()) return;
+			const otherBattler = JABS_AiManager.getBattlerByUuid(otherAggro.uuid());
+			if (!otherBattler) return;
+			if (JABS_TeamRules.isFriendly(attacker.getTeam(), otherBattler.getTeam()) === false) return;
+			if (flat !== 0) {
+				otherAggro.modAggro(flat);
+			}
+			if (percent !== 0) {
+				otherAggro.modAggro(otherAggro.aggro * (percent / 100));
+			}
+		});
 	}
 	/**
 	* Applies on-hit effects against the target.
@@ -21197,8 +21424,8 @@ var JABS_Action = class JABS_Action {
 	*/
 	applyRadiusModifiers(base) {
 		const caster = this.getAction().subject();
-		const totalBuff = caster.getRangeBuff() + caster.getRadiusBuff();
-		const totalRate = caster.getRangeRate() + caster.getRadiusRate();
+		const totalBuff = caster.getRangeBuff() + caster.getRadiusBuff() + this.getThisRangeBuff() + this.getThisRadiusBuff();
+		const totalRate = caster.getRangeRate() + caster.getRadiusRate() + this.getThisRangeRate() + this.getThisRadiusRate();
 		return Math.max(0, (base + totalBuff) * totalRate);
 	}
 	/**
@@ -21208,8 +21435,8 @@ var JABS_Action = class JABS_Action {
 	*/
 	applyProximityModifiers(base) {
 		const caster = this.getAction().subject();
-		const totalBuff = caster.getRangeBuff() + caster.getProximityBuff();
-		const totalRate = caster.getRangeRate() + caster.getProximityRate();
+		const totalBuff = caster.getRangeBuff() + caster.getProximityBuff() + this.getThisRangeBuff() + this.getThisProximityBuff();
+		const totalRate = caster.getRangeRate() + caster.getProximityRate() + this.getThisRangeRate() + this.getThisProximityRate();
 		return Math.max(0, (base + totalBuff) * totalRate);
 	}
 	/**
@@ -21219,9 +21446,80 @@ var JABS_Action = class JABS_Action {
 	*/
 	applyThicknessModifiers(base) {
 		const caster = this.getAction().subject();
-		const totalBuff = caster.getRangeBuff() + caster.getThicknessBuff();
-		const totalRate = caster.getRangeRate() + caster.getThicknessRate();
+		const totalBuff = caster.getRangeBuff() + caster.getThicknessBuff() + this.getThisRangeBuff() + this.getThisThicknessBuff();
+		const totalRate = caster.getRangeRate() + caster.getThicknessRate() + this.getThisRangeRate() + this.getThisThicknessRate();
 		return Math.max(0, (base + totalBuff) * totalRate);
+	}
+	/**
+	* Gets the flat tile bonus applied to all dimensions of this skill alone, read from this skill's
+	* own note only (not the caster's getAllNotes()). Stacks additively with {@link Game_Battler#getRangeBuff}.
+	* @returns {number}
+	*/
+	getThisRangeBuff() {
+		return RPGManager.getSumFromAllNotesByRegex([this.getBaseSkill()], J.ABS.RegExp.ThisRangeBuff) ?? 0;
+	}
+	/**
+	* Gets the multiplicative rate applied to all dimensions of this skill alone, read from this
+	* skill's own note only. Contributes (N - 1.0) deltas on top of {@link Game_Battler#getRangeRate}.
+	* @returns {number}
+	*/
+	getThisRangeRate() {
+		const captures = RPGManager.getAllCapturesFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisRangeRate);
+		return (captures ?? []).reduce((acc, capture) => acc + (Number(capture[0]) - 1), 0);
+	}
+	/**
+	* Gets the flat tile bonus applied only to this skill's own radius, read from this skill's own
+	* note only. Stacks additively with {@link Game_Battler#getRadiusBuff} and {@link #getThisRangeBuff}.
+	* @returns {number}
+	*/
+	getThisRadiusBuff() {
+		return RPGManager.getSumFromAllNotesByRegex([this.getBaseSkill()], J.ABS.RegExp.ThisRadiusBuff) ?? 0;
+	}
+	/**
+	* Gets the multiplicative rate applied only to this skill's own radius, read from this skill's
+	* own note only. Contributes (N - 1.0) deltas on top of {@link Game_Battler#getRadiusRate} and
+	* {@link #getThisRangeRate}.
+	* @returns {number}
+	*/
+	getThisRadiusRate() {
+		const captures = RPGManager.getAllCapturesFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisRadiusRate);
+		return (captures ?? []).reduce((acc, capture) => acc + (Number(capture[0]) - 1), 0);
+	}
+	/**
+	* Gets the flat tile bonus applied only to this skill's own proximity, read from this skill's own
+	* note only. Stacks additively with {@link Game_Battler#getProximityBuff} and {@link #getThisRangeBuff}.
+	* @returns {number}
+	*/
+	getThisProximityBuff() {
+		return RPGManager.getSumFromAllNotesByRegex([this.getBaseSkill()], J.ABS.RegExp.ThisProximityBuff) ?? 0;
+	}
+	/**
+	* Gets the multiplicative rate applied only to this skill's own proximity, read from this skill's
+	* own note only. Contributes (N - 1.0) deltas on top of {@link Game_Battler#getProximityRate} and
+	* {@link #getThisRangeRate}.
+	* @returns {number}
+	*/
+	getThisProximityRate() {
+		const captures = RPGManager.getAllCapturesFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisProximityRate);
+		return (captures ?? []).reduce((acc, capture) => acc + (Number(capture[0]) - 1), 0);
+	}
+	/**
+	* Gets the flat tile bonus applied only to this skill's own thickness, read from this skill's own
+	* note only. Stacks additively with {@link Game_Battler#getThicknessBuff} and {@link #getThisRangeBuff}.
+	* @returns {number}
+	*/
+	getThisThicknessBuff() {
+		return RPGManager.getSumFromAllNotesByRegex([this.getBaseSkill()], J.ABS.RegExp.ThisThicknessBuff) ?? 0;
+	}
+	/**
+	* Gets the multiplicative rate applied only to this skill's own thickness, read from this skill's
+	* own note only. Contributes (N - 1.0) deltas on top of {@link Game_Battler#getThicknessRate} and
+	* {@link #getThisRangeRate}.
+	* @returns {number}
+	*/
+	getThisThicknessRate() {
+		const captures = RPGManager.getAllCapturesFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisThicknessRate);
+		return (captures ?? []).reduce((acc, capture) => acc + (Number(capture[0]) - 1), 0);
 	}
 	/**
 	* Gets the arc sweep in degrees for this JABS action.
@@ -21267,6 +21565,30 @@ var JABS_Action = class JABS_Action {
 	*/
 	aggroMultiplier() {
 		return this.getBaseSkill().jabsAggroMultiplier ?? 1;
+	}
+	/**
+	* Gets the percent adjustment this skill applies to the caster's own already-standing aggro
+	* on the target (see {@link JABS_Engine#applyAggroPercentEffect}).
+	* @returns {number}
+	*/
+	aggroPercent() {
+		return this.getBaseSkill().jabsAggroPercent ?? 0;
+	}
+	/**
+	* Gets the flat aggro adjustment this skill applies to every OTHER battler's standing aggro
+	* on the target (see {@link JABS_Engine#applyNotMyAggroEffects}).
+	* @returns {number}
+	*/
+	notMyAggro() {
+		return this.getBaseSkill().jabsNotMyAggro ?? 0;
+	}
+	/**
+	* Gets the percent aggro adjustment this skill applies to every OTHER battler's standing aggro
+	* on the target (see {@link JABS_Engine#applyNotMyAggroEffects}).
+	* @returns {number}
+	*/
+	notMyAggroPercent() {
+		return this.getBaseSkill().jabsNotMyAggroPercent ?? 0;
 	}
 	/**
 	* Whether or not this action has hit at least one target.
@@ -23113,6 +23435,33 @@ Object.defineProperty(RPG_Skill.prototype, "jabsAggroMultiplier", { get: functio
 	return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.AggroMultiplier, true);
 } });
 /**
+* The percent adjustment this skill applies to the CASTER's own already-standing aggro on the
+* target (not the newly-computed chain result- see {@code <aggroMultiplier>} for that). Resolved
+* as `aggro *= (1 + VAL/100)` against whatever the caster's aggro entry already totals. Can be
+* negative.
+* @type {number}
+*/
+Object.defineProperty(RPG_Skill.prototype, "jabsAggroPercent", { get: function() {
+	return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.AggroPercent, true);
+} });
+/**
+* The flat aggro adjustment this skill applies to every OTHER battler's standing aggro on the
+* target (same team as the caster, caster's own entry excluded). Can be negative.
+* @type {number}
+*/
+Object.defineProperty(RPG_Skill.prototype, "jabsNotMyAggro", { get: function() {
+	return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.NotMyAggro, true);
+} });
+/**
+* The percent aggro adjustment this skill applies to every OTHER battler's standing aggro on the
+* target (same team as the caster, caster's own entry excluded). Resolved as `aggro *= (1 +
+* VAL/100)` per entry, so negative values reduce and positive values amplify. Can be negative.
+* @type {number}
+*/
+Object.defineProperty(RPG_Skill.prototype, "jabsNotMyAggroPercent", { get: function() {
+	return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.NotMyAggroPercent, true);
+} });
+/**
 * The `JABS_GuardData` of this skill.
 * Will return null if there is no guard tag available on this
 * @type {JABS_GuardData}
@@ -23857,7 +24206,7 @@ Object.defineProperty(RPG_State.prototype, "jabsStateStackMax", { get: function(
 /**
 * A bonus to this state's stack cap, read from this state's own note only.<br/>
 * When J-Extend is active and another active state carries `<extend:[...]>` or
-* `<extendStateType:TYPE>` targeting this state, that overlay's note (and thus its own
+* `<extendType:TYPE>` targeting this state, that overlay's note (and thus its own
 * `<thisStackMaxBoost:VAL>` tag, if any) is merged into this note before this getter runs-
 * so this is effectively "one state raising the stack cap of another it extends."<br/>
 * Only applies when the state's reapplication type is {@link JABS_State.reapplicationType.Stack}.
@@ -24123,6 +24472,27 @@ Object.defineProperty(RPG_State.prototype, "jabsStateDurationFrames", { get: fun
 	}
 	return this.stepsToRemove;
 } });
+/**
+* A bonus to this state's own outgoing map-timer duration, read from this state's own note only.<br/>
+* When J-Extend is active and another active state carries `<extend:[...]>` or
+* `<extendType:TYPE>` targeting this state, that overlay's note (and thus its own
+* `<thisStateDurationFlat/Perc/Formula>` tags, if any) is merged into this note before this
+* getter runs- so this is effectively "one state doubling the duration of another it extends,"
+* without touching the caster-wide {@code <stateDurationFlat/Perc/Formula>} tags (which apply to
+* every state a battler applies, not just ones sharing a classifier).<br/>
+* Mirrors {@link Game_Battler#getStateDurationBoost}, but sourced from a single (possibly
+* extension-merged) state note instead of every note source on the applying battler.
+* @param {number} baseDuration The base duration (in frames) to compute percent/formula bonuses off of.
+* @returns {number} The bonus frames to add to this state's own outgoing duration.
+*/
+RPG_State.prototype.jabsThisStateDurationBoost = function(baseDuration) {
+	const flat = RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.ThisStateDurationFlatPlus);
+	const percent = RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.ThisStateDurationPercentPlus);
+	const percentBoost = Math.round(baseDuration * (percent / 100));
+	const formulaBoost = RPGManager.getResultFromNoteByRegex(this, J.ABS.RegExp.ThisStateDurationFormulaPlus, baseDuration);
+	const durationBoost = flat + percentBoost + formulaBoost;
+	return parseFloat(durationBoost.toFixed(2));
+};
 
 //#endregion
 //#region src/plugins/abs/core/database/RPG_TraitItem.js
@@ -25047,7 +25417,7 @@ Game_Action.prototype.calculateThisBonusDamageIfTargetHpBelowPct = function(targ
 * @returns {boolean} True if any active state on the target carries this type.
 */
 Game_Action.prototype.targetHasActiveStateType = function(target, type) {
-	return target.states().some((state) => state.stateTypes().some((stateType) => stateType.toLowerCase() === type.toLowerCase()));
+	return target.states().some((state) => state.types().some((stateType) => stateType.toLowerCase() === type.toLowerCase()));
 };
 /**
 * Calculates the total damage bonus percent from bonusDamageIfStateType tags on the caster's notes.
@@ -25080,7 +25450,7 @@ Game_Action.prototype.calculatePerStateTypePct = function(target) {
 	if (!allPairs.length) return 0;
 	let totalPct = 0;
 	allPairs.forEach(([type, percent]) => {
-		const matchingStateCount = target.states().filter((state) => state.stateTypes().some((stateType) => stateType.toLowerCase() === type.toLowerCase())).length;
+		const matchingStateCount = target.states().filter((state) => state.types().some((stateType) => stateType.toLowerCase() === type.toLowerCase())).length;
 		totalPct += percent * matchingStateCount;
 	});
 	return totalPct;
@@ -26992,7 +27362,7 @@ Game_Battler.prototype.getImmuneStateTypes = function() {
 Game_Battler.prototype.isImmuneToStateByType = function(state) {
 	const immuneTypes = this.getImmuneStateTypes();
 	if (!immuneTypes.length) return false;
-	return state.stateTypes().some((stateType) => immuneTypes.some((immuneType) => immuneType.toLowerCase() === stateType.toLowerCase()));
+	return state.types().some((stateType) => immuneTypes.some((immuneType) => immuneType.toLowerCase() === stateType.toLowerCase()));
 };
 /**
 * Sums this battler's {@code <stateTypeResist:[TYPE, PCT]>} tags whose TYPE matches one of the
@@ -27003,10 +27373,10 @@ Game_Battler.prototype.isImmuneToStateByType = function(state) {
 */
 Game_Battler.prototype.stateTypeResistRate = function(stateId) {
 	const state = $dataStates[stateId];
-	if (!state || !state.stateTypes().length) return 1;
+	if (!state || !state.types().length) return 1;
 	const allPairs = this.getAllNotes().flatMap((note) => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.StateTypeResist));
 	if (!allPairs.length) return 1;
-	const stateTypes = state.stateTypes();
+	const stateTypes = state.types();
 	let totalPercent = 0;
 	allPairs.forEach(([type, percent]) => {
 		if (stateTypes.some((stateType) => stateType.toLowerCase() === type.toLowerCase())) {
@@ -27168,7 +27538,7 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker, overrides = nu
 	}
 	let totalDuration = -1;
 	if (hasMapTimer) {
-		totalDuration = stateDuration + assailant.getStateDurationBoost(stateDuration);
+		totalDuration = stateDuration + assailant.getStateDurationBoost(stateDuration) + state.jabsThisStateDurationBoost(stateDuration);
 	}
 	const builder = this.createJabsState(this, stateId, iconIndex, totalDuration, stateStacks, assailant, sourceSkill);
 	const jabsState = builder.build();

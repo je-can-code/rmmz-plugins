@@ -1,7 +1,7 @@
-//region plugins/extend/core/database/rpg-state.test.js
+//region plugins/extend/core/database/rpg-base.test.js
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-describe('RPG_State ext/extend augments (direct src import)', () =>
+describe('RPG_Base ext/extend augments (direct src import)', () =>
 {
   beforeAll(async () =>
   {
@@ -11,23 +11,23 @@ describe('RPG_State ext/extend augments (direct src import)', () =>
       EXTEND: {
         RegExp: {
           Extend: /<extend:(.*)>/i,
-          StateExtendType: /<extendStateType:(.*)>/i,
+          ExtendType: /<extendType:(.*)>/i,
         },
       },
     };
 
-    function StubRPGState()
+    function StubRPGBase()
     {
     }
 
-    globalThis.RPG_State = StubRPGState;
+    globalThis.RPG_Base = StubRPGBase;
 
     globalThis.RPGManager = {
       getArrayFromNotesByRegex: vi.fn(),
       getStringsFromNoteByRegex: vi.fn(),
     };
 
-    await import('../../../../../src/plugins/extend/core/database/RPG_State.js');
+    await import('../../../../../src/plugins/extend/core/database/RPG_Base.js');
   });
 
   beforeEach(() =>
@@ -35,17 +35,17 @@ describe('RPG_State ext/extend augments (direct src import)', () =>
     vi.clearAllMocks();
   });
 
-  describe('isStateExtension', () =>
+  describe('isExtension', () =>
   {
     it('is true when an id-extension list is present', () =>
     {
       // Arrange
       globalThis.RPGManager.getArrayFromNotesByRegex.mockReturnValue([ 1, 2 ]);
       globalThis.RPGManager.getStringsFromNoteByRegex.mockReturnValue(null);
-      const state = new globalThis.RPG_State();
+      const dbObject = new globalThis.RPG_Base();
 
       // Act
-      const result = state.isStateExtension;
+      const result = dbObject.isExtension;
 
       // Assert
       expect(result).toEqual(true);
@@ -56,10 +56,10 @@ describe('RPG_State ext/extend augments (direct src import)', () =>
       // Arrange
       globalThis.RPGManager.getArrayFromNotesByRegex.mockReturnValue(null);
       globalThis.RPGManager.getStringsFromNoteByRegex.mockReturnValue('poison');
-      const state = new globalThis.RPG_State();
+      const dbObject = new globalThis.RPG_Base();
 
       // Act
-      const result = state.isStateExtension;
+      const result = dbObject.isExtension;
 
       // Assert
       expect(result).toEqual(true);
@@ -70,46 +70,46 @@ describe('RPG_State ext/extend augments (direct src import)', () =>
       // Arrange
       globalThis.RPGManager.getArrayFromNotesByRegex.mockReturnValue(null);
       globalThis.RPGManager.getStringsFromNoteByRegex.mockReturnValue(null);
-      const state = new globalThis.RPG_State();
+      const dbObject = new globalThis.RPG_Base();
 
       // Act
-      const result = state.isStateExtension;
+      const result = dbObject.isExtension;
 
       // Assert
       expect(result).toEqual(false);
     });
   });
 
-  describe('getStateExtensions', () =>
+  describe('getExtensions', () =>
   {
     it('returns the parsed id list from the note', () =>
     {
       // Arrange
       globalThis.RPGManager.getArrayFromNotesByRegex.mockReturnValue([ 3, 4 ]);
-      const state = new globalThis.RPG_State();
+      const dbObject = new globalThis.RPG_Base();
 
       // Act
-      const result = state.getStateExtensions;
+      const result = dbObject.getExtensions;
 
       // Assert
       expect(result).toEqual([ 3, 4 ]);
     });
   });
 
-  describe('getStateExtensionTypes', () =>
+  describe('getExtensionTypes', () =>
   {
     it('returns the parsed type list from the note', () =>
     {
       // Arrange
       globalThis.RPGManager.getStringsFromNoteByRegex.mockReturnValue([ 'poison', 'burn' ]);
-      const state = new globalThis.RPG_State();
+      const dbObject = new globalThis.RPG_Base();
 
       // Act
-      const result = state.getStateExtensionTypes;
+      const result = dbObject.getExtensionTypes;
 
       // Assert
       expect(result).toEqual([ 'poison', 'burn' ]);
     });
   });
 });
-//endregion plugins/extend/core/database/rpg-state.test.js
+//endregion plugins/extend/core/database/rpg-base.test.js

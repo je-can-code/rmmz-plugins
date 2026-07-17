@@ -73,6 +73,34 @@ class PassiveRuleJabsAccess
   }
 
   /**
+   * Opposing battlers that currently have this battler as their live AI target- not a proximity
+   * check, unlike {@link nearbyEnemies}. An enemy counts here the moment it engages this battler
+   * as its target, regardless of tile distance, and stops counting the moment it disengages or
+   * retargets someone else.<br/>
+   * Used by {@code enemiesTargetingMe} gate and stack-count rules.
+   * @param {Game_Battler} battler The battler whose "being focused" status we measure.
+   * @returns {JABS_Battler[]} Opposing JABS battlers currently targeting this battler.
+   */
+  static enemiesTargetingMe(battler)
+  {
+    // grab the map wrapper — no wrapper means nobody can be targeting this battler.
+    const jabsBattler = this.getJabsBattler(battler);
+
+    if (!jabsBattler) return [];
+
+    // every opposing battler JABS knows about, filtered down to those currently engaged on us.
+    return JABS_AiManager.getOpposingBattlers(jabsBattler)
+      .filter(enemy =>
+      {
+        // disengaged enemies have no target at all; they cannot be targeting us.
+        const enemyTarget = enemy.getTarget();
+        if (!enemyTarget) return false;
+
+        return enemyTarget.getUuid() === jabsBattler.getUuid();
+      });
+  }
+
+  /**
    * Allied battlers for {@code allAllies*} threshold checks (includes self when on the map).<br/>
    * Every member of the returned set must satisfy the same threshold for the gate to pass.
    * @param {Game_Battler} battler The battler whose party context we collect.

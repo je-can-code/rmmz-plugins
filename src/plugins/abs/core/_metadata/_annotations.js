@@ -2256,6 +2256,11 @@
  * 9. Attacker TGR stat multiplier.
  * 10. Player-unique multiplier, if applicable.
  *
+ * Steps 1-10 above produce a single delta that gets written to the caster's
+ * own aggro entry on the target. aggroPercent and notMyAggro/notMyAggroPercent
+ * (below) are separate post-processing steps that run AFTER that write,
+ * operating on already-stored aggro entries rather than this hit's delta.
+ *
  * ----------------------------------------------------------------------------
  * AGGRO TAGS FOR SKILLS:
  * BONUS AGGRO:
@@ -2267,6 +2272,39 @@
  *  Where VAL is a decimal multiplier applied on top of all other aggro.
  *
  * NOTE: Default is 1.0. A value of 0.5 halves aggro; 2.0 doubles it.
+ *
+ * AGGRO PERCENT (own existing aggro):
+ *    <aggroPercent:VAL>
+ *  Where VAL is a percent adjustment applied to the caster's own ALREADY-
+ *  STANDING aggro total on the target- not just this hit's contribution.
+ *  Resolved as aggro *= (1 + VAL/100). Contrast with aggroMultiplier above,
+ *  which only scales this one hit's newly-computed amount before it's added.
+ *
+ * TAG EXAMPLE:
+ *    <aggroPercent:100>
+ *  If the caster already has 1000 standing aggro on the target, landing
+ *  this skill doubles it to 2000 (in addition to whatever this hit's own
+ *  <aggro>/<aggroMultiplier> chain contributes).
+ *
+ * NOT MY AGGRO (redirect threat to yourself):
+ *    <notMyAggro:VAL>
+ *    <notMyAggroPercent:VAL>
+ *  Unlike the tags above (which only touch the caster's own aggro entry),
+ *  these adjust every OTHER battler's standing aggro on the same target-
+ *  battlers sharing the caster's team, excluding the caster's own entry.
+ *  notMyAggro adds VAL flat to each of those entries independently (can be
+ *  negative). notMyAggroPercent scales each of those entries independently
+ *  as entry *= (1 + VAL/100). Flat applies before percent, per entry.
+ *
+ * TAG EXAMPLE:
+ *    <notMyAggro:-50>
+ *    <notMyAggroPercent:-25>
+ *  On landing, every ally's standing aggro on this target drops by 50
+ *  flat, then by another 25% of whatever remains- a taunt that pulls
+ *  threat toward the caster and away from teammates fighting the same foe.
+ *
+ * NOTE: All aggro tags above fire regardless of hit/miss/parry, same as
+ * the base aggro calculation chain.
  *
  * ----------------------------------------------------------------------------
  * AGGRO TAGS FOR STATES:
@@ -2647,7 +2685,7 @@
  *  only (not summed from the battler's other sources). On its own this is nothing
  *  you couldn't do by just raising <stackMax:VAL> directly- its purpose is to ride
  *  along on a J-Extend overlay state. When another active state carries
- *  <extend:[STATE_ID]> or <extendStateType:TYPE> targeting this state, J-Extend
+ *  <extend:[STATE_ID]> or <extendType:TYPE> targeting this state, J-Extend
  *  merges the overlay's note (and thus its <thisStackMaxBoost:VAL> tag) into this
  *  state's resolved note before this tag is read- so a single overlay state (e.g.
  *  an equipment-granted passive) can raise the stack cap of one specific state, or
