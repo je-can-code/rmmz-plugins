@@ -1440,9 +1440,33 @@ class JABS_Engine
       // render battler invincible while processing defeat.
       battler.setInvincible();
 
+      // credit whoever/whatever actually landed the last hit, falling back to the active player
+      // only when nothing was ever recorded (e.g. environmental/scripted deaths).
+      const caster = this.resolveCasterFromLastHit(battler) ?? this.getPlayer1();
+
       // process defeat.
-      this.handleDefeatedTarget(battler, this.getPlayer1());
+      this.handleDefeatedTarget(battler, caster);
     }
+  }
+
+  /**
+   * Resolves the {@link JABS_Battler} that most recently dealt damage to the given target, using
+   * the target's own last-hit record rather than assuming the active player character.
+   * @param {JABS_Battler} target The battler to resolve a killer/hitter for.
+   * @returns {JABS_Battler|undefined} The resolved battler, or undefined if nothing is on record or
+   * the recorded battler is no longer resolvable (e.g. it has since been removed from the map).
+   */
+  resolveCasterFromLastHit(target)
+  {
+    // pull the last-hit record off the underlying battler.
+    const targetBattler = target.getBattler();
+    const lastHitSource = targetBattler.getLastHitSource();
+
+    // nothing has ever hit this battler; there is nothing to resolve.
+    if (!lastHitSource) return undefined;
+
+    // resolve the recorded uuid back to a live map battler.
+    return JABS_AiManager.getBattlerByUuid(lastHitSource.uuid);
   }
 
   /**
@@ -1948,6 +1972,9 @@ class JABS_Engine
 
     // toggle any <toggleOnExecute> states on the caster exactly once, at the moment of press.
     gameAction.applyToggleOnExecuteStates();
+
+    // force-execute any <onCastExecuteSkill> payload skills exactly once, at the moment of press.
+    gameAction.applyOnCastExecuteSkills(caster);
   }
 
   /**
@@ -3048,6 +3075,17 @@ class JABS_Engine
     // apply the action to the target.
     const gameAction = action.getAction();
     gameAction.apply(targetBattler);
+
+    // record this as the last thing that hit the target, provided it actually dealt damage- a miss
+    // or full parry should not overwrite an earlier, real hit.
+    const dealtDamage = result.hpDamage > 0 || result.mpDamage > 0 || result.tpDamage > 0;
+    if (dealtDamage)
+    {
+      const casterUuid = action.getCaster()
+        .getBattler()
+        .getUuid();
+      targetBattler.setLastHitSource('skill', casterUuid, gameAction.item().id);
+    }
 
     // if the action killed the target, snapshot the death context while the action is still live.
     if (targetBattler.isDead())

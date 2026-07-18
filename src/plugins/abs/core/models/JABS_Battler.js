@@ -6471,6 +6471,15 @@ class JABS_Battler
     // actually apply the slip effect.
     this.applySlipEffect(modifiedSlipAmount, index);
 
+    // record this as the last thing that hit the battler- a negative amount is damage; a positive
+    // amount is regen/healing and should not overwrite an earlier, real hit.
+    if (modifiedSlipAmount < 0)
+    {
+      const sourceUuid = jabsState.source.getUuid();
+      this.getBattler()
+        .setLastHitSource('state', sourceUuid, jabsState.stateId);
+    }
+
     // invert the sign so slip effects are displayed right.
     const displayAmount = -modifiedSlipAmount;
 

@@ -45,6 +45,15 @@ class JABS_Cooldown
     this.frames = 0;
 
     /**
+     * The full duration this cooldown was set to the last time {@link #setFrames} was called with a
+     * positive value- i.e. the skill's total cooldown, not however much of it remains right now.
+     * Stored alongside {@link frames} the same way {@link comboExpireFramesMax} stashes the original
+     * combo window size, so percentage-based cooldown modifiers have a stable total to compute against.
+     * @type {number}
+     */
+    this.maxFrames = 0;
+
+    /**
      * Whether or not the base cooldown is ready.
      * @type {boolean}
      */
@@ -110,6 +119,7 @@ class JABS_Cooldown
   {
     // default all the values.
     this.frames = 0;
+    this.maxFrames = 0;
     this.ready = false;
     this.comboFrames = 0;
     this.comboReady = false;
@@ -260,6 +270,11 @@ class JABS_Cooldown
     if (frames > 0)
     {
       this.setComboExpireFrames(0);
+
+      // stash the full duration this cooldown was just set to, so percentage-based cooldown
+      // modifiers (e.g. "reduce all active cooldowns by 10% of their total") have a stable total to
+      // compute against instead of only ever seeing however much time happens to remain right now.
+      this.maxFrames = frames;
     }
   }
 

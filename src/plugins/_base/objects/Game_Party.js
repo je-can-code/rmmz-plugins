@@ -164,7 +164,7 @@ Game_Party.prototype.allItemsQuantified = function()
   allItemsDistinct.forEach(baseItem =>
   {
     // get the number of items we have.
-    let count = this.numItems(baseItem) ?? 0;
+    let count = this.numItems(baseItem);
 
     // countdown while we still have some.
     while (count > 0)

@@ -31,9 +31,10 @@ class AutoExecuteSkillManager extends AutoRuleManager
    * rule during its own execution, the nested dispatch is silently skipped.
    * @param {Game_Actor|Game_Enemy} battler - The battler firing the skill.
    * @param {number} skillId - The database id of the skill to execute.
+   * @param {any[]} _tuple - The full authored tuple; unused here, this rule's whole payload is the id.
    * @returns {boolean} - True when forceMapAction was successfully invoked.
    */
-  static dispatch(battler, skillId)
+  static dispatch(battler, skillId, _tuple)
   {
     // read the configured maximum nesting depth from plugin metadata.
     const maxDepth = J.PASSIVE.EXT.CONDITIONAL.Metadata.autoExecuteSkillMaxDepth || 1;

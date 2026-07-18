@@ -183,6 +183,7 @@
  *  <onHitStripState:[STATE_ID,CHANCE]>
  *  <onCastRemoveState:[STATE_ID,CHANCE]>
  *  <onHitRemoveState:[STATE_ID,CHANCE]>
+ *  <onCastExecuteSkill:[SKILL_ID,CHANCE]>
  * Where STATE_ID is the id of the state to apply, strip, or remove.
  * Where CHANCE is the percent chance between 0 and 100 that it'll trigger.
  *
@@ -231,6 +232,15 @@
  *  <onHitRemoveState:[11,40]>
  * The caster has a 40% chance of fully removing state id 11 from the target when the
  * skill successfully hits that target.
+ *
+ *  <onCastExecuteSkill:[1026,100]>
+ *  <onCastExecuteSkill:[1027,50]>
+ * On cast, always force-execute skill id 1026, and separately roll a 50% chance to also
+ * force-execute skill id 1027. Fires once at press-time (same timing as onCastSelfState), through
+ * JABS forceMapAction — no MP/TP cost, no cooldown on the payload skills. Skill-scoped and
+ * repeatable: stack as many <onCastExecuteSkill> tags on one skill as you want, each rolls
+ * independently. A forced skill's own <onCastExecuteSkill> tag may chain one further hop before
+ * being cut off (depth-guarded against runaway loops).
  * ============================================================================
  * ON-HIT APPLY STATE (SKILL-SCOPED):
  * Have you ever wanted a specific skill to apply a state to its target with a
@@ -651,6 +661,26 @@ J.EXTEND.RegExp.OnCastStripState = /<onCastStripState:[ ]?(\[\d+,[ ]?\d+])>/i;
 * @type {RegExp}
 */
 J.EXTEND.RegExp.OnCastRemoveState = /<onCastRemoveState:[ ]?(\[\d+,[ ]?\d+])>/i;
+/**
+* The structure of an on-cast force-execute-skill tag. Fires once at press-time, same as the rest
+* of the on-cast family — not per target hit. Repeatable: a skill may carry several of these tags,
+* each rolled and dispatched independently, so one cast can chain into multiple follow-up skills.
+*
+* <pre>
+* Structure:
+*  <onCastExecuteSkill:[SKILL_ID, CHANCE]>
+*
+* Example:
+*  <onCastExecuteSkill:[1026, 100]>
+*  <onCastExecuteSkill:[1027, 50]>
+*
+* Translation:
+*  On cast, always force-execute skill id 1026, and separately roll a 50% chance to also
+*  force-execute skill id 1027.
+* </pre>
+* @type {RegExp}
+*/
+J.EXTEND.RegExp.OnCastExecuteSkill = /<onCastExecuteSkill:[ ]?(\[\d+,[ ]?\d+])>/gi;
 /**
 * The structure of a skill-scoped on-hit apply-state tag with optional duration and stack overrides.
 * Reads from the executing skill only ({@code this.item()}).
@@ -1666,6 +1696,47 @@ Game_Action.prototype.applyOnCastStripStates = function(target) {
 */
 Game_Action.prototype.applyOnCastRemoveStates = function(target) {
 	this.removeStates(target, this.onCastRemoveStates());
+};
+/**
+* Maximum nesting depth permitted for {@code <onCastExecuteSkill>} chains.
+* A forced skill's own tag is allowed to trigger one further hop before being cut off, guarding
+* against an authoring mistake (or a deliberately cyclic pair of skills) looping forever.
+* @type {number}
+*/
+var ON_CAST_EXECUTE_SKILL_MAX_DEPTH = 2;
+/**
+* Current nesting depth of in-flight {@code <onCastExecuteSkill>} dispatches.
+* @type {number}
+*/
+var onCastExecuteSkillDepth = 0;
+/**
+* Gets all skills that should be force-executed when casting this skill, alongside their
+* individual roll chances. Skill-scoped and repeatable — a skill may carry several
+* {@code <onCastExecuteSkill>} tags, each collected and rolled independently.
+* @returns {[number, number][]} Tuples of `[skillId, chance]`.
+*/
+Game_Action.prototype.onCastExecuteSkills = function() {
+	return RPGManager.getArraysFromNotesByRegex(this.item(), J.EXTEND.RegExp.OnCastExecuteSkill) ?? [];
+};
+/**
+* Force-executes every qualifying {@code <onCastExecuteSkill>} payload through JABS, exactly once
+* at the moment of press. Each tag rolls its own chance independently, so a single cast can chain
+* into several follow-up skills at once.
+* @param {JABS_Battler} caster The JABS battler executing this cast.
+*/
+Game_Action.prototype.applyOnCastExecuteSkills = function(caster) {
+	const payloads = this.onCastExecuteSkills();
+	if (payloads.length === 0) return;
+	if (onCastExecuteSkillDepth >= ON_CAST_EXECUTE_SKILL_MAX_DEPTH) return;
+	onCastExecuteSkillDepth += 1;
+	try {
+		payloads.forEach(([skillId, chance]) => {
+			if (!RPGManager.chanceIn100(chance)) return;
+			$jabsEngine.forceMapAction(caster, skillId, false);
+		});
+	} finally {
+		onCastExecuteSkillDepth -= 1;
+	}
 };
 /**
 * Gets all possible states that could be self-inflicted when casting this skill.

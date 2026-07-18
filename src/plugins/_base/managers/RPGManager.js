@@ -541,15 +541,6 @@ class RPGManager
     // get the note data from this skill.
     const lines = databaseData.note.split(/[\r\n]+/);
 
-    // if we have no matching notes, then short circuit.
-    if (!lines.length)
-    {
-      // return null or 0 depending on provided options.
-      return nullIfEmpty
-        ? null
-        : 0;
-    }
-
     // initialize the value.
     let val = null;
 
@@ -1219,9 +1210,6 @@ class RPGManager
   {
     // scan the object for matching on-chance data based on the given regex.
     const foundDatas = this.getArraysFromNotesByRegex(databaseData, structure, true);
-
-    // if we found no data, then don't bother.
-    if (!foundDatas) return [];
 
     // determine the key based on the regexp provided.
     const key = J.BASE.Helpers.getKeyFromRegexp(structure);

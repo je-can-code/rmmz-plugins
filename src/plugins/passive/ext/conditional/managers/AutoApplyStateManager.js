@@ -33,9 +33,10 @@ class AutoApplyStateManager extends AutoRuleManager
    * Pushes a real combat state onto the battler through the JABS addState path.
    * @param {Game_Actor|Game_Enemy} battler - The battler receiving the state.
    * @param {number} stateId - The database id of the state to apply.
+   * @param {any[]} _tuple - The full authored tuple; unused here, this rule's whole payload is the id.
    * @returns {boolean} - True when addState was called and the state was addable.
    */
-  static dispatch(battler, stateId)
+  static dispatch(battler, stateId, _tuple)
   {
     // passive-tracked states cannot be layered on as combat states.
     if (battler.isStateAddable(stateId) === false) return false;

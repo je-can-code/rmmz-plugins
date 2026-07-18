@@ -8048,7 +8048,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     {
       return Object.assign({
         stateId: 1,
-        source: { getAllNotes: () => [] },
+        source: { getAllNotes: () => [], getUuid: () => 'source-uuid' },
         sourceSkill: null,
       }, overrides);
     }
@@ -8098,7 +8098,9 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('scales a positive (healing) slip value by rec, but not a negative (damage) one', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 2, getUuid: () => 'uuid' });
+      jabsBattler.getBattler = () => ({
+        isDead: () => false, rec: 2, getUuid: () => 'uuid', setLastHitSource: vi.fn(),
+      });
       jabsBattler.stateSlipHp = () => 5;
       jabsBattler.stateSlipMp = () => -5;
       jabsBattler.stateSlipTp = () => 0;
@@ -8109,6 +8111,43 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       expect(jabsBattler.applySlipEffect).toHaveBeenCalledWith(10, 0);
       expect(jabsBattler.applySlipEffect).toHaveBeenCalledWith(-5, 1);
+    });
+
+    it('records the last-hit source on the battler when the slip amount is damage', () =>
+    {
+      const jabsBattler = buildBattler();
+      const battler = {
+        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(),
+      };
+      jabsBattler.getBattler = () => battler;
+      jabsBattler.stateSlipHp = () => -10;
+      jabsBattler.stateSlipMp = () => 0;
+      jabsBattler.stateSlipTp = () => 0;
+      jabsBattler.applySlipEffect = vi.fn();
+      jabsBattler.onSlipRegenTick = vi.fn();
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId = vi.fn(() => buildJabsState({ stateId: 9 }));
+
+      jabsBattler.processStateTick({ id: 9 });
+
+      expect(battler.setLastHitSource).toHaveBeenCalledWith('state', 'source-uuid', 9);
+    });
+
+    it('does not record a last-hit source when the slip amount is healing, not damage', () =>
+    {
+      const jabsBattler = buildBattler();
+      const battler = {
+        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(),
+      };
+      jabsBattler.getBattler = () => battler;
+      jabsBattler.stateSlipHp = () => 10;
+      jabsBattler.stateSlipMp = () => 0;
+      jabsBattler.stateSlipTp = () => 0;
+      jabsBattler.applySlipEffect = vi.fn();
+      jabsBattler.onSlipRegenTick = vi.fn();
+
+      jabsBattler.processStateTick({ id: 1 });
+
+      expect(battler.setLastHitSource).not.toHaveBeenCalled();
     });
 
     it('fires the slip-tick hook with the sign-normalized display amount and state id', () =>
@@ -8152,14 +8191,16 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('amplifies a damage slip value by the combined battler-wide and skill-scoped DoT amp rate', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 1, getUuid: () => 'uuid' });
+      jabsBattler.getBattler = () => ({
+        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(),
+      });
       jabsBattler.stateSlipHp = () => -10;
       jabsBattler.stateSlipMp = () => 0;
       jabsBattler.stateSlipTp = () => 0;
       jabsBattler.applySlipEffect = vi.fn();
       jabsBattler.onSlipRegenTick = vi.fn();
       globalThis.$jabsEngine.getJabsStateByUuidAndStateId = vi.fn(() => buildJabsState({
-        source: { getAllNotes: () => [ 'ring-of-melting' ] },
+        source: { getAllNotes: () => [ 'ring-of-melting' ], getUuid: () => 'source-uuid' },
         sourceSkill: 'poison-skill',
       }));
       RPGManager.getSumFromAllNotesByRegex.mockReturnValueOnce(100);
@@ -8174,7 +8215,9 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('does not consult the skill-scoped amp tag when no source skill is on record', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ isDead: () => false, rec: 1, getUuid: () => 'uuid' });
+      jabsBattler.getBattler = () => ({
+        isDead: () => false, rec: 1, getUuid: () => 'uuid', setLastHitSource: vi.fn(),
+      });
       jabsBattler.stateSlipHp = () => -10;
       jabsBattler.stateSlipMp = () => 0;
       jabsBattler.stateSlipTp = () => 0;

@@ -245,6 +245,27 @@ J.EXTEND.RegExp.OnCastStripState = /<onCastStripState:[ ]?(\[\d+,[ ]?\d+])>/i;
 J.EXTEND.RegExp.OnCastRemoveState = /<onCastRemoveState:[ ]?(\[\d+,[ ]?\d+])>/i;
 
 /**
+ * The structure of an on-cast force-execute-skill tag. Fires once at press-time, same as the rest
+ * of the on-cast family — not per target hit. Repeatable: a skill may carry several of these tags,
+ * each rolled and dispatched independently, so one cast can chain into multiple follow-up skills.
+ *
+ * <pre>
+ * Structure:
+ *  <onCastExecuteSkill:[SKILL_ID, CHANCE]>
+ *
+ * Example:
+ *  <onCastExecuteSkill:[1026, 100]>
+ *  <onCastExecuteSkill:[1027, 50]>
+ *
+ * Translation:
+ *  On cast, always force-execute skill id 1026, and separately roll a 50% chance to also
+ *  force-execute skill id 1027.
+ * </pre>
+ * @type {RegExp}
+ */
+J.EXTEND.RegExp.OnCastExecuteSkill = /<onCastExecuteSkill:[ ]?(\[\d+,[ ]?\d+])>/gi;
+
+/**
  * The structure of a skill-scoped on-hit apply-state tag with optional duration and stack overrides.
  * Reads from the executing skill only ({@code this.item()}).
  *

@@ -61,4 +61,7 @@ J.RESOURCES.RegExp.TpCostFormula = /<tp-cost:\[([+\-*/ ().\w]+)]>/gi;
 J.RESOURCES.RegExp.TpGainFlat = /<tp-gain:(\d+)>/i;
 J.RESOURCES.RegExp.TpGainPercent = /<tp-gain:(\d+)%>/i;
 J.RESOURCES.RegExp.TpGainFormula = /<tp-gain:\[([+\-*/ ().\w]+)]>/gi;
+
+J.RESOURCES.RegExp.StackCost = /<stackCost:[ ]?(\[\d+,[ ]?\d+])>/i;
+J.RESOURCES.RegExp.ItemCost = /<itemCost:[ ]?(\[\d+,[ ]?\d+])>/i;
 //endregion initialization

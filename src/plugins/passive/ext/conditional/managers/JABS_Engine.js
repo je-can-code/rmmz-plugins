@@ -1,6 +1,7 @@
 //region JABS_Engine
 import AutoApplyStateManager from './AutoApplyStateManager.js';
 import AutoExecuteSkillManager from './AutoExecuteSkillManager.js';
+import AutoModifyCooldownManager from './AutoModifyCooldownManager.js';
 import AutoInflictStateManager from './AutoInflictStateManager.js';
 
 /**
@@ -24,6 +25,7 @@ JABS_Engine.prototype.handleDefeatedEnemy = function(defeatedTarget, caster)
 
   AutoApplyStateManager.scheduleKillTriggers(casterBattler);
   AutoExecuteSkillManager.scheduleKillTriggers(casterBattler);
+  AutoModifyCooldownManager.scheduleKillTriggers(casterBattler);
 };
 
 /**
@@ -82,5 +84,16 @@ JABS_Engine.prototype.postExecuteSkillEffects = function(action, target)
 
   AutoApplyStateManager.scheduleDamageDealtTriggers(casterBattler);
   AutoExecuteSkillManager.scheduleDamageDealtTriggers(casterBattler);
+
+  // onWeaponHit is narrower than onDamageDealt — only the mainhand/offhand slot qualifies, so an
+  // arbitrary skill cast (e.g. a nuke hitting the whole map) never triggers a "weapon" follow-up.
+  const cooldownType = action.getCooldownType();
+  const isWeaponSlot = cooldownType === JABS_Button.Mainhand || cooldownType === JABS_Button.Offhand;
+
+  if (isWeaponSlot)
+  {
+    AutoApplyStateManager.scheduleWeaponHitTriggers(casterBattler);
+    AutoExecuteSkillManager.scheduleWeaponHitTriggers(casterBattler);
+  }
 };
 //endregion JABS_Engine

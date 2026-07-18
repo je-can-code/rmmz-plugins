@@ -150,6 +150,33 @@ describe('RPGManager', () =>
       expect(result).toBe(null);
     });
 
+    it('returns null when the note is parsable but nothing matches and nullIfEmpty is true', () =>
+    {
+      // Arrange- a non-empty note that has no matching tag reaches the post-scan null check
+      // rather than short-circuiting on the earlier #canParsedatabaseData guard.
+      const data = { note: 'no matching tags here' };
+      const re = /<id:(\w+)>/;
+
+      // Act
+      const result = RPGManager.getStringFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toBe(null);
+    });
+
+    it('returns String.empty when the note is parsable but nothing matches and nullIfEmpty is false', () =>
+    {
+      // Arrange- reaches the post-scan check (distinct from the earlier guard-level check).
+      const data = { note: 'no matching tags here' };
+      const re = /<id:(\w+)>/;
+
+      // Act
+      const result = RPGManager.getStringFromNoteByRegex(data, re, false);
+
+      // Assert
+      expect(result).toBe('');
+    });
+
     it('returns null for a null databaseData when nullIfEmpty is true', () =>
     {
       // Arrange
@@ -305,6 +332,45 @@ describe('RPGManager', () =>
       // Assert
       expect(result).toEqual([ 1, 2, 3 ]);
     });
+
+    it('returns Array.empty when the note fails the parsability guard and nullIfEmpty is false', () =>
+    {
+      // Arrange
+      const data = { note: '' };
+      const re = /<nums:(\[[^\]]+\])>/;
+
+      // Act
+      const result = RPGManager.getNumbersFromNoteByRegex(data, re, false);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it('returns null when the note fails the parsability guard and nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const data = { note: '' };
+      const re = /<nums:(\[[^\]]+\])>/;
+
+      // Act
+      const result = RPGManager.getNumbersFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('returns null when the note is parsable but nothing matches and nullIfEmpty is true', () =>
+    {
+      // Arrange- a non-empty note that has no matching tag reaches the post-scan empty check.
+      const data = { note: 'no matching tags here' };
+      const re = /<nums:(\[[^\]]+\])>/;
+
+      // Act
+      const result = RPGManager.getNumbersFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toBeNull();
+    });
   });
 
   describe('getResultFromNoteByRegex', () =>
@@ -401,6 +467,32 @@ describe('RPGManager', () =>
       expect(result).toBe(0);
       err.mockRestore();
     });
+
+    it('returns null when the note fails the parsability guard and nullIfEmpty is true', () =>
+    {
+      // Arrange- an empty note fails #canParsedatabaseData, short-circuiting before any scan.
+      const data = { note: '' };
+      const re = /<f:([^>]+)>/;
+
+      // Act
+      const result = RPGManager.getResultFromNoteByRegex(data, re, 0, null, true);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('returns null instead of 0 when nothing was found and nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const data = { note: 'no matching tags here' };
+      const re = /<f:([^>]+)>/;
+
+      // Act
+      const result = RPGManager.getResultFromNoteByRegex(data, re, 0, null, true);
+
+      // Assert
+      expect(result).toBeNull();
+    });
   });
 
   describe('getResultsFromAllNotesByRegex', () =>
@@ -419,6 +511,19 @@ describe('RPGManager', () =>
 
       // Assert
       expect(result).toBe(12);
+    });
+
+    it('returns null instead of 0 when nothing was found across any object and nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const re = /<f:([^>]+)>/;
+      const rows = [ { note: 'no tags' }, { note: 'still no tags' } ];
+
+      // Act
+      const result = RPGManager.getResultsFromAllNotesByRegex(rows, re, 0, null, true);
+
+      // Assert
+      expect(result).toBeNull();
     });
   });
 
@@ -520,6 +625,46 @@ describe('RPGManager', () =>
       // Assert
       expect(result).toEqual([ 10, 20 ]);
     });
+
+    it('skips the second per-element parse pass when tryParse is false', () =>
+    {
+      // Arrange- the capture is already parsed once unconditionally during the scan; tryParse
+      // only controls whether each element then gets re-parsed via a .map() pass.
+      const data = { note: '<arr:[10,20]>' };
+      const re = /<arr:(\[[^\]]+\])>/;
+
+      // Act
+      const result = RPGManager.getArrayFromNotesByRegex(data, re, false, false);
+
+      // Assert
+      expect(result).toEqual([ 10, 20 ]);
+    });
+
+    it('returns an empty array when nothing matches and nullIfEmpty is false', () =>
+    {
+      // Arrange
+      const data = { note: 'no matching tags here' };
+      const re = /<arr:(\[[^\]]+\])>/;
+
+      // Act
+      const result = RPGManager.getArrayFromNotesByRegex(data, re, true, false);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it('returns null when nothing matches and nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const data = { note: 'no matching tags here' };
+      const re = /<arr:(\[[^\]]+\])>/;
+
+      // Act
+      const result = RPGManager.getArrayFromNotesByRegex(data, re, true, true);
+
+      // Assert
+      expect(result).toBeNull();
+    });
   });
 
   describe('getArraysFromNotesByRegex', () =>
@@ -535,6 +680,58 @@ describe('RPGManager', () =>
 
       // Assert
       expect(result).toEqual([ [ 1 ], [ 2, 3 ] ]);
+    });
+
+    it('skips the per-element parse pass when tryParse is false', () =>
+    {
+      // Arrange
+      const data = { note: '<a:[1]>' };
+      const re = /<a:(\[[^\]]+\])>/;
+
+      // Act
+      const result = RPGManager.getArraysFromNotesByRegex(data, re, false, false);
+
+      // Assert- the capture group is still returned, just as a raw string rather than a parsed array.
+      expect(result).toEqual([ '[1]' ]);
+    });
+
+    it('returns an empty array when nothing matches and nullIfEmpty is false', () =>
+    {
+      // Arrange
+      const data = { note: 'no matching tags here' };
+      const re = /<a:(\[[^\]]+\])>/;
+
+      // Act
+      const result = RPGManager.getArraysFromNotesByRegex(data, re, true, false);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it('returns null when nothing matches and nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const data = { note: 'no matching tags here' };
+      const re = /<a:(\[[^\]]+\])>/;
+
+      // Act
+      const result = RPGManager.getArraysFromNotesByRegex(data, re, true, true);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('returns null when the note fails the parsability guard and nullIfEmpty is true', () =>
+    {
+      // Arrange- an empty note fails #canParsedatabaseData, short-circuiting before any scan.
+      const data = { note: '' };
+      const re = /<a:(\[[^\]]+\])>/;
+
+      // Act
+      const result = RPGManager.getArraysFromNotesByRegex(data, re, true, true);
+
+      // Assert
+      expect(result).toBeNull();
     });
   });
 
@@ -553,10 +750,23 @@ describe('RPGManager', () =>
       expect(result).toEqual([ [ 'hit', 'self', 'a' ] ]);
     });
 
-    it('returns null when nothing matches and nullIfEmpty is true', () =>
+    it('returns null when the note fails the parsability guard and nullIfEmpty is true', () =>
     {
-      // Arrange
+      // Arrange- an empty note fails #canParsedatabaseData, short-circuiting before any scan.
       const data = { note: '' };
+      const re = /<none:(\d)>/;
+
+      // Act
+      const result = RPGManager.getAllCapturesFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toBe(null);
+    });
+
+    it('returns null when the note is parsable but nothing matches and nullIfEmpty is true', () =>
+    {
+      // Arrange- a non-empty note that simply has no matching tag reaches the post-scan check.
+      const data = { note: 'no matching tags here' };
       const re = /<none:(\d)>/;
 
       // Act
@@ -583,6 +793,19 @@ describe('RPGManager', () =>
 
       // Assert
       expect(result).toEqual([ [ '1' ], [ '2' ] ]);
+    });
+
+    it('returns null instead of an empty array when nothing matches and nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const re = /<c:(\d)>/;
+      const rows = [ { note: 'no tags here' } ];
+
+      // Act
+      const result = RPGManager.getAllCapturesFromAllNotesByRegex(rows, re, true);
+
+      // Assert
+      expect(result).toBeNull();
     });
   });
 
@@ -616,6 +839,19 @@ describe('RPGManager', () =>
       // Assert
       expect(list).toEqual([]);
     });
+
+    it('defaults chance to 100 when the capture array omits it', () =>
+    {
+      // Arrange
+      const data = { note: '<jeOC:[7]>' };
+      const re = /<jeOC:(\[[0-9]+\])>/;
+
+      // Act
+      const list = RPGManager.getOnChanceEffectsFromDatabaseObject(data, re);
+
+      // Assert
+      expect(list[0].chance).toBe(100);
+    });
   });
 
   describe('getOnChanceEffectsFromDatabaseObjects', () =>
@@ -634,6 +870,81 @@ describe('RPGManager', () =>
 
       // Assert
       expect(list.map(e => e.skillId)).toEqual([ 1, 2 ]);
+    });
+  });
+
+  describe('fateOf100', () =>
+  {
+    it('always succeeds when the positive roller is very lucky, bypassing the roll', () =>
+    {
+      // Arrange
+      const roller = { isVeryLucky: () => true, isVeryCursed: () => false };
+
+      // Act
+      const result = RPGManager.fateOf100(roller, 1);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('always fails when the positive roller is very cursed, bypassing the roll', () =>
+    {
+      // Arrange
+      const roller = { isVeryLucky: () => false, isVeryCursed: () => true };
+
+      // Act
+      const result = RPGManager.fateOf100(roller, 100);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('rolls normally via chanceIn100 when neither fate-override flag is set', () =>
+    {
+      // Arrange
+      const roller = { isVeryLucky: () => false, isVeryCursed: () => false };
+
+      // Act
+      const result = RPGManager.fateOf100(roller, 100);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+  });
+
+  describe('countSuccessesIn100', () =>
+  {
+    it('returns 0 without rolling when percentOfSuccess is 0', () =>
+    {
+      // Arrange & Act
+      const result = RPGManager.countSuccessesIn100(0, 5);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('counts every attempted roll unconditionally, not stopping at the first success', () =>
+    {
+      // Arrange- 100% success means every one of the 3 attempts lands.
+      // Act
+      const result = RPGManager.countSuccessesIn100(100, 3);
+
+      // Assert
+      expect(result).toBe(3);
+    });
+
+    it('counts 0 successes when every roll misses the threshold', () =>
+    {
+      // Arrange
+      const prev = globalThis.Math.randomInt;
+      globalThis.Math.randomInt = () => 99;
+
+      // Act
+      const result = RPGManager.countSuccessesIn100(1, 3);
+
+      // Assert
+      expect(result).toBe(0);
+      globalThis.Math.randomInt = prev;
     });
   });
 
@@ -707,6 +1018,20 @@ describe('RPGManager', () =>
 
       // Assert
       expect(result).toBe(false);
+      globalThis.Math.randomInt = prev;
+    });
+
+    it('keeps success when every negative reroll also lands within the threshold', () =>
+    {
+      // Arrange- 100% success means both the positive roll and every negative reroll succeed.
+      const prev = globalThis.Math.randomInt;
+      globalThis.Math.randomInt = () => 0;
+
+      // Act
+      const result = RPGManager.chanceIn100(100, 1, 1);
+
+      // Assert
+      expect(result).toBe(true);
       globalThis.Math.randomInt = prev;
     });
   });

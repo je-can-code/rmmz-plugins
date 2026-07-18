@@ -104,6 +104,24 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'autoExecuteSkillRules', {
 });
 
 /**
+ * Parsed {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoModifyCooldowns} tuples from this row.<br/>
+ * Each tuple schedules a signed cooldown modification via {@link AutoModifyCooldownManager} against
+ * one or more of the bearer's own active skill-slot cooldowns.
+ * @type {any[][]}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'autoModifyCooldownRules', {
+  get()
+  {
+    // pull every auto-modify-cooldown scheduler tuple from notes on this battler row.
+    return RPGManager.getArraysFromNotesByRegex(
+      this,
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoModifyCooldowns,
+      true
+    );
+  },
+});
+
+/**
  * Parsed {@link J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoInflictState} tuples from this row.<br/>
  * Each tuple schedules a real state application via {@link AutoInflictStateManager} onto whichever
  * external battler this row's bearer just inflicted a state upon- not the bearer, and not nearby.

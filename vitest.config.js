@@ -30,6 +30,15 @@ export default defineConfig({
         '**/src/plugins/**/scenes/**',
         '**/src/plugins/**/sprites/**',
         '**/src/plugins/**/windows/**',
+        // pure JSDoc annotation blocks and trivial plugin-metadata re-exports- never contain
+        // executable logic, so 0% here is permanent and not a real coverage gap. initialization.js
+        // and pluginCommands.js are deliberately NOT excluded- they hold real, partially-tested
+        // plugin-parameter bootstrap logic.
+        '**/src/plugins/**/_metadata/_annotations.js',
+        '**/src/plugins/**/_metadata/meta.js',
+        // vite build config and the bare plugin entry re-export- build-time only, no runtime logic.
+        '**/src/plugins/**/vite.config.*.js',
+        '**/src/plugins/**/entry.js',
       ],
       all: true,
       clean: true,

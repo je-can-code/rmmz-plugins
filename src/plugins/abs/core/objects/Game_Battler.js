@@ -81,6 +81,16 @@ Game_Battler.prototype.initJabsMembers = function()
   this._j._abs._deathContext = null;
 
   /**
+   * A record of the most recent thing that dealt damage to this battler, regardless of whether it
+   * was fatal. Overwritten by every subsequent hit- this is a running "last hit", not a death-only
+   * snapshot like {@link #_deathContext}. Populated from two places: a direct skill/attack landing
+   * ({@link JABS_Engine#executeSkillEffects}) or a state DoT/HoT tick resolving
+   * ({@link JABS_Battler#processSlipEffect}).
+   * @type {{type: string, uuid: string, id: number}|null}
+   */
+  this._j._abs._lastDamageSource = null;
+
+  /**
    * The cached result of {@link #getVisionModifier}.
    * Null when the cache is cold; invalidated by {@link #onBattlerDataChange}.
    * @type {number|null}
@@ -626,6 +636,41 @@ Game_Battler.prototype.setDeathContext = function(context)
 Game_Battler.prototype.clearDeathContext = function()
 {
   this._j._abs._deathContext = null;
+};
+
+/**
+ * Records what just dealt damage to this battler, overwriting whatever was previously recorded.
+ * @param {string} type Either `"skill"` for a direct hit, or `"state"` for a DoT/HoT tick.
+ * @param {string} uuid The JABS uuid of the battler that caused this damage- the skill's caster for
+ * a direct hit, or the state's original applier for a tick.
+ * @param {number} id The skill id (for `"skill"`) or state id (for `"state"`) responsible.
+ */
+Game_Battler.prototype.setLastHitSource = function(type, uuid, id)
+{
+  this._j._abs._lastDamageSource = { type, uuid, id };
+};
+
+/**
+ * Gets the kind of thing that last dealt damage to this battler.
+ * @returns {string|null} Either `"skill"`, `"state"`, or `null` if nothing has hit this battler yet.
+ */
+Game_Battler.prototype.getLastHitType = function()
+{
+  return this._j._abs._lastDamageSource?.type ?? null;
+};
+
+/**
+ * Gets the identity of whatever last dealt damage to this battler. Pair with {@link #getLastHitType}
+ * to know how to interpret `id`- a skill id when the type is `"skill"`, or a state id when the type
+ * is `"state"`.
+ * @returns {{uuid: string, id: number}|null}
+ */
+Game_Battler.prototype.getLastHitSource = function()
+{
+  const record = this._j._abs._lastDamageSource;
+  return record
+    ? { uuid: record.uuid, id: record.id }
+    : null;
 };
 //endregion JABS battler properties
 

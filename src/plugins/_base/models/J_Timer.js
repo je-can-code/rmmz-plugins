@@ -56,12 +56,6 @@ class J_Timer
      * @type {number}
      */
     this._timer = 0;
-
-    /**
-     * The maximum count this timer can reach.
-     * @type {number}
-     */
-    this._timerMax = 0;
   }
 
   /**

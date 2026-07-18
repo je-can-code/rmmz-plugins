@@ -457,30 +457,3 @@ J.BASE.Helpers.maskString = function(stringToMask, maskingCharacter = "?")
     .replace(structure, maskingCharacter);
 };
 //endregion Helpers
-
-/**
- * A polyfill for {@link Array.prototype.at}.<br>
- * If this is not present in the available runtime, then this implementation
- * will be used instead.
- */
-if (![].at)
-{
-  /* eslint-disable */
-  Array.prototype.at = function(index)
-  {
-    index = Math.trunc(index) || 0;
-
-    if (index < 0)
-    {
-      index += this.length;
-    }
-
-    if (index < 0 || index >= this.length)
-    {
-      return undefined;
-    }
-
-    return this[index];
-  };
-  /* eslint-enable */
-}

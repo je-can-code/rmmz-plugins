@@ -384,6 +384,72 @@ Game_Action.prototype.applyOnCastRemoveStates = function(target)
 };
 
 /**
+ * Maximum nesting depth permitted for {@code <onCastExecuteSkill>} chains.
+ * A forced skill's own tag is allowed to trigger one further hop before being cut off, guarding
+ * against an authoring mistake (or a deliberately cyclic pair of skills) looping forever.
+ * @type {number}
+ */
+const ON_CAST_EXECUTE_SKILL_MAX_DEPTH = 2;
+
+/**
+ * Current nesting depth of in-flight {@code <onCastExecuteSkill>} dispatches.
+ * @type {number}
+ */
+let onCastExecuteSkillDepth = 0;
+
+/**
+ * Gets all skills that should be force-executed when casting this skill, alongside their
+ * individual roll chances. Skill-scoped and repeatable — a skill may carry several
+ * {@code <onCastExecuteSkill>} tags, each collected and rolled independently.
+ * @returns {[number, number][]} Tuples of `[skillId, chance]`.
+ */
+Game_Action.prototype.onCastExecuteSkills = function()
+{
+  // this tag is skill-scoped, so only the executing skill's own note is read.
+  return RPGManager.getArraysFromNotesByRegex(this.item(), J.EXTEND.RegExp.OnCastExecuteSkill) ?? [];
+};
+
+/**
+ * Force-executes every qualifying {@code <onCastExecuteSkill>} payload through JABS, exactly once
+ * at the moment of press. Each tag rolls its own chance independently, so a single cast can chain
+ * into several follow-up skills at once.
+ * @param {JABS_Battler} caster The JABS battler executing this cast.
+ */
+Game_Action.prototype.applyOnCastExecuteSkills = function(caster)
+{
+  // grab every authored payload tuple from the executing skill.
+  const payloads = this.onCastExecuteSkills();
+
+  // nothing to do if no tags were found.
+  if (payloads.length === 0) return;
+
+  // bail out once nesting gets too deep- a forced skill's own onCastExecuteSkill tag would
+  // otherwise be able to re-trigger this same chain indefinitely.
+  if (onCastExecuteSkillDepth >= ON_CAST_EXECUTE_SKILL_MAX_DEPTH) return;
+
+  // track this dispatch on the depth stack for the duration of the forced executions below.
+  onCastExecuteSkillDepth += 1;
+
+  try
+  {
+    // roll each payload independently and force-execute the skill on success.
+    payloads.forEach(([skillId, chance]) =>
+    {
+      // skip the roll entirely when it fails; nothing to execute this tag this cast.
+      if (!RPGManager.chanceIn100(chance)) return;
+
+      // force the payload skill onto the map as a real, independent action.
+      $jabsEngine.forceMapAction(caster, skillId, false);
+    });
+  }
+  finally
+  {
+    // always unwind the depth counter, even if a forced execution threw partway through.
+    onCastExecuteSkillDepth -= 1;
+  }
+};
+
+/**
  * Gets all possible states that could be self-inflicted when casting this skill.
  * @returns {JABS_OnChanceEffect[]}
  */

@@ -7,7 +7,7 @@ J.BASE.Aliased.Game_Timer.set('initialize', Game_Timer.prototype.initialize);
 Game_Timer.prototype.initialize = function()
 {
   // perform original logic.
-  J.BASE.Aliased.Game_Timer.get('start')
+  J.BASE.Aliased.Game_Timer.get('initialize')
     .call(this);
 
   /**

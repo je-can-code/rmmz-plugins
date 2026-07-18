@@ -893,6 +893,9 @@ state is added to this battler),
 `onAllyHeal` (a battler within proximity of this one is healed, any resource),
 `onKill` (this battler defeats an enemy),
 `onDamageDealt` (this battler lands damage on an opposing battler),
+`onWeaponHit` (narrower than `onDamageDealt` — only fires when the damage came from this battler's
+Mainhand/Offhand slot, i.e. the basic attack or its combo chain; a skill fired from any other slot
+does not qualify, so an AoE nuke won't also proc a "swing" follow-up on the whole map),
 `move` (PARAM = whole tiles moved per apply; requires J-Pixelistics),
 `stand` (PARAM = frames standing still on the map before applying),
 `enemiesNearby`/`alliesNearby`/`enemiesNearbyBelow`/`alliesNearbyBelow` — 4/5-value proximity
@@ -4932,6 +4935,34 @@ Always fully removes state 10 from the target when the skill is executed.
 
 ---
 
+### `<onCastExecuteSkill:[SKILL_ID, CHANCE]>`
+
+**Applies to:**
+Skills only — tag lives on the casting skill, not the payload
+
+**When:**
+this skill is cast — fires once at press-time, same timing as `<onCastSelfState>`, not per target hit
+
+**Effect:**
+rolls CHANCE (1–100); on success, force-executes SKILL_ID through JABS `forceMapAction` — no MP/TP
+cost, no cooldown consumed on the payload skill. The payload owns its own hitbox, targeting, and
+formula, entirely independent of the triggering skill's target. Skill-scoped and repeatable: stack
+as many `<onCastExecuteSkill>` tags on one skill as you want — each is collected and rolled
+independently, so a single cast can chain into several follow-up skills at once. A forced payload's
+own `<onCastExecuteSkill>` tag is allowed to chain one further hop before being depth-guarded off,
+so authoring a cyclic pair by accident can't loop forever.
+
+```
+<onCastExecuteSkill:[1026,100]>
+<onCastExecuteSkill:[1027,50]>
+```
+Magic-knight style: casting this skill always fires skill 1026, and separately rolls a 50% chance
+to also fire skill 1027.
+
+**See also:** `<autoExecuteSkill>` (condition-driven, not skill-scoped), `<onCastSelfState>`
+
+---
+
 ### `<thisApplyState:[STATE_ID, CHANCE, DURATION?, STACKS?]>`
 
 **Applies to:**
@@ -5604,6 +5635,55 @@ resource to the caster on use).
 <mp-gain:[a.level]>
 ```
 Restores MP equal to the caster's level every time this skill is used.
+
+---
+
+### `<stackCost:[STATE_ID, COUNT]>`
+
+**Applies to:**
+Skills only — tag lives on the skill, not the state; costs are inherent to the skill, not something
+a caster's states/equips should be able to inject
+
+**When:**
+the skill's cost is checked/paid — feeds directly into `canPaySkillCost`/`paySkillCost`, so it
+gates skill availability the same way insufficient MP does
+
+**Effect:**
+an alternate resource paid in JABS state stacks instead of HP/MP/TP. The battler must have at least
+COUNT stacks of STATE_ID to cast; on cast, COUNT stacks are consumed via `decrementStateStacks`.
+Only the last `<stackCost>` tag on a note takes effect if more than one is present. Requires J-ABS
+(state stacks are a JABS concept) — leave STATE_ID's own `<stackMax:VAL>` high or unset for an
+effectively uncapped charge pool.
+
+```
+<stackCost:[7, 3]>
+```
+Costs 3 stacks of state 7 to cast; refuses to fire below that.
+
+**See also:** `<stackMax:VAL>`, `<autoApplyState>` / `<autoInflictState>` (natural ways to gain stacks)
+
+---
+
+### `<itemCost:[ITEM_ID, COUNT]>`
+
+**Applies to:**
+Skills only — tag lives on the skill
+
+**When:**
+the skill's cost is checked/paid — same hook as `<stackCost>`
+
+**Effect:**
+an alternate resource paid out of the party's own inventory (`$dataItems` only — not weapons or
+armors). The party must hold at least COUNT of ITEM_ID to cast; on cast, COUNT are removed via
+`$gameParty.loseItem`. Only the last `<itemCost>` tag on a note takes effect if more than one is
+present.
+
+```
+<itemCost:[12, 2]>
+```
+Costs 2 of item 12 to cast; refuses to fire without them in stock.
+
+**See also:** `<stackCost>`
 
 ---
 

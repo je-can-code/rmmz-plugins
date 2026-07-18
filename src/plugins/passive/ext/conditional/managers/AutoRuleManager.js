@@ -30,15 +30,31 @@ class AutoRuleManager
   }
 
   /**
+   * Whether `tuple[0]` must be a strictly-positive integer to be considered valid.
+   *
+   * True for every subclass whose `tuple[0]` is a database id (state/skill ids are never 0 or
+   * negative). Override to false for a subclass whose `tuple[0]` is a signed value instead (e.g. a
+   * modification amount where negative/positive is meaningful direction, not an invalid id).
+   * @returns {boolean}
+   */
+  static get requiresPositiveId()
+  {
+    return true;
+  }
+
+  /**
    * The terminal action for one resolved rule.
    *
    * Called after all condition and cooldown gates pass. Subclasses implement
    * the actual effect — applying a state, firing a skill, etc.
    * @param {Game_Battler} _battler - The battler that owns the rule.
    * @param {number} _id - State id or skill id, depending on the subclass.
+   * @param {any[]} _tuple - The full authored tuple this dispatch came from, for subclasses whose
+   * payload needs more than just `id` (e.g. a modification amount plus a range/target selector
+   * living further down the tuple than the shared loop itself ever inspects).
    * @returns {boolean} - True when the effect was successfully dispatched.
    */
-  static dispatch(_battler, _id)
+  static dispatch(_battler, _id, _tuple)
   {
     // subclasses must implement the actual dispatch logic for their effect type.
     throw new Error(`${this.name} must implement static dispatch()`);
@@ -214,6 +230,25 @@ class AutoRuleManager
   }
 
   /**
+   * Fires {@code onWeaponHit} rules on the battler that just landed a mainhand/offhand attack.
+   *
+   * Narrower than {@code onDamageDealt} — only counts hits from the caster's own basic-attack or
+   * combo chain (whatever is bound to the Mainhand/Offhand slot), not damage from arbitrary skills.
+   * @param {Game_Actor|Game_Enemy} battler - The battler that landed the weapon hit.
+   */
+  static scheduleWeaponHitTriggers(battler)
+  {
+    // no ABS context means there is nothing to schedule.
+    if (!$jabsEngine || $jabsEngine.absEnabled === false) return;
+
+    // no battler means there is nobody whose rules could fire.
+    if (!battler) return;
+
+    // delegate to the main dispatch loop with the onWeaponHit condition kind.
+    this.tryDispatch(battler, 'onWeaponHit');
+  }
+
+  /**
    * Credits one whole tile of travel toward {@code move} rules on this battler.
    *
    * Called from {@link Game_CharacterBase#updatePixelStepping} after a Pixelistics tile step completes.
@@ -239,7 +274,7 @@ class AutoRuleManager
       const tilesPerDispatch = Number(tuple[2]);
 
       // skip malformed tuples with invalid ids.
-      if (Number.isNaN(id) || id <= 0) continue;
+      if (Number.isNaN(id) || (this.requiresPositiveId && id <= 0)) continue;
 
       // only move-condition rules accumulate tile credit through this path.
       if (kind !== 'move') continue;
@@ -264,7 +299,7 @@ class AutoRuleManager
       }
 
       // the threshold was reached — dispatch the effect for this rule.
-      this.dispatch(battler, id);
+      this.dispatch(battler, id, tuple);
 
       // reset the tile counter regardless of whether dispatch succeeded, to avoid stuck credit.
       battler.setAutoRuleTileCredit(ruleKey, 0);
@@ -321,7 +356,7 @@ class AutoRuleManager
       const kind = String(tuple[1]);
 
       // skip malformed tuples with invalid ids.
-      if (Number.isNaN(id) || id <= 0) continue;
+      if (Number.isNaN(id) || (this.requiresPositiveId && id <= 0)) continue;
 
       // skip tuples that do not match the requested condition kind.
       if (kind !== conditionKind) continue;
@@ -344,7 +379,7 @@ class AutoRuleManager
       if (Number.isNaN(param) || param < 0) continue;
 
       // attempt to dispatch the rule through the frame-cooldown gate.
-      this._tryDispatchRule(battler, source, tupleIndex, id, kind, param);
+      this._tryDispatchRule(battler, source, tupleIndex, id, kind, param, tuple);
     }
   }
 
@@ -443,7 +478,7 @@ class AutoRuleManager
     if (this.proximityGatePasses(nearbyCount, minCount, kind) === false) return;
 
     // the gate passed — attempt to dispatch through the frame-cooldown gate.
-    this._tryDispatchRule(battler, source, tupleIndex, id, kind, cooldownFrames);
+    this._tryDispatchRule(battler, source, tupleIndex, id, kind, cooldownFrames, tuple);
   }
 
   /**
@@ -499,8 +534,10 @@ class AutoRuleManager
    * @param {number} id - State id or skill id for this rule.
    * @param {string} condition - The condition kind string.
    * @param {number} cooldownFrames - Minimum frames that must elapse between dispatches for this key.
+   * @param {any[]} tuple - The full authored tuple, forwarded to the subclass dispatch for rules
+   * whose payload needs more than just `id`.
    */
-  static _tryDispatchRule(battler, source, tupleIndex, id, condition, cooldownFrames)
+  static _tryDispatchRule(battler, source, tupleIndex, id, condition, cooldownFrames, tuple)
   {
     // build the stable key used to track the last-dispatch frame for this rule on this battler.
     const ruleKey = this.buildRuleKey(source, tupleIndex, id, condition);
@@ -518,7 +555,7 @@ class AutoRuleManager
     if (lastFrame > 0 && elapsed < cooldownFrames) return;
 
     // attempt the terminal dispatch through the subclass implementation.
-    const dispatched = this.dispatch(battler, id);
+    const dispatched = this.dispatch(battler, id, tuple);
 
     // only stamp the cooldown when the dispatch actually succeeded.
     if (dispatched === true)

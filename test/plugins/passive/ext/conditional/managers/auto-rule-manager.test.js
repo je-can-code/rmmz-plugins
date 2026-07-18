@@ -54,6 +54,75 @@ describe('AutoRuleManager (direct src import)', () =>
     return { constructor: { name: 'RPG_Skill' }, id, fakeRules: tuples };
   }
 
+  describe('requiresPositiveId / tuple forwarding', () =>
+  {
+    it('defaults to requiring a positive id', () =>
+    {
+      // Arrange & Act & Assert
+      expect(AutoRuleManager.requiresPositiveId).toBe(true);
+    });
+
+    it('rejects a non-positive id by default, never reaching dispatch', () =>
+    {
+      // Arrange
+      const battler = makeBattler([ makeSource(1, [ [ -10, 'onKill', 0 ] ]) ]);
+
+      // Act
+      FakeAutoApplyManager.tryDispatch(battler, 'onKill');
+
+      // Assert
+      expect(battler.dispatched).toEqual([]);
+    });
+
+    it('forwards the full tuple to dispatch alongside id, not just id alone', () =>
+    {
+      // Arrange
+      const seen = [];
+      const FakeTupleCapturingManager = class extends AutoRuleManager
+      {
+        static get rulesProperty() { return 'fakeRules'; }
+
+        static dispatch(battler, id, tuple)
+        {
+          seen.push({ id, tuple });
+          return true;
+        }
+      };
+      const tuple = [ 3, 'onKill', 0, 'extra-payload' ];
+      const battler = makeBattler([ makeSource(1, [ tuple ]) ]);
+
+      // Act
+      FakeTupleCapturingManager.tryDispatch(battler, 'onKill');
+
+      // Assert
+      expect(seen).toEqual([ { id: 3, tuple } ]);
+    });
+
+    it('lets a subclass opt out of the positive-id requirement for a signed-value payload', () =>
+    {
+      // Arrange
+      const FakeSignedAmountManager = class extends AutoRuleManager
+      {
+        static get rulesProperty() { return 'fakeRules'; }
+
+        static get requiresPositiveId() { return false; }
+
+        static dispatch(battler, amount)
+        {
+          battler.dispatched.push(amount);
+          return true;
+        }
+      };
+      const battler = makeBattler([ makeSource(1, [ [ -10, 'onKill', 0 ] ]) ]);
+
+      // Act
+      FakeSignedAmountManager.tryDispatch(battler, 'onKill');
+
+      // Assert
+      expect(battler.dispatched).toEqual([ -10 ]);
+    });
+  });
+
   describe('isProximityKind', () =>
   {
     it('recognizes enemiesNearby and its Below counterpart', () =>

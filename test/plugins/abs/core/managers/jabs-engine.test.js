@@ -1579,18 +1579,65 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(battler.update).toHaveBeenCalledTimes(1);
     });
 
-    it('handles defeat when the battler qualifies as defeated after updating', () =>
+    it('handles defeat when the battler qualifies as defeated after updating, falling back to player1 with no last-hit record', () =>
     {
       const engine = new JABS_Engine();
       const player1 = { id: 'player1' };
       engine.setPlayer1(player1);
       engine.shouldHandleDefeatedTarget = () => true;
       engine.handleDefeatedTarget = vi.fn();
-      const battler = { update: vi.fn(), setInvincible: vi.fn() };
+      const battler = {
+        update: vi.fn(),
+        setInvincible: vi.fn(),
+        getBattler: () => ({ getLastHitSource: () => null }),
+      };
 
       engine.performAiBattlerUpdate(battler);
 
       expect(battler.setInvincible).toHaveBeenCalledTimes(1);
+      expect(engine.handleDefeatedTarget).toHaveBeenCalledWith(battler, player1);
+    });
+
+    it('handles defeat crediting whoever last hit the target when a last-hit record resolves', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const actualKiller = { id: 'ally1' };
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => actualKiller);
+
+      const engine = new JABS_Engine();
+      engine.setPlayer1({ id: 'player1' });
+      engine.shouldHandleDefeatedTarget = () => true;
+      engine.handleDefeatedTarget = vi.fn();
+      const battler = {
+        update: vi.fn(),
+        setInvincible: vi.fn(),
+        getBattler: () => ({ getLastHitSource: () => ({ uuid: 'ally1-uuid', id: 5 }) }),
+      };
+
+      engine.performAiBattlerUpdate(battler);
+
+      expect(JABS_AiManager.getBattlerByUuid).toHaveBeenCalledWith('ally1-uuid');
+      expect(engine.handleDefeatedTarget).toHaveBeenCalledWith(battler, actualKiller);
+    });
+
+    it('falls back to player1 when the recorded last-hit uuid no longer resolves to a live battler', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => undefined);
+
+      const engine = new JABS_Engine();
+      const player1 = { id: 'player1' };
+      engine.setPlayer1(player1);
+      engine.shouldHandleDefeatedTarget = () => true;
+      engine.handleDefeatedTarget = vi.fn();
+      const battler = {
+        update: vi.fn(),
+        setInvincible: vi.fn(),
+        getBattler: () => ({ getLastHitSource: () => ({ uuid: 'stale-uuid', id: 5 }) }),
+      };
+
+      engine.performAiBattlerUpdate(battler);
+
       expect(engine.handleDefeatedTarget).toHaveBeenCalledWith(battler, player1);
     });
 
@@ -2263,7 +2310,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
   describe('handleOnCastStateEffects', () =>
   {
-    it('applies all four on-cast state effect hooks against the underlying Game_Action', () =>
+    it('applies all five on-cast state effect hooks against the underlying Game_Action', () =>
     {
       const engine = new JABS_Engine();
       const gameAction = {
@@ -2271,6 +2318,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         applyOnCastSelfStatesIfAfflicted: vi.fn(),
         applyOnCastLoseStates: vi.fn(),
         applyToggleOnExecuteStates: vi.fn(),
+        applyOnCastExecuteSkills: vi.fn(),
       };
       const action = { getAction: () => gameAction };
 
@@ -2280,6 +2328,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(gameAction.applyOnCastSelfStatesIfAfflicted).toHaveBeenCalledTimes(1);
       expect(gameAction.applyOnCastLoseStates).toHaveBeenCalledTimes(1);
       expect(gameAction.applyToggleOnExecuteStates).toHaveBeenCalledTimes(1);
+      expect(gameAction.applyOnCastExecuteSkills).toHaveBeenCalledWith('caster');
     });
   });
 
@@ -3105,7 +3154,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
     function buildTargetBattler(result)
     {
-      return { result: () => result, isDead: () => false };
+      return { result: () => result, isDead: () => false, setLastHitSource: vi.fn() };
     }
 
     function buildTarget(overrides = {})
@@ -3157,6 +3206,37 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.executeSkillEffects(action, target);
 
       expect(action.getAction().apply).toHaveBeenCalledWith(targetBattler);
+    });
+
+    it('records the last-hit source on the target when the action dealt damage', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      const result = buildResult({ hpDamage: 10 });
+      const targetBattler = buildTargetBattler(result);
+      const target = buildTarget({ getBattler: () => targetBattler });
+      const gameAction = { apply: vi.fn(), item: () => ({ id: 42 }) };
+      const action = buildAction({ getAction: () => gameAction });
+
+      engine.executeSkillEffects(action, target);
+
+      expect(targetBattler.setLastHitSource).toHaveBeenCalledWith('skill', 'caster-uuid', 42);
+    });
+
+    it('does not record a last-hit source when the action dealt no damage (miss/parry)', () =>
+    {
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      const result = buildResult();
+      const targetBattler = buildTargetBattler(result);
+      const target = buildTarget({ getBattler: () => targetBattler });
+      const action = buildAction();
+
+      engine.executeSkillEffects(action, target);
+
+      expect(targetBattler.setLastHitSource).not.toHaveBeenCalled();
     });
 
     it('flags the result as guarded when the target is guarding', () =>

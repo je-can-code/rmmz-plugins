@@ -334,11 +334,6 @@ ColorManager.colorIndexFromHex = function(hexString)
 
   const targetRgb = ColorManager.parseHexStringToRgb(hexString);
 
-  if (targetRgb === null)
-  {
-    return null;
-  }
-
   let bestIndex = 0;
   let bestDist = Infinity;
 

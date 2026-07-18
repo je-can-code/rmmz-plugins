@@ -132,18 +132,30 @@ Game_Battler.prototype.canPaySkillCost = function(skill)
   const hpCost = this.skillHpCost(skill);
   if (hpCost > 0)
   {
-    // Allow sacrifice via notetag.
+    // Allow sacrifice via notetag- if allowed, the HP check is satisfied regardless of current HP.
     const allowSacrifice = RPGManager.checkForBooleanFromNoteByRegex(skill, J.RESOURCES.RegExp.HpCostLethal);
-    if (allowSacrifice)
+
+    // without sacrifice allowed, HP must stay above 0 after paying the cost.
+    if (allowSacrifice === false && this.hp <= hpCost)
     {
-      // Can drop to 0 or below.
-      return true;
+      return false;
     }
-    else
-    {
-      // Must stay above 1 HP.
-      return this.hp > hpCost;
-    }
+  }
+
+  // Check stack cost- an alternate resource paid in JABS state stacks instead of hp/mp/tp.
+  const [ stackStateId, stackCount ] = this.skillStackCost(skill);
+  if (stackCount > 0 && this.stackCount(stackStateId) < stackCount)
+  {
+    // not enough stacks banked on the required state to afford this cast.
+    return false;
+  }
+
+  // Check item cost- an alternate resource paid out of the party's own inventory.
+  const [ itemId, itemCount ] = this.skillItemCost(skill);
+  if (itemCount > 0 && $gameParty.numItems($dataItems.at(itemId)) < itemCount)
+  {
+    // not enough of the required item in stock to afford this cast.
+    return false;
   }
 
   return true;
@@ -165,6 +177,20 @@ Game_Battler.prototype.paySkillCost = function(skill)
   // pay the HP cost.
   const hpCost = this.skillHpCost(skill);
   this.paySkillHpCost(hpCost);
+
+  // pay the stack cost, if any- consumes stacks off the required state directly.
+  const [ stackStateId, stackCount ] = this.skillStackCost(skill);
+  if (stackCount > 0)
+  {
+    this.decrementStateStacks(stackStateId, stackCount);
+  }
+
+  // pay the item cost, if any- consumes stock straight out of the party's inventory.
+  const [ itemId, itemCount ] = this.skillItemCost(skill);
+  if (itemCount > 0)
+  {
+    $gameParty.loseItem($dataItems.at(itemId), itemCount, false);
+  }
 
   // apply any gains from the skill.
   const hpGain = ResourceCostManager.skillGainHp(this, skill);

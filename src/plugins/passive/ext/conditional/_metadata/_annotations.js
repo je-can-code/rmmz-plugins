@@ -27,6 +27,7 @@
  *  autoApplyState          — applies a real combat state on a timer or combat event
  *  autoApplyStateOnNearby  — same as autoApplyState, but aura-style onto nearby battlers instead of the bearer
  *  autoExecuteSkill        — executes a map skill on a timer or combat event
+ *  autoModifyCooldowns     — modifies one or more of the bearer's own active skill-slot cooldowns on a timer or combat event
  *  autoInflictState        — applies a real combat state onto whoever this battler just inflicted a state upon
  *  removeOnSkillExecution  — chance to strip a stack from this state when the bearer executes a map skill
  *  removeOnSkillResolution — chance to strip a stack from this state when the bearer's fired action expires
@@ -95,6 +96,8 @@
  *  onAllyHeal      — when a battler within proximity of THIS battler is healed (any resource)
  *  onKill          — when this battler defeats an enemy (JABS_Engine#handleDefeatedEnemy)
  *  onDamageDealt   — when this battler lands damage on an opposing battler (JABS_Engine#postExecuteSkillEffects)
+ *  onWeaponHit     — narrower onDamageDealt: only Mainhand/Offhand-slot hits qualify (basic attack
+ *    or its combo chain); skills fired from any other slot do not trigger this condition
  *  move            — PARAM = whole TILES per apply (Pixelistics updatePixelStepping; requires J-Pixelistics)
  *  stand           — PARAM = frames between applies while standing still on the map
  *  enemiesNearby / alliesNearby / enemiesNearbyBelow / alliesNearbyBelow — 4/5-value proximity
@@ -175,6 +178,55 @@
  *  <autoExecuteSkill:[1024, stand, 120]>
  *  <autoExecuteSkill:[1025, enemiesNearbyBelow, 1, 60, 1]>
  *    Casts skill 1025 every 60 frames while no enemy is within 1 tile.
+ *  <autoExecuteSkill:[1026, onWeaponHit, 0]>
+ *    Magic-knight style: every basic-attack (or combo) hit also fires skill 1026 on the target.
+ * ============================================================================
+ * AUTO-MODIFY COOLDOWNS TAG
+ *  <autoModifyCooldowns:[AMOUNT, CONDITION, THROTTLE_FRAMES, UNIT, RANGE?, TARGET_KEY?]>
+ *
+ * Directly modifies one or more of the bearer's own active skill-slot cooldowns- no skill or state
+ * is executed/applied, this tag mutates cooldown timers in place.
+ *
+ * Unlike its siblings, AMOUNT is a signed modification amount, not a database id: negative reduces
+ * a cooldown, positive increases it. THROTTLE_FRAMES is the same per-rule minimum-frames-between-
+ * dispatches gate every other tag in this family uses.
+ *
+ * UNIT (required):
+ *  percent — AMOUNT is a percentage of each targeted cooldown's own full/total duration (not
+ *            however much of it happens to remain), so a kill always refunds a consistent,
+ *            predictable chunk regardless of timing.
+ *  flat    — AMOUNT is a literal frame count, applied directly regardless of that skill's length.
+ *
+ * RANGE (optional, defaults to "all"):
+ *  single  — exactly one named slot; requires TARGET_KEY.
+ *  combat  — the four combat-skill slots only.
+ *  all     — mainhand, offhand, tool, dodge (mobility skills equip here), and all four combat
+ *            skills. Deliberately excludes GCD/usable-item slots.
+ *
+ * TARGET_KEY (required only when RANGE is "single"): an author-facing slot name — mainhand,
+ * offhand, tool, dodge, or skill1-skill4 (combatskill1-4 also accepted); raw JABS_Button keys pass
+ * through unchanged.
+ *
+ * Only slots that are both equipped and currently mid-cooldown (frames > 0) are touched- a slot
+ * that's already ready has nothing to modify.
+ *
+ * Built on the same condition framework as the rest of this family, but only the onKill pump is
+ * currently wired for this tag (see {@link AutoModifyCooldownManager}); other conditions parse
+ * correctly but will not yet fire until their pump call sites are wired.
+ *
+ * EXAMPLES:
+ *  <autoModifyCooldowns:[-10, onKill, 0, percent, all]>
+ *    On every kill, no throttle: -10% of full duration off every active mainhand/offhand/tool/
+ *    dodge/combat-skill cooldown.
+ *  <autoModifyCooldowns:[-60, onKill, 0, flat, all]>
+ *    Same trigger/range, but a flat 60-frame (1 second) refund regardless of each skill's own
+ *    total duration.
+ *  <autoModifyCooldowns:[-15, onKill, 0, percent, combat]>
+ *    Restricted to the four combat-skill slots only.
+ *  <autoModifyCooldowns:[-25, onKill, 0, percent, single, mainhand]>
+ *    Restricted to the mainhand slot only.
+ *  <autoModifyCooldowns:[-10, onKill, 0, percent]>
+ *    RANGE omitted- defaults to "all".
  * ============================================================================
  * AUTO-INFLICT STATE TAG
  *  <autoInflictState:[STATE_ID, CONDITION, COOLDOWN_FRAMES]>
@@ -246,6 +298,12 @@
  *    Taking even a single step immediately strips it and resets the stand timer.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Added autoModifyCooldowns, which directly modifies one or more of the bearer's own active
+ *    skill-slot cooldowns (percent-of-total or flat frames) on a condition- currently wired for
+ *    onKill only. Widened the shared dispatch contract so a subclass's dispatch() can see the full
+ *    authored tuple, not just the leading id, and added an opt-out (requiresPositiveId) from the
+ *    base class's positive-id validation for tags whose leading slot is a signed value instead.
  * - 1.0.0
  *    Initial release. Passive gates (passiveSourceRule, passiveStateRule,
  *    passiveStateCount) with map reconcile and combat timestamps (movement, hit,

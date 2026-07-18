@@ -10198,6 +10198,14 @@ var JABS_Cooldown = class {
 		*/
 		this.frames = 0;
 		/**
+		* The full duration this cooldown was set to the last time {@link #setFrames} was called with a
+		* positive value- i.e. the skill's total cooldown, not however much of it remains right now.
+		* Stored alongside {@link frames} the same way {@link comboExpireFramesMax} stashes the original
+		* combo window size, so percentage-based cooldown modifiers have a stable total to compute against.
+		* @type {number}
+		*/
+		this.maxFrames = 0;
+		/**
 		* Whether or not the base cooldown is ready.
 		* @type {boolean}
 		*/
@@ -10253,6 +10261,7 @@ var JABS_Cooldown = class {
 	*/
 	clearData() {
 		this.frames = 0;
+		this.maxFrames = 0;
 		this.ready = false;
 		this.comboFrames = 0;
 		this.comboReady = false;
@@ -10347,6 +10356,7 @@ var JABS_Cooldown = class {
 		this.handleIfBaseUnready();
 		if (frames > 0) {
 			this.setComboExpireFrames(0);
+			this.maxFrames = frames;
 		}
 	}
 	/**
@@ -15253,6 +15263,10 @@ var JABS_Battler = class JABS_Battler {
 		if (this.canProcessSlipEffect(slipAmount) === false) return;
 		const modifiedSlipAmount = this.calculateModifiedSlipAmount(slipAmount, jabsState);
 		this.applySlipEffect(modifiedSlipAmount, index);
+		if (modifiedSlipAmount < 0) {
+			const sourceUuid = jabsState.source.getUuid();
+			this.getBattler().setLastHitSource("state", sourceUuid, jabsState.stateId);
+		}
 		const displayAmount = -modifiedSlipAmount;
 		this.onSlipRegenTick(displayAmount, index, jabsState.stateId);
 	}
@@ -17835,8 +17849,22 @@ var JABS_Engine = class JABS_Engine {
 		battler.update();
 		if (this.shouldHandleDefeatedTarget(battler)) {
 			battler.setInvincible();
-			this.handleDefeatedTarget(battler, this.getPlayer1());
+			const caster = this.resolveCasterFromLastHit(battler) ?? this.getPlayer1();
+			this.handleDefeatedTarget(battler, caster);
 		}
+	}
+	/**
+	* Resolves the {@link JABS_Battler} that most recently dealt damage to the given target, using
+	* the target's own last-hit record rather than assuming the active player character.
+	* @param {JABS_Battler} target The battler to resolve a killer/hitter for.
+	* @returns {JABS_Battler|undefined} The resolved battler, or undefined if nothing is on record or
+	* the recorded battler is no longer resolvable (e.g. it has since been removed from the map).
+	*/
+	resolveCasterFromLastHit(target) {
+		const targetBattler = target.getBattler();
+		const lastHitSource = targetBattler.getLastHitSource();
+		if (!lastHitSource) return undefined;
+		return JABS_AiManager.getBattlerByUuid(lastHitSource.uuid);
 	}
 	/**
 	* Determines whether or not a battler should be handled as defeated.
@@ -18110,6 +18138,7 @@ var JABS_Engine = class JABS_Engine {
 		gameAction.applyOnCastSelfStatesIfAfflicted();
 		gameAction.applyOnCastLoseStates();
 		gameAction.applyToggleOnExecuteStates();
+		gameAction.applyOnCastExecuteSkills(caster);
 	}
 	/**
 	* Handles adding this action to the map if applicable.
@@ -18782,6 +18811,11 @@ var JABS_Engine = class JABS_Engine {
 		}
 		const gameAction = action.getAction();
 		gameAction.apply(targetBattler);
+		const dealtDamage = result.hpDamage > 0 || result.mpDamage > 0 || result.tpDamage > 0;
+		if (dealtDamage) {
+			const casterUuid = action.getCaster().getBattler().getUuid();
+			targetBattler.setLastHitSource("skill", casterUuid, gameAction.item().id);
+		}
 		if (targetBattler.isDead()) {
 			const elementIds = gameAction.getApplicableElements(targetBattler);
 			let hitType;
@@ -26675,6 +26709,15 @@ Game_Battler.prototype.initJabsMembers = function() {
 	*/
 	this._j._abs._deathContext = null;
 	/**
+	* A record of the most recent thing that dealt damage to this battler, regardless of whether it
+	* was fatal. Overwritten by every subsequent hit- this is a running "last hit", not a death-only
+	* snapshot like {@link #_deathContext}. Populated from two places: a direct skill/attack landing
+	* ({@link JABS_Engine#executeSkillEffects}) or a state DoT/HoT tick resolving
+	* ({@link JABS_Battler#processSlipEffect}).
+	* @type {{type: string, uuid: string, id: number}|null}
+	*/
+	this._j._abs._lastDamageSource = null;
+	/**
 	* The cached result of {@link #getVisionModifier}.
 	* Null when the cache is cold; invalidated by {@link #onBattlerDataChange}.
 	* @type {number|null}
@@ -27055,6 +27098,40 @@ Game_Battler.prototype.setDeathContext = function(context) {
 */
 Game_Battler.prototype.clearDeathContext = function() {
 	this._j._abs._deathContext = null;
+};
+/**
+* Records what just dealt damage to this battler, overwriting whatever was previously recorded.
+* @param {string} type Either `"skill"` for a direct hit, or `"state"` for a DoT/HoT tick.
+* @param {string} uuid The JABS uuid of the battler that caused this damage- the skill's caster for
+* a direct hit, or the state's original applier for a tick.
+* @param {number} id The skill id (for `"skill"`) or state id (for `"state"`) responsible.
+*/
+Game_Battler.prototype.setLastHitSource = function(type, uuid, id) {
+	this._j._abs._lastDamageSource = {
+		type,
+		uuid,
+		id
+	};
+};
+/**
+* Gets the kind of thing that last dealt damage to this battler.
+* @returns {string|null} Either `"skill"`, `"state"`, or `null` if nothing has hit this battler yet.
+*/
+Game_Battler.prototype.getLastHitType = function() {
+	return this._j._abs._lastDamageSource?.type ?? null;
+};
+/**
+* Gets the identity of whatever last dealt damage to this battler. Pair with {@link #getLastHitType}
+* to know how to interpret `id`- a skill id when the type is `"skill"`, or a state id when the type
+* is `"state"`.
+* @returns {{uuid: string, id: number}|null}
+*/
+Game_Battler.prototype.getLastHitSource = function() {
+	const record = this._j._abs._lastDamageSource;
+	return record ? {
+		uuid: record.uuid,
+		id: record.id
+	} : null;
 };
 /**
 * Gets the battler's skill slot manager directly.

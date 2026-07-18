@@ -86,6 +86,9 @@ export function installPassiveConditionalHostGlobals(sandbox = globalThis, plugi
     },
   };
 
+  // onWeaponHit gating in postExecuteSkillEffects reads these slot-key constants directly.
+  sandbox.JABS_Button = sandbox.JABS_Button || { Mainhand: 'Main', Offhand: 'Offhand' };
+
   // conditional aliases updatePixelStepping- seed a noop when J-Pixelistics is not loaded.
   sandbox.Game_CharacterBase.prototype.updatePixelStepping = function()
   {

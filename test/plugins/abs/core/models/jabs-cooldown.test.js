@@ -40,6 +40,7 @@ describe('JABS_Cooldown (direct src import)', () =>
 
       // Assert
       expect(cooldown.frames).toBe(0);
+      expect(cooldown.maxFrames).toBe(0);
       expect(cooldown.ready).toBe(false);
       expect(cooldown.comboFrames).toBe(0);
       expect(cooldown.comboReady).toBe(false);
@@ -202,6 +203,46 @@ describe('JABS_Cooldown (direct src import)', () =>
       cooldown.setFrames(0);
 
       expect(cooldown.comboMode).toBe('none');
+    });
+
+    it('stashes the full duration as maxFrames when set to a positive value', () =>
+    {
+      const cooldown = new JABS_Cooldown('key');
+
+      cooldown.setFrames(300);
+
+      expect(cooldown.maxFrames).toBe(300);
+    });
+
+    it('does not overwrite maxFrames when set to 0', () =>
+    {
+      const cooldown = new JABS_Cooldown('key');
+      cooldown.setFrames(300);
+
+      cooldown.setFrames(0);
+
+      expect(cooldown.maxFrames).toBe(300);
+    });
+
+    it('updates maxFrames again on a subsequent positive setFrames call', () =>
+    {
+      const cooldown = new JABS_Cooldown('key');
+      cooldown.setFrames(300);
+
+      cooldown.setFrames(150);
+
+      expect(cooldown.maxFrames).toBe(150);
+    });
+
+    it('leaves maxFrames untouched when only modBaseFrames is used, not setFrames', () =>
+    {
+      const cooldown = new JABS_Cooldown('key');
+      cooldown.setFrames(300);
+
+      cooldown.modBaseFrames(-30);
+
+      expect(cooldown.maxFrames).toBe(300);
+      expect(cooldown.frames).toBe(270);
     });
   });
 

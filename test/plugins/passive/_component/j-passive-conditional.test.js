@@ -1243,7 +1243,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       caster.isStateAddable = () => true;
       caster.addState = (stateId) => applied.push(stateId);
       const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
-      const action = { getCaster: () => buildJabsWrapper(caster, 0) };
+      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'CombatSkill1' };
       const target = buildJabsWrapper(targetBattler, 1);
       const engine = new globalThis.JABS_Engine();
 
@@ -1261,7 +1261,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
       caster.isStateAddable = () => true;
       caster.addState = vi.fn();
       const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
-      const action = { getCaster: () => buildJabsWrapper(caster, 0) };
+      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'CombatSkill1' };
       const target = buildJabsWrapper(targetBattler, 0);
       const engine = new globalThis.JABS_Engine();
 
@@ -1279,7 +1279,77 @@ describe('J-Passive-Conditional (direct src import)', () =>
       caster.isStateAddable = () => true;
       caster.addState = vi.fn();
       const targetBattler = { result: () => ({ hpDamage: 0, mpDamage: 0, tpDamage: 0 }) };
-      const action = { getCaster: () => buildJabsWrapper(caster, 0) };
+      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'CombatSkill1' };
+      const target = buildJabsWrapper(targetBattler, 1);
+      const engine = new globalThis.JABS_Engine();
+
+      // Act
+      engine.postExecuteSkillEffects(action, target);
+
+      // Assert
+      expect(caster.addState).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('onDamageDealt scheduler > onWeaponHit scheduler', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.Graphics.frameCount = 1000;
+      globalThis.$jabsEngine = { absEnabled: true };
+    });
+
+    function buildJabsWrapper(gameBattler, team)
+    {
+      return { getBattler: () => gameBattler, getTeam: () => team };
+    }
+
+    it('fires onWeaponHit when damage lands from the Mainhand slot', () =>
+    {
+      // Arrange
+      const caster = buildMomentumToolkitActor([ '<autoApplyState:[94, onWeaponHit, 0]>' ]);
+      const applied = [];
+      caster.isStateAddable = () => true;
+      caster.addState = (stateId) => applied.push(stateId);
+      const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
+      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'Main' };
+      const target = buildJabsWrapper(targetBattler, 1);
+      const engine = new globalThis.JABS_Engine();
+
+      // Act
+      engine.postExecuteSkillEffects(action, target);
+
+      // Assert
+      expect(applied).toEqual([ 94 ]);
+    });
+
+    it('fires onWeaponHit when damage lands from the Offhand slot', () =>
+    {
+      // Arrange
+      const caster = buildMomentumToolkitActor([ '<autoApplyState:[95, onWeaponHit, 0]>' ]);
+      const applied = [];
+      caster.isStateAddable = () => true;
+      caster.addState = (stateId) => applied.push(stateId);
+      const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
+      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'Offhand' };
+      const target = buildJabsWrapper(targetBattler, 1);
+      const engine = new globalThis.JABS_Engine();
+
+      // Act
+      engine.postExecuteSkillEffects(action, target);
+
+      // Assert
+      expect(applied).toEqual([ 95 ]);
+    });
+
+    it('does not fire onWeaponHit when damage lands from a non-weapon slot', () =>
+    {
+      // Arrange: an arbitrary skill (e.g. a nuke) should not proc a "weapon" follow-up.
+      const caster = buildMomentumToolkitActor([ '<autoApplyState:[96, onWeaponHit, 0]>' ]);
+      caster.isStateAddable = () => true;
+      caster.addState = vi.fn();
+      const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
+      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'CombatSkill1' };
       const target = buildJabsWrapper(targetBattler, 1);
       const engine = new globalThis.JABS_Engine();
 

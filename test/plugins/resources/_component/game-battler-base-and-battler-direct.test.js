@@ -81,6 +81,8 @@ describe('Game_BattlerBase / Game_Battler resource extensions (resources core, d
           TpGainFlat: {},
           TpGainPercent: {},
           TpGainFormula: {},
+          StackCost: {},
+          ItemCost: {},
         },
       },
     };
@@ -89,6 +91,7 @@ describe('Game_BattlerBase / Game_Battler resource extensions (resources core, d
       checkForBooleanFromNoteByRegex: vi.fn(() => false),
       getNumberFromNoteByRegex: vi.fn(() => 0),
       getResultFromNoteByRegex: vi.fn(() => 0),
+      getArrayFromNotesByRegex: vi.fn(() => []),
     };
 
     // the files under test — patch globalThis.Game_BattlerBase.prototype / Game_Battler.prototype directly.
@@ -102,6 +105,8 @@ describe('Game_BattlerBase / Game_Battler resource extensions (resources core, d
     delete globalThis.Game_Battler;
     delete globalThis.J;
     delete globalThis.RPGManager;
+    delete globalThis.$gameParty;
+    delete globalThis.$dataItems;
   });
 
   describe('Game_BattlerBase.prototype.hcrFactor / hcr', () =>
@@ -112,6 +117,59 @@ describe('Game_BattlerBase / Game_Battler resource extensions (resources core, d
 
       expect(battler.hcrFactor()).toBe(1.0);
       expect(battler.hcr).toBe(0);
+    });
+  });
+
+  describe('Game_BattlerBase.prototype.skillStackCost / skillItemCost', () =>
+  {
+    it('returns the sentinel [0, 0] tuple when no stackCost tag is present', () =>
+    {
+      // Arrange: the RPGManager mock defaults to returning [] for any regex lookup.
+      const battler = new globalThis.Game_BattlerBase();
+
+      // Act.
+      const result = battler.skillStackCost({});
+
+      // Assert.
+      expect(result).toEqual([ 0, 0 ]);
+    });
+
+    it('returns the parsed [stateId, count] tuple when a stackCost tag is present', () =>
+    {
+      // Arrange: simulate RPGManager finding a <stackCost:[7, 3]> tag on the skill.
+      globalThis.RPGManager.getArrayFromNotesByRegex.mockReturnValue([ 7, 3 ]);
+      const battler = new globalThis.Game_BattlerBase();
+
+      // Act.
+      const result = battler.skillStackCost({});
+
+      // Assert.
+      expect(result).toEqual([ 7, 3 ]);
+    });
+
+    it('returns the sentinel [0, 0] tuple when no itemCost tag is present', () =>
+    {
+      // Arrange: the RPGManager mock defaults to returning [] for any regex lookup.
+      const battler = new globalThis.Game_BattlerBase();
+
+      // Act.
+      const result = battler.skillItemCost({});
+
+      // Assert.
+      expect(result).toEqual([ 0, 0 ]);
+    });
+
+    it('returns the parsed [itemId, count] tuple when an itemCost tag is present', () =>
+    {
+      // Arrange: simulate RPGManager finding a <itemCost:[12, 2]> tag on the skill.
+      globalThis.RPGManager.getArrayFromNotesByRegex.mockReturnValue([ 12, 2 ]);
+      const battler = new globalThis.Game_BattlerBase();
+
+      // Act.
+      const result = battler.skillItemCost({});
+
+      // Assert.
+      expect(result).toEqual([ 12, 2 ]);
     });
   });
 
@@ -258,6 +316,90 @@ describe('Game_BattlerBase / Game_Battler resource extensions (resources core, d
 
       expect(battler.canPaySkillCost({})).toBe(true);
     });
+
+    it('still checks stack/item costs after an hp sacrifice is allowed, rather than short-circuiting', () =>
+    {
+      // Arrange: hp-cost-can-kill clears the hp gate, but stacks are insufficient to afford the cast.
+      const battler = new globalThis.Game_Battler();
+      battler.initResourcesMembers();
+      battler.skillHpCost = () => 999;
+      battler.hp = 1;
+      globalThis.RPGManager.checkForBooleanFromNoteByRegex.mockReturnValue(true);
+      battler.skillStackCost = () => [ 7, 3 ];
+      battler.stackCount = () => 1;
+
+      // Act.
+      const result = battler.canPaySkillCost({});
+
+      // Assert: the hp gate alone would have passed, but the stack gate still blocks it.
+      expect(result).toBe(false);
+    });
+
+    it('returns false when the battler has fewer stacks than the required stackCost', () =>
+    {
+      // Arrange.
+      const battler = new globalThis.Game_Battler();
+      battler.initResourcesMembers();
+      battler.skillHpCost = () => 0;
+      battler.skillStackCost = () => [ 7, 3 ];
+      battler.stackCount = () => 2;
+
+      // Act.
+      const result = battler.canPaySkillCost({});
+
+      // Assert.
+      expect(result).toBe(false);
+    });
+
+    it('returns true when the battler has at least as many stacks as the required stackCost', () =>
+    {
+      // Arrange.
+      const battler = new globalThis.Game_Battler();
+      battler.initResourcesMembers();
+      battler.skillHpCost = () => 0;
+      battler.skillStackCost = () => [ 7, 3 ];
+      battler.stackCount = () => 3;
+
+      // Act.
+      const result = battler.canPaySkillCost({});
+
+      // Assert.
+      expect(result).toBe(true);
+    });
+
+    it('returns false when the party has fewer of the required item than the itemCost', () =>
+    {
+      // Arrange.
+      const battler = new globalThis.Game_Battler();
+      battler.initResourcesMembers();
+      battler.skillHpCost = () => 0;
+      battler.skillItemCost = () => [ 12, 2 ];
+      globalThis.$dataItems = { at: id => ({ id }) };
+      globalThis.$gameParty = { numItems: () => 1 };
+
+      // Act.
+      const result = battler.canPaySkillCost({});
+
+      // Assert.
+      expect(result).toBe(false);
+    });
+
+    it('returns true when the party has at least as much of the required item as the itemCost', () =>
+    {
+      // Arrange.
+      const battler = new globalThis.Game_Battler();
+      battler.initResourcesMembers();
+      battler.skillHpCost = () => 0;
+      battler.skillItemCost = () => [ 12, 2 ];
+      globalThis.$dataItems = { at: id => ({ id }) };
+      globalThis.$gameParty = { numItems: () => 2 };
+
+      // Act.
+      const result = battler.canPaySkillCost({});
+
+      // Assert.
+      expect(result).toBe(true);
+    });
   });
 
   describe('Game_Battler.prototype.paySkillCost', () =>
@@ -283,6 +425,90 @@ describe('Game_BattlerBase / Game_Battler resource extensions (resources core, d
       expect(battler.gainHp.mock.calls[1][0]).toBe(0);
       expect(battler.gainMp).toHaveBeenCalledWith(0);
       expect(battler.gainTp).toHaveBeenCalledWith(0);
+    });
+
+    it('decrements state stacks when a stackCost is configured', () =>
+    {
+      // Arrange.
+      const battler = new globalThis.Game_Battler();
+      battler.initResourcesMembers();
+      battler.mhp = 1000;
+      battler.mmp = 500;
+      battler.mtp = 100;
+      battler.rec = 1;
+      battler.skill = id => ({ id });
+      battler.skillStackCost = () => [ 7, 3 ];
+      battler.decrementStateStacks = vi.fn();
+      const skill = { id: 1 };
+
+      // Act.
+      battler.paySkillCost(skill);
+
+      // Assert.
+      expect(battler.decrementStateStacks).toHaveBeenCalledWith(7, 3);
+    });
+
+    it('does not touch state stacks when no stackCost is configured', () =>
+    {
+      // Arrange.
+      const battler = new globalThis.Game_Battler();
+      battler.initResourcesMembers();
+      battler.mhp = 1000;
+      battler.mmp = 500;
+      battler.mtp = 100;
+      battler.rec = 1;
+      battler.skill = id => ({ id });
+      battler.decrementStateStacks = vi.fn();
+      const skill = { id: 1 };
+
+      // Act.
+      battler.paySkillCost(skill);
+
+      // Assert.
+      expect(battler.decrementStateStacks).not.toHaveBeenCalled();
+    });
+
+    it('loses items from the party when an itemCost is configured', () =>
+    {
+      // Arrange.
+      const battler = new globalThis.Game_Battler();
+      battler.initResourcesMembers();
+      battler.mhp = 1000;
+      battler.mmp = 500;
+      battler.mtp = 100;
+      battler.rec = 1;
+      battler.skill = id => ({ id });
+      battler.skillItemCost = () => [ 12, 2 ];
+      const itemRow = { id: 12 };
+      globalThis.$dataItems = { at: () => itemRow };
+      globalThis.$gameParty = { loseItem: vi.fn() };
+      const skill = { id: 1 };
+
+      // Act.
+      battler.paySkillCost(skill);
+
+      // Assert.
+      expect(globalThis.$gameParty.loseItem).toHaveBeenCalledWith(itemRow, 2, false);
+    });
+
+    it('does not touch the party inventory when no itemCost is configured', () =>
+    {
+      // Arrange.
+      const battler = new globalThis.Game_Battler();
+      battler.initResourcesMembers();
+      battler.mhp = 1000;
+      battler.mmp = 500;
+      battler.mtp = 100;
+      battler.rec = 1;
+      battler.skill = id => ({ id });
+      globalThis.$gameParty = { loseItem: vi.fn() };
+      const skill = { id: 1 };
+
+      // Act.
+      battler.paySkillCost(skill);
+
+      // Assert.
+      expect(globalThis.$gameParty.loseItem).not.toHaveBeenCalled();
     });
   });
 

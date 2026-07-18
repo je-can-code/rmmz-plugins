@@ -183,6 +183,7 @@
  *  <onHitStripState:[STATE_ID,CHANCE]>
  *  <onCastRemoveState:[STATE_ID,CHANCE]>
  *  <onHitRemoveState:[STATE_ID,CHANCE]>
+ *  <onCastExecuteSkill:[SKILL_ID,CHANCE]>
  * Where STATE_ID is the id of the state to apply, strip, or remove.
  * Where CHANCE is the percent chance between 0 and 100 that it'll trigger.
  *
@@ -231,6 +232,15 @@
  *  <onHitRemoveState:[11,40]>
  * The caster has a 40% chance of fully removing state id 11 from the target when the
  * skill successfully hits that target.
+ *
+ *  <onCastExecuteSkill:[1026,100]>
+ *  <onCastExecuteSkill:[1027,50]>
+ * On cast, always force-execute skill id 1026, and separately roll a 50% chance to also
+ * force-execute skill id 1027. Fires once at press-time (same timing as onCastSelfState), through
+ * JABS forceMapAction — no MP/TP cost, no cooldown on the payload skills. Skill-scoped and
+ * repeatable: stack as many <onCastExecuteSkill> tags on one skill as you want, each rolls
+ * independently. A forced skill's own <onCastExecuteSkill> tag may chain one further hop before
+ * being cut off (depth-guarded against runaway loops).
  * ============================================================================
  * ON-HIT APPLY STATE (SKILL-SCOPED):
  * Have you ever wanted a specific skill to apply a state to its target with a

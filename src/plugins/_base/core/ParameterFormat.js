@@ -45,6 +45,18 @@ class ParameterFormat
    * @type {string}
    */
   static MULTIPLIER_PERCENT = 'multiplierPercent';
+
+  /**
+   * Hundred-scale points display with no centering (HIT).
+   * @type {string}
+   */
+  static SCALED_POINTS = 'scaledPoints';
+
+  /**
+   * Hundred-scale points display centered around zero (GRD).
+   * @type {string}
+   */
+  static SCALED_OFFSET = 'scaledOffset';
 }
 
 export default ParameterFormat;

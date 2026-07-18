@@ -201,6 +201,41 @@ describe('JCache', () =>
       // Assert
       expect(cache.get(target, 'k', () => 'fresh')).toBe('fresh');
     });
+
+    it('returns false on a multi-dimension cache when an intermediate bucket in the prefix is missing', () =>
+    {
+      // Arrange- a battlerThenObject cache has 2 dimensions, so invalidate(battler, obj) walks
+      // through the first dimension before deleting out of the second; this battler was never
+      // populated, so the very first .get() in that walk comes back empty.
+      const cache = JCache.battlerThenObject({ name: 'test:invalidate-missing-intermediate' });
+      const neverCachedBattler = {};
+      const someObject = {};
+
+      // Act
+      const result = cache.invalidate(neverCachedBattler, someObject);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('walks through an existing intermediate bucket before deleting the final prefix element', () =>
+    {
+      // Arrange- a 3-dimension cache (no named factory exists for this, so constructed directly)
+      // forces the invalidate() walk loop to run more than once, exercising the "bucket exists,
+      // keep descending" branch as well as the "bucket missing, bail out" branch already covered above.
+      const cache = new JCache({ name: 'test:invalidate-multi-dim', dims: [ 'battler', 'object', 'object' ] });
+      const battler = {};
+      const objectOne = {};
+      const objectTwo = {};
+      cache.get(battler, objectOne, objectTwo, 'k', () => 'stale');
+
+      // Act
+      const result = cache.invalidate(battler, objectOne, objectTwo);
+
+      // Assert
+      expect(result).toBe(true);
+      expect(cache.get(battler, objectOne, objectTwo, 'k', () => 'fresh')).toBe('fresh');
+    });
   });
 
   describe('metrics', () =>

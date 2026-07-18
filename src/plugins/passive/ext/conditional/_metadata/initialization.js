@@ -154,6 +154,33 @@ J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyStateOnNearby = /<autoApplyStateOnNear
 J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoExecuteSkill = /<autoExecuteSkill:[ ]?(\[[^\]]+])>/gi;
 
 /**
+ * Captures {@code autoModifyCooldowns} bracket tuples from database notes.<br/>
+ * Parsed by {@link RPGManager.getArraysFromNotesByRegex} (Path 1: outer tag + inner bracket capture).<br/>
+ * Each match schedules a signed cooldown modification via {@link AutoModifyCooldownManager} against
+ * one or more of the rule bearer's own active skill-slot cooldowns.
+ * <p>
+ * Unlike its siblings, {@code tuple[0]} is a signed modification amount, not a database id- negative
+ * reduces, positive increases. Unit (percent of the cooldown's own full duration, or a flat frame
+ * count) and range (which skill slots) live past the slots the shared dispatch loop inspects.
+ * </p>
+ * <p>
+ * Author shape: {@code <autoModifyCooldowns:[amount, condition, throttleFrames, unit, range?, targetKey?]>}.
+ * After parsing, tuples look like:
+ * </p>
+ * <ul>
+ *   <li>{@code [-10, 'onKill', 0, 'percent', 'all']} — on every kill, -10% of full duration off
+ *   every active mainhand/offhand/tool/dodge/combat-skill cooldown</li>
+ *   <li>{@code [-60, 'onKill', 0, 'flat', 'all']} — same trigger/range, but a flat 60-frame refund
+ *   regardless of each skill's own total duration</li>
+ *   <li>{@code [-15, 'onKill', 0, 'percent', 'combat']} — restricted to the four combat-skill slots</li>
+ *   <li>{@code [-25, 'onKill', 0, 'percent', 'single', 'mainhand']} — restricted to one named slot</li>
+ *   <li>{@code [-10, 'onKill', 0, 'percent']} — range omitted, defaults to {@code 'all'}</li>
+ * </ul>
+ * @type {RegExp}
+ */
+J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoModifyCooldowns = /<autoModifyCooldowns:[ ]?(\[[^\]]+])>/gi;
+
+/**
  * Captures {@code autoInflictState} bracket tuples from database notes.<br/>
  * Parsed by {@link RPGManager.getArraysFromNotesByRegex} (Path 1: outer tag + inner bracket capture).<br/>
  * Each match schedules a real JABS state application via {@link AutoInflictStateManager} onto

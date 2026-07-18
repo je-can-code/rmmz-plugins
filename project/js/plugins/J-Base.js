@@ -878,9 +878,6 @@ var RPGManager = class RPGManager {
 		const safeFlags = structure.flags.replace("g", "").replace("y", "");
 		const scan = new RegExp(structure.source, safeFlags);
 		const lines = databaseData.note.split(/[\r\n]+/);
-		if (!lines.length) {
-			return nullIfEmpty ? null : 0;
-		}
 		let val = null;
 		lines.forEach((line) => {
 			const result = scan.exec(line);
@@ -1230,7 +1227,6 @@ var RPGManager = class RPGManager {
 	*/
 	static getOnChanceEffectsFromDatabaseObject(databaseData, structure) {
 		const foundDatas = this.getArraysFromNotesByRegex(databaseData, structure, true);
-		if (!foundDatas) return [];
 		const key = J.BASE.Helpers.getKeyFromRegexp(structure);
 		const mapper = (data) => {
 			const [skillId, chance, hitTypeString] = data;
@@ -1968,23 +1964,6 @@ J.BASE.Helpers.maskString = function(stringToMask, maskingCharacter = "?") {
 	const structure = /[0-9A-Za-z\-()[\]*!?'"=@,.]/gi;
 	return stringToMask.toString().replace(structure, maskingCharacter);
 };
-/**
-* A polyfill for {@link Array.prototype.at}.<br>
-* If this is not present in the available runtime, then this implementation
-* will be used instead.
-*/
-if (![].at) {
-	Array.prototype.at = function(index) {
-		index = Math.trunc(index) || 0;
-		if (index < 0) {
-			index += this.length;
-		}
-		if (index < 0 || index >= this.length) {
-			return undefined;
-		}
-		return this[index];
-	};
-}
 
 //#endregion
 //#region src/plugins/_base/core/SerializableRegistry.js
@@ -2069,6 +2048,16 @@ var ParameterFormat = class {
 	* @type {string}
 	*/
 	static MULTIPLIER_PERCENT = "multiplierPercent";
+	/**
+	* Hundred-scale points display with no centering (HIT).
+	* @type {string}
+	*/
+	static SCALED_POINTS = "scaledPoints";
+	/**
+	* Hundred-scale points display centered around zero (GRD).
+	* @type {string}
+	*/
+	static SCALED_OFFSET = "scaledOffset";
 };
 
 //#endregion
@@ -3322,11 +3311,6 @@ var J_Timer = class {
 		* @type {number}
 		*/
 		this._timer = 0;
-		/**
-		* The maximum count this timer can reach.
-		* @type {number}
-		*/
-		this._timerMax = 0;
 	}
 	/**
 	* Gets the key of this timer, if one was set.
@@ -4434,9 +4418,6 @@ ColorManager.colorIndexFromHex = function(hexString) {
 		return null;
 	}
 	const targetRgb = ColorManager.parseHexStringToRgb(hexString);
-	if (targetRgb === null) {
-		return null;
-	}
 	let bestIndex = 0;
 	let bestDist = Infinity;
 	for (let i = 0; i < 32; i++) {
@@ -9383,7 +9364,7 @@ Game_Party.prototype.allItemsQuantified = function() {
 	const allItemsDistinct = this.allItems();
 	const allItemsRepeated = [];
 	allItemsDistinct.forEach((baseItem) => {
-		let count = this.numItems(baseItem) ?? 0;
+		let count = this.numItems(baseItem);
 		while (count > 0) {
 			allItemsRepeated.push(baseItem);
 			count--;
@@ -9494,7 +9475,7 @@ Game_Temp.prototype.initMembers = function() {};
 */
 J.BASE.Aliased.Game_Timer.set("initialize", Game_Timer.prototype.initialize);
 Game_Timer.prototype.initialize = function() {
-	J.BASE.Aliased.Game_Timer.get("start").call(this);
+	J.BASE.Aliased.Game_Timer.get("initialize").call(this);
 	/**
 	* Also initialize the duration of the timer.
 	* @type {number}

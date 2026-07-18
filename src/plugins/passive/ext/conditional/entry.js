@@ -9,6 +9,7 @@ import './managers/AutoRuleManager.js';
 import './managers/AutoApplyStateManager.js';
 import './managers/AutoApplyStateOnNearbyManager.js';
 import './managers/AutoExecuteSkillManager.js';
+import './managers/AutoModifyCooldownManager.js';
 import './managers/AutoInflictStateManager.js';
 import './managers/SkillExecutionStateRemovalManager.js';
 import './managers/SkillResolutionStateRemovalManager.js';
