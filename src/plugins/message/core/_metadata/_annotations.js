@@ -44,10 +44,15 @@
  *  From mine other plugins:
  *  \sdp[SDP_KEY]
  *  \quest[QUEST_KEY]
+ *  \param[PARAM_KEY]
  *
  * Where ID is the id of the entry in the database.
  * Where SDP_KEY is the key of the panel.
  * Where QUEST_KEY is the key of the quest.
+ * Where PARAM_KEY is a registered J-Base ParameterRegistry key (e.g. "atk", "mcr", "hcr").
+ * An unrecognized PARAM_KEY renders as an unmistakable "!!! UNKNOWN PARAM !!!" in red with a
+ * question-mark icon instead of failing silently- this is always an authoring mistake, never a
+ * legitimate zero/empty result.
  *
  * NEW TEXT CODES EXAMPLES:
  *  \Weapon[4]
@@ -59,6 +64,15 @@
  * The text of "\Skill[101]" will be replaced with:
  * - the icon of the skill matching id 101 in the database.
  * - the name of the skill matching id 101 in the database.
+ *
+ *  \param[atk]
+ * The text of "\param[atk]" will be replaced with:
+ * - the icon of the "atk" parameter from the ParameterRegistry.
+ * - the label of the "atk" parameter from the ParameterRegistry.
+ *
+ *  \param[typo]
+ * An unregistered key like "typo" will be replaced with a bright red
+ * "!!! UNKNOWN PARAM !!!" and a question-mark icon instead of doing nothing.
  *
  * ============================================================================
  * NEW TEXT STYLES:

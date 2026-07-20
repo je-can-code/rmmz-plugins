@@ -337,5 +337,112 @@ describe('J-ABS map state duration (direct src import)', () =>
       expect(jabsState.duration).toBe(200);
     });
   });
+
+  describe('Game_Battler.addJabsState with JABS_StateOverrides', () =>
+  {
+    /**
+     * Builds a minimal overrides stand-in; only duration/stacks matter here.
+     * @param {number|null} duration
+     * @param {number|null} stacks
+     * @returns {{duration: number|null, stacks: number|null}}
+     */
+    function buildOverrides(duration = null, stacks = null)
+    {
+      return { duration, stacks };
+    }
+
+    it('a -1 override duration forces eternal despite a finite stateDuration tag', () =>
+    {
+      // Arrange
+      registerStateRow(30, '<stateDuration:120>', {
+        removeByWalking: false,
+        stepsToRemove: 120,
+      });
+      const battler = buildGameBattler('test-uuid-override-eternal');
+
+      // Act
+      battler.addJabsState(30, battler, buildOverrides(-1));
+
+      // Assert
+      const [ [ , jabsState ] ] = globalThis.$jabsEngine.addOrUpdateStateByUuid.mock.calls;
+      expect(jabsState.duration).toBe(-1);
+    });
+
+    it('a positive override duration forces a finite duration despite an indefiniteState tag', () =>
+    {
+      // Arrange
+      registerStateRow(31, '<indefiniteState>\n<stateDuration:999>');
+      const battler = buildGameBattler('test-uuid-override-finite');
+
+      // Act
+      battler.addJabsState(31, battler, buildOverrides(240));
+
+      // Assert
+      const [ [ , jabsState ] ] = globalThis.$jabsEngine.addOrUpdateStateByUuid.mock.calls;
+      expect(jabsState.duration).toBe(240);
+    });
+
+    it('a 0 override duration is treated as "no override" and defers to the state\'s own finite tag', () =>
+    {
+      // Arrange
+      registerStateRow(32, '<stateDuration:150>', {
+        removeByWalking: false,
+        stepsToRemove: 150,
+      });
+      const battler = buildGameBattler('test-uuid-override-zero-finite');
+
+      // Act
+      battler.addJabsState(32, battler, buildOverrides(0));
+
+      // Assert
+      const [ [ , jabsState ] ] = globalThis.$jabsEngine.addOrUpdateStateByUuid.mock.calls;
+      expect(jabsState.duration).toBe(150);
+    });
+
+    it('a 0 override duration is treated as "no override" and defers to the state\'s own indefiniteState tag', () =>
+    {
+      // Arrange
+      registerStateRow(33, '<indefiniteState>\n<stateDuration:999>');
+      const battler = buildGameBattler('test-uuid-override-zero-indefinite');
+
+      // Act
+      battler.addJabsState(33, battler, buildOverrides(0));
+
+      // Assert
+      const [ [ , jabsState ] ] = globalThis.$jabsEngine.addOrUpdateStateByUuid.mock.calls;
+      expect(jabsState.duration).toBe(-1);
+    });
+
+    it('a positive override duration still layers the attacker\'s state-scoped duration boost on top', () =>
+    {
+      // Arrange
+      registerStateRow(34, '<indefiniteState>\n<thisStateDurationPerc:100>');
+      const battler = buildGameBattler('test-uuid-override-boost');
+
+      // Act
+      battler.addJabsState(34, battler, buildOverrides(100));
+
+      // Assert
+      const [ [ , jabsState ] ] = globalThis.$jabsEngine.addOrUpdateStateByUuid.mock.calls;
+      expect(jabsState.duration).toBe(200);
+    });
+
+    it('an override stacks value wins over the state\'s own jabsStateStacksApplied default', () =>
+    {
+      // Arrange
+      registerStateRow(35, '<stateDuration:100>', {
+        removeByWalking: false,
+        stepsToRemove: 100,
+      });
+      const battler = buildGameBattler('test-uuid-override-stacks');
+
+      // Act
+      battler.addJabsState(35, battler, buildOverrides(0, 5));
+
+      // Assert
+      const [ [ , jabsState ] ] = globalThis.$jabsEngine.addOrUpdateStateByUuid.mock.calls;
+      expect(jabsState.stackCount).toBe(5);
+    });
+  });
 });
 //endregion plugins/abs/core/_component/jabs-state-map-duration.test.js

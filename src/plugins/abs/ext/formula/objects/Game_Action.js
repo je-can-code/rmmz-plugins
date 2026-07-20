@@ -462,7 +462,9 @@ Game_Action.prototype.generateFormulaActionLogIfAvailable = function(recipient, 
   const isHeal = signed < 0;
 
   // heals can also be critical; use the recipient's current action result flag if present.
-  const recipientResult = recipient.result();
+  const recipientResult = recipient
+    ? recipient.result()
+    : null;
   const wasCrit = recipientResult ? recipientResult.critical === true : false;
 
   // build and enqueue the action log entry using the standard execution line.

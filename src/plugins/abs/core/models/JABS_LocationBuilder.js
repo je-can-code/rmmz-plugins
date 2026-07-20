@@ -113,7 +113,7 @@ class JABS_LocationBuilder
       case J.ABS.Directions.DOWN:
         return this.facingUp();
       case J.ABS.Directions.LOWERRIGHT:
-        return this.facingUpperLeft;
+        return this.facingUpperLeft();
       case J.ABS.Directions.LEFT:
         return this.facingRight();
       case J.ABS.Directions.RIGHT:

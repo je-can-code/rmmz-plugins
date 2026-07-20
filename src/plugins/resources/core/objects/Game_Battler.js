@@ -52,10 +52,12 @@ Object.defineProperty(Game_Battler.prototype, 'hcr', {
 /**
  * Gets the hp cost reduction factor for this battler.
  * This is the normalized fractional amount used in the math for hp cost reduction.
+ * Floored at zero — a negative factor would let ResourceManager's hp cost calculations go
+ * negative, which would refund hp on cast instead of just reducing the cost to free.
  */
 Game_Battler.prototype.hcrFactor = function()
 {
-  const hrcFactor = this._j._hcr / 100;
+  const hrcFactor = Math.max(0, this._j._hcr / 100);
   return hrcFactor;
 };
 

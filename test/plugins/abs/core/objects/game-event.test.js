@@ -241,6 +241,16 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       expect(event.event()).toEqual(actionData);
       expect(globalThis.$jabsEngine.event).toHaveBeenCalledWith('action-uuid');
     });
+
+    it('falls through to the original event data for a non-action event', () =>
+    {
+      const event = buildEvent({ isJabsAction: () => false });
+
+      const result = event.event();
+
+      expect(result).toBeUndefined();
+      expect(globalThis.$jabsEngine.event).not.toHaveBeenCalled();
+    });
   });
 
   describe('findProperPageIndex()', () =>
@@ -277,6 +287,17 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       event.refresh();
 
       expect(jabsRefreshSpy).toHaveBeenCalled();
+    });
+
+    it('falls through to the original refresh logic when JABS is disabled', () =>
+    {
+      globalThis.$jabsEngine.absEnabled = false;
+      const event = buildEvent();
+      const jabsRefreshSpy = vi.spyOn(event, 'jabsEventRefresh');
+
+      event.refresh();
+
+      expect(jabsRefreshSpy).not.toHaveBeenCalled();
     });
 
     it('does not refresh loot events', () =>
@@ -416,12 +437,10 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
 
       event.parseEnemyComments();
 
-      // getTeamIdOverrides() never returns null (its own local default is 1, not null), so the
-      // enemy database's teamId() is actually unreachable via the `?? enemyBattler.teamId()` fallback
-      // unless a future change makes the override genuinely optional- documenting real behavior here.
       const built = event.getBattlerCoreData();
       expect(built.battlerId).toEqual(5);
-      expect(built.teamId).toEqual(1);
+      expect(built.teamId).toEqual(9);
+      expect(built.battlerAi).toEqual('default-ai');
       expect(built.sightRange).toEqual(5);
     });
 
@@ -463,13 +482,28 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
 
       expect(event.getBattlerCoreData().canIdle).toEqual(true);
     });
+
+    it('honors explicit showHpBar and showName overrides even while inanimate', () =>
+    {
+      const event = buildEvent({
+        getValidCommentCommands: () => buildCommentCommands([ 'enemyId:5', 'inanimate', 'showHpBar', 'showName' ]),
+      });
+
+      event.parseEnemyComments();
+
+      const built = event.getBattlerCoreData();
+      expect(built.showHpBar).toEqual(true);
+      expect(built.showBattlerName).toEqual(true);
+      // canIdle has no explicit override here, so the inanimate default still suppresses it.
+      expect(built.canIdle).toEqual(false);
+    });
   });
   //endregion parseEnemyComments / canParseEnemyComments
 
   //region numeric overrides
   describe.each([
     [ 'getBattlerIdOverrides', 'enemyId:5', 5, 0 ],
-    [ 'getTeamIdOverrides', 'teamId:5', 5, 1 ],
+    [ 'getTeamIdOverrides', 'teamId:5', 5, null ],
     [ 'getSightRangeOverrides', 'sight:5', 5, null ],
     [ 'getAlertedSightBoostOverrides', 'alertedSightBoost:5', 5, null ],
     [ 'getPursuitRangeOverrides', 'pursuit:5', 5, null ],
@@ -571,13 +605,14 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
   //region getBattlerAiOverrides
   describe('getBattlerAiOverrides()', () =>
   {
-    it('defaults every trait to false when no comment matches', () =>
+    it('returns null when no ai trait comment matches, so the caller falls back to the database', () =>
     {
       const event = buildEvent({ getValidCommentCommands: () => [] });
 
-      event.getBattlerAiOverrides();
+      const result = event.getBattlerAiOverrides();
 
-      expect(JABS_EnemyAI_ctor).toHaveBeenCalledWith(false, false, false, false, false, false, false, false);
+      expect(result).toBeNull();
+      expect(JABS_EnemyAI_ctor).not.toHaveBeenCalled();
     });
 
     it('flags every trait found across the comment list', () =>
@@ -614,6 +649,19 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       event.getBattlerRoleOverrides();
 
       expect(JABS_BattlerRole_ctor).toHaveBeenCalledWith(false, false, true, true, false, false);
+    });
+
+    it('recognizes the remaining aiRole tags: leader, follower, solo, and sentinel', () =>
+    {
+      const event = buildEvent({
+        getValidCommentCommands: () => buildCommentCommands([
+          'aiRoleLeader', 'aiRoleFollower', 'aiRoleSolo', 'aiRoleSentinel',
+        ]),
+      });
+
+      event.getBattlerRoleOverrides();
+
+      expect(JABS_BattlerRole_ctor).toHaveBeenCalledWith(true, true, false, false, true, true);
     });
 
     it('honors the legacy aiTrait:leader/follower aliases', () =>

@@ -223,6 +223,27 @@ describe('JABS_Action (direct src import)', () =>
       expect(action.getCooldownType()).toBe('special');
     });
 
+    it('setCooldownType overwrites the cooldown key', () =>
+    {
+      // Arrange
+      const action = buildAction({ cooldownKey: 'special' });
+
+      // Act
+      action.setCooldownType('offhand');
+
+      // Assert
+      expect(action.getCooldownType()).toBe('offhand');
+    });
+
+    it('getCastAnimation reads the tagged cast animation from the base skill', () =>
+    {
+      // Arrange & Act
+      const action = buildAction({ skill: buildSkill({ jabsCastAnimation: 12 }) });
+
+      // Assert
+      expect(action.getCastAnimation()).toBe(12);
+    });
+
     it('marks the action as a retaliation when flagged', () =>
     {
       // Arrange & Act
@@ -815,6 +836,15 @@ describe('JABS_Action (direct src import)', () =>
       expect(action.getSelfAnimationId()).toBe(5);
     });
 
+    it('defaults self animation id to 0 when the skill has no tag at all (untagged, not just falsy)', () =>
+    {
+      // Arrange & Act
+      const action = buildAction({ skill: buildSkill({ jabsSelfAnimationId: null }) });
+
+      // Assert
+      expect(action.getSelfAnimationId()).toBe(0);
+    });
+
     it('requests the self animation on the action sprite when performed', () =>
     {
       // Arrange
@@ -862,6 +892,15 @@ describe('JABS_Action (direct src import)', () =>
       expect(action.hasOnCastAnimationId()).toBe(false);
     });
 
+    it('defaults on-cast animation id to 0 when the skill has no tag at all (untagged, not just falsy)', () =>
+    {
+      // Arrange & Act
+      const action = buildAction({ skill: buildSkill({ jabsOnCastAnimationId: null }) });
+
+      // Assert
+      expect(action.hasOnCastAnimationId()).toBe(false);
+    });
+
     it('performs the on-cast animation on the given caster override', () =>
     {
       // Arrange
@@ -874,6 +913,20 @@ describe('JABS_Action (direct src import)', () =>
 
       // Assert
       expect(character.requestAnimation).toHaveBeenCalledWith(7);
+    });
+
+    it('does nothing when there is no on-cast animation id, even with a valid caster', () =>
+    {
+      // Arrange
+      const action = buildAction({ skill: buildSkill({ jabsOnCastAnimationId: 0 }) });
+      const character = { requestAnimation: vi.fn() };
+      const overrideCaster = buildCaster({ getCharacter: () => character });
+
+      // Act
+      action.performOnCastAnimation(overrideCaster);
+
+      // Assert
+      expect(character.requestAnimation).not.toHaveBeenCalled();
     });
 
     it('does nothing when performing the on-cast animation without any caster', () =>
@@ -1058,6 +1111,27 @@ describe('JABS_Action (direct src import)', () =>
       expect(sprite._realX).toBe(7);
     });
 
+    it('does nothing for touch-triggering delay checks when there is no action sprite yet', () =>
+    {
+      // Arrange
+      const action = buildAction({
+        skill: buildSkill({ jabsDelayDuration: 100, jabsDelayTriggerByTouch: true, jabsDelayTriggerRadius: 2 }),
+      });
+
+      // Act & Assert: no throw means the missing-action-sprite guard was taken.
+      expect(() => action.checkTriggerTouchAndArm()).not.toThrow();
+      expect(action.isDelayCompleted()).toBe(false);
+    });
+
+    it('does not sync sprite position for a direct action with no action sprite yet', () =>
+    {
+      // Arrange
+      const action = buildAction({ skill: buildSkill({ jabsDirect: true }) });
+
+      // Act & Assert: no throw means syncDirectActionSpriteToCaster's missing-sprite guard was taken.
+      expect(() => action.syncDirectActionSpriteToCaster()).not.toThrow();
+    });
+
     it('arms the delay early when a touch-triggering action finds a candidate in its trigger radius', () =>
     {
       // Arrange
@@ -1231,6 +1305,67 @@ describe('JABS_Action (direct src import)', () =>
       // Assert
       expect(action.hasHitAtLeastOneTarget()).toBe(true);
     });
+
+    it('does not re-fire first-collision logic on a second collision', () =>
+    {
+      // Arrange
+      const target = { isDead: () => false, getBattler: () => ({ result: () => ({ parried: false }) }) };
+      globalThis.$jabsEngine.getCollisionTargets = vi.fn(() => [ target ]);
+      const action = buildAction({ skill: buildSkill({ jabsPierceCount: 5 }) });
+      const onFirstCollisionSpy = vi.spyOn(action, 'onFirstCollision');
+
+      // Act
+      action.processCollision();
+      onFirstCollisionSpy.mockClear();
+      action.processCollision();
+
+      // Assert
+      expect(onFirstCollisionSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('getThisRangeBuff / getThisRadiusBuff / getThisProximityBuff / getThisThicknessBuff', () =>
+  {
+    it.each([
+      [ 'getThisRangeBuff', '<thisRangeBuff:2>' ],
+      [ 'getThisRadiusBuff', '<thisRadiusBuff:3>' ],
+      [ 'getThisProximityBuff', '<thisProximityBuff:1>' ],
+      [ 'getThisThicknessBuff', '<thisThicknessBuff:4>' ],
+    ])('%s sums the tagged buff from the skill\'s own note', (method, note) =>
+    {
+      const action = buildAction({ skill: buildSkill({ note }) });
+      expect(action[method]()).toBeGreaterThan(0);
+    });
+
+    it.each([
+      [ 'getThisRangeBuff' ], [ 'getThisRadiusBuff' ], [ 'getThisProximityBuff' ], [ 'getThisThicknessBuff' ],
+    ])('%s defaults to 0 when untagged', (method) =>
+    {
+      const action = buildAction();
+      expect(action[method]()).toBe(0);
+    });
+  });
+
+  describe('getThisRangeRate / getThisRadiusRate / getThisProximityRate / getThisThicknessRate', () =>
+  {
+    it.each([
+      [ 'getThisRangeRate', '<thisRangeRate:1.5>' ],
+      [ 'getThisRadiusRate', '<thisRadiusRate:2>' ],
+      [ 'getThisProximityRate', '<thisProximityRate:1.2>' ],
+      [ 'getThisThicknessRate', '<thisThicknessRate:3>' ],
+    ])('%s sums (rate - 1.0) deltas from the skill\'s own note', (method, note) =>
+    {
+      const action = buildAction({ skill: buildSkill({ note }) });
+      expect(action[method]()).toBeGreaterThan(0);
+    });
+
+    it.each([
+      [ 'getThisRangeRate' ], [ 'getThisRadiusRate' ], [ 'getThisProximityRate' ], [ 'getThisThicknessRate' ],
+    ])('%s defaults to 0 when untagged', (method) =>
+    {
+      const action = buildAction();
+      expect(action[method]()).toBe(0);
+    });
   });
 
   describe('composeHitboxPulsePlainOptions', () =>
@@ -1275,6 +1410,49 @@ describe('JABS_Action (direct src import)', () =>
       // cleanup
       vi.restoreAllMocks();
     });
+
+    it('falls back to 180 degrees and 1 tile thickness when the engine reports falsy values', () =>
+    {
+      // Arrange
+      vi.spyOn(JABS_Engine, 'getActionOriginPixels').mockReturnValue({ x: 1, y: 2 });
+      globalThis.$jabsEngine.getActionDegrees = vi.fn(() => 0);
+      globalThis.$jabsEngine.getActionThicknessTiles = vi.fn(() => 0);
+      const action = buildAction();
+      action.setActionSprite({ id: 'sprite' });
+
+      // Act
+      const result = action.composeHitboxPulsePlainOptions();
+
+      // Assert
+      expect(result.degrees).toBe(180);
+      expect(result.thickness).toBe(1);
+
+      // cleanup
+      vi.restoreAllMocks();
+    });
+
+    it('uses the fade-specific duration/endAlpha/scaleEnd when fade animation is enabled', () =>
+    {
+      // Arrange
+      vi.spyOn(JABS_Engine, 'getMeleeVisualOriginPixelsFromCharacter').mockReturnValue({ x: 0, y: 0 });
+      const savedMeta = J.ABS.Metadata.HitboxPulse;
+      J.ABS.Metadata.HitboxPulse = {
+        useFadeAnimation: true, duration: 30, endAlpha: 0, scaleEnd: 2, startAlpha: 1, scaleStart: 1,
+      };
+      const action = buildAction();
+
+      // Act
+      const result = action.composeHitboxPulsePlainOptions();
+
+      // Assert
+      expect(result.duration).toBe(30);
+      expect(result.endAlpha).toBe(0);
+      expect(result.scaleEnd).toBe(2);
+
+      // cleanup
+      J.ABS.Metadata.HitboxPulse = savedMeta;
+      vi.restoreAllMocks();
+    });
   });
 
   describe('postUpdate', () =>
@@ -1310,6 +1488,93 @@ describe('JABS_Action (direct src import)', () =>
     });
   });
 
+  describe('isLingering / canUpdateLinger / canProcessCollision / shouldBeginLingering', () =>
+  {
+    it('is not lingering, updatable-linger, or ready to begin lingering by default', () =>
+    {
+      const action = buildAction();
+
+      expect(action.isLingering()).toBe(false);
+      expect(action.canUpdateLinger()).toBe(false);
+      expect(action.canProcessCollision()).toBe(true);
+    });
+
+    it('flips lingering/collision state once startLinger runs', () =>
+    {
+      const action = buildAction();
+
+      action.startLinger();
+
+      expect(action.isLingering()).toBe(true);
+      expect(action.canUpdateLinger()).toBe(true);
+      expect(action.canProcessCollision()).toBe(false);
+    });
+
+    it('is idempotent- calling startLinger again while already lingering changes nothing further', () =>
+    {
+      const action = buildAction();
+      const performSelfAnimationSpy = vi.spyOn(action, 'performSelfAnimation');
+
+      action.startLinger();
+      performSelfAnimationSpy.mockClear();
+      action.startLinger();
+
+      expect(performSelfAnimationSpy).not.toHaveBeenCalled();
+    });
+
+    it('shouldBeginLingering is false before the minimum duration elapses', () =>
+    {
+      const action = buildAction({ skill: buildSkill({ jabsDuration: 8 }) });
+
+      expect(action.shouldBeginLingering()).toBe(false);
+    });
+
+    it('shouldBeginLingering is true once expired past the minimum duration', () =>
+    {
+      const action = buildAction({ skill: buildSkill({ jabsDuration: 8 }) });
+      for (let i = 0; i < 9; i++)
+      {
+        action.countdownDuration();
+      }
+
+      expect(action.shouldBeginLingering()).toBe(true);
+    });
+
+    it('shouldBeginLingering is true once out of pierce, even if not otherwise expired', () =>
+    {
+      const action = buildAction({ skill: buildSkill({ jabsDuration: 100, jabsPierceCount: 1 }) });
+      for (let i = 0; i < 8; i++)
+      {
+        action.countdownDuration();
+      }
+      action.decrementPierceTimes(1);
+
+      expect(action.shouldBeginLingering()).toBe(true);
+    });
+  });
+
+  describe('getCurrentLinger / getLingerMaxFrames', () =>
+  {
+    it('starts at 0 current linger, with the max sourced from the skill\'s linger tag', () =>
+    {
+      const action = buildAction({ skill: buildSkill({ jabsLinger: 15 }) });
+
+      expect(action.getCurrentLinger()).toBe(0);
+      expect(action.getLingerMaxFrames()).toBe(15);
+    });
+
+    it('increments current linger by one per updateLinger call', () =>
+    {
+      const action = buildAction({ skill: buildSkill({ jabsLinger: 15 }) });
+
+      action.startLinger();
+      action.updateLinger();
+      action.updateLinger();
+
+      expect(action.getCurrentLinger()).toBe(2);
+    });
+  });
+
   describe('scope / cooldown / range / shape getters', () =>
   {
     it('reports a direct action when tagged', () =>
@@ -1336,6 +1601,11 @@ describe('JABS_Action (direct src import)', () =>
       expect(buildAction({ skill: buildSkill({ jabsCooldown: 30 }) }).getCooldown()).toBe(30);
     });
 
+    it('defaults cooldown to 0 when the skill has no cooldown tag', () =>
+    {
+      expect(buildAction({ skill: buildSkill({ jabsCooldown: null }) }).getCooldown()).toBe(0);
+    });
+
     it('returns null range when the skill has no radius tag', () =>
     {
       expect(buildAction({ skill: buildSkill({ jabsRadius: null }) }).getRange()).toBeNull();
@@ -1350,6 +1620,11 @@ describe('JABS_Action (direct src import)', () =>
     it('returns the tagged cast time', () =>
     {
       expect(buildAction({ skill: buildSkill({ jabsCastTime: 45 }) }).getCastTime()).toBe(45);
+    });
+
+    it('defaults cast time to 0 when the skill has no cast time tag', () =>
+    {
+      expect(buildAction({ skill: buildSkill({ jabsCastTime: null }) }).getCastTime()).toBe(0);
     });
 
     it('returns unlimited proximity for self-scoped skills', () =>

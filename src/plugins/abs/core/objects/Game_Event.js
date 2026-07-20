@@ -379,8 +379,8 @@ Game_Event.prototype.getBattlerIdOverrides = function()
  */
 Game_Event.prototype.getTeamIdOverrides = function()
 {
-  // default team id for an event is an enemy.
-  let teamId = 1;
+  // no override by default; the caller falls back to the enemy database's own team id.
+  let teamId = null;
 
   // check all the valid event commands to see if we have an override for team.
   this.getValidCommentCommands()
@@ -405,10 +405,13 @@ Game_Event.prototype.getTeamIdOverrides = function()
 
 /**
  * Parses out the battler ai including their bonus ai traits.
- * @returns {JABS_EnemyAI} The constructed battler AI.
+ * @returns {JABS_EnemyAI|null} The constructed battler AI, or null if no ai trait comment was found.
  */
 Game_Event.prototype.getBattlerAiOverrides = function()
 {
+  // track whether any ai trait comment was encountered at all.
+  let found = false;
+
   // default to not having any ai traits.
   let careful = false;
   let executor = false;
@@ -430,50 +433,61 @@ Game_Event.prototype.getBattlerAiOverrides = function()
       if (J.ABS.RegExp.AiTraitCareful.test(comment))
       {
         careful = true;
+        found = true;
       }
 
       // check if this battler has the "executor" ai trait.
       if (J.ABS.RegExp.AiTraitExecutor.test(comment))
       {
         executor = true;
+        found = true;
       }
 
       // check if this battler has the "reckless" ai trait.
       if (J.ABS.RegExp.AiTraitReckless.test(comment))
       {
         reckless = true;
+        found = true;
       }
 
       // check if this battler has the "healer" ai trait.
       if (J.ABS.RegExp.AiTraitHealer.test(comment))
       {
         healer = true;
+        found = true;
       }
 
       // check if this battler has the "cleanser" ai trait.
       if (J.ABS.RegExp.AiTraitCleanser.test(comment))
       {
         cleanser = true;
+        found = true;
       }
 
       // check if this battler has the "buffer" ai trait.
       if (J.ABS.RegExp.AiTraitBuffer.test(comment))
       {
         buffer = true;
+        found = true;
       }
 
       // check if this battler has the "tactical" ai trait.
       if (J.ABS.RegExp.AiTraitTactical.test(comment))
       {
         tactical = true;
+        found = true;
       }
 
       // check if this battler has the "berserker" ai trait.
       if (J.ABS.RegExp.AiTraitBerserker.test(comment))
       {
         berserker = true;
+        found = true;
       }
     });
+
+  // return null when no ai trait tags were present so the caller can fall back to the database.
+  if (found === false) return null;
 
   // return the overridden battler ai.
   return new JABS_EnemyAI(careful, executor, reckless, healer, cleanser, buffer, tactical, berserker);

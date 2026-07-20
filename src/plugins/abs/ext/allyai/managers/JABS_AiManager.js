@@ -423,9 +423,6 @@ JABS_AiManager.maintainSafeDistance = function(battler)
   const closeDistance = battler.getCloseDistance();
   const farDistance = battler.getFarDistance();
 
-  // within the safe band: hold position.
-  if (distance > closeDistance && distance <= farDistance) return;
-
   if (distance <= closeDistance)
   {
     battler.smartMoveAwayFromTarget();
@@ -433,6 +430,10 @@ JABS_AiManager.maintainSafeDistance = function(battler)
   else if (distance > farDistance)
   {
     battler.smartMoveTowardTarget();
+  }
+  else
+  {
+    // within the safe band: hold position.
   }
 };
 

@@ -68,6 +68,45 @@ describe('SkillHistoryBonusDisplay (direct src import)', () =>
       // Assert
       expect(result).toEqual({ typeId: 0, window: 6, pct: 4, countMode: 'unique' });
     });
+
+    it('is null when the bracket does not have exactly 4 parts', () =>
+    {
+      expect(SkillHistoryBonusDisplay.parseGeneralBracket('[0, 6, 4]')).toBeNull();
+    });
+
+    it('is null when a numeric part fails to parse', () =>
+    {
+      expect(SkillHistoryBonusDisplay.parseGeneralBracket('[0, foo, 4, unique]')).toBeNull();
+    });
+  });
+
+  describe('percentPhrase', () =>
+  {
+    it('omits the sign for a negative percent', () =>
+    {
+      expect(SkillHistoryBonusDisplay.percentPhrase(-5)).toBe('-5%');
+    });
+  });
+
+  describe('countModePhrase', () =>
+  {
+    it('formats "distinct_types" as "distinct typed skill"', () =>
+    {
+      expect(SkillHistoryBonusDisplay.countModePhrase('distinct_types')).toBe('distinct typed skill');
+    });
+
+    it('falls back to the raw token for an unrecognized count mode', () =>
+    {
+      expect(SkillHistoryBonusDisplay.countModePhrase('mystery')).toBe('mystery');
+    });
+  });
+
+  describe('typeScopePhrase', () =>
+  {
+    it('falls back to "of type N" when the type id has no name in System.json', () =>
+    {
+      expect(SkillHistoryBonusDisplay.typeScopePhrase(99)).toBe('of type 99');
+    });
   });
 
   describe('formatGeneralProse', () =>
@@ -125,6 +164,35 @@ describe('SkillHistoryBonusDisplay (direct src import)', () =>
 
   describe('collectGeneralProseLines', () =>
   {
+    it('is empty when J.ABS is unavailable', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<skillHistoryBonus:[0, 6, 4, unique]>';
+      const savedAbs = globalThis.J.ABS;
+      globalThis.J.ABS = undefined;
+
+      // Act
+      const lines = SkillHistoryBonusDisplay.collectGeneralProseLines(state, textHelper);
+
+      // Assert
+      expect(lines).toEqual([]);
+      globalThis.J.ABS = savedAbs;
+    });
+
+    it('skips a tag whose bracket fails to parse', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<skillHistoryBonus:[0, 6, 4]>\n<skillHistoryBonus:[2, 9, 10, all]>';
+
+      // Act
+      const lines = SkillHistoryBonusDisplay.collectGeneralProseLines(state, textHelper);
+
+      // Assert
+      expect(lines.length).toBe(1);
+    });
+
     it('reads every skillHistoryBonus tag on a state row', () =>
     {
       // Arrange

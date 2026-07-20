@@ -428,6 +428,13 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
 
       expect(actor.getMainhandProvidedOffhandSkillId()).toEqual(11);
     });
+
+    it('returns 0 when the mainhand exists but grants no offhand skill', () =>
+    {
+      const actor = buildActor({ equips: () => [ { jabsOffhandSkillId: null } ] });
+
+      expect(actor.getMainhandProvidedOffhandSkillId()).toEqual(0);
+    });
   });
 
   describe('isMainhandProvidedOffhandSkill()', () =>
@@ -471,6 +478,13 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
       expect(actor.isMainhandProvidedOffhandSkill(7)).toEqual(true);
     });
 
+    it('returns false when the root offhand skill has no database entry at all', () =>
+    {
+      const actor = buildActor({ equips: () => [ { jabsOffhandSkillId: 999 } ] });
+
+      expect(actor.isMainhandProvidedOffhandSkill(7)).toEqual(false);
+    });
+
     it('returns false when the skill id matches none of the sources', () =>
     {
       globalThis.$dataSkills[5] = { getComboSkillIdList: () => [] };
@@ -494,6 +508,13 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
       const actor = buildActor({ equips: () => [ null, { jabsSkillId: 12 } ] });
 
       expect(actor.getOffhandEquippedSkillId()).toEqual(12);
+    });
+
+    it('returns 0 when the offhand exists but grants no skill', () =>
+    {
+      const actor = buildActor({ equips: () => [ null, { jabsSkillId: null } ] });
+
+      expect(actor.getOffhandEquippedSkillId()).toEqual(0);
     });
   });
 
@@ -578,6 +599,9 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
     {
       const actor = buildActor({
         skills: () => [ { id: 1, offhandEligible: true } ],
+        // id 2 comes in via the equipped offhand item (buildOffhandAssignableSkillIds), but
+        // fails to resolve to real skill data here, so it must be dropped from the pool.
+        equips: () => [ null, { jabsSkillId: 2 } ],
         skill: (id) => (id === 1 ? { id: 1 } : null),
       });
 
@@ -728,6 +752,18 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
 
       expect(actor.lastOffhandItemId()).toEqual(5);
       expect(skillSlotManager.clearOffhandPin).toHaveBeenCalled();
+    });
+
+    it('does not throw when the offhand item changed but there is no skill slot manager', () =>
+    {
+      const actor = buildActor({
+        getSkillSlotManager: () => null,
+        equips: () => [ null, { id: 5 } ],
+      });
+      actor.setLastOffhandItemId({ id: 3 });
+
+      expect(() => actor.reconcileOffhandPinAgainstEquip()).not.toThrow();
+      expect(actor.lastOffhandItemId()).toEqual(5);
     });
   });
   //endregion JABS basic attack skills
@@ -1157,6 +1193,19 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
       expect(actor.setEquippedSkill).not.toHaveBeenCalled();
     });
 
+    it('skips a slot that is not eligible to upgrade', () =>
+    {
+      const slot = { key: 'combat-1', canBeAutocleared: () => true, isLocked: () => false };
+      const actor = buildActor({
+        getSkillSlotManager: () => buildSkillSlotManager({ getEquippedSlots: () => [ slot ] }),
+      });
+      vi.spyOn(actor, 'canUpgradeSkill').mockReturnValue(false);
+
+      actor.autoUpgradeSkillIfRequired(5);
+
+      expect(actor.setEquippedSkill).not.toHaveBeenCalled();
+    });
+
     it('upgrades every eligible slot', () =>
     {
       const slot = { key: 'combat-1', canBeAutocleared: () => true, isLocked: () => false };
@@ -1318,6 +1367,19 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
       expect(floorDamageSpy).toHaveBeenCalled();
     });
 
+    it('falls through to the original logic when JABS is disabled', () =>
+    {
+      globalThis.$jabsEngine.absEnabled = false;
+      const actor = buildActor();
+      const floorDamageSpy = vi.spyOn(actor, 'performJabsFloorDamage');
+      const originalSpy = vi.spyOn(globalThis.J.ABS.Aliased.Game_Actor.get('performMapDamage'), 'call');
+
+      actor.performMapDamage();
+
+      expect(originalSpy).toHaveBeenCalled();
+      expect(floorDamageSpy).not.toHaveBeenCalled();
+    });
+
     it('starts a screen flash for JABS floor damage', () =>
     {
       const actor = buildActor();
@@ -1333,6 +1395,14 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
     it('does nothing while JABS is enabled', () =>
     {
       globalThis.$jabsEngine.absEnabled = true;
+      const actor = buildActor();
+
+      expect(() => actor.turnEndOnMap()).not.toThrow();
+    });
+
+    it('falls through to the original logic when JABS is disabled', () =>
+    {
+      globalThis.$jabsEngine.absEnabled = false;
       const actor = buildActor();
 
       expect(() => actor.turnEndOnMap()).not.toThrow();

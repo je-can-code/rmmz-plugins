@@ -759,7 +759,6 @@ J.ABS.RegExp = {
 
   //region ON STATES
   // definition-related.
-  Negative: /<negative>/gi,
   NoLogs: /<noLogs>/i,
 
   // state-application immunity/resistance, read from the target's own notes (not the applied state).
@@ -905,7 +904,7 @@ J.ABS.RegExp = {
   OnEvadeExecute: /<onEvadeExecute:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
 
   /**
-   * Percent damage bonus per negative state (jabsNegative) currently active on the target.
+   * Percent damage bonus per negative state (isNegativeType) currently active on the target.
    * All PerDebuffBuff values from getAllNotes() are summed, then multiplied by the debuff count.
    * Applied before guard reduction in the damage pipeline.
    *
@@ -1158,6 +1157,28 @@ J.ABS.RegExp = {
    * @type {RegExp}
    */
   ThisBonusDamageForMyStateCount: /<thisBonusDamageForMyStateCount:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Percent damage vulnerability per stack of any state this battler has personally authored on
+   * the target, collected by whichever attacker is currently dealing damage- not just this
+   * battler. Lives on the author's passive/kit notes, but is read via each tracked state's
+   * source rather than via this.subject(), so the bonus applies to damage from anyone once the
+   * author's stacks are present. Unlike BonusDamageForMyStateCount (distinct state count), this
+   * scales by total stack count across every state the author has applied.
+   *
+   * <pre>
+   * Structure:
+   *  <vulnerabilityPerAuthoredStateStack:PCT>
+   *
+   * Example:
+   *  <vulnerabilityPerAuthoredStateStack:10>
+   *
+   * Translation:
+   *  +10% damage from anyone, per stack of any state this battler has applied to the target.
+   * </pre>
+   * @type {RegExp}
+   */
+  VulnerabilityPerAuthoredStateStack: /<vulnerabilityPerAuthoredStateStack:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
 
   /**
    * Execute-style percent damage bonus that scales with how far under a hp threshold the target

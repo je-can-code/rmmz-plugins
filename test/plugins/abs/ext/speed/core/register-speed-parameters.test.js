@@ -83,6 +83,15 @@ describe('J-ABS-Speed SpeedParameterRegistration (unit, all downstream dependenc
       // Assert
       expect(captured.getValue({ msb: 42 })).toBe(42);
     });
+
+    it('defaults the msb sdp binding fallback to 0', () =>
+    {
+      // Act
+      SpeedParameterRegistration.registerAll();
+
+      // Assert
+      expect(captured.sdpBinding.fallback()).toBe(0);
+    });
   });
 });
 //endregion plugins/abs/ext/speed/core/register-speed-parameters.test.js

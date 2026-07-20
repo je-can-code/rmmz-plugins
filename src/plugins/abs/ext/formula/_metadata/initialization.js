@@ -87,7 +87,7 @@ J.ABS.EXT.FORMULA.Settings = {
  */
 J.ABS.EXT.FORMULA.RegExp = {};
 J.ABS.EXT.FORMULA.RegExp.FormulaApply =
-  /<on-(hit|use):to-(self|allies|target|enemies|all):by-formula:for-(hp|mp|tp):\[([+\-*/ ().\w]+)]>/gi;
+  /<onApplyFormula:[ ]?(\[(?:hit|use),[ ]?(?:self|allies|target|enemies|all),[ ]?(?:hp|mp|tp),[ ]?[+\-*/ ().\w]+])>/gi;
 J.ABS.EXT.FORMULA.RegExp.SkillApply =
-  /<on-(hit|use):to-(self|allies|target|enemies|all):by-skill:\[(\d+)]>/gi;
+  /<onApplySkill:[ ]?(\[(?:hit|use),[ ]?(?:self|allies|target|enemies|all),[ ]?\d+])>/gi;
 //endregion initialization

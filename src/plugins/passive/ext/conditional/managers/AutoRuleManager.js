@@ -158,6 +158,19 @@ class AutoRuleManager
   }
 
   /**
+   * Fires {@code whenGlanced} rules after this battler suffers a glancing blow as the victim.
+   *
+   * Mutually exclusive with {@link scheduleCritTriggers} at the source- a glancing blow can never
+   * also be a critical hit, so a single incoming attack can only ever fire one of the two.
+   * @param {Game_Actor|Game_Enemy} battler - The battler that was glanced.
+   */
+  static scheduleGlancingTriggers(battler)
+  {
+    // delegate to the main dispatch loop with the whenGlanced condition kind.
+    this.tryDispatch(battler, 'whenGlanced');
+  }
+
+  /**
    * Fires state-polarity and {@code anyStateAdded} rules after a combat state lands on this battler.
    * @param {Game_Actor|Game_Enemy} battler - The battler that received the state.
    * @param {number} stateId - The database id of the state that was added.
@@ -173,8 +186,8 @@ class AutoRuleManager
     // if the state data is missing, polarity-specific rules cannot be evaluated.
     if (!state) return;
 
-    // negative polarity comes from the JABS <negative> notetag on the state.
-    if (state.jabsNegative === true)
+    // negative polarity comes from the state's own <type:negative> classifier.
+    if (state.isNegativeType())
     {
       // fire rules that are specifically interested in negative states being added.
       this.tryDispatch(battler, 'negaStateAdded');
@@ -183,6 +196,45 @@ class AutoRuleManager
     {
       // fire rules that are specifically interested in positive states being added.
       this.tryDispatch(battler, 'posiStateAdded');
+    }
+  }
+
+  /**
+   * Fires state-polarity and {@code anyStateInflicted} rules on the battler that just inflicted a
+   * combat state onto someone else- single-party variant for subclasses whose effect lands back on
+   * the rule bearer itself (e.g. modifying the inflictor's own cooldowns), not on the afflicted
+   * target. {@link AutoInflictStateManager} handles the dual-party case (rule bearer, external
+   * effect target) separately and does not go through this method.
+   * @param {Game_Actor|Game_Enemy} battler - The battler that just inflicted the state.
+   * @param {number} inflictedStateId - The database id of the state that was just inflicted.
+   */
+  static scheduleSelfStateInflictedTriggers(battler, inflictedStateId)
+  {
+    // no ABS context means there is nothing to schedule.
+    if (!$jabsEngine || $jabsEngine.absEnabled === false) return;
+
+    // no battler means there is nobody whose rules could fire.
+    if (!battler) return;
+
+    // look up the just-inflicted state's database row to determine its polarity.
+    const inflictedState = $dataStates[inflictedStateId];
+
+    // if the state data is missing, polarity-specific rules cannot be evaluated.
+    if (!inflictedState) return;
+
+    // fire rules that respond to any state being inflicted regardless of polarity.
+    this.tryDispatch(battler, 'anyStateInflicted');
+
+    // negative polarity comes from the state's own <type:negative> classifier.
+    if (inflictedState.isNegativeType())
+    {
+      // fire rules that are specifically interested in negative states being inflicted.
+      this.tryDispatch(battler, 'negaStateInflicted');
+    }
+    else
+    {
+      // fire rules that are specifically interested in positive states being inflicted.
+      this.tryDispatch(battler, 'posiStateInflicted');
     }
   }
 

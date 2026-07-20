@@ -280,12 +280,16 @@ J.EXTEND.RegExp.OnCastExecuteSkill = /<onCastExecuteSkill:[ ]?(\[\d+,[ ]?\d+])>/
  *
  * Translation:
  *  On hit, 25% chance to apply state id 8 for 240 frames (4 seconds at 60fps).
- *  When DURATION is omitted, the state's own jabsStateDurationFrames value is used.
+ *  When DURATION is omitted or {@code 0}, the state's own jabsStateDurationFrames value
+ *  (and its own indefiniteState/duration tags) is used, unchanged.
+ *  When DURATION is {@code -1}, the state is forced indefinite regardless of its own tags.
+ *  Any other DURATION value forces that exact finite duration, also regardless of the
+ *  state's own tags (including <indefiniteState>).
  *  When STACKS is omitted, the state's own jabsStateStacksApplied value is used.
  * </pre>
  * @type {RegExp}
  */
-J.EXTEND.RegExp.ThisApplyState = /<thisApplyState:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+){0,2}])>/gi;
+J.EXTEND.RegExp.ThisApplyState = /<thisApplyState:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?-?\d+(?:,[ ]?\d+)?)?])>/gi;
 
 /**
  * The structure of a caster-wide on-hit apply-state tag with optional duration and stack overrides.
@@ -303,12 +307,16 @@ J.EXTEND.RegExp.ThisApplyState = /<thisApplyState:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+)
  *
  * Translation:
  *  On hit, always apply state id 12 for 600 frames (10 seconds at 60fps).
- *  When DURATION is omitted, the state's own jabsStateDurationFrames value is used.
+ *  When DURATION is omitted or {@code 0}, the state's own jabsStateDurationFrames value
+ *  (and its own indefiniteState/duration tags) is used, unchanged.
+ *  When DURATION is {@code -1}, the state is forced indefinite regardless of its own tags.
+ *  Any other DURATION value forces that exact finite duration, also regardless of the
+ *  state's own tags (including <indefiniteState>).
  *  When STACKS is omitted, the state's own jabsStateStacksApplied value is used.
  * </pre>
  * @type {RegExp}
  */
-J.EXTEND.RegExp.ApplyState = /<applyState:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+){0,2}])>/gi;
+J.EXTEND.RegExp.ApplyState = /<applyState:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?-?\d+(?:,[ ]?\d+)?)?])>/gi;
 
 /**
  * The structure of a skill-scoped toggle-state tag. Reads from the executing skill only
@@ -330,4 +338,31 @@ J.EXTEND.RegExp.ApplyState = /<applyState:[ ]?(\[\d+,[ ]?\d+(?:,[ ]?\d+){0,2}])>
  * @type {RegExp}
  */
 J.EXTEND.RegExp.ToggleOnExecute = /<toggleOnExecute:[ ]?(\d+)>/gi;
+
+/**
+ * The structure of a skill-scoped cycle-group toggle tag. Reads from the executing skill only
+ * ({@code this.item()}). Fires once at press-time, same as {@link J.EXTEND.RegExp.ToggleOnExecute}.
+ * Unlike the scalar form, the ids in one group are coupled: exactly one is treated as "active"
+ * and execution advances to the next id in the list, wrapping back to the first after the last.
+ *
+ * <pre>
+ * Structure:
+ *  <toggleGroupOnExecute:[STATE_ID, STATE_ID, ...]>
+ *
+ * Example (a two-state stance swap):
+ *  <toggleGroupOnExecute:[12, 13]>
+ *
+ * Example (a three-state cycle):
+ *  <toggleGroupOnExecute:[12, 13, 14]>
+ *
+ * Translation:
+ *  On execution, find which id in the list the caster currently has. If none, add the first
+ *  id. If exactly one, remove it and add the next id in the list (wrapping to the first after
+ *  the last). If more than one is somehow active at once, remove all of them and add the first
+ *  id, resyncing the group back to a single active state. A skill may carry multiple
+ *  <toggleGroupOnExecute> tags to cycle several independent groups in one execution.
+ * </pre>
+ * @type {RegExp}
+ */
+J.EXTEND.RegExp.ToggleGroupOnExecute = /<toggleGroupOnExecute:[ ]?(\[[^\]]+])>/gi;
 //endregion Metadata

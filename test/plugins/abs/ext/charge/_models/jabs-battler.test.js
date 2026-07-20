@@ -224,6 +224,17 @@ describe('J-ABS-Charge JABS_Battler (unit, all downstream dependencies mocked)',
       battler.setChargingTierData([ tier1, tier2 ]);
       expect(battler.getHighestChargedTierWithSkillId()).toBe(tier1);
     });
+
+    it('picks the higher tier when multiple completed tiers both have skill ids', () =>
+    {
+      const battler = buildBattler();
+      const tier1 = new FakeChargingTier(1, 10, 5, 0, 0);
+      tier1.completed = true;
+      const tier2 = new FakeChargingTier(2, 10, 6, 0, 0);
+      tier2.completed = true;
+      battler.setChargingTierData([ tier1, tier2 ]);
+      expect(battler.getHighestChargedTierWithSkillId()).toBe(tier2);
+    });
   });
 
   describe('resetChargeData', () =>
@@ -537,6 +548,17 @@ describe('J-ABS-Charge JABS_Battler (unit, all downstream dependencies mocked)',
       expect(result[0].tier).toBe(1);
       expect(result[0].skillId).toBe(6);
     });
+
+    it('defaults omitted animation ids to 0', () =>
+    {
+      const skill = { id: 5, jabsChargeData: [ [ 1, 30, 6 ] ] };
+      const battler = buildTierBattler({
+        getBattler: () => ({ getEquippedSkillId: () => 5, skill: () => skill }),
+      });
+      const result = battler.getChargingTiers('mainhand');
+      expect(result[0].whileChargingAnimationId).toBe(0);
+      expect(result[0].chargeTierCompleteAnimationId).toBe(0);
+    });
   });
 
   describe('normalizeChargeTierData', () =>
@@ -716,6 +738,21 @@ describe('J-ABS-Charge JABS_Battler (unit, all downstream dependencies mocked)',
       expect(battler.onChargeTierComplete).toHaveBeenCalledWith(tier, nextTier);
       expect(battler.onMaxCharge).not.toHaveBeenCalled();
     });
+
+    it('does not fire the charge-tier-complete hook when the tier number did not actually advance', () =>
+    {
+      const tier = new FakeChargingTier(2, 10, 5, 0, 0);
+      tier.completed = true;
+      const sameOrLowerTier = new FakeChargingTier(2, 10, 6, 0, 0);
+      const battler = buildBattler({ getCurrentChargingTier: () => sameOrLowerTier });
+      battler.onMaxCharge = vi.fn();
+      battler.onChargeTierComplete = vi.fn();
+
+      battler.postUpdateCharging(tier);
+
+      expect(battler.onChargeTierComplete).not.toHaveBeenCalled();
+      expect(battler.onMaxCharge).not.toHaveBeenCalled();
+    });
   });
 
   describe('canShowTierCompletionAnimation', () =>
@@ -795,6 +832,17 @@ describe('J-ABS-Charge JABS_Battler (unit, all downstream dependencies mocked)',
       expect(battler.showAnimation).not.toHaveBeenCalled();
       expect(globalThis.SoundManager.playMaxChargeReadySE).not.toHaveBeenCalled();
     });
+
+    it('uses the tier\'s own animation id when it is nonzero, ignoring the plugin default', () =>
+    {
+      globalThis.J.ABS.EXT.CHARGE.Metadata.DefaultTierCompleteAnimationId = 5;
+      const battler = buildBattler();
+      const tier = new FakeChargingTier(1, 10, 5, 0, 42);
+
+      battler.onMaxCharge(tier);
+
+      expect(battler.showAnimation).toHaveBeenCalledWith(42);
+    });
   });
 
   describe('onChargeTierComplete', () =>
@@ -825,6 +873,45 @@ describe('J-ABS-Charge JABS_Battler (unit, all downstream dependencies mocked)',
 
       expect(battler.showAnimation).not.toHaveBeenCalled();
       expect(globalThis.SoundManager.playChargeTierCompleteSE).toHaveBeenCalledTimes(1);
+    });
+
+    it('does nothing audibly or visibly when neither is enabled', () =>
+    {
+      const battler = buildBattler();
+      const completed = new FakeChargingTier(1, 10, 5, 0, 0);
+      const next = new FakeChargingTier(2, 10, 6, 0, 0);
+
+      battler.onChargeTierComplete(completed, next);
+
+      expect(battler.showAnimation).not.toHaveBeenCalled();
+      expect(globalThis.SoundManager.playChargeTierCompleteSE).not.toHaveBeenCalled();
+    });
+
+    it('shows only the animation when SE-with-animation is disallowed', () =>
+    {
+      globalThis.J.ABS.EXT.CHARGE.Metadata.DefaultTierCompleteAnimationId = 5;
+      globalThis.J.ABS.EXT.CHARGE.Metadata.UseTierCompleteSE = true;
+      globalThis.J.ABS.EXT.CHARGE.Metadata.AllowTierCompleteSEandAnimation = false;
+      const battler = buildBattler();
+      const completed = new FakeChargingTier(1, 10, 5, 0, 0);
+      const next = new FakeChargingTier(2, 10, 6, 0, 0);
+
+      battler.onChargeTierComplete(completed, next);
+
+      expect(battler.showAnimation).toHaveBeenCalledWith(5);
+      expect(globalThis.SoundManager.playChargeTierCompleteSE).not.toHaveBeenCalled();
+    });
+
+    it('uses the tier\'s own animation id when it is nonzero, ignoring the plugin default', () =>
+    {
+      globalThis.J.ABS.EXT.CHARGE.Metadata.DefaultTierCompleteAnimationId = 5;
+      const battler = buildBattler();
+      const completed = new FakeChargingTier(1, 10, 5, 0, 42);
+      const next = new FakeChargingTier(2, 10, 6, 0, 0);
+
+      battler.onChargeTierComplete(completed, next);
+
+      expect(battler.showAnimation).toHaveBeenCalledWith(42);
     });
   });
 });

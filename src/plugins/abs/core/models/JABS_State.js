@@ -818,8 +818,6 @@ class JABS_State
     {
       const targetBattler = jabsBattler.getBattler();
 
-      if (!targetBattler) continue;
-
       if (targetBattler.isStateAffected(this.stateId) === false)
       {
         unafflicted.push(jabsBattler);

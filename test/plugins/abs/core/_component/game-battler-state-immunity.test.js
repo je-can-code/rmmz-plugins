@@ -84,7 +84,7 @@ describe('J-ABS Game_Battler state-application immunity (direct src import)', ()
     // patches globalThis.Game_Battler.prototype directly, no vm involved.
     await import('../../../../../src/plugins/abs/core/objects/Game_Battler.js');
 
-    // patches globalThis.RPG_State.prototype with the jabsNegative getter isStateAddable reads.
+    // patches globalThis.RPG_State.prototype with the isNegativeType method isStateAddable reads.
     await import('../../../../../src/plugins/abs/core/database/RPG_State.js');
 
     // this test realm has no vanilla RMMZ scripts loaded, so the "original" isStateAddable
@@ -98,7 +98,7 @@ describe('J-ABS Game_Battler state-application immunity (direct src import)', ()
     globalThis.RPGManager.clearCache();
     globalThis.$dataStates = [ null ];
 
-    registerStateRow(NEGATIVE_STATE_ID, { note: '<negative>' });
+    registerStateRow(NEGATIVE_STATE_ID, { note: '<type:negative>' });
     registerStateRow(POSITIVE_STATE_ID, {});
     registerStateRow(CC_TYPED_STATE_ID, { note: '<type:cc>' });
     registerStateRow(DEATH_STATE_ID, {});
@@ -166,7 +166,7 @@ describe('J-ABS Game_Battler state-application immunity (direct src import)', ()
       expect(result).toBe(true);
     });
 
-    it('blocks a <negative>-tagged state under <immuneToNegatives>', () =>
+    it('blocks a <type:negative>-tagged state under <immuneToNegatives>', () =>
     {
       // Arrange
       const battler = buildBattler([ '<immuneToNegatives>' ]);
@@ -248,6 +248,16 @@ describe('J-ABS Game_Battler state-application immunity (direct src import)', ()
 
       // Assert
       expect(result).toBe(true);
+    });
+
+    it('skips polarity/type-classifier immunity checks for a state id with no database row', () =>
+    {
+      // Arrange- an out-of-range/bogus state id, so $dataStates[stateId] is undefined.
+      const battler = buildBattler([]);
+
+      // Act & Assert
+      expect(() => battler.isStateAddable(9999)).not.toThrow();
+      expect(battler.isStateAddable(9999)).toBe(true);
     });
   });
 

@@ -442,6 +442,11 @@ Game_Character.prototype.findDiagonalDirectionToHeuristic = function(goalX, goal
     return 0;
   }
 
+  // whichever axis has strictly greater magnitude wins the primary direction; the other axis
+  // (if nonzero) tilts it into a diagonal. Note: within each outer branch below, the "losing"
+  // axis's own delta can never be zero here- that combination was already caught by the
+  // deltaX2 === 0 && deltaY2 === 0 early return above, or is mathematically impossible given
+  // the enclosing magnitude comparison (a zero magnitude cannot exceed a non-negative one).
   if (Math.abs(deltaX2) > Math.abs(deltaY2))
   {
     if (deltaX2 > 0)
@@ -452,22 +457,12 @@ Game_Character.prototype.findDiagonalDirectionToHeuristic = function(goalX, goal
           ? 7
           : 1;
     }
-    else if (deltaX2 < 0)
-    {
-      return deltaY2 === 0
-        ? 6
-        : deltaY2 > 0
-          ? 9
-          : 3;
-    }
-    else
-    {
-      return deltaY2 === 0
-        ? 0
-        : deltaY2 > 0
-          ? 8
-          : 2;
-    }
+
+    return deltaY2 === 0
+      ? 6
+      : deltaY2 > 0
+        ? 9
+        : 3;
   }
   else
   {
@@ -479,22 +474,12 @@ Game_Character.prototype.findDiagonalDirectionToHeuristic = function(goalX, goal
           ? 7
           : 9;
     }
-    else if (deltaY2 < 0)
-    {
-      return deltaX2 === 0
-        ? 2
-        : deltaX2 > 0
-          ? 1
-          : 3;
-    }
-    else
-    {
-      return deltaX2 === 0
-        ? 0
-        : deltaX2 > 0
-          ? 4
-          : 6;
-    }
+
+    return deltaX2 === 0
+      ? 2
+      : deltaX2 > 0
+        ? 1
+        : 3;
   }
 };
 

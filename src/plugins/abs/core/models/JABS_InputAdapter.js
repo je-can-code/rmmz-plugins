@@ -353,7 +353,7 @@ class JABS_InputAdapter
   static performSprint(sprinting, jabsBattler)
   {
     // check if we can sprint.
-    if (!this.#canPerformSprint(jabsBattler)) return;
+    if (!this._canPerformSprint(jabsBattler)) return;
 
     // dash and guard are mutually exclusive.
     if (sprinting && jabsBattler.guarding())
@@ -370,7 +370,7 @@ class JABS_InputAdapter
    * @param {JABS_Battler} jabsBattler The battler performing the action.
    * @returns {boolean} True if they can, false otherwise.
    */
-  static #canPerformSprint(_jabsBattler)
+  static _canPerformSprint(_jabsBattler)
   {
     return true;
   }
@@ -384,7 +384,7 @@ class JABS_InputAdapter
   static performStrafe(strafing, jabsBattler)
   {
     // check if we can strafe.
-    if (!this.#canPerformStrafe(jabsBattler)) return;
+    if (!this._canPerformStrafe(jabsBattler)) return;
 
     // perform the strafe.
     jabsBattler.getCharacter()
@@ -396,7 +396,7 @@ class JABS_InputAdapter
    * @param {JABS_Battler} jabsBattler The battler performing the action.
    * @returns {boolean} True if they can, false otherwise.
    */
-  static #canPerformStrafe(_jabsBattler)
+  static _canPerformStrafe(_jabsBattler)
   {
     return true;
   }
@@ -410,7 +410,7 @@ class JABS_InputAdapter
   static performRotate(rotating, jabsBattler)
   {
     // check if we can rotate.
-    if (!this.#canPerformRotate(jabsBattler)) return;
+    if (!this._canPerformRotate(jabsBattler)) return;
 
     // perform the rotation.
     jabsBattler.setMovementLock(rotating);
@@ -421,7 +421,7 @@ class JABS_InputAdapter
    * @param {JABS_Battler} jabsBattler The battler performing the action.
    * @returns {boolean} True if they can, false otherwise.
    */
-  static #canPerformRotate(_jabsBattler)
+  static _canPerformRotate(_jabsBattler)
   {
     return true;
   }
@@ -500,7 +500,7 @@ class JABS_InputAdapter
   static performMenuAction()
   {
     // if we cannot call the menu, then do not.
-    if (!this.#canPerformMenuAction()) return;
+    if (!this._canPerformMenuAction()) return;
 
     // pause JABS.
     $jabsEngine.absPause = true;
@@ -513,7 +513,7 @@ class JABS_InputAdapter
    * Determines whether or not we can call the menu.
    * @returns {boolean} True if they can, false otherwise.
    */
-  static #canPerformMenuAction()
+  static _canPerformMenuAction()
   {
     // there are currently no conditions for accessing the JABS menu.
     return true;

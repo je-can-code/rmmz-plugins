@@ -549,6 +549,24 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
       expect(action.onFormulaResourceDelta).toHaveBeenCalledWith(recipient, 10, 'hp');
     });
 
+    it('applies HP healing for a negative raw magnitude', () =>
+    {
+      // Arrange
+      const action = buildAction();
+      action.evaluateFormula = () => -6;
+      action.pipeFormulaThroughBattleCalculations = () => 6;
+      action.makeSuccess = vi.fn();
+      action.onFormulaResourceDelta = vi.fn();
+      action.generateFormulaActionLogIfAvailable = vi.fn();
+      const recipient = buildRecipient();
+
+      // Act
+      action.applyFormulaModePacket({ formula: '-a.mat', resource: 'hp' }, recipient);
+
+      // Assert
+      expect(recipient.gainHp).toHaveBeenCalledWith(6);
+    });
+
     it('applies MP healing for a negative raw magnitude', () =>
     {
       // Arrange
@@ -588,6 +606,60 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
       expect(recipient.gainTp).toHaveBeenCalledWith(-4);
       expect(result.hpDamage).toBe(1);
       expect(result.critical).toBe(true);
+    });
+
+    it('applies MP damage for a positive raw magnitude', () =>
+    {
+      // Arrange
+      const action = buildAction();
+      action.evaluateFormula = () => 7;
+      action.pipeFormulaThroughBattleCalculations = () => 7;
+      action.makeSuccess = vi.fn();
+      action.onFormulaResourceDelta = vi.fn();
+      action.generateFormulaActionLogIfAvailable = vi.fn();
+      const recipient = buildRecipient();
+
+      // Act
+      action.applyFormulaModePacket({ formula: 'a.atk', resource: 'mp' }, recipient);
+
+      // Assert
+      expect(recipient.gainMp).toHaveBeenCalledWith(-7);
+    });
+
+    it('applies TP healing for a negative raw magnitude', () =>
+    {
+      // Arrange
+      const action = buildAction();
+      action.evaluateFormula = () => -3;
+      action.pipeFormulaThroughBattleCalculations = () => 3;
+      action.makeSuccess = vi.fn();
+      action.onFormulaResourceDelta = vi.fn();
+      action.generateFormulaActionLogIfAvailable = vi.fn();
+      const recipient = buildRecipient();
+
+      // Act
+      action.applyFormulaModePacket({ formula: '-a.mat', resource: 'tp' }, recipient);
+
+      // Assert
+      expect(recipient.gainTp).toHaveBeenCalledWith(3);
+    });
+
+    it('attributes the action log to the parent skill id when an item is present', () =>
+    {
+      // Arrange
+      const action = buildAction({ _item: { id: 42 } });
+      action.evaluateFormula = () => 10;
+      action.pipeFormulaThroughBattleCalculations = () => 10;
+      action.makeSuccess = vi.fn();
+      action.onFormulaResourceDelta = vi.fn();
+      action.generateFormulaActionLogIfAvailable = vi.fn();
+      const recipient = buildRecipient();
+
+      // Act
+      action.applyFormulaModePacket({ formula: 'a.atk', resource: 'hp' }, recipient);
+
+      // Assert
+      expect(action.generateFormulaActionLogIfAvailable).toHaveBeenCalledWith(recipient, 10, 'hp', 42);
     });
   });
 
@@ -851,6 +923,15 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
     });
   });
 
+  describe('onFormulaResourceDelta', () =>
+  {
+    it('is a no-op extension hook that does not throw', () =>
+    {
+      const action = buildAction();
+      expect(() => action.onFormulaResourceDelta({}, -5, 'hp')).not.toThrow();
+    });
+  });
+
   describe('generateFormulaActionLogIfAvailable', () =>
   {
     it('does nothing when the logging plugin is not present', () =>
@@ -891,6 +972,49 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
 
       // Assert
       expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith({ built: true });
+    });
+
+    it('falls back to "Unknown" for the caster name when there is no subject', () =>
+    {
+      // Arrange
+      globalThis.J.LOG = true;
+      const action = buildAction({ _subject: null });
+      const recipient = { name: () => 'Slime', result: () => ({ critical: false }) };
+
+      // Act & Assert
+      expect(() => action.generateFormulaActionLogIfAvailable(recipient, -5, 'hp', 3)).not.toThrow();
+    });
+
+    it('falls back to "Unknown" for the target name when there is no recipient', () =>
+    {
+      // Arrange
+      globalThis.J.LOG = true;
+      const action = buildAction({ _subject: { name: () => 'Hero' } });
+
+      // Act & Assert
+      expect(() => action.generateFormulaActionLogIfAvailable(null, -5, 'hp', 3)).not.toThrow();
+    });
+
+    it('defaults wasCrit to false when the recipient has no current action result', () =>
+    {
+      // Arrange
+      globalThis.J.LOG = true;
+      const action = buildAction({ _subject: { name: () => 'Hero' } });
+      const recipient = { name: () => 'Slime', result: () => null };
+
+      // Act & Assert
+      expect(() => action.generateFormulaActionLogIfAvailable(recipient, -5, 'hp', 3)).not.toThrow();
+    });
+
+    it('defaults the log\'s skill id to 0 when none is provided', () =>
+    {
+      // Arrange
+      globalThis.J.LOG = true;
+      const action = buildAction({ _subject: { name: () => 'Hero' } });
+      const recipient = { name: () => 'Slime', result: () => ({ critical: false }) };
+
+      // Act & Assert
+      expect(() => action.generateFormulaActionLogIfAvailable(recipient, -5, 'hp', 0)).not.toThrow();
     });
   });
 

@@ -207,12 +207,32 @@ describe('JABS_EnemyAI (unit, all downstream dependencies mocked)', () =>
       expect(ai.decideAction(buildBattler(), buildBattler(), [])).toEqual([ 6 ]);
     });
 
+    it('falls through the healer layer when nothing is picked', () =>
+    {
+      const ai = new JABS_EnemyAI(false, false, false, true);
+      vi.spyOn(ai, 'decideHealerAction').mockReturnValue([]);
+      const genericSpy = vi.spyOn(ai, 'decideGenericAction').mockReturnValue([ 1 ]);
+
+      expect(ai.decideAction(buildBattler(), buildBattler(), [])).toEqual([ 1 ]);
+      expect(genericSpy).toHaveBeenCalled();
+    });
+
     it('prioritizes the buffer support layer when it picks something', () =>
     {
       const ai = new JABS_EnemyAI(false, false, false, false, false, true);
       vi.spyOn(ai, 'decideBufferAction').mockReturnValue([ 7 ]);
 
       expect(ai.decideAction(buildBattler(), buildBattler(), [])).toEqual([ 7 ]);
+    });
+
+    it('falls through the buffer layer when nothing is picked', () =>
+    {
+      const ai = new JABS_EnemyAI(false, false, false, false, false, true);
+      vi.spyOn(ai, 'decideBufferAction').mockReturnValue([]);
+      const genericSpy = vi.spyOn(ai, 'decideGenericAction').mockReturnValue([ 1 ]);
+
+      expect(ai.decideAction(buildBattler(), buildBattler(), [])).toEqual([ 1 ]);
+      expect(genericSpy).toHaveBeenCalled();
     });
 
     it('uses the berserker layer once the hp threshold is met', () =>
@@ -695,6 +715,42 @@ describe('JABS_EnemyAI (unit, all downstream dependencies mocked)', () =>
       expect(ai.filterSkillsHealerPriority(buildBattler(), [ 1, 2 ], allies)).toEqual([ 1, 2 ]);
     });
 
+    it('returns the healing-type subset unranked when fewer than two skills qualify as healing', () =>
+    {
+      globalThis.$dataSkills = { 1: { id: 1 }, 2: { id: 2 } };
+      globalThis.Game_Action = class
+      {
+        setSkill(skillId)
+        {
+          this.skillId = skillId;
+        }
+
+        isForAliveFriend()
+        {
+          return true;
+        }
+
+        isRecover()
+        {
+          // only skill 1 qualifies as a recovery skill- skill 2 is filtered out entirely,
+          // leaving healingTypeSkills at length 1 (below the length-2 threshold to rank).
+          return this.skillId === 1;
+        }
+
+        isHpEffect()
+        {
+          return true;
+        }
+      };
+
+      const ai = new JABS_EnemyAI(true);
+      const allies = [ { getBattler: () => ({ hp: 50, mhp: 100 }) } ];
+
+      const result = ai.filterSkillsHealerPriority(buildBattler({ getBattler: () => ({}) }), [ 1, 2 ], allies);
+
+      expect(result).toEqual([ 1 ]);
+    });
+
     it('selects the best-fit healing skill from the full computation path', () =>
     {
       globalThis.$dataSkills = { 1: { id: 1 }, 2: { id: 2 } };
@@ -754,6 +810,175 @@ describe('JABS_EnemyAI (unit, all downstream dependencies mocked)', () =>
 
       expect(result.length).toBeGreaterThanOrEqual(0);
       expect(user.setAllyTarget).toHaveBeenCalledWith(woundedAlly);
+    });
+
+    // shared per-test Game_Action stub for the remaining branch-targeted tests below- healAmountBySkillId
+    // keys off skill.id (set via setItemObject) so each test can script per-skill recovery amounts.
+    function mockHealingGameAction(healAmountBySkillId, { isForAll = false, isForOne = true } = {})
+    {
+      globalThis.Game_Action = class
+      {
+        constructor(battler)
+        {
+          this.battler = battler;
+        }
+
+        setSkill()
+        {
+        }
+
+        setItemObject(skill)
+        {
+          this.skill = skill;
+        }
+
+        isForAliveFriend()
+        {
+          return true;
+        }
+
+        isRecover()
+        {
+          return true;
+        }
+
+        isHpEffect()
+        {
+          return true;
+        }
+
+        isForAll()
+        {
+          return isForAll;
+        }
+
+        isForOne()
+        {
+          return isForOne;
+        }
+
+        makeDamageValue()
+        {
+          return healAmountBySkillId[this.skill.id];
+        }
+      };
+    }
+
+    it('prefers the closest-fit all-target heal when careful with multiple allies missing hp', () =>
+    {
+      globalThis.$dataSkills = { 1: { id: 1 }, 2: { id: 2 } };
+      // second skill both out-heals (line566: runningBiggestHealAll < healAmount) and lands closer
+      // to the actual hp deficit (line574: thisDifference < runningDifference) than the first.
+      mockHealingGameAction({ 1: -80, 2: -20 }, { isForAll: true, isForOne: false });
+
+      const ai = new JABS_EnemyAI(true);
+      const user = buildBattler({ getBattler: () => ({}) });
+      // two allies missing hp (0.5 and 0.8 ratios)- alliesMissingAnyHp > 1 and lowestHpRatio (0.5) < 0.80.
+      const allies = [
+        { getBattler: () => ({ hp: 50, mhp: 100 }) },
+        { getBattler: () => ({ hp: 80, mhp: 100 }) },
+      ];
+
+      const result = ai.filterSkillsHealerPriority(user, [ 1, 2 ], allies);
+
+      expect(result).toEqual([ 2 ]);
+    });
+
+    it('prefers the closest-fit single-target heal when careful with exactly one ally missing hp', () =>
+    {
+      globalThis.$dataSkills = { 1: { id: 1 }, 2: { id: 2 } };
+      // actualHpDifference is 40 (100 - 60); skill 2's heal (-40) lands exactly on that deficit,
+      // closer than skill 1's (-80), so closestFitHealOneSkill moves from 1 to 2.
+      mockHealingGameAction({ 1: -80, 2: -40 }, { isForAll: false, isForOne: true });
+
+      const ai = new JABS_EnemyAI(true);
+      const user = buildBattler({ getBattler: () => ({}) });
+      // exactly one ally missing hp, ratio 0.6 (> 0.40, so not the "critical" branch; < 0.80).
+      const allies = [ { getBattler: () => ({ hp: 60, mhp: 100 }) } ];
+
+      const result = ai.filterSkillsHealerPriority(user, [ 1, 2 ], allies);
+
+      expect(result).toEqual([ 2 ]);
+    });
+
+    it('falls back to the random skill pick when careful but no priority tier threshold is met', () =>
+    {
+      globalThis.$dataSkills = { 1: { id: 1 }, 2: { id: 2 } };
+      mockHealingGameAction({ 1: -50, 2: -10 }, { isForAll: false, isForOne: true });
+
+      const ai = new JABS_EnemyAI(true);
+      const user = buildBattler({ getBattler: () => ({}) });
+      // exactly one ally missing hp, but ratio 0.85 (>= 0.80)- this fails every careful tier
+      // (line604: not <=0.40, line608: alliesMissingAnyHp not >1, line612: ratio not <0.80),
+      // so bestSkillId is left at the random skillOptions pick (mocked to index 0- biggestHealAllSkill,
+      // which the firstSkill seed pins to skill 1).
+      const allies = [ { getBattler: () => ({ hp: 85, mhp: 100 }) } ];
+
+      const result = ai.filterSkillsHealerPriority(user, [ 1, 2 ], allies);
+
+      expect(result).toEqual([ 1 ]);
+    });
+
+    it('falls back to the random skill pick when not careful, not reckless, and no ally is missing hp', () =>
+    {
+      globalThis.$dataSkills = { 1: { id: 1 }, 2: { id: 2 } };
+      mockHealingGameAction({ 1: -50, 2: -10 }, { isForAll: false, isForOne: true });
+
+      // filterSkillsHealerPriority only runs its full computation when careful or reckless is
+      // set (line480); reckless also bypasses the early "nobody needs healing" return (line511)
+      // even with zero allies missing hp, letting us reach the not-careful branch's alliesMissingAnyHp
+      // checks with alliesMissingAnyHp === 0- false for both the ===1 and the >1 (line623) tiers.
+      const ai = new JABS_EnemyAI(false, false, true);
+      const user = buildBattler({ getBattler: () => ({}) });
+      const allies = [ { getBattler: () => ({ hp: 100, mhp: 100 }) } ];
+
+      const result = ai.filterSkillsHealerPriority(user, [ 1, 2 ], allies);
+
+      // reckless's final override (line629) requires alliesMissingAnyHp > 0, which is false here
+      // (0), so bestSkillId stays at whatever the not-careful branch left it (biggestHealAllSkill,
+      // untouched since alliesMissingAnyHp is neither ===1 nor >1)- pinned to skill 1 by the
+      // firstSkill seed.
+      expect(result).toEqual([ 1 ]);
+    });
+
+    it('prefers the single biggest heal when not careful and exactly one ally is missing hp', () =>
+    {
+      globalThis.$dataSkills = { 1: { id: 1 }, 2: { id: 2 } };
+      mockHealingGameAction({ 1: -50, 2: -10 }, { isForAll: false, isForOne: true });
+
+      // reckless (not careful) so the support-priority computation runs at all.
+      const ai = new JABS_EnemyAI(false, false, true);
+      const user = buildBattler({ getBattler: () => ({}) });
+      const allies = [ { getBattler: () => ({ hp: 60, mhp: 100 }) } ];
+
+      const result = ai.filterSkillsHealerPriority(user, [ 1, 2 ], allies);
+
+      // this exercises the not-careful/alliesMissingAnyHp===1 branch (line619-621), which picks
+      // biggestHealOneSkill (2, since -10 > -50). reckless's final override (line629) then
+      // replaces it with the single biggest raw heal across every skill regardless of scope
+      // (biggestHealSkill, skill 1, since |-50| > |-10|)- so the observable result is 1.
+      expect(result).toEqual([ 1 ]);
+    });
+
+    it('prefers the all-target biggest heal when not careful and multiple allies are missing hp', () =>
+    {
+      globalThis.$dataSkills = { 1: { id: 1 }, 2: { id: 2 } };
+      mockHealingGameAction({ 1: -10, 2: -50 }, { isForAll: true, isForOne: false });
+
+      const ai = new JABS_EnemyAI(false, false, true);
+      const user = buildBattler({ getBattler: () => ({}) });
+      const allies = [
+        { getBattler: () => ({ hp: 50, mhp: 100 }) },
+        { getBattler: () => ({ hp: 80, mhp: 100 }) },
+      ];
+
+      const result = ai.filterSkillsHealerPriority(user, [ 1, 2 ], allies);
+
+      // this exercises the not-careful/alliesMissingAnyHp>1 branch (line623-625), which picks
+      // biggestHealAllSkill (1, since the strict `<` comparison never re-fires for skill 2's
+      // more-negative -50). reckless's final override (line629) then replaces it with
+      // biggestHealSkill (2, since |-50| > |-10|)- so the observable result is 2.
+      expect(result).toEqual([ 2 ]);
     });
   });
 

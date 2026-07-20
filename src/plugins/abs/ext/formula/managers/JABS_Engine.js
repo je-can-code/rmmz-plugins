@@ -46,7 +46,7 @@ JABS_Engine.prototype.applyOnUseFormulaPackets = function(caster, primaryAction)
   try
   {
     // fire all on-use packets for this action; parentTarget is not defined at launch.
-    // NOTE: <on-use:to-target:...> resolves to [] by design. Prefer self/allies/enemies/all for on-use.
+    // NOTE: <onApplyFormula:[use, target, ...]> resolves to [] by design. Prefer self/allies/enemies/all for on-use.
     gameAction.applyFormulaPackets(FormulaEffect.Trigger.USE, null);
   }
   finally

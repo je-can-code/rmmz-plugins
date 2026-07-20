@@ -113,6 +113,20 @@ TextManager.rewardDescription = function(paramId)
 };
 
 /**
+ * Whether a given registry key is a known catalog parameter.<br/>
+ * Public surface for other plugins (e.g. J-MessageTextCodes) to distinguish "unregistered key"
+ * from a legitimately-falsy/zero result, since {@link TextManager.parameterLabel}/
+ * {@link IconManager.parameterIcon}/{@link ColorManager.parameterColor} each fall back to a
+ * plausible-looking default instead of surfacing the miss.
+ * @param {string} parameterKey The registry key.
+ * @returns {boolean}
+ */
+TextManager.hasParameter = function(parameterKey)
+{
+  return ParameterRegistry.has(parameterKey);
+};
+
+/**
  * Gets the display label for a catalog parameter key.
  * @param {string} parameterKey The registry key.
  * @returns {string}

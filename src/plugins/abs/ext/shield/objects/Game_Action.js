@@ -261,11 +261,10 @@ Game_Action.prototype.absorbDamageIntoShield = function(shieldState, target, ove
     remainingDamage -= useFromReal;
     pendingBonusDamage -= useFromBonus;
 
-    // show a shield damage popup for the amount absorbed (real + bonus).
-    if (absorbed > 0)
-    {
-      this.onShieldDamageAbsorbed(target, absorbed);
-    }
+    // show a shield damage popup for the amount absorbed (real + bonus). The loop guard above
+    // (remainingDamage > 0 || pendingBonusDamage > 0) combined with the pool check (before > 0)
+    // guarantees absorbed is always positive here for legitimate non-negative inputs.
+    this.onShieldDamageAbsorbed(target, absorbed);
 
     // determine whether this shield broke on this application.
     const brokeThisHit = (before > 0 && updatedShield.getCurrent() === 0);

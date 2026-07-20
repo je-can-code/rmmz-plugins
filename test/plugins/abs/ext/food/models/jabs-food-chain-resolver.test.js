@@ -297,6 +297,19 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
       expect(leader.addState).toHaveBeenCalledWith(99);
     });
 
+    it('aborts the Overstuffed punishment cleanly when no Overstuffed chain has been authored', () =>
+    {
+      const { leader, jabsBattler } = buildEatFixture({ currentChainType: 'protein', currentPhase: 'wellFed', immune: false });
+      leader.removeState = vi.fn();
+      leader.states = () => [ { id: 1, jabsFoodChainType: 'protein' } ];
+      globalThis.__testRegistryPlans.delete('overstuffed');
+
+      JABS_FoodChainResolver.resolveEat(5, jabsBattler);
+
+      expect(leader.removeState).toHaveBeenCalledWith(1);
+      expect(leader.addState).not.toHaveBeenCalledWith(99);
+    });
+
     it('auto-unequips the slot and logs when the party ran out of the item', () =>
     {
       const { jabsBattler } = buildEatFixture();

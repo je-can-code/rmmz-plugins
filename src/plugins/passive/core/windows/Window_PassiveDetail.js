@@ -772,13 +772,12 @@ class Window_PassiveDetail
     const lines = [];
 
     // boost element: one row per boosted element — icon identifies it, "Boost" the effect.
-    const boostCaptures = RPGManager.getAllCapturesFromNoteByRegex(state, J.ELEM.RegExp.BoostElement);
+    // each <boostElement:[ELEMENT_ID, PERCENT_BOOST]> tag parses directly into a numeric tuple.
+    const boostCaptures = RPGManager.getArraysFromNotesByRegex(state, J.ELEM.RegExp.BoostElement);
     if (boostCaptures && boostCaptures.length > 0)
     {
-      boostCaptures.forEach(([rawId, rawPct]) =>
+      boostCaptures.forEach(([elementId, pct]) =>
       {
-        const elementId = Number(rawId);
-        const pct = Number(rawPct);
         const sign = pct >= 0 ? '+' : '';
         lines.push({ icon: IconManager.element(elementId), label: 'Boost', value: `${sign}${pct}%` });
       });

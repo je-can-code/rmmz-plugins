@@ -395,6 +395,14 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
   });
   //endregion deriveFreshFacingForAi
 
+  describe('constructor', () =>
+  {
+    it('throws since this is a static-only class', () =>
+    {
+      expect(() => new JABS_AiManager()).toThrow('This is a static class.');
+    });
+  });
+
   //region get battlers
   describe('getAllBattlers()', () =>
   {
@@ -875,6 +883,18 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
       expect(result.uuid).toEqual('constructed-uuid');
       expect(follower.setJabsBattlerUuid).toHaveBeenCalledWith('constructed-uuid');
     });
+
+    it('suppresses the danger indicator for allies when the danger extension is present', () =>
+    {
+      globalThis.J.ABS.EXT.DANGER = true;
+      const follower = { actor: () => ({}), setJabsBattlerUuid: vi.fn() };
+
+      const result = JABS_AiManager.convertFollowerToBattler(follower);
+
+      expect(result.coreData.showDangerIndicator).toBe(false);
+
+      globalThis.J.ABS.EXT.DANGER = false;
+    });
   });
 
   describe('convertFollowersToBattlers()', () =>
@@ -920,6 +940,18 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
       JABS_AiManager.rebuildSpatialIndex();
 
       expect(JABS_AiManager.queryBattlersInAabb(0, 0, 0, 0)).toEqual([]);
+    });
+
+    it('adds multiple battlers occupying the same tile to the same bucket', () =>
+    {
+      const a = buildBattler({ uuid: 'a', getX: () => 4, getY: () => 4 });
+      const b = buildBattler({ uuid: 'b', getX: () => 4, getY: () => 4 });
+      JABS_AiManager.addOrUpdateBattlers([ a, b ]);
+      JABS_AiManager.rebuildSpatialIndex();
+
+      const results = JABS_AiManager.queryBattlersInAabb(4, 4, 4, 4);
+      expect(results).toHaveLength(2);
+      expect(results).toEqual(expect.arrayContaining([ a, b ]));
     });
 
     it('normalizes inverted min/max bounds before querying', () =>
@@ -1247,6 +1279,16 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         JABS_AiManager.aiPhase0(battler);
 
         expect(battler.getCharacter().moveStraight).toHaveBeenCalledWith(2);
+      });
+
+      it('does nothing when stopped, not idle, not alerted, but already home', () =>
+      {
+        const battler = buildIdleBattler({ isIdle: () => false, isAlerted: () => false, isHome: () => true });
+
+        JABS_AiManager.aiPhase0(battler);
+
+        expect(battler.getCharacter().moveStraight).not.toHaveBeenCalled();
+        expect(battler.resetIdleAction).not.toHaveBeenCalled();
       });
 
       it('moves idly when stopped and idle', () =>
@@ -2365,6 +2407,18 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         expect(JABS_AiManager.needsAxisAlignment(battler)).toEqual(true);
       });
 
+      it('measures misalignment along the X gap when the dominant axis is Y', () =>
+      {
+        const battler = buildPhase2Battler({
+          decidedAction: buildAction({ getShape: () => 'line', getThicknessTiles: () => 1 }),
+          getX: () => 0,
+          getY: () => 0,
+          getTarget: () => ({ getX: () => 3, getY: () => 5 }),
+        });
+        // dominant axis is Y (dy=5 > dx=3), so misalignment is the X gap (3), tolerance is 1/2=0.5.
+        expect(JABS_AiManager.needsAxisAlignment(battler)).toEqual(true);
+      });
+
       it('uses the arc chord half-width as tolerance for arc shapes', () =>
       {
         const battler = buildPhase2Battler({
@@ -3024,6 +3078,19 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         const near = buildBattler({ uuid: 'near' });
         const far = buildBattler({ uuid: 'far' });
         JABS_AiManager.getOpposingBattlersWithinRange = () => [ far, near ];
+        const selfBattler = buildGuardBattler({
+          distanceToDesignatedTarget: candidate => (candidate === near ? 1 : 10),
+        });
+
+        expect(JABS_AiManager.findDefensiveThreatBattler(selfBattler)).toBe(near);
+      });
+
+      it('keeps the earlier best candidate when a later one does not improve on the score', () =>
+      {
+        const near = buildBattler({ uuid: 'near' });
+        const far = buildBattler({ uuid: 'far' });
+        // near is evaluated first this time, so far's worse score must not overwrite it.
+        JABS_AiManager.getOpposingBattlersWithinRange = () => [ near, far ];
         const selfBattler = buildGuardBattler({
           distanceToDesignatedTarget: candidate => (candidate === near ? 1 : 10),
         });

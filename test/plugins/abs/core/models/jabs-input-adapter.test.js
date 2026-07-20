@@ -67,6 +67,14 @@ describe('JABS_InputAdapter (direct src import)', () =>
     };
   }
 
+  describe('constructor', () =>
+  {
+    it('throws since this is a static-only class', () =>
+    {
+      expect(() => new JABS_InputAdapter()).toThrow('JABS_InputAdapter is a static class.');
+    });
+  });
+
   describe('register() / hasControllers()', () =>
   {
     it('reports no controllers by default', () =>
@@ -361,6 +369,19 @@ describe('JABS_InputAdapter (direct src import)', () =>
       JABS_InputAdapter.performSprint(true, battler);
       expect(character._dashing).toBe(true);
     });
+
+    it('does nothing when sprinting is not currently permitted', () =>
+    {
+      const character = { _dashing: false };
+      const battler = buildJabsBattler({ getCharacter: () => character });
+      const original = JABS_InputAdapter._canPerformSprint;
+      JABS_InputAdapter._canPerformSprint = () => false;
+
+      JABS_InputAdapter.performSprint(true, battler);
+
+      expect(character._dashing).toBe(false);
+      JABS_InputAdapter._canPerformSprint = original;
+    });
   });
 
   describe('performStrafe()', () =>
@@ -372,6 +393,19 @@ describe('JABS_InputAdapter (direct src import)', () =>
       JABS_InputAdapter.performStrafe(true, battler);
       expect(setDirectionFix).toHaveBeenCalledWith(true);
     });
+
+    it('does nothing when strafing is not currently permitted', () =>
+    {
+      const setDirectionFix = vi.fn();
+      const battler = buildJabsBattler({ getCharacter: () => ({ setDirectionFix }) });
+      const original = JABS_InputAdapter._canPerformStrafe;
+      JABS_InputAdapter._canPerformStrafe = () => false;
+
+      JABS_InputAdapter.performStrafe(true, battler);
+
+      expect(setDirectionFix).not.toHaveBeenCalled();
+      JABS_InputAdapter._canPerformStrafe = original;
+    });
   });
 
   describe('performRotate()', () =>
@@ -381,6 +415,18 @@ describe('JABS_InputAdapter (direct src import)', () =>
       const battler = buildJabsBattler();
       JABS_InputAdapter.performRotate(true, battler);
       expect(battler.setMovementLock).toHaveBeenCalledWith(true);
+    });
+
+    it('does nothing when rotating is not currently permitted', () =>
+    {
+      const battler = buildJabsBattler();
+      const original = JABS_InputAdapter._canPerformRotate;
+      JABS_InputAdapter._canPerformRotate = () => false;
+
+      JABS_InputAdapter.performRotate(true, battler);
+
+      expect(battler.setMovementLock).not.toHaveBeenCalled();
+      JABS_InputAdapter._canPerformRotate = original;
     });
   });
 
@@ -454,6 +500,18 @@ describe('JABS_InputAdapter (direct src import)', () =>
       JABS_InputAdapter.performMenuAction();
       expect(globalThis.$jabsEngine.absPause).toBe(true);
       expect(globalThis.$jabsEngine.requestAbsMenu).toBe(true);
+    });
+
+    it('does nothing when the menu is not currently permitted', () =>
+    {
+      const original = JABS_InputAdapter._canPerformMenuAction;
+      JABS_InputAdapter._canPerformMenuAction = () => false;
+
+      JABS_InputAdapter.performMenuAction();
+
+      expect(globalThis.$jabsEngine.absPause).toBe(false);
+      expect(globalThis.$jabsEngine.requestAbsMenu).toBe(false);
+      JABS_InputAdapter._canPerformMenuAction = original;
     });
   });
 });

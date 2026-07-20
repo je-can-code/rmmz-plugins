@@ -375,6 +375,21 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
       );
     });
 
+    it('falls through to the strike juice when healing with an unrecognized authored motion tag', () =>
+    {
+      const action = buildAction({
+        isHealing: () => true,
+        getBaseSkill: () => ({ jabsNoJuice: false, jabsJuiceMotion: 'some-future-motion', damage: { type: 3 } }),
+      });
+
+      JuiceHookManager.onExecuteMapAction(buildBattler(), action);
+
+      // the default strike juice (not the healing-shortcut pulse) should have fired.
+      expect(JuiceMotionManagerMock.scheduleSquish).toHaveBeenCalledWith(
+        expect.anything(), 0.4, 20
+      );
+    });
+
     it('applies the support pulse for a non-healing support skill (damage.type 0) with no motion tag', () =>
     {
       const action = buildAction({

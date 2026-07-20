@@ -2,6 +2,7 @@
 import AutoApplyStateManager from '../managers/AutoApplyStateManager.js';
 import AutoExecuteSkillManager from '../managers/AutoExecuteSkillManager.js';
 import AutoInflictStateManager from '../managers/AutoInflictStateManager.js';
+import AutoModifyCooldownManager from '../managers/AutoModifyCooldownManager.js';
 import PassiveGateEvaluator from '../managers/PassiveGateEvaluator.js';
 import PassiveStackCountEvaluator from '../managers/PassiveStackCountEvaluator.js';
 import PassiveRuleJabsAccess from '../helpers/PassiveRuleJabsAccess.js';
@@ -657,7 +658,9 @@ Game_Battler.prototype.onStateAdded = function(stateId)
 /**
  * Extends {@link #onJabsStateInflicted}.<br/>
  * Fires autoInflictState rules on the inflicting battler, applying the configured payload state
- * onto this battler (the one just afflicted)- not the inflictor, and not anything nearby.
+ * onto this battler (the one just afflicted)- not the inflictor, and not anything nearby. Also
+ * fires the inflicting battler's autoModifyCooldowns rules against themselves- unlike
+ * autoInflictState, that effect lands back on the inflictor, not on this newly-afflicted target.
  */
 J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.set(
   'onJabsStateInflicted',
@@ -671,5 +674,8 @@ Game_Battler.prototype.onJabsStateInflicted = function(stateId, attacker)
 
   // evaluate the inflicting battler's own autoInflictState rules against this newly-afflicted target.
   AutoInflictStateManager.scheduleInflictedStateTriggers(attacker, this, stateId);
+
+  // evaluate the inflicting battler's own autoModifyCooldowns rules against themselves.
+  AutoModifyCooldownManager.scheduleSelfStateInflictedTriggers(attacker, stateId);
 };
 //endregion Game_Battler

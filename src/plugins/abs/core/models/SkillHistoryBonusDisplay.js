@@ -144,15 +144,14 @@ class SkillHistoryBonusDisplay
   {
     if (!J.ABS) return [];
 
-    const captures = RPGManager.getAllCapturesFromNoteByRegex(
-      dataRow,
-      J.ABS.RegExp.SkillHistoryBonus);
+    // each tag's single capture is the raw bracket text, parsed by parseGeneralBracket below-
+    // it is deliberately not routed through getArraysFromNotesByRegex's JSON-ish parsing.
+    const rawTags = RPGManager.getStringsFromNoteByRegex(dataRow, J.ABS.RegExp.SkillHistoryBonus);
 
     const lines = [];
 
-    captures.forEach(captureGroup =>
+    rawTags.forEach(rawTag =>
     {
-      const [ rawTag ] = captureGroup;
       const parsed = SkillHistoryBonusDisplay.parseGeneralBracket(rawTag);
 
       if (parsed === null) return;

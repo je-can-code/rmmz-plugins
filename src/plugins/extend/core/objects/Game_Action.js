@@ -222,8 +222,9 @@ Game_Action.prototype.onHitRemoveStates = function()
  */
 Game_Action.prototype.applyOnHitApplyStates = function(target)
 {
-  // grab caster-wide applyState entries from all of the attacker's notes.
-  const casterEntries = RPGManager.getAllCapturesFromAllNotesByRegex(
+  // grab caster-wide applyState entries from all of the attacker's notes. each
+  // <applyState:[...]> tag is a single bracket, so it parses directly into a tuple.
+  const casterEntries = RPGManager.getArraysFromAllNotesByRegex(
     this.subject().getAllNotes(),
     J.EXTEND.RegExp.ApplyState);
 
@@ -308,7 +309,74 @@ Game_Action.prototype.applyToggleOnExecuteStates = function()
 Game_Action.prototype.toggleOnExecuteStateIds = function()
 {
   // this tag is skill-scoped, so only the executing skill's own note is read.
-  return RPGManager.getNumbersFromNoteByRegex(this.item(), J.EXTEND.RegExp.ToggleOnExecute);
+  // getNumbersFromNoteByRegex is the wrong tool here- it expects a single bracketed
+  // list capture (e.g. <passive:[1,2,3]>), but this tag captures one bare number per
+  // repeated line, so getStringsFromNoteByRegex (which correctly collects one entry
+  // per matching line rather than overwriting) is what actually matches this shape.
+  return RPGManager.getStringsFromNoteByRegex(this.item(), J.EXTEND.RegExp.ToggleOnExecute)
+    .map(Number);
+};
+
+/**
+ * Cycles all {@code <toggleGroupOnExecute:[STATE_ID, ...]>} groups on the caster: for each
+ * tagged group, advances the caster from whichever state in the group is currently active to
+ * the next one in the list, wrapping back to the first after the last. Fires once at
+ * press-time, same as {@link #applyToggleOnExecuteStates}.
+ */
+Game_Action.prototype.applyToggleGroupOnExecuteStates = function()
+{
+  // grab the caster; this is a self-only toggle, same as the scalar form above.
+  const caster = this.subject();
+
+  // cycle each tagged group independently.
+  this.toggleGroupOnExecuteGroups()
+    .forEach(group =>
+    {
+      // find every id in this group the caster currently has active.
+      const activeIds = group.filter(stateId => caster.isStateAffected(stateId));
+
+      // remove whatever is currently active before adding the next one- this covers the
+      // "exactly one active" case as well as the "somehow more than one active" repair case,
+      // since removing zero, one, or many ids all funnel through the same call.
+      activeIds.forEach(stateId => caster.removeState(stateId));
+
+      // with none active (a fresh group) or exactly one active, the next id to add is the
+      // one immediately after the (single) active id, wrapping to the front of the list.
+      // with more than one active (a corrupted group), skip the wrap logic entirely and
+      // resync straight to the first id in the list.
+      let nextId;
+      if (activeIds.length === 1)
+      {
+        // find where the currently-active id sits in the group's ordering.
+        const currentIndex = group.indexOf(activeIds[0]);
+
+        // step forward one slot, wrapping back to 0 once we'd run past the last index.
+        const nextIndex = (currentIndex + 1) % group.length;
+
+        // that wrapped index is the one we advance to.
+        nextId = group[nextIndex];
+      }
+      else
+      {
+        // zero or 2+ active: resync straight to the first id in the list.
+        [ nextId ] = group;
+      }
+
+      // add the resolved next id, attributed to the caster.
+      caster.addState(nextId, caster);
+    });
+};
+
+/**
+ * Gets all cycle groups tagged with {@code <toggleGroupOnExecute:[STATE_ID, ...]>} on the
+ * executing skill. Skill-scoped only; a skill may carry multiple tags to cycle multiple
+ * independent groups in one execution.
+ * @returns {number[][]}
+ */
+Game_Action.prototype.toggleGroupOnExecuteGroups = function()
+{
+  // this tag is skill-scoped, so only the executing skill's own note is read.
+  return RPGManager.getArraysFromNotesByRegex(this.item(), J.EXTEND.RegExp.ToggleGroupOnExecute);
 };
 
 /**

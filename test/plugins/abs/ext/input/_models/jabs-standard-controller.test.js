@@ -577,6 +577,15 @@ describe('JABS_StandardController (unit, JABS_BaseController/Input/JABS_InputAda
 
       expect(controller[isTriggeredMethod]()).toEqual(false);
     });
+
+    it('falls through to the keyboard shortcut when the enabler is held but the chord button is not triggered', () =>
+    {
+      globalThis.Input.isPressed.mockImplementation((s) => s === 'pageup');
+      globalThis.Input.isTriggered.mockImplementation((s) => s === keyboardSymbol);
+      const controller = new JABS_StandardController();
+
+      expect(controller[isTriggeredMethod]()).toEqual(true);
+    });
   });
 
   describe('performCombatAction()', () =>
@@ -681,6 +690,13 @@ describe('JABS_StandardController (unit, JABS_BaseController/Input/JABS_InputAda
       const controller = new JABS_StandardController();
 
       expect(controller.isRotateActionTriggered()).toEqual(true);
+    });
+
+    it('rotate is false when Rotate is not pressed', () =>
+    {
+      const controller = new JABS_StandardController();
+
+      expect(controller.isRotateActionTriggered()).toEqual(false);
     });
 
     it('guard reflects the Guard pressed state', () =>

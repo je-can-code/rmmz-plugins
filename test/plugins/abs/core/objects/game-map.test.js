@@ -564,6 +564,17 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
       expect(map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2))).toEqual(true);
     });
 
+    it('returns false when the event beyond the counter is not a normal-priority trigger', () =>
+    {
+      globalThis.$gameMap.isCounter = () => true;
+      globalThis.$gameMap.eventsXy = vi.fn(() => [
+        { isJabsBattler: () => false, isTriggerIn: () => false, isNormalPriority: () => true },
+      ]);
+      const map = buildMap({ eventsXy: () => [] });
+
+      expect(map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2))).toEqual(false);
+    });
+
     it('returns false when an enemy is found beyond the counter', () =>
     {
       globalThis.$gameMap.isCounter = () => true;

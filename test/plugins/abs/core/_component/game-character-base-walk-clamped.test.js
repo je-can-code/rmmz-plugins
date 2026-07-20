@@ -151,6 +151,30 @@ describe('J-ABS Game_CharacterBase.walkInDirectionClamped (direct src import)', 
     expect([ dx, dy ]).toEqual([ 0, 0 ]);
   });
 
+  it('backs off and returns [0, 0] when immediately blocked moving up', () =>
+  {
+    // Arrange
+    const walker = buildWalker(() => false);
+
+    // Act
+    const [ dx, dy ] = walker.walkInDirectionClamped(globalThis.J.ABS.Directions.UP, 5);
+
+    // Assert
+    expect([ dx, dy ]).toEqual([ 0, 0 ]);
+  });
+
+  it('backs off and returns [0, 0] when immediately blocked moving left', () =>
+  {
+    // Arrange
+    const walker = buildWalker(() => false);
+
+    // Act
+    const [ dx, dy ] = walker.walkInDirectionClamped(globalThis.J.ABS.Directions.LEFT, 5);
+
+    // Assert
+    expect([ dx, dy ]).toEqual([ 0, 0 ]);
+  });
+
   it('rounds a fractional distance before walking', () =>
   {
     // Arrange

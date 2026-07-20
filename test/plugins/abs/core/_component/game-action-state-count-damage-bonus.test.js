@@ -128,6 +128,22 @@ describe('J-ABS Game_Action state-count damage bonus (direct src import)', () =>
       expect(result).toBe(0);
     });
 
+    it('returns 0 when the state is flagged active but has no live tracked entry', () =>
+    {
+      // Arrange
+      const passiveNote = buildSkill('<bonusDamagePerStateStack:[14, 2]>');
+      const caster = buildCaster([ passiveNote ]);
+      const action = buildAction(caster, buildSkill(''));
+      const target = buildTarget('target', [ 14 ]);
+      globalThis.$jabsEngine = { getJabsStateByUuidAndStateId: () => undefined };
+
+      // Act
+      const result = action.calculatePerStateStackPct(target);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
     it('multiplies the tag percent by the target state tracker stack count', () =>
     {
       // Arrange- 2% per stack * 50 stacks = 100%.

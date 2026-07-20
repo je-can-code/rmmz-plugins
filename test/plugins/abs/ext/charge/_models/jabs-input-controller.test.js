@@ -304,6 +304,21 @@ describe('J-ABS-Charge JABS_StandardController (unit, all downstream dependencie
       expect(controller.isOffhandActionCharging()).toBe(true);
     });
 
+    it('is not charging when allowed but the offhand button is not held', () =>
+    {
+      const controller = buildController();
+      controller.canChargeOffhandAction = () => true;
+      globalThis.Input.isPressed.mockReturnValue(false);
+      expect(controller.isOffhandActionCharging()).toBe(false);
+    });
+
+    it('is not charging when offhand cannot be charged at all', () =>
+    {
+      const controller = buildController();
+      controller.canChargeOffhandAction = () => false;
+      expect(controller.isOffhandActionCharging()).toBe(false);
+    });
+
     it('cannot charge offhand when the button was just triggered', () =>
     {
       const controller = buildController({ isOffhandActionTriggered: () => true });
@@ -316,12 +331,26 @@ describe('J-ABS-Charge JABS_StandardController (unit, all downstream dependencie
       expect(controller.canChargeOffhandAction()).toBe(false);
     });
 
+    it('can charge offhand otherwise', () =>
+    {
+      const controller = buildController();
+      expect(controller.canChargeOffhandAction()).toBe(true);
+    });
+
     it('performOffhandChargeAction starts charging once the delay completes', () =>
     {
       const controller = buildController();
       controller.getChargeInputDelayBySlot('offhand')._complete = true;
       controller.performOffhandChargeAction();
       expect(globalThis.JABS_InputAdapter.performOffhandActionCharging).toHaveBeenCalledWith(true, 'player1');
+    });
+
+    it('performOffhandChargeAction ticks the delay timer while it has not yet completed', () =>
+    {
+      const controller = buildController();
+      controller.performOffhandChargeAction();
+      expect(globalThis.JABS_InputAdapter.performOffhandActionCharging).not.toHaveBeenCalled();
+      expect(controller.getChargeInputDelayBySlot('offhand').updateCount).toBe(1);
     });
 
     it('performOffhandChargeAlterAction cancels charging and resets the delay timer', () =>
@@ -376,6 +405,15 @@ describe('J-ABS-Charge JABS_StandardController (unit, all downstream dependencie
       expect(controller.isCombatAction1Charging()).toBe(false);
     });
 
+    it('is not charging when combat skill 1 cannot be charged at all (just triggered)', () =>
+    {
+      const controller = buildController({
+        isCombatSkillUsageEnabled: () => true,
+        isCombatAction1Triggered: () => true,
+      });
+      expect(controller.isCombatAction1Charging()).toBe(false);
+    });
+
     it('is charging via the mainhand-mirrored button when combat skill usage is enabled', () =>
     {
       const controller = buildController({ isCombatSkillUsageEnabled: () => true });
@@ -388,6 +426,13 @@ describe('J-ABS-Charge JABS_StandardController (unit, all downstream dependencie
       const controller = buildController({ isCombatSkillUsageEnabled: () => true });
       globalThis.Input.isPressed.mockImplementation((sym) => sym === 'CS1');
       expect(controller.isCombatAction1Charging()).toBe(true);
+    });
+
+    it('is not charging when combat-skill usage is enabled but neither button is held', () =>
+    {
+      const controller = buildController({ isCombatSkillUsageEnabled: () => true });
+      globalThis.Input.isPressed.mockReturnValue(false);
+      expect(controller.isCombatAction1Charging()).toBe(false);
     });
 
     it('performCombatSkillChargeAction starts charging once the delay completes', () =>
@@ -437,6 +482,77 @@ describe('J-ABS-Charge JABS_StandardController (unit, all downstream dependencie
       // Assert
       expect(controller.getChargeInputDelayBySlot(slot)).toBeInstanceOf(FakeTimer);
     });
+
+    it.each([ 2, 3, 4 ])(
+      'combat skill %i is not charging when combat-skill usage is enabled but neither button is held',
+      (n) =>
+      {
+        // Arrange
+        const controller = buildController({ isCombatSkillUsageEnabled: () => true });
+        globalThis.Input.isPressed.mockReturnValue(false);
+
+        // Act & Assert
+        expect(controller[`isCombatAction${n}Charging`]()).toBe(false);
+      },
+    );
+
+    it.each([ 2, 3, 4 ])(
+      'combat skill %i is not charging when combat-skill usage is not enabled at all',
+      (n) =>
+      {
+        // Arrange
+        const controller = buildController();
+
+        // Act & Assert
+        expect(controller[`isCombatAction${n}Charging`]()).toBe(false);
+      },
+    );
+
+    it.each([ 2, 3, 4 ])(
+      'combat skill %i is not charging when it cannot be charged at all (just triggered)',
+      (n) =>
+      {
+        // Arrange
+        const controller = buildController({
+          isCombatSkillUsageEnabled: () => true,
+          [`isCombatAction${n}Triggered`]: () => true,
+        });
+
+        // Act & Assert
+        expect(controller[`isCombatAction${n}Charging`]()).toBe(false);
+      },
+    );
+
+    it.each([ 2, 3, 4 ])(
+      'combat skill %i cannot be charged directly when it was just triggered',
+      (n) =>
+      {
+        // Arrange
+        const controller = buildController({ [`isCombatAction${n}Triggered`]: () => true });
+
+        // Act & Assert
+        expect(controller[`canChargeCombatAction${n}`]()).toBe(false);
+      },
+    );
+
+    it.each([ 2, 3, 4 ])(
+      'combat skill %i handleCombatAction%iCharging performs the alter-action when not charging',
+      (n) =>
+      {
+        // Arrange
+        const controller = buildController();
+        controller[`isCombatAction${n}Charging`] = () => false;
+        controller.performCombatSkillChargeAction = vi.fn();
+        controller.performCombatSkillChargeAlterAction = vi.fn();
+
+        // Act
+        controller[`handleCombatAction${n}Charging`]();
+
+        // Assert
+        expect(controller.performCombatSkillChargeAlterAction).toHaveBeenCalledWith(`combat${n}`);
+        expect(controller.performCombatSkillChargeAction).not.toHaveBeenCalled();
+      },
+    );
   });
 });
 //endregion plugins/abs/ext/charge/_models/jabs-input-controller.test.js

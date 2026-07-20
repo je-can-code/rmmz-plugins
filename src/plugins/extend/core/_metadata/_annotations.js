@@ -255,14 +255,21 @@
  * regardless of the chance roll.
  *
  * NOTE 2:
- * DURATION is in frames (60 frames = 1 second at 60fps). It replaces the state's
- * own jabsStateDurationFrames value as the BASE duration. Attacker duration-boost
- * tags (stateDurationFlat, stateDurationPerc, stateDurationFormula) still apply
- * on top of this overridden base, so passive gear and traits remain relevant.
+ * DURATION is in frames (60 frames = 1 second at 60fps). A positive value replaces
+ * the state's own jabsStateDurationFrames value as the BASE duration, and wins over
+ * the state's own tags EVEN IF the state carries <indefiniteState> — an explicit
+ * DURATION always overrides the target's own indefinite/duration tags. Attacker
+ * duration-boost tags (stateDurationFlat, stateDurationPerc, stateDurationFormula)
+ * still apply on top of this overridden base, so passive gear and traits remain
+ * relevant.
  *
  * NOTE 3:
- * DURATION and STACKS are both optional. Omitting DURATION uses the state's own
- * default duration. Omitting STACKS uses the state's own default stack count.
+ * DURATION and STACKS are both optional, and DURATION carries two sentinels:
+ *   - Omitted, or {@code 0}: no override — defer entirely to the state's own tags
+ *     (jabsStateDurationFrames, <indefiniteState>), unchanged from today.
+ *   - {@code -1}: force this application indefinite, regardless of the state's own
+ *     tags. No duration-boost math runs (there is no duration to boost).
+ * Omitting STACKS uses the state's own default stack count.
  *
  * NOTE 4:
  * A skill may carry multiple <thisApplyState> tags to apply different states on
@@ -281,7 +288,8 @@
  *  <thisApplyState:[STATE_ID, CHANCE, DURATION, STACKS]>
  * Where STATE_ID is the id of the state to apply to the target.
  * Where CHANCE is the percent chance between 0 and 100 that it triggers.
- * Where DURATION is the duration in frames; omit to use the state's default.
+ * Where DURATION is the duration in frames; omit or use 0 for the state's default,
+ * or -1 to force the application indefinite regardless of the state's own tags.
  * Where STACKS is the starting stack count; omit to use the state's default.
  *
  * TAG EXAMPLES:
@@ -293,6 +301,14 @@
  *
  *  <thisApplyState:[8, 50, 120, 2]>
  * On hit, 50% chance to apply state id 8 for 120 frames with 2 starting stacks.
+ *
+ *  <thisApplyState:[8, 50, 0, 2]>
+ * On hit, 50% chance to apply state id 8 with 2 starting stacks and the state's
+ * own default duration (0 = no duration change).
+ *
+ *  <thisApplyState:[8, 50, -1]>
+ * On hit, 50% chance to apply state id 8 forever, regardless of the state's own
+ * duration tags.
  * ============================================================================
  * ON-HIT APPLY STATE (CASTER-WIDE):
  * Have you ever wanted a passive state, equipped item, or actor data to make
@@ -318,7 +334,8 @@
  *  <applyState:[STATE_ID, CHANCE, DURATION, STACKS]>
  * Where STATE_ID is the id of the state to apply to the target.
  * Where CHANCE is the percent chance between 0 and 100 that it triggers.
- * Where DURATION is the duration in frames; omit to use the state's default.
+ * Where DURATION is the duration in frames; omit or use 0 for the state's default,
+ * or -1 to force the application indefinite regardless of the state's own tags.
  * Where STACKS is the starting stack count; omit to use the state's default.
  *
  * TAG EXAMPLES:
@@ -327,6 +344,14 @@
  *
  *  <applyState:[12, 30]>
  * On every hit, 30% chance to apply state id 12 with the state's default duration.
+ *
+ *  <applyState:[12, 30, 0, 3]>
+ * On every hit, 30% chance to apply state id 12 with 3 starting stacks and the
+ * state's own default duration (0 = no duration change).
+ *
+ *  <applyState:[12, 30, -1]>
+ * On every hit, 30% chance to apply state id 12 forever, regardless of the
+ * state's own duration tags.
  * ============================================================================
  * TOGGLE STATE ON EXECUTE:
  * Have you ever wanted a "stance" skill — one that flips a state on when it's off,
@@ -362,7 +387,56 @@
  *  <toggleOnExecute:13>
  * Executing this skill independently toggles both state id 12 and state id 13.
  * ============================================================================
+ * TOGGLE STATE GROUP ON EXECUTE:
+ * The scalar toggle above is fine for a single on/off flag, but it falls apart
+ * for a "stance A vs. stance B" pair (or a longer cycle): tagging both states
+ * with <toggleOnExecute> flips each one independently, so if anything outside
+ * this skill ever strips one of the two states out from under you, the pair can
+ * drift into both-active or both-inactive and stay that way. This tag instead
+ * treats a whole list of states as one coupled group with exactly one "active"
+ * member at a time, and self-repairs if that invariant is ever broken.
+ *
+ * NOTE 1:
+ * Same as <toggleOnExecute>: fires once at press-time, no chance roll, always
+ * triggers, and a skill may carry multiple <toggleGroupOnExecute> tags to cycle
+ * several independent groups in one execution.
+ *
+ * NOTE 2:
+ * Within one group: if none of the listed states are active, the first one is
+ * added. If exactly one is active, it's removed and the NEXT one in the list is
+ * added, wrapping back to the first after the last — so a longer list is a full
+ * cycle, not just an A/B swap. If more than one is somehow active at once (state
+ * drift from some other effect), all of them are removed and the group resyncs
+ * to the first entry rather than continuing to advance from a broken position.
+ *
+ * TAG USAGE:
+ * - Skills only.
+ *
+ * TAG FORMAT:
+ *  <toggleGroupOnExecute:[STATE_ID, STATE_ID, ...]>
+ * Where each STATE_ID is a member of the cycle, in the order they cycle through.
+ *
+ * TAG EXAMPLES:
+ *  <toggleGroupOnExecute:[12, 13]>
+ * A two-state stance swap: executing this skill flips from 12 to 13, or from 13
+ * back to 12, always landing on exactly one of the two.
+ *
+ *  <toggleGroupOnExecute:[12, 13, 14]>
+ * A three-state cycle: 12 -> 13 -> 14 -> 12 -> ..., one step per execution.
+ * ============================================================================
  * CHANGELOG:
+ * - 1.6.0
+ *    Added <toggleGroupOnExecute:[STATE_ID, ...]> — a skill-scoped, press-time
+ *    cycle-group toggle for stance/equation-style mechanics with more than one
+ *    exclusive state. Coupled and self-repairing, unlike stacking independent
+ *    <toggleOnExecute> tags for the same purpose.
+ *    Fixed Game_Action#toggleOnExecuteStateIds throwing on every execution — it read
+ *    the tag through RPGManager.getNumbersFromNoteByRegex, which expects a single
+ *    bracketed list capture (the shape every other consumer of that helper uses),
+ *    but this tag captures one bare number per repeated line. Switched to
+ *    RPGManager.getStringsFromNoteByRegex (which collects one entry per matching
+ *    line instead of overwriting) plus a Number() map. No notetag syntax change;
+ *    existing <toggleOnExecute:STATE_ID> data is unaffected.
  * - 1.5.0
  *    Added <toggleOnExecute:STATE_ID> — a skill-scoped, press-time state toggle
  *    for stance-style skills (add if absent, remove if present). Repeatable.

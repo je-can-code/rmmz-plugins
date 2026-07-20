@@ -1081,33 +1081,33 @@ RPG_Skill.prototype.getJabsVisOffsetFor = function(direction)
   {
     // uP.
     case 8:
-      return this.jabsVisOffsetU || def || [ 0, 0 ];
+      return this.jabsVisOffsetU || def;
     // dOWN.
     case 2:
-      return this.jabsVisOffsetD || def || [ 0, 0 ];
+      return this.jabsVisOffsetD || def;
     // lEFT.
     case 4:
-      return this.jabsVisOffsetL || def || [ 0, 0 ];
+      return this.jabsVisOffsetL || def;
     // rIGHT.
     case 6:
-      return this.jabsVisOffsetR || def || [ 0, 0 ];
+      return this.jabsVisOffsetR || def;
 
     // uP-RIGHT.
     case 9:
-      return this.jabsVisOffsetUR || this.jabsVisOffsetU || this.jabsVisOffsetR || def || [ 0, 0 ];
+      return this.jabsVisOffsetUR || this.jabsVisOffsetU || this.jabsVisOffsetR || def;
     // uP-LEFT.
     case 7:
-      return this.jabsVisOffsetUL || this.jabsVisOffsetU || this.jabsVisOffsetL || def || [ 0, 0 ];
+      return this.jabsVisOffsetUL || this.jabsVisOffsetU || this.jabsVisOffsetL || def;
     // dOWN-RIGHT.
     case 3:
-      return this.jabsVisOffsetDR || this.jabsVisOffsetD || this.jabsVisOffsetR || def || [ 0, 0 ];
+      return this.jabsVisOffsetDR || this.jabsVisOffsetD || this.jabsVisOffsetR || def;
     // dOWN-LEFT.
     case 1:
-      return this.jabsVisOffsetDL || this.jabsVisOffsetD || this.jabsVisOffsetL || def || [ 0, 0 ];
+      return this.jabsVisOffsetDL || this.jabsVisOffsetD || this.jabsVisOffsetL || def;
   }
 
   // unknown direction: return default.
-  return def || [ 0, 0 ];
+  return def;
 };
 
 /**
@@ -1283,24 +1283,24 @@ RPG_Skill.prototype.getJabsVisOffsetForMergedActionMap = function(jabsAction, di
   switch (direction)
   {
     case 8:
-      return mergedU || def || [ 0, 0 ];
+      return mergedU || def;
     case 2:
-      return mergedD || def || [ 0, 0 ];
+      return mergedD || def;
     case 4:
-      return mergedL || def || [ 0, 0 ];
+      return mergedL || def;
     case 6:
-      return mergedR || def || [ 0, 0 ];
+      return mergedR || def;
     case 9:
-      return mergedUR || mergedU || mergedR || def || [ 0, 0 ];
+      return mergedUR || mergedU || mergedR || def;
     case 7:
-      return mergedUL || mergedU || mergedL || def || [ 0, 0 ];
+      return mergedUL || mergedU || mergedL || def;
     case 3:
-      return mergedDR || mergedD || mergedR || def || [ 0, 0 ];
+      return mergedDR || mergedD || mergedR || def;
     case 1:
-      return mergedDL || mergedD || mergedL || def || [ 0, 0 ];
+      return mergedDL || mergedD || mergedL || def;
   }
 
-  return def || [ 0, 0 ];
+  return def;
 };
 //endregion directional
 //endregion visual metadata

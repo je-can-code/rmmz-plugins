@@ -485,6 +485,41 @@ class RPGManager
     return val;
   }
 
+  /**
+   * Gathers all string instances matching the regex across every database object provided.
+   * @param {RPG_BaseItem[]} databaseDatas The collection of database objects to inspect.
+   * @param {RegExp} structure The RegExp structure to find values for.
+   * @param {boolean=} nullIfEmpty Whether or not to return null if we found nothing; defaults to false.
+   * @returns {string[]|null} The array of strings matching the structure across all sources, or empty, or null.
+   */
+  static getStringsFromAllNotesByRegex(databaseDatas, structure, nullIfEmpty = false)
+  {
+    // initialize the running collection.
+    const strings = [];
+
+    // iterate over each of the database objects for inspection.
+    databaseDatas.forEach(databaseData =>
+    {
+      // gather strings from this one object.
+      const found = this.getStringsFromNoteByRegex(databaseData, structure);
+
+      // if any found, concatenate into the running collection.
+      if (found.length)
+      {
+        strings.push(...found);
+      }
+    }, this);
+
+    // return null if nothing found and nullIfEmpty requested.
+    if (!strings.length && nullIfEmpty)
+    {
+      return null;
+    }
+
+    // return the strings (possibly empty array).
+    return strings;
+  }
+
   //endregion strings
 
   //region numbers
@@ -1030,6 +1065,42 @@ class RPGManager
   }
 
   /**
+   * Gets an array of arrays matching the regex across every database object provided.
+   * @param {RPG_Base[]} databaseDatas The collection of database objects to parse notes from.
+   * @param {RegExp} structure The regular expression to filter notes by.
+   * @param {boolean} tryParse Whether or not to attempt to parse the found arrays.
+   * @param {boolean} nullIfEmpty Whether or not to return null if nothing is found.
+   * @returns {any[][]|null} The array of arrays from the notes across all sources, or empty, or null.
+   */
+  static getArraysFromAllNotesByRegex(databaseDatas, structure, tryParse = true, nullIfEmpty = false)
+  {
+    // initialize the running collection.
+    const arrays = [];
+
+    // iterate over each of the database objects for inspection.
+    databaseDatas.forEach(databaseData =>
+    {
+      // gather arrays from this one object.
+      const found = this.getArraysFromNotesByRegex(databaseData, structure, tryParse);
+
+      // if any found, concatenate into the running collection.
+      if (found.length)
+      {
+        arrays.push(...found);
+      }
+    }, this);
+
+    // return null if nothing found and nullIfEmpty requested.
+    if (!arrays.length && nullIfEmpty)
+    {
+      return null;
+    }
+
+    // return the arrays (possibly empty array).
+    return arrays;
+  }
+
+  /**
    * Gets an array of arrays based on the provided regex structure.
    * @param {RPG_Base} databaseData The database object to parse notes from.
    * @param {RegExp} structure The regular expression to filter notes by.
@@ -1281,134 +1352,6 @@ class RPGManager
 
   //endregion on-chance effects
   //endregion arrays
-
-  //region captures
-  /**
-   * Gets all capture groups (excluding the full match) for every note line that matches the regex.
-   *
-   * Each matching line contributes one entry to the result array. The entry is an array of strings
-   * corresponding to the capture groups for that match (index 1..n of the RegExp exec result).
-   *
-   * Example:
-   *   Regex: /<on-(hit|use):affect-(self|allies|target|enemies|all):\[([+\-/ ().\w]+)]>/gi
-   *   Line:  "<on-hit:affect-self:[a.atk * 400]>"
-   *   Pushes: [ "hit", "self", "a.atk * 400" ]
-   *
-   * @param {RPG_BaseItem} databaseData The database object to inspect.
-   * @param {RegExp} structure The regular expression to find values for.
-   * @param {boolean=} nullIfEmpty Whether or not to return [] if not found, or null.
-   * @returns {string[][]|null} An array of capture arrays, or null.
-   */
-  static getAllCapturesFromNoteByRegex(databaseData, structure, nullIfEmpty = false)
-  {
-    // validate the incoming data object.
-    if (this.#canParsedatabaseData(databaseData) === false)
-    {
-      // handle the return.
-      return nullIfEmpty
-        ? null
-        : [];
-    }
-
-    // define the unique key for this regex and option set.
-    const key = `captures:${structure.source}::${structure.flags}::nullIfEmpty=${nullIfEmpty}`;
-
-    // grab the result (potentially cached).
-    return this.cached(
-      databaseData,
-      key,
-      () => this.#getAllCapturesFromNoteByRegex(databaseData, structure, nullIfEmpty)
-    );
-  }
-
-  /**
-   * Gets all capture groups (excluding the full match) for every note line that matches the regex.
-   * @param {RPG_BaseItem} databaseData The database object to inspect.
-   * @param {RegExp} structure The regular expression to find values for.
-   * @param {boolean=} nullIfEmpty Whether or not to return [] if not found, or null.
-   * @returns {string[][]|null} An array of capture arrays, or null.
-   */
-  static #getAllCapturesFromNoteByRegex(databaseData, structure, nullIfEmpty = false)
-  {
-    // build a non-global, non-sticky scanner to avoid lastIndex side effects across lines.
-    const safeFlags = structure.flags
-      .replace('g', '')
-      .replace('y', '');
-    const scan = new RegExp(structure.source, safeFlags);
-
-    // get the note data from this object (split by newlines).
-    const lines = databaseData.note.split(/[\r\n]+/);
-
-    // initialize the collection of capture arrays.
-    const captures = [];
-
-    // iterate over each valid line of the note.
-    lines.forEach(line =>
-    {
-      // execute the structure against this line.
-      const result = scan.exec(line);
-
-      // skip if it didn’t match.
-      if (!result) return;
-
-      // slice off the full match, keep only capture groups 1..n.
-      const groups = result.slice(1);
-
-      // push the capture group array.
-      captures.push(groups);
-    });
-
-    // check if we found nothing and want null.
-    if (captures.length === 0 && nullIfEmpty)
-    {
-      // return null.
-      return null;
-    }
-
-    // return all captures.
-    return captures;
-  }
-
-  /**
-   * Gets all capture arrays from a collection of database objects.
-   *
-   * See {@link RPGManager.getAllCapturesFromNoteByRegex} for details on the shape
-   * of the returned values for each matching tag.
-   *
-   * @param {RPG_BaseItem[]} databaseDatas The database objects to inspect.
-   * @param {RegExp} structure The regular expression to find values for.
-   * @param {boolean=} nullIfEmpty Whether or not to return [] if not found, or null.
-   * @returns {string[][]|null} All capture arrays found across all provided objects.
-   */
-  static getAllCapturesFromAllNotesByRegex(databaseDatas, structure, nullIfEmpty = false)
-  {
-    // initialize the collection of capture arrays.
-    const captures = [];
-
-    // iterate over each of the database objects for inspection.
-    databaseDatas.forEach(databaseData =>
-    {
-      // gather captures from this one object.
-      const found = this.getAllCapturesFromNoteByRegex(databaseData, structure);
-
-      // if any found, concatenate into the running collection.
-      if (found.length)
-      {
-        captures.push(...found);
-      }
-    }, this);
-
-    // return null if nothing found and nullIfEmpty requested.
-    if (!captures.length && nullIfEmpty)
-    {
-      return null;
-    }
-
-    // return captures (possibly empty array).
-    return captures;
-  }
-
-  //endregion captures
 
   /**
    * Determines whether the database object can have its note parsed.

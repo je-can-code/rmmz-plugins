@@ -101,6 +101,14 @@ describe('J-ABS-Shield ShieldParameterRegistration (unit, all downstream depende
       expect(captures[0].getValue({ sar: 1.5 })).toBe(1.5);
       expect(captures[1].getValue({ ser: 0.8 })).toBe(0.8);
     });
+
+    it('defaults sar/ser sdp bindings to a fallback multiplier of 1', () =>
+    {
+      ShieldParameterRegistration.registerAll();
+
+      expect(captures[0].sdpBinding.fallback()).toBe(1);
+      expect(captures[1].sdpBinding.fallback()).toBe(1);
+    });
   });
 });
 //endregion plugins/abs/ext/shield/core/register-shield-parameters.test.js

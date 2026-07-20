@@ -95,5 +95,14 @@ describe('J-ABS Game_Battler#onJabsStateInflicted (direct src import)', () =>
     // Assert
     expect(battler.onJabsStateInflicted).not.toHaveBeenCalled();
   });
+
+  it('the default hook itself is a no-op extension point', () =>
+  {
+    // Arrange
+    const battler = Object.create(globalThis.Game_Battler.prototype);
+
+    // Act & Assert
+    expect(() => battler.onJabsStateInflicted(14, { name: 'attacker' })).not.toThrow();
+  });
 });
 //endregion plugins/abs/core/_component/game-battler-on-jabs-state-inflicted.test.js

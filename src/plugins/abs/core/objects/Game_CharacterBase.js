@@ -208,9 +208,6 @@ Game_CharacterBase.prototype.walkInDirectionClamped = function(direction, distan
         canPass = this.canPass(realX, realY, direction);
         if (!canPass) realX--;
         break;
-      default:
-        canPass = false;
-        break;
     }
 
     // only count the step if it actually landed somewhere new.

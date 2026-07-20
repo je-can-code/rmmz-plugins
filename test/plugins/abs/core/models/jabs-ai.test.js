@@ -350,7 +350,7 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
     it('returns 0 when no negative, cleansable state is found', () =>
     {
       const ai = new JABS_AI();
-      const ally = { getBattler: () => ({ states: () => [ { id: 1, jabsNegative: false } ] }) };
+      const ally = { getBattler: () => ({ states: () => [ { id: 1, isNegativeType: () => false } ] }) };
       const user = buildBattler({ getAllNearbyAllies: () => [ ally ] });
 
       expect(ai.decideCleansing(user, [])).toEqual(0);
@@ -359,7 +359,7 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
     it('returns the best cleansing skill id when a negative, cleansable state is found', () =>
     {
       const ai = new JABS_AI();
-      const ally = { getBattler: () => ({ states: () => [ { id: 5, jabsNegative: true } ] }) };
+      const ally = { getBattler: () => ({ states: () => [ { id: 5, isNegativeType: () => true } ] }) };
       const user = buildBattler({
         getAllNearbyAllies: () => [ ally ],
         getSkill: () => ({ effects: [ { code: 22, dataId: 5, value1: 0.5 } ] }),

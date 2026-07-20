@@ -81,6 +81,11 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       configurable: true,
       get: () => Array.of(),
     });
+    Object.defineProperty(String, 'empty', {
+      enumerable: true,
+      configurable: true,
+      get: () => '',
+    });
 
     globalThis.J = {
       ABS: {
@@ -376,6 +381,11 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(JABS_Engine.resolveMeleeOriginPixelOffsetsForFacing(7)).toEqual({ ox: 0, oy: -5 });
       expect(JABS_Engine.resolveMeleeOriginPixelOffsetsForFacing(9)).toEqual({ ox: 0, oy: -5 });
     });
+
+    it('adds no extra Y offset for an unrecognized facing value', () =>
+    {
+      expect(JABS_Engine.resolveMeleeOriginPixelOffsetsForFacing(5)).toEqual({ ox: 0, oy: 0 });
+    });
   });
 
   describe('resolveMeleeVerticalLiftPxForFacing', () =>
@@ -539,6 +549,26 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       globalThis.J.LEVEL = false;
     });
 
+    it('defaults ignoreParryPercent to 0 when not provided', () =>
+    {
+      const caster = buildBattler({ hit: 5 });
+      const target = buildBattler({ grd: 5 });
+      const withZero = JABS_Engine.implicitParryChancePercent(caster, target, 0);
+      const withUndefined = JABS_Engine.implicitParryChancePercent(caster, target, undefined);
+      expect(withUndefined).toBe(withZero);
+    });
+
+    it('clamps an invalid dominance multiplier to a safe default of 2', () =>
+    {
+      globalThis.J.ABS.Metadata.ImplicitParryDominanceMultiplier = 0;
+      const caster = buildBattler({ hit: 5 });
+      const target = buildBattler({ grd: 5 });
+
+      expect(() => JABS_Engine.implicitParryChancePercent(caster, target, 0)).not.toThrow();
+
+      globalThis.J.ABS.Metadata.ImplicitParryDominanceMultiplier = 2;
+    });
+
     it('glancingBlowChancePercent uses its own dominance multiplier, independent of implicit parry', () =>
     {
       const caster = buildBattler({ hit: 5 });
@@ -582,11 +612,11 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(engine.getJabsStates().has('uuid-1')).toBe(false);
     });
 
-    it('KNOWN BUG: never actually seeds hitboxOverlaysVisible from metadata on first construction, since the class field default (`hitboxOverlaysVisible = false`) already makes `this.hitboxOverlaysVisible` non-nullish before initialize() runs- `false ?? metadataDefault` short-circuits to `false` regardless of the configured metadata value. The metadata default only takes effect via the unconditional non-transfer branch (initialize(false))', () =>
+    it('seeds hitboxOverlaysVisible from metadata on first construction (fixed- field default is now null, not false)', () =>
     {
       globalThis.J.ABS.Metadata.HitboxOverlaysInitiallyVisible = true;
       const engine = new JABS_Engine();
-      expect(engine.hitboxOverlaysVisible).toBe(false);
+      expect(engine.hitboxOverlaysVisible).toBe(true);
 
       globalThis.J.ABS.Metadata.HitboxOverlaysInitiallyVisible = false;
     });
@@ -920,7 +950,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       return Object.assign({
         expired: false,
         stateId: 1,
-        battler: { deathStateId: () => 99, state: () => ({ jabsNegative: false }) },
+        battler: { deathStateId: () => 99, state: () => ({ isNegativeType: () => false }) },
       }, overrides);
     }
 
@@ -967,7 +997,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       {
         const engine = new JABS_Engine();
         const positiveState = buildTrackedState({
-          battler: { deathStateId: () => 99, state: () => ({ jabsNegative: false }) },
+          battler: { deathStateId: () => 99, state: () => ({ isNegativeType: () => false }) },
         });
         engine.addJabsStateByUuid('uuid-1', positiveState);
         expect(engine.getPositiveJabsStatesByUuid('uuid-1')).toEqual([ positiveState ]);
@@ -978,7 +1008,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       {
         const engine = new JABS_Engine();
         const negativeState = buildTrackedState({
-          battler: { deathStateId: () => 99, state: () => ({ jabsNegative: true }) },
+          battler: { deathStateId: () => 99, state: () => ({ isNegativeType: () => true }) },
         });
         engine.addJabsStateByUuid('uuid-1', negativeState);
         expect(engine.getNegativeJabsStatesByUuid('uuid-1')).toEqual([ negativeState ]);
@@ -1889,12 +1919,24 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       });
     });
 
+    describe('prePartyCycling', () =>
+    {
+      it('is a no-op hook', () =>
+      {
+        const engine = new JABS_Engine();
+        expect(() => engine.prePartyCycling()).not.toThrow();
+      });
+    });
+
     describe('handlePartyCycleMemberChanges', () =>
     {
       it('rotates the party array until landing on a living, unlocked member', () =>
       {
-        // Arrange- 3 actors; actor 1 (self, skipped), actor 2 (dead, skipped), actor 3 (eligible).
-        globalThis.$gameParty = { _actors: [ 1, 2, 3 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
+        // Arrange- 3 actors in order [1,3,2] so the first candidate landed on after skipping
+        // self (partyIndex 0) is actor 2 (dead), forcing a second rotation onto actor 1 (eligible).
+        // this actually exercises the isDead()-true continue branch, unlike an ordering that
+        // happens to land on the eligible member on the very first candidate check.
+        globalThis.$gameParty = { _actors: [ 1, 3, 2 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
         globalThis.$gameActors = {
           actor: (id) => ({
             isDead: () => id === 2,
@@ -1907,10 +1949,31 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
         engine.handlePartyCycleMemberChanges();
 
-        // rotation stops once actor 3 lands at the front (after 2 rotations: [2,3,1] then [3,1,2]).
-        expect(globalThis.$gameParty._actors[0]).toBe(3);
+        // rotation stops once actor 1 lands at the front (after 2 rotations: [3,2,1] then [2,1,3]).
+        expect(globalThis.$gameParty._actors[0]).toBe(1);
         expect(globalThis.$gamePlayer.refresh).toHaveBeenCalledTimes(1);
         expect(engine.refreshPlayer1Data).toHaveBeenCalledTimes(1);
+      });
+
+      it('skips a living but switch-locked member', () =>
+      {
+        // Arrange- 3 actors in order [1,3,2] so the first candidate landed on after skipping
+        // self is actor 2 (locked), forcing a second rotation onto actor 1 (eligible)- this
+        // actually exercises the switchLocked()-true continue branch.
+        globalThis.$gameParty = { _actors: [ 1, 3, 2 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
+        globalThis.$gameActors = {
+          actor: (id) => ({
+            isDead: () => false,
+            switchLocked: () => id === 2,
+          }),
+        };
+        globalThis.$gamePlayer = { refresh: vi.fn() };
+        const engine = new JABS_Engine();
+        engine.refreshPlayer1Data = vi.fn();
+
+        engine.handlePartyCycleMemberChanges();
+
+        expect(globalThis.$gameParty._actors[0]).toBe(1);
       });
 
       it('triggers onBattlerDataChange for the new leader', () =>
@@ -2310,7 +2373,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
   describe('handleOnCastStateEffects', () =>
   {
-    it('applies all five on-cast state effect hooks against the underlying Game_Action', () =>
+    it('applies all six on-cast state effect hooks against the underlying Game_Action', () =>
     {
       const engine = new JABS_Engine();
       const gameAction = {
@@ -2318,6 +2381,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         applyOnCastSelfStatesIfAfflicted: vi.fn(),
         applyOnCastLoseStates: vi.fn(),
         applyToggleOnExecuteStates: vi.fn(),
+        applyToggleGroupOnExecuteStates: vi.fn(),
         applyOnCastExecuteSkills: vi.fn(),
       };
       const action = { getAction: () => gameAction };
@@ -2328,6 +2392,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(gameAction.applyOnCastSelfStatesIfAfflicted).toHaveBeenCalledTimes(1);
       expect(gameAction.applyOnCastLoseStates).toHaveBeenCalledTimes(1);
       expect(gameAction.applyToggleOnExecuteStates).toHaveBeenCalledTimes(1);
+      expect(gameAction.applyToggleGroupOnExecuteStates).toHaveBeenCalledTimes(1);
       expect(gameAction.applyOnCastExecuteSkills).toHaveBeenCalledWith('caster');
     });
   });
@@ -3623,6 +3688,20 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 2.5);
     });
 
+    it('ignores a target state with a negative jabsAggroInAmp', () =>
+    {
+      const engine = new JABS_Engine();
+      const attacker = buildAttacker();
+      const target = buildTarget(buildAggroResult(), {
+        getBattler: () => ({ result: () => buildAggroResult(), states: () => [ { jabsAggroInAmp: -1 } ] }),
+      });
+      const action = buildAction(attacker);
+
+      engine.applyAggroEffects(action, target);
+
+      expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 5);
+    });
+
     it('multiplies the final aggro by the attacker\'s tgr', () =>
     {
       const engine = new JABS_Engine();
@@ -3805,6 +3884,25 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         // flat: 100 - 50 = 50. percent: 50 * (-50/100) = -25. total delta calls: -50, then -25.
         expect(otherAggro.modAggro).toHaveBeenNthCalledWith(1, -50);
         expect(otherAggro.modAggro).toHaveBeenNthCalledWith(2, -25);
+        JABS_TeamRules.isFriendly = vi.fn(() => false);
+      });
+
+      it('skips the flat adjustment entirely when notMyAggro is 0, applying only the percent', async () =>
+      {
+        const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+        const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+        const engine = new JABS_Engine();
+        const attacker = buildAttacker();
+        const otherAggro = { uuid: () => 'other-uuid', aggro: 100, modAggro: vi.fn() };
+        const target = buildTarget(buildAggroResult(), { getAllAggros: () => [ otherAggro ] });
+        const action = buildAction(attacker, { notMyAggro: () => 0, notMyAggroPercent: () => -50 });
+        JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ getTeam: () => 'attacker-team' }));
+        JABS_TeamRules.isFriendly = vi.fn(() => true);
+
+        engine.applyNotMyAggroEffects(action, attacker, target);
+
+        expect(otherAggro.modAggro).toHaveBeenCalledTimes(1);
+        expect(otherAggro.modAggro).toHaveBeenCalledWith(-50);
         JABS_TeamRules.isFriendly = vi.fn(() => false);
       });
     });
@@ -4322,6 +4420,22 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(targetSprite.walkInDirectionClamped).not.toHaveBeenCalled();
     });
 
+    it('computes a negative y offset for an UP-facing knockback', () =>
+    {
+      const engine = buildEngine();
+      const targetSprite = buildTargetSprite();
+      const target = buildTarget(targetSprite);
+      const action = buildAction({
+        getKnockback: () => 4,
+        getBaseSkill: () => ({ jabsIgnoreTerrain: true }),
+        getActionSprite: () => ({ direction: () => J.ABS.Directions.UP }),
+      });
+
+      engine.checkKnockback(action, target);
+
+      expect(targetSprite.jump).toHaveBeenCalledWith(0, -4);
+    });
+
     it('computes a negative x offset for a LEFT-facing knockback', () =>
     {
       const engine = buildEngine();
@@ -4750,6 +4864,21 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       // rawChance(40) * scaleFactor(0.5) = 20, rounded.
       expect(globalThis.RPGManager.fateOf100).toHaveBeenCalledWith(target.getBattler(), 20, 1, 0);
     });
+
+    it('defaults ignoreParryPercent to 0 when the skill has no tag', () =>
+    {
+      JABS_Engine.implicitParryChancePercent = vi.fn(() => 40);
+      globalThis.RPGManager.fateOf100.mockReturnValue(true);
+      const engine = new JABS_Engine();
+      engine.isParryPossible = vi.fn(() => true);
+      const target = buildTarget();
+      const caster = buildCaster();
+      const action = buildAction({ getBaseSkill: () => ({ jabsIgnoreParry: null }) });
+
+      engine.checkImplicitFullParry(caster, target, action);
+
+      expect(JABS_Engine.implicitParryChancePercent).toHaveBeenCalledWith(caster, target, 0);
+    });
   });
 
   describe('checkGlancingBlow', () =>
@@ -4797,6 +4926,21 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       expect(result).toBe(true);
       expect(globalThis.RPGManager.fateOf100).toHaveBeenCalledWith(target.getBattler(), 30, 1, 0);
+    });
+
+    it('defaults ignoreParryPercent to 0 when the skill has no tag', () =>
+    {
+      JABS_Engine.glancingBlowChancePercent = vi.fn(() => 30);
+      globalThis.RPGManager.fateOf100.mockReturnValue(true);
+      const engine = new JABS_Engine();
+      engine.isParryPossible = vi.fn(() => true);
+      const target = buildTarget();
+      const caster = buildCaster();
+      const action = buildAction({ getBaseSkill: () => ({ jabsIgnoreParry: null }) });
+
+      engine.checkGlancingBlow(caster, target, action);
+
+      expect(JABS_Engine.glancingBlowChancePercent).toHaveBeenCalledWith(caster, target, 0);
     });
   });
 
@@ -5824,6 +5968,29 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
     });
 
+    it('logs an execution entry for mp-only damage, skipping the hp-damage block entirely', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const target = buildTarget(buildTargetBattler(buildResult({ mpDamage: 10 })));
+
+      engine.createAttackLog(buildAction(), target);
+
+      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+    });
+
+    it('formats negative hp damage (healing) without a leading minus sign', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+      const target = buildTarget(buildTargetBattler(buildResult({ hpDamage: -8 })));
+
+      engine.createAttackLog(buildAction(), target);
+
+      expect(globalThis.ActionLogBuilder.mock.results[0].value.setupExecution)
+        .toHaveBeenCalledWith('Slime', 'Hero', 7, '8', String.empty, true, false);
+    });
+
     it('logs the standard execution entry for hp damage', () =>
     {
       globalThis.J.LOG = true;
@@ -6133,6 +6300,38 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       expect(engine.collisionRhombus(target, action, 2)).toBe(false);
     });
+
+    it('measures the gap from the right/bottom edges when the origin is right of and below the target', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      // resolved origin (0, 0) sits to the right of and below a target rect placed at negative coordinates.
+      const target = buildTargetAt(-48, -48);
+
+      expect(engine.collisionRhombus(target, action, 2)).toBe(true);
+    });
+
+    it('has no horizontal gap when the origin\'s x already falls within the rect\'s horizontal span', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      // rect spans x:[-24, 24], so the resolved origin's x (0) sits inside it- neither the
+      // left-of nor right-of horizontal branch fires, leaving dxPx at its initialized 0.
+      const target = buildTargetAt(0, 200);
+
+      expect(engine.collisionRhombus(target, action, 2)).toBe(false);
+    });
+
+    it('has no vertical gap when the origin\'s y already falls within the rect\'s vertical span', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      // rect spans y:[-24, 24], so the resolved origin's y (0) sits inside it- neither the
+      // above nor below vertical branch fires, leaving dyPx at its initialized 0.
+      const target = buildTargetAt(200, 0);
+
+      expect(engine.collisionRhombus(target, action, 2)).toBe(false);
+    });
   });
 
   describe('collisionCross', () =>
@@ -6269,6 +6468,17 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       expect(engine.collisionSector(target, action, 1, J.ABS.Directions.DOWN, 30)).toBe(false);
     });
+
+    it('is true when a sample point sits exactly at the arc origin (degenerate case)', () =>
+    {
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      // centers the target's AABB exactly on the action origin (0, 0), so the center sample
+      // point's vector to the origin is (0, 0)- the degenerate zero-length-vector branch.
+      const target = buildTargetAt(0, 0);
+
+      expect(engine.collisionSector(target, action, 1, J.ABS.Directions.DOWN, 30)).toBe(true);
+    });
   });
 
   describe('isTargetWithinRange', () =>
@@ -6367,6 +6577,17 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       expect(result).toBe(false);
       expect(engine.collisionCircle).not.toHaveBeenCalled();
+    });
+
+    it('does not exclude a target outside the inner-radius dead zone', () =>
+    {
+      const engine = buildEngineWithShapeMocks();
+      const action = buildOriginAction();
+      const target = buildTargetAt(500, 0);
+
+      engine.isTargetWithinRange(2, target, action, 5, J.ABS.Shapes.Circle, 1);
+
+      expect(engine.collisionCircle).toHaveBeenCalled();
     });
 
     it('does not apply the dead zone when innerRadius is 0', () =>
@@ -6635,6 +6856,20 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(engine.getCollisionTargets(jabsAction)).toEqual([ retaliationTarget ]);
     });
 
+    it('falls through past a retaliation target that cannot connect', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getAllBattlers = vi.fn(() => []);
+      const engine = new JABS_Engine();
+      const retaliationTarget = { canActionConnect: () => false, isWithinScope: () => true };
+      const jabsAction = buildJabsAction({
+        getAction: () => ({ isForUser: () => false, isForOne: () => true }),
+        getActionOptions: () => ({ getRetaliationTarget: () => retaliationTarget }),
+      });
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([]);
+    });
+
     it('filters out candidates that cannot connect with the action', async () =>
     {
       const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
@@ -6674,6 +6909,48 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       const jabsAction = buildJabsAction({ getActionSprite: () => actionSprite });
 
       expect(engine.getCollisionTargets(jabsAction)).toEqual([ candidate ]);
+    });
+
+    it('skips a later candidate once single-scope has already been satisfied by an earlier hit', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      // isWithinScope is consulted twice per candidate: once by the pre-filter (no hitOne arg,
+      // always passes), and once by the per-candidate processor (respects hitOne once true).
+      const isWithinScope = (jabsAction, battler, hitOne) => hitOne !== true;
+      const first = { canActionConnect: () => true, isWithinScope, isInanimate: () => false, getCharacter: () => ({}) };
+      const second = { canActionConnect: () => true, isWithinScope, isInanimate: () => false, getCharacter: () => ({}) };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ first, second ]);
+      const engine = new JABS_Engine();
+      engine.isTargetWithinRange = vi.fn(() => true);
+      const actionSprite = { _realX: 0, _realY: 0, getJabsAction: () => ({ direction: () => 2 }) };
+      const jabsAction = buildJabsAction({ getActionSprite: () => actionSprite });
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([ first ]);
+    });
+
+    it('falls back to a 1-tile point-contact range for a direct action with no explicit range tag', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => []);
+      const engine = new JABS_Engine();
+      const jabsAction = buildJabsAction({
+        getRange: () => null,
+        isDirectAction: () => true,
+        getProximity: () => 0,
+        getCaster: () => ({ getAllyTarget: () => null, isEnemy: () => false, getX: () => 0, getY: () => 0 }),
+      });
+
+      expect(() => engine.getCollisionTargets(jabsAction)).not.toThrow();
+    });
+
+    it('falls back to a null range for a non-direct action with no explicit range tag', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      JABS_AiManager.getAllBattlers = vi.fn(() => []);
+      const engine = new JABS_Engine();
+      const jabsAction = buildJabsAction({ getRange: () => null, isDirectAction: () => false });
+
+      expect(() => engine.getCollisionTargets(jabsAction)).not.toThrow();
     });
 
     it('excludes candidates that fail a non-direct action\'s spatial collision check', async () =>
@@ -6743,6 +7020,21 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       const jabsAction = buildJabsAction({ isDirectAction: () => true, getActionSprite: () => actionSprite });
 
       expect(engine.getCollisionTargets(jabsAction)).toEqual([ candidate ]);
+    });
+
+    it('excludes a candidate that fails spatial collision for a direct action with an action sprite', async () =>
+    {
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const candidate = {
+        canActionConnect: () => true, isWithinScope: () => true, isInanimate: () => false, getCharacter: () => ({}),
+      };
+      JABS_AiManager.queryBattlersInAabb = vi.fn(() => [ candidate ]);
+      const engine = new JABS_Engine();
+      engine.isTargetWithinRange = vi.fn(() => false);
+      const actionSprite = { _realX: 0, _realY: 0, getJabsAction: () => ({ direction: () => 2 }) };
+      const jabsAction = buildJabsAction({ isDirectAction: () => true, getActionSprite: () => actionSprite });
+
+      expect(engine.getCollisionTargets(jabsAction)).toEqual([]);
     });
   });
   //endregion collision
@@ -6863,6 +7155,15 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.handleDefeatedPlayer();
 
       expect(engine.performPartyCycling).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('handleDefeatedAlly', () =>
+  {
+    it('is a no-op hook', () =>
+    {
+      const engine = new JABS_Engine();
+      expect(() => engine.handleDefeatedAlly({})).not.toThrow();
     });
   });
 
@@ -7314,6 +7615,16 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.createLootLog({ id: 1, itypeId: 4 });
 
       expect(globalThis.LootLogBuilder.mock.results[0].value.setupLootObtained).toHaveBeenCalledWith('item', 1);
+    });
+
+    it('logs an empty loot type when none of the recognized type flags are present', () =>
+    {
+      globalThis.J.LOG = true;
+      const engine = new JABS_Engine();
+
+      engine.createLootLog({ id: 5 });
+
+      expect(globalThis.LootLogBuilder.mock.results[0].value.setupLootObtained).toHaveBeenCalledWith(String.empty, 5);
     });
   });
 

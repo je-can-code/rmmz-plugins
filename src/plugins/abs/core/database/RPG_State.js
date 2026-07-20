@@ -59,17 +59,19 @@ Object.defineProperty(RPG_State.prototype, 'jabsDisarmed', {
 
 //region negative
 /**
- * Whether or not this state is considered "negative" for the purpose
- * of AI action decision-making. Ally AI set to Support or enemy AI set
- * to Healing will attempt to remove "negative" states if possible.
- * @type {boolean|null}
+ * Whether or not this state carries the {@code <type:negative>} classifier, used to determine
+ * "negative"/ailment polarity for AI action decision-making, immunity gating, and passive rule
+ * dispatch. Ally AI set to Support or enemy AI set to Healing will attempt to remove states this
+ * returns true for. Polarity used to be its own dedicated {@code <negative>} notetag, but was
+ * folded into the shared {@code <type:CLASSIFIER>} system so it composes naturally with
+ * {@code <stateTypeResist>}/{@code <stateTypeImmune>} instead of needing a parallel mechanism.
+ * @returns {boolean}
  */
-Object.defineProperty(RPG_State.prototype, 'jabsNegative', {
-  get: function()
-  {
-    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.Negative, true);
-  },
-});
+RPG_State.prototype.isNegativeType = function()
+{
+  return this.types()
+    .some(type => type.toLowerCase() === 'negative');
+};
 //endregion negative
 
 //region aggroInAmp

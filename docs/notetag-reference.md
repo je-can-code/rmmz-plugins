@@ -525,7 +525,7 @@ touches absorbed elements)
 
 ---
 
-### `<boostElement:ELEMENT_ID:PERCENT_BOOST>`
+### `<boostElement:[ELEMENT_ID, PERCENT_BOOST]>`
 
 **Applies to:**
 Actors, Enemies, Weapons, Armors, Skills, States, Classes
@@ -537,14 +537,15 @@ caster's elemental calculation is performed, for skills bearing ELEMENT_ID
 multiplies damage of skills bearing ELEMENT_ID by (1 + PERCENT_BOOST/100), on top of absorb/null/
 strict rules. PERCENT_BOOST accepts negative numbers for a penalty instead of a boost (e.g. a
 curse/debuff state). Multiple elements on one skill multiply their individual boosts together.
+Repeatable — one tag per boosted element.
 
 ```
-<boostElement:1:50>
+<boostElement:[1, 50]>
 ```
 +50% damage on skills bearing element id 1.
 
 ```
-<boostElement:1:-30>
+<boostElement:[1, -30]>
 ```
 -30% damage on skills bearing element id 1 — useful for a curse/debuff state rather than a buff.
 
@@ -887,7 +888,9 @@ CONDITION fires and the cooldown has elapsed. Conditions:
 `hpDmg`/`mpDmg`/`tpDmg` (combat loss via `gain*` going negative — not skill MP/TP cost payment),
 `anyDmg` (any of HP/MP/TP takes combat damage),
 `whenCrit` (this battler is critically hit as the victim — not `onCritApply`),
-`negaStateAdded`/`posiStateAdded`/`anyStateAdded` (a `<negative>`-tagged / non-negative / any combat
+`whenGlanced` (this battler suffers a glancing blow as the victim — an implicit partial parry that
+still lands but for reduced damage; mutually exclusive with `whenCrit` on any single hit),
+`negaStateAdded`/`posiStateAdded`/`anyStateAdded` (a `<type:negative>`-tagged / non-negative / any combat
 state is added to this battler),
 `onHealHp`/`Mp`/`Tp` (this battler's own resource is restored),
 `onAllyHeal` (a battler within proximity of this one is healed, any resource),
@@ -970,8 +973,14 @@ don't).
 ```
 <autoExecuteSkill:[1022, enemiesNearby, 1, 60]>
 <autoExecuteSkill:[1023, enemiesNearbyBelow, 1, 60, 1]>
+<autoExecuteSkill:[1024, whenGlanced, 0]>
 ```
-The second casts skill 1023 every 60 frames while no enemy is within 1 tile.
+The second casts skill 1023 every 60 frames while no enemy is within 1 tile. The third: "retaliate
+on a glancing blow" — every time this battler is grazed, no throttle, fires skill 1024 as a real
+map action from this battler's own position. There's no auto-aim at whoever landed the glance — the
+payload skill's own hitbox/range decides who it reaches, same as every other `<autoExecuteSkill>`
+condition, so a self-centered radial or facing-cone hitbox is what actually makes this read as a
+"retaliation" against the attacker.
 
 **See also:** `<autoApplyState>`, `<autoInflictState>`
 
@@ -1001,6 +1010,61 @@ application.
 ```
 
 **See also:** `<autoApplyState>`, `<autoExecuteSkill>`
+
+---
+
+### `<autoModifyCooldowns:[AMOUNT, CONDITION, THROTTLE_FRAMES, UNIT, RANGE?, TARGET_KEY?]>`
+
+**Applies to:**
+same as `<autoApplyState>`
+
+**When:**
+same condition framework as the rest of this family, but only a subset of conditions are currently
+wired for this tag: `onKill` and `negaStateInflicted`/`posiStateInflicted`/`anyStateInflicted` (this
+battler inflicts a negative-tagged / non-negative / any state onto someone else- the effect lands
+back on the inflictor, not on the afflicted target). Other conditions (`whenCrit`, `onDamageDealt`,
+`stand`, proximity kinds, etc.) parse correctly and pass validation, but will not fire because their
+pump call sites haven't been wired for this manager specifically. THROTTLE_FRAMES is the usual
+minimum-frames-between-dispatches gate.
+
+**Effect:**
+unlike every other tag in this family, this doesn't apply a state or fire a skill — it directly
+mutates one or more of the bearer's own active skill-slot cooldowns in place. AMOUNT is signed:
+negative reduces, positive increases. Only slots that are both equipped and currently mid-cooldown
+(frames > 0) are touched; a slot that's already ready has nothing to modify.
+
+UNIT (required): `percent` (AMOUNT is a percentage of each targeted cooldown's own full/total
+duration, not whatever happens to remain right now — so a proc always refunds a consistent,
+predictable chunk regardless of timing) or `flat` (AMOUNT is a literal frame count, applied
+regardless of that skill's own length; 60 frames = 1 second at the default 60fps).
+
+RANGE (optional, defaults to `all`): `single` (exactly one named slot; requires TARGET_KEY),
+`combat` (the four combat-skill slots only), `all` (mainhand, offhand, tool, dodge, and all four
+combat skills — deliberately excludes GCD/usable-item slots).
+
+TARGET_KEY (required only when RANGE is `single`): an author-facing slot name — `mainhand`,
+`offhand`, `tool`, `dodge`, or `skill1`-`skill4` (`combatskill1`-`4` also accepted); raw
+`JABS_Button` keys pass through unchanged.
+
+```
+<autoModifyCooldowns:[-10, onKill, 0, percent, all]>
+<autoModifyCooldowns:[-60, onKill, 0, flat, all]>
+<autoModifyCooldowns:[-15, onKill, 0, percent, combat]>
+<autoModifyCooldowns:[-25, onKill, 0, percent, single, mainhand]>
+```
+The first: on every kill, no throttle, -10% of full duration off every active mainhand/offhand/
+tool/dodge/combat-skill cooldown. The second: same trigger/range, flat 60-frame (1 second) refund
+regardless of each skill's own total duration. The third: restricted to the four combat-skill slots
+only. The fourth: restricted to the mainhand slot only.
+
+```
+<autoModifyCooldowns:[-60, negaStateInflicted, 0, flat, all]>
+```
+Every time this battler lands a `<type:negative>`-tagged state on an opponent (via any means- a
+skill, `<autoInflictState>`, etc.), no throttle: refund a flat 60 frames (1 second) off every active
+mainhand/offhand/tool/dodge/combat-skill cooldown, on the inflictor.
+
+**See also:** `<autoApplyState>`, `<autoInflictState>`
 
 ---
 
@@ -2626,7 +2690,7 @@ Actors, Classes, Enemies, Weapons, Armors, States
 the caster's action resolves against a target
 
 **Effect:**
-adds N% bonus damage per `<negative>`-tagged state currently active on the target — total is N ×
+adds N% bonus damage per `<type:negative>`-tagged state currently active on the target — total is N ×
 debuff count, not a flat addition. Multiple tags sum their N first, then multiply by count.
 Negative N acts as a penalty against debuffed targets instead. Applied before guard reduction
 (guard still mitigates the amplified value, just less completely).
@@ -2636,7 +2700,7 @@ Negative N acts as a penalty against debuffed targets instead. Applied before gu
 ```
 +5% damage per negative-tagged state on the target — three debuffs active = +15%.
 
-**See also:** `<bonusDamageIfState>`, `<negative>`
+**See also:** `<bonusDamageIfState>`, `<type:CLASSIFIER>`
 
 ---
 
@@ -2818,6 +2882,33 @@ from the executing skill's own note, stacking on top of the caster-wide tag.
 
 ---
 
+### `<vulnerabilityPerAuthoredStateStack:PCT>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States.
+
+**When:**
+any attacker's action resolves against a target carrying stacks of a state that this tag's
+holder (not the current attacker) originally applied.
+
+**Effect:**
+adds PCT% bonus damage per current stack of every tracked state on the target whose source is
+this tag's holder — collected by whoever is dealing damage right now, regardless of who that is.
+Unlike every other `bonusDamage*` tag in this family, this one is not read from the current
+attacker's notes; it is read from each tracked state's own source battler. This lets one
+battler's applied debuffs become a standing vulnerability the whole party can exploit, even if
+that battler isn't the one currently attacking.
+
+```
+<vulnerabilityPerAuthoredStateStack:10>
+```
++10% damage from anyone, per stack of any state this battler has applied to the target. 3 stacks
+of a Bleed this battler applied = +30% bonus damage on any ally's hit.
+
+**See also:** `<bonusDamagePerStateStack>`, `<bonusDamageForMyStateCount>`
+
+---
+
 ### `<applyStateOnExpire:[STATE_ID, CHANCE]>`
 
 **Applies to:**
@@ -2850,7 +2941,7 @@ a `<purgeStates>` skill lands a hit (parried/evaded hits do not trigger it)
 
 **Effect:**
 strips COUNT states from the target, highest priority first. TYPE filters by polarity: `negative`
-(default, only `<negative>`-tagged states), `positive` (states not tagged `<negative>`), or `all`.
+(default, only `<type:negative>`-tagged states), `positive` (states not tagged `<type:negative>`), or `all`.
 ALLOW_DEATH (default false) controls whether the death state (id 1) is eligible. All three
 parameters are optional with sensible defaults. `<noLogs>`, placed on a state, suppresses that
 specific state's removal from being written to the text log when purged.
@@ -3213,7 +3304,7 @@ left uncollected.
 
 ---
 
-### `<negative>` / `<rooted>` / `<disabled>` / `<muted>` / `<paralyzed>`
+### `<rooted>` / `<disabled>` / `<muted>` / `<paralyzed>`
 
 **Applies to:**
 States
@@ -3222,19 +3313,19 @@ States
 the state is active on a battler
 
 **Effect:**
-`negative` doesn't change mechanics — it's an AI hint that healer/support allies should try to
-remove this state. `rooted` locks movement (including dodge skills for actors). `disabled` locks
+`rooted` locks movement (including dodge skills for actors). `disabled` locks
 basic attacks (mainhand/offhand for actors, the basic-attack trait skill for enemies). `muted`
 locks combat skills (the four combat slots for actors, anything non-basic for enemies).
 `paralyzed` is rooted + disabled + muted combined.
 
 ```
-<negative>
+<type:negative>
 <paralyzed>
 ```
-A fully incapacitating debuff that AI healers will prioritize removing.
+A fully incapacitating debuff that AI healers will prioritize removing (see `<type:CLASSIFIER>`
+below for how "negative" polarity is classified).
 
-**See also:** `<perDebuffBuff>`, `<purgeStates>`
+**See also:** `<perDebuffBuff>`, `<purgeStates>`, `<type:CLASSIFIER>`
 
 ---
 
@@ -3250,16 +3341,27 @@ a state application is attempted against this battler
 **Effect:**
 checked in priority order in `Game_Battler#isStateAddable`, each fully blocking application
 before any chance roll: `immuneToAll` blocks everything including death; `immuneToStates` blocks
-everything except death; `immuneToNegatives` blocks any `<negative>`-tagged state;
+everything except death; `immuneToNegatives` blocks any `<type:negative>`-tagged state;
 `stateTypeImmune:TYPE` blocks any state carrying a matching `<type:TYPE>`. `stateTypeResist` is
-different — it doesn't block outright, it reduces the chance a matching-type state lands, folded
-into the normal per-id application roll. Multiple resist tags for the same TYPE stack
-additively.
+different — it doesn't block outright, it adjusts the chance a matching-type state lands, folded
+into the normal per-id application roll: `rate = 1 - (PCT / 100)`, clamped at 0. PCT reads as
+"percent resisted," not "percent susceptible" — positive PCT shrinks the application chance
+(more resistant), negative PCT grows it (less resistant/more susceptible). This is the opposite
+sign convention from the native RMMZ state-rate trait, where a higher raw value means MORE
+susceptible directly — easy to trip over, so the two examples below spell out both directions.
+Multiple resist tags for the same TYPE stack additively.
 
 ```
 <stateTypeResist:[cc, 50]>
 ```
-Halves the application chance of any state carrying the "cc" (crowd-control) type classifier.
+More resistant: halves the application chance of any state carrying the "cc" (crowd-control)
+type classifier (`1 - 50/100 = 0.5`).
+
+```
+<stateTypeResist:[negative, -50]>
+```
+Less resistant: increases the application chance of any `<type:negative>`-tagged state by 50%
+(`1 - (-50)/100 = 1.5`) — this battler is easier to afflict with ailments, not harder.
 
 ---
 
@@ -3893,43 +3995,45 @@ This actor/passive prevents the Overstuffed chain from ever triggering on re-fee
 Lets a single skill fire additional "packets" — inline formulas or child-skill executions —
 timed to on-use or on-hit, targeting a chosen recipient group. Skills only; items are not parsed.
 
-### `<on-(hit|use):to-(self|target|allies|enemies|all):by-formula:for-(hp|mp|tp):[FORMULA]>`
+### `<onApplyFormula:[TRIGGER, AFFECT, RESOURCE, FORMULA]>`
 
 **Applies to:**
 Skills
 
 **When:**
-`hit`: after the parent skill successfully hits a target. `use`: immediately when the parent
-skill is used, even on a miss.
+TRIGGER `hit`: after the parent skill successfully hits a target. TRIGGER `use`: immediately
+when the parent skill is used, even on a miss.
 
 **Formula context:**
 `a` = source (the user/subject), `b` = recipient (the current entity being affected), `v` =
 `$gameVariables._data`, `i` = the parent RPG_Skill.
 
 **Effect:**
-applies an inline formula result to the RR resource (hp/mp/tp) of every battler in the AA
+applies an inline formula result to the RESOURCE (hp/mp/tp) of every battler in the AFFECT
 recipient group (`self`/`target` [falls back to self]/`allies`/`enemies`/`all`, animate+alive
 only). **Sign is inverted from a normal damage formula**: positive result = loss/damage, negative
 result = gain/heal, zero = no effect. Damage-path results get element rate, on-hit crit mirroring,
 phys/mag rate, guard, variance, and JABS guard/parry reductions applied automatically;
 heal-path results get element rate, phys/mag rate, variance, REC (recipient), and HAR (caster).
-Multiple packets of the same timing apply in note order.
+Multiple packets of the same timing apply in note order. FORMULA may not contain a comma — the
+tuple is parsed by splitting on commas — so multi-argument function calls like `Math.max(a, b)`
+don't work inline; keep formulas to operators only (`+ - * / ( )` and whitespace).
 
 ```
-<on-hit:to-target:by-formula:for-hp:[a.atk * 2 - b.def]>
+<onApplyFormula:[hit, target, hp, a.atk * 2 - b.def]>
 ```
 On hit, deals HP damage to the target equal to the user's ATK×2 minus the target's DEF.
 
 ```
-<on-hit:to-allies:by-formula:for-hp:[-(a.mhp * 0.10)]>
+<onApplyFormula:[hit, allies, hp, -(a.mhp * 0.10)]>
 ```
 On hit, heals all allies for 10% of the user's max HP (negative result = heal).
 
-**See also:** `<on-(hit|use):...:by-skill>`
+**See also:** `<onApplySkill>`
 
 ---
 
-### `<on-(hit|use):to-(self|target|allies|enemies|all):by-skill:[SKILL_ID]>`
+### `<onApplySkill:[TRIGGER, AFFECT, SKILL_ID]>`
 
 **Applies to:**
 Skills
@@ -3938,7 +4042,7 @@ Skills
 same trigger timing as the by-formula variant above
 
 **Effect:**
-executes SKILL_ID as a child JABS action against every battler in the AA recipient group.
+executes SKILL_ID as a child JABS action against every battler in the AFFECT recipient group.
 Child execution consumes no cost, applies no cooldown, runs no common events, and does not
 cascade further formula/skill packets (one level of nesting only). Animations/effects/collisions/
 logs/threat all apply normally; on-hit child packets can mirror the parent's crit state. For
@@ -3946,11 +4050,11 @@ target/allies/enemies/all, position bias uses the recipient's current location �
 ground-targeted child skills.
 
 ```
-<on-use:to-self:by-skill:[77]>
+<onApplySkill:[use, self, 77]>
 ```
 On use, immediately fires skill 77 (e.g. an aura effect) centered on the caster, for free.
 
-**See also:** `<on-(hit|use):...:by-formula>`
+**See also:** `<onApplyFormula>`
 
 ---
 
@@ -4659,11 +4763,23 @@ react to "any state of this category" instead of a hardcoded state id. A state m
 `<type:CLASSIFIER>` tags and belongs to every classifier listed. Consumers compare classifier
 strings case-insensitively (e.g. J-ABS's type-based damage bonus tags).
 
+`negative` is a reserved classifier name: J-ABS's `RPG_State#isNegativeType` checks for it
+specifically to drive AI cleanse targeting, `<immuneToNegatives>`, `<perDebuffBuff>`,
+`<purgeStates>` polarity filtering, and the `negaStateAdded`/`posiStateAdded`/`negaStateInflicted`/
+`posiStateInflicted` conditional-passive triggers. Tag every ailment state with `<type:negative>`
+(alongside whatever other classifiers it already carries) to participate in all of those systems.
+
 ```
 <type:poison>
 <type:bleed>
 ```
 This state is classified as both "poison" and "bleed".
+
+```
+<type:negative>
+<type:poison>
+```
+This state is classified as both "negative" (ailment polarity) and "poison".
 
 **See also:** J-ABS's `<stateTypeResist>`, `<stateTypeImmune>`, `<bonusDamagePerStateType>`
 
@@ -4838,7 +4954,7 @@ specific id.
 ### `<onCastSelfState:[STATE_ID, CHANCE]>` / `<onHitSelfState:[STATE_ID, CHANCE]>`
 
 **Applies to:**
-Skills
+Skills, States
 
 **When:**
 `onCast`: the skill executes (press-time, no hit required). `onHit`: the skill successfully hits
@@ -4847,12 +4963,24 @@ trigger it independently).
 
 **Effect:**
 CHANCE percent chance to apply STATE_ID to the caster. State resistance is NOT factored into
-CHANCE — the tag's percent is treated as the full, final chance.
+CHANCE — the tag's percent is treated as the full, final chance. Both `onCast` and `onHit` variants
+read from `reactiveStateSources()` — the executing skill's own note PLUS every state currently
+active on the caster — so this tag is not skill-scoped. Placed on a passive state instead of a
+skill, it rolls on every skill that battler casts (or every skill that lands, for the `onHit`
+variant), regardless of which skill it is.
 
 ```
 <onHitSelfState:[19,100]>
 ```
 Always applies state 19 to the caster the moment this skill lands a hit.
+
+```
+<onCastSelfState:[42,20]>
+```
+Placed on a passive state's note instead: 20% chance to apply state 42 to the caster on every
+skill they cast, for as long as the passive state is active. This is the pattern for "cast a
+spell, chance to grant a buff" mechanics (e.g. a Red-Mage-style dualcast passive) — author the
+tag on the passive state, not on individual skills.
 
 **See also:** `<onCastSelfStateIfAfflicted>`, `<applyState>`
 
@@ -4861,10 +4989,11 @@ Always applies state 19 to the caster the moment this skill lands a hit.
 ### `<onCastSelfStateIfAfflicted:[STATE_TO_APPLY, CHANCE, STATE_REQUIREMENT]>`
 
 **Applies to:**
-Skills
+Skills, States
 
 **When:**
-the skill executes (press-time, no hit required)
+the skill executes (press-time, no hit required). Like `<onCastSelfState>`, this reads from
+`reactiveStateSources()`, so it also works when placed on a passive state's note, not just a skill's.
 
 **Effect:**
 conditional variant of `<onCastSelfState>` — only rolls CHANCE to apply STATE_TO_APPLY to the
@@ -4884,10 +5013,11 @@ state 19 is absent.
 ### `<onCastLoseState:[STATE_ID, CHANCE]>` / `<onHitLoseState:[STATE_ID, CHANCE]>`
 
 **Applies to:**
-Skills
+Skills, States
 
 **When:**
-same timing as the SelfState pair above
+same timing as the SelfState pair above; also reads from `reactiveStateSources()`, so it works on
+a passive state's note as well as a skill's
 
 **Effect:**
 CHANCE percent chance the caster loses one stack of STATE_ID from themself.
@@ -4902,10 +5032,11 @@ Always strips one stack of state 6 from the caster when the skill is executed.
 ### `<onCastStripState:[STATE_ID, CHANCE]>` / `<onHitStripState:[STATE_ID, CHANCE]>`
 
 **Applies to:**
-Skills
+Skills, States
 
 **When:**
-same timing as the SelfState pair above, but against the TARGET
+same timing as the SelfState pair above, but against the TARGET; also reads from
+`reactiveStateSources()`, so it works on a passive state's note as well as a skill's
 
 **Effect:**
 CHANCE percent chance the target loses one stack of STATE_ID.
@@ -4920,10 +5051,11 @@ CHANCE percent chance the target loses one stack of STATE_ID.
 ### `<onCastRemoveState:[STATE_ID, CHANCE]>` / `<onHitRemoveState:[STATE_ID, CHANCE]>`
 
 **Applies to:**
-Skills
+Skills, States
 
 **When:**
-same timing as the SelfState pair above, but against the TARGET
+same timing as the SelfState pair above, but against the TARGET; also reads from
+`reactiveStateSources()`, so it works on a passive state's note as well as a skill's
 
 **Effect:**
 CHANCE percent chance to fully remove STATE_ID from the target (all stacks at once, not just one).
@@ -4938,7 +5070,9 @@ Always fully removes state 10 from the target when the skill is executed.
 ### `<onCastExecuteSkill:[SKILL_ID, CHANCE]>`
 
 **Applies to:**
-Skills only — tag lives on the casting skill, not the payload
+Skills only — tag lives on the casting skill, not the payload. Unlike the rest of the onCast/onHit
+family above, this one does NOT read `reactiveStateSources()` — only the executing skill's own
+note is scanned, so placing it on a passive state's note has no effect.
 
 **When:**
 this skill is cast — fires once at press-time, same timing as `<onCastSelfState>`, not per target hit
@@ -4973,18 +5107,32 @@ this specific skill lands a hit
 
 **Effect:**
 applies STATE_ID to the target with a custom DURATION (frames) and/or STACKS, overriding the
-state's own defaults for this application only. Both DURATION and STACKS are optional — omitting
-either falls back to the state's own default. Target state resistances still apply; CHANCE only
-rolls if the state could actually land. A skill may carry multiple tags to apply different states
-on one hit. If both `<thisApplyState>` and `<applyState>` target the same state id on the same
-hit, `<thisApplyState>` fires last and wins. Overridden DURATION replaces the state's base
-duration only — attacker duration-boost tags (`stateDurationFlat`/`Perc`/`Formula`) still layer
-on top.
+state's own defaults for this application only. Both DURATION and STACKS are optional. DURATION
+carries two sentinels: omitted or `0` means no override — defer entirely to the state's own tags
+(including `<indefiniteState>`); `-1` forces this application indefinite regardless of the state's
+own tags. Any other DURATION value forces that exact finite duration, which wins over the state's
+own tags EVEN IF it carries `<indefiniteState>` — an explicit DURATION is always authoritative.
+Omitting STACKS falls back to the state's own default. Target state resistances still apply;
+CHANCE only rolls if the state could actually land. A skill may carry multiple tags to apply
+different states on one hit. If both `<thisApplyState>` and `<applyState>` target the same state
+id on the same hit, `<thisApplyState>` fires last and wins. A positive overridden DURATION replaces
+the state's base duration only — attacker duration-boost tags (`stateDurationFlat`/`Perc`/`Formula`)
+still layer on top (not applied when DURATION is `-1`, since there's no base duration to boost).
 
 ```
 <thisApplyState:[8, 50, 120, 2]>
 ```
 50% chance to apply state 8 for 120 frames with 2 starting stacks, on this skill only.
+
+```
+<thisApplyState:[8, 50, 0, 2]>
+```
+50% chance to apply state 8 with 2 starting stacks and the state's own default duration.
+
+```
+<thisApplyState:[8, 50, -1]>
+```
+50% chance to apply state 8 forever, regardless of the state's own duration tags.
 
 **See also:** `<applyState>`, J-ABS's `<stateDurationFlat>`
 
@@ -5008,6 +5156,12 @@ lands rather than one specific skill.
 ```
 Every hit this battler lands has a 30% chance to apply state 12 with its own default duration.
 
+```
+<applyState:[12, 30, -1]>
+```
+Every hit this battler lands has a 30% chance to apply state 12 forever, regardless of the
+state's own duration tags.
+
 **See also:** `<thisApplyState>`
 
 ---
@@ -5029,6 +5183,43 @@ independently in one execution.
 <toggleOnExecute:12>
 ```
 Executing this skill flips state 12 on the caster — removes it if present, adds it if absent.
+
+**See also:** `<toggleGroupOnExecute>` (for a coupled multi-state cycle instead of independent flags)
+
+---
+
+### `<toggleGroupOnExecute:[STATE_ID, STATE_ID, ...]>`
+
+**Applies to:**
+Skills
+
+**When:**
+the skill executes (press-time, no hit required)
+
+**Effect:**
+a coupled cycle group, for stance/equation-style mechanics with more than one exclusive state —
+unlike stacking independent `<toggleOnExecute>` tags for the same states (which flip each one on
+its own and can drift into both-active or both-inactive if anything external ever strips one of
+them), this treats the whole list as one group with exactly one member "active" at a time. If none
+of the listed states are active, the first one is added. If exactly one is active, it's removed and
+the NEXT one in the list is added, wrapping back to the first after the last — a list longer than
+two is a full cycle, not just an A/B swap. If more than one is somehow active at once (state drift
+from an outside effect), all of them are removed and the group resyncs to the first entry rather
+than continuing to advance from a broken position. No chance roll; always triggers. A skill may
+carry multiple `<toggleGroupOnExecute>` tags to cycle several independent groups in one execution.
+
+```
+<toggleGroupOnExecute:[12, 13]>
+```
+A two-state stance swap: executing this skill flips from 12 to 13, or from 13 back to 12, always
+landing on exactly one of the two.
+
+```
+<toggleGroupOnExecute:[12, 13, 14]>
+```
+A three-state cycle: 12 → 13 → 14 → 12 → ..., one step per execution.
+
+**See also:** `<toggleOnExecute>`
 
 ---
 

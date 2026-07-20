@@ -89,6 +89,21 @@ describe('J-ABS-Danger Game_Battler (unit, all downstream dependencies mocked)',
       // Assert- level^2 becomes 30.25, so the 130 baseline shifts to 135.25, rounded to 135.
       expect(result).toBe(135);
     });
+
+    it('warns when a param produces a NaN power level', () =>
+    {
+      // Arrange
+      const warnSpy = vi.spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      const battler = buildBattler({ param: () => NaN });
+
+      // Act
+      battler.getPowerLevel();
+
+      // Assert
+      expect(warnSpy).toHaveBeenCalledWith('what happened to the power level?');
+      warnSpy.mockRestore();
+    });
   });
 
   describe('getDangerIndicatorIcon', () =>
@@ -135,6 +150,22 @@ describe('J-ABS-Danger Game_Battler (unit, all downstream dependencies mocked)',
 
       // Assert
       expect(result).toBe(globalThis.J.ABS.EXT.DANGER.DangerIndicatorIcons[iconKey]);
+    });
+
+    it('returns -1 when the power level ratio cannot be compared (NaN)', () =>
+    {
+      // Arrange
+      const battler = buildBattler();
+      battler.getPowerLevel = () => NaN;
+      const player = buildBattler();
+      player.getPowerLevel = () => 100;
+      withPlayer(player);
+
+      // Act
+      const result = battler.getDangerIndicatorIcon();
+
+      // Assert
+      expect(result).toBe(-1);
     });
   });
 });

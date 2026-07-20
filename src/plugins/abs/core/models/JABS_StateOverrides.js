@@ -12,7 +12,11 @@ class JABS_StateOverrides
 {
   /**
    * The override duration in frames for the applied state.
-   * When {@code null}, the state's own {@code jabsStateDurationFrames} value is used instead.
+   * When {@code null} or {@code 0}, no override is applied — the state's own tags
+   * ({@code jabsStateDurationFrames}, {@code jabsIndefiniteState}) decide as usual.
+   * When {@code -1}, the state is forced indefinite regardless of its own tags.
+   * Any other value forces that exact finite duration, also regardless of the
+   * state's own tags (including an {@code <indefiniteState>} tag).
    * @type {number|null}
    */
   duration = null;
@@ -26,7 +30,8 @@ class JABS_StateOverrides
 
   /**
    * Constructor.
-   * @param {number|null} duration Override duration in frames; pass {@code null} to use the state's default.
+   * @param {number|null} duration Override duration in frames; pass {@code null} or {@code 0} to use the
+   * state's default, or {@code -1} to force the state indefinite regardless of its own tags.
    * @param {number|null} stacks Override starting stack count; pass {@code null} to use the state's default.
    */
   constructor(duration = null, stacks = null)

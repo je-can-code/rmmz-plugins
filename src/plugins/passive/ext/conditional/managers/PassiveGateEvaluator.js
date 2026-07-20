@@ -143,14 +143,14 @@ class PassiveGateEvaluator
 
   /**
    * Counts negative states currently affecting this battler.<br/>
-   * Negative classification comes from {@code state.jabsNegative} / J-ABS {@code <negative>} tag.
+   * Negative classification comes from {@link RPG_State#isNegativeType} / the {@code <type:negative>} tag.
    * @param {Game_Battler} battler The battler whose active states we inspect.
    * @returns {number} Count of states flagged negative by J-ABS.
    */
   static countNegativeStates(battler)
   {
     return battler.allStates()
-      .filter(state => state && state.jabsNegative === true)
+      .filter(state => state && state.isNegativeType())
       .length;
   }
 

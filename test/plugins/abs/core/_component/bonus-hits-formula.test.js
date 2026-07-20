@@ -182,6 +182,19 @@ describe('J-ABS formula-based bonus hits (direct src import)', () =>
       expect(totals.basic).toBe(0);
       expect(totals.skill).toBe(0);
     });
+
+    it('skips a falsy entry in the sources collection without throwing', () =>
+    {
+      // Arrange
+      const battler = buildBattler();
+      const sources = [ null, buildStateRow('<bonus-hits-global:5>') ];
+
+      // Act
+      const totals = battler.getBonusHitsFromSources(sources);
+
+      // Assert
+      expect(totals.global).toBe(5);
+    });
   });
 
   describe('JABS_Action.makeHitsPerConnectionBonus', () =>

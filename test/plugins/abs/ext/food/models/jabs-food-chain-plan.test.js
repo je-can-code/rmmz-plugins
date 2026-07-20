@@ -145,6 +145,18 @@ describe('J-ABS-Food JABS_FoodChainPlan (unit, all downstream dependencies mocke
 
   describe('_walkChain', () =>
   {
+    it('stops the walk cleanly when the entry state id itself is missing from the database', () =>
+    {
+      // Arrange
+      globalThis.$dataStates = [ null ];
+
+      // Act
+      const plan = JABS_FoodChainPlan._walkChain(99);
+
+      // Assert
+      expect(plan.segments).toHaveLength(0);
+    });
+
     it('stops the walk cleanly when a linked state id is missing from the database', () =>
     {
       // Arrange
@@ -155,6 +167,18 @@ describe('J-ABS-Food JABS_FoodChainPlan (unit, all downstream dependencies mocke
 
       // Assert
       expect(plan.segments).toHaveLength(1);
+    });
+
+    it('defaults the entry segment\'s chainType to "unknown" when the entry state itself has none', () =>
+    {
+      // Arrange
+      globalThis.$dataStates = [ null, buildState(1, { chainType: null }) ];
+
+      // Act
+      const plan = JABS_FoodChainPlan._walkChain(1);
+
+      // Assert
+      expect(plan.segments[0].chainType).toBe('unknown');
     });
 
     it('stops the walk when the linked state has no food chain type', () =>

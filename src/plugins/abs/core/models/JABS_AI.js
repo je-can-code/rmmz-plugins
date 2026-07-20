@@ -256,7 +256,7 @@ class JABS_AI
 
       const cleansableState = allyStates.find(state =>
       {
-        const isNegative = state.jabsNegative;
+        const isNegative = state.isNegativeType();
         const canBeCleansed = this.determineBestSkillForStateCleansing(availableSkills, state.id, user);
         return isNegative && canBeCleansed;
       });

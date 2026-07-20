@@ -108,9 +108,12 @@ class JABS_Engine
 
   /**
    * Whether or not the hitbox overlays are presently visible.
-   * @type {boolean}
+   * Starts `null` (not `false`) so initialize()'s own `?? metadataDefault` fallback can actually
+   * seed it from the configured plugin parameter on first construction- a `false` default here
+   * would already be non-nullish and permanently mask that fallback.
+   * @type {boolean|null}
    */
-  hitboxOverlaysVisible = false;
+  hitboxOverlaysVisible = null;
 
   /**
    * When `true`, all non‑enemies are considered in combat (UI and mechanics that consult the engine).
@@ -355,15 +358,13 @@ class JABS_Engine
   {
     const delayFrames = skill.jabsComboDelay | 0;
     const cooldownFrames = skill.jabsCooldown | 0;
+
+    // maxFrames is always at least delayFrames + 1 (one of the two Math.max candidates), so
+    // windowWidth can never be <= 0- there is no untagged/misconfigured case to guard against here.
     const maxFrames = Math.max(cooldownFrames, delayFrames + 1);
     const windowWidth = maxFrames - delayFrames;
     const minPct = J.ABS.Metadata.AiComboHumanizeWindowMinPercent;
     const maxPct = J.ABS.Metadata.AiComboHumanizeWindowMaxPercent;
-
-    if (windowWidth <= 0)
-    {
-      return Graphics.frameCount + delayFrames;
-    }
 
     const pct = minPct + (Math.random() * (maxPct - minPct));
     const offset = delayFrames + Math.round(pct * windowWidth);
@@ -522,9 +523,7 @@ class JABS_Engine
      * A collection of the metadata of all action-type events.
      * @type {RPG_MapEvent[]}
      */
-    this._activeActions = isMapTransfer
-      ? Array.empty
-      : this._activeActions ?? Array.empty;
+    this._activeActions = Array.empty;
 
     /**
      * A collection of all ongoing states that are affecting battlers on the map.
@@ -906,8 +905,8 @@ class JABS_Engine
       // grab the state for reference.
       const state = trackedState.battler.state(trackedState.stateId);
 
-      // if it is flagged as a negative state, then it is explicitly negative.
-      if (state.jabsNegative) return false;
+      // if it carries the <type:negative> classifier, then it is explicitly negative.
+      if (state.isNegativeType()) return false;
 
       // it is positive!
       return true;
@@ -942,8 +941,8 @@ class JABS_Engine
       // grab the state for reference.
       const state = trackedState.battler.state(trackedState.stateId);
 
-      // if it is not flagged as a negative state, then it is implicitly positive.
-      if (!state.jabsNegative) return false;
+      // if it does not carry the <type:negative> classifier, then it is implicitly positive.
+      if (!state.isNegativeType()) return false;
 
       // it is negative!
       return true;
@@ -1973,6 +1972,9 @@ class JABS_Engine
     // toggle any <toggleOnExecute> states on the caster exactly once, at the moment of press.
     gameAction.applyToggleOnExecuteStates();
 
+    // cycle any <toggleGroupOnExecute> state groups on the caster exactly once, at press-time.
+    gameAction.applyToggleGroupOnExecuteStates();
+
     // force-execute any <onCastExecuteSkill> payload skills exactly once, at the moment of press.
     gameAction.applyOnCastExecuteSkills(caster);
   }
@@ -2268,13 +2270,16 @@ class JABS_Engine
     }
 
     const casted = castedCardinal;
+
+    // rev() is only ever invoked below with `casted`, which by that point is always one of
+    // 2/4/6/8 (see the outer switch's own default, which already returns before calling rev())-
+    // so every call here matches one of the four explicit cases; there is no unmatched `d`.
     const rev = d =>
     {
       if (d === 2) return 8;
       if (d === 8) return 2;
       if (d === 4) return 6;
-      if (d === 6) return 4;
-      return d;
+      return 4;
     };
 
     if (travelDir !== 1 && travelDir !== 3 && travelDir !== 7 && travelDir !== 9)
@@ -2290,6 +2295,9 @@ class JABS_Engine
     let result;
     switch (casted)
     {
+      // travelDir is already constrained to {1,3,7,9} by the outer guard above, and each case
+      // below's two branches together cover all four values- there is no unmatched travelDir,
+      // so no default arm is needed (nor reachable) in any of these four inner switches.
       case 2:
       {
         switch (travelDir)
@@ -2301,9 +2309,6 @@ class JABS_Engine
           case 7:
           case 9:
             result = rev(casted);
-            break;
-          default:
-            result = casted;
             break;
         }
         break;
@@ -2320,9 +2325,6 @@ class JABS_Engine
           case 9:
             result = rev(casted);
             break;
-          default:
-            result = casted;
-            break;
         }
         break;
       }
@@ -2338,9 +2340,6 @@ class JABS_Engine
           case 7:
             result = rev(casted);
             break;
-          default:
-            result = casted;
-            break;
         }
         break;
       }
@@ -2355,9 +2354,6 @@ class JABS_Engine
           case 1:
           case 3:
             result = rev(casted);
-            break;
-          default:
-            result = casted;
             break;
         }
         break;
@@ -5142,7 +5138,9 @@ class JABS_Engine
 
     // determine configured thickness in tiles, fallback to default of 1 tile.
     // tiles.
-    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1;
+    // getActionThicknessTiles already guarantees 1 (never null) when untagged- see
+    // JABS_Action#getThicknessTiles's own `if (base === null) return 1;`.
+    const thicknessTiles = this.getActionThicknessTiles(action);
 
     // clamp to a very small positive minimum in pixels to ensure the AABB has area.
     // small positive safeguard.
@@ -5190,7 +5188,9 @@ class JABS_Engine
     const th = $gameMap.tileHeight();
 
     // resolve thickness (depth) in tiles (default 1 tile if not specified).
-    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1;
+    // getActionThicknessTiles already guarantees 1 (never null) when untagged- see
+    // JABS_Action#getThicknessTiles's own `if (base === null) return 1;`.
+    const thicknessTiles = this.getActionThicknessTiles(action);
     const minPx = 1;
     // depth when vertical.
     const depthW = Math.max(minPx, thicknessTiles * tw);
@@ -5327,7 +5327,9 @@ class JABS_Engine
     const th = $gameMap.tileHeight();
 
     // resolve thickness in tiles (default 1 tile if not specified).
-    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1;
+    // getActionThicknessTiles already guarantees 1 (never null) when untagged- see
+    // JABS_Action#getThicknessTiles's own `if (base === null) return 1;`.
+    const thicknessTiles = this.getActionThicknessTiles(action);
     const minPx = 1;
     const thicknessX = Math.max(minPx, thicknessTiles * tw);
     const thicknessY = Math.max(minPx, thicknessTiles * th);

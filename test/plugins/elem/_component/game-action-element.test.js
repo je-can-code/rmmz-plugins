@@ -124,7 +124,7 @@ describe('J-Elementalistics Game_Action element math (direct src import)', () =>
     const actor = new globalThis.Game_Actor();
     actor.initMembers();
     actor.__actorDb = actorData({
-      id: 1, name: '', note: '<boostElement:2:50>', classId: 1, traits: [],
+      id: 1, name: '', note: '<boostElement:[2, 50]>', classId: 1, traits: [],
     });
     const target = new globalThis.Game_Enemy();
     target.initMembers();

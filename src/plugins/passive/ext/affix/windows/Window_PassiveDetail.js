@@ -144,7 +144,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
   if (state.jabsRooted)    rows.push({ icon: 0, label: 'Rooted',    value: '(cannot move)' });
   if (state.jabsMuted)     rows.push({ icon: 0, label: 'Muted',     value: '(no cast skills)' });
   if (state.jabsDisarmed)  rows.push({ icon: 0, label: 'Disabled',  value: '(no basic attack)' });
-  if (state.jabsNegative)  rows.push({ icon: 0, label: 'Negative',  value: '(AI tries to remove)' });
+  if (state.isNegativeType())  rows.push({ icon: 0, label: 'Negative',  value: '(AI tries to remove)' });
 
   // slip damage/regen — percent-based takes priority over formula-based.
   const slipHpPct  = state.jabsSlipHpPercent;

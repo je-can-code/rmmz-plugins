@@ -110,6 +110,18 @@ describe('StateAfflictionProvider', () =>
     expect(collection.negative[0].polarity).toBe('negative');
   });
 
+  it('defaults iconIndex to 0 when the tracked state has no resolvable database row', () =>
+  {
+    const trackedState = buildTrackedState({ stateId: 9999 });
+    const battler = buildBattler(sandbox);
+
+    globalThis.$jabsEngine.getNegativeJabsStatesByUuid.mockReturnValue([ trackedState ]);
+
+    const collection = StateAfflictionProvider.collectForBattler(battler);
+
+    expect(collection.negative[0].iconIndex).toBe(0);
+  });
+
   it('filters passive states when J.PASSIVE is present', () =>
   {
     const trackedState = buildTrackedState({ stateId: 1021 });
@@ -135,11 +147,79 @@ describe('StateAfflictionProvider', () =>
     expect(collection.isEmpty()).toBe(true);
   });
 
+  it('returns an empty collection without calling the engine when J.ABS is absent', () =>
+  {
+    delete globalThis.J.ABS;
+    const battler = buildBattler(sandbox);
+
+    const collection = StateAfflictionProvider.collectForBattler(battler);
+
+    expect(collection.isEmpty()).toBe(true);
+    expect(globalThis.$jabsEngine.getNegativeJabsStatesByUuid).not.toHaveBeenCalled();
+  });
+
+  it('returns an empty collection without calling the engine when $jabsEngine is absent', () =>
+  {
+    globalThis.$jabsEngine = undefined;
+    const battler = buildBattler(sandbox);
+
+    const collection = StateAfflictionProvider.collectForBattler(battler);
+
+    expect(collection.isEmpty()).toBe(true);
+  });
+
+  it('returns an empty collection when no battler is provided', () =>
+  {
+    const collection = StateAfflictionProvider.collectForBattler(null);
+
+    expect(collection.isEmpty()).toBe(true);
+    expect(globalThis.$jabsEngine.getNegativeJabsStatesByUuid).not.toHaveBeenCalled();
+  });
+
+  it('collects positive rows with battler.state icon indices', () =>
+  {
+    const trackedState = buildTrackedState({ stateId: 1021 });
+    const battler = buildBattler(sandbox);
+
+    globalThis.$jabsEngine.getPositiveJabsStatesByUuid.mockReturnValue([ trackedState ]);
+
+    const collection = StateAfflictionProvider.collectForBattler(battler);
+
+    expect(collection.positive.length).toBe(1);
+    expect(collection.positive[0].polarity).toBe('positive');
+  });
+
+  it('skips a passive-derived positive row when disqualified', () =>
+  {
+    const trackedState = buildTrackedState({ stateId: 1021 });
+    const battler = buildBattler(sandbox, { _passiveStateIds: [ 1021 ] });
+
+    globalThis.$jabsEngine.getPositiveJabsStatesByUuid.mockReturnValue([ trackedState ]);
+
+    const collection = StateAfflictionProvider.collectForBattler(battler);
+
+    expect(collection.isEmpty()).toBe(true);
+  });
+
+  it('does not filter passive states when J.PASSIVE is absent', () =>
+  {
+    delete globalThis.J.PASSIVE;
+    const trackedState = buildTrackedState({ stateId: 1021 });
+    const battler = buildBattler(sandbox, { _passiveStateIds: [ 1021 ] });
+
+    globalThis.$jabsEngine.getNegativeJabsStatesByUuid.mockReturnValue([ trackedState ]);
+
+    const collection = StateAfflictionProvider.collectForBattler(battler);
+
+    expect(collection.negative.length).toBe(1);
+  });
+
   it('resolves fill ratio and eternal null', () =>
   {
     expect(StateAfflictionViewModel.resolveFillRatio(120, 240, false)).toBe(0.5);
     expect(StateAfflictionViewModel.resolveFillRatio(300, 240, false)).toBe(1);
     expect(StateAfflictionViewModel.resolveFillRatio(120, 240, true)).toBe(null);
+    expect(StateAfflictionViewModel.resolveFillRatio(120, 0, false)).toBe(null);
   });
 });
 //endregion plugins/abs/_component/state-affliction-provider.test.js

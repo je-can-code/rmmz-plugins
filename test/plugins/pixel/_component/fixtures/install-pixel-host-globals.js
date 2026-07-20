@@ -103,6 +103,18 @@ function installMinimalGameCharacterBasePrototypes(sandbox)
 
   GCB.prototype.isMoving = function()
   {
+    return this._realX !== this._x || this._realY !== this._y;
+  };
+
+  GCB.prototype.isJumping = function()
+  {
+    return (this._jumpCount ?? 0) > 0;
+  };
+
+  // real J-ABS patches every character (including the player and followers) with this;
+  // Game_Event below overrides it with its own `_jabsAction`-backed answer.
+  GCB.prototype.isJabsAction = function()
+  {
     return false;
   };
 
@@ -126,10 +138,59 @@ function installMinimalGameCharacterBasePrototypes(sandbox)
     this._movementSuccess = ok;
   };
 
-  GCB.prototype.movementSuccess = function()
+  GCB.prototype.isMovementSucceeded = function()
   {
     return this._movementSuccess !== false;
   };
+
+  GCB.prototype.realMoveSpeed = function()
+  {
+    return this._moveSpeed ?? 4;
+  };
+
+  GCB.prototype.setMoveSpeed = function(moveSpeed)
+  {
+    this._moveSpeed = moveSpeed;
+  };
+
+  // matches rmmz_objects.js's Math.pow(2, realMoveSpeed) / 256 exactly, so
+  // pixel-core movement math (which composes on top of it) stays faithful.
+  GCB.prototype.distancePerFrame = function()
+  {
+    return Math.pow(2, this.realMoveSpeed()) / 256;
+  };
+
+  GCB.prototype.reverseDir = function(d)
+  {
+    return 10 - d;
+  };
+
+  GCB.prototype.isDirectionFixed = function()
+  {
+    return false;
+  };
+
+  GCB.prototype.resetStopCount = function()
+  {
+    this._stopCount = 0;
+  };
+
+  GCB.prototype.setDirection = function(d)
+  {
+    if (!this.isDirectionFixed() && d)
+    {
+      this._direction = d;
+    }
+
+    this.resetStopCount();
+  };
+
+  GCB.prototype.direction = function()
+  {
+    return this._direction;
+  };
+
+  GCB.prototype.checkEventTriggerTouchFront = noop;
 
   sandbox.Game_Character.prototype = Object.create(sandbox.Game_CharacterBase.prototype);
   sandbox.Game_Character.prototype.constructor = sandbox.Game_Character;

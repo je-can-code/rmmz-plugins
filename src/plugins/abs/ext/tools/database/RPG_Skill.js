@@ -64,7 +64,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsGapClosePosition', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsThisOnGapCloseEnd', {
   get: function()
   {
-    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.TOOLS.RegExp.GapCloseEndThis, true) ?? [];
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.TOOLS.RegExp.GapCloseEndThis, true);
   },
 });
 //endregion thisOnGapCloseEnd

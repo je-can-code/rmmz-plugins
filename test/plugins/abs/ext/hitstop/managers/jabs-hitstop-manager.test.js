@@ -339,6 +339,29 @@ describe('J-ABS-Hitstop JABS_HitstopManager (unit, all downstream dependencies m
       globalThis.J.ABS.EXT.HITSTOP.Metadata.flurryDecayPercent = 50;
     });
 
+    it('clamps a negative decay percent result up to zero instead of going negative', () =>
+    {
+      // Arrange
+      globalThis.J.ABS.EXT.HITSTOP.Metadata.flurryDecayPercent = -50;
+      const targetChar = buildCharacter();
+      const action = buildAction({ getHitstopFrames: () => 10 });
+      const target = buildJabsBattler(targetChar);
+      const attacker = buildJabsBattler(buildCharacter());
+
+      // Act- first impact flags the flurry window; second impact lands inside it and decays
+      // negative, which must clamp to 0 rather than going negative.
+      JABS_HitstopManager.apply(action, attacker, target);
+      targetChar.getHitstopData()
+        .setFrames(0);
+      JABS_HitstopManager.apply(action, attacker, target);
+
+      // Assert
+      expect(targetChar.getHitstopData().getFrames()).toBe(0);
+
+      // Cleanup
+      globalThis.J.ABS.EXT.HITSTOP.Metadata.flurryDecayPercent = 50;
+    });
+
     describe('micro shake', () =>
     {
       it('does not shake when the shakeOnHit toggle is off', () =>
@@ -434,6 +457,26 @@ describe('J-ABS-Hitstop JABS_HitstopManager (unit, all downstream dependencies m
 
         // Cleanup
         globalThis.J.ABS.EXT.HITSTOP.Metadata.onlyOnPlayerImpact = false;
+      });
+
+      it('shakes when gated to player-only impacts, target is the player, and alsoOnPlayerAsTarget is enabled', () =>
+      {
+        // Arrange
+        globalThis.J.ABS.EXT.HITSTOP.Metadata.onlyOnPlayerImpact = true;
+        globalThis.J.ABS.EXT.HITSTOP.Metadata.alsoOnPlayerAsTarget = true;
+        const action = buildAction();
+        const target = buildJabsBattler(buildCharacter(), { isPlayer: () => true });
+        const attacker = buildJabsBattler(buildCharacter());
+
+        // Act
+        JABS_HitstopManager.apply(action, attacker, target);
+
+        // Assert
+        expect(globalThis.$gameScreen.startShake).toHaveBeenCalledTimes(1);
+
+        // Cleanup
+        globalThis.J.ABS.EXT.HITSTOP.Metadata.onlyOnPlayerImpact = false;
+        globalThis.J.ABS.EXT.HITSTOP.Metadata.alsoOnPlayerAsTarget = false;
       });
 
       it('does not shake when the anti-spam cooldown has not yet elapsed', () =>

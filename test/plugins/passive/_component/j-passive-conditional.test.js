@@ -147,6 +147,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
     await import('../../../../src/plugins/passive/ext/conditional/managers/AutoApplyStateOnNearbyManager.js');
     ({ default: globalThis.AutoExecuteSkillManager } = await import('../../../../src/plugins/passive/ext/conditional/managers/AutoExecuteSkillManager.js'));
     ({ default: globalThis.AutoInflictStateManager } = await import('../../../../src/plugins/passive/ext/conditional/managers/AutoInflictStateManager.js'));
+    ({ default: globalThis.AutoModifyCooldownManager } = await import('../../../../src/plugins/passive/ext/conditional/managers/AutoModifyCooldownManager.js'));
     ({ default: globalThis.SkillExecutionStateRemovalManager } = await import('../../../../src/plugins/passive/ext/conditional/managers/SkillExecutionStateRemovalManager.js'));
     await import('../../../../src/plugins/passive/ext/conditional/managers/SkillResolutionStateRemovalManager.js');
     await import('../../../../src/plugins/passive/ext/conditional/managers/MoveStateRemovalManager.js');
@@ -863,7 +864,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
     function stubPolarityState(stateId, isNegative)
     {
-      globalThis.$dataStates[stateId] = { id: stateId, jabsNegative: isNegative };
+      globalThis.$dataStates[stateId] = { id: stateId, isNegativeType: () => isNegative };
     }
 
     it('parses autoInflictState tuples on item rows', () =>
@@ -1105,6 +1106,63 @@ describe('J-Passive-Conditional (direct src import)', () =>
       // Assert
       expect(knockbackApplies).toEqual([ 73 ]);
       expect(inflictApplies).toEqual([ 70 ]);
+    });
+  });
+
+  describe('onJabsStateInflicted wiring', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.Graphics.frameCount = 1000;
+      globalThis.$jabsEngine = { absEnabled: true };
+      globalThis.$dataStates = [];
+    });
+
+    it('fires both autoInflictState (onto the target) and autoModifyCooldowns (onto the applier) from one real state-inflicted event', () =>
+    {
+      // Arrange
+      globalThis.$dataStates[10] = { id: 10, isNegativeType: () => true };
+      const applier = buildMomentumToolkitActor([
+        '<autoInflictState:[70, negaStateInflicted, 0]>',
+        '<autoModifyCooldowns:[-60, negaStateInflicted, 0, flat, all]>',
+      ]);
+      const mainhandCooldown = { frames: 100, maxFrames: 300, modBaseFrames: vi.fn() };
+      applier.getSkillSlotManager = () => ({
+        getEquippedSlots: () => [ { key: globalThis.JABS_Button.Mainhand, getCooldown: () => mainhandCooldown } ],
+      });
+      const target = buildMomentumToolkitActor();
+      target.isStateAddable = () => true;
+      target.addState = vi.fn();
+
+      // Act- calling the real prototype method, not the schedulers directly.
+      target.onJabsStateInflicted(10, applier);
+
+      // Assert- the payload state landed on the target, crediting the applier as source.
+      expect(target.addState).toHaveBeenCalledWith(70, applier);
+      // Assert- the cooldown modification landed on the applier itself, not the target.
+      expect(mainhandCooldown.modBaseFrames).toHaveBeenCalledWith(-60);
+    });
+
+    it('does not modify cooldowns when no autoModifyCooldowns rule matches the inflicted polarity', () =>
+    {
+      // Arrange
+      globalThis.$dataStates[11] = { id: 11, isNegativeType: () => false };
+      const applier = buildMomentumToolkitActor([
+        '<autoModifyCooldowns:[-60, negaStateInflicted, 0, flat, all]>',
+      ]);
+      const mainhandCooldown = { frames: 100, maxFrames: 300, modBaseFrames: vi.fn() };
+      applier.getSkillSlotManager = () => ({
+        getEquippedSlots: () => [ { key: globalThis.JABS_Button.Mainhand, getCooldown: () => mainhandCooldown } ],
+      });
+      const target = buildMomentumToolkitActor();
+      target.isStateAddable = () => true;
+      target.addState = vi.fn();
+
+      // Act- state 11 is positive, so the negaStateInflicted rule should not fire.
+      target.onJabsStateInflicted(11, applier);
+
+      // Assert
+      expect(mainhandCooldown.modBaseFrames).not.toHaveBeenCalled();
     });
   });
 

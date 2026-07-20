@@ -631,7 +631,6 @@ class JABS_EnemyAI
       bestSkillId = biggestHealSkill;
     }
 
-    if (!bestSkillId) return [];
     return [ bestSkillId ];
   }
   //endregion leader

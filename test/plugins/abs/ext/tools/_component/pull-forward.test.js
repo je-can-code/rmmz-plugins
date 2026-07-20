@@ -222,6 +222,22 @@ describe('J-ABS-Tools pull-forward (direct src import)', () =>
       // Assert
       expect(maxPullDistance).toBe(0);
     });
+
+    it('yields a zero unit vector when the target and caster share the exact same tile (zero magnitude)', () =>
+    {
+      // Arrange
+      const target = buildCharacter({ x: 3, y: 3 });
+      const jabsTarget = buildJabsBattler(target);
+      const caster = buildCharacter({ x: 3, y: 3 });
+      const jabsCaster = buildJabsBattler(caster);
+
+      // Act
+      const { unitX, unitY } = jabsTarget.resolvePullVector(jabsCaster);
+
+      // Assert
+      expect(unitX).toBe(0);
+      expect(unitY).toBe(0);
+    });
   });
 
   describe('pullToCaster', () =>
@@ -347,6 +363,66 @@ describe('J-ABS-Tools pull-forward (direct src import)', () =>
 
       // Assert
       expect(target.lastJump).toEqual([ 5, 0 ]);
+    });
+
+    it('does nothing when already flush against the caster (clamped distance is zero)', () =>
+    {
+      // Arrange
+      const target = buildCharacter({ x: 0, y: 0, getEffectiveRadius: () => 1 });
+      const jabsTarget = buildJabsBattler(target);
+      const jabsCaster = buildJabsBattler(buildCharacter({ x: 1, y: 0, getEffectiveRadius: () => 1 }));
+      const action = { getBaseSkill: () => buildSkillRow('<pullForward:10>') };
+
+      // Act
+      jabsTarget.pullToCaster(action, jabsCaster);
+
+      // Assert
+      expect(target.lastJump).toBeNull();
+    });
+
+    it('pulls horizontally leftward when the caster is to the left', () =>
+    {
+      // Arrange
+      const target = buildCharacter({ x: 10, y: 0 });
+      const jabsTarget = buildJabsBattler(target);
+      const jabsCaster = buildJabsBattler(buildCharacter({ x: 0, y: 0 }));
+      const action = { getBaseSkill: () => buildSkillRow('<pullForward:3>') };
+
+      // Act
+      jabsTarget.pullToCaster(action, jabsCaster);
+
+      // Assert
+      expect(target.lastJump).toEqual([ -3, 0 ]);
+    });
+
+    it('pulls vertically downward when the caster is below and vertical dominates', () =>
+    {
+      // Arrange
+      const target = buildCharacter({ x: 0, y: 0 });
+      const jabsTarget = buildJabsBattler(target);
+      const jabsCaster = buildJabsBattler(buildCharacter({ x: 0, y: 10 }));
+      const action = { getBaseSkill: () => buildSkillRow('<pullForward:3>') };
+
+      // Act
+      jabsTarget.pullToCaster(action, jabsCaster);
+
+      // Assert
+      expect(target.lastJump).toEqual([ 0, 3 ]);
+    });
+
+    it('pulls vertically upward when the caster is above and vertical dominates', () =>
+    {
+      // Arrange
+      const target = buildCharacter({ x: 0, y: 10 });
+      const jabsTarget = buildJabsBattler(target);
+      const jabsCaster = buildJabsBattler(buildCharacter({ x: 0, y: 0 }));
+      const action = { getBaseSkill: () => buildSkillRow('<pullForward:3>') };
+
+      // Act
+      jabsTarget.pullToCaster(action, jabsCaster);
+
+      // Assert
+      expect(target.lastJump).toEqual([ 0, -3 ]);
     });
   });
 });

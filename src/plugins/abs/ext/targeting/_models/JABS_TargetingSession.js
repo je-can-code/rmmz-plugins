@@ -25,7 +25,7 @@ class JABS_TargetingSession
    * after `getAttackData`, since only the caller knows which slot this came from.
    * @type {function(JABS_Action[]): void}
    */
-  #onCommit = () => {};
+  #onCommit;
 
   /**
    * Constructor.

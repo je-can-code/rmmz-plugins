@@ -93,5 +93,10 @@ export function installPassiveConditionalHostGlobals(sandbox = globalThis, plugi
   sandbox.Game_CharacterBase.prototype.updatePixelStepping = function()
   {
   };
+
+  // conditional aliases onJabsStateInflicted- seed a noop when abs/core is not loaded.
+  sandbox.Game_Battler.prototype.onJabsStateInflicted = function()
+  {
+  };
 }
 //endregion plugins/passive/_component/fixtures/install-passive-conditional-host-globals.js

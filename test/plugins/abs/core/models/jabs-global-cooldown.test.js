@@ -191,6 +191,22 @@ describe('JABS_GlobalCooldown (unit, all downstream dependencies mocked)', () =>
       expect(JABS_GlobalCooldown.jabsBattlerForActor(actor)).toEqual(followerJabsBattler);
     });
 
+    it('skips non-matching followers before finding the matching one', () =>
+    {
+      const actor = {};
+      const otherActor = {};
+      const followerJabsBattler = {};
+      const nonMatchingFollower = { actor: () => otherActor, getJabsBattler: () => null };
+      const matchingFollower = { actor: () => actor, getJabsBattler: () => followerJabsBattler };
+      globalThis.$gameParty = { leader: () => ({}) };
+      globalThis.$gamePlayer = {
+        getJabsBattler: () => null,
+        followers: () => ({ visibleFollowers: () => [ nonMatchingFollower, matchingFollower ] }),
+      };
+
+      expect(JABS_GlobalCooldown.jabsBattlerForActor(actor)).toEqual(followerJabsBattler);
+    });
+
     it('returns null when the actor is neither the leader nor a visible follower', () =>
     {
       const actor = {};

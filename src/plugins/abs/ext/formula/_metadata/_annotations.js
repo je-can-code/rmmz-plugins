@@ -39,7 +39,7 @@
  * recipients when the packet triggers.
  *
  * Tag format:
- *   <on-HH:to-AA:by-formula:for-RR:[FORMULA]>
+ *   <onApplyFormula:[HH, AA, RR, FORMULA]>
  *
  * Where:
  *   - HH (trigger):
@@ -85,16 +85,22 @@
  *
  * Examples:
  *   - On hit, damage the original target’s HP for the user’s ATK x2 minus target DEF:
- *       <on-hit:to-target:by-formula:for-hp:[a.atk * 2 - b.def]>
+ *       <onApplyFormula:[hit, target, hp, a.atk * 2 - b.def]>
  *
  *   - On use, grant self 25 TP immediately:
- *       <on-use:to-self:by-formula:for-tp:[25]>
+ *       <onApplyFormula:[use, self, tp, 25]>
  *
  *   - On hit, heal allies for 10% of the user’s max HP (negative = heal):
- *       <on-hit:to-allies:by-formula:for-hp:[-(a.mhp * 0.10)]>
+ *       <onApplyFormula:[hit, allies, hp, -(a.mhp * 0.10)]>
  *
  *   - On use, drain 5 MP from all enemies (positive = loss):
- *       <on-use:to-enemies:by-formula:for-mp:[5]>
+ *       <onApplyFormula:[use, enemies, mp, 5]>
+ *
+ * NOTE: the formula segment may not contain a comma (the tuple is parsed by
+ * splitting on commas), so multi-argument function calls like Math.max(a, b)
+ * cannot be used inline. Keep formulas to operators only (+ - * / ( ) and
+ * whitespace); wrap complex logic in a Game_Action-registered context helper
+ * instead (see registerFormulaContext).
  *
  * ============================================================================
  * TAGS: BY-SKILL (CHILD SKILL) PACKETS
@@ -107,7 +113,7 @@
  *   - For on-hit packets, child damage can mirror the parent crit state when appropriate.
  *
  * Tag format:
- *   <on-HH:to-AA:by-skill:[SKILL_ID]>
+ *   <onApplySkill:[HH, AA, SKILL_ID]>
  *
  * Where:
  *   - HH (trigger): hit | use
@@ -116,10 +122,10 @@
  *
  * Examples:
  *   - On hit, also fire skill 123 at the original target:
- *       <on-hit:to-target:by-skill:[123]>
+ *       <onApplySkill:[hit, target, 123]>
  *
  *   - On use, cast an aura skill 77 centered on self:
- *       <on-use:to-self:by-skill:[77]>
+ *       <onApplySkill:[use, self, 77]>
  *
  * Notes:
  *   - For target/allies/enemies/all, position bias uses the recipient’s current
@@ -154,10 +160,10 @@
  * QUICK REFERENCE
  * ----------------------------------------------------------------------------
  * BY-FORMULA:
- *   <on-(hit|use):to-(self|target|allies|enemies|all):by-formula:for-(hp|mp|tp):[FORMULA]>
+ *   <onApplyFormula:[hit|use, self|target|allies|enemies|all, hp|mp|tp, FORMULA]>
  *
  * BY-SKILL:
- *   <on-(hit|use):to-(self|target|allies|enemies|all):by-skill:[SKILL_ID]>
+ *   <onApplySkill:[hit|use, self|target|allies|enemies|all, SKILL_ID]>
  *
  * Formula variables:
  *   a = user/subject, b = recipient, v = $gameVariables._data, i = RPG_Skill
@@ -167,6 +173,15 @@
  * ============================================================================
  * CHANGELOG
  * ----------------------------------------------------------------------------
+ * - 1.1.0
+ *   Changed <on-HH:to-AA:by-formula:for-RR:[FORMULA]> to
+ *   <onApplyFormula:[HH, AA, RR, FORMULA]>, and <on-HH:to-AA:by-skill:[SKILL_ID]>
+ *   to <onApplySkill:[HH, AA, SKILL_ID]>. The old tag-name-encoded-enum shape
+ *   required a bespoke, ad-hoc multi-capture-group reader
+ *   (RPGManager.getAllCapturesFromNoteByRegex) instead of the standardized
+ *   bracket-array family used by every other multi-value tag; the new single
+ *   bracket form reads through getArraysFromNotesByRegex like the rest. No
+ *   existing Chef Adventure data used these tags, so no migration was needed.
  * - 1.0.4
  *   Healing path now also applies HAR (healing rate) on the caster, alongside
  *   the existing REC (recovery) on the recipient. Requires J-Base 3.5.0+.

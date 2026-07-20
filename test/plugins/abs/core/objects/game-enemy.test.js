@@ -384,6 +384,16 @@ describe('J-ABS Game_Enemy (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  // isInanimate() itself, called through the real prototype (not the `buildEnemy({ isInanimate })`
+  // override the generic table above uses for every OTHER method's animate-default case), so its
+  // own untagged fallback to J.ABS.Metadata.DefaultEnemyIsInanimate actually executes.
+  it('isInanimate() falls back to the configured default when untagged', () =>
+  {
+    const enemy = buildEnemy({ databaseData: () => buildReferenceData({}) });
+
+    expect(enemy.isInanimate()).toEqual(false);
+  });
+
   // isInanimate() itself can't consult isInanimate() as an override source (that would be
   // circular), so the "inanimate battlers default to false" branch only applies to the other
   // four boolean getters- verified separately here.

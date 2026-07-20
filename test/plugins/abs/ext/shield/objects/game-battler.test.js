@@ -126,6 +126,13 @@ describe('J-ABS-Shield Game_Battler (unit, all downstream dependencies mocked)',
       battler.baseSerFactor = () => 1.2;
       expect(battler.ser).toBeCloseTo(1.3);
     });
+
+    it('ser is just the base factor when there is no SDP bonus hook', () =>
+    {
+      const battler = buildBattler();
+      battler.baseSerFactor = () => 1.2;
+      expect(battler.ser).toBe(1.2);
+    });
   });
 
   describe('baseSarFactor', () =>

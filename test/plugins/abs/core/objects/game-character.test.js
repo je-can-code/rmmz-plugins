@@ -402,6 +402,13 @@ describe('J-ABS Game_Character (unit, all downstream dependencies mocked)', () =
       expect(buildDeltaCharacter(dx, dy).findDiagonalDirectionToHeuristic(0, 0)).toEqual(expected);
     });
 
+    it.each([
+      [ 10, 5, 7 ], [ 10, -5, 1 ], [ -10, 5, 9 ], [ -10, -5, 3 ],
+    ])('resolves the x-dominant diagonal dx=%i dy=%i to direction %i', (dx, dy, expected) =>
+    {
+      expect(buildDeltaCharacter(dx, dy).findDiagonalDirectionToHeuristic(0, 0)).toEqual(expected);
+    });
+
     it('snaps sub-tile noise on the x axis to zero', () =>
     {
       expect(buildDeltaCharacter(0.1, 5).findDiagonalDirectionToHeuristic(0, 0)).toEqual(8);
@@ -490,6 +497,171 @@ describe('J-ABS Game_Character (unit, all downstream dependencies mocked)', () =
 
       // moving straight right toward (3,0) should resolve to the "right" direction.
       expect(character.findDiagonalDirectionTo(3, 0)).toEqual(6);
+    });
+
+    describe('resolves every 8-direction outcome from a real pathfind', () =>
+    {
+      /**
+       * Builds a fully-decomposed diagonal-aware $gameMap mock (real per-direction handling,
+       * unlike the oversimplified always-southeast mock used by the sibling straight-line test).
+       * @returns {object}
+       */
+      function buildRealisticGameMap()
+      {
+        return {
+          width: () => 20,
+          distance: (x1, y1, x2, y2) => Math.abs(x2 - x1) + Math.abs(y2 - y1),
+          roundXWithDirection: (x, dir) =>
+          {
+            if (dir === 6) return x + 1;
+            if (dir === 4) return x - 1;
+            return x;
+          },
+          roundYWithDirection: (y, dir) =>
+          {
+            if (dir === 2) return y + 1;
+            if (dir === 8) return y - 1;
+            return y;
+          },
+          deltaX: (a, b) => a - b,
+          deltaY: (a, b) => a - b,
+        };
+      }
+
+      /**
+       * Maps a numpad diagonal direction to its [horz, vert] straight-direction components.
+       * @param {1|3|7|9} dir
+       * @returns {[number, number]}
+       */
+      function diagonalComponents(dir)
+      {
+        return {
+          1: [ 4, 2 ], 3: [ 6, 2 ], 7: [ 4, 8 ], 9: [ 6, 8 ],
+        }[dir];
+      }
+
+      it.each([
+        [ 1, 1, 3 ], [ -1, 1, 1 ], [ 1, -1, 9 ], [ -1, -1, 7 ], [ -3, 0, 4 ],
+        [ 0, 1, 2 ], [ 0, -1, 8 ],
+      ])('one tile away at dx=%i dy=%i resolves to direction %i', (dx, dy, expected) =>
+      {
+        globalThis.$gameMap = buildRealisticGameMap();
+        const character = buildCharacter({
+          isThrough: () => false,
+          isDebugThrough: () => false,
+          x: 0,
+          y: 0,
+          searchLimit: () => 12,
+          isDiagonalDirection: (dir) => [ 1, 3, 7, 9 ].includes(dir),
+          isStraightDirection: (dir) => [ 2, 4, 6, 8 ].includes(dir),
+          getDiagonalDirections: diagonalComponents,
+          canPass: () => true,
+          canPassDiagonally: () => true,
+        });
+
+        expect(character.findDiagonalDirectionTo(dx, dy)).toEqual(expected);
+      });
+
+      it('finds a path to a farther diagonal goal, revisiting an already-open node with a cheaper route', () =>
+      {
+        globalThis.$gameMap = buildRealisticGameMap();
+        const character = buildCharacter({
+          isThrough: () => false,
+          isDebugThrough: () => false,
+          x: 0,
+          y: 0,
+          searchLimit: () => 20,
+          isDiagonalDirection: (dir) => [ 1, 3, 7, 9 ].includes(dir),
+          isStraightDirection: (dir) => [ 2, 4, 6, 8 ].includes(dir),
+          getDiagonalDirections: diagonalComponents,
+          canPass: () => true,
+          canPassDiagonally: () => true,
+        });
+
+        expect(character.findDiagonalDirectionTo(2, 2)).toEqual(3);
+      });
+
+      it('finds a path to a farther straight goal, revisiting an already-open node with a cheaper route', () =>
+      {
+        globalThis.$gameMap = buildRealisticGameMap();
+        const character = buildCharacter({
+          isThrough: () => false,
+          isDebugThrough: () => false,
+          x: 0,
+          y: 0,
+          searchLimit: () => 20,
+          isDiagonalDirection: (dir) => [ 1, 3, 7, 9 ].includes(dir),
+          isStraightDirection: (dir) => [ 2, 4, 6, 8 ].includes(dir),
+          getDiagonalDirections: diagonalComponents,
+          canPass: () => true,
+          canPassDiagonally: () => true,
+        });
+
+        expect(character.findDiagonalDirectionTo(4, 0)).toEqual(6);
+      });
+
+      it('stops expanding once a node hits the search limit, falling back to the best node found', () =>
+      {
+        globalThis.$gameMap = buildRealisticGameMap();
+        const character = buildCharacter({
+          isThrough: () => false,
+          isDebugThrough: () => false,
+          x: 0,
+          y: 0,
+          searchLimit: () => 0,
+          deltaXFrom: () => 3,
+          deltaYFrom: () => 0,
+          isDiagonalDirection: (dir) => [ 1, 3, 7, 9 ].includes(dir),
+          isStraightDirection: (dir) => [ 2, 4, 6, 8 ].includes(dir),
+          getDiagonalDirections: diagonalComponents,
+          canPass: () => true,
+          canPassDiagonally: () => true,
+        });
+
+        // with a zero search limit, the algorithm never expands past the start node, so it
+        // falls through to the no-parent-chain case and defers to the heuristic.
+        expect(character.findDiagonalDirectionTo(3, 0)).toEqual(4);
+      });
+
+      it('skips a straight-direction neighbor blocked by canPass', () =>
+      {
+        globalThis.$gameMap = buildRealisticGameMap();
+        const character = buildCharacter({
+          isThrough: () => false,
+          isDebugThrough: () => false,
+          x: 0,
+          y: 0,
+          searchLimit: () => 12,
+          isDiagonalDirection: (dir) => [ 1, 3, 7, 9 ].includes(dir),
+          isStraightDirection: (dir) => [ 2, 4, 6, 8 ].includes(dir),
+          getDiagonalDirections: diagonalComponents,
+          // block the direct rightward step so the search must detour around it.
+          canPass: (x, y, dir) => !(x === 0 && y === 0 && dir === 6),
+          canPassDiagonally: () => true,
+        });
+
+        expect(() => character.findDiagonalDirectionTo(2, 0)).not.toThrow();
+      });
+
+      it('skips a diagonal-direction neighbor blocked by canPassDiagonally', () =>
+      {
+        globalThis.$gameMap = buildRealisticGameMap();
+        const character = buildCharacter({
+          isThrough: () => false,
+          isDebugThrough: () => false,
+          x: 0,
+          y: 0,
+          searchLimit: () => 12,
+          isDiagonalDirection: (dir) => [ 1, 3, 7, 9 ].includes(dir),
+          isStraightDirection: (dir) => [ 2, 4, 6, 8 ].includes(dir),
+          getDiagonalDirections: diagonalComponents,
+          canPass: () => true,
+          // block every diagonal step so the search must fall back to straight moves only.
+          canPassDiagonally: () => false,
+        });
+
+        expect(character.findDiagonalDirectionTo(2, 2)).toEqual(2);
+      });
     });
 
     it('falls back to the heuristic when no path is found (fully blocked map)', () =>

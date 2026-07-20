@@ -89,7 +89,9 @@
  *  hpDmg / mpDmg / tpDmg — combat loss via gain* < 0 (not skill MP/TP pay)
  *  anyDmg          — when HP, MP, or TP takes combat damage
  *  whenCrit        — when THIS battler is critically hit (victim; not onCritApply)
- *  negaStateAdded  — when a <negative> (jabsNegative) state is added
+ *  whenGlanced     — when THIS battler suffers a glancing blow (victim; implicit partial parry-
+ *    reduced damage, not a miss); mutually exclusive with whenCrit on any single hit
+ *  negaStateAdded  — when a <type:negative> (isNegativeType) state is added
  *  posiStateAdded  — when a non-negative state is added
  *  anyStateAdded   — when any combat state is added
  *  onHealHp/Mp/Tp  — when this battler's own HP/MP/TP is restored (onSelfHeal)
@@ -108,6 +110,7 @@
  *  <autoApplyState:[51, hpDmg, 60]>
  *  <autoApplyState:[52, anyDmg, 120]>
  *  <autoApplyState:[53, whenCrit, 120]>
+ *  <autoApplyState:[53, whenGlanced, 120]>
  *  <autoApplyState:[54, negaStateAdded, 180]>
  *  <autoApplyState:[55, posiStateAdded, 180]>
  *  <autoApplyState:[56, anyStateAdded, 60]>
@@ -180,6 +183,11 @@
  *    Casts skill 1025 every 60 frames while no enemy is within 1 tile.
  *  <autoExecuteSkill:[1026, onWeaponHit, 0]>
  *    Magic-knight style: every basic-attack (or combo) hit also fires skill 1026 on the target.
+ *  <autoExecuteSkill:[1027, whenGlanced, 0]>
+ *    Retaliate on a glancing blow: every time this battler is grazed, fires skill 1027 as a real
+ *    map action from this battler's own position. No auto-aim at the attacker- the payload skill's
+ *    own hitbox/range decides who it reaches (self-centered radial or facing-cone reads as
+ *    "retaliation").
  * ============================================================================
  * AUTO-MODIFY COOLDOWNS TAG
  *  <autoModifyCooldowns:[AMOUNT, CONDITION, THROTTLE_FRAMES, UNIT, RANGE?, TARGET_KEY?]>
@@ -210,9 +218,11 @@
  * Only slots that are both equipped and currently mid-cooldown (frames > 0) are touched- a slot
  * that's already ready has nothing to modify.
  *
- * Built on the same condition framework as the rest of this family, but only the onKill pump is
- * currently wired for this tag (see {@link AutoModifyCooldownManager}); other conditions parse
- * correctly but will not yet fire until their pump call sites are wired.
+ * Built on the same condition framework as the rest of this family, but only a subset of pumps are
+ * currently wired for this tag (see {@link AutoModifyCooldownManager}): onKill, and
+ * negaStateInflicted/posiStateInflicted/anyStateInflicted (this battler inflicts a state onto
+ * someone else- the effect lands back on the inflictor, not the afflicted target). Other conditions
+ * parse correctly but will not yet fire until their pump call sites are wired.
  *
  * EXAMPLES:
  *  <autoModifyCooldowns:[-10, onKill, 0, percent, all]>
@@ -227,6 +237,9 @@
  *    Restricted to the mainhand slot only.
  *  <autoModifyCooldowns:[-10, onKill, 0, percent]>
  *    RANGE omitted- defaults to "all".
+ *  <autoModifyCooldowns:[-60, negaStateInflicted, 0, flat, all]>
+ *    Every time this battler inflicts a negative-tagged state on an opponent, no throttle: refund
+ *    a flat 60 frames (1 second) off every active cooldown.
  * ============================================================================
  * AUTO-INFLICT STATE TAG
  *  <autoInflictState:[STATE_ID, CONDITION, COOLDOWN_FRAMES]>
@@ -240,7 +253,7 @@
  * would otherwise re-trigger this same tag on application.
  *
  * CONDITIONS:
- *  negaStateInflicted — this battler inflicts a <negative> (jabsNegative) state on someone
+ *  negaStateInflicted — this battler inflicts a <type:negative> (isNegativeType) state on someone
  *  posiStateInflicted — this battler inflicts a non-negative state on someone
  *  anyStateInflicted  — this battler inflicts any state on someone
  *  onKnockback        — this battler knocks an enemy back (JABS_Engine#checkKnockback)
@@ -298,6 +311,16 @@
  *    Taking even a single step immediately strips it and resets the stand timer.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.2
+ *    Added the whenGlanced condition (this battler suffers a glancing blow as the victim- mutually
+ *    exclusive with whenCrit on any single hit), wired into autoApplyState and autoExecuteSkill via
+ *    Game_Action#apply alongside the existing whenCrit check. Lets "retaliate on a glancing blow"
+ *    builds fire.
+ * - 1.1.1
+ *    Wired negaStateInflicted/posiStateInflicted/anyStateInflicted into autoModifyCooldowns via a
+ *    new shared AutoRuleManager#scheduleSelfStateInflictedTriggers pump, called from
+ *    Game_Battler#onJabsStateInflicted alongside the existing autoInflictState dispatch. Lets
+ *    "reduce my own cooldowns when I land a debuff" builds fire, not just onKill.
  * - 1.1.0
  *    Added autoModifyCooldowns, which directly modifies one or more of the bearer's own active
  *    skill-slot cooldowns (percent-of-total or flat frames) on a condition- currently wired for

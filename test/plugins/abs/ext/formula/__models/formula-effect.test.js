@@ -31,6 +31,7 @@ describe('J-ABS-Formula FormulaEffect (unit, pure class, no downstream dependenc
       [ 'self', true ],
       [ 'ALL', true ],
       [ 'bogus', false ],
+      [ undefined, false ],
     ])('isValidAffect(%s) is %s', (input, expected) =>
     {
       expect(FormulaEffect.isValidAffect(input)).toBe(expected);
@@ -40,6 +41,7 @@ describe('J-ABS-Formula FormulaEffect (unit, pure class, no downstream dependenc
       [ 'hp', true ],
       [ 'MP', true ],
       [ 'bogus', false ],
+      [ undefined, false ],
     ])('isValidResource(%s) is %s', (input, expected) =>
     {
       expect(FormulaEffect.isValidResource(input)).toBe(expected);
@@ -49,6 +51,7 @@ describe('J-ABS-Formula FormulaEffect (unit, pure class, no downstream dependenc
       [ 'skill', true ],
       [ 'FORMULA', true ],
       [ 'bogus', false ],
+      [ undefined, false ],
     ])('isValidMode(%s) is %s', (input, expected) =>
     {
       expect(FormulaEffect.isValidMode(input)).toBe(expected);
@@ -85,6 +88,11 @@ describe('J-ABS-Formula FormulaEffect (unit, pure class, no downstream dependenc
     it('normalizeResource returns null for an invalid resource', () =>
     {
       expect(FormulaEffect.normalizeResource('bogus')).toBeNull();
+    });
+
+    it('normalizeResource returns null when given undefined', () =>
+    {
+      expect(FormulaEffect.normalizeResource(undefined)).toBeNull();
     });
 
     it('normalizeMode lowercases a valid mode', () =>
@@ -198,6 +206,12 @@ describe('J-ABS-Formula FormulaEffect (unit, pure class, no downstream dependenc
     {
       const effect = new FormulaEffect({ mode: 'skill', skillId: '17' });
       expect(effect.skillId).toBe(17);
+    });
+
+    it('defaults skillId to 0 when mode is skill and skillId is omitted', () =>
+    {
+      const effect = new FormulaEffect({ mode: 'skill' });
+      expect(effect.skillId).toBe(0);
     });
 
     it('defaults skillId to 0 when mode is skill and skillId is invalid', () =>

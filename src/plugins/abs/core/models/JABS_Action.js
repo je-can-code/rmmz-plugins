@@ -191,7 +191,7 @@ class JABS_Action
      * How many frames this action should linger visually.
      * @type {number}
      */
-    this._lingerMaxFrames = this._baseSkill.jabsLinger ?? 10;
+    this._lingerMaxFrames = this._baseSkill.jabsLinger;
 
     /**
      * The current linger frame counter.
@@ -221,13 +221,13 @@ class JABS_Action
      * The duration remaining before this will action will autotrigger.
      * @type {JABS_Timer}
      */
-    this._delay._delayDuration = new JABS_Timer(this._baseSkill.jabsDelayDuration ?? 0);
+    this._delay._delayDuration = new JABS_Timer(this._baseSkill.jabsDelayDuration);
 
     /**
      * Whether or not this action will trigger when an enemy touches it.
      * @type {boolean}
      */
-    this._delay._triggerOnTouch = this._baseSkill.jabsDelayTriggerByTouch ?? false;
+    this._delay._triggerOnTouch = this._baseSkill.jabsDelayTriggerByTouch;
 
     /**
      * Optional radius in tiles used only for touch-triggering during the delay window.
@@ -426,9 +426,6 @@ class JABS_Action
   {
     // determine the caster if not provided.
     const who = caster || this.getCaster();
-
-    // validate a caster exists.
-    if (!who) return;
 
     // only perform if a valid animation id is defined.
     if (this.hasOnCastAnimationId())
@@ -863,13 +860,13 @@ class JABS_Action
    */
   decrementPierceTimes(decrement = 1)
   {
+    // reduce the remaining pierce count by the given amount.
     this._pierceTimesLeft -= decrement;
-    if (this._pierceTimesLeft <= 0)
+
+    // once pierce is exhausted, transition into lingering (unless already there).
+    if (this._pierceTimesLeft <= 0 && !this.isLingering())
     {
-      if (!this._isLingering)
-      {
-        this.startLinger();
-      }
+      this.startLinger();
     }
   }
 
@@ -1043,36 +1040,44 @@ class JABS_Action
    */
   mainUpdate()
   {
+    // if the gating conditions for updating at all aren't met, do not update.
     if (!this.canMainUpdate()) return;
 
+    // keep a spatialized direct action's event pinned to its resolved target tile.
     this.syncDirectActionSpriteToCaster();
 
+    // once the pre-execution delay has elapsed, start counting down the action's own lifespan.
     if (this.isDelayCompleted())
     {
       this.countdownDuration();
     }
 
-    if (this._isLingering)
+    // while lingering, only the fade-out timer advances; no further collision processing occurs.
+    if (this.canUpdateLinger())
     {
       this.updateLinger();
       return;
     }
 
-    if (this.isReadyForCleanup())
+    // once we've overstayed our welcome (past minimum duration) and are expired or out of pierce,
+    // transition into the lingering phase instead of continuing to collide.
+    if (this.shouldBeginLingering())
     {
+      this.startLinger();
       return;
     }
 
+    // while the pierce delay is still ticking, do not process another collision yet.
     if (!this.isPierceReady())
     {
       this.countdownPierceDelay();
       return;
     }
 
-    if (this._collisionEnabled)
-    {
-      this.processCollision();
-    }
+    // process a fresh collision check now that all the above gates have passed. Collision is
+    // only ever disabled together with lingering (see startLinger()), and canUpdateLinger()
+    // already returned above whenever lingering, so canProcessCollision() is always true here.
+    this.processCollision();
   }
 
   /**
@@ -1089,33 +1094,47 @@ class JABS_Action
   }
 
   /**
-   * Determines whether or not to cleanup the action.
-   * @returns {boolean} True if the action should be cleaned up, false otherwise.
+   * Whether or not this action is currently in its linger phase.
+   * @returns {boolean}
    */
-  isReadyForCleanup()
+  isLingering()
   {
+    return this._isLingering;
+  }
+
+  /**
+   * Whether or not the lingering fade-out timer should advance this frame, instead of running
+   * collision logic. Pure alias over {@link #isLingering} for readability at the call site.
+   * @returns {boolean}
+   */
+  canUpdateLinger()
+  {
+    return this.isLingering();
+  }
+
+  /**
+   * Whether or not collision is currently permitted for this action. Disabled once the action
+   * transitions into its lingering phase via {@link #startLinger}.
+   * @returns {boolean}
+   */
+  canProcessCollision()
+  {
+    return this._collisionEnabled;
+  }
+
+  /**
+   * Determines whether or not this action should transition into its lingering phase this frame:
+   * past the minimum duration, and either expired or out of pierce hits. A pure predicate- the
+   * caller ({@link #mainUpdate}) is responsible for actually invoking {@link #startLinger}.
+   * @returns {boolean} True if lingering should begin now, false otherwise.
+   */
+  shouldBeginLingering()
+  {
+    // too young to consider transitioning yet, regardless of expiration/pierce state.
     if (this.getDuration() < JABS_Action.getMinimumDuration()) return false;
 
-    if (this._isLingering)
-    {
-      if (this._currentLinger >= this._lingerMaxFrames)
-      {
-        this.cleanup();
-        return true;
-      }
-
-      return false;
-    }
-
-    const expired = this.isActionExpired();
-    const outOfPierce = this.getPiercingTimes() <= 0;
-    if (expired || outOfPierce)
-    {
-      this.startLinger();
-      return false;
-    }
-
-    return false;
+    // either condition alone is sufficient to justify lingering.
+    return this.isActionExpired() || (this.getPiercingTimes() <= 0);
   }
 
   /**
@@ -1123,15 +1142,35 @@ class JABS_Action
    */
   startLinger()
   {
-    if (this._isLingering) return;
+    // already lingering; nothing further to start.
+    if (this.isLingering()) return;
 
-    // store  is lingering on the instance for later reads.
+    // flag this action as now lingering, so future frames tick the fade-out timer instead.
     this._isLingering = true;
 
-    // store  collision enabled on the instance for later reads.
+    // collision no longer applies once lingering begins.
     this._collisionEnabled = false;
 
+    // play this action's self-animation, if any, as the visual cue that it has expired.
     this.performSelfAnimation();
+  }
+
+  /**
+   * The current linger frame counter.
+   * @returns {number}
+   */
+  getCurrentLinger()
+  {
+    return this._currentLinger;
+  }
+
+  /**
+   * How many frames this action should linger visually.
+   * @returns {number}
+   */
+  getLingerMaxFrames()
+  {
+    return this._lingerMaxFrames;
   }
 
   /**
@@ -1139,9 +1178,11 @@ class JABS_Action
    */
   updateLinger()
   {
+    // advance the linger fade-out counter by one frame.
     this._currentLinger++;
 
-    if (this._currentLinger >= this._lingerMaxFrames)
+    // once the linger window has fully elapsed, clean up this action for real.
+    if (this.getCurrentLinger() >= this.getLingerMaxFrames())
     {
       this.cleanup();
     }
@@ -1306,14 +1347,23 @@ class JABS_Action
    */
   postUpdate()
   {
-    if (this._isLingering)
+    // fade the action sprite's opacity down over the linger window, if currently lingering.
+    if (this.isLingering())
     {
+      // no sprite to fade yet (e.g. delayed actions), so there is nothing to update visually.
       const event = this.getActionSprite();
       if (event)
       {
-        const max = Math.max(1, this._lingerMaxFrames);
-        const t = Math.min(this._currentLinger, max);
+        // clamp the denominator to at least 1 to avoid a divide-by-zero on a misconfigured tag.
+        const max = Math.max(1, this.getLingerMaxFrames());
+
+        // clamp the elapsed linger frames so overshoot doesn't produce a negative percentage.
+        const t = Math.min(this.getCurrentLinger(), max);
+
+        // the fraction of the linger window remaining, from 1 (just started) down to 0 (elapsed).
         const pct = 1 - (t / max);
+
+        // scale that fraction into a real opacity value, floored at 0.
         const opacity = Math.max(0, Math.floor(255 * pct));
         event.setOpacity(opacity);
       }
@@ -1489,7 +1539,7 @@ class JABS_Action
    */
   getThisRangeBuff()
   {
-    return RPGManager.getSumFromAllNotesByRegex([ this.getBaseSkill() ], J.ABS.RegExp.ThisRangeBuff) ?? 0;
+    return RPGManager.getSumFromAllNotesByRegex([ this.getBaseSkill() ], J.ABS.RegExp.ThisRangeBuff);
   }
 
   /**
@@ -1499,8 +1549,8 @@ class JABS_Action
    */
   getThisRangeRate()
   {
-    const captures = RPGManager.getAllCapturesFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisRangeRate);
-    return (captures ?? []).reduce((acc, capture) => acc + (Number(capture[0]) - 1.0), 0);
+    const rates = RPGManager.getStringsFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisRangeRate);
+    return rates.reduce((acc, rate) => acc + (Number(rate) - 1.0), 0);
   }
 
   /**
@@ -1510,7 +1560,7 @@ class JABS_Action
    */
   getThisRadiusBuff()
   {
-    return RPGManager.getSumFromAllNotesByRegex([ this.getBaseSkill() ], J.ABS.RegExp.ThisRadiusBuff) ?? 0;
+    return RPGManager.getSumFromAllNotesByRegex([ this.getBaseSkill() ], J.ABS.RegExp.ThisRadiusBuff);
   }
 
   /**
@@ -1521,8 +1571,8 @@ class JABS_Action
    */
   getThisRadiusRate()
   {
-    const captures = RPGManager.getAllCapturesFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisRadiusRate);
-    return (captures ?? []).reduce((acc, capture) => acc + (Number(capture[0]) - 1.0), 0);
+    const rates = RPGManager.getStringsFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisRadiusRate);
+    return rates.reduce((acc, rate) => acc + (Number(rate) - 1.0), 0);
   }
 
   /**
@@ -1532,7 +1582,7 @@ class JABS_Action
    */
   getThisProximityBuff()
   {
-    return RPGManager.getSumFromAllNotesByRegex([ this.getBaseSkill() ], J.ABS.RegExp.ThisProximityBuff) ?? 0;
+    return RPGManager.getSumFromAllNotesByRegex([ this.getBaseSkill() ], J.ABS.RegExp.ThisProximityBuff);
   }
 
   /**
@@ -1543,8 +1593,8 @@ class JABS_Action
    */
   getThisProximityRate()
   {
-    const captures = RPGManager.getAllCapturesFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisProximityRate);
-    return (captures ?? []).reduce((acc, capture) => acc + (Number(capture[0]) - 1.0), 0);
+    const rates = RPGManager.getStringsFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisProximityRate);
+    return rates.reduce((acc, rate) => acc + (Number(rate) - 1.0), 0);
   }
 
   /**
@@ -1554,7 +1604,7 @@ class JABS_Action
    */
   getThisThicknessBuff()
   {
-    return RPGManager.getSumFromAllNotesByRegex([ this.getBaseSkill() ], J.ABS.RegExp.ThisThicknessBuff) ?? 0;
+    return RPGManager.getSumFromAllNotesByRegex([ this.getBaseSkill() ], J.ABS.RegExp.ThisThicknessBuff);
   }
 
   /**
@@ -1565,8 +1615,8 @@ class JABS_Action
    */
   getThisThicknessRate()
   {
-    const captures = RPGManager.getAllCapturesFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisThicknessRate);
-    return (captures ?? []).reduce((acc, capture) => acc + (Number(capture[0]) - 1.0), 0);
+    const rates = RPGManager.getStringsFromNoteByRegex(this.getBaseSkill(), J.ABS.RegExp.ThisThicknessRate);
+    return rates.reduce((acc, rate) => acc + (Number(rate) - 1.0), 0);
   }
 
   /**

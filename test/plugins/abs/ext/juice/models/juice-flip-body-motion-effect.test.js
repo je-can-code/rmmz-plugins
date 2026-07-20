@@ -46,6 +46,24 @@ describe('J-ABS-Juice JuiceFlipBodyMotionEffect (unit, all downstream dependenci
     });
   });
 
+  describe('isSpriteAlive', () =>
+  {
+    it('is true while the sprite transform is present', () =>
+    {
+      const sprite = buildSprite();
+      const effect = new JuiceFlipBodyMotionEffect(sprite, 1, 10);
+      expect(effect.isSpriteAlive()).toBe(true);
+    });
+
+    it('is false once the sprite transform has been nulled', () =>
+    {
+      const sprite = buildSprite();
+      const effect = new JuiceFlipBodyMotionEffect(sprite, 1, 10);
+      sprite.transform = null;
+      expect(effect.isSpriteAlive()).toBe(false);
+    });
+  });
+
   describe('tick', () =>
   {
     it('flags the sprite as juice-flipping on the very first tick', () =>

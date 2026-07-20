@@ -477,6 +477,40 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
 
       expect(globalThis.Input.getBindings('JABS', 'mainhand')).toEqual([]);
     });
+
+    it('exports an empty snapshot when the live bindings bag is missing entirely', () =>
+    {
+      globalThis.Input._jRegistries.bindings = undefined;
+
+      const exported = globalThis.Input.exportAllBindingsForSave();
+
+      expect(exported).toEqual({});
+    });
+
+    it('exports an empty namespace map when a registered namespace key has no value', () =>
+    {
+      globalThis.Input._jRegistries.bindings = { JABS: null };
+
+      const exported = globalThis.Input.exportAllBindingsForSave();
+
+      expect(exported.JABS).toEqual({});
+    });
+
+    it('coerces a non-array live binding value to an empty array on export', () =>
+    {
+      globalThis.Input._jRegistries.bindings = { JABS: { mainhand: 'not-an-array' } };
+
+      const exported = globalThis.Input.exportAllBindingsForSave();
+
+      expect(exported.JABS.mainhand).toEqual([]);
+    });
+
+    it('treats a null namespace value in the saved snapshot as an empty map on import', () =>
+    {
+      globalThis.Input.importAllBindingsFromSave({ JABS: null });
+
+      expect(globalThis.Input.getBindings('JABS', 'mainhand')).toEqual([]);
+    });
   });
   //endregion registries
 
@@ -668,6 +702,14 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
       expect(padState).toMatchObject({ left: false, right: false });
     });
 
+    it('leaves horizontal state untouched when neither holding nor neutral (mid-transition frame)', () =>
+    {
+      const padState = { left: true, right: false };
+      globalThis.Input._applyAxesToPerPad(padState, { holdLeft: false, holdRight: false, neutralX: false, holdUp: false, holdDown: false, neutralY: false });
+
+      expect(padState).toMatchObject({ left: true, right: false });
+    });
+
     it('sets up and clears down when holding up', () =>
     {
       const padState = { up: false, down: true };
@@ -722,6 +764,26 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
       );
 
       expect(result.up).toEqual(false);
+    });
+
+    it('treats a merged down as keyboard-only when axes did not contribute it last frame', () =>
+    {
+      const result = globalThis.Input._keyboardApproxFromSnapshot(
+        { up: false, down: true, left: false, right: false },
+        { up: false, down: false, left: false, right: false },
+      );
+
+      expect(result.down).toEqual(true);
+    });
+
+    it('treats a merged left as keyboard-only when axes did not contribute it last frame', () =>
+    {
+      const result = globalThis.Input._keyboardApproxFromSnapshot(
+        { up: false, down: false, left: true, right: false },
+        { up: false, down: false, left: false, right: false },
+      );
+
+      expect(result.left).toEqual(true);
     });
   });
 

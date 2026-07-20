@@ -246,6 +246,51 @@ describe('RPGManager', () =>
     });
   });
 
+  describe('getStringsFromAllNotesByRegex', () =>
+  {
+    it('concatenates matching strings across multiple database rows', () =>
+    {
+      // Arrange
+      const re = /<id:(\w+)>/;
+      const rows = [
+        { note: '<id:a>' },
+        { note: '<id:b>\n<id:c>' },
+      ];
+
+      // Act
+      const result = RPGManager.getStringsFromAllNotesByRegex(rows, re, false);
+
+      // Assert
+      expect(result).toEqual([ 'a', 'b', 'c' ]);
+    });
+
+    it('returns an empty array when nothing matches and nullIfEmpty is false', () =>
+    {
+      // Arrange
+      const re = /<id:(\w+)>/;
+      const rows = [ { note: 'no tags here' } ];
+
+      // Act
+      const result = RPGManager.getStringsFromAllNotesByRegex(rows, re, false);
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it('returns null instead of an empty array when nothing matches and nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const re = /<id:(\w+)>/;
+      const rows = [ { note: 'no tags here' } ];
+
+      // Act
+      const result = RPGManager.getStringsFromAllNotesByRegex(rows, re, true);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+  });
+
   describe('getNumberFromNoteByRegex', () =>
   {
     it('uses the last match and parses decimals', () =>
@@ -735,74 +780,45 @@ describe('RPGManager', () =>
     });
   });
 
-  describe('getAllCapturesFromNoteByRegex', () =>
+  describe('getArraysFromAllNotesByRegex', () =>
   {
-    it('returns the capture groups for each matching line', () =>
+    it('concatenates parsed arrays across multiple database rows', () =>
     {
       // Arrange
-      const data = { note: '<x:hit:self:[a]>' };
-      const re = /<x:(\w+):(\w+):\[([^\]]+)\]>/;
-
-      // Act
-      const result = RPGManager.getAllCapturesFromNoteByRegex(data, re, false);
-
-      // Assert
-      expect(result).toEqual([ [ 'hit', 'self', 'a' ] ]);
-    });
-
-    it('returns null when the note fails the parsability guard and nullIfEmpty is true', () =>
-    {
-      // Arrange- an empty note fails #canParsedatabaseData, short-circuiting before any scan.
-      const data = { note: '' };
-      const re = /<none:(\d)>/;
-
-      // Act
-      const result = RPGManager.getAllCapturesFromNoteByRegex(data, re, true);
-
-      // Assert
-      expect(result).toBe(null);
-    });
-
-    it('returns null when the note is parsable but nothing matches and nullIfEmpty is true', () =>
-    {
-      // Arrange- a non-empty note that simply has no matching tag reaches the post-scan check.
-      const data = { note: 'no matching tags here' };
-      const re = /<none:(\d)>/;
-
-      // Act
-      const result = RPGManager.getAllCapturesFromNoteByRegex(data, re, true);
-
-      // Assert
-      expect(result).toBe(null);
-    });
-  });
-
-  describe('getAllCapturesFromAllNotesByRegex', () =>
-  {
-    it('concatenates captures across multiple database rows', () =>
-    {
-      // Arrange
-      const re = /<c:(\d)>/;
+      const re = /<c:[ ]?(\[[^\]]+])>/;
       const rows = [
-        { note: '<c:1>' },
-        { note: '<c:2>' },
+        { note: '<c:[1, 2]>' },
+        { note: '<c:[3, 4]>' },
       ];
 
       // Act
-      const result = RPGManager.getAllCapturesFromAllNotesByRegex(rows, re, false);
+      const result = RPGManager.getArraysFromAllNotesByRegex(rows, re, true, false);
 
       // Assert
-      expect(result).toEqual([ [ '1' ], [ '2' ] ]);
+      expect(result).toEqual([ [ 1, 2 ], [ 3, 4 ] ]);
+    });
+
+    it('returns an empty array when nothing matches and nullIfEmpty is false', () =>
+    {
+      // Arrange
+      const re = /<c:[ ]?(\[[^\]]+])>/;
+      const rows = [ { note: 'no tags here' } ];
+
+      // Act
+      const result = RPGManager.getArraysFromAllNotesByRegex(rows, re, true, false);
+
+      // Assert
+      expect(result).toEqual([]);
     });
 
     it('returns null instead of an empty array when nothing matches and nullIfEmpty is true', () =>
     {
       // Arrange
-      const re = /<c:(\d)>/;
+      const re = /<c:[ ]?(\[[^\]]+])>/;
       const rows = [ { note: 'no tags here' } ];
 
       // Act
-      const result = RPGManager.getAllCapturesFromAllNotesByRegex(rows, re, true);
+      const result = RPGManager.getArraysFromAllNotesByRegex(rows, re, true, true);
 
       // Assert
       expect(result).toBeNull();

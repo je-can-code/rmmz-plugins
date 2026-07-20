@@ -795,9 +795,11 @@ Game_Action.prototype.applyStateEffect = function(target, stateId)
  * bonusDamageIfStateType (type-classifier presence bonus), bonusDamagePerStateType
  * (type-classifier count bonus), bonusDamagePerStateStack (named-state stack-depth bonus),
  * thisBonusDamagePerStateStack (skill-scoped named-state stack-depth bonus),
- * bonusDamageForMyStateCount (authored-distinct-state count bonus), bonusDamage (unconditional
- * caster-wide bonus), thisBonusDamage (unconditional skill-scoped bonus), and
- * bonusDamageIfTargetHpBelow/thisBonusDamageIfTargetHpBelow (target-missing-hp execute bonus).
+ * bonusDamageForMyStateCount (authored-distinct-state count bonus),
+ * vulnerabilityPerAuthoredStateStack (authored-state stack bonus collected by any attacker),
+ * bonusDamage (unconditional caster-wide bonus), thisBonusDamage (unconditional skill-scoped
+ * bonus), and bonusDamageIfTargetHpBelow/thisBonusDamageIfTargetHpBelow (target-missing-hp
+ * execute bonus).
  * Applied before guard effects so flat guard reduction cannot fully cancel the state-exploitation bonus.
  * @param {number} baseDamage The damage value before state multipliers.
  * @param {Game_Battler} target The target whose states are evaluated.
@@ -822,12 +824,14 @@ Game_Action.prototype.applyStateDamageMultipliers = function(baseDamage, target)
   const thisStackDepthPct = this.calculateThisBonusDamagePerStateStackPct(target);
   const myStateCountPct = this.calculateBonusForMyStateCountPct(target);
   const thisMyStateCountPct = this.calculateThisBonusForMyStateCountPct(target);
+  const authoredVulnerabilityPct = this.calculateAuthoredVulnerabilityStackPct(target);
   const targetHpBelowPct = this.calculateBonusIfTargetHpBelowPct(target);
   const thisTargetHpBelowPct = this.calculateThisBonusDamageIfTargetHpBelowPct(target);
 
   const combinedPct = debuffPct + specificPct + thisSpecificPct + selfStatePct + thisSelfStatePct
     + flatPct + thisFlatPct + typePresencePct + typeCountPct + stackDepthPct + thisStackDepthPct
-    + myStateCountPct + thisMyStateCountPct + targetHpBelowPct + thisTargetHpBelowPct;
+    + myStateCountPct + thisMyStateCountPct + authoredVulnerabilityPct + targetHpBelowPct
+    + thisTargetHpBelowPct;
 
   // if no source contributed a bonus, return damage unchanged.
   if (combinedPct === 0) return baseDamage;
@@ -838,7 +842,7 @@ Game_Action.prototype.applyStateDamageMultipliers = function(baseDamage, target)
 
 /**
  * Calculates the total damage bonus percent from perDebuffBuff tags on the caster's notes.
- * Counts every active state on the target that is tagged with jabsNegative and multiplies
+ * Counts every active state on the target carrying the <type:negative> classifier and multiplies
  * the summed N value by that count.
  * @param {Game_Battler} target The target whose negative states are counted.
  * @returns {number} The total bonus percent from this tag type.
@@ -850,14 +854,14 @@ Game_Action.prototype.calculatePerDebuffBonusPct = function(target)
     this.subject()
       .getAllNotes(),
     J.ABS.RegExp.PerDebuffBuff
-  ) ?? 0;
+  );
 
   // if no tags exist on this caster, there is no bonus.
   if (totalN === 0) return 0;
 
-  // count the target's active states that bear the <negative> notetag.
+  // count the target's active states carrying the <type:negative> classifier.
   const debuffCount = target.states()
-    .filter(s => s.jabsNegative)
+    .filter(s => s.isNegativeType())
     .length;
 
   // multiply the per-debuff rate by the number of debuffs on the target.
@@ -1007,7 +1011,7 @@ Game_Action.prototype.calculateBonusDamagePct = function()
     this.subject()
       .getAllNotes(),
     J.ABS.RegExp.BonusDamage
-  ) ?? 0;
+  );
 };
 
 /**
@@ -1357,6 +1361,48 @@ Game_Action.prototype.calculateThisBonusForMyStateCountPct = function(target)
   // multiply the per-state rate by the count of distinct states this caster authored.
   return perStatePct * this.countTargetStatesAuthoredByCaster(target);
 };
+
+/**
+ * Calculates the total damage bonus percent from vulnerabilityPerAuthoredStateStack tags.
+ * Unlike every other bonus in this region, this one is not read from this.subject()- it is read
+ * from each tracked state's own source battler, so the bonus applies no matter who is currently
+ * dealing the damage. This lets one battler's kit turn their applied debuffs into a standing
+ * vulnerability that any ally can then exploit.
+ * @param {Game_Battler} target The target whose tracked states are inspected.
+ * @returns {number} The total bonus percent contributed by every authored, tagged state stack.
+ */
+Game_Action.prototype.calculateAuthoredVulnerabilityStackPct = function(target)
+{
+  // grab every tracked state currently afflicting the target, keyed by state id.
+  const trackedStates = $jabsEngine.getJabsStatesByUuid(target.getUuid());
+
+  // accumulate the bonus percent across every tracked state's author.
+  let totalPct = 0;
+  trackedStates.forEach(trackedState =>
+  {
+    // skip trackers that are lingering post-expiration but not yet purged.
+    if (!target.isStateAffected(trackedState.stateId)) return;
+
+    // the author is whoever originally applied this particular tracked state.
+    const author = trackedState.source;
+
+    // a state with no discernible author cannot carry an authored vulnerability.
+    if (!author) return;
+
+    // read the vulnerability rate off the author's own notes- not the current attacker's.
+    const perStackPct = RPGManager.getSumFromAllNotesByRegex(
+      author.getAllNotes(),
+      J.ABS.RegExp.VulnerabilityPerAuthoredStateStack);
+
+    // if the author carries no such tag, this tracked state contributes nothing.
+    if (perStackPct === 0) return;
+
+    // multiply the author's rate by this specific state's current stack count.
+    totalPct += perStackPct * trackedState.stackCount;
+  });
+
+  return totalPct;
+};
 //endregion state damage multipliers
 
 //region skill history bonus
@@ -1447,23 +1493,21 @@ Game_Action.prototype.calculateGeneralSkillHistoryBonusPct = function(uuid)
   // accumulate the total general bonus percent from all matching tags.
   let totalPct = 0;
 
-  // collect all captures from every note source for the general variant tag.
-  // each entry in the returned array is a single-element array [ bracketString ].
-  const allCaptures = RPGManager.getAllCapturesFromAllNotesByRegex(
+  // collect the raw bracket text from every note source for the general variant tag-
+  // deliberately not routed through getArraysFromNotesByRegex's JSON-ish parsing, since
+  // parseGeneralSkillHistoryBracket below does its own parsing of the bracket content.
+  const rawTags = RPGManager.getStringsFromAllNotesByRegex(
     this.subject()
       .getAllNotes(),
     J.ABS.RegExp.SkillHistoryBonus
   );
 
   // if there are no tags anywhere, there is nothing to sum.
-  if (!allCaptures.length) return 0;
+  if (!rawTags.length) return 0;
 
   // iterate over each tag capture and accumulate its contribution.
-  allCaptures.forEach(captureGroup =>
+  rawTags.forEach(rawTag =>
   {
-    // the first capture group is the full bracket string.
-    const [ rawTag ] = captureGroup;
-
     // parse the bracket content — [TYPE_ID, WINDOW, PCT, COUNT_MODE].
     const parsed = this.parseGeneralSkillHistoryBracket(rawTag);
 
@@ -1617,7 +1661,7 @@ Game_Action.prototype.calculateThisCastTimeDamageBonusPctPerSec = function()
   const item = this.item();
 
   // sum every matching tag on this skill's note.
-  return RPGManager.getSumFromAllNotesByRegex([ item ], J.ABS.RegExp.ThisCastTimeDamageBonus) ?? 0;
+  return RPGManager.getSumFromAllNotesByRegex([ item ], J.ABS.RegExp.ThisCastTimeDamageBonus);
 };
 
 /**
@@ -1631,7 +1675,7 @@ Game_Action.prototype.calculateGeneralCastTimeDamageBonusPctPerSec = function()
     this.subject()
       .getAllNotes(),
     J.ABS.RegExp.CastTimeDamageBonus
-  ) ?? 0;
+  );
 };
 //endregion cast time damage bonus
 //endregion action application

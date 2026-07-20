@@ -253,5 +253,110 @@ describe('AutoRuleManager (direct src import)', () =>
       expect(battler.dispatched).toEqual([ 3 ]);
     });
   });
+
+  describe('scheduleGlancingTriggers', () =>
+  {
+    it('dispatches whenGlanced rules on the glanced battler', () =>
+    {
+      // Arrange
+      const battler = makeBattler([ makeSource(1, [ [ 9, 'whenGlanced', 0 ] ]) ]);
+
+      // Act
+      FakeAutoApplyManager.scheduleGlancingTriggers(battler);
+
+      // Assert
+      expect(battler.dispatched).toEqual([ 9 ]);
+    });
+
+    it('does not dispatch whenCrit rules', () =>
+    {
+      // Arrange
+      const battler = makeBattler([ makeSource(1, [ [ 9, 'whenCrit', 0 ] ]) ]);
+
+      // Act
+      FakeAutoApplyManager.scheduleGlancingTriggers(battler);
+
+      // Assert
+      expect(battler.dispatched).toEqual([]);
+    });
+  });
+
+  describe('scheduleSelfStateInflictedTriggers', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$dataStates = [];
+    });
+
+    it('does nothing when there is no ABS context', () =>
+    {
+      // Arrange
+      globalThis.$jabsEngine = { absEnabled: false };
+      globalThis.$dataStates[10] = { isNegativeType: () => true };
+      const battler = makeBattler([ makeSource(1, [ [ 3, 'negaStateInflicted', 0 ] ]) ]);
+
+      // Act
+      FakeAutoApplyManager.scheduleSelfStateInflictedTriggers(battler, 10);
+
+      // Assert
+      expect(battler.dispatched).toEqual([]);
+    });
+
+    it('does nothing when no battler is given', () =>
+    {
+      // Arrange & Act & Assert- must not throw for a missing battler.
+      expect(() => FakeAutoApplyManager.scheduleSelfStateInflictedTriggers(undefined, 10)).not.toThrow();
+    });
+
+    it('does nothing when the inflicted state id has no database row', () =>
+    {
+      // Arrange
+      const battler = makeBattler([ makeSource(1, [ [ 3, 'negaStateInflicted', 0 ] ]) ]);
+
+      // Act
+      FakeAutoApplyManager.scheduleSelfStateInflictedTriggers(battler, 999);
+
+      // Assert
+      expect(battler.dispatched).toEqual([]);
+    });
+
+    it('fires negaStateInflicted and anyStateInflicted rules for a negative-tagged state', () =>
+    {
+      // Arrange
+      globalThis.$dataStates[10] = { isNegativeType: () => true };
+      const battler = makeBattler([
+        makeSource(1, [
+          [ 3, 'negaStateInflicted', 0 ],
+          [ 4, 'anyStateInflicted', 0 ],
+          [ 5, 'posiStateInflicted', 0 ],
+        ]),
+      ]);
+
+      // Act
+      FakeAutoApplyManager.scheduleSelfStateInflictedTriggers(battler, 10);
+
+      // Assert
+      expect(battler.dispatched.sort()).toEqual([ 3, 4 ]);
+    });
+
+    it('fires posiStateInflicted and anyStateInflicted rules for a non-negative state', () =>
+    {
+      // Arrange
+      globalThis.$dataStates[11] = { isNegativeType: () => false };
+      const battler = makeBattler([
+        makeSource(1, [
+          [ 3, 'negaStateInflicted', 0 ],
+          [ 4, 'anyStateInflicted', 0 ],
+          [ 5, 'posiStateInflicted', 0 ],
+        ]),
+      ]);
+
+      // Act
+      FakeAutoApplyManager.scheduleSelfStateInflictedTriggers(battler, 11);
+
+      // Assert
+      expect(battler.dispatched.sort()).toEqual([ 4, 5 ]);
+    });
+  });
 });
 //endregion plugins/passive/ext/conditional/managers/auto-rule-manager.test.js

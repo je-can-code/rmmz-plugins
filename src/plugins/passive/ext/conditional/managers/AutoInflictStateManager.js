@@ -88,8 +88,8 @@ class AutoInflictStateManager extends AutoRuleManager
     // if the state data is missing, polarity-specific rules cannot be evaluated.
     if (!inflictedState) return;
 
-    // negative polarity comes from the JABS <negative> notetag on the state.
-    const polarityKind = inflictedState.jabsNegative === true
+    // negative polarity comes from the state's own <type:negative> classifier.
+    const polarityKind = inflictedState.isNegativeType()
       ? 'negaStateInflicted'
       : 'posiStateInflicted';
 

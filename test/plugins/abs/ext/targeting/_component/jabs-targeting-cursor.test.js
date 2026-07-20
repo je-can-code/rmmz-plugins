@@ -134,6 +134,19 @@ describe('JABS_TargetingCursor', () =>
       expect(cursor.getSelectedBattler()).toBe(closer);
     });
 
+    it('keeps the earlier best-aligned candidate when a later one scores no better', () =>
+    {
+      const current = buildBattler(0, 0);
+      const closer = buildBattler(2, 0);
+      const farther = buildBattler(5, 0);
+      // closer is evaluated first this time, so farther's worse score must not overwrite it.
+      const cursor = JABS_TargetingCursor.Cycle(buildBattler(0, 0), [ current, closer, farther ], 99);
+
+      cursor.selectTowards(1, 0);
+
+      expect(cursor.getSelectedBattler()).toBe(closer);
+    });
+
     it('ignores a candidate occupying the exact same position as the current selection', () =>
     {
       // zero distance from the current selection would otherwise divide-by-zero in the

@@ -1150,8 +1150,8 @@ Game_Battler.prototype.isImmuneToNonDeathStates = function()
 };
 
 /**
- * Whether or not this battler is immune to any state carrying the {@code <negative>} (jabsNegative)
- * notetag.
+ * Whether or not this battler is immune to any state carrying the {@code <type:negative>}
+ * classifier (see {@link RPG_State#isNegativeType}).
  * @returns {boolean}
  */
 Game_Battler.prototype.isImmuneToNegativeStates = function()
@@ -1256,8 +1256,8 @@ Game_Battler.prototype.isStateAddable = function(stateId)
 
   if (state)
   {
-    // negative-state immunity blocks any <negative>-tagged state.
-    if (state.jabsNegative === true && this.isImmuneToNegativeStates()) return false;
+    // negative-state immunity blocks any state carrying the <type:negative> classifier.
+    if (state.isNegativeType() && this.isImmuneToNegativeStates()) return false;
 
     // type-scoped immunity blocks any state carrying a matching <type:CLASSIFIER> tag.
     if (this.isImmuneToStateByType(state)) return false;
@@ -1439,16 +1439,16 @@ Game_Battler.prototype.isRemovableCandidate = function(state, type, allowDeath)
     return false;
   }
 
-  // negative type: only states tagged <negative>.
+  // negative type: only states carrying the <type:negative> classifier.
   if (type === 'negative')
   {
-    return state.jabsNegative === true;
+    return state.isNegativeType();
   }
 
-  // positive type: only states NOT tagged <negative>.
+  // positive type: only states NOT carrying the <type:negative> classifier.
   if (type === 'positive')
   {
-    return state.jabsNegative !== true;
+    return !state.isNegativeType();
   }
 
   // all type: no polarity filter applied.
@@ -1485,32 +1485,40 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker, overrides = nu
     jabsStateDurationFrames: baseDuration,
   } = state;
 
-  // establish the defaults from the state's own database data.
-  let stateDuration = baseDuration;
-  let stateStacks = state.jabsStateStacksApplied;
+  // establish the stack default from the state's own database data; the override (if any)
+  // wins whenever it is explicitly specified.
+  const stateStacks = overrides?.stacks ?? state.jabsStateStacksApplied;
 
-  // apply any skill-authored overrides when provided.
-  if (overrides)
-  {
-    const { duration, stacks } = overrides;
-
-    // use the override if specified; fall back to the state's own value if not.
-    stateDuration = duration ?? baseDuration;
-    stateStacks = stacks ?? state.jabsStateStacksApplied;
-  }
+  // pull the override duration out, defaulting to null (meaning "no override") when absent.
+  const overrideDuration = overrides ? overrides.duration : null;
 
   // default to eternal; finite timers come from stateDuration tags (not MZ removeByWalking).
   let totalDuration = -1;
 
-  if (hasMapTimer)
+  if (overrideDuration === -1)
   {
+    // sentinel: -1 forces this application indefinite, regardless of the state's own tags
+    // (including <indefiniteState> being absent). totalDuration is already -1 above, and
+    // there is no finite duration to run boost math against, so nothing further to do.
+  }
+  else if (overrideDuration !== null && overrideDuration !== 0)
+  {
+    // a positive (or otherwise non-sentinel) override duration always wins over the state's
+    // own tags, including <indefiniteState> — the skill author's explicit value is authoritative.
+    totalDuration = overrideDuration
+      + assailant.getStateDurationBoost(overrideDuration)
+      + state.jabsThisStateDurationBoost(overrideDuration);
+  }
+  else if (hasMapTimer)
+  {
+    // no override was given (null/0 sentinel), so fall back entirely to the state's own tags.
     // extend outgoing duration per the battler applying this state, using the effective base.
     // also fold in any state-scoped boost baked into this state's own (possibly extension-merged)
     // note, so a passive like <extendType:low-effort><thisStateDurationPerc:100> can double
     // the duration of every matching state without touching the caster-wide boost tags above.
-    totalDuration = stateDuration
-      + assailant.getStateDurationBoost(stateDuration)
-      + state.jabsThisStateDurationBoost(stateDuration);
+    totalDuration = baseDuration
+      + assailant.getStateDurationBoost(baseDuration)
+      + state.jabsThisStateDurationBoost(baseDuration);
   }
 
   // populate the state builder.
@@ -1939,7 +1947,7 @@ Game_Battler.prototype.isAccumulating = function()
 Game_Battler.prototype.getRangeBuff = function()
 {
   // sum every rangeBuff tag across all note sources.
-  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.RangeBuff) ?? 0;
+  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.RangeBuff);
 };
 
 /**
@@ -1950,8 +1958,8 @@ Game_Battler.prototype.getRangeBuff = function()
 Game_Battler.prototype.getRangeRate = function()
 {
   // accumulate each rangeRate tag's delta from 1.0, starting at 1.0.
-  const captures = RPGManager.getAllCapturesFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.RangeRate);
-  return captures.reduce((acc, capture) => acc + (Number(capture[0]) - 1.0), 1.0);
+  const rates = RPGManager.getStringsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.RangeRate);
+  return rates.reduce((acc, rate) => acc + (Number(rate) - 1.0), 1.0);
 };
 
 /**
@@ -1962,7 +1970,7 @@ Game_Battler.prototype.getRangeRate = function()
 Game_Battler.prototype.getRadiusBuff = function()
 {
   // sum every radiusBuff tag across all note sources.
-  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.RadiusBuff) ?? 0;
+  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.RadiusBuff);
 };
 
 /**
@@ -1973,8 +1981,8 @@ Game_Battler.prototype.getRadiusBuff = function()
 Game_Battler.prototype.getRadiusRate = function()
 {
   // accumulate each radiusRate tag's delta from 0 — the caller folds this into the shared rate.
-  const captures = RPGManager.getAllCapturesFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.RadiusRate);
-  return captures.reduce((acc, capture) => acc + (Number(capture[0]) - 1.0), 0);
+  const rates = RPGManager.getStringsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.RadiusRate);
+  return rates.reduce((acc, rate) => acc + (Number(rate) - 1.0), 0);
 };
 
 /**
@@ -1985,7 +1993,7 @@ Game_Battler.prototype.getRadiusRate = function()
 Game_Battler.prototype.getProximityBuff = function()
 {
   // sum every proximityBuff tag across all note sources.
-  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ProximityBuff) ?? 0;
+  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ProximityBuff);
 };
 
 /**
@@ -1996,8 +2004,8 @@ Game_Battler.prototype.getProximityBuff = function()
 Game_Battler.prototype.getProximityRate = function()
 {
   // accumulate each proximityRate tag's delta from 0 — the caller folds this into the shared rate.
-  const captures = RPGManager.getAllCapturesFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ProximityRate);
-  return captures.reduce((acc, capture) => acc + (Number(capture[0]) - 1.0), 0);
+  const rates = RPGManager.getStringsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ProximityRate);
+  return rates.reduce((acc, rate) => acc + (Number(rate) - 1.0), 0);
 };
 
 /**
@@ -2008,7 +2016,7 @@ Game_Battler.prototype.getProximityRate = function()
 Game_Battler.prototype.getThicknessBuff = function()
 {
   // sum every thicknessBuff tag across all note sources.
-  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ThicknessBuff) ?? 0;
+  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ThicknessBuff);
 };
 
 /**
@@ -2019,8 +2027,8 @@ Game_Battler.prototype.getThicknessBuff = function()
 Game_Battler.prototype.getThicknessRate = function()
 {
   // accumulate each thicknessRate tag's delta from 0 — the caller folds this into the shared rate.
-  const captures = RPGManager.getAllCapturesFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ThicknessRate);
-  return captures.reduce((acc, capture) => acc + (Number(capture[0]) - 1.0), 0);
+  const rates = RPGManager.getStringsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ThicknessRate);
+  return rates.reduce((acc, rate) => acc + (Number(rate) - 1.0), 0);
 };
 //endregion range modifiers
 

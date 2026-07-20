@@ -22,7 +22,7 @@ describe('J-ABS-Formula RPG_Skill (unit, all downstream dependencies mocked)', (
     };
 
     // RPGManager is a downstream dependency (different file); mock it entirely.
-    globalThis.RPGManager = { getAllCapturesFromNoteByRegex: vi.fn() };
+    globalThis.RPGManager = { getArraysFromNotesByRegex: vi.fn() };
 
     // FormulaEffect is a downstream dependency (a sibling model file); mock its static factories
     // with identity-preserving stand-ins so this file's own wiring/caching logic is what's tested.
@@ -46,7 +46,7 @@ describe('J-ABS-Formula RPG_Skill (unit, all downstream dependencies mocked)', (
 
   beforeEach(() =>
   {
-    globalThis.RPGManager.getAllCapturesFromNoteByRegex.mockReset();
+    globalThis.RPGManager.getArraysFromNotesByRegex.mockReset();
   });
 
   function buildSkill()
@@ -59,7 +59,7 @@ describe('J-ABS-Formula RPG_Skill (unit, all downstream dependencies mocked)', (
     it('builds and caches the effects on first access', () =>
     {
       // Arrange
-      globalThis.RPGManager.getAllCapturesFromNoteByRegex
+      globalThis.RPGManager.getArraysFromNotesByRegex
         .mockReturnValueOnce([ [ 'hit', 'target', 'hp', 'a.atk' ] ])
         .mockReturnValueOnce([]);
       const skill = buildSkill();
@@ -75,7 +75,7 @@ describe('J-ABS-Formula RPG_Skill (unit, all downstream dependencies mocked)', (
     it('returns the cached effects on subsequent access without reparsing', () =>
     {
       // Arrange
-      globalThis.RPGManager.getAllCapturesFromNoteByRegex
+      globalThis.RPGManager.getArraysFromNotesByRegex
         .mockReturnValueOnce([ [ 'hit', 'target', 'hp', 'a.atk' ] ])
         .mockReturnValueOnce([]);
       const skill = buildSkill();
@@ -86,7 +86,7 @@ describe('J-ABS-Formula RPG_Skill (unit, all downstream dependencies mocked)', (
 
       // Assert
       expect(second).toBe(first);
-      expect(globalThis.RPGManager.getAllCapturesFromNoteByRegex).toHaveBeenCalledTimes(2);
+      expect(globalThis.RPGManager.getArraysFromNotesByRegex).toHaveBeenCalledTimes(2);
     });
   });
 
@@ -95,7 +95,7 @@ describe('J-ABS-Formula RPG_Skill (unit, all downstream dependencies mocked)', (
     it('combines by-formula and by-skill effects into a single array', () =>
     {
       // Arrange
-      globalThis.RPGManager.getAllCapturesFromNoteByRegex
+      globalThis.RPGManager.getArraysFromNotesByRegex
         .mockReturnValueOnce([ [ 'hit', 'target', 'hp', 'a.atk' ] ])
         .mockReturnValueOnce([ [ 'use', 'self', '7' ] ]);
       const skill = buildSkill();
@@ -104,18 +104,18 @@ describe('J-ABS-Formula RPG_Skill (unit, all downstream dependencies mocked)', (
       const result = skill.extractJabsFormulaEffects();
 
       // Assert
-      expect(globalThis.RPGManager.getAllCapturesFromNoteByRegex).toHaveBeenNthCalledWith(1, skill, FORMULA_APPLY_REGEX, false);
-      expect(globalThis.RPGManager.getAllCapturesFromNoteByRegex).toHaveBeenNthCalledWith(2, skill, SKILL_APPLY_REGEX, false);
+      expect(globalThis.RPGManager.getArraysFromNotesByRegex).toHaveBeenNthCalledWith(1, skill, FORMULA_APPLY_REGEX);
+      expect(globalThis.RPGManager.getArraysFromNotesByRegex).toHaveBeenNthCalledWith(2, skill, SKILL_APPLY_REGEX);
       expect(result).toEqual([
         { from: 'formula', tuple: [ 'hit', 'target', 'hp', 'a.atk' ] },
         { from: 'skill', tuple: [ 'use', 'self', '7' ] },
       ]);
     });
 
-    it('defaults to an empty array when RPGManager returns a falsy result', () =>
+    it('defaults to an empty array when RPGManager finds no matching tags', () =>
     {
       // Arrange
-      globalThis.RPGManager.getAllCapturesFromNoteByRegex.mockReturnValue(null);
+      globalThis.RPGManager.getArraysFromNotesByRegex.mockReturnValue([]);
       const skill = buildSkill();
 
       // Act

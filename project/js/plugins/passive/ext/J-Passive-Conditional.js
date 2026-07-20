@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.0 PASSIVE-CONDITIONAL] Gates passives and auto-applies combat states (JABS map).
+ * [v1.1.2 PASSIVE-CONDITIONAL] Gates passives and auto-applies combat states (JABS map).
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -89,7 +89,9 @@
  *  hpDmg / mpDmg / tpDmg — combat loss via gain* < 0 (not skill MP/TP pay)
  *  anyDmg          — when HP, MP, or TP takes combat damage
  *  whenCrit        — when THIS battler is critically hit (victim; not onCritApply)
- *  negaStateAdded  — when a <negative> (jabsNegative) state is added
+ *  whenGlanced     — when THIS battler suffers a glancing blow (victim; implicit partial parry-
+ *    reduced damage, not a miss); mutually exclusive with whenCrit on any single hit
+ *  negaStateAdded  — when a <type:negative> (isNegativeType) state is added
  *  posiStateAdded  — when a non-negative state is added
  *  anyStateAdded   — when any combat state is added
  *  onHealHp/Mp/Tp  — when this battler's own HP/MP/TP is restored (onSelfHeal)
@@ -108,6 +110,7 @@
  *  <autoApplyState:[51, hpDmg, 60]>
  *  <autoApplyState:[52, anyDmg, 120]>
  *  <autoApplyState:[53, whenCrit, 120]>
+ *  <autoApplyState:[53, whenGlanced, 120]>
  *  <autoApplyState:[54, negaStateAdded, 180]>
  *  <autoApplyState:[55, posiStateAdded, 180]>
  *  <autoApplyState:[56, anyStateAdded, 60]>
@@ -180,6 +183,11 @@
  *    Casts skill 1025 every 60 frames while no enemy is within 1 tile.
  *  <autoExecuteSkill:[1026, onWeaponHit, 0]>
  *    Magic-knight style: every basic-attack (or combo) hit also fires skill 1026 on the target.
+ *  <autoExecuteSkill:[1027, whenGlanced, 0]>
+ *    Retaliate on a glancing blow: every time this battler is grazed, fires skill 1027 as a real
+ *    map action from this battler's own position. No auto-aim at the attacker- the payload skill's
+ *    own hitbox/range decides who it reaches (self-centered radial or facing-cone reads as
+ *    "retaliation").
  * ============================================================================
  * AUTO-MODIFY COOLDOWNS TAG
  *  <autoModifyCooldowns:[AMOUNT, CONDITION, THROTTLE_FRAMES, UNIT, RANGE?, TARGET_KEY?]>
@@ -210,9 +218,11 @@
  * Only slots that are both equipped and currently mid-cooldown (frames > 0) are touched- a slot
  * that's already ready has nothing to modify.
  *
- * Built on the same condition framework as the rest of this family, but only the onKill pump is
- * currently wired for this tag (see {@link AutoModifyCooldownManager}); other conditions parse
- * correctly but will not yet fire until their pump call sites are wired.
+ * Built on the same condition framework as the rest of this family, but only a subset of pumps are
+ * currently wired for this tag (see {@link AutoModifyCooldownManager}): onKill, and
+ * negaStateInflicted/posiStateInflicted/anyStateInflicted (this battler inflicts a state onto
+ * someone else- the effect lands back on the inflictor, not the afflicted target). Other conditions
+ * parse correctly but will not yet fire until their pump call sites are wired.
  *
  * EXAMPLES:
  *  <autoModifyCooldowns:[-10, onKill, 0, percent, all]>
@@ -227,6 +237,9 @@
  *    Restricted to the mainhand slot only.
  *  <autoModifyCooldowns:[-10, onKill, 0, percent]>
  *    RANGE omitted- defaults to "all".
+ *  <autoModifyCooldowns:[-60, negaStateInflicted, 0, flat, all]>
+ *    Every time this battler inflicts a negative-tagged state on an opponent, no throttle: refund
+ *    a flat 60 frames (1 second) off every active cooldown.
  * ============================================================================
  * AUTO-INFLICT STATE TAG
  *  <autoInflictState:[STATE_ID, CONDITION, COOLDOWN_FRAMES]>
@@ -240,7 +253,7 @@
  * would otherwise re-trigger this same tag on application.
  *
  * CONDITIONS:
- *  negaStateInflicted — this battler inflicts a <negative> (jabsNegative) state on someone
+ *  negaStateInflicted — this battler inflicts a <type:negative> (isNegativeType) state on someone
  *  posiStateInflicted — this battler inflicts a non-negative state on someone
  *  anyStateInflicted  — this battler inflicts any state on someone
  *  onKnockback        — this battler knocks an enemy back (JABS_Engine#checkKnockback)
@@ -298,6 +311,16 @@
  *    Taking even a single step immediately strips it and resets the stand timer.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.2
+ *    Added the whenGlanced condition (this battler suffers a glancing blow as the victim- mutually
+ *    exclusive with whenCrit on any single hit), wired into autoApplyState and autoExecuteSkill via
+ *    Game_Action#apply alongside the existing whenCrit check. Lets "retaliate on a glancing blow"
+ *    builds fire.
+ * - 1.1.1
+ *    Wired negaStateInflicted/posiStateInflicted/anyStateInflicted into autoModifyCooldowns via a
+ *    new shared AutoRuleManager#scheduleSelfStateInflictedTriggers pump, called from
+ *    Game_Battler#onJabsStateInflicted alongside the existing autoInflictState dispatch. Lets
+ *    "reduce my own cooldowns when I land a debuff" builds fire, not just onKill.
  * - 1.1.0
  *    Added autoModifyCooldowns, which directly modifies one or more of the bearer's own active
  *    skill-slot cooldowns (percent-of-total or flat frames) on a condition- currently wired for
@@ -418,7 +441,7 @@ J.PASSIVE.EXT.CONDITIONAL = {};
 /**
 * The metadata associated with this plugin.
 */
-J.PASSIVE.EXT.CONDITIONAL.Metadata = new JPassiveConditional_PluginMetadata("J-Passive-Conditional", "1.1.0");
+J.PASSIVE.EXT.CONDITIONAL.Metadata = new JPassiveConditional_PluginMetadata("J-Passive-Conditional", "1.1.2");
 /**
 * A collection of all aliased methods for this plugin.
 */
@@ -1187,6 +1210,16 @@ var AutoRuleManager = class {
 		this.tryDispatch(battler, "whenCrit");
 	}
 	/**
+	* Fires {@code whenGlanced} rules after this battler suffers a glancing blow as the victim.
+	*
+	* Mutually exclusive with {@link scheduleCritTriggers} at the source- a glancing blow can never
+	* also be a critical hit, so a single incoming attack can only ever fire one of the two.
+	* @param {Game_Actor|Game_Enemy} battler - The battler that was glanced.
+	*/
+	static scheduleGlancingTriggers(battler) {
+		this.tryDispatch(battler, "whenGlanced");
+	}
+	/**
 	* Fires state-polarity and {@code anyStateAdded} rules after a combat state lands on this battler.
 	* @param {Game_Actor|Game_Enemy} battler - The battler that received the state.
 	* @param {number} stateId - The database id of the state that was added.
@@ -1195,10 +1228,31 @@ var AutoRuleManager = class {
 		this.tryDispatch(battler, "anyStateAdded");
 		const state = $dataStates[stateId];
 		if (!state) return;
-		if (state.jabsNegative === true) {
+		if (state.isNegativeType()) {
 			this.tryDispatch(battler, "negaStateAdded");
 		} else {
 			this.tryDispatch(battler, "posiStateAdded");
+		}
+	}
+	/**
+	* Fires state-polarity and {@code anyStateInflicted} rules on the battler that just inflicted a
+	* combat state onto someone else- single-party variant for subclasses whose effect lands back on
+	* the rule bearer itself (e.g. modifying the inflictor's own cooldowns), not on the afflicted
+	* target. {@link AutoInflictStateManager} handles the dual-party case (rule bearer, external
+	* effect target) separately and does not go through this method.
+	* @param {Game_Actor|Game_Enemy} battler - The battler that just inflicted the state.
+	* @param {number} inflictedStateId - The database id of the state that was just inflicted.
+	*/
+	static scheduleSelfStateInflictedTriggers(battler, inflictedStateId) {
+		if (!$jabsEngine || $jabsEngine.absEnabled === false) return;
+		if (!battler) return;
+		const inflictedState = $dataStates[inflictedStateId];
+		if (!inflictedState) return;
+		this.tryDispatch(battler, "anyStateInflicted");
+		if (inflictedState.isNegativeType()) {
+			this.tryDispatch(battler, "negaStateInflicted");
+		} else {
+			this.tryDispatch(battler, "posiStateInflicted");
 		}
 	}
 	/**
@@ -1731,7 +1785,7 @@ var AutoInflictStateManager = class AutoInflictStateManager extends AutoRuleMana
 		if (!applier || !target) return;
 		const inflictedState = $dataStates[inflictedStateId];
 		if (!inflictedState) return;
-		const polarityKind = inflictedState.jabsNegative === true ? "negaStateInflicted" : "posiStateInflicted";
+		const polarityKind = inflictedState.isNegativeType() ? "negaStateInflicted" : "posiStateInflicted";
 		this._dispatchMatchingRules(applier, target, (kind) => kind === "anyStateInflicted" || kind === polarityKind);
 	}
 	/**
@@ -2029,12 +2083,12 @@ var PassiveGateEvaluator = class {
 	}
 	/**
 	* Counts negative states currently affecting this battler.<br/>
-	* Negative classification comes from {@code state.jabsNegative} / J-ABS {@code <negative>} tag.
+	* Negative classification comes from {@link RPG_State#isNegativeType} / the {@code <type:negative>} tag.
 	* @param {Game_Battler} battler The battler whose active states we inspect.
 	* @returns {number} Count of states flagged negative by J-ABS.
 	*/
 	static countNegativeStates(battler) {
-		return battler.allStates().filter((state) => state && state.jabsNegative === true).length;
+		return battler.allStates().filter((state) => state && state.isNegativeType()).length;
 	}
 	/**
 	* Whether one JABS skill slot is currently on cooldown for this battler.<br/>
@@ -2687,26 +2741,37 @@ Game_Battler.prototype.onStateAdded = function(stateId) {
 /**
 * Extends {@link #onJabsStateInflicted}.<br/>
 * Fires autoInflictState rules on the inflicting battler, applying the configured payload state
-* onto this battler (the one just afflicted)- not the inflictor, and not anything nearby.
+* onto this battler (the one just afflicted)- not the inflictor, and not anything nearby. Also
+* fires the inflicting battler's autoModifyCooldowns rules against themselves- unlike
+* autoInflictState, that effect lands back on the inflictor, not on this newly-afflicted target.
 */
 J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.set("onJabsStateInflicted", Game_Battler.prototype.onJabsStateInflicted);
 Game_Battler.prototype.onJabsStateInflicted = function(stateId, attacker) {
 	J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.get("onJabsStateInflicted").call(this, stateId, attacker);
 	AutoInflictStateManager.scheduleInflictedStateTriggers(attacker, this, stateId);
+	AutoModifyCooldownManager.scheduleSelfStateInflictedTriggers(attacker, stateId);
 };
 
 //#endregion
 //#region src/plugins/passive/ext/conditional/objects/Game_Action.js
 /**
 * Extends {@link #apply}.<br/>
-* When the target is critically hit, runs {@code whenCrit} auto-apply rules on the victim.
+* When the target is critically hit, runs {@code whenCrit} auto-apply rules on the victim. When the
+* target suffers a glancing blow instead, runs {@code whenGlanced} auto-apply rules on the victim-
+* the two are mutually exclusive on any single hit (see {@link Game_Action#executeJabsAction}).
 */
 J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Action.set("apply", Game_Action.prototype.apply);
 Game_Action.prototype.apply = function(target) {
 	J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Action.get("apply").call(this, target);
-	if (target.result().critical === false) return;
-	AutoApplyStateManager.scheduleCritTriggers(target);
-	AutoExecuteSkillManager.scheduleCritTriggers(target);
+	const result = target.result();
+	if (result.critical === true) {
+		AutoApplyStateManager.scheduleCritTriggers(target);
+		AutoExecuteSkillManager.scheduleCritTriggers(target);
+	}
+	if (result.glancing === true) {
+		AutoApplyStateManager.scheduleGlancingTriggers(target);
+		AutoExecuteSkillManager.scheduleGlancingTriggers(target);
+	}
 };
 
 //#endregion

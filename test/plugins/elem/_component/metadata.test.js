@@ -35,14 +35,13 @@ describe('J-Elementalistics metadata and regex (direct src import)', () =>
     expect(b[1]).toBe('[1]');
   });
 
-  it('boost tag regex captures element id and signed value', () =>
+  it('boost tag regex captures the bracketed [id, signed value] tuple', () =>
   {
     // Arrange & Act
-    const m = globalThis.J.ELEM.RegExp.BoostElement.exec('<boostElement:2:+50>');
+    const m = globalThis.J.ELEM.RegExp.BoostElement.exec('<boostElement:[2, +50]>');
 
     // Assert
-    expect(m[1]).toBe('2');
-    expect(m[2]).toBe('+50');
+    expect(m[1]).toBe('[2, +50]');
   });
 });
 //endregion plugins/elem/_component/metadata.test.js

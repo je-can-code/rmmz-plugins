@@ -1698,7 +1698,7 @@
  *
  * ----------------------------------------------------------------------------
  * PER-DEBUFF BONUS:
- * Adds N% bonus damage for every negative state (jabsNegative tagged) currently
+ * Adds N% bonus damage for every negative state (<type:negative> tagged) currently
  * active on the target. Multiple <perDebuffBuff:N> tags have their N values
  * summed, then the total is multiplied by the debuff count.
  *    <perDebuffBuff:N>
@@ -1869,6 +1869,26 @@
  *  If this caster personally applied 3 different states currently active on
  *  the target (regardless of who else also has states on it), this skill
  *  gains +45% bonus damage (15 * 3).
+ *
+ * ----------------------------------------------------------------------------
+ * VULNERABILITY PER AUTHORED STATE STACK:
+ * Adds PCT% bonus damage per current stack of every state on the target that
+ * THIS TAG'S HOLDER (not the current attacker) originally applied. Unlike
+ * every other BONUS DAMAGE tag in this region, this one is not read from the
+ * current attacker's notes- it is read from each tracked state's own source
+ * battler. That means the bonus applies to damage from ANYONE, not just the
+ * battler carrying the tag. Lives entirely on that battler's own notes
+ * (actor/class/weapon/armor/state), always live regardless of who else is
+ * currently attacking.
+ *    <vulnerabilityPerAuthoredStateStack:PCT>
+ *  Where PCT is the integer percent bonus per stack of any state this
+ *  battler has personally applied to the target.
+ *
+ * Example — Rupert's "Misery Collector" signature: enemies stacked with any
+ * state Rupert applied take bonus damage from the whole party, not just him:
+ *    <vulnerabilityPerAuthoredStateStack:10>
+ * A target with 3 stacks of a Rupert-applied Bleed takes +30% bonus damage
+ * from an ally's hit, even if Rupert himself isn't the one attacking.
  *
  * ----------------------------------------------------------------------------
  * BONUS DAMAGE IF TARGET HP BELOW / THIS BONUS DAMAGE IF TARGET HP BELOW:

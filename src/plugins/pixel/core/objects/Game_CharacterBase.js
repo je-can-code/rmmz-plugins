@@ -375,7 +375,7 @@ Game_CharacterBase.prototype.addPositionalRecord = function(positionalRecord)
 
 /**
  * Gets the first-added record from the collection of coordinate tracking.
- * @returns {Point}
+ * @returns {Point|null} The oldest tracked point, or null if no records exist yet.
  */
 Game_CharacterBase.prototype.oldestPositionalRecord = function()
 {
@@ -395,7 +395,7 @@ Game_CharacterBase.prototype.oldestPositionalRecord = function()
 
 /**
  * Gets the last-added record from the collection of coordinate tracking.
- * @returns {Point}
+ * @returns {Point|null} The most recently tracked point, or null if no records exist yet.
  */
 Game_CharacterBase.prototype.mostRecentPositionalRecord = function()
 {
@@ -759,9 +759,6 @@ Game_CharacterBase.prototype.moveStraightDistance = function(direction, pixelDis
     case J.PIXEL.Directions.UP:
       this.moveStraight8Up(pixelDistance);
       break;
-    default:
-      console.warn("attempted to move an invalid straight direction: ", direction);
-      break;
   }
 };
 
@@ -785,9 +782,6 @@ Game_CharacterBase.prototype.moveDiagonalDistance = function(direction, pixelDis
       break;
     case J.PIXEL.Directions.UPPERRIGHT:
       this.moveDiagonal9UpRight(pixelDistance);
-      break;
-    default:
-      console.warn("attempted to move an invalid diagonal direction: ", direction);
       break;
   }
 };
@@ -1253,9 +1247,6 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
         return J.PIXEL.Directions.UP;
       }
     }
-
-    // Unknown diagonal; not handled.
-    return 0;
   };
 
   // Chooses a fallback between two cardinals by comparing residuals to the rounded axes.
@@ -1432,11 +1423,6 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
         innerDirection = J.PIXEL.Directions.UP;
         return innerDirection;
       }
-      default:
-      {
-        // Unknown diagonal; return 0 to indicate not handled.
-        return 0;
-      }
     }
   };
 
@@ -1551,11 +1537,6 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
       {
         if (canRight()) return doStraightMove(J.PIXEL.Directions.RIGHT);
         return tryWallSlide(J.PIXEL.Directions.RIGHT);
-      }
-      default:
-      {
-        // Unknown straight direction; not handled.
-        return 0;
       }
     }
   };

@@ -308,4 +308,28 @@ Object.defineProperty(Game_BattlerBase.prototype, 'cnt', {
   },
   configurable: true,
 });
+
+/**
+ * Mp cost rate — negative values would let skillMpCost() go negative, which paySkillCost()
+ * would then treat as a free MP refund on cast. Floor at zero to prevent that.
+ */
+Object.defineProperty(Game_BattlerBase.prototype, 'mcr', {
+  get: function()
+  {
+    return Math.max(0, this.sparam(4));
+  },
+  configurable: true,
+});
+
+/**
+ * Tp charge rate — negative values would let TP gain from damage/items go negative, silently
+ * draining TP instead of charging it. Floor at zero.
+ */
+Object.defineProperty(Game_BattlerBase.prototype, 'tcr', {
+  get: function()
+  {
+    return Math.max(0, this.sparam(5));
+  },
+  configurable: true,
+});
 //endregion Game_BattlerBase

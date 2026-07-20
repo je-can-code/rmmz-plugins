@@ -127,9 +127,22 @@ describe('J-ABS Game_Action state multipliers + skill history bonus (direct src 
       expect(action.calculateThisSkillHistoryBonusPct('uuid')).toBe(0);
     });
 
-    it('returns 0 when the tag is malformed', () =>
+    it('returns 0 when the tag is malformed (2-part bracket never matches the 3-part outer regex)', () =>
     {
       const action = buildAction(buildCaster(), buildSkill('<thisSkillHistoryBonus:[3, 8]>'));
+      expect(action.calculateThisSkillHistoryBonusPct('uuid')).toBe(0);
+    });
+
+    it('returns 0 when the parser itself reports the bracket as malformed', () =>
+    {
+      // Arrange: the outer regex's own 3-part shape means parseSkillHistoryBracket can never
+      // actually return null through this caller in practice- isolate the caller's own
+      // defensive branch by stubbing the parser directly, since it's a real documented
+      // contract (not a nullIfEmpty-guaranteed non-null return) that may matter to future callers.
+      const action = buildAction(buildCaster(), buildSkill('<thisSkillHistoryBonus:[3, 8, streak]>'));
+      action.parseSkillHistoryBracket = () => null;
+
+      // Act & Assert
       expect(action.calculateThisSkillHistoryBonusPct('uuid')).toBe(0);
     });
 
@@ -155,10 +168,22 @@ describe('J-ABS Game_Action state multipliers + skill history bonus (direct src 
       expect(action.calculateGeneralSkillHistoryBonusPct('uuid')).toBe(0);
     });
 
-    it('skips a malformed bracket', () =>
+    it('skips a malformed bracket (3-part bracket never matches the 4-part outer regex)', () =>
     {
       const caster = buildCaster({ getAllNotes: () => [ buildSkill('<skillHistoryBonus:[7, 5, 5]>') ] });
       const action = buildAction(caster, buildSkill(''));
+      expect(action.calculateGeneralSkillHistoryBonusPct('uuid')).toBe(0);
+    });
+
+    it('skips a tag when the parser itself reports the bracket as malformed', () =>
+    {
+      // Arrange: same reachability note as the this-skill variant above- isolate the caller's
+      // own defensive branch by stubbing the parser directly.
+      const caster = buildCaster({ getAllNotes: () => [ buildSkill('<skillHistoryBonus:[7, 5, 5, streak]>') ] });
+      const action = buildAction(caster, buildSkill(''));
+      action.parseGeneralSkillHistoryBracket = () => null;
+
+      // Act & Assert
       expect(action.calculateGeneralSkillHistoryBonusPct('uuid')).toBe(0);
     });
 
