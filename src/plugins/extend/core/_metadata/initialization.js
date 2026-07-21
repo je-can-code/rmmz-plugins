@@ -266,6 +266,25 @@ J.EXTEND.RegExp.OnCastRemoveState = /<onCastRemoveState:[ ]?(\[\d+,[ ]?\d+])>/i;
 J.EXTEND.RegExp.OnCastExecuteSkill = /<onCastExecuteSkill:[ ]?(\[\d+,[ ]?\d+])>/gi;
 
 /**
+ * The structure of a conditional on-cast force-execute-skill tag.
+ * Force-executes a payload skill only if the caster already has a required state active — the
+ * <onCastSelfStateIfAfflicted> gate pattern, applied to <onCastExecuteSkill> instead of a self-state.
+ *
+ * <pre>
+ * Structure:
+ *  <onCastExecuteSkillIfAfflicted:[SKILL_ID, CHANCE, STATE_REQUIREMENT]>
+ *
+ * Example:
+ *  <onCastExecuteSkillIfAfflicted:[267, 100, 134]>
+ *
+ * Translation:
+ *  On cast, if the caster has state id 134 active, force-execute skill id 267 at 100% chance.
+ * </pre>
+ * @type {RegExp}
+ */
+J.EXTEND.RegExp.OnCastExecuteSkillIfAfflicted = /<onCastExecuteSkillIfAfflicted:[ ]?(\[\d+,[ ]?\d+,[ ]?\d+])>/gi;
+
+/**
  * The structure of a skill-scoped on-hit apply-state tag with optional duration and stack overrides.
  * Reads from the executing skill only ({@code this.item()}).
  *

@@ -184,6 +184,7 @@
  *  <onCastRemoveState:[STATE_ID,CHANCE]>
  *  <onHitRemoveState:[STATE_ID,CHANCE]>
  *  <onCastExecuteSkill:[SKILL_ID,CHANCE]>
+ *  <onCastExecuteSkillIfAfflicted:[SKILL_ID,CHANCE,STATE_REQUIREMENT]>
  * Where STATE_ID is the id of the state to apply, strip, or remove.
  * Where CHANCE is the percent chance between 0 and 100 that it'll trigger.
  *
@@ -241,6 +242,13 @@
  * repeatable: stack as many <onCastExecuteSkill> tags on one skill as you want, each rolls
  * independently. A forced skill's own <onCastExecuteSkill> tag may chain one further hop before
  * being cut off (depth-guarded against runaway loops).
+ *
+ *  <onCastExecuteSkillIfAfflicted:[267,100,134]>
+ * On cast, if the caster currently has state id 134 active, force-execute skill id 267 at 100%
+ * chance. If the caster does not have state 134, this tag does nothing- no roll occurs at all, and
+ * nothing is force-executed. Same <onCastExecuteSkill> timing, JABS dispatch path, and depth guard;
+ * this is purely a gate on top of it. Skill-scoped and repeatable, same as its unconditional
+ * counterpart.
  * ============================================================================
  * ON-HIT APPLY STATE (SKILL-SCOPED):
  * Have you ever wanted a specific skill to apply a state to its target with a

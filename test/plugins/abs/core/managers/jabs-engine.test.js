@@ -2373,7 +2373,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
   describe('handleOnCastStateEffects', () =>
   {
-    it('applies all six on-cast state effect hooks against the underlying Game_Action', () =>
+    it('applies all seven on-cast state effect hooks against the underlying Game_Action', () =>
     {
       const engine = new JABS_Engine();
       const gameAction = {
@@ -2383,6 +2383,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         applyToggleOnExecuteStates: vi.fn(),
         applyToggleGroupOnExecuteStates: vi.fn(),
         applyOnCastExecuteSkills: vi.fn(),
+        applyOnCastExecuteSkillsIfAfflicted: vi.fn(),
       };
       const action = { getAction: () => gameAction };
 
@@ -2394,6 +2395,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(gameAction.applyToggleOnExecuteStates).toHaveBeenCalledTimes(1);
       expect(gameAction.applyToggleGroupOnExecuteStates).toHaveBeenCalledTimes(1);
       expect(gameAction.applyOnCastExecuteSkills).toHaveBeenCalledWith('caster');
+      expect(gameAction.applyOnCastExecuteSkillsIfAfflicted).toHaveBeenCalledWith('caster');
     });
   });
 

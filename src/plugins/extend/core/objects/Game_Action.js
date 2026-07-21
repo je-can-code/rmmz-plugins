@@ -478,16 +478,15 @@ Game_Action.prototype.onCastExecuteSkills = function()
 };
 
 /**
- * Force-executes every qualifying {@code <onCastExecuteSkill>} payload through JABS, exactly once
- * at the moment of press. Each tag rolls its own chance independently, so a single cast can chain
- * into several follow-up skills at once.
+ * Rolls and force-executes a batch of already-gated `[skillId, chance]` payloads through JABS,
+ * sharing the single depth guard between both the unconditional and state-gated
+ * {@code onCastExecuteSkill} families so a mixed chain still can't loop forever.
+ * @param {[number, number][]} payloads Tuples of `[skillId, chance]` that have already passed
+ * whatever gate (if any) applies to their source tag.
  * @param {JABS_Battler} caster The JABS battler executing this cast.
  */
-Game_Action.prototype.applyOnCastExecuteSkills = function(caster)
+function dispatchOnCastExecuteSkillPayloads(payloads, caster)
 {
-  // grab every authored payload tuple from the executing skill.
-  const payloads = this.onCastExecuteSkills();
-
   // nothing to do if no tags were found.
   if (payloads.length === 0) return;
 
@@ -515,6 +514,55 @@ Game_Action.prototype.applyOnCastExecuteSkills = function(caster)
     // always unwind the depth counter, even if a forced execution threw partway through.
     onCastExecuteSkillDepth -= 1;
   }
+}
+
+/**
+ * Force-executes every qualifying {@code <onCastExecuteSkill>} payload through JABS, exactly once
+ * at the moment of press. Each tag rolls its own chance independently, so a single cast can chain
+ * into several follow-up skills at once.
+ * @param {JABS_Battler} caster The JABS battler executing this cast.
+ */
+Game_Action.prototype.applyOnCastExecuteSkills = function(caster)
+{
+  // grab every authored payload tuple from the executing skill and dispatch them, unconditionally.
+  dispatchOnCastExecuteSkillPayloads(this.onCastExecuteSkills(), caster);
+};
+
+/**
+ * Gets all state-gated skills that should be force-executed when casting this skill, alongside
+ * their individual roll chances. Reads {@code <onCastExecuteSkillIfAfflicted>} from the executing
+ * skill's own note only ({@code this.item()}), same skill-scoped rule as its unconditional sibling.
+ * @returns {[number, number, number][]} Tuples of `[skillId, chance, stateRequirement]`.
+ */
+Game_Action.prototype.onCastExecuteSkillsIfAfflicted = function()
+{
+  // this tag is skill-scoped, so only the executing skill's own note is read.
+  return RPGManager.getArraysFromNotesByRegex(this.item(), J.EXTEND.RegExp.OnCastExecuteSkillIfAfflicted) ?? [];
+};
+
+/**
+ * Force-executes every qualifying {@code <onCastExecuteSkillIfAfflicted>} payload through JABS,
+ * exactly once at the moment of press, but only for tags whose required state is currently active
+ * on the caster. Lets a skill fire one of several possible payloads depending on which state the
+ * caster is carrying, without ever rolling or executing the ones that don't apply.
+ * @param {JABS_Battler} caster The JABS battler executing this cast.
+ */
+Game_Action.prototype.applyOnCastExecuteSkillsIfAfflicted = function(caster)
+{
+  // grab the underlying battler for the affliction check below.
+  const subject = this.subject();
+
+  // gather every authored [skillId, chance, stateRequirement] triple from the executing skill.
+  const allTriples = this.onCastExecuteSkillsIfAfflicted();
+
+  // keep only the tags whose required state is currently active on the caster, then drop the
+  // now-redundant requirement slot so the shared dispatcher gets plain [skillId, chance] tuples.
+  const qualifyingPayloads = allTriples
+    .filter(([ , , stateRequirement ]) => subject.isStateAffected(stateRequirement))
+    .map(([ skillId, chance ]) => [ skillId, chance ]);
+
+  // dispatch whatever survived the affliction gate through the shared roll-and-execute path.
+  dispatchOnCastExecuteSkillPayloads(qualifyingPayloads, caster);
 };
 
 /**

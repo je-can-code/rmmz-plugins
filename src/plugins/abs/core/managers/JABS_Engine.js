@@ -1977,6 +1977,10 @@ class JABS_Engine
 
     // force-execute any <onCastExecuteSkill> payload skills exactly once, at the moment of press.
     gameAction.applyOnCastExecuteSkills(caster);
+
+    // force-execute any <onCastExecuteSkillIfAfflicted> payload skills whose required state is
+    // currently active on the caster, exactly once, at the moment of press.
+    gameAction.applyOnCastExecuteSkillsIfAfflicted(caster);
   }
 
   /**
