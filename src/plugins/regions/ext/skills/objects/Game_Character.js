@@ -1,7 +1,7 @@
 //region Game_Character
 import RegionSkillData from './../models/RegionSkillData.js';
 /**
- * Extends {@link #initMembers}.<br>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes the region skills members.
  */
 J.REGIONS.EXT.SKILLS.Aliased.Game_Character.set('initMembers', Game_Character.prototype.initMembers);
@@ -52,7 +52,7 @@ Game_Character.prototype.getRegionSkillsTimer = function()
 };
 
 /**
- * Extends {@link #update}.<br>
+ * Extends {@link #update}.<br/>
  * Also handles region skills updates for the character.
  */
 J.REGIONS.EXT.SKILLS.Aliased.Game_Character.set('update', Game_Character.prototype.update);
@@ -132,8 +132,16 @@ Game_Character.prototype.executeRegionSkills = function()
       isFriendly
     } = regionSkillData;
 
-    // roll the dice and see if we should even execute it.
-    if (!RPGManager.chanceIn100(chance)) return;
+    // this is a purely self-scoped proc- the one stepping on the region is both the roller and
+    // the recipient of the region-skill trigger roll.
+    const walkerBattler = targetJabsBattler.getBattler();
+    const skill = $dataSkills.at(skillId);
+    const positiveRolls = 1 + walkerBattler.getPositiveRollsForSkill(skill);
+    const negativeRolls = walkerBattler.getNegativeRollsForSkill(skill);
+
+    // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
+    const procCount = RPGManager.resolveProcCount(walkerBattler, chance, positiveRolls, negativeRolls);
+    if (procCount === 0) return;
 
     // grab the current dummy for inspection.
     const currentDummyCaster = $jabsEngine.getMapDamageBattler();
@@ -149,14 +157,17 @@ Game_Character.prototype.executeRegionSkills = function()
       $jabsEngine.setMapDamageBattler(casterId, isFriendly);
     }
 
-    // execute the skill.
-    $jabsEngine.forceMapAction(
-      $jabsEngine.getMapDamageBattler(),
-      skillId,
-      false,
-      targetJabsBattler.getX(),
-      targetJabsBattler.getY(),
-      true);
+    // execute the skill once per success.
+    for (let i = 0; i < procCount; i++)
+    {
+      $jabsEngine.forceMapAction(
+        $jabsEngine.getMapDamageBattler(),
+        skillId,
+        false,
+        targetJabsBattler.getX(),
+        targetJabsBattler.getY(),
+        true);
+    }
   });
 };
 

@@ -135,7 +135,7 @@
  *  <passive:[10,11,12]>
  * If a battler had two separate database objects in their possession each
  * bearing one of the above two tags, then the state id of 10 would be applied
- * twice, while 11, 12, and 13 would be applied only once.
+ * twice, while 11 and 12 would be applied only once.
  *
  *  <uniquePassive:[10]>
  *  <passive:[10,11,12]>
@@ -155,6 +155,17 @@
  * along with 11 and 12 being applied once, too.
  *
  * ============================================================================
+ * HIDE FROM PASSIVES LIST:
+ * Stack amplifiers and other implementation-only passive duplicates can stay
+ * out of the Passives menu while still contributing traits in combat.
+ *
+ * TAG USAGE:
+ * - States only.
+ *
+ * TAG FORMAT:
+ *  <hideFromPassiveList>
+ *
+ * ============================================================================
  * CHANGELOG:
  * - 2.1.0
  *    Added Scene_Passive viewer scene with actor ribbon, state list, and semantic detail window.
@@ -168,9 +179,12 @@
  *    Added Passives command to the main menu with configurable name, icon, and switch.
  *    Added J.PASSIVE.EXT.OTIB — item-to-state passive unlock system with optional DiaLog
  *    integration.
- *    Added J.PASSIVE.EXT.ABS — aliases detail window sections to inject JABS-specific
+ *    Added J.PASSIVE.EXT.AFFIX — aliases detail window sections to inject JABS-specific
  *    content: slip effects, shield, stacking, resource gains (J-Resources-ABS), and JABS
  *    modifier/timing rows.
+ *    Added <hideFromPassiveList> to keep stack amplifiers and other
+ *    implementation-only passive duplicates out of the Passives menu while
+ *    still contributing traits in combat.
  * - 2.0.2
  *    Added support for passives driven by map events.
  * - 2.0.1

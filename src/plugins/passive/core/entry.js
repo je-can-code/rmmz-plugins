@@ -3,6 +3,7 @@ import './_metadata/initialization.js';
 import './database/RPG_BaseBattler.js';
 import './database/RPG_BaseItem.js';
 import './database/RPG_Class.js';
+import './database/RPG_State.js';
 import './objects/Game_Actor.js';
 import './objects/Game_Battler.js';
 import './objects/Game_Enemy.js';

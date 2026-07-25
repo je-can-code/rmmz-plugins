@@ -43,6 +43,7 @@ class RegionSkillData
     this.regionId = regionId;
     this.skillId = stateId;
     this.chance = chanceOfApplication;
+    // assign caster id on this instance for callers.
     this.casterId = casterId;
     this.isFriendly = isFriendly;
   }

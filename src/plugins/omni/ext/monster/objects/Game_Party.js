@@ -2,7 +2,7 @@
 import MonsterpediaObservations from './../__models/MonsterpediaObservations.js';
 
 /**
- * Extends {@link #initOmnipediaMembers}.<br>
+ * Extends {@link #initOmnipediaMembers}.<br/>
  * Includes monsterpedia members.
  */
 J.OMNI.EXT.MONSTER.Aliased.Game_Party.set('initOmnipediaMembers', Game_Party.prototype.initOmnipediaMembers);

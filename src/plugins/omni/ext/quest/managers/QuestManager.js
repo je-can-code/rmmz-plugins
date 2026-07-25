@@ -56,6 +56,7 @@ class QuestManager
     const allQuests = $gameParty.getQuestopediaEntriesCache()
       .values();
     return Array.from(allQuests)
+      // Keep only rows that pass this predicate.
       .filter(quest => quest.isTracked());
   }
 

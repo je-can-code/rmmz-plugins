@@ -49,6 +49,7 @@ class ProficiencyConditional
     this.key = key;
     this.actorIds = actorIds;
     this.requirements = requirements;
+    // assign skill rewards on this instance for callers.
     this.skillRewards = skillRewards;
     this.jsRewards = jsRewards;
   }

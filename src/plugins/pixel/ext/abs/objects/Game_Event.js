@@ -1,6 +1,6 @@
 //region Game_Event
 /**
- * Extends {@link #initMembers}.<br>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes the cached enemy hitbox size data.
  */
 J.PIXEL.EXT.ABS.Aliased.Game_Event.set('initMembers', Game_Event.prototype.initMembers);
@@ -14,7 +14,7 @@ Game_Event.prototype.initMembers = function()
 };
 
 /**
- * Extends {@link #setupPageSettings}.<br>
+ * Extends {@link #setupPageSettings}.<br/>
  * Rebuilds the cached hitbox data whenever the active page changes.
  */
 J.PIXEL.EXT.ABS.Aliased.Game_Event.set('setupPageSettings', Game_Event.prototype.setupPageSettings);
@@ -116,11 +116,9 @@ Game_Event.prototype.refreshPixelAbsHitboxSizeData = function()
 Game_Event.prototype.canUsePixelAbsEnemyHitboxData = function()
 {
   // if this event is not a JABS battler, then this feature does not apply.
-  if (typeof this.isJabsBattler !== 'function') return false;
   if (this.isJabsBattler() === false) return false;
 
   // only enemy battlers with a valid enemy id should use this path.
-  if (typeof this.getBattlerId !== 'function') return false;
   if (this.getBattlerId() <= 0) return false;
 
   return true;
@@ -150,9 +148,6 @@ Game_Event.prototype.hasCustomPixelHitbox = function()
  */
 Game_Event.prototype.getPixelAbsHitboxSizeCommentOverride = function()
 {
-  // if the event cannot parse comments, then there can be no override.
-  if (typeof this.extractValueByRegex !== 'function') return null;
-
   // grab the raw comment payload and normalize it into the shared model.
   const rawHitboxSize = this.extractValueByRegex(J.PIXEL.EXT.ABS.RegExp.HitboxSize, null, false);
   return RPG_Enemy.hitboxSizeDataFromRaw(rawHitboxSize);
@@ -227,9 +222,6 @@ Game_Event.prototype.refreshPixelAbsHitboxRevealRange = function()
  */
 Game_Event.prototype.getPixelAbsHitboxRevealCommentOverride = function()
 {
-  // if the event cannot parse comments, then there can be no override.
-  if (typeof this.extractValueByRegex !== 'function') return null;
-
   // grab the reveal range directly from the event comments.
   return this.extractValueByRegex(J.PIXEL.EXT.ABS.RegExp.HitboxReveal, null, true);
 };
@@ -398,7 +390,7 @@ Game_Event.prototype.getPixelAbsBattlerAabbModel = function()
 };
 
 /**
- * Extends {@link Game_Event.getCollisionRadius}.<br>
+ * Extends {@link Game_Event.getCollisionRadius}.<br/>
  * The rectangle is canonical, but PIXEL still asks for a scalar in some paths.
  * Use the larger half-extent as the compatibility radius.
  * @returns {number}
@@ -409,6 +401,7 @@ Game_Event.prototype.getCollisionRadius = function()
   // if this event does not use the shared model, then perform original logic.
   if (this.hasCustomPixelHitbox() === false)
   {
+    // perform original logic.
     return J.PIXEL.EXT.ABS.Aliased.Game_Event.get('getCollisionRadius').call(this);
   }
 
@@ -418,7 +411,7 @@ Game_Event.prototype.getCollisionRadius = function()
 };
 
 /**
- * Extends {@link Game_Event.getEffectiveRadius}.<br>
+ * Extends {@link Game_Event.getEffectiveRadius}.<br/>
  * Feet-anchored rectangles are already normalized, so the compatibility radius
  * should not be clamped by the legacy downward-bleed rule.
  * @returns {number}
@@ -429,6 +422,7 @@ Game_Event.prototype.getEffectiveRadius = function()
   // if this event does not use the shared model, then perform original logic.
   if (this.hasCustomPixelHitbox() === false)
   {
+    // perform original logic.
     return J.PIXEL.EXT.ABS.Aliased.Game_Event.get('getEffectiveRadius').call(this);
   }
 
@@ -437,7 +431,7 @@ Game_Event.prototype.getEffectiveRadius = function()
 };
 
 /**
- * Extends {@link Game_Event.getCollisionPivotY}.<br>
+ * Extends {@link Game_Event.getCollisionPivotY}.<br/>
  * Enemy hitboxes are feet-anchored, so the pivot becomes the event feet.
  * @returns {number}
  */
@@ -447,6 +441,7 @@ Game_Event.prototype.getCollisionPivotY = function()
   // if this event does not use the shared model, then perform original logic.
   if (this.hasCustomPixelHitbox() === false)
   {
+    // perform original logic.
     return J.PIXEL.EXT.ABS.Aliased.Game_Event.get('getCollisionPivotY').call(this);
   }
 
@@ -455,7 +450,7 @@ Game_Event.prototype.getCollisionPivotY = function()
 };
 
 /**
- * Extends {@link Game_Event._pixelHitbox}.<br>
+ * Extends {@link Game_Event._pixelHitbox}.<br/>
  * Builds the rectangular, feet-anchored hitbox for PIXEL movement checks.
  * @param {number} radius The incoming compatibility radius.
  * @returns {{w:number,h:number,hx:number,hy:number}}
@@ -466,6 +461,7 @@ Game_Event.prototype._pixelHitbox = function(radius)
   // if this event does not use the shared model, then perform original logic.
   if (this.hasCustomPixelHitbox() === false)
   {
+    // perform original logic.
     return J.PIXEL.EXT.ABS.Aliased.Game_Event.get('_pixelHitbox').call(this, radius);
   }
 

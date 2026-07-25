@@ -17,6 +17,7 @@ class Window_RefinementDetails
     super(rect);
     this.initialize(rect);
     this.initMembers();
+    // assign opacity on this instance for callers.
     this.opacity = 220;
   }
 
@@ -257,6 +258,7 @@ class Window_RefinementDetails
       return;
     }
 
+    // Order rows so later logic can assume stable sequencing.
     traits.sort((a, b) => a._code - b._code);
 
     traits.forEach((trait, index) =>

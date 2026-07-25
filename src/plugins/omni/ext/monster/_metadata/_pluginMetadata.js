@@ -13,7 +13,7 @@ class J_OmniMonster_PluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps static command and switch metadata used by the monsterpedia entry.
    */
   postInitialize()
@@ -31,6 +31,7 @@ class J_OmniMonster_PluginMetadata
     /**
      * The various data points that define the command for the Monsterpedia.
      */
+    // assign command on this instance for callers.
     this.Command = {
       Name: 'Monsterpedia',
       Symbol: 'monster-pedia',

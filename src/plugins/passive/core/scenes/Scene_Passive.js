@@ -156,7 +156,7 @@ class Scene_Passive
   }
 
   /**
-   * Overrides {@link #createButtons}.<br>
+   * Overwrites {@link #createButtons}.<br/>
    * Removes the rendering of buttons from this scene.
    */
   createButtons()
@@ -384,10 +384,10 @@ class Scene_Passive
 
     // wire up input handlers.
     window.setHandler('cancel', this.popScene.bind(this));
-    window.setHandler('tabLeft', this.cycleTabLeft.bind(this));
-    window.setHandler('tabRight', this.cycleTabRight.bind(this));
-    window.setHandler('pagedown', this.nextActor.bind(this));
-    window.setHandler('pageup', this.previousActor.bind(this));
+    window.setHandler('content-prev', this.cycleTabLeft.bind(this));
+    window.setHandler('content-next', this.cycleTabRight.bind(this));
+    window.setHandler('actor-next', this.nextActor.bind(this));
+    window.setHandler('actor-prev', this.previousActor.bind(this));
 
     // wire up the hover-change callback to keep the detail window in sync.
     window.onIndexChange = this.onPassiveHoveredChange.bind(this);
@@ -593,7 +593,7 @@ class Scene_Passive
   }
 
   /**
-   * Extends {@link #onActorChange}.<br>
+   * Extends {@link #onActorChange}.<br/>
    * Refreshes all actor-driven windows whenever the party's menu actor changes.
    */
   onActorChange()

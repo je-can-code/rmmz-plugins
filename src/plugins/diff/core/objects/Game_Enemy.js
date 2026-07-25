@@ -1,6 +1,6 @@
 //region Game_Enemy
 /**
- * Extends {@link #param}.<br>
+ * Extends {@link #param}.<br/>
  * Also modifies the value based on the applied difficulty.
  * @returns {number}
  */
@@ -8,6 +8,7 @@ J.DIFFICULTY.Aliased.Game_Enemy.set("param", Game_Enemy.prototype.param);
 Game_Enemy.prototype.param = function(paramId)
 {
   // grab the original value.
+  // perform original logic.
   const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("param")
     .call(this, paramId);
 
@@ -22,7 +23,7 @@ Game_Enemy.prototype.param = function(paramId)
 };
 
 /**
- * Extends {@link #sparam}.<br>
+ * Extends {@link #sparam}.<br/>
  * Also modifies the value based on the applied difficulty.
  * @returns {number}
  */
@@ -30,6 +31,7 @@ J.DIFFICULTY.Aliased.Game_Enemy.set("sparam", Game_Enemy.prototype.sparam);
 Game_Enemy.prototype.sparam = function(sparamId)
 {
   // grab the original value.
+  // perform original logic.
   const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("sparam")
     .call(this, sparamId);
 
@@ -44,7 +46,7 @@ Game_Enemy.prototype.sparam = function(sparamId)
 };
 
 /**
- * Extends {@link #xparam}.<br>
+ * Extends {@link #xparam}.<br/>
  * Also modifies the value based on the applied difficulty.
  * @returns {number}
  */
@@ -52,6 +54,7 @@ J.DIFFICULTY.Aliased.Game_Enemy.set("xparam", Game_Enemy.prototype.xparam);
 Game_Enemy.prototype.xparam = function(xparamId)
 {
   // grab the original value.
+  // perform original logic.
   const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("xparam")
     .call(this, xparamId);
 
@@ -73,6 +76,7 @@ J.DIFFICULTY.Aliased.Game_Enemy.set("exp", Game_Enemy.prototype.exp);
 Game_Enemy.prototype.exp = function()
 {
   // grab the original value.
+  // perform original logic.
   const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("exp")
     .call(this);
 
@@ -94,6 +98,7 @@ J.DIFFICULTY.Aliased.Game_Enemy.set("gold", Game_Enemy.prototype.gold);
 Game_Enemy.prototype.gold = function()
 {
   // grab the original value.
+  // perform original logic.
   const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("gold")
     .call(this);
 
@@ -119,6 +124,7 @@ if (J.DROPS)
   Game_Enemy.prototype.getBaseDropRate = function()
   {
     // grab the original value.
+    // perform original logic.
     const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("getBaseDropRate")
       .call(this);
 
@@ -144,6 +150,7 @@ if (J.SDP)
   Game_Enemy.prototype.sdpPoints = function()
   {
     // grab the original value.
+    // perform original logic.
     const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("sdpPoints")
       .call(this);
 

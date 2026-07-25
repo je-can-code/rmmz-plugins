@@ -71,13 +71,18 @@
  * NOTE:
  * Bonuses are flat bonuses that get added to the base amount, not percentage.
  *
+ * NOTE:
+ * Actors only. Enemies track their own skill proficiencies same as actors do,
+ * but the bonus-gain wiring this tag feeds into was only ever built for
+ * actors, so a <proficiencyBonus> tag on an enemy (or an enemy-applicable
+ * source) is inert- parsed by nothing, applied by nothing.
+ *
  * TAG USAGE:
  * - Actors
  * - Classes
  * - Skills
  * - Weapons
  * - Armors
- * - Enemies
  * - States
  *
  * TAG FORMAT:
@@ -146,6 +151,13 @@
  * - Decreasing the proficiency will NOT undo rewards gained.
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.0
+ *    Registers 'p' as a formula context variable via Game_Action.registerFormulaContext.
+ *    Damage formulas can now use 'p' for skill proficiency without J-Elementalistics
+ *    needing to hardcode a J.PROF conditional block. The registration calls
+ *    this.skillProficiency() on the Game_Action instance at formula evaluation time.
+ *    Proficiency bonus (key "prof") registered with the shared parameter
+ *    catalog, given an SDP panel binding via baseSkillProficiencyAmount().
  * - 2.0.1
  *    Added flag for showing external file load info.
  *    Removed dead plugin parameters for conditionals.

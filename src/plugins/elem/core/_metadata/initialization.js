@@ -10,7 +10,7 @@ globalThis.J ||= {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '3.0.0';
+  const requiredBaseVersion = '3.2.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (hasBaseRequirement === false)
   {
@@ -42,5 +42,7 @@ J.ELEM.RegExp = {};
 J.ELEM.RegExp.AttackElementIds = /<attackElements:[ ]?(\[[\d, ]+])>/i;
 J.ELEM.RegExp.AbsorbElementIds = /<absorbElements:[ ]?(\[[\d, ]+])>/i;
 J.ELEM.RegExp.StrictElementIds = /<strictElements:[ ]?(\[[\d, ]+])>/i;
-J.ELEM.RegExp.BoostElement = /<boostElement:(\d+):(-?\+?[\d]+)>/i;
+J.ELEM.RegExp.BoostElement      = /<boostElement:[ ]?(\[\d+,[ ]?-?\+?\d+])>/gi;
+J.ELEM.RegExp.PierceElement     = /<pierceElement:[ ]?(\[\d+,[ ]?\d+])>/gi;
+J.ELEM.RegExp.ThisPierceElement = /<thisPierceElement:[ ]?(\[\d+,[ ]?\d+])>/gi;
 //endregion Introduction

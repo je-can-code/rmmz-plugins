@@ -52,6 +52,5 @@ class Window_Dimmer
   }
 }
 
-
 export default Window_Dimmer;
 //endregion Window_Dimmer

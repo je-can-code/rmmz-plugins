@@ -16,6 +16,7 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
     super();
     this._sprite = sprite;
     this._peakRadians = peakRadians;
+    // store  duration frames on the instance for later reads.
     this._durationFrames = durationFrames;
     this._frame = 0;
     this._baseRotation = sprite.rotation;

@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.4 CHARGE] Enable skills to be charged to perform other skills.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Enable skills to be charged to perform other skills.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-ABS
@@ -163,6 +163,15 @@
  * 1st tier charge skill as a result.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Added a segmented map charge gauge shown above charging battlers.
+ *    Registered <chargeTier> as a J-Extend non-combining key.
+ *    Charging input now also treats channeling as busy (J-ABS Channel).
+ *    canChargeSlot now requires an affordable release skill on some tier.
+ *    Guard skills can now be charged from the offhand slot.
+ *    Added per-slot charge input delay timers for hold-to-charge skills.
+ *    Fixed getHighestChargedTier crashing when no tier was completed.
+ *    Fixed switch-slot-to-charge logic, which never actually fired.
  * - 1.0.4
  *    Raised minimum J-ABS version requirement to 4.7.0.
  * - 1.0.3

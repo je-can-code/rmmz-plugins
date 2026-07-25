@@ -24,7 +24,7 @@ if (J.ABS)
   JABS_InputAdapter._canPerformQuestopediaAction = function()
   {
     // only allow while on the map scene.
-    if (!(SceneManager._scene instanceof Scene_Map))
+    if (!SceneManager._scene.isMapScene())
     {
       return false;
     }

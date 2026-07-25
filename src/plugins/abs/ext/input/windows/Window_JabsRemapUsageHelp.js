@@ -27,7 +27,7 @@ class Window_JabsRemapUsageHelp
 
     // build the ex-text with icons for each hint line.
     const rebind = `${IconManager.jabsIconTextForSymbol('ok')} Rebind`;
-    const clear = `${IconManager.jabsIconTextForSymbol(J.ABS.EXT.INPUT.Symbols.GuardTrigger)} Clear Binding`;
+    const clear = `${IconManager.jabsIconTextForSymbol(J.ABS.EXT.INPUT.Symbols.Tool)} Clear Binding`;
 
     // draw each line using drawTextEx so icons render.
     this.drawTextEx(rebind, 0, this.lineHeight() * 0, this.contentsWidth());

@@ -26,7 +26,7 @@ globalThis.$gameEnemies = null;
 globalThis.$actionMap = null;
 
 /**
- * Extends {@link DataManager.createGameObjects}.<br>
+ * Extends {@link DataManager.createGameObjects}.<br/>
  * Includes creation of our global game objects.
  */
 J.ABS.Aliased.DataManager.set('createGameObjects', DataManager.createGameObjects);

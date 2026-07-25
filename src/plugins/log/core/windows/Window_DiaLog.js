@@ -30,7 +30,7 @@ class Window_DiaLog
 
   //region overwrites
   /**
-   * Overrides {@link drawFace}.<br/>
+   * Overwrites {@link drawFace}.<br/>
    * Blits the face image at a size fitted to each row instead of the full image size.
    */
   drawFace(faceName, faceIndex, x, y, width, height)
@@ -54,7 +54,7 @@ class Window_DiaLog
   }
 
   /**
-   * Overrides {@link #itemHeight}.<br>
+   * Overwrites {@link #itemHeight}.<br/>
    * Reduces the item height further to allow for more rows to be visible at once
    * within a smaller window.
    * @returns {number} The adjusted height of each row.
@@ -66,7 +66,7 @@ class Window_DiaLog
   }
 
   /**
-   * Overrides {@link Window_Command#multilineLineHeight}.<br>
+   * Overwrites {@link Window_Command#multilineLineHeight}.<br/>
    * Increases line spacing slightly to give multi-line entries more breathing room.
    * @returns {number}
    * @override
@@ -77,7 +77,7 @@ class Window_DiaLog
   }
 
   /**
-   * Overrides {@link Window_Base#resetFontSize}.<br>
+   * Overwrites {@link Window_Base#resetFontSize}.<br/>
    * Reduces the font size slightly so multi-line entries fit comfortably
    * within each 64px row without crowding.
    * @override

@@ -1,7 +1,7 @@
 //region Window_Base
 //region more database text codes
 /**
- * Extends {@link #convertEscapeCharacters}.<br>
+ * Extends {@link #convertEscapeCharacters}.<br/>
  * Adds handling for new text codes for various database objects.
  */
 J.MESSAGE.Aliased.Window_Base.set('convertEscapeCharacters', Window_Base.prototype.convertEscapeCharacters);
@@ -49,7 +49,11 @@ Window_Base.prototype.convertEscapeCharacters = function(text)
   // handle sdp key replacements.
   textToModify = this.translateSdpTextCode(textToModify);
 
+  // handle parameter registry key replacements.
+  textToModify = this.translateParamTextCode(textToModify);
+
   // let the rest of the conversion occur with the newly modified text.
+  // perform original logic.
   return J.MESSAGE.Aliased.Window_Base.get('convertEscapeCharacters')
     .call(this, textToModify);
 };
@@ -301,6 +305,42 @@ Window_Base.prototype.translateSdpTextCode = function(text)
       rarity: colorIndex,
       iconIndex
     } = sdp;
+
+    // return the constructed replacement string.
+    return `\\I[${iconIndex}]\\C[${colorIndex}]${name}\\C[0]`;
+  });
+};
+
+/**
+ * Translates the text code into the name and icon of the corresponding catalog parameter.<br/>
+ * Unlike the other lookups in this file, an unresolvable key is never silently swallowed- an
+ * unregistered STRING_KEY is always an authoring mistake (a typo, or a plugin whose registration
+ * didn't load), so it renders as an unmistakable red "!!! UNKNOWN PARAM !!!" with a question-mark
+ * icon instead of passing through untouched or vanishing quietly.
+ * @param {string} text The text that has a text code in it.
+ * @returns {string} The new text to parse.
+ */
+Window_Base.prototype.translateParamTextCode = function(text)
+{
+  return text.replace(/\\param\[([\w-]+)]/gi, (_, p1) =>
+  {
+    // determine the parameter registry key.
+    const parameterKey = p1 ?? String.empty;
+
+    // an unknown key is always an authoring mistake- make it impossible to miss instead of
+    // silently doing nothing or leaving the raw escape code behind. icon 93 is the question mark,
+    // and color 18 is the vanilla "death" red- both chosen to be as loud as possible.
+    if (!TextManager.hasParameter(parameterKey))
+    {
+      const unknownIconIndex = 93;
+      const unknownColorIndex = 18;
+      return `\\I[${unknownIconIndex}]\\C[${unknownColorIndex}]!!! UNKNOWN PARAM !!!\\C[0]`;
+    }
+
+    // extract the necessary data from the parameter's catalog entry.
+    const name = TextManager.parameterLabel(parameterKey);
+    const iconIndex = IconManager.parameterIcon(parameterKey);
+    const colorIndex = ColorManager.parameterColor(parameterKey);
 
     // return the constructed replacement string.
     return `\\I[${iconIndex}]\\C[${colorIndex}]${name}\\C[0]`;

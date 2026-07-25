@@ -36,7 +36,7 @@ Game_Enemy.prototype.getEnemyNotes = function()
 };
 
 /**
- * Extends {@link #setup}.<br>
+ * Extends {@link #setup}.<br/>
  * Adds a hook for performing actions when an enemy is setup.
  */
 J.BASE.Aliased.Game_Enemy.set('setup', Game_Enemy.prototype.setup);
@@ -62,6 +62,37 @@ Game_Enemy.prototype.onSetup = function(enemyId)
 };
 
 /**
+ * Overwrites the vanilla {@link #traitObjects} defined on {@link Game_Enemy}.<br/>
+ * Routes all calls through the cache wrapper on {@link Game_BattlerBase} so the
+ * vanilla implementation — which concatenates directly onto the returned array — can never
+ * shadow our cache layer or cause accidental mutation.
+ * @returns {(RPG_Enemy|RPG_State)[]}
+ */
+Game_Enemy.prototype.traitObjects = function()
+{
+  return Game_BattlerBase.prototype.traitObjects.call(this);
+};
+
+/**
+ * Overwrites {@link #buildTraitObjects}.<br/>
+ * Enemies have one additional trait-bearing source beyond states: their own enemy database entry.
+ *
+ * Returns a fresh array — never mutates the result of any super call — so the
+ * cache in {@link #traitObjects} remains safe.
+ * @returns {(RPG_Enemy|RPG_State)[]}
+ */
+Game_Enemy.prototype.buildTraitObjects = function()
+{
+  return [
+    // states are the base trait source for all battlers.
+    ...this.states(),
+
+    // the enemy's own database entry carries traits.
+    this.enemy(),
+  ];
+};
+
+/**
  * Converts all "actions" from an enemy into their collection of known skills.
  * This includes both skills listed in their skill list, and any added skills via traits.
  * @returns {RPG_Skill[]}
@@ -83,6 +114,31 @@ Game_Enemy.prototype.skills = function()
   return actions
     .concat(skillTraits)
     .sort();
+};
+
+/**
+ * Gets the raw skill ids available to this enemy.
+ * Combines action skill ids with any bonus skill ids granted by traits,
+ * then deduplicates so each id appears at most once.
+ * Mirrors the logic of {@link #skills} but returns ids instead of resolved skill objects,
+ * making it safe to call from inside the skill extension resolver.
+ * @returns {number[]}
+ */
+Game_Enemy.prototype.skillIds = function()
+{
+  // collect skill ids from all actions that can be mapped to skills.
+  const actionIds = this.enemy()
+    .actions
+    .filter(this.canMapActionToSkill, this)
+    .map(action => action.skillId);
+
+  // collect any additional skill ids granted via traits.
+  const traitIds = this.traitObjects()
+    .filter(trait => trait.code === J.BASE.Traits.ADD_SKILL)
+    .map(trait => trait.dataId);
+
+  // combine and deduplicate.
+  return [...new Set(actionIds.concat(traitIds))];
 };
 
 /**
@@ -137,13 +193,13 @@ Game_Enemy.prototype.learnSkill = function(skillId)
 };
 
 /**
- * Extends {@link #die}.<br>
+ * Extends {@link #die}.<br/>
  * Adds a toggle of the death effects.
  */
 J.BASE.Aliased.Game_Enemy.set('die', Game_Enemy.prototype.die);
 Game_Enemy.prototype.die = function()
 {
-  // perform original effects.
+  // perform original logic.
   J.BASE.Aliased.Game_Enemy.get('die')
     .call(this);
 

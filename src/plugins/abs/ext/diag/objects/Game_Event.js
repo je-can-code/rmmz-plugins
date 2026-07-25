@@ -74,6 +74,7 @@ Game_Event.prototype.moveStraight = function(direction)
   // if this isn't an action, don't look for manually set potentially diagonal directions.
   if (this.isJabsAction() === false)
   {
+    // perform original logic.
     return J.ABS.EXT.DIAG.Aliased.Game_Event.get('moveStraight')
       .call(this, direction);
   }
@@ -211,6 +212,7 @@ Game_Event.prototype.turnLeft90 = function()
       break;
   }
 
+  // done rotating the custom direction after the vanilla turn.
 };
 
 /**

@@ -2,6 +2,7 @@
 import JuiceTiltMotionEffect from './../models/JuiceTiltMotionEffect.js';
 import JuiceSquishMotionEffect from './../models/JuiceSquishMotionEffect.js';
 import JuiceCastingPulseMotionEffect from './../models/JuiceCastingPulseMotionEffect.js';
+import JuiceFlipBodyMotionEffect from './../models/JuiceFlipBodyMotionEffect.js';
 import JuiceBaseEffect from './../models/JuiceBaseEffect.js';
 /**
  * Owns lightweight per-frame juice tweens on Pixi sprites (scale / rotation).
@@ -30,17 +31,20 @@ class JuiceMotionManager
   }
 
   /**
-   * Schedules a one-shot body squish on a sprite (scale pulse).
+   * Schedules a body squish on a sprite (scale pulse), optionally repeated N times.
    * @param {Sprite} sprite The Pixi sprite.
    * @param {number} intensityScale Max delta applied via sine envelope (e.g. 0.12).
-   * @param {number} durationFrames Frames to run.
+   * @param {number} durationFrames Frames to run per cycle.
+   * @param {number} [repeatCount=1] Number of times to cycle the squish envelope.
    */
-  static scheduleSquish(sprite, intensityScale, durationFrames)
+  static scheduleSquish(sprite, intensityScale, durationFrames, repeatCount = 1)
   {
     JuiceMotionManager.#cancelSpriteLock(sprite);
 
-    const effect = new JuiceSquishMotionEffect(sprite, intensityScale, durationFrames);
+    // construct effect for the next step in this routine.
+    const effect = new JuiceSquishMotionEffect(sprite, intensityScale, durationFrames, repeatCount);
 
+    // Register the value on the alias map for runtime lookup.
     JuiceMotionManager.#spriteLocks.set(sprite, effect);
     JuiceMotionManager.#effects.push(effect);
   }
@@ -55,8 +59,29 @@ class JuiceMotionManager
   {
     JuiceMotionManager.#cancelSpriteLock(sprite);
 
+    // construct effect for the next step in this routine.
     const effect = new JuiceTiltMotionEffect(sprite, peakRadians, durationFrames);
 
+    // Register the value on the alias map for runtime lookup.
+    JuiceMotionManager.#spriteLocks.set(sprite, effect);
+    JuiceMotionManager.#effects.push(effect);
+  }
+
+  /**
+   * Schedules a full-body rotation spin on a sprite, optionally repeated N times.
+   * @param {Sprite} sprite The Pixi sprite.
+   * @param {number} directionSign +1 for clockwise (flip), -1 for counter-clockwise (flip-reverse).
+   * @param {number} durationFrames Total frames for the entire animation.
+   * @param {number} [repeatCount=1] Number of full 360° rotations to complete.
+   */
+  static scheduleFlipBody(sprite, directionSign, durationFrames, repeatCount = 1)
+  {
+    JuiceMotionManager.#cancelSpriteLock(sprite);
+
+    // construct effect for the next step in this routine.
+    const effect = new JuiceFlipBodyMotionEffect(sprite, directionSign, durationFrames, repeatCount);
+
+    // Register the value on the alias map for runtime lookup.
     JuiceMotionManager.#spriteLocks.set(sprite, effect);
     JuiceMotionManager.#effects.push(effect);
   }
@@ -71,8 +96,10 @@ class JuiceMotionManager
   {
     JuiceMotionManager.#cancelSpriteLock(sprite);
 
+    // construct effect for the next step in this routine.
     const effect = new JuiceCastingPulseMotionEffect(sprite, amplitudeScale, continuePredicate);
 
+    // Register the value on the alias map for runtime lookup.
     JuiceMotionManager.#spriteLocks.set(sprite, effect);
     JuiceMotionManager.#effects.push(effect);
   }
@@ -152,8 +179,10 @@ class JuiceMotionManager
       return;
     }
 
+    // continue the routine with the next policy step.
     held.restore();
 
+    // Keep only rows that pass this predicate.
     JuiceMotionManager.#effects = JuiceMotionManager.#effects.filter(e => e !== held);
     JuiceMotionManager.#spriteLocks.delete(sprite);
   }

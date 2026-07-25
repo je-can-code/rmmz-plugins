@@ -1,0 +1,84 @@
+---
+description: ESM source → Vite single-file ship contract (boundaries, globals, verify gate). Required for all rmmz-plugins work.
+alwaysApply: true
+---
+
+# ESM ship bundle contract
+
+RMMZ loads **one script per plugin** — no `import`/`export` at runtime. Source is ESM; Vite/Rolldown emits a **single readable file** (not an IIFE).
+
+## Boundaries
+
+| Scope | Rule |
+|---|---|
+| **Same ship** (`src/plugins/<ship>/…`) | `import` / `export default` between colocated modules; every new file → that ship's `entry.js` |
+| **Cross-ship** | **Never** `import … from '…/_base/…'` or any other plugin path. After the owning ship loads, use its **globally hoisted** top-level bindings (`ParameterRegistry`, `IconManager`, …). Do **not** assign those classes onto `J.*` — Rolldown already emits `var ClassName = class { … }`. |
+| **RMMZ engine globals** (`TextManager`, `ColorManager`, …) | **Augment** in place: `TextManager.maxTp = function () { … }` — the engine defines them before plugins load |
+| **`IconManager`** (J-Base global, not RMMZ) | **Define** in `_base/managers/IconManager.js` as a static `class IconManager`; the ship bundle hoists it to the global namespace. Extension ships **augment** with `IconManager.foo = function () { … }` |
+
+Duplicate bindings in one bundle → Rolldown `$1` suffixes → subtle breakage. **Zero `$1` in `out/`** (except `RegExp.$1`).
+
+## Anti-patterns
+
+```javascript
+// BAD — cross-plugin source import (bundles a second ParameterRegistry into Crit)
+import ParameterRegistry from '../../../_base/core/ParameterRegistry.js';
+
+// GOOD — J-Base loaded first; ParameterRegistry is a hoisted global from that ship
+ParameterRegistry.register(…);
+
+// BAD — pointless mirror onto J.* (hoisted global already exists after bundle)
+J.BASE.ParameterRegistry = ParameterRegistry;
+
+// BAD — explicit globalThis on a hoisted class/scene
+globalThis.Scene_Difficulty = Scene_Difficulty;
+
+// BAD — same ship, two modules, same const name
+const SAR_SDP_PARAM_ID = 38;  // in Game_Battler.js AND registerShieldParameters.js
+
+// GOOD — one canonical home (initialization.js namespace)
+J.ABS.EXT.SHIELD.SdpParamId = { SAR: 38, SER: 39 };
+
+// BAD — IconManager is not an RMMZ engine global; assigning before J-Base defines it throws ReferenceError
+IconManager.param = function (paramId) { … };
+
+// GOOD — J-Base owns the class; the ship bundle hoists `IconManager` to the global namespace
+class IconManager
+{
+  static param(paramId) { … }
+}
+
+// BAD — engine global as exported class in an extension ship
+class IconManager { static critParam() { … } }
+export default IconManager;
+
+// GOOD — extension augments the J-Base global (matches crit/core/managers/IconManager.js)
+IconManager.critParam = function (paramId) { … };
+```
+
+## Mandatory gate (after plugin source changes)
+
+```bash
+bun run hotfix   # lint → verify:docs → build → verify:ships → copy
+```
+
+`verify:ships` fails if:
+
+- any `out/**/*.js` has line-start `import` / `export`
+- any `out/**/*.js` has `$1` suffix collisions
+- any non-`_base` source file imports from `_base/`
+- any non-`_base` source file redefines/exports `TextManager` / `ColorManager` as a class, or exports `IconManager` as a class
+- any plugin source uses `var` (`no-var` in oxlint — **source only**; Rolldown may still emit `var ClassName = class` in ships)
+- any plugin source file exports anything other than `export default` (exempt: `_metadata/meta.js` ship constants)
+- any plugin source assigns bootstrap wiring onto `J.*` outside `_metadata/initialization.js`
+- any plugin source mutates runtime state on `J.*` (use runtime classes or `$gameSystem` instead)
+
+Do **not** skip verification. Do **not** commit shipped output that fails the gate.
+
+## Source module shape
+
+| Rule | Enforcement |
+|---|---|
+| **No `var`** | Oxlint `no-var: error` on `src/plugins` + `src/build-tools` |
+| **`export default` only** | One class/object/entity per file; `verify:ships` (`source-export-default-only`) |
+| **`J.*` bootstrap in init only** | Alias maps, `Metadata`, `Aliased`, helpers, API hooks → `_metadata/initialization.js`; `verify:ships` (`source-j-namespace-in-init-only`) |

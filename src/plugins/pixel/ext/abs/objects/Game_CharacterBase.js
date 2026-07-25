@@ -1,6 +1,6 @@
 //region Game_CharacterBase
 /**
- * Extends {@link Game_CharacterBase.isOverlappingSolidTiles}.<br>
+ * Extends {@link Game_CharacterBase.isOverlappingSolidTiles}.<br/>
  * Enemy battlers with rectangular hitboxes need tile overlap checks based on the
  * full feet-anchored rectangle instead of a square radius around the center.
  * @param {number} px The proposed pivot x in tile units.
@@ -14,8 +14,9 @@ J.PIXEL.EXT.ABS.Aliased.Game_CharacterBase.set(
 Game_CharacterBase.prototype.isOverlappingSolidTiles = function(px, py, radius)
 {
   // if this character does not expose a custom rectangular hitbox, then perform original logic.
-  if (typeof this.hasCustomPixelHitbox !== 'function' || this.hasCustomPixelHitbox() === false)
+  if (this.hasCustomPixelHitbox() === false)
   {
+    // perform original logic.
     return J.PIXEL.EXT.ABS.Aliased.Game_CharacterBase.get('isOverlappingSolidTiles').call(this, px, py, radius);
   }
 
@@ -65,7 +66,7 @@ Game_CharacterBase.prototype.isOverlappingSolidTiles = function(px, py, radius)
 };
 
 /**
- * Extends {@link Game_CharacterBase.isCharacterCollisionAt}.<br>
+ * Extends {@link Game_CharacterBase.isCharacterCollisionAt}.<br/>
  * Character-vs-character overlap needs one shared PIXEL AABB builder so every
  * battler is compared in the same pivot-aware coordinate space.
  * @param {number} px Proposed x in fractional tiles.
@@ -136,6 +137,7 @@ Game_CharacterBase.prototype.isCharacterCollisionAt = function(px, py, radius = 
       // exclude through followers.
       if (f.isThrough()) return;
 
+      // Append the row to the working collection.
       candidates.push(f);
     });
   }
@@ -208,5 +210,28 @@ Game_CharacterBase.prototype.isCharacterCollisionAt = function(px, py, radius = 
   }
 
   return false;
+};
+
+/**
+ * Whether this character has a custom rectangular pixel hitbox.
+ * Only {@link Game_Event} overrides this to check for a hitbox tag.
+ * All other character types (player, followers, enemies as characters) have no custom hitbox.
+ * @returns {boolean}
+ */
+Game_CharacterBase.prototype.hasCustomPixelHitbox = function()
+{
+  // non-event characters never carry a custom hitbox model.
+  return false;
+};
+
+/**
+ * Provides the battler AABB model for JABS collision and overlay queries.
+ * Only {@link Game_Event} overrides this to return a rectangular model when a hitbox tag is present.
+ * @returns {JABS_Aabb|null}
+ */
+Game_CharacterBase.prototype.getPixelAbsBattlerAabbModel = function()
+{
+  // non-event characters have no custom rectangular AABB.
+  return null;
 };
 //endregion Game_CharacterBase

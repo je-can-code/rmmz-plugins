@@ -7,7 +7,7 @@ J.BASE.Aliased.Game_Timer.set('initialize', Game_Timer.prototype.initialize);
 Game_Timer.prototype.initialize = function()
 {
   // perform original logic.
-  J.BASE.Aliased.Game_Timer.get('start')
+  J.BASE.Aliased.Game_Timer.get('initialize')
     .call(this);
 
   /**
@@ -28,6 +28,7 @@ Game_Timer.prototype.start = function(duration)
   J.BASE.Aliased.Game_Timer.get('start')
     .call(this, duration);
 
+  // store  duration on the instance for later reads.
   this._duration = duration;
 };
 

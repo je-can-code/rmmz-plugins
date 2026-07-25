@@ -42,7 +42,7 @@ if (J.ABS)
     if ($gameMap.isMinimapBlocked()) return;
 
     // only active on the Map scene.
-    if (!(SceneManager._scene instanceof Scene_Map)) return;
+    if (!SceneManager._scene.isMapScene()) return;
 
     const mini = SceneManager._scene.getMiniMap();
     if (!mini) return;
@@ -57,7 +57,7 @@ if (J.ABS)
   JABS_InputAdapter.performMinimapFocusEnd = function()
   {
     // only active on the Map scene.
-    if (!(SceneManager._scene instanceof Scene_Map)) return;
+    if (!SceneManager._scene.isMapScene()) return;
 
     const mini = SceneManager._scene.getMiniMap();
     if (!mini) return;

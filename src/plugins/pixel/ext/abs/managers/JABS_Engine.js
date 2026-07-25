@@ -1,6 +1,6 @@
 //region JABS_Engine
 /**
- * Extends {@link JABS_Engine.getBattlerAabbModel}.<br>
+ * Extends {@link JABS_Engine.getBattlerAabbModel}.<br/>
  * Enemy battlers with PIXEL hitbox-size data provide their own feet-anchored
  * rectangular AABB so JABS combat collision and overlays stay synchronized.
  * @param {Game_CharacterBase} character The character whose AABB is being queried.
@@ -9,8 +9,8 @@
 J.PIXEL.EXT.ABS.Aliased.JABS_Engine.set('getBattlerAabbModel', JABS_Engine.getBattlerAabbModel);
 JABS_Engine.getBattlerAabbModel = function(character)
 {
-  // if the character exposes a custom battler hitbox model, then use it.
-  if (character && typeof character.getPixelAbsBattlerAabbModel === 'function')
+  // if a character was provided, check for a custom battler hitbox model.
+  if (character)
   {
     const customAabb = character.getPixelAbsBattlerAabbModel();
 

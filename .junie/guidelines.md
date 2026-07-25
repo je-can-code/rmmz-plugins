@@ -28,7 +28,11 @@
     * `clearRpgManagerCacheInVm(sandbox)` resets `RPGManager` WeakMap caches between examples when tags mutate on the same object reference.
 * When providing code samples, provide full-method drop-in replacements including the updated logic, and specify the
   file, path, and line the method starts on for clarity- this is a huge codebase.
-* **All 69 ships are Vite-built.** Source under `src/plugins/**` uses ESM (`import` / `export default`, `entry.js`, `_metadata/meta.js`). Rolldown emits one bundled `.js` per ship into `out/` — no runtime `import` in what RMMZ loads.
+* **All 69 ships are Vite-built.** Source under `src/plugins/**` uses ESM (`import` / `export default`, `entry.js`, `_metadata/meta.js`). Rolldown emits a **single readable file** per ship into `out/` — **no** runtime `import`/`export`, **no** `$1` suffix collisions, **not** an IIFE.
+    * **Same ship:** colocated ESM via `entry.js`. **Cross-ship:** runtime globals only (`J.BASE.*`, engine globals) — never `import` from another plugin's tree (e.g. `../../../_base/`).
+    * **Same ship — never re-export classes onto `J.*`:** Do **not** assign implementation classes/managers from the same ship onto the namespace (e.g. `J.SDP.MasteryManager = SdpMasteryManager`). That is pointless redirection — **import** the module. Rolldown bundles colocated ESM into one script; a second path through `J.*` is dead indirection. See **J namespace bootstrap (no same-ship re-exports)** under Architecture & Patterns.
+    * **Engine globals** (`TextManager`, `IconManager`, …): augment in place (`IconManager.param = function…`), not `class` + `export default`.
+    * **Gate:** `bun run hotfix` runs `verify:ships` after build. See `.cursor/rules/esm-ship-bundle.mdc`.
     * `import`/`export` in `/src/build-tools` and `/src/defs` follows normal Node ESM.
     * `PluginManager.registerCommand` must use **`J.*.Metadata.name`** (lowercase), not `.Name`, except where J-Base’s legacy `Metadata.Name` alias is intentional.
 * This project does not use IIFEs, instead we leverage object-driven namespacing (such as `J.ABS.EXT.SHIELD` etc) and
@@ -42,6 +46,47 @@
   around and see if it exists or is already implemented, or warn me that its not if its not anywhere.
 * It is forbidden to include anything that would or should live in "initialization.js" inside of any of the other source
   files (such as alias map instantiation- assume it exists, and provide that update to the initialization.js file).
+* **`var` is forbidden** in plugin source and build-tools — oxlint `no-var: error`. Use `let` / `const`. (Shipped bundles may still contain Rolldown-emitted `var ClassName = class`; that is bundler output, not source style.)
+* **`export default` only** in plugin source modules — one class/object/entity per file. Exempt: `_metadata/meta.js` (ship name/version constants for the Vite header plugin). Enforced by `verify:ships` (`source-export-default-only`).
+* **No `J.*` assignment outside `initialization.js`** — alias maps, `Metadata`, `Aliased`, `Helpers`, API hooks, and any other namespace wiring belong in `_metadata/initialization.js` only. Enforced by `verify:ships` (`source-j-namespace-in-init-only`).
+
+### J namespace bootstrap (no same-ship re-exports)
+
+**Never assign same-ship implementation classes onto `J.*`.** If the class lives in the same Vite ship, colocated modules reach it via ESM `import` / `export default`. Hanging it on the namespace again is pointless redirection — two paths to the same thing, one of them dead for maintainers.
+
+**Never mirror hoisted globals onto `J.*` or `globalThis`.** Rolldown emits top-level `var ClassName = …` per ship; other plugins use those names directly after load. The **only** allowed `globalThis` assignment in a plugin is bootstrapping the namespace shell: `globalThis.J ||= {}`.
+
+**What `initialization.js` is for (bootstrap only):**
+
+- Namespace shell (`J.SDP = {}`, `J.ABS = {}`, …) via `globalThis.J ||= {}` once per ship
+- `Metadata` plugin instance (`J.SDP.Metadata = new J_SdpPluginMetadata(...)`)
+- `Aliased` alias maps
+- `RegExp`, `Helpers` — regex tables and small helper surfaces used across the ship at runtime after bundle
+
+**Forbidden (same ship or hoisted global mirror):**
+
+```javascript
+// BAD — SdpMasteryManager is colocated in this ship; import it where needed.
+J.SDP.MasteryManager = SdpMasteryManager;
+
+// BAD — ParameterRegistry is already a hoisted global from the J-Base bundle.
+J.BASE.ParameterRegistry = ParameterRegistry;
+
+// BAD — Scene_Difficulty is already hoisted; no globalThis assignment.
+globalThis.Scene_Difficulty = Scene_Difficulty;
+```
+
+**Correct (same ship):**
+
+```javascript
+// In PanelRanking.js (or wherever):
+import SdpMasteryManager from '../managers/SdpMasteryManager.js';
+SdpMasteryManager.reconcileSubgroupMastery(actor, subgroupKey);
+```
+
+**Cross-ship:** Other plugin files load as separate classic scripts after J-Base. Rolldown emits top-level `var ClassName = class { … }` — those bindings are **globally hoisted**. Call `ParameterRegistry`, `ParameterDefinition`, etc. directly; do **not** mirror them onto `J.BASE` in `initialization.js` or `registerVanillaParameters.js`.
+
+**Easy test:** "Does this class's source file ship in the same bundled `.js` as the caller?" → **import**. "Does it ship in another plugin's `.js`?" → **global class name** (after that plugin loads). Only bootstrap shapes (`Metadata`, `Aliased`, `RegExp`, `Helpers`) belong on `J.*` from `initialization.js` — never implementation classes.
 
 ## DRY and Complexity
 
@@ -174,7 +219,6 @@
 
 When constructing new extensions, typically the structure defined is as such:
 
-- `__models` for models that may need to exist in a part of the `initialization.js` file for some reason.
 - `_metadata` for the plugin metadata including the `_annotations.js`, `initialization.js`, `pluginMetadata.js` and
   `pluginCommands.js`.
 - `database` for RPG_* files.
@@ -347,6 +391,42 @@ To avoid confusion between augmenting existing implementations and creating new 
           line, and closing with `*/`.
         * There are a number of special @ annotations and multi-line structures (see existing examples for reference).
 * do not needlessly/defensively attempt to validate/coerce state- it should be assumed that the state is valid.
+
+### `typeof` policy
+
+`typeof` is almost never correct inside plugin source. The one narrow exception is documented below.
+
+**Never use `typeof` for:**
+
+- Checking whether a method or property exists on an internal object (`typeof this.getUuid === 'function'`). If it is
+  part of this codebase, read the source and know what it returns. If it is missing, add it.
+- Guarding against null/undefined on any method whose `@returns` tag already excludes null. Trust the contract.
+- Probing whether an extension is loaded from core code (`typeof J.ABS !== 'undefined'`). Core never checks for
+  extensions; extensions alias/override core to inject behavior.
+- Save-migration guards (`if (!this._j || !this._j._abs || ...)`). The `||=` initialization in `initMembers`
+  guarantees all fields exist on any current save. New saves only.
+- Dispatching on input type when your own tooling (the JMZ data editor) always writes one specific type. If the
+  editor writes a number, there is no string branch.
+
+**The one valid use — `JsonMapper.js` only:**
+
+`typeof` is acceptable exactly once in this entire codebase: inside `JsonMapper.js`, which is the implementation
+of the RMMZ plugin-parameter parser. That file IS the boundary; it is allowed to inspect raw types because that
+is its entire job.
+
+**Why there are no other exceptions:**
+
+All JSON in this project is written by the JMZ data editor, never by hand. The editor guarantees the output shape.
+`JSON.parse` either succeeds and returns a correctly shaped value, or throws. There is no middle ground and no
+human-authored file that could arrive with an unexpected type.
+
+**The authority hierarchy:**
+
+1. JMZ data editor authors all config files — its output shape is the contract.
+2. `JSON.parse` parses the file → succeeds or throws. No partial results.
+3. Plugin reads the parsed value → trust the shape. Access properties directly.
+
+If the editor does not yet write a field, fix the editor — not the plugin.
 * When working with state, use this formula to determine the structure:
     * `this._j.SENSIBLE_PLUGIN_ABBREVATION.FUNCTION_CONTAINER_NAME.SOME_STATE_NAME = default state`.
         * for example, `this._j._abs._input._lastInput = null;`.

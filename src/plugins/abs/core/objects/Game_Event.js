@@ -1,8 +1,12 @@
 //region Game_Event
-import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
-import JABS_BattlerRole from './../__models/JABS_BattlerRole.js';
-import JABS_BattlerCoreData from './../__models/JABS_BattlerCoreData.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_EnemyAI from '../models/JABS_EnemyAI.js';
+import JABS_BattlerRole from '../models/JABS_BattlerRole.js';
+import JABS_BattlerCoreData from '../models/JABS_BattlerCoreData.js';
+import JABS_Battler from '../models/JABS_Battler.js';
+/**
+ * Extends {@link Game_Event.initMembers}.<br/>
+ * Bootstraps JABS battler storage on map events.
+ */
 J.ABS.Aliased.Game_Event.set('initMembers', Game_Event.prototype.initMembers);
 Game_Event.prototype.initMembers = function()
 {
@@ -77,6 +81,7 @@ Game_Event.prototype.event = function()
   }
 
   // return the underlying event data.
+  // perform original logic.
   return J.ABS.Aliased.Game_Event.get('event')
     .call(this);
 };
@@ -91,6 +96,7 @@ Game_Event.prototype.findProperPageIndex = function()
   try
   {
     // check original logic to see if we can return this.
+    // perform original logic.
     const test = J.ABS.Aliased.Game_Event.get('findProperPageIndex')
       .call(this);
 
@@ -107,7 +113,8 @@ Game_Event.prototype.findProperPageIndex = function()
 };
 
 /**
- * OVERWRITE When an map battler is hidden by something like a switch or some
+ * Extends {@link #refresh}.<br/>
+ * When an map battler is hidden by something like a switch or some
  * other condition, unveil it upon meeting such conditions.
  */
 J.ABS.Aliased.Game_Event.set('refresh', Game_Event.prototype.refresh);
@@ -129,7 +136,7 @@ Game_Event.prototype.refresh = function()
 };
 
 /**
- * Overrides {@link Game_Event.refresh}.<br>
+ * Overwrites {@link Game_Event.refresh}.<br/>
  * Safely handles battler transformation and page index reassignment.
  *
  * Sometimes the page index reassignment can get out of hand and requires guardrails.
@@ -230,6 +237,7 @@ Game_Event.prototype.setupPageSettings = function()
  *  2) from the notes of the enemy in the database (requires at least enemy id in comments).
  *  3) from the defaults of all enemies.
  */
+// oxlint-disable-next-line complexity
 Game_Event.prototype.parseEnemyComments = function()
 {
   // apply the custom move speeds from this event if any are available.
@@ -260,20 +268,21 @@ Game_Event.prototype.parseEnemyComments = function()
   const guardRange = this.getGuardRangeOverrides() ?? enemyBattler.guardRange();
   let canIdle = this.getCanIdleOverrides() ?? enemyBattler.canIdle();
   let showHpBar = this.getShowHpBarOverrides() ?? enemyBattler.showHpBar();
+  const showStates = this.getShowStatesOverrides() ?? enemyBattler.showStates();
   let showBattlerName = this.getShowBattlerNameOverrides() ?? enemyBattler.showBattlerName();
   const isInvincible = this.getInvincibleOverrides() ?? enemyBattler.isInvincible();
   const isInanimate = this.getInanimateOverrides() ?? enemyBattler.isInanimate();
 
-  // if inanimate, override the overrides with these instead.
+  // if inanimate, apply inanimate defaults unless an explicit page tag overrides them.
   if (isInanimate)
   {
     // inanimate objects belong to the neutral team.
     teamId = JABS_Battler.neutralTeamId();
 
-    // inanimate objects cannot idle, lack hp bars, and won't display their name.
-    canIdle = false;
-    showHpBar = false;
-    showBattlerName = false;
+    // inanimate suppresses idle, hp bar, and name unless this page forces otherwise.
+    if (this.getCanIdleOverrides() === null) canIdle = false;
+    if (this.getShowHpBarOverrides() === null) showHpBar = false;
+    if (this.getShowBattlerNameOverrides() === null) showBattlerName = false;
   }
 
   // build the core data.
@@ -290,6 +299,7 @@ Game_Event.prototype.parseEnemyComments = function()
     .setGuardRange(guardRange)
     .setCanIdle(canIdle)
     .setShowHpBar(showHpBar)
+    .setShowStates(showStates)
     .setShowBattlerName(showBattlerName)
     .setIsInvincible(isInvincible)
     .setIsInanimate(isInanimate)
@@ -369,8 +379,8 @@ Game_Event.prototype.getBattlerIdOverrides = function()
  */
 Game_Event.prototype.getTeamIdOverrides = function()
 {
-  // default team id for an event is an enemy.
-  let teamId = 1;
+  // no override by default; the caller falls back to the enemy database's own team id.
+  let teamId = null;
 
   // check all the valid event commands to see if we have an override for team.
   this.getValidCommentCommands()
@@ -395,10 +405,13 @@ Game_Event.prototype.getTeamIdOverrides = function()
 
 /**
  * Parses out the battler ai including their bonus ai traits.
- * @returns {JABS_EnemyAI} The constructed battler AI.
+ * @returns {JABS_EnemyAI|null} The constructed battler AI, or null if no ai trait comment was found.
  */
 Game_Event.prototype.getBattlerAiOverrides = function()
 {
+  // track whether any ai trait comment was encountered at all.
+  let found = false;
+
   // default to not having any ai traits.
   let careful = false;
   let executor = false;
@@ -420,50 +433,61 @@ Game_Event.prototype.getBattlerAiOverrides = function()
       if (J.ABS.RegExp.AiTraitCareful.test(comment))
       {
         careful = true;
+        found = true;
       }
 
       // check if this battler has the "executor" ai trait.
       if (J.ABS.RegExp.AiTraitExecutor.test(comment))
       {
         executor = true;
+        found = true;
       }
 
       // check if this battler has the "reckless" ai trait.
       if (J.ABS.RegExp.AiTraitReckless.test(comment))
       {
         reckless = true;
+        found = true;
       }
 
       // check if this battler has the "healer" ai trait.
       if (J.ABS.RegExp.AiTraitHealer.test(comment))
       {
         healer = true;
+        found = true;
       }
 
       // check if this battler has the "cleanser" ai trait.
       if (J.ABS.RegExp.AiTraitCleanser.test(comment))
       {
         cleanser = true;
+        found = true;
       }
 
       // check if this battler has the "buffer" ai trait.
       if (J.ABS.RegExp.AiTraitBuffer.test(comment))
       {
         buffer = true;
+        found = true;
       }
 
       // check if this battler has the "tactical" ai trait.
       if (J.ABS.RegExp.AiTraitTactical.test(comment))
       {
         tactical = true;
+        found = true;
       }
 
       // check if this battler has the "berserker" ai trait.
       if (J.ABS.RegExp.AiTraitBerserker.test(comment))
       {
         berserker = true;
+        found = true;
       }
     });
+
+  // return null when no ai trait tags were present so the caller can fall back to the database.
+  if (found === false) return null;
 
   // return the overridden battler ai.
   return new JABS_EnemyAI(careful, executor, reckless, healer, cleanser, buffer, tactical, berserker);
@@ -673,7 +697,6 @@ Game_Event.prototype.getCanIdleOverrides = function()
         canIdle = false;
       }
 
-
       // check if this battler has the "canIdle" config option.
       if (J.ABS.RegExp.ConfigCanIdle.test(comment))
       {
@@ -719,6 +742,33 @@ Game_Event.prototype.getShowHpBarOverrides = function()
 
   // return the truth.
   return showHpBar;
+};
+
+/**
+ * Parses out the override for whether or not this battler can show its affliction strip.
+ * @returns {boolean|null} True if we force-allow showing, false if we force-disallow, null if no overrides.
+ */
+Game_Event.prototype.getShowStatesOverrides = function()
+{
+  let showStates = null;
+
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      const [ comment, ] = command.parameters;
+
+      if (J.ABS.RegExp.ConfigHideStates.test(comment))
+      {
+        showStates = false;
+      }
+
+      if (J.ABS.RegExp.ConfigShowStates.test(comment))
+      {
+        showStates = true;
+      }
+    });
+
+  return showStates;
 };
 
 /**
@@ -1025,6 +1075,7 @@ Game_Event.prototype.existOnCaster = function()
   // `locate()` uses `setPosition()`, which rounds `_x`/`_y`; drift vs `_realX`/`_realY` reads as a lagging hitbox.
   const c = caster.getCharacter();
 
+  // store  real x on the instance for later reads.
   this._realX = c._realX;
   this._realY = c._realY;
   this._x = c._x;

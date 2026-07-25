@@ -74,6 +74,7 @@ class RPG_Enemy
     this.actions = enemy.actions
       .map(enemyAction => new RPG_EnemyAction(enemyAction));
     this.battlerHue = enemy.battlerHue;
+    // assign drop items on this instance for callers.
     this.dropItems = enemy.dropItems
       .map(dropItem => new RPG_DropItem(dropItem));
     this.exp = enemy.exp;

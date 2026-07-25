@@ -1,5 +1,5 @@
 //region Window_SdpHeader
-import StatDistributionPanel from './../__models/StatDistributionPanel.js';
+import StatDistributionPanel from '../models/StatDistributionPanel.js';
 /**
  * A single-line, help-like header that summarizes the hovered panel.
  * Name + rarity + flavor in one readable sentence, controller-first.
@@ -22,7 +22,7 @@ class Window_SdpHeader
   }
 
   /**
-   * Implements {@link Window_Base.drawContent}.<br>
+   * Implements {@link Window_Base.drawContent}.<br/>
    * Renders the single-line summary for the hovered panel.
    */
   drawContent()

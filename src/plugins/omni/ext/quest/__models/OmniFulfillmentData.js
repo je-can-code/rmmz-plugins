@@ -50,11 +50,13 @@ class OmniFulfillmentData
    */
   constructor(indiscriminate = null, destination = null, fetch = null, slay = null, quest = null)
   {
+    // none of these sub-types declare a constructor, so each one always initializes to its own
+    // class fields' defaults- no arguments are passed here to avoid implying otherwise.
     this.indiscriminate = indiscriminate ?? new IndiscriminateData();
-    this.destination = destination ?? new DestinationData(-1, -1, -1, -1, -1);
-    this.fetch = fetch ?? new FetchData(OmniObjectiveFetchType.Unset, 0, 0);
-    this.slay = slay ?? new SlayData(0, 0);
-    this.quest = quest ?? new QuestData([]);
+    this.destination = destination ?? new DestinationData();
+    this.fetch = fetch ?? new FetchData();
+    this.slay = slay ?? new SlayData();
+    this.quest = quest ?? new QuestData();
   }
 }
 

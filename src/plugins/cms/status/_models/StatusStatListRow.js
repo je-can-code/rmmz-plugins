@@ -1,7 +1,7 @@
 //region StatusStatListRow
 /**
  * Represents a single selectable stat row for the Status stat list window.
- * Each row points at a specific long parameter id and the display section it belongs to.
+ * Each row points at a registry parameter key and the display section it belongs to.
  */
 class StatusStatListRow
 {
@@ -12,23 +12,23 @@ class StatusStatListRow
   section = String.empty;
 
   /**
-   * The long parameter id represented by this row.
-   * @type {number}
+   * The registry key represented by this row.
+   * @type {string}
    */
-  longParamId = 0;
+  parameterKey = String.empty;
 
   /**
    * Constructor.
    * @param {string} section The display section header.
-   * @param {number} longParamId The long parameter id represented by this row.
+   * @param {string} parameterKey The registry key this row represents.
    */
-  constructor(section, longParamId)
+  constructor(section, parameterKey)
   {
     // assign the section this row belongs to for grouping.
     this.section = section;
 
-    // assign the long parameter id this row represents.
-    this.longParamId = longParamId;
+    // assign the registry key this row represents.
+    this.parameterKey = parameterKey;
   }
 }
 

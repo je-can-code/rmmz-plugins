@@ -68,6 +68,7 @@ class DifficultyConfig
     this.key = key;
     this.enabled = enabled;
     this.unlocked = unlocked;
+    // assign hidden on this instance for callers.
     this.hidden = hidden;
   }
 }

@@ -1,5 +1,5 @@
 //region Window_SdpCart
-import StatDistributionPanel from './../__models/StatDistributionPanel.js';
+import StatDistributionPanel from '../models/StatDistributionPanel.js';
 /**
  * A controller-first "shopping cart" window for queued SDP rankups.
  * This window is display-only; selection happens in {@link Window_SdpList}.
@@ -52,7 +52,8 @@ class Window_SdpCart
   }
 
   /**
-   * OVERWRITE No commands are selectable in this window.
+   * Overwrites {@link #isCurrentItemEnabled}.<br/>
+   * No commands are selectable in this window.
    */
   isCurrentItemEnabled()
   {
@@ -60,7 +61,7 @@ class Window_SdpCart
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Draws the contents of the cart and the total cost.
    */
   makeCommandList()
@@ -124,6 +125,7 @@ class Window_SdpCart
       const { currentRank } = actor.getSdpByKey(key);
       const cost = Window_SdpCart.#calculateQueuedCost(panel, currentRank, levels);
 
+      // construct command for the next step in this routine.
       const command = new WindowCommandBuilder(panel.name)
         .setSymbol(`cart-${key}`)
         .setEnabled(false)
@@ -139,7 +141,8 @@ class Window_SdpCart
   }
 
   /**
-   * OVERWRITE Renders the cart rows with styled padded numbers.
+   * Overwrites {@link #drawItem}.<br/>
+   * Renders the cart rows with styled padded numbers.
    * @param {number} index The command index.
    */
   drawItem(index)

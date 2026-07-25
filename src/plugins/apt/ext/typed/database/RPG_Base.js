@@ -10,6 +10,7 @@ RPG_Base.prototype.buildAptitudeTeachings = function()
 {
   // perform original logic.
   /** @type {AptitudeTeachable[]} */
+  // perform original logic.
   const base = J.APT.EXT.TYPED.Aliased.RPG_Base.get('buildAptitudeTeachings')
     .call(this);
 

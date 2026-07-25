@@ -72,7 +72,7 @@ const BUILTIN_RECEIVERS = new Set([
 /**
  * Minimal fallback docs when a member has no source JSDoc and no body to infer prose from.
  *
- * @param {string} summary
+ * @param {string} summary The summary driving this step.
  * @returns {string}
  */
 function fallbackDoc(summary)
@@ -81,8 +81,8 @@ function fallbackDoc(summary)
 }
 
 /**
- * @param {string} memberName
- * @param {string} returnTs
+ * @param {string} memberName The member name driving this step.
+ * @param {string} returnTs The return ts driving this step.
  * @returns {string}
  */
 function fallbackMethodDoc(memberName, returnTs)
@@ -96,8 +96,8 @@ function fallbackMethodDoc(memberName, returnTs)
  * `Object.defineProperties` often appears before `prototype.param` in source order, so return inference
  * can be `unknown`. Recover MZ-shaped getters from the getter body alone.
  *
- * @param {import('acorn').FunctionExpression | import('acorn').ArrowFunctionExpression} getterFn
- * @param {string} preliminaryTs
+ * @param {import('acorn').FunctionExpression | import('acorn').ArrowFunctionExpression} getterFn The getter fn driving this step.
+ * @param {string} preliminaryTs The preliminary ts driving this step.
  * @returns {string}
  */
 function refineDefinePropertyGetterReturn(getterFn, preliminaryTs)
@@ -117,6 +117,7 @@ function refineDefinePropertyGetterReturn(getterFn, preliminaryTs)
   {
     if (st.type === 'ReturnStatement')
     {
+      // Append the row to the working collection.
       rets.push(st);
     }
   }
@@ -192,7 +193,7 @@ function refineDefinePropertyGetterReturn(getterFn, preliminaryTs)
  */
 
 /**
- * @param {import('acorn').MemberExpression | import('acorn').Expression} node
+ * @param {import('acorn').MemberExpression | import('acorn').Expression} node The node driving this step.
  * @returns {string|null}
  */
 function memberChain(node)
@@ -218,12 +219,12 @@ function memberChain(node)
 }
 
 /**
- * @param {import('acorn').Literal | import('acorn').UnaryExpression | import('acorn').TemplateLiteral} node
+ * @param {import('acorn').Literal | import('acorn').UnaryExpression | import('acorn').TemplateLiteral} node The node driving this step.
  * @returns {string|null}
  */
 /**
- * @param {ClassEntry} entry
- * @param {Map<string, string>} propMap
+ * @param {ClassEntry} entry The entry driving this step.
+ * @param {Map<string, string>} propMap The prop map driving this step.
  * @returns {void}
  */
 function absorbInstanceProps(entry, propMap)
@@ -241,10 +242,10 @@ function absorbInstanceProps(entry, propMap)
 }
 
 /**
- * @param {ClassEntry} entry
+ * @param {ClassEntry} entry The entry driving this step.
  * @param {Map<string, { reads: Set<string>, writes: Set<string>, consumes: Set<string> }>} usageMap
- * @param {string} methodName
- * @param {boolean} isInitializer
+ * @param {string} methodName The method name driving this step.
+ * @param {boolean} isInitializer The is initializer driving this step.
  * @returns {void}
  */
 function absorbInstancePropUsage(entry, usageMap, methodName, isInitializer)
@@ -290,8 +291,8 @@ function absorbInstancePropUsage(entry, usageMap, methodName, isInitializer)
 }
 
 /**
- * @param {ClassEntry} entry
- * @param {string} classPath
+ * @param {ClassEntry} entry The entry driving this step.
+ * @param {string} classPath The class path driving this step.
  * @returns {Map<string, string>}
  */
 function finalizeInstancePropTs(entry, classPath)
@@ -309,7 +310,7 @@ function finalizeInstancePropTs(entry, classPath)
 /**
  * Instance typings merge surface (prototype methods and/or inferred `this._*` fields).
  *
- * @param {ClassEntry} entry
+ * @param {ClassEntry} entry The entry driving this step.
  * @returns {boolean}
  */
 function entryHasInstanceSurface(entry)
@@ -320,7 +321,7 @@ function entryHasInstanceSurface(entry)
 /**
  * VS Code / TS hovers collapse multi-line JSDoc into one paragraph unless we force breaks.
  *
- * @param {string} indent
+ * @param {string} indent The indent driving this step.
  * @param {string} body Text after the leading ` * ` (empty = blank spacer line).
  * @returns {string}
  */
@@ -334,9 +335,9 @@ function instancePropDocStarLine(indent, body)
 }
 
 /**
- * @param {ClassEntry} entry
- * @param {string} indent
- * @param {string} classPath
+ * @param {ClassEntry} entry The entry driving this step.
+ * @param {string} indent The indent driving this step.
+ * @param {string} classPath The class path driving this step.
  * @returns {string}
  */
 function formatInstancePropsBlock(entry, indent, classPath)
@@ -356,6 +357,7 @@ function formatInstancePropsBlock(entry, indent, classPath)
     /** @type {string[]} */
     const doc = [];
     doc.push(`${indent}/**\n`);
+    // Append the row to the working collection.
     doc.push(instancePropDocStarLine(indent, 'Inferred engine backing field.'));
     doc.push(instancePropDocStarLine(indent, ''));
     doc.push(instancePropDocStarLine(indent, `Type: \`${ts}\`.`));
@@ -367,7 +369,7 @@ function formatInstancePropsBlock(entry, indent, classPath)
       const read = [...meta.readIn].sort();
 
       /**
-       * @param {string[]} methods
+       * @param {string[]} methods The methods driving this step.
        * @returns {string}
        */
       function methodLinks(methods)
@@ -390,6 +392,7 @@ function formatInstancePropsBlock(entry, indent, classPath)
         }).join(', ');
       }
 
+      // Append the row to the working collection.
       doc.push(instancePropDocStarLine(indent, `Initialized in: ${methodLinks(init)}.`));
       doc.push(instancePropDocStarLine(indent, `Written in: ${methodLinks(written)}.`));
       doc.push(instancePropDocStarLine(indent, `Read in: ${methodLinks(read)}.`));
@@ -448,13 +451,13 @@ function literalToTsType(node)
 }
 
 /**
- * @param {import('acorn').Program} ast
- * @param {(stmt: import('acorn').Statement) => void} visitor
+ * @param {import('acorn').Program} ast The ast driving this step.
+ * @param {(stmt: import('acorn').Statement) => void} visitor The visitor driving this step.
  */
 function walkStatementTree(ast, visitor)
 {
   /**
-   * @param {import('acorn').Statement | null | undefined} stmt
+   * @param {import('acorn').Statement | null | undefined} stmt The stmt driving this step.
    */
   function recurse(stmt)
   {
@@ -521,14 +524,15 @@ function walkStatementTree(ast, visitor)
 }
 
 /**
- * @param {string} enginePath
- * @param {string} stem
+ * @param {string} enginePath The engine path driving this step.
+ * @param {string} stem The stem driving this step.
  */
 function extractFromFile(enginePath, stem)
 {
   /** @type {Map<string, ClassEntry>} */
   const classes = new Map();
   /** @type {Map<string, Map<string, MethodSig>>} */
+  // construct builtin proto for the next step in this routine.
   const builtinProto = new Map();
   /** @type {Map<string, Map<string, MethodSig>>} */
   const builtinStatic = new Map();
@@ -538,7 +542,7 @@ function extractFromFile(enginePath, stem)
   const engineSourceFile = path.basename(enginePath);
 
   /**
-   * @param {string} pathStr
+   * @param {string} pathStr The path str driving this step.
    * @returns {ClassEntry}
    */
   function ensureClass(pathStr)
@@ -571,13 +575,14 @@ function extractFromFile(enginePath, stem)
     });
 
   /**
-   * @param {import('acorn').AssignmentExpression} node
-   * @param {import('acorn').ExpressionStatement} parentStmt
+   * @param {import('acorn').AssignmentExpression} node The node driving this step.
+   * @param {import('acorn').ExpressionStatement} parentStmt The parent stmt driving this step.
    */
   function handleAssign(node, parentStmt)
   {
     if (node.operator !== '=')
     {
+      // exit early without a payload.
       return;
     }
 
@@ -609,6 +614,7 @@ function extractFromFile(enginePath, stem)
     )
     {
       const arg0 = right.arguments[0];
+      // when , take this branch.
       if (
         arg0
         && arg0.type === 'MemberExpression'
@@ -643,6 +649,7 @@ function extractFromFile(enginePath, stem)
       const docSummary = jd.summary && jd.summary.trim().length > 0
         ? jd.summary.trim()
         : null;
+      // Register the value on the alias map for runtime lookup.
       globals.set(left.name, { ts, docSummary });
       return;
     }
@@ -664,6 +671,7 @@ function extractFromFile(enginePath, stem)
       const prop = left.property.type === 'Identifier' ? left.property.name : null;
       if (clsPath === null || prop === null)
       {
+        // exit early without a payload.
         return;
       }
 
@@ -684,12 +692,14 @@ function extractFromFile(enginePath, stem)
                 engineSourceFile,
               }));
           }
+          // otherwise fall back to the alternate path.
           else
           {
             bucket.set(prop, { paramsTs: '', returnTs: 'unknown', docBlock: fallbackMethodDoc(prop, 'unknown') });
           }
         }
         builtinProto.set(root, bucket);
+        // exit early without a payload.
         return;
       }
 
@@ -858,7 +868,7 @@ function extractFromFile(enginePath, stem)
   }
 
   /**
-   * @param {import('acorn').Property} prop
+   * @param {import('acorn').Property} prop The prop driving this step.
    * @returns {string | null}
    */
   function definePropsKeyName(prop)
@@ -879,7 +889,7 @@ function extractFromFile(enginePath, stem)
   }
 
   /**
-   * @param {import('acorn').ObjectExpression} descObj
+   * @param {import('acorn').ObjectExpression} descObj The desc obj driving this step.
    * @returns {import('acorn').FunctionExpression | import('acorn').ArrowFunctionExpression | null}
    */
   function findGetterInDescriptor(descObj)
@@ -908,7 +918,7 @@ function extractFromFile(enginePath, stem)
   }
 
   /**
-   * @param {import('acorn').Expression} valueNode
+   * @param {import('acorn').Expression} valueNode The value node driving this step.
    * @returns {string | null}
    */
   function returnTsFromTextManagerGetterFactory(valueNode)
@@ -935,10 +945,10 @@ function extractFromFile(enginePath, stem)
   }
 
   /**
-   * @param {import('acorn').ObjectExpression} propsObj
-   * @param {string} assigningClassPath
-   * @param {'instance' | 'static'} kind
-   * @param {import('acorn').SourceLocation | null | undefined} stmtLoc
+   * @param {import('acorn').ObjectExpression} propsObj The props obj driving this step.
+   * @param {string} assigningClassPath The assigning class path driving this step.
+   * @param {'instance' | 'static'} kind The kind driving this step.
+   * @param {import('acorn').SourceLocation | null | undefined} stmtLoc The stmt loc driving this step.
    * @returns {void}
    */
   function absorbDefinePropertiesDescriptors(propsObj, assigningClassPath, kind, stmtLoc)
@@ -979,6 +989,7 @@ function extractFromFile(enginePath, stem)
           {
             entry.instanceMethods.set(name, payload);
           }
+          // otherwise fall back to the alternate path.
           else
           {
             entry.staticMethods.set(name, payload);
@@ -1001,7 +1012,7 @@ function extractFromFile(enginePath, stem)
   }
 
   /**
-   * @param {import('acorn').ExpressionStatement} stmt
+   * @param {import('acorn').ExpressionStatement} stmt The stmt driving this step.
    * @returns {void}
    */
   function tryConsumeObjectDefineProperties(stmt)
@@ -1022,6 +1033,7 @@ function extractFromFile(enginePath, stem)
     }
     if (callee.object.type !== 'Identifier' || callee.object.name !== 'Object')
     {
+      // exit early without a payload.
       return;
     }
     if (callee.property.type !== 'Identifier' || callee.property.name !== 'defineProperties')
@@ -1032,6 +1044,7 @@ function extractFromFile(enginePath, stem)
     const propsObj = ex.arguments[1];
     if (!propsObj || propsObj.type !== 'ObjectExpression')
     {
+      // exit early without a payload.
       return;
     }
     if (
@@ -1056,7 +1069,7 @@ function extractFromFile(enginePath, stem)
   }
 
   /**
-   * @param {import('acorn').ExpressionStatement} stmt
+   * @param {import('acorn').ExpressionStatement} stmt The stmt driving this step.
    * @returns {void}
    */
   function tryConsumeObjectDefineProperty(stmt)
@@ -1071,6 +1084,7 @@ function extractFromFile(enginePath, stem)
       return;
     }
     const callee = ex.callee;
+    // when , take this branch.
     if (
       callee.type !== 'MemberExpression'
       || callee.computed
@@ -1202,7 +1216,7 @@ function extractFromFile(enginePath, stem)
 }
 
 /**
- * @param {string[]} segments
+ * @param {string[]} segments The segments driving this step.
  * @returns {string}
  */
 function pathForClassDecl(segments)
@@ -1217,8 +1231,8 @@ function pathForClassDecl(segments)
 /**
  * Relative fragment path for a logical class path (e.g. `Game_Actor` → `objects/Game_Actor.d.ts`).
  *
- * @param {string} stem
- * @param {string} classPathStr
+ * @param {string} stem The stem driving this step.
+ * @param {string} classPathStr The class path str driving this step.
  * @returns {string}
  */
 function fragmentPathForClass(stem, classPathStr)
@@ -1230,7 +1244,7 @@ function fragmentPathForClass(stem, classPathStr)
 /**
  * Topological order so each `extends` parent fragment precedes the child (TS needs the base type in scope).
  *
- * @param {string[]} refs
+ * @param {string[]} refs The refs driving this step.
  * @param {Map<string, string>} extendsGraph child class path → parent class path
  * @param {Map<string, string>} classStem class path → stem dir
  * @returns {string[]}
@@ -1244,6 +1258,7 @@ function topoSortRefsByExtends(refs, extendsGraph, classStem)
   const indeg = new Map();
   for (const r of refs)
   {
+    // Register the value on the alias map for runtime lookup.
     indeg.set(r, 0);
     adj.set(r, new Set());
   }
@@ -1274,6 +1289,7 @@ function topoSortRefsByExtends(refs, extendsGraph, classStem)
   const out = [];
   /** @type {Set<string>} */
   const seen = new Set();
+  // keep looping while q.length > 0.
   while (q.length > 0)
   {
     const n = /** @type {string} */ (q.shift());
@@ -1308,8 +1324,8 @@ function topoSortRefsByExtends(refs, extendsGraph, classStem)
 }
 
 /**
- * @param {MethodSig} sig
- * @param {string} indent
+ * @param {MethodSig} sig The sig driving this step.
+ * @param {string} indent The indent driving this step.
  * @returns {string}
  */
 function formatMethod(name, sig, indent = '  ')
@@ -1335,9 +1351,9 @@ function formatMethod(name, sig, indent = '  ')
 /**
  * Static functions inside `declare namespace Foo { ... }` (MZ singleton managers).
  *
- * @param {string} name
- * @param {MethodSig} sig
- * @param {string} indent
+ * @param {string} name The name driving this step.
+ * @param {MethodSig} sig The sig driving this step.
+ * @param {string} indent The indent driving this step.
  * @returns {string}
  */
 function formatNamespaceStaticFn(name, sig, indent = '  ')
@@ -1363,9 +1379,9 @@ function formatNamespaceStaticFn(name, sig, indent = '  ')
  * Emit an `interface Name` (instance) plus optional `declare namespace Name` (statics) so types
  * merge with the JS constructor instead of fighting it.
  *
- * @param {string} sourceLabel
- * @param {string} pathStr
- * @param {ClassEntry} entry
+ * @param {string} sourceLabel The source label driving this step.
+ * @param {string} pathStr The path str driving this step.
+ * @param {ClassEntry} entry The entry driving this step.
  * @returns {string}
  */
 function emitMergeableEngineClass(sourceLabel, pathStr, entry)
@@ -1379,6 +1395,7 @@ function emitMergeableEngineClass(sourceLabel, pathStr, entry)
     ' * IDE: prototype navigation is authoritative in project/js/rmmz_*.js — ambient defs are for typing.',
     ' */',
     '',
+  // Flatten the collection into one delimiter-separated string.
   ].join('\n');
 
   const segments = pathStr.split('.');
@@ -1434,11 +1451,11 @@ function emitMergeableEngineClass(sourceLabel, pathStr, entry)
 }
 
 /**
- * @param {ExtractResult} bundle
+ * @param {ExtractResult} bundle The bundle driving this step.
  * @returns {string[]}
  */
 /**
- * @param {ExtractResult} bundle
+ * @param {ExtractResult} bundle The bundle driving this step.
  * @param {Map<string, string>} classStemOut class path (e.g. `Game_Actor`) → stem (`objects`)
  * @param {Map<string, string>} extendsGraphOut child class path → parent class path from `Object.create`
  */
@@ -1457,14 +1474,15 @@ function emitBundle(bundle, classStemOut, extendsGraphOut)
   const stemDir = path.join(OUT_ROOT, stem);
 
   /**
-   * @param {string} relPath
-   * @param {string} body
+   * @param {string} relPath The rel path driving this step.
+   * @param {string} body The body driving this step.
    */
   function write(relPath, body)
   {
     const full = path.join(stemDir, relPath);
     fs.mkdirSync(path.dirname(full), { recursive: true });
     fs.writeFileSync(full, body, 'utf8');
+    // Append the row to the working collection.
     written.push(path.join(stem, relPath).replace(/\\/g, '/'));
   }
 
@@ -1483,6 +1501,7 @@ function emitBundle(bundle, classStemOut, extendsGraphOut)
       const sig = protoM.get(name);
       lines.push(formatMethod(name, sig));
     }
+    // Append the row to the working collection.
     lines.push('  }');
     builtinParts.push(lines.join('\n'));
   }
@@ -1497,6 +1516,7 @@ function emitBundle(bundle, classStemOut, extendsGraphOut)
     for (const name of [...statM.keys()].sort())
     {
       const sig = statM.get(name);
+      // Append the row to the working collection.
       lines.push(formatMethod(name, sig));
     }
     lines.push('  }');
@@ -1609,6 +1629,7 @@ function emitBundle(bundle, classStemOut, extendsGraphOut)
       lines.push('  }\n');
     }
 
+    // Append the row to the working collection.
     lines.push('}\n');
     write(pathForClassDecl(segments), lines.join(''));
   }
@@ -1651,6 +1672,7 @@ function main()
   /** @type {string[]} */
   const allRefs = [];
   /** @type {Map<string, string>} */
+  // construct class stem meta for the next step in this routine.
   const classStemMeta = new Map();
   /** @type {Map<string, string>} */
   const extendsGraph = new Map();
@@ -1660,10 +1682,12 @@ function main()
     const enginePath = path.join(ENGINE_JS_DIR, file);
     if (!fs.existsSync(enginePath))
     {
+      // abort this pass so the operator sees a hard failure.
       throw new Error(`Missing engine file: ${enginePath}`);
     }
     const bundle = extractFromFile(enginePath, stem);
     const written = emitBundle(bundle, classStemMeta, extendsGraph);
+    // Append the row to the working collection.
     allRefs.push(...written.sort());
   }
 

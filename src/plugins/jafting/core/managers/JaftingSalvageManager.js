@@ -1,10 +1,8 @@
 //region JaftingSalvageManager
-import {
-  JaftingSalvageLedgerRow,
-  JaftingSalvageLedgerSnapshot,
-  JaftingSalvagePartyLedgerBag,
-} from '../__models/JaftingSalvageDataModels.js';
 import JaftingSalvageLedger from '../__models/JaftingSalvageLedger.js';
+import JaftingSalvageLedgerRow from '../__models/JaftingSalvageLedgerRow.js';
+import JaftingSalvageLedgerSnapshot from '../__models/JaftingSalvageLedgerSnapshot.js';
+import JaftingSalvagePartyLedgerBag from '../__models/JaftingSalvagePartyLedgerBag.js';
 
 /**
  * Orchestrates **where** ledgers live, **when** they merge from craft/refine, **how** dismantle pays out, and
@@ -32,8 +30,8 @@ class JaftingSalvageManager
    * is reset to {@link RPG_Weapon.createEmpty} / {@link RPG_Armor.createEmpty}.<br>
    * Projects may replace this function on {@link JaftingSalvageManager} to chain extra bookkeeping—default is a no-op.
    *
-   * @param {'weapon'|'armor'} kind
-   * @param {number} slotId
+   * @param {'weapon'|'armor'} kind The kind driving this step.
+   * @param {number} slotId The slot id driving this step.
    */
   /* eslint-disable no-unused-vars -- default body is empty; parameters define the hook contract for replacements. */
   static onAfterDynamicSlotReclaimed(kind, slotId)
@@ -44,7 +42,7 @@ class JaftingSalvageManager
   /**
    * Container key for party-side ledger maps (vanilla stacks cannot diverge per-instance).
    *
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum The datum driving this step.
    * @returns {string|null}
    */
   static containerKeyFromDatum(datum)
@@ -88,7 +86,7 @@ class JaftingSalvageManager
   /**
    * Rebuilds merged `bag.rows` from every non-empty per-slot ledger (dismantle still reads merged rows only).
    *
-   * @param {JaftingSalvagePartyLedgerBag} bag
+   * @param {JaftingSalvagePartyLedgerBag} bag The bag driving this step.
    */
   static recomputeMergedRowsFromPartyLedgerBag(bag)
   {
@@ -115,8 +113,8 @@ class JaftingSalvageManager
   /**
    * Keeps per-slot ledger array length aligned to current party stack size (LIFO push/pop).
    *
-   * @param {JaftingSalvagePartyLedgerBag} bag
-   * @param {RPG_Base} datum
+   * @param {JaftingSalvagePartyLedgerBag} bag The bag driving this step.
+   * @param {RPG_Base} datum The datum driving this step.
    */
   static syncPartyLedgerUnitCountToStack(bag, datum)
   {
@@ -127,11 +125,13 @@ class JaftingSalvageManager
       bag.unitLedgers = [];
     }
 
+    // keep looping while bag.unitLedgers.length < n.
     while (bag.unitLedgers.length < n)
     {
       bag.unitLedgers.push(null);
     }
 
+    // keep looping while bag.unitLedgers.length > n.
     while (bag.unitLedgers.length > n)
     {
       bag.unitLedgers.pop();
@@ -145,14 +145,14 @@ class JaftingSalvageManager
    * `numItems`.
    *
    * @param {JaftingSalvagePartyLedgerBag|{ unitLedgers?: unknown[], rows?: unknown[] }} bag
-   * @param {RPG_Base} datum
+   * @param {RPG_Base} datum The datum driving this step.
    */
   static coercePartyLedgerBagShapeForDatum(bag, datum)
   {
     const key = JaftingSalvageManager.containerKeyFromDatum(datum);
     const working = JaftingSalvagePartyLedgerBag.coerce(bag);
 
-    // `coerce` may mint a fresh bag instance—replace the map entry so later readers do not keep a stale plain object.
+    // coerce mints a fresh bag when the slot is absent—write it back so later reads see it.
     if (working !== bag)
     {
       $gameParty._j._jafting._salvageLedgers[key] = working;
@@ -169,7 +169,7 @@ class JaftingSalvageManager
   /**
    * Deletes an empty keyed bag when merged rows and every slot are lineage-free.
    *
-   * @param {string} key
+   * @param {string} key The key driving this step.
    */
   static pruneEmptyPartyLedgerBag(key)
   {
@@ -183,11 +183,6 @@ class JaftingSalvageManager
     }
 
     bag = JaftingSalvagePartyLedgerBag.coerce(bag);
-
-    if (bag !== $gameParty._j._jafting._salvageLedgers[key])
-    {
-      $gameParty._j._jafting._salvageLedgers[key] = bag;
-    }
 
     let anyUnitRows = false;
 
@@ -216,7 +211,7 @@ class JaftingSalvageManager
   /**
    * Reads the salvage ledger attached to an RPG datum or the party bag for stacked goods.
    *
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum The datum driving this step.
    * @returns {JaftingSalvageLedgerSnapshot|JaftingSalvagePartyLedgerBag|null}
    */
   static getLedgerForDatum(datum)
@@ -228,13 +223,8 @@ class JaftingSalvageManager
     }
 
     // refinement allocates unique datastore indices—those ledgers ride on the RPG row itself.
-    if (datum._jaftingSalvageLedger && datum._jaftingSalvageLedger.rows)
+    if (datum._jaftingSalvageLedger)
     {
-      if ((datum._jaftingSalvageLedger instanceof JaftingSalvageLedgerSnapshot) === false)
-      {
-        datum._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot(datum._jaftingSalvageLedger);
-      }
-
       return datum._jaftingSalvageLedger;
     }
 
@@ -259,8 +249,8 @@ class JaftingSalvageManager
   /**
    * Reads the salvage ledger for one stack index (party bag) or the whole dynamic row ledger.
    *
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum
-   * @param {number|null|undefined} unitOrdinal
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum The datum driving this step.
+   * @param {number|null|undefined} unitOrdinal The unit ordinal driving this step.
    * @returns {JaftingSalvageLedgerSnapshot|JaftingSalvagePartyLedgerBag|null}
    */
   static getLedgerUnitForDatum(datum, unitOrdinal)
@@ -313,7 +303,7 @@ class JaftingSalvageManager
   /**
    * Clears ledger storage for a datum everywhere it might live.
    *
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum The datum driving this step.
    */
   static clearLedgerForDatum(datum)
   {
@@ -333,8 +323,8 @@ class JaftingSalvageManager
   /**
    * Party hook after items enter inventory — grow per-slot lineage arrays for static-template stacks.
    *
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor} itemDatum
-   * @param {number} amountGained
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor} itemDatum The item datum driving this step.
+   * @param {number} amountGained The amount gained driving this step.
    */
   static afterPartyGainedItem(itemDatum, amountGained)
   {
@@ -370,7 +360,7 @@ class JaftingSalvageManager
   /**
    * After crafting succeeds, stamps outputs using ingredient-derived ledger rows (deduped).
    *
-   * @param {CraftingRecipe} recipe
+   * @param {CraftingRecipe} recipe The recipe driving this step.
    */
   static applyCraftRecipeOutputs(recipe)
   {
@@ -386,7 +376,7 @@ class JaftingSalvageManager
         const datum = component.getItem();
 
         // clone per output row so multi-output recipes cannot accidentally share one mutable array reference.
-        const snapshot = JaftingSalvageLedgerSnapshot.cloneFromLedgerLike(shell);
+        const snapshot = JaftingSalvageLedgerSnapshot.cloneFromLedger(shell);
 
         JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, snapshot, component.quantity());
       }
@@ -396,7 +386,7 @@ class JaftingSalvageManager
   /**
    * Merges an incoming ledger snapshot into whatever storage backs {@link datum}.
    *
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum The datum driving this step.
    * @param {JaftingSalvageLedgerSnapshot|{ rows: JaftingSalvageLedgerRow[] }} incomingLedger
    */
   static mergeLedgerIntoPartyOrDatum(datum, incomingLedger)
@@ -406,13 +396,14 @@ class JaftingSalvageManager
     if (datum.id >= JaftingSalvageManager.DynamicEquipIndexMin)
     {
       // dynamic refinement rows are unique instances—ledger travels with the RPG object in `$data*`.
-      const existingRows = JaftingSalvageLedgerSnapshot.rowsFromUnknown(datum._jaftingSalvageLedger);
-      const incomingRows = JaftingSalvageLedgerSnapshot.rowsFromUnknown(incomingLedger);
+      const existingRows = JaftingSalvageLedgerSnapshot.rowsFrom(datum._jaftingSalvageLedger);
+      const incomingRows = JaftingSalvageLedgerSnapshot.rowsFrom(incomingLedger);
 
       datum._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot(
         JaftingSalvageLedger.mergeRowArrays(existingRows, incomingRows),
       );
 
+      // exit early without a payload.
       return;
     }
 
@@ -423,9 +414,9 @@ class JaftingSalvageManager
    * Assigns freshly crafted lineage snapshots onto the last stampedCount stack slots (LIFO stack order).<br>
    * Call after {@link Game_Party.prototype.gainItem} has already raised counts (see {@link CraftingRecipe#craft}).
    *
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum The datum driving this step.
    * @param {JaftingSalvageLedgerSnapshot|{ rows: JaftingSalvageLedgerRow[] }} incomingLedger
-   * @param {number} stampedCount
+   * @param {number} stampedCount The stamped count driving this step.
    */
   static appendStampedUnitsToPartyStack(datum, incomingLedger, stampedCount)
   {
@@ -465,7 +456,7 @@ class JaftingSalvageManager
     // only the tail of the stack changed—older slots keep whatever stamp they already carried from prior crafts.
     for (let i = start; i < n; i++)
     {
-      bag.unitLedgers[i] = JaftingSalvageLedgerSnapshot.cloneFromLedgerLike(incomingLedger);
+      bag.unitLedgers[i] = JaftingSalvageLedgerSnapshot.cloneFromLedger(incomingLedger);
     }
 
     JaftingSalvageManager.recomputeMergedRowsFromPartyLedgerBag(bag);
@@ -479,7 +470,7 @@ class JaftingSalvageManager
    * Pair with {@link JaftingSalvageManager.buildRefinementOutputLedger}; that method mirrors these branches when
    * building rows.
    *
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor} materialDatum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor} materialDatum The material datum driving this step.
    * @returns {boolean}
    */
   static refinementMaterialHasNoRecoverableRows(materialDatum)
@@ -523,8 +514,8 @@ class JaftingSalvageManager
    * merges next. Ingredient-class gear without a nested ledger still gets a **synthetic** single row so dismantle
    * refunds the part. The final `return` catches non-equip donors where none of the above applied.
    *
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor} baseDatum
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor} materialDatum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor} baseDatum The base datum driving this step.
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor} materialDatum The material datum driving this step.
    * @returns {JaftingSalvageLedgerSnapshot}
    */
   static buildRefinementOutputLedger(baseDatum, materialDatum)
@@ -581,7 +572,7 @@ class JaftingSalvageManager
    * Whether dismantling this datum would return anything after weapon/armor expansion.<br>
    * UI uses this so vendor-only stamps (bare `w`/`a` rows that unpack to nothing) never clutter the candidate list.
    *
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum The datum driving this step.
    * @returns {boolean}
    */
   static datumHasSalvageLedger(datum)
@@ -595,7 +586,7 @@ class JaftingSalvageManager
    * Clone of the party/datum ledger with `w`/`a` rows replaced by nested ingredient rows (or dropped when vendor).<br>
    * Stored ledgers stay raw; dismantle + UI read through this snapshot so crafted donors never pay whole weapons back.
    *
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum The datum driving this step.
    * @returns {JaftingSalvageLedgerSnapshot|null}
    */
   static getSalvageLedgerSnapshotExpanded(datum)
@@ -618,7 +609,7 @@ class JaftingSalvageManager
   /**
    * Counts non-banned rows after expansion (used for salvage UI layout).
    *
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum The datum driving this step.
    * @returns {number}
    */
   static visibleExpandedRefundRowCount(datum)
@@ -646,7 +637,7 @@ class JaftingSalvageManager
   }
 
   /**
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum The datum driving this step.
    * @returns {number}
    */
   static layoutPreviewLineCountSingle(datum)
@@ -667,7 +658,7 @@ class JaftingSalvageManager
   }
 
   /**
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum The datum driving this step.
    * @returns {number}
    */
   static layoutPreviewLineCountTwoColumn(datum)
@@ -685,9 +676,9 @@ class JaftingSalvageManager
   /**
    * When a weapon/armor ledger row has no nested ledger, vendor shells drop—except material-type gear.
    *
-   * @param {JaftingSalvageLedgerRow[]} flat
+   * @param {JaftingSalvageLedgerRow[]} flat The flat driving this step.
    * @param {JaftingSalvageLedgerRow|{ t: string, id: number, n: number, banned?: boolean }} row
-   * @param {RPG_Weapon|RPG_Armor} equipDatum
+   * @param {RPG_Weapon|RPG_Armor} equipDatum The equip datum driving this step.
    * @returns {boolean} true when a pass-through row was appended.
    */
   static tryPushMaterialEquipmentPassThrough(flat, row, equipDatum)
@@ -704,6 +695,7 @@ class JaftingSalvageManager
       return false;
     }
 
+    // Append the row to the working collection.
     flat.push(new JaftingSalvageLedgerRow(row.t, row.id, row.n));
 
     return true;
@@ -718,7 +710,7 @@ class JaftingSalvageManager
    * {@link visited} breaks cycles if a ledger ever references itself transitively.
    *
    * @param {JaftingSalvageLedgerRow[]|{ t: string, id: number, n: number, banned?: boolean }[]} rows
-   * @param {Record<string, boolean>} visited
+   * @param {Record<string, boolean>} visited The visited driving this step.
    * @returns {JaftingSalvageLedgerRow[]}
    */
   static expandWeaponArmorRowsForSalvage(rows, visited)
@@ -793,6 +785,7 @@ class JaftingSalvageManager
         const ir = innerExpanded[j];
         const piece = new JaftingSalvageLedgerRow(ir.t, ir.id, ir.n * mult, ir.banned === true);
 
+        // Append the row to the working collection.
         flat.push(piece);
       }
     }
@@ -830,6 +823,7 @@ class JaftingSalvageManager
         continue;
       }
 
+      // Append the row to the working collection.
       out.push(datum);
     }
 
@@ -846,7 +840,7 @@ class JaftingSalvageManager
    * storage, vendor rows could mint unintended items.
    *
    * @param {JaftingSalvageLedgerSnapshot|{ rows: JaftingSalvageLedgerRow[] }} ledger
-   * @param {number} amount
+   * @param {number} amount The amount driving this step.
    */
   static refundLedgerRows(ledger, amount)
   {
@@ -896,8 +890,8 @@ class JaftingSalvageManager
   /**
    * Executes salvage for {@link amount} units of {@link datum}.
    *
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum
-   * @param {number} amount
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum The datum driving this step.
+   * @param {number} amount The amount driving this step.
    * @returns {boolean}
    */
   static executeSalvage(datum, amount)
@@ -939,8 +933,8 @@ class JaftingSalvageManager
   /**
    * Party hook after items leave inventory — reclaim refinement slots when the last copy is gone.
    *
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor} itemDatum
-   * @param {number} amountLost
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor} itemDatum The item datum driving this step.
+   * @param {number} amountLost The amount lost driving this step.
    */
   static afterPartyLostItem(itemDatum, amountLost)
   {
@@ -983,6 +977,7 @@ class JaftingSalvageManager
     {
       JaftingSalvageManager.reclaimDynamicWeaponSlot(itemDatum);
 
+      // exit early without a payload.
       return;
     }
 
@@ -995,7 +990,7 @@ class JaftingSalvageManager
   /**
    * Removes refined weapon bookkeeping when the row is fully gone from inventory.
    *
-   * @param {RPG_Weapon} weaponDatum
+   * @param {RPG_Weapon} weaponDatum The weapon datum driving this step.
    */
   static reclaimDynamicWeaponSlot(weaponDatum)
   {
@@ -1018,7 +1013,7 @@ class JaftingSalvageManager
   /**
    * Removes refined armor bookkeeping when the row is fully gone from inventory.
    *
-   * @param {RPG_Armor} armorDatum
+   * @param {RPG_Armor} armorDatum The armor datum driving this step.
    */
   static reclaimDynamicArmorSlot(armorDatum)
   {

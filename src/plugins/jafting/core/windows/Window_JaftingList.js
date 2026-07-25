@@ -17,7 +17,7 @@ class Window_JaftingList
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Builds the hub command list from {@link #buildCommands}.
    */
   makeCommandList()
@@ -53,7 +53,7 @@ class Window_JaftingList
   }
 
   /**
-   * Overrides {@link #itemHeight}.<br>
+   * Overwrites {@link #itemHeight}.<br/>
    * Makes the command rows bigger so there can be additional lines.
    * @returns {number}
    */

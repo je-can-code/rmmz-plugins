@@ -159,12 +159,15 @@ class TextPopBuilder
     this.#isCritical = false;
     this.#iconIndex = 0;
     this.#textColorIndex = 0;
+    // continue the routine with the next policy step.
     this.#popupType = Map_TextPop.Types.HpDamage;
     this.#prefix = String.empty;
     this.#value = String.empty;
+    // continue the routine with the next policy step.
     this.#suffix = String.empty;
     this.#xVariance = 0;
     this.#yVariance = 0;
+    // continue the routine with the next policy step.
     this.#textAccent = null;
     this.#layoutRing = Map_TextPop.LayoutRings.EnemyDamage;
     this.#jInstantRelease = true;

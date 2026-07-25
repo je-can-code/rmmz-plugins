@@ -1,6 +1,10 @@
 //region Game_Enemy
 import SkillProficiency from './../__models/SkillProficiency.js';
 
+/**
+ * Extends {@link Game_Enemy.initMembers}.<br/>
+ * Initializes skill proficiency storage for map enemies.
+ */
 J.PROF.Aliased.Game_Enemy.set("initMembers", Game_Enemy.prototype.initMembers);
 Game_Enemy.prototype.initMembers = function()
 {
@@ -56,6 +60,7 @@ Game_Enemy.prototype.addSkillProficiency = function(skillId, initialProficiency 
     return exists;
   }
 
+  // construct proficiency for the next step in this routine.
   const proficiency = new SkillProficiency(skillId, initialProficiency);
   this._j._profs.push(proficiency);
   this._j._profs.sort();

@@ -1,6 +1,6 @@
 //region Game_Actor
 /**
- * Extends {@link #setup}.<br>
+ * Extends {@link #setup}.<br/>
  * Includes parameter buff initialization.
  */
 J.NATURAL.Aliased.Game_Actor.set('setup', Game_Actor.prototype.setup);
@@ -15,7 +15,7 @@ Game_Actor.prototype.setup = function(actorId)
 };
 
 /**
- * Extends {@link #onBattlerDataChange}.<br>
+ * Extends {@link #onBattlerDataChange}.<br/>
  * Also refreshes all natural parameter buff values on the battler.
  */
 J.NATURAL.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onBattlerDataChange);
@@ -31,7 +31,8 @@ Game_Actor.prototype.onBattlerDataChange = function()
 
 //region max tp
 /**
- * OVERWRITE Replaces the `maxTp()` function with our custom one that will respect
+ * Overwrites {@link #maxTp}.<br/>
+ * Replaces the `maxTp()` function with our custom one that will respect
  * formulas and apply rates from tags, etc.
  * @returns {number}
  */
@@ -80,6 +81,43 @@ Game_Actor.prototype.getMaxTpGrowth = function(baseParam)
 };
 //endregion max tp
 
+//region har
+/**
+ * Extends the `har` getter — already buff-inclusive from {@link Game_Battler} —
+ * to also layer in permanent growth. Actors are the only battler type that
+ * accrues growth, so this override lives here rather than on Game_Battler.
+ */
+J.NATURAL.Aliased.Game_Actor.set('har', Object.getOwnPropertyDescriptor(Game_Battler.prototype, 'har').get);
+Object.defineProperty(Game_Actor.prototype, 'har', {
+  get: function()
+  {
+    const baseParam = J.NATURAL.Aliased.Game_Actor.get('har').call(this);
+    return baseParam + this.getHarGrowth(baseParam);
+  },
+  configurable: true,
+});
+
+/**
+ * Gets the current amount of HAR bonuses added from growths.
+ * @param {number} baseParam The base parameter value.
+ * @returns {number}
+ */
+Game_Actor.prototype.getHarGrowth = function(baseParam)
+{
+  // get the permanent flat bonus to this parameter.
+  const growthPlus = this.harGrowthPlus();
+
+  // get the permanent rate bonus to this parameter.
+  const growthRate = this.harGrowthRate();
+
+  // short circuit if we have no bonuses of any kind.
+  if (!growthPlus && !growthRate) return 0;
+
+  // return result.
+  return this.calculatePlusRate(baseParam, growthPlus, growthRate);
+};
+//endregion har
+
 //region b params
 /**
  * Extends `.paramBase()` to include any additional growth bonuses as part of the base.
@@ -88,6 +126,7 @@ J.NATURAL.Aliased.Game_Actor.set('paramBase', Game_Actor.prototype.paramBase);
 Game_Actor.prototype.paramBase = function(paramId)
 {
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase')
     .call(this, paramId);
 
@@ -112,6 +151,7 @@ Game_Actor.prototype.paramBaseNaturalBonuses = function(paramId)
   if (!structures) return 0;
 
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase')
     .call(this, paramId);
 
@@ -170,6 +210,7 @@ J.NATURAL.Aliased.Game_Actor.set('xparam', Game_Actor.prototype.xparam);
 Game_Actor.prototype.xparam = function(xparamId)
 {
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam')
     .call(this, xparamId);
 
@@ -194,6 +235,7 @@ Game_Actor.prototype.xparamNaturalBonuses = function(xparamId)
   if (!structures) return 0;
 
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam')
     .call(this, xparamId);
 
@@ -250,6 +292,7 @@ J.NATURAL.Aliased.Game_Actor.set('sparam', Game_Actor.prototype.sparam);
 Game_Actor.prototype.sparam = function(sparamId)
 {
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam')
     .call(this, sparamId);
 
@@ -268,6 +311,7 @@ Game_Actor.prototype.sparam = function(sparamId)
 Game_Actor.prototype.sparamNaturalBonuses = function(sparamId)
 {
   // get original value.
+  // perform original logic.
   const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam')
     .call(this, sparamId);
 
@@ -392,6 +436,7 @@ Game_Actor.prototype.applyNaturalBparamGrowths = function()
     const [ plusStructure, rateStructure ] = this.getGrowthRegexByBparamId(paramId);
 
     // get original value.
+    // perform original logic.
     const baseParam = J.NATURAL.Aliased.Game_Actor.get('paramBase')
       .call(this, paramId);
 
@@ -454,6 +499,7 @@ Game_Actor.prototype.applyNaturalXparamGrowths = function()
     const [ plusStructure, rateStructure ] = this.getGrowthRegexByXparamId(paramId);
 
     // get original value.
+    // perform original logic.
     const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam')
       .call(this, paramId);
 
@@ -520,6 +566,7 @@ Game_Actor.prototype.applyNaturalSparamGrowths = function()
     const [ plusStructure, rateStructure ] = this.getGrowthRegexBySparamId(paramId);
 
     // get original value.
+    // perform original logic.
     const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam')
       .call(this, paramId);
 
@@ -576,6 +623,34 @@ Game_Actor.prototype.getGrowthRegexBySparamId = function(sparamId)
  */
 Game_Actor.prototype.applyNaturalCustomGrowths = function()
 {
+  // apply the growths for HAR.
+  this.applyNaturalHarGrowths();
+};
+
+/**
+ * Applies the growths for HAR.
+ */
+Game_Actor.prototype.applyNaturalHarGrowths = function()
+{
+  // destructure out the plus and rate structures for growths.
+  const [ , , growthPlusStructure, growthRateStructure ] = this.getRegexForHar();
+
+  // grab the pre-natural HAR value (notetag factor + SDP bonus) for value basing.
+  const baseHar = this.baseHarFactor() + (this.getSdpBonusForParameterKey
+    ? this.getSdpBonusForParameterKey('har', 1)
+    : 0);
+
+  // calculate the flat growth for this parameter.
+  const growthPlus = this.naturalParamBuff(growthPlusStructure, baseHar);
+
+  // add it to the running total of permanent growth pluses.
+  this.modHarGrowthPlus(growthPlus);
+
+  // calculate the rate growth for this parameter.
+  const growthRate = this.naturalParamBuff(growthRateStructure, baseHar);
+
+  // add it to the running total of permanent growth rates.
+  this.modHarGrowthRate(growthRate);
 };
 //endregion apply growths
 //endregion Game_Actor

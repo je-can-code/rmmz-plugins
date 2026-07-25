@@ -16,11 +16,24 @@ if (J.ABS)
     J.APT.Aliased.JABS_Engine.get('gainBasicRewards')
       .call(this, enemy, actor);
 
-    // grab the AP amount from the enemy.
-    const ap = enemy.apPoints();
+    // determine the base AP from the defeated enemy.
+    const ap = this.determineApGained(enemy);
 
     // gain the AP.
     this.gainAptitudeReward(ap, actor, enemy);
+  };
+
+  /**
+   * Determines how many AP the defeated enemy yielded before per-member level scaling.
+   * @param {Game_Enemy} defeatedEnemy The enemy that was defeated.
+   * @returns {number} The base AP gained.
+   */
+  JABS_Engine.prototype.determineApGained = function(defeatedEnemy)
+  {
+    // check the reward policy gate; no actor is available at this call site so pass null.
+    if (this.canGainReward(defeatedEnemy, null) === false) return 0;
+
+    return defeatedEnemy.apPoints();
   };
 
   /**
@@ -31,10 +44,10 @@ if (J.ABS)
    */
   JABS_Engine.prototype.gainAptitudeReward = function(ap, actor, enemy)
   {
-    // don't do anything if the enemy didn't grant any sdp points.
+    // don't do anything if the enemy didn't grant any AP.
     if (ap === 0) return;
 
-    // Award AP to the full party; per-actor distribution happens in ApManager.
+    // award AP to the full party; per-actor distribution happens in ApManager.
     $gameParty.members()
       .filter(member => this.canGainAptitudeReward(member, enemy))
       .forEach(member =>
@@ -68,7 +81,7 @@ if (J.ABS)
   JABS_Engine.prototype.canGainAptitudeReward = function(actor, enemy)
   {
     // check if we are using the level plugin.
-    if (J.LEVEL && J.LEVEL.Metadata.enabled && J.APT.Metadata.usingLevelThresholdLimit === true)
+    if (J.LEVEL && $gameSystem.isLevelScalingEnabled() && J.APT.Metadata.usingLevelThresholdLimit === true)
     {
       // identify the level difference between the battlers.
       const levelDifference = actor.level - enemy.level;

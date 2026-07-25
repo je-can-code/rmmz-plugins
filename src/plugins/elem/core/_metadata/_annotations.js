@@ -16,10 +16,6 @@
  * - Elements can now be boosted.
  * - Actors/Enemies can now whitelist effective elements.
  *
- * WARNING:
- * None of the note tags below support negative numbers and are white-space
- * sensitive. Follow the examples closely to achieve your desired effects.
- *
  * NOTE:
  * Combining multiple elements together is done multiplicatively for all
  * the various operations below.
@@ -148,11 +144,17 @@
  * - Classes
  *
  * TAG FORMAT:
- *  <boostElement:[ELEMENT_ID]:[PERCENT_BOOST]>
+ *  <boostElement:[ELEMENT_ID, PERCENT_BOOST]>
+ * PERCENT_BOOST accepts negative numbers too, for a penalty instead of a boost.
+ * Repeatable — one tag per boosted element.
  *
- * TAG EXAMPLE:
- *  <boostElement:1:50>
+ * TAG EXAMPLES:
+ *  <boostElement:[1, 50]>
  * This battler has a +50% boost to skills bearing element id 1.
+ *
+ *  <boostElement:[1, -30]>
+ * This battler deals 30% LESS damage with skills bearing element id 1- useful
+ * for a curse/debuff state rather than a buff.
  *
  * ============================================================================
  * STRICT ELEMENTS:
@@ -202,7 +204,102 @@
  * This battler now can only receive damage from skills that include the
  * element id of 1, 2, 3, 4, 5, 6, or 8.
  * ============================================================================
+ * PIERCE ELEMENTS:
+ * Have you ever wanted a battler to partially ignore an enemy's elemental
+ * resistance — punching through fire immunity to deal real damage? Well now
+ * you can! By applying the appropriate tag(s) to any notetag source, you can
+ * reduce the target's effective element rate for one or more elements,
+ * nudging it toward neutral (1.0x) damage.
+ *
+ * DETAILS:
+ * When a skill's elemental calculation is performed, all relevant pierce tags
+ * are summed for the element being used. The target's effective rate is then
+ * raised by that sum, capped at 1.0 (neutral). Pierce never turns a resistance
+ * into a weakness, and it never affects elements the target is already weak to
+ * or absorbs.
+ *
+ * Two scopes are available:
+ *
+ *   pierceElement tags are read from the ATTACKER's full getAllNotes() sources
+ *   (actor, class, equips, states, and learned skills). If placed on a skill,
+ *   the attacker passively benefits from the pierce on ALL skills they cast for
+ *   as long as they know that skill.
+ *
+ *   thisPierceElement tags are read from the SKILL being cast RIGHT NOW only.
+ *   This is the right tag when the pierce should only apply to one specific
+ *   attack rather than granting a global passive benefit.
+ *
+ * EXAMPLE 1:
+ * Target has 0% fire rate (immune). Attacker has 50 total fire pierce.
+ * Effective rate = min(1.0, 0.0 + 0.50) = 0.50 → target takes 50% fire damage.
+ *
+ * EXAMPLE 2:
+ * Target has 50% fire rate (resistant). Attacker has 30 fire pierce.
+ * Effective rate = min(1.0, 0.50 + 0.30) = 0.80 → target takes 80% fire damage.
+ *
+ * EXAMPLE 3:
+ * Target has 200% fire rate (weak). Pierce is irrelevant — weakness unchanged.
+ *
+ * EXAMPLE 4:
+ * Target absorbs fire. Pierce is irrelevant — absorption unchanged.
+ *
+ * NOTE:
+ * Multiple pierce tags on the same element are summed together. A state with
+ * <pierceElement:[4, 30]> and an armor with <pierceElement:[4, 20]> together
+ * give 50 total pierce on element 4.
+ *
+ * TAG USAGE (pierceElement — global, any skill):
+ * - Actors
+ * - Enemies
+ * - Classes
+ * - Skills (knowing the skill passively grants the pierce to all casts)
+ * - Weapons
+ * - Armors
+ * - States
+ *
+ * TAG USAGE (thisPierceElement — this skill only):
+ * - Skills only
+ *
+ * TAG FORMAT:
+ *  <pierceElement:[ELEMENT_ID, PIERCE_PERCENT]>
+ *  <thisPierceElement:[ELEMENT_ID, PIERCE_PERCENT]>
+ * Where ELEMENT_ID is the numeric element id from the Types tab,
+ * and PIERCE_PERCENT is an integer (30 = 30 pierce, raising effective rate by 0.30).
+ *
+ * TAG EXAMPLES:
+ *  <pierceElement:[4, 30]>
+ * The attacker pierces 30% of the target's fire (element 4) resistance on all skills.
+ * If placed on a passive mastery state, it is always active while the state is applied.
+ *
+ *  <pierceElement:[4, 50]> on actor, <pierceElement:[4, 20]> on equipped ring:
+ * Combined 70 fire pierce. A fully immune target takes 70% fire damage.
+ *
+ *  <thisPierceElement:[4, 100]>
+ * Only when casting THIS specific skill does it fully pierce fire immunity.
+ * Other skills the caster uses are unaffected.
+ *
+ *  <thisPierceElement:[4, 40]> combined with <pierceElement:[4, 30]> from a state:
+ * 70 total fire pierce on this skill (40 skill-specific + 30 passive global).
+ *
+ * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Changed <boostElement:ELEMENT_ID:PERCENT_BOOST> to <boostElement:[ELEMENT_ID, PERCENT_BOOST]>.
+ *    The old colon-separated shape required a bespoke, ad-hoc capture-group reader
+ *    (RPGManager.getAllCapturesFromNoteByRegex) instead of the standardized bracket-array
+ *    family used by every other multi-value tag; the bracket form now reads through
+ *    getArraysFromNotesByRegex like the rest. Existing game data must be migrated.
+ * - 1.2.0
+ *    evalDamageFormula now delegates formula evaluation to Game_Action#evalFormulaWithContext.
+ *    The hardcoded p (proficiency) setup and J.PROF conditional block have been removed;
+ *    J-Proficiency registers p independently via Game_Action.registerFormulaContext.
+ *    All registered context variables (p, s, and any future additions) are automatically
+ *    available in damage formulas without J-Elementalistics needing to know about them.
+ * - 1.1.0
+ *    Added resistance piercing via pierceElement and thisPierceElement tags.
+ *    Pierce applies to the target's base element rate before the attacker's
+ *    boost multiplier, nudging resistances toward neutral (1.0). Weaknesses
+ *    and absorbed elements are never affected.
  * - 1.0.1
  *    Consumed `RPGManager` updates.
  * - 1.0.0

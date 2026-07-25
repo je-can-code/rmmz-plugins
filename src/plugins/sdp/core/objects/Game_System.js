@@ -1,6 +1,6 @@
 //region Game_System
 /**
- * Extends {@link #initialize}.<br>
+ * Extends {@link #initialize}.<br/>
  * Also initializes the debug features for the SDP system.
  */
 J.SDP.Aliased.Game_System.set('initialize', Game_System.prototype.initialize);

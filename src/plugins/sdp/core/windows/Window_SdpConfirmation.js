@@ -18,6 +18,7 @@ class Window_SdpConfirmation
     this.initialize(rect);
     this.initMembers();
 
+    // assign opacity on this instance for callers.
     this.opacity = 255;
     this.contentsBack.opacity = 255;
     this.contents.opacity = 255;
@@ -39,6 +40,7 @@ class Window_SdpConfirmation
      * - cart: checkout the queued cart.
      * @type {string}
      */
+    // assign mode on this instance for callers.
     this.mode = 'single';
 
     /**
@@ -330,7 +332,8 @@ class Window_SdpConfirmation
   }
 
   /**
-   * OVERWRITE Creates the command list for this window.
+   * Overwrites {@link #makeCommandList}.<br/>
+   * Creates the command list for this window.
    */
   makeCommandList()
   {
@@ -343,6 +346,7 @@ class Window_SdpConfirmation
       ? summary.canAfford
       : false;
 
+    // construct upgrade for the next step in this routine.
     const upgrade = new WindowCommandBuilder('Upgrade')
       .setSymbol(isCart
         ? 'panel-cart-ok'
@@ -352,6 +356,7 @@ class Window_SdpConfirmation
       .build();
     this.addBuiltCommand(upgrade);
 
+    // construct cancel for the next step in this routine.
     const cancel = new WindowCommandBuilder('Cancel')
       .setSymbol('panel-upgrade-cancel')
       .setEnabled(true)

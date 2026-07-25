@@ -1,10 +1,10 @@
 //region JABS_AiManager
 import JABS_TeamRules from './JABS_TeamRules.js';
-import JABS_Location from './../__models/JABS_Location.js';
-import JABS_BattlerCoreData from './../__models/JABS_BattlerCoreData.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
-import JABS_ActionOptions from './../__models/JABS_ActionOptions.js';
-import JABS_Action from './../__models/JABS_Action.js';
+import JABS_Location from '../models/JABS_Location.js';
+import JABS_BattlerCoreData from '../models/JABS_BattlerCoreData.js';
+import JABS_Battler from '../models/JABS_Battler.js';
+import JABS_ActionOptions from '../models/JABS_ActionOptions.js';
+import JABS_Action from '../models/JABS_Action.js';
 /**
  * This static class tracks and manages all {@link JABS_Battler}s on the map.
  */
@@ -224,7 +224,7 @@ class JABS_AiManager
 
   /**
    * Gets all followers that the given leader battler has.
-   * @param {JABS_Battler} leaderBattler
+   * @param {JABS_Battler} leaderBattler The leader battler driving this step.
    * @returns {JABS_Battler[]}
    */
   static getLeaderFollowers(leaderBattler)
@@ -236,7 +236,7 @@ class JABS_AiManager
     const nearbyBattlers = this.getAlliedBattlersWithinRange(leaderBattler, leaderBattler.getPursuitRadius());
 
     /**
-     * @param {JABS_Battler} battler
+     * @param {JABS_Battler} battler The battler driving this step.
      */
     const filtering = battler =>
     {
@@ -403,6 +403,9 @@ class JABS_AiManager
     {
       // neutral battlers are never an opposition.
       if (battler.getTeam() === JABS_Battler.neutralTeamId()) return false;
+
+      // invisible followers are not combat-eligible; enemies should not target or aggro them.
+      if (battler.isFollower() && battler.getCharacter().isVisible() === false) return false;
 
       // check if the selected battler is opposed to the target battler's team.
       const isOpposingTeam = JABS_TeamRules.isOpposed(selectedBattler.getTeam(), battler.getTeam());
@@ -928,8 +931,12 @@ class JABS_AiManager
     // do not manage the player.
     if (battler.isPlayer()) return false;
 
-    // do not manage inanimate battlers.
-    if (battler.isInanimate()) return false;
+    // inanimate battlers only need AI when they can idle about.
+    if (battler.isInanimate() && battler.canIdle() === false) return false;
+
+    // invisible followers are not combat-eligible; the battler object persists for party cycling,
+    // but AI should not tick while the follower is hidden.
+    if (battler.isFollower() && battler.getCharacter().isVisible() === false) return false;
 
     // manage that AI!
     return true;
@@ -943,6 +950,13 @@ class JABS_AiManager
   {
     // no AI is executed when waiting.
     if (battler.isWaiting()) return;
+
+    // inanimate battlers may only wander idly; all combat AI stays suppressed.
+    if (battler.isInanimate())
+    {
+      this.aiPhase0(battler);
+      return;
+    }
 
     // drop ally guard when idle, missing guard skill, or threat disappeared while engaged.
     this.releaseAllyCombatGuardIfStale(battler);
@@ -1121,6 +1135,9 @@ class JABS_AiManager
    */
   static seekForAlerter(battler)
   {
+    // rooted/paralyzed battlers cannot move toward the alerter.
+    if (battler.isMovementLockedByState()) return;
+
     // grab the x:y coordinates that we last "heard" the one triggering the alert from.
     const [ alertX, alertY ] = battler.getAlertedCoordinates();
 
@@ -1134,6 +1151,9 @@ class JABS_AiManager
    */
   static goHome(battler)
   {
+    // rooted/paralyzed battlers cannot move, even to return home.
+    if (battler.isMovementLockedByState()) return;
+
     // grab the character of the battler trying to go home.
     const character = battler.getCharacter();
 
@@ -1206,14 +1226,8 @@ class JABS_AiManager
    */
   static shouldMoveIdly()
   {
-    // roll a d100.
-    const chance = (Math.randomInt(100) + 1);
-
-    // need a nat100 to move.
-    const shouldMove = (chance === 100);
-
-    // to move or not to move?
-    return shouldMove;
+    // a flat 1% chance to take an idle step this frame.
+    return RPGManager.chanceIn100(1);
   }
 
   //endregion Phase 0 - Idle Phase
@@ -1495,7 +1509,7 @@ class JABS_AiManager
   static needsRepositioning(battler)
   {
     // if the battler is casting, then they can't do repositioning things.
-    if (battler.isCasting()) return false;
+    if (battler.isCastingOrChanneling()) return false;
 
     // if we are already in position, then we don't need repositioning.
     if (battler.isInPosition()) return false;
@@ -1528,7 +1542,7 @@ class JABS_AiManager
     if (!battler.isInPosition()) return false;
 
     // check if the battler is still casting.
-    if (battler.isCasting()) return false;
+    if (battler.isCastingOrChanneling()) return false;
 
     // we need action!
     return true;
@@ -1569,7 +1583,7 @@ class JABS_AiManager
     }
 
     // if we are currently casting, then do not process further.
-    if (battler.isCasting()) return;
+    if (battler.isCastingOrChanneling()) return;
 
     // start the cast timer.
     battler.setCastCountdown(action.getCastTime());
@@ -1660,7 +1674,7 @@ class JABS_AiManager
     // use the battler's AI to decide the skill.
     const decidedPicks = battler
       .getAiMode()
-      .decideAction(battler, battler.getTarget(), battler.getSkillIdsFromEnemy());
+      .decideAction(battler, battler.getTarget(), battler.getAllSkillIdsFromEnemy());
 
     // validate the skill chosen.
     if (decidedPicks.length === 0 || !this.isSkillIdValid(decidedPicks[0]))
@@ -2120,18 +2134,14 @@ class JABS_AiManager
       return;
     }
 
-    const gb = battler.getBattler();
-
-    // use the resolved skill id so guard-type classification matches the transformed skill.
-    const guardSkillId = gb.getResolvedSkillId(JABS_Button.Offhand);
-
-    if (!guardSkillId || !JABS_Battler.isGuardSkillById(guardSkillId))
+    if (!battler.isGuardSkillEquipped())
     {
       if (battler.guarding())
       {
-        battler.executeGuard(false, JABS_Button.Offhand);
+        battler.executeGuard(false);
       }
 
+      // exit early without a payload.
       return;
     }
 
@@ -2149,15 +2159,17 @@ class JABS_AiManager
 
     if (heldFrames >= J.ABS.Metadata.AiAllyDefensiveGuardMaxHoldFrames)
     {
-      battler.executeGuard(false, JABS_Button.Offhand);
+      battler.executeGuard(false);
 
+      // exit early without a payload.
       return;
     }
 
     if (!battler.isEngaged())
     {
-      battler.executeGuard(false, JABS_Button.Offhand);
+      battler.executeGuard(false);
 
+      // exit early without a payload.
       return;
     }
 
@@ -2165,8 +2177,9 @@ class JABS_AiManager
 
     if (!closestHostile || closestHostile.isDead())
     {
-      battler.executeGuard(false, JABS_Button.Offhand);
+      battler.executeGuard(false);
 
+      // exit early without a payload.
       return;
     }
 
@@ -2174,8 +2187,9 @@ class JABS_AiManager
 
     if (separation === null || separation > J.ABS.Metadata.AiAllyDefensiveGuardMaintainMaxTiles)
     {
-      battler.executeGuard(false, JABS_Button.Offhand);
+      battler.executeGuard(false);
 
+      // exit early without a payload.
       return;
     }
 
@@ -2183,7 +2197,7 @@ class JABS_AiManager
 
     if (!threat)
     {
-      battler.executeGuard(false, JABS_Button.Offhand);
+      battler.executeGuard(false);
     }
   }
 
@@ -2214,10 +2228,7 @@ class JABS_AiManager
       }
     }
 
-    // use the resolved skill id so guard-type classification matches the transformed skill.
-    const guardSkillId = gb.getResolvedSkillId(JABS_Button.Offhand);
-
-    if (!guardSkillId || !JABS_Battler.isGuardSkillById(guardSkillId))
+    if (!battler.isGuardSkillEquipped())
     {
       return;
     }
@@ -2239,19 +2250,14 @@ class JABS_AiManager
       return;
     }
 
-    if (!battler.isGuardSkillByKey(JABS_Button.Offhand))
-    {
-      return;
-    }
-
-    const guardData = battler.getGuardData(JABS_Button.Offhand);
+    const guardData = battler.getGuardData();
 
     if (!guardData || !guardData.canGuard())
     {
       return;
     }
 
-    battler.executeGuard(true, JABS_Button.Offhand);
+    battler.executeGuard(true);
     battler._aiAllyGuardRaiseFrame = Graphics.frameCount;
     battler._aiAllyDefensiveGuardReadyFrame = Graphics.frameCount
       + J.ABS.Metadata.AiAllyDefensiveGuardCooldownFrames;
@@ -2272,7 +2278,7 @@ class JABS_AiManager
       return false;
     }
 
-    if (battler.isCasting())
+    if (battler.isCastingOrChanneling())
     {
       return false;
     }

@@ -16,6 +16,7 @@ RPG_Enemy.prototype.typedApRewards = function()
     .map(([ amount, domain, idOrName ]) =>
     {
       const dom = String(domain)
+        // Strip surrounding whitespace before comparison.
         .trim()
         .toLowerCase();
       const id = ApManager.resolveDomainId(dom, idOrName);

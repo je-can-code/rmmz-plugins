@@ -1,6 +1,7 @@
 //region WindowLayer
 /**
- * OVERWRITE Renders windows, but WITH the ability to overlay.
+ * Overwrites {@link #render}.<br/>
+ * Renders windows, but WITH the ability to overlay.
  *
  * @param {PIXI.Renderer} renderer - The renderer.
  */
@@ -11,6 +12,7 @@ WindowLayer.prototype.render = function(renderer)
     return;
   }
 
+  // construct graphics for the next step in this routine.
   const graphics = new PIXI.Graphics(), { gl } = renderer, children = this.children.clone();
 
   // noinspection JSUnresolvedFunction
@@ -19,6 +21,7 @@ WindowLayer.prototype.render = function(renderer)
   renderer.batch.flush();
   gl.enable(gl.STENCIL_TEST);
 
+  // keep looping while children.length > 0.
   while (children.length > 0)
   {
     // draw from front to back instead of back to front.

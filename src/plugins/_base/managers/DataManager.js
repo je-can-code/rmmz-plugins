@@ -54,6 +54,7 @@ DataManager.rewriteProcessed = function()
 J.BASE.Aliased.DataManager.set('isDatabaseLoaded', DataManager.isDatabaseLoaded);
 DataManager.isDatabaseLoaded = function()
 {
+  // perform original logic.
   const isLoaded = J.BASE.Aliased.DataManager.get('isDatabaseLoaded')
     .call(this);
   if (isLoaded)

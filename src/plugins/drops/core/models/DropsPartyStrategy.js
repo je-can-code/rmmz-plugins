@@ -8,6 +8,7 @@ class DropsPartyStrategy
     console.warn(`Attempted to instantiate the PartyStrategy class.`);
     console.warn(`Please directly use the static properties on it instead of instantiating it.`);
     console.trace();
+    // abort this pass so the operator sees a hard failure.
     throw new Error(`PartyStrategy is a static class that cannot be instantiated.`);
   }
 

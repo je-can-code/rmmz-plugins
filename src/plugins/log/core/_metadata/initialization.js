@@ -11,7 +11,7 @@ globalThis.J ||= {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '2.1.2';
+  const requiredBaseVersion = '3.2.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (hasBaseRequirement === false)
   {

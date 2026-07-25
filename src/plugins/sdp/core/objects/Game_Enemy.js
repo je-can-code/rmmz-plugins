@@ -8,6 +8,7 @@ J.SDP.Aliased.Game_Enemy.set("extraDrops", Game_Enemy.prototype.extraDrops);
 Game_Enemy.prototype.extraDrops = function()
 {
   // get the original drop list.
+  // perform original logic.
   const dropList = J.SDP.Aliased.Game_Enemy.get("extraDrops")
     .call(this);
 

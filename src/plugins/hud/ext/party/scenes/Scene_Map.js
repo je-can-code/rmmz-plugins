@@ -76,7 +76,8 @@ Scene_Map.prototype.partyFrameWindowRectangle = function()
 //endregion party frame
 
 /**
- * OVERWRITE Relocates the map display name window to not overlap the hud.
+ * Overwrites {@link #mapNameWindowRect}.<br/>
+ * Relocates the map display name window to not overlap the hud.
  */
 Scene_Map.prototype.mapNameWindowRect = function()
 {

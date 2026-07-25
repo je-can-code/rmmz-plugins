@@ -1,6 +1,6 @@
 //region Window_MenuCommand
 /**
- * Extends {@link #makeCommandList}.<br>
+ * Extends {@link #makeCommandList}.<br/>
  * Adds the Passives viewer command to the main menu command list.
  */
 J.PASSIVE.Aliased.Window_MenuCommand.set('makeCommandList', Window_MenuCommand.prototype.makeCommandList);

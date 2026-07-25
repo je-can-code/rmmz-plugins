@@ -7,6 +7,7 @@ J.DIFFICULTY.Aliased.Game_Map.set("encounterStep", Game_Map.prototype.encounterS
 Game_Map.prototype.encounterStep = function()
 {
   // grab the original value.
+  // perform original logic.
   const originalValue = J.DIFFICULTY.Aliased.Game_Map.get("encounterStep")
     .call(this);
 

@@ -57,6 +57,7 @@ class Scene_JaftingCreate
       return;
     }
 
+    // Append the row to the working collection.
     SceneManager.push(this);
   }
 
@@ -251,7 +252,7 @@ class Scene_JaftingCreate
   }
 
   /**
-   * Overrides {@link Scene_MenuBase.prototype.createBackground}.<br>
+   * Overwrites {@link Scene_MenuBase.prototype.createBackground}.<br/>
    * Changes the filter to a different type from {@link PIXI.filters}.<br>
    */
   createBackground()
@@ -265,7 +266,7 @@ class Scene_JaftingCreate
   }
 
   /**
-   * Overrides {@link #createButtons}.<br>
+   * Overwrites {@link #createButtons}.<br/>
    * Disables the creation of the buttons.
    * @override
    */
@@ -400,7 +401,7 @@ class Scene_JaftingCreate
   }
 
   /**
-   * @param {Window_CreationCategoryBadge} someWindow
+   * @param {Window_CreationCategoryBadge} someWindow The some window driving this step.
    */
   setCreationCategoryBadgeWindow(someWindow)
   {

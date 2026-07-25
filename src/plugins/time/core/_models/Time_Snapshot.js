@@ -364,9 +364,11 @@ class Time_Snapshot
     const dateTimeOfDay = $gameTime.timeOfDay(date.getHours());
     const seasonOfYear = $gameTime.seasonOfYear(date.getMonth() + 1);
     return new Time_Snapshot(
+      // continue the routine with the next policy step.
       date.getSeconds(),
       date.getMinutes(),
       date.getHours(),
+      // continue the routine with the next policy step.
       date.getDate(),
       date.getMonth() + 1,
       date.getFullYear(),

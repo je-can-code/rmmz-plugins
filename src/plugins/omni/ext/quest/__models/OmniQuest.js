@@ -52,7 +52,7 @@ class OmniQuest
 
   /**
    * Converts a string descriptor of a quest state to its numeric counterpart.
-   * @param {string} questStateDescriptor
+   * @param {string} questStateDescriptor The quest state descriptor driving this step.
    * @returns {number}
    * @constructor
    */
@@ -141,9 +141,11 @@ class OmniQuest
     this.name = name;
     this.key = key;
     this.categoryKey = categoryKey;
+    // assign tag keys on this instance for callers.
     this.tagKeys = tagKeys;
     this.unknownHint = unknownHint;
     this.overview = overview;
+    // assign recommended level on this instance for callers.
     this.recommendedLevel = recommendedLevel;
     this.objectives = objectives;
   }

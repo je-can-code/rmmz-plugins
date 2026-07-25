@@ -1,6 +1,6 @@
 //region Game_Map
-import JABS_LootDrop from './../__models/JABS_LootDrop.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_LootDrop from '../models/JABS_LootDrop.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * Extends `Game_Map.setup()` to parse out battlers and populate enemies.
@@ -165,7 +165,7 @@ Game_Map.prototype.actionEventsFromDataMapByUuid = function(uuid)
 {
   // the filter function for retrieving action metadatas from the datamap.
   /**
-   * @param {RPG_MapEvent} metadata
+   * @param {RPG_MapEvent} metadata The metadata driving this step.
    */
   const filtering = metadata =>
   {
@@ -255,7 +255,7 @@ Game_Map.prototype.lootEventsFromDataMapByUuid = function(uuid)
 {
   // the filter function for retrieving loot metadatas from the datamap.
   /**
-   * @param {RPG_MapEvent} metadata
+   * @param {RPG_MapEvent} metadata The metadata driving this step.
    */
   const filtering = metadata =>
   {

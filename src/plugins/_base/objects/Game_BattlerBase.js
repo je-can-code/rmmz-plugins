@@ -1,5 +1,145 @@
 //region Game_BattlerBase
 /**
+ * Extends {@link #initMembers}.<br/>
+ * Initializes the trait objects cache for this battler.
+ */
+J.BASE.Aliased.Game_BattlerBase.set('initMembers', Game_BattlerBase.prototype.initMembers);
+Game_BattlerBase.prototype.initMembers = function()
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_BattlerBase.get('initMembers')
+    .call(this);
+
+  /**
+   * The J object where all my additional properties live.
+   */
+  this._j ||= {};
+
+  /**
+   * A grouping of all properties associated with the base plugin.
+   */
+  this._j._base ||= {};
+
+  /**
+   * The cached result of {@link #buildTraitObjects} for this battler.
+   * Null when the cache is cold; populated on the first {@link #traitObjects} call after
+   * construction or after {@link #onBattlerDataChange} invalidates it.
+   * @type {(RPG_Actor|RPG_Enemy|RPG_Class|RPG_Skill|RPG_EquipItem|RPG_State)[]|null}
+   */
+  this._j._base._cachedTraitObjects = null;
+
+  /**
+   * The cached result of {@link #allTraits} for this battler.
+   * Null when the cache is cold; populated on the first {@link #allTraits} call after
+   * construction or after {@link #onBattlerDataChange} invalidates it.
+   * Every downstream trait query ({@link #traits}, {@link #traitsWithId}, {@link #traitsPi},
+   * {@link #traitsDeltaSum}, {@link #traitsSum}) benefits automatically.
+   * @type {MV.Trait[]|null}
+   */
+  this._j._base._cachedAllTraits = null;
+};
+
+/**
+ * Gets the cached trait objects for this battler, or null if the cache is cold.
+ * @returns {(RPG_Actor|RPG_Enemy|RPG_Class|RPG_Skill|RPG_EquipItem|RPG_State)[]|null}
+ */
+Game_BattlerBase.prototype.getCachedTraitObjects = function()
+{
+  return this._j._base._cachedTraitObjects;
+};
+
+/**
+ * Sets the cached trait objects for this battler.
+ * @param {(RPG_Actor|RPG_Enemy|RPG_Class|RPG_Skill|RPG_EquipItem|RPG_State)[]|null} traitObjects The new cached value, or null to invalidate.
+ */
+Game_BattlerBase.prototype.setCachedTraitObjects = function(traitObjects)
+{
+  this._j._base._cachedTraitObjects = traitObjects;
+};
+
+/**
+ * Gets all objects that bear traits for this battler.
+ *
+ * The result is cached and shared across all callers within a single data-change cycle.
+ * The cache is invalidated by {@link #onBattlerDataChange}, which fires whenever states,
+ * equipment, skills, or any other trait-bearing data changes on this battler.
+ *
+ * Subclasses define their full trait object list via {@link #buildTraitObjects} rather than
+ * pushing into the returned array — this keeps the cache safe from accidental mutation.
+ * @returns {(RPG_Actor|RPG_Enemy|RPG_Class|RPG_Skill|RPG_EquipItem|RPG_State)[]}
+ */
+Game_BattlerBase.prototype.traitObjects = function()
+{
+  // return the cached result if the cache is still warm.
+  if (this.getCachedTraitObjects() !== null)
+  {
+    return this.getCachedTraitObjects();
+  }
+
+  // build the trait objects collection and cache it for all subsequent callers this cycle.
+  this.setCachedTraitObjects(this.buildTraitObjects());
+
+  return this.getCachedTraitObjects();
+};
+
+/**
+ * Builds the complete list of objects that bear traits for this battler.
+ *
+ * This is the extension point for subclasses — override this instead of {@link #traitObjects}
+ * so the cache layer in {@link #traitObjects} remains intact. Return a fresh array each call;
+ * never mutate the result of a super call.
+ * @returns {(RPG_Actor|RPG_Enemy|RPG_Class|RPG_Skill|RPG_EquipItem|RPG_State)[]}
+ */
+Game_BattlerBase.prototype.buildTraitObjects = function()
+{
+  // states are the only trait-bearing sources at the base battler level.
+  return [ ...this.states() ];
+};
+
+/**
+ * Gets the cached flat trait list for this battler, or null if the cache is cold.
+ * @returns {MV.Trait[]|null}
+ */
+Game_BattlerBase.prototype.getCachedAllTraits = function()
+{
+  return this._j._base._cachedAllTraits;
+};
+
+/**
+ * Sets the cached flat trait list for this battler.
+ * @param {MV.Trait[]|null} allTraits The new cached value, or null to invalidate.
+ */
+Game_BattlerBase.prototype.setCachedAllTraits = function(allTraits)
+{
+  this._j._base._cachedAllTraits = allTraits;
+};
+
+/**
+ * Gets the flat list of all traits from all trait-bearing objects for this battler.
+ *
+ * The result is cached and shared across all callers within a single data-change cycle.
+ * Every downstream trait query — {@link #traits}, {@link #traitsWithId}, {@link #traitsPi},
+ * {@link #traitsDeltaSum}, {@link #traitsSum} — benefits automatically since they all
+ * call this method first.
+ *
+ * The cache is invalidated by {@link #onBattlerDataChange}.
+ * @returns {MV.Trait[]}
+ */
+Game_BattlerBase.prototype.allTraits = function()
+{
+  // return the cached result if the cache is still warm.
+  if (this.getCachedAllTraits() !== null)
+  {
+    return this.getCachedAllTraits();
+  }
+
+  // flatten all traits from all trait-bearing objects and cache the result.
+  this.setCachedAllTraits(this.traitObjects().reduce((r, obj) => r.concat(obj.traits), []));
+
+  return this.getCachedAllTraits();
+};
+
+/**
  * Returns a list of known base parameter ids.
  * @returns {number[]}
  */
@@ -27,63 +167,6 @@ Game_BattlerBase.knownSpParameterIds = function()
 };
 
 /**
- * Whether or not the given long-parameter id is a known base parameter.
- * @param {number} longParameterId The long-parameter id to validate.
- * @returns {boolean}
- */
-Game_BattlerBase.isBaseParam = function(longParameterId)
-{
-  return this.knownBaseParameterIds()
-    .includes(longParameterId);
-};
-
-/**
- * Whether or not the given long-parameter id is a known ex parameter.
- * @param {number} longParameterId The long-parameter id to validate.
- * @returns {boolean}
- */
-Game_BattlerBase.isExParam = function(longParameterId)
-{
-  return this.knownExParameterIds()
-    .includes(longParameterId - 8);
-};
-
-/**
- * Whether or not the given long-parameter id is a known sp parameter.
- * @param {number} longParameterId The long-parameter id to validate.
- * @returns {boolean}
- */
-Game_BattlerBase.isSpParam = function(longParameterId)
-{
-  return this.knownSpParameterIds()
-    .includes(longParameterId - 18);
-};
-
-/**
- * Whether or not the given ex-parameter id is a known parameter.
- * Use {@link #isRegenLongParamId} for long-parameter ids.
- * @param {number} paramId The ex-parameter id to validate.
- * @returns {boolean}
- */
-Game_BattlerBase.isRegenParamId = function(paramId)
-{
-  const regenParamIds = [ 7, 8, 9 ];
-  return regenParamIds.includes(paramId);
-};
-
-/**
- * Whether or not the given long-parameter id is a known parameter.
- * Use {@link #isRegenParamId} for ex-parameter ids.
- * @param {number} longParamId The long-parameter id to validate.
- * @returns {boolean}
- */
-Game_BattlerBase.isRegenLongParamId = function(longParamId)
-{
-  const regenParamIds = [ 7, 8, 9 ];
-  return regenParamIds.includes(longParamId - 8);
-};
-
-/**
  * Gets the sum of deltas above the 1.0 neutral baseline for all traits matching the given
  * code and dataId.  Each trait value is treated as `1.0 + delta`; this method isolates
  * the delta portion and sums them additively.
@@ -103,7 +186,7 @@ Game_BattlerBase.prototype.traitsDeltaSum = function(code, id)
 };
 
 /**
- * Overrides {@link Game_BattlerBase#sparam}.<br>
+ * Overwrites {@link Game_BattlerBase#sparam}.<br/>
  * Replaces the default multiplicative aggregation (traitsPi) with additive delta stacking.
  *
  * RMMZ stores sparam trait values as multipliers (1.0 = baseline, 1.5 = +50%).
@@ -124,7 +207,7 @@ Game_BattlerBase.prototype.sparam = function(sparamId)
 };
 
 /**
- * Overrides {@link Game_BattlerBase#elementRate}.<br>
+ * Overwrites {@link Game_BattlerBase#elementRate}.<br/>
  * Replaces the default multiplicative aggregation (traitsPi) with additive delta stacking.
  *
  * RMMZ stores element rate trait values as multipliers (1.0 = neutral, 1.2 = +20% damage taken).
@@ -148,7 +231,7 @@ Game_BattlerBase.prototype.elementRate = function(elementId)
 };
 
 /**
- * Overrides {@link Game_BattlerBase#paramRate}.<br>
+ * Overwrites {@link Game_BattlerBase#paramRate}.<br/>
  * Replaces the default multiplicative aggregation (traitsPi) with additive delta stacking.
  *
  * RMMZ stores param rate trait values as multipliers (1.0 = baseline, 1.5 = +50%).
@@ -171,7 +254,7 @@ Game_BattlerBase.prototype.paramRate = function(paramId)
 };
 
 /**
- * Overrides {@link Game_BattlerBase#stateRate}.<br>
+ * Overwrites {@link Game_BattlerBase#stateRate}.<br/>
  * Replaces the default multiplicative aggregation (traitsPi) with additive delta stacking.
  *
  * RMMZ stores state rate trait values as multipliers (1.0 = neutral, 0.5 = 50% less likely).
@@ -202,5 +285,51 @@ Object.defineProperty(Game_BattlerBase.prototype, "mtp", {
     return this.maxTp();
   },
   configurable: true
+});
+
+/**
+ * Magic reflect rate — negative values are meaningless, so floor at zero for combat and UI.
+ */
+Object.defineProperty(Game_BattlerBase.prototype, 'mrf', {
+  get: function()
+  {
+    return Math.max(0, this.xparam(5));
+  },
+  configurable: true,
+});
+
+/**
+ * Counter rate — negative values are meaningless, so floor at zero for combat and UI.
+ */
+Object.defineProperty(Game_BattlerBase.prototype, 'cnt', {
+  get: function()
+  {
+    return Math.max(0, this.xparam(6));
+  },
+  configurable: true,
+});
+
+/**
+ * Mp cost rate — negative values would let skillMpCost() go negative, which paySkillCost()
+ * would then treat as a free MP refund on cast. Floor at zero to prevent that.
+ */
+Object.defineProperty(Game_BattlerBase.prototype, 'mcr', {
+  get: function()
+  {
+    return Math.max(0, this.sparam(4));
+  },
+  configurable: true,
+});
+
+/**
+ * Tp charge rate — negative values would let TP gain from damage/items go negative, silently
+ * draining TP instead of charging it. Floor at zero.
+ */
+Object.defineProperty(Game_BattlerBase.prototype, 'tcr', {
+  get: function()
+  {
+    return Math.max(0, this.sparam(5));
+  },
+  configurable: true,
 });
 //endregion Game_BattlerBase

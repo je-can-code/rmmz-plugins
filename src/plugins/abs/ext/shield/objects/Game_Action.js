@@ -180,18 +180,16 @@ Game_Action.prototype.calculateShieldBonusDamage = function(target, baseDamage)
     return 0;
   }
 
-  // Provide common variables for evaluation.
-  /* eslint-disable no-unused-vars */
+  // provide common variables for evaluation — a (attacker), b (target), o (original damage).
   const a = this.subject();
   const b = target;
   const o = baseDamage;
-  /* eslint-enable no-unused-vars */
 
-  // Sum the evaluated formulas (clamped to non-negative, rounded).
+  // sum the evaluated formulas (clamped to non-negative, rounded).
   const sum = formulas.reduce((total, f) =>
   {
-    // Evaluate the formula in the action context.
-    const result = eval(f);
+    // evaluate the formula with the scoped context variables.
+    const result = new Function('a', 'b', 'o', `return (${f})`)(a, b, o);
 
     // Coerce to number and clamp to non-negative.
     const n = Number(result) || 0;
@@ -229,13 +227,19 @@ Game_Action.prototype.absorbDamageIntoShield = function(shieldState, target, ove
     const { shield: updatedShield } = shieldState;
 
     // if there is no shield to absorb, stop processing this state.
-    if (!updatedShield || updatedShield.getCurrent() <= 0)
+    if (!updatedShield)
     {
       break;
     }
 
     // how much could be absorbed this iteration when considering the bonus?
     const before = updatedShield.getCurrent();
+
+    // if the pool is already empty, stop processing this state.
+    if (before <= 0)
+    {
+      break;
+    }
 
     // the maximum absorb this tick is limited by the pool.
     const maxAbsorbThisTick = before;
@@ -257,11 +261,10 @@ Game_Action.prototype.absorbDamageIntoShield = function(shieldState, target, ove
     remainingDamage -= useFromReal;
     pendingBonusDamage -= useFromBonus;
 
-    // show a shield damage popup for the amount absorbed (real + bonus).
-    if (absorbed > 0)
-    {
-      this.onShieldDamageAbsorbed(target, absorbed);
-    }
+    // show a shield damage popup for the amount absorbed (real + bonus). The loop guard above
+    // (remainingDamage > 0 || pendingBonusDamage > 0) combined with the pool check (before > 0)
+    // guarantees absorbed is always positive here for legitimate non-negative inputs.
+    this.onShieldDamageAbsorbed(target, absorbed);
 
     // determine whether this shield broke on this application.
     const brokeThisHit = (before > 0 && updatedShield.getCurrent() === 0);

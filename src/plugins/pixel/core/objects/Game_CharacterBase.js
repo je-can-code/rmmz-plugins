@@ -1,9 +1,10 @@
 //region Game_CharacterBase
 import PIXEL_CollisionManager from './../managers/PIXEL_CollisionManager.js';
+import PixelDebugSampler from './../_models/PixelDebugSampler.js';
 
 //region init
 /**
- * Extends {@link Game_CharacterBase.initMembers}.<br>
+ * Extends {@link Game_CharacterBase.initMembers}.<br/>
  * Includes this plugin's extra properties as well.
  */
 J.PIXEL.Aliased.Game_CharacterBase.set('initMembers', Game_CharacterBase.prototype.initMembers);
@@ -374,7 +375,7 @@ Game_CharacterBase.prototype.addPositionalRecord = function(positionalRecord)
 
 /**
  * Gets the first-added record from the collection of coordinate tracking.
- * @returns {Point}
+ * @returns {Point|null} The oldest tracked point, or null if no records exist yet.
  */
 Game_CharacterBase.prototype.oldestPositionalRecord = function()
 {
@@ -394,7 +395,7 @@ Game_CharacterBase.prototype.oldestPositionalRecord = function()
 
 /**
  * Gets the last-added record from the collection of coordinate tracking.
- * @returns {Point}
+ * @returns {Point|null} The most recently tracked point, or null if no records exist yet.
  */
 Game_CharacterBase.prototype.mostRecentPositionalRecord = function()
 {
@@ -414,18 +415,21 @@ Game_CharacterBase.prototype.mostRecentPositionalRecord = function()
 //endregion properties
 
 /**
- * Extends {@link Game_CharacterBase.update}.<br>
+ * Extends {@link Game_CharacterBase.update}.<br/>
  * Ensures render coordinates match logical coordinates and clears per-frame flags.
  */
 J.PIXEL.Aliased.Game_CharacterBase.set("update", Game_CharacterBase.prototype.update);
 Game_CharacterBase.prototype.update = function()
 {
   // Perform original logic.
+  // perform original logic.
   J.PIXEL.Aliased.Game_CharacterBase.get("update")
     .call(this);
 
-  // Always synchronize render/smoothing coordinates to the logical coordinates.
-  if (this._realX !== this._x || this._realY !== this._y)
+  // Always synchronize render/smoothing coordinates to the logical coordinates,
+  // but not during a jump — updateJump handles _realX/_realY interpolation and
+  // snapping here would teleport the character to the destination on frame one.
+  if ((this._realX !== this._x || this._realY !== this._y) && !this.isJumping())
   {
     // Snap the render coordinates to the logical coordinates.
     this._realX = this._x;
@@ -528,6 +532,7 @@ J.PIXEL.Aliased.Game_CharacterBase.set("isMoving", Game_CharacterBase.prototype.
 Game_CharacterBase.prototype.isMoving = function()
 {
   // Determine movement per the original engine behavior.
+  // perform original logic.
   const original = J.PIXEL.Aliased.Game_CharacterBase.get("isMoving")
     .call(this);
 
@@ -754,9 +759,6 @@ Game_CharacterBase.prototype.moveStraightDistance = function(direction, pixelDis
     case J.PIXEL.Directions.UP:
       this.moveStraight8Up(pixelDistance);
       break;
-    default:
-      console.warn("attempted to move an invalid straight direction: ", direction);
-      break;
   }
 };
 
@@ -780,9 +782,6 @@ Game_CharacterBase.prototype.moveDiagonalDistance = function(direction, pixelDis
       break;
     case J.PIXEL.Directions.UPPERRIGHT:
       this.moveDiagonal9UpRight(pixelDistance);
-      break;
-    default:
-      console.warn("attempted to move an invalid diagonal direction: ", direction);
       break;
   }
 };
@@ -1087,7 +1086,7 @@ Game_CharacterBase.prototype.isOverlappingSolidTiles = function(px, py, radius)
 };
 
 /**
- * Extends {@link Game_CharacterBase.canPass}.<br>
+ * Extends {@link Game_CharacterBase.canPass}.<br/>
  * Rounds fractional pixel coordinates to the nearest tile integer before delegating
  * to the tile-based passability check. With pixel movement, `_x`/`_y` are fractional;
  * the base RMMZ method uses them as array indices, so non-integer inputs produce
@@ -1100,11 +1099,12 @@ Game_CharacterBase.prototype.isOverlappingSolidTiles = function(px, py, radius)
 J.PIXEL.Aliased.Game_CharacterBase.set('canPass', Game_CharacterBase.prototype.canPass);
 Game_CharacterBase.prototype.canPass = function(x, y, d)
 {
+  // perform original logic.
   return J.PIXEL.Aliased.Game_CharacterBase.get('canPass').call(this, Math.round(x), Math.round(y), d);
 };
 
 /**
- * Extends {@link Game_CharacterBase#regionId}.<br>
+ * Extends {@link Game_CharacterBase#regionId}.<br/>
  * Samples the map region at the character's collision pivot tile. With pixel movement,
  * `_x`/`_y` are fractional; vanilla forwards them into {@link Game_Map#tileId}, which
  * indexes `$dataMap.data` and returns wrong regions when coordinates are not integers.
@@ -1149,7 +1149,7 @@ Game_CharacterBase.prototype.moveStraight = function(direction)
 };
 
 /**
- * Extends {@link Game_CharacterBase.moveDiagonally}.<br>
+ * Extends {@link Game_CharacterBase.moveDiagonally}.<br/>
  * Evaluates pixel-aware diagonal passability and executes pixel-distance movement.
  * Direction is updated unconditionally (matching rmmz default behavior) so that
  * a blocked diagonal step still rotates the character away from a wall.
@@ -1247,9 +1247,6 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
         return J.PIXEL.Directions.UP;
       }
     }
-
-    // Unknown diagonal; not handled.
-    return 0;
   };
 
   // Chooses a fallback between two cardinals by comparing residuals to the rounded axes.
@@ -1426,11 +1423,6 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
         innerDirection = J.PIXEL.Directions.UP;
         return innerDirection;
       }
-      default:
-      {
-        // Unknown diagonal; return 0 to indicate not handled.
-        return 0;
-      }
     }
   };
 
@@ -1545,11 +1537,6 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
       {
         if (canRight()) return doStraightMove(J.PIXEL.Directions.RIGHT);
         return tryWallSlide(J.PIXEL.Directions.RIGHT);
-      }
-      default:
-      {
-        // Unknown straight direction; not handled.
-        return 0;
       }
     }
   };
@@ -2295,9 +2282,9 @@ Game_CharacterBase.prototype._pixelCheckLeftPassage = function(x, y, xDest, hb, 
 
     // DEBUG markers.
     // yellow current.
-    J.PIXEL.Debug.push(curColX,  ny, "rgba(255, 255, 0, 0.6)");
+    PixelDebugSampler.push(curColX,  ny, "rgba(255, 255, 0, 0.6)");
     // cyan dest.
-    J.PIXEL.Debug.push(destColX, ny, "rgba(0, 255, 255, 0.6)");
+    PixelDebugSampler.push(destColX, ny, "rgba(0, 255, 255, 0.6)");
 
     // Current left-most subcell must allow moving LEFT (exiting left).
     if (this._pixelIsPositionPassable(curColX, ny, J.PIXEL.Directions.LEFT) === false) return false;
@@ -2358,9 +2345,9 @@ Game_CharacterBase.prototype._pixelCheckRightPassage = function(x, y, xDest, hb,
 
     // DEBUG markers.
     // yellow current.
-    J.PIXEL.Debug.push(curColX,  ny, "rgba(255, 255, 0, 0.6)");
+    PixelDebugSampler.push(curColX,  ny, "rgba(255, 255, 0, 0.6)");
     // cyan dest.
-    J.PIXEL.Debug.push(destColX, ny, "rgba(0, 255, 255, 0.6)");
+    PixelDebugSampler.push(destColX, ny, "rgba(0, 255, 255, 0.6)");
 
     // Current right-most must allow RIGHT (exiting right).
     if (this._pixelIsPositionPassable(curColX, ny, J.PIXEL.Directions.RIGHT) === false) return false;
@@ -2421,9 +2408,9 @@ Game_CharacterBase.prototype._pixelCheckUpPassage = function(x, y, yDest, hb, co
 
     // DEBUG markers.
     // yellow current.
-    J.PIXEL.Debug.push(nx, curRowY,  "rgba(255, 255, 0, 0.6)");
+    PixelDebugSampler.push(nx, curRowY,  "rgba(255, 255, 0, 0.6)");
     // cyan dest.
-    J.PIXEL.Debug.push(nx, destRowY, "rgba(0, 255, 255, 0.6)");
+    PixelDebugSampler.push(nx, destRowY, "rgba(0, 255, 255, 0.6)");
 
     // Current top must allow UP (exiting upward).
     if (this._pixelIsPositionPassable(nx, curRowY,  J.PIXEL.Directions.UP)   === false) return false;
@@ -2484,9 +2471,9 @@ Game_CharacterBase.prototype._pixelCheckDownPassage = function(x, y, yDest, hb, 
 
     // DEBUG markers.
     // yellow current.
-    J.PIXEL.Debug.push(nx, curRowY,  "rgba(255, 255, 0, 0.6)");
+    PixelDebugSampler.push(nx, curRowY,  "rgba(255, 255, 0, 0.6)");
     // cyan dest.
-    J.PIXEL.Debug.push(nx, destRowY, "rgba(0, 255, 255, 0.6)");
+    PixelDebugSampler.push(nx, destRowY, "rgba(0, 255, 255, 0.6)");
 
     // Current bottom must allow DOWN (exiting downward).
     if (this._pixelIsPositionPassable(nx, curRowY,  J.PIXEL.Directions.DOWN) === false) return false;
@@ -2556,7 +2543,7 @@ Game_CharacterBase.prototype._pixelCheckVerticalAtNewXColumn = function(xCurrent
     const ny = row / count;
 
     // DEBUG lane markers (blue).
-    J.PIXEL.Debug.push(columnX, ny, "rgba(0, 128, 255, 0.6)");
+    PixelDebugSampler.push(columnX, ny, "rgba(0, 128, 255, 0.6)");
 
     // Compute lane permissions.
     const upOk   = this._pixelIsPositionPassable(columnX, ny, J.PIXEL.Directions.UP);
@@ -2627,7 +2614,7 @@ Game_CharacterBase.prototype._pixelCheckHorizontalAtNewYRow = function(yCurrent,
     const nx = col / count;
 
     // DEBUG lane markers (blue).
-    J.PIXEL.Debug.push(nx, rowY, "rgba(0, 128, 255, 0.6)");
+    PixelDebugSampler.push(nx, rowY, "rgba(0, 128, 255, 0.6)");
 
     // Compute lane permissions.
     const leftOk  = this._pixelIsPositionPassable(nx, rowY, J.PIXEL.Directions.LEFT);

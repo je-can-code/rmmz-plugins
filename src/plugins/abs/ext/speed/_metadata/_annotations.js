@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.3 MOVE] Enable modifying move speeds.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Enable modifying move speeds.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -66,6 +66,13 @@
  * This battler's movement speed will be increased by ~40%.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Move speed boost (msb) registered with the shared parameter catalog
+ *    and given an SDP panel binding, so it can now be invested via SDP.
+ *    Replaced getWalkSpeedBoosts() with a plain msb getter, matching the
+ *    catalog's getValue(battler => battler.msb) convention.
+ *    Removed the legacy IconManager.longParam(31) override in favor of
+ *    catalog-driven icon resolution.
  * - 1.0.3
  *    Raised minimum J-ABS version requirement to 4.7.0.
  * - 1.0.2

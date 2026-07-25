@@ -30,17 +30,13 @@ RPG_Skill.prototype.jabsFormulaEffects = function()
  */
 RPG_Skill.prototype.extractJabsFormulaEffects = function()
 {
-  // capture tuples for by-formula (trigger, affect, resource, formula).
-  const formulaTuples = RPGManager.getAllCapturesFromNoteByRegex(
-    this,
-    J.ABS.EXT.FORMULA.RegExp.FormulaApply,
-    false) || [];
+  // capture tuples for by-formula (trigger, affect, resource, formula); each
+  // <onApplyFormula:[...]> tag is a single bracket, so it parses directly into a tuple.
+  const formulaTuples = RPGManager.getArraysFromNotesByRegex(this, J.ABS.EXT.FORMULA.RegExp.FormulaApply);
 
-  // capture tuples for by-skill (trigger, affect, skillIdString).
-  const skillTuples = RPGManager.getAllCapturesFromNoteByRegex(
-    this,
-    J.ABS.EXT.FORMULA.RegExp.SkillApply,
-    false) || [];
+  // capture tuples for by-skill (trigger, affect, skillId); each <onApplySkill:[...]> tag
+  // is a single bracket, so it parses directly into a tuple.
+  const skillTuples = RPGManager.getArraysFromNotesByRegex(this, J.ABS.EXT.FORMULA.RegExp.SkillApply);
 
   // map to FormulaEffect instances.
   const formulaEffects = formulaTuples.map(FormulaEffect.fromFormulaTuple, FormulaEffect);

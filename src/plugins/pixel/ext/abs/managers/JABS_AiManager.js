@@ -1,6 +1,6 @@
 //region JABS_AiManager
 /**
- * Overrides {@link #canMoveIdly}.<br/>
+ * Overwrites {@link #canMoveIdly}.<br/>
  * With pixel-idle wander the timing is managed entirely by the destination/wait
  * state machine on the battler. The external frame-gate and random roll are not needed.
  * @param {JABS_Battler} battler The battler checking idle movement readiness.
@@ -14,7 +14,7 @@ JABS_AiManager.canMoveIdly = function(battler)
 };
 
 /**
- * Overrides {@link #moveIdly}.<br/>
+ * Overwrites {@link #moveIdly}.<br/>
  * Delegates to the battler's pixel-aware idle wander state machine rather than
  * calling the tile-step moveRandom, which only advances a single distancePerFrame pixel.
  * @param {JABS_Battler} battler The battler moving idly.
@@ -26,7 +26,7 @@ JABS_AiManager.moveIdly = function(battler)
 };
 
 /**
- * Overrides {@link #goHome}.<br/>
+ * Overwrites {@link #goHome}.<br/>
  * Uses pixel-aware smart movement toward the home coordinates so the battler glides
  * home smoothly instead of shuffling one distancePerFrame pixel at a time via moveStraight.
  * @param {JABS_Battler} battler The battler returning to its home point.
@@ -154,7 +154,7 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
 };
 
 /**
- * Overrides {@link #calculateFormationSlotCoordinates}.<br/>
+ * Overwrites {@link #calculateFormationSlotCoordinates}.<br/>
  * Calculates considering the tile center.
  * @param {number} lx The leader's x coordinate.
  * @param {number} rx The rotated x.
@@ -173,7 +173,7 @@ JABS_AiManager.calculateFormationSlotCoordinates = function(lx, rx, ly, ry)
 };
 
 /**
- * Overrides {@link #isWithinTolerance}.<br/>
+ * Overwrites {@link #isWithinTolerance}.<br/>
  * Checks if a battler is within a Euclidean tolerance of the target point.
  * @param {JABS_Battler} allyBattler The ally battler.
  * @param {number} targetX The target x (fractional center).

@@ -4,8 +4,8 @@ class J_CaModsPluginMetadata
 {
   /**
    * Constructor.
-   * @param {string} name
-   * @param {string} version
+   * @param {string} name The name driving this step.
+   * @param {string} version The version driving this step.
    */
   constructor(name, version)
   {

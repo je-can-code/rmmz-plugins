@@ -1,6 +1,6 @@
 //region Game_Party
 /**
- * Extends {@link #initialize}.<br>
+ * Extends {@link #initialize}.<br/>
  * Includes our custom members as well.
  */
 J.PASSIVE.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);
@@ -110,11 +110,11 @@ Game_Party.prototype.refreshPassiveStates = function()
   // grab all the unique ids.
   const uniqueIds = this.getAllUniquePassiveStateIds();
 
-  // grab all the stackable ids.
-  const stackableIds = this.getAllStackablePassiveStateIds();
-
-  // add all the unique ids to the tracker.
+  // commit unique passives first so nested stack grants on mastery state rows resolve this pass.
   uniqueIds.forEach(stateId => this.addPassiveStateId(stateId, false), this);
+
+  // grab stackable ids after unique rows are in the tracker — mastery states can own passiveStateCount.
+  const stackableIds = this.getAllStackablePassiveStateIds();
 
   // add all the stackable ids to the tracker.
   stackableIds.forEach((stackCount, stateId) =>
@@ -210,7 +210,7 @@ Game_Party.prototype.getAllStackablePassiveStateIds = function()
 };
 
 /**
- * Extends {@link #gainItem}.<br>
+ * Extends {@link #gainItem}.<br/>
  * Also refreshes the passive states for the party.
  * @param {RPG_Item|RPG_Weapon|RPG_Armor} item The item to modify the quantity of.
  * @param {number} amount The amount to modify the quantity by.

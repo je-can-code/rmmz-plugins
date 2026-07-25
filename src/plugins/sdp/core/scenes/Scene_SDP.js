@@ -1,14 +1,17 @@
 //region Scene_SDP
-import StatDistributionPanel from './../__models/StatDistributionPanel.js';
+import StatDistributionPanel from '../models/StatDistributionPanel.js';
+import SdpFamilyFilter from '../managers/SdpFamilyFilter.js';
 import Window_SdpList from '../windows/Window_SdpList.js';
 import Window_SdpHeader from '../windows/Window_SdpHeader.js';
 import Window_SdpParameterList from '../windows/Window_SdpParameterList.js';
 import Window_SdpRewardList from '../windows/Window_SdpRewardList.js';
+import Window_SdpMastery from '../windows/Window_SdpMastery.js';
 import Window_SdpCart from '../windows/Window_SdpCart.js';
 import Window_SdpConfirmation from '../windows/Window_SdpConfirmation.js';
 import Window_SdpPoints from '../windows/Window_SdpPoints.js';
 import Window_SdpHelp from '../windows/Window_SdpHelp.js';
 import Window_SdpControlsHint from '../windows/Window_SdpControlsHint.js';
+import Window_SdpFamilyStrip from '../windows/Window_SdpFamilyStrip.js';
 
 /**
  * The scene for managing SDPs that the player has acquired.
@@ -79,6 +82,12 @@ class Scene_SDP
     this._j._sdp._windows._sdpRewardList = null;
 
     /**
+     * Subgroup mastery summary for the hovered panel (separate from rank rewards).
+     * @type {Window_SdpMastery}
+     */
+    this._j._sdp._windows._sdpMastery = null;
+
+    /**
      * The shopping cart window for planned rank-ups.
      * @type {Window_SdpCart}
      */
@@ -103,10 +112,28 @@ class Scene_SDP
     this._j._sdp._windows._sdpHelp = null;
 
     /**
+     * Family-filter strip above the panel list.
+     * @type {Window_SdpFamilyStrip}
+     */
+    this._j._sdp._windows._sdpFamilyStrip = null;
+
+    /**
      * The controller-first shopping cart of queued rankups by panel key.
      * @type {Map<string, number>}
      */
     this._j._sdp._cart = new Map();
+
+    /**
+     * L2/R2 family-filter cycle keys for the current menu actor.
+     * @type {string[]}
+     */
+    this._j._sdp._familyFilterCycle = [];
+
+    /**
+     * Index into {@link this._j._sdp._familyFilterCycle}.
+     * @type {number}
+     */
+    this._j._sdp._familyFilterIndex = 0;
 
   }
 
@@ -135,7 +162,7 @@ class Scene_SDP
   }
 
   /**
-   * Overrides {@link #createButtons}.<br>
+   * Overwrites {@link #createButtons}.<br/>
    * Removes the rendering of buttons from this scene.
    */
   createButtons()
@@ -161,6 +188,7 @@ class Scene_SDP
   {
     // display data windows.
     this.createSdpPointsWindow();
+    this.createSdpFamilyStripWindow();
     this.createSdpHeaderWindow();
     this.createSdpControlsHintWindow();
     this.createSdpHelpWindow();
@@ -168,6 +196,7 @@ class Scene_SDP
     // selectable data windows.
     this.createSdpListWindow();
     this.createSdpParameterListWindow();
+    this.createSdpMasteryWindow();
     this.createSdpRewardListWindow();
     this.createSdpCartWindow();
 
@@ -175,8 +204,186 @@ class Scene_SDP
     this.createSdpConfirmationWindow();
 
     // the initial refresh to load all windows.
+    this.rebuildFamilyFilterCycle();
+    this.applyActiveFamilyFilter(false);
     this.onPanelHoveredChange();
   }
+
+  //region family filter
+  /**
+   * Pixel height for the family strip above the panel list.
+   * @returns {number}
+   */
+  sdpFamilyStripHeight()
+  {
+    const lineHeight = Window_Base.prototype.lineHeight();
+    const pad = $gameSystem.windowPadding();
+
+    return lineHeight + pad * 2;
+  }
+
+  /**
+   * Creates the family-filter strip above the panel list.
+   */
+  createSdpFamilyStripWindow()
+  {
+    const window = this.buildSdpFamilyStripWindow();
+
+    this.setSdpFamilyStripWindow(window);
+    this.addWindow(window);
+  }
+
+  /**
+   * Builds the family-filter strip window.
+   * @returns {Window_SdpFamilyStrip}
+   */
+  buildSdpFamilyStripWindow()
+  {
+    const rectangle = this.sdpFamilyStripRectangle();
+    return new Window_SdpFamilyStrip(rectangle);
+  }
+
+  /**
+   * Rectangle for the family strip sitting under the points ribbon.
+   * @returns {Rectangle}
+   */
+  sdpFamilyStripRectangle()
+  {
+    const pointsRect = this.sdpPointsRectangle();
+    const { width, height: pointsHeight } = pointsRect;
+    const height = this.sdpFamilyStripHeight();
+    const x = 0;
+    const y = pointsHeight;
+
+    return new Rectangle(x, y, width, height);
+  }
+
+  /**
+   * Gets the tracked family strip window.
+   * @returns {Window_SdpFamilyStrip}
+   */
+  getSdpFamilyStripWindow()
+  {
+    return this._j._sdp._windows._sdpFamilyStrip;
+  }
+
+  /**
+   * Sets the tracked family strip window.
+   * @param {Window_SdpFamilyStrip} familyStripWindow The family strip window driving this step.
+   */
+  setSdpFamilyStripWindow(familyStripWindow)
+  {
+    this._j._sdp._windows._sdpFamilyStrip = familyStripWindow;
+  }
+
+  /**
+   * Rebuilds the L2/R2 family cycle for the current menu actor.
+   */
+  rebuildFamilyFilterCycle()
+  {
+    const actor = $gameParty.menuActor();
+    const cycle = SdpFamilyFilter.buildCycleForActor(actor);
+    const previousKey = this.getActiveFamilyFilterKey();
+    let nextIndex = cycle.indexOf(previousKey);
+
+    if (nextIndex < 0)
+    {
+      nextIndex = 0;
+    }
+
+    this._j._sdp._familyFilterCycle = cycle;
+    this._j._sdp._familyFilterIndex = nextIndex;
+  }
+
+  /**
+   * Gets the active family-filter key from scene state.
+   * @returns {string}
+   */
+  getActiveFamilyFilterKey()
+  {
+    const cycle = this._j._sdp._familyFilterCycle;
+
+    if (cycle.length === 0)
+    {
+      return SdpFamilyFilter.ALL;
+    }
+
+    return cycle[this._j._sdp._familyFilterIndex | 0] ?? SdpFamilyFilter.ALL;
+  }
+
+  /**
+   * Applies the active family filter to the strip and panel list.
+   * @param {boolean} clampSelection When true, clamp list selection after refresh.
+   */
+  applyActiveFamilyFilter(clampSelection = true)
+  {
+    const filterKey = this.getActiveFamilyFilterKey();
+    const listWindow = this.getSdpListWindow();
+
+    this.getSdpFamilyStripWindow()
+      .setFilterKey(filterKey);
+    listWindow.setFamilyFilterKey(filterKey);
+
+    if (clampSelection === false)
+    {
+      return;
+    }
+
+    this.clampSdpListSelection();
+  }
+
+  /**
+   * Keeps the panel list selection in bounds after a filter refresh.
+   */
+  clampSdpListSelection()
+  {
+    const listWindow = this.getSdpListWindow();
+    const commandCount = listWindow.commandList().length;
+
+    if (commandCount === 0)
+    {
+      listWindow.deselect();
+      return;
+    }
+
+    const index = listWindow.index();
+
+    // after an empty filter (deselect → -1), the next non-empty filter must pick a row again.
+    if (index < 0 || index >= commandCount)
+    {
+      listWindow.select(Math.max(0, Math.min(index, commandCount - 1)));
+    }
+  }
+
+  /**
+   * Cycles the family filter forward or backward.
+   * @param {boolean} isForward The is forward driving this step.
+   */
+  cycleFamilyFilters(isForward = true)
+  {
+    const cycle = this._j._sdp._familyFilterCycle;
+
+    if (cycle.length <= 1)
+    {
+      SoundManager.playBuzzer();
+      this.getSdpListWindow()
+        .activate();
+      return;
+    }
+
+    const currentIndex = this._j._sdp._familyFilterIndex | 0;
+    const delta = isForward
+      ? 1
+      : -1;
+    const nextIndex = (currentIndex + delta + cycle.length) % cycle.length;
+
+    this._j._sdp._familyFilterIndex = nextIndex;
+    this.applyActiveFamilyFilter();
+    this.onPanelHoveredChange();
+    this.getSdpListWindow()
+      .activate();
+  }
+  //endregion family filter
 
   //region sdp list window
   /**
@@ -209,11 +416,13 @@ class Scene_SDP
     // configure the window input handlers.
     window.setHandler('cancel', this.popScene.bind(this));
     window.setHandler('ok', this.onSelectPanel.bind(this));
-    window.setHandler('more', this.onFilterPanels.bind(this));
+    window.setHandler('context', this.onFilterPanels.bind(this));
     window.setHandler('cart-dec', this.onCartLevelDecrease.bind(this));
     window.setHandler('cart-inc', this.onCartLevelIncrease.bind(this));
-    window.setHandler('pagedown', this.cycleMembers.bind(this, true));
-    window.setHandler('pageup', this.cycleMembers.bind(this, false));
+    window.setHandler('content-next', this.cycleFamilyFilters.bind(this, true));
+    window.setHandler('content-prev', this.cycleFamilyFilters.bind(this, false));
+    window.setHandler('actor-next', this.cycleMembers.bind(this, true));
+    window.setHandler('actor-prev', this.cycleMembers.bind(this, false));
     window.onIndexChange = this.onPanelHoveredChange.bind(this);
 
     // initialize with the current menu actor.
@@ -231,18 +440,19 @@ class Scene_SDP
   {
     // grab the points rectangle for reference.
     const pointsRectangle = this.sdpPointsRectangle();
+    const familyStripHeight = this.sdpFamilyStripHeight();
 
     // width shares the left ribbon with {@link #sdpPointsRectangle} (scaled up for larger menu fonts).
     const width = 480;
 
     // determine the modifier of the height for fitting properly..
     const hintH = this.sdpControlsHintHeight();
-    const heightFit = (pointsRectangle.height + this.sdpHelpRectangle().height + hintH) + 8;
+    const heightFit = (pointsRectangle.height + familyStripHeight + this.sdpHelpRectangle().height + hintH) + 8;
     const height = Graphics.height - heightFit;
 
     // determine the x:y coordinates.
     const x = 0;
-    const y = pointsRectangle.height;
+    const y = pointsRectangle.height + familyStripHeight;
 
     // return the built rectangle.
     return new Rectangle(x, y, width, height);
@@ -396,6 +606,49 @@ class Scene_SDP
 
   //endregion reward list window
 
+  //region mastery window
+  /**
+   * Creates the mastery summary window above rank rewards.
+   */
+  createSdpMasteryWindow()
+  {
+    const window = this.buildSdpMasteryWindow();
+
+    this.setSdpMasteryWindow(window);
+    this.addWindow(window);
+  }
+
+  /**
+   * Builds the read-only mastery strip for the hovered panel.
+   * @returns {Window_SdpMastery}
+   */
+  buildSdpMasteryWindow()
+  {
+    const rectangle = this.sdpMasteryRectangle();
+    const window = new Window_SdpMastery(rectangle);
+
+    return window;
+  }
+
+  /**
+   * Gets the tracked mastery window.
+   * @returns {Window_SdpMastery}
+   */
+  getSdpMasteryWindow()
+  {
+    return this._j._sdp._windows._sdpMastery;
+  }
+
+  /**
+   * Sets the tracked mastery window.
+   * @param {Window_SdpMastery} masteryWindow The mastery window to track.
+   */
+  setSdpMasteryWindow(masteryWindow)
+  {
+    this._j._sdp._windows._sdpMastery = masteryWindow;
+  }
+  //endregion mastery window
+
   //region cart window
   /**
    * Creates the window for planned ("cart") panel rankups.
@@ -444,38 +697,82 @@ class Scene_SDP
   //endregion cart window
 
   /**
-   * Rectangle for the cart window, occupying the bottom half of the right column.
-   * @returns {Rectangle}
+   * Shared geometry for the right column (mastery, rewards, cart).
+   * Cart height and y are pinned to the bottom half and must stay stable.
+   * @returns {{ x: number, topY: number, width: number, cartY: number, cartHeight: number, topRegionHeight: number, gap: number }}
    */
-  sdpCartRectangle()
-  {
-    const rewardsRect = this.sdpRewardListRectangle();
-    const bottom = this.sdpRightColumnBottom();
-    const gap = this.sdpRightColumnSplitGap();
-    const cartY = rewardsRect.y + rewardsRect.height + gap;
-    const cartHeight = bottom - cartY;
-    return new Rectangle(rewardsRect.x, cartY, rewardsRect.width, cartHeight);
-  }
-
-  /**
-   * Rectangle for the rewards window, occupying the top half of the right column.
-   * @returns {Rectangle}
-   */
-  sdpRewardListRectangle()
+  sdpRightColumnMetrics()
   {
     const sdpListRect = this.sdpListRectangle();
     const centerW = this.sdpCenterColumnWidth();
     const { height: headerH } = this.sdpHeaderRectangle();
 
     const x = sdpListRect.width + centerW;
-    const y = headerH;
+    const topY = headerH;
     const width = Graphics.boxWidth - x;
     const bottom = this.sdpRightColumnBottom();
     const gap = this.sdpRightColumnSplitGap();
-    const fullHeight = bottom - y;
-    const height = Math.floor((fullHeight - gap) / 2);
+    const fullHeight = bottom - topY;
+    const cartHeight = Math.floor((fullHeight - gap) / 2);
+    const cartY = bottom - cartHeight;
+    const topRegionHeight = cartY - topY - gap;
 
-    return new Rectangle(x, y, width, height);
+    return {
+      x,
+      topY,
+      width,
+      cartY,
+      cartHeight,
+      topRegionHeight,
+      gap,
+    };
+  }
+
+  /**
+   * Pixel height for the mastery summary strip (two text rows + chrome).
+   * @returns {number}
+   */
+  sdpMasteryWindowHeight()
+  {
+    // matches {@link Window_SdpHeader} — two full text rows.
+    return 108;
+  }
+
+  /**
+   * Rectangle for the mastery window at the top of the right column.
+   * @returns {Rectangle}
+   */
+  sdpMasteryRectangle()
+  {
+    const metrics = this.sdpRightColumnMetrics();
+    const height = this.sdpMasteryWindowHeight();
+
+    return new Rectangle(metrics.x, metrics.topY, metrics.width, height);
+  }
+
+  /**
+   * Rectangle for the cart window, occupying the bottom half of the right column.
+   * @returns {Rectangle}
+   */
+  sdpCartRectangle()
+  {
+    const metrics = this.sdpRightColumnMetrics();
+
+    return new Rectangle(metrics.x, metrics.cartY, metrics.width, metrics.cartHeight);
+  }
+
+  /**
+   * Rectangle for the rewards window, filling the space between mastery and cart.
+   * @returns {Rectangle}
+   */
+  sdpRewardListRectangle()
+  {
+    const metrics = this.sdpRightColumnMetrics();
+    const masteryHeight = this.sdpMasteryWindowHeight();
+    const y = metrics.topY + masteryHeight + metrics.gap;
+    const height = metrics.cartY - y - metrics.gap;
+
+    return new Rectangle(metrics.x, y, metrics.width, height);
   }
 
   /**
@@ -956,13 +1253,7 @@ class Scene_SDP
 
     // trigger a refresh of windows.
     this.onPanelHoveredChange();
-
-    // check if the index became out of bounds.
-    if (sdpListWindow.index() >= sdpListWindow.commandList().length)
-    {
-      // correct the index to the last item.
-      sdpListWindow.select(sdpListWindow.commandList().length - 1);
-    }
+    this.clampSdpListSelection();
   }
 
   /**
@@ -1109,6 +1400,33 @@ class Scene_SDP
   }
 
   /**
+   * Clears the detail strip when the filter list is empty or nothing is selected.
+   */
+  clearPanelDetailWindows()
+  {
+    this.getSdpHeaderWindow()
+      .setPanel(null);
+    this.getSdpHeaderWindow()
+      .refresh();
+
+    this.getSdpMasteryWindow()
+      .setPanel(null);
+    this.getSdpMasteryWindow()
+      .refresh();
+
+    const parameterListWindow = this.getSdpParameterListWindow();
+    parameterListWindow.setParameters(null);
+    parameterListWindow.refresh();
+
+    const rewardListWindow = this.getSdpRewardListWindow();
+    rewardListWindow.setRewards(null);
+    rewardListWindow.refresh();
+
+    this.getSdpHelpWindow()
+      .setText(String.empty);
+  }
+
+  /**
    * Refreshes all windows in this scene on change of index in the list.
    */
   onPanelHoveredChange()
@@ -1118,10 +1436,7 @@ class Scene_SDP
       .hasCommands();
     if (!hasPanels)
     {
-      this.getSdpHeaderWindow()
-        .setPanel(null);
-      this.getSdpHeaderWindow()
-        .refresh();
+      this.clearPanelDetailWindows();
       return;
     }
 
@@ -1129,6 +1444,13 @@ class Scene_SDP
     /** @type {StatDistributionPanel} */
     const currentPanel = this.getSdpListWindow()
       .currentExt();
+
+    // stale index (-1) can survive a filter refresh when the prior filter had zero rows.
+    if (currentPanel === null)
+    {
+      this.clearPanelDetailWindows();
+      return;
+    }
 
     // grab the current actor of the menu.
     const currentActor = $gameParty.menuActor();
@@ -1153,6 +1475,12 @@ class Scene_SDP
     const rewardListWindow = this.getSdpRewardListWindow();
     rewardListWindow.setRewards(currentPanel.panelRewards);
     rewardListWindow.refresh();
+
+    // update the mastery strip — subgroup tier skills, not panelRewards rows.
+    this.getSdpMasteryWindow()
+      .setPanel(currentPanel);
+    this.getSdpMasteryWindow()
+      .refresh();
 
     // update the cart window with current planned purchases.
     this.getSdpCartWindow()
@@ -1192,6 +1520,10 @@ class Scene_SDP
     isForward
       ? $gameParty.makeMenuActorNext()
       : $gameParty.makeMenuActorPrevious();
+
+    // family cycle depends on which panels this actor has unlocked.
+    this.rebuildFamilyFilterCycle();
+    this.applyActiveFamilyFilter(false);
 
     // refresh everything.
     this.onPanelHoveredChange();

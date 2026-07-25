@@ -1,6 +1,6 @@
 //region Window_EquipItem
 /**
- * Overrides {@link #updateHelp}.<br>
+ * Overwrites {@link #updateHelp}.<br/>
  * Enables extension of the method's logic for various menu needs.
  */
 Window_EquipItem.prototype.updateHelp = function()

@@ -1,3 +1,6 @@
+/**
+ * Adds CMS main menu commands with custom icon indices per entry.
+ */
 Window_MenuCommand.prototype.addMainCommands = function()
 {
   const enabled = this.areMainCommandsEnabled();
@@ -23,6 +26,9 @@ Window_MenuCommand.prototype.addMainCommands = function()
   }
 };
 
+/**
+ * Adds the options command when the plugin list includes it.
+ */
 Window_MenuCommand.prototype.addOptionsCommand = function()
 {
   if (this.needsCommand("options"))
@@ -32,6 +38,9 @@ Window_MenuCommand.prototype.addOptionsCommand = function()
   }
 };
 
+/**
+ * Adds the game-end command with CMS icon styling.
+ */
 Window_MenuCommand.prototype.addGameEndCommand = function()
 {
   const enabled = this.isGameEndEnabled();

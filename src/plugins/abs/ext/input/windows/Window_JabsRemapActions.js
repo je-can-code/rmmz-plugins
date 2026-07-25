@@ -314,6 +314,7 @@ class Window_JabsRemapActions
     for (let i = 0; i < specs.length; i++)
     {
       const spec = specs[i];
+      // Append the row to the working collection.
       rows.push(this.buildHeaderCommand(spec.title));
       for (let j = 0; j < spec.buttons.length; j++)
       {
@@ -457,11 +458,13 @@ class Window_JabsRemapActions
     const cmd = this._list[index];
     if (!cmd)
     {
+      // exit early without a payload.
       return;
     }
     if (cmd.ext && cmd.ext.kind === 'header')
     {
       this._drawHeaderItem(rect, cmd);
+      // exit early without a payload.
       return;
     }
     if (cmd.ext && cmd.ext.kind === 'ext-action')
@@ -636,26 +639,16 @@ class Window_JabsRemapActions
     if (!cmd)
     {
       SoundManager.playBuzzer();
+      // exit early without a payload.
       return;
     }
     if (cmd.ext && cmd.ext.kind === 'header')
     {
       SoundManager.playBuzzer();
+      // exit early without a payload.
       return;
     }
     super.processOk();
-  }
-
-  /**
-   * Forwards to base handling and maps PageDown to the `clear` handler.
-   */
-  processHandling()
-  {
-    super.processHandling();
-    if (this.isOpenAndActive() && Input.isTriggered('pagedown'))
-    {
-      this.callHandler('clear');
-    }
   }
 
   //endregion handling

@@ -183,6 +183,7 @@ class ExternalJsonConfigLoaderOptionsBuilder
     this.#pluginName = null;
     this.#configName = null;
     this.#validator = null;
+    // continue the routine with the next policy step.
     this.#mapper = null;
     this.#logSummary = null;
   }

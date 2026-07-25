@@ -1,6 +1,6 @@
 //region Game_Battler
 /**
- * Extends {@link Game_Battler.initMembers}.<br>
+ * Extends {@link Game_Battler.initMembers}.<br/>
  */
 J.ABS.EXT.SPEED.Aliased.Game_Battler.set('initMembers', Game_Battler.prototype.initMembers);
 Game_Battler.prototype.initMembers = function()
@@ -43,13 +43,23 @@ Game_Battler.prototype.initSpeedBoosts = function()
 };
 
 /**
- * Gets the current walking speed boost scale for this battler.
- * @returns {number}
+ * Move speed boost from notes and SDP panels.
  */
-Game_Battler.prototype.getWalkSpeedBoosts = function()
-{
-  return this._j._abs._speed._walkBoost;
-};
+Object.defineProperty(Game_BattlerBase.prototype, 'msb', {
+  get: function()
+  {
+    return 0;
+  },
+  configurable: true,
+});
+
+Object.defineProperty(Game_Battler.prototype, 'msb', {
+  get: function()
+  {
+    return this._j._abs._speed._walkBoost;
+  },
+  configurable: true,
+});
 
 /**
  * Sets the current speed bost scale for this battler.

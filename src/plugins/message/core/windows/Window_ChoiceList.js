@@ -16,7 +16,7 @@ Window_ChoiceList.prototype.makeCommandList = function()
   let needsUpdate = false;
 
   // iterate over all the choices in this list in reverse to avoid index issues.
-  for (var i = this._list.length; i > -1; i--)
+  for (let i = this._list.length; i > -1; i--)
   {
     // check if the choice is hidden by its index.
     if ($gameMessage.isChoiceHidden(i))

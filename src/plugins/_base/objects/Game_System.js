@@ -2,7 +2,7 @@ import RPG_Weapon from './../database/implementations/RPG_Weapon.js';
 import RPG_Item from './../database/implementations/RPG_Item.js';
 import RPG_Armor from './../database/implementations/RPG_Armor.js';
 /**
- * Extends {@link Game_System.initialize}.<br>
+ * Extends {@link Game_System.initialize}.<br/>
  * Initializes all members of this class and adds our custom members.
  */
 J.BASE.Aliased.Game_System.set('initialize', Game_System.prototype.initialize);

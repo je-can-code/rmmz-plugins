@@ -1,6 +1,6 @@
 //region Plugin Command Registration
-import JABS_GlobalCooldown from './../__models/JABS_GlobalCooldown.js';
-import JABS_InputAdapter from './../__models/JABS_InputAdapter.js';
+import JABS_GlobalCooldown from '../models/JABS_GlobalCooldown.js';
+import JABS_InputAdapter from '../models/JABS_InputAdapter.js';
 
 /**
  * Plugin command for enabling JABS.
@@ -49,8 +49,8 @@ PluginManager.registerCommand(J.ABS.Metadata.name, "Set JABS Skill", args =>
   // designate the default assigned id to be the skill id.
   let assignedId = parseInt(skillId);
 
-  // check if we are assigning to the tool slot and have an item id available.
-  if (itemId !== 0 && skillSlotKey === JABS_Button.Tool)
+  // check if we are assigning to an item-based slot and have an item id available.
+  if (itemId !== 0 && (skillSlotKey === JABS_Button.Tool || skillSlotKey === JABS_Button.UsableItem))
   {
     // overwrite any possible skill id with the item id instead.
     assignedId = parseInt(itemId);

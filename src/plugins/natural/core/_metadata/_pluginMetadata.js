@@ -11,7 +11,7 @@ class J_NaturalGrowthPluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps plugin parameters into instance fields used by battler TP logic.
    */
   postInitialize()

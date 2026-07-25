@@ -1,4 +1,8 @@
 //region Game_Party
+/**
+ * Passive skill states from battle party members that can trigger on-hit self effects.
+ * @returns {RPG_State[]}
+ */
 Game_Party.prototype.extraOnHitSelfStateSources = function()
 {
   const extraSources = [];
@@ -19,6 +23,10 @@ Game_Party.prototype.extraOnHitSelfStateSources = function()
   return extraSources;
 };
 
+/**
+ * Passive skill states from battle party members that can trigger on-cast self effects.
+ * @returns {RPG_State[]}
+ */
 Game_Party.prototype.extraOnCastSelfStateSources = function()
 {
   const extraSources = [];

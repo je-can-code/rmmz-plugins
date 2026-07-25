@@ -41,9 +41,11 @@ Game_Player.prototype.moveByInput = function()
       this.checkEventTriggerTouchFront(faceDir);
     }
 
+    // exit early without a payload.
     return;
   }
 
+  // perform original logic.
   J.PIXEL.EXT.ABS.Aliased.Game_Player.get('moveByInput')
     .call(this);
 };
@@ -65,6 +67,7 @@ Game_Player.prototype.updateDashing = function()
     return;
   }
 
+  // perform original logic.
   J.PIXEL.EXT.ABS.Aliased.Game_Player.get('updateDashing')
     .call(this);
 };

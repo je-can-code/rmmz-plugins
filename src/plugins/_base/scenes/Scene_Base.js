@@ -8,7 +8,7 @@ import Window_Dimmer from '../windows/Window_Dimmer.js';
 Scene_Base.MODAL_DIMMER_CONTENTS_OPACITY_DEFAULT = 200;
 
 /**
- * Extends {@link #initialize}.<br>
+ * Extends {@link #initialize}.<br/>
  * Adds extension for initializing custom members for scenes.
  */
 J.BASE.Aliased.Scene_Base.set('initialize', Scene_Base.prototype.initialize);
@@ -136,4 +136,27 @@ Scene_Base.prototype.callScene = function()
   SceneManager.push(this);
 };
 
+/**
+ * Whether this scene is the map scene.
+ * All scenes return false; {@link Scene_Map} overrides to return true.
+ * @returns {boolean}
+ */
+Scene_Base.prototype.isMapScene = function()
+{
+  // scenes are not the map scene unless they say otherwise.
+  return false;
+};
+
 //endregion Scene_Base
+
+//region Scene_Map
+/**
+ * Identifies this scene as the map scene.
+ * @returns {boolean}
+ */
+Scene_Map.prototype.isMapScene = function()
+{
+  // this is the map scene.
+  return true;
+};
+//endregion Scene_Map

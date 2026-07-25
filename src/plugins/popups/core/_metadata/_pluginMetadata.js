@@ -14,7 +14,7 @@ class J_PopupsPluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps plugin parameters onto fields used by map popup dispatch.
    */
   postInitialize()

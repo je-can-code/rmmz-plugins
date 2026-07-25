@@ -7,7 +7,7 @@ globalThis.J ||= {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '3.0.0';
+  const requiredBaseVersion = '3.2.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
@@ -15,7 +15,7 @@ globalThis.J ||= {};
   }
 
   // Check to ensure we have the minimum required version of the J-ABS plugin.
-  const requiredJabsVersion = '4.6.0';
+  const requiredJabsVersion = '4.13.0';
   const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
   if (!hasJabsRequirement)
   {
@@ -52,11 +52,16 @@ J.ABS.EXT.TOOLS.Aliased = {
  * All regular expressions used by this plugin.
  */
 J.ABS.EXT.TOOLS.RegExp = {
-  GapClose: /<gapClose>/i,
-  GapCloseTarget: /<gapCloseTarget>/i,
+  GapClose: /<gapClose:(\w+)>/i,
+  GapCloseAny: /<gapCloseAny>/i,
+  GapCloseTarget: /<gapCloseTarget:(\w+)>/i,
   GapCloseMode: /<gapCloseMode:(blink|jump|travel)>/i,
   GapClosePosition: /<gapClosePosition:(infront|behind|same)>/i,
+  GapCloseEndThis: /<thisOnGapCloseEnd:[ ]?(\[[\d, ]+])>/i,
+  GapCloseEnd: /<onGapCloseEnd:[ ]?(\[[\d, ]+])>/i,
   BlockGapClose: /<blockGapClose>/i,
+  RespectTerrain: /<respectTerrain>/i,
+  PullForward: /<pullForward:[ ]?(\d+)>/i,
 };
 
 /**
@@ -77,8 +82,8 @@ J.ABS.EXT.TOOLS.GapCloseModes = {
   Jump: "jump",
 
   /**
-   * Using pathing, will attempt to walk to the destination.
-   * While traveling, "through" will be enabled.
+   * Glides to the target- same destination as a jump, but renders as a flat ground-level
+   * slide instead of a parabolic hop.
    */
   Travel: "travel",
 };

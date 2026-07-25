@@ -11,7 +11,7 @@ class J_ChargePluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps charging animation and sound defaults from plugin parameters.
    */
   postInitialize()

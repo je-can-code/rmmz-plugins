@@ -18,6 +18,7 @@ Bitmap.prototype.drawText = function(text, x, y, maxWidth, lineHeight, align)
     ? 'left'
     : align;
 
+  // perform original logic.
   J.BASE.Aliased.Bitmap.get('drawText')
     .call(this, text, x, y, maxWidth, lineHeight, resolvedAlign);
 };

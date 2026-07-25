@@ -20,7 +20,7 @@ J.TIME.Metadata = new J_TIME_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__)
  * A collection of all aliased methods for this plugin.
  */
 J.TIME.Aliased = {
-  DataManager: {},
+  DataManager: new Map(),
 
   Game_Event: new Map(),
   Game_Interpreter: new Map(),

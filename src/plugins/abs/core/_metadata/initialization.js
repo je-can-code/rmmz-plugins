@@ -11,7 +11,7 @@ globalThis.J ||= {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '3.0.0';
+  const requiredBaseVersion = '3.2.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
@@ -53,6 +53,8 @@ J.ABS.Helpers.PluginManager.TranslateOptionToSlot = slot =>
   {
     case 'Tool':
       return JABS_Button.Tool;
+    case 'UsableItem':
+      return JABS_Button.UsableItem;
     case 'Dodge':
       return JABS_Button.Dodge;
     case 'Offhand':
@@ -93,7 +95,6 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
     };
   });
 };
-
 /**
  * Loads external JABS configuration from the project filesystem.
  *
@@ -106,30 +107,12 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  */
 J.ABS.Helpers.loadExternalConfig = (configPath = 'data/config.jabs.json') =>
 {
-  // validate that the parsed blob matches our expected root shape.
-  const validate = parsedConfig =>
-  {
-    // the root must be an object.
-    if (parsedConfig === null || typeof parsedConfig !== 'object')
-    {
-      throw new Error('config root must be an object.');
-    }
-
-    // teams must exist and be an array.
-    const { teams } = parsedConfig;
-    if (Array.isArray(teams) === false)
-    {
-      throw new Error('config root must contain a "teams" array.');
-    }
-  };
-
-  // load and validate the external config.
+  // load the external config; the JMZ editor guarantees the root shape.
   const parsedConfig = ExternalJsonConfigLoader.load(
     configPath,
     ExternalJsonConfigLoaderOptions.Builder()
       .pluginName('J-ABS')
       .configName('external configuration')
-      .validator(validate)
       .build()
   );
 
@@ -418,6 +401,7 @@ J.ABS.ProjectileFormations = {
    */
   Nova: 'nova',
 };
+//endregion plugin setup & configuration
 
 /**
  * A collection of helpful mappings for `notes` that are placed in
@@ -443,6 +427,16 @@ J.ABS.RegExp = {
   CastTime: /<castTime:[ ]?(\d+)>/gi,
   CastAnimation: /<castAnimation:[ ]?(\d+)>/gi,
 
+  // channeling-related: repeatedly executes a child skill every tick for a total duration.
+  Channel: /<channel:[ ]?(\[(?:0|[1-9][0-9]*),[ ]?(?:0|[1-9][0-9]*)])>/gi,
+  ChannelTickSpeed: /<channelTickSpeed:[ ]?(\d+)>/gi,
+  OnChannelComplete: /<onChannelComplete:[ ]?(\[\d+(?:,[ ]?\d+)*])>/gi,
+
+  // casting/channeling interruption-related.
+  CannotMoveToInterrupt: /<cannotMoveToInterrupt>/i,
+  ThisCannotBeInterrupted: /<thisCannotBeInterrupted>/i,
+  Interrupt: /<interrupt:[ ]?(\d+)>/gi,
+
   // post-execution-related.
   Cooldown: /<cooldown:[ ]?(\d+)>/gi,
   UniqueCooldown: /<uniqueCooldown>/gi,
@@ -450,9 +444,11 @@ J.ABS.RegExp = {
   Ogcd: /<ogcd>/gi,
   // optional per-skill GCD duration override in frames.
   GlobalCooldownFrames: /<gcd:[ ]?(\d+)>/gi,
+  // battler-wide GCD reduction rate; positive values shorten GCD, negative lengthen it.
+  GlobalCooldownReduction: /<cdr:\[([+\-*/ ().\w]+)]>/gi,
+  ParryExtensionRate: /<per:\[([+\-*/ ().\w]+)]>/gi,
 
   // action size/shape/count related.
-  SizeInPixels: /<size:[ ]?(\d+)>/gi,
   Degrees: /<degrees:[ ]?(\d+)>/gi,
   Range: /<radius:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
   Shape: /<hitbox:[ ]?(circle|rhombus|square|line|arc|wall|cross)>/gi,
@@ -465,8 +461,10 @@ J.ABS.RegExp = {
   DirectLock: /<directLock>/i,
   DirectStateTarget: /<directStateTarget:[ ]?(\d+)>/gi,
   Proximity: /<proximity:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+  InnerRadius: /<innerRadius:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
   Duration: /<duration:[ ]?(\d+)>/gi,
   Knockback: /<knockback:[ ]?(\d+)>/gi,
+  IgnoreTerrain: /<ignoreTerrain>/i,
   DelayData: /<delay:[ ]?(\[-?\d+,[ ]?(true|false)(?:,[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?))?])>/gi,
   Linger: /<linger:[ ]?(\d+)>/gi,
   OnDefeatedTarget: /<onDefeatedTarget>/gi,
@@ -476,7 +474,7 @@ J.ABS.RegExp = {
   OnCastAnimationId: /<onCastAnimationId:[ ]?(\d+)>/gi,
 
   // combo-related.
-  ComboAction: /<combo:[ ]?(\[\d+,[ ]?\d+])>/gi,
+  ComboAction: /<combo:[ ]?(\[\d+(?:,[ ]?\d+){0,2}])>/gi,
   ComboStarter: /<comboStarter>/gi,
   AiSkillExclusion: /<aiSkillExclusion>/gi,
   FreeCombo: /<freeCombo>/gi,
@@ -494,6 +492,9 @@ J.ABS.RegExp = {
   // aggro-related.
   BonusAggro: /<aggro:[ ]?(-?\d+)>/gi,
   AggroMultiplier: /<aggroMultiplier:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+  AggroPercent: /<aggroPercent:[ ]?(-?\d+)>/gi,
+  NotMyAggro: /<notMyAggro:[ ]?(-?\d+)>/gi,
+  NotMyAggroPercent: /<notMyAggroPercent:[ ]?(-?\d+)>/gi,
 
   // hits-related.
   Unparryable: /<unparryable>/gi,
@@ -516,6 +517,20 @@ J.ABS.RegExp = {
   BonusHitsSkillNote: /<bonus-hits:[ ]?(\d+)>/gi,
 
   /**
+   * Formula variant of {@link BonusHitsSkillNote}. Evaluated with `a` bound to the caster.
+   *
+   * <pre>
+   * Structure:
+   *  <bonus-hits:[FORMULA]>
+   *
+   * Example:
+   *  <bonus-hits:[a.luk / 10]>
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusHitsSkillNoteFormula: /<bonus-hits:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
    * Bonus hits per connection from battler-side notes, applied to basic attacks only.
    *
    * <pre>
@@ -528,6 +543,20 @@ J.ABS.RegExp = {
    * @type {RegExp}
    */
   BonusHitsScopeBasic: /<bonus-hits-basic:[ ]?(\d+)>/gi,
+
+  /**
+   * Formula variant of {@link BonusHitsScopeBasic}. Evaluated with `a` bound to the battler.
+   *
+   * <pre>
+   * Structure:
+   *  <bonus-hits-basic:[FORMULA]>
+   *
+   * Example:
+   *  <bonus-hits-basic:[a.luk / 10]>
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusHitsScopeBasicFormula: /<bonus-hits-basic:[ ]?\[([+\-*/ ().\w]+)]>/gi,
 
   /**
    * Bonus hits per connection from battler-side notes, applied to non-basic skills only.
@@ -544,6 +573,20 @@ J.ABS.RegExp = {
   BonusHitsScopeSkill: /<bonus-hits-skill:[ ]?(\d+)>/gi,
 
   /**
+   * Formula variant of {@link BonusHitsScopeSkill}. Evaluated with `a` bound to the battler.
+   *
+   * <pre>
+   * Structure:
+   *  <bonus-hits-skill:[FORMULA]>
+   *
+   * Example:
+   *  <bonus-hits-skill:[a.luk / 10]>
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusHitsScopeSkillFormula: /<bonus-hits-skill:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
    * Bonus hits per connection from battler-side notes, applied to all JABS actions.
    *
    * <pre>
@@ -556,6 +599,90 @@ J.ABS.RegExp = {
    * @type {RegExp}
    */
   BonusHitsScopeGlobal: /<bonus-hits-global:[ ]?(\d+)>/gi,
+
+  /**
+   * Formula variant of {@link BonusHitsScopeGlobal}. Evaluated with `a` bound to the battler.
+   *
+   * <pre>
+   * Structure:
+   *  <bonus-hits-global:[FORMULA]>
+   *
+   * Example:
+   *  <bonus-hits-global:[a.luk / 10]>
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusHitsScopeGlobalFormula: /<bonus-hits-global:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
+   * Battler-wide bonus positive rerolls fed into chanceIn100 whenever this battler is the party
+   * wanting a roll to succeed (e.g. the attacker landing a hit/crit/state-apply). Evaluated with
+   * `a` bound to this battler, summed across every note source. No floor or cap.
+   * Structure: <luckyRolls:[FORMULA]>
+   * @type {RegExp}
+   */
+  LuckyRolls: /<luckyRolls:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
+   * Same as {@link LuckyRolls}, but read from a specific skill's own note only- lets a skill
+   * grant its caster bonus positive rerolls specifically while using it.
+   * Structure: <thisLuckyRolls:[FORMULA]>
+   * @type {RegExp}
+   */
+  ThisLuckyRolls: /<thisLuckyRolls:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
+   * Battler-wide bonus negative rerolls fed into chanceIn100 whenever this battler is the party
+   * wanting a roll to fail (e.g. the defender evading a hit/crit/state-apply). Evaluated with
+   * `a` bound to this battler, summed across every note source. No floor or cap.
+   * Structure: <cursedRolls:[FORMULA]>
+   * @type {RegExp}
+   */
+  CursedRolls: /<cursedRolls:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
+   * Same as {@link CursedRolls}, but read from a specific skill's own note only.
+   * Structure: <thisCursedRolls:[FORMULA]>
+   * @type {RegExp}
+   */
+  ThisCursedRolls: /<thisCursedRolls:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
+   * Battler-wide flag that short-circuits any `chanceIn100`/`shouldTrigger` roll this battler is
+   * the positive-roller for straight to guaranteed success- no roll occurs at all. True bypass,
+   * not an absurd reroll count.
+   * Structure: <veryLucky>
+   * @type {RegExp}
+   */
+  VeryLucky: /<veryLucky>/i,
+
+  /**
+   * Battler-wide flag that short-circuits any `chanceIn100`/`shouldTrigger` roll this battler is
+   * the positive-roller for straight to guaranteed failure- no roll occurs at all.
+   * Structure: <veryCursed>
+   * @type {RegExp}
+   */
+  VeryCursed: /<veryCursed>/i,
+
+  /**
+   * Battler-wide bonus repeat count: whenever this battler is the positive-roller for a
+   * repeatable-action proc (state application, forced skill execution), each individual success
+   * executes `1 + encoreRepeats` times instead of once. Evaluated with `a` bound to this battler,
+   * summed across every note source. No floor or cap.
+   * Structure: <encoreRepeats:[FORMULA]>
+   * @type {RegExp}
+   */
+  EncoreRepeats: /<encoreRepeats:[ ]?\[([+\-*/ ().\w]+)]>/gi,
+
+  /**
+   * Battler-wide flag that switches this battler's repeatable-action procs into Accumulate Mode:
+   * instead of stopping at the first successful positive roll, every one of the positive rolls is
+   * counted, and the proc's action executes once per success (subject to `<encoreRepeats>` on
+   * top of that).
+   * Structure: <accumulate>
+   * @type {RegExp}
+   */
+  Accumulate: /<accumulate>/i,
 
   PiercingData: /<pierce:[ ]?(\[\d+,[ ]?\d+])>/gi,
 
@@ -593,15 +720,31 @@ J.ABS.RegExp = {
   // cast preview (skill-level).
   NoCastPreviewSkill: /<noCastPreview>/gi,
   CastPreviewWarnAt: /<castPreviewWarnAt:[ ]?(\d+)>/gi,
+
+  // on-hit state purge.
+  PurgeStates: /<purgeStates:[ ]?(\[.*?])>/i,
+
+  // slip amplification scoped to states applied by this skill specifically.
+  ThisDotAmpRate: /<thisDotAmpRate:[ ]?(-?\d+)%?>/gi,
+  ThisHotAmpRate: /<thisHotAmpRate:[ ]?(-?\d+)%?>/gi,
   //endregion ON SKILLS
 
   //region ON EQUIPS
   // skill-related.
   SkillId: /<skillId:[ ]?(\d+)>/gi,
   OffhandSkillId: /<offhandSkillId:[ ]?(\d+)>/gi,
+  GuardSkillId: /<guardSkillId:[ ]?(\d+)>/gi,
 
   // knockback-related.
   KnockbackResist: /<knockbackResist:[ ]?(\d+)>/gi,
+  ProximityKnockback: /<proximityKnockback:[ ]?(\[(?:0|[1-9][0-9]*)(?:\.[0-9]+)?,[ ]?-?(?:0|[1-9][0-9]*)])>/gi,
+
+  // unconditional outgoing knockback amplification- no proximity requirement, unlike ProximityKnockback.
+  // KnockbackAmp reads from the caster's getAllNotes() (any source); ThisKnockbackAmp is skill-scoped,
+  // read from the executing skill's own note only. Both sum additively with each other and with
+  // ProximityKnockback into one final outgoing-knockback multiplier.
+  KnockbackAmp: /<knockbackAmp:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+  ThisKnockbackAmp: /<thisKnockbackAmp:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
 
   // parry-related.
   IgnoreParry: /<ignoreParry:[ ]?(\d+)>/gi,
@@ -610,11 +753,24 @@ J.ABS.RegExp = {
   //region ON ITEMS
   UseOnPickup: /<useOnPickup>/gi,
   Expires: /<expires:[ ]?(\d+)>/gi,
+  // marks an item as a tool (hookshot, bomb, etc.) for the tool slot; without
+  // this tag, regular consumables land in the usable-item slot instead.
+  JabsTool: /<jabsTool>/i,
   //endregion ON ITEMS
 
   //region ON STATES
   // definition-related.
-  Negative: /<negative>/gi,
+  NoLogs: /<noLogs>/i,
+
+  // state-application immunity/resistance, read from the target's own notes (not the applied state).
+  StateTypeResist: /<stateTypeResist:[ ]?(\[[a-zA-Z][a-zA-Z0-9_-]*,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+  StateTypeImmune: /<stateTypeImmune:[ ]?([a-zA-Z][a-zA-Z0-9_-]*)>/gi,
+  ImmuneToNegatives: /<immuneToNegatives>/gi,
+  ImmuneToStates: /<immuneToStates>/gi,
+  ImmuneToAll: /<immuneToAll>/gi,
+
+  // casting/channeling interruption immunity, read from all of a battler's own note sources.
+  CannotBeInterrupted: /<cannotBeInterrupted>/i,
 
   // function-related.
   ReapplyType: /<stackType:[ ]?(refresh|extend|stack)>/gi,
@@ -626,8 +782,14 @@ J.ABS.RegExp = {
   ReapplyExtendMax: /<stackExtendMax:[ ]?(\d+)>/gi,
 
   ReapplyStackMax: /<stackMax:[ ]?(\d+)>/gi,
+  StackMaxBoost: /<stackMaxBoost:[ ]?([-+]?\d+)>/gi,
+  ThisStackMaxBoost: /<thisStackMaxBoost:[ ]?([-+]?\d+)>/gi,
   StateApplicationAmount: /<applyStacks:[ ]?(\d+)>/gi,
   LoseAllStacksAtOnce: /<loseAllStacksAtOnce>/gi,
+  StackOnExpire: /<stackOnExpire>/gi,
+  StacksConvertToState: /<stacksConvertToState:(\[\d+,[ ]?\d+])>/gi,
+  RemoveOnConvert: /<removeOnConvert>/gi,
+  ConvertUsesCaster: /<convertUsesCaster>/gi,
   SkillTransform: /<skillTransform:[ ]?(\[\d+,[ ]?\d+])>/gi,
 
   // jabs core ailment functionalities.
@@ -653,9 +815,26 @@ J.ABS.RegExp = {
   SlipTpFormula: /<tpFormula:\[([+\-*/ ().\w]+)]>/gi,
 
   // state duration-related.
+  StateDuration: /<stateDuration:[ ]?(\d+)>/i,
+  StateDurationSec: /<stateDurationSec:[ ]?(\d+)>/i,
+  IndefiniteState: /<indefiniteState>/i,
   StateDurationFlatPlus: /<stateDurationFlat:[ ]?([-+]?\d+)>/gi,
   StateDurationPercentPlus: /<stateDurationPerc:[ ]?([-+]?\d+)>/gi,
   StateDurationFormulaPlus: /<stateDurationFormula:\[([+\-*/ ().\w]+)]>/gi,
+  ThisStateDurationFlatPlus: /<thisStateDurationFlat:[ ]?([-+]?\d+)>/gi,
+  ThisStateDurationPercentPlus: /<thisStateDurationPerc:[ ]?([-+]?\d+)>/gi,
+  ThisStateDurationFormulaPlus: /<thisStateDurationFormula:\[([+\-*/ ().\w]+)]>/gi,
+
+  // tick speed-related.
+  ThisTickSpeed: /<thisTickSpeed:[ ]?(\d+)>/gi,
+  TickSpeedFlat: /<tickSpeedFlat:[ ]?(-?\d+)>/gi,
+  TickSpeedPercent: /<tickSpeedPercent:[ ]?(-?\d+)%?>/gi,
+  TickSpeedTypePercent: /<tickSpeedTypePercent:(\[[a-zA-Z][a-zA-Z0-9_-]*,[ ]?-?\d+])>/gi,
+
+  // slip amplification-related; battler-wide, summed across every note source (actor/class/
+  // weapon/armor/state) on the battler applying the slip.
+  DotAmpRate: /<dotAmpRate:[ ]?(-?\d+)%?>/gi,
+  HotAmpRate: /<hotAmpRate:[ ]?(-?\d+)%?>/gi,
   //endregion ON STATES
 
   //region ON BATTLERS
@@ -670,6 +849,7 @@ J.ABS.RegExp = {
 
   // bonus concepts.
   VisionMultiplier: /<visionMultiplier:[ ]?(-?\d+)>/i,
+  ProjectileDurationMultiplier: /<projectileDuration:[ ]?(-?\d+)>/i,
 
   // alert-related.
   AlertDuration: /<alertDuration:[ ]?(\d+)>/i,
@@ -703,8 +883,10 @@ J.ABS.RegExp = {
   ConfigCanIdle: /<jabsConfig:[ ]?canIdle>/i,
   ConfigNoHpBar: /<jabsConfig:[ ]?noHpBar>/i,
   ConfigShowHpBar: /<jabsConfig:[ ]?showHpBar>/i,
+  ConfigShowStates: /<jabsConfig:[ ]?showStates>/i,
+  ConfigHideStates: /<jabsConfig:[ ]?hideStates>/i,
   ConfigInanimate: /<jabsConfig:[ ]?inanimate>/i,
-  ConfigNotInanimate: /<jabsConfig[ ]?:notInanimate>/i,
+  ConfigNotInanimate: /<jabsConfig:[ ]?notInanimate>/i,
   ConfigInvincible: /<jabsConfig:[ ]?invincible>/i,
   ConfigNotInvincible: /<jabsConfig:[ ]?notInvincible>/i,
   ConfigNoName: /<jabsConfig:[ ]?noName>/i,
@@ -716,10 +898,723 @@ J.ABS.RegExp = {
   // counter-related (on-chance-effect)
   OnOwnDefeat: /<onOwnDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
   OnTargetDefeat: /<onTargetDefeat:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+
+  // evasion-related (on-chance-effect)
+  OnEvadeApply: /<onEvadeApply:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+  OnEvadeApplySelf: /<onEvadeApplySelf:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+  OnEvadeExecute: /<onEvadeExecute:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+
+  /**
+   * Percent damage bonus per negative state (isNegativeType) currently active on the target.
+   * All PerDebuffBuff values from getAllNotes() are summed, then multiplied by the debuff count.
+   * Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <perDebuffBuff:N>
+   *
+   * Example:
+   *  <perDebuffBuff:5>
+   *
+   * Translation:
+   *  +5% damage for every negative state active on the target.
+   * </pre>
+   * @type {RegExp}
+   */
+  PerDebuffBuff: /<perDebuffBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Flat percent damage bonus applied when the target has a specific state active.
+   * Reads from getAllNotes(). Multiple tags for different state ids each fire independently.
+   * Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamageIfState:[STATE_ID, PCT]>
+   *
+   * Example:
+   *  <bonusDamageIfState:[14, 25]>
+   *
+   * Translation:
+   *  +25% damage if the target currently has state 14 active.
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamageIfState: /<bonusDamageIfState:[ ]?(\[\d+,[ ]?\d+])>/gi,
+
+  /**
+   * Flat percent damage bonus applied when the target has a specific state active.
+   * Reads from this.item() only — fires only when THIS skill is the action being resolved.
+   * Multiple tags for different state ids each fire independently and stack additively.
+   * Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <thisBonusDamageIfState:[STATE_ID, PCT]>
+   *
+   * Example:
+   *  <thisBonusDamageIfState:[14, 100]>
+   *
+   * Translation:
+   *  +100% damage from this skill if the target currently has state 14 active.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisBonusDamageIfState: /<thisBonusDamageIfState:[ ]?(\[\d+,[ ]?\d+])>/gi,
+
+  /**
+   * Flat percent damage bonus applied when the CASTER currently has a specific state active.
+   * Reads from the caster's getAllNotes() sources (actor, class, equips, states).
+   * Multiple tags for different state ids each fire independently and stack additively.
+   * Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamageIfSelfState:[STATE_ID, PCT]>
+   *
+   * Example:
+   *  <bonusDamageIfSelfState:[29, 50]>
+   *
+   * Translation:
+   *  +50% damage if the caster currently has state 29 active.
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamageIfSelfState: /<bonusDamageIfSelfState:[ ]?(\[\d+,[ ]?\d+])>/gi,
+
+  /**
+   * Flat percent damage bonus applied when the CASTER currently has a specific state active.
+   * Reads from this.item() only — fires only when THIS skill is the action being resolved.
+   * Multiple tags for different state ids each fire independently and stack additively.
+   * Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <thisBonusDamageIfSelfState:[STATE_ID, PCT]>
+   *
+   * Example:
+   *  <thisBonusDamageIfSelfState:[29, 50]>
+   *
+   * Translation:
+   *  +50% damage from this skill if the caster currently has state 29 active.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisBonusDamageIfSelfState: /<thisBonusDamageIfSelfState:[ ]?(\[\d+,[ ]?\d+])>/gi,
+
+  /**
+   * Unconditional flat percent damage bonus applied to every action the caster performs.
+   * Reads from the caster's getAllNotes() sources (actor, class, equips, states) — unlike
+   * thisBonusDamage, this is not scoped to one skill; it applies caster-wide. All values found
+   * across every note source are summed. Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamage:PCT>
+   *
+   * Example:
+   *  <bonusDamage:15>
+   *
+   * Translation:
+   *  This battler always deals +15% damage with every action, regardless of target state.
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamage: /<bonusDamage:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Unconditional flat percent damage bonus applied when THIS skill is the action being resolved.
+   * Reads from this.item() only — does not read from getAllNotes() and does not affect other skills.
+   * Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <thisBonusDamage:PCT>
+   *
+   * Example:
+   *  <thisBonusDamage:20>
+   *
+   * Translation:
+   *  This skill always deals +20% damage, regardless of target state.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisBonusDamage: /<thisBonusDamage:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Flat percent damage bonus applied when the target has at least one active state
+   * carrying the given type classifier (see RPG_State's stateTypes()).
+   * Reads from getAllNotes(). Multiple tags for different types each fire independently.
+   * Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamageIfStateType:[TYPE, PCT]>
+   *
+   * Example:
+   *  <bonusDamageIfStateType:[poison, 25]>
+   *
+   * Translation:
+   *  +25% damage if the target has any active state classified as "poison".
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamageIfStateType: /<bonusDamageIfStateType:[ ]?(\[[a-zA-Z][a-zA-Z0-9_-]*,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+
+  /**
+   * Percent damage bonus per active state carrying the given type classifier
+   * (see RPG_State's stateTypes()). Each tag's PCT is multiplied by the count of
+   * distinct active states on the target bearing that type, then summed across tags.
+   * Reads from getAllNotes(). Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamagePerStateType:[TYPE, PCT]>
+   *
+   * Example:
+   *  <bonusDamagePerStateType:[poison, 10]>
+   *
+   * Translation:
+   *  +10% damage for every active state classified as "poison" on the target.
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamagePerStateType: /<bonusDamagePerStateType:[ ]?(\[[a-zA-Z][a-zA-Z0-9_-]*,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+
+  /**
+   * Percent damage bonus per stack of one specific state currently active on the target.
+   * Unlike BonusDamagePerStateType (which counts distinct states of a type), this reads the
+   * stack count of one named state and multiplies accordingly. No stack cap is enforced here-
+   * whatever cap the state itself carries is the only ceiling. Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamagePerStateStack:[STATE_ID, PCT]>
+   *
+   * Example:
+   *  <bonusDamagePerStateStack:[14, 2]>
+   *
+   * Translation:
+   *  +2% damage per stack of state 14 currently on the target.
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamagePerStateStack: /<bonusDamagePerStateStack:[ ]?(\[\d+,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+
+  /**
+   * Percent damage bonus per stack of one specific state currently active on the target.
+   * Reads from this.item() only — fires only when this specific skill is the action being
+   * resolved, unlike BonusDamagePerStateStack which reads from the caster's getAllNotes().
+   * No stack cap is enforced here- whatever cap the state itself carries is the only ceiling.
+   *
+   * <pre>
+   * Structure:
+   *  <thisBonusDamagePerStateStack:[STATE_ID, PCT]>
+   *
+   * Example:
+   *  <thisBonusDamagePerStateStack:[14, 2]>
+   *
+   * Translation:
+   *  +2% damage per stack of state 14 currently on the target, from this skill only.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisBonusDamagePerStateStack: /<thisBonusDamagePerStateStack:[ ]?(\[\d+,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+
+  /**
+   * Flat percent damage bonus per distinct state currently on the target that this battler
+   * personally applied. Counts distinct authored states, not stack depth of any one state-
+   * distinct from BonusDamagePerStateStack above. Lives on a passive state; always active
+   * regardless of which skill is executing. Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamageForMyStateCount:PCT>
+   *
+   * Example:
+   *  <bonusDamageForMyStateCount:5>
+   *
+   * Translation:
+   *  +5% damage per distinct state this battler has authored on the target.
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamageForMyStateCount: /<bonusDamageForMyStateCount:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Skill-scoped counterpart to BonusDamageForMyStateCount- applies only when this specific
+   * skill is the action being resolved. Reads from this.item() only.
+   *
+   * <pre>
+   * Structure:
+   *  <thisBonusDamageForMyStateCount:PCT>
+   *
+   * Example:
+   *  <thisBonusDamageForMyStateCount:5>
+   *
+   * Translation:
+   *  +5% damage per distinct state this battler has authored on the target, when this skill lands.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisBonusDamageForMyStateCount: /<thisBonusDamageForMyStateCount:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Percent damage vulnerability per stack of any state this battler has personally authored on
+   * the target, collected by whichever attacker is currently dealing damage- not just this
+   * battler. Lives on the author's passive/kit notes, but is read via each tracked state's
+   * source rather than via this.subject(), so the bonus applies to damage from anyone once the
+   * author's stacks are present. Unlike BonusDamageForMyStateCount (distinct state count), this
+   * scales by total stack count across every state the author has applied.
+   *
+   * <pre>
+   * Structure:
+   *  <vulnerabilityPerAuthoredStateStack:PCT>
+   *
+   * Example:
+   *  <vulnerabilityPerAuthoredStateStack:10>
+   *
+   * Translation:
+   *  +10% damage from anyone, per stack of any state this battler has applied to the target.
+   * </pre>
+   * @type {RegExp}
+   */
+  VulnerabilityPerAuthoredStateStack: /<vulnerabilityPerAuthoredStateStack:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Execute-style percent damage bonus that scales with how far under a hp threshold the target
+   * currently is. Reads from getAllNotes() (actor, class, equips, states). The gate opens once
+   * target hp% <= THRESHOLD_PCT, then the bonus scales by PCT_PER_POINT for every percentage
+   * point the target is under that threshold- not a flat one-time bonus.
+   * Applied before guard reduction in the damage pipeline.
+   *
+   * <pre>
+   * Structure:
+   *  <bonusDamageIfTargetHpBelow:[THRESHOLD_PCT, PCT_PER_POINT]>
+   *
+   * Example:
+   *  <bonusDamageIfTargetHpBelow:[50, 2]>
+   *
+   * Translation:
+   *  Once the target is at or under 50% hp, gain +2% damage for every percentage point they are
+   *  under 50%- +40% at 30% hp, +80% at 10% hp.
+   * </pre>
+   * @type {RegExp}
+   */
+  BonusDamageIfTargetHpBelow: /<bonusDamageIfTargetHpBelow:[ ]?(\[-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+
+  /**
+   * Skill-scoped counterpart to BonusDamageIfTargetHpBelow- applies only when this specific
+   * skill is the action being resolved. Reads from this.item() only.
+   *
+   * <pre>
+   * Structure:
+   *  <thisBonusDamageIfTargetHpBelow:[THRESHOLD_PCT, PCT_PER_POINT]>
+   *
+   * Example:
+   *  <thisBonusDamageIfTargetHpBelow:[50, 2]>
+   *
+   * Translation:
+   *  When this skill lands on a target at or under 50% hp, gain +2% damage from this skill for
+   *  every percentage point they are under 50%.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisBonusDamageIfTargetHpBelow: /<thisBonusDamageIfTargetHpBelow:[ ]?(\[-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?,[ ]?-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?])>/gi,
+
+  /**
+   * Flat tile addition applied to radius, proximity, and thickness before the rate multiplier.
+   * Signed decimal; negative values shrink reach. Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <rangeBuff:N>
+   *
+   * Example:
+   *  <rangeBuff:2>
+   *
+   * Translation:
+   *  Adds 2 tiles flat to every outgoing action's radius, proximity, and thickness.
+   * </pre>
+   * @type {RegExp}
+   */
+  RangeBuff: /<rangeBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Multiplicative rate applied to radius, proximity, and thickness after the buff step.
+   * Base-1.0 delta model: each tag contributes (N - 1.0) to the accumulator.
+   * Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <rangeRate:N>
+   *
+   * Example:
+   *  <rangeRate:1.5>
+   *
+   * Translation:
+   *  All outgoing actions have 1.5x radius, proximity, and thickness.
+   *  A second <rangeRate:1.5> stacks to 2.0x (each contributes +0.5 to the accumulator).
+   * </pre>
+   * @type {RegExp}
+   */
+  RangeRate: /<rangeRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Flat tile addition applied only to radius (AoE splash zone), after rangeBuff but before rate.
+   * Negative values shrink the splash zone.
+   * Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <radiusBuff:N>
+   *
+   * Example:
+   *  <radiusBuff:2>
+   *
+   * Translation:
+   *  Adds 2 tiles flat to every outgoing action's radius only (not proximity or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  RadiusBuff: /<radiusBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Multiplicative rate applied only to radius (AoE splash zone), after all buffs.
+   * Base-1.0 delta model: each tag contributes (N - 1.0) to the accumulator.
+   * Stacks with rangeRate.
+   * Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <radiusRate:N>
+   *
+   * Example:
+   *  <radiusRate:1.5>
+   *
+   * Translation:
+   *  All outgoing actions have 1.5x radius only (not proximity or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  RadiusRate: /<radiusRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Flat tile addition applied only to proximity (targeting reach), after rangeBuff but before rate.
+   * Negative values shorten targeting reach.
+   * Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <proximityBuff:N>
+   *
+   * Example:
+   *  <proximityBuff:2>
+   *
+   * Translation:
+   *  Adds 2 tiles flat to every outgoing action's proximity only (not radius or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  ProximityBuff: /<proximityBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Multiplicative rate applied only to proximity (targeting reach), after all buffs.
+   * Base-1.0 delta model: each tag contributes (N - 1.0) to the accumulator.
+   * Stacks with rangeRate.
+   * Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <proximityRate:N>
+   *
+   * Example:
+   *  <proximityRate:1.5>
+   *
+   * Translation:
+   *  All outgoing actions have 1.5x proximity only (not radius or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  ProximityRate: /<proximityRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Flat tile addition applied only to thickness (LINE/WALL hitbox width), after rangeBuff but before rate.
+   * Negative values narrow the hitbox.
+   * Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <thicknessBuff:N>
+   *
+   * Example:
+   *  <thicknessBuff:1>
+   *
+   * Translation:
+   *  Adds 1 tile flat to every outgoing action's thickness only (not radius or proximity).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThicknessBuff: /<thicknessBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Multiplicative rate applied only to thickness (LINE/WALL hitbox width), after all buffs.
+   * Base-1.0 delta model: each tag contributes (N - 1.0) to the accumulator.
+   * Stacks with rangeRate.
+   * Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <thicknessRate:N>
+   *
+   * Example:
+   *  <thicknessRate:1.5>
+   *
+   * Translation:
+   *  All outgoing actions have 1.5x thickness only (not radius or proximity).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThicknessRate: /<thicknessRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to rangeBuff: flat tile addition to radius, proximity, and thickness,
+   * read only from this skill's own note (this.getBaseSkill()), not the caster's getAllNotes().
+   * Stacks additively with rangeBuff.
+   *
+   * <pre>
+   * Structure:
+   *  <thisRangeBuff:N>
+   *
+   * Example:
+   *  <thisRangeBuff:2>
+   *
+   * Translation:
+   *  This skill alone gets +2 tiles flat to radius, proximity, and thickness.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisRangeBuff: /<thisRangeBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to rangeRate: multiplicative rate applied to radius, proximity, and
+   * thickness, read only from this skill's own note. Base-1.0 delta model, same as rangeRate.
+   * Stacks additively with rangeRate.
+   *
+   * <pre>
+   * Structure:
+   *  <thisRangeRate:N>
+   *
+   * Example:
+   *  <thisRangeRate:1.5>
+   *
+   * Translation:
+   *  This skill alone has 1.5x radius, proximity, and thickness.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisRangeRate: /<thisRangeRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to radiusBuff, read only from this skill's own note.
+   * Stacks additively with radiusBuff (and thisRangeBuff).
+   *
+   * <pre>
+   * Structure:
+   *  <thisRadiusBuff:N>
+   *
+   * Example:
+   *  <thisRadiusBuff:2>
+   *
+   * Translation:
+   *  This skill alone gets +2 tiles flat to radius only (not proximity or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisRadiusBuff: /<thisRadiusBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to radiusRate, read only from this skill's own note.
+   * Stacks additively with radiusRate (and thisRangeRate).
+   *
+   * <pre>
+   * Structure:
+   *  <thisRadiusRate:N>
+   *
+   * Example:
+   *  <thisRadiusRate:1.5>
+   *
+   * Translation:
+   *  This skill alone has 1.5x radius only (not proximity or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisRadiusRate: /<thisRadiusRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to proximityBuff, read only from this skill's own note.
+   * Stacks additively with proximityBuff (and thisRangeBuff).
+   *
+   * <pre>
+   * Structure:
+   *  <thisProximityBuff:N>
+   *
+   * Example:
+   *  <thisProximityBuff:2>
+   *
+   * Translation:
+   *  This skill alone gets +2 tiles flat to proximity only (not radius or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisProximityBuff: /<thisProximityBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to proximityRate, read only from this skill's own note.
+   * Stacks additively with proximityRate (and thisRangeRate).
+   *
+   * <pre>
+   * Structure:
+   *  <thisProximityRate:N>
+   *
+   * Example:
+   *  <thisProximityRate:1.5>
+   *
+   * Translation:
+   *  This skill alone has 1.5x proximity only (not radius or thickness).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisProximityRate: /<thisProximityRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to thicknessBuff, read only from this skill's own note.
+   * Stacks additively with thicknessBuff (and thisRangeBuff).
+   *
+   * <pre>
+   * Structure:
+   *  <thisThicknessBuff:N>
+   *
+   * Example:
+   *  <thisThicknessBuff:1>
+   *
+   * Translation:
+   *  This skill alone gets +1 tile flat to thickness only (not radius or proximity).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisThicknessBuff: /<thisThicknessBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Self-scoped counterpart to thicknessRate, read only from this skill's own note.
+   * Stacks additively with thicknessRate (and thisRangeRate).
+   *
+   * <pre>
+   * Structure:
+   *  <thisThicknessRate:N>
+   *
+   * Example:
+   *  <thisThicknessRate:1.5>
+   *
+   * Translation:
+   *  This skill alone has 1.5x thickness only (not radius or proximity).
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisThicknessRate: /<thisThicknessRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Passive/state/equip skill history damage bonus.
+   * Reads from getAllNotes(); applies to every attack by the bearer.
+   * TYPE_ID = 0 is the sentinel for "any skill type".
+   *
+   * <pre>
+   * Structure:
+   *  <skillHistoryBonus:[TYPE_ID, WINDOW, PCT, COUNT_MODE]>
+   *
+   * Example:
+   *  <skillHistoryBonus:[0, 10, 5, unique]>
+   *
+   * Translation:
+   *  +5% damage per unique skill used in the last 10 seconds (any type).
+   *  COUNT_MODE values: all | unique | streak | distinct_types
+   * </pre>
+   * @type {RegExp}
+   */
+  SkillHistoryBonus: /<skillHistoryBonus:[ ]?(\[\d+,[ ]?\d+,[ ]?\d+,[ ]?[a-z_]+])>/gi,
+
+  /**
+   * Per-skill history damage bonus; only fires when this specific skill is the action.
+   * Reads from this.item(). History scope is limited to this skill's own id.
+   *
+   * <pre>
+   * Structure:
+   *  <thisSkillHistoryBonus:[WINDOW, PCT, COUNT_MODE]>
+   *
+   * Example:
+   *  <thisSkillHistoryBonus:[3, 8, streak]>
+   *
+   * Translation:
+   *  +8% damage per consecutive cast of this skill in the last 3 seconds.
+   *  COUNT_MODE values: all | unique | streak | distinct_types
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisSkillHistoryBonus: /<thisSkillHistoryBonus:[ ]?(\[\d+,[ ]?\d+,[ ]?[a-z_]+])>/gi,
+
+  /**
+   * Percent direct damage bonus per second of resolved cast time on the action.
+   * Reads from getAllNotes() on the caster. Stacks additively with thisCastTimeDamageBonus.
+   *
+   * <pre>
+   * Structure:
+   *  <castTimeDamageBonus:N>
+   *
+   * Example:
+   *  <castTimeDamageBonus:12>
+   *
+   * Translation:
+   *  +12% direct damage per second spent casting (e.g. 3s cast → +36%).
+   * </pre>
+   * @type {RegExp}
+   */
+  CastTimeDamageBonus: /<castTimeDamageBonus:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Per-skill cast-time direct damage bonus; only fires when this specific skill resolves.
+   * Reads from this.item() note. Stacks additively with castTimeDamageBonus sources.
+   *
+   * <pre>
+   * Structure:
+   *  <thisCastTimeDamageBonus:N>
+   *
+   * Example:
+   *  <thisCastTimeDamageBonus:20>
+   *
+   * Translation:
+   *  +20% direct damage per second of this skill's resolved cast time.
+   * </pre>
+   * @type {RegExp}
+   */
+  ThisCastTimeDamageBonus: /<thisCastTimeDamageBonus:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
   //endregion ON BATTLERS
 
+  //region ON STATES (EXPIRY CHAIN)
+  // when a state expires naturally, apply another state at a given percent chance.
+  ApplyStateOnExpire: /<applyStateOnExpire:[ ]?(\[\d+,[ ]?\d+])>/gi,
+  //endregion ON STATES (EXPIRY CHAIN)
+
+  //region ON STATES (SPREAD)
+  Spread: /<spread:[ ]?(\[\d+,[ ]?\d+])>/gi,
+  Viral: /<viral>/gi,
+  SpreadTick: /<spreadTick:(\d+)>/gi,
+  SpreadPerTick: /<spreadPerTick:(\d+)>/gi,
+  SpreadPreferUnafflicted: /<spreadPreferUnafflicted>/gi,
+  SpreadSkipAfflicted: /<spreadSkipAfflicted>/gi,
+  //endregion ON STATES (SPREAD)
+
   //region ON BATTLERS OR STATES
-  Retaliate: /<retaliate:[ ]?(\[\d+,?[ ]?\d+?])>/gi,
+  Retaliate: /<retaliate:[ ]?(\[\d+,?[ ]?\d+?(?:,?[ ]?\w+)?])>/gi,
   //endregion ON BATTLERS OR STATES
 
   //region ON ACTORS/CLASSES
@@ -744,7 +1639,7 @@ J.ABS.Aliased = {
   Game_CharacterBase: new Map(),
   Game_Enemy: new Map(),
   Game_Event: new Map(),
-  Game_Interpreter: {},
+  Game_Interpreter: new Map(),
   JABS_Battler: new Map(),
   Game_Map: new Map(),
   Game_Party: new Map(),
@@ -756,6 +1651,7 @@ J.ABS.Aliased = {
   RPG_Enemy: new Map(),
   RPG_Skill: new Map(),
 
+  Scene_Boot: new Map(),
   Scene_Load: new Map(),
   Scene_Map: new Map(),
 
@@ -765,5 +1661,4 @@ J.ABS.Aliased = {
   Sprite_Character: new Map(),
   Sprite_Gauge: new Map(),
 };
-//endregion Plugin setup & configuration
 //endregion Metadata

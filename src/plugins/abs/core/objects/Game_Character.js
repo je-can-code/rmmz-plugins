@@ -1,10 +1,10 @@
 //region Game_Character
-import JABS_LootDrop from './../__models/JABS_LootDrop.js';
+import JABS_LootDrop from '../models/JABS_LootDrop.js';
 import JABS_Engine from './../managers/JABS_Engine.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
-import JABS_Action from './../__models/JABS_Action.js';
-import JABS_Aabb from './../__models/JABS_Aabb.js';
+import JABS_Action from '../models/JABS_Action.js';
+import JABS_Aabb from '../models/JABS_Aabb.js';
 /**
  * Hooks into the `Game_Character.initMembers` and adds in action sprite properties.
  */
@@ -394,7 +394,7 @@ Game_Character.prototype.requestAnimation = function(animationId)
 };
 
 /**
- * Extends {@link Game_Character.isMovementSucceeded}.<br>
+ * Extends {@link Game_Character.isMovementSucceeded}.<br/>
  * Includes handling for battlers being move-locked by JABS.
  * @returns {boolean}
  */
@@ -428,13 +428,25 @@ Game_Character.prototype.isMovementSucceeded = function()
  */
 Game_Character.prototype.findDiagonalDirectionToHeuristic = function(goalX, goalY)
 {
-  const deltaX2 = this.deltaXFrom(goalX);
-  const deltaY2 = this.deltaYFrom(goalY);
+  const rawDX = this.deltaXFrom(goalX);
+  const rawDY = this.deltaYFrom(goalY);
+
+  // snap sub-tile offsets to zero so pixel-movement floating-point noise doesn't
+  // force a diagonal when the target is essentially on the same axis as the actor.
+  const AXIS_SNAP = 0.3;
+  const deltaX2 = Math.abs(rawDX) < AXIS_SNAP ? 0 : rawDX;
+  const deltaY2 = Math.abs(rawDY) < AXIS_SNAP ? 0 : rawDY;
+
   if (deltaX2 === 0 && deltaY2 === 0)
   {
     return 0;
   }
 
+  // whichever axis has strictly greater magnitude wins the primary direction; the other axis
+  // (if nonzero) tilts it into a diagonal. Note: within each outer branch below, the "losing"
+  // axis's own delta can never be zero here- that combination was already caught by the
+  // deltaX2 === 0 && deltaY2 === 0 early return above, or is mathematically impossible given
+  // the enclosing magnitude comparison (a zero magnitude cannot exceed a non-negative one).
   if (Math.abs(deltaX2) > Math.abs(deltaY2))
   {
     if (deltaX2 > 0)
@@ -445,22 +457,12 @@ Game_Character.prototype.findDiagonalDirectionToHeuristic = function(goalX, goal
           ? 7
           : 1;
     }
-    else if (deltaX2 < 0)
-    {
-      return deltaY2 === 0
-        ? 6
-        : deltaY2 > 0
-          ? 9
-          : 3;
-    }
-    else
-    {
-      return deltaY2 === 0
-        ? 0
-        : deltaY2 > 0
-          ? 8
-          : 2;
-    }
+
+    return deltaY2 === 0
+      ? 6
+      : deltaY2 > 0
+        ? 9
+        : 3;
   }
   else
   {
@@ -472,22 +474,12 @@ Game_Character.prototype.findDiagonalDirectionToHeuristic = function(goalX, goal
           ? 7
           : 9;
     }
-    else if (deltaY2 < 0)
-    {
-      return deltaX2 === 0
-        ? 2
-        : deltaX2 > 0
-          ? 1
-          : 3;
-    }
-    else
-    {
-      return deltaX2 === 0
-        ? 0
-        : deltaX2 > 0
-          ? 4
-          : 6;
-    }
+
+    return deltaX2 === 0
+      ? 2
+      : deltaX2 > 0
+        ? 1
+        : 3;
   }
 };
 
@@ -528,12 +520,14 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
   start.g = 0;
   start.f = $gameMap.distance(start.x, start.y, goalXi, goalYi);
   nodeList.push(start);
+  // Append the row to the working collection.
   openList.push(start.y * mapWidth + start.x);
 
+  // keep looping while nodeList.length > 0.
   while (nodeList.length > 0)
   {
     let bestIndex = 0;
-    for (var i = 0; i < nodeList.length; i++)
+    for (let i = 0; i < nodeList.length; i++)
     {
       if (nodeList[i].f < nodeList[bestIndex].f)
       {
@@ -547,6 +541,7 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
     const pos1 = y1 * mapWidth + x1;
     const g1 = current.g;
 
+    // Mutate the array in place for this edit.
     nodeList.splice(bestIndex, 1);
     openList.splice(openList.indexOf(pos1), 1);
     closedList.push(pos1);
@@ -562,13 +557,13 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
       continue;
     }
 
-    for (var j = 1; j <= 9; j++)
+    for (let j = 1; j <= 9; j++)
     {
       if (j === 5)
       {
         continue;
       }
-      var directions;
+      let directions;
       if (this.isDiagonalDirection(j))
       {
         directions = this.getDiagonalDirections(j);
@@ -595,7 +590,9 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
           continue;
         }
       }
-      else if (this.isDiagonalDirection(j))
+      // every value j can take here (1-9, excluding 5) is either straight or diagonal, so
+      // reaching this branch always means j is a diagonal direction.
+      else
       {
         if (!this.canPassDiagonally(x1, y1, horz, vert))
         {
@@ -603,12 +600,12 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
         }
       }
 
-      var g2 = g1 + 1;
-      var index2 = openList.indexOf(pos2);
+      let g2 = g1 + 1;
+      let index2 = openList.indexOf(pos2);
 
       if (index2 < 0 || g2 < nodeList[index2].g)
       {
-        var neighbor;
+        let neighbor;
         if (index2 >= 0)
         {
           neighbor = nodeList[index2];

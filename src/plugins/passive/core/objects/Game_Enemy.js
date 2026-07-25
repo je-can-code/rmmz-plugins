@@ -1,6 +1,6 @@
 //region Game_Enemy
 /**
- * Extends {@link #onSetup}.<br>
+ * Extends {@link #onSetup}.<br/>
  * Also refreshes the passive states on this battler for the first time.
  * @param {number} enemyId The battler's id.
  */
@@ -16,25 +16,26 @@ Game_Enemy.prototype.onSetup = function(enemyId)
 };
 
 /**
- * Extends {@link #traitObjects}.<br>
+ * Extends {@link #buildTraitObjects}.<br/>
  * When considering traits, also include the enemy's passive states.
+ *
+ * Returns a fresh array by spreading the base result and appending passives — never
+ * mutates the base result so the {@link #traitObjects} cache stays safe.
+ * @returns {(RPG_Enemy|RPG_State)[]}
  */
-J.PASSIVE.Aliased.Game_Enemy.set('traitObjects', Game_Enemy.prototype.traitObjects);
-Game_Enemy.prototype.traitObjects = function()
+J.PASSIVE.Aliased.Game_Enemy.set('buildTraitObjects', Game_Enemy.prototype.buildTraitObjects);
+Game_Enemy.prototype.buildTraitObjects = function()
 {
   // perform original logic.
-  const originalObjects = J.PASSIVE.Aliased.Game_Enemy.get('traitObjects')
+  const baseObjects = J.PASSIVE.Aliased.Game_Enemy.get('buildTraitObjects')
     .call(this);
 
-  // add our own passive states.
-  originalObjects.push(...this.getPassiveStates());
-
-  // return the new combined collection.
-  return originalObjects;
+  // return a new array that includes the enemy's passive states.
+  return [ ...baseObjects, ...this.getPassiveStates() ];
 };
 
 /**
- * Extends {@link #getNotesSources}.<br>
+ * Extends {@link #getNotesSources}.<br/>
  * Includes passive states from this enemy.
  * @returns {RPG_BaseItem[]}
  */
@@ -47,9 +48,6 @@ Game_Enemy.prototype.getNotesSources = function()
 
   // newly defined sources for passives.
   const passiveSources = [
-    // then add all those currently applied passive skill states, too.
-    ...this.getPassiveStates(),
-
     // add all sources from events.
     ...this.passiveExternalStateSources(),
   ];

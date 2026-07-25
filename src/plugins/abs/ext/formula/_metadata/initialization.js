@@ -7,7 +7,7 @@ globalThis.J ||= {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '3.0.0';
+  const requiredBaseVersion = '3.2.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
@@ -15,7 +15,7 @@ globalThis.J ||= {};
   }
 
   // Check to ensure we have the minimum required version of the J-ABS plugin.
-  const requiredJabsVersion = '4.6.0';
+  const requiredJabsVersion = '4.13.0';
   const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
   if (!hasJabsRequirement)
   {
@@ -87,7 +87,7 @@ J.ABS.EXT.FORMULA.Settings = {
  */
 J.ABS.EXT.FORMULA.RegExp = {};
 J.ABS.EXT.FORMULA.RegExp.FormulaApply =
-  /<on-(hit|use):to-(self|allies|target|enemies|all):by-formula:for-(hp|mp|tp):\[([+\-*/ ().\w]+)]>/gi;
+  /<onApplyFormula:[ ]?(\[(?:hit|use),[ ]?(?:self|allies|target|enemies|all),[ ]?(?:hp|mp|tp),[ ]?[+\-*/ ().\w]+])>/gi;
 J.ABS.EXT.FORMULA.RegExp.SkillApply =
-  /<on-(hit|use):to-(self|allies|target|enemies|all):by-skill:\[(\d+)]>/gi;
+  /<onApplySkill:[ ]?(\[(?:hit|use),[ ]?(?:self|allies|target|enemies|all),[ ]?\d+])>/gi;
 //endregion initialization

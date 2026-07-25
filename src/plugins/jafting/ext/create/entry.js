@@ -22,5 +22,4 @@ import './scenes/Scene_JaftingCreate.js';
 import './scenes/Scene_Jafting.js';
 import './windows/Window_JaftingList.js';
 import './_metadata/pluginCommands.js';
-import './debug/jaftingCreationDebug.js';
 

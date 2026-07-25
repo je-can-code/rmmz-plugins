@@ -1,6 +1,9 @@
 //region IconManager
+import ParameterRegistry from './../core/ParameterRegistry.js';
+
 /**
  * A static class that manages the icon to X correlation, such as stats and elements.
+ * IconManager is a J-Base global — not part of the RMMZ engine (unlike TextManager).
  */
 class IconManager
 {
@@ -10,7 +13,7 @@ class IconManager
    */
   constructor()
   {
-    throw new Error('This is a static class.');
+    throw new Error('The IconManager is a static class.');
   }
 
   /**
@@ -29,6 +32,15 @@ class IconManager
   static maxTp()
   {
     return 930;
+  }
+
+  /**
+   * Gets the `iconIndex` for HAR (Healing Rate).
+   * @returns {number} The `iconIndex`.
+   */
+  static har()
+  {
+    return 7;
   }
 
   /**
@@ -154,81 +166,20 @@ class IconManager
   }
 
   /**
-   * Gets the `iconIndex` based on the "long" parameter id.
-   *
-   * "Long" parameter ids are used in the context of 0-27, rather than
-   * 0-7 for param, 0-9 for xparam, and 0-9 for sparam.
-   * @param {number} paramId The "long" parameter id.
-   * @returns {number} The `iconIndex`.
+   * Gets the icon index for a catalog parameter key.
+   * @param {string} parameterKey The registry key.
+   * @returns {number}
    */
-  // eslint-disable-next-line complexity
-  static longParam(paramId)
+  static parameterIcon(parameterKey)
   {
-    switch (paramId)
-    {
-      case  0:
-        return this.param(paramId); // mhp
-      case  1:
-        return this.param(paramId); // mmp
-      case  2:
-        return this.param(paramId); // atk
-      case  3:
-        return this.param(paramId); // def
-      case  4:
-        return this.param(paramId); // mat
-      case  5:
-        return this.param(paramId); // mdf
-      case  6:
-        return this.param(paramId); // agi
-      case  7:
-        return this.param(paramId); // luk
-      case  8:
-        return this.xparam(paramId - 8); // hit
-      case  9:
-        return this.xparam(paramId - 8); // eva (jabs: parry boost)
-      case 10:
-        return this.xparam(paramId - 8); // cri
-      case 11:
-        return this.xparam(paramId - 8); // cev
-      case 12:
-        return this.xparam(paramId - 8); // mev (jabs: unused)
-      case 13:
-        return this.xparam(paramId - 8); // mrf
-      case 14:
-        return this.xparam(paramId - 8); // cnt (jabs: autocounter)
-      case 15:
-        return this.xparam(paramId - 8); // hrg
-      case 16:
-        return this.xparam(paramId - 8); // mrg
-      case 17:
-        return this.xparam(paramId - 8); // trg
-      case 18:
-        return this.sparam(paramId - 18); // trg (jabs: aggro)
-      case 19:
-        return this.sparam(paramId - 18); // grd (jabs: parry)
-      case 20:
-        return this.sparam(paramId - 18); // rec
-      case 21:
-        return this.sparam(paramId - 18); // pha
-      case 22:
-        return this.sparam(paramId - 18); // mcr
-      case 23:
-        return this.sparam(paramId - 18); // tcr
-      case 24:
-        return this.sparam(paramId - 18); // pdr
-      case 25:
-        return this.sparam(paramId - 18); // mdr
-      case 26:
-        return this.sparam(paramId - 18); // fdr
-      case 27:
-        return this.sparam(paramId - 18); // exr
-      case 30:
-        return this.maxTp(); // mtp
+    const definition = ParameterRegistry.get(parameterKey);
 
-      default:
-        console.warn(`paramId:${paramId} didn't map to any of the default parameters.`);
-        return 0;
+    if (!definition)
+    {
+      return 0;
     }
+
+    return definition.iconIndex();
   }
 
   /**
@@ -503,7 +454,7 @@ class IconManager
         return this.partyAbility(trait._dataId);
 
       default:
-        console.error(`all traits are accounted for- is this a custom trait code: [${jaftingTrait._code}]?`);
+        console.error(`all traits are accounted for- is this a custom trait code: [${trait._code}]?`);
         return false;
     }
   }
@@ -544,7 +495,7 @@ class IconManager
     NOT_BASE: 'not-refinement-base',
     NOT_MATERIAL: 'not-refinement-material',
     TIMES_REFINED: 'refined-count',
-    UNREFINABLE: 'unrefinable'
+    UNREFINABLE: 'unrefinable',
   };
 
   /**
@@ -589,7 +540,6 @@ class IconManager
     }
   }
 }
-
 
 export default IconManager;
 //endregion IconManager

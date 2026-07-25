@@ -33,7 +33,7 @@ Game_Item.prototype.underlyingObject = function()
 
 /**
  * Extends `setObject()` to enable setting custom skills and items.
- * @param {RPG_UsableItem|RPG_EquipItem}
+ * @param {RPG_UsableItem|RPG_EquipItem} obj The database row or custom object being bound.
  */
 J.EXTEND.Aliased.Game_Item.set('setObject', Game_Item.prototype.setObject);
 Game_Item.prototype.setObject = function(obj)
@@ -74,6 +74,7 @@ Game_Item.prototype.object = function()
     return this._item;
   }
 
+  // perform original logic.
   return J.EXTEND.Aliased.Game_Item.get('object')
     .call(this);
 };

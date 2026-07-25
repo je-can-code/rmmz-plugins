@@ -1,13 +1,13 @@
 //region Game_Character
 /**
- * Extends {@link Game_Character.distancePerFrame}.<br>
+ * Extends {@link Game_Character.distancePerFrame}.<br/>
  * Enables modification of the character's movement speed on the map.
  * @return {number} The modified distance per frame to move.
  */
 J.ABS.EXT.SPEED.Aliased.Game_Character.set('distancePerFrame', Game_Character.prototype.distancePerFrame);
 Game_Character.prototype.distancePerFrame = function()
 {
-  // determine base distance per frame.
+  // perform original logic.
   const base = J.ABS.EXT.SPEED.Aliased.Game_Character.get('distancePerFrame')
     .call(this);
 
@@ -21,7 +21,7 @@ Game_Character.prototype.distancePerFrame = function()
   // seriously, disable this line and get the result to be negative and see what happens.
   const constrainedTotal = Math.max(total, this.minimumDistancePerFrame());
 
-  // return the sum.
+  // return the constrained sum.
   return constrainedTotal;
 };
 
@@ -39,7 +39,7 @@ Game_Character.prototype.calculateSpeedBoostBonus = function(baseMoveSpeed)
 
   // get the current speed boosts associated with the battler.
   const scale = battler.getBattler()
-    .getWalkSpeedBoosts();
+    .msb;
 
   // if we have no boosts, then don't process.
   if (scale === 0) return 0;

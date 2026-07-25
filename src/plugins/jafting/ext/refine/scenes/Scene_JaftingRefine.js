@@ -40,6 +40,7 @@ class Scene_JaftingRefine
       return;
     }
 
+    // Append the row to the working collection.
     SceneManager.push(this);
   }
 
@@ -296,7 +297,7 @@ class Scene_JaftingRefine
   }
 
   /**
-   * Overrides {@link Scene_MenuBase.prototype.createBackground}.<br>
+   * Overwrites {@link Scene_MenuBase.prototype.createBackground}.<br/>
    * Changes the filter to a different type from {@link PIXI.filters}.<br>
    */
   createBackground()
@@ -310,7 +311,7 @@ class Scene_JaftingRefine
   }
 
   /**
-   * Overrides {@link #createButtons}.<br>
+   * Overwrites {@link #createButtons}.<br/>
    * Disables the creation of the buttons.
    * @override
    */
@@ -331,6 +332,7 @@ class Scene_JaftingRefine
       return this._cachedRefinementStepHintHeight;
     }
 
+    // construct probe for the next step in this routine.
     const probe = new Window_RefinementStepHint(new Rectangle(0, 0, 400, 48));
     this._cachedRefinementStepHintHeight = probe.fittingHeight(1);
     probe.destroy();
@@ -411,7 +413,7 @@ class Scene_JaftingRefine
   }
 
   /**
-   * @param {Window_RefinementStepHint} someWindow
+   * @param {Window_RefinementStepHint} someWindow The some window driving this step.
    */
   setRefinementStepHintWindow(someWindow)
   {

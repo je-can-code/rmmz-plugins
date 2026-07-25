@@ -17,6 +17,7 @@ Scene_Jafting.prototype.onRootJaftingSelection = function()
   }
   else
   {
+    // perform original logic.
     J.JAFTING.Aliased.Scene_Jafting.get('onRootJaftingSelection').call(this);
   }
 };

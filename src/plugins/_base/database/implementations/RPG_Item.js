@@ -109,6 +109,5 @@ class RPG_Item
   }
 }
 
-
 export default RPG_Item;
 //endregion RPG_Item

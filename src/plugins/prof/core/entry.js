@@ -9,5 +9,6 @@ import './objects/Game_Action.js';
 import './objects/Game_System.js';
 import './managers/TextManager.js';
 import './managers/IconManager.js';
+import './core/registerProfParameters.js';
 import './scenes/Scene_Boot.js';
 import './_metadata/pluginCommands.js';

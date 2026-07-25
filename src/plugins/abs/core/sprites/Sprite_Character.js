@@ -1,9 +1,11 @@
 //region Sprite_Character
-import JABS_LootDrop from './../__models/JABS_LootDrop.js';
-import JABS_BattlerName from './../__models/JABS_BattlerName.js';
-import JABS_Action from './../__models/JABS_Action.js';
+import JABS_LootDrop from '../models/JABS_LootDrop.js';
+import JABS_BattlerName from '../models/JABS_BattlerName.js';
+import JABS_Action from '../models/JABS_Action.js';
 import Sprite_MapCastGauge from './Sprite_MapCastGauge.js';
 import Sprite_MapHpGauge from './Sprite_MapHpGauge.js';
+import Sprite_MapAfflictionStrip from './Sprite_MapAfflictionStrip.js';
+import StateAfflictionMapLayoutConfig from '../models/StateAfflictionMapLayoutConfig.js';
 //region init
 /**
  * Hooks into `Sprite_Character.initMembers` and adds our initiation for damage sprites.
@@ -133,6 +135,12 @@ Sprite_Character.prototype.initGaugeMembers = function()
    * The cast gauge for this sprite.
    */
   this._j._abs._gauges._castGauge = null;
+
+  /**
+   * The affliction strip for this sprite.
+   * @type {Sprite_MapAfflictionStrip|null}
+   */
+  this._j._abs._gauges._afflictionStrip = null;
 };
 //endregion init
 
@@ -213,7 +221,7 @@ Sprite_Character.prototype.getBattler = function()
 Sprite_Character.prototype.isJabsBattler = function()
 {
   // if the character doesn't exist, or they are a vehicle, they aren't a battler.
-  if (!this.character() || this.character() instanceof Game_Vehicle) return false;
+  if (!this.character() || this.character().isVehicle()) return false;
 
   // return whether or not this has a battler attached to it.
   return !!this.character()
@@ -356,6 +364,9 @@ Sprite_Character.prototype.setupMapSprite = function()
   // setup a text sprite to display the name of the battler on the map.
   this.setupBattlerName();
 
+  // setup the affliction strip beneath the hp gauge.
+  this.setupAfflictionStrip();
+
   // flag this character as finalized for the purpose of jabs battler-related updates.
   this.finalizeJabsBattlerSetup();
 };
@@ -363,7 +374,7 @@ Sprite_Character.prototype.setupMapSprite = function()
 
 //region visual offsetting
 /**
- * Extends/Overrides {@link Sprite_Character.prototype.updatePosition}.<br/>
+ * Extends {@link Sprite_Character.prototype.updatePosition}.<br/>
  * Also applies per-skill visual metadata (offset, anchor, z, rotation, scale) to JABS action sprites.
  */
 J.ABS.Aliased.Sprite_Character.set('updatePosition', Sprite_Character.prototype.updatePosition);
@@ -761,6 +772,7 @@ Sprite_Character.prototype.setupCastGauge = function()
     const y = -28; // a few pixels higher than -24 to accommodate the taller gauge+icon
     sprite.move(x, y);
 
+    // exit early without a payload.
     return;
   }
 
@@ -813,6 +825,135 @@ Sprite_Character.prototype.updateGauges = function()
     // then hide it.
     this.hideCastGauge();
   }
+
+  // refresh the affliction strip beneath the hp gauge.
+  if (this.canUpdateAfflictionStrip() === true)
+  {
+    this.updateAfflictionStrip();
+  }
+  else
+  {
+    this.hideAfflictionStrip();
+  }
+};
+
+/**
+ * Sets up the affliction strip beneath the hp gauge when applicable.
+ */
+Sprite_Character.prototype.setupAfflictionStrip = function()
+{
+  if (!this._j._abs._gauges._afflictionStrip)
+  {
+    const strip = new Sprite_MapAfflictionStrip();
+
+    this._j._abs._gauges._afflictionStrip = strip;
+    this.addChild(strip);
+  }
+
+  this._j._abs._gauges._afflictionStrip.setupBattler(this.getBattler());
+  this.repositionAfflictionStrip();
+};
+
+/**
+ * Updates the affliction strip for this battler.
+ */
+Sprite_Character.prototype.updateAfflictionStrip = function()
+{
+  const { _afflictionStrip: strip } = this._j._abs._gauges;
+
+  strip.updateStrip();
+  this.repositionAfflictionStrip();
+};
+
+/**
+ * Repositions the affliction strip below the hp gauge, left-aligned to the hp bar.
+ */
+Sprite_Character.prototype.repositionAfflictionStrip = function()
+{
+  const { _afflictionStrip: strip, _hpGauge: hpGauge } = this._j._abs._gauges;
+
+  if (!strip)
+  {
+    return;
+  }
+
+  let x = 0;
+
+  if (hpGauge)
+  {
+    ({ x } = hpGauge);
+  }
+
+  const y = this.mapAfflictionStripY();
+
+  strip.move(x, y);
+};
+
+/**
+ * Resolves the y coordinate for the affliction strip beneath the hp gauge.
+ * @returns {number}
+ */
+Sprite_Character.prototype.mapAfflictionStripY = function()
+{
+  const layoutConfig = StateAfflictionMapLayoutConfig.fromMetadata();
+  const { gapBelowHpBar } = layoutConfig;
+  const hpGauge = this._j._abs._gauges._hpGauge;
+
+  if (this.canUpdateHpGauge() === true && hpGauge)
+  {
+    return hpGauge.y + hpGauge.bitmapHeight() + gapBelowHpBar;
+  }
+
+  return gapBelowHpBar;
+};
+
+/**
+ * Whether the affliction strip can update for this sprite.
+ * @returns {boolean}
+ */
+Sprite_Character.prototype.canUpdateAfflictionStrip = function()
+{
+  if (this.canUpdate() === false)
+  {
+    return false;
+  }
+
+  if (this.isJabsBattler() === false)
+  {
+    return false;
+  }
+
+  if (!this._j._abs._gauges._afflictionStrip)
+  {
+    return false;
+  }
+
+  const jabsBattler = this._character.getJabsBattler();
+
+  if (!jabsBattler)
+  {
+    return false;
+  }
+
+  if (jabsBattler.showStates() === false)
+  {
+    return false;
+  }
+
+  return true;
+};
+
+/**
+ * Hides the affliction strip when it cannot update.
+ */
+Sprite_Character.prototype.hideAfflictionStrip = function()
+{
+  if (!this._j._abs._gauges._afflictionStrip)
+  {
+    return;
+  }
+
+  this._j._abs._gauges._afflictionStrip.hide();
 };
 
 /**
@@ -853,19 +994,20 @@ Sprite_Character.prototype.canUpdateCastGauge = function()
   // if we don't have a cast gauge sprite, we can't update it.
   if (!this._j._abs._gauges._castGauge) return false;
 
-  // use the current JABS battler's live casting state as the gate.
+  // use the current JABS battler's live casting/channeling state as the gate.
   const jabs = this._character.getJabsBattler();
   if (!jabs) return false; // no battler
 
-  // must be actively casting.
-  if (!jabs.isCasting()) return false;
+  // must be actively casting or channeling.
+  if (!jabs.isCastingOrChanneling()) return false;
 
   // must have a decided action.
   const decided = jabs.getDecidedAction();
   if (!decided || decided.length === 0) return false;
 
-  // must have time remaining.
-  if (jabs.getCastTimeCountdown() <= 0) return false;
+  // must have time remaining- whichever of the two states is actually active.
+  if (jabs.isCasting() && jabs.getCastTimeCountdown() <= 0) return false;
+  if (jabs.isChanneling() && jabs.getChannelDurationRemaining() <= 0) return false;
 
   // ready to update this frame.
   return true;
@@ -1005,6 +1147,7 @@ Sprite_Character.prototype.createBattlerNameSprite = function()
   const { name, colorHex } = battlerNameData;
   const fontSize = 16;
 
+  // construct text sprite for the next step in this routine.
   const textSprite = new Sprite_BaseText()
     .setText(name)
     .setFontSize(fontSize)
@@ -1032,7 +1175,7 @@ Sprite_Character.prototype.createBattlerNameSprite = function()
 
 /**
  * Map nameplate draws {@link JABS_BattlerName#colorHex} on the stripe only; HUD may use the same field for text.
- * @param {string} colorHex
+ * @param {string} colorHex The color hex driving this step.
  * @returns {boolean}
  */
 Sprite_Character.prototype.shouldDrawMapTierStripe = function(colorHex)
@@ -1049,7 +1192,8 @@ Sprite_Character.prototype.shouldDrawMapTierStripe = function(colorHex)
 };
 
 /**
- * @param {string} color
+ * Validates hex color strings before drawing map tier stripe overlays.
+ * @param {string} color The color driving this step.
  * @returns {boolean}
  */
 Sprite_Character.prototype.isValidMapTierStripeHex = function(color)
@@ -1060,8 +1204,9 @@ Sprite_Character.prototype.isValidMapTierStripeHex = function(color)
 };
 
 /**
- * @param {string} colorHex
- * @param {number} fontSize
+ * Builds the bordered stripe bitmap used beside map tier labels.
+ * @param {string} colorHex The color hex driving this step.
+ * @param {number} fontSize The font size driving this step.
  * @returns {Bitmap}
  */
 Sprite_Character.prototype.buildMapTierStripeBitmap = function(colorHex, fontSize)
@@ -1082,8 +1227,9 @@ Sprite_Character.prototype.buildMapTierStripeBitmap = function(colorHex, fontSiz
 };
 
 /**
- * @param {Sprite_BaseText} textSprite
- * @param {number} outerH
+ * Vertically centers the tier stripe beside the nameplate text sprite.
+ * @param {Sprite_BaseText} textSprite The text sprite driving this step.
+ * @param {number} outerH The outer h driving this step.
  * @returns {number}
  */
 Sprite_Character.prototype.computeMapTierStripeY = function(textSprite, outerH)

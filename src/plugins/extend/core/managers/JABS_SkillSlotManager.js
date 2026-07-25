@@ -19,6 +19,6 @@ JABS_SkillSlotManager.prototype.filterActionSkills = function(enemy, action)
   const skill = enemy.skill(action.skillId);
 
   // filter out the extend skills.
-  return skill.isSkillExtension === false;
+  return skill.isExtension === false;
 };
 //endregion JABS_SkillSlotManager

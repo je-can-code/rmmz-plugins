@@ -1,4 +1,5 @@
 import RPG_Traited from '../base/RPG_Traited.js';
+import RPGManager from '../../managers/RPGManager.js';
 
 //region RPG_State
 /**
@@ -22,7 +23,7 @@ class RPG_State
   chanceByDamage = 100;
 
   /**
-   * OVERWRITE States do not normally have descriptions.
+   * States do not normally have descriptions.
    * Rather than leaving it as `undefined`, lets be nice and keep it
    * an empty string.
    * @type {String.empty}
@@ -145,9 +146,11 @@ class RPG_State
     this.autoRemovalTiming = state.autoRemovalTiming;
     this.chanceByDamage = state.chanceByDamage;
     this.maxTurns = state.maxTurns;
+    // assign message1 on this instance for callers.
     this.message1 = state.message1;
     this.message2 = state.message2;
     this.message3 = state.message3;
+    // assign message4 on this instance for callers.
     this.message4 = state.message4;
     this.minTurns = state.minTurns;
     this.motion = state.motion;
@@ -218,7 +221,6 @@ class RPG_State
     return new RPG_State(raw, index);
   }
 }
-
 
 export default RPG_State;
 //endregion RPG_State

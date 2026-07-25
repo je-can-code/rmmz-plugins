@@ -23,7 +23,7 @@
  * This plugin adds HP cost and gain support, as well as tag-based flat,
  * percentage, and formula costs for MP and TP as well.
  *
- * longParam ID 34 is reserved by this plugin for the HP cost parameter.
+ * HP cost reduction is registered in the parameter catalog as `hcr`.
  *
  * ============================================================================
  * HP COST
@@ -34,7 +34,7 @@
  *
  * NOTE:
  * By default, a battler cannot cast a skill if its HP cost would kill them.
- * Add the sacrifice tag to allow casting even when it would be lethal.
+ * Add the <hp-cost-can-kill> tag to allow casting even when it would be lethal.
  *
  * TAG USAGE:
  * - Skills
@@ -52,7 +52,7 @@
  *    Where FORMULA is an eval'd expression with access to `a` (the battler).
  *
  * TAG FORMAT (lethal / sacrifice):
- *  <hp-cost-sacrifice>
+ *  <hp-cost-can-kill>
  *    Allows casting even when the HP cost would reduce HP to 0.
  *
  * TAG EXAMPLES:
@@ -65,7 +65,7 @@
  *  <hp-cost:[a.mhp / 4]>
  *    Costs 25% of max HP via formula.
  *
- *  <hp-cost-sacrifice>
+ *  <hp-cost-can-kill>
  *    This skill can be cast even if it would reduce the caster to 0 HP.
  *
  * ============================================================================
@@ -77,8 +77,14 @@
  *
  * NOTE:
  * Unlike MCR/TCR which are multipliers, HCR is additive subtraction from 100.
- * A tag of <hcr:5> means "reduce HP costs by 5 percentage points", making it
+ * A tag of <hcr:[5]> means "reduce HP costs by 5 percentage points", making it
  * easy to read at-a-glance what each piece of equipment contributes.
+ *
+ * NOTE ABOUT THE FORMULA CONTEXT:
+ * Unlike most formula tags in these plugins, this one is evaluated per note
+ * source directly (not per-battler), so there is no `a` battler reference
+ * available- only literal numeric expressions are safe here (e.g. `[5]`,
+ * `[10 - 2]`). Referencing a battler property will throw.
  *
  * TAG USAGE:
  * - Actors
@@ -88,11 +94,11 @@
  * - States
  *
  * TAG FORMAT:
- *  <hcr:VALUE>
+ *  <hcr:[VALUE]>
  *    Where VALUE is the integer percentage to reduce HP costs by.
  *
  * TAG EXAMPLES:
- *  <hcr:5>
+ *  <hcr:[5]>
  *    Reduces all HP skill costs by 5%.
  *
  * ============================================================================
@@ -130,13 +136,51 @@
  *  <tp-gain:VALUE>  <tp-gain:PERCENT%>  <tp-gain:[FORMULA]>
  *
  * ============================================================================
+ * STACK COST / ITEM COST
+ * Have you ever wanted a skill that costs something other than hp/mp/tp- like
+ * charges banked up from an earlier proc, or literal ammo out of the party's
+ * inventory? Well now you can! These feed directly into canPaySkillCost/
+ * paySkillCost, so an unaffordable skill is refused to fire exactly like
+ * insufficient MP already is- no separate UI wiring needed.
+ *
+ * NOTE:
+ * Both tags live on the skill only (not on states/equips/etc.)- costs are
+ * inherent to the skill. If more than one of the same tag is authored on one
+ * note, only the last one found wins (same convention as flat/percent costs).
+ *
+ * TAG USAGE:
+ * - Skills
+ *
+ * TAG FORMAT (stack cost):
+ *  <stackCost:[STATE_ID,COUNT]>
+ *    Requires J-ABS. The caster must hold at least COUNT stacks of STATE_ID
+ *    to cast; COUNT stacks are consumed via decrementStateStacks on pay.
+ *    Leave the state's own <stackMax:VAL> high/unset for an uncapped pool.
+ *
+ * TAG FORMAT (item cost):
+ *  <itemCost:[ITEM_ID,COUNT]>
+ *    ITEM_ID resolves against $dataItems only (not weapons/armors). The party
+ *    must hold at least COUNT of the item to cast; COUNT are removed from
+ *    the party's inventory via $gameParty.loseItem on pay.
+ *
+ * TAG EXAMPLES:
+ *  <stackCost:[7,3]>
+ * Costs 3 stacks of state 7 to cast; refuses to fire below that.
+ *
+ *  <itemCost:[12,2]>
+ * Costs 2 of item 12 to cast; refuses to fire without them in stock.
+ *
+ * ============================================================================
  * CHANGELOG:
  * - 1.0.0
  *    Initial release.
  *    Added HP/MP/TP costs and gains via flat, percent, and formula notetags.
  *    Added HCR (HP Cost Reduction) as an additive stat sourced from traits.
- *    Added sacrifice tag to allow lethal HP costs.
- *    Registered longParam ID 34 for Life Cost.
+ *    Added <hp-cost-can-kill> tag to allow lethal HP costs.
+ *    Registered {@code hcr} (HP Cost Reduction) in the parameter catalog.
+ *    Added <stackCost:[STATE_ID,COUNT]> (requires J-ABS) and
+ *    <itemCost:[ITEM_ID,COUNT]> skill costs, feeding directly into
+ *    canPaySkillCost/paySkillCost alongside hp/mp/tp.
  * ============================================================================
  *
  * @param parentConfig

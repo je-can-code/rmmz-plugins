@@ -6,13 +6,14 @@ import OmniConditional from './../__models/OmniConditional.js';
 /**
  * Extends {@link meetsConditions}.<br/>
  * Also includes the custom conditions that relate to a quest.
- * @param {any} page
+ * @param {any} page The page driving this step.
  * @returns {boolean}
  */
 J.OMNI.EXT.QUEST.Aliased.Game_Event.set('meetsConditions', Game_Event.prototype.meetsConditions);
 Game_Event.prototype.meetsConditions = function(page)
 {
   // check original conditions.
+  // perform original logic.
   const metOtherPageConditions = J.OMNI.EXT.QUEST.Aliased.Game_Event.get('meetsConditions')
     .call(this, page);
 

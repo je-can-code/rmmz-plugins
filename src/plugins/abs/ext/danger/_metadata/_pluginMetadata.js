@@ -11,7 +11,7 @@ class J_DangerPluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps danger indicator defaults from plugin parameters.
    */
   postInitialize()
@@ -29,6 +29,7 @@ class J_DangerPluginMetadata
     this.DefaultEnemyShowDangerIndicator =
       this.parsedPluginParameters['defaultEnemyShowDangerIndicator'] === "true";
 
+    // assign danger indicator icons on this instance for callers.
     this.DangerIndicatorIcons =
       J.ABS.EXT.DANGER.Helpers.PluginManager.TranslateDangerIndicatorIcons(
         this.parsedPluginParameters['dangerIndicatorIconData'],

@@ -1,4 +1,6 @@
 //region RPG_Base
+import RPGManager from "../../managers/RPGManager.js";
+
 /**
  * A class representing the foundation of all database objects.
  * In addition to doing all the things that a database object normally does,
@@ -10,10 +12,13 @@ class RPG_Base
 {
   //region properties
   /**
-   * The original object that this data was built from.
-   * @type {any}
+   * Stores the original underlying data per-instance, keyed by the instance.
+   * Using a static WeakMap instead of a private instance field makes _original()
+   * safe to call on objects created via Object.create(RPG_Base.prototype) (which
+   * never run the constructor and therefore cannot initialize private fields).
+   * @type {WeakMap<RPG_Base, any>}
    */
-  #original = null;
+  static #originals = new WeakMap();
 
   /**
    * The index of this entry in the database.
@@ -56,7 +61,7 @@ class RPG_Base
    */
   constructor(baseItem, index)
   {
-    this.#original = baseItem;
+    RPG_Base.#originals.set(this, baseItem);
     this.index = index;
 
     // map the core data that all database objects have.
@@ -64,7 +69,17 @@ class RPG_Base
     this.meta = baseItem.meta;
     this.name = baseItem.name;
     this.note = baseItem.note;
+
+    // allow plugins to copy extra properties from the source object without modifying this constructor.
+    this.initMembers(baseItem);
   }
+
+  /**
+   * Extension seam: called at the end of construction with the raw source object so plugins can copy extra
+   * properties that are not part of the base schema.
+   * @param {any} _baseItem The underlying database object.
+   */
+  initMembers(_baseItem) {}
 
   //endregion init
 
@@ -107,7 +122,7 @@ class RPG_Base
    */
   _original()
   {
-    return this.#original;
+    return RPG_Base.#originals.get(this) ?? this;
   }
 
   //endregion accessors
@@ -198,6 +213,16 @@ class RPG_Base
   }
 
   /**
+   * Whether or not this database entry is an equip item (weapon or armor).
+   * {@link RPG_EquipItem} overrides this to return true.
+   * @returns {boolean}
+   */
+  isEquipItem()
+  {
+    return false;
+  }
+
+  /**
    * Whether or not this database entry is a skill.
    * @returns {boolean}
    */
@@ -222,6 +247,17 @@ class RPG_Base
   implementationType()
   {
     return '@base';
+  }
+
+  /**
+   * Gets all type classifiers assigned to this state via notetag.
+   * Returns every value matched by a {@code <type:CLASSIFIER>} tag in the notebox.
+   * Multiple tags on the same state are all collected and returned together.
+   * @returns {string[]} The array of classifier strings, or an empty array if none are defined.
+   */
+  types()
+  {
+    return RPGManager.getStringsFromNoteByRegex(this, J.BASE.RegExp.ClassifierType);
   }
   //endregion typing
 }

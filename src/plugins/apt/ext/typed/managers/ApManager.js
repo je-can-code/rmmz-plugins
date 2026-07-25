@@ -3,7 +3,7 @@ import ApTypeKey from './../_models/ApTypeKey.js';
 import ApTypeDisplayInfo from './../_models/ApTypeDisplayInfo.js';
 
 /**
- * Overrides {@link #gainAp}.<br/>
+ * Overwrites {@link #gainAp}.<br/>
  * Routes untyped AP through `gainApUntypedOnly` so typed tracks are not fueled by it.
  * @param {Game_Actor} actor The actor gaining AP.
  * @param {number} amount The amount of AP awarded.
@@ -128,10 +128,10 @@ ApManager.resolveDomainId = function(domain, idOrName)
     case ApTypeKey.DomainType.Element:
       list = $dataSystem.elements;
       break;
-    case ApTypeKey.DomainType.WeaponType:
+    case ApTypeKey.DomainType.Weapon:
       list = $dataSystem.weaponTypes;
       break;
-    case ApTypeKey.DomainType.SkillType:
+    case ApTypeKey.DomainType.Skill:
       list = $dataSystem.skillTypes;
       break;
     default:
@@ -183,11 +183,11 @@ ApManager.apTypeDisplay = function(key)
       name = $dataSystem.elements[id];
       icon = IconManager.element(id);
       break;
-    case ApTypeKey.DomainType.WeaponType:
+    case ApTypeKey.DomainType.Weapon:
       name = $dataSystem.weaponTypes[id];
       icon = IconManager.weaponType(id);
       break;
-    case ApTypeKey.DomainType.SkillType:
+    case ApTypeKey.DomainType.Skill:
       name = $dataSystem.skillTypes[id];
       icon = IconManager.skillType(id);
       break;

@@ -4,7 +4,6 @@
  */
 PluginManager.registerCommand(J.LEVEL.Metadata.name, "enableScaling", () =>
 {
-  J.LEVEL.Metadata.enabled = true;
   $gameSystem.enableLevelScaling();
 });
 
@@ -13,7 +12,6 @@ PluginManager.registerCommand(J.LEVEL.Metadata.name, "enableScaling", () =>
  */
 PluginManager.registerCommand(J.LEVEL.Metadata.name, "disableScaling", () =>
 {
-  J.LEVEL.Metadata.enabled = false;
   $gameSystem.disableLevelScaling();
 });
 //endregion Plugin Command Registration

@@ -1,6 +1,6 @@
 //region Game_Actor
 /**
- * Extends {@link #param}.<br>
+ * Extends {@link #param}.<br/>
  * Also modifies the value based on the applied difficulty.
  * @returns {number}
  */
@@ -8,6 +8,7 @@ J.DIFFICULTY.Aliased.Game_Actor.set("param", Game_Actor.prototype.param);
 Game_Actor.prototype.param = function(paramId)
 {
   // grab the original value.
+  // perform original logic.
   const originalValue = J.DIFFICULTY.Aliased.Game_Actor.get("param")
     .call(this, paramId);
 
@@ -22,7 +23,7 @@ Game_Actor.prototype.param = function(paramId)
 };
 
 /**
- * Extends {@link #sparam}.<br>
+ * Extends {@link #sparam}.<br/>
  * Also modifies the value based on the applied difficulty.
  * @returns {number}
  */
@@ -30,6 +31,7 @@ J.DIFFICULTY.Aliased.Game_Actor.set("sparam", Game_Actor.prototype.sparam);
 Game_Actor.prototype.sparam = function(sparamId)
 {
   // grab the original value.
+  // perform original logic.
   const originalValue = J.DIFFICULTY.Aliased.Game_Actor.get("sparam")
     .call(this, sparamId);
 
@@ -44,7 +46,7 @@ Game_Actor.prototype.sparam = function(sparamId)
 };
 
 /**
- * Extends {@link #xparam}.<br>
+ * Extends {@link #xparam}.<br/>
  * Also modifies the value based on the applied difficulty.
  * @returns {number}
  */
@@ -52,6 +54,7 @@ J.DIFFICULTY.Aliased.Game_Actor.set("xparam", Game_Actor.prototype.xparam);
 Game_Actor.prototype.xparam = function(xparamId)
 {
   // grab the original value.
+  // perform original logic.
   const originalValue = J.DIFFICULTY.Aliased.Game_Actor.get("xparam")
     .call(this, xparamId);
 

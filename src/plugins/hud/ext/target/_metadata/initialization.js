@@ -10,7 +10,7 @@ globalThis.J ||= {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '2.1.2';
+  const requiredBaseVersion = '3.2.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (hasBaseRequirement === false)
   {
@@ -46,6 +46,7 @@ J.HUD.EXT.TARGET.Aliased = {
   Hud_Manager: new Map(),
   JABS_Battler: new Map(),
   Scene_Map: new Map(),
+  Window_TargetFrame: new Map(),
 };
 
 /**

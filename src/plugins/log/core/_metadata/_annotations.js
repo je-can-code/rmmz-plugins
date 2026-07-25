@@ -108,7 +108,14 @@
  * to scroll up.
  *
  * ============================================================================
+ * NOTE ABOUT NOTETAGS:
+ * This plugin has no notetags of its own- logging is driven entirely by
+ * JABS integration (when installed) and by plugin commands.
+ * ============================================================================
  * CHANGELOG:
+ * - 2.2.2
+ *    Added ActionLogBuilder#setupStatePurged, a log message for a state
+ *    being removed via J-ABS's new <purgeStates> tag.
  * - 2.2.1
  *    Added SDP drop-related logging.
  * - 2.2.0

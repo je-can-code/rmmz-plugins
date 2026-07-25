@@ -1,6 +1,6 @@
 //region Game_System
 /**
- * Extends {@link Game_System.initMembers}.<br>
+ * Extends {@link Game_System.initMembers}.<br/>
  * Also initializes our new members.
  */
 J.ABS.EXT.TOOLS.Aliased.Game_System.set('initMembers', Game_System.prototype.initMembers);
@@ -44,7 +44,7 @@ Game_System.prototype.isGrabThrowEnabled = function()
 
 /**
  * Sets whether or not grab and throw functionality is enabled.
- * @param {boolean} isEnabled
+ * @param {boolean} isEnabled The is enabled driving this step.
  */
 Game_System.prototype.setGrabThrowEnabled = function(isEnabled)
 {

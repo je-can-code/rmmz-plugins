@@ -52,6 +52,7 @@ class FramedTargetConfiguration
     this.showName = showName;
     this.showText = showText;
     this.showHp = showHp;
+    // assign show mp on this instance for callers.
     this.showMp = showMp;
     this.showTp = showTp;
   }

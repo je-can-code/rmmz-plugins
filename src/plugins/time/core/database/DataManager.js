@@ -4,20 +4,22 @@ import Game_Time from '../_models/Game_Time.js';
 /**
  * Extends the game object creation to include creating the JAFTING manager.
  */
-J.TIME.Aliased.DataManager.createGameObjects = DataManager.createGameObjects;
+J.TIME.Aliased.DataManager.set('createGameObjects', DataManager.createGameObjects);
 DataManager.createGameObjects = function()
 {
-  J.TIME.Aliased.DataManager.createGameObjects.call(this);
+  // perform original logic.
+  J.TIME.Aliased.DataManager.get('createGameObjects').call(this);
   $gameTime = new Game_Time();
 };
 
 /**
  * Extends the save content creation to include creating JAFTING data.
  */
-J.TIME.Aliased.DataManager.makeSaveContents = DataManager.makeSaveContents;
+J.TIME.Aliased.DataManager.set('makeSaveContents', DataManager.makeSaveContents);
 DataManager.makeSaveContents = function()
 {
-  const contents = J.TIME.Aliased.DataManager.makeSaveContents.call(this);
+  // perform original logic.
+  const contents = J.TIME.Aliased.DataManager.get('makeSaveContents').call(this);
   contents.time = $gameTime;
   return contents;
 };
@@ -28,10 +30,11 @@ DataManager.makeSaveContents = function()
  * NOTE: This is the first function encountered where I actually extend it _twice_.
  * As such, we accommodated that by numbering it.
  */
-J.TIME.Aliased.DataManager.extractSaveContents2 = DataManager.extractSaveContents;
+J.TIME.Aliased.DataManager.set('extractSaveContents2', DataManager.extractSaveContents);
 DataManager.extractSaveContents = function(contents)
 {
-  J.TIME.Aliased.DataManager.extractSaveContents2.call(this, contents);
+  // perform original logic.
+  J.TIME.Aliased.DataManager.get('extractSaveContents2').call(this, contents);
   $gameTime = contents.time;
   if (!$gameTime)
   {

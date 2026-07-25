@@ -263,7 +263,7 @@ class Scene_JabsRemap
 
     // bind handlers for interactions.
     window.setHandler('ok', this.onRemapRequested.bind(this));
-    window.setHandler('clear', this.onClearBinding.bind(this));
+    window.setHandler('context', this.onClearBinding.bind(this));
     window.setHandler('cancel', this.onActionsCancel.bind(this));
 
     // attach the top help so selection changes update descriptions.
@@ -723,6 +723,7 @@ class Scene_JabsRemap
       mapping[button] = [];
     };
 
+    // construct seen for the next step in this routine.
     const seen = new Set();
     const assignable = JABS_Button.assignableInputs();
     for (let i = 0; i < assignable.length; i++)
@@ -731,6 +732,7 @@ class Scene_JabsRemap
       if (Object.prototype.hasOwnProperty.call(mapping, button))
       {
         visit(button);
+        // track this key so duplicate work is skipped later.
         seen.add(button);
       }
     }
@@ -776,12 +778,14 @@ class Scene_JabsRemap
       let arr;
       if (Array.isArray(raw))
       {
+        // Copy a sub-range without mutating the source array.
         arr = raw.slice(0);
       }
       else if (raw)
       {
         arr = [ raw ];
       }
+      // otherwise fall back to the alternate path.
       else
       {
         arr = [];
@@ -1035,7 +1039,7 @@ class Scene_JabsRemap
   assignWithConflictResolution(button, symbol)
   {
     // check if this is an external capture token.
-    if (typeof button === 'string' && button.indexOf('__ext__') === 0)
+    if (button.startsWith('__ext__'))
     {
       // extract the namespace and key from the token format: __ext__<ns>:<key>
       const without = button.substring('__ext__'.length);

@@ -1,7 +1,6 @@
 import './_metadata/initialization.js';
 
 import './_metadata/_annotations.js';
-import './_metadata/juiceConfigValidation.js';
 import './_metadata/meta.js';
 import './database/RPG_Skill.js';
 import './helpers/JuiceFlurryStrikeRecord.js';
@@ -10,6 +9,7 @@ import './managers/JABS_Engine.js';
 import './managers/JuiceHookManager.js';
 import './models/JuiceBaseEffect.js';
 import './models/JuiceCastingPulseMotionEffect.js';
+import './models/JuiceFlipBodyMotionEffect.js';
 import './models/JuiceSquishMotionEffect.js';
 import './models/JuiceTiltMotionEffect.js';
 import './models/JuiceWeaponSwingMotionEffect.js';
@@ -19,3 +19,4 @@ import './objects/JABS_Battler.js';
 import './resolvers/JuiceProfileResolver.js';
 import './resolvers/JuiceStyleMultiplierRow.js';
 import './scenes/Scene_Map.js';
+import './sprites/Sprite_Character.js';

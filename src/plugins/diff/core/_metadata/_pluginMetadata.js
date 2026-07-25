@@ -31,7 +31,7 @@ class J_DiffPluginMetadata
 
   /**
    * Updates the default layer with a new default.
-   * @param {DifficultyLayer} layer
+   * @param {DifficultyLayer} layer The layer driving this step.
    */
   static updateDefaultLayer(layer)
   {
@@ -153,7 +153,7 @@ class J_DiffPluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Includes translation of plugin parameters.
    */
   postInitialize()

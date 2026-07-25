@@ -9,14 +9,18 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
   /**
    * @param {Sprite} sprite The Pixi sprite being driven.
    * @param {number} intensityScale Max delta applied via sine envelope (e.g. 0.12).
-   * @param {number} durationFrames Frames to run.
+   * @param {number} durationFrames Frames to run per repeat cycle.
+   * @param {number} [repeatCount=1] How many times to cycle the squish envelope before finishing.
    */
-  constructor(sprite, intensityScale, durationFrames)
+  constructor(sprite, intensityScale, durationFrames, repeatCount = 1)
   {
     super();
     this._sprite = sprite;
     this._intensityScale = intensityScale;
+    // store duration frames on the instance for later reads.
     this._durationFrames = durationFrames;
+    this._repeatCount = Math.max(1, repeatCount);
+    this._repeatsRemaining = this._repeatCount;
     this._frame = 0;
     this._baseScaleX = sprite.scale.x;
     this._baseScaleY = sprite.scale.y;
@@ -60,6 +64,16 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
 
     if (this._frame >= this._durationFrames)
     {
+      this._repeatsRemaining--;
+
+      // more cycles remain — reset the frame counter and continue.
+      if (this._repeatsRemaining > 0)
+      {
+        this._frame = 0;
+        return true;
+      }
+
+      // all cycles exhausted — restore and release the sprite lock.
       this.restore();
       JuiceMotionManager.relinquishSpriteLock(this._sprite);
       return false;

@@ -62,6 +62,7 @@ class Initter
     // clone the template into the destination.
     await mirror.mirrorToDestination(`${this.DEFAULT_BASE_PLUGIN_PATH}/${destinationPath}`);
 
+    // Emit this message even when logging is muted.
     Logger.logAnyway(`Initter™ has completed execution.`, LogStyle.rainbow);
   }
 }

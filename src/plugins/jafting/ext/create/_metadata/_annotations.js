@@ -133,7 +133,17 @@
  * rather wasteful.
  *
  * ============================================================================
+ * NOTE ABOUT NOTETAGS:
+ * This plugin has no notetags of its own- recipes and categories are
+ * entirely defined in the external JSON configuration file (authored via
+ * the J-MZ Data Editor app), not tagged on individual database objects.
+ * ============================================================================
  * CHANGELOG:
+ * - 1.1.2
+ *    Registered RecipeTracking/CategoryTracking with SerializableRegistry so
+ *    JsonEx restores keep their prototype methods after a save load.
+ *    Moved dev-only debug cheat helpers from a standalone debug/ file into
+ *    initialization.js; no functional change.
  * - 1.0.4
  *    Craft outputs inherit dismantle lineage from recipe ingredients (core
  *    salvage stamping).

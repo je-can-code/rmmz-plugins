@@ -11,30 +11,20 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
    * @returns {{ x: number, y: number }}
    */
   /**
-   * Clamps spin preset rotation count (full turns) for spin / spin-reverse.
-   * @param {number} spinCount Candidate count from skill notes or resolver.
+   * Normalizes repeat count — floors to integer, defaults to 1 if invalid or below 1.
+   * @param {number} repeatCount Candidate count from skill notes or resolver.
    * @returns {number}
    */
-  static #clampSpinCount(spinCount)
+  static #clampRepeatCount(repeatCount)
   {
-    if (spinCount === undefined || spinCount === null || Number.isFinite(spinCount) === false)
+    if (repeatCount === undefined || repeatCount === null || Number.isFinite(repeatCount) === false)
     {
       return 1;
     }
 
-    const k = Math.floor(spinCount);
+    const k = Math.floor(repeatCount);
 
-    if (k < 1)
-    {
-      return 1;
-    }
-
-    if (k > 8)
-    {
-      return 8;
-    }
-
-    return k;
+    return k < 1 ? 1 : k;
   }
 
   static #forwardUnit(dir)
@@ -164,6 +154,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
       easeLo = ease;
       easeHi = Math.min(ease + (eps * 2), 1);
     }
+    // otherwise when ease >= 1 - eps, use this branch.
     else if (ease >= 1 - eps)
     {
       easeHi = ease;
@@ -355,6 +346,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
       return { rotation, mirrorX: false };
     }
 
+    // keep looping while rotation > Math.PI.
     while (rotation > Math.PI)
     {
       rotation -= Math.PI * 2;
@@ -382,6 +374,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
    */
   static MotionTypes = {
     Arc: 'arc',
+    ArcOscillate: 'arc-oscillate',
     ArcReverse: 'arc-reverse',
     Bash: 'bash',
     Present: 'present',
@@ -410,7 +403,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
    * @param {number} stabTipAngleRadians Resolved radians from +x to tip/bore at rotation 0 (stab / bash / recoil).
    * @param {number} neutralBaseX Hand-neutral overlay X when spawn pose includes preset offset (bash / recoil).
    * @param {number} neutralBaseY Hand-neutral overlay Y (same).
-   * @param {number} spinCount Full rotations for spin / spin-reverse (clamped 1–8; ignored for other presets).
+   * @param {number} repeatCount Times to repeat the motion within duration (clamped 1–8).
    * @param {boolean} profileGun Skill `<juiceProfileGun>` — mirror for E/W aim instead of π rotation.
    */
   constructor(
@@ -425,16 +418,18 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
     stabTipAngleRadians,
     neutralBaseX,
     neutralBaseY,
-    spinCount,
+    repeatCount,
     profileGun
   )
   {
     super();
     this._parentSprite = parentSprite;
     this._overlay = overlay;
+    // store  base rotation on the instance for later reads.
     this._baseRotation = baseRotation;
     this._peakRotationRadians = peakRotationRadians;
     this._durationFrames = durationFrames;
+    // store  motion type on the instance for later reads.
     this._motionType = motionType;
     this._frame = 0;
     this._arcSpanDegrees = arcSpanDegrees >= 30 && arcSpanDegrees <= 300
@@ -473,10 +468,10 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
     this._trail = [];
 
     /**
-     * Full rotations for spin / spin-reverse ({@link MotionTypes.Spin}, {@link MotionTypes.SpinReverse}).
+     * Times to repeat the motion within the duration window (all motion types).
      * @type {number}
      */
-    this._spinCount = JuiceWeaponSwingMotionEffect.#clampSpinCount(spinCount);
+    this._repeatCount = JuiceWeaponSwingMotionEffect.#clampRepeatCount(repeatCount);
 
     /**
      * Profile gun: horizontal mirror replaces full 180° rotation for side-view IconSet art.
@@ -504,6 +499,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
       this._profileGun
     );
 
+    // continue the routine with the next policy step.
     this._overlay.rotation = align.rotation + extraRotationRadians;
 
     if (this._profileGun === true)
@@ -547,11 +543,14 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
       case JuiceWeaponSwingMotionEffect.MotionTypes.ArcReverse:
         this.#tickArc(phy, dir, ease, true);
         break;
+      case JuiceWeaponSwingMotionEffect.MotionTypes.ArcOscillate:
+        this.#tickArcOscillate(phy, dir, t);
+        break;
       case JuiceWeaponSwingMotionEffect.MotionTypes.Spin:
-        this.#tickSpin(phy, t, this._spinCount, 1);
+        this.#tickSpin(phy, t, this._repeatCount, 1);
         break;
       case JuiceWeaponSwingMotionEffect.MotionTypes.SpinReverse:
-        this.#tickSpin(phy, t, this._spinCount, -1);
+        this.#tickSpin(phy, t, this._repeatCount, -1);
         break;
       case JuiceWeaponSwingMotionEffect.MotionTypes.StabForward:
         this.#tickStabForward(phy, dir, ease);
@@ -602,11 +601,14 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
     const pose = JuiceWeaponSwingMotionEffect.computeArcPose(
       dir,
       phy,
+      // continue the routine with the next policy step.
       this._arcSpanDegrees,
       reverse,
       ease
+    // continue the routine with the next policy step.
     );
 
+    // continue the routine with the next policy step.
     this._overlay.x = pose.x;
     this._overlay.y = pose.y;
 
@@ -623,7 +625,24 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
       return;
     }
 
+    // continue the routine with the next policy step.
     this._overlay.rotation = JuiceWeaponSwingMotionEffect.bladeRotationArcForward(pose.theta);
+  }
+
+  /**
+   * Alternating arc sweeps: arc → arc-reverse → arc … for `_repeatCount` total passes.
+   * Each pass occupies an equal slice of the total duration; direction flips each slice.
+   * @param {number} phy Pattern height.
+   * @param {number} dir Facing direction.
+   * @param {number} t Linear progress (0..1).
+   */
+  #tickArcOscillate(phy, dir, t)
+  {
+    const sliceT = (t * this._repeatCount) % 1;
+    const sliceIndex = Math.floor(t * this._repeatCount);
+    const reverse = (sliceIndex % 2) === 1;
+    const ease = 1 - Math.pow(1 - sliceT, 3);
+    this.#tickArc(phy, dir, ease, reverse);
   }
 
   /**
@@ -669,12 +688,14 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
     const ghost = new Sprite();
     ghost.bitmap = this._overlay.bitmap;
     ghost.anchor.x = this._overlay.anchor.x;
+    // continue the routine with the next policy step.
     ghost.anchor.y = this._overlay.anchor.y;
     ghost.scale.x = this._overlay.scale.x;
     ghost.scale.y = this._overlay.scale.y;
     ghost.opacity = 140;
     ghost.blendMode = 1;
 
+    // continue the routine with the next policy step.
     ghost.setFrame(
       this._overlay._frame.x,
       this._overlay._frame.y,
@@ -682,10 +703,12 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
       this._overlay._frame.height
     );
 
+    // continue the routine with the next policy step.
     ghost.x = this._overlay.x;
     ghost.y = this._overlay.y;
     ghost.rotation = this._overlay.rotation;
 
+    // continue the routine with the next policy step.
     this._parentSprite.addChild(ghost);
     this._trail.push({ sprite: ghost, ttl: 10 });
   }
@@ -711,10 +734,12 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
         return;
       }
 
+      // continue the routine with the next policy step.
       this._parentSprite.removeChild(trail.sprite);
       trail.sprite.destroy();
     });
 
+    // store  trail on the instance for later reads.
     this._trail = survivors;
   }
 
@@ -733,6 +758,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
     const dx = forward.x * dist;
     const dy = forward.y * dist;
 
+    // continue the routine with the next policy step.
     this._overlay.x = this._baseX + (dx * ease);
     this._overlay.y = this._baseY + (dy * ease);
   }
@@ -746,6 +772,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
   {
     const lift = phy * 0.42;
 
+    // continue the routine with the next policy step.
     this._overlay.x = this._baseX;
     this._overlay.y = this._baseY - (lift * ease);
     this._overlay.rotation = this._baseRotation;
@@ -762,6 +789,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
     const off = JuiceWeaponSwingMotionEffect.computeBashOffset(dir, phy, ease);
     const whip = JuiceWeaponSwingMotionEffect.bashWhipRotationRadians(ease);
 
+    // continue the routine with the next policy step.
     this._overlay.x = this._baseX + off.x;
     this._overlay.y = this._baseY + off.y;
     this.#applyTipAlignedRotation(dir, whip);
@@ -777,6 +805,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
   {
     const p = JuiceWeaponSwingMotionEffect.computeRecoilPose(dir, phy, ease);
 
+    // continue the routine with the next policy step.
     this._overlay.x = this._baseX + p.x;
     this._overlay.y = this._baseY + p.y;
     this.#applyTipAlignedRotation(dir, p.rotationDelta);

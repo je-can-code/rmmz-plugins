@@ -1,6 +1,6 @@
 //region Spriteset_Map
 /**
- * Extends {@link #createLowerLayer}.<br>
+ * Extends {@link #createLowerLayer}.<br/>
  * Also creates the PIXEL-ABS hitbox reveal outline layer.
  */
 J.PIXEL.EXT.ABS.Aliased.Spriteset_Map.set('createLowerLayer', Spriteset_Map.prototype.createLowerLayer);
@@ -14,7 +14,7 @@ Spriteset_Map.prototype.createLowerLayer = function()
 };
 
 /**
- * Extends {@link #updateJabsSprites}.<br>
+ * Extends {@link #updateJabsSprites}.<br/>
  * Also updates the PIXEL-ABS reveal outline overlays.
  */
 J.PIXEL.EXT.ABS.Aliased.Spriteset_Map.set('updateJabsSprites', Spriteset_Map.prototype.updateJabsSprites);
@@ -123,6 +123,7 @@ Spriteset_Map.prototype.collectPixelAbsHitboxRevealItems = function()
   return this.collectActiveBattlerOverlayItems()
     .filter(item => item.type === 'battler')
     .filter(item => item.source.canShowPixelAbsHitboxReveal())
+    // Project each row into the shape downstream code expects.
     .map(item =>
     {
       return {
@@ -235,7 +236,7 @@ Spriteset_Map.prototype.purgePixelAbsHitboxRevealSprites = function(items)
 };
 
 /**
- * Extends {@link #drawBattlerHitboxInto}.<br>
+ * Extends {@link #drawBattlerHitboxInto}.<br/>
  * Draws a softer outline-only style for PIXEL-ABS reveal sprites.
  * @param {Sprite} sprite The target battler hitbox sprite.
  * @param {'player'|'follower'|'battler'} type The kind of battler.
@@ -250,6 +251,7 @@ Spriteset_Map.prototype.drawBattlerHitboxInto = function(sprite, type, tw, th, c
   // if this is not a reveal sprite, then perform original logic.
   if (sprite._pixelAbsRevealOutline !== true)
   {
+    // perform original logic.
     J.PIXEL.EXT.ABS.Aliased.Spriteset_Map.get('drawBattlerHitboxInto').call(
       this,
       sprite,

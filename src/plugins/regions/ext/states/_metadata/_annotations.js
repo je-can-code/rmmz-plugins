@@ -96,6 +96,12 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Region state application now rolls through the shared on-chance
+ *    system (lucky/cursed rolls, Accumulate Mode, Encore) instead of a
+ *    flat percent check.
+ *    Removed a defensive function-existence guard around isVisible(); the
+ *    method is always present on the contract this plugin targets.
  * - 1.0.0
  *    Initial release.
  * ============================================================================

@@ -4,6 +4,11 @@ import './_utilities/ArrayHelper.js';
 import './_utilities/JsonMapper.js';
 
 import './core/SerializableRegistry.js';
+import './core/ParameterFormat.js';
+import './core/ParameterDisplayPolicy.js';
+import './core/ParameterDisplaySentinel.js';
+import './core/ParameterGroups.js';
+import './core/ParameterKeys.js';
 import './core/JsonEx.js';
 import './core/Bitmap.js';
 
@@ -13,7 +18,7 @@ import './models/BuiltWindowCommand.js';
 import './models/ExternalJsonConfigLoaderOptions.js';
 import './models/GaugeOptionsBuilder.js';
 import './models/J_EventEmitter.js';
-import './models/J_Timer.js';
+import './core/registerJBaseSerializableModels.js';
 import './models/WindowCommandBuilder.js';
 import './models/WindowGaugeOptions.js';
 
@@ -27,7 +32,12 @@ import './managers/RPGManager.js';
 import './managers/SoundManager.js';
 import './managers/TextManager.js';
 import './managers/TraitManager.js';
+import './managers/TraitResolver.js';
 
+import './core/registerVanillaParameters.js';
+import './core/AffiliationDisplay.js';
+
+import './objects/Game_Action.js';
 import './objects/Game_Actor.js';
 import './objects/Game_Actors.js';
 import './objects/Game_Battler.js';
@@ -47,7 +57,9 @@ import './objects/Game_Timer.js';
 import './objects/Game_Vehicle.js';
 
 import './scenes/Scene_Base.js';
+import './scenes/Scene_Boot.js';
 
+import './sprites/Sprite.js';
 import './sprites/Sprite_BaseText.js';
 import './sprites/Sprite_Character.js';
 import './sprites/Sprite_Face.js';

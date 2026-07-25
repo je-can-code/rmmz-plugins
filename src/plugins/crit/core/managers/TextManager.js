@@ -1,25 +1,5 @@
 //region TextManager
 /**
- * Extends {@link #longParam}.<br>
- * First searches for our critical damage text ids before searching for others.
- */
-J.CRIT.Aliased.TextManager.set('longParam', TextManager.longParam);
-TextManager.longParam = function(paramId)
-{
-  switch (paramId)
-  {
-    case 28:
-      return this.critParam(0);   // cdm
-    case 29:
-      return this.critParam(1);   // cdr
-    default:
-      // perform original logic.
-      return J.CRIT.Aliased.TextManager.get('longParam')
-        .call(this, paramId);
-  }
-};
-
-/**
  * Gets the text for the critical damage parameters from "J-CriticalFactors".
  * @param {number} paramId The id of the crit param to get a name for.
  * @returns {string} The name of the parameter.
@@ -32,26 +12,6 @@ TextManager.critParam = function(paramId)
       return "Crit Amp";
     case 1:
       return "Crit Block";
-  }
-};
-
-/**
- * Extends {@link #longParamDescription}.<br>
- * First searches for our critical damage text ids before searching for others.
- */
-J.CRIT.Aliased.TextManager.set('longParamDescription', TextManager.longParamDescription);
-TextManager.longParamDescription = function(paramId)
-{
-  switch (paramId)
-  {
-    case 28:
-      return this.critParamDescription(0);   // cdm
-    case 29:
-      return this.critParamDescription(1);   // cdr
-    default:
-      // perform original logic.
-      return J.CRIT.Aliased.TextManager.get('longParamDescription')
-        .call(this, paramId);
   }
 };
 

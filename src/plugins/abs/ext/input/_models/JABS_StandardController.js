@@ -73,6 +73,9 @@ class JABS_StandardController
 
     // NOTE: Dodge is intentionally not seeded; Sprint handles mobility contextually.
 
+    // seed the usable-item slot to R2 (MobilitySkill).
+    this.inputMapping.set(JABS_Button.UsableItem, [ J.ABS.EXT.INPUT.Symbols.MobilitySkill ]);
+
     // seed mobility & modifiers.
     this.inputMapping.set(JABS_Button.Sprint, [ J.ABS.EXT.INPUT.Symbols.Dash ]);
     this.inputMapping.set(JABS_Button.Strafe, [ J.ABS.EXT.INPUT.Symbols.StrafeTrigger ]);
@@ -106,6 +109,7 @@ class JABS_StandardController
     defaults[JABS_Button.Offhand] = [ J.ABS.EXT.INPUT.Symbols.Offhand ];
     defaults[JABS_Button.Tool] = [ J.ABS.EXT.INPUT.Symbols.Tool ];
     defaults[JABS_Button.Dodge] = [ J.ABS.EXT.INPUT.Symbols.MobilitySkill ];
+    defaults[JABS_Button.UsableItem] = [ J.ABS.EXT.INPUT.Symbols.MobilitySkill ];
 
     // seed mobility/modifiers.
     defaults[JABS_Button.Sprint] = [ J.ABS.EXT.INPUT.Symbols.Dash ];
@@ -308,6 +312,7 @@ class JABS_StandardController
     this.updateMainhandAction();
     this.updateOffhandAction();
     this.updateToolAction();
+    this.updateUsableItemAction();
     this.updateSprintCommand();
 
     // update input for multi-button actions.
@@ -660,6 +665,54 @@ class JABS_StandardController
   }
 
   //endregion tool
+
+  //region usable item
+  /**
+   * Monitors and takes action based on player input regarding the usable-item action.
+   * This is R2 on the gamepad by default.
+   */
+  updateUsableItemAction()
+  {
+    // check if the action's input requirements have been met.
+    if (this.isUsableItemActionTriggered())
+    {
+      // execute the action.
+      this.performUsableItemAction();
+    }
+  }
+
+  /**
+   * Checks the inputs of the usable-item action currently assigned (R2 default).
+   * @returns {boolean}
+   */
+  isUsableItemActionTriggered()
+  {
+    // if the player is preparing to use a skill, don't do this as well.
+    if (this.isCombatSkillUsageEnabled())
+    {
+      return false;
+    }
+
+    // this action requires the logical UsableItem to be triggered.
+    if (this.isActionTriggered(JABS_Button.UsableItem))
+    {
+      return true;
+    }
+
+    // UsableItem is not being triggered.
+    return false;
+  }
+
+  /**
+   * Executes the currently assigned usable-item action (R2 default).
+   */
+  performUsableItemAction()
+  {
+    // perform the usable-item action for this controller's battler.
+    JABS_InputAdapter.performUsableItemAction(this.getBattler());
+  }
+
+  //endregion usable item
 
   //region combat actions
   /**

@@ -28,21 +28,33 @@ class OverlayManager
 
   //region caching
   /**
-   * A cache for caster-skill extensions.
-   * This is effectively a map of maps, where the parent map is keyed by the caster, while the child map is keyed by
-   * a combination of the skill id and its extension skill ids.
-   * @type {WeakMap<Game_Actor|Game_Enemy, Map<string, RPG_Skill>>}
+   * The cache for caster-skill extensions. Keyed by the caster alone- extension results are
+   * wholesale-invalidated on any learnSkill/forgetSkill via {@link invalidate}, so the skill id
+   * is a stable key within one cache lifetime with no need to encode the overlay set.
+   * @type {JCache}
    */
-  static _casterExtendCache = new WeakMap();
+  static _skillCache = JCache.battlerScoped({ name: 'overlay:caster-skill' });
 
   /**
-   * The metrics for this manager.
-   * @type {{ hits: number, misses: number }}
+   * Tracks skill ids currently mid-resolution per caster to detect circular extension data
+   * (e.g. skill 2 extends skill 1 AND skill 1 extends skill 2, direct or indirect).
+   * Unlike the old caster-level re-entrancy guard, this is scoped per-skillId so legitimate
+   * recursive chains (A extends B extends C) proceed normally — only actual cycles throw.
+   * @type {WeakMap<Game_Actor|Game_Enemy, Set<number>>}
    */
-  static _metrics = {
-    hits: 0,
-    misses: 0,
-  };
+  static #resolving = new WeakMap();
+
+  /**
+   * The cache for battler-state extensions, parallel to {@link _skillCache} for skills.
+   * @type {JCache}
+   */
+  static _stateCache = JCache.battlerScoped({ name: 'overlay:battler-state' });
+
+  /**
+   * Tracks state ids currently mid-resolution per battler to detect circular state extension data.
+   * @type {WeakMap<Game_Battler, Set<number>>}
+   */
+  static #resolvingState = new WeakMap();
 
   /**
    * Invalidates the cache for the given battler.
@@ -51,7 +63,8 @@ class OverlayManager
    */
   static invalidate(battler)
   {
-    return this._casterExtendCache.delete(battler);
+    this._skillCache.invalidate(battler);
+    this._stateCache.invalidate(battler);
   }
 
   /**
@@ -59,71 +72,23 @@ class OverlayManager
    */
   static clearCache()
   {
-    this._casterExtendCache = new WeakMap();
-  }
-
-  /**
-   * Gets the existing cache of a caster's skill extensions.
-   * If a cache does not yet exist for the caster, it'll be created.
-   * @param {Game_Actor|Game_Enemy} caster The caster of the skill.
-   * @returns {Map<string, RPG_Skill>}
-   */
-  static getOrCreateCacheForCaster(caster)
-  {
-    // check if the cache for this caster already exists.
-    const cacheHit = this._casterExtendCache.get(caster);
-
-    // if it does exist, return it.
-    if (cacheHit) return cacheHit;
-
-    // it doesn't exist yet, so create it.
-    const newCasterCache = new Map();
-    this._casterExtendCache.set(caster, newCasterCache);
-
-    // return the newly created cache.
-    return newCasterCache;
-  }
-
-  /**
-   * Retrieves a cached value for this caster/key, or computes and stores it.
-   *
-   * @param {Game_Actor|Game_Enemy} caster - The caster whose cache bucket to use.
-   * @param {string} key - Stable key representing the computed value (ex: base skill id + overlay ids).
-   * @param {Function} computeFn - A no-arg function that computes the value on a cache miss.
-   * @returns {RPG_Skill} - The cached or newly computed extended skill.
-   */
-  static cached(caster, key, computeFn)
-  {
-    // get or create the per-caster cache map from the WeakMap.
-    const perCaster = this.getOrCreateCacheForCaster(caster);
-
-    // if we already have this key cached, return it and track a hit.
-    if (perCaster.has(key))
-    {
-      // increment metrics for visibility while iterating on this.
-      this._metrics.hits++;
-
-      // return the cached value.
-      return perCaster.get(key);
-    }
-
-    // we do not yet have a cached value; compute it now.
-    const value = computeFn();
-
-    // store the computed value in the per-caster cache.
-    perCaster.set(key, value);
-
-    // increment miss counter.
-    this._metrics.misses++;
-
-    // return the computed value.
-    return value;
+    this._skillCache.clear();
+    this._stateCache.clear();
   }
 
   //endregion caching
 
   /**
    * Gets the extended skill based on the caster's learned skills.
+   *
+   * Extension candidates are gathered from the caster's full {@link Game_Battler#skillIds} list
+   * (learned skills only — unlike states, a skill overlay never applies unless the caster has
+   * actually learned it) and applied in two passes:
+   * 1. Type-based overlays ({@code <extendType:TYPE>}) in ascending skill-id order — familial.
+   * 2. Id-based overlays ({@code <extend:[IDs]>}) in ascending skill-id order — specific.
+   *
+   * Each candidate is itself recursively resolved before being applied, so extension chains work.
+   * Mirrors {@link getExtendedState}; see that method for the parallel state-side implementation.
    * @param caster {Game_Actor|Game_Enemy} The caster of the skill.
    * @param skillId {number} The base skill to extend.
    * @returns {RPG_Skill}
@@ -136,42 +101,192 @@ class OverlayManager
     // if we don't have a caster for some reason, don't process anything.
     if (!caster) return $dataSkills[skillId];
 
-    // collect all overlay-capable skills for the provided base skill id.
-    const overlaySkills = caster.skills()
-      .filter(skill => this.#isOverlayForBase(skill, skillId));
-
-    // sort overlays deterministically by their id to ensure stable and predictable results.
-    if (overlaySkills.length > 0)
+    // fast-path: JCache.get() itself checks the per-caster bucket before running the compute
+    // function below, so a cache hit never allocates, filters, or touches the re-entrancy guard.
+    // the cache is always invalidated wholesale via invalidate(battler) on any learnSkill /
+    // forgetSkill call, so skillId alone is a stable key within one cache lifetime — encoding the
+    // overlay set in the key is redundant overhead.
+    return this._skillCache.get(caster, String(skillId), () =>
     {
-      overlaySkills.sort((a, b) => a.id - b.id);
-    }
+      // cache miss: get all known skill ids for this caster.
+      const knownIds = caster.skillIds();
 
-    // construct a cache key that represents the base skill and the exact overlay set order.
-    const overlayKey = `${skillId}|${overlaySkills.map(s => s.id)
-      .join(',')}`;
+      // get the target skill's type classifiers for type-based candidate matching.
+      const targetSkill = $dataSkills[skillId];
+      const targetTypes = targetSkill
+        ? targetSkill.types()
+        : [];
 
-    // fetch from cache or compute the extended skill once for this exact combination.
-    return this.cached(
-      caster,
-      overlayKey,
-      () => this.#getExtendedSkill(overlaySkills, skillId)
-    );
+      // bucket candidates: type-based first (familial), id-based second (specific).
+      const typeCandidates = [];
+      const idCandidates = [];
+
+      for (const id of knownIds)
+      {
+        // skip the target itself.
+        if (id === skillId) continue;
+
+        // skip invalid or non-extension skills.
+        const candidate = $dataSkills[id];
+        if (!candidate || !candidate.isExtension) continue;
+
+        // type-based: candidate declares a type that intersects with the target's types.
+        if (targetTypes.length > 0 && ArrayHelper.hasAnyIntersection(targetTypes, candidate.getExtensionTypes))
+        {
+          typeCandidates.push(id);
+          continue;
+        }
+
+        // id-based: candidate explicitly lists this skillId as a target.
+        if (candidate.getExtensions.includes(skillId))
+        {
+          idCandidates.push(id);
+        }
+      }
+
+      // sort each bucket ascending by id.
+      typeCandidates.sort((a, b) => a - b);
+      idCandidates.sort((a, b) => a - b);
+
+      // combine: type-based overlays first, id-based overlays second.
+      const overlayIds = [ ...typeCandidates, ...idCandidates ];
+
+      // get or create the set of skill ids currently being resolved for this caster.
+      let inProgress = this.#resolving.get(caster);
+      if (!inProgress)
+      {
+        inProgress = new Set();
+        this.#resolving.set(caster, inProgress);
+      }
+
+      // a skill id already in the set means we have walked back to it — bad extension data.
+      if (inProgress.has(skillId))
+      {
+        // circular extension detected — this is bad data, not a recoverable state.
+        throw new Error(`Circular skill extension detected on skill ${skillId}! Please stop recursing the universe 💢`);
+      }
+
+      // mark this skill as in-flight before recursing into overlay resolution.
+      inProgress.add(skillId);
+
+      try
+      {
+        // recursively resolve each overlay to its own fully-extended form before applying it.
+        const resolvedOverlays = overlayIds.map(id => this.getExtendedSkill(caster, id));
+        return this.#getExtendedSkill(resolvedOverlays, skillId);
+      }
+      finally
+      {
+        // always remove the skill from in-flight so sibling and future calls proceed normally.
+        inProgress.delete(skillId);
+        if (inProgress.size === 0) this.#resolving.delete(caster);
+      }
+    });
   }
 
+  //region state extension
   /**
-   * Checks if a given skill is an extension skill that can overlay the given base skill.
-   * @param {RPG_Skill} skill The skill that potentially is the overlay.
-   * @param {number} skillId The id of the base skill to check for overlay compatibility.
-   * @returns {boolean} Whether or not the skill is an overlay for the base skill.
+   * Gets the extended state for the given battler and state id.
+   *
+   * Extension states are gathered from the battler's full {@link Game_Battler#allStateIds} list
+   * (preserving passive stacks/duplicates) and applied in two passes:
+   * 1. Type-based overlays ({@code <extendType:TYPE>}) in ascending state-id order — familial.
+   * 2. Id-based overlays ({@code <extend:[IDs]>}) in ascending state-id order — specific.
+   *
+   * Each candidate is itself recursively resolved before being applied, so extension chains work.
+   * Results are cached per-battler and invalidated by {@link OverlayManager.invalidate} on any
+   * state change (via {@link Game_Battler#onBattlerDataChange}).
+   * @param {Game_Battler} battler The battler whose active states supply potential overlays.
+   * @param {number} stateId The base state id to potentially extend.
+   * @returns {RPG_State} The extended (or unmodified) state.
    */
-  static #isOverlayForBase(skill, skillId)
+  static getExtendedState(battler, stateId)
   {
-    // if this skill is not an extension skill, then it cannot overlay the base.
-    if (skill.isSkillExtension === false) return false;
+    // validate the incoming base id.
+    if (stateId <= 0) throw new Error('Invalid state id for extension.');
 
-    // indicate whether or not this skill overlays the base.
-    return skill.getSkillExtensions.includes(skillId);
+    // if we don't have a battler for some reason, don't process anything.
+    if (!battler) return $dataStates[stateId];
+
+    // fast-path: JCache.get() itself checks the per-battler bucket before running the compute
+    // function below, so a cache hit never allocates, walks allStateIds, or touches the guard.
+    return this._stateCache.get(battler, String(stateId), () =>
+    {
+      // cache miss: get all raw state ids, preserving stacks and duplicates.
+      const allIds = battler.allStateIds();
+
+      // get the target state's type classifiers for type-based candidate matching.
+      const targetState = $dataStates[stateId];
+      const targetTypes = targetState
+        ? targetState.types()
+        : [];
+
+      // bucket candidates: type-based first (familial), id-based second (specific).
+      const typeCandidates = [];
+      const idCandidates = [];
+
+      for (const id of allIds)
+      {
+        // skip the target itself.
+        if (id === stateId) continue;
+
+        // skip invalid or non-extension states.
+        const candidate = $dataStates[id];
+        if (!candidate || !candidate.isExtension) continue;
+
+        // type-based: candidate declares a type that intersects with the target's types.
+        if (targetTypes.length > 0 && ArrayHelper.hasAnyIntersection(targetTypes, candidate.getExtensionTypes))
+        {
+          typeCandidates.push(id);
+          continue;
+        }
+
+        // id-based: candidate explicitly lists this stateId as a target.
+        if (candidate.getExtensions.includes(stateId))
+        {
+          idCandidates.push(id);
+        }
+      }
+
+      // sort each bucket ascending by id (duplicate stacks of the same id remain consecutive).
+      typeCandidates.sort((a, b) => a - b);
+      idCandidates.sort((a, b) => a - b);
+
+      // combine: type-based overlays first, id-based overlays second.
+      const overlayIds = [ ...typeCandidates, ...idCandidates ];
+
+      // get or create the circular-guard set for this battler.
+      let inProgressState = this.#resolvingState.get(battler);
+      if (!inProgressState)
+      {
+        inProgressState = new Set();
+        this.#resolvingState.set(battler, inProgressState);
+      }
+
+      // a stateId already in the set means we have walked back to it — circular data.
+      if (inProgressState.has(stateId))
+      {
+        throw new Error(`Circular state extension detected on state ${stateId}! Please stop recursing the universe 💢`);
+      }
+
+      // mark this state as in-flight before recursing into overlay resolution.
+      inProgressState.add(stateId);
+
+      try
+      {
+        // recursively resolve each overlay to its own fully-extended form before applying it.
+        const resolvedOverlays = overlayIds.map(id => this.getExtendedState(battler, id));
+        return this.#getExtendedState(resolvedOverlays, stateId);
+      }
+      finally
+      {
+        // always clear the in-flight marker so siblings and future calls proceed normally.
+        inProgressState.delete(stateId);
+        if (inProgressState.size === 0) this.#resolvingState.delete(battler);
+      }
+    });
   }
+  //endregion state extension
 
   /**
    * Extends the base skill with the given overlay skills in sequential order.
@@ -197,6 +312,24 @@ class OverlayManager
 
     // return the final extended skill.
     return extended;
+  }
+
+  /**
+   * Extends the base state with the given overlay states in sequential order.
+   * @param {RPG_State[]} overlayStates The state overlays to apply.
+   * @param {number} stateId The id of the base state to extend.
+   * @returns {RPG_State} The extended state.
+   */
+  static #getExtendedState(overlayStates, stateId)
+  {
+    // if there are no overlays, return the original state without incurring clone cost.
+    if (overlayStates.length === 0) return $dataStates[stateId];
+
+    // clone the base state so overlays can safely mutate the clone without affecting the database.
+    const baseClone = $dataStates[stateId]._clone();
+
+    // apply all overlays in order to produce the final extended state.
+    return overlayStates.reduce((working, overlay) => this.extendState(working, overlay), baseClone);
   }
 
   /**
@@ -415,8 +548,8 @@ class OverlayManager
       baseSkill.hitType = skillOverlay.hitType;
     }
 
-    // overwrite the animation if not 0 (default) and it changed.
-    if (baseSkill.animationId !== 0 && baseSkill.animationId !== skillOverlay.animationId)
+    // overwrite the animation only if the overlay actually specifies one (not 0/default) and it changed.
+    if (skillOverlay.animationId !== 0 && baseSkill.animationId !== skillOverlay.animationId)
     {
       baseSkill.animationId = skillOverlay.animationId;
     }
@@ -429,31 +562,33 @@ class OverlayManager
    */
   static extendMessage(baseSkill, skillOverlay)
   {
-    // overwrite message 1.
-    if (baseSkill.message1 !== skillOverlay.message1)
+    // overwrite message 1 only if the overlay actually specifies one (not blank/default).
+    if (skillOverlay.message1 !== String.empty && baseSkill.message1 !== skillOverlay.message1)
     {
       baseSkill.message1 = skillOverlay.message1;
     }
 
-    // overwrite message 2.
-    if (baseSkill.message2 !== skillOverlay.message2)
+    // overwrite message 2 only if the overlay actually specifies one (not blank/default).
+    if (skillOverlay.message2 !== String.empty && baseSkill.message2 !== skillOverlay.message2)
     {
       baseSkill.message2 = skillOverlay.message2;
     }
   }
 
   /**
-   * Purges all references to the skill extend tag from the `baseSkill`.
+   * Purges all references to the skill extension tags from the `baseSkill`.
    * @param baseSkill {RPG_Skill} The base skill.
    * @returns {RPG_Skill} The overlayed base skill.
    */
   static sanitizeExtensions(baseSkill)
   {
-    // remove the skill extend from the metadata.
-    delete baseSkill.meta['skillExtend'];
+    // remove the extend tags from the metadata.
+    delete baseSkill.meta['extend'];
+    delete baseSkill.meta['extendType'];
 
-    // remove the skill extend from the notedata.
-    baseSkill.note = baseSkill.note.replace(J.EXTEND.RegExp.SkillExtend, String.empty);
+    // remove the extend tags from the notedata, so recursive re-triggering can't occur.
+    baseSkill.note = baseSkill.note.replace(J.EXTEND.RegExp.Extend, String.empty);
+    baseSkill.note = baseSkill.note.replace(J.EXTEND.RegExp.ExtendType, String.empty);
 
     // cleanup any duplicate newlines.
     baseSkill.note = baseSkill.note.replace(/\n\n/gmi, '\n');
@@ -463,51 +598,148 @@ class OverlayManager
     RPGManager.invalidate(baseSkill);
   }
 
+  //region state extensions
+  /**
+   * Merges the state overlay onto the base state and returns the updated base state.
+   * @param {RPG_State} baseState The base state to be overlaid.
+   * @param {RPG_State} stateOverlay The state to overlay with.
+   * @returns {RPG_State} The updated base state.
+   */
+  static extendState(baseState, stateOverlay)
+  {
+    this.extendStateGeneral(baseState, stateOverlay);
+    this.extendStateRemoval(baseState, stateOverlay);
+    this.extendStateMessages(baseState, stateOverlay);
+    this.extendStateTraits(baseState, stateOverlay);
+    this.extendStateMetadata(baseState, stateOverlay);
+    this.sanitizeStateExtensions(baseState);
+    return baseState;
+  }
+
+  /**
+   * Extends the general section of a state (restriction, priority, overlay icon, battler motion).
+   * @param {RPG_State} baseState The state being extended.
+   * @param {RPG_State} stateOverlay The state extending the base.
+   */
+  static extendStateGeneral(baseState, stateOverlay)
+  {
+    // overwrite restriction only when the overlay declares one (0 = "none"/default).
+    if (stateOverlay.restriction !== 0)
+    {
+      baseState.restriction = stateOverlay.restriction;
+    }
+
+    // overwrite priority only when the overlay declares a non-default value (50 = default).
+    if (stateOverlay.priority !== 50)
+    {
+      baseState.priority = stateOverlay.priority;
+    }
+
+    // overwrite the visual overlay icon only when the overlay declares one (0 = none/default).
+    if (stateOverlay.overlay !== 0)
+    {
+      baseState.overlay = stateOverlay.overlay;
+    }
+
+    // overwrite the battler motion only when the overlay declares one (0 = none/default).
+    if (stateOverlay.motion !== 0)
+    {
+      baseState.motion = stateOverlay.motion;
+    }
+  }
+
+  /**
+   * Extends the removal conditions of a state (timing, turns, damage, walk, restriction, battle-end).
+   * Last wins for all fields; numeric fields only replace when the overlay differs from default.
+   * @param {RPG_State} baseState The state being extended.
+   * @param {RPG_State} stateOverlay The state extending the base.
+   */
+  static extendStateRemoval(baseState, stateOverlay)
+  {
+    // overwrite timing when the overlay declares a non-default value (0 = "none"/default).
+    if (stateOverlay.autoRemovalTiming !== 0)
+    {
+      baseState.autoRemovalTiming = stateOverlay.autoRemovalTiming;
+    }
+
+    // overwrite turn range when the overlay declares non-default values (1/1 = defaults).
+    if (stateOverlay.minTurns !== 1) baseState.minTurns = stateOverlay.minTurns;
+    if (stateOverlay.maxTurns !== 1) baseState.maxTurns = stateOverlay.maxTurns;
+
+    // last wins for all boolean removal flags.
+    baseState.removeAtBattleEnd = stateOverlay.removeAtBattleEnd;
+    baseState.removeByRestriction = stateOverlay.removeByRestriction;
+    baseState.removeByDamage = stateOverlay.removeByDamage;
+    baseState.removeByWalking = stateOverlay.removeByWalking;
+
+    // overwrite numeric removal params only when they differ from their defaults.
+    if (stateOverlay.chanceByDamage !== 100) baseState.chanceByDamage = stateOverlay.chanceByDamage;
+    if (stateOverlay.stepsToRemove !== 100) baseState.stepsToRemove = stateOverlay.stepsToRemove;
+  }
+
+  /**
+   * Extends the messages of a state; only overwrites when the overlay provides a non-empty string.
+   * @param {RPG_State} baseState The state being extended.
+   * @param {RPG_State} stateOverlay The state extending the base.
+   */
+  static extendStateMessages(baseState, stateOverlay)
+  {
+    if (stateOverlay.message1) baseState.message1 = stateOverlay.message1;
+    if (stateOverlay.message2) baseState.message2 = stateOverlay.message2;
+    if (stateOverlay.message3) baseState.message3 = stateOverlay.message3;
+    if (stateOverlay.message4) baseState.message4 = stateOverlay.message4;
+  }
+
+  /**
+   * Extends the traits of a state using {@link TraitResolver.overlayTraits} (last wins per code+dataId).
+   * @param {RPG_State} baseState The state being extended.
+   * @param {RPG_State} stateOverlay The state extending the base.
+   */
+  static extendStateTraits(baseState, stateOverlay)
+  {
+    baseState.traits = TraitResolver.overlayTraits(baseState.traits, stateOverlay.traits);
+  }
+
+  /**
+   * Extends the metadata and note of a state.
+   * @param {RPG_State} baseState The state being extended.
+   * @param {RPG_State} stateOverlay The state extending the base.
+   */
+  static extendStateMetadata(baseState, stateOverlay)
+  {
+    baseState.meta = { ...baseState.meta, ...stateOverlay.meta };
+    baseState.note = this.overwriteNote(baseState.note, stateOverlay.note);
+    RPGManager.invalidate(baseState);
+  }
+
+  /**
+   * Purges all state-extension tags from the note of the given state to prevent recursive extension.
+   * @param {RPG_State} baseState The state to sanitize.
+   */
+  static sanitizeStateExtensions(baseState)
+  {
+    baseState.note = baseState.note.replace(J.EXTEND.RegExp.Extend, String.empty);
+    baseState.note = baseState.note.replace(J.EXTEND.RegExp.ExtendType, String.empty);
+    baseState.note = baseState.note.replace(/\n\n/gmi, '\n');
+    baseState.note = baseState.note.replace(/\r\r/gmi, '\r');
+    RPGManager.invalidate(baseState);
+  }
+  //endregion state extensions
+
   //region extend note
   // TODO: make this configurable.
   /**
-   * The list of keys on notes that should never get merged/overridden, but instead appended.
-   * @type {string[]}
-   */
-  static _nonCombiningKeys = [ 'drop' ];
-
-  /**
-   * Gets the keys that should never be combined- they will effectively be treated as unsupported.
-   * @returns {string[]}
-   */
-  static getNonCombiningKeys()
-  {
-    return this._nonCombiningKeys;
-  }
-
-  /**
-   * Sets the global list of tag keys that should NOT be replaced when merging, but instead combined.
-   * This allows multi-instance tags like `drop` to append additional lines from the overlay note.
-   * @param {string[]} keys The array of keys that should be non-combining (case-insensitive).
-   */
-  static setNonCombiningKeys(keys)
-  {
-    // ensure we store a normalized list of lowercase keys for comparisons.
-    this._nonCombiningKeys = Array.isArray(keys)
-      ? keys.map(k => String(k)
-        .toLowerCase())
-      : [];
-  }
-
-  /**
    * Merges the overlay note into the base note with key-aware behavior.
-   * - For keys not in the exclusions set: replace base lines with overlay lines if overlay provides any.
-   * - For keys in the exclusions set: append unique overlay lines after base lines (multi-instance tags like "drop").
+   * - For keys not registered as non-combining: replace base lines with overlay lines if overlay provides any.
+   * - For keys registered as non-combining: append unique overlay lines after base lines.
    * - Unsupported lines (non-tag text) are preserved from both notes with deduplication; base lines keep priority.
-   *
+   * Non-combining keys are registered via {@link J.EXTEND.Metadata.registerNonCombiningKey}.
    * Keys are case-insensitive. Tags are those enclosed with angle brackets (e.g., `<key:value>` or `<key>`).
-   *
    * @param {string} baseNote The base note content.
    * @param {string} overlayNote The overlay note content.
-   * @param {string[]=} nonCombiningKeys Optional keys to merge instead of replace; defaults to configured static list.
    * @returns {string} The merged note text, joined with newlines.
    */
-  static overwriteNote(baseNote, overlayNote, nonCombiningKeys)
+  static overwriteNote(baseNote, overlayNote)
   {
     // normalize the incoming notes to empty strings if nullish.
     const oldNote = baseNote || String.empty;
@@ -515,8 +747,8 @@ class OverlayManager
     // normalize the overlay note to empty string if nullish.
     const newNote = overlayNote || String.empty;
 
-    // normalize the incoming non-combining keys; fall back to configured static if not provided.
-    const exclusions = this._normalizeExclusions(nonCombiningKeys);
+    // fetch the currently registered non-combining keys from the extend plugin metadata.
+    const exclusions = J.EXTEND.Metadata.getNonCombiningKeys();
 
     // tokenize both notes into tags and unsupported lines.
     const oldTokens = this._tokenizeNote(oldNote);
@@ -530,7 +762,7 @@ class OverlayManager
     // bucket the tags by key for new note.
     const newBuckets = this._toKeyBuckets(newTokens.tags);
 
-    // merge the buckets based on replace-or-merge rules and exclusions.
+    // merge the buckets based on replace-or-append rules per registered non-combining keys.
     const merged = this._mergeBuckets(oldBuckets, newBuckets, exclusions);
 
     // merge unsupported lines from old then new with deduplication.
@@ -541,23 +773,6 @@ class OverlayManager
 
     // return the final merged note string.
     return result;
-  }
-
-  /**
-   * Normalizes the incoming exclusions array, or falls back to the static configuration.
-   * @param {string[]|null|undefined} exclusions The caller-provided keys that should merge instead of replace.
-   * @returns {string[]} A lowercase array of keys to treat as non-replacing during merges.
-   */
-  static _normalizeExclusions(exclusions)
-  {
-    // determine the base keys list to use.
-    const provided = Array.isArray(exclusions)
-      ? exclusions
-      : this.getNonCombiningKeys();
-
-    // normalize all keys to lowercase for case-insensitive comparisons.
-    return provided.map(k => String(k)
-      .toLowerCase());
   }
 
   /**

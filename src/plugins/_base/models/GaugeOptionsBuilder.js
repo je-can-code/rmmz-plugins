@@ -260,6 +260,5 @@ class GaugeOptionsBuilder
   //endregion setters
 }
 
-
 export default GaugeOptionsBuilder;
 //endregion GaugeOptionsBuilder

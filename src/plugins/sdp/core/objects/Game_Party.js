@@ -1,6 +1,6 @@
 //region Game_Party
 /**
- * Extends {@link #initialize}.<br>
+ * Extends {@link #initialize}.<br/>
  * Also initializes our SDP members.
  */
 J.SDP.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);

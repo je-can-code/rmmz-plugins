@@ -182,6 +182,7 @@ class Window_MoreData
     const calculatedHeight = (this._list.length + 1) * (this.lineHeight() + 8) - 16;
     if (calculatedHeight >= magicHeight)
     {
+      // assign height on this instance for callers.
       this.height = magicHeight;
     }
     else
@@ -190,7 +191,6 @@ class Window_MoreData
     }
   }
 }
-
 
 export default Window_MoreData;
 //endregion Window_MoreData

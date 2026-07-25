@@ -38,8 +38,15 @@ const ignoredKeys = [
   'copy:',
   'build:all',
   'hotfix',
+  'verify-pre-compile',
+  'compile',
+  'verify-post-compile',
   'test',
   'clean:',
+  'migrate:',
+  'verify:',
+  'defs:',
+  'lint',
 ];
 
 // extract the scripts section of our package.json.

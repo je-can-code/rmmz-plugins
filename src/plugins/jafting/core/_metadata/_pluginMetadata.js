@@ -22,11 +22,13 @@ class J_CraftingPluginMetadata
   {
     super.postInitialize();
 
+    // assign material armor type id on this instance for callers.
     this.materialArmorTypeId = J.BASE.Helpers.parsePluginInt(
       this.parsedPluginParameters['material-armor-type-id'],
       5,
     );
 
+    // assign material weapon type id on this instance for callers.
     this.materialWeaponTypeId = J.BASE.Helpers.parsePluginInt(
       this.parsedPluginParameters['material-weapon-type-id'],
       -1,
@@ -41,6 +43,7 @@ class J_CraftingPluginMetadata
     // label + icon on the root hub list; plugin command `call-salvage` ignores the switch gate entirely.
     this.salvageCommandName = this.parsedPluginParameters['salvage-menu-name'] ?? 'Salvage';
 
+    // assign salvage menu icon index on this instance for callers.
     this.salvageMenuIconIndex = J.BASE.Helpers.parsePluginInt(
       this.parsedPluginParameters['salvage-menu-icon'],
       192,

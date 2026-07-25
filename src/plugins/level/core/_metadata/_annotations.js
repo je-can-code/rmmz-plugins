@@ -31,38 +31,66 @@
  * - J-NATURAL; handles level-based max hp/mp/tp growths.
  *
  * ============================================================================
- * PLUGIN PARAMETERS BREAKDOWN:
- *  - Start Enabled:
- *      The scaling functionality will be enabled when a newgame is started.
- *      Defaults to true.
- *  - Minimum Multiplier (Combat):
- *      Clamp floor for damage and other combat uses of level scaling.
- *      Defaults to 0.1x.
- *  - Maximum Multiplier (Combat):
- *      Clamp ceiling for combat scaling.
- *      Defaults to 2.0x.
- *  - Minimum / Maximum Multiplier (Rewards):
- *      Separate clamps for EXP and gold from level scaling. When blank, combat values are used.
- *      Defaults to match combat.
- *  - Growth Multiplier:
+ * PLUGIN CONFIGURATION:
+ * All tuning for this plugin (scaling multipliers, invariance ranges, actor/
+ * enemy level balancer variable ids, single-level-across-classes toggle, the
+ * canonical exp curve inputs, and the max level settings) lives in an external
+ * JSON file rather than PluginManager parameters:
+ *   data/config.level.json
+ * This file is required- a missing or invalid file will crash boot, exactly
+ * like this author's other config-file-driven plugins (J-ABS, J-SDP,
+ * J-JAFTING-Creation, Omni-Quest, J-Diff, J-Prof). Author/maintain it via
+ * jmz-data-editor's Level board rather than hand-editing JSON.
+ *
+ * Fields and their meaning:
+ *  - useScaling (boolean):
+ *      Whether or not this scaling functionality is enabled by default.
+ *  - minMultiplier / maxMultiplier (number):
+ *      Clamp floor/ceiling for damage and other combat uses of level scaling.
+ *  - rewardMinMultiplier / rewardMaxMultiplier (number, nullable):
+ *      Separate clamps for EXP and gold from level scaling. When null/absent,
+ *      the combat min/max above is used instead.
+ *  - growthMultiplier (number):
  *      The amount the multiplier changes per level of difference.
- *      Defaults to 0.1x per level of difference.
- *  - Upper Invariance:
- *      The amount above 0 levels of difference before scaling is applied.
- *      See the SAMPLE CALCULATIONS below for examples.
- *      Defaults to 1 level.
- *  - Lower Invariance:
- *      The amount below 0 levels of difference before scaling is applied.
- *      See the SAMPLE CALCULATIONS below for examples.
- *      Defaults to 1 level.
- *  - Actor Balancer:
- *      A variableId whose value is added to all actor's levels.
- *      This DOES impact how their levels are perceived by RMMZ.
- *      Defaults to variableId 141.
- *  - Enemy Balancer:
- *      A variableId whose value is added to all enemy's levels.
- *      Only really applies to scaling since enemies usually lack levels.
- *      Defaults to variableId 142.
+ *  - invariantUpperRange / invariantLowerRange (number):
+ *      The amount above/below 0 levels of difference before scaling is
+ *      applied. See the SAMPLE CALCULATIONS below for examples.
+ *  - variableActorBalancer / variableEnemyBalancer (number):
+ *      A variableId whose value is added to all actors'/enemies' levels.
+ *  - useSharedActorLevel (boolean):
+ *      Whether all classes share one actor-wide level/exp instead of each
+ *      class leveling independently (vanilla RMMZ behavior).
+ *  - canonicalExpBasis / canonicalExpExtra / canonicalExpAccA / canonicalExpAccB (number):
+ *      The four inputs to the class-independent exp curve used when
+ *      useSharedActorLevel is on. Ignored if another plugin (e.g.
+ *      J-Level-Flat) overrides expForLevel; only matters as the honest
+ *      default when nothing else does.
+ *  - defaultBeyondMaxLevel (number):
+ *      The default max level beyond the database's 99 cap.
+ *  - trueMaxLevel (number):
+ *      The absolute max level your level can be, including all boosts.
+ * ============================================================================
+ * SINGLE LEVEL ACROSS CLASSES:
+ * By default, RPG Maker MZ tracks experience per-class (Game_Actor._exp is
+ * keyed by classId), so switching to a class you haven't played resets you to
+ * level 1 even if your other classes are deep into the double digits. With
+ * this setting enabled, every class always agrees on the same level and exp
+ * for a given actor- _exp remains an object keyed by classId (for
+ * compatibility with anything that expects that shape), but every key is kept
+ * in sync with every write, so there is effectively only one level per actor.
+ *
+ * Switching classes no longer resets or re-derives level from a per-class
+ * exp bucket. It also retroactively grants every learning on the destination
+ * class at or below your current level (mirroring how a fresh actor learns
+ * everything up to their initial level), so jumping into a brand new class at
+ * level 40 doesn't skip past its first 40 levels of learnings.
+ *
+ * This is intentionally orthogonal to per-class stat growth (see J-NATURAL):
+ * J-NATURAL banks permanent stat growth once per level-up, sourced from
+ * whichever class is active in that exact moment. With levels shared, playing
+ * many classes no longer punishes you with a level-1 reset, but the stat
+ * growth you bank is still shaped entirely by which classes you actually
+ * spent those levels playing.
  * ============================================================================
  * LEVEL TAGS:
  * Have you ever wanted to scale damage/experience/gold by level, but realized
@@ -211,6 +239,54 @@
  * base max level.
  *
  * ============================================================================
+ * GROWTH CURVES (BEYOND MAX LEVEL)
+ * Have you ever wanted precise, authored control over a stat's growth past
+ * level 99 instead of trusting a slope-extrapolation guess? Well now you can!
+ * By tagging a class with a growth curve formula for a given parameter, that
+ * formula becomes the source of truth for that stat beyond 99- replacing the
+ * fallback extrapolation entirely for that class/param combination.
+ *
+ * NOTE ABOUT AUTHORING:
+ * These are primarily generated via the jmz-data-editor's Classes board
+ * (which previews the exact same formula evaluation the runtime uses), but
+ * nothing stops you from hand-authoring them directly on a class note.
+ *
+ * NOTE ABOUT MTP:
+ * Every base parameter (mhp/mmp/atk/def/mat/mdf/agi/luk) only uses its growth
+ * curve tag beyond level 99- levels 1-99 stay driven by the class's baked
+ * params[] array from the database. MTP is different: it has no params[]
+ * array at all (it's a J-Base/J-NaturalGrowth note-tag-only stat), so its
+ * growth curve tag, when present, is evaluated LIVE for every level, not
+ * just beyond 99.
+ *
+ * Formula context:
+ *   a.level = the level being evaluated (this is the ONLY binding available-
+ *             no b, no v, unlike most other formula tags in this ecosystem)
+ *
+ * TAG USAGE:
+ * - Classes only.
+ *
+ * TAG FORMAT:
+ *  <mhpGrowthCurve:[FORMULA]>
+ *  <mmpGrowthCurve:[FORMULA]>
+ *  <atkGrowthCurve:[FORMULA]>
+ *  <defGrowthCurve:[FORMULA]>
+ *  <matGrowthCurve:[FORMULA]>
+ *  <mdfGrowthCurve:[FORMULA]>
+ *  <agiGrowthCurve:[FORMULA]>
+ *  <lukGrowthCurve:[FORMULA]>
+ *  <mtpGrowthCurve:[FORMULA]>
+ *
+ * TAG EXAMPLES:
+ *  <atkGrowthCurve:[20 + (a.level * 3)]>
+ * Beyond level 99, this class's ATK follows 20 + (level * 3) instead of the
+ * slope-extrapolation fallback.
+ *
+ *  <mtpGrowthCurve:[a.level * 2]>
+ * This class's max TP is always (level * 2), evaluated live at every level-
+ * not just beyond 99.
+ *
+ * ============================================================================
  * SAMPLE CALCULATIONS:
  * Here is an example back and forth encounter between an allied party and
  * enemy party.
@@ -296,6 +372,16 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.4.0
+ *    Added Single Level Across Classes: actors can now share one level/exp
+ *    across all classes instead of leveling each class independently, with
+ *    a class-independent canonical exp curve and retroactive learning
+ *    backfill on class change.
+ *    Added per-class growth curve tags (<mhpGrowthCurve>, etc. for all base
+ *    params plus <mtpGrowthCurve>) as authored, formula-driven replacements
+ *    for the slope-extrapolation fallback beyond level 99. MTP's curve is
+ *    evaluated live at every level, not just beyond 99, since MTP has no
+ *    baked params[] array to defer to below the cap.
  * - 1.3.1
  *    Updated battler name rendering support for compatibility.
  * - 1.3.0
@@ -316,108 +402,6 @@
  * - 1.0.0
  *    The initial release.
  * ============================================================================
- * @param parentConfigScaling
- * @text SCALING
- *
- * @param useScaling
- * @parent parentConfigScaling
- * @type boolean
- * @text Start Enabled
- * @desc Whether or not this scaling functionality is enabled by default.
- * @on Enabled By Default
- * @off Disabled By Default
- * @default true
- *
- * @param minMultiplier
- * @parent parentConfigScaling
- * @type number
- * @decimals 2
- * @text Minimum Multiplier (Combat)
- * @desc Min for damage and parry. EXP/gold use reward params when set.
- * @default 0.10
- *
- * @param maxMultiplier
- * @parent parentConfigScaling
- * @type number
- * @decimals 2
- * @text Maximum Multiplier (Combat)
- * @desc Clamp ceiling for combat scaling.
- * @default 2.00
- *
- * @param rewardMinMultiplier
- * @parent parentConfigScaling
- * @type number
- * @decimals 2
- * @text Minimum Multiplier (Rewards)
- * @desc Min for scaled EXP/gold. Missing param uses combat minimum.
- * @default 0.10
- *
- * @param rewardMaxMultiplier
- * @parent parentConfigScaling
- * @type number
- * @decimals 2
- * @text Maximum Multiplier (Rewards)
- * @desc Max for scaled EXP/gold. Missing param uses combat maximum.
- * @default 2.00
- *
- * @param growthMultiplier
- * @parent parentConfigScaling
- * @type number
- * @decimals 2
- * @text Growth Multiplier
- * @desc The amount of growth per level of difference.
- * @default 0.10
- *
- * @param invariantUpperRange
- * @parent parentConfigScaling
- * @type number
- * @text Upper Invariance
- * @desc The amount of level difference over 0 before scaling takes effect.
- * @default 1
- *
- * @param invariantLowerRange
- * @parent parentConfigScaling
- * @type number
- * @text Lower Invariance
- * @desc The amount of level difference under 0 before scaling takes effect.
- * @default 1
- *
- * @param variableActorBalancer
- * @parent parentConfigScaling
- * @type variable
- * @text Actor Balancer
- * @desc The variable id to act as a constant level modifier in favor of actors.
- * @default 141
- *
- * @param variableEnemyBalancer
- * @parent parentConfigScaling
- * @type variable
- * @text Enemy Balancer
- * @desc The variable id to act as a constant level modifier in favor of enemies.
- * @default 142
- *
- * @param parentConfigMaxLevel
- * @text MAX LEVEL
- *
- * @param defaultBeyondMaxLevel
- * @parent parentConfigMaxLevel
- * @type number
- * @min 100
- * @max 1000
- * @text Default Beyond Max Level
- * @desc The default for what the max level is if beyond the cap. Requires max level for actors to be set to 99.
- * @default 255
- *
- * @param trueMaxLevel
- * @parent parentConfigMaxLevel
- * @type number
- * @min 1
- * @max 1000
- * @text Max Boosted Level
- * @desc The max level your level can be. While this is intended to always be beyond the max, it can be lower.
- * @default 1000
- *
- *
  * @command enableScaling
  * @text Enable Scaling
  * @desc Enables the scaling functionality for damage/rewards.

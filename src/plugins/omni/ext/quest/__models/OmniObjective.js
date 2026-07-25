@@ -97,6 +97,10 @@ class OmniObjective
   }
 
   static FetchTypes = {
+    /**
+     * The default state for a fetch objective before a real type has been chosen.
+     */
+    Unset: -1,
     Item: 0,
     Weapon: 1,
     Armor: 2,
@@ -167,6 +171,7 @@ class OmniObjective
     this.logs = logs;
     this.fulfillment = fulfillment;
 
+    // assign hidden by default on this instance for callers.
     this.hiddenByDefault = hiddenByDefault;
     this.isOptional = isOptional;
   }

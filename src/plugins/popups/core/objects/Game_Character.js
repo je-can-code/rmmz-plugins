@@ -1,4 +1,6 @@
 //region Game_Character
+import PopupLayoutHelper from './../helpers/PopupLayoutHelper.js';
+
 /**
  * Hooks into the `Game_Character.initMembers` and adds in action sprite properties.
  */
@@ -24,6 +26,7 @@ Game_Character.prototype.initMembers = function()
   this._j._textPopRequest = false;
 
   // run the rest of the original logic.
+  // perform original logic.
   J.POPUPS.Aliased.Game_Character.get('initMembers')
     .call(this);
 };
@@ -65,7 +68,7 @@ Game_Character.prototype.addTextPop = function(textPop)
 {
   if (J.POPUPS.Metadata.disablePopups === true) return;
 
-  if (J.POPUPS.isValidTextPopForQueue(textPop) === false)
+  if (PopupLayoutHelper.isValidTextPopForQueue(textPop) === false)
   {
     console.warn(
       `[${J.POPUPS.Metadata.name}] addTextPop rejected invalid Map_TextPop (bad type or layoutRing).`,
@@ -74,6 +77,7 @@ Game_Character.prototype.addTextPop = function(textPop)
     return;
   }
 
+  // Append the row to the working collection.
   this._j._textPops.push(textPop);
   J.POPUPS.notifyPopupQueued(this, textPop);
 };
@@ -94,6 +98,7 @@ Game_Character.prototype.emptyDamagePops = function()
 {
   const textPops = this.getTextPops();
 
+  // Mutate the array in place for this edit.
   textPops.splice(0, textPops.length);
 };
 

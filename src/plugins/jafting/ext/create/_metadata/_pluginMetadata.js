@@ -168,6 +168,7 @@ class J_CraftingCreatePluginMetadata
      */
     this.recipes = classifiedCraftingConfig.recipes();
 
+    // construct recipe map for the next step in this routine.
     const recipeMap = new Map();
     this.recipes.forEach(recipe => recipeMap.set(recipe.key, recipe));
 
@@ -183,6 +184,7 @@ class J_CraftingCreatePluginMetadata
      */
     this.categories = classifiedCraftingConfig.categories();
 
+    // construct categories map for the next step in this routine.
     const categoriesMap = new Map();
     this.categories.forEach(category => categoriesMap.set(category.key, category));
 
@@ -278,6 +280,7 @@ class J_CraftingCreatePluginMetadata
     return PluginVersion.builder
       .major('2')
       .minor('0')
+      // continue the routine with the next policy step.
       .patch('0')
       .build();
   }
@@ -311,6 +314,7 @@ class J_CraftingCreatePluginMetadata
     return PluginVersion.builder
       .major('2')
       .minor('3')
+      // continue the routine with the next policy step.
       .patch('1')
       .build();
   }

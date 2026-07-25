@@ -48,45 +48,5 @@ J.PIXEL.Directions = {
   UPPERLEFT: 7,
   UPPERRIGHT: 9,
 };
-
-/**
- * A small debug container for one-frame collision sampling traces.
- * Populated by the pixel passage helpers and consumed by Sprite_PixelCollisionOverlay.
- */
-J.PIXEL.Debug = {
-  /**
-   * Controls whether subcell samples are collected.
-   * Set to true only when the collision overlay is actively visible.
-   * Leave false in production to avoid per-frame object allocations in the probe loops.
-   * @type {boolean}
-   */
-  enabled: false,
-
-  /**
-   * @type {{x:number,y:number,color:string}[]}
-   */
-  samples: [],
-
-  /**
-   * Queues a subcell sample to be drawn this frame by the overlay.
-   * @param {number} x Fractional tile x (seam-aligned).
-   * @param {number} y Fractional tile y (seam-aligned).
-   * @param {string} color A rgba color string.
-   */
-  push(x, y, color)
-  {
-    if (this.enabled === false) return;
-
-    this.samples.push({ x, y, color });
-  },
-
-  /**
-   * Clears all queued samples at the end of each frame.
-   */
-  clear()
-  {
-    this.samples.length = 0;
-  },
-};
 //endregion metadata
 //endregion initialization

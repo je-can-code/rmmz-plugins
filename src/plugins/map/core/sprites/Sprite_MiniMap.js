@@ -142,14 +142,17 @@ class Sprite_MiniMap
     // Positioning
     this.anchor.set(0.5, 0.5);
 
+    // assign x on this instance for callers.
     this.x = J.MAP.Metadata.minimapX >= 0
       ? J.MAP.Metadata.minimapX
       : (Graphics.boxWidth - (this._width / 2) - 10);
 
+    // assign y on this instance for callers.
     this.y = J.MAP.Metadata.minimapY >= 0
       ? J.MAP.Metadata.minimapY
       : (Graphics.boxHeight - (this._height / 2) - 10);
 
+    // assign z on this instance for callers.
     this.z = 200;
 
     /**
@@ -185,6 +188,7 @@ class Sprite_MiniMap
      */
     this._cachedMapId = 0;
 
+    // store  smooth fx on the instance for later reads.
     this._smoothFx = 0; // smoothed source X in pixels within _cacheBitmap
     this._smoothFy = 0; // smoothed source Y in pixels within _cacheBitmap
   }
@@ -544,6 +548,7 @@ class Sprite_MiniMap
     const pixelWidth = cacheTilesW * this.SCALE;
     const pixelHeight = cacheTilesH * this.SCALE;
 
+    // store  cache bitmap on the instance for later reads.
     this._cacheBitmap = new Bitmap(pixelWidth, pixelHeight);
 
     // Background behind the map
@@ -712,8 +717,8 @@ class Sprite_MiniMap
   /**
    * Draws one full map copy into the cache, offset by whole-tile origins.
    * originTileX/Y are in cache tile space, relative to the cache’s (0,0).
-   * @param {number} originTileX
-   * @param {number} originTileY
+   * @param {number} originTileX The origin tile x driving this step.
+   * @param {number} originTileY The origin tile y driving this step.
    * @param {number[]} flags - tileset flags (pre-fetched)
    */
   drawMapCopyAt(originTileX, originTileY, flags)
@@ -1162,7 +1167,7 @@ class Sprite_MiniMap
    * player's facing direction. The line sits near the tip of the faced arm
    * and stays within the inner marker box to avoid clipping.
    *
-   * @param {Bitmap} targetBitmap
+   * @param {Bitmap} targetBitmap The target bitmap driving this step.
    * @param {number} lx - tile top-left x in pixels
    * @param {number} ly - tile top-left y in pixels
    * @param {number} sizePx - desired marker size in pixels
@@ -1280,7 +1285,6 @@ class Sprite_MiniMap
    */
   toCss(hex)
   {
-    if (typeof hex !== 'string') return '#ff00ff';
     const clean = hex.replace(/\s+/g, String.empty);
     if (!clean.startsWith('#')) return '#ff00ff';
 

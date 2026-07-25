@@ -7,6 +7,7 @@ J.MESSAGE.Aliased.Game_Interpreter.set('setupChoices', Game_Interpreter.prototyp
 Game_Interpreter.prototype.setupChoices = function(params)
 {
   // perform original choice setup logic.
+  // perform original logic.
   J.MESSAGE.Aliased.Game_Interpreter.get('setupChoices')
     .call(this, params);
 
@@ -80,6 +81,7 @@ Game_Interpreter.prototype.hideSpecificChoiceBranches = function(params)
       counterIndex++;
     }
 
+    // Append the row to the working collection.
     runningCollection.push(choiceGroup);
 
     return runningCollection;

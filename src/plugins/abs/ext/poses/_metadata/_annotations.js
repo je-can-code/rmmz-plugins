@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.4 POSES] Enable action poses for JABS.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Enable action poses for JABS.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -55,6 +55,11 @@
  * This is not a highly tested feature of JABS and may not work as intended.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.5
+ *    startGuarding no longer takes a skillSlot param, matching J-ABS core;
+ *    the guard pose now resolves via getGuardSkillId() instead.
+ *    Moved gameAssetExists from its own file into initialization.js.
+ *    Removed leftover unused scaffold plugin params.
  * - 1.0.4
  *    `JABS_Battler` pose hooks aligned with J-ABS 4.10.0 dodge/guard battler updates.
  * - 1.0.3
@@ -66,15 +71,5 @@
  * - 1.0.0
  *    The initial release.
  * ============================================================================
- *
- * @param parentConfig
- * @text SETUP
- *
- * @param menu-switch
- * @parent parentConfig
- * @type switch
- * @text Menu Switch ID
- * @desc When this switch is ON, then this command is visible in the menu.
- * @default 101
  */
 //endregion annotations

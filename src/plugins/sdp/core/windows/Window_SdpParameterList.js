@@ -1,5 +1,5 @@
 //region Window_SdpParameterList
-import PanelParameter from './../__models/PanelParameter.js';
+import PanelParameter from '../models/PanelParameter.js';
 class Window_SdpParameterList
   extends Window_Command
 {
@@ -42,7 +42,7 @@ class Window_SdpParameterList
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Creates the command list of parameters affected by this SDP.
    */
   makeCommandList()
@@ -72,31 +72,32 @@ class Window_SdpParameterList
   {
     // extract a couple parameter data points for building the display information.
     const {
-      parameterId,
+      parameterKey,
       isCore
+    // continue the routine with the next policy step.
     } = panelParameter;
+
+    const definition = ParameterRegistry.get(parameterKey);
 
     // determine the item color.
     const colorIndex = isCore
       ? 14
       : 0;
 
-    // determine the parameter data to display.
-    const paramName = TextManager.longParam(parameterId);
-    const paramIcon = IconManager.longParam(parameterId);
-    let paramValue = this.currentActor.longParam(parameterId);
-    const isPercentParamValue = this.isPercentParameter(parameterId);
-    const percentValue = isPercentParamValue
-      ? '%'
-      : String.empty;
-
-    // non-base parameters (and not max tp) get multiplied by 100.
-    if (!Game_BattlerBase.isBaseParam(parameterId) && parameterId !== 30)
-    {
-      paramValue *= 100;
-    }
-
-    const paramDescription = TextManager.longParamDescription(parameterId);
+    // resolve display metadata from the catalog when available.
+    const paramName = definition
+      ? definition.label()
+      : parameterKey;
+    const paramIcon = definition
+      ? definition.iconIndex()
+      : 0;
+    const paramValue = this.currentActor.parameter(parameterKey);
+    const paramDescription = definition
+      ? definition.description()
+      : [ String.empty ];
+    const prettyValue = definition
+      ? definition.prettyValue(paramValue, false, this.currentActor)
+      : Math.trunc(paramValue).toString();
 
     // determine the modifier data to display.
     const {
@@ -105,11 +106,11 @@ class Window_SdpParameterList
     } = this.#determineModifierData(panelParameter);
 
     // build the command name.
-    const commandName = `${paramName} ( ${Math.trunc(paramValue)}${percentValue} )`;
+    const commandName = `${paramName} ( ${prettyValue} )`;
 
     // construct the command.
     const command = new WindowCommandBuilder(commandName)
-      .setSymbol(parameterId)
+      .setSymbol(parameterKey)
       .addTextLines(paramDescription)
       .setIconIndex(paramIcon)
       .setColorIndex(colorIndex)
@@ -133,7 +134,7 @@ class Window_SdpParameterList
     };
 
     // a messy helper function for determining the modifier's color index.
-    const determineModifierColorIndex = (paramId, isCore, paramValue, afterRankupValue) =>
+    const determineModifierColorIndex = (parameterKey, isCore, paramValue, afterRankupValue) =>
     {
       // define some colors.
       const upColor = 24; // ColorManager.textColor(24);
@@ -142,7 +143,7 @@ class Window_SdpParameterList
       const downCoreColor = 18; // ColorManager.textColor(18);
 
       // determine if smaller is better.
-      const smallerIsBetter = this.isNegativeGood(paramId);
+      const smallerIsBetter = this.isNegativeGood(parameterKey);
 
       let colorIndex = 0;
 
@@ -200,20 +201,20 @@ class Window_SdpParameterList
 
     // deconstruct the info we need from the panel parameter.
     const {
-      parameterId: paramId,
+      parameterKey,
       perRank: modifier,
       isFlat,
       isCore
     } = panelParameter;
 
     // determine the current value of the parameter.
-    const paramValue = this.currentActor.longParam(paramId);
+    const paramValue = this.currentActor.parameter(parameterKey);
 
     // calculate the post-rankup amount.
     const afterRankupValue = calculateAfterRankUpValue(paramValue, modifier, isFlat);
 
     // calculate the color index.
-    const modifierColorIndex = determineModifierColorIndex(paramId, isCore, paramValue, afterRankupValue);
+    const modifierColorIndex = determineModifierColorIndex(parameterKey, isCore, paramValue, afterRankupValue);
 
     // build the modifier's text.
     const modifierText = buildModifierText(modifier, isFlat);
@@ -227,78 +228,16 @@ class Window_SdpParameterList
 
   /**
    * Determines whether or not the parameter should be marked as "improved" if it is negative.
-   * @param {number} parameterId The paramId to check if smaller is better for.
-   * @returns {boolean} True if the smaller is better for this paramId, false otherwise.
+   * @param {string} parameterKey The registry key to check if smaller is better for.
+   * @returns {boolean} True if the smaller is better for this key, false otherwise.
    */
-  isNegativeGood(parameterId)
+  isNegativeGood(parameterKey)
   {
-    // grab the list of ids that qualify as "smaller is better".
-    const smallerIsBetterParameterIds = this.getSmallerIsBetterParameterIds();
-
-    // check to see if our id is in that special list.
-    const smallerIsBetter = smallerIsBetterParameterIds.includes(parameterId);
-
-    // return the check.
-    return smallerIsBetter;
+    return ParameterKeys.SDP_SMALLER_IS_BETTER.includes(parameterKey);
   }
 
   /**
-   * The collection of long-form parameter ids that should have a positive color indicator
-   * when there is a decrease of value in that parameter from the panel.
-   * @returns {number[]}
-   */
-  getSmallerIsBetterParameterIds()
-  {
-    return [
-      18,   // trg
-      22,   // mcr
-      23,   // tcr
-      24,   // pdr
-      25,   // mdr
-      26    // fdr
-    ];
-  }
-
-  /**
-   * Determines whether or not the parameter should be suffixed with a % character.
-   * This is specifically for parameters that truly are ranged between 0-100 and RNG.
-   * @param {number} parameterId The paramId to check if is a percent.
-   * @returns {boolean}
-   */
-  isPercentParameter(parameterId)
-  {
-    // grab the list of ids that qualify as "needs a % symbol".
-    const isPercentParameterIds = this.getIsPercentParameterIds();
-
-    // check to see if our id is in that special list.
-    const isPercent = isPercentParameterIds.includes(parameterId);
-
-    // return the check.
-    return isPercent;
-  }
-
-  /**
-   * The collection of long-form parameter ids that should be decorated with a `%` symbol.
-   * @returns {number[]}
-   */
-  getIsPercentParameterIds()
-  {
-    return [
-      9,    // eva
-      14,   // cnt
-      20,   // rec
-      21,   // pha
-      22,   // mcr
-      23,   // tcr
-      24,   // pdr
-      25,   // mdr
-      26,   // fdr
-      27    // exr
-    ];
-  }
-
-  /**
-   * Overrides {@link #itemHeight}.<br>
+   * Overwrites {@link #itemHeight}.<br/>
    * Makes the command rows bigger so there can be additional lines.
    * @returns {number}
    */

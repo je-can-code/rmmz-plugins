@@ -2,7 +2,7 @@
 if (J.ABS)
 {
   /**
-   * Extends/Overrides {@link #initMembers}.<br/>
+   * Extends {@link #initMembers}.<br/>
    * Also initializes the minimap controller-local state without lazy init.
    */
   J.MAP.Aliased.JABS_StandardController.set('initMembers', JABS_StandardController.prototype.initMembers);

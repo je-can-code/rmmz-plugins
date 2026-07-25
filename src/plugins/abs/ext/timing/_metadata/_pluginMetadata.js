@@ -11,7 +11,7 @@ class J_TimingPluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps cast/cooldown tuning from plugin parameters.
    */
   postInitialize()

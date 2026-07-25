@@ -32,7 +32,7 @@ class Mirror
 
   /**
    * Sets the destinations of which this mirror will mirror to.
-   * @param {string[]} destinations
+   * @param {string[]} destinations The destinations driving this step.
    */
   setDestinations(destinations)
   {
@@ -50,7 +50,7 @@ class Mirror
 
   /**
    * Sets a new source to mirror from.
-   * @param {string} source
+   * @param {string} source The source driving this step.
    */
   setSource(source)
   {
@@ -94,6 +94,7 @@ class Mirror
     // better resolve this path one, too.
     const resolvedDestination = path.resolve(destination);
 
+    // await this.#mirrorAllFilesExceptSourceMaps(resolvedSource, ... before continuing.
     await this.#mirrorAllFilesExceptSourceMaps(resolvedSource, resolvedDestination);
     Logger.logAnyway(`copied [${resolvedSource}] to [${resolvedDestination}]`, LogStyle.magenta);
   }

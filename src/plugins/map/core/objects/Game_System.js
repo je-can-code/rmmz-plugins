@@ -7,6 +7,7 @@ J.MAP.Aliased.Game_System.set('initMembers', Game_System.prototype.initMembers);
 Game_System.prototype.initMembers = function()
 {
   // original
+  // perform original logic.
   J.MAP.Aliased.Game_System.get('initMembers').call(this);
 
   /**

@@ -39,7 +39,7 @@ class Window_StatusStatBreakdown
     if (!this._j._cms_s._status) this._j._cms_s._status = {};
     this._j._cms_s._status._breakdown = {
       _actor: null,
-      _longParamId: 0,
+      _parameterKey: String.empty,
     };
   }
 
@@ -58,16 +58,16 @@ class Window_StatusStatBreakdown
     this._j._cms_s._status._breakdown._actor = v;
   }
 
-  /** @returns {number} */
-  getLongParamId()
+  /** @returns {string} */
+  getParameterKey()
   {
-    return this._j._cms_s._status._breakdown._longParamId | 0;
+    return this._j._cms_s._status._breakdown._parameterKey;
   }
 
-  /** @param {number} v */
-  setLongParamId(v)
+  /** @param {string} v */
+  setParameterKey(v)
   {
-    this._j._cms_s._status._breakdown._longParamId = v | 0;
+    this._j._cms_s._status._breakdown._parameterKey = v;
   }
 
   //endregion accessors
@@ -76,12 +76,12 @@ class Window_StatusStatBreakdown
   /**
    * Sets the context and refreshes the panel.
    * @param {Game_Actor} actor The actor.
-   * @param {number} longParamId The long param id.
+   * @param {string} parameterKey The registry key.
    */
-  setContext(actor, longParamId)
+  setContext(actor, parameterKey)
   {
     this.setActor(actor);
-    this.setLongParamId(longParamId);
+    this.setParameterKey(parameterKey);
     this.refresh();
   }
 
@@ -111,15 +111,15 @@ class Window_StatusStatBreakdown
   {
     // gather context.
     const actor = this.getActor();
-    const longId = this.getLongParamId();
+    const parameterKey = this.getParameterKey();
 
     // header visuals.
-    const name = TextManager.longParam(longId);
-    const icon = IconManager.longParam(longId);
-    const color = ColorManager.longParam(longId);
+    const name = TextManager.parameterLabel(parameterKey);
+    const icon = IconManager.parameterIcon(parameterKey);
+    const color = ColorManager.parameterColor(parameterKey);
 
     // final value mirrors Page 1 formatting.
-    const finalValue = new StatusParameter(actor.longParam(longId), longId).prettyValue(false);
+    const finalValue = new StatusParameter(actor.parameter(parameterKey), parameterKey, actor).prettyValue(false);
 
     // layout.
     const gutter = 16;
@@ -135,8 +135,7 @@ class Window_StatusStatBreakdown
     this.drawText(finalValue, headerX, headerY, widthUsable, 'right');
 
     // draw the two-line description just under the header.
-    // leverage TextManager.longParamDescription(longId) from J.BASE.
-    const descriptionLines = TextManager.longParamDescription(longId);
+    const descriptionLines = TextManager.parameterDescription(parameterKey);
 
     // establish the starting y for descriptions (one row below the header).
     let cursorY = headerY + this.lineHeight();
@@ -159,27 +158,27 @@ class Window_StatusStatBreakdown
     cursorY += 16;
 
     // resolve kind and draw body accordingly.
-    const kind = this.resolveKind(longId);
+    const kind = this.resolveKind(parameterKey);
 
     switch (kind)
     {
       case Window_StatusStatBreakdown.KINDS.Base:
-        this.drawBParamBreakdown(actor, longId, headerX, cursorY, widthUsable);
+        this.drawBParamBreakdown(actor, ParameterKeys.bparamId(parameterKey), headerX, cursorY, widthUsable);
         break;
       case Window_StatusStatBreakdown.KINDS.Ex:
-        this.drawXParamBreakdown(actor, longId - 8, headerX, cursorY, widthUsable);
+        this.drawXParamBreakdown(actor, ParameterKeys.xparamId(parameterKey), headerX, cursorY, widthUsable);
         break;
       case Window_StatusStatBreakdown.KINDS.Special:
-        this.drawSParamBreakdown(actor, longId - 18, headerX, cursorY, widthUsable);
+        this.drawSParamBreakdown(actor, ParameterKeys.sparamId(parameterKey), headerX, cursorY, widthUsable);
         break;
       case Window_StatusStatBreakdown.KINDS.Mtp:
         this.drawMtpBreakdown(actor, headerX, cursorY, widthUsable);
         break;
       case Window_StatusStatBreakdown.KINDS.Crit:
-        this.drawCritBreakdown(actor, longId - 28, headerX, cursorY, widthUsable);
+        this.drawCritBreakdown(actor, parameterKey === 'cdm' ? 0 : 1, headerX, cursorY, widthUsable);
         break;
       case Window_StatusStatBreakdown.KINDS.Custom:
-        this.drawCustomBreakdown(actor, longId, headerX, cursorY, widthUsable);
+        this.drawCustomBreakdown(actor, parameterKey, headerX, cursorY, widthUsable);
         break;
       default:
         this.drawText('No breakdown available for this stat.', headerX, cursorY, widthUsable, 'left');
@@ -191,17 +190,17 @@ class Window_StatusStatBreakdown
 
   //region kind resolution
   /**
-   * Resolves the kind from a long param id.
-   * @param {number} longId The long param id.
+   * Resolves the kind from a registry parameter key.
+   * @param {string} parameterKey The registry key.
    * @returns {string}
    */
-  resolveKind(longId)
+  resolveKind(parameterKey)
   {
-    if (longId === 30) return Window_StatusStatBreakdown.KINDS.Mtp;
-    if (longId >= 0 && longId <= 7) return Window_StatusStatBreakdown.KINDS.Base;
-    if (longId >= 8 && longId <= 17) return Window_StatusStatBreakdown.KINDS.Ex;
-    if (longId >= 18 && longId <= 27) return Window_StatusStatBreakdown.KINDS.Special;
-    if (longId >= 28 && longId <= 29) return Window_StatusStatBreakdown.KINDS.Crit;
+    if (parameterKey === 'mtp') return Window_StatusStatBreakdown.KINDS.Mtp;
+    if (parameterKey === 'cdm' || parameterKey === 'ctr') return Window_StatusStatBreakdown.KINDS.Crit;
+    if (ParameterKeys.bparamId(parameterKey) >= 0) return Window_StatusStatBreakdown.KINDS.Base;
+    if (ParameterKeys.xparamId(parameterKey) >= 0) return Window_StatusStatBreakdown.KINDS.Ex;
+    if (ParameterKeys.sparamId(parameterKey) >= 0) return Window_StatusStatBreakdown.KINDS.Special;
     return Window_StatusStatBreakdown.KINDS.Custom;
   }
 
@@ -210,11 +209,11 @@ class Window_StatusStatBreakdown
   //region drawing
   /**
    * Draws the b-param breakdown.
-   * @param {Game_Actor} actor
-   * @param {number} longId
-   * @param {number} x
-   * @param {number} y
-   * @param {number} w
+   * @param {Game_Actor} actor The actor driving this step.
+   * @param {number} longId The long id driving this step.
+   * @param {number} x The x driving this step.
+   * @param {number} y The y driving this step.
+   * @param {number} w The w driving this step.
    * @returns {number}
    */
   drawBParamBreakdown(actor, longId, x, y, w)
@@ -247,7 +246,7 @@ class Window_StatusStatBreakdown
     const natBuffDeltaRaw = this.calcPlusRate(actor, baseVanilla, natBuffPlus, natBuffRate);
     const natBuffDelta = Math.round(natBuffDeltaRaw);
 
-    // NATURAL-inclusive base we’ll use as the baseline for flats/traits (Growths + Buffs).
+    // NATURAL-inclusive base we'll use as the baseline for flats/traits (Growths + Buffs).
     const baseNatural = baseVanilla + natGrowthDelta + natBuffDelta;
 
     // Flats by source (equips/states) from core param arrays.
@@ -306,6 +305,7 @@ class Window_StatusStatBreakdown
       });
     }
 
+    // Append the row to the working collection.
     baseRows.push({
       key: '= Base (with NATURAL)',
       value: baseNatural
@@ -354,7 +354,7 @@ class Window_StatusStatBreakdown
     }
     cursorY = this.drawSectionWithRows(x, cursorY, w, 'Traits (×)', traitsRows);
 
-    // SDP section (only if any non-zero panel rows contribute and net isn’t neutral).
+    // SDP section (only if any non-zero panel rows contribute and net isn't neutral).
     if (sdpTotalDelta !== 0 && sdpPanelDeltas.length > 0)
     {
       const totalSign = sdpTotalDelta >= 0
@@ -370,11 +370,11 @@ class Window_StatusStatBreakdown
 
   /**
    * Draws the x-param breakdown.
-   * @param {Game_Actor} actor
-   * @param {number} xId
-   * @param {number} x
-   * @param {number} y
-   * @param {number} w
+   * @param {Game_Actor} actor The actor driving this step.
+   * @param {number} xId The x id driving this step.
+   * @param {number} x The x driving this step.
+   * @param {number} y The y driving this step.
+   * @param {number} w The w driving this step.
    * @returns {number}
    */
   drawXParamBreakdown(actor, xId, x, y, w)
@@ -393,7 +393,9 @@ class Window_StatusStatBreakdown
 
   /**
    * Renders the xparam breakdown for the three repurposed regen stats (HRG/MRG/TRG).
-   * These use flat native units and are displayed as "per 5s" values for readability.
+   * These use flat native units and are displayed as "per second" values for readability, using
+   * this actor's own currently-resolved tick interval so the preview stays accurate regardless of
+   * tick speed modifiers.
    * The section includes Baseline, Natural (growth), Natural (buffs), Traits (+), and SDP (Panels).
    * @param {Game_Actor} actor The actor whose regen xparam is being explained.
    * @param {number} xId The xparam id (7=HRG, 8=MRG, 9=TRG).
@@ -443,29 +445,29 @@ class Window_StatusStatBreakdown
     // Begin drawing regen layout.
     let cursorY = y;
 
-    // Baseline section: explicit “per 5s” labeling and a 0 baseline.
+    // Baseline section: explicit “per second” labeling and a 0 baseline.
     cursorY = this.drawSectionTitle(x, cursorY, w, 'Baseline');
-    this.drawKeyValue(x + 12, cursorY, w - 12, 'Baseline', this.formatPerFiveFlat(0), 'left');
+    this.drawKeyValue(x + 12, cursorY, w - 12, 'Baseline', this.formatPerSecondFlat(0, actor), 'left');
     cursorY += this.lineHeight() + 6;
 
-    // Natural (Growths): only if non-zero. Show delta as flat-per-5s.
+    // Natural (Growths): only if non-zero. Show delta as flat-per-second.
     if (natGrowthDeltaNative !== 0)
     {
       cursorY = this.drawSectionTitle(x, cursorY, w, 'Natural');
-      const growthText = this.formatPlusRatePerFive(natGrowthDeltaNative, actor.xParamGrowthRate(xId));
+      const growthText = this.formatPlusRatePerSecond(natGrowthDeltaNative, actor.xParamGrowthRate(xId), actor);
       this.drawKeyValue(x + 12, cursorY, w - 12, '+ Natural (Growths)', growthText, 'left');
       cursorY += this.lineHeight() + 6;
     }
 
-    // Natural (Buffs): only if non-zero. Show delta as flat-per-5s.
+    // Natural (Buffs): only if non-zero. Show delta as flat-per-second.
     if (natBuffDeltaNative !== 0)
     {
-      const buffText = this.formatSignedFlatPerFive(natBuffDeltaNative);
+      const buffText = this.formatSignedFlatPerSecond(natBuffDeltaNative, actor);
       this.drawKeyValue(x + 12, cursorY, w - 12, '+ Natural (Buffs)', buffText, 'left');
       cursorY += this.lineHeight() + 6;
     }
 
-    // Traits (+) section: convert editor decimals to native (*100) and draw per‑5s.
+    // Traits (+) section: convert editor decimals to native (*100) and draw per‑second.
     const traitRows = [
       {
         key: '+ Actor',
@@ -487,16 +489,16 @@ class Window_StatusStatBreakdown
       .filter(r => r.valueNative !== 0)
       .map(r => ({
         key: r.key,
-        value: this.formatPerFiveFlat(r.valueNative)
+        value: this.formatPerSecondFlat(r.valueNative, actor)
       }));
 
     cursorY = this.drawSectionWithRows(x, cursorY, w, 'Traits (+)', traitRows);
 
-    // SDP (Panels) for regen — draw in flat-per-5s terms.
+    // SDP (Panels) for regen — draw in flat-per-second terms.
     if (sdpPanelDeltas.length > 0 && sdpTotalFlat !== 0)
     {
-      const totalText = this.formatSignedFlatPerFive(sdpTotalFlat);
-      cursorY = this.drawSdpPanelsFlatPerFiveSection(x, cursorY, w, totalText, sdpPanelDeltas);
+      const totalText = this.formatSignedFlatPerSecond(sdpTotalFlat, actor);
+      cursorY = this.drawSdpPanelsFlatPerSecondSection(x, cursorY, w, totalText, sdpPanelDeltas, actor);
     }
 
     // Return small tailing gap.
@@ -623,8 +625,7 @@ class Window_StatusStatBreakdown
     // Aggregate trait adds for each source group.
     const addActor = this.xparamAddFromTraits([ actor.actor() ], xId);
     const addClass = this.xparamAddFromTraits([ actor.currentClass() ], xId);
-    const addEquips = this.xparamAddFromTraits(actor.equips()
-      .filter(e => !!e), xId);
+    const addEquips = this.xparamAddFromTraits(actor.equips(), xId);
     const addStates = this.xparamAddFromTraits(actor.states(), xId);
 
     // Compute NATURAL delta on the 0.0 baseline (plus/rate → concrete delta).
@@ -648,11 +649,11 @@ class Window_StatusStatBreakdown
 
   /**
    * Draws the s-param breakdown.
-   * @param {Game_Actor} actor
-   * @param {number} sId
-   * @param {number} x
-   * @param {number} y
-   * @param {number} w
+   * @param {Game_Actor} actor The actor driving this step.
+   * @param {number} sId The s id driving this step.
+   * @param {number} x The x driving this step.
+   * @param {number} y The y driving this step.
+   * @param {number} w The w driving this step.
    * @returns {number}
    */
   drawSParamBreakdown(actor, sId, x, y, w)
@@ -780,10 +781,10 @@ class Window_StatusStatBreakdown
 
   /**
    * Draws the max tp breakdown.
-   * @param {Game_Actor} actor
-   * @param {number} x
-   * @param {number} y
-   * @param {number} w
+   * @param {Game_Actor} actor The actor driving this step.
+   * @param {number} x The x driving this step.
+   * @param {number} y The y driving this step.
+   * @param {number} w The w driving this step.
    * @returns {number}
    */
   drawMtpBreakdown(actor, x, y, w)
@@ -923,12 +924,12 @@ class Window_StatusStatBreakdown
     // Buff plus/rate regex per mode.
     const buffPlusRegex = isAmp
       ? J.CRIT.RegExp.CritDamageMultiplierBuffPlus
-      : J.CRIT.RegExp.CritDamageReductionBuffPlus;
+      : J.CRIT.RegExp.CritTakenRateBuffPlus;
     const buffPlusSum = RPGManager.getSumFromAllNotesByRegex(notesSources, buffPlusRegex);
 
     const buffRateRegex = isAmp
       ? J.CRIT.RegExp.CritDamageMultiplierBuffRate
-      : J.CRIT.RegExp.CritDamageReductionBuffRate;
+      : J.CRIT.RegExp.CritTakenRateBuffRate;
     const buffRateSum = RPGManager.getSumFromAllNotesByRegex(notesSources, buffRateRegex);
 
     // Solve the delta against the base.
@@ -969,41 +970,42 @@ class Window_StatusStatBreakdown
   }
 
   /**
-   * Draws a breakdown for custom long parameters that don’t fit the base/x/s/crit/mtp families.
+   * Draws a breakdown for custom long parameters that don't fit the base/x/s/crit/mtp families.
    * Currently supported custom params:
    * - 31: Move Speed Boost (MSB)
    * - 32: Skill Proficiency Boost (SPB)
    * - 33: SDP Multiplier Bonus (SMB)
+   * - 44: Cooldown Rate Reduction (CDR)
+   * - 45: Parry Extension Rate (PER)
    * @param {Game_Actor} actor The actor whose stat is being explained.
-   * @param {number} longId The long param id to render.
+   * @param {string} parameterKey The registry key to render.
    * @param {number} x The x coordinate to start drawing.
    * @param {number} y The y coordinate to start drawing.
    * @param {number} w The width available to draw within.
    * @returns {number} The next y position after finishing this section.
    */
-  drawCustomBreakdown(actor, longId, x, y, w)
+  drawCustomBreakdown(actor, parameterKey, x, y, w)
   {
-    // Dispatch to the appropriate custom renderer.
-    if (longId === 31)
+    switch (parameterKey)
     {
-      return this._drawMsbBreakdown(actor, x, y, w);
+      case 'msb':
+        return this._drawMsbBreakdown(actor, x, y, w);
+      case 'prof':
+        return this._drawSpbBreakdown(actor, x, y, w);
+      case 'sdr':
+        return this._drawSmbBreakdown(actor, x, y, w);
+      case 'cdr':
+        return this._drawCdrBreakdown(actor, x, y, w);
+      case 'per':
+        return this._drawPerBreakdown(actor, x, y, w);
+      default:
+        return this.drawSectionWithRows(x, y, w, 'Details', [
+          {
+            key: 'Info',
+            value: 'No breakdown available for this custom stat.'
+          },
+        ]);
     }
-    if (longId === 32)
-    {
-      return this._drawSpbBreakdown(actor, x, y, w);
-    }
-    if (longId === 33)
-    {
-      return this._drawSmbBreakdown(actor, x, y, w);
-    }
-
-    // Fallback if an unknown custom id sneaks in.
-    return this.drawSectionWithRows(x, y, w, 'Details', [
-      {
-        key: 'Info',
-        value: 'No breakdown available for this custom stat.'
-      },
-    ]);
   }
 
   //endregion drawing
@@ -1036,7 +1038,8 @@ class Window_StatusStatBreakdown
       if (!panel) return;
 
       // fetch all parameters for this panel that affect the target param id.
-      const panelParams = panel.getPanelParameterById(paramId);
+      const parameterKey = ParameterKeys.bparamKey(paramId);
+      const panelParams = panel.getPanelParameterByKey(parameterKey);
 
       // if the panel has no relevant parameters, skip it.
       if (!panelParams.length) return;
@@ -1093,7 +1096,7 @@ class Window_StatusStatBreakdown
 
   /**
    * Computes each core panel's exact delta against the pre‑SDP base.
-   * Floors percent pieces to match J.SDP’s behavior for core params.
+   * Floors percent pieces to match J.SDP's behavior for core params.
    * Carries icon/rarity for rendering.
    * @param {number} basePreSdp The pre-SDP base value.
    * @param {Array} rows The rows from _sdpCoreCoefficients().
@@ -1175,11 +1178,12 @@ class Window_StatusStatBreakdown
       // get panel metadata for this ranking.
       const panel = J.SDP.Metadata.panelsMap.get(ranking.key);
 
-      // if panel doesn’t exist, skip it.
+      // if panel doesn't exist, skip it.
       if (!panel) return;
 
       // fetch panel parameters for this non-core id (offset by idExtra).
-      const panelParams = panel.getPanelParameterById(subId + idExtra);
+      const parameterKey = ParameterKeys.legacyLongParamKey(subId + idExtra);
+      const panelParams = panel.getPanelParameterByKey(parameterKey);
 
       // if no relevant parameters, skip.
       if (!panelParams.length) return;
@@ -1256,11 +1260,12 @@ class Window_StatusStatBreakdown
       // get panel metadata for this ranking.
       const panel = J.SDP.Metadata.panelsMap.get(ranking.key);
 
-      // if panel doesn’t exist, skip it.
+      // if panel doesn't exist, skip it.
       if (!panel) return;
 
       // fetch panel parameters for this regen sub-id.
-      const panelParams = panel.getPanelParameterById(subId + idExtra);
+      const parameterKey = ParameterKeys.legacyLongParamKey(subId + idExtra);
+      const panelParams = panel.getPanelParameterByKey(parameterKey);
 
       // if no relevant parameters, skip.
       if (!panelParams.length) return;
@@ -1276,7 +1281,7 @@ class Window_StatusStatBreakdown
         const { perRank } = pp;
         const curRank = ranking.currentRank;
 
-        // if flat, keep native units (no /100). Example: +3 regen per 5s is represented natively.
+        // if flat, keep native units (no /100). Example: +3 regen per tick is represented natively.
         if (isFlat)
         {
           const add = (curRank * perRank);
@@ -1369,7 +1374,7 @@ class Window_StatusStatBreakdown
       let delta;
       let rateDec = 0;
 
-      // if flat, delta is the flat amount in the caller’s native space.
+      // if flat, delta is the flat amount in the caller's native space.
       if (row.isFlat)
       {
         delta = row.amount;
@@ -1499,15 +1504,16 @@ class Window_StatusStatBreakdown
   }
 
   /**
-   * An SDP (Panels) section renderer for regen showing flat values per 5s.
+   * An SDP (Panels) section renderer for regen showing flat values per second.
    * @param {number} x The x coordinate.
    * @param {number} y The y coordinate to start drawing.
    * @param {number} w The width.
-   * @param {string} totalValueText The right-aligned signed total in per‑5s units.
+   * @param {string} totalValueText The right-aligned signed total in per‑second units.
    * @param {{ name:string, iconIndex:number, rarity:number, delta:number }[]} panels The per-panel rows.
+   * @param {Game_Actor} actor The actor whose tick cadence resolves the per‑second conversion.
    * @returns {number} The next y after drawing (or unchanged if skipped).
    */
-  drawSdpPanelsFlatPerFiveSection(x, y, w, totalValueText, panels)
+  drawSdpPanelsFlatPerSecondSection(x, y, w, totalValueText, panels, actor)
   {
     // Determine if the section is relevant at all.
     const anyPanels = panels && panels.length > 0;
@@ -1519,11 +1525,11 @@ class Window_StatusStatBreakdown
     // Draw the section title.
     let cursorY = this.drawSectionTitle(x, y, w, 'SDP (Panels)');
 
-    // Draw the total row as flat-per-5s.
+    // Draw the total row as flat-per-second.
     this.drawKeyValue(x + 12, cursorY, w - 12, '+ Total ', totalValueText, 'left');
     cursorY += this.lineHeight();
 
-    // Draw each panel entry formatted as flat-per-5s.
+    // Draw each panel entry formatted as flat-per-second.
     panels.forEach(panel =>
     {
       const { name } = panel;
@@ -1536,12 +1542,12 @@ class Window_StatusStatBreakdown
       if (panel.rateDec)
       {
         const pctText = StatusHelper.toPercentString(panel.rateDec * 100, true);
-        const flatText = this.formatSignedFlatPerFive(panel.delta);
+        const flatText = this.formatSignedFlatPerSecond(panel.delta, actor);
         valueText = `${pctText} (${flatText})`;
       }
       else
       {
-        valueText = this.formatSignedFlatPerFive(panel.delta);
+        valueText = this.formatSignedFlatPerSecond(panel.delta, actor);
       }
 
       // Draw the panel line with icon and rarity coloring.
@@ -1559,54 +1565,65 @@ class Window_StatusStatBreakdown
   }
 
   /**
-   * Formats a native flat value as a per‑5s display string, with simple rounding.
-   * Example: native 6 → "1.2" (per 5 seconds).
-   * @param {number} nativeFlat The native flat amount (pre‑division).
+   * Formats a native flat value (a per-tick amount, in the same units {@link JABS_Battler
+   * #calculatedRegen} applies in full on every natural regen tick) as a per‑second display
+   * string. Converts using this actor's own currently-resolved tick interval- rather than
+   * assuming a fixed tick count- so the preview stays accurate regardless of tick speed
+   * modifiers from gear/passives/states.
+   * Example: native 6 (per tick) at the default 60-frame (1 tick/sec) interval → "6.0" (per second).
+   * @param {number} nativeFlat The native flat per-tick amount.
+   * @param {Game_Actor} actor The actor whose tick cadence resolves the conversion.
    * @returns {string}
    */
-  formatPerFiveFlat(nativeFlat)
+  formatPerSecondFlat(nativeFlat, actor)
   {
-    // Convert native units to a per‑5s value.
-    const perFive = nativeFlat / 5;
+    // resolve this actor's actual tick interval, then convert frames-per-tick to ticks-per-second.
+    const intervalFrames = actor.getNaturalRegenTickInterval();
+    const ticksPerSecond = 60 / intervalFrames;
 
-    // Show to one decimal place for readability (ex: 2.4 per 5s).
-    const text = perFive.toFixed(1);
+    // scale the fixed per-tick amount by how many ticks land in one second.
+    const perSecond = nativeFlat * ticksPerSecond;
+
+    // show to one decimal place for readability (ex: 2.4 per second).
+    const text = perSecond.toFixed(1);
     return text;
   }
 
   /**
-   * Formats a native flat delta as a signed per‑5s string (ex: "+1.2").
-   * @param {number} nativeFlat The native flat delta (pre‑division).
+   * Formats a native flat delta as a signed per‑second string (ex: "+1.2").
+   * @param {number} nativeFlat The native flat per-tick delta.
+   * @param {Game_Actor} actor The actor whose tick cadence resolves the conversion.
    * @returns {string}
    */
-  formatSignedFlatPerFive(nativeFlat)
+  formatSignedFlatPerSecond(nativeFlat, actor)
   {
     // Determine sign character.
     const sign = nativeFlat >= 0
       ? '+'
       : String.empty;
 
-    // Convert to per‑5s with one decimal using the shared formatter.
-    const absPerFive = this.formatPerFiveFlat(Math.abs(nativeFlat));
+    // Convert to per‑second with one decimal using the shared formatter.
+    const absPerSecond = this.formatPerSecondFlat(Math.abs(nativeFlat), actor);
 
     // Prepend the sign to the absolute value.
-    return `${sign}${absPerFive}`;
+    return `${sign}${absPerSecond}`;
   }
 
   /**
-   * Formats NATURAL growth for regen as "<rate%> → +<per5s>" where the delta
-   * is expressed as per‑5s. Example: "+20% → +0.6".
+   * Formats NATURAL growth for regen as "<rate%> → +<perSecond>" where the delta
+   * is expressed as per‑second. Example: "+20% → +0.6".
    * @param {number} deltaNative The computed delta in native flat units.
    * @param {number} ratePercent The growth rate percent (for display only).
+   * @param {Game_Actor} actor The actor whose tick cadence resolves the conversion.
    * @returns {string}
    */
-  formatPlusRatePerFive(deltaNative, ratePercent)
+  formatPlusRatePerSecond(deltaNative, ratePercent, actor)
   {
     // Render the rate as a percent string (signed).
     const rateText = StatusHelper.toPercentString(ratePercent, true);
 
-    // Convert native delta to per‑5s text with sign.
-    const deltaText = this.formatSignedFlatPerFive(deltaNative);
+    // Convert native delta to per‑second text with sign.
+    const deltaText = this.formatSignedFlatPerSecond(deltaNative, actor);
 
     // Keep the regen NATURAL line concise.
     return `${rateText} → ${deltaText}`;
@@ -1647,14 +1664,12 @@ class Window_StatusStatBreakdown
   _drawMsbBreakdown(actor, x, y, w)
   {
     // Gather equip/state contributions directly from note properties.
-    const equipTotal = (actor.equippedEquips() || [])
-      .filter(e => !!e)
+    const equipTotal = actor.equippedEquips()
       .reduce((n, e) => n + (e.jabsSpeedBoost | 0), 0);
-    const stateTotal = (actor.states() || [])
-      .filter(s => !!s)
+    const stateTotal = actor.states()
       .reduce((n, s) => n + (s.jabsSpeedBoost | 0), 0);
 
-    // Total should match Page 1’s longParam(31).
+    // Total should match Page 1's msb value.
     const total = (equipTotal + stateTotal);
 
     // Build rows — MSB is shown as whole numbers (Page 1 omits % for 31).
@@ -1694,17 +1709,15 @@ class Window_StatusStatBreakdown
   {
     // Sum SPB bonuses by regex over equips/states only.
     const eq = RPGManager.getSumFromAllNotesByRegex(
-      actor.equippedEquips()
-        .filter(e => !!e),
+      actor.equippedEquips(),
       J.PROF.RegExp.ProficiencyBonus
     );
     const st = RPGManager.getSumFromAllNotesByRegex(
-      actor.states()
-        .filter(s => !!s),
+      actor.states(),
       J.PROF.RegExp.ProficiencyBonus
     );
 
-    const total = (eq + st); // equals Page 1’s bonusSkillProficiencyGains()
+    const total = (eq + st); // equals Page 1's bonusSkillProficiencyGains()
 
     const rows = [];
     rows.push({
@@ -1741,13 +1754,11 @@ class Window_StatusStatBreakdown
   {
     // Sum percent-point bonuses by regex over equips/states only.
     const eqPct = RPGManager.getSumFromAllNotesByRegex(
-      actor.equippedEquips()
-        .filter(e => !!e),
+      actor.equippedEquips(),
       J.SDP.RegExp.SdpMultiplier
     );
     const stPct = RPGManager.getSumFromAllNotesByRegex(
-      actor.states()
-        .filter(s => !!s),
+      actor.states(),
       J.SDP.RegExp.SdpMultiplier
     );
 
@@ -1794,7 +1805,7 @@ class Window_StatusStatBreakdown
     const stFactor = stPct / 100;       // => e.g., -0.03
     const totalFactor = totalPct / 100;   // => e.g., 1.37
 
-    // Build rows rendered in factor space to match Page 1’s display.
+    // Build rows rendered in factor space to match Page 1's display.
     const rows = [];
 
     // Baseline shown as factor (not percent).
@@ -1831,15 +1842,83 @@ class Window_StatusStatBreakdown
     return this.drawSectionWithRows(x, y, w, 'Sources (Equips/States)', rows);
   }
 
+  /**
+   * Renders the breakdown for Cooldown Rate Reduction (CDR).
+   * Sources are any note-bearing objects that carry `<cdr:[FORMULA]>` tags.
+   * Values are signed percent-points (positive = GCD shortened, negative = lengthened).
+   * @param {Game_Actor} actor The actor whose stat is being explained.
+   * @param {number} x The x coordinate to start drawing.
+   * @param {number} y The y coordinate to start drawing.
+   * @param {number} w The width available to draw within.
+   * @returns {number} The next y position after finishing this section.
+   */
+  _drawCdrBreakdown(actor, x, y, w)
+  {
+    const regex = J.ABS.RegExp.GlobalCooldownReduction;
+
+    const stateTotal = RPGManager.getResultsFromAllNotesByRegex(
+      actor.allStates(),
+      regex, 0, actor
+    );
+    const equipTotal = RPGManager.getResultsFromAllNotesByRegex(
+      actor.equippedEquips(),
+      regex, 0, actor
+    );
+    const actorClassTotal = RPGManager.getResultsFromAllNotesByRegex(
+      [ actor.databaseData(), actor.currentClass() ],
+      regex, 0, actor
+    );
+
+    const total = stateTotal + equipTotal + actorClassTotal;
+
+    const rows = [];
+    rows.push({ key: 'Baseline', value: '0%' });
+    if (stateTotal !== 0) rows.push({ key: '+ States', value: `${stateTotal > 0 ? '+' : ''}${stateTotal}%` });
+    if (equipTotal !== 0) rows.push({ key: '+ Equips', value: `${equipTotal > 0 ? '+' : ''}${equipTotal}%` });
+    if (actorClassTotal !== 0) rows.push({ key: '+ Actor/Class', value: `${actorClassTotal > 0 ? '+' : ''}${actorClassTotal}%` });
+    rows.push({ key: '= Total', value: `${total}%` });
+
+    return this.drawSectionWithRows(x, y, w, 'Sources', rows);
+  }
+
+  _drawPerBreakdown(actor, x, y, w)
+  {
+    const regex = J.ABS.RegExp.ParryExtensionRate;
+
+    const stateTotal = RPGManager.getResultsFromAllNotesByRegex(
+      actor.allStates(),
+      regex, 0, actor
+    );
+    const equipTotal = RPGManager.getResultsFromAllNotesByRegex(
+      actor.equippedEquips(),
+      regex, 0, actor
+    );
+    const actorClassTotal = RPGManager.getResultsFromAllNotesByRegex(
+      [ actor.databaseData(), actor.currentClass() ],
+      regex, 0, actor
+    );
+
+    const total = stateTotal + equipTotal + actorClassTotal;
+
+    const rows = [];
+    rows.push({ key: 'Baseline', value: '0%' });
+    if (stateTotal !== 0) rows.push({ key: '+ States', value: `${stateTotal > 0 ? '+' : ''}${stateTotal}%` });
+    if (equipTotal !== 0) rows.push({ key: '+ Equips', value: `${equipTotal > 0 ? '+' : ''}${equipTotal}%` });
+    if (actorClassTotal !== 0) rows.push({ key: '+ Actor/Class', value: `${actorClassTotal > 0 ? '+' : ''}${actorClassTotal}%` });
+    rows.push({ key: '= Total', value: `${total}%` });
+
+    return this.drawSectionWithRows(x, y, w, 'Sources', rows);
+  }
+
   //endregion custom
 
   //region math helpers
   /**
    * Calculates the amount to add to a parameter.
-   * @param {Game_Actor} actor
-   * @param {number} base
-   * @param {number} plus
-   * @param {number} rate
+   * @param {Game_Actor} actor The actor driving this step.
+   * @param {number} base The base driving this step.
+   * @param {number} plus The plus driving this step.
+   * @param {number} rate The rate driving this step.
    * @returns {number}
    */
   calcPlusRate(actor, base, plus, rate)
@@ -1851,9 +1930,9 @@ class Window_StatusStatBreakdown
 
   /**
    * Formats the plus and rate into a readable string.
-   * @param {number} plus
-   * @param {number} rate
-   * @param {number} delta
+   * @param {number} plus The plus driving this step.
+   * @param {number} rate The rate driving this step.
+   * @param {number} delta The delta driving this step.
    * @returns {string}
    */
   formatPlusRate(plus, rate, delta)
@@ -1870,8 +1949,8 @@ class Window_StatusStatBreakdown
 
   /**
    * Sums the flat bonus parameter from equips.
-   * @param {Game_Actor} actor
-   * @param {number} paramId
+   * @param {Game_Actor} actor The actor driving this step.
+   * @param {number} paramId The param id driving this step.
    * @returns {number}
    */
   sumEquipBParamFlat(actor, paramId)
@@ -1891,8 +1970,8 @@ class Window_StatusStatBreakdown
 
   /**
    * Sums the flat bonus parameter from states.
-   * @param {Game_Actor} actor
-   * @param {number} paramId
+   * @param {Game_Actor} actor The actor driving this step.
+   * @param {number} paramId The param id driving this step.
    * @returns {number}
    */
   sumStateBParamFlat(actor, paramId)
@@ -1912,8 +1991,8 @@ class Window_StatusStatBreakdown
 
   /**
    * Determines the b-param bonuses from traits.
-   * @param {RPG_Traited[]} objs
-   * @param {number} paramId
+   * @param {RPG_Traited[]} objs The objs driving this step.
+   * @param {number} paramId The param id driving this step.
    * @returns {number}
    */
   paramRateFromTraits(objs, paramId)
@@ -1936,8 +2015,8 @@ class Window_StatusStatBreakdown
 
   /**
    * Determines the x-param bonuses from traits.
-   * @param {RPG_Traited[]} objs
-   * @param {number} xId
+   * @param {RPG_Traited[]} objs The objs driving this step.
+   * @param {number} xId The x id driving this step.
    * @returns {number}
    */
   xparamAddFromTraits(objs, xId)
@@ -1960,8 +2039,8 @@ class Window_StatusStatBreakdown
 
   /**
    * Determines the s-param bonuses from traits.
-   * @param {RPG_Traited[]} objs
-   * @param {number} sId
+   * @param {RPG_Traited[]} objs The objs driving this step.
+   * @param {number} sId The s id driving this step.
    * @returns {number}
    */
   sparamRateFromTraits(objs, sId)

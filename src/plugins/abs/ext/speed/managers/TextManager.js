@@ -1,49 +1,11 @@
 //region TextManager
 /**
- * Extends {@link #longParam}.<br>
- * First checks if this is the move speed parameter, then checks others.
- */
-J.ABS.EXT.SPEED.Aliased.TextManager.set('longParam', TextManager.longParam);
-TextManager.longParam = function(paramId)
-{
-  switch (paramId)
-  {
-    case 31:
-      // move speed boost.
-      return this.movespeed();
-    default:
-      // perform original logic.
-      return J.ABS.EXT.SPEED.Aliased.TextManager.get('longParam')
-        .call(this, paramId);
-  }
-};
-
-/**
  * Gets the proper name of "move speed boost".
  * @returns {string}
  */
 TextManager.movespeed = function()
 {
   return "Move Boost";
-};
-
-/**
- * Extends {@link #longParamDescription}.<br>
- * First checks if this is the move speed parameter, then checks others.
- */
-J.ABS.EXT.SPEED.Aliased.TextManager.set('longParamDescription', TextManager.longParamDescription);
-TextManager.longParamDescription = function(paramId)
-{
-  switch (paramId)
-  {
-    case 31:
-      // move speed boost.
-      return this.moveSpeedDescription();
-    default:
-      // perform original logic.
-      return J.ABS.EXT.SPEED.Aliased.TextManager.get('longParamDescription')
-        .call(this, paramId);
-  }
 };
 
 /**

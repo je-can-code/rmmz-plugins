@@ -2,7 +2,7 @@
 import Time_Snapshot from './../_models/Time_Snapshot.js';
 
 /**
- * Extends {@link #convertEscapeCharacters}.<br>
+ * Extends {@link #convertEscapeCharacters}.<br/>
  * Adds handling for new text codes for TIME data.
  */
 J.TIME.Aliased.Window_Base.set('convertEscapeCharacters', Window_Base.prototype.convertEscapeCharacters);
@@ -21,6 +21,7 @@ Window_Base.prototype.convertEscapeCharacters = function(text)
   textToModify = this.translateCurrentTimeTextCode(textToModify);
 
   // let the rest of the conversion occur with the newly modified text.
+  // perform original logic.
   return J.TIME.Aliased.Window_Base.get('convertEscapeCharacters')
     .call(this, textToModify);
 };

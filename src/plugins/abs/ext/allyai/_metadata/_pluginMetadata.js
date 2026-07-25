@@ -12,7 +12,7 @@ class J_AllyAiPluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps ally AI menu commands and formation defaults from plugin parameters.
    */
   postInitialize()
@@ -36,14 +36,17 @@ class J_AllyAiPluginMetadata
     this.PartyAiPassiveText = this.parsedPluginParameters['partyWidePassiveText'];
     this.PartyAiPassiveIconIndex = Number(this.parsedPluginParameters['partyWidePassiveIconIndex']);
     this.PartyAiAggressiveText = this.parsedPluginParameters['partyWideAggressiveText'];
+    // assign party ai aggressive icon index on this instance for callers.
     this.PartyAiAggressiveIconIndex = Number(this.parsedPluginParameters['partyWideAggressiveIconIndex']);
 
     // configuration for the various ai modes.
     this.AiModeEquippedIconIndex = Number(this.parsedPluginParameters['aiModeEquipped']);
     this.AiModeNotEquippedIconIndex = Number(this.parsedPluginParameters['aiModeNotEquipped']);
     this.AllyFormationsCommandName = this.parsedPluginParameters['allyFormationsCommandName'] || 'Ally Formations';
+    // assign ally formations command icon index on this instance for callers.
     this.AllyFormationsCommandIconIndex = Number(this.parsedPluginParameters['allyFormationsCommandIconIndex'] || 289);
 
+    // assign formation tolerance on this instance for callers.
     this.FormationTolerance = 0.5;
 
     /**

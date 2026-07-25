@@ -1,0 +1,147 @@
+//region plugins/log/_component/fixtures/install-log-host-globals.js
+import { installJBaseHostGlobals } from '../../../_base/_component/fixtures/install-j-base-host-globals.js';
+import { installPluginManagerWithParams } from '../../../../setup/install-plugin-manager-with-params.js';
+import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
+
+const noop = function()
+{
+};
+
+export const DEFAULT_LOG_PLUGIN_PARAMS = {
+  defaultInactivityTime: '60',
+};
+
+/**
+ * `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` are bare identifiers read once, at import time, by
+ * _base/_metadata/initialization.js.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ */
+export function setPluginContextToJBase(sandbox = globalThis)
+{
+  sandbox.__PLUGIN_NAME__ = 'J-Base';
+  sandbox.__PLUGIN_VERSION__ = '3.2.0';
+}
+
+/**
+ * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-Log's own identity.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ */
+export function setPluginContextToJLog(sandbox = globalThis)
+{
+  sandbox.__PLUGIN_NAME__ = 'J-Log';
+  sandbox.__PLUGIN_VERSION__ = '1.0.0';
+}
+
+/**
+ * Seeds the placeholder Window_Command class (not one of installJBaseHostGlobals's placeholders)
+ * with every prototype method J-Log's Window_MapLog.js touches.
+ * @param {object} sandbox The sandbox to install onto.
+ */
+function installLogWindowCommandGlobals(sandbox)
+{
+  function Window_Command()
+  {
+  }
+
+  Window_Command.prototype = Object.create(sandbox.Window_Base.prototype);
+  Window_Command.prototype.constructor = Window_Command;
+  sandbox.Window_Command = sandbox.Window_Command || Window_Command;
+
+  const proto = sandbox.Window_Command.prototype;
+  proto.initialize ||= noop;
+  proto.isScrollEnabled ||= () => true;
+  proto.smoothScrollTo ||= noop;
+  proto.itemRectWithPadding ||= () => ({ x: 0 });
+  proto.processDrawIcon ||= noop;
+  proto.update ||= noop;
+  proto.clearCommandList ||= noop;
+  proto.addBuiltCommand ||= noop;
+  proto.commandList ||= () => [];
+  proto.smoothScrollDown ||= noop;
+  proto.refresh ||= noop;
+  proto.hasCommands ||= () => true;
+}
+
+/**
+ * Seeds Scene_Map/Window_Base placeholder lifecycle methods plus the $gameMessage/$gamePlayer
+ * globals J-Log's Window_MapLog.js reads from.
+ * @param {object} sandbox The sandbox to install onto.
+ */
+function installLogSceneAndWindowGlobals(sandbox)
+{
+  sandbox.Scene_Map.prototype.initialize = noop;
+  sandbox.Scene_Map.prototype.createAllWindows = noop;
+  sandbox.Scene_Map.prototype.addWindow = noop;
+
+  sandbox.Window_Base.prototype.initialize ||= noop;
+  sandbox.Window_Base.prototype.update ||= noop;
+
+  installLogWindowCommandGlobals(sandbox);
+
+  sandbox.$gameMessage = sandbox.$gameMessage || {};
+  sandbox.$gameMessage.isBusy = () => false;
+
+  sandbox.$gamePlayer = sandbox.$gamePlayer || {};
+  sandbox.$gamePlayer.screenX = () => 0;
+  sandbox.$gamePlayer.screenY = () => 0;
+}
+
+/**
+ * Globals required for J-Log's DataManager/pluginCommands/Window_MapLog.js to evaluate when
+ * direct-imported into the real Vitest realm instead of a nested vm context.
+ * @param {object} [sandbox] Defaults to `globalThis` so direct-import tests can call this with no target arg.
+ */
+export function installLogHostGlobals(sandbox = globalThis)
+{
+  if (sandbox.__logHostGlobalsInstalled === true)
+  {
+    return;
+  }
+
+  sandbox.__logHostGlobalsInstalled = true;
+
+  installJBaseHostGlobals(sandbox);
+
+  // log's own _pluginMetadata.js subclasses this real J-Base class as a bare global (no import).
+  sandbox.PluginMetadata ??= PluginMetadata;
+
+  installPluginManagerWithParams(sandbox, 'J-Log', DEFAULT_LOG_PLUGIN_PARAMS);
+
+  // pluginCommands.js registers real commands as an import-time side effect; capture them.
+  sandbox.__logPluginCommands = sandbox.__logPluginCommands || new Map();
+  sandbox.PluginManager.registerCommand = function(pluginName, commandName, callback)
+  {
+    sandbox.__logPluginCommands.set(`${pluginName}:${commandName}`, callback);
+  };
+
+  // DataManager.js's createGameObjects alias captures whatever's here as "original".
+  sandbox.DataManager.createGameObjects = noop;
+
+  // log/managers/DataManager.js assigns these as bare (undeclared) globals; pre-seed them so the
+  // strict-mode module assignment resolves against an existing globalThis property.
+  sandbox.$actionLogManager = null;
+  sandbox.$diaLogManager = null;
+  sandbox.$lootLogManager = null;
+
+  sandbox.Graphics.boxWidth ??= 1280;
+  sandbox.Graphics.boxHeight ??= 720;
+  sandbox.Graphics.verticalPadding ??= 0;
+
+  function Rectangle(x, y, width, height)
+  {
+    this.x = x;
+    this.y = y;
+    this.width = width;
+    this.height = height;
+  }
+
+  sandbox.Rectangle = sandbox.Rectangle || Rectangle;
+
+  sandbox.ImageManager = sandbox.ImageManager || {};
+  sandbox.ImageManager.iconWidth = 32;
+  sandbox.ImageManager.iconHeight = 32;
+  sandbox.ImageManager.loadSystem = () => ({});
+
+  installLogSceneAndWindowGlobals(sandbox);
+}
+//endregion plugins/log/_component/fixtures/install-log-host-globals.js

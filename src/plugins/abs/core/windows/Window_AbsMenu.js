@@ -77,9 +77,19 @@ class Window_AbsMenu
       .setHelpText(this.toolHelpText())
       .build();
 
+    // build the usable item command.
+    const usableItemCommand = new WindowCommandBuilder(J.ABS.Metadata.EquipUsableItemText)
+      .setSymbol('usable-item-assign')
+      .setEnabled(true)
+      .setIconIndex(210)
+      .setColorIndex(29)
+      .setHelpText(this.usableItemHelpText())
+      .build();
+
     // return the built commands.
     return [
-      mainMenuCommand, offhandSkillCommand, combatSkillsCommand, dodgeSkillCommand, toolCommand,
+      mainMenuCommand, offhandSkillCommand, combatSkillsCommand, dodgeSkillCommand,
+      toolCommand, usableItemCommand,
     ];
   }
 
@@ -149,6 +159,20 @@ class Window_AbsMenu
     const description = [
       "Your tool list, where you can find any and all equippable items.",
       "Not all items will show up in the list- only ones usable in combat somehow will be available."
+    ];
+
+    return description.join("\n");
+  }
+
+  /**
+   * The help text for the JABS usable-item menu.
+   * @returns {string}
+   */
+  usableItemHelpText()
+  {
+    const description = [
+      "Your consumable item list — potions, food, and other usable items.",
+      "Items tagged <jabsTool> belong in the tool slot instead and won't appear here."
     ];
 
     return description.join("\n");

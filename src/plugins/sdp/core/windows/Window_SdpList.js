@@ -1,5 +1,6 @@
 //region Window_SdpList
-import StatDistributionPanel from './../__models/StatDistributionPanel.js';
+import StatDistributionPanel from '../models/StatDistributionPanel.js';
+import SdpFamilyFilter from '../managers/SdpFamilyFilter.js';
 /**
  * The SDP window containing the list of all unlocked panels.
  */
@@ -13,6 +14,12 @@ class Window_SdpList
   currentActor = null;
 
   filterNoMaxedPanels = false;
+
+  /**
+   * Active family-filter key for the panel list.
+   * @type {string}
+   */
+  familyFilterKey = SdpFamilyFilter.ALL;
 
   /**
    * The queued cart levels by panel key.
@@ -67,7 +74,27 @@ class Window_SdpList
   }
 
   /**
-   * OVERWRITE Sets the alignment for this command window to be left-aligned.
+   * Sets the active family filter and refreshes the list.
+   * @param {string} familyFilterKey The family filter key driving this step.
+   */
+  setFamilyFilterKey(familyFilterKey)
+  {
+    this.familyFilterKey = familyFilterKey;
+    this.refresh();
+  }
+
+  /**
+   * Gets the active family filter key.
+   * @returns {string}
+   */
+  getFamilyFilterKey()
+  {
+    return this.familyFilterKey;
+  }
+
+  /**
+   * Overwrites {@link #itemTextAlign}.<br/>
+   * Sets the alignment for this command window to be left-aligned.
    */
   itemTextAlign()
   {
@@ -75,7 +102,8 @@ class Window_SdpList
   }
 
   /**
-   * OVERWRITE Creates the command list for this window.
+   * Overwrites {@link #makeCommandList}.<br/>
+   * Creates the command list for this window.
    */
   makeCommandList()
   {
@@ -145,6 +173,12 @@ class Window_SdpList
       return null;
     }
 
+    // apply the active family filter.
+    if (SdpFamilyFilter.panelMatchesFilter(panel, this.familyFilterKey) === false)
+    {
+      return null;
+    }
+
     // keep rows selectable even when the wallet cannot afford the next rank alone — cart totals and
     // queued levels change continuously; disabling by snapshot points goes stale quickly.
     const enabled = !isMaxRank;
@@ -163,7 +197,8 @@ class Window_SdpList
   }
 
   /**
-   * OVERWRITE Renders SDP list rows with styled padded ranks.
+   * Overwrites {@link #drawItem}.<br/>
+   * Renders SDP list rows with styled padded ranks.
    * @param {number} index The command index.
    */
   drawItem(index)
@@ -265,7 +300,8 @@ class Window_SdpList
 
   //region cart
   /**
-   * OVERWRITE Enables tab-switching via left input (controller-first).
+   * Extends {@link #cursorLeft}.<br/>
+   * Enables tab-switching via left input (controller-first).
    */
   cursorLeft(wrap)
   {
@@ -281,7 +317,8 @@ class Window_SdpList
   }
 
   /**
-   * OVERWRITE Enables tab-switching via right input (controller-first).
+   * Extends {@link #cursorRight}.<br/>
+   * Enables tab-switching via right input (controller-first).
    */
   cursorRight(wrap)
   {

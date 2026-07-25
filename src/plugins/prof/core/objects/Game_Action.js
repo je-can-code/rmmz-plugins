@@ -5,6 +5,7 @@
 J.PROF.Aliased.Game_Action.set("apply", Game_Action.prototype.apply);
 Game_Action.prototype.apply = function(target)
 {
+  // perform original logic.
   J.PROF.Aliased.Game_Action.get("apply")
     .call(this, target);
 
@@ -56,6 +57,7 @@ Game_Action.prototype.increaseProficiency = function()
   const skill = this.item();
   if (!caster || !skill)
   {
+    // Surface a non-fatal warning for operator triage.
     console.warn('attempted to improve prof for an invalid caster or skill.');
     return;
   }
@@ -88,7 +90,7 @@ Game_Action.prototype.skillProficiency = function()
 if (J.ABS)
 {
   /**
-   * Extends {@link Game_Action.onParry}.<br>
+   * Extends {@link Game_Action.onParry}.<br/>
    * Also gains proficiency for the parry if possible.
    * @param {JABS_Battler} jabsBattler The battler that is parrying.
    */
@@ -104,7 +106,7 @@ if (J.ABS)
   };
 
   /**
-   * Extends {@link Game_Action.onGuard}.<br>
+   * Extends {@link Game_Action.onGuard}.<br/>
    * Also gains proficiency for the guard if possible.
    * @param {JABS_Battler} jabsBattler The battler that is guarding.
    */

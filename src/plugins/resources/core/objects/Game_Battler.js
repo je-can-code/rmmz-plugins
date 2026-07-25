@@ -35,43 +35,29 @@ Game_Battler.prototype.initResourcesMembers = function()
    * The hp cost reduction for this battler.
    * @type {number}
    */
-  if (typeof this._j._hcr !== 'number' || Number.isNaN(this._j._hcr))
-  {
-    this._j._hcr = 100;
-  }
+  this._j._hcr = 100;
 };
 
 /**
- * Saves from before J-Resources may omit `_hcr` on `_j`. {@link #refreshHcr} repopulates it from traits.
+ * HP cost reduction in decimal percent space (0 = none).
  */
-Game_Battler.prototype._ensureHcrInitializedForResources = function()
-{
-  this._j ||= {};
-  this._j._resources ||= {};
-  if (typeof this._j._hcr !== 'number' || Number.isNaN(this._j._hcr))
+Object.defineProperty(Game_Battler.prototype, 'hcr', {
+  get: function()
   {
-    this.refreshHcr();
-  }
-};
-
-/**
- * Gets the hp cost reduction for this battler.
- * @returns {number}
- */
-Game_Battler.prototype.hcr = function()
-{
-  this._ensureHcrInitializedForResources();
-  return this._j._hcr;
-};
+    return Math.max(0, (100 - this._j._hcr) / 100);
+  },
+  configurable: true,
+});
 
 /**
  * Gets the hp cost reduction factor for this battler.
  * This is the normalized fractional amount used in the math for hp cost reduction.
+ * Floored at zero — a negative factor would let ResourceManager's hp cost calculations go
+ * negative, which would refund hp on cast instead of just reducing the cost to free.
  */
 Game_Battler.prototype.hcrFactor = function()
 {
-  this._ensureHcrInitializedForResources();
-  const hrcFactor = this._j._hcr / 100;
+  const hrcFactor = Math.max(0, this._j._hcr / 100);
   return hrcFactor;
 };
 
@@ -137,6 +123,7 @@ J.RESOURCES.Aliased.Game_BattlerBase.set('canPaySkillCost', Game_BattlerBase.pro
 Game_Battler.prototype.canPaySkillCost = function(skill)
 {
   // Check base costs MP/TP first.
+  // perform original logic.
   if (J.RESOURCES.Aliased.Game_BattlerBase.get('canPaySkillCost')
     .call(this, skill) === false)
   {
@@ -147,18 +134,30 @@ Game_Battler.prototype.canPaySkillCost = function(skill)
   const hpCost = this.skillHpCost(skill);
   if (hpCost > 0)
   {
-    // Allow sacrifice via notetag.
+    // Allow sacrifice via notetag- if allowed, the HP check is satisfied regardless of current HP.
     const allowSacrifice = RPGManager.checkForBooleanFromNoteByRegex(skill, J.RESOURCES.RegExp.HpCostLethal);
-    if (allowSacrifice)
+
+    // without sacrifice allowed, HP must stay above 0 after paying the cost.
+    if (allowSacrifice === false && this.hp <= hpCost)
     {
-      // Can drop to 0 or below.
-      return true;
+      return false;
     }
-    else
-    {
-      // Must stay above 1 HP.
-      return this.hp > hpCost;
-    }
+  }
+
+  // Check stack cost- an alternate resource paid in JABS state stacks instead of hp/mp/tp.
+  const [ stackStateId, stackCount ] = this.skillStackCost(skill);
+  if (stackCount > 0 && this.stackCount(stackStateId) < stackCount)
+  {
+    // not enough stacks banked on the required state to afford this cast.
+    return false;
+  }
+
+  // Check item cost- an alternate resource paid out of the party's own inventory.
+  const [ itemId, itemCount ] = this.skillItemCost(skill);
+  if (itemCount > 0 && $gameParty.numItems($dataItems.at(itemId)) < itemCount)
+  {
+    // not enough of the required item in stock to afford this cast.
+    return false;
   }
 
   return true;
@@ -173,12 +172,27 @@ J.RESOURCES.Aliased.Game_BattlerBase.set('paySkillCost', Game_BattlerBase.protot
 Game_Battler.prototype.paySkillCost = function(skill)
 {
   // Pay vanilla MP/TP first.
+  // perform original logic.
   J.RESOURCES.Aliased.Game_BattlerBase.get('paySkillCost')
     .call(this, skill);
 
   // pay the HP cost.
   const hpCost = this.skillHpCost(skill);
   this.paySkillHpCost(hpCost);
+
+  // pay the stack cost, if any- consumes stacks off the required state directly.
+  const [ stackStateId, stackCount ] = this.skillStackCost(skill);
+  if (stackCount > 0)
+  {
+    this.decrementStateStacks(stackStateId, stackCount);
+  }
+
+  // pay the item cost, if any- consumes stock straight out of the party's inventory.
+  const [ itemId, itemCount ] = this.skillItemCost(skill);
+  if (itemCount > 0)
+  {
+    $gameParty.loseItem($dataItems.at(itemId), itemCount, false);
+  }
 
   // apply any gains from the skill.
   const hpGain = ResourceCostManager.skillGainHp(this, skill);

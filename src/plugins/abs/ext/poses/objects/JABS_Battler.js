@@ -2,7 +2,7 @@
 //region getters/setters
 J.ABS.EXT.POSES.Aliased.JABS_Battler.set('initialize', JABS_Battler.prototype.initialize);
 /**
- * Extends {@link #initialize}.<br>
+ * Extends {@link #initialize}.<br/>
  * Also intializes the pose information.
  * @param {Game_Event} event The event the battler is bound to.
  * @param {Game_Actor|Game_Enemy} battler The battler data itself.
@@ -413,7 +413,6 @@ JABS_Battler.prototype.managePosePattern = function()
   // TODO: this should be probably optimized in some way?
   // TODO: direction should be dynamically determined based on current facing.
 
-
   // if the battler has 4 or less frames left.
   if (this.getPoseFrames() < 4)
   {
@@ -440,17 +439,17 @@ J.ABS.EXT.POSES.Aliased.JABS_Battler.set('startGuarding', JABS_Battler.prototype
 /**
  * Extends {@link #startGuarding}.
  * Executes an action pose when guarding.
- * @param {string} skillSlot The skill slot containing the guard data.
  */
-JABS_Battler.prototype.startGuarding = function(skillSlot)
+JABS_Battler.prototype.startGuarding = function()
 {
   // perform original logic.
   J.ABS.EXT.POSES.Aliased.JABS_Battler.get('startGuarding')
-    .call(this, skillSlot);
+    .call(this);
 
-  // set the pose!
+  // set the pose! guard is resolved from the equipped offhand's declared guard skill,
+  // not from the skill-slot system- mirror core's own resolution in getGuardData().
   const skillId = this.getBattler()
-    .getEquippedSkillId(skillSlot);
+    .getGuardSkillId();
   const skill = this.getSkill(skillId);
   this.performActionPose(skill);
 };

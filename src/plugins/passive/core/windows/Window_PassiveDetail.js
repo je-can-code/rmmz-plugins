@@ -8,7 +8,7 @@
  * share state through {@link currentX} and {@link currentY}, both reset at the
  * start of each repaint — no y threading through method signatures.
  *
- * Left column:   Combat (stub, filled by passive/ext/abs) + Ailments
+ * Left column:   Combat (stub, filled by a passive extension) + Ailments
  * Middle column: Parameters + Elements
  * Right column:  Skills + Equip + Properties + Rewards
  *
@@ -193,7 +193,7 @@ class Window_PassiveDetail
    * Top-level orchestrator — draws the full-width header, then populates the
    * left and right columns with their respective sections.
    *
-   * Left column: Combat (stub, filled by passive/ext/abs), Parameters, Elements.
+   * Left column: Combat (stub, filled by a passive extension), Parameters, Elements.
    * Right column: Ailments, Skills, Equip, Properties, Rewards.
    *
    * Extensions may alias either this method or any individual section method.
@@ -224,7 +224,7 @@ class Window_PassiveDetail
 
   /**
    * Stub for the combat section — occupies no space when unoverridden.
-   * J.PASSIVE.EXT.ABS overrides this to draw JABS combat, shield, and stacking.
+   * A passive affix extension overrides this to draw JABS combat, shield, and stacking.
    * @param {RPG_State} state The state being detailed.
    */
   // eslint-disable-next-line no-unused-vars
@@ -358,15 +358,15 @@ class Window_PassiveDetail
     // fall back to the raw formula when there is no actor context to evaluate against.
     if (!actor) return `[${formula}]`;
 
+    // attempt the fragile parse or io work inside this block.
     try
     {
       // 'a' and 'b' are the RMMZ formula conventions for acting and target battlers.
       // for passive states, the bearer is both — there is no external attacker or target.
       const a = actor;
-      const b = actor; // eslint-disable-line no-unused-vars
-      // eval is intentional here — this mirrors what RMMZ does internally for damage formulas.
-      const result = eval(formula);
-      if (typeof result === 'number') return `${Math.round(result)}`;
+      const b = actor;
+      const result = new Function('a', 'b', `return (${formula})`)(a, b);
+      if (Number.isFinite(result)) return `${Math.round(result)}`;
       return `${result}`;
     }
     catch
@@ -444,7 +444,7 @@ class Window_PassiveDetail
       this.drawDetailRow(icon, label, value);
     });
 
-    // HCR row from J-Resources: HP cost rate reduction, displayed like MCR/TCR.
+    // HCR row from J-Resources: life cost rate reduction, displayed like MCR/TCR.
     const hcrLine = this.collectHcrLine(state);
     if (hcrLine)
     {
@@ -456,10 +456,17 @@ class Window_PassiveDetail
     {
       this.drawDetailRow(icon, label, value);
     });
+
+    // CDR row from J-ABS: global cooldown rate reduction.
+    const cdrLine = this.collectCdrLine(state);
+    if (cdrLine)
+    {
+      this.drawDetailRow(cdrLine.icon, cdrLine.label, cdrLine.value);
+    }
   }
 
   /**
-   * Collects the HP Cost Reduction (HCR) display row from J-Resources.
+   * Collects the Life Cost (HCR) display row from J-Resources.
    * HCR formula evaluates to a positive reduction amount (e.g. 15 = 15% cheaper),
    * so the value is negated for display to match the MCR/TCR visual convention,
    * and invertColor is applied so the resulting '-' prefix renders green.
@@ -477,7 +484,7 @@ class Window_PassiveDetail
     const evaluated = Number(this.evaluateFormula(formula, this._actor));
     return {
       icon:  IconManager.param(0),
-      label: 'HP Cost Rate',
+      label: 'Life Cost',
       value: `-${Math.abs(evaluated)}%`,
     };
   }
@@ -519,6 +526,28 @@ class Window_PassiveDetail
     }
 
     return rows;
+  }
+
+  /**
+   * Collects the CDR (global cooldown rate reduction) display row from J-ABS.
+   * Positive values shorten GCD (green); negative lengthen it.
+   * Returns null when J-ABS is not loaded or the state has no CDR tag.
+   * @param {RPG_State} state The state to check.
+   * @returns {{icon: number, label: string, value: string}|null}
+   */
+  collectCdrLine(state)
+  {
+    if (!J.ABS) return null;
+
+    const formula = RPGManager.getStringFromNoteByRegex(state, J.ABS.RegExp.GlobalCooldownReduction);
+    if (!formula) return null;
+
+    const evaluated = Number(this.evaluateFormula(formula, this._actor));
+    return {
+      icon:  IconManager.cdr(),
+      label: 'Cooldown Rate',
+      value: `${evaluated > 0 ? '+' : ''}${evaluated}%`,
+    };
   }
 
   /**
@@ -743,13 +772,12 @@ class Window_PassiveDetail
     const lines = [];
 
     // boost element: one row per boosted element — icon identifies it, "Boost" the effect.
-    const boostCaptures = RPGManager.getAllCapturesFromNoteByRegex(state, J.ELEM.RegExp.BoostElement);
+    // each <boostElement:[ELEMENT_ID, PERCENT_BOOST]> tag parses directly into a numeric tuple.
+    const boostCaptures = RPGManager.getArraysFromNotesByRegex(state, J.ELEM.RegExp.BoostElement);
     if (boostCaptures && boostCaptures.length > 0)
     {
-      boostCaptures.forEach(([rawId, rawPct]) =>
+      boostCaptures.forEach(([elementId, pct]) =>
       {
-        const elementId = Number(rawId);
-        const pct = Number(rawPct);
         const sign = pct >= 0 ? '+' : '';
         lines.push({ icon: IconManager.element(elementId), label: 'Boost', value: `${sign}${pct}%` });
       });
@@ -922,13 +950,13 @@ class Window_PassiveDetail
       const dropMult = RPGManager.getNumberFromNoteByRegex(state, J.DROPS.RegExp.DropMultiplier);
       if (dropMult)
       {
-        rows.push({ icon: 0, label: 'Drop Rate', value: `${dropMult > 0 ? '+' : ''}${dropMult}%` });
+        rows.push({ icon: IconManager.parameterIcon('dor'), label: 'Drop Rate', value: `${dropMult > 0 ? '+' : ''}${dropMult}%` });
       }
 
       const goldMult = RPGManager.getNumberFromNoteByRegex(state, J.DROPS.RegExp.GoldMultiplier);
       if (goldMult)
       {
-        rows.push({ icon: 0, label: 'Gold', value: `${goldMult > 0 ? '+' : ''}${goldMult}%` });
+        rows.push({ icon: IconManager.parameterIcon('gdr'), label: 'Gold', value: `${goldMult > 0 ? '+' : ''}${goldMult}%` });
       }
     }
 
@@ -937,14 +965,23 @@ class Window_PassiveDetail
       const sdpMult = RPGManager.getNumberFromNoteByRegex(state, J.SDP.RegExp.SdpMultiplier);
       if (sdpMult)
       {
-        rows.push({ icon: 0, label: 'SDP Points', value: `${sdpMult > 0 ? '+' : ''}${sdpMult}%` });
+        rows.push({ icon: IconManager.parameterIcon('sdr'), label: 'SDP Points', value: `${sdpMult > 0 ? '+' : ''}${sdpMult}%` });
+      }
+    }
+
+    if (J.APT)
+    {
+      const aptMult = RPGManager.getNumberFromNoteByRegex(state, J.APT.RegExp.AptMultiplier);
+      if (aptMult)
+      {
+        rows.push({ icon: IconManager.parameterIcon('apr'), label: 'APT Rate', value: `${aptMult > 0 ? '+' : ''}${aptMult}%` });
       }
     }
 
     if (J.PROF)
     {
       const profBonus = RPGManager.getNumberFromNoteByRegex(state, J.PROF.RegExp.ProficiencyBonus);
-      if (profBonus) rows.push({ icon: 0, label: 'Proficiency Bonus', value: `+${profBonus}` });
+      if (profBonus) rows.push({ icon: IconManager.parameterIcon('prof'), label: 'Proficiency Bonus', value: `+${profBonus}` });
     }
 
     if (J.NATURAL)

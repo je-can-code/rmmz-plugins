@@ -39,7 +39,7 @@ Scene_Map.prototype.initMiniMapMembers = function()
 };
 
 /**
- * Extends {@link #createAllWindows}.<br>
+ * Extends {@link #createAllWindows}.<br/>
  * Also creates the minimap sprite.
  */
 J.MAP.Aliased.Scene_Map.set('createAllWindows', Scene_Map.prototype.createAllWindows);

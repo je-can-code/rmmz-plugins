@@ -17,13 +17,14 @@ Scene_Boot.prototype.startNormalGame = function()
   // otherwise, perform original logic.
   else
   {
+    // perform original logic.
     J.UTILS.Aliased.Scene_Boot.get('startNormalGame')
       .call(this);
   }
 };
 
 /**
- * Extends {@link #start}.<br>
+ * Extends {@link #start}.<br/>
  * Also shows the devtools window because I need that to do dev things.
  */
 J.UTILS.Aliased.Scene_Boot.set('start', Scene_Boot.prototype.start);

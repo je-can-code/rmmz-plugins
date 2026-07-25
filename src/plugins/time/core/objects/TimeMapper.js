@@ -129,6 +129,7 @@ class TimeMapper
     const [ , startHourRange, endHourRange ] = regex.exec(comment);
     const startHourRangeTimeRange = [ parseInt(startHourRange), 0 ];
     const endHourRangeTimeRange = [ parseInt(endHourRange), 0 ];
+    // construct time conditional for the next step in this routine.
     const timeConditional = new TimeConditional();
     timeConditional.startRange = startHourRangeTimeRange;
     timeConditional.endRange = endHourRangeTimeRange;
@@ -172,6 +173,7 @@ class TimeMapper
       ? currentTimeSnapshot.years + 1
       : currentTimeSnapshot.years;
     const fullDateRangeEnd = [ 59, 59, 23, 30, monthRangeEnd, monthRangeYearEnd ];
+    // construct time conditional for the next step in this routine.
     const timeConditional = new TimeConditional();
     timeConditional.startRange = fullDateRangeStart;
     timeConditional.endRange = fullDateRangeEnd;

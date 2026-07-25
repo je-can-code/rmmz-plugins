@@ -11,6 +11,16 @@
  * @orderAfter J-Base
  * @orderAfter J-Resources
  * @orderAfter J-ABS
+ *
+ * @param healChainDepth
+ * @text Heal Chain Depth
+ * @type number
+ * @min 0
+ * @max 20
+ * @default 5
+ * @desc Maximum number of cascade rounds a single heal event can trigger.
+ * 0 disables all cascades. Higher values allow deeper empathy-bond chains.
+ *
  * @help
  * ============================================================================
  * OVERVIEW
@@ -126,7 +136,117 @@
  *    Gain TP equal to 5% of the damage taken- scales with how hard the hit was.
  *
  * ============================================================================
+ * STEAL RATES (LST / MST / TST)
+ * Have you ever wanted a weapon that siphons life with every strike, or a
+ * vampiric state that converts damage dealt into mana? Well now you can! By
+ * applying the appropriate tag(s) across the database, a battler can recover
+ * HP, MP, or TP equal to a percentage of the HP damage they deal, on every
+ * hit.
+ *
+ * NOTE:
+ * These are battler-wide percent-point stats, not per-skill tags- they're
+ * summed from every note source on the battler (actor, class, weapons,
+ * armors, states) and combined with any SDP panel bonus for the same
+ * parameter key.
+ *
+ * TAG USAGE:
+ * - Actors
+ * - Classes
+ * - Weapons
+ * - Armors
+ * - Enemies
+ * - States
+ *
+ * TAG FORMAT:
+ *  <lst:VALUE>
+ *    Lifesteal- VALUE percent of HP damage dealt is recovered as HP.
+ *
+ *  <mst:VALUE>
+ *    Manasteal- VALUE percent of HP damage dealt is recovered as MP.
+ *
+ *  <tst:VALUE>
+ *    Techsteal- VALUE percent of HP damage dealt is recovered as TP.
+ *
+ * TAG EXAMPLES:
+ *  <lst:10>
+ *    This battler recovers 10% of all HP damage they deal as HP.
+ *
+ *  <mst:5>
+ *  <tst:5>
+ *    This battler recovers 5% of all HP damage they deal as both MP and TP
+ *    simultaneously (the three steal rates are independent and can stack).
+ *
+ * ============================================================================
+ * ============================================================================
+ * HEAL EVENTS
+ * When a battler receives positive HP, MP, or TP recovery, a cascade of
+ * secondary heals can be triggered based on notetags placed on any traited
+ * source (actor, class, equip, state, skill).
+ *
+ * Two families:
+ *
+ *   onSelf tags — when THIS battler's trigger resource is healed, also heal
+ *   PERCENT% of the heal amount as the output resource. Self always receives
+ *   it; if RANGE > 0, allies within RANGE tiles also receive it.
+ *
+ *   onAlly tags — when an ally within RANGE tiles has their trigger resource
+ *   healed, this battler (the observer) receives PERCENT% of that heal amount
+ *   as the output resource.
+ *
+ * Cascades are limited by the healChainDepth plugin parameter (default 5).
+ * Secondary heals themselves fire onHeal again, so chains of empathy bonds and
+ * jelly transfusions can propagate naturally up to the depth limit.
+ *
+ * TAG USAGE:
+ * - Actors, Enemies, Classes, Equips, States, Skills
+ *
+ * TAG FORMAT (onSelf):
+ *  <onSelf{Trigger}Heal{Output}:[PERCENT, RANGE]>
+ *  <onSelf{Trigger}Heal{Output}:[PERCENT, RANGE, MAX_DEPTH]>
+ *    Trigger:   Hp | Mp | Tp | Any
+ *    Output:    Hp | Mp | Tp
+ *    PERCENT:   integer percentage of the heal amount to apply as secondary
+ *    RANGE:     tile radius; 0 = self only, >0 includes allies within radius
+ *    MAX_DEPTH: max cross-battler cascade hops (default: healChainDepth plugin param).
+ *               The tag never echoes itself on the same battler regardless of this value.
+ *
+ * TAG FORMAT (onAlly):
+ *  <onAlly{Trigger}Heal{Output}:[PERCENT, RANGE]>
+ *  <onAlly{Trigger}Heal{Output}:[PERCENT, RANGE, MAX_DEPTH]>
+ *    Trigger:   Hp | Mp | Tp | Any
+ *    Output:    Hp | Mp | Tp
+ *    PERCENT:   integer percentage of the ally's heal to apply to self
+ *    RANGE:     tile radius; observer only reacts if healed ally is within range
+ *    MAX_DEPTH: max cross-battler cascade hops (default: healChainDepth plugin param)
+ *
+ * TAG EXAMPLES:
+ *  <onSelfHpHealMp:[50, 0]>
+ *    When this battler receives HP healing, also recover 50% of that amount as
+ *    MP. Self only (Jelly Mana Transfusion).
+ *
+ *  <onSelfHpHealHp:[25, 3]>
+ *    When this battler is healed for HP, also heal self and allies within
+ *    3 tiles for 25% of the same amount (Empathic Splash).
+ *
+ *  <onAllyHpHealHp:[30, 4]>
+ *    Whenever an ally within 4 tiles receives HP healing, this battler also
+ *    gains 30% of that heal amount as HP (Emotion Empathic Bond).
+ *
+ *  <onSelfAnyHealTp:[10, 0]>
+ *    Any resource recovery on this battler also grants 10% as TP
+ *    (Momentum from healing).
+ *
+ * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Added HEAL EVENTS system with onSelf and onAlly resource cascade tags.
+ *    24 notetag variants (4 triggers × 3 outputs × 2 families).
+ *    New plugin parameter: healChainDepth (default 5) caps cascade depth.
+ *    Fixed: Scene_Boot import was missing from entry.js, so parameter
+ *    registration was never called. Now fixed.
+ *    Added LST/MST/TST (life/mana/tech steal) battler-wide percent-point
+ *    stats, summed from every note source plus SDP panel bonus, recovering
+ *    HP/MP/TP as a percent of HP damage dealt on every hit.
  * - 1.0.0
  *    Initial release.
  *    Added on-attack HP/MP/TP gains via flat, percent, and formula skill tags.

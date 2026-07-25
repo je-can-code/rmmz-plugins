@@ -1,3 +1,5 @@
+import GrowthCurveFormula from "../managers/GrowthCurveFormula.js";
+
 //region Game_Temp
 /**
  * Intializes all additional members of this class.
@@ -55,8 +57,9 @@ Game_Temp.prototype.buildBeyondMaxData = function()
  */
 Game_Temp.prototype.buildBeyondMaxDataForClass = function(classId)
 {
-  // grab the parameter collections for the class.
-  const classParams = $dataClasses.at(classId).params;
+  // grab the class database object and its parameter collections.
+  const dataClass = $dataClasses.at(classId);
+  const classParams = dataClass.params;
 
   // start a new array for the updated class parameters.
   const newClassParams = Array.empty;
@@ -69,26 +72,42 @@ Game_Temp.prototype.buildBeyondMaxDataForClass = function(classId)
       const parameterValues = classParams.at(paramId)
         .toSpliced(0, 0);
 
-      // grab the final five levels to determine the average growth to continue with.
-      const lastFive = parameterValues.slice(parameterValues.length - 6);
-      const growth = Array.empty;
-      lastFive.forEach((value, index) =>
+      // check whether this class has an authored `<paramGrowthCurve:[formula]>` tag for this param-
+      // when present, it's the source of truth for beyond-99 growth instead of guessing a slope.
+      const growthCurveFormula = GrowthCurveFormula.readForClass(dataClass, paramId);
+
+      if (growthCurveFormula)
       {
-        if (index === 0) return;
-
-        const previousValue = lastFive[index - 1];
-        const difference = value - previousValue;
-        growth.push(difference);
-      });
-
-      // determine the average growth rate to continue beyond level 99 with.
-      const averageGrowth = growth.reduce((sum, value) => sum + value, 0) / growth.length;
-
-      // arbitrarily evaluate ten thousand levels worth of parameters upfront.
-      for (let i = 100; i < 1000; i++)
+        // evaluate the authored formula directly at every level beyond the editor's max.
+        for (let i = 100; i < 1000; i++)
+        {
+          parameterValues[i] = Math.round(GrowthCurveFormula.evaluate(growthCurveFormula, i));
+        }
+      }
+      else
       {
-        const nextParameterValue = parameterValues.at(i - 1) + averageGrowth;
-        parameterValues[i] = Math.ceil(nextParameterValue);
+        // no authored curve for this param- fall back to the prior slope-extrapolation guess.
+        // grab the final five levels to determine the average growth to continue with.
+        const lastFive = parameterValues.slice(parameterValues.length - 6);
+        const growth = Array.empty;
+        lastFive.forEach((value, index) =>
+        {
+          if (index === 0) return;
+
+          const previousValue = lastFive[index - 1];
+          const difference = value - previousValue;
+          growth.push(difference);
+        });
+
+        // determine the average growth rate to continue beyond level 99 with.
+        const averageGrowth = growth.reduce((sum, value) => sum + value, 0) / growth.length;
+
+        // arbitrarily evaluate ten thousand levels worth of parameters upfront.
+        for (let i = 100; i < 1000; i++)
+        {
+          const nextParameterValue = parameterValues.at(i - 1) + averageGrowth;
+          parameterValues[i] = Math.ceil(nextParameterValue);
+        }
       }
 
       // add the data to the running collection.

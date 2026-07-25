@@ -1,5 +1,17 @@
 //region Game_Battler
 import SkillProficiency from './../__models/SkillProficiency.js';
+
+/**
+ * Bonus proficiency gained when earning skill proficiency.
+ */
+Object.defineProperty(Game_BattlerBase.prototype, 'prof', {
+  get: function()
+  {
+    return 0;
+  },
+  configurable: true,
+});
+
 /**
  * Gets all skill proficiencies for this battler.
  * @returns {SkillProficiency[]}
@@ -27,7 +39,7 @@ Game_Battler.prototype.skillProficiencyBySkillId = function(skillId)
 Game_Battler.prototype.skillProficiencyAmount = function()
 {
   const base = this.baseSkillProficiencyAmount();
-  const bonuses = this.bonusSkillProficiencyGains();
+  const bonuses = this.prof;
   return base + bonuses;
 };
 
@@ -38,15 +50,6 @@ Game_Battler.prototype.skillProficiencyAmount = function()
 Game_Battler.prototype.baseSkillProficiencyAmount = function()
 {
   return 1;
-};
-
-/**
- * Gets the base amount of proficiency gained from an action for this battler.
- * @returns {number}
- */
-Game_Battler.prototype.bonusSkillProficiencyGains = function()
-{
-  return 0;
 };
 
 /**

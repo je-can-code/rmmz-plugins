@@ -97,11 +97,11 @@ class TextPopSpriteManager
       case Map_TextPop.Types.Gold:
       case Map_TextPop.Types.Sdp:
       case Map_TextPop.Types.Item:
-        return 120;
+        return 30;
       case Map_TextPop.Types.Learn:
-        return 120;
+        return 60;
       case Map_TextPop.Types.Levelup:
-        return 180;
+        return 90;
       case Map_TextPop.Types.Parry:
       case Map_TextPop.Types.SkillUsage:
       case Map_TextPop.Types.Slip:

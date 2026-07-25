@@ -133,6 +133,7 @@ class ExternalJsonConfigLoader
         ? built
         : [ built ];
 
+      // Emit progress to the build log for operator visibility.
       console.log(`loaded:
 ${lines.map(line => `      ${line}`)
     .join('\n')}
@@ -144,7 +145,6 @@ ${lines.map(line => `      ${line}`)
     console.log(`loaded external JSON from file ${configPath}.`);
   }
 }
-
 
 export default ExternalJsonConfigLoader;
 //endregion ExternalJsonConfigLoader

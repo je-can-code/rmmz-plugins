@@ -1,5 +1,9 @@
 //region DataManager
 import JABS_StandardController from './../_models/JABS_StandardController.js';
+/**
+ * Extends {@link DataManager.createGameObjects}.<br/>
+ * Bootstraps input remap defaults, JABS icon/text registration, and controller 1.
+ */
 J.ABS.EXT.INPUT.Aliased.DataManager.set('createGameObjects', DataManager.createGameObjects);
 DataManager.createGameObjects = function()
 {

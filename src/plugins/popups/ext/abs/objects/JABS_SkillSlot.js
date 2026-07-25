@@ -26,6 +26,7 @@ JABS_SkillSlot.prototype.handleComboReadiness = function()
     }
   }
 
+  // perform original logic.
   J.POPUPS.EXT.ABS.Aliased.JABS_SkillSlot.get('handleComboReadiness')
     .call(this);
 };

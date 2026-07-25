@@ -7,7 +7,7 @@
 Game_Character.pixelRepeatableMoveCommandCodes = [ 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13 ];
 
 /**
- * Extends {@link processMoveCommand}.<br>
+ * Extends {@link processMoveCommand}.<br/>
  * Ensures when move routes are being processed, that we adjust the x,y coordinates.
  * @param {RPG_EventListCommand} command The commands associated with this movement.
  */
@@ -18,6 +18,7 @@ Game_Character.prototype.processMoveCommand = function(command)
   this.setMovePressed(false);
 
   // perform the original logic.
+  // perform original logic.
   J.PIXEL.Aliased.Game_Character.get('processMoveCommand')
     .call(this, command);
 };

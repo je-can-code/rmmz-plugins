@@ -79,7 +79,7 @@ class CraftingCreationSession
   /**
    * User locked in a category; recipe list should filter to {@link categoryKey}.
    *
-   * @param {string} categoryKey
+   * @param {string} categoryKey The category key driving this step.
    */
   enterRecipeBrowsing(categoryKey)
   {
@@ -99,7 +99,7 @@ class CraftingCreationSession
   /**
    * Attempts to craft the given recipe when the player confirms on the recipe list.
    *
-   * @param {CraftingRecipe|null|undefined} recipe
+   * @param {CraftingRecipe|null|undefined} recipe The recipe driving this step.
    * @returns {{ crafted: boolean, playedSuccessSound: boolean, reason: string|null }}
    */
   tryCraftRecipe(recipe)

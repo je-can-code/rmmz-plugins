@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v3.0.0 ALLYAI] Grants your allies AI to fight alongside the player.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Grants your allies AI to fight alongside the player.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -94,6 +94,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.0.1
+ *    Ally idle-check now also treats channeling as busy (J-ABS Channel).
+ *    Fixed applyBattleMemories' inverted check; memories went unrecorded.
+ *    Fixed jumpAll returning early instead of skipping just one follower.
  * - 3.0.0
  *    Replaced exclusive AI modes with three orthogonal behavior axes:
  *    risk (careful/balanced/reckless), support (offense/balanced/support),

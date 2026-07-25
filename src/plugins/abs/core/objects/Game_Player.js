@@ -1,5 +1,5 @@
 //region Game_Player
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 /**
  * While JABS is enabled, don't try to interact with events if they are enemies.
  */
@@ -39,11 +39,18 @@ Game_Player.prototype.canMove = function()
   // check if something related to JABS is causing the player to stop moving.
   const isMenuRequested = $jabsEngine.requestAbsMenu;
   const isAbsPaused = $jabsEngine.absPause;
-  const isPlayerCasting = $jabsEngine.getPlayer1()
-    .isCasting();
+
+  // casting/channeling only roots the player outright when the in-flight skill opts into
+  // <cannotMoveToInterrupt>; otherwise movement is allowed, and JABS_Battler's own
+  // updateSelfInterruptOnMove() is what cancels the cast/channel as a consequence of that
+  // movement- watching input signals directly there is movement-plugin-agnostic, since this
+  // project's pixel-movement plugin fully overwrites moveByInput/executeMove rather than
+  // aliasing them.
+  const isPlayerRooted = $jabsEngine.getPlayer1()
+    .hasUninterruptibleMovementLock();
 
   // any of these will prevent the player from moving.
-  const jabsDeniesMovement = (isMenuRequested || isAbsPaused || isPlayerCasting);
+  const jabsDeniesMovement = (isMenuRequested || isAbsPaused || isPlayerRooted);
 
   // check if JABS is denying movement.
   if (jabsDeniesMovement)
@@ -61,7 +68,7 @@ Game_Player.prototype.canMove = function()
 };
 
 /**
- * Extends/Overrides {@link #isDashing}.<br/>
+ * Extends {@link #isDashing}.<br/>
  * Disables engine dash while the player is in JABS combat.
  */
 J.ABS.Aliased.Game_Player.set("isDashing", Game_Player.prototype.isDashing);
@@ -76,6 +83,7 @@ Game_Player.prototype.isDashing = function()
   }
 
   // otherwise, perform original engine logic.
+  // perform original logic.
   return J.ABS.Aliased.Game_Player.get("isDashing").call(this);
 };
 
@@ -250,7 +258,7 @@ Game_Player.prototype.pickupLoot = function(lootEvent)
 Game_Player.prototype.useOnPickup = function(lootData)
 {
   const player = $jabsEngine.getPlayer1();
-  player.applyToolEffects(lootData.id, true);
+  player.applyToolItemEffects(lootData.id, JABS_Button.Tool, true);
 };
 
 /**

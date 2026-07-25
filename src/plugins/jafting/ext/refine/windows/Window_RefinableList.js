@@ -13,7 +13,7 @@ import JaftingManager from './../managers/JaftingManager.js';
 /**
  * True when this row should sort with stamped-lineage priority (salvage bag, dynamic ledger, or any refine +N).
  *
- * @param {RPG_EquipItem} equip
+ * @param {RPG_EquipItem} equip The equip driving this step.
  * @returns {boolean}
  */
 function refinableEquipTemplateSortHasSalvageLineage(equip)
@@ -41,8 +41,8 @@ function refinableEquipTemplateSortHasSalvageLineage(equip)
 /**
  * True when this row should show dismantle lineage styling (per stack slot when expanded).
  *
- * @param {RPG_EquipItem} equip
- * @param {number|undefined|null} unitOrdinal
+ * @param {RPG_EquipItem} equip The equip driving this step.
+ * @param {number|undefined|null} unitOrdinal The unit ordinal driving this step.
  * @returns {boolean}
  */
 function refinableEquipHasSalvageStamp(equip, unitOrdinal)
@@ -170,7 +170,8 @@ class Window_RefinableList
   }
 
   /**
-   * OVERWRITE Sets the alignment for this command window to be left-aligned.
+   * Overwrites {@link #itemTextAlign}.<br/>
+   * Sets the alignment for this command window to be left-aligned.
    */
   itemTextAlign()
   {
@@ -246,6 +247,7 @@ class Window_RefinableList
       {
         this.addRefinableEquipCommand(equip, null);
 
+        // exit early without a payload.
         return;
       }
 
@@ -259,7 +261,7 @@ class Window_RefinableList
   /**
    * Builds and appends refinable rows (enable rules, icons, salvage stamp label, optional stack counts).
    *
-   * @param {RPG_EquipItem} equip
+   * @param {RPG_EquipItem} equip The equip driving this step.
    * @param {{ unitOrdinal: number, unitsTotal: number }|null} unitSlot Pass null for stack-counted material rows.
    */
   // eslint-disable-next-line complexity -- refinement eligibility stays flat so designers can scan every branch.
@@ -441,6 +443,7 @@ class Window_RefinableList
       extData.unitsTotal = unitSlot.unitsTotal;
     }
 
+    // construct command for the next step in this routine.
     const command = new WindowCommandBuilder(rowName)
       .setSymbol('refine-object')
       .setEnabled(enabled)

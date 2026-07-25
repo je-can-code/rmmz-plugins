@@ -11,6 +11,7 @@ Game_Interpreter.prototype.command205 = function(params)
   // if param[0] is -1, that is the player!
   // TODO: only jump to player if the player moves!
   // execute the move route command.
+  // perform original logic.
   const result = J.ABS.EXT.ALLYAI.Aliased.Game_Interpreter.get('command205').call(this, params);
 
   // check if we have a result and also the target is to move the character.

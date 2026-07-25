@@ -1,15 +1,18 @@
 //region JABS_Engine
 import JABS_TeamRules from './JABS_TeamRules.js';
-import JABS_State from './../__models/JABS_State.js';
-import JABS_LootDrop from './../__models/JABS_LootDrop.js';
-import JABS_Location from './../__models/JABS_Location.js';
-import JABS_InputAdapter from './../__models/JABS_InputAdapter.js';
-import JABS_GlobalCooldown from './../__models/JABS_GlobalCooldown.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_SkillExecution from '../models/JABS_SkillExecution.js';
+import JABS_State from '../models/JABS_State.js';
+import JABS_Timer from '../models/JABS_Timer.js';
+import JABS_LootDrop from '../models/JABS_LootDrop.js';
+import JABS_Location from '../models/JABS_Location.js';
+import JABS_InputAdapter from '../models/JABS_InputAdapter.js';
+import JABS_GlobalCooldown from '../models/JABS_GlobalCooldown.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 import JABS_AiManager from './JABS_AiManager.js';
-import JABS_ActionOptions from './../__models/JABS_ActionOptions.js';
-import JABS_Action from './../__models/JABS_Action.js';
-import JABS_Aabb from './../__models/JABS_Aabb.js';
+import JABS_ActionOptions from '../models/JABS_ActionOptions.js';
+import JABS_Action from '../models/JABS_Action.js';
+import JABS_Aabb from '../models/JABS_Aabb.js';
+import JABS_DeathContext from '../models/JABS_DeathContext.js';
 /**
  * This class is the engine that manages JABS and how JABS actions interact
  * with the `JABS_Battler`s on the map.
@@ -26,7 +29,7 @@ class JABS_Engine
    * A cached collection of actions keyed by their uuids.
    */
   cachedActions = new Map();
-
+/**/
   //region properties
   /**
    * Retrieves whether or not the ABS is currently enabled.
@@ -105,9 +108,12 @@ class JABS_Engine
 
   /**
    * Whether or not the hitbox overlays are presently visible.
-   * @type {boolean}
+   * Starts `null` (not `false`) so initialize()'s own `?? metadataDefault` fallback can actually
+   * seed it from the configured plugin parameter on first construction- a `false` default here
+   * would already be non-nullish and permanently mask that fallback.
+   * @type {boolean|null}
    */
-  hitboxOverlaysVisible = false;
+  hitboxOverlaysVisible = null;
 
   /**
    * When `true`, all non‑enemies are considered in combat (UI and mechanics that consult the engine).
@@ -203,6 +209,9 @@ class JABS_Engine
   /**
    * Builds screen-space melee px offsets from plugin defaults plus facing-aware vertical trims.
    * Lateral offsets stay global; up/down cardinals (and blended diagonals) get extra Y so wedges track torso motion.
+   * Left/right facings (4 and 6) bypass the base Y offset entirely: for those directions the perpendicular
+   * axis of the line hitbox is Y, so any global oy would skew the vertical hit window off-center. Keeping
+   * oy = 0 for L/R pins the breadth band symmetrically to the character's visual center (th/2 lift only).
    * @param {number} facing Logical travel dir8 from the {@link JABS_Action} (2 down … 8 up).
    * @returns {{ ox:number, oy:number }}
    */
@@ -212,6 +221,16 @@ class JABS_Engine
     const baseY = J.ABS.Metadata.HitboxMeleeOriginOffsetPxY;
     const extraDown = J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingDown;
     const extraUp = J.ABS.Metadata.HitboxMeleeOriginExtraPxYFacingUp;
+
+    // for pure left/right facings, suppress the global Y offset so the perpendicular
+    // breadth band stays centered on the character's visual midpoint rather than drifting up.
+    if (facing === 4 || facing === 6)
+    {
+      return {
+        ox: baseX,
+        oy: 0,
+      };
+    }
 
     let addY = 0;
 
@@ -280,16 +299,12 @@ class JABS_Engine
       };
     }
 
+    // get the action's recorded facing direction to orient the origin offset.
     let facing = 2;
-
-    if (typeof actionEvent.getJabsAction === 'function')
+    const ja = actionEvent.getJabsAction();
+    if (ja)
     {
-      const ja = actionEvent.getJabsAction();
-
-      if (ja)
-      {
-        facing = ja.direction();
-      }
+      facing = ja.direction();
     }
 
     const { ox, oy } = JABS_Engine.resolveMeleeOriginPixelOffsetsForFacing(facing);
@@ -343,15 +358,13 @@ class JABS_Engine
   {
     const delayFrames = skill.jabsComboDelay | 0;
     const cooldownFrames = skill.jabsCooldown | 0;
+
+    // maxFrames is always at least delayFrames + 1 (one of the two Math.max candidates), so
+    // windowWidth can never be <= 0- there is no untagged/misconfigured case to guard against here.
     const maxFrames = Math.max(cooldownFrames, delayFrames + 1);
     const windowWidth = maxFrames - delayFrames;
     const minPct = J.ABS.Metadata.AiComboHumanizeWindowMinPercent;
     const maxPct = J.ABS.Metadata.AiComboHumanizeWindowMaxPercent;
-
-    if (windowWidth <= 0)
-    {
-      return Graphics.frameCount + delayFrames;
-    }
 
     const pct = minPct + (Math.random() * (maxPct - minPct));
     const offset = delayFrames + Math.round(pct * windowWidth);
@@ -360,16 +373,15 @@ class JABS_Engine
   }
 
   /**
-   * Implicit passive parry chance (0–100) from attacker/defender pressure vs the dominance band.
-   * Matches the probability step inside {@link #checkParry}; does not apply facing, GRD &gt; 0,
-   * or attacker ignore-parry state gates ({@link #isParryPossible}).
+   * Builds the attacker pressure (A) and defender pressure (D) used by all defensive-event formulas.
+   * Both values incorporate the baseline floor, per-level ramp, stat contributions, and the
+   * ignore-parry factor that skills can apply to weaken the defender's guard rating.
    * @param {JABS_Battler} caster The attacker on the map.
    * @param {JABS_Battler} target The defender on the map.
-   * @param {number} ignoreParryPercent Defender GRD pressure ignored (0–100); same as skill tag
-   * {@code jabsIgnoreParry}.
-   * @returns {number} Rounded percent chance the implicit parry roll succeeds (same rounding as combat).
+   * @param {number} ignoreParryPercent Defender GRD pressure ignored (0–100).
+   * @returns {{ A: number, D: number }} The resolved attacker and defender pressure values.
    */
-  static implicitParryChancePercent(caster, target, ignoreParryPercent)
+  static #defensivePressure(caster, target, ignoreParryPercent)
   {
     const targetBattler = target.getBattler();
     const casterBattler = caster.getBattler();
@@ -377,9 +389,11 @@ class JABS_Engine
     const ignoreRaw = ignoreParryPercent ?? 0;
     const parryIgnoredFactor = (100 - ignoreRaw) / 100;
 
+    // local helpers for stat scaling.
     const hundredX = value => parseFloat((value * 100).toFixed(3));
     const tenPercent = value => parseFloat((value * 0.1).toFixed(3));
 
+    // build the symmetric baseline for both sides; levels past 1 add a small ramp.
     const baselineFloor = J.ABS.Metadata.ImplicitParryBaselineFloor;
     const baselinePerLevel = J.ABS.Metadata.ImplicitParryBaselinePerLevel;
     const baselineA = baselineFloor + baselinePerLevel * Math.max(0, casterBattler.level - 1);
@@ -391,12 +405,14 @@ class JABS_Engine
     const bonusGrdFromLuk = tenPercent(targetBattler.luk);
     const D = (baseGrd + bonusGrdFromAgi + bonusGrdFromLuk) * parryIgnoredFactor;
 
+    // build the attacker pressure from hit rate plus secondary stat bonuses.
     const baseHit = hundredX(casterBattler.hit) + baselineA;
     const bonusHitFromAgi = tenPercent(casterBattler.agi);
     const bonusHitFromLuk = tenPercent(casterBattler.luk);
     let A = baseHit + bonusHitFromAgi + bonusHitFromLuk;
 
-    if (J.LEVEL && J.LEVEL.Metadata.enabled)
+    // apply the level-scaling multiplier when that plugin is active.
+    if (J.LEVEL && $gameSystem.isLevelScalingEnabled())
     {
       const levelMul = LevelScaling.multiplier(
         casterBattler.level,
@@ -406,31 +422,81 @@ class JABS_Engine
       A *= levelMul;
     }
 
+    return { A, D };
+  }
+
+  /**
+   * Converts a resolved A/D pressure pair and a dominance multiplier M into a 0–100 percent chance.
+   * The band is [1/M, M]: at or below 1/M the defender fully dominates (100%); at or above M
+   * the attacker fully dominates (0%); between them the chance interpolates linearly.
+   * @param {number} A The attacker pressure value.
+   * @param {number} D The defender pressure value.
+   * @param {number} M The dominance multiplier (must be > 1; clamped to 2 if invalid).
+   * @returns {number} Rounded percent chance (0–100).
+   */
+  static #dominanceBandChance(A, D, M)
+  {
+    // guard against an invalid M that would break the band math.
+    const safeM = (Number.isFinite(M) && M > 1) ? M : 2;
+
     const defenderFloor = 1;
     const ratio = A / Math.max(D, defenderFloor);
+    const invM = 1 / safeM;
 
-    let M = J.ABS.Metadata.ImplicitParryDominanceMultiplier;
-    if (!Number.isFinite(M) || M <= 1)
-    {
-      M = 2;
-    }
-
-    const invM = 1 / M;
-
-    if (ratio >= M)
+    // attacker so dominant the defensive event cannot occur.
+    if (ratio >= safeM)
     {
       return 0;
     }
 
+    // defender so dominant the defensive event always occurs.
     if (ratio <= invM)
     {
       return 100;
     }
 
-    const span = M - invM;
+    // linear interpolation across the dominance band.
+    const span = safeM - invM;
     const t = (ratio - invM) / span;
 
     return Math.round(100 * (1 - t));
+  }
+
+  /**
+   * Implicit passive parry chance (0–100) from attacker/defender pressure vs the dominance band.
+   * Does not apply facing, GRD &gt; 0, or attacker ignore-parry state gates ({@link #isParryPossible}).
+   * Multiply the result by {@link J.ABS.Metadata.ImplicitParryScaleFactor} before rolling to get
+   * the effective full-negate chance used in {@link #checkImplicitFullParry}.
+   * @param {JABS_Battler} caster The attacker on the map.
+   * @param {JABS_Battler} target The defender on the map.
+   * @param {number} ignoreParryPercent Defender GRD pressure ignored (0–100); same as skill tag
+   * {@code jabsIgnoreParry}.
+   * @returns {number} Rounded percent chance the implicit parry roll succeeds (same rounding as combat).
+   */
+  static implicitParryChancePercent(caster, target, ignoreParryPercent)
+  {
+    const { A, D } = JABS_Engine.#defensivePressure(caster, target, ignoreParryPercent);
+    const M = J.ABS.Metadata.ImplicitParryDominanceMultiplier;
+
+    return JABS_Engine.#dominanceBandChance(A, D, M);
+  }
+
+  /**
+   * Glancing blow chance (0–100) from attacker/defender pressure vs the glancing dominance band.
+   * Uses the same baseline pressure as {@link #implicitParryChancePercent} but reads
+   * {@link J.ABS.Metadata.GlancingBlowDominanceMultiplier} for its band width, allowing the two
+   * systems to be tuned independently.
+   * @param {JABS_Battler} caster The attacker on the map.
+   * @param {JABS_Battler} target The defender on the map.
+   * @param {number} ignoreParryPercent Defender GRD pressure ignored (0–100).
+   * @returns {number} Rounded percent chance a glancing blow occurs (0–100).
+   */
+  static glancingBlowChancePercent(caster, target, ignoreParryPercent)
+  {
+    const { A, D } = JABS_Engine.#defensivePressure(caster, target, ignoreParryPercent);
+    const M = J.ABS.Metadata.GlancingBlowDominanceMultiplier;
+
+    return JABS_Engine.#dominanceBandChance(A, D, M);
   }
 
   //endregion static
@@ -457,9 +523,7 @@ class JABS_Engine
      * A collection of the metadata of all action-type events.
      * @type {RPG_MapEvent[]}
      */
-    this._activeActions = isMapTransfer
-      ? Array.empty
-      : this._activeActions ?? Array.empty;
+    this._activeActions = Array.empty;
 
     /**
      * A collection of all ongoing states that are affecting battlers on the map.
@@ -469,6 +533,22 @@ class JABS_Engine
       ? this._jabsStates ?? new Map()
       : new Map();
 
+    /**
+     * A log of recent skill executions per battler, keyed by battler uuid.
+     * Survives map transfer so that cooldown-asymmetric history rewards are not lost mid-transition.
+     * @type {Map<string, JABS_SkillExecution[]>}
+     */
+    this._skillExecutionLog = isMapTransfer
+      ? this._skillExecutionLog ?? new Map()
+      : new Map();
+
+    /**
+     * The once-per-second throttle timer for aging and pruning skill execution log entries.
+     * @type {JABS_Timer}
+     */
+    this._skillExecutionTimer = this._skillExecutionTimer ?? new JABS_Timer(60);
+
+    // assign hitbox overlays visible on this instance for callers.
     this.hitboxOverlaysVisible = isMapTransfer
       ? this.hitboxOverlaysVisible ?? J.ABS.Metadata.HitboxOverlaysInitiallyVisible
       : J.ABS.Metadata.HitboxOverlaysInitiallyVisible;
@@ -695,6 +775,9 @@ class JABS_Engine
     // update all JABS states being tracked.
     this.updateJabsStates();
 
+    // age and prune the skill execution history log.
+    this.updateSkillExecutionLog();
+
     // handle input from the player(s).
     this.updateInput();
   }
@@ -809,7 +892,7 @@ class JABS_Engine
   {
     // a filter function defining what is a "positive" state.
     /**
-     * @param {JABS_State} trackedState
+     * @param {JABS_State} trackedState The tracked state driving this step.
      */
     const filtering = trackedState =>
     {
@@ -822,8 +905,8 @@ class JABS_Engine
       // grab the state for reference.
       const state = trackedState.battler.state(trackedState.stateId);
 
-      // if it is flagged as a negative state, then it is explicitly negative.
-      if (state.jabsNegative) return false;
+      // if it carries the <type:negative> classifier, then it is explicitly negative.
+      if (state.isNegativeType()) return false;
 
       // it is positive!
       return true;
@@ -858,8 +941,8 @@ class JABS_Engine
       // grab the state for reference.
       const state = trackedState.battler.state(trackedState.stateId);
 
-      // if it is not flagged as a negative state, then it is implicitly positive.
-      if (!state.jabsNegative) return false;
+      // if it does not carry the <type:negative> classifier, then it is implicitly positive.
+      if (!state.isNegativeType()) return false;
 
       // it is negative!
       return true;
@@ -979,9 +1062,6 @@ class JABS_Engine
    */
   refreshJabsState(jabsState, newJabsState)
   {
-    // don't refresh the state if it was just applied.
-    if (jabsState.wasRecentlyApplied()) return;
-
     // grab the database data of the state being refreshed.
     const state = jabsState.battler.state(jabsState.stateId);
 
@@ -1009,9 +1089,6 @@ class JABS_Engine
    */
   extendJabsState(jabsState, newJabsState)
   {
-    // don't refresh the state if it was just applied.
-    if (jabsState.wasRecentlyApplied()) return;
-
     // grab the database data of the state being extended.
     const state = jabsState.battler.state(newJabsState.stateId);
 
@@ -1036,20 +1113,58 @@ class JABS_Engine
    */
   stackJabsState(jabsState, newJabsState)
   {
-    // don't refresh the state if it was just applied.
-    if (jabsState.wasRecentlyApplied()) return;
+    // use the stack count from the incoming jabsState, which already reflects any skill-authored
+    // override; falling back to the database default only happens when no override was specified.
+    const addedStackAmount = newJabsState.stackCount;
 
-    // grab the added stacks from the state if applicable.
-    const addedStackAmount = newJabsState.battler.state(newJabsState.stateId).jabsStateStacksApplied;
-
-    // increment the stack of the state.
-    jabsState.incrementStacks(addedStackAmount);
+    // gain the stack(s) and roll for stack-conversion.
+    jabsState.applyStackGain(addedStackAmount);
 
     // update the underlying base duration to the latest stack's duration.
     jabsState.setBaseDuration(newJabsState.duration);
 
     // refresh the state as well.
     this.refreshJabsState(jabsState, newJabsState);
+  }
+
+  /**
+   * Checks whether the current stack count on a state triggers a conversion to a new state.
+   * Fires when the stack count meets or exceeds the threshold defined by
+   * {@code <stacksConvertToState:[NEW_STATE_ID, STACKS_REQUIRED]>} on the source state.
+   * If {@code <removeOnConvert>} is also present, the source state is removed after conversion.
+   * @param {JABS_State} jabsState The state whose stack count was just updated.
+   */
+  checkStackConversion(jabsState)
+  {
+    // get the caster's perceived version of the state to check for the caster-direction flag.
+    // the flag lives on the caster's extension passive, so only the caster's view will have it.
+    const casterPerceivedState = jabsState.source.state(jabsState.stateId);
+
+    // determine which battler's perceived version of the state to read conversion data from.
+    // if the caster's view carries <convertUsesCaster>, use theirs; otherwise fall back to the target's.
+    const conversionPerceivedState = casterPerceivedState.jabsConvertUsesCaster
+      ? casterPerceivedState
+      : jabsState.battler.state(jabsState.stateId);
+
+    // get the conversion data from the resolved state note.
+    const conversionData = conversionPerceivedState.jabsStacksConvertToState;
+
+    // if no conversion is defined on the resolved state, there is nothing to do.
+    if (!conversionData) return;
+
+    // if the stack count hasn't reached the required threshold yet, nothing to do.
+    if (jabsState.stackCount < conversionData.stacksRequired) return;
+
+    // apply the converted state to the battler; the battler is its own attacker for this self-transformation,
+    // but the originating skill (if any) still carries over from the state that triggered the conversion.
+    jabsState.battler.addState(conversionData.stateId, jabsState.battler, jabsState.sourceSkill);
+
+    // if the resolved state is configured to be removed on conversion, remove it now.
+    if (conversionPerceivedState.jabsRemoveOnConvert)
+    {
+      // remove the source state from the battler, fully expiring the tracked instance.
+      jabsState.removeFromBattler();
+    }
   }
 
   /**
@@ -1064,6 +1179,22 @@ class JABS_Engine
 
     // set the state anew.
     jabsStates.set(jabsState.stateId, jabsState);
+  }
+
+  /**
+   * Removes the tracker for a given state from a given battler's JABS state map.
+   * Called on forced removal so expired entries do not pollute the map and
+   * cause reapplication to go through the update path instead of the add path.
+   * @param {string} uuid The uuid of the battler.
+   * @param {number} stateId The id of the state to remove from the tracker.
+   */
+  removeJabsStateByUuid(uuid, stateId)
+  {
+    // get the states afflicted upon this battler.
+    const jabsStates = this.getJabsStatesByUuid(uuid);
+
+    // delete the entry entirely so hasJabsStateByUuid returns false on next application.
+    jabsStates.delete(stateId);
   }
 
   /**
@@ -1086,6 +1217,179 @@ class JABS_Engine
   }
 
   //endregion state tracking
+
+  //region skill execution log
+  /**
+   * Gets the full skill execution log for all battlers.
+   * @returns {Map<string, JABS_SkillExecution[]>}
+   */
+  getSkillExecutionLog()
+  {
+    return this._skillExecutionLog;
+  }
+
+  /**
+   * Gets the skill execution log entries for a specific battler by uuid.
+   * Lazily initializes the entry array if the battler has no log yet.
+   * @param {string} uuid The uuid of the battler to retrieve the log for.
+   * @returns {JABS_SkillExecution[]}
+   */
+  getSkillExecutionLogByUuid(uuid)
+  {
+    // grab a reference to the full execution log.
+    const log = this.getSkillExecutionLog();
+
+    // lazily initialize the array for this battler if it does not yet exist.
+    if (!log.has(uuid))
+    {
+      // start with an empty history for this battler.
+      log.set(uuid, []);
+    }
+
+    // return the battler's execution log.
+    return log.get(uuid);
+  }
+
+  /**
+   * Records a skill execution in the given battler's history log.
+   * Skills whose type id is in the excluded set are silently ignored.
+   * @param {string} uuid The uuid of the battler that executed the skill.
+   * @param {number} skillId The id of the skill executed.
+   * @param {number} skillTypeId The skill type id of the executed skill.
+   */
+  logSkillExecution(uuid, skillId, skillTypeId)
+  {
+    // check whether this skill type is excluded from history tracking.
+    if (J.ABS.Metadata.SkillExecutionExcludedSkillTypeSet.has(skillTypeId)) return;
+
+    // grab the battler's log and append the new execution entry.
+    const log = this.getSkillExecutionLogByUuid(uuid);
+
+    // push the new execution entry to the end of the log.
+    log.push(new JABS_SkillExecution(skillId, skillTypeId));
+  }
+
+  /**
+   * Queries the skill execution log for a battler and returns a count based on
+   * the given filters and count mode.
+   *
+   * COUNT_MODE values:
+   *  'all'            — total entries matching the scope filter within the window.
+   *  'unique'         — distinct skill ids matching the filter within the window.
+   *  'streak'         — consecutive matching entries from the tail of the log backward.
+   *  'distinct_types' — distinct skill type ids matching the filter within the window.
+   *
+   * @param {string} uuid The uuid of the battler to query.
+   * @param {number} skillId The skill id scope filter (0 = any skill).
+   * @param {number} typeId The skill type id filter (0 = any type).
+   * @param {number} windowSeconds The number of seconds to look back.
+   * @param {string} countMode One of: all | unique | streak | distinct_types
+   * @returns {number} The count result for the given parameters.
+   */
+  querySkillExecutionLog(uuid, skillId, typeId, windowSeconds, countMode)
+  {
+    // grab the log for this battler.
+    const log = this.getSkillExecutionLogByUuid(uuid);
+
+    // streak is computed directly from the log tail — no pre-filter needed.
+    if (countMode === 'streak')
+    {
+      return this.#countSkillExecutionStreak(log, skillId, typeId, windowSeconds);
+    }
+
+    // build the working set: entries within the window that match the scope filter.
+    const workingSet = log.filter(entry =>
+      entry.isWithinWindow(windowSeconds) &&
+      entry.matchesSkillId(skillId) &&
+      entry.matchesTypeId(typeId));
+
+    // apply the appropriate count mode to the working set.
+    switch (countMode)
+    {
+      case 'unique':
+        // count how many distinct skill ids appear in the filtered window.
+        return new Set(workingSet.map(entry => entry.skillId)).size;
+      case 'distinct_types':
+        // count how many distinct skill type ids appear in the filtered window.
+        return new Set(workingSet.map(entry => entry.skillTypeId)).size;
+      case 'all':
+      default:
+        // count every entry in the filtered window.
+        return workingSet.length;
+    }
+  }
+
+  /**
+   * Counts consecutive matching entries from the tail of the log backward.
+   * Iteration stops at the first entry that does not match all filters or
+   * falls outside the window.
+   * @param {JABS_SkillExecution[]} log The full execution log for this battler.
+   * @param {number} skillId The skill id scope filter (0 = any skill).
+   * @param {number} typeId The skill type id filter (0 = any type).
+   * @param {number} windowSeconds The number of seconds to look back.
+   * @returns {number} The length of the consecutive matching streak.
+   */
+  #countSkillExecutionStreak(log, skillId, typeId, windowSeconds)
+  {
+    // track the count of consecutive matching entries.
+    let streak = 0;
+
+    // iterate from the most recent entry backward.
+    for (let i = log.length - 1; i >= 0; i--)
+    {
+      const entry = log[i];
+
+      // stop if this entry is outside the time window.
+      if (entry.isWithinWindow(windowSeconds) === false) break;
+
+      // stop if this entry does not match the scope filters.
+      if (entry.matchesSkillId(skillId) === false) break;
+
+      // stop if this entry does not match the type filter.
+      if (entry.matchesTypeId(typeId) === false) break;
+
+      // this entry is consecutive and valid — count it.
+      streak++;
+    }
+
+    return streak;
+  }
+
+  /**
+   * Ages all skill execution log entries by one second and prunes expired ones.
+   * Gated by a once-per-second throttle timer to avoid per-frame overhead.
+   */
+  updateSkillExecutionLog()
+  {
+    // tick the throttle timer forward by one frame.
+    this._skillExecutionTimer.update();
+
+    // only process the log once per second when the timer completes.
+    if (this._skillExecutionTimer.isTimerComplete() === false) return;
+
+    // grab the maximum window from metadata for pruning decisions.
+    const maxWindow = J.ABS.Metadata.SkillExecutionMaxWindowSeconds;
+
+    // grab the full log for all battlers.
+    const log = this.getSkillExecutionLog();
+
+    // iterate over each battler's log.
+    log.forEach((entries, uuid) =>
+    {
+      // age every entry by one second.
+      entries.forEach(entry => entry.tick());
+
+      // remove entries that have exceeded the global max window.
+      const pruned = entries.filter(entry => entry.isExpired(maxWindow) === false);
+
+      // write the pruned array back to the log for this battler.
+      log.set(uuid, pruned);
+    });
+
+    // reset the throttle timer for the next one-second interval.
+    this._skillExecutionTimer.reset();
+  }
+  //endregion skill execution log
   //endregion update player
 
   //region update ai battlers
@@ -1119,7 +1423,7 @@ class JABS_Engine
    * NOTE: The player's battler gets duplicated once into the "all battlers"
    * collection after the first party cycle. The initial check prevents updating
    * the player battler twice if they are in that collection.
-   * @param {JABS_Battler} battler
+   * @param {JABS_Battler} battler The battler driving this step.
    */
   performAiBattlerUpdate(battler)
   {
@@ -1135,9 +1439,33 @@ class JABS_Engine
       // render battler invincible while processing defeat.
       battler.setInvincible();
 
+      // credit whoever/whatever actually landed the last hit, falling back to the active player
+      // only when nothing was ever recorded (e.g. environmental/scripted deaths).
+      const caster = this.resolveCasterFromLastHit(battler) ?? this.getPlayer1();
+
       // process defeat.
-      this.handleDefeatedTarget(battler, this.getPlayer1());
+      this.handleDefeatedTarget(battler, caster);
     }
+  }
+
+  /**
+   * Resolves the {@link JABS_Battler} that most recently dealt damage to the given target, using
+   * the target's own last-hit record rather than assuming the active player character.
+   * @param {JABS_Battler} target The battler to resolve a killer/hitter for.
+   * @returns {JABS_Battler|undefined} The resolved battler, or undefined if nothing is on record or
+   * the recorded battler is no longer resolvable (e.g. it has since been removed from the map).
+   */
+  resolveCasterFromLastHit(target)
+  {
+    // pull the last-hit record off the underlying battler.
+    const targetBattler = target.getBattler();
+    const lastHitSource = targetBattler.getLastHitSource();
+
+    // nothing has ever hit this battler; there is nothing to resolve.
+    if (!lastHitSource) return undefined;
+
+    // resolve the recorded uuid back to a live map battler.
+    return JABS_AiManager.getBattlerByUuid(lastHitSource.uuid);
   }
 
   /**
@@ -1459,7 +1787,7 @@ class JABS_Engine
 
       if (!JABS_Battler.isGuardSkillById(strikeSkillId))
       {
-        caster.executeGuard(false, JABS_Button.Offhand);
+        caster.executeGuard(false);
       }
     }
 
@@ -1516,12 +1844,13 @@ class JABS_Engine
 
   /**
    * Applies any on-execution effects to the caster based on the actions.
+   * Also records the skill in the caster's execution history log for skill history bonuses.
    * @param {JABS_Battler} caster The battler executing the skill.
    * @param {JABS_Action} primaryAction The 0th index action.
    */
   applyOnExecutionEffects(caster, primaryAction)
   {
-    // retaliation skills are exempt from execution effects.
+    // retaliation skills are exempt from execution effects and history tracking.
     if (primaryAction.isRetaliation()) return;
 
     // pay the primary action's skill costs.
@@ -1529,6 +1858,10 @@ class JABS_Engine
 
     // apply the necessary cooldowns for the action against the caster.
     this.applyCooldownCounters(caster, primaryAction);
+
+    // record this execution in the caster's skill history for history-based bonuses.
+    const skill = primaryAction.getBaseSkill();
+    this.logSkillExecution(caster.getUuid(), skill.id, skill.stypeId);
   }
 
   /**
@@ -1545,11 +1878,8 @@ class JABS_Engine
     // handle the possibility of "freecombo".
     this.handleActionCombo(caster, action);
 
-    // handle the cast animation for this action.
-    this.handleActionCastAnimation(caster, action);
-
-    // handle the one-off on-cast animation on the caster at execution time.
-    this.handleActionOnCastAnimation(caster, action);
+    // fire all on-execute actions.
+    this.onExecuteMapAction(caster, action);
 
     // handle the generation of the action on the map.
     this.handleActionGeneration(caster, action, targetX, targetY);
@@ -1568,6 +1898,23 @@ class JABS_Engine
       // trigger the free combo effect for this action.
       this.checkComboSequence(caster, action);
     }
+  }
+
+  /**
+   * Handles actions that happen as a side effect of executing an action.
+   * @param {JABS_Battler} caster The JABS_Battler executing the JABS action.
+   * @param {JABS_Action} action The JABS action to execute.
+   */
+  onExecuteMapAction(caster, action)
+  {
+    // handle the cast animation for this action.
+    this.handleActionCastAnimation(caster, action);
+
+    // handle the one-off on-cast animation on the caster at execution time.
+    this.handleActionOnCastAnimation(caster, action);
+
+    // handle the on-cast effects like adding or removing a state.
+    this.handleOnCastStateEffects(caster, action);
   }
 
   /**
@@ -1600,6 +1947,40 @@ class JABS_Engine
       // play it once on the caster’s character.
       action.performOnCastAnimation(caster);
     }
+  }
+
+  /**
+   * Handles the on-cast state effects for a JABS action, firing once at press-time
+   * rather than once per target hit.
+   * @param {JABS_Battler} caster The JABS_Battler executing the JABS action.
+   * @param {JABS_Action} action The JABS action being executed.
+   */
+  handleOnCastStateEffects(caster, action)
+  {
+    // grab the underlying Game_Action to access its state-effect methods.
+    const gameAction = action.getAction();
+
+    // apply any on-cast self-states to the caster exactly once, at the moment of press.
+    gameAction.applyOnCastSelfStates();
+
+    // apply any conditional on-cast self-states that require the caster to have a specific state.
+    gameAction.applyOnCastSelfStatesIfAfflicted();
+
+    // remove any on-cast lose-states from the caster exactly once, at the moment of press.
+    gameAction.applyOnCastLoseStates();
+
+    // toggle any <toggleOnExecute> states on the caster exactly once, at the moment of press.
+    gameAction.applyToggleOnExecuteStates();
+
+    // cycle any <toggleGroupOnExecute> state groups on the caster exactly once, at press-time.
+    gameAction.applyToggleGroupOnExecuteStates();
+
+    // force-execute any <onCastExecuteSkill> payload skills exactly once, at the moment of press.
+    gameAction.applyOnCastExecuteSkills(caster);
+
+    // force-execute any <onCastExecuteSkillIfAfflicted> payload skills whose required state is
+    // currently active on the caster, exactly once, at the moment of press.
+    gameAction.applyOnCastExecuteSkillsIfAfflicted(caster);
   }
 
   /**
@@ -1893,13 +2274,16 @@ class JABS_Engine
     }
 
     const casted = castedCardinal;
+
+    // rev() is only ever invoked below with `casted`, which by that point is always one of
+    // 2/4/6/8 (see the outer switch's own default, which already returns before calling rev())-
+    // so every call here matches one of the four explicit cases; there is no unmatched `d`.
     const rev = d =>
     {
       if (d === 2) return 8;
       if (d === 8) return 2;
       if (d === 4) return 6;
-      if (d === 6) return 4;
-      return d;
+      return 4;
     };
 
     if (travelDir !== 1 && travelDir !== 3 && travelDir !== 7 && travelDir !== 9)
@@ -1915,6 +2299,9 @@ class JABS_Engine
     let result;
     switch (casted)
     {
+      // travelDir is already constrained to {1,3,7,9} by the outer guard above, and each case
+      // below's two branches together cover all four values- there is no unmatched travelDir,
+      // so no default arm is needed (nor reachable) in any of these four inner switches.
       case 2:
       {
         switch (travelDir)
@@ -1926,9 +2313,6 @@ class JABS_Engine
           case 7:
           case 9:
             result = rev(casted);
-            break;
-          default:
-            result = casted;
             break;
         }
         break;
@@ -1945,9 +2329,6 @@ class JABS_Engine
           case 9:
             result = rev(casted);
             break;
-          default:
-            result = casted;
-            break;
         }
         break;
       }
@@ -1963,9 +2344,6 @@ class JABS_Engine
           case 7:
             result = rev(casted);
             break;
-          default:
-            result = casted;
-            break;
         }
         break;
       }
@@ -1980,9 +2358,6 @@ class JABS_Engine
           case 1:
           case 3:
             result = rev(casted);
-            break;
-          default:
-            result = casted;
             break;
         }
         break;
@@ -2220,21 +2595,44 @@ class JABS_Engine
    */
   applyCooldownCounters(caster, action)
   {
-    this.applyPlayerCooldowns(caster, action);
+    this.applyCasterCooldowns(caster, action);
   }
 
   /**
-   * Applies per-slot (or unique) skill cooldowns for the player after an action, then optionally stamps the
+   * Applies per-slot (or unique) skill cooldowns for the caster after an action, then optionally stamps the
    * battler-wide GCD. When global cooldown is enabled and the skill is subject to it,
    * {@link J.ABS.Globals.GlobalCooldownKey} is set to the computed duration so other GCD-subject skills cannot fire
    * until it elapses.
-   * @param {JABS_Battler} caster The player.
+   * @param {JABS_Battler} caster The battler (player or enemy) that executed the action.
    * @param {JABS_Action} action The JABS action to execute.
    */
-  applyPlayerCooldowns(caster, action)
+  applyCasterCooldowns(caster, action)
+  {
+    const skill = action.getBaseSkill();
+
+    // stamp the skill's own normal effective cooldown onto whichever slot(s) it occupies.
+    this.applyCooldownValueForSkill(caster, action, action.getCooldown());
+
+    if (JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown(skill))
+    {
+      const gcdFrames = JABS_GlobalCooldown.framesForSkill(skill);
+      const reducedFrames = JABS_GlobalCooldown.reducedFramesForCaster(caster, gcdFrames);
+      caster.setCooldownCounter(J.ABS.Globals.GlobalCooldownKey, reducedFrames);
+    }
+  }
+
+  /**
+   * Stamps a specific cooldown value onto whichever slot(s) the given action's skill occupies.
+   * Shared between normal post-execution cooldown application (using the skill's own effective
+   * cooldown) and interrupt cooldown penalties (using a scaled value)- both need the identical
+   * unique-vs-shared-cooldown slot resolution, just with a different value to apply.
+   * @param {JABS_Battler} caster The battler whose cooldown(s) to stamp.
+   * @param {JABS_Action} action The JABS action whose skill/cooldown-type is being stamped.
+   * @param {number} cooldownValue The cooldown duration, in frames, to apply.
+   */
+  applyCooldownValueForSkill(caster, action, cooldownValue)
   {
     const cooldownType = action.getCooldownType();
-    const cooldownValue = action.getCooldown();
     const skill = action.getBaseSkill();
 
     // if the skill has a unique cooldown functionality,
@@ -2243,6 +2641,9 @@ class JABS_Engine
     {
       // if the skill is unique, only apply the cooldown to the slot assigned.
       caster.setCooldownCounter(cooldownType, cooldownValue);
+
+      // stamp the overlay mode so the HUD knows how to display the lock icon for this cycle.
+      this.applyComboModeForSkill(caster, cooldownType, skill);
     }
     else
     {
@@ -2257,14 +2658,61 @@ class JABS_Engine
         if (battler.resolveEquippedSkillId(skillSlot.id) === skill.id)
         {
           caster.setCooldownCounter(skillSlot.key, cooldownValue);
+
+          // stamp the overlay mode on each affected slot.
+          this.applyComboModeForSkill(caster, skillSlot.key, skill);
         }
       });
     }
+  }
 
-    if (JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown(skill))
+  /**
+   * Stamps the HUD overlay combo mode on a cooldown from the skill that just fired.
+   * Called once per affected slot key immediately after the slot's cooldown counter is set.
+   *
+   * Modes (written to {@link JABS_Cooldown.comboMode}):
+   *   'none'     — skill has no combo link; the lock icon shows immediately.
+   *   'expiring' — skill has a combo link with an authored expire window; lock shows after the window closes.
+   *   'infinite' — skill has a combo link with no expire window; lock never shows (the whole CD is the window).
+   *
+   * @param {JABS_Battler} caster The battler whose cooldown to stamp.
+   * @param {string} cooldownKey The slot key of the cooldown to stamp.
+   * @param {RPG_Skill} skill The skill that was just executed.
+   */
+  applyComboModeForSkill(caster, cooldownKey, skill)
+  {
+    // fetch the cooldown object for this slot.
+    const cooldown = caster.getCooldown(cooldownKey);
+
+    // bail if the cooldown somehow does not exist for this key.
+    if (!cooldown) return;
+
+    // determine the mode from the skill's authored combo data.
+    // jabsComboSkillId and jabsComboExpire both dereference jabsComboAction, which is null when the
+    // skill has no <combo> tag — guard against null before touching any of the sub-properties.
+    if (!skill.jabsComboAction)
     {
-      const gcdFrames = JABS_GlobalCooldown.framesForSkill(skill);
-      caster.setCooldownCounter(J.ABS.Globals.GlobalCooldownKey, gcdFrames);
+      // no combo tag on this skill; show the lock icon right away.
+      cooldown.setComboMode('none');
+    }
+    else if (skill.jabsComboExpire > 0)
+    {
+      // combo with a hard expiry window; show the lock icon once the window closes.
+      cooldown.setComboMode('expiring');
+
+      // pre-arm both the delay and the expiry window at fire time so the HUD has no gap between
+      // "button pressed" and "hitbox registers its first collision."
+      // updateComboSequence will overwrite these with the same values on hit — harmless redundancy.
+      cooldown.setComboFrames(skill.jabsComboDelay);
+      cooldown.setComboExpireFrames(skill.jabsComboExpire);
+    }
+    else
+    {
+      // combo with no expiry; the entire cooldown acts as the window.
+      cooldown.setComboMode('infinite');
+
+      // pre-arm the delay so the HUD knows the combo is incoming even before the first hit.
+      cooldown.setComboFrames(skill.jabsComboDelay);
     }
   }
 
@@ -2589,23 +3037,29 @@ class JABS_Engine
       isUnparryable = true;
     }
 
-    // check whether or not this action was parried.
+    // check whether or not this action triggers a defensive outcome.
     const caster = action.getCaster();
 
-    let willParry = false;
     if (isUnparryable === false && this.canAttemptImplicitParry(target))
     {
-      willParry = this.checkParry(caster, target, action);
-    }
-
-    // check if the action is parryable and was parried.
-    if (willParry)
-    {
-      // when an action is parried, it gets completely undone.
-      result.clear();
-
-      // flag the result for being parried.
-      result.parried = true;
+      // full implicit parry is checked first; it is the rarer, more powerful outcome.
+      const willFullParry = this.checkImplicitFullParry(caster, target, action);
+      if (willFullParry)
+      {
+        // a full implicit parry completely negates the action.
+        result.clear();
+        result.parried = true;
+      }
+      else
+      {
+        // only check for a glancing blow when the full parry did not fire.
+        const willGlance = this.checkGlancingBlow(caster, target, action);
+        if (willGlance)
+        {
+          // a glancing blow still lands but deals reduced damage; handled in executeJabsAction.
+          result.glancing = true;
+        }
+      }
     }
 
     // check if the action was guarded.
@@ -2621,6 +3075,32 @@ class JABS_Engine
     // apply the action to the target.
     const gameAction = action.getAction();
     gameAction.apply(targetBattler);
+
+    // record this as the last thing that hit the target, provided it actually dealt damage- a miss
+    // or full parry should not overwrite an earlier, real hit.
+    const dealtDamage = result.hpDamage > 0 || result.mpDamage > 0 || result.tpDamage > 0;
+    if (dealtDamage)
+    {
+      const casterUuid = action.getCaster()
+        .getBattler()
+        .getUuid();
+      targetBattler.setLastHitSource('skill', casterUuid, gameAction.item().id);
+    }
+
+    // if the action killed the target, snapshot the death context while the action is still live.
+    if (targetBattler.isDead())
+    {
+      const elementIds = gameAction.getApplicableElements(targetBattler);
+      let hitType;
+      if (gameAction.isPhysical())      hitType = 'physical';
+      else if (gameAction.isMagical())  hitType = 'magical';
+      else                              hitType = 'certain';
+      const { stypeId } = gameAction.item();
+      const killerUuid = action.getCaster()
+        .getBattler()
+        .getUuid();
+      targetBattler.setDeathContext(new JABS_DeathContext(elementIds, hitType, stypeId, killerUuid));
+    }
 
     // handle any post-execution effects.
     this.postExecuteSkillEffects(action, target);
@@ -2742,6 +3222,87 @@ class JABS_Engine
 
     // apply the aggro to the target.
     target.addUpdateAggro(attacker.getUuid(), aggro);
+
+    // apply any percent scaling of the attacker's own now-current standing aggro.
+    this.applyAggroPercentEffect(action, attacker, target);
+
+    // apply any "not my aggro" redirection from the underlying skill.
+    this.applyNotMyAggroEffects(action, attacker, target);
+  }
+
+  /**
+   * Applies any {@code <aggroPercent:VAL>} scaling from the underlying skill to the attacker's own
+   * already-standing aggro entry on the target. Unlike {@code <aggroMultiplier>}, which scales the
+   * newly-computed chain result for just this hit, this scales the entry's full current total-
+   * including everything accumulated from prior hits.
+   * @param {JABS_Action} action The JABS action containing the action data.
+   * @param {JABS_Battler} attacker The battler that executed the action.
+   * @param {JABS_Battler} target The target having the action applied against.
+   */
+  applyAggroPercentEffect(action, attacker, target)
+  {
+    // grab the percent scaling amount from the underlying skill.
+    const percent = action.aggroPercent();
+
+    // if it's not present, there is nothing to scale.
+    if (percent === 0) return;
+
+    // usually already exists- addUpdateAggro() just created or updated it- but a locked aggro that
+    // never previously existed is skipped by addUpdateAggro entirely, so this can still be absent.
+    const ownAggro = target.aggroExists(attacker.getUuid());
+    if (!ownAggro) return;
+
+    // scale the entry's current total: aggro *= (1 + percent/100).
+    ownAggro.modAggro(ownAggro.aggro * (percent / 100));
+  }
+
+  /**
+   * Applies any {@code <notMyAggro:VAL>}/{@code <notMyAggroPercent:VAL>} redirection from the
+   * underlying skill to every OTHER battler's standing aggro on the target- same team as the
+   * attacker, attacker's own entry excluded. Unlike {@code <aggroMultiplier>} (a single scalar
+   * applied once to the attacker's own newly-computed aggro), this walks N distinct existing
+   * aggro entries and adjusts each independently off its own current value.
+   * @param {JABS_Action} action The JABS action containing the action data.
+   * @param {JABS_Battler} attacker The battler that executed the action.
+   * @param {JABS_Battler} target The target having the action applied against.
+   */
+  applyNotMyAggroEffects(action, attacker, target)
+  {
+    // grab the flat and percent redirection amounts from the underlying skill.
+    const flat = action.notMyAggro();
+    const percent = action.notMyAggroPercent();
+
+    // if neither is present, there is nothing to redirect.
+    if (flat === 0 && percent === 0) return;
+
+    // walk every aggro entry currently tracked on the target.
+    target.getAllAggros()
+      .forEach(otherAggro =>
+      {
+        // skip the attacker's own entry- this effect only touches OTHER battlers' aggro.
+        if (otherAggro.uuid() === attacker.getUuid()) return;
+
+        // resolve the battler behind this aggro entry to check team membership.
+        const otherBattler = JABS_AiManager.getBattlerByUuid(otherAggro.uuid());
+
+        // skip stale entries whose battler no longer exists.
+        if (!otherBattler) return;
+
+        // only redirect aggro belonging to the attacker's own team.
+        if (JABS_TeamRules.isFriendly(attacker.getTeam(), otherBattler.getTeam()) === false) return;
+
+        // apply the flat adjustment first.
+        if (flat !== 0)
+        {
+          otherAggro.modAggro(flat);
+        }
+
+        // apply the percent adjustment against the now-current value: aggro *= (1 + percent/100).
+        if (percent !== 0)
+        {
+          otherAggro.modAggro(otherAggro.aggro * (percent / 100));
+        }
+      });
   }
 
   /**
@@ -2797,6 +3358,7 @@ class JABS_Engine
     }
 
     this.checkKnockback(action, target);
+    this.checkInterrupt(action, target);
     this.triggerAlert(caster, target);
 
     // if the attacker and the target are the same team, then don't set that as "last hit".
@@ -2849,6 +3411,15 @@ class JABS_Engine
     // multiply the knockback by the remaining effectiveness (100 - resistance).
     knockback *= ((100 - targetKnockbackResist) / 100);
 
+    // amplify by the caster's unconditional flat amp, this skill's own amp, and however many
+    // nearby enemies the caster's own proximity tags detect- all three sum into one multiplier.
+    const caster = action.getCaster();
+    const totalAmpPct = this.getKnockbackAmplificationPct(caster, action);
+    if (totalAmpPct !== 0)
+    {
+      knockback *= (1 + (totalAmpPct / 100));
+    }
+
     const targetSprite = target.getCharacter();
 
     // check if the knockback is 0, or the action is direct.
@@ -2882,45 +3453,52 @@ class JABS_Engine
         break;
     }
 
-    const maxX = targetSprite.x + xPlus;
-    const maxY = targetSprite.y + yPlus;
-    let realX = targetSprite.x;
-    let realY = targetSprite.y;
-    let canPass = true;
-
-    // dynamically test each square to ensure you don't cross any unpassable tiles.
-    while (canPass && (realX !== maxX || realY !== maxY))
+    // a skill tagged with <ignoreTerrain> sails straight to the computed destination,
+    // crossing pits/gaps/whatever else would normally halt the tile-by-tile walk below.
+    if (action.getBaseSkill().jabsIgnoreTerrain)
     {
-      switch (knockbackDirection)
-      {
-        case J.ABS.Directions.UP:
-          realY--;
-          canPass = targetSprite.canPass(realX, realY, knockbackDirection);
-          if (!canPass) realY++;
-          break;
-        case J.ABS.Directions.DOWN:
-          realY++;
-          canPass = targetSprite.canPass(realX, realY, knockbackDirection);
-          if (!canPass) realY--;
-          break;
-        case J.ABS.Directions.LEFT:
-          realX--;
-          canPass = targetSprite.canPass(realX, realY, knockbackDirection);
-          if (!canPass) realX++;
-          break;
-        case J.ABS.Directions.RIGHT:
-          realX++;
-          canPass = targetSprite.canPass(realX, realY, knockbackDirection);
-          if (!canPass) realX--;
-          break;
-        default:
-          canPass = false;
-          break;
-      }
+      targetSprite.jump(xPlus, yPlus);
+      return;
     }
 
+    // otherwise, walk tile-by-tile toward the destination, stopping at the last passable tile-
+    // shared with pull-forward and terrain-respecting gap-close so this behavior is consistent
+    // everywhere forced displacement happens.
+    const knockbackDistance = Math.max(Math.abs(xPlus), Math.abs(yPlus));
+    const [ dx, dy ] = targetSprite.walkInDirectionClamped(knockbackDirection, knockbackDistance);
+
     // execute the jump to the new destination.
-    targetSprite.jump(realX - targetSprite.x, realY - targetSprite.y);
+    targetSprite.jump(dx, dy);
+  }
+
+  /**
+   * Checks whether this landed hit should interrupt the target's in-flight cast/channel.
+   * Requires the attacking skill to carry `<interrupt:MAGNIFIER>`, and the target to be neither
+   * skill-specifically immune (`<thisCannotBeInterrupted>` on its own in-flight skill) nor
+   * battler-wide immune (`<cannotBeInterrupted>` from any of its own note sources).
+   * @param {JABS_Action} action The action that just landed a hit.
+   * @param {JABS_Battler} target The map battler that was hit.
+   */
+  checkInterrupt(action, target)
+  {
+    // only a target currently casting/channeling has anything to interrupt.
+    if (!target.isCastingOrChanneling()) return;
+
+    // the attacking skill must actually carry interrupt capability.
+    const magnifier = action.getBaseSkill().jabsInterruptMagnifier;
+    if (!magnifier) return;
+
+    // a skill-specific immunity on the interrupted skill itself takes priority.
+    const decidedActions = target.getDecidedAction();
+    const interruptedSkill = decidedActions
+      ? decidedActions.at(0).getBaseSkill()
+      : null;
+    if (interruptedSkill && interruptedSkill.jabsThisCannotBeInterrupted) return;
+
+    // battler-wide immunity, sourced from any of the target's own note sources.
+    if (target.getBattler().isImmuneToInterrupt()) return;
+
+    target.interrupt(magnifier, false);
   }
 
   canBeKnockedBack(action, target)
@@ -2944,6 +3522,84 @@ class JABS_Engine
   }
 
   /**
+   * Computes the total outgoing knockback percent bonus from every amplification source: the
+   * caster's unconditional `<knockbackAmp:PCT>` tags, this specific skill's `<thisKnockbackAmp:PCT>`
+   * tag, and the caster's conditional `<proximityKnockback:[RADIUS, PCT]>` tags. All three sum
+   * into one final multiplier applied once to outgoing knockback.
+   * @param {JABS_Battler} caster The battler executing the knockback-dealing action.
+   * @param {JABS_Action} action The action potentially knocking the target back.
+   * @returns {number} The total percent bonus to apply to outgoing knockback; 0 if untagged.
+   */
+  getKnockbackAmplificationPct(caster, action)
+  {
+    return this.getFlatKnockbackAmpPct(caster)
+      + this.getThisKnockbackAmpPct(action)
+      + this.getProximityKnockbackBonusPct(caster);
+  }
+
+  /**
+   * Sums every `<knockbackAmp:PCT>` tag from the caster's own note sources- an unconditional
+   * amplifier with no proximity requirement, unlike `<proximityKnockback>`.
+   * @param {JABS_Battler} caster The battler executing the knockback-dealing action.
+   * @returns {number} The total flat percent bonus to apply to outgoing knockback; 0 if untagged.
+   */
+  getFlatKnockbackAmpPct(caster)
+  {
+    const casterNotes = caster.getBattler()
+      .getAllNotes();
+
+    return RPGManager.getSumFromAllNotesByRegex(casterNotes, J.ABS.RegExp.KnockbackAmp) ?? 0;
+  }
+
+  /**
+   * Reads the `<thisKnockbackAmp:PCT>` tag from the executing skill's own note only- fires only
+   * when this specific skill is the one dealing the knockback, independent of the caster-wide
+   * `<knockbackAmp>` tag.
+   * @param {JABS_Action} action The action potentially knocking the target back.
+   * @returns {number} The percent bonus to apply to outgoing knockback; 0 if untagged.
+   */
+  getThisKnockbackAmpPct(action)
+  {
+    const pct = RPGManager.getNumberFromNoteByRegex(
+      action.getBaseSkill(),
+      J.ABS.RegExp.ThisKnockbackAmp,
+      true
+    );
+
+    return pct ?? 0;
+  }
+
+  /**
+   * Computes the total knockback percent bonus from every `<proximityKnockback:[RADIUS, PCT]>`
+   * tag on the caster's own notes, each scaled by however many opposing battlers are currently
+   * within that specific tag's radius. Multiple tags (different sources, different radii) all
+   * contribute independently and sum together.
+   * @param {JABS_Battler} caster The battler executing the knockback-dealing action.
+   * @returns {number} The total percent bonus to apply to outgoing knockback; 0 if untagged.
+   */
+  getProximityKnockbackBonusPct(caster)
+  {
+    // collect every [RADIUS, PCT] pair from all of the caster's note sources.
+    const allPairs = caster.getBattler()
+      .getAllNotes()
+      .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.ProximityKnockback));
+
+    // no tags anywhere means no bonus to apply.
+    if (!allPairs.length) return 0;
+
+    // sum each tag's contribution: its own percent, times however many opposing battlers
+    // are within that tag's own radius right now.
+    let totalPct = 0;
+    allPairs.forEach(([ radius, percent ]) =>
+    {
+      const nearbyEnemyCount = JABS_AiManager.getOpposingBattlersWithinRange(caster, radius).length;
+      totalPct += percent * nearbyEnemyCount;
+    });
+
+    return totalPct;
+  }
+
+  /**
    * Determines if there is a combo action that should succeed this skill.
    * @param {JABS_Battler} caster The battler that casted this skill.
    * @param {JABS_Action} action The action that contains the skill to check for combos.
@@ -2955,6 +3611,7 @@ class JABS_Engine
     {
       this.updateComboSequence(caster, action);
 
+      // exit early without a payload.
       return;
     }
 
@@ -2981,6 +3638,9 @@ class JABS_Engine
     // drop back to starter routing on this cooldown key; AI pacing latch dies with the chain.
     caster.setComboNextActionId(cooldownKey, 0);
     caster.clearAiComboHumanizedReadyFrame();
+
+    // clear any active expiry window; the chain is over so the window is no longer meaningful.
+    caster.setComboExpireFrames(cooldownKey, 0);
   }
 
   /**
@@ -3021,21 +3681,16 @@ class JABS_Engine
     const skill = action.getBaseSkill();
     const {
       jabsComboSkillId,
-      jabsComboDelay
+      jabsComboDelay,
+      jabsComboExpire
     } = skill;
 
     // determine which slot to apply cooldowns to.
     const cooldownKey = action.getCooldownType();
 
-    // clarifies that this check is whether or not the next combo skill is a continuation of the combo.
-    const isComboAction = (caster.getComboNextActionId(cooldownKey) !== jabsComboSkillId);
-
-    // check if this is actually a combo action to the last action.
-    if (isComboAction)
+    // advancing to a new step in the combo chain — signal the AI state machine to move to the action phase.
+    if (caster.getComboNextActionId(cooldownKey) !== jabsComboSkillId)
     {
-      // its a combo skill, so also extend the base cooldown by the combo cooldown.
-      caster.modCooldownCounter(cooldownKey, jabsComboDelay);
-
       caster.setPhase(2);
     }
 
@@ -3043,13 +3698,16 @@ class JABS_Engine
     caster.setComboFrames(cooldownKey, jabsComboDelay);
     caster.setComboNextActionId(cooldownKey, jabsComboSkillId);
 
+    // apply an expiry window if one was authored; zero means no deadline (cleared immediately if set).
+    caster.setComboExpireFrames(cooldownKey, jabsComboExpire);
+
     // arm fair pacing so AI does not mash the follow-up at the earliest legal frame every time.
     caster.setAiComboHumanizedReadyFrame(JABS_Engine.computeAiComboHumanizedReadyFrameForSkill(skill));
   }
 
   /**
    * Whether implicit (facing + GRD vs HIT) parry may roll for this target.
-   * While guarding, only explicit timed parry applies; casting and dashing
+   * While guarding, only explicit timed parry applies; casting/channeling and dashing
    * suppress implicit parry only.
    * @param {JABS_Battler} target The defender.
    * @returns {boolean} True if implicit parry is allowed this frame.
@@ -3058,7 +3716,7 @@ class JABS_Engine
   {
     if (target.guarding()) return false;
 
-    if (target.isCasting()) return false;
+    if (target.isCastingOrChanneling()) return false;
 
     const character = target.getCharacter();
     if (character && character.isDashing()) return false;
@@ -3068,40 +3726,74 @@ class JABS_Engine
 
   /**
    * Calculates whether or not the attack was parried by implicit (passive) parry.
-   * Uses ratio of attacker pressure A to defender pressure D with dominance
-   * multiplier M from plugin metadata. Baseline pressure uses floor + per-level on each
-   * side: attacker from caster level, defender from target level. Caller must use
-   * {@link #canAttemptImplicitParry} first; timed parry while guarding is handled in
-   * {@link Game_Action.handleGuardEffects}.
+   * Calculates whether the implicit parry roll succeeds as a full negate.
+   * Uses the standard A/D pressure formula scaled down by {@link J.ABS.Metadata.ImplicitParryScaleFactor},
+   * so full negation is rarer than the broad defensive-event chance. Prerequisites are checked
+   * via {@link #isParryPossible} first; active timed parry while guarding is separate
+   * ({@link Game_Action.handleGuardEffects}).
    * @param {JABS_Battler} caster The battler performing the action.
    * @param {JABS_Battler} target The target the action is against.
    * @param {JABS_Action} action The action being executed.
-   * @returns {boolean} True if the action was parried, false otherwise.
+   * @returns {boolean} True if the action was fully parried (complete negate), false otherwise.
    */
-  checkParry(caster, target, action)
+  checkImplicitFullParry(caster, target, action)
   {
-    // cannot parry if not facing target.
-    if (!this.isParryPossible(caster, target)) return false;
-
-    const ignoreParryPercent = action.getBaseSkill().jabsIgnoreParry ?? 0;
-    const parryChancePercent = JABS_Engine.implicitParryChancePercent(caster, target, ignoreParryPercent);
-
-    if (parryChancePercent >= 100)
-    {
-      return true;
-    }
-
-    if (parryChancePercent <= 0)
+    // prerequisites must be met before rolling for either defensive outcome.
+    if (this.isParryPossible(caster, target) === false)
     {
       return false;
     }
 
-    const rng = Math.randomInt(100) + 1;
-    return rng <= parryChancePercent;
+    const ignoreParryPercent = action.getBaseSkill().jabsIgnoreParry ?? 0;
+
+    // the base formula gives the raw chance; scale it down so full negation is rare.
+    const rawChance = JABS_Engine.implicitParryChancePercent(caster, target, ignoreParryPercent);
+    const scaleFactor = J.ABS.Metadata.ImplicitParryScaleFactor;
+    const parryChancePercent = Math.round(rawChance * scaleFactor);
+
+    // roles are reversed from an offensive roll: the defender wants this to succeed (they're
+    // the one parrying), while the attacker's own curse works against them getting parried.
+    const defenderBattler = target.getBattler();
+    const defenderPositiveRolls = defenderBattler.getPositiveRolls();
+    const attackerNegativeRolls = caster.getBattler().getNegativeRollsForSkill(action.getBaseSkill());
+
+    // chanceIn100 already treats <=0 as an automatic failure and a 100+ roll always succeeds
+    // (every 1-100 roll qualifies), so no separate edge-case branches are needed here.
+    return RPGManager.fateOf100(defenderBattler, parryChancePercent, 1 + defenderPositiveRolls, attackerNegativeRolls);
   }
 
   /**
-   * Prerequisites for implicit {@link #checkParry} (facing, GRD, attacker ignore-parry states).
+   * Calculates whether the implicit parry roll succeeds as a glancing blow.
+   * Uses the glancing blow dominance band (separate M from full parry) so the two checks
+   * can be tuned independently. Only called when {@link #checkImplicitFullParry} did not fire.
+   * @param {JABS_Battler} caster The battler performing the action.
+   * @param {JABS_Battler} target The target the action is against.
+   * @param {JABS_Action} action The action being executed.
+   * @returns {boolean} True if the hit is a glancing blow, false otherwise.
+   */
+  checkGlancingBlow(caster, target, action)
+  {
+    // prerequisites must be met (same gates as full parry; glancing is also a defensive outcome).
+    if (this.isParryPossible(caster, target) === false)
+    {
+      return false;
+    }
+
+    const ignoreParryPercent = action.getBaseSkill().jabsIgnoreParry ?? 0;
+    const glancingChancePercent = JABS_Engine.glancingBlowChancePercent(caster, target, ignoreParryPercent);
+
+    // same role reversal as checkImplicitFullParry: the defender wants this to succeed.
+    const defenderBattler = target.getBattler();
+    const defenderPositiveRolls = defenderBattler.getPositiveRolls();
+    const attackerNegativeRolls = caster.getBattler().getNegativeRollsForSkill(action.getBaseSkill());
+
+    // chanceIn100 already treats <=0 as an automatic failure and a 100+ roll always succeeds.
+    return RPGManager.fateOf100(defenderBattler, glancingChancePercent, 1 + defenderPositiveRolls, attackerNegativeRolls);
+  }
+
+  /**
+   * Prerequisites for implicit defensive events: {@link #checkImplicitFullParry} and
+   * {@link #checkGlancingBlow} (facing, GRD > 0, attacker ignore-parry states).
    * @param {JABS_Battler} caster The one executing the skill against the target.
    * @param {JABS_Battler} target The one being attacked by the caster.
    */
@@ -3206,21 +3898,22 @@ class JABS_Engine
     if (targetBattler.isActor())
     {
       // handle player retaliations.
-      this.handleActorRetaliation(targetBattler);
+      this.handleActorRetaliation(targetBattler, action);
     }
     // they must be an enemy.
     else
     {
       // handle non-player retaliations.
-      this.handleEnemyRetaliation(targetBattler);
+      this.handleEnemyRetaliation(targetBattler, action);
     }
   }
 
   /**
    * Executes any retaliation the player may have when receiving a hit.
    * @param {JABS_Battler} battler The battler doing the retaliating.
+   * @param {JABS_Action} triggeringAction The action that struck the battler.
    */
-  handleActorRetaliation(battler)
+  handleActorRetaliation(battler, triggeringAction)
   {
     // grab the action result.
     const actionResult = battler.getBattler()
@@ -3254,13 +3947,7 @@ class JABS_Engine
     if (retaliationSkills.length)
     {
       // ...perform them!
-      retaliationSkills.forEach(skillChance =>
-      {
-        if (skillChance.shouldTrigger())
-        {
-          this.forceMapAction(battler, skillChance.skillId, true);
-        }
-      });
+      this.executeRetaliationSkills(battler, retaliationSkills, triggeringAction);
     }
   }
 
@@ -3274,7 +3961,7 @@ class JABS_Engine
     if (!this.canBattlerParry(battler)) return false;
 
     // execute the counterparry.
-    this.doCounterParry(battler, JABS_Button.Offhand);
+    this.doCounterParry(battler);
 
     // indicate we did a counterparry.
     return true;
@@ -3306,7 +3993,7 @@ class JABS_Engine
     if (needsCounterGuard)
     {
       // execute the counterguard.
-      this.doCounterGuard(battler, JABS_Button.Offhand);
+      this.doCounterGuard(battler);
 
       // indicate we did counterguard.
       return true;
@@ -3326,42 +4013,46 @@ class JABS_Engine
     // stop processing if we cannot autocounter.
     if (!this.canAutoCounter(battler)) return;
 
+    // this is a purely self-scoped proc- the counter-user is both the roller and the recipient.
+    const counterBattler = battler.getBattler();
+    const positiveRolls = 1 + counterBattler.getPositiveRolls();
+    const negativeRolls = counterBattler.getNegativeRolls();
+
     // check if RNG favors you.
-    const shouldAutoCounter = battler.getBattler().cnt > Math.random();
+    const autoCounterChance = counterBattler.cnt * 100;
+    const shouldAutoCounter = RPGManager.fateOf100(counterBattler, autoCounterChance, positiveRolls, negativeRolls);
 
     // if RNG did actually favor you, then proceed.
     if (shouldAutoCounter)
     {
       // perform the autocounter.
-      this.doAutoCounter(battler, JABS_Button.Offhand);
+      this.doAutoCounter(battler);
     }
   }
 
   /**
    * Commands the {@link JABS_Battler} to perform an autocounter.
    * This will attempt to execute all counterguard/counterparry skill ids available
-   * in the given slot.
+   * to the battler's currently resolved guard skill.
    * @param {JABS_Battler} battler The battler doing the autocounter.
-   * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
    */
-  doAutoCounter(battler, slot = JABS_Button.Offhand)
+  doAutoCounter(battler)
   {
     // execute counterparrying.
-    this.doCounterParry(battler, slot);
+    this.doCounterParry(battler);
 
     // execute counterguarding.
-    this.doCounterGuard(battler, slot);
+    this.doCounterGuard(battler);
   }
 
   /**
    * Executes any counterguard skills available to the given battler.
    * @param {JABS_Battler} battler The battler to perform the skills.
-   * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
    */
-  doCounterGuard(battler, slot = JABS_Button.Offhand)
+  doCounterGuard(battler)
   {
     // destructure out the guard and parry ids.
-    const { counterGuardIds } = battler.getGuardData(slot);
+    const { counterGuardIds } = battler.getGuardData();
 
     // check if we even have any skills to counterguard with.
     if (counterGuardIds.length)
@@ -3374,12 +4065,11 @@ class JABS_Engine
   /**
    * Executes any counterparry skills available to the given battler.
    * @param {JABS_Battler} battler The battler to perform the skills.
-   * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
    */
-  doCounterParry(battler, slot = JABS_Button.Offhand)
+  doCounterParry(battler)
   {
     // destructure out the parry ids.
-    const { counterParryIds } = battler.getGuardData(slot);
+    const { counterParryIds } = battler.getGuardData();
 
     // check if we even have any skills to counterparry with.
     if (counterParryIds.length)
@@ -3396,8 +4086,8 @@ class JABS_Engine
    */
   canAutoCounter(battler)
   {
-    // shorthand the guard data from your offhand.
-    const guardData = battler.getGuardData(JABS_Button.Offhand);
+    // shorthand the guard data currently resolved for this battler.
+    const guardData = battler.getGuardData();
 
     // if we have no guard data, don't try to autocounter.
     if (!guardData) return false;
@@ -3413,7 +4103,12 @@ class JABS_Engine
    * Executes any retaliation the enemy may have when receiving a hit at any time.
    * @param {JABS_Battler} enemy The enemy's `JABS_Battler`.
    */
-  handleEnemyRetaliation(enemy)
+  /**
+   * Executes any retaliation an enemy may have when receiving a hit.
+   * @param {JABS_Battler} enemy The enemy doing the retaliating.
+   * @param {JABS_Action} triggeringAction The action that struck the enemy.
+   */
+  handleEnemyRetaliation(enemy, triggeringAction)
   {
     // assumes enemy battler is enemy.
     const retaliationSkills = enemy.getBattler()
@@ -3423,14 +4118,94 @@ class JABS_Engine
     if (retaliationSkills.length)
     {
       // ...perform them!
-      retaliationSkills.forEach(skillChance =>
-      {
-        if (skillChance.shouldTrigger())
-        {
-          this.forceMapAction(enemy, skillChance.skillId, true);
-        }
-      });
+      this.executeRetaliationSkills(enemy, retaliationSkills, triggeringAction);
     }
+  }
+
+  /**
+   * Fires all retaliation skills that pass their chance roll and hit type filter,
+   * stamping the triggering damage onto each outgoing action so payload formulas
+   * can reference `d` (HP), `m` (MP), and `t` (TP).
+   * @param {JABS_Battler} retaliator The battler firing the retaliation skills.
+   * @param {JABS_OnChanceEffect[]} retaliationSkills The retaliation skill candidates.
+   * @param {JABS_Action} triggeringAction The action that struck the retaliator.
+   */
+  executeRetaliationSkills(retaliator, retaliationSkills, triggeringAction)
+  {
+    // grab the incoming skill's hit type for filtering.
+    const incomingHitType = triggeringAction.getBaseSkill().hitType;
+
+    // grab the damage values from the result to stamp onto outgoing actions.
+    const { hpDamage, mpDamage, tpDamage } = retaliator.getBattler().result();
+
+    retaliationSkills.forEach(skillChance =>
+    {
+      // skip if the hit type filter doesn't match.
+      if (!skillChance.matchesHitType(incomingHitType)) return;
+
+      // this is a purely self-scoped proc- the retaliator is both the roller and the recipient
+      // of "do I retaliate"; the retaliation attack itself gets its own hit/crit/state rolls.
+      const retaliatorBattler = retaliator.getBattler();
+      const skill = skillChance.baseSkill(retaliatorBattler);
+      const positiveRolls = 1 + retaliatorBattler.getPositiveRollsForSkill(skill);
+      const negativeRolls = retaliatorBattler.getNegativeRollsForSkill(skill);
+
+      // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
+      const procCount = skillChance.resolveProcCount(positiveRolls, negativeRolls, retaliatorBattler);
+
+      // fire the whole retaliation once per success- each iteration builds fresh actions, since
+      // a JABS_Action is single-use once executed.
+      for (let i = 0; i < procCount; i++)
+      {
+        // build the outgoing retaliation actions.
+        const retaliationActions = retaliator.createJabsActionFromSkill(
+          skillChance.skillId,
+          JABS_ActionOptions.Builder().setIsRetaliation(true).build()
+        );
+
+        // stamp the triggering damage onto each action so formulas can use d/m/t.
+        retaliationActions.forEach(retaliationAction =>
+          retaliationAction.getAction().setTriggerDamage(hpDamage, mpDamage, tpDamage));
+
+        // for direct retaliations, enforce proximity before firing — the normal skill-use gate
+        // is bypassed by retaliations, so without this check a direct skill hits at any range.
+        const attackerBattler = triggeringAction.getCaster();
+        const attackerDistance = retaliator.distanceToDesignatedTarget(attackerBattler);
+        const directRetaliationActions = retaliationActions.filter(a => a.isDirectAction());
+        const blockedByProximity = directRetaliationActions.some(
+          a => attackerDistance > a.getProximity()
+        );
+
+        if (blockedByProximity) continue;
+
+        // for direct actions, freeze the target location on the action options so
+        // syncDirectActionSpriteToCaster leaves the sprite at the attacker's tile
+        // instead of body-anchoring it to the retaliator every frame.
+        const isAnyDirect = retaliationActions.some(a => a.isDirectAction());
+        if (isAnyDirect)
+        {
+          const attackerX = triggeringAction.getCaster().getX();
+          const attackerY = triggeringAction.getCaster().getY();
+          const frozenLocation = JABS_Location.Builder().setX(attackerX).setY(attackerY).build();
+          const frozenOptions = JABS_ActionOptions.Builder()
+            .setIsRetaliation(true)
+            .setLocation(frozenLocation)
+            .setRetaliationTarget(triggeringAction.getCaster())
+            .build();
+          retaliationActions.forEach(a => a.setActionOptions(frozenOptions));
+        }
+
+        const targetX = isAnyDirect ? triggeringAction.getCaster().getX() : null;
+        const targetY = isAnyDirect ? triggeringAction.getCaster().getY() : null;
+
+        // fire each action if executable.
+        if (this.canExecuteMapActions(retaliator, retaliationActions))
+        {
+          retaliationActions.forEach(retaliationAction =>
+            this.executeMapAction(retaliator, retaliationAction, targetX, targetY));
+        }
+      }
+    });
   }
 
   /**
@@ -3443,6 +4218,82 @@ class JABS_Engine
     // generate log for this action.
     this.createAttackLog(action, target);
 
+    // apply any purge-states effects defined on the skill.
+    this.processPurgeStates(action, target);
+  }
+
+  /**
+   * Processes the {@code <purgeStates>} tag on the executed skill, removing states from the target
+   * by priority order according to the tag parameters.
+   *
+   * This only fires when the action landed a hit. Parried and evaded actions are skipped.
+   *
+   * @param {JABS_Action} action - The action being executed.
+   * @param {JABS_Battler} target - The target having states removed.
+   */
+  processPurgeStates(action, target)
+  {
+    // only process on a real hit.
+    const result = target.getBattler()
+      .result();
+
+    if (result.isHit() === false)
+    {
+      return;
+    }
+
+    // read the purgeStates tag params from the base skill.
+    const skill = action.getBaseSkill();
+    const params = skill.jabsPurgeStatesParams;
+
+    // if the tag is absent, nothing to do.
+    if (params === null)
+    {
+      return;
+    }
+
+    // destructure tag params: [type, allowDeath, count].
+    const [ rawType, rawAllowDeath, rawCount ] = params;
+
+    // resolve each parameter with its default when omitted.
+    const type = rawType ?? 'negative';
+    const allowDeath = rawAllowDeath === true;
+    const count = rawCount !== undefined ? parseInt(rawCount) : 1;
+
+    // perform the state removal and collect what was actually purged.
+    const purged = target.getBattler()
+      .removeStatesByPriority(type, allowDeath, count);
+
+    // log each purged state as its own entry.
+    this.createPurgeStateLogs(target, purged);
+  }
+
+  /**
+   * Generates one log entry per purged state, naming the target and the state that was removed.
+   * Only fires when J.LOG is active and at least one state was actually removed.
+   * @param {JABS_Battler} target - The battler that had states removed.
+   * @param {RPG_State[]} purged - The states that were removed.
+   */
+  createPurgeStateLogs(target, purged)
+  {
+    // skip if logging is not enabled or nothing was purged.
+    if (!J.LOG) return;
+    if (purged.length === 0) return;
+
+    // grab the target's display name once for all entries.
+    const targetName = target.getBattlerDatabaseData().name;
+
+    // emit one log entry per removed state.
+    purged.forEach(state =>
+    {
+      // if the state explicitly forbids logging, then do not log its removal.
+      if (state.jabsNoLogs === true) return;
+
+      const log = new ActionLogBuilder()
+        .setupStatePurged(targetName, state.id)
+        .build();
+      $actionLogManager.addLog(log);
+    });
   }
 
   /**
@@ -3457,8 +4308,8 @@ class JABS_Engine
     if (!J.LOG) return;
 
     // gather shorthand variables for use.
-    const result = target.getBattler()
-      .result();
+    const targetBattler = target.getBattler();
+    const result = targetBattler.result();
     const caster = action.getCaster();
     const skill = action.getBaseSkill();
 
@@ -3492,8 +4343,12 @@ class JABS_Engine
       $actionLogManager.addLog(retaliationLog);
     }
     // if no damage of any kind was dealt, and no states were applied, then you get a special message!
+    // skills with no damage type (support skills) skip this — they have their own log paths.
     else if (!result.hpDamage && !result.mpDamage && !result.tpDamage && !result.addedStates.length)
     {
+      // damage.type 0 = None — a support skill with no damage formula; suppress the undamaged entry.
+      if (skill.damage.type === 0) return;
+
       const undamagedLog = new ActionLogBuilder()
         .setupUndamaged(targetName, casterName, skill.id)
         .build();
@@ -3542,8 +4397,7 @@ class JABS_Engine
       result.addedStates.forEach(stateId =>
       {
         // show a custom line when an enemy is defeated.
-        if (stateId === target.getBattler()
-          .deathStateId())
+        if (stateId === targetBattler.deathStateId())
         {
           const targetDefeatedLog = new ActionLogBuilder()
             .setupTargetDefeated(targetName)
@@ -3551,6 +4405,12 @@ class JABS_Engine
           $actionLogManager.addLog(targetDefeatedLog);
           return;
         }
+
+        // grab the state itself.
+        const targetAfflictedState = targetBattler.state(stateId);
+
+        // if the state explicitly forbids logging, then do not log its addition.
+        if (targetAfflictedState.jabsNoLogs === true) return;
 
         // show all the rest of the non-death states.
         const stateAfflictedLog = new ActionLogBuilder()
@@ -3619,13 +4479,6 @@ class JABS_Engine
     const gameAction = jabsAction.getAction();
     const casterJabsBattler = jabsAction.getCaster();
 
-    // self-targeting takes FIRST PRIORITY.
-    if (gameAction.isForUser())
-    {
-      // return only the caster as the target.
-      return [ casterJabsBattler ];
-    }
-
     // grab the allied target selected by the caster of this action.
     const allyTarget = casterJabsBattler.getAllyTarget();
 
@@ -3637,6 +4490,18 @@ class JABS_Engine
       {
         // hit the ally only.
         return [ allyTarget ];
+      }
+    }
+
+    // retaliation target takes THIRD PRIORITY.
+    // direct one-enemy retaliations stamp the triggering attacker so spatial sorting cannot
+    // redirect the counter to a bystander.
+    const retaliationTarget = jabsAction.getActionOptions()?.getRetaliationTarget() ?? null;
+    if (retaliationTarget !== null && gameAction.isForOne())
+    {
+      if (retaliationTarget.canActionConnect() && retaliationTarget.isWithinScope(jabsAction, retaliationTarget, false))
+      {
+        return [ retaliationTarget ];
       }
     }
 
@@ -3653,14 +4518,21 @@ class JABS_Engine
       // if the attacker is an enemy, do not consider inanimate targets.
       if (casterJabsBattler.isEnemy() && battler.isInanimate()) return false;
 
-      // this battler is potentially hit-able.
       return true;
     };
 
     // a few definitions used within collision processing.
     const actionSprite = jabsAction.getActionSprite();
-    const range = jabsAction.getRange();
+
+    // direct skills without an explicit <radius> tag spawn ON the target tile;
+    // their proximity describes targeting reach, not collision size.
+    // falling back to proximity caused a 12-tile circle that hit every enemy on the map.
+    // a 1-tile footprint is the correct point-contact for a teleport landing.
+    const range = jabsAction.getRange() ?? (jabsAction.isDirectAction() ? 1 : null);
     const shape = jabsAction.getShape();
+
+    // the universal dead zone- 0 when untagged, meaning no exclusion ever triggers below.
+    const innerRadius = jabsAction.getInnerRadius();
 
     const targetsHit = [];
     let hitOne = false;
@@ -3681,7 +4553,6 @@ class JABS_Engine
         const maxX = Math.ceil(cx + range);
         const maxY = Math.ceil(cy + range);
 
-        // return the candidates from the spatial index.
         return JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
       }
 
@@ -3701,7 +4572,6 @@ class JABS_Engine
         const maxX = cx + radius;
         const maxY = cy + radius;
 
-        // return the candidates from the spatial index.
         return JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
       }
 
@@ -3746,7 +4616,7 @@ class JABS_Engine
           const sprite = battler.getCharacter();
           const actionDirection = actionSprite.getJabsAction()
             .direction();
-          const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
+          const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape, innerRadius);
           if (result)
           {
             // add this battler to the list of targets hit.
@@ -3787,7 +4657,7 @@ class JABS_Engine
       const sprite = battler.getCharacter();
       const actionDirection = actionSprite.getJabsAction()
         .direction();
-      const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape);
+      const result = this.isTargetWithinRange(actionDirection, sprite, actionSprite, range, shape, innerRadius);
       if (result)
       {
         // add this battler to the list of targets hit.
@@ -3814,9 +4684,32 @@ class JABS_Engine
    * @param {Game_Event} actionEvent The action sprite against the target.
    * @param {number} range How big the collision shape is.
    * @param {string} shape The collision formula based on shape.
+   * @param {number} [innerRadius=0] The universal dead zone in tiles; 0 disables it.
    */
-  isTargetWithinRange(facing, targetCharacter, actionEvent, range, shape)
+  isTargetWithinRange(facing, targetCharacter, actionEvent, range, shape, innerRadius = 0)
   {
+    // the inner radius is a dead zone applied uniformly ahead of every shape below- a target
+    // centered within it is excluded outright, regardless of what the shape's own math would say.
+    if (innerRadius > 0)
+    {
+      // same pixel conversion collisionCircle already uses, so both radii share one scale.
+      const innerRadiusPx = innerRadius * $gameMap.tileWidth();
+
+      // the same unified origin and AABB model every other shape check below relies on.
+      const { x: originCx, y: originCy } = JABS_Engine.getActionOriginPixels(actionEvent);
+      const targetRect = JABS_Engine.getBattlerAabbModel(targetCharacter);
+
+      // keyed off the target's center point, not full-hitbox overlap- every other shape check
+      // below (collisionSector's outer range/angle gates, etc.) is lenient and counts a hit the
+      // moment any corner of the target's AABB qualifies. Excluding on any-overlap here would be
+      // the opposite philosophy: a target's near corner would clip the dead zone long before its
+      // center cleared it, shrinking a deliberately thin ring (e.g. innerRadius close to range)
+      // down to a sliver nothing could actually stand in.
+      const dx = targetRect.cx - originCx;
+      const dy = targetRect.cy - originCy;
+      if ((dx * dx) + (dy * dy) <= (innerRadiusPx * innerRadiusPx)) return false;
+    }
+
     // determine collision based on the selected shape.
     switch (shape)
     {
@@ -3853,9 +4746,106 @@ class JABS_Engine
         // shallow depth, broad breadth wall immediately in front.
         return this.collisionWall(targetCharacter, actionEvent, range, facing);
       default:
-        // unknown shape → no collision.
-        return false;
+        // null/unknown shape — fall back to circle so direct skills without <hitbox> still land.
+        return this.collisionCircle(targetCharacter, actionEvent, range);
     }
+  }
+
+  /**
+   * Checks a small circular radius around the action sprite for potential targets
+   * solely to determine whether an action should arm during its delay phase.
+   *
+   * This does not apply damage; it only identifies whether any valid battlers are
+   * within the supplied radius.
+   *
+   * @param {JABS_Action} jabsAction The action to evaluate.
+   * @param {number} radius The trigger radius in tiles.
+   * @returns {JABS_Battler[]} A list of potential targets inside the trigger radius.
+   */
+  getTriggerTouchTargets(jabsAction, radius)
+  {
+    // read core references for filtering.
+    const casterJabsBattler = jabsAction.getCaster();
+
+    // we only support spatial checks around an action sprite.
+    const actionSprite = jabsAction.getActionSprite();
+    if (!actionSprite)
+    {
+      return [];
+    }
+
+    /**
+     * Basic candidate filter: can be hit, in-scope for the action, and not
+     * an inanimate target (when the caster is an enemy).
+     * @param {JABS_Battler} battler The candidate battler.
+     * @returns {boolean} True if valid for proximity trigger, false otherwise.
+     */
+    const canActionConnectWithBattler = battler =>
+    {
+      // this battler is untargetable.
+      if (!battler.canActionConnect())
+      {
+        return false;
+      }
+
+      // respect core scope constraints (friend/enemy/grounding, etc.).
+      if (!battler.isWithinScope(jabsAction, battler, false))
+      {
+        return false;
+      }
+
+      // enemies should not react to inanimate targets.
+      if (casterJabsBattler.isEnemy() && battler.isInanimate())
+      {
+        return false;
+      }
+
+      // this candidate is valid.
+      return true;
+    };
+
+    // anchor the AABB on the action sprite’s continuous map coords (tile getters round under pixel movement).
+    const cx = actionSprite._realX;
+    const cy = actionSprite._realY;
+
+    // compute inclusive bounds for the spatial index query.
+    const minX = Math.floor(cx - radius);
+    const minY = Math.floor(cy - radius);
+    const maxX = Math.ceil(cx + radius);
+    const maxY = Math.ceil(cy + radius);
+
+    // query spatial candidates from the index.
+    const candidates = JABS_AiManager.queryBattlersInAabb(minX, minY, maxX, maxY);
+
+    // check circle distance for each candidate relative to the action sprite.
+    const targets = [];
+    // circle collision ignores facing, but keep logical dir8 for parity with shaped actions.
+    const actionDirection = jabsAction.direction();
+    candidates
+      .filter(canActionConnectWithBattler, this)
+      .forEach(battler =>
+      {
+        // retrieve the battler's character for spatial testing.
+        const sprite = battler.getCharacter();
+
+        // reuse the engine's circle collision helper.
+        const inCircle = this.isTargetWithinRange(
+          actionDirection,
+          sprite,
+          actionSprite,
+          radius,
+          J.ABS.Shapes.Circle,
+        );
+
+        // collect if inside the trigger radius.
+        if (inCircle)
+        {
+          targets.push(battler);
+        }
+      }, this);
+
+    // return any battlers that were inside the trigger radius.
+    return targets;
   }
 
   /**
@@ -3890,20 +4880,9 @@ class JABS_Engine
    */
   getActionThicknessTiles(actionEvent)
   {
-    // attempt to retrieve the underlying JABS_Action model.
-    const jabsAction = actionEvent.getJabsAction();
-
-    // retrieve the base skill for this action.
-    const baseSkill = jabsAction.getBaseSkill();
-
-    // read the capture from the notes using the canonical <thickness:N> tag.
-    const found = RPGManager.getNumberFromNoteByRegex(baseSkill, J.ABS.RegExp.Thickness, true);
-
-    // if nothing found, return null to allow defaulting upstream.
-    if (found === null) return null;
-
-    // ensure non-negative thickness (0 is allowed but clamped later in px space).
-    return Math.max(0, found);
+    // delegate to the canonical JABS_Action accessor, which applies range modifiers.
+    // callers already do ?? 1 on the result so the untagged default of 1 is safe.
+    return actionEvent.getJabsAction().getThicknessTiles();
   }
 
   /**
@@ -4160,7 +5139,9 @@ class JABS_Engine
 
     // determine configured thickness in tiles, fallback to default of 1 tile.
     // tiles.
-    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1;
+    // getActionThicknessTiles already guarantees 1 (never null) when untagged- see
+    // JABS_Action#getThicknessTiles's own `if (base === null) return 1;`.
+    const thicknessTiles = this.getActionThicknessTiles(action);
 
     // clamp to a very small positive minimum in pixels to ensure the AABB has area.
     // small positive safeguard.
@@ -4208,7 +5189,9 @@ class JABS_Engine
     const th = $gameMap.tileHeight();
 
     // resolve thickness (depth) in tiles (default 1 tile if not specified).
-    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1;
+    // getActionThicknessTiles already guarantees 1 (never null) when untagged- see
+    // JABS_Action#getThicknessTiles's own `if (base === null) return 1;`.
+    const thicknessTiles = this.getActionThicknessTiles(action);
     const minPx = 1;
     // depth when vertical.
     const depthW = Math.max(minPx, thicknessTiles * tw);
@@ -4345,7 +5328,9 @@ class JABS_Engine
     const th = $gameMap.tileHeight();
 
     // resolve thickness in tiles (default 1 tile if not specified).
-    const thicknessTiles = this.getActionThicknessTiles(action) ?? 1;
+    // getActionThicknessTiles already guarantees 1 (never null) when untagged- see
+    // JABS_Action#getThicknessTiles's own `if (base === null) return 1;`.
+    const thicknessTiles = this.getActionThicknessTiles(action);
     const minPx = 1;
     const thicknessX = Math.max(minPx, thicknessTiles * tw);
     const thicknessY = Math.max(minPx, thicknessTiles * th);
@@ -4504,12 +5489,30 @@ class JABS_Engine
   }
 
   /**
+   * Determines whether the victorious actor is eligible to gain rewards from the defeated enemy.
+   * This is the central policy gate for all four reward types (EXP, gold, SDP, AP).
+   * Returns true by default — all defeated enemies grant rewards. Alias this method to introduce
+   * game-specific exclusion conditions (e.g. inanimate objects, zero-yield flags, kill-type filters).
+   * @param {Game_Enemy} defeatedEnemy The enemy that was defeated.
+   * @param {Game_Actor} victoriousActor The actor that defeated the enemy.
+   * @returns {boolean} True if rewards should be granted, false to skip all reward calculation.
+   */
+  // eslint-disable-next-line no-unused-vars
+  canGainReward(defeatedEnemy, victoriousActor)
+  {
+    return true;
+  }
+
+  /**
    * Determines how much experience the defeated enemy yielded.
    * @param {Game_Enemy} defeatedEnemy The enemy that was defeated.
    * @param {Game_Actor} victoriousActor The actor that defeated the enemy.
    */
   determineExperienceGained(defeatedEnemy, victoriousActor)
   {
+    // check the reward policy gate before doing any calculation.
+    if (this.canGainReward(defeatedEnemy, victoriousActor) === false) return 0;
+
     // identify the amount the enemy yielded.
     const experience = defeatedEnemy.exp();
 
@@ -4533,6 +5536,9 @@ class JABS_Engine
    */
   determineGoldGained(defeatedEnemy, victoriousActor)
   {
+    // check the reward policy gate before doing any calculation.
+    if (this.canGainReward(defeatedEnemy, victoriousActor) === false) return 0;
+
     // identify the amount the enemy yielded.
     const gold = defeatedEnemy.gold();
 
@@ -4562,7 +5568,7 @@ class JABS_Engine
     let multiplier = 1.0;
 
     // check if we are using the level scaling functionality.
-    if (J.LEVEL && J.LEVEL.Metadata.enabled)
+    if (J.LEVEL && $gameSystem.isLevelScalingEnabled())
     {
       // calculate the reverse multiplier using scaling based on enemy and actor.
       // if the enemy is higher, then the rewards will be greater.
@@ -4640,15 +5646,14 @@ class JABS_Engine
    * @param {JABS_Battler} target The enemy dropping the loot.
    * @param {JABS_Battler} caster The ally that defeated the enemy.
    */
-  // eslint-disable-next-line no-unused-vars
   createLootDrops(target, caster)
   {
     // actors don't drop loot.
     if (target.isActor()) return;
 
-    // if we have no drops, don't bother.
+    // if we have no drops, don't bother. the killer contributes their own luck/curse to the roll.
     const items = target.getBattler()
-      .makeDropItems();
+      .makeDropItems(caster.getBattler());
     if (items.length === 0) return;
 
     items.forEach(item => this.addLootDropToMap(target.getX(), target.getY(), item));
@@ -4667,6 +5672,7 @@ class JABS_Engine
     {
       lootType = 'armor';
     }
+    // otherwise when item.wtypeId, use this branch.
     else if (item.wtypeId)
     {
       lootType = 'weapon';

@@ -32,4 +32,4 @@ J.REGIONS.EXT.STATES.Aliased.Game_System = new Map();
  * All regular expressions used by this plugin.
  */
 J.REGIONS.EXT.STATES.RegExp = {};
-J.REGIONS.EXT.STATES.RegExp.RegionState = /<regionAddState:[ ]?(\[\d+, ?\d+, ?\d+, ?\d+])>/gi;
+J.REGIONS.EXT.STATES.RegExp.RegionState = /<regionAddState:[ ]?(\[\d+, ?\d+(?:, ?\d+)?(?:, ?\d+)?])>/gi;

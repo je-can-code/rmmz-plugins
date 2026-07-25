@@ -9,14 +9,15 @@ import JABS_Shield from './../_models/JABS_Shield.js';
  * @param {number} totalDuration The total duration in frames of the state being applied.
  * @param {number} stacks The number of stacks of the state being applied.
  * @param {Game_Battler} attacker The battler applying the state.
+ * @param {RPG_Skill=} sourceSkill The skill that was executing when this state was applied, if any.
  * @returns {JABS_StateBuilder} The builder with all the parameters of the state being applied.
  */
 J.ABS.EXT.SHIELD.Aliased.Game_Battler.set('createJabsState', Game_Battler.prototype.createJabsState);
-Game_Battler.prototype.createJabsState = function(target, stateId, iconIndex, totalDuration, stacks, attacker)
+Game_Battler.prototype.createJabsState = function(target, stateId, iconIndex, totalDuration, stacks, attacker, sourceSkill = null)
 {
   // perform original logic.
   const builder = J.ABS.EXT.SHIELD.Aliased.Game_Battler.get('createJabsState')
-    .call(this, target, stateId, iconIndex, totalDuration, stacks, attacker);
+    .call(this, target, stateId, iconIndex, totalDuration, stacks, attacker, sourceSkill);
 
   // determine the shield.
   const shield = JABS_Shield.fromStateId(stateId, target);
@@ -149,14 +150,25 @@ Game_Battler.prototype.currentShieldStacks = function()
 
 /**
  * An event hook fired when a shield is broken.
+ * Stores the broken shield's cap on the battler so that break skills can
+ * reference it as `s` inside their damage formulas.
+ * @param {number} shieldBreakValue The cap of the shield that just broke.
  */
-Game_Battler.prototype.onShieldBreak = function()
+Game_Battler.prototype.onShieldBreak = function(shieldBreakValue = 0)
 {
-  // Resolve the bearer’s JABS battler.
+  // store the broken shield's cap so damage formulas fired from here can use it as 's'.
+  this.lastShieldBreakValue = shieldBreakValue;
+
+  // resolve the bearer's JABS battler.
   const caster = JABS_AiManager.getBattlerByUuid(this.getUuid());
 
   // check if we have a valid caster.
-  if (!caster) return;
+  if (!caster)
+  {
+    // clear the stored value before bailing out.
+    this.lastShieldBreakValue = 0;
+    return;
+  }
 
   // identify all the sources from which shield break skills can be pulled from.
   const sources = this.shieldBreakSources().filter(source => !!source);
@@ -179,10 +191,18 @@ Game_Battler.prototype.onShieldBreak = function()
   const breakSkillIds = sources.reduce(reducer, []);
 
   // if no skillIds were found, then we can skip processing.
-  if (breakSkillIds.length === 0) return;
+  if (breakSkillIds.length === 0)
+  {
+    // clear the stored value so non-break actions don't see a stale 's'.
+    this.lastShieldBreakValue = 0;
+    return;
+  }
 
-  // trigger all skills in succession.
+  // trigger all skills in succession while 's' holds the shield cap.
   breakSkillIds.forEach(skillId => $jabsEngine.forceMapAction(caster, skillId, true));
+
+  // clear the stored value after all break skills have been fired.
+  this.lastShieldBreakValue = 0;
 };
 
 /**

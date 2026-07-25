@@ -146,6 +146,5 @@ class RPG_Skill
   }
 }
 
-
 export default RPG_Skill;
 //endregion RPG_Skill

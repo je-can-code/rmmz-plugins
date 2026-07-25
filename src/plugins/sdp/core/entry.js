@@ -1,10 +1,16 @@
-import './__models/PanelParameter.js';
-import './__models/PanelRankupReward.js';
-import './__models/PanelRarity.js';
-import './__models/StatDistributionPanel.js';
-import './__models/StatDistributionPanelBuilder.js';
-import './__models/PanelRanking.js';
-import './__models/PanelTracking.js';
+import './models/PanelFamily.js';
+import './models/PanelMastery.js';
+import './models/PanelParameter.js';
+import './models/PanelRankupReward.js';
+import './models/PanelRarity.js';
+import './models/PanelSubgroup.js';
+import './models/SdpConfiguration.js';
+import './models/StatDistributionPanel.js';
+import './models/StatDistributionPanelBuilder.js';
+import './models/PanelRanking.js';
+import './models/PanelTracking.js';
+
+import './managers/SdpMasteryManager.js';
 
 import './_metadata/initialization.js';
 
@@ -24,16 +30,19 @@ import './managers/BattleManager.js';
 import './managers/JABS_Engine.js';
 import './managers/IconManager.js';
 import './managers/TextManager.js';
+import './core/registerSdpParameters.js';
 import './windows/Window_MenuCommand.js';
 import './windows/Window_AbsMenu.js';
 import './windows/Window_SdpList.js';
 import './windows/Window_SdpHeader.js';
 import './windows/Window_SdpParameterList.js';
 import './windows/Window_SdpRewardList.js';
+import './windows/Window_SdpMastery.js';
 import './windows/Window_SdpCart.js';
 import './windows/Window_SdpConfirmation.js';
 import './windows/Window_SdpPoints.js';
 import './windows/Window_SdpHelp.js';
+import './windows/Window_SdpFamilyStrip.js';
 import './windows/Window_SdpControlsHint.js';
 import './scenes/Scene_SDP.js';
 import './scenes/Scene_Boot.js';

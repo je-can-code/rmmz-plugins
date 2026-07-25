@@ -1,6 +1,6 @@
 //region Game_ActionResult
 /**
- * Extends {@link Game_ActionResult.initialize}.<br>
+ * Extends {@link Game_ActionResult.initialize}.<br/>
  * Initializes additional members.
  */
 J.ABS.Aliased.Game_ActionResult.set('initialize', Game_ActionResult.prototype.initialize);
@@ -17,6 +17,12 @@ Game_ActionResult.prototype.initialize = function()
    * @type {boolean}
    */
   this.parried = false;
+
+  /**
+   * Whether or not the result was a glancing blow (implicit parry that still lands but deals reduced damage).
+   * @type {boolean}
+   */
+  this.glancing = false;
 
   /**
    * The amount of damage reduced by guarding.
@@ -42,14 +48,27 @@ Game_ActionResult.prototype.clear = function()
   // refresh our custom parameters.
   this.guarded = false;
   this.parried = false;
+  this.glancing = false;
   this.reduced = 0;
 };
 
 /**
- * OVERWRITE Removes the check for "hit vs rng", and adds in parry instead.
+ * Overwrites {@link #isHit}.<br/>
+ * Removes the check for "hit vs rng", and adds in parry instead.
  */
 Game_ActionResult.prototype.isHit = function()
 {
-  return this.used && !this.parried && !this.evaded;
+  return this.used &&
+    this.parried === false &&
+    this.isEvaded() === false;
+};
+
+/**
+ * Whether or not the action was evaded.
+ * @returns {boolean}
+ */
+Game_ActionResult.prototype.isEvaded = function()
+{
+  return this.evaded;
 };
 //endregion Game_ActionResult

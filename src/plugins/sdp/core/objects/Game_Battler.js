@@ -1,10 +1,12 @@
 //region Game_Battler
 /**
- * Gets the SDP points multiplier for this battler.
- * @returns {number}
+ * SDP points multiplier for this battler.
  */
-Game_Battler.prototype.sdpMultiplier = function()
-{
-  return 1.0;
-};
+Object.defineProperty(Game_BattlerBase.prototype, 'sdpMultiplier', {
+  get: function()
+  {
+    return 1.0;
+  },
+  configurable: true,
+});
 //endregion Game_Battler

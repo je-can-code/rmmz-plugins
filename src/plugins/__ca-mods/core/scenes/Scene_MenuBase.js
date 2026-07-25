@@ -1,6 +1,6 @@
 //region Scene_MenuBase
 /**
- * Overrides {@link #createButtons}.<br>
+ * Overwrites {@link #createButtons}.<br/>
  * Removes logic for button creation- those are not allowed here.
  */
 Scene_MenuBase.prototype.createButtons = function()

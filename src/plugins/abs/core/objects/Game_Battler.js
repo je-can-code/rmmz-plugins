@@ -1,13 +1,16 @@
 //region Game_Battler
-import JABS_StateBuilder from './../__models/JABS_StateBuilder.js';
-import JABS_State from './../__models/JABS_State.js';
-import JABS_SkillSlotManager from './../__models/JABS_SkillSlotManager.js';
-import JABS_SkillSlot from './../__models/JABS_SkillSlot.js';
-import JABS_OnChanceEffect from './../__models/JABS_OnChanceEffect.js';
-import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_StateBuilder from '../models/JABS_StateBuilder.js';
+import JABS_State from '../models/JABS_State.js';
+import JABS_SkillSlotManager from '../models/JABS_SkillSlotManager.js';
+import JABS_SkillSlot from '../models/JABS_SkillSlot.js';
+import JABS_OnChanceEffect from '../models/JABS_OnChanceEffect.js';
+import JABS_EnemyAI from '../models/JABS_EnemyAI.js';
+import JABS_Battler from '../models/JABS_Battler.js';
+import JABS_DeathContext from '../models/JABS_DeathContext.js';
+import JABS_AiManager from '../managers/JABS_AiManager.js';
+
 /**
- * Extends {@link Game_Battler.initMembers}.<br>
+ * Extends {@link Game_Battler.initMembers}.<br/>
  * Includes JABS parameter initialization.
  */
 J.ABS.Aliased.Game_Battler.set('initMembers', Game_Battler.prototype.initMembers);
@@ -69,7 +72,172 @@ Game_Battler.prototype.initJabsMembers = function()
    * @type {JABS_SkillSlotManager}
    */
   this._j._abs._equippedSkills = new JABS_SkillSlotManager();
+
+  /**
+   * A snapshot of the conditions under which this battler last died.
+   * Populated immediately after the killing blow lands; cleared on revive.
+   * @type {JABS_DeathContext|null}
+   */
+  this._j._abs._deathContext = null;
+
+  /**
+   * A record of the most recent thing that dealt damage to this battler, regardless of whether it
+   * was fatal. Overwritten by every subsequent hit- this is a running "last hit", not a death-only
+   * snapshot like {@link #_deathContext}. Populated from two places: a direct skill/attack landing
+   * ({@link JABS_Engine#executeSkillEffects}) or a state DoT/HoT tick resolving
+   * ({@link JABS_Battler#processSlipEffect}).
+   * @type {{type: string, uuid: string, id: number}|null}
+   */
+  this._j._abs._lastDamageSource = null;
+
+  /**
+   * The cached result of {@link #getVisionModifier}.
+   * Null when the cache is cold; invalidated by {@link #onBattlerDataChange}.
+   * @type {number|null}
+   */
+  this._j._abs._cachedVisionModifier = null;
+
+  /**
+   * The cached result of {@link #getProjectileDurationModifier}.
+   * Null when the cache is cold; invalidated by {@link #onBattlerDataChange}.
+   * @type {number|null}
+   */
+  this._j._abs._cachedProjectileDurationModifier = null;
+
+  /**
+   * The cached sum of all CDR (global cooldown reduction) percent-points from note sources.
+   * Refreshed by {@link #refreshCdr} on {@link #onBattlerDataChange}.
+   * @type {number}
+   */
+  this._j._abs._cdr = 0;
+
+  /**
+   * The cached sum of all PER (parry extension rate) percent-points from note sources.
+   * Refreshed by {@link #refreshPer} on {@link #onBattlerDataChange}.
+   * @type {number}
+   */
+  this._j._abs._per = 0;
+
+  /**
+   * The cached, unfloored battler-wide positive-reroll total from `<luckyRolls:[FORMULA]>`.
+   * Refreshed by {@link #refreshPositiveRolls} on {@link #onBattlerDataChange}.
+   * @type {number}
+   */
+  this._j._abs._positiveRolls = 0;
+
+  /**
+   * The cached, unfloored battler-wide negative-reroll total from `<cursedRolls:[FORMULA]>`.
+   * Refreshed by {@link #refreshNegativeRolls} on {@link #onBattlerDataChange}.
+   * @type {number}
+   */
+  this._j._abs._negativeRolls = 0;
+
+  /**
+   * The cached, unfloored bonus repeat count for this battler's repeatable-action procs from
+   * `<encoreRepeats:[FORMULA]>`.
+   * Refreshed by {@link #refreshEncoreRepeats} on {@link #onBattlerDataChange}.
+   * @type {number}
+   */
+  this._j._abs._encoreRepeats = 0;
 };
+
+//region CDR
+/**
+ * The battler's CDR in percent-point space; sourced from all active note sources.
+ * @type {number}
+ */
+Object.defineProperty(Game_Battler.prototype, 'cdr', {
+  get: function()
+  {
+    return this.globalCooldownReduction();
+  },
+  configurable: true,
+});
+
+/**
+ * Gets this battler's cached global cooldown reduction in percent-point space.
+ * @returns {number}
+ */
+Game_Battler.prototype.globalCooldownReduction = function()
+{
+  return this._j._abs._cdr;
+};
+
+Game_Battler.prototype.setGlobalCooldownReduction = function(cooldownReduction)
+{
+  this._j._abs._cdr = cooldownReduction;
+};
+
+/**
+ * Recomputes and caches the sum of all CDR percent-points from this battler's note sources.
+ * Called from {@link Game_Actor#onBattlerDataChange} and {@link Game_Enemy#onBattlerDataChange}.
+ */
+Game_Battler.prototype.refreshCdr = function()
+{
+  // grab all the candidates for cooldown reduction.
+  const objectsToCheck = this.getAllNotes();
+
+  // iterate over them and process what grants CDR.
+  const newCooldownReduction = RPGManager.getResultsFromAllNotesByRegex(
+    objectsToCheck,
+    J.ABS.RegExp.GlobalCooldownReduction,
+    0,
+    this
+  );
+
+  // convert from percent-points to decimal to match the PERCENT_SUFFIX display convention.
+  this.setGlobalCooldownReduction(newCooldownReduction / 100);
+};
+//endregion CDR
+
+//region PER
+/**
+ * The battler's PER in percent-point space; sourced from all active note sources.
+ * @type {number}
+ */
+Object.defineProperty(Game_Battler.prototype, 'per', {
+  get: function()
+  {
+    return this.parryExtensionRate();
+  },
+  configurable: true,
+});
+
+/**
+ * Gets this battler's cached parry extension rate in percent-point space.
+ * @returns {number}
+ */
+Game_Battler.prototype.parryExtensionRate = function()
+{
+  return this._j._abs._per;
+};
+
+Game_Battler.prototype.setParryExtensionRate = function(parryExtensionRate)
+{
+  this._j._abs._per = parryExtensionRate;
+};
+
+/**
+ * Recomputes and caches the sum of all PER percent-points from this battler's note sources.
+ * Called from {@link Game_Actor#onBattlerDataChange} and {@link Game_Enemy#onBattlerDataChange}.
+ */
+Game_Battler.prototype.refreshPer = function()
+{
+  // grab all the candidates for parry extension rate.
+  const objectsToCheck = this.getAllNotes();
+
+  // iterate over them and process what grants PER.
+  const newParryExtensionRate = RPGManager.getResultsFromAllNotesByRegex(
+    objectsToCheck,
+    J.ABS.RegExp.ParryExtensionRate,
+    0,
+    this
+  );
+
+  // convert from percent-points to decimal to match the PERCENT_SUFFIX display convention.
+  this.setParryExtensionRate(newParryExtensionRate / 100);
+};
+//endregion PER
 
 //region JABS battler properties
 /**
@@ -168,30 +336,170 @@ Game_Battler.prototype.pursuitRange = function()
 };
 
 /**
+ * Gets the cached vision modifier for this battler, or null if the cache is cold.
+ * @returns {number|null}
+ */
+Game_Battler.prototype.getCachedVisionModifier = function()
+{
+  return this._j._abs._cachedVisionModifier;
+};
+
+/**
+ * Sets the cached vision modifier for this battler.
+ * @param {number|null} value The new cached value, or null to invalidate.
+ */
+Game_Battler.prototype.setCachedVisionModifier = function(value)
+{
+  this._j._abs._cachedVisionModifier = value;
+};
+
+/**
  * A multiplier against the vision of an enemy target.
  * This may increase/decrease the sight and pursuit range of an enemy attempting to
  * perceive the actor.
+ * Result is cached and invalidated by {@link #onBattlerDataChange}.
  * @returns {number}
  */
 Game_Battler.prototype.getVisionModifier = function()
 {
-  // grab all the notes.
-  const objectsToCheck = this.getAllNotes();
+  // return the cached result if the cache is still warm.
+  if (this.getCachedVisionModifier() !== null)
+  {
+    return this.getCachedVisionModifier();
+  }
 
   // define the base vision rate for this battler.
   const baseVisionRate = 100;
 
   // get the vision multiplier from anything this battler has available.
-  const visionMultiplier = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.ABS.RegExp.VisionMultiplier);
-
-  // calculate the multiplier.
-  const totalVisionMultiplier = baseVisionRate + visionMultiplier;
+  const visionMultiplier = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.VisionMultiplier);
 
   // constrain the multiplier to never go below 0.
-  const constrainedVisionMultiplier = Math.max((totalVisionMultiplier / 100), 0);
+  const constrainedVisionMultiplier = Math.max(((baseVisionRate + visionMultiplier) / 100), 0);
 
-  // return our constrainted multiplier.
-  return constrainedVisionMultiplier;
+  // cache and return the result.
+  this.setCachedVisionModifier(constrainedVisionMultiplier);
+
+  return this.getCachedVisionModifier();
+};
+
+/**
+ * Gets the cached projectile duration modifier for this battler, or null if the cache is cold.
+ * @returns {number|null}
+ */
+Game_Battler.prototype.getCachedProjectileDurationModifier = function()
+{
+  return this._j._abs._cachedProjectileDurationModifier;
+};
+
+/**
+ * Sets the cached projectile duration modifier for this battler.
+ * @param {number|null} value The new cached value, or null to invalidate.
+ */
+Game_Battler.prototype.setCachedProjectileDurationModifier = function(value)
+{
+  this._j._abs._cachedProjectileDurationModifier = value;
+};
+
+/**
+ * A multiplier against how long this battler's map actions (projectiles, hitboxes, etc.)
+ * persist on the map, sourced from `<projectileDuration:PERCENT_POINTS>` across all active
+ * note sources (equips, states, class, actor).
+ * Result is cached and invalidated by {@link #onBattlerDataChange}.
+ * @returns {number}
+ */
+Game_Battler.prototype.getProjectileDurationModifier = function()
+{
+  // return the cached result if the cache is still warm.
+  if (this.getCachedProjectileDurationModifier() !== null)
+  {
+    return this.getCachedProjectileDurationModifier();
+  }
+
+  // define the base duration rate for this battler.
+  const baseDurationRate = 100;
+
+  // get the duration percent-points from anything this battler has available.
+  const durationMultiplier = RPGManager.getSumFromAllNotesByRegex(
+    this.getAllNotes(),
+    J.ABS.RegExp.ProjectileDurationMultiplier);
+
+  // constrain the multiplier to never go below 0.
+  const constrainedDurationMultiplier = Math.max(((baseDurationRate + durationMultiplier) / 100), 0);
+
+  // cache and return the result.
+  this.setCachedProjectileDurationModifier(constrainedDurationMultiplier);
+
+  return this.getCachedProjectileDurationModifier();
+};
+
+/**
+ * The sum of all flat tick-speed modifiers ({@code <tickSpeedFlat:N>}) currently affecting
+ * this battler. Positive values shorten the resolved tick interval; negative values lengthen it.
+ * @returns {number}
+ */
+Game_Battler.prototype.tickSpeedFlatModifier = function()
+{
+  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.TickSpeedFlat);
+};
+
+/**
+ * The sum of all percent tick-speed modifiers currently affecting this battler: the
+ * battler-wide {@code <tickSpeedPercent:N>} total, plus every
+ * {@code <tickSpeedTypePercent:[TYPE, N]>} whose TYPE matches one of the provided classifiers.
+ * Positive values make ticks fire more often; negative values make them fire less often.
+ * @param {string[]} types The {@code <type:CLASSIFIER>} tags to match type-scoped modifiers against.
+ * @returns {number}
+ */
+Game_Battler.prototype.tickSpeedPercentModifier = function(types = [])
+{
+  // start with the battler-wide percent modifier, which applies regardless of type.
+  let total = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.TickSpeedPercent);
+
+  // layer on every type-scoped modifier whose classifier matches one of the given types.
+  this.getAllNotes()
+    .forEach(note =>
+    {
+      const tuples = RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.TickSpeedTypePercent, true);
+
+      tuples.forEach(([ classifier, percent ]) =>
+      {
+        if (types.includes(classifier))
+        {
+          total += Number(percent);
+        }
+      });
+    });
+
+  return total;
+};
+
+/**
+ * Resolves how many frames elapse between natural HRG/MRG/TRG regeneration ticks for this
+ * battler. Uses the same base-plus-flat-then-percent formula as per-state slip ticking, typed
+ * as the plugin-configured natural regen tick type so type-scoped modifiers can reach it.
+ * Shared by {@link JABS_Battler#getNaturalRegenTickInterval} (the live map ticking loop) and any
+ * UI wanting to preview the same cadence without a live map/JABS_Battler context- this only reads
+ * notes and static plugin metadata off the battler itself.
+ * @returns {number} The resolved tick interval, in frames.
+ */
+Game_Battler.prototype.getNaturalRegenTickInterval = function()
+{
+  // shorthand the configured natural regen type classifier.
+  const naturalRegenType = J.ABS.Metadata.NaturalRegenTickType;
+
+  // resolve the base interval and layer on this battler's own flat/percent modifiers.
+  const baseInterval = J.ABS.Metadata.DefaultStateTickInterval;
+  const flatModifier = this.tickSpeedFlatModifier();
+  const percentModifier = this.tickSpeedPercentModifier([ naturalRegenType ]);
+
+  // apply the flat modifier first, then the combined percent modifier.
+  const modifiedInterval = (baseInterval + flatModifier) / (1 + (percentModifier / 100));
+
+  // never let the interval drop below the tunable floor, and never below 1 frame regardless.
+  const tunableFloor = Math.max(J.ABS.Metadata.MinimumStateTickInterval, 1);
+
+  return Math.max(Math.round(modifiedInterval), tunableFloor);
 };
 
 /**
@@ -250,6 +558,15 @@ Game_Battler.prototype.showHpBar = function()
 };
 
 /**
+ * All battlers show their map affliction strip by default.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.showStates = function()
+{
+  return true;
+};
+
+/**
  * All battlers will show their danger indicator by default.
  * @returns {boolean}
  */
@@ -294,6 +611,66 @@ Game_Battler.prototype.isAggroLocked = function()
 {
   return this.states()
     .some(state => state.jabsAggroLock ?? false);
+};
+/**
+ * Gets the death context snapshot for this battler.
+ * @returns {JABS_DeathContext|null}
+ */
+Game_Battler.prototype.getDeathContext = function()
+{
+  return this._j._abs._deathContext;
+};
+
+/**
+ * Sets the death context snapshot for this battler.
+ * @param {JABS_DeathContext} context The death context to store.
+ */
+Game_Battler.prototype.setDeathContext = function(context)
+{
+  this._j._abs._deathContext = context;
+};
+
+/**
+ * Clears the death context snapshot for this battler.
+ */
+Game_Battler.prototype.clearDeathContext = function()
+{
+  this._j._abs._deathContext = null;
+};
+
+/**
+ * Records what just dealt damage to this battler, overwriting whatever was previously recorded.
+ * @param {string} type Either `"skill"` for a direct hit, or `"state"` for a DoT/HoT tick.
+ * @param {string} uuid The JABS uuid of the battler that caused this damage- the skill's caster for
+ * a direct hit, or the state's original applier for a tick.
+ * @param {number} id The skill id (for `"skill"`) or state id (for `"state"`) responsible.
+ */
+Game_Battler.prototype.setLastHitSource = function(type, uuid, id)
+{
+  this._j._abs._lastDamageSource = { type, uuid, id };
+};
+
+/**
+ * Gets the kind of thing that last dealt damage to this battler.
+ * @returns {string|null} Either `"skill"`, `"state"`, or `null` if nothing has hit this battler yet.
+ */
+Game_Battler.prototype.getLastHitType = function()
+{
+  return this._j._abs._lastDamageSource?.type ?? null;
+};
+
+/**
+ * Gets the identity of whatever last dealt damage to this battler. Pair with {@link #getLastHitType}
+ * to know how to interpret `id`- a skill id when the type is `"skill"`, or a state id when the type
+ * is `"state"`.
+ * @returns {{uuid: string, id: number}|null}
+ */
+Game_Battler.prototype.getLastHitSource = function()
+{
+  const record = this._j._abs._lastDamageSource;
+  return record
+    ? { uuid: record.uuid, id: record.id }
+    : null;
 };
 //endregion JABS battler properties
 
@@ -505,24 +882,170 @@ Game_Battler.prototype.onTargetDefeatSkillIds = function()
   // return what was found.
   return onTargetKills;
 };
+
+/**
+ * Gets all on-evade-apply-self effects associated with this battler.
+ * These are states to apply to the evader themselves when an evasion occurs.
+ * @returns {JABS_OnChanceEffect[]}
+ */
+Game_Battler.prototype.onEvadeApplySelfEffects = function()
+{
+  // get all things that have notes.
+  const objectsToCheck = this.getAllNotes();
+
+  // get all on-evade-apply-self state effects from the notes.
+  const selfStateEffects = RPGManager.getOnChanceEffectsFromDatabaseObjects(
+    objectsToCheck,
+    J.ABS.RegExp.OnEvadeApplySelf
+  );
+
+  // return what was found.
+  return selfStateEffects;
+};
+
+/**
+ * Gets all on-evade-apply-attacker effects associated with this battler.
+ * These are states to apply to the attacker who was evaded.
+ * @returns {JABS_OnChanceEffect[]}
+ */
+Game_Battler.prototype.onEvadeApplyAttackerEffects = function()
+{
+  // get all things that have notes.
+  const objectsToCheck = this.getAllNotes();
+
+  // get all on-evade-apply state effects (targeting the attacker) from the notes.
+  const attackerStateEffects = RPGManager.getOnChanceEffectsFromDatabaseObjects(
+    objectsToCheck,
+    J.ABS.RegExp.OnEvadeApply
+  );
+
+  // return what was found.
+  return attackerStateEffects;
+};
+
+/**
+ * Gets all on-evade-execute effects associated with this battler.
+ * These are skills to fire when an evasion occurs.
+ * @returns {JABS_OnChanceEffect[]}
+ */
+Game_Battler.prototype.onEvadeExecuteEffects = function()
+{
+  // get all things that have notes.
+  const objectsToCheck = this.getAllNotes();
+
+  // get all on-evade-execute skill effects from the notes.
+  const executeEffects = RPGManager.getOnChanceEffectsFromDatabaseObjects(
+    objectsToCheck,
+    J.ABS.RegExp.OnEvadeExecute
+  );
+
+  // return what was found.
+  return executeEffects;
+};
+
+/**
+ * Processes the on-evasion state effects targeting the evader themselves.
+ */
+Game_Battler.prototype.processOnEvadeStateSelf = function()
+{
+  // get all self-targeting state effects for this evasion.
+  const selfEffects = this.onEvadeApplySelfEffects();
+
+  // if there are none, there is nothing to do.
+  if (selfEffects.length === 0) return;
+
+  // iterate over each effect and apply it if the chance roll passes.
+  selfEffects.forEach(stateEffect =>
+  {
+    // this is a purely self-scoped proc- the evader is both the roller and the recipient, so
+    // both their own positive and negative rolls apply to their own single roll.
+    const skill = stateEffect.baseSkill(this);
+    const positiveRolls = 1 + this.getPositiveRollsForSkill(skill);
+    const negativeRolls = this.getNegativeRollsForSkill(skill);
+
+    // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
+    const procCount = stateEffect.resolveProcCount(positiveRolls, negativeRolls, this);
+
+    // apply the state to ourselves once per success — the evader gets the benefit.
+    for (let i = 0; i < procCount; i++)
+    {
+      this.addState(stateEffect.skillId);
+    }
+  });
+};
+
+/**
+ * Processes the on-evasion state effects targeting the attacker who was evaded.
+ * @param {Game_Actor|Game_Enemy} attacker The battler whose attack was evaded.
+ */
+Game_Battler.prototype.processOnEvadeStateAttacker = function(attacker)
+{
+  // get all attacker-targeting state effects for this evasion.
+  const attackerEffects = this.onEvadeApplyAttackerEffects();
+
+  // if there are none, there is nothing to do.
+  if (attackerEffects.length === 0) return;
+
+  // iterate over each effect and apply it if the chance roll passes.
+  attackerEffects.forEach(stateEffect =>
+  {
+    // the evader is the one whose proc this is (positive rolls); the attacker is the one
+    // receiving the punishment state and can resist it with their own negative rolls.
+    const skill = stateEffect.baseSkill(this);
+    const positiveRolls = 1 + this.getPositiveRollsForSkill(skill);
+    const negativeRolls = attacker.getNegativeRolls();
+
+    // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
+    const procCount = stateEffect.resolveProcCount(positiveRolls, negativeRolls, this);
+
+    // apply the state to the attacker once per success — they get punished for missing.
+    for (let i = 0; i < procCount; i++)
+    {
+      attacker.addState(stateEffect.skillId);
+    }
+  });
+};
+
+/**
+ * Processes all on-evasion reactionary effects.
+ * @param {Game_Actor|Game_Enemy} attacker The attacker whom this battler evaded.
+ * @param {Game_Action} _action The action that was evaded.
+ */
+Game_Battler.prototype.onEvade = function(attacker, _action)
+{
+  // apply any states the evader has configured to grant themselves on evasion.
+  this.processOnEvadeStateSelf();
+
+  // apply any states the evader has configured to inflict on the attacker on evasion.
+  this.processOnEvadeStateAttacker(attacker);
+
+  // skill execution requires JABS_Battler context — look up the evader's JABS_Battler.
+  const jabsEvader = JABS_AiManager.getBattlerByUuid(this.getUuid());
+
+  // if no JABS_Battler is found (e.g. not on a JABS map), there are no skills to execute.
+  if (!jabsEvader) return;
+
+  // look up the attacker's JABS_Battler so skills can use them as the seed target.
+  const jabsAttacker = JABS_AiManager.getBattlerByUuid(attacker.getUuid());
+
+  // delegate skill execution to the JABS_Battler, which has engine access.
+  jabsEvader.handleOnEvadeSkills(jabsAttacker);
+};
 //endregion on-chance effects
 
 //region JABS state management
-J.ABS.Aliased.Game_Battler.set('states', Game_Battler.prototype.states);
 /**
- * Overrides {@link #states}.<br/>
- * Returns the proper states for all that are afflicted on this battler.<br/>
+ * Overwrites {@link #states}.<br/>
+ * Returns the proper states for all that are afflicted on this battler.
  * Accommodates stacking.
  * @returns {RPG_State[]}
  */
+J.ABS.Aliased.Game_Battler.set('states', Game_Battler.prototype.states);
 Game_Battler.prototype.states = function()
 {
-  // grab the original states as they were.
-  /**
-   * @type {RPG_State[]}
-   */
+  // perform original logic.
   const originalStates = J.ABS.Aliased.Game_Battler.get('states')
-    .call(this);
+      .call(this);
 
   // grab all the states the user is currently afflicted with- as far as JABS is concerned.
   const currentAfflictedStates = $jabsEngine.getJabsStatesByUuid(this.getUuid());
@@ -560,13 +1083,32 @@ Game_Battler.prototype.states = function()
 };
 
 /**
- * OVERWRITE Rewrites the handling for state application. The attacker is
+ * Gets the number of stacks of a given state currently applied to this battler.
+ * @param {number} stateId The id of the state to check.
+ * @returns {number} The number of stacks applied of the given state.
+ */
+Game_Battler.prototype.stackCount = function(stateId)
+{
+  // grab the state tracked by JABS.
+  const state = $jabsEngine.getJabsStateByUuidAndStateId(this.getUuid(), stateId);
+
+  // if there is no state,
+  if (state === undefined) return 0;
+
+  // return the stack count of the state.
+  return state.stackCount;
+};
+
+/**
+ * Extends {@link #addState}.<br/>
+ * Rewrites the handling for state application. The attacker is
  * now relevant to the state being applied.
  * @param {number} stateId The state id to potentially apply.
  * @param {Game_Battler} attacker The battler who is applying this state.
+ * @param {RPG_Skill=} sourceSkill The skill that was executing when this state was applied, if any.
  */
 J.ABS.Aliased.Game_Battler.set('addState', Game_Battler.prototype.addState);
-Game_Battler.prototype.addState = function(stateId, attacker)
+Game_Battler.prototype.addState = function(stateId, attacker, sourceSkill = null)
 {
   // if we're missing an attacker or the engine is disabled, perform as usual.
   if (!attacker || !$jabsEngine.absEnabled)
@@ -580,15 +1122,162 @@ Game_Battler.prototype.addState = function(stateId, attacker)
   }
 
   // hand-off the state handling to JABS.
-  this.handleAddingJabsState(stateId, attacker);
+  this.handleAddingJabsState(stateId, attacker, null, sourceSkill);
 };
+
+//region state-application immunity
+/**
+ * Whether or not this battler is immune to absolutely all state application, including the death
+ * state. This is a stronger guarantee than {@link #isImmuneToNonDeathStates}- it does not carve
+ * out an exception for dying, because there is no dedicated "death" system to intercept; vanilla
+ * kills a battler by adding the death state through this exact same pathway.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isImmuneToAllStates = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ImmuneToAll) === true;
+};
+
+/**
+ * Whether or not this battler is immune to all state application except the death state. Carves
+ * out that one exception explicitly so that buff/debuff immunity never accidentally grants
+ * immortality as a side effect.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isImmuneToNonDeathStates = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ImmuneToStates) === true;
+};
+
+/**
+ * Whether or not this battler is immune to any state carrying the {@code <type:negative>}
+ * classifier (see {@link RPG_State#isNegativeType}).
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isImmuneToNegativeStates = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ImmuneToNegatives) === true;
+};
+
+/**
+ * Whether or not this battler is immune to being externally interrupted out of a cast/channel by
+ * an incoming `<interrupt:MAGNIFIER>` hit, from any of this battler's own note sources (states,
+ * equips, class, actor). This does not suppress self-interruption from choosing to move- that axis
+ * is controlled per-skill by {@link RPG_Skill#jabsCannotMoveToInterrupt} instead.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isImmuneToInterrupt = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.CannotBeInterrupted) === true;
+};
+
+/**
+ * Collects every {@code <type:CLASSIFIER>} classifier this battler is fully immune to, from every
+ * passive-capable note source.
+ * @returns {string[]}
+ */
+Game_Battler.prototype.getImmuneStateTypes = function()
+{
+  return this.getAllNotes()
+    .flatMap(note => RPGManager.getStringsFromNoteByRegex(note, J.ABS.RegExp.StateTypeImmune));
+};
+
+/**
+ * Determines whether or not this battler is immune to the given state by type classifier.
+ * @param {RPG_State} state The state row being checked for type-based immunity.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isImmuneToStateByType = function(state)
+{
+  // grab every type classifier this battler is immune to.
+  const immuneTypes = this.getImmuneStateTypes();
+
+  // no immunities means nothing can possibly match.
+  if (!immuneTypes.length) return false;
+
+  // check whether any of the state's own classifiers match an immune type, case-insensitively.
+  return state.types()
+    .some(stateType => immuneTypes.some(immuneType => immuneType.toLowerCase() === stateType.toLowerCase()));
+};
+
+/**
+ * Sums this battler's {@code <stateTypeResist:[TYPE, PCT]>} tags whose TYPE matches one of the
+ * given state's own type classifiers, and converts the total into a multiplicative rate- the same
+ * shape as vanilla's per-id {@link Game_BattlerBase#stateRate}, but scoped by type instead of id.
+ * @param {number} stateId The database id of the state being rolled for application.
+ * @returns {number} A multiplier in the 0-1 range (clamped); 1 means no resistance.
+ */
+Game_Battler.prototype.stateTypeResistRate = function(stateId)
+{
+  // grab the state row to check its type classifiers.
+  const state = $dataStates[stateId];
+
+  // states with no classifiers cannot match any stateTypeResist tag.
+  if (!state || !state.types().length) return 1.0;
+
+  // collect all [TYPE, PCT] pairs from every note source on this battler.
+  const allPairs = this.getAllNotes()
+    .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.StateTypeResist));
+
+  // if no tags are present anywhere, there is no resistance to apply.
+  if (!allPairs.length) return 1.0;
+
+  // sum the resist percent for every tag whose type matches one of the state's own classifiers.
+  const stateTypes = state.types();
+  let totalPercent = 0;
+  allPairs.forEach(([ type, percent ]) =>
+  {
+    if (stateTypes.some(stateType => stateType.toLowerCase() === type.toLowerCase()))
+    {
+      totalPercent += percent;
+    }
+  });
+
+  // convert the summed percent into a multiplier, clamped so it can never go negative.
+  return Math.max(1 - (totalPercent / 100), 0);
+};
+
+/**
+ * Extends {@link #isStateAddable}.<br/>
+ * Gates state application against the new immunity tag family before falling through to
+ * whatever this battler's existing eligibility rules (vanilla, passive layer, etc.) decide.
+ */
+J.ABS.Aliased.Game_Battler.set('isStateAddable', Game_Battler.prototype.isStateAddable);
+Game_Battler.prototype.isStateAddable = function(stateId)
+{
+  // total immunity blocks everything, including the death state.
+  if (this.isImmuneToAllStates()) return false;
+
+  // near-total immunity blocks everything except the death state.
+  if (stateId !== this.deathStateId() && this.isImmuneToNonDeathStates()) return false;
+
+  // grab the state row to check its polarity and type classifiers.
+  const state = $dataStates[stateId];
+
+  if (state)
+  {
+    // negative-state immunity blocks any state carrying the <type:negative> classifier.
+    if (state.isNegativeType() && this.isImmuneToNegativeStates()) return false;
+
+    // type-scoped immunity blocks any state carrying a matching <type:CLASSIFIER> tag.
+    if (this.isImmuneToStateByType(state)) return false;
+  }
+
+  // perform original logic (vanilla/passive-layer eligibility checks).
+  return J.ABS.Aliased.Game_Battler.get('isStateAddable')
+    .call(this, stateId);
+};
+//endregion state-application immunity
 
 /**
  * Handles logic surrounding state application in regards to JABS.
  * @param {number} stateId The state being applied.
  * @param {Game_Actor|Game_Enemy|Game_Battler} attacker The assailant applying the state.
+ * @param {JABS_StateOverrides|null} overrides Optional skill-authored overrides for duration and stacks.
+ * When null, the state's own database values are used.
+ * @param {RPG_Skill=} sourceSkill The skill that was executing when this state was applied, if any.
  */
-Game_Battler.prototype.handleAddingJabsState = function(stateId, attacker)
+Game_Battler.prototype.handleAddingJabsState = function(stateId, attacker, overrides = null, sourceSkill = null)
 {
   // if the state isn't addable, then don't add it.
   if (!this.isStateAddable(stateId)) return;
@@ -606,45 +1295,34 @@ Game_Battler.prototype.handleAddingJabsState = function(stateId, attacker)
   // reset the state counts for the battler.
   this.resetStateCounts(stateId, attacker);
 
+  // track the state in the JABS engine now that vanilla tracking is settled.
+  this.addJabsState(stateId, attacker, overrides, sourceSkill);
+
+  // notify hooks that this attacker just inflicted a state, now that tracking is fully settled.
+  // fires on every application, first or repeat- unlike onStateAdded, which only fires once.
+  this.onJabsStateInflicted(stateId, attacker);
+
   // add the new state to the action result on this battler.
   this._result.pushAddedState(stateId);
 };
 
 /**
- * Extends this function to add the state to the JABS state tracker.
- * @param {number} stateId The state id to track.
- * @param {Game_Battler} attacker The battler who is applying this state.
+ * A no-op hook fired on the afflicted battler whenever an attacker successfully inflicts a state
+ * on them, including reapplications. Unlike {@link #onStateAdded}, this fires every time, not just
+ * on the first application, and carries the attacker directly rather than requiring a lookup into
+ * the JABS state tracker (which is not yet populated for this application at {@link #onStateAdded}
+ * time). Extensions may alias this to react to "I just inflicted a state on someone" scenarios.
+ * @param {number} _stateId The state id that was just inflicted.
+ * @param {Game_Battler} _attacker The battler who inflicted the state.
  */
-J.ABS.Aliased.Game_Battler.set('addNewState', Game_Battler.prototype.addNewState);
-Game_Battler.prototype.addNewState = function(stateId, attacker)
+// eslint-disable-next-line no-unused-vars
+Game_Battler.prototype.onJabsStateInflicted = function(_stateId, _attacker)
 {
-  // perform original logic.
-  J.ABS.Aliased.Game_Battler.get('addNewState')
-    .call(this, stateId);
-
-  // add the jabs state.
-  this.addJabsState(stateId, attacker);
-};
-
-/**
- * Refreshes the battler's state that is being re-applied.
- * @param {number} stateId The state id to track.
- * @param {Game_Battler} attacker The battler who is applying this state.
- */
-J.ABS.Aliased.Game_Battler.set('resetStateCounts', Game_Battler.prototype.resetStateCounts);
-Game_Battler.prototype.resetStateCounts = function(stateId, attacker)
-{
-  // perform original logic.
-  J.ABS.Aliased.Game_Battler.get('resetStateCounts')
-    .call(this, stateId);
-
-  // add the state to the battler.
-  this.addJabsState(stateId, attacker);
 };
 
 /**
  * Extends `removeState()` to also expire the state in the JABS state tracker.
- * @param {number} stateId
+ * @param {number} stateId The state id driving this step.
  */
 J.ABS.Aliased.Game_Battler.set('removeState', Game_Battler.prototype.removeState);
 Game_Battler.prototype.removeState = function(stateId)
@@ -659,9 +1337,53 @@ Game_Battler.prototype.removeState = function(stateId)
   // check if we found anything.
   if (trackedState)
   {
-    // expire the found state if it is being removed.
-    trackedState.expired = true;
+    // delete the map entry so reapplication routes through the add path, not the update path.
+    $jabsEngine.removeJabsStateByUuid(this.getUuid(), stateId);
   }
+};
+
+/**
+ * Extends `clearStates()` to also purge this battler's JABS-tracked map states.
+ * Vanilla `clearStates()` (called by `die()`, `recoverAll()`, and `escape()`) wipes `_states`
+ * directly without going through `removeState()`, which is the only place the JABS state
+ * tracker gets cleaned up. Left unhandled, a tracked state whose owning battler dies (or is
+ * otherwise vanilla-cleared) becomes permanently orphaned: its `canRemoveFromBattler()` check
+ * requires `isStateAffected()`, which is now false forever, so the tracker's `expired` flag can
+ * never flip true and it keeps ticking (regen forever) or fires again immediately on revive
+ * (bleed reapplying its damage the instant hp comes back).
+ */
+J.ABS.Aliased.Game_Battler.set('clearStates', Game_Battler.prototype.clearStates);
+Game_Battler.prototype.clearStates = function()
+{
+  // this battler may still be under construction (this is the very first clearStates() call,
+  // fired from within vanilla initMembers before initJabsMembers has set up `_j._abs`)- in that
+  // case there is nothing tracked yet, so there is nothing to purge.
+  if (this._j?._abs?._uuid && $jabsEngine)
+  {
+    // snapshot the tracked states now, since removeState() below mutates the tracker map as it goes.
+    const trackedStates = Array.from($jabsEngine.getJabsStatesByUuid(this.getUuid())
+      .values());
+
+    trackedStates.forEach(trackedState =>
+    {
+      // already fully removed- nothing left to do for this one.
+      if (trackedState.expired) return;
+
+      // never force-remove the death state itself through this path; vanilla removeState()
+      // special-cases the death state id by calling revive(), which would resurrect this
+      // battler mid-death if a stale death-state tracker happened to still be present.
+      if (trackedState.stateId === this.deathStateId()) return;
+
+      // route through the normal removal pipeline so every removeState-aliased cleanup
+      // (including J-Passive's passive-state guard, which correctly no-ops for
+      // passive-granted states) stays in sync with the state list about to be wiped wholesale.
+      this.removeState(trackedState.stateId);
+    }, this);
+  }
+
+  // perform original logic.
+  J.ABS.Aliased.Game_Battler.get('clearStates')
+    .call(this);
 };
 
 /**
@@ -702,11 +1424,90 @@ Game_Battler.prototype.decrementStateStacks = function(stateId, stacksRemoved = 
 };
 
 /**
+ * Removes up to {@link count} states from this battler, selected by highest priority first.
+ *
+ * States are filtered by {@link type}: {@code negative} selects only states tagged {@code <negative>};
+ * {@code positive} selects only states not tagged {@code <negative>}; {@code all} applies no filter.
+ * Death (state 1) is excluded unless {@link allowDeath} is {@code true}.
+ * The pool of eligible states is provided by {@link getPurgeableStates}, which upstream plugins
+ * (such as J-Passive) may override to exclude states this layer should not know about.
+ *
+ * @param {string} [type='negative'] - Which states to target: {@code negative}, {@code positive}, or {@code all}.
+ * @param {boolean} [allowDeath=false] - When {@code true}, state 1 (death) is eligible for removal.
+ * @param {number} [count=1] - Maximum number of states to remove; pass {@code Infinity} to remove all matching.
+ */
+Game_Battler.prototype.removeStatesByPriority = function(type = 'negative', allowDeath = false, count = 1)
+{
+  // collect purgeable states from the extensible pool, then apply type and death filters.
+  const candidates = this.getPurgeableStates()
+    .filter(state => this.isRemovableCandidate(state, type, allowDeath));
+
+  // sort by priority descending so the most impactful state is removed first.
+  candidates.sort((a, b) => b.priority - a.priority);
+
+  // select the top candidates up to count, then remove each and collect what was actually removed.
+  const toRemove = candidates.slice(0, count);
+  toRemove.forEach(state => this.removeState(state.id));
+
+  // return the removed states so callers can log or react to what was cleansed.
+  return toRemove;
+};
+
+/**
+ * Returns the pool of states eligible for priority-based removal via {@link removeStatesByPriority}.
+ *
+ * Base implementation returns all currently active states. Upstream plugins that manage state
+ * categories invisible to this layer (e.g. passive states) should override this method to exclude
+ * states that must never be forcibly removed.
+ *
+ * @returns {RPG_State[]} - The candidate pool before type and death filters are applied.
+ */
+Game_Battler.prototype.getPurgeableStates = function()
+{
+  // base pool: all states currently active on this battler.
+  return this.allStates();
+};
+
+/**
+ * Determines whether a state qualifies as a removal candidate given the requested type filter.
+ * @param {RPG_State} state - The state to evaluate.
+ * @param {string} type - {@code negative}, {@code positive}, or {@code all}.
+ * @param {boolean} allowDeath - Whether state 1 (death) is eligible.
+ * @returns {boolean} - {@code true} when the state passes all filters.
+ */
+Game_Battler.prototype.isRemovableCandidate = function(state, type, allowDeath)
+{
+  // death state is excluded unless the caller explicitly allows it.
+  if (state.id === 1 && allowDeath === false)
+  {
+    return false;
+  }
+
+  // negative type: only states carrying the <type:negative> classifier.
+  if (type === 'negative')
+  {
+    return state.isNegativeType();
+  }
+
+  // positive type: only states NOT carrying the <type:negative> classifier.
+  if (type === 'positive')
+  {
+    return !state.isNegativeType();
+  }
+
+  // all type: no polarity filter applied.
+  return true;
+};
+
+/**
  * Adds a particular state to become tracked by the tracker for this battler.
  * @param {number} stateId The state id to track.
  * @param {Game_Battler|Game_Actor|Game_Enemy} attacker The battler who is applying this state.
+ * @param {JABS_StateOverrides|null} overrides Optional skill-authored overrides for duration and stacks.
+ * When null, the state's own database values are used for both.
+ * @param {RPG_Skill=} sourceSkill The skill that was executing when this state was applied, if any.
  */
-Game_Battler.prototype.addJabsState = function(stateId, attacker)
+Game_Battler.prototype.addJabsState = function(stateId, attacker, overrides = null, sourceSkill = null)
 {
   // reassign the incoming parameter because we are good developers.
   let assailant = attacker;
@@ -723,38 +1524,88 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker)
 
   // extract the base duration and icon index.
   const {
-    removeByWalking,
-    stepsToRemove: baseDuration,
-    iconIndex
+    iconIndex,
+    jabsStateHasMapTimer: hasMapTimer,
+    jabsStateDurationFrames: baseDuration,
   } = state;
 
-  // calculate the total duration of the state.
-  let totalDuration = baseDuration;
+  // establish the stack default from the state's own database data; the override (if any)
+  // wins whenever it is explicitly specified.
+  const stateStacks = overrides?.stacks ?? state.jabsStateStacksApplied;
 
-  // check if the state is removable by duration.
-  if (removeByWalking)
-  {
-    // extend our states per the one applying the states.
-    totalDuration += assailant.getStateDurationBoost(baseDuration);
-  }
-  // the state is not removable, so it is an eternal state.
-  else
-  {
-    // set the duration to -1 to flag it as an eternal state.
-    totalDuration = -1;
-  }
+  // pull the override duration out, defaulting to null (meaning "no override") when absent.
+  const overrideDuration = overrides ? overrides.duration : null;
 
-  // grab the number of stacks to apply at once.
-  const stacks = state.jabsStateStacksApplied;
+  // default to eternal; finite timers come from stateDuration tags (not MZ removeByWalking).
+  let totalDuration = -1;
+
+  if (overrideDuration === -1)
+  {
+    // sentinel: -1 forces this application indefinite, regardless of the state's own tags
+    // (including <indefiniteState> being absent). totalDuration is already -1 above, and
+    // there is no finite duration to run boost math against, so nothing further to do.
+  }
+  else if (overrideDuration !== null && overrideDuration !== 0)
+  {
+    // a positive (or otherwise non-sentinel) override duration always wins over the state's
+    // own tags, including <indefiniteState> — the skill author's explicit value is authoritative.
+    totalDuration = overrideDuration
+      + assailant.getStateDurationBoost(overrideDuration)
+      + state.jabsThisStateDurationBoost(overrideDuration);
+  }
+  else if (hasMapTimer)
+  {
+    // no override was given (null/0 sentinel), so fall back entirely to the state's own tags.
+    // extend outgoing duration per the battler applying this state, using the effective base.
+    // also fold in any state-scoped boost baked into this state's own (possibly extension-merged)
+    // note, so a passive like <extendType:low-effort><thisStateDurationPerc:100> can double
+    // the duration of every matching state without touching the caster-wide boost tags above.
+    totalDuration = baseDuration
+      + assailant.getStateDurationBoost(baseDuration)
+      + state.jabsThisStateDurationBoost(baseDuration);
+  }
 
   // populate the state builder.
-  const builder = this.createJabsState(this, stateId, iconIndex, totalDuration, stacks, assailant);
+  const builder = this.createJabsState(this, stateId, iconIndex, totalDuration, stateStacks, assailant, sourceSkill);
 
   // build the state.
   const jabsState = builder.build();
 
-  // add the state to the engine's tracker.
+  // always follow the state's configured reapplication type (refresh/extend/stack); override values
+  // for duration and stacks are already baked into the jabsState and will be used as the incoming
+  // parameters to the reapplication logic, not as a reason to bypass it.
   $jabsEngine.addOrUpdateStateByUuid(this.getUuid(), jabsState);
+};
+
+/**
+ * Applies a state to this battler with skill-authored duration and/or stack overrides.
+ *
+ * Use this instead of {@link addState} when a skill notetag specifies a custom duration
+ * or starting stack count that should replace the state's own database defaults.
+ * The attacker's duration-boost tags ({@code stateDurationFlat}, {@code stateDurationPerc},
+ * {@code stateDurationFormula}) still apply on top of the overridden base duration.
+ *
+ * Falls back to vanilla state application without overrides if JABS is disabled.
+ *
+ * @param {number} stateId The id of the state to apply.
+ * @param {Game_Battler} attacker The battler applying the state.
+ * @param {JABS_StateOverrides} overrides The skill-authored duration and/or stack overrides.
+ * @param {RPG_Skill=} sourceSkill The skill that was executing when this state was applied, if any.
+ */
+Game_Battler.prototype.addStateWithOverrides = function(stateId, attacker, overrides, sourceSkill = null)
+{
+  // if JABS is disabled, fall back to vanilla state application since overrides are JABS-only.
+  if (!$jabsEngine.absEnabled)
+  {
+    // apply the state normally, discarding the overrides.
+    this.addState(stateId);
+
+    // stop processing.
+    return;
+  }
+
+  // apply the state via the JABS handler with the provided overrides.
+  this.handleAddingJabsState(stateId, attacker, overrides, sourceSkill);
 };
 
 /**
@@ -766,15 +1617,17 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker)
  * @param {number} totalDuration The total duration in frames of the state being applied.
  * @param {number} stacks The number of stacks of the state being applied.
  * @param {Game_Battler} attacker The battler applying the state.
+ * @param {RPG_Skill=} sourceSkill The skill that was executing when this state was applied, if any.
  * @returns {JABS_StateBuilder} The builder with all the parameters of the state being applied.
  */
-Game_Battler.prototype.createJabsState = function(target, stateId, iconIndex, totalDuration, stacks, attacker)
+Game_Battler.prototype.createJabsState = function(target, stateId, iconIndex, totalDuration, stacks, attacker, sourceSkill = null)
 {
   return JABS_State.Builder(target, stateId)
     .setIconIndex(iconIndex)
     .setDuration(totalDuration)
     .setStartingStacks(stacks)
-    .setSource(attacker);
+    .setSource(attacker)
+    .setSourceSkill(sourceSkill);
 };
 
 /**
@@ -814,6 +1667,17 @@ Game_Battler.prototype.getStateDurationBoost = function(baseDuration)
   // return the total state duration boost.
   return formattedDurationBoost;
 };
+
+/**
+ * Sums this battler's {@code <stackMaxBoost:VAL>} tags from every note source (actor, class,
+ * equips, states). A blanket bonus applied to the stack cap of every state this battler stacks,
+ * regardless of which state it is.
+ * @returns {number} The total bonus to add to any state's stack cap.
+ */
+Game_Battler.prototype.getStackMaxBoost = function()
+{
+  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.StackMaxBoost);
+};
 //endregion JABS state management
 
 //region JABS bonus hits
@@ -843,12 +1707,16 @@ Game_Battler.prototype.refreshBonusHits = function()
 
 /**
  * Gets all collections of sources that will be scanned for bonus hits.
+ *
+ * Uses {@link #getAllNotes} so the result benefits from the notes cache and
+ * naturally includes passives that were previously missed when this called
+ * {@link #states} directly.
  * @returns {RPG_BaseItem[][]}
  */
 Game_Battler.prototype.getBonusHitsSources = function()
 {
   return [
-    this.states(), [ this.databaseData() ],
+    this.getAllNotes(),
   ];
 };
 
@@ -908,12 +1776,18 @@ Game_Battler.prototype.setBonusHitsSkill = function(value)
 
 /**
  * Sums scoped per-connection bonus hits from a collection of traited database rows.
+ * Includes both the flat-integer tags and their `[FORMULA]` counterparts, the latter
+ * evaluated with `a` bound to this battler.
  * @param {RPG_Traited[]|RPG_BaseBattler[]|RPG_Class[]} sources Rows that may carry scoped bonus-hit notes.
  * @returns {{ global: number, basic: number, skill: number }} Totals contributed by this collection.
  */
 Game_Battler.prototype.getBonusHitsFromSources = function(sources)
 {
-  const totals = { global: 0, basic: 0, skill: 0 };
+  const totals = {
+    global: 0,
+    basic: 0,
+    skill: 0
+  };
 
   const collectFromSource = source =>
   {
@@ -926,9 +1800,281 @@ Game_Battler.prototype.getBonusHitsFromSources = function(sources)
 
   sources.forEach(collectFromSource);
 
+  // formula-based contributions are summed across the whole collection at once, since the
+  // eval context ("a" = this battler) is the same for every source in it.
+  totals.global += RPGManager.getResultsFromAllNotesByRegex(sources, J.ABS.RegExp.BonusHitsScopeGlobalFormula, 0, this);
+  totals.basic += RPGManager.getResultsFromAllNotesByRegex(sources, J.ABS.RegExp.BonusHitsScopeBasicFormula, 0, this);
+  totals.skill += RPGManager.getResultsFromAllNotesByRegex(sources, J.ABS.RegExp.BonusHitsScopeSkillFormula, 0, this);
+
   return totals;
 };
 //endregion JABS bonus hits
+
+//region luck/curse rolls
+/**
+ * The cached, unfloored battler-wide positive-reroll total. Kept unfloored so callers combining
+ * this with a this-skill contribution can floor the true combined total once, rather than
+ * compounding two separate floors.
+ * @returns {number}
+ */
+Game_Battler.prototype.getRawPositiveRolls = function()
+{
+  return this._j._abs._positiveRolls;
+};
+
+/**
+ * Sets the cached, unfloored battler-wide positive-reroll total.
+ * @param {number} value The new total.
+ */
+Game_Battler.prototype.setPositiveRolls = function(value)
+{
+  this._j._abs._positiveRolls = value;
+};
+
+/**
+ * Recomputes and caches the sum of all `<luckyRolls:[FORMULA]>` contributions from this
+ * battler's note sources, each formula evaluated with `a` bound to this battler.
+ * Called from {@link Game_Actor#onBattlerDataChange} and {@link Game_Enemy#onBattlerDataChange}.
+ */
+Game_Battler.prototype.refreshPositiveRolls = function()
+{
+  const newTotal = RPGManager.getResultsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.LuckyRolls, 0, this);
+  this.setPositiveRolls(newTotal);
+};
+
+/**
+ * The cached, unfloored battler-wide negative-reroll total.
+ * @returns {number}
+ */
+Game_Battler.prototype.getRawNegativeRolls = function()
+{
+  return this._j._abs._negativeRolls;
+};
+
+/**
+ * Sets the cached, unfloored battler-wide negative-reroll total.
+ * @param {number} value The new total.
+ */
+Game_Battler.prototype.setNegativeRolls = function(value)
+{
+  this._j._abs._negativeRolls = value;
+};
+
+/**
+ * Recomputes and caches the sum of all `<cursedRolls:[FORMULA]>` contributions from this
+ * battler's note sources, each formula evaluated with `a` bound to this battler.
+ * Called from {@link Game_Actor#onBattlerDataChange} and {@link Game_Enemy#onBattlerDataChange}.
+ */
+Game_Battler.prototype.refreshNegativeRolls = function()
+{
+  const newTotal = RPGManager.getResultsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.CursedRolls, 0, this);
+  this.setNegativeRolls(newTotal);
+};
+
+/**
+ * The total extra positive rerolls this battler contributes whenever it is the party wanting a
+ * `chanceIn100` roll to succeed (e.g. the attacker landing a hit, applying a state, or scoring
+ * a critical). Floored once at the end.
+ * @returns {number}
+ */
+Game_Battler.prototype.getPositiveRolls = function()
+{
+  return Math.floor(this.getRawPositiveRolls());
+};
+
+/**
+ * The total extra negative rerolls this battler contributes whenever it is the party wanting a
+ * `chanceIn100` roll to fail (e.g. the defender evading a hit, resisting a crit, or resisting a
+ * state). Floored once at the end.
+ * @returns {number}
+ */
+Game_Battler.prototype.getNegativeRolls = function()
+{
+  return Math.floor(this.getRawNegativeRolls());
+};
+
+/**
+ * This battler's total positive rerolls while executing the given skill: its own battler-wide
+ * `luckyRolls` plus that skill's own `<thisLuckyRolls:[FORMULA]>` bonus, floored once combined-
+ * not floored separately and then summed, which would compound rounding error.
+ * @param {RPG_UsableItem} skill The skill being executed.
+ * @returns {number}
+ */
+Game_Battler.prototype.getPositiveRollsForSkill = function(skill)
+{
+  const battlerWide = this.getRawPositiveRolls();
+  const thisSkill = RPGManager.getResultFromNoteByRegex(skill, J.ABS.RegExp.ThisLuckyRolls, 0, this);
+  return Math.floor(battlerWide + thisSkill);
+};
+
+/**
+ * This battler's total negative rerolls while executing the given skill: its own battler-wide
+ * `cursedRolls` plus that skill's own `<thisCursedRolls:[FORMULA]>` bonus, floored once combined.
+ * @param {RPG_UsableItem} skill The skill being executed.
+ * @returns {number}
+ */
+Game_Battler.prototype.getNegativeRollsForSkill = function(skill)
+{
+  const battlerWide = this.getRawNegativeRolls();
+  const thisSkill = RPGManager.getResultFromNoteByRegex(skill, J.ABS.RegExp.ThisCursedRolls, 0, this);
+  return Math.floor(battlerWide + thisSkill);
+};
+
+/**
+ * Whether or not this battler's own on-chance rolls are guaranteed to succeed- a true bypass,
+ * not an absurd reroll count. Sourced from any of this battler's own note sources via
+ * `<veryLucky>`.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isVeryLucky = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.VeryLucky) === true;
+};
+
+/**
+ * Whether or not this battler's own on-chance rolls are guaranteed to fail- a true bypass, not
+ * an absurd reroll count. Sourced from any of this battler's own note sources via `<veryCursed>`.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isVeryCursed = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.VeryCursed) === true;
+};
+
+/**
+ * The cached, floored bonus repeat count for this battler's repeatable-action procs: each
+ * individual success executes `1 + getEncoreRepeats()` times instead of once.
+ * @returns {number}
+ */
+Game_Battler.prototype.getEncoreRepeats = function()
+{
+  return Math.floor(this._j._abs._encoreRepeats);
+};
+
+/**
+ * Sets the cached, unfloored bonus repeat count.
+ * @param {number} value The new total.
+ */
+Game_Battler.prototype.setEncoreRepeats = function(value)
+{
+  this._j._abs._encoreRepeats = value;
+};
+
+/**
+ * Recomputes and caches the sum of all `<encoreRepeats:[FORMULA]>` contributions from this
+ * battler's note sources, each formula evaluated with `a` bound to this battler.
+ * Called from {@link Game_Actor#onBattlerDataChange} and {@link Game_Enemy#onBattlerDataChange}.
+ */
+Game_Battler.prototype.refreshEncoreRepeats = function()
+{
+  const newTotal = RPGManager.getResultsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.EncoreRepeats, 0, this);
+  this.setEncoreRepeats(newTotal);
+};
+
+/**
+ * Whether or not this battler's repeatable-action procs are in Accumulate Mode: every positive
+ * roll is counted instead of stopping at the first success. Sourced from any of this battler's
+ * own note sources via `<accumulate>`.
+ * @returns {boolean}
+ */
+Game_Battler.prototype.isAccumulating = function()
+{
+  return RPGManager.checkForBooleanFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.Accumulate) === true;
+};
+//endregion luck/curse rolls
+
+//region range modifiers
+/**
+ * Gets the flat tile bonus applied to all outgoing action dimensions (radius, proximity, thickness).
+ * @returns {number}
+ */
+Game_Battler.prototype.getRangeBuff = function()
+{
+  // sum every rangeBuff tag across all note sources.
+  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.RangeBuff);
+};
+
+/**
+ * Gets the multiplicative rate applied to all outgoing action dimensions.
+ * Accumulates as 1.0 + sum(each tag value - 1.0) so multiple tags stack additively.
+ * @returns {number}
+ */
+Game_Battler.prototype.getRangeRate = function()
+{
+  // accumulate each rangeRate tag's delta from 1.0, starting at 1.0.
+  const rates = RPGManager.getStringsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.RangeRate);
+  return rates.reduce((acc, rate) => acc + (Number(rate) - 1.0), 1.0);
+};
+
+/**
+ * Gets the flat tile bonus applied only to outgoing action radius (AoE splash zone).
+ * Stacks with {@link #getRangeBuff}.
+ * @returns {number}
+ */
+Game_Battler.prototype.getRadiusBuff = function()
+{
+  // sum every radiusBuff tag across all note sources.
+  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.RadiusBuff);
+};
+
+/**
+ * Gets the multiplicative rate applied only to outgoing action radius.
+ * Contributes (N - 1.0) deltas on top of {@link #getRangeRate}.
+ * @returns {number}
+ */
+Game_Battler.prototype.getRadiusRate = function()
+{
+  // accumulate each radiusRate tag's delta from 0 — the caller folds this into the shared rate.
+  const rates = RPGManager.getStringsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.RadiusRate);
+  return rates.reduce((acc, rate) => acc + (Number(rate) - 1.0), 0);
+};
+
+/**
+ * Gets the flat tile bonus applied only to outgoing action proximity (targeting reach).
+ * Stacks with {@link #getRangeBuff}.
+ * @returns {number}
+ */
+Game_Battler.prototype.getProximityBuff = function()
+{
+  // sum every proximityBuff tag across all note sources.
+  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ProximityBuff);
+};
+
+/**
+ * Gets the multiplicative rate applied only to outgoing action proximity.
+ * Contributes (N - 1.0) deltas on top of {@link #getRangeRate}.
+ * @returns {number}
+ */
+Game_Battler.prototype.getProximityRate = function()
+{
+  // accumulate each proximityRate tag's delta from 0 — the caller folds this into the shared rate.
+  const rates = RPGManager.getStringsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ProximityRate);
+  return rates.reduce((acc, rate) => acc + (Number(rate) - 1.0), 0);
+};
+
+/**
+ * Gets the flat tile bonus applied only to outgoing action thickness (LINE/WALL hitbox width).
+ * Stacks with {@link #getRangeBuff}.
+ * @returns {number}
+ */
+Game_Battler.prototype.getThicknessBuff = function()
+{
+  // sum every thicknessBuff tag across all note sources.
+  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ThicknessBuff);
+};
+
+/**
+ * Gets the multiplicative rate applied only to outgoing action thickness.
+ * Contributes (N - 1.0) deltas on top of {@link #getRangeRate}.
+ * @returns {number}
+ */
+Game_Battler.prototype.getThicknessRate = function()
+{
+  // accumulate each thicknessRate tag's delta from 0 — the caller folds this into the shared rate.
+  const rates = RPGManager.getStringsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.ThicknessRate);
+  return rates.reduce((acc, rate) => acc + (Number(rate) - 1.0), 0);
+};
+//endregion range modifiers
 
 /**
  * Checks all states to see if we have anything that grants parry ignore.
@@ -1029,8 +2175,8 @@ Game_Battler.prototype.resolveEquippedSkillId = function(baseSkillId)
  */
 Game_Battler.prototype.getResolvedSkillId = function(slot)
 {
-  // the tool slot stores item ids; transforms do not apply to it.
-  if (slot === JABS_Button.Tool)
+  // item-based slots store item ids, not skill ids; transforms do not apply to them.
+  if (slot === JABS_Button.Tool || slot === JABS_Button.UsableItem)
   {
     return this.getEquippedSkillId(slot);
   }

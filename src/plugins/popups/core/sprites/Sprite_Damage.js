@@ -1,10 +1,13 @@
 //region Sprite_Damage
+import PopupNumericDisplay from './../helpers/PopupNumericDisplay.js';
+
 /**
  * Extends this `.initialize()` function to include our parameters for all damage sprites.
  */
 J.POPUPS.Aliased.Sprite_Damage.set('initialize', Sprite_Damage.prototype.initialize);
 Sprite_Damage.prototype.initialize = function()
 {
+  // perform original logic.
   J.POPUPS.Aliased.Sprite_Damage.get('initialize')
     .call(this);
   this.initMembers();
@@ -154,6 +157,7 @@ Sprite_Damage.prototype.setYVariance = function(yVariance)
 J.POPUPS.Aliased.Sprite_Damage.set('createChildSprite', Sprite_Damage.prototype.createChildSprite);
 Sprite_Damage.prototype.createChildSprite = function(width, height)
 {
+  // perform original logic.
   const sprite = J.POPUPS.Aliased.Sprite_Damage.get('createChildSprite')
     .call(this, width, height);
   this.setupMotionData(sprite);
@@ -205,7 +209,7 @@ Sprite_Damage.prototype.createValue = function(value)
     healingPopup = true;
   }
 
-  const displayValue = J.POPUPS.formatNumericPopupDisplayString(value, healingPopup);
+  const displayValue = PopupNumericDisplay.formatNumericPopupDisplayString(value, healingPopup);
 
   if (this._j._popups._sourcePopup)
   {
@@ -226,14 +230,22 @@ Sprite_Damage.prototype.createValue = function(value)
   else
   {
     const accent = this._j._popups._textAccent;
-    const accentItalic = accent === 'miss' || accent === 'evade' || accent === 'parry';
+
+    // mitigation labels (parry/evade/miss) render smaller and italic.
+    const accentSmallItalic = accent === 'miss' || accent === 'evade' || accent === 'parry';
     const legacyItalic = displayValue.includes('Missed')
       || displayValue.includes('Evaded')
       || displayValue.includes('Parry');
 
-    if (accentItalic || legacyItalic)
+    if (accentSmallItalic || legacyItalic)
     {
       fontSize -= 6;
+      sprite.bitmap.fontItalic = true;
+    }
+
+    // glancing blows are italic at normal size; the grey color handles the visual distinction.
+    if (accent === 'glance')
+    {
       sprite.bitmap.fontItalic = true;
     }
   }
@@ -324,7 +336,8 @@ Sprite_Damage.prototype.addDuration = function(extraDuration)
 };
 
 /**
- * OVERWRITE Replaces the damage updating with our own motion management.
+ * Overwrites {@link #updateChild}.<br/>
+ * Replaces the damage updating with our own motion management.
  * @param {Sprite} sprite The sprite to udpate.
  */
 Sprite_Damage.prototype.updateChild = function(sprite)
@@ -454,7 +467,8 @@ Sprite_Damage.prototype.flyawayDamageSpriteMotion = function(sprite)
 };
 
 /**
- * OVERWRITE Updates the duration to start fading later, and for longer.
+ * Overwrites {@link #updateOpacity}.<br/>
+ * Updates the duration to start fading later, and for longer.
  */
 Sprite_Damage.prototype.updateOpacity = function()
 {
@@ -475,7 +489,8 @@ Sprite_Damage.prototype.setDamageColor = function(damageColor)
 };
 
 /**
- * OVERWRITE Replaces the color with a designated color on-creation.
+ * Overwrites {@link #damageColor}.<br/>
+ * Replaces the color with a designated color on-creation.
  */
 Sprite_Damage.prototype.damageColor = function()
 {
@@ -488,6 +503,7 @@ Sprite_Damage.prototype.damageColor = function()
 J.POPUPS.Aliased.Sprite_Damage.set('setupCriticalEffect', Sprite_Damage.prototype.setupCriticalEffect);
 Sprite_Damage.prototype.setupCriticalEffect = function()
 {
+  // perform original logic.
   J.POPUPS.Aliased.Sprite_Damage.get('setupCriticalEffect')
     .call(this);
 

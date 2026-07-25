@@ -10,6 +10,7 @@ import JaftingSalvageManager from './../managers/JaftingSalvageManager.js';
 J.JAFTING.Aliased.DataManager.set('createGameObjects', DataManager.createGameObjects);
 DataManager.createGameObjects = function()
 {
+  // perform original logic.
   J.JAFTING.Aliased.DataManager.get('createGameObjects')
     .call(this);
 
@@ -20,6 +21,7 @@ DataManager.createGameObjects = function()
 J.JAFTING.Aliased.DataManager.set('extractSaveContents', DataManager.extractSaveContents);
 DataManager.extractSaveContents = function(contents)
 {
+  // perform original logic.
   J.JAFTING.Aliased.DataManager.get('extractSaveContents')
     .call(this, contents);
 

@@ -5,12 +5,10 @@
  * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Provides core functionality for this HUD system.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
- * @base J-ABS
  * @base J-Base
- * @base J-HUD
- * @orderAfter J-ABS
+ * @base J-ABS
  * @orderAfter J-Base
- * @orderAfter J-HUD
+ * @orderAfter J-ABS
  * @help
  * ============================================================================
  * OVERVIEW
@@ -70,6 +68,19 @@
  * - "Refresh HUD Image Cache"
  *    Refreshes the image cache of the HUD, for when you change faces.
  *
+ * ============================================================================
+ * NOTE ABOUT NOTETAGS:
+ * This plugin has no notetags of its own- HUD control is entirely
+ * plugin-command driven.
+ * ============================================================================
+ * CHANGELOG:
+ * - 2.1.0
+ *    Added a dual-row (negative/positive) state affliction presenter to the
+ *    party HUD frame- icons, timers, and stack counts, sprite-cached per
+ *    battler and cleaned up on target switch.
+ *    Added an explicit J-ABS 4.0.0+ version requirement check at boot.
+ *    Fixed a self-referencing @base/@orderAfter J-HUD declaration on this
+ *    plugin's own header.
  * ============================================================================
  * @command hideHud
  * @text Hide HUD

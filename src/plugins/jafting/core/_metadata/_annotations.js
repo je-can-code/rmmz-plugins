@@ -32,7 +32,18 @@
  * that unifies access to all JAFTING scenes. You could also just directly
  * call the other JAFTING scenes directly if you preferred.
  * ============================================================================
+ * NOTE ABOUT NOTETAGS:
+ * This plugin has no notetags of its own- salvage/refine material typing is
+ * configured entirely via plugin parameters (armor/weapon type ids), and
+ * the JAFTING extensions that plug into this hub (Creation, Refinement) own
+ * their own respective tags.
+ * ============================================================================
  * CHANGELOG:
+ * - 2.1.3
+ *    Split JaftingSalvageDataModels.js into one file per class
+ *    (JaftingSalvageLedgerRow/Snapshot/PartyLedgerBag) and registered all
+ *    three with SerializableRegistry so JsonEx restores keep their
+ *    prototype methods after a save load.
  * - 2.1.2
  *    Salvage hub row: label, icon, optional switch gate
  *    ({@link Window_JaftingList}).

@@ -1,0 +1,85 @@
+//region plugins/hud/ext/food/_metadata/metadata.test.js
+import { beforeAll, describe, expect, it, vi } from 'vitest';
+
+import {
+  installHudHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJHud,
+  setPluginContextToJHudFood,
+} from '../../../_component/fixtures/install-hud-host-globals.js';
+
+describe('J-HUD-FOOD metadata (direct src import)', () =>
+{
+  beforeAll(async () =>
+  {
+    vi.resetModules();
+
+    installHudHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+
+    setPluginContextToJHud();
+    await import('../../../../../../src/plugins/hud/core/_metadata/initialization.js');
+
+    setPluginContextToJHudFood();
+    await import('../../../../../../src/plugins/hud/ext/food/_metadata/initialization.js');
+  });
+
+  it('exposes plugin name on J.HUD.EXT.FOOD.Metadata', () =>
+  {
+    // Arrange & Act & Assert
+    expect(globalThis.J.HUD.EXT.FOOD.Metadata.name).toBe('J-HUD-FOOD');
+  });
+
+  it('exposes plugin version on J.HUD.EXT.FOOD.Metadata', () =>
+  {
+    // Arrange & Act & Assert
+    expect(globalThis.J.HUD.EXT.FOOD.Metadata.version).toMatchObject({ major: 1, minor: 0, patch: 0 });
+  });
+
+  it('falls back to the default window position and size when unconfigured', () =>
+  {
+    // Arrange & Act
+    const { Metadata } = globalThis.J.HUD.EXT.FOOD;
+
+    // Assert
+    expect(Metadata.windowX).toBe(0);
+    expect(Metadata.windowY).toBe(70);
+    expect(Metadata.windowWidth).toBe(200);
+    expect(Metadata.windowHeight).toBe(478);
+  });
+
+  it('falls back to full opacity when unconfigured', () =>
+  {
+    // Arrange & Act & Assert
+    expect(globalThis.J.HUD.EXT.FOOD.Metadata.windowOpacity).toBe(255);
+  });
+
+  it('initializes empty aliased maps for every hooked class', () =>
+  {
+    // Arrange & Act
+    const { Aliased } = globalThis.J.HUD.EXT.FOOD;
+
+    // Assert
+    expect(Aliased.JABS_Engine).toBeInstanceOf(Map);
+    expect(Aliased.Scene_Map).toBeInstanceOf(Map);
+  });
+
+  it('throws when J-Base does not satisfy the minimum required version', async () =>
+  {
+    // Arrange: downgrade the already-installed J-Base metadata below FOOD's required floor.
+    vi.resetModules();
+    const originalVersion = globalThis.J.BASE.Metadata.Version;
+    globalThis.J.BASE.Metadata.Version = '0.0.1';
+    setPluginContextToJHudFood();
+
+    // Act & Assert
+    await expect(import('../../../../../../src/plugins/hud/ext/food/_metadata/initialization.js'))
+      .rejects.toThrow(/missing J-Base/);
+
+    // reset back to a satisfying version so later tests in the suite are unaffected.
+    globalThis.J.BASE.Metadata.Version = originalVersion;
+  });
+});
+//endregion plugins/hud/ext/food/_metadata/metadata.test.js

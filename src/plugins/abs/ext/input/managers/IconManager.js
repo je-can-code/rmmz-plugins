@@ -175,8 +175,9 @@ IconManager.jabsIconTextForSymbol = function(symbol)
   // handle empty/unbound case.
   if (!symbol) return "(unbound)";
 
-  // return the ex-text for the symbol, or the symbol itself if not mapped.
-  return this.jabsInputTextForSymbol(symbol) || String(symbol);
+  // return the ex-text for the symbol, or the symbol itself if not mapped (jabsInputTextForSymbol
+  // already guarantees a truthy result for any truthy symbol via its own fallback chain).
+  return this.jabsInputTextForSymbol(symbol);
 };
 
 /**

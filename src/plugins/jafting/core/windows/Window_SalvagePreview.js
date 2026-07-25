@@ -18,13 +18,14 @@ class Window_SalvagePreview
     super(rect);
     this._datum = null;
     this._dismantleAmount = 1;
+    // store  refund two column on the instance for later reads.
     this._refundTwoColumn = false;
   }
 
   /**
    * When true, refund rows render in two columns so more components fit without scrolling.
    *
-   * @param {boolean} flag
+   * @param {boolean} flag The flag driving this step.
    */
   setRefundTwoColumnMode(flag)
   {
@@ -34,7 +35,7 @@ class Window_SalvagePreview
   /**
    * How many stamped units one confirm action dismantles (must match {@link Scene_JaftingSalvage.DismantleBatchSize}).
    *
-   * @param {number} amount
+   * @param {number} amount The amount driving this step.
    */
   setDismantleAmount(amount)
   {
@@ -44,12 +45,13 @@ class Window_SalvagePreview
     }
     else
     {
+      // store  dismantle amount on the instance for later reads.
       this._dismantleAmount = amount;
     }
   }
 
   /**
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null} datum The datum driving this step.
    */
   setDatum(datum)
   {
@@ -74,6 +76,7 @@ class Window_SalvagePreview
     {
       this.drawText('Select an item to preview refunds.', 0, 0, this.contentsWidth(), 'left');
 
+      // exit early without a payload.
       return;
     }
 
@@ -83,6 +86,7 @@ class Window_SalvagePreview
     {
       this.drawText('Nothing recoverable is stamped on this item.', 0, 0, this.contentsWidth(), 'left');
 
+      // exit early without a payload.
       return;
     }
 
@@ -98,6 +102,7 @@ class Window_SalvagePreview
         'left',
       );
 
+      // exit early without a payload.
       return;
     }
 
@@ -136,7 +141,7 @@ class Window_SalvagePreview
   }
 
   /**
-   * @param {object[]} rows
+   * @param {object[]} rows The rows driving this step.
    * @returns {object[]}
    */
   static collectNonBannedRows(rows)
@@ -152,6 +157,7 @@ class Window_SalvagePreview
         continue;
       }
 
+      // Append the row to the working collection.
       out.push(row);
     }
 
@@ -159,12 +165,12 @@ class Window_SalvagePreview
   }
 
   /**
-   * @param {number} y
-   * @param {object[]} visibleRows
-   * @param {number} batch
-   * @param {number} lh
-   * @param {number} countCol
-   * @param {number} nameW
+   * @param {number} y The y driving this step.
+   * @param {object[]} visibleRows The visible rows driving this step.
+   * @param {number} batch The batch driving this step.
+   * @param {number} lh The lh driving this step.
+   * @param {number} countCol The count col driving this step.
+   * @param {number} nameW The name w driving this step.
    */
   paintExpandedRefundRows(y, visibleRows, batch, lh, countCol, nameW)
   {
@@ -172,6 +178,7 @@ class Window_SalvagePreview
     {
       this.paintExpandedRefundRowsSingle(y, visibleRows, batch, lh, countCol, nameW);
 
+      // exit early without a payload.
       return;
     }
 
@@ -179,12 +186,12 @@ class Window_SalvagePreview
   }
 
   /**
-   * @param {number} y
-   * @param {object[]} visibleRows
-   * @param {number} batch
-   * @param {number} lh
-   * @param {number} countCol
-   * @param {number} nameW
+   * @param {number} y The y driving this step.
+   * @param {object[]} visibleRows The visible rows driving this step.
+   * @param {number} batch The batch driving this step.
+   * @param {number} lh The lh driving this step.
+   * @param {number} countCol The count col driving this step.
+   * @param {number} nameW The name w driving this step.
    */
   paintExpandedRefundRowsSingle(y, visibleRows, batch, lh, countCol, nameW)
   {
@@ -213,10 +220,10 @@ class Window_SalvagePreview
   }
 
   /**
-   * @param {number} y
-   * @param {object[]} visibleRows
-   * @param {number} batch
-   * @param {number} lh
+   * @param {number} y The y driving this step.
+   * @param {object[]} visibleRows The visible rows driving this step.
+   * @param {number} batch The batch driving this step.
+   * @param {number} lh The lh driving this step.
    */
   paintExpandedRefundRowsDouble(y, visibleRows, batch, lh)
   {
@@ -263,7 +270,7 @@ class Window_SalvagePreview
   }
 
   /**
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum The datum driving this step.
    * @returns {number}
    */
   static previewContentLineCount(datum)
@@ -272,7 +279,7 @@ class Window_SalvagePreview
   }
 
   /**
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum The datum driving this step.
    * @returns {number}
    */
   static previewContentLineCountTwoColumn(datum)
@@ -281,7 +288,7 @@ class Window_SalvagePreview
   }
 
   /**
-   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null|undefined} datum The datum driving this step.
    * @returns {number}
    */
   static countVisibleRefundRowsForDatum(datum)
@@ -291,12 +298,12 @@ class Window_SalvagePreview
 
   /**
    * @param {{ t: string, id: number, n: number, banned?: boolean }} row
-   * @param {number} baseX
-   * @param {number} y
-   * @param {number} dismantleBatch
-   * @param {number} lh
-   * @param {number} countCol
-   * @param {number} nameW
+   * @param {number} baseX The base x driving this step.
+   * @param {number} y The y driving this step.
+   * @param {number} dismantleBatch The dismantle batch driving this step.
+   * @param {number} lh The lh driving this step.
+   * @param {number} countCol The count col driving this step.
+   * @param {number} nameW The name w driving this step.
    * @param {number} colInnerW width budget for this column (drawItemName + count).
    * @returns {number} next Y below this row.
    */

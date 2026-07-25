@@ -117,8 +117,8 @@ class Window_RecipeDetails
   /**
    * Wraps plain text to fit width using the current font metrics (caller sets face).
    *
-   * @param {string} text
-   * @param {number} maxWidth
+   * @param {string} text The text driving this step.
+   * @param {number} maxWidth The max width driving this step.
    * @returns {string[]}
    */
   #splitLongToken(token, maxWidth)
@@ -141,6 +141,7 @@ class Window_RecipeDetails
           segments.push(chunk);
         }
 
+        // continue the routine with the next policy step.
         chunk = token.charAt(ci);
       }
     }
@@ -219,8 +220,8 @@ class Window_RecipeDetails
   /**
    * Measures wrapped lines for italic subtext at the standard recipe-detail size.
    *
-   * @param {string} subtext
-   * @param {number} bandWidth
+   * @param {string} subtext The subtext driving this step.
+   * @param {number} bandWidth The band width driving this step.
    * @returns {string[]}
    */
   #measureItalicSubtextLines(subtext, bandWidth)
@@ -247,6 +248,7 @@ class Window_RecipeDetails
       Window_RecipeDetails.#SUBTEXT_OUTPUTS,
     ];
 
+    // continue the routine with the next policy step.
     this.#prepareItalicsSubtextFont();
     const subLineHeight = this.lineHeight();
     this.#restoreAfterItalicsSubtextFont();
@@ -263,6 +265,7 @@ class Window_RecipeDetails
 
       const lines = this.#measureItalicSubtextLines(subtexts[i], cw);
 
+      // Append the row to the working collection.
       layouts.push({ titleH, lines, subLineHeight });
     }
 
@@ -288,12 +291,12 @@ class Window_RecipeDetails
   /**
    * Draws title + wrapped subtext for one column; horizontal rules are drawn separately at a shared Y.
    *
-   * @param {number} x
-   * @param {number} y
-   * @param {number} bandWidth
-   * @param {string} title
-   * @param {string[]} lines
-   * @param {number} subLineHeight
+   * @param {number} x The x driving this step.
+   * @param {number} y The y driving this step.
+   * @param {number} bandWidth The band width driving this step.
+   * @param {string} title The title driving this step.
+   * @param {string[]} lines The lines driving this step.
+   * @param {number} subLineHeight The sub line height driving this step.
    */
   #drawColumnTitleAndSubtext(x, y, bandWidth, title, lines, subLineHeight)
   {
@@ -304,6 +307,7 @@ class Window_RecipeDetails
     let cursor = y + this.lineHeight();
     this.toggleBold();
 
+    // continue the routine with the next policy step.
     this.#prepareItalicsSubtextFont();
 
     for (let li = 0; li < lines.length; li++)
@@ -312,6 +316,7 @@ class Window_RecipeDetails
       cursor += subLineHeight;
     }
 
+    // continue the routine with the next policy step.
     this.#restoreAfterItalicsSubtextFont();
   }
 
@@ -347,7 +352,7 @@ class Window_RecipeDetails
   }
 
   /**
-   * Implements {@link Window_Base.drawContent}.<br>
+   * Implements {@link Window_Base.drawContent}.<br/>
    * Draws the recipe details header bands and the primary output column.
    */
   drawContent()
@@ -390,8 +395,8 @@ class Window_RecipeDetails
   }
 
   /**
-   * @param {number} x
-   * @param {number} y
+   * @param {number} x The x driving this step.
+   * @param {number} y The y driving this step.
    * @param {number} bandWidth width of the fourth (detail) column
    */
   drawPrimaryOutput(x, y, bandWidth)

@@ -484,6 +484,7 @@ class Sprite_FlowingGauge
     const sliceW = this.gaugeWidth();
     const maxFlow = sliceW - this._gaugeSliceFillMinX - this._gaugeSliceFillInnerWidth;
 
+    // store  gauge actual flow limit on the instance for later reads.
     this._gaugeActualFlowLimit = Math.max(1, maxFlow);
     this._gaugeActualFlowCurrent = Math.floor(Math.random() * this._gaugeActualFlowLimit);
   }
@@ -766,6 +767,7 @@ class Sprite_FlowingGauge
 
     if (sliceW === 0 || sliceH === 0) return;
 
+    // store  gauge slice fill inner width on the instance for later reads.
     this._gaugeSliceFillInnerWidth = sliceW;
     this._gaugeBackgroundTrackInnerWidth = this._backgroundBitmap
       ? this._backgroundBitmap.width
@@ -808,6 +810,7 @@ class Sprite_FlowingGauge
 
     const trackInnerW = Math.max(1, bgTrack.maxX - bgTrack.minX + 1);
 
+    // store  gauge slice fill min x on the instance for later reads.
     this._gaugeSliceFillMinX = fillMinX;
     this._gaugeSliceFillInnerWidth = fillInnerW;
     this._gaugeBackgroundTrackMinX = bgTrack.minX;

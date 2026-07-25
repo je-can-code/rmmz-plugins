@@ -64,6 +64,7 @@ class JABS_ChargingTier
     this.maxDuration = maxDuration;
     this.tier = tier;
     this.skillId = skillId;
+    // assign while charging animation id on this instance for callers.
     this.whileChargingAnimationId = whileChargingAnimationId;
     this.chargeTierCompleteAnimationId = maxChargeReadyAnimationId;
   }

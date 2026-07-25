@@ -187,10 +187,32 @@ Scene_Status.prototype.refreshActor = function()
   list.setActor(actor);
 
   // also set the actor on the breakdown.
-  breakdown.setContext(actor, list.currentLongParamId());
+  breakdown.setContext(actor, list.currentParameterKey());
+};
+
+/**
+ * Overwrites {@link #onActorChange}.<br/>
+ * Vanilla activates {@link this._statusWindow}, which CMS does not use.
+ * Refresh all CMS windows and restore focus for the active page.
+ */
+Scene_Status.prototype.onActorChange = function()
+{
+  Scene_MenuBase.prototype.onActorChange.call(this);
+  this.refreshActor();
+  this.applyPageVisibility();
 };
 
 //region rect helpers
+/**
+ * Width of the stacked actor + equip column on the left edge of Page 1.
+ * @returns {number}
+ */
+Scene_Status.prototype.statusLeftColumnWidth = function()
+{
+  // ~25% narrower than the original 30% column — reclaimed width goes to the stat grid.
+  return Math.round(Graphics.boxWidth * 0.225);
+};
+
 /**
  * The rectangle for the status window.
  * @returns {Rectangle}
@@ -199,7 +221,7 @@ Scene_Status.prototype.statusWindowRect = function()
 {
   const wx = 0;
   const wy = 0;
-  const ww = Math.round(Graphics.boxWidth * 0.3);
+  const ww = this.statusLeftColumnWidth();
   const wh = Math.round(Graphics.boxHeight * 0.6);
   return new Rectangle(wx, wy, ww, wh);
 };
@@ -212,7 +234,7 @@ Scene_Status.prototype.statusEquipWindowRect = function()
 {
   const wx = 0;
   const wy = this.getStatusWindow().height;
-  const ww = Math.round(Graphics.boxWidth * 0.3);
+  const ww = this.statusLeftColumnWidth();
   const wh = Math.round(Graphics.boxHeight * 0.4);
   return new Rectangle(wx, wy, ww, wh);
 };
@@ -223,15 +245,17 @@ Scene_Status.prototype.statusEquipWindowRect = function()
  */
 Scene_Status.prototype.statusParamsWindowRect = function()
 {
-  // grab the width of the status window.
-  const wx = this.getStatusWindow().width;
+  const leftColumnWidth = this.statusLeftColumnWidth();
+
+  // sit flush against the narrowed actor column.
+  const wx = leftColumnWidth;
 
   // compute the vertical offset from the hint’s height.
   const hintRect = this.statusHintWindowRect();
   const wy = hintRect.height;
 
-  // keep the same width as before.
-  const ww = Math.round(Graphics.boxWidth * 0.7);
+  // span the remainder of the screen to the right edge.
+  const ww = Graphics.boxWidth - leftColumnWidth;
 
   // fill remaining height beneath the hint.
   const wh = Graphics.boxHeight - wy;
@@ -246,8 +270,10 @@ Scene_Status.prototype.statusParamsWindowRect = function()
  */
 Scene_Status.prototype.statusStatListWindowRect = function()
 {
+  const leftColumnWidth = this.statusLeftColumnWidth();
+
   // start exactly after the left column.
-  const wx = Math.round(Graphics.boxWidth * 0.3);
+  const wx = leftColumnWidth;
 
   // align directly under the hint (no top gap).
   const hintRect = this.statusHintWindowRect();
@@ -290,8 +316,10 @@ Scene_Status.prototype.statusStatBreakdownWindowRect = function()
  */
 Scene_Status.prototype.statusHintWindowRect = function()
 {
+  const leftColumnWidth = this.statusLeftColumnWidth();
+
   // start the hint immediately after the left column.
-  const wx = this.getStatusWindow().width;
+  const wx = leftColumnWidth;
 
   // arbitrary y.
   const wy = 0;
@@ -361,7 +389,7 @@ Scene_Status.prototype.createStatBreakdownWindow = function()
   const rect = this.statusStatBreakdownWindowRect();
   const breakdown = new Window_StatusStatBreakdown(rect);
   this.setStatBreakdownWindow(breakdown);
-  breakdown.setContext(this.actor(), 0);
+  breakdown.setContext(this.actor(), 'mhp');
   this.addWindow(breakdown);
 };
 
@@ -394,12 +422,12 @@ Scene_Status.prototype.onStatListChanged = function()
   if (this.getPageIndex() !== 1) return;
 
   // grab the selected long param id.
-  const longId = this.getStatListWindow()
-    .currentLongParamId();
+  const parameterKey = this.getStatListWindow()
+    .currentParameterKey();
 
   // update the context of the breakdown window.
   this.getStatBreakdownWindow()
-    .setContext(this.actor(), longId);
+    .setContext(this.actor(), parameterKey);
 };
 
 /**
@@ -490,39 +518,46 @@ Scene_Status.prototype.updatePageSwitchCooldown = function()
     return;
   }
 
-  // handle page switching when not cooling down.
+  // handle normalized menu input when not cooling down.
   if (this.getSwitchCooldown() === 0)
   {
-    // handle the potential for page switching.
-    this.handlePageSwitching();
+    this.handleNormalizedStatusInput();
   }
 };
 
 /**
- * Handles page switching between status breakdown and stat overview.
+ * Handles L2/R2 page switching and L1/R1 actor cycling for the status scene.
+ * Page 1 has no active selectable window, so this lives at scene scope.
  */
-Scene_Status.prototype.handlePageSwitching = function()
+Scene_Status.prototype.handleNormalizedStatusInput = function()
 {
-  // check for left/right inputs.
-  const goPrev = Input.isTriggered('left') || Input.isTriggered('dpad-left');
-  const goNext = Input.isTriggered('right') || Input.isTriggered('dpad-right');
+  let handled = false;
 
-  // check if we received input.
-  if (goPrev || goNext)
+  // L2 or R2 flips between the overview grid and the stat breakdown list.
+  if (Input.isTriggered('l2') || Input.isTriggered('r2'))
   {
-    // identify the next page index.
     const next = (this.getPageIndex() + 1) % 2;
-
-    // flip the index.
     this.setPageIndex(next);
-
-    // update the visibility of the windows.
     this.applyPageVisibility();
-
-    // update the stat list if needed.
     this.onStatListChanged();
+    handled = true;
+  }
 
-    // small debounce to avoid rapid flips when holding.
+  // L1 / R1 cycle the viewed party member.
+  if (Input.isTriggered('pageup'))
+  {
+    this.previousActor();
+    handled = true;
+  }
+
+  if (Input.isTriggered('pagedown'))
+  {
+    this.nextActor();
+    handled = true;
+  }
+
+  if (handled)
+  {
     this.setSwitchCooldown(12);
   }
 };

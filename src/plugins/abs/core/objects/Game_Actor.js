@@ -1,9 +1,9 @@
 //region Game_Actor
-import JABS_SkillSlot from './../__models/JABS_SkillSlot.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_SkillSlot from '../models/JABS_SkillSlot.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
- * Extends {@link #initJabsMembers}.<br>
+ * Extends {@link #initJabsMembers}.<br/>
  * Includes additional actor-specific members.
  */
 J.ABS.Aliased.Game_Actor.set('initJabsMembers', Game_Actor.prototype.initJabsMembers);
@@ -69,12 +69,11 @@ Game_Actor.prototype.jabsRefresh = function()
   // refresh the currently equipped skills to ensure they are still valid.
   this.refreshBasicAttackSkills();
 
-  // refresh the bonus hits to ensure they are still accurate.
-  this.refreshBonusHits();
+  // bonus hits are refreshed by onBattlerDataChange, which always fires before jabsRefresh.
 };
 
 /**
- * Extends {@link #onBattlerDataChange}.<br>
+ * Extends {@link #onBattlerDataChange}.<br/>
  * Adds a hook for performing actions when the battler's data hase changed.
  */
 J.ABS.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onBattlerDataChange);
@@ -83,6 +82,29 @@ Game_Actor.prototype.onBattlerDataChange = function()
   // perform original logic.
   J.ABS.Aliased.Game_Actor.get('onBattlerDataChange')
     .call(this);
+
+  // invalidate the vision modifier cache — enemies use this to scale pursuit radius against the actor.
+  this.setCachedVisionModifier(null);
+
+  // invalidate the projectile duration modifier cache — recomputed lazily on next access.
+  this.setCachedProjectileDurationModifier(null);
+
+  // bonus hits are derived from getAllNotes() which changes whenever battler data changes
+  // (equips, states, passives, etc.) — recompute the cache to stay current.
+  this.refreshBonusHits();
+
+  // recompute cached CDR from note sources.
+  this.refreshCdr();
+
+  // recompute cached PER from note sources.
+  this.refreshPer();
+
+  // recompute cached luck/curse roll totals from note sources.
+  this.refreshPositiveRolls();
+  this.refreshNegativeRolls();
+
+  // recompute cached bonus repeat count from note sources.
+  this.refreshEncoreRepeats();
 
   // update JABS-related things.
   this.jabsRefresh();
@@ -196,7 +218,9 @@ Game_Actor.prototype.updateOffhandSkill = function()
  *
  * Resolution precedence (highest first):
  *  1. Native offhand equip-seal (returns 0) unless the mainhand also defines an
- *     {@link RPG_EquipItem#jabsOffhandSkillId offhandSkillId} that bypasses it.
+ *     {@link RPG_EquipItem#jabsOffhandSkillId offhandSkillId} that bypasses it, or the
+ *     actor is also dual-wielding (a second weapon has taken over the physical slot the
+ *     seal was meant to empty, so there is nothing left for the seal to enforce).
  *  2. Player pin via the JABS quick menu, when the pinned skill is still assignable.
  *  3. The mainhand's provided offhand skill via {@code <offhandSkillId:N>}.
  *  4. The equipped offhand item's {@link RPG_EquipItem#jabsSkillId jabsSkillId}.
@@ -209,9 +233,11 @@ Game_Actor.prototype.updateOffhandSkill = function()
 Game_Actor.prototype.getOffhandSkill = function()
 {
   // an offhand equip-seal trait anywhere on the battler seals the slot unless the
-  // same weapon also declares its own offhand skill. this preserves spear-like
-  // weapons that intentionally define a specific offhand action.
-  if (this.isTwoHanded() && !this.mainhandDeclaresOffhandSkillId())
+  // same weapon also declares its own offhand skill (spear-like weapons), or dual-wield
+  // is also active. vanilla RMMZ's own dual-wield handling already reclassifies the
+  // offhand equip slot into a second weapon slot before this ever runs, so the seal has
+  // no physical slot left to enforce- a "deathgrip both weapons" build keeps both combos.
+  if (this.isTwoHanded() && !this.mainhandDeclaresOffhandSkillId() && !this.isDualWield())
   {
     return 0;
   }
@@ -364,7 +390,18 @@ Game_Actor.prototype.isMainhandProvidedOffhandSkill = function(skillId)
 
   // transformed match against the state-upgraded result of the mainhand's provided skill.
   const transformedMainhandSkillId = this.getTransformedOffhandSkillId(mainhandProvidedSkillId);
-  return transformedMainhandSkillId === skillId;
+  if (transformedMainhandSkillId === skillId) return true;
+
+  // combo chain match — the executing skill may be a combo descendent of the root offhand skill
+  // (e.g. row 5 follows row 4 via <combo>); walk the full chain and accept any member.
+  const rootSkill = $dataSkills.at(mainhandProvidedSkillId);
+  if (rootSkill)
+  {
+    const comboChain = rootSkill.getComboSkillIdList();
+    if (comboChain.includes(skillId)) return true;
+  }
+
+  return false;
 };
 
 /**
@@ -381,6 +418,25 @@ Game_Actor.prototype.getOffhandEquippedSkillId = function()
 
   // return the offhand's granted skill id.
   return offhand.jabsSkillId ?? 0;
+};
+
+/**
+ * Gets the guard skill declared by the equipped offhand item, if any.
+ * This is independent of {@link #getOffhandEquippedSkillId}- an offhand item with no
+ * guard skill declared grants no guarding capability at all, regardless of whatever
+ * attack skill it or the mainhand weapon provides.
+ * @returns {number}
+ */
+Game_Actor.prototype.getGuardSkillId = function()
+{
+  // grab only the offhand equip.
+  const [ , offhand ] = this.equips();
+
+  // no offhand means there is no guard skill to resolve.
+  if (!offhand) return 0;
+
+  // return the offhand's declared guard skill id, if any.
+  return offhand.jabsGuardSkillId ?? 0;
 };
 
 /**
@@ -522,6 +578,28 @@ Game_Actor.prototype.buildOffhandAssignableSkillPool = function()
 
   // return the translated pool.
   return skillPool;
+};
+
+/**
+ * Builds the list of skills available for player pinning into the combat slot.
+ * @returns {RPG_Skill[]}
+ */
+Game_Actor.prototype.buildCombatSkillCandidatePool = function()
+{
+  // grab all of this actor's learned skills that are visible in the combat quick menu.
+  return this.skills()
+    .filter(JABS_Battler.isSkillVisibleInCombatMenu);
+};
+
+/**
+ * Builds the list of skills available for player pinning into the dodge slot.
+ * @returns {RPG_Skill[]}
+ */
+Game_Actor.prototype.buildDodgeSkillCandidatePool = function()
+{
+  // grab all of this actor's learned skills that are visible in the dodge quick menu.
+  return this.skills()
+    .filter(JABS_Battler.isSkillVisibleInDodgeMenu);
 };
 
 /**
@@ -687,6 +765,7 @@ Game_Actor.prototype.getUuid = function()
     return `actor-${this.actorId()}`;
   }
 
+  // Surface a non-fatal warning for operator triage.
   console.warn("no uuid currently available for this actor.", this);
   return String.empty;
 };
@@ -851,6 +930,15 @@ Game_Actor.prototype.showHpBar = function()
 };
 
 /**
+ * Actors always show their map affliction strip when states are active.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.showStates = function()
+{
+  return true;
+};
+
+/**
  * Gets whether or not the actor's name will show below their character.
  * Actors never show their name.
  * @returns {boolean}
@@ -948,6 +1036,9 @@ Game_Actor.prototype.onRevive = function()
 
   // stops this battler from being flagged as dead by JABS.
   this.stopDying();
+
+  // the death context is no longer relevant after revival.
+  this.clearDeathContext();
 };
 
 /**
@@ -1050,7 +1141,8 @@ Game_Actor.prototype.getUpgradableSkillSlots = function()
 
 //region leveling
 /**
- * OVERWRITE Replaces the levelup display on the map to not display a message.
+ * Overwrites {@link #shouldDisplayLevelUp}.<br/>
+ * Replaces the levelup display on the map to not display a message.
  */
 Game_Actor.prototype.shouldDisplayLevelUp = function()
 {
@@ -1084,7 +1176,7 @@ Game_Actor.prototype.jabsLevelUp = function()
 };
 
 /**
- * Extends {@link #onLevelDown}.<br>
+ * Extends {@link #onLevelDown}.<br/>
  * Also refresh sprites' danger indicator.
  */
 J.ABS.Aliased.Game_Actor.set('onLevelDown', Game_Actor.prototype.onLevelDown);
@@ -1323,8 +1415,8 @@ Game_Actor.prototype.refreshAutoEquippedSkills = function()
 Game_Actor.prototype.getBonusHitsSources = function()
 {
   return [
-    // states may contain bonus hits.
-    this.states(),
+    // allStates includes passive states; states() only returns regular states.
+    this.allStates(),
 
     // the actor itself may contain bonus hits.
     [ this.databaseData() ],
@@ -1380,6 +1472,7 @@ Game_Actor.prototype.turnEndOnMap = function()
   if (!$jabsEngine.absEnabled) return;
 
   // do normal turn-end things while JABS is disabled.
+  // perform original logic.
   J.ABS.Aliased.Game_Actor.get('turnEndOnMap')
     .call(this);
 };

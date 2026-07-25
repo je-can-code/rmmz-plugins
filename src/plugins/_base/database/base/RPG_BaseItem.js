@@ -37,6 +37,22 @@ class RPG_BaseItem
   }
 }
 
+/**
+ * A frozen sentinel representing an empty or unoccupied database item slot.
+ * Use in place of null when a slot may have no item equipped so that callers
+ * can read {@code .name}, {@code .iconIndex}, and {@code .description} without
+ * null-guarding. Distinguish a real entry from this sentinel via {@code entry.id > 0}.
+ * @type {Readonly<{id: number, index: number, name: string, note: string, meta: {}, description: string, iconIndex: number}>}
+ */
+RPG_BaseItem.Empty = Object.freeze({
+  id: 0,
+  index: 0,
+  name: '',
+  note: '',
+  meta: {},
+  description: '',
+  iconIndex: 0,
+});
 
 export default RPG_BaseItem;
 //endregion RPG_BaseItem

@@ -107,6 +107,28 @@ J.BASE.Traits = {
 };
 
 /**
+ * String keys representing the three core battler resources.
+ * Passed as the first argument to {@link Game_Battler#onHeal} so listeners
+ * can branch without comparing magic strings themselves.
+ */
+J.BASE.Resource = {
+  /**
+   * Hit points — the primary health resource.
+   */
+  HP: 'hp',
+
+  /**
+   * Magic points — the mana / skill cost resource.
+   */
+  MP: 'mp',
+
+  /**
+   * Tech points — the limit / combo resource.
+   */
+  TP: 'tp',
+};
+
+/**
  * All regular expressions used by this plugin.
  */
 J.BASE.RegExp = {};
@@ -114,7 +136,12 @@ J.BASE.RegExp = {};
 /**
  * The basic structure for the maximum count of a number of items holdable is.
  */
-J.BASE.RegExp.MaxItems = /<max:(d+)>/gi;
+J.BASE.RegExp.MaxItems = /<max:(\d+)>/gi;
+
+/**
+ * Outgoing heal potency multiplier — the sender-side counterpart to REC (`<har:25>` = +25%).
+ */
+J.BASE.RegExp.HealAmplification = /<har:(-?\d+)>/gi;
 
 /**
  * The definition of what a parsable comment in an event looks like.
@@ -136,6 +163,24 @@ J.BASE.RegExp.ParsableComment = /^<[[\]\w :"',.!+\-*/\\]+>$/i;
 J.BASE.RegExp.MaxTp = /<maxTp: ?(-?\d+)>/i;
 
 /**
+ * One or more type classifiers assigned to a state.
+ * Multiple tags on the same state are all collected.
+ *
+ * <pre>
+ * Structure:
+ *  <type:CLASSIFIER>
+ *
+ * Example:
+ *  <type:poison>
+ *
+ * Translation:
+ *  This state belongs to the "poison" classifier category.
+ * </pre>
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ClassifierType = /<type:[ ]?([a-zA-Z][a-zA-Z0-9_-]*)>/gi;
+
+/**
  * A collection of all aliased methods for this plugin.
  */
 J.BASE.Aliased = {
@@ -143,6 +188,7 @@ J.BASE.Aliased = {
   Bitmap: new Map(),
   DataManager: new Map(),
   JsonEx: new Map(),
+  Game_Action: new Map(),
   Game_BattlerBase: new Map(),
   Game_Character: {},
   Game_Actor: new Map(),
@@ -153,11 +199,12 @@ J.BASE.Aliased = {
   Game_Timer: new Map(),
   Game_System: new Map(),
   Scene_Base: new Map(),
+  Scene_Boot: new Map(),
   Scene_MenuBase: new Map(),
   SoundManager: new Map(),
   Window_Base: new Map(),
-  Window_Command: {},
-  Window_Selectable: {},
+  Window_Command: new Map(),
+  Window_Selectable: new Map(),
 };
 
 //region Helpers
@@ -351,7 +398,7 @@ Object.defineProperty(Array, "empty", {
 /**
  * Executes a given function a given number of `times`.
  * This uses `.forEach()` under the covers, so build your functions accordingly.
- * @param {number} times
+ * @param {number} times The times driving this step.
  * @param {Function} func The function
  * @param {undefined|any=} thisArg What represents "this" in the `.forEach()`; defaults to undefined.
  */
@@ -367,7 +414,7 @@ Array.iterate = function(times, func, thisArg = undefined)
  */
 Date.prototype.addDays = function(days)
 {
-  var result = new Date(this.valueOf());
+  const result = new Date(this.valueOf());
   result.setDate(result.getDate() + days);
   return result;
 };
@@ -410,30 +457,3 @@ J.BASE.Helpers.maskString = function(stringToMask, maskingCharacter = "?")
     .replace(structure, maskingCharacter);
 };
 //endregion Helpers
-
-/**
- * A polyfill for {@link Array.prototype.at}.<br>
- * If this is not present in the available runtime, then this implementation
- * will be used instead.
- */
-if (![].at)
-{
-  /* eslint-disable */
-  Array.prototype.at = function(index)
-  {
-    index = Math.trunc(index) || 0;
-
-    if (index < 0)
-    {
-      index += this.length;
-    }
-
-    if (index < 0 || index >= this.length)
-    {
-      return undefined;
-    }
-
-    return this[index];
-  };
-  /* eslint-enable */
-}

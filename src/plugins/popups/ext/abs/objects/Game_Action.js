@@ -6,6 +6,7 @@
 J.POPUPS.EXT.ABS.Aliased.Game_Action.set('onFormulaResourceDelta', Game_Action.prototype.onFormulaResourceDelta);
 Game_Action.prototype.onFormulaResourceDelta = function(recipient, amount, resource)
 {
+  // perform original logic.
   J.POPUPS.EXT.ABS.Aliased.Game_Action.get('onFormulaResourceDelta')
     .call(this, recipient, amount, resource);
 
@@ -53,12 +54,14 @@ Game_Action.prototype.onFormulaResourceDelta = function(recipient, amount, resou
 J.POPUPS.EXT.ABS.Aliased.Game_Action.set('onShieldDamageAbsorbed', Game_Action.prototype.onShieldDamageAbsorbed);
 Game_Action.prototype.onShieldDamageAbsorbed = function(target, value)
 {
+  // perform original logic.
   J.POPUPS.EXT.ABS.Aliased.Game_Action.get('onShieldDamageAbsorbed')
     .call(this, target, value);
 
   const jabsBattler = JABS_AiManager.getBattlerByUuid(target.getUuid());
   if (!jabsBattler) return;
 
+  // construct pop for the next step in this routine.
   const pop = new TextPopBuilder(`  -${Math.round(value)}`)
     .isShieldDamage()
     .build();
@@ -73,12 +76,14 @@ Game_Action.prototype.onShieldDamageAbsorbed = function(target, value)
 J.POPUPS.EXT.ABS.Aliased.Game_Action.set('onShieldBroken', Game_Action.prototype.onShieldBroken);
 Game_Action.prototype.onShieldBroken = function(target)
 {
+  // perform original logic.
   J.POPUPS.EXT.ABS.Aliased.Game_Action.get('onShieldBroken')
     .call(this, target);
 
   const jabsBattler = JABS_AiManager.getBattlerByUuid(target.getUuid());
   if (!jabsBattler) return;
 
+  // construct pop for the next step in this routine.
   const pop = new TextPopBuilder(`B R E A K`)
     .isShieldBreak()
     .build();

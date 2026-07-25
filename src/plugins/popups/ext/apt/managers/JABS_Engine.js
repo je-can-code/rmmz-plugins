@@ -6,6 +6,7 @@
 J.POPUPS.EXT.APT.Aliased.JABS_Engine.set('gainAptitudeReward', JABS_Engine.prototype.gainAptitudeReward);
 JABS_Engine.prototype.gainAptitudeReward = function(ap, actor, enemy)
 {
+  // perform original logic.
   J.POPUPS.EXT.APT.Aliased.JABS_Engine.get('gainAptitudeReward')
     .call(this, ap, actor, enemy);
 
@@ -38,6 +39,7 @@ JABS_Engine.prototype.gainAptitudeReward = function(ap, actor, enemy)
 J.POPUPS.EXT.APT.Aliased.JABS_Engine.set('onTypedApGained', JABS_Engine.prototype.onTypedApGained);
 JABS_Engine.prototype.onTypedApGained = function(apPoints, character, apTypeKey)
 {
+  // perform original logic.
   J.POPUPS.EXT.APT.Aliased.JABS_Engine.get('onTypedApGained')
     .call(this, apPoints, character, apTypeKey);
 

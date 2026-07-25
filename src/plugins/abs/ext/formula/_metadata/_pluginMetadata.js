@@ -11,7 +11,7 @@ class JFORMULA_PluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Includes translation of plugin parameters.
    */
   postInitialize()

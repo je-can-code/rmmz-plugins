@@ -1,7 +1,7 @@
 //region Game_Event
 import MinimapEventType from './../__models/MinimapEventType.js';
 /**
- * Extends {@link Game_Event.initMembers}.<br>
+ * Extends {@link Game_Event.initMembers}.<br/>
  * Initializes minimap-related properties.
  */
 J.MAP.Aliased.Game_Event.set('initMembers', Game_Event.prototype.initMembers);

@@ -2,7 +2,7 @@
 import OverlayManager from './../managers/OverlayManager.js';
 
 /**
- * Overrides {@link #setSkill}.<br>
+ * Overwrites {@link #setSkill}.<br/>
  * If a caster is available to this action, then update the udnerlying skill with
  * the overlayed skill instead.
  */
@@ -28,7 +28,7 @@ Game_Action.prototype.setSkill = function(skillId)
 };
 
 /**
- * Overrides {@link #setItemObject}.<br>
+ * Overwrites {@link #setItemObject}.<br/>
  * If a caster is available to this action, then update the underlying item with the data.
  */
 J.EXTEND.Aliased.Game_Action.set('setItemObject', Game_Action.prototype.setItemObject);
@@ -50,7 +50,7 @@ Game_Action.prototype.setItemObject = function(itemObject)
 };
 
 /**
- * Extends {@link #apply}.<br>
+ * Extends {@link #apply}.<br/>
  * Also applies on-hit states.
  */
 J.EXTEND.Aliased.Game_Action.set('apply', Game_Action.prototype.apply);
@@ -78,6 +78,9 @@ Game_Action.prototype.applyOnHitStateEffects = function(target)
 
   // apply our on-hit lose-states if we have any.
   this.applyOnHitLoseStates();
+
+  // apply our on-hit apply-states (with optional duration/stack overrides) if we have any.
+  this.applyOnHitApplyStates(target);
 
   // apply our on-hit strip-states if we have any.
   this.applyOnHitStripStates(target);
@@ -206,8 +209,55 @@ Game_Action.prototype.onHitRemoveStates = function()
 };
 
 /**
- * Extends {@link #applyItemUserEffect}.<br>
- * Also applies on-cast states.
+ * Applies all on-hit apply-states to the target, drawing from two sources:
+ * the executing skill ({@code <thisApplyState>}) and the caster's full notes
+ * ({@code <applyState>}). Caster-wide entries fire first; skill-scoped entries
+ * fire second and win on any same-state conflict via force-replace semantics.
+ *
+ * Each entry is evaluated independently: the chance is rolled, and on success a
+ * {@link JABS_StateOverrides} is constructed and passed to
+ * {@link Game_Battler#addStateWithOverrides}.
+ * Target state resistance is still respected inside {@link Game_Battler#handleAddingJabsState}.
+ * @param {Game_Actor|Game_Enemy} target The target being hit with the action.
+ */
+Game_Action.prototype.applyOnHitApplyStates = function(target)
+{
+  // grab caster-wide applyState entries from all of the attacker's notes. each
+  // <applyState:[...]> tag is a single bracket, so it parses directly into a tuple.
+  const casterEntries = RPGManager.getArraysFromAllNotesByRegex(
+    this.subject().getAllNotes(),
+    J.EXTEND.RegExp.ApplyState);
+
+  // grab skill-scoped thisApplyState entries from the executing skill only.
+  const skillEntries = RPGManager.getArraysFromNotesByRegex(this.item(), J.EXTEND.RegExp.ThisApplyState);
+
+  // combine both lists; caster-wide fires first, skill-scoped fires last and wins conflicts.
+  const allEntries = [...casterEntries, ...skillEntries];
+
+  // if there are no entries from either source, there is nothing to do.
+  if (!allEntries.length) return;
+
+  // grab the attacker for attribution when tracking the applied state.
+  const attacker = this.subject();
+
+  // iterate over every entry and conditionally apply.
+  allEntries.forEach(([stateId, chance, duration = null, stacks = null]) =>
+  {
+    // roll the chance; if it doesn't pass, this state does not apply on this hit.
+    if (!RPGManager.chanceIn100(chance)) return;
+
+    // build the overrides object from whatever the tag provided.
+    const overrides = new JABS_StateOverrides(duration, stacks);
+
+    // apply the state to the target with the overrides; resistance is checked inside.
+    target.addStateWithOverrides(stateId, attacker, overrides, this.item());
+  });
+};
+
+/**
+ * Extends {@link #applyItemUserEffect}.<br/>
+ * Also applies on-cast target-affecting states (strip/remove).
+ * On-cast self states (self/lose) fire once at press-time via {@link JABS_Engine#handleOnCastStateEffects} instead.
  */
 J.EXTEND.Aliased.Game_Action.set('applyItemUserEffect', Game_Action.prototype.applyItemUserEffect);
 Game_Action.prototype.applyItemUserEffect = function(target)
@@ -216,17 +266,117 @@ Game_Action.prototype.applyItemUserEffect = function(target)
   J.EXTEND.Aliased.Game_Action.get('applyItemUserEffect')
     .call(this, target);
 
-  // apply our on-cast self-states if we have any.
-  this.applyOnCastSelfStates();
-
-  // apply our on-cast lose-states if we have any.
-  this.applyOnCastLoseStates();
-
   // apply our on-cast strip-states if we have any.
   this.applyOnCastStripStates(target);
 
   // apply our on-cast remove-states if we have any.
   this.applyOnCastRemoveStates(target);
+};
+
+/**
+ * Toggles all {@code <toggleOnExecute:STATE_ID>} states on the caster: for each tagged state id,
+ * removes it if the caster currently has it, or adds it if they don't. Fires once at press-time
+ * (see {@link JABS_Engine#handleOnCastStateEffects}), same as the on-cast self-state family below.
+ * There is no chance roll; this always triggers when the skill executes.
+ */
+Game_Action.prototype.applyToggleOnExecuteStates = function()
+{
+  // grab the caster; this is a self-only toggle, so the caster is always both actor and target.
+  const caster = this.subject();
+
+  // toggle each tagged state independently.
+  this.toggleOnExecuteStateIds()
+    .forEach(stateId =>
+    {
+      // if the caster already has this state, toggling it off means removing it.
+      if (caster.isStateAffected(stateId))
+      {
+        caster.removeState(stateId);
+      }
+      // otherwise, toggling it on means adding it, attributed to the caster.
+      else
+      {
+        caster.addState(stateId, caster);
+      }
+    });
+};
+
+/**
+ * Gets all state ids tagged with {@code <toggleOnExecute:STATE_ID>} on the executing skill.
+ * Skill-scoped only; a skill may carry multiple tags to toggle multiple states in one execution.
+ * @returns {number[]}
+ */
+Game_Action.prototype.toggleOnExecuteStateIds = function()
+{
+  // this tag is skill-scoped, so only the executing skill's own note is read.
+  // getNumbersFromNoteByRegex is the wrong tool here- it expects a single bracketed
+  // list capture (e.g. <passive:[1,2,3]>), but this tag captures one bare number per
+  // repeated line, so getStringsFromNoteByRegex (which correctly collects one entry
+  // per matching line rather than overwriting) is what actually matches this shape.
+  return RPGManager.getStringsFromNoteByRegex(this.item(), J.EXTEND.RegExp.ToggleOnExecute)
+    .map(Number);
+};
+
+/**
+ * Cycles all {@code <toggleGroupOnExecute:[STATE_ID, ...]>} groups on the caster: for each
+ * tagged group, advances the caster from whichever state in the group is currently active to
+ * the next one in the list, wrapping back to the first after the last. Fires once at
+ * press-time, same as {@link #applyToggleOnExecuteStates}.
+ */
+Game_Action.prototype.applyToggleGroupOnExecuteStates = function()
+{
+  // grab the caster; this is a self-only toggle, same as the scalar form above.
+  const caster = this.subject();
+
+  // cycle each tagged group independently.
+  this.toggleGroupOnExecuteGroups()
+    .forEach(group =>
+    {
+      // find every id in this group the caster currently has active.
+      const activeIds = group.filter(stateId => caster.isStateAffected(stateId));
+
+      // remove whatever is currently active before adding the next one- this covers the
+      // "exactly one active" case as well as the "somehow more than one active" repair case,
+      // since removing zero, one, or many ids all funnel through the same call.
+      activeIds.forEach(stateId => caster.removeState(stateId));
+
+      // with none active (a fresh group) or exactly one active, the next id to add is the
+      // one immediately after the (single) active id, wrapping to the front of the list.
+      // with more than one active (a corrupted group), skip the wrap logic entirely and
+      // resync straight to the first id in the list.
+      let nextId;
+      if (activeIds.length === 1)
+      {
+        // find where the currently-active id sits in the group's ordering.
+        const currentIndex = group.indexOf(activeIds[0]);
+
+        // step forward one slot, wrapping back to 0 once we'd run past the last index.
+        const nextIndex = (currentIndex + 1) % group.length;
+
+        // that wrapped index is the one we advance to.
+        nextId = group[nextIndex];
+      }
+      else
+      {
+        // zero or 2+ active: resync straight to the first id in the list.
+        [ nextId ] = group;
+      }
+
+      // add the resolved next id, attributed to the caster.
+      caster.addState(nextId, caster);
+    });
+};
+
+/**
+ * Gets all cycle groups tagged with {@code <toggleGroupOnExecute:[STATE_ID, ...]>} on the
+ * executing skill. Skill-scoped only; a skill may carry multiple tags to cycle multiple
+ * independent groups in one execution.
+ * @returns {number[][]}
+ */
+Game_Action.prototype.toggleGroupOnExecuteGroups = function()
+{
+  // this tag is skill-scoped, so only the executing skill's own note is read.
+  return RPGManager.getArraysFromNotesByRegex(this.item(), J.EXTEND.RegExp.ToggleGroupOnExecute);
 };
 
 /**
@@ -248,6 +398,40 @@ Game_Action.prototype.applyOnCastLoseStates = function()
 };
 
 /**
+ * Applies conditional on-cast self-states that require the caster to already have a specific state.
+ * Reads from the skill note and the caster's active states.
+ * Each tag is [STATE_TO_APPLY, CHANCE, STATE_REQUIREMENT]; the state is applied only when the
+ * caster is currently afflicted with STATE_REQUIREMENT.
+ */
+Game_Action.prototype.applyOnCastSelfStatesIfAfflicted = function()
+{
+  // grab the caster for affliction checks and state application.
+  const caster = this.subject();
+
+  // gather all sources that could carry this tag: the skill itself and the caster's active states.
+  const sources = this.reactiveStateSources();
+
+  // collect every [stateToApply, chance, stateRequirement] triple across all sources.
+  const allArrays = sources.flatMap(source =>
+    RPGManager.getArraysFromNotesByRegex(source, J.EXTEND.RegExp.OnCastSelfStateIfAfflicted) ?? []
+  );
+
+  // nothing to do if no tags were found.
+  if (allArrays.length === 0) return;
+
+  // build a JABS_OnChanceEffect for each tag that passes the affliction gate, then apply them
+  // all through applyStates so the JABS engine registers the tracker (required for HUD display).
+  const effects = allArrays
+    .filter(([ , , stateRequirement ]) => caster.isStateAffected(stateRequirement))
+    .map(([ stateToApply, chance ]) =>
+      new JABS_OnChanceEffect(stateToApply, chance, J.EXTEND.RegExp.OnCastSelfStateIfAfflicted.toString())
+    );
+
+  // apply any qualifying effects through the JABS path so they appear in the HUD.
+  this.applyStates(caster, effects);
+};
+
+/**
  * Applies all applicable on-cast state stripping.
  * @param {Game_Actor|Game_Enemy} target The target the casted action will affect.
  */
@@ -265,6 +449,120 @@ Game_Action.prototype.applyOnCastRemoveStates = function(target)
 {
   // apply all removable states to a target.
   this.removeStates(target, this.onCastRemoveStates());
+};
+
+/**
+ * Maximum nesting depth permitted for {@code <onCastExecuteSkill>} chains.
+ * A forced skill's own tag is allowed to trigger one further hop before being cut off, guarding
+ * against an authoring mistake (or a deliberately cyclic pair of skills) looping forever.
+ * @type {number}
+ */
+const ON_CAST_EXECUTE_SKILL_MAX_DEPTH = 2;
+
+/**
+ * Current nesting depth of in-flight {@code <onCastExecuteSkill>} dispatches.
+ * @type {number}
+ */
+let onCastExecuteSkillDepth = 0;
+
+/**
+ * Gets all skills that should be force-executed when casting this skill, alongside their
+ * individual roll chances. Skill-scoped and repeatable — a skill may carry several
+ * {@code <onCastExecuteSkill>} tags, each collected and rolled independently.
+ * @returns {[number, number][]} Tuples of `[skillId, chance]`.
+ */
+Game_Action.prototype.onCastExecuteSkills = function()
+{
+  // this tag is skill-scoped, so only the executing skill's own note is read.
+  return RPGManager.getArraysFromNotesByRegex(this.item(), J.EXTEND.RegExp.OnCastExecuteSkill) ?? [];
+};
+
+/**
+ * Rolls and force-executes a batch of already-gated `[skillId, chance]` payloads through JABS,
+ * sharing the single depth guard between both the unconditional and state-gated
+ * {@code onCastExecuteSkill} families so a mixed chain still can't loop forever.
+ * @param {[number, number][]} payloads Tuples of `[skillId, chance]` that have already passed
+ * whatever gate (if any) applies to their source tag.
+ * @param {JABS_Battler} caster The JABS battler executing this cast.
+ */
+function dispatchOnCastExecuteSkillPayloads(payloads, caster)
+{
+  // nothing to do if no tags were found.
+  if (payloads.length === 0) return;
+
+  // bail out once nesting gets too deep- a forced skill's own onCastExecuteSkill tag would
+  // otherwise be able to re-trigger this same chain indefinitely.
+  if (onCastExecuteSkillDepth >= ON_CAST_EXECUTE_SKILL_MAX_DEPTH) return;
+
+  // track this dispatch on the depth stack for the duration of the forced executions below.
+  onCastExecuteSkillDepth += 1;
+
+  try
+  {
+    // roll each payload independently and force-execute the skill on success.
+    payloads.forEach(([skillId, chance]) =>
+    {
+      // skip the roll entirely when it fails; nothing to execute this tag this cast.
+      if (!RPGManager.chanceIn100(chance)) return;
+
+      // force the payload skill onto the map as a real, independent action.
+      $jabsEngine.forceMapAction(caster, skillId, false);
+    });
+  }
+  finally
+  {
+    // always unwind the depth counter, even if a forced execution threw partway through.
+    onCastExecuteSkillDepth -= 1;
+  }
+}
+
+/**
+ * Force-executes every qualifying {@code <onCastExecuteSkill>} payload through JABS, exactly once
+ * at the moment of press. Each tag rolls its own chance independently, so a single cast can chain
+ * into several follow-up skills at once.
+ * @param {JABS_Battler} caster The JABS battler executing this cast.
+ */
+Game_Action.prototype.applyOnCastExecuteSkills = function(caster)
+{
+  // grab every authored payload tuple from the executing skill and dispatch them, unconditionally.
+  dispatchOnCastExecuteSkillPayloads(this.onCastExecuteSkills(), caster);
+};
+
+/**
+ * Gets all state-gated skills that should be force-executed when casting this skill, alongside
+ * their individual roll chances. Reads {@code <onCastExecuteSkillIfAfflicted>} from the executing
+ * skill's own note only ({@code this.item()}), same skill-scoped rule as its unconditional sibling.
+ * @returns {[number, number, number][]} Tuples of `[skillId, chance, stateRequirement]`.
+ */
+Game_Action.prototype.onCastExecuteSkillsIfAfflicted = function()
+{
+  // this tag is skill-scoped, so only the executing skill's own note is read.
+  return RPGManager.getArraysFromNotesByRegex(this.item(), J.EXTEND.RegExp.OnCastExecuteSkillIfAfflicted) ?? [];
+};
+
+/**
+ * Force-executes every qualifying {@code <onCastExecuteSkillIfAfflicted>} payload through JABS,
+ * exactly once at the moment of press, but only for tags whose required state is currently active
+ * on the caster. Lets a skill fire one of several possible payloads depending on which state the
+ * caster is carrying, without ever rolling or executing the ones that don't apply.
+ * @param {JABS_Battler} caster The JABS battler executing this cast.
+ */
+Game_Action.prototype.applyOnCastExecuteSkillsIfAfflicted = function(caster)
+{
+  // grab the underlying battler for the affliction check below.
+  const subject = this.subject();
+
+  // gather every authored [skillId, chance, stateRequirement] triple from the executing skill.
+  const allTriples = this.onCastExecuteSkillsIfAfflicted();
+
+  // keep only the tags whose required state is currently active on the caster, then drop the
+  // now-redundant requirement slot so the shared dispatcher gets plain [skillId, chance] tuples.
+  const qualifyingPayloads = allTriples
+    .filter(([ , , stateRequirement ]) => subject.isStateAffected(stateRequirement))
+    .map(([ skillId, chance ]) => [ skillId, chance ]);
+
+  // dispatch whatever survived the affliction gate through the shared roll-and-execute path.
+  dispatchOnCastExecuteSkillPayloads(qualifyingPayloads, caster);
 };
 
 /**
@@ -364,11 +662,19 @@ Game_Action.prototype.applyStates = function(target, jabsOnChanceEffects)
   // iterate over each of them and see if we should apply them.
   jabsOnChanceEffects.forEach(jabsOnChanceEffect =>
   {
-    // roll the dice to see if the on-chance effect applies.
-    if (jabsOnChanceEffect.shouldTrigger())
+    // the caster wants the state to stick; the target's own curse can undermine that success.
+    const attacker = this.subject();
+    const skill = jabsOnChanceEffect.baseSkill(attacker);
+    const positiveRolls = 1 + attacker.getPositiveRollsForSkill(skill);
+    const negativeRolls = target.getNegativeRolls();
+
+    // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
+    const procCount = jabsOnChanceEffect.resolveProcCount(positiveRolls, negativeRolls, attacker);
+
+    // apply the given state once per success, with the caster as the attacker.
+    for (let i = 0; i < procCount; i++)
     {
-      // apply the given state to the caster, with the caster as the attacker.
-      target.addState(jabsOnChanceEffect.skillId, this.subject());
+      target.addState(jabsOnChanceEffect.skillId, attacker, skill);
     }
   });
 };
@@ -387,8 +693,14 @@ Game_Action.prototype.loseStates = function(target, jabsOnChanceEffects)
   // iterate over each of them and see if we should apply them.
   jabsOnChanceEffects.forEach(jabsOnChanceEffect =>
   {
+    // the caster wants the removal to succeed; the target's own curse can resist it.
+    const attacker = this.subject();
+    const skill = jabsOnChanceEffect.baseSkill(attacker);
+    const positiveRolls = 1 + attacker.getPositiveRollsForSkill(skill);
+    const negativeRolls = target.getNegativeRolls();
+
     // roll the dice to see if the on-chance effect applies.
-    if (jabsOnChanceEffect.shouldTrigger())
+    if (jabsOnChanceEffect.shouldTrigger(positiveRolls, negativeRolls, attacker))
     {
       // lose the given state from the target.
       this.loseState(target, jabsOnChanceEffect.skillId);
@@ -410,8 +722,14 @@ Game_Action.prototype.stripStates = function(target, jabsOnChanceEffects)
   // iterate over each of them and see if we should apply them.
   jabsOnChanceEffects.forEach(jabsOnChanceEffect =>
   {
+    // the caster wants the strip to succeed; the target's own curse can resist it.
+    const attacker = this.subject();
+    const skill = jabsOnChanceEffect.baseSkill(attacker);
+    const positiveRolls = 1 + attacker.getPositiveRollsForSkill(skill);
+    const negativeRolls = target.getNegativeRolls();
+
     // roll the dice to see if the on-chance effect applies.
-    if (jabsOnChanceEffect.shouldTrigger())
+    if (jabsOnChanceEffect.shouldTrigger(positiveRolls, negativeRolls, attacker))
     {
       // strip the given state from the target.
       this.stripState(target, jabsOnChanceEffect.skillId);
@@ -471,8 +789,14 @@ Game_Action.prototype.removeStates = function(target, jabsOnChanceEffects)
   // iterate over each of them and see if we should apply them.
   jabsOnChanceEffects.forEach(jabsOnChanceEffect =>
   {
+    // the caster wants the removal to succeed; the target's own curse can resist it.
+    const attacker = this.subject();
+    const skill = jabsOnChanceEffect.baseSkill(attacker);
+    const positiveRolls = 1 + attacker.getPositiveRollsForSkill(skill);
+    const negativeRolls = target.getNegativeRolls();
+
     // roll the dice to see if the on-chance effect applies.
-    if (jabsOnChanceEffect.shouldTrigger())
+    if (jabsOnChanceEffect.shouldTrigger(positiveRolls, negativeRolls, attacker))
     {
       // apply the given state to the caster, with the caster as the attacker.
       target.removeState(jabsOnChanceEffect.skillId);

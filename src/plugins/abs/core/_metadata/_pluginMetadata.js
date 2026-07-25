@@ -1,6 +1,4 @@
 //region plugin metadata
-import JABS_State from './../__models/JABS_State.js';
-
 class J_AbsPluginMetadata
   extends PluginMetadata
 {
@@ -13,7 +11,7 @@ class J_AbsPluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps plugin parameters and external config into metadata fields.
    */
   postInitialize()
@@ -35,6 +33,7 @@ class J_AbsPluginMetadata
     this.initializeElementalIconMetadata();
     this.initializeActionDecidedMetadata();
     this.initializeAggroMetadata();
+    this.initializeChannelMetadata();
     this.initializeStateMetadata();
     this.initializeMiscMovementMetadata();
     this.initializeHitboxMeleeOriginMetadata();
@@ -42,7 +41,9 @@ class J_AbsPluginMetadata
     this.initializeParryMetadata();
     this.initializeQuickMenuTextMetadata();
     this.initializeGlobalCooldownMetadata();
+    this.initializeSkillExecutionMetadata();
     this.initializeHitboxOverlayStyleMetadata();
+    this.initializeMapAfflictionMetadata();
   }
 
   /**
@@ -62,9 +63,11 @@ class J_AbsPluginMetadata
     this.DefaultActionMapId = Number(this.parsedPluginParameters['actionMapId']);
     this.DefaultEnemyMapId = Number(this.parsedPluginParameters['enemyMapId']);
     this.DefaultDodgeSkillTypeId = Number(this.parsedPluginParameters['dodgeSkillTypeId']);
+    // assign default guard skill type id on this instance for callers.
     this.DefaultGuardSkillTypeId = Number(this.parsedPluginParameters['guardSkillTypeId']);
     this.DefaultWeaponSkillTypeId = Number(this.parsedPluginParameters['weaponSkillTypeId']);
     this.DefaultToolCooldownTime = Number(this.parsedPluginParameters['defaultToolCooldownTime']);
+    // assign default attack animation id on this instance for callers.
     this.DefaultAttackAnimationId = Number(this.parsedPluginParameters['defaultAttackAnimationId']);
     this.DefaultLootExpiration = Number(this.parsedPluginParameters['defaultLootExpiration']);
   }
@@ -103,12 +106,15 @@ class J_AbsPluginMetadata
     this.DefaultEnemyPrepareTime = Number(this.parsedPluginParameters['defaultEnemyPrepareTime']);
     this.DefaultEnemyAttackSkillId = Number(this.parsedPluginParameters['defaultEnemyAttackSkillId']);
     this.DefaultEnemySightRange = Number(this.parsedPluginParameters['defaultEnemySightRange']);
+    // assign default enemy pursuit range on this instance for callers.
     this.DefaultEnemyPursuitRange = Number(this.parsedPluginParameters['defaultEnemyPursuitRange']);
     this.DefaultEnemyAlertedSightBoost = Number(this.parsedPluginParameters['defaultEnemyAlertedSightBoost']);
     this.DefaultEnemyAlertedPursuitBoost = Number(this.parsedPluginParameters['defaultEnemyAlertedPursuitBoost']);
+    // assign default enemy alert duration on this instance for callers.
     this.DefaultEnemyAlertDuration = Number(this.parsedPluginParameters['defaultEnemyAlertDuration']);
     this.DefaultEnemyCanIdle = Boolean(this.parsedPluginParameters['defaultEnemyCanIdle'] === 'true');
     this.DefaultEnemyShowHpBar = Boolean(this.parsedPluginParameters['defaultEnemyShowHpBar'] === 'true');
+    // assign default enemy show battler name on this instance for callers.
     this.DefaultEnemyShowBattlerName = Boolean(this.parsedPluginParameters['defaultEnemyShowBattlerName'] === 'true');
     this.DefaultEnemyIsInvincible = Boolean(this.parsedPluginParameters['defaultEnemyIsInvincible'] === 'true');
     this.DefaultEnemyIsInanimate = Boolean(this.parsedPluginParameters['defaultEnemyIsInanimate'] === 'true');
@@ -140,11 +146,23 @@ class J_AbsPluginMetadata
     this.BaseAggro = Number(this.parsedPluginParameters['baseAggro']);
     this.AggroPerHp = Number(this.parsedPluginParameters['aggroPerHp']);
     this.AggroPerMp = Number(this.parsedPluginParameters['aggroPerMp']);
+    // assign aggro per tp on this instance for callers.
     this.AggroPerTp = Number(this.parsedPluginParameters['aggroPerTp']);
     this.AggroDrain = Number(this.parsedPluginParameters['aggroDrainMultiplier']);
     this.AggroParryFlatAmount = Number(this.parsedPluginParameters['aggroParryFlatAmount']);
+    // assign aggro parry user gain on this instance for callers.
     this.AggroParryUserGain = Number(this.parsedPluginParameters['aggroParryUserGain']);
     this.AggroPlayerReduction = Number(this.parsedPluginParameters['aggroPlayerReduction']);
+  }
+
+  /**
+   * Maps channeling defaults from plugin parameters.
+   */
+  initializeChannelMetadata()
+  {
+    // fallback tick speed for a `<channel:[SKILL_ID, DURATION]>` skill that omits its own
+    // `<channelTickSpeed:N>` override.
+    this.DefaultChannelTickSpeed = Number(this.parsedPluginParameters['defaultChannelTickSpeed']) || 30;
   }
 
   /**
@@ -152,14 +170,23 @@ class J_AbsPluginMetadata
    */
   initializeStateMetadata()
   {
-    this.DefaultStateReapplyType = this.parsedPluginParameters['defaultStateReapplyType'] || JABS_State.reapplicationType.Refresh;
+    this.DefaultStateReapplyType = this.parsedPluginParameters['defaultStateReapplyType'] || 'refresh';
 
+    // assign default state refresh diminish on this instance for callers.
     this.DefaultStateRefreshDiminish = Number(this.parsedPluginParameters['defaultStateRefreshDiminish']) || 120;
     this.DefaultStateRefreshReset = Number(this.parsedPluginParameters['defaultStateRefreshReset']) || 900;
+    this.DefaultStateSpreadTickInterval = Number(this.parsedPluginParameters['defaultStateSpreadTickInterval']) || 30;
 
+    // assign the default/minimum state tick interval and natural regen type on this instance for callers.
+    this.DefaultStateTickInterval = Number(this.parsedPluginParameters['defaultStateTickInterval']) || 60;
+    this.MinimumStateTickInterval = Number(this.parsedPluginParameters['minimumStateTickInterval']) || 4;
+    this.NaturalRegenTickType = this.parsedPluginParameters['naturalRegenTickType'] || 'regen';
+
+    // assign default state extend amount on this instance for callers.
     this.DefaultStateExtendAmount = Number(this.parsedPluginParameters['defaultStateExtendAmount']) || 180;
     this.DefaultStateExtendMax = Number(this.parsedPluginParameters['defaultStateExtendMax']) || 216000;
 
+    // assign default state stack max on this instance for callers.
     this.DefaultStateStackMax = Number(this.parsedPluginParameters['defaultStateStackMax']) || 5;
     this.DefaultStateApplicationCount = Number(this.parsedPluginParameters['defaultStateApplicationCount']) || 1;
     this.DefaultStateLoseAllStacksAtOnce = (this.parsedPluginParameters['defaultStateLoseAllStacksAtOnce'] === 'true') || false;
@@ -173,6 +200,7 @@ class J_AbsPluginMetadata
     this.LootPickupRange = Number(this.parsedPluginParameters['lootPickupDistance']);
     this.AllyRubberbandAdjustment = Number(this.parsedPluginParameters['allyRubberbandAdjustment']);
     this.DashSpeedBoost = Number(this.parsedPluginParameters['dashSpeedBoost']);
+    // assign hitbox overlays initially visible on this instance for callers.
     this.HitboxOverlaysInitiallyVisible = (this.parsedPluginParameters['hitboxOverlaysInitiallyVisible'] === 'true');
   }
 
@@ -260,6 +288,37 @@ class J_AbsPluginMetadata
     {
       this.ImplicitParryBaselinePerLevel = implicitParryBaselinePerLevelParsed;
     }
+
+    // the scale factor multiplies the raw parry formula output, keeping full negation rare.
+    const implicitParryScaleFactorRaw = this.parsedPluginParameters['implicitParryScaleFactor'];
+    const implicitParryScaleFactorParsed = Number(implicitParryScaleFactorRaw);
+    this.ImplicitParryScaleFactor = 0.2;
+    if (Number.isFinite(implicitParryScaleFactorParsed) === true
+      && implicitParryScaleFactorParsed >= 0
+      && implicitParryScaleFactorParsed <= 1)
+    {
+      this.ImplicitParryScaleFactor = implicitParryScaleFactorParsed;
+    }
+
+    // glancing blow dominance multiplier: the band width for the glancing check (independent of parry M).
+    const glancingBlowDomRaw = this.parsedPluginParameters['glancingBlowDominanceMultiplier'];
+    const glancingBlowDomParsed = Number(glancingBlowDomRaw);
+    this.GlancingBlowDominanceMultiplier = 2;
+    if (Number.isFinite(glancingBlowDomParsed) === true && glancingBlowDomParsed > 1)
+    {
+      this.GlancingBlowDominanceMultiplier = glancingBlowDomParsed;
+    }
+
+    // the fraction of normal damage a glancing blow deals (0.0–1.0).
+    const glancingBlowDamageFactorRaw = this.parsedPluginParameters['glancingBlowDamageFactor'];
+    const glancingBlowDamageFactorParsed = Number(glancingBlowDamageFactorRaw);
+    this.GlancingBlowDamageFactor = 0.3;
+    if (Number.isFinite(glancingBlowDamageFactorParsed) === true
+      && glancingBlowDamageFactorParsed >= 0
+      && glancingBlowDamageFactorParsed <= 1)
+    {
+      this.GlancingBlowDamageFactor = glancingBlowDamageFactorParsed;
+    }
   }
 
   /**
@@ -270,9 +329,12 @@ class J_AbsPluginMetadata
     this.EquipCombatSkillsText = this.parsedPluginParameters['equipCombatSkillsText'];
     this.EquipDodgeSkillsText = this.parsedPluginParameters['equipDodgeSkillsText'];
     this.EquipOffhandText = this.parsedPluginParameters['equipOffhandText'];
+    // assign equip tools text on this instance for callers.
     this.EquipToolsText = this.parsedPluginParameters['equipToolsText'];
+    this.EquipUsableItemText = this.parsedPluginParameters['equipUsableItemText'];
     this.MainMenuText = this.parsedPluginParameters['mainMenuText'];
     this.CancelText = this.parsedPluginParameters['cancelText'];
+    // assign clear slot text on this instance for callers.
     this.ClearSlotText = this.parsedPluginParameters['clearSlotText'];
     this.UnassignedText = this.parsedPluginParameters['unassignedText'];
   }
@@ -325,6 +387,43 @@ class J_AbsPluginMetadata
   }
 
   /**
+   * Maps skill execution history tracking configuration from plugin parameters.
+   * The max window is the global prune threshold; individual tag windows must be <= this value.
+   * The excluded skill type set contains stypeIds never recorded in the skill history log.
+   */
+  initializeSkillExecutionMetadata()
+  {
+    // the maximum number of seconds a skill execution entry is kept before pruning.
+    this.SkillExecutionMaxWindowSeconds = Number(
+      this.parsedPluginParameters['skillExecutionMaxWindowSeconds']) || 15;
+
+    // build the set of excluded skill type ids from the raw JSON array parameter.
+    const rawExcluded = this.parsedPluginParameters['skillExecutionExcludedSkillTypes'] ?? '[]';
+    const excludedSet = new Set();
+    try
+    {
+      const arr = JSON.parse(rawExcluded);
+      if (Array.isArray(arr))
+      {
+        arr.forEach(v =>
+        {
+          // coerce each element to a finite integer before adding to the set.
+          const n = parseInt(String(v), 10);
+          if (Number.isFinite(n))
+          {
+            excludedSet.add(n);
+          }
+        });
+      }
+    }
+    catch (e)
+    {
+      console.warn('J-ABS: skillExecutionExcludedSkillTypes JSON parse failed.', e);
+    }
+    this.SkillExecutionExcludedSkillTypeSet = excludedSet;
+  }
+
+  /**
    * Maps hitbox overlay style and pulse defaults used by debug overlays.
    */
   initializeHitboxOverlayStyleMetadata()
@@ -368,7 +467,6 @@ class J_AbsPluginMetadata
         },
       },
 
-
       // Battler overrides by kind (player/follower/battler)
       byKind:
         {
@@ -395,6 +493,7 @@ class J_AbsPluginMetadata
         },
     };
 
+    // assign hitbox pulse on this instance for callers.
     this.HitboxPulse = {
       enabled: this.parsedPluginParameters['hitboxPulseEnabled'] !== 'false',
       highlightColliderBattlers: this.parsedPluginParameters['hitboxPulseHighlightColliders'] !== 'false',
@@ -413,6 +512,36 @@ class J_AbsPluginMetadata
       // PIXI.BLEND_MODES.NORMAL or ADD
       blendMode: PIXI.BLEND_MODES.ADD,
     };
+  }
+
+  /**
+   * Parses the map affliction max slot parameter, ignoring corrupted export noise.
+   * @param {string|number|undefined} rawValue The plugin parameter value.
+   * @returns {number}
+   */
+  static parseMapAfflictionMaxSlots(rawValue)
+  {
+    const parsedValue = Number.parseInt(String(rawValue).trim(), 10);
+
+    if (Number.isFinite(parsedValue) === false || parsedValue < 1)
+    {
+      return 8;
+    }
+
+    return Math.min(parsedValue, 16);
+  }
+
+  /**
+   * Maps map affliction strip layout parameters from plugin parameters.
+   */
+  initializeMapAfflictionMetadata()
+  {
+    this.mapAfflictionIconScale = Number(this.parsedPluginParameters['mapAfflictionIconScale'] ?? 0.5);
+    this.mapAfflictionGaugeHeight = Number(this.parsedPluginParameters['mapAfflictionGaugeHeight'] ?? 3);
+    this.mapAfflictionGapBelowHpBar = Number(this.parsedPluginParameters['mapAfflictionGapBelowHpBar'] ?? 2);
+    this.mapAfflictionMaxSlots = J_AbsPluginMetadata.parseMapAfflictionMaxSlots(
+      this.parsedPluginParameters['mapAfflictionMaxSlots'],
+    );
   }
 }
 

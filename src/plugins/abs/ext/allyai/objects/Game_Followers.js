@@ -1,6 +1,7 @@
 //region Game_Followers
 /**
- * OVERWRITE If you're using this, the followers always show up!
+ * Extends {@link #show}.<br/>
+ * If you're using this, the followers always show up!
  * @returns {boolean}
  */
 J.ABS.EXT.ALLYAI.Aliased.Game_Followers.set('show', Game_Followers.prototype.show);
@@ -18,7 +19,8 @@ Game_Followers.prototype.show = function()
 };
 
 /**
- * OVERWRITE If you're using this, the followers always show up!
+ * Extends {@link #hide}.<br/>
+ * If you're using this, the followers always show up!
  * @returns {boolean}
  */
 J.ABS.EXT.ALLYAI.Aliased.Game_Followers.set('hide', Game_Followers.prototype.hide);
@@ -36,7 +38,8 @@ Game_Followers.prototype.hide = function()
 };
 
 /**
- * OVERWRITE Adjust the jumpAll function to prevent jumping to the player
+ * Overwrites {@link #jumpAll}.<br/>
+ * Adjust the jumpAll function to prevent jumping to the player
  * when the player is hit.
  */
 Game_Followers.prototype.jumpAll = function()
@@ -50,13 +53,13 @@ Game_Followers.prototype.jumpAll = function()
   for (const follower of this._data)
   {
     // skip followers that don't exist.
-    if (!follower || !follower.isVisible()) return;
+    if (!follower || !follower.isVisible()) continue;
 
     // grab the follower's battler.
     const battler = follower.getJabsBattler();
 
     // only jump if the battler isn't engaged, and there is no event running.
-    if (battler.isEngaged() || !$gameMap._interpreter.isRunning()) return;
+    if (battler.isEngaged() || !$gameMap._interpreter.isRunning()) continue;
 
     // determine coordinates to jump to.
     const sx = $gamePlayer.deltaXFrom(follower.x);

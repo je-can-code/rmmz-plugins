@@ -1,8 +1,8 @@
 //region Game_Enemy
-import JABS_EnemyAI from './../__models/JABS_EnemyAI.js';
-import JABS_Battler from './../__models/JABS_Battler/_initialization.js';
+import JABS_EnemyAI from '../models/JABS_EnemyAI.js';
+import JABS_Battler from '../models/JABS_Battler.js';
 /**
- * Extends {@link Game_Enemy.setup}.<br>
+ * Extends {@link Game_Enemy.setup}.<br/>
  * Includes JABS skill initialization.
  */
 J.ABS.Aliased.Game_Enemy.set('setup', Game_Enemy.prototype.setup);
@@ -33,12 +33,11 @@ Game_Enemy.prototype.initAbsSkills = function()
  */
 Game_Enemy.prototype.jabsRefresh = function()
 {
-  // refresh the bonus hits to ensure they are still accurate.
-  this.refreshBonusHits();
+  // bonus hits are refreshed by onBattlerDataChange, which always fires before jabsRefresh.
 };
 
 /**
- * Extends {@link #onBattlerDataChange}.<br>
+ * Extends {@link #onBattlerDataChange}.<br/>
  * Adds a hook for performing actions when the battler's data hase changed.
  */
 J.ABS.Aliased.Game_Enemy.set('onBattlerDataChange', Game_Enemy.prototype.onBattlerDataChange);
@@ -47,6 +46,26 @@ Game_Enemy.prototype.onBattlerDataChange = function()
   // perform original logic.
   J.ABS.Aliased.Game_Enemy.get('onBattlerDataChange')
     .call(this);
+
+  // bonus hits are derived from getAllNotes() which changes whenever battler data changes
+  // (equips, states, passives, etc.) — recompute the cache to stay current.
+  this.refreshBonusHits();
+
+  // recompute cached CDR from note sources.
+  this.refreshCdr();
+
+  // recompute cached PER from note sources.
+  this.refreshPer();
+
+  // recompute cached luck/curse roll totals from note sources.
+  this.refreshPositiveRolls();
+  this.refreshNegativeRolls();
+
+  // recompute cached bonus repeat count from note sources.
+  this.refreshEncoreRepeats();
+
+  // invalidate the projectile duration modifier cache — recomputed lazily on next access.
+  this.setCachedProjectileDurationModifier(null);
 
   // update JABS-related things.
   this.jabsRefresh();
@@ -92,6 +111,7 @@ J.ABS.Aliased.Game_Enemy.set('basicAttackSkillId', Game_Enemy.prototype.basicAtt
 Game_Enemy.prototype.basicAttackSkillId = function()
 {
   // check our enemy to see if we found a custom basic attack skill id.
+  // perform original logic.
   const basicAttackSkillId = J.ABS.Aliased.Game_Enemy.get('basicAttackSkillId')
     .call(this);
 
@@ -99,6 +119,20 @@ Game_Enemy.prototype.basicAttackSkillId = function()
   return basicAttackSkillId ?? J.ABS.Metadata.DefaultEnemyAttackSkillId;
 };
 //endregion JABS basic attack skills
+
+//region JABS guard skill
+/**
+ * Gets this enemy's guard skill id from their own notes, if any.
+ * Enemies have no equipment to hang a guard skill off of- tag one directly on an
+ * individual enemy to grant it guarding capability.
+ * @returns {number}
+ */
+Game_Enemy.prototype.getGuardSkillId = function()
+{
+  // return the enemy's declared guard skill id from their own notes, if any.
+  return this.databaseData().jabsGuardSkillId ?? 0;
+};
+//endregion JABS guard skill
 
 //region JABS battler properties
 /**
@@ -322,6 +356,9 @@ Game_Enemy.prototype.canIdle = function()
   // prohibition tag present → not idle (invert presence to "can idle").
   if (cannotIdle !== null) return !cannotIdle;
 
+  // inanimate battlers do not idle unless an explicit config tag overrides that.
+  if (this.isInanimate()) return false;
+
   // if we have no notes regarding this, then return the default.
   return J.ABS.Metadata.DefaultEnemyCanIdle;
 };
@@ -348,8 +385,36 @@ Game_Enemy.prototype.showHpBar = function()
   // prohibition tag present → hide bar.
   if (noHpBar !== null) return !noHpBar;
 
+  // inanimate battlers hide their hp bar unless an explicit config tag overrides that.
+  if (this.isInanimate()) return false;
+
   // if we have no notes regarding this, then return the default.
   return J.ABS.Metadata.DefaultEnemyShowHpBar;
+};
+
+/**
+ * Gets whether or not an enemy shows the map affliction strip from their notes.
+ * This will be overwritten by values provided from an event.
+ * @returns {boolean}
+ */
+Game_Enemy.prototype.showStates = function()
+{
+  const referenceData = this.databaseData();
+  const showStates = referenceData.jabsConfigShowStates;
+
+  if (showStates !== null)
+  {
+    return showStates;
+  }
+
+  const hideStates = referenceData.jabsConfigHideStates;
+
+  if (hideStates !== null)
+  {
+    return !hideStates;
+  }
+
+  return true;
 };
 
 /**
@@ -373,6 +438,9 @@ Game_Enemy.prototype.showBattlerName = function()
 
   // prohibition tag present → hide name.
   if (noName !== null) return !noName;
+
+  // inanimate battlers hide their name unless an explicit config tag overrides that.
+  if (this.isInanimate()) return false;
 
   // if we have no notes regarding this, then return the default.
   return J.ABS.Metadata.DefaultEnemyShowBattlerName;
@@ -443,8 +511,8 @@ Game_Enemy.prototype.isInanimate = function()
 Game_Enemy.prototype.getBonusHitsSources = function()
 {
   return [
-    // states may contain bonus hits.
-    this.states(),
+    // allStates includes passive states; states() only returns regular states.
+    this.allStates(),
 
     // the enemy itself may contain bonus hits.
     [ this.databaseData() ],

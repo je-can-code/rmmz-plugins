@@ -165,6 +165,7 @@ if (J.HUD && J.HUD.EXT.PARTY)
   Window_PartyFrame.prototype.createCache = function()
   {
     // establish the gauge types we will create.
+    // perform original logic.
     J.ABS.EXT.SHIELD.Aliased.Window_PartyFrame.get('createCache')
       .call(this);
 
@@ -241,7 +242,7 @@ if (J.HUD && J.HUD.EXT.PARTY)
   };
 
   /**
-   * Extends/Overrides {@link #drawAllyGauges}.<br/>
+   * Extends {@link #drawAllyGauges}.<br/>
    * Calls original, then overlays the composite shield gauge on the ally HP gauge.
    * @param {Game_Actor} ally The ally to draw the gauges for.
    * @param {number} x The x coordinate.

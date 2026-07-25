@@ -24,6 +24,7 @@ class Window_RefinementStepHint
       return;
     }
 
+    // store  text on the instance for later reads.
     this._text = text;
     this.refresh();
   }

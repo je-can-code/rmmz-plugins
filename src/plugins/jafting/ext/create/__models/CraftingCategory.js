@@ -45,6 +45,7 @@ class CraftingCategory
     this.name = name;
     this.key = key;
     this.iconIndex = iconIndex;
+    // assign description on this instance for callers.
     this.description = description;
     this.unlockedByDefault = unlockedByDefault;
   }

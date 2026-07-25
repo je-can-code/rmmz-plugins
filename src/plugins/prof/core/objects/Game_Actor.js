@@ -171,12 +171,13 @@ Game_Actor.prototype.executeJsRewards = function(conditional)
   // if we don't actually have any javascript to execute, then don't bother.
   if (!conditional.jsRewards) return;
 
-  const a = this;         // the actor reference.
-  const c = conditional;  // the conditional reference.
+  const a = this;
+  const c = conditional;
   const { jsRewards } = c;
   try
   {
-    eval(jsRewards);
+    // 'a' is the actor, 'c' is the conditional — match the original eval scope.
+    new Function('a', 'c', jsRewards)(a, c);
   }
   catch (error)
   {
@@ -357,11 +358,16 @@ Game_Actor.prototype.updateBonusSkillProficiencyGains = function()
 };
 
 /**
- * Calculates total amount of bonus proficiency gain when gaining skill proficiency.
- * @returns {number}
+ * Bonus proficiency gained when earning skill proficiency.
  */
-Game_Actor.prototype.bonusSkillProficiencyGains = function()
-{
-  return this._j._proficiency._bonusSkillProficiencyGains;
-};
+Object.defineProperty(Game_Actor.prototype, 'prof', {
+  get: function()
+  {
+    const sdpBonus = this.getSdpBonusForParameterKey
+      ? this.getSdpBonusForParameterKey('prof', 1)
+      : 0;
+    return this._j._proficiency._bonusSkillProficiencyGains + sdpBonus;
+  },
+  configurable: true,
+});
 //endregion Game_Actor

@@ -23,7 +23,7 @@ class PluginVersion
    * Constructor.
    * It is strongly recommended to use the {@link PluginVersion.builder} to
    * create these classes due to their string-parsing sensitivity.
-   * @param {string} version
+   * @param {string} version The version driving this step.
    */
   constructor(version)
   {
@@ -166,7 +166,6 @@ class PluginVersion
     }
   }
 }
-
 
 export default PluginVersion;
 //endregion PluginVersion

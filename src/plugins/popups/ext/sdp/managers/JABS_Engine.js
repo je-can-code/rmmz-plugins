@@ -6,9 +6,11 @@
 J.POPUPS.EXT.SDP.Aliased.JABS_Engine.set('onSdpRewardGranted', JABS_Engine.prototype.onSdpRewardGranted);
 JABS_Engine.prototype.onSdpRewardGranted = function(sdpPoints, character)
 {
+  // perform original logic.
   J.POPUPS.EXT.SDP.Aliased.JABS_Engine.get('onSdpRewardGranted')
     .call(this, sdpPoints, character);
 
+  // construct pop for the next step in this routine.
   const pop = new TextPopBuilder(sdpPoints)
     .isSdpPoints()
     .build();
@@ -26,6 +28,7 @@ JABS_Engine.prototype.onSdpRewardGranted = function(sdpPoints, character)
 J.POPUPS.EXT.SDP.Aliased.JABS_Engine.set('onSdpPanelUnlocked', JABS_Engine.prototype.onSdpPanelUnlocked);
 JABS_Engine.prototype.onSdpPanelUnlocked = function(sdpKey, character)
 {
+  // perform original logic.
   J.POPUPS.EXT.SDP.Aliased.JABS_Engine.get('onSdpPanelUnlocked')
     .call(this, sdpKey, character);
 

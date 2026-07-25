@@ -106,6 +106,7 @@ class CraftingComponent
       return this.#getSdpComponent();
     }
 
+    // Surface a non-fatal warning for operator triage.
     console.warn("attempted to retrieve an unsupported type; this will probably break.", this);
     return null;
   }
@@ -281,6 +282,7 @@ class CraftingComponent
       }
     }
 
+    // Surface a non-fatal warning for operator triage.
     console.warn('an unsupported component type was presented for quantity.', this);
 
     // we don't even know what is desired, so lets just say none.

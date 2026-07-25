@@ -4,13 +4,14 @@ import TimeMapper from './TimeMapper.js';
 /**
  * Extends {@link meetsConditions}.<br/>
  * Also includes the custom conditions that relate to time.
- * @param {any} page
+ * @param {any} page The page driving this step.
  * @returns {boolean}
  */
 J.TIME.Aliased.Game_Event.set('meetsConditions', Game_Event.prototype.meetsConditions);
 Game_Event.prototype.meetsConditions = function(page)
 {
   // check original conditions.
+  // perform original logic.
   const metOtherPageConditions = J.TIME.Aliased.Game_Event.get('meetsConditions')
     .call(this, page);
 
@@ -249,7 +250,7 @@ Game_Event.timeConditionalMet = function(timeConditional)
 
 /**
  * Determines if the conditional comparison was equal.
- * @param {TimeConditional} timeConditional
+ * @param {TimeConditional} timeConditional The time conditional driving this step.
  * @returns {boolean}
  * @private
  */
@@ -286,7 +287,7 @@ Game_Event._timeConditionalDirectMet = function(timeConditional)
 
 /**
  * Determines if the current time was within the conditional time range.
- * @param {TimeConditional} timeConditional
+ * @param {TimeConditional} timeConditional The time conditional driving this step.
  * @returns {boolean}
  * @private
  */
@@ -352,7 +353,7 @@ Game_Event._timeConditionalTimeRangeMet = function(timeConditional)
 
 /**
  * Determines if the current full date time was within the conditional full date time range.
- * @param {TimeConditional} timeConditional
+ * @param {TimeConditional} timeConditional The time conditional driving this step.
  * @returns {boolean}
  * @private
  */

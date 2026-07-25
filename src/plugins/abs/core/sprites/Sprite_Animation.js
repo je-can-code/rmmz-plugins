@@ -11,6 +11,7 @@ Sprite_Animation.prototype.setup = function(targets, animation, mirror, delay, p
   // perform original logic when there is nothing to normalize.
   if (animation === undefined || animation === null)
   {
+    // perform original logic.
     J.ABS.Aliased.Sprite_Animation.get('setup')
       .call(this, targets, animation, mirror, delay, previous);
     return;
@@ -33,6 +34,7 @@ Sprite_Animation.prototype.setup = function(targets, animation, mirror, delay, p
 
   if (arraysAlreadyDense === true)
   {
+    // perform original logic.
     J.ABS.Aliased.Sprite_Animation.get('setup')
       .call(this, targets, animation, mirror, delay, previous);
     return;
@@ -47,6 +49,7 @@ Sprite_Animation.prototype.setup = function(targets, animation, mirror, delay, p
     }
   );
 
+  // perform original logic.
   J.ABS.Aliased.Sprite_Animation.get('setup')
     .call(this, targets, safeAnimation, mirror, delay, previous);
 };
@@ -61,6 +64,7 @@ Sprite_Animation.prototype.targetPosition = function (renderer)
   // if this is a screen animation, use the original logic.
   if (this._animation.displayType === 2)
   {
+    // perform original logic.
     return J.ABS.Aliased.Sprite_Animation.get('targetPosition')
       .call(this, renderer);
   }
@@ -89,7 +93,7 @@ Sprite_Animation.prototype.targetPosition = function (renderer)
 };
 
 /**
- * Extends/Overrides {@link Sprite_Animation.prototype.targetSpritePosition}.<br/>
+ * Extends {@link Sprite_Animation.prototype.targetSpritePosition}.<br/>
  * Adds a definitive guard against null or destroyed sprites to prevent crashes during transformation updates.
  * @param {Sprite} sprite The sprite to get the position of.
  * @returns {Point}
@@ -112,6 +116,7 @@ Sprite_Animation.prototype.targetSpritePosition = function (sprite)
   // perform original logic.
   try
   {
+    // perform original logic.
     return J.ABS.Aliased.Sprite_Animation.get('targetSpritePosition')
       .call(this, sprite);
   }

@@ -68,6 +68,15 @@ class RPG_EquipItem
   }
 
   /**
+   * Whether or not this database entry is an equip item.
+   * @returns {boolean}
+   */
+  isEquipItem()
+  {
+    return true;
+  }
+
+  /**
    * Gets the type of implementation this database entry is.
    * @returns {string}
    */

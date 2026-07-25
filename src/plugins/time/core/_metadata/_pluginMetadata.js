@@ -10,7 +10,7 @@ class J_TIME_PluginMetadata extends PluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps plugin parameters into instance fields used by {@link Game_Time}.
    */
   postInitialize()
@@ -19,15 +19,19 @@ class J_TIME_PluginMetadata extends PluginMetadata
 
     const pp = this.parsedPluginParameters;
 
+    // assign time window x on this instance for callers.
     this.TimeWindowX = Number(pp['timeWindowX']);
     this.TimeWindowY = Number(pp['timeWindowY']);
 
+    // assign start visible on this instance for callers.
     this.StartVisible = pp['startVisible'] === 'true';
     this.StartActivated = pp['startActivated'] === 'true';
     this.UseRealTime = pp['useRealTime'] === 'true';
+    // assign change tone by time on this instance for callers.
     this.ChangeToneByTime = pp['changeToneByTime'] === 'true';
     this.UseVariableAssignment = pp['useVariableAssignment'] === 'true';
 
+    // assign seconds variable on this instance for callers.
     this.SecondsVariable = Number(pp['secondsVariable']);
     this.MinutesVariable = Number(pp['minutesVariable']);
     this.HoursVariable = Number(pp['hoursVariable']);
@@ -39,8 +43,10 @@ class J_TIME_PluginMetadata extends PluginMetadata
     this.SeasonOfYearIdVariable = Number(pp['seasonOfYearIdVariable']);
     this.SeasonOfYearNameVariable = Number(pp['seasonOfYearNameVariable']);
 
+    // assign frames per tick on this instance for callers.
     this.FramesPerTick = Number(pp['framesPerTick']);
 
+    // assign starting second on this instance for callers.
     this.StartingSecond = Number(pp['startingSecond']);
     this.StartingMinute = Number(pp['startingMinute']);
     this.StartingHour = Number(pp['startingHour']);
@@ -48,6 +54,7 @@ class J_TIME_PluginMetadata extends PluginMetadata
     this.StartingMonth = Number(pp['startingMonth']);
     this.StartingYear = Number(pp['startingYear']);
 
+    // assign seconds per increment on this instance for callers.
     this.SecondsPerIncrement = Number(pp['secondsPerIncrement']);
     this.MinutesPerIncrement = Number(pp['minutesPerIncrement']);
     this.HoursPerIncrement = Number(pp['hoursPerIncrement']);

@@ -176,6 +176,7 @@ class Window_SkillDetail
     {
       return sprite;
     }
+    // otherwise fall back to the alternate path.
     else
     {
       sprite = new Sprite_Icon(iconIndex);
@@ -196,6 +197,7 @@ class Window_SkillDetail
     const actor = this._actor;
     const params = [];
 
+    // Append the row to the working collection.
     params.push(this.makeSkillTypeParam(skill));
     params.push(this.makeDividerParam());
 
@@ -204,6 +206,7 @@ class Window_SkillDetail
       params.push(this.makeHpCostParam(skill, actor));
     }
 
+    // Append the row to the working collection.
     params.push(this.makeMpCostParam(skill, actor));
     params.push(this.makeTpCostParam(skill, actor));
 
@@ -235,9 +238,11 @@ class Window_SkillDetail
     const actor = this._actor;
     const params = [];
 
+    // Append the row to the working collection.
     params.push(this.makeProjectedDamageParam(skill, actor));
     params.push(this.makeHitsParam(skill, actor));
     params.push(this.makeDividerParam());
+    // Append the row to the working collection.
     params.push(...this.makeAttackStates(skill, actor));
 
     const col = Math.floor(this.innerWidth / 3);
@@ -275,12 +280,10 @@ class Window_SkillDetail
       return new JCMS_ParameterKvp(`\\C[8]Raw Damage\\C[0]`, 'n/a');
     }
 
-    /* a, b, v are the standard RPG Maker damage-formula symbols consumed by eval(). */
-    /* eslint-disable no-unused-vars */
+    // a, b, v are the standard RMMZ formula binding names; p is proficiency.
     const a = actor;
     const b = $gameEnemies.enemy(1);
     const v = $gameVariables._data;
-    /* eslint-enable no-unused-vars */
     let p = 0;
     if (J.PROF)
     {
@@ -293,7 +296,7 @@ class Window_SkillDetail
     const sign = [ 3, 4 ].includes(skill.damage.type)
       ? -1
       : 1;
-    const value = Math.round(Math.max(eval(skill.damage.formula), 0));
+    const value = Math.round(Math.max(new Function('a', 'b', 'v', 'p', `return (${skill.damage.formula})`)(a, b, v, p), 0));
     const potential = isNaN(value)
       ? 0
       : value;
@@ -350,19 +353,21 @@ class Window_SkillDetail
     /** @type {JCMS_ParameterKvp[]} */
     const params = [];
 
+    const col = Math.floor(this.innerWidth / 3);
+    const nameWidth = Math.floor(col * 0.55);
+
     // add the skill proficiency of this skill.
     if (J.PROF)
     {
-      params.push(...this.makeSkillProficiency(actor, skill));
+      params.push(...this.makeSkillProficiency(actor, skill, nameWidth));
     }
 
+    // Append the row to the working collection.
     params.push(...this.makeAttackElementsList(skill, actor));
 
-    const col = Math.floor(this.innerWidth / 3);
     const ox = col * 2 + 4;
     const oy = 0;
     const lh = this.lineHeight();
-    const nameWidth = Math.floor(col * 0.55);
     const valueOffset = Math.floor(col * 0.57);
     const valueWidth = col - valueOffset - 4;
     params.forEach((param, index) =>
@@ -379,9 +384,11 @@ class Window_SkillDetail
    * Makes a parameter that displays this actor's proficiency with this skill.
    * @param {Game_Actor} actor The actor.
    * @param {RPG_Skill} skill The skill.
+   * @param {number} nameWidth The pixel width available for the name column, used to keep
+   * long related-skill names from overlapping the fixed-position required/current values.
    * @returns {JCMS_ParameterKvp[]}
    */
-  makeSkillProficiency(actor, skill)
+  makeSkillProficiency(actor, skill, nameWidth)
   {
     const proficiencyParams = [];
     const skillProficiency = actor.tryGetSkillProficiencyBySkillId(skill.id);
@@ -390,7 +397,7 @@ class Window_SkillDetail
     const proficiencyValue = `${skillProficiency.proficiency}`;
     const proficiencyParam = new JCMS_ParameterKvp(proficiencyKey, proficiencyValue);
     proficiencyParams.push(proficiencyParam);
-    proficiencyParams.push(...this.makeRelatedProficiencyConditionals(actor, skill));
+    proficiencyParams.push(...this.makeRelatedProficiencyConditionals(actor, skill, nameWidth));
     proficiencyParams.push(this.makeDividerParam());
 
     return proficiencyParams;
@@ -400,12 +407,20 @@ class Window_SkillDetail
    * Makes a parameter that displays this actor's proficiency with this skill.
    * @param {Game_Actor} actor The actor.
    * @param {RPG_Skill} skill The skill.
+   * @param {number} nameWidth The pixel width available for the name column, used to keep
+   * long related-skill names from overlapping the fixed-position required/current values.
    * @returns {JCMS_ParameterKvp[]}
    */
-  makeRelatedProficiencyConditionals(actor, skill)
+  makeRelatedProficiencyConditionals(actor, skill, nameWidth)
   {
     const conditionals = actor.proficiencyConditionalBySkillId(skill.id);
     const params = [];
+
+    // each row spends two icon-widths (the learned checkmark, then the skill's own icon)
+    // before any name text starts, so the name only ever gets whatever's left over.
+    const iconAllowance = (ImageManager.standardIconWidth + 4) * 2;
+    const availableNameTextWidth = nameWidth - iconAllowance;
+
     conditionals.forEach(conditional =>
     {
       // if there are no rewards, then don't even draw the "related" section.
@@ -429,7 +444,11 @@ class Window_SkillDetail
         const learnedIcon = actorKnowsSkill
           ? 91
           : 90;
-        const name = `\\I[${learnedIcon}]\\Skill[${extendedSkill.id}]`;
+
+        // truncate the plain name (with an ellipsis) so the rendered row never runs
+        // into the required/current value, which is drawn afterward at a fixed x.
+        const truncatedName = this.truncateToWidth(extendedSkill.name, availableNameTextWidth);
+        const name = `\\I[${learnedIcon}]\\I[${extendedSkill.iconIndex}]${truncatedName}`;
         const currentProficiency = proficiencyRequirement.totalProficiency(actor);
         const requiredProficiency = proficiencyRequirement.proficiency;
         const value = `${currentProficiency} / ${requiredProficiency}`;
@@ -447,6 +466,30 @@ class Window_SkillDetail
   }
 
   /**
+   * Truncates plain (escape-code-free) text with an ellipsis so it fits within the
+   * given pixel width under this window's current font, without touching the
+   * position of whatever is drawn after it.
+   * @param {string} text The plain text to measure and truncate.
+   * @param {number} maxWidth The maximum pixel width the text may occupy.
+   * @returns {string} The original text if it already fits, or an ellipsis-suffixed
+   * truncation of it otherwise.
+   */
+  truncateToWidth(text, maxWidth)
+  {
+    // if it already fits within the available width, there's nothing to do.
+    if (this.textWidth(text) <= maxWidth) return text;
+
+    // shrink one character at a time until the truncated text (plus ellipsis) fits.
+    let truncated = text;
+    while (truncated.length > 0 && this.textWidth(`${truncated}...`) > maxWidth)
+    {
+      truncated = truncated.slice(0, -1);
+    }
+
+    return `${truncated}...`;
+  }
+
+  /**
    * Creates a list of all elemenets contained by this skill.
    * @param {RPG_Skill} skill The skill.
    * @param {Game_Actor} actor The actor.
@@ -458,6 +501,7 @@ class Window_SkillDetail
     const elementParams = [];
     elementParams.push(new JCMS_ParameterKvp(`\\C[17]Elemental Affiliations\\C[0]`));
     const attackElements = [ skill.damage.elementId ];
+    // Append the row to the working collection.
     attackElements.push(...Game_Action.extractElementsFromAction(skill));
     attackElements.forEach(attackElement =>
     {
@@ -553,7 +597,7 @@ class Window_SkillDetail
    */
   makeHpCostParam(skill, actor)
   {
-    const hpName = TextManager.longParam(34);
+    const hpName = TextManager.parameterLabel('hcr');
     const { flat, percent, calculatedPercent, formula } = ResourceCostManager.hpCostBreakdown(actor, skill);
     const hasAnyCost = flat !== 0 || percent !== 0 || formula !== 0;
     const hpColor = hasAnyCost
@@ -571,10 +615,11 @@ class Window_SkillDetail
    */
   makeMpCostParam(skill, actor)
   {
-    const mpName = TextManager.longParam(22);
+    const mpName = TextManager.parameterLabel('mcr');
     if (J.RESOURCES)
     {
       // base vanilla cost is the original skillMpCost result (pre-tag-extras, post-MCR).
+      // perform original logic.
       const baseCost = J.RESOURCES.Aliased.Game_BattlerBase.get('skillMpCost').call(actor, skill);
       const {
         flat: extraFlat,
@@ -606,10 +651,11 @@ class Window_SkillDetail
    */
   makeTpCostParam(skill, actor)
   {
-    const tpName = TextManager.longParam(23);
+    const tpName = TextManager.parameterLabel('tcr');
     if (J.RESOURCES)
     {
       // base vanilla cost is the original skillTpCost result (pre-tag-extras, no rate in vanilla).
+      // perform original logic.
       const baseCost = J.RESOURCES.Aliased.Game_BattlerBase.get('skillTpCost').call(actor, skill);
       const {
         flat: extraFlat,

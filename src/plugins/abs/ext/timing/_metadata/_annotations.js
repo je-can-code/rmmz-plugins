@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.2 TIMING] Enable modifying cooldowns/casting for actions.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Enable modifying cooldowns/casting for actions.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-ABS
@@ -200,23 +200,29 @@
  * - States
  *
  * TAG FORMAT:
- *  <baseCastSpeed:[FORMULA]>
- *  <castSpeedFlat:[FORMULA]>
+ *  <baseCastTime:[FORMULA]>
+ *  <castTimeFlat:[FORMULA]>
  *  <castSpeedRate:[FORMULA]>
- * Where [FORMULA] is the formula to produce the fast cooldown value.
+ * Where [FORMULA] is the formula to produce the cast speed value.
  *
  * EXAMPLE:
- *  <baseCastSpeed:[3]>
+ *  <baseCastTime:[3]>
  * Base cast speed will be set to +3 frames.
  *
- *  <castSpeedFlat:[(a.level * 2) * -1]>
+ *  <castTimeFlat:[(a.level * 2) * -1]>
  * All cast times are reduced by 2 frames per level.
  *
  *  <castSpeedRate:[b * -5]>
- * All cast times will be reduced by 5% per point of base fast cooldown.
+ * All cast times will be reduced by 5% per point of base casting speed.
  * (not a practical formula, but demonstrating use)
  * ==============================================================================
  * CHANGELOG:
+ * - 1.0.3
+ *    Fixed <castSpeedRate> actually matching <castTimePercent:...> instead
+ *    of its own documented tag name, so it never worked as documented.
+ *    Fixed updateCastSpeedRate reading castSpeedFlat() instead of
+ *    castSpeedRate(), feeding the rate modifier the wrong source value.
+ *    Corrected stale doc text for <baseCastTime>/<castTimeFlat>.
  * - 1.0.2
  *    Raised minimum J-ABS version requirement to 4.7.0.
  * - 1.0.1

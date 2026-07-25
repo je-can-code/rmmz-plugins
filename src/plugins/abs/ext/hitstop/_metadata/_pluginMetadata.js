@@ -133,8 +133,6 @@ class JHitstop_PluginMetadata
      */
     this.shakeOnlyOnFlurryFirstHit = true;
 
-    this.lastShakeFrame = 0;
-
     //endregion shake
   }
 }

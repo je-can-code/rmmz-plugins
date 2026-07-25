@@ -38,8 +38,17 @@
  * - in combat indicator
  * - shield gauge (if using J-ABS-Shield)
  * ============================================================================
+ * NOTE ABOUT NOTETAGS:
+ * This plugin has no notetags of its own- it purely reads live battler data
+ * for display.
+ * ============================================================================
  * CHANGELOG
  * ----------------------------------------------------------------------------
+ * - 1.3.0
+ *    Leader affliction rendering now delegates to J-HUD core's shared
+ *    StateAfflictionHudPresenter/StateAfflictionHudLayoutSpec instead of a
+ *    duplicated local implementation (removed ~300 lines of local code).
+ *    Window backdrop opacity default changed from 32 to fully transparent (0).
  * - 1.2.0
  *    Integrated J-ABS-Shields; supports display for shield gauge.
  *    Updated many classes to use modern class syntax.

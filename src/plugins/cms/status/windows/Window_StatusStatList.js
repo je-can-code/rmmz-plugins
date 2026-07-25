@@ -1,5 +1,6 @@
 //region Window_StatusStatList
 import StatusStatListRow from './../_models/StatusStatListRow.js';
+import Window_StatusParameters from './Window_StatusParameters.js';
 
 /**
  * A selectable list of stats (by long param id) that drives the breakdown panel.
@@ -157,16 +158,16 @@ class Window_StatusStatList
   }
 
   /**
-   * Gets the selected long parameter id (or 0 if none).
-   * @returns {number}
+   * Gets the selected parameter key (or empty when none).
+   * @returns {string}
    */
-  currentLongParamId()
+  currentParameterKey()
   {
     /** @type {StatusStatListRow} */
     const row = this.currentItem();
     return row
-      ? row.longParamId
-      : 0;
+      ? row.parameterKey
+      : String.empty;
   }
 
   /**
@@ -210,47 +211,23 @@ class Window_StatusStatList
     /** @type {StatusStatListRow[]} */
     const rows = [];
 
-    // Define groups in the same order as drawn on page 1.
-    // Page 1 order: Row1 (Combat, Vitality), Row2 (Precision, Defensive), Row3 (Mobility, Fate).
-    const groups = [
-      // Row 1
-      {
-        section: 'Combat',
-        ids: [ 2, 4, 14, 13 ], // ATK, MAT, CNT, MRF
-      },
-      {
-        section: 'Vitality',
-        ids: [ 0, 15, 1, 16, 30, 17, 20, 21 ], // MHP, HRG, MMP, MRG, MTP, TRG, REC, PHA
-      },
-
-      // Row 2
-      {
-        section: 'Precision',
-        ids: [ 8, 19, 6, 9, 10, 11, 28, 29 ], // HIT, GRD, AGI, EVA, CRI, CEV, CDM, CDR
-      },
-      {
-        section: 'Defensive',
-        ids: [ 3, 5, 24, 25 ], // DEF, MDF, PDR, MDR
-      },
-
-      // Row 3
-      {
-        section: 'Mobility',
-        ids: [ 31 ], // MSB (custom: move speed boost)
-      },
-      {
-        section: 'Fate',
-        ids: [ 7, 27, 32, 33 ], // LUK, EXR, SPB (skill prof boost), SMB (SDP multiplier bonus)
-      },
-    ];
-
-    // Flatten the groups into concrete list rows in the defined order.
-    groups.forEach(group =>
+    // Walk the same row/column slots page 1 uses so both views stay in sync.
+    Window_StatusParameters.PAGE_GROUP_ROW_GROUPS.forEach(rowGroups =>
     {
-      group.ids.forEach(longId =>
+      rowGroups.forEach(groupId =>
       {
-        // Preserve the section label (unused visually today, but handy later).
-        rows.push(new StatusStatListRow(group.section, longId));
+        const chrome = Window_StatusParameters.GROUP_CHROME[groupId];
+        const definitions = ParameterRegistry.byGroup(groupId);
+
+        if (!chrome || !definitions.length)
+        {
+          return;
+        }
+
+        definitions.forEach(definition =>
+        {
+          rows.push(new StatusStatListRow(chrome.title, definition.key));
+        });
       });
     });
 
@@ -272,10 +249,10 @@ class Window_StatusStatList
     const row = this.itemAt(index);
 
     // collect display attributes.
-    const longId = row.longParamId;
-    const name = TextManager.longParam(longId);
-    const icon = IconManager.longParam(longId);
-    const color = ColorManager.longParam(longId);
+    const { parameterKey } = row;
+    const name = TextManager.parameterLabel(parameterKey);
+    const icon = IconManager.parameterIcon(parameterKey);
+    const color = ColorManager.parameterColor(parameterKey);
 
     // draw icon + name.
     this.changeTextColor(ColorManager.textColor(color));

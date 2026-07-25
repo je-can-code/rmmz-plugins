@@ -3,7 +3,7 @@ import Scene_Monsterpedia from './Scene_Monsterpedia.js';
 
 //region root actions
 /**
- * Extends {@link #onRootPediaSelection}.<br>
+ * Extends {@link #onRootPediaSelection}.<br/>
  * When the monsterpedia is selected, open the monsterpedia.
  */
 J.OMNI.EXT.MONSTER.Aliased.Scene_Omnipedia.set('onRootPediaSelection', Scene_Omnipedia.prototype.onRootPediaSelection);
@@ -22,6 +22,7 @@ Scene_Omnipedia.prototype.onRootPediaSelection = function()
   else
   {
     // possibly activate other choices.
+    // perform original logic.
     J.OMNI.EXT.MONSTER.Aliased.Scene_Omnipedia.get('onRootPediaSelection')
       .call(this);
   }

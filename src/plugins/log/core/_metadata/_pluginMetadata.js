@@ -10,7 +10,7 @@ class J_LogPluginMetadata extends PluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps plugin parameters into instance fields used by map log windows.
    */
   postInitialize()

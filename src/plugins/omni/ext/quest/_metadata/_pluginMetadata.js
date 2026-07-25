@@ -42,6 +42,7 @@ class J_QUEST_PluginMetadata
         .objectives(parsedQuest.objectives)
         .build();
 
+      // Append the row to the working collection.
       parsedQuests.push(builtQuest);
     };
 
@@ -92,6 +93,7 @@ class J_QUEST_PluginMetadata
      */
     this.quests = classifiedQuests;
 
+    // construct quest map for the next step in this routine.
     const questMap = new Map();
     this.quests.forEach(quest => questMap.set(quest.key, quest));
 
@@ -107,6 +109,7 @@ class J_QUEST_PluginMetadata
      */
     this.categories = parsedConfiguration.categories;
 
+    // construct category map for the next step in this routine.
     const categoryMap = new Map();
     this.categories.forEach(category => categoryMap.set(category.key, category));
 
@@ -122,6 +125,7 @@ class J_QUEST_PluginMetadata
      */
     this.tags = parsedConfiguration.tags;
 
+    // construct tag map for the next step in this routine.
     const tagMap = new Map();
     this.tags.forEach(tag => tagMap.set(tag.key, tag));
 
@@ -199,6 +203,7 @@ class J_QUEST_PluginMetadata
     return PluginVersion.builder
       .major('2')
       .minor('3')
+      // continue the routine with the next policy step.
       .patch('1')
       .build();
   }

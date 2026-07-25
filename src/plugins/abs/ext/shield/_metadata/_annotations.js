@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.2 SHIELD] A JABS extension that provides state-based HP shields.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A JABS extension that provides state-based HP shields.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -74,18 +74,60 @@
  * TAG FORMAT:
  *  <shield:[FORMULA]>
  *    Where FORMULA represents a damage-like formula calculating the amount to
- *    absorb. The variables 'a' and 'b' can be used in the formulas like you
- *    would in a damage formula, where 'a' represents the target afflicted
- *    with the shield state, and 'b' represents the RPG_State object.
+ *    absorb. The variables 'a', 'b', and 's' can be used in the formulas like
+ *    you would in a damage formula, where 'a' represents the battler applying
+ *    the shield state, 'b' represents the battler receiving the shield state,
+ *    and 's' represents the RPG_State object of the shield state itself.
  *
  * TAG EXAMPLES:
  *  <shield:[100]>
- * A shield to protect against 100 daamge will be supplied when afflicted with
+ * A shield to protect against 100 damage will be supplied when afflicted with
  * the state bearing this tag.
  *
- *  <shield:[(a.atk * 3) + b.stepsToRemove]>
- * A shield to protect against damage based on triple the afflicted's attack
- * parameter as well as the value in the "steps to remove" field on the state.
+ *  <shield:[(a.mat * 3) + s.stepsToRemove]>
+ * A shield based on triple the caster's magic attack parameter as well as the
+ * value in the "steps to remove" field on the shield state.
+ *
+ * NOTE ABOUT SAR/SER SCALING:
+ * After the formula is evaluated, the result is multiplied by the applying
+ * battler's "sar" (Shield Amplification Rate) and the receiving battler's
+ * "ser" (Shield Effectiveness Rate) factors. See the SHIELD AMPLIFICATION/
+ * EFFECTIVENESS section below for how those factors are built.
+ *
+ * ============================================================================
+ * SHIELD AMPLIFICATION / EFFECTIVENESS:
+ * Two percent-point stats scale every shield this battler is involved with,
+ * summed from all of a battler's note sources (actor, class, weapons,
+ * armors, states) and also contributed to by SDP panel investment.
+ *
+ * SAR (Shield Amplification Rate) scales shields THIS battler grants when
+ * applying a shield state to someone (including themselves). SER (Shield
+ * Effectiveness Rate) scales shields THIS battler receives, regardless of
+ * who applied them. Both default to a neutral 100 (1.0x multiplier).
+ *
+ * TAG USAGE:
+ * - Actors
+ * - Classes
+ * - Enemies
+ * - Weapons
+ * - Armors
+ * - States
+ *
+ * TAG FORMAT:
+ *  <sar:PERCENT_POINTS>
+ *  <ser:PERCENT_POINTS>
+ *    Where PERCENT_POINTS is a signed integer offset from the 100 baseline.
+ *    All matching sources are summed before being converted to a multiplier.
+ *
+ * TAG EXAMPLES:
+ *  <sar:25>
+ * This source grants +25 percent-points of Shield Amplification, meaning
+ * shields this battler applies to others (or themselves) come out 25%
+ * larger.
+ *
+ *  <ser:-50>
+ * This source grants -50 percent-points of Shield Effectiveness, meaning
+ * any shield this battler receives is worth half as much.
  *
  * ============================================================================
  * SHIELD CAPS:
@@ -105,18 +147,19 @@
  * TAG FORMAT:
  *  <shieldCap:[FORMULA]>
  *    Where FORMULA represents a damage-like formula calculating the cap shield
- *    amount. The variables 'a' and 'b' can be used in the formulas like you
- *    would in a damage formula, where 'a' represents the target afflicted
- *    with the shield state, and 'b' represents the RPG_State object.
+ *    amount. The variables 'a', 'b', and 's' can be used in the formulas like
+ *    you would in a damage formula, where 'a' represents the battler applying
+ *    the shield state, 'b' represents the battler receiving the shield state,
+ *    and 's' represents the RPG_State object of the shield state itself.
  *
  * TAG EXAMPLES:
  *  <shieldCap:[100]>
  * A shield cap of 100 will be applied when afflicted with the state bearing this
  * tag.
  *
- *  <shieldCap:[(a.atk * 3) + b.stepsToRemove]>
- * A shield cap of (target's attack * 3) + (number of steps to remove) will be
- * applied when afflicted with the state bearing this tag.
+ *  <shieldCap:[(a.mat * 3) + s.stepsToRemove]>
+ * A shield cap of (caster's magic attack * 3) + (number of steps to remove) will
+ * be applied when afflicted with the state bearing this tag.
  *
  * ============================================================================
  * SHIELD PRIORITY:
@@ -301,6 +344,21 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    JABS_State.onShieldBreak now passes the broken shield's cap to Game_Battler.onShieldBreak.
+ *    Game_Battler.onShieldBreak stores the value as lastShieldBreakValue before firing break
+ *    skills, then clears it immediately after. This value is exposed as the formula variable
+ *    's' via Game_Action.registerFormulaContext, so a skill authored with <shieldBreak:[ID]>
+ *    can write its damage formula as e.g. "s * 0.30" to deal 30% of the broken shield's cap.
+ *    's' is 0 for all non-shield-break actions; it never persists across frames.
+ *    Added SAR (Shield Amplification Rate) and SER (Shield Effectiveness
+ *    Rate) battler-wide stats via <sar:PERCENT_POINTS>/<ser:PERCENT_POINTS>,
+ *    summed from all note sources plus SDP panel investment. SAR scales
+ *    shields this battler grants; SER scales shields this battler receives.
+ *    <shield>/<shieldCap> formulas now expose 'a' (applier), 'b' (receiver),
+ *    and 's' (the shield state itself) — previously 'a' was the afflicted
+ *    target and 'b' was the state, so existing formulas using 'a'/'b' need
+ *    re-authoring against the new meaning.
  * - 1.0.2
  *    Raised minimum J-ABS version requirement to 4.7.0.
  * - 1.0.1

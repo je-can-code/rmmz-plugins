@@ -1,6 +1,6 @@
 //region Scene_Map
 /**
- * Overrides {@link Scene_Map.updateEncounter}.<br>
+ * Overwrites {@link Scene_Map.updateEncounter}.<br/>
  * Disables base encounter scene management.
  */
 Scene_Map.prototype.updateEncounter = function()

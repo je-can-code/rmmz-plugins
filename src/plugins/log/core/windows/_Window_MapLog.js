@@ -89,7 +89,7 @@ class Window_MapLog
 
   //region overwrites
   /**
-   * Extends {@link #isScrollEnabled}.<br>
+   * Extends {@link #isScrollEnabled}.<br/>
    * Also requires the this window to not be hidden for scrolling to be enabled.
    * @returns {boolean}
    * @extends
@@ -102,7 +102,7 @@ class Window_MapLog
   }
 
   /**
-   * Overrides {@link #updateArrows}
+   * Overwrites {@link #updateArrows}.<br/>
    * Forces the arrows that appear in scrollable windows to not be visible.
    * @override
    */
@@ -111,7 +111,7 @@ class Window_MapLog
   }
 
   /**
-   * Extends {@link #smoothScrollTo}.<br>
+   * Extends {@link #smoothScrollTo}.<br/>
    * Also refreshes the timer to prevent this window from going invisible
    * while scrolling around through the logs.
    * @param {number} x The x coordinate to scroll to.
@@ -132,7 +132,7 @@ class Window_MapLog
   }
 
   /**
-   * Overrides {@link #itemHeight}.<br>
+   * Overwrites {@link #itemHeight}.<br/>
    * Reduces the item height further to allow for more rows to be visible at once
    * within a smaller window.
    * @returns {number} The adjusted height of each row.
@@ -144,7 +144,7 @@ class Window_MapLog
   }
 
   /**
-   * Overrides {@link #drawBackgroundRect}.<br>
+   * Overwrites {@link #drawBackgroundRect}.<br/>
    * Prevents the rendering of the backdrop of each line in the window.
    * @param {Rectangle} _ The rectangle to draw the background for.
    * @override
@@ -154,7 +154,7 @@ class Window_MapLog
   }
 
   /**
-   * Extends {@link #itemRectWithPadding}.<br>
+   * Extends {@link #itemRectWithPadding}.<br/>
    * Shifts the rect slightly to the left to give a cleaner look.
    * @param {number} index The index of the item in the window.
    * @returns {Rectangle}
@@ -168,7 +168,7 @@ class Window_MapLog
   }
 
   /**
-   * Overrides {@link #drawIcon}.<br>
+   * Overwrites {@link #drawIcon}.<br/>
    * Reduces the size of the icons being drawn in the log window.
    * @param {number} iconIndex The index of the icon to draw.
    * @param {number} x The x coordinate to draw the icon at.
@@ -190,7 +190,7 @@ class Window_MapLog
   }
 
   /**
-   * Extends {@link #processDrawIcon}.<br>
+   * Extends {@link #processDrawIcon}.<br/>
    * Accommodates the other icon-related adjustments by manually shifting the
    * {@link textState} around before and after executing the super method execution.
    *

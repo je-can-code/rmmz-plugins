@@ -13,7 +13,7 @@ class J_Omnipedia_PluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Maps static command and switch metadata used by menu integration.
    */
   postInitialize()
@@ -31,6 +31,7 @@ class J_Omnipedia_PluginMetadata
     /**
      * The various data points that define the command for the Omnipedia.
      */
+    // assign command on this instance for callers.
     this.Command = {
       Name: 'The Omnipedia',
       Symbol: 'omni-menu',

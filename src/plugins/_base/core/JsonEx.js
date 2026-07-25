@@ -2,9 +2,77 @@
 import SerializableRegistry from './SerializableRegistry.js';
 
 /**
+ * Extends {@link JsonEx._encode}.<br/>
+ * Also encodes native `Map`/`Set` instances, and stops the original algorithm's in-place mutation of
+ * whatever object graph is being stringified.
+ */
+J.BASE.Aliased.JsonEx.set('_encode', JsonEx._encode);
+JsonEx._encode = function(value, depth)
+{
+  // enforce the same recursion ceiling the original algorithm uses, before doing anything else.
+  if (depth >= this.maxDepth)
+  {
+    throw new Error('Object too deep');
+  }
+
+  // a Map's real entries live outside Object.keys()' reach, so encode them into a plain, restorable
+  // shape up front instead of letting them fall through to the generic walk below (which would skip
+  // them entirely, since their type tag isn't "[object Object]"/"[object Array]").
+  if (value instanceof Map)
+  {
+    return {
+      '@': 'Map',
+      entries: [ ...value.entries() ].map(([ key, val ]) => [ this._encode(key, depth + 1), this._encode(val, depth + 1) ]),
+    };
+  }
+
+  // a Set's real values have the same engine-internal-slot problem as a Map's entries above.
+  if (value instanceof Set)
+  {
+    return {
+      '@': 'Set',
+      values: [ ...value ].map(val => this._encode(val, depth + 1)),
+    };
+  }
+
+  // determine the type of value we're working with.
+  const type = Object.prototype.toString.call(value);
+
+  // handle objects and arrays only.
+  if (type === '[object Object]' || type === '[object Array]')
+  {
+    // build a fresh container instead of writing back into the live object- the original algorithm
+    // mutated `value` directly here, which is invisible for plain objects/arrays (a stray '@' tag
+    // nothing reads) but is destructive for the Map/Set case above: assigning that returned plain
+    // object back onto the live parent would permanently replace a real Map/Set with its encoded
+    // shape the moment anything- e.g. an autosave- called JsonEx.stringify() on the live game state.
+    const encoded = Array.isArray(value) ? [] : {};
+
+    // grab the constructor's name so it can be tagged for restoration later, unless it's a plain shape.
+    const constructorName = value.constructor.name;
+    if (constructorName !== 'Object' && constructorName !== 'Array')
+    {
+      encoded['@'] = constructorName;
+    }
+
+    // recursively encode every key into the fresh container, leaving the source object untouched.
+    for (const key of Object.keys(value))
+    {
+      encoded[key] = this._encode(value[key], depth + 1);
+    }
+
+    return encoded;
+  }
+
+  // primitives pass through unchanged- nothing to encode or copy.
+  return value;
+};
+
+/**
  * Extends {@link JsonEx._decode}.<br/>
- * Also resolves constructors via {@link SerializableRegistry} before falling back
- * to the engine's default `window[className]` lookup.
+ * Also resolves constructors via {@link SerializableRegistry} before falling back to the engine's
+ * default `window[className]` lookup, and reconstructs `Map`/`Set` instances encoded by the
+ * {@link JsonEx._encode} extension above.
  */
 J.BASE.Aliased.JsonEx.set('_decode', JsonEx._decode);
 JsonEx._decode = function(value)
@@ -15,6 +83,19 @@ JsonEx._decode = function(value)
   // handle objects and arrays only.
   if (type === '[object Object]' || type === '[object Array]')
   {
+    // Map/Set were tagged '@': 'Map'/'Set' by the _encode extension above, with their real state moved
+    // into an entries/values array- their internal storage can't be restored by Object.setPrototypeOf
+    // like an ordinary class below, so reconstruct them directly via their real constructor instead.
+    if (value['@'] === 'Map')
+    {
+      return new Map(value.entries.map(([ key, val ]) => [ this._decode(key), this._decode(val) ]));
+    }
+
+    if (value['@'] === 'Set')
+    {
+      return new Set(value.values.map(val => this._decode(val)));
+    }
+
     // check if this object has a constructor tag.
     if (value['@'])
     {

@@ -116,12 +116,15 @@ class WindowGaugeOptions
     this.gaugeType = gaugeType;
     this.backColor = backColor;
     this.leftGradientColor = leftGradientColor;
+    // assign right gradient color on this instance for callers.
     this.rightGradientColor = rightGradientColor;
     this.borderColor = borderColor;
     this.borderThickness = borderThickness;
+    // assign border gap on this instance for callers.
     this.borderGap = borderGap;
     this.dividerColor = dividerColor;
     this.segments = segments;
+    // assign gap on this instance for callers.
     this.gap = gap;
     this.radius = radius;
     this.thickness = thickness;

@@ -11,7 +11,7 @@ class JPassive_PluginMetadata
   }
 
   /**
-   * Extends {@link #postInitialize}.<br>
+   * Extends {@link #postInitialize}.<br/>
    * Includes translation of plugin parameters.
    */
   postInitialize()
@@ -34,6 +34,7 @@ class JPassive_PluginMetadata
      * Configured via plugin parameter "menuSwitch".
      * @type {number}
      */
+    // assign menu switch id on this instance for callers.
     this.menuSwitchId = parseInt(this.parsedPluginParameters['menuSwitch']);
 
     /**

@@ -15,7 +15,7 @@ class Window_RecipeIngredientList
   }
 
   /**
-   * Extends {@link #initialize}.<br>
+   * Extends {@link #initialize}.<br/>
    * Initializes some additional window properies.
    */
   initialize(rect)
@@ -35,7 +35,7 @@ class Window_RecipeIngredientList
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Creates the command list of unlocked crafting categories.
    */
   makeCommandList()
@@ -91,6 +91,7 @@ class Window_RecipeIngredientList
       missingMessage += ` (missing: ${(need - have)})`;
     }
 
+    // Append the row to the working collection.
     subtexts.push(missingMessage);
 
     // build a command based on the component.
@@ -110,7 +111,7 @@ class Window_RecipeIngredientList
   }
 
   /**
-   * Overrides {@link #itemHeight}.<br>
+   * Overwrites {@link #itemHeight}.<br/>
    * Makes the command rows bigger so there can be additional lines.
    * @returns {number}
    */
@@ -138,7 +139,7 @@ class Window_RecipeIngredientList
   }
 
   /**
-   * @param {number} index
+   * @param {number} index The index driving this step.
    * @returns {Rectangle}
    */
   itemLineRect(index)
@@ -151,7 +152,7 @@ class Window_RecipeIngredientList
   }
 
   /**
-   * Overrides {@link #drawBackgroundRect}.<br>
+   * Overwrites {@link #drawBackgroundRect}.<br/>
    * Prevents the rendering of the backdrop of each line in the window.
    * @param {Rectangle} _ The rectangle to draw the background for.
    * @override

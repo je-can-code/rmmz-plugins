@@ -21,9 +21,10 @@ class JABS_Shield
     // grab all the formulas that the
     const pointFormulas = RPGManager.getStringsFromNoteByRegex(state, J.ABS.EXT.SHIELD.RegExp.ShieldPointsFormula);
 
-    // allows access to the attacker and target (RPG formula bindings for eval()).
-    const a = attacker ?? target;
+    // allows access to the caster, receiver, and the shield state itself (RPG formula bindings for eval()).
+    const a = attacker;
     const b = target;
+    const s = state;
 
     /**
      * A safe reduce function that wears a diaper during evaluation.
@@ -35,7 +36,7 @@ class JABS_Shield
     {
       try
       {
-        return total + eval(formula);
+        return total + new Function('a', 'b', 's', `return (${formula})`)(a, b, s);
       }
       catch (e)
       {
@@ -45,8 +46,19 @@ class JABS_Shield
     };
 
     // combine all the point formulas into a single value.
-    const totalPoints = pointFormulas
+    let totalPoints = pointFormulas
       .reduce(safeReduce, 0);
+
+    // scale shield points by outgoing amplification and incoming effectiveness.
+    if (attacker && attacker.sar)
+    {
+      totalPoints *= attacker.sar;
+    }
+
+    if (target && target.ser)
+    {
+      totalPoints *= target.ser;
+    }
 
     // if we have no shield points, then nothing else matters.
     if (totalPoints === 0) return null;

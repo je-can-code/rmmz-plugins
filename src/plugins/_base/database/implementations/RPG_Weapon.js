@@ -54,6 +54,15 @@ class RPG_Weapon
   }
 
   /**
+   * Whether or not this database entry is an equip item.
+   * @returns {boolean}
+   */
+  isEquipItem()
+  {
+    return true;
+  }
+
+  /**
    * Gets the type of implementation this database entry is.
    * @returns {string}
    */
@@ -88,7 +97,6 @@ class RPG_Weapon
     return new RPG_Weapon(raw, index);
   }
 }
-
 
 export default RPG_Weapon;
 //endregion RPG_Weapon

@@ -7,89 +7,6 @@ import RPG_EquipItem from './../database/core/RPG_EquipItem.js';
 import RPG_Class from './../database/implementations/RPG_Class.js';
 import RPG_Actor from './../database/implementations/RPG_Actor.js';
 /**
- * Gets the parameter value from the "long" parameter id.
- *
- * "Long" parameter ids are used in the context of 0-27, rather than
- * 0-7 for param, 0-9 for xparam, and 0-9 for sparam.
- * @param {number} paramId The "long" parameter id.
- * @returns {number} The value of the given parameter.
- */
-// eslint-disable-next-line complexity
-Game_Actor.prototype.longParam = function(paramId)
-{
-  switch (paramId)
-  {
-    case  0:
-      return this.param(paramId); // mhp
-    case  1:
-      return this.param(paramId); // mmp
-    case  2:
-      return this.param(paramId); // atk
-    case  3:
-      return this.param(paramId); // def
-    case  4:
-      return this.param(paramId); // mat
-    case  5:
-      return this.param(paramId); // mdf
-    case  6:
-      return this.param(paramId); // agi
-    case  7:
-      return this.param(paramId); // luk
-    case  8:
-      return this.xparam(paramId - 8); // hit
-    case  9:
-      return this.xparam(paramId - 8); // eva (parry boost)
-    case 10:
-      return this.xparam(paramId - 8); // cri
-    case 11:
-      return this.xparam(paramId - 8); // cev
-    case 12:
-      return this.xparam(paramId - 8); // mev (unused)
-    case 13:
-      return this.xparam(paramId - 8); // mrf
-    case 14:
-      return this.xparam(paramId - 8); // cnt (autocounter)
-    case 15:
-      return this.xparam(paramId - 8); // hrg
-    case 16:
-      return this.xparam(paramId - 8); // mrg
-    case 17:
-      return this.xparam(paramId - 8); // trg
-    case 18:
-      return this.sparam(paramId - 18); // trg (aggro)
-    case 19:
-      return this.sparam(paramId - 18); // grd (parry)
-    case 20:
-      return this.sparam(paramId - 18); // rec
-    case 21:
-      return this.sparam(paramId - 18); // pha
-    case 22:
-      return this.sparam(paramId - 18); // mcr (mp cost)
-    case 23:
-      return this.sparam(paramId - 18); // tcr (tp cost)
-    case 24:
-      return this.sparam(paramId - 18); // pdr
-    case 25:
-      return this.sparam(paramId - 18); // mdr
-    case 26:
-      return this.sparam(paramId - 18); // fdr
-    case 27:
-      return this.sparam(paramId - 18); // exr
-    case 30:
-      return this.maxTp();              // mtp
-    case 31:
-      return this.getWalkSpeedBoosts();               // move speed boost
-    case 32:
-      return this.bonusSkillProficiencyGains();   // proficiency boost
-    case 33:
-      return this.sdpMultiplier();                // sdp multiplier
-    default:
-      console.warn(`paramId:${paramId} didn't map to any of the default parameters.`);
-      return 0;
-  }
-};
-
-/**
  * The underlying database data for this battler.
  *
  * This allows operations to be performed against both actor and enemy indifferently.
@@ -107,6 +24,18 @@ Game_Actor.prototype.battlerId = function()
 Game_Actor.prototype.databaseData = function()
 {
   return this.actor();
+};
+
+/**
+ * Gets the raw skill ids known to this actor.
+ * Combines the actor's learned skill list with any bonus skill ids granted by traits,
+ * then deduplicates so each id appears at most once.
+ * @returns {number[]}
+ */
+Game_Actor.prototype.skillIds = function()
+{
+  // merge learned skills and trait-granted skill ids into a single deduplicated list.
+  return [...new Set(this._skills.concat(this.addedSkills()))];
 };
 
 /**
@@ -163,7 +92,7 @@ Game_Actor.prototype.getNotesSources = function()
 };
 
 /**
- * Extends {@link #setup}.<br>
+ * Extends {@link #setup}.<br/>
  * Adds a hook for performing actions when an actor is setup.
  */
 J.BASE.Aliased.Game_Actor.set('setup', Game_Actor.prototype.setup);
@@ -188,7 +117,7 @@ Game_Actor.prototype.onSetup = function(actorId)
 };
 
 /**
- * Extends {@link #learnSkill}.<br>
+ * Extends {@link #learnSkill}.<br/>
  * Adds a hook for performing actions when a new skill is learned.
  * If the skill is already known, it will not trigger any on-skill-learned effects.
  */
@@ -218,7 +147,7 @@ Game_Actor.prototype.onLearnNewSkill = function(skillId)
 };
 
 /**
- * Extends {@link #learnSkill}.<br>
+ * Extends {@link #learnSkill}.<br/>
  * Adds a hook for performing actions when a new skill is learned.
  * If the skill is already known, it will not trigger any on-skill-learned effects.
  */
@@ -248,13 +177,13 @@ Game_Actor.prototype.onForgetSkill = function(skillId)
 };
 
 /**
- * Extends {@link #die}.<br>
+ * Extends {@link #die}.<br/>
  * Adds a toggle of the death effects.
  */
 J.BASE.Aliased.Game_Actor.set('die', Game_Actor.prototype.die);
 Game_Actor.prototype.die = function()
 {
-  // perform original effects.
+  // perform original logic.
   J.BASE.Aliased.Game_Actor.get('die')
     .call(this);
 
@@ -272,7 +201,7 @@ Game_Actor.prototype.onDeath = function()
 };
 
 /**
- * Extends {@link #revive}.<br>
+ * Extends {@link #revive}.<br/>
  * Handles on-revive effects at the actor-level.
  */
 J.BASE.Aliased.Game_Actor.set('revive', Game_Actor.prototype.revive);
@@ -329,7 +258,7 @@ Game_Actor.prototype.onClassChange = function(classId, keepExp)
 };
 
 /**
- * Extends {@link #changeEquip}.<br>
+ * Extends {@link #changeEquip}.<br/>
  * Adds a hook for performing actions when equipment on the actor has changed state.
  */
 J.BASE.Aliased.Game_Actor.set('changeEquip', Game_Actor.prototype.changeEquip);
@@ -354,7 +283,7 @@ Game_Actor.prototype.changeEquip = function(slotId, item)
 };
 
 /**
- * Extends {@link #discardEquip}.<br>
+ * Extends {@link #discardEquip}.<br/>
  * Adds a hook for performing actions when equipment on the actor has been discarded.
  */
 J.BASE.Aliased.Game_Actor.set('discardEquip', Game_Actor.prototype.discardEquip);
@@ -379,7 +308,7 @@ Game_Actor.prototype.discardEquip = function(item)
 };
 
 /**
- * Extends {@link #forceChangeEquip}.<br>
+ * Extends {@link #forceChangeEquip}.<br/>
  * Adds a hook for performing actions when equipment on the actor has been forcefully changed.
  */
 J.BASE.Aliased.Game_Actor.set('forceChangeEquip', Game_Actor.prototype.forceChangeEquip);
@@ -404,7 +333,7 @@ Game_Actor.prototype.forceChangeEquip = function(slotId, item)
 };
 
 /**
- * Extends {@link #releaseUnequippableItems}.<br>
+ * Extends {@link #releaseUnequippableItems}.<br/>
  * Adds a hook for performing actions when equipment on the actor has been released due to internal change.
  */
 J.BASE.Aliased.Game_Actor.set('releaseUnequippableItems', Game_Actor.prototype.releaseUnequippableItems);
@@ -464,6 +393,44 @@ Game_Actor.prototype.haveEquipsChanged = function(oldEquips)
 };
 
 /**
+ * Overwrites the vanilla {@link #traitObjects} defined on {@link Game_Actor}.<br/>
+ * Routes all calls through the cache wrapper on {@link Game_BattlerBase} so the
+ * vanilla implementation — which pushes directly into the returned array — can never
+ * shadow our cache layer or cause accidental mutation.
+ * @returns {(RPG_Actor|RPG_Class|RPG_EquipItem|RPG_State)[]}
+ */
+Game_Actor.prototype.traitObjects = function()
+{
+  return Game_BattlerBase.prototype.traitObjects.call(this);
+};
+
+/**
+ * Overwrites {@link #buildTraitObjects}.<br/>
+ * Actors have additional trait-bearing sources beyond states: their actor data,
+ * current class, and all currently equipped items.
+ *
+ * Returns a fresh array — never mutates the result of any super call — so the
+ * cache in {@link #traitObjects} remains safe.
+ * @returns {(RPG_Actor|RPG_Class|RPG_EquipItem|RPG_State)[]}
+ */
+Game_Actor.prototype.buildTraitObjects = function()
+{
+  return [
+    // states are the base trait source for all battlers.
+    ...this.states(),
+
+    // the actor's own database entry carries traits.
+    this.actor(),
+
+    // the actor's current class also carries traits.
+    this.currentClass(),
+
+    // all currently equipped items carry traits; nulls are excluded.
+    ...this.equippedEquips(),
+  ];
+};
+
+/**
  * Gets all currently-equipped equips for this actor.
  * Normally, {@link #equips} includes `null`s where there may be empty equipment slots,
  * but this filters those out for you.
@@ -520,7 +487,7 @@ Game_Actor.prototype.onLevelDown = function()
 };
 
 /**
- * Extends {@link #levelDown}.<br>
+ * Extends {@link #levelDown}.<br/>
  * Adds a hook for performing actions when an the actor levels down.
  */
 J.BASE.Aliased.Game_Actor.set('levelDown', Game_Actor.prototype.levelDown);

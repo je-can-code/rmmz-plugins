@@ -296,7 +296,7 @@ class Window_QuestFrame
   }
 
   /**
-   * Overrides {@link lineHeight}.<br/>
+   * Overwrites {@link lineHeight}.<br/>
    * This window's default lineheight will be 10 less than the default.
    * @returns {number}
    */

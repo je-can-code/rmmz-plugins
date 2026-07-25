@@ -267,6 +267,5 @@ class Sprite_Icon
   }
 }
 
-
 export default Sprite_Icon;
 //endregion Sprite_Icon

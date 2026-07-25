@@ -2,7 +2,7 @@
 import Scene_JaftingCreate from './Scene_JaftingCreate.js';
 
 /**
- * Extends {@link #onRootJaftingSelection}.<br>
+ * Extends {@link #onRootJaftingSelection}.<br/>
  * When Creation is chosen on the JAFTING hub, opens the Creation scene.
  */
 J.JAFTING.EXT.CREATE.Aliased.Scene_Jafting
@@ -18,6 +18,7 @@ Scene_Jafting.prototype.onRootJaftingSelection = function()
   else
   {
     // possibly activate other choices.
+    // perform original logic.
     J.JAFTING.EXT.CREATE.Aliased.Scene_Jafting.get('onRootJaftingSelection')
       .call(this);
   }

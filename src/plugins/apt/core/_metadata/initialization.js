@@ -11,7 +11,7 @@ globalThis.J ||= {};
 (() =>
 {
   // check to ensure we have the minimum required version of the j-base plugin.
-  const requiredBaseVersion = '3.0.0';
+  const requiredBaseVersion = '3.2.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (hasBaseRequirement === false)
   {
@@ -19,7 +19,7 @@ globalThis.J ||= {};
   }
 
   // check to ensure we have the minimum required version of the j-abs plugin.
-  const requiredJabsVersion = '4.6.0';
+  const requiredJabsVersion = '4.13.0';
   const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
   if (hasJabsRequirement === false)
   {
@@ -47,6 +47,7 @@ J.APT.Metadata = new JAptitude_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION_
  * A collection of all aliased methods for this plugin.
  */
 J.APT.Aliased = {};
+J.APT.Aliased.Scene_Boot = new Map();
 J.APT.Aliased.BattleManager = new Map();
 J.APT.Aliased.Game_Action = new Map();
 J.APT.Aliased.Game_Actor = new Map();
@@ -94,5 +95,7 @@ J.APT.RegExp.AptitudeTeachable = /<aptitude:[ ]?(\[\d+,[ ]?\d+])>/gi;
  * @type {RegExp}
  */
 J.APT.RegExp.ApReward = /<ap: ?(\d+)>/i;
+
+J.APT.RegExp.AptMultiplier = /<aptMultiplier:(-?\d+)>/i;
 
 //endregion initialization

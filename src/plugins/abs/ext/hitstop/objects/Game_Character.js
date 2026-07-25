@@ -1,7 +1,7 @@
 //region Game_Character
 import JABS_HitstopData from './../_models/JABS_HitstopData.js';
 /**
- * Extends {@link #initMembers}.<br>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes hitstop members.
  */
 J.ABS.EXT.HITSTOP.Aliased.Game_Character.set('initMembers', Game_Character.prototype.initMembers);
@@ -69,7 +69,7 @@ Game_Character.prototype.isHitstopped = function()
 };
 
 /**
- * Extends {@link #update}.<br>
+ * Extends {@link #update}.<br/>
  * Also pauses this character while hitstopped.
  */
 J.ABS.EXT.HITSTOP.Aliased.Game_Character.set('update', Game_Character.prototype.update);

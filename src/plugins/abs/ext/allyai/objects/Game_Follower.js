@@ -1,6 +1,7 @@
 //region Game_Follower
 /**
- * OVERWRITE Adjust the chaseCharacter function to prevent chasing the player
+ * Extends {@link #chaseCharacter}.<br/>
+ * Adjust the chaseCharacter function to prevent chasing the player
  * while this follower is engaged.
  * @param {Game_Character} character The character this follower is following.
  */

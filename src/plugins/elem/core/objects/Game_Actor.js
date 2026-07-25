@@ -5,6 +5,7 @@
 J.ELEM.Aliased.Game_Actor.set("elementRate", Game_Actor.prototype.elementRate);
 Game_Actor.prototype.elementRate = function(elementId)
 {
+  // perform original logic.
   const baseRate = J.ELEM.Aliased.Game_Enemy.get("elementRate")
     .call(this, elementId);
 
@@ -69,6 +70,7 @@ Game_Actor.prototype.elementRateBoost = function(elementId)
     const boost = this.extractElementRateBoosts(referenceData);
     if (!boost.length) return;
 
+    // Append the row to the working collection.
     boosts.push(...boost);
   });
 

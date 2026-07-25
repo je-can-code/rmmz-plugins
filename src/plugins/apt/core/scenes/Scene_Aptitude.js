@@ -522,8 +522,8 @@ class Scene_Aptitude
     const x = containerX;
     const y = 0;
 
-    // keep ribbon width proportional to list column (25% of container width).
-    const w = Math.floor(containerW * 0.25);
+    // keep ribbon width proportional to list column.
+    const w = Math.floor(containerW * this.listColumnWidthPercent());
 
     // keep the same visual height used previously for ribbon rows.
     const height = (36 * 3);
@@ -564,11 +564,9 @@ class Scene_Aptitude
     // wire basic handlers.
     win.setHandler('ok', this.onListOk.bind(this));
     win.setHandler('cancel', this.popScene.bind(this));
-    win.setHandler('more', this.toggleViewMode.bind(this));
-
-    // also wire page navigation keys (Q/W or shoulder buttons).
-    win.setHandler('pageup', this.onCycleActorLeft.bind(this));
-    win.setHandler('pagedown', this.onCycleActorRight.bind(this));
+    win.setHandler('context', this.toggleViewMode.bind(this));
+    win.setHandler('actor-prev', this.onCycleActorLeft.bind(this));
+    win.setHandler('actor-next', this.onCycleActorRight.bind(this));
 
     // store and add to the scene.
     this._j._aptitude._windows._aggregateList = win;
@@ -599,8 +597,8 @@ class Scene_Aptitude
     // use the main area height for window height.
     const wh = Graphics.boxHeight - ribbonHeight;
 
-    // keep the list width at 25% of the container width.
-    const listW = Math.floor(containerW * 0.25);
+    // keep the list width proportional to the container width.
+    const listW = Math.floor(containerW * this.listColumnWidthPercent());
 
     // return the rectangle for the list on the left of the container.
     return new Rectangle(containerX, wy, listW, wh);
@@ -639,11 +637,9 @@ class Scene_Aptitude
     // wire basic handlers.
     win.setHandler('ok', this.onListOk.bind(this));
     win.setHandler('cancel', this.popScene.bind(this));
-    win.setHandler('more', this.toggleViewMode.bind(this));
-
-    // also wire page navigation keys (Q/W or shoulder buttons).
-    win.setHandler('pageup', this.onCycleActorLeft.bind(this));
-    win.setHandler('pagedown', this.onCycleActorRight.bind(this));
+    win.setHandler('context', this.toggleViewMode.bind(this));
+    win.setHandler('actor-prev', this.onCycleActorLeft.bind(this));
+    win.setHandler('actor-next', this.onCycleActorRight.bind(this));
 
     // hide this window initially.
     win.hide();
@@ -710,8 +706,8 @@ class Scene_Aptitude
     const wy = this.mainAreaTop();
     const wh = Graphics.boxHeight;
 
-    // split container 25/75 between list and details (same proportions as before).
-    const listW = Math.floor(containerW * 0.25);
+    // split the container between list and details using the same list-column proportion.
+    const listW = Math.floor(containerW * this.listColumnWidthPercent());
     const detailsW = containerW - listW;
 
     // place details immediately to the right of the list.
@@ -779,6 +775,17 @@ class Scene_Aptitude
   containerWidthPercent()
   {
     return 0.90;
+  }
+
+  /**
+   * The percentage of the container width allotted to the list column (and, by
+   * extension, the ribbon above it). Widened from the original 0.25 so that long
+   * skill/source names and their right-aligned AP counts don't collide.
+   * @returns {number}
+   */
+  listColumnWidthPercent()
+  {
+    return 0.32;
   }
 
   containerHeightPercent()

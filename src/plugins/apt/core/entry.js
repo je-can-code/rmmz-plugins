@@ -11,10 +11,15 @@ import './_metadata/initialization.js';
 
 import './database/RPG_Base.js';
 import './database/RPG_Enemy.js';
+import './objects/Game_BattlerBase.js';
 import './objects/Game_Battler.js';
 import './objects/Game_Actor.js';
 import './objects/Game_Troop.js';
 import './managers/ApManager.js';
+import './managers/TextManager.js';
+import './managers/IconManager.js';
+import './core/registerAptParameters.js';
+import './scenes/Scene_Boot.js';
 import './managers/BattleManager.js';
 import './_models/JABS_Battler.js';
 import './windows/Window_AptitudeRibbon.js';

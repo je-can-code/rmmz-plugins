@@ -1,6 +1,6 @@
 //region RPG_Skill effects
-import JABS_GuardData from './../__models/JABS_GuardData.js';
-import JABS_Action from './../__models/JABS_Action.js';
+import JABS_GuardData from '../models/JABS_GuardData.js';
+import JABS_Action from '../models/JABS_Action.js';
 //region range
 /**
  * The JABS range for this skill.
@@ -28,6 +28,21 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsProximity', {
   },
 });
 //endregion proximity
+
+//region innerRadius
+/**
+ * The universal dead zone for this skill's hitbox, in tiles. Targets within this many tiles
+ * of the action's origin are excluded from collision entirely, regardless of the outer shape's
+ * own math- lets a skill carve a hole out of the middle of any hitbox shape.
+ * @type {number|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsInnerRadius', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.InnerRadius, true);
+  },
+});
+//endregion innerRadius
 
 //region actionId
 /**
@@ -94,6 +109,20 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsKnockback', {
     return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.Knockback, true);
   },
 });
+
+/**
+ * Whether this skill's forced displacement (knockback or pull-forward) should bypass terrain
+ * passability entirely, sailing over any tile- pits, gaps, whatever- instead of stopping at the
+ * last passable tile. Absent by default, which preserves knockback's existing terrain-respecting
+ * behavior.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsIgnoreTerrain', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.IgnoreTerrain);
+  },
+});
 //endregion knockback
 
 //region casting
@@ -119,6 +148,73 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsCastTime', {
   },
 });
 //endregion casting
+
+//region channeling
+/**
+ * The `[SKILL_ID, TOTAL_DURATION]` pair parsed from this skill's `<channel:[...]>` tag.
+ * When present, this skill becomes a "vessel": it pays its own cost once, then repeatedly
+ * executes SKILL_ID every {@link RPG_Skill#jabsChannelTickSpeed} frames for TOTAL_DURATION
+ * frames- the vessel's own damage/effects are never invoked.
+ * @type {[number, number]}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsChannel', {
+  get: function()
+  {
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.Channel, true, true) ?? [];
+  },
+});
+
+/**
+ * The number of frames between each repeated execution of a channel's child skill.
+ * Falls back to the plugin-configured default when this skill omits its own override.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsChannelTickSpeed', {
+  get: function()
+  {
+    const tickSpeed = RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.ChannelTickSpeed, true);
+    return tickSpeed ?? J.ABS.Metadata.DefaultChannelTickSpeed;
+  },
+});
+
+/**
+ * The skill id(s) to execute for free, once, immediately after a channel completes its full
+ * duration uninterrupted. Does not fire if the channel is cut short by {@link JABS_Battler#interrupt}.
+ * @type {number[]}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsOnChannelComplete', {
+  get: function()
+  {
+    return RPGManager.getNumbersFromNoteByRegex(this, J.ABS.RegExp.OnChannelComplete);
+  },
+});
+//endregion channeling
+
+//region interruption
+/**
+ * Whether or not this specific casting/channeling skill can be self-interrupted by the caster
+ * choosing to move. Absent by default, which means moving cancels the cast/channel.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsCannotMoveToInterrupt', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.CannotMoveToInterrupt);
+  },
+});
+
+/**
+ * Whether or not this specific casting/channeling skill can be interrupted by an incoming
+ * `<interrupt:MAGNIFIER>` hit, regardless of the caster's own battler-wide immunity.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsThisCannotBeInterrupted', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.ThisCannotBeInterrupted);
+  },
+});
+//endregion interruption
 
 //region direct targeting
 /**
@@ -186,6 +282,45 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsAggroMultiplier', {
   get: function()
   {
     return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.AggroMultiplier, true);
+  },
+});
+
+/**
+ * The percent adjustment this skill applies to the CASTER's own already-standing aggro on the
+ * target (not the newly-computed chain result- see {@code <aggroMultiplier>} for that). Resolved
+ * as `aggro *= (1 + VAL/100)` against whatever the caster's aggro entry already totals. Can be
+ * negative.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsAggroPercent', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.AggroPercent, true);
+  },
+});
+
+/**
+ * The flat aggro adjustment this skill applies to every OTHER battler's standing aggro on the
+ * target (same team as the caster, caster's own entry excluded). Can be negative.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsNotMyAggro', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.NotMyAggro, true);
+  },
+});
+
+/**
+ * The percent aggro adjustment this skill applies to every OTHER battler's standing aggro on the
+ * target (same team as the caster, caster's own entry excluded). Resolved as `aggro *= (1 +
+ * VAL/100)` per entry, so negative values reduce and positive values amplify. Can be negative.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsNotMyAggroPercent', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.NotMyAggroPercent, true);
   },
 });
 //endregion aggro
@@ -391,21 +526,6 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsComboStarter', {
 });
 
 /**
- * Whether or not this skill is a "skill extend" skill.
- * @returns {boolean} True if this is a "skill extend" skill, false otherwise.
- */
-Object.defineProperty(RPG_Skill.prototype, 'isSkillExtender', {
-  get: function()
-  {
-    // if we're not using the extend plugin, then this is an automatic no.
-    if (!J.EXTEND) return false;
-
-    // if the skill doesn't have the extend tag, then it's not an extend skill.
-    return J.EXTEND.RegExp.SkillExtend.test(this.note);
-  },
-});
-
-/**
  * Whether or not this skill can be chosen at all by the JABS AI.
  * Combo skills can still be executed as they are chosen by different means.
  */
@@ -430,12 +550,27 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsComboSkillId', {
 
 /**
  * The JABS combo delay in frames before the combo skill can be triggered.
- * @type {number|null}
+ * Defaults to 0 when the second parameter is omitted from the combo tag.
+ * @type {number}
  */
 Object.defineProperty(RPG_Skill.prototype, 'jabsComboDelay', {
   get: function()
   {
-    return this.jabsComboAction[1];
+    return this.jabsComboAction[1] ?? 0;
+  },
+});
+
+/**
+ * The JABS combo expire window in frames, counted from the moment the skill fires.
+ * When non-zero, the combo skill is cleared from the slot if it has not been used
+ * before this many frames elapse — even if the combo delay has not yet completed.
+ * Defaults to 0 (no expiry) when the third parameter is omitted from the combo tag.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsComboExpire', {
+  get: function()
+  {
+    return this.jabsComboAction[2] ?? 0;
   },
 });
 //endregion comboAction
@@ -473,6 +608,9 @@ RPG_Skill.prototype.recursivelyFindAllComboSkillIds = function(skillId, list = A
   {
     // grab the combo skill id.
     const { jabsComboSkillId } = skill;
+
+    // if the next combo target is already in the list, a cycle exists — stop here.
+    if (skillIdList.includes(jabsComboSkillId)) return skillIdList;
 
     // add it to the list.
     skillIdList.push(jabsComboSkillId);
@@ -554,7 +692,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsPierceCount', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsPierceDelay', {
   get: function()
   {
-    return Math.max(this.jabsPiercingData[1], 5);
+    return Math.max(this.jabsPiercingData[1], 0);
   },
 });
 //endregion piercing
@@ -562,7 +700,7 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsPierceDelay', {
 //region bonusHitsSkillNote
 /**
  * Extra per-connection bonus hits parsed from this skill note, additive with battler scope tags.
- * When J-SkillExtend merges extension notes into this skill, matching tags on the extension contribute here too.
+ * When J-Extend merges extension notes into this skill, matching tags on the extension contribute here too.
  * @type {number}
  */
 Object.defineProperty(RPG_Skill.prototype, 'jabsBonusHitsFromSkillNote', {
@@ -943,33 +1081,33 @@ RPG_Skill.prototype.getJabsVisOffsetFor = function(direction)
   {
     // uP.
     case 8:
-      return this.jabsVisOffsetU || def || [ 0, 0 ];
+      return this.jabsVisOffsetU || def;
     // dOWN.
     case 2:
-      return this.jabsVisOffsetD || def || [ 0, 0 ];
+      return this.jabsVisOffsetD || def;
     // lEFT.
     case 4:
-      return this.jabsVisOffsetL || def || [ 0, 0 ];
+      return this.jabsVisOffsetL || def;
     // rIGHT.
     case 6:
-      return this.jabsVisOffsetR || def || [ 0, 0 ];
+      return this.jabsVisOffsetR || def;
 
     // uP-RIGHT.
     case 9:
-      return this.jabsVisOffsetUR || this.jabsVisOffsetU || this.jabsVisOffsetR || def || [ 0, 0 ];
+      return this.jabsVisOffsetUR || this.jabsVisOffsetU || this.jabsVisOffsetR || def;
     // uP-LEFT.
     case 7:
-      return this.jabsVisOffsetUL || this.jabsVisOffsetU || this.jabsVisOffsetL || def || [ 0, 0 ];
+      return this.jabsVisOffsetUL || this.jabsVisOffsetU || this.jabsVisOffsetL || def;
     // dOWN-RIGHT.
     case 3:
-      return this.jabsVisOffsetDR || this.jabsVisOffsetD || this.jabsVisOffsetR || def || [ 0, 0 ];
+      return this.jabsVisOffsetDR || this.jabsVisOffsetD || this.jabsVisOffsetR || def;
     // dOWN-LEFT.
     case 1:
-      return this.jabsVisOffsetDL || this.jabsVisOffsetD || this.jabsVisOffsetL || def || [ 0, 0 ];
+      return this.jabsVisOffsetDL || this.jabsVisOffsetD || this.jabsVisOffsetL || def;
   }
 
   // unknown direction: return default.
-  return def || [ 0, 0 ];
+  return def;
 };
 
 /**
@@ -1145,25 +1283,51 @@ RPG_Skill.prototype.getJabsVisOffsetForMergedActionMap = function(jabsAction, di
   switch (direction)
   {
     case 8:
-      return mergedU || def || [ 0, 0 ];
+      return mergedU || def;
     case 2:
-      return mergedD || def || [ 0, 0 ];
+      return mergedD || def;
     case 4:
-      return mergedL || def || [ 0, 0 ];
+      return mergedL || def;
     case 6:
-      return mergedR || def || [ 0, 0 ];
+      return mergedR || def;
     case 9:
-      return mergedUR || mergedU || mergedR || def || [ 0, 0 ];
+      return mergedUR || mergedU || mergedR || def;
     case 7:
-      return mergedUL || mergedU || mergedL || def || [ 0, 0 ];
+      return mergedUL || mergedU || mergedL || def;
     case 3:
-      return mergedDR || mergedD || mergedR || def || [ 0, 0 ];
+      return mergedDR || mergedD || mergedR || def;
     case 1:
-      return mergedDL || mergedD || mergedL || def || [ 0, 0 ];
+      return mergedDL || mergedD || mergedL || def;
   }
 
-  return def || [ 0, 0 ];
+  return def;
 };
 //endregion directional
 //endregion visual metadata
+
+//region purgeStates
+/**
+ * The parsed {@code <purgeStates>} parameter tuple from this skill's notes, if present.
+ *
+ * <pre>
+ * Structure:
+ *  <purgeStates:[TYPE, ALLOW_DEATH, COUNT]>
+ *
+ * Example:
+ *  <purgeStates:[negative, false, 2]>
+ *
+ * Translation:
+ *  On hit: remove the 2 highest-priority negative states from the target.
+ *  Death state is not eligible. Passive states are never eligible.
+ * </pre>
+ * @type {any[]|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsPurgeStatesParams', {
+  get: function()
+  {
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.PurgeStates, true, true);
+  },
+});
+//endregion purgeStates
+
 //endregion RPG_Skill effects

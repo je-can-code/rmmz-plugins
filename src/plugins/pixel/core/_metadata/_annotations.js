@@ -40,7 +40,17 @@
  *   src/plugins/pixel/ext/abs  — JABS bridge (loads after J-ABS + this)
  *
  * ============================================================================
+ * NOTE ABOUT NOTETAGS:
+ * This plugin has no notetags of its own- movement/collision tuning is
+ * entirely plugin-parameter driven.
+ * ============================================================================
  * CHANGELOG:
+ * - 1.0.2
+ *    Fixed a jump-in-progress being teleported to its destination on frame
+ *    one- Game_CharacterBase#update's render-coordinate snap now skips
+ *    while isJumping() so updateJump's own interpolation is not overridden.
+ *    Moved the debug-overlay sample collector from a plain J.PIXEL.Debug
+ *    object into its own PixelDebugSampler class; no functional change.
  * - 1.0.1
  *    Optional foot-touch trigger delay after map setup (plugin parameter).
  * - 1.0.0

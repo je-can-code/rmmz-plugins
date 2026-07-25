@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.2 DANGER] Enable danger indicators on foes on the map.
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] Enable danger indicators on foes on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-ABS
@@ -20,7 +20,37 @@
  * this functionality. Just add this plugin after/below JABS, and it'll work
  * with no additional adjustments.
  * ============================================================================
+ * OVERRIDING THE INDICATOR PER ENEMY:
+ * By default, whether an enemy's danger indicator shows is controlled by the
+ * plugin parameter "Show Indicator by Default". You can override this on a
+ * per-enemy basis using the tags below.
+ *
+ * TAG USAGE:
+ * - Enemies (database note)
+ * - Enemy events (comment; overrides the database default for that event)
+ *
+ * TAG FORMAT:
+ *    <noDangerIndicator>
+ *  Suppresses the danger indicator for this enemy, regardless of the plugin
+ *  parameter default.
+ *
+ *    <showDangerIndicator>
+ *  Forces the danger indicator to show for this enemy, regardless of the
+ *  plugin parameter default. Only meaningful on an event comment when the
+ *  database default (or an event-level <noDangerIndicator>) would otherwise
+ *  suppress it.
+ *
+ * NOTE: An event-level tag overrides whatever the database note tag or
+ * plugin parameter default would otherwise decide for that specific event.
+ *
+ * EXAMPLE:
+ *    <noDangerIndicator>
+ * This enemy never shows a danger indicator, even if the plugin parameter
+ * default is enabled.
+ * ============================================================================
  * CHANGELOG:
+ * - 1.0.3
+ *    Added <noDangerIndicator>/<showDangerIndicator> per-enemy overrides.
  * - 1.0.2
  *    Raised minimum J-ABS version requirement to 4.7.0.
  * - 1.0.1

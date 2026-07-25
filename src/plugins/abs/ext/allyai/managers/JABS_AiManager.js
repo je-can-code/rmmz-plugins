@@ -112,7 +112,7 @@ JABS_AiManager.enforceFollowerThroughPolicy = function(allyBattler)
 JABS_AiManager.canPerformAllyPhase0 = function(allyBattler)
 {
   // we do not idle while casting.
-  if (allyBattler.isCasting()) return false;
+  if (allyBattler.isCastingOrChanneling()) return false;
 
   // we do not idle while engaged in combat.
   if (allyBattler.isEngaged()) return false;
@@ -402,7 +402,7 @@ JABS_AiManager.isWithinTolerance = function(allyBattler, targetX, targetY, toler
 };
 
 /**
- * Extends {@link #maintainSafeDistance}.<br>
+ * Extends {@link #maintainSafeDistance}.<br/>
  * Allies use spacing-axis-driven close/far thresholds instead of the global constants.
  * @param {JABS_Battler} battler The battler to reposition.
  */
@@ -412,6 +412,7 @@ JABS_AiManager.maintainSafeDistance = function(battler)
   // enemies use the original global-constant logic unchanged.
   if (battler.isEnemy())
   {
+    // perform original logic.
     J.ABS.EXT.ALLYAI.Aliased.JABS_AiManager.get('maintainSafeDistance')
       .call(this, battler);
     return;
@@ -422,9 +423,6 @@ JABS_AiManager.maintainSafeDistance = function(battler)
   const closeDistance = battler.getCloseDistance();
   const farDistance = battler.getFarDistance();
 
-  // within the safe band: hold position.
-  if (distance > closeDistance && distance <= farDistance) return;
-
   if (distance <= closeDistance)
   {
     battler.smartMoveAwayFromTarget();
@@ -433,10 +431,14 @@ JABS_AiManager.maintainSafeDistance = function(battler)
   {
     battler.smartMoveTowardTarget();
   }
+  else
+  {
+    // within the safe band: hold position.
+  }
 };
 
 /**
- * Extends {@link #decideAiPhase2Action}.<br>
+ * Extends {@link #decideAiPhase2Action}.<br/>
  * Includes handling ally AI as well as enemy.
  * @param {JABS_Battler} battler The battler deciding the action.
  */

@@ -113,7 +113,7 @@
  *  <maxRefineCount:NUM>
  *
  * TAG EXAMPLES
- *  <maxRefinementCount:3>
+ *  <maxRefineCount:3>
  * An equip with this can only be used as a "base" for refinement 3 times
  * OR
  * An equip can only achieve be fused to or beyond +3 once
@@ -134,10 +134,10 @@
  * the player from adding an unreasonable number of traits onto an equip.
  *
  * TAG FORMAT
- *  <maxRefinedTraits:NUM>
+ *  <maxTraitCount:NUM>
  *
  * TAG EXAMPLES
- *  <maxRefinedTraits:3>
+ *  <maxTraitCount:3>
  * An equip with this can only have a total of 3 unique traits.
  *
  * NOTE ABOUT LIMITS
@@ -148,6 +148,14 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Replaced ~550 lines of local trait-combining logic with calls to
+ *    J-Base's new shared TraitResolver.refineTraits/consolidate.
+ *    Fixed the salvage ledger being silently dropped from refined equipment
+ *    on save/load- RPG_EquipItem's base schema doesn't carry
+ *    _jaftingSalvageLedger, so Game_Party's database-refresh reconstruction
+ *    (new RPG_Weapon/RPG_Armor from raw JSON) lost refinement lineage every
+ *    time until this fix.
  * - 1.0.2
  *    Salvage ledger merges before refine consumes inputs.
  *    Refinable list lineage hints; hollow-diamond prefix for stamped rows.

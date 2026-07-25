@@ -95,8 +95,7 @@ Game_Battler.prototype.extractElementRateBoosts = function(referenceData)
   // if for some reason there is no note, then don't try to parse it.
   if (!referenceData.note) return [];
 
-  const caps = RPGManager
-    .getAllCapturesFromNoteByRegex(referenceData, J.ELEM.RegExp.BoostElement);
-  return caps.map(([ id, boost ]) => [ Number(id), Number(boost) ]);
+  // each <boostElement:[ELEMENT_ID, PERCENT_BOOST]> tag parses directly into a numeric tuple.
+  return RPGManager.getArraysFromNotesByRegex(referenceData, J.ELEM.RegExp.BoostElement);
 };
 //endregion Game_Battler

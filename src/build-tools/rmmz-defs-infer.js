@@ -18,7 +18,7 @@ const RESERVED_PARAM = new Set([
 ]);
 
 /**
- * @param {string} name
+ * @param {string} name The name driving this step.
  * @returns {string}
  */
 export function safeParam(name)
@@ -31,7 +31,7 @@ export function safeParam(name)
 }
 
 /**
- * @param {string} src
+ * @param {string} src The src driving this step.
  * @returns {number[]}
  */
 export function buildLineStarts(src)
@@ -41,6 +41,7 @@ export function buildLineStarts(src)
   {
     if (src[i] === '\n')
     {
+      // Append the row to the working collection.
       starts.push(i + 1);
     }
   }
@@ -48,7 +49,7 @@ export function buildLineStarts(src)
 }
 
 /**
- * @param {number[]} lineStarts
+ * @param {number[]} lineStarts The line starts driving this step.
  * @param {{ line: number, column: number }} pos
  * @returns {number}
  */
@@ -67,7 +68,7 @@ export function locStartToOffset(lineStarts, pos)
 }
 
 /**
- * @param {string} s
+ * @param {string} s The s driving this step.
  * @returns {string[]}
  */
 function splitUnionTop(s)
@@ -86,6 +87,7 @@ function splitUnionTop(s)
     {
       depth--;
     }
+    // otherwise when c  equals  '|'  and  depth  equals  0, use this branch.
     else if (c === '|' && depth === 0)
     {
       out.push(cur.trim());
@@ -99,7 +101,7 @@ function splitUnionTop(s)
 }
 
 /**
- * @param {string} raw
+ * @param {string} raw The raw driving this step.
  * @returns {string}
  */
 export function jsdocTypeToTs(raw)
@@ -209,7 +211,7 @@ export function jsdocTypeToTs(raw)
 /**
  * Extract `{content}` after `@param` on a line (handles nested braces shallowly).
  *
- * @param {string} line
+ * @param {string} line The line driving this step.
  * @returns {{ typeRaw: string, name: string, description?: string } | null}
  */
 function parseParamLine(line)
@@ -238,6 +240,7 @@ function parseParamLine(line)
     {
       depth++;
     }
+    // otherwise when c  equals  '}', use this branch.
     else if (c === '}')
     {
       depth--;
@@ -267,7 +270,7 @@ function parseParamLine(line)
 }
 
 /**
- * @param {string} jsdoc
+ * @param {string} jsdoc The jsdoc driving this step.
  * @returns {{
  *   params: Map<string, string>,
  *   paramDescriptions: Map<string, string>,
@@ -281,6 +284,7 @@ export function parseJsdocBlock(jsdoc)
   /** @type {Map<string, string>} */
   const params = new Map();
   /** @type {Map<string, string>} */
+  // construct param descriptions for the next step in this routine.
   const paramDescriptions = new Map();
   let returns = null;
   let typeTag = null;
@@ -367,10 +371,10 @@ export function parseJsdocBlock(jsdoc)
 }
 
 /**
- * @param {string} src
- * @param {number[]} lineStarts
+ * @param {string} src The src driving this step.
+ * @param {number[]} lineStarts The line starts driving this step.
  * @param {{ start: { line: number, column: number } }} stmtLoc
- * @param {number} maxGap
+ * @param {number} maxGap The max gap driving this step.
  * @returns {string}
  */
 export function extractLeadingJsdoc(src, lineStarts, stmtLoc, maxGap = 900)
@@ -409,7 +413,7 @@ export function extractLeadingJsdoc(src, lineStarts, stmtLoc, maxGap = 900)
 }
 
 /**
- * @param {string} classPath
+ * @param {string} classPath The class path driving this step.
  * @returns {string}
  */
 function shortClassName(classPath)
@@ -419,8 +423,8 @@ function shortClassName(classPath)
 }
 
 /**
- * @param {import('acorn').Statement | import('acorn').Expression | null | undefined} node
- * @param {import('acorn').AnyNode[]} out
+ * @param {import('acorn').Statement | import('acorn').Expression | null | undefined} node The node driving this step.
+ * @param {import('acorn').AnyNode[]} out The out driving this step.
  */
 function gatherReturns(node, out)
 {
@@ -433,6 +437,7 @@ function gatherReturns(node, out)
   {
     case 'ReturnStatement':
       out.push(node.argument);
+      // exit early without a payload.
       return;
     case 'BlockStatement':
       for (const st of node.body)
@@ -490,7 +495,7 @@ function gatherReturns(node, out)
  * RPG Maker MZ convention: predicate helpers named `isFoo` / `isJapanese` almost always return boolean.
  * Requires `is` + uppercase camel segment so we do not match identifiers like `issue` or `isolate`.
  *
- * @param {string} name
+ * @param {string} name The name driving this step.
  * @returns {boolean}
  */
 function looksLikeIsPredicateMethodName(name)
@@ -501,7 +506,7 @@ function looksLikeIsPredicateMethodName(name)
 /**
  * `hasItem`, `hasSkill`, etc. — same predicate vibe as `is*`.
  *
- * @param {string} name
+ * @param {string} name The name driving this step.
  * @returns {boolean}
  */
 function looksLikeHasPredicateMethodName(name)
@@ -649,7 +654,7 @@ const INTERPRETER_COMMAND_PARAM_TYPES = Object.freeze({
 });
 
 /**
- * @param {string} methodName
+ * @param {string} methodName The method name driving this step.
  * @returns {string}
  */
 function interpreterCommandParamsTs(methodName)
@@ -667,9 +672,9 @@ function interpreterCommandParamsTs(methodName)
  * Small allow-list of return types verified against vanilla `project/js/rmmz_*.js` implementations.
  * Add entries only after reading the method body — no regex/name-shape guessing (see v1.1 banner).
  *
- * @param {string | undefined} cls
- * @param {string} methodName
- * @param {string} currentTs
+ * @param {string | undefined} cls The cls driving this step.
+ * @param {string} methodName The method name driving this step.
+ * @param {string} currentTs The current ts driving this step.
  * @returns {string | null}
  */
 function refineReturnTsByEngineClass(cls, methodName, currentTs)
@@ -701,6 +706,7 @@ function refineReturnTsByEngineClass(cls, methodName, currentTs)
 
   const allowPromiseRefinement = cls === 'StorageManager' && currentTs === 'Promise';
 
+  // when , take this branch.
   if (
     !allowPromiseRefinement
     && currentTs !== 'unknown'
@@ -771,13 +777,12 @@ function refineReturnTsByEngineClass(cls, methodName, currentTs)
   return null;
 }
 
-
 /**
  * Last pass after JSDoc + `inferReturnFromBody`. v1.1 removed broad name-shape heuristics; only
  * a few engine singleton accessors and `is*` / `has*` predicates are tightened here.
  *
- * @param {string} currentTs
- * @param {InferContext} inferCtx
+ * @param {string} currentTs The current ts driving this step.
+ * @param {InferContext} inferCtx The infer ctx driving this step.
  * @returns {string}
  */
 function refineReturnTsByMethodName(currentTs, inferCtx)
@@ -876,8 +881,8 @@ function refineReturnTsByMethodName(currentTs, inferCtx)
 /**
  * Verified parameter shapes where vanilla uses a stable identifier (v1.1 allow-list only).
  *
- * @param {string} paramName
- * @param {InferContext | undefined} inferCtx
+ * @param {string} paramName The param name driving this step.
+ * @param {InferContext | undefined} inferCtx The infer ctx driving this step.
  * @returns {string | null}
  */
 function refineParamTsByEnginePrototype(paramName, inferCtx)
@@ -918,9 +923,9 @@ function refineParamTsByEnginePrototype(paramName, inferCtx)
 /**
  * When JSDoc left a parameter as `unknown`, apply the small engine prototype allow-list above.
  *
- * @param {string} paramName
- * @param {string} currentTs
- * @param {InferContext | undefined} inferCtx
+ * @param {string} paramName The param name driving this step.
+ * @param {string} currentTs The current ts driving this step.
+ * @param {InferContext | undefined} inferCtx The infer ctx driving this step.
  * @returns {string}
  */
 function refineParamTsByParamName(paramName, currentTs, inferCtx)
@@ -940,9 +945,9 @@ function refineParamTsByParamName(paramName, currentTs, inferCtx)
 }
 
 /**
- * @param {string | undefined | null} jsdocTs
- * @param {string} paramName
- * @param {InferContext | undefined} inferCtx
+ * @param {string | undefined | null} jsdocTs The jsdoc ts driving this step.
+ * @param {string} paramName The param name driving this step.
+ * @param {InferContext | undefined} inferCtx The infer ctx driving this step.
  * @returns {string}
  */
 function resolveParamTs(jsdocTs, paramName, inferCtx)
@@ -980,8 +985,8 @@ function resolveParamTs(jsdocTs, paramName, inferCtx)
 }
 
 /**
- * @param {import('acorn').Expression | null | undefined} expr
- * @param {InferContext} ctx
+ * @param {import('acorn').Expression | null | undefined} expr The expr driving this step.
+ * @param {InferContext} ctx The ctx driving this step.
  * @returns {string | null}
  */
 export function inferExprType(expr, ctx)
@@ -1080,6 +1085,7 @@ export function inferExprType(expr, ctx)
       const parts = [];
       if (lt !== null && lt !== undefined)
       {
+        // Append the row to the working collection.
         parts.push(lt);
       }
       if (rt !== null && rt !== undefined)
@@ -1112,6 +1118,7 @@ export function inferExprType(expr, ctx)
       if (expr.callee.type === 'MemberExpression' && !expr.callee.computed)
       {
         const prop = expr.callee.property.type === 'Identifier' ? expr.callee.property.name : '';
+        // when , take this branch.
         if (
           expr.callee.object.type === 'ThisExpression'
           && (prop === 'slice' || prop === 'concat')
@@ -1157,6 +1164,7 @@ export function inferExprType(expr, ctx)
       {
         return 'string';
       }
+      // when , take this branch.
       if (
         expr.callee.type === 'MemberExpression'
         && !expr.callee.computed
@@ -1297,7 +1305,7 @@ export function inferExprType(expr, ctx)
 /**
  * Collapse multiple inferred RHS types into one TS union (shared by returns and instance fields).
  *
- * @param {string[]} types
+ * @param {string[]} types The types driving this step.
  * @returns {string}
  */
 export function mergeReturnTypes(types)
@@ -1322,7 +1330,7 @@ export function mergeReturnTypes(types)
 /**
  * Flatten shallow `a | b` chunks into ordered unique members (engine RHS unions stay simple).
  *
- * @param {string[]} chunks
+ * @param {string[]} chunks The chunks driving this step.
  * @returns {string[]}
  */
 function dedupeUnionTypeMembers(chunks)
@@ -1348,7 +1356,7 @@ function dedupeUnionTypeMembers(chunks)
 /**
  * Engine fields often start as numeric literals (`Sprite._counter = 0`) but are mutated later (`++`).
  *
- * @param {string} ts
+ * @param {string} ts The ts driving this step.
  * @returns {string}
  */
 function widenNumericLiteralInstanceProp(ts)
@@ -1368,7 +1376,7 @@ function widenNumericLiteralInstanceProp(ts)
 /**
  * Drop numeric literals from a union when `number` is already present (`0 | number` → `number`).
  *
- * @param {string[]} members
+ * @param {string[]} members The members driving this step.
  * @returns {string[]}
  */
 function collapseNumericLiteralWithNumber(members)
@@ -1384,7 +1392,7 @@ function collapseNumericLiteralWithNumber(members)
 /**
  * Drop boolean literals when `boolean` is already present (`false | boolean` → `boolean`).
  *
- * @param {string[]} members
+ * @param {string[]} members The members driving this step.
  * @returns {string[]}
  */
 function collapseBoolLiteralWithBoolean(members)
@@ -1439,7 +1447,7 @@ export function refineInstanceBackingFieldTs(classPath, propName, currentTs)
  * Merge RHS observations for instance fields: drop `unknown` when any concrete inference exists
  * (literal vs call-expression on the same prop).
  *
- * @param {string[]} types
+ * @param {string[]} types The types driving this step.
  * @returns {string}
  */
 export function mergeInstancePropRhsObservations(types)
@@ -1472,8 +1480,8 @@ export function mergeInstancePropRhsObservations(types)
 /**
  * Depth-first walk over Acorn nodes (skips `loc` / `range` metadata).
  *
- * @param {import('acorn').AnyNode | null | undefined} node
- * @param {(n: import('acorn').AnyNode) => void} visitor
+ * @param {import('acorn').AnyNode | null | undefined} node The node driving this step.
+ * @param {(n: import('acorn').AnyNode) => void} visitor The visitor driving this step.
  * @returns {void}
  */
 export function walkAstRecursive(node, visitor)
@@ -1516,8 +1524,8 @@ const INSTANCE_PROP_COMPOUND_ASSIGNS = new Set(['+=', '-=', '*=', '/=', '%=', '*
  *
  * @param {import('acorn').FunctionDeclaration |
  *   import('acorn').FunctionExpression |
- *   import('acorn').ArrowFunctionExpression} funcNode
- * @param {InferContext} inferCtx
+ *   import('acorn').ArrowFunctionExpression} funcNode The func node driving this step.
+ * @param {InferContext} inferCtx The infer ctx driving this step.
  * @returns {Map<string, string>}
  */
 export function collectThisUnderscorePropsFromFunction(funcNode, inferCtx)
@@ -1526,8 +1534,8 @@ export function collectThisUnderscorePropsFromFunction(funcNode, inferCtx)
   const bucket = new Map();
 
   /**
-   * @param {string} propName
-   * @param {string} rhsTs
+   * @param {string} propName The prop name driving this step.
+   * @param {string} rhsTs The rhs ts driving this step.
    * @returns {void}
    */
   function pushProp(propName, rhsTs)
@@ -1548,6 +1556,7 @@ export function collectThisUnderscorePropsFromFunction(funcNode, inferCtx)
     if (node.type === 'UpdateExpression')
     {
       const arg = node.argument;
+      // when , take this branch.
       if (
         arg.type === 'MemberExpression'
         && !arg.computed
@@ -1561,6 +1570,7 @@ export function collectThisUnderscorePropsFromFunction(funcNode, inferCtx)
           pushProp(propName, 'number');
         }
       }
+      // exit early without a payload.
       return;
     }
     if (node.type !== 'AssignmentExpression')
@@ -1627,7 +1637,7 @@ export function collectThisUnderscorePropsFromFunction(funcNode, inferCtx)
  *
  * @param {import('acorn').FunctionDeclaration |
  *   import('acorn').FunctionExpression |
- *   import('acorn').ArrowFunctionExpression} funcNode
+ *   import('acorn').ArrowFunctionExpression} funcNode The func node driving this step.
  * @returns {Map<string, ThisUnderscoreUsage>}
  */
 export function collectThisUnderscoreUsageFromFunction(funcNode)
@@ -1636,7 +1646,7 @@ export function collectThisUnderscoreUsageFromFunction(funcNode)
   const out = new Map();
 
   /**
-   * @param {string} propName
+   * @param {string} propName The prop name driving this step.
    * @returns {ThisUnderscoreUsage}
    */
   function ensure(propName)
@@ -1649,14 +1659,15 @@ export function collectThisUnderscoreUsageFromFunction(funcNode)
         writes: new Set(),
         consumes: new Set(),
       };
+      // Register the value on the alias map for runtime lookup.
       out.set(propName, cur);
     }
     return cur;
   }
 
   /**
-   * @param {import('acorn').AnyNode | null | undefined} node
-   * @param {import('acorn').AnyNode | null} parent
+   * @param {import('acorn').AnyNode | null | undefined} node The node driving this step.
+   * @param {import('acorn').AnyNode | null} parent The parent driving this step.
    * @returns {void}
    */
   function walk(node, parent)
@@ -1688,6 +1699,7 @@ export function collectThisUnderscoreUsageFromFunction(funcNode)
         {
           usage.writes.add('assign');
         }
+        // otherwise when , use this branch.
         else if (
           parent
           && parent.type === 'UpdateExpression'
@@ -1696,6 +1708,7 @@ export function collectThisUnderscoreUsageFromFunction(funcNode)
         {
           usage.writes.add('update');
         }
+        // otherwise fall back to the alternate path.
         else
         {
           usage.reads.add('read');
@@ -1734,6 +1747,7 @@ export function collectThisUnderscoreUsageFromFunction(funcNode)
         const propName = arg.property.name;
         if (propName.startsWith('_'))
         {
+          // track this key so duplicate work is skipped later.
           ensure(propName).writes.add(node.operator);
         }
       }
@@ -1824,8 +1838,8 @@ export function collectThisUnderscoreUsageFromFunction(funcNode)
 }
 
 /**
- * @param {import('acorn').Function | import('acorn').ArrowFunctionExpression} funcNode
- * @param {InferContext} ctx
+ * @param {import('acorn').Function | import('acorn').ArrowFunctionExpression} funcNode The func node driving this step.
+ * @param {InferContext} ctx The ctx driving this step.
  * @returns {string}
  */
 function inferReturnFromBody(funcNode, ctx)
@@ -1857,9 +1871,9 @@ function inferReturnFromBody(funcNode, ctx)
 }
 
 /**
- * @param {import('acorn').AnyNode[]} params
- * @param {Map<string, string>} jsdocParams
- * @param {InferContext | undefined} inferCtx
+ * @param {import('acorn').AnyNode[]} params The params driving this step.
+ * @param {Map<string, string>} jsdocParams The jsdoc params driving this step.
+ * @param {InferContext | undefined} inferCtx The infer ctx driving this step.
  * @returns {string}
  */
 function buildParamsTs(params, jsdocParams, inferCtx)
@@ -1873,11 +1887,13 @@ function buildParamsTs(params, jsdocParams, inferCtx)
       const jt = jsdocParams.get(p.name);
       parts.push(`${safeParam(p.name)}: ${resolveParamTs(jt, p.name, inferCtx)}`);
     }
+    // otherwise when p.type  equals  'AssignmentPattern'  and  p.left.type  equals  'Ident..., use this branch.
     else if (p.type === 'AssignmentPattern' && p.left.type === 'Identifier')
     {
       const jt = jsdocParams.get(p.left.name);
       parts.push(`${safeParam(p.left.name)}?: ${resolveParamTs(jt, p.left.name, inferCtx)}`);
     }
+    // otherwise when p.type  equals  'RestElement'  and  p.argument.type  equals  'Identif..., use this branch.
     else if (p.type === 'RestElement' && p.argument.type === 'Identifier')
     {
       parts.push(`...${safeParam(p.argument.name)}: unknown[]`);
@@ -1893,11 +1909,11 @@ function buildParamsTs(params, jsdocParams, inferCtx)
 /**
  * Accepts function expressions (including arrows) assigned to prototypes / static bags.
  *
- * @param {import('acorn').FunctionExpression} funcNode
- * @param {string} src
- * @param {number[]} lineStarts
+ * @param {import('acorn').FunctionExpression} funcNode The func node driving this step.
+ * @param {string} src The src driving this step.
+ * @param {number[]} lineStarts The line starts driving this step.
  * @param {{ start: { line: number, column: number } }} stmtLoc
- * @param {InferContext} inferCtx
+ * @param {InferContext} inferCtx The infer ctx driving this step.
  * @returns {{ paramsTs: string, returnTs: string, docBlock: string }}
  */
 export function buildMethodSignature(funcNode, src, lineStarts, stmtLoc, inferCtx)
@@ -1921,7 +1937,7 @@ export function buildMethodSignature(funcNode, src, lineStarts, stmtLoc, inferCt
 }
 
 /**
- * @param {string} s
+ * @param {string} s The s driving this step.
  * @returns {string}
  */
 function escapeDocStarText(s)
@@ -1930,7 +1946,7 @@ function escapeDocStarText(s)
 }
 
 /**
- * @param {import('acorn').Function | import('acorn').ArrowFunctionExpression} funcNode
+ * @param {import('acorn').Function | import('acorn').ArrowFunctionExpression} funcNode The func node driving this step.
  * @returns {string[]}
  */
 function collectFormalParamNames(funcNode)
@@ -1944,6 +1960,7 @@ function collectFormalParamNames(funcNode)
     {
       out.push(p.name);
     }
+    // otherwise when p.type  equals  'AssignmentPattern'  and  p.left.type  equals  'Ident..., use this branch.
     else if (p.type === 'AssignmentPattern' && p.left.type === 'Identifier')
     {
       out.push(p.left.name);
@@ -1955,8 +1972,8 @@ function collectFormalParamNames(funcNode)
 /**
  * Only emits when the engine JSDoc actually describes behavior or parameters — no “see source” filler.
  *
- * @param {ReturnType<typeof parseJsdocBlock>} jd
- * @param {import('acorn').Function | import('acorn').ArrowFunctionExpression} funcNode
+ * @param {ReturnType<typeof parseJsdocBlock>} jd The jd driving this step.
+ * @param {import('acorn').Function | import('acorn').ArrowFunctionExpression} funcNode The func node driving this step.
  * @returns {string}
  */
 function buildMethodDocStarLines(jd, funcNode, inferCtx, returnTs)
@@ -1965,21 +1982,23 @@ function buildMethodDocStarLines(jd, funcNode, inferCtx, returnTs)
   const starLines = [];
 
   /**
-   * @param {string} methodName
+   * @param {string} methodName The method name driving this step.
    * @returns {string}
    */
   function methodNameToWords(methodName)
   {
     return methodName
+      // Rewrite the matched substring for output formatting.
       .replace(/^_+/, '')
       .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
+      // Rewrite the matched substring for output formatting.
       .replace(/_/g, ' ')
       .trim()
       .toLowerCase();
   }
 
   /**
-   * @param {string} raw
+   * @param {string} raw The raw driving this step.
    * @returns {string}
    */
   function titleFromName(raw)
@@ -2007,18 +2026,21 @@ function buildMethodDocStarLines(jd, funcNode, inferCtx, returnTs)
     }
     else if (/^get[A-Z]/.test(m))
     {
+      // Append the row to the working collection.
       starLines.push(` * Gets ${escapeDocStarText(words.replace(/^get /, ''))}.`);
     }
     else if (/^set[A-Z]/.test(m))
     {
       starLines.push(` * Sets ${escapeDocStarText(words.replace(/^set /, ''))}.`);
     }
+    // otherwise when /^clear[A-Z]/.test(m)  or  /^reset[A-Z]/.test(m), use this branch.
     else if (/^clear[A-Z]/.test(m) || /^reset[A-Z]/.test(m))
     {
       starLines.push(` * Clears ${escapeDocStarText(words.replace(/^(clear|reset) /, ''))}.`);
     }
     else if (/^add[A-Z]/.test(m))
     {
+      // Append the row to the working collection.
       starLines.push(` * Adds ${escapeDocStarText(words.replace(/^add /, ''))}.`);
     }
     else if (/^remove[A-Z]/.test(m))

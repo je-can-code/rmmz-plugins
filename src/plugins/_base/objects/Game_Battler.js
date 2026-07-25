@@ -1,5 +1,7 @@
 //region Game_Battler
 import RPGManager from './../managers/RPGManager.js';
+import JCache from './../core/JCache.js';
+import ParameterRegistry from './../core/ParameterRegistry.js';
 import RPG_State from './../database/implementations/RPG_State.js';
 import RPG_Skill from './../database/implementations/RPG_Skill.js';
 import RPG_EquipItem from './../database/core/RPG_EquipItem.js';
@@ -24,6 +26,16 @@ Game_Battler.prototype.skill = function(skillId)
  * @returns {RPG_Skill[]}
  */
 Game_Battler.prototype.skills = function()
+{
+  return Array.empty;
+};
+
+/**
+ * Gets the raw skill ids available to this battler.
+ * Returns an empty array by default; actor and enemy override this for their respective data sources.
+ * @returns {number[]}
+ */
+Game_Battler.prototype.skillIds = function()
 {
   return Array.empty;
 };
@@ -62,7 +74,7 @@ Game_Battler.prototype.class = function(classId)
 };
 
 /**
- * Overrides {@link #maxTp}.<br/>
+ * Overwrites {@link #maxTp}.<br/>
  * Replaces the default of 100 for all battlers with a tag-based calculation that reviews all available notes to sum
  * together all maxTp values for a custom value.
  * @returns {number}
@@ -90,19 +102,112 @@ Game_Battler.prototype.getBaseMaxTp = function()
 
 /**
  * The base bonus to max tech on this battler.
+ * Result is cached and invalidated by {@link #onBattlerDataChange}.
  * @returns {number}
  */
 Game_Battler.prototype.getBaseMaxTpBonuses = function()
 {
-  // grab all the notes.
-  const objectsToCheck = this.getAllNotes();
+  // return the cached result if the cache is still warm.
+  if (this.getCachedMaxTpBonuses() !== null)
+  {
+    return this.getCachedMaxTpBonuses();
+  }
 
-  // determine the sum of all max tech values from the available notes- if any.
-  return RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.BASE.RegExp.MaxTp);
+  // compute and cache the result.
+  const bonus = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.BASE.RegExp.MaxTp);
+  this.setCachedMaxTpBonuses(bonus);
+
+  return this.getCachedMaxTpBonuses();
+};
+
+/**
+ * Extends {@link #initMembers}.<br/>
+ * Initializes the notes cache for this battler.
+ */
+J.BASE.Aliased.Game_Battler.set('initMembers', Game_Battler.prototype.initMembers);
+Game_Battler.prototype.initMembers = function()
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_Battler.get('initMembers')
+    .call(this);
+
+  /**
+   * The J object where all my additional properties live.
+   */
+  this._j ||= {};
+
+  /**
+   * A grouping of all properties associated with the base plugin.
+   */
+  this._j._base ||= {};
+
+  /**
+   * The cached result of {@link #getNotesSources} for this battler.
+   * Null when the cache is cold; populated on the first {@link #getAllNotes} call after
+   * construction or after {@link #onBattlerDataChange} invalidates it.
+   * @type {RPG_BaseItem[]|null}
+   */
+  this._j._base._cachedAllNotes = null;
+
+  /**
+   * The cached result of {@link #getBaseMaxTpBonuses} for this battler.
+   * Null when the cache is cold; populated on the first call and invalidated by
+   * {@link #onBattlerDataChange}.
+   * @type {number|null}
+   */
+  this._j._base._cachedMaxTpBonuses = null;
+
+  /**
+   * The cached result of {@link #baseHarFactor} for this battler.
+   * Null when the cache is cold; invalidated by {@link #onBattlerDataChange}.
+   * @type {number|null}
+   */
+  this._j._base._cachedHarFactor = null;
+};
+
+/**
+ * Gets the cached max-tp-bonuses value for this battler, or null if the cache is cold.
+ * @returns {number|null}
+ */
+Game_Battler.prototype.getCachedMaxTpBonuses = function()
+{
+  return this._j._base._cachedMaxTpBonuses;
+};
+
+/**
+ * Sets the cached max-tp-bonuses value for this battler.
+ * @param {number|null} value The new cached value, or null to invalidate.
+ */
+Game_Battler.prototype.setCachedMaxTpBonuses = function(value)
+{
+  this._j._base._cachedMaxTpBonuses = value;
+};
+
+/**
+ * Gets the cached all-notes collection for this battler, or null if the cache is cold.
+ * @returns {RPG_BaseItem[]|null}
+ */
+Game_Battler.prototype.getCachedAllNotes = function()
+{
+  return this._j._base._cachedAllNotes;
+};
+
+/**
+ * Sets the cached all-notes collection for this battler.
+ * @param {RPG_BaseItem[]|null} notes The new cached value, or null to invalidate.
+ */
+Game_Battler.prototype.setCachedAllNotes = function(notes)
+{
+  this._j._base._cachedAllNotes = notes;
 };
 
 /**
  * Gets everything that this battler has with notes on it.
+ *
+ * The result is cached and shared across all callers within a single data-change cycle.
+ * The cache is invalidated by {@link #onBattlerDataChange}, which fires whenever states,
+ * equipment, skills, or any other note-bearing data changes on this battler.
+ *
  * All battlers have their own database data, along with all their states.
  * Actors also get their class, skills, and equips added.
  * Enemies also get their skills added.
@@ -110,11 +215,22 @@ Game_Battler.prototype.getBaseMaxTpBonuses = function()
  */
 Game_Battler.prototype.getAllNotes = function()
 {
-  // initialize the container.
-  const objectsWithNotes = this.getNotesSources();
+  // test hook: skip the cache and return the caller-supplied sources directly.
+  if (this.__testNoteSources !== undefined)
+  {
+    return this.__testNoteSources;
+  }
 
-  // return this combined collection of note-containing objects.
-  return objectsWithNotes;
+  // return the cached result if the cache is still warm.
+  if (this.getCachedAllNotes() !== null)
+  {
+    return this.getCachedAllNotes();
+  }
+
+  // build the notes collection and cache it for all subsequent callers this cycle.
+  this.setCachedAllNotes(this.getNotesSources());
+
+  return this.getCachedAllNotes();
 };
 
 /**
@@ -142,6 +258,24 @@ Game_Battler.prototype.getNotesSources = function()
  */
 Game_Battler.prototype.onBattlerDataChange = function()
 {
+  // invalidate the notes cache so the next getAllNotes() call rebuilds from current data.
+  this.setCachedAllNotes(null);
+
+  // invalidate the trait objects cache so the next traitObjects() call rebuilds from current data.
+  this.setCachedTraitObjects(null);
+
+  // invalidate the all-traits cache so the next allTraits() call rebuilds from current data.
+  this.setCachedAllTraits(null);
+
+  // invalidate the max-tp-bonuses cache so the next getBaseMaxTpBonuses() call recomputes.
+  this.setCachedMaxTpBonuses(null);
+
+  // invalidate the HAR factor cache so the next baseHarFactor() call recomputes.
+  this.setCachedHarFactor(null);
+
+  // drop every battler-scoped cache entry for this battler in one bus call- covers the RPGManager
+  // eval cache, both OverlayManager caches, and any future battler-dimensioned JCache.
+  JCache.invalidateAllForBattler(this);
 };
 
 //region state management
@@ -157,7 +291,7 @@ Game_Battler.prototype.state = function(stateId)
 };
 
 /**
- * Overrides {@link #states}.<br>
+ * Overwrites {@link #states}.<br/>
  * Returns all states from the view of this battler.
  * @returns {RPG_State[]}
  */
@@ -167,7 +301,7 @@ Game_Battler.prototype.states = function()
 };
 
 /**
- * Extends {@link #eraseState}.<br>
+ * Extends {@link #eraseState}.<br/>
  * Adds a hook for performing actions when a state is removed from the battler.
  */
 J.BASE.Aliased.Game_Battler.set('eraseState', Game_Battler.prototype.eraseState);
@@ -203,7 +337,7 @@ Game_Battler.prototype.onStateRemoval = function(stateId)
 };
 
 /**
- * Extends {@link #addNewState}.<br>
+ * Extends {@link #addNewState}.<br/>
  * Adds a hook for performing actions when a state is added on the battler.
  */
 J.BASE.Aliased.Game_Battler.set('addNewState', Game_Battler.prototype.addNewState);
@@ -254,6 +388,30 @@ Game_Battler.prototype.allStates = function()
   // return that combined collection.
   return states;
 };
+
+/**
+ * Gets the ids of all states on the battler as raw numbers.
+ * This can include other state ids from other plugins, too.
+ * @returns {number[]}
+ */
+Game_Battler.prototype.allStateIds = function()
+{
+  return [...this._states];
+};
+
+/**
+ * Overwrites {@link Game_BattlerBase#isStateAffected}.<br/>
+ * Uses {@link #allStateIds} instead of the raw `_states` array so that passives injected
+ * by J.PASSIVE (and any other plugin that extends allStateIds) are included in the check.
+ * @param {number} stateId The state id to check.
+ * @returns {boolean}
+ */
+J.BASE.Aliased.Game_Battler.set('isStateAffected', Game_BattlerBase.prototype.isStateAffected);
+Game_Battler.prototype.isStateAffected = function(stateId)
+{
+  // delegate to allStateIds so passive-injected states are included in the check.
+  return this.allStateIds().includes(stateId);
+};
 //endregion state management
 
 /**
@@ -274,4 +432,133 @@ Game_Battler.prototype.currentHpPercent100 = function()
   // return the whole base-100 version of the hp percent.
   return Math.round(this.currentHpPercent() * 100);
 };
+
+/**
+ * Resolves a catalog parameter value by string key.
+ * Delegates to {@link ParameterRegistry} — does not bypass param/xparam/sparam alias chains.
+ * @param {string} key The parameter key (e.g. `'atk'`).
+ * @returns {number}
+ */
+Game_Battler.prototype.parameter = function(key)
+{
+  return ParameterRegistry.resolveValue(this, key);
+};
+
+/**
+ * Hook fired after any positive resource recovery on this battler.
+ * Extensions alias this instead of gainHp/gainMp/gainTp to react to healing events
+ * without duplicating three separate aliases per plugin.
+ * @param {string} _resource One of {@link J.BASE.Resource}.HP / .MP / .TP.
+ * @param {number} _amount The positive amount that was recovered.
+ */
+Game_Battler.prototype.onHeal = function(_resource, _amount)
+{
+};
+
+/**
+ * Extends {@link #gainHp}.<br/>
+ * Fires {@link #onHeal} after any positive HP recovery so listeners can react.
+ */
+J.BASE.Aliased.Game_Battler.set('gainHp', Game_Battler.prototype.gainHp);
+Game_Battler.prototype.gainHp = function(value)
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_Battler.get('gainHp').call(this, value);
+  // notify heal listeners when a positive HP recovery is applied.
+  if (value > 0) this.onHeal(J.BASE.Resource.HP, value);
+};
+
+/**
+ * Extends {@link #gainMp}.<br/>
+ * Fires {@link #onHeal} after any positive MP recovery so listeners can react.
+ */
+J.BASE.Aliased.Game_Battler.set('gainMp', Game_Battler.prototype.gainMp);
+Game_Battler.prototype.gainMp = function(value)
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_Battler.get('gainMp').call(this, value);
+  // notify heal listeners when a positive MP recovery is applied.
+  if (value > 0) this.onHeal(J.BASE.Resource.MP, value);
+};
+
+/**
+ * Extends {@link #gainTp}.<br/>
+ * Fires {@link #onHeal} after any positive TP recovery so listeners can react.
+ */
+J.BASE.Aliased.Game_Battler.set('gainTp', Game_Battler.prototype.gainTp);
+Game_Battler.prototype.gainTp = function(value)
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_Battler.get('gainTp').call(this, value);
+  // notify heal listeners when a positive TP recovery is applied.
+  if (value > 0) this.onHeal(J.BASE.Resource.TP, value);
+};
+
+//region HAR
+Object.defineProperties(Game_BattlerBase.prototype, {
+  /**
+   * Outgoing heal amplification (1.0 = baseline). The sender-side counterpart to REC.
+   */
+  har: {
+    get: function()
+    {
+      return 1.0;
+    },
+    configurable: true,
+  },
+});
+
+Object.defineProperty(Game_Battler.prototype, 'har', {
+  get: function()
+  {
+    let factor = this.baseHarFactor();
+
+    if (this.getSdpBonusForParameterKey)
+    {
+      factor += this.getSdpBonusForParameterKey('har', 1);
+    }
+
+    return factor;
+  },
+  configurable: true,
+});
+
+/**
+ * Sums `<har:X>` notetags into a multiplier factor.
+ * Result is cached and invalidated by {@link #onBattlerDataChange}.
+ * @returns {number}
+ */
+Game_Battler.prototype.baseHarFactor = function()
+{
+  // return the cached result if the cache is still warm.
+  if (this.getCachedHarFactor() !== null)
+  {
+    return this.getCachedHarFactor();
+  }
+
+  // compute and cache the result.
+  const bonus = RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.BASE.RegExp.HealAmplification);
+  this.setCachedHarFactor((100 + bonus) / 100);
+
+  return this.getCachedHarFactor();
+};
+
+/**
+ * Gets the cached HAR factor for this battler, or null if the cache is cold.
+ * @returns {number|null}
+ */
+Game_Battler.prototype.getCachedHarFactor = function()
+{
+  return this._j._base._cachedHarFactor;
+};
+
+/**
+ * Sets the cached HAR factor for this battler.
+ * @param {number|null} value The new cached value, or null to invalidate.
+ */
+Game_Battler.prototype.setCachedHarFactor = function(value)
+{
+  this._j._base._cachedHarFactor = value;
+};
+//endregion HAR
 //endregion Game_Battler

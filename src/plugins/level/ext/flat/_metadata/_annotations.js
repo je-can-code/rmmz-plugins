@@ -172,6 +172,12 @@
   ]
  *
  * ============================================================================
+ * NOTE ABOUT NOTETAGS:
+ * This plugin has no notetags of its own. Everything here is tuned entirely
+ * through the plugin parameters below (Exp Required Per Level, Exp Policy
+ * Multiplier) and the level-difference table above- there's nothing to tag
+ * on individual database objects.
+ * ============================================================================
  * NOTE ABOUT EXR:
  * Party members still apply their experience rate (exr) when the engine
  * actually grants EXP. This plugin does not fold exr into the policy number;
@@ -208,6 +214,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Flat experience gain now consults the shared reward-policy gate
+ *    (canGainReward), so inanimate enemies grant none.
+ *    Reads $gameSystem.isLevelScalingEnabled() instead of the static
+ *    J.LEVEL.Metadata.enabled flag.
  * - 1.0.0
  *    The initial release.
  * ============================================================================

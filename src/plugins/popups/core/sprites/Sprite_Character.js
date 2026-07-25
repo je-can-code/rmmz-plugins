@@ -1,6 +1,7 @@
 //region Sprite_Character
 import TextPopSpriteManager from './../_models/TextPopSpriteManager.js';
 import Map_TextPop from './../_models/Map_TextPop.js';
+import PopupLayoutHelper from './../helpers/PopupLayoutHelper.js';
 
 /**
  * Hooks into `Sprite_Character.initMembers` and adds our initiation for damage sprites.
@@ -32,6 +33,7 @@ Sprite_Character.prototype.initMembers = function()
    */
   this._j._popups._nonDamagePopSprites = [];
 
+  // perform original logic.
   J.POPUPS.Aliased.Sprite_Character.get('initMembers')
     .call(this);
 };
@@ -94,6 +96,7 @@ Sprite_Character.prototype.cleanupNonDamagePops = function()
 J.POPUPS.Aliased.Sprite_Character.set('update', Sprite_Character.prototype.update);
 Sprite_Character.prototype.update = function()
 {
+  // perform original logic.
   J.POPUPS.Aliased.Sprite_Character.get('update')
     .call(this);
 
@@ -148,8 +151,8 @@ Sprite_Character.prototype.createIncomingTextPop = function(popup)
   const useMotion = J.POPUPS.Layout.Motion.Enabled === true && isMotionType;
 
   const ringExtra = useMotion
-    ? J.POPUPS.resolveMotionOffset(popup)
-    : J.POPUPS.consumeLayoutRingOffset(character, popup.layoutRing);
+    ? PopupLayoutHelper.resolveMotionOffset(popup)
+    : PopupLayoutHelper.consumeLayoutRingOffset(character, popup.layoutRing);
   const sprite = TextPopSpriteManager.convert(popup, ringExtra);
 
   if (sprite.isDamage())

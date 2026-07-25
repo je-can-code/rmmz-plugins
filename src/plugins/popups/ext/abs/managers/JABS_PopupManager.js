@@ -15,6 +15,9 @@ class JABS_PopupManager
    */
   static showAttackPop(action, target, engine)
   {
+    // support skills (damage.type 0 = None) have no damage to pop — skip entirely.
+    if (action.getBaseSkill().damage.type === 0) return;
+
     const character = target.getCharacter();
     const pop = this.buildDamagePop(action, target, engine);
     const caster = action.getCaster();
@@ -30,6 +33,7 @@ class JABS_PopupManager
         labelPrefix: 'PARRY',
       });
 
+      // exit early without a payload.
       return;
     }
 
@@ -40,6 +44,7 @@ class JABS_PopupManager
         labelPrefix: 'DODGE',
       });
 
+      // exit early without a payload.
       return;
     }
 
@@ -89,6 +94,7 @@ class JABS_PopupManager
     {
       elementalRate = gameAction.calculateRawElementRate(targetBattler);
     }
+    // otherwise fall back to the alternate path.
     else
     {
       elementalRate = gameAction.calcElementRate(targetBattler);
@@ -99,6 +105,7 @@ class JABS_PopupManager
       ? 128
       : elementalIcon;
 
+    // construct text pop builder for the next step in this routine.
     const textPopBuilder = new TextPopBuilder(0);
 
     switch (true)
@@ -125,9 +132,15 @@ class JABS_PopupManager
         {
           textPopBuilder.forIncomingHealRing();
         }
+        // otherwise fall back to the alternate path.
         else
         {
           textPopBuilder.forEnemyDamageRing();
+        }
+        // glancing blows render italic in grey to distinguish them from clean hits.
+        if (actionResult.glancing)
+        {
+          textPopBuilder.setTextAccent(`glance`).setTextColorIndex(7);
         }
         break;
       case actionResult.mpDamage !== 0:
@@ -295,6 +308,7 @@ class JABS_PopupManager
       ? 128
       : elementalIcon;
 
+    // construct text pop builder for the next step in this routine.
     const textPopBuilder = new TextPopBuilder(0);
 
     switch (true)
@@ -321,9 +335,15 @@ class JABS_PopupManager
         {
           textPopBuilder.forIncomingHealRing();
         }
+        // otherwise fall back to the alternate path.
         else
         {
           textPopBuilder.forEnemyDamageRing();
+        }
+        // glancing blows render italic in grey to distinguish them from clean hits.
+        if (actionResult.glancing)
+        {
+          textPopBuilder.setTextAccent(`glance`).setTextColorIndex(7);
         }
         break;
       case actionResult.mpDamage !== 0:
@@ -376,6 +396,7 @@ class JABS_PopupManager
         labelPrefix: 'PARRY',
       });
 
+      // exit early without a payload.
       return;
     }
 
@@ -386,6 +407,7 @@ class JABS_PopupManager
         labelPrefix: 'DODGE',
       });
 
+      // exit early without a payload.
       return;
     }
 

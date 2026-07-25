@@ -1,6 +1,6 @@
 //region Game_Battler
 /**
- * Extends {@link #initMembers}.<br>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes the passive states properties for this battler.
  */
 J.PASSIVE.Aliased.Game_BattlerBase.set('initMembers', Game_Battler.prototype.initMembers);
@@ -40,6 +40,14 @@ Game_Battler.prototype.initPassiveStatesMembers = function()
    * @type {RPG_BaseItem[]}
    */
   this._j._passive._externalStateSources = [];
+
+  /**
+   * Pre-filtered subset of passive sources rebuilt after each {@link #refreshPassiveStates}.
+   * Contains only sources that declare at least one passive state id; sources like weapon
+   * combat skills that carry no passive tags are excluded so drift checks skip them.
+   * @type {RPG_BaseItem[]}
+   */
+  this._j._passive._passiveSources = [];
 };
 
 /**
@@ -58,6 +66,53 @@ Game_Battler.prototype.getPassiveStateIds = function()
 Game_Battler.prototype.passiveExternalStateSources = function()
 {
   return this._j._passive._externalStateSources;
+};
+
+/**
+ * Returns the pre-filtered list of passive-capable sources from the last refresh.<br/>
+ * Contains only sources that declared at least one passive state id.
+ * @returns {RPG_BaseItem[]}
+ */
+Game_Battler.prototype.passiveCapableSources = function()
+{
+  return this._j._passive._passiveSources;
+};
+
+/**
+ * Rebuilds the filtered list of passive-capable sources from the full source list.<br/>
+ * Called at the end of {@link #refreshPassiveStates} so the conditional ext's drift
+ * fingerprint builder has a short list to iterate instead of the full source roster.
+ */
+Game_Battler.prototype.cachePassiveCapableSources = function()
+{
+  const allSources = this.getPassiveStateSources();
+
+  this._j._passive._passiveSources = allSources.filter(source =>
+    this.sourceHasAnyPassiveIds(source));
+};
+
+/**
+ * Whether a source has any passive state ids on any passive tag variant.<br/>
+ * Accounts for unique vs stackable and for equip-specific passive id properties.
+ * All reads hit the {@link RPGManager} WeakMap cache so no regex work occurs here.
+ * @param {RPG_BaseItem} source The source to inspect.
+ * @returns {boolean} True when this source carries at least one passive state id.
+ */
+Game_Battler.prototype.sourceHasAnyPassiveIds = function(source)
+{
+  if (!source) return false;
+
+  if (source.passiveStateIds && source.passiveStateIds.length > 0) return true;
+  if (source.uniquePassiveStateIds && source.uniquePassiveStateIds.length > 0) return true;
+
+  // equip items expose separate equip-slot-specific passive id properties.
+  if (source.isEquipItem())
+  {
+    if (source.equippedPassiveStateIds && source.equippedPassiveStateIds.length > 0) return true;
+    if (source.uniqueEquippedPassiveStateIds && source.uniqueEquippedPassiveStateIds.length > 0) return true;
+  }
+
+  return false;
 };
 
 /**
@@ -200,11 +255,11 @@ Game_Battler.prototype.refreshPassiveStates = function()
   // grab all the unique ids.
   const uniqueIds = this.getAllUniquePassiveStateIds();
 
-  // grab all the stackable ids.
-  const stackableIds = this.getAllStackablePassiveStateIds();
-
-  // add all the unique ids to the tracker.
+  // commit unique passives first so nested stack grants on mastery state rows resolve this pass.
   uniqueIds.forEach(stateId => this.addPassiveStateId(stateId, false), this);
+
+  // grab stackable ids after unique rows are in the tracker — mastery states can own passiveStateCount.
+  const stackableIds = this.getAllStackablePassiveStateIds();
 
   // add all the stackable ids to the tracker.
   stackableIds.forEach((stackCount, stateId) =>
@@ -225,6 +280,39 @@ Game_Battler.prototype.refreshPassiveStates = function()
       times--;
     }
   });
+
+  // rebuild the filtered source cache so drift checks skip non-passive sources next cycle.
+  this.cachePassiveCapableSources();
+
+  // flag that battler data has changed.
+  this.onBattlerDataChange();
+};
+
+/**
+ * Determines whether a passive state from a specific source may be included
+ * in this battler's passive collection right now.<br/>
+ * Returns true unconditionally in the base; extension plugins override to apply gate rules.
+ * @param {RPG_BaseItem} baseItem Database row that declares the passive state id.
+ * @param {number} stateId Passive state id being evaluated for inclusion.
+ * @returns {boolean} Whether this source/state pair passes all gate conditions.
+ */
+Game_Battler.prototype.canIncludePassiveStateFromSource = function(_baseItem, _stateId)
+{
+  // base implementation always allows — conditional ext overrides with gate rule logic.
+  return true;
+};
+
+/**
+ * Returns how many stacks one source contributes for a given passive state id.<br/>
+ * Returns 1 unconditionally in the base; extension plugins override to scale by runtime context.
+ * @param {RPG_BaseItem} baseItem Database row that declares the passive state id.
+ * @param {number} stateId Passive state id being evaluated for stack contribution.
+ * @returns {number} Stack contribution from this source (0 excludes it from the stack map).
+ */
+Game_Battler.prototype.getPassiveStackContributionFromSource = function(_baseItem, _stateId)
+{
+  // base implementation contributes a flat 1 stack — conditional ext overrides for scaling.
+  return 1;
 };
 
 /**
@@ -247,14 +335,20 @@ Game_Battler.prototype.getAllUniquePassiveStateIds = function()
     const uniqueIds = baseItem.uniquePassiveStateIds;
 
     // check if we need to include passive state ids, too.
-    if (baseItem instanceof RPG_EquipItem)
+    if (baseItem.isEquipItem())
     {
       // add the equip-only passive state ids.
       uniqueIds.push(...baseItem.uniqueEquippedPassiveStateIds);
     }
 
-    // add them uniquely to the set.
-    uniqueIds.forEach(id => uniquePassiveStateIds.add(id));
+    // gate each candidate through the virtual inclusion hook before committing to the set.
+    uniqueIds.forEach(id =>
+    {
+      if (this.canIncludePassiveStateFromSource(baseItem, id) === false) return;
+
+      // add the gated id to the unique passive set.
+      uniquePassiveStateIds.add(id);
+    }, this);
   });
 
   // return the completed unique set.
@@ -282,7 +376,7 @@ Game_Battler.prototype.getAllStackablePassiveStateIds = function()
     const stackableIds = baseItem.passiveStateIds;
 
     // check if we need to include passive state ids, too.
-    if (baseItem instanceof RPG_EquipItem)
+    if (baseItem.isEquipItem())
     {
       // add the equip-only passive state ids.
       stackableIds.push(...baseItem.equippedPassiveStateIds);
@@ -291,22 +385,31 @@ Game_Battler.prototype.getAllStackablePassiveStateIds = function()
     // iterate over each of the stackable passive state ids on this item.
     stackableIds.forEach(id =>
     {
+      // gate each candidate through the virtual inclusion hook — conditional ext may veto.
+      if (this.canIncludePassiveStateFromSource(baseItem, id) === false) return;
+
+      // ask the virtual contribution hook for the stack amount — conditional ext may scale.
+      const contribution = this.getPassiveStackContributionFromSource(baseItem, id);
+
+      // zero contribution means this source/state pair is excluded from the stack map.
+      if (contribution <= 0) return;
+
       // check if we are already tracking this passive state id.
       if (stackablePassiveStateIds.has(id))
       {
         // grab the running stack total for this passive state id.
         const stack = stackablePassiveStateIds.get(id);
 
-        // increment the stack.
-        stackablePassiveStateIds.set(id, stack + 1);
+        // add the source contribution to the running total.
+        stackablePassiveStateIds.set(id, stack + contribution);
       }
       // we aren't tracking this passive state id yet.
       else
       {
-        // start the stack for this passive state id at 1.
-        stackablePassiveStateIds.set(id, 1);
+        // start the stack at the contribution amount for this source.
+        stackablePassiveStateIds.set(id, contribution);
       }
-    });
+    }, this);
   });
 
   // return the completed stackable map.
@@ -327,11 +430,11 @@ Game_Battler.prototype.getPassiveStateSources = function()
     // ones own data from the database, such as the actor or enemy data.
     this.databaseData(),
 
-    // all states currently applied to the battler- this won't include own any passive states.
+    // all states currently applied to the battler, including passive states via the allStates() override.
     ...this.allStates(),
 
-    // all skills available to this battler.
-    ...this.skills(),
+    // all skills that currently qualify as passive state sources for this battler.
+    ...this.getPassiveStateSourcedSkills(),
 
     // add all sources from events.
     ...this.passiveExternalStateSources(),
@@ -339,6 +442,19 @@ Game_Battler.prototype.getPassiveStateSources = function()
 
   // return this collection of stuff.
   return battlerSources;
+};
+
+/**
+ * Gets the skills that currently qualify as passive state sources for this battler.
+ * By default, every learned skill qualifies- this exists as its own seam so extensions
+ * (such as one bridging to an equip-slot system) can narrow the list down to only skills
+ * that are actually in play, without needing to override the whole of {@link #getPassiveStateSources}.
+ * @returns {RPG_Skill[]}
+ */
+Game_Battler.prototype.getPassiveStateSourcedSkills = function()
+{
+  // by default, every learned skill is a passive state source.
+  return this.skills();
 };
 
 /**
@@ -353,14 +469,14 @@ Game_Battler.prototype.isPassiveState = function(stateId)
 };
 
 /**
- * Extends {@link #allStates}.<br>
+ * Extends {@link #allStates}.<br/>
  * Includes states from passive skills as well.
  * @returns {RPG_State[]}
  */
 J.PASSIVE.Aliased.Game_Battler.set('allStates', Game_Battler.prototype.allStates);
 Game_Battler.prototype.allStates = function()
 {
-  // get all original states.
+  // perform original logic.
   const states = J.PASSIVE.Aliased.Game_Battler.get('allStates')
     .call(this);
 
@@ -372,7 +488,39 @@ Game_Battler.prototype.allStates = function()
 };
 
 /**
- * Extends {@link #isStateAddable}.<br>
+ * Extends {@link #allStateIds}.<br/>
+ * Includes state ids from passive skills as well.
+ * @returns {number[]}
+ */
+J.PASSIVE.Aliased.Game_Battler.set('allStateIds', Game_Battler.prototype.allStateIds);
+Game_Battler.prototype.allStateIds = function()
+{
+  // perform original logic.
+  const ids = J.PASSIVE.Aliased.Game_Battler.get('allStateIds')
+    .call(this);
+
+  // add in all passive state ids, including stacks.
+  ids.push(...this.getPassiveStateIds());
+
+  // return that combined collection.
+  return ids;
+};
+
+/**
+ * Overrides {@link #getPurgeableStates}.<br/>
+ * Excludes passive states from the pool so forced removal via {@code removeStatesByPriority}
+ * can never strip states that are granted by passive skills.
+ * @returns {RPG_State[]}
+ */
+Game_Battler.prototype.getPurgeableStates = function()
+{
+  // start from all states, then remove any that are passive-granted.
+  return this.allStates()
+    .filter(state => this.isPassiveState(state.id) === false);
+};
+
+/**
+ * Extends {@link #isStateAddable}.<br/>
  * Prevents adding states if they are identified as passive.
  */
 J.PASSIVE.Aliased.Game_Battler.set('isStateAddable', Game_Battler.prototype.isStateAddable);
@@ -382,12 +530,13 @@ Game_Battler.prototype.isStateAddable = function(stateId)
   if (this.isPassiveState(stateId)) return false;
 
   // otherwise, check as normal.
+  // perform original logic.
   return J.PASSIVE.Aliased.Game_Battler.get('isStateAddable')
     .call(this, stateId);
 };
 
 /**
- * Extends {@link #onStateAdded}.<br>
+ * Extends {@link #onStateAdded}.<br/>
  * Triggers a refresh of passive states when a state is added.
  * @param {number} stateId The state id being added.
  */
@@ -403,7 +552,7 @@ Game_Battler.prototype.onStateAdded = function(stateId)
 };
 
 /**
- * Extends {@link #removeState}.<br>
+ * Extends {@link #removeState}.<br/>
  * Prevent removal of states if they are identified as passive.
  */
 J.PASSIVE.Aliased.Game_Battler.set('removeState', Game_Battler.prototype.removeState);
@@ -413,12 +562,13 @@ Game_Battler.prototype.removeState = function(stateId)
   if (this.isPassiveState(stateId)) return;
 
   // otherwise, remove as normal.
+  // perform original logic.
   J.PASSIVE.Aliased.Game_Battler.get('removeState')
     .call(this, stateId);
 };
 
 /**
- * Extends {@link #onStateRemoval}.<br>
+ * Extends {@link #onStateRemoval}.<br/>
  * Triggers a refresh of passive states when a state is removed.
  * @param {number} stateId The state id being removed.
  */

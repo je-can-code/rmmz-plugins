@@ -1,7 +1,7 @@
 //region Game_Enemy
 
 /**
- * Extends {@link Game_Enemy.setup}.<br>
+ * Extends {@link Game_Enemy.setup}.<br/>
  * Includes setting up the learned level map for skills.
  */
 J.LEVEL.Aliased.Game_Enemy.set('initMembers', Game_Enemy.prototype.initMembers);
@@ -55,7 +55,21 @@ Game_Enemy.prototype.setCachedLevelOverride = function(level)
 };
 
 /**
- * Extends {@link Game_Enemy.setup}.<br>
+ * Extends {@link #onBattlerDataChange}.<br/>
+ * Refreshes the cached level when this enemy's battler data changes.
+ */
+J.LEVEL.Aliased.Game_Enemy.set('onBattlerDataChange', Game_Enemy.prototype.onBattlerDataChange);
+Game_Enemy.prototype.onBattlerDataChange = function()
+{
+  // perform original logic.
+  J.LEVEL.Aliased.Game_Enemy.get('onBattlerDataChange')
+    .call(this);
+
+  this.refreshLevel();
+};
+
+/**
+ * Extends {@link Game_Enemy.setup}.<br/>
  * Includes setting up the learned level map for skills.
  */
 J.LEVEL.Aliased.Game_Enemy.set('setup', Game_Enemy.prototype.setup);
@@ -123,7 +137,7 @@ Game_Enemy.prototype.isLearnedSkillByLevel = function(action)
 };
 
 /**
- * Overrides {@link #getBattlerBaseLevel}.<br/>
+ * Overwrites {@link #getBattlerBaseLevel}.<br/>
  * Instead of defaulting to zero, it will use the enemy's own note, accommodating any overrides if present.
  * @returns {number}
  */
@@ -131,6 +145,7 @@ J.LEVEL.Aliased.Game_Enemy.set('getBattlerBaseLevel', Game_Enemy.prototype.getBa
 Game_Enemy.prototype.getBattlerBaseLevel = function()
 {
   // calculate the original level- probably zero unless another plugin modifies this.
+  // perform original logic.
   const defaultBaseLevel = J.LEVEL.Aliased.Game_Enemy.get('getBattlerBaseLevel')
     .call(this);
 
@@ -181,14 +196,16 @@ Game_Enemy.prototype.shouldHideLevel = function()
 
 /**
  * Gets all database sources we can get levels from.
+ *
+ * Excludes the enemy's own database entry because {@link #getBattlerBaseLevel} already
+ * reads the base `<level:N>` tag directly from the enemy note. Including it here would
+ * cause that tag to be counted twice. Skills and states may still carry `<level:+N>` bonus
+ * tags, which is intentional.
  * @returns {RPG_BaseItem[]}
  */
 Game_Enemy.prototype.getLevelSources = function()
 {
-  // our sources of data that a level can be retrieved from.
-  return [
-    ...this.states(), // all states applied to this enemy are sources.
-  ];
+  return [ ...this.skills(), ...this.allStates() ];
 };
 
 /**

@@ -96,12 +96,15 @@ class Scene_JaftingSalvage
     const previewRect = this.salvagePreviewWindowRect();
     const confirmRect = this.salvageConfirmationWindowRect();
 
+    // store  candidate window on the instance for later reads.
     this._candidateWindow = new Window_SalvageCandidateList(candidateRect);
     this._candidateWindow.setHandler('ok', this.onSalvageCandidateOk.bind(this));
     this._candidateWindow.setHandler('cancel', this.popScene.bind(this));
 
+    // store  preview window on the instance for later reads.
     this._previewWindow = new Window_SalvagePreview(previewRect);
 
+    // store  confirmation window on the instance for later reads.
     this._confirmationWindow = new Window_SalvageConfirmation(confirmRect);
     this._confirmationWindow.setHandler('confirm', this.onSalvageConfirmOk.bind(this));
     this._confirmationWindow.setHandler('cancel', this.onSalvageConfirmCancel.bind(this));
@@ -329,6 +332,7 @@ class Scene_JaftingSalvage
     {
       SoundManager.playBuzzer();
 
+      // exit early without a payload.
       return;
     }
 
@@ -350,6 +354,7 @@ class Scene_JaftingSalvage
       SoundManager.playBuzzer();
       this.onSalvageConfirmCancel();
 
+      // exit early without a payload.
       return;
     }
 
@@ -388,6 +393,7 @@ class Scene_JaftingSalvage
     const item = this._candidateWindow.item();
     const stack = item ? $gameParty.numItems(item) : 0;
 
+    // store  last preview datum on the instance for later reads.
     this._lastPreviewDatum = item;
     this._lastPreviewStack = stack;
     this.layoutSalvagePanels();

@@ -11,7 +11,7 @@ export const RMMZ_SHIP_DEFINE_PLUGIN_VERSION = '__PLUGIN_VERSION__';
 
 /**
  * Loads `_metadata/meta.js` for the ship described by the active Vite config file.
- * @param {import('vite').ResolvedConfig | import('vite').UserConfig} config
+ * @param {import('vite').ResolvedConfig | import('vite').UserConfig} config The config driving this step.
  * @returns {Promise<{ shipRoot: string, meta: Record<string, string> }>}
  */
 async function resolveShipMeta(config)
@@ -60,7 +60,7 @@ export function prependMzHeaderPlugin()
     enforce: 'post',
     /**
      * Injects compile-time constants from meta.js so initialization.js never imports meta into the ship bundle.
-     * @param {import('vite').UserConfig} config
+     * @param {import('vite').UserConfig} config The config driving this step.
      * @returns {Promise<import('vite').UserConfig>}
      */
     async config(config)
@@ -70,13 +70,14 @@ export function prependMzHeaderPlugin()
       return {
         define: {
           [RMMZ_SHIP_DEFINE_PLUGIN_NAME]: JSON.stringify(meta.PLUGIN_NAME),
+          // Serialize the model back into json-safe text.
           [RMMZ_SHIP_DEFINE_PLUGIN_VERSION]: JSON.stringify(meta.PLUGIN_VERSION),
         },
       };
     },
     /**
      * Reads annotations and meta.js, substitutes version/tag placeholders, and guards against meta.js in the ship graph.
-     * @param {import('vite').ResolvedConfig} config
+     * @param {import('vite').ResolvedConfig} config The config driving this step.
      */
     async configResolved(config)
     {
@@ -95,6 +96,7 @@ export function prependMzHeaderPlugin()
       header = fs.readFileSync(annotationsPath, 'utf8');
       if (/^import\s/m.test(header))
       {
+        // abort this pass so the operator sees a hard failure.
         throw new Error(
           `prepend-mz-header: ${annotationsPath} must not contain ESM import statements (RMMZ ships are a single script).`,
         );

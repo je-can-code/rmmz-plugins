@@ -1,7 +1,7 @@
 //region JABS_Battler
 import JABS_ChargingTier from './JABS_ChargingTier.js';
 /**
- * Extends {@link JABS_Battler.initBattleInfo}.<br>
+ * Extends {@link JABS_Battler.initBattleInfo}.<br/>
  * Also initializes the charge-related data.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_Battler.set('initBattleInfo', JABS_Battler.prototype.initBattleInfo);
@@ -160,7 +160,7 @@ JABS_Battler.prototype.getHighestChargedTier = function()
     .sort((chargeTierLeft, chargeTierRight) => chargeTierRight.tier - chargeTierLeft.tier);
 
   // if we have none left after sorting and filtering, then null it is.
-  if (!sortedFilteredTiers.length) return null;
+  if (!sortedFilteredtiers.length) return null;
 
   // grab the first, which should be highest, completed charge tier.
   const [ highestChargedTier, ] = sortedFilteredtiers;
@@ -203,7 +203,6 @@ JABS_Battler.prototype.getHighestChargedTierWithSkillId = function()
 
   // return the highest charged tier.
   return highestChargedTier;
-
 };
 
 /**
@@ -279,7 +278,7 @@ JABS_Battler.prototype.executeChargeAction = function(slot, charging)
   if (isStillCharging) return;
 
   // shorthand for switching slots to charge, aka restarting.
-  const isSwitchingChargingSlot = isStillCharging && !isSameSlot;
+  const isSwitchingChargingSlot = isCurrentlyCharging && !isSameSlot;
 
   // check if we're trying to switch slots to charge.
   if (isSwitchingChargingSlot)
@@ -318,9 +317,10 @@ JABS_Battler.prototype.canChargeSlot = function(slot)
   // if there is no slot provided, do not charge.
   if (!slot) return false;
 
+  const battler = this.getBattler();
+
   // shorthand the skill slot.
-  const skillSlot = this
-    .getBattler()
+  const skillSlot = battler
     .getSkillSlotManager()
     .getSkillSlotByKey(slot);
 
@@ -328,10 +328,14 @@ JABS_Battler.prototype.canChargeSlot = function(slot)
   if (!skillSlot) return false;
 
   // cannot charge slots with skills you do not know.
-  if (!this.getBattler()
-    .hasSkill(skillSlot.id))
+  if (!battler.hasSkill(skillSlot.id)) return false;
+
+  // check each charge tier's release skill — if none are affordable, don't charge.
+  const chargingTiers = this.getChargingTiers(slot);
+  if (chargingTiers)
   {
-    return false;
+    const anyTierAffordable = chargingTiers.some(tier => tier.skillId && battler.meetsSkillConditions(battler.skill(tier.skillId)));
+    if (!anyTierAffordable) return false;
   }
 
   // we can charge this slot!
@@ -339,7 +343,7 @@ JABS_Battler.prototype.canChargeSlot = function(slot)
 };
 
 /**
- *
+ * Begins charging the given slot after seeding tier data and guards.
  * @param {string} slot The slot to be charged.
  * @param {JABS_ChargingTier[]} chargingTiers The charging tier data.
  */
@@ -540,7 +544,7 @@ JABS_Battler.prototype.normalizeChargeTierData = function(chargeTierData)
 };
 
 /**
- * Extends {@link JABS_Battler.update}.<br>
+ * Extends {@link JABS_Battler.update}.<br/>
  * Also updates charging as-needed.
  */
 J.ABS.EXT.CHARGE.Aliased.JABS_Battler.set('update', JABS_Battler.prototype.update);

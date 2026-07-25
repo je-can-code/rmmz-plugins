@@ -76,14 +76,7 @@ class Window_SkillEquipDetail
     // if we do not have a skill id, then there is no skill.
     if (!this._skillId) return null;
 
-    // if we have extend capability available and actor context, then resolve overlayed skill.
-    if (typeof J !== 'undefined' && J.EXTEND && this._actor)
-    {
-      // return the overlayed skill.
-      return OverlayManager.getExtendedSkill(this._actor, this._skillId);
-    }
-
-    // otherwise, return the base skill.
+    // return the base skill from the database.
     return $dataSkills[this._skillId];
   }
 

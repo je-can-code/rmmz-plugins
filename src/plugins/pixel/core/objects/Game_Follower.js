@@ -51,6 +51,7 @@ Game_Follower.prototype.chaseCharacter = function(character)
   if (J.ABS.EXT.ALLYAI && this.getJabsBattler()) return;
 
   // Perform original vanilla chase behavior for non-AI followers.
+  // perform original logic.
   J.PIXEL.Aliased.Game_Follower.get("chaseCharacter")
     .call(this, character);
 };
@@ -63,6 +64,7 @@ J.PIXEL.Aliased.Game_Follower.set("update", Game_Follower.prototype.update);
 Game_Follower.prototype.update = function()
 {
   // Perform original logic.
+  // perform original logic.
   J.PIXEL.Aliased.Game_Follower.get("update")
     .call(this);
 
@@ -119,6 +121,7 @@ Game_Follower.prototype.moveStraight = function(direction)
   }
 
   // Perform original logic.
+  // perform original logic.
   J.PIXEL.Aliased.Game_Follower.get("moveStraight")
     .call(this, direction);
 };
@@ -152,12 +155,13 @@ Game_Follower.prototype.moveDiagonally = function(horz, vert)
   }
 
   // Perform original logic.
+  // perform original logic.
   J.PIXEL.Aliased.Game_Follower.get("moveDiagonally")
     .call(this, horz, vert);
 };
 
 /**
- * Overrides {@link Game_CharacterBase.getCollisionPivotY}.<br>
+ * Overwrites {@link Game_CharacterBase.getCollisionPivotY}.<br/>
  * Anchors the follower's collision center near their feet to match the player's
  * depth-biased collision feel. Keeps the follower train visually consistent.
  * @returns {number} The Y pivot offset in tile units.

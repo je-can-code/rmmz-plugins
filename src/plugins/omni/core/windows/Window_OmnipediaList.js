@@ -15,7 +15,7 @@ class Window_OmnipediaList
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Creates the command list of omnipedia entries available for this window.
    */
   makeCommandList()
@@ -42,6 +42,7 @@ class Window_OmnipediaList
       .setIconIndex(112)
       .build();
 
+    // construct armorpedia command for the next step in this routine.
     const armorpediaCommand = new WindowCommandBuilder("Armor-pedia")
       .setSymbol("armor-pedia")
       .addSubTextLine("Your armor information is in this thing.")
@@ -49,6 +50,7 @@ class Window_OmnipediaList
       .setIconIndex(482)
       .build();
 
+    // construct itempedia command for the next step in this routine.
     const itempediaCommand = new WindowCommandBuilder("Item-pedia")
       .setSymbol("item-pedia")
       .addSubTextLine("Your item data is all stored in here.")
@@ -61,7 +63,7 @@ class Window_OmnipediaList
   }
 
   /**
-   * Overrides {@link #itemHeight}.<br>
+   * Overwrites {@link #itemHeight}.<br/>
    * Makes the command rows bigger so there can be additional lines.
    * @returns {number}
    */

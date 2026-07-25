@@ -8,6 +8,7 @@ J.ABS.EXT.JUICE.Aliased.JABS_Battler.set('processCastingTimer', JABS_Battler.pro
 JABS_Battler.prototype.processCastingTimer = function()
 {
   // advance timers exactly like core JABS (cast countdown may finish inside here).
+  // perform original logic.
   J.ABS.EXT.JUICE.Aliased.JABS_Battler.get('processCastingTimer')
     .call(this);
 
@@ -29,6 +30,7 @@ JABS_Battler.prototype.onCastComplete = function()
   JuiceHookManager.endCastingJuice(this);
 
   // fire the normal cast-completion pipeline (completeCast, generation, etc.).
+  // perform original logic.
   J.ABS.EXT.JUICE.Aliased.JABS_Battler.get('onCastComplete')
     .call(this);
 };

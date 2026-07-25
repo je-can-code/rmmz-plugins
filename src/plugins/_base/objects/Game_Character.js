@@ -73,3 +73,15 @@ Game_Character.prototype.distanceFromCharacter = function(character)
   // return the calculated value.
   return constrainedDistance;
 };
+
+/**
+ * Characters are visible by default.
+ * The base engine only defines {@code isVisible} on {@link Game_Follower} and {@link Game_Vehicle};
+ * subclasses that have their own visibility logic (followers, vehicles) override this.
+ * @returns {boolean}
+ */
+Game_Character.prototype.isVisible = function()
+{
+  // default: all characters are visible unless a subclass says otherwise.
+  return true;
+};

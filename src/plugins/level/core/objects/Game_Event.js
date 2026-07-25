@@ -1,6 +1,6 @@
 //region Game_Event
 /**
- * Extends {@link Game_Event.initMembers}.<br>
+ * Extends {@link Game_Event.initMembers}.<br/>
  * Initializes level-related properties.
  */
 J.LEVEL.Aliased.Game_Event.set('initMembers', Game_Event.prototype.initMembers);
@@ -72,7 +72,7 @@ Game_Event.prototype.setCachedHideLevel = function(hideLevel)
 };
 
 /**
- * Extends {@link Game_Event.refresh}.<br>
+ * Extends {@link Game_Event.refresh}.<br/>
  * Clears the level override cache when the event page changes.
  */
 J.LEVEL.Aliased.Game_Event.set('refresh', Game_Event.prototype.refresh);

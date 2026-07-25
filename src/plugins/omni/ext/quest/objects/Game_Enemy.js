@@ -42,6 +42,7 @@ Game_Enemy.prototype.processSlayQuestsCheck = function()
     // check if we've exceeded the number of required enemies to slay for the objective.
     if (!objective.hasSlainEnoughEnemies()) return;
 
+    // Emit progress to the build log for operator visibility.
     console.log(`player has completed the slay objective: ${objective.id} for quest: ${objective.questKey}.`);
 
     // grab the quest for reference.

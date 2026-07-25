@@ -1,6 +1,6 @@
 //region DataManager
 /**
- * Extends/Overrides {@link #createGameObjects}.<br/>
+ * Extends {@link #createGameObjects}.<br/>
  * Also registers J.OMNI.QUEST input actions and defaults.
  */
 J.OMNI.EXT.QUEST.Aliased.DataManager.set('createGameObjects', DataManager.createGameObjects);

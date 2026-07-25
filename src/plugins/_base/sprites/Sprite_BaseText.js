@@ -494,6 +494,5 @@ class Sprite_BaseText
   }
 }
 
-
 export default Sprite_BaseText;
 //endregion Sprite_BaseText

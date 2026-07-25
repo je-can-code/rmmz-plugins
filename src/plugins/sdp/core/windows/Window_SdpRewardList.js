@@ -1,5 +1,5 @@
 //region Window_SdpRewardList
-import PanelRankupReward from './../__models/PanelRankupReward.js';
+import PanelRankupReward from '../models/PanelRankupReward.js';
 class Window_SdpRewardList
   extends Window_Command
 {
@@ -24,7 +24,7 @@ class Window_SdpRewardList
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Creates the command list of rewards granted by this SDP.
    */
   makeCommandList()
@@ -54,6 +54,7 @@ class Window_SdpRewardList
         .setColorIndex(8)
         .build();
 
+      // Append the row to the working collection.
       commands.push(command);
       return commands;
     }
@@ -89,6 +90,7 @@ class Window_SdpRewardList
         })
         .build();
 
+      // Append the row to the working collection.
       commands.push(command);
     });
 
@@ -96,7 +98,8 @@ class Window_SdpRewardList
   }
 
   /**
-   * OVERWRITE Renders reward rows with styled padded ranks.
+   * Overwrites {@link #drawItem}.<br/>
+   * Renders reward rows with styled padded ranks.
    * @param {number} index The command index.
    */
   drawItem(index)

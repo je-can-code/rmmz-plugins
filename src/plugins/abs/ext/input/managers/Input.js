@@ -1,47 +1,6 @@
 //region Input
 import JABS_Button from './../_models/JABS_Button.js';
-/**
- * The mappings of the gamepad descriptions to their buttons.
- */
-J.ABS.EXT.INPUT.Symbols = {};
-
-//region input definitions
-
-// this section of inputs is an attempt to align with the internal RMMZ mapping convention.
-J.ABS.EXT.INPUT.Symbols.DirUp = 'up';
-J.ABS.EXT.INPUT.Symbols.DirDown = 'down';
-J.ABS.EXT.INPUT.Symbols.DirLeft = 'left';
-J.ABS.EXT.INPUT.Symbols.DirRight = 'right';
-J.ABS.EXT.INPUT.Symbols.Mainhand = 'ok';
-J.ABS.EXT.INPUT.Symbols.Offhand = 'cancel';
-J.ABS.EXT.INPUT.Symbols.Dash = 'shift';
-J.ABS.EXT.INPUT.Symbols.Tool = 'tab';
-J.ABS.EXT.INPUT.Symbols.GuardTrigger = 'pagedown';
-J.ABS.EXT.INPUT.Symbols.SkillTrigger = 'pageup';
-
-// this section of inputs are newly implemented.
-J.ABS.EXT.INPUT.Symbols.MobilitySkill = 'r2';
-J.ABS.EXT.INPUT.Symbols.StrafeTrigger = 'l2';
-J.ABS.EXT.INPUT.Symbols.Quickmenu = 'start';
-J.ABS.EXT.INPUT.Symbols.PartyCycle = 'select';
-J.ABS.EXT.INPUT.Symbols.Debug = 'cheat';
-
-// for gamepads, these buttons are tracked, but aren't used by JABS right now.
-J.ABS.EXT.INPUT.Symbols.R3 = 'r3';
-J.ABS.EXT.INPUT.Symbols.L3 = 'l3';
-
-// for dedicated D-pad shortcuts (not movement directions).
-J.ABS.EXT.INPUT.Symbols.DPadUp = 'dpad-up';
-J.ABS.EXT.INPUT.Symbols.DPadDown = 'dpad-down';
-J.ABS.EXT.INPUT.Symbols.DPadLeft = 'dpad-left';
-J.ABS.EXT.INPUT.Symbols.DPadRight = 'dpad-right';
-
-// for keyboards, these buttons are for direct combatskill usage.
-J.ABS.EXT.INPUT.Symbols.CombatSkill1 = 'combat-skill-1';
-J.ABS.EXT.INPUT.Symbols.CombatSkill2 = 'combat-skill-2';
-J.ABS.EXT.INPUT.Symbols.CombatSkill3 = 'combat-skill-3';
-J.ABS.EXT.INPUT.Symbols.CombatSkill4 = 'combat-skill-4';
-//endregion input definitions
+import JabsInputSymbols from './../_models/JabsInputSymbols.js';
 
 /**
  * Extends the existing mapper for keyboards to accommodate for the
@@ -53,55 +12,55 @@ Input.keyMapper = {
 
   // this is the new debug move-through for use with JABS.
   // ` (backtick).
-  192: J.ABS.EXT.INPUT.Symbols.Debug,
+  192: JabsInputSymbols.Debug,
 
   // core buttons.
   // z.
-  90: J.ABS.EXT.INPUT.Symbols.Mainhand,
+  90: JabsInputSymbols.Mainhand,
   // x.
-  88: J.ABS.EXT.INPUT.Symbols.Offhand,
+  88: JabsInputSymbols.Offhand,
   // shift (already defined).
-  16: J.ABS.EXT.INPUT.Symbols.Dash,
-  // c.
-  67: J.ABS.EXT.INPUT.Symbols.Tool,
+  16: JabsInputSymbols.Dash,
+  // tab key — same physical symbol triangle fires on pad.
+  9: JabsInputSymbols.Tool,
 
   // functional buttons.
   // q.
-  81: J.ABS.EXT.INPUT.Symbols.SkillTrigger,
+  81: JabsInputSymbols.SkillTrigger,
   // ctrl.
-  17: J.ABS.EXT.INPUT.Symbols.StrafeTrigger,
+  17: JabsInputSymbols.StrafeTrigger,
   // e.
-  69: J.ABS.EXT.INPUT.Symbols.GuardTrigger,
-  // tab.
-  9: J.ABS.EXT.INPUT.Symbols.MobilitySkill,
+  69: JabsInputSymbols.GuardTrigger,
+  // alt — keyboard default for r2 / content-next in menus.
+  18: JabsInputSymbols.MobilitySkill,
 
   // quickmenu button.
   // enter.
-  13: J.ABS.EXT.INPUT.Symbols.Quickmenu,
+  13: JabsInputSymbols.Quickmenu,
 
   // party cycling button.
   // del.
-  46: J.ABS.EXT.INPUT.Symbols.PartyCycle,
+  46: JabsInputSymbols.PartyCycle,
 
   // movement buttons.
   // arrow up.
-  38: J.ABS.EXT.INPUT.Symbols.DirUp,
+  38: JabsInputSymbols.DirUp,
   // arrow down.
-  40: J.ABS.EXT.INPUT.Symbols.DirDown,
+  40: JabsInputSymbols.DirDown,
   // arrow left.
-  37: J.ABS.EXT.INPUT.Symbols.DirLeft,
+  37: JabsInputSymbols.DirLeft,
   // arrow right.
-  39: J.ABS.EXT.INPUT.Symbols.DirRight,
+  39: JabsInputSymbols.DirRight,
 
   // keyboard alternative for the multi-button skills.
   // 1 = L1 + cross.
-  49: J.ABS.EXT.INPUT.Symbols.CombatSkill1,
+  49: JabsInputSymbols.CombatSkill1,
   // 2 = L1 + circle.
-  50: J.ABS.EXT.INPUT.Symbols.CombatSkill2,
+  50: JabsInputSymbols.CombatSkill2,
   // 3 = L1 + square.
-  51: J.ABS.EXT.INPUT.Symbols.CombatSkill3,
+  51: JabsInputSymbols.CombatSkill3,
   // 4 = L1 + triangle.
-  52: J.ABS.EXT.INPUT.Symbols.CombatSkill4,
+  52: JabsInputSymbols.CombatSkill4,
 };
 
 /**
@@ -115,50 +74,50 @@ Input.keyMapper = {
  * - NEW: select/options, start/menu
  * - NEW: L2/LT, R2/RT
  * - NEW: L3/LSB, R3/RSB
- * - OVERWRITE: Y now is the tool button, and start is the menu.
+ * - remapped: Y is now the tool button, and start is the menu.
  */
 Input.gamepadMapper = {
   // action face buttons.
   // kross.
-  0: J.ABS.EXT.INPUT.Symbols.Mainhand,
+  0: JabsInputSymbols.Mainhand,
   // circle.
-  1: J.ABS.EXT.INPUT.Symbols.Offhand,
+  1: JabsInputSymbols.Offhand,
   // square.
-  2: J.ABS.EXT.INPUT.Symbols.Dash,
+  2: JabsInputSymbols.Dash,
   // triangle.
-  3: J.ABS.EXT.INPUT.Symbols.Tool,
+  3: JabsInputSymbols.Tool,
 
   // shoulder/trigger buttons.
   // (L1) left bumper.
-  4: J.ABS.EXT.INPUT.Symbols.SkillTrigger,
+  4: JabsInputSymbols.SkillTrigger,
   // (R1) right bumper.
-  5: J.ABS.EXT.INPUT.Symbols.GuardTrigger,
+  5: JabsInputSymbols.GuardTrigger,
   // (L2) left trigger.
-  6: J.ABS.EXT.INPUT.Symbols.StrafeTrigger,
+  6: JabsInputSymbols.StrafeTrigger,
   // (R2) right trigger.
-  7: J.ABS.EXT.INPUT.Symbols.MobilitySkill,
+  7: JabsInputSymbols.MobilitySkill,
 
   // meta/menu buttons.
   // select.
-  8: J.ABS.EXT.INPUT.Symbols.PartyCycle,
+  8: JabsInputSymbols.PartyCycle,
   // start.
-  9: J.ABS.EXT.INPUT.Symbols.Quickmenu,
+  9: JabsInputSymbols.Quickmenu,
 
   // stick-click buttons.
   // (L3) left stick button.
-  10: J.ABS.EXT.INPUT.Symbols.L3,
+  10: JabsInputSymbols.L3,
   // (R3) right stick button.
-  11: J.ABS.EXT.INPUT.Symbols.R3,
+  11: JabsInputSymbols.R3,
 
   // D-pad buttons remapped to dedicated shortcut symbols (not movement directions).
   // d-pad up (shortcut).
-  12: J.ABS.EXT.INPUT.Symbols.DPadUp,
+  12: JabsInputSymbols.DPadUp,
   // d-pad down (shortcut).
-  13: J.ABS.EXT.INPUT.Symbols.DPadDown,
+  13: JabsInputSymbols.DPadDown,
   // d-pad left (shortcut).
-  14: J.ABS.EXT.INPUT.Symbols.DPadLeft,
+  14: JabsInputSymbols.DPadLeft,
   // d-pad right (shortcut).
-  15: J.ABS.EXT.INPUT.Symbols.DPadRight,
+  15: JabsInputSymbols.DPadRight,
 
   // the analog stick should be natively supported for movement.
 };
@@ -237,6 +196,7 @@ Input.seedDefaultBindings = function(ns, defaults)
   {
     const k = keys[i];
     out[k] = Array.isArray(defaults[k])
+      // Copy a sub-range without mutating the source array.
       ? defaults[k].slice()
       : [];
   }
@@ -404,49 +364,51 @@ Input.ensureRemapBootstrapped = function()
   const d = {};
 
   // functionality
-  d[JABS_Button.Menu] = [ J.ABS.EXT.INPUT.Symbols.Quickmenu ];
-  d[JABS_Button.Select] = [ J.ABS.EXT.INPUT.Symbols.PartyCycle ];
+  d[JABS_Button.Menu] = [ JabsInputSymbols.Quickmenu ];
+  d[JABS_Button.Select] = [ JabsInputSymbols.PartyCycle ];
 
   // primary actions
-  d[JABS_Button.Mainhand] = [ J.ABS.EXT.INPUT.Symbols.Mainhand ];
-  d[JABS_Button.Offhand] = [ J.ABS.EXT.INPUT.Symbols.Offhand ];
-  d[JABS_Button.Tool] = [ J.ABS.EXT.INPUT.Symbols.Tool ];
+  d[JABS_Button.Mainhand] = [ JabsInputSymbols.Mainhand ];
+  d[JABS_Button.Offhand] = [ JabsInputSymbols.Offhand ];
+  d[JABS_Button.Tool] = [ JabsInputSymbols.Tool ];
 
   // mobility & modifiers
   // IMPORTANT: No default binding for Dodge; Sprint handles mobility contextually.
   // d[JABS_Button.Dodge] is intentionally omitted.
-  d[JABS_Button.Sprint] = [ J.ABS.EXT.INPUT.Symbols.Dash ];
-  d[JABS_Button.Strafe] = [ J.ABS.EXT.INPUT.Symbols.StrafeTrigger ];
-  d[JABS_Button.Rotate] = [ J.ABS.EXT.INPUT.Symbols.GuardTrigger ];
-  d[JABS_Button.Guard] = [ J.ABS.EXT.INPUT.Symbols.GuardTrigger ];
-  d[JABS_Button.SkillTrigger] = [ J.ABS.EXT.INPUT.Symbols.SkillTrigger ];
+  d[JABS_Button.Sprint] = [ JabsInputSymbols.Dash ];
+  d[JABS_Button.Strafe] = [ JabsInputSymbols.StrafeTrigger ];
+  d[JABS_Button.Rotate] = [ JabsInputSymbols.GuardTrigger ];
+  d[JABS_Button.Guard] = [ JabsInputSymbols.GuardTrigger ];
+  d[JABS_Button.SkillTrigger] = [ JabsInputSymbols.SkillTrigger ];
 
   // L1 + buttons (keyboard shortcuts available separately)
-  d[JABS_Button.CombatSkill1] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill1 ];
-  d[JABS_Button.CombatSkill2] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill2 ];
-  d[JABS_Button.CombatSkill3] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill3 ];
-  d[JABS_Button.CombatSkill4] = [ J.ABS.EXT.INPUT.Symbols.CombatSkill4 ];
+  d[JABS_Button.CombatSkill1] = [ JabsInputSymbols.CombatSkill1 ];
+  d[JABS_Button.CombatSkill2] = [ JabsInputSymbols.CombatSkill2 ];
+  d[JABS_Button.CombatSkill3] = [ JabsInputSymbols.CombatSkill3 ];
+  d[JABS_Button.CombatSkill4] = [ JabsInputSymbols.CombatSkill4 ];
 
   // register the defaults and ensure live bindings are initialized.
   Input.seedDefaultBindings('JABS', d);
   Input.getAllBindings('JABS');
 
   // friendly labels for some common symbols.
-  Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.L3, 'L3');
-  Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.R3, 'R3');
-  Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.MobilitySkill, 'R2');
-  Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.DPadUp, 'D-Pad Up');
-  Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.DPadDown, 'D-Pad Down');
-  Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.DPadLeft, 'D-Pad Left');
-  Input.registerSymbolLabel(J.ABS.EXT.INPUT.Symbols.DPadRight, 'D-Pad Right');
+  Input.registerSymbolLabel(JabsInputSymbols.L3, 'L3');
+  Input.registerSymbolLabel(JabsInputSymbols.R3, 'R3');
+  Input.registerSymbolLabel(JabsInputSymbols.Tool, 'Triangle');
+  Input.registerSymbolLabel(JabsInputSymbols.StrafeTrigger, 'L2');
+  Input.registerSymbolLabel(JabsInputSymbols.MobilitySkill, 'R2');
+  Input.registerSymbolLabel(JabsInputSymbols.DPadUp, 'D-Pad Up');
+  Input.registerSymbolLabel(JabsInputSymbols.DPadDown, 'D-Pad Down');
+  Input.registerSymbolLabel(JabsInputSymbols.DPadLeft, 'D-Pad Left');
+  Input.registerSymbolLabel(JabsInputSymbols.DPadRight, 'D-Pad Right');
 
   // allow these symbols to be captured in the prompt if desired.
-  Input.registerRemapCaptureSymbol(J.ABS.EXT.INPUT.Symbols.L3);
-  Input.registerRemapCaptureSymbol(J.ABS.EXT.INPUT.Symbols.R3);
-  Input.registerRemapCaptureSymbol(J.ABS.EXT.INPUT.Symbols.DPadUp);
-  Input.registerRemapCaptureSymbol(J.ABS.EXT.INPUT.Symbols.DPadDown);
-  Input.registerRemapCaptureSymbol(J.ABS.EXT.INPUT.Symbols.DPadLeft);
-  Input.registerRemapCaptureSymbol(J.ABS.EXT.INPUT.Symbols.DPadRight);
+  Input.registerRemapCaptureSymbol(JabsInputSymbols.L3);
+  Input.registerRemapCaptureSymbol(JabsInputSymbols.R3);
+  Input.registerRemapCaptureSymbol(JabsInputSymbols.DPadUp);
+  Input.registerRemapCaptureSymbol(JabsInputSymbols.DPadDown);
+  Input.registerRemapCaptureSymbol(JabsInputSymbols.DPadLeft);
+  Input.registerRemapCaptureSymbol(JabsInputSymbols.DPadRight);
 
   // expose all non-engine keyboard keys for capture/binding.
   Input.bootstrapAllKeyboardKeysForCapture();
@@ -461,26 +423,15 @@ Input.ensureRemapBootstrapped = function()
  */
 Input.bootstrapAllKeyboardKeysForCapture = function()
 {
-  // collect a snapshot of engine/core-reserved symbols to avoid overriding them.
+  // collect the fixed set of engine/core-reserved symbols to avoid overriding them. This must stay
+  // a literal list, not derived from the live keyMapper- a derived set would include the very
+  // symbol being checked at each keycode, permanently reserving it against itself and making the
+  // "existing non-engine mapping" capture branch below unreachable.
   const reserved = new Set([
     // core engine actions and directions.
     'ok', 'cancel', 'menu', 'escape', 'tab', 'pageup', 'pagedown', 'shift', 'control', 'up', 'down', 'left', 'right',
+    'l2', 'r2',
   ]);
-
-  // also consider whatever the current keyMapper already resolves to.
-  const existingMap = Object.assign({}, Input.keyMapper);
-  Object.keys(existingMap)
-    .forEach(code =>
-    {
-      // read the mapped symbol for this code.
-      const sym = existingMap[code];
-
-      // if mapped to a core-like word, add to the reserved set for safety.
-      if (typeof sym === 'string' && sym.length)
-      {
-        reserved.add(sym);
-      }
-    });
 
   // iterate a reasonable range of DOM KeyboardEvent.keyCode values.
   for (let code = 8; code <= 222; code++)
@@ -686,7 +637,8 @@ Input.setAxisThreshold = function(v)
 };
 
 /**
- * OVERWRITE-ALIAS Extends gamepad processing to reinforce directions from axes
+ * Extends {@link Input._updateGamepadState}.<br/>
+ * Extends gamepad processing to reinforce directions from axes
  * using a configurable threshold, without disabling vanilla behavior.
  * Ensures mutual exclusivity and proper clearing when axes return to neutral.
  * Also writes results to the per-pad state, then rebuilds the merged state as
@@ -767,7 +719,7 @@ Input._ensurePadStates = function(gamepad)
   const s = this._currentState;
 
   // resolve the per-pad state snapshot for this index.
-  const padState = this._gamepadStates && typeof gamepad.index === 'number'
+  const padState = this._gamepadStates
     ? this._gamepadStates[gamepad.index]
     : null;
 
@@ -877,11 +829,13 @@ Input._applyAxesToPerPad = function(padState, f)
     padState.left = true;
     padState.right = false;
   }
+  // otherwise when f.holdRight, use this branch.
   else if (f.holdRight)
   {
     padState.right = true;
     padState.left = false;
   }
+  // otherwise when f.neutralX, use this branch.
   else if (f.neutralX)
   {
     padState.left = false;
@@ -997,12 +951,6 @@ Input.exportAllBindingsForSave = function()
  */
 Input.importAllBindingsFromSave = function(saved)
 {
-  // ignore invalid inputs.
-  if (!saved || typeof saved !== 'object')
-  {
-    return;
-  }
-
   // ensure the bindings bag exists.
   const b = Input._jRegistries.bindings;
 

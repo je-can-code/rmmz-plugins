@@ -76,7 +76,7 @@ class Scene_Difficulty
   }
 
   /**
-   * Extends {@link #start}.<br>
+   * Extends {@link #start}.<br/>
    * Handles the post-scene setup.
    */
   start()
@@ -95,7 +95,7 @@ class Scene_Difficulty
   }
 
   /**
-   * Extends {@link #create}.<br>
+   * Extends {@link #create}.<br/>
    * Creates our scene's windows.
    */
   create()
@@ -769,6 +769,5 @@ class Scene_Difficulty
   }
 }
 
-globalThis.Scene_Difficulty = Scene_Difficulty;
 export default Scene_Difficulty;
 //endregion Scene_Difficulty

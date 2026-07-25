@@ -43,7 +43,7 @@ class Window_RecipeList
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br>
+   * Implements {@link #makeCommandList}.<br/>
    * Creates the command list of unlocked crafting recipes.
    */
   makeCommandList()
@@ -100,7 +100,7 @@ class Window_RecipeList
   }
 
   /**
-   * Overrides {@link #itemHeight}.<br>
+   * Overwrites {@link #itemHeight}.<br/>
    * Makes the command rows smaller so there can be additional recipeeeees.
    * @returns {number}
    */
@@ -110,7 +110,7 @@ class Window_RecipeList
   }
 
   /**
-   * Overrides {@link #drawBackgroundRect}.<br>
+   * Overwrites {@link #drawBackgroundRect}.<br/>
    * Prevents the rendering of the backdrop of each line in the window.
    * @param {Rectangle} _ The rectangle to draw the background for.
    * @override

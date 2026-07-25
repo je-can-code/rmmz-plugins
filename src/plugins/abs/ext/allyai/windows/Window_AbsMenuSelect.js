@@ -169,6 +169,7 @@ Window_AbsMenuSelect.prototype.makeAllyAiDoNothingToggle = function()
     ? J.ABS.EXT.ALLYAI.Metadata.PartyAiPassiveIconIndex
     : J.ABS.EXT.ALLYAI.Metadata.PartyAiAggressiveIconIndex;
 
+  // construct command for the next step in this routine.
   const command = new WindowCommandBuilder(commandName)
     .setSymbol('do-nothing-toggle')
     .setTextLines(description.split(/[\r\n]/i))
@@ -201,6 +202,7 @@ Window_AbsMenuSelect.prototype.makeAllyAiPresetList = function()
       ? J.ABS.EXT.ALLYAI.Metadata.AiModeEquippedIconIndex
       : J.ABS.EXT.ALLYAI.Metadata.AiModeNotEquippedIconIndex;
 
+    // construct command for the next step in this routine.
     const command = new WindowCommandBuilder(name)
       .setSymbol('select-ai')
       .setTextLines(description.split(/[\r\n]/i))

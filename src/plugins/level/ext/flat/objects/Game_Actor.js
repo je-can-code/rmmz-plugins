@@ -1,6 +1,6 @@
 //region Game_Actor
 /**
- * Overrides {@link #expForLevel}.<br/>
+ * Overwrites {@link #expForLevel}.<br/>
  * Uses the flat-experience formula.
  * @param {number} level The level to calculate the experience for.
  * @returns {number}

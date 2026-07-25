@@ -1,9 +1,6 @@
 //region JaftingSalvageLedger
-import JaftingSalvageManager from './../managers/JaftingSalvageManager.js';
-import {
-  JaftingSalvageLedgerRow,
-  JaftingSalvageLedgerSnapshot,
-} from './JaftingSalvageDataModels.js';
+import JaftingSalvageLedgerRow from './JaftingSalvageLedgerRow.js';
+import JaftingSalvageLedgerSnapshot from './JaftingSalvageLedgerSnapshot.js';
 
 /**
  * Stateless helpers for salvage ledger **rows** (clone, merge, dedupe).<br>
@@ -29,19 +26,8 @@ JaftingSalvageLedger.MaterialArmorTypeId = 5;
  */
 JaftingSalvageLedger.getMaterialArmorTypeId = function()
 {
-  if (typeof J !== 'undefined'
-    && J.JAFTING !== undefined
-    && J.JAFTING.Metadata !== undefined)
-  {
-    const v = J.JAFTING.Metadata.materialArmorTypeId;
-
-    if (typeof v === 'number' && !Number.isNaN(v))
-    {
-      return v;
-    }
-  }
-
-  return JaftingSalvageLedger.MaterialArmorTypeId;
+  // read the armor type id directly from the plugin metadata.
+  return J.JAFTING.Metadata.materialArmorTypeId;
 };
 
 /**
@@ -52,25 +38,14 @@ JaftingSalvageLedger.getMaterialArmorTypeId = function()
  */
 JaftingSalvageLedger.getMaterialWeaponTypeId = function()
 {
-  if (typeof J !== 'undefined'
-    && J.JAFTING !== undefined
-    && J.JAFTING.Metadata !== undefined)
-  {
-    const v = J.JAFTING.Metadata.materialWeaponTypeId;
-
-    if (typeof v === 'number' && !Number.isNaN(v))
-    {
-      return v;
-    }
-  }
-
-  return -1;
+  // read the weapon type id directly from the plugin metadata.
+  return J.JAFTING.Metadata.materialWeaponTypeId;
 };
 
 /**
  * True when this armor row uses the configured material armor type (refine primary filter, dismantle pass-through).
  *
- * @param {RPG_Armor|RPG_Base} datum
+ * @param {RPG_Armor|RPG_Base} datum The datum driving this step.
  * @returns {boolean}
  */
 JaftingSalvageLedger.isMaterialArmorDatum = function(datum)
@@ -88,7 +63,7 @@ JaftingSalvageLedger.isMaterialArmorDatum = function(datum)
 /**
  * True when this weapon row uses the configured material weapon type (parameter must be zero or greater).
  *
- * @param {RPG_Weapon|RPG_Base} datum
+ * @param {RPG_Weapon|RPG_Base} datum The datum driving this step.
  * @returns {boolean}
  */
 JaftingSalvageLedger.isMaterialWeaponDatum = function(datum)
@@ -106,7 +81,7 @@ JaftingSalvageLedger.isMaterialWeaponDatum = function(datum)
 /**
  * True when refine lists should keep one row with stack counts (monster parts, clip-style weapons, etc.).
  *
- * @param {RPG_EquipItem|RPG_Base} datum
+ * @param {RPG_EquipItem|RPG_Base} datum The datum driving this step.
  * @returns {boolean}
  */
 JaftingSalvageLedger.isStackCountedRefinableEquip = function(datum)
@@ -129,20 +104,13 @@ JaftingSalvageLedger.rowMergeKey = function(row)
 /**
  * Clones row objects for safe merging without sharing references.
  *
- * @param {JaftingSalvageLedgerRow[]|{ t: string, id: number, n: number, banned?: boolean }[]} rows
+ * @param {JaftingSalvageLedgerRow[]} rows The rows to clone.
  * @returns {JaftingSalvageLedgerRow[]}
  */
 JaftingSalvageLedger.cloneRows = function(rows)
 {
-  const list = JaftingSalvageLedgerSnapshot.coerceRows(rows);
-  const out = [];
-
-  for (let i = 0; i < list.length; i++)
-  {
-    out.push(list[i].clone());
-  }
-
-  return out;
+  // produce a new array of cloned rows so callers cannot mutate shared references.
+  return rows.map(r => r.clone());
 };
 
 /**
@@ -158,11 +126,10 @@ JaftingSalvageLedger.mergeDuplicateRows = function(rows)
 {
   // bucket keyed by component identity so two "horn" lines become one row with summed quantity.
   const bucket = {};
-  const list = JaftingSalvageLedgerSnapshot.coerceRows(rows);
 
-  for (let i = 0; i < list.length; i++)
+  for (let i = 0; i < rows.length; i++)
   {
-    const row = list[i];
+    const row = rows[i];
     const key = JaftingSalvageLedger.rowMergeKey(row);
 
     if (!bucket[key])
@@ -188,7 +155,7 @@ JaftingSalvageLedger.mergeDuplicateRows = function(rows)
  * Builds ledger rows from recipe ingredients (what crafting consumed).<br>
  * Tools are intentionally omitted — salvage stamps track consumed inputs only.
  *
- * @param {CraftingComponent[]} ingredients
+ * @param {CraftingComponent[]} ingredients The ingredients driving this step.
  * @returns {JaftingSalvageLedgerRow[]}
  */
 JaftingSalvageLedger.rowsFromCraftingComponents = function(ingredients)
@@ -214,6 +181,7 @@ JaftingSalvageLedger.rowsFromCraftingComponents = function(ingredients)
         typeLetter = 'a';
       }
 
+      // Append the row to the working collection.
       rows.push(new JaftingSalvageLedgerRow(typeLetter, datum.id, component.quantity()));
     }
     else if (component.isGold())

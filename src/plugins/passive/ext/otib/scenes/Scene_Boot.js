@@ -1,6 +1,6 @@
 //region Scene_Boot
 /**
- * Extends {@link #onDatabaseLoaded}.<br>
+ * Extends {@link #onDatabaseLoaded}.<br/>
  * Registers the OTIB tab with the passive viewer once the database is available.
  */
 J.PASSIVE.EXT.OTIB.Aliased.Scene_Boot.set('onDatabaseLoaded', Scene_Boot.prototype.onDatabaseLoaded);

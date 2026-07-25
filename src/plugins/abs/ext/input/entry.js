@@ -1,6 +1,7 @@
 import './_metadata/initialization.js';
 
 import './_metadata/_annotations.js';
+import './_models/JabsInputSymbols.js';
 import './_models/JABS_Battler.js';
 import './_models/JABS_Button.js';
 import './_models/JABS_InputAdapter.js';

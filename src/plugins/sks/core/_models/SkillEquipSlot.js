@@ -1,23 +1,32 @@
 //region SkillEquipSlot
 /**
- * Represents a single skill equipped in a slot for an actor.
- * Serialized into save data; uses a prototype constructor to remain JSON-safe.
- * @param {number} index - The index of the slot this entry occupies.
- * @param {number} skillId - The id of the skill equipped in this slot.
+ * One equipped skill occupying a slot on an actor's skill-equip bar.
+ * Serialized into save data via {@link JsonEx}; registered so bundled restores keep prototype methods.
  */
-function SkillEquipSlot(index, skillId)
+class SkillEquipSlot
 {
   /**
-   * The index of the slot this entry occupies.
-   * @type {number}
+   * Constructor.
+   * @param {number} index The index of the slot this entry occupies.
+   * @param {number} skillId The id of the skill equipped in this slot.
    */
-  this.index = index;
+  constructor(index, skillId)
+  {
+    /**
+     * The index of the slot this entry occupies.
+     * @type {number}
+     */
+    this.index = index;
 
-  /**
-   * The id of the skill equipped in this slot.
-   * @type {number}
-   */
-  this.skillId = skillId;
+    /**
+     * The id of the skill equipped in this slot.
+     * @type {number}
+     */
+    this.skillId = skillId;
+  }
 }
+
+SerializableRegistry.register(SkillEquipSlot);
+
 export default SkillEquipSlot;
 //endregion SkillEquipSlot

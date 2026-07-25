@@ -49,6 +49,7 @@ class OmniObjectiveLogs
     this.inactive = unknown;
     this.active = discovered;
     this.completed = completed;
+    // assign failed on this instance for callers.
     this.failed = failed;
     this.missed = missed;
   }

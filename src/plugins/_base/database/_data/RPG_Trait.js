@@ -48,6 +48,7 @@ class RPG_Trait
   constructor(trait)
   {
 
+    // assign code on this instance for callers.
     this.code = trait.code;
     this.dataId = trait.dataId;
     this.value = trait.value;
@@ -275,7 +276,6 @@ class RPG_Trait
     }
   }
 }
-
 
 export default RPG_Trait;
 //endregion RPG_Trait

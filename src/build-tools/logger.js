@@ -131,7 +131,7 @@ class Logger
    * Returns a rainbow-ified version of the provided text by coloring each character
    * with a cycling palette.
    * @param {string} text The text to colorize.
-   * @param {object} [options]
+   * @param {object} [options] The [options] driving this step.
    * @param {import('./logger.js').LogStyleKey[]} [options.palette] The palette to use.
    * @param {number} [options.offset] Starting index within the palette.
    * @param {boolean} [options.keepSpaces] If true, spaces/newlines do not advance the palette.
@@ -231,7 +231,7 @@ class Logger
 
   /**
    * Convenience: info-level (cyan).
-   * @param {string} text
+   * @param {string} text The text driving this step.
    */
   static info(text)
   {
@@ -240,7 +240,7 @@ class Logger
 
   /**
    * Convenience: success-level (green).
-   * @param {string} text
+   * @param {string} text The text driving this step.
    */
   static success(text)
   {
@@ -249,7 +249,7 @@ class Logger
 
   /**
    * Convenience: warning-level (yellow).
-   * @param {string} text
+   * @param {string} text The text driving this step.
    */
   static warn(text)
   {
@@ -258,19 +258,20 @@ class Logger
 
   /**
    * Convenience: error-level (brightRed).
-   * @param {string|Error} text
+   * @param {string|Error} text The text driving this step.
    */
   static error(text)
   {
     const msg = text && text.stack
       ? text.stack
       : `${text}`;
+    // Emit this message even when logging is muted.
     this.logAnyway(`ERROR: ${msg}`, LogStyle.brightRed);
   }
 
   /**
    * Convenience: dim a message (useful for verbose or timing notes).
-   * @param {string} text
+   * @param {string} text The text driving this step.
    */
   static dim(text)
   {

@@ -6,7 +6,7 @@ import RPG_BaseItem from './../database/base/RPG_BaseItem.js';
 import RPG_Armor from './../database/implementations/RPG_Armor.js';
 
 /**
- * Overrides {@link #gainItem}.<br>
+ * Overwrites {@link #gainItem}.<br/>
  * Replaces item gain and management with index-based management instead.
  * @param {RPG_Item|RPG_Weapon|RPG_Armor} item The item to modify the quantity of.
  * @param {number} amount The amount to modify the quantity by.
@@ -94,7 +94,7 @@ Game_Party.prototype.processContainerlessItemGain = function(item, amount, inclu
 };
 
 /**
- * Extends {@link #maxItems}.<br>
+ * Extends {@link #maxItems}.<br/>
  * Adds more handling regarding maximum quantities for your inventory.
  */
 J.BASE.Aliased.Game_Party.set('maxItems', Game_Party.prototype.maxItems);
@@ -130,7 +130,8 @@ Game_Party.prototype.defaultMaxItems = function()
 };
 
 /**
- * OVERWRITE Retrieves the item based on its index.
+ * Overwrites {@link #numItems}.<br/>
+ * Retrieves the item based on its index.
  * @param {RPG_BaseItem} item The item to check the quantity of.
  * @returns {number}
  */
@@ -163,7 +164,7 @@ Game_Party.prototype.allItemsQuantified = function()
   allItemsDistinct.forEach(baseItem =>
   {
     // get the number of items we have.
-    let count = this.numItems(baseItem) ?? 0;
+    let count = this.numItems(baseItem);
 
     // countdown while we still have some.
     while (count > 0)
@@ -190,7 +191,7 @@ Game_Party.prototype.recoverAllMembers = function()
 };
 
 /**
- * Overrides {@link #maxBattleMembers}.<br/>
+ * Overwrites {@link #maxBattleMembers}.<br/>
  * Sets the maximum number of battle members to 8.
  * @returns {number}
  */

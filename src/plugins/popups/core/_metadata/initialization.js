@@ -163,11 +163,6 @@ J.POPUPS.Layout = {
   },
 };
 
-/**
- * Per-character slot offsets for {@link Map_TextPop.LayoutRings}. Ephemeral (WeakMap; not saved).
- */
-J.POPUPS._layoutRingState = new WeakMap();
-
 J.POPUPS.Helpers = {};
 J.POPUPS.Helpers.PopupEmitter = new J_EventEmitter();
 

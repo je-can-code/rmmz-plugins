@@ -1,11 +1,11 @@
 //region Scene_Map
-import JABS_MenuType from './../__models/JABS_MenuFocus.js';
+import JABS_MenuType from '../models/JABS_MenuFocus.js';
 import JABS_AiManager from './../managers/JABS_AiManager.js';
 import Window_AbsMenu from './../windows/Window_AbsMenu.js';
 import Window_AbsMenuSelect from './../windows/Window_AbsMenuSelect.js';
 //region init
 /**
- * Extends {@link #initialize}.<br>
+ * Extends {@link #initialize}.<br/>
  * Also initializes all additional properties for JABS.
  */
 J.ABS.Aliased.Scene_Map.set('initialize', Scene_Map.prototype.initialize);
@@ -25,7 +25,7 @@ Scene_Map.prototype.initialize = function()
 };
 
 /**
- * Extends {@link #onMapLoaded}.<br>
+ * Extends {@link #onMapLoaded}.<br/>
  * Safety net for ensuring the player's battler is initialized with the map load.
  */
 J.ABS.Aliased.Scene_Map.set('onMapLoaded', Scene_Map.prototype.onMapLoaded);
@@ -126,6 +126,18 @@ Scene_Map.prototype.initJabsMenu = function()
    * @type {Window_AbsMenuSelect|null}
    */
   this._j._absMenu._equipOffhandWindow = null;
+
+  /**
+   * The window containing the list of equippable usable items (consumables).
+   * @type {Window_AbsMenuSelect|null}
+   */
+  this._j._absMenu._usableItemWindow = null;
+
+  /**
+   * The window containing the currently equipped usable item.
+   * @type {Window_AbsMenuSelect|null}
+   */
+  this._j._absMenu._equipUsableItemWindow = null;
 };
 
 //region properties
@@ -363,6 +375,8 @@ Scene_Map.prototype.createJabsAbsMenu = function()
   this.createJabsAbsMenuEquipToolWindow();
   this.createJabsAbsMenuEquipDodgeWindow();
   this.createJabsAbsMenuEquipOffhandWindow();
+  this.createJabsAbsMenuUsableItemListWindow();
+  this.createJabsAbsMenuEquipUsableItemWindow();
 };
 
 //region main menu
@@ -402,6 +416,7 @@ Scene_Map.prototype.buildJabsMenuMainWindow = function()
   window.setHandler('dodge-assign', this.commandDodge.bind(this));
   window.setHandler('offhand-assign', this.commandOffhand.bind(this));
   window.setHandler('item-assign', this.commandItem.bind(this));
+  window.setHandler('usable-item-assign', this.commandUsableItem.bind(this));
   window.setHandler('main-menu', this.commandMenu.bind(this));
   window.setHandler('cancel', this.closeAbsWindow.bind(this, JABS_MenuType.Main));
 
@@ -974,6 +989,176 @@ Scene_Map.prototype.jabsEquippedOffhandSkillWindowRectangle = function()
   return new Rectangle(x, y, width, height);
 };
 //endregion equip offhand
+
+//region usable item list
+/**
+ * Gets the window containing the list of equippable usable items.
+ * @returns {Window_AbsMenuSelect|null}
+ */
+Scene_Map.prototype.getJabsUsableItemListWindow = function()
+{
+  return this._j._absMenu._usableItemWindow;
+};
+
+/**
+ * Set the currently tracked JABS menu usable item list window to the given window.
+ * @param {Window_AbsMenuSelect} window The usable item list window to track.
+ */
+Scene_Map.prototype.setJabsUsableItemListWindow = function(window)
+{
+  this._j._absMenu._usableItemWindow = window;
+};
+
+/**
+ * Gets the window containing the equipped usable item.
+ * @returns {Window_AbsMenuSelect|null}
+ */
+Scene_Map.prototype.getJabsEquippedUsableItemWindow = function()
+{
+  return this._j._absMenu._equipUsableItemWindow;
+};
+
+/**
+ * Set the currently tracked JABS menu equipped usable item window to the given window.
+ * @param {Window_AbsMenuSelect} window The equipped usable item window to track.
+ */
+Scene_Map.prototype.setJabsEquippedUsableItemWindow = function(window)
+{
+  this._j._absMenu._equipUsableItemWindow = window;
+};
+
+/**
+ * Creates the usable item list window of the JABS menu.
+ */
+Scene_Map.prototype.createJabsAbsMenuUsableItemListWindow = function()
+{
+  // create the window.
+  const window = this.buildJabsUsableItemListWindow();
+
+  // update the tracker with the new window.
+  this.setJabsUsableItemListWindow(window);
+
+  // add the window to the scene manager's tracking.
+  this.addWindow(window);
+};
+
+/**
+ * Sets up and defines the usable item list of the JABS menu.
+ * @returns {Window_AbsMenuSelect}
+ */
+Scene_Map.prototype.buildJabsUsableItemListWindow = function()
+{
+  // define the rectangle of the window.
+  const rectangle = this.jabsUsableItemListWindowRectangle();
+
+  // create the window with the rectangle.
+  const window = new Window_AbsMenuSelect(rectangle, Window_AbsMenuSelect.SelectionTypes.UsableItemList);
+
+  // assign functionality for each of the commands.
+  window.setHandler('cancel', this.closeAbsWindow.bind(this, JABS_MenuType.UsableItem));
+  window.setHandler('usable-item', this.commandEquipUsableItem.bind(this));
+
+  // close and hide the window by default upon creation.
+  window.close();
+  window.hide();
+
+  // return the built and configured window.
+  return window;
+};
+
+/**
+ * Get the rectangle associated with the usable item list of the JABS menu.
+ * Mirrors the tool list dimensions.
+ * @returns {Rectangle}
+ */
+Scene_Map.prototype.jabsUsableItemListWindowRectangle = function()
+{
+  // define the width arbitrarily.
+  const width = Math.round(Graphics.boxWidth * 0.66);
+
+  // the general height of a command item is this many pixels.
+  const commandHeight = 72;
+
+  // the height should be 10 items tall with some padding on top and bottom.
+  const height = commandHeight * 10 + 40;
+
+  // the x coordinate should push the window against the right side.
+  const x = Graphics.boxWidth - width;
+
+  // define the y coordinate arbitrarily.
+  const y = 0;
+
+  // build the rectangle to return.
+  return new Rectangle(x, y, width, height);
+};
+//endregion usable item list
+
+//region equip usable item
+/**
+ * Creates the equip usable item window of the JABS menu.
+ */
+Scene_Map.prototype.createJabsAbsMenuEquipUsableItemWindow = function()
+{
+  // create the window.
+  const window = this.buildJabsEquippedUsableItemWindow();
+
+  // update the tracker with the new window.
+  this.setJabsEquippedUsableItemWindow(window);
+
+  // add the window to the scene manager's tracking.
+  this.addWindow(window);
+};
+
+/**
+ * Sets up and defines the equipped usable item window of the JABS menu.
+ * @returns {Window_AbsMenuSelect}
+ */
+Scene_Map.prototype.buildJabsEquippedUsableItemWindow = function()
+{
+  // define the rectangle of the window.
+  const rectangle = this.jabsEquippedUsableItemWindowRectangle();
+
+  // create the window with the rectangle.
+  const window = new Window_AbsMenuSelect(rectangle, Window_AbsMenuSelect.SelectionTypes.UsableItemEquip);
+
+  // assign functionality for each of the commands.
+  window.setHandler('cancel', this.closeAbsWindow.bind(this, JABS_MenuType.Assign));
+  window.setHandler('slot', this.commandAssign.bind(this));
+
+  // close and hide the window by default upon creation.
+  window.close();
+  window.hide();
+
+  // return the built and configured window.
+  return window;
+};
+
+/**
+ * Get the rectangle associated with the equipped usable item of the JABS menu.
+ * Mirrors the equipped tool window dimensions.
+ * @returns {Rectangle}
+ */
+Scene_Map.prototype.jabsEquippedUsableItemWindowRectangle = function()
+{
+  // define the width arbitrarily.
+  const width = 400;
+
+  // the height should be just enough to fit the single usable item in there.
+  const height = 96;
+
+  // the x coordinate should push the window against the right side.
+  const x = Graphics.boxWidth - width;
+
+  // grab the parent rectangle for location details.
+  const parentRectangle = this.jabsUsableItemListWindowRectangle();
+
+  // define the y coordinate arbitrarily.
+  const y = parentRectangle.y + parentRectangle.height;
+
+  // build the rectangle to return.
+  return new Rectangle(x, y, width, height);
+};
+//endregion equip usable item
 //endregion create
 
 //region actions
@@ -1043,6 +1228,53 @@ Scene_Map.prototype.commandItem = function()
 };
 
 /**
+ * When the "assign usable item" option is chosen, it prioritizes this window.
+ */
+Scene_Map.prototype.commandUsableItem = function()
+{
+  // adjust the focus.
+  this.setJabsMenuFocus(JABS_MenuType.UsableItem);
+
+  // refresh the window.
+  this.getJabsUsableItemListWindow()
+    .refresh();
+
+  // show the related equipped window.
+  this.getJabsEquippedUsableItemWindow()
+    .refresh();
+  this.showJabsEquippedUsableItemWindow();
+  this.getJabsEquippedUsableItemWindow()
+    .deselect();
+  this.getJabsEquippedUsableItemWindow()
+    .deactivate();
+
+  // show the window.
+  this.showJabsUsableItemListWindow();
+
+  // set the assignment type to usable items.
+  this.setJabsMenuEquipType(JABS_MenuType.UsableItem);
+};
+
+/**
+ * When a decision is made in usable item assign, prioritize the equip window.
+ */
+Scene_Map.prototype.commandEquipUsableItem = function()
+{
+  // adjust the focus.
+  this.setJabsMenuFocus(JABS_MenuType.Assign);
+
+  // grab the window.
+  const window = this.getJabsEquippedUsableItemWindow();
+
+  // refresh the window.
+  window.refresh();
+  window.select(0);
+
+  // show the window.
+  this.showJabsEquippedUsableItemWindow();
+};
+
+/**
  * When the "assign dodge" option is chosen, it prioritizes this window.
  */
 Scene_Map.prototype.commandDodge = function()
@@ -1087,7 +1319,6 @@ Scene_Map.prototype.commandEquipSkill = function()
 
   // show the window.
   this.showJabsEquippedCombatSkillsWindow();
-
 };
 
 /**
@@ -1224,6 +1455,13 @@ Scene_Map.prototype.commandAssign = function()
       nextActionSkill = this.getJabsOffhandSkillListWindow()
         .currentExt() ?? 0;
       break;
+    case JABS_MenuType.UsableItem:
+      // update with usable item information and the given slot.
+      equippedActionSlot = this.getJabsEquippedUsableItemWindow()
+        .currentExt();
+      nextActionSkill = this.getJabsUsableItemListWindow()
+        .currentExt();
+      break;
   }
 
   // pivot writes for offhand through the pin path so equipment refreshes do not stomp it.
@@ -1245,7 +1483,7 @@ Scene_Map.prototype.commandAssign = function()
 
 //region update
 /**
- * Extends {@link #update}.<br>
+ * Extends {@link #update}.<br/>
  * Also updates JABS.
  */
 J.ABS.Aliased.Scene_Map.set('update', Scene_Map.prototype.update);
@@ -1351,6 +1589,10 @@ Scene_Map.prototype.manageAbsMenu = function()
       this.hideJabsMainWindow();
       this.showJabsOffhandSkillListWindow();
       break;
+    case JABS_MenuType.UsableItem:
+      this.hideJabsMainWindow();
+      this.showJabsUsableItemListWindow();
+      break;
     case null:
       this.setJabsMenuFocus(JABS_MenuType.Main);
       break;
@@ -1359,7 +1601,7 @@ Scene_Map.prototype.manageAbsMenu = function()
 //endregion update
 
 /**
- * Extends {@link #callMenu}.<br>
+ * Extends {@link #callMenu}.<br/>
  * Disables the ability to directly call the menu by pressing the given key.
  */
 J.ABS.Aliased.Scene_Map.set('callMenu', Scene_Map.prototype.callMenu);
@@ -1617,6 +1859,58 @@ Scene_Map.prototype.hideJabsEquippedOffhandSkillWindow = function()
 };
 //endregion equip offhand skill
 
+//region usable items
+/**
+ * Shows the JABS menu usable item list window.
+ */
+Scene_Map.prototype.showJabsUsableItemListWindow = function()
+{
+  // grab the window.
+  const window = this.getJabsUsableItemListWindow();
+
+  // show the window.
+  this.showJabsMenuWindow(window);
+};
+
+/**
+ * Hides the JABS menu usable item list window.
+ */
+Scene_Map.prototype.hideJabsUsableItemListWindow = function()
+{
+  // grab the window.
+  const window = this.getJabsUsableItemListWindow();
+
+  // hide the window.
+  this.hideJabsMenuWindow(window);
+};
+//endregion usable items
+
+//region equip usable item
+/**
+ * Shows the JABS menu equip usable item window.
+ */
+Scene_Map.prototype.showJabsEquippedUsableItemWindow = function()
+{
+  // grab the window.
+  const window = this.getJabsEquippedUsableItemWindow();
+
+  // show the window.
+  this.showJabsMenuWindow(window);
+};
+
+/**
+ * Hides the JABS menu equip usable item window.
+ */
+Scene_Map.prototype.hideJabsEquippedUsableItemWindow = function()
+{
+  // grab the window.
+  const window = this.getJabsEquippedUsableItemWindow();
+
+  // hide the window.
+  this.hideJabsMenuWindow(window);
+};
+//endregion equip usable item
+
 /**
  * Hides all windows of the JABS menu.
  */
@@ -1630,6 +1924,9 @@ Scene_Map.prototype.hideAllJabsWindows = function()
 
   this.hideJabsToolListWindow();
   this.hideJabsEquippedToolWindow();
+
+  this.hideJabsUsableItemListWindow();
+  this.hideJabsEquippedUsableItemWindow();
 
   this.hideJabsCombatSkillListWindow();
   this.hideJabsEquippedCombatSkillsWindow();
@@ -1657,11 +1954,8 @@ Scene_Map.prototype.showJabsMenuWindow = function(window)
  */
 Scene_Map.prototype.hideJabsMenuWindow = function(window)
 {
-  // if its a selectable window, be sure to deselect it.
-  if (window instanceof Window_Selectable)
-  {
-    window.deselect();
-  }
+  // deselect before closing so no stale cursor state persists.
+  window.deselect();
 
   // negatively close it.
   window.close();
@@ -1700,6 +1994,11 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
     case JABS_MenuType.Offhand:
       this.hideJabsOffhandSkillListWindow();
       this.hideJabsEquippedOffhandSkillWindow();
+      this.setJabsMenuFocus(JABS_MenuType.Main);
+      break;
+    case JABS_MenuType.UsableItem:
+      this.hideJabsUsableItemListWindow();
+      this.hideJabsEquippedUsableItemWindow();
       this.setJabsMenuFocus(JABS_MenuType.Main);
       break;
     case JABS_MenuType.Assign:
@@ -1747,6 +2046,13 @@ Scene_Map.prototype.redirectToParentAssignMenu = function()
       this.getJabsOffhandSkillListWindow()
         .activate();
       break;
+    case JABS_MenuType.UsableItem:
+      const equippedUsableItemWindow = this.getJabsEquippedUsableItemWindow();
+      equippedUsableItemWindow.deselect();
+      equippedUsableItemWindow.refresh();
+      this.getJabsUsableItemListWindow()
+        .activate();
+      break;
   }
 };
 
@@ -1769,6 +2075,7 @@ Scene_Map.prototype.forceCloseAbsMenu = function()
   this.closeAbsWindow(JABS_MenuType.Tool);
   this.closeAbsWindow(JABS_MenuType.Dodge);
   this.closeAbsWindow(JABS_MenuType.Offhand);
+  this.closeAbsWindow(JABS_MenuType.UsableItem);
 
   this.setJabsMenuEquipType(String.empty);
   this.closeAbsWindow(JABS_MenuType.Main);

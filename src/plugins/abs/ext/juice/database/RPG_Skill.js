@@ -1,5 +1,16 @@
 //region RPG_Skill
 /**
+ * When {@code true}, all juice motion is suppressed for this skill on the caster.
+ * @type {boolean}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsNoJuice', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.EXT.JUICE.RegExp.NoJuice, false) === true;
+  },
+});
+
+/**
  * Skill note override for J-ABS-Juice weapon swing IconSet index (falls back to equipped weapon).
  * @type {number}
  */
@@ -44,13 +55,27 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsJuiceArcSpanDegrees', {
 });
 
 /**
- * Skill note: `<juiceSpinCount:N>` — full rotations for spin / spin-reverse (see J-ABS-Juice help).
+ * Skill note: `<juiceRepeatCount:N>` — number of times to repeat the motion within the juice duration.
+ * Applies to all motion types: spin / spin-reverse use it as full rotations; arc-oscillate uses it as
+ * sweep count (alternating direction); all others replay the motion N times within the duration.
  * @type {number}
  */
-Object.defineProperty(RPG_Skill.prototype, 'jabsJuiceSpinCount', {
+Object.defineProperty(RPG_Skill.prototype, 'jabsJuiceRepeatCount', {
   get: function()
   {
-    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.EXT.JUICE.RegExp.JuiceSpinCount, true) ?? -1;
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.EXT.JUICE.RegExp.JuiceRepeatCount, true) ?? -1;
+  },
+});
+
+/**
+ * Skill note: `<juiceDuration:N>` — overrides the weapon swing animation duration in frames.
+ * When omitted, the global metadata default (`weaponSwingFrames * 2`) is used.
+ * @type {number|null}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsJuiceDuration', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.EXT.JUICE.RegExp.JuiceDuration, true) ?? null;
   },
 });
 

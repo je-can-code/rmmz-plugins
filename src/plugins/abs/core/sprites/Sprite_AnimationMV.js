@@ -1,6 +1,6 @@
 //region Sprite_AnimationMV
 /**
- * Extends/Overrides {@link Sprite_AnimationMV.prototype.updatePosition}.<br/>
+ * Extends {@link Sprite_AnimationMV.prototype.updatePosition}.<br/>
  * Adds a guard to ensure we don't attempt to follow destroyed or removed sprites.
  */
 J.ABS.Aliased.Sprite_AnimationMV.set('updatePosition', Sprite_AnimationMV.prototype.updatePosition);
@@ -9,6 +9,7 @@ Sprite_AnimationMV.prototype.updatePosition = function ()
   // if this is a screen animation, use original logic.
   if (this._animation.position === 3)
   {
+    // perform original logic.
     J.ABS.Aliased.Sprite_AnimationMV.get('updatePosition')
       .call(this);
     return;

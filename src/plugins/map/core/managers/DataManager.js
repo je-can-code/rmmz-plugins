@@ -1,6 +1,6 @@
 //region DataManager
 /**
- * Extends/Overrides {@link #createGameObjects}.<br/>
+ * Extends {@link #createGameObjects}.<br/>
  * Also registers J.MAP minimap input actions and defaults.
  */
 J.MAP.Aliased.DataManager.set('createGameObjects', DataManager.createGameObjects);

@@ -46,6 +46,46 @@ Game_Actor.prototype.initAptitudeMembers = function()
    * @type {Record<number, AptitudeSkill>}
    */
   this._j._aptitude._learned = {};
+
+  /**
+   * The cached result of the {@link #apr} property getter.
+   * Null when the cache is cold; invalidated by {@link #onBattlerDataChange}.
+   * @type {number|null}
+   */
+  this._j._aptitude._cachedApr = null;
+};
+
+/**
+ * Gets the cached APR factor for this actor, or null if the cache is cold.
+ * @returns {number|null}
+ */
+Game_Actor.prototype.getCachedApr = function()
+{
+  return this._j._aptitude._cachedApr;
+};
+
+/**
+ * Sets the cached APR factor for this actor.
+ * @param {number|null} value The new cached value, or null to invalidate.
+ */
+Game_Actor.prototype.setCachedApr = function(value)
+{
+  this._j._aptitude._cachedApr = value;
+};
+
+/**
+ * Extends {@link #onBattlerDataChange}.<br/>
+ * Invalidates the APR factor cache.
+ */
+J.APT.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onBattlerDataChange);
+Game_Actor.prototype.onBattlerDataChange = function()
+{
+  // perform original logic.
+  J.APT.Aliased.Game_Actor.get('onBattlerDataChange')
+    .call(this);
+
+  // invalidate the APR factor cache.
+  this.setCachedApr(null);
 };
 
 /**
@@ -92,8 +132,12 @@ Game_Actor.prototype.getAptitudeSkillAggregates = function()
     {
       // iterate each learning under this progress.
       Object.entries(progress.learnings())
-        .forEach(([ skillId, learning ]) =>
+        .forEach(([ skillIdKey, learning ]) =>
         {
+          // Object.entries() keys are always strings; coerce back to the numeric skillId that
+          // AptitudeSkillAggregate/AptitudeSkillSourceProgress both declare via their contracts.
+          const skillId = Number(skillIdKey);
+
           // create the aggregate if not present.
           if (!perSkill[skillId])
           {
@@ -194,8 +238,9 @@ Game_Actor.prototype.createAptitudeProgress = function(key, skillId, requiredAp,
   // we don't have one, so create a new progress.
   const newProgress = new AptitudeProgress(key);
 
-  // add the new learning to this progress with the initial AP.
-  newProgress.setLearning(skillId, requiredAp, initialAp);
+  // add the new learning to this progress with the initial AP. This is a fresh, empty progress, so
+  // it must be initializeLearning (which creates), not setLearning (which only updates an existing one).
+  newProgress.initializeLearning(skillId, requiredAp, initialAp);
 
   // return the built aptitude progress.
   return newProgress;
@@ -223,16 +268,30 @@ Game_Actor.prototype.getAptitudeLearning = function(key, skillId)
 };
 
 /**
- * Gets all aptitude sources for this actor.
+ * Gets all aptitude sources for this actor, in a curated display order:
+ * class, then the actor itself, then equips, then states, then anything else.
  * This is typed as {@link RPG_Base}, but can yield many of its subclasses.
- * @returns {(RPG_Actor|RPG_Class|RPG_EquipItem|RPG_Weapon|RPG_Armor|RPG_Skill|RPG_State)[]}
+ * @returns {(RPG_Actor|RPG_Class|RPG_EquipItem|RPG_Weapon|RPG_Armor|RPG_State)[]}
  */
 Game_Actor.prototype.getAptitudeSources = function()
 {
-  // get literally everything.
-  return this.getAllNotes()
-    // exclude skills since we are learning skills.
+  // get literally everything, excluding skills since we are learning skills, not sourcing from them.
+  const sources = this.getAllNotes()
     .filter(obj => obj.isSkill() === false);
+
+  // bucket the remaining sources by kind so they can be rendered in a stable, curated order.
+  const classes = sources.filter(obj => obj.isClass());
+  const actors = sources.filter(obj => obj.isActor());
+  const equips = sources.filter(obj => obj.isEquipItem());
+  const states = sources.filter(obj => obj.isState());
+
+  // anything that doesn't match one of the curated buckets falls through to the end,
+  // preserving its original relative order.
+  const known = new Set([ ...classes, ...actors, ...equips, ...states ]);
+  const others = sources.filter(obj => known.has(obj) === false);
+
+  // return the sources in the curated priority order: class, actor, equips, states, others.
+  return [ ...classes, ...actors, ...equips, ...states, ...others ];
 };
 
 /**

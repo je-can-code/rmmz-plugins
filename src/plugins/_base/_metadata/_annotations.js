@@ -72,6 +72,71 @@
  * it would reduce to 50100.
  *
  * ============================================================================
+ * STATE TYPE CLASSIFIER:
+ * Have you ever wanted to group states into named categories, like "poison" or
+ * "bleed", so other plugins/tags can react to "any state of this category" instead
+ * of a single hardcoded state id? Well now you can! By applying this tag to a
+ * state's notebox, that state is classified under one or more named types.
+ *
+ * NOTE ABOUT MULTIPLE TAGS:
+ * A single state may carry more than one <type:CLASSIFIER> tag, and will
+ * belong to every classifier listed across all of its tags.
+ *
+ * NOTE ABOUT CASING:
+ * Classifier strings are intended to be compared case-insensitively by
+ * consumers of this tag (such as J-ABS's type-based damage bonus tags).
+ *
+ * TAG USAGE:
+ * - States
+ *
+ * TAG FORMAT:
+ *  <type:CLASSIFIER>
+ *    Where CLASSIFIER is the name of the category this state belongs to.
+ *
+ * TAG EXAMPLES:
+ *  <type:poison>
+ *  <type:bleed>
+ * This state is classified as both "poison" and "bleed".
+ *
+ * ============================================================================
+ * HAR (HEALING RATE):
+ * Have you ever wanted a battler to be better (or worse) at healing others,
+ * separately from how well a battler receives healing (REC)? Well now you
+ * can! HAR is the sender-side counterpart to REC — it multiplies the potency
+ * of healing this battler deals out, rather than healing this battler
+ * receives.
+ *
+ * NOTE ABOUT COMBINING TAGS:
+ * This is additive across the board, so if a single battler has multiple
+ * tags from various equipment and/or states, all amounts of HAR will be
+ * summed together before being applied as a single percent multiplier.
+ *
+ * NOTE ABOUT WHERE THIS APPLIES:
+ * HAR is applied everywhere REC already is on the giving side: Damage-tab
+ * "HP/MP Recover" skills, Effects-tab "Recover HP/MP" entries, and J-ABS-
+ * Formula's custom heal pipeline (if that plugin is installed).
+ *
+ * TAG USAGE:
+ * - Actors
+ * - Classes
+ * - Skills
+ * - Weapons
+ * - Armors
+ * - Enemies
+ * - States
+ *
+ * TAG FORMAT:
+ *  <har:VALUE>
+ *    Where VALUE represents the percent bonus/penalty to outgoing healing.
+ *
+ * TAG EXAMPLES:
+ *  <har:25>    (on actor)
+ * This battler's outgoing healing is now 125% effective.
+ *
+ *  <har:-50>   (on state)
+ * While afflicted, this battler's outgoing healing is only 50% effective.
+ *
+ * ============================================================================
  *
  * DEV DETAILS:
  * I would encourage you peruse the added functions to the various classes.
@@ -92,6 +157,46 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.2.0
+ *    Added skillIds() to Game_Battler (stub returning empty), Game_Actor (learned skills
+ *    plus trait-granted ids, deduplicated), and Game_Enemy (action skill ids plus
+ *    trait-granted ids, deduplicated). This gives the skill-extension resolver a raw-id
+ *    source that is completely outside the skill()/skills() call path, eliminating the
+ *    need for a re-entrancy guard and enabling intentional recursive overlay chains.
+ *    Added J.BASE.Resource enum (HP/MP/TP string keys).
+ *    Added Game_Battler.prototype.onHeal(resource, amount) stub — a broadcast hook
+ *    fired after any positive resource recovery. Extensions alias onHeal instead of
+ *    the three gainHp/gainMp/gainTp methods individually.
+ *    Aliased gainHp, gainMp, gainTp on Game_Battler to fire onHeal for positive values.
+ *    Added Game_Action.formulaContextProviders registry and Game_Action.registerFormulaContext
+ *    static method. Any plugin can now inject a named variable into damage formula evaluation
+ *    by registering a getter; the variable is available in every formula evaluated by
+ *    evalFormulaWithContext without any plugin needing to patch another plugin's code.
+ *    Added Game_Action.prototype.evalFormulaWithContext(formula, a, b) — evaluates a formula
+ *    string via new Function with the base context (a, b, v) plus all registered providers.
+ *    This replaces all eval() usage in damage/formula paths; see each consumer's changelog.
+ *    Added HAR (Healing Rate) — the sender-side counterpart to REC. New `har`
+ *    getter on Game_Battler/Game_BattlerBase, summed from `<har:VALUE>` tags
+ *    plus any SDP panel bonus. Registered in the parameter catalog (VITALITY
+ *    group, longParamId 46).
+ *    Aliased Game_Action.prototype.makeDamageValue to apply the caster's HAR
+ *    to Damage-tab "HP/MP Recover" results, alongside vanilla's own REC
+ *    multiplication for the same branch.
+ *    Overwrote Game_Action.prototype.itemEffectRecoverHp/itemEffectRecoverMp
+ *    to apply the caster's HAR to Effects-tab "Recover HP/MP" results.
+ *    Added TraitResolver, a static class centralizing trait-merging logic shared
+ *    across the ecosystem: overlayTraits (last-wins per code+dataId, used by
+ *    J-Extend's state/skill overlays) and refineTraits (keep-better per
+ *    code+dataId, used by JAFTING refinement), both built from shared
+ *    sub-operations (opposing-pair cancellation, no-duplicate filtering,
+ *    additive parameter-trait combining). Replaces ~550 lines of duplicated,
+ *    near-identical combine-by-trait-code logic that used to live inside
+ *    JaftingManager alone.
+ *    Extended JsonEx._encode/_decode to support native Map/Set instances in save data.
+ *    Fixed _encode mutating the live object graph in place while stringifying — the original
+ *    algorithm wrote its "@" constructor tag back onto the same object being saved, which was
+ *    invisible for plain objects/arrays but silently corrupted any live Map/Set the moment
+ *    something (e.g. autosave) called JsonEx.stringify() on the live game state.
  * - 3.1.1
  *    RPG database wrappers expose createEmpty() on item, weapon, armor, skill,
  *    and state classes.

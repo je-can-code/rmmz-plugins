@@ -13,7 +13,7 @@ PluginManager.registerCommand(J.MAP.Metadata.name, 'toggle-minimap', args =>
     $gameSystem.hideMinimap();
 
     // if currently on the map scene, immediately reflect the hidden state.
-    if (SceneManager._scene instanceof Scene_Map)
+    if (SceneManager._scene.isMapScene())
     {
       const miniMap = SceneManager._scene.getMiniMap();
       if (miniMap)
@@ -36,7 +36,7 @@ PluginManager.registerCommand(J.MAP.Metadata.name, 'toggle-minimap', args =>
   }
 
   // If we are currently on Scene_Map and have a minimap, update immediately.
-  if (SceneManager._scene instanceof Scene_Map)
+  if (SceneManager._scene.isMapScene())
   {
     const miniMap = SceneManager._scene.getMiniMap();
     if (miniMap)

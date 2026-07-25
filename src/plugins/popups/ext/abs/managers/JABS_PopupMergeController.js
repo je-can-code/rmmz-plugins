@@ -1,4 +1,5 @@
 //region JABS_PopupMergeController
+
 /**
  * Central merge policy for map popups: accumulate compatible hits on a {@link Sprite_MapDamage}, then release motion.
  */
@@ -36,15 +37,15 @@ class JABS_PopupMergeController
 
     if (useMotion)
     {
-      return J.POPUPS.resolveMotionOffset(popup);
+      return PopupLayoutHelper.resolveMotionOffset(popup);
     }
 
-    return J.POPUPS.consumeLayoutRingOffset(character, popup.layoutRing);
+    return PopupLayoutHelper.consumeLayoutRingOffset(character, popup.layoutRing);
   }
 
   /**
    * @param {Game_Character} character The anchor character.
-   * @returns {{ sessions: Map<string, object>, lastCharacterMergeFrame: number }}
+   * @returns {{ sessions: Map<string, object> }}
    */
   static #ensureBucket(character)
   {
@@ -54,7 +55,6 @@ class JABS_PopupMergeController
     {
       bucket = {
         sessions: new Map(),
-        lastCharacterMergeFrame: 0,
       };
       JABS_PopupMergeController.#characterStore.set(character, bucket);
     }
@@ -63,14 +63,14 @@ class JABS_PopupMergeController
   }
 
   /**
-   * Rolls the idle-release window forward for **every** merge stream on this battler — any strike, slip,
-   * mitigation stack, or reward tick counts as activity so separate buckets do not expire out of sync.
+   * Stamps the current frame on a single merge session so its idle window resets independently.
+   * Other sessions on the same character are unaffected and can expire on their own timeline.
    *
-   * @param {{ sessions: Map, lastCharacterMergeFrame: number }} bucket The character bucket.
+   * @param {object} session The individual merge session to touch.
    */
-  static #touchCharacterMergeWindow(bucket)
+  static #touchSessionMergeWindow(session)
   {
-    bucket.lastCharacterMergeFrame = Graphics.frameCount;
+    session.lastActivityFrame = Graphics.frameCount;
   }
 
   /**
@@ -120,6 +120,7 @@ class JABS_PopupMergeController
       return;
     }
 
+    // continue the routine with the next policy step.
     JABS_PopupMergeController.#releaseSprite(sprite);
   }
 
@@ -132,12 +133,15 @@ class JABS_PopupMergeController
     return new Map_TextPop({
       iconIndex: pop.iconIndex,
       textColorIndex: pop.textColorIndex,
+      // continue the routine with the next policy step.
       popupType: pop.popupType,
       value: pop.value,
       critical: pop.critical,
+      // continue the routine with the next policy step.
       coordinateVariance: pop.coordinateVariance,
       healing: pop.healing,
       textAccent: pop.textAccent,
+      // continue the routine with the next policy step.
       layoutRing: pop.layoutRing,
       jInstantRelease: false,
     });
@@ -203,24 +207,25 @@ class JABS_PopupMergeController
     {
       TextPopManager.show(pop, character);
 
+      // exit early without a payload.
       return;
     }
 
     const key = JABS_PopupMergeController.buildStrikeMergeKey(pop);
-    const spriteCharacter = J.POPUPS.findSpriteCharacterForGameCharacter(character);
+    const spriteCharacter = PopupSpriteLocator.findSpriteCharacterForGameCharacter(character);
 
     if (!spriteCharacter)
     {
       TextPopManager.show(pop, character);
 
+      // exit early without a payload.
       return;
     }
 
     const bucket = JABS_PopupMergeController.#ensureBucket(character);
 
-    JABS_PopupMergeController.#touchCharacterMergeWindow(bucket);
-
     let session = bucket.sessions.get(key);
+
 
     if (!session)
     {
@@ -246,10 +251,13 @@ class JABS_PopupMergeController
         runningTotal: ctx.amount,
       };
 
+      // Register the value on the alias map for runtime lookup.
       bucket.sessions.set(key, session);
       JABS_PopupMergeController.#trackCharacter(character);
       spriteCharacter.attachConvertedDamagePopupSprite(sprite, template);
+      JABS_PopupMergeController.#touchSessionMergeWindow(session);
 
+      // exit early without a payload.
       return;
     }
 
@@ -261,6 +269,8 @@ class JABS_PopupMergeController
       session.sprite.refreshDisplayedValue(pop.value, pop.critical === true);
       session.sprite._j._popups._sourcePopup.value = pop.value;
     }
+
+    JABS_PopupMergeController.#touchSessionMergeWindow(session);
   }
 
   /**
@@ -276,22 +286,22 @@ class JABS_PopupMergeController
     {
       TextPopManager.show(pop, character);
 
+      // exit early without a payload.
       return;
     }
 
     const key = JABS_PopupMergeController.buildSlipMergeKey(pop);
-    const spriteCharacter = J.POPUPS.findSpriteCharacterForGameCharacter(character);
+    const spriteCharacter = PopupSpriteLocator.findSpriteCharacterForGameCharacter(character);
 
     if (!spriteCharacter)
     {
       TextPopManager.show(pop, character);
 
+      // exit early without a payload.
       return;
     }
 
     const bucket = JABS_PopupMergeController.#ensureBucket(character);
-
-    JABS_PopupMergeController.#touchCharacterMergeWindow(bucket);
 
     let session = bucket.sessions.get(key);
 
@@ -309,10 +319,13 @@ class JABS_PopupMergeController
         runningTotal: ctx.amount,
       };
 
+      // Register the value on the alias map for runtime lookup.
       bucket.sessions.set(key, session);
       JABS_PopupMergeController.#trackCharacter(character);
       spriteCharacter.attachConvertedDamagePopupSprite(sprite, template);
+      JABS_PopupMergeController.#touchSessionMergeWindow(session);
 
+      // exit early without a payload.
       return;
     }
 
@@ -324,6 +337,8 @@ class JABS_PopupMergeController
       session.sprite.refreshDisplayedValue(pop.value);
       session.sprite._j._popups._sourcePopup.value = pop.value;
     }
+
+    JABS_PopupMergeController.#touchSessionMergeWindow(session);
   }
 
   /**
@@ -339,22 +354,22 @@ class JABS_PopupMergeController
     {
       TextPopManager.show(pop, character);
 
+      // exit early without a payload.
       return;
     }
 
     const key = JABS_PopupMergeController.buildMitigationMergeKey(ctx.mitigationType);
-    const spriteCharacter = J.POPUPS.findSpriteCharacterForGameCharacter(character);
+    const spriteCharacter = PopupSpriteLocator.findSpriteCharacterForGameCharacter(character);
 
     if (!spriteCharacter)
     {
       TextPopManager.show(pop, character);
 
+      // exit early without a payload.
       return;
     }
 
     const bucket = JABS_PopupMergeController.#ensureBucket(character);
-
-    JABS_PopupMergeController.#touchCharacterMergeWindow(bucket);
 
     let session = bucket.sessions.get(key);
 
@@ -373,10 +388,13 @@ class JABS_PopupMergeController
         labelPrefix: ctx.labelPrefix,
       };
 
+      // Register the value on the alias map for runtime lookup.
       bucket.sessions.set(key, session);
       JABS_PopupMergeController.#trackCharacter(character);
       spriteCharacter.attachConvertedDamagePopupSprite(sprite, template);
+      JABS_PopupMergeController.#touchSessionMergeWindow(session);
 
+      // exit early without a payload.
       return;
     }
 
@@ -388,6 +406,8 @@ class JABS_PopupMergeController
       session.sprite.refreshDisplayedValue(pop.value);
       session.sprite._j._popups._sourcePopup.value = pop.value;
     }
+
+    JABS_PopupMergeController.#touchSessionMergeWindow(session);
   }
 
   /**
@@ -403,22 +423,22 @@ class JABS_PopupMergeController
     {
       TextPopManager.show(pop, character);
 
+      // exit early without a payload.
       return;
     }
 
     const key = JABS_PopupMergeController.buildRewardMergeKey(ctx.rewardType);
-    const spriteCharacter = J.POPUPS.findSpriteCharacterForGameCharacter(character);
+    const spriteCharacter = PopupSpriteLocator.findSpriteCharacterForGameCharacter(character);
 
     if (!spriteCharacter)
     {
       TextPopManager.show(pop, character);
 
+      // exit early without a payload.
       return;
     }
 
     const bucket = JABS_PopupMergeController.#ensureBucket(character);
-
-    JABS_PopupMergeController.#touchCharacterMergeWindow(bucket);
 
     let session = bucket.sessions.get(key);
 
@@ -436,10 +456,13 @@ class JABS_PopupMergeController
         runningTotal: ctx.amount,
       };
 
+      // Register the value on the alias map for runtime lookup.
       bucket.sessions.set(key, session);
       JABS_PopupMergeController.#trackCharacter(character);
       spriteCharacter.attachConvertedDamagePopupSprite(sprite, template);
+      JABS_PopupMergeController.#touchSessionMergeWindow(session);
 
+      // exit early without a payload.
       return;
     }
 
@@ -451,6 +474,8 @@ class JABS_PopupMergeController
       session.sprite.refreshDisplayedValue(pop.value);
       session.sprite._j._popups._sourcePopup.value = pop.value;
     }
+
+    JABS_PopupMergeController.#touchSessionMergeWindow(session);
   }
 
   /**
@@ -467,13 +492,14 @@ class JABS_PopupMergeController
       return;
     }
 
-    const spriteCharacter = J.POPUPS.findSpriteCharacterForGameCharacter(character);
+    const spriteCharacter = PopupSpriteLocator.findSpriteCharacterForGameCharacter(character);
 
     if (!spriteCharacter)
     {
       bucket.sessions.clear();
       JABS_PopupMergeController.#untrackIfEmpty(character);
 
+      // exit early without a payload.
       return;
     }
 
@@ -487,8 +513,8 @@ class JABS_PopupMergeController
   }
 
   /**
-   * Idle flush: releases sprites after **no** merge activity on this battler for the configured frames
-   * (strikes, slip, mitigation, and rewards all refresh the same sliding window).
+   * Idle flush: releases each merge session independently after it has been idle for the configured frames.
+   * A slip tick no longer holds reward or strike sessions hostage — each stream expires on its own timeline.
    */
   static tickIdleFlush()
   {
@@ -504,17 +530,10 @@ class JABS_PopupMergeController
         return;
       }
 
-      const lastAct = bucket.lastCharacterMergeFrame ?? 0;
+      const spriteCharacter = PopupSpriteLocator.findSpriteCharacterForGameCharacter(character);
+      const keys = Array.from(bucket.sessions.keys());
 
-      if (now - lastAct < idleFrames)
-      {
-        return;
-      }
-
-      const spriteCharacter = J.POPUPS.findSpriteCharacterForGameCharacter(character);
-      const toDelete = Array.from(bucket.sessions.keys());
-
-      toDelete.forEach(key =>
+      keys.forEach(key =>
       {
         const session = bucket.sessions.get(key);
 
@@ -522,6 +541,15 @@ class JABS_PopupMergeController
         {
           bucket.sessions.delete(key);
 
+          // exit early without a payload.
+          return;
+        }
+
+        // each session tracks its own activity timestamp; only flush when this specific stream is idle.
+        const lastAct = session.lastActivityFrame ?? 0;
+
+        if (now - lastAct < idleFrames)
+        {
           return;
         }
 

@@ -27,6 +27,7 @@ J.RESOURCES.Metadata = new JResources_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_V
 J.RESOURCES.Aliased = {};
 J.RESOURCES.Aliased.IconManager = new Map();
 J.RESOURCES.Aliased.TextManager = new Map();
+J.RESOURCES.Aliased.Scene_Boot = new Map();
 J.RESOURCES.Aliased.Game_BattlerBase = new Map();
 J.RESOURCES.Aliased.Game_Battler = new Map();
 
@@ -34,7 +35,7 @@ J.RESOURCES.Aliased.Game_Battler = new Map();
  * All regular expressions used by this plugin.
  */
 J.RESOURCES.RegExp = {};
-J.RESOURCES.RegExp.HpCostReduction = /<hrc:\[([+\-*/ ().\w]+)]>/gi;
+J.RESOURCES.RegExp.HpCostReduction = /<hcr:\[([+\-*/ ().\w]+)]>/gi;
 
 J.RESOURCES.RegExp.HpCostFlat = /<hp-cost:(\d+)>/gi;
 J.RESOURCES.RegExp.HpCostPercent = /<hp-cost:(\d+)%>/gi;
@@ -60,4 +61,7 @@ J.RESOURCES.RegExp.TpCostFormula = /<tp-cost:\[([+\-*/ ().\w]+)]>/gi;
 J.RESOURCES.RegExp.TpGainFlat = /<tp-gain:(\d+)>/i;
 J.RESOURCES.RegExp.TpGainPercent = /<tp-gain:(\d+)%>/i;
 J.RESOURCES.RegExp.TpGainFormula = /<tp-gain:\[([+\-*/ ().\w]+)]>/gi;
+
+J.RESOURCES.RegExp.StackCost = /<stackCost:[ ]?(\[\d+,[ ]?\d+])>/i;
+J.RESOURCES.RegExp.ItemCost = /<itemCost:[ ]?(\[\d+,[ ]?\d+])>/i;
 //endregion initialization

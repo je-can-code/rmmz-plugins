@@ -177,8 +177,8 @@ class Scene_Monsterpedia
   }
 
   /**
-   * Overrides {@link Scene_MenuBase.prototype.createBackground}.<br>
-   * Changes the filter to a different type from {@link PIXI.filters}.<br>
+   * Overwrites {@link Scene_MenuBase.prototype.createBackground}.<br/>
+   * Changes the filter to a different type from {@link PIXI.filters}.
    */
   createBackground()
   {
@@ -223,9 +223,6 @@ class Scene_Monsterpedia
 
     // assign cancel functionality.
     window.setHandler('cancel', this.onCancelMonsterpedia.bind(this));
-
-    // assign on-select functionality.
-    window.setHandler('ok', this.onMonsterpediaListSelection.bind(this));
 
     // overwrite the onIndexChange hook with our local onMonsterpediaIndexChange hook.
     window.onIndexChange = this.onMonsterpediaIndexChange.bind(this);
@@ -400,18 +397,6 @@ class Scene_Monsterpedia
 
     // refresh the window for the content update.
     detailWindow.refresh();
-  }
-
-  /**
-   * TODO: do something when a monster is selected?
-   */
-  onMonsterpediaListSelection()
-  {
-    const listWindow = this.getMonsterpediaListWindow();
-
-    console.log(`monster selected index: [${listWindow.index()}].`);
-
-    listWindow.activate();
   }
 
   /**

@@ -1,0 +1,323 @@
+//region plugins/abs/ext/food/models/jabs-food-chain-plan.test.js
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+describe('J-ABS-Food JABS_FoodChainPlan (unit, all downstream dependencies mocked)', () =>
+{
+  /** @type {typeof import('../../../../../../src/plugins/abs/ext/food/models/JABS_FoodChainPlan.js').default} */
+  let JABS_FoodChainPlan;
+
+  /** duck-typed stand-in for JABS_FoodChainSegment- a trivial field bag, safe to reimplement. */
+  class FakeSegment
+  {
+    constructor(stateId, chainType, frames, color)
+    {
+      this.stateId = stateId;
+      this.chainType = chainType;
+      this.frames = frames;
+      this.color = color;
+    }
+  }
+
+  beforeAll(async () =>
+  {
+    vi.resetModules();
+
+    globalThis.J = { ABS: { RegExp: { StateDuration: Symbol('StateDuration'), StateDurationSec: Symbol('StateDurationSec') } } };
+    globalThis.RPGManager = { getNumberFromNoteByRegex: vi.fn(() => null) };
+
+    vi.doMock('../../../../../../src/plugins/abs/ext/food/models/JABS_FoodChainSegment.js', () => ({
+      default: FakeSegment,
+    }));
+
+    ({ default: JABS_FoodChainPlan } = await import('../../../../../../src/plugins/abs/ext/food/models/JABS_FoodChainPlan.js'));
+  });
+
+  beforeEach(() =>
+  {
+    globalThis.RPGManager.getNumberFromNoteByRegex.mockReset().mockReturnValue(null);
+  });
+
+  /** Builds a minimal $dataStates-shaped fixture from a plain description object. */
+  function buildState(id, { chainType = null, expireStateId = null, frames = 0, color = '#888888', name = `State${id}` } = {})
+  {
+    return {
+      id,
+      name,
+      jabsFoodChainType: chainType,
+      jabsApplyStateOnExpire: expireStateId === null ? null : { stateId: expireStateId },
+      jabsStateDurationFrames: frames,
+      jabsFoodGroupColor: color,
+    };
+  }
+
+  describe('buildRegistry / forChainType', () =>
+  {
+    it('registers a single-segment chain for a state with no expire link', () =>
+    {
+      // Arrange
+      globalThis.$dataStates = [ null, buildState(1, { chainType: 'protein' }) ];
+
+      // Act
+      JABS_FoodChainPlan.buildRegistry();
+      const plan = JABS_FoodChainPlan.forChainType('protein');
+
+      // Assert
+      expect(plan.segments).toHaveLength(1);
+      expect(plan.segments[0].stateId).toBe(1);
+    });
+
+    it('walks a multi-state chain following applyStateOnExpire links', () =>
+    {
+      // Arrange
+      globalThis.$dataStates = [
+        null,
+        buildState(1, { chainType: 'protein', expireStateId: 2 }),
+        buildState(2, { chainType: 'protein', expireStateId: 3 }),
+        buildState(3, { chainType: 'protein' }),
+      ];
+
+      // Act
+      JABS_FoodChainPlan.buildRegistry();
+      const plan = JABS_FoodChainPlan.forChainType('protein');
+
+      // Assert
+      expect(plan.segments.map(s => s.stateId)).toEqual([ 1, 2, 3 ]);
+    });
+
+    it('identifies entry states as those not referenced by any expire link', () =>
+    {
+      // Arrange- state 2 is referenced by state 1's expire link, so only state 1 is an entry.
+      globalThis.$dataStates = [
+        null,
+        buildState(1, { chainType: 'protein', expireStateId: 2 }),
+        buildState(2, { chainType: 'protein' }),
+      ];
+
+      // Act
+      JABS_FoodChainPlan.buildRegistry();
+
+      // Assert- only one plan registered (for 'protein'), rooted at state 1.
+      expect(JABS_FoodChainPlan.forChainType('protein').getEntry().stateId).toBe(1);
+    });
+
+    it('returns null for an unregistered chain type', () =>
+    {
+      globalThis.$dataStates = [];
+      JABS_FoodChainPlan.buildRegistry();
+      expect(JABS_FoodChainPlan.forChainType('nonexistent')).toBeNull();
+    });
+
+    it('clears any previously-built registry on rebuild', () =>
+    {
+      // Arrange
+      globalThis.$dataStates = [ null, buildState(1, { chainType: 'protein' }) ];
+      JABS_FoodChainPlan.buildRegistry();
+      expect(JABS_FoodChainPlan.forChainType('protein')).not.toBeNull();
+
+      // Act- rebuild with a database that no longer has any protein states.
+      globalThis.$dataStates = [];
+      JABS_FoodChainPlan.buildRegistry();
+
+      // Assert
+      expect(JABS_FoodChainPlan.forChainType('protein')).toBeNull();
+    });
+
+    it('throws when two distinct entry states claim the same chain type', () =>
+    {
+      // Arrange- both state 1 and state 2 are entries (nothing points to either) and share a type.
+      globalThis.$dataStates = [
+        null,
+        buildState(1, { chainType: 'protein' }),
+        buildState(2, { chainType: 'protein' }),
+      ];
+
+      // Act / Assert
+      expect(() => JABS_FoodChainPlan.buildRegistry()).toThrow(/Duplicate food chain type 'protein'/);
+    });
+
+    it('ignores states with no foodChain tag entirely', () =>
+    {
+      globalThis.$dataStates = [ null, buildState(1, { chainType: null }) ];
+      JABS_FoodChainPlan.buildRegistry();
+      expect(JABS_FoodChainPlan.forChainType('protein')).toBeNull();
+    });
+  });
+
+  describe('_walkChain', () =>
+  {
+    it('stops the walk cleanly when the entry state id itself is missing from the database', () =>
+    {
+      // Arrange
+      globalThis.$dataStates = [ null ];
+
+      // Act
+      const plan = JABS_FoodChainPlan._walkChain(99);
+
+      // Assert
+      expect(plan.segments).toHaveLength(0);
+    });
+
+    it('stops the walk cleanly when a linked state id is missing from the database', () =>
+    {
+      // Arrange
+      globalThis.$dataStates = [ null, buildState(1, { chainType: 'protein', expireStateId: 99 }) ];
+
+      // Act
+      const plan = JABS_FoodChainPlan._walkChain(1);
+
+      // Assert
+      expect(plan.segments).toHaveLength(1);
+    });
+
+    it('defaults the entry segment\'s chainType to "unknown" when the entry state itself has none', () =>
+    {
+      // Arrange
+      globalThis.$dataStates = [ null, buildState(1, { chainType: null }) ];
+
+      // Act
+      const plan = JABS_FoodChainPlan._walkChain(1);
+
+      // Assert
+      expect(plan.segments[0].chainType).toBe('unknown');
+    });
+
+    it('stops the walk when the linked state has no food chain type', () =>
+    {
+      // Arrange
+      globalThis.$dataStates = [
+        null,
+        buildState(1, { chainType: 'protein', expireStateId: 2 }),
+        buildState(2, { chainType: null }),
+      ];
+
+      // Act
+      const plan = JABS_FoodChainPlan._walkChain(1);
+
+      // Assert
+      expect(plan.segments).toHaveLength(1);
+    });
+
+    it('throws a descriptive error when a cycle is detected', () =>
+    {
+      // Arrange- state 1 -> 2 -> 1, an infinite loop.
+      globalThis.$dataStates = [
+        null,
+        buildState(1, { chainType: 'protein', expireStateId: 2 }),
+        buildState(2, { chainType: 'protein', expireStateId: 1 }),
+      ];
+
+      // Act / Assert
+      expect(() => JABS_FoodChainPlan._walkChain(1)).toThrow(/Food chain cycle detected/);
+    });
+
+    it('caps the walk at 16 segments as a hard ceiling', () =>
+    {
+      // Arrange- build a chain of 20 states, each expiring into the next.
+      const states = [ null ];
+      for (let id = 1; id <= 20; id++)
+      {
+        states.push(buildState(id, { chainType: 'protein', expireStateId: id < 20 ? id + 1 : null }));
+      }
+      globalThis.$dataStates = states;
+
+      // Act
+      const plan = JABS_FoodChainPlan._walkChain(1);
+
+      // Assert
+      expect(plan.segments).toHaveLength(16);
+    });
+
+    it('defaults frames/color/chainType defensively when the state is missing them', () =>
+    {
+      // Arrange- a state with jabsFoodChainType present (walk requires this) but no
+      // duration/color data set.
+      globalThis.$dataStates = [
+        null,
+        { id: 1, name: 'Bare', jabsFoodChainType: 'protein', jabsApplyStateOnExpire: null,
+          jabsStateDurationFrames: undefined, jabsFoodGroupColor: undefined },
+      ];
+
+      // Act
+      const plan = JABS_FoodChainPlan._walkChain(1);
+
+      // Assert
+      expect(plan.segments[0].frames).toBe(0);
+      expect(plan.segments[0].color).toBe('#888888');
+    });
+
+    it('warns when a chain state relies on stepsToRemove alone without an explicit duration tag', () =>
+    {
+      // Arrange
+      globalThis.$dataStates = [ null, buildState(1, { chainType: 'protein', frames: 300 }) ];
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(null);
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // Act
+      JABS_FoodChainPlan._walkChain(1);
+
+      // Assert
+      expect(console.warn).toHaveBeenCalledWith(expect.stringContaining('has <foodChain> but no'));
+      console.warn.mockRestore();
+    });
+
+    it('does not warn when an explicit duration tag is present', () =>
+    {
+      // Arrange
+      globalThis.$dataStates = [ null, buildState(1, { chainType: 'protein', frames: 300 }) ];
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(300);
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // Act
+      JABS_FoodChainPlan._walkChain(1);
+
+      // Assert
+      expect(console.warn).not.toHaveBeenCalled();
+      console.warn.mockRestore();
+    });
+  });
+
+  describe('instance methods', () =>
+  {
+    it('getEntry returns the first segment, or null for an empty plan', () =>
+    {
+      const plan = new JABS_FoodChainPlan([ new FakeSegment(1, 'protein', 0, '#fff') ]);
+      expect(plan.getEntry().stateId).toBe(1);
+      expect(new JABS_FoodChainPlan([]).getEntry()).toBeNull();
+    });
+
+    it('isEmpty reflects whether the plan has any segments', () =>
+    {
+      expect(new JABS_FoodChainPlan([]).isEmpty()).toBe(true);
+      expect(new JABS_FoodChainPlan([ new FakeSegment(1, 'protein', 0, '#fff') ]).isEmpty()).toBe(false);
+    });
+
+    it('indexOfState finds the matching segment index, or -1 when absent', () =>
+    {
+      const plan = new JABS_FoodChainPlan([
+        new FakeSegment(1, 'protein', 0, '#fff'),
+        new FakeSegment(2, 'protein', 0, '#fff'),
+      ]);
+      expect(plan.indexOfState(2)).toBe(1);
+      expect(plan.indexOfState(99)).toBe(-1);
+    });
+
+    it('phaseAtIndex labels the first segment wellFed, the last tail, and everything else peak', () =>
+    {
+      const plan = new JABS_FoodChainPlan([
+        new FakeSegment(1, 'protein', 0, '#fff'),
+        new FakeSegment(2, 'protein', 0, '#fff'),
+        new FakeSegment(3, 'protein', 0, '#fff'),
+      ]);
+      expect(plan.phaseAtIndex(0)).toBe('wellFed');
+      expect(plan.phaseAtIndex(1)).toBe('peak');
+      expect(plan.phaseAtIndex(2)).toBe('tail');
+    });
+
+    it('phaseAtIndex labels a single-segment plan\'s only entry as wellFed (index 0 wins the tie)', () =>
+    {
+      const plan = new JABS_FoodChainPlan([ new FakeSegment(1, 'protein', 0, '#fff') ]);
+      expect(plan.phaseAtIndex(0)).toBe('wellFed');
+    });
+  });
+});
+//endregion plugins/abs/ext/food/models/jabs-food-chain-plan.test.js

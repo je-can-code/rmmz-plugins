@@ -1,3 +1,23 @@
+//region salvage ledger
+/**
+ * Copies the salvage ledger from the source object so refinement lineage survives save/load.
+ * The base schema does not include `_jaftingSalvageLedger`, so without this hook the property is silently dropped
+ * when {@link Game_Party#refreshDatabaseWeapons} and {@link Game_Party#refreshDatabaseArmors} reconstruct refined
+ * entries via `new RPG_Weapon(raw, index)`.
+ *
+ * @param {RPG_EquipItem & { _jaftingSalvageLedger?: JaftingSalvageLedgerSnapshot|null }} baseItem
+ */
+J.JAFTING.EXT.REFINE.Aliased.RPG_EquipItem.set('initMembers', RPG_EquipItem.prototype.initMembers);
+RPG_EquipItem.prototype.initMembers = function(baseItem)
+{
+  // perform original logic.
+  J.JAFTING.EXT.REFINE.Aliased.RPG_EquipItem.get('initMembers').call(this, baseItem);
+
+  // carry the salvage ledger forward; null for all non-refined base rows.
+  this._jaftingSalvageLedger = baseItem._jaftingSalvageLedger ?? null;
+};
+//endregion salvage ledger
+
 //region refinedCount
 /**
  * The number of times this equip has been refined.

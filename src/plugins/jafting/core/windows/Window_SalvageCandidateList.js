@@ -50,6 +50,7 @@ class Window_SalvageCandidateList
 
     this.makeItemList();
 
+    // Invoke the aliased body with the original receiver.
     Window_Selectable.prototype.refresh.call(this);
 
     // after dismantle the list shrinks—clamp so `item()` stays valid and the preview can repaint.
@@ -57,6 +58,7 @@ class Window_SalvageCandidateList
     {
       this.select(-1);
 
+      // exit early without a payload.
       return;
     }
 
@@ -64,6 +66,7 @@ class Window_SalvageCandidateList
     {
       this.select(0);
 
+      // exit early without a payload.
       return;
     }
 

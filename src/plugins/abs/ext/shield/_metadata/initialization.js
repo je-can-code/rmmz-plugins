@@ -7,7 +7,7 @@ globalThis.J ||= {};
 (() =>
 {
   // Check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '3.0.0';
+  const requiredBaseVersion = '3.2.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
@@ -15,7 +15,7 @@ globalThis.J ||= {};
   }
 
   // Check to ensure we have the minimum required version of the J-ABS plugin.
-  const requiredJabsVersion = '4.6.0';
+  const requiredJabsVersion = '4.13.0';
   const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
   if (!hasJabsRequirement)
   {
@@ -43,6 +43,7 @@ J.ABS.EXT.SHIELD.Metadata = new JShield_PluginMetadata(__PLUGIN_NAME__, __PLUGIN
  * A collection of all aliased methods for this plugin.
  */
 J.ABS.EXT.SHIELD.Aliased = {
+  Scene_Boot: new Map(),
   Game_Action: new Map(),
   Game_Actor: new Map(),
   Game_Battler: new Map(),
@@ -100,5 +101,22 @@ J.ABS.EXT.SHIELD.RegExp = {
    * Represents one or many skills to fire when this state’s shield breaks.
    */
   Break: /<shieldBreak:[ ]?(\[[\d, ]+])>/i,
+
+  /** Outgoing shield point amplification (`<sar:25>` = +25%). */
+  ShieldAmplification: /<sar:(-?\d+)>/gi,
+
+  /** Incoming shield effectiveness (`<ser:25>` = +25%). */
+  ShieldEffectiveness: /<ser:(-?\d+)>/gi,
 };
+
+/** Legacy SDP panel parameter ids for shield stats. */
+J.ABS.EXT.SHIELD.SdpParamId = {
+  SAR: 38,
+  SER: 39,
+};
+
+// register 's' as a formula context variable so damage formulas fired on shield break
+// can reference the broken shield's original cap value directly.
+// 's' is 0 for all non-shield-break actions (lastShieldBreakValue is reset after break skills fire).
+Game_Action.registerFormulaContext('s', (_action, a) => a.lastShieldBreakValue);
 //endregion initialization

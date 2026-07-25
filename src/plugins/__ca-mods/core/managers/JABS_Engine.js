@@ -1,5 +1,27 @@
 //region JABS_Engine
 /**
+ * Extends {@link #canGainReward}.<br/>
+ * Inanimate enemies (trees, shrubs, ore deposits, destructibles) do not grant any rewards in CA.
+ * Their levels are intentionally high to gate resource access — not to serve as experience farms.
+ * @param {Game_Enemy} defeatedEnemy The enemy that was defeated.
+ * @param {Game_Actor} victoriousActor The actor that defeated the enemy.
+ * @returns {boolean} False if the defeated enemy is inanimate, otherwise defers to the base check.
+ */
+J.CAMods.Aliased.JABS_Engine.set('canGainReward', JABS_Engine.prototype.canGainReward);
+JABS_Engine.prototype.canGainReward = function(defeatedEnemy, victoriousActor)
+{
+  // inanimate objects never grant EXP, gold, SDP, or AP in CA.
+  if (defeatedEnemy.isInanimate() === true)
+  {
+    return false;
+  }
+
+  // perform original logic for all other cases.
+  return J.CAMods.Aliased.JABS_Engine.get('canGainReward')
+    .call(this, defeatedEnemy, victoriousActor);
+};
+
+/**
  * Fixes the weird problem where CA uniquely seems to want to move character sprites up
  * by 1 when generating loot.
  * @param {number} targetX The `x` coordiante where the loot will be dropped/placed.
@@ -42,7 +64,7 @@ JABS_Engine.prototype.handleDefeatedEnemy = function(defeatedTarget, caster)
 };
 
 /**
- * Extends {@link #handleDefeatedPlayer}.<br>
+ * Extends {@link #handleDefeatedPlayer}.<br/>
  * Also tracks player defeated count.
  */
 J.CAMods.Aliased.JABS_Engine.set('handleDefeatedPlayer', JABS_Engine.prototype.handleDefeatedPlayer);
@@ -57,7 +79,7 @@ JABS_Engine.prototype.handleDefeatedPlayer = function()
 };
 
 /**
- * Extends {@link #postExecuteSkillEffects}.<br>
+ * Extends {@link #postExecuteSkillEffects}.<br/>
  * Also tracks our combat data in variables.
  * @param {JABS_Action} action The action being executed.
  * @param {JABS_Battler} target The target to apply skill effects against.
@@ -66,6 +88,7 @@ J.CAMods.Aliased.JABS_Engine.set('postExecuteSkillEffects', JABS_Engine.prototyp
 JABS_Engine.prototype.postExecuteSkillEffects = function(action, target)
 {
   // execute the original method so the result is on the target.
+  // perform original logic.
   J.CAMods.Aliased.JABS_Engine.get('postExecuteSkillEffects')
     .call(this, action, target);
 
@@ -165,6 +188,7 @@ JABS_Engine.prototype.trackDefensiveData = function(target)
       }
     }
 
+    // close out the hp-damage branch before parry tracking.
   }
   else if (parried)
   {
@@ -180,7 +204,7 @@ JABS_Engine.prototype.trackDefensiveData = function(target)
 };
 
 /**
- * Extends {@link #executeMapAction}.<br>
+ * Extends {@link #executeMapAction}.<br/>
  * Also tracks action execution data.
  * @param {JABS_Battler} caster The battler executing the action.
  * @param {JABS_Action} action The action being executed.
@@ -204,7 +228,7 @@ JABS_Engine.prototype.executeMapAction = function(caster, action, targetX, targe
 
 /**
  * Tracks mainhand/offhand/skill usage data points and assigns them to variables.
- * @param {JABS_Action} action
+ * @param {JABS_Action} action The action driving this step.
  */
 JABS_Engine.prototype.trackActionData = function(action)
 {

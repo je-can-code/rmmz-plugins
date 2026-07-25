@@ -85,6 +85,7 @@ class LevelScaling
     {
       return {
         min: J.LEVEL.Metadata.rewardMinimumMultiplier,
+        // continue the routine with the next policy step.
         max: J.LEVEL.Metadata.rewardMaximumMultiplier,
       };
     }
