@@ -41,6 +41,8 @@
  * ----------------------------------------------------------------------------
  * - 1.1.0
  *    Added complete long-parameter coverage and detailed breakdown panel.
+ *    Migrated StatusParameter from numeric longParamId to the shared
+ *    parameter catalog's string parameterKey.
  *    Documentation pass for status list window and models.
  *    Retroactively added this changelog.
  * - 1.0.0

@@ -233,7 +233,7 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
       globalThis.JaftingSalvageManager = { applyCraftRecipeOutputs: vi.fn() };
 
       globalThis.__PLUGIN_NAME__ = 'J-Base';
-      globalThis.__PLUGIN_VERSION__ = '3.0.0';
+      globalThis.__PLUGIN_VERSION__ = '3.2.0';
       await import('../../../../src/plugins/_base/_metadata/initialization.js');
 
       globalThis.__PLUGIN_NAME__ = 'J-JAFTING';

@@ -57,6 +57,9 @@
  * one per tag, in the order they appear on the note.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Added <hideFromMonsterpedia>, <monsterFamilyIcon:ICON_INDEX>, and
+ *    repeatable <descriptionLine:TEXT> Monsterpedia entry tags.
  * - 1.0.2
  *    Consumed `RPGManager` updates.
  *    Fixed missed issue with SDP rendering.

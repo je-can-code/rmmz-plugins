@@ -147,6 +147,14 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Added an orange-diamond minimap marker for inanimate JABS enemies
+ *    (pots, crates), distinct from the red-diamond hostile marker.
+ *    Added <minimap:teleport>/<mm:teleport> markers (hollow light-blue
+ *    square), stretchable to a multi-tile zone via <areaEvent:WxH>.
+ *    Added quest markers (questOffer/questProgress/questTurnIn) for
+ *    Omni-Quest integration.
+ *    Added <blockMinimap> to suppress the minimap outright on a given map.
  * - 1.0.2
  *    Adapted for updates to J-ABS-InputManager (input namespace).
  * - 1.0.1

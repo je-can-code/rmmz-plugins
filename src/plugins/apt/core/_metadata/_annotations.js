@@ -128,6 +128,18 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Added AP rate multiplier via <aptMultiplier:AMOUNT>, registered with
+ *    the shared parameter catalog (apr) with an SDP panel binding.
+ *    J-LevelMaster integration is now an all-or-nothing gate on AP gain
+ *    once the actor is too many levels above the enemy, replacing the old
+ *    scaling multiplier; reads $gameSystem.isLevelScalingEnabled() instead
+ *    of the static plugin metadata flag.
+ *    Fixed stale requiredAp: a learning's persisted requiredAp now re-syncs
+ *    to the live notetag value every time its source grants AP, instead of
+ *    being frozen at whatever value existed the first time it was touched.
+ *    Added refresh-required-ap / refresh-required-ap-all plugin commands to
+ *    manually repair saves that had already gone stale before this fix.
  * - 1.0.3
  *    Raised minimum J-ABS version requirement to 4.6.0.
  * - 1.0.2

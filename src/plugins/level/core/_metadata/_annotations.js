@@ -377,6 +377,11 @@
  *    across all classes instead of leveling each class independently, with
  *    a class-independent canonical exp curve and retroactive learning
  *    backfill on class change.
+ *    Added per-class growth curve tags (<mhpGrowthCurve>, etc. for all base
+ *    params plus <mtpGrowthCurve>) as authored, formula-driven replacements
+ *    for the slope-extrapolation fallback beyond level 99. MTP's curve is
+ *    evaluated live at every level, not just beyond 99, since MTP has no
+ *    baked params[] array to defer to below the cap.
  * - 1.3.1
  *    Updated battler name rendering support for compatibility.
  * - 1.3.0

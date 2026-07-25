@@ -24,6 +24,10 @@
  * This plugin does NOT parse food notetags or register the R2 button.
  * Those responsibilities belong to J-ABS-Food.
  * ============================================================================
+ * CHANGELOG:
+ * - 1.0.0
+ *    Initial release.
+ * ============================================================================
  * PLUGIN PARAMETERS:
  * @param windowX
  * @type number

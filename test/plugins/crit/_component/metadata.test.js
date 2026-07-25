@@ -15,7 +15,7 @@ describe('J-CriticalFactors metadata (direct src import)', () =>
     globalThis.PluginManager = { parameters: () => ({}) };
 
     globalThis.__PLUGIN_NAME__ = 'J-Base';
-    globalThis.__PLUGIN_VERSION__ = '3.0.0';
+    globalThis.__PLUGIN_VERSION__ = '3.2.0';
     await import('../../../../src/plugins/_base/_metadata/initialization.js');
 
     globalThis.__PLUGIN_NAME__ = 'J-CriticalFactors';

@@ -49,6 +49,8 @@
  * default is enabled.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.3
+ *    Added <noDangerIndicator>/<showDangerIndicator> per-enemy overrides.
  * - 1.0.2
  *    Raised minimum J-ABS version requirement to 4.7.0.
  * - 1.0.1

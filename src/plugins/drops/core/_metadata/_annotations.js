@@ -209,6 +209,14 @@
  * The party will now gain +175% gold from defeated enemies.
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.0
+ *    Added a NaturalGrowth-integrated drop rate stat (key "dor") via
+ *    <dorBuffPlus>/<dorBuffRate>/<dorGrowthPlus>/<dorGrowthRate>, following
+ *    J-NaturalGrowth's own Buff/Growth tag pattern; requires J-NaturalGrowth.
+ *    makeDropItems/didFindLoot now accept the killing battler, whose
+ *    lucky/cursed on-chance rolls now contribute to the loot-discovery roll.
+ *    Documented that drop TYPE accepts long-form aliases (item/weapon/armor)
+ *    alongside the short forms (i/w/a).
  * - 2.1.2
  *    Consumed `RPGManager` updates.
  * - 2.1.1

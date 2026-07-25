@@ -6121,7 +6121,7 @@ class JABS_Battler
 
   /**
    * Gets the proper skill based on the skill id.
-   * Accommodates J-SkillExtend and/or J-Passives.
+   * Accommodates J-Extend and/or J-Passives.
    * @param {number} skillId The skill id to retrieve.
    * @returns {RPG_Skill|null}
    */

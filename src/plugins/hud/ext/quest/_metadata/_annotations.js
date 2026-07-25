@@ -31,6 +31,9 @@
  * This plugin has no notetags of its own.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Wrote real help docs; the help text was still boilerplate placeholder.
+ *    Removed leftover unused scaffold plugin params/command/regex.
  * - 1.0.0
  *    The initial release.
  * ============================================================================

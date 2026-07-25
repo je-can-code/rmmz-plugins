@@ -516,6 +516,16 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Added <forceCritProcs> to force every on-crit state application roll
+ *    to succeed, without inflating crit chance or touching luck elsewhere.
+ *    Added conditional crit chance bonuses vs a target's active state, by
+ *    id (<thisCritChanceIfState>/<critChanceIfState>) or by type
+ *    classifier (<thisCritChanceIfStateType>/<critChanceIfStateType>).
+ *    Added guaranteed crits vs a target's active state, by id
+ *    (<thisCritsAlwaysIfState>/<critAlwaysIfState>) or by type classifier
+ *    (<thisCritsAlwaysIfStateType>/<critAlwaysIfStateType>); bypasses cev
+ *    the same way <thisCritsAlways> does.
  * - 1.2.0
  *    Added plugin parameters for the base CDM/CTR defaults (previously a
  *    hard-coded, unreachable 50% baked into Game_BattlerBase).

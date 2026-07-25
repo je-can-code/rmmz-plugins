@@ -18,4 +18,13 @@
  * This plugin has no notetags of its own- it is purely a scene/window
  * redesign of the native equip menu.
  * ============================================================================
+ * CHANGELOG:
+ * - 1.1.0
+ *    Added a context action on the equip slot list to unequip the
+ *    currently-selected slot directly, without opening the item list.
+ *    Renamed slot-window handler symbols pagedown/pageup to
+ *    actor-next/actor-prev.
+ * - 1.0.0
+ *    Initial release.
+ * ============================================================================
  */

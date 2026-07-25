@@ -120,6 +120,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Region skill triggers now roll through the shared on-chance system
+ *    (lucky/cursed rolls, Accumulate Mode, Encore) instead of a flat
+ *    percent check, and can proc more than once per step.
  * - 1.0.0
  *    Initial release.
  * ============================================================================

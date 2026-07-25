@@ -197,6 +197,10 @@
  *
  * =============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Added time-gated event pages/choices: exact-value, range, composite
+ *    clock-time, and full-date-range tag families (Page and Choice variants)
+ *    for minute/hour/day/month/year/timeOfDay/seasonOfYear.
  * - 1.0.4
  *    Fixed reversed check that only let time pass while blocked (oops!).
  * - 1.0.3

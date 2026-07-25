@@ -9,7 +9,7 @@ globalThis.J ||= {};
 //region version checks
 (() =>
 {
-  const requiredBaseVersion = '2.1.2';
+  const requiredBaseVersion = '3.2.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (hasBaseRequirement === false)
   {

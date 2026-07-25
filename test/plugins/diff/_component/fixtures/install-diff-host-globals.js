@@ -23,7 +23,7 @@ export const DEFAULT_DIFF_PLUGIN_PARAMS = {
 export function setPluginContextToJBase(sandbox = globalThis)
 {
   sandbox.__PLUGIN_NAME__ = 'J-Base';
-  sandbox.__PLUGIN_VERSION__ = '3.0.0';
+  sandbox.__PLUGIN_VERSION__ = '3.2.0';
 }
 
 /**

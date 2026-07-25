@@ -73,6 +73,10 @@
  * Overstuffed chain. Tail-phase behaviour is unchanged (always rescues).
  *
  * ============================================================================
+ * CHANGELOG:
+ * - 1.0.0
+ *    Initial release.
+ * ============================================================================
  * PLUGIN PARAMETERS:
  * @param equipFoodText
  * @type string

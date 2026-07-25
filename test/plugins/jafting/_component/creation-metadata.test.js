@@ -56,7 +56,7 @@ async function bootJaftingCreate(craftingJson, { bootBase = true, pluginName = '
     globalThis.PluginVersion = PluginVersion;
 
     globalThis.__PLUGIN_NAME__ = 'J-Base';
-    globalThis.__PLUGIN_VERSION__ = '3.0.0';
+    globalThis.__PLUGIN_VERSION__ = '3.2.0';
     await import('../../../../src/plugins/_base/_metadata/initialization.js');
 
     globalThis.__PLUGIN_NAME__ = 'J-JAFTING';

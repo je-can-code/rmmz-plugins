@@ -38,4 +38,14 @@
  * the text or icon tag, then the text/icon will always be visible while the
  * event is visible on the map.
  * ============================================================================
+ * CHANGELOG:
+ * - 1.0.1
+ *    <proximityText>/<proximityIcon> now require an explicit DISTANCE; the
+ *    no-argument form (implicit distance 0) is no longer supported- use
+ *    <proximityText:0>/<proximityIcon:0> instead.
+ *    Removed a dead constructor-type check against Game_Event that was
+ *    already unreachable behind an equivalent isEvent() check.
+ * - 1.0.0
+ *    Initial release.
+ * ============================================================================
 */

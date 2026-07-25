@@ -94,6 +94,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.0.1
+ *    Ally idle-check now also treats channeling as busy (J-ABS Channel).
+ *    Fixed applyBattleMemories' inverted check; memories went unrecorded.
+ *    Fixed jumpAll returning early instead of skipping just one follower.
  * - 3.0.0
  *    Replaced exclusive AI modes with three orthogonal behavior axes:
  *    risk (careful/balanced/reckless), support (offense/balanced/support),

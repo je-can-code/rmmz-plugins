@@ -532,7 +532,7 @@ class JABS_SkillSlot
   /**
    * Gets the underlying data for this slot.
    * Supports retrieving combo skills via targetId.
-   * Supports skill extended data via J-SkillExtend.
+   * Supports skill extended data via J-Extend.
    * @param {Game_Actor|null} user The user to get extended skill data for.
    * @param {number|null} targetId The target id to get skill data for.
    * @returns {RPG_UsableItem|RPG_Skill|null}

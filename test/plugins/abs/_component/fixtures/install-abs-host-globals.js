@@ -23,7 +23,7 @@ const noop = function()
 export function setPluginContextToJBase(sandbox = globalThis)
 {
   sandbox.__PLUGIN_NAME__ = 'J-Base';
-  sandbox.__PLUGIN_VERSION__ = '3.0.0';
+  sandbox.__PLUGIN_VERSION__ = '3.2.0';
 }
 
 /**
@@ -36,7 +36,7 @@ export function setPluginContextToJBase(sandbox = globalThis)
 export function setPluginContextToJAbs(sandbox = globalThis)
 {
   sandbox.__PLUGIN_NAME__ = 'J-ABS';
-  sandbox.__PLUGIN_VERSION__ = '4.12.4';
+  sandbox.__PLUGIN_VERSION__ = '4.13.0';
 }
 
 /**

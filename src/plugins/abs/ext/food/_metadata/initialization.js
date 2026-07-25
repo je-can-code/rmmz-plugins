@@ -7,7 +7,7 @@ globalThis.J ||= {};
 (() =>
 {
   // check to ensure we have the minimum required version of the J-Base plugin.
-  const requiredBaseVersion = '3.0.0';
+  const requiredBaseVersion = '3.2.0';
   const hasBaseRequirement = J.BASE.Helpers.satisfies(J.BASE.Metadata.Version, requiredBaseVersion);
   if (!hasBaseRequirement)
   {
@@ -15,7 +15,7 @@ globalThis.J ||= {};
   }
 
   // check to ensure we have the minimum required version of the J-ABS plugin.
-  const requiredJabsVersion = '4.12.0';
+  const requiredJabsVersion = '4.13.0';
   const hasJabsRequirement = J.BASE.Helpers.satisfies(J.ABS.Metadata.version.version(), requiredJabsVersion);
   if (!hasJabsRequirement)
   {

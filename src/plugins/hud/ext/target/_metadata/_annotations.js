@@ -383,6 +383,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Target frame now renders the shared dual-row state affliction
+ *    presenter from J-HUD core, wired via a new patch file.
+ *    Fixed Game_Enemy#targetFrameIcon reading with the TargetFrameText
+ *    regex instead of TargetFrameIcon, so the icon tag never matched.
  * - 1.0.1
  *    Adjusted target frame defaults for better readability.
  *    Improved gauge alignment logic for consistent HP/MP positioning.

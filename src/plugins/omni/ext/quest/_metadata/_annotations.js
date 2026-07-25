@@ -138,6 +138,11 @@
  * This choice is only shown while objective 2 of that quest is completed.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Added <pageQuestCondition>/<choiceQuestCondition>, gating an event
+ *    page or a single "Show Choices" branch behind quest/objective state
+ *    (active quest, active objective, or a specific objective STATE:
+ *    inactive/active/completed/failed/missed).
  * - 1.0.3
  *    Updated to accommodate for mapping shortcut to view quest log.
  *    Added flag for showing external file load info.

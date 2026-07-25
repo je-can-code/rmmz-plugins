@@ -9,7 +9,7 @@ import { installJBaseHostGlobals } from '../../../_base/_component/fixtures/inst
 export function setPluginContextToJBase(sandbox = globalThis)
 {
   sandbox.__PLUGIN_NAME__ = 'J-Base';
-  sandbox.__PLUGIN_VERSION__ = '3.0.0';
+  sandbox.__PLUGIN_VERSION__ = '3.2.0';
 }
 
 /**

@@ -351,6 +351,14 @@
  *    's' via Game_Action.registerFormulaContext, so a skill authored with <shieldBreak:[ID]>
  *    can write its damage formula as e.g. "s * 0.30" to deal 30% of the broken shield's cap.
  *    's' is 0 for all non-shield-break actions; it never persists across frames.
+ *    Added SAR (Shield Amplification Rate) and SER (Shield Effectiveness
+ *    Rate) battler-wide stats via <sar:PERCENT_POINTS>/<ser:PERCENT_POINTS>,
+ *    summed from all note sources plus SDP panel investment. SAR scales
+ *    shields this battler grants; SER scales shields this battler receives.
+ *    <shield>/<shieldCap> formulas now expose 'a' (applier), 'b' (receiver),
+ *    and 's' (the shield state itself) — previously 'a' was the afflicted
+ *    target and 'b' was the state, so existing formulas using 'a'/'b' need
+ *    re-authoring against the new meaning.
  * - 1.0.2
  *    Raised minimum J-ABS version requirement to 4.7.0.
  * - 1.0.1

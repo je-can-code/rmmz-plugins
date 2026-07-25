@@ -73,6 +73,15 @@
  * This plugin has no notetags of its own- HUD control is entirely
  * plugin-command driven.
  * ============================================================================
+ * CHANGELOG:
+ * - 2.1.0
+ *    Added a dual-row (negative/positive) state affliction presenter to the
+ *    party HUD frame- icons, timers, and stack counts, sprite-cached per
+ *    battler and cleaned up on target switch.
+ *    Added an explicit J-ABS 4.0.0+ version requirement check at boot.
+ *    Fixed a self-referencing @base/@orderAfter J-HUD declaration on this
+ *    plugin's own header.
+ * ============================================================================
  * @command hideHud
  * @text Hide HUD
  * @desc Hides the HUD on the map.

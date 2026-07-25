@@ -168,6 +168,16 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Added <noJuice> and <juiceMotion:none> to suppress caster motion outright.
+ *    Added flip/flip-reverse caster-body full-rotation spin motions.
+ *    Added arc-oscillate weapon motion (alternating-direction arc sweeps).
+ *    Renamed <juiceSpinCount> to <juiceRepeatCount>, generalized to every motion.
+ *    Added <juiceDuration:N> to override the per-cycle swing frame count.
+ *    Support/utility skills (damage type None) no longer trigger a target
+ *    hit-reaction squish that could cancel their own caster-side motion.
+ *    Removed the juiceConfigValidation module; config shape is now
+ *    guaranteed by the jmz-data-editor tool instead of validated at runtime.
  * - 1.0.1
  *    Fixed crash when the full menu (Scene_Menu) was opened while a juice motion was in flight.
  *    JuiceMotionManager.#effects is a static array that outlives any single scene instance;

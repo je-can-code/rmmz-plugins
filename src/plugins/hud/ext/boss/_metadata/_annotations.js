@@ -25,6 +25,11 @@
  * the player's current target, not a specially-tagged "boss".
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Fixed the HP-percent threshold check using a chained comparison
+ *    (lowerRange <= hpPercent <= upperRange), which does not perform a
+ *    range check in JS and was nearly always true regardless of the
+ *    boss's actual HP.
  * - 1.0.0
  *    Initial release.
  * ============================================================================

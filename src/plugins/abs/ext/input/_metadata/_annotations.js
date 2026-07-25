@@ -44,6 +44,12 @@
  * ============================================================================
  * CHANGELOG
  * ----------------------------------------------------------------------------
+ * - 2.3.0
+ *    Added UsableItem as a remappable logical input (R2 by default),
+ *    wiring J-ABS core's new usable-item equip slot to its own trigger.
+ *    Centralized raw Input symbol strings into JabsInputSymbols.
+ *    Removed now-redundant defensive guards now that input scaffolding
+ *    initialization guarantees the mappings/bindings shape always exists.
  * - 2.2.2
  *    Raised minimum J-ABS version requirement to 4.7.0.
  * - 2.2.1

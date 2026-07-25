@@ -171,6 +171,14 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Fixed <apTyped:[AMOUNT, DOMAIN, ID_OR_NAME]> never matching — the
+ *    regex required a 4th leading numeric field that the documented
+ *    3-argument format never had.
+ *    Fixed AptitudeTeachable.js never being imported in entry.js, so
+ *    setApTypeKey()/apTypeKey() were never actually attached.
+ *    Renamed ApTypeKey.DomainType.WeaponType/SkillType to Weapon/Skill.
+ *    Replaced the leftover boilerplate plugin description.
  * - 1.0.0
  *    The initial release.
  * ============================================================================

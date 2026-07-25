@@ -55,6 +55,11 @@
  * This is not a highly tested feature of JABS and may not work as intended.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.5
+ *    startGuarding no longer takes a skillSlot param, matching J-ABS core;
+ *    the guard pose now resolves via getGuardSkillId() instead.
+ *    Moved gameAssetExists from its own file into initialization.js.
+ *    Removed leftover unused scaffold plugin params.
  * - 1.0.4
  *    `JABS_Battler` pose hooks aligned with J-ABS 4.10.0 dodge/guard battler updates.
  * - 1.0.3

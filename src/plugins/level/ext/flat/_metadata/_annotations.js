@@ -214,6 +214,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Flat experience gain now consults the shared reward-policy gate
+ *    (canGainReward), so inanimate enemies grant none.
+ *    Reads $gameSystem.isLevelScalingEnabled() instead of the static
+ *    J.LEVEL.Metadata.enabled flag.
  * - 1.0.0
  *    The initial release.
  * ============================================================================

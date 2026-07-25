@@ -88,6 +88,14 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.7
+ *    Overrode JABS_Battler#canDirectionalDodgeStepPass to gate directional
+ *    dodge steps through PIXEL's own subcell passability
+ *    (canPassDiagonalByDirection/canPassStraight) instead of the base
+ *    tile-grid check.
+ *    Added Game_CharacterBase#hasCustomPixelHitbox/getPixelAbsBattlerAabbModel
+ *    default stubs (false/null), replacing duck-typing checks against
+ *    optional methods with a real base contract.
  * - 1.0.6
  *    Added enemy `hitboxReveal` support for proximity-based hitbox outlines in `J-ABS-Pixelistics`.
  *    Added an always-active outline option and a default reveal-range plugin parameter.

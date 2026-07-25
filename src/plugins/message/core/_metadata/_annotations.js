@@ -140,6 +140,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Added \param[PARAM_KEY] text code, pulling name/icon/color from the
+ *    shared J-Base ParameterRegistry catalog. An unregistered key renders as
+ *    a loud red "!!! UNKNOWN PARAM !!!" instead of failing silently.
  * - 1.2.1
  *    Added helper for applying text color to fragments.
  * - 1.2.0

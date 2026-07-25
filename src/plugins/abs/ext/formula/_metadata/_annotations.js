@@ -182,9 +182,14 @@
  *   bracket-array family used by every other multi-value tag; the new single
  *   bracket form reads through getArraysFromNotesByRegex like the rest. No
  *   existing Chef Adventure data used these tags, so no migration was needed.
+ *   Replaced eval() with new Function() in evaluateFormula, matching J-Base's
+ *   removal of eval() from every damage/formula path.
+ *   Dropped the unused reduced/HP-mitigation-display param from
+ *   generateFormulaActionLogIfAvailable; guarded recipient.result() against
+ *   a null recipient.
  * - 1.0.4
  *   Healing path now also applies HAR (healing rate) on the caster, alongside
- *   the existing REC (recovery) on the recipient. Requires J-Base 3.5.0+.
+ *   the existing REC (recovery) on the recipient. Requires J-Base 3.2.0+.
  * - 1.0.2
  *   Raised minimum J-ABS version requirement to 4.7.0.
  * - 1.0.1
