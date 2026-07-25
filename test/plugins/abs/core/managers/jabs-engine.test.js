@@ -2159,7 +2159,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.executeMapActions(caster, [ buildAction() ], 1, 2);
 
-      expect(caster.executeGuard).toHaveBeenCalledWith(false, 'offhand');
+      expect(caster.executeGuard).toHaveBeenCalledWith(false);
     });
 
     it('does not drop guard when the strike skill is itself a guard skill', async () =>
@@ -2786,16 +2786,16 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
   describe('applyCooldownCounters', () =>
   {
-    it('delegates to applyPlayerCooldowns', () =>
+    it('delegates to applyCasterCooldowns', () =>
     {
       const engine = new JABS_Engine();
-      engine.applyPlayerCooldowns = vi.fn();
+      engine.applyCasterCooldowns = vi.fn();
       engine.applyCooldownCounters('caster', 'action');
-      expect(engine.applyPlayerCooldowns).toHaveBeenCalledWith('caster', 'action');
+      expect(engine.applyCasterCooldowns).toHaveBeenCalledWith('caster', 'action');
     });
   });
 
-  describe('applyPlayerCooldowns', () =>
+  describe('applyCasterCooldowns', () =>
   {
     it('applies the skill\'s own effective cooldown value', () =>
     {
@@ -2803,7 +2803,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.applyCooldownValueForSkill = vi.fn();
       const action = { getBaseSkill: () => ({ id: 5 }), getCooldown: () => 42 };
 
-      engine.applyPlayerCooldowns('caster', action);
+      engine.applyCasterCooldowns('caster', action);
 
       expect(engine.applyCooldownValueForSkill).toHaveBeenCalledWith('caster', action, 42);
     });
@@ -2815,7 +2815,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       const caster = { setCooldownCounter: vi.fn() };
       const action = { getBaseSkill: () => ({ id: 5 }), getCooldown: () => 42 };
 
-      engine.applyPlayerCooldowns(caster, action);
+      engine.applyCasterCooldowns(caster, action);
 
       expect(caster.setCooldownCounter).not.toHaveBeenCalled();
     });
@@ -2831,7 +2831,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       const caster = { setCooldownCounter: vi.fn() };
       const action = { getBaseSkill: () => ({ id: 5 }), getCooldown: () => 42 };
 
-      engine.applyPlayerCooldowns(caster, action);
+      engine.applyCasterCooldowns(caster, action);
 
       expect(caster.setCooldownCounter).toHaveBeenCalledWith('gcd', 80);
       JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown = () => false;
@@ -5240,7 +5240,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.doCounterParry = vi.fn();
 
       expect(engine.handleCounterParry('battler')).toBe(true);
-      expect(engine.doCounterParry).toHaveBeenCalledWith('battler', JABS_Button.Offhand);
+      expect(engine.doCounterParry).toHaveBeenCalledWith('battler');
     });
   });
 
@@ -5283,7 +5283,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       const battler = { guarding: () => true, counterGuard: () => [ 1 ] };
 
       expect(engine.handleCounterGuard(battler, false)).toBe(true);
-      expect(engine.doCounterGuard).toHaveBeenCalledWith(battler, JABS_Button.Offhand);
+      expect(engine.doCounterGuard).toHaveBeenCalledWith(battler);
     });
   });
 
@@ -5344,7 +5344,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(engine.doAutoCounter).not.toHaveBeenCalled();
     });
 
-    it('auto-counters with the offhand slot when the roll succeeds', () =>
+    it('auto-counters when the roll succeeds', () =>
     {
       const engine = new JABS_Engine();
       engine.canAutoCounter = vi.fn(() => true);
@@ -5355,22 +5355,22 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.handleAutoCounter(battler);
 
-      expect(engine.doAutoCounter).toHaveBeenCalledWith(battler, JABS_Button.Offhand);
+      expect(engine.doAutoCounter).toHaveBeenCalledWith(battler);
     });
   });
 
   describe('doAutoCounter', () =>
   {
-    it('performs both counterparry and counterguard with the given slot', () =>
+    it('performs both counterparry and counterguard for the battler', () =>
     {
       const engine = new JABS_Engine();
       engine.doCounterParry = vi.fn();
       engine.doCounterGuard = vi.fn();
 
-      engine.doAutoCounter('battler', 'offhand-slot');
+      engine.doAutoCounter('battler');
 
-      expect(engine.doCounterParry).toHaveBeenCalledWith('battler', 'offhand-slot');
-      expect(engine.doCounterGuard).toHaveBeenCalledWith('battler', 'offhand-slot');
+      expect(engine.doCounterParry).toHaveBeenCalledWith('battler');
+      expect(engine.doCounterGuard).toHaveBeenCalledWith('battler');
     });
   });
 

@@ -26,7 +26,7 @@ class MoveStateRemovalManager
     {
       if (!state) continue;
 
-      const rules = state.removeStateOnMoveRules || [];
+      const rules = state.removeStateOnMoveRules;
 
       for (const tuple of rules)
       {
@@ -54,7 +54,7 @@ class MoveStateRemovalManager
    */
   static #resetStandCooldown(battler, sourceState, payloadStateId)
   {
-    const tuples = sourceState.autoApplyStateRules || [];
+    const tuples = sourceState.autoApplyStateRules;
 
     for (let tupleIndex = 0; tupleIndex < tuples.length; tupleIndex++)
     {

@@ -10,6 +10,8 @@ export const DEFAULT_SKS_PLUGIN_PARAMS = {
   'equippable-skill-type-ids': '[]',
   'default-max-slots': '4',
   'default-max-slot-points': '4',
+  'enable-exclusive-mode': 'false',
+  'slots-only': 'false',
 };
 
 /**

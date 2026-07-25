@@ -148,18 +148,12 @@ class SkillHistoryBonusDisplay
     // it is deliberately not routed through getArraysFromNotesByRegex's JSON-ish parsing.
     const rawTags = RPGManager.getStringsFromNoteByRegex(dataRow, J.ABS.RegExp.SkillHistoryBonus);
 
-    const lines = [];
-
-    rawTags.forEach(rawTag =>
-    {
-      const parsed = SkillHistoryBonusDisplay.parseGeneralBracket(rawTag);
-
-      if (parsed === null) return;
-
-      lines.push(SkillHistoryBonusDisplay.formatGeneralProse(parsed, window));
-    });
-
-    return lines;
+    // the capturing group in J.ABS.RegExp.SkillHistoryBonus only matches brackets already shaped
+    // as [\d+, \d+, \d+, [a-z_]+], so parseGeneralBracket can never return null for a rawTag
+    // sourced from here-the null-check lives on parseGeneralBracket itself for its other callers.
+    return rawTags.map(rawTag => SkillHistoryBonusDisplay.formatGeneralProse(
+      SkillHistoryBonusDisplay.parseGeneralBracket(rawTag),
+      window));
   }
 }
 

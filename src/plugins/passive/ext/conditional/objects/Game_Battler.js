@@ -434,7 +434,7 @@ Game_Battler.prototype.getPassiveStackContributionFromSource = function(baseItem
 Game_Battler.prototype.evaluatePassiveGateRulesForSource = function(baseItem, stateId)
 {
   // source rules gate every passive on this row; shape is [kind, ...params].
-  const sourceRules = baseItem.passiveSourceRules || [];
+  const sourceRules = baseItem.passiveSourceRules;
   const passesSourceRules = sourceRules.every(([kind, ...params]) =>
     PassiveGateEvaluator.evaluate(this, kind, ...params));
 
@@ -442,7 +442,7 @@ Game_Battler.prototype.evaluatePassiveGateRulesForSource = function(baseItem, st
   if (passesSourceRules === false) return false;
 
   // state rules target a specific passive id; shape is [stateId, kind, ...params].
-  const stateRules = (baseItem.passiveStateRules || [])
+  const stateRules = baseItem.passiveStateRules
     .filter(([ruleStateId]) => Number(ruleStateId) === stateId);
   const passesStateRules = stateRules.every(([, kind, ...params]) =>
     PassiveGateEvaluator.evaluate(this, kind, ...params));
@@ -459,7 +459,7 @@ Game_Battler.prototype.evaluatePassiveGateRulesForSource = function(baseItem, st
  */
 Game_Battler.prototype.findPassiveStateCountTuple = function(baseItem, stateId)
 {
-  const matches = (baseItem.passiveStateCounts || [])
+  const matches = baseItem.passiveStateCounts
     .filter(tuple => Number(tuple[0]) === stateId);
 
   if (matches.length === 0) return null;
@@ -488,11 +488,11 @@ Game_Battler.prototype.buildPassiveCollectionFingerprint = function()
   sources.forEach(source =>
   {
     // build the unique id list for this source; concat avoids mutating the cached getter arrays.
-    let uniqueSourceIds = source.uniquePassiveStateIds || [];
+    let uniqueSourceIds = source.uniquePassiveStateIds;
 
     if (source.isEquipItem())
     {
-      uniqueSourceIds = uniqueSourceIds.concat(source.uniqueEquippedPassiveStateIds || []);
+      uniqueSourceIds = uniqueSourceIds.concat(source.uniqueEquippedPassiveStateIds);
     }
 
     uniqueSourceIds.forEach(id =>
@@ -504,11 +504,11 @@ Game_Battler.prototype.buildPassiveCollectionFingerprint = function()
     });
 
     // build the stackable id list for this source in the same non-mutating way.
-    let stackableSourceIds = source.passiveStateIds || [];
+    let stackableSourceIds = source.passiveStateIds;
 
     if (source.isEquipItem())
     {
-      stackableSourceIds = stackableSourceIds.concat(source.equippedPassiveStateIds || []);
+      stackableSourceIds = stackableSourceIds.concat(source.equippedPassiveStateIds);
     }
 
     stackableSourceIds.forEach(id =>

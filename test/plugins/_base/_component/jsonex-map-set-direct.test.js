@@ -165,5 +165,40 @@ describe('J-Base JsonEx Map/Set encode/decode extension (real engine direct impo
 
     expect(() => globalThis.JsonEx.makeDeepCopy(deepest)).toThrow('Object too deep');
   });
+
+  it('leaves a live Map field untouched after JsonEx.stringify(), instead of replacing it with its own encoded tag-shape', async () =>
+  {
+    // this is the actual production bug: DataManager.makeSaveContents() hands JsonEx.stringify() a
+    // reference to the live $gameActors graph (not a copy), so if _encode mutated that graph in place
+    // the way the stock algorithm mutates plain objects/arrays, every live Map/Set anywhere in it- e.g.
+    // Game_Actor's SKS slotMap- would get permanently swapped for its encoded {'@': 'Map', entries} shape
+    // the instant anything called stringify, whether or not a save/load round trip ever actually finished.
+    const { default: SerializableRegistry } = await import('../../../../src/plugins/_base/core/SerializableRegistry.js');
+
+    class SlotHolder
+    {
+      slotMap = new Map();
+    }
+
+    SerializableRegistry.register(SlotHolder);
+
+    const holder = new SlotHolder();
+    holder.slotMap.set(0, 101);
+
+    globalThis.JsonEx.stringify(holder);
+
+    expect(holder.slotMap).toBeInstanceOf(Map);
+    expect(holder.slotMap.get(0)).toBe(101);
+  });
+
+  it('leaves a live Map untouched after JsonEx.stringify(), even when it is not nested inside a class instance', () =>
+  {
+    const original = { label: 'bag', contents: new Map([ [ 7, 'seven' ] ]) };
+
+    globalThis.JsonEx.stringify(original);
+
+    expect(original.contents).toBeInstanceOf(Map);
+    expect(original.contents.get(7)).toBe('seven');
+  });
 });
 //endregion plugins/_base/_component/jsonex-map-set-direct.test.js

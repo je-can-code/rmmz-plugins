@@ -268,16 +268,30 @@ Game_Actor.prototype.getAptitudeLearning = function(key, skillId)
 };
 
 /**
- * Gets all aptitude sources for this actor.
+ * Gets all aptitude sources for this actor, in a curated display order:
+ * class, then the actor itself, then equips, then states, then anything else.
  * This is typed as {@link RPG_Base}, but can yield many of its subclasses.
- * @returns {(RPG_Actor|RPG_Class|RPG_EquipItem|RPG_Weapon|RPG_Armor|RPG_Skill|RPG_State)[]}
+ * @returns {(RPG_Actor|RPG_Class|RPG_EquipItem|RPG_Weapon|RPG_Armor|RPG_State)[]}
  */
 Game_Actor.prototype.getAptitudeSources = function()
 {
-  // get literally everything.
-  return this.getAllNotes()
-    // exclude skills since we are learning skills.
+  // get literally everything, excluding skills since we are learning skills, not sourcing from them.
+  const sources = this.getAllNotes()
     .filter(obj => obj.isSkill() === false);
+
+  // bucket the remaining sources by kind so they can be rendered in a stable, curated order.
+  const classes = sources.filter(obj => obj.isClass());
+  const actors = sources.filter(obj => obj.isActor());
+  const equips = sources.filter(obj => obj.isEquipItem());
+  const states = sources.filter(obj => obj.isState());
+
+  // anything that doesn't match one of the curated buckets falls through to the end,
+  // preserving its original relative order.
+  const known = new Set([ ...classes, ...actors, ...equips, ...states ]);
+  const others = sources.filter(obj => known.has(obj) === false);
+
+  // return the sources in the curated priority order: class, actor, equips, states, others.
+  return [ ...classes, ...actors, ...equips, ...states, ...others ];
 };
 
 /**

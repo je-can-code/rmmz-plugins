@@ -68,6 +68,33 @@
  * This skill is always active and will never appear in the SKS equip scene.
  *
  * ============================================================================
+ * UNSLOTTED SKILLS
+ * Want a specific actor/class (or any other note source) to treat a normally-
+ * slottable skill as perpetually active for them specifically, without making
+ * that skill unslotted for everyone else? By applying the appropriate tag,
+ * you can grant a per-battler exemption from the slot requirement- the skill
+ * still costs a slot for any other actor who has to learn-then-equip it
+ * through the normal pipeline.
+ *
+ * TAG USAGE:
+ * - Actors
+ * - Classes
+ * - Skills
+ * - Weapons
+ * - Armor
+ * - States
+ *
+ * TAG FORMAT:
+ *  <unslottedSkills:[SKILL_ID, SKILL_ID, ...]>
+ *    Where each SKILL_ID is exempted from the slot requirement for this
+ *    battler, regardless of that skill's own <unslotted> tag or type.
+ *
+ * TAG EXAMPLES:
+ *  <unslottedSkills:[901,902]>
+ * This actor/class always has skills 901 and 902 active, without spending a
+ * slot on either- e.g. a class with native weapon access to two weapon types.
+ *
+ * ============================================================================
  * SLOT COST MODIFIER
  * Want to adjust the slot cost of skills based on what an actor has equipped
  * or what states they are under? By applying the appropriate tag across the
@@ -148,7 +175,34 @@
  * This source reduces the actor's slot point budget by 2 while active.
  *
  * ============================================================================
+ * EXCLUSIVE MODE
+ * By default, equipping a skill is gated by both slot count AND slot points
+ * together (tandem mode) - a skill must fit within both the remaining slot
+ * count and the remaining point budget to be equipped. If you'd rather only
+ * one of those two capacities matter, turn on Exclusive Mode and choose which
+ * one governs equipping via the Slots Only config.
+ *
+ * When Exclusive Mode is ON and Slots Only is ON, only slot count matters -
+ * slot points are never checked, so an actor can equip anything as long as a
+ * slot is physically available (a la Digital Devil Saga's skill system).
+ *
+ * When Exclusive Mode is ON and Slots Only is OFF, only slot points matter -
+ * slot count is never checked, so an actor can equip anything as long as the
+ * point budget allows it, regardless of how many slots that occupies (a la
+ * Final Fantasy IX's passive ability system).
+ *
+ * When Exclusive Mode is OFF, Slots Only has no effect; tandem mode applies.
+ *
+ * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Added per-battler unslotted-skill exemptions via <unslottedSkills:[...]>.
+ *    Stale slot entries are now automatically cleared when the actor no
+ *    longer knows the skill occupying them.
+ * - 1.2.0
+ *    Added Exclusive Mode, letting slot count or slot points alone gate
+ *    equipping instead of requiring both. Enforced slot count as a real
+ *    limit on equipping rather than a display-only limit in the equip scene.
  * - 1.1.0
  *    Promoted maxSlots and maxSlotPoints to independent, notetag-driven stats.
  *    Removed the mod-slot-points-party plugin command.
@@ -186,5 +240,23 @@
  * @text Default Max Slot Points
  * @desc The baseline slot point budget an actor has when no <baseSlotPoints:...> tag is found on the actor or class.
  * @default 4
+ *
+ * @param enable-exclusive-mode
+ * @parent parentConfig
+ * @type boolean
+ * @text Enable Exclusive Mode
+ * @desc When ON, only slot count OR slot points gate equipping (see Slots Only), never both together.
+ * @on Exclusive
+ * @off Tandem
+ * @default false
+ *
+ * @param slots-only
+ * @parent parentConfig
+ * @type boolean
+ * @text Slots Only (Exclusive Mode)
+ * @desc Only used when Exclusive Mode is ON. ON means only slot count is checked (points ignored); OFF means only slot points are checked (count ignored).
+ * @on Slots Only
+ * @off Points Only
+ * @default false
  */
 //endregion annotations

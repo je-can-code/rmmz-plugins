@@ -250,6 +250,23 @@ describe('J-ABS Game_Enemy (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('getGuardSkillId()', () =>
+  {
+    it('returns 0 when the enemy declares no guard skill in their own notes', () =>
+    {
+      const enemy = buildEnemy({ databaseData: () => buildReferenceData({ jabsGuardSkillId: null }) });
+
+      expect(enemy.getGuardSkillId()).toEqual(0);
+    });
+
+    it('returns the enemy-declared guard skill id', () =>
+    {
+      const enemy = buildEnemy({ databaseData: () => buildReferenceData({ jabsGuardSkillId: 211 }) });
+
+      expect(enemy.getGuardSkillId()).toEqual(211);
+    });
+  });
+
   describe('prepareTime()', () =>
   {
     it('prefers the ATTACK_SPEED trait when present', () =>

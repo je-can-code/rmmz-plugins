@@ -1,6 +1,7 @@
 import './_models/ApTypeKey.js';
 import './_models/ApTypeGrant.js';
 import './_models/ApTypeDisplayInfo.js';
+import './_models/AptitudeTeachable.js';
 
 import './_metadata/initialization.js';
 

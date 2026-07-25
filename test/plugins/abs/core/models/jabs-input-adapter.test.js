@@ -50,7 +50,7 @@ describe('JABS_InputAdapter (direct src import)', () =>
       setCastCountdown: vi.fn(),
       resetComboData: vi.fn(),
       isCastingOrChanneling: () => false,
-      isGuardSkillByKey: () => false,
+      isGuardSkillEquipped: () => false,
       getBattler: () => ({
         getEquippedSkillId: () => 7,
         getSkillSlot: () => ({ isEmpty: () => false }),
@@ -151,13 +151,6 @@ describe('JABS_InputAdapter (direct src import)', () =>
 
   describe('performOffhandAction()', () =>
   {
-    it('does nothing when the offhand slot is actually a guard skill', () =>
-    {
-      const battler = buildJabsBattler({ isGuardSkillByKey: () => true });
-      JABS_InputAdapter.performOffhandAction(battler);
-      expect(battler.setDecidedAction).not.toHaveBeenCalled();
-    });
-
     it('does nothing when there is a pedestrian blocking the way', () =>
     {
       globalThis.$gameMap.hasInteractableEventInFront = () => true;
@@ -352,7 +345,7 @@ describe('JABS_InputAdapter (direct src import)', () =>
     {
       const battler = buildJabsBattler({ guarding: () => true });
       JABS_InputAdapter.performSprint(true, battler);
-      expect(battler.executeGuard).toHaveBeenCalledWith(false, JABS_Button.Offhand);
+      expect(battler.executeGuard).toHaveBeenCalledWith(false);
     });
 
     it('does not touch guard when not currently guarding', () =>
@@ -432,9 +425,9 @@ describe('JABS_InputAdapter (direct src import)', () =>
 
   describe('performGuard()', () =>
   {
-    it('does nothing when the offhand slot is not a guard skill', () =>
+    it('does nothing when there is no guard skill equipped', () =>
     {
-      const battler = buildJabsBattler({ isGuardSkillByKey: () => false });
+      const battler = buildJabsBattler({ isGuardSkillEquipped: () => false });
       JABS_InputAdapter.performGuard(true, battler);
       expect(battler.executeGuard).not.toHaveBeenCalled();
     });
@@ -442,7 +435,7 @@ describe('JABS_InputAdapter (direct src import)', () =>
     it('cancels dashing when starting to guard', () =>
     {
       const character = { _dashing: true };
-      const battler = buildJabsBattler({ isGuardSkillByKey: () => true, getCharacter: () => character });
+      const battler = buildJabsBattler({ isGuardSkillEquipped: () => true, getCharacter: () => character });
       JABS_InputAdapter.performGuard(true, battler);
       expect(character._dashing).toBe(false);
     });
@@ -450,16 +443,16 @@ describe('JABS_InputAdapter (direct src import)', () =>
     it('does not touch dashing when releasing guard', () =>
     {
       const character = { _dashing: true };
-      const battler = buildJabsBattler({ isGuardSkillByKey: () => true, getCharacter: () => character });
+      const battler = buildJabsBattler({ isGuardSkillEquipped: () => true, getCharacter: () => character });
       JABS_InputAdapter.performGuard(false, battler);
       expect(character._dashing).toBe(true);
     });
 
-    it('executes the guard skill in the offhand slot', () =>
+    it('executes the guard skill', () =>
     {
-      const battler = buildJabsBattler({ isGuardSkillByKey: () => true });
+      const battler = buildJabsBattler({ isGuardSkillEquipped: () => true });
       JABS_InputAdapter.performGuard(true, battler);
-      expect(battler.executeGuard).toHaveBeenCalledWith(true, JABS_Button.Offhand);
+      expect(battler.executeGuard).toHaveBeenCalledWith(true);
     });
   });
 

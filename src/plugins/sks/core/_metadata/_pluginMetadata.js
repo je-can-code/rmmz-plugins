@@ -62,6 +62,21 @@ class JSkillSlots_PluginMetadata
      * @type {number}
      */
     this.defaultSkillSlotCost = 1; // TODO: get from plugin parameters.
+
+    /**
+     * Whether or not exclusive mode is enabled. When enabled, only one of slot count or
+     * slot points gates equipping (per {@link #slotsOnly}), rather than both together.
+     * @type {boolean}
+     */
+    this.enableExclusiveMode = this.parsedPluginParameters['enable-exclusive-mode'] === 'true';
+
+    /**
+     * Which capacity governs equipping while {@link #enableExclusiveMode} is on.
+     * True means only slot count matters; false means only slot points matter.
+     * Has no effect when {@link #enableExclusiveMode} is false.
+     * @type {boolean}
+     */
+    this.slotsOnly = this.parsedPluginParameters['slots-only'] === 'true';
   }
 }
 

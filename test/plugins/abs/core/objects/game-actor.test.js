@@ -85,6 +85,16 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
         {
           return skill.offhandEligible === true;
         }
+
+        static isSkillVisibleInCombatMenu(skill)
+        {
+          return skill.combatEligible === true;
+        }
+
+        static isSkillVisibleInDodgeMenu(skill)
+        {
+          return skill.dodgeEligible === true;
+        }
       },
     }));
     getBattlerByUuidMock = vi.fn();
@@ -141,6 +151,7 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
       hasSkill: () => true,
       isLeader: () => false,
       isEquipTypeSealed: () => false,
+      isDualWield: () => false,
       // non-empty by default so `.some()` gates actually invoke the mocked RPGManager predicate
       // instead of short-circuiting on an empty array.
       getAllNotes: () => [ {} ],
@@ -358,6 +369,17 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
       expect(actor.getOffhandSkill()).toEqual(9);
     });
 
+    it('resolves through when two-handed but also dual-wielding a second weapon', () =>
+    {
+      const actor = buildActor({
+        isEquipTypeSealed: () => true,
+        isDualWield: () => true,
+        equips: () => [ {}, { jabsSkillId: 12 } ],
+      });
+
+      expect(actor.getOffhandSkill()).toEqual(12);
+    });
+
     it('returns 0 when there is no base offhand skill to resolve', () =>
     {
       const actor = buildActor({ equips: () => [ null, null ] });
@@ -518,6 +540,30 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('getGuardSkillId()', () =>
+  {
+    it('returns 0 when there is no offhand equipped', () =>
+    {
+      const actor = buildActor({ equips: () => [ null, null ] });
+
+      expect(actor.getGuardSkillId()).toEqual(0);
+    });
+
+    it('returns 0 when the offhand exists but declares no guard skill', () =>
+    {
+      const actor = buildActor({ equips: () => [ null, { jabsGuardSkillId: null } ] });
+
+      expect(actor.getGuardSkillId()).toEqual(0);
+    });
+
+    it('returns the offhand-declared guard skill id', () =>
+    {
+      const actor = buildActor({ equips: () => [ null, { jabsGuardSkillId: 221 } ] });
+
+      expect(actor.getGuardSkillId()).toEqual(221);
+    });
+  });
+
   describe('getPinnedOffhandSkillId()', () =>
   {
     it('returns 0 when there is no skill slot manager', () =>
@@ -606,6 +652,30 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
       });
 
       expect(actor.buildOffhandAssignableSkillPool()).toEqual([ { id: 1 } ]);
+    });
+  });
+
+  describe('buildCombatSkillCandidatePool()', () =>
+  {
+    it('filters learned skills down to those visible in the combat menu', () =>
+    {
+      const actor = buildActor({
+        skills: () => [ { id: 1, combatEligible: true }, { id: 2, combatEligible: false } ],
+      });
+
+      expect(actor.buildCombatSkillCandidatePool()).toEqual([ { id: 1, combatEligible: true } ]);
+    });
+  });
+
+  describe('buildDodgeSkillCandidatePool()', () =>
+  {
+    it('filters learned skills down to those visible in the dodge menu', () =>
+    {
+      const actor = buildActor({
+        skills: () => [ { id: 1, dodgeEligible: false }, { id: 2, dodgeEligible: true } ],
+      });
+
+      expect(actor.buildDodgeSkillCandidatePool()).toEqual([ { id: 2, dodgeEligible: true } ]);
     });
   });
 

@@ -218,7 +218,9 @@ Game_Actor.prototype.updateOffhandSkill = function()
  *
  * Resolution precedence (highest first):
  *  1. Native offhand equip-seal (returns 0) unless the mainhand also defines an
- *     {@link RPG_EquipItem#jabsOffhandSkillId offhandSkillId} that bypasses it.
+ *     {@link RPG_EquipItem#jabsOffhandSkillId offhandSkillId} that bypasses it, or the
+ *     actor is also dual-wielding (a second weapon has taken over the physical slot the
+ *     seal was meant to empty, so there is nothing left for the seal to enforce).
  *  2. Player pin via the JABS quick menu, when the pinned skill is still assignable.
  *  3. The mainhand's provided offhand skill via {@code <offhandSkillId:N>}.
  *  4. The equipped offhand item's {@link RPG_EquipItem#jabsSkillId jabsSkillId}.
@@ -231,9 +233,11 @@ Game_Actor.prototype.updateOffhandSkill = function()
 Game_Actor.prototype.getOffhandSkill = function()
 {
   // an offhand equip-seal trait anywhere on the battler seals the slot unless the
-  // same weapon also declares its own offhand skill. this preserves spear-like
-  // weapons that intentionally define a specific offhand action.
-  if (this.isTwoHanded() && !this.mainhandDeclaresOffhandSkillId())
+  // same weapon also declares its own offhand skill (spear-like weapons), or dual-wield
+  // is also active. vanilla RMMZ's own dual-wield handling already reclassifies the
+  // offhand equip slot into a second weapon slot before this ever runs, so the seal has
+  // no physical slot left to enforce- a "deathgrip both weapons" build keeps both combos.
+  if (this.isTwoHanded() && !this.mainhandDeclaresOffhandSkillId() && !this.isDualWield())
   {
     return 0;
   }
@@ -417,6 +421,25 @@ Game_Actor.prototype.getOffhandEquippedSkillId = function()
 };
 
 /**
+ * Gets the guard skill declared by the equipped offhand item, if any.
+ * This is independent of {@link #getOffhandEquippedSkillId}- an offhand item with no
+ * guard skill declared grants no guarding capability at all, regardless of whatever
+ * attack skill it or the mainhand weapon provides.
+ * @returns {number}
+ */
+Game_Actor.prototype.getGuardSkillId = function()
+{
+  // grab only the offhand equip.
+  const [ , offhand ] = this.equips();
+
+  // no offhand means there is no guard skill to resolve.
+  if (!offhand) return 0;
+
+  // return the offhand's declared guard skill id, if any.
+  return offhand.jabsGuardSkillId ?? 0;
+};
+
+/**
  * Gets the skill id pinned to the offhand slot by the player, or 0 if no pin is set.
  * @returns {number}
  */
@@ -555,6 +578,28 @@ Game_Actor.prototype.buildOffhandAssignableSkillPool = function()
 
   // return the translated pool.
   return skillPool;
+};
+
+/**
+ * Builds the list of skills available for player pinning into the combat slot.
+ * @returns {RPG_Skill[]}
+ */
+Game_Actor.prototype.buildCombatSkillCandidatePool = function()
+{
+  // grab all of this actor's learned skills that are visible in the combat quick menu.
+  return this.skills()
+    .filter(JABS_Battler.isSkillVisibleInCombatMenu);
+};
+
+/**
+ * Builds the list of skills available for player pinning into the dodge slot.
+ * @returns {RPG_Skill[]}
+ */
+Game_Actor.prototype.buildDodgeSkillCandidatePool = function()
+{
+  // grab all of this actor's learned skills that are visible in the dodge quick menu.
+  return this.skills()
+    .filter(JABS_Battler.isSkillVisibleInDodgeMenu);
 };
 
 /**

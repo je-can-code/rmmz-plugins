@@ -141,6 +141,12 @@ class JABS_SkillSlotManager
    */
   setupEnemySlots(enemy)
   {
+    // the GCD slot has no skill, so it would never pass isUsable() and enter the normal update loop;
+    // initialize its cooldown as ready so it doesn't permanently block before the first stamp.
+    const gcdSlot = new JABS_SkillSlot(J.ABS.Globals.GlobalCooldownKey, 0);
+    gcdSlot.getCooldown().enableBase();
+    this._slots.push(gcdSlot);
+
     // grab the database data.
     const battlerData = enemy.databaseData();
 

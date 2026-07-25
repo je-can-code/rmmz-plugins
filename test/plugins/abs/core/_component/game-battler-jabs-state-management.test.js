@@ -229,6 +229,111 @@ describe('J-ABS Game_Battler JABS state management (direct src import)', () =>
     });
   });
 
+  describe('clearStates (JABS override)', () =>
+  {
+    it('always performs the original clearing logic', () =>
+    {
+      // Arrange
+      const battler = buildBattler();
+      const originalClearStates = vi.fn();
+      globalThis.J.ABS.Aliased.Game_Battler.set('clearStates', originalClearStates);
+
+      // Act
+      battler.clearStates();
+
+      // Assert
+      expect(originalClearStates).toHaveBeenCalledTimes(1);
+    });
+
+    it('skips the purge entirely when this battler has not finished JABS construction yet', () =>
+    {
+      // Arrange- a bare instance that never ran initJabsMembers, so `_j._abs._uuid` is unset.
+      const battler = Object.create(globalThis.Game_Battler.prototype);
+      const originalClearStates = vi.fn();
+      globalThis.J.ABS.Aliased.Game_Battler.set('clearStates', originalClearStates);
+      globalThis.$jabsEngine.getJabsStatesByUuid = vi.fn();
+
+      // Act
+      expect(() => battler.clearStates()).not.toThrow();
+
+      // Assert
+      expect(globalThis.$jabsEngine.getJabsStatesByUuid).not.toHaveBeenCalled();
+      expect(originalClearStates).toHaveBeenCalledTimes(1);
+    });
+
+    it('skips the purge entirely when the JABS engine is unavailable', () =>
+    {
+      // Arrange
+      const battler = buildBattler();
+      const originalClearStates = vi.fn();
+      globalThis.J.ABS.Aliased.Game_Battler.set('clearStates', originalClearStates);
+      const getJabsStatesByUuidSpy = vi.fn();
+      globalThis.$jabsEngine.getJabsStatesByUuid = getJabsStatesByUuidSpy;
+      globalThis.$jabsEngine = undefined;
+
+      // Act
+      expect(() => battler.clearStates()).not.toThrow();
+
+      // Assert
+      expect(getJabsStatesByUuidSpy).not.toHaveBeenCalled();
+      expect(originalClearStates).toHaveBeenCalledTimes(1);
+    });
+
+    it('routes a non-expired, non-death tracked state through the normal removal pipeline', () =>
+    {
+      // Arrange
+      const battler = buildBattler();
+      battler.deathStateId = () => 1;
+      globalThis.J.ABS.Aliased.Game_Battler.set('clearStates', vi.fn());
+      globalThis.$jabsEngine.getJabsStatesByUuid = () => new Map([ [ 5, { stateId: 5, expired: false } ] ]);
+      const removeSpy = vi.spyOn(battler, 'removeState')
+        .mockImplementation(() => {});
+
+      // Act
+      battler.clearStates();
+
+      // Assert
+      expect(removeSpy).toHaveBeenCalledWith(5);
+      removeSpy.mockRestore();
+    });
+
+    it('skips a tracked state that has already expired', () =>
+    {
+      // Arrange
+      const battler = buildBattler();
+      battler.deathStateId = () => 1;
+      globalThis.J.ABS.Aliased.Game_Battler.set('clearStates', vi.fn());
+      globalThis.$jabsEngine.getJabsStatesByUuid = () => new Map([ [ 5, { stateId: 5, expired: true } ] ]);
+      const removeSpy = vi.spyOn(battler, 'removeState')
+        .mockImplementation(() => {});
+
+      // Act
+      battler.clearStates();
+
+      // Assert
+      expect(removeSpy).not.toHaveBeenCalled();
+      removeSpy.mockRestore();
+    });
+
+    it('never force-removes a tracked death-state entry, to avoid an accidental revive', () =>
+    {
+      // Arrange
+      const battler = buildBattler();
+      battler.deathStateId = () => 1;
+      globalThis.J.ABS.Aliased.Game_Battler.set('clearStates', vi.fn());
+      globalThis.$jabsEngine.getJabsStatesByUuid = () => new Map([ [ 1, { stateId: 1, expired: false } ] ]);
+      const removeSpy = vi.spyOn(battler, 'removeState')
+        .mockImplementation(() => {});
+
+      // Act
+      battler.clearStates();
+
+      // Assert
+      expect(removeSpy).not.toHaveBeenCalled();
+      removeSpy.mockRestore();
+    });
+  });
+
   describe('decrementStateStacks', () =>
   {
     it('does nothing when the battler is not affected by the state', () =>

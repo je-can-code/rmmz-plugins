@@ -183,5 +183,17 @@
  * @max 99999999
  * @desc The amount of AP to modify by. Negative removes AP. Per-source never goes below 0.
  * @default 10
+ *
+ * @command refresh-required-ap-all
+ * @text Refresh Required AP (Party)
+ * @desc Re-syncs persisted aptitude requiredAp values against current notetags for all party members.
+ *
+ * @command refresh-required-ap
+ * @text Refresh Required AP
+ * @desc Re-syncs persisted aptitude requiredAp values against current notetags for an actor by its id.
+ * @arg actorId
+ * @type actor
+ * @desc The id of the actor to refresh aptitude requirements for.
+ * @default 1
  */
 //endregion annotations

@@ -103,8 +103,6 @@ class PassiveRuleThreshold
 
         return Math.round((battler.tp / mtp) * 100);
       }
-      default:
-        return 0;
     }
   }
 
@@ -188,8 +186,12 @@ class PassiveRuleThreshold
   {
     if (kind.startsWith('allAllies') === false) return null;
 
-    // strip the allAllies prefix and reuse single-battler threshold parsing.
-    const remainder = kind.slice('allAllies'.length);
+    // strip the allAllies prefix, then re-lowercase the leading letter so the recovered key
+    // matches CURRENT_RESOURCE_KEYS/MAX_RESOURCE_KEYS/ParameterRegistry's lowercase-first casing
+    // (e.g. "allAlliesHpAbove" must resolve to key "hp", not "Hp").
+    const stripped = kind.slice('allAllies'.length);
+    const remainder = stripped.charAt(0)
+      .toLowerCase() + stripped.slice(1);
 
     return this.parseThresholdKind(remainder);
   }

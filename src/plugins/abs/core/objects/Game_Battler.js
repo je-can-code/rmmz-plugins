@@ -1343,6 +1343,50 @@ Game_Battler.prototype.removeState = function(stateId)
 };
 
 /**
+ * Extends `clearStates()` to also purge this battler's JABS-tracked map states.
+ * Vanilla `clearStates()` (called by `die()`, `recoverAll()`, and `escape()`) wipes `_states`
+ * directly without going through `removeState()`, which is the only place the JABS state
+ * tracker gets cleaned up. Left unhandled, a tracked state whose owning battler dies (or is
+ * otherwise vanilla-cleared) becomes permanently orphaned: its `canRemoveFromBattler()` check
+ * requires `isStateAffected()`, which is now false forever, so the tracker's `expired` flag can
+ * never flip true and it keeps ticking (regen forever) or fires again immediately on revive
+ * (bleed reapplying its damage the instant hp comes back).
+ */
+J.ABS.Aliased.Game_Battler.set('clearStates', Game_Battler.prototype.clearStates);
+Game_Battler.prototype.clearStates = function()
+{
+  // this battler may still be under construction (this is the very first clearStates() call,
+  // fired from within vanilla initMembers before initJabsMembers has set up `_j._abs`)- in that
+  // case there is nothing tracked yet, so there is nothing to purge.
+  if (this._j?._abs?._uuid && $jabsEngine)
+  {
+    // snapshot the tracked states now, since removeState() below mutates the tracker map as it goes.
+    const trackedStates = Array.from($jabsEngine.getJabsStatesByUuid(this.getUuid())
+      .values());
+
+    trackedStates.forEach(trackedState =>
+    {
+      // already fully removed- nothing left to do for this one.
+      if (trackedState.expired) return;
+
+      // never force-remove the death state itself through this path; vanilla removeState()
+      // special-cases the death state id by calling revive(), which would resurrect this
+      // battler mid-death if a stale death-state tracker happened to still be present.
+      if (trackedState.stateId === this.deathStateId()) return;
+
+      // route through the normal removal pipeline so every removeState-aliased cleanup
+      // (including J-Passive's passive-state guard, which correctly no-ops for
+      // passive-granted states) stays in sync with the state list about to be wiped wholesale.
+      this.removeState(trackedState.stateId);
+    }, this);
+  }
+
+  // perform original logic.
+  J.ABS.Aliased.Game_Battler.get('clearStates')
+    .call(this);
+};
+
+/**
  * Decrements the stack count of a tracked state by the designated amount.
  * If the state is not being tracked by JABS, then this falls back to normal state removal.
  * @param {number} stateId The id of the state to decrement.

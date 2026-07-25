@@ -1674,7 +1674,7 @@ class JABS_AiManager
     // use the battler's AI to decide the skill.
     const decidedPicks = battler
       .getAiMode()
-      .decideAction(battler, battler.getTarget(), battler.getSkillIdsFromEnemy());
+      .decideAction(battler, battler.getTarget(), battler.getAllSkillIdsFromEnemy());
 
     // validate the skill chosen.
     if (decidedPicks.length === 0 || !this.isSkillIdValid(decidedPicks[0]))
@@ -2134,16 +2134,11 @@ class JABS_AiManager
       return;
     }
 
-    const gb = battler.getBattler();
-
-    // use the resolved skill id so guard-type classification matches the transformed skill.
-    const guardSkillId = gb.getResolvedSkillId(JABS_Button.Offhand);
-
-    if (!guardSkillId || !JABS_Battler.isGuardSkillById(guardSkillId))
+    if (!battler.isGuardSkillEquipped())
     {
       if (battler.guarding())
       {
-        battler.executeGuard(false, JABS_Button.Offhand);
+        battler.executeGuard(false);
       }
 
       // exit early without a payload.
@@ -2164,7 +2159,7 @@ class JABS_AiManager
 
     if (heldFrames >= J.ABS.Metadata.AiAllyDefensiveGuardMaxHoldFrames)
     {
-      battler.executeGuard(false, JABS_Button.Offhand);
+      battler.executeGuard(false);
 
       // exit early without a payload.
       return;
@@ -2172,7 +2167,7 @@ class JABS_AiManager
 
     if (!battler.isEngaged())
     {
-      battler.executeGuard(false, JABS_Button.Offhand);
+      battler.executeGuard(false);
 
       // exit early without a payload.
       return;
@@ -2182,7 +2177,7 @@ class JABS_AiManager
 
     if (!closestHostile || closestHostile.isDead())
     {
-      battler.executeGuard(false, JABS_Button.Offhand);
+      battler.executeGuard(false);
 
       // exit early without a payload.
       return;
@@ -2192,7 +2187,7 @@ class JABS_AiManager
 
     if (separation === null || separation > J.ABS.Metadata.AiAllyDefensiveGuardMaintainMaxTiles)
     {
-      battler.executeGuard(false, JABS_Button.Offhand);
+      battler.executeGuard(false);
 
       // exit early without a payload.
       return;
@@ -2202,7 +2197,7 @@ class JABS_AiManager
 
     if (!threat)
     {
-      battler.executeGuard(false, JABS_Button.Offhand);
+      battler.executeGuard(false);
     }
   }
 
@@ -2233,10 +2228,7 @@ class JABS_AiManager
       }
     }
 
-    // use the resolved skill id so guard-type classification matches the transformed skill.
-    const guardSkillId = gb.getResolvedSkillId(JABS_Button.Offhand);
-
-    if (!guardSkillId || !JABS_Battler.isGuardSkillById(guardSkillId))
+    if (!battler.isGuardSkillEquipped())
     {
       return;
     }
@@ -2258,19 +2250,14 @@ class JABS_AiManager
       return;
     }
 
-    if (!battler.isGuardSkillByKey(JABS_Button.Offhand))
-    {
-      return;
-    }
-
-    const guardData = battler.getGuardData(JABS_Button.Offhand);
+    const guardData = battler.getGuardData();
 
     if (!guardData || !guardData.canGuard())
     {
       return;
     }
 
-    battler.executeGuard(true, JABS_Button.Offhand);
+    battler.executeGuard(true);
     battler._aiAllyGuardRaiseFrame = Graphics.frameCount;
     battler._aiAllyDefensiveGuardReadyFrame = Graphics.frameCount
       + J.ABS.Metadata.AiAllyDefensiveGuardCooldownFrames;

@@ -26,7 +26,7 @@ class SkillExecutionStateRemovalManager
     {
       if (!state) continue;
 
-      const rules = state.removeOnSkillExecutionRules || [];
+      const rules = state.removeOnSkillExecutionRules;
 
       for (const tuple of rules)
       {
@@ -45,28 +45,24 @@ class SkillExecutionStateRemovalManager
 
         if (RPGManager.fateOf100(battler, chance, positiveRolls, negativeRolls) === false) continue;
 
-        const stateId = state.id;
-        const stacksLossCount = this.#resolveStacksLossCount(battler, stateId);
+        const stacksLossCount = this.#resolveStacksLossCount(battler, state);
 
-        battler.decrementStateStacks(stateId, stacksLossCount);
+        battler.decrementStateStacks(state.id, stacksLossCount);
       }
     }
   }
 
   /**
-   * Mirrors {@link JABS_State#handleStackChangeFromDuration} stack peel amount for one state id.
+   * Mirrors {@link JABS_State#handleStackChangeFromDuration} stack peel amount for one state.
    * @param {Game_Actor|Game_Enemy} battler The battler losing stacks.
-   * @param {number} stateId The database state id to peel.
+   * @param {RPG_State} state The state row to peel- already confirmed live on the battler by the
+   * caller, so no re-lookup against $dataStates is needed here.
    * @returns {number} How many stacks to remove in one proc.
    */
-  static #resolveStacksLossCount(battler, stateId)
+  static #resolveStacksLossCount(battler, state)
   {
-    const stateRow = $dataStates[stateId];
-
-    if (!stateRow) return 1;
-
-    const loseAllStacksAtOnce = stateRow.jabsLoseAllStacksAtOnce === true;
-    const tracked = $jabsEngine.getJabsStateByUuidAndStateId(battler.getUuid(), stateId);
+    const loseAllStacksAtOnce = state.jabsLoseAllStacksAtOnce === true;
+    const tracked = $jabsEngine.getJabsStateByUuidAndStateId(battler.getUuid(), state.id);
 
     if (loseAllStacksAtOnce === true && tracked)
     {

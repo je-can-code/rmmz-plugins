@@ -522,8 +522,8 @@ class Scene_Aptitude
     const x = containerX;
     const y = 0;
 
-    // keep ribbon width proportional to list column (25% of container width).
-    const w = Math.floor(containerW * 0.25);
+    // keep ribbon width proportional to list column.
+    const w = Math.floor(containerW * this.listColumnWidthPercent());
 
     // keep the same visual height used previously for ribbon rows.
     const height = (36 * 3);
@@ -597,8 +597,8 @@ class Scene_Aptitude
     // use the main area height for window height.
     const wh = Graphics.boxHeight - ribbonHeight;
 
-    // keep the list width at 25% of the container width.
-    const listW = Math.floor(containerW * 0.25);
+    // keep the list width proportional to the container width.
+    const listW = Math.floor(containerW * this.listColumnWidthPercent());
 
     // return the rectangle for the list on the left of the container.
     return new Rectangle(containerX, wy, listW, wh);
@@ -706,8 +706,8 @@ class Scene_Aptitude
     const wy = this.mainAreaTop();
     const wh = Graphics.boxHeight;
 
-    // split container 25/75 between list and details (same proportions as before).
-    const listW = Math.floor(containerW * 0.25);
+    // split the container between list and details using the same list-column proportion.
+    const listW = Math.floor(containerW * this.listColumnWidthPercent());
     const detailsW = containerW - listW;
 
     // place details immediately to the right of the list.
@@ -775,6 +775,17 @@ class Scene_Aptitude
   containerWidthPercent()
   {
     return 0.90;
+  }
+
+  /**
+   * The percentage of the container width allotted to the list column (and, by
+   * extension, the ribbon above it). Widened from the original 0.25 so that long
+   * skill/source names and their right-aligned AP counts don't collide.
+   * @returns {number}
+   */
+  listColumnWidthPercent()
+  {
+    return 0.32;
   }
 
   containerHeightPercent()

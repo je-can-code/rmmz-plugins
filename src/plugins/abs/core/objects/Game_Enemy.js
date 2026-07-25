@@ -120,6 +120,20 @@ Game_Enemy.prototype.basicAttackSkillId = function()
 };
 //endregion JABS basic attack skills
 
+//region JABS guard skill
+/**
+ * Gets this enemy's guard skill id from their own notes, if any.
+ * Enemies have no equipment to hang a guard skill off of- tag one directly on an
+ * individual enemy to grant it guarding capability.
+ * @returns {number}
+ */
+Game_Enemy.prototype.getGuardSkillId = function()
+{
+  // return the enemy's declared guard skill id from their own notes, if any.
+  return this.databaseData().jabsGuardSkillId ?? 0;
+};
+//endregion JABS guard skill
+
 //region JABS battler properties
 /**
  * Gets the enemy's prepare time from their notes.

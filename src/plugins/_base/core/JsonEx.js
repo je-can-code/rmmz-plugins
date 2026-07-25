@@ -3,10 +3,8 @@ import SerializableRegistry from './SerializableRegistry.js';
 
 /**
  * Extends {@link JsonEx._encode}.<br/>
- * Also encodes native `Map`/`Set` instances. Their real key/value storage lives in an engine-internal
- * slot invisible to `Object.keys()`, so without this they never match the original algorithm's
- * `[object Object]`/`[object Array]` type-tag gate below and get silently serialized as an empty `{}`
- * by the raw `JSON.stringify()` call in {@link JsonEx.stringify}.
+ * Also encodes native `Map`/`Set` instances, and stops the original algorithm's in-place mutation of
+ * whatever object graph is being stringified.
  */
 J.BASE.Aliased.JsonEx.set('_encode', JsonEx._encode);
 JsonEx._encode = function(value, depth)
@@ -43,21 +41,30 @@ JsonEx._encode = function(value, depth)
   // handle objects and arrays only.
   if (type === '[object Object]' || type === '[object Array]')
   {
+    // build a fresh container instead of writing back into the live object- the original algorithm
+    // mutated `value` directly here, which is invisible for plain objects/arrays (a stray '@' tag
+    // nothing reads) but is destructive for the Map/Set case above: assigning that returned plain
+    // object back onto the live parent would permanently replace a real Map/Set with its encoded
+    // shape the moment anything- e.g. an autosave- called JsonEx.stringify() on the live game state.
+    const encoded = Array.isArray(value) ? [] : {};
+
     // grab the constructor's name so it can be tagged for restoration later, unless it's a plain shape.
     const constructorName = value.constructor.name;
     if (constructorName !== 'Object' && constructorName !== 'Array')
     {
-      value['@'] = constructorName;
+      encoded['@'] = constructorName;
     }
 
-    // recursively encode every key on this object/array.
+    // recursively encode every key into the fresh container, leaving the source object untouched.
     for (const key of Object.keys(value))
     {
-      value[key] = this._encode(value[key], depth + 1);
+      encoded[key] = this._encode(value[key], depth + 1);
     }
+
+    return encoded;
   }
 
-  // return the fully-encoded value.
+  // primitives pass through unchanged- nothing to encode or copy.
   return value;
 };
 

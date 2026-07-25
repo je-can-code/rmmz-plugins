@@ -95,10 +95,43 @@ export function installPassiveHostGlobals(sandbox = globalThis)
   sandbox.Game_Battler.prototype.isVeryLucky = function() { return false; };
   sandbox.Game_Battler.prototype.isVeryCursed = function() { return false; };
 
+  // real RMMZ base-game behavior for these is data-driven from engine state this lightweight
+  // fixture doesn't model; passive/core/objects/Game_Battler.js aliases whatever is here at
+  // import time, so tests control the "original" result per-instance via the `__base*` fields
+  // below instead of shadowing the (post-patch) prototype methods themselves.
+  sandbox.Game_Battler.prototype.databaseData = function() { return this.__baseDatabaseData ?? {}; };
+  sandbox.Game_Battler.prototype.allStates = function() { return this.__baseStates ?? []; };
+  sandbox.Game_Battler.prototype.skills = function() { return this.__baseSkills ?? []; };
+  sandbox.Game_Battler.prototype.state = function(stateId) { return (this.__statesById ?? {})[stateId] ?? null; };
+  sandbox.Game_Battler.prototype.allStateIds = function() { return this.__baseStateIds ?? []; };
+  sandbox.Game_Battler.prototype.isStateAddable = function(stateId)
+  {
+    return this.__baseUnaddableStateIds ? !this.__baseUnaddableStateIds.includes(stateId) : true;
+  };
+  sandbox.Game_Battler.prototype.onStateAdded = function(stateId)
+  {
+    this.__onStateAddedCalls ??= [];
+    this.__onStateAddedCalls.push(stateId);
+  };
+  sandbox.Game_Battler.prototype.removeState = function(stateId)
+  {
+    this.__removeStateCalls ??= [];
+    this.__removeStateCalls.push(stateId);
+  };
+  sandbox.Game_Battler.prototype.onStateRemoval = function(stateId)
+  {
+    this.__onStateRemovalCalls ??= [];
+    this.__onStateRemovalCalls.push(stateId);
+  };
+
   sandbox.Game_Actor.prototype.actorId = function()
   {
     return 1;
   };
+
+  // aliased at import time by passive/core/objects/Game_Actor.js; keep as a real no-op so the
+  // aliasing captures a callable "original" rather than undefined.
+  sandbox.Game_Actor.prototype.onSetup = noop;
 
   sandbox.Game_Actor.prototype.actor = function()
   {

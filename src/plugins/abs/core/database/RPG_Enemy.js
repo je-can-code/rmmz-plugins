@@ -76,6 +76,22 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsGuardRange', {
 });
 //endregion guard range
 
+//region guard skillId
+/**
+ * The guard skill id declared directly on this battler's own notes.
+ * Enemies have no equipment to hang a guard skill off of the way actors do via
+ * {@link RPG_EquipItem#jabsGuardSkillId}, so this is the direct, battler-level equivalent-
+ * tag it on an individual enemy to grant it guarding capability.
+ * @type {number|null}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsGuardSkillId', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.GuardSkillId, true);
+  },
+});
+//endregion guard skillId
+
 //region alert duration
 /**
  * The JABS alert duration for this battler.

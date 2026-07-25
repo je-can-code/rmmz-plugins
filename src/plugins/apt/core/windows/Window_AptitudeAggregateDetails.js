@@ -86,6 +86,12 @@ class Window_AptitudeAggregateDetails
     // update the actor.
     this._actor = actor;
 
+    // the previously-selected aggregate belongs to the old actor's source keys- clear it so
+    // this refresh shows the "select a skill" hint instead of resolving stale sources against
+    // the new actor. The scene supplies a fresh, actor-matched aggregate shortly after via
+    // setAggregate(), which triggers its own refresh().
+    this._aggregate = null;
+
     // refresh the contents for the new actor.
     this.refresh();
   }

@@ -131,8 +131,8 @@ describe('JABS_SkillSlotManager (direct src import)', () =>
       const manager = new JABS_SkillSlotManager();
       manager.setupSlots(buildEnemy());
 
-      // dodge slot + offhand (guard) slot + 2 unique action skills = 4 slots.
-      expect(manager.getAllSlots()).toHaveLength(4);
+      // gcd slot + dodge slot + offhand (guard) slot + 2 unique action skills = 5 slots.
+      expect(manager.getAllSlots()).toHaveLength(5);
     });
 
     it('adds the basic attack skill id when present', () =>
@@ -140,7 +140,7 @@ describe('JABS_SkillSlotManager (direct src import)', () =>
       const manager = new JABS_SkillSlotManager();
       manager.setupSlots(buildEnemy({ basicAttackSkillId: () => 20 }));
 
-      expect(manager.getAllSlots()).toHaveLength(5);
+      expect(manager.getAllSlots()).toHaveLength(6);
     });
 
     it('deduplicates skill ids that appear more than once', () =>
@@ -150,8 +150,8 @@ describe('JABS_SkillSlotManager (direct src import)', () =>
         databaseData: () => ({ actions: [ { skillId: 10 }, { skillId: 10 } ] }),
       }));
 
-      // dodge + offhand + 1 unique skill = 3 slots.
-      expect(manager.getAllSlots()).toHaveLength(3);
+      // gcd + dodge + offhand + 1 unique skill = 4 slots.
+      expect(manager.getAllSlots()).toHaveLength(4);
     });
 
     it('assigns the first dodge-classified skill to the dodge slot', () =>

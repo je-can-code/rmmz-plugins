@@ -4306,7 +4306,7 @@ class JABS_Battler
     // dodge and held guard share the body; drop guard so dodge movement and speed stack cleanly.
     if (this.guarding())
     {
-      this.executeGuard(false, JABS_Button.Offhand);
+      this.executeGuard(false);
     }
 
     // set up any parsed i‑frame window; not applied yet pending semantics.
@@ -4750,15 +4750,20 @@ class JABS_Battler
 
   /**
    * Gets all data associated with guarding for this battler.
+   *
+   * Guard is resolved from whatever the battler's equipped offhand item (or, for enemies,
+   * their own notes) declares via {@code <guardSkillId:N>}- entirely independent of the
+   * action-slot/SkillSlotManager system that combat/dodge/offhand attack skills use.
    * @returns {JABS_GuardData|null}
    */
-  getGuardData(cooldownKey)
+  getGuardData()
   {
     // shorthand the battler of which we're getting data for.
     const battler = this.getBattler();
 
-    // determine the resolved skill in the given slot, applying any active transform.
-    const skillId = battler.getResolvedSkillId(cooldownKey);
+    // determine the guard skill declared by whatever this battler has equipped (or, for
+    // enemies, tagged directly on their own notes).
+    const skillId = battler.getGuardSkillId();
 
     // if we have no skill to guard with, then we don't guard.
     if (!skillId) return null;
@@ -4780,32 +4785,20 @@ class JABS_Battler
   };
 
   /**
-   * Determines whether or not the skill slot is a guard-type skill or not.
-   * @param {string} cooldownKey The key to determine if its a guard skill or not.
+   * Determines whether or not this battler currently has a guard-type skill equipped.
    * @returns {boolean} True if it is a guard skill, false otherwise.
    */
-  isGuardSkillByKey(cooldownKey)
+  isGuardSkillEquipped()
   {
-    // get the resolved skill in the given slot, applying any active transform.
-    const skillId = this.getBattler()
-      .getResolvedSkillId(cooldownKey);
-
-    // if we don't hve a skill id, it isn't a guard skill.
-    if (!skillId) return false;
-
-    // if it it isn't a guard skill by its id, then ... it isn't a guard skill.
-    if (!JABS_Battler.isGuardSkillById(skillId)) return false;
-
-    // its a guard skill!
-    return true;
+    // a guard skill is equipped if it resolves to real guard data.
+    return this.getGuardData() !== null;
   };
 
   /**
    * Triggers and maintains the guard state.
    * @param {boolean} guarding True if the battler is guarding, false otherwise.
-   * @param {string} skillSlot The skill slot to build guard data from.
    */
-  executeGuard(guarding, skillSlot)
+  executeGuard(guarding)
   {
     // if we're still guarding, and already in a guard state, don't reset.
     if (guarding && this.guarding()) return;
@@ -4824,23 +4817,22 @@ class JABS_Battler
     if (!guarding) return;
 
     // if not guarding, wasn't guarding before, but want to guard, then let's guard!
-    const guardData = this.getGuardData(skillSlot);
+    const guardData = this.getGuardData();
 
     // if we cannot guard, then don't try.
     if (!guardData || !guardData.canGuard()) return;
 
     // begin guarding!
-    this.startGuarding(skillSlot);
+    this.startGuarding();
   };
 
   /**
-   * Begin guarding with the given skill slot.
-   * @param {string} skillSlot The skill slot containing the guard data.
+   * Begin guarding with whatever guard skill is currently resolved for this battler.
    */
-  startGuarding(skillSlot)
+  startGuarding()
   {
     // grab the guard data.
-    const guardData = this.getGuardData(skillSlot);
+    const guardData = this.getGuardData();
 
     // begin guarding!
     this.setGuarding(true);

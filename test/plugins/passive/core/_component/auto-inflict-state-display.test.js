@@ -192,6 +192,32 @@ describe('AutoInflictStateDisplay (direct src import)', () =>
       // Assert
       expect(lines.length).toBe(0);
     });
+
+    it('skips a tuple with a non-positive/NaN state id', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<autoInflictState:[0, anyStateInflicted, 0]>\n<autoInflictState:[70, anyStateInflicted, 0]>';
+
+      // Act
+      const lines = AutoInflictStateDisplay.collectProseLines(state, textHelper);
+
+      // Assert
+      expect(lines.length).toBe(1);
+    });
+
+    it('skips a tuple with an invalid/negative cooldown value', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<autoInflictState:[70, anyStateInflicted, -1]>\n<autoInflictState:[71, anyStateInflicted, 0]>';
+
+      // Act
+      const lines = AutoInflictStateDisplay.collectProseLines(state, textHelper);
+
+      // Assert
+      expect(lines.length).toBe(1);
+    });
   });
 });
 //endregion plugins/passive/core/_component/auto-inflict-state-display.test.js

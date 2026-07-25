@@ -303,5 +303,101 @@ describe('J-ABS Game_Action state-count damage bonus (direct src import)', () =>
       expect(result).toBe(10);
     });
   });
+
+  describe('calculateAuthoredVulnerabilityStackPct (vulnerabilityPerAuthoredStateStack, read from each tracker\'s author)', () =>
+  {
+    it('returns 0 when the target has no tracked states', () =>
+    {
+      // Arrange
+      const action = buildAction(buildCaster([], 'caster'), buildSkill(''));
+      const target = buildTarget('target');
+      globalThis.$jabsEngine = { getJabsStatesByUuid: () => new Map() };
+
+      // Act
+      const result = action.calculateAuthoredVulnerabilityStackPct(target);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('skips a tracker whose state is not currently affecting the target', () =>
+    {
+      // Arrange- tracker 10 lingers post-expiration; the target no longer carries state 10.
+      const action = buildAction(buildCaster([], 'caster'), buildSkill(''));
+      const target = buildTarget('target', []);
+      const author = buildCaster([ buildSkill('<vulnerabilityPerAuthoredStateStack:10>') ], 'author');
+      globalThis.$jabsEngine = {
+        getJabsStatesByUuid: () => new Map([
+          [ 10, { stateId: 10, source: author, stackCount: 3 } ],
+        ]),
+      };
+
+      // Act
+      const result = action.calculateAuthoredVulnerabilityStackPct(target);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('skips a tracker with no discernible author', () =>
+    {
+      // Arrange- source is falsy, so no author notes can be consulted.
+      const action = buildAction(buildCaster([], 'caster'), buildSkill(''));
+      const target = buildTarget('target', [ 10 ]);
+      globalThis.$jabsEngine = {
+        getJabsStatesByUuid: () => new Map([
+          [ 10, { stateId: 10, source: null, stackCount: 3 } ],
+        ]),
+      };
+
+      // Act
+      const result = action.calculateAuthoredVulnerabilityStackPct(target);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('skips a tracker whose author carries no vulnerabilityPerAuthoredStateStack tag', () =>
+    {
+      // Arrange- the author has notes, but none of them carry the vulnerability tag.
+      const action = buildAction(buildCaster([], 'caster'), buildSkill(''));
+      const target = buildTarget('target', [ 10 ]);
+      const author = buildCaster([ buildSkill('') ], 'author');
+      globalThis.$jabsEngine = {
+        getJabsStatesByUuid: () => new Map([
+          [ 10, { stateId: 10, source: author, stackCount: 3 } ],
+        ]),
+      };
+
+      // Act
+      const result = action.calculateAuthoredVulnerabilityStackPct(target);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('multiplies each authored tracker\'s per-stack percent by its stack count, summed across every attacker\'s trackers', () =>
+    {
+      // Arrange- the bonus is read from each tracker's own author, not from this action's caster,
+      // so it applies no matter who is currently attacking with this action.
+      const attacker = buildCaster([], 'attacker');
+      const action = buildAction(attacker, buildSkill(''));
+      const target = buildTarget('target', [ 10, 11 ]);
+      const authorA = buildCaster([ buildSkill('<vulnerabilityPerAuthoredStateStack:10>') ], 'author-a');
+      const authorB = buildCaster([ buildSkill('<vulnerabilityPerAuthoredStateStack:5>') ], 'author-b');
+      globalThis.$jabsEngine = {
+        getJabsStatesByUuid: () => new Map([
+          [ 10, { stateId: 10, source: authorA, stackCount: 2 } ],
+          [ 11, { stateId: 11, source: authorB, stackCount: 4 } ],
+        ]),
+      };
+
+      // Act
+      const result = action.calculateAuthoredVulnerabilityStackPct(target);
+
+      // Assert- (10% * 2 stacks) + (5% * 4 stacks) = 40.
+      expect(result).toBe(40);
+    });
+  });
 });
 //endregion plugins/abs/core/_component/game-action-state-count-damage-bonus.test.js

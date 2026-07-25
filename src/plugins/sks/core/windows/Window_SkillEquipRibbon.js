@@ -57,12 +57,30 @@ class Window_SkillEquipRibbon
 
     // gather display values.
     const name = actor.name();
-    const spent = actor.spentSlotPoints();
-    const total = actor.maxSlotPoints();
 
-    // draw name (left) and points (right) on the same line.
+    // draw name (left) and the mode-appropriate capacity summary (right) on the same line.
     this.drawText(name, nameX, y, this.contentsWidth() - nameX - 6, 'left');
-    this.drawText(`${spent}/${total} pts`, 0, y, this.contentsWidth() - 6, 'right');
+    this.drawText(this.capacitySummaryText(actor), 0, y, this.contentsWidth() - 6, 'right');
+  }
+
+  /**
+   * Builds the capacity summary text for the given actor, matching whichever
+   * capacity the plugin's configured mode actually gates equipping by.
+   * @param {Game_Actor} actor - The actor to summarize.
+   * @returns {string}
+   */
+  capacitySummaryText(actor)
+  {
+    // when exclusive mode is on and slots are the governing capacity, points are
+    // irrelevant to whether anything can be equipped- show slot count instead.
+    if (J.SKS.Metadata.enableExclusiveMode && J.SKS.Metadata.slotsOnly)
+    {
+      // slotMap().size is the true occupied-slot count, unlike the sparse slots() array.
+      return `${actor.slotMap().size}/${actor.maxSlots()} slots`;
+    }
+
+    // otherwise- tandem mode, or exclusive points-only mode- points still gate equipping.
+    return `${actor.spentSlotPoints()}/${actor.maxSlotPoints()} pts`;
   }
 }
 

@@ -192,14 +192,47 @@ describe('Game_Actor aptitude additions (direct src import)', () =>
 
   describe('getAptitudeSources', () =>
   {
+    /**
+     * Builds a fake note source exposing only the kind-check surface
+     * `getAptitudeSources` reads, defaulting every kind check to false.
+     * @param {object} overrides Fields to override on the base note source.
+     * @returns {object}
+     */
+    function makeNote(overrides = {})
+    {
+      return {
+        isSkill: () => false,
+        isClass: () => false,
+        isActor: () => false,
+        isEquipItem: () => false,
+        isState: () => false,
+        ...overrides,
+      };
+    }
+
     it('excludes skill-type notes from the actor\'s note sources', () =>
     {
       const actor = buildActor();
-      const weaponNote = { isSkill: () => false, name: 'weapon-note' };
-      const skillNote = { isSkill: () => true, name: 'skill-note' };
+      const weaponNote = makeNote({ isEquipItem: () => true, name: 'weapon-note' });
+      const skillNote = makeNote({ isSkill: () => true, name: 'skill-note' });
       actor.getAllNotes = () => [ weaponNote, skillNote ];
 
       expect(actor.getAptitudeSources()).toEqual([ weaponNote ]);
+    });
+
+    it('orders remaining sources as class, actor, equips, states, then anything else', () =>
+    {
+      const actor = buildActor();
+      const state = makeNote({ isState: () => true, name: 'state-note' });
+      const equip = makeNote({ isEquipItem: () => true, name: 'equip-note' });
+      const klass = makeNote({ isClass: () => true, name: 'class-note' });
+      const actorNote = makeNote({ isActor: () => true, name: 'actor-note' });
+      const other = makeNote({ name: 'other-note' });
+
+      // deliberately scramble the input order to prove the output re-sorts it.
+      actor.getAllNotes = () => [ state, other, equip, actorNote, klass ];
+
+      expect(actor.getAptitudeSources()).toEqual([ klass, actorNote, equip, state, other ]);
     });
   });
 

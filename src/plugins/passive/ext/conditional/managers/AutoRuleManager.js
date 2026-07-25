@@ -456,7 +456,7 @@ class AutoRuleManager
     for (const source of sources)
     {
       // read the rule tuples from the source using the subclass-defined property name.
-      const tuples = source[this.rulesProperty] || [];
+      const tuples = source[this.rulesProperty];
 
       // iterate over each tuple and record it alongside its source and index.
       for (let tupleIndex = 0; tupleIndex < tuples.length; tupleIndex++)

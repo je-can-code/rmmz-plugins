@@ -175,11 +175,24 @@ class Window_SkillEquipSlots
       ? $dataSkills[skillId].iconIndex
       : 0;
 
-    // compute cost text for the right side; explicitly 0 if empty.
-    const rightText = isEmpty === false
-      ? `${this.actor()
-        .skillSlotCost(skillId, slotIndex)}`
-      : '0';
+    // in slots-only exclusive mode, points don't gate anything- don't render a cost at all.
+    const isSlotsOnlyMode = J.SKS.Metadata.enableExclusiveMode && J.SKS.Metadata.slotsOnly;
+
+    // compute cost text for the right side; explicitly 0 if empty, blank if slots-only mode.
+    let rightText;
+    if (isSlotsOnlyMode)
+    {
+      rightText = String.empty;
+    }
+    else if (isEmpty === false)
+    {
+      rightText = `${this.actor()
+        .skillSlotCost(skillId, slotIndex)}`;
+    }
+    else
+    {
+      rightText = '0';
+    }
 
     // slots are always selectable; follow-up behavior handled by scene.
     const enabled = true;

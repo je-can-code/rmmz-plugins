@@ -26,6 +26,22 @@ Object.defineProperty(RPG_EquipItem.prototype, 'jabsOffhandSkillId', {
 });
 //endregion offhand skillId
 
+//region guard skillId
+/**
+ * The guard skill id declared by this equip, if any.
+ * Lives independently of {@link jabsSkillId}/{@link jabsOffhandSkillId}- an offhand item
+ * with no guard skill declared grants no guarding capability at all, regardless of
+ * whatever attack skill it or the mainhand weapon provides.
+ * @type {number|null}
+ */
+Object.defineProperty(RPG_EquipItem.prototype, 'jabsGuardSkillId', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.GuardSkillId, true);
+  },
+});
+//endregion guard skillId
+
 //region useOnPickup
 /**
  * Normally defines whether or not an item will be automatically used

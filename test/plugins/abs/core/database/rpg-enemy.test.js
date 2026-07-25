@@ -22,7 +22,7 @@ describe('J-ABS RPG_BaseBattler jabs* properties (unit, all downstream dependenc
     // every regex value just needs to be a distinct, identifiable token- RPGManager itself is
     // mocked, so the getters never actually run a real regex against a real note string.
     const regexKeys = [
-      'TeamId', 'PrepareTime', 'Sight', 'Pursuit', 'GuardRange', 'AlertDuration', 'AlertedSightBoost',
+      'TeamId', 'PrepareTime', 'Sight', 'Pursuit', 'GuardRange', 'GuardSkillId', 'AlertDuration', 'AlertedSightBoost',
       'AlertedPursuitBoost', 'AiTraitCareful', 'AiTraitExecutor', 'AiTraitReckless', 'AiTraitHealer',
       'AiTraitFollower', 'AiTraitLeader', 'AiTraitCleanser', 'AiTraitBuffer', 'AiTraitTactical',
       'AiTraitBerserker', 'AiRoleLeader', 'AiRoleFollower', 'AiRoleGuardian', 'AiRoleWard', 'AiRoleSolo',
@@ -69,6 +69,7 @@ describe('J-ABS RPG_BaseBattler jabs* properties (unit, all downstream dependenc
     [ 'jabsSightRange', 'Sight' ],
     [ 'jabsPursuitRange', 'Pursuit' ],
     [ 'jabsGuardRange', 'GuardRange' ],
+    [ 'jabsGuardSkillId', 'GuardSkillId' ],
     [ 'jabsAlertDuration', 'AlertDuration' ],
     [ 'jabsAlertedSightBoost', 'AlertedSightBoost' ],
     [ 'jabsAlertedPursuitBoost', 'AlertedPursuitBoost' ],

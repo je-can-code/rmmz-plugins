@@ -1787,7 +1787,7 @@ class JABS_Engine
 
       if (!JABS_Battler.isGuardSkillById(strikeSkillId))
       {
-        caster.executeGuard(false, JABS_Button.Offhand);
+        caster.executeGuard(false);
       }
     }
 
@@ -2595,18 +2595,18 @@ class JABS_Engine
    */
   applyCooldownCounters(caster, action)
   {
-    this.applyPlayerCooldowns(caster, action);
+    this.applyCasterCooldowns(caster, action);
   }
 
   /**
-   * Applies per-slot (or unique) skill cooldowns for the player after an action, then optionally stamps the
+   * Applies per-slot (or unique) skill cooldowns for the caster after an action, then optionally stamps the
    * battler-wide GCD. When global cooldown is enabled and the skill is subject to it,
    * {@link J.ABS.Globals.GlobalCooldownKey} is set to the computed duration so other GCD-subject skills cannot fire
    * until it elapses.
-   * @param {JABS_Battler} caster The player.
+   * @param {JABS_Battler} caster The battler (player or enemy) that executed the action.
    * @param {JABS_Action} action The JABS action to execute.
    */
-  applyPlayerCooldowns(caster, action)
+  applyCasterCooldowns(caster, action)
   {
     const skill = action.getBaseSkill();
 
@@ -3961,7 +3961,7 @@ class JABS_Engine
     if (!this.canBattlerParry(battler)) return false;
 
     // execute the counterparry.
-    this.doCounterParry(battler, JABS_Button.Offhand);
+    this.doCounterParry(battler);
 
     // indicate we did a counterparry.
     return true;
@@ -3993,7 +3993,7 @@ class JABS_Engine
     if (needsCounterGuard)
     {
       // execute the counterguard.
-      this.doCounterGuard(battler, JABS_Button.Offhand);
+      this.doCounterGuard(battler);
 
       // indicate we did counterguard.
       return true;
@@ -4026,35 +4026,33 @@ class JABS_Engine
     if (shouldAutoCounter)
     {
       // perform the autocounter.
-      this.doAutoCounter(battler, JABS_Button.Offhand);
+      this.doAutoCounter(battler);
     }
   }
 
   /**
    * Commands the {@link JABS_Battler} to perform an autocounter.
    * This will attempt to execute all counterguard/counterparry skill ids available
-   * in the given slot.
+   * to the battler's currently resolved guard skill.
    * @param {JABS_Battler} battler The battler doing the autocounter.
-   * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
    */
-  doAutoCounter(battler, slot = JABS_Button.Offhand)
+  doAutoCounter(battler)
   {
     // execute counterparrying.
-    this.doCounterParry(battler, slot);
+    this.doCounterParry(battler);
 
     // execute counterguarding.
-    this.doCounterGuard(battler, slot);
+    this.doCounterGuard(battler);
   }
 
   /**
    * Executes any counterguard skills available to the given battler.
    * @param {JABS_Battler} battler The battler to perform the skills.
-   * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
    */
-  doCounterGuard(battler, slot = JABS_Button.Offhand)
+  doCounterGuard(battler)
   {
     // destructure out the guard and parry ids.
-    const { counterGuardIds } = battler.getGuardData(slot);
+    const { counterGuardIds } = battler.getGuardData();
 
     // check if we even have any skills to counterguard with.
     if (counterGuardIds.length)
@@ -4067,12 +4065,11 @@ class JABS_Engine
   /**
    * Executes any counterparry skills available to the given battler.
    * @param {JABS_Battler} battler The battler to perform the skills.
-   * @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
    */
-  doCounterParry(battler, slot = JABS_Button.Offhand)
+  doCounterParry(battler)
   {
     // destructure out the parry ids.
-    const { counterParryIds } = battler.getGuardData(slot);
+    const { counterParryIds } = battler.getGuardData();
 
     // check if we even have any skills to counterparry with.
     if (counterParryIds.length)
@@ -4089,8 +4086,8 @@ class JABS_Engine
    */
   canAutoCounter(battler)
   {
-    // shorthand the guard data from your offhand.
-    const guardData = battler.getGuardData(JABS_Button.Offhand);
+    // shorthand the guard data currently resolved for this battler.
+    const guardData = battler.getGuardData();
 
     // if we have no guard data, don't try to autocounter.
     if (!guardData) return false;

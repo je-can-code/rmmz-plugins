@@ -75,6 +75,13 @@ export function installPassiveAffixHostGlobals(sandbox = globalThis, pluginParam
     sandbox.JABS_AiManager = {};
   }
 
+  if (typeof sandbox.JABS_AiManager.postConvertMutate !== 'function')
+  {
+    sandbox.JABS_AiManager.postConvertMutate = function()
+    {
+    };
+  }
+
   if (typeof sandbox.JABS_Engine !== 'function')
   {
     function JABS_Engine()

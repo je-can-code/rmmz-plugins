@@ -52,8 +52,7 @@ J.ABS.EXT.TARGETING.Aliased.JABS_InputAdapter.set('performOffhandAction', JABS_I
 JABS_InputAdapter.performOffhandAction = function(jabsBattler)
 {
   // if any of the same gates the original enforces fail, fall through to original logic.
-  if (jabsBattler.isGuardSkillByKey(JABS_Button.Offhand)
-    || $gameMap.hasInteractableEventInFront(jabsBattler)
+  if ($gameMap.hasInteractableEventInFront(jabsBattler)
     || !jabsBattler.canBattlerUseAttacks()
     || !jabsBattler.isSkillTypeCooldownReady(JABS_Button.Offhand)
     || jabsBattler.isCastingOrChanneling())

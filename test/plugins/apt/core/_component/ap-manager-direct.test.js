@@ -318,7 +318,7 @@ describe('ApManager (direct src import)', () =>
           progresses[key] = {
             hasLearning: () => false,
             initializeLearning: vi.fn(),
-            learningBySkillId: () => ({ currentAp, isLearned: () => false }),
+            learningBySkillId: () => ({ currentAp, isLearned: () => false, setRequiredAp: vi.fn() }),
           };
         },
         getAptitudeProgress: key => progresses[key],
@@ -364,6 +364,7 @@ describe('ApManager (direct src import)', () =>
         learningBySkillId: () => ({
           currentAp,
           isLearned: () => currentAp >= 5,
+          setRequiredAp: vi.fn(),
         }),
       };
 
@@ -420,7 +421,7 @@ describe('ApManager (direct src import)', () =>
 
       const progress = {
         hasLearning: () => true,
-        learningBySkillId: () => ({ currentAp: 5, isLearned: () => true }),
+        learningBySkillId: () => ({ currentAp: 5, isLearned: () => true, setRequiredAp: vi.fn() }),
       };
 
       const learnSkill = vi.fn();

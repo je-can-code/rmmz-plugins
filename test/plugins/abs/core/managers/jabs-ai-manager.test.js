@@ -2678,7 +2678,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
     function buildGuardBattler(overrides = {})
     {
-      const gameBattler = { getResolvedSkillId: () => 5, mhp: 100, hp: 100, ...overrides.gameBattler };
+      const gameBattler = { mhp: 100, hp: 100, ...overrides.gameBattler };
       return buildBattler({
         isActor: () => true,
         isPlayer: () => false,
@@ -2689,7 +2689,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         _aiAllyGuardRaiseFrame: 0,
         _aiAllyDefensiveGuardReadyFrame: 0,
         distanceToDesignatedTarget: () => 1,
-        isGuardSkillByKey: () => true,
+        isGuardSkillEquipped: () => true,
         getGuardData: () => ({ canGuard: () => true }),
         ...overrides,
       });
@@ -2717,18 +2717,16 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
-      it('releases held guard when the resolved skill is not a guard skill at all', () =>
+      it('releases held guard when there is no guard skill equipped at all', () =>
       {
-        JABS_Battler.isGuardSkillById = () => false;
-        const battler = buildGuardBattler({ guarding: () => true });
+        const battler = buildGuardBattler({ guarding: () => true, isGuardSkillEquipped: () => false });
         JABS_AiManager.releaseAllyCombatGuardIfStale(battler);
-        expect(battler.executeGuard).toHaveBeenCalledWith(false, JABS_Button.Offhand);
+        expect(battler.executeGuard).toHaveBeenCalledWith(false);
       });
 
-      it('does nothing when not currently guarding and the resolved skill is invalid', () =>
+      it('does nothing when not currently guarding and there is no guard skill equipped', () =>
       {
-        JABS_Battler.isGuardSkillById = () => false;
-        const battler = buildGuardBattler({ guarding: () => false });
+        const battler = buildGuardBattler({ guarding: () => false, isGuardSkillEquipped: () => false });
         JABS_AiManager.releaseAllyCombatGuardIfStale(battler);
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
@@ -2745,7 +2743,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         globalThis.Graphics.frameCount = 200;
         const battler = buildGuardBattler({ guarding: () => true, _aiAllyGuardRaiseFrame: 10 });
         JABS_AiManager.releaseAllyCombatGuardIfStale(battler);
-        expect(battler.executeGuard).toHaveBeenCalledWith(false, JABS_Button.Offhand);
+        expect(battler.executeGuard).toHaveBeenCalledWith(false);
       });
 
       it('releases guard once the battler is no longer engaged', () =>
@@ -2753,7 +2751,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         globalThis.Graphics.frameCount = 10;
         const battler = buildGuardBattler({ guarding: () => true, isEngaged: () => false });
         JABS_AiManager.releaseAllyCombatGuardIfStale(battler);
-        expect(battler.executeGuard).toHaveBeenCalledWith(false, JABS_Button.Offhand);
+        expect(battler.executeGuard).toHaveBeenCalledWith(false);
       });
 
       it('releases guard when there is no closest hostile', () =>
@@ -2762,7 +2760,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         JABS_AiManager.getClosestOpposingBattler = () => null;
         const battler = buildGuardBattler({ guarding: () => true });
         JABS_AiManager.releaseAllyCombatGuardIfStale(battler);
-        expect(battler.executeGuard).toHaveBeenCalledWith(false, JABS_Button.Offhand);
+        expect(battler.executeGuard).toHaveBeenCalledWith(false);
       });
 
       it('releases guard when the closest hostile is already dead', () =>
@@ -2771,7 +2769,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         JABS_AiManager.getClosestOpposingBattler = () => buildBattler({ isDead: () => true });
         const battler = buildGuardBattler({ guarding: () => true });
         JABS_AiManager.releaseAllyCombatGuardIfStale(battler);
-        expect(battler.executeGuard).toHaveBeenCalledWith(false, JABS_Button.Offhand);
+        expect(battler.executeGuard).toHaveBeenCalledWith(false);
       });
 
       it('releases guard when the hostile has drifted beyond the maintain-guard tile range', () =>
@@ -2780,7 +2778,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         JABS_AiManager.getClosestOpposingBattler = () => buildBattler({ isDead: () => false });
         const battler = buildGuardBattler({ guarding: () => true, distanceToDesignatedTarget: () => 99 });
         JABS_AiManager.releaseAllyCombatGuardIfStale(battler);
-        expect(battler.executeGuard).toHaveBeenCalledWith(false, JABS_Button.Offhand);
+        expect(battler.executeGuard).toHaveBeenCalledWith(false);
       });
 
       it('releases guard when separation cannot be measured', () =>
@@ -2789,7 +2787,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         JABS_AiManager.getClosestOpposingBattler = () => buildBattler({ isDead: () => false });
         const battler = buildGuardBattler({ guarding: () => true, distanceToDesignatedTarget: () => null });
         JABS_AiManager.releaseAllyCombatGuardIfStale(battler);
-        expect(battler.executeGuard).toHaveBeenCalledWith(false, JABS_Button.Offhand);
+        expect(battler.executeGuard).toHaveBeenCalledWith(false);
       });
 
       it('releases guard once the tracked threat disappears', () =>
@@ -2799,7 +2797,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         JABS_AiManager.findDefensiveThreatBattler = () => null;
         const battler = buildGuardBattler({ guarding: () => true });
         JABS_AiManager.releaseAllyCombatGuardIfStale(battler);
-        expect(battler.executeGuard).toHaveBeenCalledWith(false, JABS_Button.Offhand);
+        expect(battler.executeGuard).toHaveBeenCalledWith(false);
       });
 
       it('keeps guard held when every release condition is avoided', () =>
@@ -2906,11 +2904,11 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
-      it('does nothing when the battler is not configured with a guard skill by key', () =>
+      it('does nothing when the battler has no guard skill equipped', () =>
       {
         stubThreatFound();
         globalThis.RPGManager.chanceIn100.mockReturnValue(true);
-        const battler = buildGuardBattler({ gameBattler: { hp: 10, mhp: 100 }, isGuardSkillByKey: () => false });
+        const battler = buildGuardBattler({ gameBattler: { hp: 10, mhp: 100 }, isGuardSkillEquipped: () => false });
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
@@ -2942,7 +2940,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
 
-        expect(battler.executeGuard).toHaveBeenCalledWith(true, JABS_Button.Offhand);
+        expect(battler.executeGuard).toHaveBeenCalledWith(true);
         expect(battler._aiAllyGuardRaiseFrame).toEqual(50);
         expect(battler._aiAllyDefensiveGuardReadyFrame).toEqual(110);
       });
@@ -2956,7 +2954,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
 
-        expect(battler.executeGuard).toHaveBeenCalledWith(true, JABS_Button.Offhand);
+        expect(battler.executeGuard).toHaveBeenCalledWith(true);
 
         // restore for later tests.
         J.ABS.Metadata.AiAllyDefensiveGuardHpThresholdPercent = 0.5;
@@ -3172,7 +3170,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         }),
         getTarget: () => null,
         getAllyTarget: () => null,
-        getSkillIdsFromEnemy: () => [ 5 ],
+        getAllSkillIdsFromEnemy: () => [ 5 ],
         getSkill: () => ({ id: 5, jabsDirect: false }),
         canExecuteSkill: () => true,
         createJabsActionFromSkill: () => [ buildJabsAction() ],

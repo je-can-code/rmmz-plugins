@@ -703,6 +703,24 @@
  *    <actionId:EVENT_ID>
  *  Where EVENT_ID is the id of the event from the action map.
  *
+ * NOTE ABOUT THE DEFAULT (no tag present):
+ * Omitting this tag does not mean "no visual" -- it silently defaults to
+ * event id 1 on the action map. Whatever move route THAT specific event
+ * happens to have will run regardless of how the skill's target got
+ * resolved, INCLUDING for <direct>/<directLock> skills. Event id 1 has no
+ * special meaning to the engine itself -- it's just whatever event your
+ * project happens to have authored at that id on your action map. In the
+ * sample/default project, event 1 is set up as a melee swing anchored to
+ * the caster; if YOUR project's event 1 (or whatever id a skill defaults
+ * to) is likewise caster-anchored, an untagged direct/ranged skill will
+ * visually -- and spatially, since collision checks against the event's
+ * live position -- snap back to the caster every time, even though
+ * targeting resolved correctly. This looks exactly like a targeting bug
+ * but isn't one; it's a missing <actionId:N>. Always set this tag
+ * explicitly on any skill that isn't a plain melee swing, and check what
+ * move route your project's default-id event actually has before
+ * assuming the targeting math is wrong.
+ *
  * ----------------------------------------------------------------------------
  * DURATION:
  * How long the skill's action event persists on the map.
@@ -836,6 +854,18 @@
  * This gives a skilled player a window to dodge by moving away during
  * the cast. If you want to remove that window, use <directLock> below.
  *
+ * NOTE ABOUT ACTION ID:
+ * A direct skill still spawns a real action-map event once a target
+ * resolves -- it is not a pure math-only effect. Always pair it with an
+ * explicit <actionId:EVENT_ID> pointing at an event whose move route
+ * actually suits a direct skill (e.g. "stays put"). Leaving this tag off
+ * silently defaults to event id 1 -- and whatever move route YOUR
+ * project has authored at that id is what runs. In the sample/default
+ * project, event 1 is anchored back to the caster (a melee swing), so an
+ * untagged direct skill there will visually AND spatially snap back to
+ * the caster on every cast regardless of how correctly the target
+ * resolved -- see the ACTION ID section above.
+ *
  * ----------------------------------------------------------------------------
  * DIRECT LOCK:
  * Similar to <direct>, but locks onto the target's live position at the
@@ -849,6 +879,10 @@
  *
  * NOTE: <directLock> and <direct> are mutually exclusive. If both are
  * present on a skill, <directLock> takes precedence.
+ *
+ * NOTE ABOUT ACTION ID: same pitfall as <direct> above -- set <actionId:N>
+ * explicitly, or an untagged skill defaults to event 1 and inherits
+ * whatever move route it has (see the ACTION ID section above).
  *
  * ----------------------------------------------------------------------------
  * DIRECT STATE TARGET:
@@ -4744,6 +4778,7 @@ J.ABS.RegExp = {
 	ThisHotAmpRate: /<thisHotAmpRate:[ ]?(-?\d+)%?>/gi,
 	SkillId: /<skillId:[ ]?(\d+)>/gi,
 	OffhandSkillId: /<offhandSkillId:[ ]?(\d+)>/gi,
+	GuardSkillId: /<guardSkillId:[ ]?(\d+)>/gi,
 	KnockbackResist: /<knockbackResist:[ ]?(\d+)>/gi,
 	ProximityKnockback: /<proximityKnockback:[ ]?(\[(?:0|[1-9][0-9]*)(?:\.[0-9]+)?,[ ]?-?(?:0|[1-9][0-9]*)])>/gi,
 	KnockbackAmp: /<knockbackAmp:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
@@ -7828,7 +7863,7 @@ var JABS_EnemyAI = class extends JABS_AI {
 		if (this.shouldFollowWithCombo(user)) {
 			return [this.followWithCombo(user)];
 		}
-		if (!usableSkills.length) return [];
+		if (!usableSkills.length) return [user.getEnemyBasicAttack()];
 		const target = user.getTarget();
 		let filtered = usableSkills;
 		if (this.careful) {
@@ -9699,7 +9734,7 @@ var JABS_AiManager = class JABS_AiManager {
 			this.setupActionForNextPhase(battler, followerSkillId, followerCooldownKey);
 			return;
 		}
-		const decidedPicks = battler.getAiMode().decideAction(battler, battler.getTarget(), battler.getSkillIdsFromEnemy());
+		const decidedPicks = battler.getAiMode().decideAction(battler, battler.getTarget(), battler.getAllSkillIdsFromEnemy());
 		if (decidedPicks.length === 0 || !this.isSkillIdValid(decidedPicks[0])) {
 			this.cancelActionSetup(battler);
 			return;
@@ -9952,11 +9987,9 @@ var JABS_AiManager = class JABS_AiManager {
 		if (!battler.isActor() || battler.isPlayer()) {
 			return;
 		}
-		const gb = battler.getBattler();
-		const guardSkillId = gb.getResolvedSkillId(JABS_Button.Offhand);
-		if (!guardSkillId || !JABS_Battler.isGuardSkillById(guardSkillId)) {
+		if (!battler.isGuardSkillEquipped()) {
 			if (battler.guarding()) {
-				battler.executeGuard(false, JABS_Button.Offhand);
+				battler.executeGuard(false);
 			}
 			return;
 		}
@@ -9968,26 +10001,26 @@ var JABS_AiManager = class JABS_AiManager {
 		}
 		const heldFrames = Graphics.frameCount - battler._aiAllyGuardRaiseFrame;
 		if (heldFrames >= J.ABS.Metadata.AiAllyDefensiveGuardMaxHoldFrames) {
-			battler.executeGuard(false, JABS_Button.Offhand);
+			battler.executeGuard(false);
 			return;
 		}
 		if (!battler.isEngaged()) {
-			battler.executeGuard(false, JABS_Button.Offhand);
+			battler.executeGuard(false);
 			return;
 		}
 		const closestHostile = JABS_AiManager.getClosestOpposingBattler(battler);
 		if (!closestHostile || closestHostile.isDead()) {
-			battler.executeGuard(false, JABS_Button.Offhand);
+			battler.executeGuard(false);
 			return;
 		}
 		const separation = battler.distanceToDesignatedTarget(closestHostile);
 		if (separation === null || separation > J.ABS.Metadata.AiAllyDefensiveGuardMaintainMaxTiles) {
-			battler.executeGuard(false, JABS_Button.Offhand);
+			battler.executeGuard(false);
 			return;
 		}
 		const threat = JABS_AiManager.findDefensiveThreatBattler(battler);
 		if (!threat) {
-			battler.executeGuard(false, JABS_Button.Offhand);
+			battler.executeGuard(false);
 		}
 	}
 	/**
@@ -10008,8 +10041,7 @@ var JABS_AiManager = class JABS_AiManager {
 				return;
 			}
 		}
-		const guardSkillId = gb.getResolvedSkillId(JABS_Button.Offhand);
-		if (!guardSkillId || !JABS_Battler.isGuardSkillById(guardSkillId)) {
+		if (!battler.isGuardSkillEquipped()) {
 			return;
 		}
 		const threat = JABS_AiManager.findDefensiveThreatBattler(battler);
@@ -10022,14 +10054,11 @@ var JABS_AiManager = class JABS_AiManager {
 		if (!RPGManager.chanceIn100(J.ABS.Metadata.AiAllyDefensiveGuardChancePercent)) {
 			return;
 		}
-		if (!battler.isGuardSkillByKey(JABS_Button.Offhand)) {
-			return;
-		}
-		const guardData = battler.getGuardData(JABS_Button.Offhand);
+		const guardData = battler.getGuardData();
 		if (!guardData || !guardData.canGuard()) {
 			return;
 		}
-		battler.executeGuard(true, JABS_Button.Offhand);
+		battler.executeGuard(true);
 		battler._aiAllyGuardRaiseFrame = Graphics.frameCount;
 		battler._aiAllyDefensiveGuardReadyFrame = Graphics.frameCount + J.ABS.Metadata.AiAllyDefensiveGuardCooldownFrames;
 	}
@@ -14015,7 +14044,7 @@ var JABS_Battler = class JABS_Battler {
 	*/
 	executeDodgeSkill(skill, forcedDirection8) {
 		if (this.guarding()) {
-			this.executeGuard(false, JABS_Button.Offhand);
+			this.executeGuard(false);
 		}
 		this.setDodgeIFrames(skill.jabsIFrames);
 		this.setInvincible(skill.jabsInvincibleDodge);
@@ -14322,11 +14351,15 @@ var JABS_Battler = class JABS_Battler {
 	}
 	/**
 	* Gets all data associated with guarding for this battler.
+	*
+	* Guard is resolved from whatever the battler's equipped offhand item (or, for enemies,
+	* their own notes) declares via {@code <guardSkillId:N>}- entirely independent of the
+	* action-slot/SkillSlotManager system that combat/dodge/offhand attack skills use.
 	* @returns {JABS_GuardData|null}
 	*/
-	getGuardData(cooldownKey) {
+	getGuardData() {
 		const battler = this.getBattler();
-		const skillId = battler.getResolvedSkillId(cooldownKey);
+		const skillId = battler.getGuardSkillId();
 		if (!skillId) return null;
 		if (!JABS_Battler.isGuardSkillById(skillId)) return null;
 		const skill = this.getSkill(skillId);
@@ -14335,38 +14368,32 @@ var JABS_Battler = class JABS_Battler {
 		return skill.jabsGuardData;
 	}
 	/**
-	* Determines whether or not the skill slot is a guard-type skill or not.
-	* @param {string} cooldownKey The key to determine if its a guard skill or not.
+	* Determines whether or not this battler currently has a guard-type skill equipped.
 	* @returns {boolean} True if it is a guard skill, false otherwise.
 	*/
-	isGuardSkillByKey(cooldownKey) {
-		const skillId = this.getBattler().getResolvedSkillId(cooldownKey);
-		if (!skillId) return false;
-		if (!JABS_Battler.isGuardSkillById(skillId)) return false;
-		return true;
+	isGuardSkillEquipped() {
+		return this.getGuardData() !== null;
 	}
 	/**
 	* Triggers and maintains the guard state.
 	* @param {boolean} guarding True if the battler is guarding, false otherwise.
-	* @param {string} skillSlot The skill slot to build guard data from.
 	*/
-	executeGuard(guarding, skillSlot) {
+	executeGuard(guarding) {
 		if (guarding && this.guarding()) return;
 		if (!guarding && this.guarding()) {
 			this.endGuarding();
 			return;
 		}
 		if (!guarding) return;
-		const guardData = this.getGuardData(skillSlot);
+		const guardData = this.getGuardData();
 		if (!guardData || !guardData.canGuard()) return;
-		this.startGuarding(skillSlot);
+		this.startGuarding();
 	}
 	/**
-	* Begin guarding with the given skill slot.
-	* @param {string} skillSlot The skill slot containing the guard data.
+	* Begin guarding with whatever guard skill is currently resolved for this battler.
 	*/
-	startGuarding(skillSlot) {
-		const guardData = this.getGuardData(skillSlot);
+	startGuarding() {
+		const guardData = this.getGuardData();
 		this.setGuarding(true);
 		this.setFlatGuardReduction(guardData.flatGuardReduction);
 		this.setPercGuardReduction(guardData.percGuardReduction);
@@ -16686,7 +16713,6 @@ var JABS_InputAdapter = class JABS_InputAdapter {
 	* @returns {boolean} True if they can, false otherwise.
 	*/
 	static #canPerformOffhandAction(jabsBattler) {
-		if (jabsBattler.isGuardSkillByKey(JABS_Button.Offhand)) return false;
 		if ($gameMap.hasInteractableEventInFront(jabsBattler)) return false;
 		if (!jabsBattler.canBattlerUseAttacks()) return false;
 		if (!jabsBattler.isSkillTypeCooldownReady(JABS_Button.Offhand)) return false;
@@ -16801,7 +16827,7 @@ var JABS_InputAdapter = class JABS_InputAdapter {
 	static performSprint(sprinting, jabsBattler) {
 		if (!this._canPerformSprint(jabsBattler)) return;
 		if (sprinting && jabsBattler.guarding()) {
-			jabsBattler.executeGuard(false, JABS_Button.Offhand);
+			jabsBattler.executeGuard(false);
 		}
 		jabsBattler.getCharacter()._dashing = sprinting;
 	}
@@ -16851,25 +16877,25 @@ var JABS_InputAdapter = class JABS_InputAdapter {
 	}
 	/**
 	* Executes the guard action.
-	* The player will only perform the guard action if the offhand slot is a guard-ready skill.
+	* The player will only perform the guard action if their equipped offhand item (or, for
+	* enemies, their own notes) declares a guard skill via {@code <guardSkillId:N>}.
 	* @param {boolean} guarding True if the player is guarding, false otherwise.
 	* @param {JABS_Battler} jabsBattler The battler performing the action.
 	*/
 	static performGuard(guarding, jabsBattler) {
-		if (!this.#canPerformGuardBySlot(JABS_Button.Offhand, jabsBattler)) return;
+		if (!this.#canPerformGuard(jabsBattler)) return;
 		if (guarding) {
 			jabsBattler.getCharacter()._dashing = false;
 		}
-		jabsBattler.executeGuard(guarding, JABS_Button.Offhand);
+		jabsBattler.executeGuard(guarding);
 	}
 	/**
 	* Determines whether or not the player can guard.
-	* @param {string} slot The slot to check if is able to be used.
 	* @param {JABS_Battler} jabsBattler The battler performing the action.
 	* @returns {boolean} True if they can, false otherwise.
 	*/
-	static #canPerformGuardBySlot(slot, jabsBattler) {
-		if (!jabsBattler.isGuardSkillByKey(slot)) return false;
+	static #canPerformGuard(jabsBattler) {
+		if (!jabsBattler.isGuardSkillEquipped()) return false;
 		return true;
 	}
 	/**
@@ -18069,7 +18095,7 @@ var JABS_Engine = class JABS_Engine {
 		if (primaryStrike && caster.guarding()) {
 			const strikeSkillId = primaryStrike.getBaseSkill().id;
 			if (!JABS_Battler.isGuardSkillById(strikeSkillId)) {
-				caster.executeGuard(false, JABS_Button.Offhand);
+				caster.executeGuard(false);
 			}
 		}
 		this.applyOnExecutionEffects(caster, actions[0]);
@@ -18178,6 +18204,7 @@ var JABS_Engine = class JABS_Engine {
 		gameAction.applyToggleOnExecuteStates();
 		gameAction.applyToggleGroupOnExecuteStates();
 		gameAction.applyOnCastExecuteSkills(caster);
+		gameAction.applyOnCastExecuteSkillsIfAfflicted(caster);
 	}
 	/**
 	* Handles adding this action to the map if applicable.
@@ -18596,17 +18623,17 @@ var JABS_Engine = class JABS_Engine {
 	* @param {JABS_Action} action The JABS action to execute.
 	*/
 	applyCooldownCounters(caster, action) {
-		this.applyPlayerCooldowns(caster, action);
+		this.applyCasterCooldowns(caster, action);
 	}
 	/**
-	* Applies per-slot (or unique) skill cooldowns for the player after an action, then optionally stamps the
+	* Applies per-slot (or unique) skill cooldowns for the caster after an action, then optionally stamps the
 	* battler-wide GCD. When global cooldown is enabled and the skill is subject to it,
 	* {@link J.ABS.Globals.GlobalCooldownKey} is set to the computed duration so other GCD-subject skills cannot fire
 	* until it elapses.
-	* @param {JABS_Battler} caster The player.
+	* @param {JABS_Battler} caster The battler (player or enemy) that executed the action.
 	* @param {JABS_Action} action The JABS action to execute.
 	*/
-	applyPlayerCooldowns(caster, action) {
+	applyCasterCooldowns(caster, action) {
 		const skill = action.getBaseSkill();
 		this.applyCooldownValueForSkill(caster, action, action.getCooldown());
 		if (JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown(skill)) {
@@ -19344,7 +19371,7 @@ var JABS_Engine = class JABS_Engine {
 	*/
 	handleCounterParry(battler) {
 		if (!this.canBattlerParry(battler)) return false;
-		this.doCounterParry(battler, JABS_Button.Offhand);
+		this.doCounterParry(battler);
 		return true;
 	}
 	/**
@@ -19360,7 +19387,7 @@ var JABS_Engine = class JABS_Engine {
 		if (alreadyCounterParried) return false;
 		const needsCounterGuard = battler.guarding() && battler.counterGuard().length;
 		if (needsCounterGuard) {
-			this.doCounterGuard(battler, JABS_Button.Offhand);
+			this.doCounterGuard(battler);
 			return true;
 		}
 		return false;
@@ -19378,27 +19405,25 @@ var JABS_Engine = class JABS_Engine {
 		const autoCounterChance = counterBattler.cnt * 100;
 		const shouldAutoCounter = RPGManager.fateOf100(counterBattler, autoCounterChance, positiveRolls, negativeRolls);
 		if (shouldAutoCounter) {
-			this.doAutoCounter(battler, JABS_Button.Offhand);
+			this.doAutoCounter(battler);
 		}
 	}
 	/**
 	* Commands the {@link JABS_Battler} to perform an autocounter.
 	* This will attempt to execute all counterguard/counterparry skill ids available
-	* in the given slot.
+	* to the battler's currently resolved guard skill.
 	* @param {JABS_Battler} battler The battler doing the autocounter.
-	* @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
 	*/
-	doAutoCounter(battler, slot = JABS_Button.Offhand) {
-		this.doCounterParry(battler, slot);
-		this.doCounterGuard(battler, slot);
+	doAutoCounter(battler) {
+		this.doCounterParry(battler);
+		this.doCounterGuard(battler);
 	}
 	/**
 	* Executes any counterguard skills available to the given battler.
 	* @param {JABS_Battler} battler The battler to perform the skills.
-	* @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
 	*/
-	doCounterGuard(battler, slot = JABS_Button.Offhand) {
-		const { counterGuardIds } = battler.getGuardData(slot);
+	doCounterGuard(battler) {
+		const { counterGuardIds } = battler.getGuardData();
 		if (counterGuardIds.length) {
 			counterGuardIds.forEach((id) => this.forceMapAction(battler, id, true));
 		}
@@ -19406,10 +19431,9 @@ var JABS_Engine = class JABS_Engine {
 	/**
 	* Executes any counterparry skills available to the given battler.
 	* @param {JABS_Battler} battler The battler to perform the skills.
-	* @param {string=} slot The skill slot key; defaults to {@link JABS_Button.Offhand}.<br>
 	*/
-	doCounterParry(battler, slot = JABS_Button.Offhand) {
-		const { counterParryIds } = battler.getGuardData(slot);
+	doCounterParry(battler) {
+		const { counterParryIds } = battler.getGuardData();
 		if (counterParryIds.length) {
 			counterParryIds.forEach((id) => this.forceMapAction(battler, id, true));
 		}
@@ -19420,7 +19444,7 @@ var JABS_Engine = class JABS_Engine {
 	* @returns {boolean} True if we should try to autocounter, false otherwise.
 	*/
 	canAutoCounter(battler) {
-		const guardData = battler.getGuardData(JABS_Button.Offhand);
+		const guardData = battler.getGuardData();
 		if (!guardData) return false;
 		if (!guardData.canCounter()) return false;
 		return true;
@@ -21961,6 +21985,9 @@ var JABS_SkillSlotManager = class {
 	* @param {Game_Enemy} enemy The enemy to setup slots for.
 	*/
 	setupEnemySlots(enemy) {
+		const gcdSlot = new JABS_SkillSlot(J.ABS.Globals.GlobalCooldownKey, 0);
+		gcdSlot.getCooldown().enableBase();
+		this._slots.push(gcdSlot);
 		const battlerData = enemy.databaseData();
 		const skillIds = battlerData.actions.filter((action) => this.filterActionSkills(enemy, action)).map((action) => action.skillId);
 		const basicAttackSkillId = enemy.basicAttackSkillId();
@@ -22365,13 +22392,7 @@ var SkillHistoryBonusDisplay = class SkillHistoryBonusDisplay {
 	static collectGeneralProseLines(dataRow, window) {
 		if (!J.ABS) return [];
 		const rawTags = RPGManager.getStringsFromNoteByRegex(dataRow, J.ABS.RegExp.SkillHistoryBonus);
-		const lines = [];
-		rawTags.forEach((rawTag) => {
-			const parsed = SkillHistoryBonusDisplay.parseGeneralBracket(rawTag);
-			if (parsed === null) return;
-			lines.push(SkillHistoryBonusDisplay.formatGeneralProse(parsed, window));
-		});
-		return lines;
+		return rawTags.map((rawTag) => SkillHistoryBonusDisplay.formatGeneralProse(SkillHistoryBonusDisplay.parseGeneralBracket(rawTag), window));
 	}
 };
 
@@ -22981,6 +23002,16 @@ Object.defineProperty(RPG_BaseBattler.prototype, "jabsGuardRange", { get: functi
 	return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.GuardRange, true);
 } });
 /**
+* The guard skill id declared directly on this battler's own notes.
+* Enemies have no equipment to hang a guard skill off of the way actors do via
+* {@link RPG_EquipItem#jabsGuardSkillId}, so this is the direct, battler-level equivalent-
+* tag it on an individual enemy to grant it guarding capability.
+* @type {number|null}
+*/
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsGuardSkillId", { get: function() {
+	return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.GuardSkillId, true);
+} });
+/**
 * The JABS alert duration for this battler.
 * This number represents how many frames this battler will remain alerted
 * when controlled by the {@link JABS_AiManager}.<br>
@@ -23278,6 +23309,16 @@ Object.defineProperty(RPG_EquipItem.prototype, "jabsSkillId", { get: function() 
 */
 Object.defineProperty(RPG_EquipItem.prototype, "jabsOffhandSkillId", { get: function() {
 	return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.OffhandSkillId, true);
+} });
+/**
+* The guard skill id declared by this equip, if any.
+* Lives independently of {@link jabsSkillId}/{@link jabsOffhandSkillId}- an offhand item
+* with no guard skill declared grants no guarding capability at all, regardless of
+* whatever attack skill it or the mainhand weapon provides.
+* @type {number|null}
+*/
+Object.defineProperty(RPG_EquipItem.prototype, "jabsGuardSkillId", { get: function() {
+	return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.GuardSkillId, true);
 } });
 /**
 * Normally defines whether or not an item will be automatically used
@@ -25981,7 +26022,9 @@ Game_Actor.prototype.updateOffhandSkill = function() {
 *
 * Resolution precedence (highest first):
 *  1. Native offhand equip-seal (returns 0) unless the mainhand also defines an
-*     {@link RPG_EquipItem#jabsOffhandSkillId offhandSkillId} that bypasses it.
+*     {@link RPG_EquipItem#jabsOffhandSkillId offhandSkillId} that bypasses it, or the
+*     actor is also dual-wielding (a second weapon has taken over the physical slot the
+*     seal was meant to empty, so there is nothing left for the seal to enforce).
 *  2. Player pin via the JABS quick menu, when the pinned skill is still assignable.
 *  3. The mainhand's provided offhand skill via {@code <offhandSkillId:N>}.
 *  4. The equipped offhand item's {@link RPG_EquipItem#jabsSkillId jabsSkillId}.
@@ -25992,7 +26035,7 @@ Game_Actor.prototype.updateOffhandSkill = function() {
 * @returns {number} The offhand skill id.
 */
 Game_Actor.prototype.getOffhandSkill = function() {
-	if (this.isTwoHanded() && !this.mainhandDeclaresOffhandSkillId()) {
+	if (this.isTwoHanded() && !this.mainhandDeclaresOffhandSkillId() && !this.isDualWield()) {
 		return 0;
 	}
 	const baseOffhandSkillId = this.getBaseOffhandSkill();
@@ -26112,6 +26155,18 @@ Game_Actor.prototype.getOffhandEquippedSkillId = function() {
 	return offhand.jabsSkillId ?? 0;
 };
 /**
+* Gets the guard skill declared by the equipped offhand item, if any.
+* This is independent of {@link #getOffhandEquippedSkillId}- an offhand item with no
+* guard skill declared grants no guarding capability at all, regardless of whatever
+* attack skill it or the mainhand weapon provides.
+* @returns {number}
+*/
+Game_Actor.prototype.getGuardSkillId = function() {
+	const [, offhand] = this.equips();
+	if (!offhand) return 0;
+	return offhand.jabsGuardSkillId ?? 0;
+};
+/**
 * Gets the skill id pinned to the offhand slot by the player, or 0 if no pin is set.
 * @returns {number}
 */
@@ -26198,6 +26253,20 @@ Game_Actor.prototype.buildOffhandAssignableSkillPool = function() {
 		skillPool.push(skillData);
 	});
 	return skillPool;
+};
+/**
+* Builds the list of skills available for player pinning into the combat slot.
+* @returns {RPG_Skill[]}
+*/
+Game_Actor.prototype.buildCombatSkillCandidatePool = function() {
+	return this.skills().filter(JABS_Battler.isSkillVisibleInCombatMenu);
+};
+/**
+* Builds the list of skills available for player pinning into the dodge slot.
+* @returns {RPG_Skill[]}
+*/
+Game_Actor.prototype.buildDodgeSkillCandidatePool = function() {
+	return this.skills().filter(JABS_Battler.isSkillVisibleInDodgeMenu);
 };
 /**
 * Extends {@link Game_Battler#getSkillTransformSources}.<br/>
@@ -27599,6 +27668,28 @@ Game_Battler.prototype.removeState = function(stateId) {
 	}
 };
 /**
+* Extends `clearStates()` to also purge this battler's JABS-tracked map states.
+* Vanilla `clearStates()` (called by `die()`, `recoverAll()`, and `escape()`) wipes `_states`
+* directly without going through `removeState()`, which is the only place the JABS state
+* tracker gets cleaned up. Left unhandled, a tracked state whose owning battler dies (or is
+* otherwise vanilla-cleared) becomes permanently orphaned: its `canRemoveFromBattler()` check
+* requires `isStateAffected()`, which is now false forever, so the tracker's `expired` flag can
+* never flip true and it keeps ticking (regen forever) or fires again immediately on revive
+* (bleed reapplying its damage the instant hp comes back).
+*/
+J.ABS.Aliased.Game_Battler.set("clearStates", Game_Battler.prototype.clearStates);
+Game_Battler.prototype.clearStates = function() {
+	if (this._j?._abs?._uuid && $jabsEngine) {
+		const trackedStates = Array.from($jabsEngine.getJabsStatesByUuid(this.getUuid()).values());
+		trackedStates.forEach((trackedState) => {
+			if (trackedState.expired) return;
+			if (trackedState.stateId === this.deathStateId()) return;
+			this.removeState(trackedState.stateId);
+		}, this);
+	}
+	J.ABS.Aliased.Game_Battler.get("clearStates").call(this);
+};
+/**
 * Decrements the stack count of a tracked state by the designated amount.
 * If the state is not being tracked by JABS, then this falls back to normal state removal.
 * @param {number} stateId The id of the state to decrement.
@@ -28529,7 +28620,7 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY) {
 				if (!this.canPass(x1, y1, j)) {
 					continue;
 				}
-			} else if (this.isDiagonalDirection(j)) {
+			} else {
 				if (!this.canPassDiagonally(x1, y1, horz, vert)) {
 					continue;
 				}
@@ -28904,6 +28995,15 @@ J.ABS.Aliased.Game_Enemy.set("basicAttackSkillId", Game_Enemy.prototype.basicAtt
 Game_Enemy.prototype.basicAttackSkillId = function() {
 	const basicAttackSkillId = J.ABS.Aliased.Game_Enemy.get("basicAttackSkillId").call(this);
 	return basicAttackSkillId ?? J.ABS.Metadata.DefaultEnemyAttackSkillId;
+};
+/**
+* Gets this enemy's guard skill id from their own notes, if any.
+* Enemies have no equipment to hang a guard skill off of- tag one directly on an
+* individual enemy to grant it guarding capability.
+* @returns {number}
+*/
+Game_Enemy.prototype.getGuardSkillId = function() {
+	return this.databaseData().jabsGuardSkillId ?? 0;
 };
 /**
 * Gets the enemy's prepare time from their notes.
@@ -30686,7 +30786,7 @@ var Window_AbsMenuSelect = class Window_AbsMenuSelect extends Window_Command {
 	*/
 	makeCombatSkillList() {
 		const actor = $gameParty.leader();
-		const skills = actor.skills().filter(JABS_Battler.isSkillVisibleInCombatMenu);
+		const skills = actor.buildCombatSkillCandidatePool();
 		const commands = Array.empty;
 		const clearSlotCommand = new WindowCommandBuilder(J.ABS.Metadata.ClearSlotText).setSymbol("skill").setColorIndex(16).setTextLines(["Remove the existing combat skill from the slot."]).build();
 		commands.push(clearSlotCommand);
@@ -30757,7 +30857,7 @@ var Window_AbsMenuSelect = class Window_AbsMenuSelect extends Window_Command {
 		const commands = Array.empty;
 		const clearSlotCommand = new WindowCommandBuilder(J.ABS.Metadata.ClearSlotText).setSymbol("dodge").setColorIndex(16).setTextLines(["Remove the existing dodge skill from the slot."]).build();
 		commands.push(clearSlotCommand);
-		const dodgeSkills = $gameParty.leader().skills().filter(JABS_Battler.isSkillVisibleInDodgeMenu);
+		const dodgeSkills = $gameParty.leader().buildDodgeSkillCandidatePool();
 		const forEacher = (dodgeSkill) => {
 			const { name, id, iconIndex, description } = dodgeSkill;
 			const dodgeCommand = new WindowCommandBuilder(name).setSymbol("dodge").setExtensionData(id).setIconIndex(iconIndex).setHelpText(description).setTextLines(description.split(/[\r\n]+/)).build();

@@ -180,7 +180,7 @@ describe('SkillHistoryBonusDisplay (direct src import)', () =>
       globalThis.J.ABS = savedAbs;
     });
 
-    it('skips a tag whose bracket fails to parse', () =>
+    it('ignores a tag whose bracket is missing the count-mode token, since it never matches the capturing regex', () =>
     {
       // Arrange
       const state = Object.create(globalThis.RPG_State.prototype);

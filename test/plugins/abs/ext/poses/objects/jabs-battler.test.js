@@ -660,15 +660,15 @@ describe('J-ABS-Poses JABS_Battler (unit, all downstream dependencies mocked)', 
       // Arrange
       const battler = buildBattler();
       const skill = { id: 7 };
-      battler.getBattler = () => ({ getEquippedSkillId: vi.fn(() => 7) });
+      battler.getBattler = () => ({ getGuardSkillId: vi.fn(() => 7) });
       battler.getSkill = vi.fn(() => skill);
       battler.performActionPose = vi.fn();
 
       // Act
-      battler.startGuarding('L');
+      battler.startGuarding();
 
       // Assert
-      expect(originalStartGuarding).toHaveBeenCalledWith('L');
+      expect(originalStartGuarding).toHaveBeenCalledWith();
       expect(battler.getSkill).toHaveBeenCalledWith(7);
       expect(battler.performActionPose).toHaveBeenCalledWith(skill);
     });

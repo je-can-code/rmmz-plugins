@@ -180,6 +180,24 @@ describe('AutoApplyStateOnNearbyManager (direct src import)', () =>
       expect(battler.setAutoRuleLastFrame).toHaveBeenCalledWith(expect.any(String), 1000);
     });
 
+    it('does not stamp the cooldown when every nearby target rejects the state', () =>
+    {
+      // Arrange
+      const battler = makeBattler();
+      const source = { constructor: { name: 'RPG_State' }, id: 1 };
+      const nearbyTarget = makeBattler({ isStateAddable: vi.fn().mockReturnValue(false) });
+      FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([ { getBattler: () => nearbyTarget } ]);
+
+      // Act
+      AutoApplyStateOnNearbyManager._tryDispatchProximityRule(
+        battler, source, 0, 5, 'enemiesNearby', [ 5, 'enemiesNearby', 1, 60 ],
+      );
+
+      // Assert
+      expect(nearbyTarget.addState).not.toHaveBeenCalled();
+      expect(battler.setAutoRuleLastFrame).not.toHaveBeenCalled();
+    });
+
     it('uses alliesNearby (excluding self) for the alliesNearby condition kind', () =>
     {
       // Arrange

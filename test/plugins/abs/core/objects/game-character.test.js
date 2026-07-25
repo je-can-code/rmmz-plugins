@@ -600,6 +600,35 @@ describe('J-ABS Game_Character (unit, all downstream dependencies mocked)', () =
         expect(character.findDiagonalDirectionTo(4, 0)).toEqual(6);
       });
 
+      it('reopens a node already sitting in the open list once a cheaper path to it is found', () =>
+      {
+        globalThis.$gameMap = buildRealisticGameMap();
+        // the manhattan-distance heuristic overestimates the true cost of diagonal steps, so the
+        // straight-line detour around (1,0) and (3,0) is explored first and reaches (2,-1) before
+        // the diagonal route does; the diagonal route then arrives at the same (2,-1) tile with a
+        // strictly lower g, forcing the search to mutate the already-queued node in place instead
+        // of pushing a new one (the `index2 >= 0` branch at Game_Character.js).
+        const character = buildCharacter({
+          isThrough: () => false,
+          isDebugThrough: () => false,
+          x: 0,
+          y: 0,
+          searchLimit: () => 20,
+          isDiagonalDirection: (dir) => [ 1, 3, 7, 9 ].includes(dir),
+          isStraightDirection: (dir) => [ 2, 4, 6, 8 ].includes(dir),
+          getDiagonalDirections: diagonalComponents,
+          canPass: (x, y, dir) =>
+          {
+            const x2 = $gameMap.roundXWithDirection(x, dir);
+            const y2 = $gameMap.roundYWithDirection(y, dir);
+            return !((x2 === 1 && y2 === 0) || (x2 === 3 && y2 === 0));
+          },
+          canPassDiagonally: () => true,
+        });
+
+        expect(character.findDiagonalDirectionTo(4, 0)).toEqual(3);
+      });
+
       it('stops expanding once a node hits the search limit, falling back to the best node found', () =>
       {
         globalThis.$gameMap = buildRealisticGameMap();

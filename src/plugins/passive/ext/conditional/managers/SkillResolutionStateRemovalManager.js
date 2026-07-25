@@ -35,7 +35,7 @@ class SkillResolutionStateRemovalManager
       // skip null/undefined entries in the state array.
       if (!state) continue;
 
-      const rules = state.removeOnSkillResolutionRules || [];
+      const rules = state.removeOnSkillResolutionRules;
 
       for (const tuple of rules)
       {
@@ -57,34 +57,28 @@ class SkillResolutionStateRemovalManager
         if (RPGManager.fateOf100(battler, chance, positiveRolls, negativeRolls) === false) continue;
 
         // resolve how many stacks to remove for this state.
-        const stateId = state.id;
-        const stacksLossCount = this.#resolveStacksLossCount(battler, stateId);
+        const stacksLossCount = this.#resolveStacksLossCount(battler, state);
 
         // peel the stacks, which will remove the state entirely if stacks reach zero.
-        battler.decrementStateStacks(stateId, stacksLossCount);
+        battler.decrementStateStacks(state.id, stacksLossCount);
       }
     }
   }
 
   /**
-   * Mirrors {@link JABS_State#handleStackChangeFromDuration} stack peel amount for one state id.
+   * Mirrors {@link JABS_State#handleStackChangeFromDuration} stack peel amount for one state.
    * @param {Game_Actor|Game_Enemy} battler - The battler losing stacks.
-   * @param {number} stateId - The database state id to peel.
+   * @param {RPG_State} state - The state row to peel- already confirmed live on the battler by the
+   * caller, so no re-lookup against $dataStates is needed here.
    * @returns {number} - How many stacks to remove in one proc.
    */
-  static #resolveStacksLossCount(battler, stateId)
+  static #resolveStacksLossCount(battler, state)
   {
-    // look up the state row for the loseAllStacksAtOnce flag.
-    const stateRow = $dataStates[stateId];
-
-    // if the state row is missing, fall back to peeling one stack.
-    if (!stateRow) return 1;
-
     // check if this state collapses all stacks at once.
-    const loseAllStacksAtOnce = stateRow.jabsLoseAllStacksAtOnce === true;
+    const loseAllStacksAtOnce = state.jabsLoseAllStacksAtOnce === true;
 
     // look up the live JABS state tracker to know the current stack count.
-    const tracked = $jabsEngine.getJabsStateByUuidAndStateId(battler.getUuid(), stateId);
+    const tracked = $jabsEngine.getJabsStateByUuidAndStateId(battler.getUuid(), state.id);
 
     // when collapsing all at once and a tracker exists, return the full stack count.
     if (loseAllStacksAtOnce === true && tracked)

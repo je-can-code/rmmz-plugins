@@ -548,8 +548,8 @@ class OverlayManager
       baseSkill.hitType = skillOverlay.hitType;
     }
 
-    // overwrite the animation if not 0 (default) and it changed.
-    if (baseSkill.animationId !== 0 && baseSkill.animationId !== skillOverlay.animationId)
+    // overwrite the animation only if the overlay actually specifies one (not 0/default) and it changed.
+    if (skillOverlay.animationId !== 0 && baseSkill.animationId !== skillOverlay.animationId)
     {
       baseSkill.animationId = skillOverlay.animationId;
     }
@@ -562,14 +562,14 @@ class OverlayManager
    */
   static extendMessage(baseSkill, skillOverlay)
   {
-    // overwrite message 1.
-    if (baseSkill.message1 !== skillOverlay.message1)
+    // overwrite message 1 only if the overlay actually specifies one (not blank/default).
+    if (skillOverlay.message1 !== String.empty && baseSkill.message1 !== skillOverlay.message1)
     {
       baseSkill.message1 = skillOverlay.message1;
     }
 
-    // overwrite message 2.
-    if (baseSkill.message2 !== skillOverlay.message2)
+    // overwrite message 2 only if the overlay actually specifies one (not blank/default).
+    if (skillOverlay.message2 !== String.empty && baseSkill.message2 !== skillOverlay.message2)
     {
       baseSkill.message2 = skillOverlay.message2;
     }

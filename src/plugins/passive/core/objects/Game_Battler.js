@@ -433,8 +433,8 @@ Game_Battler.prototype.getPassiveStateSources = function()
     // all states currently applied to the battler, including passive states via the allStates() override.
     ...this.allStates(),
 
-    // all skills available to this battler.
-    ...this.skills(),
+    // all skills that currently qualify as passive state sources for this battler.
+    ...this.getPassiveStateSourcedSkills(),
 
     // add all sources from events.
     ...this.passiveExternalStateSources(),
@@ -442,6 +442,19 @@ Game_Battler.prototype.getPassiveStateSources = function()
 
   // return this collection of stuff.
   return battlerSources;
+};
+
+/**
+ * Gets the skills that currently qualify as passive state sources for this battler.
+ * By default, every learned skill qualifies- this exists as its own seam so extensions
+ * (such as one bridging to an equip-slot system) can narrow the list down to only skills
+ * that are actually in play, without needing to override the whole of {@link #getPassiveStateSources}.
+ * @returns {RPG_Skill[]}
+ */
+Game_Battler.prototype.getPassiveStateSourcedSkills = function()
+{
+  // by default, every learned skill is a passive state source.
+  return this.skills();
 };
 
 /**

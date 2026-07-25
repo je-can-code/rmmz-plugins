@@ -325,6 +325,11 @@ class ApManager
       // grab the learning from the progress.
       const aptitudeLearning = aptitudeProgress.learningBySkillId(skillId);
 
+      // keep the persisted requirement in sync with the live notetag value- otherwise a
+      // save that already started this learning would be stuck forever honoring whatever
+      // requiredAp existed the moment it was first touched, ignoring later notetag tuning.
+      aptitudeLearning.setRequiredAp(requiredAp);
+
       // the previous amount of AP acquired.
       const before = aptitudeLearning.currentAp;
 
@@ -342,6 +347,49 @@ class ApManager
         this.#resolveLearn(actor, sourceKey, skillId, cause);
       }
     });
+  }
+
+  /**
+   * Re-syncs the requiredAp on every persisted aptitude learning for this actor to
+   * match the current live notetag values on their sources.
+   *
+   * Normal AP gain only re-syncs a learning's requiredAp the next time that specific
+   * source actually grants AP (see {@link ApManager.applyApToSource}), so a save that
+   * started a learning before a notetag was retuned would otherwise be stuck honoring
+   * the stale value forever. Use this to repair such a save after tuning notetags
+   * mid-playtest, without needing to grind AP to touch every learning again.
+   * @param {Game_Actor} actor The actor to refresh aptitude requirements for.
+   */
+  static refreshRequiredAp(actor)
+  {
+    // grab every persisted progress on this actor, keyed by source key.
+    const progresses = actor.getAllAptitudeProgresses();
+
+    // walk each source's progress to resync its learnings.
+    Object.entries(progresses)
+      .forEach(([ sourceKey, progress ]) =>
+      {
+        // resolve the source from the key alone, regardless of whether the actor
+        // still has it active- a learning can persist after unequipping/reclassing.
+        const source = this.resolveStaticSourceByKey(sourceKey);
+
+        // if the source no longer exists in the database, there's nothing to resync against.
+        if (!source) return;
+
+        // rebuild the live teachables for this source from its current notetags.
+        const teachables = source.aptitudeTeachings;
+
+        // resync each teachable's requiredAp into its persisted learning, if one exists.
+        teachables.forEach(teachable =>
+        {
+          // skip teachables that don't have a persisted learning yet.
+          if (progress.hasLearning(teachable.skillId) === false) return;
+
+          // grab the persisted learning and sync its requiredAp to the live value.
+          progress.learningBySkillId(teachable.skillId)
+            .setRequiredAp(teachable.requiredAp);
+        });
+      });
   }
 
   /**

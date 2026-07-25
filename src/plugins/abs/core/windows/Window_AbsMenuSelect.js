@@ -106,8 +106,7 @@ class Window_AbsMenuSelect
     const actor = $gameParty.leader();
 
     // grab all of the leader's skills that are visible in this menu.
-    const skills = actor.skills()
-      .filter(JABS_Battler.isSkillVisibleInCombatMenu);
+    const skills = actor.buildCombatSkillCandidatePool();
 
     // initialize our blank list of skills to view.
     const commands = Array.empty;
@@ -294,8 +293,7 @@ class Window_AbsMenuSelect
 
     // filter out all non-dodge-skills.
     const dodgeSkills = $gameParty.leader()
-      .skills()
-      .filter(JABS_Battler.isSkillVisibleInDodgeMenu);
+      .buildDodgeSkillCandidatePool();
 
     // an iterator function for building dodge skill commands.
     const forEacher = dodgeSkill =>

@@ -36,7 +36,7 @@ describe('ApManager ext/typed augments (direct src import)', () =>
       hasLearnedAptitudeSkill: () => false,
       hasAptitudeProgress: () => false,
       initializeAptitudeProgress: vi.fn(),
-      getAptitudeProgress: () => ({ hasLearning: () => false, initializeLearning: vi.fn(), learningBySkillId: () => ({ currentAp: 0, isLearned: () => false }) }),
+      getAptitudeProgress: () => ({ hasLearning: () => false, initializeLearning: vi.fn(), learningBySkillId: () => ({ currentAp: 0, isLearned: () => false, setRequiredAp: vi.fn() }) }),
       setAptitudeProgress: vi.fn(),
       learnAptitudeSkill: vi.fn(),
       isLearnedSkill: () => false,

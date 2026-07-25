@@ -158,6 +158,9 @@ class Window_SkillEquipList
       // exclude unslotted.
       if (skill.unslotted) return false;
 
+      // exclude skills forced unslotted for this specific battler.
+      if (this.actor().forcedUnslottedSkillIds().has(skill.id)) return false;
+
       // exclude extension skills when J.EXTEND exists.
       if (J.EXTEND && skill.isExtension) return false;
 
@@ -188,9 +191,14 @@ class Window_SkillEquipList
    */
   buildCommand(skill)
   {
-    // compute cost for right text.
-    const cost = this.actor()
-      .skillSlotCost(skill.id, this.slotContext());
+    // in slots-only exclusive mode, points don't gate anything- don't render a cost at all.
+    const isSlotsOnlyMode = J.SKS.Metadata.enableExclusiveMode && J.SKS.Metadata.slotsOnly;
+
+    // compute cost for right text, or blank it entirely in slots-only mode.
+    const rightText = isSlotsOnlyMode
+      ? String.empty
+      : `${this.actor()
+        .skillSlotCost(skill.id, this.slotContext())}`;
 
     // determine if this skill is currently enabled to equip.
     const enabled = this.actor()
@@ -201,7 +209,7 @@ class Window_SkillEquipList
       .setSymbol(`skill:${skill.id}`)
       .setExtensionData({ id: skill.id })
       .setIconIndex(skill.iconIndex)
-      .setRightText(`${cost}`)
+      .setRightText(rightText)
       .setEnabled(enabled)
       .build();
 

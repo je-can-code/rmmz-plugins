@@ -43,8 +43,38 @@ Game_Actor.prototype.initSkillSlotsMembers = function()
    * @type {Map<number, number>}
    */
   this._j._sks._slotMap = new Map();
+
+  /**
+   * The cached set of skill ids exempted from the slot requirement for this battler
+   * specifically, per {@link J.SKS.RegExp.UnslottedSkills}. Null until first computed,
+   * and invalidated back to null whenever {@link #onBattlerDataChange} fires.
+   * @type {Set<number>|null}
+   */
+  this._j._sks._forcedUnslottedSkillIds = null;
 };
 //endregion init
+
+//region event hooks
+/**
+ * Extends {@link #onBattlerDataChange}.<br/>
+ * Invalidates the forced-unslotted-skills cache and prunes any slot that no longer
+ * holds a skill this actor actually knows, since whatever changed (equip, class,
+ * state, level) may have altered either.
+ */
+J.SKS.Aliased.Game_Actor.set('onBattlerDataChange', Game_Actor.prototype.onBattlerDataChange);
+Game_Actor.prototype.onBattlerDataChange = function()
+{
+  // perform original logic.
+  J.SKS.Aliased.Game_Actor.get('onBattlerDataChange')
+    .call(this);
+
+  // the cached forced-unslotted set may now be stale- clear it so it recomputes on next read.
+  this._j._sks._forcedUnslottedSkillIds = null;
+
+  // clear out any slot whose skill this actor no longer actually knows.
+  this.pruneStaleSlots();
+};
+//endregion event hooks
 
 //region accessors
 /**
@@ -228,6 +258,31 @@ Game_Actor.prototype.equippedSkills = function()
   return equippedSkills;
 };
 
+/**
+ * Gets the set of skill ids exempted from the slot requirement for this battler
+ * specifically, per {@link J.SKS.RegExp.UnslottedSkills} tags found anywhere across
+ * {@link #getAllNotes}. Unlike a skill's own {@link RPG_Skill#unslotted} tag, this
+ * exemption applies only to this battler- the same skill still costs a slot for
+ * anyone who has to learn-then-equip it through the normal pipeline. Cached until
+ * {@link #onBattlerDataChange} invalidates it.
+ * @returns {Set<number>}
+ */
+Game_Actor.prototype.forcedUnslottedSkillIds = function()
+{
+  // return the cached set if it has already been computed since the last data change.
+  if (this._j._sks._forcedUnslottedSkillIds !== null) return this._j._sks._forcedUnslottedSkillIds;
+
+  // scan every note source for the tag, yielding one raw array of ids per tag found.
+  const arraysFound = RPGManager.getArraysFromAllNotesByRegex(
+    this.getAllNotes(), J.SKS.RegExp.UnslottedSkills, true, false) ?? [];
+
+  // flatten every array found into a single deduplicated set of skill ids.
+  this._j._sks._forcedUnslottedSkillIds = new Set(arraysFound.flat());
+
+  // return the freshly-computed and now-cached set.
+  return this._j._sks._forcedUnslottedSkillIds;
+};
+
 //endregion accessors
 
 //region slot management
@@ -285,28 +340,60 @@ Game_Actor.prototype.equipSkillToSlot = function(slotIndex, skillId)
 
 /**
  * Determines whether a skill can be equipped into the given slot by this actor.
+ * Gating depends on the plugin's configured mode: by default both slot count and
+ * slot points must permit the equip (tandem mode); when exclusive mode is enabled,
+ * only one of those two capacities is checked at all, per {@link J.SKS.Metadata.slotsOnly}.
  * @param {number} slotIndex - The index of the slot to check.
  * @param {number} skillId - The id of the skill to check.
  * @returns {boolean}
  */
 Game_Actor.prototype.canEquipSkillToSlot = function(slotIndex, skillId)
 {
-  // resolve the cost of the incoming skill for this slot.
-  const newCost = this.skillSlotCost(skillId, slotIndex);
-
-  // free skills can always be equipped.
-  if (newCost <= 0) return true;
-
-  // if this skill is already equipped somewhere, moving it incurs no additional cost.
+  // if this skill is already equipped somewhere, moving it incurs no additional
+  // cost or slot usage- the source slot is still occupied at this point in time,
+  // so treating this as "new" usage would wrongly double-count it.
   if (this.getEquippedSkillIndex(skillId) !== -1) return true;
 
   // check what is currently occupying the target slot.
   const currentSkillId = this.getSkillIdInSlot(slotIndex);
 
-  // replacing a slot with the same skill is always allowed.
+  // replacing a slot with the same skill it already holds is always allowed.
   if (currentSkillId === skillId) return true;
 
-  // compute the cost of the skill currently in the target slot.
+  // resolve whether points and count each independently permit this equip.
+  const pointsOk = this.canAffordSkillSlotPoints(slotIndex, skillId, currentSkillId);
+  const countOk = this.canAffordSkillSlotCount(currentSkillId);
+
+  // consult the plugin's configured mode to decide which capacities actually gate.
+  if (J.SKS.Metadata.enableExclusiveMode)
+  {
+    // in exclusive mode, only the configured capacity matters- the other is ignored entirely.
+    return J.SKS.Metadata.slotsOnly
+      ? countOk
+      : pointsOk;
+  }
+
+  // in tandem mode (the default), both capacities must permit the equip.
+  return pointsOk && countOk;
+};
+
+/**
+ * Determines whether this actor has enough slot points to place the given skill
+ * into the given slot, accounting for whatever skill is being displaced.
+ * @param {number} slotIndex - The index of the slot being targeted.
+ * @param {number} skillId - The id of the incoming skill.
+ * @param {number} currentSkillId - The id of the skill currently occupying the slot, or 0 if empty.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.canAffordSkillSlotPoints = function(slotIndex, skillId, currentSkillId)
+{
+  // resolve the cost of the incoming skill for this slot.
+  const newCost = this.skillSlotCost(skillId, slotIndex);
+
+  // free skills never strain the point budget, regardless of what they displace.
+  if (newCost <= 0) return true;
+
+  // compute the cost of the skill currently in the target slot, if any.
   const currentCost = this.skillSlotCost(currentSkillId, slotIndex);
 
   // determine the hypothetical spend after swapping the occupant for the new skill.
@@ -314,6 +401,31 @@ Game_Actor.prototype.canEquipSkillToSlot = function(slotIndex, skillId)
 
   // allow only if the hypothetical spend stays within the actor's maximum.
   return hypotheticalSpent <= this.maxSlotPoints();
+};
+
+/**
+ * Determines whether this actor has room for one more occupied slot, unless the
+ * target slot is already occupied- in which case no new slot usage is introduced.
+ * @param {number} currentSkillId - The id of the skill currently occupying the target slot, or 0 if empty.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.canAffordSkillSlotCount = function(currentSkillId)
+{
+  // an occupied target slot is being replaced in-place, not newly consumed.
+  const isNewSlotUsage = currentSkillId === 0;
+
+  // a replacement never needs a free slot; only new usage needs to fit under the cap.
+  return isNewSlotUsage === false || this.hasSufficientSlotCount();
+};
+
+/**
+ * Determines if this actor has an available slot beyond what is currently occupied.
+ * @returns {boolean}
+ */
+Game_Actor.prototype.hasSufficientSlotCount = function()
+{
+  // compare the true occupant count against the actor's maximum slot count.
+  return this.slotMap().size < this.maxSlots();
 };
 
 /**
@@ -404,6 +516,31 @@ Game_Actor.prototype.unequipSkillFromSlot = function(slotIndex)
 
   // notify observers that this skill has been unequipped.
   this.onSkillUnequipChange(slotIndex, currentSkillId);
+};
+
+/**
+ * Unequips every slot whose skill this actor no longer actually knows- e.g. after a
+ * class change or state removal takes away access to something that was equipped.
+ * Left in place, a stale slot would keep pointing at a skill the actor can't use.
+ */
+Game_Actor.prototype.pruneStaleSlots = function()
+{
+  // snapshot the occupied indices first, since unequipping mutates the slot map mid-iteration.
+  const occupiedIndices = [ ...this.slotMap()
+    .keys() ];
+
+  // check each occupied slot against what this actor currently knows.
+  occupiedIndices.forEach(slotIndex =>
+  {
+    // resolve the skill currently sitting in this slot.
+    const skillId = this.getSkillIdInSlot(slotIndex);
+
+    // still known- nothing to prune here.
+    if (this.hasSkill(skillId)) return;
+
+    // no longer known- clear the stale slot.
+    this.unequipSkillFromSlot(slotIndex);
+  });
 };
 
 /**

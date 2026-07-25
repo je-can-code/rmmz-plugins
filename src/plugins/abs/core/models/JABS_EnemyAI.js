@@ -285,7 +285,7 @@ class JABS_EnemyAI
       return [ this.followWithCombo(user) ];
     }
 
-    if (!usableSkills.length) return [];
+    if (!usableSkills.length) return [ user.getEnemyBasicAttack() ];
 
     const target = user.getTarget();
     let filtered = usableSkills;

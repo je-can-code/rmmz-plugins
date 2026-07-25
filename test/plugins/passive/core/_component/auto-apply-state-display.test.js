@@ -111,6 +111,91 @@ describe('AutoApplyStateDisplay (direct src import)', () =>
       expect(lines[1]).toContain('\\state[1010]');
       expect(lines[1]).toContain('\\*\\_15 seconds\\_\\*');
     });
+
+    it('skips a tuple with a non-positive/NaN state id', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<autoApplyState:[0, time, 3600]>\n<autoApplyState:[1001, time, 3600]>';
+
+      // Act
+      const lines = AutoApplyStateDisplay.collectTimeProseLines(state, textHelper);
+
+      // Assert
+      expect(lines.length).toBe(1);
+    });
+
+    it('skips a tuple with a non-positive/NaN param', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<autoApplyState:[1001, time, 0]>\n<autoApplyState:[1002, time, 3600]>';
+
+      // Act
+      const lines = AutoApplyStateDisplay.collectTimeProseLines(state, textHelper);
+
+      // Assert
+      expect(lines.length).toBe(1);
+      expect(lines[0]).toContain('\\state[1002]');
+    });
+  });
+
+  describe('collectStandProseLines', () =>
+  {
+    it('ignores non-stand conditions', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<autoApplyState:[1001, stand, 3600]>\n<autoApplyState:[1002, time, 60]>';
+
+      // Act
+      const lines = AutoApplyStateDisplay.collectStandProseLines(state, textHelper);
+
+      // Assert
+      expect(lines.length).toBe(1);
+      expect(lines[0]).toContain('\\state[1001]');
+      expect(lines[0]).toContain('While standing still');
+    });
+
+    it('reads every stand tag on a state row', () =>
+    {
+      // Arrange
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<autoApplyState:[1001, stand, 3600]>\n<autoApplyState:[1010, stand, 900]>';
+
+      // Act
+      const lines = AutoApplyStateDisplay.collectStandProseLines(state, textHelper);
+
+      // Assert
+      expect(lines.length).toBe(2);
+    });
+  });
+
+  describe('intervalPhrase', () =>
+  {
+    it('formats a whole-second interval without a tilde', () =>
+    {
+      // Act & Assert
+      expect(AutoApplyStateDisplay.intervalPhrase(120)).toBe('2 seconds');
+    });
+
+    it('formats a fractional-second interval with a rounded, tilde-prefixed value', () =>
+    {
+      // Act & Assert- 100 frames / 60 = 1.6666...s, rounds to 1.67.
+      expect(AutoApplyStateDisplay.intervalPhrase(100)).toBe('~1.67 seconds');
+    });
+  });
+
+  describe('formatStandProse', () =>
+  {
+    it('formats stand-condition prose with a state text code', () =>
+    {
+      // Act
+      const prose = AutoApplyStateDisplay.formatStandProse(1001, 3600, textHelper);
+
+      // Assert
+      expect(prose).toBe('While standing still, gain \\state[1001] every \\C[6]\\*\\_60 seconds\\_\\*\\C[0].');
+    });
   });
 });
 //endregion plugins/passive/core/_component/auto-apply-state-display.test.js

@@ -5328,7 +5328,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       jabsBattler.executeDodgeSkill(buildDodgeSkill());
 
-      expect(jabsBattler.executeGuard).toHaveBeenCalledWith(false, JABS_Button.Offhand);
+      expect(jabsBattler.executeGuard).toHaveBeenCalledWith(false);
     });
 
     it('does not touch guard when not currently guarding', () =>
@@ -5779,21 +5779,21 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
   describe('getGuardData', () =>
   {
-    it('returns null without a resolved skill id', () =>
+    it('returns null without a resolved guard skill id', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 0 });
+      jabsBattler.getBattler = () => ({ getGuardSkillId: () => 0 });
 
-      expect(jabsBattler.getGuardData('offhand')).toBeNull();
+      expect(jabsBattler.getGuardData()).toBeNull();
     });
 
     it('returns null when the resolved skill is not a guard skill', () =>
     {
       JABS_Battler.isGuardSkillById = vi.fn(() => false);
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 1 });
+      jabsBattler.getBattler = () => ({ getGuardSkillId: () => 1 });
 
-      expect(jabsBattler.getGuardData('offhand')).toBeNull();
+      expect(jabsBattler.getGuardData()).toBeNull();
     });
 
     it('returns null when the skill conditions are not met', () =>
@@ -5801,11 +5801,11 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       JABS_Battler.isGuardSkillById = vi.fn(() => true);
       const jabsBattler = buildBattler();
       jabsBattler.getBattler = () => ({
-        getResolvedSkillId: () => 1, meetsSkillConditions: () => false,
+        getGuardSkillId: () => 1, meetsSkillConditions: () => false,
       });
       jabsBattler.getSkill = () => ({ jabsGuardData: 'guard-data' });
 
-      expect(jabsBattler.getGuardData('offhand')).toBeNull();
+      expect(jabsBattler.getGuardData()).toBeNull();
     });
 
     it('returns the skill\'s guard data when everything checks out', () =>
@@ -5813,40 +5813,30 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       JABS_Battler.isGuardSkillById = vi.fn(() => true);
       const jabsBattler = buildBattler();
       jabsBattler.getBattler = () => ({
-        getResolvedSkillId: () => 1, meetsSkillConditions: () => true,
+        getGuardSkillId: () => 1, meetsSkillConditions: () => true,
       });
       jabsBattler.getSkill = () => ({ jabsGuardData: 'guard-data' });
 
-      expect(jabsBattler.getGuardData('offhand')).toBe('guard-data');
+      expect(jabsBattler.getGuardData()).toBe('guard-data');
     });
   });
 
-  describe('isGuardSkillByKey', () =>
+  describe('isGuardSkillEquipped', () =>
   {
-    it('is false without a resolved skill id', () =>
+    it('is false without a resolved guard skill id', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 0 });
+      jabsBattler.getGuardData = () => null;
 
-      expect(jabsBattler.isGuardSkillByKey('offhand')).toBe(false);
+      expect(jabsBattler.isGuardSkillEquipped()).toBe(false);
     });
 
-    it('is false when the resolved skill is not a guard skill', () =>
+    it('is true when guard data resolves', () =>
     {
-      JABS_Battler.isGuardSkillById = vi.fn(() => false);
       const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 1 });
+      jabsBattler.getGuardData = () => ({ canGuard: () => true });
 
-      expect(jabsBattler.isGuardSkillByKey('offhand')).toBe(false);
-    });
-
-    it('is true for a resolved guard skill', () =>
-    {
-      JABS_Battler.isGuardSkillById = vi.fn(() => true);
-      const jabsBattler = buildBattler();
-      jabsBattler.getBattler = () => ({ getResolvedSkillId: () => 1 });
-
-      expect(jabsBattler.isGuardSkillByKey('offhand')).toBe(true);
+      expect(jabsBattler.isGuardSkillEquipped()).toBe(true);
     });
   });
 
@@ -5859,7 +5849,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.endGuarding = vi.fn();
       jabsBattler.startGuarding = vi.fn();
 
-      jabsBattler.executeGuard(true, 'offhand');
+      jabsBattler.executeGuard(true);
 
       expect(jabsBattler.endGuarding).not.toHaveBeenCalled();
       expect(jabsBattler.startGuarding).not.toHaveBeenCalled();
@@ -5872,7 +5862,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.endGuarding = vi.fn();
       jabsBattler.startGuarding = vi.fn();
 
-      jabsBattler.executeGuard(false, 'offhand');
+      jabsBattler.executeGuard(false);
 
       expect(jabsBattler.endGuarding).toHaveBeenCalledTimes(1);
       expect(jabsBattler.startGuarding).not.toHaveBeenCalled();
@@ -5885,7 +5875,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.endGuarding = vi.fn();
       jabsBattler.startGuarding = vi.fn();
 
-      jabsBattler.executeGuard(false, 'offhand');
+      jabsBattler.executeGuard(false);
 
       expect(jabsBattler.endGuarding).not.toHaveBeenCalled();
     });
@@ -5897,7 +5887,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getGuardData = () => null;
       jabsBattler.startGuarding = vi.fn();
 
-      jabsBattler.executeGuard(true, 'offhand');
+      jabsBattler.executeGuard(true);
 
       expect(jabsBattler.startGuarding).not.toHaveBeenCalled();
     });
@@ -5909,7 +5899,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getGuardData = () => ({ canGuard: () => false });
       jabsBattler.startGuarding = vi.fn();
 
-      jabsBattler.executeGuard(true, 'offhand');
+      jabsBattler.executeGuard(true);
 
       expect(jabsBattler.startGuarding).not.toHaveBeenCalled();
     });
@@ -5921,9 +5911,9 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getGuardData = () => ({ canGuard: () => true });
       jabsBattler.startGuarding = vi.fn();
 
-      jabsBattler.executeGuard(true, 'offhand');
+      jabsBattler.executeGuard(true);
 
-      expect(jabsBattler.startGuarding).toHaveBeenCalledWith('offhand');
+      expect(jabsBattler.startGuarding).toHaveBeenCalledWith();
     });
   });
 
@@ -5949,7 +5939,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getGuardData = () => guardData;
       jabsBattler.getBonusParryFrames = () => 0;
 
-      jabsBattler.startGuarding('offhand');
+      jabsBattler.startGuarding();
 
       expect(jabsBattler.guarding()).toBe(true);
       expect(jabsBattler.flatGuardReduction()).toBe(5);
@@ -5966,7 +5956,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getGuardData = () => guardData;
       jabsBattler.getBonusParryFrames = () => 5;
 
-      jabsBattler.startGuarding('offhand');
+      jabsBattler.startGuarding();
 
       expect(jabsBattler._parryWindow).toBe(15);
     });
@@ -5978,7 +5968,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getGuardData = () => guardData;
       jabsBattler.getBonusParryFrames = () => 5;
 
-      jabsBattler.startGuarding('offhand');
+      jabsBattler.startGuarding();
 
       expect(jabsBattler._parryWindow).toBe(0);
     });

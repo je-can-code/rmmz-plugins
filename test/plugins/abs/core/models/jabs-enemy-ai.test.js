@@ -412,11 +412,11 @@ describe('JABS_EnemyAI (unit, all downstream dependencies mocked)', () =>
       expect(ai.decideAttackAction(buildBattler(), [ 1 ])).toEqual([ 42 ]);
     });
 
-    it('returns empty when there are no usable skills', () =>
+    it('falls back to the basic attack when there are no usable skills', () =>
     {
       const ai = new JABS_EnemyAI();
 
-      expect(ai.decideAttackAction(buildBattler(), [])).toEqual([]);
+      expect(ai.decideAttackAction(buildBattler(), [])).toEqual([ 999 ]);
     });
 
     it('applies the careful filter when active', () =>

@@ -56,7 +56,7 @@ describe('J-ABS-Targeting JABS_InputAdapter (direct src import, JABS_TargetingMa
       canBattlerUseSkills: () => true,
       isSkillTypeCooldownReady: () => true,
       isCastingOrChanneling: () => false,
-      isGuardSkillByKey: () => false,
+      isGuardSkillEquipped: () => false,
       setDecidedAction: vi.fn(),
       setCastCountdown: vi.fn(),
       resetComboData: vi.fn(),
@@ -164,16 +164,6 @@ describe('J-ABS-Targeting JABS_InputAdapter (direct src import, JABS_TargetingMa
 
   describe('performOffhandAction', () =>
   {
-    it('falls through to original logic when the offhand is a guard skill', () =>
-    {
-      const battler = buildJabsBattler({ isGuardSkillByKey: () => true });
-
-      globalThis.JABS_InputAdapter.performOffhandAction(battler);
-
-      expect(globalThis.J.ABS.EXT.TARGETING.Aliased.JABS_InputAdapter.get('performOffhandAction'))
-        .toHaveBeenCalledWith(battler);
-    });
-
     it('falls through to original logic when a pedestrian blocks the way', () =>
     {
       globalThis.$gameMap.hasInteractableEventInFront = () => true;

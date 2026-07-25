@@ -58,6 +58,13 @@ export function installPassiveConditionalHostGlobals(sandbox = globalThis, plugi
   {
     return null;
   };
+  sandbox.JABS_Battler.prototype.getCharacter = function()
+  {
+    return null;
+  };
+  sandbox.JABS_Battler.prototype.setLastUsedSkillId = function()
+  {
+  };
 
   sandbox.JABS_Action = function JABS_Action()
   {

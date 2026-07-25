@@ -358,5 +358,303 @@ describe('AutoRuleManager (direct src import)', () =>
       expect(battler.dispatched.sort()).toEqual([ 4, 5 ]);
     });
   });
+
+  describe('ABS-inactive / missing-battler guards', () =>
+  {
+    it.each([
+      'processTimeRules', 'processStandRules', 'processEnemiesNearbyRules', 'processAlliesNearbyRules',
+    ])('%s is a no-op when $jabsEngine is absent', (methodName) =>
+    {
+      // Arrange
+      globalThis.$jabsEngine = null;
+      const battler = makeBattler([ makeSource(1, [ [ 1, 'time', 0 ] ]) ]);
+
+      // Act & Assert
+      expect(() => FakeAutoApplyManager[methodName](battler)).not.toThrow();
+      expect(battler.dispatched).toEqual([]);
+    });
+
+    it.each([
+      'processTimeRules', 'processStandRules', 'processEnemiesNearbyRules', 'processAlliesNearbyRules',
+    ])('%s is a no-op when absEnabled is false', (methodName) =>
+    {
+      // Arrange
+      globalThis.$jabsEngine = { absEnabled: false };
+      const battler = makeBattler([ makeSource(1, [ [ 1, 'time', 0 ] ]) ]);
+
+      // Act & Assert
+      expect(() => FakeAutoApplyManager[methodName](battler)).not.toThrow();
+      expect(battler.dispatched).toEqual([]);
+    });
+
+    it.each([ 'scheduleKillTriggers', 'scheduleDamageDealtTriggers', 'scheduleWeaponHitTriggers' ])(
+      '%s is a no-op when $jabsEngine is absent', (methodName) =>
+      {
+        // Arrange
+        globalThis.$jabsEngine = null;
+        const battler = makeBattler([]);
+
+        // Act & Assert
+        expect(() => FakeAutoApplyManager[methodName](battler)).not.toThrow();
+      });
+
+    it.each([ 'scheduleKillTriggers', 'scheduleDamageDealtTriggers', 'scheduleWeaponHitTriggers' ])(
+      '%s is a no-op when the battler is falsy', (methodName) =>
+      {
+        // Arrange
+        globalThis.$jabsEngine = { absEnabled: true };
+
+        // Act & Assert
+        expect(() => FakeAutoApplyManager[methodName](null)).not.toThrow();
+      });
+
+    it('creditTileStep is a no-op when $jabsEngine is absent', () =>
+    {
+      // Arrange
+      globalThis.$jabsEngine = null;
+      const battler = makeBattler([ makeSource(1, [ [ 1, 'move', 1 ] ]) ]);
+
+      // Act & Assert
+      expect(() => FakeAutoApplyManager.creditTileStep(battler)).not.toThrow();
+    });
+  });
+
+  describe('creditTileStep', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$jabsEngine = { absEnabled: true };
+    });
+
+    it('skips a tuple with an invalid id', () =>
+    {
+      // Arrange
+      const battler = makeBattler([ makeSource(1, [ [ 0, 'move', 1 ] ]) ]);
+      battler.getAutoRuleTileCredit = vi.fn();
+      battler.setAutoRuleTileCredit = vi.fn();
+
+      // Act
+      FakeAutoApplyManager.creditTileStep(battler);
+
+      // Assert
+      expect(battler.setAutoRuleTileCredit).not.toHaveBeenCalled();
+    });
+
+    it('skips a non-move condition kind', () =>
+    {
+      // Arrange
+      const battler = makeBattler([ makeSource(1, [ [ 1, 'time', 1 ] ]) ]);
+      battler.getAutoRuleTileCredit = vi.fn();
+      battler.setAutoRuleTileCredit = vi.fn();
+
+      // Act
+      FakeAutoApplyManager.creditTileStep(battler);
+
+      // Assert
+      expect(battler.setAutoRuleTileCredit).not.toHaveBeenCalled();
+    });
+
+    it('skips a tuple with an invalid tiles-per-dispatch threshold', () =>
+    {
+      // Arrange
+      const battler = makeBattler([ makeSource(1, [ [ 1, 'move', 0 ] ]) ]);
+      battler.getAutoRuleTileCredit = vi.fn();
+      battler.setAutoRuleTileCredit = vi.fn();
+
+      // Act
+      FakeAutoApplyManager.creditTileStep(battler);
+
+      // Assert
+      expect(battler.setAutoRuleTileCredit).not.toHaveBeenCalled();
+    });
+
+    it('accumulates credit without dispatching until the tile threshold is reached', () =>
+    {
+      // Arrange
+      const battler = makeBattler([ makeSource(1, [ [ 1, 'move', 3 ] ]) ]);
+      battler.getAutoRuleTileCredit = vi.fn().mockReturnValue(0);
+      battler.setAutoRuleTileCredit = vi.fn();
+
+      // Act
+      FakeAutoApplyManager.creditTileStep(battler);
+
+      // Assert- 0 prior + 1 = 1, still under the 3-tile threshold.
+      expect(battler.setAutoRuleTileCredit).toHaveBeenCalledWith(expect.any(String), 1);
+      expect(battler.dispatched).toEqual([]);
+    });
+
+    it('dispatches and resets credit once the tile threshold is reached', () =>
+    {
+      // Arrange
+      const battler = makeBattler([ makeSource(1, [ [ 1, 'move', 3 ] ]) ]);
+      battler.getAutoRuleTileCredit = vi.fn().mockReturnValue(2);
+      battler.setAutoRuleTileCredit = vi.fn();
+
+      // Act
+      FakeAutoApplyManager.creditTileStep(battler);
+
+      // Assert- 2 prior + 1 = 3, meets the threshold.
+      expect(battler.dispatched).toEqual([ 1 ]);
+      expect(battler.setAutoRuleTileCredit).toHaveBeenCalledWith(expect.any(String), 0);
+    });
+  });
+
+  describe('processTileStepFromCharacter', () =>
+  {
+    it('does nothing when the character has no JABS wrapper', () =>
+    {
+      // Arrange
+      const character = { getJabsBattler: () => null };
+
+      // Act & Assert
+      expect(() => FakeAutoApplyManager.processTileStepFromCharacter(character)).not.toThrow();
+    });
+
+    it('does nothing when the JABS wrapper has no underlying Game_Battler', () =>
+    {
+      // Arrange
+      const character = { getJabsBattler: () => ({ getBattler: () => null }) };
+
+      // Act & Assert
+      expect(() => FakeAutoApplyManager.processTileStepFromCharacter(character)).not.toThrow();
+    });
+
+    it('forwards the tile step to the underlying battler', () =>
+    {
+      // Arrange
+      globalThis.$jabsEngine = { absEnabled: true };
+      const battler = makeBattler([ makeSource(1, [ [ 1, 'move', 1 ] ]) ]);
+      battler.getAutoRuleTileCredit = vi.fn().mockReturnValue(0);
+      battler.setAutoRuleTileCredit = vi.fn();
+      const character = { getJabsBattler: () => ({ getBattler: () => battler }) };
+
+      // Act
+      FakeAutoApplyManager.processTileStepFromCharacter(character);
+
+      // Assert
+      expect(battler.setAutoRuleTileCredit).toHaveBeenCalled();
+    });
+  });
+
+  describe('buildRuleKey', () =>
+  {
+    it('falls back to "Unknown" when the source constructor has no name', () =>
+    {
+      // Arrange
+      const source = { constructor: {}, id: 5 };
+
+      // Act
+      const key = AutoRuleManager.buildRuleKey(source, 0, 10, 'time');
+
+      // Assert
+      expect(key).toBe('Unknown:5:0:10:time');
+    });
+  });
+
+  describe('_tryDispatchRule cooldown gate', () =>
+  {
+    it('dispatches when the cooldown has fully elapsed since the last fire', () =>
+    {
+      // Arrange
+      const battler = makeBattler([ makeSource(1, [ [ 7, 'time', 60 ] ]) ]);
+      battler.getAutoRuleLastFrame = vi.fn().mockReturnValue(500);
+      globalThis.Graphics.frameCount = 1000;
+
+      // Act
+      FakeAutoApplyManager.tryDispatch(battler, 'time');
+
+      // Assert- 500 elapsed frames well past the 60-frame cooldown.
+      expect(battler.dispatched).toEqual([ 7 ]);
+      expect(battler.setAutoRuleLastFrame).toHaveBeenCalled();
+    });
+
+    it('does not stamp the cooldown when dispatch itself reports failure', () =>
+    {
+      // Arrange
+      const FailingManager = class extends AutoRuleManager
+      {
+        static get rulesProperty() { return 'fakeRules'; }
+
+        static dispatch() { return false; }
+      };
+      const battler = makeBattler([ makeSource(1, [ [ 7, 'time', 60 ] ]) ]);
+      battler.getAutoRuleLastFrame = vi.fn().mockReturnValue(0);
+
+      // Act
+      FailingManager.tryDispatch(battler, 'time');
+
+      // Assert
+      expect(battler.setAutoRuleLastFrame).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('tryDispatch / proximity rule edge cases', () =>
+  {
+    it('tryDispatch itself is a no-op when ABS is inactive', () =>
+    {
+      // Arrange
+      globalThis.$jabsEngine = { absEnabled: false };
+      const battler = makeBattler([ makeSource(1, [ [ 7, 'time', 60 ] ]) ]);
+
+      // Act
+      FakeAutoApplyManager.tryDispatch(battler, 'time');
+
+      // Assert
+      expect(battler.dispatched).toEqual([]);
+    });
+
+    it('skips a non-proximity tuple with a negative parameter', () =>
+    {
+      // Arrange
+      const battler = makeBattler([ makeSource(1, [ [ 7, 'time', -1 ] ]) ]);
+
+      // Act
+      FakeAutoApplyManager.tryDispatch(battler, 'time');
+
+      // Assert
+      expect(battler.dispatched).toEqual([]);
+    });
+
+    it('skips a proximity tuple with an invalid/zero count threshold', () =>
+    {
+      // Arrange
+      const battler = makeBattler([ makeSource(1, [ [ 7, 'enemiesNearby', 0, 60, 1 ] ]) ]);
+      FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([ {} ]);
+
+      // Act
+      FakeAutoApplyManager.processEnemiesNearbyRules(battler);
+
+      // Assert
+      expect(battler.dispatched).toEqual([]);
+    });
+
+    it('skips a proximity tuple with an invalid cooldown value', () =>
+    {
+      // Arrange
+      const battler = makeBattler([ makeSource(1, [ [ 7, 'enemiesNearby', 1, -5, 1 ] ]) ]);
+      FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([ {} ]);
+
+      // Act
+      FakeAutoApplyManager.processEnemiesNearbyRules(battler);
+
+      // Assert
+      expect(battler.dispatched).toEqual([]);
+    });
+  });
+
+  describe('abstract interface guards', () =>
+  {
+    it('rulesProperty throws when a subclass forgets to override it', () =>
+    {
+      // Act & Assert
+      expect(() => AutoRuleManager.rulesProperty).toThrow(/must implement static get rulesProperty/);
+    });
+
+    it('dispatch throws when a subclass forgets to override it', () =>
+    {
+      // Act & Assert
+      expect(() => AutoRuleManager.dispatch({}, 1, [])).toThrow(/must implement static dispatch/);
+    });
+  });
 });
 //endregion plugins/passive/ext/conditional/managers/auto-rule-manager.test.js

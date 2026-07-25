@@ -10,6 +10,7 @@ import {
   installPassiveConditionalHostGlobals,
   setPluginContextToJPassiveConditional,
 } from './fixtures/install-passive-conditional-host-globals.js';
+import { installPluginManagerWithParams } from '../../../setup/install-plugin-manager-with-params.js';
 
 /**
  * Builds a test actor whose skill notes carry passive grants and rule tags.
@@ -117,6 +118,13 @@ describe('J-Passive-Conditional (direct src import)', () =>
     ({ default: globalThis.RPG_State } = await import('../../../../src/plugins/_base/database/implementations/RPG_State.js'));
 
     await import('../../../../src/plugins/_base/objects/Game_BattlerBase.js');
+
+    // _base's own Game_Battler.js aliases these at import time (vanilla RMMZ engine behavior this
+    // lightweight fixture doesn't model); real gainHp/gainMp/gainTp just apply the delta.
+    globalThis.Game_Battler.prototype.gainHp = function(value) { this._hp = (this._hp || 0) + value; };
+    globalThis.Game_Battler.prototype.gainMp = function(value) { this._mp = (this._mp || 0) + value; };
+    globalThis.Game_Battler.prototype.gainTp = function(value) { this._tp = (this._tp || 0) + value; };
+
     await import('../../../../src/plugins/_base/objects/Game_Battler.js');
     await import('../../../../src/plugins/_base/objects/Game_Actor.js');
 
@@ -134,6 +142,7 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
     setPluginContextToJPassiveConditional();
     await import('../../../../src/plugins/passive/ext/conditional/_metadata/initialization.js');
+    ({ default: globalThis.JPassiveConditional_PluginMetadata } = await import('../../../../src/plugins/passive/ext/conditional/_metadata/_pluginMetadata.js'));
 
     // patches the real prototype chain and JABS_* stand-ins directly, no vm involved, following
     // the same order as passive/ext/conditional/entry.js.
@@ -149,11 +158,16 @@ describe('J-Passive-Conditional (direct src import)', () =>
     ({ default: globalThis.AutoInflictStateManager } = await import('../../../../src/plugins/passive/ext/conditional/managers/AutoInflictStateManager.js'));
     ({ default: globalThis.AutoModifyCooldownManager } = await import('../../../../src/plugins/passive/ext/conditional/managers/AutoModifyCooldownManager.js'));
     ({ default: globalThis.SkillExecutionStateRemovalManager } = await import('../../../../src/plugins/passive/ext/conditional/managers/SkillExecutionStateRemovalManager.js'));
-    await import('../../../../src/plugins/passive/ext/conditional/managers/SkillResolutionStateRemovalManager.js');
-    await import('../../../../src/plugins/passive/ext/conditional/managers/MoveStateRemovalManager.js');
+    ({ default: globalThis.SkillResolutionStateRemovalManager } = await import('../../../../src/plugins/passive/ext/conditional/managers/SkillResolutionStateRemovalManager.js'));
+    ({ default: globalThis.MoveStateRemovalManager } = await import('../../../../src/plugins/passive/ext/conditional/managers/MoveStateRemovalManager.js'));
     await import('../../../../src/plugins/passive/ext/conditional/managers/PassiveGateEvaluator.js');
     await import('../../../../src/plugins/passive/ext/conditional/managers/PassiveStackCountEvaluator.js');
     await import('../../../../src/plugins/passive/ext/conditional/objects/Game_Battler.js');
+
+    // aliased at import time by conditional's own Game_Action.js; the shared J-Base placeholder
+    // class has an empty prototype, so seed a real no-op "original" before patching it.
+    globalThis.Game_Action.prototype.apply = function() {};
+
     await import('../../../../src/plugins/passive/ext/conditional/objects/Game_Action.js');
     await import('../../../../src/plugins/passive/ext/conditional/objects/Game_CharacterBase.js');
     await import('../../../../src/plugins/passive/ext/conditional/managers/JABS_Battler.js');
@@ -184,6 +198,36 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
       // Assert
       expect(result).toBe(5);
+    });
+
+    it('falls back to documented defaults when every plugin param is unset', () =>
+    {
+      // Arrange
+      installPluginManagerWithParams(globalThis, 'J-Passive-Conditional-test-defaults', {});
+
+      // Act
+      const metadata = new globalThis.JPassiveConditional_PluginMetadata('J-Passive-Conditional-test-defaults', '1.0.0');
+
+      // Assert
+      expect(metadata.reconcileDelayFrames).toBe(15);
+      expect(metadata.defaultProximityTiles).toBe(5);
+      expect(metadata.autoExecuteSkillMaxDepth).toBe(1);
+      expect(metadata.autoInflictStateMaxDepth).toBe(1);
+    });
+
+    it('parses a configured auto-inflict-state-max-depth plugin param', () =>
+    {
+      // Arrange- the shared fixture's default params never set this one, so its "valid parse"
+      // branch is otherwise never exercised.
+      installPluginManagerWithParams(globalThis, 'J-Passive-Conditional-test-inflict-depth', {
+        'auto-inflict-state-max-depth': '3',
+      });
+
+      // Act
+      const metadata = new globalThis.JPassiveConditional_PluginMetadata('J-Passive-Conditional-test-inflict-depth', '1.0.0');
+
+      // Assert
+      expect(metadata.autoInflictStateMaxDepth).toBe(3);
     });
   });
 
@@ -320,6 +364,120 @@ describe('J-Passive-Conditional (direct src import)', () =>
       // Act & Assert
       expect(row.passiveSourceRules.length).toBe(1);
     });
+
+    it('parses one passiveStateRule tuple', () =>
+    {
+      // Arrange
+      const row = Object.assign(Object.create(globalThis.RPG_BaseBattler.prototype), {
+        id: 1, meta: {}, name: 'Test', note: '<passiveStateRule:[77, hpBelow, 25]>', description: String.empty, iconIndex: 0,
+      });
+
+      // Act & Assert
+      expect(row.passiveStateRules.length).toBe(1);
+      expect(row.passiveStateRules[0][0]).toBe(77);
+    });
+
+    it('parses one passiveStateCount tuple', () =>
+    {
+      // Arrange
+      const row = Object.assign(Object.create(globalThis.RPG_BaseBattler.prototype), {
+        id: 1, meta: {}, name: 'Test', note: '<passiveStateCount:[77, moreIsMoreHp, 25]>', description: String.empty, iconIndex: 0,
+      });
+
+      // Act & Assert
+      expect(row.passiveStateCounts.length).toBe(1);
+      expect(row.passiveStateCounts[0][0]).toBe(77);
+    });
+
+    it('parses one autoApplyStateOnNearby tuple', () =>
+    {
+      // Arrange
+      const row = Object.assign(Object.create(globalThis.RPG_BaseBattler.prototype), {
+        id: 1, meta: {}, name: 'Test', note: '<autoApplyStateOnNearby:[16, enemiesNearby, time, 180]>', description: String.empty, iconIndex: 0,
+      });
+
+      // Act & Assert
+      expect(row.autoApplyStateOnNearbyRules.length).toBe(1);
+    });
+
+    it('parses one autoExecuteSkill tuple', () =>
+    {
+      // Arrange
+      const row = Object.assign(Object.create(globalThis.RPG_BaseBattler.prototype), {
+        id: 1, meta: {}, name: 'Test', note: '<autoExecuteSkill:[10, time, 180]>', description: String.empty, iconIndex: 0,
+      });
+
+      // Act & Assert
+      expect(row.autoExecuteSkillRules.length).toBe(1);
+    });
+
+    it('parses one autoModifyCooldowns tuple', () =>
+    {
+      // Arrange
+      const row = Object.assign(Object.create(globalThis.RPG_BaseBattler.prototype), {
+        id: 1, meta: {}, name: 'Test', note: '<autoModifyCooldowns:[mainhand, -10]>', description: String.empty, iconIndex: 0,
+      });
+
+      // Act & Assert
+      expect(row.autoModifyCooldownRules.length).toBe(1);
+    });
+
+    it('parses one autoInflictState tuple', () =>
+    {
+      // Arrange
+      const row = Object.assign(Object.create(globalThis.RPG_BaseBattler.prototype), {
+        id: 1, meta: {}, name: 'Test', note: '<autoInflictState:[16, 100]>', description: String.empty, iconIndex: 0,
+      });
+
+      // Act & Assert
+      expect(row.autoInflictStateRules.length).toBe(1);
+    });
+  });
+
+  describe('conditional tags on RPG_State rows', () =>
+  {
+    it('parses one removeStateOnMove tuple', () =>
+    {
+      // Arrange
+      const row = stubMomentumStateRow(9001, '<removeStateOnMove:[9001]>');
+
+      // Act & Assert
+      expect(row.removeStateOnMoveRules.length).toBe(1);
+    });
+
+    it('parses one removeOnSkillResolution tuple', () =>
+    {
+      // Arrange
+      const row = stubMomentumStateRow(9002, '<removeOnSkillResolution:[0, 100]>');
+
+      // Act & Assert
+      expect(row.removeOnSkillResolutionRules.length).toBe(1);
+    });
+  });
+
+  describe('conditional tags on RPG_BaseItem rows', () =>
+  {
+    it('parses one autoModifyCooldowns tuple', () =>
+    {
+      // Arrange
+      const row = new globalThis.RPG_BaseItem({
+        id: 1, meta: {}, name: String.empty, note: '<autoModifyCooldowns:[mainhand, -10]>', description: String.empty, iconIndex: 0,
+      }, 1);
+
+      // Act & Assert
+      expect(row.autoModifyCooldownRules.length).toBe(1);
+    });
+
+    it('parses one autoApplyStateOnNearby tuple', () =>
+    {
+      // Arrange
+      const row = new globalThis.RPG_BaseItem({
+        id: 1, meta: {}, name: String.empty, note: '<autoApplyStateOnNearby:[16, enemiesNearby, time, 180]>', description: String.empty, iconIndex: 0,
+      }, 1);
+
+      // Act & Assert
+      expect(row.autoApplyStateOnNearbyRules.length).toBe(1);
+    });
   });
 
   describe('momentum toolkit (move / stand / removeOnSkillExecution)', () =>
@@ -417,6 +575,25 @@ describe('J-Passive-Conditional (direct src import)', () =>
       expect(applied).toEqual([ 42 ]);
     });
 
+    it('does not credit a tile step when moveDistance has not reached stepDistance yet', () =>
+    {
+      // Arrange
+      const actor = buildMomentumToolkitActor([ '<autoApplyState:[44, move, 1]>' ]);
+      const applied = [];
+      actor.isStateAddable = () => true;
+      actor.addState = (stateId) => applied.push(stateId);
+      const character = Object.create(globalThis.Game_CharacterBase.prototype);
+      character.moveDistance = () => 0.5;
+      character.stepDistance = () => 1;
+      character.getJabsBattler = () => ({ getBattler: () => actor });
+
+      // Act
+      character.updatePixelStepping();
+
+      // Assert
+      expect(applied).toEqual([]);
+    });
+
     it('skips stand auto-apply when the battler moved this frame', () =>
     {
       // Arrange
@@ -485,6 +662,66 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
     describe('SkillExecutionStateRemovalManager.process', () =>
     {
+      it('does nothing when ABS is not active', () =>
+      {
+        // Arrange
+        globalThis.$jabsEngine = { absEnabled: false };
+        const actor = buildMomentumToolkitActor([]);
+        actor.decrementStateStacks = vi.fn();
+
+        // Act & Assert
+        expect(() => globalThis.SkillExecutionStateRemovalManager.process(actor, 1)).not.toThrow();
+        expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+      });
+
+      it('does nothing when the executed skill id has no database row', () =>
+      {
+        // Arrange
+        globalThis.$jabsEngine = { absEnabled: true };
+        const actor = buildMomentumToolkitActor([]);
+        actor.decrementStateStacks = vi.fn();
+        globalThis.$dataSkills = [];
+
+        // Act & Assert
+        expect(() => globalThis.SkillExecutionStateRemovalManager.process(actor, 999)).not.toThrow();
+        expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+      });
+
+      it('skips a null entry in the active states array', () =>
+      {
+        // Arrange
+        globalThis.$jabsEngine = { absEnabled: true };
+        const actor = buildMomentumToolkitActor([]);
+        actor.states = () => [ null ];
+        actor.decrementStateStacks = vi.fn();
+        globalThis.$dataSkills = [];
+        globalThis.$dataSkills[70] = { id: 70, stypeId: 1 };
+
+        // Act & Assert
+        expect(() => globalThis.SkillExecutionStateRemovalManager.process(actor, 70)).not.toThrow();
+        expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+      });
+
+      it('skips removal when the chance/param is non-positive', () =>
+      {
+        // Arrange
+        globalThis.$jabsEngine = { absEnabled: true };
+        const stateId = 71;
+        stubMomentumStateRow(stateId, '<removeOnSkillExecution:[0, 0]>');
+        const actor = buildMomentumToolkitActor([]);
+        actor._states = [ stateId ];
+        actor.getUuid = () => 'test-actor';
+        actor.decrementStateStacks = vi.fn();
+        globalThis.$dataSkills = [];
+        globalThis.$dataSkills[71] = { id: 71, stypeId: 1 };
+
+        // Act
+        globalThis.SkillExecutionStateRemovalManager.process(actor, 71);
+
+        // Assert
+        expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+      });
+
       it('decrements stacks when the executed skill stype matches', () =>
       {
         // Arrange
@@ -601,6 +838,225 @@ describe('J-Passive-Conditional (direct src import)', () =>
         expect(decrements).toEqual([ { id: stateId, count: 4 } ]);
         globalThis.RPGManager.chanceIn100 = prevChance;
       });
+
+      it('peels only one stack when loseAllStacksAtOnce is set but no live tracker exists', () =>
+      {
+        // Arrange
+        const stateId = 72;
+        const stateRow = stubMomentumStateRow(stateId, '<removeOnSkillExecution:[0, 100]>');
+        stateRow.jabsLoseAllStacksAtOnce = true;
+        const actor = buildMomentumToolkitActor([]);
+        actor._states = [ stateId ];
+        actor.getUuid = () => 'test-actor';
+        const decrements = [];
+        actor.decrementStateStacks = (id, count) => decrements.push({ id, count });
+        globalThis.$dataSkills = [];
+        globalThis.$dataSkills[73] = { id: 73, stypeId: 2 };
+        globalThis.$jabsEngine.getJabsStateByUuidAndStateId = () => null;
+        const prevChance = globalThis.RPGManager.chanceIn100;
+        globalThis.RPGManager.chanceIn100 = () => true;
+
+        // Act
+        globalThis.SkillExecutionStateRemovalManager.process(actor, 73);
+
+        // Assert
+        expect(decrements).toEqual([ { id: stateId, count: 1 } ]);
+        globalThis.RPGManager.chanceIn100 = prevChance;
+      });
+    });
+
+    describe('SkillResolutionStateRemovalManager.process', () =>
+    {
+      it('does nothing when ABS is not active', () =>
+      {
+        // Arrange
+        globalThis.$jabsEngine = { absEnabled: false };
+        const actor = buildMomentumToolkitActor([]);
+        actor.decrementStateStacks = vi.fn();
+
+        // Act & Assert
+        expect(() => globalThis.SkillResolutionStateRemovalManager.process(actor, 1)).not.toThrow();
+        expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+      });
+
+      it('does nothing when the resolved skill id has no database row', () =>
+      {
+        // Arrange
+        const actor = buildMomentumToolkitActor([]);
+        actor.decrementStateStacks = vi.fn();
+        globalThis.$dataSkills = [];
+
+        // Act & Assert
+        expect(() => globalThis.SkillResolutionStateRemovalManager.process(actor, 999)).not.toThrow();
+        expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+      });
+
+      it('skips a null entry in the active states array', () =>
+      {
+        // Arrange
+        const actor = buildMomentumToolkitActor([]);
+        actor._states = [];
+        actor.states = () => [ null ];
+        actor.decrementStateStacks = vi.fn();
+        globalThis.$dataSkills = [];
+        globalThis.$dataSkills[60] = { id: 60, stypeId: 1 };
+
+        // Act & Assert
+        expect(() => globalThis.SkillResolutionStateRemovalManager.process(actor, 60)).not.toThrow();
+        expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+      });
+
+      it('decrements stacks when the executed skill stype matches', () =>
+      {
+        // Arrange
+        const stateId = 55;
+        stubMomentumStateRow(stateId, '<removeOnSkillResolution:[7, 100]>');
+        const actor = buildMomentumToolkitActor([]);
+        actor._states = [ stateId ];
+        actor.getUuid = () => 'test-actor';
+        const decrements = [];
+        actor.decrementStateStacks = (id, count) => decrements.push({ id, count });
+        globalThis.$dataSkills = [];
+        globalThis.$dataSkills[61] = { id: 61, stypeId: 7 };
+        const prevChance = globalThis.RPGManager.chanceIn100;
+        globalThis.RPGManager.chanceIn100 = () => true;
+
+        // Act
+        globalThis.SkillResolutionStateRemovalManager.process(actor, 61);
+
+        // Assert
+        expect(decrements).toEqual([ { id: stateId, count: 1 } ]);
+        globalThis.RPGManager.chanceIn100 = prevChance;
+      });
+
+      it('skips removal when the chance/param is non-positive', () =>
+      {
+        // Arrange
+        const stateId = 56;
+        stubMomentumStateRow(stateId, '<removeOnSkillResolution:[0, 0]>');
+        const actor = buildMomentumToolkitActor([]);
+        actor._states = [ stateId ];
+        actor.getUuid = () => 'test-actor';
+        actor.decrementStateStacks = vi.fn();
+        globalThis.$dataSkills = [];
+        globalThis.$dataSkills[62] = { id: 62, stypeId: 1 };
+
+        // Act
+        globalThis.SkillResolutionStateRemovalManager.process(actor, 62);
+
+        // Assert
+        expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+      });
+
+      it('skips removal when the executed skill stype does not match', () =>
+      {
+        // Arrange
+        const stateId = 57;
+        stubMomentumStateRow(stateId, '<removeOnSkillResolution:[3, 100]>');
+        const actor = buildMomentumToolkitActor([]);
+        actor._states = [ stateId ];
+        actor.getUuid = () => 'test-actor';
+        actor.decrementStateStacks = vi.fn();
+        globalThis.$dataSkills = [];
+        globalThis.$dataSkills[63] = { id: 63, stypeId: 8 };
+        const prevChance = globalThis.RPGManager.chanceIn100;
+        globalThis.RPGManager.chanceIn100 = () => true;
+
+        // Act
+        globalThis.SkillResolutionStateRemovalManager.process(actor, 63);
+
+        // Assert
+        expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+        globalThis.RPGManager.chanceIn100 = prevChance;
+      });
+
+      it('skips removal when the fate roll fails', () =>
+      {
+        // Arrange
+        const stateId = 58;
+        stubMomentumStateRow(stateId, '<removeOnSkillResolution:[0, 100]>');
+        const actor = buildMomentumToolkitActor([]);
+        actor._states = [ stateId ];
+        actor.getUuid = () => 'test-actor';
+        actor.decrementStateStacks = vi.fn();
+        globalThis.$dataSkills = [];
+        globalThis.$dataSkills[64] = { id: 64, stypeId: 1 };
+        const prevChance = globalThis.RPGManager.chanceIn100;
+        globalThis.RPGManager.chanceIn100 = () => false;
+
+        // Act
+        globalThis.SkillResolutionStateRemovalManager.process(actor, 64);
+
+        // Assert
+        expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+        globalThis.RPGManager.chanceIn100 = prevChance;
+      });
+
+      it('peels every stack at once when the state row uses loseAllStacksAtOnce', () =>
+      {
+        // Arrange
+        const stateId = 59;
+        const stateRow = stubMomentumStateRow(stateId, '<removeOnSkillResolution:[0, 100]>');
+        stateRow.jabsLoseAllStacksAtOnce = true;
+        const actor = buildMomentumToolkitActor([]);
+        actor._states = [ stateId ];
+        actor.getUuid = () => 'test-actor';
+        const decrements = [];
+        actor.decrementStateStacks = (id, count) => decrements.push({ id, count });
+        globalThis.$dataSkills = [];
+        globalThis.$dataSkills[65] = { id: 65, stypeId: 2 };
+        globalThis.$jabsEngine.getJabsStateByUuidAndStateId = () => ({ stackCount: 3 });
+        const prevChance = globalThis.RPGManager.chanceIn100;
+        globalThis.RPGManager.chanceIn100 = () => true;
+
+        // Act
+        globalThis.SkillResolutionStateRemovalManager.process(actor, 65);
+
+        // Assert
+        expect(decrements).toEqual([ { id: stateId, count: 3 } ]);
+        globalThis.RPGManager.chanceIn100 = prevChance;
+      });
+
+      it('peels only one stack when loseAllStacksAtOnce is set but no live tracker exists', () =>
+      {
+        // Arrange
+        const stateId = 74;
+        const stateRow = stubMomentumStateRow(stateId, '<removeOnSkillResolution:[0, 100]>');
+        stateRow.jabsLoseAllStacksAtOnce = true;
+        const actor = buildMomentumToolkitActor([]);
+        actor._states = [ stateId ];
+        actor.getUuid = () => 'test-actor';
+        const decrements = [];
+        actor.decrementStateStacks = (id, count) => decrements.push({ id, count });
+        globalThis.$dataSkills = [];
+        globalThis.$dataSkills[75] = { id: 75, stypeId: 2 };
+        globalThis.$jabsEngine.getJabsStateByUuidAndStateId = () => null;
+        const prevChance = globalThis.RPGManager.chanceIn100;
+        globalThis.RPGManager.chanceIn100 = () => true;
+
+        // Act
+        globalThis.SkillResolutionStateRemovalManager.process(actor, 75);
+
+        // Assert
+        expect(decrements).toEqual([ { id: stateId, count: 1 } ]);
+        globalThis.RPGManager.chanceIn100 = prevChance;
+      });
+    });
+  });
+
+  describe('AutoApplyStateManager.dispatch', () =>
+  {
+    it('returns false and does not apply the state when it is not addable', () =>
+    {
+      // Arrange
+      const battler = { isStateAddable: () => false, addState: vi.fn() };
+
+      // Act
+      const result = globalThis.AutoApplyStateManager.dispatch(battler, 42, []);
+
+      // Assert
+      expect(result).toBe(false);
+      expect(battler.addState).not.toHaveBeenCalled();
     });
   });
 
@@ -850,6 +1306,79 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
       // Assert
       expect(globalThis.__forcedSkills).toEqual([ 507 ]);
+    });
+
+    it('dispatch returns false when the battler has no map presence', () =>
+    {
+      // Arrange
+      globalThis.JABS_AiManager.getBattlerByUuid = () => null;
+      const actor = buildMomentumToolkitActor([]);
+      actor.getUuid = () => 'off-map-actor';
+
+      // Act & Assert
+      expect(globalThis.AutoExecuteSkillManager.dispatch(actor, 500)).toBe(false);
+      expect(globalThis.__forcedSkills).toEqual([]);
+    });
+
+    it('dispatch returns false for an invalid/non-positive skill id', () =>
+    {
+      // Arrange
+      const actor = buildMomentumToolkitActor([]);
+      actor.getUuid = () => 'auto-exec-actor';
+      mockJabsBattler.getBattler = () => actor;
+
+      // Act & Assert
+      expect(globalThis.AutoExecuteSkillManager.dispatch(actor, 0)).toBe(false);
+      expect(globalThis.__forcedSkills).toEqual([]);
+    });
+
+    it('dispatch returns false when the skill id has no database row', () =>
+    {
+      // Arrange
+      const actor = buildMomentumToolkitActor([]);
+      actor.getUuid = () => 'auto-exec-actor';
+      mockJabsBattler.getBattler = () => actor;
+      globalThis.$dataSkills = [];
+
+      // Act & Assert
+      expect(globalThis.AutoExecuteSkillManager.dispatch(actor, 999)).toBe(false);
+      expect(globalThis.__forcedSkills).toEqual([]);
+    });
+
+    it('dispatch returns false when JABS refuses the previewed action', () =>
+    {
+      // Arrange
+      const actor = buildMomentumToolkitActor([]);
+      actor.getUuid = () => 'auto-exec-actor';
+      mockJabsBattler.getBattler = () => actor;
+      globalThis.$dataSkills = [];
+      globalThis.$dataSkills[509] = { id: 509, stypeId: 1 };
+      globalThis.$jabsEngine.canExecuteMapActions = () => false;
+
+      // Act & Assert
+      expect(globalThis.AutoExecuteSkillManager.dispatch(actor, 509)).toBe(false);
+      expect(globalThis.__forcedSkills).toEqual([]);
+    });
+
+    it('falls back to a max depth of 1 when the metadata value is falsy', () =>
+    {
+      // Arrange
+      const actor = buildMomentumToolkitActor([]);
+      actor.getUuid = () => 'auto-exec-actor';
+      mockJabsBattler.getBattler = () => actor;
+      globalThis.$dataSkills = [];
+      globalThis.$dataSkills[510] = { id: 510, stypeId: 1 };
+      const savedDepth = globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoExecuteSkillMaxDepth;
+      globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoExecuteSkillMaxDepth = 0;
+
+      // Act
+      const result = globalThis.AutoExecuteSkillManager.dispatch(actor, 510);
+
+      // Assert- depth 0 || 1 falls back to 1, and starting executionDepth (0) is under that.
+      expect(result).toBe(true);
+
+      // Cleanup
+      globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoExecuteSkillMaxDepth = savedDepth;
     });
   });
 
@@ -1166,6 +1695,107 @@ describe('J-Passive-Conditional (direct src import)', () =>
     });
   });
 
+  describe('AutoInflictStateManager edge cases', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$jabsEngine = { absEnabled: true };
+      globalThis.Graphics.frameCount = 2000;
+    });
+
+    it('scheduleInflictedStateTriggers is a no-op without a valid applier/target pair', () =>
+    {
+      // Act & Assert
+      expect(() => globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(null, {}, 10))
+        .not.toThrow();
+      expect(() => globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers({}, null, 10))
+        .not.toThrow();
+    });
+
+    it('scheduleInflictedStateTriggers is a no-op when the inflicted state has no database row', () =>
+    {
+      // Arrange
+      const applier = buildMomentumToolkitActor([]);
+      const target = buildMomentumToolkitActor([]);
+      target.isStateAddable = () => true;
+      target.addState = vi.fn();
+      globalThis.$dataStates[9030] = undefined;
+
+      // Act
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 9030);
+
+      // Assert
+      expect(target.addState).not.toHaveBeenCalled();
+    });
+
+    it('scheduleKnockbackTriggers is a no-op when ABS is not active', () =>
+    {
+      // Arrange
+      globalThis.$jabsEngine = { absEnabled: false };
+
+      // Act & Assert
+      expect(() => globalThis.AutoInflictStateManager.scheduleKnockbackTriggers({}, {})).not.toThrow();
+    });
+
+    it('scheduleKnockbackTriggers is a no-op without a valid applier/target pair', () =>
+    {
+      // Act & Assert
+      expect(() => globalThis.AutoInflictStateManager.scheduleKnockbackTriggers(null, {})).not.toThrow();
+      expect(() => globalThis.AutoInflictStateManager.scheduleKnockbackTriggers({}, null)).not.toThrow();
+    });
+
+    it('falls back to a max depth of 1 when the metadata value is falsy', () =>
+    {
+      // Arrange
+      const target = buildMomentumToolkitActor([]);
+      target.isStateAddable = () => true;
+      target.addState = vi.fn();
+      const savedDepth = globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoInflictStateMaxDepth;
+      globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoInflictStateMaxDepth = 0;
+
+      // Act
+      const result = globalThis.AutoInflictStateManager.dispatch(target, 71, {});
+
+      // Assert
+      expect(result).toBe(true);
+
+      // Cleanup
+      globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoInflictStateMaxDepth = savedDepth;
+    });
+
+    it('skips a rule tuple with an invalid/non-positive payload state id', () =>
+    {
+      // Arrange
+      const applier = buildMomentumToolkitActor([ '<autoInflictState:[0, anyStateInflicted, 0]>' ]);
+      const target = buildMomentumToolkitActor([]);
+      target.isStateAddable = () => true;
+      target.addState = vi.fn();
+      globalThis.$dataStates[9031] = { id: 9031, isNegativeType: () => false };
+
+      // Act
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 9031);
+
+      // Assert
+      expect(target.addState).not.toHaveBeenCalled();
+    });
+
+    it('skips a rule tuple with an invalid cooldown value', () =>
+    {
+      // Arrange
+      const applier = buildMomentumToolkitActor([ '<autoInflictState:[72, anyStateInflicted, -1]>' ]);
+      const target = buildMomentumToolkitActor([]);
+      target.isStateAddable = () => true;
+      target.addState = vi.fn();
+      globalThis.$dataStates[9032] = { id: 9032, isNegativeType: () => false };
+
+      // Act
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 9032);
+
+      // Assert
+      expect(target.addState).not.toHaveBeenCalled();
+    });
+  });
+
   describe('onKill scheduler', () =>
   {
     beforeEach(() =>
@@ -1242,6 +1872,24 @@ describe('J-Passive-Conditional (direct src import)', () =>
       // Assert
       expect(act).not.toThrow();
     });
+
+    it('does not throw when the caster has no underlying Game_Battler', () =>
+    {
+      // Arrange
+      const defeatedTargetJabsBattler = {
+        clearFollowers: vi.fn(),
+        clearLeader: vi.fn(),
+        getCharacter: () => ({ start: vi.fn() }),
+        isInanimate: () => true,
+        hasEventActions: () => false,
+        setDying: vi.fn(),
+      };
+      const casterJabsBattler = { getBattler: () => null };
+      const engine = new globalThis.JABS_Engine();
+
+      // Act & Assert
+      expect(() => engine.handleDefeatedEnemy(defeatedTargetJabsBattler, casterJabsBattler)).not.toThrow();
+    });
   });
 
   describe('JABS_Engine#checkKnockback hook', () =>
@@ -1262,6 +1910,17 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
       // Assert
       expect(knockedBack.addState).toHaveBeenCalledWith(74, caster);
+    });
+
+    it('does not throw when either side has no underlying Game_Battler', () =>
+    {
+      // Arrange
+      const action = { getCaster: () => ({ getBattler: () => null }) };
+      const targetJabsBattler = { getBattler: () => null };
+      const engine = new globalThis.JABS_Engine();
+
+      // Act & Assert
+      expect(() => engine.checkKnockback(action, targetJabsBattler)).not.toThrow();
     });
   });
 
@@ -1417,6 +2076,18 @@ describe('J-Passive-Conditional (direct src import)', () =>
       // Assert
       expect(caster.addState).not.toHaveBeenCalled();
     });
+
+    it('does not throw when the caster has no underlying Game_Battler', () =>
+    {
+      // Arrange
+      const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
+      const action = { getCaster: () => buildJabsWrapper(null, 0), getCooldownType: () => 'Main' };
+      const target = buildJabsWrapper(targetBattler, 1);
+      const engine = new globalThis.JABS_Engine();
+
+      // Act & Assert
+      expect(() => engine.postExecuteSkillEffects(action, target)).not.toThrow();
+    });
   });
 
   describe('onAllyHeal scheduler', () =>
@@ -1483,6 +2154,713 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
       // Assert
       expect(allyApplied).toEqual([ 96 ]);
+    });
+  });
+
+  describe('initPassiveRuleMembers', () =>
+  {
+    it('falls back to a 15-frame reconcile delay when the plugin param is unset', () =>
+    {
+      // Arrange
+      const savedDelay = globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.reconcileDelayFrames;
+      globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.reconcileDelayFrames = 0;
+
+      // Act
+      const battler = buildMomentumToolkitActor([]);
+
+      // Assert
+      expect(battler.passiveRuleReconcileTimer()._delay).toBe(15);
+
+      // Cleanup
+      globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.reconcileDelayFrames = savedDelay;
+    });
+  });
+
+  describe('Game_Battler passive rule timestamp getters/stampers', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.Graphics.frameCount = 1000;
+    });
+
+    it('getPassiveRuleLastHitFrame reads the stamped frame', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      battler.stampPassiveRuleHitFrame();
+
+      // Act & Assert
+      expect(battler.getPassiveRuleLastHitFrame()).toBe(1000);
+    });
+
+    it('getPassiveRuleLastAttackedFrame reads the stamped frame', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      battler.stampPassiveRuleAttackedFrame();
+
+      // Act & Assert
+      expect(battler.getPassiveRuleLastAttackedFrame()).toBe(1000);
+    });
+
+    it('getPassiveRuleLastHpHealFrame/MpHealFrame/TpHealFrame read their stamped frames', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      battler.stampPassiveRuleHpHealFrame();
+      battler.stampPassiveRuleMpHealFrame();
+      battler.stampPassiveRuleTpHealFrame();
+
+      // Act & Assert
+      expect(battler.getPassiveRuleLastHpHealFrame()).toBe(1000);
+      expect(battler.getPassiveRuleLastMpHealFrame()).toBe(1000);
+      expect(battler.getPassiveRuleLastTpHealFrame()).toBe(1000);
+    });
+  });
+
+  describe('gainHp / gainMp / gainTp (extended)', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.Graphics.frameCount = 2000;
+      globalThis.$jabsEngine = { absEnabled: true };
+      globalThis.PassiveRuleJabsAccess.nearbyAlliesExcludingSelf = () => [];
+    });
+
+    it('gainHp stamps the hit frame and schedules hpDmg triggers when hp is lost', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([ '<autoApplyState:[97, hpDmg, 0]>' ]);
+      battler.isStateAddable = () => true;
+      const applied = [];
+      battler.addState = (stateId) => applied.push(stateId);
+
+      // Act
+      battler.gainHp(-10);
+
+      // Assert
+      expect(battler.getPassiveRuleLastHitFrame()).toBe(2000);
+      expect(applied).toEqual([ 97 ]);
+    });
+
+    it('gainHp does not stamp or schedule hpDmg triggers on a positive gain', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([ '<autoApplyState:[98, hpDmg, 0]>' ]);
+      battler.isStateAddable = () => true;
+      const applied = [];
+      battler.addState = (stateId) => applied.push(stateId);
+
+      // Act
+      battler.gainHp(10);
+
+      // Assert
+      expect(battler.getPassiveRuleLastHitFrame()).toBe(0);
+      expect(applied).toEqual([]);
+    });
+
+    it('gainMp schedules mpDmg triggers when mp is lost', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([ '<autoApplyState:[99, mpDmg, 0]>' ]);
+      battler.isStateAddable = () => true;
+      const applied = [];
+      battler.addState = (stateId) => applied.push(stateId);
+
+      // Act
+      battler.gainMp(-5);
+
+      // Assert
+      expect(applied).toEqual([ 99 ]);
+    });
+
+    it('gainTp schedules tpDmg triggers when tp is lost', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([ '<autoApplyState:[100, tpDmg, 0]>' ]);
+      battler.isStateAddable = () => true;
+      const applied = [];
+      battler.addState = (stateId) => applied.push(stateId);
+
+      // Act
+      battler.gainTp(-3);
+
+      // Assert
+      expect(applied).toEqual([ 100 ]);
+    });
+
+    it('gainMp does not schedule mpDmg triggers on a positive gain', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([ '<autoApplyState:[102, mpDmg, 0]>' ]);
+      battler.isStateAddable = () => true;
+      const applied = [];
+      battler.addState = (stateId) => applied.push(stateId);
+
+      // Act
+      battler.gainMp(5);
+
+      // Assert
+      expect(applied).toEqual([]);
+    });
+
+    it('gainTp does not schedule tpDmg triggers on a positive gain', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([ '<autoApplyState:[103, tpDmg, 0]>' ]);
+      battler.isStateAddable = () => true;
+      const applied = [];
+      battler.addState = (stateId) => applied.push(stateId);
+
+      // Act
+      battler.gainTp(3);
+
+      // Assert
+      expect(applied).toEqual([]);
+    });
+  });
+
+  describe('onHeal (extended)', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.Graphics.frameCount = 2500;
+      globalThis.$jabsEngine = { absEnabled: true };
+    });
+
+    it('does not stamp any heal frame or notify allies for an unrecognized resource', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      globalThis.PassiveRuleJabsAccess.nearbyAlliesExcludingSelf = () => [];
+
+      // Act
+      const act = () => battler.onHeal('notARealResource', 10);
+
+      // Assert
+      expect(act).not.toThrow();
+      expect(battler.getPassiveRuleLastHpHealFrame()).toBe(0);
+      expect(battler.getPassiveRuleLastMpHealFrame()).toBe(0);
+      expect(battler.getPassiveRuleLastTpHealFrame()).toBe(0);
+    });
+
+    it('skips a nearby ally jabs wrapper with no resolvable Game_Battler', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      globalThis.PassiveRuleJabsAccess.nearbyAlliesExcludingSelf = () => [ { getBattler: () => null } ];
+
+      // Act
+      const act = () => battler.onHeal(globalThis.J.BASE.Resource.HP, 10);
+
+      // Assert
+      expect(act).not.toThrow();
+    });
+  });
+
+  describe('canIncludePassiveStateFromSource (extended)', () =>
+  {
+    it('short-circuits to false when an upstream extension already vetoed the source/state pair', () =>
+    {
+      // Arrange- restore the real aliased base afterward; it's a shared Map every later test relies on.
+      const battler = buildMomentumToolkitActor([]);
+      const originalBase = globalThis.J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.get('canIncludePassiveStateFromSource');
+      globalThis.J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.set(
+        'canIncludePassiveStateFromSource', () => false);
+
+      // Act
+      const result = battler.canIncludePassiveStateFromSource({ passiveSourceRules: [] }, 1);
+
+      // Assert
+      expect(result).toBe(false);
+
+      // Cleanup
+      globalThis.J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_Battler.set('canIncludePassiveStateFromSource', originalBase);
+    });
+  });
+
+  describe('evaluatePassiveGateRulesForSource (extended)', () =>
+  {
+    it('short-circuits to false without checking state rules when a source rule fails', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      const baseItem = {
+        passiveSourceRules: [ [ 'hpAbove', 200 ] ],
+        // this state rule would pass if ever evaluated- proves the short-circuit actually skipped it.
+        passiveStateRules: [ [ 1, 'hpBelow', 200 ] ],
+      };
+      battler._hp = 1;
+      battler._mhp = 100;
+
+      // Act & Assert
+      expect(battler.evaluatePassiveGateRulesForSource(baseItem, 1)).toBe(false);
+    });
+  });
+
+  describe('buildPassiveCollectionFingerprint / reconcilePassiveRules', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.Graphics.frameCount = 3000;
+    });
+
+    it('includes equip-only unique/stackable ids when the source is an equip item', () =>
+    {
+      // Arrange- RPG_BaseBattler hardcodes equipped-passive fields to empty (battlers can't be
+      // equipped); RPG_BaseItem is the equip-capable row shape that actually parses these tags.
+      const battler = buildMomentumToolkitActor([]);
+      const equipSource = new globalThis.RPG_BaseItem({
+        id: 1,
+        meta: {},
+        name: 'Equip',
+        // two of each so the final sort comparators actually run (a single-entry array never
+        // invokes Array#sort's comparator at all).
+        note: '<uniqueEquippedPassive:[203, 201]>\n<equippedPassive:[204, 202]>',
+        description: String.empty,
+        iconIndex: 0,
+      }, 1);
+      equipSource.isEquipItem = () => true;
+      battler._j._passive._passiveSources = [ equipSource ];
+
+      // Act
+      const fingerprint = JSON.parse(battler.buildPassiveCollectionFingerprint());
+
+      // Assert
+      expect(fingerprint.uniqueIds).toEqual([ 201, 203 ]);
+      expect(fingerprint.stackEntries).toEqual([ [ 202, 1 ], [ 204, 1 ] ]);
+    });
+
+    it('excludes a unique id gated out by canIncludePassiveStateFromSource', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      const source = new globalThis.RPG_BaseItem({
+        id: 1, meta: {}, name: 'Src', note: '<uniquePassive:[301]>', description: String.empty, iconIndex: 0,
+      }, 1);
+      battler._j._passive._passiveSources = [ source ];
+      battler.canIncludePassiveStateFromSource = () => false;
+
+      // Act
+      const fingerprint = JSON.parse(battler.buildPassiveCollectionFingerprint());
+
+      // Assert
+      expect(fingerprint.uniqueIds).toEqual([]);
+    });
+
+    it('accumulates stack contributions across multiple sources granting the same stackable id', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      const sourceA = new globalThis.RPG_BaseItem({
+        id: 1, meta: {}, name: 'A', note: '<passive:[401]>', description: String.empty, iconIndex: 0,
+      }, 1);
+      const sourceB = new globalThis.RPG_BaseItem({
+        id: 2, meta: {}, name: 'B', note: '<passive:[401]>', description: String.empty, iconIndex: 0,
+      }, 2);
+      battler._j._passive._passiveSources = [ sourceA, sourceB ];
+
+      // Act
+      const fingerprint = JSON.parse(battler.buildPassiveCollectionFingerprint());
+
+      // Assert- default stack contribution is 1 per source, so two sources sum to 2.
+      expect(fingerprint.stackEntries).toEqual([ [ 401, 2 ] ]);
+    });
+
+    it('excludes a stackable id whose contribution resolves to zero or less', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      const source = new globalThis.RPG_BaseItem({
+        id: 1, meta: {}, name: 'Src', note: '<passive:[402]>', description: String.empty, iconIndex: 0,
+      }, 1);
+      battler._j._passive._passiveSources = [ source ];
+      battler.getPassiveStackContributionFromSource = () => 0;
+
+      // Act
+      const fingerprint = JSON.parse(battler.buildPassiveCollectionFingerprint());
+
+      // Assert
+      expect(fingerprint.stackEntries).toEqual([]);
+    });
+
+    it('does not skip a reconcile when the fingerprint is unchanged', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      battler._j._passive._passiveSources = [];
+      const refreshSpy = vi.spyOn(battler, 'refreshPassiveStates');
+      battler._j._passive._conditional._collectionFingerprint = battler.buildPassiveCollectionFingerprint();
+
+      // Act
+      battler.reconcilePassiveRules();
+
+      // Assert
+      expect(refreshSpy).not.toHaveBeenCalled();
+
+      // Cleanup
+      refreshSpy.mockRestore();
+    });
+
+    it('refreshes passive states when the fingerprint has drifted', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      battler._j._passive._passiveSources = [];
+      battler._j._passive._conditional._collectionFingerprint = 'stale-fingerprint';
+
+      // Act
+      battler.reconcilePassiveRules();
+
+      // Assert- refreshPassiveStates (aliased) re-derives and stores a fresh, non-stale fingerprint.
+      expect(battler._j._passive._conditional._collectionFingerprint).not.toBe('stale-fingerprint');
+      expect(battler._j._passive._conditional._pendingFingerprint).toBe(null);
+    });
+  });
+
+  describe('updatePassiveRuleReconcileTimer', () =>
+  {
+    it('does not reconcile while the timer is still counting down', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      const reconcileSpy = vi.spyOn(battler, 'reconcilePassiveRules').mockImplementation(() => {});
+
+      // Act- the fixture's JABS_Timer needs `_frames >= _delay` (default delay 15) to complete.
+      battler.updatePassiveRuleReconcileTimer();
+
+      // Assert
+      expect(reconcileSpy).not.toHaveBeenCalled();
+
+      // Cleanup
+      reconcileSpy.mockRestore();
+    });
+
+    it('reconciles and resets the timer once it completes', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      const reconcileSpy = vi.spyOn(battler, 'reconcilePassiveRules').mockImplementation(() => {});
+      const timer = battler.passiveRuleReconcileTimer();
+
+      // Act- drive the timer to completion (delay defaults to 15 frames per the fixture param).
+      for (let i = 0; i < 20; i++)
+      {
+        battler.updatePassiveRuleReconcileTimer();
+      }
+
+      // Assert
+      expect(reconcileSpy).toHaveBeenCalled();
+      expect(timer.isTimerComplete()).toBe(false);
+
+      // Cleanup
+      reconcileSpy.mockRestore();
+    });
+  });
+
+  describe('onStateAdded (extended)', () =>
+  {
+    it('schedules anyStateAdded auto-apply and auto-execute triggers', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([ '<autoApplyState:[101, anyStateAdded, 0]>' ]);
+      battler.isStateAddable = () => true;
+      const applied = [];
+      battler.addState = (stateId) => applied.push(stateId);
+      globalThis.$jabsEngine = { absEnabled: true };
+
+      // Act
+      battler.onStateAdded(5);
+
+      // Assert
+      expect(applied).toEqual([ 101 ]);
+    });
+
+    it('fires negaStateAdded for a state classified as negative', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([ '<autoApplyState:[120, negaStateAdded, 0]>' ]);
+      battler.isStateAddable = () => true;
+      const applied = [];
+      battler.addState = (stateId) => applied.push(stateId);
+      globalThis.$jabsEngine = { absEnabled: true };
+      const negativeState = stubMomentumStateRow(9020, '');
+      negativeState.isNegativeType = () => true;
+
+      // Act
+      battler.onStateAdded(9020);
+
+      // Assert
+      expect(applied).toEqual([ 120 ]);
+    });
+
+    it('fires posiStateAdded for a state classified as positive', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([ '<autoApplyState:[121, posiStateAdded, 0]>' ]);
+      battler.isStateAddable = () => true;
+      const applied = [];
+      battler.addState = (stateId) => applied.push(stateId);
+      globalThis.$jabsEngine = { absEnabled: true };
+      const positiveState = stubMomentumStateRow(9021, '');
+      positiveState.isNegativeType = () => false;
+
+      // Act
+      battler.onStateAdded(9021);
+
+      // Assert
+      expect(applied).toEqual([ 121 ]);
+    });
+  });
+
+  describe('Game_Action#apply (extended)', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.Graphics.frameCount = 4000;
+      globalThis.$jabsEngine = { absEnabled: true };
+    });
+
+    it('schedules whenCrit triggers on the target when the hit was critical', () =>
+    {
+      // Arrange
+      const target = buildMomentumToolkitActor([ '<autoApplyState:[110, whenCrit, 120]>' ]);
+      target.isStateAddable = () => true;
+      const applied = [];
+      target.addState = (stateId) => applied.push(stateId);
+      target.result = () => ({ critical: true, glancing: false });
+      const action = Object.create(globalThis.Game_Action.prototype);
+
+      // Act
+      action.apply(target);
+
+      // Assert
+      expect(applied).toEqual([ 110 ]);
+    });
+
+    it('schedules whenGlanced triggers on the target when the hit was a glancing blow', () =>
+    {
+      // Arrange
+      const target = buildMomentumToolkitActor([ '<autoApplyState:[111, whenGlanced, 120]>' ]);
+      target.isStateAddable = () => true;
+      const applied = [];
+      target.addState = (stateId) => applied.push(stateId);
+      target.result = () => ({ critical: false, glancing: true });
+      const action = Object.create(globalThis.Game_Action.prototype);
+
+      // Act
+      action.apply(target);
+
+      // Assert
+      expect(applied).toEqual([ 111 ]);
+    });
+
+    it('schedules neither trigger on a plain hit (neither critical nor glancing)', () =>
+    {
+      // Arrange
+      const target = buildMomentumToolkitActor([
+        '<autoApplyState:[112, whenCrit, 120]>', '<autoApplyState:[113, whenGlanced, 120]>',
+      ]);
+      target.isStateAddable = () => true;
+      const applied = [];
+      target.addState = (stateId) => applied.push(stateId);
+      target.result = () => ({ critical: false, glancing: false });
+      const action = Object.create(globalThis.Game_Action.prototype);
+
+      // Act
+      action.apply(target);
+
+      // Assert
+      expect(applied).toEqual([]);
+    });
+  });
+
+  describe('JABS_Action#preCleanupHook (extended)', () =>
+  {
+    it('processes removeOnSkillResolution rules against the caster\'s underlying battler', () =>
+    {
+      // Arrange- verifying the wiring (right battler, right skill id) is this file's job; the
+      // removal manager's own internal behavior is covered by its dedicated test suite.
+      const caster = buildMomentumToolkitActor([]);
+      const processSpy = vi.spyOn(globalThis.SkillResolutionStateRemovalManager, 'process')
+        .mockImplementation(() => {});
+      const action = Object.create(globalThis.JABS_Action.prototype);
+      action.getCaster = () => ({ getBattler: () => caster });
+      action.getBaseSkill = () => ({ id: 7 });
+
+      // Act
+      action.preCleanupHook();
+
+      // Assert
+      expect(processSpy).toHaveBeenCalledWith(caster, 7);
+
+      // Cleanup
+      processSpy.mockRestore();
+    });
+  });
+
+  describe('JABS_Battler (conditional extensions)', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.Graphics.frameCount = 5000;
+      globalThis.$jabsEngine = { absEnabled: true };
+    });
+
+    describe('update (extended)', () =>
+    {
+      it('runs movement tracking and reconcile after the base update logic', () =>
+      {
+        // Arrange
+        const battler = buildMomentumToolkitActor([]);
+        const jabsBattler = Object.create(globalThis.JABS_Battler.prototype);
+        jabsBattler.getCharacter = () => null;
+        jabsBattler.getBattler = () => battler;
+        const reconcileSpy = vi.spyOn(battler, 'updatePassiveRuleReconcileTimer').mockImplementation(() => {});
+
+        // Act
+        jabsBattler.update();
+
+        // Assert- with no character, movement tracking no-ops, but reconcile still runs.
+        expect(reconcileSpy).toHaveBeenCalled();
+      });
+    });
+
+    describe('setLastUsedSkillId (extended)', () =>
+    {
+      it('does nothing further when the map battler has no underlying Game_Battler', () =>
+      {
+        // Arrange
+        const jabsBattler = Object.create(globalThis.JABS_Battler.prototype);
+        jabsBattler.getBattler = () => null;
+
+        // Act & Assert
+        expect(() => jabsBattler.setLastUsedSkillId(1)).not.toThrow();
+      });
+
+      it('stamps the attacked frame and processes skill-execution removal rules', () =>
+      {
+        // Arrange
+        const battler = buildMomentumToolkitActor([]);
+        const processSpy = vi.spyOn(globalThis.SkillExecutionStateRemovalManager, 'process')
+          .mockImplementation(() => {});
+        const jabsBattler = Object.create(globalThis.JABS_Battler.prototype);
+        jabsBattler.getBattler = () => battler;
+
+        // Act
+        jabsBattler.setLastUsedSkillId(3);
+
+        // Assert
+        expect(battler.getPassiveRuleLastAttackedFrame()).toBe(5000);
+        expect(processSpy).toHaveBeenCalledWith(battler, 3);
+
+        // Cleanup
+        processSpy.mockRestore();
+      });
+    });
+
+    describe('updatePassiveRuleReconcile', () =>
+    {
+      it('does nothing when the map battler has no underlying Game_Battler', () =>
+      {
+        // Arrange
+        const jabsBattler = Object.create(globalThis.JABS_Battler.prototype);
+        jabsBattler.getBattler = () => null;
+
+        // Act & Assert
+        expect(() => jabsBattler.updatePassiveRuleReconcile()).not.toThrow();
+      });
+
+      it('advances the reconcile timer and runs every scheduler pass on the underlying battler', () =>
+      {
+        // Arrange
+        const battler = buildMomentumToolkitActor([]);
+        const jabsBattler = Object.create(globalThis.JABS_Battler.prototype);
+        jabsBattler.getBattler = () => battler;
+        globalThis.PassiveRuleJabsAccess.nearbyAlliesExcludingSelf = () => [];
+        globalThis.PassiveRuleJabsAccess.nearbyEnemies = () => [];
+
+        // Act & Assert- exercising the full real scheduler chain; absence of a throw is the signal.
+        expect(() => jabsBattler.updatePassiveRuleReconcile()).not.toThrow();
+      });
+    });
+
+    describe('updatePassiveRuleMovementTracking', () =>
+    {
+      it('does nothing when the map battler has no underlying character', () =>
+      {
+        // Arrange
+        const jabsBattler = Object.create(globalThis.JABS_Battler.prototype);
+        jabsBattler.getCharacter = () => null;
+
+        // Act & Assert
+        expect(() => jabsBattler.updatePassiveRuleMovementTracking()).not.toThrow();
+      });
+
+      it('does nothing when the map battler has no underlying Game_Battler', () =>
+      {
+        // Arrange
+        const jabsBattler = Object.create(globalThis.JABS_Battler.prototype);
+        jabsBattler.getCharacter = () => ({ _realX: 0, _realY: 0 });
+        jabsBattler.getBattler = () => null;
+
+        // Act & Assert
+        expect(() => jabsBattler.updatePassiveRuleMovementTracking()).not.toThrow();
+      });
+
+      it('seeds the baseline coordinates on the first update without stamping movement', () =>
+      {
+        // Arrange
+        const battler = buildMomentumToolkitActor([]);
+        const jabsBattler = Object.create(globalThis.JABS_Battler.prototype);
+        jabsBattler.getCharacter = () => ({ _realX: 5, _realY: 5 });
+        jabsBattler.getBattler = () => battler;
+
+        // Act
+        jabsBattler.updatePassiveRuleMovementTracking();
+
+        // Assert
+        expect(battler.getPassiveRuleLastMovedFrame()).toBe(0);
+      });
+
+      it('does not stamp movement when the coordinates have not changed since the last update', () =>
+      {
+        // Arrange
+        const battler = buildMomentumToolkitActor([]);
+        battler._j._passive._conditional._lastTrackedX = 5;
+        battler._j._passive._conditional._lastTrackedY = 5;
+        const jabsBattler = Object.create(globalThis.JABS_Battler.prototype);
+        jabsBattler.getCharacter = () => ({ _realX: 5, _realY: 5 });
+        jabsBattler.getBattler = () => battler;
+
+        // Act
+        jabsBattler.updatePassiveRuleMovementTracking();
+
+        // Assert
+        expect(battler.getPassiveRuleLastMovedFrame()).toBe(0);
+      });
+
+      it('stamps movement and processes move-removal rules once coordinates change', () =>
+      {
+        // Arrange
+        const battler = buildMomentumToolkitActor([]);
+        battler._j._passive._conditional._lastTrackedX = 5;
+        battler._j._passive._conditional._lastTrackedY = 5;
+        const processSpy = vi.spyOn(globalThis.MoveStateRemovalManager, 'process').mockImplementation(() => {});
+        const jabsBattler = Object.create(globalThis.JABS_Battler.prototype);
+        jabsBattler.getCharacter = () => ({ _realX: 6, _realY: 5 });
+        jabsBattler.getBattler = () => battler;
+
+        // Act
+        jabsBattler.updatePassiveRuleMovementTracking();
+
+        // Assert
+        expect(battler.getPassiveRuleLastMovedFrame()).toBe(5000);
+        expect(processSpy).toHaveBeenCalledWith(battler);
+
+        // Cleanup
+        processSpy.mockRestore();
+      });
     });
   });
 });

@@ -439,17 +439,17 @@ J.ABS.EXT.POSES.Aliased.JABS_Battler.set('startGuarding', JABS_Battler.prototype
 /**
  * Extends {@link #startGuarding}.
  * Executes an action pose when guarding.
- * @param {string} skillSlot The skill slot containing the guard data.
  */
-JABS_Battler.prototype.startGuarding = function(skillSlot)
+JABS_Battler.prototype.startGuarding = function()
 {
   // perform original logic.
   J.ABS.EXT.POSES.Aliased.JABS_Battler.get('startGuarding')
-    .call(this, skillSlot);
+    .call(this);
 
-  // set the pose!
+  // set the pose! guard is resolved from the equipped offhand's declared guard skill,
+  // not from the skill-slot system- mirror core's own resolution in getGuardData().
   const skillId = this.getBattler()
-    .getEquippedSkillId(skillSlot);
+    .getGuardSkillId();
   const skill = this.getSkill(skillId);
   this.performActionPose(skill);
 };

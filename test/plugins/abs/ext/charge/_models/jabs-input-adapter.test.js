@@ -20,7 +20,6 @@ describe('J-ABS-Charge JABS_InputAdapter (unit, all downstream dependencies mock
       canBattlerUseAttacks: () => true,
       canBattlerUseSkills: () => true,
       isCastingOrChanneling: () => false,
-      isGuardSkillByKey: () => false,
       executeChargeAction: vi.fn(),
     }, overrides);
   }
@@ -76,18 +75,6 @@ describe('J-ABS-Charge JABS_InputAdapter (unit, all downstream dependencies mock
 
       // Assert
       expect(battler.executeChargeAction).toHaveBeenCalledWith('offhand', true);
-    });
-
-    it('does not execute charging when the offhand slot is a guard skill', () =>
-    {
-      // Arrange
-      const battler = buildBattler({ isGuardSkillByKey: () => true });
-
-      // Act
-      globalThis.JABS_InputAdapter.performOffhandActionCharging(true, battler);
-
-      // Assert
-      expect(battler.executeChargeAction).not.toHaveBeenCalled();
     });
 
     it('does not execute charging when the battler cannot use attacks', () =>

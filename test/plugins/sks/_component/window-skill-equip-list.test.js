@@ -39,9 +39,9 @@ describe('Window_SkillEquipList (src/plugins/sks/core/windows/Window_SkillEquipL
 
   /**
    * Builds a fake actor exposing just the surface Window_SkillEquipList reads from a Game_Actor:
-   * `skills()`, `skillSlotCost()`, and `canEquipSkillToSlot()`.
+   * `skills()`, `skillSlotCost()`, `canEquipSkillToSlot()`, and `forcedUnslottedSkillIds()`.
    * @param {object[]} skills The learned skills to report from `skills()`.
-   * @param {object} [overrides] Optional overrides for the cost/enable functions.
+   * @param {object} [overrides] Optional overrides for the cost/enable/forced-unslotted functions.
    * @returns {object}
    */
   function makeActor(skills, overrides = {})
@@ -50,11 +50,15 @@ describe('Window_SkillEquipList (src/plugins/sks/core/windows/Window_SkillEquipL
       skills: () => skills,
       skillSlotCost: overrides.skillSlotCost ?? (skill => skill),
       canEquipSkillToSlot: overrides.canEquipSkillToSlot ?? (() => true),
+      forcedUnslottedSkillIds: overrides.forcedUnslottedSkillIds ?? (() => new Set()),
     };
   }
 
   beforeEach(() =>
   {
+    // default to tandem mode (neither exclusive nor slots-only) unless a test overrides it.
+    globalThis.J.SKS = { Metadata: { enableExclusiveMode: false, slotsOnly: false } };
+
     // a small roster of skills covering: normal, unslotted, and an extension-flagged skill.
     globalThis.$dataSkills = [
       null,
@@ -75,6 +79,19 @@ describe('Window_SkillEquipList (src/plugins/sks/core/windows/Window_SkillEquipL
   {
     const list = new Window_SkillEquipList({});
     const actor = makeActor([ globalThis.$dataSkills[1], globalThis.$dataSkills[2] ]);
+
+    list.setActor(actor);
+
+    expect(list.commandList().map(cmd => cmd.ext.id)).toEqual([ 1 ]);
+  });
+
+  it('buildCommands excludes skills forced unslotted for the current actor', () =>
+  {
+    const list = new Window_SkillEquipList({});
+    const actor = makeActor(
+      [ globalThis.$dataSkills[1], globalThis.$dataSkills[3] ],
+      { forcedUnslottedSkillIds: () => new Set([ 3 ]) },
+    );
 
     list.setActor(actor);
 
@@ -130,6 +147,19 @@ describe('Window_SkillEquipList (src/plugins/sks/core/windows/Window_SkillEquipL
     expect(command.rightText).toBe('4');
     expect(command.enabled).toBe(false);
     expect(command.icon).toBe(10);
+  });
+
+  it('buildCommand blanks the right text entirely in slots-only exclusive mode', () =>
+  {
+    globalThis.J.SKS.Metadata = { enableExclusiveMode: true, slotsOnly: true };
+
+    const list = new Window_SkillEquipList({});
+    const actor = makeActor([ globalThis.$dataSkills[1] ], { skillSlotCost: () => 4 });
+
+    list.setActor(actor);
+    const [ command ] = list.commandList();
+
+    expect(command.rightText).toBe(String.empty);
   });
 
   describe('item()', () =>

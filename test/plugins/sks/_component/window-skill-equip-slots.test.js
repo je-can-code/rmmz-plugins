@@ -31,10 +31,15 @@ describe('Window_SkillEquipSlots (src/plugins/sks/core/windows/Window_SkillEquip
   {
     delete globalThis.Window_Command;
     delete globalThis.WindowCommandBuilder;
+    delete globalThis.J;
   });
 
   beforeEach(() =>
   {
+    // default to tandem mode (neither exclusive nor slots-only) unless a test overrides it.
+    globalThis.J = { SKS: { Metadata: { enableExclusiveMode: false, slotsOnly: false } } };
+
+    // a small roster covering both a normally-costed skill and a free one.
     // a small roster covering both a normally-costed skill and a free one.
     globalThis.$dataSkills = [
       null,
@@ -134,6 +139,23 @@ describe('Window_SkillEquipSlots (src/plugins/sks/core/windows/Window_SkillEquip
       expect(command.name).toBe('Guard');
       expect(command.icon).toBe(20);
       expect(command.rightText).toBe('3');
+    });
+
+    it('blanks the right text entirely in slots-only exclusive mode', () =>
+    {
+      globalThis.J.SKS.Metadata = { enableExclusiveMode: true, slotsOnly: true };
+
+      const slots = new Window_SkillEquipSlots({});
+      const actor = makeActor({
+        slotMap: new Map([ [ 0, 2 ] ]),
+        maxSlots: 1,
+        skillSlotCost: () => 3,
+      });
+
+      slots.setActor(actor);
+      const [ command ] = slots.commandList();
+
+      expect(command.rightText).toBe(String.empty);
     });
   });
 

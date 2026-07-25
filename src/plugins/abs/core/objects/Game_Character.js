@@ -590,7 +590,9 @@ Game_Character.prototype.findDiagonalDirectionTo = function(goalX, goalY)
           continue;
         }
       }
-      else if (this.isDiagonalDirection(j))
+      // every value j can take here (1-9, excluding 5) is either straight or diagonal, so
+      // reaching this branch always means j is a diagonal direction.
+      else
       {
         if (!this.canPassDiagonally(x1, y1, horz, vert))
         {

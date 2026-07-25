@@ -20,6 +20,7 @@ describe('RPG_EquipItem (src/plugins/abs/core/database/RPG_EquipItem.js)', () =>
         RegExp: {
           SkillId: /<skillId:[ ]?(\d+)>/i,
           OffhandSkillId: /<offhandSkillId:[ ]?(\d+)>/i,
+          GuardSkillId: /<guardSkillId:[ ]?(\d+)>/i,
           Expires: /<expires:[ ]?(\d+)>/i,
           SkillTransform: /<skillTransform:(\[\d+,[ ]?\d+])>/gi,
         },
@@ -71,6 +72,19 @@ describe('RPG_EquipItem (src/plugins/abs/core/database/RPG_EquipItem.js)', () =>
     it('is null when untagged', () =>
     {
       expect(equipData('').jabsOffhandSkillId).toBeNull();
+    });
+  });
+
+  describe('jabsGuardSkillId', () =>
+  {
+    it('reads the tagged guard skill id', () =>
+    {
+      expect(equipData('<guardSkillId:211>').jabsGuardSkillId).toBe(211);
+    });
+
+    it('is null when untagged', () =>
+    {
+      expect(equipData('').jabsGuardSkillId).toBeNull();
     });
   });
 

@@ -80,7 +80,8 @@ class AutoApplyStateDisplay
    */
   static collectTimeProseLines(dataRow, window)
   {
-    return AutoApplyStateDisplay.#collectProseLinesByCondition(dataRow, window, 'time');
+    return AutoApplyStateDisplay.#collectProseLinesByCondition(
+      dataRow, window, 'time', AutoApplyStateDisplay.formatTimeProse);
   }
 
   /**
@@ -91,7 +92,8 @@ class AutoApplyStateDisplay
    */
   static collectStandProseLines(dataRow, window)
   {
-    return AutoApplyStateDisplay.#collectProseLinesByCondition(dataRow, window, 'stand');
+    return AutoApplyStateDisplay.#collectProseLinesByCondition(
+      dataRow, window, 'stand', AutoApplyStateDisplay.formatStandProse);
   }
 
   /**
@@ -99,9 +101,11 @@ class AutoApplyStateDisplay
    * @param {RPG_BaseItem} dataRow State, skill, or equip row bearing notes.
    * @param {Window_Base} window Host window supplying bold/color text helpers.
    * @param {string} conditionKind The condition kind to match ('time' or 'stand').
+   * @param {(stateId: number, param: number, window: Window_Base) => string} formatter Formats one
+   * matching tuple into a prose line; the caller supplies the kind-specific formatter to use.
    * @returns {string[]}
    */
-  static #collectProseLinesByCondition(dataRow, window, conditionKind)
+  static #collectProseLinesByCondition(dataRow, window, conditionKind, formatter)
   {
     const tuples = RPGManager.getArraysFromNotesByRegex(
       dataRow,
@@ -121,14 +125,7 @@ class AutoApplyStateDisplay
       if (condition !== conditionKind) continue;
       if (Number.isNaN(param) || param < 1) continue;
 
-      if (conditionKind === 'time')
-      {
-        lines.push(AutoApplyStateDisplay.formatTimeProse(stateId, param, window));
-      }
-      else if (conditionKind === 'stand')
-      {
-        lines.push(AutoApplyStateDisplay.formatStandProse(stateId, param, window));
-      }
+      lines.push(formatter(stateId, param, window));
     }
 
     return lines;

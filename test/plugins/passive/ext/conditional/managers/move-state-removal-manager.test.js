@@ -77,7 +77,7 @@ describe('MoveStateRemovalManager (direct src import)', () =>
     {
       // Arrange
       globalThis.$jabsEngine = { absEnabled: true };
-      const state = { constructor: { name: 'RPG_State' } };
+      const state = { constructor: { name: 'RPG_State' }, removeStateOnMoveRules: [] };
       const battler = makeBattler({ allStates: vi.fn().mockReturnValue([ state ]) });
 
       // Act

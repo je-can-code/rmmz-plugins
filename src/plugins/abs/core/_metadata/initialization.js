@@ -733,6 +733,7 @@ J.ABS.RegExp = {
   // skill-related.
   SkillId: /<skillId:[ ]?(\d+)>/gi,
   OffhandSkillId: /<offhandSkillId:[ ]?(\d+)>/gi,
+  GuardSkillId: /<guardSkillId:[ ]?(\d+)>/gi,
 
   // knockback-related.
   KnockbackResist: /<knockbackResist:[ ]?(\d+)>/gi,

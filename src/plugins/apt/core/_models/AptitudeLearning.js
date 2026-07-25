@@ -50,6 +50,15 @@ class AptitudeLearning
   }
 
   /**
+   * Sets the required AP to achieve this learning.
+   * @param {number} requiredAp The amount of AP to set as required.
+   */
+  setRequiredAp(requiredAp)
+  {
+    this.requiredAp = requiredAp;
+  }
+
+  /**
    * Whether or not this learning is achieved.
    * @returns {boolean} True if the learning is achieved, false otherwise.
    */

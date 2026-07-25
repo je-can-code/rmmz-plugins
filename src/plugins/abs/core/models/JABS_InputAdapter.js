@@ -147,9 +147,6 @@ class JABS_InputAdapter
    */
   static #canPerformOffhandAction(jabsBattler)
   {
-    // if the offhand skill is actually a guard skill, then do not perform.
-    if (jabsBattler.isGuardSkillByKey(JABS_Button.Offhand)) return false;
-
     // do not perform actions if there is pedestrians infront of you!
     if ($gameMap.hasInteractableEventInFront(jabsBattler)) return false;
 
@@ -358,7 +355,7 @@ class JABS_InputAdapter
     // dash and guard are mutually exclusive.
     if (sprinting && jabsBattler.guarding())
     {
-      jabsBattler.executeGuard(false, JABS_Button.Offhand);
+      jabsBattler.executeGuard(false);
     }
 
     // perform the sprint.
@@ -428,14 +425,15 @@ class JABS_InputAdapter
 
   /**
    * Executes the guard action.
-   * The player will only perform the guard action if the offhand slot is a guard-ready skill.
+   * The player will only perform the guard action if their equipped offhand item (or, for
+   * enemies, their own notes) declares a guard skill via {@code <guardSkillId:N>}.
    * @param {boolean} guarding True if the player is guarding, false otherwise.
    * @param {JABS_Battler} jabsBattler The battler performing the action.
    */
   static performGuard(guarding, jabsBattler)
   {
-    // check if we can guard with the offhand slot.
-    if (!this.#canPerformGuardBySlot(JABS_Button.Offhand, jabsBattler)) return;
+    // check if we have a guard skill to guard with.
+    if (!this.#canPerformGuard(jabsBattler)) return;
 
     // dash and guard are mutually exclusive; pivot-in-place guard wins over residual dash.
     if (guarding)
@@ -443,20 +441,19 @@ class JABS_InputAdapter
       jabsBattler.getCharacter()._dashing = false;
     }
 
-    // perform the guard skill in the offhand slot.
-    jabsBattler.executeGuard(guarding, JABS_Button.Offhand);
+    // perform the guard skill.
+    jabsBattler.executeGuard(guarding);
   }
 
   /**
    * Determines whether or not the player can guard.
-   * @param {string} slot The slot to check if is able to be used.
    * @param {JABS_Battler} jabsBattler The battler performing the action.
    * @returns {boolean} True if they can, false otherwise.
    */
-  static #canPerformGuardBySlot(slot, jabsBattler)
+  static #canPerformGuard(jabsBattler)
   {
-    // if the offhand slot is not a guard skill, then do not perform.
-    if (!jabsBattler.isGuardSkillByKey(slot)) return false;
+    // if there is no guard skill equipped, then do not perform.
+    if (!jabsBattler.isGuardSkillEquipped()) return false;
 
     // perform!
     return true;
