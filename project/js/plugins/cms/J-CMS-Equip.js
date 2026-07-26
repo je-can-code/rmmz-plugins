@@ -6,7 +6,9 @@
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
+ * @base J-CMS-Main
  * @orderAfter J-Base
+ * @orderAfter J-CMS-Main
  * @help
  * ============================================================================
  * This is a redesign of the equipment menu.
@@ -29,7 +31,7 @@
  * ============================================================================
  */
 
-//#region src/plugins/cms/equip/_metadata/_pluginMetadata.js
+//#region src/plugins/cms/ext/equip/_metadata/_pluginMetadata.js
 var J_CmsEquip_PluginMetadata = class extends PluginMetadata {
 	/**
 	* Constructor.
@@ -42,7 +44,7 @@ var J_CmsEquip_PluginMetadata = class extends PluginMetadata {
 };
 
 //#endregion
-//#region src/plugins/cms/equip/_metadata/initialization.js
+//#region src/plugins/cms/ext/equip/_metadata/initialization.js
 /**
 * The core where all of my extensions live: in the `J` object.
 */
@@ -69,7 +71,7 @@ J.CMS_E.Aliased = {
 };
 
 //#endregion
-//#region src/plugins/cms/equip/windows/Window_MoreEquipData.js
+//#region src/plugins/cms/ext/equip/windows/Window_MoreEquipData.js
 /**
 * A window designed to display "more" data associated with the equipment.
 */
@@ -289,7 +291,7 @@ var Window_MoreEquipData = class extends Window_MoreData {
 };
 
 //#endregion
-//#region src/plugins/cms/equip/scenes/Scene_Equip.js
+//#region src/plugins/cms/ext/equip/scenes/Scene_Equip.js
 /**
 * Initializes this scene.
 */
@@ -522,7 +524,7 @@ Scene_Equip.prototype.refreshActor = function() {
 };
 
 //#endregion
-//#region src/plugins/cms/equip/windows/Window_EquipItem.js
+//#region src/plugins/cms/ext/equip/windows/Window_EquipItem.js
 /**
 * Extends the `.initialize()` to include tracking for the more equip data window.
 */
@@ -556,7 +558,7 @@ Window_EquipItem.prototype.setMoreDataWindow = function(moreDataWindow) {
 };
 
 //#endregion
-//#region src/plugins/cms/equip/windows/Window_EquipSlot.js
+//#region src/plugins/cms/ext/equip/windows/Window_EquipSlot.js
 /**
 * Extends the `.initialize()` to include tracking for the more equip data window.
 */
@@ -590,253 +592,67 @@ Window_EquipSlot.prototype.setMoreDataWindow = function(moreDataWindow) {
 };
 
 //#endregion
-//#region src/plugins/cms/equip/windows/Window_EquipStatus.js
+//#region src/plugins/cms/ext/equip/windows/Window_EquipStatus.js
 /**
-* Gets the parameter bitmap width.
-* @returns {number} The parameter bitmap width.
+* Overwrites {@link #lineHeight}.<br/>
+* Matches the status scene's line height so both screens read identically.
+* @returns {number}
 */
-Window_EquipStatus.prototype.paramWidth = () => 64;
+Window_EquipStatus.prototype.lineHeight = function() {
+	return 32;
+};
 /**
-* Draws all parameters.
+* Overwrites {@link #makeFontSmaller}.<br/>
+* Matches the status scene's reduced font step.
+*/
+Window_EquipStatus.prototype.makeFontSmaller = function() {
+	if (this.contents.fontSize >= 24) {
+		this.contents.fontSize -= 6;
+	}
+};
+/**
+* Overwrites {@link #makeFontBigger}.<br/>
+* Matches the status scene's expanded font step.
+*/
+Window_EquipStatus.prototype.makeFontBigger = function() {
+	if (this.contents.fontSize <= 96) {
+		this.contents.fontSize += 6;
+	}
+};
+/**
+* Overwrites {@link #drawAllParams}.<br/>
+* Renders every registered parameter — vanilla b/x/s params and every custom one alike — through
+* the shared {@link ParameterCatalogRenderer}, grouped and chromed identically to the status
+* scene's page 1 (Combat/Vitality/Precision/Defensive/Haste/Fate). This is the same catalog data
+* the status scene reads, so nothing shown here can drift out of sync with what the player already
+* knows from that screen.
+*
+* When a `_tempActor` is present (the player is hovering a candidate piece of equipment), each row
+* renders "current → projected" instead of a bare value, so the impact of the swap is visible
+* without leaving this window.
 */
 Window_EquipStatus.prototype.drawAllParams = function() {
-	this.drawAllBParams(0, 192);
-	this.drawAllXParams(360, 0);
-	this.drawAllSParams(360, 380);
-};
-/**
-* Draws all b-parameters and their changed values.
-* @param {number} ox The origin x.
-* @param {number} oy The origin y.
-*/
-Window_EquipStatus.prototype.drawAllBParams = function(ox, oy) {
-	const params = [
-		0,
-		1,
-		2,
-		3,
-		4,
-		5,
-		6,
-		7
-	];
-	params.forEach((_, paramId) => {
-		this.drawBParamName(paramId, ox, oy);
-		this.drawCurrentBParam(paramId, ox, oy);
-		this.drawNextBParam(paramId, ox, oy);
-	});
-};
-/**
-* Draws the name of the parameter.
-* @param {number} paramId The parameter id.
-* @param {number} ox The origin x.
-* @param {number} oy The origin y.
-*/
-Window_EquipStatus.prototype.drawBParamName = function(paramId, ox, oy) {
-	const paramWidth = this.paramWidth();
-	const row = paramId;
-	const rowY = this.lineHeight() * row + oy;
-	const paramIcon = IconManager.param(paramId);
-	const paramName = TextManager.param(paramId);
-	this.drawIcon(paramIcon, ox, rowY);
-	this.resetTextColor();
-	this.drawText(paramName, ox + 32, rowY, paramWidth * 2, "left");
-};
-/**
-* Draws the current value that the parameter is now.
-* @param {number} paramId The parameter id.
-* @param {number} ox The origin x.
-* @param {number} oy The origin y.
-*/
-Window_EquipStatus.prototype.drawCurrentBParam = function(paramId, ox, oy) {
-	const paramWidth = this.paramWidth();
-	const row = paramId;
-	const rowX = ox + 100 + paramWidth;
-	const rowY = this.lineHeight() * row + oy;
-	this.resetTextColor();
-	const current = this._actor.param(paramId);
-	this.drawText(current, rowX, rowY, paramWidth, "right");
-};
-/**
-* Draws the projected value that the parameter will be if equipped.
-* @param {number} paramId The parameter id.
-* @param {number} ox The origin x.
-* @param {number} oy The origin y.
-*/
-Window_EquipStatus.prototype.drawNextBParam = function(paramId, ox, oy) {
-	if (!this._tempActor) return;
-	const paramWidth = this.paramWidth();
-	const row = paramId;
-	const rowX = ox + 160 + paramWidth;
-	const rowY = this.lineHeight() * row + oy;
-	const newValue = this._tempActor.param(paramId);
-	const diffValue = newValue - this._actor.param(paramId);
-	this.drawModifierArrow(rowX + 16, rowY, diffValue);
-	this.changeTextColor(ColorManager.paramchangeTextColor(diffValue));
-	this.drawText(newValue, rowX + 56, rowY, paramWidth, "left");
-};
-/**
-* Draws all x-params.
-* @param {number} ox The origin x.
-* @param {number} oy The origin y.
-*/
-Window_EquipStatus.prototype.drawAllXParams = function(ox, oy) {
-	const xparams = [
-		0,
-		1,
-		2,
-		3,
-		4,
-		5,
-		6,
-		7,
-		8,
-		9
-	];
-	xparams.forEach((_, xparamId) => {
-		this.drawXParamName(xparamId, ox, oy);
-		this.drawCurrentXParam(xparamId, ox, oy);
-		this.drawNextXParam(xparamId, ox, oy);
-	});
-};
-/**
-* Draws the name of the parameter.
-* @param {number} xparamId The parameter id.
-* @param {number} ox The origin x.
-* @param {number} oy The origin y.
-*/
-Window_EquipStatus.prototype.drawXParamName = function(xparamId, ox, oy) {
-	const paramWidth = this.paramWidth();
-	const row = xparamId;
-	const rowY = this.lineHeight() * row + oy;
-	const paramIcon = IconManager.xparam(xparamId);
-	const paramName = TextManager.xparam(xparamId);
-	this.drawIcon(paramIcon, ox, rowY);
-	this.resetTextColor();
-	this.drawText(paramName, ox + 32, rowY, paramWidth * 2, "left");
-};
-/**
-* Draws the current value that the parameter is now.
-* @param {number} xparamId The parameter id.
-* @param {number} ox The origin x.
-* @param {number} oy The origin y.
-*/
-Window_EquipStatus.prototype.drawCurrentXParam = function(xparamId, ox, oy) {
-	const paramWidth = this.paramWidth();
-	const row = xparamId;
-	const rowX = ox + 100 + paramWidth;
-	const rowY = this.lineHeight() * row + oy;
-	this.resetTextColor();
-	const current = (this._actor.xparam(xparamId) * 100).toFixed(0);
-	this.drawText(current, rowX, rowY, paramWidth, "right");
-};
-/**
-* Draws the projected value that the parameter will be if equipped.
-* @param {number} xparamId The parameter id.
-* @param {number} ox The origin x.
-* @param {number} oy The origin y.
-*/
-Window_EquipStatus.prototype.drawNextXParam = function(xparamId, ox, oy) {
-	if (!this._tempActor) return;
-	const paramWidth = this.paramWidth();
-	const row = xparamId;
-	const rowX = ox + 160 + paramWidth;
-	const rowY = this.lineHeight() * row + oy;
-	const newValue = this._tempActor.xparam(xparamId);
-	const displayedNewValue = (newValue * 100).toFixed(0);
-	const diffValue = newValue - this._actor.xparam(xparamId);
-	this.drawModifierArrow(rowX + 16, rowY, diffValue);
-	this.changeTextColor(ColorManager.paramchangeTextColor(diffValue));
-	this.drawText(displayedNewValue, rowX + 56, rowY, paramWidth, "left");
-};
-/**
-* Draws all s-params.
-* @param {number} ox The origin x.
-* @param {number} oy The origin y.
-*/
-Window_EquipStatus.prototype.drawAllSParams = function(ox, oy) {
-	const sparams = [
-		0,
-		1,
-		2,
-		3,
-		4,
-		5,
-		6,
-		7,
-		8,
-		9
-	];
-	sparams.forEach((_, xparamId) => {
-		this.drawSParamName(xparamId, ox, oy);
-		this.drawCurrentSParam(xparamId, ox, oy);
-		this.drawNextSParam(xparamId, ox, oy);
-	});
-};
-/**
-* Draws the name of the parameter.
-* @param {number} sparamId The parameter id.
-* @param {number} ox The origin x.
-* @param {number} oy The origin y.
-*/
-Window_EquipStatus.prototype.drawSParamName = function(sparamId, ox, oy) {
-	const paramWidth = this.paramWidth();
-	const row = sparamId;
-	const rowY = this.lineHeight() * row + oy;
-	const paramIcon = IconManager.sparam(sparamId);
-	const paramName = TextManager.sparam(sparamId);
-	this.drawIcon(paramIcon, ox, rowY);
-	this.resetTextColor();
-	this.drawText(paramName, ox + 32, rowY, paramWidth * 2, "left");
-};
-/**
-* Draws the current value that the parameter is now.
-* @param {number} sparamId The parameter id.
-* @param {number} ox The origin x.
-* @param {number} oy The origin y.
-*/
-Window_EquipStatus.prototype.drawCurrentSParam = function(sparamId, ox, oy) {
-	const paramWidth = this.paramWidth();
-	const row = sparamId;
-	const rowX = ox + 100 + paramWidth;
-	const rowY = this.lineHeight() * row + oy;
-	this.resetTextColor();
-	const current = (this._actor.sparam(sparamId) * 100 - 100).toFixed(0);
-	this.drawText(current, rowX, rowY, paramWidth, "right");
-};
-/**
-* Draws the projected value that the parameter will be if equipped.
-* @param {number} sparamId The parameter id.
-* @param {number} ox The origin x.
-* @param {number} oy The origin y.
-*/
-Window_EquipStatus.prototype.drawNextSParam = function(sparamId, ox, oy) {
-	if (!this._tempActor) return;
-	const paramWidth = this.paramWidth();
-	const row = sparamId;
-	const rowX = ox + 160 + paramWidth;
-	const rowY = this.lineHeight() * row + oy;
-	const newValue = this._tempActor.sparam(sparamId);
-	const displayedNewValue = (newValue * 100 - 100).toFixed(0);
-	const diffValue = newValue - this._actor.sparam(sparamId);
-	this.drawModifierArrow(rowX + 16, rowY, diffValue);
-	this.changeTextColor(ColorManager.paramchangeTextColor(diffValue));
-	this.drawText(displayedNewValue, rowX + 56, rowY, paramWidth, "left");
-};
-Window_EquipStatus.prototype.drawModifierArrow = function(x, y, diffValue) {
-	const rightArrowWidth = this.rightArrowWidth();
-	this.changeTextColor(ColorManager.systemColor());
-	const character = this.arrowCharacter(diffValue);
-	this.drawText(character, x, y, rightArrowWidth, "center");
-};
-Window_EquipStatus.prototype.arrowCharacter = function(diffValue) {
-	if (diffValue > 0) {
-		return "↗️";
-	} else if (diffValue < 0) {
-		return "↘️";
-	} else {
-		return "→";
+	const { rowGap } = ParameterCatalogRenderer.PAGE_LAYOUT;
+	const columnLayout = ParameterCatalogRenderer.computeThreeColumnLayout(this);
+	let cursorY = 0;
+	if (columnLayout) {
+		const columnXs = [columnLayout.leftX, columnLayout.middleX];
+		ParameterCatalogRenderer.PAGE_GROUP_ROW_GROUPS.forEach((rowGroups) => {
+			const rowHeights = rowGroups.map((groupId, columnIndex) => {
+				return ParameterCatalogRenderer.drawParameterGroup(this, columnXs[columnIndex], cursorY, groupId, columnLayout.columnWidth, this._actor, this._tempActor);
+			});
+			const tallestSection = Math.max(...rowHeights);
+			cursorY += tallestSection + rowGap;
+		});
+		return;
 	}
+	const fallbackWidth = this.innerWidth;
+	ParameterCatalogRenderer.PAGE_GROUP_ROW_GROUPS.forEach((rowGroups) => {
+		rowGroups.forEach((groupId) => {
+			const groupHeight = ParameterCatalogRenderer.drawParameterGroup(this, 0, cursorY, groupId, fallbackWidth, this._actor, this._tempActor);
+			cursorY += groupHeight + rowGap;
+		});
+	});
 };
 
 //#endregion

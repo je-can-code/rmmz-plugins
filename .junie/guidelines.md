@@ -151,12 +151,14 @@ SdpMasteryManager.reconcileSubgroupMastery(actor, subgroupKey);
                   modifications.
                 * `/src/plugins/abs/ext/tools` - A JABS extension that owns the management of various "tools" and such
                   in JABS (such as a hookshot).
-        * `/src/plugins/cms` - A parent directory for all Custom Menu System plugins. There is no "core" or "
-          extensions", they are just divided by the scene they replace.
-            * `/src/plugins/cms/equip` - The CMS scene replacement for the equip scene.
-            * `/src/plugins/cms/main` - The CMS scene replacement for the main menu scene.
-            * `/src/plugins/cms/skill` - The CMS scene replacement for the skill scene.
-            * `/src/plugins/cms/status` - The CMS scene replacement for the status scene.
+        * `/src/plugins/cms` - A parent directory for all Custom Menu System plugins, following the same "core"/
+          "extensions" convention as other plugin families.
+            * `/src/plugins/cms/core` - The CMS scene replacement for the main menu scene; also owns the shared
+              parameter-catalog rendering machinery (group chrome, layout, registry-driven drawing) that the other
+              CMS scenes build on.
+            * `/src/plugins/cms/ext/equip` - The CMS scene replacement for the equip scene.
+            * `/src/plugins/cms/ext/skill` - The CMS scene replacement for the skill scene.
+            * `/src/plugins/cms/ext/status` - The CMS scene replacement for the status scene.
         * `/src/plugins/crit` - A plugin that provides extended control over critical hits against battlers.
         * `/src/plugins/diff` - A plugin that enables a "difficulty layer" system, such as "easy", "normal", "hard",
           where any of them can be combined at once.

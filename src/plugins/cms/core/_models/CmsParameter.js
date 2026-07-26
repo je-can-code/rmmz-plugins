@@ -1,0 +1,134 @@
+//region CmsParameter
+/**
+ * The content of a single parameter being drawn in a window.
+ * Shared across all CMS scenes (status, equip, etc.) so every screen renders
+ * a given registry parameter with identical name/icon/color/formatting.
+ */
+class CmsParameter
+{
+  /**
+   * The numeric value for the parameter.
+   * For sp/ex parameters, this may be a decimal.
+   * @type {number}
+   */
+  value = 0.0;
+
+  /**
+   * The parameter registry key this value represents.
+   * @type {string}
+   */
+  parameterKey = String.empty;
+
+  /**
+   * The `name` of this parameter.
+   * @type {string}
+   */
+  name = String.empty;
+
+  /**
+   * The `iconIndex` of this parameter.
+   * @type {number}
+   */
+  iconIndex = 0;
+
+  /**
+   * The `colorIndex` of this parameter.
+   * @type {number}
+   */
+  colorIndex = 0;
+
+  /**
+   * The battler this parameter belongs to, if known. Threaded through to
+   * {@link ParameterDefinition#prettyValue} so REGEN_PER_SECOND can convert using this
+   * battler's actual tick cadence instead of assuming a fixed tick count.
+   * @type {Game_Battler|null}
+   */
+  actor = null;
+
+  /**
+   * Constructor.
+   * @param {number} value The value of the parameter.
+   * @param {string} parameterKey The registry key this value represents.
+   * @param {Game_Battler=} actor The battler this parameter belongs to, if known.
+   */
+  constructor(value, parameterKey, actor = null)
+  {
+    // assign the raw numeric value of the parameter.
+    this.value = value;
+
+    // assign the registry key that describes how this value should be displayed.
+    this.parameterKey = parameterKey;
+
+    // assign the owning battler, if provided.
+    this.actor = actor;
+
+    // refresh the derived display data for this parameter.
+    this.refresh();
+  }
+
+  /**
+   * Initialize the properties based on the registry definition.
+   */
+  refresh()
+  {
+    const definition = ParameterRegistry.get(this.parameterKey);
+
+    if (!definition)
+    {
+      this.name = this.parameterKey;
+      this.iconIndex = 0;
+      this.colorIndex = 0;
+      return;
+    }
+
+    // assign name on this instance for callers.
+    this.name = definition.label();
+    this.iconIndex = definition.iconIndex();
+    // color index is value-dependent — rate parameters change color based on magnitude and policy.
+    this.colorIndex = definition.resolveDisplayColorIndex(this.value);
+  }
+
+  /**
+   * Whether this parameter should use styled zero-padding on the status screen.
+   * Returns false when a sentinel label replaces the numeric value, or for regen stats
+   * that already format themselves with a unit suffix.
+   * @returns {boolean}
+   */
+  usesStyledValue()
+  {
+    const definition = ParameterRegistry.get(this.parameterKey);
+
+    if (!definition)
+    {
+      return false;
+    }
+
+    // sentinel states (FREE, IMMUNE, NONE) replace the numeric display entirely.
+    if (definition.resolveDisplaySentinel(this.value))
+    {
+      return false;
+    }
+
+    return definition.format !== ParameterFormat.REGEN_PER_SECOND;
+  }
+
+  /**
+   * Get the pretty value of this parameter.
+   * @param {boolean=} withPadding True if you want zero-padding, false otherwise; defaults to false.
+   * @returns {string}
+   */
+  prettyValue(withPadding = false)
+  {
+    const definition = ParameterRegistry.get(this.parameterKey);
+
+    if (!definition)
+    {
+      return this.value.toString();
+    }
+
+    return definition.prettyValue(this.value, withPadding, this.actor);
+  }
+}
+
+export default CmsParameter;
+//endregion CmsParameter

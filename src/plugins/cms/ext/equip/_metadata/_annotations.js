@@ -1,0 +1,32 @@
+//region Introduction
+/*:
+ * @target MZ
+ * @plugindesc
+ * [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A redesign of the equip menu.
+ * @author JE
+ * @url https://github.com/je-can-code/rmmz-plugins
+ * @base J-Base
+ * @base J-CMS-Main
+ * @orderAfter J-Base
+ * @orderAfter J-CMS-Main
+ * @help
+ * ============================================================================
+ * This is a redesign of the equipment menu.
+ * It includes the ability to see more parameters when changing equips.
+ * You can also now press the square button (or equivalent of) to view the
+ * detailed information relating to JABS (if applicable).
+ * ============================================================================
+ * NOTE ABOUT NOTETAGS:
+ * This plugin has no notetags of its own- it is purely a scene/window
+ * redesign of the native equip menu.
+ * ============================================================================
+ * CHANGELOG:
+ * - 1.1.0
+ *    Added a context action on the equip slot list to unequip the
+ *    currently-selected slot directly, without opening the item list.
+ *    Renamed slot-window handler symbols pagedown/pageup to
+ *    actor-next/actor-prev.
+ * - 1.0.0
+ *    Initial release.
+ * ============================================================================
+ */

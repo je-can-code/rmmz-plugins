@@ -7,7 +7,7 @@ area: feature
 
 ## Source
 
-- `src/plugins/cms/skill/windows/Window_SkillDetail.js` — `makeProjectedDamageParam` (eval whole formula → single **Raw Damage** vs `enemy(1)`)
+- `src/plugins/cms/ext/skill/windows/Window_SkillDetail.js` — `makeProjectedDamageParam` (eval whole formula → single **Raw Damage** vs `enemy(1)`)
 - `ca/docs/weapons/` — weapon band formulas moving toward `(Σ a-side terms) − (Σ b-side terms)` (e.g. tome **MMP/MAT/MDF** scaling)
 - Design discussion (2026-06): FFXIV potency / Persona tiers / Hades % — target **stat-transparent** scaling text derived from formula when possible
 
