@@ -42,6 +42,15 @@ Sprite_Character.prototype.applyPassiveMapTierAccent = function(battlerName)
   {
     battlerName.colorHex = tierStripeHex;
   }
+
+  // resolve the pip count from the same prefix state that decided the stripe color.
+  const tierRank = J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierRank(battler);
+
+  // only touch the name bag when we actually resolved a tier rank (0 means "no tag", leave the default).
+  if (tierRank !== 0)
+  {
+    battlerName.tier = tierRank;
+  }
 };
 
 /**

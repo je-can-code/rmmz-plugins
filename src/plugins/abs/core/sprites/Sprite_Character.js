@@ -1108,7 +1108,7 @@ Sprite_Character.prototype.setupBattlerName = function()
   if (this._j._abs._battlerName)
   {
     // get the name of this battler.
-    const { name, colorHex } = this.getBattlerName();
+    const { name, colorHex, tier } = this.getBattlerName();
 
     // redraw the new battler name.
     this._j._abs._battlerName.setText(name);
@@ -1118,7 +1118,7 @@ Sprite_Character.prototype.setupBattlerName = function()
     if (this._j._abs._battlerNameTierStripe && this.shouldDrawMapTierStripe(colorHex))
     {
       const fontSize = this._j._abs._battlerName.fontSize();
-      this._j._abs._battlerNameTierStripe.bitmap = this.buildMapTierStripeBitmap(colorHex, fontSize);
+      this._j._abs._battlerNameTierStripe.bitmap = this.buildMapTierStripeBitmap(colorHex, fontSize, tier);
     }
 
     // if we already have the sprite, no need to recreate it.
@@ -1144,7 +1144,7 @@ Sprite_Character.prototype.setupBattlerName = function()
 Sprite_Character.prototype.createBattlerNameSprite = function()
 {
   const battlerNameData = this.getBattlerName();
-  const { name, colorHex } = battlerNameData;
+  const { name, colorHex, tier } = battlerNameData;
   const fontSize = 16;
 
   // construct text sprite for the next step in this routine.
@@ -1161,7 +1161,7 @@ Sprite_Character.prototype.createBattlerNameSprite = function()
   if (this.shouldDrawMapTierStripe(colorHex))
   {
     const stripeSprite = new Sprite();
-    stripeSprite.bitmap = this.buildMapTierStripeBitmap(colorHex, fontSize);
+    stripeSprite.bitmap = this.buildMapTierStripeBitmap(colorHex, fontSize, tier);
     const outerW = stripeSprite.bitmap.width;
     const outerH = stripeSprite.bitmap.height;
     const GAP = 4;
@@ -1204,24 +1204,64 @@ Sprite_Character.prototype.isValidMapTierStripeHex = function(color)
 };
 
 /**
+ * Clamps a raw tier rank down to the number of pips the stripe should draw.
+ * `0` or `1` both mean "no pip subdivision" (single solid block, matches legacy stripe shape).
+ * @param {number} tier The raw tier rank from {@link JABS_BattlerName#tier}.
+ * @returns {number} The pip count to draw, at least 1 and at most 5.
+ */
+Sprite_Character.prototype.computeTierPipCount = function(tier)
+{
+  const MAX_PIPS = 5;
+
+  // no tag (0) or the lowest tier (1) both render as a single solid block, same as before this feature existed.
+  if (!tier || tier <= 1) return 1;
+
+  // higher tiers cap at MAX_PIPS so a mis-tagged value cannot blow out the stripe bitmap width.
+  return Math.min(tier, MAX_PIPS);
+};
+
+/**
  * Builds the bordered stripe bitmap used beside map tier labels.
+ * A pip count of 1 draws the original single solid block; anything higher draws that many thin
+ * vertical pips instead, so tier rank is visually legible without memorizing per-tier hex colors.
  * @param {string} colorHex The color hex driving this step.
  * @param {number} fontSize The font size driving this step.
+ * @param {number} tier The tier rank driving how many pips to draw.
  * @returns {Bitmap}
  */
-Sprite_Character.prototype.buildMapTierStripeBitmap = function(colorHex, fontSize)
+Sprite_Character.prototype.buildMapTierStripeBitmap = function(colorHex, fontSize, tier)
 {
   const BORDER = 1;
-  const INNER_W = 4;
-  const outerW = INNER_W + BORDER * 2;
   const outerH = fontSize;
+  const innerH = outerH - BORDER * 2;
+  const pipCount = this.computeTierPipCount(tier);
+
+  // single solid block: identical output to the pre-pip stripe, so untagged/tier-1 states never change visually.
+  if (pipCount <= 1)
+  {
+    const INNER_W = 4;
+    const outerW = INNER_W + BORDER * 2;
+    const bitmap = new Bitmap(outerW, outerH);
+    bitmap.fillRect(0, 0, outerW, outerH, '#000000');
+    bitmap.fillRect(BORDER, BORDER, INNER_W, innerH, colorHex);
+
+    return bitmap;
+  }
+
+  // multiple pips: each pip is a thin bar with a gap between, sized to fit the pip count.
+  const PIP_W = 2;
+  const PIP_GAP = 1;
+  const innerW = (pipCount * PIP_W) + ((pipCount - 1) * PIP_GAP);
+  const outerW = innerW + BORDER * 2;
   const bitmap = new Bitmap(outerW, outerH);
 
   bitmap.fillRect(0, 0, outerW, outerH, '#000000');
 
-  const innerH = outerH - BORDER * 2;
-
-  bitmap.fillRect(BORDER, BORDER, INNER_W, innerH, colorHex);
+  for (let pipIndex = 0; pipIndex < pipCount; pipIndex++)
+  {
+    const pipX = BORDER + (pipIndex * (PIP_W + PIP_GAP));
+    bitmap.fillRect(pipX, BORDER, PIP_W, innerH, colorHex);
+  }
 
   return bitmap;
 };
