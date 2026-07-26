@@ -1151,8 +1151,11 @@ Game_CharacterBase.prototype.moveStraight = function(direction)
 /**
  * Extends {@link Game_CharacterBase.moveDiagonally}.<br/>
  * Evaluates pixel-aware diagonal passability and executes pixel-distance movement.
- * Direction is updated unconditionally (matching rmmz default behavior) so that
- * a blocked diagonal step still rotates the character away from a wall.
+ * Faces the vertical component (down/up) on a successful diagonal step rather than the raw
+ * 8-dir composite code (1/3/7/9): {@link Sprite_Character#characterPatternY} only understands
+ * cardinals 2/4/6/8 and produces a fractional, corrupted sprite-sheet row for anything else.
+ * This mirrors the facing convention this plugin already uses for its other diagonal-movement
+ * path in {@link Game_CharacterBase#pixelMoveByInput}'s `tryDiagonal` helper.
  * @param {4|6} horz The horizontal component direction (4=left, 6=right).
  * @param {2|8} vert The vertical component direction (2=down, 8=up).
  */
@@ -1165,11 +1168,15 @@ Game_CharacterBase.prototype.moveDiagonally = function(horz, vert)
   {
     const direction = this.directionFromHorzVert(horz, vert);
     this.movePixelDistance(direction, this.diagonalDistancePerFrame());
-    this.setDirection(direction);
+
+    // face the vertical component instead of the raw diagonal code; keeps _direction a
+    // valid cardinal at all times for sprite rendering and for anything downstream that
+    // reads facing (e.g. Game_Map.roundXWithDirection, which has no diagonal branch either).
+    this.setDirection(vert);
   }
 
-  // rmmz updates direction unconditionally for diagonal moves: if the character
-  // is facing the reverse of a component direction, rotate toward that component.
+  // if blocked while facing directly away from a component, rotate toward that component
+  // so the character visually turns toward the wall instead of staying reversed.
   if (this._direction === this.reverseDir(horz))
   {
     this.setDirection(horz);

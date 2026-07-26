@@ -7,12 +7,13 @@
 J.PASSIVE.Aliased.Game_Actor.set('onSetup', Game_Actor.prototype.onSetup);
 Game_Actor.prototype.onSetup = function(actorId)
 {
-  // perform original logic.
+  // attach passives first- deferred, so this doesn't trigger its own battler-data-change cascade-
+  // so that when original logic below fires the single notification, passives are already in place.
+  this.refreshPassiveStates(true);
+
+  // perform original logic; this is what actually fires the battler-data-change cascade.
   J.PASSIVE.Aliased.Game_Actor.get('onSetup')
     .call(this, actorId);
-
-  // refresh all passive states on this battler.
-  this.refreshPassiveStates();
 };
 
 /**

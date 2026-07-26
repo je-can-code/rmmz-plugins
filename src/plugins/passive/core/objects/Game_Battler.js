@@ -246,8 +246,12 @@ Game_Battler.prototype.clearPassiveStates = function()
 
 /**
  * Clears and updates the passive state tracker with the latest.
+ * @param {boolean=} deferRefresh Whether or not to defer the trailing battler-data-change
+ * notification; defaults to false. Callers that already know a follow-up notification is coming
+ * (e.g. {@link Game_Enemy.onSetup} pairing this with the base setup notification) should pass true
+ * so the expensive note-regex cascade behind {@link #onBattlerDataChange} only runs once.
  */
-Game_Battler.prototype.refreshPassiveStates = function()
+Game_Battler.prototype.refreshPassiveStates = function(deferRefresh = false)
 {
   // remove all currently tracked passive states.
   this.clearPassiveStates();
@@ -283,6 +287,10 @@ Game_Battler.prototype.refreshPassiveStates = function()
 
   // rebuild the filtered source cache so drift checks skip non-passive sources next cycle.
   this.cachePassiveCapableSources();
+
+  // if the caller is deferring the notification, stop here- they're responsible for triggering
+  // the battler-data-change cascade themselves once, later.
+  if (deferRefresh === true) return;
 
   // flag that battler data has changed.
   this.onBattlerDataChange();

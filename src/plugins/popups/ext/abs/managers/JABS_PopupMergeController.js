@@ -524,12 +524,6 @@ class JABS_PopupMergeController
     JABS_PopupMergeController.#trackedCharacters.forEach(character =>
     {
       const bucket = JABS_PopupMergeController.#characterStore.get(character);
-
-      if (!bucket)
-      {
-        return;
-      }
-
       const spriteCharacter = PopupSpriteLocator.findSpriteCharacterForGameCharacter(character);
       const keys = Array.from(bucket.sessions.keys());
 
@@ -546,7 +540,7 @@ class JABS_PopupMergeController
         }
 
         // each session tracks its own activity timestamp; only flush when this specific stream is idle.
-        const lastAct = session.lastActivityFrame ?? 0;
+        const lastAct = session.lastActivityFrame;
 
         if (now - lastAct < idleFrames)
         {

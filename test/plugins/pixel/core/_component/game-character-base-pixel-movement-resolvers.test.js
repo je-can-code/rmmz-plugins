@@ -198,6 +198,20 @@ describe('J-Pixelistics Game_CharacterBase movement resolvers (direct src import
       expect(ch._y).toBeGreaterThan(2);
     });
 
+    it('faces the vertical cardinal instead of the raw diagonal code when passable', () =>
+    {
+      // Arrange: characterPatternY only understands cardinals 2/4/6/8; a diagonal code
+      // (1/3/7/9) here would produce a fractional, corrupted sprite-sheet row.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+
+      // Act
+      ch.moveDiagonally(D().RIGHT, D().DOWN);
+
+      // Assert
+      expect(ch.direction()).toBe(D().DOWN);
+    });
+
     it('rotates toward the horizontal component when facing its reverse and blocked', () =>
     {
       // Arrange: facing LEFT (reverse of RIGHT); rmmz rotates unconditionally toward the
