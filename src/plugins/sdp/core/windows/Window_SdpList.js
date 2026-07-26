@@ -137,6 +137,9 @@ class Window_SdpList
       }, this)
       .filter(command => command !== null);
 
+    // order rows by family, then subgroup, then subgroup tier (alphabetical-by-key fallback).
+    commands.sort((left, right) => SdpFamilyFilter.comparePanels(left.ext, right.ext));
+
     commands.forEach(this.addBuiltCommand, this);
   }
 
