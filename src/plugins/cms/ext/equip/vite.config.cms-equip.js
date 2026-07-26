@@ -9,7 +9,7 @@ const thisConfig = defineConfig({
   build: {
     rolldownOptions: {
       input: {
-        'cms/J-CMS-Equip': path.resolve(_dirname, './entry.js'),
+        'cms/ext/J-CMS-Equip': path.resolve(_dirname, './entry.js'),
       },
     },
   },

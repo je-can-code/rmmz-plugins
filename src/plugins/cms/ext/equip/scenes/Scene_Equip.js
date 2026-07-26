@@ -1,5 +1,7 @@
 //region Scene_Equip
 import Window_MoreEquipData from '../windows/Window_MoreEquipData.js';
+import Window_EquipActorRibbon from '../windows/Window_EquipActorRibbon.js';
+import Window_EquipControlsHint from '../windows/Window_EquipControlsHint.js';
 
 /**
  * Initializes this scene.
@@ -27,6 +29,8 @@ Scene_Equip.prototype.create = function()
 {
   Scene_MenuBase.prototype.create.call(this);
   this.createHelpWindow();
+  this.createActorRibbonWindow();
+  this.createControlsHintWindow();
   this.createStatusWindow();
   this.createMoreDataWindow();
   this.createSlotWindow();
@@ -46,33 +50,126 @@ Scene_Equip.prototype.buttonAreaHeight = () => 0;
 
 /**
  * Overwrites {@link #statusWidth}.<br/>
- * Modifies the width of the equip status window.
+ * Modifies the width of the equip status window — whatever {@link #rightColumnWidth} trims off
+ * the right-hand column (slot/item lists + controls hint) flows into this column instead, since
+ * the parameter grid is the one that actually needs the room.
+ * @returns {number}
  */
-Scene_Equip.prototype.statusWidth = () => 1024;
+Scene_Equip.prototype.statusWidth = function()
+{
+  return Graphics.boxWidth - this.rightColumnWidth();
+};
+
+/**
+ * The width of the right-hand column (slot list, item list, controls hint). Trimmed to ~70% of
+ * its original width (the full remainder past the old fixed 1024px status column) — still plenty
+ * of room for the controls hint text and the widest equipment names, without hogging space the
+ * parameter grid needs more.
+ * @returns {number}
+ */
+Scene_Equip.prototype.rightColumnWidth = function()
+{
+  const originalRightWidth = Graphics.boxWidth - 1024;
+  return Math.round(originalRightWidth * 0.7);
+};
 
 /**
  * Overwrites {@link #helpWindowRect}.<br/>
- * Changes the width to be what we want it to be.
+ * Stretches the help window across the full screen width along the bottom, instead of only the
+ * status column, since it's the one window in this scene that isn't scoped to either column.
  * @returns {Rectangle}
  */
 Scene_Equip.prototype.helpWindowRect = function()
 {
   const wx = 0;
   const wy = this.helpAreaTop();
-  const ww = this.statusWidth();
+  const ww = Graphics.boxWidth;
   const wh = this.helpAreaHeight();
   return new Rectangle(wx, wy, ww, wh);
 };
 
 /**
+ * The height of a one-line top row (actor ribbon on the left, controls hint on the right).
+ * @returns {number}
+ */
+Scene_Equip.prototype.topRowHeight = function()
+{
+  return this.calcWindowHeight(1, false);
+};
+
+/**
+ * Gets the rectangle that defines the shape of the actor ribbon window.
+ * Spans the full width of the status column.
+ * @returns {Rectangle}
+ */
+Scene_Equip.prototype.actorRibbonRect = function()
+{
+  const wx = 0;
+  const wy = this.mainAreaTop();
+  const ww = this.statusWidth();
+  const wh = this.topRowHeight();
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+/**
+ * Gets the rectangle that defines the shape of the controls hint window.
+ * Sits directly above the slot window, since that's what its legend describes.
+ * @returns {Rectangle}
+ */
+Scene_Equip.prototype.controlsHintRect = function()
+{
+  const wx = this.statusWidth();
+  const wy = this.mainAreaTop();
+  const ww = Graphics.boxWidth - this.statusWidth();
+  const wh = this.topRowHeight();
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+/**
+ * Creates the actor ribbon window.
+ */
+Scene_Equip.prototype.createActorRibbonWindow = function()
+{
+  const rect = this.actorRibbonRect();
+  this._actorRibbonWindow = new Window_EquipActorRibbon(rect);
+  this.addWindow(this._actorRibbonWindow);
+};
+
+/**
+ * Creates the controls hint window.
+ */
+Scene_Equip.prototype.createControlsHintWindow = function()
+{
+  const rect = this.controlsHintRect();
+  this._controlsHintWindow = new Window_EquipControlsHint(rect);
+  this._controlsHintWindow.refresh();
+  this.addWindow(this._controlsHintWindow);
+};
+
+/**
+ * Overwrites {@link #statusWindowRect}.<br/>
+ * Shrinks the status window to start below the actor-ribbon row instead of carving out space for
+ * a portrait internally.
+ * @returns {Rectangle}
+ */
+Scene_Equip.prototype.statusWindowRect = function()
+{
+  const wx = 0;
+  const wy = this.mainAreaTop() + this.topRowHeight();
+  const ww = this.statusWidth();
+  const wh = this.mainAreaHeight() - this.topRowHeight();
+  return new Rectangle(wx, wy, ww, wh);
+};
+
+/**
  * Overwrites {@link #slotWindowRect}.<br/>
- * Modifies the size of the equip slots window.
+ * Modifies the size of the equip slots window, starting below the controls hint row.
  * @returns {Rectangle}
  */
 Scene_Equip.prototype.slotWindowRect = function()
 {
   const wx = this.statusWidth();
-  const wy = this.mainAreaTop();
+  const wy = this.mainAreaTop() + this.topRowHeight();
   const ww = Graphics.boxWidth - this.statusWidth();
   const wh = this.slotWindowHeight(6);
   return new Rectangle(wx, wy, ww, wh);
@@ -216,7 +313,7 @@ Scene_Equip.prototype.moreDataRect = function()
   const wx = this.statusWidth() - width - 4;
   const wy = this.slotWindowRect().y - 4;
   const ww = width;
-  const wh = Graphics.boxHeight - wy;
+  const wh = this.mainAreaBottom() - wy;
   return new Rectangle(wx, wy, ww, wh);
 };
 
@@ -232,14 +329,15 @@ Scene_Equip.prototype.backToItemsList = function()
 
 /**
  * Gets the rectangle that defines the shape of this window.
+ * Starts below the slot window and stops above the bottom help window, so it never runs behind it.
  * @returns {Rectangle}
  */
 Scene_Equip.prototype.itemWindowRect = function()
 {
   const wx = this.statusWidth();
-  const wy = this.mainAreaTop() + this._slotWindow.height;
+  const wy = this.slotWindowRect().y + this._slotWindow.height;
   const ww = Graphics.boxWidth - this.statusWidth();
-  const wh = Graphics.boxHeight - wy;
+  const wh = this.mainAreaBottom() - wy;
   return new Rectangle(wx, wy, ww, wh);
 };
 
@@ -293,5 +391,6 @@ Scene_Equip.prototype.refreshActor = function()
   J.CMS_E.Aliased.Scene_Equip.get('refreshActor').call(this);
   const actor = this.actor();
   this._moreDataWindow.setActor(actor);
+  this._actorRibbonWindow.setActor(actor);
 };
 //endregion Scene_Equip

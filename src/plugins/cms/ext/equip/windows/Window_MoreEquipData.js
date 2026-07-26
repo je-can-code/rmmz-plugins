@@ -60,59 +60,11 @@ class Window_MoreEquipData
     // add jafting-related data.
     this.addJaftingRefinementData();
 
-    // add all the b-params from the database.
-    this.addBaseParameterData();
-
-    // add all various JABS-related data from equipment.
-    this.addJabsEquipmentData();
-
-    // add all the traits from the database.
-    this.addEquipmentTraitData();
-  }
-
-  /**
-   * Add any applicable base parameter commands from the equipment.
-   */
-  addBaseParameterData()
-  {
-    // an iterator function for adding b-params to the list.
-    const forEacher = (value, paramIdIndex) =>
-    {
-      // skip falsy values.
-      if (!value) return;
-
-      // determine the base parameter values for the item.
-      const baseValue = this.item.params[paramIdIndex];
-
-      // define the command name.
-      const commandName = `${TextManager.param(paramIdIndex)}: ${baseValue}`;
-
-      // build the command.
-      const command = new WindowCommandBuilder(commandName)
-        .setIconIndex(IconManager.param(paramIdIndex))
-        .build();
-
-      // add the skill command to the list.
-      this.addBuiltCommand(command);
-    };
-
-    // add all valid b-params to the list.
-    this.item.params.forEach(forEacher, this);
-  }
-
-  /**
-   * Adds all commands related to JABS on the equipment.
-   */
-  addJabsEquipmentData()
-  {
     // add the hit count.
     this.addHitsCommand();
 
-    // add all added and combo skills.
-    this.addSkillCommands();
-
-    // add the move speed boost.
-    this.addSpeedBoostCommand();
+    // add all the traits from the database.
+    this.addEquipmentTraitData();
   }
 
   /**
@@ -153,107 +105,6 @@ class Window_MoreEquipData
         .build();
       this.addBuiltCommand(hitCountRow);
     }
-  }
-
-  /**
-   * Add the the appropriate skill and combo commands as-needed.
-   */
-  addSkillCommands()
-  {
-    // grab the skill id from the skill.
-    const { jabsSkillId } = this.item;
-
-    // if there is no skill, then there is no skill command.
-    if (!jabsSkillId) return;
-
-    // determine the skill.
-    const skill = this.actor.skill(jabsSkillId);
-
-    // build the combo list.
-    const comboSkillList = skill.getComboSkillIdList(this.actor);
-
-    // check if this is main or offhand slot.
-    let baseAttackSkillCommand = this.item.isArmor()
-      ? `Offhand Skill`
-      : `Attack Skill`;
-
-    // identify if there is a combo here or not.
-    const hasCombo = comboSkillList.length > 0;
-
-    // only modify the effect name if we have combos.
-    if (hasCombo)
-    {
-      // rename the command to combo starter.
-      baseAttackSkillCommand = `Combo Starter`;
-    }
-
-    // determine the actual skill.
-    const {
-      name,
-      iconIndex
-    } = skill;
-
-    // define the command name.
-    const attackSkillCommand = `${baseAttackSkillCommand}: \\C[2]${name}\\C[0]`;
-
-    // build the skill command.
-    const command = new WindowCommandBuilder(attackSkillCommand)
-      .setIconIndex(iconIndex)
-      .build();
-
-    // add the skill command to the list.
-    this.addBuiltCommand(command);
-
-    // check if we have combos before we start trying to add them.
-    if (hasCombo)
-    {
-      // an iterator function for building and adding combo commands to the list.
-      const forEacher = (comboSkillId, index) =>
-      {
-        // grab the combo skill.
-        const comboSkill = this.actor.skill(comboSkillId);
-
-        // define the combo skill name.
-        const comboSkillCommandName = `Combo Skill ${index + 1}: \\C[2]${comboSkill.name}\\C[0]`;
-
-        // build the combo skill command.
-        const comboCommand = new WindowCommandBuilder(comboSkillCommandName)
-          .setIconIndex(iconIndex)
-          .build();
-
-        // add the combo skill command to the list.
-        this.addBuiltCommand(comboCommand);
-      };
-
-      // iterate over the combos and add them.
-      comboSkillList.forEach(forEacher, this);
-    }
-  }
-
-  /**
-   * Add any speed boost adjustments from the equipment.
-   */
-  addSpeedBoostCommand()
-  {
-    // grab the data out of the item.
-    const { jabsSpeedBoost } = this.item;
-
-    // if there is no speed boost, then do not render the data.
-    if (!jabsSpeedBoost) return;
-
-    // define the command name.
-    const speedBoostCommand = `Speed Boost: ${jabsSpeedBoost}`;
-
-    // its very long, so lets do that icon calculation here.
-    const speedBoostIcon = IconManager.jabsParameterIcon(IconManager.JABS_PARAMETER.SPEED_BOOST);
-
-    // build the speed boost command.
-    const command = new WindowCommandBuilder(speedBoostCommand)
-      .setIconIndex(speedBoostIcon)
-      .build();
-
-    // add the skill command to the list.
-    this.addBuiltCommand(command);
   }
 
   /**
@@ -324,14 +175,21 @@ class Window_MoreEquipData
    */
   addEquipmentTraitData()
   {
-    // we have no traits.
-    const allTraits = this.item.traits;
+    // param-modifying traits (b/x/s) are deliberately excluded here — the equip status window's
+    // parameter grid already shows every one of these as a current → projected comparison across
+    // the actor's whole build, which is strictly more useful than restating the item's isolated
+    // trait value in this popup too.
+    const paramTraitCodes = [
+      J.BASE.Traits.B_PARAMETER,
+      J.BASE.Traits.X_PARAMETER,
+      J.BASE.Traits.S_PARAMETER,
+    ];
+
+    // we have no traits worth showing.
+    const allTraits = this.item.traits.filter(trait => paramTraitCodes.includes(trait.code) === false);
     if (!allTraits.length) return;
 
-    const xparamNoPercents = [ 0, 2, 7, 8, 9 ]; // code 22
-    const sparamNoPercents = [ 1 ]; // code 23
-    const dividerIndex = allTraits.findIndex(trait => trait.code === J.BASE.Traits.NO_DISAPPEAR);
-    const hasDivider = dividerIndex !== -1;
+    const hasDivider = allTraits.some(trait => trait.code === J.BASE.Traits.NO_DISAPPEAR);
     if (hasDivider)
     {
       this.addCommand(`BASE TRAITS`, null, true, null, 16, 30);
@@ -342,37 +200,10 @@ class Window_MoreEquipData
       const convertedTrait = new JAFTING_Trait(t.code, t.dataId, t.value);
       let commandName = convertedTrait.nameAndValue;
       let commandColor = 0;
-      switch (convertedTrait._code)
+      if (convertedTrait._code === J.BASE.Traits.NO_DISAPPEAR)
       {
-        case 21:
-          const paramId = convertedTrait._dataId;
-          const paramBase = this.actor.paramBase(paramId);
-          const bonus = paramBase * (convertedTrait._value - 1);
-          const sign = bonus >= 0
-            ? '+'
-            : '-';
-          commandName += ` \\C[6](${sign}${bonus.toFixed(2)})\\C[0]`;
-          break;
-        case 22:
-          const xparamId = convertedTrait._dataId;
-          if (xparamNoPercents.includes(xparamId))
-          {
-            commandName = commandName.replace("%", String.empty);
-          }
-
-          break;
-        case 23:
-          const sparamId = convertedTrait._dataId;
-          if (sparamNoPercents.includes(sparamId))
-          {
-            commandName = commandName.replace("%", String.empty);
-          }
-
-          break;
-        case 63:
-          commandName = convertedTrait.name;
-          commandColor = 30;
-          break;
+        commandName = convertedTrait.name;
+        commandColor = 30;
       }
 
       const commandIcon = IconManager.trait(convertedTrait);

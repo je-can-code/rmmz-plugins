@@ -26,7 +26,7 @@ TextManager.cdrDescription = function()
  */
 TextManager.per = function()
 {
-  return 'Parry Extension';
+  return 'Grace';
 };
 
 /**

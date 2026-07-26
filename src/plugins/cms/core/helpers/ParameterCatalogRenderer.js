@@ -49,16 +49,23 @@ class ParameterCatalogRenderer
       iconIndex: 1619,
       colorIndex: 27,
     },
+    support: {
+      title: 'Support',
+      iconIndex: 86,
+      colorIndex: 14,
+    },
   };
 
   /**
-   * Catalog group ids per visual row band (left column, then middle column).
-   * @type {Array<[string, string]>}
+   * Catalog group ids per visual row band (left column, then middle column). `support` has no
+   * partner group — like an odd-count group's dangling last row, it's a lone entry in its own band.
+   * @type {Array<[string, string]|[string]>}
    */
   static PAGE_GROUP_ROW_GROUPS = [
     [ 'combat', 'vitality' ],
     [ 'precision', 'defensive' ],
     [ 'mobility', 'fate' ],
+    [ 'support' ],
   ];
 
   /**
@@ -126,6 +133,39 @@ class ParameterCatalogRenderer
       middleX,
       rightX,
       rightColumnWidth,
+    };
+  }
+
+  /**
+   * Computes equal-width two-column layout spanning the full inner width. Unlike
+   * {@link #computeThreeColumnLayout}, this reserves no third column for elements/ailments — for
+   * consumers (like the equip comparison panel) that have nothing to put there, splitting into two
+   * wider columns instead gives every parameter name and value room to breathe.
+   * @param {Window_Base} window The window driving the layout.
+   * @returns {{ edgePad: number, gap: number, columnWidth: number, leftX: number, middleX: number }|null}
+   */
+  static computeTwoColumnLayout(window)
+  {
+    const edgePad = 8;
+    const usable = window.innerWidth - (edgePad * 2);
+    const gap = ParameterCatalogRenderer.COLUMN_LINE_BLEED + ParameterCatalogRenderer.COLUMN_CLEAR_GAP;
+    const minColumnWidth = 200;
+    const columnWidth = Math.floor((usable - gap) / 2);
+
+    if (columnWidth < minColumnWidth)
+    {
+      return null;
+    }
+
+    const leftX = edgePad;
+    const middleX = leftX + columnWidth + gap;
+
+    return {
+      edgePad,
+      gap,
+      columnWidth,
+      leftX,
+      middleX,
     };
   }
 
@@ -250,33 +290,19 @@ class ParameterCatalogRenderer
   }
 
   /**
-   * Picks the arrow glyph describing the direction of a projected change.
-   * @param {number} diffValue The signed delta between the current and projected value.
-   * @returns {string}
-   */
-  static arrowCharacter(diffValue)
-  {
-    if (diffValue > 0)
-    {
-      return '↗';
-    }
-
-    if (diffValue < 0)
-    {
-      return '↘';
-    }
-
-    return '→';
-  }
-
-  /**
    * Resolves what text/color a catalog value slot should render. When `nextParameter` is supplied
    * and its value differs from `parameter`, this collapses "current → projected" into a single
    * colored string instead of the padded single-value display — that's the whole reason equip's
    * comparison panel can share this renderer with the plain status page instead of duplicating it.
+   *
+   * `color` is always a ready-to-draw CSS color string. It is kept separate from `colorIndex`
+   * (a raw palette index, only meaningful in the non-diff/padded-value path) because
+   * {@link ColorManager#paramchangeTextColor} — used for the diff path — already returns a resolved
+   * CSS string rather than a palette index; feeding that back through {@link ColorManager#textColor}
+   * a second time throws, since that call expects a number.
    * @param {CmsParameter} parameter The parameter's current value.
    * @param {CmsParameter|null} nextParameter The parameter's projected value, if comparing.
-   * @returns {{text: string, colorIndex: number, withPadding: boolean}}
+   * @returns {{text: string, colorIndex: number, color: string, bold: boolean, withPadding: boolean}}
    */
   static resolveCatalogDisplay(parameter, nextParameter)
   {
@@ -288,15 +314,36 @@ class ParameterCatalogRenderer
       return {
         text: parameter.prettyValue(withPadding),
         colorIndex: parameter.colorIndex,
+        color: ColorManager.textColor(parameter.colorIndex),
+        bold: parameter.colorIndex !== 0,
         withPadding,
       };
     }
 
     const diffValue = nextParameter.value - parameter.value;
-    const arrow = ParameterCatalogRenderer.arrowCharacter(diffValue);
+
+    // color alone carries direction now (no arrow glyph) — but "good"/"bad" still depends on the
+    // parameter's policy; cost/damage-rate params are lower-is-better, so a decrease there needs to
+    // read green, not red. Flip the sign fed into the color lookup for those.
+    const definition = ParameterRegistry.get(parameter.parameterKey);
+    const colorDiff = (definition && definition.isIncreaseBeneficial() === false)
+      ? -diffValue
+      : diffValue;
+
+    // show only the projected value instead of "current → next" — a compound string doubles the
+    // width of long formats (regen rates, percents), which crowds out the icon/name on rows that
+    // are already the ones meant to stand out. The magnitude of the change is still worth
+    // surfacing though, since the old value is otherwise gone from view entirely — append it as a
+    // signed "(+diff)"/"(-diff)" using the same unit conventions.
+    const deltaText = definition
+      ? definition.prettyDelta(diffValue, parameter.actor)
+      : String.empty;
+
     return {
-      text: `${parameter.prettyValue()} ${arrow} ${nextParameter.prettyValue()}`,
-      colorIndex: ColorManager.paramchangeTextColor(diffValue),
+      text: `${nextParameter.prettyValue()}${deltaText ? ` (${deltaText})` : String.empty}`,
+      colorIndex: 0,
+      color: ColorManager.paramchangeTextColor(colorDiff),
+      bold: true,
       withPadding: false,
     };
   }
@@ -321,12 +368,12 @@ class ParameterCatalogRenderer
       return;
     }
 
-    if (display.colorIndex !== 0)
+    if (display.bold)
     {
       window.contents.fontBold = true;
     }
 
-    window.changeTextColor(ColorManager.textColor(display.colorIndex));
+    window.changeTextColor(display.color);
     window.drawText(display.text, x, y, width, align);
     window.resetTextColor();
     window.resetFontFormatting();
@@ -453,6 +500,12 @@ class ParameterCatalogRenderer
         ? ParameterCatalogRenderer.makeParameter(tempActor, definition.key)
         : null;
 
+      // while comparing against a candidate, fade every stat that isn't actually changing so the
+      // handful that are stand out instead of competing for attention with the whole catalog.
+      const isComparing = tempActor !== null;
+      const isUnchanged = (nextParameter === null) || (nextParameter.value === parameter.value);
+      window.changePaintOpacity(!(isComparing && isUnchanged));
+
       if (index % 2 === 0)
       {
         ParameterCatalogRenderer.drawParameterLeft(window, x, rowY, leftInnerRight, parameter, nextParameter);
@@ -462,6 +515,9 @@ class ParameterCatalogRenderer
         ParameterCatalogRenderer.drawParameterRight(window, rightHalfX, rowY, rowRight, parameter, nextParameter);
       }
     });
+
+    // never leave the window's paint opacity dimmed for whatever draws next (next group's title, etc).
+    window.changePaintOpacity(true);
   }
 
   /**

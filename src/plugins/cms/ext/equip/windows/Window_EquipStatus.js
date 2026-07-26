@@ -11,13 +11,14 @@ Window_EquipStatus.prototype.lineHeight = function()
 
 /**
  * Overwrites {@link #makeFontSmaller}.<br/>
- * Matches the status scene's reduced font step.
+ * Eases off the reduction step compared to the status scene — this window has a wider two-column
+ * layout with room to spare, so parameter names don't need to squeeze down as far to fit.
  */
 Window_EquipStatus.prototype.makeFontSmaller = function()
 {
-  if (this.contents.fontSize >= 24)
+  if (this.contents.fontSize >= 20)
   {
-    this.contents.fontSize -= 6;
+    this.contents.fontSize -= 2;
   }
 };
 
@@ -34,12 +35,31 @@ Window_EquipStatus.prototype.makeFontBigger = function()
 };
 
 /**
+ * Overwrites {@link #refresh}.<br/>
+ * Drops the vanilla name/face block — {@link Window_EquipActorRibbon} owns that now, in its own
+ * row above this window — so the parameter grid gets the full window instead of carving out space
+ * for a portrait internally.
+ */
+Window_EquipStatus.prototype.refresh = function()
+{
+  this.contents.clear();
+  if (this._actor)
+  {
+    this.drawAllParams();
+  }
+};
+
+/**
  * Overwrites {@link #drawAllParams}.<br/>
  * Renders every registered parameter — vanilla b/x/s params and every custom one alike — through
  * the shared {@link ParameterCatalogRenderer}, grouped and chromed identically to the status
- * scene's page 1 (Combat/Vitality/Precision/Defensive/Haste/Fate). This is the same catalog data
- * the status scene reads, so nothing shown here can drift out of sync with what the player already
- * knows from that screen.
+ * scene's page 1 (Combat/Vitality/Precision/Defensive/Haste/Fate/Support). This is the same catalog
+ * data the status scene reads, so nothing shown here can drift out of sync with what the player
+ * already knows from that screen.
+ *
+ * Unlike the status page, this window uses a two-column layout instead of three — there's no
+ * elements/ailments panel to reserve a third column for here, so the freed width goes toward
+ * wider, more legible name/value columns instead.
  *
  * When a `_tempActor` is present (the player is hovering a candidate piece of equipment), each row
  * renders "current → projected" instead of a bare value, so the impact of the swap is visible
@@ -48,7 +68,7 @@ Window_EquipStatus.prototype.makeFontBigger = function()
 Window_EquipStatus.prototype.drawAllParams = function()
 {
   const { rowGap } = ParameterCatalogRenderer.PAGE_LAYOUT;
-  const columnLayout = ParameterCatalogRenderer.computeThreeColumnLayout(this);
+  const columnLayout = ParameterCatalogRenderer.computeTwoColumnLayout(this);
   let cursorY = 0;
 
   if (columnLayout)

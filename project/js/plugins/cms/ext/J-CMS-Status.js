@@ -6,13 +6,13 @@
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
- * @base J-CMS-Main
+ * @base J-CMS
  * @base J-ABS
  * @base J-SDP
  * @base J-CriticalFactors
  * @base J-NaturalGrowth
  * @orderAfter J-Base
- * @orderAfter J-CMS-Main
+ * @orderAfter J-CMS
  * @help
  * ============================================================================
  * OVERVIEW
