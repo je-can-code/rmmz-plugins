@@ -409,6 +409,8 @@ describe('TrackedOmniObjective (omni ext/quest, direct src import)', () =>
       {
         return builder;
       };
+      // J-Log must be present for the announcement path to run at all.
+      globalThis.J.LOG = {};
       globalThis.$diaLogManager = { addLog: vi.fn() };
 
       tracked.onObjectiveUpdate();
@@ -426,6 +428,8 @@ describe('TrackedOmniObjective (omni ext/quest, direct src import)', () =>
       tracked.state = OmniObjective.States.Active;
 
       globalThis.DiaLogBuilder = vi.fn();
+      // J-Log must be present for the announcement path to run at all.
+      globalThis.J.LOG = {};
       globalThis.$diaLogManager = { addLog: vi.fn() };
 
       tracked.onObjectiveUpdate();

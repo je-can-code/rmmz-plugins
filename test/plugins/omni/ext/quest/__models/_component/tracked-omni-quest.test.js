@@ -614,6 +614,8 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
       {
         return builder;
       };
+      // J-Log must be present for the announcement path to run at all.
+      globalThis.J.LOG = {};
       globalThis.$diaLogManager = { addLog: vi.fn() };
 
       quest.setState(OmniQuest.States.Active);
@@ -627,6 +629,8 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
       const quest = new TrackedOmniQuest('quest-key', 'main', [ fakeObjective(0, OmniObjective.States.Inactive) ]);
       quest.state = OmniQuest.States.Active;
 
+      // J-Log must be present for the announcement path to run at all.
+      globalThis.J.LOG = {};
       globalThis.$diaLogManager = { addLog: vi.fn() };
 
       quest.setState(OmniQuest.States.Inactive);

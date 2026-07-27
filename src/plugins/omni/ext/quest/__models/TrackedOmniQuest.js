@@ -714,8 +714,9 @@ class TrackedOmniQuest
    */
   onQuestStateChange()
   {
-    // check if we have the dialog manager.
-    if ($diaLogManager)
+    // check if the log plugin is present to announce through. a bare $diaLogManager reference would
+    // throw a ReferenceError rather than read as falsy when J-Log is not loaded at all.
+    if (J.LOG)
     {
       // handle logging.
       this.handleQuestUpdateLog();
