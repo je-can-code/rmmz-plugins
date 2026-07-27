@@ -11,6 +11,10 @@ describe('ApManager (direct src import)', () =>
 
   beforeAll(async () =>
   {
+    // the J namespace always exists in-game via J-Base; without J-Log in it, learns simply go
+    // unannounced, which keeps these tests focused on the AP math rather than the dia log.
+    globalThis.J = {};
+
     ({ default: AptitudeTeachable } = await import('../../../../../src/plugins/apt/core/_models/AptitudeTeachable.js'));
     ({ default: ApManager } = await import('../../../../../src/plugins/apt/core/managers/ApManager.js'));
   });

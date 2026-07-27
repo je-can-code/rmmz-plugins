@@ -1,5 +1,5 @@
 //region plugins/sdp/_component/sdp-mastery.test.js
-import { beforeAll, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   installSdpHostGlobals,
@@ -571,6 +571,170 @@ describe('J-SDP mastery (direct src import)', () =>
 
       // Assert
       expect(freshActor.isLearnedSkill(901)).toBe(true);
+    });
+  });
+
+  describe('mastery dia log announcements', () =>
+  {
+    let addLog;
+
+    /**
+     * Builds an actor wired with everything the mastery announcement reads off a learner.
+     * @returns {Game_Actor}
+     */
+    function createAnnouncingActor()
+    {
+      const actor = createTestActor();
+
+      actor.name = () => 'Jerald';
+      actor.faceName = () => 'Actor1';
+      actor.faceIndex = () => 0;
+      actor.skill = skillId => ({ name: `Mastery ${skillId}`, message1: '', message2: '' });
+
+      return actor;
+    }
+
+    /**
+     * Maxes a panel for an actor and reconciles it, which is what triggers an announcement.
+     * @param {Game_Actor} actor The actor gaining the mastery.
+     * @param {string} panelKey The key of the panel being maxed.
+     */
+    function maxPanel(actor, panelKey)
+    {
+      const ranking = new PanelRanking(panelKey, actor.actorId());
+      ranking.currentRank = 1;
+      ranking.maxed = true;
+      actor.getAllSdpRankings()
+        .push(ranking);
+      ranking.applySubgroupMastery();
+    }
+
+    beforeEach(() =>
+    {
+      applyMasteryConfiguration(buildMasteryConfig());
+
+      addLog = vi.fn();
+      globalThis.$diaLogManager = { addLog };
+
+      // J-Log being present is what permits announcing at all.
+      globalThis.J.LOG = {};
+
+      // the dia log builder is a runtime global provided by J-Log, mirrored here as a fluent stub.
+      globalThis.DiaLogBuilder = class
+      {
+        constructor()
+        {
+          this.lines = [];
+          this.faceName = null;
+          this.faceIndex = -1;
+        }
+
+        addLine(line)
+        {
+          this.lines.push(line);
+          return this;
+        }
+
+        setFaceName(faceName)
+        {
+          this.faceName = faceName;
+          return this;
+        }
+
+        setFaceIndex(faceIndex)
+        {
+          this.faceIndex = faceIndex;
+          return this;
+        }
+
+        build()
+        {
+          return { lines: this.lines, faceName: this.faceName, faceIndex: this.faceIndex };
+        }
+      };
+    });
+
+    it('announces a first mastery as an achievement rather than an upgrade', () =>
+    {
+      // Arrange
+      const actor = createAnnouncingActor();
+
+      // Act
+      maxPanel(actor, 'mastery_t1');
+
+      // Assert
+      expect(addLog).toHaveBeenCalledTimes(1);
+      expect(addLog.mock.calls[0][0].lines[0]).toContain('achieved mastery');
+    });
+
+    it('announces a higher tier as an upgrade naming what it superseded', () =>
+    {
+      // Arrange
+      const actor = createAnnouncingActor();
+      maxPanel(actor, 'mastery_t1');
+      addLog.mockClear();
+
+      // Act
+      maxPanel(actor, 'mastery_t2');
+
+      // Assert
+      expect(addLog).toHaveBeenCalledTimes(1);
+      expect(addLog.mock.calls[0][0].lines[0]).toContain('deepened their mastery');
+      expect(addLog.mock.calls[0][0].lines[0]).toContain('Mastery 901');
+    });
+
+    it('stays silent when a reconcile changes nothing', () =>
+    {
+      // Arrange
+      const actor = createAnnouncingActor();
+      maxPanel(actor, 'mastery_t1');
+      addLog.mockClear();
+
+      // Act
+      SdpMasteryManager.reconcileAllForActor(actor);
+
+      // Assert
+      expect(addLog).not.toHaveBeenCalled();
+    });
+
+    it('does not build a log when J-Log is not loaded', () =>
+    {
+      // Arrange
+      const actor = createAnnouncingActor();
+      globalThis.J.LOG = undefined;
+
+      // Act
+      maxPanel(actor, 'mastery_t1');
+
+      // Assert
+      expect(actor.isLearnedSkill(901)).toBe(true);
+      expect(addLog).not.toHaveBeenCalled();
+    });
+
+    it('prefers the mastery skill authored message1 over the default phrasing', () =>
+    {
+      // Arrange
+      const actor = createAnnouncingActor();
+      actor.skill = skillId => ({ name: `Mastery ${skillId}`, message1: 'Custom headline.', message2: '' });
+
+      // Act
+      maxPanel(actor, 'mastery_t1');
+
+      // Assert
+      expect(addLog.mock.calls[0][0].lines[0]).toBe('Custom headline.');
+    });
+
+    it('prefers the mastery skill authored message2 over the default instruction', () =>
+    {
+      // Arrange
+      const actor = createAnnouncingActor();
+      actor.skill = skillId => ({ name: `Mastery ${skillId}`, message1: '', message2: 'Custom instruction.' });
+
+      // Act
+      maxPanel(actor, 'mastery_t1');
+
+      // Assert
+      expect(addLog.mock.calls[0][0].lines[1]).toBe('Custom instruction.');
     });
   });
 });

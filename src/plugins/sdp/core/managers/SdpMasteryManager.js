@@ -64,6 +64,11 @@ class SdpMasteryManager
     // scan the actor's maxed rankings and pick the highest tier in this subgroup.
     const winningPanel = SdpMasteryManager.#resolveWinningMasteryPanel(actor, subgroupKey);
 
+    // remembers the highest-tier mastery actually stripped during this pass. the panels arrive sorted
+    // by tier, so the last one forgotten is the tier the actor was sitting on immediately before now-
+    // which is exactly what makes an upgrade announcement able to say what it grew out of.
+    let supersededPanel = null;
+
     // walk every mastery panel in the subgroup and strip skills that lost the tier contest.
     panelsInSubgroup.forEach(panel =>
     {
@@ -79,6 +84,9 @@ class SdpMasteryManager
       {
         // drop the superseded wrapper skill; J-Passive will refresh states on forget.
         actor.forgetSkill(mastery.masterySkillId);
+
+        // record what was displaced so the announcement can frame this as growth rather than a gain.
+        supersededPanel = panel;
       }
     });
 
@@ -91,7 +99,46 @@ class SdpMasteryManager
     if (actor.isLearnedSkill(winningMastery.masterySkillId) === false)
     {
       actor.learnSkill(winningMastery.masterySkillId);
+
+      // announce the new mastery while both the winning and displaced panels are still in scope.
+      SdpMasteryManager.#handleMasteryLearnedLog(actor, winningPanel, supersededPanel);
     }
+  }
+
+  /**
+   * Generates a dia log announcing that an actor gained a subgroup mastery.
+   * Masteries supersede one another within a subgroup, so this distinguishes a first mastery from an
+   * upgrade over a lower tier- the latter being the more common and more satisfying of the two, and
+   * otherwise entirely invisible to the player. Reconciles that change nothing never reach this.
+   * @param {Game_Actor} actor The actor who gained the mastery.
+   * @param {StatDistributionPanel} winningPanel The panel whose mastery is now active.
+   * @param {StatDistributionPanel|null} supersededPanel The panel this mastery grew out of, if any.
+   */
+  static #handleMasteryLearnedLog(actor, winningPanel, supersededPanel)
+  {
+    // the dia log is optional- when J-Log is absent there is simply nowhere to announce this.
+    if (!J.LOG) return;
+
+    // grab the wrapper skill so its name and message overrides can be read.
+    const skill = actor.skill(winningPanel.mastery.masterySkillId);
+
+    // an upgrade gets to name what it replaced; a first mastery has nothing to grow out of.
+    const headline = skill.message1 || (supersededPanel !== null
+      ? `\\C[1]${actor.name()}\\C[0] deepened their mastery: \\C[1]${skill.name}\\C[0] supersedes ${actor.skill(supersededPanel.mastery.masterySkillId).name}!`
+      : `\\C[1]${actor.name()}\\C[0] achieved mastery of \\C[1]${skill.name}\\C[0]!`);
+
+    // the skill's own message2 wins when authored; otherwise remind the player it must be equipped.
+    const instruction = skill.message2 || 'Equip it from the skills menu to use it.';
+
+    // build the two-line log wearing the master's face so the player knows who grew.
+    const log = new DiaLogBuilder().addLine(headline)
+      .addLine(instruction)
+      .setFaceName(actor.faceName())
+      .setFaceIndex(actor.faceIndex())
+      .build();
+
+    // push it into the dia log for display.
+    $diaLogManager.addLog(log);
   }
 
   /**

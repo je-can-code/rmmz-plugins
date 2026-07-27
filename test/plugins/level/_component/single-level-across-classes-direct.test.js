@@ -74,6 +74,11 @@ function installVanillaFaithfulGameActor()
     }
   };
 
+  Game_Actor.prototype.isLearnedSkill = function(skillId)
+  {
+    return this._skills.includes(skillId);
+  };
+
   Game_Actor.prototype.skills = function()
   {
     return [ ...this._skills ];
