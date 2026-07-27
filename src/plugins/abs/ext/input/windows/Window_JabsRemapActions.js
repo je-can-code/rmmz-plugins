@@ -29,10 +29,6 @@ function jabsRemapActionLookupMaps()
   labels[JABS_Button.Offhand] = 'Offhand';
   labels[JABS_Button.Tool] = 'Tool';
   labels[JABS_Button.Dodge] = 'Dodge';
-  labels[JABS_Button.CombatSkill1] = 'Skill Trigger + Mainhand';
-  labels[JABS_Button.CombatSkill2] = 'Skill Trigger + Offhand';
-  labels[JABS_Button.CombatSkill3] = 'Skill Trigger + Dodge';
-  labels[JABS_Button.CombatSkill4] = 'Skill Trigger + Tool';
   labels[JABS_Button.Sprint] = 'Sprint';
   labels[JABS_Button.SkillTrigger] = 'Skill Trigger';
   labels[JABS_Button.Strafe] = 'Strafe';
@@ -40,6 +36,18 @@ function jabsRemapActionLookupMaps()
   labels[JABS_Button.Guard] = 'Guard';
   labels[JABS_Button.Menu] = 'Menu';
   labels[JABS_Button.Select] = 'Party Cycle';
+
+  // derive the combat skill labels from their compositions rather than spelling them out. writing
+  // them by hand is how "Skill Trigger + Dodge" survived long after the dodge input was folded into
+  // sprint- deriving them means a change to the composition can never leave a label behind.
+  const compositions = JABS_Button.combatSkillCompositions();
+  Object.keys(compositions)
+    .forEach(combatSkillButton =>
+    {
+      // join each component button's own label to describe what produces this combat skill.
+      labels[combatSkillButton] = compositions[combatSkillButton].map(component => labels[component])
+        .join(' + ');
+    });
 
   const help = {};
   help[JABS_Button.Menu] = 'Open the JABS quick menu.\nAccess actions, tools, and options.';
@@ -290,7 +298,6 @@ class Window_JabsRemapActions
           JABS_Button.SkillTrigger,
           JABS_Button.Rotate,
           JABS_Button.Strafe,
-          JABS_Button.Dodge,
         ],
       },
       {

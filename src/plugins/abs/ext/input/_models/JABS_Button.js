@@ -127,6 +127,46 @@ class JABS_Button
   //endregion  L1 + buttons
 
   /**
+   * Gets the logical buttons that combine to produce each combat skill input.
+   *
+   * Combat skills are not independently bindable- each one is the {@link JABS_Button.SkillTrigger}
+   * modifier held alongside one of the four primary buttons. That relationship used to exist only
+   * inside display strings such as "Skill Trigger + Mainhand", which meant a retired button could
+   * (and did) leave those strings quietly lying about what actually fires the skill.
+   *
+   * Expressing it as data instead lets every consumer- remap labels, HUD hints, loadout screens-
+   * resolve the current binding of each half through the live input mapping, so remapping either
+   * component immediately and correctly updates everywhere it is displayed.
+   * @returns {Object<string, string[]>} A map of combat skill key to its component button keys.
+   */
+  static combatSkillCompositions()
+  {
+    // each combat skill is the skill trigger modifier plus one primary button, in slot order.
+    const compositions = {};
+    compositions[this.CombatSkill1] = [ this.SkillTrigger, this.Mainhand ];
+    compositions[this.CombatSkill2] = [ this.SkillTrigger, this.Offhand ];
+    compositions[this.CombatSkill3] = [ this.SkillTrigger, this.Sprint ];
+    compositions[this.CombatSkill4] = [ this.SkillTrigger, this.Tool ];
+
+    // return the mapping of combat skills to the buttons that produce them.
+    return compositions;
+  }
+
+  /**
+   * Gets the logical buttons that combine to produce the given combat skill input.
+   * @param {string} combatSkillButton The combat skill key to decompose.
+   * @returns {string[]} The component button keys, or an empty array if it is not a combat skill.
+   */
+  static combatSkillComposition(combatSkillButton)
+  {
+    // look up the composition for this button.
+    const composition = this.combatSkillCompositions()[combatSkillButton];
+
+    // buttons that are not combat skills have no components to report.
+    return composition ?? Array.empty;
+  }
+
+  /**
    * Gets all assignable buttons used for JABS.
    * @returns {string[]} A collection of JABS-input keys' identifiers.
    */
