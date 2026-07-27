@@ -523,7 +523,15 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
      */
     function buildJabsBattler(x, y, direction)
     {
-      return { getCharacter: () => ({ x, y, direction: () => direction }) };
+      return {
+        getCharacter: () => ({
+          x,
+          y,
+          direction: () => direction,
+          occupiedTileX: () => x,
+          occupiedTileY: () => y,
+        }),
+      };
     }
 
     it('returns false when an enemy battler event is directly in front', () =>
@@ -589,6 +597,40 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
       const map = buildMap({ eventsXy: () => [] });
 
       expect(map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2))).toEqual(false);
+    });
+
+    it('finds a triggerable event on the player\'s own occupied tile, distinct from the front tile', () =>
+    {
+      // Arrange: a real direction-aware round so the base tile (0,0) and front tile (0,-1)
+      // genuinely differ- this is the doorstep case, where the interactable event is underfoot
+      // rather than strictly ahead.
+      globalThis.$gameMap.roundYWithDirection = (y, d) => y + (d === 8 ? -1 : 0);
+      const onBaseTile = { isJabsBattler: () => false, isTriggerIn: () => true, isNormalPriority: () => true };
+      const map = buildMap({
+        eventsXy: (x, y) => (y === 0 ? [ onBaseTile ] : []),
+      });
+
+      // Act
+      const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 8));
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('preserves battler precedence: a battler on the base tile still blocks interaction, even with nothing in front', () =>
+    {
+      // Arrange
+      globalThis.$gameMap.roundYWithDirection = (y, d) => y + (d === 8 ? -1 : 0);
+      const battlerOnBaseTile = { isJabsBattler: () => true };
+      const map = buildMap({
+        eventsXy: (x, y) => (y === 0 ? [ battlerOnBaseTile ] : []),
+      });
+
+      // Act
+      const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 8));
+
+      // Assert: standing on/overlapping an enemy must never be reinterpreted as "interact".
+      expect(result).toBe(false);
     });
   });
 });

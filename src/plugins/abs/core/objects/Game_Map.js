@@ -497,6 +497,10 @@ Game_Map.prototype.clearExpiredLootEvent = function(lootEvent)
  * Handles event interaction for events in front of the player. If they exist,
  * and the player meets the criteria to interact with the event, then do so.
  * It also prevents the player from swinging their weapon willy nilly at NPCs.
+ * Checks the player's own occupied tile before the front tile: under pixel movement a
+ * feet-anchored body can legitimately be standing on an event's tile (doorstep geometry), and
+ * the attack-vs-interact decision has to agree with wherever {@link Game_Player#startMapEvent}
+ * will actually look, or the button press swings a weapon instead of interacting.
  * @param {JABS_Battler} jabsBattler The battler to check the fore-facing events of.
  * @returns {boolean} True if there is an event infront of the player, false otherwise.
  */
@@ -505,14 +509,26 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
   const player = jabsBattler.getCharacter();
   const direction = player.direction();
 
-  // player coordinates are fractional with pixel movement; round to the nearest tile
-  // before computing the look-ahead so eventsXy() can match event positions correctly.
-  const x1 = Math.round(player.x);
-  const y1 = Math.round(player.y);
+  const triggers = [ 0, 1, 2 ];
+
+  // resolve the tile this character's body actually occupies.
+  const x1 = player.occupiedTileX();
+  const y1 = player.occupiedTileY();
   const x2 = $gameMap.roundXWithDirection(x1, direction);
   const y2 = $gameMap.roundYWithDirection(y1, direction);
 
-  const triggers = [ 0, 1, 2 ];
+  // look over events on the player's own tile first; overlap geometry means an interactable
+  // event can be right underfoot rather than strictly "in front".
+  for (const event of this.eventsXy(x1, y1))
+  {
+    // if the player is standing on/overlapping an enemy, let them continue attacking.
+    if (event.isJabsBattler()) return false;
+
+    if (event.isTriggerIn(triggers) && event.isNormalPriority() === true)
+    {
+      return true;
+    }
+  }
 
   // look over events directly infront of the player.
   for (const event of this.eventsXy(x2, y2))

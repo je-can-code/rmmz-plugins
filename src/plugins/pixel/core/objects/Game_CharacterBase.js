@@ -1104,22 +1104,50 @@ Game_CharacterBase.prototype.canPass = function(x, y, d)
 };
 
 /**
+ * Gets the x tile coordinate this character's body actually occupies.
+ * Derives from the collision pivot so triggers, lookups, and collision all agree on a single
+ * definition of "the tile I am on" — see {@link Game_CharacterBase#occupiedTileY} for why this
+ * matters. The pivot is clamped below 1.0 because the JABS pixel extension anchors custom-hitbox
+ * enemies at pivotY 1.0 ("feet on the tile's bottom edge"); unclamped, an at-rest enemy sitting on
+ * an exact integer tile would report the tile below itself instead of its own.
+ * @returns {number} The x tile coordinate containing this character's pivot.
+ */
+Game_CharacterBase.prototype.occupiedTileX = function()
+{
+  return Math.floor(this._x + Math.min(this.getCollisionPivotX(), 1 - 1e-6));
+};
+
+/**
+ * Gets the y tile coordinate this character's body actually occupies.
+ * Collision (`canPassStraight`, `isOverlappingSolidTiles`, etc.) decides where a character
+ * physically stops using `floor(_y + getCollisionPivotY())` — the feet-anchored body tile. Event-
+ * trigger lookups used to decide "which tile is this character on" via `Math.round(_y)` instead —
+ * the logical-center tile. For any pivot other than 0.5 those two conventions disagree whenever
+ * `frac(_y)` falls in `[1 - pivotY, 0.5)`, and pixel movement's feet-anchored physics parks
+ * characters in that band constantly. This is the single authority both sides must use instead.
+ * See {@link Game_CharacterBase#occupiedTileX} for the clamp rationale.
+ * @returns {number} The y tile coordinate containing this character's pivot.
+ */
+Game_CharacterBase.prototype.occupiedTileY = function()
+{
+  return Math.floor(this._y + Math.min(this.getCollisionPivotY(), 1 - 1e-6));
+};
+
+/**
  * Overwrites {@link Game_CharacterBase.pos}.<br/>
- * Rounds this character's fractional pixel coordinates to the nearest tile before comparing.
- * Vanilla `pos` is an exact-equality check, which callers throughout the engine (event-trigger
- * lookups via `Game_Map.eventsXy`, `startMapEvent`, etc.) rely on to match a character against
- * an already-rounded tile coordinate. Under pixel movement, `_x`/`_y` are fractional almost all
- * the time, so exact equality only ever matched by coincidence — this is the same fractional-vs-
- * integer mismatch already fixed for {@link Game_CharacterBase#canPass} and
- * {@link Game_CharacterBase#regionId}, just on the "am I at this tile" side of the comparison
- * instead of the "can I move to this tile" side.
+ * Compares against this character's occupied tile (the collision pivot's tile) rather than
+ * vanilla's exact fractional equality or a naive round-to-nearest. Vanilla `pos` assumes integer
+ * `_x`/`_y`, which pixel movement violates almost all the time; rounding alone "fixed" the
+ * fractional-vs-integer mismatch but kept the wrong convention, disagreeing with the physics that
+ * decide where a character's body actually stands whenever the collision pivot isn't 0.5. For
+ * pivot-0.5 characters (vanilla defaults) this is identical to `Math.round`.
  * @param {number} x The x tile coordinate to compare against (expected to be an integer).
  * @param {number} y The y tile coordinate to compare against (expected to be an integer).
- * @returns {boolean} True if this character's nearest tile matches (x, y).
+ * @returns {boolean} True if this character's occupied tile matches (x, y).
  */
 Game_CharacterBase.prototype.pos = function(x, y)
 {
-  return Math.round(this._x) === x && Math.round(this._y) === y;
+  return this.occupiedTileX() === x && this.occupiedTileY() === y;
 };
 
 /**
@@ -1133,8 +1161,8 @@ J.PIXEL.Aliased.Game_CharacterBase.set('regionId', Game_CharacterBase.prototype.
 Game_CharacterBase.prototype.regionId = function()
 {
   // resolve the tile under the body, not the fractional anchor corner.
-  const tileX = Math.floor(this._x + this.getCollisionPivotX());
-  const tileY = Math.floor(this._y + this.getCollisionPivotY());
+  const tileX = this.occupiedTileX();
+  const tileY = this.occupiedTileY();
 
   return $gameMap.regionId(tileX, tileY);
 };
@@ -2658,19 +2686,33 @@ Game_CharacterBase.prototype._pixelCheckHorizontalAtNewYRow = function(yCurrent,
 /**
  * Moves this character at an arbitrary angle in degrees.
  * The angle follows the RMMZ map convention: 0° = right, 90° = down, 180° = left, 270° = up.
- * Movement is blocked if pixel collision prevents passage in the chosen direction.
+ * Movement is blocked if pixel collision prevents passage in the chosen direction. Fires touch-
+ * front triggers on contact with either blocked axis, even while wall-sliding continues
+ * successfully along the other axis - see the wall-sliding comment inline for why "moved
+ * successfully via sliding" and "touched a blocked axis" are independent outcomes, not mutually
+ * exclusive ones.
  * @param {number} angleDegrees The angle in degrees (0–360, clockwise from right).
  * @param {number=} speed The movement speed in tile units; defaults to distancePerFrame.
  * @returns {boolean} True if the character moved, false if blocked.
  */
+// eslint-disable-next-line complexity
 Game_CharacterBase.prototype.vectorMoveByAngle = function(angleDegrees, speed = this.distancePerFrame())
 {
   // convert angle from degrees to radians.
   const radians = (angleDegrees * Math.PI) / 180;
 
-  // compute the signed unit vector components in tile space.
-  const dx = Math.cos(radians) * speed;
-  const dy = Math.sin(radians) * speed;
+  // Compute the signed unit vector components in tile space. Exact cardinal/diagonal angles
+  // (0/45/90/.../315 - what keyboard/d-pad input always produces via dir8ToAngle) do not land on
+  // an exactly-zero component here: Math.cos/sin of a multiple of 90deg leaves ~1e-17 floating-
+  // point noise instead of a true 0. Left unclamped, a pure vertical push (dy blocked, dx "noise")
+  // reads as a nonzero dx, which slips past the "fully blocked" check below and reports a
+  // successful move via an imperceptible sideways drift - silently skipping the blocked-movement
+  // branch that fires touch-front triggers (doors, NPC bumps) for every straight-line wall bump.
+  const noiseEpsilon = 1e-9;
+  let dx = Math.cos(radians) * speed;
+  let dy = Math.sin(radians) * speed;
+  if (Math.abs(dx) < noiseEpsilon) dx = 0;
+  if (Math.abs(dy) < noiseEpsilon) dy = 0;
 
   // cache the pre-move position for rollback on collision.
   const prevX = this._x;
@@ -2724,6 +2766,23 @@ Game_CharacterBase.prototype.vectorMoveByAngle = function(angleDegrees, speed = 
   {
     // no movement occurred.
     return false;
+  }
+
+  // Wall-sliding lets movement continue along the open axis even when the other axis is
+  // blocked, so a character can hug a wall/door for many frames without ever coming to a full
+  // stop - especially with analog/fuzzy-angle input that's "mostly up but not exactly", which
+  // almost never lands on a true full stop. Touch triggers (opening doors, bumping NPCs) fire on
+  // CONTACT with the blocked axis here, rather than waiting for sliding to happen to dead-end.
+  if (dx !== 0 && canMoveX === false)
+  {
+    this.setDirection(horzDir);
+    this.checkEventTriggerTouchFront(horzDir);
+  }
+
+  if (dy !== 0 && canMoveY === false)
+  {
+    this.setDirection(vertDir);
+    this.checkEventTriggerTouchFront(vertDir);
   }
 
   // apply displacement.
