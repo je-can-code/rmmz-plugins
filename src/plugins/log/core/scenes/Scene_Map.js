@@ -34,6 +34,12 @@ Scene_Map.prototype.initialize = function()
    * @type {Window_DiaLog}
    */
   this._j._log._diaLog = null;
+
+  /**
+   * The loot-centric log for the map.
+   * @type {Window_LootLog}
+   */
+  this._j._log._lootLog = null;
 };
 
 /**
@@ -219,7 +225,7 @@ Scene_Map.prototype.setDiaLogWindow = function(window)
 
 //region loot log
 /**
- * Creates the dia log window and adds it to tracking.
+ * Creates the loot log window and adds it to tracking.
  */
 Scene_Map.prototype.createLootLogWindow = function()
 {
@@ -284,7 +290,7 @@ Scene_Map.prototype.lootLogWindowRect = function()
  */
 Scene_Map.prototype.getLootLogWindow = function()
 {
-  return this._j._log._diaLog;
+  return this._j._log._lootLog;
 };
 
 /**
@@ -293,7 +299,7 @@ Scene_Map.prototype.getLootLogWindow = function()
  */
 Scene_Map.prototype.setLootLogWindow = function(window)
 {
-  this._j._log._diaLog = window;
+  this._j._log._lootLog = window;
 };
 //endregion loot log
 //endregion Scene_Map
