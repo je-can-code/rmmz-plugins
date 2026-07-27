@@ -1385,6 +1385,23 @@ Game_CharacterBase.prototype.canPass = function(x, y, d) {
 	return J.PIXEL.Aliased.Game_CharacterBase.get("canPass").call(this, Math.round(x), Math.round(y), d);
 };
 /**
+* Overwrites {@link Game_CharacterBase.pos}.<br/>
+* Rounds this character's fractional pixel coordinates to the nearest tile before comparing.
+* Vanilla `pos` is an exact-equality check, which callers throughout the engine (event-trigger
+* lookups via `Game_Map.eventsXy`, `startMapEvent`, etc.) rely on to match a character against
+* an already-rounded tile coordinate. Under pixel movement, `_x`/`_y` are fractional almost all
+* the time, so exact equality only ever matched by coincidence — this is the same fractional-vs-
+* integer mismatch already fixed for {@link Game_CharacterBase#canPass} and
+* {@link Game_CharacterBase#regionId}, just on the "am I at this tile" side of the comparison
+* instead of the "can I move to this tile" side.
+* @param {number} x The x tile coordinate to compare against (expected to be an integer).
+* @param {number} y The y tile coordinate to compare against (expected to be an integer).
+* @returns {boolean} True if this character's nearest tile matches (x, y).
+*/
+Game_CharacterBase.prototype.pos = function(x, y) {
+	return Math.round(this._x) === x && Math.round(this._y) === y;
+};
+/**
 * Extends {@link Game_CharacterBase#regionId}.<br/>
 * Samples the map region at the character's collision pivot tile. With pixel movement,
 * `_x`/`_y` are fractional; vanilla forwards them into {@link Game_Map#tileId}, which

@@ -1035,5 +1035,38 @@ describe('J-Pixelistics Game_CharacterBase pixel movement helpers (direct src im
       globalThis.J.PIXEL.Aliased.Game_CharacterBase.set('canPass', original);
     });
   });
+
+  describe('pos overwrite', () =>
+  {
+    it('matches when the fractional coordinate rounds to the given tile', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_CharacterBase();
+      ch.initMembers();
+      ch._x = 2.9;
+      ch._y = 4.1;
+
+      // Act
+      const matched = ch.pos(3, 4);
+
+      // Assert
+      expect(matched).toBe(true);
+    });
+
+    it('does not match when the fractional coordinate rounds to a different tile', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_CharacterBase();
+      ch.initMembers();
+      ch._x = 2.4;
+      ch._y = 4.1;
+
+      // Act
+      const matched = ch.pos(3, 4);
+
+      // Assert
+      expect(matched).toBe(false);
+    });
+  });
 });
 //endregion plugins/pixel/core/_component/game-character-base-pixel.test.js
