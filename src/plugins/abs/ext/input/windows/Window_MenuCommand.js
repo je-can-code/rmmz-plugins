@@ -24,6 +24,7 @@ Window_MenuCommand.prototype.addJabsRemapCommand = function()
   // build the JABS remap command.
   const command = new WindowCommandBuilder('JABS Controls')
     .setSymbol('jabsRemap')
+    .setHelpText("Rebind the controls used during combat.")
     .setIconIndex(2569)
     .setEnabled(true)
     .build();

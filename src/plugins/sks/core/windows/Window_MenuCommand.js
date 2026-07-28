@@ -19,6 +19,8 @@ Window_MenuCommand.prototype.addOriginalCommands = function()
     // build the command.
     const builtCommand = new WindowCommandBuilder('Skill Equip')
       .setSymbol('skill-equip')
+      .setHelpText("Choose which of this character's known skills are active.")
+      .setMenuSection(MenuSection.Actor)
       .setIconIndex(78)
       .build();
 

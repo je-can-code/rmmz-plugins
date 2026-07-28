@@ -16,6 +16,8 @@ Window_MenuCommand.prototype.makeCommandList = function()
   // build and insert the Passives command.
   const command = new WindowCommandBuilder(J.PASSIVE.Metadata.commandName)
     .setSymbol('passive-menu')
+    .setHelpText("Review the always-active effects this character benefits from.")
+    .setMenuSection(MenuSection.Actor)
     .setEnabled(true)
     .setIconIndex(J.PASSIVE.Metadata.commandIconIndex)
     .build();

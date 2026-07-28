@@ -15,6 +15,8 @@ Window_MenuCommand.prototype.makeCommandList = function()
   // build the command.
   const command = new WindowCommandBuilder(J.SDP.Metadata.commandName)
     .setSymbol("sdp-menu")
+    .setHelpText("Spend earned points to grow this character's parameters.")
+    .setMenuSection(MenuSection.Actor)
     .setEnabled($gameParty.hasAnyUnlockedSdps())
     .setIconIndex(J.SDP.Metadata.commandIconIndex)
     .setColorIndex(1)
