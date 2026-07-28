@@ -94,6 +94,7 @@
     "build:jabs-formula": "vite build --config src/plugins/abs/ext/formula/vite.config.jabs-formula.js",
     "build:jabs-hitstop": "vite build --config src/plugins/abs/ext/hitstop/vite.config.jabs-hitstop.js",
     "build:jabs-input": "vite build --config src/plugins/abs/ext/input/vite.config.jabs-input.js",
+    "build:jabs-loadout": "vite build --config src/plugins/abs/ext/loadout/vite.config.jabs-loadout.js",
     "build:jabs-juice": "vite build --config src/plugins/abs/ext/juice/vite.config.jabs-juice.js",
     "build:jabs-poses": "vite build --config src/plugins/abs/ext/poses/vite.config.jabs-poses.js",
     "build:jabs-speed": "vite build --config src/plugins/abs/ext/speed/vite.config.jabs-speed.js",
