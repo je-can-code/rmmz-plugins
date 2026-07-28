@@ -1,4 +1,5 @@
 import BuiltWindowCommand from './BuiltWindowCommand.js';
+import MenuSection from './MenuSection.js';
 
 /**
  * A builder class for constructing {@link BuiltWindowCommand}.<br>
@@ -89,6 +90,12 @@ class WindowCommandBuilder
    */
   #faceIndex = -1;
 
+  /**
+   * The menu section this command belongs to.
+   * @type {string}
+   */
+  #menuSection = MenuSection.Party;
+
   //endregion properties
 
   /**
@@ -121,6 +128,9 @@ class WindowCommandBuilder
       this.#helpText,
       this.#isSubtext,
       [ this.#faceName, this.#faceIndex ]);
+
+    // the section is assigned after construction rather than passed in- see the setter for why.
+    command.menuSection = this.#menuSection;
 
     // return the built command.
     return command;
@@ -297,6 +307,20 @@ class WindowCommandBuilder
   setFaceIndex(faceIndex)
   {
     this.#faceIndex = faceIndex;
+    return this;
+  }
+
+  /**
+   * Sets the menu section this command belongs to, for menus that split commands into columns.
+   *
+   * Commands that never call this default to {@link MenuSection.Party}, which is what allows menus to
+   * be split without every existing command in the ecosystem having to be updated first.
+   * @param {string} menuSection One of {@link MenuSection}.
+   * @returns {this} This builder for fluent-building.
+   */
+  setMenuSection(menuSection)
+  {
+    this.#menuSection = menuSection;
     return this;
   }
 }

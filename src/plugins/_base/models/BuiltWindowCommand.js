@@ -1,3 +1,5 @@
+import MenuSection from './MenuSection.js';
+
 /**
  * An implementation of a class surrounding the data for a singular window command.
  */
@@ -86,6 +88,16 @@ class BuiltWindowCommand
    * @type {number}
    */
   #faceIndex = -1;
+
+  /**
+   * The menu section this command belongs to, for menus that split their commands into columns.
+   *
+   * This defaults to {@link MenuSection.Party} rather than being required, so that any command built
+   * without knowledge of sections still lands somewhere sensible instead of vanishing. Only commands
+   * that open an actor-scoped scene need to say otherwise.
+   * @type {string}
+   */
+  #menuSection = MenuSection.Party;
 
   //endregion properties
 
@@ -240,6 +252,32 @@ class BuiltWindowCommand
   get faceData()
   {
     return [ this.#faceName, this.#faceIndex ];
+  }
+
+  /**
+   * Gets the menu section this command belongs to.
+   * @returns {string}
+   */
+  get menuSection()
+  {
+    return this.#menuSection;
+  }
+
+  /**
+   * Sets the menu section this command belongs to.
+   *
+   * This is assigned after construction rather than through the constructor because the constructor
+   * already carries twelve positional parameters- adding a thirteenth for a field that most commands
+   * never set would make every existing call site harder to read for no benefit.
+   * @param {string} menuSection One of {@link MenuSection}.
+   */
+  set menuSection(menuSection)
+  {
+    // ignore anything that is not a real section, leaving the safe default in place.
+    if (MenuSection.isValid(menuSection) === false) return;
+
+    // assign the validated section.
+    this.#menuSection = menuSection;
   }
 
   //endregion getters

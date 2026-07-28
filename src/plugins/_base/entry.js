@@ -14,6 +14,7 @@ import './core/Bitmap.js';
 
 import './models/PluginVersion.js';
 import './models/PluginMetadata.js';
+import './models/MenuSection.js';
 import './models/BuiltWindowCommand.js';
 import './models/ExternalJsonConfigLoaderOptions.js';
 import './models/GaugeOptionsBuilder.js';
@@ -27,6 +28,7 @@ import './managers/DataManager.js';
 import './managers/ExternalJsonConfigLoader.js';
 import './managers/Graphics.js';
 import './managers/IconManager.js';
+import './managers/InputLegendResolver.js';
 import './managers/ImageManager.js';
 import './managers/RPGManager.js';
 import './managers/SoundManager.js';
@@ -58,6 +60,8 @@ import './objects/Game_Vehicle.js';
 
 import './scenes/Scene_Base.js';
 import './scenes/Scene_Boot.js';
+import './scenes/Scene_MenuFacetBase.js';
+import './scenes/Scene_ActorFacetBase.js';
 
 import './sprites/Sprite.js';
 import './sprites/Sprite_BaseText.js';
@@ -70,6 +74,7 @@ import './windows/TileMap.js';
 import './windows/Window_ActorRibbon.js';
 import './windows/Window_Base.js';
 import './windows/Window_Command.js';
+import './windows/Window_ControlLegend.js';
 import './windows/Window_Dimmer.js';
 import './windows/Window_EquipItem.js';
 import './windows/Window_Help.js';
