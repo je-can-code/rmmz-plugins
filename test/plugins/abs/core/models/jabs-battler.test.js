@@ -7658,94 +7658,159 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('is false without a chosen skill id', () =>
     {
-      expect(buildExecutableBattler().canExecuteSkill(0)).toBe(false);
+      // Arrange
+      const jabsBattler = buildExecutableBattler();
+
+      // Act
+      const result = jabsBattler.canExecuteSkill(0);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
-    it('is false when neither skills nor attacks can be used', () =>
+    it('short-circuits before resolving basic-attack status when neither skills nor attacks can be used', () =>
     {
+      // Arrange- the "neither" gate is a fast path: it bails before calling isSkillIdBasicAttack,
+      // which for an actor runs a findSlotForSkillId slot scan on every AI decision tick. Spying on
+      // that call is what makes this test meaningful- asserting only the false return would still
+      // pass with the fast path deleted, since the two gates below it catch the same cases.
+      const isSkillIdBasicAttack = vi.fn(() => false);
       const jabsBattler = buildExecutableBattler({
-        canBattlerUseSkills: () => false, canBattlerUseAttacks: () => false,
+        canBattlerUseSkills: () => false, canBattlerUseAttacks: () => false, isSkillIdBasicAttack,
       });
 
-      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+      // Act
+      const result = jabsBattler.canExecuteSkill(1);
+
+      // Assert
+      expect(result).toBe(false);
+      expect(isSkillIdBasicAttack).not.toHaveBeenCalled();
     });
 
     it('is false for a basic attack when attacks are blocked', () =>
     {
+      // Arrange
       const jabsBattler = buildExecutableBattler({
         canBattlerUseAttacks: () => false, isSkillIdBasicAttack: () => true,
       });
 
-      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+      // Act
+      const result = jabsBattler.canExecuteSkill(1);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
     it('is false for a non-basic-attack skill when skills are blocked', () =>
     {
+      // Arrange
       const jabsBattler = buildExecutableBattler({
         canBattlerUseSkills: () => false, isSkillIdBasicAttack: () => false,
       });
 
-      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+      // Act
+      const result = jabsBattler.canExecuteSkill(1);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
     it('is false when the cost cannot be paid', () =>
     {
+      // Arrange
       const jabsBattler = buildExecutableBattler({ canPaySkillCost: () => false });
 
-      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+      // Act
+      const result = jabsBattler.canExecuteSkill(1);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
     it('is false without a resolvable cooldown key', () =>
     {
+      // Arrange
       const jabsBattler = buildExecutableBattler({ getCooldownKeyBySkillId: () => null });
 
-      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+      // Act
+      const result = jabsBattler.canExecuteSkill(1);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
     it('warns and is false when the resolved key has no cooldown', () =>
     {
+      // Arrange- a resolved key with no cooldown behind it means a follower's skill leaked into
+      // this battler's slots, so the source logs a warn plus a trace to surface the culprit.
       const jabsBattler = buildExecutableBattler({ getCooldown: () => null });
       const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const traceSpy = vi.spyOn(console, 'trace').mockImplementation(() => {});
 
-      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+      // Act
+      const result = jabsBattler.canExecuteSkill(1);
+
+      // Assert- the diagnostics are the point of this branch, so assert them, not just the return.
+      expect(result).toBe(false);
+      expect(warnSpy).toHaveBeenCalledWith(jabsBattler, 'mainhand');
+      expect(traceSpy).toHaveBeenCalledTimes(1);
       warnSpy.mockRestore();
       traceSpy.mockRestore();
     });
 
     it('is false when the base cooldown is not ready and this is not a combo', () =>
     {
+      // Arrange
       const jabsBattler = buildExecutableBattler({
         getCooldown: () => ({ isBaseReady: () => false }),
       });
 
-      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+      // Act
+      const result = jabsBattler.canExecuteSkill(1);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
     it('is true for a combo skill even when the base cooldown is not ready', () =>
     {
+      // Arrange- a combo follow-up is allowed to ignore the base cooldown of its own slot.
       const jabsBattler = buildExecutableBattler({
         getCooldown: () => ({ isBaseReady: () => false }),
         getBattler: () => ({ getSkillSlot: () => ({ comboId: 1 }) }),
       });
 
-      expect(jabsBattler.canExecuteSkill(1)).toBe(true);
+      // Act
+      const result = jabsBattler.canExecuteSkill(1);
+
+      // Assert
+      expect(result).toBe(true);
     });
 
     it('is false when the global cooldown is blocking this skill', async () =>
     {
+      // Arrange
       const { default: JABS_GlobalCooldown } = await import('../../../../../src/plugins/abs/core/models/JABS_GlobalCooldown.js');
       JABS_GlobalCooldown.isGlobalBlockingSkillId = vi.fn(() => true);
       const jabsBattler = buildExecutableBattler();
 
-      expect(jabsBattler.canExecuteSkill(1)).toBe(false);
+      // Act
+      const result = jabsBattler.canExecuteSkill(1);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
     it('is true when every gate passes', () =>
     {
+      // Arrange
       const jabsBattler = buildExecutableBattler();
 
-      expect(jabsBattler.canExecuteSkill(1)).toBe(true);
+      // Act
+      const result = jabsBattler.canExecuteSkill(1);
+
+      // Assert
+      expect(result).toBe(true);
     });
   });
   //endregion readiness

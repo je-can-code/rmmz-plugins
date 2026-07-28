@@ -482,7 +482,6 @@ class JABS_EnemyAI
     let mostWoundedAlly = null;
     let lowestHpRatio = 1.01;
     let actualHpDifference = 0;
-    let alliesBelow66 = 0;
     let alliesMissingAnyHp = 0;
 
     allies.forEach(ally =>
@@ -495,11 +494,6 @@ class JABS_EnemyAI
         lowestHpRatio = hpRatio;
         mostWoundedAlly = ally;
         actualHpDifference = battler.mhp - battler.hp;
-
-        if (hpRatio <= 0.66)
-        {
-          alliesBelow66++;
-        }
       }
 
       if (hpRatio < 1)
@@ -563,14 +557,19 @@ class JABS_EnemyAI
 
       if (testAction.isForAll())
       {
-        if (runningBiggestHealAll < healAmount)
+        // heal amounts arrive as negative damage (rmmz negates recovery formulas), so a bigger heal
+        // is a more-negative number. Compare magnitudes- a raw `<` would pick the weakest heal.
+        if (Math.abs(runningBiggestHealAll) < Math.abs(healAmount))
         {
           biggestHealAllSkill = skillId;
           runningBiggestHealAll = healAmount;
         }
 
-        const runningDifference = Math.abs(runningClosestFitHealAll - actualHpDifference);
-        const thisDifference = Math.abs(healAmount - actualHpDifference);
+        // the deficit is a positive hp amount while heals are negative, so the magnitudes have to be
+        // taken before differencing- subtracting directly makes every distance |heal| + deficit,
+        // which is monotonic in heal size and degrades "closest fit" into "smallest heal".
+        const runningDifference = Math.abs(Math.abs(runningClosestFitHealAll) - actualHpDifference);
+        const thisDifference = Math.abs(Math.abs(healAmount) - actualHpDifference);
         if (thisDifference < runningDifference)
         {
           closestFitHealAllSkill = skillId;
@@ -580,14 +579,16 @@ class JABS_EnemyAI
 
       if (testAction.isForOne())
       {
-        if (runningBiggestHealOne < healAmount)
+        // same magnitude comparison as the all-target branch above- see the note there.
+        if (Math.abs(runningBiggestHealOne) < Math.abs(healAmount))
         {
           biggestHealOneSkill = skillId;
           runningBiggestHealOne = healAmount;
         }
 
-        const runningDifference = Math.abs(runningClosestFitHealOne - actualHpDifference);
-        const thisDifference = Math.abs(healAmount - actualHpDifference);
+        // same magnitude-before-differencing rule as the all-target branch above.
+        const runningDifference = Math.abs(Math.abs(runningClosestFitHealOne) - actualHpDifference);
+        const thisDifference = Math.abs(Math.abs(healAmount) - actualHpDifference);
         if (thisDifference < runningDifference)
         {
           closestFitHealOneSkill = skillId;
@@ -614,18 +615,12 @@ class JABS_EnemyAI
         bestSkillId = closestFitHealOneSkill;
       }
     }
-    else
-    {
-      if (alliesMissingAnyHp === 1)
-      {
-        bestSkillId = biggestHealOneSkill;
-      }
-      else if (alliesMissingAnyHp > 1)
-      {
-        bestSkillId = biggestHealAllSkill;
-      }
-    }
 
+    // a non-careful healer that got this far is necessarily reckless- the trait gate above returns
+    // early when neither is set- and the reckless override below reassigns bestSkillId for every
+    // case a non-careful tier could have handled. There is deliberately no `else` branch here: one
+    // used to exist picking biggest-heal-one/all by wounded-ally count, but every assignment it made
+    // was immediately discarded by that override, so it never affected a single decision.
     if (reckless && alliesMissingAnyHp > 0)
     {
       bestSkillId = biggestHealSkill;
