@@ -101,6 +101,22 @@ describe('JABS_Engine ext/typed augments (direct src import)', () =>
       expect(globalThis.$gameParty.members).not.toHaveBeenCalled();
     });
 
+    it('does nothing further when the implicit percent is set but nothing was inferred', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const enemy = makeEnemy();
+      globalThis.J.APT.EXT.TYPED.Metadata.ImplicitEnemyElementPercent = 50;
+
+      // Act
+      engine.gainAptitudeReward(10, {}, enemy);
+
+      // Assert
+      // the mirror of the case above- a willingness to award implicit AP is worth nothing when the
+      // enemy's traits imply no element alignment to award it for.
+      expect(globalThis.$gameParty.members).not.toHaveBeenCalled();
+    });
+
     it('distributes typed rewards to eligible party members when explicit rewards exist', () =>
     {
       // Arrange

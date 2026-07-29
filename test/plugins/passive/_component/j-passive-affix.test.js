@@ -272,6 +272,51 @@ describe('J-Passive-Affix (direct src import)', () =>
     });
   });
 
+  describe('J.PASSIVE.EXT.AFFIX.Helpers.findFirstEnemyPrefixState', () =>
+  {
+    it('finds nothing when the battler carries passives but none of them is a prefix', () =>
+    {
+      // Arrange
+      const plainState = Object.create(globalThis.RPG_State.prototype);
+      plainState.id = 60;
+      plainState.note = '';
+      plainState.name = 'Ordinary';
+      const battler = {
+        isEnemy: () => true,
+        getPassiveStateIds: () => [ 60 ],
+        state: (stateId) => (stateId === 60 ? plainState : null),
+      };
+
+      // Act
+      const result = globalThis.J.PASSIVE.EXT.AFFIX.Helpers.findFirstEnemyPrefixState(battler);
+
+      // Assert
+      // walking the whole list without a prefix has to end in nothing, not in the last state looked
+      // at- an ordinary enemy with ordinary passives has no tier presentation to speak of.
+      expect(result).toBeNull();
+    });
+
+    it('skips passive ids that resolve to no state at all', () =>
+    {
+      // Arrange
+      const prefixState = Object.create(globalThis.RPG_State.prototype);
+      prefixState.id = 62;
+      prefixState.note = '<enemy-prefix>';
+      prefixState.name = 'Tier';
+      const battler = {
+        isEnemy: () => true,
+        getPassiveStateIds: () => [ 61, 62 ],
+        state: (stateId) => (stateId === 62 ? prefixState : null),
+      };
+
+      // Act
+      const result = globalThis.J.PASSIVE.EXT.AFFIX.Helpers.findFirstEnemyPrefixState(battler);
+
+      // Assert
+      expect(result).toBe(prefixState);
+    });
+  });
+
   describe('J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierRank', () =>
   {
     it('returns 0 when the first prefix state has no tier tag', () =>

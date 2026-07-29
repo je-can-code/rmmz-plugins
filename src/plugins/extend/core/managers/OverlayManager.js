@@ -843,8 +843,10 @@ class OverlayManager
     // find angle-bracketed chunks like <key:value> or <key>.
     const tags = note.match(/<[^>]+>/g) || [];
 
-    // split the raw text on newlines to capture any free-form lines.
-    const rawLines = (note.split(/[\r\n]+/) || []).filter(l => l.length > 0);
+    // split the raw text on newlines to capture any free-form lines. splitting always yields an
+    // array- even an empty string produces a one-element one- so there is nothing to fall back to.
+    const rawLines = note.split(/[\r\n]+/)
+      .filter(l => l.length > 0);
 
     // build a fast look-up set of exact tag strings.
     const tagSet = new Set(tags);
@@ -924,9 +926,11 @@ class OverlayManager
     // must at least start and end with angle brackets.
     if (line.startsWith('<') === false || line.endsWith('>') === false) return OverlayManager.LineType.unsupported;
 
-    // too many angle brackets.
-    if ((line.match(/</g) || []).length > 1) return OverlayManager.LineType.unsupported;
-    if ((line.match(/>/g) || []).length > 1) return OverlayManager.LineType.unsupported;
+    // too many angle brackets. the check above already established that the line opens with `<` and
+    // closes with `>`, so both of these matches are guaranteed to find at least one occurrence-
+    // there is no null result here to guard against.
+    if (line.match(/</g).length > 1) return OverlayManager.LineType.unsupported;
+    if (line.match(/>/g).length > 1) return OverlayManager.LineType.unsupported;
 
     // if a colon exists, then it must be a key-value pair of some kind.
     if (line.includes(':')) return OverlayManager.LineType.kvp;
@@ -1016,12 +1020,9 @@ class OverlayManager
       // set the lines array as a shallow copy.
       mergedMap[key] = lines.slice(0);
 
-      // record the key order if not already present.
-      if (mergedOrder.includes(key) === false)
-      {
-        // push the key preserving order.
-        mergedOrder.push(key);
-      }
+      // record the key order. no membership check is needed: step 1 walks a key list that is itself
+      // free of repeats, and step 2 already establishes that a key is absent before appending it.
+      mergedOrder.push(key);
     };
 
     // step 1: walk old keys first to preserve their order baseline.

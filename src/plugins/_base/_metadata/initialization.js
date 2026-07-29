@@ -283,13 +283,17 @@ J.BASE.Helpers.generateUuid = function()
  */
 J.BASE.Helpers.shortUuid = function()
 {
+  // NOTE: unlike generateUuid this template carries no `y` placeholder. `y` marks the RFC-4122
+  // variant position, which only means something in a full-length uuid- a short id has no variant
+  // to encode. matching on it here, and carrying the variant-bit arithmetic that goes with it, was
+  // inherited from copying the full generator and could never fire.
   return 'xxx-xxx'
-    .replace(/[xy]/g, c =>
+    .replace(/x/g, () =>
     {
-      const r = Math.random() * 16 | 0, v = c === 'x'
-        ? r
-        : (r & 0x3 | 0x8);
-      return v.toString(16);
+      // a single random nibble, rendered as one hexadecimal digit.
+      const nibble = Math.random() * 16 | 0;
+
+      return nibble.toString(16);
     });
 };
 

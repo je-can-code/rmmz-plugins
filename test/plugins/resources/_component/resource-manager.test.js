@@ -189,6 +189,73 @@ describe('ResourceCostManager (resources core)', () =>
 
       expect(ResourceCostManager.skillGainTp(battler, skill)).toBe(0);
     });
+
+    it('scales the total tp gain by battler.rec once any component is non-zero', () =>
+    {
+      // Arrange
+      const battler = buildBattler({
+        mtp: 100,
+        rec: 2,
+      });
+      const skill = { id: 1 };
+
+      getNumberFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.TpGainFlat) return 7;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.skillGainTp(battler, skill);
+
+      // Assert
+      // flat 7 * rec 2 = 14; the zero-shortcut above must not swallow a real gain.
+      expect(result).toBe(14);
+    });
+
+    it('counts a percentage of max tp toward the gain', () =>
+    {
+      // Arrange
+      const battler = buildBattler({
+        mtp: 200,
+        rec: 1,
+      });
+      const skill = { id: 1 };
+
+      getNumberFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.TpGainPercent) return 25;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.skillGainTp(battler, skill);
+
+      // Assert
+      // 25% of a 200 max tp pool.
+      expect(result).toBe(50);
+    });
+
+    it('counts a formula-sourced gain toward the total', () =>
+    {
+      // Arrange
+      const battler = buildBattler({ rec: 1 });
+      const skill = { id: 1 };
+      getResultFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.TpGainFormula) return 9;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.skillGainTp(battler, skill);
+
+      // Assert
+      expect(result).toBe(9);
+    });
   });
 });
 //endregion plugins/resources/_component/resource-manager.test.js

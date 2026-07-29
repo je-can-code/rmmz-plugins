@@ -392,9 +392,11 @@ JABS_Battler.prototype.smartMoveAwayFromTarget = function()
       // Right.
       simX += straightStep;
     }
-    else if (dir === J.ABS.Directions.LEFT)
+    else
     {
-      // Left.
+      // Left- the only candidate left once the other seven have been ruled out, since the candidate
+      // list above is exactly the eight directions and this chain tests all of them. re-checking for
+      // LEFT here would be a condition that can never be false.
       simX -= straightStep;
     }
 

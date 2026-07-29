@@ -286,6 +286,34 @@ describe('OverlayManager extension resolution (direct src import)', () =>
       expect(result.mpCost).toBe(90);
     });
 
+    it('applies type-based overlays within their own bucket in ascending id order', () =>
+    {
+      // Arrange- the id-ordering case above only ever fills the id bucket, leaving the type bucket
+      // with a single entry and its ordering unexercised. two familial overlays put the type bucket
+      // through the same ordering guarantee.
+      globalThis.$dataSkills[1] = buildRow(1, {
+        mpCost: 10,
+        types: () => [ 'fire' ],
+      });
+      globalThis.$dataSkills[5] = buildRow(5, {
+        mpCost: 50,
+        isExtension: true,
+        getExtensionTypes: [ 'fire' ],
+      });
+      globalThis.$dataSkills[9] = buildRow(9, {
+        mpCost: 90,
+        isExtension: true,
+        getExtensionTypes: [ 'fire' ],
+      });
+      const caster = buildCaster([ 9, 5, 1 ]);
+
+      // Act
+      const result = OverlayManager.getExtendedSkill(caster, 1);
+
+      // Assert- learned back to front, yet the highest id still applies last and wins.
+      expect(result.mpCost).toBe(90);
+    });
+
     it('resolves a chained overlay to its own extended form first', () =>
     {
       // Arrange- skill 3 extends skill 2, and skill 2 extends skill 1. Skill 2 must arrive already
@@ -502,6 +530,33 @@ describe('OverlayManager extension resolution (direct src import)', () =>
       globalThis.$dataStates[1] = buildRow(1, { priority: 10 });
       globalThis.$dataStates[5] = buildRow(5, { priority: 55, isExtension: true, getExtensions: [ 1 ] });
       globalThis.$dataStates[9] = buildRow(9, { priority: 99, isExtension: true, getExtensions: [ 1 ] });
+      const battler = buildBattler([ 9, 5, 1 ]);
+
+      // Act
+      const result = OverlayManager.getExtendedState(battler, 1);
+
+      // Assert
+      expect(result.priority).toBe(99);
+    });
+
+    it('applies type-based state overlays within their own bucket in ascending id order', () =>
+    {
+      // Arrange- the ordering case above fills only the id bucket, so the type bucket's ordering
+      // goes unexercised on the state side exactly as it did on the skill side.
+      globalThis.$dataStates[1] = buildRow(1, {
+        priority: 10,
+        types: () => [ 'burn' ],
+      });
+      globalThis.$dataStates[5] = buildRow(5, {
+        priority: 55,
+        isExtension: true,
+        getExtensionTypes: [ 'burn' ],
+      });
+      globalThis.$dataStates[9] = buildRow(9, {
+        priority: 99,
+        isExtension: true,
+        getExtensionTypes: [ 'burn' ],
+      });
       const battler = buildBattler([ 9, 5, 1 ]);
 
       // Act
