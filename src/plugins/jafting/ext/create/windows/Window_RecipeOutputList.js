@@ -18,18 +18,12 @@ class Window_RecipeOutputList
   //endregion properties
 
   /**
-   * True if the text of this list should be masked, false otherwise.
-   * @type {boolean}
-   */
-
-  needsMasking = false;
-
-  /**
    * Constructor.
    * @param {Rectangle} rect The rectangle that represents this window.
    */
   constructor(rect)
   {
+    // perform original logic, which seeds this window's members before building the list.
     super(rect);
 
     // this background is layered ontop of another window, so it should be invisibile.
@@ -37,10 +31,15 @@ class Window_RecipeOutputList
   }
 
   /**
-   * Extends {@link #initialize}.<br/>
-   * Initializes some additional window properies.
+   * Implements {@link Window_Command.initMembers}.<br/>
+   * Initializes the members of this window.
+   *
+   * This replaces an `initialize` override that seeded `_components` before calling super for exactly
+   * this reason- the hook now does that centrally, for every command window. `needsMasking` could not
+   * be a class field either: JavaScript applies those only after `super()` returns, by which point the
+   * command list has already been built from them.
    */
-  initialize(rect)
+  initMembers()
   {
     /**
      * The list of components this window should render.
@@ -48,7 +47,11 @@ class Window_RecipeOutputList
      */
     this._components = [];
 
-    super.initialize(rect);
+    /**
+     * True if the text of this list should be masked, false otherwise.
+     * @type {boolean}
+     */
+    this.needsMasking = false;
   }
 
   setComponents(components)

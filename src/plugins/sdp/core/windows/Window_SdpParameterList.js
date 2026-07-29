@@ -4,23 +4,35 @@ class Window_SdpParameterList
   extends Window_Command
 {
   /**
-   * The current parameters on the panel being hovered over.
-   * @type {PanelParameter[]}
-   */
-  panelParameters = [];
-
-  /**
-   * The current actor to compare parameters against the panel parameters for.
-   * @type {Game_Actor}
-   */
-  currentActor = null;
-
-  /**
    * Constructor.
+   * @param {Rectangle} rect The rectangle that represents this window.
    */
   constructor(rect)
   {
+    // perform original logic, which seeds this window's members before building the list.
     super(rect);
+  }
+
+  /**
+   * Implements {@link Window_Command.initMembers}.<br/>
+   * Initializes the members of this window.
+   *
+   * These cannot be class field declarations: JavaScript applies those only after `super()` returns,
+   * by which point the command list has already been built from them and found them undefined.
+   */
+  initMembers()
+  {
+    /**
+     * The current parameters on the panel being hovered over.
+     * @type {PanelParameter[]}
+     */
+    this.panelParameters = [];
+
+    /**
+     * The current actor to compare parameters against the panel parameters for.
+     * @type {Game_Actor}
+     */
+    this.currentActor = null;
   }
 
   /**

@@ -6,20 +6,6 @@
 class Window_SkillEquipList
   extends Window_Command
 {
-  //region properties
-  /**
-   * The actor whose equips are being managed.
-   * @type {Game_Actor|null}
-   */
-  _actor = null;
-
-  /**
-   * The current slot index context used for cost checks.
-   * @type {number}
-   */
-  _slotContext = 0;
-  //endregion properties
-
   //region init
   /**
    * Constructor.
@@ -27,22 +13,29 @@ class Window_SkillEquipList
    */
   constructor(rect)
   {
-    // perform original logic.
+    // perform original logic, which seeds this window's members before building the list.
     super(rect);
-
-    // initialize members.
-    this.initMembers();
   }
 
   /**
+   * Implements {@link Window_Command.initMembers}.<br/>
    * Initializes internal members.
+   *
+   * These cannot be class field declarations: JavaScript applies those only after `super()` returns,
+   * by which point the command list has already been built from them and found them undefined.
    */
   initMembers()
   {
-    // initialize the actor reference.
+    /**
+     * The actor whose equips are being managed.
+     * @type {Game_Actor|null}
+     */
     this._actor = null;
 
-    // initialize the slot context.
+    /**
+     * The current slot index context used for cost checks.
+     * @type {number}
+     */
     this._slotContext = 0;
   }
 

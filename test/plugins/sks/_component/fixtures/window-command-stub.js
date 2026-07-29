@@ -23,6 +23,11 @@ export function installWindowCommandStub(sandbox = globalThis)
     // eslint-disable-next-line no-unused-vars
     constructor(rect)
     {
+      // J-Base aliases the real Window_Command.initialize to call this hook before anything else, so
+      // that a subclass has its members seeded by the time the command list is built from them.
+      // Mirror it here or every subclass under test builds its first list against undefined fields.
+      this.initMembers();
+
       // the backing array for all commands currently built into this window.
       this._list = [];
 
@@ -32,6 +37,13 @@ export function installWindowCommandStub(sandbox = globalThis)
       // real Window_Command builds its initial list at construction time; mirror that so a
       // window can be queried immediately without an explicit refresh() call.
       this.makeCommandList();
+    }
+
+    /**
+     * A hook for subclasses to seed their own members. No-op here, exactly as in J-Base.
+     */
+    initMembers()
+    {
     }
 
     /**

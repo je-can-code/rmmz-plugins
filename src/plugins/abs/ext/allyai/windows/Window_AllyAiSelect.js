@@ -38,29 +38,33 @@ class Window_AllyAiSelect
    */
   constructor(rect, type)
   {
-    // perform original logic.
+    // perform original logic, which seeds this window's members before building the list. The type
+    // cannot be handed over that early- the seeding hook takes no arguments, and a derived
+    // constructor cannot reach `this` before super- so the first list built is deliberately empty.
     super(rect);
 
-    // initialize our custom members.
-    this.initMembers(type);
+    // now that the type is knowable, adopt it.
+    this.setMenuType(type);
 
-    // render and take focus, since these windows are opened on demand rather than left standing.
+    // rebuild against the type just adopted, filling the list that was deliberately left empty.
     this.refresh();
+
+    // take focus, since these windows are opened on demand rather than left standing.
     this.select(0);
     this.activate();
   }
 
   /**
+   * Implements {@link Window_Command.initMembers}.<br/>
    * Initializes all custom members of this window.
-   * @param {string} type Which of {@link Window_AllyAiSelect.Types} this window renders.
    */
-  initMembers(type)
+  initMembers()
   {
     /**
      * Which mode this window renders.
      * @type {string}
      */
-    this._menuType = type;
+    this._menuType = String.empty;
 
     /**
      * The actor id of the ally currently being managed through this window.

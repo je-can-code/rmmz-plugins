@@ -8,32 +8,47 @@ class Window_SdpList
   extends Window_Command
 {
   /**
-   * The currently selected actor for listing unlocked panels and drawing ranks/costs.
-   * @type {Game_Actor}
-   */
-  currentActor = null;
-
-  filterNoMaxedPanels = false;
-
-  /**
-   * Active family-filter key for the panel list.
-   * @type {string}
-   */
-  familyFilterKey = SdpFamilyFilter.ALL;
-
-  /**
-   * The queued cart levels by panel key.
-   * @type {Map<string, number>}
-   */
-  cart = new Map();
-
-  /**
    * @constructor
    * @param {Rectangle} rect The rectangle that represents this window.
    */
   constructor(rect)
   {
+    // perform original logic, which seeds this window's members before building the list.
     super(rect);
+  }
+
+  /**
+   * Implements {@link Window_Command.initMembers}.<br/>
+   * Initializes the members of this window.
+   *
+   * These cannot be class field declarations: JavaScript applies those only after `super()` returns,
+   * by which point the command list has already been built from them and found them undefined.
+   */
+  initMembers()
+  {
+    /**
+     * The currently selected actor for listing unlocked panels and drawing ranks/costs.
+     * @type {Game_Actor}
+     */
+    this.currentActor = null;
+
+    /**
+     * Whether panels already at max rank are hidden from the list.
+     * @type {boolean}
+     */
+    this.filterNoMaxedPanels = false;
+
+    /**
+     * Active family-filter key for the panel list.
+     * @type {string}
+     */
+    this.familyFilterKey = SdpFamilyFilter.ALL;
+
+    /**
+     * The queued cart levels by panel key.
+     * @type {Map<string, number>}
+     */
+    this.cart = new Map();
   }
 
   /**

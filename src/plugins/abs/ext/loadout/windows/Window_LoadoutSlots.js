@@ -18,11 +18,8 @@ class Window_LoadoutSlots
    */
   constructor(rect)
   {
-    // perform original logic.
+    // perform original logic, which seeds this window's members before building the list.
     super(rect);
-
-    // initialize our custom members.
-    this.initMembers();
   }
 
   /**

@@ -18,19 +18,29 @@ class Window_QuestopediaList
   //endregion properties
 
   /**
-   * The category that this list is being filtered by. When an empty string, no filter is applied.
-   * @type {string}
-   */
-
-  _currentCategoryKey = String.empty;
-
-  /**
    * Constructor.
    * @param {Rectangle} rect The rectangle that represents this window.
    */
   constructor(rect)
   {
+    // perform original logic, which seeds this window's members before building the list.
     super(rect);
+  }
+
+  /**
+   * Implements {@link Window_Command.initMembers}.<br/>
+   * Initializes the members of this window.
+   *
+   * This cannot be a class field declaration: JavaScript applies those only after `super()` returns,
+   * by which point the command list has already been built from it and found it undefined.
+   */
+  initMembers()
+  {
+    /**
+     * The category that this list is being filtered by. When an empty string, no filter is applied.
+     * @type {string}
+     */
+    this._currentCategoryKey = String.empty;
   }
 
   /**

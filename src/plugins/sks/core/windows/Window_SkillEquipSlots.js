@@ -6,20 +6,6 @@
 class Window_SkillEquipSlots
   extends Window_Command
 {
-  //region properties
-  /**
-   * The actor whose equips are being managed.
-   * @type {Game_Actor|null}
-   */
-  _actor = null;
-
-  /**
-   * The number of visible slots to present.
-   * @type {number}
-   */
-  _visibleSlots = 8;
-  //endregion properties
-
   //region init
   /**
    * Constructor.
@@ -27,22 +13,29 @@ class Window_SkillEquipSlots
    */
   constructor(rect)
   {
-    // perform original logic.
+    // perform original logic, which seeds this window's members before building the list.
     super(rect);
-
-    // initialize members.
-    this.initMembers();
   }
 
   /**
+   * Implements {@link Window_Command.initMembers}.<br/>
    * Initializes the members of this window.
+   *
+   * These cannot be class field declarations: JavaScript applies those only after `super()` returns,
+   * by which point the command list has already been built from them and found them undefined.
    */
   initMembers()
   {
-    // initialize the actor.
+    /**
+     * The actor whose equips are being managed.
+     * @type {Game_Actor|null}
+     */
     this._actor = null;
 
-    // initialize visible slot count.
+    /**
+     * The number of visible slots to present.
+     * @type {number}
+     */
     this._visibleSlots = 8;
   }
 

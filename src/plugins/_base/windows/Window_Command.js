@@ -1,5 +1,47 @@
 //region Window_Command
 import BuiltWindowCommand from './../models/BuiltWindowCommand.js';
+
+//region init
+/**
+ * A hook for subclasses to seed their own members before the command list is first built.
+ *
+ * A no-op here; implement it in the subclass and it will be called at the right moment.
+ *
+ * This exists because {@link Window_Command.initialize} ends by refreshing- which builds the command
+ * list, and therefore runs the subclass's `makeCommandList` before the subclass has had any chance to
+ * set itself up. Both of the obvious places to seed state are too late:
+ *
+ * - the constructor body after `super(rect)`, because `super(rect)` is what triggers the refresh.
+ * - class field declarations, because JavaScript applies those only after `super()` returns.
+ *
+ * And a derived constructor cannot touch `this` before calling `super`, so there is no earlier place
+ * to put it. The result was a family of crashes that all looked like "cannot read properties of
+ * undefined" from inside `makeCommandList`, one per scene, each apparently unrelated to the others.
+ *
+ * Implementations must confine themselves to assigning fields. This runs before the original logic
+ * reaches {@link Window_Base.initialize}, so there is no `contents`, no geometry and no font yet-
+ * anything that draws, measures, or refreshes belongs after `super(rect)` in the constructor instead.
+ */
+Window_Command.prototype.initMembers = function()
+{
+};
+
+/**
+ * Extends {@link Window_Command.initialize}.<br/>
+ * Also gives subclasses a chance to seed their members before the command list is built from them.
+ */
+J.BASE.Aliased.Window_Command.set('initialize', Window_Command.prototype.initialize);
+Window_Command.prototype.initialize = function(rect)
+{
+  // let the subclass set itself up while there is still time to matter.
+  this.initMembers();
+
+  // perform original logic, which ends by building the command list.
+  J.BASE.Aliased.Window_Command.get('initialize')
+    .call(this, rect);
+};
+//endregion init
+
 /**
  * Gets all commands currently in this list.
  * @returns {BuiltWindowCommand[]}

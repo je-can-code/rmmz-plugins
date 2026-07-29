@@ -89,14 +89,13 @@ class Window_JabsRemapActions
   constructor(rect)
   {
     super(rect);
-    this.initMembers();
     this.select(this.firstActionIndex());
   }
 
   //region init
   /**
+   * Implements {@link Window_Command.initMembers}.<br/>
    * Ensures `this._j._abs._input._actions` exists and seeds state/view bags.
-   * Also hydrates the assignable button list when empty.
    */
   initMembers()
   {
@@ -112,11 +111,6 @@ class Window_JabsRemapActions
       _buttons: [],
     };
     actions._view = { _helpWindow: null };
-
-    if (this.getButtons().length === 0)
-    {
-      this.setButtons(this.buildButtonList());
-    }
   }
 
   //region properties

@@ -4,15 +4,30 @@ import OmniObjective from './../__models/OmniObjective.js';
 class Window_QuestopediaObjectives
   extends Window_Command
 {
-  _currentObjectives = [];
-
   /**
    * Constructor.
    * @param {Rectangle} rect The rectangle that represents this window.
    */
   constructor(rect)
   {
+    // perform original logic, which seeds this window's members before building the list.
     super(rect);
+  }
+
+  /**
+   * Implements {@link Window_Command.initMembers}.<br/>
+   * Initializes the members of this window.
+   *
+   * This cannot be a class field declaration: JavaScript applies those only after `super()` returns,
+   * by which point the command list has already been built from it and found it undefined.
+   */
+  initMembers()
+  {
+    /**
+     * The quest objectives currently being rendered.
+     * @type {TrackedOmniObjective[]}
+     */
+    this._currentObjectives = [];
   }
 
   /**

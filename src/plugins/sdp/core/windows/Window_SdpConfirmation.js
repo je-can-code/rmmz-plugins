@@ -14,11 +14,13 @@ class Window_SdpConfirmation
    */
   constructor(rect)
   {
+    // perform original logic, which seeds this window's members via initMembers and then builds the
+    // command list from them. The explicit second initialize() this used to make was redundant- the
+    // parent constructor already performs one- and merely refreshed, selected and activated twice.
     super(rect);
-    this.initialize(rect);
-    this.initMembers();
 
-    // assign opacity on this instance for callers.
+    // assign opacity on this instance for callers. this stays here rather than moving into
+    // initMembers, because contents and contentsBack do not exist until the parent has initialized.
     this.opacity = 255;
     this.contentsBack.opacity = 255;
     this.contents.opacity = 255;

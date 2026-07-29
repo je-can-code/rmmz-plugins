@@ -36,10 +36,10 @@ class Window_MoreData
    */
   constructor(rect)
   {
+    // perform original logic, which seeds this window's members via initMembers and then builds the
+    // command list from them. The explicit second initialize() this used to make was redundant- the
+    // parent constructor already performs one- and merely refreshed, selected and activated twice.
     super(rect);
-    this.initialize(rect);
-    this.initMembers();
-    this.refresh();
   }
 
   /**
