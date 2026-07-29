@@ -18,6 +18,30 @@ class Window_MenuSectionCommand
    * Extends {@link #makeCommandList}.<br/>
    * Also discards every command belonging to a different section.
    */
+  
+
+  //region properties
+  /**
+   * Gets the remembered index.
+   * @returns {*} The rememberedIndex.
+   */
+  rememberedIndex()
+  {
+    // hand back the remembered index.
+    return this._rememberedIndex;
+  }
+
+  /**
+   * Sets the remembered index.
+   * @param {*} newRememberedIndex The new rememberedIndex.
+   */
+  setRememberedIndex(newRememberedIndex)
+  {
+    // assign the remembered index.
+    this._rememberedIndex = newRememberedIndex;
+  }
+  //endregion properties
+
   makeCommandList()
   {
     // perform original logic, which runs vanilla's commands plus every plugin's additions.
@@ -100,10 +124,10 @@ class Window_MenuSectionCommand
   updateHelp()
   {
     // nothing to describe into if this window was never given a help window.
-    if (!this._helpWindow) return;
+    if (!this.helpWindow()) return;
 
     // describe whatever is currently highlighted.
-    this._helpWindow.setText(this.currentHelpText());
+    this.helpWindow().setText(this.currentHelpText());
   }
 
   /**
@@ -117,7 +141,7 @@ class Window_MenuSectionCommand
     // only remember a real selection; a deselected column has nothing worth keeping.
     if (this.index() < 0) return;
 
-    this._rememberedIndex = this.index();
+    this.setRememberedIndex(this.index());
   }
 
   /**
@@ -126,7 +150,7 @@ class Window_MenuSectionCommand
   restoreSelection()
   {
     // fall back to the top of the list for a column the player has never visited.
-    const index = this._rememberedIndex ?? 0;
+    const index = this.rememberedIndex() ?? 0;
 
     // never restore past the end; the list may have shrunk since the player was last here.
     this.select(Math.min(index, Math.max(0, this.maxItems() - 1)));

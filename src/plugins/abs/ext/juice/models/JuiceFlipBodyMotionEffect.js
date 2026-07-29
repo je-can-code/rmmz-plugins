@@ -18,6 +18,100 @@ class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
    * @param {number} durationFrames Total frames for the entire animation (all rotations).
    * @param {number} [repeatCount=1] Number of full 360° rotations to complete.
    */
+  
+
+  //region properties
+  /**
+   * Gets the sprite.
+   * @returns {*} The sprite.
+   */
+  sprite()
+  {
+    // hand back the sprite.
+    return this._sprite;
+  }
+
+  /**
+   * Gets the base rotation.
+   * @returns {*} The baseRotation.
+   */
+  baseRotation()
+  {
+    // hand back the base rotation.
+    return this._baseRotation;
+  }
+
+  /**
+   * Gets the base anchor x.
+   * @returns {*} The baseAnchorX.
+   */
+  baseAnchorX()
+  {
+    // hand back the base anchor x.
+    return this._baseAnchorX;
+  }
+
+  /**
+   * Gets the base anchor y.
+   * @returns {*} The baseAnchorY.
+   */
+  baseAnchorY()
+  {
+    // hand back the base anchor y.
+    return this._baseAnchorY;
+  }
+
+  /**
+   * Gets the frame.
+   * @returns {*} The frame.
+   */
+  frame()
+  {
+    // hand back the frame.
+    return this._frame;
+  }
+
+  /**
+   * Sets the frame.
+   * @param {*} newFrame The new frame.
+   */
+  setFrame(newFrame)
+  {
+    // assign the frame.
+    this._frame = newFrame;
+  }
+
+  /**
+   * Gets the duration frames.
+   * @returns {*} The durationFrames.
+   */
+  durationFrames()
+  {
+    // hand back the duration frames.
+    return this._durationFrames;
+  }
+
+  /**
+   * Gets the direction sign.
+   * @returns {*} The directionSign.
+   */
+  directionSign()
+  {
+    // hand back the direction sign.
+    return this._directionSign;
+  }
+
+  /**
+   * Gets the repeat count.
+   * @returns {*} The repeatCount.
+   */
+  repeatCount()
+  {
+    // hand back the repeat count.
+    return this._repeatCount;
+  }
+  //endregion properties
+
   constructor(sprite, directionSign, durationFrames, repeatCount = 1)
   {
     super();
@@ -43,7 +137,7 @@ class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
    */
   isSpriteAlive()
   {
-    return !!this._sprite.transform;
+    return !!this.sprite().transform;
   }
 
   /**
@@ -51,10 +145,10 @@ class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
    */
   restore()
   {
-    this._sprite._juiceFlipping = false;
-    this._sprite.rotation = this._baseRotation;
-    this._sprite.anchor.x = this._baseAnchorX;
-    this._sprite.anchor.y = this._baseAnchorY;
+    this.sprite()._juiceFlipping = false;
+    this.sprite().rotation = this.baseRotation();
+    this.sprite().anchor.x = this.baseAnchorX();
+    this.sprite().anchor.y = this.baseAnchorY();
   }
 
   /**
@@ -64,15 +158,15 @@ class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
    */
   tick()
   {
-    this._sprite._juiceFlipping = true;
-    this._frame++;
-    const t = this._frame / this._durationFrames;
-    this._sprite.rotation = this._baseRotation + this._directionSign * t * (Math.PI * 2) * this._repeatCount;
+    this.sprite()._juiceFlipping = true;
+    this.setFrame(this.frame() + 1);
+    const t = this.frame() / this.durationFrames();
+    this.sprite().rotation = this.baseRotation() + this.directionSign() * t * (Math.PI * 2) * this.repeatCount();
 
-    if (this._frame >= this._durationFrames)
+    if (this.frame() >= this.durationFrames())
     {
       this.restore();
-      JuiceMotionManager.relinquishSpriteLock(this._sprite);
+      JuiceMotionManager.relinquishSpriteLock(this.sprite());
       return false;
     }
 

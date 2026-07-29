@@ -137,6 +137,18 @@ class Scene_SDP
 
   }
 
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   //endregion init
 
   //region create
@@ -264,7 +276,7 @@ class Scene_SDP
    */
   getSdpFamilyStripWindow()
   {
-    return this._j._sdp._windows._sdpFamilyStrip;
+    return this.j()._sdp._windows._sdpFamilyStrip;
   }
 
   /**
@@ -273,7 +285,7 @@ class Scene_SDP
    */
   setSdpFamilyStripWindow(familyStripWindow)
   {
-    this._j._sdp._windows._sdpFamilyStrip = familyStripWindow;
+    this.j()._sdp._windows._sdpFamilyStrip = familyStripWindow;
   }
 
   /**
@@ -291,8 +303,8 @@ class Scene_SDP
       nextIndex = 0;
     }
 
-    this._j._sdp._familyFilterCycle = cycle;
-    this._j._sdp._familyFilterIndex = nextIndex;
+    this.j()._sdp._familyFilterCycle = cycle;
+    this.j()._sdp._familyFilterIndex = nextIndex;
   }
 
   /**
@@ -301,14 +313,14 @@ class Scene_SDP
    */
   getActiveFamilyFilterKey()
   {
-    const cycle = this._j._sdp._familyFilterCycle;
+    const cycle = this.j()._sdp._familyFilterCycle;
 
     if (cycle.length === 0)
     {
       return SdpFamilyFilter.ALL;
     }
 
-    return cycle[this._j._sdp._familyFilterIndex | 0] ?? SdpFamilyFilter.ALL;
+    return cycle[this.j()._sdp._familyFilterIndex | 0] ?? SdpFamilyFilter.ALL;
   }
 
   /**
@@ -361,7 +373,7 @@ class Scene_SDP
    */
   cycleFamilyFilters(isForward = true)
   {
-    const cycle = this._j._sdp._familyFilterCycle;
+    const cycle = this.j()._sdp._familyFilterCycle;
 
     if (cycle.length <= 1)
     {
@@ -371,13 +383,13 @@ class Scene_SDP
       return;
     }
 
-    const currentIndex = this._j._sdp._familyFilterIndex | 0;
+    const currentIndex = this.j()._sdp._familyFilterIndex | 0;
     const delta = isForward
       ? 1
       : -1;
     const nextIndex = (currentIndex + delta + cycle.length) % cycle.length;
 
-    this._j._sdp._familyFilterIndex = nextIndex;
+    this.j()._sdp._familyFilterIndex = nextIndex;
     this.applyActiveFamilyFilter();
     this.onPanelHoveredChange();
     this.getSdpListWindow()
@@ -464,7 +476,7 @@ class Scene_SDP
    */
   getSdpListWindow()
   {
-    return this._j._sdp._windows._sdpList;
+    return this.j()._sdp._windows._sdpList;
   }
 
   /**
@@ -473,7 +485,7 @@ class Scene_SDP
    */
   setSdpListWindow(listWindow)
   {
-    this._j._sdp._windows._sdpList = listWindow;
+    this.j()._sdp._windows._sdpList = listWindow;
   }
 
   //endregion sdp list window
@@ -538,7 +550,7 @@ class Scene_SDP
    */
   getSdpParameterListWindow()
   {
-    return this._j._sdp._windows._sdpParameterList;
+    return this.j()._sdp._windows._sdpParameterList;
   }
 
   /**
@@ -547,7 +559,7 @@ class Scene_SDP
    */
   setSdpParameterListWindow(listWindow)
   {
-    this._j._sdp._windows._sdpParameterList = listWindow;
+    this.j()._sdp._windows._sdpParameterList = listWindow;
   }
 
   //endregion parameter list window
@@ -592,7 +604,7 @@ class Scene_SDP
    */
   getSdpRewardListWindow()
   {
-    return this._j._sdp._windows._sdpRewardList;
+    return this.j()._sdp._windows._sdpRewardList;
   }
 
   /**
@@ -601,7 +613,7 @@ class Scene_SDP
    */
   setSdpRewardListWindow(listWindow)
   {
-    this._j._sdp._windows._sdpRewardList = listWindow;
+    this.j()._sdp._windows._sdpRewardList = listWindow;
   }
 
   //endregion reward list window
@@ -636,7 +648,7 @@ class Scene_SDP
    */
   getSdpMasteryWindow()
   {
-    return this._j._sdp._windows._sdpMastery;
+    return this.j()._sdp._windows._sdpMastery;
   }
 
   /**
@@ -645,7 +657,7 @@ class Scene_SDP
    */
   setSdpMasteryWindow(masteryWindow)
   {
-    this._j._sdp._windows._sdpMastery = masteryWindow;
+    this.j()._sdp._windows._sdpMastery = masteryWindow;
   }
   //endregion mastery window
 
@@ -683,7 +695,7 @@ class Scene_SDP
    */
   getSdpCartWindow()
   {
-    return this._j._sdp._windows._sdpCart;
+    return this.j()._sdp._windows._sdpCart;
   }
 
   /**
@@ -692,7 +704,7 @@ class Scene_SDP
    */
   setSdpCartWindow(cartWindow)
   {
-    this._j._sdp._windows._sdpCart = cartWindow;
+    this.j()._sdp._windows._sdpCart = cartWindow;
   }
   //endregion cart window
 
@@ -838,7 +850,7 @@ class Scene_SDP
    */
   getSdpHeaderWindow()
   {
-    return this._j._sdp._windows._sdpHeader;
+    return this.j()._sdp._windows._sdpHeader;
   }
 
   /**
@@ -847,7 +859,7 @@ class Scene_SDP
    */
   setSdpHeaderWindow(headerWindow)
   {
-    this._j._sdp._windows._sdpHeader = headerWindow;
+    this.j()._sdp._windows._sdpHeader = headerWindow;
   }
   //endregion header window
 
@@ -968,7 +980,7 @@ class Scene_SDP
    */
   getSdpHelpWindow()
   {
-    return this._j._sdp._windows._sdpHelp;
+    return this.j()._sdp._windows._sdpHelp;
   }
 
   /**
@@ -977,7 +989,7 @@ class Scene_SDP
    */
   setSdpHelpWindow(helpWindow)
   {
-    this._j._sdp._windows._sdpHelp = helpWindow;
+    this.j()._sdp._windows._sdpHelp = helpWindow;
   }
 
   // endregion help window
@@ -1038,7 +1050,7 @@ class Scene_SDP
    */
   getSdpPointsWindow()
   {
-    return this._j._sdp._windows._sdpPoints;
+    return this.j()._sdp._windows._sdpPoints;
   }
 
   /**
@@ -1047,7 +1059,7 @@ class Scene_SDP
    */
   setSdpPointsWindow(pointsWindow)
   {
-    this._j._sdp._windows._sdpPoints = pointsWindow;
+    this.j()._sdp._windows._sdpPoints = pointsWindow;
   }
 
   //endregion points window
@@ -1120,7 +1132,7 @@ class Scene_SDP
    */
   getSdpConfirmationWindow()
   {
-    return this._j._sdp._windows._sdpConfirmation;
+    return this.j()._sdp._windows._sdpConfirmation;
   }
 
   /**
@@ -1129,7 +1141,7 @@ class Scene_SDP
    */
   setSdpConfirmationWindow(confirmationWindow)
   {
-    this._j._sdp._windows._sdpConfirmation = confirmationWindow;
+    this.j()._sdp._windows._sdpConfirmation = confirmationWindow;
   }
 
   //endregion confirmation window
@@ -1142,7 +1154,7 @@ class Scene_SDP
   onSelectPanel()
   {
     // if the cart has any planned purchases, confirm checkout.
-    if (this._j._sdp._cart.size > 0)
+    if (this.j()._sdp._cart.size > 0)
     {
       this.openCartCheckoutConfirmation();
       return;
@@ -1222,7 +1234,7 @@ class Scene_SDP
     const { currentRank } = actor.getSdpByKey(key);
     const maxQueue = Math.max(0, maxRank - currentRank);
 
-    const cart = this._j._sdp._cart;
+    const cart = this.j()._sdp._cart;
     const existing = cart.get(key) ?? 0;
     const next = Math.max(0, Math.min(existing + delta, maxQueue));
 
@@ -1263,7 +1275,7 @@ class Scene_SDP
   checkoutCart()
   {
     const actor = $gameParty.menuActor();
-    const cart = this._j._sdp._cart;
+    const cart = this.j()._sdp._cart;
     if (cart.size === 0)
     {
       return false;
@@ -1319,7 +1331,7 @@ class Scene_SDP
     });
 
     // clear the cart after purchasing.
-    this._j._sdp._cart.clear();
+    this.j()._sdp._cart.clear();
 
     // refresh everything.
     this.onPanelHoveredChange();
@@ -1344,7 +1356,7 @@ class Scene_SDP
    */
   buildCartSummary(actor)
   {
-    const cart = this._j._sdp._cart;
+    const cart = this.j()._sdp._cart;
     const wallet = actor.getSdpPoints();
     let totalCost = 0;
     let levelCount = 0;
@@ -1459,7 +1471,7 @@ class Scene_SDP
     this.getSdpListWindow()
       .setActor(currentActor);
     this.getSdpListWindow()
-      .setCart(this._j._sdp._cart);
+      .setCart(this.j()._sdp._cart);
 
     // update the actor associated with the sdp point tracking.
     this.getSdpPointsWindow()
@@ -1484,7 +1496,7 @@ class Scene_SDP
 
     // update the cart window with current planned purchases.
     this.getSdpCartWindow()
-      .setCart(currentActor, this._j._sdp._cart);
+      .setCart(currentActor, this.j()._sdp._cart);
     this.getSdpCartWindow()
       .refresh();
 
@@ -1508,7 +1520,7 @@ class Scene_SDP
   cycleMembers(isForward = true)
   {
     // cart is actor-specific (wallet + rank curve); don't allow swapping while it has contents.
-    if (this._j._sdp._cart.size > 0)
+    if (this.j()._sdp._cart.size > 0)
     {
       SoundManager.playBuzzer();
       this.getSdpListWindow()

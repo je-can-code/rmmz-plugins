@@ -124,7 +124,10 @@ describe('JABS_EnemyAI (unit, all downstream dependencies mocked)', () =>
       getEnemyBasicAttack: () => 999,
       getTarget: () => ({}),
       getBattler: () => ({ currentHpPercent: () => 1 }),
-      getSkill: () => ({ effects: [] }),
+      // mirrors the real JABS_Battler#getSkill, which delegates to getBattler().skill(skillId) and so
+      // resolves any extension overlays before the caller ever sees the skill. Returning a fixed
+      // object regardless of id would hide which skill the AI actually looked at.
+      getSkill: skillId => (globalThis.$dataSkills && globalThis.$dataSkills[skillId]) || { id: skillId, effects: [] },
       getSkillIdsFromEnemy: () => [],
       getSightRadius: () => 5,
       hasLeader: () => false,
@@ -1327,6 +1330,51 @@ describe('JABS_EnemyAI (unit, all downstream dependencies mocked)', () =>
 
     const oneOnly = { isForAll: false, isForOne: true };
     const allOnly = { isForAll: true, isForOne: false };
+
+    it('ranks a heal by its extension-resolved form, not its raw database row', () =>
+    {
+      // Arrange- skill 1 carries an <extend:> overlay, so resolving it through the battler yields a
+      // different (stronger) skill than the database row does. The two paths disagree on the winner:
+      //   via getSkill  -> skill 1 heals 80, beating skill 2's 50  -> picks skill 1
+      //   via $dataSkills -> skill 1 heals only 20, losing to skill 2 -> picks skill 2
+      // so the returned id alone proves which lookup the ranking actually used.
+      mockScopedGameAction({
+        1: { heal: -20, ...allOnly },
+        2: { heal: -50, ...allOnly },
+        99: { heal: -80, ...allOnly },
+      });
+      globalThis.Math.randomInt.mockReturnValue(0);
+      const { ai, allies } = buildRankingHarness();
+      const user = buildBattler({
+        getBattler: () => ({}),
+        getSkill: skillId => (skillId === 1
+          ? { id: 99 }
+          : globalThis.$dataSkills[skillId]),
+      });
+
+      // Act
+      const result = ai.filterSkillsHealerPriority(user, [ 1, 2 ], allies);
+
+      // Assert- reading the raw row here is what let a healer pick its target using the base formula
+      // and then execute the overlaid one.
+      expect(result).toEqual([ 1 ]);
+    });
+
+    it('ranks an unextended heal identically whichever way it is resolved', () =>
+    {
+      // Arrange- the common case: no overlay, so the battler hands back the same row the database
+      // holds and the ranking is unchanged. This is the half that proves the fix above did not just
+      // invert the outcome for everyone.
+      mockScopedGameAction({ 1: { heal: -20, ...allOnly }, 2: { heal: -50, ...allOnly } });
+      globalThis.Math.randomInt.mockReturnValue(0);
+      const { ai, user, allies } = buildRankingHarness();
+
+      // Act
+      const result = ai.filterSkillsHealerPriority(user, [ 1, 2 ], allies);
+
+      // Assert
+      expect(result).toEqual([ 2 ]);
+    });
 
     it('leaves the biggest all-target slot at its seed when no skill targets everyone', () =>
     {

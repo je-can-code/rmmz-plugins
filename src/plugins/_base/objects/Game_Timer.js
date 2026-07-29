@@ -29,7 +29,7 @@ Game_Timer.prototype.start = function(duration)
     .call(this, duration);
 
   // store  duration on the instance for later reads.
-  this._duration = duration;
+  this.setDuration(duration);
 };
 
 /**
@@ -38,6 +38,28 @@ Game_Timer.prototype.start = function(duration)
  */
 Game_Timer.prototype.elapsedFrames = function()
 {
-  return this._duration - this._frames;
+  return this.duration() - this.frames();
 };
+
+//region properties
+/**
+ * Gets the frame count this timer was originally started with.
+ * @returns {number} The starting duration in frames.
+ */
+Game_Timer.prototype.duration = function()
+{
+  // hand back the duration.
+  return this._duration;
+};
+
+/**
+ * Sets the frame count this timer counts down from.
+ * @param {number} newDuration The starting duration in frames.
+ */
+Game_Timer.prototype.setDuration = function(newDuration)
+{
+  // assign the duration.
+  this._duration = newDuration;
+};
+//endregion properties
 //endregion Game_Timer

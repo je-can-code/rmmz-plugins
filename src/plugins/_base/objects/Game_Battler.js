@@ -216,9 +216,9 @@ Game_Battler.prototype.setCachedAllNotes = function(notes)
 Game_Battler.prototype.getAllNotes = function()
 {
   // test hook: skip the cache and return the caller-supplied sources directly.
-  if (this.__testNoteSources !== undefined)
+  if (this.testNoteSources() !== undefined)
   {
-    return this.__testNoteSources;
+    return this.testNoteSources();
   }
 
   // return the cached result if the cache is still warm.
@@ -308,14 +308,14 @@ J.BASE.Aliased.Game_Battler.set('eraseState', Game_Battler.prototype.eraseState)
 Game_Battler.prototype.eraseState = function(stateId)
 {
   // grab a snapshot of what the equips looked like before changing.
-  const oldStates = Array.from(this._states);
+  const oldStates = this.allStateIds();
 
   // perform original logic.
   J.BASE.Aliased.Game_Battler.get('eraseState')
     .call(this, stateId);
 
   // determine if the states array changed from what it was before original logic.
-  const isChanged = !oldStates.equals(this._states);
+  const isChanged = !oldStates.equals(this.allStateIds());
 
   // check if we did actually have change.
   if (isChanged)
@@ -344,14 +344,14 @@ J.BASE.Aliased.Game_Battler.set('addNewState', Game_Battler.prototype.addNewStat
 Game_Battler.prototype.addNewState = function(stateId)
 {
   // grab a snapshot of what the equips looked like before changing.
-  const oldStates = Array.from(this._states);
+  const oldStates = this.allStateIds();
 
   // perform original logic.
   J.BASE.Aliased.Game_Battler.get('addNewState')
     .call(this, stateId);
 
   // determine if the states array changed from what it was before original logic.
-  const isChanged = !oldStates.equals(this._states);
+  const isChanged = !oldStates.equals(this.allStateIds());
 
   // check if we did actually have change.
   if (isChanged)
@@ -561,4 +561,16 @@ Game_Battler.prototype.setCachedHarFactor = function(value)
   this._j._base._cachedHarFactor = value;
 };
 //endregion HAR
+
+//region properties
+/**
+ * Gets the test note sources.
+ * @returns {*} The testNoteSources.
+ */
+Game_Battler.prototype.testNoteSources = function()
+{
+  // hand back the test note sources.
+  return this.__testNoteSources;
+};
+//endregion properties
 //endregion Game_Battler

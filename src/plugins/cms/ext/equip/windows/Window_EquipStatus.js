@@ -43,7 +43,7 @@ Window_EquipStatus.prototype.makeFontBigger = function()
 Window_EquipStatus.prototype.refresh = function()
 {
   this.contents.clear();
-  if (this._actor)
+  if (this.actor())
   {
     this.drawAllParams();
   }
@@ -80,7 +80,7 @@ Window_EquipStatus.prototype.drawAllParams = function()
       const rowHeights = rowGroups.map((groupId, columnIndex) =>
       {
         return ParameterCatalogRenderer.drawParameterGroup(
-          this, columnXs[columnIndex], cursorY, groupId, columnLayout.columnWidth, this._actor, this._tempActor);
+          this, columnXs[columnIndex], cursorY, groupId, columnLayout.columnWidth, this.actor(), this.tempActor());
       });
 
       const tallestSection = Math.max(...rowHeights);
@@ -98,7 +98,7 @@ Window_EquipStatus.prototype.drawAllParams = function()
     rowGroups.forEach(groupId =>
     {
       const groupHeight = ParameterCatalogRenderer.drawParameterGroup(
-        this, 0, cursorY, groupId, fallbackWidth, this._actor, this._tempActor);
+        this, 0, cursorY, groupId, fallbackWidth, this.actor(), this.tempActor());
       cursorY += groupHeight + rowGap;
     });
   });

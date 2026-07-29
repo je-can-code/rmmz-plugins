@@ -49,14 +49,14 @@ Game_Item.prototype.setObject = function(obj)
   if (obj.hasOwnProperty('stypeId'))
   {
     // assign the data.
-    this._dataClass = 'skill';
+    this.setDataClass('skill');
     this._item = obj;
   }
   // check to ensure it has an item category property.
   else if (obj.hasOwnProperty('itypeId'))
   {
     // assign the data.
-    this._dataClass = 'item';
+    this.setDataClass('item');
     this._item = obj;
   }
 };

@@ -116,5 +116,5 @@ Window_Help.prototype.renderText = function()
   } = this.baseTextRect();
 
   // draw the actual text.
-  this.drawTextEx(this._text, x, y, width);
+  this.drawTextEx(this.getText(), x, y, width);
 };

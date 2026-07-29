@@ -16,12 +16,14 @@ import JABS_AiManager from '../managers/JABS_AiManager.js';
 J.ABS.Aliased.Game_Battler.set('initMembers', Game_Battler.prototype.initMembers);
 Game_Battler.prototype.initMembers = function()
 {
+  // seed the JABS members FIRST. Vanilla's own initMembers calls clearStates(), which JABS
+  // overrides to purge tracked states by uuid- so `_j._abs` has to exist before that runs, or the
+  // override fires against a battler that has no namespace yet.
+  this.initJabsMembers();
+
   // perform original logic.
   J.ABS.Aliased.Game_Battler.get('initMembers')
     .call(this);
-
-  // initialize our custom members.
-  this.initJabsMembers();
 };
 
 /**
@@ -248,7 +250,7 @@ Game_Battler.prototype.refreshPer = function()
 Game_Battler.prototype.getUuid = function()
 {
   // build the custom uuid including the name.
-  const modifiedUuid = `${this.name()}_${this._j._abs._uuid}`;
+  const modifiedUuid = `${this.name()}_${this.uuid()}`;
 
   // return the name-based uuid.
   return modifiedUuid;
@@ -635,7 +637,7 @@ Game_Battler.prototype.setDeathContext = function(context)
  */
 Game_Battler.prototype.clearDeathContext = function()
 {
-  this._j._abs._deathContext = null;
+  this.setDeathContext(null);
 };
 
 /**
@@ -647,7 +649,7 @@ Game_Battler.prototype.clearDeathContext = function()
  */
 Game_Battler.prototype.setLastHitSource = function(type, uuid, id)
 {
-  this._j._abs._lastDamageSource = { type, uuid, id };
+  this.setLastDamageSource({ type, uuid, id });
 };
 
 /**
@@ -656,7 +658,11 @@ Game_Battler.prototype.setLastHitSource = function(type, uuid, id)
  */
 Game_Battler.prototype.getLastHitType = function()
 {
-  return this._j._abs._lastDamageSource?.type ?? null;
+  // this source is contractually nullable, so say so rather than short-circuiting silently.
+  const lastDamageSource = this.lastDamageSource();
+  if (lastDamageSource === null) return null;
+
+  return lastDamageSource.type;
 };
 
 /**
@@ -667,7 +673,7 @@ Game_Battler.prototype.getLastHitType = function()
  */
 Game_Battler.prototype.getLastHitSource = function()
 {
-  const record = this._j._abs._lastDamageSource;
+  const record = this.lastDamageSource();
   return record
     ? { uuid: record.uuid, id: record.id }
     : null;
@@ -1303,7 +1309,7 @@ Game_Battler.prototype.handleAddingJabsState = function(stateId, attacker, overr
   this.onJabsStateInflicted(stateId, attacker);
 
   // add the new state to the action result on this battler.
-  this._result.pushAddedState(stateId);
+  this.result().pushAddedState(stateId);
 };
 
 /**
@@ -1355,10 +1361,9 @@ Game_Battler.prototype.removeState = function(stateId)
 J.ABS.Aliased.Game_Battler.set('clearStates', Game_Battler.prototype.clearStates);
 Game_Battler.prototype.clearStates = function()
 {
-  // this battler may still be under construction (this is the very first clearStates() call,
-  // fired from within vanilla initMembers before initJabsMembers has set up `_j._abs`)- in that
-  // case there is nothing tracked yet, so there is nothing to purge.
-  if (this._j?._abs?._uuid && $jabsEngine)
+  // `initMembers` seeds the JABS namespace before vanilla's own logic runs, so the uuid always
+  // exists by the time this is reached- even on the very first clearStates() call.
+  if ($jabsEngine)
   {
     // snapshot the tracked states now, since removeState() below mutates the tracker map as it goes.
     const trackedStates = Array.from($jabsEngine.getJabsStatesByUuid(this.getUuid())
@@ -1531,7 +1536,9 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker, overrides = nu
 
   // establish the stack default from the state's own database data; the override (if any)
   // wins whenever it is explicitly specified.
-  const stateStacks = overrides?.stacks ?? state.jabsStateStacksApplied;
+  const stateStacks = overrides
+    ? overrides.stacks
+    : state.jabsStateStacksApplied;
 
   // pull the override duration out, defaulting to null (meaning "no override") when absent.
   const overrideDuration = overrides ? overrides.duration : null;
@@ -1948,7 +1955,7 @@ Game_Battler.prototype.isVeryCursed = function()
  */
 Game_Battler.prototype.getEncoreRepeats = function()
 {
-  return Math.floor(this._j._abs._encoreRepeats);
+  return Math.floor(this.encoreRepeats());
 };
 
 /**
@@ -2193,4 +2200,48 @@ Game_Battler.prototype.getResolvedSkillId = function(slot)
 Game_Battler.prototype.regenerateAll = function()
 {
 };
+
+//region properties
+/**
+ * Gets the last damage source.
+ * @returns {*} The lastDamageSource.
+ */
+Game_Battler.prototype.lastDamageSource = function()
+{
+  // hand back the last damage source.
+  return this._j._abs._lastDamageSource;
+};
+
+/**
+ * Sets the last damage source.
+ * @param {*} newLastDamageSource The new lastDamageSource.
+ */
+Game_Battler.prototype.setLastDamageSource = function(newLastDamageSource)
+{
+  // assign the last damage source.
+  this._j._abs._lastDamageSource = newLastDamageSource;
+};
+//endregion properties
+
+//region properties
+/**
+ * Gets the identifier tracking this battler across the JABS systems.
+ * @returns {string} The battler uuid.
+ */
+Game_Battler.prototype.uuid = function()
+{
+  // hand back the uuid.
+  return this._j._abs._uuid;
+};
+
+/**
+ * Gets the encore repeats.
+ * @returns {*} The encoreRepeats.
+ */
+Game_Battler.prototype.encoreRepeats = function()
+{
+  // hand back the encore repeats.
+  return this._j._abs._encoreRepeats;
+};
+//endregion properties
 //endregion Game_Battler

@@ -45,6 +45,28 @@ class Window_LoadoutPicker
     this._slotKey = String.empty;
   }
 
+  //region properties
+  /**
+   * Sets the actor.
+   * @param {*} newActor The new actor.
+   */
+  setActor(newActor)
+  {
+    // assign the actor.
+    this._actor = newActor;
+  }
+
+  /**
+   * Sets the slot key.
+   * @param {*} newSlotKey The new slotKey.
+   */
+  setSlotKey(newSlotKey)
+  {
+    // assign the slot key.
+    this._slotKey = newSlotKey;
+  }
+  //endregion properties
+
   /**
    * Points this window at a particular actor's particular slot and rebuilds accordingly.
    * @param {Game_Actor} actor The actor whose slot is being filled.
@@ -52,8 +74,8 @@ class Window_LoadoutPicker
    */
   setTarget(actor, slotKey)
   {
-    this._actor = actor;
-    this._slotKey = slotKey;
+    this.setActor(actor);
+    this.setSlotKey(slotKey);
 
     // the entire contents depend on the target, so nothing is valid until it is rebuilt.
     this.refresh();

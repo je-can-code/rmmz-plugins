@@ -30,13 +30,13 @@ Window_MenuCommand.prototype.addJabsRemapCommand = function()
     .build();
 
   // determine what the last command is.
-  const lastCommand = this._list.at(-1);
+  const lastCommand = this.commandList().at(-1);
 
   // check if the last command is the "End Game" command.
   if (lastCommand.symbol === "gameEnd")
   {
     // add it before the "End Game" command.
-    this._list.splice(this._list.length - 2, 0, command);
+    this.commandList().splice(this.commandList().length - 2, 0, command);
   }
   // the last command is something else.
   else

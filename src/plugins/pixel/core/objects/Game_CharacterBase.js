@@ -104,18 +104,12 @@ Game_CharacterBase.prototype.initPixelMovementMembers = function()
 
 /**
  * Returns the pixel movement state namespace for this character.
- * If the namespace is absent — for example when loading a save created before
- * this plugin was installed — it is initialized on demand so that no individual
- * getter or setter needs its own defensive guard.
+ * `initMembers` is aliased to seed this namespace, so it is always present.
  * @returns {object} The `this._j._pixel` state object.
  */
 Game_CharacterBase.prototype._pixelState = function()
 {
-  if (!this._j || !this._j._pixel)
-  {
-    this.initPixelMovementMembers();
-  }
-
+  // hand back the namespace every pixel accessor reads through.
   return this._j._pixel;
 };
 
@@ -429,11 +423,11 @@ Game_CharacterBase.prototype.update = function()
   // Always synchronize render/smoothing coordinates to the logical coordinates,
   // but not during a jump — updateJump handles _realX/_realY interpolation and
   // snapping here would teleport the character to the destination on frame one.
-  if ((this._realX !== this._x || this._realY !== this._y) && !this.isJumping())
+  if ((this.realX() !== this.x || this.realY() !== this.y) && !this.isJumping())
   {
     // Snap the render coordinates to the logical coordinates.
-    this._realX = this._x;
-    this._realY = this._y;
+    this.setRealX(this.x)
+    this.setRealY(this.y)
   }
 
   // Tick down the pixel-move cooldown, if any.
@@ -619,15 +613,15 @@ Game_CharacterBase.prototype.recordPixelPosition = function()
 Game_CharacterBase.prototype.relocate = function(x, y)
 {
   // Update the logical coordinates of this character.
-  this._x = x;
-  this._y = y;
+  this.setX(x);
+  this.setY(y);
 
   // Synchronize the render/smoothing coordinates to prevent post-teleport sliding.
-  this._realX = x;
-  this._realY = y;
+  this.setRealX(x);
+  this.setRealY(y);
 
   // Reset the stop counter so the engine considers us stationary immediately.
-  this._stopCount = 0;
+  this.setStopCount(0);
 };
 
 /**
@@ -652,8 +646,8 @@ Game_CharacterBase.prototype.stopPixelMoving = function()
 
   // Synchronize the render/smoothing coordinates to the logical position.
   // This prevents any residual tween drift once we intentionally stop.
-  this._realX = this._x;
-  this._realY = this._y;
+  this.setRealX(this.x)
+  this.setRealY(this.y)
 
   // update the position for this character.
   this.recordPixelPosition();
@@ -679,8 +673,8 @@ Game_CharacterBase.prototype.diagonalDistancePerFrame = function()
 Game_CharacterBase.prototype.movePixelDistance = function(direction, distance)
 {
   // Cache previous logical coordinates before applying movement.
-  const prevX = this._x;
-  const prevY = this._y;
+  const prevX = this.x;
+  const prevY = this.y;
 
   // Determine whether the direction is straight or diagonal.
   const isStraight = this.isStraightDirection(direction);
@@ -705,17 +699,17 @@ Game_CharacterBase.prototype.movePixelDistance = function(direction, distance)
   // If we ended up overlapping solid tiles after this step, revert the move.
   // Through or playtest debug-through bypass this check entirely.
   if (this.isThrough() === false && this.isDebugThrough() === false && this.isOverlappingSolidTiles(
-    this._x + this.getCollisionPivotX(),
-    this._y + this.getCollisionPivotY(),
+    this.x + this.getCollisionPivotX(),
+    this.y + this.getCollisionPivotY(),
     radius))
   {
     // Restore the previous logical position.
-    this._x = prevX;
-    this._y = prevY;
+    this.setX(prevX);
+    this.setY(prevY);
 
     // Synchronize the display coordinates with the restored logical position.
-    this._realX = this._x;
-    this._realY = this._y;
+    this.setRealX(this.x)
+    this.setRealY(this.y)
 
     // Mark this movement as unsuccessful so upstream callers don’t keep pushing.
     this.setMovementSuccess(false);
@@ -728,8 +722,8 @@ Game_CharacterBase.prototype.movePixelDistance = function(direction, distance)
   this.setMovedThisFrame(true);
 
   // Synchronize the display coordinates with the logical position to avoid engine tween drift.
-  this._realX = this._x;
-  this._realY = this._y;
+  this.setRealX(this.x)
+  this.setRealY(this.y)
 
   // Also modify the move distance by how far we've moved.
   this.modMoveDistance(distance);
@@ -792,7 +786,7 @@ Game_CharacterBase.prototype.moveDiagonalDistance = function(direction, pixelDis
  */
 Game_CharacterBase.prototype.moveStraight2Down = function(pixelDistance)
 {
-  this._y += pixelDistance;
+  this.setY(this.y + pixelDistance);
 };
 
 /**
@@ -801,7 +795,7 @@ Game_CharacterBase.prototype.moveStraight2Down = function(pixelDistance)
  */
 Game_CharacterBase.prototype.moveStraight4Left = function(pixelDistance)
 {
-  this._x -= pixelDistance;
+  this.setX(this.x - pixelDistance);
 };
 
 /**
@@ -810,7 +804,7 @@ Game_CharacterBase.prototype.moveStraight4Left = function(pixelDistance)
  */
 Game_CharacterBase.prototype.moveStraight6Right = function(pixelDistance)
 {
-  this._x += pixelDistance;
+  this.setX(this.x + pixelDistance);
 };
 
 /**
@@ -819,7 +813,7 @@ Game_CharacterBase.prototype.moveStraight6Right = function(pixelDistance)
  */
 Game_CharacterBase.prototype.moveStraight8Up = function(pixelDistance)
 {
-  this._y -= pixelDistance;
+  this.setY(this.y - pixelDistance);
 };
 
 /**
@@ -828,8 +822,8 @@ Game_CharacterBase.prototype.moveStraight8Up = function(pixelDistance)
  */
 Game_CharacterBase.prototype.moveDiagonal1DownLeft = function(pixelDistance)
 {
-  this._x -= pixelDistance;
-  this._y += pixelDistance;
+  this.setX(this.x - pixelDistance);
+  this.setY(this.y + pixelDistance);
 };
 
 /**
@@ -838,8 +832,8 @@ Game_CharacterBase.prototype.moveDiagonal1DownLeft = function(pixelDistance)
  */
 Game_CharacterBase.prototype.moveDiagonal3DownRight = function(pixelDistance)
 {
-  this._x += pixelDistance;
-  this._y += pixelDistance;
+  this.setX(this.x + pixelDistance);
+  this.setY(this.y + pixelDistance);
 };
 
 /**
@@ -848,8 +842,8 @@ Game_CharacterBase.prototype.moveDiagonal3DownRight = function(pixelDistance)
  */
 Game_CharacterBase.prototype.moveDiagonal7UpLeft = function(pixelDistance)
 {
-  this._x -= pixelDistance;
-  this._y -= pixelDistance;
+  this.setX(this.x - pixelDistance);
+  this.setY(this.y - pixelDistance);
 };
 
 /**
@@ -858,8 +852,8 @@ Game_CharacterBase.prototype.moveDiagonal7UpLeft = function(pixelDistance)
  */
 Game_CharacterBase.prototype.moveDiagonal9UpRight = function(pixelDistance)
 {
-  this._x += pixelDistance;
-  this._y -= pixelDistance;
+  this.setX(this.x + pixelDistance);
+  this.setY(this.y - pixelDistance);
 };
 
 /**
@@ -877,10 +871,10 @@ Game_CharacterBase.prototype.canPassStraight = function(direction, distance = th
 {
   // TODO: reduce complexity (collision kernel); extract pure helpers without changing semantics.
   // Acquire the current fractional center.
-  const x0 = this._x;
+  const x0 = this.x;
 
   // Acquire the current fractional center.
-  const y0 = this._y;
+  const y0 = this.y;
 
   // Approve immediately if we are pass-through (debug or through).
   if (this.isThrough() || this.isDebugThrough())
@@ -1114,7 +1108,7 @@ Game_CharacterBase.prototype.canPass = function(x, y, d)
  */
 Game_CharacterBase.prototype.occupiedTileX = function()
 {
-  return Math.floor(this._x + Math.min(this.getCollisionPivotX(), 1 - 1e-6));
+  return Math.floor(this.x + Math.min(this.getCollisionPivotX(), 1 - 1e-6));
 };
 
 /**
@@ -1130,7 +1124,7 @@ Game_CharacterBase.prototype.occupiedTileX = function()
  */
 Game_CharacterBase.prototype.occupiedTileY = function()
 {
-  return Math.floor(this._y + Math.min(this.getCollisionPivotY(), 1 - 1e-6));
+  return Math.floor(this.y + Math.min(this.getCollisionPivotY(), 1 - 1e-6));
 };
 
 /**
@@ -1209,7 +1203,7 @@ Game_CharacterBase.prototype.moveStraight = function(direction)
 J.PIXEL.Aliased.Game_CharacterBase.set('moveDiagonally', Game_CharacterBase.prototype.moveDiagonally);
 Game_CharacterBase.prototype.moveDiagonally = function(horz, vert)
 {
-  this.setMovementSuccess(this.canPassDiagonally(this._x, this._y, horz, vert));
+  this.setMovementSuccess(this.canPassDiagonally(this.x, this.y, horz, vert));
 
   if (this.isMovementSucceeded())
   {
@@ -1224,11 +1218,11 @@ Game_CharacterBase.prototype.moveDiagonally = function(horz, vert)
 
   // if blocked while facing directly away from a component, rotate toward that component
   // so the character visually turns toward the wall instead of staying reversed.
-  if (this._direction === this.reverseDir(horz))
+  if (this.direction() === this.reverseDir(horz))
   {
     this.setDirection(horz);
   }
-  if (this._direction === this.reverseDir(vert))
+  if (this.direction() === this.reverseDir(vert))
   {
     this.setDirection(vert);
   }
@@ -1263,8 +1257,8 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
   const canRight = () => this.canPassStraight(J.PIXEL.Directions.RIGHT, straightDistance);
 
   // Precompute rounded axes for light orthogonal re-centering after straight moves.
-  const roundX = Math.round(this._x);
-  const roundY = Math.round(this._y);
+  const roundX = Math.round(this.x);
+  const roundY = Math.round(this.y);
 
   // A small snap tolerance to gently re-center on the orthogonal axis after straight motion.
   const SNAP_EPSILON = 0.1;
@@ -1323,10 +1317,10 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
   const recenterXAfterVertical = () =>
   {
     // If we are close enough to tile center, snap to eliminate drift.
-    if (Math.abs(this._x - roundX) <= SNAP_EPSILON)
+    if (Math.abs(this.x - roundX) <= SNAP_EPSILON)
     {
       // Assign the rounded X.
-      this._x = roundX;
+      this.setX(roundX);
     }
   };
 
@@ -1334,10 +1328,10 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
   const recenterYAfterHorizontal = () =>
   {
     // If we are close enough to tile center, snap to eliminate drift.
-    if (Math.abs(this._y - roundY) <= SNAP_EPSILON)
+    if (Math.abs(this.y - roundY) <= SNAP_EPSILON)
     {
       // Assign the rounded Y.
-      this._y = roundY;
+      this.setY(roundY);
     }
   };
 
@@ -1498,18 +1492,18 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
     if (isHorizontal)
     {
       // Nudge Y toward the nearest tile-center row.
-      const targetY = Math.round(this._y);
-      const residual = targetY - this._y;
+      const targetY = Math.round(this.y);
+      const residual = targetY - this.y;
 
       // Already centered; nothing to nudge.
       if (Math.abs(residual) < 0.001) return 0;
 
       const nudge = Math.sign(residual) * Math.min(Math.abs(residual), straightDistance);
-      const nudgedY = this._y + nudge;
+      const nudgedY = this.y + nudge;
 
       // Reject the nudge if the new Y position would overlap a solid tile.
       if (this.isOverlappingSolidTiles(
-        this._x + this.getCollisionPivotX(),
+        this.x + this.getCollisionPivotX(),
         nudgedY + this.getCollisionPivotY(),
         radius))
       {
@@ -1517,8 +1511,8 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
       }
 
       // Commit the nudge so it accumulates across frames.
-      this._y = nudgedY;
-      this._realY = this._y;
+      this.setY(nudgedY);
+      this.setRealY(this.y)
 
       // Re-check horizontal passability from the nudged position.
       if (this.canPassStraight(blockedDir, straightDistance))
@@ -1535,26 +1529,26 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
     else
     {
       // Nudge X toward the nearest tile-center column.
-      const targetX = Math.round(this._x);
-      const residual = targetX - this._x;
+      const targetX = Math.round(this.x);
+      const residual = targetX - this.x;
 
       if (Math.abs(residual) < 0.001) return 0;
 
       const nudge = Math.sign(residual) * Math.min(Math.abs(residual), straightDistance);
-      const nudgedX = this._x + nudge;
+      const nudgedX = this.x + nudge;
 
       // Reject the nudge if the new X position would overlap a solid tile.
       if (this.isOverlappingSolidTiles(
         nudgedX + this.getCollisionPivotX(),
-        this._y + this.getCollisionPivotY(),
+        this.y + this.getCollisionPivotY(),
         radius))
       {
         return 0;
       }
 
       // Commit the nudge.
-      this._x = nudgedX;
-      this._realX = this._x;
+      this.setX(nudgedX);
+      this.setRealX(this.x)
 
       if (this.canPassStraight(blockedDir, straightDistance))
       {
@@ -1630,21 +1624,21 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
 {
   // TODO: reduce complexity (collision kernel); extract pure helpers without changing semantics.
   // Snapshot current to restore after checks.
-  const oldX = this._x;
+  const oldX = this.x;
 
   // Snapshot current to restore after checks.
-  const oldY = this._y;
+  const oldY = this.y;
 
   // Align to provided coordinates for symmetry.
-  this._x = x;
-  this._y = y;
+  this.setX(x);
+  this.setY(y);
 
   // If through/debug-through, approve.
   if (this.isThrough() || this.isDebugThrough())
   {
     // Restore and approve.
-    this._x = oldX;
-    this._y = oldY;
+    this.setX(oldX);
+    this.setY(oldY);
     return true;
   }
 
@@ -1664,39 +1658,39 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
   const subCount = this._pixelCollisionSubCount();
 
   // Initialize destination center X with current X.
-  let nx = this._x;
+  let nx = this.x;
 
   // Initialize destination center Y with current Y.
-  let ny = this._y;
+  let ny = this.y;
 
   // If the horizontal leg is right, add the diagonal step to X.
   if (horz === J.PIXEL.Directions.RIGHT)
   {
-    nx = this._x + diagStep;
+    nx = this.x + diagStep;
   }
   // Else if the horizontal leg is left, subtract the diagonal step from X.
   else if (horz === J.PIXEL.Directions.LEFT)
   {
-    nx = this._x - diagStep;
+    nx = this.x - diagStep;
   }
 
   // If the vertical leg is down, add the diagonal step to Y.
   if (vert === J.PIXEL.Directions.DOWN)
   {
-    ny = this._y + diagStep;
+    ny = this.y + diagStep;
   }
   // Else if the vertical leg is up, subtract the diagonal step from Y.
   else if (vert === J.PIXEL.Directions.UP)
   {
-    ny = this._y - diagStep;
+    ny = this.y - diagStep;
   }
 
   // Bounds check destination.
   if ($gameMap.isValid(nx, ny) === false)
   {
     // Restore original coordinates.
-    this._x = oldX;
-    this._y = oldY;
+    this.setX(oldX);
+    this.setY(oldY);
 
     // Destination is invalid.
     return false;
@@ -1706,22 +1700,22 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
   if (horz === J.PIXEL.Directions.LEFT)
   {
     // Validate leftward passage from the current center.
-    if (this._pixelCheckLeftPassage(this._x, this._y, this._x - straightStep, hitbox, subCount) === false)
+    if (this._pixelCheckLeftPassage(this.x, this.y, this.x - straightStep, hitbox, subCount) === false)
     {
       // Restore original coordinates and reject.
-      this._x = oldX;
-      this._y = oldY;
+      this.setX(oldX);
+      this.setY(oldY);
       return false;
     }
   }
   else
   {
     // Validate rightward passage from the current center.
-    if (this._pixelCheckRightPassage(this._x, this._y, this._x + straightStep, hitbox, subCount) === false)
+    if (this._pixelCheckRightPassage(this.x, this.y, this.x + straightStep, hitbox, subCount) === false)
     {
       // Restore original coordinates and reject.
-      this._x = oldX;
-      this._y = oldY;
+      this.setX(oldX);
+      this.setY(oldY);
       return false;
     }
   }
@@ -1730,98 +1724,98 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
   if (vert === J.PIXEL.Directions.UP)
   {
     // Validate upward passage from the current center.
-    if (this._pixelCheckUpPassage(this._x, this._y, this._y - straightStep, hitbox, subCount) === false)
+    if (this._pixelCheckUpPassage(this.x, this.y, this.y - straightStep, hitbox, subCount) === false)
     {
       // Restore original coordinates and reject.
-      this._x = oldX;
-      this._y = oldY;
+      this.setX(oldX);
+      this.setY(oldY);
       return false;
     }
   }
   else
   {
     // Validate downward passage from the current center.
-    if (this._pixelCheckDownPassage(this._x, this._y, this._y + straightStep, hitbox, subCount) === false)
+    if (this._pixelCheckDownPassage(this.x, this.y, this.y + straightStep, hitbox, subCount) === false)
     {
       // Restore original coordinates and reject.
-      this._x = oldX;
-      this._y = oldY;
+      this.setX(oldX);
+      this.setY(oldY);
       return false;
     }
   }
 
   // Revalidate at new Y (horizontal at y2).
-  let y2 = this._y;
+  let y2 = this.y;
 
   // If moving down on the vertical leg, add straight step to y2.
   if (vert === J.PIXEL.Directions.DOWN)
   {
-    y2 = this._y + straightStep;
+    y2 = this.y + straightStep;
   }
   // Else if moving up, subtract straight step from y2.
   else if (vert === J.PIXEL.Directions.UP)
   {
-    y2 = this._y - straightStep;
+    y2 = this.y - straightStep;
   }
 
   // Validate the horizontal leg at the displaced Y.
   if (horz === J.PIXEL.Directions.LEFT)
   {
     // Validate leftward passage at y2.
-    if (this._pixelCheckLeftPassage(this._x, y2, this._x - straightStep, hitbox, subCount) === false)
+    if (this._pixelCheckLeftPassage(this.x, y2, this.x - straightStep, hitbox, subCount) === false)
     {
       // Restore original coordinates and reject.
-      this._x = oldX;
-      this._y = oldY;
+      this.setX(oldX);
+      this.setY(oldY);
       return false;
     }
   }
   else
   {
     // Validate rightward passage at y2.
-    if (this._pixelCheckRightPassage(this._x, y2, this._x + straightStep, hitbox, subCount) === false)
+    if (this._pixelCheckRightPassage(this.x, y2, this.x + straightStep, hitbox, subCount) === false)
     {
       // Restore original coordinates and reject.
-      this._x = oldX;
-      this._y = oldY;
+      this.setX(oldX);
+      this.setY(oldY);
       return false;
     }
   }
 
   // Revalidate at new X (vertical at x2).
-  let x2 = this._x;
+  let x2 = this.x;
 
   // If moving right on the horizontal leg, add straight step to x2.
   if (horz === J.PIXEL.Directions.RIGHT)
   {
-    x2 = this._x + straightStep;
+    x2 = this.x + straightStep;
   }
   // Else if moving left, subtract straight step from x2.
   else if (horz === J.PIXEL.Directions.LEFT)
   {
-    x2 = this._x - straightStep;
+    x2 = this.x - straightStep;
   }
 
   // Validate the vertical leg at the displaced X.
   if (vert === J.PIXEL.Directions.UP)
   {
     // Validate upward passage at x2.
-    if (this._pixelCheckUpPassage(x2, this._y, this._y - straightStep, hitbox, subCount) === false)
+    if (this._pixelCheckUpPassage(x2, this.y, this.y - straightStep, hitbox, subCount) === false)
     {
       // Restore original coordinates and reject.
-      this._x = oldX;
-      this._y = oldY;
+      this.setX(oldX);
+      this.setY(oldY);
       return false;
     }
   }
   else
   {
     // Validate downward passage at x2.
-    if (this._pixelCheckDownPassage(x2, this._y, this._y + straightStep, hitbox, subCount) === false)
+    if (this._pixelCheckDownPassage(x2, this.y, this.y + straightStep, hitbox, subCount) === false)
     {
       // Restore original coordinates and reject.
-      this._x = oldX;
-      this._y = oldY;
+      this.setX(oldX);
+      this.setY(oldY);
       return false;
     }
   }
@@ -1833,8 +1827,8 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
     if (this._pixelCheckRightPassage(nx, ny, nx + straightStep, hitbox, subCount) === false)
     {
       // Restore original coordinates and reject.
-      this._x = oldX;
-      this._y = oldY;
+      this.setX(oldX);
+      this.setY(oldY);
       return false;
     }
   }
@@ -1844,8 +1838,8 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
     if (this._pixelCheckLeftPassage(nx, ny, nx - straightStep, hitbox, subCount) === false)
     {
       // Restore original coordinates and reject.
-      this._x = oldX;
-      this._y = oldY;
+      this.setX(oldX);
+      this.setY(oldY);
       return false;
     }
   }
@@ -1857,8 +1851,8 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
     if (this._pixelCheckDownPassage(nx, ny, ny + straightStep, hitbox, subCount) === false)
     {
       // Restore original coordinates and reject.
-      this._x = oldX;
-      this._y = oldY;
+      this.setX(oldX);
+      this.setY(oldY);
       return false;
     }
   }
@@ -1868,8 +1862,8 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
     if (this._pixelCheckUpPassage(nx, ny, ny - straightStep, hitbox, subCount) === false)
     {
       // Restore original coordinates and reject.
-      this._x = oldX;
-      this._y = oldY;
+      this.setX(oldX);
+      this.setY(oldY);
       return false;
     }
   }
@@ -1878,8 +1872,8 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
   const blocked = this.isCharacterCollisionAt(nx, ny, radius);
 
   // Restore original coordinates.
-  this._x = oldX;
-  this._y = oldY;
+  this.setX(oldX);
+  this.setY(oldY);
 
   // Approve if no character is colliding at destination.
   return blocked === false;
@@ -1914,8 +1908,8 @@ Game_CharacterBase.prototype.canPassDiagonalByDirection = function(
 
   // Simulate the diagonal landing point (same step length you execute with).
   const step = this.diagonalDistancePerFrame();
-  let nx = this._x;
-  let ny = this._y;
+  let nx = this.x;
+  let ny = this.y;
   if (diagonalDir === J.PIXEL.Directions.LOWERLEFT)
   {
     nx -= step;
@@ -1954,116 +1948,124 @@ Game_CharacterBase.prototype.canPassDiagonalByDirection = function(
  */
 Game_CharacterBase.prototype.isCharacterCollisionAt = function(px, py, radius = 0.35)
 {
-  // Acquire the player reference.
-  const player = $gamePlayer;
+  // Build this character's footprint at the proposed position.
+  const selfAabb = this.getCollisionAabbAt(px, py, radius);
 
-  // Acquire follower references.
+  // Collide against the first candidate whose footprint shares any area.
+  return this.getCollisionCandidates()
+    .some(candidate =>
+    {
+      // Extra defense: skip JABS action sprites even if accidentally included above.
+      if (J.ABS && candidate.isJabsAction()) return false;
+
+      // Measure each candidate on its own pivot and radius.
+      const candidateAabb = candidate.getCollisionAabbAt(candidate.x, candidate.y, candidate.getEffectiveRadius());
+
+      return collisionAabbsOverlap(selfAabb, candidateAabb);
+    });
+};
+
+/**
+ * Collects every character that could block this one from moving.
+ * Party members never block each other, so they only count when the mover is an outsider.
+ * @returns {Game_CharacterBase[]} The characters worth testing for overlap.
+ */
+Game_CharacterBase.prototype.getCollisionCandidates = function()
+{
+  // Acquire the player and its followers.
+  const player = $gamePlayer;
   const followers = player._followers._data;
 
-  // Build the party list (player + followers).
-  const party = [ player ].concat(followers);
-
   // Determine if this character is part of the party.
-  const selfIsParty = party.includes(this);
+  const selfIsParty = [ player ].concat(followers)
+    .includes(this);
 
-  // Gather all map events as initial candidates.
-  const events = $gameMap.events();
-
-  // Initialize candidate collection.
-  const candidates = [];
-
-  // Add events that can collide.
-  events.forEach(ev =>
-  {
-    // Exclude self.
-    if (ev === this) return;
-
-    // Exclude erased events.
-    if (ev.isErased()) return;
-
-    // Exclude events flagged as through.
-    if (ev.isThrough()) return;
-
-    // Exclude events that are NOT normal priority (below/above characters don’t block movement).
-    if (ev.isNormalPriority() === false) return;
-
-    // Exclude JABS action sprites so they do not block physical movement.
-    if (J.ABS && ev.isJabsAction()) return;
-
-    // Include this event as a candidate.
-    candidates.push(ev);
-  });
-
-  // Only add the player/followers if self is NOT a party member.
-  if (selfIsParty === false)
-  {
-    // Add the player as a candidate when not through.
-    if (player !== this && player.isThrough() === false)
-    {
-      // Include the player as a candidate.
-      candidates.push(player);
-    }
-
-    // Add followers that can collide.
-    followers.forEach(f =>
+  // Gather the map events solid enough to matter.
+  const candidates = $gameMap.events()
+    .filter(event =>
     {
       // Exclude self.
-      if (f === this) return;
+      if (event === this) return false;
 
-      // Exclude through followers.
-      if (f.isThrough()) return;
+      // Exclude erased events.
+      if (event.isErased()) return false;
 
-      // Include this follower as a candidate.
-      candidates.push(f);
-    });
-  }
+      // Exclude events flagged as through.
+      if (event.isThrough()) return false;
 
-  // Define a small helper for AABB overlap test in tile-space.
-  const aabbOverlap = function(ax, ay, ahw, ahh, bx, by, bhw, bhh)
-  {
-    // Compute deltas along each axis.
-    const dx = Math.abs(ax - bx);
+      // Exclude events that are not normal priority.
+      if (event.isNormalPriority() === false) return false;
 
-    // Compute deltas along each axis.
-    const dy = Math.abs(ay - by);
+      // Exclude JABS action sprites so they do not block physical movement.
+      if (J.ABS && event.isJabsAction()) return false;
 
-    // Overlap if deltas are within summed half-extents along both axes.
-    return dx < (ahw + bhw) && dy < (ahh + bhh);
-  };
-
-  // Probe the AABB for each candidate.
-  for (let i = 0; i < candidates.length; i++)
-  {
-    // Grab the candidate.
-    const ch = candidates[i];
-
-    // Extra defense: skip JABS action sprites even if accidentally included above.
-    if (J.ABS && ch.isJabsAction())
-    {
-      // Do not collide with JABS actions here.
-      continue;
-    }
-
-    // Acquire candidate center in true fractional tile space.
-    const cx = ch.x;
-
-    // Acquire candidate center in true fractional tile space.
-    const cy = ch.y;
-
-    // Candidate half-extents in tiles; use the character's effective (clamped) radius.
-    const cr = ch.getEffectiveRadius();
-
-    // Test AABB overlap.
-    if (aabbOverlap(px, py, radius, radius, cx, cy, cr, cr))
-    {
-      // Overlap found; movement would collide.
       return true;
-    }
+    });
+
+  // Party members are transparent to one another.
+  if (selfIsParty) return candidates;
+
+  // Add the player as a candidate when not through.
+  if (player.isThrough() === false)
+  {
+    candidates.push(player);
   }
 
-  // No overlaps found; movement is clear.
-  return false;
+  // Add followers that can collide.
+  followers.forEach(follower =>
+  {
+    // Exclude through followers.
+    if (follower.isThrough()) return;
+
+    candidates.push(follower);
+  });
+
+  return candidates;
 };
+
+/**
+ * Builds this character's collision footprint in tile space at a proposed position.
+ * Anchored on this character's own pivot and shaped by its own hitbox, so feet-anchored and
+ * rectangular hitboxes are measured correctly rather than as a square around the logical coordinate.
+ * @param {number} logicalX The x coordinate to measure from, in fractional tiles.
+ * @param {number} logicalY The y coordinate to measure from, in fractional tiles.
+ * @param {number} halfRadius The compatibility radius for square footprints.
+ * @returns {{left: number, top: number, right: number, bottom: number, width: number, height: number}}
+ */
+Game_CharacterBase.prototype.getCollisionAabbAt = function(logicalX, logicalY, halfRadius)
+{
+  // Shift the origin onto this character's pivot.
+  const pivotX = logicalX + this.getCollisionPivotX();
+  const pivotY = logicalY + this.getCollisionPivotY();
+
+  // Acquire the hitbox shape, which subclasses may widen into a rectangle.
+  const hitbox = this._pixelHitbox(halfRadius);
+
+  // The hitbox offsets are relative to the pivot.
+  const left = pivotX + hitbox.hx;
+  const top = pivotY + hitbox.hy;
+
+  return {
+    left,
+    top,
+    right: left + hitbox.w,
+    bottom: top + hitbox.h,
+    width: hitbox.w,
+    height: hitbox.h,
+  };
+};
+
+/**
+ * Determines whether two tile-space collision footprints overlap.
+ * Edge-touching is not overlap, matching the legacy scalar logic.
+ * @param {{left: number, top: number, right: number, bottom: number}} a The first footprint.
+ * @param {{left: number, top: number, right: number, bottom: number}} b The second footprint.
+ * @returns {boolean} True if the two footprints share any area.
+ */
+function collisionAabbsOverlap(a, b)
+{
+  return a.left < b.right && a.right > b.left && a.top < b.bottom && a.bottom > b.top;
+}
 
 /**
  * Gets the collision radius for this character in tile units.
@@ -2715,8 +2717,8 @@ Game_CharacterBase.prototype.vectorMoveByAngle = function(angleDegrees, speed = 
   if (Math.abs(dy) < noiseEpsilon) dy = 0;
 
   // cache the pre-move position for rollback on collision.
-  const prevX = this._x;
-  const prevY = this._y;
+  const prevX = this.x;
+  const prevY = this.y;
 
   // acquire the collision radius for AABB evaluation.
   const radius = this.getEffectiveRadius();
@@ -2786,22 +2788,22 @@ Game_CharacterBase.prototype.vectorMoveByAngle = function(angleDegrees, speed = 
   }
 
   // apply displacement.
-  this._x += finalDx;
-  this._y += finalDy;
+  this.setX(this.x + finalDx);
+  this.setY(this.y + finalDy);
 
   // post-overlap guard: if we ended up inside a solid tile, roll back.
   if (this.isThrough() === false && this.isDebugThrough() === false && this.isOverlappingSolidTiles(
-    this._x + this.getCollisionPivotX(),
-    this._y + this.getCollisionPivotY(),
+    this.x + this.getCollisionPivotX(),
+    this.y + this.getCollisionPivotY(),
     radius))
   {
     // restore the previous position.
-    this._x = prevX;
-    this._y = prevY;
+    this.setX(prevX);
+    this.setY(prevY);
 
     // synchronize render coordinates.
-    this._realX = this._x;
-    this._realY = this._y;
+    this.setRealX(this.x)
+    this.setRealY(this.y)
 
     // no movement occurred.
     return false;
@@ -2811,8 +2813,8 @@ Game_CharacterBase.prototype.vectorMoveByAngle = function(angleDegrees, speed = 
   this.setMovedThisFrame(true);
 
   // synchronize render/smoothing coordinates.
-  this._realX = this._x;
-  this._realY = this._y;
+  this.setRealX(this.x)
+  this.setRealY(this.y)
 
   // update move distance for step tracking.
   this.modMoveDistance(speed);

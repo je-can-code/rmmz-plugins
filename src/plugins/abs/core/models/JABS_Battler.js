@@ -27,6 +27,744 @@ class JABS_Battler
    * @param {Game_Actor|Game_Enemy} battler The battler data itself.
    * @param {JABS_BattlerCoreData} battlerCoreData The core data for the battler.
    */
+  
+
+  //region properties
+  /**
+   * Gets the prepare ready.
+   * @returns {*} The prepareReady.
+   */
+  
+
+  //region properties
+  /**
+   * Sets the hidden.
+   * @param {*} newHidden The new hidden.
+   */
+  setHidden(newHidden)
+  {
+    // assign the hidden.
+    this._hidden = newHidden;
+  }
+
+  /**
+   * Gets the leader decided action.
+   * @returns {*} The leaderDecidedAction.
+   */
+  leaderDecidedAction()
+  {
+    // hand back the leader decided action.
+    return this._leaderDecidedAction;
+  }
+
+  /**
+   * Gets the post action cooldown complete.
+   * @returns {*} The postActionCooldownComplete.
+   */
+  postActionCooldownComplete()
+  {
+    // hand back the post action cooldown complete.
+    return this._postActionCooldownComplete;
+  }
+
+  /**
+   * Sets the post action cooldown complete.
+   * @param {*} newPostActionCooldownComplete The new postActionCooldownComplete.
+   */
+  setPostActionCooldownComplete(newPostActionCooldownComplete)
+  {
+    // assign the post action cooldown complete.
+    this._postActionCooldownComplete = newPostActionCooldownComplete;
+  }
+
+  /**
+   * Gets the idle action ready.
+   * @returns {*} The idleActionReady.
+   */
+  idleActionReady()
+  {
+    // hand back the idle action ready.
+    return this._idleActionReady;
+  }
+
+  /**
+   * Sets the idle action ready.
+   * @param {*} newIdleActionReady The new idleActionReady.
+   */
+  setIdleActionReady(newIdleActionReady)
+  {
+    // assign the idle action ready.
+    this._idleActionReady = newIdleActionReady;
+  }
+
+  /**
+   * Gets the ai combo humanized ready frame.
+   * @returns {*} The aiComboHumanizedReadyFrame.
+   */
+  aiComboHumanizedReadyFrame()
+  {
+    // hand back the ai combo humanized ready frame.
+    return this._aiComboHumanizedReadyFrame;
+  }
+
+  /**
+   * Sets the channeling.
+   * @param {*} newChanneling The new channeling.
+   */
+  setChanneling(newChanneling)
+  {
+    // assign the channeling.
+    this._channeling = newChanneling;
+  }
+
+  /**
+   * Sets the casting.
+   * @param {*} newCasting The new casting.
+   */
+  setCasting(newCasting)
+  {
+    // assign the casting.
+    this._casting = newCasting;
+  }
+  //endregion properties
+
+  isPrepareReady()
+  {
+    // hand back the prepare ready.
+    return this._prepareReady;
+  }
+
+  /**
+   * Sets the prepare ready.
+   * @param {*} newPrepareReady The new prepareReady.
+   */
+  setPrepareReady(newPrepareReady)
+  {
+    // assign the prepare ready.
+    this._prepareReady = newPrepareReady;
+  }
+
+  /**
+   * Gets the engagement lock.
+   * @returns {*} The engagementLock.
+   */
+  isEngagementLock()
+  {
+    // hand back the engagement lock.
+    return this._engagementLock;
+  }
+
+  /**
+   * Sets the engagement lock.
+   * @param {*} newEngagementLock The new engagementLock.
+   */
+  setEngagementLock(newEngagementLock)
+  {
+    // assign the engagement lock.
+    this._engagementLock = newEngagementLock;
+  }
+
+  /**
+   * Gets the is guarding.
+   * @returns {*} The isGuarding.
+   */
+  isGuarding()
+  {
+    // hand back the is guarding.
+    return this._isGuarding;
+  }
+
+  /**
+   * Sets the is guarding.
+   * @param {*} newIsGuarding The new isGuarding.
+   */
+  setIsGuarding(newIsGuarding)
+  {
+    // assign the is guarding.
+    this._isGuarding = newIsGuarding;
+  }
+
+  /**
+   * Gets the event.
+   * @returns {*} The event.
+   */
+  event()
+  {
+    // hand back the event.
+    return this._event;
+  }
+
+  /**
+   * Sets the event.
+   * @param {*} newEvent The new event.
+   */
+  setEvent(newEvent)
+  {
+    // assign the event.
+    this._event = newEvent;
+  }
+
+  /**
+   * Gets the leader uuid.
+   * @returns {*} The leaderUuid.
+   */
+  leaderUuid()
+  {
+    // hand back the leader uuid.
+    return this._leaderUuid;
+  }
+
+  /**
+   * Sets the leader uuid.
+   * @param {*} newLeaderUuid The new leaderUuid.
+   */
+  setLeaderUuid(newLeaderUuid)
+  {
+    // assign the leader uuid.
+    this._leaderUuid = newLeaderUuid;
+  }
+
+  /**
+   * Gets the followers.
+   * @returns {*} The followers.
+   */
+  followers()
+  {
+    // hand back the followers.
+    return this._followers;
+  }
+
+  /**
+   * Gets the team.
+   * @returns {*} The team.
+   */
+  team()
+  {
+    // hand back the team.
+    return this._team;
+  }
+
+  /**
+   * Gets the inanimate.
+   * @returns {*} The inanimate.
+   */
+  inanimate()
+  {
+    // hand back the inanimate.
+    return this._inanimate;
+  }
+
+  /**
+   * Gets the prepare counter.
+   * @returns {*} The prepareCounter.
+   */
+  prepareCounter()
+  {
+    // hand back the prepare counter.
+    return this._prepareCounter;
+  }
+
+  /**
+   * Sets the prepare counter.
+   * @param {*} newPrepareCounter The new prepareCounter.
+   */
+  setPrepareCounter(newPrepareCounter)
+  {
+    // assign the prepare counter.
+    this._prepareCounter = newPrepareCounter;
+  }
+
+  /**
+   * Gets the ai defensive dodge ready frame.
+   * @returns {*} The aiDefensiveDodgeReadyFrame.
+   */
+  aiDefensiveDodgeReadyFrame()
+  {
+    // hand back the ai defensive dodge ready frame.
+    return this._aiDefensiveDodgeReadyFrame;
+  }
+
+  /**
+   * Sets the ai defensive dodge ready frame.
+   * @param {*} newAiDefensiveDodgeReadyFrame The new aiDefensiveDodgeReadyFrame.
+   */
+  setAiDefensiveDodgeReadyFrame(newAiDefensiveDodgeReadyFrame)
+  {
+    // assign the ai defensive dodge ready frame.
+    this._aiDefensiveDodgeReadyFrame = newAiDefensiveDodgeReadyFrame;
+  }
+
+  /**
+   * Gets the ai ally defensive guard ready frame.
+   * @returns {*} The aiAllyDefensiveGuardReadyFrame.
+   */
+  aiAllyDefensiveGuardReadyFrame()
+  {
+    // hand back the ai ally defensive guard ready frame.
+    return this._aiAllyDefensiveGuardReadyFrame;
+  }
+
+  /**
+   * Sets the ai ally defensive guard ready frame.
+   * @param {*} newAiAllyDefensiveGuardReadyFrame The new aiAllyDefensiveGuardReadyFrame.
+   */
+  setAiAllyDefensiveGuardReadyFrame(newAiAllyDefensiveGuardReadyFrame)
+  {
+    // assign the ai ally defensive guard ready frame.
+    this._aiAllyDefensiveGuardReadyFrame = newAiAllyDefensiveGuardReadyFrame;
+  }
+
+  /**
+   * Gets the ai ally guard raise frame.
+   * @returns {*} The aiAllyGuardRaiseFrame.
+   */
+  aiAllyGuardRaiseFrame()
+  {
+    // hand back the ai ally guard raise frame.
+    return this._aiAllyGuardRaiseFrame;
+  }
+
+  /**
+   * Sets the ai ally guard raise frame.
+   * @param {*} newAiAllyGuardRaiseFrame The new aiAllyGuardRaiseFrame.
+   */
+  setAiAllyGuardRaiseFrame(newAiAllyGuardRaiseFrame)
+  {
+    // assign the ai ally guard raise frame.
+    this._aiAllyGuardRaiseFrame = newAiAllyGuardRaiseFrame;
+  }
+
+  /**
+   * Gets the battler.
+   * @returns {*} The battler.
+   */
+  battler()
+  {
+    // hand back the battler.
+    return this._battler;
+  }
+
+  /**
+   * Gets the sight radius.
+   * @returns {*} The sightRadius.
+   */
+  sightRadius()
+  {
+    // hand back the sight radius.
+    return this._sightRadius;
+  }
+
+  /**
+   * Gets the alerted sight boost.
+   * @returns {*} The alertedSightBoost.
+   */
+  alertedSightBoost()
+  {
+    // hand back the alerted sight boost.
+    return this._alertedSightBoost;
+  }
+
+  /**
+   * Gets the pursuit radius.
+   * @returns {*} The pursuitRadius.
+   */
+  pursuitRadius()
+  {
+    // hand back the pursuit radius.
+    return this._pursuitRadius;
+  }
+
+  /**
+   * Gets the alerted pursuit boost.
+   * @returns {*} The alertedPursuitBoost.
+   */
+  alertedPursuitBoost()
+  {
+    // hand back the alerted pursuit boost.
+    return this._alertedPursuitBoost;
+  }
+
+  /**
+   * Gets the guard range.
+   * @returns {*} The guardRange.
+   */
+  guardRange()
+  {
+    // hand back the guard range.
+    return this._guardRange;
+  }
+
+  /**
+   * Gets the last hit.
+   * @returns {*} The lastHit.
+   */
+  lastHit()
+  {
+    // hand back the last hit.
+    return this._lastHit;
+  }
+
+  /**
+   * Sets the last hit.
+   * @param {*} newLastHit The new lastHit.
+   */
+  setLastHit(newLastHit)
+  {
+    // assign the last hit.
+    this._lastHit = newLastHit;
+  }
+
+  /**
+   * Gets the last hit countdown.
+   * @returns {*} The lastHitCountdown.
+   */
+  lastHitCountdown()
+  {
+    // hand back the last hit countdown.
+    return this._lastHitCountdown;
+  }
+
+  /**
+   * Sets the last hit countdown.
+   * @param {*} newLastHitCountdown The new lastHitCountdown.
+   */
+  setLastHitCountdown(newLastHitCountdown)
+  {
+    // assign the last hit countdown.
+    this._lastHitCountdown = newLastHitCountdown;
+  }
+
+  /**
+   * Gets the home x.
+   * @returns {*} The homeX.
+   */
+  homeX()
+  {
+    // hand back the home x.
+    return this._homeX;
+  }
+
+  /**
+   * Gets the home y.
+   * @returns {*} The homeY.
+   */
+  homeY()
+  {
+    // hand back the home y.
+    return this._homeY;
+  }
+
+  /**
+   * Gets the alert duration.
+   * @returns {*} The alertDuration.
+   */
+  alertDuration()
+  {
+    // hand back the alert duration.
+    return this._alertDuration;
+  }
+
+  /**
+   * Gets the ai mode.
+   * @returns {*} The aiMode.
+   */
+  aiMode()
+  {
+    // hand back the ai mode.
+    return this._aiMode;
+  }
+
+  /**
+   * Gets the battler role.
+   * @returns {*} The battlerRole.
+   */
+  battlerRole()
+  {
+    // hand back the battler role.
+    return this._battlerRole;
+  }
+
+  /**
+   * Gets the battler id.
+   * @returns {*} The battlerId.
+   */
+  battlerId()
+  {
+    // hand back the battler id.
+    return this._battlerId;
+  }
+
+  /**
+   * Gets the in combat window max.
+   * @returns {*} The inCombatWindowMax.
+   */
+  inCombatWindowMax()
+  {
+    // hand back the in combat window max.
+    return this._inCombatWindowMax;
+  }
+
+  /**
+   * Sets the in combat window max.
+   * @param {*} newInCombatWindowMax The new inCombatWindowMax.
+   */
+  setInCombatWindowMax(newInCombatWindowMax)
+  {
+    // assign the in combat window max.
+    this._inCombatWindowMax = newInCombatWindowMax;
+  }
+
+  /**
+   * Gets the wait timer.
+   * @returns {*} The waitTimer.
+   */
+  waitTimer()
+  {
+    // hand back the wait timer.
+    return this._waitTimer;
+  }
+
+  /**
+   * Gets the channel source action.
+   * @returns {*} The channelSourceAction.
+   */
+  channelSourceAction()
+  {
+    // hand back the channel source action.
+    return this._channelSourceAction;
+  }
+
+  /**
+   * Sets the channel source action.
+   * @param {*} newChannelSourceAction The new channelSourceAction.
+   */
+  setChannelSourceAction(newChannelSourceAction)
+  {
+    // assign the channel source action.
+    this._channelSourceAction = newChannelSourceAction;
+  }
+
+  /**
+   * Gets the channel skill id.
+   * @returns {*} The channelSkillId.
+   */
+  channelSkillId()
+  {
+    // hand back the channel skill id.
+    return this._channelSkillId;
+  }
+
+  /**
+   * Sets the channel skill id.
+   * @param {*} newChannelSkillId The new channelSkillId.
+   */
+  setChannelSkillId(newChannelSkillId)
+  {
+    // assign the channel skill id.
+    this._channelSkillId = newChannelSkillId;
+  }
+
+  /**
+   * Gets the channel duration remaining.
+   * @returns {*} The channelDurationRemaining.
+   */
+  channelDurationRemaining()
+  {
+    // hand back the channel duration remaining.
+    return this._channelDurationRemaining;
+  }
+
+  /**
+   * Sets the channel duration remaining.
+   * @param {*} newChannelDurationRemaining The new channelDurationRemaining.
+   */
+  setChannelDurationRemaining(newChannelDurationRemaining)
+  {
+    // assign the channel duration remaining.
+    this._channelDurationRemaining = newChannelDurationRemaining;
+  }
+
+  /**
+   * Gets the channel tick countdown.
+   * @returns {*} The channelTickCountdown.
+   */
+  channelTickCountdown()
+  {
+    // hand back the channel tick countdown.
+    return this._channelTickCountdown;
+  }
+
+  /**
+   * Sets the channel tick countdown.
+   * @param {*} newChannelTickCountdown The new channelTickCountdown.
+   */
+  setChannelTickCountdown(newChannelTickCountdown)
+  {
+    // assign the channel tick countdown.
+    this._channelTickCountdown = newChannelTickCountdown;
+  }
+
+  /**
+   * Gets the engagement timer.
+   * @returns {*} The engagementTimer.
+   */
+  engagementTimer()
+  {
+    // hand back the engagement timer.
+    return this._engagementTimer;
+  }
+
+  /**
+   * Gets the aggros.
+   * @returns {*} The aggros.
+   */
+  aggros()
+  {
+    // hand back the aggros.
+    return this._aggros;
+  }
+
+  /**
+   * Gets the dodge iframes.
+   * @returns {*} The dodgeIframes.
+   */
+  dodgeIframes()
+  {
+    // hand back the dodge iframes.
+    return this._dodgeIframes;
+  }
+
+  /**
+   * Sets the dodge iframes.
+   * @param {*} newDodgeIframes The new dodgeIframes.
+   */
+  setDodgeIframes(newDodgeIframes)
+  {
+    // assign the dodge iframes.
+    this._dodgeIframes = newDodgeIframes;
+  }
+
+  /**
+   * Gets the guard flat reduction.
+   * @returns {*} The guardFlatReduction.
+   */
+  guardFlatReduction()
+  {
+    // hand back the guard flat reduction.
+    return this._guardFlatReduction;
+  }
+
+  /**
+   * Sets the guard flat reduction.
+   * @param {*} newGuardFlatReduction The new guardFlatReduction.
+   */
+  setGuardFlatReduction(newGuardFlatReduction)
+  {
+    // assign the guard flat reduction.
+    this._guardFlatReduction = newGuardFlatReduction;
+  }
+
+  /**
+   * Gets the guard perc reduction.
+   * @returns {*} The guardPercReduction.
+   */
+  guardPercReduction()
+  {
+    // hand back the guard perc reduction.
+    return this._guardPercReduction;
+  }
+
+  /**
+   * Sets the guard perc reduction.
+   * @param {*} newGuardPercReduction The new guardPercReduction.
+   */
+  setGuardPercReduction(newGuardPercReduction)
+  {
+    // assign the guard perc reduction.
+    this._guardPercReduction = newGuardPercReduction;
+  }
+
+  /**
+   * Gets the post action cooldown.
+   * @returns {*} The postActionCooldown.
+   */
+  postActionCooldown()
+  {
+    // hand back the post action cooldown.
+    return this._postActionCooldown;
+  }
+
+  /**
+   * Sets the post action cooldown.
+   * @param {*} newPostActionCooldown The new postActionCooldown.
+   */
+  setPostActionCooldown(newPostActionCooldown)
+  {
+    // assign the post action cooldown.
+    this._postActionCooldown = newPostActionCooldown;
+  }
+
+  /**
+   * Gets the post action cooldown max.
+   * @returns {*} The postActionCooldownMax.
+   */
+  postActionCooldownMax()
+  {
+    // hand back the post action cooldown max.
+    return this._postActionCooldownMax;
+  }
+
+  /**
+   * Sets the post action cooldown max.
+   * @param {*} newPostActionCooldownMax The new postActionCooldownMax.
+   */
+  setPostActionCooldownMax(newPostActionCooldownMax)
+  {
+    // assign the post action cooldown max.
+    this._postActionCooldownMax = newPostActionCooldownMax;
+  }
+
+  /**
+   * Gets the idle action count.
+   * @returns {*} The idleActionCount.
+   */
+  idleActionCount()
+  {
+    // hand back the idle action count.
+    return this._idleActionCount;
+  }
+
+  /**
+   * Sets the idle action count.
+   * @param {*} newIdleActionCount The new idleActionCount.
+   */
+  setIdleActionCount(newIdleActionCount)
+  {
+    // assign the idle action count.
+    this._idleActionCount = newIdleActionCount;
+  }
+
+  /**
+   * Gets the idle action count max.
+   * @returns {*} The idleActionCountMax.
+   */
+  idleActionCountMax()
+  {
+    // hand back the idle action count max.
+    return this._idleActionCountMax;
+  }
+
+  /**
+   * Gets the prepare max.
+   * @returns {*} The prepareMax.
+   */
+  prepareMax()
+  {
+    // hand back the prepare max.
+    return this._prepareMax;
+  }
+  //endregion properties
+
   constructor(event, battler, battlerCoreData)
   {
     this.initialize(event, battler, battlerCoreData);
@@ -626,7 +1364,7 @@ class JABS_Battler
    */
   setCharacter(newCharacter)
   {
-    this._event = newCharacter;
+    this.setEvent(newCharacter);
   };
 
   /**
@@ -677,7 +1415,7 @@ class JABS_Battler
    */
   revealHiddenBattler()
   {
-    this._hidden = false;
+    this.setHidden(false);
   };
 
   /**
@@ -685,7 +1423,7 @@ class JABS_Battler
    */
   hideBattler()
   {
-    this._hidden = true;
+    this.setHidden(true);
   };
 
   /**
@@ -815,7 +1553,7 @@ class JABS_Battler
     // if you don't have a leader, you don't perform the actions.
     if (!this.hasLeader()) return false;
 
-    return this._leaderDecidedAction;
+    return this.leaderDecidedAction();
   };
 
   /**
@@ -825,7 +1563,7 @@ class JABS_Battler
    */
   getNextLeaderDecidedAction()
   {
-    const action = this._leaderDecidedAction;
+    const action = this.leaderDecidedAction();
     this.clearLeaderDecidedActionsQueue();
     return action;
   };
@@ -844,7 +1582,7 @@ class JABS_Battler
    */
   clearLeaderDecidedActionsQueue()
   {
-    this._leaderDecidedAction = null;
+    this.setLeaderDecidedAction(null);
   };
 
   /**
@@ -852,7 +1590,7 @@ class JABS_Battler
    */
   getLeader()
   {
-    return this._leaderUuid;
+    return this.leaderUuid();
   };
 
   /**
@@ -861,9 +1599,9 @@ class JABS_Battler
    */
   getLeaderBattler()
   {
-    if (this._leaderUuid)
+    if (this.leaderUuid())
     {
-      return JABS_AiManager.getBattlerByUuid(this._leaderUuid);
+      return JABS_AiManager.getBattlerByUuid(this.leaderUuid());
     }
 
     return null;
@@ -879,7 +1617,7 @@ class JABS_Battler
     const leader = JABS_AiManager.getBattlerByUuid(newLeader);
     if (leader)
     {
-      this._leaderUuid = newLeader;
+      this.setLeaderUuid(newLeader);
       leader.addFollower(this.getUuid());
     }
   };
@@ -891,7 +1629,7 @@ class JABS_Battler
    */
   hasLeader()
   {
-    return !!this._leaderUuid;
+    return !!this.leaderUuid();
   };
 
   /**
@@ -901,7 +1639,7 @@ class JABS_Battler
    */
   getFollowers()
   {
-    return this._followers;
+    return this.followers();
   };
 
   /**
@@ -915,7 +1653,7 @@ class JABS_Battler
     if (!this.hasFollowers()) return null;
 
     // search through the followers to find the matching battler.
-    const foundUuid = this._followers.find(uuid => uuid === followerUuid);
+    const foundUuid = this.followers().find(uuid => uuid === followerUuid);
     if (foundUuid)
     {
       return JABS_AiManager.getBattlerByUuid(foundUuid);
@@ -939,7 +1677,7 @@ class JABS_Battler
     // otherwise fall back to the alternate path.
     else
     {
-      this._followers.push(newFollowerUuid);
+      this.followers().push(newFollowerUuid);
     }
   };
 
@@ -949,13 +1687,13 @@ class JABS_Battler
   clearFollowers()
   {
     // first de-assign leadership from all followers for this leader...
-    this._followers.forEach(followerUuid =>
+    this.followers().forEach(followerUuid =>
     {
       $gameMap.clearLeaderDataByUuid(followerUuid);
     });
 
     // ...then empty the collection.
-    this._followers.splice(0, this._followers.length);
+    this.followers().splice(0, this.followers().length);
   };
 
   /**
@@ -985,10 +1723,10 @@ class JABS_Battler
    */
   removeFollowerByUuid(uuid)
   {
-    const index = this._followers.indexOf(uuid);
+    const index = this.followers().indexOf(uuid);
     if (index !== -1)
     {
-      this._followers.splice(index, 1);
+      this.followers().splice(index, 1);
     }
   };
 
@@ -1011,7 +1749,7 @@ class JABS_Battler
     // if you're not a leader, you can't have followers.
     if (!this.getBattlerRole().leader) return false;
 
-    return this._followers.length > 0;
+    return this.followers().length > 0;
   };
 
   /**
@@ -1142,7 +1880,7 @@ class JABS_Battler
    */
   getTeam()
   {
-    return this._team;
+    return this.team();
   };
 
   /**
@@ -1170,7 +1908,7 @@ class JABS_Battler
    */
   isInanimate()
   {
-    return this._inanimate;
+    return this.inanimate();
   };
 
   /**
@@ -1198,18 +1936,18 @@ class JABS_Battler
   resetPhases()
   {
     this.setPhase(1);
-    this._prepareReady = false;
-    this._prepareCounter = 0;
+    this.setPrepareReady(false);
+    this.setPrepareCounter(0);
     // store  post action cooldown complete on the instance for later reads.
-    this._postActionCooldownComplete = false;
+    this.setPostActionCooldownComplete(false);
     this.setDecidedAction(null);
     this.setAllyTarget(null);
     this.setInPosition(false);
     this.clearAiComboHumanizedReadyFrame();
-    this._aiDefensiveDodgeReadyFrame = 0;
+    this.setAiDefensiveDodgeReadyFrame(0);
     // store  ai ally defensive guard ready frame on the instance for later reads.
-    this._aiAllyDefensiveGuardReadyFrame = 0;
-    this._aiAllyGuardRaiseFrame = 0;
+    this.setAiAllyDefensiveGuardReadyFrame(0);
+    this.setAiAllyGuardRaiseFrame(0);
   };
 
   /**
@@ -1237,7 +1975,7 @@ class JABS_Battler
    */
   isActionDecided()
   {
-    return this._decidedAction !== null;
+    return this.getDecidedAction() !== null;
   };
 
   /**
@@ -1263,7 +2001,7 @@ class JABS_Battler
    */
   clearDecidedAction()
   {
-    this._decidedAction = null;
+    this.setDecidedAction(null);
   };
 
   /**
@@ -1271,7 +2009,7 @@ class JABS_Battler
    */
   resetIdleAction()
   {
-    this._idleActionReady = false;
+    this.setIdleActionReady(false);
   };
 
   /**
@@ -1281,7 +2019,7 @@ class JABS_Battler
    */
   getCharacter()
   {
-    return this._event;
+    return this.event();
   };
 
   /**
@@ -1292,7 +2030,7 @@ class JABS_Battler
    */
   getBattler()
   {
-    return this._battler;
+    return this.battler();
   };
 
   /**
@@ -1317,10 +2055,10 @@ class JABS_Battler
    */
   getSightRadius()
   {
-    let sight = this._sightRadius;
+    let sight = this.sightRadius();
     if (this.isAlerted())
     {
-      sight += this._alertedSightBoost;
+      sight += this.alertedSightBoost();
     }
 
     return sight;
@@ -1332,10 +2070,10 @@ class JABS_Battler
    */
   getPursuitRadius()
   {
-    let pursuit = this._pursuitRadius;
+    let pursuit = this.pursuitRadius();
     if (this.isAlerted())
     {
-      pursuit += this._alertedPursuitBoost;
+      pursuit += this.alertedPursuitBoost();
     }
 
     return pursuit;
@@ -1349,7 +2087,7 @@ class JABS_Battler
    */
   getGuardRange()
   {
-    return this._guardRange;
+    return this.guardRange();
   };
 
   /**
@@ -1459,7 +2197,7 @@ class JABS_Battler
    */
   isEngagementLocked()
   {
-    return this._engagementLock;
+    return this.isEngagementLock();
   };
 
   /**
@@ -1468,7 +2206,7 @@ class JABS_Battler
    */
   lockEngagement()
   {
-    this._engagementLock = true;
+    this.setEngagementLock(true);
   };
 
   /**
@@ -1477,7 +2215,7 @@ class JABS_Battler
    */
   unlockEngagement()
   {
-    this._engagementLock = false;
+    this.setEngagementLock(false);
   };
 
   /**
@@ -1504,13 +2242,13 @@ class JABS_Battler
    */
   getBattlerLastHit()
   {
-    if (this._lastHit && this._lastHit.isDead())
+    if (this.lastHit() && this.lastHit().isDead())
     {
       // if the last hit battler was defeated or something, remove it.
       this.setBattlerLastHit(null);
     }
 
-    return this._lastHit;
+    return this.lastHit();
   };
 
   /**
@@ -1519,14 +2257,14 @@ class JABS_Battler
    */
   setBattlerLastHit(battlerLastHit)
   {
-    this._lastHit = battlerLastHit;
+    this.setLastHit(battlerLastHit);
 
     // the player-controlled character cannot have a target by normal means due
     // to them not being controlled by AI. However, their "last hit" is basically
     // the same thing, so assign their target as well.
     if (this.isPlayer())
     {
-      this.setTarget(this._lastHit);
+      this.setTarget(this.lastHit());
     }
   };
 
@@ -1561,7 +2299,7 @@ class JABS_Battler
    */
   setLastBattlerHitCountdown(duration = 900)
   {
-    this._lastHitCountdown = duration;
+    this.setLastHitCountdown(duration);
   };
 
   /**
@@ -1570,18 +2308,18 @@ class JABS_Battler
    */
   countdownLastHit()
   {
-    if (this._lastHitCountdown <= 0)
+    if (this.lastHitCountdown() <= 0)
     {
-      this._lastHitCountdown = 0;
+      this.setLastHitCountdown(0);
       if (this.hasBattlerLastHit())
       {
         this.clearBattlerLastHit();
       }
     }
 
-    if (this._lastHitCountdown > 0)
+    if (this.lastHitCountdown() > 0)
     {
-      this._lastHitCountdown--;
+      this.setLastHitCountdown(this.lastHitCountdown() - 1);
     }
   };
 
@@ -1689,7 +2427,7 @@ class JABS_Battler
    */
   distanceToHome()
   {
-    return this.distanceToPoint(this._homeX, this._homeY);
+    return this.distanceToPoint(this.homeX(), this.homeY());
   };
 
   /**
@@ -1752,17 +2490,27 @@ class JABS_Battler
    */
   getAlertDuration()
   {
-    return this._alertDuration;
+    return this.alertDuration();
   };
 
   /**
    * Sets the alerted counter to this number of frames.
    * @param {number} alertedFrames The duration in frames for how long to be alerted.
    */
+  /**
+   * Gets the remaining alerted frames.
+   * @returns {number}
+   */
+  alertedCounter()
+  {
+    // hand back the remaining alerted frames.
+    return this._alertedCounter;
+  }
+
   setAlertedCounter(alertedFrames)
   {
     this._alertedCounter = alertedFrames;
-    if (this._alertedCounter > 0)
+    if (this.alertedCounter() > 0)
     {
       this.setIdle(false);
       this.setAlerted();
@@ -1798,7 +2546,7 @@ class JABS_Battler
    */
   isHome()
   {
-    return (this._event.x === this._homeX && this._event.y === this._homeY);
+    return (this.event().x === this.homeX() && this.event().y === this.homeY());
   };
 
   /**
@@ -1807,7 +2555,7 @@ class JABS_Battler
    */
   getHomeX()
   {
-    return this._homeX;
+    return this.homeX();
   };
 
   /**
@@ -1816,7 +2564,7 @@ class JABS_Battler
    */
   getHomeY()
   {
-    return this._homeY;
+    return this.homeY();
   };
 
   /**
@@ -1843,7 +2591,7 @@ class JABS_Battler
    */
   getAiMode()
   {
-    return this._aiMode;
+    return this.aiMode();
   };
 
   /**
@@ -1853,7 +2601,7 @@ class JABS_Battler
    */
   getBattlerRole()
   {
-    return this._battlerRole;
+    return this.battlerRole();
   };
 
   /**
@@ -2066,7 +2814,7 @@ class JABS_Battler
    */
   getBattlerId()
   {
-    return this._battlerId;
+    return this.battlerId();
   };
 
   /**
@@ -2108,7 +2856,7 @@ class JABS_Battler
    */
   clearAiComboHumanizedReadyFrame()
   {
-    this._aiComboHumanizedReadyFrame = 0;
+    this.setAiComboHumanizedReadyFrame(0);
   };
 
   /**
@@ -2117,12 +2865,12 @@ class JABS_Battler
    */
   isAiComboHumanizationTimingReady()
   {
-    if (this._aiComboHumanizedReadyFrame <= 0)
+    if (this.aiComboHumanizedReadyFrame() <= 0)
     {
       return true;
     }
 
-    return Graphics.frameCount >= this._aiComboHumanizedReadyFrame;
+    return Graphics.frameCount >= this.aiComboHumanizedReadyFrame();
   };
 
   /**
@@ -2241,7 +2989,7 @@ class JABS_Battler
    */
   showBalloon(balloonId)
   {
-    $gameTemp.requestBalloon(this._event, balloonId);
+    $gameTemp.requestBalloon(this.event(), balloonId);
   };
 
   /**
@@ -2280,7 +3028,7 @@ class JABS_Battler
   getInCombatCountdown()
   {
     // return the number of frames remaining while in combat.
-    return this._inCombatCountdown || 0;
+    return this._inCombatCountdown;
   };
 
   /**
@@ -2306,7 +3054,7 @@ class JABS_Battler
     if ($jabsEngine.forcedCombat === true) return true;
 
     // a positive countdown means still in combat.
-    if (this._inCombatCountdown > 0) return true;
+    if (this.getInCombatCountdown() > 0) return true;
 
     // nothing combat-related is happening.
     return false;
@@ -2319,7 +3067,7 @@ class JABS_Battler
   getCombatWindowMax()
   {
     // return the configured max (fallback guards against legacy saves).
-    return this._inCombatWindowMax || 600;
+    return this.inCombatWindowMax();
   };
 
   /**
@@ -2329,7 +3077,7 @@ class JABS_Battler
   setCombatWindowMax(frames)
   {
     // clamp to zero minimum.
-    this._inCombatWindowMax = Math.max(0, frames);
+    this.setInCombatWindowMax(Math.max(0, frames));
   };
 
   /**
@@ -3137,7 +3885,7 @@ class JABS_Battler
    */
   processWaitTimer()
   {
-    this._waitTimer.update();
+    this.waitTimer().update();
   };
 
   /**
@@ -3247,11 +3995,11 @@ class JABS_Battler
     $jabsEngine.logSkillExecution(this.getUuid(), skill.id, skill.stypeId);
 
     // retain the source action for cooldown lookups at completion/interrupt time.
-    this._channelSourceAction = action;
-    this._channelSkillId = channelSkillId;
-    this._channelDurationRemaining = totalDuration;
-    this._channelTickCountdown = skill.jabsChannelTickSpeed;
-    this._channeling = true;
+    this.setChannelSourceAction(action);
+    this.setChannelSkillId(channelSkillId);
+    this.setChannelDurationRemaining(totalDuration);
+    this.setChannelTickCountdown(skill.jabsChannelTickSpeed);
+    this.setChanneling(true);
   };
 
   /**
@@ -3265,18 +4013,18 @@ class JABS_Battler
     // count down until the next repeated execution of the channel's child skill first- a tick
     // due on the exact same frame the duration expires still fires (e.g. <channel:[25, 180]>
     // with a tick speed of 30 fires all 6 ticks, including the one landing on frame 180).
-    this._channelTickCountdown--;
-    if (this._channelTickCountdown <= 0)
+    this.setChannelTickCountdown(this.channelTickCountdown() - 1);
+    if (this.channelTickCountdown() <= 0)
     {
       this.executeChannelTick();
 
       // reset using the vessel's own tick speed (may itself be a plugin-param fallback).
-      this._channelTickCountdown = this._channelSourceAction.getBaseSkill().jabsChannelTickSpeed;
+      this.setChannelTickCountdown(this.channelSourceAction().getBaseSkill().jabsChannelTickSpeed);
     }
 
     // count down the total channel duration; once it expires, the channel is over.
-    this._channelDurationRemaining--;
-    if (this._channelDurationRemaining <= 0)
+    this.setChannelDurationRemaining(this.channelDurationRemaining() - 1);
+    if (this.channelDurationRemaining() <= 0)
     {
       this.onChannelComplete();
       return;
@@ -3290,8 +4038,8 @@ class JABS_Battler
    */
   executeChannelTick()
   {
-    const [ targetX, targetY ] = this.resolveActionTargetCoordinates(this._channelSourceAction);
-    $jabsEngine.forceMapAction(this, this._channelSkillId, false, targetX, targetY);
+    const [ targetX, targetY ] = this.resolveActionTargetCoordinates(this.channelSourceAction());
+    $jabsEngine.forceMapAction(this, this.channelSkillId(), false, targetX, targetY);
   };
 
   /**
@@ -3301,7 +4049,7 @@ class JABS_Battler
    */
   onChannelComplete()
   {
-    const sourceAction = this._channelSourceAction;
+    const sourceAction = this.channelSourceAction();
 
     this.endChannel();
 
@@ -3324,10 +4072,10 @@ class JABS_Battler
    */
   endChannel()
   {
-    this._channeling = false;
-    this._channelSkillId = 0;
-    this._channelTickCountdown = 0;
-    this._channelDurationRemaining = 0;
+    this.setChanneling(false);
+    this.setChannelSkillId(0);
+    this.setChannelTickCountdown(0);
+    this.setChannelDurationRemaining(0);
   };
 
   /**
@@ -3345,7 +4093,7 @@ class JABS_Battler
    */
   getChannelDurationRemaining()
   {
-    return this._channelDurationRemaining;
+    return this.channelDurationRemaining();
   };
 
   /**
@@ -3401,7 +4149,7 @@ class JABS_Battler
     let sourceAction = null;
     if (this.isChanneling())
     {
-      sourceAction = this._channelSourceAction;
+      sourceAction = this.channelSourceAction();
       this.endChannel();
     }
     else if (this.isCasting())
@@ -3410,7 +4158,7 @@ class JABS_Battler
       sourceAction = decidedActions
         ? decidedActions.at(0)
         : null;
-      this._casting = false;
+      this.setCasting(false);
       this.setCastTimeCountdown(0);
     }
 
@@ -3437,7 +4185,7 @@ class JABS_Battler
    */
   processEngagementTimer()
   {
-    this._engagementTimer.update();
+    this.engagementTimer().update();
   };
 
   /**
@@ -3461,7 +4209,7 @@ class JABS_Battler
     this.handleEngagement(target, distance);
 
     // reset the engagement timer.
-    this._engagementTimer.reset();
+    this.engagementTimer().reset();
   };
 
   /**
@@ -3481,7 +4229,7 @@ class JABS_Battler
     if (this.isInanimate()) return false;
 
     // if the engagement timer is not ready, we cannot update.
-    if (!this._engagementTimer.isTimerComplete()) return false;
+    if (!this.engagementTimer().isTimerComplete()) return false;
 
     // if we're already engaged, no need to further update engagement- its confusing.
     if (this.isEngaged()) return false;
@@ -3940,7 +4688,7 @@ class JABS_Battler
    */
   getAllAggros()
   {
-    return this._aggros;
+    return this.aggros();
   };
 
   /**
@@ -4057,7 +4805,7 @@ class JABS_Battler
   removeAggro(uuid)
   {
     // get the index to remove...
-    const indexToRemove = this._aggros.findIndex(aggro => aggro.uuid() === uuid);
+    const indexToRemove = this.aggros().findIndex(aggro => aggro.uuid() === uuid);
     if (indexToRemove > -1)
     {
       // if currently engaged with the dead target, then disengage.
@@ -4068,7 +4816,7 @@ class JABS_Battler
       }
 
       // ...and remove it.
-      this._aggros.splice(indexToRemove, 1);
+      this.aggros().splice(indexToRemove, 1);
     }
   };
 
@@ -4096,7 +4844,7 @@ class JABS_Battler
     {
       const newAggro = new JABS_Aggro(uuid);
       newAggro.setAggro(aggroValue, forced);
-      this._aggros.push(newAggro);
+      this.aggros().push(newAggro);
     }
   };
 
@@ -4147,7 +4895,7 @@ class JABS_Battler
     this.resetOneAggro(uuid, forced);
 
     // and reset all aggros this battler has.
-    this._aggros.forEach(aggro => aggro.resetAggro(forced));
+    this.aggros().forEach(aggro => aggro.resetAggro(forced));
   };
 
   /**
@@ -4158,7 +4906,7 @@ class JABS_Battler
    */
   aggroExists(uuid)
   {
-    return this._aggros.find(aggro => aggro.uuid() === uuid);
+    return this.aggros().find(aggro => aggro.uuid() === uuid);
   };
 
   //endregion aggro
@@ -4223,7 +4971,7 @@ class JABS_Battler
    */
   decrementDodgeSteps()
   {
-    this._dodgeSteps--;
+    this.setDodgeSteps(this.getDodgeSteps() - 1);
   };
 
   /**
@@ -4249,7 +4997,7 @@ class JABS_Battler
    */
   incrementDodgeFrame()
   {
-    this._dodgeFrame++;
+    this.setDodgeFrame(this.getDodgeFrame() + 1);
   };
 
   /**
@@ -4258,7 +5006,7 @@ class JABS_Battler
    */
   getDodgeIFrames()
   {
-    return this._dodgeIframes;
+    return this.dodgeIframes();
   };
 
   /**
@@ -4267,7 +5015,7 @@ class JABS_Battler
    */
   setDodgeIFrames(frames)
   {
-    this._dodgeIframes = frames;
+    this.setDodgeIframes(frames);
   };
 
   /**
@@ -4592,8 +5340,18 @@ class JABS_Battler
    */
   parrying()
   {
-    return this._parryWindow > 0;
+    return this.parryWindow() > 0;
   };
+
+  /**
+   * Gets the remaining parry window frames.
+   * @returns {number}
+   */
+  parryWindow()
+  {
+    // hand back the remaining parry window frames.
+    return this._parryWindow;
+  }
 
   /**
    * Sets the battlers precise-parry window frames.
@@ -4618,7 +5376,7 @@ class JABS_Battler
    */
   guarding()
   {
-    return this._isGuarding;
+    return this.isGuarding();
   };
 
   /**
@@ -4627,7 +5385,7 @@ class JABS_Battler
    */
   setGuarding(isGuarding)
   {
-    this._isGuarding = isGuarding;
+    this.setIsGuarding(isGuarding);
   };
 
   /**
@@ -4638,7 +5396,7 @@ class JABS_Battler
   {
     if (!this.guarding()) return 0;
 
-    return this._guardFlatReduction;
+    return this.guardFlatReduction();
   };
 
   /**
@@ -4647,7 +5405,7 @@ class JABS_Battler
    */
   setFlatGuardReduction(flatReduction)
   {
-    this._guardFlatReduction = flatReduction;
+    this.setGuardFlatReduction(flatReduction);
   };
 
   /**
@@ -4658,7 +5416,7 @@ class JABS_Battler
   {
     if (!this.guarding()) return 0;
 
-    return this._guardPercReduction;
+    return this.guardPercReduction();
   };
 
   /**
@@ -4667,7 +5425,7 @@ class JABS_Battler
    */
   setPercGuardReduction(percReduction)
   {
-    this._guardPercReduction = percReduction;
+    this.setGuardPercReduction(percReduction);
   };
 
   /**
@@ -4858,7 +5616,7 @@ class JABS_Battler
     this.setGuarding(false);
 
     // reset ally ai guard timing so max-hold does not fire on the next stance.
-    this._aiAllyGuardRaiseFrame = 0;
+    this.setAiAllyGuardRaiseFrame(0);
 
     // remove any remaining parry time.
     this.setParryWindow(0);
@@ -5763,20 +6521,20 @@ class JABS_Battler
    */
   isPostActionCooldownComplete()
   {
-    if (this._postActionCooldownComplete)
+    if (this.postActionCooldownComplete())
     {
       // we are ready to do idle things.
       return true;
     }
 
-    if (this._postActionCooldown <= this._postActionCooldownMax)
+    if (this.postActionCooldown() <= this.postActionCooldownMax())
     {
       // we are still charging up...
-      this._postActionCooldown++;
+      this.setPostActionCooldown(this.postActionCooldown() + 1);
       return false;
     }
-    this._postActionCooldownComplete = true;
-    this._postActionCooldown = 0;
+    this.setPostActionCooldownComplete(true);
+    this.setPostActionCooldown(0);
 
     // we are ready to finish phase3!
     return true;
@@ -5789,9 +6547,9 @@ class JABS_Battler
    */
   startPostActionCooldown(cooldown)
   {
-    this._postActionCooldownComplete = false;
-    this._postActionCooldown = 0;
-    this._postActionCooldownMax = cooldown;
+    this.setPostActionCooldownComplete(false);
+    this.setPostActionCooldown(0);
+    this.setPostActionCooldownMax(cooldown);
   };
 
   /**
@@ -5818,20 +6576,20 @@ class JABS_Battler
    */
   isIdleActionReady()
   {
-    if (this._idleActionReady)
+    if (this.idleActionReady())
     {
       // we are ready to do idle things.
       return true;
     }
 
-    if (this._idleActionCount <= this._idleActionCountMax)
+    if (this.idleActionCount() <= this.idleActionCountMax())
     {
       // we are still charging up...
-      this._idleActionCount++;
+      this.setIdleActionCount(this.idleActionCount() + 1);
       return false;
     }
-    this._idleActionReady = true;
-    this._idleActionCount = 0;
+    this.setIdleActionReady(true);
+    this.setIdleActionCount(0);
 
     // we are ready to idle!
     return true;
@@ -5915,22 +6673,22 @@ class JABS_Battler
    */
   isActionReady()
   {
-    if (this._prepareReady)
+    if (this.isPrepareReady())
     {
       // we are ready to take action.
       return true;
     }
 
-    if (this._prepareCounter < this._prepareMax)
+    if (this.prepareCounter() < this.prepareMax())
     {
       // we are still charging up...
-      this._prepareCounter++;
+      this.setPrepareCounter(this.prepareCounter() + 1);
       return false;
     }
 
     // store  prepare ready on the instance for later reads.
-    this._prepareReady = true;
-    this._prepareCounter = 0;
+    this.setPrepareReady(true);
+    this.setPrepareCounter(0);
     // we are charged up now!
     return true;
 
@@ -6860,10 +7618,10 @@ class JABS_Battler
   setWaitCountdown(wait)
   {
     // reset the wait timer to start over.
-    this._waitTimer.reset();
+    this.waitTimer().reset();
 
     // set the wait timer's max to a new time.
-    this._waitTimer.setMaxTime(wait);
+    this.waitTimer().setMaxTime(wait);
   };
 
   /**
@@ -6872,7 +7630,7 @@ class JABS_Battler
    */
   isWaiting()
   {
-    return !this._waitTimer.isTimerComplete();
+    return !this.waitTimer().isTimerComplete();
   };
 
   /**
@@ -6881,17 +7639,17 @@ class JABS_Battler
   countdownCastTime()
   {
     this.performCastAnimation();
-    if (this._castTimeCountdown > 0)
+    if (this.getCastTimeCountdown() > 0)
     {
-      this._castTimeCountdown--;
+      this.setCastTimeCountdown(this.getCastTimeCountdown() - 1);
       // exit early without a payload.
       return;
     }
 
-    if (this._castTimeCountdown <= 0)
+    if (this.getCastTimeCountdown() <= 0)
     {
-      this._casting = false;
-      this._castTimeCountdown = 0;
+      this.setCasting(false);
+      this.setCastTimeCountdown(0);
     }
   };
 
@@ -6940,12 +7698,12 @@ class JABS_Battler
     this.setCastTimeCountdown(castTime);
     if (this.getCastTimeCountdown() > 0)
     {
-      this._casting = true;
+      this.setCasting(true);
     }
 
     if (this.getCastTimeCountdown() <= 0)
     {
-      this._casting = false;
+      this.setCasting(false);
       this.setCastTimeCountdown(0);
     }
   };
@@ -6982,13 +7740,13 @@ class JABS_Battler
    */
   countdownAlert()
   {
-    if (this._alertedCounter > 0)
+    if (this.alertedCounter() > 0)
     {
-      this._alertedCounter--;
+      this.setAlertedCounter(this.alertedCounter() - 1);
       return;
     }
 
-    if (this._alertedCounter <= 0)
+    if (this.alertedCounter() <= 0)
     {
       this.clearAlert();
     }

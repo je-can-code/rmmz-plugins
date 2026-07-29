@@ -81,7 +81,7 @@ Game_Actor.prototype.getAllyAI = function()
     this.initAllyAiMembers();
   }
 
-  return this._j._abs._allyAi._mode;
+  return this.mode();
 }
 
 /**
@@ -90,7 +90,7 @@ Game_Actor.prototype.getAllyAI = function()
  */
 Game_Actor.prototype.setAllyAIPreset = function(presetKey)
 {
-  this._j._abs._allyAi._mode.applyPreset(presetKey);
+  this.mode().applyPreset(presetKey);
 };
 
 /**
@@ -101,7 +101,7 @@ Game_Actor.prototype.setAllyAIPreset = function(presetKey)
 Game_Actor.prototype.getDefaultAllyAI = function()
 {
   // if there is no actor id, then don't try this yet.
-  if (!this._actorId) return null;
+  if (!this.actorId()) return null;
 
   // extract the ally ai mode from the actor.
   const actorMode = RPGManager.getStringFromNoteByRegex(
@@ -138,4 +138,16 @@ Game_Actor.prototype.getValidSkillSlotsForAlly = function()
   return this.getSkillSlotManager()
     .getEquippedAllySlots();
 };
+
+//region properties
+/**
+ * Gets the ally AI mode governing how this actor fights on its own.
+ * @returns {string} The configured ally AI mode.
+ */
+Game_Actor.prototype.mode = function()
+{
+  // hand back the mode.
+  return this._j._abs._allyAi._mode;
+};
+//endregion properties
 //endregion Game_Actor

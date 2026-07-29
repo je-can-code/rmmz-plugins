@@ -36,6 +36,40 @@ class Window_SkillDetail
     this.refresh();
   }
 
+  //region properties
+  /**
+   * Gets the skill id.
+   * @returns {*} The skillId.
+   */
+  skillId()
+  {
+    // hand back the skill id.
+    return this._skillId;
+  }
+
+  /**
+   * Gets the actor.
+   * @returns {*} The actor.
+   */
+  actor()
+  {
+    // hand back the actor.
+    return this._actor;
+  }
+  //endregion properties
+
+  //region properties
+  /**
+   * Gets the skill sprites.
+   * @returns {*} The skillSprites.
+   */
+  skillSprites()
+  {
+    // hand back the skill sprites.
+    return this._skillSprites;
+  }
+  //endregion properties
+
   /**
    * Sets the skill id of the window to this and refreshes the data.
    * @param {number} newSkillId The new skill id for this window.
@@ -60,20 +94,20 @@ class Window_SkillDetail
    */
   skill()
   {
-    if (!this._skillId)
+    if (!this.skillId())
     {
       return null;
     }
     else
     {
       // if we're using the skill extension plugin, then grab the extended version.
-      if (J.EXTEND && this._actor)
+      if (J.EXTEND && this.actor())
       {
-        return OverlayManager.getExtendedSkill(this._actor, this._skillId);
+        return this.actor().skill(this.skillId());
       }
 
       // otherwise, return the base skill.
-      return $dataSkills[this._skillId];
+      return $dataSkills[this.skillId()];
     }
   }
 
@@ -101,7 +135,7 @@ class Window_SkillDetail
    */
   clearSkillImages()
   {
-    this._skillSprites.forEach(sprite =>
+    this.skillSprites().forEach(sprite =>
     {
       sprite.hide();
     });
@@ -171,7 +205,7 @@ class Window_SkillDetail
    */
   createIconSprite(key, iconIndex)
   {
-    let sprite = this._skillSprites.get(key);
+    let sprite = this.skillSprites().get(key);
     if (sprite)
     {
       return sprite;
@@ -182,7 +216,7 @@ class Window_SkillDetail
       sprite = new Sprite_Icon(iconIndex);
       sprite.scale.x = 4.0;
       sprite.scale.y = 4.0;
-      this._skillSprites.set(key, sprite);
+      this.skillSprites().set(key, sprite);
       this.addInnerChild(sprite);
       return sprite;
     }
@@ -194,7 +228,7 @@ class Window_SkillDetail
   drawLeftColumn()
   {
     const skill = this.skill();
-    const actor = this._actor;
+    const actor = this.actor();
     const params = [];
 
     // Append the row to the working collection.
@@ -235,7 +269,7 @@ class Window_SkillDetail
   drawMiddleColumn()
   {
     const skill = this.skill();
-    const actor = this._actor;
+    const actor = this.actor();
     const params = [];
 
     // Append the row to the working collection.
@@ -349,7 +383,7 @@ class Window_SkillDetail
   drawRightColumn()
   {
     const skill = this.skill();
-    const actor = this._actor;
+    const actor = this.actor();
     /** @type {JCMS_ParameterKvp[]} */
     const params = [];
 

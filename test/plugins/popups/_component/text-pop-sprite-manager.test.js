@@ -34,6 +34,10 @@ describe('J-Popups TextPopSpriteManager (direct src import)', () =>
     // Sprite_MapDamage extends and TextPopSpriteManager.convert() relies on.
     await import('../../../../src/plugins/popups/core/sprites/Sprite_Damage.js');
 
+    // J-Base accessors the production code now reads through.
+    globalThis.Sprite_Damage.prototype.duration = function() { return this._duration; };
+    globalThis.Sprite_Damage.prototype.setDuration = function(v) { this._duration = v; };
+
     ({ default: Sprite_MapDamage } = await import('../../../../src/plugins/popups/core/sprites/Sprite_MapDamage.js'));
     ({ default: TextPopSpriteManager } = await import('../../../../src/plugins/popups/core/_models/TextPopSpriteManager.js'));
   });

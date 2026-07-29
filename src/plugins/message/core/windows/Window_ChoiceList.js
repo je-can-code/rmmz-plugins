@@ -16,13 +16,13 @@ Window_ChoiceList.prototype.makeCommandList = function()
   let needsUpdate = false;
 
   // iterate over all the choices in this list in reverse to avoid index issues.
-  for (let i = this._list.length; i > -1; i--)
+  for (let i = this.commandList().length; i > -1; i--)
   {
     // check if the choice is hidden by its index.
     if ($gameMessage.isChoiceHidden(i))
     {
       // remove the hidden choice from this window.
-      this._list.splice(i, 1);
+      this.commandList().splice(i, 1);
 
       // remove the hidden choice from the message data.
       $gameMessage._choices.splice(i, 1);
@@ -33,7 +33,7 @@ Window_ChoiceList.prototype.makeCommandList = function()
     else
     {
       // Add this to our choice map.
-      this._choiceMap.unshift(i);
+      this.choiceMap().unshift(i);
     }
   }
 
@@ -48,7 +48,7 @@ Window_ChoiceList.prototype.makeCommandList = function()
 /* Stores the choice numbers at each index */
 Window_ChoiceList.prototype.clearChoiceMap = function()
 {
-  this._choiceMap = [];
+  this.setChoiceMap([]);
 };
 
 /**
@@ -57,8 +57,30 @@ Window_ChoiceList.prototype.clearChoiceMap = function()
  */
 Window_ChoiceList.prototype.callOkHandler = function()
 {
-  $gameMessage.onChoice(this._choiceMap[this.index()]);
-  this._messageWindow.terminateMessage();
+  $gameMessage.onChoice(this.choiceMap()[this.index()]);
+  this.messageWindow().terminateMessage();
   this.close();
 };
+
+//region properties
+/**
+ * Gets the choice map.
+ * @returns {*} The choiceMap.
+ */
+Window_ChoiceList.prototype.choiceMap = function()
+{
+  // hand back the choice map.
+  return this._choiceMap;
+};
+
+/**
+ * Sets the choice map.
+ * @param {*} newChoiceMap The new choiceMap.
+ */
+Window_ChoiceList.prototype.setChoiceMap = function(newChoiceMap)
+{
+  // assign the choice map.
+  this._choiceMap = newChoiceMap;
+};
+//endregion properties
 //endregion Window_ChoiceList

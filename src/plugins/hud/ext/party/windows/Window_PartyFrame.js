@@ -85,6 +85,28 @@ class Window_PartyFrame
     this._afflictionPresenter = new StateAfflictionHudPresenter(this, this._hudSprites);
   }
 
+  //region properties
+  /**
+   * Gets the hud sprites.
+   * @returns {*} The hudSprites.
+   */
+  hudSprites()
+  {
+    // hand back the hud sprites.
+    return this._hudSprites;
+  }
+
+  /**
+   * Gets the affliction presenter.
+   * @returns {*} The afflictionPresenter.
+   */
+  afflictionPresenter()
+  {
+    // hand back the affliction presenter.
+    return this._afflictionPresenter;
+  }
+  //endregion properties
+
   /**
    * Performs the one-time setup and configuration per instantiation.
    */
@@ -118,7 +140,7 @@ class Window_PartyFrame
   hideSprites()
   {
     // hide all the sprites; gauges self-deactivate via their hide() override.
-    this._hudSprites.forEach((sprite, _) =>
+    this.hudSprites().forEach((sprite, _) =>
     {
       // when refreshing, always hide all the sprites.
       sprite.hide();
@@ -144,16 +166,16 @@ class Window_PartyFrame
   emptyCache()
   {
     // iterate over each sprite and destroy it properly.
-    this._hudSprites.forEach((value, _) => value.destroy());
+    this.hudSprites().forEach((value, _) => value.destroy());
 
     // empty the collection of all references.
-    this._hudSprites.clear();
+    this.hudSprites().clear();
   }
 
   /**
    * Creates all sprites for this hud and caches them.
    */
-  createCache()
+  static createCache()
   {
     // establish the gauge types we will create.
     const gaugeTypes = this.gaugeTypes();
@@ -207,10 +229,10 @@ class Window_PartyFrame
     const key = this.makeFaceSpriteKey(actor, true);
 
     // check if the key already maps to a cached sprite.
-    if (this._hudSprites.has(key))
+    if (this.hudSprites().has(key))
     {
       // if it does, just return that.
-      return this._hudSprites.get(key);
+      return this.hudSprites().get(key);
     }
 
     // create a new full-sized face sprite of the actor.
@@ -221,7 +243,7 @@ class Window_PartyFrame
     sprite.scale.y = 1;
 
     // cache the sprite.
-    this._hudSprites.set(key, sprite);
+    this.hudSprites().set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -244,10 +266,10 @@ class Window_PartyFrame
     const key = this.makeFaceSpriteKey(actor, false);
 
     // check if the key already maps to a cached sprite.
-    if (this._hudSprites.has(key))
+    if (this.hudSprites().has(key))
     {
       // if it does, just return that.
-      return this._hudSprites.get(key);
+      return this.hudSprites().get(key);
     }
 
     // create a new full-sized face sprite of the actor.
@@ -258,7 +280,7 @@ class Window_PartyFrame
     sprite.scale.y = 0.3;
 
     // cache the sprite.
-    this._hudSprites.set(key, sprite);
+    this.hudSprites().set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -311,10 +333,10 @@ class Window_PartyFrame
     const key = this.makeGaugeSpriteKey(actor, true, gaugeType);
 
     // check if the key already maps to a cached sprite.
-    if (this._hudSprites.has(key))
+    if (this.hudSprites().has(key))
     {
       // if it does, just return that.
-      return this._hudSprites.get(key);
+      return this.hudSprites().get(key);
     }
 
     // gets the full-sized gauge height for this gauge type.
@@ -337,7 +359,7 @@ class Window_PartyFrame
     sprite.deactivateGauge();
 
     // cache the sprite.
-    this._hudSprites.set(key, sprite);
+    this.hudSprites().set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -361,10 +383,10 @@ class Window_PartyFrame
     const key = this.makeGaugeSpriteKey(actor, false, gaugeType);
 
     // check if the key already maps to a cached sprite.
-    if (this._hudSprites.has(key))
+    if (this.hudSprites().has(key))
     {
       // if it does, just return that.
-      return this._hudSprites.get(key);
+      return this.hudSprites().get(key);
     }
 
     // gets the mini-sized gauge height for this gauge type.
@@ -385,7 +407,7 @@ class Window_PartyFrame
     sprite.deactivateGauge();
 
     // cache the sprite.
-    this._hudSprites.set(key, sprite);
+    this.hudSprites().set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -423,10 +445,10 @@ class Window_PartyFrame
     const key = this.makeValueSpriteKey(actor, gaugeType);
 
     // check if the key already maps to a cached sprite.
-    if (this._hudSprites.has(key))
+    if (this.hudSprites().has(key))
     {
       // if it does, just return that.
-      return this._hudSprites.get(key);
+      return this.hudSprites().get(key);
     }
 
     // determine the font size.
@@ -438,7 +460,7 @@ class Window_PartyFrame
     const sprite = new Sprite_ActorValue(actor, gaugeType, valueFontSize);
 
     // cache the sprite.
-    this._hudSprites.set(key, sprite);
+    this.hudSprites().set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -461,9 +483,9 @@ class Window_PartyFrame
     const key = `combat-icon-${actor.name()}-${actor.actorId()}`;
 
     // if cached already, return it.
-    if (this._hudSprites.has(key))
+    if (this.hudSprites().has(key))
     {
-      return this._hudSprites.get(key);
+      return this.hudSprites().get(key);
     }
 
     // in-combat icon index is two fists punching.
@@ -476,7 +498,7 @@ class Window_PartyFrame
     sprite.selfManageOpacity();
 
     // cache and stage it.
-    this._hudSprites.set(key, sprite);
+    this.hudSprites().set(key, sprite);
     sprite.hide();
     this.addChild(sprite);
 
@@ -495,9 +517,9 @@ class Window_PartyFrame
     const key = `combat-timer-${actor.name()}-${actor.actorId()}`;
 
     // if cached already, return it.
-    if (this._hudSprites.has(key))
+    if (this.hudSprites().has(key))
     {
-      return this._hudSprites.get(key);
+      return this.hudSprites().get(key);
     }
 
     // create a text sprite.
@@ -516,7 +538,7 @@ class Window_PartyFrame
     sprite.hide();
 
     // cache and stage it.
-    this._hudSprites.set(key, sprite);
+    this.hudSprites().set(key, sprite);
 
     // add the sprite to tracking.
     this.addChild(sprite);
@@ -537,9 +559,9 @@ class Window_PartyFrame
     const key = `combat-label-${actor.name()}-${actor.actorId()}`;
 
     // if cached already, return it.
-    if (this._hudSprites.has(key))
+    if (this.hudSprites().has(key))
     {
-      return this._hudSprites.get(key);
+      return this.hudSprites().get(key);
     }
 
     // create a text sprite.
@@ -556,7 +578,7 @@ class Window_PartyFrame
       .selfManageOpacity();
 
     // cache and stage it.
-    this._hudSprites.set(key, sprite);
+    this.hudSprites().set(key, sprite);
     this.addChild(sprite);
 
     // return the created sprite.
@@ -642,7 +664,7 @@ class Window_PartyFrame
    */
   handlePlayerInterference()
   {
-    this._hudSprites.forEach((sprite, _) =>
+    this.hudSprites().forEach((sprite, _) =>
     {
       // if the interference shouldn't be handled for this sprite, then don't.
       if (this.canHandleSpriteInterference(sprite) === false) return;
@@ -665,7 +687,7 @@ class Window_PartyFrame
    */
   revertInterferenceOpacity()
   {
-    this._hudSprites.forEach((sprite, _) =>
+    this.hudSprites().forEach((sprite, _) =>
     {
       // if the interference shouldn't be handled for this sprite, then don't.
       if (this.canHandleSpriteInterference(sprite) === false) return;
@@ -754,7 +776,7 @@ class Window_PartyFrame
 
     layout.originX = gaugesX;
     layout.originY = gaugesY - (ImageManager.iconHeight * 2) - 48;
-    this._afflictionPresenter.render($gameParty.leader(), layout);
+    this.afflictionPresenter().render($gameParty.leader(), layout);
 
     // draw the in‑combat indicator (icon + timer) just to the right of the gauges.
     this.drawLeaderCombatIndicator(gaugesX, gaugesY);

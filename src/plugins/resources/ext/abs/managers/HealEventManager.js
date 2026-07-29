@@ -14,6 +14,40 @@ class HealEventManager
    * Incremented at the start of each dispatch round and decremented on exit.
    * @type {number}
    */
+  
+
+  //region properties
+  /**
+   * Gets the current depth.
+   * @returns {*} The currentDepth.
+   */
+  static currentDepth()
+  {
+    // hand back the current depth.
+    return this._currentDepth;
+  }
+
+  /**
+   * Sets the current depth.
+   * @param {*} newCurrentDepth The new currentDepth.
+   */
+  static setCurrentDepth(newCurrentDepth)
+  {
+    // assign the current depth.
+    this._currentDepth = newCurrentDepth;
+  }
+
+  /**
+   * Gets the self blocked tags.
+   * @returns {*} The selfBlockedTags.
+   */
+  static selfBlockedTags()
+  {
+    // hand back the self blocked tags.
+    return this._selfBlockedTags;
+  }
+  //endregion properties
+
   static _currentDepth = 0;
 
   /**
@@ -51,9 +85,9 @@ class HealEventManager
   static #dispatch(recipient, triggerKey, amount)
   {
     // stop cascading once we exceed the configured depth limit.
-    if (this._currentDepth >= J.RESOURCES.EXT.ABS.Metadata.healChainDepth) return;
+    if (this.currentDepth() >= J.RESOURCES.EXT.ABS.Metadata.healChainDepth) return;
 
-    this._currentDepth++;
+    this.setCurrentDepth(this.currentDepth() + 1);
 
     try
     {
@@ -63,7 +97,7 @@ class HealEventManager
     finally
     {
       // always decrement even if an error occurs mid-cascade.
-      this._currentDepth--;
+      this.setCurrentDepth(this.currentDepth() - 1);
     }
   }
 
@@ -104,16 +138,16 @@ class HealEventManager
       for (const [percent, range, maxDepth] of tuples)
       {
         // per-tag depth gate: cross-battler chain length limit.
-        if (this._currentDepth > maxDepth) continue;
+        if (this.currentDepth() > maxDepth) continue;
 
         const secondary = Math.floor(amount * percent / 100);
         if (secondary <= 0) continue;
 
         // self-heal: blocked if this tag's own previous secondary triggered this re-entry.
         const selfBlockKey = `${outputKey}:${recipient.getUuid()}`;
-        if (!this._selfBlockedTags.has(selfBlockKey))
+        if (!this.selfBlockedTags().has(selfBlockKey))
         {
-          this._selfBlockedTags.add(selfBlockKey);
+          this.selfBlockedTags().add(selfBlockKey);
           try
           {
             this.#applySecondaryHeal(recipient, outputKey, secondary);
@@ -122,7 +156,7 @@ class HealEventManager
           {
             // clear before ally-heals so cross-battler splashes back to this recipient
             // are not blocked by our own self-echo guard.
-            this._selfBlockedTags.delete(selfBlockKey);
+            this.selfBlockedTags().delete(selfBlockKey);
           }
         }
 
@@ -185,7 +219,7 @@ class HealEventManager
         for (const [percent, range, maxDepth] of tuples)
         {
           // per-tag depth gate: cross-battler chain length limit.
-          if (this._currentDepth > maxDepth) continue;
+          if (this.currentDepth() > maxDepth) continue;
 
           // the observer only reacts if the healed ally is within the tag's range.
           if (distance > range) continue;

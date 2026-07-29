@@ -31,7 +31,7 @@ Window_SkillList.prototype.setSkillDetailWindow = function(newWindow)
  */
 Window_SkillList.prototype.refreshSkillDetailWindow = function()
 {
-  if (!this._skillDetailWindow) return;
+  if (!this.skillDetailWindow()) return;
 
   let id = 0;
   const item = this.item();
@@ -39,8 +39,8 @@ Window_SkillList.prototype.refreshSkillDetailWindow = function()
   {
     ({ id } = item);
   }
-  this._skillDetailWindow.setActor(this._actor);
-  this._skillDetailWindow.setSkillId(id);
+  this.skillDetailWindow().setActor(this.actor());
+  this.skillDetailWindow().setSkillId(id);
 };
 
 /**
@@ -89,15 +89,27 @@ Window_SkillList.prototype.includes = function(skill)
   if (!skill) return false;
 
   // check if the skill matches the selected type.
-  const matchesSkillTypeId = skill.stypeId === this._stypeId;
+  const matchesSkillTypeId = skill.stypeId === this.stypeId();
 
   // if there is no actor, then we only factor in the skill itself.
-  if (!this._actor) return matchesSkillTypeId;
+  if (!this.actor()) return matchesSkillTypeId;
 
   // check if the actor's equipped weapon matches the skill type.
-  const matchesWeaponTypeId = this._actor.isSkillWtypeOk(skill);
+  const matchesWeaponTypeId = this.actor().isSkillWtypeOk(skill);
 
   // return whether or not both skill and weapon types match.
   return (matchesSkillTypeId && matchesWeaponTypeId);
 };
+
+//region properties
+/**
+ * Gets the skill detail window.
+ * @returns {*} The skillDetailWindow.
+ */
+Window_SkillList.prototype.skillDetailWindow = function()
+{
+  // hand back the skill detail window.
+  return this._skillDetailWindow;
+};
+//endregion properties
 //endregion Window_SkillList

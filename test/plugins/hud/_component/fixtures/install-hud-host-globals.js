@@ -113,6 +113,16 @@ export function setPluginContextToJHudParty(sandbox = globalThis)
 }
 
 /**
+ * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-HUD-QuestFrame's own identity.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ */
+export function setPluginContextToJHudQuest(sandbox = globalThis)
+{
+  sandbox.__PLUGIN_NAME__ = 'J-HUD-QuestFrame';
+  sandbox.__PLUGIN_VERSION__ = '1.0.0';
+}
+
+/**
  * Layers each hud extension's plugin parameters on top of whatever `PluginManager.parameters()`
  * stub is already installed (typically J-Base's, from {@link installJBaseHostGlobals}).
  * @param {object} sandbox

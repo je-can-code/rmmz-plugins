@@ -8,6 +8,20 @@ class Window_RecipeOutputList
    * True if the text of this list should be masked, false otherwise.
    * @type {boolean}
    */
+  
+
+  //region properties
+  /**
+   * Gets the components.
+   * @returns {*} The components.
+   */
+  components()
+  {
+    // hand back the components.
+    return this._components;
+  }
+  //endregion properties
+
   needsMasking = false;
 
   /**
@@ -71,7 +85,7 @@ class Window_RecipeOutputList
   buildCommands()
   {
     // grab all recipes in the list.
-    const components = this._components;
+    const components = this.components();
 
     // compile the list of commands.
     const commands = components.map(this.buildCommand, this);

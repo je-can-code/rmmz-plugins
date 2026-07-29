@@ -26,6 +26,340 @@ class Sprite_MiniMap
    * Viewport width/height in tiles = (MAP_RANGE * 2 + 1).
    * @type {number}
    */
+  
+
+  //region properties
+  /**
+   * Gets the cache ready.
+   * @returns {*} The cacheReady.
+   */
+  isCacheReady()
+  {
+    // hand back the cache ready.
+    return this._cacheReady;
+  }
+
+  /**
+   * Sets the cache ready.
+   * @param {*} newCacheReady The new cacheReady.
+   */
+  setCacheReady(newCacheReady)
+  {
+    // assign the cache ready.
+    this._cacheReady = newCacheReady;
+  }
+
+  /**
+   * Gets the focus mode.
+   * @returns {*} The focusMode.
+   */
+  isFocusMode()
+  {
+    // hand back the focus mode.
+    return this._focusMode;
+  }
+
+  /**
+   * Sets the focus mode.
+   * @param {*} newFocusMode The new focusMode.
+   */
+  setFocusMode(newFocusMode)
+  {
+    // assign the focus mode.
+    this._focusMode = newFocusMode;
+  }
+
+  /**
+   * Gets the cached map id.
+   * @returns {*} The cachedMapId.
+   */
+  cachedMapId()
+  {
+    // hand back the cached map id.
+    return this._cachedMapId;
+  }
+
+  /**
+   * Sets the cached map id.
+   * @param {*} newCachedMapId The new cachedMapId.
+   */
+  setCachedMapId(newCachedMapId)
+  {
+    // assign the cached map id.
+    this._cachedMapId = newCachedMapId;
+  }
+
+  /**
+   * Gets the smooth fx.
+   * @returns {*} The smoothFx.
+   */
+  smoothFx()
+  {
+    // hand back the smooth fx.
+    return this._smoothFx;
+  }
+
+  /**
+   * Sets the smooth fx.
+   * @param {*} newSmoothFx The new smoothFx.
+   */
+  setSmoothFx(newSmoothFx)
+  {
+    // assign the smooth fx.
+    this._smoothFx = newSmoothFx;
+  }
+
+  /**
+   * Gets the smooth fy.
+   * @returns {*} The smoothFy.
+   */
+  smoothFy()
+  {
+    // hand back the smooth fy.
+    return this._smoothFy;
+  }
+
+  /**
+   * Sets the smooth fy.
+   * @param {*} newSmoothFy The new smoothFy.
+   */
+  setSmoothFy(newSmoothFy)
+  {
+    // assign the smooth fy.
+    this._smoothFy = newSmoothFy;
+  }
+
+  /**
+   * Gets the last x.
+   * @returns {*} The lastX.
+   */
+  lastX()
+  {
+    // hand back the last x.
+    return this._lastX;
+  }
+
+  /**
+   * Sets the last x.
+   * @param {*} newLastX The new lastX.
+   */
+  setLastX(newLastX)
+  {
+    // assign the last x.
+    this._lastX = newLastX;
+  }
+
+  /**
+   * Gets the last y.
+   * @returns {*} The lastY.
+   */
+  lastY()
+  {
+    // hand back the last y.
+    return this._lastY;
+  }
+
+  /**
+   * Sets the last y.
+   * @param {*} newLastY The new lastY.
+   */
+  setLastY(newLastY)
+  {
+    // assign the last y.
+    this._lastY = newLastY;
+  }
+
+  /**
+   * Gets the minimap frame sprite.
+   * @returns {*} The minimapFrameSprite.
+   */
+  minimapFrameSprite()
+  {
+    // hand back the minimap frame sprite.
+    return this._minimapFrameSprite;
+  }
+
+  /**
+   * Gets the pre focus state.
+   * @returns {*} The preFocusState.
+   */
+  preFocusState()
+  {
+    // hand back the pre focus state.
+    return this._preFocusState;
+  }
+
+  /**
+   * Sets the pre focus state.
+   * @param {*} newPreFocusState The new preFocusState.
+   */
+  setPreFocusState(newPreFocusState)
+  {
+    // assign the pre focus state.
+    this._preFocusState = newPreFocusState;
+  }
+
+  /**
+   * Gets the width.
+   * @returns {*} The width.
+   */
+  minimapWidth()
+  {
+    // hand back the width.
+    return this._width;
+  }
+
+  /**
+   * Sets the width.
+   * @param {*} newWidth The new width.
+   */
+  setMinimapWidth(newWidth)
+  {
+    // assign the width.
+    this._width = newWidth;
+  }
+
+  /**
+   * Gets the height.
+   * @returns {*} The height.
+   */
+  minimapHeight()
+  {
+    // hand back the height.
+    return this._height;
+  }
+
+  /**
+   * Sets the height.
+   * @param {*} newHeight The new height.
+   */
+  setMinimapHeight(newHeight)
+  {
+    // assign the height.
+    this._height = newHeight;
+  }
+
+  /**
+   * Gets the view tiles.
+   * @returns {*} The viewTiles.
+   */
+  viewTiles()
+  {
+    // hand back the view tiles.
+    return this._viewTiles;
+  }
+
+  /**
+   * Sets the view tiles.
+   * @param {*} newViewTiles The new viewTiles.
+   */
+  setViewTiles(newViewTiles)
+  {
+    // assign the view tiles.
+    this._viewTiles = newViewTiles;
+  }
+
+  /**
+   * Gets the overlay sprite.
+   * @returns {*} The overlaySprite.
+   */
+  overlaySprite()
+  {
+    // hand back the overlay sprite.
+    return this._overlaySprite;
+  }
+
+  /**
+   * Gets the overlay.
+   * @returns {*} The overlay.
+   */
+  overlay()
+  {
+    // hand back the overlay.
+    return this._overlay;
+  }
+
+  /**
+   * Sets the overlay.
+   * @param {*} newOverlay The new overlay.
+   */
+  setOverlay(newOverlay)
+  {
+    // assign the overlay.
+    this._overlay = newOverlay;
+  }
+
+  /**
+   * Gets the chrome sprite.
+   * @returns {*} The chromeSprite.
+   */
+  chromeSprite()
+  {
+    // hand back the chrome sprite.
+    return this._chromeSprite;
+  }
+
+  /**
+   * Gets the chrome bitmap.
+   * @returns {*} The chromeBitmap.
+   */
+  chromeBitmap()
+  {
+    // hand back the chrome bitmap.
+    return this._chromeBitmap;
+  }
+
+  /**
+   * Sets the chrome bitmap.
+   * @param {*} newChromeBitmap The new chromeBitmap.
+   */
+  setChromeBitmap(newChromeBitmap)
+  {
+    // assign the chrome bitmap.
+    this._chromeBitmap = newChromeBitmap;
+  }
+
+  /**
+   * Gets the cache offset tiles.
+   * @returns {*} The cacheOffsetTiles.
+   */
+  cacheOffsetTiles()
+  {
+    // hand back the cache offset tiles.
+    return this._cacheOffsetTiles;
+  }
+
+  /**
+   * Sets the cache offset tiles.
+   * @param {*} newCacheOffsetTiles The new cacheOffsetTiles.
+   */
+  setCacheOffsetTiles(newCacheOffsetTiles)
+  {
+    // assign the cache offset tiles.
+    this._cacheOffsetTiles = newCacheOffsetTiles;
+  }
+
+  /**
+   * Gets the cache bitmap.
+   * @returns {*} The cacheBitmap.
+   */
+  cacheBitmap()
+  {
+    // hand back the cache bitmap.
+    return this._cacheBitmap;
+  }
+
+  /**
+   * Sets the cache bitmap.
+   * @param {*} newCacheBitmap The new cacheBitmap.
+   */
+  setCacheBitmap(newCacheBitmap)
+  {
+    // assign the cache bitmap.
+    this._cacheBitmap = newCacheBitmap;
+  }
+  //endregion properties
+
   MAP_RANGE = 12;
 
   /**
@@ -260,7 +594,7 @@ class Sprite_MiniMap
    */
   refresh()
   {
-    this._cacheReady = false;
+    this.setCacheReady(false);
   }
 
   /**
@@ -278,26 +612,23 @@ class Sprite_MiniMap
       : 0;
 
     // Build cache if first time, or map changed, or refresh() requested.
-    if (!this._cacheReady || this._cachedMapId !== mapId)
+    if (!this.isCacheReady() || this.cachedMapId() !== mapId)
     {
       this.buildCache();
-      this._cachedMapId = mapId;
-      this._cacheReady = true;
+      this.setCachedMapId(mapId);
+      this.setCacheReady(true);
 
       // Seed smoothing so there's no snap on the first frame after rebuild.
       const {
         fx,
         fy
-      } = this.srcFloatFromPlayer?.() ?? {
-        fx: 0,
-        fy: 0
-      };
-      this._smoothFx = fx;
-      this._smoothFy = fy;
+      } = this.srcFloatFromPlayer();
+      this.setSmoothFx(fx);
+      this.setSmoothFy(fy);
 
       // Force initial redraw regardless of movement.
-      this._lastX = -99999;
-      this._lastY = -99999;
+      this.setLastX(-99999);
+      this.setLastY(-99999);
     }
 
     if (this.SMOOTH_SCROLL)
@@ -307,15 +638,15 @@ class Sprite_MiniMap
       this.refreshMinimapFrame();
 
       // Keep last integer tile updated for any logic that relies on it
-      this._lastX = $gamePlayer.x;
-      this._lastY = $gamePlayer.y;
+      this.setLastX($gamePlayer.x);
+      this.setLastY($gamePlayer.y);
     }
     else if (this.needsUpdate())
     {
       // Legacy: only redraw when the player changes tiles
       this.redrawWindow();
-      this._lastX = $gamePlayer.x;
-      this._lastY = $gamePlayer.y;
+      this.setLastX($gamePlayer.x);
+      this.setLastY($gamePlayer.y);
       this.refreshMinimapFrame();
     }
 
@@ -325,24 +656,24 @@ class Sprite_MiniMap
 
   refreshMinimapFrame()
   {
-    if (!this._minimapFrameSprite) return;
+    if (!this.minimapFrameSprite()) return;
 
     const w = this.bitmap.width;
     const h = this.bitmap.height;
-    if (this._minimapFrameSprite.bitmap.width !== w || this._minimapFrameSprite.bitmap.height !== h)
+    if (this.minimapFrameSprite().bitmap.width !== w || this.minimapFrameSprite().bitmap.height !== h)
     {
-      this._minimapFrameSprite.bitmap = new Bitmap(w, h);
+      this.minimapFrameSprite().bitmap = new Bitmap(w, h);
       // Keep the sprite centered over the parent
-      this._minimapFrameSprite.anchor.set(0.5, 0.5);
-      this._minimapFrameSprite.x = 0;
-      this._minimapFrameSprite.y = 0;
+      this.minimapFrameSprite().anchor.set(0.5, 0.5);
+      this.minimapFrameSprite().x = 0;
+      this.minimapFrameSprite().y = 0;
     }
     else
     {
-      this._minimapFrameSprite.bitmap.clear();
+      this.minimapFrameSprite().bitmap.clear();
     }
 
-    this.drawPixelArtMinimapFrame(this._minimapFrameSprite.bitmap, 0, 0, w, h);
+    this.drawPixelArtMinimapFrame(this.minimapFrameSprite().bitmap, 0, 0, w, h);
   }
 
   //endregion lifecycle
@@ -355,22 +686,22 @@ class Sprite_MiniMap
   enterFocusMode()
   {
     // if already focused, do nothing.
-    if (this._focusMode) return;
+    if (this.isFocusMode()) return;
 
     // mark focused.
-    this._focusMode = true;
+    this.setFocusMode(true);
 
     // snapshot current state to restore later.
-    this._preFocusState = {
+    this.setPreFocusState({
       mapRange: this.MAP_RANGE,           // current tiles in each direction
       scale: this.SCALE,                  // current tile pixel size
-      width: this._width,                 // window width in px
-      height: this._height,               // window height in px
+      width: this.minimapWidth(),                 // window width in px
+      height: this.minimapHeight(),               // window height in px
       x: this.x,                          // position
       y: this.y,
-      smoothFx: this._smoothFx,           // smooth scroll floats
-      smoothFy: this._smoothFy,
-    };
+      smoothFx: this.smoothFx(),           // smooth scroll floats
+      smoothFy: this.smoothFy(),
+    });
 
     // Choose an expanded scope. 2x is a good default; tweak to taste.
     // We expand MAP_RANGE (more tiles) to see far more of the map at once.
@@ -382,27 +713,27 @@ class Sprite_MiniMap
     // this.SCALE = this.SCALE + 2;
 
     // Recompute derived dimensions for the new window size.
-    this._viewTiles = (this.MAP_RANGE * 2) + 1; // tiles per axis
-    this._width = this._viewTiles * this.SCALE; // pixels
-    this._height = this._viewTiles * this.SCALE; // pixels
+    this.setViewTiles((this.MAP_RANGE * 2) + 1); // tiles per axis
+    this.setMinimapWidth(this.viewTiles() * this.SCALE); // pixels
+    this.setMinimapHeight(this.viewTiles() * this.SCALE); // pixels
 
     // Resize the base bitmap.
-    this.bitmap = new Bitmap(this._width, this._height);
+    this.bitmap = new Bitmap(this.minimapWidth(), this.minimapHeight());
 
     // Resize overlay and keep it centered/aligned.
-    if (this._overlaySprite)
+    if (this.overlaySprite())
     {
-      this._overlay = new Bitmap(this._width, this._height);
-      this._overlaySprite.bitmap = this._overlay;
-      this._overlaySprite.anchor.set(0.5, 0.5);
+      this.setOverlay(new Bitmap(this.minimapWidth(), this.minimapHeight()));
+      this.overlaySprite().bitmap = this.overlay();
+      this.overlaySprite().anchor.set(0.5, 0.5);
     }
 
     // Resize chrome and redraw.
-    if (this._chromeSprite)
+    if (this.chromeSprite())
     {
-      this._chromeBitmap = new Bitmap(this._width, this._height);
-      this._chromeSprite.bitmap = this._chromeBitmap;
-      this._chromeSprite.anchor.set(0.5, 0.5);
+      this.setChromeBitmap(new Bitmap(this.minimapWidth(), this.minimapHeight()));
+      this.chromeSprite().bitmap = this.chromeBitmap();
+      this.chromeSprite().anchor.set(0.5, 0.5);
       this.redrawChrome();
     }
 
@@ -410,7 +741,7 @@ class Sprite_MiniMap
     this.refreshMinimapFrame();
 
     // Reposition: center of the screen.
-    this.x = Math.floor(Graphics.boxWidth - (this._width / 2) - 10);
+    this.x = Math.floor(Graphics.boxWidth - (this.minimapWidth() / 2) - 10);
     this.y = Math.floor(Graphics.boxHeight / 2);
 
     // Force cache rebuild and seed smoothing so there is no snap.
@@ -418,16 +749,13 @@ class Sprite_MiniMap
     const {
       fx,
       fy
-    } = this.srcFloatFromPlayer?.() ?? {
-      fx: 0,
-      fy: 0
-    };
-    this._smoothFx = fx;
-    this._smoothFy = fy;
+    } = this.srcFloatFromPlayer();
+    this.setSmoothFx(fx);
+    this.setSmoothFy(fy);
 
     // Ensure immediate redraw.
-    this._lastX = -99999;
-    this._lastY = -99999;
+    this.setLastX(-99999);
+    this.setLastY(-99999);
 
     // Ensure visibility while focused.
     this.visible = true;
@@ -440,14 +768,14 @@ class Sprite_MiniMap
   exitFocusMode()
   {
     // if not focused, nothing to do.
-    if (!this._focusMode) return;
+    if (!this.isFocusMode()) return;
 
     // clear focus flag first to let visibility logic work normally.
-    this._focusMode = false;
+    this.setFocusMode(false);
 
     // pull prior state; if missing, just bail gracefully.
-    const st = this._preFocusState || null;
-    this._preFocusState = null;
+    const st = this.preFocusState() || null;
+    this.setPreFocusState(null);
     if (!st) return;
 
     // Restore core values.
@@ -455,27 +783,27 @@ class Sprite_MiniMap
     this.SCALE = st.scale;
 
     // Recompute derived window size.
-    this._viewTiles = (this.MAP_RANGE * 2) + 1;
-    this._width = this._viewTiles * this.SCALE;
-    this._height = this._viewTiles * this.SCALE;
+    this.setViewTiles((this.MAP_RANGE * 2) + 1);
+    this.setMinimapWidth(this.viewTiles() * this.SCALE);
+    this.setMinimapHeight(this.viewTiles() * this.SCALE);
 
     // Resize base bitmap.
-    this.bitmap = new Bitmap(this._width, this._height);
+    this.bitmap = new Bitmap(this.minimapWidth(), this.minimapHeight());
 
     // Resize overlay bitmap/sprite.
-    if (this._overlaySprite)
+    if (this.overlaySprite())
     {
-      this._overlay = new Bitmap(this._width, this._height);
-      this._overlaySprite.bitmap = this._overlay;
-      this._overlaySprite.anchor.set(0.5, 0.5);
+      this.setOverlay(new Bitmap(this.minimapWidth(), this.minimapHeight()));
+      this.overlaySprite().bitmap = this.overlay();
+      this.overlaySprite().anchor.set(0.5, 0.5);
     }
 
     // Resize chrome and redraw.
-    if (this._chromeSprite)
+    if (this.chromeSprite())
     {
-      this._chromeBitmap = new Bitmap(this._width, this._height);
-      this._chromeSprite.bitmap = this._chromeBitmap;
-      this._chromeSprite.anchor.set(0.5, 0.5);
+      this.setChromeBitmap(new Bitmap(this.minimapWidth(), this.minimapHeight()));
+      this.chromeSprite().bitmap = this.chromeBitmap();
+      this.chromeSprite().anchor.set(0.5, 0.5);
       this.redrawChrome();
     }
 
@@ -486,26 +814,23 @@ class Sprite_MiniMap
     this.anchor.set(0.5, 0.5);
     this.x = J.MAP.Metadata.minimapX >= 0
       ? J.MAP.Metadata.minimapX
-      : (Graphics.boxWidth - (this._width / 2) - 10);
+      : (Graphics.boxWidth - (this.minimapWidth() / 2) - 10);
     this.y = J.MAP.Metadata.minimapY >= 0
       ? J.MAP.Metadata.minimapY
-      : (Graphics.boxHeight - (this._height / 2) - 10);
+      : (Graphics.boxHeight - (this.minimapHeight() / 2) - 10);
 
     // Force cache rebuild for the smaller window and reset smoothing.
     this.refresh();
     const {
       fx,
       fy
-    } = this.srcFloatFromPlayer?.() ?? {
-      fx: 0,
-      fy: 0
-    };
-    this._smoothFx = fx;
-    this._smoothFy = fy;
+    } = this.srcFloatFromPlayer();
+    this.setSmoothFx(fx);
+    this.setSmoothFy(fy);
 
     // Force redraw next update.
-    this._lastX = -99999;
-    this._lastY = -99999;
+    this.setLastX(-99999);
+    this.setLastY(-99999);
   }
 
   /**
@@ -514,7 +839,7 @@ class Sprite_MiniMap
    */
   isInFocusMode()
   {
-    return !!this._focusMode;
+    return !!this.isFocusMode();
   }
 
   //region drawing
@@ -525,7 +850,7 @@ class Sprite_MiniMap
   needsUpdate()
   {
     if (!$gamePlayer) return false;
-    return $gamePlayer.x !== this._lastX || $gamePlayer.y !== this._lastY;
+    return $gamePlayer.x !== this.lastX() || $gamePlayer.y !== this.lastY();
   }
 
   /**
@@ -541,7 +866,7 @@ class Sprite_MiniMap
     const mapHeight = $gameMap.height();
 
     const pad = this.MAP_RANGE; // padding tiles around the map in the cache
-    this._cacheOffsetTiles = pad;
+    this.setCacheOffsetTiles(pad);
 
     const cacheTilesW = mapWidth + (pad * 2);
     const cacheTilesH = mapHeight + (pad * 2);
@@ -549,18 +874,18 @@ class Sprite_MiniMap
     const pixelHeight = cacheTilesH * this.SCALE;
 
     // store  cache bitmap on the instance for later reads.
-    this._cacheBitmap = new Bitmap(pixelWidth, pixelHeight);
+    this.setCacheBitmap(new Bitmap(pixelWidth, pixelHeight));
 
     // Background behind the map
-    this._cacheBitmap.fillRect(0, 0, pixelWidth, pixelHeight, this.toCss(this.BG_COLOR));
+    this.cacheBitmap().fillRect(0, 0, pixelWidth, pixelHeight, this.toCss(this.BG_COLOR));
 
     // Pre-fetch tileset flags once
     /** @type {number[]} */
     const flags = $gameMap.tilesetFlags();
 
     // Loop flags from engine
-    const loopH = $gameMap.isLoopHorizontal?.() ?? false;
-    const loopV = $gameMap.isLoopVertical?.() ?? false;
+    const loopH = $gameMap.isLoopHorizontal();
+    const loopV = $gameMap.isLoopVertical();
 
     // Base map at (pad, pad)
     this.drawMapCopyAt(pad, pad, flags);
@@ -595,7 +920,7 @@ class Sprite_MiniMap
    */
   redrawWindow()
   {
-    if (!this._cacheBitmap) return;
+    if (!this.cacheBitmap()) return;
 
     this.bitmap.clear();
 
@@ -603,7 +928,7 @@ class Sprite_MiniMap
       srcX,
       srcY
     } = this.cacheSrcFromPlayer();
-    this.bitmap.blt(this._cacheBitmap, srcX, srcY, this._width, this._height, 0, 0);
+    this.bitmap.blt(this.cacheBitmap(), srcX, srcY, this.minimapWidth(), this.minimapHeight(), 0, 0);
     // Player marker at center (green circle)
     this.drawPlayerMarker();
   }
@@ -613,12 +938,12 @@ class Sprite_MiniMap
    */
   redrawChrome()
   {
-    if (!this._chromeBitmap) return;
+    if (!this.chromeBitmap()) return;
 
-    this._chromeBitmap.clear();
-    this.drawNorthNotch(this._chromeBitmap);
+    this.chromeBitmap().clear();
+    this.drawNorthNotch(this.chromeBitmap());
 
-    this.setChildIndex(this._chromeSprite, this.children.length - 1);
+    this.setChildIndex(this.chromeSprite(), this.children.length - 1);
   }
 
   /**
@@ -626,13 +951,13 @@ class Sprite_MiniMap
    */
   redrawOverlay()
   {
-    this._overlay.clear();
-    this.drawOverlay(this._overlay);
+    this.overlay().clear();
+    this.drawOverlay(this.overlay());
   }
 
   redrawWindowSmooth()
   {
-    if (!this._cacheBitmap) return;
+    if (!this.cacheBitmap()) return;
 
     // Target float source (pixels)
     const {
@@ -644,20 +969,20 @@ class Sprite_MiniMap
     if (this.SMOOTH_LERP > 0)
     {
       const a = this.SMOOTH_LERP;
-      this._smoothFx = this._smoothFx + (tfx - this._smoothFx) * a;
-      this._smoothFy = this._smoothFy + (tfy - this._smoothFy) * a;
+      this.setSmoothFx(this.smoothFx() + (tfx - this.smoothFx()) * a);
+      this.setSmoothFy(this.smoothFy() + (tfy - this.smoothFy()) * a);
     }
     else
     {
-      this._smoothFx = tfx;
-      this._smoothFy = tfy;
+      this.setSmoothFx(tfx);
+      this.setSmoothFy(tfy);
     }
 
     // Clamp source to cache bounds
-    const maxSx = Math.max(0, this._cacheBitmap.width - this._width);
-    const maxSy = Math.max(0, this._cacheBitmap.height - this._height);
-    const sfx = Math.min(Math.max(this._smoothFx, 0), maxSx);
-    const sfy = Math.min(Math.max(this._smoothFy, 0), maxSy);
+    const maxSx = Math.max(0, this.cacheBitmap().width - this.minimapWidth());
+    const maxSy = Math.max(0, this.cacheBitmap().height - this.minimapHeight());
+    const sfx = Math.min(Math.max(this.smoothFx(), 0), maxSx);
+    const sfy = Math.min(Math.max(this.smoothFy(), 0), maxSy);
 
     // Slice on whole pixels; keep sub-pixel via dest offset
     const srcX = Math.floor(sfx);
@@ -668,7 +993,7 @@ class Sprite_MiniMap
     this.bitmap.clear();
 
     // If your runtime floors dx/dy, wrap with Math.round(dx/dy)
-    this.bitmap.blt(this._cacheBitmap, srcX, srcY, this._width, this._height, dx, dy);
+    this.bitmap.blt(this.cacheBitmap(), srcX, srcY, this.minimapWidth(), this.minimapHeight(), dx, dy);
 
     // Player marker stays at center
     this.drawPlayerMarker();
@@ -739,12 +1064,12 @@ class Sprite_MiniMap
 
         if (mask === 0x0f)
         {
-          this._cacheBitmap.fillRect(sx, sy, this.SCALE, this.SCALE, this.toCss(this.IMPASSABLE_COLOR));
+          this.cacheBitmap().fillRect(sx, sy, this.SCALE, this.SCALE, this.toCss(this.IMPASSABLE_COLOR));
         }
         else
         {
-          this._cacheBitmap.fillRect(sx, sy, this.SCALE, this.SCALE, this.toCss(this.FLOOR_COLOR));
-          this.drawEdges(this._cacheBitmap, sx, sy, mask);
+          this.cacheBitmap().fillRect(sx, sy, this.SCALE, this.SCALE, this.toCss(this.FLOOR_COLOR));
+          this.drawEdges(this.cacheBitmap(), sx, sy, mask);
         }
       }
     }
@@ -779,7 +1104,7 @@ class Sprite_MiniMap
 
   drawNorthNotch(targetBitmap)
   {
-    const w = this._width;
+    const w = this.minimapWidth();
     const centerX = Math.floor(w / 2);
 
     // Use your configured edge color with a darker halo for contrast
@@ -938,7 +1263,7 @@ class Sprite_MiniMap
   inView(lx, ly)
   {
     const s = this.SCALE;
-    return !(lx < -s || ly < -s || lx >= this._width || ly >= this._height);
+    return !(lx < -s || ly < -s || lx >= this.minimapWidth() || ly >= this.minimapHeight());
   }
 
   /**
@@ -1331,7 +1656,7 @@ class Sprite_MiniMap
    */
   cacheSrcFromPlayer()
   {
-    const pad = this._cacheOffsetTiles; // tiles
+    const pad = this.cacheOffsetTiles(); // tiles
     const srcX = (($gamePlayer.x - this.MAP_RANGE) + pad) * this.SCALE;
     const srcY = (($gamePlayer.y - this.MAP_RANGE) + pad) * this.SCALE;
     return {
@@ -1342,7 +1667,7 @@ class Sprite_MiniMap
 
   srcFloatFromPlayer()
   {
-    const pad = this._cacheOffsetTiles; // tiles
+    const pad = this.cacheOffsetTiles(); // tiles
     const rx = ($gamePlayer._realX ?? $gamePlayer.x);
     const ry = ($gamePlayer._realY ?? $gamePlayer.y);
     // Top-left of window so player is centered (MAP_RANGE from origin)

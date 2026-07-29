@@ -49,11 +49,11 @@ Game_Player.prototype.update = function(sceneActive)
   // occupied tile actually changing is the only cadence that's deterministic regardless of speed.
   const tileX = this.occupiedTileX();
   const tileY = this.occupiedTileY();
-  if (this._lastOccupiedTileX !== tileX || this._lastOccupiedTileY !== tileY)
+  if (this.lastOccupiedTileX() !== tileX || this.lastOccupiedTileY() !== tileY)
   {
     // Track the new tile before checking, so a started event's own updates can't re-trigger this.
-    this._lastOccupiedTileX = tileX;
-    this._lastOccupiedTileY = tileY;
+    this.setLastOccupiedTileX(tileX);
+    this.setLastOccupiedTileY(tileY);
     this.checkEventTriggerHere([ 1, 2 ]);
   }
 };
@@ -395,7 +395,7 @@ Game_Player.prototype.moveByInput = function()
         this.clearPositionalRecords();
 
         // grab the collection of followers.
-        const followers = this._followers._data;
+        const followers = this.followers()._data;
 
         // also reset their positions.
         followers.forEach(follower => follower.clearPositionalRecords());
@@ -573,7 +573,7 @@ Game_Player.prototype.processFollowersPixelMoving = function()
   this.recordPixelPosition();
 
   // Grab all the followers the player has.
-  const followers = this._followers._data;
+  const followers = this.followers()._data;
 
   // Iterate over all the followers to do movement things.
   followers.forEach((follower, index) =>
@@ -608,7 +608,7 @@ Game_Player.prototype.processFollowersPixelMoving = function()
 Game_Player.prototype.stopFollowersPixelMoving = function()
 {
   // Iterate over the followers and halt their pixel movement.
-  this._followers._data.forEach(follower =>
+  this.followers()._data.forEach(follower =>
   {
     // If Ally AI is present and this follower is AI-controlled, do not interfere.
     if (J.ABS.EXT.ALLYAI && follower.getJabsBattler()) return;
@@ -630,4 +630,46 @@ Game_Player.prototype.getCollisionPivotY = function()
 {
   return 0.70;
 };
+
+//region properties
+/**
+ * Gets the last occupied tile x.
+ * @returns {*} The lastOccupiedTileX.
+ */
+Game_Player.prototype.lastOccupiedTileX = function()
+{
+  // hand back the last occupied tile x.
+  return this._lastOccupiedTileX;
+};
+
+/**
+ * Sets the last occupied tile x.
+ * @param {*} newLastOccupiedTileX The new lastOccupiedTileX.
+ */
+Game_Player.prototype.setLastOccupiedTileX = function(newLastOccupiedTileX)
+{
+  // assign the last occupied tile x.
+  this._lastOccupiedTileX = newLastOccupiedTileX;
+};
+
+/**
+ * Gets the last occupied tile y.
+ * @returns {*} The lastOccupiedTileY.
+ */
+Game_Player.prototype.lastOccupiedTileY = function()
+{
+  // hand back the last occupied tile y.
+  return this._lastOccupiedTileY;
+};
+
+/**
+ * Sets the last occupied tile y.
+ * @param {*} newLastOccupiedTileY The new lastOccupiedTileY.
+ */
+Game_Player.prototype.setLastOccupiedTileY = function(newLastOccupiedTileY)
+{
+  // assign the last occupied tile y.
+  this._lastOccupiedTileY = newLastOccupiedTileY;
+};
+//endregion properties
 //endregion Game_Player

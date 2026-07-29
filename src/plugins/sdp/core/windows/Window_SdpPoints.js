@@ -24,6 +24,18 @@ class Window_SdpPoints
     this._actor = null;
   }
 
+  //region properties
+  /**
+   * Gets the actor.
+   * @returns {*} The actor.
+   */
+  actor()
+  {
+    // hand back the actor.
+    return this._actor;
+  }
+  //endregion properties
+
   /**
    * Refreshes this window and all its content.
    */
@@ -49,13 +61,13 @@ class Window_SdpPoints
   drawActorName()
   {
     // don't draw the name if the actor is unavailable.
-    if (!this._actor) return;
+    if (!this.actor()) return;
 
     const nameX = 140;
     const y = this.ribbonTextY();
     const nameMaxWidth = this.sdpWalletAnchorX() - nameX - 8;
 
-    this.drawText(this._actor.name(), nameX, y, nameMaxWidth, 'left');
+    this.drawText(this.actor().name(), nameX, y, nameMaxWidth, 'left');
   }
 
   /**
@@ -64,12 +76,12 @@ class Window_SdpPoints
   drawSdpWallet()
   {
     // don't draw the wallet if the actor is unavailable.
-    if (!this._actor) return;
+    if (!this.actor()) return;
 
     const y = this.ribbonTextY();
     const pad = 12;
     const gap = 8;
-    const wallet = this._actor.getSdpPoints();
+    const wallet = this.actor().getSdpPoints();
     const amountW = this.textWidth('00000000');
     const amountX = this.innerWidth - amountW - pad;
 
@@ -111,11 +123,11 @@ class Window_SdpPoints
   drawSdpFace()
   {
     // don't draw the points if the actor is unavailable.
-    if (!this._actor) return;
+    if (!this.actor()) return;
 
     this.drawFace(
-      this._actor.faceName(),
-      this._actor.faceIndex(),
+      this.actor().faceName(),
+      this.actor().faceIndex(),
       0,
       0,
       128,

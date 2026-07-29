@@ -31,6 +31,16 @@ export function setPluginContextToJPopups(sandbox = globalThis)
 }
 
 /**
+ * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-Popups-SDP's own identity.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ */
+export function setPluginContextToJPopupsSdp(sandbox = globalThis)
+{
+  sandbox.__PLUGIN_NAME__ = 'J-Popups-SDP';
+  sandbox.__PLUGIN_VERSION__ = '1.0.0';
+}
+
+/**
  * Globals required for J-Popups's prototype-patch source files to evaluate when direct-imported
  * into the real Vitest realm instead of a nested vm context.
  * @param {object} [sandbox] Defaults to `globalThis` so direct-import tests can call this with no target arg.

@@ -34,7 +34,7 @@ class AptitudeProgress
   learningBySkillId(skillId)
   {
     // get the current progress for the skill, or politely coalesce to null if it doesn't exist.
-    return this._learnings[skillId] ?? null;
+    return this.learnings()[skillId] ?? null;
   }
 
   /**
@@ -44,7 +44,7 @@ class AptitudeProgress
    */
   hasLearning(skillId)
   {
-    return this._learnings[skillId] !== undefined;
+    return this.learnings()[skillId] !== undefined;
   }
 
   /**

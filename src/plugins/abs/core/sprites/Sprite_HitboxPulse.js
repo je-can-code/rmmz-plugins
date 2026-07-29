@@ -12,6 +12,360 @@ class Sprite_HitboxPulse
    * Constructor.
    * Creates the internal Graphics child and resets members.
    */
+  
+
+  //region properties
+  /**
+   * Gets the sustained.
+   * @returns {*} The sustained.
+   */
+  isSustained()
+  {
+    // hand back the sustained.
+    return this._sustained;
+  }
+
+  /**
+   * Sets the sustained.
+   * @param {*} newSustained The new sustained.
+   */
+  setSustained(newSustained)
+  {
+    // assign the sustained.
+    this._sustained = newSustained;
+  }
+
+  /**
+   * Gets the age.
+   * @returns {*} The age.
+   */
+  age()
+  {
+    // hand back the age.
+    return this._age;
+  }
+
+  /**
+   * Sets the age.
+   * @param {*} newAge The new age.
+   */
+  setAge(newAge)
+  {
+    // assign the age.
+    this._age = newAge;
+  }
+
+  /**
+   * Gets the duration.
+   * @returns {*} The duration.
+   */
+  duration()
+  {
+    // hand back the duration.
+    return this._duration;
+  }
+
+  /**
+   * Sets the duration.
+   * @param {*} newDuration The new duration.
+   */
+  setDuration(newDuration)
+  {
+    // assign the duration.
+    this._duration = newDuration;
+  }
+
+  /**
+   * Gets the start alpha.
+   * @returns {*} The startAlpha.
+   */
+  startAlpha()
+  {
+    // hand back the start alpha.
+    return this._startAlpha;
+  }
+
+  /**
+   * Sets the start alpha.
+   * @param {*} newStartAlpha The new startAlpha.
+   */
+  setStartAlpha(newStartAlpha)
+  {
+    // assign the start alpha.
+    this._startAlpha = newStartAlpha;
+  }
+
+  /**
+   * Gets the end alpha.
+   * @returns {*} The endAlpha.
+   */
+  endAlpha()
+  {
+    // hand back the end alpha.
+    return this._endAlpha;
+  }
+
+  /**
+   * Sets the end alpha.
+   * @param {*} newEndAlpha The new endAlpha.
+   */
+  setEndAlpha(newEndAlpha)
+  {
+    // assign the end alpha.
+    this._endAlpha = newEndAlpha;
+  }
+
+  /**
+   * Gets the scale start.
+   * @returns {*} The scaleStart.
+   */
+  scaleStart()
+  {
+    // hand back the scale start.
+    return this._scaleStart;
+  }
+
+  /**
+   * Sets the scale start.
+   * @param {*} newScaleStart The new scaleStart.
+   */
+  setScaleStart(newScaleStart)
+  {
+    // assign the scale start.
+    this._scaleStart = newScaleStart;
+  }
+
+  /**
+   * Gets the scale end.
+   * @returns {*} The scaleEnd.
+   */
+  scaleEnd()
+  {
+    // hand back the scale end.
+    return this._scaleEnd;
+  }
+
+  /**
+   * Sets the scale end.
+   * @param {*} newScaleEnd The new scaleEnd.
+   */
+  setScaleEnd(newScaleEnd)
+  {
+    // assign the scale end.
+    this._scaleEnd = newScaleEnd;
+  }
+
+  /**
+   * Gets the line color.
+   * @returns {*} The lineColor.
+   */
+  lineColor()
+  {
+    // hand back the line color.
+    return this._lineColor;
+  }
+
+  /**
+   * Sets the line color.
+   * @param {*} newLineColor The new lineColor.
+   */
+  setLineColor(newLineColor)
+  {
+    // assign the line color.
+    this._lineColor = newLineColor;
+  }
+
+  /**
+   * Gets the line alpha.
+   * @returns {*} The lineAlpha.
+   */
+  lineAlpha()
+  {
+    // hand back the line alpha.
+    return this._lineAlpha;
+  }
+
+  /**
+   * Sets the line alpha.
+   * @param {*} newLineAlpha The new lineAlpha.
+   */
+  setLineAlpha(newLineAlpha)
+  {
+    // assign the line alpha.
+    this._lineAlpha = newLineAlpha;
+  }
+
+  /**
+   * Gets the line width.
+   * @returns {*} The lineWidth.
+   */
+  lineWidth()
+  {
+    // hand back the line width.
+    return this._lineWidth;
+  }
+
+  /**
+   * Sets the line width.
+   * @param {*} newLineWidth The new lineWidth.
+   */
+  setLineWidth(newLineWidth)
+  {
+    // assign the line width.
+    this._lineWidth = newLineWidth;
+  }
+
+  /**
+   * Gets the fill color.
+   * @returns {*} The fillColor.
+   */
+  fillColor()
+  {
+    // hand back the fill color.
+    return this._fillColor;
+  }
+
+  /**
+   * Sets the fill color.
+   * @param {*} newFillColor The new fillColor.
+   */
+  setFillColor(newFillColor)
+  {
+    // assign the fill color.
+    this._fillColor = newFillColor;
+  }
+
+  /**
+   * Gets the fill alpha.
+   * @returns {*} The fillAlpha.
+   */
+  fillAlpha()
+  {
+    // hand back the fill alpha.
+    return this._fillAlpha;
+  }
+
+  /**
+   * Sets the fill alpha.
+   * @param {*} newFillAlpha The new fillAlpha.
+   */
+  setFillAlpha(newFillAlpha)
+  {
+    // assign the fill alpha.
+    this._fillAlpha = newFillAlpha;
+  }
+
+  /**
+   * Gets the shape.
+   * @returns {*} The shape.
+   */
+  shape()
+  {
+    // hand back the shape.
+    return this._shape;
+  }
+
+  /**
+   * Sets the shape.
+   * @param {*} newShape The new shape.
+   */
+  setShape(newShape)
+  {
+    // assign the shape.
+    this._shape = newShape;
+  }
+
+  /**
+   * Gets the range.
+   * @returns {*} The range.
+   */
+  range()
+  {
+    // hand back the range.
+    return this._range;
+  }
+
+  /**
+   * Sets the range.
+   * @param {*} newRange The new range.
+   */
+  setRange(newRange)
+  {
+    // assign the range.
+    this._range = newRange;
+  }
+
+  /**
+   * Gets the degrees.
+   * @returns {*} The degrees.
+   */
+  degrees()
+  {
+    // hand back the degrees.
+    return this._degrees;
+  }
+
+  /**
+   * Sets the degrees.
+   * @param {*} newDegrees The new degrees.
+   */
+  setDegrees(newDegrees)
+  {
+    // assign the degrees.
+    this._degrees = newDegrees;
+  }
+
+  /**
+   * Gets the thickness.
+   * @returns {*} The thickness.
+   */
+  thickness()
+  {
+    // hand back the thickness.
+    return this._thickness;
+  }
+
+  /**
+   * Sets the thickness.
+   * @param {*} newThickness The new thickness.
+   */
+  setThickness(newThickness)
+  {
+    // assign the thickness.
+    this._thickness = newThickness;
+  }
+
+  /**
+   * Gets the inner radius.
+   * @returns {*} The innerRadius.
+   */
+  innerRadius()
+  {
+    // hand back the inner radius.
+    return this._innerRadius;
+  }
+
+  /**
+   * Sets the inner radius.
+   * @param {*} newInnerRadius The new innerRadius.
+   */
+  setInnerRadius(newInnerRadius)
+  {
+    // assign the inner radius.
+    this._innerRadius = newInnerRadius;
+  }
+
+  /**
+   * Gets the graphics.
+   * @returns {*} The graphics.
+   */
+  graphics()
+  {
+    // hand back the graphics.
+    return this._graphics;
+  }
+  //endregion properties
+
   constructor()
   {
     // initialize base Sprite.
@@ -37,34 +391,34 @@ class Sprite_HitboxPulse
   reset()
   {
     // lifetime counters.
-    this._age = 0;           // current frame
-    this._duration = 18;     // total frames
+    this.setAge(0);           // current frame
+    this.setDuration(18);     // total frames
 
     // visual alpha curve.
-    this._startAlpha = 0.22;
-    this._endAlpha = 0.0;
+    this.setStartAlpha(0.22);
+    this.setEndAlpha(0.0);
 
     // scale pulse curve.
-    this._scaleStart = 1.00;
-    this._scaleEnd = 1.08;
+    this.setScaleStart(1.00);
+    this.setScaleEnd(1.08);
 
     // base style components.
-    this._lineColor = 0xFFFFFF;
-    this._lineAlpha = 0.85;
-    this._lineWidth = 2;
-    this._fillColor = 0xFFFFFF;
-    this._fillAlpha = 0.18;
-    this._blendMode = PIXI.BLEND_MODES.ADD;
+    this.setLineColor(0xFFFFFF);
+    this.setLineAlpha(0.85);
+    this.setLineWidth(2);
+    this.setFillColor(0xFFFFFF);
+    this.setFillAlpha(0.18);
+    this.blendMode = PIXI.BLEND_MODES.ADD;
 
     // geometry settings.
-    this._shape = J.ABS.Shapes.Circle;
-    this._range = 1;         // in tiles
-    this._degrees = 180;     // for Arc shape
-    this._thickness = 1;     // for Line/Wall width (tiles)
-    this._innerRadius = 0;   // universal dead zone punched out of any shape (tiles)
+    this.setShape(J.ABS.Shapes.Circle);
+    this.setRange(1);         // in tiles
+    this.setDegrees(180);     // for Arc shape
+    this.setThickness(1);     // for Line/Wall width (tiles)
+    this.setInnerRadius(0);   // universal dead zone punched out of any shape (tiles)
 
     // sustained pulses skip pooled expiry animation; manager refreshes them each frame.
-    this._sustained = false;
+    this.setSustained(false);
 
     // snap transforms.
     this.rotation = 0;
@@ -72,7 +426,7 @@ class Sprite_HitboxPulse
     this.scale.set(1.0, 1.0);
 
     // clear old geometry.
-    this._graphics.clear();
+    this.graphics().clear();
   }
 
   /**
@@ -81,47 +435,45 @@ class Sprite_HitboxPulse
   setup(opts)
   {
     // cache the duration and curves.
-    this._duration = Math.max(1, opts.duration);
-    this._startAlpha = opts.startAlpha;
-    this._endAlpha = opts.endAlpha;
-    this._scaleStart = opts.scaleStart;
-    this._scaleEnd = opts.scaleEnd;
+    this.setDuration(Math.max(1, opts.duration));
+    this.setStartAlpha(opts.startAlpha);
+    this.setEndAlpha(opts.endAlpha);
+    this.setScaleStart(opts.scaleStart);
+    this.setScaleEnd(opts.scaleEnd);
 
     // cache style.
-    this._lineColor = opts.lineColor;
-    this._lineAlpha = opts.lineAlpha;
-    this._lineWidth = opts.lineWidth;
-    this._fillColor = opts.fillColor;
-    this._fillAlpha = opts.fillAlpha;
-    this._blendMode = opts.blendMode;
+    this.setLineColor(opts.lineColor);
+    this.setLineAlpha(opts.lineAlpha);
+    this.setLineWidth(opts.lineWidth);
+    this.setFillColor(opts.fillColor);
+    this.setFillAlpha(opts.fillAlpha);
+    this.blendMode = opts.blendMode;
 
     // cache geometry.
-    this._shape = opts.shape;
-    this._range = Math.max(0, opts.range);
-    this._degrees = opts.degrees !== undefined
+    this.setShape(opts.shape);
+    this.setRange(Math.max(0, opts.range));
+    this.setDegrees(opts.degrees !== undefined
       ? opts.degrees
-      : 180;
-    this._thickness = opts.thickness !== undefined
+      : 180);
+    this.setThickness(opts.thickness !== undefined
       ? Math.max(0, opts.thickness)
-      : 1;
-    this._innerRadius = opts.innerRadius !== undefined
+      : 1);
+    this.setInnerRadius(opts.innerRadius !== undefined
       ? Math.max(0, opts.innerRadius)
-      : 0;
+      : 0);
 
     // sustained overlays are ticked by JABS_HitboxPulseManager.sync, not the ephemeral pool update().
-    this._sustained = opts.sustained === true;
+    this.setSustained(opts.sustained === true);
 
-    // set blend.
-    this.blendMode = this._blendMode;
 
     // draw the geometry now (static path; only alpha/scale animates per frame).
     this.drawGeometry();
 
     // snap visual curve for sustained pulses so they read as a steady outline during the swing.
-    if (this._sustained)
+    if (this.isSustained())
     {
-      this.alpha = this._startAlpha;
-      this.scale.set(this._scaleStart, this._scaleStart);
+      this.alpha = this.startAlpha();
+      this.scale.set(this.scaleStart(), this.scaleStart());
     }
   }
 
@@ -134,12 +486,12 @@ class Sprite_HitboxPulse
   drawGeometry()
   {
     // clear previous path.
-    const g = this._graphics;
+    const g = this.graphics();
     g.clear();
 
     // apply outline and fill.
-    g.lineStyle(this._lineWidth, this._lineColor, this._lineAlpha);
-    g.beginFill(this._fillColor, this._fillAlpha);
+    g.lineStyle(this.lineWidth(), this.lineColor(), this.lineAlpha());
+    g.beginFill(this.fillColor(), this.fillAlpha());
 
     // set by the Arc/default branch when it bakes the dead zone into its own polygon,
     // so the generic hole-punch below doesn't double-apply on top of it.
@@ -149,12 +501,12 @@ class Sprite_HitboxPulse
     const tile = $gameMap.tileWidth();
 
     // resolve per-shape drawing.
-    switch (this._shape)
+    switch (this.shape())
     {
       case J.ABS.Shapes.Circle:
       {
         // compute world-space pixel radius.
-        const r = this._range * tile;
+        const r = this.range() * tile;
 
         // draw the circle centered at local origin.
         g.drawCircle(0, 0, r);
@@ -167,7 +519,7 @@ class Sprite_HitboxPulse
       case J.ABS.Shapes.Wall:        // approximation (wall uses Line in engine; see Line branch below if needed)
       {
         // use a square AABB centered on origin with half-extent = range.
-        const half = this._range * tile;
+        const half = this.range() * tile;
         g.drawRect(-half, -half, half * 2, half * 2);
         break;
       }
@@ -175,8 +527,8 @@ class Sprite_HitboxPulse
       case J.ABS.Shapes.Line:
       {
         // a rectangle extending forward from origin by `range` with thickness.
-        const length = this._range * tile;
-        const thick = Math.max(1, this._thickness * tile);
+        const length = this.range() * tile;
+        const thick = Math.max(1, this.thickness() * tile);
         g.drawRect(0, -thick * 0.5, length, thick);
         break;
       }
@@ -185,15 +537,15 @@ class Sprite_HitboxPulse
       default:
       {
         // draw a sector (wedge) oriented along +X (we rotate the sprite externally).
-        const r = this._range * tile;
-        const deg = Math.max(0, Math.min(360, this._degrees));
+        const r = this.range() * tile;
+        const deg = Math.max(0, Math.min(360, this.degrees()));
         const rad = deg * Math.PI / 180;
         const startAngle = -rad / 2;  // symmetric about +X axis
         const endAngle = rad / 2;
 
         // sample the arc with a reasonable step for smoothness; ~1 sample per 8°.
         const steps = Math.max(2, Math.ceil(deg / 8));
-        const innerRadiusPx = this._innerRadius * tile;
+        const innerRadiusPx = this.innerRadius() * tile;
 
         if (innerRadiusPx > 0)
         {
@@ -242,9 +594,9 @@ class Sprite_HitboxPulse
 
     // punch the universal dead zone out of every shape that didn't already bake it directly
     // into its own polygon above (Arc, and any unrecognized shape sharing its fallback path).
-    if (this._innerRadius > 0 && holeAlreadyBaked === false)
+    if (this.innerRadius() > 0 && holeAlreadyBaked === false)
     {
-      const innerRadiusPx = this._innerRadius * tile;
+      const innerRadiusPx = this.innerRadius() * tile;
       g.beginHole();
       g.drawCircle(0, 0, innerRadiusPx);
       g.endHole();
@@ -288,20 +640,20 @@ class Sprite_HitboxPulse
   update()
   {
     // sustained pulses live outside the ephemeral pool timeline.
-    if (this._sustained)
+    if (this.isSustained())
     {
       return;
     }
 
     // increment age.
-    this._age++;
+    this.setAge(this.age() + 1);
 
     // compute progress 0..1.
-    const t = Math.min(1, this._age / this._duration);
+    const t = Math.min(1, this.age() / this.duration());
 
     // interpolate alpha and scale.
-    const a = this._startAlpha + (this._endAlpha - this._startAlpha) * t;
-    const s = this._scaleStart + (this._scaleEnd - this._scaleStart) * t;
+    const a = this.startAlpha() + (this.endAlpha() - this.startAlpha()) * t;
+    const s = this.scaleStart() + (this.scaleEnd() - this.scaleStart()) * t;
 
     // assign transforms.
     this.alpha = a;
@@ -315,13 +667,13 @@ class Sprite_HitboxPulse
   isExpired()
   {
     // sustained pulses never expire through age; the manager detaches them explicitly.
-    if (this._sustained)
+    if (this.isSustained())
     {
       return false;
     }
 
     // report if this pulse has reached or exceeded its lifetime.
-    return this._age >= this._duration;
+    return this.age() >= this.duration();
   }
 
   //endregion update

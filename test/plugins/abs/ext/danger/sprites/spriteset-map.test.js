@@ -29,6 +29,9 @@ describe('J-ABS-Danger Spriteset_Map (unit, all downstream dependencies mocked)'
     globalThis.Spriteset_Map = Spriteset_Map;
 
     await import('../../../../../../src/plugins/abs/ext/danger/sprites/Spriteset_Map.js');
+
+    // J-Base accessors the production code now reads through.
+    globalThis.Spriteset_Map.prototype.characterSprites = function() { return this._characterSprites; };
   });
 
   beforeEach(() =>

@@ -12,7 +12,7 @@ Scene_Menu.prototype.createCommandWindow = function()
     .call(this);
 
   // add an additional handler for the new menu.
-  this._commandWindow.setHandler(J.OMNI.Metadata.Command.Symbol, this.commandOmnipedia.bind(this));
+  this.commandWindow().setHandler(J.OMNI.Metadata.Command.Symbol, this.commandOmnipedia.bind(this));
 };
 
 /**

@@ -8,6 +8,20 @@ class Window_QuestopediaList
    * The category that this list is being filtered by. When an empty string, no filter is applied.
    * @type {string}
    */
+  
+
+  //region properties
+  /**
+   * Gets the quest filtering.
+   * @returns {*} The questFiltering.
+   */
+  questFiltering()
+  {
+    // hand back the quest filtering.
+    return this._questFiltering;
+  }
+  //endregion properties
+
   _currentCategoryKey = String.empty;
 
   /**
@@ -61,7 +75,7 @@ class Window_QuestopediaList
     const questEntries = $gameParty.getQuestopediaEntries();
 
     // filter the quests by various criteria.
-    const filteredQuests = questEntries.filter(this._questFiltering, this);
+    const filteredQuests = questEntries.filter(this.questFiltering(), this);
 
     // no quests to display.
     if (filteredQuests.length === 0) return [];

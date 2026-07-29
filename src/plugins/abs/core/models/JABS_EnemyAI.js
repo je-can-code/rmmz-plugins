@@ -531,7 +531,10 @@ class JABS_EnemyAI
 
     healingTypeSkills.forEach(skillId =>
     {
-      const skill = $dataSkills[skillId];
+      // resolve through the battler rather than reading the database row directly- a raw lookup
+      // returns the un-extended skill, so a caster carrying an <extend:> overlay for this heal would
+      // pick its target using the base formula and then execute the overlaid one.
+      const skill = user.getSkill(skillId);
       const testAction = new Game_Action(user.getBattler());
       testAction.setItemObject(skill);
       const healAmount = testAction.makeDamageValue(mostWoundedAllyBattler, false);

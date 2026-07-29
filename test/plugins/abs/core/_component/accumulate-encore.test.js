@@ -109,6 +109,7 @@ describe('Accumulate Mode / Encore (direct src import)', () =>
         refreshEncoreRepeats: globalThis.Game_Battler.prototype.refreshEncoreRepeats,
         setEncoreRepeats: globalThis.Game_Battler.prototype.setEncoreRepeats,
         getEncoreRepeats: globalThis.Game_Battler.prototype.getEncoreRepeats,
+        encoreRepeats: globalThis.Game_Battler.prototype.encoreRepeats,
         _j: { _abs: { _encoreRepeats: 0 } },
       };
     }

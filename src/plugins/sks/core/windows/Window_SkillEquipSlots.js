@@ -105,6 +105,9 @@ class Window_SkillEquipSlots
    */
   setVisibleSlots(count)
   {
+    // nothing to redraw when the value has not changed.
+    if (this._visibleSlots === count) return;
+
     // assign the value.
     this._visibleSlots = count;
 

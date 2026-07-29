@@ -255,8 +255,7 @@ class Window_StatusStatBreakdown
     // Trait multipliers by group.
     const trActor = this.paramRateFromTraits([ actor.actor() ], paramId);
     const trClass = this.paramRateFromTraits([ actor.currentClass() ], paramId);
-    const trEquips = this.paramRateFromTraits(actor.equips()
-      .filter(equip => !!equip), paramId);
+    const trEquips = this.paramRateFromTraits(actor.equippedEquips(), paramId);
     const trStates = this.paramRateFromTraits(actor.states(), paramId);
 
     // Multiply them together for a single product.
@@ -660,8 +659,7 @@ class Window_StatusStatBreakdown
     // trait multipliers by group (omit neutral later).
     const rActor = this.sparamRateFromTraits([ actor.actor() ], sId);
     const rClass = this.sparamRateFromTraits([ actor.currentClass() ], sId);
-    const rEquips = this.sparamRateFromTraits(actor.equips()
-      .filter(equip => !!equip), sId);
+    const rEquips = this.sparamRateFromTraits(actor.equippedEquips(), sId);
     const rStates = this.sparamRateFromTraits(actor.states(), sId);
 
     // NATURAL Growth as multiplier around baseline 1.0 (rate only previously shown).

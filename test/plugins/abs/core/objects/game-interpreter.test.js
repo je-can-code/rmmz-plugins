@@ -30,6 +30,9 @@ describe('J-ABS Game_Interpreter (unit, all downstream dependencies mocked)', ()
         originals[key] = vi.fn(() => `original-${key}`);
         Game_Interpreter.prototype[key] = originals[key];
       });
+    // vanilla accessor the abs layer reads through.
+    Game_Interpreter.prototype.eventId = function() { return this._eventId; };
+
     globalThis.Game_Interpreter = Game_Interpreter;
 
     globalThis.Scene_Battle = class {};
@@ -40,6 +43,15 @@ describe('J-ABS Game_Interpreter (unit, all downstream dependencies mocked)', ()
     globalThis.Window_MenuCommand = { initCommandPosition: vi.fn() };
 
     await import('../../../../../src/plugins/abs/core/objects/Game_Interpreter.js');
+
+    // J-Base accessors the production code now reads through.
+    globalThis.Game_Interpreter.prototype.commonEventId = function() { return this._commonEventId; };
+    globalThis.Game_Interpreter.prototype.index = function() { return this._index; };
+    globalThis.Game_Interpreter.prototype.setIndex = function(v) { this._index = v; };
+
+    // J-Base accessors the production code now reads through.
+    globalThis.Game_Interpreter.prototype.branch = function() { return this._branch; };
+    globalThis.Game_Interpreter.prototype.indent = function() { return this._indent; };
   });
 
   beforeEach(() =>

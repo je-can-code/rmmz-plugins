@@ -52,14 +52,14 @@ Game_Player.prototype.moveDiagonally = function(horz, vert)
   if (this.isMovementSucceeded() === true) return;
 
   // try sliding vertically.
-  this.setMovementSuccess(this.canPass(this._x, this._y, vert));
+  this.setMovementSuccess(this.canPass(this.x, this.y, vert));
   if (this.isMovementSucceeded())
   {
     this.moveStraight(vert);
   }
 
   // try sliding horizontally.
-  this.setMovementSuccess(this.canPass(this._x, this._y, horz));
+  this.setMovementSuccess(this.canPass(this.x, this.y, horz));
   if (this.isMovementSucceeded())
   {
     this.moveStraight(horz);

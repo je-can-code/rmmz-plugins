@@ -235,6 +235,7 @@ describe('J-ABS formula-based bonus hits (direct src import)', () =>
       return {
         _baseSkill: skillRow,
         getBaseSkill: () => skillRow,
+        baseSkill: () => skillRow,
         getCaster: () => casterJabsBattler,
         makeHitsPerConnectionBonus: globalThis.JABS_Action.prototype.makeHitsPerConnectionBonus,
       };

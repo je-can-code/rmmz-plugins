@@ -740,7 +740,7 @@ describe('JABS_Action (direct src import)', () =>
     it('returns null trigger radius when the skill has none configured', () =>
     {
       // Arrange & Act
-      const action = buildAction({ skill: buildSkill({ jabsDelayTriggerRadius: undefined }) });
+      const action = buildAction({ skill: buildSkill({ jabsDelayTriggerRadius: null }) });
 
       // Assert
       expect(action.getTriggerRadius()).toBeNull();

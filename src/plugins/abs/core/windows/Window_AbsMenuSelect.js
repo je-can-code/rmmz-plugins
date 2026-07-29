@@ -8,6 +8,20 @@ class Window_AbsMenuSelect
   extends Window_Command
 {
   /* eslint-disable prefer-destructuring */
+  
+
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   static SelectionTypes = {
     SkillList: 'skill',
     SkillEquip: 'equip-skill',
@@ -52,7 +66,7 @@ class Window_AbsMenuSelect
    */
   makeCommandList()
   {
-    switch (this._j._menuType)
+    switch (this.j()._menuType)
     {
       case Window_AbsMenuSelect.SelectionTypes.SkillList:
         // the list of all equippable combat skills this actor knows.

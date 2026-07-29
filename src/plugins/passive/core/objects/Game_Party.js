@@ -48,7 +48,7 @@ Game_Party.prototype.initPassiveItemStates = function()
  */
 Game_Party.prototype.passiveStateIds = function()
 {
-  return this._j._passive._states;
+  return this.states();
 };
 
 /**
@@ -57,7 +57,7 @@ Game_Party.prototype.passiveStateIds = function()
  */
 Game_Party.prototype.passiveStates = function()
 {
-  return this._j._passive._cachedStates;
+  return this.cachedStates();
 };
 
 /**
@@ -76,10 +76,10 @@ Game_Party.prototype.state = function(stateId)
 Game_Party.prototype.clearPassiveStates = function()
 {
   // empty the state tracker.
-  this._j._passive._states = [];
+  this.setStates([]);
 
   // empty the cached states, too.
-  this._j._passive._cachedStates = [];
+  this.setCachedStates([]);
 };
 
 /**
@@ -90,13 +90,13 @@ Game_Party.prototype.clearPassiveStates = function()
 Game_Party.prototype.addPassiveStateId = function(stateId, allowDuplicates = true)
 {
   // check if we disallow duplicates and already have the state tracked.
-  if (!allowDuplicates && this._j._passive._states.has(stateId)) return;
+  if (!allowDuplicates && this.states().has(stateId)) return;
 
   // add the state id to the tracker for passive states.
-  this._j._passive._states.push(stateId);
+  this.states().push(stateId);
 
   // add the converted state object to the cache.
-  this._j._passive._cachedStates.push(this.state(stateId));
+  this.cachedStates().push(this.state(stateId));
 };
 
 /**
@@ -226,4 +226,46 @@ Game_Party.prototype.gainItem = function(item, amount, includeEquip)
   // also refresh our passive states tracker.
   this.refreshPassiveStates();
 };
+
+//region properties
+/**
+ * Gets the passive state ids currently applied across the whole party.
+ * @returns {number[]} The party-wide passive state ids.
+ */
+Game_Party.prototype.states = function()
+{
+  // hand back the states.
+  return this._j._passive._states;
+};
+
+/**
+ * Sets the passive state ids applied across the whole party.
+ * @param {number[]} newStates The party-wide passive state ids.
+ */
+Game_Party.prototype.setStates = function(newStates)
+{
+  // assign the states.
+  this._j._passive._states = newStates;
+};
+
+/**
+ * Gets the cached states.
+ * @returns {*} The cachedStates.
+ */
+Game_Party.prototype.cachedStates = function()
+{
+  // hand back the cached states.
+  return this._j._passive._cachedStates;
+};
+
+/**
+ * Sets the cached states.
+ * @param {*} newCachedStates The new cachedStates.
+ */
+Game_Party.prototype.setCachedStates = function(newCachedStates)
+{
+  // assign the cached states.
+  this._j._passive._cachedStates = newCachedStates;
+};
+//endregion properties
 //endregion Game_Party

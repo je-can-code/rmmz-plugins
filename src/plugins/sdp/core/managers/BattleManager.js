@@ -11,10 +11,10 @@ BattleManager.makeRewards = function()
     .call(this);
 
   // extend the rewards to include SDP points.
-  this._rewards = {
-    ...this._rewards,
+  this.setRewards({
+    ...this.rewards(),
     sdp: $gameTroop.sdpTotal(),
-  };
+  });
 };
 
 /**
@@ -38,7 +38,7 @@ BattleManager.gainRewards = function()
 BattleManager.gainSdpPoints = function()
 {
   // extract the SDP points earned.
-  const { sdp } = this._rewards;
+  const { sdp } = this.rewards();
 
   // iterate over each member and add the points.
   $gameParty.members()
@@ -66,7 +66,7 @@ BattleManager.displayRewards = function()
 BattleManager.displaySdp = function()
 {
   // extract the SDP points earned.
-  const { sdp } = this._rewards;
+  const { sdp } = this.rewards();
 
   // if there were no SDP rewards, don't display anything.
   if (sdp <= 0) return;

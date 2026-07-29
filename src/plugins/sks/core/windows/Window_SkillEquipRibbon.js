@@ -24,6 +24,18 @@ class Window_SkillEquipRibbon
     super.initMembers();
   }
 
+  //region properties
+  /**
+   * Gets the actor.
+   * @returns {*} The actor.
+   */
+  actor()
+  {
+    // hand back the actor.
+    return this._actor;
+  }
+  //endregion properties
+
   /**
    * Clears and redraws the contents of this window.
    */
@@ -33,7 +45,7 @@ class Window_SkillEquipRibbon
     super.drawContent();
 
     // don't draw if the actor is unavailable.
-    if (!this._actor) return;
+    if (!this.actor()) return;
 
     // draw the actor name and slot info.
     this.drawNameAndPoints();

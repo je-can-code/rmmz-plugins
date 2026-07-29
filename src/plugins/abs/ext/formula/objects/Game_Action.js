@@ -107,7 +107,7 @@ Game_Action.prototype.resolveFormulaRecipients = function(affect, parentTarget)
       if (!subjJabs) return [];
       const allies = JABS_AiManager.getAlliedBattlers(subjJabs);
       return mapToBattlers(allies)
-        .filter(this._filterFormulaEligibleBattler, this);
+        .filter(this.filterFormulaEligibleBattler(), this);
     }
 
     case FormulaEffect.Affect.ENEMIES:
@@ -116,14 +116,14 @@ Game_Action.prototype.resolveFormulaRecipients = function(affect, parentTarget)
       if (!subjJabs) return [];
       const foes = JABS_AiManager.getOpposingBattlers(subjJabs);
       return mapToBattlers(foes)
-        .filter(this._filterFormulaEligibleBattler, this);
+        .filter(this.filterFormulaEligibleBattler(), this);
     }
 
     case FormulaEffect.Affect.ALL:
     {
       const all = JABS_AiManager.getAllBattlers();
       return mapToBattlers(all)
-        .filter(this._filterFormulaEligibleBattler, this);
+        .filter(this.filterFormulaEligibleBattler(), this);
     }
   }
 
@@ -489,4 +489,16 @@ Game_Action.prototype.applyGlobal = function()
   J.ABS.EXT.FORMULA.Aliased.Game_Action.get("applyGlobal")
     .call(this);
 };
+
+//region properties
+/**
+ * Gets the filter formula eligible battler.
+ * @returns {*} The filterFormulaEligibleBattler.
+ */
+Game_Action.prototype.filterFormulaEligibleBattler = function()
+{
+  // hand back the filter formula eligible battler.
+  return this._filterFormulaEligibleBattler;
+};
+//endregion properties
 //endregion Game_Action

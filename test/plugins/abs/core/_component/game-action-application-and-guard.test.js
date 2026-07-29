@@ -38,6 +38,12 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
     // patches globalThis.Game_Action.prototype directly, no vm involved.
     await import('../../../../../src/plugins/abs/core/objects/Game_Action.js');
 
+    // J-Base accessors the production code now reads through.
+    globalThis.Game_Action.prototype.subjectActorId = function() { return this._subjectActorId; };
+    globalThis.Game_Action.prototype.setSubjectActorId = function(v) { this._subjectActorId = v; };
+    globalThis.Game_Action.prototype.setSubjectEnemyIndex = function(v) { this._subjectEnemyIndex = v; };
+    globalThis.Game_Action.prototype.subjectEnemyIndex = function() { return this._subjectEnemyIndex; };
+
     // Game_Action.js imports this for real (not via globalThis)- register test doubles
     // directly on its real static `battlers` Map rather than stubbing a global.
     ({ default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js'));

@@ -58,6 +58,6 @@ Game_System.prototype.disableForcedSdpDrops = function()
  */
 Game_System.prototype.shouldForceDropSdp = function()
 {
-  return this._j._sdp._forceDropPanels ?? false;
+  return this._j._sdp._forceDropPanels;
 };
 //endregion Game_System

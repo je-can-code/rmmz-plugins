@@ -58,6 +58,58 @@ class J_Timer
     this._timer = 0;
   }
 
+  //region properties
+  /**
+   * Gets the timer.
+   * @returns {*} The timer.
+   */
+  timer()
+  {
+    // hand back the timer.
+    return this._timer;
+  }
+
+  /**
+   * Sets the timer.
+   * @param {*} newTimer The new timer.
+   */
+  setTimer(newTimer)
+  {
+    // assign the timer.
+    this._timer = newTimer;
+  }
+
+  /**
+   * Gets the timer max.
+   * @returns {*} The timerMax.
+   */
+  timerMax()
+  {
+    // hand back the timer max.
+    return this._timerMax;
+  }
+
+  /**
+   * Sets the timer max.
+   * @param {*} newTimerMax The new timerMax.
+   */
+  setTimerMax(newTimerMax)
+  {
+    // assign the timer max.
+    this._timerMax = newTimerMax;
+  }
+
+  /**
+   * Gets the stop counting.
+   * @returns {*} The stopCounting.
+   */
+  stopCounting()
+  {
+    // hand back the stop counting.
+    return this._stopCounting;
+  }
+  //endregion properties
+
   /**
    * Gets the key of this timer, if one was set.
    * @returns {string|String.empty}
@@ -82,7 +134,7 @@ class J_Timer
    */
   getCurrentTime()
   {
-    return this._timer;
+    return this.timer();
   }
 
   /**
@@ -93,7 +145,7 @@ class J_Timer
    */
   setCurrentTime(time)
   {
-    this._timer = time;
+    this.setTimer(time);
 
     // handle the possibility of the timer becoming incomplete.
     this._handleIfIncomplete();
@@ -112,7 +164,7 @@ class J_Timer
   modCurrentTime(time)
   {
     // modify by this amount.
-    this._timer += time;
+    this.setTimer(this.timer() + time);
 
     // handle the possibility of the timer becoming incomplete.
     this._handleIfIncomplete();
@@ -121,7 +173,7 @@ class J_Timer
     this._handleIfComplete();
 
     // for convenience, returns the new total.
-    return this._timer;
+    return this.timer();
   }
 
   /**
@@ -130,7 +182,7 @@ class J_Timer
    */
   getMaxTime()
   {
-    return this._timerMax;
+    return this.timerMax();
   }
 
   /**
@@ -139,7 +191,7 @@ class J_Timer
    */
   setMaxTime(maxTime)
   {
-    this._timerMax = maxTime;
+    this.setTimerMax(maxTime);
   }
 
   /**
@@ -148,7 +200,7 @@ class J_Timer
    */
   shouldStopCounting()
   {
-    return this._stopCounting;
+    return this.stopCounting();
   }
 
   /**
@@ -163,7 +215,7 @@ class J_Timer
     if (!this.shouldStopCounting()) return;
 
     // reset the time to the max time.
-    this._timer = this.getMaxTime();
+    this.setTimer(this.getMaxTime());
   }
 
   /**
@@ -181,7 +233,7 @@ class J_Timer
   reset()
   {
     // re-initialize the timer.
-    this._timer = 0;
+    this.setTimer(0);
 
     // re-initialize the completion flag.
     this._timerComplete = false;
@@ -208,7 +260,7 @@ class J_Timer
     if (this.isTimerComplete()) return;
 
     // increment the timer.
-    this._timer++;
+    this.setTimer(this.timer() + 1);
   }
 
   /**
@@ -226,7 +278,7 @@ class J_Timer
   _handleIfIncomplete()
   {
     // check if we are below the max time duration.
-    if (this._timer < this._timerMax)
+    if (this.timer() < this.timerMax())
     {
       // going below the timer marks this timer as incomplete.
       this._timerComplete = false;
@@ -245,7 +297,7 @@ class J_Timer
     if (this.isTimerComplete()) return;
 
     // check if we have reached or exceeded the max time duration.
-    if (this._timer >= this._timerMax)
+    if (this.timer() >= this.timerMax())
     {
       // surpassing the timer marks this timer as complete.
       this._timerComplete = true;

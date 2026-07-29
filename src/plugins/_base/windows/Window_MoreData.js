@@ -179,7 +179,7 @@ class Window_MoreData
   adjustWindowHeight()
   {
     const magicHeight = 800;
-    const calculatedHeight = (this._list.length + 1) * (this.lineHeight() + 8) - 16;
+    const calculatedHeight = (this.commandList().length + 1) * (this.lineHeight() + 8) - 16;
     if (calculatedHeight >= magicHeight)
     {
       // assign height on this instance for callers.

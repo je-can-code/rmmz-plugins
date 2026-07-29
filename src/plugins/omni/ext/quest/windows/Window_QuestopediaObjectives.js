@@ -31,7 +31,7 @@ class Window_QuestopediaObjectives
    */
   getCurrentObjectives()
   {
-    return this._currentObjectives ?? [];
+    return this._currentObjectives;
   }
 
   /**

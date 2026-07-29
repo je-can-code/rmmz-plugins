@@ -33,6 +33,9 @@ describe('J-ABS-AllyAI Game_Actor (unit, all downstream dependencies mocked)', (
     originalSetup = vi.fn();
     Game_Actor.prototype.initMembers = originalInitMembers;
     Game_Actor.prototype.setup = originalSetup;
+    // vanilla accessor the allyai layer reads through.
+    Game_Actor.prototype.actorId = function() { return this._actorId; };
+
     globalThis.Game_Actor = Game_Actor;
 
     await import('../../../../../../src/plugins/abs/ext/allyai/objects/Game_Actor.js');

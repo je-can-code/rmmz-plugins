@@ -49,7 +49,7 @@ Scene_Skill.prototype.createSkillDetailWindow = function()
 {
   const rect = this.skillDetailRect();
   this._skillDetailWindow = new Window_SkillDetail(rect);
-  this._itemWindow.setSkillDetailWindow(this._skillDetailWindow);
+  this.itemWindow().setSkillDetailWindow(this._skillDetailWindow);
   this.addWindow(this._skillDetailWindow);
 };
 
@@ -60,11 +60,11 @@ Scene_Skill.prototype.createSkillDetailWindow = function()
 Scene_Skill.prototype.skillDetailRect = function()
 {
   const ww = Graphics.boxWidth - this.mainCommandWidth();
-  const wh = this.mainAreaHeight() - this._statusWindow.height
+  const wh = this.mainAreaHeight() - this.statusWindow().height
   const wx = this.isRightInputMode()
     ? 0
     : Graphics.boxWidth - ww;
-  const wy = this.mainAreaTop() + this._statusWindow.height;
+  const wy = this.mainAreaTop() + this.statusWindow().height;
   return new Rectangle(wx, wy, ww, wh);
 };
 
@@ -88,11 +88,11 @@ Scene_Skill.prototype.buttonAreaHeight = () => 0;
 Scene_Skill.prototype.itemWindowRect = function()
 {
   const ww = this.mainCommandWidth();
-  const wh = this.mainAreaHeight() - this._statusWindow.height;
+  const wh = this.mainAreaHeight() - this.statusWindow().height;
   const wx = this.isRightInputMode()
     ? Graphics.boxWidth - ww
     : 0;
-  const wy = this._statusWindow.y + this._statusWindow.height;
+  const wy = this.statusWindow().y + this.statusWindow().height;
   return new Rectangle(wx, wy, ww, wh);
 };
 //endregion Scene_Skill

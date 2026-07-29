@@ -39,50 +39,50 @@ Spriteset_Map.prototype.createJabsLayer = function ()
    * The container for all debug-centric hitbox sprites.
    * @type {Sprite}
    */
-  this._j._abs._debugHitboxLayer = new Sprite();
+  this.setDebugHitboxLayer(new Sprite());
 
   /**
    * Direct tracking for individual sprites by their uuid.
    * @type {Record<string, Sprite>}
    */
-  this._j._abs._debugActionHitboxSprites = {};
+  this.setDebugActionHitboxSprites({});
 
   /**
    * Direct tracking for battler hitbox sprites by their stable key.
    * Keys include enemy battler uuids, and fixed keys for player/followers.
    * @type {Record<string, Sprite>}
    */
-  this._j._abs._debugBattlerHitboxSprites = {};
+  this.setDebugBattlerHitboxSprites({});
 
   /**
    * Direct tracking for cast preview sprites by battler uuid.
    * Keys are of the form: `castpreview:${uuid}`.
    * @type {Record<string, Sprite>}
    */
-  this._j._abs._castPreviewSprites = {};
+  this.setCastPreviewSprites({});
 
   /**
    * The container for cast preview sprites.
    * @type {Sprite}
    */
-  this._j._abs._castPreviewLayer = new Sprite();
+  this.setCastPreviewLayer(new Sprite());
 
   /**
    * The container for transient hitbox pulses.
    * @type {Sprite}
    */
-  this._j._abs._hitboxPulseLayer = new Sprite();
+  this.setHitboxPulseLayer(new Sprite());
 
   // mount under tilemap for consistent coordinates.
-  this.addChild(this._j._abs._debugHitboxLayer);
-  this.addChild(this._j._abs._castPreviewLayer);
-  this._tilemap.addChild(this._j._abs._hitboxPulseLayer);
+  this.addChild(this.debugHitboxLayer());
+  this.addChild(this.castPreviewLayer());
+  this.tilemap().addChild(this.hitboxPulseLayer());
 
   // ensure no stale pulses from a prior map remain.
   JABS_HitboxPulseManager.clear();
 
   // bind the new layer to the static manager.
-  JABS_HitboxPulseManager.setLayer(this._j._abs._hitboxPulseLayer);
+  JABS_HitboxPulseManager.setLayer(this.hitboxPulseLayer());
 
   // apply optional manager configuration (duration, alpha, scale, colors, blend, etc.).
   JABS_HitboxPulseManager.configure(J.ABS.Metadata.HitboxPulse);
@@ -97,7 +97,7 @@ Spriteset_Map.prototype.createJabsLayer = function ()
  */
 Spriteset_Map.prototype.getJabsHitboxLayer = function ()
 {
-  return this._j._abs._debugHitboxLayer;
+  return this.debugHitboxLayer();
 };
 
 /**
@@ -106,7 +106,7 @@ Spriteset_Map.prototype.getJabsHitboxLayer = function ()
  */
 Spriteset_Map.prototype.getCastPreviewLayer = function ()
 {
-  return this._j._abs._castPreviewLayer;
+  return this.castPreviewLayer();
 };
 
 /**
@@ -115,7 +115,7 @@ Spriteset_Map.prototype.getCastPreviewLayer = function ()
  */
 Spriteset_Map.prototype.getActionHitboxSprites = function ()
 {
-  return this._j._abs._debugActionHitboxSprites;
+  return this.debugActionHitboxSprites();
 };
 
 /**
@@ -124,7 +124,7 @@ Spriteset_Map.prototype.getActionHitboxSprites = function ()
  */
 Spriteset_Map.prototype.getBattlerHitboxSprites = function ()
 {
-  return this._j._abs._debugBattlerHitboxSprites; // return the dict.
+  return this.debugBattlerHitboxSprites(); // return the dict.
 };
 //endregion init
 
@@ -221,8 +221,8 @@ Spriteset_Map.prototype.addActionSprite = function (actionEvent)
   const sprite = new Sprite_Character(character);
 
   // add the sprite to tracking.
-  this._characterSprites.push(sprite);
-  this._tilemap.addChild(sprite);
+  this.characterSprites().push(sprite);
+  this.tilemap().addChild(sprite);
 
   // acknowledge that the sprite was added.
   actionEvent.setActionSpriteNeedsAdding(false);
@@ -254,20 +254,20 @@ Spriteset_Map.prototype.removeActionSprite = function (actionEvent)
 
   // Find all sprites that match this character (defensive: remove all we find).
   const matches = [];
-  for (let i = this._characterSprites.length - 1; i >= 0; i--)
+  for (let i = this.characterSprites().length - 1; i >= 0; i--)
   {
-    const sprite = this._characterSprites[i];
+    const sprite = this.characterSprites()[i];
 
     // character() must match exactly the character we created the sprite with.
     if (character && sprite.character() === character)
     {
       // remove from tracking first.
-      this._characterSprites.splice(i, 1);
+      this.characterSprites().splice(i, 1);
 
       // remove from the display tree if attached.
-      if (this._tilemap && sprite.parent === this._tilemap)
+      if (this.tilemap() && sprite.parent === this.tilemap())
       {
-        this._tilemap.removeChild(sprite);
+        this.tilemap().removeChild(sprite);
       }
 
       // destroy the sprite to stop updates and free resources.
@@ -285,13 +285,13 @@ Spriteset_Map.prototype.removeActionSprite = function (actionEvent)
   // fall back to the original search by actionEvent (legacy behavior).
   if (matches.length === 0)
   {
-    const idx = this._characterSprites.findIndex(s => s.character() === actionEvent);
+    const idx = this.characterSprites().findIndex(s => s.character() === actionEvent);
     if (idx !== -1)
     {
-      const [ sprite ] = this._characterSprites.splice(idx, 1);
-      if (this._tilemap && sprite && sprite.parent === this._tilemap)
+      const [ sprite ] = this.characterSprites().splice(idx, 1);
+      if (this.tilemap() && sprite && sprite.parent === this.tilemap())
       {
-        this._tilemap.removeChild(sprite);
+        this.tilemap().removeChild(sprite);
       }
       if (sprite && !sprite.destroyed)
       {
@@ -336,7 +336,7 @@ Spriteset_Map.prototype.purgeActionSpritesByUuid = function (uuid)
   }
 
   // 2) Purge from cast preview dictionary.
-  const previewDict = this._j._abs._castPreviewSprites;
+  const previewDict = this.castPreviewSprites();
   const previewKey = `castpreview:${uuid}`;
   const previewSprite = previewDict[previewKey];
   if (previewSprite)
@@ -388,8 +388,8 @@ Spriteset_Map.prototype.addBattlerSprite = function (battlerEvent)
   const sprite = new Sprite_Character(battlerEvent);
 
   // add the sprite to tracking.
-  this._characterSprites.push(sprite);
-  this._tilemap.addChild(sprite);
+  this.characterSprites().push(sprite);
+  this.tilemap().addChild(sprite);
 
   // acknowledge that the sprite was added.
   battlerEvent.removeFlagForAddingBattler();
@@ -442,8 +442,8 @@ Spriteset_Map.prototype.addLootSprite = function (lootEvent)
   const sprite = new Sprite_Character(lootEvent);
 
   // add the sprite to tracking.
-  this._characterSprites.push(sprite);
-  this._tilemap.addChild(sprite);
+  this.characterSprites().push(sprite);
+  this.tilemap().addChild(sprite);
 
   // acknowledge that the sprite was added.
   lootEvent.setLootNeedsAdding(false);
@@ -471,7 +471,7 @@ Spriteset_Map.prototype.removeLootSprites = function ()
 Spriteset_Map.prototype.removeLootSprite = function (lootEvent)
 {
   // attempt to find the sprite by direct character reference first.
-  let spriteIndex = this._characterSprites.findIndex(sprite =>
+  let spriteIndex = this.characterSprites().findIndex(sprite =>
   {
     // if the character doesn't match the event, then keep looking.
     if (sprite.character() !== lootEvent) return false;
@@ -493,7 +493,7 @@ Spriteset_Map.prototype.removeLootSprite = function (lootEvent)
     if (targetUuid)
     {
       // scan for a sprite whose underlying loot uuid matches.
-      spriteIndex = this._characterSprites.findIndex(sprite =>
+      spriteIndex = this.characterSprites().findIndex(sprite =>
       {
         // get the character associated with this sprite, if any.
         const character = sprite.character();
@@ -516,19 +516,19 @@ Spriteset_Map.prototype.removeLootSprite = function (lootEvent)
   if (spriteIndex !== -1)
   {
     // extract the sprite to be removed.
-    const sprite = this._characterSprites[spriteIndex];
+    const sprite = this.characterSprites()[spriteIndex];
 
     // delete that sprite's loot child sprites, if any.
     sprite.deleteLootSprite();
 
     // remove the sprite from the display tree if attached.
-    if (this._tilemap && sprite.parent === this._tilemap)
+    if (this.tilemap() && sprite.parent === this.tilemap())
     {
-      this._tilemap.removeChild(sprite);
+      this.tilemap().removeChild(sprite);
     }
 
     // purge the sprite from tracking.
-    this._characterSprites.splice(spriteIndex, 1);
+    this.characterSprites().splice(spriteIndex, 1);
 
     // destroy the sprite to stop updates and free resources.
     if (!sprite.destroyed)
@@ -562,8 +562,6 @@ Spriteset_Map.prototype.handleSpriteRefresh = function ()
  */
 Spriteset_Map.prototype.refreshAllCharacterSprites = function ()
 {
-  // ensure the collection exists.
-  this._characterSprites ||= [];
 
   // 1) Identify the current party characters to display.
   const player = $gamePlayer; // the leader
@@ -574,7 +572,7 @@ Spriteset_Map.prototype.refreshAllCharacterSprites = function ()
   let playerSprite = null;
   const followerSprites = [];
 
-  this._characterSprites.forEach(
+  this.characterSprites().forEach(
     (sprite) =>
     {
       // skip non-character or unexpected entries.
@@ -609,10 +607,10 @@ Spriteset_Map.prototype.refreshAllCharacterSprites = function ()
   {
     // If there was no existing player sprite, create and add one now.
     const newPlayerSprite = new Sprite_Character(player);
-    this._characterSprites.push(newPlayerSprite);
-    if (this._tilemap)
+    this.characterSprites().push(newPlayerSprite);
+    if (this.tilemap())
     {
-      this._tilemap.addChild(newPlayerSprite);
+      this.tilemap().addChild(newPlayerSprite);
     }
   }
 
@@ -623,10 +621,10 @@ Spriteset_Map.prototype.refreshAllCharacterSprites = function ()
     {
       const follower = followers[i];
       const followerSprite = new Sprite_Character(follower);
-      this._characterSprites.push(followerSprite);
-      if (this._tilemap)
+      this.characterSprites().push(followerSprite);
+      if (this.tilemap())
       {
-        this._tilemap.addChild(followerSprite);
+        this.tilemap().addChild(followerSprite);
       }
       followerSprites.push(followerSprite);
     }
@@ -737,7 +735,7 @@ Spriteset_Map.prototype.buildMissingCastPreviewSprites = function ()
 {
   // get the preview container and dict.
   const layer = this.getCastPreviewLayer(); // decoupled from debug overlay layer.
-  const dict = this._j._abs._castPreviewSprites; // preview sprite dict.
+  const dict = this.castPreviewSprites(); // preview sprite dict.
 
   // collect all active preview items for this frame.
   const items = this.collectActiveCastPreviewItems();
@@ -761,7 +759,7 @@ Spriteset_Map.prototype.buildMissingCastPreviewSprites = function ()
 Spriteset_Map.prototype.refreshExistingCastPreviewSprites = function ()
 {
   // grab the preview sprite dictionary for quick access.
-  const dict = this._j._abs._castPreviewSprites;
+  const dict = this.castPreviewSprites();
 
   // build an active-set of preview items for this frame keyed by their persistent key.
   const active = new Map();
@@ -849,7 +847,7 @@ Spriteset_Map.prototype.refreshExistingCastPreviewSprites = function ()
 Spriteset_Map.prototype.purgeOrphanedCastPreviewSprites = function ()
 {
   // pull dict and parent layer for previews.
-  const dict = this._j._abs._castPreviewSprites; // preview sprite dict.
+  const dict = this.castPreviewSprites(); // preview sprite dict.
   const layer = this.getCastPreviewLayer(); // parent layer for previews.
 
   // compute active keys for this frame.
@@ -2132,4 +2130,126 @@ Spriteset_Map.prototype.destroyBattlerHitboxSprite = function (sprite)
 };
 //endregion battler hitboxes
 //endregion hitbox sprites
+
+//region properties
+/**
+ * Gets the debug hitbox layer.
+ * @returns {*} The debugHitboxLayer.
+ */
+Spriteset_Map.prototype.debugHitboxLayer = function()
+{
+  // hand back the debug hitbox layer.
+  return this._j._abs._debugHitboxLayer;
+};
+
+/**
+ * Sets the debug hitbox layer.
+ * @param {*} newDebugHitboxLayer The new debugHitboxLayer.
+ */
+Spriteset_Map.prototype.setDebugHitboxLayer = function(newDebugHitboxLayer)
+{
+  // assign the debug hitbox layer.
+  this._j._abs._debugHitboxLayer = newDebugHitboxLayer;
+};
+
+/**
+ * Gets the debug action hitbox sprites.
+ * @returns {*} The debugActionHitboxSprites.
+ */
+Spriteset_Map.prototype.debugActionHitboxSprites = function()
+{
+  // hand back the debug action hitbox sprites.
+  return this._j._abs._debugActionHitboxSprites;
+};
+
+/**
+ * Sets the debug action hitbox sprites.
+ * @param {*} newDebugActionHitboxSprites The new debugActionHitboxSprites.
+ */
+Spriteset_Map.prototype.setDebugActionHitboxSprites = function(newDebugActionHitboxSprites)
+{
+  // assign the debug action hitbox sprites.
+  this._j._abs._debugActionHitboxSprites = newDebugActionHitboxSprites;
+};
+
+/**
+ * Gets the debug battler hitbox sprites.
+ * @returns {*} The debugBattlerHitboxSprites.
+ */
+Spriteset_Map.prototype.debugBattlerHitboxSprites = function()
+{
+  // hand back the debug battler hitbox sprites.
+  return this._j._abs._debugBattlerHitboxSprites;
+};
+
+/**
+ * Sets the debug battler hitbox sprites.
+ * @param {*} newDebugBattlerHitboxSprites The new debugBattlerHitboxSprites.
+ */
+Spriteset_Map.prototype.setDebugBattlerHitboxSprites = function(newDebugBattlerHitboxSprites)
+{
+  // assign the debug battler hitbox sprites.
+  this._j._abs._debugBattlerHitboxSprites = newDebugBattlerHitboxSprites;
+};
+
+/**
+ * Gets the cast preview sprites.
+ * @returns {*} The castPreviewSprites.
+ */
+Spriteset_Map.prototype.castPreviewSprites = function()
+{
+  // hand back the cast preview sprites.
+  return this._j._abs._castPreviewSprites;
+};
+
+/**
+ * Sets the cast preview sprites.
+ * @param {*} newCastPreviewSprites The new castPreviewSprites.
+ */
+Spriteset_Map.prototype.setCastPreviewSprites = function(newCastPreviewSprites)
+{
+  // assign the cast preview sprites.
+  this._j._abs._castPreviewSprites = newCastPreviewSprites;
+};
+
+/**
+ * Gets the cast preview layer.
+ * @returns {*} The castPreviewLayer.
+ */
+Spriteset_Map.prototype.castPreviewLayer = function()
+{
+  // hand back the cast preview layer.
+  return this._j._abs._castPreviewLayer;
+};
+
+/**
+ * Sets the cast preview layer.
+ * @param {*} newCastPreviewLayer The new castPreviewLayer.
+ */
+Spriteset_Map.prototype.setCastPreviewLayer = function(newCastPreviewLayer)
+{
+  // assign the cast preview layer.
+  this._j._abs._castPreviewLayer = newCastPreviewLayer;
+};
+
+/**
+ * Gets the hitbox pulse layer.
+ * @returns {*} The hitboxPulseLayer.
+ */
+Spriteset_Map.prototype.hitboxPulseLayer = function()
+{
+  // hand back the hitbox pulse layer.
+  return this._j._abs._hitboxPulseLayer;
+};
+
+/**
+ * Sets the hitbox pulse layer.
+ * @param {*} newHitboxPulseLayer The new hitboxPulseLayer.
+ */
+Spriteset_Map.prototype.setHitboxPulseLayer = function(newHitboxPulseLayer)
+{
+  // assign the hitbox pulse layer.
+  this._j._abs._hitboxPulseLayer = newHitboxPulseLayer;
+};
+//endregion properties
 //endregion Spriteset_Map

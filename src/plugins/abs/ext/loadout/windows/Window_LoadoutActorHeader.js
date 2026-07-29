@@ -40,6 +40,48 @@ class Window_LoadoutActorHeader
     this._slotSpineWidth = 0;
   }
 
+  //region properties
+  /**
+   * Gets the actor column width.
+   * @returns {*} The actorColumnWidth.
+   */
+  actorColumnWidth()
+  {
+    // hand back the actor column width.
+    return this._actorColumnWidth;
+  }
+
+  /**
+   * Sets the actor column width.
+   * @param {*} newActorColumnWidth The new actorColumnWidth.
+   */
+  setActorColumnWidth(newActorColumnWidth)
+  {
+    // assign the actor column width.
+    this._actorColumnWidth = newActorColumnWidth;
+  }
+
+  /**
+   * Gets the slot spine width.
+   * @returns {*} The slotSpineWidth.
+   */
+  slotSpineWidth()
+  {
+    // hand back the slot spine width.
+    return this._slotSpineWidth;
+  }
+
+  /**
+   * Sets the slot spine width.
+   * @param {*} newSlotSpineWidth The new slotSpineWidth.
+   */
+  setSlotSpineWidth(newSlotSpineWidth)
+  {
+    // assign the slot spine width.
+    this._slotSpineWidth = newSlotSpineWidth;
+  }
+  //endregion properties
+
   /**
    * Adopts the board's column geometry so each name lands over its own column.
    *
@@ -51,8 +93,8 @@ class Window_LoadoutActorHeader
    */
   setColumnGeometry(actorColumnWidth, slotSpineWidth)
   {
-    this._actorColumnWidth = actorColumnWidth;
-    this._slotSpineWidth = slotSpineWidth;
+    this.setActorColumnWidth(actorColumnWidth);
+    this.setSlotSpineWidth(slotSpineWidth);
 
     // the geometry is the only thing this window renders against, so redraw once it is known.
     this.refresh();
@@ -76,7 +118,7 @@ class Window_LoadoutActorHeader
     this.contents.clear();
 
     // there is nothing meaningful to place until the board has shared its geometry.
-    if (this._actorColumnWidth === 0) return;
+    if (this.actorColumnWidth() === 0) return;
 
     // render each member over their own column.
     this.members()
@@ -93,16 +135,16 @@ class Window_LoadoutActorHeader
     // everything past the first column is pushed clear of the spine, exactly as the board does it.
     const spineOffset = index === 0
       ? 0
-      : this._slotSpineWidth;
+      : this.slotSpineWidth();
 
     // work out where this column begins.
-    const x = (this._actorColumnWidth * index) + spineOffset;
+    const x = (this.actorColumnWidth() * index) + spineOffset;
 
     // headers are chrome rather than content, so they render in the system color.
     this.changeTextColor(ColorManager.systemColor());
 
     // center the name over its column so it reads as a heading rather than a list entry.
-    this.drawText(actor.name(), x, 0, this._actorColumnWidth, 'center');
+    this.drawText(actor.name(), x, 0, this.actorColumnWidth(), 'center');
 
     // leave the color as we found it for anything else drawing into these contents.
     this.resetTextColor();

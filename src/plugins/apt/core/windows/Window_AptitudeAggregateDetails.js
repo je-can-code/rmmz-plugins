@@ -84,7 +84,7 @@ class Window_AptitudeAggregateDetails
     if (this.actor() === actor) return;
 
     // update the actor.
-    this._actor = actor;
+    this.setActor(actor);
 
     // the previously-selected aggregate belongs to the old actor's source keys- clear it so
     // this refresh shows the "select a skill" hint instead of resolving stale sources against
@@ -127,7 +127,7 @@ class Window_AptitudeAggregateDetails
    */
   nextY()
   {
-    return this._nextY || 0;
+    return this._nextY;
   }
 
   /**

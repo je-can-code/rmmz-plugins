@@ -11,6 +11,80 @@ class Sprite_MapChargeGauge
    * Constructor.
    * @param {...*} args Forwarded to {@link #initialize}.
    */
+  
+
+  //region properties
+  /**
+   * Gets the jabs battler.
+   * @returns {*} The jabsBattler.
+   */
+  jabsBattler()
+  {
+    // hand back the jabs battler.
+    return this._jabsBattler;
+  }
+
+  /**
+   * Sets the jabs battler.
+   * @param {*} newJabsBattler The new jabsBattler.
+   */
+  setJabsBattler(newJabsBattler)
+  {
+    // assign the jabs battler.
+    this._jabsBattler = newJabsBattler;
+  }
+
+  /**
+   * Gets the expected character.
+   * @returns {*} The expectedCharacter.
+   */
+  expectedCharacter()
+  {
+    // hand back the expected character.
+    return this._expectedCharacter;
+  }
+
+  /**
+   * Sets the expected character.
+   * @param {*} newExpectedCharacter The new expectedCharacter.
+   */
+  setExpectedCharacter(newExpectedCharacter)
+  {
+    // assign the expected character.
+    this._expectedCharacter = newExpectedCharacter;
+  }
+
+  /**
+   * Gets the expected uuid.
+   * @returns {*} The expectedUuid.
+   */
+  expectedUuid()
+  {
+    // hand back the expected uuid.
+    return this._expectedUuid;
+  }
+
+  /**
+   * Sets the expected uuid.
+   * @param {*} newExpectedUuid The new expectedUuid.
+   */
+  setExpectedUuid(newExpectedUuid)
+  {
+    // assign the expected uuid.
+    this._expectedUuid = newExpectedUuid;
+  }
+
+  /**
+   * Gets the gauge.
+   * @returns {*} The gauge.
+   */
+  gauge()
+  {
+    // hand back the gauge.
+    return this._gauge;
+  }
+  //endregion properties
+
   constructor(...args)
   {
     super();
@@ -38,7 +112,7 @@ class Sprite_MapChargeGauge
     this._jabsBattler = null;
 
     // indicate this is not one of the base types.
-    this._statusType = "charge";
+    this.setStatusType("charge");
 
     // default hidden to prevent any invalid-frame flashes.
     this.visible = false;
@@ -50,7 +124,7 @@ class Sprite_MapChargeGauge
    */
   getJabsBattler()
   {
-    return this._jabsBattler;
+    return this.jabsBattler();
   }
 
   /**
@@ -61,24 +135,24 @@ class Sprite_MapChargeGauge
   setupJabs(jabsBattler, expectedCharacter)
   {
     // retain the JABS battler for charge-state logic.
-    this._jabsBattler = jabsBattler;
+    this.setJabsBattler(jabsBattler);
 
     /**
      * The character this gauge expects the JABS battler to be bound to.
      * @type {Game_Character|null}
      */
-    this._expectedCharacter = expectedCharacter ?? null;
+    this.setExpectedCharacter(expectedCharacter ?? null);
 
     /**
      * The UUID we expect this gauge to track.
      * @type {string}
      */
-    this._expectedUuid = jabsBattler
+    this.setExpectedUuid(jabsBattler
       ? jabsBattler.getUuid()
-      : null;
+      : null);
 
     // bind the underlying Game_Battler to satisfy Sprite_Gauge internals.
-    this.setup(jabsBattler.getBattler(), this._statusType);
+    this.setup(jabsBattler.getBattler(), this.statusType());
   }
 
   /**
@@ -90,8 +164,8 @@ class Sprite_MapChargeGauge
   {
     // grab binding state.
     const jabsBattler = this.getJabsBattler();
-    const expectedUuid = this._expectedUuid;
-    const expectedCharacter = this._expectedCharacter;
+    const expectedUuid = this.expectedUuid();
+    const expectedCharacter = this.expectedCharacter();
 
     // must have a battler and a bound uuid.
     if (!jabsBattler || !expectedUuid) return false;
@@ -160,7 +234,7 @@ class Sprite_MapChargeGauge
     // always keep the base gauge bound to the correct underlying battler each frame.
     if (this.getJabsBattler())
     {
-      this._battler = this.getJabsBattler().getBattler();
+      this.setBattler(this.getJabsBattler().getBattler());
     }
 
     // determine validity for this frame.
@@ -172,13 +246,13 @@ class Sprite_MapChargeGauge
       this.visible = false;
 
       // clear label if present.
-      if (this._gauge._label)
+      if (this.gauge()._label)
       {
         this.setLabel(String.empty);
       }
 
       // clear icon if present.
-      if (this._gauge._iconIndex !== -1)
+      if (this.gauge()._iconIndex !== -1)
       {
         this.setIcon(-1);
       }
@@ -288,7 +362,7 @@ class Sprite_MapChargeGauge
   drawLabel()
   {
     // if there is no label, don't draw anything.
-    if (!this._gauge._label) return;
+    if (!this.gauge()._label) return;
 
     // configure font for crisp small-text map display.
     this.bitmap.fontFace = $gameSystem.mainFontFace();
@@ -304,7 +378,7 @@ class Sprite_MapChargeGauge
     const h = this.bitmapHeight();
 
     this.bitmap.drawText(
-      this._gauge._label,
+      this.gauge()._label,
       Math.floor(x),
       Math.floor(y),
       Math.floor(w),

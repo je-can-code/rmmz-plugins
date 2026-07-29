@@ -65,10 +65,10 @@ Game_Character.prototype.updateRoutineMove = function()
 Game_Character.prototype.handlePixelRoutineMove = function()
 {
   // check if we are waiting in the move route.
-  if (this._waitCount > 0)
+  if (this.waitCount() > 0)
   {
     // decrement wait count and stop processing.
-    this._waitCount--;
+    this.setWaitCount(this.waitCount() - 1);
 
     // stop processing while waiting.
     return;
@@ -78,7 +78,7 @@ Game_Character.prototype.handlePixelRoutineMove = function()
   this.setMovementSuccess(true);
 
   // extract the current move route command.
-  const command = this._moveRoute.list[this._moveRouteIndex];
+  const command = this.moveRoute().list[this.moveRouteIndex()];
 
   // nothing to do if no command is present at this index.
   if (command === undefined) return;

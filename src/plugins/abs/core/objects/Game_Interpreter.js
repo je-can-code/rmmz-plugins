@@ -18,7 +18,7 @@ Game_Interpreter.prototype.character = function(param)
     {
       const id = param > 0
         ? param
-        : this._eventId;
+        : this.eventId();
       return $gameMap.event(id);
     }
     else
@@ -159,7 +159,7 @@ Game_Interpreter.prototype.command301 = function(params)
     if ($dataTroops[troopId])
     {
       BattleManager.setup(troopId, params[2], params[3]);
-      BattleManager.setEventCallback(n => this._branch[this._indent] = n);
+      BattleManager.setEventCallback(n => this.branch()[this.indent()] = n);
       $gamePlayer.makeEncounterCount();
       SceneManager.push(Scene_Battle);
     }
@@ -186,7 +186,7 @@ Game_Interpreter.prototype.command302 = function(params)
     const goods = [ params ];
     while (this.nextEventCode() === 605)
     {
-      this._index++;
+      this.setIndex(this.index() + 1);
       goods.push(this.currentCommand().parameters);
     }
 

@@ -11,6 +11,90 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
    * @param {number} amplitudeScale Scale wobble amplitude (small, e.g. 0.04).
    * @param {function(): boolean} continuePredicate While true, pulse continues.
    */
+  
+
+  //region properties
+  /**
+   * Gets the sprite.
+   * @returns {*} The sprite.
+   */
+  sprite()
+  {
+    // hand back the sprite.
+    return this._sprite;
+  }
+
+  /**
+   * Gets the base scale x.
+   * @returns {*} The baseScaleX.
+   */
+  baseScaleX()
+  {
+    // hand back the base scale x.
+    return this._baseScaleX;
+  }
+
+  /**
+   * Gets the base scale y.
+   * @returns {*} The baseScaleY.
+   */
+  baseScaleY()
+  {
+    // hand back the base scale y.
+    return this._baseScaleY;
+  }
+
+  /**
+   * Gets the base blend color.
+   * @returns {*} The baseBlendColor.
+   */
+  baseBlendColor()
+  {
+    // hand back the base blend color.
+    return this._baseBlendColor;
+  }
+
+  /**
+   * Gets the base color tone.
+   * @returns {*} The baseColorTone.
+   */
+  baseColorTone()
+  {
+    // hand back the base color tone.
+    return this._baseColorTone;
+  }
+
+  /**
+   * Gets the phase.
+   * @returns {*} The phase.
+   */
+  phase()
+  {
+    // hand back the phase.
+    return this._phase;
+  }
+
+  /**
+   * Sets the phase.
+   * @param {*} newPhase The new phase.
+   */
+  setPhase(newPhase)
+  {
+    // assign the phase.
+    this._phase = newPhase;
+  }
+
+  /**
+   * Gets the amplitude scale.
+   * @returns {*} The amplitudeScale.
+   */
+  amplitudeScale()
+  {
+    // hand back the amplitude scale.
+    return this._amplitudeScale;
+  }
+  //endregion properties
+
   constructor(sprite, amplitudeScale, continuePredicate)
   {
     super();
@@ -37,7 +121,7 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
    */
   isSpriteAlive()
   {
-    return !!this._sprite.transform;
+    return !!this.sprite().transform;
   }
 
   /**
@@ -45,12 +129,12 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
    */
   restore()
   {
-    this._sprite.scale.x = this._baseScaleX;
-    this._sprite.scale.y = this._baseScaleY;
+    this.sprite().scale.x = this.baseScaleX();
+    this.sprite().scale.y = this.baseScaleY();
 
     // restore original render modifiers.
-    this._sprite.setBlendColor(this._baseBlendColor);
-    this._sprite.setColorTone(this._baseColorTone);
+    this.sprite().setBlendColor(this.baseBlendColor());
+    this.sprite().setColorTone(this.baseColorTone());
   }
 
   /**
@@ -62,12 +146,12 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
     if (this._continuePredicate() === false)
     {
       this.restore();
-      JuiceMotionManager.relinquishSpriteLock(this._sprite);
+      JuiceMotionManager.relinquishSpriteLock(this.sprite());
       return false;
     }
 
     // advance the pulse phase.
-    this._phase++;
+    this.setPhase(this.phase() + 1);
 
     // calculate the next scale multiplier.
     // this is a uniform "breathing" pulse rather than a squash/stretch, so it reads as a charge-up shimmer.
@@ -75,22 +159,22 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
     const startPeriodFrames = 60;
     const endPeriodFrames = 24;
     const rampDurationFrames = 180;
-    const t = Math.min(this._phase / rampDurationFrames, 1);
+    const t = Math.min(this.phase() / rampDurationFrames, 1);
     const periodFrames = Math.round(startPeriodFrames + ((endPeriodFrames - startPeriodFrames) * t));
-    const phaseRadians = (this._phase % periodFrames) / periodFrames * (Math.PI * 2);
+    const phaseRadians = (this.phase() % periodFrames) / periodFrames * (Math.PI * 2);
     const wave = Math.sin(phaseRadians);
-    const mul = 1 + (wave * this._amplitudeScale);
+    const mul = 1 + (wave * this.amplitudeScale());
 
     // apply the pulse to both axes equally.
-    this._sprite.scale.x = this._baseScaleX * mul;
-    this._sprite.scale.y = this._baseScaleY * mul;
+    this.sprite().scale.x = this.baseScaleX() * mul;
+    this.sprite().scale.y = this.baseScaleY() * mul;
 
     // apply a lightweight casting glow.
     // this uses blendColor alpha pulsing to fake an additive-ish "charging" overlay.
     const glowMin = 0;
     const glowMax = 96;
     const glowAlpha = Math.round(((wave + 1) / 2) * (glowMax - glowMin) + glowMin);
-    this._sprite.setBlendColor([ 180, 220, 255, glowAlpha ]);
+    this.sprite().setBlendColor([ 180, 220, 255, glowAlpha ]);
 
     return true;
   }

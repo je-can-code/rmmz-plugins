@@ -81,11 +81,11 @@ describe('Game_System ext/sdp augments (direct src import)', () =>
       expect(system.shouldForceDropSdp()).toEqual(false);
     });
 
-    it('defaults to false when the internal flag is missing (older save)', () =>
+    it('starts disabled on a freshly initialized system', () =>
     {
       // Arrange
       const system = new Game_System();
-      system._j = { _sdp: {} };
+      system.initialize();
 
       // Act
       const result = system.shouldForceDropSdp();

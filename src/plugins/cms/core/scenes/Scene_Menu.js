@@ -293,16 +293,16 @@ Scene_Menu.prototype.createCommandWindow = function()
   this.createPartyCommandWindow();
 
   // expose them as one target so existing integrations need no knowledge of the split.
-  this._commandWindow = new MenuCommandBroadcaster([ this.actorCommandWindow(), this.partyCommandWindow() ]);
+  this.setCommandWindow(new MenuCommandBroadcaster([ this.actorCommandWindow(), this.partyCommandWindow() ]));
 
   // wire the vanilla commands through the same broadcaster everyone else uses.
-  this.bindMenuCommandHandlers(this._commandWindow);
+  this.bindMenuCommandHandlers(this.commandWindow());
 
   // both columns describe their highlighted command into the same help window.
   this.actorCommandWindow()
-    .setHelpWindow(this._helpWindow);
+    .setHelpWindow(this.helpWindow());
   this.partyCommandWindow()
-    .setHelpWindow(this._helpWindow);
+    .setHelpWindow(this.helpWindow());
 };
 
 /**

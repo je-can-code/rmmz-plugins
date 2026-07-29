@@ -227,4 +227,24 @@ Game_Event.prototype.isErased = function()
 {
   return this._erased;
 };
+
+/**
+ * Gets the index of the currently active event page.
+ * @returns {number} The pageIndex.
+ */
+Game_Event.prototype.pageIndex = function()
+{
+  // hand back the index of the currently active event page.
+  return this._pageIndex;
+};
+
+/**
+ * Sets the index of the currently active event page.
+ * @param {number} newPageIndex The new pageIndex.
+ */
+Game_Event.prototype.setPageIndex = function(newPageIndex)
+{
+  // assign the index of the currently active event page.
+  this._pageIndex = newPageIndex;
+};
 //endregion Game_Event

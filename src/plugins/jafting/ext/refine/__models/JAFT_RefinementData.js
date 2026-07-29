@@ -9,6 +9,20 @@ class JAFTING_RefinementData
    * @param {string} notes The raw note box as a string.
    * @param {any} meta The `meta` object containing prebuilt note metadata.
    */
+  
+
+  //region properties
+  /**
+   * Gets the notes.
+   * @returns {*} The notes.
+   */
+  notes()
+  {
+    // hand back the notes.
+    return this._notes;
+  }
+  //endregion properties
+
   constructor(notes, meta)
   {
     this._notes = notes.split(/[\r\n]+/);
@@ -31,7 +45,7 @@ class JAFTING_RefinementData
   {
     return RPGManager.getNumberFromNoteByRegex(// because it expects actual database objects for inspection,
       // hand-craft an object with a note property to be inspected.
-      { note: this._notes }, J.JAFTING.EXT.REFINE.MaxRefineCount);
+      { note: this.notes() }, J.JAFTING.EXT.REFINE.MaxRefineCount);
   }
 
   /**
@@ -42,7 +56,7 @@ class JAFTING_RefinementData
   {
     return RPGManager.getNumberFromNoteByRegex(// because it expects actual database objects for inspection,
       // hand-craft an object with a note property to be inspected.
-      { note: this._notes }, J.JAFTING.EXT.REFINE.MaxRefinedTraits);
+      { note: this.notes() }, J.JAFTING.EXT.REFINE.MaxRefinedTraits);
   }
 
   /**
@@ -53,7 +67,7 @@ class JAFTING_RefinementData
   {
     return RPGManager.checkForBooleanFromNoteByRegex(// because it expects actual database objects for inspection,
       // hand-craft an object with a note property to be inspected.
-      { note: this._notes }, J.JAFTING.EXT.REFINE.NotRefinementMaterial);
+      { note: this.notes() }, J.JAFTING.EXT.REFINE.NotRefinementMaterial);
   }
 
   /**
@@ -64,7 +78,7 @@ class JAFTING_RefinementData
   {
     return RPGManager.checkForBooleanFromNoteByRegex(// because it expects actual database objects for inspection,
       // hand-craft an object with a note property to be inspected.
-      { note: this._notes }, J.JAFTING.EXT.REFINE.NotRefinementBase);
+      { note: this.notes() }, J.JAFTING.EXT.REFINE.NotRefinementBase);
   }
 
   /**
@@ -76,7 +90,7 @@ class JAFTING_RefinementData
   {
     return RPGManager.checkForBooleanFromNoteByRegex(// because it expects actual database objects for inspection,
       // hand-craft an object with a note property to be inspected.
-      { note: this._notes }, J.JAFTING.EXT.REFINE.Unrefinable);
+      { note: this.notes() }, J.JAFTING.EXT.REFINE.Unrefinable);
   }
 }
 

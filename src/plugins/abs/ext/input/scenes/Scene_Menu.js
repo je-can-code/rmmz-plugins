@@ -12,7 +12,7 @@ Scene_Menu.prototype.createCommandWindow = function()
     .call(this);
 
   // wire the handler for our custom command symbol.
-  this._commandWindow.setHandler('jabsRemap', () =>
+  this.commandWindow().setHandler('jabsRemap', () =>
   {
     // open the JABS remapping scene.
     SceneManager.push(Scene_JabsRemap);

@@ -12,7 +12,7 @@ Window_SkillType.prototype.maxCols = function()
 Window_SkillType.prototype.makeCommandList = function()
 {
   /** @type {Game_Actor} */
-  const currentActor = this._actor;
+  const currentActor = this.actor();
 
   if (!currentActor) return;
 

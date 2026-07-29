@@ -33,6 +33,9 @@ class Window_JabsRemapPrompt
     // perform super initialize.
     super(rect);
 
+    // seed this window's data before anything can read it.
+    this.initMembers();
+
     // make background darker for overlay effect.
     this.opacity = 192;
 
@@ -42,15 +45,57 @@ class Window_JabsRemapPrompt
 
   //region init
   /**
-   * Lazily ensures the root plugin namespace exists for this window's data.
+   * Initializes all members of this window.
    */
-  _root()
+  initMembers()
   {
-    // ensure root namespaces.
+    // build out the namespace this window's data lives in.
     this._j ||= {};
     this._j._abs ||= {};
     this._j._abs._input ||= {};
+
+    /**
+     * The captured symbol awaiting pickup by the scene.
+     * @type {string|null}
+     */
+    this._j._abs._input._remapCaptured = null;
+
+    /**
+     * Whether or not the prompt is currently capturing input.
+     * @type {boolean}
+     */
+    this._j._abs._input._remapActive = false;
+
+    /**
+     * The remaining frames before input capture begins.
+     * @type {number}
+     */
+    this._j._abs._input._remapWarmup = 0;
+
+    /**
+     * The remaining frames before the prompt auto-closes.
+     * @type {number}
+     */
+    this._j._abs._input._remapTimeout = 0;
+
+    /**
+     * The logical action label being captured for.
+     * @type {string}
+     */
+    this._j._abs._input._remapButtonLabel = String.empty;
   }
+
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
 
   //endregion init
 
@@ -61,8 +106,7 @@ class Window_JabsRemapPrompt
    */
   getCapturedSymbol()
   {
-    this._root();
-    return this._j._abs._input._remapCaptured ?? null;
+    return this.j()._abs._input._remapCaptured;
   }
 
   /**
@@ -71,8 +115,7 @@ class Window_JabsRemapPrompt
    */
   setCapturedSymbol(v)
   {
-    this._root();
-    this._j._abs._input._remapCaptured = v ?? null;
+    this.j()._abs._input._remapCaptured = v ?? null;
   }
 
   /**
@@ -81,8 +124,7 @@ class Window_JabsRemapPrompt
    */
   isActive()
   {
-    this._root();
-    return this._j._abs._input._remapActive === true;
+    return this.j()._abs._input._remapActive === true;
   }
 
   /**
@@ -91,8 +133,7 @@ class Window_JabsRemapPrompt
    */
   setActive(v)
   {
-    this._root();
-    this._j._abs._input._remapActive = v === true;
+    this.j()._abs._input._remapActive = v === true;
   }
 
   /**
@@ -101,8 +142,7 @@ class Window_JabsRemapPrompt
    */
   getWarmupFrames()
   {
-    this._root();
-    return this._j._abs._input._remapWarmup | 0;
+    return this.j()._abs._input._remapWarmup | 0;
   }
 
   /**
@@ -111,8 +151,7 @@ class Window_JabsRemapPrompt
    */
   setWarmupFrames(v)
   {
-    this._root();
-    this._j._abs._input._remapWarmup = Math.max(0, v | 0);
+    this.j()._abs._input._remapWarmup = Math.max(0, v | 0);
   }
 
   /**
@@ -121,8 +160,7 @@ class Window_JabsRemapPrompt
    */
   getTimeoutFrames()
   {
-    this._root();
-    return this._j._abs._input._remapTimeout | 0;
+    return this.j()._abs._input._remapTimeout | 0;
   }
 
   /**
@@ -131,8 +169,7 @@ class Window_JabsRemapPrompt
    */
   setTimeoutFrames(v)
   {
-    this._root();
-    this._j._abs._input._remapTimeout = Math.max(0, v | 0);
+    this.j()._abs._input._remapTimeout = Math.max(0, v | 0);
   }
 
   /**
@@ -141,8 +178,7 @@ class Window_JabsRemapPrompt
    */
   getButtonLabel()
   {
-    this._root();
-    return this._j._abs._input._remapButtonLabel || String.empty;
+    return this.j()._abs._input._remapButtonLabel;
   }
 
   /**
@@ -151,8 +187,7 @@ class Window_JabsRemapPrompt
    */
   setButtonLabel(v)
   {
-    this._root();
-    this._j._abs._input._remapButtonLabel = String(v || String.empty);
+    this.j()._abs._input._remapButtonLabel = String(v || String.empty);
   }
 
   //endregion accessors

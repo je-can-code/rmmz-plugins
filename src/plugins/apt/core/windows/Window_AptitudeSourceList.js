@@ -69,7 +69,7 @@ class Window_AptitudeSourceList
    */
   sources()
   {
-    return this._sources || [];
+    return this._sources;
   }
 
   /**

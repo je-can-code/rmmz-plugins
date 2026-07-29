@@ -27,7 +27,7 @@ Game_Interpreter.prototype.command301 = function(params)
     BattleManager.setup(troopId, canEscape, canLose);
 
     // do event things.
-    BattleManager.setEventCallback(n => this._branch[this._indent] = n);
+    BattleManager.setEventCallback(n => this.branch()[this.indent()] = n);
 
     // update the encounter count (???).
     $gamePlayer.makeEncounterCount();

@@ -73,7 +73,7 @@ Window_Selectable.prototype.isMoreEnabled = function()
  */
 Window_Selectable.prototype.isMoreTriggered = function()
 {
-  return this._canRepeat
+  return this.canRepeat()
     ? Input.isRepeated('shift')
     : Input.isTriggered('shift');
 };
@@ -111,7 +111,7 @@ Window_Selectable.prototype.isContextEnabled = function()
  */
 Window_Selectable.prototype.isContextTriggered = function()
 {
-  return this._canRepeat
+  return this.canRepeat()
     ? Input.isRepeated('tab')
     : Input.isTriggered('tab');
 };
@@ -149,7 +149,7 @@ Window_Selectable.prototype.isContentPrevEnabled = function()
  */
 Window_Selectable.prototype.isContentPrevTriggered = function()
 {
-  return this._canRepeat
+  return this.canRepeat()
     ? Input.isRepeated('l2')
     : Input.isTriggered('l2');
 };
@@ -187,7 +187,7 @@ Window_Selectable.prototype.isContentNextEnabled = function()
  */
 Window_Selectable.prototype.isContentNextTriggered = function()
 {
-  return this._canRepeat
+  return this.canRepeat()
     ? Input.isRepeated('r2')
     : Input.isTriggered('r2');
 };
@@ -225,7 +225,7 @@ Window_Selectable.prototype.isActorPrevEnabled = function()
  */
 Window_Selectable.prototype.isActorPrevTriggered = function()
 {
-  return this._canRepeat
+  return this.canRepeat()
     ? Input.isRepeated('pageup')
     : Input.isTriggered('pageup');
 };
@@ -263,7 +263,7 @@ Window_Selectable.prototype.isActorNextEnabled = function()
  */
 Window_Selectable.prototype.isActorNextTriggered = function()
 {
-  return this._canRepeat
+  return this.canRepeat()
     ? Input.isRepeated('pagedown')
     : Input.isTriggered('pagedown');
 };
@@ -292,10 +292,10 @@ Window_Selectable.prototype.callActorNextHandler = function()
 J.BASE.Aliased.Window_Selectable.set('select', Window_Selectable.prototype.select);
 Window_Selectable.prototype.select = function(index)
 {
-  const previousIndex = this._index;
+  const previousIndex = this.index();
   // perform original logic.
   J.BASE.Aliased.Window_Selectable.get('select').call(this, index);
-  if (previousIndex !== this._index)
+  if (previousIndex !== this.index())
   {
     this.onIndexChange();
   }
@@ -308,5 +308,25 @@ Window_Selectable.prototype.select = function(index)
  */
 Window_Selectable.prototype.onIndexChange = function()
 {
+};
+
+/**
+ * Gets whether or not holding a direction repeats the cursor movement.
+ * @returns {boolean} The canRepeat.
+ */
+Window_Selectable.prototype.canRepeat = function()
+{
+  // hand back whether or not holding a direction repeats the cursor movement.
+  return this._canRepeat;
+};
+
+/**
+ * Gets the help window bound to this selection.
+ * @returns {Window_Help} The helpWindow.
+ */
+Window_Selectable.prototype.helpWindow = function()
+{
+  // hand back the help window bound to this selection.
+  return this._helpWindow;
 };
 //endregion Window_Selectable

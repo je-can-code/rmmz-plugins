@@ -10,6 +10,30 @@ class Window_SalvageCandidateList
   /**
    * @param {Rectangle} rect Window geometry.
    */
+  
+
+  //region properties
+  /**
+   * Gets the data.
+   * @returns {*} The data.
+   */
+  data()
+  {
+    // hand back the data.
+    return this._data;
+  }
+
+  /**
+   * Sets the data.
+   * @param {*} newData The new data.
+   */
+  setData(newData)
+  {
+    // assign the data.
+    this._data = newData;
+  }
+  //endregion properties
+
   constructor(rect)
   {
     super(rect);
@@ -21,7 +45,7 @@ class Window_SalvageCandidateList
    */
   maxItems()
   {
-    return this._data.length;
+    return this.data().length;
   }
 
   /**
@@ -29,7 +53,7 @@ class Window_SalvageCandidateList
    */
   item()
   {
-    return this._data[this.index()];
+    return this.data()[this.index()];
   }
 
   /**
@@ -38,7 +62,7 @@ class Window_SalvageCandidateList
   makeItemList()
   {
     // anything lacking a ledger never appears—salvage stays honest about stamped gear only.
-    this._data = JaftingSalvageManager.getSalvageCandidateDatums();
+    this.setData(JaftingSalvageManager.getSalvageCandidateDatums());
   }
 
   /**
@@ -81,7 +105,7 @@ class Window_SalvageCandidateList
    */
   drawItem(index)
   {
-    const datum = this._data[index];
+    const datum = this.data()[index];
 
     if (datum === undefined || datum === null)
     {

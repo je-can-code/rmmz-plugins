@@ -34,6 +34,7 @@ import './windows/Window_QuestopediaObjectives.js';
 import './windows/Window_QuestopediaControlsHint.js';
 import './windows/Window_JabsRemapActions.js';
 import './scenes/Scene_Questopedia.js';
+import './windows/Window_Base.js';
 import './windows/Window_OmnipediaList.js';
 import './scenes/Scene_Omnipedia.js';
 import './_metadata/pluginCommands.js';

@@ -9,6 +9,20 @@ class SerializableRegistry
    * The internal collection of registered constructors.
    * @type {Map<string, Function>}
    */
+  
+
+  //region properties
+  /**
+   * Gets the constructors.
+   * @returns {*} The constructors.
+   */
+  static constructors()
+  {
+    // hand back the constructors.
+    return this._constructors;
+  }
+  //endregion properties
+
   static _constructors = new Map();
 
   /**
@@ -28,7 +42,7 @@ class SerializableRegistry
       : constructor.name;
 
     // register the primary id.
-    this._constructors.set(id, constructor);
+    this.constructors().set(id, constructor);
 
     // register any aliases for backwards compatibility.
     const aliases = (options && options.aliases)
@@ -37,7 +51,7 @@ class SerializableRegistry
 
     aliases.forEach(alias =>
     {
-      this._constructors.set(alias, constructor);
+      this.constructors().set(alias, constructor);
     });
   }
 
@@ -48,9 +62,9 @@ class SerializableRegistry
    */
   static resolve(id)
   {
-    if (this._constructors.has(id))
+    if (this.constructors().has(id))
     {
-      return this._constructors.get(id);
+      return this.constructors().get(id);
     }
 
     return null;

@@ -5,6 +5,41 @@ import RPG_Item from './../database/implementations/RPG_Item.js';
 import RPG_BaseItem from './../database/base/RPG_BaseItem.js';
 import RPG_Armor from './../database/implementations/RPG_Armor.js';
 
+//region properties
+/**
+ * Gets the raw item container, mapping item ids to the quantity held.
+ *
+ * This is deliberately not {@link Game_Party#items}, which resolves the ids into database rows.
+ * Anything inspecting or pruning the container itself needs the id-keyed form.
+ * @returns {Object<number, number>} The raw id-to-quantity map.
+ */
+Game_Party.prototype.rawItems = function()
+{
+  // hand back the container itself rather than the rows it points at.
+  return this._items;
+};
+
+/**
+ * Gets the raw weapon container, mapping weapon ids to the quantity held.
+ * @returns {Object<number, number>} The raw id-to-quantity map.
+ */
+Game_Party.prototype.rawWeapons = function()
+{
+  // hand back the container itself rather than the rows it points at.
+  return this._weapons;
+};
+
+/**
+ * Gets the raw armor container, mapping armor ids to the quantity held.
+ * @returns {Object<number, number>} The raw id-to-quantity map.
+ */
+Game_Party.prototype.rawArmors = function()
+{
+  // hand back the container itself rather than the rows it points at.
+  return this._armors;
+};
+//endregion properties
+
 /**
  * Overwrites {@link #gainItem}.<br/>
  * Replaces item gain and management with index-based management instead.

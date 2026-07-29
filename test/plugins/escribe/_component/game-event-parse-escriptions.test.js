@@ -29,6 +29,9 @@ describe('J-Escriptions Game_Event escription parsing (direct src import)', () =
     await import('../../../../src/plugins/escribe/core/objects/Game_Character.js');
     await import('../../../../src/plugins/escribe/core/objects/Game_Event.js');
 
+    // J-Base accessors the production code now reads through.
+    globalThis.Game_Event.prototype.pageIndex = function() { return this._pageIndex; };
+
     ({ Game_Event } = globalThis);
   });
 

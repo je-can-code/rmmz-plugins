@@ -19,6 +19,230 @@ class TrackedOmniObjective
    * @param {boolean} hidden Whether or not this objective is hidden.
    * @param {boolean} optional Whether or not this objective is optional for its parent quest.
    */
+  
+
+  //region properties
+  /**
+   * Gets the indiscriminate target data.
+   * @returns {*} The indiscriminateTargetData.
+   */
+  indiscriminateTargetData()
+  {
+    // hand back the indiscriminate target data.
+    return this._indiscriminateTargetData;
+  }
+
+  /**
+   * Sets the indiscriminate target data.
+   * @param {*} newIndiscriminateTargetData The new indiscriminateTargetData.
+   */
+  setIndiscriminateTargetData(newIndiscriminateTargetData)
+  {
+    // assign the indiscriminate target data.
+    this._indiscriminateTargetData = newIndiscriminateTargetData;
+  }
+
+  /**
+   * Gets the target map id.
+   * @returns {*} The targetMapId.
+   */
+  targetMapId()
+  {
+    // hand back the target map id.
+    return this._targetMapId;
+  }
+
+  /**
+   * Sets the target map id.
+   * @param {*} newTargetMapId The new targetMapId.
+   */
+  setTargetMapId(newTargetMapId)
+  {
+    // assign the target map id.
+    this._targetMapId = newTargetMapId;
+  }
+
+  /**
+   * Gets the target coordinate range.
+   * @returns {*} The targetCoordinateRange.
+   */
+  targetCoordinateRange()
+  {
+    // hand back the target coordinate range.
+    return this._targetCoordinateRange;
+  }
+
+  /**
+   * Sets the target coordinate range.
+   * @param {*} newTargetCoordinateRange The new targetCoordinateRange.
+   */
+  setTargetCoordinateRange(newTargetCoordinateRange)
+  {
+    // assign the target coordinate range.
+    this._targetCoordinateRange = newTargetCoordinateRange;
+  }
+
+  /**
+   * Gets the target item type.
+   * @returns {*} The targetItemType.
+   */
+  targetItemType()
+  {
+    // hand back the target item type.
+    return this._targetItemType;
+  }
+
+  /**
+   * Sets the target item type.
+   * @param {*} newTargetItemType The new targetItemType.
+   */
+  setTargetItemType(newTargetItemType)
+  {
+    // assign the target item type.
+    this._targetItemType = newTargetItemType;
+  }
+
+  /**
+   * Gets the target item id.
+   * @returns {*} The targetItemId.
+   */
+  targetItemId()
+  {
+    // hand back the target item id.
+    return this._targetItemId;
+  }
+
+  /**
+   * Sets the target item id.
+   * @param {*} newTargetItemId The new targetItemId.
+   */
+  setTargetItemId(newTargetItemId)
+  {
+    // assign the target item id.
+    this._targetItemId = newTargetItemId;
+  }
+
+  /**
+   * Gets the target item fetch quantity.
+   * @returns {*} The targetItemFetchQuantity.
+   */
+  targetItemFetchQuantity()
+  {
+    // hand back the target item fetch quantity.
+    return this._targetItemFetchQuantity;
+  }
+
+  /**
+   * Sets the target item fetch quantity.
+   * @param {*} newTargetItemFetchQuantity The new targetItemFetchQuantity.
+   */
+  setTargetItemFetchQuantity(newTargetItemFetchQuantity)
+  {
+    // assign the target item fetch quantity.
+    this._targetItemFetchQuantity = newTargetItemFetchQuantity;
+  }
+
+  /**
+   * Gets the target enemy id.
+   * @returns {*} The targetEnemyId.
+   */
+  targetEnemyId()
+  {
+    // hand back the target enemy id.
+    return this._targetEnemyId;
+  }
+
+  /**
+   * Sets the target enemy id.
+   * @param {*} newTargetEnemyId The new targetEnemyId.
+   */
+  setTargetEnemyId(newTargetEnemyId)
+  {
+    // assign the target enemy id.
+    this._targetEnemyId = newTargetEnemyId;
+  }
+
+  /**
+   * Gets the target enemy amount.
+   * @returns {*} The targetEnemyAmount.
+   */
+  targetEnemyAmount()
+  {
+    // hand back the target enemy amount.
+    return this._targetEnemyAmount;
+  }
+
+  /**
+   * Sets the target enemy amount.
+   * @param {*} newTargetEnemyAmount The new targetEnemyAmount.
+   */
+  setTargetEnemyAmount(newTargetEnemyAmount)
+  {
+    // assign the target enemy amount.
+    this._targetEnemyAmount = newTargetEnemyAmount;
+  }
+
+  /**
+   * Gets the target quest keys.
+   * @returns {*} The targetQuestKeys.
+   */
+  targetQuestKeys()
+  {
+    // hand back the target quest keys.
+    return this._targetQuestKeys;
+  }
+
+  /**
+   * Sets the target quest keys.
+   * @param {*} newTargetQuestKeys The new targetQuestKeys.
+   */
+  setTargetQuestKeys(newTargetQuestKeys)
+  {
+    // assign the target quest keys.
+    this._targetQuestKeys = newTargetQuestKeys;
+  }
+
+  /**
+   * Gets the current item fetch quantity.
+   * @returns {*} The currentItemFetchQuantity.
+   */
+  currentItemFetchQuantity()
+  {
+    // hand back the current item fetch quantity.
+    return this._currentItemFetchQuantity;
+  }
+
+  /**
+   * Sets the current item fetch quantity.
+   * @param {*} newCurrentItemFetchQuantity The new currentItemFetchQuantity.
+   */
+  setCurrentItemFetchQuantity(newCurrentItemFetchQuantity)
+  {
+    // assign the current item fetch quantity.
+    this._currentItemFetchQuantity = newCurrentItemFetchQuantity;
+  }
+
+  /**
+   * Gets the current enemy amount.
+   * @returns {*} The currentEnemyAmount.
+   */
+  currentEnemyAmount()
+  {
+    // hand back the current enemy amount.
+    return this._currentEnemyAmount;
+  }
+
+  /**
+   * Sets the current enemy amount.
+   * @param {*} newCurrentEnemyAmount The new currentEnemyAmount.
+   */
+  setCurrentEnemyAmount(newCurrentEnemyAmount)
+  {
+    // assign the current enemy amount.
+    this._currentEnemyAmount = newCurrentEnemyAmount;
+  }
+  //endregion properties
+
   constructor(questKey, id, omniFulfillmentData, hidden, optional)
   {
     /**
@@ -144,8 +368,8 @@ class TrackedOmniObjective
     {
       // if the type is indiscriminate, then it is event-controlled and not automagical.
       case OmniObjective.Types.Indiscriminate:
-        this._indiscriminateTargetData = omniFulfillmentData.indiscriminate.hint
-          ?? "No indiscriminate objective instructions provided.";
+        this.setIndiscriminateTargetData(omniFulfillmentData.indiscriminate.hint
+          ?? "No indiscriminate objective instructions provided.");
         // exit early without a payload.
         return;
   
@@ -158,30 +382,30 @@ class TrackedOmniObjective
           x2,
           y2
         } = omniFulfillmentData.destination;
-        this._targetMapId = mapId;
+        this.setTargetMapId(mapId);
         const point1 = [
           x1, y1 ];
         const point2 = [
           x2, y2 ];
-        this._targetCoordinateRange = [ point1, point2 ];
+        this.setTargetCoordinateRange([ point1, point2 ]);
         break;
   
       // if the fulfillment is of type 'fetch', then fill in the data.
       case OmniObjective.Types.Fetch:
-        this._targetItemType = omniFulfillmentData.fetch.type;
-        this._targetItemId = omniFulfillmentData.fetch.id;
-        this._targetItemFetchQuantity = omniFulfillmentData.fetch.amount;
+        this.setTargetItemType(omniFulfillmentData.fetch.type);
+        this.setTargetItemId(omniFulfillmentData.fetch.id);
+        this.setTargetItemFetchQuantity(omniFulfillmentData.fetch.amount);
         break;
   
       // if the fulfillment is of type 'slay', then fill in the data.
       case OmniObjective.Types.Slay:
-        this._targetEnemyId = omniFulfillmentData.slay.id;
-        this._targetEnemyAmount = omniFulfillmentData.slay.amount;
+        this.setTargetEnemyId(omniFulfillmentData.slay.id);
+        this.setTargetEnemyAmount(omniFulfillmentData.slay.amount);
         break;
   
       // if the fulfillment is of type 'quest', then fill in the data.
       case OmniObjective.Types.Quest:
-        this._targetQuestKeys = [ ...omniFulfillmentData.quest.keys ];
+        this.setTargetQuestKeys([ ...omniFulfillmentData.quest.keys ]);
         break;
     }
   }
@@ -408,32 +632,32 @@ class TrackedOmniObjective
     switch (this.type())
     {
       case OmniObjective.Types.Indiscriminate:
-        return OmniObjective.FulfillmentTemplate(this.type(), this._indiscriminateTargetData);
+        return OmniObjective.FulfillmentTemplate(this.type(), this.indiscriminateTargetData());
   
       case OmniObjective.Types.Destination:
         // TODO: validate this stringifies as intended.
-        const point1 = `${this._targetCoordinateRange.at(0)}`;
-        const point2 = `${this._targetCoordinateRange.at(1)}`;
+        const point1 = `${this.targetCoordinateRange().at(0)}`;
+        const point2 = `${this.targetCoordinateRange().at(1)}`;
         return OmniObjective.FulfillmentTemplate(this.type(), $gameMap.displayName(), point1, point2);
   
       case OmniObjective.Types.Fetch:
-        const fetchColor = (this._currentItemFetchQuantity < this._targetItemFetchQuantity)
+        const fetchColor = (this.currentItemFetchQuantity() < this.targetItemFetchQuantity())
           ? notEnoughColor
           : enoughColor;
   
-        const targetItemText = `${this.fetchDataSourceTextPrefix()}[${this._targetItemId}]`;
-        const quantity = `\\C[${fetchColor}]${this._currentItemFetchQuantity} / ${this._targetItemFetchQuantity}\\C[0]`;
+        const targetItemText = `${this.fetchDataSourceTextPrefix()}[${this.targetItemId()}]`;
+        const quantity = `\\C[${fetchColor}]${this.currentItemFetchQuantity()} / ${this.targetItemFetchQuantity()}\\C[0]`;
         return OmniObjective.FulfillmentTemplate(this.type(), quantity, targetItemText);
   
       case OmniObjective.Types.Slay:
-        const slayColor = (this._currentEnemyAmount < this._targetEnemyAmount)
+        const slayColor = (this.currentEnemyAmount() < this.targetEnemyAmount())
           ? notEnoughColor
           : enoughColor;
-        const targetEnemyText = `\\C[${slayColor}]${this._currentEnemyAmount} / ${this._targetEnemyAmount}\\C[0]`;
-        return OmniObjective.FulfillmentTemplate(this.type(), targetEnemyText, this._targetEnemyId);
+        const targetEnemyText = `\\C[${slayColor}]${this.currentEnemyAmount()} / ${this.targetEnemyAmount()}\\C[0]`;
+        return OmniObjective.FulfillmentTemplate(this.type(), targetEnemyText, this.targetEnemyId());
   
       case OmniObjective.Types.Quest:
-        const questNames = this._targetQuestKeys
+        const questNames = this.targetQuestKeys()
           .map(questKey => `'\\quest[${questKey}]'`);
         const questNamesWithCommas = questNames.join(', ');
         return OmniObjective.FulfillmentTemplate(this.type(), questNamesWithCommas);
@@ -491,7 +715,7 @@ class TrackedOmniObjective
   destinationData()
   {
     return [
-      this._targetMapId, this._targetCoordinateRange ];
+      this.targetMapId(), this.targetCoordinateRange() ];
   }
   
   /**
@@ -532,7 +756,7 @@ class TrackedOmniObjective
   fetchData()
   {
     return [
-      this._targetItemId, this._targetItemFetchQuantity ];
+      this.targetItemId(), this.targetItemFetchQuantity() ];
   }
   
   /**
@@ -549,12 +773,12 @@ class TrackedOmniObjective
     if (objectiveType !== OmniObjective.Types.Fetch) return false;
   
     // validate the target item type aligns with the corresponding entry.
-    if (this._targetItemType === 0 && !entry.isItem()) return false;
-    if (this._targetItemType === 1 && !entry.isWeapon()) return false;
-    if (this._targetItemType === 2 && !entry.isArmor()) return false;
+    if (this.targetItemType() === 0 && !entry.isItem()) return false;
+    if (this.targetItemType() === 1 && !entry.isWeapon()) return false;
+    if (this.targetItemType() === 2 && !entry.isArmor()) return false;
   
     // check if the id matches the target item id.
-    return entry.id === this._targetItemId;
+    return entry.id === this.targetItemId();
   }
   
   /**
@@ -563,7 +787,7 @@ class TrackedOmniObjective
    */
   fetchDataSourceTextPrefix()
   {
-    switch (this._targetItemType)
+    switch (this.targetItemType())
     {
       case OmniObjective.FetchTypes.Item:
         return `\\Item`;
@@ -572,7 +796,7 @@ class TrackedOmniObjective
       case OmniObjective.FetchTypes.Armor:
         return `\\Armor`;
       default:
-        throw new Error(`unknown target item type: ${this._targetItemType}`);
+        throw new Error(`unknown target item type: ${this.targetItemType()}`);
     }
   }
   
@@ -582,7 +806,7 @@ class TrackedOmniObjective
    */
   fetchItemDataSource()
   {
-    switch (this._targetItemType)
+    switch (this.targetItemType())
     {
       case OmniObjective.FetchTypes.Item:
         return $dataItems;
@@ -591,7 +815,7 @@ class TrackedOmniObjective
       case OmniObjective.FetchTypes.Armor:
         return $dataArmors;
       default:
-        throw new Error(`unknown target item type: ${this._targetItemType}`);
+        throw new Error(`unknown target item type: ${this.targetItemType()}`);
     }
   }
   
@@ -602,10 +826,10 @@ class TrackedOmniObjective
   {
     // determine the current amount of the item in possession.
     const targetDataSource = this.fetchItemDataSource();
-    const targetItem = targetDataSource.at(this._targetItemId);
+    const targetItem = targetDataSource.at(this.targetItemId());
   
     // align the tracked amount with the actual amount.
-    this._currentItemFetchQuantity = $gameParty.numItems(targetItem);
+    this.setCurrentItemFetchQuantity($gameParty.numItems(targetItem));
   
     // process the event hook.
     this.onObjectiveUpdate();
@@ -622,7 +846,7 @@ class TrackedOmniObjective
     if (this.type() !== OmniObjective.Types.Fetch) return false;
   
     // return the evaluation.
-    return this._currentItemFetchQuantity >= this._targetItemFetchQuantity;
+    return this.currentItemFetchQuantity() >= this.targetItemFetchQuantity();
   }
   //endregion fetch data
   
@@ -634,7 +858,7 @@ class TrackedOmniObjective
   slayData()
   {
     return [
-      this._targetEnemyId, this._targetEnemyAmount ];
+      this.targetEnemyId(), this.targetEnemyAmount() ];
   }
   
   /**
@@ -643,7 +867,7 @@ class TrackedOmniObjective
   incrementSlayTargetEnemyAmount()
   {
     // we increment by +1 in this land.
-    this._currentEnemyAmount++;
+    this.setCurrentEnemyAmount(this.currentEnemyAmount() + 1);
   
     // process the event hook.
     this.onObjectiveUpdate();
@@ -660,14 +884,14 @@ class TrackedOmniObjective
     if (this.type() !== OmniObjective.Types.Slay) return false;
   
     // return the evaluation.
-    return this._currentEnemyAmount >= this._targetEnemyAmount;
+    return this.currentEnemyAmount() >= this.targetEnemyAmount();
   }
   //endregion slay data
   
   //region quest completion data
   questCompletionData()
   {
-    return this._targetQuestKeys;
+    return this.targetQuestKeys();
   }
   
   hasCompletedAllQuests()

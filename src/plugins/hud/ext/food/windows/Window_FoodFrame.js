@@ -334,7 +334,7 @@ class Window_FoodFrame
    */
   #strokeBarOutline(x, y, width, height)
   {
-    const ctx = this.contents._context;
+    const ctx = this.contents.context;
 
     ctx.save();
     ctx.beginPath();

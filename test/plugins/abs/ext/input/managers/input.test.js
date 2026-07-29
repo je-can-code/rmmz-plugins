@@ -28,6 +28,10 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
 
     await import('../../../../../../src/plugins/abs/ext/input/managers/Input.js');
 
+    // J-Base accessors the input layer reads through.
+    globalThis.Input.currentState = function() { return this._currentState; };
+    globalThis.Input.gamepadStates = function() { return this._gamepadStates; };
+
     // snapshot the freshly-patched keyMapper so each test can restore a clean copy- bootstrap
     // tests mutate it in place (registering "key-N" entries), and those mutations would otherwise
     // leak into later tests and permanently "reserve" symbols that should still be fresh.

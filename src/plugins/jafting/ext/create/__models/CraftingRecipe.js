@@ -246,7 +246,7 @@ class CraftingRecipe
   getPrimaryOutput()
   {
     return this.outputs.at(0)
-      ?.getItem();
+      .getItem();
   }
 
   /**

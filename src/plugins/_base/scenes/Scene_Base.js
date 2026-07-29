@@ -82,7 +82,7 @@ Scene_Base.prototype.getModalDimmerWindow = function()
 Scene_Base.prototype.ensureModalDimmerBeforeWindow = function(anchorWindow)
 {
   const dimmer = this.getModalDimmerWindow();
-  const wl = this._windowLayer;
+  const wl = this.windowLayer();
 
   if (dimmer.parent !== null)
   {
@@ -158,5 +158,15 @@ Scene_Map.prototype.isMapScene = function()
 {
   // this is the map scene.
   return true;
+};
+
+/**
+ * Gets the layer every window of this scene is added to.
+ * @returns {WindowLayer} The windowLayer.
+ */
+Scene_Base.prototype.windowLayer = function()
+{
+  // hand back the layer every window of this scene is added to.
+  return this._windowLayer;
 };
 //endregion Scene_Map

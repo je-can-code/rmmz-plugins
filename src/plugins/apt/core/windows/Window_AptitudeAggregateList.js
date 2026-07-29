@@ -79,7 +79,7 @@ class Window_AptitudeAggregateList
    */
   aggregates()
   {
-    return this._aggregates || [];
+    return this._aggregates;
   }
 
   /**

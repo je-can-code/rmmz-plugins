@@ -35,10 +35,10 @@ if (J.HUD && J.HUD.EXT.PARTY)
     const key = this.makeShieldGaugeSpriteKey(actor, true);
 
     // check if the key already maps to a cached sprite.
-    if (this._hudSprites.has(key))
+    if (this.hudSprites().has(key))
     {
       // if it does, just return that.
-      return this._hudSprites.get(key);
+      return this.hudSprites().get(key);
     }
 
     // determine gauge width based on gauge type.
@@ -57,7 +57,7 @@ if (J.HUD && J.HUD.EXT.PARTY)
     sprite.deactivateGauge();
 
     // cache the sprite.
-    this._hudSprites.set(key, sprite);
+    this.hudSprites().set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -80,10 +80,10 @@ if (J.HUD && J.HUD.EXT.PARTY)
     const key = this.makeShieldGaugeSpriteKey(actor, false);
 
     // if we already have one cached, reuse it.
-    if (this._hudSprites.has(key))
+    if (this.hudSprites().has(key))
     {
       // return the cached instance.
-      return this._hudSprites.get(key);
+      return this.hudSprites().get(key);
     }
 
     // create the shield gauge using the mini HP gauge’s nominal width and a thin height.
@@ -102,7 +102,7 @@ if (J.HUD && J.HUD.EXT.PARTY)
     sprite.deactivateGauge();
 
     // cache the sprite.
-    this._hudSprites.set(key, sprite);
+    this.hudSprites().set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -137,16 +137,16 @@ if (J.HUD && J.HUD.EXT.PARTY)
     const key = this.makeShieldValueSpriteKey(actor);
 
     // check cache.
-    if (this._hudSprites.has(key))
+    if (this.hudSprites().has(key))
     {
-      return this._hudSprites.get(key);
+      return this.hudSprites().get(key);
     }
 
     // create and set up the value sprite for shields.
     const sprite = new Sprite_ActorValue(actor, Window_PartyFrame.gaugeTypes.Shield, -6);
 
     // cache the sprite.
-    this._hudSprites.set(key, sprite);
+    this.hudSprites().set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -294,3 +294,15 @@ if (J.HUD && J.HUD.EXT.PARTY)
     shield.show();
   };
 }
+
+//region properties
+/**
+ * Gets the hud sprites.
+ * @returns {*} The hudSprites.
+ */
+Window_PartyFrame.prototype.hudSprites = function()
+{
+  // hand back the hud sprites.
+  return this._hudSprites;
+};
+//endregion properties

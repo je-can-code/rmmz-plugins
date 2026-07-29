@@ -71,7 +71,7 @@ class Window_ControlLegend
     this.contents.clear();
 
     // a legend with nothing to say draws nothing at all.
-    if (this._entries.length === 0) return;
+    if (this.entries().length === 0) return;
 
     // draw the assembled line.
     this.drawLegend();

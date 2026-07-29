@@ -27,6 +27,10 @@ describe('Game_Interpreter ext/quest augments (direct src import)', () =>
     };
 
     await import('../../../../../../../src/plugins/omni/ext/quest/objects/Game_Interpreter.js');
+
+    // J-Base accessors the production code now reads through.
+    globalThis.Game_Interpreter.prototype.commonEventId = function() { return this._commonEventId; };
+    globalThis.Game_Interpreter.prototype.index = function() { return this._index; };
     ({ Game_Interpreter } = globalThis);
   });
 

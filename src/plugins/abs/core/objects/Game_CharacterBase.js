@@ -352,7 +352,7 @@ J.ABS.Aliased.Game_CharacterBase.set('jump', Game_CharacterBase.prototype.jump);
 Game_CharacterBase.prototype.jump = function(xPlus, yPlus)
 {
   // a fresh jump always renders its normal parabolic arc unless glideTo() says otherwise.
-  this._j._abs._noJumpArc = false;
+  this.setNoJumpArc(false);
 
   // perform original logic.
   J.ABS.Aliased.Game_CharacterBase.get('jump')
@@ -371,7 +371,7 @@ J.ABS.Aliased.Game_CharacterBase.set('jumpHeight', Game_CharacterBase.prototype.
 Game_CharacterBase.prototype.jumpHeight = function()
 {
   // arc suppressed- render perfectly flat regardless of where we are in the jump timeline.
-  if (this._j._abs._noJumpArc) return 0;
+  if (this.isNoJumpArc()) return 0;
 
   // perform original logic.
   return J.ABS.Aliased.Game_CharacterBase.get('jumpHeight')
@@ -392,6 +392,28 @@ Game_CharacterBase.prototype.glideTo = function(xPlus, yPlus)
   this.jump(xPlus, yPlus);
 
   // suppress the arc for the duration of this jump only; the next jump() call resets this.
-  this._j._abs._noJumpArc = true;
+  this.setNoJumpArc(true);
 };
+
+//region properties
+/**
+ * Gets the no jump arc.
+ * @returns {*} The noJumpArc.
+ */
+Game_CharacterBase.prototype.isNoJumpArc = function()
+{
+  // hand back the no jump arc.
+  return this._j._abs._noJumpArc;
+};
+
+/**
+ * Sets the no jump arc.
+ * @param {*} newNoJumpArc The new noJumpArc.
+ */
+Game_CharacterBase.prototype.setNoJumpArc = function(newNoJumpArc)
+{
+  // assign the no jump arc.
+  this._j._abs._noJumpArc = newNoJumpArc;
+};
+//endregion properties
 //endregion Game_CharacterBase

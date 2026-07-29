@@ -79,6 +79,9 @@ class Window_SdpList
    */
   setFamilyFilterKey(familyFilterKey)
   {
+    // nothing to redraw when the value has not changed.
+    if (this.familyFilterKey === familyFilterKey) return;
+
     this.familyFilterKey = familyFilterKey;
     this.refresh();
   }

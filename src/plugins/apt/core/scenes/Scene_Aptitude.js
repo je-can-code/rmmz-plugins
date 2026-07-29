@@ -52,6 +52,18 @@ class Scene_Aptitude
     this.initPrimaryMembers();
   }
 
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   /**
    * Initializes the core aptitude members.
    */
@@ -146,7 +158,7 @@ class Scene_Aptitude
    * Applies initial visibility and selection to match the current view mode.
    * Ensures index 0 is selected (or the remembered index) and details are set.
    */
-  initializeView()
+  static initializeView()
   {
     // ensure we have selection trackers for this actor.
     this.resetSelectionTrackers();
@@ -191,7 +203,7 @@ class Scene_Aptitude
       .actorId();
 
     // pull from the map; default to 0 if not yet set.
-    const map = this._j._aptitude._lastAggregateIndexByActor;
+    const map = this.j()._aptitude._lastAggregateIndexByActor;
     if (map[actorId] === undefined)
     {
       map[actorId] = 0;
@@ -212,7 +224,7 @@ class Scene_Aptitude
       .actorId();
 
     // update the remembered index for this actor.
-    this._j._aptitude._lastAggregateIndexByActor[actorId] = index;
+    this.j()._aptitude._lastAggregateIndexByActor[actorId] = index;
   }
 
   /**
@@ -226,7 +238,7 @@ class Scene_Aptitude
       .actorId();
 
     // pull from the map; default to 0 if not yet set.
-    const map = this._j._aptitude._lastSourceIndexByActor;
+    const map = this.j()._aptitude._lastSourceIndexByActor;
     if (map[actorId] === undefined)
     {
       map[actorId] = 0;
@@ -247,7 +259,7 @@ class Scene_Aptitude
       .actorId();
 
     // update the remembered index for this actor.
-    this._j._aptitude._lastSourceIndexByActor[actorId] = index;
+    this.j()._aptitude._lastSourceIndexByActor[actorId] = index;
   }
 
   /**
@@ -261,14 +273,14 @@ class Scene_Aptitude
       .actorId();
 
     // ensure aggregate index exists.
-    const aggMap = this._j._aptitude._lastAggregateIndexByActor;
+    const aggMap = this.j()._aptitude._lastAggregateIndexByActor;
     if (aggMap[actorId] === undefined)
     {
       aggMap[actorId] = 0;
     }
 
     // ensure source index exists.
-    const srcMap = this._j._aptitude._lastSourceIndexByActor;
+    const srcMap = this.j()._aptitude._lastSourceIndexByActor;
     if (srcMap[actorId] === undefined)
     {
       srcMap[actorId] = 0;
@@ -282,7 +294,7 @@ class Scene_Aptitude
   aggregates()
   {
     // return the cached aggregates.
-    return this._j._aptitude._aggregates;
+    return this.j()._aptitude._aggregates;
   }
 
   /**
@@ -291,7 +303,7 @@ class Scene_Aptitude
    */
   setAggregates(aggregates)
   {
-    this._j._aptitude._aggregates = aggregates;
+    this.j()._aptitude._aggregates = aggregates;
   }
 
   /**
@@ -313,7 +325,7 @@ class Scene_Aptitude
    */
   sources()
   {
-    return this._j._aptitude._sources;
+    return this.j()._aptitude._sources;
   }
 
   /**
@@ -322,7 +334,7 @@ class Scene_Aptitude
    */
   setSources(sources)
   {
-    this._j._aptitude._sources = sources;
+    this.j()._aptitude._sources = sources;
   }
 
   /**
@@ -345,7 +357,7 @@ class Scene_Aptitude
    */
   viewMode()
   {
-    return this._j._aptitude._viewMode;
+    return this.j()._aptitude._viewMode;
   }
 
   /**
@@ -353,7 +365,7 @@ class Scene_Aptitude
    */
   setViewModeToAggregate()
   {
-    this._j._aptitude._viewMode = Scene_Aptitude.viewMode.AGGREGATE;
+    this.j()._aptitude._viewMode = Scene_Aptitude.viewMode.AGGREGATE;
 
     this.aptitudeRibbonWindow()
       .setToggleHintTarget('the sources');
@@ -364,7 +376,7 @@ class Scene_Aptitude
    */
   setViewModeToSource()
   {
-    this._j._aptitude._viewMode = Scene_Aptitude.viewMode.SOURCE;
+    this.j()._aptitude._viewMode = Scene_Aptitude.viewMode.SOURCE;
 
     this.aptitudeRibbonWindow()
       .setToggleHintTarget('your skills');
@@ -500,7 +512,7 @@ class Scene_Aptitude
     win.setToggleHintTarget('the sources');
 
     // assign the window.
-    this._j._aptitude._windows._ribbon = win;
+    this.j()._aptitude._windows._ribbon = win;
 
     // add the window to the scene.
     this.addWindow(win);
@@ -538,7 +550,7 @@ class Scene_Aptitude
    */
   aptitudeRibbonWindow()
   {
-    return this._j._aptitude._windows._ribbon;
+    return this.j()._aptitude._windows._ribbon;
   }
 
   //endregion ribbon
@@ -569,7 +581,7 @@ class Scene_Aptitude
     win.setHandler('actor-next', this.onCycleActorRight.bind(this));
 
     // store and add to the scene.
-    this._j._aptitude._windows._aggregateList = win;
+    this.j()._aptitude._windows._aggregateList = win;
     this.addWindow(win);
   }
 
@@ -611,7 +623,7 @@ class Scene_Aptitude
   aptitudeAggregateListWindow()
   {
     // return the list window or null.
-    return this._j._aptitude._windows._aggregateList;
+    return this.j()._aptitude._windows._aggregateList;
   }
 
   //endregion aggregate list
@@ -646,7 +658,7 @@ class Scene_Aptitude
     win.deactivate();
 
     // store and add to the scene.
-    this._j._aptitude._windows._sourceList = win;
+    this.j()._aptitude._windows._sourceList = win;
     this.addWindow(win);
   }
 
@@ -665,7 +677,7 @@ class Scene_Aptitude
    */
   aptitudeSourceListWindow()
   {
-    return this._j._aptitude._windows._sourceList;
+    return this.j()._aptitude._windows._sourceList;
   }
 
   //endregion source list
@@ -686,7 +698,7 @@ class Scene_Aptitude
     win.setActor(this.actor());
 
     // store and add to the scene.
-    this._j._aptitude._windows._aggregateDetails = win;
+    this.j()._aptitude._windows._aggregateDetails = win;
     this.addWindow(win);
   }
 
@@ -724,7 +736,7 @@ class Scene_Aptitude
   aptitudeAggregateDetailsWindow()
   {
     // return the details window or null.
-    return this._j._aptitude._windows._aggregateDetails;
+    return this.j()._aptitude._windows._aggregateDetails;
   }
 
   //endregion aggregate details
@@ -748,7 +760,7 @@ class Scene_Aptitude
     win.hide();
 
     // store and add to the scene.
-    this._j._aptitude._windows._sourceDetails = win;
+    this.j()._aptitude._windows._sourceDetails = win;
     this.addWindow(win);
   }
 
@@ -767,7 +779,7 @@ class Scene_Aptitude
    */
   aptitudeSourceDetailsWindow()
   {
-    return this._j._aptitude._windows._sourceDetails;
+    return this.j()._aptitude._windows._sourceDetails;
   }
 
   //endregion source details

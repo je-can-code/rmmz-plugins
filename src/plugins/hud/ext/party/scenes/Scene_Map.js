@@ -46,10 +46,10 @@ Scene_Map.prototype.createPartyFrameWindow = function()
   const rect = this.partyFrameWindowRectangle();
 
   // assign the window to our reference.
-  this._j._partyFrame = new Window_PartyFrame(rect);
+  this.setPartyFrame(new Window_PartyFrame(rect));
 
   // add window to tracking.
-  this.addWindow(this._j._partyFrame);
+  this.addWindow(this.partyFrame());
 };
 
 /**
@@ -99,7 +99,7 @@ Scene_Map.prototype.refreshHud = function()
     .call(this);
 
   // refresh the party frame.
-  this._j._partyFrame.refresh();
+  this.partyFrame().refresh();
 };
 
 /**
@@ -128,7 +128,7 @@ Scene_Map.prototype.handleRefreshPartyFrame = function()
   if ($hudManager.hasRequestRefreshHud())
   {
     // refresh the hud.
-    this._j._partyFrame.refresh();
+    this.partyFrame().refresh();
 
     // let the hud manager know we've done the deed.
     $hudManager.acknowledgeRefreshHud();
@@ -144,13 +144,35 @@ Scene_Map.prototype.handleRefreshPartyFrameImageCache = function()
   if ($hudManager.hasRequestRefreshImageCache())
   {
     // refresh the hud's image cache.
-    this._j._partyFrame.refreshCache();
+    this.partyFrame().refreshCache();
 
     // and then refresh the hud with the new refreshed assets.
-    this._j._partyFrame.refresh();
+    this.partyFrame().refresh();
 
     // let the hud manager know we've done the deed.
     $hudManager.acknowledgeRefreshImageCache();
   }
 };
+
+//region properties
+/**
+ * Gets the party frame.
+ * @returns {*} The partyFrame.
+ */
+Scene_Map.prototype.partyFrame = function()
+{
+  // hand back the party frame.
+  return this._j._partyFrame;
+};
+
+/**
+ * Sets the party frame.
+ * @param {*} newPartyFrame The new partyFrame.
+ */
+Scene_Map.prototype.setPartyFrame = function(newPartyFrame)
+{
+  // assign the party frame.
+  this._j._partyFrame = newPartyFrame;
+};
+//endregion properties
 //endregion Scene_Map

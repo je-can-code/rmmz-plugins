@@ -32,7 +32,7 @@ Sprite_Character.prototype.getBattlerName = function()
   let levelString = `${level.padZero(3)}`;
 
   // check if this character is an event and if the level should be hidden
-  if (this._character && this._character.isEvent() && this._character.shouldHideLevel())
+  if (this.character() && this.character().isEvent() && this.character().shouldHideLevel())
   {
     levelString = '???';
   }

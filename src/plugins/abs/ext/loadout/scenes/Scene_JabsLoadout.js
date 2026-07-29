@@ -129,7 +129,7 @@ class Scene_JabsLoadout
     window.setHandler('cancel', this.popScene.bind(this));
 
     // the board describes its highlighted slot into the help window.
-    window.setHelpWindow(this._helpWindow);
+    window.setHelpWindow(this.helpWindow());
 
     // update the tracker with the new window.
     this._j._loadout._board = window;
@@ -165,7 +165,7 @@ class Scene_JabsLoadout
     window.setHandler('cancel', this.onPickerCancelled.bind(this));
 
     // the picker describes its highlighted candidate into the same help window as the board.
-    window.setHelpWindow(this._helpWindow);
+    window.setHelpWindow(this.helpWindow());
 
     // the picker is dormant until a slot is chosen.
     window.hide();

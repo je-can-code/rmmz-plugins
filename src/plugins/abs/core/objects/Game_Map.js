@@ -345,6 +345,18 @@ Game_Map.prototype.newBattlerEvents = function()
 
 /**
  * Adds a provided event to the current map's event list.
+ *
+ * INVARIANT- an event's INDEX IS ITS ID. Vanilla resolves events with `this._events[eventId]`, so
+ * a slot can never shift; {@link Game_Map#removeEvent} nulls the slot rather than splicing, and
+ * this method refills those nulls before appending.
+ *
+ * That reuse is only safe because `removeEvent` is called exclusively on SPAWNED events- expired
+ * JABS actions and expired loot. Editor-placed events are never removed, so every hole sits above
+ * the real-event range and reuse can never steal a real event's id.
+ *
+ * Removing an editor-placed event would break that, and nothing here can stop you: the reused slot
+ * would hand its id to an unrelated event, and every `$gameMap.event(id)` lookup for it would
+ * silently resolve to the wrong thing.
  * @param {Game_Event} event The `Game_Event` to add to this map.
  */
 Game_Map.prototype.addEvent = function(event)
@@ -353,13 +365,13 @@ Game_Map.prototype.addEvent = function(event)
   // whether or not we found a spot to insert.
   let inserted = false;
 
-  for (let i = 0; i < this._events.length; i++)
+  for (let i = 0; i < this.rawEvents().length; i++)
   {
     // if the slot is empty/nullish, then reuse it.
-    if (!this._events[i])
+    if (!this.rawEvents()[i])
     {
       // assign into the first available hole.
-      this._events[i] = event;
+      this.setEventByIndex(i, event);
       // flag that we inserted.
       inserted = true;
       // stop looking for holes.
@@ -371,7 +383,7 @@ Game_Map.prototype.addEvent = function(event)
   if (!inserted)
   {
     // append to the end.
-    this._events.push(event);
+    this.rawEvents().push(event);
   }
 };
 
@@ -382,7 +394,7 @@ Game_Map.prototype.addEvent = function(event)
 Game_Map.prototype.removeEvent = function(eventToRemove)
 {
   // find the index of the event we're trying to remove.
-  const eventIndex = this._events.findIndex(event => event === eventToRemove);
+  const eventIndex = this.rawEvents().findIndex(event => event === eventToRemove);
 
   // confirm we found the event to remove.
   if (eventIndex > -1)
@@ -393,9 +405,9 @@ Game_Map.prototype.removeEvent = function(eventToRemove)
     // remove it if it's a loot event.
     this.handleLootEventRemoval(eventToRemove);
 
-    // mark the slot as empty to avoid sparseness while preserving indices.
-    // keep array dense and reusable.
-    this._events[eventIndex] = null;
+    // null the slot rather than splicing- an index IS an event id, so removing the entry would
+    // renumber every event after it. See the invariant on addEvent().
+    this.clearEventByIndex(eventIndex);
   }
 };
 
@@ -440,7 +452,7 @@ Game_Map.prototype.handleLootEventRemoval = function(lootToRemove)
   if (!lootToRemove.isJabsLoot()) return;
 
   // get the relevant metadatas for the loot.
-  const lootMetadatas = this.lootEventsFromDataMapByUuid(lootToRemove.getJabsLoot().uuid);
+  const lootMetadatas = this.lootEventsFromDataMapByUuid(lootToRemove.getJabsLoot().uuid());
 
   // iterate over each of the metadatas for deletion.
   lootMetadatas.forEach(lootMetadata =>

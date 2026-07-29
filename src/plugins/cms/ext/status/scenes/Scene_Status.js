@@ -135,7 +135,7 @@ Scene_Status.prototype.setStatusHintWindow = function(v)
 //region accessors (state)
 Scene_Status.prototype.getPageIndex = function()
 {
-  return this._j._cms_s._status._state._pageIndex | 0;
+  return this.pageIndex() | 0;
 };
 
 Scene_Status.prototype.setPageIndex = function(v)
@@ -145,7 +145,7 @@ Scene_Status.prototype.setPageIndex = function(v)
 
 Scene_Status.prototype.getLastDir4 = function()
 {
-  return this._j._cms_s._status._state._lastDir4 | 0;
+  return this.lastDir4() | 0;
 };
 
 Scene_Status.prototype.setLastDir4 = function(v)
@@ -155,7 +155,7 @@ Scene_Status.prototype.setLastDir4 = function(v)
 
 Scene_Status.prototype.getSwitchCooldown = function()
 {
-  return this._j._cms_s._status._state._switchCooldown | 0;
+  return this.switchCooldown() | 0;
 };
 
 Scene_Status.prototype.setSwitchCooldown = function(v)
@@ -562,4 +562,36 @@ Scene_Status.prototype.handleNormalizedStatusInput = function()
   }
 };
 //endregion update
+
+//region properties
+/**
+ * Gets the page index.
+ * @returns {*} The pageIndex.
+ */
+Scene_Status.prototype.pageIndex = function()
+{
+  // hand back the page index.
+  return this._j._cms_s._status._state._pageIndex;
+};
+
+/**
+ * Gets the last dir4.
+ * @returns {*} The lastDir4.
+ */
+Scene_Status.prototype.lastDir4 = function()
+{
+  // hand back the last dir4.
+  return this._j._cms_s._status._state._lastDir4;
+};
+
+/**
+ * Gets the switch cooldown.
+ * @returns {*} The switchCooldown.
+ */
+Scene_Status.prototype.switchCooldown = function()
+{
+  // hand back the switch cooldown.
+  return this._j._cms_s._status._state._switchCooldown;
+};
+//endregion properties
 //endregion Scene_Status

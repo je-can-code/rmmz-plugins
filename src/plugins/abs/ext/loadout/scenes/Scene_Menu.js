@@ -13,7 +13,7 @@ Scene_Menu.prototype.createCommandWindow = function()
     .call(this);
 
   // set the handler for our custom command.
-  this._commandWindow.setHandler('jabs-loadout', this.commandJabsLoadout.bind(this));
+  this.commandWindow().setHandler('jabs-loadout', this.commandJabsLoadout.bind(this));
 };
 
 /**

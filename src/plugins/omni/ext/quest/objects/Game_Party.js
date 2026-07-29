@@ -64,7 +64,7 @@ Game_Party.prototype.populateQuestopediaTrackings = function()
   // populate the cache so it gets updated upon saving.
   trackedOmniquests.forEach(trackedOmniquest =>
   {
-    this._j._omni._questopediaCache.set(trackedOmniquest.key, trackedOmniquest);
+    this.getQuestopediaEntriesCache().set(trackedOmniquest.key, trackedOmniquest);
   });
 };
 
@@ -127,7 +127,10 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
         if (!omniquest.objectives.at(index)) return;
 
         // update the fulfillment data for the obejctive.
-        objective.populateFulfillmentData(omniquest.objectives.at(index)?.fulfillment);
+        const sourceObjective = omniquest.objectives.at(index);
+        objective.populateFulfillmentData(sourceObjective === undefined
+          ? undefined
+          : sourceObjective.fulfillment);
 
         // grab the new objective from the tracking for comparison.
         const newObjective = newTracking.objectives.at(index);

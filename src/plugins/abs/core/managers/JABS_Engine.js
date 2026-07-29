@@ -23,6 +23,70 @@ class JABS_Engine
    * The events array of the enemy cloning map.
    * @type {RPG_MapEvent[]|null}
    */
+  
+
+  //region properties
+  /**
+   * Gets the action events.
+   * @returns {*} The actionEvents.
+   */
+  actionEvents()
+  {
+    // hand back the action events.
+    return this._actionEvents;
+  }
+
+  /**
+   * Sets the action events.
+   * @param {*} newActionEvents The new actionEvents.
+   */
+  setActionEvents(newActionEvents)
+  {
+    // assign the action events.
+    this._actionEvents = newActionEvents;
+  }
+
+  /**
+   * Gets the active actions.
+   * @returns {*} The activeActions.
+   */
+  activeActions()
+  {
+    // hand back the active actions.
+    return this._activeActions;
+  }
+
+  /**
+   * Gets the jabs states.
+   * @returns {*} The jabsStates.
+   */
+  jabsStates()
+  {
+    // hand back the jabs states.
+    return this._jabsStates;
+  }
+
+  /**
+   * Gets the skill execution log.
+   * @returns {*} The skillExecutionLog.
+   */
+  skillExecutionLog()
+  {
+    // hand back the skill execution log.
+    return this._skillExecutionLog;
+  }
+
+  /**
+   * Gets the skill execution timer.
+   * @returns {*} The skillExecutionTimer.
+   */
+  skillExecutionTimer()
+  {
+    // hand back the skill execution timer.
+    return this._skillExecutionTimer;
+  }
+  //endregion properties
+
   static #enemyCloneList = null;
 
   /**
@@ -560,12 +624,12 @@ class JABS_Engine
    */
   getAllActionEvents()
   {
-    return this._actionEvents;
+    return this.actionEvents();
   }
 
   setAllActionEvents(actionEvents)
   {
-    this._actionEvents = actionEvents;
+    this.setActionEvents(actionEvents);
   }
 
   /**
@@ -585,7 +649,7 @@ class JABS_Engine
     // if the event is a physical event on the map, track that data too.
     if (actionEventData)
     {
-      this._activeActions.push(actionEventData);
+      this.activeActions().push(actionEventData);
     }
   }
 
@@ -598,7 +662,7 @@ class JABS_Engine
    */
   event(uuid)
   {
-    return this._activeActions
+    return this.activeActions()
       .find(eventData => eventData.uniqueId === uuid);
   }
 
@@ -742,10 +806,10 @@ class JABS_Engine
   canInitializePlayer1()
   {
     // if the player doesn't exist, initialize it.
-    if (this._player1 === null) return true;
+    if (this.getPlayer1() === null) return true;
 
     // check if the player is currently assigned a battler.
-    if (!this._player1.getBattlerId()) return true;
+    if (!this.getPlayer1().getBattlerId()) return true;
 
     // initialize the player!
     return false;
@@ -859,7 +923,7 @@ class JABS_Engine
    */
   getJabsStates()
   {
-    return this._jabsStates;
+    return this.jabsStates();
   }
 
   /**
@@ -1225,7 +1289,7 @@ class JABS_Engine
    */
   getSkillExecutionLog()
   {
-    return this._skillExecutionLog;
+    return this.skillExecutionLog();
   }
 
   /**
@@ -1362,10 +1426,10 @@ class JABS_Engine
   updateSkillExecutionLog()
   {
     // tick the throttle timer forward by one frame.
-    this._skillExecutionTimer.update();
+    this.skillExecutionTimer().update();
 
     // only process the log once per second when the timer completes.
-    if (this._skillExecutionTimer.isTimerComplete() === false) return;
+    if (this.skillExecutionTimer().isTimerComplete() === false) return;
 
     // grab the maximum window from metadata for pruning decisions.
     const maxWindow = J.ABS.Metadata.SkillExecutionMaxWindowSeconds;
@@ -1387,7 +1451,7 @@ class JABS_Engine
     });
 
     // reset the throttle timer for the next one-second interval.
-    this._skillExecutionTimer.reset();
+    this.skillExecutionTimer().reset();
   }
   //endregion skill execution log
   //endregion update player
@@ -2901,12 +2965,12 @@ class JABS_Engine
     // create loot model.
     const jabsLootData = new JABS_LootDrop(item);
     // associate unique id.
-    lootEventData.uuid = jabsLootData.uuid;
+    lootEventData.uuid = jabsLootData.uuid();
 
     // set the duration of this loot drop
     // if a custom time is available, then use that, otherwise use the default.
     // lifetime.
-    jabsLootData.duration = item.jabsExpiration ?? J.ABS.Metadata.DefaultLootExpiration;
+    jabsLootData.setDuration(item.jabsExpiration ?? J.ABS.Metadata.DefaultLootExpiration);
 
     // generate a new event to visually represent the loot drop and flag it for adding.
     // use the reused/appended index.
@@ -4496,7 +4560,10 @@ class JABS_Engine
     // retaliation target takes THIRD PRIORITY.
     // direct one-enemy retaliations stamp the triggering attacker so spatial sorting cannot
     // redirect the counter to a bystander.
-    const retaliationTarget = jabsAction.getActionOptions()?.getRetaliationTarget() ?? null;
+    const actionOptions = jabsAction.getActionOptions();
+    const retaliationTarget = actionOptions === null
+      ? null
+      : actionOptions.getRetaliationTarget();
     if (retaliationTarget !== null && gameAction.isForOne())
     {
       if (retaliationTarget.canActionConnect() && retaliationTarget.isWithinScope(jabsAction, retaliationTarget, false))

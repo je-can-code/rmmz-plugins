@@ -655,7 +655,7 @@ class Scene_JabsRemap
   buildDisplayMapping()
   {
     // Start with a shallow clone of the controller’s pending mapping.
-    const base = this.currentPendingMapping() || {};
+    const base = this.currentPendingMapping();
     const combined = {};
 
     // clone base logical mappings (first binding shown by UI is at [0]).
@@ -694,8 +694,8 @@ class Scene_JabsRemap
     // resolve the key for this controller index.
     const key = this.resolveControllerKey(this._state()._controllerIndex);
 
-    // return the mapping for this key.
-    return this._state()._pendingByKey[key];
+    // a key with no pending edits has an empty mapping, not a missing one.
+    return this._state()._pendingByKey[key] ?? {};
   }
 
   /**

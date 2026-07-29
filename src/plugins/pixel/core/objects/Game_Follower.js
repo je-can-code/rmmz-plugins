@@ -13,13 +13,13 @@ Game_Follower.prototype.pixelFaceCharacter = function(otherCharacter = $gamePlay
   if (!otherPosition) return;
 
   // check if the follower is facing up/down.
-  const isFacingVertically = Math.abs(otherPosition.y - this._y) > Math.abs(otherPosition.x - this._x);
+  const isFacingVertically = Math.abs(otherPosition.y - this.y) > Math.abs(otherPosition.x - this.x);
 
   // determine which direction to face; only one of these can be true at any given time.
-  const shouldFaceDown = isFacingVertically && otherPosition.y > this._y;
-  const shouldFaceUp = isFacingVertically && otherPosition.y < this._y;
-  const shouldFaceRight = !isFacingVertically && otherPosition.x > this._x;
-  const shouldFaceLeft = !isFacingVertically && otherPosition.x < this._x;
+  const shouldFaceDown = isFacingVertically && otherPosition.y > this.y;
+  const shouldFaceUp = isFacingVertically && otherPosition.y < this.y;
+  const shouldFaceRight = !isFacingVertically && otherPosition.x > this.x;
+  const shouldFaceLeft = !isFacingVertically && otherPosition.x < this.x;
 
   // face the follower the appropriate direction.
   switch (true)
@@ -69,11 +69,11 @@ Game_Follower.prototype.update = function()
     .call(this);
 
   // Always synchronize render/smoothing coordinates to the logical coordinates.
-  if (this._realX !== this._x || this._realY !== this._y)
+  if (this.realX() !== this.x || this.realY() !== this.y)
   {
     // Snap the render coordinates to the logical coordinates.
-    this._realX = this._x;
-    this._realY = this._y;
+    this.setRealX(this.x)
+    this.setRealY(this.y)
   }
 
   // Defensive: if this follower is an AI-controlled ally and did not move via PIXEL this frame,
@@ -84,11 +84,11 @@ Game_Follower.prototype.update = function()
     if (this.isMovePressed() === false)
     {
       // Reset stop count so the engine considers us stationary immediately.
-      this._stopCount = 0;
+      this.setStopCount(0);
 
       // Synchronize the render one more time (belt-and-suspenders).
-      this._realX = this._x;
-      this._realY = this._y;
+      this.setRealX(this.x)
+      this.setRealY(this.y)
     }
   }
 };

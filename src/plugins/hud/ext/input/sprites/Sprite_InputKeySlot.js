@@ -58,6 +58,18 @@ class Sprite_InputKeySlot
     this._j._spriteCache = new Map();
   }
 
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   /**
    * Sets up this sprite with the given skill slot and owning battler.
    * @param {JABS_SkillSlot} skillSlot The skill slot to track.
@@ -82,7 +94,7 @@ class Sprite_InputKeySlot
    */
   skillSlot()
   {
-    return this._j._skillSlot;
+    return this.j()._skillSlot;
   }
 
   /**
@@ -91,7 +103,7 @@ class Sprite_InputKeySlot
    */
   hasSkillSlot()
   {
-    return !!this._j._skillSlot;
+    return !!this.j()._skillSlot;
   }
 
   /**
@@ -100,7 +112,7 @@ class Sprite_InputKeySlot
    */
   setSkillSlot(skillSlot)
   {
-    this._j._skillSlot = skillSlot;
+    this.j()._skillSlot = skillSlot;
   }
 
   /**
@@ -159,7 +171,7 @@ class Sprite_InputKeySlot
    */
   jabsBattler()
   {
-    return this._j._battler;
+    return this.j()._battler;
   }
 
   /**
@@ -178,7 +190,7 @@ class Sprite_InputKeySlot
    */
   hasBattler()
   {
-    return !!this._j._battler;
+    return !!this.j()._battler;
   }
 
   /**
@@ -187,7 +199,7 @@ class Sprite_InputKeySlot
    */
   setBattler(battler)
   {
-    this._j._battler = battler;
+    this.j()._battler = battler;
   }
 
   //endregion getters & setters
@@ -229,17 +241,17 @@ class Sprite_InputKeySlot
     const key = this.makeInputKeyIconSpriteKey(skillSlot, inputType);
 
     // check if the key already maps to a cached sprite.
-    if (this._j._spriteCache.has(key))
+    if (this.j()._spriteCache.has(key))
     {
       // if it does, just return that.
-      return this._j._spriteCache.get(key);
+      return this.j()._spriteCache.get(key);
     }
 
     // create a new sprite.
     const sprite = new Sprite_SkillSlotIcon(0, skillSlot);
 
     // cache the sprite.
-    this._j._spriteCache.set(key, sprite);
+    this.j()._spriteCache.set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -279,17 +291,17 @@ class Sprite_InputKeySlot
     const key = this.makeInputKeyAbilityCostSpriteKey(amount, colorIndex, inputType);
 
     // check if the key already maps to a cached sprite.
-    if (this._j._spriteCache.has(key))
+    if (this.j()._spriteCache.has(key))
     {
       // if it does, just return that.
-      return this._j._spriteCache.get(key);
+      return this.j()._spriteCache.get(key);
     }
 
     // create a new sprite.
     const sprite = new Sprite_SkillCost(amount, colorIndex, itemId);
 
     // cache the sprite.
-    this._j._spriteCache.set(key, sprite);
+    this.j()._spriteCache.set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -327,17 +339,17 @@ class Sprite_InputKeySlot
     const key = this.makeInputKeySkillCostSpriteKey(costType, inputType);
 
     // check if the key already maps to a cached sprite.
-    if (this._j._spriteCache.has(key))
+    if (this.j()._spriteCache.has(key))
     {
       // if it does, just return that.
-      return this._j._spriteCache.get(key);
+      return this.j()._spriteCache.get(key);
     }
 
     // create a new sprite.
     const sprite = new Sprite_SkillCost(skillSlot, costType);
 
     // cache the sprite.
-    this._j._spriteCache.set(key, sprite);
+    this.j()._spriteCache.set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -378,17 +390,17 @@ class Sprite_InputKeySlot
     const key = this.makeInputKeyCooldownTimerSpriteKey(cooldownData, inputType, isItem);
 
     // check if the key already maps to a cached sprite.
-    if (this._j._spriteCache.has(key))
+    if (this.j()._spriteCache.has(key))
     {
       // if it does, just return that.
-      return this._j._spriteCache.get(key);
+      return this.j()._spriteCache.get(key);
     }
 
     // create a new sprite.
     const sprite = new Sprite_CooldownTimer(inputType, cooldownData, isItem);
 
     // cache the sprite.
-    this._j._spriteCache.set(key, sprite);
+    this.j()._spriteCache.set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -425,17 +437,17 @@ class Sprite_InputKeySlot
     const key = this.makeInputKeyComboGaugeSpriteKey(cooldownData, inputType);
 
     // check if the key already maps to a cached sprite.
-    if (this._j._spriteCache.has(key))
+    if (this.j()._spriteCache.has(key))
     {
       // if it does, just return that.
-      return this._j._spriteCache.get(key);
+      return this.j()._spriteCache.get(key);
     }
 
     // create a new sprite.
     const sprite = new Sprite_CooldownGauge(cooldownData);
 
     // cache the sprite.
-    this._j._spriteCache.set(key, sprite);
+    this.j()._spriteCache.set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -476,10 +488,10 @@ class Sprite_InputKeySlot
     const key = this.makeInputKeySkillNameSpriteKey(inputType);
 
     // check if the key already maps to a cached sprite.
-    if (this._j._spriteCache.has(key))
+    if (this.j()._spriteCache.has(key))
     {
       // if it does, just return that.
-      return this._j._spriteCache.get(key);
+      return this.j()._spriteCache.get(key);
     }
 
     // create a new sprite.
@@ -488,7 +500,7 @@ class Sprite_InputKeySlot
       .setAlignment(Sprite_BaseText.Alignments.Center);
 
     // cache the sprite.
-    this._j._spriteCache.set(key, sprite);
+    this.j()._spriteCache.set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -528,10 +540,10 @@ class Sprite_InputKeySlot
     const key = this.makeInputKeySlotNameSpriteKey(skillSlot, inputType);
 
     // check if the key already maps to a cached sprite.
-    if (this._j._spriteCache.has(key))
+    if (this.j()._spriteCache.has(key))
     {
       // if it does, just return that.
-      return this._j._spriteCache.get(key);
+      return this.j()._spriteCache.get(key);
     }
 
     // push for uppercase for cleanliness.
@@ -558,7 +570,7 @@ class Sprite_InputKeySlot
       .setBold(true);
 
     // cache the sprite.
-    this._j._spriteCache.set(key, sprite);
+    this.j()._spriteCache.set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();

@@ -125,7 +125,7 @@ Game_Temp.prototype.buildBeyondMaxDataForClass = function(classId)
  */
 Game_Temp.prototype.getBeyondMaxData = function(classId)
 {
-  return this._j._level._beyondMaxData[classId];
+  return this.beyondMaxData()[classId];
 };
 
 /**
@@ -154,3 +154,15 @@ Game_Temp.prototype.flagBeyondMaxDataAsCached = function()
 {
   this._j._level._hasCachedBeyondMaxData = true;
 };
+
+//region properties
+/**
+ * Gets the beyond max data.
+ * @returns {*} The beyondMaxData.
+ */
+Game_Temp.prototype.beyondMaxData = function()
+{
+  // hand back the beyond max data.
+  return this._j._level._beyondMaxData;
+};
+//endregion properties

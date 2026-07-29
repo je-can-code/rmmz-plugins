@@ -171,7 +171,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
   }
   else if (slipHpForm)
   {
-    const hpEval = this.evaluateFormula(slipHpForm, this._actor);
+    const hpEval = this.evaluateFormula(slipHpForm, this.actor());
     rows.push({
       icon:  TraitManager.slipIcon('hp', Number(hpEval)),
       label: TraitManager.slipName('hp', Number(hpEval)),
@@ -189,7 +189,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
   }
   else if (slipMpForm)
   {
-    const mpEval = this.evaluateFormula(slipMpForm, this._actor);
+    const mpEval = this.evaluateFormula(slipMpForm, this.actor());
     rows.push({
       icon:  TraitManager.slipIcon('mp', Number(mpEval)),
       label: TraitManager.slipName('mp', Number(mpEval)),
@@ -207,7 +207,7 @@ Window_PassiveDetail.prototype.collectJabsAilmentRows = function(state)
   }
   else if (slipTpForm)
   {
-    const tpEval = this.evaluateFormula(slipTpForm, this._actor);
+    const tpEval = this.evaluateFormula(slipTpForm, this.actor());
     rows.push({
       icon:  TraitManager.slipIcon('tp', Number(tpEval)),
       label: TraitManager.slipName('tp', Number(tpEval)),
@@ -282,7 +282,7 @@ Window_PassiveDetail.prototype.collectResourceGainRow = function(state, flatRx, 
   const form = RPGManager.getStringFromNoteByRegex(state, formRx);
   if (form)
   {
-    const evaluated = this.evaluateFormula(form, this._actor);
+    const evaluated = this.evaluateFormula(form, this.actor());
     return { icon, label, value: `+${Math.abs(Number(evaluated))}` };
   }
 
@@ -390,25 +390,25 @@ Window_PassiveDetail.prototype.collectJabsTimingRows = function(state)
     const castFlat = RPGManager.getStringFromNoteByRegex(state, J.ABS.EXT.TIMING.RegExp.CastSpeedFlat);
     if (castFlat)
     {
-      rows.push({ icon: 0, label: 'Cast Time Flat', value: `${this.evaluateFormula(castFlat, this._actor)}` });
+      rows.push({ icon: 0, label: 'Cast Time Flat', value: `${this.evaluateFormula(castFlat, this.actor())}` });
     }
 
     const castRate = RPGManager.getStringFromNoteByRegex(state, J.ABS.EXT.TIMING.RegExp.CastSpeedRate);
     if (castRate)
     {
-      rows.push({ icon: 0, label: 'Cast Time Rate', value: `${this.evaluateFormula(castRate, this._actor)}%` });
+      rows.push({ icon: 0, label: 'Cast Time Rate', value: `${this.evaluateFormula(castRate, this.actor())}%` });
     }
 
     const cdFlat = RPGManager.getStringFromNoteByRegex(state, J.ABS.EXT.TIMING.RegExp.FastCooldownFlat);
     if (cdFlat)
     {
-      rows.push({ icon: 0, label: 'Cooldown Flat', value: `${this.evaluateFormula(cdFlat, this._actor)}` });
+      rows.push({ icon: 0, label: 'Cooldown Flat', value: `${this.evaluateFormula(cdFlat, this.actor())}` });
     }
 
     const cdRate = RPGManager.getStringFromNoteByRegex(state, J.ABS.EXT.TIMING.RegExp.FastCooldownRate);
     if (cdRate)
     {
-      rows.push({ icon: 0, label: 'Cooldown Rate', value: `${this.evaluateFormula(cdRate, this._actor)}%` });
+      rows.push({ icon: 0, label: 'Cooldown Rate', value: `${this.evaluateFormula(cdRate, this.actor())}%` });
     }
   }
 
@@ -432,7 +432,7 @@ Window_PassiveDetail.prototype.collectJabsTimingRows = function(state)
   const durationForm = RPGManager.getStringFromNoteByRegex(state, J.ABS.RegExp.StateDurationFormulaPlus);
   if (durationForm)
   {
-    rows.push({ icon: 0, label: 'Duration', value: `x${this.evaluateFormula(durationForm, this._actor)}` });
+    rows.push({ icon: 0, label: 'Duration', value: `x${this.evaluateFormula(durationForm, this.actor())}` });
   }
 
   return rows;
@@ -456,7 +456,7 @@ Window_PassiveDetail.prototype.drawJabsShieldSection = function(state)
     state, J.ABS.EXT.SHIELD.RegExp.ShieldPointsFormula);
   if (shieldFormula)
   {
-    rows.push({ icon: 0, label: 'Shield', value: `${this.evaluateFormula(shieldFormula, this._actor)}` });
+    rows.push({ icon: 0, label: 'Shield', value: `${this.evaluateFormula(shieldFormula, this.actor())}` });
   }
 
   // protect mode prevents overflow damage on shield break.
@@ -504,4 +504,16 @@ Window_PassiveDetail.prototype.drawJabsStackingSection = function(state)
     if (state.jabsLoseAllStacksAtOnce) this.drawDetailRow(0, 'Lose All Stacks At Once', '');
   }
 };
+
+//region properties
+/**
+ * Gets the actor whose passive details are being displayed.
+ * @returns {Game_Actor} The displayed actor.
+ */
+Window_PassiveDetail.prototype.actor = function()
+{
+  // hand back the actor.
+  return this._actor;
+};
+//endregion properties
 //endregion Window_PassiveDetail

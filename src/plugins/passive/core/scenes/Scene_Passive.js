@@ -52,7 +52,7 @@ class Scene_Passive
    */
   static registerTab(config)
   {
-    this._tabRegistry.push(config);
+    this.tabRegistry().push(config);
   }
 
   /**
@@ -61,7 +61,7 @@ class Scene_Passive
    */
   static registeredTabs()
   {
-    return this._tabRegistry;
+    return this.tabRegistry();
   }
 
   //endregion static tab registry
@@ -130,6 +130,28 @@ class Scene_Passive
      */
     this._j._passive._tabIndex = 0;
   }
+
+  //region properties
+  /**
+   * Gets the tab registry.
+   * @returns {*} The tabRegistry.
+   */
+  static tabRegistry()
+  {
+    // hand back the tab registry.
+    return this._tabRegistry;
+  }
+
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
 
   //endregion init
 
@@ -266,7 +288,7 @@ class Scene_Passive
    */
   getPassiveTabHeaderWindow()
   {
-    return this._j._passive._windows._tabHeader;
+    return this.j()._passive._windows._tabHeader;
   }
 
   /**
@@ -275,7 +297,7 @@ class Scene_Passive
    */
   setPassiveTabHeaderWindow(tabHeaderWindow)
   {
-    this._j._passive._windows._tabHeader = tabHeaderWindow;
+    this.j()._passive._windows._tabHeader = tabHeaderWindow;
   }
 
   //endregion tab header window
@@ -337,7 +359,7 @@ class Scene_Passive
    */
   getPassiveActorRibbonWindow()
   {
-    return this._j._passive._windows._actorRibbon;
+    return this.j()._passive._windows._actorRibbon;
   }
 
   /**
@@ -346,7 +368,7 @@ class Scene_Passive
    */
   setPassiveActorRibbonWindow(ribbonWindow)
   {
-    this._j._passive._windows._actorRibbon = ribbonWindow;
+    this.j()._passive._windows._actorRibbon = ribbonWindow;
   }
   //endregion actor ribbon window
 
@@ -420,7 +442,7 @@ class Scene_Passive
    */
   getPassiveListWindow()
   {
-    return this._j._passive._windows._list;
+    return this.j()._passive._windows._list;
   }
 
   /**
@@ -429,7 +451,7 @@ class Scene_Passive
    */
   setPassiveListWindow(listWindow)
   {
-    this._j._passive._windows._list = listWindow;
+    this.j()._passive._windows._list = listWindow;
   }
 
   //endregion list window
@@ -494,7 +516,7 @@ class Scene_Passive
    */
   getPassiveDetailWindow()
   {
-    return this._j._passive._windows._detail;
+    return this.j()._passive._windows._detail;
   }
 
   /**
@@ -503,7 +525,7 @@ class Scene_Passive
    */
   setPassiveDetailWindow(detailWindow)
   {
-    this._j._passive._windows._detail = detailWindow;
+    this.j()._passive._windows._detail = detailWindow;
   }
 
   //endregion detail window
@@ -516,7 +538,7 @@ class Scene_Passive
    */
   currentTab()
   {
-    return this.constructor._tabRegistry[this._j._passive._tabIndex];
+    return this.constructor._tabRegistry[this.j()._passive._tabIndex];
   }
 
   /**
@@ -526,7 +548,7 @@ class Scene_Passive
   {
     // increment the index modularly.
     const tabCount = this.constructor._tabRegistry.length;
-    this._j._passive._tabIndex = (this._j._passive._tabIndex + 1) % tabCount;
+    this.j()._passive._tabIndex = (this.j()._passive._tabIndex + 1) % tabCount;
 
     // apply the new tab.
     this.applyCurrentTab();
@@ -539,7 +561,7 @@ class Scene_Passive
   {
     // decrement the index modularly.
     const tabCount = this.constructor._tabRegistry.length;
-    this._j._passive._tabIndex = (this._j._passive._tabIndex - 1 + tabCount) % tabCount;
+    this.j()._passive._tabIndex = (this.j()._passive._tabIndex - 1 + tabCount) % tabCount;
 
     // apply the new tab.
     this.applyCurrentTab();

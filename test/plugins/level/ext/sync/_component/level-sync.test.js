@@ -30,6 +30,11 @@ function clearMapSync()
     _j: { _levelSync: { _contentSyncLevel: null, _contentSyncUplevel: false } },
     getMapContentSyncLevel: globalThis.Game_Map.prototype.getMapContentSyncLevel,
     isMapContentSyncUplevel: globalThis.Game_Map.prototype.isMapContentSyncUplevel,
+    // the generated accessors those two methods now read through.
+    contentSyncLevel: globalThis.Game_Map.prototype.contentSyncLevel,
+    setContentSyncLevel: globalThis.Game_Map.prototype.setContentSyncLevel,
+    contentSyncUplevel: globalThis.Game_Map.prototype.contentSyncUplevel,
+    setContentSyncUplevel: globalThis.Game_Map.prototype.setContentSyncUplevel,
   };
 }
 

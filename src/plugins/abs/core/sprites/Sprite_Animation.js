@@ -62,7 +62,7 @@ J.ABS.Aliased.Sprite_Animation.set('targetPosition', Sprite_Animation.prototype.
 Sprite_Animation.prototype.targetPosition = function (renderer)
 {
   // if this is a screen animation, use the original logic.
-  if (this._animation.displayType === 2)
+  if (this.animation().displayType === 2)
   {
     // perform original logic.
     return J.ABS.Aliased.Sprite_Animation.get('targetPosition')
@@ -70,7 +70,7 @@ Sprite_Animation.prototype.targetPosition = function (renderer)
   }
 
   // otherwise, filter out any targets that have been destroyed or are null.
-  const validTargets = this._targets.filter(target => target && !target.destroyed);
+  const validTargets = this.targets().filter(target => target && !target.destroyed);
 
   // if no valid targets remain, return a default point to avoid further issues.
   if (validTargets.length === 0)

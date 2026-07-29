@@ -8,7 +8,7 @@ J.ABS.EXT.DANGER.Aliased.Spriteset_Map.set(
 Spriteset_Map.prototype.refreshAllCharacterSprites = function()
 {
   // iterate over each sprite and set up its danger indicators if necessary.
-  this._characterSprites.forEach(sprite => sprite.setupDangerIndicator());
+  this.characterSprites().forEach(sprite => sprite.setupDangerIndicator());
 
   // perform original logic.
   J.ABS.EXT.DANGER.Aliased.Spriteset_Map.get('refreshAllCharacterSprites')

@@ -11,9 +11,21 @@ Sprite_Character.prototype.updatePosition = function()
   // perform original logic.
   J.ABS.EXT.JUICE.Aliased.Sprite_Character.get('updatePosition').call(this);
 
-  if (this._juiceFlipping === true)
+  if (this.juiceFlipping() === true)
   {
     this.y -= this.height / 2;
   }
 };
+
+//region properties
+/**
+ * Gets the juice flipping.
+ * @returns {*} The juiceFlipping.
+ */
+Sprite_Character.prototype.juiceFlipping = function()
+{
+  // hand back the juice flipping.
+  return this._juiceFlipping;
+};
+//endregion properties
 //endregion Sprite_Character (juice flip hook)

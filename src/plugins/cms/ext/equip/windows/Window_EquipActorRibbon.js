@@ -11,6 +11,20 @@ class Window_EquipActorRibbon
    * Constructor.
    * @param {Rectangle} rect The rectangle for this window.
    */
+  
+
+  //region properties
+  /**
+   * Gets the actor.
+   * @returns {*} The actor.
+   */
+  actor()
+  {
+    // hand back the actor.
+    return this._actor;
+  }
+  //endregion properties
+
   constructor(rect)
   {
     // call super when having extended constructors.
@@ -40,7 +54,7 @@ class Window_EquipActorRibbon
   drawActorName()
   {
     // no actor means nothing to draw.
-    if (!this._actor) return;
+    if (!this.actor()) return;
 
     // the text column starts just past the face graphic.
     const textX = this.faceWidth() + 8;
@@ -48,7 +62,7 @@ class Window_EquipActorRibbon
     const textY = Math.floor((this.innerHeight - this.lineHeight()) / 2);
 
     // draw the actor name.
-    this.drawText(this._actor.name(), textX, textY, textWidth, 'left');
+    this.drawText(this.actor().name(), textX, textY, textWidth, 'left');
   }
   //endregion draw
 }

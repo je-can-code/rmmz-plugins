@@ -93,7 +93,7 @@ JABS_Battler.prototype.hasGapCloseDestination = function()
  */
 JABS_Battler.prototype.clearGapCloseDestination = function()
 {
-  this._gapCloseDestination = [ 0, 0 ];
+  this.setGapCloseDestination([ 0, 0 ]);
 };
 
 /**
@@ -210,7 +210,7 @@ JABS_Battler.prototype.gapCloseToTarget = function(action, target)
   this.beginGapClosing();
 
   // store the initiating skill ID so the landing hook can read its <thisOnGapCloseEnd> tag.
-  this._gapCloseSourceSkillId = action.getBaseSkill().id;
+  this.setGapCloseSourceSkillId(action.getBaseSkill().id);
 
   // store the actual landing coordinates (not the raw target tile) so the arrival check resolves correctly.
   this.setGapCloseDestination([ this.getX() + x, this.getY() + y ]);
@@ -362,7 +362,7 @@ JABS_Battler.prototype.resolvePullVector = function(caster)
 JABS_Battler.prototype.resolveGapCloseEndSkillIds = function()
 {
   // grab the skill that started the gap close.
-  const sourceSkill = $dataSkills[this._gapCloseSourceSkillId];
+  const sourceSkill = $dataSkills[this.gapCloseSourceSkillId()];
 
   // collect IDs from <thisOnGapCloseEnd> on the initiating skill itself.
   const thisIds = sourceSkill
@@ -477,4 +477,26 @@ JABS_Battler.gapCloseWiggleRoom = function()
 {
   return 0.5;
 };
+
+//region properties
+/**
+ * Gets the gap close source skill id.
+ * @returns {*} The gapCloseSourceSkillId.
+ */
+JABS_Battler.prototype.gapCloseSourceSkillId = function()
+{
+  // hand back the gap close source skill id.
+  return this._gapCloseSourceSkillId;
+};
+
+/**
+ * Sets the gap close source skill id.
+ * @param {*} newGapCloseSourceSkillId The new gapCloseSourceSkillId.
+ */
+JABS_Battler.prototype.setGapCloseSourceSkillId = function(newGapCloseSourceSkillId)
+{
+  // assign the gap close source skill id.
+  this._gapCloseSourceSkillId = newGapCloseSourceSkillId;
+};
+//endregion properties
 //endregion JABS_Battler

@@ -194,7 +194,7 @@ class Window_ActorRibbon
   drawContent()
   {
     // don't draw if the actor is unavailable.
-    if (!this._actor) return;
+    if (!this.actor()) return;
 
     // draw the actor face.
     this.drawActorRibbon();

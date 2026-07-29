@@ -112,7 +112,7 @@ Scene_Map.prototype.createJabsAbsMenuMainWindow = function()
     .call(this);
 
   // also associate the ally AI handler with the appropriate symbol.
-  this._j._absMenu._mainWindow.setHandler("ally-ai", this.commandManagePartyAi.bind(this));
+  this.getJabsMainListWindow().setHandler("ally-ai", this.commandManagePartyAi.bind(this));
 };
 
 /**
@@ -133,12 +133,12 @@ Scene_Map.prototype.createAllyAiPartyWindow = function()
   aiPartyMenu.setHandler("ally-formations", this.commandAllyFormations.bind(this));
 
   // set the window for tracking.
-  this._j._absMenu._allyAiPartyWindow = aiPartyMenu;
-  this.addWindow(this._j._absMenu._allyAiPartyWindow);
+  this.setAllyAiPartyWindow(aiPartyMenu);
+  this.addWindow(this.allyAiPartyWindow());
 
   // manage the initial state of the window.
-  this._j._absMenu._allyAiPartyWindow.close();
-  this._j._absMenu._allyAiPartyWindow.hide();
+  this.allyAiPartyWindow().close();
+  this.allyAiPartyWindow().hide();
 };
 
 /**
@@ -180,12 +180,12 @@ Scene_Map.prototype.createAllyAiEquipWindow = function()
   aiMemberMenu.setHandler("do-nothing-toggle", this.commandToggleDoNothing.bind(this));
 
   // set the window for tracking.
-  this._j._absMenu._allyAiEquipWindow = aiMemberMenu;
-  this.addWindow(this._j._absMenu._allyAiEquipWindow);
+  this.setAllyAiEquipWindow(aiMemberMenu);
+  this.addWindow(this.allyAiEquipWindow());
 
   // manage the initial state of the window.
-  this._j._absMenu._allyAiEquipWindow.close();
-  this._j._absMenu._allyAiEquipWindow.hide();
+  this.allyAiEquipWindow().close();
+  this.allyAiEquipWindow().hide();
 };
 
 /**
@@ -278,10 +278,10 @@ Scene_Map.prototype.commandSelectMemberAi = function()
   this.setJabsMenuFocus("select-ai");
 
   // set the actorId into the AI selection window and refresh.
-  const actorId = this._j._absMenu._allyAiPartyWindow.currentExt();
+  const actorId = this.allyAiPartyWindow().currentExt();
   this.setAllyAiActorId(actorId);
-  this._j._absMenu._allyAiEquipWindow.setActorId(actorId);
-  this._j._absMenu._allyAiEquipWindow.refresh();
+  this.allyAiEquipWindow().setActorId(actorId);
+  this.allyAiEquipWindow().refresh();
 };
 
 /**
@@ -300,7 +300,7 @@ Scene_Map.prototype.commandAggroPassiveToggle = function()
     : $gameParty.becomeAggro();
 
   // refresh the window to pick up the new state.
-  this._j._absMenu._allyAiPartyWindow.refresh();
+  this.allyAiPartyWindow().refresh();
 };
 
 /**
@@ -308,10 +308,10 @@ Scene_Map.prototype.commandAggroPassiveToggle = function()
  */
 Scene_Map.prototype.commandEquipMemberAi = function()
 {
-  const newPreset = this._j._absMenu._allyAiEquipWindow.currentExt();
+  const newPreset = this.allyAiEquipWindow().currentExt();
   const allyAi = $gameActors.actor(this.getAllyAiActorId()).getAllyAI();
   allyAi.applyPreset(newPreset.key);
-  this._j._absMenu._allyAiEquipWindow.refresh();
+  this.allyAiEquipWindow().refresh();
 };
 
 /**
@@ -322,7 +322,7 @@ Scene_Map.prototype.commandToggleDoNothing = function()
   SoundManager.playRecovery();
   const allyAi = $gameActors.actor(this.getAllyAiActorId()).getAllyAI();
   allyAi.setDoNothing(!allyAi.isDoNothing());
-  this._j._absMenu._allyAiEquipWindow.refresh();
+  this.allyAiEquipWindow().refresh();
 };
 
 Scene_Map.prototype.commandAllyFormations = function()
@@ -355,29 +355,29 @@ Scene_Map.prototype.manageAbsMenu = function()
     .call(this);
 
   // pivot on the window focus to manage which should be open and which should be closed.
-  switch (this._j._absMenu._windowFocus)
+  switch (this.getJabsMenuFocus())
   {
     case "ai-party-list":
-      this._j._absMenu._mainWindow.hide();
-      this._j._absMenu._mainWindow.close();
-      this._j._absMenu._mainWindow.deactivate();
-      this._j._absMenu._allyAiPartyWindow.show();
-      this._j._absMenu._allyAiPartyWindow.open();
-      this._j._absMenu._allyAiPartyWindow.activate();
+      this.getJabsMainListWindow().hide();
+      this.getJabsMainListWindow().close();
+      this.getJabsMainListWindow().deactivate();
+      this.allyAiPartyWindow().show();
+      this.allyAiPartyWindow().open();
+      this.allyAiPartyWindow().activate();
       break;
     case "select-ai":
-      this._j._absMenu._allyAiPartyWindow.hide();
-      this._j._absMenu._allyAiPartyWindow.close();
-      this._j._absMenu._allyAiPartyWindow.deactivate();
-      this._j._absMenu._allyAiEquipWindow.show();
-      this._j._absMenu._allyAiEquipWindow.open();
-      this._j._absMenu._allyAiEquipWindow.activate();
+      this.allyAiPartyWindow().hide();
+      this.allyAiPartyWindow().close();
+      this.allyAiPartyWindow().deactivate();
+      this.allyAiEquipWindow().show();
+      this.allyAiEquipWindow().open();
+      this.allyAiEquipWindow().activate();
       break;
     case "ally-formations":
     {
-      this._j._absMenu._allyAiPartyWindow.hide();
-      this._j._absMenu._allyAiPartyWindow.close();
-      this._j._absMenu._allyAiPartyWindow.deactivate();
+      this.allyAiPartyWindow().hide();
+      this.allyAiPartyWindow().close();
+      this.allyAiPartyWindow().deactivate();
 
       const window = this.getAllyFormationWindow();
       window.show();
@@ -403,21 +403,21 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
   switch (absWindow)
   {
     case "ai-party-list":
-      this._j._absMenu._allyAiPartyWindow.hide();
-      this._j._absMenu._allyAiPartyWindow.close();
-      this._j._absMenu._allyAiPartyWindow.deactivate();
-      this._j._absMenu._mainWindow.activate();
-      this._j._absMenu._mainWindow.open();
-      this._j._absMenu._mainWindow.show();
+      this.allyAiPartyWindow().hide();
+      this.allyAiPartyWindow().close();
+      this.allyAiPartyWindow().deactivate();
+      this.getJabsMainListWindow().activate();
+      this.getJabsMainListWindow().open();
+      this.getJabsMainListWindow().show();
       this.setJabsMenuFocus("main");
       break;
     case "select-ai":
-      this._j._absMenu._allyAiEquipWindow.hide();
-      this._j._absMenu._allyAiEquipWindow.close();
-      this._j._absMenu._allyAiEquipWindow.deactivate();
-      this._j._absMenu._allyAiPartyWindow.activate();
-      this._j._absMenu._allyAiPartyWindow.open();
-      this._j._absMenu._allyAiPartyWindow.show();
+      this.allyAiEquipWindow().hide();
+      this.allyAiEquipWindow().close();
+      this.allyAiEquipWindow().deactivate();
+      this.allyAiPartyWindow().activate();
+      this.allyAiPartyWindow().open();
+      this.allyAiPartyWindow().show();
       this.setJabsMenuFocus("ai-party-list");
       break;
     case "ally-formations":
@@ -427,13 +427,55 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
       window.close();
       window.deactivate();
 
-      this._j._absMenu._allyAiPartyWindow.activate();
-      this._j._absMenu._allyAiPartyWindow.open();
-      this._j._absMenu._allyAiPartyWindow.show();
+      this.allyAiPartyWindow().activate();
+      this.allyAiPartyWindow().open();
+      this.allyAiPartyWindow().show();
       this.setJabsMenuFocus("ai-party-list");
       break;
     }
   }
 };
 //endregion manage menu
+
+//region properties
+/**
+ * Gets the ally ai party window.
+ * @returns {*} The allyAiPartyWindow.
+ */
+Scene_Map.prototype.allyAiPartyWindow = function()
+{
+  // hand back the ally ai party window.
+  return this._j._absMenu._allyAiPartyWindow;
+};
+
+/**
+ * Sets the ally ai party window.
+ * @param {*} newAllyAiPartyWindow The new allyAiPartyWindow.
+ */
+Scene_Map.prototype.setAllyAiPartyWindow = function(newAllyAiPartyWindow)
+{
+  // assign the ally ai party window.
+  this._j._absMenu._allyAiPartyWindow = newAllyAiPartyWindow;
+};
+
+/**
+ * Gets the ally ai equip window.
+ * @returns {*} The allyAiEquipWindow.
+ */
+Scene_Map.prototype.allyAiEquipWindow = function()
+{
+  // hand back the ally ai equip window.
+  return this._j._absMenu._allyAiEquipWindow;
+};
+
+/**
+ * Sets the ally ai equip window.
+ * @param {*} newAllyAiEquipWindow The new allyAiEquipWindow.
+ */
+Scene_Map.prototype.setAllyAiEquipWindow = function(newAllyAiEquipWindow)
+{
+  // assign the ally ai equip window.
+  this._j._absMenu._allyAiEquipWindow = newAllyAiEquipWindow;
+};
+//endregion properties
 //endregion Scene_Map

@@ -43,17 +43,19 @@ class JAptitudeTyped_PluginMetadata
 
     /**
      * The strict resistance threshold (elements with rate < this are alignments).
+     * Authored in percent points, consumed as the `/100` factor element rates are expressed in.
      * @type {number}
      */
     this.ResistThreshold = JsonMapper
-      .parseObject(this.parsedPluginParameters['resistThreshold']);
+      .parseObject(this.parsedPluginParameters['resistThreshold']) / 100;
 
     /**
      * The strict slayer/attribute threshold (elements with rate > this qualify).
+     * Authored in percent points, consumed as the `/100` factor element rates are expressed in.
      * @type {number}
      */
     this.SlayerWeaknessThreshold = JsonMapper
-      .parseObject(this.parsedPluginParameters['slayerWeaknessThreshold']);
+      .parseObject(this.parsedPluginParameters['slayerWeaknessThreshold']) / 100;
 
     /**
      * Names or ids to exclude from resistance-as-alignment.

@@ -34,6 +34,6 @@ RPG_DropItem.prototype.setSdpKey = function(key)
  */
 RPG_DropItem.prototype.isSdpDrop = function()
 {
-  return !!this._sdpKey;
+  return !!this.getSdpKey();
 };
 //endregion RPG_Item

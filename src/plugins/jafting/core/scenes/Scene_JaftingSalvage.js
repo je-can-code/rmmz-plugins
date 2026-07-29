@@ -13,6 +13,110 @@ class Scene_JaftingSalvage
   /**
    * How many stamped units one confirmation dismantles (stack splitting can grow this later).
    */
+  
+
+  //region properties
+  /**
+   * Gets the last preview datum.
+   * @returns {*} The lastPreviewDatum.
+   */
+  lastPreviewDatum()
+  {
+    // hand back the last preview datum.
+    return this._lastPreviewDatum;
+  }
+
+  /**
+   * Sets the last preview datum.
+   * @param {*} newLastPreviewDatum The new lastPreviewDatum.
+   */
+  setLastPreviewDatum(newLastPreviewDatum)
+  {
+    // assign the last preview datum.
+    this._lastPreviewDatum = newLastPreviewDatum;
+  }
+
+  /**
+   * Gets the last preview stack.
+   * @returns {*} The lastPreviewStack.
+   */
+  lastPreviewStack()
+  {
+    // hand back the last preview stack.
+    return this._lastPreviewStack;
+  }
+
+  /**
+   * Sets the last preview stack.
+   * @param {*} newLastPreviewStack The new lastPreviewStack.
+   */
+  setLastPreviewStack(newLastPreviewStack)
+  {
+    // assign the last preview stack.
+    this._lastPreviewStack = newLastPreviewStack;
+  }
+
+  /**
+   * Gets the candidate window.
+   * @returns {*} The candidateWindow.
+   */
+  candidateWindow()
+  {
+    // hand back the candidate window.
+    return this._candidateWindow;
+  }
+
+  /**
+   * Sets the candidate window.
+   * @param {*} newCandidateWindow The new candidateWindow.
+   */
+  setCandidateWindow(newCandidateWindow)
+  {
+    // assign the candidate window.
+    this._candidateWindow = newCandidateWindow;
+  }
+
+  /**
+   * Gets the preview window.
+   * @returns {*} The previewWindow.
+   */
+  previewWindow()
+  {
+    // hand back the preview window.
+    return this._previewWindow;
+  }
+
+  /**
+   * Sets the preview window.
+   * @param {*} newPreviewWindow The new previewWindow.
+   */
+  setPreviewWindow(newPreviewWindow)
+  {
+    // assign the preview window.
+    this._previewWindow = newPreviewWindow;
+  }
+
+  /**
+   * Gets the confirmation window.
+   * @returns {*} The confirmationWindow.
+   */
+  confirmationWindow()
+  {
+    // hand back the confirmation window.
+    return this._confirmationWindow;
+  }
+
+  /**
+   * Sets the confirmation window.
+   * @param {*} newConfirmationWindow The new confirmationWindow.
+   */
+  setConfirmationWindow(newConfirmationWindow)
+  {
+    // assign the confirmation window.
+    this._confirmationWindow = newConfirmationWindow;
+  }
+  //endregion properties
+
   static DismantleBatchSize = 1;
 
   /**
@@ -63,8 +167,8 @@ class Scene_JaftingSalvage
     Scene_MenuBase.prototype.create.call(this);
 
     // tracks last highlighted datum + stack so preview repaints after dismantle without waiting for cursor moves.
-    this._lastPreviewDatum = null;
-    this._lastPreviewStack = null;
+    this.setLastPreviewDatum(null);
+    this.setLastPreviewStack(null);
     this.createSalvageWindows();
   }
 
@@ -73,11 +177,11 @@ class Scene_JaftingSalvage
    */
   createBackground()
   {
-    this._backgroundFilter = new PIXI.filters.AlphaFilter(0.1);
-    this._backgroundSprite = new Sprite();
-    this._backgroundSprite.bitmap = SceneManager.backgroundBitmap();
-    this._backgroundSprite.filters = [ this._backgroundFilter ];
-    this.addChild(this._backgroundSprite);
+    this.setBackgroundFilter(new PIXI.filters.AlphaFilter(0.1));
+    this.setBackgroundSprite(new Sprite());
+    this.backgroundSprite().bitmap = SceneManager.backgroundBitmap();
+    this.backgroundSprite().filters = [ this.backgroundFilter() ];
+    this.addChild(this.backgroundSprite());
   }
 
   /**
@@ -97,27 +201,27 @@ class Scene_JaftingSalvage
     const confirmRect = this.salvageConfirmationWindowRect();
 
     // store  candidate window on the instance for later reads.
-    this._candidateWindow = new Window_SalvageCandidateList(candidateRect);
-    this._candidateWindow.setHandler('ok', this.onSalvageCandidateOk.bind(this));
-    this._candidateWindow.setHandler('cancel', this.popScene.bind(this));
+    this.setCandidateWindow(new Window_SalvageCandidateList(candidateRect));
+    this.candidateWindow().setHandler('ok', this.onSalvageCandidateOk.bind(this));
+    this.candidateWindow().setHandler('cancel', this.popScene.bind(this));
 
     // store  preview window on the instance for later reads.
-    this._previewWindow = new Window_SalvagePreview(previewRect);
+    this.setPreviewWindow(new Window_SalvagePreview(previewRect));
 
     // store  confirmation window on the instance for later reads.
-    this._confirmationWindow = new Window_SalvageConfirmation(confirmRect);
-    this._confirmationWindow.setHandler('confirm', this.onSalvageConfirmOk.bind(this));
-    this._confirmationWindow.setHandler('cancel', this.onSalvageConfirmCancel.bind(this));
+    this.setConfirmationWindow(new Window_SalvageConfirmation(confirmRect));
+    this.confirmationWindow().setHandler('confirm', this.onSalvageConfirmOk.bind(this));
+    this.confirmationWindow().setHandler('cancel', this.onSalvageConfirmCancel.bind(this));
 
     // modal sits invisible until the player commits on the candidate list—mirrors refinement confirmation layering.
-    this._confirmationWindow.hide();
-    this._confirmationWindow.deactivate();
+    this.confirmationWindow().hide();
+    this.confirmationWindow().deactivate();
 
-    this.addWindow(this._candidateWindow);
-    this.addWindow(this._previewWindow);
-    this.addWindow(this._confirmationWindow);
+    this.addWindow(this.candidateWindow());
+    this.addWindow(this.previewWindow());
+    this.addWindow(this.confirmationWindow());
 
-    this._previewWindow.setDismantleAmount(Scene_JaftingSalvage.DismantleBatchSize);
+    this.previewWindow().setDismantleAmount(Scene_JaftingSalvage.DismantleBatchSize);
     // initial rects come from salvage*WindowRect(); real panel placement waits for start() after refresh()
     // so the candidate cursor (and thus refund row counts) exist—see refreshPreviewFromSelection().
   }
@@ -226,10 +330,10 @@ class Scene_JaftingSalvage
       listX, listW, previewX, previewW, topY, bandH,
     } = strip;
 
-    this._candidateWindow.move(listX, topY, listW, bandH);
+    this.candidateWindow().move(listX, topY, listW, bandH);
 
-    const preview = this._previewWindow;
-    const item = this._candidateWindow.item();
+    const preview = this.previewWindow();
+    const item = this.candidateWindow().item();
     const n = JaftingSalvageManager.visibleExpandedRefundRowCount(item);
     const linesSingle = JaftingSalvageManager.layoutPreviewLineCountSingle(item);
     const linesTwo = JaftingSalvageManager.layoutPreviewLineCountTwoColumn(item);
@@ -290,11 +394,11 @@ class Scene_JaftingSalvage
   start()
   {
     Scene_MenuBase.prototype.start.call(this);
-    this._candidateWindow.open();
-    this._previewWindow.open();
-    this._confirmationWindow.open();
-    this._candidateWindow.refresh();
-    this._candidateWindow.activate();
+    this.candidateWindow().open();
+    this.previewWindow().open();
+    this.confirmationWindow().open();
+    this.candidateWindow().refresh();
+    this.candidateWindow().activate();
     // windows already exist—now the list has a valid index, so we can move panes and sync preview in one pass.
     this.refreshPreviewFromSelection();
   }
@@ -306,17 +410,17 @@ class Scene_JaftingSalvage
   {
     Scene_MenuBase.prototype.update.call(this);
 
-    if (this._candidateWindow && this._candidateWindow.active)
+    if (this.candidateWindow() && this.candidateWindow().active)
     {
-      const item = this._candidateWindow.item();
+      const item = this.candidateWindow().item();
       const stack = item ? $gameParty.numItems(item) : 0;
 
-      if (item !== this._lastPreviewDatum || stack !== this._lastPreviewStack)
+      if (item !== this.lastPreviewDatum() || stack !== this.lastPreviewStack())
       {
-        this._lastPreviewDatum = item;
-        this._lastPreviewStack = stack;
+        this.setLastPreviewDatum(item);
+        this.setLastPreviewStack(stack);
         this.layoutSalvagePanels();
-        this._previewWindow.setDatum(item);
+        this.previewWindow().setDatum(item);
       }
     }
   }
@@ -326,7 +430,7 @@ class Scene_JaftingSalvage
    */
   onSalvageCandidateOk()
   {
-    const datum = this._candidateWindow.item();
+    const datum = this.candidateWindow().item();
 
     if (datum === undefined || datum === null)
     {
@@ -336,10 +440,10 @@ class Scene_JaftingSalvage
       return;
     }
 
-    this._confirmationWindow.show();
-    this._confirmationWindow.select(0);
-    this._confirmationWindow.activate();
-    this._candidateWindow.deactivate();
+    this.confirmationWindow().show();
+    this.confirmationWindow().select(0);
+    this.confirmationWindow().activate();
+    this.candidateWindow().deactivate();
   }
 
   /**
@@ -347,7 +451,7 @@ class Scene_JaftingSalvage
    */
   onSalvageConfirmOk()
   {
-    const datum = this._candidateWindow.item();
+    const datum = this.candidateWindow().item();
 
     if (datum === undefined || datum === null)
     {
@@ -369,7 +473,7 @@ class Scene_JaftingSalvage
       SoundManager.playUseItem();
     }
 
-    this._candidateWindow.refresh();
+    this.candidateWindow().refresh();
 
     this.refreshPreviewFromSelection();
     this.onSalvageConfirmCancel();
@@ -380,9 +484,9 @@ class Scene_JaftingSalvage
    */
   onSalvageConfirmCancel()
   {
-    this._confirmationWindow.hide();
-    this._confirmationWindow.deactivate();
-    this._candidateWindow.activate();
+    this.confirmationWindow().hide();
+    this.confirmationWindow().deactivate();
+    this.candidateWindow().activate();
   }
 
   /**
@@ -390,14 +494,14 @@ class Scene_JaftingSalvage
    */
   refreshPreviewFromSelection()
   {
-    const item = this._candidateWindow.item();
+    const item = this.candidateWindow().item();
     const stack = item ? $gameParty.numItems(item) : 0;
 
     // store  last preview datum on the instance for later reads.
-    this._lastPreviewDatum = item;
-    this._lastPreviewStack = stack;
+    this.setLastPreviewDatum(item);
+    this.setLastPreviewStack(stack);
     this.layoutSalvagePanels();
-    this._previewWindow.setDatum(item);
+    this.previewWindow().setDatum(item);
   }
 }
 

@@ -102,6 +102,18 @@ class Window_TargetFrame
     this._j._inactivityTimer = 0;
   }
 
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   /**
    * Executes any one-time configuration required for this window.
    */
@@ -133,10 +145,10 @@ class Window_TargetFrame
   emptyCache()
   {
     // iterate over each sprite and destroy it properly.
-    this._j._spriteCache.forEach((value, _) => value.destroy());
+    this.j()._spriteCache.forEach((value, _) => value.destroy());
 
     // empty the collection of all references.
-    this._j._spriteCache.clear();
+    this.j()._spriteCache.clear();
   }
 
   /**
@@ -164,17 +176,17 @@ class Window_TargetFrame
     const key = `targetframe-enemy-hp-gauge`;
 
     // check if the key already maps to a cached sprite.
-    if (this._j._spriteCache.has(key))
+    if (this.j()._spriteCache.has(key))
     {
       // if it does, just return that.
-      return this._j._spriteCache.get(key);
+      return this.j()._spriteCache.get(key);
     }
 
     // create a new enemy gauge sprite.
     const sprite = new Sprite_FlowingGauge();
 
     // cache the sprite.
-    this._j._spriteCache.set(key, sprite);
+    this.j()._spriteCache.set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -198,17 +210,17 @@ class Window_TargetFrame
     const key = `targetframe-enemy-mp-gauge`;
 
     // check if the key already maps to a cached sprite.
-    if (this._j._spriteCache.has(key))
+    if (this.j()._spriteCache.has(key))
     {
       // if it does, just return that.
-      return this._j._spriteCache.get(key);
+      return this.j()._spriteCache.get(key);
     }
 
     // create a new enemy gauge sprite.
     const sprite = new Sprite_FlowingGauge();
 
     // cache the sprite.
-    this._j._spriteCache.set(key, sprite);
+    this.j()._spriteCache.set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -232,17 +244,17 @@ class Window_TargetFrame
     const key = `targetframe-enemy-tp-gauge`;
 
     // check if the key already maps to a cached sprite.
-    if (this._j._spriteCache.has(key))
+    if (this.j()._spriteCache.has(key))
     {
       // if it does, just return that.
-      return this._j._spriteCache.get(key);
+      return this.j()._spriteCache.get(key);
     }
 
     // create a new enemy gauge sprite.
     const sprite = new Sprite_FlowingGauge();
 
     // cache the sprite.
-    this._j._spriteCache.set(key, sprite);
+    this.j()._spriteCache.set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -266,12 +278,12 @@ class Window_TargetFrame
   setTarget(target)
   {
     // assign the newly provided data.
-    this._j._name = target.name;
-    this._j._nameColorHex = target.nameColorHex;
-    this._j._text = target.text;
-    this._j._icon = target.icon;
-    this._j._battler = target.battler;
-    this._j._configuration = target.configuration;
+    this.j()._name = target.name;
+    this.j()._nameColorHex = target.nameColorHex;
+    this.j()._text = target.text;
+    this.j()._icon = target.icon;
+    this.j()._battler = target.battler;
+    this.j()._configuration = target.configuration;
 
     // refresh the contents of the window to reflect the changes.
     this.refresh();
@@ -282,7 +294,7 @@ class Window_TargetFrame
    */
   requestTargetRefresh()
   {
-    this._j._requestTargetRefresh = true;
+    this.j()._requestTargetRefresh = true;
   }
 
   /**
@@ -291,7 +303,7 @@ class Window_TargetFrame
    */
   hasRequestTargetRefresh()
   {
-    return this._j._requestTargetRefresh;
+    return this.j()._requestTargetRefresh;
   }
 
   /**
@@ -299,7 +311,7 @@ class Window_TargetFrame
    */
   acknowledgeTargetRefresh()
   {
-    this._j._requestTargetRefresh = false;
+    this.j()._requestTargetRefresh = false;
   }
 
   /**
@@ -308,7 +320,7 @@ class Window_TargetFrame
    */
   targetName()
   {
-    return this._j._name;
+    return this.j()._name;
   }
 
   /**
@@ -317,7 +329,7 @@ class Window_TargetFrame
    */
   targetText()
   {
-    return this._j._text;
+    return this.j()._text;
   }
 
   /**
@@ -326,7 +338,7 @@ class Window_TargetFrame
    */
   targetIcon()
   {
-    return this._j._icon;
+    return this.j()._icon;
   }
 
   /**
@@ -335,7 +347,7 @@ class Window_TargetFrame
    */
   targetConfiguration()
   {
-    return this._j._configuration;
+    return this.j()._configuration;
   }
 
   /**
@@ -361,7 +373,7 @@ class Window_TargetFrame
    */
   resetInactivityTimer()
   {
-    this._j._inactivityTimer = Window_TargetFrame.MaxDuration;
+    this.j()._inactivityTimer = Window_TargetFrame.MaxDuration;
   }
 
   /**
@@ -475,10 +487,10 @@ class Window_TargetFrame
   handleInactivity()
   {
     // countdown the timer.
-    this._j._inactivityTimer--;
+    this.j()._inactivityTimer--;
 
     // check if we have <1 second left before this goes inactive.
-    if (this._j._inactivityTimer < 60)
+    if (this.j()._inactivityTimer < 60)
     {
       this.fadeOutWindow();
     }
@@ -496,7 +508,7 @@ class Window_TargetFrame
     this.opacity -= 10;
     this.backOpacity -= 10;
     this.contentsOpacity -= 10;
-    this._j._spriteCache.forEach((sprite, _) => sprite.opacity -= 10);
+    this.j()._spriteCache.forEach((sprite, _) => sprite.opacity -= 10);
   }
 
   /**
@@ -507,7 +519,7 @@ class Window_TargetFrame
     this.opacity += 40;
     this.backOpacity += 40;
     this.contentsOpacity += 40;
-    this._j._spriteCache.forEach((sprite, _) => sprite.opacity += 40);
+    this.j()._spriteCache.forEach((sprite, _) => sprite.opacity += 40);
   }
 
   /**
@@ -534,7 +546,7 @@ class Window_TargetFrame
       name = `\\*` + name;
     }
 
-    const hex = this._j._nameColorHex;
+    const hex = this.j()._nameColorHex;
     const useHex = hex !== String.empty && hex.length > 0;
 
     const w = this.targetFrameNameLineInnerWidth();
@@ -570,7 +582,7 @@ class Window_TargetFrame
     if (!this.canDrawTargetLevel()) return;
 
     // get the level from the battler.
-    const { level } = this._j._battler;
+    const { level } = this.j()._battler;
 
     // check to see if the enemy is leveled.
     if (level)
@@ -593,7 +605,7 @@ class Window_TargetFrame
     if (!J.LEVEL) return false;
 
     // if we don't have a battler as the target, then don't draw levels.
-    if (!this._j._battler) return false;
+    if (!this.j()._battler) return false;
 
     // draw levels!
     return true;
@@ -661,7 +673,7 @@ class Window_TargetFrame
   drawTargetBattlerInfo(x, y)
   {
     // validate that we have a battler to draw data for.
-    if (this._j._battler)
+    if (this.j()._battler)
     {
       // determine the corrected X coordinate.
       const currentX = x + this.targetBattlerGaugesX();
@@ -676,7 +688,7 @@ class Window_TargetFrame
     else
     {
       // clear/hide the gauge data.
-      this._j._spriteCache.forEach(value => value.hide());
+      this.j()._spriteCache.forEach(value => value.hide());
     }
   }
 
@@ -743,7 +755,7 @@ class Window_TargetFrame
     }
 
     // setup the gauge with the battler.
-    gauge.setup(this._j._battler, Sprite_FlowingGauge.Types.HP);
+    gauge.setup(this.j()._battler, Sprite_FlowingGauge.Types.HP);
 
     // relocate the gauge sprite.
     gauge.move(x, y);
@@ -765,7 +777,7 @@ class Window_TargetFrame
     }
 
     // setup the gauge with the battler.
-    gauge.setup(this._j._battler, Sprite_FlowingGauge.Types.MP);
+    gauge.setup(this.j()._battler, Sprite_FlowingGauge.Types.MP);
 
     // relocate the gauge sprite.
     gauge.move(x, y);
@@ -787,7 +799,7 @@ class Window_TargetFrame
     }
 
     // setup the gauge with the battler.
-    gauge.setup(this._j._battler, Sprite_FlowingGauge.Types.TP);
+    gauge.setup(this.j()._battler, Sprite_FlowingGauge.Types.TP);
 
     // relocate the gauge sprite.
     gauge.move(x, y);

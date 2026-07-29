@@ -28,6 +28,24 @@ describe('Game_Follower ext/pixel augments (direct src import)', () =>
     globalThis.Game_Follower = StubGameFollower;
 
     await import('../../../../../src/plugins/pixel/core/objects/Game_Follower.js');
+
+    // RMMZ exposes map coordinates as native properties on Game_CharacterBase.
+    Object.defineProperties(globalThis.Game_Follower.prototype, {
+      // vanilla exposes these read-only; the double allows writes so tests can position freely.
+      x: { get() { return this._x; }, set(v) { this._x = v; }, configurable: true },
+      y: { get() { return this._y; }, set(v) { this._y = v; }, configurable: true },
+    });
+
+    // J-Base coordinate accessors the pixel/abs layers read and write through.
+    globalThis.Game_Follower.prototype.setX = function(v) { this._x = v; };
+    globalThis.Game_Follower.prototype.setY = function(v) { this._y = v; };
+    globalThis.Game_Follower.prototype.realX = function() { return this._realX; };
+    globalThis.Game_Follower.prototype.realY = function() { return this._realY; };
+    globalThis.Game_Follower.prototype.setRealX = function(v) { this._realX = v; };
+    globalThis.Game_Follower.prototype.setRealY = function(v) { this._realY = v; };
+
+    // J-Base accessor the production code now writes through.
+    StubGameFollower.prototype.setStopCount = function(v) { this._stopCount = v; };
     ({ Game_Follower } = globalThis);
   });
 

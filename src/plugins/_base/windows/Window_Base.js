@@ -706,7 +706,7 @@ Window_Base.prototype.drawGaugeBorderedRect = function(x, y, w, h, rate, options
   }
 
   // stroke rectangular border.
-  const ctx = this.contents._context;
+  const ctx = this.context();
   ctx.save();
   ctx.beginPath();
   ctx.rect(x + 0.5, y + 0.5, w - 1, h - 1);
@@ -781,7 +781,7 @@ Window_Base.prototype.drawGaugeSegmented = function(x, y, w, h, rate, options)
   }
 
   // BORDER: rectangular stroke around the shape.
-  const ctx = this.contents._context;
+  const ctx = this.context();
   ctx.save();
   ctx.beginPath();
   ctx.rect(x + 0.5, y + 0.5, w - 1, h - 1);
@@ -817,7 +817,7 @@ Window_Base.prototype.drawGaugePill = function(x, y, w, h, rate, options)
   if (h <= 0) return;
 
   // get 2D context and gradient.
-  const ctx = this.contents._context;
+  const ctx = this.context();
   const grad = ctx.createLinearGradient(x, y, x + w, y);
   grad.addColorStop(0, options.leftGradientColor);
   grad.addColorStop(1, options.rightGradientColor);
@@ -901,7 +901,7 @@ Window_Base.prototype.drawGaugeRadial = function(x, y, w, h, rate, options)
   const { borderThickness } = options;
 
   // acquire 2D context and gradient.
-  const ctx = this.contents._context;
+  const ctx = this.context();
   const midAngle = a0 + (a1 - a0) / 2;
   const gx0 = cx + Math.cos(a0) * irx;
   const gy0 = cy + Math.sin(a0) * iry;
@@ -1007,4 +1007,16 @@ Window_Base.prototype._computeGaugeInnerRect = function(rect, options)
 };
 
 //endregion draw gauge
+
+//region properties
+/**
+ * Gets the 2d drawing context backing this window's contents bitmap.
+ * @returns {CanvasRenderingContext2D} The drawing context.
+ */
+Window_Base.prototype.context = function()
+{
+  // Bitmap exposes this natively; reaching past it would couple to its storage.
+  return this.contents.context;
+};
+//endregion properties
 //endregion Window_Base

@@ -312,7 +312,9 @@ class J_SdpPluginMetadata
     const foreacher = parsedPanel =>
     {
       // validate the name is not one of the organizational names for the editor-only.
-      const panelName = parsedPanel.identity?.name ?? parsedPanel.name ?? String.empty;
+      const panelName = parsedPanel.identity
+            ? parsedPanel.identity.name
+            : (parsedPanel.name ?? String.empty);
       if (panelName.startsWith('__')) return;
       // if (panelName.startsWith('==')) return;
       if (panelName.startsWith('--')) return;

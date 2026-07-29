@@ -86,9 +86,9 @@ Game_Map.prototype.parseMapContentSyncTags = function()
     J.LEVEL.EXT.SYNC.RegExp.ContentSyncLevel);
 
   // store the sync level, defaulting to null if not found.
-  this._j._levelSync._contentSyncLevel = syncLevel > 0
+  this.setContentSyncLevel(syncLevel > 0
     ? syncLevel
-    : null;
+    : null);
 
   // parse the uplevel flag from the map note.
   const uplevel = RPGManager.checkForBooleanFromNoteByRegex(
@@ -96,7 +96,7 @@ Game_Map.prototype.parseMapContentSyncTags = function()
     J.LEVEL.EXT.SYNC.RegExp.ContentSyncUplevel);
 
   // store the uplevel flag.
-  this._j._levelSync._contentSyncUplevel = uplevel === true;
+  this.setContentSyncUplevel(uplevel === true);
 };
 
 /**
@@ -105,7 +105,7 @@ Game_Map.prototype.parseMapContentSyncTags = function()
  */
 Game_Map.prototype.getMapContentSyncLevel = function()
 {
-  return this._j._levelSync._contentSyncLevel;
+  return this.contentSyncLevel();
 };
 
 /**
@@ -114,6 +114,48 @@ Game_Map.prototype.getMapContentSyncLevel = function()
  */
 Game_Map.prototype.isMapContentSyncUplevel = function()
 {
+  return this.contentSyncUplevel();
+};
+
+//region properties
+/**
+ * Gets the content sync level.
+ * @returns {*} The contentSyncLevel.
+ */
+Game_Map.prototype.contentSyncLevel = function()
+{
+  // hand back the content sync level.
+  return this._j._levelSync._contentSyncLevel;
+};
+
+/**
+ * Sets the content sync level.
+ * @param {*} newContentSyncLevel The new contentSyncLevel.
+ */
+Game_Map.prototype.setContentSyncLevel = function(newContentSyncLevel)
+{
+  // assign the content sync level.
+  this._j._levelSync._contentSyncLevel = newContentSyncLevel;
+};
+
+/**
+ * Gets the content sync uplevel.
+ * @returns {*} The contentSyncUplevel.
+ */
+Game_Map.prototype.contentSyncUplevel = function()
+{
+  // hand back the content sync uplevel.
   return this._j._levelSync._contentSyncUplevel;
 };
+
+/**
+ * Sets the content sync uplevel.
+ * @param {*} newContentSyncUplevel The new contentSyncUplevel.
+ */
+Game_Map.prototype.setContentSyncUplevel = function(newContentSyncUplevel)
+{
+  // assign the content sync uplevel.
+  this._j._levelSync._contentSyncUplevel = newContentSyncUplevel;
+};
+//endregion properties
 //endregion Game_Map

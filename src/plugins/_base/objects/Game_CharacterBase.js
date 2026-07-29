@@ -104,3 +104,87 @@ Game_CharacterBase.prototype.directionFromHorzVert = function(horz, vert)
   // Invalid combination; return 0.
   return 0;
 };
+
+/**
+ * Gets the number of frames this character has been standing still.
+ * @returns {number} The stopCount.
+ */
+Game_CharacterBase.prototype.stopCount = function()
+{
+  // hand back the number of frames this character has been standing still.
+  return this._stopCount;
+};
+
+/**
+ * Sets the number of frames this character has been standing still.
+ * @param {number} newStopCount The new stopCount.
+ */
+Game_CharacterBase.prototype.setStopCount = function(newStopCount)
+{
+  // assign the number of frames this character has been standing still.
+  this._stopCount = newStopCount;
+};
+/**
+ * Sets the x coordinate of this character on the map.
+ *
+ * RMMZ exposes the matching getter as the native `x` property rather than a method, so reads go
+ * through `this.x` while writes come here- defining an `x()` method would clobber that property.
+ * @param {number} newX The new x coordinate.
+ */
+Game_CharacterBase.prototype.setX = function(newX)
+{
+  // assign the x coordinate of this character on the map.
+  this._x = newX;
+};
+
+/**
+ * Sets the y coordinate of this character on the map.
+ *
+ * Reads go through the native `y` property, for the same reason described on {@link #setX}.
+ * @param {number} newY The new y coordinate.
+ */
+Game_CharacterBase.prototype.setY = function(newY)
+{
+  // assign the y coordinate of this character on the map.
+  this._y = newY;
+};
+
+/**
+ * Gets the interpolated x coordinate this character is rendered at mid-step.
+ * @returns {number} The realX.
+ */
+Game_CharacterBase.prototype.realX = function()
+{
+  // hand back the interpolated x coordinate.
+  return this._realX;
+};
+
+/**
+ * Sets the interpolated x coordinate this character is rendered at mid-step.
+ * @param {number} newRealX The new realX.
+ */
+Game_CharacterBase.prototype.setRealX = function(newRealX)
+{
+  // assign the interpolated x coordinate.
+  this._realX = newRealX;
+};
+
+/**
+ * Gets the interpolated y coordinate this character is rendered at mid-step.
+ * @returns {number} The realY.
+ */
+Game_CharacterBase.prototype.realY = function()
+{
+  // hand back the interpolated y coordinate.
+  return this._realY;
+};
+
+/**
+ * Sets the interpolated y coordinate this character is rendered at mid-step.
+ * @param {number} newRealY The new realY.
+ */
+Game_CharacterBase.prototype.setRealY = function(newRealY)
+{
+  // assign the interpolated y coordinate.
+  this._realY = newRealY;
+};

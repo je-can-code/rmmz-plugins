@@ -26,6 +26,9 @@ class Window_RecipeList
    */
   setCurrentCategory(newCategory)
   {
+    // nothing to redraw when the value has not changed.
+    if (this.currentCategory === newCategory) return;
+
     // set the new category.
     this.currentCategory = newCategory;
 

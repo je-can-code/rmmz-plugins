@@ -10,6 +10,20 @@ class Window_PassiveTabHeader
    * Constructor.
    * @param {Rectangle} rect The rectangle for this window.
    */
+  
+
+  //region properties
+  /**
+   * Gets the label.
+   * @returns {*} The label.
+   */
+  label()
+  {
+    // hand back the label.
+    return this._label;
+  }
+  //endregion properties
+
   constructor(rect)
   {
     // call super when having extended constructors.
@@ -44,6 +58,9 @@ class Window_PassiveTabHeader
    */
   setLabel(label)
   {
+    // nothing to redraw when the value has not changed.
+    if (this._label === label) return;
+
     // update the tracked label.
     this._label = label;
 
@@ -62,7 +79,7 @@ class Window_PassiveTabHeader
     this.contents.clear();
 
     // draw the label centered with arrow hints on each side.
-    const text = `◀  ${this._label}  ▶`;
+    const text = `◀  ${this.label()}  ▶`;
     this.drawText(text, 0, 0, this.innerWidth, 'center');
   }
   //endregion draw

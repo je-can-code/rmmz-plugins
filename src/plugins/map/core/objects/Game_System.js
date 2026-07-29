@@ -40,7 +40,7 @@ Game_System.prototype.isMinimapVisible = function()
  */
 Game_System.prototype.showMinimap = function()
 {
-  this._j._map._minimapVisible = true;
+  this.setMinimapVisibility(true);
 };
 
 /**
@@ -48,7 +48,7 @@ Game_System.prototype.showMinimap = function()
  */
 Game_System.prototype.hideMinimap = function()
 {
-  this._j._map._minimapVisible = false;
+  this.setMinimapVisibility(false);
 };
 
 /**
@@ -56,7 +56,7 @@ Game_System.prototype.hideMinimap = function()
  */
 Game_System.prototype.toggleMinimapVisibility = function()
 {
-  this._j._map._minimapVisible = !this._j._map._minimapVisible;
+  this.setMinimapVisibility(!this.isMinimapVisible());
 };
 
 /**
@@ -80,6 +80,6 @@ Game_System.prototype.onAfterLoad = function()
   // ensure structure and default if missing from older saves.
   this._j ||= {};
   this._j._map ||= {};
-  this._j._map._minimapVisible ??= J.MAP.Metadata.startVisible;
+  this.setMinimapVisibility(this.isMinimapVisible() ?? J.MAP.Metadata.startVisible);
 };
 //endregion Game_System

@@ -10,12 +10,26 @@
  */
 Bitmap.prototype._createCanvas = function(width, height)
 {
+  // this method IS the canvas creator, so it owns these fields directly- reading through the
+  // `canvas` property here would re-enter `_ensureCanvas` and recurse.
   this._canvas = document.createElement("canvas");
 
   // applies the new attribute to change it to software rendering.
-  this._context = this._canvas.getContext("2d", { willReadFrequently: true });
+  this.setContext(this._canvas.getContext("2d", { willReadFrequently: true }));
 
   this._canvas.width = width;
   this._canvas.height = height;
   this._createBaseTexture(this._canvas);
 };
+
+//region properties
+/**
+ * Sets the 2d drawing context this bitmap renders through.
+ * @param {CanvasRenderingContext2D} newContext The drawing context.
+ */
+Bitmap.prototype.setContext = function(newContext)
+{
+  // assign the context.
+  this._context = newContext;
+};
+//endregion properties

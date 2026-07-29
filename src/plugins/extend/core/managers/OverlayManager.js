@@ -8,6 +8,30 @@ class OverlayManager
   /**
    * The line types available for overlaying in the context of a note.
    */
+  
+
+  //region properties
+  /**
+   * Gets the skill cache.
+   * @returns {*} The skillCache.
+   */
+  static skillCache()
+  {
+    // hand back the skill cache.
+    return this._skillCache;
+  }
+
+  /**
+   * Gets the state cache.
+   * @returns {*} The stateCache.
+   */
+  static stateCache()
+  {
+    // hand back the state cache.
+    return this._stateCache;
+  }
+  //endregion properties
+
   static LineType = {
     /**
      * A "key value pair" tag, such as <key:value>.
@@ -63,8 +87,8 @@ class OverlayManager
    */
   static invalidate(battler)
   {
-    this._skillCache.invalidate(battler);
-    this._stateCache.invalidate(battler);
+    this.skillCache().invalidate(battler);
+    this.stateCache().invalidate(battler);
   }
 
   /**
@@ -72,8 +96,8 @@ class OverlayManager
    */
   static clearCache()
   {
-    this._skillCache.clear();
-    this._stateCache.clear();
+    this.skillCache().clear();
+    this.stateCache().clear();
   }
 
   //endregion caching
@@ -99,14 +123,14 @@ class OverlayManager
     if (skillId <= 0) throw new Error('Invalid skill extension id.');
 
     // if we don't have a caster for some reason, don't process anything.
-    if (!caster) return $dataSkills[skillId];
+    if (!caster) return this.#requireDatabaseEntry($dataSkills[skillId], 'skill', skillId);
 
     // fast-path: JCache.get() itself checks the per-caster bucket before running the compute
     // function below, so a cache hit never allocates, filters, or touches the re-entrancy guard.
     // the cache is always invalidated wholesale via invalidate(battler) on any learnSkill /
     // forgetSkill call, so skillId alone is a stable key within one cache lifetime — encoding the
     // overlay set in the key is redundant overhead.
-    return this._skillCache.get(caster, String(skillId), () =>
+    return this.skillCache().get(caster, String(skillId), () =>
     {
       // cache miss: get all known skill ids for this caster.
       const knownIds = caster.skillIds();
@@ -206,11 +230,11 @@ class OverlayManager
     if (stateId <= 0) throw new Error('Invalid state id for extension.');
 
     // if we don't have a battler for some reason, don't process anything.
-    if (!battler) return $dataStates[stateId];
+    if (!battler) return this.#requireDatabaseEntry($dataStates[stateId], 'state', stateId);
 
     // fast-path: JCache.get() itself checks the per-battler bucket before running the compute
     // function below, so a cache hit never allocates, walks allStateIds, or touches the guard.
-    return this._stateCache.get(battler, String(stateId), () =>
+    return this.stateCache().get(battler, String(stateId), () =>
     {
       // cache miss: get all raw state ids, preserving stacks and duplicates.
       const allIds = battler.allStateIds();
@@ -296,15 +320,18 @@ class OverlayManager
    */
   static #getExtendedSkill(overlaySkills, skillId)
   {
+    // a missing row is bad data, not a recoverable state; say so before anything else touches it.
+    const baseSkill = this.#requireDatabaseEntry($dataSkills[skillId], 'skill', skillId);
+
     // if there are no overlays, return the original skill without incurring clone cost.
     if (overlaySkills.length === 0)
     {
       // return the base database skill untouched.
-      return $dataSkills[skillId];
+      return baseSkill;
     }
 
     // clone the base skill so overlays can safely mutate the clone without affecting the database.
-    const baseClone = $dataSkills[skillId]._clone();
+    const baseClone = baseSkill._clone();
 
     // apply all overlays in order to produce the final extended skill.
     const extended = overlaySkills
@@ -322,14 +349,39 @@ class OverlayManager
    */
   static #getExtendedState(overlayStates, stateId)
   {
+    // a missing row is bad data, not a recoverable state; say so before anything else touches it.
+    const baseState = this.#requireDatabaseEntry($dataStates[stateId], 'state', stateId);
+
     // if there are no overlays, return the original state without incurring clone cost.
-    if (overlayStates.length === 0) return $dataStates[stateId];
+    if (overlayStates.length === 0) return baseState;
 
     // clone the base state so overlays can safely mutate the clone without affecting the database.
-    const baseClone = $dataStates[stateId]._clone();
+    const baseClone = baseState._clone();
 
     // apply all overlays in order to produce the final extended state.
     return overlayStates.reduce((working, overlay) => this.extendState(working, overlay), baseClone);
+  }
+
+  /**
+   * Asserts that a database row actually exists before it gets overlaid.
+   *
+   * An `<extend:>` tag pointing at an id that no longer exists is a data error, and a silent
+   * fallback would leave a skill or state quietly doing nothing for the rest of the playthrough.
+   * Failing loudly, naming the id, is the only useful outcome.
+   * @param {RPG_Skill|RPG_State} entry The database row to validate.
+   * @param {string} kind The kind of row, for the error message.
+   * @param {number} id The id that was looked up.
+   * @returns {RPG_Skill|RPG_State} The validated row.
+   */
+  static #requireDatabaseEntry(entry, kind, id)
+  {
+    // an absent row means the id is dangling and there is nothing meaningful to overlay.
+    if (!entry)
+    {
+      throw new Error(`Extension targets a ${kind} id that does not exist: ${id}. Check your <extend:> data.`);
+    }
+
+    return entry;
   }
 
   /**
@@ -528,7 +580,11 @@ class OverlayManager
     }
 
     // if they aren't the same, and aren't 100 (default), then add them.
-    if (baseSkill.successRate !== skillOverlay.successRate || skillOverlay.successRate !== 100)
+    // both halves must hold: an overlay sitting at the RMMZ default of 100 has expressed no opinion
+    // about accuracy, so it must not contribute. with an OR here, extending any skill whose own rate
+    // was not 100 would add a flat +100 to it purely because the two values differed- silently
+    // turning a deliberately-fallible skill into one that never misses.
+    if (baseSkill.successRate !== skillOverlay.successRate && skillOverlay.successRate !== 100)
     {
       baseSkill.successRate += skillOverlay.successRate;
     }

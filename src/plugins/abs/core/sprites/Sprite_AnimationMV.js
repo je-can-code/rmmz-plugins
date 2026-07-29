@@ -7,7 +7,7 @@ J.ABS.Aliased.Sprite_AnimationMV.set('updatePosition', Sprite_AnimationMV.protot
 Sprite_AnimationMV.prototype.updatePosition = function ()
 {
   // if this is a screen animation, use original logic.
-  if (this._animation.position === 3)
+  if (this.animation().position === 3)
   {
     // perform original logic.
     J.ABS.Aliased.Sprite_AnimationMV.get('updatePosition')
@@ -16,7 +16,7 @@ Sprite_AnimationMV.prototype.updatePosition = function ()
   }
 
   // filter out destroyed targets or those belonging to JABS actions being removed.
-  const validTargets = this._targets.filter(target =>
+  const validTargets = this.targets().filter(target =>
   {
     // if there is no target, it isn't valid.
     if (!target || target.destroyed) return false;
@@ -39,7 +39,7 @@ Sprite_AnimationMV.prototype.updatePosition = function ()
   }
 
   // perform original logic with the valid target list if it was reduced.
-  if (validTargets.length !== this._targets.length)
+  if (validTargets.length !== this.targets().length)
   {
     // retrieve the first valid target.
     const [target] = validTargets;
@@ -62,11 +62,11 @@ Sprite_AnimationMV.prototype.updatePosition = function ()
     }
 
     // adjust height based on animation position settings.
-    if (this._animation.position === 0)
+    if (this.animation().position === 0)
     {
       this.y -= target.height;
     }
-    else if (this._animation.position === 1)
+    else if (this.animation().position === 1)
     {
       this.y -= target.height / 2;
     }

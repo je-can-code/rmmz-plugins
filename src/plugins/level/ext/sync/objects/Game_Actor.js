@@ -87,7 +87,7 @@ Game_Actor.prototype.getLevelForExp = function()
   if (J.LEVEL.EXT.SYNC.Metadata.syncAffectsExp === false)
   {
     // return the real level to preserve level-difference EXP policy.
-    return this._level;
+    return this.getBattlerBaseLevel();
   }
 
   // sync affects EXP; use effective (synced) level.

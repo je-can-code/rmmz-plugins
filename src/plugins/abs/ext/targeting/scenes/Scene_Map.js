@@ -23,9 +23,9 @@ Scene_Map.prototype.createAllWindows = function()
 Scene_Map.prototype.createTargetingListWindow = function()
 {
   const rect = this.targetingListWindowRect();
-  this._targetingListWindow = new Window_TargetingList(rect);
-  this._targetingListWindow.hide();
-  this.addWindow(this._targetingListWindow);
+  this.setTargetingListWindow(new Window_TargetingList(rect));
+  this.targetingListWindow().hide();
+  this.addWindow(this.targetingListWindow());
 };
 
 /**
@@ -57,7 +57,7 @@ Scene_Map.prototype.update = function()
     .call(this);
 
   // whether a session was active before ticking this frame, to detect the begin/end transition.
-  const wasActive = this._targetingWasActive === true;
+  const wasActive = this.targetingWasActive() === true;
 
   // tick the targeting manager after everything else has updated for this frame.
   JABS_TargetingManager.update();
@@ -82,18 +82,60 @@ Scene_Map.prototype.updateTargetingListWindow = function(wasActive)
     // populate once, right when the session begins.
     if (!wasActive)
     {
-      this._targetingListWindow.setCandidates(cursor.getCandidates());
-      this._targetingListWindow.show();
+      this.targetingListWindow().setCandidates(cursor.getCandidates());
+      this.targetingListWindow().show();
     }
 
     // keep the highlight in sync with the manager's current cycle position every frame.
-    this._targetingListWindow.select(cursor.getSelectedIndex());
+    this.targetingListWindow().select(cursor.getSelectedIndex());
   }
-  else if (this._targetingListWindow.visible)
+  else if (this.targetingListWindow().visible)
   {
-    this._targetingListWindow.hide();
+    this.targetingListWindow().hide();
   }
 
-  this._targetingWasActive = isActive;
+  this.setTargetingWasActive(isActive);
 };
+
+//region properties
+/**
+ * Gets the targeting list window.
+ * @returns {*} The targetingListWindow.
+ */
+Scene_Map.prototype.targetingListWindow = function()
+{
+  // hand back the targeting list window.
+  return this._targetingListWindow;
+};
+
+/**
+ * Sets the targeting list window.
+ * @param {*} newTargetingListWindow The new targetingListWindow.
+ */
+Scene_Map.prototype.setTargetingListWindow = function(newTargetingListWindow)
+{
+  // assign the targeting list window.
+  this._targetingListWindow = newTargetingListWindow;
+};
+
+/**
+ * Gets the targeting was active.
+ * @returns {*} The targetingWasActive.
+ */
+Scene_Map.prototype.targetingWasActive = function()
+{
+  // hand back the targeting was active.
+  return this._targetingWasActive;
+};
+
+/**
+ * Sets the targeting was active.
+ * @param {*} newTargetingWasActive The new targetingWasActive.
+ */
+Scene_Map.prototype.setTargetingWasActive = function(newTargetingWasActive)
+{
+  // assign the targeting was active.
+  this._targetingWasActive = newTargetingWasActive;
+};
+//endregion properties
 //endregion Scene_Map (targeting tick)

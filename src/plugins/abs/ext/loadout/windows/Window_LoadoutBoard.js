@@ -317,7 +317,10 @@ class Window_LoadoutBoard
     if (this.index() < 0) return null;
 
     // hand back whatever the highlighted command is carrying.
-    return this.commandEntryAt(this.index())?.ext ?? null;
+    const commandEntry = this.commandEntryAt(this.index());
+    if (commandEntry === null) return null;
+
+    return commandEntry.ext;
   }
 }
 

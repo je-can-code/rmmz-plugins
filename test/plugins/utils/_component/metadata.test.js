@@ -19,6 +19,11 @@ describe('J-SystemUtilities metadata (direct src import)', () =>
 
     // patches globalThis.Bitmap.prototype directly, no vm involved.
     await import('../../../../src/plugins/utils/core/Bitmap.js');
+
+    // J-Base accessors the production code now reads through.
+    globalThis.Bitmap.prototype.setCanvas = function(v) { this._canvas = v; };
+    globalThis.Bitmap.prototype.canvas = function() { return this._canvas; };
+    globalThis.Bitmap.prototype.setContext = function(v) { this._context = v; };
   });
 
   it('initializes J.UTILS metadata with parsed params', () =>

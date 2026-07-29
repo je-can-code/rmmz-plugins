@@ -12,7 +12,7 @@ Scene_Menu.prototype.createCommandWindow = function()
     .call(this);
 
   // add an additional handler for the new menu.
-  this._commandWindow.setHandler("sdp-menu", this.commandSdp.bind(this));
+  this.commandWindow().setHandler("sdp-menu", this.commandSdp.bind(this));
 };
 
 /**

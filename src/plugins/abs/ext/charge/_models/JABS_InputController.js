@@ -59,7 +59,7 @@ JABS_StandardController.prototype.initInputDelays = function()
  */
 JABS_StandardController.prototype.getChargeInputDelayBySlot = function(slot)
 {
-  return this._chargeInputDelay.get(slot);
+  return this.chargeInputDelay().get(slot);
 };
 
 /**
@@ -658,4 +658,16 @@ JABS_StandardController.prototype.canChargeCombatAction4 = function()
 };
 //endregion combat skill 4
 //endregion combat skills
+
+//region properties
+/**
+ * Gets the charge input delay.
+ * @returns {*} The chargeInputDelay.
+ */
+JABS_StandardController.prototype.chargeInputDelay = function()
+{
+  // hand back the charge input delay.
+  return this._chargeInputDelay;
+};
+//endregion properties
 //endregion JABS_InputController

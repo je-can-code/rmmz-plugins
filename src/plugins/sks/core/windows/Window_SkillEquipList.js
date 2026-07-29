@@ -86,6 +86,9 @@ class Window_SkillEquipList
    */
   setSlotContext(slotIndex)
   {
+    // nothing to redraw when the value has not changed.
+    if (this._slotContext === slotIndex) return;
+
     // assign the slot index.
     this._slotContext = slotIndex;
 

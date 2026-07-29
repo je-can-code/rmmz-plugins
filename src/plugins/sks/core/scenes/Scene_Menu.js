@@ -13,7 +13,7 @@ Scene_Menu.prototype.createCommandWindow = function()
     .call(this);
 
   // set the handler for our custom command.
-  this._commandWindow.setHandler('skill-equip', this.commandSkillEquip.bind(this));
+  this.commandWindow().setHandler('skill-equip', this.commandSkillEquip.bind(this));
 };
 
 /**

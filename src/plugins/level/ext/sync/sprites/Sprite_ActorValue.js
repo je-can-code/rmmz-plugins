@@ -21,11 +21,11 @@ if (J.HUD && J.HUD.EXT && J.HUD.EXT.PARTY)
     // show or hide based on current sync state.
     if (this.getActor().isContentSynced())
     {
-      this._j._syncIconSprite.show();
+      this.syncIconSprite().show();
     }
     else
     {
-      this._j._syncIconSprite.hide();
+      this.syncIconSprite().hide();
     }
   };
 
@@ -36,7 +36,7 @@ if (J.HUD && J.HUD.EXT && J.HUD.EXT.PARTY)
   Sprite_ActorValue.prototype.getOrCreateSyncIcon = function()
   {
     // return cached sprite if it already exists.
-    if (this._j._syncIconSprite) return this._j._syncIconSprite;
+    if (this.syncIconSprite()) return this.syncIconSprite();
 
     // resolve the configured icon index.
     const iconIndex = J.LEVEL.EXT.SYNC.Metadata.syncIndicatorIconIndex;
@@ -51,7 +51,7 @@ if (J.HUD && J.HUD.EXT && J.HUD.EXT.PARTY)
     sprite.hide();
 
     // cache on the namespaced property block.
-    this._j._syncIconSprite = sprite;
+    this.setSyncIconSprite(sprite);
 
     // position the icon just to the left of the level text.
     sprite.x = -ImageManager.iconWidth;
@@ -115,4 +115,26 @@ if (J.HUD && J.HUD.EXT && J.HUD.EXT.PARTY)
     return `${syncedLevel} (${realLevel})`;
   };
 }
+
+//region properties
+/**
+ * Gets the sync icon sprite.
+ * @returns {*} The syncIconSprite.
+ */
+Sprite_ActorValue.prototype.syncIconSprite = function()
+{
+  // hand back the sync icon sprite.
+  return this._j._syncIconSprite;
+};
+
+/**
+ * Sets the sync icon sprite.
+ * @param {*} newSyncIconSprite The new syncIconSprite.
+ */
+Sprite_ActorValue.prototype.setSyncIconSprite = function(newSyncIconSprite)
+{
+  // assign the sync icon sprite.
+  this._j._syncIconSprite = newSyncIconSprite;
+};
+//endregion properties
 //endregion Sprite_ActorValue

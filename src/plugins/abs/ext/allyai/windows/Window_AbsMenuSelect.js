@@ -57,7 +57,7 @@ Window_AbsMenuSelect.prototype.makeCommandList = function()
     .call(this);
 
   // pivot on the menu type.
-  switch (this._j._menuType)
+  switch (this.menuType())
   {
     case "ai-party-list":
       this.addAggroPassiveToggleCommand();
@@ -227,4 +227,16 @@ Window_AbsMenuSelect.prototype.itemHeight = function()
 {
   return this.lineHeight() * 2;
 };
+
+//region properties
+/**
+ * Gets the menu type.
+ * @returns {*} The menuType.
+ */
+Window_AbsMenuSelect.prototype.menuType = function()
+{
+  // hand back the menu type.
+  return this._j._menuType;
+};
+//endregion properties
 //endregion Window_AbsMenuSelect

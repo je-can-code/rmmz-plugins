@@ -41,20 +41,32 @@ class Sprite_Face
     };
   }
 
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   /**
    * Loads the bitmap into the sprite.
    */
   loadBitmap()
   {
-    this.bitmap = ImageManager.loadFace(this._j._faceName);
+    this.bitmap = ImageManager.loadFace(this.j()._faceName);
     const pw = ImageManager.faceWidth;
     const ph = ImageManager.faceHeight;
     const width = pw;
     const height = ph;
     const sw = Math.min(width, pw);
     const sh = Math.min(height, ph);
-    const sx = Math.floor((this._j._faceIndex % 4) * pw + (pw - sw) / 2);
-    const sy = Math.floor(Math.floor(this._j._faceIndex / 4) * ph + (ph - sh) / 2);
+    const sx = Math.floor((this.j()._faceIndex % 4) * pw + (pw - sw) / 2);
+    const sy = Math.floor(Math.floor(this.j()._faceIndex / 4) * ph + (ph - sh) / 2);
     this.setFrame(sx, sy, pw, ph);
   }
 }

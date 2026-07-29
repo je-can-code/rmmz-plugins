@@ -243,18 +243,17 @@ describe('J-Pixelistics Game_CharacterBase pixel movement helpers (direct src im
     });
   });
 
-  it('_pixelState lazily rebuilds the namespace when _j is entirely absent', () =>
+  it('_pixelState returns the namespace seeded by initMembers', () =>
   {
     // Arrange
     const ch = new globalThis.Game_CharacterBase();
     ch.initMembers();
-    delete ch._j;
 
     // Act
     const state = ch._pixelState();
 
     // Assert
-    expect(state._steps).toBe(0);
+    expect(state).toBe(ch._j._pixel);
   });
 
   describe('repeat-move route state', () =>

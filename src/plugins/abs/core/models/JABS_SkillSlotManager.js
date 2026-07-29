@@ -46,6 +46,18 @@ class JABS_SkillSlotManager
     this._setupComplete = false;
   }
 
+  //region properties
+  /**
+   * Gets the slots.
+   * @returns {*} The slots.
+   */
+  slots()
+  {
+    // hand back the slots.
+    return this._slots;
+  }
+  //endregion properties
+
   /**
    * Gets whether or not this skill slot manager has been setup yet.
    * @returns {boolean}
@@ -97,7 +109,7 @@ class JABS_SkillSlotManager
    */
   getAllSlots()
   {
-    return this._slots;
+    return this.slots();
   }
 
   /**
@@ -119,19 +131,19 @@ class JABS_SkillSlotManager
     // initialize its cooldown as ready so it doesn't permanently block before the first stamp.
     const gcdSlot = new JABS_SkillSlot(J.ABS.Globals.GlobalCooldownKey, 0);
     gcdSlot.getCooldown().enableBase();
-    this._slots.push(gcdSlot);
-    this._slots.push(new JABS_SkillSlot(JABS_Button.Mainhand, 0));
-    this._slots.push(new JABS_SkillSlot(JABS_Button.Offhand, 0));
+    this.slots().push(gcdSlot);
+    this.slots().push(new JABS_SkillSlot(JABS_Button.Mainhand, 0));
+    this.slots().push(new JABS_SkillSlot(JABS_Button.Offhand, 0));
     // Append the row to the working collection.
-    this._slots.push(new JABS_SkillSlot(JABS_Button.Tool, 0));
-    this._slots.push(new JABS_SkillSlot(JABS_Button.UsableItem, 0));
-    this._slots.push(new JABS_SkillSlot(JABS_Button.Dodge, 0));
+    this.slots().push(new JABS_SkillSlot(JABS_Button.Tool, 0));
+    this.slots().push(new JABS_SkillSlot(JABS_Button.UsableItem, 0));
+    this.slots().push(new JABS_SkillSlot(JABS_Button.Dodge, 0));
 
     // Append the row to the working collection.
-    this._slots.push(new JABS_SkillSlot(JABS_Button.CombatSkill1, 0));
-    this._slots.push(new JABS_SkillSlot(JABS_Button.CombatSkill2, 0));
-    this._slots.push(new JABS_SkillSlot(JABS_Button.CombatSkill3, 0));
-    this._slots.push(new JABS_SkillSlot(JABS_Button.CombatSkill4, 0));
+    this.slots().push(new JABS_SkillSlot(JABS_Button.CombatSkill1, 0));
+    this.slots().push(new JABS_SkillSlot(JABS_Button.CombatSkill2, 0));
+    this.slots().push(new JABS_SkillSlot(JABS_Button.CombatSkill3, 0));
+    this.slots().push(new JABS_SkillSlot(JABS_Button.CombatSkill4, 0));
   }
 
   /**
@@ -145,7 +157,7 @@ class JABS_SkillSlotManager
     // initialize its cooldown as ready so it doesn't permanently block before the first stamp.
     const gcdSlot = new JABS_SkillSlot(J.ABS.Globals.GlobalCooldownKey, 0);
     gcdSlot.getCooldown().enableBase();
-    this._slots.push(gcdSlot);
+    this.slots().push(gcdSlot);
 
     // grab the database data.
     const battlerData = enemy.databaseData();
@@ -233,7 +245,7 @@ class JABS_SkillSlotManager
    */
   flagAllSkillSlotsForRefresh()
   {
-    this._slots.forEach(slot => slot.flagSkillSlotForRefresh());
+    this.slots().forEach(slot => slot.flagSkillSlotForRefresh());
   }
 
   /**
@@ -245,13 +257,13 @@ class JABS_SkillSlotManager
   addSlot(key, initialSkillId)
   {
     // check if the slot key already exists on the manager.
-    const exists = this._slots.find(slot => slot.key === key);
+    const exists = this.slots().find(slot => slot.key === key);
 
     // if it exists, then don't re-add this slot.
     if (exists) return;
 
     // add the slot with the designated key and skill id.
-    this._slots.push(new JABS_SkillSlot(key, initialSkillId));
+    this.slots().push(new JABS_SkillSlot(key, initialSkillId));
   }
 
   /**

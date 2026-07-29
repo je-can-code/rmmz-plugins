@@ -54,10 +54,10 @@ Game_Actor.prototype.skillProficiencies = function()
 Game_Actor.prototype.addNewSkillProficiency = function(skillProficiency)
 {
   // add the new proficiency.
-  this._j._proficiency._proficiencies.push(skillProficiency);
+  this.skillProficiencies().push(skillProficiency);
 
   // sort them after adding in case the order changed.
-  this._j._proficiency._proficiencies.sort();
+  this.skillProficiencies().sort();
 };
 
 /**
@@ -84,7 +84,7 @@ Game_Actor.prototype.unlockedConditionals = function()
  */
 Game_Actor.prototype.addUnlockedConditional = function(conditional)
 {
-  this._j._proficiency._unlockedConditionals.push(conditional);
+  this.unlockedConditionals().push(conditional);
 };
 
 /**
@@ -413,15 +413,15 @@ Game_Actor.prototype.onBattlerDataChange = function()
 Game_Actor.prototype.updateBonusSkillProficiencyGains = function()
 {
   // TEMPORARY FIX FOR UPDATING SAVES IN PROGRESS.
-  if (this._j._proficiency._bonusSkillProficiencyGains === undefined
-    || this._j._proficiency._bonusSkillProficiencyGains === null)
+  if (this.bonusSkillProficiencyGains() === undefined
+    || this.bonusSkillProficiencyGains() === null)
   {
-    this._j._proficiency._bonusSkillProficiencyGains = 0;
+    this.setBonusSkillProficiencyGains(0);
   }
 
-  this._j._proficiency._bonusSkillProficiencyGains = RPGManager.getSumFromAllNotesByRegex(
+  this.setBonusSkillProficiencyGains(RPGManager.getSumFromAllNotesByRegex(
     this.getAllNotes(),
-    J.PROF.RegExp.ProficiencyBonus)
+    J.PROF.RegExp.ProficiencyBonus))
 };
 
 /**
@@ -437,4 +437,26 @@ Object.defineProperty(Game_Actor.prototype, 'prof', {
   },
   configurable: true,
 });
+
+//region properties
+/**
+ * Gets the bonus skill proficiency gains.
+ * @returns {*} The bonusSkillProficiencyGains.
+ */
+Game_Actor.prototype.bonusSkillProficiencyGains = function()
+{
+  // hand back the bonus skill proficiency gains.
+  return this._j._proficiency._bonusSkillProficiencyGains;
+};
+
+/**
+ * Sets the bonus skill proficiency gains.
+ * @param {*} newBonusSkillProficiencyGains The new bonusSkillProficiencyGains.
+ */
+Game_Actor.prototype.setBonusSkillProficiencyGains = function(newBonusSkillProficiencyGains)
+{
+  // assign the bonus skill proficiency gains.
+  this._j._proficiency._bonusSkillProficiencyGains = newBonusSkillProficiencyGains;
+};
+//endregion properties
 //endregion Game_Actor

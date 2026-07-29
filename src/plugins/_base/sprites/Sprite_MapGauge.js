@@ -16,6 +16,20 @@ class Sprite_MapGauge
    * @param {number|null} value - The value of the gauge.
    * @param {number} iconIndex - The index of the icon to display.
    */
+  
+
+  //region properties
+  /**
+   * Gets the gauge.
+   * @returns {*} The gauge.
+   */
+  gauge()
+  {
+    // hand back the gauge.
+    return this._gauge;
+  }
+  //endregion properties
+
   constructor(bitmapWidth = 96, bitmapHeight = 24, gaugeHeight = 6, label = String.empty, value = null, iconIndex = -1)
   {
     super(bitmapWidth, bitmapHeight, gaugeHeight, label, value, iconIndex);
@@ -113,7 +127,7 @@ class Sprite_MapGauge
    */
   getBattler()
   {
-    return this._battler;
+    return this.battler();
   }
 
   /**
@@ -122,7 +136,7 @@ class Sprite_MapGauge
    */
   getStatusType()
   {
-    return this._statusType;
+    return this.statusType();
   }
 
   /**
@@ -141,7 +155,7 @@ class Sprite_MapGauge
    */
   bitmapWidth()
   {
-    return this._gauge._bitmapWidth;
+    return this.gauge()._bitmapWidth;
   }
 
   /**
@@ -151,7 +165,7 @@ class Sprite_MapGauge
    */
   bitmapHeight()
   {
-    return this._gauge._bitmapHeight;
+    return this.gauge()._bitmapHeight;
   }
 
   /**
@@ -161,7 +175,7 @@ class Sprite_MapGauge
    */
   gaugeHeight()
   {
-    return this._gauge._gaugeHeight;
+    return this.gauge()._gaugeHeight;
   }
 
   /**
@@ -171,7 +185,7 @@ class Sprite_MapGauge
    */
   label()
   {
-    return this._gauge._label;
+    return this.gauge()._label;
   }
 
   /**
@@ -180,7 +194,7 @@ class Sprite_MapGauge
    */
   iconIndex()
   {
-    return this._gauge._iconIndex;
+    return this.gauge()._iconIndex;
   }
 
   /**
@@ -192,26 +206,26 @@ class Sprite_MapGauge
   setIcon(iconIndex)
   {
     // assign the new index (use -1 as the sentinel for "no icon").
-    this._gauge._iconIndex = iconIndex;
+    this.gauge()._iconIndex = iconIndex;
 
     // if we already have an icon sprite, update it in-place.
-    if (this._gauge._iconSprite)
+    if (this.gauge()._iconSprite)
     {
       // when "no icon", keep the sprite but hide it.
-      if (this._gauge._iconIndex < 0)
+      if (this.gauge()._iconIndex < 0)
       {
-        this._gauge._iconSprite.visible = false; // hide without removing
+        this.gauge()._iconSprite.visible = false; // hide without removing
       }
       else
       {
         // update the icon tile and make sure it is visible.
-        this._gauge._iconSprite.setIconIndex(this._gauge._iconIndex);
-        this._gauge._iconSprite.visible = true;
+        this.gauge()._iconSprite.setIconIndex(this.gauge()._iconIndex);
+        this.gauge()._iconSprite.visible = true;
 
         // re-center vertically in case the gauge height changed.
         const iconHeight = 16; // after 0.5 scale of a 32px icon
         const centeredY = Math.floor((this.bitmapHeight() - iconHeight) / 2);
-        this._gauge._iconSprite.move(10, centeredY);
+        this.gauge()._iconSprite.move(10, centeredY);
       }
 
       // redraw the gauge (label/gradient may still need updating).
@@ -220,11 +234,11 @@ class Sprite_MapGauge
     }
 
     // if we don’t have a sprite yet and the index is valid, create one now.
-    if (this._gauge._iconIndex >= 0)
+    if (this.gauge()._iconIndex >= 0)
     {
       const sprite = this.createIconSprite();
       this.addChild(sprite);
-      this._gauge._iconSprite = sprite;
+      this.gauge()._iconSprite = sprite;
     }
 
     // redraw the gauge (label/gradient may still need updating).
@@ -237,7 +251,7 @@ class Sprite_MapGauge
    */
   setLabel(label)
   {
-    this._gauge._label = label;
+    this.gauge()._label = label;
     this.redraw();
   }
 
@@ -246,7 +260,7 @@ class Sprite_MapGauge
    */
   activateGauge()
   {
-    this._gauge._activated = true;
+    this.gauge()._activated = true;
   }
 
   /**
@@ -267,7 +281,7 @@ class Sprite_MapGauge
    */
   deactivateGauge()
   {
-    this._gauge._activated = false;
+    this.gauge()._activated = false;
   }
 
   /**
@@ -276,7 +290,7 @@ class Sprite_MapGauge
    */
   isGaugeActive()
   {
-    return this._gauge._activated;
+    return this.gauge()._activated;
   }
 
   /**
@@ -292,13 +306,13 @@ class Sprite_MapGauge
     switch (this.getStatusType())
     {
       case 'hp':
-        return this._battler.hp;
+        return this.battler().hp;
       case 'mp':
-        return this._battler.mp;
+        return this.battler().mp;
       case 'tp':
-        return this._battler.tp;
+        return this.battler().tp;
       case 'time':
-        return this._battler.currentExp() - this._battler.currentLevelExp();
+        return this.battler().currentExp() - this.battler().currentLevelExp();
       default:
         return NaN;
     }
@@ -314,16 +328,16 @@ class Sprite_MapGauge
     // if there is no battler, then there is no value.
     if (!this.getBattler()) return NaN;
 
-    switch (this._statusType)
+    switch (this.statusType())
     {
       case 'hp':
-        return this._battler.mhp;
+        return this.battler().mhp;
       case 'mp':
-        return this._battler.mmp;
+        return this.battler().mmp;
       case 'tp':
-        return this._battler.maxTp();
+        return this.battler().maxTp();
       case 'time':
-        return this._battler.nextLevelExp() - this._battler.currentLevelExp();
+        return this.battler().nextLevelExp() - this.battler().currentLevelExp();
       default:
         return NaN;
     }
@@ -339,7 +353,7 @@ class Sprite_MapGauge
   createIconSprite()
   {
     // create the icon sprite at the current index.
-    const sprite = new Sprite_Icon(this._gauge._iconIndex);
+    const sprite = new Sprite_Icon(this.gauge()._iconIndex);
 
     // scale the icon smaller for map display.
     sprite.scale.x = 0.5;
@@ -375,21 +389,21 @@ class Sprite_MapGauge
     // reconcile presence & visibility without destroying when unnecessary.
     if (this.iconIndex() >= 0)
     {
-      if (!this._gauge._iconSprite)
+      if (!this.gauge()._iconSprite)
       {
         // add if missing.
         const sprite = this.createIconSprite();
         this.addChild(sprite);
-        this._gauge._iconSprite = sprite;
+        this.gauge()._iconSprite = sprite;
       }
 
       // ensure visible when we have an icon index.
-      this._gauge._iconSprite.visible = true;
+      this.gauge()._iconSprite.visible = true;
     }
-    else if (this._gauge._iconSprite)
+    else if (this.gauge()._iconSprite)
     {
       // hide (do not remove) when no icon is intended.
-      this._gauge._iconSprite.visible = false;
+      this.gauge()._iconSprite.visible = false;
     }
   }
 
@@ -406,7 +420,7 @@ class Sprite_MapGauge
     const x = 32;
     const y = 0;
     this.bitmap.fontSize = 12;
-    this.bitmap.drawText(this._gauge._label, x, y, this.bitmapWidth(), this.bitmapHeight(), 'left');
+    this.bitmap.drawText(this.gauge()._label, x, y, this.bitmapWidth(), this.bitmapHeight(), 'left');
   }
 
   /**
@@ -432,14 +446,14 @@ class Sprite_MapGauge
     if (!isNaN(currentValue))
     {
       // assign backing fields for gaugeRate() to function.
-      this._value = currentValue; // current filled amount
-      this._maxValue = this.currentMaxValue(); // maximum value for fill
+      this.setValue(currentValue); // current filled amount
+      this.setMaxValue(this.currentMaxValue()); // maximum value for fill
 
       // draw the colored fill/backdrop using the cached rate values.
       this.drawGauge();
 
       // draw label & icon similarly to your existing behavior (skip for "time").
-      if (this._statusType !== 'time')
+      if (this.statusType() !== 'time')
       {
         this.drawLabel();
         this.drawIcon();

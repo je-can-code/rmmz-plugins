@@ -12,6 +12,100 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
    * @param {number} durationFrames Frames to run per repeat cycle.
    * @param {number} [repeatCount=1] How many times to cycle the squish envelope before finishing.
    */
+  
+
+  //region properties
+  /**
+   * Gets the sprite.
+   * @returns {*} The sprite.
+   */
+  sprite()
+  {
+    // hand back the sprite.
+    return this._sprite;
+  }
+
+  /**
+   * Gets the base scale x.
+   * @returns {*} The baseScaleX.
+   */
+  baseScaleX()
+  {
+    // hand back the base scale x.
+    return this._baseScaleX;
+  }
+
+  /**
+   * Gets the base scale y.
+   * @returns {*} The baseScaleY.
+   */
+  baseScaleY()
+  {
+    // hand back the base scale y.
+    return this._baseScaleY;
+  }
+
+  /**
+   * Gets the frame.
+   * @returns {*} The frame.
+   */
+  frame()
+  {
+    // hand back the frame.
+    return this._frame;
+  }
+
+  /**
+   * Sets the frame.
+   * @param {*} newFrame The new frame.
+   */
+  setFrame(newFrame)
+  {
+    // assign the frame.
+    this._frame = newFrame;
+  }
+
+  /**
+   * Gets the duration frames.
+   * @returns {*} The durationFrames.
+   */
+  durationFrames()
+  {
+    // hand back the duration frames.
+    return this._durationFrames;
+  }
+
+  /**
+   * Gets the intensity scale.
+   * @returns {*} The intensityScale.
+   */
+  intensityScale()
+  {
+    // hand back the intensity scale.
+    return this._intensityScale;
+  }
+
+  /**
+   * Gets the repeats remaining.
+   * @returns {*} The repeatsRemaining.
+   */
+  repeatsRemaining()
+  {
+    // hand back the repeats remaining.
+    return this._repeatsRemaining;
+  }
+
+  /**
+   * Sets the repeats remaining.
+   * @param {*} newRepeatsRemaining The new repeatsRemaining.
+   */
+  setRepeatsRemaining(newRepeatsRemaining)
+  {
+    // assign the repeats remaining.
+    this._repeatsRemaining = newRepeatsRemaining;
+  }
+  //endregion properties
+
   constructor(sprite, intensityScale, durationFrames, repeatCount = 1)
   {
     super();
@@ -37,7 +131,7 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
    */
   isSpriteAlive()
   {
-    return !!this._sprite.transform;
+    return !!this.sprite().transform;
   }
 
   /**
@@ -45,8 +139,8 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
    */
   restore()
   {
-    this._sprite.scale.x = this._baseScaleX;
-    this._sprite.scale.y = this._baseScaleY;
+    this.sprite().scale.x = this.baseScaleX();
+    this.sprite().scale.y = this.baseScaleY();
   }
 
   /**
@@ -55,27 +149,27 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
    */
   tick()
   {
-    this._frame++;
-    const t = this._frame / this._durationFrames;
+    this.setFrame(this.frame() + 1);
+    const t = this.frame() / this.durationFrames();
     const envelope = Math.sin(t * Math.PI);
-    const mul = 1 + envelope * this._intensityScale;
-    this._sprite.scale.x = this._baseScaleX * mul;
-    this._sprite.scale.y = this._baseScaleY * (1 / mul);
+    const mul = 1 + envelope * this.intensityScale();
+    this.sprite().scale.x = this.baseScaleX() * mul;
+    this.sprite().scale.y = this.baseScaleY() * (1 / mul);
 
-    if (this._frame >= this._durationFrames)
+    if (this.frame() >= this.durationFrames())
     {
-      this._repeatsRemaining--;
+      this.setRepeatsRemaining(this.repeatsRemaining() - 1);
 
       // more cycles remain — reset the frame counter and continue.
-      if (this._repeatsRemaining > 0)
+      if (this.repeatsRemaining() > 0)
       {
-        this._frame = 0;
+        this.setFrame(0);
         return true;
       }
 
       // all cycles exhausted — restore and release the sprite lock.
       this.restore();
-      JuiceMotionManager.relinquishSpriteLock(this._sprite);
+      JuiceMotionManager.relinquishSpriteLock(this.sprite());
       return false;
     }
 

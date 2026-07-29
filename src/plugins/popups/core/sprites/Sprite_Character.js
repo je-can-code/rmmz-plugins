@@ -44,7 +44,7 @@ Sprite_Character.prototype.initMembers = function()
  */
 Sprite_Character.prototype.hasDamagePops = function()
 {
-  return this._j._popups._damagePopSprites.length > 0;
+  return this.damagePopSprites().length > 0;
 };
 
 /**
@@ -53,7 +53,7 @@ Sprite_Character.prototype.hasDamagePops = function()
  */
 Sprite_Character.prototype.getDamagePops = function()
 {
-  return this._j._popups._damagePopSprites;
+  return this.damagePopSprites();
 };
 
 /**
@@ -62,7 +62,7 @@ Sprite_Character.prototype.getDamagePops = function()
  */
 Sprite_Character.prototype.hasNonDamagePops = function()
 {
-  return this._j._popups._nonDamagePopSprites.length > 0;
+  return this.nonDamagePopSprites().length > 0;
 };
 
 /**
@@ -71,23 +71,7 @@ Sprite_Character.prototype.hasNonDamagePops = function()
  */
 Sprite_Character.prototype.getNonDamagePops = function()
 {
-  return this._j._popups._nonDamagePopSprites;
-};
-
-/**
- * Cleans up the `undefined` or `null` damage pop sprites that are invalid.
- */
-Sprite_Character.prototype.cleanupDamagePops = function()
-{
-  this._j._popups._damagePopSprites = this._j._popups._damagePopSprites.filter(pop => !!pop);
-};
-
-/**
- * Cleans up the `undefined` or `null` non damage pop sprites that are invalid.
- */
-Sprite_Character.prototype.cleanupNonDamagePops = function()
-{
-  this._j._popups._nonDamagePopSprites = this._j._popups._nonDamagePopSprites.filter(pop => !!pop);
+  return this.nonDamagePopSprites();
 };
 
 /**
@@ -157,11 +141,11 @@ Sprite_Character.prototype.createIncomingTextPop = function(popup)
 
   if (sprite.isDamage())
   {
-    this._j._popups._damagePopSprites.push(sprite);
+    this.damagePopSprites().push(sprite);
   }
   else
   {
-    this._j._popups._nonDamagePopSprites.push(sprite);
+    this.nonDamagePopSprites().push(sprite);
   }
 
   this.parent.addChild(sprite);
@@ -178,11 +162,11 @@ Sprite_Character.prototype.attachConvertedDamagePopupSprite = function(sprite, p
 {
   if (sprite.isDamage())
   {
-    this._j._popups._damagePopSprites.push(sprite);
+    this.damagePopSprites().push(sprite);
   }
   else
   {
-    this._j._popups._nonDamagePopSprites.push(sprite);
+    this.nonDamagePopSprites().push(sprite);
   }
 
   this.parent.addChild(sprite);
@@ -230,48 +214,40 @@ Sprite_Character.prototype.updateNonDamagePops = function()
  */
 Sprite_Character.prototype._updateTrackedPopupBucket = function(bucket, updateLocationFn)
 {
-  const deletedFlags = bucket.map((pop, index) =>
+  // update every popup first, so a sprite finishing this frame is still positioned correctly.
+  bucket.forEach(pop =>
   {
-    if (!pop) return false;
-
     pop.update();
     updateLocationFn.call(this, pop);
+  });
 
-    if (!pop.isPlaying())
-    {
-      this._removeTrackedPopSprite(pop, index, bucket);
-      return true;
-    }
+  // split the bucket rather than deleting in place- `delete` leaves holes, which is what forced
+  // the compaction pass (and the null-filters) that used to live here.
+  const stillPlaying = bucket.filter(pop => pop.isPlaying() === true);
+  const finished = bucket.filter(pop => pop.isPlaying() === false);
 
-    return false;
-  }, this);
+  // nothing ended this frame, so the bucket is already correct.
+  if (finished.length === 0) return;
 
-  if (deletedFlags.some(flag => flag === true))
-  {
-    const next = bucket.filter(entry => !!entry);
-    bucket.length = 0;
+  // detach and destroy everything that finished.
+  finished.forEach(pop => this._removeTrackedPopSprite(pop));
 
-    for (let i = 0; i < next.length; i++)
-    {
-      bucket.push(next[i]);
-    }
-  }
+  // callers hold this same array reference, so rewrite it in place rather than reassigning.
+  bucket.length = 0;
+  stillPlaying.forEach(pop => bucket.push(pop));
 };
 
 /**
  * Detaches a finished popup, emits lifecycle, and destroys the sprite.
  * @param {Sprite_Damage} sprite The popup sprite.
- * @param {number} index Index in the bucket (may be sparse).
- * @param {Sprite_Damage[]} bucket Owning array.
  */
-Sprite_Character.prototype._removeTrackedPopSprite = function(sprite, index, bucket)
+Sprite_Character.prototype._removeTrackedPopSprite = function(sprite)
 {
   const character = this.character();
 
   this.parent.removeChild(sprite);
   J.POPUPS.notifyPopupSpriteFinished(character, sprite._j._popups._sourcePopup, sprite);
   sprite.destroy();
-  delete bucket[index];
 };
 
 /**
@@ -303,4 +279,46 @@ Sprite_Character.prototype.updateNonDamagePopLocation = function(nonDamageSprite
   this.updateTextPopAnchorPosition(nonDamageSprite);
 };
 //endregion handle text pops
+
+//region properties
+/**
+ * Gets the damage pop sprites.
+ * @returns {*} The damagePopSprites.
+ */
+Sprite_Character.prototype.damagePopSprites = function()
+{
+  // hand back the damage pop sprites.
+  return this._j._popups._damagePopSprites;
+};
+
+/**
+ * Sets the damage pop sprites.
+ * @param {*} newDamagePopSprites The new damagePopSprites.
+ */
+Sprite_Character.prototype.setDamagePopSprites = function(newDamagePopSprites)
+{
+  // assign the damage pop sprites.
+  this._j._popups._damagePopSprites = newDamagePopSprites;
+};
+
+/**
+ * Gets the non damage pop sprites.
+ * @returns {*} The nonDamagePopSprites.
+ */
+Sprite_Character.prototype.nonDamagePopSprites = function()
+{
+  // hand back the non damage pop sprites.
+  return this._j._popups._nonDamagePopSprites;
+};
+
+/**
+ * Sets the non damage pop sprites.
+ * @param {*} newNonDamagePopSprites The new nonDamagePopSprites.
+ */
+Sprite_Character.prototype.setNonDamagePopSprites = function(newNonDamagePopSprites)
+{
+  // assign the non damage pop sprites.
+  this._j._popups._nonDamagePopSprites = newNonDamagePopSprites;
+};
+//endregion properties
 //endregion Sprite_Character

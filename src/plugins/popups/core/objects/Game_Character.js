@@ -38,7 +38,7 @@ Game_Character.prototype.hasTextPops = function()
 {
   if (J.POPUPS.Metadata.disablePopups === true) return false;
 
-  return this._j._textPopRequest;
+  return this.isTextPopRequest();
 };
 
 /**
@@ -48,7 +48,7 @@ Game_Character.prototype.requestTextPop = function()
 {
   if (J.POPUPS.Metadata.disablePopups === true) return;
 
-  this._j._textPopRequest = true;
+  this.setTextPopRequest(true);
   J.POPUPS.notifyPopupFlushRequested(this);
 };
 
@@ -57,7 +57,7 @@ Game_Character.prototype.requestTextPop = function()
  */
 Game_Character.prototype.acknowledgeTextPops = function()
 {
-  this._j._textPopRequest = false;
+  this.setTextPopRequest(false);
 };
 
 /**
@@ -78,7 +78,7 @@ Game_Character.prototype.addTextPop = function(textPop)
   }
 
   // Append the row to the working collection.
-  this._j._textPops.push(textPop);
+  this.getTextPops().push(textPop);
   J.POPUPS.notifyPopupQueued(this, textPop);
 };
 
@@ -109,4 +109,26 @@ Game_Character.prototype.clearPendingTextPops = function()
 {
   this.emptyDamagePops();
 };
+
+//region properties
+/**
+ * Gets the text pop request.
+ * @returns {*} The textPopRequest.
+ */
+Game_Character.prototype.isTextPopRequest = function()
+{
+  // hand back the text pop request.
+  return this._j._textPopRequest;
+};
+
+/**
+ * Sets the text pop request.
+ * @param {*} newTextPopRequest The new textPopRequest.
+ */
+Game_Character.prototype.setTextPopRequest = function(newTextPopRequest)
+{
+  // assign the text pop request.
+  this._j._textPopRequest = newTextPopRequest;
+};
+//endregion properties
 //endregion Game_Character

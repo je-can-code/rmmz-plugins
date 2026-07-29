@@ -253,7 +253,7 @@ Game_Actor.prototype.changeExp = function(exp, show)
   this.setSyncedExp(clampedExp);
 
   // remember the level prior to this exp change so we know whether to show a level-up later.
-  const lastLevel = this._level;
+  const lastLevel = this.getBattlerBaseLevel();
 
   // remember the skill list prior to this exp change so newly-learned skills can be identified.
   const lastSkills = this.skills();
@@ -273,7 +273,7 @@ Game_Actor.prototype.changeExp = function(exp, show)
   }
 
   // if we were asked to show the level-up display and we actually gained a level, show it.
-  if (show && this._level > lastLevel)
+  if (show && this.getBattlerBaseLevel() > lastLevel)
   {
     // display the level-up screen, listing off whatever new skills were picked up along the way.
     this.displayLevelUp(this.findNewSkills(lastSkills));
@@ -302,7 +302,7 @@ Game_Actor.prototype.changeClass = function(classId, keepExp)
   }
 
   // swap the active class outright; level/exp are shared, so there is nothing to reset here.
-  this._classId = classId;
+  this.setClassId(classId);
 
   // grant every learning the new class has at or below our current level, same as a fresh actor
   // would receive via initSkills()- otherwise a high-level actor entering a brand new class would
@@ -328,7 +328,7 @@ Game_Actor.prototype.backfillLearningsForCurrentLevel = function()
   this.currentClass().learnings.forEach(learning =>
   {
     // if our current level already meets or exceeds this learning's requirement, grant it.
-    if (learning.level <= this._level)
+    if (learning.level <= this.getBattlerBaseLevel())
     {
       // capture whether this skill was already known before granting it. this method is explicitly
       // safe to call repeatedly, so without this snapshot every backfill would re-announce the
@@ -397,7 +397,7 @@ Game_Actor.prototype.setSyncedExp = function(exp)
     if (!rpgClass) return;
 
     // write the same exp value into this class's slot.
-    this._exp[rpgClass.id] = exp;
+    this.exp()[rpgClass.id] = exp;
   }, this);
 };
 

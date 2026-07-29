@@ -56,24 +56,24 @@ if (J.HUD && J.HUD.EXT.TARGET)
    */
   Window_TargetFrame.prototype.updateTargetAfflictions = function()
   {
-    if (!this._afflictionPresenter)
+    if (!this.afflictionPresenter())
     {
       return;
     }
 
-    if (!this._j._battler)
+    if (!this.battler())
     {
       return;
     }
 
-    if (this._j._inactivityTimer < 60)
+    if (this.inactivityTimer() < 60)
     {
       return;
     }
 
     const layout = this.targetAfflictionLayoutSpec();
 
-    this._afflictionPresenter.render(this._j._battler, layout);
+    this.afflictionPresenter().render(this.battler(), layout);
   };
 
   J.HUD.EXT.TARGET.Aliased.Window_TargetFrame.set('updateTarget', Window_TargetFrame.prototype.updateTarget);
@@ -86,4 +86,36 @@ if (J.HUD && J.HUD.EXT.TARGET)
     this.updateTargetAfflictions();
   };
 }
+
+//region properties
+/**
+ * Gets the affliction presenter.
+ * @returns {*} The afflictionPresenter.
+ */
+Window_TargetFrame.prototype.afflictionPresenter = function()
+{
+  // hand back the affliction presenter.
+  return this._afflictionPresenter;
+};
+
+/**
+ * Gets the battler currently displayed in the target frame.
+ * @returns {JABS_Battler} The displayed battler.
+ */
+Window_TargetFrame.prototype.battler = function()
+{
+  // hand back the battler.
+  return this._j._battler;
+};
+
+/**
+ * Gets the inactivity timer.
+ * @returns {*} The inactivityTimer.
+ */
+Window_TargetFrame.prototype.inactivityTimer = function()
+{
+  // hand back the inactivity timer.
+  return this._j._inactivityTimer;
+};
+//endregion properties
 //endregion Window_TargetFrame afflictions

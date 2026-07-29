@@ -278,6 +278,89 @@ class JABS_AllyAI
      */
     this.memory = [];
   }
+
+  //region properties
+  /**
+   * Gets the risk.
+   * @returns {*} The risk.
+   */
+  risk()
+  {
+    // hand back the risk.
+    return this._risk;
+  }
+
+  /**
+   * Sets the risk.
+   * @param {*} newRisk The new risk.
+   */
+  setRisk(newRisk)
+  {
+    // assign the risk.
+    this._risk = newRisk;
+  }
+
+  /**
+   * Gets the support.
+   * @returns {*} The support.
+   */
+  support()
+  {
+    // hand back the support.
+    return this._support;
+  }
+
+  /**
+   * Sets the support.
+   * @param {*} newSupport The new support.
+   */
+  setSupport(newSupport)
+  {
+    // assign the support.
+    this._support = newSupport;
+  }
+
+  /**
+   * Gets the spacing.
+   * @returns {*} The spacing.
+   */
+  spacing()
+  {
+    // hand back the spacing.
+    return this._spacing;
+  }
+
+  /**
+   * Sets the spacing.
+   * @param {*} newSpacing The new spacing.
+   */
+  setSpacing(newSpacing)
+  {
+    // assign the spacing.
+    this._spacing = newSpacing;
+  }
+
+  /**
+   * Gets the preset key.
+   * @returns {*} The presetKey.
+   */
+  presetKey()
+  {
+    // hand back the preset key.
+    return this._presetKey;
+  }
+
+  /**
+   * Sets the preset key.
+   * @param {*} newPresetKey The new presetKey.
+   */
+  setPresetKey(newPresetKey)
+  {
+    // assign the preset key.
+    this._presetKey = newPresetKey;
+  }
+  //endregion properties
+
   //endregion initialize
 
   //region do-nothing
@@ -307,7 +390,7 @@ class JABS_AllyAI
    */
   getRisk()
   {
-    return this._risk;
+    return this.risk();
   }
 
   /**
@@ -316,7 +399,7 @@ class JABS_AllyAI
    */
   getSupport()
   {
-    return this._support;
+    return this.support();
   }
 
   /**
@@ -325,7 +408,7 @@ class JABS_AllyAI
    */
   getSpacing()
   {
-    return this._spacing;
+    return this.spacing();
   }
 
   /**
@@ -334,7 +417,7 @@ class JABS_AllyAI
    */
   getPresetKey()
   {
-    return this._presetKey;
+    return this.presetKey();
   }
 
   /**
@@ -352,10 +435,10 @@ class JABS_AllyAI
     }
 
     // store  risk on the instance for later reads.
-    this._risk = preset.risk;
-    this._support = preset.support;
-    this._spacing = preset.spacing;
-    this._presetKey = preset.key;
+    this.setRisk(preset.risk);
+    this.setSupport(preset.support);
+    this.setSpacing(preset.spacing);
+    this.setPresetKey(preset.key);
   }
   //endregion axes
 
@@ -367,8 +450,8 @@ class JABS_AllyAI
    */
   getCloseDistance()
   {
-    if (this._doNothing) return JABS_AllyAI.DoNothingCloseDistance;
-    return JABS_AllyAI.CloseDistances[this._spacing];
+    if (this.isDoNothing()) return JABS_AllyAI.DoNothingCloseDistance;
+    return JABS_AllyAI.CloseDistances[this.spacing()];
   }
 
   /**
@@ -378,8 +461,8 @@ class JABS_AllyAI
    */
   getFarDistance()
   {
-    if (this._doNothing) return JABS_AllyAI.DoNothingFarDistance;
-    return JABS_AllyAI.FarDistances[this._spacing];
+    if (this.isDoNothing()) return JABS_AllyAI.DoNothingFarDistance;
+    return JABS_AllyAI.FarDistances[this.spacing()];
   }
 
   /**
@@ -389,8 +472,8 @@ class JABS_AllyAI
    */
   getLeashMultiplier()
   {
-    if (this._doNothing) return JABS_AllyAI.DoNothingLeashMultiplier;
-    return JABS_AllyAI.LeashMultipliers[this._spacing];
+    if (this.isDoNothing()) return JABS_AllyAI.DoNothingLeashMultiplier;
+    return JABS_AllyAI.LeashMultipliers[this.spacing()];
   }
   //endregion spacing helpers
 
@@ -416,7 +499,7 @@ class JABS_AllyAI
   decideAction(user, target, availableSkills)
   {
     // do-nothing overrides all axis behavior.
-    if (this._doNothing) return this.decideDoNothing(user);
+    if (this.isDoNothing()) return this.decideDoNothing(user);
 
     // filter out unusable skills before any decision.
     const usableSkills = this.filterUncastableSkills(user, availableSkills);
@@ -425,7 +508,7 @@ class JABS_AllyAI
     if (this.shouldFollowWithCombo(user)) return [ this.followWithCombo(user) ];
 
     // support axis drives the top-level branch.
-    switch (this._support)
+    switch (this.support())
     {
       case JABS_AllyAI.Support.SUPPORT:
         return this.decideSupportFirst(usableSkills, user, target);
@@ -511,7 +594,7 @@ class JABS_AllyAI
   {
     if (!usableSkills.length) return [];
 
-    switch (this._risk)
+    switch (this.risk())
     {
       case JABS_AllyAI.Risk.RECKLESS:
         return this.decideRecklessOffense(usableSkills, user, target);

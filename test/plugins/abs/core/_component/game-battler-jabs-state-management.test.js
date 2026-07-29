@@ -245,20 +245,35 @@ describe('J-ABS Game_Battler JABS state management (direct src import)', () =>
       expect(originalClearStates).toHaveBeenCalledTimes(1);
     });
 
-    it('skips the purge entirely when this battler has not finished JABS construction yet', () =>
+    it('has its JABS namespace seeded before vanilla initMembers can call it', () =>
     {
-      // Arrange- a bare instance that never ran initJabsMembers, so `_j._abs._uuid` is unset.
+      // Arrange- initMembers seeds the JABS members first precisely so the clearStates() call
+      // fired from within vanilla initMembers finds a uuid already in place.
       const battler = Object.create(globalThis.Game_Battler.prototype);
-      const originalClearStates = vi.fn();
-      globalThis.J.ABS.Aliased.Game_Battler.set('clearStates', originalClearStates);
-      globalThis.$jabsEngine.getJabsStatesByUuid = vi.fn();
+      // getUuid() composes the name with the raw uuid, so the bare instance needs one.
+      battler.name = () => 'tester';
+      const aliases = globalThis.J.ABS.Aliased.Game_Battler;
+      const priorInitMembers = aliases.get('initMembers');
+      const priorClearStates = aliases.get('clearStates');
+      aliases.set('initMembers', vi.fn(function() { this.clearStates(); }));
+      aliases.set('clearStates', vi.fn());
+      globalThis.$jabsEngine.getJabsStatesByUuid = vi.fn(() => new Map());
 
-      // Act
-      expect(() => battler.clearStates()).not.toThrow();
+      try
+      {
+        // Act
+        battler.initMembers();
 
-      // Assert
-      expect(globalThis.$jabsEngine.getJabsStatesByUuid).not.toHaveBeenCalled();
-      expect(originalClearStates).toHaveBeenCalledTimes(1);
+        // Assert- the purge ran against a real uuid rather than being skipped.
+        expect(battler.getUuid()).toEqual(expect.any(String));
+        expect(globalThis.$jabsEngine.getJabsStatesByUuid).toHaveBeenCalledWith(battler.getUuid());
+      }
+      finally
+      {
+        // these aliases are shared across every test in this file, so put them back.
+        aliases.set('initMembers', priorInitMembers);
+        aliases.set('clearStates', priorClearStates);
+      }
     });
 
     it('skips the purge entirely when the JABS engine is unavailable', () =>

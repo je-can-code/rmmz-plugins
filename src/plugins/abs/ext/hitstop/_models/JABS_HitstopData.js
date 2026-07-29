@@ -32,6 +32,18 @@ class JABS_HitstopData
     this._flurryWindows = new Map();
   }
 
+  //region properties
+  /**
+   * Gets the flurry windows.
+   * @returns {*} The flurryWindows.
+   */
+  flurryWindows()
+  {
+    // hand back the flurry windows.
+    return this._flurryWindows;
+  }
+  //endregion properties
+
   /**
    * Sets hitstop frames.
    * @param {number} frames The frames to set.
@@ -58,10 +70,10 @@ class JABS_HitstopData
   tick()
   {
     // decrement the timer if applicable.
-    if (this._frames > 0) this._frames--;
+    if (this.getFrames() > 0) this.setFrames(this.getFrames() - 1);
 
     // also decrement any active flurry windows.
-    this._flurryWindows.forEach((remaining, key) =>
+    this.flurryWindows().forEach((remaining, key) =>
     {
       // decrement the remaining frames.
       const next = remaining - 1;
@@ -69,12 +81,12 @@ class JABS_HitstopData
       // if the window elapsed, remove this entry.
       if (next <= 0)
       {
-        this._flurryWindows.delete(key);
+        this.flurryWindows().delete(key);
       }
       // otherwise, persist the decremented window.
       else
       {
-        this._flurryWindows.set(key, next);
+        this.flurryWindows().set(key, next);
       }
     });
   }
@@ -86,7 +98,7 @@ class JABS_HitstopData
   isActive()
   {
     // return whether or not the frames are still ticking.
-    return this._frames > 0;
+    return this.getFrames() > 0;
   }
 
   /**
@@ -97,7 +109,7 @@ class JABS_HitstopData
   flagFlurryWindow(actionUuid, windowFrames)
   {
     // set or replace the window with the provided amount.
-    this._flurryWindows.set(actionUuid, Math.max(0, Math.floor(windowFrames)));
+    this.flurryWindows().set(actionUuid, Math.max(0, Math.floor(windowFrames)));
   }
 
   /**
@@ -108,7 +120,7 @@ class JABS_HitstopData
   isInFlurryWindow(actionUuid)
   {
     // determine if the action is currently in the window.
-    return this._flurryWindows.has(actionUuid);
+    return this.flurryWindows().has(actionUuid);
   }
 }
 

@@ -184,7 +184,7 @@ J.TIME.Aliased.Scene_Map.set("onMapLoaded", Scene_Map.prototype.onMapLoaded);
 Scene_Map.prototype.onMapLoaded = function()
 {
   // inspect if this map was loaded as a result of a map transfer.
-  if (this._transfer)
+  if (this.transfer())
   {
     // handle the blockage of TIME as-needed.
     this.handleTimeBlock();

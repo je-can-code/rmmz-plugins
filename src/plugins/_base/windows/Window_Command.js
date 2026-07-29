@@ -6,7 +6,7 @@ import BuiltWindowCommand from './../models/BuiltWindowCommand.js';
  */
 Window_Command.prototype.commandList = function()
 {
-  return this._list ?? [];
+  return this._list;
 };
 
 /**

@@ -39,6 +39,9 @@ class Window_AptitudeRibbon
    */
   setToggleHintTarget(target)
   {
+    // nothing to redraw when the value has not changed.
+    if (this._toggleHintTarget === target) return;
+
     // store the target.
     this._toggleHintTarget = target;
 

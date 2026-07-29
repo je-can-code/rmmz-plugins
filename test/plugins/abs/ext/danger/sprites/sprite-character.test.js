@@ -42,6 +42,9 @@ describe('J-ABS-Danger Sprite_Character (unit, all downstream dependencies mocke
     Sprite_Character.prototype.initMembers = originalInitMembers;
     Sprite_Character.prototype.setupJabsSprite = originalSetupJabsSprite;
     Sprite_Character.prototype.update = originalUpdate;
+
+    // J-Base defines this accessor on every Sprite_Character; production code reads through it.
+    Sprite_Character.prototype.character = function() { return this._character; };
     globalThis.Sprite_Character = Sprite_Character;
 
     await import('../../../../../../src/plugins/abs/ext/danger/sprites/Sprite_Character.js');

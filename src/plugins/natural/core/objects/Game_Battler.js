@@ -160,6 +160,12 @@ Game_Battler.prototype.initNaturalGrowthParameters = function()
    * @type {number}
    */
   this._j._natural._goldPlus = 0;
+
+  /**
+   * The amount of additional SDP points to gain. Only affects points gained from an enemy's defeat.
+   * @type {number}
+   */
+  this._j._natural._sdpsPlus = 0;
 };
 
 //region max tp
@@ -334,7 +340,7 @@ Object.defineProperty(Game_Battler.prototype, 'har', {
  */
 Game_Battler.prototype.bParamGrowthPlus = function(paramId)
 {
-  return this._j._natural._bParamsGrowthPlus[paramId] ?? 0;
+  return this.bParamsGrowthPlus()[paramId] ?? 0;
 };
 
 /**
@@ -344,7 +350,7 @@ Game_Battler.prototype.bParamGrowthPlus = function(paramId)
  */
 Game_Battler.prototype.modBparamGrowthPlus = function(paramId, amount)
 {
-  this._j._natural._bParamsGrowthPlus[paramId] += amount;
+  this.bParamsGrowthPlus()[paramId] += amount;
 };
 
 /**
@@ -354,7 +360,7 @@ Game_Battler.prototype.modBparamGrowthPlus = function(paramId, amount)
  */
 Game_Battler.prototype.bParamGrowthRate = function(paramId)
 {
-  return this._j._natural._bParamsGrowthRate[paramId] ?? 0;
+  return this.bParamsGrowthRate()[paramId] ?? 0;
 };
 
 /**
@@ -364,7 +370,7 @@ Game_Battler.prototype.bParamGrowthRate = function(paramId)
  */
 Game_Battler.prototype.modBparamGrowthRate = function(paramId, amount)
 {
-  this._j._natural._bParamsGrowthRate[paramId] += amount;
+  this.bParamsGrowthRate()[paramId] += amount;
 };
 
 /**
@@ -374,7 +380,7 @@ Game_Battler.prototype.modBparamGrowthRate = function(paramId, amount)
  */
 Game_Battler.prototype.bParamBuffPlus = function(paramId)
 {
-  return this._j._natural._bParamsBuffPlus[paramId] ?? 0;
+  return this.bParamsBuffPlus()[paramId] ?? 0;
 };
 
 /**
@@ -384,7 +390,7 @@ Game_Battler.prototype.bParamBuffPlus = function(paramId)
  */
 Game_Battler.prototype.setBparamBuffPlus = function(paramId, amount)
 {
-  this._j._natural._bParamsBuffPlus[paramId] = amount;
+  this.bParamsBuffPlus()[paramId] = amount;
 };
 
 /**
@@ -394,7 +400,7 @@ Game_Battler.prototype.setBparamBuffPlus = function(paramId, amount)
  */
 Game_Battler.prototype.bParamBuffRate = function(paramId)
 {
-  return this._j._natural._bParamsBuffRate[paramId] ?? 0;
+  return this.bParamsBuffRate()[paramId] ?? 0;
 };
 
 /**
@@ -404,7 +410,7 @@ Game_Battler.prototype.bParamBuffRate = function(paramId)
  */
 Game_Battler.prototype.setBparamBuffRate = function(paramId, amount)
 {
-  this._j._natural._bParamsBuffRate[paramId] = amount;
+  this.bParamsBuffRate()[paramId] = amount;
 };
 //endregion b-params
 
@@ -416,7 +422,7 @@ Game_Battler.prototype.setBparamBuffRate = function(paramId, amount)
  */
 Game_Battler.prototype.sParamGrowthPlus = function(paramId)
 {
-  return this._j._natural._sParamsGrowthPlus[paramId] ?? 0;
+  return this.sParamsGrowthPlus()[paramId] ?? 0;
 };
 
 /**
@@ -426,7 +432,7 @@ Game_Battler.prototype.sParamGrowthPlus = function(paramId)
  */
 Game_Battler.prototype.modSparamGrowthPlus = function(paramId, amount)
 {
-  this._j._natural._sParamsGrowthPlus[paramId] += amount;
+  this.sParamsGrowthPlus()[paramId] += amount;
 };
 
 /**
@@ -436,7 +442,7 @@ Game_Battler.prototype.modSparamGrowthPlus = function(paramId, amount)
  */
 Game_Battler.prototype.sParamGrowthRate = function(paramId)
 {
-  return this._j._natural._sParamsGrowthRate[paramId] ?? 0;
+  return this.sParamsGrowthRate()[paramId] ?? 0;
 };
 
 /**
@@ -446,7 +452,7 @@ Game_Battler.prototype.sParamGrowthRate = function(paramId)
  */
 Game_Battler.prototype.modSparamGrowthRate = function(paramId, amount)
 {
-  this._j._natural._sParamsGrowthRate[paramId] += amount;
+  this.sParamsGrowthRate()[paramId] += amount;
 };
 
 /**
@@ -456,7 +462,7 @@ Game_Battler.prototype.modSparamGrowthRate = function(paramId, amount)
  */
 Game_Battler.prototype.sParamBuffPlus = function(paramId)
 {
-  return this._j._natural._sParamsBuffPlus[paramId] ?? 0;
+  return this.sParamsBuffPlus()[paramId] ?? 0;
 };
 
 /**
@@ -466,7 +472,7 @@ Game_Battler.prototype.sParamBuffPlus = function(paramId)
  */
 Game_Battler.prototype.setSparamBuffPlus = function(paramId, amount)
 {
-  this._j._natural._sParamsBuffPlus[paramId] = amount;
+  this.sParamsBuffPlus()[paramId] = amount;
 };
 
 /**
@@ -476,7 +482,7 @@ Game_Battler.prototype.setSparamBuffPlus = function(paramId, amount)
  */
 Game_Battler.prototype.sParamBuffRate = function(paramId)
 {
-  return this._j._natural._sParamsBuffRate[paramId] ?? 0;
+  return this.sParamsBuffRate()[paramId] ?? 0;
 };
 
 /**
@@ -486,7 +492,7 @@ Game_Battler.prototype.sParamBuffRate = function(paramId)
  */
 Game_Battler.prototype.setSparamBuffRate = function(paramId, amount)
 {
-  this._j._natural._sParamsBuffRate[paramId] = amount;
+  this.sParamsBuffRate()[paramId] = amount;
 };
 //endregion s-params
 
@@ -498,7 +504,7 @@ Game_Battler.prototype.setSparamBuffRate = function(paramId, amount)
  */
 Game_Battler.prototype.xParamGrowthPlus = function(paramId)
 {
-  return this._j._natural._xParamsGrowthPlus[paramId] ?? 0;
+  return this.xParamsGrowthPlus()[paramId] ?? 0;
 };
 
 /**
@@ -508,7 +514,7 @@ Game_Battler.prototype.xParamGrowthPlus = function(paramId)
  */
 Game_Battler.prototype.modXparamGrowthPlus = function(paramId, amount)
 {
-  this._j._natural._xParamsGrowthPlus[paramId] += amount;
+  this.xParamsGrowthPlus()[paramId] += amount;
 };
 
 /**
@@ -518,7 +524,7 @@ Game_Battler.prototype.modXparamGrowthPlus = function(paramId, amount)
  */
 Game_Battler.prototype.xParamGrowthRate = function(paramId)
 {
-  return this._j._natural._xParamsGrowthRate[paramId] ?? 0;
+  return this.xParamsGrowthRate()[paramId] ?? 0;
 };
 
 /**
@@ -528,7 +534,7 @@ Game_Battler.prototype.xParamGrowthRate = function(paramId)
  */
 Game_Battler.prototype.modXparamGrowthRate = function(paramId, amount)
 {
-  this._j._natural._xParamsGrowthRate[paramId] += amount;
+  this.xParamsGrowthRate()[paramId] += amount;
 };
 
 /**
@@ -538,7 +544,7 @@ Game_Battler.prototype.modXparamGrowthRate = function(paramId, amount)
  */
 Game_Battler.prototype.xParamBuffPlus = function(paramId)
 {
-  return this._j._natural._xParamsBuffPlus[paramId] ?? 0;
+  return this.xParamsBuffPlus()[paramId] ?? 0;
 };
 
 /**
@@ -548,7 +554,7 @@ Game_Battler.prototype.xParamBuffPlus = function(paramId)
  */
 Game_Battler.prototype.setXparamBuffPlus = function(paramId, amount)
 {
-  this._j._natural._xParamsBuffPlus[paramId] = amount;
+  this.xParamsBuffPlus()[paramId] = amount;
 };
 
 /**
@@ -558,7 +564,7 @@ Game_Battler.prototype.setXparamBuffPlus = function(paramId, amount)
  */
 Game_Battler.prototype.xParamBuffRate = function(paramId)
 {
-  return this._j._natural._xParamsBuffRate[paramId] ?? 0;
+  return this.xParamsBuffRate()[paramId] ?? 0;
 };
 
 /**
@@ -568,7 +574,7 @@ Game_Battler.prototype.xParamBuffRate = function(paramId)
  */
 Game_Battler.prototype.setXparamBuffRate = function(paramId, amount)
 {
-  this._j._natural._xParamsBuffRate[paramId] = amount;
+  this.xParamsBuffRate()[paramId] = amount;
 };
 //endregion x-params
 
@@ -579,7 +585,7 @@ Game_Battler.prototype.setXparamBuffRate = function(paramId, amount)
  */
 Game_Battler.prototype.expPlus = function()
 {
-  return this._j._natural._expPlus ?? 0;
+  return this._j._natural._expPlus;
 };
 
 /**
@@ -596,7 +602,7 @@ Game_Battler.prototype.setExpPlus = function(expPlus)
  */
 Game_Battler.prototype.goldPlus = function()
 {
-  return this._j._natural._goldPlus ?? 0;
+  return this._j._natural._goldPlus;
 };
 
 /**
@@ -614,7 +620,7 @@ Game_Battler.prototype.setGoldPlus = function(goldPlus)
  */
 Game_Battler.prototype.sdpsPlus = function()
 {
-  return this._j._natural._sdpsPlus ?? 0;
+  return this._j._natural._sdpsPlus;
 };
 
 /**
@@ -651,19 +657,19 @@ Game_Battler.prototype.refreshAllParameterBuffs = function()
 Game_Battler.prototype.clearAllParameterBuffs = function()
 {
   // zero everything out.
-  this._j._natural._maxTpBuffPlus = 0;
-  this._j._natural._maxTpBuffRate = 0;
-  this._j._natural._harBuffPlus = 0;
-  this._j._natural._harBuffRate = 0;
-  this._j._natural._bParamsBuffPlus = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
-  this._j._natural._bParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0 ];
-  this._j._natural._sParamsBuffPlus = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-  this._j._natural._sParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-  this._j._natural._xParamsBuffPlus = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-  this._j._natural._xParamsBuffRate = [ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ];
-  this._j._natural._expPlus = 0;
-  this._j._natural._goldPlus = 0;
-  this._j._natural._sdpsPlus = 0;
+  this.setMaxTpBuffPlus(0);
+  this.setMaxTpBuffRate(0);
+  this.setHarBuffPlus(0);
+  this.setHarBuffRate(0);
+  this.setBParamsBuffPlus([ 0, 0, 0, 0, 0, 0, 0, 0 ]);
+  this.setBParamsBuffRate([ 0, 0, 0, 0, 0, 0, 0, 0 ]);
+  this.setSParamsBuffPlus([ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]);
+  this.setSParamsBuffRate([ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]);
+  this.setXParamsBuffPlus([ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]);
+  this.setXParamsBuffRate([ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 ]);
+  this.setExpPlus(0);
+  this.setGoldPlus(0);
+  this.setSdpsPlus(0);
 };
 
 /**
@@ -1163,4 +1169,186 @@ Game_Battler.prototype.getMaxTpBuff = function(baseParam)
   return this.calculatePlusRate(baseParam, buffPlus, buffRate);
 };
 //endregion max tp
+
+//region properties
+/**
+ * Gets the b params growth plus.
+ * @returns {*} The bParamsGrowthPlus.
+ */
+Game_Battler.prototype.bParamsGrowthPlus = function()
+{
+  // hand back the b params growth plus.
+  return this._j._natural._bParamsGrowthPlus;
+};
+
+/**
+ * Gets the b params growth rate.
+ * @returns {*} The bParamsGrowthRate.
+ */
+Game_Battler.prototype.bParamsGrowthRate = function()
+{
+  // hand back the b params growth rate.
+  return this._j._natural._bParamsGrowthRate;
+};
+
+/**
+ * Gets the b params buff plus.
+ * @returns {*} The bParamsBuffPlus.
+ */
+Game_Battler.prototype.bParamsBuffPlus = function()
+{
+  // hand back the b params buff plus.
+  return this._j._natural._bParamsBuffPlus;
+};
+
+/**
+ * Sets the b params buff plus.
+ * @param {*} newBParamsBuffPlus The new bParamsBuffPlus.
+ */
+Game_Battler.prototype.setBParamsBuffPlus = function(newBParamsBuffPlus)
+{
+  // assign the b params buff plus.
+  this._j._natural._bParamsBuffPlus = newBParamsBuffPlus;
+};
+
+/**
+ * Gets the b params buff rate.
+ * @returns {*} The bParamsBuffRate.
+ */
+Game_Battler.prototype.bParamsBuffRate = function()
+{
+  // hand back the b params buff rate.
+  return this._j._natural._bParamsBuffRate;
+};
+
+/**
+ * Sets the b params buff rate.
+ * @param {*} newBParamsBuffRate The new bParamsBuffRate.
+ */
+Game_Battler.prototype.setBParamsBuffRate = function(newBParamsBuffRate)
+{
+  // assign the b params buff rate.
+  this._j._natural._bParamsBuffRate = newBParamsBuffRate;
+};
+
+/**
+ * Gets the s params growth plus.
+ * @returns {*} The sParamsGrowthPlus.
+ */
+Game_Battler.prototype.sParamsGrowthPlus = function()
+{
+  // hand back the s params growth plus.
+  return this._j._natural._sParamsGrowthPlus;
+};
+
+/**
+ * Gets the s params growth rate.
+ * @returns {*} The sParamsGrowthRate.
+ */
+Game_Battler.prototype.sParamsGrowthRate = function()
+{
+  // hand back the s params growth rate.
+  return this._j._natural._sParamsGrowthRate;
+};
+
+/**
+ * Gets the s params buff plus.
+ * @returns {*} The sParamsBuffPlus.
+ */
+Game_Battler.prototype.sParamsBuffPlus = function()
+{
+  // hand back the s params buff plus.
+  return this._j._natural._sParamsBuffPlus;
+};
+
+/**
+ * Sets the s params buff plus.
+ * @param {*} newSParamsBuffPlus The new sParamsBuffPlus.
+ */
+Game_Battler.prototype.setSParamsBuffPlus = function(newSParamsBuffPlus)
+{
+  // assign the s params buff plus.
+  this._j._natural._sParamsBuffPlus = newSParamsBuffPlus;
+};
+
+/**
+ * Gets the s params buff rate.
+ * @returns {*} The sParamsBuffRate.
+ */
+Game_Battler.prototype.sParamsBuffRate = function()
+{
+  // hand back the s params buff rate.
+  return this._j._natural._sParamsBuffRate;
+};
+
+/**
+ * Sets the s params buff rate.
+ * @param {*} newSParamsBuffRate The new sParamsBuffRate.
+ */
+Game_Battler.prototype.setSParamsBuffRate = function(newSParamsBuffRate)
+{
+  // assign the s params buff rate.
+  this._j._natural._sParamsBuffRate = newSParamsBuffRate;
+};
+
+/**
+ * Gets the x params growth plus.
+ * @returns {*} The xParamsGrowthPlus.
+ */
+Game_Battler.prototype.xParamsGrowthPlus = function()
+{
+  // hand back the x params growth plus.
+  return this._j._natural._xParamsGrowthPlus;
+};
+
+/**
+ * Gets the x params growth rate.
+ * @returns {*} The xParamsGrowthRate.
+ */
+Game_Battler.prototype.xParamsGrowthRate = function()
+{
+  // hand back the x params growth rate.
+  return this._j._natural._xParamsGrowthRate;
+};
+
+/**
+ * Gets the x params buff plus.
+ * @returns {*} The xParamsBuffPlus.
+ */
+Game_Battler.prototype.xParamsBuffPlus = function()
+{
+  // hand back the x params buff plus.
+  return this._j._natural._xParamsBuffPlus;
+};
+
+/**
+ * Sets the x params buff plus.
+ * @param {*} newXParamsBuffPlus The new xParamsBuffPlus.
+ */
+Game_Battler.prototype.setXParamsBuffPlus = function(newXParamsBuffPlus)
+{
+  // assign the x params buff plus.
+  this._j._natural._xParamsBuffPlus = newXParamsBuffPlus;
+};
+
+/**
+ * Gets the x params buff rate.
+ * @returns {*} The xParamsBuffRate.
+ */
+Game_Battler.prototype.xParamsBuffRate = function()
+{
+  // hand back the x params buff rate.
+  return this._j._natural._xParamsBuffRate;
+};
+
+/**
+ * Sets the x params buff rate.
+ * @param {*} newXParamsBuffRate The new xParamsBuffRate.
+ */
+Game_Battler.prototype.setXParamsBuffRate = function(newXParamsBuffRate)
+{
+  // assign the x params buff rate.
+  this._j._natural._xParamsBuffRate = newXParamsBuffRate;
+};
+//endregion properties
 //endregion Game_Battler

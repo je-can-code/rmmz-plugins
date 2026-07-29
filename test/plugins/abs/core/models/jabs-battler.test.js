@@ -2423,10 +2423,9 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.getInCombatCountdown()).toBe(600);
     });
 
-    it('getInCombatCountdown defaults to 0 for a falsy countdown', () =>
+    it('getInCombatCountdown starts at 0 on a freshly built battler', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler._inCombatCountdown = undefined;
 
       expect(jabsBattler.getInCombatCountdown()).toBe(0);
     });
@@ -2466,12 +2465,12 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.isInCombat()).toBe(false);
     });
 
-    it('getCombatWindowMax falls back to 600 for a falsy configured value', () =>
+    it('getCombatWindowMax honors a configured zero rather than substituting a default', () =>
     {
       const jabsBattler = buildBattler();
-      jabsBattler._inCombatWindowMax = 0;
+      jabsBattler.setCombatWindowMax(0);
 
-      expect(jabsBattler.getCombatWindowMax()).toBe(600);
+      expect(jabsBattler.getCombatWindowMax()).toBe(0);
     });
 
     it('setCombatWindowMax clamps to a zero minimum', () =>

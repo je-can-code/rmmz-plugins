@@ -58,14 +58,38 @@ class Window_Time
      * @type {boolean}
      */
     this._alternating = false;
-  };
+  }
+
+  //region properties
+  /**
+   * Gets the alternating.
+   * @returns {*} The alternating.
+   */
+  isAlternating()
+  {
+    // hand back the alternating.
+    return this._alternating;
+  }
+
+  /**
+   * Sets the alternating.
+   * @param {*} newAlternating The new alternating.
+   */
+  setAlternating(newAlternating)
+  {
+    // assign the alternating.
+    this._alternating = newAlternating;
+  }
+  //endregion properties
+
+  ;
 
   /**
    * Toggles the alternating colon boolean.
    */
   toggleAlternating()
   {
-    this._alternating = !this._alternating;
+    this.setAlternating(!this.isAlternating());
   }
 
   /**
@@ -130,10 +154,10 @@ class Window_Time
    */
   drawContent()
   {
-    const colon1 = this._alternating
+    const colon1 = this.isAlternating()
       ? ":"
       : " ";
-    const colon2 = this._alternating
+    const colon2 = this.isAlternating()
       ? " "
       : ":";
     const ampm = this.time.hours > 11

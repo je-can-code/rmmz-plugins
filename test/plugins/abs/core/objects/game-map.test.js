@@ -28,6 +28,11 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
     originalUpdate = vi.fn();
     Game_Map.prototype.setup = originalSetup;
     Game_Map.prototype.update = originalUpdate;
+
+    // J-Base owns these; the abs layer reads and writes the event list through them.
+    Game_Map.prototype.rawEvents = function() { return this._events; };
+    Game_Map.prototype.setEventByIndex = function(index, newEvent) { this._events[index] = newEvent; };
+    Game_Map.prototype.clearEventByIndex = function(index) { this._events[index] = null; };
     globalThis.Game_Map = Game_Map;
 
     // sibling model/manager dependencies- mocked entirely per the unit-tier convention.
@@ -475,7 +480,7 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
     {
       const metadata = { uuid: 'loot-uuid', lootIndex: 2 };
       globalThis.$dataMap.events = [ null, null, metadata ];
-      const event = { isJabsLoot: () => true, getJabsLoot: () => ({ uuid: 'loot-uuid' }) };
+      const event = { isJabsLoot: () => true, getJabsLoot: () => ({ uuid: () => 'loot-uuid' }) };
       const map = buildMap();
 
       map.handleLootEventRemoval(event);

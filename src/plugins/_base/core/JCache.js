@@ -17,6 +17,40 @@ class JCache
    * without each caller needing to know the full list of caches that exist.
    * @type {Set<JCache>}
    */
+  
+
+  //region properties
+  /**
+   * Gets the battler caches.
+   * @returns {*} The battlerCaches.
+   */
+  static battlerCaches()
+  {
+    // hand back the battler caches.
+    return this._battlerCaches;
+  }
+
+  /**
+   * Gets the root.
+   * @returns {*} The root.
+   */
+  root()
+  {
+    // hand back the root.
+    return this._root;
+  }
+
+  /**
+   * Sets the root.
+   * @param {*} newRoot The new root.
+   */
+  setRoot(newRoot)
+  {
+    // assign the root.
+    this._root = newRoot;
+  }
+  //endregion properties
+
   static _battlerCaches = new Set();
 
   /**
@@ -29,7 +63,7 @@ class JCache
   static invalidateAllForBattler(battler)
   {
     // walk every battler-dimensioned cache that has ever been constructed and drop this battler's subtree from each.
-    for (const cache of this._battlerCaches)
+    for (const cache of this.battlerCaches())
     {
       cache.invalidate(battler);
     }
@@ -134,7 +168,7 @@ class JCache
     const stringKey = args.pop();
 
     // start walking from the root weak dimension bucket.
-    let node = this._root;
+    let node = this.root();
 
     // descend through every declared dimension in order, creating buckets lazily as we go.
     for (let i = 0; i < this.dims.length; i++)
@@ -193,7 +227,7 @@ class JCache
     }
 
     // start walking from the root weak dimension bucket.
-    let node = this._root;
+    let node = this.root();
 
     // descend through every dimension except the last one, bailing out early if a bucket is missing.
     for (let i = 0; i < prefix.length - 1; i++)
@@ -215,7 +249,7 @@ class JCache
   clear()
   {
     // a fresh WeakMap has no entries and no path back to any previously cached value.
-    this._root = new WeakMap();
+    this.setRoot(new WeakMap());
   }
 
   /**

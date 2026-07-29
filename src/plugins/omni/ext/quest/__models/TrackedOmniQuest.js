@@ -226,7 +226,9 @@ class TrackedOmniQuest
     const objective = this.objectives.find(o => o.id === actualObjectiveId);
   
     // validate the objective in question is in the state of active, regardless of the quest.
-    return objective?.state === OmniObjective.States.Active;
+    if (objective === undefined) return false;
+
+    return objective.state === OmniObjective.States.Active;
   }
   
   /**
@@ -470,7 +472,7 @@ class TrackedOmniQuest
   immediateObjective()
   {
     return this.activeObjectives()
-      ?.at(0);
+      .at(0);
   }
   
   /**

@@ -71,6 +71,9 @@ describe('J-ABS-Charge Sprite_Character (unit, all downstream dependencies mocke
     Sprite_Character.prototype.initGaugeMembers = originalInitGaugeMembers;
     Sprite_Character.prototype.setupMapSprite = originalSetupMapSprite;
     Sprite_Character.prototype.updateGauges = originalUpdateGauges;
+
+    // J-Base defines this accessor on every Sprite_Character; production code reads through it.
+    Sprite_Character.prototype.character = function() { return this._character; };
     globalThis.Sprite_Character = Sprite_Character;
 
     await import('../../../../../../src/plugins/abs/ext/charge/sprites/Sprite_Character.js');

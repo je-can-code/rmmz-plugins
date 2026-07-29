@@ -191,7 +191,17 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         }
       },
     }));
-    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_LootDrop.js', () => ({ default: class {} }));
+    vi.doMock('../../../../../src/plugins/abs/core/models/JABS_LootDrop.js', () => ({
+      // the engine reads uuid() and writes setDuration() on every loot it creates.
+      default: class
+      {
+        _uuid = 'mock-loot-uuid';
+        _duration = 0;
+        uuid() { return this._uuid; }
+        duration() { return this._duration; }
+        setDuration(v) { this._duration = v; }
+      },
+    }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Location.js', () => ({
       default: class
       {
@@ -3133,12 +3143,12 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     {
       const engineWithTag = new JABS_Engine();
       const withCustom = engineWithTag.addLootDropToMap(1, 2, { id: 1, jabsExpiration: 999 });
-      expect(withCustom.setJabsLoot.mock.calls[0][0].duration).toBe(999);
+      expect(withCustom.setJabsLoot.mock.calls[0][0].duration()).toBe(999);
 
       globalThis.$dataMap.events = [ null ];
       const engineWithoutTag = new JABS_Engine();
       const withDefault = engineWithoutTag.addLootDropToMap(1, 2, { id: 1 });
-      expect(withDefault.setJabsLoot.mock.calls[0][0].duration).toBe(300);
+      expect(withDefault.setJabsLoot.mock.calls[0][0].duration()).toBe(300);
     });
   });
 

@@ -35,7 +35,7 @@ JABS_Engine.prototype.initialize = function(isMapTransfer = true)
  */
 JABS_Engine.prototype.getFoodChainPlanByUuid = function(uuid)
 {
-  return this._foodChainPlans.get(uuid) ?? null;
+  return this.foodChainPlans().get(uuid) ?? null;
 };
 //endregion getFoodChainPlanByUuid
 
@@ -48,8 +48,20 @@ JABS_Engine.prototype.getFoodChainPlanByUuid = function(uuid)
  */
 JABS_Engine.prototype.setFoodChainPlanByUuid = function(uuid, plan)
 {
-  this._foodChainPlans.set(uuid, plan);
+  this.foodChainPlans().set(uuid, plan);
 };
 //endregion setFoodChainPlanByUuid
 
+
+//region properties
+/**
+ * Gets the food chain plans.
+ * @returns {*} The foodChainPlans.
+ */
+JABS_Engine.prototype.foodChainPlans = function()
+{
+  // hand back the food chain plans.
+  return this._foodChainPlans;
+};
+//endregion properties
 //endregion JABS_Engine food extensions

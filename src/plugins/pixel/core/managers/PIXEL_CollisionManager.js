@@ -10,6 +10,30 @@ class PIXEL_CollisionManager
    * Initializes configuration for collision table density and storage.
    * Reads the step count from J.PIXEL.Metadata if available, otherwise defaults to 4.
    */
+  
+
+  //region properties
+  /**
+   * Gets the table.
+   * @returns {*} The table.
+   */
+  static table()
+  {
+    // hand back the table.
+    return this._table;
+  }
+
+  /**
+   * Sets the table.
+   * @param {*} newTable The new table.
+   */
+  static setTable(newTable)
+  {
+    // assign the table.
+    this._table = newTable;
+  }
+  //endregion properties
+
   static initConfig()
   {
     // Read the step count from plugin metadata if already initialized.
@@ -54,7 +78,7 @@ class PIXEL_CollisionManager
     const subH = $dataMap.height * this.collisionStepCount;
 
     // Allocate a new subcell collision table sized to the current map.
-    this._table = new Array(subW * subH);
+    this.setTable(new Array(subW * subH));
 
     // Load the default passability-derived collision into the subcell table.
     this._loadDefaultCollisionTable();
@@ -150,7 +174,7 @@ class PIXEL_CollisionManager
     const idx = this._index(px, py);
 
     // Set the code at that index.
-    this._table[idx] = code;
+    this.table()[idx] = code;
   }
 
   /**
@@ -469,7 +493,7 @@ class PIXEL_CollisionManager
     }
 
     // Acquire the stored code for this subcell (default to open if empty).
-    const code = this._table[this._index(sx, sy)] || this.Codes.Open;
+    const code = this.table()[this._index(sx, sy)] || this.Codes.Open;
 
     // Open: always passable.
     if (code === this.Codes.Open)

@@ -36,9 +36,9 @@ Scene_Equip.prototype.create = function()
   this.createSlotWindow();
   this.createItemWindow();
   this.refreshActor();
-  this._slotWindow.activate();
-  this._slotWindow.select(0);
-  this._slotWindow.onIndexChange();
+  this.slotWindow().activate();
+  this.slotWindow().select(0);
+  this.slotWindow().onIndexChange();
 };
 
 /**
@@ -131,8 +131,8 @@ Scene_Equip.prototype.controlsHintRect = function()
 Scene_Equip.prototype.createActorRibbonWindow = function()
 {
   const rect = this.actorRibbonRect();
-  this._actorRibbonWindow = new Window_EquipActorRibbon(rect);
-  this.addWindow(this._actorRibbonWindow);
+  this.setActorRibbonWindow(new Window_EquipActorRibbon(rect));
+  this.addWindow(this.actorRibbonWindow());
 };
 
 /**
@@ -141,9 +141,9 @@ Scene_Equip.prototype.createActorRibbonWindow = function()
 Scene_Equip.prototype.createControlsHintWindow = function()
 {
   const rect = this.controlsHintRect();
-  this._controlsHintWindow = new Window_EquipControlsHint(rect);
-  this._controlsHintWindow.refresh();
-  this.addWindow(this._controlsHintWindow);
+  this.setControlsHintWindow(new Window_EquipControlsHint(rect));
+  this.controlsHintWindow().refresh();
+  this.addWindow(this.controlsHintWindow());
 };
 
 /**
@@ -190,8 +190,8 @@ Scene_Equip.prototype.switchToMoreDataFromEquipSlots = function()
   this._j.moreVisible = !this._j.moreVisible;
   if (this._j.moreVisible)
   {
-    this._slotWindow.refreshMoreData();
-    this._slotWindow.deactivate();
+    this.slotWindow().refreshMoreData();
+    this.slotWindow().deactivate();
     this._moreDataWindow.setHandler("cancel", this.backToSlotsList.bind(this));
     this._moreDataWindow.show();
     this._moreDataWindow.activate();
@@ -202,7 +202,7 @@ Scene_Equip.prototype.switchToMoreDataFromEquipSlots = function()
     this._moreDataWindow.hide();
     this._moreDataWindow.deactivate();
     this._moreDataWindow.deselect();
-    this._slotWindow.activate();
+    this.slotWindow().activate();
   }
 };
 
@@ -214,8 +214,8 @@ Scene_Equip.prototype.switchToMoreDataFromEquipItems = function()
   this._j.moreVisible = !this._j.moreVisible;
   if (this._j.moreVisible)
   {
-    this._itemWindow.refreshMoreData();
-    this._itemWindow.deactivate();
+    this.itemWindow().refreshMoreData();
+    this.itemWindow().deactivate();
     this._moreDataWindow.setHandler("cancel", this.backToItemsList.bind(this));
     this._moreDataWindow.show();
     this._moreDataWindow.activate();
@@ -226,7 +226,7 @@ Scene_Equip.prototype.switchToMoreDataFromEquipItems = function()
     this._moreDataWindow.hide();
     this._moreDataWindow.deactivate();
     this._moreDataWindow.deselect();
-    this._itemWindow.activate();
+    this.itemWindow().activate();
   }
 };
 
@@ -238,11 +238,11 @@ Scene_Equip.prototype.createSlotWindow = function()
 {
   // perform original logic.
   J.CMS_E.Aliased.Scene_Equip.get('createSlotWindow').call(this);
-  this._slotWindow.setHandler('more', this.switchToMoreDataFromEquipSlots.bind(this));
-  this._slotWindow.setHandler('context', this.onContextUnequipSlot.bind(this));
-  this._slotWindow.setHandler('actor-next', this.nextActor.bind(this));
-  this._slotWindow.setHandler('actor-prev', this.previousActor.bind(this));
-  this._slotWindow.setMoreDataWindow(this._moreDataWindow);
+  this.slotWindow().setHandler('more', this.switchToMoreDataFromEquipSlots.bind(this));
+  this.slotWindow().setHandler('context', this.onContextUnequipSlot.bind(this));
+  this.slotWindow().setHandler('actor-next', this.nextActor.bind(this));
+  this.slotWindow().setHandler('actor-prev', this.previousActor.bind(this));
+  this.slotWindow().setMoreDataWindow(this._moreDataWindow);
 };
 
 /**
@@ -252,25 +252,25 @@ Scene_Equip.prototype.createSlotWindow = function()
 Scene_Equip.prototype.onContextUnequipSlot = function()
 {
   // only act while the slot list owns focus.
-  if (this._slotWindow.active === false)
+  if (this.slotWindow().active === false)
   {
     return;
   }
 
   // grab the slot index under the cursor.
-  const slotId = this._slotWindow.index();
+  const slotId = this.slotWindow().index();
 
   // clear the slot when something is equipped there.
   this.actor().changeEquip(slotId, null);
 
   // refresh dependent windows.
-  this._statusWindow.refresh();
-  this._slotWindow.refresh();
-  this._itemWindow.refresh();
+  this.statusWindow().refresh();
+  this.slotWindow().refresh();
+  this.itemWindow().refresh();
   this.refreshActor();
 
   // remain on the slot list.
-  this._slotWindow.activate();
+  this.slotWindow().activate();
 };
 
 /**
@@ -280,17 +280,17 @@ Scene_Equip.prototype.onContextUnequipSlot = function()
 Scene_Equip.prototype.createItemWindow = function()
 {
   const rect = this.itemWindowRect();
-  this._itemWindow = new Window_EquipItem(rect);
-  this._itemWindow.setHelpWindow(this._helpWindow);
-  this._itemWindow.setStatusWindow(this._statusWindow);
-  this._itemWindow.setHandler("more", this.switchToMoreDataFromEquipItems.bind(this));
-  this._itemWindow.setHandler("ok", this.onItemOk.bind(this));
-  this._itemWindow.setHandler("cancel", this.onItemCancel.bind(this));
-  this._itemWindow.setMoreDataWindow(this._moreDataWindow);
+  this.setItemWindow(new Window_EquipItem(rect));
+  this.itemWindow().setHelpWindow(this.helpWindow());
+  this.itemWindow().setStatusWindow(this.statusWindow());
+  this.itemWindow().setHandler("more", this.switchToMoreDataFromEquipItems.bind(this));
+  this.itemWindow().setHandler("ok", this.onItemOk.bind(this));
+  this.itemWindow().setHandler("cancel", this.onItemCancel.bind(this));
+  this.itemWindow().setMoreDataWindow(this._moreDataWindow);
 
-  this._slotWindow.setItemWindow(this._itemWindow);
+  this.slotWindow().setItemWindow(this.itemWindow());
 
-  this.addWindow(this._itemWindow);
+  this.addWindow(this.itemWindow());
 };
 
 /**
@@ -335,7 +335,7 @@ Scene_Equip.prototype.backToItemsList = function()
 Scene_Equip.prototype.itemWindowRect = function()
 {
   const wx = this.statusWidth();
-  const wy = this.slotWindowRect().y + this._slotWindow.height;
+  const wy = this.slotWindowRect().y + this.slotWindow().height;
   const ww = Graphics.boxWidth - this.statusWidth();
   const wh = this.mainAreaBottom() - wy;
   return new Rectangle(wx, wy, ww, wh);
@@ -347,8 +347,8 @@ Scene_Equip.prototype.itemWindowRect = function()
  */
 Scene_Equip.prototype.onSlotOk = function()
 {
-  this._itemWindow.activate();
-  this._itemWindow.select(0);
+  this.itemWindow().activate();
+  this.itemWindow().select(0);
 };
 
 /**
@@ -366,8 +366,8 @@ Scene_Equip.prototype.onSlotCancel = function()
  */
 Scene_Equip.prototype.hideItemWindow = function()
 {
-  this._slotWindow.activate();
-  this._itemWindow.deselect();
+  this.slotWindow().activate();
+  this.itemWindow().deselect();
 };
 
 /**
@@ -391,6 +391,48 @@ Scene_Equip.prototype.refreshActor = function()
   J.CMS_E.Aliased.Scene_Equip.get('refreshActor').call(this);
   const actor = this.actor();
   this._moreDataWindow.setActor(actor);
-  this._actorRibbonWindow.setActor(actor);
+  this.actorRibbonWindow().setActor(actor);
 };
+
+//region properties
+/**
+ * Gets the actor ribbon window.
+ * @returns {*} The actorRibbonWindow.
+ */
+Scene_Equip.prototype.actorRibbonWindow = function()
+{
+  // hand back the actor ribbon window.
+  return this._actorRibbonWindow;
+};
+
+/**
+ * Sets the actor ribbon window.
+ * @param {*} newActorRibbonWindow The new actorRibbonWindow.
+ */
+Scene_Equip.prototype.setActorRibbonWindow = function(newActorRibbonWindow)
+{
+  // assign the actor ribbon window.
+  this._actorRibbonWindow = newActorRibbonWindow;
+};
+
+/**
+ * Gets the controls hint window.
+ * @returns {*} The controlsHintWindow.
+ */
+Scene_Equip.prototype.controlsHintWindow = function()
+{
+  // hand back the controls hint window.
+  return this._controlsHintWindow;
+};
+
+/**
+ * Sets the controls hint window.
+ * @param {*} newControlsHintWindow The new controlsHintWindow.
+ */
+Scene_Equip.prototype.setControlsHintWindow = function(newControlsHintWindow)
+{
+  // assign the controls hint window.
+  this._controlsHintWindow = newControlsHintWindow;
+};
+//endregion properties
 //endregion Scene_Equip

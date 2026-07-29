@@ -34,6 +34,9 @@ describe('J-SkillExtend Game_Action skill layering (direct src import)', () =>
     ({ default: globalThis.OverlayManager } = await import('../../../../src/plugins/extend/core/managers/OverlayManager.js'));
 
     // patches globalThis.Game_Action.prototype directly, no vm involved.
+    // J-Base owns the rawItem() accessor extend's Game_Action reads through.
+    await import('../../../../src/plugins/_base/objects/Game_Action.js');
+
     await import('../../../../src/plugins/extend/core/objects/Game_Action.js');
   });
 
