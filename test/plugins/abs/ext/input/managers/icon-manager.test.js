@@ -11,6 +11,9 @@ describe('J-ABS-Input IconManager (unit, all downstream dependencies mocked)', (
     globalThis.Input = { labelForSymbol: vi.fn(() => null) };
     globalThis.IconManager = {};
 
+    // the glyph chosen for a symbol depends on what the player is holding; default to a keyboard.
+    globalThis.InputDeviceTracker = { isGamepad: vi.fn(() => false) };
+
     await import('../../../../../../src/plugins/abs/ext/input/managers/IconManager.js');
   });
 
@@ -19,6 +22,7 @@ describe('J-ABS-Input IconManager (unit, all downstream dependencies mocked)', (
     globalThis.IconManager._jabsActionIconRegistry = {};
     globalThis.IconManager._jabsInputTextRegistry = {};
     globalThis.Input.labelForSymbol.mockReset().mockReturnValue(null);
+    globalThis.InputDeviceTracker.isGamepad.mockReset().mockReturnValue(false);
   });
 
   describe('registerJabsIcon / jabsIconIndexForSymbol', () =>
@@ -64,18 +68,52 @@ describe('J-ABS-Input IconManager (unit, all downstream dependencies mocked)', (
   {
     it('registers and retrieves ex-text, normalizing the symbol to lowercase', () =>
     {
-      globalThis.IconManager.registerJabsInputText('  OK  ', '  A Button  ');
-      expect(globalThis.IconManager.jabsInputTextForSymbol('ok')).toBe('A Button');
+      globalThis.IconManager.registerJabsInputText('  OK  ', '  Cross  ', '  Z Key  ');
+      expect(globalThis.IconManager.jabsInputTextForSymbol('ok')).toBe('Z Key');
     });
 
     it('throws when the symbol normalizes to empty', () =>
     {
-      expect(() => globalThis.IconManager.registerJabsInputText('   ', 'text')).toThrow(/empty symbol/);
+      expect(() => globalThis.IconManager.registerJabsInputText('   ', 'pad', 'key')).toThrow(/empty symbol/);
     });
 
-    it('throws when the text normalizes to empty', () =>
+    it('throws when the gamepad text normalizes to empty', () =>
     {
-      expect(() => globalThis.IconManager.registerJabsInputText('ok', '   ')).toThrow(/empty ex-text/);
+      // Arrange & Act & Assert: a symbol with no gamepad glyph would render blank for pad players.
+      expect(() => globalThis.IconManager.registerJabsInputText('ok', '   ', 'key'))
+        .toThrow(/empty gamepad ex-text/);
+    });
+
+    it('throws when the keyboard text normalizes to empty', () =>
+    {
+      // Arrange & Act & Assert: likewise for keyboard players, so both are demanded up front.
+      expect(() => globalThis.IconManager.registerJabsInputText('ok', 'pad', '   '))
+        .toThrow(/empty keyboard ex-text/);
+    });
+
+    it('returns the gamepad glyph while the player is on a gamepad', () =>
+    {
+      // Arrange: register a pair, then put the player on a pad.
+      globalThis.IconManager.registerJabsInputText('ok', 'Cross', 'Z Key');
+      globalThis.InputDeviceTracker.isGamepad.mockReturnValue(true);
+
+      // Act.
+      const text = globalThis.IconManager.jabsInputTextForSymbol('ok');
+
+      // Assert: the keyboard half is not shown at all.
+      expect(text).toBe('Cross');
+    });
+
+    it('returns the keyboard glyph while the player is on a keyboard', () =>
+    {
+      // Arrange: register a pair; the fixture already defaults the player to a keyboard.
+      globalThis.IconManager.registerJabsInputText('ok', 'Cross', 'Z Key');
+
+      // Act.
+      const text = globalThis.IconManager.jabsInputTextForSymbol('ok');
+
+      // Assert.
+      expect(text).toBe('Z Key');
     });
 
     it('falls back to Input.labelForSymbol when unmapped', () =>
@@ -90,6 +128,24 @@ describe('J-ABS-Input IconManager (unit, all downstream dependencies mocked)', (
     });
   });
 
+  describe('registerJabsInputIcon', () =>
+  {
+    it('derives the keyboard icon index from the gamepad one', () =>
+    {
+      // Arrange: register from a single gamepad index.
+      globalThis.IconManager.registerJabsInputIcon('ok', 2448);
+
+      // Act: read both halves of the resulting pair.
+      const keyboardText = globalThis.IconManager.jabsInputTextForSymbol('ok');
+      globalThis.InputDeviceTracker.isGamepad.mockReturnValue(true);
+      const gamepadText = globalThis.IconManager.jabsInputTextForSymbol('ok');
+
+      // Assert: the keyboard glyph sits exactly one sheet row above the gamepad glyph.
+      expect(gamepadText).toBe('\\I[2448]');
+      expect(keyboardText).toBe('\\I[2432]');
+    });
+  });
+
   describe('jabsIconTextForSymbol', () =>
   {
     it('returns "(unbound)" for a falsy symbol', () =>
@@ -100,8 +156,8 @@ describe('J-ABS-Input IconManager (unit, all downstream dependencies mocked)', (
 
     it('delegates to jabsInputTextForSymbol for a real symbol', () =>
     {
-      globalThis.IconManager.registerJabsInputText('ok', 'A Button');
-      expect(globalThis.IconManager.jabsIconTextForSymbol('ok')).toBe('A Button');
+      globalThis.IconManager.registerJabsInputText('ok', 'Cross', 'Z Key');
+      expect(globalThis.IconManager.jabsIconTextForSymbol('ok')).toBe('Z Key');
     });
   });
 
@@ -109,7 +165,13 @@ describe('J-ABS-Input IconManager (unit, all downstream dependencies mocked)', (
   {
     it('registers ex-text for every JABS input symbol', () =>
     {
+      // Arrange: put the player on a pad so the registered gamepad indices are the ones read back.
+      globalThis.InputDeviceTracker.isGamepad.mockReturnValue(true);
+
+      // Act.
       globalThis.IconManager.registerJabsInputTexts();
+
+      // Assert.
       expect(globalThis.IconManager.jabsInputTextForSymbol('ok')).toContain('2448');
     });
   });

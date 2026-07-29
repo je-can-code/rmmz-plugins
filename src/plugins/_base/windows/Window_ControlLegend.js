@@ -1,5 +1,6 @@
 //region Window_ControlLegend
 import InputLegendResolver from './../managers/InputLegendResolver.js';
+import InputDeviceTracker from './../managers/InputDeviceTracker.js';
 
 /**
  * A single-line legend describing what the controls do in the scene currently being viewed.
@@ -38,6 +39,32 @@ class Window_ControlLegend
      * @type {{semantic: string, label: string}[]}
      */
     this._entries = [];
+
+    /**
+     * The input device this legend's glyphs were last drawn for.
+     * @type {string} One of {@link InputDevice}.
+     */
+    this._renderedDevice = InputDeviceTracker.currentDevice();
+  }
+
+  /**
+   * Gets the input device this legend's glyphs were last drawn for.
+   * @returns {string} One of {@link InputDevice}.
+   */
+  renderedDevice()
+  {
+    // hand back the device this legend currently reflects.
+    return this._renderedDevice;
+  }
+
+  /**
+   * Sets the input device this legend's glyphs were last drawn for.
+   * @param {string} device One of {@link InputDevice}.
+   */
+  setRenderedDevice(device)
+  {
+    // assign the device this legend now reflects.
+    this._renderedDevice = device;
   }
 
   /**
@@ -59,6 +86,33 @@ class Window_ControlLegend
     this._entries = entries;
 
     // the legend is only useful if it reflects what is currently true.
+    this.refresh();
+  }
+
+  /**
+   * Extends {@link Window_Base.update}.<br/>
+   * Also redraws the legend when the player changes input device.
+   *
+   * Nothing pushes this change outward- the tracker has no idea who is listening- so the window asks,
+   * which is the same way every other window in the engine notices the world moving underneath it. The
+   * comparison is against what was last *drawn* rather than a flag, so a legend created before the
+   * player ever touched anything still corrects itself.
+   */
+  update()
+  {
+    // perform original logic.
+    super.update();
+
+    // find out what the player is holding now.
+    const currentDevice = InputDeviceTracker.currentDevice();
+
+    // glyphs already match the device in the player's hands.
+    if (this.renderedDevice() === currentDevice) return;
+
+    // remember what we are about to draw for, so this only happens once per change.
+    this.setRenderedDevice(currentDevice);
+
+    // redraw every glyph in the other device's language.
     this.refresh();
   }
 
@@ -118,17 +172,36 @@ class Window_ControlLegend
 
   /**
    * Describes a single legend entry as displayable text.
-   * @param {{semantic: string, label: string}} entry The entry to describe.
+   *
+   * An entry may name more than one semantic, because some controls are a pair the player thinks of
+   * as one thing- moving between columns is "left or right", not two separate abilities. Listing
+   * those separately would say the same sentence twice.
+   * @param {{semantic: (string|string[]), label: string}} entry The entry to describe.
    * @returns {string}
    */
   describeEntry(entry)
   {
-    // ask whoever owns the input mapping what this semantic currently looks like, falling back to
-    // the semantic's own name when nobody can say.
-    const input = InputLegendResolver.resolve(entry.semantic, entry.semantic);
+    // an entry may carry one semantic or several; treat both the same way.
+    const semantics = Array.isArray(entry.semantic)
+      ? entry.semantic
+      : [ entry.semantic ];
 
-    // pair the input with what it actually does.
-    return `${input}: ${entry.label}`;
+    // ask whoever owns the input mapping what each currently looks like, falling back to the
+    // semantic's own name when nobody can say.
+    const inputs = semantics.map(semantic => InputLegendResolver.resolve(semantic, semantic))
+      .join(this.semanticSeparator());
+
+    // pair the inputs with what they actually do.
+    return `${inputs}: ${entry.label}`;
+  }
+
+  /**
+   * The separator drawn between the inputs of a single entry.
+   * @returns {string}
+   */
+  semanticSeparator()
+  {
+    return '/';
   }
 
   /**
