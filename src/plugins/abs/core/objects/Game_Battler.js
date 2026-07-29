@@ -1361,12 +1361,12 @@ Game_Battler.prototype.removeState = function(stateId)
 J.ABS.Aliased.Game_Battler.set('clearStates', Game_Battler.prototype.clearStates);
 Game_Battler.prototype.clearStates = function()
 {
-  // seeding the JABS namespace early guarantees enemies have a uuid by the time this runs, but
-  // actors derive theirs from their actor id, which vanilla assigns in setup() only after
-  // initMembers() has already called through to here. So the very first clearStates() of an
-  // actor's life legitimately has no identity to look states up by, and getUuid() correctly
-  // reports that with its empty-string sentinel. A battler with no uuid has no tracked states
-  // either, so there is nothing to purge.
+  // vanilla assigns a battler's database identity in setup(), which runs only after initMembers()
+  // has already called through to here. So the very first clearStates() of any battler's life
+  // legitimately has nothing to look states up by: an actor has no actor id yet, and an enemy no
+  // enemy id. Both subclasses override getUuid() to report exactly that with an empty-string
+  // sentinel- the base implementation cannot, since it always yields at least a separator. A
+  // battler with no uuid has no tracked states either, so there is nothing to purge.
   if ($jabsEngine && this.getUuid() !== String.empty)
   {
     // snapshot the tracked states now, since removeState() below mutates the tracker map as it goes.
