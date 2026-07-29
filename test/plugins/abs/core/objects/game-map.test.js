@@ -597,6 +597,124 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
       expect(map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2))).toEqual(false);
     });
 
+    /**
+     * The cases above leave the tile ahead of the player indistinguishable from the tile beneath
+     * them, because the default direction-rounding stubs hand back the coordinate unchanged. That
+     * makes the player's own tile answer for both lookups, so the front-tile pass never actually
+     * runs. These cases separate the two tiles so the front-tile pass is genuinely exercised.
+     */
+    describe('with the tile ahead distinct from the tile underfoot', () =>
+    {
+      /**
+       * Makes facing down actually advance a tile, and routes each tile's events separately.
+       * @param {object[]} underfoot The events occupying the player's own tile.
+       * @param {object[]} ahead The events occupying the tile the player faces.
+       */
+      const mapWithTiles = (underfoot, ahead) =>
+      {
+        globalThis.$gameMap.roundYWithDirection = (y, direction) => (direction === 2
+          ? y + 1
+          : y);
+
+        return buildMap({
+          eventsXy: (x, y) => (y === 0
+            ? underfoot
+            : ahead),
+        });
+      };
+
+      it('returns false when the tile ahead holds an enemy battler', () =>
+      {
+        // Arrange
+        const map = mapWithTiles([], [ { isJabsBattler: () => true } ]);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        // swinging at an enemy ahead must stay an attack rather than becoming an interaction.
+        expect(result).toEqual(false);
+      });
+
+      it('returns true when the tile ahead holds a normal-priority triggerable event', () =>
+      {
+        // Arrange
+        const map = mapWithTiles([], [
+          {
+            isJabsBattler: () => false,
+            isTriggerIn: () => true,
+            isNormalPriority: () => true,
+          },
+        ]);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        expect(result).toEqual(true);
+      });
+
+      it('keeps looking when the event ahead is not triggerable', () =>
+      {
+        // Arrange
+        const map = mapWithTiles([], [
+          {
+            isJabsBattler: () => false,
+            isTriggerIn: () => false,
+            isNormalPriority: () => true,
+          },
+        ]);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        expect(result).toEqual(false);
+      });
+
+      it('keeps looking when the event ahead is triggerable but not normal priority', () =>
+      {
+        // Arrange
+        const map = mapWithTiles([], [
+          {
+            isJabsBattler: () => false,
+            isTriggerIn: () => true,
+            isNormalPriority: () => false,
+          },
+        ]);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        // an above/below-priority event shares the tile rather than blocking it, so it is not
+        // something the player is standing in front of and reaching for.
+        expect(result).toEqual(false);
+      });
+
+      it('prefers the event underfoot over the one ahead', () =>
+      {
+        // Arrange
+        const map = mapWithTiles(
+          [
+            {
+              isJabsBattler: () => false,
+              isTriggerIn: () => true,
+              isNormalPriority: () => true,
+            },
+          ],
+          [ { isJabsBattler: () => true } ]);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        // the doorstep case: a feet-anchored body standing on an event's tile interacts with it
+        // even when an enemy occupies the tile ahead.
+        expect(result).toEqual(true);
+      });
+    });
+
     it('returns false when nothing interactable is found anywhere', () =>
     {
       const map = buildMap({ eventsXy: () => [] });

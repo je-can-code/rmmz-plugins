@@ -1122,6 +1122,67 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler._aiAllyDefensiveGuardReadyFrame).toBe(0);
       expect(jabsBattler._aiAllyGuardRaiseFrame).toBe(0);
     });
+
+    /**
+     * The reset case above reaches the defensive-timing fields directly, which leaves their getters
+     * unexercised even though the fields themselves are asserted. These round-trip each one through
+     * its own accessor pair, so a getter wired to the wrong backing field would be caught.
+     */
+    it('aiDefensiveDodgeReadyFrame reports the frame its setter stored', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+
+      // Act
+      jabsBattler.setAiDefensiveDodgeReadyFrame(42);
+
+      // Assert
+      expect(jabsBattler.aiDefensiveDodgeReadyFrame()).toBe(42);
+    });
+
+    it('aiAllyDefensiveGuardReadyFrame reports the frame its setter stored', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+
+      // Act
+      jabsBattler.setAiAllyDefensiveGuardReadyFrame(77);
+
+      // Assert
+      expect(jabsBattler.aiAllyDefensiveGuardReadyFrame()).toBe(77);
+    });
+
+    it('aiAllyGuardRaiseFrame reports the frame its setter stored', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+
+      // Act
+      jabsBattler.setAiAllyGuardRaiseFrame(13);
+
+      // Assert
+      expect(jabsBattler.aiAllyGuardRaiseFrame()).toBe(13);
+    });
+
+    it('keeps the three defensive-timing frames independent of one another', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+
+      // Act
+      jabsBattler.setAiDefensiveDodgeReadyFrame(1);
+      jabsBattler.setAiAllyDefensiveGuardReadyFrame(2);
+      jabsBattler.setAiAllyGuardRaiseFrame(3);
+
+      // Assert
+      // these three sit adjacent in the source with near-identical accessor pairs, which is exactly
+      // the shape where a copy-paste slip crosses two of them onto the same backing field.
+      expect([
+        jabsBattler.aiDefensiveDodgeReadyFrame(),
+        jabsBattler.aiAllyDefensiveGuardReadyFrame(),
+        jabsBattler.aiAllyGuardRaiseFrame(),
+      ]).toEqual([ 1, 2, 3 ]);
+    });
   });
 
   describe('in-position tracking', () =>
