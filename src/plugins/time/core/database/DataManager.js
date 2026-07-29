@@ -36,10 +36,25 @@ DataManager.extractSaveContents = function(contents)
   // perform original logic.
   J.TIME.Aliased.DataManager.get('extractSaveContents2').call(this, contents);
   $gameTime = contents.time;
+
+  // a save from before TIME was installed has no clock at all, so start a fresh one.
   if (!$gameTime)
   {
     $gameTime = new Game_Time();
     console.info('J-Time did not exist in the loaded save file- creating anew.');
+
+    return;
   }
+
+  // a save from before some member existed rehydrates without it, leaving that member undefined
+  // forever after. re-running initialization backfills anything missing- every persisted member is
+  // assigned with `??=`, so values that did come out of the save are left exactly as they were.
+  // this is what makes it safe to add new members to TIME without stranding existing saves.
+  $gameTime.initMembers();
+
+  // initialization deliberately clears the screen tone, since that is derived display state rather
+  // than something worth trusting from a save. recompute it for the hour we actually loaded into so
+  // the map tints correctly instead of holding whatever tone it happened to boot with.
+  $gameTime.updateCurrentTone();
 };
 //endregion DataManager

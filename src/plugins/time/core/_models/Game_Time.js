@@ -1,5 +1,6 @@
 //region Game_Time
 import Time_Snapshot from './Time_Snapshot.js';
+import TimeToneResolver from '../managers/TimeToneResolver.js';
 
 /**
  * A class for controlling time.
@@ -20,16 +21,23 @@ class Game_Time
 
   //region statics
   /**
-   * A static representation of the tones for each time of day.
+   * How many of each unit fit inside the unit above it, which is the point at which the smaller
+   * unit resets and hands one of itself up the chain.
+   *
+   * Seconds, minutes and hours are zero-based and reset once they *reach* their limit; days and
+   * months are one-based and only reset once they *pass* it. That asymmetry is why the rollover
+   * helper takes a zero-based flag rather than assuming one convention for everything.
+   * @type {number}
    */
-  static toneOfDay = {
-    Night: [ -100, -100, -30, 100 ],
-    Dawn: [ -30, -15, 15, 64 ],
-    Morning: [ 0, 0, 0, 0 ],
-    Afternoon: [ 10, 10, 10, 10 ],
-    Evening: [ 0, -30, -30, -30 ],
-    Twilight: [ -68, -68, 0, 68 ],
-  };
+  static secondsPerMinute = 60;
+
+  static minutesPerHour = 60;
+
+  static hoursPerDay = 24;
+
+  static daysPerMonth = 30;
+
+  static monthsPerYear = 12;
   //endregion statics
 
   /**
@@ -554,15 +562,8 @@ class Game_Time
    */
   toggleMapWindow()
   {
-
-    if (this.isVisible() === true)
-    {
-      this.setVisible(false);
-    }
-    else if (this.isVisible() === false)
-    {
-      this.setVisible(true);
-    }
+    // visibility is always a boolean, so flipping it needs no third case for "neither".
+    this.setVisible(!this.isVisible());
   }
 
   /**
@@ -570,13 +571,6 @@ class Game_Time
    */
   flagForHudUpdate()
   {
-
-    if (this.hasBeenUpdated() === undefined)
-    {
-      this.setHasBeenUpdated(true);
-      console.log('hasBeenUpdated property added.');
-    }
-
     // store  has been updated on the instance for later reads.
     this.setHasBeenUpdated(true);
   }
@@ -586,13 +580,6 @@ class Game_Time
    */
   acknowledgeHudUpdate()
   {
-
-    if (this.hasBeenUpdated() === undefined)
-    {
-      this.setHasBeenUpdated(false);
-      console.log('hasBeenUpdated property added.');
-    }
-
     // store  has been updated on the instance for later reads.
     this.setHasBeenUpdated(false);
   }
@@ -603,12 +590,6 @@ class Game_Time
    */
   needsHudUpdate()
   {
-
-    if (this.hasBeenUpdated() === undefined)
-    {
-      this.setHasBeenUpdated(false);
-    }
-
     return this.hasBeenUpdated();
   }
 
@@ -695,12 +676,11 @@ class Game_Time
       return false;
     }
 
-    // if there is a tag on the map that specifies not to change the tone, then don't.
-    if ($dataMap.meta["noToneChange"])
-    {
-      return false;
-    }
-
+    // note that a map tagged to opt out of tone changes is deliberately NOT short-circuited here.
+    // suppressing the change outright used to leave the previous map's tone painted on the screen,
+    // so walking into a cave at midnight kept the cave midnight-blue. the opt-out is handled where
+    // the target tone is chosen instead- see targetTone- so that such a map resolves to a neutral
+    // tone and this pipeline goes on to actually apply it.
     return this._needsToneChange;
   }
 
@@ -745,12 +725,44 @@ class Game_Time
     if (!this.canUpdateTone()) return;
 
     // if we reached this point, then grab the target tone
-    const tone = this.translateHourToTone();
+    const tone = this.targetTone();
     if (!this.isSameTone(tone))
     {
       this.setCurrentTone(tone.clone());
       this.setNeedsToneChange(true);
     }
+  }
+
+  /**
+   * Determines the tone the screen ought to be showing right now.
+   *
+   * Normally that is whatever the hour of the day calls for, but a map can opt out of the day/night
+   * cycle entirely with a `noToneChange` tag- an interior, a cave, anywhere the sky is not visible.
+   * Such a map resolves to a neutral tone rather than to no answer at all, because the screen tint
+   * is global state that outlives a map change: nothing in the engine clears it on transfer, so
+   * declining to answer leaves the previous map's tone painted over the new one.
+   * @returns {[number, number, number, number]}
+   */
+  targetTone()
+  {
+    // a map that sits outside the day/night cycle wants no tint of ours, which is a neutral tone.
+    if (this.isToneSuppressedByMap()) return [ 0, 0, 0, 0 ];
+
+    // everywhere else takes the tone belonging to the current hour.
+    return this.translateHourToTone();
+  }
+
+  /**
+   * Determines whether the active map has opted out of the day/night tone cycle.
+   * @returns {boolean}
+   */
+  isToneSuppressedByMap()
+  {
+    // with no map loaded there is nothing opting out of anything.
+    if (!$dataMap || !$dataMap.meta) return false;
+
+    // the tag's mere presence is the opt-in; RMMZ hands back `true` for a bare `<noToneChange>`.
+    return Boolean($dataMap.meta["noToneChange"]);
   }
 
   /**
@@ -782,141 +794,25 @@ class Game_Time
    * be between -255 and 255.
    * @returns {[number, number, number, number]}
    */
-  // eslint-disable-next-line complexity
   translateHourToTone()
   {
-    // TODO: reduce complexity via hour->phase/quarter table + interpolation.
+    // real time reads the wall clock, artificial time reads the counter this class maintains.
+    // sourcing the hour is this class's business; turning it into a colour is not.
     const hours = J.TIME.Metadata.UseRealTime
       ? new Date().getHours()
       : this.hours();
-    let tone = [ 0, 0, 0, 0 ];
-    switch (hours)
-    {
-      case  0: // night
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Twilight, Game_Time.toneOfDay.Night, 0.25);
-        break;
-      case  1: // night
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Twilight, Game_Time.toneOfDay.Night, 0.50);
-        break;
-      case  2: // night
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Twilight, Game_Time.toneOfDay.Night, 0.75);
-        break;
-      case  3: // night
-        tone = Game_Time.toneOfDay.Night;
-        break;
-      case  4: // dawn
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Night, Game_Time.toneOfDay.Dawn, 0.25);
-        break;
-      case  5: // dawn
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Night, Game_Time.toneOfDay.Dawn, 0.50);
-        break;
-      case  6: // dawn
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Night, Game_Time.toneOfDay.Dawn, 0.75);
-        break;
-      case  7: // dawn
-        tone = Game_Time.toneOfDay.Dawn;
-        break;
-      case  8: // morning
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Dawn, Game_Time.toneOfDay.Morning, 0.25);
-        break;
-      case  9: // morning
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Dawn, Game_Time.toneOfDay.Morning, 0.50);
-        break;
-      case 10: // morning
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Dawn, Game_Time.toneOfDay.Morning, 0.75);
-        break;
-      case 11: // morning
-        tone = Game_Time.toneOfDay.Morning;
-        break;
-      case 12: // afternoon
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Morning, Game_Time.toneOfDay.Afternoon, 0.25);
-        break;
-      case 13: // afternoon
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Morning, Game_Time.toneOfDay.Afternoon, 0.50);
-        break;
-      case 14: // afternoon
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Morning, Game_Time.toneOfDay.Afternoon, 0.75);
-        break;
-      case 15: // afternoon
-        tone = Game_Time.toneOfDay.Afternoon;
-        break;
-      case 16: // evening
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Afternoon, Game_Time.toneOfDay.Evening, 0.25);
-        break;
-      case 17: // evening
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Afternoon, Game_Time.toneOfDay.Evening, 0.50);
-        break;
-      case 18: // evening
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Afternoon, Game_Time.toneOfDay.Evening, 0.75);
-        break;
-      case 19: // evening
-        tone = Game_Time.toneOfDay.Evening;
-        break;
-      case 20: // twilight
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Evening, Game_Time.toneOfDay.Twilight, 0.25);
-        break;
-      case 21: // twilight
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Evening, Game_Time.toneOfDay.Twilight, 0.50);
-        break;
-      case 22: // twilight
-        tone = this.toneBetweenTones(Game_Time.toneOfDay.Evening, Game_Time.toneOfDay.Twilight, 0.75);
-        break;
-      case 23: // twilight
-        tone = Game_Time.toneOfDay.Twilight;
-        break;
-    }
-  
-    return tone;
-  }
 
-  /**
-   * Calculates the tone that is a percentage of the way between two tones.
-   *
-   * Order is important here, as we are calculating a percent of the way from
-   * the first tone to the second tone.
-   * @param {[number, number, number, number]} tone1 The starting tone.
-   * @param {[number, number, number, number]} tone2 The next tone.
-   * @param {number} rate The decimal rate of which we are transitioning to.
-   * @returns {[number, number, number, number]}
-   */
-  toneBetweenTones(tone1, tone2, rate)
-  {
-
-    const diff = (a, b) => a > b
-      ? a - b
-      : b - a;
-    const newTone = [];
-    tone1.forEach((color1, index) =>
-    {
-      const color2 = tone2[index];
-      const diffToNext = diff(color1, color2);
-      const partial = Math.round(diffToNext * rate);
-      const newRgbValue = color2 > color1
-        ? color1 + partial
-        : color1 - partial;
-      newTone.push(newRgbValue);
-    });
-
-    return newTone;
+    return TimeToneResolver.toneOfHour(hours);
   }
 
   /**
    * Compares the current tone with a target tone to see if they are the same.
-   * @param {[number, number, number, number]} targetTone
+   * @param {[number, number, number, number]} targetTone The tone being compared against.
    * @returns {boolean}
    */
   isSameTone(targetTone)
   {
-
-    if (this.getCurrentTone().length < 4) return false;
-
-    // individually compare each of the RGBA elements with the new tone's elements.
-    if (this.getCurrentTone()[0] !== targetTone[0]) return false;
-    if (this.getCurrentTone()[1] !== targetTone[1]) return false;
-    if (this.getCurrentTone()[2] !== targetTone[2]) return false;
-    if (this.getCurrentTone()[3] !== targetTone[3]) return false;
-
-    return true;
+    return TimeToneResolver.isSameTone(this.getCurrentTone(), targetTone);
   }
 
   /**
@@ -1075,24 +971,9 @@ class Game_Time
    */
   timeOfDay(hours)
   {
-
-    switch (true)
-    {
-      case (hours <= 3):
-        return 0;
-      case (hours > 3 && hours <= 7):
-        return 1;
-      case (hours > 7 && hours <= 11):
-        return 2;
-      case (hours > 11 && hours <= 15):
-        return 3;
-      case (hours > 15 && hours <= 19):
-        return 4;
-      case (hours > 19):
-        return 5;
-      default:
-        return -1;
-    }
+    // the phases the tone fades between and the time-of-day ids surfaced to events are the same six
+    // buckets, so they are resolved in one place rather than defined twice and left to drift.
+    return TimeToneResolver.phaseOfHour(hours);
   }
 
   /**
@@ -1102,8 +983,7 @@ class Game_Time
    */
   startOfTimeOfDay(timeOfDayId)
   {
-
-    return (timeOfDayId * 4);
+    return TimeToneResolver.startOfPhase(timeOfDayId);
   }
 
   /**
@@ -1204,28 +1084,60 @@ class Game_Time
    */
   addSeconds(seconds = this._secondsPerTick)
   {
+    // seconds reset on reaching 60 and hand a tick's worth of minutes upward.
+    this.#advanceUnit(
+      seconds,
+      Game_Time.secondsPerMinute,
+      true,
+      () => this.seconds(),
+      newSeconds => this.setSeconds(newSeconds),
+      () => this.addMinutes(this.minutesPerTick()));
+  }
 
-    // check how many seconds we have when adding the tick amount.
-    let potentialSeconds = this.seconds() + seconds;
+  /**
+   * Advances a single unit of the clock, spilling any excess up into the unit above it.
+   *
+   * Every unit from seconds through months shares this shape: land on a new value, and while that
+   * value has outgrown its own range, shed one full unit of itself and bump the next unit up. What
+   * gets bumped is a *tick's worth* of the larger unit rather than exactly one of it, which is what
+   * lets a configuration advance several minutes per minute of overflow.
+   *
+   * Note that overflow is the only direction handled. Handing a negative amount to a unit that does
+   * not overflow simply writes the negative result through, since there is no borrowing counterpart.
+   * @param {number} amount How much of this unit to add.
+   * @param {number} limit How many of this unit fit inside the unit above it.
+   * @param {boolean} isZeroBased True when the unit counts from 0 and resets on reaching the limit,
+   * false when it counts from 1 and only resets after passing the limit.
+   * @param {function(): number} read Reads this unit's current value.
+   * @param {function(number): void} write Writes this unit's new value.
+   * @param {function(): void} carry Advances the unit above this one by a tick's worth.
+   */
+  #advanceUnit(amount, limit, isZeroBased, read, write, carry)
+  {
+    // zero-based units are spent the moment they reach their limit; one-based units get to sit on it.
+    const hasOverflowed = value => (isZeroBased
+      ? value >= limit
+      : value > limit);
 
-    // if we have greater than or equal to 60...
-    if (potentialSeconds >= 60)
+    // where this unit lands before any spilling is accounted for.
+    let potential = read() + amount;
+
+    // a value still inside its own range is just an assignment, and nothing above it moves.
+    if (!hasOverflowed(potential))
     {
-      // ...keep adding minutes until we're below 60 seconds.
-      while (potentialSeconds >= 60)
-      {
-        this.addMinutes(this.minutesPerTick());
-        potentialSeconds -= 60;
-      }
+      write(potential);
 
-      // and reassign the seconds.
-      this.setSeconds(potentialSeconds);
-      // if we don't have more than 60, just add the seconds on.
+      return;
     }
-    else
+
+    // otherwise shed one full unit at a time upward until what remains fits back in range.
+    while (hasOverflowed(potential))
     {
-      this.setSeconds(this.seconds() + seconds);
+      carry();
+      potential -= limit;
     }
+
+    write(potential);
   }
 
   /**
@@ -1234,24 +1146,18 @@ class Game_Time
    */
   addMinutes(minutes = this._minutesPerTick)
   {
-
+    // minutes are the finest granularity at which the screen's tone visibly shifts, so this is where
+    // the tone gets re-evaluated rather than on every single second.
     this.updateCurrentTone();
-    let potentialMinutes = this.minutes() + minutes;
-    if (potentialMinutes >= 60)
-    {
-      while (potentialMinutes >= 60)
-      {
-        this.addHours(this.hoursPerTick());
-        potentialMinutes -= 60;
-      }
 
-      // store  minutes on the instance for later reads.
-      this.setMinutes(potentialMinutes);
-    }
-    else
-    {
-      this.setMinutes(this.minutes() + minutes);
-    }
+    // minutes reset on reaching 60 and hand a tick's worth of hours upward.
+    this.#advanceUnit(
+      minutes,
+      Game_Time.minutesPerHour,
+      true,
+      () => this.minutes(),
+      newMinutes => this.setMinutes(newMinutes),
+      () => this.addHours(this.hoursPerTick()));
   }
 
   /**
@@ -1260,23 +1166,14 @@ class Game_Time
    */
   addHours(hours = this._hoursPerTick)
   {
-
-    let potentialHours = this.hours() + hours;
-    if (potentialHours >= 24)
-    {
-      while (potentialHours >= 24)
-      {
-        this.addDays(this.daysPerTick());
-        potentialHours -= 24;
-      }
-
-      // store  hours on the instance for later reads.
-      this.setHours(potentialHours);
-    }
-    else
-    {
-      this.setHours(this.hours() + hours);
-    }
+    // hours reset on reaching 24 and hand a tick's worth of days upward.
+    this.#advanceUnit(
+      hours,
+      Game_Time.hoursPerDay,
+      true,
+      () => this.hours(),
+      newHours => this.setHours(newHours),
+      () => this.addDays(this.daysPerTick()));
   }
 
   /**
@@ -1285,23 +1182,14 @@ class Game_Time
    */
   addDays(days = this._daysPerTick)
   {
-
-    let potentialDays = this.days() + days;
-    if (potentialDays > 30)
-    {
-      while (potentialDays > 30)
-      {
-        this.addMonths(this.monthsPerTick());
-        potentialDays -= 30;
-      }
-
-      // store  days on the instance for later reads.
-      this.setDays(potentialDays);
-    }
-    else
-    {
-      this.setDays(this.days() + days);
-    }
+    // days count from 1, so the 30th is still a valid day and only the 31st spills into a new month.
+    this.#advanceUnit(
+      days,
+      Game_Time.daysPerMonth,
+      false,
+      () => this.days(),
+      newDays => this.setDays(newDays),
+      () => this.addMonths(this.monthsPerTick()));
   }
 
   /**
@@ -1310,23 +1198,14 @@ class Game_Time
    */
   addMonths(months = this._monthsPerTick)
   {
-
-    let potentialMonths = this.months() + months;
-    if (potentialMonths > 12)
-    {
-      while (potentialMonths > 12)
-      {
-        this.addYears(this.yearsPerTick());
-        potentialMonths -= 12;
-      }
-
-      // store  months on the instance for later reads.
-      this.setMonths(potentialMonths);
-    }
-    else
-    {
-      this.setMonths(this.months() + months);
-    }
+    // months count from 1, so the 12th is still a valid month and only the 13th spills into a new year.
+    this.#advanceUnit(
+      months,
+      Game_Time.monthsPerYear,
+      false,
+      () => this.months(),
+      newMonths => this.setMonths(newMonths),
+      () => this.addYears(this.yearsPerTick()));
   }
 
   /**

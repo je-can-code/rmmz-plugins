@@ -189,8 +189,11 @@ Scene_Map.prototype.onMapLoaded = function()
     // handle the blockage of TIME as-needed.
     this.handleTimeBlock();
 
-    // flag the system for needing a tone change (potentially) upon map transfer.
-    $gameTime.setNeedsToneChange(true);
+    // re-resolve the tone for the map we just arrived on rather than merely flagging that one is
+    // due. the tone the clock is holding belongs to the map we left, and the two maps may disagree-
+    // stepping indoors suppresses the tone entirely, stepping back out restores it. recomputing
+    // here is what makes the flag meaningful; flagging alone would re-apply the old map's tone.
+    $gameTime.updateCurrentTone();
   }
 
   // perform original logic.

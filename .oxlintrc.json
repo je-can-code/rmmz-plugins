@@ -613,6 +613,7 @@
     "TilingSprite": "writable",
     "TimeConditional": "writable",
     "TimeMapper": "writable",
+    "TimeToneResolver": "writable",
     "Time_Snapshot": "writable",
     "TouchInput": "writable",
     "TrackedOmniObjective": "writable",
