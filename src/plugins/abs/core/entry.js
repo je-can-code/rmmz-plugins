@@ -89,4 +89,3 @@ import './sprites/Sprite_MapAfflictionSlot.js';
 import './sprites/Sprite_MapAfflictionStrip.js';
 import './sprites/Spriteset_Map.js';
 import './windows/Window_AbsMenu.js';
-import './windows/Window_AbsMenuSelect.js';

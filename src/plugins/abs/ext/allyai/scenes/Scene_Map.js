@@ -1,5 +1,6 @@
 //region Scene_Map
 import Window_Formations from './../windows/Window_Formations.js';
+import Window_AllyAiSelect from './../windows/Window_AllyAiSelect.js';
 import JABS_Formation from './../_models/JABS_Formation.js';
 //region init
 /**
@@ -23,13 +24,13 @@ Scene_Map.prototype.initAllyAiMembers = function()
 {
   /**
    * The window containing the list of party members to adjust the AI for.
-   * @type {Window_AbsMenuSelect|null}
+   * @type {Window_AllyAiSelect|null}
    */
   this._j._absMenu._allyAiPartyWindow = null;
 
   /**
    * The window containing the list of AI strategies for use.
-   * @type {Window_AbsMenuSelect|null}
+   * @type {Window_AllyAiSelect|null}
    */
   this._j._absMenu._allyAiEquipWindow = null;
 
@@ -124,7 +125,7 @@ Scene_Map.prototype.createAllyAiPartyWindow = function()
   const rect = this.allyAiPartyRectangle();
 
   // build the window with the rectangle and its type.
-  const aiPartyMenu = new Window_AbsMenuSelect(rect, "ai-party-list");
+  const aiPartyMenu = new Window_AllyAiSelect(rect, "ai-party-list");
 
   // setup the handlers.
   aiPartyMenu.setHandler("cancel", this.closeAbsWindow.bind(this, "ai-party-list"));
@@ -172,7 +173,7 @@ Scene_Map.prototype.createAllyAiEquipWindow = function()
   const rect = this.allyAiEquipRectangle();
 
   // build the window with the rectangle and its type.
-  const aiMemberMenu = new Window_AbsMenuSelect(rect, "select-ai");
+  const aiMemberMenu = new Window_AllyAiSelect(rect, "select-ai");
 
   // setup the handlers.
   aiMemberMenu.setHandler("cancel", this.closeAbsWindow.bind(this, "select-ai"));

@@ -57,7 +57,7 @@ J.ABS.EXT.ALLYAI.Aliased = {
   Spriteset_Map: new Map(),
 
   Window_AbsMenu: new Map(),
-  Window_AbsMenuSelect: new Map(),
+  Window_AllyAiSelect: new Map(),
 };
 
 /**

@@ -632,6 +632,7 @@
     "Window_AbsMenuSelect": "writable",
     "Window_ActorCommand": "writable",
     "Window_ActorRibbon": "writable",
+    "Window_AllyAiSelect": "writable",
     "Window_AptitudeAggregateDetails": "writable",
     "Window_AptitudeAggregateList": "writable",
     "Window_AptitudeRibbon": "writable",

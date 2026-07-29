@@ -17,5 +17,5 @@ import './objects/Game_Player.js';
 import './scenes/Scene_Map.js';
 import './sprites/Spriteset_Map.js';
 import './windows/Window_AbsMenu.js';
-import './windows/Window_AbsMenuSelect.js';
+import './windows/Window_AllyAiSelect.js';
 import './windows/Window_Formations.js';

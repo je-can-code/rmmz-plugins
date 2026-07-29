@@ -41,56 +41,8 @@ class Window_AbsMenu
       .setHelpText(this.mainMenuHelpText())
       .build();
 
-    // build the offhand assignment command.
-    const offhandSkillCommand = new WindowCommandBuilder(J.ABS.Metadata.EquipOffhandText)
-      .setSymbol('offhand-assign')
-      .setEnabled(true)
-      .setIconIndex(81)
-      .setColorIndex(4)
-      .setHelpText(this.offhandSkillHelpText())
-      .build();
-
-    // build the combat skills command.
-    const combatSkillsCommand = new WindowCommandBuilder(J.ABS.Metadata.EquipCombatSkillsText)
-      .setSymbol('skill-assign')
-      .setEnabled(true)
-      .setIconIndex(77)
-      .setColorIndex(10)
-      .setHelpText(this.combatSkillsHelpText())
-      .build();
-
-    // build the dodge skill command.
-    const dodgeSkillCommand = new WindowCommandBuilder(J.ABS.Metadata.EquipDodgeSkillsText)
-      .setSymbol('dodge-assign')
-      .setEnabled(true)
-      .setIconIndex(82)
-      .setColorIndex(24)
-      .setHelpText(this.dodgeSkillHelpText())
-      .build();
-
-    // build the tool command.
-    const toolCommand = new WindowCommandBuilder(J.ABS.Metadata.EquipToolsText)
-      .setSymbol('item-assign')
-      .setEnabled(true)
-      .setIconIndex(83)
-      .setColorIndex(17)
-      .setHelpText(this.toolHelpText())
-      .build();
-
-    // build the usable item command.
-    const usableItemCommand = new WindowCommandBuilder(J.ABS.Metadata.EquipUsableItemText)
-      .setSymbol('usable-item-assign')
-      .setEnabled(true)
-      .setIconIndex(210)
-      .setColorIndex(29)
-      .setHelpText(this.usableItemHelpText())
-      .build();
-
-    // return the built commands.
-    return [
-      mainMenuCommand, offhandSkillCommand, combatSkillsCommand, dodgeSkillCommand,
-      toolCommand, usableItemCommand,
-    ];
+    // return the built commands. extensions append their own to this.
+    return [ mainMenuCommand ];
   }
 
   /**
@@ -102,77 +54,6 @@ class Window_AbsMenu
     const description = [
       "The unabbreviated main menu with access to player status, descriptions, etc.",
       "This is colloquially referred to as the 'The Main Menu™' by protagonists all across the universe."
-    ];
-
-    return description.join("\n");
-  }
-
-  /**
-   * The help text for the JABS combat skills menu.
-   * @returns {string}
-   */
-  combatSkillsHelpText()
-  {
-    const description = [
-      "The `Combat Skills` are more powerful variants of your basic attacks that may require resources to execute.",
-      "Typical things like sword techs and magic spells will show up here."
-    ];
-
-    return description.join("\n");
-  }
-
-  /**
-   * The help text for the JABS dodge skill menu.
-   * @returns {string}
-   */
-  dodgeSkillHelpText()
-  {
-    const description = [
-      "The `Dodge Skills` are ones that grant some form of mobility.",
-      "It is encouraged to use these liberally to maneuver around the field, in and out of combat."
-    ];
-
-    return description.join("\n");
-  }
-
-  /**
-   * The help text for the JABS offhand skill menu.
-   * @returns {string}
-   */
-  offhandSkillHelpText()
-  {
-    const description = [
-      "Pin a learned skill into the offhand slot, overriding the offhand weapon's default.",
-      "Pinning a non-guard skill trades the ability to guard until the pin is cleared.",
-      "Equipping a different offhand item clears the pin and restores its granted skill."
-    ];
-
-    return description.join("\n");
-  }
-
-  /**
-   * The help text for the JABS tool menu.
-   * @returns {string}
-   */
-  toolHelpText()
-  {
-    const description = [
-      "Your tool list, where you can find any and all equippable items.",
-      "Not all items will show up in the list- only ones usable in combat somehow will be available."
-    ];
-
-    return description.join("\n");
-  }
-
-  /**
-   * The help text for the JABS usable-item menu.
-   * @returns {string}
-   */
-  usableItemHelpText()
-  {
-    const description = [
-      "Your consumable item list — potions, food, and other usable items.",
-      "Items tagged <jabsTool> belong in the tool slot instead and won't appear here."
     ];
 
     return description.join("\n");
