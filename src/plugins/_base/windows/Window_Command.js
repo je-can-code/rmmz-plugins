@@ -381,6 +381,27 @@ Window_Command.prototype.currentHelpText = function()
 };
 
 /**
+ * Overwrites {@link #updateHelp}.<br/>
+ * Describes the highlighted command in the attached help window.
+ *
+ * Commands already carry their own help text, and the engine already tells a window when to refresh
+ * its help- but the default implementation only ever clears, so every window wanting the two joined
+ * up had to say so itself. Doing it here means attaching a help window is the whole of the work.
+ *
+ * Commands without help text resolve to an empty string, which reads identically to the clear this
+ * replaces, so windows that never set any behave exactly as they did before.
+ */
+Window_Command.prototype.updateHelp = function()
+{
+  // nothing to describe into if this window was never given a help window.
+  if (!this.helpWindow()) return;
+
+  // describe whatever is currently highlighted.
+  this.helpWindow()
+    .setText(this.currentHelpText());
+};
+
+/**
  * Wraps the command in color if a color index is provided.
  * @param {string} command The comman as raw text.
  * @param {number} index The index of this command in the window.

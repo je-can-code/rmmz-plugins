@@ -116,18 +116,6 @@ class Window_MenuSectionCommand
     this.move(this.x, y, this.width, height);
   }
 
-  /**
-   * Overwrites {@link #updateHelp}.<br/>
-   * Describes the highlighted command in the scene's help window.
-   */
-  updateHelp()
-  {
-    // nothing to describe into if this window was never given a help window.
-    if (!this.helpWindow()) return;
-
-    // describe whatever is currently highlighted.
-    this.helpWindow().setText(this.currentHelpText());
-  }
 
   /**
    * Remembers which command is currently highlighted, so it can be returned to later.
@@ -155,46 +143,6 @@ class Window_MenuSectionCommand
     this.select(Math.min(index, Math.max(0, this.maxItems() - 1)));
   }
 
-  /**
-   * Extends {@link #cursorRight}.<br/>
-   * Moves focus to the column on the right, if there is one.
-   *
-   * A single-column list has no use for horizontal cursor movement- the engine no-ops it entirely- so
-   * the input is free, and moving right between two side-by-side columns is what a player reaches for
-   * first. This routes it to the same handler the shoulder buttons use, so both work and neither is a
-   * special case.
-   * @param {boolean} wrap Whether or not to wrap the cursor.
-   */
-  cursorRight(wrap)
-  {
-    // when a neighbouring column exists to the right, go to it.
-    if (this.isHandled('content-next'))
-    {
-      this.callHandler('content-next');
-      return;
-    }
-
-    // perform original logic.
-    super.cursorRight(wrap);
-  }
-
-  /**
-   * Extends {@link #cursorLeft}.<br/>
-   * Moves focus to the column on the left, if there is one.
-   * @param {boolean} wrap Whether or not to wrap the cursor.
-   */
-  cursorLeft(wrap)
-  {
-    // when a neighbouring column exists to the left, go to it.
-    if (this.isHandled('content-prev'))
-    {
-      this.callHandler('content-prev');
-      return;
-    }
-
-    // perform original logic.
-    super.cursorLeft(wrap);
-  }
 }
 
 export default Window_MenuSectionCommand;

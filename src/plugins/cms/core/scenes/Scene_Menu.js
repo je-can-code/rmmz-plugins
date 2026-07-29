@@ -254,7 +254,7 @@ Scene_Menu.prototype.controlLegendEntries = function()
 {
   return [
     {
-      semantic: 'content-next',
+      semantic: [ 'focus-prev', 'focus-next' ],
       label: 'switch column',
     },
     {
@@ -314,7 +314,7 @@ Scene_Menu.prototype.createActorCommandWindow = function()
   const window = new Window_MenuActorCommand(this.actorCommandWindowRect());
 
   // moving right hands focus to the party column.
-  window.setHandler('content-next', this.onFocusPartyColumn.bind(this));
+  window.setHandler('focus-next', this.onFocusPartyColumn.bind(this));
 
   // backing out of the menu returns to the map.
   window.setHandler('cancel', this.popScene.bind(this));
@@ -333,7 +333,7 @@ Scene_Menu.prototype.createPartyCommandWindow = function()
   const window = new Window_MenuPartyCommand(this.partyCommandWindowRect());
 
   // moving left hands focus back to the actor column.
-  window.setHandler('content-prev', this.onFocusActorColumn.bind(this));
+  window.setHandler('focus-prev', this.onFocusActorColumn.bind(this));
 
   // backing out of the menu returns to the map.
   window.setHandler('cancel', this.popScene.bind(this));
