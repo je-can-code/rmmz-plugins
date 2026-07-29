@@ -1158,16 +1158,16 @@ Game_Party.prototype.setCachedStates = function(newCachedStates) {
 */
 var Window_PassiveTabHeader = class extends Window_Base {
 	/**
-	* Constructor.
-	* @param {Rectangle} rect The rectangle for this window.
-	*/
-	/**
 	* Gets the label.
-	* @returns {*} The label.
+	* @returns {string} The label.
 	*/
 	label() {
 		return this._label;
 	}
+	/**
+	* Constructor.
+	* @param {Rectangle} rect The rectangle for this window.
+	*/
 	constructor(rect) {
 		super(rect);
 		this.initialize(rect);
@@ -1209,16 +1209,16 @@ var Window_PassiveTabHeader = class extends Window_Base {
 */
 var Window_PassiveActorRibbon = class extends Window_ActorRibbon {
 	/**
-	* Constructor.
-	* @param {Rectangle} rect The rectangle for this window.
-	*/
-	/**
 	* Gets the actor.
 	* @returns {*} The actor.
 	*/
 	actor() {
 		return this._actor;
 	}
+	/**
+	* Constructor.
+	* @param {Rectangle} rect The rectangle for this window.
+	*/
 	constructor(rect) {
 		super(rect);
 		this.initialize(rect);
@@ -1436,33 +1436,33 @@ var Window_PassiveList = class extends Window_Selectable {
 */
 var Window_PassiveDetail = class extends Window_Base {
 	/**
-	* Constructor.
-	* @param {Rectangle} rect The rectangle for this window.
-	*/
-	/**
 	* Gets the column start y.
-	* @returns {*} The columnStartY.
+	* @returns {number} The columnStartY.
 	*/
 	/**
 	* Gets the actor.
-	* @returns {*} The actor.
+	* @returns {Game_Actor|null} The actor.
 	*/
 	actor() {
 		return this._actor;
 	}
 	/**
 	* Gets the state.
-	* @returns {*} The state.
+	* @returns {RPG_State|null} The state.
 	*/
 	state() {
 		return this._state;
 	}
+	/**
+	* Constructor.
+	* @param {Rectangle} rect The rectangle for this window.
+	*/
 	columnStartY() {
 		return this._columnStartY;
 	}
 	/**
 	* Sets the column start y.
-	* @param {*} newColumnStartY The new columnStartY.
+	* @param {number} newColumnStartY The new columnStartY.
 	*/
 	setColumnStartY(newColumnStartY) {
 		this._columnStartY = newColumnStartY;

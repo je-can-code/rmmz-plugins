@@ -214,16 +214,16 @@ var Window_MoreEquipData = class extends Window_MoreData {
 */
 var Window_EquipActorRibbon = class extends Window_ActorRibbon {
 	/**
-	* Constructor.
-	* @param {Rectangle} rect The rectangle for this window.
-	*/
-	/**
 	* Gets the actor.
 	* @returns {*} The actor.
 	*/
 	actor() {
 		return this._actor;
 	}
+	/**
+	* Constructor.
+	* @param {Rectangle} rect The rectangle for this window.
+	*/
 	constructor(rect) {
 		super(rect);
 		this.initialize(rect);
@@ -600,28 +600,28 @@ Scene_Equip.prototype.refreshActor = function() {
 };
 /**
 * Gets the actor ribbon window.
-* @returns {*} The actorRibbonWindow.
+* @returns {Window_Base} The actorRibbonWindow.
 */
 Scene_Equip.prototype.actorRibbonWindow = function() {
 	return this._actorRibbonWindow;
 };
 /**
 * Sets the actor ribbon window.
-* @param {*} newActorRibbonWindow The new actorRibbonWindow.
+* @param {Window_Base} newActorRibbonWindow The new actorRibbonWindow.
 */
 Scene_Equip.prototype.setActorRibbonWindow = function(newActorRibbonWindow) {
 	this._actorRibbonWindow = newActorRibbonWindow;
 };
 /**
 * Gets the controls hint window.
-* @returns {*} The controlsHintWindow.
+* @returns {Window_Base} The controlsHintWindow.
 */
 Scene_Equip.prototype.controlsHintWindow = function() {
 	return this._controlsHintWindow;
 };
 /**
 * Sets the controls hint window.
-* @param {*} newControlsHintWindow The new controlsHintWindow.
+* @param {Window_Base} newControlsHintWindow The new controlsHintWindow.
 */
 Scene_Equip.prototype.setControlsHintWindow = function(newControlsHintWindow) {
 	this._controlsHintWindow = newControlsHintWindow;

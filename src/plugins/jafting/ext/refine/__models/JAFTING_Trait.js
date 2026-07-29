@@ -10,13 +10,6 @@
  */
 class JAFTING_Trait
 {
-  /**
-   * Initializes the members of this class.
-   * @param {number} code The code of the trait.
-   * @param {number} dataId The dataId of the trait.
-   * @param {number} value The value of the trait.
-   */
-  
 
   //region properties
   /**
@@ -31,7 +24,7 @@ class JAFTING_Trait
 
   /**
    * Gets the data id.
-   * @returns {*} The dataId.
+   * @returns {number} The dataId.
    */
   dataId()
   {
@@ -39,6 +32,13 @@ class JAFTING_Trait
     return this._dataId;
   }
   //endregion properties
+
+  /**
+   * Initializes the members of this class.
+   * @param {number} code The code of the trait.
+   * @param {number} dataId The dataId of the trait.
+   * @param {number} value The value of the trait.
+   */
 
   constructor(code, dataId, value)
   {

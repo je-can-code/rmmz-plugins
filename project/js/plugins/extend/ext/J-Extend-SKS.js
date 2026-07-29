@@ -69,7 +69,7 @@ Window_SkillEquipDetail.prototype.skill = function() {
 };
 /**
 * Gets the skill id.
-* @returns {*} The skillId.
+* @returns {number} The skillId.
 */
 Window_SkillEquipDetail.prototype.skillId = function() {
 	return this._skillId;

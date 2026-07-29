@@ -440,7 +440,7 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow)
 //region properties
 /**
  * Gets the ally ai party window.
- * @returns {*} The allyAiPartyWindow.
+ * @returns {Window_Base} The allyAiPartyWindow.
  */
 Scene_Map.prototype.allyAiPartyWindow = function()
 {
@@ -450,7 +450,7 @@ Scene_Map.prototype.allyAiPartyWindow = function()
 
 /**
  * Sets the ally ai party window.
- * @param {*} newAllyAiPartyWindow The new allyAiPartyWindow.
+ * @param {Window_Base} newAllyAiPartyWindow The new allyAiPartyWindow.
  */
 Scene_Map.prototype.setAllyAiPartyWindow = function(newAllyAiPartyWindow)
 {
@@ -460,7 +460,7 @@ Scene_Map.prototype.setAllyAiPartyWindow = function(newAllyAiPartyWindow)
 
 /**
  * Gets the ally ai equip window.
- * @returns {*} The allyAiEquipWindow.
+ * @returns {Window_Base} The allyAiEquipWindow.
  */
 Scene_Map.prototype.allyAiEquipWindow = function()
 {
@@ -470,7 +470,7 @@ Scene_Map.prototype.allyAiEquipWindow = function()
 
 /**
  * Sets the ally ai equip window.
- * @param {*} newAllyAiEquipWindow The new allyAiEquipWindow.
+ * @param {Window_Base} newAllyAiEquipWindow The new allyAiEquipWindow.
  */
 Scene_Map.prototype.setAllyAiEquipWindow = function(newAllyAiEquipWindow)
 {

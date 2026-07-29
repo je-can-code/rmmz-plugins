@@ -48,7 +48,7 @@ class Window_LoadoutPicker
   //region properties
   /**
    * Sets the actor.
-   * @param {*} newActor The new actor.
+   * @param {Game_Actor|null} newActor The new actor.
    */
   setActor(newActor)
   {
@@ -58,7 +58,7 @@ class Window_LoadoutPicker
 
   /**
    * Sets the slot key.
-   * @param {*} newSlotKey The new slotKey.
+   * @param {string} newSlotKey The new slotKey.
    */
   setSlotKey(newSlotKey)
   {

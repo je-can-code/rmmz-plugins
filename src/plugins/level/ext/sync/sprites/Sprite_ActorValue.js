@@ -119,7 +119,7 @@ if (J.HUD && J.HUD.EXT && J.HUD.EXT.PARTY)
 //region properties
 /**
  * Gets the sync icon sprite.
- * @returns {*} The syncIconSprite.
+ * @returns {Sprite} The syncIconSprite.
  */
 Sprite_ActorValue.prototype.syncIconSprite = function()
 {
@@ -129,7 +129,7 @@ Sprite_ActorValue.prototype.syncIconSprite = function()
 
 /**
  * Sets the sync icon sprite.
- * @param {*} newSyncIconSprite The new syncIconSprite.
+ * @param {Sprite} newSyncIconSprite The new syncIconSprite.
  */
 Sprite_ActorValue.prototype.setSyncIconSprite = function(newSyncIconSprite)
 {

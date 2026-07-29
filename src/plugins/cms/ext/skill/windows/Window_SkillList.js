@@ -104,7 +104,7 @@ Window_SkillList.prototype.includes = function(skill)
 //region properties
 /**
  * Gets the skill detail window.
- * @returns {*} The skillDetailWindow.
+ * @returns {Window_Base} The skillDetailWindow.
  */
 Window_SkillList.prototype.skillDetailWindow = function()
 {

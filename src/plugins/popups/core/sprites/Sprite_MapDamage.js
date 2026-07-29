@@ -8,11 +8,6 @@ import PopupNumericDisplay from './../helpers/PopupNumericDisplay.js';
 class Sprite_MapDamage
   extends Sprite_Damage
 {
-  /**
-   * Constructor.
-   * @param {...*} args Forwarded to {@link #initialize}.
-   */
-  
 
   //region properties
   /**
@@ -27,7 +22,7 @@ class Sprite_MapDamage
 
   /**
    * Gets the duration.
-   * @returns {*} The duration.
+   * @returns {number} The duration.
    */
   duration()
   {
@@ -37,7 +32,7 @@ class Sprite_MapDamage
 
   /**
    * Sets the duration.
-   * @param {*} newDuration The new duration.
+   * @param {number} newDuration The new duration.
    */
   setDuration(newDuration)
   {
@@ -45,6 +40,11 @@ class Sprite_MapDamage
     this._duration = newDuration;
   }
   //endregion properties
+
+  /**
+   * Constructor.
+   * @param {...*} args Forwarded to {@link #initialize}.
+   */
 
   constructor(...args)
   {

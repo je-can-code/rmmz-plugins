@@ -1068,37 +1068,29 @@ var QuestManager = class {
 */
 var TrackedOmniObjective = class {
 	/**
-	* Initialize an objective tracker for an quest.
-	* @param {number} id The id of this objective.
-	* @param {string} questKey The key of the quest that owns this objective.
-	* @param {OmniFulfillmentData} omniFulfillmentData The extraneous data on how this objective is to be fulfilled.
-	* @param {boolean} hidden Whether or not this objective is hidden.
-	* @param {boolean} optional Whether or not this objective is optional for its parent quest.
-	*/
-	/**
 	* Gets the indiscriminate target data.
-	* @returns {*} The indiscriminateTargetData.
+	* @returns {string} The indiscriminateTargetData.
 	*/
 	indiscriminateTargetData() {
 		return this._indiscriminateTargetData;
 	}
 	/**
 	* Sets the indiscriminate target data.
-	* @param {*} newIndiscriminateTargetData The new indiscriminateTargetData.
+	* @param {string} newIndiscriminateTargetData The new indiscriminateTargetData.
 	*/
 	setIndiscriminateTargetData(newIndiscriminateTargetData) {
 		this._indiscriminateTargetData = newIndiscriminateTargetData;
 	}
 	/**
 	* Gets the target map id.
-	* @returns {*} The targetMapId.
+	* @returns {number} The targetMapId.
 	*/
 	targetMapId() {
 		return this._targetMapId;
 	}
 	/**
 	* Sets the target map id.
-	* @param {*} newTargetMapId The new targetMapId.
+	* @param {number} newTargetMapId The new targetMapId.
 	*/
 	setTargetMapId(newTargetMapId) {
 		this._targetMapId = newTargetMapId;
@@ -1119,116 +1111,124 @@ var TrackedOmniObjective = class {
 	}
 	/**
 	* Gets the target item type.
-	* @returns {*} The targetItemType.
+	* @returns {number} The targetItemType.
 	*/
 	targetItemType() {
 		return this._targetItemType;
 	}
 	/**
 	* Sets the target item type.
-	* @param {*} newTargetItemType The new targetItemType.
+	* @param {number} newTargetItemType The new targetItemType.
 	*/
 	setTargetItemType(newTargetItemType) {
 		this._targetItemType = newTargetItemType;
 	}
 	/**
 	* Gets the target item id.
-	* @returns {*} The targetItemId.
+	* @returns {number} The targetItemId.
 	*/
 	targetItemId() {
 		return this._targetItemId;
 	}
 	/**
 	* Sets the target item id.
-	* @param {*} newTargetItemId The new targetItemId.
+	* @param {number} newTargetItemId The new targetItemId.
 	*/
 	setTargetItemId(newTargetItemId) {
 		this._targetItemId = newTargetItemId;
 	}
 	/**
 	* Gets the target item fetch quantity.
-	* @returns {*} The targetItemFetchQuantity.
+	* @returns {number} The targetItemFetchQuantity.
 	*/
 	targetItemFetchQuantity() {
 		return this._targetItemFetchQuantity;
 	}
 	/**
 	* Sets the target item fetch quantity.
-	* @param {*} newTargetItemFetchQuantity The new targetItemFetchQuantity.
+	* @param {number} newTargetItemFetchQuantity The new targetItemFetchQuantity.
 	*/
 	setTargetItemFetchQuantity(newTargetItemFetchQuantity) {
 		this._targetItemFetchQuantity = newTargetItemFetchQuantity;
 	}
 	/**
 	* Gets the target enemy id.
-	* @returns {*} The targetEnemyId.
+	* @returns {number} The targetEnemyId.
 	*/
 	targetEnemyId() {
 		return this._targetEnemyId;
 	}
 	/**
 	* Sets the target enemy id.
-	* @param {*} newTargetEnemyId The new targetEnemyId.
+	* @param {number} newTargetEnemyId The new targetEnemyId.
 	*/
 	setTargetEnemyId(newTargetEnemyId) {
 		this._targetEnemyId = newTargetEnemyId;
 	}
 	/**
 	* Gets the target enemy amount.
-	* @returns {*} The targetEnemyAmount.
+	* @returns {number} The targetEnemyAmount.
 	*/
 	targetEnemyAmount() {
 		return this._targetEnemyAmount;
 	}
 	/**
 	* Sets the target enemy amount.
-	* @param {*} newTargetEnemyAmount The new targetEnemyAmount.
+	* @param {number} newTargetEnemyAmount The new targetEnemyAmount.
 	*/
 	setTargetEnemyAmount(newTargetEnemyAmount) {
 		this._targetEnemyAmount = newTargetEnemyAmount;
 	}
 	/**
 	* Gets the target quest keys.
-	* @returns {*} The targetQuestKeys.
+	* @returns {string[]} The targetQuestKeys.
 	*/
 	targetQuestKeys() {
 		return this._targetQuestKeys;
 	}
 	/**
 	* Sets the target quest keys.
-	* @param {*} newTargetQuestKeys The new targetQuestKeys.
+	* @param {string[]} newTargetQuestKeys The new targetQuestKeys.
 	*/
 	setTargetQuestKeys(newTargetQuestKeys) {
 		this._targetQuestKeys = newTargetQuestKeys;
 	}
 	/**
 	* Gets the current item fetch quantity.
-	* @returns {*} The currentItemFetchQuantity.
+	* @returns {number} The currentItemFetchQuantity.
 	*/
 	currentItemFetchQuantity() {
 		return this._currentItemFetchQuantity;
 	}
 	/**
 	* Sets the current item fetch quantity.
-	* @param {*} newCurrentItemFetchQuantity The new currentItemFetchQuantity.
+	* @param {number} newCurrentItemFetchQuantity The new currentItemFetchQuantity.
 	*/
 	setCurrentItemFetchQuantity(newCurrentItemFetchQuantity) {
 		this._currentItemFetchQuantity = newCurrentItemFetchQuantity;
 	}
 	/**
 	* Gets the current enemy amount.
-	* @returns {*} The currentEnemyAmount.
+	* @returns {number} The currentEnemyAmount.
 	*/
 	currentEnemyAmount() {
 		return this._currentEnemyAmount;
 	}
 	/**
 	* Sets the current enemy amount.
-	* @param {*} newCurrentEnemyAmount The new currentEnemyAmount.
+	* @param {number} newCurrentEnemyAmount The new currentEnemyAmount.
 	*/
 	setCurrentEnemyAmount(newCurrentEnemyAmount) {
 		this._currentEnemyAmount = newCurrentEnemyAmount;
 	}
+	/**
+	* Initialize an objective tracker for an quest.
+	* @param {number} id The id of this objective.
+	* @param {string} questKey The key of the quest that owns this objective.
+	* @param {OmniFulfillmentData} omniFulfillmentData The extraneous data on how this objective is to be fulfilled.
+	* @param {boolean} hidden Whether or not this objective is hidden.
+	* @param {boolean} optional Whether or not this objective is optional for its parent quest.
+	*/
 	constructor(questKey, id, omniFulfillmentData, hidden, optional) {
 		/**
 		* The key of the quest that owns this objective. This is mostly used for metadata lookup.
@@ -2481,16 +2481,16 @@ var Window_QuestopediaCategories = class extends Window_HorzCommand {
 //#region src/plugins/omni/ext/quest/windows/Window_QuestopediaList.js
 var Window_QuestopediaList = class extends Window_Command {
 	/**
-	* The category that this list is being filtered by. When an empty string, no filter is applied.
-	* @type {string}
-	*/
-	/**
 	* Gets the quest filtering.
 	* @returns {*} The questFiltering.
 	*/
 	questFiltering() {
 		return this._questFiltering;
 	}
+	/**
+	* The category that this list is being filtered by. When an empty string, no filter is applied.
+	* @type {string}
+	*/
 	_currentCategoryKey = String.empty;
 	/**
 	* Constructor.

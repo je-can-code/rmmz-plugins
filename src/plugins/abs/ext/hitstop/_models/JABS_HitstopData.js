@@ -35,7 +35,7 @@ class JABS_HitstopData
   //region properties
   /**
    * Gets the flurry windows.
-   * @returns {*} The flurryWindows.
+   * @returns {Map<string, number>} The flurryWindows.
    */
   flurryWindows()
   {

@@ -8,11 +8,6 @@ import JABS_HitboxPulseManager from './../managers/JABS_HitboxPulseManager.js';
 class Sprite_HitboxPulse
   extends Sprite
 {
-  /**
-   * Constructor.
-   * Creates the internal Graphics child and resets members.
-   */
-  
 
   //region properties
   /**
@@ -27,7 +22,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the sustained.
-   * @param {*} newSustained The new sustained.
+   * @param {boolean} newSustained The new sustained.
    */
   setSustained(newSustained)
   {
@@ -37,7 +32,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the age.
-   * @returns {*} The age.
+   * @returns {number} The age.
    */
   age()
   {
@@ -47,7 +42,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the age.
-   * @param {*} newAge The new age.
+   * @param {number} newAge The new age.
    */
   setAge(newAge)
   {
@@ -57,7 +52,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the duration.
-   * @returns {*} The duration.
+   * @returns {number} The duration.
    */
   duration()
   {
@@ -67,7 +62,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the duration.
-   * @param {*} newDuration The new duration.
+   * @param {number} newDuration The new duration.
    */
   setDuration(newDuration)
   {
@@ -77,7 +72,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the start alpha.
-   * @returns {*} The startAlpha.
+   * @returns {number} The startAlpha.
    */
   startAlpha()
   {
@@ -87,7 +82,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the start alpha.
-   * @param {*} newStartAlpha The new startAlpha.
+   * @param {number} newStartAlpha The new startAlpha.
    */
   setStartAlpha(newStartAlpha)
   {
@@ -97,7 +92,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the end alpha.
-   * @returns {*} The endAlpha.
+   * @returns {number} The endAlpha.
    */
   endAlpha()
   {
@@ -107,7 +102,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the end alpha.
-   * @param {*} newEndAlpha The new endAlpha.
+   * @param {number} newEndAlpha The new endAlpha.
    */
   setEndAlpha(newEndAlpha)
   {
@@ -117,7 +112,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the scale start.
-   * @returns {*} The scaleStart.
+   * @returns {number} The scaleStart.
    */
   scaleStart()
   {
@@ -127,7 +122,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the scale start.
-   * @param {*} newScaleStart The new scaleStart.
+   * @param {number} newScaleStart The new scaleStart.
    */
   setScaleStart(newScaleStart)
   {
@@ -137,7 +132,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the scale end.
-   * @returns {*} The scaleEnd.
+   * @returns {number} The scaleEnd.
    */
   scaleEnd()
   {
@@ -147,7 +142,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the scale end.
-   * @param {*} newScaleEnd The new scaleEnd.
+   * @param {number} newScaleEnd The new scaleEnd.
    */
   setScaleEnd(newScaleEnd)
   {
@@ -177,7 +172,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the line alpha.
-   * @returns {*} The lineAlpha.
+   * @returns {number} The lineAlpha.
    */
   lineAlpha()
   {
@@ -187,7 +182,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the line alpha.
-   * @param {*} newLineAlpha The new lineAlpha.
+   * @param {number} newLineAlpha The new lineAlpha.
    */
   setLineAlpha(newLineAlpha)
   {
@@ -197,7 +192,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the line width.
-   * @returns {*} The lineWidth.
+   * @returns {number} The lineWidth.
    */
   lineWidth()
   {
@@ -207,7 +202,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the line width.
-   * @param {*} newLineWidth The new lineWidth.
+   * @param {number} newLineWidth The new lineWidth.
    */
   setLineWidth(newLineWidth)
   {
@@ -237,7 +232,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the fill alpha.
-   * @returns {*} The fillAlpha.
+   * @returns {number} The fillAlpha.
    */
   fillAlpha()
   {
@@ -247,7 +242,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the fill alpha.
-   * @param {*} newFillAlpha The new fillAlpha.
+   * @param {number} newFillAlpha The new fillAlpha.
    */
   setFillAlpha(newFillAlpha)
   {
@@ -277,7 +272,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the range.
-   * @returns {*} The range.
+   * @returns {number} The range.
    */
   range()
   {
@@ -287,7 +282,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the range.
-   * @param {*} newRange The new range.
+   * @param {number} newRange The new range.
    */
   setRange(newRange)
   {
@@ -297,7 +292,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the degrees.
-   * @returns {*} The degrees.
+   * @returns {number} The degrees.
    */
   degrees()
   {
@@ -307,7 +302,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the degrees.
-   * @param {*} newDegrees The new degrees.
+   * @param {number} newDegrees The new degrees.
    */
   setDegrees(newDegrees)
   {
@@ -317,7 +312,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the thickness.
-   * @returns {*} The thickness.
+   * @returns {number} The thickness.
    */
   thickness()
   {
@@ -327,7 +322,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the thickness.
-   * @param {*} newThickness The new thickness.
+   * @param {number} newThickness The new thickness.
    */
   setThickness(newThickness)
   {
@@ -337,7 +332,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the inner radius.
-   * @returns {*} The innerRadius.
+   * @returns {number} The innerRadius.
    */
   innerRadius()
   {
@@ -347,7 +342,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the inner radius.
-   * @param {*} newInnerRadius The new innerRadius.
+   * @param {number} newInnerRadius The new innerRadius.
    */
   setInnerRadius(newInnerRadius)
   {
@@ -357,7 +352,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the graphics.
-   * @returns {*} The graphics.
+   * @returns {PIXI.Graphics} The graphics.
    */
   graphics()
   {
@@ -365,6 +360,11 @@ class Sprite_HitboxPulse
     return this._graphics;
   }
   //endregion properties
+
+  /**
+   * Constructor.
+   * Creates the internal Graphics child and resets members.
+   */
 
   constructor()
   {

@@ -19,16 +19,11 @@ import JABS_DeathContext from '../models/JABS_DeathContext.js';
  */
 class JABS_Engine
 {
-  /**
-   * The events array of the enemy cloning map.
-   * @type {RPG_MapEvent[]|null}
-   */
-  
 
   //region properties
   /**
    * Gets the action events.
-   * @returns {*} The actionEvents.
+   * @returns {JABS_Action[]} The actionEvents.
    */
   actionEvents()
   {
@@ -38,7 +33,7 @@ class JABS_Engine
 
   /**
    * Sets the action events.
-   * @param {*} newActionEvents The new actionEvents.
+   * @param {JABS_Action[]} newActionEvents The new actionEvents.
    */
   setActionEvents(newActionEvents)
   {
@@ -48,7 +43,7 @@ class JABS_Engine
 
   /**
    * Gets the active actions.
-   * @returns {*} The activeActions.
+   * @returns {RPG_MapEvent[]} The activeActions.
    */
   activeActions()
   {
@@ -58,7 +53,7 @@ class JABS_Engine
 
   /**
    * Gets the jabs states.
-   * @returns {*} The jabsStates.
+   * @returns {Map<string, Map<number, JABS_State>>} The jabsStates.
    */
   jabsStates()
   {
@@ -68,7 +63,7 @@ class JABS_Engine
 
   /**
    * Gets the skill execution log.
-   * @returns {*} The skillExecutionLog.
+   * @returns {Map<string, JABS_SkillExecution[]>} The skillExecutionLog.
    */
   skillExecutionLog()
   {
@@ -78,7 +73,7 @@ class JABS_Engine
 
   /**
    * Gets the skill execution timer.
-   * @returns {*} The skillExecutionTimer.
+   * @returns {JABS_Timer} The skillExecutionTimer.
    */
   skillExecutionTimer()
   {
@@ -86,6 +81,11 @@ class JABS_Engine
     return this._skillExecutionTimer;
   }
   //endregion properties
+
+  /**
+   * The events array of the enemy cloning map.
+   * @type {RPG_MapEvent[]|null}
+   */
 
   static #enemyCloneList = null;
 

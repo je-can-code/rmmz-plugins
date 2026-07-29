@@ -9,12 +9,6 @@
  */
 class HealEventManager
 {
-  /**
-   * Tracks how many cascade rounds are currently in flight.
-   * Incremented at the start of each dispatch round and decremented on exit.
-   * @type {number}
-   */
-  
 
   //region properties
   /**
@@ -48,6 +42,11 @@ class HealEventManager
   }
   //endregion properties
 
+  /**
+   * Tracks how many cascade rounds are currently in flight.
+   * Incremented at the start of each dispatch round and decremented on exit.
+   * @type {number}
+   */
   static _currentDepth = 0;
 
   /**

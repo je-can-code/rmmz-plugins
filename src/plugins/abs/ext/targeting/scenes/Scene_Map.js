@@ -100,7 +100,7 @@ Scene_Map.prototype.updateTargetingListWindow = function(wasActive)
 //region properties
 /**
  * Gets the targeting list window.
- * @returns {*} The targetingListWindow.
+ * @returns {Window_Base} The targetingListWindow.
  */
 Scene_Map.prototype.targetingListWindow = function()
 {
@@ -110,7 +110,7 @@ Scene_Map.prototype.targetingListWindow = function()
 
 /**
  * Sets the targeting list window.
- * @param {*} newTargetingListWindow The new targetingListWindow.
+ * @param {Window_Base} newTargetingListWindow The new targetingListWindow.
  */
 Scene_Map.prototype.setTargetingListWindow = function(newTargetingListWindow)
 {

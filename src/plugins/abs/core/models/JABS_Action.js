@@ -118,7 +118,7 @@ class JABS_Action
   //region properties
   /**
    * Sets the cast complete.
-   * @param {*} newCastComplete The new castComplete.
+   * @param {boolean} newCastComplete The new castComplete.
    */
   setCastComplete(newCastComplete)
   {
@@ -128,7 +128,7 @@ class JABS_Action
 
   /**
    * Gets the facing.
-   * @returns {*} The facing.
+   * @returns {number} The facing.
    */
   facing()
   {
@@ -138,7 +138,7 @@ class JABS_Action
 
   /**
    * Sets the is lingering.
-   * @param {*} newIsLingering The new isLingering.
+   * @param {boolean} newIsLingering The new isLingering.
    */
   setIsLingering(newIsLingering)
   {
@@ -150,7 +150,7 @@ class JABS_Action
   //region properties
   /**
    * Gets the hit at least one.
-   * @returns {*} The hitAtLeastOne.
+   * @returns {boolean} The hitAtLeastOne.
    */
   isHitAtLeastOne()
   {
@@ -160,7 +160,7 @@ class JABS_Action
 
   /**
    * Sets the hit at least one.
-   * @param {*} newHitAtLeastOne The new hitAtLeastOne.
+   * @param {boolean} newHitAtLeastOne The new hitAtLeastOne.
    */
   setHitAtLeastOne(newHitAtLeastOne)
   {
@@ -170,7 +170,7 @@ class JABS_Action
 
   /**
    * Gets the played self animation on defeat.
-   * @returns {*} The playedSelfAnimationOnDefeat.
+   * @returns {boolean} The playedSelfAnimationOnDefeat.
    */
   isPlayedSelfAnimationOnDefeat()
   {
@@ -180,7 +180,7 @@ class JABS_Action
 
   /**
    * Sets the played self animation on defeat.
-   * @param {*} newPlayedSelfAnimationOnDefeat The new playedSelfAnimationOnDefeat.
+   * @param {boolean} newPlayedSelfAnimationOnDefeat The new playedSelfAnimationOnDefeat.
    */
   setPlayedSelfAnimationOnDefeat(newPlayedSelfAnimationOnDefeat)
   {
@@ -190,7 +190,7 @@ class JABS_Action
 
   /**
    * Gets the collision enabled.
-   * @returns {*} The collisionEnabled.
+   * @returns {boolean} The collisionEnabled.
    */
   isCollisionEnabled()
   {
@@ -200,7 +200,7 @@ class JABS_Action
 
   /**
    * Sets the collision enabled.
-   * @param {*} newCollisionEnabled The new collisionEnabled.
+   * @param {boolean} newCollisionEnabled The new collisionEnabled.
    */
   setCollisionEnabled(newCollisionEnabled)
   {
@@ -210,7 +210,7 @@ class JABS_Action
 
   /**
    * Gets the base skill.
-   * @returns {*} The baseSkill.
+   * @returns {RPG_Skill} The baseSkill.
    */
   baseSkill()
   {
@@ -230,7 +230,7 @@ class JABS_Action
 
   /**
    * Gets the self animation id.
-   * @returns {*} The selfAnimationId.
+   * @returns {number} The selfAnimationId.
    */
   selfAnimationId()
   {
@@ -240,7 +240,7 @@ class JABS_Action
 
   /**
    * Gets the on cast animation id.
-   * @returns {*} The onCastAnimationId.
+   * @returns {number} The onCastAnimationId.
    */
   onCastAnimationId()
   {
@@ -250,7 +250,7 @@ class JABS_Action
 
   /**
    * Gets the uuid.
-   * @returns {*} The uuid.
+   * @returns {string} The uuid.
    */
   uuid()
   {
@@ -260,7 +260,7 @@ class JABS_Action
 
   /**
    * Gets the game action.
-   * @returns {*} The gameAction.
+   * @returns {Game_Action} The gameAction.
    */
   gameAction()
   {
@@ -270,7 +270,7 @@ class JABS_Action
 
   /**
    * Gets the caster.
-   * @returns {*} The caster.
+   * @returns {JABS_Battler} The caster.
    */
   caster()
   {
@@ -300,7 +300,7 @@ class JABS_Action
 
   /**
    * Gets the action cooldown type.
-   * @returns {*} The actionCooldownType.
+   * @returns {string} The actionCooldownType.
    */
   actionCooldownType()
   {
@@ -310,7 +310,7 @@ class JABS_Action
 
   /**
    * Sets the action cooldown type.
-   * @param {*} newActionCooldownType The new actionCooldownType.
+   * @param {string} newActionCooldownType The new actionCooldownType.
    */
   setActionCooldownType(newActionCooldownType)
   {
@@ -320,7 +320,7 @@ class JABS_Action
 
   /**
    * Gets the current duration.
-   * @returns {*} The currentDuration.
+   * @returns {number} The currentDuration.
    */
   currentDuration()
   {
@@ -330,7 +330,7 @@ class JABS_Action
 
   /**
    * Sets the current duration.
-   * @param {*} newCurrentDuration The new currentDuration.
+   * @param {number} newCurrentDuration The new currentDuration.
    */
   setCurrentDuration(newCurrentDuration)
   {
@@ -350,7 +350,7 @@ class JABS_Action
 
   /**
    * Gets the pierce times left.
-   * @returns {*} The pierceTimesLeft.
+   * @returns {number} The pierceTimesLeft.
    */
   pierceTimesLeft()
   {
@@ -360,7 +360,7 @@ class JABS_Action
 
   /**
    * Sets the pierce times left.
-   * @param {*} newPierceTimesLeft The new pierceTimesLeft.
+   * @param {number} newPierceTimesLeft The new pierceTimesLeft.
    */
   setPierceTimesLeft(newPierceTimesLeft)
   {
@@ -370,7 +370,7 @@ class JABS_Action
 
   /**
    * Gets the pierce delay.
-   * @returns {*} The pierceDelay.
+   * @returns {JABS_Timer} The pierceDelay.
    */
   pierceDelay()
   {
@@ -380,7 +380,7 @@ class JABS_Action
 
   /**
    * Gets the current linger.
-   * @returns {*} The currentLinger.
+   * @returns {number} The currentLinger.
    */
   currentLinger()
   {
@@ -390,7 +390,7 @@ class JABS_Action
 
   /**
    * Sets the current linger.
-   * @param {*} newCurrentLinger The new currentLinger.
+   * @param {number} newCurrentLinger The new currentLinger.
    */
   setCurrentLinger(newCurrentLinger)
   {
@@ -400,7 +400,7 @@ class JABS_Action
 
   /**
    * Gets the linger max frames.
-   * @returns {*} The lingerMaxFrames.
+   * @returns {number} The lingerMaxFrames.
    */
   lingerMaxFrames()
   {

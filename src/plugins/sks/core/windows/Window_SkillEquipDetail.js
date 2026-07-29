@@ -42,7 +42,7 @@ class Window_SkillEquipDetail
   //region properties
   /**
    * Gets the actor.
-   * @returns {*} The actor.
+   * @returns {Game_Actor|null} The actor.
    */
   actor()
   {
@@ -52,7 +52,7 @@ class Window_SkillEquipDetail
 
   /**
    * Gets the skill id.
-   * @returns {*} The skillId.
+   * @returns {number} The skillId.
    */
   skillId()
   {

@@ -9,17 +9,6 @@ import ArrayHelper from './../_utilities/ArrayHelper.js';
 class RPGManager
 {
   //region caching
-  /**
-   * Backing field for {@link _noteCache}, built lazily on first access rather than as an eager
-   * static-field initializer. RPG_Base now imports this class (for its {@code types()} method),
-   * and JCache imports RPG_Base (for its {@code instanceof} clone-resolution check) — a real
-   * three-file import cycle (RPG_Base -> RPGManager -> JCache -> RPG_Base). Eager static fields
-   * evaluate at module-load time, so their result depends on which file the cycle happens to be
-   * entered from; a lazy getter defers construction until the first real call, by which point the
-   * whole module graph has finished loading regardless of entry order.
-   * @type {JCache|null}
-   */
-  
 
   //region properties
   /**
@@ -42,6 +31,17 @@ class RPGManager
     return this._evalCache;
   }
   //endregion properties
+
+  /**
+   * Backing field for {@link _noteCache}, built lazily on first access rather than as an eager
+   * static-field initializer. RPG_Base now imports this class (for its {@code types()} method),
+   * and JCache imports RPG_Base (for its {@code instanceof} clone-resolution check) — a real
+   * three-file import cycle (RPG_Base -> RPGManager -> JCache -> RPG_Base). Eager static fields
+   * evaluate at module-load time, so their result depends on which file the cycle happens to be
+   * entered from; a lazy getter defers construction until the first real call, by which point the
+   * whole module graph has finished loading regardless of entry order.
+   * @type {JCache|null}
+   */
 
   static #noteCache = null;
 

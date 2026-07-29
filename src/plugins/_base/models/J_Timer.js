@@ -61,7 +61,7 @@ class J_Timer
   //region properties
   /**
    * Gets the timer.
-   * @returns {*} The timer.
+   * @returns {number} The timer.
    */
   timer()
   {
@@ -71,7 +71,7 @@ class J_Timer
 
   /**
    * Sets the timer.
-   * @param {*} newTimer The new timer.
+   * @param {number} newTimer The new timer.
    */
   setTimer(newTimer)
   {
@@ -81,7 +81,7 @@ class J_Timer
 
   /**
    * Gets the timer max.
-   * @returns {*} The timerMax.
+   * @returns {number} The timerMax.
    */
   timerMax()
   {
@@ -91,7 +91,7 @@ class J_Timer
 
   /**
    * Sets the timer max.
-   * @param {*} newTimerMax The new timerMax.
+   * @param {number} newTimerMax The new timerMax.
    */
   setTimerMax(newTimerMax)
   {
@@ -101,7 +101,7 @@ class J_Timer
 
   /**
    * Gets the stop counting.
-   * @returns {*} The stopCounting.
+   * @returns {boolean} The stopCounting.
    */
   stopCounting()
   {

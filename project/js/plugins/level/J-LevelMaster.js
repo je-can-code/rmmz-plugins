@@ -1654,7 +1654,7 @@ Game_Temp.prototype.flagBeyondMaxDataAsCached = function() {
 };
 /**
 * Gets the beyond max data.
-* @returns {*} The beyondMaxData.
+* @returns {Array} The beyondMaxData.
 */
 Game_Temp.prototype.beyondMaxData = function() {
 	return this._j._level._beyondMaxData;

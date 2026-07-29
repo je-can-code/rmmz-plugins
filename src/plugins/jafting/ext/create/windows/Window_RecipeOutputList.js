@@ -4,16 +4,11 @@ import Window_RecipeIngredientList from './Window_RecipeIngredientList.js';
 class Window_RecipeOutputList
   extends Window_Command
 {
-  /**
-   * True if the text of this list should be masked, false otherwise.
-   * @type {boolean}
-   */
-  
 
   //region properties
   /**
    * Gets the components.
-   * @returns {*} The components.
+   * @returns {CraftingComponent[]} The components.
    */
   components()
   {
@@ -21,6 +16,11 @@ class Window_RecipeOutputList
     return this._components;
   }
   //endregion properties
+
+  /**
+   * True if the text of this list should be masked, false otherwise.
+   * @type {boolean}
+   */
 
   needsMasking = false;
 

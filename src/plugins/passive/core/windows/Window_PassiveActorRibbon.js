@@ -7,11 +7,6 @@
 class Window_PassiveActorRibbon
   extends Window_ActorRibbon
 {
-  /**
-   * Constructor.
-   * @param {Rectangle} rect The rectangle for this window.
-   */
-  
 
   //region properties
   /**
@@ -24,6 +19,11 @@ class Window_PassiveActorRibbon
     return this._actor;
   }
   //endregion properties
+
+  /**
+   * Constructor.
+   * @param {Rectangle} rect The rectangle for this window.
+   */
 
   constructor(rect)
   {

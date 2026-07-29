@@ -720,20 +720,15 @@ Game_Event.prototype.getAreaEventRect = function() {
 */
 var Sprite_MiniMap = class extends Sprite {
 	/**
-	* Number of tiles to show from the player in each direction.
-	* Viewport width/height in tiles = (MAP_RANGE * 2 + 1).
-	* @type {number}
-	*/
-	/**
 	* Gets the cache ready.
-	* @returns {*} The cacheReady.
+	* @returns {boolean} The cacheReady.
 	*/
 	isCacheReady() {
 		return this._cacheReady;
 	}
 	/**
 	* Sets the cache ready.
-	* @param {*} newCacheReady The new cacheReady.
+	* @param {boolean} newCacheReady The new cacheReady.
 	*/
 	setCacheReady(newCacheReady) {
 		this._cacheReady = newCacheReady;
@@ -747,21 +742,21 @@ var Sprite_MiniMap = class extends Sprite {
 	}
 	/**
 	* Sets the focus mode.
-	* @param {*} newFocusMode The new focusMode.
+	* @param {boolean} newFocusMode The new focusMode.
 	*/
 	setFocusMode(newFocusMode) {
 		this._focusMode = newFocusMode;
 	}
 	/**
 	* Gets the cached map id.
-	* @returns {*} The cachedMapId.
+	* @returns {number} The cachedMapId.
 	*/
 	cachedMapId() {
 		return this._cachedMapId;
 	}
 	/**
 	* Sets the cached map id.
-	* @param {*} newCachedMapId The new cachedMapId.
+	* @param {number} newCachedMapId The new cachedMapId.
 	*/
 	setCachedMapId(newCachedMapId) {
 		this._cachedMapId = newCachedMapId;
@@ -796,35 +791,35 @@ var Sprite_MiniMap = class extends Sprite {
 	}
 	/**
 	* Gets the last x.
-	* @returns {*} The lastX.
+	* @returns {number} The lastX.
 	*/
 	lastX() {
 		return this._lastX;
 	}
 	/**
 	* Sets the last x.
-	* @param {*} newLastX The new lastX.
+	* @param {number} newLastX The new lastX.
 	*/
 	setLastX(newLastX) {
 		this._lastX = newLastX;
 	}
 	/**
 	* Gets the last y.
-	* @returns {*} The lastY.
+	* @returns {number} The lastY.
 	*/
 	lastY() {
 		return this._lastY;
 	}
 	/**
 	* Sets the last y.
-	* @param {*} newLastY The new lastY.
+	* @param {number} newLastY The new lastY.
 	*/
 	setLastY(newLastY) {
 		this._lastY = newLastY;
 	}
 	/**
 	* Gets the minimap frame sprite.
-	* @returns {*} The minimapFrameSprite.
+	* @returns {Sprite} The minimapFrameSprite.
 	*/
 	minimapFrameSprite() {
 		return this._minimapFrameSprite;
@@ -845,116 +840,121 @@ var Sprite_MiniMap = class extends Sprite {
 	}
 	/**
 	* Gets the width.
-	* @returns {*} The width.
+	* @returns {number} The width.
 	*/
 	minimapWidth() {
 		return this._width;
 	}
 	/**
 	* Sets the width.
-	* @param {*} newWidth The new width.
+	* @param {number} newWidth The new width.
 	*/
 	setMinimapWidth(newWidth) {
 		this._width = newWidth;
 	}
 	/**
 	* Gets the height.
-	* @returns {*} The height.
+	* @returns {number} The height.
 	*/
 	minimapHeight() {
 		return this._height;
 	}
 	/**
 	* Sets the height.
-	* @param {*} newHeight The new height.
+	* @param {number} newHeight The new height.
 	*/
 	setMinimapHeight(newHeight) {
 		this._height = newHeight;
 	}
 	/**
 	* Gets the view tiles.
-	* @returns {*} The viewTiles.
+	* @returns {number} The viewTiles.
 	*/
 	viewTiles() {
 		return this._viewTiles;
 	}
 	/**
 	* Sets the view tiles.
-	* @param {*} newViewTiles The new viewTiles.
+	* @param {number} newViewTiles The new viewTiles.
 	*/
 	setViewTiles(newViewTiles) {
 		this._viewTiles = newViewTiles;
 	}
 	/**
 	* Gets the overlay sprite.
-	* @returns {*} The overlaySprite.
+	* @returns {Sprite} The overlaySprite.
 	*/
 	overlaySprite() {
 		return this._overlaySprite;
 	}
 	/**
 	* Gets the overlay.
-	* @returns {*} The overlay.
+	* @returns {Bitmap} The overlay.
 	*/
 	overlay() {
 		return this._overlay;
 	}
 	/**
 	* Sets the overlay.
-	* @param {*} newOverlay The new overlay.
+	* @param {Bitmap} newOverlay The new overlay.
 	*/
 	setOverlay(newOverlay) {
 		this._overlay = newOverlay;
 	}
 	/**
 	* Gets the chrome sprite.
-	* @returns {*} The chromeSprite.
+	* @returns {Sprite} The chromeSprite.
 	*/
 	chromeSprite() {
 		return this._chromeSprite;
 	}
 	/**
 	* Gets the chrome bitmap.
-	* @returns {*} The chromeBitmap.
+	* @returns {Bitmap} The chromeBitmap.
 	*/
 	chromeBitmap() {
 		return this._chromeBitmap;
 	}
 	/**
 	* Sets the chrome bitmap.
-	* @param {*} newChromeBitmap The new chromeBitmap.
+	* @param {Bitmap} newChromeBitmap The new chromeBitmap.
 	*/
 	setChromeBitmap(newChromeBitmap) {
 		this._chromeBitmap = newChromeBitmap;
 	}
 	/**
 	* Gets the cache offset tiles.
-	* @returns {*} The cacheOffsetTiles.
+	* @returns {number} The cacheOffsetTiles.
 	*/
 	cacheOffsetTiles() {
 		return this._cacheOffsetTiles;
 	}
 	/**
 	* Sets the cache offset tiles.
-	* @param {*} newCacheOffsetTiles The new cacheOffsetTiles.
+	* @param {number} newCacheOffsetTiles The new cacheOffsetTiles.
 	*/
 	setCacheOffsetTiles(newCacheOffsetTiles) {
 		this._cacheOffsetTiles = newCacheOffsetTiles;
 	}
 	/**
 	* Gets the cache bitmap.
-	* @returns {*} The cacheBitmap.
+	* @returns {Bitmap} The cacheBitmap.
 	*/
 	cacheBitmap() {
 		return this._cacheBitmap;
 	}
 	/**
 	* Sets the cache bitmap.
-	* @param {*} newCacheBitmap The new cacheBitmap.
+	* @param {Bitmap} newCacheBitmap The new cacheBitmap.
 	*/
 	setCacheBitmap(newCacheBitmap) {
 		this._cacheBitmap = newCacheBitmap;
 	}
+	/**
+	* Number of tiles to show from the player in each direction.
+	* Viewport width/height in tiles = (MAP_RANGE * 2 + 1).
+	* @type {number}
+	*/
 	MAP_RANGE = 12;
 	/**
 	* The pixel size of each minimap tile.

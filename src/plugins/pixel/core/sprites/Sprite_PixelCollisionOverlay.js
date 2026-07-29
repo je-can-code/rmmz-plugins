@@ -9,11 +9,6 @@ import PixelDebugSampler from './../_models/PixelDebugSampler.js';
 class Sprite_PixelCollisionOverlay
   extends Sprite
 {
-  /**
-   * Constructor.
-   * @param {...*} args Forwarded to {@link #initialize}.
-   */
-  
 
   //region properties
   /**
@@ -48,7 +43,7 @@ class Sprite_PixelCollisionOverlay
 
   /**
    * Gets the last display x.
-   * @returns {*} The lastDisplayX.
+   * @returns {number} The lastDisplayX.
    */
   lastDisplayX()
   {
@@ -58,7 +53,7 @@ class Sprite_PixelCollisionOverlay
 
   /**
    * Sets the last display x.
-   * @param {*} newLastDisplayX The new lastDisplayX.
+   * @param {number} newLastDisplayX The new lastDisplayX.
    */
   setLastDisplayX(newLastDisplayX)
   {
@@ -68,7 +63,7 @@ class Sprite_PixelCollisionOverlay
 
   /**
    * Gets the last display y.
-   * @returns {*} The lastDisplayY.
+   * @returns {number} The lastDisplayY.
    */
   lastDisplayY()
   {
@@ -78,7 +73,7 @@ class Sprite_PixelCollisionOverlay
 
   /**
    * Sets the last display y.
-   * @param {*} newLastDisplayY The new lastDisplayY.
+   * @param {number} newLastDisplayY The new lastDisplayY.
    */
   setLastDisplayY(newLastDisplayY)
   {
@@ -88,7 +83,7 @@ class Sprite_PixelCollisionOverlay
 
   /**
    * Gets the last player x.
-   * @returns {*} The lastPlayerX.
+   * @returns {number} The lastPlayerX.
    */
   lastPlayerX()
   {
@@ -98,7 +93,7 @@ class Sprite_PixelCollisionOverlay
 
   /**
    * Sets the last player x.
-   * @param {*} newLastPlayerX The new lastPlayerX.
+   * @param {number} newLastPlayerX The new lastPlayerX.
    */
   setLastPlayerX(newLastPlayerX)
   {
@@ -108,7 +103,7 @@ class Sprite_PixelCollisionOverlay
 
   /**
    * Gets the last player y.
-   * @returns {*} The lastPlayerY.
+   * @returns {number} The lastPlayerY.
    */
   lastPlayerY()
   {
@@ -118,7 +113,7 @@ class Sprite_PixelCollisionOverlay
 
   /**
    * Sets the last player y.
-   * @param {*} newLastPlayerY The new lastPlayerY.
+   * @param {number} newLastPlayerY The new lastPlayerY.
    */
   setLastPlayerY(newLastPlayerY)
   {
@@ -126,6 +121,11 @@ class Sprite_PixelCollisionOverlay
     this._lastPlayerY = newLastPlayerY;
   }
   //endregion properties
+
+  /**
+   * Constructor.
+   * @param {...*} args Forwarded to {@link #initialize}.
+   */
 
   constructor(...args)
   {

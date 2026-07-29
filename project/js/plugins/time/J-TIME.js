@@ -732,6 +732,20 @@ var TimeConditional = class {
 */
 var Time_Snapshot = class Time_Snapshot {
 	/**
+	* Gets the season of year id.
+	* @returns {number} The seasonOfYearId.
+	*/
+	seasonOfYearId() {
+		return this._seasonOfYearId;
+	}
+	/**
+	* Gets the time of day id.
+	* @returns {number} The timeOfDayId.
+	*/
+	timeOfDayId() {
+		return this._timeOfDayId;
+	}
+	/**
 	* @constructor
 	* @param {number} seconds The seconds of the current time.
 	* @param {number} minutes The minutes of the current time.
@@ -742,20 +756,6 @@ var Time_Snapshot = class Time_Snapshot {
 	* @param {number} timeOfDayId The id of the time of day.
 	* @param {number} seasonOfYearId The id of the season of the year.
 	*/
-	/**
-	* Gets the season of year id.
-	* @returns {*} The seasonOfYearId.
-	*/
-	seasonOfYearId() {
-		return this._seasonOfYearId;
-	}
-	/**
-	* Gets the time of day id.
-	* @returns {*} The timeOfDayId.
-	*/
-	timeOfDayId() {
-		return this._timeOfDayId;
-	}
 	constructor(seconds, minutes, hours, days, months, years, timeOfDayId, seasonOfYearId) {
 		/**
 		* The seconds of the current time.
@@ -1350,14 +1350,14 @@ var Game_Time = class Game_Time {
 	}
 	/**
 	* Gets the has been updated.
-	* @returns {*} The hasBeenUpdated.
+	* @returns {boolean} The hasBeenUpdated.
 	*/
 	hasBeenUpdated() {
 		return this._hasBeenUpdated;
 	}
 	/**
 	* Sets the has been updated.
-	* @param {*} newHasBeenUpdated The new hasBeenUpdated.
+	* @param {boolean} newHasBeenUpdated The new hasBeenUpdated.
 	*/
 	setHasBeenUpdated(newHasBeenUpdated) {
 		this._hasBeenUpdated = newHasBeenUpdated;
@@ -1371,21 +1371,21 @@ var Game_Time = class Game_Time {
 	}
 	/**
 	* Sets the visible.
-	* @param {*} newVisible The new visible.
+	* @param {boolean} newVisible The new visible.
 	*/
 	setVisible(newVisible) {
 		this._visible = newVisible;
 	}
 	/**
 	* Gets the tick frames.
-	* @returns {*} The tickFrames.
+	* @returns {number} The tickFrames.
 	*/
 	tickFrames() {
 		return this._tickFrames;
 	}
 	/**
 	* Sets the tick frames.
-	* @param {*} newTickFrames The new tickFrames.
+	* @param {number} newTickFrames The new tickFrames.
 	*/
 	setTickFrames(newTickFrames) {
 		this._tickFrames = newTickFrames;
@@ -1420,28 +1420,28 @@ var Game_Time = class Game_Time {
 	}
 	/**
 	* Gets the seconds.
-	* @returns {*} The seconds.
+	* @returns {number} The seconds.
 	*/
 	seconds() {
 		return this._seconds;
 	}
 	/**
 	* Sets the seconds.
-	* @param {*} newSeconds The new seconds.
+	* @param {number} newSeconds The new seconds.
 	*/
 	setSeconds(newSeconds) {
 		this._seconds = newSeconds;
 	}
 	/**
 	* Gets the minutes.
-	* @returns {*} The minutes.
+	* @returns {number} The minutes.
 	*/
 	minutes() {
 		return this._minutes;
 	}
 	/**
 	* Sets the minutes.
-	* @param {*} newMinutes The new minutes.
+	* @param {number} newMinutes The new minutes.
 	*/
 	setMinutes(newMinutes) {
 		this._minutes = newMinutes;
@@ -2564,14 +2564,14 @@ var Window_Time = class extends Window_Base {
 	}
 	/**
 	* Gets the alternating.
-	* @returns {*} The alternating.
+	* @returns {boolean} The alternating.
 	*/
 	isAlternating() {
 		return this._alternating;
 	}
 	/**
 	* Sets the alternating.
-	* @param {*} newAlternating The new alternating.
+	* @param {boolean} newAlternating The new alternating.
 	*/
 	setAlternating(newAlternating) {
 		this._alternating = newAlternating;

@@ -20,7 +20,7 @@ Window_SkillEquipDetail.prototype.skill = function()
 //region properties
 /**
  * Gets the skill id.
- * @returns {*} The skillId.
+ * @returns {number} The skillId.
  */
 Window_SkillEquipDetail.prototype.skillId = function()
 {

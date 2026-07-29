@@ -1140,14 +1140,14 @@ var Window_SkillEquipDetail = class extends Window_Base {
 	}
 	/**
 	* Gets the actor.
-	* @returns {*} The actor.
+	* @returns {Game_Actor|null} The actor.
 	*/
 	actor() {
 		return this._actor;
 	}
 	/**
 	* Gets the skill id.
-	* @returns {*} The skillId.
+	* @returns {number} The skillId.
 	*/
 	skillId() {
 		return this._skillId;

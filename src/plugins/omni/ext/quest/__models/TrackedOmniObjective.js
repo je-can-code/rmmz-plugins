@@ -11,20 +11,11 @@ import OmniQuest from './OmniQuest.js';
 class TrackedOmniObjective
 {
   //region init
-  /**
-   * Initialize an objective tracker for an quest.
-   * @param {number} id The id of this objective.
-   * @param {string} questKey The key of the quest that owns this objective.
-   * @param {OmniFulfillmentData} omniFulfillmentData The extraneous data on how this objective is to be fulfilled.
-   * @param {boolean} hidden Whether or not this objective is hidden.
-   * @param {boolean} optional Whether or not this objective is optional for its parent quest.
-   */
-  
 
   //region properties
   /**
    * Gets the indiscriminate target data.
-   * @returns {*} The indiscriminateTargetData.
+   * @returns {string} The indiscriminateTargetData.
    */
   indiscriminateTargetData()
   {
@@ -34,7 +25,7 @@ class TrackedOmniObjective
 
   /**
    * Sets the indiscriminate target data.
-   * @param {*} newIndiscriminateTargetData The new indiscriminateTargetData.
+   * @param {string} newIndiscriminateTargetData The new indiscriminateTargetData.
    */
   setIndiscriminateTargetData(newIndiscriminateTargetData)
   {
@@ -44,7 +35,7 @@ class TrackedOmniObjective
 
   /**
    * Gets the target map id.
-   * @returns {*} The targetMapId.
+   * @returns {number} The targetMapId.
    */
   targetMapId()
   {
@@ -54,7 +45,7 @@ class TrackedOmniObjective
 
   /**
    * Sets the target map id.
-   * @param {*} newTargetMapId The new targetMapId.
+   * @param {number} newTargetMapId The new targetMapId.
    */
   setTargetMapId(newTargetMapId)
   {
@@ -84,7 +75,7 @@ class TrackedOmniObjective
 
   /**
    * Gets the target item type.
-   * @returns {*} The targetItemType.
+   * @returns {number} The targetItemType.
    */
   targetItemType()
   {
@@ -94,7 +85,7 @@ class TrackedOmniObjective
 
   /**
    * Sets the target item type.
-   * @param {*} newTargetItemType The new targetItemType.
+   * @param {number} newTargetItemType The new targetItemType.
    */
   setTargetItemType(newTargetItemType)
   {
@@ -104,7 +95,7 @@ class TrackedOmniObjective
 
   /**
    * Gets the target item id.
-   * @returns {*} The targetItemId.
+   * @returns {number} The targetItemId.
    */
   targetItemId()
   {
@@ -114,7 +105,7 @@ class TrackedOmniObjective
 
   /**
    * Sets the target item id.
-   * @param {*} newTargetItemId The new targetItemId.
+   * @param {number} newTargetItemId The new targetItemId.
    */
   setTargetItemId(newTargetItemId)
   {
@@ -124,7 +115,7 @@ class TrackedOmniObjective
 
   /**
    * Gets the target item fetch quantity.
-   * @returns {*} The targetItemFetchQuantity.
+   * @returns {number} The targetItemFetchQuantity.
    */
   targetItemFetchQuantity()
   {
@@ -134,7 +125,7 @@ class TrackedOmniObjective
 
   /**
    * Sets the target item fetch quantity.
-   * @param {*} newTargetItemFetchQuantity The new targetItemFetchQuantity.
+   * @param {number} newTargetItemFetchQuantity The new targetItemFetchQuantity.
    */
   setTargetItemFetchQuantity(newTargetItemFetchQuantity)
   {
@@ -144,7 +135,7 @@ class TrackedOmniObjective
 
   /**
    * Gets the target enemy id.
-   * @returns {*} The targetEnemyId.
+   * @returns {number} The targetEnemyId.
    */
   targetEnemyId()
   {
@@ -154,7 +145,7 @@ class TrackedOmniObjective
 
   /**
    * Sets the target enemy id.
-   * @param {*} newTargetEnemyId The new targetEnemyId.
+   * @param {number} newTargetEnemyId The new targetEnemyId.
    */
   setTargetEnemyId(newTargetEnemyId)
   {
@@ -164,7 +155,7 @@ class TrackedOmniObjective
 
   /**
    * Gets the target enemy amount.
-   * @returns {*} The targetEnemyAmount.
+   * @returns {number} The targetEnemyAmount.
    */
   targetEnemyAmount()
   {
@@ -174,7 +165,7 @@ class TrackedOmniObjective
 
   /**
    * Sets the target enemy amount.
-   * @param {*} newTargetEnemyAmount The new targetEnemyAmount.
+   * @param {number} newTargetEnemyAmount The new targetEnemyAmount.
    */
   setTargetEnemyAmount(newTargetEnemyAmount)
   {
@@ -184,7 +175,7 @@ class TrackedOmniObjective
 
   /**
    * Gets the target quest keys.
-   * @returns {*} The targetQuestKeys.
+   * @returns {string[]} The targetQuestKeys.
    */
   targetQuestKeys()
   {
@@ -194,7 +185,7 @@ class TrackedOmniObjective
 
   /**
    * Sets the target quest keys.
-   * @param {*} newTargetQuestKeys The new targetQuestKeys.
+   * @param {string[]} newTargetQuestKeys The new targetQuestKeys.
    */
   setTargetQuestKeys(newTargetQuestKeys)
   {
@@ -204,7 +195,7 @@ class TrackedOmniObjective
 
   /**
    * Gets the current item fetch quantity.
-   * @returns {*} The currentItemFetchQuantity.
+   * @returns {number} The currentItemFetchQuantity.
    */
   currentItemFetchQuantity()
   {
@@ -214,7 +205,7 @@ class TrackedOmniObjective
 
   /**
    * Sets the current item fetch quantity.
-   * @param {*} newCurrentItemFetchQuantity The new currentItemFetchQuantity.
+   * @param {number} newCurrentItemFetchQuantity The new currentItemFetchQuantity.
    */
   setCurrentItemFetchQuantity(newCurrentItemFetchQuantity)
   {
@@ -224,7 +215,7 @@ class TrackedOmniObjective
 
   /**
    * Gets the current enemy amount.
-   * @returns {*} The currentEnemyAmount.
+   * @returns {number} The currentEnemyAmount.
    */
   currentEnemyAmount()
   {
@@ -234,7 +225,7 @@ class TrackedOmniObjective
 
   /**
    * Sets the current enemy amount.
-   * @param {*} newCurrentEnemyAmount The new currentEnemyAmount.
+   * @param {number} newCurrentEnemyAmount The new currentEnemyAmount.
    */
   setCurrentEnemyAmount(newCurrentEnemyAmount)
   {
@@ -242,6 +233,15 @@ class TrackedOmniObjective
     this._currentEnemyAmount = newCurrentEnemyAmount;
   }
   //endregion properties
+
+  /**
+   * Initialize an objective tracker for an quest.
+   * @param {number} id The id of this objective.
+   * @param {string} questKey The key of the quest that owns this objective.
+   * @param {OmniFulfillmentData} omniFulfillmentData The extraneous data on how this objective is to be fulfilled.
+   * @param {boolean} hidden Whether or not this objective is hidden.
+   * @param {boolean} optional Whether or not this objective is optional for its parent quest.
+   */
 
   constructor(questKey, id, omniFulfillmentData, hidden, optional)
   {

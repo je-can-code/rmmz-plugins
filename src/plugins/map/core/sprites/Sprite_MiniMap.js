@@ -21,17 +21,11 @@ class Sprite_MiniMap
 {
   //region configuration
 
-  /**
-   * Number of tiles to show from the player in each direction.
-   * Viewport width/height in tiles = (MAP_RANGE * 2 + 1).
-   * @type {number}
-   */
-  
 
   //region properties
   /**
    * Gets the cache ready.
-   * @returns {*} The cacheReady.
+   * @returns {boolean} The cacheReady.
    */
   isCacheReady()
   {
@@ -41,7 +35,7 @@ class Sprite_MiniMap
 
   /**
    * Sets the cache ready.
-   * @param {*} newCacheReady The new cacheReady.
+   * @param {boolean} newCacheReady The new cacheReady.
    */
   setCacheReady(newCacheReady)
   {
@@ -61,7 +55,7 @@ class Sprite_MiniMap
 
   /**
    * Sets the focus mode.
-   * @param {*} newFocusMode The new focusMode.
+   * @param {boolean} newFocusMode The new focusMode.
    */
   setFocusMode(newFocusMode)
   {
@@ -71,7 +65,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the cached map id.
-   * @returns {*} The cachedMapId.
+   * @returns {number} The cachedMapId.
    */
   cachedMapId()
   {
@@ -81,7 +75,7 @@ class Sprite_MiniMap
 
   /**
    * Sets the cached map id.
-   * @param {*} newCachedMapId The new cachedMapId.
+   * @param {number} newCachedMapId The new cachedMapId.
    */
   setCachedMapId(newCachedMapId)
   {
@@ -131,7 +125,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the last x.
-   * @returns {*} The lastX.
+   * @returns {number} The lastX.
    */
   lastX()
   {
@@ -141,7 +135,7 @@ class Sprite_MiniMap
 
   /**
    * Sets the last x.
-   * @param {*} newLastX The new lastX.
+   * @param {number} newLastX The new lastX.
    */
   setLastX(newLastX)
   {
@@ -151,7 +145,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the last y.
-   * @returns {*} The lastY.
+   * @returns {number} The lastY.
    */
   lastY()
   {
@@ -161,7 +155,7 @@ class Sprite_MiniMap
 
   /**
    * Sets the last y.
-   * @param {*} newLastY The new lastY.
+   * @param {number} newLastY The new lastY.
    */
   setLastY(newLastY)
   {
@@ -171,7 +165,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the minimap frame sprite.
-   * @returns {*} The minimapFrameSprite.
+   * @returns {Sprite} The minimapFrameSprite.
    */
   minimapFrameSprite()
   {
@@ -201,7 +195,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the width.
-   * @returns {*} The width.
+   * @returns {number} The width.
    */
   minimapWidth()
   {
@@ -211,7 +205,7 @@ class Sprite_MiniMap
 
   /**
    * Sets the width.
-   * @param {*} newWidth The new width.
+   * @param {number} newWidth The new width.
    */
   setMinimapWidth(newWidth)
   {
@@ -221,7 +215,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the height.
-   * @returns {*} The height.
+   * @returns {number} The height.
    */
   minimapHeight()
   {
@@ -231,7 +225,7 @@ class Sprite_MiniMap
 
   /**
    * Sets the height.
-   * @param {*} newHeight The new height.
+   * @param {number} newHeight The new height.
    */
   setMinimapHeight(newHeight)
   {
@@ -241,7 +235,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the view tiles.
-   * @returns {*} The viewTiles.
+   * @returns {number} The viewTiles.
    */
   viewTiles()
   {
@@ -251,7 +245,7 @@ class Sprite_MiniMap
 
   /**
    * Sets the view tiles.
-   * @param {*} newViewTiles The new viewTiles.
+   * @param {number} newViewTiles The new viewTiles.
    */
   setViewTiles(newViewTiles)
   {
@@ -261,7 +255,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the overlay sprite.
-   * @returns {*} The overlaySprite.
+   * @returns {Sprite} The overlaySprite.
    */
   overlaySprite()
   {
@@ -271,7 +265,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the overlay.
-   * @returns {*} The overlay.
+   * @returns {Bitmap} The overlay.
    */
   overlay()
   {
@@ -281,7 +275,7 @@ class Sprite_MiniMap
 
   /**
    * Sets the overlay.
-   * @param {*} newOverlay The new overlay.
+   * @param {Bitmap} newOverlay The new overlay.
    */
   setOverlay(newOverlay)
   {
@@ -291,7 +285,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the chrome sprite.
-   * @returns {*} The chromeSprite.
+   * @returns {Sprite} The chromeSprite.
    */
   chromeSprite()
   {
@@ -301,7 +295,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the chrome bitmap.
-   * @returns {*} The chromeBitmap.
+   * @returns {Bitmap} The chromeBitmap.
    */
   chromeBitmap()
   {
@@ -311,7 +305,7 @@ class Sprite_MiniMap
 
   /**
    * Sets the chrome bitmap.
-   * @param {*} newChromeBitmap The new chromeBitmap.
+   * @param {Bitmap} newChromeBitmap The new chromeBitmap.
    */
   setChromeBitmap(newChromeBitmap)
   {
@@ -321,7 +315,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the cache offset tiles.
-   * @returns {*} The cacheOffsetTiles.
+   * @returns {number} The cacheOffsetTiles.
    */
   cacheOffsetTiles()
   {
@@ -331,7 +325,7 @@ class Sprite_MiniMap
 
   /**
    * Sets the cache offset tiles.
-   * @param {*} newCacheOffsetTiles The new cacheOffsetTiles.
+   * @param {number} newCacheOffsetTiles The new cacheOffsetTiles.
    */
   setCacheOffsetTiles(newCacheOffsetTiles)
   {
@@ -341,7 +335,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the cache bitmap.
-   * @returns {*} The cacheBitmap.
+   * @returns {Bitmap} The cacheBitmap.
    */
   cacheBitmap()
   {
@@ -351,7 +345,7 @@ class Sprite_MiniMap
 
   /**
    * Sets the cache bitmap.
-   * @param {*} newCacheBitmap The new cacheBitmap.
+   * @param {Bitmap} newCacheBitmap The new cacheBitmap.
    */
   setCacheBitmap(newCacheBitmap)
   {
@@ -359,6 +353,12 @@ class Sprite_MiniMap
     this._cacheBitmap = newCacheBitmap;
   }
   //endregion properties
+
+  /**
+   * Number of tiles to show from the player in each direction.
+   * Viewport width/height in tiles = (MAP_RANGE * 2 + 1).
+   * @type {number}
+   */
 
   MAP_RANGE = 12;
 

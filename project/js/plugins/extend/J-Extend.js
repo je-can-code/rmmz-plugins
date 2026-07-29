@@ -904,9 +904,6 @@ J.EXTEND.RegExp.ToggleGroupOnExecute = /<toggleGroupOnExecute:[ ]?(\[[^\]]+])>/g
 */
 var OverlayManager = class OverlayManager {
 	/**
-	* The line types available for overlaying in the context of a note.
-	*/
-	/**
 	* Gets the skill cache.
 	* @returns {*} The skillCache.
 	*/
@@ -920,6 +917,9 @@ var OverlayManager = class OverlayManager {
 	static stateCache() {
 		return this._stateCache;
 	}
+	/**
+	* The line types available for overlaying in the context of a note.
+	*/
 	static LineType = {
 		/**
 		* A "key value pair" tag, such as <key:value>.

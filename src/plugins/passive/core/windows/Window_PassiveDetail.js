@@ -23,23 +23,18 @@
 class Window_PassiveDetail
   extends Window_Base
 {
-  /**
-   * Constructor.
-   * @param {Rectangle} rect The rectangle for this window.
-   */
-  
 
   //region properties
   /**
    * Gets the column start y.
-   * @returns {*} The columnStartY.
+   * @returns {number} The columnStartY.
    */
   
 
   //region properties
   /**
    * Gets the actor.
-   * @returns {*} The actor.
+   * @returns {Game_Actor|null} The actor.
    */
   actor()
   {
@@ -49,7 +44,7 @@ class Window_PassiveDetail
 
   /**
    * Gets the state.
-   * @returns {*} The state.
+   * @returns {RPG_State|null} The state.
    */
   state()
   {
@@ -57,6 +52,11 @@ class Window_PassiveDetail
     return this._state;
   }
   //endregion properties
+
+  /**
+   * Constructor.
+   * @param {Rectangle} rect The rectangle for this window.
+   */
 
   columnStartY()
   {
@@ -66,7 +66,7 @@ class Window_PassiveDetail
 
   /**
    * Sets the column start y.
-   * @param {*} newColumnStartY The new columnStartY.
+   * @param {number} newColumnStartY The new columnStartY.
    */
   setColumnStartY(newColumnStartY)
   {

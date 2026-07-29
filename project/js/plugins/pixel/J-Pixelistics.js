@@ -273,10 +273,6 @@ var PixelDebugSampler = class PixelDebugSampler {
 */
 var PIXEL_CollisionManager = class {
 	/**
-	* Initializes configuration for collision table density and storage.
-	* Reads the step count from J.PIXEL.Metadata if available, otherwise defaults to 4.
-	*/
-	/**
 	* Gets the table.
 	* @returns {*} The table.
 	*/
@@ -290,6 +286,10 @@ var PIXEL_CollisionManager = class {
 	static setTable(newTable) {
 		this._table = newTable;
 	}
+	/**
+	* Initializes configuration for collision table density and storage.
+	* Reads the step count from J.PIXEL.Metadata if available, otherwise defaults to 4.
+	*/
 	static initConfig() {
 		const metaCount = J.PIXEL && J.PIXEL.Metadata ? J.PIXEL.Metadata.CollisionStepCount : 4;
 		this.collisionStepCount = metaCount;
@@ -2893,28 +2893,28 @@ Game_Player.prototype.getCollisionPivotY = function() {
 };
 /**
 * Gets the last occupied tile x.
-* @returns {*} The lastOccupiedTileX.
+* @returns {number} The lastOccupiedTileX.
 */
 Game_Player.prototype.lastOccupiedTileX = function() {
 	return this._lastOccupiedTileX;
 };
 /**
 * Sets the last occupied tile x.
-* @param {*} newLastOccupiedTileX The new lastOccupiedTileX.
+* @param {number} newLastOccupiedTileX The new lastOccupiedTileX.
 */
 Game_Player.prototype.setLastOccupiedTileX = function(newLastOccupiedTileX) {
 	this._lastOccupiedTileX = newLastOccupiedTileX;
 };
 /**
 * Gets the last occupied tile y.
-* @returns {*} The lastOccupiedTileY.
+* @returns {number} The lastOccupiedTileY.
 */
 Game_Player.prototype.lastOccupiedTileY = function() {
 	return this._lastOccupiedTileY;
 };
 /**
 * Sets the last occupied tile y.
-* @param {*} newLastOccupiedTileY The new lastOccupiedTileY.
+* @param {number} newLastOccupiedTileY The new lastOccupiedTileY.
 */
 Game_Player.prototype.setLastOccupiedTileY = function(newLastOccupiedTileY) {
 	this._lastOccupiedTileY = newLastOccupiedTileY;
@@ -2927,10 +2927,6 @@ Game_Player.prototype.setLastOccupiedTileY = function(newLastOccupiedTileY) {
 * Draws only the currently visible subcells for performance.
 */
 var Sprite_PixelCollisionOverlay = class extends Sprite {
-	/**
-	* Constructor.
-	* @param {...*} args Forwarded to {@link #initialize}.
-	*/
 	/**
 	* Gets the show grid lines.
 	* @returns {*} The showGridLines.
@@ -2954,60 +2950,64 @@ var Sprite_PixelCollisionOverlay = class extends Sprite {
 	}
 	/**
 	* Gets the last display x.
-	* @returns {*} The lastDisplayX.
+	* @returns {number} The lastDisplayX.
 	*/
 	lastDisplayX() {
 		return this._lastDisplayX;
 	}
 	/**
 	* Sets the last display x.
-	* @param {*} newLastDisplayX The new lastDisplayX.
+	* @param {number} newLastDisplayX The new lastDisplayX.
 	*/
 	setLastDisplayX(newLastDisplayX) {
 		this._lastDisplayX = newLastDisplayX;
 	}
 	/**
 	* Gets the last display y.
-	* @returns {*} The lastDisplayY.
+	* @returns {number} The lastDisplayY.
 	*/
 	lastDisplayY() {
 		return this._lastDisplayY;
 	}
 	/**
 	* Sets the last display y.
-	* @param {*} newLastDisplayY The new lastDisplayY.
+	* @param {number} newLastDisplayY The new lastDisplayY.
 	*/
 	setLastDisplayY(newLastDisplayY) {
 		this._lastDisplayY = newLastDisplayY;
 	}
 	/**
 	* Gets the last player x.
-	* @returns {*} The lastPlayerX.
+	* @returns {number} The lastPlayerX.
 	*/
 	lastPlayerX() {
 		return this._lastPlayerX;
 	}
 	/**
 	* Sets the last player x.
-	* @param {*} newLastPlayerX The new lastPlayerX.
+	* @param {number} newLastPlayerX The new lastPlayerX.
 	*/
 	setLastPlayerX(newLastPlayerX) {
 		this._lastPlayerX = newLastPlayerX;
 	}
 	/**
 	* Gets the last player y.
-	* @returns {*} The lastPlayerY.
+	* @returns {number} The lastPlayerY.
 	*/
 	lastPlayerY() {
 		return this._lastPlayerY;
 	}
 	/**
 	* Sets the last player y.
-	* @param {*} newLastPlayerY The new lastPlayerY.
+	* @param {number} newLastPlayerY The new lastPlayerY.
 	*/
 	setLastPlayerY(newLastPlayerY) {
 		this._lastPlayerY = newLastPlayerY;
 	}
+	/**
+	* Constructor.
+	* @param {...*} args Forwarded to {@link #initialize}.
+	*/
 	constructor(...args) {
 		super();
 		this.initialize(...args);

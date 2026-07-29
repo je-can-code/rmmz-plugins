@@ -7,11 +7,6 @@
 class Window_TargetingList
   extends Window_Command
 {
-  /**
-   * How many font sizes smaller than normal the list entries render at.
-   * @type {number}
-   */
-  
 
   //region properties
   /**
@@ -25,6 +20,10 @@ class Window_TargetingList
   }
   //endregion properties
 
+  /**
+   * How many font sizes smaller than normal the list entries render at.
+   * @type {number}
+   */
   static FontSizeDelta = -8;
 
   /**

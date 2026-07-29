@@ -4,18 +4,11 @@
  */
 class JABS_Timer
 {
-  /**
-   * A key or name for this timer.
-   * This is not strictly enforced by the timer, so this is for
-   * developer convenience if needed.
-   * @type {string}
-   */
-  
 
   //region properties
   /**
    * Gets the timer.
-   * @returns {*} The timer.
+   * @returns {number} The timer.
    */
   timer()
   {
@@ -25,7 +18,7 @@ class JABS_Timer
 
   /**
    * Sets the timer.
-   * @param {*} newTimer The new timer.
+   * @param {number} newTimer The new timer.
    */
   setTimer(newTimer)
   {
@@ -35,7 +28,7 @@ class JABS_Timer
 
   /**
    * Gets the timer max.
-   * @returns {*} The timerMax.
+   * @returns {number} The timerMax.
    */
   timerMax()
   {
@@ -45,7 +38,7 @@ class JABS_Timer
 
   /**
    * Sets the timer max.
-   * @param {*} newTimerMax The new timerMax.
+   * @param {number} newTimerMax The new timerMax.
    */
   setTimerMax(newTimerMax)
   {
@@ -55,7 +48,7 @@ class JABS_Timer
 
   /**
    * Gets the stop counting.
-   * @returns {*} The stopCounting.
+   * @returns {boolean} The stopCounting.
    */
   stopCounting()
   {
@@ -63,6 +56,13 @@ class JABS_Timer
     return this._stopCounting;
   }
   //endregion properties
+
+  /**
+   * A key or name for this timer.
+   * This is not strictly enforced by the timer, so this is for
+   * developer convenience if needed.
+   * @type {string}
+   */
 
   _key = String.empty;
 

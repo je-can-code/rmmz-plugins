@@ -338,7 +338,7 @@ var JABS_HitstopData = class {
 	}
 	/**
 	* Gets the flurry windows.
-	* @returns {*} The flurryWindows.
+	* @returns {Map<string, number>} The flurryWindows.
 	*/
 	flurryWindows() {
 		return this._flurryWindows;

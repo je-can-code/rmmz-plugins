@@ -2438,7 +2438,7 @@ Scene_Status.prototype.handleNormalizedStatusInput = function() {
 };
 /**
 * Gets the page index.
-* @returns {*} The pageIndex.
+* @returns {number} The pageIndex.
 */
 Scene_Status.prototype.pageIndex = function() {
 	return this._j._cms_s._status._state._pageIndex;
@@ -2452,7 +2452,7 @@ Scene_Status.prototype.lastDir4 = function() {
 };
 /**
 * Gets the switch cooldown.
-* @returns {*} The switchCooldown.
+* @returns {number} The switchCooldown.
 */
 Scene_Status.prototype.switchCooldown = function() {
 	return this._j._cms_s._status._state._switchCooldown;

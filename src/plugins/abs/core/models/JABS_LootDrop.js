@@ -4,16 +4,11 @@
  */
 class JABS_LootDrop
 {
-  /**
-   * The duration that this loot drop will exist on the map.
-   * @type {number}
-   */
-  
 
   //region properties
   /**
    * Sets the can expire.
-   * @param {*} newCanExpire The new canExpire.
+   * @param {boolean} newCanExpire The new canExpire.
    */
   setCanExpire(newCanExpire)
   {
@@ -26,6 +21,11 @@ class JABS_LootDrop
    * @param {*} newDuration The new duration.
    */
   //endregion properties
+
+  /**
+   * The duration that this loot drop will exist on the map.
+   * @type {number}
+   */
 
   _duration = 900;
 

@@ -7,15 +7,11 @@ import JaftingSalvageManager from './../managers/JaftingSalvageManager.js';
 class Window_SalvageCandidateList
   extends Window_Selectable
 {
-  /**
-   * @param {Rectangle} rect Window geometry.
-   */
-  
 
   //region properties
   /**
    * Gets the data.
-   * @returns {*} The data.
+   * @returns {Array} The data.
    */
   data()
   {
@@ -25,7 +21,7 @@ class Window_SalvageCandidateList
 
   /**
    * Sets the data.
-   * @param {*} newData The new data.
+   * @param {Array} newData The new data.
    */
   setData(newData)
   {
@@ -33,6 +29,10 @@ class Window_SalvageCandidateList
     this._data = newData;
   }
   //endregion properties
+
+  /**
+   * @param {Rectangle} rect Window geometry.
+   */
 
   constructor(rect)
   {

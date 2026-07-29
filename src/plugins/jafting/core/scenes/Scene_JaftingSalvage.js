@@ -10,10 +10,6 @@ import Window_SalvagePreview from '../windows/Window_SalvagePreview.js';
 class Scene_JaftingSalvage
   extends Scene_MenuBase
 {
-  /**
-   * How many stamped units one confirmation dismantles (stack splitting can grow this later).
-   */
-  
 
   //region properties
   /**
@@ -58,7 +54,7 @@ class Scene_JaftingSalvage
 
   /**
    * Gets the candidate window.
-   * @returns {*} The candidateWindow.
+   * @returns {Window_SalvageCandidateList} The candidateWindow.
    */
   candidateWindow()
   {
@@ -68,7 +64,7 @@ class Scene_JaftingSalvage
 
   /**
    * Sets the candidate window.
-   * @param {*} newCandidateWindow The new candidateWindow.
+   * @param {Window_SalvageCandidateList} newCandidateWindow The new candidateWindow.
    */
   setCandidateWindow(newCandidateWindow)
   {
@@ -78,7 +74,7 @@ class Scene_JaftingSalvage
 
   /**
    * Gets the preview window.
-   * @returns {*} The previewWindow.
+   * @returns {Window_SalvagePreview} The previewWindow.
    */
   previewWindow()
   {
@@ -88,7 +84,7 @@ class Scene_JaftingSalvage
 
   /**
    * Sets the preview window.
-   * @param {*} newPreviewWindow The new previewWindow.
+   * @param {Window_SalvagePreview} newPreviewWindow The new previewWindow.
    */
   setPreviewWindow(newPreviewWindow)
   {
@@ -98,7 +94,7 @@ class Scene_JaftingSalvage
 
   /**
    * Gets the confirmation window.
-   * @returns {*} The confirmationWindow.
+   * @returns {Window_SalvageConfirmation} The confirmationWindow.
    */
   confirmationWindow()
   {
@@ -108,7 +104,7 @@ class Scene_JaftingSalvage
 
   /**
    * Sets the confirmation window.
-   * @param {*} newConfirmationWindow The new confirmationWindow.
+   * @param {Window_SalvageConfirmation} newConfirmationWindow The new confirmationWindow.
    */
   setConfirmationWindow(newConfirmationWindow)
   {
@@ -116,6 +112,10 @@ class Scene_JaftingSalvage
     this._confirmationWindow = newConfirmationWindow;
   }
   //endregion properties
+
+  /**
+   * How many stamped units one confirmation dismantles (stack splitting can grow this later).
+   */
 
   static DismantleBatchSize = 1;
 

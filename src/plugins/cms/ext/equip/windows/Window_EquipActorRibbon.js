@@ -7,11 +7,6 @@
 class Window_EquipActorRibbon
   extends Window_ActorRibbon
 {
-  /**
-   * Constructor.
-   * @param {Rectangle} rect The rectangle for this window.
-   */
-  
 
   //region properties
   /**
@@ -25,6 +20,10 @@ class Window_EquipActorRibbon
   }
   //endregion properties
 
+  /**
+   * Constructor.
+   * @param {Rectangle} rect The rectangle for this window.
+   */
   constructor(rect)
   {
     // call super when having extended constructors.

@@ -158,7 +158,7 @@ Game_Temp.prototype.flagBeyondMaxDataAsCached = function()
 //region properties
 /**
  * Gets the beyond max data.
- * @returns {*} The beyondMaxData.
+ * @returns {Array} The beyondMaxData.
  */
 Game_Temp.prototype.beyondMaxData = function()
 {

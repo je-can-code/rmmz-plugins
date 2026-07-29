@@ -702,10 +702,6 @@ var FramedTarget = class {
 */
 var Sprite_FlowingGauge = class Sprite_FlowingGauge extends Sprite {
 	/**
-	* Gets the gauge bitmap.
-	* @returns {*} The gaugeBitmap.
-	*/
-	/**
 	* Gets the background bitmap.
 	* @returns {*} The backgroundBitmap.
 	*/
@@ -714,157 +710,161 @@ var Sprite_FlowingGauge = class Sprite_FlowingGauge extends Sprite {
 	}
 	/**
 	* Sets the is ready.
-	* @param {*} newIsReady The new isReady.
+	* @param {boolean} newIsReady The new isReady.
 	*/
 	setIsReady(newIsReady) {
 		this._isReady = newIsReady;
 	}
+	/**
+	* Gets the gauge bitmap.
+	* @returns {Bitmap|null} The gaugeBitmap.
+	*/
 	gaugeBitmap() {
 		return this._gaugeBitmap;
 	}
 	/**
 	* Sets the gauge bitmap.
-	* @param {*} newGaugeBitmap The new gaugeBitmap.
+	* @param {Bitmap|null} newGaugeBitmap The new gaugeBitmap.
 	*/
 	setGaugeBitmap(newGaugeBitmap) {
 		this._gaugeBitmap = newGaugeBitmap;
 	}
 	/**
 	* Gets the gauge background.
-	* @returns {*} The gaugeBackground.
+	* @returns {Sprite} The gaugeBackground.
 	*/
 	gaugeBackground() {
 		return this._gaugeBackground;
 	}
 	/**
 	* Sets the gauge background.
-	* @param {*} newGaugeBackground The new gaugeBackground.
+	* @param {Sprite} newGaugeBackground The new gaugeBackground.
 	*/
 	setGaugeBackground(newGaugeBackground) {
 		this._gaugeBackground = newGaugeBackground;
 	}
 	/**
 	* Gets the gauge current sprite.
-	* @returns {*} The gaugeCurrentSprite.
+	* @returns {Sprite} The gaugeCurrentSprite.
 	*/
 	gaugeCurrentSprite() {
 		return this._gaugeCurrentSprite;
 	}
 	/**
 	* Sets the gauge current sprite.
-	* @param {*} newGaugeCurrentSprite The new gaugeCurrentSprite.
+	* @param {Sprite} newGaugeCurrentSprite The new gaugeCurrentSprite.
 	*/
 	setGaugeCurrentSprite(newGaugeCurrentSprite) {
 		this._gaugeCurrentSprite = newGaugeCurrentSprite;
 	}
 	/**
 	* Gets the gauge actual sprite.
-	* @returns {*} The gaugeActualSprite.
+	* @returns {Sprite} The gaugeActualSprite.
 	*/
 	gaugeActualSprite() {
 		return this._gaugeActualSprite;
 	}
 	/**
 	* Sets the gauge actual sprite.
-	* @param {*} newGaugeActualSprite The new gaugeActualSprite.
+	* @param {Sprite} newGaugeActualSprite The new gaugeActualSprite.
 	*/
 	setGaugeActualSprite(newGaugeActualSprite) {
 		this._gaugeActualSprite = newGaugeActualSprite;
 	}
 	/**
 	* Gets the gauge current.
-	* @returns {*} The gaugeCurrent.
+	* @returns {number} The gaugeCurrent.
 	*/
 	gaugeCurrent() {
 		return this._gaugeCurrent;
 	}
 	/**
 	* Sets the gauge current.
-	* @param {*} newGaugeCurrent The new gaugeCurrent.
+	* @param {number} newGaugeCurrent The new gaugeCurrent.
 	*/
 	setGaugeCurrent(newGaugeCurrent) {
 		this._gaugeCurrent = newGaugeCurrent;
 	}
 	/**
 	* Gets the gauge target.
-	* @returns {*} The gaugeTarget.
+	* @returns {number} The gaugeTarget.
 	*/
 	gaugeTarget() {
 		return this._gaugeTarget;
 	}
 	/**
 	* Sets the gauge target.
-	* @param {*} newGaugeTarget The new gaugeTarget.
+	* @param {number} newGaugeTarget The new gaugeTarget.
 	*/
 	setGaugeTarget(newGaugeTarget) {
 		this._gaugeTarget = newGaugeTarget;
 	}
 	/**
 	* Gets the gauge max.
-	* @returns {*} The gaugeMax.
+	* @returns {number} The gaugeMax.
 	*/
 	gaugeMax() {
 		return this._gaugeMax;
 	}
 	/**
 	* Sets the gauge max.
-	* @param {*} newGaugeMax The new gaugeMax.
+	* @param {number} newGaugeMax The new gaugeMax.
 	*/
 	setGaugeMax(newGaugeMax) {
 		this._gaugeMax = newGaugeMax;
 	}
 	/**
 	* Gets the battler.
-	* @returns {*} The battler.
+	* @returns {Game_Enemy|null} The battler.
 	*/
 	battler() {
 		return this._battler;
 	}
 	/**
 	* Sets the battler.
-	* @param {*} newBattler The new battler.
+	* @param {Game_Enemy|null} newBattler The new battler.
 	*/
 	setBattler(newBattler) {
 		this._battler = newBattler;
 	}
 	/**
 	* Gets the gauge type.
-	* @returns {*} The gaugeType.
+	* @returns {Sprite_FlowingGauge.Types} The gaugeType.
 	*/
 	gaugeType() {
 		return this._gaugeType;
 	}
 	/**
 	* Sets the gauge type.
-	* @param {*} newGaugeType The new gaugeType.
+	* @param {Sprite_FlowingGauge.Types} newGaugeType The new gaugeType.
 	*/
 	setGaugeType(newGaugeType) {
 		this._gaugeType = newGaugeType;
 	}
 	/**
 	* Gets the gauge slice fill min x.
-	* @returns {*} The gaugeSliceFillMinX.
+	* @returns {number} The gaugeSliceFillMinX.
 	*/
 	gaugeSliceFillMinX() {
 		return this._gaugeSliceFillMinX;
 	}
 	/**
 	* Sets the gauge slice fill min x.
-	* @param {*} newGaugeSliceFillMinX The new gaugeSliceFillMinX.
+	* @param {number} newGaugeSliceFillMinX The new gaugeSliceFillMinX.
 	*/
 	setGaugeSliceFillMinX(newGaugeSliceFillMinX) {
 		this._gaugeSliceFillMinX = newGaugeSliceFillMinX;
 	}
 	/**
 	* Gets the gauge slice fill inner width.
-	* @returns {*} The gaugeSliceFillInnerWidth.
+	* @returns {number} The gaugeSliceFillInnerWidth.
 	*/
 	gaugeSliceFillInnerWidth() {
 		return this._gaugeSliceFillInnerWidth;
 	}
 	/**
 	* Sets the gauge slice fill inner width.
-	* @param {*} newGaugeSliceFillInnerWidth The new gaugeSliceFillInnerWidth.
+	* @param {number} newGaugeSliceFillInnerWidth The new gaugeSliceFillInnerWidth.
 	*/
 	setGaugeSliceFillInnerWidth(newGaugeSliceFillInnerWidth) {
 		this._gaugeSliceFillInnerWidth = newGaugeSliceFillInnerWidth;
@@ -885,42 +885,42 @@ var Sprite_FlowingGauge = class Sprite_FlowingGauge extends Sprite {
 	}
 	/**
 	* Gets the gauge actual flow current.
-	* @returns {*} The gaugeActualFlowCurrent.
+	* @returns {number} The gaugeActualFlowCurrent.
 	*/
 	gaugeActualFlowCurrent() {
 		return this._gaugeActualFlowCurrent;
 	}
 	/**
 	* Sets the gauge actual flow current.
-	* @param {*} newGaugeActualFlowCurrent The new gaugeActualFlowCurrent.
+	* @param {number} newGaugeActualFlowCurrent The new gaugeActualFlowCurrent.
 	*/
 	setGaugeActualFlowCurrent(newGaugeActualFlowCurrent) {
 		this._gaugeActualFlowCurrent = newGaugeActualFlowCurrent;
 	}
 	/**
 	* Gets the gauge background track min x.
-	* @returns {*} The gaugeBackgroundTrackMinX.
+	* @returns {number} The gaugeBackgroundTrackMinX.
 	*/
 	gaugeBackgroundTrackMinX() {
 		return this._gaugeBackgroundTrackMinX;
 	}
 	/**
 	* Sets the gauge background track min x.
-	* @param {*} newGaugeBackgroundTrackMinX The new gaugeBackgroundTrackMinX.
+	* @param {number} newGaugeBackgroundTrackMinX The new gaugeBackgroundTrackMinX.
 	*/
 	setGaugeBackgroundTrackMinX(newGaugeBackgroundTrackMinX) {
 		this._gaugeBackgroundTrackMinX = newGaugeBackgroundTrackMinX;
 	}
 	/**
 	* Gets the gauge background track inner width.
-	* @returns {*} The gaugeBackgroundTrackInnerWidth.
+	* @returns {number} The gaugeBackgroundTrackInnerWidth.
 	*/
 	gaugeBackgroundTrackInnerWidth() {
 		return this._gaugeBackgroundTrackInnerWidth;
 	}
 	/**
 	* Sets the gauge background track inner width.
-	* @param {*} newGaugeBackgroundTrackInnerWidth The new gaugeBackgroundTrackInnerWidth.
+	* @param {number} newGaugeBackgroundTrackInnerWidth The new gaugeBackgroundTrackInnerWidth.
 	*/
 	setGaugeBackgroundTrackInnerWidth(newGaugeBackgroundTrackInnerWidth) {
 		this._gaugeBackgroundTrackInnerWidth = newGaugeBackgroundTrackInnerWidth;

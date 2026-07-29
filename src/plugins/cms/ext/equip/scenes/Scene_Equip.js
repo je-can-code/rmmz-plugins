@@ -397,7 +397,7 @@ Scene_Equip.prototype.refreshActor = function()
 //region properties
 /**
  * Gets the actor ribbon window.
- * @returns {*} The actorRibbonWindow.
+ * @returns {Window_Base} The actorRibbonWindow.
  */
 Scene_Equip.prototype.actorRibbonWindow = function()
 {
@@ -407,7 +407,7 @@ Scene_Equip.prototype.actorRibbonWindow = function()
 
 /**
  * Sets the actor ribbon window.
- * @param {*} newActorRibbonWindow The new actorRibbonWindow.
+ * @param {Window_Base} newActorRibbonWindow The new actorRibbonWindow.
  */
 Scene_Equip.prototype.setActorRibbonWindow = function(newActorRibbonWindow)
 {
@@ -417,7 +417,7 @@ Scene_Equip.prototype.setActorRibbonWindow = function(newActorRibbonWindow)
 
 /**
  * Gets the controls hint window.
- * @returns {*} The controlsHintWindow.
+ * @returns {Window_Base} The controlsHintWindow.
  */
 Scene_Equip.prototype.controlsHintWindow = function()
 {
@@ -427,7 +427,7 @@ Scene_Equip.prototype.controlsHintWindow = function()
 
 /**
  * Sets the controls hint window.
- * @param {*} newControlsHintWindow The new controlsHintWindow.
+ * @param {Window_Base} newControlsHintWindow The new controlsHintWindow.
  */
 Scene_Equip.prototype.setControlsHintWindow = function(newControlsHintWindow)
 {

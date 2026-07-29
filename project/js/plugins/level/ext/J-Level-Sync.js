@@ -411,14 +411,14 @@ Game_Map.prototype.isMapContentSyncUplevel = function() {
 };
 /**
 * Gets the content sync level.
-* @returns {*} The contentSyncLevel.
+* @returns {number} The contentSyncLevel.
 */
 Game_Map.prototype.contentSyncLevel = function() {
 	return this._j._levelSync._contentSyncLevel;
 };
 /**
 * Sets the content sync level.
-* @param {*} newContentSyncLevel The new contentSyncLevel.
+* @param {number} newContentSyncLevel The new contentSyncLevel.
 */
 Game_Map.prototype.setContentSyncLevel = function(newContentSyncLevel) {
 	this._j._levelSync._contentSyncLevel = newContentSyncLevel;
@@ -665,14 +665,14 @@ if (J.HUD && J.HUD.EXT && J.HUD.EXT.PARTY) {
 }
 /**
 * Gets the sync icon sprite.
-* @returns {*} The syncIconSprite.
+* @returns {Sprite} The syncIconSprite.
 */
 Sprite_ActorValue.prototype.syncIconSprite = function() {
 	return this._j._syncIconSprite;
 };
 /**
 * Sets the sync icon sprite.
-* @param {*} newSyncIconSprite The new syncIconSprite.
+* @param {Sprite} newSyncIconSprite The new syncIconSprite.
 */
 Sprite_ActorValue.prototype.setSyncIconSprite = function(newSyncIconSprite) {
 	this._j._syncIconSprite = newSyncIconSprite;

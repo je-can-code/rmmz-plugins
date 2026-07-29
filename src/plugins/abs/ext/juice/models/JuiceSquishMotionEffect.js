@@ -6,13 +6,6 @@ import JuiceBaseEffect from './JuiceBaseEffect.js';
  */
 class JuiceSquishMotionEffect extends JuiceBaseEffect
 {
-  /**
-   * @param {Sprite} sprite The Pixi sprite being driven.
-   * @param {number} intensityScale Max delta applied via sine envelope (e.g. 0.12).
-   * @param {number} durationFrames Frames to run per repeat cycle.
-   * @param {number} [repeatCount=1] How many times to cycle the squish envelope before finishing.
-   */
-  
 
   //region properties
   /**
@@ -27,7 +20,7 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the base scale x.
-   * @returns {*} The baseScaleX.
+   * @returns {number} The baseScaleX.
    */
   baseScaleX()
   {
@@ -37,7 +30,7 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the base scale y.
-   * @returns {*} The baseScaleY.
+   * @returns {number} The baseScaleY.
    */
   baseScaleY()
   {
@@ -47,7 +40,7 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the frame.
-   * @returns {*} The frame.
+   * @returns {number} The frame.
    */
   frame()
   {
@@ -57,7 +50,7 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
 
   /**
    * Sets the frame.
-   * @param {*} newFrame The new frame.
+   * @param {number} newFrame The new frame.
    */
   setFrame(newFrame)
   {
@@ -67,7 +60,7 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the duration frames.
-   * @returns {*} The durationFrames.
+   * @returns {number} The durationFrames.
    */
   durationFrames()
   {
@@ -105,6 +98,13 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
     this._repeatsRemaining = newRepeatsRemaining;
   }
   //endregion properties
+
+  /**
+   * @param {Sprite} sprite The Pixi sprite being driven.
+   * @param {number} intensityScale Max delta applied via sine envelope (e.g. 0.12).
+   * @param {number} durationFrames Frames to run per repeat cycle.
+   * @param {number} [repeatCount=1] How many times to cycle the squish envelope before finishing.
+   */
 
   constructor(sprite, intensityScale, durationFrames, repeatCount = 1)
   {

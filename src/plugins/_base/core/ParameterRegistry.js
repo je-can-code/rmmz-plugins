@@ -7,10 +7,6 @@ import ParameterDefinition from './../models/ParameterDefinition.js';
  */
 class ParameterRegistry
 {
-  /**
-   * @type {Map<string, ParameterDefinition>}
-   */
-  
 
   //region properties
   /**
@@ -33,6 +29,10 @@ class ParameterRegistry
     return this._groupCache;
   }
   //endregion properties
+
+  /**
+   * @type {Map<string, ParameterDefinition>}
+   */
 
   static _definitions = new Map();
 

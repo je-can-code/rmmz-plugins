@@ -88,7 +88,7 @@ class Window_PartyFrame
   //region properties
   /**
    * Gets the hud sprites.
-   * @returns {*} The hudSprites.
+   * @returns {Map<string, Sprite_Face|Sprite_MapGauge|Sprite_ActorValue|Sprite_Icon|Sprite_BaseText>} The hudSprites.
    */
   hudSprites()
   {
@@ -98,7 +98,7 @@ class Window_PartyFrame
 
   /**
    * Gets the affliction presenter.
-   * @returns {*} The afflictionPresenter.
+   * @returns {StateAfflictionHudPresenter} The afflictionPresenter.
    */
   afflictionPresenter()
   {

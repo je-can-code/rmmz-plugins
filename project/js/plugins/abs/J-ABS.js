@@ -5715,46 +5715,46 @@ var JABS_Aabb = class JABS_Aabb {
 */
 var JABS_Timer = class {
 	/**
-	* A key or name for this timer.
-	* This is not strictly enforced by the timer, so this is for
-	* developer convenience if needed.
-	* @type {string}
-	*/
-	/**
 	* Gets the timer.
-	* @returns {*} The timer.
+	* @returns {number} The timer.
 	*/
 	timer() {
 		return this._timer;
 	}
 	/**
 	* Sets the timer.
-	* @param {*} newTimer The new timer.
+	* @param {number} newTimer The new timer.
 	*/
 	setTimer(newTimer) {
 		this._timer = newTimer;
 	}
 	/**
 	* Gets the timer max.
-	* @returns {*} The timerMax.
+	* @returns {number} The timerMax.
 	*/
 	timerMax() {
 		return this._timerMax;
 	}
 	/**
 	* Sets the timer max.
-	* @param {*} newTimerMax The new timerMax.
+	* @param {number} newTimerMax The new timerMax.
 	*/
 	setTimerMax(newTimerMax) {
 		this._timerMax = newTimerMax;
 	}
 	/**
 	* Gets the stop counting.
-	* @returns {*} The stopCounting.
+	* @returns {boolean} The stopCounting.
 	*/
 	stopCounting() {
 		return this._stopCounting;
 	}
+	/**
+	* A key or name for this timer.
+	* This is not strictly enforced by the timer, so this is for
+	* developer convenience if needed.
+	* @type {string}
+	*/
 	_key = String.empty;
 	/**
 	* The counter on this timer that ticks up to the max.
@@ -6168,10 +6168,6 @@ var JABS_HitboxPulseOptions = class JABS_HitboxPulseOptions {
 */
 var Sprite_HitboxPulse = class extends Sprite {
 	/**
-	* Constructor.
-	* Creates the internal Graphics child and resets members.
-	*/
-	/**
 	* Gets the sustained.
 	* @returns {*} The sustained.
 	*/
@@ -6180,91 +6176,91 @@ var Sprite_HitboxPulse = class extends Sprite {
 	}
 	/**
 	* Sets the sustained.
-	* @param {*} newSustained The new sustained.
+	* @param {boolean} newSustained The new sustained.
 	*/
 	setSustained(newSustained) {
 		this._sustained = newSustained;
 	}
 	/**
 	* Gets the age.
-	* @returns {*} The age.
+	* @returns {number} The age.
 	*/
 	age() {
 		return this._age;
 	}
 	/**
 	* Sets the age.
-	* @param {*} newAge The new age.
+	* @param {number} newAge The new age.
 	*/
 	setAge(newAge) {
 		this._age = newAge;
 	}
 	/**
 	* Gets the duration.
-	* @returns {*} The duration.
+	* @returns {number} The duration.
 	*/
 	duration() {
 		return this._duration;
 	}
 	/**
 	* Sets the duration.
-	* @param {*} newDuration The new duration.
+	* @param {number} newDuration The new duration.
 	*/
 	setDuration(newDuration) {
 		this._duration = newDuration;
 	}
 	/**
 	* Gets the start alpha.
-	* @returns {*} The startAlpha.
+	* @returns {number} The startAlpha.
 	*/
 	startAlpha() {
 		return this._startAlpha;
 	}
 	/**
 	* Sets the start alpha.
-	* @param {*} newStartAlpha The new startAlpha.
+	* @param {number} newStartAlpha The new startAlpha.
 	*/
 	setStartAlpha(newStartAlpha) {
 		this._startAlpha = newStartAlpha;
 	}
 	/**
 	* Gets the end alpha.
-	* @returns {*} The endAlpha.
+	* @returns {number} The endAlpha.
 	*/
 	endAlpha() {
 		return this._endAlpha;
 	}
 	/**
 	* Sets the end alpha.
-	* @param {*} newEndAlpha The new endAlpha.
+	* @param {number} newEndAlpha The new endAlpha.
 	*/
 	setEndAlpha(newEndAlpha) {
 		this._endAlpha = newEndAlpha;
 	}
 	/**
 	* Gets the scale start.
-	* @returns {*} The scaleStart.
+	* @returns {number} The scaleStart.
 	*/
 	scaleStart() {
 		return this._scaleStart;
 	}
 	/**
 	* Sets the scale start.
-	* @param {*} newScaleStart The new scaleStart.
+	* @param {number} newScaleStart The new scaleStart.
 	*/
 	setScaleStart(newScaleStart) {
 		this._scaleStart = newScaleStart;
 	}
 	/**
 	* Gets the scale end.
-	* @returns {*} The scaleEnd.
+	* @returns {number} The scaleEnd.
 	*/
 	scaleEnd() {
 		return this._scaleEnd;
 	}
 	/**
 	* Sets the scale end.
-	* @param {*} newScaleEnd The new scaleEnd.
+	* @param {number} newScaleEnd The new scaleEnd.
 	*/
 	setScaleEnd(newScaleEnd) {
 		this._scaleEnd = newScaleEnd;
@@ -6285,28 +6281,28 @@ var Sprite_HitboxPulse = class extends Sprite {
 	}
 	/**
 	* Gets the line alpha.
-	* @returns {*} The lineAlpha.
+	* @returns {number} The lineAlpha.
 	*/
 	lineAlpha() {
 		return this._lineAlpha;
 	}
 	/**
 	* Sets the line alpha.
-	* @param {*} newLineAlpha The new lineAlpha.
+	* @param {number} newLineAlpha The new lineAlpha.
 	*/
 	setLineAlpha(newLineAlpha) {
 		this._lineAlpha = newLineAlpha;
 	}
 	/**
 	* Gets the line width.
-	* @returns {*} The lineWidth.
+	* @returns {number} The lineWidth.
 	*/
 	lineWidth() {
 		return this._lineWidth;
 	}
 	/**
 	* Sets the line width.
-	* @param {*} newLineWidth The new lineWidth.
+	* @param {number} newLineWidth The new lineWidth.
 	*/
 	setLineWidth(newLineWidth) {
 		this._lineWidth = newLineWidth;
@@ -6327,14 +6323,14 @@ var Sprite_HitboxPulse = class extends Sprite {
 	}
 	/**
 	* Gets the fill alpha.
-	* @returns {*} The fillAlpha.
+	* @returns {number} The fillAlpha.
 	*/
 	fillAlpha() {
 		return this._fillAlpha;
 	}
 	/**
 	* Sets the fill alpha.
-	* @param {*} newFillAlpha The new fillAlpha.
+	* @param {number} newFillAlpha The new fillAlpha.
 	*/
 	setFillAlpha(newFillAlpha) {
 		this._fillAlpha = newFillAlpha;
@@ -6355,67 +6351,71 @@ var Sprite_HitboxPulse = class extends Sprite {
 	}
 	/**
 	* Gets the range.
-	* @returns {*} The range.
+	* @returns {number} The range.
 	*/
 	range() {
 		return this._range;
 	}
 	/**
 	* Sets the range.
-	* @param {*} newRange The new range.
+	* @param {number} newRange The new range.
 	*/
 	setRange(newRange) {
 		this._range = newRange;
 	}
 	/**
 	* Gets the degrees.
-	* @returns {*} The degrees.
+	* @returns {number} The degrees.
 	*/
 	degrees() {
 		return this._degrees;
 	}
 	/**
 	* Sets the degrees.
-	* @param {*} newDegrees The new degrees.
+	* @param {number} newDegrees The new degrees.
 	*/
 	setDegrees(newDegrees) {
 		this._degrees = newDegrees;
 	}
 	/**
 	* Gets the thickness.
-	* @returns {*} The thickness.
+	* @returns {number} The thickness.
 	*/
 	thickness() {
 		return this._thickness;
 	}
 	/**
 	* Sets the thickness.
-	* @param {*} newThickness The new thickness.
+	* @param {number} newThickness The new thickness.
 	*/
 	setThickness(newThickness) {
 		this._thickness = newThickness;
 	}
 	/**
 	* Gets the inner radius.
-	* @returns {*} The innerRadius.
+	* @returns {number} The innerRadius.
 	*/
 	innerRadius() {
 		return this._innerRadius;
 	}
 	/**
 	* Sets the inner radius.
-	* @param {*} newInnerRadius The new innerRadius.
+	* @param {number} newInnerRadius The new innerRadius.
 	*/
 	setInnerRadius(newInnerRadius) {
 		this._innerRadius = newInnerRadius;
 	}
 	/**
 	* Gets the graphics.
-	* @returns {*} The graphics.
+	* @returns {PIXI.Graphics} The graphics.
 	*/
 	graphics() {
 		return this._graphics;
 	}
+	/**
+	* Constructor.
+	* Creates the internal Graphics child and resets members.
+	*/
 	constructor() {
 		super();
 		/**
@@ -11492,343 +11492,343 @@ SerializableRegistry.register(JABS_SkillSlot);
 */
 var JABS_Battler = class JABS_Battler {
 	/**
-	* Constructor.
-	* @param {Game_Event|Game_Player|Game_Follower} event The event the battler is bound to.
-	* @param {Game_Actor|Game_Enemy} battler The battler data itself.
-	* @param {JABS_BattlerCoreData} battlerCoreData The core data for the battler.
-	*/
-	/**
 	* Gets the prepare ready.
 	* @returns {*} The prepareReady.
 	*/
 	/**
 	* Sets the hidden.
-	* @param {*} newHidden The new hidden.
+	* @param {boolean} newHidden The new hidden.
 	*/
 	setHidden(newHidden) {
 		this._hidden = newHidden;
 	}
 	/**
 	* Gets the leader decided action.
-	* @returns {*} The leaderDecidedAction.
+	* @returns {number|null} The leaderDecidedAction.
 	*/
 	leaderDecidedAction() {
 		return this._leaderDecidedAction;
 	}
 	/**
 	* Gets the post action cooldown complete.
-	* @returns {*} The postActionCooldownComplete.
+	* @returns {boolean} The postActionCooldownComplete.
 	*/
 	postActionCooldownComplete() {
 		return this._postActionCooldownComplete;
 	}
 	/**
 	* Sets the post action cooldown complete.
-	* @param {*} newPostActionCooldownComplete The new postActionCooldownComplete.
+	* @param {boolean} newPostActionCooldownComplete The new postActionCooldownComplete.
 	*/
 	setPostActionCooldownComplete(newPostActionCooldownComplete) {
 		this._postActionCooldownComplete = newPostActionCooldownComplete;
 	}
 	/**
 	* Gets the idle action ready.
-	* @returns {*} The idleActionReady.
+	* @returns {boolean} The idleActionReady.
 	*/
 	idleActionReady() {
 		return this._idleActionReady;
 	}
 	/**
 	* Sets the idle action ready.
-	* @param {*} newIdleActionReady The new idleActionReady.
+	* @param {boolean} newIdleActionReady The new idleActionReady.
 	*/
 	setIdleActionReady(newIdleActionReady) {
 		this._idleActionReady = newIdleActionReady;
 	}
 	/**
 	* Gets the ai combo humanized ready frame.
-	* @returns {*} The aiComboHumanizedReadyFrame.
+	* @returns {number} The aiComboHumanizedReadyFrame.
 	*/
 	aiComboHumanizedReadyFrame() {
 		return this._aiComboHumanizedReadyFrame;
 	}
 	/**
 	* Sets the channeling.
-	* @param {*} newChanneling The new channeling.
+	* @param {boolean} newChanneling The new channeling.
 	*/
 	setChanneling(newChanneling) {
 		this._channeling = newChanneling;
 	}
 	/**
 	* Sets the casting.
-	* @param {*} newCasting The new casting.
+	* @param {boolean} newCasting The new casting.
 	*/
 	setCasting(newCasting) {
 		this._casting = newCasting;
 	}
+	/**
+	* Constructor.
+	* @param {Game_Event|Game_Player|Game_Follower} event The event the battler is bound to.
+	* @param {Game_Actor|Game_Enemy} battler The battler data itself.
+	* @param {JABS_BattlerCoreData} battlerCoreData The core data for the battler.
+	*/
 	isPrepareReady() {
 		return this._prepareReady;
 	}
 	/**
 	* Sets the prepare ready.
-	* @param {*} newPrepareReady The new prepareReady.
+	* @param {boolean} newPrepareReady The new prepareReady.
 	*/
 	setPrepareReady(newPrepareReady) {
 		this._prepareReady = newPrepareReady;
 	}
 	/**
 	* Gets the engagement lock.
-	* @returns {*} The engagementLock.
+	* @returns {boolean} The engagementLock.
 	*/
 	isEngagementLock() {
 		return this._engagementLock;
 	}
 	/**
 	* Sets the engagement lock.
-	* @param {*} newEngagementLock The new engagementLock.
+	* @param {boolean} newEngagementLock The new engagementLock.
 	*/
 	setEngagementLock(newEngagementLock) {
 		this._engagementLock = newEngagementLock;
 	}
 	/**
 	* Gets the is guarding.
-	* @returns {*} The isGuarding.
+	* @returns {boolean} The isGuarding.
 	*/
 	isGuarding() {
 		return this._isGuarding;
 	}
 	/**
 	* Sets the is guarding.
-	* @param {*} newIsGuarding The new isGuarding.
+	* @param {boolean} newIsGuarding The new isGuarding.
 	*/
 	setIsGuarding(newIsGuarding) {
 		this._isGuarding = newIsGuarding;
 	}
 	/**
 	* Gets the event.
-	* @returns {*} The event.
+	* @returns {Game_Event|Game_Player|Game_Follower} The event.
 	*/
 	event() {
 		return this._event;
 	}
 	/**
 	* Sets the event.
-	* @param {*} newEvent The new event.
+	* @param {Game_Event|Game_Player|Game_Follower} newEvent The new event.
 	*/
 	setEvent(newEvent) {
 		this._event = newEvent;
 	}
 	/**
 	* Gets the leader uuid.
-	* @returns {*} The leaderUuid.
+	* @returns {string} The leaderUuid.
 	*/
 	leaderUuid() {
 		return this._leaderUuid;
 	}
 	/**
 	* Sets the leader uuid.
-	* @param {*} newLeaderUuid The new leaderUuid.
+	* @param {string} newLeaderUuid The new leaderUuid.
 	*/
 	setLeaderUuid(newLeaderUuid) {
 		this._leaderUuid = newLeaderUuid;
 	}
 	/**
 	* Gets the followers.
-	* @returns {*} The followers.
+	* @returns {string[]} The followers.
 	*/
 	followers() {
 		return this._followers;
 	}
 	/**
 	* Gets the team.
-	* @returns {*} The team.
+	* @returns {number} The team.
 	*/
 	team() {
 		return this._team;
 	}
 	/**
 	* Gets the inanimate.
-	* @returns {*} The inanimate.
+	* @returns {boolean} The inanimate.
 	*/
 	inanimate() {
 		return this._inanimate;
 	}
 	/**
 	* Gets the prepare counter.
-	* @returns {*} The prepareCounter.
+	* @returns {number} The prepareCounter.
 	*/
 	prepareCounter() {
 		return this._prepareCounter;
 	}
 	/**
 	* Sets the prepare counter.
-	* @param {*} newPrepareCounter The new prepareCounter.
+	* @param {number} newPrepareCounter The new prepareCounter.
 	*/
 	setPrepareCounter(newPrepareCounter) {
 		this._prepareCounter = newPrepareCounter;
 	}
 	/**
 	* Gets the ai defensive dodge ready frame.
-	* @returns {*} The aiDefensiveDodgeReadyFrame.
+	* @returns {number} The aiDefensiveDodgeReadyFrame.
 	*/
 	aiDefensiveDodgeReadyFrame() {
 		return this._aiDefensiveDodgeReadyFrame;
 	}
 	/**
 	* Sets the ai defensive dodge ready frame.
-	* @param {*} newAiDefensiveDodgeReadyFrame The new aiDefensiveDodgeReadyFrame.
+	* @param {number} newAiDefensiveDodgeReadyFrame The new aiDefensiveDodgeReadyFrame.
 	*/
 	setAiDefensiveDodgeReadyFrame(newAiDefensiveDodgeReadyFrame) {
 		this._aiDefensiveDodgeReadyFrame = newAiDefensiveDodgeReadyFrame;
 	}
 	/**
 	* Gets the ai ally defensive guard ready frame.
-	* @returns {*} The aiAllyDefensiveGuardReadyFrame.
+	* @returns {number} The aiAllyDefensiveGuardReadyFrame.
 	*/
 	aiAllyDefensiveGuardReadyFrame() {
 		return this._aiAllyDefensiveGuardReadyFrame;
 	}
 	/**
 	* Sets the ai ally defensive guard ready frame.
-	* @param {*} newAiAllyDefensiveGuardReadyFrame The new aiAllyDefensiveGuardReadyFrame.
+	* @param {number} newAiAllyDefensiveGuardReadyFrame The new aiAllyDefensiveGuardReadyFrame.
 	*/
 	setAiAllyDefensiveGuardReadyFrame(newAiAllyDefensiveGuardReadyFrame) {
 		this._aiAllyDefensiveGuardReadyFrame = newAiAllyDefensiveGuardReadyFrame;
 	}
 	/**
 	* Gets the ai ally guard raise frame.
-	* @returns {*} The aiAllyGuardRaiseFrame.
+	* @returns {number} The aiAllyGuardRaiseFrame.
 	*/
 	aiAllyGuardRaiseFrame() {
 		return this._aiAllyGuardRaiseFrame;
 	}
 	/**
 	* Sets the ai ally guard raise frame.
-	* @param {*} newAiAllyGuardRaiseFrame The new aiAllyGuardRaiseFrame.
+	* @param {number} newAiAllyGuardRaiseFrame The new aiAllyGuardRaiseFrame.
 	*/
 	setAiAllyGuardRaiseFrame(newAiAllyGuardRaiseFrame) {
 		this._aiAllyGuardRaiseFrame = newAiAllyGuardRaiseFrame;
 	}
 	/**
 	* Gets the battler.
-	* @returns {*} The battler.
+	* @returns {Game_Actor|Game_Enemy} The battler.
 	*/
 	battler() {
 		return this._battler;
 	}
 	/**
 	* Gets the sight radius.
-	* @returns {*} The sightRadius.
+	* @returns {number} The sightRadius.
 	*/
 	sightRadius() {
 		return this._sightRadius;
 	}
 	/**
 	* Gets the alerted sight boost.
-	* @returns {*} The alertedSightBoost.
+	* @returns {number} The alertedSightBoost.
 	*/
 	alertedSightBoost() {
 		return this._alertedSightBoost;
 	}
 	/**
 	* Gets the pursuit radius.
-	* @returns {*} The pursuitRadius.
+	* @returns {number} The pursuitRadius.
 	*/
 	pursuitRadius() {
 		return this._pursuitRadius;
 	}
 	/**
 	* Gets the alerted pursuit boost.
-	* @returns {*} The alertedPursuitBoost.
+	* @returns {number} The alertedPursuitBoost.
 	*/
 	alertedPursuitBoost() {
 		return this._alertedPursuitBoost;
 	}
 	/**
 	* Gets the guard range.
-	* @returns {*} The guardRange.
+	* @returns {number|null} The guardRange.
 	*/
 	guardRange() {
 		return this._guardRange;
 	}
 	/**
 	* Gets the last hit.
-	* @returns {*} The lastHit.
+	* @returns {JABS_Battler} The lastHit.
 	*/
 	lastHit() {
 		return this._lastHit;
 	}
 	/**
 	* Sets the last hit.
-	* @param {*} newLastHit The new lastHit.
+	* @param {JABS_Battler} newLastHit The new lastHit.
 	*/
 	setLastHit(newLastHit) {
 		this._lastHit = newLastHit;
 	}
 	/**
 	* Gets the last hit countdown.
-	* @returns {*} The lastHitCountdown.
+	* @returns {number} The lastHitCountdown.
 	*/
 	lastHitCountdown() {
 		return this._lastHitCountdown;
 	}
 	/**
 	* Sets the last hit countdown.
-	* @param {*} newLastHitCountdown The new lastHitCountdown.
+	* @param {number} newLastHitCountdown The new lastHitCountdown.
 	*/
 	setLastHitCountdown(newLastHitCountdown) {
 		this._lastHitCountdown = newLastHitCountdown;
 	}
 	/**
 	* Gets the home x.
-	* @returns {*} The homeX.
+	* @returns {number} The homeX.
 	*/
 	homeX() {
 		return this._homeX;
 	}
 	/**
 	* Gets the home y.
-	* @returns {*} The homeY.
+	* @returns {number} The homeY.
 	*/
 	homeY() {
 		return this._homeY;
 	}
 	/**
 	* Gets the alert duration.
-	* @returns {*} The alertDuration.
+	* @returns {number} The alertDuration.
 	*/
 	alertDuration() {
 		return this._alertDuration;
 	}
 	/**
 	* Gets the ai mode.
-	* @returns {*} The aiMode.
+	* @returns {JABS_EnemyAI} The aiMode.
 	*/
 	aiMode() {
 		return this._aiMode;
 	}
 	/**
 	* Gets the battler role.
-	* @returns {*} The battlerRole.
+	* @returns {JABS_BattlerRole} The battlerRole.
 	*/
 	battlerRole() {
 		return this._battlerRole;
 	}
 	/**
 	* Gets the battler id.
-	* @returns {*} The battlerId.
+	* @returns {number} The battlerId.
 	*/
 	battlerId() {
 		return this._battlerId;
 	}
 	/**
 	* Gets the in combat window max.
-	* @returns {*} The inCombatWindowMax.
+	* @returns {number} The inCombatWindowMax.
 	*/
 	inCombatWindowMax() {
 		return this._inCombatWindowMax;
 	}
 	/**
 	* Sets the in combat window max.
-	* @param {*} newInCombatWindowMax The new inCombatWindowMax.
+	* @param {number} newInCombatWindowMax The new inCombatWindowMax.
 	*/
 	setInCombatWindowMax(newInCombatWindowMax) {
 		this._inCombatWindowMax = newInCombatWindowMax;
@@ -11842,168 +11842,168 @@ var JABS_Battler = class JABS_Battler {
 	}
 	/**
 	* Gets the channel source action.
-	* @returns {*} The channelSourceAction.
+	* @returns {JABS_Action|null} The channelSourceAction.
 	*/
 	channelSourceAction() {
 		return this._channelSourceAction;
 	}
 	/**
 	* Sets the channel source action.
-	* @param {*} newChannelSourceAction The new channelSourceAction.
+	* @param {JABS_Action|null} newChannelSourceAction The new channelSourceAction.
 	*/
 	setChannelSourceAction(newChannelSourceAction) {
 		this._channelSourceAction = newChannelSourceAction;
 	}
 	/**
 	* Gets the channel skill id.
-	* @returns {*} The channelSkillId.
+	* @returns {number} The channelSkillId.
 	*/
 	channelSkillId() {
 		return this._channelSkillId;
 	}
 	/**
 	* Sets the channel skill id.
-	* @param {*} newChannelSkillId The new channelSkillId.
+	* @param {number} newChannelSkillId The new channelSkillId.
 	*/
 	setChannelSkillId(newChannelSkillId) {
 		this._channelSkillId = newChannelSkillId;
 	}
 	/**
 	* Gets the channel duration remaining.
-	* @returns {*} The channelDurationRemaining.
+	* @returns {number} The channelDurationRemaining.
 	*/
 	channelDurationRemaining() {
 		return this._channelDurationRemaining;
 	}
 	/**
 	* Sets the channel duration remaining.
-	* @param {*} newChannelDurationRemaining The new channelDurationRemaining.
+	* @param {number} newChannelDurationRemaining The new channelDurationRemaining.
 	*/
 	setChannelDurationRemaining(newChannelDurationRemaining) {
 		this._channelDurationRemaining = newChannelDurationRemaining;
 	}
 	/**
 	* Gets the channel tick countdown.
-	* @returns {*} The channelTickCountdown.
+	* @returns {number} The channelTickCountdown.
 	*/
 	channelTickCountdown() {
 		return this._channelTickCountdown;
 	}
 	/**
 	* Sets the channel tick countdown.
-	* @param {*} newChannelTickCountdown The new channelTickCountdown.
+	* @param {number} newChannelTickCountdown The new channelTickCountdown.
 	*/
 	setChannelTickCountdown(newChannelTickCountdown) {
 		this._channelTickCountdown = newChannelTickCountdown;
 	}
 	/**
 	* Gets the engagement timer.
-	* @returns {*} The engagementTimer.
+	* @returns {JABS_Timer} The engagementTimer.
 	*/
 	engagementTimer() {
 		return this._engagementTimer;
 	}
 	/**
 	* Gets the aggros.
-	* @returns {*} The aggros.
+	* @returns {JABS_Aggro[]} The aggros.
 	*/
 	aggros() {
 		return this._aggros;
 	}
 	/**
 	* Gets the dodge iframes.
-	* @returns {*} The dodgeIframes.
+	* @returns {[number, number]|null} The dodgeIframes.
 	*/
 	dodgeIframes() {
 		return this._dodgeIframes;
 	}
 	/**
 	* Sets the dodge iframes.
-	* @param {*} newDodgeIframes The new dodgeIframes.
+	* @param {[number, number]|null} newDodgeIframes The new dodgeIframes.
 	*/
 	setDodgeIframes(newDodgeIframes) {
 		this._dodgeIframes = newDodgeIframes;
 	}
 	/**
 	* Gets the guard flat reduction.
-	* @returns {*} The guardFlatReduction.
+	* @returns {number} The guardFlatReduction.
 	*/
 	guardFlatReduction() {
 		return this._guardFlatReduction;
 	}
 	/**
 	* Sets the guard flat reduction.
-	* @param {*} newGuardFlatReduction The new guardFlatReduction.
+	* @param {number} newGuardFlatReduction The new guardFlatReduction.
 	*/
 	setGuardFlatReduction(newGuardFlatReduction) {
 		this._guardFlatReduction = newGuardFlatReduction;
 	}
 	/**
 	* Gets the guard perc reduction.
-	* @returns {*} The guardPercReduction.
+	* @returns {number} The guardPercReduction.
 	*/
 	guardPercReduction() {
 		return this._guardPercReduction;
 	}
 	/**
 	* Sets the guard perc reduction.
-	* @param {*} newGuardPercReduction The new guardPercReduction.
+	* @param {number} newGuardPercReduction The new guardPercReduction.
 	*/
 	setGuardPercReduction(newGuardPercReduction) {
 		this._guardPercReduction = newGuardPercReduction;
 	}
 	/**
 	* Gets the post action cooldown.
-	* @returns {*} The postActionCooldown.
+	* @returns {number} The postActionCooldown.
 	*/
 	postActionCooldown() {
 		return this._postActionCooldown;
 	}
 	/**
 	* Sets the post action cooldown.
-	* @param {*} newPostActionCooldown The new postActionCooldown.
+	* @param {number} newPostActionCooldown The new postActionCooldown.
 	*/
 	setPostActionCooldown(newPostActionCooldown) {
 		this._postActionCooldown = newPostActionCooldown;
 	}
 	/**
 	* Gets the post action cooldown max.
-	* @returns {*} The postActionCooldownMax.
+	* @returns {number} The postActionCooldownMax.
 	*/
 	postActionCooldownMax() {
 		return this._postActionCooldownMax;
 	}
 	/**
 	* Sets the post action cooldown max.
-	* @param {*} newPostActionCooldownMax The new postActionCooldownMax.
+	* @param {number} newPostActionCooldownMax The new postActionCooldownMax.
 	*/
 	setPostActionCooldownMax(newPostActionCooldownMax) {
 		this._postActionCooldownMax = newPostActionCooldownMax;
 	}
 	/**
 	* Gets the idle action count.
-	* @returns {*} The idleActionCount.
+	* @returns {number} The idleActionCount.
 	*/
 	idleActionCount() {
 		return this._idleActionCount;
 	}
 	/**
 	* Sets the idle action count.
-	* @param {*} newIdleActionCount The new idleActionCount.
+	* @param {number} newIdleActionCount The new idleActionCount.
 	*/
 	setIdleActionCount(newIdleActionCount) {
 		this._idleActionCount = newIdleActionCount;
 	}
 	/**
 	* Gets the idle action count max.
-	* @returns {*} The idleActionCountMax.
+	* @returns {number} The idleActionCountMax.
 	*/
 	idleActionCountMax() {
 		return this._idleActionCountMax;
 	}
 	/**
 	* Gets the prepare max.
-	* @returns {*} The prepareMax.
+	* @returns {number} The prepareMax.
 	*/
 	prepareMax() {
 		return this._prepareMax;
@@ -17269,12 +17269,8 @@ JABS_State.Builder = (target, stateId) => new JABS_StateBuilder(target, stateId)
 */
 var JABS_LootDrop = class {
 	/**
-	* The duration that this loot drop will exist on the map.
-	* @type {number}
-	*/
-	/**
 	* Sets the can expire.
-	* @param {*} newCanExpire The new canExpire.
+	* @param {boolean} newCanExpire The new canExpire.
 	*/
 	setCanExpire(newCanExpire) {
 		this._canExpire = newCanExpire;
@@ -17282,6 +17278,10 @@ var JABS_LootDrop = class {
 	/**
 	* Sets the duration.
 	* @param {*} newDuration The new duration.
+	*/
+	/**
+	* The duration that this loot drop will exist on the map.
+	* @type {number}
 	*/
 	_duration = 900;
 	/**
@@ -17847,51 +17847,51 @@ var JABS_DeathContext = class {
 */
 var JABS_Engine = class JABS_Engine {
 	/**
-	* The events array of the enemy cloning map.
-	* @type {RPG_MapEvent[]|null}
-	*/
-	/**
 	* Gets the action events.
-	* @returns {*} The actionEvents.
+	* @returns {JABS_Action[]} The actionEvents.
 	*/
 	actionEvents() {
 		return this._actionEvents;
 	}
 	/**
 	* Sets the action events.
-	* @param {*} newActionEvents The new actionEvents.
+	* @param {JABS_Action[]} newActionEvents The new actionEvents.
 	*/
 	setActionEvents(newActionEvents) {
 		this._actionEvents = newActionEvents;
 	}
 	/**
 	* Gets the active actions.
-	* @returns {*} The activeActions.
+	* @returns {RPG_MapEvent[]} The activeActions.
 	*/
 	activeActions() {
 		return this._activeActions;
 	}
 	/**
 	* Gets the jabs states.
-	* @returns {*} The jabsStates.
+	* @returns {Map<string, Map<number, JABS_State>>} The jabsStates.
 	*/
 	jabsStates() {
 		return this._jabsStates;
 	}
 	/**
 	* Gets the skill execution log.
-	* @returns {*} The skillExecutionLog.
+	* @returns {Map<string, JABS_SkillExecution[]>} The skillExecutionLog.
 	*/
 	skillExecutionLog() {
 		return this._skillExecutionLog;
 	}
 	/**
 	* Gets the skill execution timer.
-	* @returns {*} The skillExecutionTimer.
+	* @returns {JABS_Timer} The skillExecutionTimer.
 	*/
 	skillExecutionTimer() {
 		return this._skillExecutionTimer;
 	}
+	/**
+	* The events array of the enemy cloning map.
+	* @type {RPG_MapEvent[]|null}
+	*/
 	static #enemyCloneList = null;
 	/**
 	* A cached collection of actions keyed by their uuids.
@@ -21452,70 +21452,70 @@ var JABS_Action = class JABS_Action {
 	}
 	/**
 	* Sets the cast complete.
-	* @param {*} newCastComplete The new castComplete.
+	* @param {boolean} newCastComplete The new castComplete.
 	*/
 	setCastComplete(newCastComplete) {
 		this._castComplete = newCastComplete;
 	}
 	/**
 	* Gets the facing.
-	* @returns {*} The facing.
+	* @returns {number} The facing.
 	*/
 	facing() {
 		return this._facing;
 	}
 	/**
 	* Sets the is lingering.
-	* @param {*} newIsLingering The new isLingering.
+	* @param {boolean} newIsLingering The new isLingering.
 	*/
 	setIsLingering(newIsLingering) {
 		this._isLingering = newIsLingering;
 	}
 	/**
 	* Gets the hit at least one.
-	* @returns {*} The hitAtLeastOne.
+	* @returns {boolean} The hitAtLeastOne.
 	*/
 	isHitAtLeastOne() {
 		return this._hitAtLeastOne;
 	}
 	/**
 	* Sets the hit at least one.
-	* @param {*} newHitAtLeastOne The new hitAtLeastOne.
+	* @param {boolean} newHitAtLeastOne The new hitAtLeastOne.
 	*/
 	setHitAtLeastOne(newHitAtLeastOne) {
 		this._hitAtLeastOne = newHitAtLeastOne;
 	}
 	/**
 	* Gets the played self animation on defeat.
-	* @returns {*} The playedSelfAnimationOnDefeat.
+	* @returns {boolean} The playedSelfAnimationOnDefeat.
 	*/
 	isPlayedSelfAnimationOnDefeat() {
 		return this._playedSelfAnimationOnDefeat;
 	}
 	/**
 	* Sets the played self animation on defeat.
-	* @param {*} newPlayedSelfAnimationOnDefeat The new playedSelfAnimationOnDefeat.
+	* @param {boolean} newPlayedSelfAnimationOnDefeat The new playedSelfAnimationOnDefeat.
 	*/
 	setPlayedSelfAnimationOnDefeat(newPlayedSelfAnimationOnDefeat) {
 		this._playedSelfAnimationOnDefeat = newPlayedSelfAnimationOnDefeat;
 	}
 	/**
 	* Gets the collision enabled.
-	* @returns {*} The collisionEnabled.
+	* @returns {boolean} The collisionEnabled.
 	*/
 	isCollisionEnabled() {
 		return this._collisionEnabled;
 	}
 	/**
 	* Sets the collision enabled.
-	* @param {*} newCollisionEnabled The new collisionEnabled.
+	* @param {boolean} newCollisionEnabled The new collisionEnabled.
 	*/
 	setCollisionEnabled(newCollisionEnabled) {
 		this._collisionEnabled = newCollisionEnabled;
 	}
 	/**
 	* Gets the base skill.
-	* @returns {*} The baseSkill.
+	* @returns {RPG_Skill} The baseSkill.
 	*/
 	baseSkill() {
 		return this._baseSkill;
@@ -21529,35 +21529,35 @@ var JABS_Action = class JABS_Action {
 	}
 	/**
 	* Gets the self animation id.
-	* @returns {*} The selfAnimationId.
+	* @returns {number} The selfAnimationId.
 	*/
 	selfAnimationId() {
 		return this._selfAnimationId;
 	}
 	/**
 	* Gets the on cast animation id.
-	* @returns {*} The onCastAnimationId.
+	* @returns {number} The onCastAnimationId.
 	*/
 	onCastAnimationId() {
 		return this._onCastAnimationId;
 	}
 	/**
 	* Gets the uuid.
-	* @returns {*} The uuid.
+	* @returns {string} The uuid.
 	*/
 	uuid() {
 		return this._uuid;
 	}
 	/**
 	* Gets the game action.
-	* @returns {*} The gameAction.
+	* @returns {Game_Action} The gameAction.
 	*/
 	gameAction() {
 		return this._gameAction;
 	}
 	/**
 	* Gets the caster.
-	* @returns {*} The caster.
+	* @returns {JABS_Battler} The caster.
 	*/
 	caster() {
 		return this._caster;
@@ -21578,28 +21578,28 @@ var JABS_Action = class JABS_Action {
 	}
 	/**
 	* Gets the action cooldown type.
-	* @returns {*} The actionCooldownType.
+	* @returns {string} The actionCooldownType.
 	*/
 	actionCooldownType() {
 		return this._actionCooldownType;
 	}
 	/**
 	* Sets the action cooldown type.
-	* @param {*} newActionCooldownType The new actionCooldownType.
+	* @param {string} newActionCooldownType The new actionCooldownType.
 	*/
 	setActionCooldownType(newActionCooldownType) {
 		this._actionCooldownType = newActionCooldownType;
 	}
 	/**
 	* Gets the current duration.
-	* @returns {*} The currentDuration.
+	* @returns {number} The currentDuration.
 	*/
 	currentDuration() {
 		return this._currentDuration;
 	}
 	/**
 	* Sets the current duration.
-	* @param {*} newCurrentDuration The new currentDuration.
+	* @param {number} newCurrentDuration The new currentDuration.
 	*/
 	setCurrentDuration(newCurrentDuration) {
 		this._currentDuration = newCurrentDuration;
@@ -21613,42 +21613,42 @@ var JABS_Action = class JABS_Action {
 	}
 	/**
 	* Gets the pierce times left.
-	* @returns {*} The pierceTimesLeft.
+	* @returns {number} The pierceTimesLeft.
 	*/
 	pierceTimesLeft() {
 		return this._pierceTimesLeft;
 	}
 	/**
 	* Sets the pierce times left.
-	* @param {*} newPierceTimesLeft The new pierceTimesLeft.
+	* @param {number} newPierceTimesLeft The new pierceTimesLeft.
 	*/
 	setPierceTimesLeft(newPierceTimesLeft) {
 		this._pierceTimesLeft = newPierceTimesLeft;
 	}
 	/**
 	* Gets the pierce delay.
-	* @returns {*} The pierceDelay.
+	* @returns {JABS_Timer} The pierceDelay.
 	*/
 	pierceDelay() {
 		return this._pierceDelay;
 	}
 	/**
 	* Gets the current linger.
-	* @returns {*} The currentLinger.
+	* @returns {number} The currentLinger.
 	*/
 	currentLinger() {
 		return this._currentLinger;
 	}
 	/**
 	* Sets the current linger.
-	* @param {*} newCurrentLinger The new currentLinger.
+	* @param {number} newCurrentLinger The new currentLinger.
 	*/
 	setCurrentLinger(newCurrentLinger) {
 		this._currentLinger = newCurrentLinger;
 	}
 	/**
 	* Gets the linger max frames.
-	* @returns {*} The lingerMaxFrames.
+	* @returns {number} The lingerMaxFrames.
 	*/
 	lingerMaxFrames() {
 		return this._lingerMaxFrames;
@@ -33537,19 +33537,15 @@ Sprite_AnimationMV.prototype.updatePosition = function() {
 */
 var Sprite_MapCastGauge = class extends Sprite_MapGauge {
 	/**
-	* Constructor.
-	* @param {...*} args Forwarded to {@link #initialize}.
-	*/
-	/**
 	* Gets the jabs battler.
-	* @returns {*} The jabsBattler.
+	* @returns {JABS_Battler|null} The jabsBattler.
 	*/
 	jabsBattler() {
 		return this._jabsBattler;
 	}
 	/**
 	* Sets the jabs battler.
-	* @param {*} newJabsBattler The new jabsBattler.
+	* @param {JABS_Battler|null} newJabsBattler The new jabsBattler.
 	*/
 	setJabsBattler(newJabsBattler) {
 		this._jabsBattler = newJabsBattler;
@@ -33589,6 +33585,10 @@ var Sprite_MapCastGauge = class extends Sprite_MapGauge {
 	gauge() {
 		return this._gauge;
 	}
+	/**
+	* Constructor.
+	* @param {...*} args Forwarded to {@link #initialize}.
+	*/
 	constructor(...args) {
 		super();
 		this.initialize(...args);
@@ -35110,14 +35110,14 @@ Sprite_Character.prototype.setLootSetupComplete = function(newLootSetupComplete)
 };
 /**
 * Gets the state overlay sprite.
-* @returns {*} The stateOverlaySprite.
+* @returns {Sprite} The stateOverlaySprite.
 */
 Sprite_Character.prototype.stateOverlaySprite = function() {
 	return this._j._abs._stateOverlaySprite;
 };
 /**
 * Sets the state overlay sprite.
-* @param {*} newStateOverlaySprite The new stateOverlaySprite.
+* @param {Sprite} newStateOverlaySprite The new stateOverlaySprite.
 */
 Sprite_Character.prototype.setStateOverlaySprite = function(newStateOverlaySprite) {
 	this._j._abs._stateOverlaySprite = newStateOverlaySprite;
@@ -35166,14 +35166,14 @@ Sprite_Character.prototype.setBattler = function(newBattler) {
 };
 /**
 * Gets the battler name.
-* @returns {*} The battlerName.
+* @returns {string} The battlerName.
 */
 Sprite_Character.prototype.battlerName = function() {
 	return this._j._abs._battlerName;
 };
 /**
 * Sets the battler name.
-* @param {*} newBattlerName The new battlerName.
+* @param {string} newBattlerName The new battlerName.
 */
 Sprite_Character.prototype.setBattlerName = function(newBattlerName) {
 	this._j._abs._battlerName = newBattlerName;

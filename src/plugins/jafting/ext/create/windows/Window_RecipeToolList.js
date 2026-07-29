@@ -4,16 +4,11 @@ import Window_RecipeIngredientList from './Window_RecipeIngredientList.js';
 class Window_RecipeToolList
   extends Window_Command
 {
-  /**
-   * Constructor.
-   * @param {Rectangle} rect The rectangle that represents this window.
-   */
-  
 
   //region properties
   /**
    * Gets the components.
-   * @returns {*} The components.
+   * @returns {CraftingComponent[]} The components.
    */
   components()
   {
@@ -21,6 +16,11 @@ class Window_RecipeToolList
     return this._components;
   }
   //endregion properties
+
+  /**
+   * Constructor.
+   * @param {Rectangle} rect The rectangle that represents this window.
+   */
 
   constructor(rect)
   {

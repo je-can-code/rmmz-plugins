@@ -5,10 +5,6 @@
  */
 class OverlayManager
 {
-  /**
-   * The line types available for overlaying in the context of a note.
-   */
-  
 
   //region properties
   /**
@@ -31,6 +27,10 @@ class OverlayManager
     return this._stateCache;
   }
   //endregion properties
+
+  /**
+   * The line types available for overlaying in the context of a note.
+   */
 
   static LineType = {
     /**

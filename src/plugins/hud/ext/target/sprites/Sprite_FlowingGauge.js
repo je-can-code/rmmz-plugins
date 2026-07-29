@@ -11,11 +11,6 @@ class Sprite_FlowingGauge
   
 
   //region properties
-  /**
-   * Gets the gauge bitmap.
-   * @returns {*} The gaugeBitmap.
-   */
-  
 
   //region properties
   /**
@@ -30,7 +25,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the is ready.
-   * @param {*} newIsReady The new isReady.
+   * @param {boolean} newIsReady The new isReady.
    */
   setIsReady(newIsReady)
   {
@@ -38,6 +33,11 @@ class Sprite_FlowingGauge
     this._isReady = newIsReady;
   }
   //endregion properties
+
+  /**
+   * Gets the gauge bitmap.
+   * @returns {Bitmap|null} The gaugeBitmap.
+   */
 
   gaugeBitmap()
   {
@@ -47,7 +47,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the gauge bitmap.
-   * @param {*} newGaugeBitmap The new gaugeBitmap.
+   * @param {Bitmap|null} newGaugeBitmap The new gaugeBitmap.
    */
   setGaugeBitmap(newGaugeBitmap)
   {
@@ -57,7 +57,7 @@ class Sprite_FlowingGauge
 
   /**
    * Gets the gauge background.
-   * @returns {*} The gaugeBackground.
+   * @returns {Sprite} The gaugeBackground.
    */
   gaugeBackground()
   {
@@ -67,7 +67,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the gauge background.
-   * @param {*} newGaugeBackground The new gaugeBackground.
+   * @param {Sprite} newGaugeBackground The new gaugeBackground.
    */
   setGaugeBackground(newGaugeBackground)
   {
@@ -77,7 +77,7 @@ class Sprite_FlowingGauge
 
   /**
    * Gets the gauge current sprite.
-   * @returns {*} The gaugeCurrentSprite.
+   * @returns {Sprite} The gaugeCurrentSprite.
    */
   gaugeCurrentSprite()
   {
@@ -87,7 +87,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the gauge current sprite.
-   * @param {*} newGaugeCurrentSprite The new gaugeCurrentSprite.
+   * @param {Sprite} newGaugeCurrentSprite The new gaugeCurrentSprite.
    */
   setGaugeCurrentSprite(newGaugeCurrentSprite)
   {
@@ -97,7 +97,7 @@ class Sprite_FlowingGauge
 
   /**
    * Gets the gauge actual sprite.
-   * @returns {*} The gaugeActualSprite.
+   * @returns {Sprite} The gaugeActualSprite.
    */
   gaugeActualSprite()
   {
@@ -107,7 +107,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the gauge actual sprite.
-   * @param {*} newGaugeActualSprite The new gaugeActualSprite.
+   * @param {Sprite} newGaugeActualSprite The new gaugeActualSprite.
    */
   setGaugeActualSprite(newGaugeActualSprite)
   {
@@ -117,7 +117,7 @@ class Sprite_FlowingGauge
 
   /**
    * Gets the gauge current.
-   * @returns {*} The gaugeCurrent.
+   * @returns {number} The gaugeCurrent.
    */
   gaugeCurrent()
   {
@@ -127,7 +127,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the gauge current.
-   * @param {*} newGaugeCurrent The new gaugeCurrent.
+   * @param {number} newGaugeCurrent The new gaugeCurrent.
    */
   setGaugeCurrent(newGaugeCurrent)
   {
@@ -137,7 +137,7 @@ class Sprite_FlowingGauge
 
   /**
    * Gets the gauge target.
-   * @returns {*} The gaugeTarget.
+   * @returns {number} The gaugeTarget.
    */
   gaugeTarget()
   {
@@ -147,7 +147,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the gauge target.
-   * @param {*} newGaugeTarget The new gaugeTarget.
+   * @param {number} newGaugeTarget The new gaugeTarget.
    */
   setGaugeTarget(newGaugeTarget)
   {
@@ -157,7 +157,7 @@ class Sprite_FlowingGauge
 
   /**
    * Gets the gauge max.
-   * @returns {*} The gaugeMax.
+   * @returns {number} The gaugeMax.
    */
   gaugeMax()
   {
@@ -167,7 +167,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the gauge max.
-   * @param {*} newGaugeMax The new gaugeMax.
+   * @param {number} newGaugeMax The new gaugeMax.
    */
   setGaugeMax(newGaugeMax)
   {
@@ -177,7 +177,7 @@ class Sprite_FlowingGauge
 
   /**
    * Gets the battler.
-   * @returns {*} The battler.
+   * @returns {Game_Enemy|null} The battler.
    */
   battler()
   {
@@ -187,7 +187,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the battler.
-   * @param {*} newBattler The new battler.
+   * @param {Game_Enemy|null} newBattler The new battler.
    */
   setBattler(newBattler)
   {
@@ -197,7 +197,7 @@ class Sprite_FlowingGauge
 
   /**
    * Gets the gauge type.
-   * @returns {*} The gaugeType.
+   * @returns {Sprite_FlowingGauge.Types} The gaugeType.
    */
   gaugeType()
   {
@@ -207,7 +207,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the gauge type.
-   * @param {*} newGaugeType The new gaugeType.
+   * @param {Sprite_FlowingGauge.Types} newGaugeType The new gaugeType.
    */
   setGaugeType(newGaugeType)
   {
@@ -217,7 +217,7 @@ class Sprite_FlowingGauge
 
   /**
    * Gets the gauge slice fill min x.
-   * @returns {*} The gaugeSliceFillMinX.
+   * @returns {number} The gaugeSliceFillMinX.
    */
   gaugeSliceFillMinX()
   {
@@ -227,7 +227,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the gauge slice fill min x.
-   * @param {*} newGaugeSliceFillMinX The new gaugeSliceFillMinX.
+   * @param {number} newGaugeSliceFillMinX The new gaugeSliceFillMinX.
    */
   setGaugeSliceFillMinX(newGaugeSliceFillMinX)
   {
@@ -237,7 +237,7 @@ class Sprite_FlowingGauge
 
   /**
    * Gets the gauge slice fill inner width.
-   * @returns {*} The gaugeSliceFillInnerWidth.
+   * @returns {number} The gaugeSliceFillInnerWidth.
    */
   gaugeSliceFillInnerWidth()
   {
@@ -247,7 +247,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the gauge slice fill inner width.
-   * @param {*} newGaugeSliceFillInnerWidth The new gaugeSliceFillInnerWidth.
+   * @param {number} newGaugeSliceFillInnerWidth The new gaugeSliceFillInnerWidth.
    */
   setGaugeSliceFillInnerWidth(newGaugeSliceFillInnerWidth)
   {
@@ -277,7 +277,7 @@ class Sprite_FlowingGauge
 
   /**
    * Gets the gauge actual flow current.
-   * @returns {*} The gaugeActualFlowCurrent.
+   * @returns {number} The gaugeActualFlowCurrent.
    */
   gaugeActualFlowCurrent()
   {
@@ -287,7 +287,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the gauge actual flow current.
-   * @param {*} newGaugeActualFlowCurrent The new gaugeActualFlowCurrent.
+   * @param {number} newGaugeActualFlowCurrent The new gaugeActualFlowCurrent.
    */
   setGaugeActualFlowCurrent(newGaugeActualFlowCurrent)
   {
@@ -297,7 +297,7 @@ class Sprite_FlowingGauge
 
   /**
    * Gets the gauge background track min x.
-   * @returns {*} The gaugeBackgroundTrackMinX.
+   * @returns {number} The gaugeBackgroundTrackMinX.
    */
   gaugeBackgroundTrackMinX()
   {
@@ -307,7 +307,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the gauge background track min x.
-   * @param {*} newGaugeBackgroundTrackMinX The new gaugeBackgroundTrackMinX.
+   * @param {number} newGaugeBackgroundTrackMinX The new gaugeBackgroundTrackMinX.
    */
   setGaugeBackgroundTrackMinX(newGaugeBackgroundTrackMinX)
   {
@@ -317,7 +317,7 @@ class Sprite_FlowingGauge
 
   /**
    * Gets the gauge background track inner width.
-   * @returns {*} The gaugeBackgroundTrackInnerWidth.
+   * @returns {number} The gaugeBackgroundTrackInnerWidth.
    */
   gaugeBackgroundTrackInnerWidth()
   {
@@ -327,7 +327,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the gauge background track inner width.
-   * @param {*} newGaugeBackgroundTrackInnerWidth The new gaugeBackgroundTrackInnerWidth.
+   * @param {number} newGaugeBackgroundTrackInnerWidth The new gaugeBackgroundTrackInnerWidth.
    */
   setGaugeBackgroundTrackInnerWidth(newGaugeBackgroundTrackInnerWidth)
   {

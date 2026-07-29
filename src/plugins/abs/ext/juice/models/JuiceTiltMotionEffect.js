@@ -6,12 +6,6 @@ import JuiceBaseEffect from './JuiceBaseEffect.js';
  */
 class JuiceTiltMotionEffect extends JuiceBaseEffect
 {
-  /**
-   * @param {Sprite} sprite The Pixi sprite being driven.
-   * @param {number} peakRadians Peak rotation magnitude (radians).
-   * @param {number} durationFrames Frames to run.
-   */
-  
 
   //region properties
   /**
@@ -36,7 +30,7 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the frame.
-   * @returns {*} The frame.
+   * @returns {number} The frame.
    */
   frame()
   {
@@ -46,7 +40,7 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
 
   /**
    * Sets the frame.
-   * @param {*} newFrame The new frame.
+   * @param {number} newFrame The new frame.
    */
   setFrame(newFrame)
   {
@@ -56,7 +50,7 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the duration frames.
-   * @returns {*} The durationFrames.
+   * @returns {number} The durationFrames.
    */
   durationFrames()
   {
@@ -74,6 +68,12 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
     return this._peakRadians;
   }
   //endregion properties
+
+  /**
+   * @param {Sprite} sprite The Pixi sprite being driven.
+   * @param {number} peakRadians Peak rotation magnitude (radians).
+   * @param {number} durationFrames Frames to run.
+   */
 
   constructor(sprite, peakRadians, durationFrames)
   {

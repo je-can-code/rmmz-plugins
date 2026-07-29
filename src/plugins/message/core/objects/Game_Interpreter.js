@@ -144,7 +144,7 @@ Game_Interpreter.prototype.setChoiceHidden = function(choiceIndex, shouldHide = 
 //region properties
 /**
  * Gets the common event id.
- * @returns {*} The commonEventId.
+ * @returns {number} The commonEventId.
  */
 Game_Interpreter.prototype.commonEventId = function()
 {

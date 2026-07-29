@@ -172,14 +172,14 @@ var Window_PartyFrame = class Window_PartyFrame extends Window_Base {
 	}
 	/**
 	* Gets the hud sprites.
-	* @returns {*} The hudSprites.
+	* @returns {Map<string, Sprite_Face|Sprite_MapGauge|Sprite_ActorValue|Sprite_Icon|Sprite_BaseText>} The hudSprites.
 	*/
 	hudSprites() {
 		return this._hudSprites;
 	}
 	/**
 	* Gets the affliction presenter.
-	* @returns {*} The afflictionPresenter.
+	* @returns {StateAfflictionHudPresenter} The afflictionPresenter.
 	*/
 	afflictionPresenter() {
 		return this._afflictionPresenter;

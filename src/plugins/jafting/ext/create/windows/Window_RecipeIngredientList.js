@@ -2,16 +2,11 @@
 class Window_RecipeIngredientList
   extends Window_Command
 {
-  /**
-   * Constructor.
-   * @param {Rectangle} rect The rectangle that represents this window.
-   */
-  
 
   //region properties
   /**
    * Gets the components.
-   * @returns {*} The components.
+   * @returns {CraftingComponent[]} The components.
    */
   components()
   {
@@ -19,6 +14,11 @@ class Window_RecipeIngredientList
     return this._components;
   }
   //endregion properties
+
+  /**
+   * Constructor.
+   * @param {Rectangle} rect The rectangle that represents this window.
+   */
 
   constructor(rect)
   {

@@ -7,16 +7,6 @@ import Sprite_Icon from './Sprite_Icon.js';
 class Sprite_MapGauge
   extends Sprite_Gauge
 {
-  /**
-   * Constructor.
-   * @param {number} bitmapWidth - The width of the gauge bitmap.
-   * @param {number} bitmapHeight - The height of the gauge bitmap.
-   * @param {number} gaugeHeight - The height of the gauge itself.
-   * @param {string} label - The label on the gauge.
-   * @param {number|null} value - The value of the gauge.
-   * @param {number} iconIndex - The index of the icon to display.
-   */
-  
 
   //region properties
   /**
@@ -29,6 +19,16 @@ class Sprite_MapGauge
     return this._gauge;
   }
   //endregion properties
+
+  /**
+   * Constructor.
+   * @param {number} bitmapWidth - The width of the gauge bitmap.
+   * @param {number} bitmapHeight - The height of the gauge bitmap.
+   * @param {number} gaugeHeight - The height of the gauge itself.
+   * @param {string} label - The label on the gauge.
+   * @param {number|null} value - The value of the gauge.
+   * @param {number} iconIndex - The index of the icon to display.
+   */
 
   constructor(bitmapWidth = 96, bitmapHeight = 24, gaugeHeight = 6, label = String.empty, value = null, iconIndex = -1)
   {

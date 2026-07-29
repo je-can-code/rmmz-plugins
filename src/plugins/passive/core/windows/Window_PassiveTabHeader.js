@@ -6,16 +6,11 @@
 class Window_PassiveTabHeader
   extends Window_Base
 {
-  /**
-   * Constructor.
-   * @param {Rectangle} rect The rectangle for this window.
-   */
-  
 
   //region properties
   /**
    * Gets the label.
-   * @returns {*} The label.
+   * @returns {string} The label.
    */
   label()
   {
@@ -23,6 +18,11 @@ class Window_PassiveTabHeader
     return this._label;
   }
   //endregion properties
+
+  /**
+   * Constructor.
+   * @param {Rectangle} rect The rectangle for this window.
+   */
 
   constructor(rect)
   {

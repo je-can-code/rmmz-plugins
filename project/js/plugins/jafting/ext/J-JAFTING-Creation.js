@@ -2473,16 +2473,16 @@ var Window_RecipeDetails = class Window_RecipeDetails extends Window_Base {
 //#region src/plugins/jafting/ext/create/windows/Window_RecipeIngredientList.js
 var Window_RecipeIngredientList = class Window_RecipeIngredientList extends Window_Command {
 	/**
-	* Constructor.
-	* @param {Rectangle} rect The rectangle that represents this window.
-	*/
-	/**
 	* Gets the components.
-	* @returns {*} The components.
+	* @returns {CraftingComponent[]} The components.
 	*/
 	components() {
 		return this._components;
 	}
+	/**
+	* Constructor.
+	* @param {Rectangle} rect The rectangle that represents this window.
+	*/
 	constructor(rect) {
 		super(rect);
 		this.opacity = 0;
@@ -2583,16 +2583,16 @@ var Window_RecipeIngredientList = class Window_RecipeIngredientList extends Wind
 //#region src/plugins/jafting/ext/create/windows/Window_RecipeToolList.js
 var Window_RecipeToolList = class extends Window_Command {
 	/**
-	* Constructor.
-	* @param {Rectangle} rect The rectangle that represents this window.
-	*/
-	/**
 	* Gets the components.
-	* @returns {*} The components.
+	* @returns {CraftingComponent[]} The components.
 	*/
 	components() {
 		return this._components;
 	}
+	/**
+	* Constructor.
+	* @param {Rectangle} rect The rectangle that represents this window.
+	*/
 	constructor(rect) {
 		super(rect);
 		this.opacity = 0;
@@ -2700,16 +2700,16 @@ var Window_RecipeToolList = class extends Window_Command {
 //#region src/plugins/jafting/ext/create/windows/Window_RecipeOutputList.js
 var Window_RecipeOutputList = class extends Window_Command {
 	/**
-	* True if the text of this list should be masked, false otherwise.
-	* @type {boolean}
-	*/
-	/**
 	* Gets the components.
-	* @returns {*} The components.
+	* @returns {CraftingComponent[]} The components.
 	*/
 	components() {
 		return this._components;
 	}
+	/**
+	* True if the text of this list should be masked, false otherwise.
+	* @type {boolean}
+	*/
 	needsMasking = false;
 	/**
 	* Constructor.

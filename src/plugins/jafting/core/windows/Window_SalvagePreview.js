@@ -10,10 +10,6 @@ import JaftingSalvageManager from './../managers/JaftingSalvageManager.js';
 class Window_SalvagePreview
   extends Window_Base
 {
-  /**
-   * @param {Rectangle} rect Window geometry (repositioned by {@link Scene_JaftingSalvage#layoutSalvagePanels}).
-   */
-  
 
   //region properties
   /**
@@ -25,7 +21,7 @@ class Window_SalvagePreview
   //region properties
   /**
    * Gets the dismantle amount.
-   * @returns {*} The dismantleAmount.
+   * @returns {number} The dismantleAmount.
    */
   dismantleAmount()
   {
@@ -43,6 +39,10 @@ class Window_SalvagePreview
     return this._datum;
   }
   //endregion properties
+
+  /**
+   * @param {Rectangle} rect Window geometry (repositioned by {@link Scene_JaftingSalvage#layoutSalvagePanels}).
+   */
 
   isRefundTwoColumn()
   {

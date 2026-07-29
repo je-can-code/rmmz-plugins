@@ -10,17 +10,11 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
    * @param {number} dir Game_Character.direction().
    * @returns {{ x: number, y: number }}
    */
-  /**
-   * Normalizes repeat count — floors to integer, defaults to 1 if invalid or below 1.
-   * @param {number} repeatCount Candidate count from skill notes or resolver.
-   * @returns {number}
-   */
-  
 
   //region properties
   /**
    * Gets the stab tip angle radians.
-   * @returns {*} The stabTipAngleRadians.
+   * @returns {number} The stabTipAngleRadians.
    */
   stabTipAngleRadians()
   {
@@ -30,7 +24,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the profile gun.
-   * @returns {*} The profileGun.
+   * @returns {boolean} The profileGun.
    */
   profileGun()
   {
@@ -40,7 +34,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the overlay.
-   * @returns {*} The overlay.
+   * @returns {Bitmap} The overlay.
    */
   overlay()
   {
@@ -50,7 +44,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the scale mag.
-   * @returns {*} The scaleMag.
+   * @returns {number} The scaleMag.
    */
   scaleMag()
   {
@@ -60,7 +54,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the parent sprite.
-   * @returns {*} The parentSprite.
+   * @returns {Sprite} The parentSprite.
    */
   parentSprite()
   {
@@ -70,7 +64,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the frame.
-   * @returns {*} The frame.
+   * @returns {number} The frame.
    */
   frame()
   {
@@ -80,7 +74,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Sets the frame.
-   * @param {*} newFrame The new frame.
+   * @param {number} newFrame The new frame.
    */
   setFrame(newFrame)
   {
@@ -90,7 +84,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the duration frames.
-   * @returns {*} The durationFrames.
+   * @returns {number} The durationFrames.
    */
   durationFrames()
   {
@@ -100,7 +94,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the swing direction.
-   * @returns {*} The swingDirection.
+   * @returns {number} The swingDirection.
    */
   swingDirection()
   {
@@ -120,7 +114,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the repeat count.
-   * @returns {*} The repeatCount.
+   * @returns {number} The repeatCount.
    */
   repeatCount()
   {
@@ -170,7 +164,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the base x.
-   * @returns {*} The baseX.
+   * @returns {number} The baseX.
    */
   baseX()
   {
@@ -180,7 +174,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the base y.
-   * @returns {*} The baseY.
+   * @returns {number} The baseY.
    */
   baseY()
   {
@@ -188,6 +182,12 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
     return this._baseY;
   }
   //endregion properties
+
+  /**
+   * Normalizes repeat count — floors to integer, defaults to 1 if invalid or below 1.
+   * @param {number} repeatCount Candidate count from skill notes or resolver.
+   * @returns {number}
+   */
 
   static #clampRepeatCount(repeatCount)
   {

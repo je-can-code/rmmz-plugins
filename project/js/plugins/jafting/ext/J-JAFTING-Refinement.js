@@ -208,12 +208,6 @@
 */
 var JAFTING_Trait = class {
 	/**
-	* Initializes the members of this class.
-	* @param {number} code The code of the trait.
-	* @param {number} dataId The dataId of the trait.
-	* @param {number} value The value of the trait.
-	*/
-	/**
 	* Gets the code.
 	* @returns {*} The code.
 	*/
@@ -222,11 +216,17 @@ var JAFTING_Trait = class {
 	}
 	/**
 	* Gets the data id.
-	* @returns {*} The dataId.
+	* @returns {number} The dataId.
 	*/
 	dataId() {
 		return this._dataId;
 	}
+	/**
+	* Initializes the members of this class.
+	* @param {number} code The code of the trait.
+	* @param {number} dataId The dataId of the trait.
+	* @param {number} value The value of the trait.
+	*/
 	constructor(code, dataId, value) {
 		this._code = code;
 		this._dataId = dataId;
@@ -280,17 +280,17 @@ var JAFTING_Trait = class {
 */
 var JAFTING_RefinementData = class {
 	/**
-	* @constructor
-	* @param {string} notes The raw note box as a string.
-	* @param {any} meta The `meta` object containing prebuilt note metadata.
-	*/
-	/**
 	* Gets the notes.
 	* @returns {*} The notes.
 	*/
 	notes() {
 		return this._notes;
 	}
+	/**
+	* @constructor
+	* @param {string} notes The raw note box as a string.
+	* @param {any} meta The `meta` object containing prebuilt note metadata.
+	*/
 	constructor(notes, meta) {
 		this._notes = notes.split(/[\r\n]+/);
 		this._meta = meta;

@@ -1393,19 +1393,15 @@ Scene_Boot.prototype.onDatabaseLoaded = function() {
 */
 var Sprite_MapChargeGauge = class extends Sprite_MapGauge {
 	/**
-	* Constructor.
-	* @param {...*} args Forwarded to {@link #initialize}.
-	*/
-	/**
 	* Gets the jabs battler.
-	* @returns {*} The jabsBattler.
+	* @returns {JABS_Battler|null} The jabsBattler.
 	*/
 	jabsBattler() {
 		return this._jabsBattler;
 	}
 	/**
 	* Sets the jabs battler.
-	* @param {*} newJabsBattler The new jabsBattler.
+	* @param {JABS_Battler|null} newJabsBattler The new jabsBattler.
 	*/
 	setJabsBattler(newJabsBattler) {
 		this._jabsBattler = newJabsBattler;
@@ -1445,6 +1441,10 @@ var Sprite_MapChargeGauge = class extends Sprite_MapGauge {
 	gauge() {
 		return this._gauge;
 	}
+	/**
+	* Constructor.
+	* @param {...*} args Forwarded to {@link #initialize}.
+	*/
 	constructor(...args) {
 		super();
 		this.initialize(...args);

@@ -566,7 +566,7 @@ Scene_Status.prototype.handleNormalizedStatusInput = function()
 //region properties
 /**
  * Gets the page index.
- * @returns {*} The pageIndex.
+ * @returns {number} The pageIndex.
  */
 Scene_Status.prototype.pageIndex = function()
 {
@@ -586,7 +586,7 @@ Scene_Status.prototype.lastDir4 = function()
 
 /**
  * Gets the switch cooldown.
- * @returns {*} The switchCooldown.
+ * @returns {number} The switchCooldown.
  */
 Scene_Status.prototype.switchCooldown = function()
 {

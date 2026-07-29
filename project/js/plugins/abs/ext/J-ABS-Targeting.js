@@ -558,10 +558,6 @@ var JABS_TargetingSentinelAction = class {
 */
 var JABS_TargetingManager = class JABS_TargetingManager {
 	/**
-	* The currently active targeting session, or null if nobody is aiming.
-	* @type {JABS_TargetingSession|null}
-	*/
-	/**
 	* Gets the just began.
 	* @returns {*} The justBegan.
 	*/
@@ -638,6 +634,10 @@ var JABS_TargetingManager = class JABS_TargetingManager {
 	static setPreviousDpadStep(newPreviousDpadStep) {
 		this._previousDpadStep = newPreviousDpadStep;
 	}
+	/**
+	* The currently active targeting session, or null if nobody is aiming.
+	* @type {JABS_TargetingSession|null}
+	*/
 	static _session = null;
 	/**
 	* The aiming state (cycle-select or free-roam) for the active session, or null.
@@ -1123,16 +1123,16 @@ Game_Player.prototype.canMove = function() {
 */
 var Window_TargetingList = class Window_TargetingList extends Window_Command {
 	/**
-	* How many font sizes smaller than normal the list entries render at.
-	* @type {number}
-	*/
-	/**
 	* Gets the candidates.
 	* @returns {*} The candidates.
 	*/
 	candidates() {
 		return this._candidates;
 	}
+	/**
+	* How many font sizes smaller than normal the list entries render at.
+	* @type {number}
+	*/
 	static FontSizeDelta = -8;
 	/**
 	* Constructor.
@@ -1576,14 +1576,14 @@ Scene_Map.prototype.updateTargetingListWindow = function(wasActive) {
 };
 /**
 * Gets the targeting list window.
-* @returns {*} The targetingListWindow.
+* @returns {Window_Base} The targetingListWindow.
 */
 Scene_Map.prototype.targetingListWindow = function() {
 	return this._targetingListWindow;
 };
 /**
 * Sets the targeting list window.
-* @param {*} newTargetingListWindow The new targetingListWindow.
+* @param {Window_Base} newTargetingListWindow The new targetingListWindow.
 */
 Scene_Map.prototype.setTargetingListWindow = function(newTargetingListWindow) {
 	this._targetingListWindow = newTargetingListWindow;

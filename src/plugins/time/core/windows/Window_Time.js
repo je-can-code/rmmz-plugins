@@ -63,7 +63,7 @@ class Window_Time
   //region properties
   /**
    * Gets the alternating.
-   * @returns {*} The alternating.
+   * @returns {boolean} The alternating.
    */
   isAlternating()
   {
@@ -73,7 +73,7 @@ class Window_Time
 
   /**
    * Sets the alternating.
-   * @param {*} newAlternating The new alternating.
+   * @param {boolean} newAlternating The new alternating.
    */
   setAlternating(newAlternating)
   {

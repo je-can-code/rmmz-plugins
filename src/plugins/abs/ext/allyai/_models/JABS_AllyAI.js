@@ -282,7 +282,7 @@ class JABS_AllyAI
   //region properties
   /**
    * Gets the risk.
-   * @returns {*} The risk.
+   * @returns {number} The risk.
    */
   risk()
   {
@@ -292,7 +292,7 @@ class JABS_AllyAI
 
   /**
    * Sets the risk.
-   * @param {*} newRisk The new risk.
+   * @param {number} newRisk The new risk.
    */
   setRisk(newRisk)
   {
@@ -302,7 +302,7 @@ class JABS_AllyAI
 
   /**
    * Gets the support.
-   * @returns {*} The support.
+   * @returns {number} The support.
    */
   support()
   {
@@ -312,7 +312,7 @@ class JABS_AllyAI
 
   /**
    * Sets the support.
-   * @param {*} newSupport The new support.
+   * @param {number} newSupport The new support.
    */
   setSupport(newSupport)
   {
@@ -322,7 +322,7 @@ class JABS_AllyAI
 
   /**
    * Gets the spacing.
-   * @returns {*} The spacing.
+   * @returns {number} The spacing.
    */
   spacing()
   {
@@ -332,7 +332,7 @@ class JABS_AllyAI
 
   /**
    * Sets the spacing.
-   * @param {*} newSpacing The new spacing.
+   * @param {number} newSpacing The new spacing.
    */
   setSpacing(newSpacing)
   {
@@ -342,7 +342,7 @@ class JABS_AllyAI
 
   /**
    * Gets the preset key.
-   * @returns {*} The presetKey.
+   * @returns {string} The presetKey.
    */
   presetKey()
   {
@@ -352,7 +352,7 @@ class JABS_AllyAI
 
   /**
    * Sets the preset key.
-   * @param {*} newPresetKey The new presetKey.
+   * @param {string} newPresetKey The new presetKey.
    */
   setPresetKey(newPresetKey)
   {

@@ -303,12 +303,6 @@
 */
 var JCache = class JCache {
 	/**
-	* Every JCache instance that declared a `'battler'` dimension, so a single bus call
-	* ({@link JCache.invalidateAllForBattler}) can clear every battler-scoped cache in the game
-	* without each caller needing to know the full list of caches that exist.
-	* @type {Set<JCache>}
-	*/
-	/**
 	* Gets the battler caches.
 	* @returns {*} The battlerCaches.
 	*/
@@ -317,18 +311,24 @@ var JCache = class JCache {
 	}
 	/**
 	* Gets the root.
-	* @returns {*} The root.
+	* @returns {WeakMap} The root.
 	*/
 	root() {
 		return this._root;
 	}
 	/**
 	* Sets the root.
-	* @param {*} newRoot The new root.
+	* @param {WeakMap} newRoot The new root.
 	*/
 	setRoot(newRoot) {
 		this._root = newRoot;
 	}
+	/**
+	* Every JCache instance that declared a `'battler'` dimension, so a single bus call
+	* ({@link JCache.invalidateAllForBattler}) can clear every battler-scoped cache in the game
+	* without each caller needing to know the full list of caches that exist.
+	* @type {Set<JCache>}
+	*/
 	static _battlerCaches = new Set();
 	/**
 	* Drops every battler-scoped cache entry for the given battler, across every registered
@@ -608,16 +608,6 @@ var ArrayHelper = class {
 */
 var RPGManager = class RPGManager {
 	/**
-	* Backing field for {@link _noteCache}, built lazily on first access rather than as an eager
-	* static-field initializer. RPG_Base now imports this class (for its {@code types()} method),
-	* and JCache imports RPG_Base (for its {@code instanceof} clone-resolution check) — a real
-	* three-file import cycle (RPG_Base -> RPGManager -> JCache -> RPG_Base). Eager static fields
-	* evaluate at module-load time, so their result depends on which file the cycle happens to be
-	* entered from; a lazy getter defers construction until the first real call, by which point the
-	* whole module graph has finished loading regardless of entry order.
-	* @type {JCache|null}
-	*/
-	/**
 	* Gets the note cache.
 	* @returns {*} The noteCache.
 	*/
@@ -631,6 +621,16 @@ var RPGManager = class RPGManager {
 	static evalCache() {
 		return this._evalCache;
 	}
+	/**
+	* Backing field for {@link _noteCache}, built lazily on first access rather than as an eager
+	* static-field initializer. RPG_Base now imports this class (for its {@code types()} method),
+	* and JCache imports RPG_Base (for its {@code instanceof} clone-resolution check) — a real
+	* three-file import cycle (RPG_Base -> RPGManager -> JCache -> RPG_Base). Eager static fields
+	* evaluate at module-load time, so their result depends on which file the cycle happens to be
+	* entered from; a lazy getter defers construction until the first real call, by which point the
+	* whole module graph has finished loading regardless of entry order.
+	* @type {JCache|null}
+	*/
 	static #noteCache = null;
 	/**
 	* The cache for storing parsed note-text results (string/number/boolean/array/captures). Keyed
@@ -2004,16 +2004,16 @@ J.BASE.Helpers.maskString = function(stringToMask, maskingCharacter = "?") {
 */
 var SerializableRegistry = class {
 	/**
-	* The internal collection of registered constructors.
-	* @type {Map<string, Function>}
-	*/
-	/**
 	* Gets the constructors.
 	* @returns {*} The constructors.
 	*/
 	static constructors() {
 		return this._constructors;
 	}
+	/**
+	* The internal collection of registered constructors.
+	* @type {Map<string, Function>}
+	*/
 	static _constructors = new Map();
 	/**
 	* Registers a constructor for {@link JsonEx} deserialization.
@@ -3420,35 +3420,35 @@ var J_Timer = class {
 	}
 	/**
 	* Gets the timer.
-	* @returns {*} The timer.
+	* @returns {number} The timer.
 	*/
 	timer() {
 		return this._timer;
 	}
 	/**
 	* Sets the timer.
-	* @param {*} newTimer The new timer.
+	* @param {number} newTimer The new timer.
 	*/
 	setTimer(newTimer) {
 		this._timer = newTimer;
 	}
 	/**
 	* Gets the timer max.
-	* @returns {*} The timerMax.
+	* @returns {number} The timerMax.
 	*/
 	timerMax() {
 		return this._timerMax;
 	}
 	/**
 	* Sets the timer max.
-	* @param {*} newTimerMax The new timerMax.
+	* @param {number} newTimerMax The new timerMax.
 	*/
 	setTimerMax(newTimerMax) {
 		this._timerMax = newTimerMax;
 	}
 	/**
 	* Gets the stop counting.
-	* @returns {*} The stopCounting.
+	* @returns {boolean} The stopCounting.
 	*/
 	stopCounting() {
 		return this._stopCounting;
@@ -4349,9 +4349,6 @@ ParameterDefinition.Builder = () => new ParameterDefinitionBuilder();
 */
 var ParameterRegistry = class {
 	/**
-	* @type {Map<string, ParameterDefinition>}
-	*/
-	/**
 	* Gets the definitions.
 	* @returns {*} The definitions.
 	*/
@@ -4365,6 +4362,9 @@ var ParameterRegistry = class {
 	static groupCache() {
 		return this._groupCache;
 	}
+	/**
+	* @type {Map<string, ParameterDefinition>}
+	*/
 	static _definitions = new Map();
 	/**
 	* @type {Map<string, ParameterDefinition[]>}
@@ -11715,6 +11715,13 @@ var Sprite_Icon = class extends Sprite {
 */
 var Sprite_MapGauge = class extends Sprite_Gauge {
 	/**
+	* Gets the gauge.
+	* @returns {*} The gauge.
+	*/
+	gauge() {
+		return this._gauge;
+	}
+	/**
 	* Constructor.
 	* @param {number} bitmapWidth - The width of the gauge bitmap.
 	* @param {number} bitmapHeight - The height of the gauge bitmap.
@@ -11723,13 +11730,6 @@ var Sprite_MapGauge = class extends Sprite_Gauge {
 	* @param {number|null} value - The value of the gauge.
 	* @param {number} iconIndex - The index of the icon to display.
 	*/
-	/**
-	* Gets the gauge.
-	* @returns {*} The gauge.
-	*/
-	gauge() {
-		return this._gauge;
-	}
 	constructor(bitmapWidth = 96, bitmapHeight = 24, gaugeHeight = 6, label = String.empty, value = null, iconIndex = -1) {
 		super(bitmapWidth, bitmapHeight, gaugeHeight, label, value, iconIndex);
 	}

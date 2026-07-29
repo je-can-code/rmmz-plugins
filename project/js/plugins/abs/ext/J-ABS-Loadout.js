@@ -188,28 +188,28 @@ var Window_LoadoutActorHeader = class extends Window_Base {
 	}
 	/**
 	* Gets the actor column width.
-	* @returns {*} The actorColumnWidth.
+	* @returns {number} The actorColumnWidth.
 	*/
 	actorColumnWidth() {
 		return this._actorColumnWidth;
 	}
 	/**
 	* Sets the actor column width.
-	* @param {*} newActorColumnWidth The new actorColumnWidth.
+	* @param {number} newActorColumnWidth The new actorColumnWidth.
 	*/
 	setActorColumnWidth(newActorColumnWidth) {
 		this._actorColumnWidth = newActorColumnWidth;
 	}
 	/**
 	* Gets the slot spine width.
-	* @returns {*} The slotSpineWidth.
+	* @returns {number} The slotSpineWidth.
 	*/
 	slotSpineWidth() {
 		return this._slotSpineWidth;
 	}
 	/**
 	* Sets the slot spine width.
-	* @param {*} newSlotSpineWidth The new slotSpineWidth.
+	* @param {number} newSlotSpineWidth The new slotSpineWidth.
 	*/
 	setSlotSpineWidth(newSlotSpineWidth) {
 		this._slotSpineWidth = newSlotSpineWidth;
@@ -515,14 +515,14 @@ var Window_LoadoutPicker = class extends Window_Command {
 	}
 	/**
 	* Sets the actor.
-	* @param {*} newActor The new actor.
+	* @param {Game_Actor|null} newActor The new actor.
 	*/
 	setActor(newActor) {
 		this._actor = newActor;
 	}
 	/**
 	* Sets the slot key.
-	* @param {*} newSlotKey The new slotKey.
+	* @param {string} newSlotKey The new slotKey.
 	*/
 	setSlotKey(newSlotKey) {
 		this._slotKey = newSlotKey;

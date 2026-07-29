@@ -163,7 +163,7 @@ class Game_Time
   //region properties
   /**
    * Gets the has been updated.
-   * @returns {*} The hasBeenUpdated.
+   * @returns {boolean} The hasBeenUpdated.
    */
   hasBeenUpdated()
   {
@@ -173,7 +173,7 @@ class Game_Time
 
   /**
    * Sets the has been updated.
-   * @param {*} newHasBeenUpdated The new hasBeenUpdated.
+   * @param {boolean} newHasBeenUpdated The new hasBeenUpdated.
    */
   setHasBeenUpdated(newHasBeenUpdated)
   {
@@ -193,7 +193,7 @@ class Game_Time
 
   /**
    * Sets the visible.
-   * @param {*} newVisible The new visible.
+   * @param {boolean} newVisible The new visible.
    */
   setVisible(newVisible)
   {
@@ -203,7 +203,7 @@ class Game_Time
 
   /**
    * Gets the tick frames.
-   * @returns {*} The tickFrames.
+   * @returns {number} The tickFrames.
    */
   tickFrames()
   {
@@ -213,7 +213,7 @@ class Game_Time
 
   /**
    * Sets the tick frames.
-   * @param {*} newTickFrames The new tickFrames.
+   * @param {number} newTickFrames The new tickFrames.
    */
   setTickFrames(newTickFrames)
   {
@@ -263,7 +263,7 @@ class Game_Time
 
   /**
    * Gets the seconds.
-   * @returns {*} The seconds.
+   * @returns {number} The seconds.
    */
   seconds()
   {
@@ -273,7 +273,7 @@ class Game_Time
 
   /**
    * Sets the seconds.
-   * @param {*} newSeconds The new seconds.
+   * @param {number} newSeconds The new seconds.
    */
   setSeconds(newSeconds)
   {
@@ -283,7 +283,7 @@ class Game_Time
 
   /**
    * Gets the minutes.
-   * @returns {*} The minutes.
+   * @returns {number} The minutes.
    */
   minutes()
   {
@@ -293,7 +293,7 @@ class Game_Time
 
   /**
    * Sets the minutes.
-   * @param {*} newMinutes The new minutes.
+   * @param {number} newMinutes The new minutes.
    */
   setMinutes(newMinutes)
   {

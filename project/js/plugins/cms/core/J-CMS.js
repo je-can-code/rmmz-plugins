@@ -839,23 +839,23 @@ Window_MenuCommand.prototype.addGameEndCommand = function() {
 */
 var Window_MenuSectionCommand = class extends Window_MenuCommand {
 	/**
-	* Extends {@link #makeCommandList}.<br/>
-	* Also discards every command belonging to a different section.
-	*/
-	/**
 	* Gets the remembered index.
-	* @returns {*} The rememberedIndex.
+	* @returns {number} The rememberedIndex.
 	*/
 	rememberedIndex() {
 		return this._rememberedIndex;
 	}
 	/**
 	* Sets the remembered index.
-	* @param {*} newRememberedIndex The new rememberedIndex.
+	* @param {number} newRememberedIndex The new rememberedIndex.
 	*/
 	setRememberedIndex(newRememberedIndex) {
 		this._rememberedIndex = newRememberedIndex;
 	}
+	/**
+	* Extends {@link #makeCommandList}.<br/>
+	* Also discards every command belonging to a different section.
+	*/
 	makeCommandList() {
 		super.makeCommandList();
 		this.filterToSection();

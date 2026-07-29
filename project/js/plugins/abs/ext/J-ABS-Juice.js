@@ -554,69 +554,64 @@ var JuiceWeaponSwingMotionEffect = class JuiceWeaponSwingMotionEffect extends Ju
 	* @returns {{ x: number, y: number }}
 	*/
 	/**
-	* Normalizes repeat count — floors to integer, defaults to 1 if invalid or below 1.
-	* @param {number} repeatCount Candidate count from skill notes or resolver.
-	* @returns {number}
-	*/
-	/**
 	* Gets the stab tip angle radians.
-	* @returns {*} The stabTipAngleRadians.
+	* @returns {number} The stabTipAngleRadians.
 	*/
 	stabTipAngleRadians() {
 		return this._stabTipAngleRadians;
 	}
 	/**
 	* Gets the profile gun.
-	* @returns {*} The profileGun.
+	* @returns {boolean} The profileGun.
 	*/
 	profileGun() {
 		return this._profileGun;
 	}
 	/**
 	* Gets the overlay.
-	* @returns {*} The overlay.
+	* @returns {Bitmap} The overlay.
 	*/
 	overlay() {
 		return this._overlay;
 	}
 	/**
 	* Gets the scale mag.
-	* @returns {*} The scaleMag.
+	* @returns {number} The scaleMag.
 	*/
 	scaleMag() {
 		return this._scaleMag;
 	}
 	/**
 	* Gets the parent sprite.
-	* @returns {*} The parentSprite.
+	* @returns {Sprite} The parentSprite.
 	*/
 	parentSprite() {
 		return this._parentSprite;
 	}
 	/**
 	* Gets the frame.
-	* @returns {*} The frame.
+	* @returns {number} The frame.
 	*/
 	frame() {
 		return this._frame;
 	}
 	/**
 	* Sets the frame.
-	* @param {*} newFrame The new frame.
+	* @param {number} newFrame The new frame.
 	*/
 	setFrame(newFrame) {
 		this._frame = newFrame;
 	}
 	/**
 	* Gets the duration frames.
-	* @returns {*} The durationFrames.
+	* @returns {number} The durationFrames.
 	*/
 	durationFrames() {
 		return this._durationFrames;
 	}
 	/**
 	* Gets the swing direction.
-	* @returns {*} The swingDirection.
+	* @returns {number} The swingDirection.
 	*/
 	swingDirection() {
 		return this._swingDirection;
@@ -630,7 +625,7 @@ var JuiceWeaponSwingMotionEffect = class JuiceWeaponSwingMotionEffect extends Ju
 	}
 	/**
 	* Gets the repeat count.
-	* @returns {*} The repeatCount.
+	* @returns {number} The repeatCount.
 	*/
 	repeatCount() {
 		return this._repeatCount;
@@ -665,18 +660,23 @@ var JuiceWeaponSwingMotionEffect = class JuiceWeaponSwingMotionEffect extends Ju
 	}
 	/**
 	* Gets the base x.
-	* @returns {*} The baseX.
+	* @returns {number} The baseX.
 	*/
 	baseX() {
 		return this._baseX;
 	}
 	/**
 	* Gets the base y.
-	* @returns {*} The baseY.
+	* @returns {number} The baseY.
 	*/
 	baseY() {
 		return this._baseY;
 	}
+	/**
+	* Normalizes repeat count — floors to integer, defaults to 1 if invalid or below 1.
+	* @param {number} repeatCount Candidate count from skill notes or resolver.
+	* @returns {number}
+	*/
 	static #clampRepeatCount(repeatCount) {
 		if (repeatCount === undefined || repeatCount === null || Number.isFinite(repeatCount) === false) {
 			return 1;
@@ -1563,11 +1563,6 @@ var JuiceProfileResolver = class JuiceProfileResolver {
 */
 var JuiceTiltMotionEffect = class extends JuiceBaseEffect {
 	/**
-	* @param {Sprite} sprite The Pixi sprite being driven.
-	* @param {number} peakRadians Peak rotation magnitude (radians).
-	* @param {number} durationFrames Frames to run.
-	*/
-	/**
 	* Gets the sprite.
 	* @returns {*} The sprite.
 	*/
@@ -1583,21 +1578,21 @@ var JuiceTiltMotionEffect = class extends JuiceBaseEffect {
 	}
 	/**
 	* Gets the frame.
-	* @returns {*} The frame.
+	* @returns {number} The frame.
 	*/
 	frame() {
 		return this._frame;
 	}
 	/**
 	* Sets the frame.
-	* @param {*} newFrame The new frame.
+	* @param {number} newFrame The new frame.
 	*/
 	setFrame(newFrame) {
 		this._frame = newFrame;
 	}
 	/**
 	* Gets the duration frames.
-	* @returns {*} The durationFrames.
+	* @returns {number} The durationFrames.
 	*/
 	durationFrames() {
 		return this._durationFrames;
@@ -1609,6 +1604,11 @@ var JuiceTiltMotionEffect = class extends JuiceBaseEffect {
 	peakRadians() {
 		return this._peakRadians;
 	}
+	/**
+	* @param {Sprite} sprite The Pixi sprite being driven.
+	* @param {number} peakRadians Peak rotation magnitude (radians).
+	* @param {number} durationFrames Frames to run.
+	*/
 	constructor(sprite, peakRadians, durationFrames) {
 		super();
 		this._sprite = sprite;
@@ -1659,12 +1659,6 @@ var JuiceTiltMotionEffect = class extends JuiceBaseEffect {
 */
 var JuiceSquishMotionEffect = class extends JuiceBaseEffect {
 	/**
-	* @param {Sprite} sprite The Pixi sprite being driven.
-	* @param {number} intensityScale Max delta applied via sine envelope (e.g. 0.12).
-	* @param {number} durationFrames Frames to run per repeat cycle.
-	* @param {number} [repeatCount=1] How many times to cycle the squish envelope before finishing.
-	*/
-	/**
 	* Gets the sprite.
 	* @returns {*} The sprite.
 	*/
@@ -1673,35 +1667,35 @@ var JuiceSquishMotionEffect = class extends JuiceBaseEffect {
 	}
 	/**
 	* Gets the base scale x.
-	* @returns {*} The baseScaleX.
+	* @returns {number} The baseScaleX.
 	*/
 	baseScaleX() {
 		return this._baseScaleX;
 	}
 	/**
 	* Gets the base scale y.
-	* @returns {*} The baseScaleY.
+	* @returns {number} The baseScaleY.
 	*/
 	baseScaleY() {
 		return this._baseScaleY;
 	}
 	/**
 	* Gets the frame.
-	* @returns {*} The frame.
+	* @returns {number} The frame.
 	*/
 	frame() {
 		return this._frame;
 	}
 	/**
 	* Sets the frame.
-	* @param {*} newFrame The new frame.
+	* @param {number} newFrame The new frame.
 	*/
 	setFrame(newFrame) {
 		this._frame = newFrame;
 	}
 	/**
 	* Gets the duration frames.
-	* @returns {*} The durationFrames.
+	* @returns {number} The durationFrames.
 	*/
 	durationFrames() {
 		return this._durationFrames;
@@ -1727,6 +1721,12 @@ var JuiceSquishMotionEffect = class extends JuiceBaseEffect {
 	setRepeatsRemaining(newRepeatsRemaining) {
 		this._repeatsRemaining = newRepeatsRemaining;
 	}
+	/**
+	* @param {Sprite} sprite The Pixi sprite being driven.
+	* @param {number} intensityScale Max delta applied via sine envelope (e.g. 0.12).
+	* @param {number} durationFrames Frames to run per repeat cycle.
+	* @param {number} [repeatCount=1] How many times to cycle the squish envelope before finishing.
+	*/
 	constructor(sprite, intensityScale, durationFrames, repeatCount = 1) {
 		super();
 		this._sprite = sprite;
@@ -1789,11 +1789,6 @@ var JuiceSquishMotionEffect = class extends JuiceBaseEffect {
 */
 var JuiceCastingPulseMotionEffect = class extends JuiceBaseEffect {
 	/**
-	* @param {Sprite} sprite The Pixi sprite being driven.
-	* @param {number} amplitudeScale Scale wobble amplitude (small, e.g. 0.04).
-	* @param {function(): boolean} continuePredicate While true, pulse continues.
-	*/
-	/**
 	* Gets the sprite.
 	* @returns {*} The sprite.
 	*/
@@ -1802,14 +1797,14 @@ var JuiceCastingPulseMotionEffect = class extends JuiceBaseEffect {
 	}
 	/**
 	* Gets the base scale x.
-	* @returns {*} The baseScaleX.
+	* @returns {number} The baseScaleX.
 	*/
 	baseScaleX() {
 		return this._baseScaleX;
 	}
 	/**
 	* Gets the base scale y.
-	* @returns {*} The baseScaleY.
+	* @returns {number} The baseScaleY.
 	*/
 	baseScaleY() {
 		return this._baseScaleY;
@@ -1830,14 +1825,14 @@ var JuiceCastingPulseMotionEffect = class extends JuiceBaseEffect {
 	}
 	/**
 	* Gets the phase.
-	* @returns {*} The phase.
+	* @returns {number} The phase.
 	*/
 	phase() {
 		return this._phase;
 	}
 	/**
 	* Sets the phase.
-	* @param {*} newPhase The new phase.
+	* @param {number} newPhase The new phase.
 	*/
 	setPhase(newPhase) {
 		this._phase = newPhase;
@@ -1849,6 +1844,11 @@ var JuiceCastingPulseMotionEffect = class extends JuiceBaseEffect {
 	amplitudeScale() {
 		return this._amplitudeScale;
 	}
+	/**
+	* @param {Sprite} sprite The Pixi sprite being driven.
+	* @param {number} amplitudeScale Scale wobble amplitude (small, e.g. 0.04).
+	* @param {function(): boolean} continuePredicate While true, pulse continues.
+	*/
 	constructor(sprite, amplitudeScale, continuePredicate) {
 		super();
 		this._sprite = sprite;
@@ -1927,12 +1927,6 @@ var JuiceCastingPulseMotionEffect = class extends JuiceBaseEffect {
 */
 var JuiceFlipBodyMotionEffect = class extends JuiceBaseEffect {
 	/**
-	* @param {Sprite} sprite The Pixi sprite being driven.
-	* @param {number} directionSign +1 for clockwise (flip), -1 for counter-clockwise (flip-reverse).
-	* @param {number} durationFrames Total frames for the entire animation (all rotations).
-	* @param {number} [repeatCount=1] Number of full 360° rotations to complete.
-	*/
-	/**
 	* Gets the sprite.
 	* @returns {*} The sprite.
 	*/
@@ -1948,35 +1942,35 @@ var JuiceFlipBodyMotionEffect = class extends JuiceBaseEffect {
 	}
 	/**
 	* Gets the base anchor x.
-	* @returns {*} The baseAnchorX.
+	* @returns {number} The baseAnchorX.
 	*/
 	baseAnchorX() {
 		return this._baseAnchorX;
 	}
 	/**
 	* Gets the base anchor y.
-	* @returns {*} The baseAnchorY.
+	* @returns {number} The baseAnchorY.
 	*/
 	baseAnchorY() {
 		return this._baseAnchorY;
 	}
 	/**
 	* Gets the frame.
-	* @returns {*} The frame.
+	* @returns {number} The frame.
 	*/
 	frame() {
 		return this._frame;
 	}
 	/**
 	* Sets the frame.
-	* @param {*} newFrame The new frame.
+	* @param {number} newFrame The new frame.
 	*/
 	setFrame(newFrame) {
 		this._frame = newFrame;
 	}
 	/**
 	* Gets the duration frames.
-	* @returns {*} The durationFrames.
+	* @returns {number} The durationFrames.
 	*/
 	durationFrames() {
 		return this._durationFrames;
@@ -1990,11 +1984,17 @@ var JuiceFlipBodyMotionEffect = class extends JuiceBaseEffect {
 	}
 	/**
 	* Gets the repeat count.
-	* @returns {*} The repeatCount.
+	* @returns {number} The repeatCount.
 	*/
 	repeatCount() {
 		return this._repeatCount;
 	}
+	/**
+	* @param {Sprite} sprite The Pixi sprite being driven.
+	* @param {number} directionSign +1 for clockwise (flip), -1 for counter-clockwise (flip-reverse).
+	* @param {number} durationFrames Total frames for the entire animation (all rotations).
+	* @param {number} [repeatCount=1] Number of full 360° rotations to complete.
+	*/
 	constructor(sprite, directionSign, durationFrames, repeatCount = 1) {
 		super();
 		this._sprite = sprite;

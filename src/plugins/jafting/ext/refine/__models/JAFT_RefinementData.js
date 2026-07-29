@@ -4,12 +4,6 @@
  */
 class JAFTING_RefinementData
 {
-  /**
-   * @constructor
-   * @param {string} notes The raw note box as a string.
-   * @param {any} meta The `meta` object containing prebuilt note metadata.
-   */
-  
 
   //region properties
   /**
@@ -22,6 +16,12 @@ class JAFTING_RefinementData
     return this._notes;
   }
   //endregion properties
+
+  /**
+   * @constructor
+   * @param {string} notes The raw note box as a string.
+   * @param {any} meta The `meta` object containing prebuilt note metadata.
+   */
 
   constructor(notes, meta)
   {

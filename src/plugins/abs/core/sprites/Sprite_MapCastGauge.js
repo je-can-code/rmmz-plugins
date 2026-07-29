@@ -7,16 +7,11 @@ import JABS_Battler from '../models/JABS_Battler.js';
 class Sprite_MapCastGauge
   extends Sprite_MapGauge
 {
-  /**
-   * Constructor.
-   * @param {...*} args Forwarded to {@link #initialize}.
-   */
-  
 
   //region properties
   /**
    * Gets the jabs battler.
-   * @returns {*} The jabsBattler.
+   * @returns {JABS_Battler|null} The jabsBattler.
    */
   jabsBattler()
   {
@@ -26,7 +21,7 @@ class Sprite_MapCastGauge
 
   /**
    * Sets the jabs battler.
-   * @param {*} newJabsBattler The new jabsBattler.
+   * @param {JABS_Battler|null} newJabsBattler The new jabsBattler.
    */
   setJabsBattler(newJabsBattler)
   {
@@ -84,6 +79,11 @@ class Sprite_MapCastGauge
     return this._gauge;
   }
   //endregion properties
+
+  /**
+   * Constructor.
+   * @param {...*} args Forwarded to {@link #initialize}.
+   */
 
   constructor(...args)
   {

@@ -12,13 +12,6 @@ import JuiceBaseEffect from './JuiceBaseEffect.js';
  */
 class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
 {
-  /**
-   * @param {Sprite} sprite The Pixi sprite being driven.
-   * @param {number} directionSign +1 for clockwise (flip), -1 for counter-clockwise (flip-reverse).
-   * @param {number} durationFrames Total frames for the entire animation (all rotations).
-   * @param {number} [repeatCount=1] Number of full 360° rotations to complete.
-   */
-  
 
   //region properties
   /**
@@ -43,7 +36,7 @@ class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the base anchor x.
-   * @returns {*} The baseAnchorX.
+   * @returns {number} The baseAnchorX.
    */
   baseAnchorX()
   {
@@ -53,7 +46,7 @@ class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the base anchor y.
-   * @returns {*} The baseAnchorY.
+   * @returns {number} The baseAnchorY.
    */
   baseAnchorY()
   {
@@ -63,7 +56,7 @@ class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the frame.
-   * @returns {*} The frame.
+   * @returns {number} The frame.
    */
   frame()
   {
@@ -73,7 +66,7 @@ class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
 
   /**
    * Sets the frame.
-   * @param {*} newFrame The new frame.
+   * @param {number} newFrame The new frame.
    */
   setFrame(newFrame)
   {
@@ -83,7 +76,7 @@ class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the duration frames.
-   * @returns {*} The durationFrames.
+   * @returns {number} The durationFrames.
    */
   durationFrames()
   {
@@ -103,7 +96,7 @@ class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the repeat count.
-   * @returns {*} The repeatCount.
+   * @returns {number} The repeatCount.
    */
   repeatCount()
   {
@@ -112,6 +105,12 @@ class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
   }
   //endregion properties
 
+  /**
+   * @param {Sprite} sprite The Pixi sprite being driven.
+   * @param {number} directionSign +1 for clockwise (flip), -1 for counter-clockwise (flip-reverse).
+   * @param {number} durationFrames Total frames for the entire animation (all rotations).
+   * @param {number} [repeatCount=1] Number of full 360° rotations to complete.
+   */
   constructor(sprite, directionSign, durationFrames, repeatCount = 1)
   {
     super();

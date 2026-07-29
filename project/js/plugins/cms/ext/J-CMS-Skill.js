@@ -152,21 +152,21 @@ var Window_SkillDetail = class extends Window_Base {
 	}
 	/**
 	* Gets the skill id.
-	* @returns {*} The skillId.
+	* @returns {number} The skillId.
 	*/
 	skillId() {
 		return this._skillId;
 	}
 	/**
 	* Gets the actor.
-	* @returns {*} The actor.
+	* @returns {Game_Actor} The actor.
 	*/
 	actor() {
 		return this._actor;
 	}
 	/**
 	* Gets the skill sprites.
-	* @returns {*} The skillSprites.
+	* @returns {Map<string, Sprite>} The skillSprites.
 	*/
 	skillSprites() {
 		return this._skillSprites;
@@ -790,7 +790,7 @@ Window_SkillList.prototype.includes = function(skill) {
 };
 /**
 * Gets the skill detail window.
-* @returns {*} The skillDetailWindow.
+* @returns {Window_Base} The skillDetailWindow.
 */
 Window_SkillList.prototype.skillDetailWindow = function() {
 	return this._skillDetailWindow;

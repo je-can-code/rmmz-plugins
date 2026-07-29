@@ -408,7 +408,7 @@ Game_Interpreter.prototype.setChoiceHidden = function(choiceIndex, shouldHide = 
 };
 /**
 * Gets the common event id.
-* @returns {*} The commonEventId.
+* @returns {number} The commonEventId.
 */
 Game_Interpreter.prototype.commonEventId = function() {
 	return this._commonEventId;

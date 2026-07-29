@@ -43,7 +43,7 @@ class Window_LoadoutActorHeader
   //region properties
   /**
    * Gets the actor column width.
-   * @returns {*} The actorColumnWidth.
+   * @returns {number} The actorColumnWidth.
    */
   actorColumnWidth()
   {
@@ -53,7 +53,7 @@ class Window_LoadoutActorHeader
 
   /**
    * Sets the actor column width.
-   * @param {*} newActorColumnWidth The new actorColumnWidth.
+   * @param {number} newActorColumnWidth The new actorColumnWidth.
    */
   setActorColumnWidth(newActorColumnWidth)
   {
@@ -63,7 +63,7 @@ class Window_LoadoutActorHeader
 
   /**
    * Gets the slot spine width.
-   * @returns {*} The slotSpineWidth.
+   * @returns {number} The slotSpineWidth.
    */
   slotSpineWidth()
   {
@@ -73,7 +73,7 @@ class Window_LoadoutActorHeader
 
   /**
    * Sets the slot spine width.
-   * @param {*} newSlotSpineWidth The new slotSpineWidth.
+   * @param {number} newSlotSpineWidth The new slotSpineWidth.
    */
   setSlotSpineWidth(newSlotSpineWidth)
   {

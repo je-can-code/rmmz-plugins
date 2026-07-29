@@ -1737,7 +1737,7 @@ Sprite_Character.prototype.setLootSetupComplete = function(newLootSetupComplete)
 
 /**
  * Gets the state overlay sprite.
- * @returns {*} The stateOverlaySprite.
+ * @returns {Sprite} The stateOverlaySprite.
  */
 Sprite_Character.prototype.stateOverlaySprite = function()
 {
@@ -1747,7 +1747,7 @@ Sprite_Character.prototype.stateOverlaySprite = function()
 
 /**
  * Sets the state overlay sprite.
- * @param {*} newStateOverlaySprite The new stateOverlaySprite.
+ * @param {Sprite} newStateOverlaySprite The new stateOverlaySprite.
  */
 Sprite_Character.prototype.setStateOverlaySprite = function(newStateOverlaySprite)
 {
@@ -1817,7 +1817,7 @@ Sprite_Character.prototype.setBattler = function(newBattler)
 
 /**
  * Gets the battler name.
- * @returns {*} The battlerName.
+ * @returns {string} The battlerName.
  */
 Sprite_Character.prototype.battlerName = function()
 {
@@ -1827,7 +1827,7 @@ Sprite_Character.prototype.battlerName = function()
 
 /**
  * Sets the battler name.
- * @param {*} newBattlerName The new battlerName.
+ * @param {string} newBattlerName The new battlerName.
  */
 Sprite_Character.prototype.setBattlerName = function(newBattlerName)
 {

@@ -4,6 +4,29 @@
  */
 class Time_Snapshot
 {
+
+  //region properties
+  /**
+   * Gets the season of year id.
+   * @returns {number} The seasonOfYearId.
+   */
+  seasonOfYearId()
+  {
+    // hand back the season of year id.
+    return this._seasonOfYearId;
+  }
+
+  /**
+   * Gets the time of day id.
+   * @returns {number} The timeOfDayId.
+   */
+  timeOfDayId()
+  {
+    // hand back the time of day id.
+    return this._timeOfDayId;
+  }
+  //endregion properties
+
   /**
    * @constructor
    * @param {number} seconds The seconds of the current time.
@@ -15,29 +38,6 @@ class Time_Snapshot
    * @param {number} timeOfDayId The id of the time of day.
    * @param {number} seasonOfYearId The id of the season of the year.
    */
-  
-
-  //region properties
-  /**
-   * Gets the season of year id.
-   * @returns {*} The seasonOfYearId.
-   */
-  seasonOfYearId()
-  {
-    // hand back the season of year id.
-    return this._seasonOfYearId;
-  }
-
-  /**
-   * Gets the time of day id.
-   * @returns {*} The timeOfDayId.
-   */
-  timeOfDayId()
-  {
-    // hand back the time of day id.
-    return this._timeOfDayId;
-  }
-  //endregion properties
 
   constructor(seconds, minutes, hours, days, months, years, timeOfDayId, seasonOfYearId)
   {

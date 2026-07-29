@@ -21,13 +21,6 @@ import JABS_Timer from './JABS_Timer.js';
  */
 class JABS_Battler
 {
-  /**
-   * Constructor.
-   * @param {Game_Event|Game_Player|Game_Follower} event The event the battler is bound to.
-   * @param {Game_Actor|Game_Enemy} battler The battler data itself.
-   * @param {JABS_BattlerCoreData} battlerCoreData The core data for the battler.
-   */
-  
 
   //region properties
   /**
@@ -39,7 +32,7 @@ class JABS_Battler
   //region properties
   /**
    * Sets the hidden.
-   * @param {*} newHidden The new hidden.
+   * @param {boolean} newHidden The new hidden.
    */
   setHidden(newHidden)
   {
@@ -49,7 +42,7 @@ class JABS_Battler
 
   /**
    * Gets the leader decided action.
-   * @returns {*} The leaderDecidedAction.
+   * @returns {number|null} The leaderDecidedAction.
    */
   leaderDecidedAction()
   {
@@ -59,7 +52,7 @@ class JABS_Battler
 
   /**
    * Gets the post action cooldown complete.
-   * @returns {*} The postActionCooldownComplete.
+   * @returns {boolean} The postActionCooldownComplete.
    */
   postActionCooldownComplete()
   {
@@ -69,7 +62,7 @@ class JABS_Battler
 
   /**
    * Sets the post action cooldown complete.
-   * @param {*} newPostActionCooldownComplete The new postActionCooldownComplete.
+   * @param {boolean} newPostActionCooldownComplete The new postActionCooldownComplete.
    */
   setPostActionCooldownComplete(newPostActionCooldownComplete)
   {
@@ -79,7 +72,7 @@ class JABS_Battler
 
   /**
    * Gets the idle action ready.
-   * @returns {*} The idleActionReady.
+   * @returns {boolean} The idleActionReady.
    */
   idleActionReady()
   {
@@ -89,7 +82,7 @@ class JABS_Battler
 
   /**
    * Sets the idle action ready.
-   * @param {*} newIdleActionReady The new idleActionReady.
+   * @param {boolean} newIdleActionReady The new idleActionReady.
    */
   setIdleActionReady(newIdleActionReady)
   {
@@ -99,7 +92,7 @@ class JABS_Battler
 
   /**
    * Gets the ai combo humanized ready frame.
-   * @returns {*} The aiComboHumanizedReadyFrame.
+   * @returns {number} The aiComboHumanizedReadyFrame.
    */
   aiComboHumanizedReadyFrame()
   {
@@ -109,7 +102,7 @@ class JABS_Battler
 
   /**
    * Sets the channeling.
-   * @param {*} newChanneling The new channeling.
+   * @param {boolean} newChanneling The new channeling.
    */
   setChanneling(newChanneling)
   {
@@ -119,7 +112,7 @@ class JABS_Battler
 
   /**
    * Sets the casting.
-   * @param {*} newCasting The new casting.
+   * @param {boolean} newCasting The new casting.
    */
   setCasting(newCasting)
   {
@@ -127,6 +120,13 @@ class JABS_Battler
     this._casting = newCasting;
   }
   //endregion properties
+
+  /**
+   * Constructor.
+   * @param {Game_Event|Game_Player|Game_Follower} event The event the battler is bound to.
+   * @param {Game_Actor|Game_Enemy} battler The battler data itself.
+   * @param {JABS_BattlerCoreData} battlerCoreData The core data for the battler.
+   */
 
   isPrepareReady()
   {
@@ -136,7 +136,7 @@ class JABS_Battler
 
   /**
    * Sets the prepare ready.
-   * @param {*} newPrepareReady The new prepareReady.
+   * @param {boolean} newPrepareReady The new prepareReady.
    */
   setPrepareReady(newPrepareReady)
   {
@@ -146,7 +146,7 @@ class JABS_Battler
 
   /**
    * Gets the engagement lock.
-   * @returns {*} The engagementLock.
+   * @returns {boolean} The engagementLock.
    */
   isEngagementLock()
   {
@@ -156,7 +156,7 @@ class JABS_Battler
 
   /**
    * Sets the engagement lock.
-   * @param {*} newEngagementLock The new engagementLock.
+   * @param {boolean} newEngagementLock The new engagementLock.
    */
   setEngagementLock(newEngagementLock)
   {
@@ -166,7 +166,7 @@ class JABS_Battler
 
   /**
    * Gets the is guarding.
-   * @returns {*} The isGuarding.
+   * @returns {boolean} The isGuarding.
    */
   isGuarding()
   {
@@ -176,7 +176,7 @@ class JABS_Battler
 
   /**
    * Sets the is guarding.
-   * @param {*} newIsGuarding The new isGuarding.
+   * @param {boolean} newIsGuarding The new isGuarding.
    */
   setIsGuarding(newIsGuarding)
   {
@@ -186,7 +186,7 @@ class JABS_Battler
 
   /**
    * Gets the event.
-   * @returns {*} The event.
+   * @returns {Game_Event|Game_Player|Game_Follower} The event.
    */
   event()
   {
@@ -196,7 +196,7 @@ class JABS_Battler
 
   /**
    * Sets the event.
-   * @param {*} newEvent The new event.
+   * @param {Game_Event|Game_Player|Game_Follower} newEvent The new event.
    */
   setEvent(newEvent)
   {
@@ -206,7 +206,7 @@ class JABS_Battler
 
   /**
    * Gets the leader uuid.
-   * @returns {*} The leaderUuid.
+   * @returns {string} The leaderUuid.
    */
   leaderUuid()
   {
@@ -216,7 +216,7 @@ class JABS_Battler
 
   /**
    * Sets the leader uuid.
-   * @param {*} newLeaderUuid The new leaderUuid.
+   * @param {string} newLeaderUuid The new leaderUuid.
    */
   setLeaderUuid(newLeaderUuid)
   {
@@ -226,7 +226,7 @@ class JABS_Battler
 
   /**
    * Gets the followers.
-   * @returns {*} The followers.
+   * @returns {string[]} The followers.
    */
   followers()
   {
@@ -236,7 +236,7 @@ class JABS_Battler
 
   /**
    * Gets the team.
-   * @returns {*} The team.
+   * @returns {number} The team.
    */
   team()
   {
@@ -246,7 +246,7 @@ class JABS_Battler
 
   /**
    * Gets the inanimate.
-   * @returns {*} The inanimate.
+   * @returns {boolean} The inanimate.
    */
   inanimate()
   {
@@ -256,7 +256,7 @@ class JABS_Battler
 
   /**
    * Gets the prepare counter.
-   * @returns {*} The prepareCounter.
+   * @returns {number} The prepareCounter.
    */
   prepareCounter()
   {
@@ -266,7 +266,7 @@ class JABS_Battler
 
   /**
    * Sets the prepare counter.
-   * @param {*} newPrepareCounter The new prepareCounter.
+   * @param {number} newPrepareCounter The new prepareCounter.
    */
   setPrepareCounter(newPrepareCounter)
   {
@@ -276,7 +276,7 @@ class JABS_Battler
 
   /**
    * Gets the ai defensive dodge ready frame.
-   * @returns {*} The aiDefensiveDodgeReadyFrame.
+   * @returns {number} The aiDefensiveDodgeReadyFrame.
    */
   aiDefensiveDodgeReadyFrame()
   {
@@ -286,7 +286,7 @@ class JABS_Battler
 
   /**
    * Sets the ai defensive dodge ready frame.
-   * @param {*} newAiDefensiveDodgeReadyFrame The new aiDefensiveDodgeReadyFrame.
+   * @param {number} newAiDefensiveDodgeReadyFrame The new aiDefensiveDodgeReadyFrame.
    */
   setAiDefensiveDodgeReadyFrame(newAiDefensiveDodgeReadyFrame)
   {
@@ -296,7 +296,7 @@ class JABS_Battler
 
   /**
    * Gets the ai ally defensive guard ready frame.
-   * @returns {*} The aiAllyDefensiveGuardReadyFrame.
+   * @returns {number} The aiAllyDefensiveGuardReadyFrame.
    */
   aiAllyDefensiveGuardReadyFrame()
   {
@@ -306,7 +306,7 @@ class JABS_Battler
 
   /**
    * Sets the ai ally defensive guard ready frame.
-   * @param {*} newAiAllyDefensiveGuardReadyFrame The new aiAllyDefensiveGuardReadyFrame.
+   * @param {number} newAiAllyDefensiveGuardReadyFrame The new aiAllyDefensiveGuardReadyFrame.
    */
   setAiAllyDefensiveGuardReadyFrame(newAiAllyDefensiveGuardReadyFrame)
   {
@@ -316,7 +316,7 @@ class JABS_Battler
 
   /**
    * Gets the ai ally guard raise frame.
-   * @returns {*} The aiAllyGuardRaiseFrame.
+   * @returns {number} The aiAllyGuardRaiseFrame.
    */
   aiAllyGuardRaiseFrame()
   {
@@ -326,7 +326,7 @@ class JABS_Battler
 
   /**
    * Sets the ai ally guard raise frame.
-   * @param {*} newAiAllyGuardRaiseFrame The new aiAllyGuardRaiseFrame.
+   * @param {number} newAiAllyGuardRaiseFrame The new aiAllyGuardRaiseFrame.
    */
   setAiAllyGuardRaiseFrame(newAiAllyGuardRaiseFrame)
   {
@@ -336,7 +336,7 @@ class JABS_Battler
 
   /**
    * Gets the battler.
-   * @returns {*} The battler.
+   * @returns {Game_Actor|Game_Enemy} The battler.
    */
   battler()
   {
@@ -346,7 +346,7 @@ class JABS_Battler
 
   /**
    * Gets the sight radius.
-   * @returns {*} The sightRadius.
+   * @returns {number} The sightRadius.
    */
   sightRadius()
   {
@@ -356,7 +356,7 @@ class JABS_Battler
 
   /**
    * Gets the alerted sight boost.
-   * @returns {*} The alertedSightBoost.
+   * @returns {number} The alertedSightBoost.
    */
   alertedSightBoost()
   {
@@ -366,7 +366,7 @@ class JABS_Battler
 
   /**
    * Gets the pursuit radius.
-   * @returns {*} The pursuitRadius.
+   * @returns {number} The pursuitRadius.
    */
   pursuitRadius()
   {
@@ -376,7 +376,7 @@ class JABS_Battler
 
   /**
    * Gets the alerted pursuit boost.
-   * @returns {*} The alertedPursuitBoost.
+   * @returns {number} The alertedPursuitBoost.
    */
   alertedPursuitBoost()
   {
@@ -386,7 +386,7 @@ class JABS_Battler
 
   /**
    * Gets the guard range.
-   * @returns {*} The guardRange.
+   * @returns {number|null} The guardRange.
    */
   guardRange()
   {
@@ -396,7 +396,7 @@ class JABS_Battler
 
   /**
    * Gets the last hit.
-   * @returns {*} The lastHit.
+   * @returns {JABS_Battler} The lastHit.
    */
   lastHit()
   {
@@ -406,7 +406,7 @@ class JABS_Battler
 
   /**
    * Sets the last hit.
-   * @param {*} newLastHit The new lastHit.
+   * @param {JABS_Battler} newLastHit The new lastHit.
    */
   setLastHit(newLastHit)
   {
@@ -416,7 +416,7 @@ class JABS_Battler
 
   /**
    * Gets the last hit countdown.
-   * @returns {*} The lastHitCountdown.
+   * @returns {number} The lastHitCountdown.
    */
   lastHitCountdown()
   {
@@ -426,7 +426,7 @@ class JABS_Battler
 
   /**
    * Sets the last hit countdown.
-   * @param {*} newLastHitCountdown The new lastHitCountdown.
+   * @param {number} newLastHitCountdown The new lastHitCountdown.
    */
   setLastHitCountdown(newLastHitCountdown)
   {
@@ -436,7 +436,7 @@ class JABS_Battler
 
   /**
    * Gets the home x.
-   * @returns {*} The homeX.
+   * @returns {number} The homeX.
    */
   homeX()
   {
@@ -446,7 +446,7 @@ class JABS_Battler
 
   /**
    * Gets the home y.
-   * @returns {*} The homeY.
+   * @returns {number} The homeY.
    */
   homeY()
   {
@@ -456,7 +456,7 @@ class JABS_Battler
 
   /**
    * Gets the alert duration.
-   * @returns {*} The alertDuration.
+   * @returns {number} The alertDuration.
    */
   alertDuration()
   {
@@ -466,7 +466,7 @@ class JABS_Battler
 
   /**
    * Gets the ai mode.
-   * @returns {*} The aiMode.
+   * @returns {JABS_EnemyAI} The aiMode.
    */
   aiMode()
   {
@@ -476,7 +476,7 @@ class JABS_Battler
 
   /**
    * Gets the battler role.
-   * @returns {*} The battlerRole.
+   * @returns {JABS_BattlerRole} The battlerRole.
    */
   battlerRole()
   {
@@ -486,7 +486,7 @@ class JABS_Battler
 
   /**
    * Gets the battler id.
-   * @returns {*} The battlerId.
+   * @returns {number} The battlerId.
    */
   battlerId()
   {
@@ -496,7 +496,7 @@ class JABS_Battler
 
   /**
    * Gets the in combat window max.
-   * @returns {*} The inCombatWindowMax.
+   * @returns {number} The inCombatWindowMax.
    */
   inCombatWindowMax()
   {
@@ -506,7 +506,7 @@ class JABS_Battler
 
   /**
    * Sets the in combat window max.
-   * @param {*} newInCombatWindowMax The new inCombatWindowMax.
+   * @param {number} newInCombatWindowMax The new inCombatWindowMax.
    */
   setInCombatWindowMax(newInCombatWindowMax)
   {
@@ -526,7 +526,7 @@ class JABS_Battler
 
   /**
    * Gets the channel source action.
-   * @returns {*} The channelSourceAction.
+   * @returns {JABS_Action|null} The channelSourceAction.
    */
   channelSourceAction()
   {
@@ -536,7 +536,7 @@ class JABS_Battler
 
   /**
    * Sets the channel source action.
-   * @param {*} newChannelSourceAction The new channelSourceAction.
+   * @param {JABS_Action|null} newChannelSourceAction The new channelSourceAction.
    */
   setChannelSourceAction(newChannelSourceAction)
   {
@@ -546,7 +546,7 @@ class JABS_Battler
 
   /**
    * Gets the channel skill id.
-   * @returns {*} The channelSkillId.
+   * @returns {number} The channelSkillId.
    */
   channelSkillId()
   {
@@ -556,7 +556,7 @@ class JABS_Battler
 
   /**
    * Sets the channel skill id.
-   * @param {*} newChannelSkillId The new channelSkillId.
+   * @param {number} newChannelSkillId The new channelSkillId.
    */
   setChannelSkillId(newChannelSkillId)
   {
@@ -566,7 +566,7 @@ class JABS_Battler
 
   /**
    * Gets the channel duration remaining.
-   * @returns {*} The channelDurationRemaining.
+   * @returns {number} The channelDurationRemaining.
    */
   channelDurationRemaining()
   {
@@ -576,7 +576,7 @@ class JABS_Battler
 
   /**
    * Sets the channel duration remaining.
-   * @param {*} newChannelDurationRemaining The new channelDurationRemaining.
+   * @param {number} newChannelDurationRemaining The new channelDurationRemaining.
    */
   setChannelDurationRemaining(newChannelDurationRemaining)
   {
@@ -586,7 +586,7 @@ class JABS_Battler
 
   /**
    * Gets the channel tick countdown.
-   * @returns {*} The channelTickCountdown.
+   * @returns {number} The channelTickCountdown.
    */
   channelTickCountdown()
   {
@@ -596,7 +596,7 @@ class JABS_Battler
 
   /**
    * Sets the channel tick countdown.
-   * @param {*} newChannelTickCountdown The new channelTickCountdown.
+   * @param {number} newChannelTickCountdown The new channelTickCountdown.
    */
   setChannelTickCountdown(newChannelTickCountdown)
   {
@@ -606,7 +606,7 @@ class JABS_Battler
 
   /**
    * Gets the engagement timer.
-   * @returns {*} The engagementTimer.
+   * @returns {JABS_Timer} The engagementTimer.
    */
   engagementTimer()
   {
@@ -616,7 +616,7 @@ class JABS_Battler
 
   /**
    * Gets the aggros.
-   * @returns {*} The aggros.
+   * @returns {JABS_Aggro[]} The aggros.
    */
   aggros()
   {
@@ -626,7 +626,7 @@ class JABS_Battler
 
   /**
    * Gets the dodge iframes.
-   * @returns {*} The dodgeIframes.
+   * @returns {[number, number]|null} The dodgeIframes.
    */
   dodgeIframes()
   {
@@ -636,7 +636,7 @@ class JABS_Battler
 
   /**
    * Sets the dodge iframes.
-   * @param {*} newDodgeIframes The new dodgeIframes.
+   * @param {[number, number]|null} newDodgeIframes The new dodgeIframes.
    */
   setDodgeIframes(newDodgeIframes)
   {
@@ -646,7 +646,7 @@ class JABS_Battler
 
   /**
    * Gets the guard flat reduction.
-   * @returns {*} The guardFlatReduction.
+   * @returns {number} The guardFlatReduction.
    */
   guardFlatReduction()
   {
@@ -656,7 +656,7 @@ class JABS_Battler
 
   /**
    * Sets the guard flat reduction.
-   * @param {*} newGuardFlatReduction The new guardFlatReduction.
+   * @param {number} newGuardFlatReduction The new guardFlatReduction.
    */
   setGuardFlatReduction(newGuardFlatReduction)
   {
@@ -666,7 +666,7 @@ class JABS_Battler
 
   /**
    * Gets the guard perc reduction.
-   * @returns {*} The guardPercReduction.
+   * @returns {number} The guardPercReduction.
    */
   guardPercReduction()
   {
@@ -676,7 +676,7 @@ class JABS_Battler
 
   /**
    * Sets the guard perc reduction.
-   * @param {*} newGuardPercReduction The new guardPercReduction.
+   * @param {number} newGuardPercReduction The new guardPercReduction.
    */
   setGuardPercReduction(newGuardPercReduction)
   {
@@ -686,7 +686,7 @@ class JABS_Battler
 
   /**
    * Gets the post action cooldown.
-   * @returns {*} The postActionCooldown.
+   * @returns {number} The postActionCooldown.
    */
   postActionCooldown()
   {
@@ -696,7 +696,7 @@ class JABS_Battler
 
   /**
    * Sets the post action cooldown.
-   * @param {*} newPostActionCooldown The new postActionCooldown.
+   * @param {number} newPostActionCooldown The new postActionCooldown.
    */
   setPostActionCooldown(newPostActionCooldown)
   {
@@ -706,7 +706,7 @@ class JABS_Battler
 
   /**
    * Gets the post action cooldown max.
-   * @returns {*} The postActionCooldownMax.
+   * @returns {number} The postActionCooldownMax.
    */
   postActionCooldownMax()
   {
@@ -716,7 +716,7 @@ class JABS_Battler
 
   /**
    * Sets the post action cooldown max.
-   * @param {*} newPostActionCooldownMax The new postActionCooldownMax.
+   * @param {number} newPostActionCooldownMax The new postActionCooldownMax.
    */
   setPostActionCooldownMax(newPostActionCooldownMax)
   {
@@ -726,7 +726,7 @@ class JABS_Battler
 
   /**
    * Gets the idle action count.
-   * @returns {*} The idleActionCount.
+   * @returns {number} The idleActionCount.
    */
   idleActionCount()
   {
@@ -736,7 +736,7 @@ class JABS_Battler
 
   /**
    * Sets the idle action count.
-   * @param {*} newIdleActionCount The new idleActionCount.
+   * @param {number} newIdleActionCount The new idleActionCount.
    */
   setIdleActionCount(newIdleActionCount)
   {
@@ -746,7 +746,7 @@ class JABS_Battler
 
   /**
    * Gets the idle action count max.
-   * @returns {*} The idleActionCountMax.
+   * @returns {number} The idleActionCountMax.
    */
   idleActionCountMax()
   {
@@ -756,7 +756,7 @@ class JABS_Battler
 
   /**
    * Gets the prepare max.
-   * @returns {*} The prepareMax.
+   * @returns {number} The prepareMax.
    */
   prepareMax()
   {

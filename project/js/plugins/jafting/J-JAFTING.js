@@ -1202,22 +1202,22 @@ var Window_JaftingListHeader = class extends Window_Base {
 */
 var Window_SalvageCandidateList = class extends Window_Selectable {
 	/**
-	* @param {Rectangle} rect Window geometry.
-	*/
-	/**
 	* Gets the data.
-	* @returns {*} The data.
+	* @returns {Array} The data.
 	*/
 	data() {
 		return this._data;
 	}
 	/**
 	* Sets the data.
-	* @param {*} newData The new data.
+	* @param {Array} newData The new data.
 	*/
 	setData(newData) {
 		this._data = newData;
 	}
+	/**
+	* @param {Rectangle} rect Window geometry.
+	*/
 	constructor(rect) {
 		super(rect);
 		this._data = [];
@@ -1306,15 +1306,12 @@ var Window_SalvageConfirmation = class extends Window_Command {
 */
 var Window_SalvagePreview = class Window_SalvagePreview extends Window_Base {
 	/**
-	* @param {Rectangle} rect Window geometry (repositioned by {@link Scene_JaftingSalvage#layoutSalvagePanels}).
-	*/
-	/**
 	* Gets the refund two column.
 	* @returns {*} The refundTwoColumn.
 	*/
 	/**
 	* Gets the dismantle amount.
-	* @returns {*} The dismantleAmount.
+	* @returns {number} The dismantleAmount.
 	*/
 	dismantleAmount() {
 		return this._dismantleAmount;
@@ -1326,6 +1323,9 @@ var Window_SalvagePreview = class Window_SalvagePreview extends Window_Base {
 	datum() {
 		return this._datum;
 	}
+	/**
+	* @param {Rectangle} rect Window geometry (repositioned by {@link Scene_JaftingSalvage#layoutSalvagePanels}).
+	*/
 	isRefundTwoColumn() {
 		return this._refundTwoColumn;
 	}
@@ -1591,9 +1591,6 @@ var Window_SalvagePreview = class Window_SalvagePreview extends Window_Base {
 */
 var Scene_JaftingSalvage = class Scene_JaftingSalvage extends Scene_MenuBase {
 	/**
-	* How many stamped units one confirmation dismantles (stack splitting can grow this later).
-	*/
-	/**
 	* Gets the last preview datum.
 	* @returns {*} The lastPreviewDatum.
 	*/
@@ -1623,46 +1620,49 @@ var Scene_JaftingSalvage = class Scene_JaftingSalvage extends Scene_MenuBase {
 	}
 	/**
 	* Gets the candidate window.
-	* @returns {*} The candidateWindow.
+	* @returns {Window_SalvageCandidateList} The candidateWindow.
 	*/
 	candidateWindow() {
 		return this._candidateWindow;
 	}
 	/**
 	* Sets the candidate window.
-	* @param {*} newCandidateWindow The new candidateWindow.
+	* @param {Window_SalvageCandidateList} newCandidateWindow The new candidateWindow.
 	*/
 	setCandidateWindow(newCandidateWindow) {
 		this._candidateWindow = newCandidateWindow;
 	}
 	/**
 	* Gets the preview window.
-	* @returns {*} The previewWindow.
+	* @returns {Window_SalvagePreview} The previewWindow.
 	*/
 	previewWindow() {
 		return this._previewWindow;
 	}
 	/**
 	* Sets the preview window.
-	* @param {*} newPreviewWindow The new previewWindow.
+	* @param {Window_SalvagePreview} newPreviewWindow The new previewWindow.
 	*/
 	setPreviewWindow(newPreviewWindow) {
 		this._previewWindow = newPreviewWindow;
 	}
 	/**
 	* Gets the confirmation window.
-	* @returns {*} The confirmationWindow.
+	* @returns {Window_SalvageConfirmation} The confirmationWindow.
 	*/
 	confirmationWindow() {
 		return this._confirmationWindow;
 	}
 	/**
 	* Sets the confirmation window.
-	* @param {*} newConfirmationWindow The new confirmationWindow.
+	* @param {Window_SalvageConfirmation} newConfirmationWindow The new confirmationWindow.
 	*/
 	setConfirmationWindow(newConfirmationWindow) {
 		this._confirmationWindow = newConfirmationWindow;
 	}
+	/**
+	* How many stamped units one confirmation dismantles (stack splitting can grow this later).
+	*/
 	static DismantleBatchSize = 1;
 	/**
 	* Hub / handler symbol for {@link Window_JaftingList} and {@link Scene_Jafting#onRootJaftingSelection}.

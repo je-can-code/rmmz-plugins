@@ -433,11 +433,6 @@ IconManager.tst = function() {
 */
 var HealEventManager = class {
 	/**
-	* Tracks how many cascade rounds are currently in flight.
-	* Incremented at the start of each dispatch round and decremented on exit.
-	* @type {number}
-	*/
-	/**
 	* Gets the current depth.
 	* @returns {*} The currentDepth.
 	*/
@@ -458,6 +453,11 @@ var HealEventManager = class {
 	static selfBlockedTags() {
 		return this._selfBlockedTags;
 	}
+	/**
+	* Tracks how many cascade rounds are currently in flight.
+	* Incremented at the start of each dispatch round and decremented on exit.
+	* @type {number}
+	*/
 	static _currentDepth = 0;
 	/**
 	* Tracks which (outputKey + battler uuid) combinations are currently mid-dispatch

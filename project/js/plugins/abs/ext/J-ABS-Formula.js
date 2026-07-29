@@ -590,14 +590,14 @@ RPG_Skill.prototype.extractJabsFormulaEffects = function() {
 };
 /**
 * Gets the formula effects.
-* @returns {*} The formulaEffects.
+* @returns {Array} The formulaEffects.
 */
 RPG_Skill.prototype.formulaEffects = function() {
 	return this._j._abs._formulaEffects;
 };
 /**
 * Sets the formula effects.
-* @param {*} newFormulaEffects The new formulaEffects.
+* @param {Array} newFormulaEffects The new formulaEffects.
 */
 RPG_Skill.prototype.setFormulaEffects = function(newFormulaEffects) {
 	this._j._abs._formulaEffects = newFormulaEffects;

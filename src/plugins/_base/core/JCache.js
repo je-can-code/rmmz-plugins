@@ -11,13 +11,6 @@ import RPG_Base from './../database/base/RPG_Base.js';
  */
 class JCache
 {
-  /**
-   * Every JCache instance that declared a `'battler'` dimension, so a single bus call
-   * ({@link JCache.invalidateAllForBattler}) can clear every battler-scoped cache in the game
-   * without each caller needing to know the full list of caches that exist.
-   * @type {Set<JCache>}
-   */
-  
 
   //region properties
   /**
@@ -32,7 +25,7 @@ class JCache
 
   /**
    * Gets the root.
-   * @returns {*} The root.
+   * @returns {WeakMap} The root.
    */
   root()
   {
@@ -42,7 +35,7 @@ class JCache
 
   /**
    * Sets the root.
-   * @param {*} newRoot The new root.
+   * @param {WeakMap} newRoot The new root.
    */
   setRoot(newRoot)
   {
@@ -51,6 +44,12 @@ class JCache
   }
   //endregion properties
 
+  /**
+   * Every JCache instance that declared a `'battler'` dimension, so a single bus call
+   * ({@link JCache.invalidateAllForBattler}) can clear every battler-scoped cache in the game
+   * without each caller needing to know the full list of caches that exist.
+   * @type {Set<JCache>}
+   */
   static _battlerCaches = new Set();
 
   /**

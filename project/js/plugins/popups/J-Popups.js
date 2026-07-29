@@ -1037,10 +1037,6 @@ var PopupNumericDisplay = class {
 */
 var Sprite_MapDamage = class extends Sprite_Damage {
 	/**
-	* Constructor.
-	* @param {...*} args Forwarded to {@link #initialize}.
-	*/
-	/**
 	* Gets the j.
 	* @returns {*} The j.
 	*/
@@ -1049,18 +1045,22 @@ var Sprite_MapDamage = class extends Sprite_Damage {
 	}
 	/**
 	* Gets the duration.
-	* @returns {*} The duration.
+	* @returns {number} The duration.
 	*/
 	duration() {
 		return this._duration;
 	}
 	/**
 	* Sets the duration.
-	* @param {*} newDuration The new duration.
+	* @param {number} newDuration The new duration.
 	*/
 	setDuration(newDuration) {
 		this._duration = newDuration;
 	}
+	/**
+	* Constructor.
+	* @param {...*} args Forwarded to {@link #initialize}.
+	*/
 	constructor(...args) {
 		super();
 		this.initialize(...args);
@@ -1949,14 +1949,14 @@ Sprite_Damage.prototype.setupCriticalEffect = function() {
 };
 /**
 * Gets the is critical.
-* @returns {*} The isCritical.
+* @returns {boolean} The isCritical.
 */
 Sprite_Damage.prototype.isCritical = function() {
 	return this._j._popups._isCritical;
 };
 /**
 * Sets the is critical.
-* @param {*} newIsCritical The new isCritical.
+* @param {boolean} newIsCritical The new isCritical.
 */
 Sprite_Damage.prototype.setIsCritical = function(newIsCritical) {
 	this._j._popups._isCritical = newIsCritical;
@@ -1970,14 +1970,14 @@ Sprite_Damage.prototype.textAccent = function() {
 };
 /**
 * Gets the icon sprite.
-* @returns {*} The iconSprite.
+* @returns {Sprite} The iconSprite.
 */
 Sprite_Damage.prototype.iconSprite = function() {
 	return this._j._popups._iconSprite;
 };
 /**
 * Sets the icon sprite.
-* @param {*} newIconSprite The new iconSprite.
+* @param {Sprite} newIconSprite The new iconSprite.
 */
 Sprite_Damage.prototype.setIconSprite = function(newIconSprite) {
 	this._j._popups._iconSprite = newIconSprite;

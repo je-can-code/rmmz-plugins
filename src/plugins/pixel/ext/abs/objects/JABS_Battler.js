@@ -956,7 +956,7 @@ JABS_Battler.prototype.setPixelIdleWait = function(newPixelIdleWait)
 
 /**
  * Gets the pixel idle stuck frames.
- * @returns {*} The pixelIdleStuckFrames.
+ * @returns {number} The pixelIdleStuckFrames.
  */
 JABS_Battler.prototype.pixelIdleStuckFrames = function()
 {
@@ -966,7 +966,7 @@ JABS_Battler.prototype.pixelIdleStuckFrames = function()
 
 /**
  * Sets the pixel idle stuck frames.
- * @param {*} newPixelIdleStuckFrames The new pixelIdleStuckFrames.
+ * @param {number} newPixelIdleStuckFrames The new pixelIdleStuckFrames.
  */
 JABS_Battler.prototype.setPixelIdleStuckFrames = function(newPixelIdleStuckFrames)
 {

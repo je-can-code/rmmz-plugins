@@ -5,11 +5,6 @@
  */
 class SerializableRegistry
 {
-  /**
-   * The internal collection of registered constructors.
-   * @type {Map<string, Function>}
-   */
-  
 
   //region properties
   /**
@@ -22,6 +17,11 @@ class SerializableRegistry
     return this._constructors;
   }
   //endregion properties
+
+  /**
+   * The internal collection of registered constructors.
+   * @type {Map<string, Function>}
+   */
 
   static _constructors = new Map();
 

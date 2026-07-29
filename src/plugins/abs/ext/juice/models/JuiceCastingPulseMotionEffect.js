@@ -6,12 +6,6 @@ import JuiceBaseEffect from './JuiceBaseEffect.js';
  */
 class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
 {
-  /**
-   * @param {Sprite} sprite The Pixi sprite being driven.
-   * @param {number} amplitudeScale Scale wobble amplitude (small, e.g. 0.04).
-   * @param {function(): boolean} continuePredicate While true, pulse continues.
-   */
-  
 
   //region properties
   /**
@@ -26,7 +20,7 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the base scale x.
-   * @returns {*} The baseScaleX.
+   * @returns {number} The baseScaleX.
    */
   baseScaleX()
   {
@@ -36,7 +30,7 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the base scale y.
-   * @returns {*} The baseScaleY.
+   * @returns {number} The baseScaleY.
    */
   baseScaleY()
   {
@@ -66,7 +60,7 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the phase.
-   * @returns {*} The phase.
+   * @returns {number} The phase.
    */
   phase()
   {
@@ -76,7 +70,7 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
 
   /**
    * Sets the phase.
-   * @param {*} newPhase The new phase.
+   * @param {number} newPhase The new phase.
    */
   setPhase(newPhase)
   {
@@ -94,6 +88,12 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
     return this._amplitudeScale;
   }
   //endregion properties
+
+  /**
+   * @param {Sprite} sprite The Pixi sprite being driven.
+   * @param {number} amplitudeScale Scale wobble amplitude (small, e.g. 0.04).
+   * @param {function(): boolean} continuePredicate While true, pulse continues.
+   */
 
   constructor(sprite, amplitudeScale, continuePredicate)
   {

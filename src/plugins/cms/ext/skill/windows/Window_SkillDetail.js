@@ -39,7 +39,7 @@ class Window_SkillDetail
   //region properties
   /**
    * Gets the skill id.
-   * @returns {*} The skillId.
+   * @returns {number} The skillId.
    */
   skillId()
   {
@@ -49,7 +49,7 @@ class Window_SkillDetail
 
   /**
    * Gets the actor.
-   * @returns {*} The actor.
+   * @returns {Game_Actor} The actor.
    */
   actor()
   {
@@ -61,7 +61,7 @@ class Window_SkillDetail
   //region properties
   /**
    * Gets the skill sprites.
-   * @returns {*} The skillSprites.
+   * @returns {Map<string, Sprite>} The skillSprites.
    */
   skillSprites()
   {

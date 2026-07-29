@@ -20,11 +20,6 @@ import JABS_TargetingSentinelAction from './../_models/JABS_TargetingSentinelAct
 class JABS_TargetingManager
 {
   //region static fields
-  /**
-   * The currently active targeting session, or null if nobody is aiming.
-   * @type {JABS_TargetingSession|null}
-   */
-  
 
   //region properties
   /**
@@ -138,6 +133,10 @@ class JABS_TargetingManager
   }
   //endregion properties
 
+  /**
+   * The currently active targeting session, or null if nobody is aiming.
+   * @type {JABS_TargetingSession|null}
+   */
   static _session = null;
 
   /**

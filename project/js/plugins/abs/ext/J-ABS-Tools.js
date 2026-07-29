@@ -611,14 +611,14 @@ JABS_Battler.gapCloseWiggleRoom = function() {
 };
 /**
 * Gets the gap close source skill id.
-* @returns {*} The gapCloseSourceSkillId.
+* @returns {number} The gapCloseSourceSkillId.
 */
 JABS_Battler.prototype.gapCloseSourceSkillId = function() {
 	return this._gapCloseSourceSkillId;
 };
 /**
 * Sets the gap close source skill id.
-* @param {*} newGapCloseSourceSkillId The new gapCloseSourceSkillId.
+* @param {number} newGapCloseSourceSkillId The new gapCloseSourceSkillId.
 */
 JABS_Battler.prototype.setGapCloseSourceSkillId = function(newGapCloseSourceSkillId) {
 	this._gapCloseSourceSkillId = newGapCloseSourceSkillId;

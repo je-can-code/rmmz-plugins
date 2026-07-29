@@ -520,7 +520,7 @@ Sprite_Damage.prototype.setupCriticalEffect = function()
 //region properties
 /**
  * Gets the is critical.
- * @returns {*} The isCritical.
+ * @returns {boolean} The isCritical.
  */
 Sprite_Damage.prototype.isCritical = function()
 {
@@ -530,7 +530,7 @@ Sprite_Damage.prototype.isCritical = function()
 
 /**
  * Sets the is critical.
- * @param {*} newIsCritical The new isCritical.
+ * @param {boolean} newIsCritical The new isCritical.
  */
 Sprite_Damage.prototype.setIsCritical = function(newIsCritical)
 {
@@ -550,7 +550,7 @@ Sprite_Damage.prototype.textAccent = function()
 
 /**
  * Gets the icon sprite.
- * @returns {*} The iconSprite.
+ * @returns {Sprite} The iconSprite.
  */
 Sprite_Damage.prototype.iconSprite = function()
 {
@@ -560,7 +560,7 @@ Sprite_Damage.prototype.iconSprite = function()
 
 /**
  * Sets the icon sprite.
- * @param {*} newIconSprite The new iconSprite.
+ * @param {Sprite} newIconSprite The new iconSprite.
  */
 Sprite_Damage.prototype.setIconSprite = function(newIconSprite)
 {

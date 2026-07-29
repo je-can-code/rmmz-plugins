@@ -6,11 +6,6 @@
  */
 class PIXEL_CollisionManager
 {
-  /**
-   * Initializes configuration for collision table density and storage.
-   * Reads the step count from J.PIXEL.Metadata if available, otherwise defaults to 4.
-   */
-  
 
   //region properties
   /**
@@ -33,6 +28,11 @@ class PIXEL_CollisionManager
     this._table = newTable;
   }
   //endregion properties
+
+  /**
+   * Initializes configuration for collision table density and storage.
+   * Reads the step count from J.PIXEL.Metadata if available, otherwise defaults to 4.
+   */
 
   static initConfig()
   {

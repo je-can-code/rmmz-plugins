@@ -49,7 +49,7 @@ RPG_Skill.prototype.extractJabsFormulaEffects = function()
 //region properties
 /**
  * Gets the formula effects.
- * @returns {*} The formulaEffects.
+ * @returns {Array} The formulaEffects.
  */
 RPG_Skill.prototype.formulaEffects = function()
 {
@@ -59,7 +59,7 @@ RPG_Skill.prototype.formulaEffects = function()
 
 /**
  * Sets the formula effects.
- * @param {*} newFormulaEffects The new formulaEffects.
+ * @param {Array} newFormulaEffects The new formulaEffects.
  */
 RPG_Skill.prototype.setFormulaEffects = function(newFormulaEffects)
 {

@@ -634,7 +634,7 @@ Game_Player.prototype.getCollisionPivotY = function()
 //region properties
 /**
  * Gets the last occupied tile x.
- * @returns {*} The lastOccupiedTileX.
+ * @returns {number} The lastOccupiedTileX.
  */
 Game_Player.prototype.lastOccupiedTileX = function()
 {
@@ -644,7 +644,7 @@ Game_Player.prototype.lastOccupiedTileX = function()
 
 /**
  * Sets the last occupied tile x.
- * @param {*} newLastOccupiedTileX The new lastOccupiedTileX.
+ * @param {number} newLastOccupiedTileX The new lastOccupiedTileX.
  */
 Game_Player.prototype.setLastOccupiedTileX = function(newLastOccupiedTileX)
 {
@@ -654,7 +654,7 @@ Game_Player.prototype.setLastOccupiedTileX = function(newLastOccupiedTileX)
 
 /**
  * Gets the last occupied tile y.
- * @returns {*} The lastOccupiedTileY.
+ * @returns {number} The lastOccupiedTileY.
  */
 Game_Player.prototype.lastOccupiedTileY = function()
 {
@@ -664,7 +664,7 @@ Game_Player.prototype.lastOccupiedTileY = function()
 
 /**
  * Sets the last occupied tile y.
- * @param {*} newLastOccupiedTileY The new lastOccupiedTileY.
+ * @param {number} newLastOccupiedTileY The new lastOccupiedTileY.
  */
 Game_Player.prototype.setLastOccupiedTileY = function(newLastOccupiedTileY)
 {

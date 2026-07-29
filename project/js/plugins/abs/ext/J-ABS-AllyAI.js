@@ -622,56 +622,56 @@ var JABS_AllyAI = class JABS_AllyAI extends JABS_AI {
 	}
 	/**
 	* Gets the risk.
-	* @returns {*} The risk.
+	* @returns {number} The risk.
 	*/
 	risk() {
 		return this._risk;
 	}
 	/**
 	* Sets the risk.
-	* @param {*} newRisk The new risk.
+	* @param {number} newRisk The new risk.
 	*/
 	setRisk(newRisk) {
 		this._risk = newRisk;
 	}
 	/**
 	* Gets the support.
-	* @returns {*} The support.
+	* @returns {number} The support.
 	*/
 	support() {
 		return this._support;
 	}
 	/**
 	* Sets the support.
-	* @param {*} newSupport The new support.
+	* @param {number} newSupport The new support.
 	*/
 	setSupport(newSupport) {
 		this._support = newSupport;
 	}
 	/**
 	* Gets the spacing.
-	* @returns {*} The spacing.
+	* @returns {number} The spacing.
 	*/
 	spacing() {
 		return this._spacing;
 	}
 	/**
 	* Sets the spacing.
-	* @param {*} newSpacing The new spacing.
+	* @param {number} newSpacing The new spacing.
 	*/
 	setSpacing(newSpacing) {
 		this._spacing = newSpacing;
 	}
 	/**
 	* Gets the preset key.
-	* @returns {*} The presetKey.
+	* @returns {string} The presetKey.
 	*/
 	presetKey() {
 		return this._presetKey;
 	}
 	/**
 	* Sets the preset key.
-	* @param {*} newPresetKey The new presetKey.
+	* @param {string} newPresetKey The new presetKey.
 	*/
 	setPresetKey(newPresetKey) {
 		this._presetKey = newPresetKey;
@@ -2145,28 +2145,28 @@ Scene_Map.prototype.closeAbsWindow = function(absWindow) {
 };
 /**
 * Gets the ally ai party window.
-* @returns {*} The allyAiPartyWindow.
+* @returns {Window_Base} The allyAiPartyWindow.
 */
 Scene_Map.prototype.allyAiPartyWindow = function() {
 	return this._j._absMenu._allyAiPartyWindow;
 };
 /**
 * Sets the ally ai party window.
-* @param {*} newAllyAiPartyWindow The new allyAiPartyWindow.
+* @param {Window_Base} newAllyAiPartyWindow The new allyAiPartyWindow.
 */
 Scene_Map.prototype.setAllyAiPartyWindow = function(newAllyAiPartyWindow) {
 	this._j._absMenu._allyAiPartyWindow = newAllyAiPartyWindow;
 };
 /**
 * Gets the ally ai equip window.
-* @returns {*} The allyAiEquipWindow.
+* @returns {Window_Base} The allyAiEquipWindow.
 */
 Scene_Map.prototype.allyAiEquipWindow = function() {
 	return this._j._absMenu._allyAiEquipWindow;
 };
 /**
 * Sets the ally ai equip window.
-* @param {*} newAllyAiEquipWindow The new allyAiEquipWindow.
+* @param {Window_Base} newAllyAiEquipWindow The new allyAiEquipWindow.
 */
 Scene_Map.prototype.setAllyAiEquipWindow = function(newAllyAiEquipWindow) {
 	this._j._absMenu._allyAiEquipWindow = newAllyAiEquipWindow;

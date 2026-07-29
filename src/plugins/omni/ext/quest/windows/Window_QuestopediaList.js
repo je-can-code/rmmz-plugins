@@ -4,11 +4,6 @@ import OmniQuest from './../__models/OmniQuest.js';
 class Window_QuestopediaList
   extends Window_Command
 {
-  /**
-   * The category that this list is being filtered by. When an empty string, no filter is applied.
-   * @type {string}
-   */
-  
 
   //region properties
   /**
@@ -21,6 +16,11 @@ class Window_QuestopediaList
     return this._questFiltering;
   }
   //endregion properties
+
+  /**
+   * The category that this list is being filtered by. When an empty string, no filter is applied.
+   * @type {string}
+   */
 
   _currentCategoryKey = String.empty;
 

@@ -14,16 +14,11 @@
 class Window_MenuSectionCommand
   extends Window_MenuCommand
 {
-  /**
-   * Extends {@link #makeCommandList}.<br/>
-   * Also discards every command belonging to a different section.
-   */
-  
 
   //region properties
   /**
    * Gets the remembered index.
-   * @returns {*} The rememberedIndex.
+   * @returns {number} The rememberedIndex.
    */
   rememberedIndex()
   {
@@ -33,7 +28,7 @@ class Window_MenuSectionCommand
 
   /**
    * Sets the remembered index.
-   * @param {*} newRememberedIndex The new rememberedIndex.
+   * @param {number} newRememberedIndex The new rememberedIndex.
    */
   setRememberedIndex(newRememberedIndex)
   {
@@ -42,6 +37,10 @@ class Window_MenuSectionCommand
   }
   //endregion properties
 
+  /**
+   * Extends {@link #makeCommandList}.<br/>
+   * Also discards every command belonging to a different section.
+   */
   makeCommandList()
   {
     // perform original logic, which runs vanilla's commands plus every plugin's additions.
