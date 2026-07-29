@@ -597,16 +597,6 @@ class J_SdpPluginMetadata
     this.commandIconIndex = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['menuCommandIcon'], 0);
 
     /**
-     * When JABS is enabled, this menu is removed from the main menu and added instead
-     * to the quick menu. If this is set to true, then access to the menu will be re-added
-     * to the main menu again.<br>
-     *
-     * Both menus are shown/hidden by the menu switch id.
-     * @type {boolean}
-     */
-    this.jabsShowInBothMenus = this.parsedPluginParameters['showInBoth'] === 'true';
-
-    /**
      * Singular player-facing name for one SDP row (confirmation copy, future labels).
      * @type {string}
      */

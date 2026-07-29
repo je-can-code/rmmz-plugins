@@ -40,18 +40,17 @@ Window_MenuCommand.prototype.makeCommandList = function()
 };
 
 /**
- * Determines whether or not the sdp command can be added to the JABS menu.
+ * Determines whether or not the sdp command can be added to the main menu.
+ *
+ * Formerly also refused to render whenever JABS was installed, unless a parameter opted back in. That
+ * made sense while the JABS quick menu carried its own copy of this command and the two would have
+ * duplicated each other- but the quick menu no longer offers anything except a way into this one, so
+ * the check had quietly become the reason the scene was reachable from nowhere at all.
  * @returns {boolean} True if the command should be added, false otherwise.
  */
 Window_MenuCommand.prototype.canAddSdpCommand = function()
 {
-  // if the necessary switch isn't ON, don't render the command at all.
-  if (!$gameSwitches.value(J.SDP.Metadata.menuSwitchId)) return false;
-
-  // if we're using JABS but not allowing to show this command in both menus, then skip.
-  if (J.ABS && !J.SDP.Metadata.jabsShowInBothMenus) return false;
-
-  // render the command!
-  return true;
+  // the switch remains the single gate, so the command can stay hidden until the story introduces it.
+  return $gameSwitches.value(J.SDP.Metadata.menuSwitchId);
 };
 //endregion Window_MenuCommand
