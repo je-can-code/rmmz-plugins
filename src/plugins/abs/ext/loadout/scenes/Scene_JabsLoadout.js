@@ -1,7 +1,9 @@
 //region Scene_JabsLoadout
 import Window_LoadoutActorHeader from './../windows/Window_LoadoutActorHeader.js';
-import Window_LoadoutBoard from './../windows/Window_LoadoutBoard.js';
 import Window_LoadoutPicker from './../windows/Window_LoadoutPicker.js';
+import Window_LoadoutSlots from './../windows/Window_LoadoutSlots.js';
+import Window_LoadoutSpine from './../windows/Window_LoadoutSpine.js';
+import LoadoutSlotCatalog from './../_models/LoadoutSlotCatalog.js';
 
 /**
  * The scene for reviewing and changing what each party member has bound to each combat input.
@@ -10,10 +12,14 @@ import Window_LoadoutPicker from './../windows/Window_LoadoutPicker.js';
  * which opened a pair of on-map windows and every one of which operated on the party leader only-
  * meaning an ally's loadout could not be touched without first making them the leader.
  *
- * Unlike the other actor-scoped scenes this one extends the plain facet base rather than the
- * actor-scoped one. It has no single actor to put in a ribbon: the board shows every member at once,
- * which it can afford because its picker opens as a modal over the board instead of occupying a
- * column beside it.
+ * Every member gets a column of slots, and those columns move together: choosing a row selects that
+ * slot for everyone at once, and only the focused column animates its highlight. The candidate lists
+ * beneath follow the same row, so "who has what in this slot, and what could they have" is answered
+ * without navigating anywhere. Left and right change whose column is focused, and mean exactly that
+ * everywhere in the scene.
+ *
+ * Unlike the other actor-scoped scenes this extends the plain facet base rather than the actor-scoped
+ * one. It has no single actor to name in a ribbon.
  */
 class Scene_JabsLoadout
   extends Scene_MenuFacetBase
@@ -47,17 +53,97 @@ class Scene_JabsLoadout
     this._j._loadout._header = null;
 
     /**
-     * The board of every member's every slot.
-     * @type {Window_LoadoutBoard|null}
+     * The labels naming each row's slot.
+     * @type {Window_LoadoutSpine|null}
      */
-    this._j._loadout._board = null;
+    this._j._loadout._spine = null;
 
     /**
-     * The modal list of things eligible for the slot being filled.
-     * @type {Window_LoadoutPicker|null}
+     * Each member's column of slots, in party order.
+     * @type {Window_LoadoutSlots[]}
      */
-    this._j._loadout._picker = null;
+    this._j._loadout._slotColumns = [];
+
+    /**
+     * Each member's list of candidates for the selected slot, in party order.
+     * @type {Window_LoadoutPicker[]}
+     */
+    this._j._loadout._pickers = [];
+
+    /**
+     * Which member's column is currently focused.
+     * @type {number}
+     */
+    this._j._loadout._focusedColumn = 0;
   }
+
+  //region properties
+  /**
+   * Gets the party members this scene presents, in column order.
+   * @returns {Game_Actor[]}
+   */
+  members()
+  {
+    return $gameParty.members();
+  }
+
+  /**
+   * Gets every member's slot column.
+   * @returns {Window_LoadoutSlots[]}
+   */
+  slotColumns()
+  {
+    return this._j._loadout._slotColumns;
+  }
+
+  /**
+   * Gets every member's candidate list.
+   * @returns {Window_LoadoutPicker[]}
+   */
+  pickers()
+  {
+    return this._j._loadout._pickers;
+  }
+
+  /**
+   * Gets which member's column is currently focused.
+   * @returns {number} The focusedColumn.
+   */
+  focusedColumn()
+  {
+    // hand back the focused column.
+    return this._j._loadout._focusedColumn;
+  }
+
+  /**
+   * Sets which member's column is currently focused.
+   * @param {number} newFocusedColumn The new focusedColumn.
+   */
+  setFocusedColumn(newFocusedColumn)
+  {
+    // assign the focused column.
+    this._j._loadout._focusedColumn = newFocusedColumn;
+  }
+
+  /**
+   * Gets the slot column currently focused.
+   * @returns {Window_LoadoutSlots}
+   */
+  focusedSlotColumn()
+  {
+    return this.slotColumns()[this.focusedColumn()];
+  }
+
+  /**
+   * Gets the candidate list belonging to the focused column.
+   * @returns {Window_LoadoutPicker}
+   */
+  focusedPicker()
+  {
+    return this.pickers()[this.focusedColumn()];
+  }
+
+  //endregion properties
 
   //region create
   /**
@@ -72,17 +158,17 @@ class Scene_JabsLoadout
     // build the help window describing the highlighted slot.
     this.createHelpWindow();
 
-    // build this scene's own contents. the board comes first because the headers take their column
-    // geometry from it rather than deriving their own.
-    this.createBoardWindow();
+    // build this scene's own contents.
     this.createActorHeaderWindow();
-    this.createPickerWindow();
+    this.createSlotColumnWindows();
+    this.createSpineWindow();
+    this.createPickerWindows();
 
     // begin on the first slot of the first member.
-    this.boardWindow()
-      .select(0);
-    this.boardWindow()
+    this.syncSlotSelection(0);
+    this.focusedSlotColumn()
       .activate();
+    this.refreshPickers();
   }
 
   /**
@@ -90,16 +176,11 @@ class Scene_JabsLoadout
    */
   createActorHeaderWindow()
   {
-    // define the rectangle of the window.
-    const rectangle = this.actorHeaderWindowRect();
-
     // create the window with the rectangle.
-    const window = new Window_LoadoutActorHeader(rectangle);
+    const window = new Window_LoadoutActorHeader(this.actorHeaderWindowRect());
 
-    // adopt the board's column geometry so each name sits over its own column.
-    window.setColumnGeometry(this.boardWindow()
-      .actorColumnWidth(), this.boardWindow()
-      .slotSpineWidth());
+    // adopt this scene's column geometry so each name sits over its own column.
+    window.setColumnGeometry(this.actorColumnWidth(), this.spineWidth());
 
     // update the tracker with the new window.
     this._j._loadout._header = window;
@@ -109,181 +190,379 @@ class Scene_JabsLoadout
   }
 
   /**
-   * Creates the loadout board and adds it to tracking.
+   * Creates one slot column per party member.
    */
-  createBoardWindow()
+  createSlotColumnWindows()
   {
-    // define the rectangle of the window.
-    const rectangle = this.boardWindowRect();
+    this.members()
+      .forEach((actor, index) =>
+      {
+        // create the window with its column's rectangle.
+        const window = new Window_LoadoutSlots(this.slotColumnRect(index));
 
+        // point it at the member it represents.
+        window.setActor(actor);
+
+        // every column is wired identically; only the focused one is ever active.
+        window.setHandler('ok', this.onSlotChosen.bind(this));
+        window.setHandler('context', this.onSlotCleared.bind(this));
+        window.setHandler('cancel', this.popScene.bind(this));
+        window.setHandler('focus-prev', this.onFocusPreviousColumn.bind(this));
+        window.setHandler('focus-next', this.onFocusNextColumn.bind(this));
+
+        // it describes its highlighted slot into the shared help window.
+        window.setHelpWindow(this.helpWindow());
+
+        // columns other than the first begin dormant.
+        window.deactivate();
+
+        // track and register the window.
+        this.slotColumns()
+          .push(window);
+        this.addWindow(window);
+      });
+  }
+
+  /**
+   * Creates the spine of slot labels and adds it to tracking.
+   */
+  createSpineWindow()
+  {
     // create the window with the rectangle.
-    const window = new Window_LoadoutBoard(rectangle);
+    const window = new Window_LoadoutSpine(this.spineWindowRect());
 
-    // choosing a slot opens the list of things eligible for it.
-    window.setHandler('ok', this.onSlotSelected.bind(this));
-
-    // the context action empties a slot without opening anything.
-    window.setHandler('context', this.onSlotCleared.bind(this));
-
-    // backing out of the board leaves the scene.
-    window.setHandler('cancel', this.popScene.bind(this));
-
-    // the board describes its highlighted slot into the help window.
-    window.setHelpWindow(this.helpWindow());
+    // adopt the slot columns' row height so each label sits beside the row it names.
+    window.setRowHeight(this.slotColumns()[0].itemHeight());
 
     // update the tracker with the new window.
-    this._j._loadout._board = window;
+    this._j._loadout._spine = window;
 
     // add the window to the scene manager's tracking.
     this.addWindow(window);
   }
 
   /**
-   * Gets the loadout board.
-   * @returns {Window_LoadoutBoard}
+   * Creates one candidate list per party member.
    */
-  boardWindow()
+  createPickerWindows()
   {
-    return this._j._loadout._board;
-  }
+    this.members()
+      .forEach((actor, index) =>
+      {
+        // create the window with its half of the space below.
+        const window = new Window_LoadoutPicker(this.pickerRect(index));
 
-  /**
-   * Creates the picker and adds it to tracking.
-   */
-  createPickerWindow()
-  {
-    // define the rectangle of the window.
-    const rectangle = this.pickerWindowRect();
+        // choosing a candidate commits it; clearing empties the slot.
+        window.setHandler('candidate', this.onCandidateChosen.bind(this));
+        window.setHandler('clear', this.onCandidateCleared.bind(this));
+        window.setHandler('cancel', this.onPickerCancelled.bind(this));
 
-    // create the window with the rectangle.
-    const window = new Window_LoadoutPicker(rectangle);
+        // it describes its highlighted candidate into the same help window.
+        window.setHelpWindow(this.helpWindow());
 
-    // choosing a candidate commits it to the slot.
-    window.setHandler('candidate', this.onCandidateSelected.bind(this));
+        // candidate lists are visible from the outset but never focused until asked for.
+        window.deactivate();
+        window.deselect();
 
-    // backing out abandons the assignment and returns to the board.
-    window.setHandler('cancel', this.onPickerCancelled.bind(this));
-
-    // the picker describes its highlighted candidate into the same help window as the board.
-    window.setHelpWindow(this.helpWindow());
-
-    // the picker is dormant until a slot is chosen.
-    window.hide();
-    window.deactivate();
-
-    // update the tracker with the new window.
-    this._j._loadout._picker = window;
-
-    // add the window to the scene manager's tracking.
-    this.addWindow(window);
-  }
-
-  /**
-   * Gets the picker.
-   * @returns {Window_LoadoutPicker}
-   */
-  pickerWindow()
-  {
-    return this._j._loadout._picker;
+        // track and register the window.
+        this.pickers()
+          .push(window);
+        this.addWindow(window);
+      });
   }
 
   //endregion create
 
   //region layout
   /**
-   * Builds the rectangle for the column headers, capping the board.
+   * The proportion of the width given to the spine of slot labels.
+   *
+   * Narrower than either member's column because it carries a short fixed label rather than a skill
+   * name, and because the assignments are the content- the spine only says which row you are on.
+   * @returns {number}
+   */
+  spineRatio()
+  {
+    return 0.24;
+  }
+
+  /**
+   * The width of the spine of slot labels.
+   * @returns {number}
+   */
+  spineWidth()
+  {
+    return Math.floor(this.facetAreaRect().width * this.spineRatio());
+  }
+
+  /**
+   * The width of a single member's column.
+   *
+   * An even share of whatever the spine does not claim, so the columns always match each other
+   * regardless of how wide the spine is configured to be.
+   * @returns {number}
+   */
+  actorColumnWidth()
+  {
+    return Math.floor((this.facetAreaRect().width - this.spineWidth()) / this.members().length);
+  }
+
+  /**
+   * The left edge of a given member's column.
+   * @param {number} index The column being placed.
+   * @returns {number}
+   */
+  actorColumnX(index)
+  {
+    // everything past the first column is pushed clear of the spine between them.
+    const spineOffset = index === 0
+      ? 0
+      : this.spineWidth();
+
+    return (this.actorColumnWidth() * index) + spineOffset;
+  }
+
+  /**
+   * Builds the rectangle for the column headers, capping the slot columns.
    * @returns {Rectangle}
    */
   actorHeaderWindowRect()
   {
-    // start from the region this scene is allowed to fill.
     const facetArea = this.facetAreaRect();
 
-    // a single line naming each column.
-    const height = this.calcWindowHeight(1, false);
-
-    // return the built rectangle.
-    return new Rectangle(facetArea.x, facetArea.y, facetArea.width, height);
+    return new Rectangle(facetArea.x, facetArea.y, facetArea.width, this.calcWindowHeight(1, false));
   }
 
   /**
-   * Builds the rectangle for the board, filling whatever the headers leave.
+   * The height of the slot columns, being exactly the rows they contain.
+   * @returns {number}
+   */
+  slotColumnHeight()
+  {
+    return this.calcWindowHeight(LoadoutSlotCatalog.slotCount(), true);
+  }
+
+  /**
+   * The vertical position the slot columns begin at.
+   * @returns {number}
+   */
+  slotColumnY()
+  {
+    return this.facetAreaRect().y + this.actorHeaderWindowRect().height;
+  }
+
+  /**
+   * Builds the rectangle for a given member's slot column.
+   * @param {number} index The column being placed.
    * @returns {Rectangle}
    */
-  boardWindowRect()
+  slotColumnRect(index)
   {
-    // start from the region this scene is allowed to fill.
-    const facetArea = this.facetAreaRect();
-
-    // the headers consume the top of it.
-    const headerHeight = this.actorHeaderWindowRect().height;
-
-    // return whatever remains beneath the headers.
     return new Rectangle(
-      facetArea.x,
-      facetArea.y + headerHeight,
-      facetArea.width,
-      facetArea.height - headerHeight);
+      this.actorColumnX(index),
+      this.slotColumnY(),
+      this.actorColumnWidth(),
+      this.slotColumnHeight());
   }
 
   /**
-   * Builds the rectangle for the picker, overlaying the board.
-   *
-   * It deliberately covers the board rather than sitting beside it- a permanent side panel is exactly
-   * what forces every other actor-scoped scene down to one actor at a time.
+   * Builds the rectangle for the spine of slot labels, sat between the columns.
    * @returns {Rectangle}
    */
-  pickerWindowRect()
+  spineWindowRect()
   {
-    return this.boardWindowRect();
+    return new Rectangle(this.actorColumnWidth(), this.slotColumnY(), this.spineWidth(), this.slotColumnHeight());
+  }
+
+  /**
+   * Builds the rectangle for a given member's candidate list.
+   *
+   * These claim everything between the slot columns and the control legend, which is the space the
+   * scene previously left empty while opening its picker as a modal over the board instead.
+   * @param {number} index The list being placed.
+   * @returns {Rectangle}
+   */
+  pickerRect(index)
+  {
+    const facetArea = this.facetAreaRect();
+
+    // each list takes an even share of the full width, ignoring the spine that divides the columns
+    // above- there is nothing down here for a spine to separate.
+    const width = Math.floor(facetArea.width / this.members().length);
+
+    // begin immediately beneath the slot columns.
+    const y = this.slotColumnY() + this.slotColumnHeight();
+
+    // claim everything remaining.
+    const height = facetArea.y + facetArea.height - y;
+
+    return new Rectangle(width * index, y, width, height);
   }
 
   //endregion layout
 
   //region actions
   /**
-   * Handles a slot being chosen on the board, opening the list of things eligible for it.
+   * Points every slot column at the same row, so a slot is selected for the whole party at once.
+   *
+   * Columns that are not focused stay selected rather than being deselected, which leaves their
+   * highlight drawn without animating it- the player can see which slot they are on for everyone,
+   * while it stays unambiguous whose slot they are about to change.
+   * @param {number} index The row to select.
    */
-  onSlotSelected()
+  syncSlotSelection(index)
   {
-    // grab what the board says is highlighted.
-    const slotData = this.boardWindow()
-      .currentSlotData();
-
-    // stand the board down while the picker is up.
-    this.boardWindow()
-      .deactivate();
-
-    // point the picker at this actor's slot and reveal it.
-    this.pickerWindow()
-      .setTarget($gameActors.actor(slotData.actorId), slotData.slotKey);
-    this.pickerWindow()
-      .show();
-    this.pickerWindow()
-      .activate();
+    this.slotColumns()
+      .forEach(column => column.select(index));
   }
 
   /**
-   * Handles a candidate being chosen in the picker, committing it to the slot.
+   * Rebuilds every candidate list to reflect the currently selected slot.
    */
-  onCandidateSelected()
+  refreshPickers()
+  {
+    // the slot is shared across columns, so any of them can name it.
+    const slotKey = this.focusedSlotColumn()
+      .currentSlotKey();
+
+    // each list shows its own member's candidates for that same slot.
+    this.pickers()
+      .forEach((picker, index) => picker.setTarget(this.members()[index], slotKey));
+
+    // a list nobody is choosing from should not look like it is awaiting a choice.
+    this.pickers()
+      .forEach(picker => picker.deselect());
+  }
+
+  /**
+   * Extends {@link #update}.<br/>
+   * Also keeps the unfocused columns and the candidate lists following the focused column.
+   */
+  update()
+  {
+    // perform original logic.
+    super.update();
+
+    // nothing to follow while the player is choosing a candidate rather than a slot.
+    if (this.focusedPicker()
+      .active) return;
+
+    // the focused column is the only one the player can move, so it is the source of truth.
+    const index = this.focusedSlotColumn()
+      .index();
+
+    // when it has moved, bring everything else along with it.
+    if (this.slotColumns()
+      .some(column => column.index() !== index))
+    {
+      this.syncSlotSelection(index);
+      this.refreshPickers();
+    }
+  }
+
+  /**
+   * Moves focus to the previous member's column.
+   */
+  onFocusPreviousColumn()
+  {
+    this.focusColumn(this.focusedColumn() - 1);
+  }
+
+  /**
+   * Moves focus to the next member's column.
+   */
+  onFocusNextColumn()
+  {
+    this.focusColumn(this.focusedColumn() + 1);
+  }
+
+  /**
+   * Focuses a member's column, wrapping around the ends of the party.
+   * @param {number} index The column to focus.
+   */
+  focusColumn(index)
+  {
+    // wrap rather than stopping, so holding a direction cycles the party.
+    const count = this.slotColumns().length;
+    const wrapped = ((index % count) + count) % count;
+
+    // stand the old column down, leaving its selection drawn but no longer animated.
+    this.focusedSlotColumn()
+      .deactivate();
+
+    // remember whose column now has focus.
+    this.setFocusedColumn(wrapped);
+
+    // wake the new one and let it describe its slot.
+    this.focusedSlotColumn()
+      .activate();
+    this.focusedSlotColumn()
+      .updateHelp();
+  }
+
+  /**
+   * Handles a slot being chosen, focusing that member's candidate list.
+   */
+  onSlotChosen()
+  {
+    // stand the columns down while a candidate is being chosen.
+    this.focusedSlotColumn()
+      .deactivate();
+
+    // wake this member's list at the top.
+    this.focusedPicker()
+      .activate();
+    this.focusedPicker()
+      .select(0);
+  }
+
+  /**
+   * Handles a candidate being chosen, committing it to the slot.
+   */
+  onCandidateChosen()
   {
     // the chosen candidate's id rides on the command.
-    const chosenId = this.pickerWindow()
+    const chosenId = this.focusedPicker()
       .currentExt();
 
-    // commit the assignment to the slot the picker was opened for.
-    this.pickerWindow()
-      .actor()
-      .setEquippedSkill(this.pickerWindow()
-        .slotKey(), chosenId);
+    // commit it to the slot the list was built for.
+    this.commitAssignment(chosenId);
+  }
 
-    // return to the board, which must redraw to show what changed.
+  /**
+   * Handles the clear entry being chosen, emptying the slot.
+   */
+  onCandidateCleared()
+  {
+    // emptying a slot is assigning nothing to it.
+    this.commitAssignment(0);
+  }
+
+  /**
+   * Assigns something to the focused member's selected slot and returns to the columns.
+   * @param {number} skillId The id to assign, or zero to empty the slot.
+   */
+  commitAssignment(skillId)
+  {
+    // commit the assignment.
+    this.focusedPicker()
+      .actor()
+      .setEquippedSkill(this.focusedPicker()
+        .slotKey(), skillId);
+
+    // acknowledge the change.
+    SoundManager.playEquip();
+
+    // the column now shows a stale assignment, so rebuild it.
+    this.focusedSlotColumn()
+      .refresh();
+
+    // return focus to the columns.
     this.closePicker();
   }
 
   /**
-   * Handles the picker being backed out of without choosing anything.
+   * Handles the candidate list being backed out of without choosing anything.
    */
   onPickerCancelled()
   {
@@ -291,51 +570,45 @@ class Scene_JabsLoadout
   }
 
   /**
-   * Dismisses the picker and returns focus to the board.
+   * Returns focus from a candidate list to the slot columns.
    */
   closePicker()
   {
-    // hide the picker away again.
-    this.pickerWindow()
-      .hide();
-    this.pickerWindow()
+    // the list is no longer awaiting a choice.
+    this.focusedPicker()
       .deactivate();
+    this.focusedPicker()
+      .deselect();
 
-    // the board may now be showing stale assignments, so rebuild it.
-    this.boardWindow()
-      .refresh();
-    this.boardWindow()
+    // hand focus back to the column the player came from.
+    this.focusedSlotColumn()
       .activate();
   }
 
   /**
-   * Handles the context action on the board, emptying the highlighted slot.
+   * Handles the context action on a slot column, emptying the highlighted slot outright.
    */
   onSlotCleared()
   {
-    // grab what the board says is highlighted.
-    const slotData = this.boardWindow()
-      .currentSlotData();
+    // grab the column doing the clearing.
+    const column = this.focusedSlotColumn();
 
-    // an empty slot has nothing to clear, so say so rather than pretending something happened.
-    if (slotData.skillId === 0)
+    // an already-empty slot has nothing to clear, so say so rather than pretending otherwise.
+    if (column.slottedEntry(column.currentSlotKey()) === null)
     {
       SoundManager.playBuzzer();
-      this.boardWindow()
-        .activate();
+      column.activate();
       return;
     }
 
     // emptying a slot is assigning nothing to it.
-    $gameActors.actor(slotData.actorId)
-      .setEquippedSkill(slotData.slotKey, 0);
+    column.actor()
+      .setEquippedSkill(column.currentSlotKey(), 0);
 
     // acknowledge the change and redraw to show it.
     SoundManager.playEquip();
-    this.boardWindow()
-      .refresh();
-    this.boardWindow()
-      .activate();
+    column.refresh();
+    column.activate();
   }
 
   //endregion actions
@@ -347,6 +620,10 @@ class Scene_JabsLoadout
   controlLegendEntries()
   {
     return [
+      {
+        semantic: [ 'focus-prev', 'focus-next' ],
+        label: 'switch character',
+      },
       {
         semantic: 'ok',
         label: 'assign',

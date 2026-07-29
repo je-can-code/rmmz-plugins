@@ -109,9 +109,34 @@ class Window_LoadoutPicker
     // nothing is listable until a target has been chosen.
     if (!this.actor()) return;
 
+    // emptying a slot is a choice like any other, and belongs among the choices. the context button
+    // remains a shortcut for it, but a shortcut is a poor place for the only way to do something.
+    this.addBuiltCommand(this.buildClearCommand());
+
     // list whatever this particular slot accepts.
     this.candidates()
       .forEach(candidate => this.addBuiltCommand(this.buildCandidateCommand(candidate)));
+  }
+
+  /**
+   * Builds the command that empties the targeted slot.
+   * @returns {BuiltWindowCommand}
+   */
+  buildClearCommand()
+  {
+    return new WindowCommandBuilder(J.ABS.Metadata.ClearSlotText).setSymbol('clear')
+      .setColorIndex(this.clearCommandColorIndex())
+      .setHelpText('Leave this slot empty.')
+      .build();
+  }
+
+  /**
+   * The color index the clear command renders with, setting it apart from real candidates.
+   * @returns {number}
+   */
+  clearCommandColorIndex()
+  {
+    return 16;
   }
 
   /**
