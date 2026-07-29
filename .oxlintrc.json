@@ -630,7 +630,6 @@
     "WindowGaugeOptions": "writable",
     "WindowLayer": "writable",
     "Window_AbsMenu": "writable",
-    "Window_AbsMenuSelect": "writable",
     "Window_ActorCommand": "writable",
     "Window_ActorRibbon": "writable",
     "Window_AllyAiSelect": "writable",

@@ -43,9 +43,9 @@ Object.defineProperty(RPG_Item.prototype, "jabsExpiration", {
  * Whether this item is a JABS tool (hookshot, bomb, etc.) that belongs in the tool slot.<br/>
  * Tagged with {@code <jabsTool>}. Items without this tag are treated as consumables and land
  * in the usable-item slot instead.<br/>
- * Note: the tag alone is not sufficient — {@link Window_AbsMenuSelect#isItemVisibleInToolMenu}
- * also enforces itypeId===1 and occasion===0 as a safety rail, since only RPG_Item entries
- * are ever iterated for either menu list.
+ * Note: the tag alone is not sufficient — the loadout picker also enforces itypeId===1 and
+ * occasion===0 as a safety rail, since only RPG_Item entries are ever iterated for either
+ * slot's candidate list.
  * @type {boolean}
  */
 Object.defineProperty(RPG_Item.prototype, "jabsTool", {

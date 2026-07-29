@@ -158,7 +158,7 @@ class Scene_Aptitude
    * Applies initial visibility and selection to match the current view mode.
    * Ensures index 0 is selected (or the remembered index) and details are set.
    */
-  static initializeView()
+  initializeView()
   {
     // ensure we have selection trackers for this actor.
     this.resetSelectionTrackers();

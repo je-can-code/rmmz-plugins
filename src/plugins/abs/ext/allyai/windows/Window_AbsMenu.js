@@ -59,14 +59,4 @@ Window_AbsMenu.prototype.allyAiHelpText = function()
 
   return description.join("\n");
 };
-
-/**
- * Overwrites {@link #itemHeight}.<br/>
- * Increases the height so subtext can be added.
- * @returns {number}
- */
-Window_AbsMenuSelect.prototype.itemHeight = function()
-{
-  return this.lineHeight() * 2;
-};
 //endregion Window_AbsMenu

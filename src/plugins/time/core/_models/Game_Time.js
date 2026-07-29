@@ -1085,7 +1085,7 @@ class Game_Time
   addSeconds(seconds = this._secondsPerTick)
   {
     // seconds reset on reaching 60 and hand a tick's worth of minutes upward.
-    this.#advanceUnit(
+    this.advanceUnit(
       seconds,
       Game_Time.secondsPerMinute,
       true,
@@ -1112,7 +1112,7 @@ class Game_Time
    * @param {function(number): void} write Writes this unit's new value.
    * @param {function(): void} carry Advances the unit above this one by a tick's worth.
    */
-  #advanceUnit(amount, limit, isZeroBased, read, write, carry)
+  advanceUnit(amount, limit, isZeroBased, read, write, carry)
   {
     // zero-based units are spent the moment they reach their limit; one-based units get to sit on it.
     const hasOverflowed = value => (isZeroBased
@@ -1151,7 +1151,7 @@ class Game_Time
     this.updateCurrentTone();
 
     // minutes reset on reaching 60 and hand a tick's worth of hours upward.
-    this.#advanceUnit(
+    this.advanceUnit(
       minutes,
       Game_Time.minutesPerHour,
       true,
@@ -1167,7 +1167,7 @@ class Game_Time
   addHours(hours = this._hoursPerTick)
   {
     // hours reset on reaching 24 and hand a tick's worth of days upward.
-    this.#advanceUnit(
+    this.advanceUnit(
       hours,
       Game_Time.hoursPerDay,
       true,
@@ -1183,7 +1183,7 @@ class Game_Time
   addDays(days = this._daysPerTick)
   {
     // days count from 1, so the 30th is still a valid day and only the 31st spills into a new month.
-    this.#advanceUnit(
+    this.advanceUnit(
       days,
       Game_Time.daysPerMonth,
       false,
@@ -1199,7 +1199,7 @@ class Game_Time
   addMonths(months = this._monthsPerTick)
   {
     // months count from 1, so the 12th is still a valid month and only the 13th spills into a new year.
-    this.#advanceUnit(
+    this.advanceUnit(
       months,
       Game_Time.monthsPerYear,
       false,

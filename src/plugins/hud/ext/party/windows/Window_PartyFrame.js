@@ -175,7 +175,7 @@ class Window_PartyFrame
   /**
    * Creates all sprites for this hud and caches them.
    */
-  static createCache()
+  createCache()
   {
     // establish the gauge types we will create.
     const gaugeTypes = this.gaugeTypes();

@@ -166,19 +166,8 @@ Scene_Map.prototype.createAllWindows = function()
  */
 Scene_Map.prototype.createJabsAbsMenu = function()
 {
-  // the main window that forks into the other categories.
+  // the only window this menu has left; the assignment categories moved to the loadout scene.
   this.createJabsAbsMenuMainWindow();
-
-  // the per-category list windows of the ABS menu.
-  this.createJabsAbsMenuToolListWindow();
-
-  // the per-category equipped/landing windows for assignment.
-  this.createJabsAbsMenuEquipSkillWindow();
-  this.createJabsAbsMenuEquipToolWindow();
-  this.createJabsAbsMenuEquipDodgeWindow();
-  this.createJabsAbsMenuEquipOffhandWindow();
-  this.createJabsAbsMenuUsableItemListWindow();
-  this.createJabsAbsMenuEquipUsableItemWindow();
 };
 
 //region main menu
