@@ -73,7 +73,12 @@ class Window_SdpParameterList
    */
   buildCommands()
   {
-    if (!this.panelParameters) return [];
+    // nothing to describe yet, which is the state this window is built in: vanilla's
+    // Window_Command.initialize ends by refreshing, so this runs once before the scene has had any
+    // chance to hand over a panel. Returning early matters more than it looks- the private method
+    // below is not branded onto this instance until `super()` returns, and merely *naming* it as a
+    // map callback is enough to trip that check, empty array or not.
+    if (this.panelParameters.length === 0) return [];
 
     const commands = this.panelParameters.map(this.#buildPanelParameterCommand, this);
 
