@@ -10,14 +10,23 @@ import Window_SdpCart from '../windows/Window_SdpCart.js';
 import Window_SdpConfirmation from '../windows/Window_SdpConfirmation.js';
 import Window_SdpPoints from '../windows/Window_SdpPoints.js';
 import Window_SdpHelp from '../windows/Window_SdpHelp.js';
-import Window_SdpControlsHint from '../windows/Window_SdpControlsHint.js';
 import Window_SdpFamilyStrip from '../windows/Window_SdpFamilyStrip.js';
 
 /**
  * The scene for managing SDPs that the player has acquired.
+ *
+ * Layout is inherited from {@link Scene_ActorFacetBase}: the help window across the top, the actor ribbon
+ * beneath it, the control legend across the bottom, and {@link Scene_ActorFacetBase.contentAreaRect} as
+ * the region left over for the three columns.
+ *
+ * This was the furthest-evolved of the actor scenes and the template the shared base was extracted from,
+ * so it is fitting that it is the last to actually sit on it. Its rects previously chained through each
+ * other rather than deriving from a common region- one of them read the points rect, the family strip
+ * height, the help rect *and* the controls hint height to produce a single number- which meant every
+ * rectangle had to be right for any rectangle to be right.
  */
 class Scene_SDP
-  extends Scene_MenuBase
+  extends Scene_ActorFacetBase
 {
   /**
    * Calls this scene.
@@ -99,11 +108,8 @@ class Scene_SDP
      */
     this._j._sdp._windows._sdpConfirmation = null;
 
-    /**
-     * The points window that displays the current menu actor's SDP points.
-     * @type {Window_SdpPoints}
-     */
-    this._j._sdp._windows._sdpPoints = null;
+    // note: the points ribbon is deliberately not tracked here. It is this scene's actor ribbon, and
+    // the base owns it- reach it through getSdpPointsWindow(), which delegates.
 
     /**
      * The help window that displays the description of the currently hovered SDP.
@@ -185,24 +191,14 @@ class Scene_SDP
 
   //region windows
   /**
-   * Pixel width shared by the center column windows.
-   * @returns {number}
-   */
-  sdpCenterColumnWidth()
-  {
-    return 720;
-  }
-
-  /**
    * Creates all windows associated with the SDP scene.
    */
   createAllWindows()
   {
-    // display data windows.
-    this.createSdpPointsWindow();
+    // display data windows. the ribbon comes from the base, and the controller hint strip is now the
+    // base's own control legend.
     this.createSdpFamilyStripWindow();
     this.createSdpHeaderWindow();
-    this.createSdpControlsHintWindow();
     this.createSdpHelpWindow();
 
     // selectable data windows.
@@ -261,13 +257,14 @@ class Scene_SDP
    */
   sdpFamilyStripRectangle()
   {
-    const pointsRect = this.sdpPointsRectangle();
-    const { width, height: pointsHeight } = pointsRect;
-    const height = this.sdpFamilyStripHeight();
-    const x = 0;
-    const y = pointsHeight;
+    // sit at the top of the left column, inside the region the base leaves beneath the ribbon.
+    const contentArea = this.contentAreaRect();
 
-    return new Rectangle(x, y, width, height);
+    return new Rectangle(
+      contentArea.x,
+      contentArea.y,
+      this.sdpListColumnWidth(),
+      this.sdpFamilyStripHeight());
   }
 
   /**
@@ -450,24 +447,17 @@ class Scene_SDP
    */
   sdpListRectangle()
   {
-    // grab the points rectangle for reference.
-    const pointsRectangle = this.sdpPointsRectangle();
-    const familyStripHeight = this.sdpFamilyStripHeight();
+    // the family strip has already claimed the top of this column.
+    const contentArea = this.contentAreaRect();
+    const stripHeight = this.sdpFamilyStripHeight();
 
-    // width shares the left ribbon with {@link #sdpPointsRectangle} (scaled up for larger menu fonts).
-    const width = 480;
-
-    // determine the modifier of the height for fitting properly..
-    const hintH = this.sdpControlsHintHeight();
-    const heightFit = (pointsRectangle.height + familyStripHeight + this.sdpHelpRectangle().height + hintH) + 8;
-    const height = Graphics.height - heightFit;
-
-    // determine the x:y coordinates.
-    const x = 0;
-    const y = pointsRectangle.height + familyStripHeight;
-
-    // return the built rectangle.
-    return new Rectangle(x, y, width, height);
+    // fill the rest of the column beneath it. This used to subtract the points, family strip, help and
+    // controls-hint heights from `Graphics.height`- note, not `boxHeight`- plus a magic 8.
+    return new Rectangle(
+      contentArea.x,
+      contentArea.y + stripHeight,
+      this.sdpListColumnWidth(),
+      contentArea.height - stripHeight);
   }
 
   /**
@@ -531,17 +521,16 @@ class Scene_SDP
    */
   sdpParameterListRectangle()
   {
-    const listRect = this.sdpListRectangle();
-    const headerH = this.sdpHeaderRectangle().height;
-    const helpH = this.sdpHelpRectangle().height;
-    const hintH = this.sdpControlsHintHeight();
+    // the panel header describes the hovered panel and sits above this, in the same column.
+    const contentArea = this.contentAreaRect();
+    const headerRect = this.sdpHeaderRectangle();
 
-    const x = listRect.width;
-    const y = headerH;
-    const width = this.sdpCenterColumnWidth();
-    const height = Graphics.boxHeight - helpH - headerH - hintH;
-
-    return new Rectangle(x, y, width, height);
+    // fill the rest of the center column beneath the header.
+    return new Rectangle(
+      headerRect.x,
+      headerRect.y + headerRect.height,
+      headerRect.width,
+      contentArea.height - headerRect.height);
   }
 
   /**
@@ -715,13 +704,14 @@ class Scene_SDP
    */
   sdpRightColumnMetrics()
   {
-    const sdpListRect = this.sdpListRectangle();
-    const centerW = this.sdpCenterColumnWidth();
-    const { height: headerH } = this.sdpHeaderRectangle();
+    // the left and center columns have already claimed their shares; this one is the remainder, so the
+    // three cannot leave a seam between them or overrun the right edge.
+    const contentArea = this.contentAreaRect();
+    const headerRect = this.sdpHeaderRectangle();
 
-    const x = sdpListRect.width + centerW;
-    const topY = headerH;
-    const width = Graphics.boxWidth - x;
+    const x = headerRect.x + headerRect.width;
+    const topY = contentArea.y;
+    const width = contentArea.x + contentArea.width - x;
     const bottom = this.sdpRightColumnBottom();
     const gap = this.sdpRightColumnSplitGap();
     const fullHeight = bottom - topY;
@@ -793,8 +783,10 @@ class Scene_SDP
    */
   sdpRightColumnBottom()
   {
-    // help is not rendered under the right column; take the full height.
-    return Graphics.boxHeight;
+    // the bottom of the region the base handed down, which already excludes the legend beneath it.
+    const contentArea = this.contentAreaRect();
+
+    return contentArea.y + contentArea.height;
   }
 
   /**
@@ -835,13 +827,18 @@ class Scene_SDP
    */
   sdpHeaderRectangle()
   {
-    const pointsRect = this.sdpPointsRectangle();
-    const { width: x } = pointsRect;
-    const y = 0;
-    const width = Graphics.boxWidth - x;
-    // this header renders two full text rows; match Window_Base.fittingHeight(2).
-    const height = 108;
-    return new Rectangle(x, y, width, height);
+    // sit at the top of the center column, immediately right of the panel list.
+    const contentArea = this.contentAreaRect();
+    const x = contentArea.x + this.sdpListColumnWidth();
+
+    // this header renders two full text rows.
+    const height = this.calcWindowHeight(2, false);
+
+    // it describes the hovered panel, so it spans only the column showing that panel's parameters- it
+    // used to run all the way to the right edge, across the mastery and cart windows too.
+    const width = Math.round(contentArea.width * this.sdpCenterColumnRatio());
+
+    return new Rectangle(x, contentArea.y, width, height);
   }
 
   /**
@@ -864,62 +861,71 @@ class Scene_SDP
   //endregion header window
 
   //region controls hint window
+
   /**
-   * Pixel height reserved for the controller legend strip above {@link Window_SdpHelp}.
+   * Implements {@link Scene_MenuFacetBase.controlLegendEntries}.<br/>
+   * Describes the controls this scene responds to.
+   *
+   * This replaces `Window_SdpControlsHint`, which was for a long time the only button help anywhere in
+   * the game- and therefore the proof that the idea was worth generalising. The shared legend it became
+   * renders live glyphs for whichever device the player is holding, which the bespoke one could not.
+   * @returns {{semantic: (string|string[]), label: string}[]}
+   */
+  controlLegendEntries()
+  {
+    return [
+      {
+        semantic: 'ok',
+        label: 'add to cart',
+      },
+      {
+        semantic: 'context',
+        label: 'checkout',
+      },
+      {
+        semantic: [ 'content-prev', 'content-next' ],
+        label: 'switch family',
+      },
+      {
+        semantic: 'more',
+        label: 'hide maxed',
+      },
+      {
+        semantic: [ 'actor-prev', 'actor-next' ],
+        label: 'switch character',
+      },
+      {
+        semantic: 'cancel',
+        label: 'back',
+      },
+    ];
+  }
+
+  /**
+   * The proportion of the content area given to the panel list column.
    * @returns {number}
    */
-  sdpControlsHintHeight()
+  sdpListColumnRatio()
   {
-    // must match {@link Window_Base#fittingHeight}(1): one text row + top/bottom window padding.
-    // a height of 36 would leave ~12px of inner space after padding, so the hint text never shows.
-    const lineHeight = Window_Base.prototype.lineHeight();
-    const pad = $gameSystem.windowPadding();
-
-    return lineHeight + pad * 2;
+    return 0.25;
   }
 
   /**
-   * Creates the controller hint strip (cart/checkout/filter legend).
+   * The proportion of the content area given to the parameter column.
+   * @returns {number}
    */
-  createSdpControlsHintWindow()
+  sdpCenterColumnRatio()
   {
-    const window = this.buildSdpControlsHintWindow();
-
-    this.addWindow(window);
+    return 0.375;
   }
 
   /**
-   * Builds the controller hint window.
-   * @returns {Window_SdpControlsHint}
+   * The width of the panel list column.
+   * @returns {number}
    */
-  buildSdpControlsHintWindow()
+  sdpListColumnWidth()
   {
-    const rectangle = this.sdpControlsHintRectangle();
-    const window = new Window_SdpControlsHint(rectangle);
-
-    window.refresh();
-
-    return window;
-  }
-
-  /**
-   * Rectangle for the controller legend strip (left + center columns only).
-   * @returns {Rectangle}
-   */
-  sdpControlsHintRectangle()
-  {
-    const hintH = this.sdpControlsHintHeight();
-    const {
-      y: helpY,
-      width: helpWidth,
-    } = this.sdpHelpRectangle();
-
-    const x = 0;
-    const y = helpY - hintH;
-    const width = helpWidth;
-    const height = hintH;
-
-    return new Rectangle(x, y, width, height);
+    return Math.round(this.contentAreaRect().width * this.sdpListColumnRatio());
   }
 
   //endregion controls hint window
@@ -962,16 +968,10 @@ class Scene_SDP
    */
   sdpHelpRectangle()
   {
-    // help only needs to live under the left+center columns, not under the cart/rewards.
-    const { width: ribbonW } = this.sdpPointsRectangle();
-    const width = ribbonW + this.sdpCenterColumnWidth();
-    // two description lines + padding; add slack so large menu fonts / drawTextEx do not clip the last line.
-    const lineHeight = Window_Base.prototype.lineHeight();
-    const pad = $gameSystem.windowPadding();
-    const height = lineHeight * 2 + pad * 2 + 24;
-    const x = 0;
-    const y = Graphics.boxHeight - height;
-    return new Rectangle(x, y, width, height);
+    // the base reserves a strip across the very top for exactly this, and it is the same strip every
+    // other facet scene uses. Help used to sit along the bottom here, spanning only the left and center
+    // columns- which is what put it directly above a controls hint that has since become the legend.
+    return this.helpWindowRect();
   }
 
   /**
@@ -996,70 +996,28 @@ class Scene_SDP
 
   //region points window
   /**
-   * Creates the points window for displaying how many points the current actor has.
-   */
-  createSdpPointsWindow()
-  {
-    // create the window.
-    const window = this.buildSdpPointsWindow();
-
-    // update the tracker with the new window.
-    this.setSdpPointsWindow(window);
-
-    // add the window to the scene manager's tracking.
-    this.addWindow(window);
-  }
-
-  /**
-   * Sets up and defines the sdp points window.
+   * Overrides {@link Scene_ActorFacetBase.buildActorRibbonWindow}.<br/>
+   * Supplies the SDP ribbon, which shows the actor plus their spendable point balance.
+   *
+   * The base decides where it sits and how wide it is. This used to be a 480px band pinned to the upper
+   * left, whose width the panel list below then had to match by restating the same number.
+   * @param {Rectangle} rectangle The rectangle to build the window within.
    * @returns {Window_SdpPoints}
    */
-  buildSdpPointsWindow()
+  buildActorRibbonWindow(rectangle)
   {
-    // define the rectangle of the window.
-    const rectangle = this.sdpPointsRectangle();
-
-    // create the window with the rectangle.
-    const window = new Window_SdpPoints(rectangle);
-
-    // also set the menu actor.
-    window.setActor($gameParty.menuActor());
-
-    // return the built and configured window.
-    return window;
-  }
-
-  /**
-   * Gets the rectangle associated with the sdp points ribbon window.
-   * @returns {Rectangle}
-   */
-  sdpPointsRectangle()
-  {
-    // upper-left ribbon; width matches {@link #sdpListRectangle} for a single vertical stripe.
-    const width = 480;
-    // header is now two lines; keep the full top band height.
-    const height = 72;
-    const x = 0;
-    const y = 0;
-    return new Rectangle(x, y, width, height);
+    return new Window_SdpPoints(rectangle);
   }
 
   /**
    * Gets the currently tracked sdp points window.
+   *
+   * Kept as a name that reads in context; the base owns the window itself.
    * @returns {Window_SdpPoints}
    */
   getSdpPointsWindow()
   {
-    return this.j()._sdp._windows._sdpPoints;
-  }
-
-  /**
-   * Set the currently tracked sdp points window to the given window.
-   * @param {Window_SdpPoints} pointsWindow The window to track.
-   */
-  setSdpPointsWindow(pointsWindow)
-  {
-    this.j()._sdp._windows._sdpPoints = pointsWindow;
+    return this.getActorRibbonWindow();
   }
 
   //endregion points window
