@@ -68,7 +68,6 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
 
     globalThis.$jabsEngine = {
       absEnabled: false,
-      requestAbsMenu: false,
       absPause: false,
       getPlayer1: vi.fn(() => ({ hasUninterruptibleMovementLock: vi.fn(() => false) })),
       initializePlayer1: vi.fn(),

@@ -26,7 +26,7 @@ describe('JABS_InputAdapter (direct src import)', () =>
     JABS_InputAdapter.controllers = [];
     globalThis.$gameMap = { hasInteractableEventInFront: () => false };
     globalThis.$gameParty = { canPartyCycle: () => true, _actors: [ 1, 2 ] };
-    globalThis.$jabsEngine = { performPartyCycling: vi.fn(), absPause: false, requestAbsMenu: false };
+    globalThis.$jabsEngine = { performPartyCycling: vi.fn(), absPause: false };
   });
 
   function buildAction(overrides = {})

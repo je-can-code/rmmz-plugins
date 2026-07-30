@@ -1794,7 +1794,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     {
       globalThis.$gameMap = Object.assign(globalThis.$gameMap, { isEventRunning: () => false });
       globalThis.$gameMessage = { isBusy: () => false };
-      globalThis.$jabsEngine = { requestAbsMenu: false, absPause: false, absEnabled: true, ...overrides };
+      globalThis.$jabsEngine = { absPause: false, absEnabled: true, ...overrides };
     }
 
     it('is false while a map event is running', () =>
