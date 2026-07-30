@@ -255,6 +255,23 @@ class Scene_Passive
   }
 
   /**
+   * Overrides {@link Scene_ActorFacetBase.actorRibbonWindowRect}.<br/>
+   * Narrows the ribbon to sit above the state list rather than spanning the screen.
+   *
+   * The base spans the full width because most facet scenes want that, but a ribbon holding a cropped
+   * face and one name has nothing to do with the remaining sixteen hundred pixels. Confining it to the
+   * left column lets the detail panel beside it start from the very top instead.
+   * @returns {Rectangle}
+   */
+  actorRibbonWindowRect()
+  {
+    // start from the region this scene is allowed to fill.
+    const facetArea = this.facetAreaRect();
+
+    return new Rectangle(facetArea.x, facetArea.y, this.passiveListWidth(), this.actorRibbonHeight());
+  }
+
+  /**
    * Implements {@link Scene_MenuFacetBase.controlLegendEntries}.<br/>
    * Describes the controls this scene responds to.
    *
@@ -315,9 +332,9 @@ class Scene_Passive
   /**
    * Gets the rectangle for the tab header strip.
    *
-   * Spans the full width across the top of the content area. It used to sit only above the detail
-   * panel, tucked beside the ribbon- but the ribbon now spans the full width itself, and the tab
-   * names which subset of the list is showing, so it belongs over both columns rather than one.
+   * Confined to the left column, directly beneath the ribbon and directly above the list. The tab names
+   * which subset of *the list* is showing, so the list's width is the honest width for it- it has no
+   * bearing on the detail panel beside it.
    * @returns {Rectangle}
    */
   passiveTabHeaderRectangle()
@@ -325,7 +342,11 @@ class Scene_Passive
     // start from the region left over beneath the ribbon.
     const contentArea = this.contentAreaRect();
 
-    return new Rectangle(contentArea.x, contentArea.y, contentArea.width, this.passiveTabHeaderHeight());
+    return new Rectangle(
+      contentArea.x,
+      contentArea.y,
+      this.passiveListWidth(),
+      this.passiveTabHeaderHeight());
   }
 
   /**
@@ -478,22 +499,24 @@ class Scene_Passive
   /**
    * Gets the rectangle for the detail panel.
    *
-   * Occupies the right of the content area beside the list, and is defined as the *remainder* of that
-   * width rather than its own fraction- so the two columns cannot drift apart or leave a seam between
-   * them however the ratio is tuned.
+   * Takes the whole right side, full height, starting from the very top of the region- above where the
+   * ribbon and tab header sit, because neither of those extends this far across. Its width is the
+   * *remainder* of the region rather than its own fraction, so the two columns cannot drift apart or
+   * leave a seam however the list's ratio is tuned.
    * @returns {Rectangle}
    */
   passiveDetailRectangle()
   {
-    // the list has already claimed its share; take what is left beside it.
-    const listRect = this.passiveListRectangle();
-    const contentArea = this.contentAreaRect();
+    // measured against the full region rather than the part beneath the ribbon, since the ribbon does
+    // not reach this column.
+    const facetArea = this.facetAreaRect();
+    const listWidth = this.passiveListWidth();
 
     return new Rectangle(
-      listRect.x + listRect.width,
-      listRect.y,
-      contentArea.width - listRect.width,
-      listRect.height);
+      facetArea.x + listWidth,
+      facetArea.y,
+      facetArea.width - listWidth,
+      facetArea.height);
   }
 
   /**
