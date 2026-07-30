@@ -80,7 +80,6 @@
     "build:cms": "vite build --config src/plugins/cms/core/vite.config.cms-core.js",
     "build:cms-equip": "vite build --config src/plugins/cms/ext/equip/vite.config.cms-equip.js",
     "build:cms-skill": "vite build --config src/plugins/cms/ext/skill/vite.config.cms-skill.js",
-    "build:cms-status": "vite build --config src/plugins/cms/ext/status/vite.config.cms-status.js",
     "build:hud": "vite build --config src/plugins/hud/core/vite.config.hud-core.js",
     "build:hud-input": "vite build --config src/plugins/hud/ext/input/vite.config.hud-input.js",
     "build:hud-party": "vite build --config src/plugins/hud/ext/party/vite.config.hud-party.js",

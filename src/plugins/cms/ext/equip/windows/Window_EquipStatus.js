@@ -57,9 +57,10 @@ Window_EquipStatus.prototype.refresh = function()
  * data the status scene reads, so nothing shown here can drift out of sync with what the player
  * already knows from that screen.
  *
- * Unlike the status page, this window uses a two-column layout instead of three — there's no
- * elements/ailments panel to reserve a third column for here, so the freed width goes toward
- * wider, more legible name/value columns instead.
+ * This window uses a two-column layout, and the elements and ailments the actor deviates from the
+ * baseline on are drawn beneath the grid rather than in a third column. Equipment is the main thing
+ * that moves those numbers, so this is where they belong- and only deviations are listed, so an actor
+ * wearing nothing unusual costs two short "all standard" lines rather than fifty rows.
  *
  * When a `_tempActor` is present (the player is hovering a candidate piece of equipment), each row
  * renders "current → projected" instead of a bare value, so the impact of the swap is visible
@@ -87,6 +88,9 @@ Window_EquipStatus.prototype.drawAllParams = function()
       cursorY += tallestSection + rowGap;
     });
 
+    // the affiliations sit beneath the grid, sharing its two columns.
+    this.drawAffiliations(columnXs, cursorY, columnLayout.columnWidth);
+
     return;
   }
 
@@ -102,5 +106,27 @@ Window_EquipStatus.prototype.drawAllParams = function()
       cursorY += groupHeight + rowGap;
     });
   });
+
+  // stacked too, when there is not room to sit them side by side.
+  const stackedHalf = Math.floor((fallbackWidth - 16) / 2);
+  this.drawAffiliations([ 0, stackedHalf + 16 ], cursorY, stackedHalf);
+};
+
+/**
+ * Draws the element and ailment affiliations beneath the parameter grid.
+ *
+ * Only entries deviating from the 100% baseline appear, so this occupies the space it earns- a
+ * character with no unusual resistances shows two short lines rather than an inventory of nothing.
+ * @param {number[]} columnXs The x coordinate of each column.
+ * @param {number} y The y coordinate to begin drawing at.
+ * @param {number} columnWidth The width of a single column.
+ */
+Window_EquipStatus.prototype.drawAffiliations = function(columnXs, y, columnWidth)
+{
+  // leave a little air between the last catalog group and these.
+  const affiliationY = y + 8;
+
+  ParameterCatalogRenderer.drawElementAffiliations(this, this.actor(), columnXs[0], affiliationY, columnWidth);
+  ParameterCatalogRenderer.drawAilmentAffiliations(this, this.actor(), columnXs[1], affiliationY, columnWidth);
 };
 //endregion Window_EquipStatus

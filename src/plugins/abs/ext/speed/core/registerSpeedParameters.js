@@ -12,8 +12,8 @@ class SpeedParameterRegistration
     ParameterRegistry.register(
       ParameterDefinition.Builder()
         .key('msb')
-        .group(ParameterGroups.MOBILITY)
-        .sortOrder(0)
+        .group(ParameterGroups.SUPPORT)
+        .sortOrder(2)
         .label(() => TextManager.movespeed())
         .description(() => TextManager.moveSpeedDescription())
         .iconIndex(() => IconManager.movespeed())

@@ -443,7 +443,6 @@ Scene_Menu.prototype.bindMenuCommandHandlers = function(window)
   // the actor-scoped vanilla scenes.
   window.setHandler("skill", this.commandActorScene.bind(this, Scene_Skill));
   window.setHandler("equip", this.commandActorScene.bind(this, Scene_Equip));
-  window.setHandler("status", this.commandActorScene.bind(this, Scene_Status));
 
   // the party-scoped vanilla scenes.
   window.setHandler("item", this.commandItem.bind(this));

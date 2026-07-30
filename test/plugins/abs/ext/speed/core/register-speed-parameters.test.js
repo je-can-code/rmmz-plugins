@@ -15,7 +15,7 @@ describe('J-ABS-Speed SpeedParameterRegistration (unit, all downstream dependenc
 
     globalThis.TextManager = { movespeed: vi.fn(() => 'Move Boost'), moveSpeedDescription: vi.fn(() => [ 'line' ]) };
     globalThis.IconManager = { movespeed: vi.fn(() => 978) };
-    globalThis.ParameterGroups = { MOBILITY: 'mobility' };
+    globalThis.ParameterGroups = { SUPPORT: 'support' };
     globalThis.ParameterFormat = { FLAT: 'flat' };
     globalThis.ParameterRegistry = { register: vi.fn() };
 
@@ -50,15 +50,16 @@ describe('J-ABS-Speed SpeedParameterRegistration (unit, all downstream dependenc
 
   describe('registerAll', () =>
   {
-    it('registers the msb parameter in the MOBILITY group at sort order 0', () =>
+    it('registers the msb parameter in the SUPPORT group at sort order 2', () =>
     {
       // Act
       SpeedParameterRegistration.registerAll();
 
-      // Assert
+      // Assert: movement joined the support group when the two-stat "Haste" group was dissolved, and
+      // takes sort order 2 so it falls in behind the shield pair already sitting at 0 and 1.
       expect(captured.key).toBe('msb');
-      expect(captured.group).toBe('mobility');
-      expect(captured.sortOrder).toBe(0);
+      expect(captured.group).toBe('support');
+      expect(captured.sortOrder).toBe(2);
       expect(captured.format).toBe('flat');
       expect(globalThis.SdpParameterBinding.byKey).toHaveBeenCalledWith('msb', expect.any(Function));
       expect(globalThis.ParameterRegistry.register).toHaveBeenCalledWith(expect.objectContaining({ built: true }));
