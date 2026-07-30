@@ -2,7 +2,7 @@
 /**
  * Verifies that no plugin source file uses optional chaining (`?.`).
  *
- * Per `.junie/guidelines.md`, optional chaining is strictly forbidden, and code that appears to
+ * Per `CLAUDE.md`, optional chaining is strictly forbidden, and code that appears to
  * need it should be rewritten so it doesn't. Every `?.` is one of three things, and none of them
  * survive contact with the guidelines:
  *
