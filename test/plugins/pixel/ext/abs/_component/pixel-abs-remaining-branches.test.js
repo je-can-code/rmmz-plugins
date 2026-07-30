@@ -461,6 +461,12 @@ describe('J-ABS-Pixelistics remaining branch coverage (direct src import)', () =
       angleToNearestDirection: angle => (angle === 90 ? 2 : 6),
       dir8ToAngle: () => 0,
       _dashing: true,
+
+      // the source writes dash state through its setter now, so the double needs to answer for it.
+      setDashing(dashing)
+      {
+        this._dashing = dashing;
+      },
     }, overrides);
 
     /**

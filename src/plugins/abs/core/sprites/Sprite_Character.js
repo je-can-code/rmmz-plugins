@@ -594,15 +594,42 @@ Sprite_Character.prototype.applyActionDebug = function(skill)
     {
       this.addChild(this._j._abs._visDebugGizmo); // attach gizmo.
     }
-    this._j._abs._visDebugGizmo.visible = true; // show while debugging.
+    this.visDebugGizmo().visible = true; // show while debugging.
     return;
   }
 
   // hide when not debugging.
-  if (this._j._abs._visDebugGizmo)
+  if (this.visDebugGizmo())
   {
-    this._j._abs._visDebugGizmo.visible = false;
+    this.visDebugGizmo().visible = false;
   }
+};
+
+/**
+ * Gets the gizmo drawn over this character while visual debugging is on.
+ * @returns {Sprite|null}
+ */
+Sprite_Character.prototype.visDebugGizmo = function()
+{
+  return this._j._abs._visDebugGizmo;
+};
+
+/**
+ * Gets the stripe drawn beneath this battler's name to mark their tier.
+ * @returns {Sprite|null}
+ */
+Sprite_Character.prototype.battlerNameTierStripe = function()
+{
+  return this._j._abs._battlerNameTierStripe;
+};
+
+/**
+ * Sets the stripe drawn beneath this battler's name to mark their tier.
+ * @param {Sprite|null} stripe The sprite to track, or null when there is none.
+ */
+Sprite_Character.prototype.setBattlerNameTierStripe = function(stripe)
+{
+  this._j._abs._battlerNameTierStripe = stripe;
 };
 
 /**
@@ -1115,10 +1142,10 @@ Sprite_Character.prototype.setupBattlerName = function()
     this.battlerName().setColor('#ffffff');
 
     // refresh the tier stripe bitmap when the stripe exists and the color is still valid.
-    if (this._j._abs._battlerNameTierStripe && this.shouldDrawMapTierStripe(colorHex))
+    if (this.battlerNameTierStripe() && this.shouldDrawMapTierStripe(colorHex))
     {
       const fontSize = this.battlerName().fontSize();
-      this._j._abs._battlerNameTierStripe.bitmap = this.buildMapTierStripeBitmap(colorHex, fontSize, tier);
+      this.battlerNameTierStripe().bitmap = this.buildMapTierStripeBitmap(colorHex, fontSize, tier);
     }
 
     // if we already have the sprite, no need to recreate it.
@@ -1129,9 +1156,9 @@ Sprite_Character.prototype.setupBattlerName = function()
   this.setBattlerName(this.createBattlerNameSprite());
 
   // add stripe behind the text so the name draws on top.
-  if (this._j._abs._battlerNameTierStripe)
+  if (this.battlerNameTierStripe())
   {
-    this.addChild(this._j._abs._battlerNameTierStripe);
+    this.addChild(this.battlerNameTierStripe());
   }
 
   this.addChild(this.battlerName());
@@ -1156,7 +1183,7 @@ Sprite_Character.prototype.createBattlerNameSprite = function()
 
   textSprite.move(-70, 0);
 
-  this._j._abs._battlerNameTierStripe = null;
+  this.setBattlerNameTierStripe(null);
 
   if (this.shouldDrawMapTierStripe(colorHex))
   {
@@ -1167,7 +1194,7 @@ Sprite_Character.prototype.createBattlerNameSprite = function()
     const GAP = 4;
     const stripeY = this.computeMapTierStripeY(textSprite, outerH);
     stripeSprite.move(-70 - GAP - outerW, stripeY);
-    this._j._abs._battlerNameTierStripe = stripeSprite;
+    this.setBattlerNameTierStripe(stripeSprite);
   }
 
   return textSprite;
@@ -1352,9 +1379,9 @@ Sprite_Character.prototype.showBattlerName = function()
 {
   this.battlerName().show();
 
-  if (this._j._abs._battlerNameTierStripe)
+  if (this.battlerNameTierStripe())
   {
-    this._j._abs._battlerNameTierStripe.show();
+    this.battlerNameTierStripe().show();
   }
 };
 
@@ -1365,9 +1392,9 @@ Sprite_Character.prototype.hideBattlerName = function()
 {
   this.battlerName().hide();
 
-  if (this._j._abs._battlerNameTierStripe)
+  if (this.battlerNameTierStripe())
   {
-    this._j._abs._battlerNameTierStripe.hide();
+    this.battlerNameTierStripe().hide();
   }
 };
 //endregion battler name

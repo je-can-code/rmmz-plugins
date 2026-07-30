@@ -27,7 +27,8 @@ Window_EquipItem.prototype.refreshMoreData = function()
  */
 Window_EquipItem.prototype.onIndexChange = function()
 {
-  this._moreDataWindow.setItem(this.item());
+  this.moreDataWindow()
+    .setItem(this.item());
 };
 
 /**
@@ -37,5 +38,14 @@ Window_EquipItem.prototype.onIndexChange = function()
 Window_EquipItem.prototype.setMoreDataWindow = function(moreDataWindow)
 {
   this._moreDataWindow = moreDataWindow;
+};
+
+/**
+ * Gets the more equip data window observing this one.
+ * @returns {Window_MoreEquipData}
+ */
+Window_EquipItem.prototype.moreDataWindow = function()
+{
+  return this._moreDataWindow;
 };
 //endregion Window_EquipItem

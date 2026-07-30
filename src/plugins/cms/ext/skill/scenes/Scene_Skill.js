@@ -34,7 +34,13 @@ Scene_Skill.prototype.initMembers = function()
    * Whether the extended skill detail pane is currently showing.
    * @type {boolean}
    */
-  this._j.moreVisible = false;
+  this._j._moreVisible = false;
+
+  /**
+   * The pane describing the highlighted skill.
+   * @type {Window_SkillDetail|null}
+   */
+  this._j._skillDetailWindow = null;
 };
 
 /**
@@ -153,11 +159,32 @@ Scene_Skill.prototype.itemWindowRect = function()
  */
 Scene_Skill.prototype.createSkillDetailWindow = function()
 {
-  const rect = this.skillDetailRect();
-  this._skillDetailWindow = new Window_SkillDetail(rect);
+  const window = new Window_SkillDetail(this.skillDetailRect());
+
+  // the list drives what this pane describes, so it needs a handle on it.
   this.itemWindow()
-    .setSkillDetailWindow(this._skillDetailWindow);
-  this.addWindow(this._skillDetailWindow);
+    .setSkillDetailWindow(window);
+
+  this.setSkillDetailWindow(window);
+  this.addWindow(window);
+};
+
+/**
+ * Gets the pane describing the highlighted skill.
+ * @returns {Window_SkillDetail}
+ */
+Scene_Skill.prototype.skillDetailWindow = function()
+{
+  return this._j._skillDetailWindow;
+};
+
+/**
+ * Sets the pane describing the highlighted skill.
+ * @param {Window_SkillDetail} window The window to track.
+ */
+Scene_Skill.prototype.setSkillDetailWindow = function(window)
+{
+  this._j._skillDetailWindow = window;
 };
 
 /**

@@ -80,6 +80,15 @@ Sprite_Damage.prototype.initMembers = function()
 };
 
 /**
+ * Gets the popup this sprite was built from.
+ * @returns {Map_TextPop|null}
+ */
+Sprite_Damage.prototype.sourcePopup = function()
+{
+  return this._j._popups._sourcePopup;
+};
+
+/**
  * Gets whether or not this sprite is a damage popup.
  * @returns {boolean} True if it is a damage popup, false if it is a non-damage popup.
  */
@@ -204,16 +213,16 @@ Sprite_Damage.prototype.createValue = function(value)
 {
   let healingPopup = false;
 
-  if (this._j._popups._sourcePopup && this._j._popups._sourcePopup.healing === true)
+  if (this.sourcePopup() && this.sourcePopup().healing === true)
   {
     healingPopup = true;
   }
 
   const displayValue = PopupNumericDisplay.formatNumericPopupDisplayString(value, healingPopup);
 
-  if (this._j._popups._sourcePopup)
+  if (this.sourcePopup())
   {
-    this._j._popups._sourcePopup.value = displayValue;
+    this.sourcePopup().value = displayValue;
   }
 
   const w = J.POPUPS.Layout.ValueBitmapWidth;
@@ -310,7 +319,7 @@ Sprite_Damage.prototype.repositionChildren = function()
     const iconWidth = ImageManager.iconWidth * J.POPUPS.Layout.IconScale;
     
     // measure the actual text width.
-    const textWidth = text.bitmap.measureTextWidth(this._j._popups._sourcePopup.value);
+    const textWidth = text.bitmap.measureTextWidth(this.sourcePopup().value);
     const totalWidth = iconWidth + spacing + textWidth;
     
     // the center of the group should be at x=0.

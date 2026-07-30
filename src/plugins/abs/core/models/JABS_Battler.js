@@ -3119,7 +3119,7 @@ class JABS_Battler
   _maybeShortenCombatTail(tailFrames)
   {
     // do not lengthen; only clamp if the window is larger than our tail.
-    if (this._inCombatCountdown <= tailFrames)
+    if (this.getInCombatCountdown() <= tailFrames)
     {
       return;
     }
@@ -3131,7 +3131,7 @@ class JABS_Battler
     const graceFrames = 15;
 
     // determine if we are within the grace window (i.e., just re/entered combat).
-    const withinGraceWindow = this._inCombatCountdown > (windowMax - graceFrames);
+    const withinGraceWindow = this.getInCombatCountdown() > (windowMax - graceFrames);
     if (withinGraceWindow)
     {
       return;
@@ -3140,7 +3140,7 @@ class JABS_Battler
     // if nobody is aggroed to the party, compress the combat tail.
     if (JABS_AiManager.anyLivingEnemiesAggroedToParty() === false)
     {
-      this._inCombatCountdown = tailFrames;
+      this.setInCombatCountdown(tailFrames);
     }
   };
 

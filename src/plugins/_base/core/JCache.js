@@ -195,13 +195,13 @@ class JCache
     if (node.has(stringKey) === false)
     {
       // record the miss, then compute and store the value.
-      this._metrics.misses++;
+      this.recordMiss();
       node.set(stringKey, computeFn());
     }
     else
     {
       // record the hit; the existing value is returned below.
-      this._metrics.hits++;
+      this.recordHit();
     }
 
     // return whatever now lives at this string key, whether just computed or previously cached.
@@ -258,6 +258,22 @@ class JCache
   {
     // return a copy so callers cannot mutate our internal counters.
     return { ...this._metrics };
+  }
+
+  /**
+   * Records that a lookup found nothing and had to compute.
+   */
+  recordMiss()
+  {
+    this._metrics.misses++;
+  }
+
+  /**
+   * Records that a lookup was served from the cache.
+   */
+  recordHit()
+  {
+    this._metrics.hits++;
   }
 }
 

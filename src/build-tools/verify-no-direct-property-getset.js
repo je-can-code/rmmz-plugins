@@ -144,6 +144,67 @@ function isNamedForField(methodName, fieldAccessor)
 }
 
 /**
+ * The most statements an accessor's body may hold before it stops being an accessor.
+ *
+ * Three covers every honest shape in this tree: a bare `return this._foo;`, a setter that guards against
+ * an unchanged value before assigning and then refreshes, and a getter that seeds its namespace on the
+ * way out. Anything longer is orchestrating something, and orchestration reaches the field the same way
+ * every other caller does.
+ * @type {number}
+ */
+const MAX_ACCESSOR_STATEMENTS = 3;
+
+/**
+ * Determines whether a property chain names state this rule governs.
+ *
+ * Either the leaf is underscored, or the chain hangs off one of our own namespaces- `this._j.moreVisible`
+ * is instance state whatever its leaf is called. Both the accessor test and the violation walk ask this,
+ * because a method judged against fields the accessor test never saw looks like it owns nothing.
+ * @param {string[]} chain The dotted property chain, rooted at `this`.
+ * @returns {boolean}
+ */
+function isOurField(chain)
+{
+  if (chain[chain.length - 1].startsWith('_')) return true;
+
+  return chain.length > 1 && chain[0].startsWith('_');
+}
+
+/**
+ * Determines whether a field touch writes to the field.
+ * @param {object} node The member expression touching the field.
+ * @param {object|null} parent The parent of that expression.
+ * @param {boolean} indexedInto Whether the touch is a computed index into the field.
+ * @param {Map<object, object>} grandparentOf Parent lookup, for resolving computed writes.
+ * @returns {boolean}
+ */
+function writesField(node, parent, indexedInto, grandparentOf)
+{
+  // a plain assignment to the field itself.
+  if (parent?.type === 'AssignmentExpression' && parent.left === node) return true;
+
+  // `this._metrics.misses++` writes the field just as surely as `= x + 1` would.
+  if (parent?.type === 'UpdateExpression' && parent.argument === node) return true;
+
+  // `setEventByIndex(index, event) { this._events[index] = event; }` is the owning mutator of
+  // `_events` just as much as a whole-field assignment would be.
+  return indexedInto && isWriteTarget(parent, grandparentOf.get(parent));
+}
+
+/**
+ * Determines whether a function is short enough to be an accessor.
+ * @param {object} fnNode The function node to measure.
+ * @returns {boolean}
+ */
+function isAccessorSized(fnNode)
+{
+  // an expression-bodied arrow is as short as a body gets.
+  if (fnNode.body?.type !== 'BlockStatement') return true;
+
+  return fnNode.body.body.length <= MAX_ACCESSOR_STATEMENTS;
+}
+
+/**
  * Determines whether a parent node hands the field it wraps back out to a caller.
  *
  * A bare `return this._foo;` is the obvious case, but a getter that copies on the way out —
@@ -195,7 +256,8 @@ function accessorFieldOf(fnNode)
 
     const chain = chainOf(node);
     if (!chain?.length) return;
-    if (!chain[chain.length - 1].startsWith('_')) return;
+
+    if (isOurField(chain) === false) return;
 
     // only the outermost expression of a chain counts, so `a._b._c` is recorded once. Computed
     // access is the exception: `this._events[index]` cannot extend the dotted chain, so the field
@@ -206,11 +268,7 @@ function accessorFieldOf(fnNode)
     touched.add(chain.join('.'));
 
     if (handsFieldOut(parent)) returnsField = true;
-    if (parent?.type === 'AssignmentExpression' && parent.left === node) assignsField = true;
-
-    // `setEventByIndex(index, event) { this._events[index] = event; }` is the owning mutator of
-    // `_events` just as much as a whole-field assignment would be.
-    if (indexedInto && isWriteTarget(parent, grandparentOf.get(parent))) assignsField = true;
+    if (writesField(node, parent, indexedInto, grandparentOf)) assignsField = true;
   });
 
   // an accessor concerns itself with exactly one field. Touching a second makes it behaviour, even
@@ -223,7 +281,13 @@ function accessorFieldOf(fnNode)
 
   const [ field ] = touched;
 
-  return field;
+  // a method that both hands its one field out *and* writes it is memoizing: read the cache, compute
+  // on a miss, store, return. That is still an accessor however long the computation runs, so it is
+  // reported alongside the field to spare it the length test.
+  return {
+    field,
+    memoizing: returnsField && assignsField,
+  };
 }
 
 /**
@@ -330,19 +394,33 @@ function collectViolations(filePath, ast, namespaces)
 
       const field = chain[fieldIndex];
 
-      // public properties are not this rule's business.
-      if (!field.startsWith('_')) return;
+      // public properties are not this rule's business- `this.opacity` is the engine's, not ours.
+      //
+      // But anything hanging off a namespace *is* instance state whatever it is called, so a leaf like
+      // `this._j.moreVisible` counts even though the leaf itself is not underscore-prefixed. Skipping
+      // those was how an entire convention went unenforced: `_j` reads as a namespace, the leaf reads
+      // as public, and between the two the field was invisible. The rest of the tree writes these as
+      // `this._j._thing._field`, with the leaf underscored and an accessor pair to reach it.
+      // ...and only when the namespace it hangs off is ours. `this.contents.fontSize` is the engine's
+      // public bitmap, reached through a public property; that is not this rule's business either.
+      const isOurNamespacedLeaf = fieldIndex > 0 && chain[0].startsWith('_');
+      if (!field.startsWith('_') && !isOurNamespacedLeaf) return;
 
       const dotted = chain.join('.');
       const fieldAccessor = accessorNameFor(field);
 
       // this method is the accessor for exactly this field, which is where it belongs.
-      if (ownedField === dotted) return;
+      //
+      // Touching one field is necessary but no longer sufficient. It used to be the whole test, which
+      // quietly exempted any method that happened to reach exactly one- `switchToMoreDataFromEquipSlots`
+      // was let through that way, and so was an aptitude setter that had been recursing into itself.
+      // A real accessor hands its field in or out and does nothing else, so its body is short; anything
+      // long enough to branch and orchestrate is behaviour, and behaviour asks nicely like everyone.
+      if (ownedField?.field === dotted && (ownedField.memoizing || isAccessorSized(fnNode))) return;
 
-      // ...and so is a method NAMED for the field it touches. The shape test above only recognises
-      // a bare `return this._foo;` or `this._foo = v;`, but a setter that seeds its namespace first
-      // (`this._j ||= {}`) or a getter that copies on the way out (`return [ ...this._states ];`)
-      // is still that field's owner. Suggesting it call itself is never the right advice.
+      // ...and so is a method NAMED for the field it touches, however long it runs. A setter that seeds
+      // its namespace first, or a getter that copies on the way out, is still that field's owner, and
+      // telling it to call itself is never the right advice.
       if (isNamedForField(methodName, fieldAccessor)) return;
 
       const key = `${inner.loc.start.line}:${dotted}`;

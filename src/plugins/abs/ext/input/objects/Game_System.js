@@ -123,6 +123,15 @@ Game_System.prototype.getInputBindingsSnapshot = function()
 };
 
 /**
+ * Sets the persisted Input bindings snapshot on the system object.
+ * @param {Object<string, Object<string, string[]>>} bindings The snapshot to persist.
+ */
+Game_System.prototype.setInputBindings = function(bindings)
+{
+  this._j._abs._input._bindings = bindings;
+};
+
+/**
  * Overwrites the persisted Input bindings snapshot on the system object.
  * The provided object should follow the shape: { [ns]: { [key]: string[] } }.
  * @param {Object<string, Object<string, string[]>>} snapshot The snapshot to store.
@@ -148,7 +157,7 @@ Game_System.prototype.setInputBindingsSnapshot = function(snapshot)
     }
     out[ns] = copy;
   }
-  this._j._abs._input._bindings = out;
+  this.setInputBindings(out);
 };
 
 /**

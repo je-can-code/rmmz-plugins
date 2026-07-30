@@ -100,7 +100,7 @@ describe('J-ABS Game_Character (unit, all downstream dependencies mocked)', () =
       character.initMembers();
 
       expect(originalInitMembers).toHaveBeenCalled();
-      expect(character._j._abs._action.actionData).toBeNull();
+      expect(character._j._abs._action._jabsAction).toBeNull();
       expect(character._j._abs._battler._needsAdding).toEqual(false);
       expect(character._j._abs._loot._data).toBeNull();
     });

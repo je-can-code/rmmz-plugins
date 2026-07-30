@@ -314,7 +314,7 @@ class Scene_SkillEquip
     win.setHandler('actor-next', this.onCycleActorRight.bind(this));
 
     // assign the window reference.
-    this._j._sks._windows._slots = win;
+    this.setSlotsWindow(win);
 
     // add the window to the scene.
     this.addWindow(win);
@@ -350,6 +350,15 @@ class Scene_SkillEquip
     return this._j._sks._windows._slots;
   }
 
+  /**
+   * Sets the slots window.
+   * @param {Window_SkillEquipSlots} window The window to track.
+   */
+  setSlotsWindow(window)
+  {
+    this._j._sks._windows._slots = window;
+  }
+
   //endregion slots
 
   //region skills list
@@ -374,7 +383,7 @@ class Scene_SkillEquip
     win.setHandler('cancel', this.onSkillCancel.bind(this));
 
     // assign the window reference.
-    this._j._sks._windows._skills = win;
+    this.setSkillsWindow(win);
 
     // add the window to the scene.
     this.addWindow(win);
@@ -423,6 +432,15 @@ class Scene_SkillEquip
     return this._j._sks._windows._skills;
   }
 
+  /**
+   * Sets the skills list window.
+   * @param {Window_SkillEquipList} window The window to track.
+   */
+  setSkillsWindow(window)
+  {
+    this._j._sks._windows._skills = window;
+  }
+
   //endregion skills list
 
   //region detail
@@ -441,7 +459,7 @@ class Scene_SkillEquip
     win.setActor(this.actor());
 
     // assign the window reference.
-    this._j._sks._windows._detail = win;
+    this.setDetailWindow(win);
 
     // add the window to the scene.
     this.addWindow(win);
@@ -471,6 +489,15 @@ class Scene_SkillEquip
   detailWindow()
   {
     return this._j._sks._windows._detail;
+  }
+
+  /**
+   * Sets the detail window.
+   * @param {Window_SkillEquipDetail} window The window to track.
+   */
+  setDetailWindow(window)
+  {
+    this._j._sks._windows._detail = window;
   }
 
   //endregion detail

@@ -88,6 +88,42 @@ class Scene_JabsLoadout
   }
 
   /**
+   * Gets the headers naming each column's party member.
+   * @returns {Window_LoadoutActorHeader}
+   */
+  headerWindow()
+  {
+    return this._j._loadout._header;
+  }
+
+  /**
+   * Sets the headers naming each column's party member.
+   * @param {Window_LoadoutActorHeader} window The window to track.
+   */
+  setHeaderWindow(window)
+  {
+    this._j._loadout._header = window;
+  }
+
+  /**
+   * Gets the labels naming each row's slot.
+   * @returns {Window_LoadoutSpine}
+   */
+  spineWindow()
+  {
+    return this._j._loadout._spine;
+  }
+
+  /**
+   * Sets the labels naming each row's slot.
+   * @param {Window_LoadoutSpine} window The window to track.
+   */
+  setSpineWindow(window)
+  {
+    this._j._loadout._spine = window;
+  }
+
+  /**
    * Gets every member's slot column.
    * @returns {Window_LoadoutSlots[]}
    */
@@ -183,7 +219,7 @@ class Scene_JabsLoadout
     window.setColumnGeometry(this.actorColumnWidth(), this.spineWidth());
 
     // update the tracker with the new window.
-    this._j._loadout._header = window;
+    this.setHeaderWindow(window);
 
     // add the window to the scene manager's tracking.
     this.addWindow(window);
@@ -235,7 +271,7 @@ class Scene_JabsLoadout
     window.setRowHeight(this.slotColumns()[0].itemHeight());
 
     // update the tracker with the new window.
-    this._j._loadout._spine = window;
+    this.setSpineWindow(window);
 
     // add the window to the scene manager's tracking.
     this.addWindow(window);
