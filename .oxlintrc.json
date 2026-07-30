@@ -739,7 +739,6 @@
     "Window_Scrollable": "writable",
     "Window_SdpCart": "writable",
     "Window_SdpConfirmation": "writable",
-    "Window_SdpControlsHint": "writable",
     "Window_SdpFamilyStrip": "writable",
     "Window_SdpHeader": "writable",
     "Window_SdpHelp": "writable",
