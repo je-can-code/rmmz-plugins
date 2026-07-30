@@ -11,13 +11,21 @@ import Window_PassiveTabHeader from '../windows/Window_PassiveTabHeader.js';
  * The core always provides an "All" tab; extensions register additional tabs during
  * their own initialization phases (e.g. the OTIB ext registers an "Item Boosts" tab).
  *
- * Layout (top to bottom, left to right):
- * - Full-width tab header strip at the top
- * - Left column: scrollable state list (filtered by active tab)
- * - Right column: detail panel for the currently highlighted state
+ * Layout is inherited rather than declared. {@link Scene_ActorFacetBase} supplies the help window
+ * across the top, the actor ribbon beneath it, and the control legend across the bottom, and hands
+ * down {@link Scene_ActorFacetBase.contentAreaRect} as the region left over. This scene therefore
+ * describes only what is particular to it, within that region:
+ *
+ * - a tab header strip across the top of the content area
+ * - left column: scrollable state list, filtered by the active tab
+ * - right column: detail panel for the currently highlighted state
+ *
+ * Before this it positioned all of that against `Graphics.boxWidth`/`boxHeight` directly, with a
+ * hardcoded 480px list column and its own ribbon height- which is precisely the drift the shared base
+ * exists to end.
  */
 class Scene_Passive
-  extends Scene_MenuBase
+  extends Scene_ActorFacetBase
 {
   /**
    * Tab configurations in registration order; the core seeds the "All" tab first.
@@ -69,25 +77,23 @@ class Scene_Passive
   //region init
   /**
    * Constructor.
+   *
+   * No explicit `initialize()` call: the engine's own scene constructor performs one, so making a
+   * second was running the whole initialization twice.
    */
   constructor()
   {
-    // call super when having extended constructors.
     super();
-
-    // jumpstart initialization on creation.
-    this.initialize();
   }
 
   /**
-   * Initializes all properties for this scene.
+   * Extends {@link Scene_ActorFacetBase.initMembers}.<br/>
+   * Also initializes the properties particular to the passive viewer.
    */
   initMembers()
   {
-    // perform original logic.
+    // perform original logic, which seeds the shared namespace and the facet skeleton's own members.
     super.initMembers();
-
-    this._j ||= {};
 
     /**
      * A grouping of all properties associated with the passive viewer.
@@ -104,12 +110,6 @@ class Scene_Passive
      * @type {Window_PassiveTabHeader}
      */
     this._j._passive._windows._tabHeader = null;
-
-    /**
-     * The actor identity ribbon above the state list.
-     * @type {Window_PassiveActorRibbon}
-     */
-    this._j._passive._windows._actorRibbon = null;
 
     /**
      * The scrollable list of passive states for the active tab.
@@ -157,12 +157,16 @@ class Scene_Passive
 
   //region create
   /**
-   * Initialize all resources required for this scene.
+   * Extends {@link Scene_ActorFacetBase.create}.<br/>
+   * Also creates the windows particular to this scene.
    */
   create()
   {
-    // perform original logic.
+    // perform original logic, which builds the control legend and the actor ribbon.
     super.create();
+
+    // build the help window describing whatever is highlighted.
+    this.createHelpWindow();
 
     // create the various display objects on the screen.
     this.createDisplayObjects();
@@ -192,7 +196,6 @@ class Scene_Passive
   {
     // create non-interactive display windows first.
     this.createPassiveTabHeaderWindow();
-    this.createPassiveActorRibbonWindow();
     this.createPassiveDetailWindow();
 
     // create the interactive list window last so it draws on top.
@@ -200,6 +203,20 @@ class Scene_Passive
 
     // perform the initial render of all windows.
     this.onPassiveHoveredChange();
+  }
+
+  /**
+   * Overrides {@link Scene_ActorFacetBase.buildActorRibbonWindow}.<br/>
+   * Supplies a ribbon that names the actor as well as showing their face.
+   *
+   * This is the extension point rather than building a ribbon and placing it by hand: the base owns
+   * where the ribbon sits and how tall it is, and only the contents differ.
+   * @param {Rectangle} rectangle The rectangle to build the window within.
+   * @returns {Window_PassiveActorRibbon}
+   */
+  buildActorRibbonWindow(rectangle)
+  {
+    return new Window_PassiveActorRibbon(rectangle);
   }
 
   //endregion create
@@ -212,17 +229,20 @@ class Scene_Passive
    */
   passiveTabHeaderHeight()
   {
-    return Window_Base.prototype.lineHeight() + $gameSystem.windowPadding() * 2;
+    return this.calcWindowHeight(1, false);
   }
 
   /**
-   * The pixel height of the actor ribbon strip above the state list.
-   * Sized to fit a cropped face (40px) plus two text rows and window padding.
+   * The proportion of the content area given to the state list.
+   *
+   * A ratio rather than the 480px this used to hardcode, so the split holds at any resolution- and so
+   * that the detail panel can be defined as the remainder instead of a second number that has to be
+   * kept in agreement with the first.
    * @returns {number}
    */
-  passiveActorRibbonHeight()
+  passiveListRatio()
   {
-    return 72;
+    return 0.4;
   }
 
   /**
@@ -231,7 +251,33 @@ class Scene_Passive
    */
   passiveListWidth()
   {
-    return 480;
+    return Math.round(this.contentAreaRect().width * this.passiveListRatio());
+  }
+
+  /**
+   * Implements {@link Scene_MenuFacetBase.controlLegendEntries}.<br/>
+   * Describes the controls this scene responds to.
+   *
+   * Note that there is no `ok` entry: nothing in here is chosen, only read. Teaching a button that does
+   * nothing would be worse than teaching nothing.
+   * @returns {{semantic: (string|string[]), label: string}[]}
+   */
+  controlLegendEntries()
+  {
+    return [
+      {
+        semantic: [ 'content-prev', 'content-next' ],
+        label: 'switch tab',
+      },
+      {
+        semantic: [ 'actor-prev', 'actor-next' ],
+        label: 'switch character',
+      },
+      {
+        semantic: 'cancel',
+        label: 'back',
+      },
+    ];
   }
 
   //endregion layout
@@ -268,18 +314,18 @@ class Scene_Passive
 
   /**
    * Gets the rectangle for the tab header strip.
-   * Sits above the detail panel in the right column — same x and width as the detail window,
-   * so it does not overlap the actor ribbon and list on the left.
+   *
+   * Spans the full width across the top of the content area. It used to sit only above the detail
+   * panel, tucked beside the ribbon- but the ribbon now spans the full width itself, and the tab
+   * names which subset of the list is showing, so it belongs over both columns rather than one.
    * @returns {Rectangle}
    */
   passiveTabHeaderRectangle()
   {
-    const x = this.passiveListWidth();
-    const y = 0;
-    const width = Graphics.boxWidth - this.passiveListWidth();
-    const height = this.passiveTabHeaderHeight();
+    // start from the region left over beneath the ribbon.
+    const contentArea = this.contentAreaRect();
 
-    return new Rectangle(x, y, width, height);
+    return new Rectangle(contentArea.x, contentArea.y, contentArea.width, this.passiveTabHeaderHeight());
   }
 
   /**
@@ -301,76 +347,6 @@ class Scene_Passive
   }
 
   //endregion tab header window
-
-  //region actor ribbon window
-  /**
-   * Creates the actor ribbon window.
-   */
-  createPassiveActorRibbonWindow()
-  {
-    // build the window.
-    const window = this.buildPassiveActorRibbonWindow();
-
-    // track the reference.
-    this.setPassiveActorRibbonWindow(window);
-
-    // register with the scene manager.
-    this.addWindow(window);
-  }
-
-  /**
-   * Builds the actor ribbon window.
-   * @returns {Window_PassiveActorRibbon}
-   */
-  buildPassiveActorRibbonWindow()
-  {
-    // define the rectangle for this window.
-    const rectangle = this.passiveActorRibbonRectangle();
-
-    // create the window with the rectangle.
-    const window = new Window_PassiveActorRibbon(rectangle);
-
-    // load the initial actor.
-    window.setActor($gameParty.menuActor());
-
-    // return the built window.
-    return window;
-  }
-
-  /**
-   * Gets the rectangle for the actor ribbon.
-   * Sits at the top of the left column — flush to y=0 because the tab header
-   * now lives above the detail panel (right column) only.
-   * @returns {Rectangle}
-   */
-  passiveActorRibbonRectangle()
-  {
-    const x = 0;
-    const y = 0;
-    const width = this.passiveListWidth();
-    const height = this.passiveActorRibbonHeight();
-
-    return new Rectangle(x, y, width, height);
-  }
-
-  /**
-   * Gets the tracked actor ribbon window.
-   * @returns {Window_PassiveActorRibbon}
-   */
-  getPassiveActorRibbonWindow()
-  {
-    return this.j()._passive._windows._actorRibbon;
-  }
-
-  /**
-   * Sets the tracked actor ribbon window.
-   * @param {Window_PassiveActorRibbon} ribbonWindow The window to track.
-   */
-  setPassiveActorRibbonWindow(ribbonWindow)
-  {
-    this.j()._passive._windows._actorRibbon = ribbonWindow;
-  }
-  //endregion actor ribbon window
 
   //region list window
   /**
@@ -423,17 +399,22 @@ class Scene_Passive
 
   /**
    * Gets the rectangle for the passive state list column.
-   * Sits below the actor ribbon in the left column.
+   * Occupies the left of the content area, beneath the tab header.
    * @returns {Rectangle}
    */
   passiveListRectangle()
   {
-    const x = 0;
-    const y = this.passiveActorRibbonHeight();
-    const width = this.passiveListWidth();
-    const height = Graphics.boxHeight - y;
+    // start from the region left over beneath the ribbon.
+    const contentArea = this.contentAreaRect();
 
-    return new Rectangle(x, y, width, height);
+    // the tab header sits above both columns.
+    const y = contentArea.y + this.passiveTabHeaderHeight();
+
+    return new Rectangle(
+      contentArea.x,
+      y,
+      this.passiveListWidth(),
+      contentArea.height - this.passiveTabHeaderHeight());
   }
 
   /**
@@ -496,18 +477,23 @@ class Scene_Passive
 
   /**
    * Gets the rectangle for the detail panel.
-   * Occupies the right column beside the list, below the tab header.
+   *
+   * Occupies the right of the content area beside the list, and is defined as the *remainder* of that
+   * width rather than its own fraction- so the two columns cannot drift apart or leave a seam between
+   * them however the ratio is tuned.
    * @returns {Rectangle}
    */
   passiveDetailRectangle()
   {
-    const listWidth = this.passiveListWidth();
-    const x = listWidth;
-    const y = this.passiveTabHeaderHeight();
-    const width = Graphics.boxWidth - listWidth;
-    const height = Graphics.boxHeight - y;
+    // the list has already claimed its share; take what is left beside it.
+    const listRect = this.passiveListRectangle();
+    const contentArea = this.contentAreaRect();
 
-    return new Rectangle(x, y, width, height);
+    return new Rectangle(
+      listRect.x + listRect.width,
+      listRect.y,
+      contentArea.width - listRect.width,
+      listRect.height);
   }
 
   /**
@@ -612,23 +598,38 @@ class Scene_Passive
     // push the state (or null) into the detail window.
     this.getPassiveDetailWindow()
       .setState(state);
+
+    // describe it across the top, in the strip the base reserves for exactly this.
+    this.helpWindow()
+      .setText(this.describeHoveredPassive(state));
   }
 
   /**
-   * Extends {@link #onActorChange}.<br/>
-   * Refreshes all actor-driven windows whenever the party's menu actor changes.
+   * Describes the highlighted passive state for the help window.
+   * @param {?RPG_State} state The highlighted state, or null when the list is empty.
+   * @returns {string}
+   */
+  describeHoveredPassive(state)
+  {
+    // an empty list has nothing to describe, and says so rather than leaving a blank strip.
+    if (state === null) return 'No passive states are currently applied.';
+
+    return state.description;
+  }
+
+  /**
+   * Extends {@link Scene_ActorFacetBase.onActorChange}.<br/>
+   * Refreshes this scene's actor-driven windows whenever the party's menu actor changes.
+   *
+   * The ribbon is no longer updated here- the base owns it, and does that itself.
    */
   onActorChange()
   {
-    // perform original logic.
+    // perform original logic, which repoints the actor ribbon.
     super.onActorChange();
 
     // the current menu actor after the change.
     const actor = $gameParty.menuActor();
-
-    // push the updated actor into the ribbon.
-    this.getPassiveActorRibbonWindow()
-      .setActor(actor);
 
     // push the updated actor into the list.
     this.getPassiveListWindow()

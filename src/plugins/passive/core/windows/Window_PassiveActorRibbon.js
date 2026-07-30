@@ -8,30 +8,17 @@ class Window_PassiveActorRibbon
   extends Window_ActorRibbon
 {
 
-  //region properties
-  /**
-   * Gets the actor.
-   * @returns {*} The actor.
-   */
-  actor()
-  {
-    // hand back the actor.
-    return this._actor;
-  }
-  //endregion properties
-
   /**
    * Constructor.
+   *
+   * No explicit `initialize()` call: {@link Window_ActorRibbon}'s own constructor performs one, so
+   * making a second was initializing this window twice. Nor is there an `actor()` getter here anymore-
+   * the parent already provides one, and redeclaring it only invited the two to drift apart.
    * @param {Rectangle} rect The rectangle for this window.
    */
-
   constructor(rect)
   {
-    // call super when having extended constructors.
     super(rect);
-
-    // jumpstart initialization on creation.
-    this.initialize(rect);
   }
 
   //region draw
