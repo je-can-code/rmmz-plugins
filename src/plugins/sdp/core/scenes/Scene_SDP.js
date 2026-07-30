@@ -18,12 +18,6 @@ import Window_SdpFamilyStrip from '../windows/Window_SdpFamilyStrip.js';
  * Layout is inherited from {@link Scene_ActorFacetBase}: the help window across the top, the actor ribbon
  * beneath it, the control legend across the bottom, and {@link Scene_ActorFacetBase.contentAreaRect} as
  * the region left over for the three columns.
- *
- * This was the furthest-evolved of the actor scenes and the template the shared base was extracted from,
- * so it is fitting that it is the last to actually sit on it. Its rects previously chained through each
- * other rather than deriving from a common region- one of them read the points rect, the family strip
- * height, the help rect *and* the controls hint height to produce a single number- which meant every
- * rectangle had to be right for any rectangle to be right.
  */
 class Scene_SDP
   extends Scene_ActorFacetBase
@@ -451,8 +445,7 @@ class Scene_SDP
     const contentArea = this.contentAreaRect();
     const stripHeight = this.sdpFamilyStripHeight();
 
-    // fill the rest of the column beneath it. This used to subtract the points, family strip, help and
-    // controls-hint heights from `Graphics.height`- note, not `boxHeight`- plus a magic 8.
+    // fill the rest of the column beneath it.
     return new Rectangle(
       contentArea.x,
       contentArea.y + stripHeight,
@@ -746,8 +739,7 @@ class Scene_SDP
   sdpMasteryWindowHeight()
   {
     // two rows: the subgroup this panel's mastery belongs to, and the skill it grants at max rank.
-    // Derived rather than the flat 108 it used to be, which carried 12px of slack over what two rows
-    // actually need- and that slack is worth handing to the rewards list beneath it.
+    // derived rather than hardcoded, so every spare pixel falls through to the rewards list beneath it.
     return this.calcWindowHeight(2, false);
   }
 
@@ -877,9 +869,7 @@ class Scene_SDP
    * Implements {@link Scene_MenuFacetBase.controlLegendEntries}.<br/>
    * Describes the controls this scene responds to.
    *
-   * This replaces `Window_SdpControlsHint`, which was for a long time the only button help anywhere in
-   * the game- and therefore the proof that the idea was worth generalising. The shared legend it became
-   * renders live glyphs for whichever device the player is holding, which the bespoke one could not.
+   * These are semantics rather than glyphs, so the legend can draw whichever device the player is holding.
    * @returns {{semantic: (string|string[]), label: string}[]}
    */
   controlLegendEntries()
@@ -984,8 +974,7 @@ class Scene_SDP
   sdpHelpRectangle()
   {
     // the base reserves a strip across the very top for exactly this, and it is the same strip every
-    // other facet scene uses. Help used to sit along the bottom here, spanning only the left and center
-    // columns- which is what put it directly above a controls hint that has since become the legend.
+    // other facet scene uses.
     return this.helpWindowRect();
   }
 
@@ -1014,8 +1003,7 @@ class Scene_SDP
    * Overrides {@link Scene_ActorFacetBase.buildActorRibbonWindow}.<br/>
    * Supplies the SDP ribbon, which shows the actor plus their spendable point balance.
    *
-   * The base decides where it sits and how wide it is. This used to be a 480px band pinned to the upper
-   * left, whose width the panel list below then had to match by restating the same number.
+   * Only the contents differ from the default ribbon; the base decides where it sits and how wide it is.
    * @param {Rectangle} rectangle The rectangle to build the window within.
    * @returns {Window_SdpPoints}
    */
@@ -1025,9 +1013,7 @@ class Scene_SDP
   }
 
   /**
-   * Gets the currently tracked sdp points window.
-   *
-   * Kept as a name that reads in context; the base owns the window itself.
+   * Gets the actor ribbon window under the name this scene refers to it by.
    * @returns {Window_SdpPoints}
    */
   getSdpPointsWindow()

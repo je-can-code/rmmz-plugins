@@ -41,11 +41,6 @@ Window_MenuCommand.prototype.makeCommandList = function()
 
 /**
  * Determines whether or not the sdp command can be added to the main menu.
- *
- * Formerly also refused to render whenever JABS was installed, unless a parameter opted back in. That
- * made sense while the JABS quick menu carried its own copy of this command and the two would have
- * duplicated each other- but the quick menu no longer offers anything except a way into this one, so
- * the check had quietly become the reason the scene was reachable from nowhere at all.
  * @returns {boolean} True if the command should be added, false otherwise.
  */
 Window_MenuCommand.prototype.canAddSdpCommand = function()

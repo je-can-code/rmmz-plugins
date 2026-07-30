@@ -122,10 +122,6 @@ class Scene_ActorFacetBase
    *
    * One, because it is a ribbon: a band naming who is being looked at, not a panel about them. The face
    * it draws is cropped to 40px by default precisely so it fits in a single row.
-   *
-   * This was two for a while, matching {@link Scene_MenuFacetBase.helpWindowLineCount} by coincidence
-   * rather than intent- which made every scene's ribbon exactly as tall as its help window, and looked
-   * like one had been copied from the other.
    * @returns {number}
    */
   actorRibbonLineCount()

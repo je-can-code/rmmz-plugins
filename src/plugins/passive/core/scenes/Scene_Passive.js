@@ -19,10 +19,6 @@ import Window_PassiveTabHeader from '../windows/Window_PassiveTabHeader.js';
  * - a tab header strip across the top of the content area
  * - left column: scrollable state list, filtered by the active tab
  * - right column: detail panel for the currently highlighted state
- *
- * Before this it positioned all of that against `Graphics.boxWidth`/`boxHeight` directly, with a
- * hardcoded 480px list column and its own ribbon height- which is precisely the drift the shared base
- * exists to end.
  */
 class Scene_Passive
   extends Scene_ActorFacetBase
@@ -78,8 +74,8 @@ class Scene_Passive
   /**
    * Constructor.
    *
-   * No explicit `initialize()` call: the engine's own scene constructor performs one, so making a
-   * second was running the whole initialization twice.
+   * No explicit `initialize()` call: the engine's own scene constructor performs one, and a second would
+   * run the whole initialization twice.
    */
   constructor()
   {
@@ -235,9 +231,8 @@ class Scene_Passive
   /**
    * The proportion of the content area given to the state list.
    *
-   * A ratio rather than the 480px this used to hardcode, so the split holds at any resolution- and so
-   * that the detail panel can be defined as the remainder instead of a second number that has to be
-   * kept in agreement with the first.
+   * A ratio rather than a pixel width, so the split holds at any resolution- and so that the detail
+   * panel can be defined as the remainder instead of a second number that has to agree with the first.
    * @returns {number}
    */
   passiveListRatio()
@@ -643,8 +638,6 @@ class Scene_Passive
   /**
    * Extends {@link Scene_ActorFacetBase.onActorChange}.<br/>
    * Refreshes this scene's actor-driven windows whenever the party's menu actor changes.
-   *
-   * The ribbon is no longer updated here- the base owns it, and does that itself.
    */
   onActorChange()
   {

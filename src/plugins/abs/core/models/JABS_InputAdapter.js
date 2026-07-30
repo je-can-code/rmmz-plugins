@@ -494,13 +494,8 @@ class JABS_InputAdapter
   /**
    * Opens the main menu.
    *
-   * This used to raise a small quick menu over the map instead. That menu was pared down over time as
-   * each of the things it configured became a scene of its own, until its only remaining entries were a
-   * way into this menu and a way into the ally AI menu- at which point it was a keypress charged for
-   * nothing, and went the way of the rest.
-   *
-   * Nothing needs pausing or flagging here, which is precisely the advantage of it being a scene: the
-   * map stops updating and the player stops moving because Scene_Map is no longer the running scene, not
+   * Nothing needs pausing or flagging here, which is the advantage of the menu being a scene: the map
+   * stops updating and the player stops moving because {@link Scene_Map} is not the running scene, not
    * because something remembered to say so.
    */
   static performMenuAction()
@@ -517,9 +512,8 @@ class JABS_InputAdapter
    */
   static _canPerformMenuAction()
   {
-    // the game can forbid the menu outright, which events do during cutscenes and the like. This check
-    // used to live on the quick menu's own "main menu" command, greying it out; with the quick menu gone
-    // there is nothing left to grey out, so the button itself has to honour it.
+    // the game can forbid the menu outright, which events do during cutscenes and the like. There is no
+    // command entry to grey out here, so the button itself has to honour it.
     return $gameSystem.isMenuEnabled();
   }
 }

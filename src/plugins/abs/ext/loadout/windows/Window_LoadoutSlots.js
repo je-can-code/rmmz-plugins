@@ -135,8 +135,8 @@ class Window_LoadoutSlots
   /**
    * Describes what a slot currently holds and how it is triggered.
    *
-   * Named for the actor as well as the input, because the scene shows two members at once- "the
-   * offhand slot" is ambiguous here in a way it never was on the old single-actor menus.
+   * Named for the actor as well as the input, because the scene shows two members at once- "the offhand
+   * slot" would be ambiguous without saying whose.
    * @param {string} slotKey The key of the slot being described.
    * @param {?RPG_UsableItem|?RPG_Skill} entry Whatever currently occupies the slot, if anything.
    * @returns {string}

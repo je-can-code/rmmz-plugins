@@ -42,7 +42,7 @@ describe('J-ABS-Pixelistics Game_Player bridge (direct src import)', () =>
   it('updateDashing clears dash state while the pivot-guard blocks motion', () =>
   {
     // Arrange
-    // built off the real prototype so the setter the source now writes through is present.
+    // built off the real prototype so the setter the source writes through is present.
     const p = Object.create(globalThis.Game_Player.prototype);
     p._dashing = true;
     p.isMoving = () => false;

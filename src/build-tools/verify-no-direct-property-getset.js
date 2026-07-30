@@ -397,10 +397,10 @@ function collectViolations(filePath, ast, namespaces)
       // public properties are not this rule's business- `this.opacity` is the engine's, not ours.
       //
       // But anything hanging off a namespace *is* instance state whatever it is called, so a leaf like
-      // `this._j.moreVisible` counts even though the leaf itself is not underscore-prefixed. Skipping
-      // those was how an entire convention went unenforced: `_j` reads as a namespace, the leaf reads
-      // as public, and between the two the field was invisible. The rest of the tree writes these as
-      // `this._j._thing._field`, with the leaf underscored and an accessor pair to reach it.
+      // `this._j.moreVisible` counts even though the leaf itself is not underscore-prefixed. Without
+      // that, `_j` reads as a namespace, the leaf reads as public, and between the two the field is
+      // invisible to this rule. The rest of the tree writes these as `this._j._thing._field`, with the
+      // leaf underscored and an accessor pair to reach it.
       // ...and only when the namespace it hangs off is ours. `this.contents.fontSize` is the engine's
       // public bitmap, reached through a public property; that is not this rule's business either.
       const isOurNamespacedLeaf = fieldIndex > 0 && chain[0].startsWith('_');
@@ -411,11 +411,10 @@ function collectViolations(filePath, ast, namespaces)
 
       // this method is the accessor for exactly this field, which is where it belongs.
       //
-      // Touching one field is necessary but no longer sufficient. It used to be the whole test, which
-      // quietly exempted any method that happened to reach exactly one- `switchToMoreDataFromEquipSlots`
-      // was let through that way, and so was an aptitude setter that had been recursing into itself.
-      // A real accessor hands its field in or out and does nothing else, so its body is short; anything
-      // long enough to branch and orchestrate is behaviour, and behaviour asks nicely like everyone.
+      // touching exactly one field is necessary but not sufficient, or any method that happened to reach
+      // one would be exempt. A real accessor hands its field in or out and does nothing else, so its body
+      // is short; anything long enough to branch and orchestrate is behaviour, and behaviour asks nicely
+      // like everyone.
       if (ownedField?.field === dotted && (ownedField.memoizing || isAccessorSized(fnNode))) return;
 
       // ...and so is a method NAMED for the field it touches, however long it runs. A setter that seeds

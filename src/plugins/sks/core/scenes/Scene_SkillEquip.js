@@ -8,11 +8,8 @@ import Window_SkillEquipDetail from '../windows/Window_SkillEquipDetail.js';
  * The scene for viewing and managing skill equip slots.
  *
  * Layout is inherited from {@link Scene_ActorFacetBase}, which supplies the actor ribbon and the control
- * legend and hands down {@link Scene_ActorFacetBase.contentAreaRect} as the region left over.
- *
- * The slot column used to be a fixed 420px while the pool of available skills took everything else- so
- * the subject of the scene got the smaller half. It now takes the same proportional share the sibling
- * facet scenes give their primary list.
+ * legend and hands down {@link Scene_ActorFacetBase.contentAreaRect} as the region left over. Within it,
+ * the slot column takes the same proportional share the sibling facet scenes give their primary list.
  */
 class Scene_SkillEquip
   extends Scene_ActorFacetBase
@@ -212,8 +209,7 @@ class Scene_SkillEquip
    * Overrides {@link Scene_ActorFacetBase.buildActorRibbonWindow}.<br/>
    * Supplies the skill equip ribbon, which shows the actor plus their slot capacity summary.
    *
-   * The base decides where it sits and how tall it is. That is a change in itself: this scene used to
-   * give the ribbon a single line of height, which cramped the face it draws.
+   * Only the contents differ from the default ribbon; the base decides where it sits and how tall it is.
    * @param {Rectangle} rectangle The rectangle to build the window within.
    * @returns {Window_SkillEquipRibbon}
    */
@@ -223,9 +219,7 @@ class Scene_SkillEquip
   }
 
   /**
-   * Gets the ribbon window.
-   *
-   * Kept as a name that reads in context, but the base owns the window and its rectangle now.
+   * Gets the actor ribbon window under the name this scene refers to it by.
    * @returns {Window_SkillEquipRibbon}
    */
   ribbonWindow()
@@ -236,8 +230,8 @@ class Scene_SkillEquip
   /**
    * The proportion of the content area given to the slot column.
    *
-   * The slots are the subject of this scene, so they take the larger share rather than the fixed 420px
-   * they used to be squeezed into while the pool of candidates filled everything else.
+   * The same share the sibling facet scenes give their primary list, leaving the remainder for the pool
+   * of candidate skills- which needs the room more, since it lists every skill the actor knows.
    * @returns {number}
    */
   slotColumnRatio()

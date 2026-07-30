@@ -11,9 +11,8 @@ class Window_PassiveActorRibbon
   /**
    * Constructor.
    *
-   * No explicit `initialize()` call: {@link Window_ActorRibbon}'s own constructor performs one, so
-   * making a second was initializing this window twice. Nor is there an `actor()` getter here anymore-
-   * the parent already provides one, and redeclaring it only invited the two to drift apart.
+   * No explicit `initialize()` call: {@link Window_ActorRibbon}'s own constructor performs one, and a
+   * second would initialize this window twice.
    * @param {Rectangle} rect The rectangle for this window.
    */
   constructor(rect)

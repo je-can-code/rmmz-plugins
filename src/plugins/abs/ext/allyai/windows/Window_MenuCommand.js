@@ -6,9 +6,6 @@
  * The party column rather than the actor column, because what this configures is how the party behaves
  * as a group- the formation they hold, whether they pick fights of their own- and the per-ally presets
  * only make sense read against each other.
- *
- * This command previously lived in the JABS quick menu on the map. It moved here when that menu was
- * retired, since by then the quick menu's only other entry was a way into this very menu.
  */
 J.ABS.EXT.ALLYAI.Aliased.Window_MenuCommand.set(
   'addOriginalCommands',

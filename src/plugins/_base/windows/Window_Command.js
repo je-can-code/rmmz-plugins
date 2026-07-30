@@ -14,9 +14,9 @@ import BuiltWindowCommand from './../models/BuiltWindowCommand.js';
  * - the constructor body after `super(rect)`, because `super(rect)` is what triggers the refresh.
  * - class field declarations, because JavaScript applies those only after `super()` returns.
  *
- * And a derived constructor cannot touch `this` before calling `super`, so there is no earlier place
- * to put it. The result was a family of crashes that all looked like "cannot read properties of
- * undefined" from inside `makeCommandList`, one per scene, each apparently unrelated to the others.
+ * And a derived constructor cannot touch `this` before calling `super`, so there is no earlier place to
+ * put it. Seeding state anywhere else yields "cannot read properties of undefined" from inside
+ * `makeCommandList`, on the first frame the window exists.
  *
  * Implementations must confine themselves to assigning fields. This runs before the original logic
  * reaches {@link Window_Base.initialize}, so there is no `contents`, no geometry and no font yet-
@@ -437,12 +437,9 @@ Window_Command.prototype.currentHelpText = function()
  * Overwrites {@link #updateHelp}.<br/>
  * Describes the highlighted command in the attached help window.
  *
- * Commands already carry their own help text, and the engine already tells a window when to refresh
- * its help- but the default implementation only ever clears, so every window wanting the two joined
- * up had to say so itself. Doing it here means attaching a help window is the whole of the work.
- *
- * Commands without help text resolve to an empty string, which reads identically to the clear this
- * replaces, so windows that never set any behave exactly as they did before.
+ * Commands already carry their own help text, and the engine already tells a window when to refresh its
+ * help- so doing the join here means attaching a help window is the whole of the work. Commands without
+ * help text resolve to an empty string, which reads as a cleared help window.
  */
 Window_Command.prototype.updateHelp = function()
 {

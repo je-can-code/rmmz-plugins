@@ -42,11 +42,6 @@ Window_MenuCommand.prototype.addMainCommands = function()
       .setMenuSection(MenuSection.Actor)
       .build());
   }
-
-  // note: there is deliberately no status command. The status scene was retired- everything it showed
-  // about an actor's parameters, the equip scene already showed, and the one thing it showed that the
-  // equip scene did not- the elemental and ailment affiliations- moved there, since equipment is what
-  // moves those numbers in the first place.
 };
 
 /**

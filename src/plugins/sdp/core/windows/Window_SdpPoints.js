@@ -2,11 +2,9 @@
 /**
  * The SDP ribbon: menu actor identity and always-visible wallet balance.
  *
- * This is the scene's actor ribbon, and now says so by inheriting one. It previously extended
- * {@link Window_Base} and reimplemented the whole of {@link Window_ActorRibbon} alongside it- its own
- * `_actor` field, its own `actor()` and `setActor()`, and its own face drawing- which is the drift the
- * shared ribbon exists to prevent. All that remains here is what is genuinely particular to SDP: the
- * name beside the face, and the wallet on the right edge.
+ * This is the scene's actor ribbon, so {@link Window_ActorRibbon} supplies the actor tracking and the
+ * face. All this adds is what is particular to SDP: the name beside the face, and the wallet balance
+ * on the right edge.
  *
  * Note that {@link Window_SdpHeader} is *not* the counterpart to this window despite the name. That one
  * describes the hovered panel, not the actor.

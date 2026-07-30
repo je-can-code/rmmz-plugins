@@ -92,10 +92,9 @@ class Window_AptitudeAggregateDetails
     // the new actor. The scene supplies a fresh, actor-matched aggregate shortly after via
     // setAggregate(), which triggers its own refresh().
     //
-    // routed through the owning mutator rather than assigning the field, which means a redundant
-    // redraw whenever there was an aggregate to clear. That is invisible on a menu window, and worth
-    // it: this method having written the field directly was what made the ownership checker read it
-    // as the aggregate's own accessor, which in turn hid the recursion bug that used to be here.
+    // routed through the owning mutator rather than assigning the field, which costs a redundant redraw
+    // whenever there was an aggregate to clear. That is invisible on a menu window, and worth it to keep
+    // the field's ownership with its one mutator.
     this.setAggregate(null);
 
     // refresh the contents for the new actor.

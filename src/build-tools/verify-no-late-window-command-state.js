@@ -25,7 +25,7 @@
  *
  * Which is a miserable thing to diagnose. The class reads correctly, the field has an obvious initial
  * value sitting right there in the source, and every failure looks local to whichever scene happened to
- * open — so a whole family of these was found and fixed one at a time, each mistaken for its own bug.
+ * open — so each instance of it reads as its own unrelated bug.
  *
  * J-Base solves it centrally: `Window_Command.prototype.initMembers` is a no-op hook, called from an
  * aliased `initialize` before the original logic runs. Subclasses implement it and get seeded at the one

@@ -9,8 +9,6 @@ class Window_DifficultyEffects
   constructor(rect)
   {
     // construct parent class, which seeds this window's members and then builds the list from them.
-    // the explicit refresh this used to make afterwards is redundant now that the members exist by
-    // the time the parent's own refresh runs.
     super(rect);
   }
 

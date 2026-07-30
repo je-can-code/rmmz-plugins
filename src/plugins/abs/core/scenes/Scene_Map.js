@@ -78,9 +78,9 @@ Scene_Map.prototype.onPartyRotate = function()
  * Extends {@link #callMenu}.<br/>
  * Disables the ability to directly call the menu by pressing the given key.
  *
- * Kept even now that the menu is reached from the map again, because the key vanilla listens for here is
- * the one JABS gives to the offhand attack. Swinging a weapon should not open a menu. The menu has its
- * own dedicated button, handled by {@link JABS_InputAdapter.performMenuAction}.
+ * The key vanilla listens for here is the one JABS gives to the offhand attack, and swinging a weapon
+ * should not open a menu. The menu has its own dedicated button, handled by
+ * {@link JABS_InputAdapter.performMenuAction}.
  */
 J.ABS.Aliased.Scene_Map.set('callMenu', Scene_Map.prototype.callMenu);
 Scene_Map.prototype.callMenu = function()

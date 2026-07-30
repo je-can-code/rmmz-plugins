@@ -413,8 +413,8 @@ class Scene_JabsLoadout
   /**
    * Builds the rectangle for a given member's candidate list.
    *
-   * These claim everything between the slot columns and the control legend, which is the space the
-   * scene previously left empty while opening its picker as a modal over the board instead.
+   * These claim everything between the slot columns and the control legend, so the board stays visible
+   * behind the choice being made rather than being covered by it.
    * @param {number} index The list being placed.
    * @returns {Rectangle}
    */

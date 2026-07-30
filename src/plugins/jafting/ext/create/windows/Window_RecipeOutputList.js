@@ -34,10 +34,8 @@ class Window_RecipeOutputList
    * Implements {@link Window_Command.initMembers}.<br/>
    * Initializes the members of this window.
    *
-   * This replaces an `initialize` override that seeded `_components` before calling super for exactly
-   * this reason- the hook now does that centrally, for every command window. `needsMasking` could not
-   * be a class field either: JavaScript applies those only after `super()` returns, by which point the
-   * command list has already been built from them.
+   * `needsMasking` cannot be a class field: JavaScript applies those only after `super()` returns, by
+   * which point the command list has already been built from them.
    */
   initMembers()
   {

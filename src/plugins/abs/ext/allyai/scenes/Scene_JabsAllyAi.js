@@ -5,13 +5,8 @@ import Window_Formations from './../windows/Window_Formations.js';
 /**
  * The scene for deciding how the party's allies behave in combat.
  *
- * This replaces a stack of windows that used to open on top of the map, one over the next: pick "manage
- * ally ai", get a window; pick an ally, get another window over that one; pick formations, get a third.
- * Each step hid the one before it, so the player could never see what they were changing relative to
- * anything else, and the whole arrangement lived on {@link Scene_Map} where it competed with the HUD.
- *
- * Here the party stays on screen the entire time, and whatever is being chosen sits beside it rather
- * than on top of it. Same three lists, same handlers, none of the stacking.
+ * The party list stays on screen the entire time, and whatever is being chosen for the highlighted ally
+ * sits beside it- so the player can always read one ally's settings against the rest of the party.
  */
 class Scene_JabsAllyAi
   extends Scene_MenuFacetBase
