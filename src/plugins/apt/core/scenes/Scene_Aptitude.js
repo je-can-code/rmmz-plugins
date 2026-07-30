@@ -369,9 +369,6 @@ class Scene_Aptitude
   setViewModeToAggregate()
   {
     this.j()._aptitude._viewMode = Scene_Aptitude.viewMode.AGGREGATE;
-
-    this.aptitudeRibbonWindow()
-      .setToggleHintTarget('the sources');
   }
 
   /**
@@ -380,9 +377,6 @@ class Scene_Aptitude
   setViewModeToSource()
   {
     this.j()._aptitude._viewMode = Scene_Aptitude.viewMode.SOURCE;
-
-    this.aptitudeRibbonWindow()
-      .setToggleHintTarget('your skills');
   }
 
   /**
@@ -505,13 +499,7 @@ class Scene_Aptitude
    */
   buildActorRibbonWindow(rectangle)
   {
-    // build the window.
-    const window = new Window_AptitudeRibbon(rectangle);
-
-    // the scene opens in aggregate view, so the toggle offers the sources.
-    window.setToggleHintTarget('the sources');
-
-    return window;
+    return new Window_AptitudeRibbon(rectangle);
   }
 
   /**
@@ -778,7 +766,7 @@ class Scene_Aptitude
   {
     return [
       {
-        semantic: 'more',
+        semantic: 'context',
         label: 'skills / sources',
       },
       {
@@ -992,7 +980,12 @@ class Scene_Aptitude
 
   //region actions
   /**
-   * Handles the "more" action- aka the shift key/square button from the either list.
+   * Swaps between the per-skill aggregate view and the per-source view.
+   *
+   * Bound to `context`, not `more`- this said "more" for a long time while the handler said otherwise, and
+   * the ribbon's own hardcoded hint icons quietly agreed with the handler rather than the comment. The
+   * control legend now resolves the glyph from the semantic, so there is one statement of it instead of
+   * three that could disagree.
    */
   toggleViewMode()
   {
