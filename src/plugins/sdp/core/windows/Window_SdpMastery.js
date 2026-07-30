@@ -55,8 +55,12 @@ class Window_SdpMastery
 
     // line 1: subgroup identity — the family this mastery belongs to.
     const iconPad = 4;
+
+    // note: `Window_Base._iconWidth` is an RPG Maker MV property that MZ does not have, so this used to
+    // resolve to `undefined + 4`, and the subgroup name was drawn at an x of NaN- which renders nothing
+    // at all. The icon beside it drew fine, which is why it looked like a lone icon that never changed.
     const textX = subgroupIcon >= 0
-      ? Window_Base._iconWidth + iconPad
+      ? ImageManager.iconWidth + iconPad
       : 0;
 
     if (subgroupIcon >= 0)

@@ -40,6 +40,13 @@ const SEMANTIC_TO_SYMBOL = {
   // is, the other changes what they are looking at, and each gets its own input.
   'focus-prev': JabsInputSymbols.DirLeft,
   'focus-next': JabsInputSymbols.DirRight,
+
+  // adjusting a quantity is directional too, and answers to the same pair of inputs. It gets its own
+  // semantic rather than borrowing `focus-prev`/`focus-next` because a semantic names what the player
+  // is *doing*, not which key they pressed- and nudging a number up and down is not moving focus. One
+  // input serving two meanings in two different scenes is the arrangement working, not a collision.
+  'cart-dec': JabsInputSymbols.DirLeft,
+  'cart-inc': JabsInputSymbols.DirRight,
 };
 
 /**

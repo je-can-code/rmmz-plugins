@@ -521,15 +521,18 @@ class Scene_SDP
    */
   sdpParameterListRectangle()
   {
-    // the panel header describes the hovered panel and sits above this, in the same column.
+    // the panel header spans everything right of the list, and sits above this.
     const contentArea = this.contentAreaRect();
     const headerRect = this.sdpHeaderRectangle();
+
+    // the header is wider than this column now, so take only this column's share of it.
+    const width = Math.round(contentArea.width * this.sdpCenterColumnRatio());
 
     // fill the rest of the center column beneath the header.
     return new Rectangle(
       headerRect.x,
       headerRect.y + headerRect.height,
-      headerRect.width,
+      width,
       contentArea.height - headerRect.height);
   }
 
@@ -707,15 +710,21 @@ class Scene_SDP
     // the left and center columns have already claimed their shares; this one is the remainder, so the
     // three cannot leave a seam between them or overrun the right edge.
     const contentArea = this.contentAreaRect();
+    const parameterRect = this.sdpParameterListRectangle();
     const headerRect = this.sdpHeaderRectangle();
 
-    const x = headerRect.x + headerRect.width;
-    const topY = contentArea.y;
+    const x = parameterRect.x + parameterRect.width;
     const width = contentArea.x + contentArea.width - x;
     const bottom = this.sdpRightColumnBottom();
     const gap = this.sdpRightColumnSplitGap();
-    const fullHeight = bottom - topY;
-    const cartHeight = Math.floor((fullHeight - gap) / 2);
+
+    // this column begins beneath the header, which now spans across it.
+    const topY = headerRect.y + headerRect.height;
+
+    // the cart's height is measured against the whole region rather than what is left after the header,
+    // so that giving the header more room takes it from the mastery and rewards windows instead. The
+    // cart shows what the player is about to spend and is the one thing here that must not get smaller.
+    const cartHeight = Math.floor((contentArea.height - gap) / 2);
     const cartY = bottom - cartHeight;
     const topRegionHeight = cartY - topY - gap;
 
@@ -736,8 +745,10 @@ class Scene_SDP
    */
   sdpMasteryWindowHeight()
   {
-    // matches {@link Window_SdpHeader} — two full text rows.
-    return 108;
+    // two rows: the subgroup this panel's mastery belongs to, and the skill it grants at max rank.
+    // Derived rather than the flat 108 it used to be, which carried 12px of slack over what two rows
+    // actually need- and that slack is worth handing to the rewards list beneath it.
+    return this.calcWindowHeight(2, false);
   }
 
   /**
@@ -827,16 +838,16 @@ class Scene_SDP
    */
   sdpHeaderRectangle()
   {
-    // sit at the top of the center column, immediately right of the panel list.
+    // sit at the top of everything right of the panel list.
     const contentArea = this.contentAreaRect();
     const x = contentArea.x + this.sdpListColumnWidth();
 
     // this header renders two full text rows.
     const height = this.calcWindowHeight(2, false);
 
-    // it describes the hovered panel, so it spans only the column showing that panel's parameters- it
-    // used to run all the way to the right edge, across the mastery and cart windows too.
-    const width = Math.round(contentArea.width * this.sdpCenterColumnRatio());
+    // it runs all the way to the right edge, across the mastery, rewards and cart windows. The panel's
+    // flavour text can be lengthy, and confining it to the parameter column beneath it clipped it.
+    const width = contentArea.x + contentArea.width - x;
 
     return new Rectangle(x, contentArea.y, width, height);
   }
@@ -881,6 +892,10 @@ class Scene_SDP
       {
         semantic: 'context',
         label: 'checkout',
+      },
+      {
+        semantic: [ 'cart-dec', 'cart-inc' ],
+        label: 'ranks to buy',
       },
       {
         semantic: [ 'content-prev', 'content-next' ],
