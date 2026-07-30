@@ -18,4 +18,14 @@ Scene_Skill.prototype.itemWindow = function()
   // hand back the window listing the selectable skills.
   return this._itemWindow;
 };
+
+/**
+ * Gets the window listing the actor's skill types, which filters the skill list.
+ * @returns {Window_SkillType} The skillTypeWindow.
+ */
+Scene_Skill.prototype.skillTypeWindow = function()
+{
+  // hand back the window listing the actor's skill types.
+  return this._skillTypeWindow;
+};
 //endregion Scene_Skill
