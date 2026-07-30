@@ -1,57 +1,52 @@
 //region Window_SdpPoints
 /**
- * The upper-left SDP ribbon: menu actor identity and always-visible wallet balance.
+ * The SDP ribbon: menu actor identity and always-visible wallet balance.
+ *
+ * This is the scene's actor ribbon, and now says so by inheriting one. It previously extended
+ * {@link Window_Base} and reimplemented the whole of {@link Window_ActorRibbon} alongside it- its own
+ * `_actor` field, its own `actor()` and `setActor()`, and its own face drawing- which is the drift the
+ * shared ribbon exists to prevent. All that remains here is what is genuinely particular to SDP: the
+ * name beside the face, and the wallet on the right edge.
+ *
+ * Note that {@link Window_SdpHeader} is *not* the counterpart to this window despite the name. That one
+ * describes the hovered panel, not the actor.
  */
 class Window_SdpPoints
-  extends Window_Base
+  extends Window_ActorRibbon
 {
   /**
-   * @constructor
-   * @param {Rectangle} rect The rectangle that defines this window's shape.
+   * Overrides {@link Window_ActorRibbon.faceWidth}.<br/>
+   * Widens the face so the identity block reads as a band rather than a thumbnail.
+   * @returns {number}
    */
-  constructor(rect)
+  faceWidth()
   {
-    super(rect);
-    this.initialize(rect);
-    this.initMembers();
+    return 128;
   }
 
   /**
-   * Initializes all members of this window.
+   * Overrides {@link Window_ActorRibbon.faceHeight}.<br/>
+   * Crops the face to a single band of height.
+   * @returns {number}
    */
-  initMembers()
+  faceHeight()
   {
-    this._actor = null;
-  }
-
-  //region properties
-  /**
-   * Gets the actor.
-   * @returns {*} The actor.
-   */
-  actor()
-  {
-    // hand back the actor.
-    return this._actor;
-  }
-  //endregion properties
-
-  /**
-   * Refreshes this window and all its content.
-   */
-  refresh()
-  {
-    this.contents.clear();
-    this.drawPoints();
+    return 40;
   }
 
   /**
-   * Draws the face, actor name, and right-aligned SDP wallet for the menu actor.
+   * Extends {@link Window_ActorRibbon.drawContent}.<br/>
+   * Also draws the actor's name and their SDP wallet.
    */
-  drawPoints()
+  drawContent()
   {
-    this.drawSdpFace();
+    // perform original logic, which draws the face.
+    super.drawContent();
+
+    // name the actor beside it.
     this.drawActorName();
+
+    // and report what they have to spend.
     this.drawSdpWallet();
   }
 
@@ -63,7 +58,8 @@ class Window_SdpPoints
     // don't draw the name if the actor is unavailable.
     if (!this.actor()) return;
 
-    const nameX = 140;
+    // start just past the face rather than at a fixed offset that has to agree with it.
+    const nameX = this.faceWidth() + 12;
     const y = this.ribbonTextY();
     const nameMaxWidth = this.sdpWalletAnchorX() - nameX - 8;
 
@@ -81,7 +77,8 @@ class Window_SdpPoints
     const y = this.ribbonTextY();
     const pad = 12;
     const gap = 8;
-    const wallet = this.actor().getSdpPoints();
+    const wallet = this.actor()
+      .getSdpPoints();
     const amountW = this.textWidth('00000000');
     const amountX = this.innerWidth - amountW - pad;
 
@@ -115,34 +112,6 @@ class Window_SdpPoints
   ribbonTextY()
   {
     return Math.floor((this.innerHeight - this.lineHeight()) / 2);
-  }
-
-  /**
-   * A wrapper around the drawing of the actor's face- in case we need logic.
-   */
-  drawSdpFace()
-  {
-    // don't draw the points if the actor is unavailable.
-    if (!this.actor()) return;
-
-    this.drawFace(
-      this.actor().faceName(),
-      this.actor().faceIndex(),
-      0,
-      0,
-      128,
-      40
-    );
-  }
-
-  /**
-   * Sets the actor focus for the SDP points window. Implicit refresh.
-   * @param {Game_Actor} actor The actor to display SDP info for.
-   */
-  setActor(actor)
-  {
-    this._actor = actor;
-    this.refresh();
   }
 }
 
