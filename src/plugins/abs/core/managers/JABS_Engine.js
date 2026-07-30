@@ -108,23 +108,10 @@ class JABS_Engine
   absPause = false;
 
   /**
-   * Checks whether or not we have a need to request the JABS quick menu.
-   * @returns {boolean} True if menu requested, false otherwise.
-   */
-  requestAbsMenu = false;
-
-  /**
    * Gets whether or not there is a request to cycle through party members.
    * @returns {boolean}
    */
   requestPartyRotation = false;
-
-  /**
-   * Gets whether or not there is a request to refresh the JABS menu.
-   * The most common use case for this is adding new commands to the menu.
-   * @returns {boolean}
-   */
-  requestJabsMenuRefresh = false;
 
   /**
    * Checks whether or not we have a need to request rendering for new actions.
@@ -1586,9 +1573,6 @@ class JABS_Engine
 
     // if the message window is up, do not update.
     if ($gameMessage.isBusy()) return false;
-
-    // if the jabs menu is up, do not update.
-    if ($jabsEngine.requestAbsMenu) return false;
 
     // if the JABS engine is paused, do not update.
     if ($jabsEngine.absPause) return false;

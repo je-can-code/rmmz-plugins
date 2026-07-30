@@ -53,11 +53,12 @@ J.ABS.EXT.ALLYAI.Aliased = {
   JABS_Engine: new Map(),
 
   Scene_Map: new Map(),
+  Scene_Menu: new Map(),
 
   Spriteset_Map: new Map(),
 
-  Window_AbsMenu: new Map(),
   Window_AllyAiSelect: new Map(),
+  Window_MenuCommand: new Map(),
 };
 
 /**

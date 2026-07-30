@@ -13,9 +13,6 @@ Game_Followers.prototype.show = function()
 
   // update all allies when choosing "show" as an event command.
   $gameMap.updateAllies();
-
-  // refresh the JABS menu.
-  $jabsEngine.requestJabsMenuRefresh = true;
 };
 
 /**
@@ -32,9 +29,6 @@ Game_Followers.prototype.hide = function()
 
   // update all allies when choosing "hide" as an event command.
   $gameMap.updateAllies();
-
-  // refresh the JABS menu.
-  $jabsEngine.requestJabsMenuRefresh = true;
 };
 
 /**

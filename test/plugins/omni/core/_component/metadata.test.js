@@ -131,7 +131,6 @@ describe('J-Omnipedia core metadata (direct src import)', () =>
       expect(Aliased.Game_Party).toBeInstanceOf(Map);
       expect(Aliased.Scene_Map).toBeInstanceOf(Map);
       expect(Aliased.Scene_Menu).toBeInstanceOf(Map);
-      expect(Aliased.Window_AbsMenu).toBeInstanceOf(Map);
       expect(Aliased.Window_MenuCommand).toBeInstanceOf(Map);
     });
   });

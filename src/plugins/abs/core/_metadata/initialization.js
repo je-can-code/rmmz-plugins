@@ -1644,7 +1644,6 @@ J.ABS.Aliased = {
   Game_Map: new Map(),
   Game_Party: new Map(),
   Game_Player: new Map(),
-  Game_Switches: new Map(),
   Game_Unit: new Map(),
 
   RPG_Actor: new Map(),

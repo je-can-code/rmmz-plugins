@@ -34,7 +34,6 @@ describe('J-ABS-AllyAI Game_Followers (unit, all downstream dependencies mocked)
     originalShow.mockReset();
     originalHide.mockReset();
     globalThis.$gameMap = { updateAllies: vi.fn(), _interpreter: { isRunning: () => true } };
-    globalThis.$jabsEngine = { requestJabsMenuRefresh: false };
     globalThis.$gamePlayer = { isJumping: () => true, getJabsBattler: () => ({}), deltaXFrom: vi.fn(() => 1), deltaYFrom: vi.fn(() => 2) };
   });
 
@@ -45,25 +44,23 @@ describe('J-ABS-AllyAI Game_Followers (unit, all downstream dependencies mocked)
 
   describe('show', () =>
   {
-    it('performs the original logic then updates allies and requests a menu refresh', () =>
+    it('performs the original logic then updates allies', () =>
     {
       const followers = buildFollowers();
       followers.show();
       expect(originalShow).toHaveBeenCalledTimes(1);
       expect(globalThis.$gameMap.updateAllies).toHaveBeenCalledTimes(1);
-      expect(globalThis.$jabsEngine.requestJabsMenuRefresh).toBe(true);
     });
   });
 
   describe('hide', () =>
   {
-    it('performs the original logic then updates allies and requests a menu refresh', () =>
+    it('performs the original logic then updates allies', () =>
     {
       const followers = buildFollowers();
       followers.hide();
       expect(originalHide).toHaveBeenCalledTimes(1);
       expect(globalThis.$gameMap.updateAllies).toHaveBeenCalledTimes(1);
-      expect(globalThis.$jabsEngine.requestJabsMenuRefresh).toBe(true);
     });
   });
 

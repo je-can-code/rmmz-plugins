@@ -58,8 +58,6 @@ function installAbsEnginePlaceholderGlobals(sandbox)
     'Sprite_HitboxPulse',
     'Sprite_MapCastGauge',
     'Sprite_MapHpGauge',
-    'Window_AbsMenu',
-    'Window_AbsMenuSelect',
     'Input',
     'TouchInput',
     'Scene_Load',

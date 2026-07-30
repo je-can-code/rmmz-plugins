@@ -1813,13 +1813,6 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(engine.canUpdateInput()).toBe(false);
     });
 
-    it('is false while the jabs menu is requested', () =>
-    {
-      withGates({ requestAbsMenu: true });
-      const engine = new JABS_Engine();
-      expect(engine.canUpdateInput()).toBe(false);
-    });
-
     it('is false while jabs is paused', () =>
     {
       withGates({ absPause: true });

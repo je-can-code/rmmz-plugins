@@ -141,14 +141,6 @@ PluginManager.registerCommand(J.ABS.Metadata.name, "Enable Party Rotation", () =
 });
 
 /**
- * Plugin command for updating the JABS menu.
- */
-PluginManager.registerCommand(J.ABS.Metadata.name, "Refresh JABS Menu", () =>
-{
-  $jabsEngine.requestJabsMenuRefresh = true;
-});
-
-/**
  * Plugin command: forces the global cooldown counter on a party actor who is currently on the map as
  * the player or a visible follower.
  * Positive {@code frames} starts or refreshes GCD for that battler; zero or invalid clears it. Actors

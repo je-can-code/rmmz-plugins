@@ -238,16 +238,6 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
   //region canMove
   describe('canMove', () =>
   {
-    it('denies movement when the abs menu is requested', () =>
-    {
-      // Arrange
-      const player = buildPlayer();
-      globalThis.$jabsEngine.requestAbsMenu = true;
-
-      // Act/Assert
-      expect(player.canMove()).toEqual(false);
-    });
-
     it('denies movement when abs is paused', () =>
     {
       // Arrange

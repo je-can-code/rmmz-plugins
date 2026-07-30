@@ -36,8 +36,8 @@ Game_Player.prototype.startMapEvent = function(x, y, triggers, normal)
 J.ABS.Aliased.Game_Player.set('canMove', Game_Player.prototype.canMove);
 Game_Player.prototype.canMove = function()
 {
-  // check if something related to JABS is causing the player to stop moving.
-  const isMenuRequested = $jabsEngine.requestAbsMenu;
+  // check if something related to JABS is causing the player to stop moving. Note that the menu is no
+  // longer among them: it is a scene now, so Scene_Map is not even running while it is open.
   const isAbsPaused = $jabsEngine.absPause;
 
   // casting/channeling only roots the player outright when the in-flight skill opts into
@@ -50,7 +50,7 @@ Game_Player.prototype.canMove = function()
     .hasUninterruptibleMovementLock();
 
   // any of these will prevent the player from moving.
-  const jabsDeniesMovement = (isMenuRequested || isAbsPaused || isPlayerRooted);
+  const jabsDeniesMovement = (isAbsPaused || isPlayerRooted);
 
   // check if JABS is denying movement.
   if (jabsDeniesMovement)
