@@ -79,14 +79,23 @@ describe('J-CriticalFactors Game_Battler (direct src import)', () =>
 
   describe('criticalDamageMultiplier / criticalDamageReduction', () =>
   {
-    it('exposes both as numeric stats', () =>
+    it('reports no crit damage multiplier for a battler carrying no cdm sources', () =>
+    {
+      // Arrange
+      const actor = buildActor();
+
+      // Act & Assert: notes, natural growths and sdp bonuses all contribute nothing here, so the
+      // summed factor has to land on the zero sentinel rather than a stray base value.
+      expect(actor.criticalDamageMultiplier()).toBe(0);
+    });
+
+    it('reports no crit damage reduction for a battler carrying no ctr sources', () =>
     {
       // Arrange
       const actor = buildActor();
 
       // Act & Assert
-      expect(typeof actor.criticalDamageMultiplier()).toBe('number');
-      expect(typeof actor.criticalDamageReduction()).toBe('number');
+      expect(actor.criticalDamageReduction()).toBe(0);
     });
   });
 

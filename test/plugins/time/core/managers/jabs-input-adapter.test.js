@@ -54,8 +54,8 @@ describe('JABS_InputAdapter ext/time augments (direct src import)', () =>
       // Act
       await import('../../../../../src/plugins/time/core/managers/JABS_InputAdapter.js');
 
-      // Assert
-      expect(typeof globalThis.JABS_InputAdapter.performTimeWindowAction).toBe('function');
+      // Assert: the adapter starts bare, so the key only exists because the patch attached it.
+      expect(Object.keys(globalThis.JABS_InputAdapter)).toContain('performTimeWindowAction');
     });
 
     it('declines to toggle the window when the action is not permitted', async () =>

@@ -41,6 +41,17 @@ export function setPluginContextToJOmniQuest(sandbox = globalThis)
 }
 
 /**
+ * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-Omni-Monsterpedia's own
+ * identity. Call this right before importing omni/ext/monster/_metadata/initialization.js.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ */
+export function setPluginContextToJOmniMonster(sandbox = globalThis)
+{
+  sandbox.__PLUGIN_NAME__ = 'J-Omni-Monsterpedia';
+  sandbox.__PLUGIN_VERSION__ = '1.1.0';
+}
+
+/**
  * A minimal but structurally honest quest configuration, shaped the way `data/config.quest.json`
  * is shaped on disk. The `__`, `==`, and `--` prefixed rows exist because the real config uses them
  * as editor-only organizational separators, and the metadata's classifier is required to drop them

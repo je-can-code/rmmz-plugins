@@ -840,7 +840,10 @@ describe('RPGManager', () =>
       expect(list.length).toBe(1);
       expect(list[0].skillId).toBe(7);
       expect(list[0].chance).toBe(55);
-      expect(typeof list[0].key).toBe('string');
+
+      // the key is derived from the tag name inside the regex itself, so that every effect built
+      // from one structure shares an identity the cooldown bookkeeping can group by.
+      expect(list[0].key).toBe('jeOC');
     });
 
     it('returns an empty array when the note has no matches', () =>

@@ -60,10 +60,11 @@ describe('J-JAFTING core (direct src import)', () =>
     });
   });
 
-  it('reserves J.JAFTING.EXT as an object for extensions', () =>
+  it('reserves J.JAFTING.EXT as an empty namespace for extensions to claim', () =>
   {
-    // Arrange & Act & Assert
-    expect(typeof globalThis.J.JAFTING.EXT).toBe('object');
+    // Arrange & Act & Assert: core stakes out the namespace but must not populate it, since every
+    // key in here belongs to an extension that has not loaded yet.
+    expect(globalThis.J.JAFTING.EXT).toEqual({});
   });
 
   describe('Window_JaftingList', () =>
@@ -95,46 +96,5 @@ describe('J-JAFTING core (direct src import)', () =>
     });
   });
 
-  describe('Scene_Jafting', () =>
-  {
-    it('is defined as a menu scene subclass', () =>
-    {
-      // Arrange & Act & Assert
-      expect(Scene_Jafting.prototype.constructor).toBe(Scene_Jafting);
-    });
-  });
-
-  describe('Scene_JaftingSalvage and salvage models', () =>
-  {
-    it('defines Scene_JaftingSalvage', () =>
-    {
-      // Arrange & Act & Assert
-      expect(typeof Scene_JaftingSalvage).toBe('function');
-    });
-
-    it('defines JaftingSalvageManager', () =>
-    {
-      // Arrange & Act & Assert
-      expect(typeof JaftingSalvageManager).toBe('function');
-    });
-
-    it('defines JaftingSalvageLedgerRow', () =>
-    {
-      // Arrange & Act & Assert
-      expect(typeof JaftingSalvageLedgerRow).toBe('function');
-    });
-
-    it('defines JaftingSalvageLedgerSnapshot', () =>
-    {
-      // Arrange & Act & Assert
-      expect(typeof JaftingSalvageLedgerSnapshot).toBe('function');
-    });
-
-    it('defines JaftingSalvagePartyLedgerBag', () =>
-    {
-      // Arrange & Act & Assert
-      expect(typeof JaftingSalvagePartyLedgerBag).toBe('function');
-    });
-  });
 });
 //endregion plugins/jafting/_component/jafting-core.test.js

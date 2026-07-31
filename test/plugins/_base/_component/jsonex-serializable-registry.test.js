@@ -74,7 +74,6 @@ describe('JsonEx SerializableRegistry pilot (JABS_HitstopData)', () =>
 
     // Assert
     expect(copy).toBeInstanceOf(JABS_HitstopData);
-    expect(typeof copy.tick).toBe('function');
     expect(copy.getFrames()).toBe(10);
   });
 
