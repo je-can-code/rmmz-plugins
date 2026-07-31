@@ -5,5 +5,5 @@
 // PLUGIN_DESC_TAG → @@PLUGIN_DESC_TAG@@ in annotations only.
 export const PLUGIN_NAME = "J-Region-States";
 export const PLUGIN_VERSION = "1.0.1";
-export const PLUGIN_DESC_TAG = "REGION-STATES";
+export const PLUGIN_DESC_TAG = "REGIONS-STATES";
 //endregion ship-meta

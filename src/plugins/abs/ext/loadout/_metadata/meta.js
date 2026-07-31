@@ -5,5 +5,5 @@
 // PLUGIN_DESC_TAG → @@PLUGIN_DESC_TAG@@ in annotations only.
 export const PLUGIN_NAME = 'J-ABS-Loadout';
 export const PLUGIN_VERSION = '1.0.0';
-export const PLUGIN_DESC_TAG = 'LOADOUT';
+export const PLUGIN_DESC_TAG = 'ABS-LOADOUT';
 //endregion ship-meta
