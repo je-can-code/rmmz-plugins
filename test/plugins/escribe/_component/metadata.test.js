@@ -82,5 +82,22 @@ describe('J-Escriptions metadata (direct src import)', () =>
     // Assert: the number grammar is deliberate, so a padded value is an invalid tag.
     expect(match).toBeNull();
   });
+
+  it('throws when J-Base does not satisfy the minimum required version', async () =>
+  {
+    // Arrange: drop the already-installed J-Base metadata below this plugin's floor.
+    vi.resetModules();
+    const originalVersion = globalThis.J.BASE.Metadata.Version;
+    globalThis.J.BASE.Metadata.Version = '0.0.1';
+    globalThis.__PLUGIN_NAME__ = 'J-Escriptions';
+    globalThis.__PLUGIN_VERSION__ = '1.0.0';
+
+    // Act & Assert
+    await expect(import('../../../../src/plugins/escribe/core/_metadata/initialization.js'))
+      .rejects.toThrow(/missing J-Base/);
+
+    // restore the satisfying version so later tests in this file are unaffected.
+    globalThis.J.BASE.Metadata.Version = originalVersion;
+  });
 });
 //endregion plugins/escribe/_component/metadata.test.js

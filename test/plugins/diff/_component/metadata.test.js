@@ -59,5 +59,21 @@ describe('J-Difficulty metadata (direct src import)', () =>
     // Assert
     expect(hard.enemyEffects.bparams[0]).toBe(50);
   });
+
+  it('throws when J-Base does not satisfy the minimum required version', async () =>
+  {
+    // Arrange: drop the already-installed J-Base metadata below this plugin's floor.
+    vi.resetModules();
+    const originalVersion = globalThis.J.BASE.Metadata.Version;
+    globalThis.J.BASE.Metadata.Version = '0.0.1';
+    setPluginContextToJDiff();
+
+    // Act & Assert
+    await expect(import('../../../../src/plugins/diff/core/_metadata/initialization.js'))
+      .rejects.toThrow(/missing J-Base/);
+
+    // restore the satisfying version so later tests in this file are unaffected.
+    globalThis.J.BASE.Metadata.Version = originalVersion;
+  });
 });
 //endregion plugins/diff/_component/metadata.test.js

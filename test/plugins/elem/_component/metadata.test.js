@@ -44,5 +44,21 @@ describe('J-Elementalistics metadata and regex (direct src import)', () =>
     // Assert
     expect(m[1]).toBe('[2, +50]');
   });
+
+  it('throws when J-Base does not satisfy the minimum required version', async () =>
+  {
+    // Arrange: drop the already-installed J-Base metadata below this plugin's floor.
+    vi.resetModules();
+    const originalVersion = globalThis.J.BASE.Metadata.Version;
+    globalThis.J.BASE.Metadata.Version = '0.0.1';
+    setPluginContextToJElem();
+
+    // Act & Assert
+    await expect(import('../../../../src/plugins/elem/core/_metadata/initialization.js'))
+      .rejects.toThrow(/missing J-Base/);
+
+    // restore the satisfying version so later tests in this file are unaffected.
+    globalThis.J.BASE.Metadata.Version = originalVersion;
+  });
 });
 //endregion plugins/elem/_component/metadata.test.js

@@ -242,5 +242,22 @@ describe('J-CriticalFactors metadata (direct src import)', () =>
       expect(first[1]).toBe('a.level * 3');
     });
   });
+
+  it('throws when J-Base does not satisfy the minimum required version', async () =>
+  {
+    // Arrange: drop the already-installed J-Base metadata below this plugin's floor.
+    vi.resetModules();
+    const originalVersion = globalThis.J.BASE.Metadata.Version;
+    globalThis.J.BASE.Metadata.Version = '0.0.1';
+    globalThis.__PLUGIN_NAME__ = 'J-CriticalFactors';
+    globalThis.__PLUGIN_VERSION__ = '1.0.0';
+
+    // Act & Assert
+    await expect(import('../../../../src/plugins/crit/core/_metadata/initialization.js'))
+      .rejects.toThrow(/missing J-Base/);
+
+    // restore the satisfying version so later tests in this file are unaffected.
+    globalThis.J.BASE.Metadata.Version = originalVersion;
+  });
 });
 //endregion plugins/crit/_component/metadata.test.js

@@ -160,5 +160,59 @@ describe('J-JAFTING + J-JAFTING-Creation metadata (direct src import)', () =>
     await expect(bootJaftingCreate('{ not valid json', { bootBase: false, pluginName: 'J-JAFTING-Creation-badjson' }))
       .rejects.toThrow(/failed to parse JSON at data\/config\.crafting\.json/i);
   });
+
+  describe('host version requirements', () =>
+  {
+    it('the core throws when J-Base does not satisfy the minimum required version', async () =>
+    {
+      // Arrange: drop the already-installed J-Base metadata below the core's floor.
+      vi.resetModules();
+      const originalVersion = globalThis.J.BASE.Metadata.Version;
+      globalThis.J.BASE.Metadata.Version = '0.0.1';
+      globalThis.__PLUGIN_NAME__ = 'J-JAFTING';
+      globalThis.__PLUGIN_VERSION__ = '2.1.0';
+
+      // Act & Assert
+      await expect(import('../../../../src/plugins/jafting/core/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-Base/);
+
+      // restore the satisfying version so later tests in this file are unaffected.
+      globalThis.J.BASE.Metadata.Version = originalVersion;
+    });
+
+    it('the creation extension throws when J-Base does not satisfy the minimum required version', async () =>
+    {
+      // Arrange
+      vi.resetModules();
+      const originalVersion = globalThis.J.BASE.Metadata.Version;
+      globalThis.J.BASE.Metadata.Version = '0.0.1';
+      globalThis.__PLUGIN_NAME__ = 'J-JAFTING-Creation';
+      globalThis.__PLUGIN_VERSION__ = '2.1.0';
+
+      // Act & Assert
+      await expect(import('../../../../src/plugins/jafting/ext/create/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-Base/);
+
+      // restore the satisfying version so later tests in this file are unaffected.
+      globalThis.J.BASE.Metadata.Version = originalVersion;
+    });
+
+    it('the creation extension throws when J-JAFTING does not satisfy the minimum required version', async () =>
+    {
+      // Arrange: J-Base has to keep passing so the jafting core check is the one that trips.
+      vi.resetModules();
+      const originalVersion = globalThis.J.JAFTING.Metadata.version.version;
+      globalThis.J.JAFTING.Metadata.version.version = () => '0.0.1';
+      globalThis.__PLUGIN_NAME__ = 'J-JAFTING-Creation';
+      globalThis.__PLUGIN_VERSION__ = '2.1.0';
+
+      // Act & Assert
+      await expect(import('../../../../src/plugins/jafting/ext/create/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-JAFTING/);
+
+      // restore the real accessor rather than relying on restoreAllMocks.
+      globalThis.J.JAFTING.Metadata.version.version = originalVersion;
+    });
+  });
 });
 //endregion plugins/jafting/_component/creation-metadata.test.js
