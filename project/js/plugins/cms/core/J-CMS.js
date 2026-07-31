@@ -162,11 +162,6 @@ J.CMS_M = {};
 * The `metadata` associated with this plugin, such as version.
 */
 J.CMS_M.Metadata = new J_CmsMain_PluginMetadata("J-CMS", "1.0.0");
-J.CMS_M.Aliased = {
-	Scene_Menu: {},
-	Window_EquipItem: {},
-	Window_EquipSlot: {}
-};
 
 //#endregion
 //#region src/plugins/cms/core/_models/CmsParameter.js

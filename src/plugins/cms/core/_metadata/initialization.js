@@ -28,10 +28,4 @@ J.CMS_M = {};
  * The `metadata` associated with this plugin, such as version.
  */
 J.CMS_M.Metadata = new J_CmsMain_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
-
-J.CMS_M.Aliased = {
-  Scene_Menu: {},
-  Window_EquipItem: {},
-  Window_EquipSlot: {},
-};
 //endregion Introduction

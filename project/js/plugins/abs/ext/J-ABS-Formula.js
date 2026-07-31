@@ -553,15 +553,6 @@ var FormulaEffect = class FormulaEffect {
 };
 
 //#endregion
-//#region src/plugins/abs/ext/formula/_metadata/pluginCommands.js
-/**
-* Plugin command for doing the thing.
-*/
-PluginManager.registerCommand(J.ABS.EXT.FORMULA.Metadata.name, "do-the-thing", (args) => {
-	console.log("did the thing.");
-});
-
-//#endregion
 //#region src/plugins/abs/ext/formula/database/RPG_Skill.js
 /**
 * Gets all FormulaEffect packets defined on this skill via J.ABS.EXT.FORMULA.
