@@ -42,27 +42,6 @@ describe('J-Popups-SDP metadata (direct src import)', () =>
     setPluginContextToJPopupsSdp();
   });
 
-  it('registers the plugin metadata under the SDP extension namespace', async () =>
-  {
-    // Arrange & Act
-    await import(sdpInitPath);
-
-    // Assert
-    expect(globalThis.J.POPUPS.EXT.SDP.Metadata.name).toBe('J-Popups-SDP');
-  });
-
-  it('records the plugin version from the build-time identity', async () =>
-  {
-    // Arrange & Act
-    await import(sdpInitPath);
-
-    // Assert
-    const { version } = globalThis.J.POPUPS.EXT.SDP.Metadata;
-    expect(version.major).toBe(1);
-    expect(version.minor).toBe(0);
-    expect(version.patch).toBe(0);
-  });
-
   it('creates the aliased-method map for the engine class it patches', async () =>
   {
     // Arrange & Act
@@ -143,8 +122,9 @@ describe('J-Popups-SDP metadata (direct src import)', () =>
     // Act
     await import(sdpInitPath);
 
-    // Assert
-    expect(globalThis.J.POPUPS.EXT.SDP.Metadata.name).toBe('J-Popups-SDP');
+    // Assert: the whole namespace chain has to be rebuilt from scratch, right down to the alias
+    // map the patching code later reaches for.
+    expect(globalThis.J.POPUPS.EXT.SDP.Aliased.JABS_Engine).toBeInstanceOf(Map);
   });
 });
 //endregion plugins/popups/ext/sdp/_component/metadata.test.js

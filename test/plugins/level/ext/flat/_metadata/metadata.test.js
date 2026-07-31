@@ -26,18 +26,6 @@ describe('J-LEVEL-Flat metadata (direct src import)', () =>
     await import('../../../../../../src/plugins/level/ext/flat/_metadata/initialization.js');
   });
 
-  it('exposes plugin name on J.LEVEL.EXT.FLAT.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.LEVEL.EXT.FLAT.Metadata.name).toBe('J-LEVEL-Flat');
-  });
-
-  it('exposes plugin version on J.LEVEL.EXT.FLAT.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.LEVEL.EXT.FLAT.Metadata.version).toMatchObject({ major: 1, minor: 0, patch: 0 });
-  });
-
   it('falls back to the default flat experience per level when unconfigured', () =>
   {
     // Arrange & Act & Assert

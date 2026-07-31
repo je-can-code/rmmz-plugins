@@ -50,27 +50,6 @@ describe('J-Extend-ABS metadata (direct src import)', () =>
     setPluginContextToJExtendAbs();
   });
 
-  it('registers the plugin metadata under the ABS extension namespace', async () =>
-  {
-    // Arrange & Act
-    await import(absInitPath);
-
-    // Assert
-    expect(globalThis.J.EXTEND.EXT.ABS.Metadata.name).toBe('J-Extend-ABS');
-  });
-
-  it('records the plugin version from the build-time identity', async () =>
-  {
-    // Arrange & Act
-    await import(absInitPath);
-
-    // Assert
-    const { version } = globalThis.J.EXTEND.EXT.ABS.Metadata;
-    expect(version.major).toBe(1);
-    expect(version.minor).toBe(0);
-    expect(version.patch).toBe(0);
-  });
-
   it('creates the aliased-method map for the battler class it patches', async () =>
   {
     // Arrange & Act

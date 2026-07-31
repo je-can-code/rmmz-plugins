@@ -23,21 +23,40 @@ describe('J-Difficulty metadata (direct src import)', () =>
     await import('../../../../src/plugins/diff/core/_metadata/initialization.js');
   });
 
-  it('loads external config into J.DIFFICULTY.Metadata.allMetadatas', () =>
+  it('parses the starting difficulty point budget out of the plugin parameters', () =>
   {
     // Arrange & Act & Assert
-    expect(globalThis.J.DIFFICULTY.Metadata.name).toBe('J-Difficulty');
     expect(globalThis.J.DIFFICULTY.Metadata.initialPoints).toBe(Number(DEFAULT_DIFF_PLUGIN_PARAMS.initialPoints));
-    expect(globalThis.J.DIFFICULTY.Metadata.defaultKey).toBe(DEFAULT_DIFF_PLUGIN_PARAMS.defaultDifficulty);
-    expect(globalThis.J.DIFFICULTY.Metadata.allMetadatas.size).toBe(2);
+  });
 
+  it('parses the default difficulty key out of the plugin parameters', () =>
+  {
+    // Arrange & Act & Assert
+    expect(globalThis.J.DIFFICULTY.Metadata.defaultKey).toBe(DEFAULT_DIFF_PLUGIN_PARAMS.defaultDifficulty);
+  });
+
+  it('loads every difficulty in the external config into the metadata map', () =>
+  {
+    // Arrange & Act & Assert
+    expect(globalThis.J.DIFFICULTY.Metadata.allMetadatas.size).toBe(2);
+  });
+
+  it('keys each loaded difficulty by its own key and keeps its actor effects', () =>
+  {
+    // Arrange & Act
     const meta = globalThis.J.DIFFICULTY.Metadata.allMetadatas.get('vitest_diff');
-    expect(meta).toBeDefined();
+
+    // Assert
     expect(meta.key).toBe('vitest_diff');
     expect(meta.actorEffects.bparams[0]).toBe(80);
+  });
 
+  it('keeps the enemy effects of a loaded difficulty distinct from its actor effects', () =>
+  {
+    // Arrange & Act
     const hard = globalThis.J.DIFFICULTY.Metadata.allMetadatas.get('vitest_hard');
-    expect(hard).toBeDefined();
+
+    // Assert
     expect(hard.enemyEffects.bparams[0]).toBe(50);
   });
 });

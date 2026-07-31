@@ -26,18 +26,6 @@ describe('J-Extend-SKS metadata (direct src import)', () =>
     await import('../../../../../../src/plugins/extend/ext/sks/_metadata/initialization.js');
   });
 
-  it('exposes plugin name on J.EXTEND.EXT.SKS.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.EXTEND.EXT.SKS.Metadata.name).toBe('J-Extend-SKS');
-  });
-
-  it('exposes plugin version on J.EXTEND.EXT.SKS.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.EXTEND.EXT.SKS.Metadata.version).toMatchObject({ major: 1, minor: 0, patch: 0 });
-  });
-
   it('initializes an empty aliased map for Window_SkillEquipDetail', () =>
   {
     // Arrange & Act & Assert

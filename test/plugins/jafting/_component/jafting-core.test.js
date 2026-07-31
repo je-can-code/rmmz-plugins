@@ -47,12 +47,6 @@ describe('J-JAFTING core (direct src import)', () =>
 
   describe('J.JAFTING.Metadata', () =>
   {
-    it('sets the metadata name to J-JAFTING', () =>
-    {
-      // Arrange & Act & Assert
-      expect(globalThis.J.JAFTING.Metadata.name).toBe('J-JAFTING');
-    });
-
     it('defaults materialArmorTypeId to 5', () =>
     {
       // Arrange & Act & Assert

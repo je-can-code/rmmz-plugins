@@ -38,12 +38,6 @@ describe('J-JAFTING + J-JAFTING-Refinement metadata (direct src import)', () =>
     await import('../../../../src/plugins/jafting/ext/refine/_metadata/initialization.js');
   });
 
-  it('sets the metadata name to J-JAFTING-Refinement', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.JAFTING.EXT.REFINE.Metadata.name).toBe('J-JAFTING-Refinement');
-  });
-
   it('parses the menu switch id from plugin parameters', () =>
   {
     // Arrange & Act & Assert

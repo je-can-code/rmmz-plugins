@@ -23,16 +23,64 @@ describe('J-Escriptions metadata (direct src import)', () =>
     await import('../../../../src/plugins/escribe/core/_metadata/initialization.js');
   });
 
-  it('sets the metadata name to J-Escriptions', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.ESCRIBE.Metadata.name).toBe('J-Escriptions');
-  });
-
   it('builds a working Text regex from the initialized RegExp table', () =>
   {
     // Arrange & Act & Assert
     expect(globalThis.J.ESCRIBE.RegExp.Text.test('<text:Hello>')).toBe(true);
+  });
+
+  it('captures the whole description, spaces and punctuation included', () =>
+  {
+    // Arrange & Act
+    const match = '<text:A weathered signpost.>'.match(globalThis.J.ESCRIBE.RegExp.Text);
+
+    // Assert
+    expect(match[1]).toBe('A weathered signpost.');
+  });
+
+  it('captures an icon index', () =>
+  {
+    // Arrange & Act
+    const match = '<icon:87>'.match(globalThis.J.ESCRIBE.RegExp.IconIndex);
+
+    // Assert
+    expect(match[1]).toBe('87');
+  });
+
+  it('captures a whole-number proximity', () =>
+  {
+    // Arrange & Act
+    const match = '<proximityText:4>'.match(globalThis.J.ESCRIBE.RegExp.ProximityText);
+
+    // Assert
+    expect(match[1]).toBe('4');
+  });
+
+  it('captures a fractional proximity, since proximity is measured in tiles', () =>
+  {
+    // Arrange & Act
+    const match = '<proximityIcon:2.5>'.match(globalThis.J.ESCRIBE.RegExp.ProximityIcon);
+
+    // Assert
+    expect(match[1]).toBe('2.5');
+  });
+
+  it('captures a zero proximity', () =>
+  {
+    // Arrange & Act
+    const match = '<proximityText:0>'.match(globalThis.J.ESCRIBE.RegExp.ProximityText);
+
+    // Assert
+    expect(match[1]).toBe('0');
+  });
+
+  it('refuses a proximity padded with a leading zero', () =>
+  {
+    // Arrange & Act
+    const match = '<proximityText:04>'.match(globalThis.J.ESCRIBE.RegExp.ProximityText);
+
+    // Assert: the number grammar is deliberate, so a padded value is an invalid tag.
+    expect(match).toBeNull();
   });
 });
 //endregion plugins/escribe/_component/metadata.test.js

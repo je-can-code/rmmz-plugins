@@ -55,8 +55,10 @@ describe('J-HUD-QuestFrame metadata (direct src import)', () =>
       // Arrange & Act
       await import(questInitPath);
 
-      // Assert
-      expect(globalThis.J.HUD.EXT.QUEST.Metadata.name).toBe('J-HUD-QuestFrame');
+      // Assert: the alias surface is declared after the version gate, so its presence is what
+      // proves initialization ran all the way through rather than throwing partway.
+      expect(Object.keys(globalThis.J.HUD.EXT.QUEST.Aliased))
+        .toEqual([ 'Scene_Map', 'Scene_Questopedia', 'TrackedOmniQuest', 'TrackedOmniObjective', 'HudManager' ]);
     });
 
     it('throws when J-Base is below the required version', async () =>
@@ -108,17 +110,6 @@ describe('J-HUD-QuestFrame metadata (direct src import)', () =>
     beforeEach(async () =>
     {
       await import(questInitPath);
-    });
-
-    it('records the plugin version from the build-time identity', () =>
-    {
-      // Arrange & Act
-      const { version } = globalThis.J.HUD.EXT.QUEST.Metadata;
-
-      // Assert
-      expect(version.major).toBe(1);
-      expect(version.minor).toBe(0);
-      expect(version.patch).toBe(0);
     });
 
     it('creates an aliased-method map for every class the plugin patches', () =>

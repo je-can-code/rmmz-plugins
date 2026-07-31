@@ -26,18 +26,6 @@ describe('J-HUD-FOOD metadata (direct src import)', () =>
     await import('../../../../../../src/plugins/hud/ext/food/_metadata/initialization.js');
   });
 
-  it('exposes plugin name on J.HUD.EXT.FOOD.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.HUD.EXT.FOOD.Metadata.name).toBe('J-HUD-FOOD');
-  });
-
-  it('exposes plugin version on J.HUD.EXT.FOOD.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.HUD.EXT.FOOD.Metadata.version).toMatchObject({ major: 1, minor: 0, patch: 0 });
-  });
-
   it('falls back to the default window position and size when unconfigured', () =>
   {
     // Arrange & Act

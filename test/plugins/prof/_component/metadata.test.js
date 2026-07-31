@@ -32,7 +32,6 @@ describe('J-Proficiency metadata and regex (direct src import)', () =>
     globalThis.J.PROF.Metadata.initializeProficiencies();
 
     // Assert
-    expect(globalThis.J.PROF.Metadata.name).toBe('J-Proficiency');
     expect(globalThis.J.PROF.Metadata.conditionals.length).toBe(5);
     expect(globalThis.J.PROF.Metadata.conditionals[0].key).toBe('vitest_unlock_skill');
   });

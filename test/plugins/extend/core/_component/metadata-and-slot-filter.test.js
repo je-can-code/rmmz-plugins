@@ -51,8 +51,10 @@ describe('J-Extend metadata and skill-slot filtering (direct src import)', () =>
       // Arrange & Act
       await import('../../../../../src/plugins/extend/core/_metadata/initialization.js');
 
-      // Assert
-      expect(globalThis.J.EXTEND.Metadata.name).toBe('J-Extend');
+      // Assert: the alias surface is declared after the version gate, so its presence is what
+      // proves initialization ran all the way through rather than throwing partway.
+      expect(Object.keys(globalThis.J.EXTEND.Aliased))
+        .toEqual([ 'DataManager', 'Game_Action', 'Game_Actor', 'Game_Enemy', 'Game_Item', 'JABS_SkillSlotManager' ]);
     });
 
     it('throws when J-Base is below the required version', async () =>

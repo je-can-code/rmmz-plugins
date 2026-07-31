@@ -31,22 +31,31 @@ describe('J-RegionEffects metadata (direct src import)', () =>
 
   describe('default plugin parameters', () =>
   {
-    it('sets the metadata name to J-RegionEffects', () =>
+    it('captures a bracketed region list from an allow tag', () =>
     {
-      // Arrange & Act & Assert
-      expect(globalThis.J.REGIONS.Metadata.name).toBe('J-RegionEffects');
+      // Arrange & Act
+      const [ first ] = [ ...'<allowRegions:[1, 2, 3]>'.matchAll(globalThis.J.REGIONS.RegExp.AllowRegions) ];
+
+      // Assert
+      expect(first[1]).toBe('[1, 2, 3]');
     });
 
-    it('compiles a usable AllowRegions regex', () =>
+    it('captures a bracketed region list from a deny tag', () =>
     {
-      // Arrange & Act & Assert
-      expect(typeof globalThis.J.REGIONS.RegExp.AllowRegions.test).toBe('function');
+      // Arrange & Act
+      const [ first ] = [ ...'<denyRegions:[7]>'.matchAll(globalThis.J.REGIONS.RegExp.DenyRegions) ];
+
+      // Assert
+      expect(first[1]).toBe('[7]');
     });
 
-    it('compiles a usable DenyRegions regex', () =>
+    it('refuses a region list holding a non-numeric entry', () =>
     {
-      // Arrange & Act & Assert
-      expect(typeof globalThis.J.REGIONS.RegExp.DenyRegions.test).toBe('function');
+      // Arrange & Act
+      const matches = [ ...'<allowRegions:[grass]>'.matchAll(globalThis.J.REGIONS.RegExp.AllowRegions) ];
+
+      // Assert: regions are numeric ids, so a named entry means the tag is simply invalid.
+      expect(matches).toHaveLength(0);
     });
 
     it('parses an empty globalAllowRegions default to an empty array', () =>

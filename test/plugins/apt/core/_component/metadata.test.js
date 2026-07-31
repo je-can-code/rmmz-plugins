@@ -15,12 +15,21 @@ describe('J-Aptitude metadata (direct src import)', () =>
     });
   });
 
-  it('maps plugin parameters onto J.APT.Metadata', () =>
+  it('parses the menu switch id out of the plugin parameters', () =>
   {
     // Arrange & Act & Assert
-    expect(globalThis.J.APT.Metadata.name).toBe('J-Aptitude');
     expect(globalThis.J.APT.Metadata.menuSwitchId).toBe(0);
+  });
+
+  it('parses the max level threshold out of the plugin parameters', () =>
+  {
+    // Arrange & Act & Assert
     expect(globalThis.J.APT.Metadata.maxLevelThreshold).toBe(-1);
+  });
+
+  it('treats a negative threshold as having no level limit at all', () =>
+  {
+    // Arrange & Act & Assert: -1 is the "unbounded" sentinel, not a real ceiling.
     expect(globalThis.J.APT.Metadata.usingLevelThresholdLimit).toBe(false);
   });
 });

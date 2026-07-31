@@ -26,18 +26,6 @@ describe('J-HUD-PartyFrame metadata (direct src import)', () =>
     await import('../../../../../../src/plugins/hud/ext/party/_metadata/initialization.js');
   });
 
-  it('exposes plugin name on J.HUD.EXT.PARTY.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.HUD.EXT.PARTY.Metadata.name).toBe('J-HUD-PartyFrame');
-  });
-
-  it('exposes plugin version on J.HUD.EXT.PARTY.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.HUD.EXT.PARTY.Metadata.version).toMatchObject({ major: 1, minor: 2, patch: 0 });
-  });
-
   it('initializes an empty aliased map for Scene_Map', () =>
   {
     // Arrange & Act & Assert

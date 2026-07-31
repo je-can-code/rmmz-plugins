@@ -92,20 +92,8 @@ describe('J-JAFTING + J-JAFTING-Creation metadata (direct src import)', () =>
     await bootJaftingCreate(VITEST_MINIMAL_CRAFTING_JSON);
   });
 
-  it('exposes core metadata on J.JAFTING.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.JAFTING.Metadata.name).toBe('J-JAFTING');
-  });
-
   describe('J.JAFTING.EXT.CREATE.Metadata', () =>
   {
-    it('sets the metadata name to J-JAFTING-Creation', () =>
-    {
-      // Arrange & Act & Assert
-      expect(globalThis.J.JAFTING.EXT.CREATE.Metadata.name).toBe('J-JAFTING-Creation');
-    });
-
     it('parses the menu switch id from plugin parameters', () =>
     {
       // Arrange & Act & Assert

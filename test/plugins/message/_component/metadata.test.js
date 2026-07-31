@@ -18,11 +18,15 @@ describe('J-MessageTextCodes metadata (direct src import)', () =>
     await import('../../../../src/plugins/message/core/_metadata/initialization.js');
   });
 
-  it('initializes J.MESSAGE metadata and regex', () =>
+  it('matches a leader choice conditional carrying the optional space after the colon', () =>
   {
     // Arrange & Act & Assert
-    expect(globalThis.J.MESSAGE.Metadata.name).toBe('J-MessageTextCodes');
     expect(globalThis.J.MESSAGE.RegExp.LeaderChoiceConditional.test('<leaderChoiceCondition: 3>')).toBe(true);
+  });
+
+  it('matches a switch-off choice conditional written without the optional space', () =>
+  {
+    // Arrange & Act & Assert
     expect(globalThis.J.MESSAGE.RegExp.SwitchOffChoiceConditional.test('<switchOffChoiceCondition:2>')).toBe(true);
   });
 });

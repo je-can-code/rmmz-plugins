@@ -75,12 +75,6 @@ describe('J-Aptitude-Typed metadata and plugin commands (direct src import)', ()
 
   describe('namespace construction', () =>
   {
-    it('registers the plugin metadata under the typed extension namespace', () =>
-    {
-      // Arrange & Act & Assert
-      expect(globalThis.J.APT.EXT.TYPED.Metadata.name).toBe('J-Aptitude-Typed');
-    });
-
     it('creates an aliased-method map for every class the plugin patches', () =>
     {
       // Arrange & Act

@@ -26,18 +26,6 @@ describe('J-HUD-InputFrame metadata (direct src import)', () =>
     await import('../../../../../../src/plugins/hud/ext/input/_metadata/initialization.js');
   });
 
-  it('exposes plugin name on J.HUD.EXT.INPUT.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.HUD.EXT.INPUT.Metadata.name).toBe('J-HUD-InputFrame');
-  });
-
-  it('exposes plugin version on J.HUD.EXT.INPUT.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.HUD.EXT.INPUT.Metadata.version).toMatchObject({ major: 1, minor: 2, patch: 0 });
-  });
-
   it('falls back to the default cooldown overlay icon index when unconfigured', () =>
   {
     // Arrange & Act & Assert

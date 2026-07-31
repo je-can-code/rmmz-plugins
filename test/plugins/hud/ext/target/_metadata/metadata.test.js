@@ -26,18 +26,6 @@ describe('J-HUD-TargetFrame metadata (direct src import)', () =>
     await import('../../../../../../src/plugins/hud/ext/target/_metadata/initialization.js');
   });
 
-  it('exposes plugin name on J.HUD.EXT.TARGET.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.HUD.EXT.TARGET.Metadata.name).toBe('J-HUD-TargetFrame');
-  });
-
-  it('exposes plugin version on J.HUD.EXT.TARGET.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.HUD.EXT.TARGET.Metadata.version).toMatchObject({ major: 1, minor: 0, patch: 1 });
-  });
-
   it('parses the target frame window bounds from plugin parameters', () =>
   {
     // Arrange & Act

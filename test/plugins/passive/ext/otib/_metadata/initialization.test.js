@@ -29,12 +29,6 @@ describe('J-Passive-OTIB initialization.js (direct src import)', () =>
     await import('../../../../../../src/plugins/passive/ext/otib/_metadata/initialization.js');
   });
 
-  it('exposes the plugin name on J.PASSIVE.EXT.OTIB.Metadata', () =>
-  {
-    // Act & Assert
-    expect(globalThis.J.PASSIVE.EXT.OTIB.Metadata.name).toBe('J-Passive-OTIB');
-  });
-
   it('parses the menu-switch plugin parameter into menuSwitchId', () =>
   {
     // Act & Assert

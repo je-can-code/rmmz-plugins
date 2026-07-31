@@ -18,10 +18,9 @@ describe('J-Log metadata (direct src import)', () =>
     await import('../../../../src/plugins/log/core/_metadata/initialization.js');
   });
 
-  it('initializes J.LOG metadata and inactivity duration from parameters', () =>
+  it('parses the log window inactivity duration out of the plugin parameters', () =>
   {
     // Arrange & Act & Assert
-    expect(globalThis.J.LOG.Metadata.name).toBe('J-Log');
     expect(globalThis.J.LOG.Metadata.InactivityTimerDuration).toBe(60);
   });
 });

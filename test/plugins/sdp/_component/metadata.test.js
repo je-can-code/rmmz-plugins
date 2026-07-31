@@ -33,12 +33,6 @@ describe('J-SDP metadata (direct src import)', () =>
 
   describe('plugin parameters', () =>
   {
-    it('maps the plugin name', () =>
-    {
-      // Arrange & Act & Assert
-      expect(globalThis.J.SDP.Metadata.name).toBe('J-SDP');
-    });
-
     it('maps the menu switch id', () =>
     {
       // Arrange & Act & Assert

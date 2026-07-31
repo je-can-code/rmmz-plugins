@@ -26,11 +26,15 @@ describe('J-SystemUtilities metadata (direct src import)', () =>
     globalThis.Bitmap.prototype.setContext = function(v) { this._context = v; };
   });
 
-  it('initializes J.UTILS metadata with parsed params', () =>
+  it('parses the autostart-newgame flag out of the plugin parameters', () =>
   {
     // Arrange & Act & Assert
-    expect(globalThis.J.UTILS.Metadata.name).toBe('J-SystemUtilities');
     expect(globalThis.J.UTILS.Metadata.autostartNewgame).toBe(false);
+  });
+
+  it('parses the autoload-devtools flag out of the plugin parameters', () =>
+  {
+    // Arrange & Act & Assert
     expect(globalThis.J.UTILS.Metadata.autoloadDevtools).toBe(false);
   });
 

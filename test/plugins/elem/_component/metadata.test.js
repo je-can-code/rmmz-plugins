@@ -18,21 +18,22 @@ describe('J-Elementalistics metadata and regex (direct src import)', () =>
     await import('../../../../src/plugins/elem/core/_metadata/initialization.js');
   });
 
-  it('exposes J.ELEM.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.ELEM.Metadata.name).toBe('J-Elementalistics');
-  });
-
-  it('attack and absorb tag regexes capture bracketed id lists', () =>
+  it('attack tag regex captures a bracketed id list', () =>
   {
     // Arrange & Act
-    const a = globalThis.J.ELEM.RegExp.AttackElementIds.exec('<attackElements:[3, 4]>');
-    const b = globalThis.J.ELEM.RegExp.AbsorbElementIds.exec('<absorbElements:[1]>');
+    const attack = globalThis.J.ELEM.RegExp.AttackElementIds.exec('<attackElements:[3, 4]>');
 
     // Assert
-    expect(a[1]).toBe('[3, 4]');
-    expect(b[1]).toBe('[1]');
+    expect(attack[1]).toBe('[3, 4]');
+  });
+
+  it('absorb tag regex captures a bracketed id list', () =>
+  {
+    // Arrange & Act
+    const absorb = globalThis.J.ELEM.RegExp.AbsorbElementIds.exec('<absorbElements:[1]>');
+
+    // Assert
+    expect(absorb[1]).toBe('[1]');
   });
 
   it('boost tag regex captures the bracketed [id, signed value] tuple', () =>

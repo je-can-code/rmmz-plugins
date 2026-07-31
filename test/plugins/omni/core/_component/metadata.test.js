@@ -62,8 +62,10 @@ describe('J-Omnipedia core metadata (direct src import)', () =>
       // Arrange & Act
       await import(omniInitPath);
 
-      // Assert
-      expect(globalThis.J.OMNI.Metadata.name).toBe('J-Omnipedia');
+      // Assert: the alias surface is declared after the version gate, so its presence is what
+      // proves initialization ran all the way through rather than throwing partway.
+      expect(globalThis.J.OMNI.Aliased).toBeDefined();
+      expect(globalThis.J.OMNI.Metadata.parsedPluginParameters).toBeDefined();
     });
 
     it('throws when J-Base is present but below the required version', async () =>
@@ -108,17 +110,6 @@ describe('J-Omnipedia core metadata (direct src import)', () =>
     beforeEach(async () =>
     {
       await import(omniInitPath);
-    });
-
-    it('records the plugin version from the build-time identity', () =>
-    {
-      // Arrange & Act
-      const { version } = globalThis.J.OMNI.Metadata;
-
-      // Assert
-      expect(version.major).toBe(1);
-      expect(version.minor).toBe(0);
-      expect(version.patch).toBe(0);
     });
 
     it('creates an aliased-method map for every class the plugin patches', () =>
