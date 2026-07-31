@@ -1317,10 +1317,6 @@ J.JAFTING.EXT.CREATE.Aliased.Game_System = new Map();
 J.JAFTING.EXT.CREATE.Aliased.Scene_Jafting = new Map();
 J.JAFTING.EXT.CREATE.Aliased.Window_JaftingList = new Map();
 /**
-* All regular expressions used by this plugin.
-*/
-J.JAFTING.EXT.CREATE.RegExp = {};
-/**
 * Dev-only cheat helpers for JAFTING Creation testing.
 */
 J.JAFTING.EXT.CREATE.Debug = {};

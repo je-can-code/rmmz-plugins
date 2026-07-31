@@ -44,9 +44,4 @@ J.HUD.EXT.BOSS.Metadata = new JHudBoss_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_
 J.HUD.EXT.BOSS.Aliased = {};
 J.HUD.EXT.BOSS.Aliased.Hud_Manager = new Map();
 J.HUD.EXT.BOSS.Aliased.Scene_Map = new Map();
-
-/**
- * All regular expressions used by this plugin.
- */
-J.HUD.EXT.BOSS.RegExp = {};
 //endregion Introduction

@@ -40,13 +40,6 @@ describe('J-HUD-BossFrame metadata (direct src import)', () =>
     expect(globalThis.J.HUD.EXT.BOSS.Aliased.Scene_Map).toBeInstanceOf(Map);
   });
 
-  it('reserves a regexp table even though it ships no patterns yet', () =>
-  {
-    // Arrange & Act & Assert: the table is staked out so later tags have somewhere to land without
-    // a second reader having to wonder whether the namespace exists.
-    expect(globalThis.J.HUD.EXT.BOSS.RegExp).toEqual({});
-  });
-
   it('completes the base plugin metadata initialization it extends', () =>
   {
     // Arrange & Act & Assert
