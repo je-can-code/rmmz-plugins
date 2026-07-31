@@ -3,11 +3,11 @@
  * Extends {@link #initialize}.<br/>
  * Includes our skill detail window.
  */
-J.CMS_K.Aliased.Window_SkillList.set('initialize', Window_SkillList.prototype.initialize);
+J.CMS.EXT.SKILL.Aliased.Window_SkillList.set('initialize', Window_SkillList.prototype.initialize);
 Window_SkillList.prototype.initialize = function(rect)
 {
   // perform original logic.
-  J.CMS_K.Aliased.Window_SkillList.get('initialize').call(this, rect);
+  J.CMS.EXT.SKILL.Aliased.Window_SkillList.get('initialize').call(this, rect);
 
   /**
    * The detail window for the skill.
@@ -46,11 +46,11 @@ Window_SkillList.prototype.refreshSkillDetailWindow = function()
 /**
  * Extends `.select()` to also update our skill detail window if need-be.
  */
-J.CMS_K.Aliased.Window_SkillList.set('select', Window_SkillList.prototype.select);
+J.CMS.EXT.SKILL.Aliased.Window_SkillList.set('select', Window_SkillList.prototype.select);
 Window_SkillList.prototype.select = function(index)
 {
   // perform original logic.
-  J.CMS_K.Aliased.Window_SkillList.get('select').call(this, index);
+  J.CMS.EXT.SKILL.Aliased.Window_SkillList.get('select').call(this, index);
   this.refreshSkillDetailWindow();
 };
 

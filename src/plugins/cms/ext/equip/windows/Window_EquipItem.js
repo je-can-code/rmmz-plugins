@@ -2,11 +2,11 @@
 /**
  * Extends the `.initialize()` to include tracking for the more equip data window.
  */
-J.CMS_E.Aliased.Window_EquipItem.set('initialize', Window_EquipItem.prototype.initialize);
+J.CMS.EXT.EQUIP.Aliased.Window_EquipItem.set('initialize', Window_EquipItem.prototype.initialize);
 Window_EquipItem.prototype.initialize = function(rect)
 {
   // perform original logic.
-  J.CMS_E.Aliased.Window_EquipItem.get('initialize').call(this, rect);
+  J.CMS.EXT.EQUIP.Aliased.Window_EquipItem.get('initialize').call(this, rect);
   /**
    * The more data window to manipulate.
    * @type {Window_MoreEquipData}

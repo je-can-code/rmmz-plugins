@@ -16,20 +16,36 @@ globalThis.J ||= {};
   {
     throw new Error(`Either missing J-Base or has a lower version than the required: ${requiredBaseVersion}`);
   }
+
+  // Check to ensure we have the minimum required version of the J-CMS plugin.
+  const requiredCmsVersion = '1.0.0';
+  const hasCmsRequirement = J.BASE.Helpers.satisfies(J.CMS.Metadata.version.version(), requiredCmsVersion);
+  if (hasCmsRequirement === false)
+  {
+    throw new Error(`Either missing J-CMS or has a lower version than the required: ${requiredCmsVersion}`);
+  }
 })();
 //endregion version check
 
 /**
+ * The plugin umbrella that governs all extensions of the parent.
+ */
+J.CMS.EXT ||= {};
+
+/**
  * The plugin umbrella that governs all things related to this plugin.
  */
-J.CMS_E = {};
+J.CMS.EXT.EQUIP = {};
 
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.CMS_E.Metadata = new J_CmsEquip_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
+J.CMS.EXT.EQUIP.Metadata = new J_CmsEquip_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
 
-J.CMS_E.Aliased = {
+/**
+ * A collection of all aliased methods for this plugin.
+ */
+J.CMS.EXT.EQUIP.Aliased = {
   Scene_Equip: new Map(),
   Window_EquipItem: new Map(),
   Window_EquipSlot: new Map(),

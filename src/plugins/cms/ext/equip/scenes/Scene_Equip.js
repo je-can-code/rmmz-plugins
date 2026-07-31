@@ -282,11 +282,11 @@ Scene_Equip.prototype.switchToMoreDataFromEquipItems = function()
 /**
  * Extends the slot window to include our additional actions.
  */
-J.CMS_E.Aliased.Scene_Equip.set('createSlotWindow', Scene_Equip.prototype.createSlotWindow);
+J.CMS.EXT.EQUIP.Aliased.Scene_Equip.set('createSlotWindow', Scene_Equip.prototype.createSlotWindow);
 Scene_Equip.prototype.createSlotWindow = function()
 {
   // perform original logic.
-  J.CMS_E.Aliased.Scene_Equip.get('createSlotWindow').call(this);
+  J.CMS.EXT.EQUIP.Aliased.Scene_Equip.get('createSlotWindow').call(this);
   this.slotWindow().setHandler('more', this.switchToMoreDataFromEquipSlots.bind(this));
   this.slotWindow().setHandler('context', this.onContextUnequipSlot.bind(this));
   this.slotWindow().setHandler('actor-next', this.nextActor.bind(this));
@@ -444,11 +444,11 @@ Scene_Equip.prototype.onActorChange = function()
 /**
  * Extends the actor refresh to include the more data window.
  */
-J.CMS_E.Aliased.Scene_Equip.set('refreshActor', Scene_Equip.prototype.refreshActor);
+J.CMS.EXT.EQUIP.Aliased.Scene_Equip.set('refreshActor', Scene_Equip.prototype.refreshActor);
 Scene_Equip.prototype.refreshActor = function()
 {
   // perform original logic.
-  J.CMS_E.Aliased.Scene_Equip.get('refreshActor').call(this);
+  J.CMS.EXT.EQUIP.Aliased.Scene_Equip.get('refreshActor').call(this);
   const actor = this.actor();
   this.moreDataWindow()
     .setActor(actor);

@@ -30,7 +30,7 @@ describe('J-CMS metadata (direct src import)', () =>
     it('maps each configured menu command symbol to its help text', () =>
     {
       // Arrange & Act
-      const { commandHelpText } = globalThis.J.CMS_M.Metadata;
+      const { commandHelpText } = globalThis.J.CMS.Metadata;
 
       // Assert
       expect(commandHelpText.get('item')).toBe(DEFAULT_CMS_PLUGIN_PARAMS['help-item']);
@@ -40,7 +40,7 @@ describe('J-CMS metadata (direct src import)', () =>
     it('keys the map by command symbol rather than by parameter name', () =>
     {
       // Arrange & Act
-      const { commandHelpText } = globalThis.J.CMS_M.Metadata;
+      const { commandHelpText } = globalThis.J.CMS.Metadata;
 
       // Assert: the window looks these up by the symbol it already has in hand.
       expect([ ...commandHelpText.keys() ]).toEqual([
@@ -52,7 +52,7 @@ describe('J-CMS metadata (direct src import)', () =>
     {
       // Arrange & Act & Assert: formation ships unconfigured, and an undefined here would render
       // as the literal text "undefined" in the help window.
-      expect(globalThis.J.CMS_M.Metadata.commandHelpText.get('formation')).toBe('');
+      expect(globalThis.J.CMS.Metadata.commandHelpText.get('formation')).toBe('');
     });
   });
 
@@ -61,7 +61,7 @@ describe('J-CMS metadata (direct src import)', () =>
     it('returns the help text registered against a known symbol', () =>
     {
       // Arrange & Act & Assert
-      expect(globalThis.J.CMS_M.Metadata.helpTextFor('equip'))
+      expect(globalThis.J.CMS.Metadata.helpTextFor('equip'))
         .toBe(DEFAULT_CMS_PLUGIN_PARAMS['help-equip']);
     });
 
@@ -69,7 +69,7 @@ describe('J-CMS metadata (direct src import)', () =>
     {
       // Arrange & Act & Assert: other plugins add their own menu commands, and an unknown symbol
       // has to render as blank rather than crash the help window.
-      expect(globalThis.J.CMS_M.Metadata.helpTextFor('sdp')).toBe('');
+      expect(globalThis.J.CMS.Metadata.helpTextFor('sdp')).toBe('');
     });
   });
 

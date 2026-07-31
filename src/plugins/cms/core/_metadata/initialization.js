@@ -22,10 +22,15 @@ globalThis.J ||= {};
 /**
  * The plugin umbrella that governs all things related to this plugin.
  */
-J.CMS_M = {};
+J.CMS = {};
 
 /**
  * The `metadata` associated with this plugin, such as version.
  */
-J.CMS_M.Metadata = new J_CmsMain_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
+J.CMS.Metadata = new J_CmsMain_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VERSION__);
+
+/**
+ * The plugin umbrella that governs all extensions of this plugin.
+ */
+J.CMS.EXT = {};
 //endregion Introduction

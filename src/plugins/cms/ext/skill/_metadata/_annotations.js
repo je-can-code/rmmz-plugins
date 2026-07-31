@@ -6,7 +6,9 @@
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
+ * @base J-CMS
  * @orderAfter J-Base
+ * @orderAfter J-CMS
  * @help
  * ============================================================================
  * This is a redesign of the skill menu.
