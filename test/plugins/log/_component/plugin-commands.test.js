@@ -88,5 +88,116 @@ describe('J-Log plugin commands mutate managers (direct src import)', () =>
     // Assert
     expect(globalThis.$actionLogManager.getLogs().length).toBe(0);
   });
+
+  describe('dia log', () =>
+  {
+    it('showDiaLog makes the dialog window visible', () =>
+    {
+      // Arrange- the three logs are separate managers so a cutscene can silence combat chatter
+      // without also silencing its own dialogue.
+      globalThis.DataManager.createGameObjects();
+
+      // Act
+      globalThis.__logPluginCommands.get('J-Log:showDiaLog')();
+
+      // Assert
+      expect(globalThis.$diaLogManager.isVisible()).toBe(true);
+    });
+
+    it('hideDiaLog hides the dialog window again', () =>
+    {
+      // Arrange
+      globalThis.DataManager.createGameObjects();
+      globalThis.__logPluginCommands.get('J-Log:showDiaLog')();
+
+      // Act
+      globalThis.__logPluginCommands.get('J-Log:hideDiaLog')();
+
+      // Assert
+      expect(globalThis.$diaLogManager.isHidden()).toBe(true);
+    });
+
+    it('addDiaLog splits the supplied text into one entry across its lines', () =>
+    {
+      // Arrange- the editor hands over a single multi-line string, and the builder wants an array.
+      globalThis.DataManager.createGameObjects();
+
+      // Act
+      globalThis.__logPluginCommands.get('J-Log:addDiaLog')(
+        { lines: 'first line\nsecond line', faceName: 'Actor1', faceIndex: '2' });
+
+      // Assert
+      const [ log ] = globalThis.$diaLogManager.getLogs();
+      expect(globalThis.$diaLogManager.getLogs().length).toBe(1);
+      expect(log.lines()).toEqual([ 'first line', 'second line' ]);
+    });
+
+    it('clearDiaLog empties the accumulated dialogue entries', () =>
+    {
+      // Arrange
+      globalThis.DataManager.createGameObjects();
+      globalThis.__logPluginCommands.get('J-Log:addDiaLog')(
+        { lines: 'first line', faceName: 'Actor1', faceIndex: '2' });
+
+      // Act
+      globalThis.__logPluginCommands.get('J-Log:clearDiaLog')();
+
+      // Assert
+      expect(globalThis.$diaLogManager.getLogs().length).toBe(0);
+    });
+  });
+
+  describe('loot log', () =>
+  {
+    it('showLootLog makes the loot window visible', () =>
+    {
+      // Arrange
+      globalThis.DataManager.createGameObjects();
+
+      // Act
+      globalThis.__logPluginCommands.get('J-Log:showLootLog')();
+
+      // Assert
+      expect(globalThis.$lootLogManager.isVisible()).toBe(true);
+    });
+
+    it('hideLootLog hides the loot window again', () =>
+    {
+      // Arrange
+      globalThis.DataManager.createGameObjects();
+      globalThis.__logPluginCommands.get('J-Log:showLootLog')();
+
+      // Act
+      globalThis.__logPluginCommands.get('J-Log:hideLootLog')();
+
+      // Assert
+      expect(globalThis.$lootLogManager.isHidden()).toBe(true);
+    });
+
+    it('addLootLog records the obtained loot as an entry', () =>
+    {
+      // Arrange
+      globalThis.DataManager.createGameObjects();
+
+      // Act
+      globalThis.__logPluginCommands.get('J-Log:addLootLog')({ lootId: '1', lootType: 'i' });
+
+      // Assert
+      expect(globalThis.$lootLogManager.getLogs().length).toBe(1);
+    });
+
+    it('clearLootLog empties the accumulated loot entries', () =>
+    {
+      // Arrange
+      globalThis.DataManager.createGameObjects();
+      globalThis.__logPluginCommands.get('J-Log:addLootLog')({ lootId: '1', lootType: 'i' });
+
+      // Act
+      globalThis.__logPluginCommands.get('J-Log:clearLootLog')();
+
+      // Assert
+      expect(globalThis.$lootLogManager.getLogs().length).toBe(0);
+    });
+  });
 });
 //endregion plugins/log/_component/plugin-commands.test.js

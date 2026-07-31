@@ -161,6 +161,88 @@ describe('J-JAFTING + J-JAFTING-Creation metadata (direct src import)', () =>
       .rejects.toThrow(/failed to parse JSON at data\/config\.crafting\.json/i);
   });
 
+  describe('optional SDP linkage', () =>
+  {
+    /**
+     * Publishes a stand-in J-SDP at the given version: registered in the shared plugin registry so
+     * `hasPlugin` finds it, and present on the J umbrella so its version can be compared. Passing
+     * null leaves J-SDP entirely absent, which is the "not installed" case.
+     * @param {?string} version The semver J-SDP should report.
+     * @param {string} registrationName The name this stand-in registers under.
+     */
+    const publishSdpAt = async (version, registrationName) =>
+    {
+      if (version === null)
+      {
+        delete globalThis.J.SDP;
+        return;
+      }
+
+      const [ major, minor, patch ] = version.split('.');
+      globalThis.J.SDP = {
+        Metadata: {
+          version: PluginVersion.builder.major(major)
+            .minor(minor)
+            .patch(patch)
+            .build(),
+        },
+      };
+
+      // hasPlugin() keys off the shared registry, so a stand-in has to actually register itself
+      // there; the instance is discarded because only its registration matters.
+      const registered = new globalThis.PluginMetadata(registrationName, version);
+      expect(globalThis.PluginMetadata.hasPlugin(registered.name)).toBe(true);
+    };
+
+    /**
+     * Rebuilds the creation metadata against a brand-new PluginMetadata, whose static name
+     * registry therefore starts empty. That keeps each case below independent: one needs J-SDP
+     * absent from the registry, the others need it present, and a shared registry cannot be both.
+     */
+    const rebuildAgainstEmptyRegistry = async () =>
+    {
+      const { default: FreshPluginMetadata } =
+        await import('../../../../src/plugins/_base/models/PluginMetadata.js');
+      globalThis.PluginMetadata = FreshPluginMetadata;
+
+      await bootJaftingCreate(VITEST_MINIMAL_CRAFTING_JSON,
+        { bootBase: false, pluginName: 'J-JAFTING-Creation' });
+
+      return globalThis.J.JAFTING.EXT.CREATE.Metadata;
+    };
+
+    it('declines the linkage when J-SDP was never registered', async () =>
+    {
+      // Arrange- crafting recipes may charge SDP points, but the whole feature is optional and its
+      // absence must read as "not available" rather than crashing.
+      const metadata = await rebuildAgainstEmptyRegistry();
+      await publishSdpAt(null, '');
+
+      // Act & Assert
+      expect(metadata.usingSdp()).toBe(false);
+    });
+
+    it('declines the linkage when J-SDP is present but below the minimum version', async () =>
+    {
+      // Arrange
+      const metadata = await rebuildAgainstEmptyRegistry();
+      await publishSdpAt('1.0.0', 'J-SDP');
+
+      // Act & Assert- an old SDP cannot answer the calls this crafting system would make of it.
+      expect(metadata.usingSdp()).toBe(false);
+    });
+
+    it('accepts the linkage when J-SDP is registered at a satisfying version', async () =>
+    {
+      // Arrange
+      const metadata = await rebuildAgainstEmptyRegistry();
+      await publishSdpAt('2.0.0', 'J-SDP');
+
+      // Act & Assert
+      expect(metadata.usingSdp()).toBe(true);
+    });
+  });
+
   describe('host version requirements', () =>
   {
     it('the core throws when J-Base does not satisfy the minimum required version', async () =>

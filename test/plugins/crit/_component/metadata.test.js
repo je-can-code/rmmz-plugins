@@ -259,5 +259,62 @@ describe('J-CriticalFactors metadata (direct src import)', () =>
     // restore the satisfying version so later tests in this file are unaffected.
     globalThis.J.BASE.Metadata.Version = originalVersion;
   });
+
+  describe('base factor plugin parameters', () =>
+  {
+    /**
+     * Builds a second metadata instance against configured parameters. PluginMetadata keeps a
+     * static name registry that rejects duplicates, so each variation introduces itself under a
+     * name of its own; only the registry key and the parameter lookup care about the name.
+     * @param {Record<string, string>} params The plugin parameters to serve.
+     * @param {string} name The plugin name this instance registers under.
+     */
+    const buildWithParams = async (params, name) =>
+    {
+      const { default: CritPluginMetadata } =
+        await import('../../../../src/plugins/crit/core/_metadata/_pluginMetadata.js');
+      const previous = globalThis.PluginManager;
+      globalThis.PluginManager = { parameters: requested => (requested === name ? params : {}) };
+
+      const metadata = new CritPluginMetadata(name, '1.0.0');
+      globalThis.PluginManager = previous;
+
+      return metadata;
+    };
+
+    it('converts a configured percent-point default into the factor battler math consumes', async () =>
+    {
+      // Arrange & Act- the editor stores these as percent points, and every consumer wants /100.
+      const metadata = await buildWithParams(
+        { critMultiplierBaseDefault: '150.00', critReductionBaseDefault: '25' },
+        'J-CriticalFactors-Configured');
+
+      // Assert
+      expect(metadata.baseCdmFactor).toBe(1.5);
+      expect(metadata.baseCtrFactor).toBe(0.25);
+    });
+
+    it('keeps the built-in default when a configured value cannot be parsed', async () =>
+    {
+      // Arrange & Act
+      const metadata = await buildWithParams(
+        { critMultiplierBaseDefault: 'not-a-number' },
+        'J-CriticalFactors-Unparseable');
+
+      // Assert- a NaN factor would silently zero out every crit in the game.
+      expect(metadata.baseCdmFactor).toBe(0.5);
+    });
+
+    it('keeps the built-in default when the parameter is blank', async () =>
+    {
+      // Arrange & Act
+      const metadata = await buildWithParams(
+        { critMultiplierBaseDefault: '' },
+        'J-CriticalFactors-Blank');
+
+      // Assert
+      expect(metadata.baseCdmFactor).toBe(0.5);
+    });
+  });
 });
 //endregion plugins/crit/_component/metadata.test.js
