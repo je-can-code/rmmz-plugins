@@ -58,7 +58,6 @@ describe('J-JAFTING-Creation plugin commands (direct src import)', () =>
     expect(Object.keys(handlers)).toEqual([
       'call-menu', 'unlock-categories', 'lock-categories', 'unlock-recipes', 'lock-recipes',
       'unlock-all-categories', 'lock-all-categories', 'unlock-all-recipes', 'lock-all-recipes',
-      'debug-prepare-creation-testing',
     ]);
   });
 
@@ -156,67 +155,5 @@ describe('J-JAFTING-Creation plugin commands (direct src import)', () =>
     expect(globalThis.$gameParty.lockAllRecipes).toHaveBeenCalled();
   });
 
-  describe('debug-prepare-creation-testing', () =>
-  {
-    it('defaults the multiplier to 15 when no override is provided', () =>
-    {
-      // Arrange
-      const args = {};
-
-      // Act
-      handlers['debug-prepare-creation-testing'](args);
-
-      // Assert
-      expect(globalThis.J.JAFTING.EXT.CREATE.Debug.prepareFullCreationTest).toHaveBeenCalledWith(15);
-    });
-
-    it('defaults the multiplier to 15 when the override is an empty string', () =>
-    {
-      // Arrange
-      const args = { recipeStockMultiplier: '' };
-
-      // Act
-      handlers['debug-prepare-creation-testing'](args);
-
-      // Assert
-      expect(globalThis.J.JAFTING.EXT.CREATE.Debug.prepareFullCreationTest).toHaveBeenCalledWith(15);
-    });
-
-    it('uses the floored parsed override when it is a finite number >= 1', () =>
-    {
-      // Arrange
-      const args = { recipeStockMultiplier: '7.9' };
-
-      // Act
-      handlers['debug-prepare-creation-testing'](args);
-
-      // Assert
-      expect(globalThis.J.JAFTING.EXT.CREATE.Debug.prepareFullCreationTest).toHaveBeenCalledWith(7);
-    });
-
-    it('falls back to the default of 15 when the override is below 1', () =>
-    {
-      // Arrange
-      const args = { recipeStockMultiplier: '0.5' };
-
-      // Act
-      handlers['debug-prepare-creation-testing'](args);
-
-      // Assert
-      expect(globalThis.J.JAFTING.EXT.CREATE.Debug.prepareFullCreationTest).toHaveBeenCalledWith(15);
-    });
-
-    it('falls back to the default of 15 when the override is not a finite number', () =>
-    {
-      // Arrange
-      const args = { recipeStockMultiplier: 'not-a-number' };
-
-      // Act
-      handlers['debug-prepare-creation-testing'](args);
-
-      // Assert
-      expect(globalThis.J.JAFTING.EXT.CREATE.Debug.prepareFullCreationTest).toHaveBeenCalledWith(15);
-    });
-  });
 });
 //endregion plugins/jafting/ext/create/_metadata/plugin-commands.test.js
