@@ -161,6 +161,30 @@ describe('J-JAFTING + J-JAFTING-Creation metadata (direct src import)', () =>
       .rejects.toThrow(/failed to parse JSON at data\/config\.crafting\.json/i);
   });
 
+  describe('configuration load reporting', () =>
+  {
+    it('reports what it loaded when external file load info is enabled', async () =>
+    {
+      // Arrange
+      const logSpy = vi.spyOn(console, 'log')
+        .mockImplementation(() => {});
+      globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = true;
+
+      // Act
+      await bootJaftingCreate(VITEST_MINIMAL_CRAFTING_JSON,
+        { bootBase: false, pluginName: 'J-JAFTING-Creation-Logged' });
+
+      // Assert
+      const [ [ logged ] ] = logSpy.mock.calls;
+      expect(logged).toContain('1 recipes');
+      expect(logged).toContain('1 categories');
+
+      globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = false;
+      logSpy.mockRestore();
+    });
+
+  });
+
   describe('optional SDP linkage', () =>
   {
     /**

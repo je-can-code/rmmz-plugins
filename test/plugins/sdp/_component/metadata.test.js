@@ -243,6 +243,102 @@ describe('J-SDP metadata (direct src import)', () =>
     });
   });
 
+  describe('rarity cost defaults', () =>
+  {
+    /**
+     * Builds a second metadata instance against doctored plugin parameters. PluginMetadata keeps a
+     * static name registry that rejects duplicates, so each variation registers under its own name.
+     * @param {Record<string, string>} overrides Parameters layered over the harness defaults.
+     * @param {string} name The plugin name this instance registers under.
+     */
+    const buildWithParams = async (overrides, name) =>
+    {
+      const { default: SdpPluginMetadata } =
+        await import('../../../../src/plugins/sdp/core/_metadata/_pluginMetadata.js');
+      const previous = globalThis.PluginManager;
+      globalThis.PluginManager = {
+        parameters: requested => (requested === name
+          ? { ...DEFAULT_SDP_PLUGIN_PARAMS, ...overrides }
+          : previous.parameters(requested)),
+        registerCommand() {},
+      };
+
+      const metadata = new SdpPluginMetadata(name, '2.0.0');
+      globalThis.PluginManager = previous;
+
+      return metadata;
+    };
+
+    it('falls back to the built-in growth base when a rarity mult is left unconfigured', async () =>
+    {
+      // Arrange & Act- an unset parameter arrives as an empty string from the editor.
+      const metadata = await buildWithParams({ sdpDefaultCommonMult: '' }, 'J-SDP-BlankMult');
+
+      // Assert
+      expect(metadata.panelCostDefaultsByRarity[0].multGrowthCost).toBe(1.06);
+    });
+
+    it('falls back to the built-in growth base when a rarity mult is not a positive number', async () =>
+    {
+      // Arrange & Act- a zero or negative growth base would collapse every rank-up cost curve
+      // built on top of it, so it is refused rather than honored.
+      const metadata = await buildWithParams({ sdpDefaultRareMult: '0' }, 'J-SDP-ZeroMult');
+
+      // Assert
+      expect(metadata.panelCostDefaultsByRarity[2].multGrowthCost).toBe(1.06);
+    });
+
+    it('honors a configured rarity mult that is a positive number', async () =>
+    {
+      // Arrange & Act- the fallbacks must not swallow a legitimately configured curve.
+      const metadata = await buildWithParams({ sdpDefaultEpicMult: '1.25' }, 'J-SDP-ConfiguredMult');
+
+      // Assert
+      expect(metadata.panelCostDefaultsByRarity[3].multGrowthCost).toBe(1.25);
+    });
+
+    it('reports what it loaded when external file load info is enabled', async () =>
+    {
+      // Arrange
+      const logSpy = vi.spyOn(console, 'log')
+        .mockImplementation(() => {});
+      globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = true;
+
+      // Act
+      await buildWithParams({}, 'J-SDP-Logged');
+
+      // Assert
+      const [ [ logged ] ] = logSpy.mock.calls;
+      expect(logged).toContain('panels');
+      expect(logged).toContain('subgroups');
+      expect(logged).toContain('families');
+
+      globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = false;
+      logSpy.mockRestore();
+    });
+
+    it('stays silent about the load when J-Base is too old to be asked', async () =>
+    {
+      // Arrange- the summary reaches for J-Base helpers, so an out-of-date J-Base means the load
+      // still happens but reports nothing rather than failing.
+      const logSpy = vi.spyOn(console, 'log')
+        .mockImplementation(() => {});
+      globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = true;
+      const originalVersion = globalThis.J.BASE.Metadata.Version;
+      globalThis.J.BASE.Metadata.Version = '0.0.1';
+
+      // Act
+      const metadata = await buildWithParams({}, 'J-SDP-OldBase');
+
+      // Assert- the panels still classified; only the reporting went quiet.
+      expect(metadata.panelsMap.size).toBeGreaterThan(0);
+
+      globalThis.J.BASE.Metadata.Version = originalVersion;
+      globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = false;
+      logSpy.mockRestore();
+    });
+  });
+
   describe('mastery validation', () =>
   {
     /** @type {object} the metadata class itself, whose validators are static and pure. */
