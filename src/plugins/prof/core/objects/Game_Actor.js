@@ -430,7 +430,8 @@ Game_Actor.prototype.updateBonusSkillProficiencyGains = function()
 Object.defineProperty(Game_Actor.prototype, 'prof', {
   get: function()
   {
-    const sdpBonus = this.getSdpBonusForParameterKey
+    // J-SDP is optional, so its contribution is only asked for when that plugin is present.
+    const sdpBonus = J.SDP
       ? this.getSdpBonusForParameterKey('prof', 1)
       : 0;
     return this._j._proficiency._bonusSkillProficiencyGains + sdpBonus;
