@@ -93,10 +93,14 @@ class Scene_JaftingCreate
   }
 
   /**
-   * Initialize all properties for the Creation scene.
+   * Extends {@link #initMembers}.<br/>
+   * Also initializes all properties for the Creation scene.
    */
   initMembers()
   {
+    // perform original logic.
+    super.initMembers();
+
     // initialize the root-namespace definition members.
     this.initCoreMembers();
 

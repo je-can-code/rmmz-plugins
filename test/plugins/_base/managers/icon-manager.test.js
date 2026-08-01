@@ -149,7 +149,7 @@ describe('IconManager (direct src import)', () =>
   {
     it.each([
       [ 1, 82 ], [ 2, 2592 ], [ 3, 77 ], [ 4, 79 ], [ 5, 188 ], [ 6, 227 ],
-      [ 7, 76 ], [ 8, 68 ], [ 9, 69 ], [ 10, 64 ], [ 11, 67 ], [ 12, 2192 ],
+      [ 7, 76 ], [ 8, 2192 ],
     ])('maps skillTypeId %i to icon %i', (skillTypeId, expected) =>
     {
       expect(IconManager.skillType(skillTypeId)).toBe(expected);

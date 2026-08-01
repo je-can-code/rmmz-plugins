@@ -520,8 +520,18 @@ needed. Reserve VM-style bundle evaluation for prototype-patch and metadata test
 - Each JABS extension pack gets its own isolated fixture — never share one between packs.
 - `vi.spyOn` on a bare-global plugin object leaks into later tests in the same file. Restore manually,
   per test; do not rely on `restoreAllMocks`.
-- **Scenes, sprites, and windows are deliberately coverage-invisible.** Logic found in a view gets
-  extracted into a service and tested there — never covered in place.
+- **Logic found in a view gets extracted into a service and tested there** — never covered in place.
+  Business logic does not belong inside a window, and this rule has not changed.
+- **Wiring is the exception, and it has a harness.** `test/setup/rmmz-view-harness.js` boots the real
+  view layer — real PIXI, real `Window_*`, real `Scene_*` — with only `Bitmap` and the shader-compiling
+  filters mocked, needing no new dependencies. Use it for the seams that have nowhere else to live:
+  `initMembers` chains reaching their base, `makeCommandList` building the rows it claims, a handler
+  leaving the cursor somewhere reachable, a control legend naming a semantic something actually binds.
+  Read [`docs/testing-scenes-and-windows.md`](docs/testing-scenes-and-windows.md) before using it —
+  the load order is unforgiving and two steps fail somewhere that looks unrelated to the cause.
+  `measureTextWidth` is faked, so text-metric layout stays untested regardless of coverage.
+- `vitest.config.js` still excludes `scenes/**`, `sprites/**`, `windows/**` from coverage. Lift that
+  **per family, as tests land** — flipping it wholesale buries real targets under hundreds of 0% files.
 - If writing a test surfaces a real bug or dead code, **stop and raise it** rather than testing around
   it. A block that only calls `console.error` is a deletion candidate, not a coverage gap.
 

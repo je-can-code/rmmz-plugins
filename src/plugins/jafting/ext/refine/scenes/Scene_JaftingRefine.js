@@ -76,10 +76,14 @@ class Scene_JaftingRefine
   }
 
   /**
-   * Initialize all properties for the Refinement scene.
+   * Extends {@link #initMembers}.<br/>
+   * Also initializes all properties for the Refinement scene.
    */
   initMembers()
   {
+    // perform original logic.
+    super.initMembers();
+
     // initialize the root-namespace definition members.
     this.initCoreMembers();
 

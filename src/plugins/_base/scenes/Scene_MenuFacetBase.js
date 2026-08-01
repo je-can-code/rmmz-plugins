@@ -34,10 +34,14 @@ class Scene_MenuFacetBase
   }
 
   /**
-   * Initializes all custom members of this scene.
+   * Extends {@link #initMembers}.<br/>
+   * Also initializes the members shared by every facet scene.
    */
   initMembers()
   {
+    // perform original logic.
+    super.initMembers();
+
     /**
      * The shared root namespace for all of J's plugin data.
      */

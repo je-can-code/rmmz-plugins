@@ -30,10 +30,14 @@ class Scene_Difficulty
   }
 
   /**
-   * Initializes all properties for this scene.
+   * Extends {@link #initMembers}.<br/>
+   * Also initializes all properties for this scene.
    */
   initMembers()
   {
+    // perform original logic.
+    super.initMembers();
+
     /**
      * The shared root namespace for all of J's plugin data.
      */

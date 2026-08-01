@@ -163,6 +163,7 @@ the ship you are editing already uses.
 | Path | What it is |
 |---|---|
 | `test/setup/rmmz-engine-loader.js` | Loads the real vendored `rmmz_core.js` / `rmmz_objects.js` so tests run against actual engine classes |
+| `test/setup/rmmz-view-harness.js` | Loads the *whole* view layer — real PIXI, real `Window_*`, real `Scene_*` — with only `Bitmap` and the shader-compiling filters mocked. See [`testing-scenes-and-windows.md`](testing-scenes-and-windows.md) |
 | `test/setup/install-minimal-menu-ui-stubs.js` | Menu scene/window scaffolding shared by SDP, Difficulty, and Aptitude |
 | `test/setup/install-plugin-manager-with-params.js` | `PluginManager` with plugin parameters populated |
 | `test/setup/repo-root.js` | Repo root path resolution |

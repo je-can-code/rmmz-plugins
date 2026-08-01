@@ -876,12 +876,15 @@ class Scene_SDP
   {
     return [
       {
+        // one word for two behaviors: with ranks queued this buys the whole cart, and with an empty
+        // cart it buys a single rank of whatever is hovered. Both are a purchase, so the legend says
+        // so rather than naming only the path the player happens not to be on.
         semantic: 'ok',
-        label: 'add to cart',
+        label: 'purchase',
       },
       {
         semantic: 'context',
-        label: 'checkout',
+        label: 'hide maxed',
       },
       {
         semantic: [ 'cart-dec', 'cart-inc' ],
@@ -890,10 +893,6 @@ class Scene_SDP
       {
         semantic: [ 'content-prev', 'content-next' ],
         label: 'switch family',
-      },
-      {
-        semantic: 'more',
-        label: 'hide maxed',
       },
       {
         semantic: [ 'actor-prev', 'actor-next' ],

@@ -46,10 +46,14 @@ class Scene_Questopedia
   }
 
   /**
-   * Initialize all properties for our omnipedia.
+   * Extends {@link #initMembers}.<br/>
+   * Also initializes all properties for our omnipedia.
    */
   initMembers()
   {
+    // perform original logic.
+    super.initMembers();
+
     // initialize the root-namespace definition members.
     this.initCoreMembers();
 

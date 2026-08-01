@@ -313,6 +313,11 @@ class Scene_JabsAllyAi
     // refresh the window to pick up the new state.
     this.partyListWindow()
       .refresh();
+
+    // processOk deactivates before dispatching, so the cursor must be handed back deliberately-
+    // this command applies in place rather than opening anything, so focus never moved.
+    this.partyListWindow()
+      .activate();
   }
 
   /**
@@ -333,6 +338,11 @@ class Scene_JabsAllyAi
     // redraw so the newly-equipped preset shows as equipped.
     this.presetListWindow()
       .refresh();
+
+    // the preset stays on screen so another can be picked immediately; processOk already
+    // deactivated it, so without this the scene would hold a cursor nobody can move.
+    this.presetListWindow()
+      .activate();
   }
 
   /**
@@ -349,6 +359,10 @@ class Scene_JabsAllyAi
 
     this.presetListWindow()
       .refresh();
+
+    // a toggle leaves the player exactly where they were, so the cursor returns to this list.
+    this.presetListWindow()
+      .activate();
   }
 
   /**
@@ -374,6 +388,10 @@ class Scene_JabsAllyAi
     // redraw so the newly-chosen formation shows as chosen.
     this.formationListWindow()
       .refresh();
+
+    // formations apply in place like the presets do, so the cursor stays on this list.
+    this.formationListWindow()
+      .activate();
   }
   //endregion commands
 

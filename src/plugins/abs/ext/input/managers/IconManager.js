@@ -245,11 +245,13 @@ IconManager.jabsIconTextForSymbol = function(symbol)
  */
 IconManager.registerJabsInputTexts = function()
 {
-  // the four face buttons.
+  // the four face buttons, in the order the sheet lays them out: cross, circle, square, triangle.
+  // that order is the gamepad's own button indices, so the pairing here must follow
+  // {@link Input.gamepadMapper} rather than the order the symbols happen to be declared in.
   this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.Mainhand, 2448);
   this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.Offhand, 2449);
-  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.Tool, 2450);
-  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.Dash, 2451);
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.Dash, 2450);
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.Tool, 2451);
 
   // the four shoulders and triggers.
   this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.SkillTrigger, 2452);
@@ -257,9 +259,10 @@ IconManager.registerJabsInputTexts = function()
   this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.StrafeTrigger, 2454);
   this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.MobilitySkill, 2455);
 
-  // the two center buttons.
-  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.Quickmenu, 2456);
-  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.PartyCycle, 2457);
+  // the two center buttons, select before start, matching their button indices the same way the
+  // face buttons and shoulders above do.
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.PartyCycle, 2456);
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.Quickmenu, 2457);
 
   // the four directions, which menus lean on far more heavily than the map does.
   this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.DirLeft, 2458);

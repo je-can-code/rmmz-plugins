@@ -45,10 +45,14 @@ class Scene_JabsRemap
   }
 
   /**
-   * Initialize all properties required by the scene.
+   * Extends {@link #initMembers}.<br/>
+   * Also initializes all properties required by the scene.
    */
   initMembers()
   {
+    // perform original logic.
+    super.initMembers();
+
     // initialize the root-namespace definition members.
     this.initCoreMembers();
 
