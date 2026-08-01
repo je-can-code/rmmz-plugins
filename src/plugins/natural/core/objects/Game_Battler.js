@@ -701,10 +701,13 @@ Game_Battler.prototype.refreshMaxTpBuffs = function()
  */
 Game_Battler.prototype.refreshHarBuffs = function()
 {
-  // get the pre-natural HAR value (notetag factor + SDP bonus) for this battler.
-  const baseParam = this.baseHarFactor() + (this.getSdpBonusForParameterKey
+  // get the pre-natural HAR value (notetag factor + SDP bonus) for this battler. J-SDP is
+  // optional, and even when present it only panels actors- enemies never gain from panels, so
+  // both conditions have to hold before the bonus can be asked for.
+  const sdpBonus = (J.SDP && this.isActor())
     ? this.getSdpBonusForParameterKey('har', 1)
-    : 0);
+    : 0;
+  const baseParam = this.baseHarFactor() + sdpBonus;
 
   // destructure out the plus and rate structures for buffs.
   const [ plusStructure, rateStructure, , ] = this.getRegexForHar();

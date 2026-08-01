@@ -639,10 +639,12 @@ Game_Actor.prototype.applyNaturalHarGrowths = function()
   // destructure out the plus and rate structures for growths.
   const [ , , growthPlusStructure, growthRateStructure ] = this.getRegexForHar();
 
-  // grab the pre-natural HAR value (notetag factor + SDP bonus) for value basing.
-  const baseHar = this.baseHarFactor() + (this.getSdpBonusForParameterKey
+  // grab the pre-natural HAR value (notetag factor + SDP bonus) for value basing; J-SDP is
+  // optional, so its contribution is only asked for when that plugin is actually present.
+  const sdpBonus = J.SDP
     ? this.getSdpBonusForParameterKey('har', 1)
-    : 0);
+    : 0;
+  const baseHar = this.baseHarFactor() + sdpBonus;
 
   // calculate the flat growth for this parameter.
   const growthPlus = this.naturalParamBuff(growthPlusStructure, baseHar);

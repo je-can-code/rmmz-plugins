@@ -1187,7 +1187,8 @@ Game_Battler.prototype.refreshMaxTpBuffs = function() {
 * Refreshes both HAR plus/rate buffs.
 */
 Game_Battler.prototype.refreshHarBuffs = function() {
-	const baseParam = this.baseHarFactor() + (this.getSdpBonusForParameterKey ? this.getSdpBonusForParameterKey("har", 1) : 0);
+	const sdpBonus = J.SDP && this.isActor() ? this.getSdpBonusForParameterKey("har", 1) : 0;
+	const baseParam = this.baseHarFactor() + sdpBonus;
 	const [plusStructure, rateStructure, ,] = this.getRegexForHar();
 	const buffPlus = this.naturalParamBuff(plusStructure, baseParam);
 	const buffRate = this.naturalParamBuff(rateStructure, baseParam);
@@ -1926,7 +1927,8 @@ Game_Actor.prototype.applyNaturalCustomGrowths = function() {
 */
 Game_Actor.prototype.applyNaturalHarGrowths = function() {
 	const [, , growthPlusStructure, growthRateStructure] = this.getRegexForHar();
-	const baseHar = this.baseHarFactor() + (this.getSdpBonusForParameterKey ? this.getSdpBonusForParameterKey("har", 1) : 0);
+	const sdpBonus = J.SDP ? this.getSdpBonusForParameterKey("har", 1) : 0;
+	const baseHar = this.baseHarFactor() + sdpBonus;
 	const growthPlus = this.naturalParamBuff(growthPlusStructure, baseHar);
 	this.modHarGrowthPlus(growthPlus);
 	const growthRate = this.naturalParamBuff(growthRateStructure, baseHar);

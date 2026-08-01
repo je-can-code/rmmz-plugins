@@ -463,44 +463,74 @@ describe('J-NaturalGrowth Game_Battler bonuses (direct src import)', () =>
   //region sdp interplay
   describe('refreshHarBuffs', () =>
   {
-    it('folds an SDP bonus into the pre-natural HAR base when SDP is installed', () =>
+    /**
+     * Runs a HAR buff refresh and reports the base the formula was handed.
+     * @param {Game_Battler} subject The battler driving this step.
+     * @returns {number} The base parameter the formula received.
+     */
+    function observedHarBase(subject)
+    {
+      let observed = null;
+      subject.naturalParamBuff = (_structure, baseParam) =>
+      {
+        observed = baseParam;
+
+        return 0;
+      };
+      subject.refreshHarBuffs();
+
+      return observed;
+    }
+
+    it('folds an SDP bonus into the pre-natural HAR base for an actor when SDP is installed', () =>
     {
       // Arrange: HAR buffs are formula-driven off a base that already includes the notetag
       // factor and any SDP contribution, so a panel-granted HAR has to be visible to the
       // formula rather than being added on afterwards.
-      let observedBase = null;
+      const previousSdp = globalThis.J.SDP;
+      globalThis.J.SDP = {};
+      battler.isActor = () => true;
       battler.getSdpBonusForParameterKey = () => 7;
-      battler.naturalParamBuff = (_structure, baseParam) =>
-      {
-        observedBase = baseParam;
-
-        return 0;
-      };
 
       // Act
-      battler.refreshHarBuffs();
+      const observed = observedHarBase(battler);
 
       // Assert
-      expect(observedBase).toBeCloseTo(battler.baseHarFactor() + 7, 10);
+      expect(observed).toBeCloseTo(battler.baseHarFactor() + 7, 10);
+
+      // restore the bare-global namespace rather than leaking it into later tests in this file.
+      globalThis.J.SDP = previousSdp;
+    });
+
+    it('asks nothing of SDP for an enemy, which panels never apply to', () =>
+    {
+      // Arrange: panels are an actor-only system, so the bonus accessor only exists on actors.
+      // Asking an enemy for it would throw the moment its data changed.
+      const previousSdp = globalThis.J.SDP;
+      globalThis.J.SDP = {};
+      battler.isActor = () => false;
+
+      // Act
+      const observed = observedHarBase(battler);
+
+      // Assert
+      expect(observed).toBeCloseTo(battler.baseHarFactor(), 10);
+
+      // restore the bare-global namespace.
+      globalThis.J.SDP = previousSdp;
     });
 
     it('uses the bare HAR factor when SDP is not installed', () =>
     {
       // Arrange: J-SDP is optional, so its absence must leave the base untouched rather than
       // poisoning the formula input.
-      let observedBase = null;
-      battler.naturalParamBuff = (_structure, baseParam) =>
-      {
-        observedBase = baseParam;
-
-        return 0;
-      };
+      battler.isActor = () => true;
 
       // Act
-      battler.refreshHarBuffs();
+      const observed = observedHarBase(battler);
 
       // Assert
-      expect(observedBase).toBeCloseTo(battler.baseHarFactor(), 10);
+      expect(observed).toBeCloseTo(battler.baseHarFactor(), 10);
     });
   });
   //endregion sdp interplay

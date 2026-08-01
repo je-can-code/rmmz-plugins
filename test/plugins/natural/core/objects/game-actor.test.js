@@ -458,6 +458,8 @@ describe('J-NaturalGrowth Game_Actor growths (direct src import)', () =>
     {
       // Arrange: growth formulas are based off the pre-natural HAR, so a panel-granted HAR has
       // to be visible to the formula rather than being bolted on afterwards.
+      const previousSdp = globalThis.J.SDP;
+      globalThis.J.SDP = {};
       let observedBase = null;
       actor.getSdpBonusForParameterKey = () => 7;
       actor.naturalParamBuff = (_structure, baseParam) =>
@@ -472,6 +474,9 @@ describe('J-NaturalGrowth Game_Actor growths (direct src import)', () =>
 
       // Assert
       expect(observedBase).toBeCloseTo(actor.baseHarFactor() + 7, 10);
+
+      // restore the bare-global namespace rather than leaking it into later tests in this file.
+      globalThis.J.SDP = previousSdp;
     });
 
     it('uses the bare HAR factor when SDP is not installed', () =>

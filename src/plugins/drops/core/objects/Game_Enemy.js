@@ -131,15 +131,10 @@ Game_Enemy.prototype.canFindLoot = function(drop)
  */
 Game_Enemy.prototype.didFindLoot = function(rate, killer = null)
 {
-  // locally assign the percent chance to find something.
-  let chance = rate;
-
-  // check if anyone in the party has the double-drop trait.
-  if ($gameParty.hasDropItemDouble())
-  {
-    // double the ratio!
-    chance *= 2;
-  }
+  // the incoming rate already carries every party-wide modifier, including the double-drop
+  // accessory that getDropMultiplierBonus folds in via the engine's own dropItemRate. Doubling
+  // again here would apply that accessory twice to a single roll.
+  const chance = rate;
 
   // this is a purely self-scoped proc from the killer's perspective- when known, the killer is
   // both the roller and the recipient of the drop-chance roll.
@@ -226,8 +221,8 @@ Game_Enemy.prototype.dropSources = function()
  */
 Game_Enemy.prototype.extractExtraDrops = function(referenceData)
 {
-  // get the drops found on this enemy.
-  const moreDrops = RPGManager.getArraysFromNotesByRegex(referenceData, J.DROPS.RegExp.ExtraDrop, true) ?? [];
+  // get the drops found on this enemy; an absent tag yields an empty array, never null.
+  const moreDrops = RPGManager.getArraysFromNotesByRegex(referenceData, J.DROPS.RegExp.ExtraDrop, true);
 
   // a mapping function to build proper drop items from the arrays.
   const mapper = drop =>
