@@ -68,6 +68,25 @@ describe('J-SDP RPG_Enemy notes (direct src import)', () =>
       // Act & Assert
       expect(enemy.sdpDropChance).toBe(50);
     });
+
+    it('reports a blank key for an enemy carrying no drop tag', () =>
+    {
+      // Arrange: the overwhelming majority of enemies drop no panel at all, so the absent case
+      // has to answer with a usable shape rather than null.
+      const enemy = Object.assign(Object.create(RPG_Enemy.prototype), { id: 4, note: '' });
+
+      // Act & Assert
+      expect(enemy.sdpDropKey).toBe(String.empty);
+    });
+
+    it('reports a zero chance for an enemy carrying no drop tag', () =>
+    {
+      // Arrange
+      const enemy = Object.assign(Object.create(RPG_Enemy.prototype), { id: 5, note: '' });
+
+      // Act & Assert
+      expect(enemy.sdpDropChance).toBe(0);
+    });
   });
 });
 //endregion plugins/sdp/_component/rpg-enemy.test.js
