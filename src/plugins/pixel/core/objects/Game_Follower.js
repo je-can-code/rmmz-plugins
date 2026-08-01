@@ -40,23 +40,6 @@ Game_Follower.prototype.pixelFaceCharacter = function(otherCharacter = $gamePlay
 };
 
 /**
- * Extends {@link Game_Follower.chaseCharacter}.<br/>
- * Suppresses vanilla chasing when ALLYAI controls this follower, so formation owns movement.
- * @param {Game_Character} character The character to chase (usually the preceding character).
- */
-J.PIXEL.Aliased.Game_Follower.set("chaseCharacter", Game_Follower.prototype.chaseCharacter);
-Game_Follower.prototype.chaseCharacter = function(character)
-{
-  // If Ally AI exists and this follower is AI-controlled, defer to formation logic entirely.
-  if (J.ABS.EXT.ALLYAI && this.getJabsBattler()) return;
-
-  // Perform original vanilla chase behavior for non-AI followers.
-  // perform original logic.
-  J.PIXEL.Aliased.Game_Follower.get("chaseCharacter")
-    .call(this, character);
-};
-
-/**
  * Extends {@link Game_Follower.update}.<br/>
  * Ensures follower render coordinates always match logical coordinates.
  */
@@ -75,89 +58,24 @@ Game_Follower.prototype.update = function()
     this.setRealX(this.x)
     this.setRealY(this.y)
   }
-
-  // Defensive: if this follower is an AI-controlled ally and did not move via PIXEL this frame,
-  // ensure no residual drift continues. This does not interfere with formation moves.
-  if (J.ABS.EXT.ALLYAI && this.getJabsBattler())
-  {
-    // If there was no active pixel-move input this frame, clamp any lingering movement state.
-    if (this.isMovePressed() === false)
-    {
-      // Reset stop count so the engine considers us stationary immediately.
-      this.setStopCount(0);
-
-      // Synchronize the render one more time (belt-and-suspenders).
-      this.setRealX(this.x)
-      this.setRealY(this.y)
-    }
-  }
 };
 
 /**
- * Extends {@link Game_Follower.moveStraight}.<br/>
- * When AllyAI controls this follower and it is idle (not alerted/engaged),
- * block generic straight movement unless PIXEL is actively driving movement.
- * @param {2|4|6|8} direction The cardinal direction to move.
+ * Whether this follower's position is owned by something other than the player's breadcrumb
+ * train. The train relocates each follower onto the trail the character ahead of it left behind;
+ * if another system is also steering the same follower, both write a position every frame and the
+ * sprite visibly fights itself. A follower that answers true here is skipped by the train entirely,
+ * on the understanding that whatever claimed it is now responsible for moving it.
+ *
+ * Pixel movement on its own has no such other system, so the answer is always no here. Ships that
+ * introduce one - J-ABS-Pixelistics handing allies to formation movement, for instance - override
+ * this to claim their followers.
+ * @returns {boolean} True if the follower train must not move this follower, false otherwise.
  */
-J.PIXEL.Aliased.Game_Follower.set("moveStraight", Game_Follower.prototype.moveStraight);
-Game_Follower.prototype.moveStraight = function(direction)
+Game_Follower.prototype.isPixelTrainSuspended = function()
 {
-  // If AllyAI exists and this follower is AI-controlled, enforce idle guard.
-  if (J.ABS.EXT.ALLYAI && this.getJabsBattler())
-  {
-    // Acquire the JABS battler for engagement/alert state.
-    const jabsBattler = this.getJabsBattler();
-
-    // If not engaged and not alerted (formation/idle phase)...
-    if (!jabsBattler.isEngaged() && !jabsBattler.isAlerted())
-    {
-      // Only allow movement if pixel movement is actively pressing (issued this frame).
-      if (this.isMovePressed() === false)
-      {
-        // Block stray straight moves during idle formation.
-        return;
-      }
-    }
-  }
-
-  // Perform original logic.
-  // perform original logic.
-  J.PIXEL.Aliased.Game_Follower.get("moveStraight")
-    .call(this, direction);
-};
-
-/**
- * Extends {@link Game_Follower.moveDiagonally}.<br/>
- * When AllyAI controls this follower and it is idle (not alerted/engaged),
- * block generic diagonal movement unless PIXEL is actively driving movement.
- * @param {4|6} horz The horizontal component direction (4=left, 6=right).
- * @param {2|8} vert The vertical component direction (2=down, 8=up).
- */
-J.PIXEL.Aliased.Game_Follower.set("moveDiagonally", Game_Follower.prototype.moveDiagonally);
-Game_Follower.prototype.moveDiagonally = function(horz, vert)
-{
-  // If AllyAI exists and this follower is AI-controlled, enforce idle guard.
-  if (J.ABS.EXT.ALLYAI && this.getJabsBattler())
-  {
-    // Acquire the JABS battler for engagement/alert state.
-    const jabsBattler = this.getJabsBattler();
-
-    // If not engaged and not alerted (formation/idle phase)...
-    if (!jabsBattler.isEngaged() && !jabsBattler.isAlerted())
-    {
-      // Only allow movement if pixel movement is actively pressing (issued this frame).
-      if (this.isMovePressed() === false)
-      {
-        // Block stray diagonal moves during idle formation.
-        return;
-      }
-    }
-  }
-
-  // Perform original logic.
-  // perform original logic.
-  J.PIXEL.Aliased.Game_Follower.get("moveDiagonally")
-    .call(this, horz, vert);
+  // nothing competes with the follower train under plain pixel movement.
+  return false;
 };
 
 /**

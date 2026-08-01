@@ -90,18 +90,12 @@ JABS_AiManager.moveTowardSlotIfNeeded = function(allyBattler, desiredX, desiredY
   // acquire the character once.
   const chr = allyBattler.getCharacter();
 
-  // resolve tolerances.
-  // default if ALLYAI not present.
-  let tolerance = 0.45;
+  // how close to the slot counts as arrived; Ally AI is a hard dependency of this plugin, so
+  // its configured formation tolerance is always available to read.
+  const tolerance = J.ABS.EXT.ALLYAI.Metadata.FormationTolerance;
 
   // extra ring outside tolerance for gentle throttling near target.
   const hysteresis = 0.25;
-
-  if (J.ABS.EXT.ALLYAI && J.ABS.EXT.ALLYAI.Metadata)
-  {
-    // use the configured formation tolerance if available.
-    tolerance = J.ABS.EXT.ALLYAI.Metadata.FormationTolerance;
-  }
 
   // compute Euclidean distance to the target point using fractional coords.
   const dx = chr.x - desiredX;

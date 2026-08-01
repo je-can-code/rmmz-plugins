@@ -90,5 +90,17 @@ describe('J-Pixelistics (core) metadata (direct src import)', () =>
     // Assert
     expect(metadata.CollisionStepCount).toBe(4);
   });
+
+  it('defaults CollisionRadius when parseFloat yields NaN', () =>
+  {
+    // Arrange & Act
+    const metadata = buildMetadata({
+      ...DEFAULT_PIXEL_CORE_PLUGIN_PARAMS,
+      collisionRadius: 'not-a-number',
+    });
+
+    // Assert
+    expect(metadata.CollisionRadius).toBe(0.30);
+  });
 });
 //endregion plugins/pixel/core/_component/metadata.test.js

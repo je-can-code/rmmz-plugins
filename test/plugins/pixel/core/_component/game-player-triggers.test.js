@@ -2,17 +2,91 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
+  attachPixelEventRoster,
+  buildPixelMapEvent,
   installPixelCoreHostGlobals,
   setPluginContextToJBase,
   setPluginContextToJPixel,
 } from '../../_component/fixtures/install-pixel-host-globals.js';
 
+const noop = function()
+{
+};
+
 /**
- * `checkEventTriggerThere`/`checkEventTriggerTouchFront` are pixel-core `Game_Player`
- * overwrites that call `startMapEvent`/`checkEventTriggerTouch`, and the tile-entry check in
- * `update` calls `checkEventTriggerHere`- none of those three are exercised by spying on the
- * real chain (which needs a live `$gameMap`/event roster), so this file spies on them directly
- * and stubs just enough of the surrounding engine to drive the overwrites under test.
+ * Builds a map that answers real directional questions, so the "tile in front of me" the trigger
+ * overwrites compute is genuine geometry rather than a coordinate handed back unchanged.
+ * @param {object[]} roster Events built by `buildPixelMapEvent`.
+ * @param {Set<string>} [counterTiles] Tiles that behave as counters, keyed `"x,y"`.
+ * @returns {object}
+ */
+function buildTriggerPixelGameMap(roster, counterTiles = new Set())
+{
+  const map = {
+    _pixelFootTouchTriggerCooldown: 0,
+    width()
+    {
+      return 10;
+    },
+    height()
+    {
+      return 10;
+    },
+    tileWidth()
+    {
+      return 48;
+    },
+    tileHeight()
+    {
+      return 48;
+    },
+    roundXWithDirection(x, d)
+    {
+      if (d === globalThis.J.PIXEL.Directions.RIGHT) return x + 1;
+      if (d === globalThis.J.PIXEL.Directions.LEFT) return x - 1;
+
+      return x;
+    },
+    roundYWithDirection(y, d)
+    {
+      if (d === globalThis.J.PIXEL.Directions.DOWN) return y + 1;
+      if (d === globalThis.J.PIXEL.Directions.UP) return y - 1;
+
+      return y;
+    },
+    isCounter(x, y)
+    {
+      return counterTiles.has(`${x},${y}`);
+    },
+    // mirrors rmmz_objects.js: an event merely flagged as starting already blocks another start.
+    isEventRunning()
+    {
+      return this.isAnyEventStarting();
+    },
+    isAnyEventStarting()
+    {
+      return this.events()
+        .some(event => event.isStarting());
+    },
+    isPassable()
+    {
+      return true;
+    },
+    isDashDisabled()
+    {
+      return false;
+    },
+    requestRefresh: noop,
+  };
+
+  return attachPixelEventRoster(map, roster);
+}
+
+/**
+ * Pixel core's `Game_Player` trigger overwrites, driven end to end against a real event roster.
+ * Every assertion here is on an observable outcome- whether a specific event actually started-
+ * rather than on whether a collaborator method happened to be called, because the interesting
+ * behavior of these overwrites is precisely *which tile* ends up being searched.
  */
 describe('J-Pixelistics Game_Player trigger overwrites (direct src import)', () =>
 {
@@ -34,181 +108,486 @@ describe('J-Pixelistics Game_Player trigger overwrites (direct src import)', () 
 
   beforeEach(() =>
   {
-    globalThis.$gameMap = {
-      roundXWithDirection(x, d)
-      {
-        if (d === 6) return x + 1;
-        if (d === 4) return x - 1;
-        return x;
-      },
-      roundYWithDirection(y, d)
-      {
-        if (d === 2) return y + 1;
-        if (d === 8) return y - 1;
-        return y;
-      },
-      isCounter: () => false,
-      isAnyEventStarting: () => false,
-      _pixelFootTouchTriggerCooldown: 0,
-    };
-
-    globalThis.Game_Player.prototype.canStartLocalEvents = () => true;
-    globalThis.Game_Player.prototype.startMapEvent = vi.fn();
+    globalThis.$gameMap = buildTriggerPixelGameMap([]);
   });
 
   /**
-   * Builds a player instance positioned/facing as given, with a stubbed feet-anchored pivot
-   * (0.70) matching the real {@link Game_Player.getCollisionPivotY} override in production.
-   * @param {number} x
-   * @param {number} y
-   * @param {number} direction
+   * Builds a player whose body occupies tile (2, 5): the 0.70 feet pivot pushes `_y` 4.65 into
+   * row 5, one row past where a naive round would land, so base-tile and front-tile lookups are
+   * genuinely distinguishable in every test below.
+   * @param {number} x The fractional x coordinate.
+   * @param {number} y The fractional y coordinate.
+   * @param {number} direction The facing direction.
    * @returns {Game_Player}
    */
   function makePlayer(x, y, direction)
   {
     const player = new globalThis.Game_Player();
     player.initMembers();
-    player.getCollisionPivotY = () => 0.70;
     player._x = x;
     player._y = y;
     player.setDirection(direction);
+
     return player;
   }
 
-  describe('checkEventTriggerThere', () =>
+  //region checkEventTriggerHere
+  describe('checkEventTriggerHere', () =>
   {
-    it('checks the occupied base tile before the front tile (doorstep geometry)', () =>
+    it('starts an underfoot event on the tile the body actually occupies', () =>
     {
-      // Arrange: pivotY 0.70 at _y = 4.65 puts the body in row 5 (floor(4.65+0.70)=5),
-      // one row past where a plain round(_y)=5 would also land- occupiedTileY is exercised here
-      // via a value chosen so the base tile (5) and the "one tile ahead" front tile (4) differ.
+      // Arrange: the event sits on row 5, which only the feet-anchored pivot resolves to.
+      const event = buildPixelMapEvent(2, 5, 1, false);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ event ]);
       const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
 
       // Act
-      player.checkEventTriggerThere([ 0, 1, 2 ]);
-
-      // Assert: the base tile (2, 5) is checked, not just the front tile (2, 4).
-      expect(globalThis.Game_Player.prototype.startMapEvent).toHaveBeenCalledWith(2, 5, [ 0, 1, 2 ], true);
-    });
-
-    it('still checks the front tile when the base tile does not start an event', () =>
-    {
-      // Arrange
-      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
-
-      // Act
-      player.checkEventTriggerThere([ 0, 1, 2 ]);
+      player.checkEventTriggerHere([ 1, 2 ]);
 
       // Assert
-      expect(globalThis.Game_Player.prototype.startMapEvent).toHaveBeenCalledWith(2, 4, [ 0, 1, 2 ], true);
+      expect(event.isStarting())
+        .toBe(true);
     });
 
-    it('does not check the front tile once the base tile has already started an event', () =>
+    it('starts nothing while local events cannot be started', () =>
     {
       // Arrange
+      const event = buildPixelMapEvent(2, 5, 1, false);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ event ]);
       const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
-      globalThis.$gameMap.isAnyEventStarting = vi.fn()
-        .mockReturnValueOnce(true);
+      player._canStartLocalEvents = false;
 
       // Act
-      player.checkEventTriggerThere([ 0, 1, 2 ]);
+      player.checkEventTriggerHere([ 1, 2 ]);
 
-      // Assert: only the base-tile call happened.
-      expect(globalThis.Game_Player.prototype.startMapEvent).toHaveBeenCalledTimes(1);
-      expect(globalThis.Game_Player.prototype.startMapEvent).toHaveBeenCalledWith(2, 5, [ 0, 1, 2 ], true);
+      // Assert
+      expect(event.isStarting())
+        .toBe(false);
     });
 
-    it('does not check beyond a counter once an earlier check already started an event', () =>
+    it('suppresses touch triggers entirely while the foot-touch cooldown is active', () =>
     {
-      // Arrange
+      // Arrange: the cooldown exists to stop an event from immediately re-firing underfoot,
+      // so with only touch triggers requested there is nothing left to search for.
+      const event = buildPixelMapEvent(2, 5, 1, false);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ event ]);
+      globalThis.$gameMap._pixelFootTouchTriggerCooldown = 3;
       const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
-      globalThis.$gameMap.isCounter = () => true;
-      globalThis.$gameMap.isAnyEventStarting = vi.fn()
-        .mockReturnValueOnce(false)
-        .mockReturnValueOnce(true);
 
       // Act
-      player.checkEventTriggerThere([ 0, 1, 2 ]);
+      player.checkEventTriggerHere([ 1, 2 ]);
 
-      // Assert: base tile + front tile only, no beyond-counter tile (2, 3).
-      expect(globalThis.Game_Player.prototype.startMapEvent).not.toHaveBeenCalledWith(2, 3, [ 0, 1, 2 ], true);
+      // Assert
+      expect(event.isStarting())
+        .toBe(false);
+    });
+
+    it('still honors non-touch triggers while the foot-touch cooldown is active', () =>
+    {
+      // Arrange: the cooldown only filters the touch triggers (1 and 2); an action-button
+      // trigger (0) survives the filter and is still searched for.
+      const event = buildPixelMapEvent(2, 5, 0, false);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ event ]);
+      globalThis.$gameMap._pixelFootTouchTriggerCooldown = 3;
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      player.checkEventTriggerHere([ 0, 1, 2 ]);
+
+      // Assert
+      expect(event.isStarting())
+        .toBe(true);
     });
   });
+  //endregion checkEventTriggerHere
 
-  describe('checkEventTriggerTouchFront', () =>
+  //region update
+  describe('update', () =>
   {
-    it('fires a touch trigger on the occupied base tile without needing to look ahead', () =>
+    it('ticks the foot-touch cooldown down while it is active', () =>
     {
       // Arrange
+      globalThis.$gameMap._pixelFootTouchTriggerCooldown = 3;
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.DOWN);
+
+      // Act
+      player.update(true);
+
+      // Assert
+      expect(globalThis.$gameMap._pixelFootTouchTriggerCooldown)
+        .toBe(2);
+    });
+
+    it('leaves an already-expired cooldown alone rather than driving it negative', () =>
+    {
+      // Arrange
+      globalThis.$gameMap._pixelFootTouchTriggerCooldown = 0;
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.DOWN);
+
+      // Act
+      player.update(true);
+
+      // Assert
+      expect(globalThis.$gameMap._pixelFootTouchTriggerCooldown)
+        .toBe(0);
+    });
+
+    it('fires underfoot triggers when the occupied tile changes', () =>
+    {
+      // Arrange: pre-seed the tracked tile so only the deliberate row 4 -> row 5 crossing counts.
+      const event = buildPixelMapEvent(2, 5, 1, false);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ event ]);
+      const player = makePlayer(2, 3.65, globalThis.J.PIXEL.Directions.DOWN);
+      player.setLastOccupiedTileX(player.occupiedTileX());
+      player.setLastOccupiedTileY(player.occupiedTileY());
+
+      // Act: cross into row 5.
+      player._y = 4.65;
+      player.update(true);
+
+      // Assert
+      expect(event.isStarting())
+        .toBe(true);
+    });
+
+    it('fires on the very first update, since the tracked tile starts undefined', () =>
+    {
+      // Arrange
+      const event = buildPixelMapEvent(2, 5, 1, false);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ event ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.DOWN);
+
+      // Act
+      player.update(true);
+
+      // Assert
+      expect(event.isStarting())
+        .toBe(true);
+    });
+
+    it('does not fire again while the occupied tile stays the same', () =>
+    {
+      // Arrange
+      const event = buildPixelMapEvent(2, 5, 1, false);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ event ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.DOWN);
+      player.setLastOccupiedTileX(player.occupiedTileX());
+      player.setLastOccupiedTileY(player.occupiedTileY());
+
+      // Act: three frames with no tile change at all.
+      player.update(true);
+      player.update(true);
+      player.update(true);
+
+      // Assert
+      expect(event.isStarting())
+        .toBe(false);
+    });
+
+    it('records the newly entered tile so the crossing is only counted once', () =>
+    {
+      // Arrange
+      const player = makePlayer(2, 3.65, globalThis.J.PIXEL.Directions.DOWN);
+      player.setLastOccupiedTileX(player.occupiedTileX());
+      player.setLastOccupiedTileY(player.occupiedTileY());
+
+      // Act
+      player._y = 4.65;
+      player.update(true);
+
+      // Assert
+      expect(player.lastOccupiedTileY())
+        .toBe(5);
+    });
+  });
+  //endregion update
+
+  //region checkEventTriggerThere
+  describe('checkEventTriggerThere', () =>
+  {
+    it('starts nothing while local events cannot be started', () =>
+    {
+      // Arrange
+      const event = buildPixelMapEvent(2, 5, 0, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ event ]);
       const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
-      const touchSpy = vi.spyOn(player, 'checkEventTriggerTouch')
-        .mockImplementation((x, y) => x === 2 && y === 5);
+      player._canStartLocalEvents = false;
+
+      // Act
+      player.checkEventTriggerThere([ 0 ]);
+
+      // Assert
+      expect(event.isStarting())
+        .toBe(false);
+    });
+
+    it('checks the occupied base tile before the front tile (doorstep geometry)', () =>
+    {
+      // Arrange: a doorstep event on the player's own tile, with the wall behind it being what
+      // the vanilla "tile in front" model would have looked at instead.
+      const doorstep = buildPixelMapEvent(2, 5, 0, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ doorstep ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      player.checkEventTriggerThere([ 0 ]);
+
+      // Assert
+      expect(doorstep.isStarting())
+        .toBe(true);
+    });
+
+    it('checks the front tile when the base tile holds no event', () =>
+    {
+      // Arrange: facing UP from row 5 puts the front tile at row 4.
+      const ahead = buildPixelMapEvent(2, 4, 0, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ ahead ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      player.checkEventTriggerThere([ 0 ]);
+
+      // Assert
+      expect(ahead.isStarting())
+        .toBe(true);
+    });
+
+    it('does not start a front-tile event once the base tile already started one', () =>
+    {
+      // Arrange
+      const doorstep = buildPixelMapEvent(2, 5, 0, true);
+      const ahead = buildPixelMapEvent(2, 4, 0, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ doorstep, ahead ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      player.checkEventTriggerThere([ 0 ]);
+
+      // Assert
+      expect(ahead.isStarting())
+        .toBe(false);
+    });
+
+    it('reaches past a counter tile to the tile beyond it', () =>
+    {
+      // Arrange: the front tile (2, 4) is a counter, so the shopkeeper at (2, 3) is reachable.
+      const beyond = buildPixelMapEvent(2, 3, 0, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ beyond ], new Set([ '2,4' ]));
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      player.checkEventTriggerThere([ 0 ]);
+
+      // Assert
+      expect(beyond.isStarting())
+        .toBe(true);
+    });
+
+    it('does not reach past a counter once an earlier check already started an event', () =>
+    {
+      // Arrange
+      const ahead = buildPixelMapEvent(2, 4, 0, true);
+      const beyond = buildPixelMapEvent(2, 3, 0, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ ahead, beyond ], new Set([ '2,4' ]));
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      player.checkEventTriggerThere([ 0 ]);
+
+      // Assert
+      expect(beyond.isStarting())
+        .toBe(false);
+    });
+
+    it('does not reach beyond a front tile that is not a counter', () =>
+    {
+      // Arrange
+      const beyond = buildPixelMapEvent(2, 3, 0, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ beyond ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      player.checkEventTriggerThere([ 0 ]);
+
+      // Assert
+      expect(beyond.isStarting())
+        .toBe(false);
+    });
+  });
+  //endregion checkEventTriggerThere
+
+  //region checkEventTriggerTouch
+  describe('checkEventTriggerTouch', () =>
+  {
+    it('reports a started event when the coordinates sit near the tile center', () =>
+    {
+      // Arrange
+      const event = buildPixelMapEvent(2, 5, 1, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ event ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      const fired = player.checkEventTriggerTouch(2.05, 5.05);
+
+      // Assert
+      expect(fired)
+        .toBe(true);
+    });
+
+    it('starts the event it reports on', () =>
+    {
+      // Arrange
+      const event = buildPixelMapEvent(2, 5, 1, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ event ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      player.checkEventTriggerTouch(2.05, 5.05);
+
+      // Assert
+      expect(event.isStarting())
+        .toBe(true);
+    });
+
+    it('declines coordinates too far from the tile center to count as a touch', () =>
+    {
+      // Arrange: 0.4 away on both axes exceeds the 0.3 threshold that guards against a touch
+      // firing while the body is still most of a tile away.
+      const event = buildPixelMapEvent(2, 5, 1, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ event ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      const fired = player.checkEventTriggerTouch(2.4, 5.4);
+
+      // Assert
+      expect(fired)
+        .toBe(false);
+    });
+
+    it('starts nothing when the coordinates fail the threshold', () =>
+    {
+      // Arrange
+      const event = buildPixelMapEvent(2, 5, 1, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ event ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      player.checkEventTriggerTouch(2.4, 5.4);
+
+      // Assert
+      expect(event.isStarting())
+        .toBe(false);
+    });
+
+    it('reports no start when the touch lands on a tile holding no event', () =>
+    {
+      // Arrange
+      globalThis.$gameMap = buildTriggerPixelGameMap([]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      const fired = player.checkEventTriggerTouch(2.05, 5.05);
+
+      // Assert
+      expect(fired)
+        .toBe(false);
+    });
+  });
+  //endregion checkEventTriggerTouch
+
+  //region checkEventTriggerTouchFront
+  describe('checkEventTriggerTouchFront', () =>
+  {
+    it('fires a touch trigger on the occupied base tile without looking ahead', () =>
+    {
+      // Arrange: a blocked player overlapping a doorstep event should still touch it.
+      const doorstep = buildPixelMapEvent(2, 5, 1, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ doorstep ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
 
       // Act
       const fired = player.checkEventTriggerTouchFront(globalThis.J.PIXEL.Directions.UP);
 
       // Assert
-      expect(fired).toBe(true);
-      expect(touchSpy).toHaveBeenCalledWith(2, 5);
-    });
-  });
-
-  describe('tile-entry underfoot touch check (update override)', () =>
-  {
-    it('fires checkEventTriggerHere exactly once when the occupied tile changes', () =>
-    {
-      // Arrange: pre-seed the tracked tile to the starting position so only the deliberate
-      // y=4->5 transition below counts as a change (the very first call always fires once,
-      // since the tracking fields start undefined- that behavior is covered separately below).
-      const player = makePlayer(2, 4, globalThis.J.PIXEL.Directions.DOWN);
-      player._followers = { update: () => {} };
-      player._lastOccupiedTileX = player.occupiedTileX();
-      player._lastOccupiedTileY = player.occupiedTileY();
-      const hereSpy = vi.spyOn(player, 'checkEventTriggerHere')
-        .mockImplementation(() => {});
-
-      // Act: cross from tile row 4 into tile row 5.
-      player._y = 5;
-      player.update(true);
-
-      // Assert
-      expect(hereSpy).toHaveBeenCalledTimes(1);
-      expect(hereSpy).toHaveBeenCalledWith([ 1, 2 ]);
+      expect(fired)
+        .toBe(true);
     });
 
-    it('fires once on the very first update, since the tracked tile starts undefined', () =>
+    it('leaves the front tile alone once the base tile already fired', () =>
     {
       // Arrange
-      const player = makePlayer(2, 4, globalThis.J.PIXEL.Directions.DOWN);
-      player._followers = { update: () => {} };
-      const hereSpy = vi.spyOn(player, 'checkEventTriggerHere')
-        .mockImplementation(() => {});
+      const doorstep = buildPixelMapEvent(2, 5, 1, true);
+      const ahead = buildPixelMapEvent(2, 4, 1, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ doorstep, ahead ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
 
       // Act
-      player.update(true);
+      player.checkEventTriggerTouchFront(globalThis.J.PIXEL.Directions.UP);
 
       // Assert
-      expect(hereSpy).toHaveBeenCalledTimes(1);
+      expect(ahead.isStarting())
+        .toBe(false);
     });
 
-    it('does not fire again while the occupied tile stays the same', () =>
+    it('fires a touch trigger on the front tile when the base tile is empty', () =>
     {
-      // Arrange: pre-seed so the baseline frame below isn't itself counted as a change.
-      const player = makePlayer(2, 4, globalThis.J.PIXEL.Directions.DOWN);
-      player._followers = { update: () => {} };
-      player._lastOccupiedTileX = player.occupiedTileX();
-      player._lastOccupiedTileY = player.occupiedTileY();
-      const hereSpy = vi.spyOn(player, 'checkEventTriggerHere')
-        .mockImplementation(() => {});
+      // Arrange
+      const ahead = buildPixelMapEvent(2, 4, 1, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ ahead ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
 
-      // Act: three frames with no tile change.
-      player.update(true);
-      player.update(true);
-      player.update(true);
+      // Act
+      const fired = player.checkEventTriggerTouchFront(globalThis.J.PIXEL.Directions.UP);
 
       // Assert
-      expect(hereSpy).not.toHaveBeenCalled();
+      expect(fired)
+        .toBe(true);
+    });
+
+    it('fires a touch trigger beyond a counter when neither nearer tile did', () =>
+    {
+      // Arrange
+      const beyond = buildPixelMapEvent(2, 3, 1, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ beyond ], new Set([ '2,4' ]));
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      const fired = player.checkEventTriggerTouchFront(globalThis.J.PIXEL.Directions.UP);
+
+      // Assert
+      expect(fired)
+        .toBe(true);
+    });
+
+    it('reports failure when the front tile is a counter but nothing lies beyond it', () =>
+    {
+      // Arrange
+      globalThis.$gameMap = buildTriggerPixelGameMap([], new Set([ '2,4' ]));
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      const fired = player.checkEventTriggerTouchFront(globalThis.J.PIXEL.Directions.UP);
+
+      // Assert
+      expect(fired)
+        .toBe(false);
+    });
+
+    it('reports failure when no tile in the search path holds a touch event', () =>
+    {
+      // Arrange
+      globalThis.$gameMap = buildTriggerPixelGameMap([]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      const fired = player.checkEventTriggerTouchFront(globalThis.J.PIXEL.Directions.UP);
+
+      // Assert
+      expect(fired)
+        .toBe(false);
     });
   });
+  //endregion checkEventTriggerTouchFront
 });
 //endregion plugins/pixel/core/_component/game-player-triggers.test.js

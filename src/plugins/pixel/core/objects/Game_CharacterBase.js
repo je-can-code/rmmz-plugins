@@ -1589,21 +1589,17 @@ Game_CharacterBase.prototype.pixelMoveByInput = function(direction)
     }
   };
 
-  // If diagonal, try the diagonal handler first.
+  // Diagonal input is fully resolved by its own pipeline, which always answers with a cardinal
+  // facing - either the diagonal it committed to, or the single axis it fell back to.
   if (this.isDiagonalDirection(direction))
   {
-    // Attempt a diagonal execution path.
-    const faced = handleDiagonal(direction);
-    if (faced > 0) return faced;
+    return handleDiagonal(direction);
   }
 
-  // If straight, try the straight handler.
-  if (this.isStraightDirection(direction))
-  {
-    // Attempt a straight execution path.
-    const faced = handleStraight(direction);
-    if (faced > 0) return faced;
-  }
+  // Anything not diagonal is a cardinal. A wall-slide that finds no room answers 0, which falls
+  // through to leaving the facing unchanged.
+  const faced = handleStraight(direction);
+  if (faced > 0) return faced;
 
   // Fall back to returning the inner direction unchanged.
   return innerDirection;
@@ -1668,8 +1664,8 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
   {
     nx = this.x + diagStep;
   }
-  // Else if the horizontal leg is left, subtract the diagonal step from X.
-  else if (horz === J.PIXEL.Directions.LEFT)
+  // Otherwise the horizontal leg is left, so subtract the diagonal step from X.
+  else
   {
     nx = this.x - diagStep;
   }
@@ -1679,8 +1675,8 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
   {
     ny = this.y + diagStep;
   }
-  // Else if the vertical leg is up, subtract the diagonal step from Y.
-  else if (vert === J.PIXEL.Directions.UP)
+  // Otherwise the vertical leg is up, so subtract the diagonal step from Y.
+  else
   {
     ny = this.y - diagStep;
   }
@@ -1752,8 +1748,8 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
   {
     y2 = this.y + straightStep;
   }
-  // Else if moving up, subtract straight step from y2.
-  else if (vert === J.PIXEL.Directions.UP)
+  // Otherwise moving up, so subtract straight step from y2.
+  else
   {
     y2 = this.y - straightStep;
   }
@@ -1790,8 +1786,8 @@ Game_CharacterBase.prototype.canPassDiagonally = function(x, y, horz, vert)
   {
     x2 = this.x + straightStep;
   }
-  // Else if moving left, subtract straight step from x2.
-  else if (horz === J.PIXEL.Directions.LEFT)
+  // Otherwise moving left, so subtract straight step from x2.
+  else
   {
     x2 = this.x - straightStep;
   }
@@ -2822,13 +2818,9 @@ Game_CharacterBase.prototype.vectorMoveByAngle = function(angleDegrees, speed = 
   // check for step threshold crossing.
   this.updatePixelStepping();
 
-  // face the nearest 8-direction toward the angle for sprite orientation.
-  const facingDirection = this.angleToNearestDirection(angleDegrees);
-  if (facingDirection > 0)
-  {
-    // update the sprite facing direction.
-    this.setDirection(facingDirection);
-  }
+  // face the nearest cardinal toward the angle for sprite orientation; every angle on the circle
+  // resolves to one, so there is no "no answer" case to account for.
+  this.setDirection(this.angleToNearestDirection(angleDegrees));
 
   // movement succeeded.
   return true;

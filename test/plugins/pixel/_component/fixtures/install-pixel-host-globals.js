@@ -200,10 +200,135 @@ function installMinimalGameCharacterBasePrototypes(sandbox)
     sandbox.Game_CharacterBase.prototype.initMembers.call(this);
   };
 
+  // vanilla `Game_Character` move-route plumbing that pixel core's own route overrides call into.
+  // Mirrors rmmz_objects.js: the index advances with a wrap back to 0 on a repeating route.
+  sandbox.Game_Character.prototype.advanceMoveRouteIndex = function()
+  {
+    const route = this._moveRoute;
+
+    if (route && (this.isMovementSucceeded() || route.skippable))
+    {
+      const numCommands = route.list.length - 1;
+
+      this._moveRouteIndex++;
+
+      if (route.repeat && this._moveRouteIndex >= numCommands)
+      {
+        this._moveRouteIndex = 0;
+      }
+    }
+  };
+
+  // Mirrors rmmz_objects.js `Game_Character.prototype.updateRoutineMove`: one command per frame,
+  // advancing immediately. Pixel core aliases this and only defers to it for JABS action entities,
+  // so the contrast between this cadence and the pixel-repeating one is the behavior under test.
+  sandbox.Game_Character.prototype.updateRoutineMove = function()
+  {
+    if (this._waitCount > 0)
+    {
+      this._waitCount--;
+
+      return;
+    }
+
+    this.setMovementSuccess(true);
+
+    const command = this._moveRoute.list[this._moveRouteIndex];
+
+    if (command)
+    {
+      this.processMoveCommand(command);
+      this.advanceMoveRouteIndex();
+    }
+  };
+
+  // vanilla's own no-op-by-default command dispatcher; pixel core aliases this, so it has to
+  // exist on the prototype before pixel's `Game_Character.js` is imported or the alias captures
+  // `undefined`. Deliberately NOT defining `moveStraight` here- pixel core overrides that one on
+  // `Game_CharacterBase.prototype`, and a same-named stub on the subclass would shadow it.
+  sandbox.Game_Character.prototype.processMoveCommand = noop;
+
   sandbox.Game_Player.prototype = Object.create(sandbox.Game_Character.prototype);
   sandbox.Game_Player.prototype.constructor = sandbox.Game_Player;
 
   sandbox.Game_Player.prototype.initMembers = function()
+  {
+    sandbox.Game_Character.prototype.initMembers.call(this);
+    this._followers = { _data: [] };
+    this._vehicleType = 'walk';
+    this._dashing = false;
+  };
+
+  sandbox.Game_Player.prototype.followers = function()
+  {
+    return this._followers;
+  };
+
+  sandbox.Game_Player.prototype.canMove = function()
+  {
+    return this._canMove !== false;
+  };
+
+  sandbox.Game_Player.prototype.isInVehicle = function()
+  {
+    return this._vehicleType !== 'walk';
+  };
+
+  sandbox.Game_Player.prototype.isDashButtonPressed = function()
+  {
+    return this._dashButtonPressed === true;
+  };
+
+  sandbox.Game_Player.prototype.increaseSteps = function()
+  {
+    this._steps = (this._steps ?? 0) + 1;
+  };
+
+  sandbox.Game_Player.prototype.canStartLocalEvents = function()
+  {
+    return this._canStartLocalEvents !== false;
+  };
+
+  // A* pathing is vanilla's own concern and is not what pixel core is responsible for; pixel's
+  // destination movement only consumes the direction it hands back (or 0 for "no route"). Tests
+  // set `_forcedPathDirection` to pin that oracle and assert the pixel logic built around it.
+  sandbox.Game_Player.prototype.findDirectionTo = function()
+  {
+    return this._forcedPathDirection ?? 0;
+  };
+
+  // Mirrors rmmz_objects.js `Game_Player.prototype.checkEventTriggerTouch` exactly, INCLUDING the
+  // fact that it returns nothing. Pixel core aliases this method and treats the aliased result as
+  // a boolean, so reproducing the real (absent) return value is the whole point of standing it up
+  // faithfully rather than having it hand back a convenient `true`.
+  sandbox.Game_Player.prototype.checkEventTriggerTouch = function(x, y)
+  {
+    if (this.canStartLocalEvents())
+    {
+      this.startMapEvent(x, y, [ 1, 2 ], true);
+    }
+  };
+
+  // Mirrors rmmz_objects.js `Game_Player.prototype.startMapEvent`: every event on the tile whose
+  // trigger matches and whose priority matches `normal` gets started, unless one is already running.
+  sandbox.Game_Player.prototype.startMapEvent = function(x, y, triggers, normal)
+  {
+    if (sandbox.$gameMap.isEventRunning()) return;
+
+    sandbox.$gameMap.eventsXy(x, y)
+      .forEach(event =>
+      {
+        if (event.isTriggerIn(triggers) && event.isNormalPriority() === normal)
+        {
+          event.start();
+        }
+      });
+  };
+
+  sandbox.Game_Follower.prototype = Object.create(sandbox.Game_Character.prototype);
+  sandbox.Game_Follower.prototype.constructor = sandbox.Game_Follower;
+
+  sandbox.Game_Follower.prototype.initMembers = function()
   {
     sandbox.Game_Character.prototype.initMembers.call(this);
   };
@@ -334,12 +459,85 @@ export function buildDefaultPixelGameMap()
     {
       return [];
     },
+    eventsXy()
+    {
+      return [];
+    },
     eventsXyNt()
     {
       return [];
     },
+    // mirrors rmmz_objects.js: an event that has merely been flagged as starting already counts
+    // as running, which is what stops a single input from starting two events at once.
+    isEventRunning()
+    {
+      return this.isAnyEventStarting();
+    },
+    isAnyEventStarting()
+    {
+      return this.events()
+        .some(event => event.isStarting());
+    },
     requestRefresh: noop,
   };
+}
+
+/**
+ * Builds a map-event stand-in that answers the same four questions vanilla's `startMapEvent`
+ * asks of a real `Game_Event`, and records whether it actually started. Tests assert on that
+ * observable outcome- an event either ran or it did not- rather than on whether some collaborator
+ * method happened to be called.
+ * @param {number} x The tile x the event sits on.
+ * @param {number} y The tile y the event sits on.
+ * @param {number} trigger The RMMZ trigger code (0 action button, 1 player touch, 2 event touch).
+ * @param {boolean} [normalPriority] Whether the event is same-as-characters priority.
+ * @returns {object}
+ */
+export function buildPixelMapEvent(x, y, trigger, normalPriority = true)
+{
+  return {
+    _starting: false,
+    x,
+    y,
+    isTriggerIn(triggers)
+    {
+      return triggers.includes(trigger);
+    },
+    isNormalPriority()
+    {
+      return normalPriority;
+    },
+    start()
+    {
+      this._starting = true;
+    },
+    isStarting()
+    {
+      return this._starting;
+    },
+  };
+}
+
+/**
+ * Wraps a roster of events onto a map stub so `eventsXy`/`events`/`isAnyEventStarting` all agree
+ * with each other, the way they do on a real `Game_Map`.
+ * @param {object} gameMap The map stub to attach the roster to.
+ * @param {object[]} roster The events built by {@link buildPixelMapEvent}.
+ * @returns {object} The same map, for chaining.
+ */
+export function attachPixelEventRoster(gameMap, roster)
+{
+  gameMap.events = function()
+  {
+    return roster;
+  };
+
+  gameMap.eventsXy = function(x, y)
+  {
+    return roster.filter(event => event.x === x && event.y === y);
+  };
+
+  return gameMap;
 }
 
 /**
@@ -476,6 +674,14 @@ export function installPixelAbsExtHostGlobals(sandbox = globalThis, extParams = 
     UPPERRIGHT: 9,
   };
   sandbox.J.ABS.EXT = sandbox.J.ABS.EXT || {};
+
+  // J-ABS-AllyAI is a hard `@base` dependency of J-ABS-Pixelistics, so its metadata is always
+  // present at runtime and the ext reads it without probing. The fixture has to honor that.
+  sandbox.J.ABS.EXT.ALLYAI = sandbox.J.ABS.EXT.ALLYAI || {
+    Metadata: {
+      FormationTolerance: 0.45,
+    },
+  };
 
   if (typeof sandbox.JABS_AiManager !== 'function')
   {

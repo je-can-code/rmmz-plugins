@@ -8,9 +8,11 @@
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
  * @base J-ABS
+ * @base J-ABS-AllyAI
  * @base J-Pixelistics
  * @orderAfter J-Base
  * @orderAfter J-ABS
+ * @orderAfter J-ABS-AllyAI
  * @orderAfter J-Pixelistics
  * @help
  * ============================================================================

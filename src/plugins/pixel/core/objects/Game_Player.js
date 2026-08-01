@@ -111,6 +111,13 @@ Game_Player.prototype.checkEventTriggerThere = function(triggers)
 /**
  * Extends {@link checkEventTriggerTouch}.<br/>
  * Handles the triggering of events by using a threshold-type formula to determine if actually touched.
+ * Vanilla's version reports nothing at all, so this asks the map whether an event is now starting
+ * and hands that back- callers need a real answer to know whether to keep searching neighboring
+ * tiles, and {@link Game_Player#checkEventTriggerThere} already uses the same map-level question
+ * as its own short-circuit.
+ * @param {number} x The fractional x coordinate to test for a touch.
+ * @param {number} y The fractional y coordinate to test for a touch.
+ * @returns {boolean} True if an event is starting after this check, false otherwise.
  */
 J.PIXEL.Aliased.Game_Player.set('checkEventTriggerTouch', Game_Player.prototype.checkEventTriggerTouch);
 Game_Player.prototype.checkEventTriggerTouch = function(x, y)
@@ -123,17 +130,15 @@ Game_Player.prototype.checkEventTriggerTouch = function(x, y)
   // trigger only when within 0.3 tiles of the tile center to prevent early/spurious fires.
   const didTrigger = Math.abs(roundX - x) < 0.3 && Math.abs(roundY - y) < 0.3;
 
-  // check if the event was triggered with the threshold coordinates.
-  if (didTrigger)
-  {
-    // return the original logic's result.
-    // perform original logic.
-    return J.PIXEL.Aliased.Game_Player.get('checkEventTriggerTouch')
-      .call(this, roundX, roundY);
-  }
+  // the coordinates were too far from the tile center to count as a touch.
+  if (didTrigger === false) return false;
 
-  // no triggering the event.
-  return false;
+  // perform original logic.
+  J.PIXEL.Aliased.Game_Player.get('checkEventTriggerTouch')
+    .call(this, roundX, roundY);
+
+  // report whether anything is actually starting, since the original logic never says.
+  return $gameMap.isAnyEventStarting();
 };
 
 /**
@@ -404,15 +409,12 @@ Game_Player.prototype.moveByInput = function()
       // flag that movement was not successful.
       this.setMovementSuccess(false);
 
-      // determine the actual direction.
+      // determine the actual direction; a blocked step still answers with the pressed direction,
+      // so there is never a "no direction" case to guard against here.
       direction = this.pixelMoveByInput(direction);
 
-      // if we have a direction, assign it to ourselves.
-      if (direction > 0)
-      {
-        // set the new direction.
-        this.setDirection(direction);
-      }
+      // set the new direction.
+      this.setDirection(direction);
 
       // check if we've succeeded in moving somehow.
       if (this.isMovementSucceeded())
@@ -510,15 +512,12 @@ Game_Player.prototype.pixelMoveTowardDestination = function()
   // reset movement success before attempting the step.
   this.setMovementSuccess(false);
 
-  // execute the pixel step in the A*-derived direction.
+  // execute the pixel step in the A*-derived direction; it always answers with a direction, since
+  // the unreachable case was already handled by the zero check above.
   const facedDirection = this.pixelMoveByInput(dir);
 
-  // update facing if a direction was returned.
-  if (facedDirection > 0)
-  {
-    // face the direction of travel.
-    this.setDirection(facedDirection);
-  }
+  // face the direction of travel.
+  this.setDirection(facedDirection);
 
   // if the step succeeded, keep followers in sync.
   if (this.isMovementSucceeded())
@@ -578,8 +577,8 @@ Game_Player.prototype.processFollowersPixelMoving = function()
   // Iterate over all the followers to do movement things.
   followers.forEach((follower, index) =>
   {
-    // If Ally AI is present and this follower is AI-controlled, do not relocate via follower-train.
-    if (J.ABS.EXT.ALLYAI && follower.getJabsBattler()) return;
+    // A follower claimed by another movement system is not ours to relocate.
+    if (follower.isPixelTrainSuspended()) return;
 
     // Determine who the previous character was in the sequence.
     const precedingCharacter = index > 0
@@ -610,8 +609,8 @@ Game_Player.prototype.stopFollowersPixelMoving = function()
   // Iterate over the followers and halt their pixel movement.
   this.followers()._data.forEach(follower =>
   {
-    // If Ally AI is present and this follower is AI-controlled, do not interfere.
-    if (J.ABS.EXT.ALLYAI && follower.getJabsBattler()) return;
+    // A follower claimed by another movement system is not ours to halt.
+    if (follower.isPixelTrainSuspended()) return;
 
     // Otherwise, stop pixel moving to prevent residual drift.
     follower.stopPixelMoving();

@@ -60,6 +60,7 @@ J.PIXEL.EXT.ABS.RegExp.HitboxReveal = /<hitboxReveal:[ ]?([+-]?\d+(?:\.\d+)?)>/i
 J.PIXEL.EXT.ABS.Aliased = {
   Game_CharacterBase: new Map(),
   Game_Event: new Map(),
+  Game_Follower: new Map(),
   Game_Player: new Map(),
   JABS_AiManager: new Map(),
   JABS_Battler: new Map(),
