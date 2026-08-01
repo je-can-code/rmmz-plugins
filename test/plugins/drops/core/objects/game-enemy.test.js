@@ -230,6 +230,28 @@ describe('J-DropsControl Game_Enemy drop pipeline (direct src import)', () =>
       expect(found).toEqual([ { id: 1, name: 'Potion' } ]);
     });
 
+    it('yields several copies of one drop when the killer accumulates', () =>
+    {
+      // Arrange: a drop is a repeatable outcome, so a killer whose extra rolls all land should
+      // walk away with a stack rather than the surplus rolls being discarded.
+      globalThis.$dataItems[1] = { id: 1, name: 'Potion' };
+      enemy._enemyDb.originalDropItems = () => [ { kind: 1, dataId: 1, denominator: 100 } ];
+      const killer = {
+        getPositiveRolls: () => 2,
+        getNegativeRolls: () => 0,
+        isVeryLucky: () => false,
+        isVeryCursed: () => false,
+        isAccumulating: () => true,
+        getEncoreRepeats: () => 0,
+      };
+
+      // Act
+      const found = enemy.makeDropItems(killer);
+
+      // Assert: the base roll plus both bonus rolls, each landing at a guaranteed rate.
+      expect(found.length).toBe(3);
+    });
+
     it('skips an empty drop slot without rolling for it', () =>
     {
       // Arrange

@@ -708,10 +708,11 @@ Game_Enemy.prototype.makeDropItems = function(killer = null) {
 	dropList.forEach((drop) => {
 		if (!this.canFindLoot(drop)) return;
 		const rate = drop.denominator * multiplier;
-		const treasureHunterSkip = rate >= 100;
-		const foundLoot = treasureHunterSkip ? true : this.didFindLoot(rate, killer);
-		if (foundLoot === false) return;
-		this.findLoot(drop, itemsFound);
+		const foundCount = this.howMuchLootFound(rate, killer);
+		if (foundCount <= 0) return;
+		for (let index = 0; index < foundCount; index++) {
+			this.findLoot(drop, itemsFound);
+		}
 	}, this);
 	return itemsFound;
 };
@@ -739,18 +740,37 @@ Game_Enemy.prototype.canFindLoot = function(drop) {
 	return true;
 };
 /**
+* Determines how many copies of a drop were found at the given rate.
+*
+* A drop is a repeatable outcome- finding it twice is a coherent result in a way that "hit twice"
+* or "critted twice" are not- so this resolves through the shared proc-count path rather than
+* collapsing to a single yes/no. That is what lets Accumulate Mode roll every one of the killer's
+* positive rolls and award a copy per success, and lets Encore echo each success further.
+*
+* A rate at or beyond 100 succeeds on every roll by construction, so a "guaranteed" drop needs no
+* special case: it simply lands on all of them.
+* @param {number} rate The 0-100 integer rate of which to find this loot.
+* @param {Game_Actor|Game_Enemy=} killer The battler that landed the killing blow, if known.
+* @returns {number} How many copies of this loot were found; 0 means none.
+*/
+Game_Enemy.prototype.howMuchLootFound = function(rate, killer = null) {
+	if (!killer) {
+		return RPGManager.chanceIn100(rate, 1, 0) ? 1 : 0;
+	}
+	const positiveRolls = 1 + killer.getPositiveRolls();
+	const negativeRolls = killer.getNegativeRolls();
+	return RPGManager.resolveProcCount(killer, rate, positiveRolls, negativeRolls);
+};
+/**
 * Determines whether or not loot was found based on the provided rate.
-* This is not deterministic, and the same (non-100) rate
+* This is not deterministic, and the same (non-100) rate can answer differently each time.
+* Callers that care how many copies were found should ask {@link #howMuchLootFound} instead.
 * @param {number} rate The 0-100 integer rate of which to find this loot.
 * @param {Game_Actor|Game_Enemy=} killer The battler that landed the killing blow, if known.
 * @returns {boolean} True if we found loot this time, false otherwise.
 */
 Game_Enemy.prototype.didFindLoot = function(rate, killer = null) {
-	const chance = rate;
-	const positiveRolls = killer ? 1 + killer.getPositiveRolls() : 1;
-	const negativeRolls = killer ? killer.getNegativeRolls() : 0;
-	const found = killer ? RPGManager.fateOf100(killer, chance, positiveRolls, negativeRolls) : RPGManager.chanceIn100(chance, positiveRolls, negativeRolls);
-	return found;
+	return this.howMuchLootFound(rate, killer) > 0;
 };
 /**
 * Gets the drop items from this enemy from all sources available.
