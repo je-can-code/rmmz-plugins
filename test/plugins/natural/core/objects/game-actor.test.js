@@ -386,6 +386,71 @@ describe('J-NaturalGrowth Game_Actor growths (direct src import)', () =>
   });
   //endregion regex mappings without a match
 
+  //region fractional parameter scaling
+  describe('growth tags on fractional parameters', () =>
+  {
+    /**
+     * Applies growth to an actor carrying a single notetag.
+     * @param {string} note The note text driving this step.
+     * @param {string} method The growth application method to invoke.
+     * @returns {Game_Actor}
+     */
+    function applyGrowthFromNote(note, method)
+    {
+      const tagged = new globalThis.Game_Actor();
+      tagged.initMembers();
+      tagged.getAllNotes = () => [ { note } ];
+      tagged[method]();
+
+      return tagged;
+    }
+
+    it('reads an ex-parameter growth tag as whole percents', () =>
+    {
+      // Arrange & Act: ex-parameters live on a 0-1 scale, so a tag asking for five percent has
+      // to land as 0.05 rather than as a flat 5, which would be five hundred percent - per level.
+      const tagged = applyGrowthFromNote('<hitGrowthPlus:[5]>', 'applyNaturalXparamGrowths');
+
+      // Assert
+      expect(tagged.xParamGrowthPlus(0)).toBeCloseTo(0.05, 10);
+    });
+
+    it('reads an sp-parameter growth tag as whole percents', () =>
+    {
+      // Arrange & Act
+      const tagged = applyGrowthFromNote('<tgrGrowthPlus:[5]>', 'applyNaturalSparamGrowths');
+
+      // Assert
+      expect(tagged.sParamGrowthPlus(0)).toBeCloseTo(0.05, 10);
+    });
+
+    it('leaves base parameter growth unscaled, since those are whole numbers already', () =>
+    {
+      // Arrange & Act: max life is a raw integer, so ten means ten points and must not be
+      // divided the way the fractional parameters are.
+      const tagged = applyGrowthFromNote('<mhpGrowthPlus:[10]>', 'applyNaturalBparamGrowths');
+
+      // Assert
+      expect(tagged.bParamGrowthPlus(0)).toBeCloseTo(10, 10);
+    });
+
+    it('matches the buff tag of the same value on the same parameter', () =>
+    {
+      // Arrange: the whole point of the scaling is that an author writing five means five
+      // percent whichever family of tag they reach for.
+      const grown = applyGrowthFromNote('<hitGrowthPlus:[5]>', 'applyNaturalXparamGrowths');
+      const buffed = applyGrowthFromNote('<hitBuffPlus:[5]>', 'refreshXParamBuffs');
+
+      // Act
+      const growthBonus = grown.getXparamGrowth(0, 0.95);
+      const buffBonus = buffed.calculateExParamBuff(0, 0.95);
+
+      // Assert
+      expect(growthBonus).toBeCloseTo(buffBonus, 10);
+    });
+  });
+  //endregion fractional parameter scaling
+
   //region applying growth
   describe('applyNaturalHarGrowths', () =>
   {
