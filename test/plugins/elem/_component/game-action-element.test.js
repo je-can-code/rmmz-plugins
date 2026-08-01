@@ -35,10 +35,9 @@ describe('J-Elementalistics Game_Action element math (direct src import)', () =>
     // patches globalThis.Game_Battler/Game_Enemy/Game_Actor/Game_Action prototypes directly, no vm involved.
     await import('../../../../src/plugins/elem/core/objects/Game_Battler.js');
 
-    // Game_Actor's elementRate alias reads J.ELEM.Aliased.Game_Enemy's captured original, so Game_Enemy
-    // must be imported (and thus alias itself) before Game_Actor.
-    await import('../../../../src/plugins/elem/core/objects/Game_Enemy.js');
+    // load order mirrors the plugin entry point: actor before enemy.
     await import('../../../../src/plugins/elem/core/objects/Game_Actor.js');
+    await import('../../../../src/plugins/elem/core/objects/Game_Enemy.js');
     await import('../../../../src/plugins/elem/core/objects/Game_Action.js');
   });
 

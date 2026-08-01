@@ -80,9 +80,12 @@ export function installElemHostGlobals(sandbox = globalThis)
     elements: [ null, { id: 1, name: 'F' }, { id: 2, name: 'I' } ],
   };
 
-  // elem/core/objects/Game_Enemy.js's elementRate alias captures whatever is here as "original"
-  // before overwriting it- matches vanilla RMMZ's flat 1.0 base rate.
-  sandbox.Game_Enemy.prototype.elementRate = function()
+  // Both elem's Game_Actor.js and Game_Enemy.js capture whatever is here as their "original"
+  // before overwriting it. Vanilla defines elementRate on Game_BattlerBase alone- neither
+  // subclass has its own - so it belongs on the shared base here too; hanging it on one subclass
+  // would leave the other's alias capturing undefined, which is a shape production never has.
+  // Returns a flat 1.0, matching vanilla RMMZ's base rate.
+  sandbox.Game_Battler.prototype.elementRate = function()
   {
     return 1;
   };

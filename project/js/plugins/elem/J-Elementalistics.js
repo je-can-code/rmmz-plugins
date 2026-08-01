@@ -437,7 +437,7 @@ Game_Battler.prototype.extractElementRateBoosts = function(referenceData) {
 */
 J.ELEM.Aliased.Game_Actor.set("elementRate", Game_Actor.prototype.elementRate);
 Game_Actor.prototype.elementRate = function(elementId) {
-	const baseRate = J.ELEM.Aliased.Game_Enemy.get("elementRate").call(this, elementId);
+	const baseRate = J.ELEM.Aliased.Game_Actor.get("elementRate").call(this, elementId);
 	const isAbsorbed = this.isElementAbsorbed(elementId) ? -1 : 1;
 	return baseRate * isAbsorbed;
 };
