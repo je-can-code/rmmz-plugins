@@ -2410,6 +2410,7 @@ var Scene_JaftingRefine = class Scene_JaftingRefine extends Scene_MenuBase {
 		const listWindow = this.getBaseRefinableListWindow();
 		listWindow.refresh();
 		listWindow.select(0);
+		this.onBaseRefinableListIndexChange();
 		this.getConsumableRefinableListWindow().refresh();
 	}
 };
