@@ -623,7 +623,12 @@ class JABS_SkillSlot
   }
 }
 
-SerializableRegistry.register(JABS_SkillSlot);
+SerializableRegistry.register(JABS_SkillSlot, {
+  typed: {
+    // initMembers builds this in the constructor, so every slot in a save carries one.
+    cooldown: JABS_Cooldown,
+  },
+});
 
 export default JABS_SkillSlot;
 //endregion JABS_SkillSlot

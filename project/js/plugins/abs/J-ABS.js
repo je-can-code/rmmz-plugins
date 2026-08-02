@@ -11477,7 +11477,7 @@ var JABS_SkillSlot = class {
 		return !noAutoclearSlots.includes(this.key);
 	}
 };
-SerializableRegistry.register(JABS_SkillSlot);
+SerializableRegistry.register(JABS_SkillSlot, { typed: { cooldown: JABS_Cooldown } });
 
 //#endregion
 //#region src/plugins/abs/core/models/JABS_Battler.js

@@ -4,6 +4,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 describe('JABS_SkillSlot (direct src import)', () =>
 {
   let JABS_SkillSlot;
+  let JABS_Cooldown;
 
   beforeAll(async () =>
   {
@@ -19,6 +20,7 @@ describe('JABS_SkillSlot (direct src import)', () =>
     globalThis.console = { ...console, warn: vi.fn() };
 
     ({ default: JABS_SkillSlot } = await import('../../../../../src/plugins/abs/core/models/JABS_SkillSlot.js'));
+    ({ default: JABS_Cooldown } = await import('../../../../../src/plugins/abs/core/models/JABS_Cooldown.js'));
   });
 
   beforeEach(() =>
@@ -31,7 +33,13 @@ describe('JABS_SkillSlot (direct src import)', () =>
 
   it('registers itself with the serializable registry on module load', () =>
   {
-    expect(globalThis.SerializableRegistry.register).toHaveBeenCalledWith(JABS_SkillSlot);
+    // the cooldown declaration is not decoration: initMembers builds one in every slot, so an
+    // encoder walking a save meets a JABS_Cooldown here and refuses to write an undeclared one.
+    expect(globalThis.SerializableRegistry.register).toHaveBeenCalledWith(JABS_SkillSlot, {
+      typed: {
+        cooldown: JABS_Cooldown,
+      },
+    });
   });
 
   describe('constructor / initialize', () =>
