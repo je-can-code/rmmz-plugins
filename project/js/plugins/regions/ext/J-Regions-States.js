@@ -211,12 +211,12 @@ var RegionStateData = class {
 //#endregion
 //#region src/plugins/regions/ext/states/objects/Game_Map.js
 /**
-* Extends {@link #initialize}.<br/>
+* Extends {@link #initMembers}.<br/>
 * Also initializes the region states properties.
 */
-J.REGIONS.EXT.STATES.Aliased.Game_Map.set("initialize", Game_Map.prototype.initialize);
-Game_Map.prototype.initialize = function() {
-	J.REGIONS.EXT.STATES.Aliased.Game_Map.get("initialize").call(this);
+J.REGIONS.EXT.STATES.Aliased.Game_Map.set("initMembers", Game_Map.prototype.initMembers);
+Game_Map.prototype.initMembers = function() {
+	J.REGIONS.EXT.STATES.Aliased.Game_Map.get("initMembers").call(this);
 	this.initRegionStatesMembers();
 };
 /**

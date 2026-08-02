@@ -3300,12 +3300,12 @@ Game_Troop.prototype.sdpTotal = function() {
 //#endregion
 //#region src/plugins/sdp/core/objects/Game_System.js
 /**
-* Extends {@link #initialize}.<br/>
+* Extends {@link #initMembers}.<br/>
 * Also initializes the debug features for the SDP system.
 */
-J.SDP.Aliased.Game_System.set("initialize", Game_System.prototype.initialize);
-Game_System.prototype.initialize = function() {
-	J.SDP.Aliased.Game_System.get("initialize").call(this);
+J.SDP.Aliased.Game_System.set("initMembers", Game_System.prototype.initMembers);
+Game_System.prototype.initMembers = function() {
+	J.SDP.Aliased.Game_System.get("initMembers").call(this);
 	this.initSdpMembers();
 };
 /**

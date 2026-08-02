@@ -131,7 +131,14 @@ export function installMapHostGlobals(sandbox = globalThis, mapPluginParameterSt
   sandbox.Game_Event.prototype.note = () => '';
   sandbox.Game_Event.prototype.getValidCommentCommands = () => [];
 
-  sandbox.Game_Map.prototype.initialize = noop;
+  sandbox.Game_Map.prototype.initialize = function()
+  {
+    this.initMembers();
+  };
+
+  // J-Base adds this hook and calls it from an aliased `initialize`; plugins adding state to
+  // this host alias the hook rather than `initialize`, so their chain needs it to exist.
+  sandbox.Game_Map.prototype.initMembers = noop;
 
   sandbox.Game_System.prototype.initMembers = noop;
 

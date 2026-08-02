@@ -13,7 +13,7 @@ describe('Game_System ext/sdp augments (direct src import)', () =>
     {
     }
 
-    StubGameSystem.prototype.initialize = vi.fn();
+    StubGameSystem.prototype.initMembers = vi.fn();
     globalThis.Game_System = StubGameSystem;
 
     await import('../../../../../src/plugins/sdp/core/objects/Game_System.js');
@@ -25,7 +25,7 @@ describe('Game_System ext/sdp augments (direct src import)', () =>
     vi.clearAllMocks();
   });
 
-  describe('initialize', () =>
+  describe('initMembers', () =>
   {
     it('always calls through to the original aliased implementation', () =>
     {
@@ -33,10 +33,10 @@ describe('Game_System ext/sdp augments (direct src import)', () =>
       const system = new Game_System();
 
       // Act
-      system.initialize();
+      system.initMembers();
 
       // Assert
-      expect(globalThis.J.SDP.Aliased.Game_System.get('initialize')).toHaveBeenCalled();
+      expect(globalThis.J.SDP.Aliased.Game_System.get('initMembers')).toHaveBeenCalled();
     });
 
     it('initializes forced-drop debug flag to false', () =>
@@ -45,7 +45,7 @@ describe('Game_System ext/sdp augments (direct src import)', () =>
       const system = new Game_System();
 
       // Act
-      system.initialize();
+      system.initMembers();
 
       // Assert
       expect(system.shouldForceDropSdp()).toEqual(false);
@@ -58,7 +58,7 @@ describe('Game_System ext/sdp augments (direct src import)', () =>
     {
       // Arrange
       const system = new Game_System();
-      system.initialize();
+      system.initMembers();
 
       // Act
       system.enableForcedSdpDrops();
@@ -71,7 +71,7 @@ describe('Game_System ext/sdp augments (direct src import)', () =>
     {
       // Arrange
       const system = new Game_System();
-      system.initialize();
+      system.initMembers();
       system.enableForcedSdpDrops();
 
       // Act
@@ -85,7 +85,7 @@ describe('Game_System ext/sdp augments (direct src import)', () =>
     {
       // Arrange
       const system = new Game_System();
-      system.initialize();
+      system.initMembers();
 
       // Act
       const result = system.shouldForceDropSdp();

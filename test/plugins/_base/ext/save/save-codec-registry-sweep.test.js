@@ -105,6 +105,26 @@ describe('save codec registry sweeps (direct src import)', () =>
     {
     };
 
+    globalThis.Game_System.prototype.initMembers = function()
+    {
+    };
+
+    globalThis.Game_Map.prototype.initMembers = function()
+    {
+    };
+
+    globalThis.Game_Timer.prototype.initMembers = function()
+    {
+    };
+
+    globalThis.Game_Item.prototype.initMembers = function()
+    {
+    };
+
+    globalThis.Game_ActionResult.prototype.initMembers = function()
+    {
+    };
+
     // the `Game_Event` codec declares `_j` transient with a factory that hands back whatever the
     // seed built, and it is plugins aliasing `initMembers` that build it - vanilla has no `_j` at
     // all. This stands in for one, so the sweep measures the shape a real install has. Without it

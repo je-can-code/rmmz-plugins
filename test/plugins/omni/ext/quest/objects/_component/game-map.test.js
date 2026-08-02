@@ -18,7 +18,7 @@ describe('Game_Map ext/quest augments (direct src import)', () =>
     {
     }
 
-    StubGameMap.prototype.initialize = vi.fn();
+    StubGameMap.prototype.initMembers = vi.fn();
     StubGameMap.prototype.update = vi.fn();
     globalThis.Game_Map = StubGameMap;
 
@@ -42,7 +42,7 @@ describe('Game_Map ext/quest augments (direct src import)', () =>
     await import('../../../../../../../src/plugins/omni/ext/quest/objects/Game_Map.js');
   });
 
-  describe('initialize/initQuestopediaMembers', () =>
+  describe('initMembers/initQuestopediaMembers', () =>
   {
     it('always calls through to the original aliased implementation', () =>
     {
@@ -50,10 +50,10 @@ describe('Game_Map ext/quest augments (direct src import)', () =>
       const map = new globalThis.Game_Map();
 
       // Act
-      map.initialize();
+      map.initMembers();
 
       // Assert
-      expect(globalThis.J.OMNI.EXT.QUEST.Aliased.Game_Map.get('initialize')).toHaveBeenCalled();
+      expect(globalThis.J.OMNI.EXT.QUEST.Aliased.Game_Map.get('initMembers')).toHaveBeenCalled();
     });
 
     it('initializes a destination timer for tracking', () =>
@@ -62,7 +62,7 @@ describe('Game_Map ext/quest augments (direct src import)', () =>
       const map = new globalThis.Game_Map();
 
       // Act
-      map.initialize();
+      map.initMembers();
 
       // Assert
       expect(map.getDestinationTimer()).toBeInstanceOf(globalThis.J_Timer);
@@ -75,7 +75,7 @@ describe('Game_Map ext/quest augments (direct src import)', () =>
     {
       // Arrange
       const map = new globalThis.Game_Map();
-      map.initialize();
+      map.initMembers();
 
       // Act
       map.update(true);
@@ -88,7 +88,7 @@ describe('Game_Map ext/quest augments (direct src import)', () =>
     {
       // Arrange
       const map = new globalThis.Game_Map();
-      map.initialize();
+      map.initMembers();
       map.getDestinationTimer().complete = false;
 
       // Act
@@ -103,7 +103,7 @@ describe('Game_Map ext/quest augments (direct src import)', () =>
     {
       // Arrange
       const map = new globalThis.Game_Map();
-      map.initialize();
+      map.initMembers();
       map.getDestinationTimer().complete = true;
 
       // Act

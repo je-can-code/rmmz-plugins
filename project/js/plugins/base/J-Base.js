@@ -1825,6 +1825,9 @@ J.BASE.Aliased = {
 	Game_Actor: new Map(),
 	Game_Battler: new Map(),
 	Game_Enemy: new Map(),
+	Game_ActionResult: new Map(),
+	Game_Item: new Map(),
+	Game_Map: new Map(),
 	Game_Party: new Map(),
 	Game_Temp: new Map(),
 	Game_Timer: new Map(),
@@ -9031,6 +9034,28 @@ Game_Actor.prototype.exp = function() {
 };
 
 //#endregion
+//#region src/plugins/_base/core/objects/Game_ActionResult.js
+/**
+* Extends {@link Game_ActionResult.initialize}.<br/>
+* Also runs the member-initialization hook every plugin hangs its own state off.
+*/
+J.BASE.Aliased.Game_ActionResult.set("initialize", Game_ActionResult.prototype.initialize);
+Game_ActionResult.prototype.initialize = function() {
+	J.BASE.Aliased.Game_ActionResult.get("initialize").call(this);
+	this.initMembers();
+};
+/**
+* A hook for initializing additional members in {@link Game_ActionResult}.<br>
+*
+* Vanilla sets a result up inside `initialize`, which a decode can never re-run, so plugin state
+* added through it would come back missing. A result reaches a savefile nested on every battler, so
+* its codec seeds the engine's own fields and then calls this.
+*
+* **Plugins adding state to an action result alias this, not `initialize`.**
+*/
+Game_ActionResult.prototype.initMembers = function() {};
+
+//#endregion
 //#region src/plugins/_base/core/objects/Game_Actors.js
 /**
 * Gets all proper actor ids available for actors in the database.
@@ -10355,6 +10380,26 @@ Game_Follower.prototype.isFollower = function() {
 //#endregion
 //#region src/plugins/_base/core/objects/Game_Item.js
 /**
+* Extends {@link Game_Item.initialize}.<br/>
+* Also runs the member-initialization hook every plugin hangs its own state off.
+*/
+J.BASE.Aliased.Game_Item.set("initialize", Game_Item.prototype.initialize);
+Game_Item.prototype.initialize = function(item) {
+	J.BASE.Aliased.Game_Item.get("initialize").call(this, item);
+	this.initMembers();
+};
+/**
+* A hook for initializing additional members in {@link Game_Item}.<br>
+*
+* Note that this takes no arguments while `initialize` takes the item being wrapped. That split is
+* the point: a decode has a savefile, not a constructor argument, so the hook is only ever a
+* *defaulter*. Anything a plugin derives from the argument belongs in an `initialize` alias, and
+* whatever that field's resting value is belongs here.
+*
+* **Plugins adding state to a game item alias this, not `initialize`.**
+*/
+Game_Item.prototype.initMembers = function() {};
+/**
 * Gets the data class of this item, describing which database this item is drawn from.
 * @returns {string} One of "skill", "item", "weapon", or "armor"- or empty when unassigned.
 */
@@ -10402,6 +10447,25 @@ Game_Interpreter.prototype.setIndex = function(newIndex) {
 
 //#endregion
 //#region src/plugins/_base/core/objects/Game_Map.js
+/**
+* Extends {@link Game_Map.initialize}.<br/>
+* Also runs the member-initialization hook every plugin hangs its own state off.
+*/
+J.BASE.Aliased.Game_Map.set("initialize", Game_Map.prototype.initialize);
+Game_Map.prototype.initialize = function() {
+	J.BASE.Aliased.Game_Map.get("initialize").call(this);
+	this.initMembers();
+};
+/**
+* A hook for initializing additional members in {@link Game_Map}.<br>
+*
+* Vanilla sets the map up inside `initialize`, which a decode can never re-run, so plugin state
+* added through it would come back missing. This hook is what a decode *can* run: the map's codec
+* seeds the engine's own fields and then calls this, walking the same chain construction does.
+*
+* **Plugins adding state to the map alias this, not `initialize`.**
+*/
+Game_Map.prototype.initMembers = function() {};
 /**
 * Gets the raw event collection, nulls and all.
 *
@@ -10686,8 +10750,20 @@ Game_Temp.prototype.initMembers = function() {};
 J.BASE.Aliased.Game_Timer.set("initialize", Game_Timer.prototype.initialize);
 Game_Timer.prototype.initialize = function() {
 	J.BASE.Aliased.Game_Timer.get("initialize").call(this);
+	this.initMembers();
+};
+/**
+* A hook for initializing additional members in {@link Game_Timer}.<br>
+*
+* Vanilla sets the timer up inside `initialize`, which a decode can never re-run, so anything added
+* through it would come back missing. The timer's codec seeds the engine's own fields and then calls
+* this, walking the same chain construction does.
+*
+* **Plugins adding state to the timer alias this, not `initialize`.**
+*/
+Game_Timer.prototype.initMembers = function() {
 	/**
-	* Also initialize the duration of the timer.
+	* The duration of the timer.
 	* @type {number}
 	*/
 	this._duration = 0;

@@ -1518,9 +1518,9 @@ Game_Party.prototype.averageActorLevel = function() {
 /**
 * Extends `initialize()` to include properties for this plugin.
 */
-J.LEVEL.Aliased.Game_System.set("initialize", Game_System.prototype.initialize);
-Game_System.prototype.initialize = function() {
-	J.LEVEL.Aliased.Game_System.get("initialize").call(this);
+J.LEVEL.Aliased.Game_System.set("initMembers", Game_System.prototype.initMembers);
+Game_System.prototype.initMembers = function() {
+	J.LEVEL.Aliased.Game_System.get("initMembers").call(this);
 	/**
 	* The overarching _j object, where all my stateful plugin data is stored.
 	*/

@@ -212,7 +212,14 @@ export function installSdpHostGlobals(sandbox = globalThis, sdpConfigJson = '{"s
 
   sandbox.Game_Player.prototype.useOnPickup = noop;
 
-  sandbox.Game_System.prototype.initialize = noop;
+  sandbox.Game_System.prototype.initialize = function()
+  {
+    this.initMembers();
+  };
+
+  // J-Base adds this hook and calls it from an aliased `initialize`; plugins adding state to
+  // this host alias the hook rather than `initialize`, so their chain needs it to exist.
+  sandbox.Game_System.prototype.initMembers = noop;
 
   function Game_Troop()
   {

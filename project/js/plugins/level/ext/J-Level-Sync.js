@@ -259,12 +259,12 @@ J.LEVEL.EXT.SYNC.RegExp = {
 //#endregion
 //#region src/plugins/level/ext/sync/objects/Game_System.js
 /**
-* Extends {@link #initialize}.<br/>
+* Extends {@link #initMembers}.<br/>
 * Also initializes content sync session storage for this plugin.
 */
-J.LEVEL.EXT.SYNC.Aliased.Game_System.set("initialize", Game_System.prototype.initialize);
-Game_System.prototype.initialize = function() {
-	J.LEVEL.EXT.SYNC.Aliased.Game_System.get("initialize").call(this);
+J.LEVEL.EXT.SYNC.Aliased.Game_System.set("initMembers", Game_System.prototype.initMembers);
+Game_System.prototype.initMembers = function() {
+	J.LEVEL.EXT.SYNC.Aliased.Game_System.get("initMembers").call(this);
 	/**
 	* The overarching _j object, where all my stateful plugin data is stored.
 	*/
@@ -338,12 +338,12 @@ Game_System.prototype.onAfterLoad = function() {
 //#endregion
 //#region src/plugins/level/ext/sync/objects/Game_Map.js
 /**
-* Extends {@link #initialize}.<br/>
+* Extends {@link #initMembers}.<br/>
 * Initializes the level sync state so accessors are safe before the first map setup.
 */
-J.LEVEL.EXT.SYNC.Aliased.Game_Map.set("initialize", Game_Map.prototype.initialize);
-Game_Map.prototype.initialize = function() {
-	J.LEVEL.EXT.SYNC.Aliased.Game_Map.get("initialize").call(this);
+J.LEVEL.EXT.SYNC.Aliased.Game_Map.set("initMembers", Game_Map.prototype.initMembers);
+Game_Map.prototype.initMembers = function() {
+	J.LEVEL.EXT.SYNC.Aliased.Game_Map.get("initMembers").call(this);
 	this.initLevelSyncMembers();
 };
 /**

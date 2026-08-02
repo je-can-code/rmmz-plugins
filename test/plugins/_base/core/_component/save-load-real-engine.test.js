@@ -220,6 +220,26 @@ describe('save and load through the real engine objects', () =>
     {
     };
 
+    globalThis.Game_System.prototype.initMembers = function()
+    {
+    };
+
+    globalThis.Game_Map.prototype.initMembers = function()
+    {
+    };
+
+    globalThis.Game_Timer.prototype.initMembers = function()
+    {
+    };
+
+    globalThis.Game_Item.prototype.initMembers = function()
+    {
+    };
+
+    globalThis.Game_ActionResult.prototype.initMembers = function()
+    {
+    };
+
     // J-Base-Save reads the registry as a hoisted global rather than importing across ships.
     ({ default: globalThis.SerializableRegistry } = await import(
       '../../../../../src/plugins/_base/core/core/SerializableRegistry.js'));

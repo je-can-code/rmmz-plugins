@@ -74,6 +74,9 @@ SerializableRegistry.register(Game_Item, {
   {
     instance._dataClass = String.empty;
     instance._itemId = 0;
+
+    // and then the hook, which is where J-Extend's underlying-object default lives.
+    instance.initMembers();
   },
 });
 
@@ -84,7 +87,15 @@ SerializableRegistry.register(Game_Item, {
 SerializableRegistry.register(Game_ActionResult, {
   id: 'game-action-result',
   aliases: [ 'Game_ActionResult' ],
-  seed: instance => instance.clear(),
+  seed: instance =>
+  {
+    instance.clear();
+
+    // and then the hook plugins hang their own result state off. J-ABS's fields are re-established
+    // by its own `clear()` extension, so this is belt and braces there - but a plugin adding a field
+    // without extending `clear()` would have nowhere else to be seeded from.
+    instance.initMembers();
+  },
 });
 
 /**
@@ -115,6 +126,10 @@ SerializableRegistry.register(Game_System, {
     instance._defeatMe = null;
     instance._savedBgm = null;
     instance._walkingBgm = null;
+
+    // and then the hook every plugin hangs its own system state off; `$gameSystem._j` has more
+    // tenants than any other host, and none of them would otherwise be seeded.
+    instance.initMembers();
   },
 });
 
@@ -128,6 +143,10 @@ SerializableRegistry.register(Game_Timer, {
   {
     instance._frames = 0;
     instance._working = false;
+
+    // and then the hook, which is where J-Base's own `_duration` lives alongside anything a plugin
+    // adds to the timer.
+    instance.initMembers();
   },
 });
 
@@ -314,6 +333,9 @@ SerializableRegistry.register(Game_Map, {
     instance._battleback1Name = null;
     instance._battleback2Name = null;
     instance.createVehicles();
+
+    // and then the hook every plugin hangs its own map state off.
+    instance.initMembers();
   },
 });
 

@@ -2,14 +2,14 @@
 import RegionSkillData from './../models/RegionSkillData.js';
 
 /**
- * Extends {@link #initialize}.<br/>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes the region skills properties.
  */
-J.REGIONS.EXT.SKILLS.Aliased.Game_Map.set('initialize', Game_Map.prototype.initialize);
-Game_Map.prototype.initialize = function()
+J.REGIONS.EXT.SKILLS.Aliased.Game_Map.set('initMembers', Game_Map.prototype.initMembers);
+Game_Map.prototype.initMembers = function()
 {
   // perform original logic.
-  J.REGIONS.EXT.SKILLS.Aliased.Game_Map.get('initialize')
+  J.REGIONS.EXT.SKILLS.Aliased.Game_Map.get('initMembers')
     .call(this);
 
   // initialize the region states.

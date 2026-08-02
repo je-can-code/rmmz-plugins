@@ -205,9 +205,9 @@ PluginManager.registerCommand(J.HUD.Metadata.name, "refreshImageCache", () => {
 /**
 * Extends the `initialize()` to include our hud data for remembering.
 */
-J.HUD.Aliased.Game_System.set("initialize", Game_System.prototype.initialize);
-Game_System.prototype.initialize = function() {
-	J.HUD.Aliased.Game_System.get("initialize").call(this);
+J.HUD.Aliased.Game_System.set("initMembers", Game_System.prototype.initMembers);
+Game_System.prototype.initMembers = function() {
+	J.HUD.Aliased.Game_System.get("initMembers").call(this);
 	this._j ||= {};
 	this._j._hud ||= {
 		_hudVisible: true,

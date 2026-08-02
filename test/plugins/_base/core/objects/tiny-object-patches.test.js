@@ -7,7 +7,16 @@ describe('J-Base tiny Game_* object patches (direct src import)', () =>
   {
     String.empty = '';
 
-    globalThis.J = { BASE: { Aliased: { Game_Temp: new Map() } } };
+    globalThis.J = {
+      BASE: {
+        Aliased: {
+          Game_ActionResult: new Map(),
+          Game_Item: new Map(),
+          Game_Map: new Map(),
+          Game_Temp: new Map(),
+        },
+      },
+    };
 
     function Game_Map()
     {

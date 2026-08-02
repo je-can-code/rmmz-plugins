@@ -154,12 +154,12 @@ J.REGIONS.RegExp.DenyRegions = /<denyRegions:[ ]?(\[[\d, ]+])>/gi;
 //#endregion
 //#region src/plugins/regions/core/objects/Game_Map.js
 /**
-* Extends {@link #initialize}.<br/>
+* Extends {@link #initMembers}.<br/>
 * Also initializes the region effects properties.
 */
-J.REGIONS.Aliased.Game_Map.set("initialize", Game_Map.prototype.initialize);
-Game_Map.prototype.initialize = function() {
-	J.REGIONS.Aliased.Game_Map.get("initialize").call(this);
+J.REGIONS.Aliased.Game_Map.set("initMembers", Game_Map.prototype.initMembers);
+Game_Map.prototype.initMembers = function() {
+	J.REGIONS.Aliased.Game_Map.get("initMembers").call(this);
 	this.initRegionEffectsMembers();
 };
 /**

@@ -10,8 +10,23 @@ Game_Timer.prototype.initialize = function()
   J.BASE.Aliased.Game_Timer.get('initialize')
     .call(this);
 
+  // initialize our class members.
+  this.initMembers();
+};
+
+/**
+ * A hook for initializing additional members in {@link Game_Timer}.<br>
+ *
+ * Vanilla sets the timer up inside `initialize`, which a decode can never re-run, so anything added
+ * through it would come back missing. The timer's codec seeds the engine's own fields and then calls
+ * this, walking the same chain construction does.
+ *
+ * **Plugins adding state to the timer alias this, not `initialize`.**
+ */
+Game_Timer.prototype.initMembers = function()
+{
   /**
-   * Also initialize the duration of the timer.
+   * The duration of the timer.
    * @type {number}
    */
   this._duration = 0;

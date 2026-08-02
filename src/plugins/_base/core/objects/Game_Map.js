@@ -1,4 +1,32 @@
 //region Game_Map
+/**
+ * Extends {@link Game_Map.initialize}.<br/>
+ * Also runs the member-initialization hook every plugin hangs its own state off.
+ */
+J.BASE.Aliased.Game_Map.set('initialize', Game_Map.prototype.initialize);
+Game_Map.prototype.initialize = function()
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_Map.get('initialize')
+    .call(this);
+
+  // initialize our class members.
+  this.initMembers();
+};
+
+/**
+ * A hook for initializing additional members in {@link Game_Map}.<br>
+ *
+ * Vanilla sets the map up inside `initialize`, which a decode can never re-run, so plugin state
+ * added through it would come back missing. This hook is what a decode *can* run: the map's codec
+ * seeds the engine's own fields and then calls this, walking the same chain construction does.
+ *
+ * **Plugins adding state to the map alias this, not `initialize`.**
+ */
+Game_Map.prototype.initMembers = function()
+{
+};
+
 //region properties
 /**
  * Gets the raw event collection, nulls and all.

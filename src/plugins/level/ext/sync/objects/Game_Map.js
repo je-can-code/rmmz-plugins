@@ -1,13 +1,13 @@
 //region Game_Map
 /**
- * Extends {@link #initialize}.<br/>
+ * Extends {@link #initMembers}.<br/>
  * Initializes the level sync state so accessors are safe before the first map setup.
  */
-J.LEVEL.EXT.SYNC.Aliased.Game_Map.set('initialize', Game_Map.prototype.initialize);
-Game_Map.prototype.initialize = function()
+J.LEVEL.EXT.SYNC.Aliased.Game_Map.set('initMembers', Game_Map.prototype.initMembers);
+Game_Map.prototype.initMembers = function()
 {
   // perform original logic.
-  J.LEVEL.EXT.SYNC.Aliased.Game_Map.get('initialize')
+  J.LEVEL.EXT.SYNC.Aliased.Game_Map.get('initMembers')
     .call(this);
 
   // initialize level sync state immediately so getLevel calls before setup() are safe.

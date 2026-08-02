@@ -1,13 +1,13 @@
 //region Game_System
 /**
- * Extends {@link #initialize}.<br/>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes content sync session storage for this plugin.
  */
-J.LEVEL.EXT.SYNC.Aliased.Game_System.set('initialize', Game_System.prototype.initialize);
-Game_System.prototype.initialize = function()
+J.LEVEL.EXT.SYNC.Aliased.Game_System.set('initMembers', Game_System.prototype.initMembers);
+Game_System.prototype.initMembers = function()
 {
   // perform original logic.
-  J.LEVEL.EXT.SYNC.Aliased.Game_System.get('initialize')
+  J.LEVEL.EXT.SYNC.Aliased.Game_System.get('initMembers')
     .call(this);
 
   /**

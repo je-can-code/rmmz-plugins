@@ -81,7 +81,14 @@ export function installDiffHostGlobals(sandbox = globalThis, diffConfigJson = bu
   sandbox.TextManager.sdpPoints = () => '';
 
   // Game_System.js's initialize alias captures whatever's here as "original" before overwriting it.
-  sandbox.Game_System.prototype.initialize = noop;
+  sandbox.Game_System.prototype.initialize = function()
+  {
+    this.initMembers();
+  };
+
+  // J-Base adds this hook and calls it from an aliased `initialize`; plugins adding state to
+  // this host alias the hook rather than `initialize`, so their chain needs it to exist.
+  sandbox.Game_System.prototype.initMembers = noop;
 
   // Game_Temp.js's initMembers alias captures whatever's here as "original" before overwriting it;
   // installJBaseHostGlobals's Game_Temp placeholder has an empty prototype with no default.

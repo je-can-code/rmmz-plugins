@@ -2212,16 +2212,30 @@ Game_Enemy.prototype.learnSkill = function(skillId) {
 //#endregion
 //#region src/plugins/extend/core/objects/Game_Item.js
 /**
-* Extend `initialize()` to include our update of assigning the item.
+* Extends {@link #initMembers}.<br/>
+* Also declares the underlying object, at its resting value.
+*
+* The default lives here rather than in the `initialize` alias below so that a decode establishes it
+* too - the hook is the only one of the two a savefile can run.
 */
-J.EXTEND.Aliased.Game_Item.set("initialize", Game_Item.prototype.initialize);
-Game_Item.prototype.initialize = function(item) {
-	J.EXTEND.Aliased.Game_Item.get("initialize").call(this, item);
+J.EXTEND.Aliased.Game_Item.set("initMembers", Game_Item.prototype.initMembers);
+Game_Item.prototype.initMembers = function() {
+	J.EXTEND.Aliased.Game_Item.get("initMembers").call(this);
 	/**
 	* The underlying object associated with this item.
 	* @type {RPG_EquipItem|RPG_UsableItem}
 	*/
 	this._item = null;
+};
+/**
+* Extends `initialize()` to include our update of assigning the item.
+*
+* Only the *mapping* is here; the default is in {@link #initMembers} above. An extended skill is not
+* in the database, so the object it wraps has to be carried in rather than looked up.
+*/
+J.EXTEND.Aliased.Game_Item.set("initialize", Game_Item.prototype.initialize);
+Game_Item.prototype.initialize = function(item) {
+	J.EXTEND.Aliased.Game_Item.get("initialize").call(this, item);
 	if (item) {
 		this._item = item;
 	}

@@ -26862,11 +26862,11 @@ Game_Action.prototype.calculateGeneralCastTimeDamageBonusPctPerSec = function() 
 //#endregion
 //#region src/plugins/abs/core/objects/Game_ActionResult.js
 /**
-* Extends {@link Game_ActionResult.initialize}.<br/>
+* Extends {@link Game_ActionResult.initMembers}.<br/>
 * Initializes additional members.
 */
-J.ABS.Aliased.Game_ActionResult.set("initialize", Game_ActionResult.prototype.initialize);
-Game_ActionResult.prototype.initialize = function() {
+J.ABS.Aliased.Game_ActionResult.set("initMembers", Game_ActionResult.prototype.initMembers);
+Game_ActionResult.prototype.initMembers = function() {
 	/**
 	* Whether or not the result was guarded.
 	* @type {boolean}
@@ -26887,7 +26887,7 @@ Game_ActionResult.prototype.initialize = function() {
 	* @type {number}
 	*/
 	this.reduced = 0;
-	J.ABS.Aliased.Game_ActionResult.get("initialize").call(this);
+	J.ABS.Aliased.Game_ActionResult.get("initMembers").call(this);
 };
 /**
 * Extends `.clear()` to include wiping the custom properties.

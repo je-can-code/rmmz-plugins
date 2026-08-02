@@ -18,7 +18,7 @@ describe('Game_System hud augments (direct src import)', () =>
     {
     }
 
-    StubGameSystem.prototype.initialize = originalInitialize;
+    StubGameSystem.prototype.initMembers = originalInitialize;
     globalThis.Game_System = StubGameSystem;
 
     await import('../../../../../src/plugins/hud/core/objects/Game_System.js');
@@ -30,7 +30,7 @@ describe('Game_System hud augments (direct src import)', () =>
     vi.clearAllMocks();
   });
 
-  describe('initialize', () =>
+  describe('initMembers', () =>
   {
     it('calls through to original logic and seeds default hud visibility flags', () =>
     {
@@ -38,7 +38,7 @@ describe('Game_System hud augments (direct src import)', () =>
       const system = new Game_System();
 
       // Act
-      system.initialize();
+      system.initMembers();
 
       // Assert
       expect(originalInitialize).toHaveBeenCalled();
@@ -53,7 +53,7 @@ describe('Game_System hud augments (direct src import)', () =>
       system._j = { someOtherPlugin: true };
 
       // Act
-      system.initialize();
+      system.initMembers();
 
       // Assert
       expect(system._j.someOtherPlugin).toBe(true);
@@ -67,7 +67,7 @@ describe('Game_System hud augments (direct src import)', () =>
     {
       // Arrange
       const system = new Game_System();
-      system.initialize();
+      system.initMembers();
 
       // Act
       system.setHudVisible(false);
@@ -83,7 +83,7 @@ describe('Game_System hud augments (direct src import)', () =>
     {
       // Arrange
       const system = new Game_System();
-      system.initialize();
+      system.initMembers();
 
       // Act
       system.setHudAlliesVisible(false);

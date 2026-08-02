@@ -1740,6 +1740,7 @@ SerializableRegistry.register(Game_Item, {
 	seed: (instance) => {
 		instance._dataClass = String.empty;
 		instance._itemId = 0;
+		instance.initMembers();
 	}
 });
 /**
@@ -1749,7 +1750,10 @@ SerializableRegistry.register(Game_Item, {
 SerializableRegistry.register(Game_ActionResult, {
 	id: "game-action-result",
 	aliases: ["Game_ActionResult"],
-	seed: (instance) => instance.clear()
+	seed: (instance) => {
+		instance.clear();
+		instance.initMembers();
+	}
 });
 /**
 * Global flags and audio state. Holds no instances at all- the bgm/bgs/me fields are plain audio
@@ -1778,6 +1782,7 @@ SerializableRegistry.register(Game_System, {
 		instance._defeatMe = null;
 		instance._savedBgm = null;
 		instance._walkingBgm = null;
+		instance.initMembers();
 	}
 });
 /**
@@ -1789,6 +1794,7 @@ SerializableRegistry.register(Game_Timer, {
 	seed: (instance) => {
 		instance._frames = 0;
 		instance._working = false;
+		instance.initMembers();
 	}
 });
 /**
@@ -1950,6 +1956,7 @@ SerializableRegistry.register(Game_Map, {
 		instance._battleback1Name = null;
 		instance._battleback2Name = null;
 		instance.createVehicles();
+		instance.initMembers();
 	}
 });
 /**
