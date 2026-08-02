@@ -6527,12 +6527,37 @@ DataManager.setupNewGame = function() {
 };
 /**
 * Extends {@link #extractSaveContents}.<br/>
-* Also clears the RPGManager note cache before applying save data.
+* Also clears the RPGManager note cache before applying save data, and drops the derived caches the
+* restored battlers came back holding.
 */
 J.BASE.Aliased.DataManager.set("extractSaveContents", DataManager.extractSaveContents);
 DataManager.extractSaveContents = function(contents) {
 	RPGManager.clearCache();
 	J.BASE.Aliased.DataManager.get("extractSaveContents").call(this, contents);
+	this.invalidateLoadedBattlerCaches();
+};
+/**
+* Drops every derived cache on every actor that was just restored from a savefile.
+*
+* A savefile is a snapshot of live objects, so a battler's caches come back holding database rows
+* that were copied at save time- and they come back *warm*, because every cache guard in the
+* codebase tests `!== null` and a populated cache is exactly what was written. Nothing else in the
+* load path notices: {@link Scene_Load.reloadMapIfUpdated} is the one mechanism that reacts to the
+* database having changed, and it reloads the map without ever touching an actor.
+*
+* So a loaded actor keeps its stale traits, notes, and derived numbers until some unrelated state
+* or equip change happens to fire {@link Game_Battler.onBattlerDataChange}. In combat that is
+* immediate and the bug is invisible; standing on the map it may never happen at all. That is why
+* editing a state's traits and loading a save appears to do nothing.
+*
+* {@link Game_Battler.onBattlerDataChange} is the right hammer here rather than nulling the five
+* known caches by hand, because it also runs {@link JCache.invalidateAllForBattler}- which walks
+* every battler-dimensioned {@link JCache} ever constructed and drops this battler's subtree from
+* each. That makes this method self-maintaining: a cache added years from now is covered without
+* anyone remembering to come back here.
+*/
+DataManager.invalidateLoadedBattlerCaches = function() {
+	$gameActors.existingActors().forEach((actor) => actor.onBattlerDataChange());
 };
 /**
 * Extends {@link #setupBattleTest}.<br/>
@@ -8787,6 +8812,22 @@ Game_Actors.prototype.actorIds = function() {
 */
 Game_Actors.prototype.actors = function() {
 	return this.actorIds().map((id) => this.actor(id), this);
+};
+/**
+* Gets the actor store exactly as the engine keeps it: a sparse array indexed by actor id, holding
+* only the actors this playthrough has actually built.
+*
+* This is deliberately not {@link #actors}. That one walks the database and hands each id to
+* {@link Game_Actors.actor}, which lazily constructs any actor it does not find- so asking it "who
+* exists right now" answers by making the answer true. Anything that wants to touch the actors a
+* save genuinely knows about must read the store instead.
+*
+* The holes are left in place. `forEach`, `filter`, and `map` all skip them by definition, so a
+* caller iterating this array only ever sees real actors.
+* @returns {Game_Actor[]}
+*/
+Game_Actors.prototype.existingActors = function() {
+	return this._data;
 };
 
 //#endregion

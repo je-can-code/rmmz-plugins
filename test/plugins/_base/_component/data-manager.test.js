@@ -283,11 +283,27 @@ describe('DataManager (direct src import)', () =>
 
   describe('extractSaveContents', () =>
   {
+    /**
+     * Stands up a minimal `$gameActors` whose store holds the given actors, mirroring the sparse,
+     * id-indexed array the engine keeps.
+     * @param {object[]} actors The actors to seed the store with, in id order from index 1.
+     * @returns {object} The stubbed actor store.
+     */
+    const installGameActors = actors =>
+    {
+      const store = [];
+      actors.forEach((actor, index) => store[ index + 1 ] = actor);
+      globalThis.$gameActors = { existingActors: () => store };
+
+      return globalThis.$gameActors;
+    };
+
     it('clears the RPGManager cache before applying save contents', () =>
     {
       // Arrange
       const clearSpy = vi.spyOn(RPGManager, 'clearCache');
       const contents = { some: 'data' };
+      installGameActors([]);
 
       // Act
       globalThis.DataManager.extractSaveContents(contents);
@@ -295,6 +311,42 @@ describe('DataManager (direct src import)', () =>
       // Assert
       expect(clearSpy).toHaveBeenCalled();
       clearSpy.mockRestore();
+    });
+
+    it('invalidates the battler caches of every restored actor', () =>
+    {
+      // Arrange
+      const first = { onBattlerDataChange: vi.fn() };
+      const second = { onBattlerDataChange: vi.fn() };
+      installGameActors([ first, second ]);
+
+      // Act
+      globalThis.DataManager.extractSaveContents({ some: 'data' });
+
+      // Assert
+      expect(first.onBattlerDataChange).toHaveBeenCalledTimes(1);
+      expect(second.onBattlerDataChange).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('invalidateLoadedBattlerCaches', () =>
+  {
+    it('skips the holes a sparse actor store leaves for ids that were never built', () =>
+    {
+      // Arrange- ids 1 and 3 exist, id 2 was never materialized.
+      const first = { onBattlerDataChange: vi.fn() };
+      const third = { onBattlerDataChange: vi.fn() };
+      const store = [];
+      store[ 1 ] = first;
+      store[ 3 ] = third;
+      globalThis.$gameActors = { existingActors: () => store };
+
+      // Act
+      globalThis.DataManager.invalidateLoadedBattlerCaches();
+
+      // Assert
+      expect(first.onBattlerDataChange).toHaveBeenCalledTimes(1);
+      expect(third.onBattlerDataChange).toHaveBeenCalledTimes(1);
     });
   });
 

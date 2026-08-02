@@ -518,7 +518,8 @@ DataManager.setupNewGame = function()
 
 /**
  * Extends {@link #extractSaveContents}.<br/>
- * Also clears the RPGManager note cache before applying save data.
+ * Also clears the RPGManager note cache before applying save data, and drops the derived caches the
+ * restored battlers came back holding.
  */
 J.BASE.Aliased.DataManager.set('extractSaveContents', DataManager.extractSaveContents);
 DataManager.extractSaveContents = function(contents)
@@ -529,6 +530,36 @@ DataManager.extractSaveContents = function(contents)
   // perform original logic.
   J.BASE.Aliased.DataManager.get('extractSaveContents')
     .call(this, contents);
+
+  // the actors only exist as of the call above, so their caches can only be invalidated after it.
+  this.invalidateLoadedBattlerCaches();
+};
+
+/**
+ * Drops every derived cache on every actor that was just restored from a savefile.
+ *
+ * A savefile is a snapshot of live objects, so a battler's caches come back holding database rows
+ * that were copied at save time- and they come back *warm*, because every cache guard in the
+ * codebase tests `!== null` and a populated cache is exactly what was written. Nothing else in the
+ * load path notices: {@link Scene_Load.reloadMapIfUpdated} is the one mechanism that reacts to the
+ * database having changed, and it reloads the map without ever touching an actor.
+ *
+ * So a loaded actor keeps its stale traits, notes, and derived numbers until some unrelated state
+ * or equip change happens to fire {@link Game_Battler.onBattlerDataChange}. In combat that is
+ * immediate and the bug is invisible; standing on the map it may never happen at all. That is why
+ * editing a state's traits and loading a save appears to do nothing.
+ *
+ * {@link Game_Battler.onBattlerDataChange} is the right hammer here rather than nulling the five
+ * known caches by hand, because it also runs {@link JCache.invalidateAllForBattler}- which walks
+ * every battler-dimensioned {@link JCache} ever constructed and drops this battler's subtree from
+ * each. That makes this method self-maintaining: a cache added years from now is covered without
+ * anyone remembering to come back here.
+ */
+DataManager.invalidateLoadedBattlerCaches = function()
+{
+  // the store is sparse and indexed by actor id, so forEach skips every id this save never built.
+  $gameActors.existingActors()
+    .forEach(actor => actor.onBattlerDataChange());
 };
 
 /**

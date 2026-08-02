@@ -38,4 +38,22 @@ Game_Actors.prototype.actors = function()
     .map(id => this.actor(id), this);
 };
 
+/**
+ * Gets the actor store exactly as the engine keeps it: a sparse array indexed by actor id, holding
+ * only the actors this playthrough has actually built.
+ *
+ * This is deliberately not {@link #actors}. That one walks the database and hands each id to
+ * {@link Game_Actors.actor}, which lazily constructs any actor it does not find- so asking it "who
+ * exists right now" answers by making the answer true. Anything that wants to touch the actors a
+ * save genuinely knows about must read the store instead.
+ *
+ * The holes are left in place. `forEach`, `filter`, and `map` all skip them by definition, so a
+ * caller iterating this array only ever sees real actors.
+ * @returns {Game_Actor[]}
+ */
+Game_Actors.prototype.existingActors = function()
+{
+  return this._data;
+};
+
 //endregion Game_Actors
