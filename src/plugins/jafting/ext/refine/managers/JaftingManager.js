@@ -232,13 +232,18 @@ class JaftingManager
   static lineageForDatum(datum)
   {
     // a dynamic slot means this row was itself refined, and its provenance is already on file.
-    if (datum.id >= this.StartingIndex)
+    // the slot is the *index*, never the id: a refined row is a clone of its base, so it keeps the
+    // base's id forever and only `_updateIndex` moves it into the dynamic range. Asking about the id
+    // here answers about the original weapon and quietly makes every refinement look like a first one.
+    const slot = datum._key();
+
+    if (slot >= this.StartingIndex)
     {
       const tracked = datum.isWeapon()
         ? $gameParty.getRefinedWeapons()
         : $gameParty.getRefinedArmors();
 
-      const existing = tracked.find(lineage => lineage.index === datum.id);
+      const existing = tracked.find(lineage => lineage.index === slot);
 
       // a refined row is recorded the moment it is created and only removed when its last copy
       // leaves the party - so one being consumed as an input is always still on the list.

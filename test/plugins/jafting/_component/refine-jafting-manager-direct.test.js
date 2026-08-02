@@ -351,7 +351,8 @@ describe('JaftingManager (direct src import)', () =>
     it('describes a plain database weapon as a weapon leaf', () =>
     {
       // Arrange
-      const datum = { id: 12, isWeapon: () => true, isArmor: () => false };
+      // a static row sits at the slot its id names, so the two agree.
+      const datum = { id: 12, _key: () => 12, isWeapon: () => true, isArmor: () => false };
 
       // Act
       const lineage = JaftingManager.lineageForDatum(datum);
@@ -365,7 +366,7 @@ describe('JaftingManager (direct src import)', () =>
     it('describes a plain database armor as an armor leaf', () =>
     {
       // Arrange
-      const datum = { id: 12, isWeapon: () => false, isArmor: () => true };
+      const datum = { id: 12, _key: () => 12, isWeapon: () => false, isArmor: () => true };
 
       // Act
       const lineage = JaftingManager.lineageForDatum(datum);
@@ -377,7 +378,7 @@ describe('JaftingManager (direct src import)', () =>
     it('falls back to the item letter for a datum that is neither weapon nor armor', () =>
     {
       // Arrange
-      const datum = { id: 3, isWeapon: () => false, isArmor: () => false };
+      const datum = { id: 3, _key: () => 3, isWeapon: () => false, isArmor: () => false };
 
       // Act
       const lineage = JaftingManager.lineageForDatum(datum);
@@ -395,7 +396,11 @@ describe('JaftingManager (direct src import)', () =>
         JaftingRefinementLineage.leaf('w', 9),
         null);
       $gameParty.getRefinedWeapons = vi.fn(() => [ tracked ]);
-      const datum = { id: 2001, isWeapon: () => true, isArmor: () => false };
+
+      // a refined row is a clone of its base, so it keeps the base's id forever and only its slot
+      // moves into the dynamic range. Giving this datum id 2001 would describe a shape the game
+      // never builds, and would let an implementation that asks about the id pass.
+      const datum = { id: 5, _key: () => 2001, isWeapon: () => true, isArmor: () => false };
 
       // Act
       const lineage = JaftingManager.lineageForDatum(datum);
@@ -413,7 +418,7 @@ describe('JaftingManager (direct src import)', () =>
         JaftingRefinementLineage.leaf('a', 9),
         null);
       $gameParty.getRefinedArmors = vi.fn(() => [ tracked ]);
-      const datum = { id: 2001, isWeapon: () => false, isArmor: () => true };
+      const datum = { id: 5, _key: () => 2001, isWeapon: () => false, isArmor: () => true };
 
       // Act
       const lineage = JaftingManager.lineageForDatum(datum);
@@ -426,14 +431,15 @@ describe('JaftingManager (direct src import)', () =>
     {
       // Arrange
       $gameParty.getRefinedWeapons = vi.fn(() => []);
-      const datum = { id: 2001, isWeapon: () => true, isArmor: () => false };
+      const datum = { id: 5, _key: () => 2001, isWeapon: () => true, isArmor: () => false };
 
       // Act
       const lineage = JaftingManager.lineageForDatum(datum);
 
-      // Assert
+      // Assert- a dynamic row nobody recorded degrades to the database row it was cloned from,
+      // which is the most that can honestly be said about it.
       expect(lineage.isLeaf()).toBe(true);
-      expect(lineage.id).toBe(2001);
+      expect(lineage.id).toBe(5);
     });
   });
 

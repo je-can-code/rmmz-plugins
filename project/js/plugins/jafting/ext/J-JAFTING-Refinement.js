@@ -611,9 +611,10 @@ var JaftingManager = class JaftingManager {
 	* @returns {JaftingRefinementLineage} The node describing it.
 	*/
 	static lineageForDatum(datum) {
-		if (datum.id >= this.StartingIndex) {
+		const slot = datum._key();
+		if (slot >= this.StartingIndex) {
 			const tracked = datum.isWeapon() ? $gameParty.getRefinedWeapons() : $gameParty.getRefinedArmors();
-			const existing = tracked.find((lineage) => lineage.index === datum.id);
+			const existing = tracked.find((lineage) => lineage.index === slot);
 			if (existing) return existing;
 		}
 		return JaftingRefinementLineage.leaf(this.lineageKindForDatum(datum), datum.id);
