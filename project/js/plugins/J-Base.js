@@ -300,7 +300,10 @@
  */
 
 //#region \0rolldown/runtime.js
-var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
+var __require = /* @__PURE__ */ ((x) => typeof require !== "undefined" ? require : typeof Proxy !== "undefined" ? new Proxy(x, { get: (a, b) => (typeof require !== "undefined" ? require : a)[b] }) : x)(function(x) {
+	if (typeof require !== "undefined") return require.apply(this, arguments);
+	throw Error("Calling `require` for \"" + x + "\" in an environment that doesn't expose the `require` function. See https://rolldown.rs/in-depth/bundling-cjs#require-external-modules for more details.");
+});
 
 //#endregion
 //#region src/plugins/_base/core/JCache.js
@@ -10073,12 +10076,6 @@ var ProfileManager = class {
 };
 
 //#endregion
-//#region __vite-browser-external
-var require___vite_browser_external = /* @__PURE__ */ __commonJSMin(((exports, module) => {
-	module.exports = {};
-}));
-
-//#endregion
 //#region src/plugins/_base/managers/StorageManager.js
 /**
 * The save pipeline, replaced end to end.
@@ -10110,7 +10107,7 @@ var require___vite_browser_external = /* @__PURE__ */ __commonJSMin(((exports, m
 * @returns {boolean}
 */
 StorageManager.fsExists = function(path) {
-	const fs = require___vite_browser_external();
+	const fs = __require("fs");
 	return fs.existsSync(path);
 };
 /**
@@ -10119,7 +10116,7 @@ StorageManager.fsExists = function(path) {
 * @returns {boolean}
 */
 StorageManager.fsIsDirectory = function(path) {
-	const fs = require___vite_browser_external();
+	const fs = __require("fs");
 	return fs.statSync(path).isDirectory();
 };
 /**
@@ -10131,7 +10128,7 @@ StorageManager.fsIsDirectory = function(path) {
 * @param {string} path The directory to create.
 */
 StorageManager.fsMkdirRecursive = function(path) {
-	const fs = require___vite_browser_external();
+	const fs = __require("fs");
 	if (!fs.existsSync(path)) {
 		fs.mkdirSync(path, { recursive: true });
 	}
@@ -10142,7 +10139,7 @@ StorageManager.fsMkdirRecursive = function(path) {
 * @returns {string[]} The entry names, without their directory.
 */
 StorageManager.fsReaddir = function(path) {
-	const fs = require___vite_browser_external();
+	const fs = __require("fs");
 	return fs.readdirSync(path);
 };
 /**
@@ -10155,7 +10152,7 @@ StorageManager.fsReaddir = function(path) {
 * @param {string} contents The text to write.
 */
 StorageManager.fsWriteFileSynced = function(path, contents) {
-	const fs = require___vite_browser_external();
+	const fs = __require("fs");
 	const descriptor = fs.openSync(path, "w");
 	try {
 		fs.writeSync(descriptor, contents);
@@ -10177,7 +10174,7 @@ StorageManager.fsWriteFileSynced = function(path, contents) {
 * @param {string} path The directory to flush.
 */
 StorageManager.fsSyncDirectory = function(path) {
-	const fs = require___vite_browser_external();
+	const fs = __require("fs");
 	try {
 		const descriptor = fs.openSync(path, "r");
 		try {
@@ -10192,7 +10189,7 @@ StorageManager.fsSyncDirectory = function(path) {
 * @param {string} path The directory to delete.
 */
 StorageManager.fsRemoveDirectory = function(path) {
-	const fs = require___vite_browser_external();
+	const fs = __require("fs");
 	if (fs.existsSync(path)) {
 		fs.rmSync(path, {
 			recursive: true,

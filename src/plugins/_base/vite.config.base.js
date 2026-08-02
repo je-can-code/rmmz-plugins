@@ -8,6 +8,8 @@ const _dirname = path.dirname(fileURLToPath(import.meta.url));
 const thisConfig = defineConfig({
   build: {
     rolldownOptions: {
+      // StorageManager uses runtime require('path'/'fs') under NW.js — do not browser-stub them.
+      external: [ 'path', 'fs' ],
       input: {
         'J-Base': path.resolve(_dirname, './entry.js'),
       },
