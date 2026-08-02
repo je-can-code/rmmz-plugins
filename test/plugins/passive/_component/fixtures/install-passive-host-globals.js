@@ -226,6 +226,10 @@ export function installPassiveHostGlobals(sandbox = globalThis)
   };
 
   sandbox.Game_Party.prototype.initialize = noop;
+
+  // J-Base defines this hook and calls it from an aliased `initialize`; plugins adding party state
+  // alias the hook rather than `initialize`, so it has to exist here for their chain to capture.
+  sandbox.Game_Party.prototype.initMembers = noop;
 }
 
 /**

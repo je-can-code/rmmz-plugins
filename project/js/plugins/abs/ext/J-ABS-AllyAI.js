@@ -1726,9 +1726,9 @@ Game_Map.prototype.removeBattlers = function(battlers) {
 /**
 * Extends initialization to include the ally AI configurations.
 */
-J.ABS.EXT.ALLYAI.Aliased.Game_Party.set("initialize", Game_Party.prototype.initialize);
-Game_Party.prototype.initialize = function() {
-	J.ABS.EXT.ALLYAI.Aliased.Game_Party.get("initialize").call(this);
+J.ABS.EXT.ALLYAI.Aliased.Game_Party.set("initMembers", Game_Party.prototype.initMembers);
+Game_Party.prototype.initMembers = function() {
+	J.ABS.EXT.ALLYAI.Aliased.Game_Party.get("initMembers").call(this);
 	this.initAllyAi();
 };
 /**

@@ -3178,12 +3178,12 @@ Game_Enemy.prototype.sdpPoints = function() {
 //#endregion
 //#region src/plugins/sdp/core/objects/Game_Party.js
 /**
-* Extends {@link #initialize}.<br/>
+* Extends {@link #initMembers}.<br/>
 * Also initializes our SDP members.
 */
-J.SDP.Aliased.Game_Party.set("initialize", Game_Party.prototype.initialize);
-Game_Party.prototype.initialize = function() {
-	J.SDP.Aliased.Game_Party.get("initialize").call(this);
+J.SDP.Aliased.Game_Party.set("initMembers", Game_Party.prototype.initMembers);
+Game_Party.prototype.initMembers = function() {
+	J.SDP.Aliased.Game_Party.get("initMembers").call(this);
 	this.initSdpMembers();
 };
 /**

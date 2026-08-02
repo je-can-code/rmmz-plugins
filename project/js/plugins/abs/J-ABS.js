@@ -31444,9 +31444,9 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler) {
 /**
 * Extends the initialize to include additional objects for JABS.
 */
-J.ABS.Aliased.Game_Party.set("initialize", Game_Party.prototype.initialize);
-Game_Party.prototype.initialize = function() {
-	J.ABS.Aliased.Game_Party.get("initialize").call(this);
+J.ABS.Aliased.Game_Party.set("initMembers", Game_Party.prototype.initMembers);
+Game_Party.prototype.initMembers = function() {
+	J.ABS.Aliased.Game_Party.get("initMembers").call(this);
 	this.initJabsPartyData();
 };
 /**

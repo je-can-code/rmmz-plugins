@@ -1108,9 +1108,9 @@ Game_Item.prototype.setObject = function(item) {
 * writes {@link RPG_Weapon.createEmpty} / {@link RPG_Armor.createEmpty} back into `$dataWeapons` / `$dataArmors` so
 * indices stay hydrated blanks instead of `null`—keep any custom refresh paths consistent with that contract.
 */
-J.JAFTING.EXT.REFINE.Aliased.Game_Party.set("initialize", Game_Party.prototype.initialize);
-Game_Party.prototype.initialize = function() {
-	J.JAFTING.EXT.REFINE.Aliased.Game_Party.get("initialize").call(this);
+J.JAFTING.EXT.REFINE.Aliased.Game_Party.set("initMembers", Game_Party.prototype.initMembers);
+Game_Party.prototype.initMembers = function() {
+	J.JAFTING.EXT.REFINE.Aliased.Game_Party.get("initMembers").call(this);
 	this.initJaftingRefinementMembers();
 };
 /**

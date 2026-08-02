@@ -213,6 +213,13 @@ describe('save and load through the real engine objects', () =>
     // J-Base's namespace, reduced to what the save pipeline actually reads off it.
     globalThis.J = { BASE: { EXT: { SAVE: { Metadata: { retainedSaveGenerations: 3 } } } } };
 
+    // `Game_Party` sets up in `initialize`, which a decode can never re-run, so J-Base gives it an
+    // `initMembers` hook that plugins alias and its codec seed calls. J-Base is not loaded here, so
+    // its augmentation is stood in for.
+    globalThis.Game_Party.prototype.initMembers = function()
+    {
+    };
+
     // J-Base-Save reads the registry as a hoisted global rather than importing across ships.
     ({ default: globalThis.SerializableRegistry } = await import(
       '../../../../../src/plugins/_base/core/core/SerializableRegistry.js'));

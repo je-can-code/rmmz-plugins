@@ -122,7 +122,7 @@ describe('J-Passive party, equipment, and enemy sources (direct src import)', ()
     {
       const { weaponData } = fixtures;
       const party = new globalThis.Game_Party();
-      party.initialize();
+      party.initMembers();
       const w = weaponData({ id: 9, name: 'PartyW', note: '<passive:[8, 9]>', wtypeId: 1 });
       party.allItemsQuantified = () => [ w ];
       return party;

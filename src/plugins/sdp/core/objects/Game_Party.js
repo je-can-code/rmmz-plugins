@@ -1,13 +1,13 @@
 //region Game_Party
 /**
- * Extends {@link #initialize}.<br/>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes our SDP members.
  */
-J.SDP.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);
-Game_Party.prototype.initialize = function()
+J.SDP.Aliased.Game_Party.set('initMembers', Game_Party.prototype.initMembers);
+Game_Party.prototype.initMembers = function()
 {
   // perform original logic.
-  J.SDP.Aliased.Game_Party.get('initialize')
+  J.SDP.Aliased.Game_Party.get('initMembers')
     .call(this);
 
   // init sdp members.

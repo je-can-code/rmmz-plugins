@@ -1907,6 +1907,7 @@ SerializableRegistry.register(Game_Party, {
 		instance._targetActorId = 0;
 		instance._actors = [];
 		instance.initAllItems();
+		instance.initMembers();
 	}
 });
 /**

@@ -4,11 +4,11 @@ import JABS_AiManager from './../managers/JABS_AiManager.js';
 /**
  * Extends the initialize to include additional objects for JABS.
  */
-J.ABS.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);
-Game_Party.prototype.initialize = function()
+J.ABS.Aliased.Game_Party.set('initMembers', Game_Party.prototype.initMembers);
+Game_Party.prototype.initMembers = function()
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Party.get('initialize')
+  J.ABS.Aliased.Game_Party.get('initMembers')
     .call(this);
 
   // initialize party data for JABS.

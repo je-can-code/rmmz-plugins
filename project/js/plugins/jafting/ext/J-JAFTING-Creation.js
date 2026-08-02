@@ -1310,12 +1310,12 @@ J.JAFTING.EXT.CREATE.Aliased.Window_JaftingList = new Map();
 //#endregion
 //#region src/plugins/jafting/ext/create/objects/Game_Party.js
 /**
-* Extends {@link #initialize}.<br/>
+* Extends {@link #initMembers}.<br/>
 * Also initializes our jafting members.
 */
-J.JAFTING.EXT.CREATE.Aliased.Game_Party.set("initialize", Game_Party.prototype.initialize);
-Game_Party.prototype.initialize = function() {
-	J.JAFTING.EXT.CREATE.Aliased.Game_Party.get("initialize").call(this);
+J.JAFTING.EXT.CREATE.Aliased.Game_Party.set("initMembers", Game_Party.prototype.initMembers);
+Game_Party.prototype.initMembers = function() {
+	J.JAFTING.EXT.CREATE.Aliased.Game_Party.get("initMembers").call(this);
 	this.initJaftingCreationMembers();
 	this.populateJaftingTrackings();
 };

@@ -997,12 +997,12 @@ Game_Event.prototype.getPassiveStateIds = function() {
 //#endregion
 //#region src/plugins/passive/core/objects/Game_Party.js
 /**
-* Extends {@link #initialize}.<br/>
+* Extends {@link #initMembers}.<br/>
 * Includes our custom members as well.
 */
-J.PASSIVE.Aliased.Game_Party.set("initialize", Game_Party.prototype.initialize);
-Game_Party.prototype.initialize = function() {
-	J.PASSIVE.Aliased.Game_Party.get("initialize").call(this);
+J.PASSIVE.Aliased.Game_Party.set("initMembers", Game_Party.prototype.initMembers);
+Game_Party.prototype.initMembers = function() {
+	J.PASSIVE.Aliased.Game_Party.get("initMembers").call(this);
 	this.initPassiveItemStates();
 };
 /**

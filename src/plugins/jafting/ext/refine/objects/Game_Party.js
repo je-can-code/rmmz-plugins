@@ -7,11 +7,11 @@ import JaftingManager from './../managers/JaftingManager.js';
  * writes {@link RPG_Weapon.createEmpty} / {@link RPG_Armor.createEmpty} back into `$dataWeapons` / `$dataArmors` so
  * indices stay hydrated blanks instead of `null`—keep any custom refresh paths consistent with that contract.
  */
-J.JAFTING.EXT.REFINE.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);
-Game_Party.prototype.initialize = function()
+J.JAFTING.EXT.REFINE.Aliased.Game_Party.set('initMembers', Game_Party.prototype.initMembers);
+Game_Party.prototype.initMembers = function()
 {
   // perform original logic.
-  J.JAFTING.EXT.REFINE.Aliased.Game_Party.get('initialize')
+  J.JAFTING.EXT.REFINE.Aliased.Game_Party.get('initMembers')
     .call(this);
 
   // init the members.

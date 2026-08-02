@@ -98,6 +98,13 @@ describe('save codec registry sweeps (direct src import)', () =>
     // namespace is built by.
     globalThis.$gameParty = { maxBattleMembers: () => 4 };
 
+    // hosts that set up in `initialize` cannot re-run it during a decode, so J-Base gives each an
+    // `initMembers` hook that plugins alias instead, and their codec seeds call it. J-Base is a
+    // different ship than the one under test here, so its augmentation is stood in for.
+    globalThis.Game_Party.prototype.initMembers = function()
+    {
+    };
+
     // the `Game_Event` codec declares `_j` transient with a factory that hands back whatever the
     // seed built, and it is plugins aliasing `initMembers` that build it - vanilla has no `_j` at
     // all. This stands in for one, so the sweep measures the shape a real install has. Without it

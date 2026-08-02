@@ -266,6 +266,10 @@ SerializableRegistry.register(Game_Party, {
     instance._targetActorId = 0;
     instance._actors = [];
     instance.initAllItems();
+
+    // and then the hook every plugin hangs its own party state off, so a namespace added since this
+    // save was written comes back at its defaults rather than missing entirely.
+    instance.initMembers();
   },
 });
 

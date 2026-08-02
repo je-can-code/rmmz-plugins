@@ -434,12 +434,12 @@ var Scene_Omnipedia = class extends Scene_MenuBase {
 //#endregion
 //#region src/plugins/omni/core/objects/Game_Party.js
 /**
-* Extends {@link #initialize}.<br/>
+* Extends {@link #initMembers}.<br/>
 * Adds a hook for omnipedia extensions to initialize their members.
 */
-J.OMNI.Aliased.Game_Party.set("initialize", Game_Party.prototype.initialize);
-Game_Party.prototype.initialize = function() {
-	J.OMNI.Aliased.Game_Party.get("initialize").call(this);
+J.OMNI.Aliased.Game_Party.set("initMembers", Game_Party.prototype.initMembers);
+Game_Party.prototype.initMembers = function() {
+	J.OMNI.Aliased.Game_Party.get("initMembers").call(this);
 	this.initOmnipediaMembers();
 };
 /**

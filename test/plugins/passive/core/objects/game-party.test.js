@@ -21,7 +21,7 @@ describe('J-Passive Game_Party (direct src import)', () =>
     setPluginContextToJPassive();
     await import('../../../../../src/plugins/passive/core/_metadata/initialization.js');
 
-    globalThis.Game_Party.prototype.initialize = function() {};
+    globalThis.Game_Party.prototype.initMembers = function() {};
     globalThis.Game_Party.prototype.gainItem = function() {};
     globalThis.Game_Party.prototype.allItemsQuantified = function() { return this.__items ?? []; };
 
@@ -47,7 +47,7 @@ describe('J-Passive Game_Party (direct src import)', () =>
     };
   }
 
-  describe('initialize (extended)', () =>
+  describe('initMembers (extended)', () =>
   {
     it('initializes empty passive state tracking structures', () =>
     {
@@ -59,13 +59,13 @@ describe('J-Passive Game_Party (direct src import)', () =>
       expect(party.passiveStates()).toEqual([]);
     });
 
-    it('routes through Game_Party.prototype.initialize, which delegates to the base', () =>
+    it('routes through Game_Party.prototype.initMembers, which delegates to the base', () =>
     {
       // Arrange
       const party = Object.create(globalThis.Game_Party.prototype);
 
       // Act
-      party.initialize();
+      party.initMembers();
 
       // Assert
       expect(party.passiveStateIds()).toEqual([]);

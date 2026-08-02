@@ -10442,6 +10442,27 @@ Game_Map.prototype.note = function() {
 //#endregion
 //#region src/plugins/_base/core/objects/Game_Party.js
 /**
+* Extends {@link Game_Party.initialize}.<br/>
+* Also runs the member-initialization hook every plugin hangs its own state off.
+*/
+J.BASE.Aliased.Game_Party.set("initialize", Game_Party.prototype.initialize);
+Game_Party.prototype.initialize = function() {
+	J.BASE.Aliased.Game_Party.get("initialize").call(this);
+	this.initMembers();
+};
+/**
+* A hook for initializing additional members in {@link Game_Party}.<br>
+*
+* Vanilla sets the party up inside `initialize`, which takes no arguments but is never safe to
+* re-run - so a save being decoded cannot call it, and any plugin state added through it would come
+* back missing. This hook exists so that state has somewhere to live that a decode *can* run:
+* `Game_Party`'s codec seeds the engine's own fields and then calls this, which walks the same alias
+* chain construction does.
+*
+* **Plugins adding state to the party alias this, not `initialize`.**
+*/
+Game_Party.prototype.initMembers = function() {};
+/**
 * Gets the raw item container, mapping item ids to the quantity held.
 *
 * This is deliberately not {@link Game_Party#items}, which resolves the ids into database rows.
