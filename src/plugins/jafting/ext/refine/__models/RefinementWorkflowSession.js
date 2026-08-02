@@ -111,13 +111,19 @@ class RefinementWorkflowSession
     // resync `unitLedgers` once counts drop, which would otherwise merge from an empty base and drop craft stamps.
     const mergedLedger = JaftingSalvageManager.buildRefinementOutputLedger(baseDatum, materialDatum);
 
+    // refinement provenance is captured here for the same reason and one step further: when an input was itself a
+    // refined row, spending its last copy makes `reclaimDynamicWeaponSlot` splice its lineage out of the party's
+    // tracking list *and* blank its `$data*` slot. Reading it after the spend would find nothing to nest.
+    const baseLineage = JaftingManager.lineageForDatum(baseDatum);
+    const materialLineage = JaftingManager.lineageForDatum(materialDatum);
+
     $gameParty.gainItem(baseItem, -1);
     $gameParty.gainItem(materialItem, -1);
 
     outputEquip._jaftingSalvageLedger = mergedLedger;
 
     // hands the stamped RPG row to JAFTING core so it picks the next dynamic weapon/armor slot and `gainItem`s it.
-    JaftingManager.createRefinedOutput(outputEquip);
+    JaftingManager.createRefinedOutput(outputEquip, baseLineage, materialLineage);
     this.markCommittedReturnToBase();
 
     return { ok: true, reason: null };

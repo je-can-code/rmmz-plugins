@@ -34,14 +34,14 @@ Game_Party.prototype.initJaftingRefinementMembers = function()
   this._j._refinement ||= {};
 
   /**
-   * A collection of all weapons that have been refined.
-   * @type {RPG_EquipItem[]}
+   * The provenance of every weapon that has been refined.
+   * @type {JaftingRefinementLineage[]}
    */
   this._j._refinement._weapons = [];
 
   /**
-   * A collection of all armors that have been refined.
-   * @type {RPG_EquipItem[]}
+   * The provenance of every armor that has been refined.
+   * @type {JaftingRefinementLineage[]}
    */
   this._j._refinement._armors = [];
 
@@ -66,8 +66,8 @@ Game_Party.prototype.initJaftingRefinementMembers = function()
 };
 
 /**
- * Gets all tracked weapons that have been refined.
- * @returns {RPG_EquipItem[]}
+ * Gets the provenance of every weapon this party has refined.
+ * @returns {JaftingRefinementLineage[]}
  */
 Game_Party.prototype.getRefinedWeapons = function()
 {
@@ -75,8 +75,8 @@ Game_Party.prototype.getRefinedWeapons = function()
 };
 
 /**
- * Gets all tracked armors that have been refined.
- * @returns {RPG_EquipItem[]}
+ * Gets the provenance of every armor this party has refined.
+ * @returns {JaftingRefinementLineage[]}
  */
 Game_Party.prototype.getRefinedArmors = function()
 {
@@ -84,47 +84,52 @@ Game_Party.prototype.getRefinedArmors = function()
 };
 
 /**
- * Adds a newly refined weapon to the collection for tracking purposes.
- * @param {RPG_EquipItem} equip The newly refined weapon.
+ * Adds a newly refined weapon's provenance to the collection for tracking purposes.
+ * @param {JaftingRefinementLineage} lineage The provenance of the newly refined weapon.
  */
-Game_Party.prototype.addRefinedWeapon = function(equip)
+Game_Party.prototype.addRefinedWeapon = function(lineage)
 {
-  this.getRefinedWeapons().push(equip);
+  this.getRefinedWeapons().push(lineage);
 };
 
 /**
- * Adds a newly refined armor to the collection for tracking purposes.
- * @param {RPG_EquipItem} equip The newly refined armor.
+ * Adds a newly refined armor's provenance to the collection for tracking purposes.
+ * @param {JaftingRefinementLineage} lineage The provenance of the newly refined armor.
  */
-Game_Party.prototype.addRefinedArmor = function(equip)
+Game_Party.prototype.addRefinedArmor = function(lineage)
 {
-  this.getRefinedArmors().push(equip);
+  this.getRefinedArmors().push(lineage);
 };
 
 /**
- * Updates the $dataWeapons collection to include the player's collection of
- * refined weapons.
+ * Rebuilds every refined weapon from its provenance and writes it back into `$dataWeapons`.
+ *
+ * This runs on load rather than during decode on purpose. The loader steps back through
+ * generations when one fails to read, so a decode that mutated `$dataWeapons` on its way to
+ * throwing would leave a rejected generation's rows behind in the datastore. Replaying from a
+ * post-load hook means the datastore is only ever touched by a load that actually succeeded.
  */
 Game_Party.prototype.refreshDatabaseWeapons = function()
 {
   this.getRefinedWeapons()
-    .forEach(weapon =>
+    .forEach(lineage =>
     {
-      const updatedWeapon = new RPG_Weapon(weapon, weapon.index);
+      const updatedWeapon = JaftingManager.replayLineage(lineage);
       $dataWeapons[updatedWeapon._key()] = updatedWeapon;
     });
 };
 
 /**
- * Updates the $dataArmors collection to include the player's collection of
- * refined armors.
+ * Rebuilds every refined armor from its provenance and writes it back into `$dataArmors`.
+ *
+ * Twin of {@link Game_Party#refreshDatabaseWeapons}; the same reasoning about when it runs applies.
  */
 Game_Party.prototype.refreshDatabaseArmors = function()
 {
   this.getRefinedArmors()
-    .forEach(armor =>
+    .forEach(lineage =>
     {
-      const updatedArmor = new RPG_Armor(armor, armor.index);
+      const updatedArmor = JaftingManager.replayLineage(lineage);
       $dataArmors[updatedArmor._key()] = updatedArmor;
     });
 };

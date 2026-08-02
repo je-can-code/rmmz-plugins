@@ -8,7 +8,10 @@ import RefinementWorkflowSession from '../../../../src/plugins/jafting/ext/refin
 // globalThis.JaftingManager reassignment never reaches it- vi.mock intercepts the import itself,
 // vitest's equivalent of moq/FakeItEasy for ESM dependencies.
 vi.mock('../../../../src/plugins/jafting/ext/refine/managers/JaftingManager.js', () => ({
-  default: { createRefinedOutput: vi.fn() },
+  default: {
+    createRefinedOutput: vi.fn(),
+    lineageForDatum: vi.fn(datum => ({ leafFor: datum.id })),
+  },
 }));
 
 describe('RefinementWorkflowSession phase state machine', () =>
@@ -98,8 +101,9 @@ describe('RefinementWorkflowSession phase state machine', () =>
       globalThis.JaftingSalvageManager = previousSalvageManager;
     });
 
-    it('builds the merged ledger before removing party items, so lineage cannot be lost mid-transaction', () =>
+    it('captures provenance before removing party items, so a consumed refined input is still on file', () =>
     {
+      // Arrange
       const callOrder = [];
 
       // JaftingSalvageManager is referenced as a bare global in the source (not imported), so a
@@ -117,17 +121,44 @@ describe('RefinementWorkflowSession phase state machine', () =>
       };
 
       JaftingManager.createRefinedOutput.mockImplementation(() => callOrder.push('createRefinedOutput'));
+      JaftingManager.lineageForDatum.mockImplementation(datum =>
+      {
+        callOrder.push('lineageForDatum');
+
+        return { leafFor: datum.id };
+      });
 
       const baseItem = { object: () => ({ id: 1 }) };
       const materialItem = { object: () => ({ id: 2 }) };
       const outputEquip = {};
 
+      // Act
       const result = session.commitRefinement(baseItem, materialItem, outputEquip);
 
-      expect(callOrder).toEqual([ 'buildLedger', 'gainItem', 'gainItem', 'createRefinedOutput' ]);
+      // Assert
+      expect(callOrder).toEqual([
+        'buildLedger', 'lineageForDatum', 'lineageForDatum', 'gainItem', 'gainItem', 'createRefinedOutput',
+      ]);
       expect(outputEquip._jaftingSalvageLedger).toEqual({ merged: true });
       expect(result).toEqual({ ok: true, reason: null });
       expect(session.getPhase()).toBe(RefinementWorkflowSession.Phase.PickingBase);
+    });
+
+    it('hands the captured provenance of both inputs down to the output creator', () =>
+    {
+      // Arrange
+      globalThis.JaftingSalvageManager = { buildRefinementOutputLedger: () => ({ merged: true }) };
+      globalThis.$gameParty = { gainItem: () => {} };
+      JaftingManager.createRefinedOutput.mockImplementation(() => {});
+      JaftingManager.lineageForDatum.mockImplementation(datum => ({ leafFor: datum.id }));
+
+      // Act
+      session.commitRefinement({ object: () => ({ id: 1 }) }, { object: () => ({ id: 2 }) }, {});
+
+      // Assert
+      const [ , baseLineage, materialLineage ] = JaftingManager.createRefinedOutput.mock.calls.at(-1);
+      expect(baseLineage).toEqual({ leafFor: 1 });
+      expect(materialLineage).toEqual({ leafFor: 2 });
     });
   });
 });

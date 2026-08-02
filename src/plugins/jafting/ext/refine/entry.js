@@ -1,5 +1,6 @@
 import './__models/JAFTING_Trait.js';
 import './__models/JAFT_RefinementData.js';
+import './__models/JaftingRefinementLineage.js';
 import './__models/RefinementWorkflowSession.js';
 
 import './_metadata/initialization.js';
