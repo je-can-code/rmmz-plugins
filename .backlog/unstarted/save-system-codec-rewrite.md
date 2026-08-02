@@ -18,8 +18,8 @@ become testable — not shipping boundaries. Do not split them.
 |---|---|---|
 | 0 | the transient inventory, as data; plus the stale-cache bug fix | ✅ done |
 | 1 | codec core: registry extension, encoder, decoder, `seed` | ✅ done |
-| 2 | storage layer: generations, atomic pointer, pretty JSON | next |
-| 3 | scopes and the section router | |
+| 2 | storage layer: generations, atomic pointer, pretty JSON | ✅ done |
+| 3 | scopes and the section router | ✅ done |
 | 4 | JAFTING refinement lineage | |
 | 5 | versioning and the migration seam | |
 | 6 | the test suite | |
@@ -32,6 +32,25 @@ merged half of itself is harder to reason about than one that has merged none of
 together, after the whole thing is verified and functional.
 
 **Branch:** `feat/save-system-codec-rewrite`, cut from `main` at the close of PR #67.
+
+### Carried forward out of Phases 2 and 3
+
+Work that is understood, is not blocking, and belongs to a later phase or a sweep:
+
+- **The namespace-registration sweep.** 27 `_j.<plugin>` namespaces could be routed into
+  `systems/*.json`; none are registered yet. Unregistered means "written inline with its host", which
+  is correct but untidy. One line per plugin.
+- **The retirement of the five ad-hoc hooks.** See
+  [Ad-hoc save hooks to retire](#ad-hoc-save-hooks-to-retire) — they still run, they still work, and
+  they now duplicate work the codecs would do.
+- **`_j._passive._passiveSources` persists 14 whole `RPG_Skill` rows.** Registering the type made it
+  encode cleanly and it is still wrong — a rebalanced skill never reaches an existing save. **This
+  needs Jeremy's call**, because the fix is a change to J-Passive's storage (persist ids, resolve on
+  read), not to the codec layer.
+- **Nothing has saved or loaded in the real engine yet.** Every acceptance criterion below that says
+  "in-engine" is outstanding. The automated suites cover the mechanics; they cannot cover a boot.
+- **`SaveManifest.schemaVersion` is 1 and there is no migration chain.** That is Phase 5, and it has
+  the only external deadline in this document.
 
 Phases are expected to span several working sessions. Each session should pick up from this document
 rather than from the last session's memory — if something here is unclear or wrong, **fix the
@@ -277,11 +296,40 @@ neighbour plugins' map-scoped state — including `_j._omni._quest._destinationT
 eight.
 
 **`$gameMap._events[]` is the one host that is not routed.** Every `_j.*` slice on a map event is
-transient per Phase 0 — `Game_Map.setupEvents` reconstructs events from scratch, so that state has a
-map-session lifetime and never reaches disk. The router must therefore **skip events entirely**:
-there is no `events` key in a system file, and the router does not walk `$gameMap._events` on either
-encode or decode. On load, event slices are re-seeded by each plugin's event `initMembers` path, the
-same as after a map transfer.
+transient per Phase 0, so the router does not walk `$gameMap._events` on either encode or decode and
+a system file has no `events` key.
+
+**But the router is not what drops them — a codec is.** An earlier draft had the router handling
+event state, which cannot work: the events are still inside `$gameMap._events` when `Game_Map` is
+encoded, so a router that merely declines to *lift* their slices leaves them to be written with the
+map, `JABS_Timer`s and all, and the encoder throws on the first one. The `Game_Event` codec
+therefore declares `_j` transient outright, which is both the skip and the re-seed.
+
+Its cold value is **whatever the seed established**, which is a third shape of transient alongside
+the lazy cache that answers `null` and the eager cache that rebuilds itself. The decoder runs `seed`
+before any field from the file lands, and `Game_Event.initMembers` - the chain every plugin aliases -
+is what builds `_j`. So by the time the transient factory runs, a complete freshly-initialized
+namespace is already sitting there, and handing it back is the whole of the re-seed:
+
+```javascript
+transients: {
+  _j: event => event._j,
+},
+```
+
+That chain was checked link by link before relying on it: every plugin's `Game_Event.initMembers`
+alias is pure assignment, including J-Pixelistics', whose `$dataMap`-reading work hangs off
+`setupPageSettings` rather than `initMembers`.
+
+**And the reason a load reaches a map setup at all is J-ABS, not the engine.** Vanilla's
+`Scene_Load.reloadMapIfUpdated` only reserves a transfer when `$gameSystem.versionId()` disagrees
+with the database, so an ordinary load performs no transfer and never calls `Game_Map.setup` -
+meaning vanilla would keep the decoded events as the live ones. J-ABS **overwrites** that method to
+reserve a transfer and request a map reload whenever JABS is enabled
+(`abs/core/scenes/Scene_Load.js`), which is what actually guarantees `setupEvents` rebuilds every
+event on load. Phase 0's claim that "the engine reconstructs them" is true for CA and false in
+general; if J-ABS is ever disabled, event state comes back at its `initMembers` defaults instead of
+its saved values, which is the intended behavior either way.
 
 #### Not every `_j.<key>` is a namespace
 
@@ -309,7 +357,11 @@ returns** — which is also what stops a stray field added to `_j` from silently
   "playtimeFrames": 547933,
   "sections": [ "world.json", "party.json", "actors.json", "systems/abs.json" ],
   "display": {
-    "chapter": "Chapter 3 - The Sunken Larder",
+    "title": "Chef Adventure",
+    "characters": [ [ "Actor1", 0 ] ],
+    "faces": [ [ "Actor1", 0 ] ],
+    "playtime": "12:45:33",
+    "timestamp": 1754074251238,
     "mapName": "Riverside Kitchen",
     "leaderName": "Jerald",
     "level": 24,
@@ -322,6 +374,19 @@ returns** — which is also what stops a stray field added to `_j` from silently
 `display` exists so the load menu never parses the world. `sections` exists so a truncated
 generation is detectable before anything is decoded.
 
+**`display` must be a superset of what `DataManager.makeSavefileInfo` produces, not a replacement.**
+An earlier draft listed only the interesting fields and dropped the vanilla five - `title`,
+`characters`, `faces`, `playtime`, `timestamp` - which `Window_SavefileList.drawItem` reads by name.
+Dropping them would have left the load menu blank. `_base/managers/DataManager.js` therefore extends
+`makeSavefileInfo` rather than replacing it, and the manifest writes whatever it returns.
+
+**The manifest replaces `global.rmmzsave` outright.** Vanilla keeps a second document listing every
+slot's summary, written *after* the save it describes, so a crash between the two leaves the menu
+describing a save that is not there. `DataManager.loadGlobalInfo` now derives `_globalInfo` by
+reading each slot's manifest, and `saveGlobalInfo` is a no-op. No `global.json` is ever written. A
+manifest is read as **plain data** - the decoder is never run over it, because the menu wants five
+fields off a small document.
+
 ### The slot document and its section map
 
 `SaveDocument` owns **what sections exist and what lands in each** — the single place that answers
@@ -329,17 +394,31 @@ generation is detectable before anything is decoded.
 today (ten engine keys plus J-TIME's `contents.time`).
 
 ```javascript
-SaveDocument.sections = {
-  'world.json':  [ 'map', 'player', 'screen', 'timer', 'switches', 'variables', 'selfSwitches' ],
-  'party.json':  [ 'party' ],
-  'actors.json': [ 'actors' ],
-  // 'systems/<plugin>.json' is generated by SaveSectionRouter, not listed here.
-};
+SaveDocument.registerKey('system', 'world.json');
+SaveDocument.registerKey('screen', 'world.json');
+SaveDocument.registerKey('timer', 'world.json');
+SaveDocument.registerKey('switches', 'world.json');
+SaveDocument.registerKey('variables', 'world.json');
+SaveDocument.registerKey('selfSwitches', 'world.json');
+SaveDocument.registerKey('map', 'world.json');
+SaveDocument.registerKey('player', 'world.json');
+SaveDocument.registerKey('party', 'party.json');
+SaveDocument.registerKey('actors', 'actors.json');
+// 'systems/<plugin>.json' is generated by SaveSectionRouter, not registered here.
 ```
+
+(`system` was missing from the earlier draft's list of the ten. Followers and vehicles are absent
+because they are not top-level keys - they travel inside `player` and `map`.)
 
 A plugin adding a top-level key registers it against a section rather than aliasing
 `makeSaveContents`. J-TIME's `time` is the migration case: it becomes a registered key routed into
 `world.json`, and its `DataManager` alias goes away.
+
+**Registration is optional, and an unregistered key lands in `world.json` rather than being
+dropped.** The failure modes are not symmetrical: a key in the wrong file is untidy, a key in no file
+is a player's progress evaporating. This is the same fail-open stance the codec layer takes on
+fields, and it is what lets J-TIME's `contents.time` keep working untouched while its own retirement
+waits its turn.
 
 ### Routing sequence
 
@@ -350,23 +429,37 @@ because system slices must land on hosts that are themselves being decoded.
 
 ```
 1. build the slot object from SaveDocument's registered keys
-2. router lifts each _j.<plugin> slice out of each host, recording host kind + key
-3. encode each section independently
-4. write
+2. encode each top-level key independently
+3. router lifts each _j.<plugin> slice out of each encoded host, recording host kind + key
+4. group the remaining keys into their sections and write
 ```
 
 **Decode:**
 
 ```
-1. read + decode every section into objects, systems last
-2. router places each slice back onto its host, resolving host keys against the
-   already-decoded objects from step 1
-3. assign the globals ($gameMap, $gameParty, ...)
+1. read + parse every section file
+2. router merges each slice back into the encoded host data it came from
+3. decode each top-level key
+4. assign the globals ($gameMap, $gameParty, ...)
 ```
 
-Slices are routed **after** all sections decode and **before** globals are assigned, so the router
-resolves `vehicles.boat` or `actors.3` against decoded objects rather than the throwaway ones
-`createGameObjects` just made.
+**Both transformations happen on plain data, and the order above is a correction to an earlier
+draft** that had the router lift before encoding and place after decoding. Both directions were
+wrong, for different reasons:
+
+- Lifting before encoding means reaching into `$gameParty` and pulling `_j._omni` off it during a
+  save. Mutating live state while writing it is exactly the defect that made the engine's own
+  `JsonEx._encode` dangerous.
+- Placing after decoding is worse, because it is silent. **A host's transients are re-seeded as the
+  last step of its own decode** - a fresh `JABS_Timer` is written to `_j._regions._skills._timer`
+  while the `Game_Player` is being rebuilt. A slice merged onto the finished object afterwards
+  replaces `_j._regions` wholesale and takes the freshly-seeded timer with it, leaving `undefined`
+  at a path a guard reads with `!== null`. That is the exact failure Principle 3 exists to prevent,
+  reintroduced by the routing step.
+
+Merging before the decode also removes the problem the old ordering was trying to solve: there is no
+"resolve `actors.3` against decoded objects" step, because the slice is put back while everything is
+still the plain data the file holds.
 
 **A system file naming a host that no longer exists is not an error.** Follower counts change,
 vehicles get removed, an actor leaves the party. The router logs the orphaned slice and drops it; the
@@ -454,6 +547,24 @@ five battler caches on `Game_Actor`.
 Extending a type nothing has registered throws, naming the load-order problem, rather than quietly
 inventing a codec that the owning plugin would then overwrite.
 
+#### A codec is resolved by exact constructor, so declare on the classes that are saved
+
+`SerializableRegistry.codecForInstance` is a `Map` lookup on `value.constructor`. It does **not**
+walk the prototype chain, and declarations do not inherit. That is deliberate - it is a lookup, not a
+resolution algorithm - but it invalidates a line Phase 0 wrote about the character-like timers:
+
+> The four character-like timers are declared on `Game_CharacterBase` / `Game_Character`, so one
+> declaration per class covers player, followers, vehicles, and events alike.
+
+They are *assigned* there. They must be *declared* on `Game_Player`, `Game_Follower`, and
+`Game_Vehicle` - each one separately - because those are the constructors an encoder actually meets
+in a savefile. A declaration on `Game_CharacterBase` describes a type that never appears in a save by
+itself and reaches nothing. Events need no declaration at all, since their whole `_j` is dropped by
+the `Game_Event` codec.
+
+This is why `abs/ext/tools`, `regions/ext/skills`, and `regions/ext/states` each call `extend` three
+times with the same transient bag.
+
 `encode` / `decode` are the escape hatch for types whose storage shape genuinely differs from their
 runtime shape — JAFTING lineage in Phase 4 is the motivating case. Most types declare only
 `transients` and `typed`, and many declare neither.
@@ -513,14 +624,15 @@ classes are registered today. The gap is the worklist:
 |---|---|---|---|
 | `RPG_Trait` | 255 | only inside battler caches | vanishes with the transients |
 | `JABS_Timer` | 110 | five holder paths | register; transient at every holder |
-| `RPG_Skill` / `RPG_SkillDamage` | 61 each | 47 in battler caches, **14 in `$.actors._data[]._j._passive._passiveSources[]`** | register — see below |
+| `RPG_Skill` / `RPG_SkillDamage` | 61 each | 47 in battler caches, **14 in `$.actors._data[]._j._passive._passiveSources[]`** | ✅ registered — see below |
+| `RPG_UsableEffect` | 28 | read as cache-only, but reachable as `RPG_Skill.effects[]` | ✅ registered — the census missed this |
 | `RPG_State` / `RPG_UsableEffect` / `RPG_Armor` / `RPG_Actor` / `RPG_Class` / `RPG_Weapon` | 28/28/8/4/4/4 | only inside battler caches | vanishes with the transients |
 | `Map` | 37 | 35 survive | register as a codec, Phase 1 step 5 |
 | `DifficultyConfig` | 17 | `$.system._j._difficulty._configurations[]` | register |
 | `JABS_DeathContext` | 1 | `$.actors._data[]._j._abs._deathContext` | register |
 | `J_Timer` | 1 | `$.map._j._omni._quest._destinationTimer` | register; transient |
 | the 18 engine `Game_*` classes | 94 | the spine of the document | register with type maps, Phase 1 step 6 |
-| `CGMZ_Core`, `Eli_SavedContents` | 1 each | third-party top-level keys | **not registered** — both plugins are being removed from CA |
+| `CGMZ_Core`, `Eli_SavedContents` | 1 each | third-party top-level keys | **not registered** — ✅ both plugins removed from CA's `plugins.js`, with their dependents |
 
 **`_j._passive._passiveSources` is a genuine reference-vs-value bug, not a registration gap.** It
 persists 14 whole `RPG_Skill` rows — database objects stored by value, so a rebalanced skill never
@@ -579,6 +691,21 @@ behavior: call `instance.initMembers()` when the class defines one. Classes that
 `_actors` and calls `initAllItems()` directly in `initialize` — **must supply `seed` explicitly**, as
 a function that assigns the same defaults without the side effects. Never call `initialize` itself:
 `Game_Actor.prototype.initialize` takes an actor id and runs `setup()`, which does real work.
+
+**An `initMembers` that takes parameters is a mapper, not a defaulter, and is never the seed.**
+`RPG_Skill.prototype.initMembers(skill)` reads a database row it is handed and throws on the first
+property access if called with nothing. The derived seed therefore checks arity and falls back to a
+no-op when `initMembers.length > 0`, so a class shaped that way supplies `seed` explicitly or gets
+nothing. Found while registering `RPG_Skill`; without it every decode of one threw.
+
+**Decoded plain objects merge over seeded ones rather than replacing them.** `seed` promises that a
+field added after a save shipped comes back at its default, and a plain assignment breaks that
+promise one level down: the seed runs the whole `initMembers` chain and builds every plugin's `_j`
+namespace, then the file's older `_j` replaces it wholesale and every plugin added since the save was
+written finds its own state missing. `SaveDecoder.mergeOverSeeded` merges plain objects key by key -
+the file wins where it has something to say, the seeded default survives where it does not - and
+replaces outright for instances, arrays, `Map`s, and primitives, since a decoded instance is already
+the complete answer for its position.
 
 **Defaulting `seed` to `initMembers()` inherits the whole alias chain, so verify the chain, not the
 method.** `Game_Battler.prototype.initMembers` is aliased by a dozen plugins, and the default is only
@@ -651,14 +778,22 @@ New files:
 | `src/plugins/_base/core/save/SaveCodec.js` | the normalized per-type record the registry stores |
 | `src/plugins/_base/core/save/registerEngineSaveCodecs.js` | `Map`, `Set`, and the engine classes |
 | `src/plugins/_base/core/save/SaveManifest.js` | manifest model, registered serializable |
+| `src/plugins/_base/core/save/SaveDocument.js` | which top-level key lands in which section |
 | `src/plugins/_base/core/save/SaveSectionRouter.js` | slot object <-> section files, `_j.*` lifting |
 | `src/plugins/_base/core/save/SaveMigrationRegistry.js` | version chain |
 | `src/plugins/_base/core/save/SaveError.js` | the error base: path plus a `kind` discriminator |
 | `src/plugins/_base/core/save/SaveEncodeError.js` | encode failures, one named factory per case |
 | `src/plugins/_base/core/save/SaveDecodeError.js` | decode failures, one named factory per case |
+| `src/plugins/_base/core/save/SaveStorageError.js` | file-level failures: missing pointer, torn generation, refused write |
 | `src/plugins/_base/managers/SaveFileSystem.js` | generations, pointer, fsync, pruning |
 | `src/plugins/_base/managers/StorageManager.js` | engine augmentation replacing the pipeline |
 | `src/plugins/_base/managers/ConfigManager.js` | installation scope onto the new pipeline |
+| `src/plugins/_base/managers/ProfileManager.js` | profile scope: the third lifetime, with the same registration seam |
+
+`SaveDocument.js` was missing from this table in the original draft even though the design section
+describes `SaveDocument.sections`; it is its own file, because one class per file is the rule and
+because "which section does this key go in" and "how are `_j` slices lifted" are two questions with
+two different answers. `SaveStorageError.js` and `ProfileManager.js` were simply not anticipated.
 
 Modified:
 
@@ -794,9 +929,12 @@ delay takes effect on the next load rather than being frozen at whatever a save 
 | `_j._passive._conditional._timer` | `new JABS_Timer(J.PASSIVE.EXT.CONDITIONAL.Metadata.reconcileDelayFrames \|\| 15)` | `passive/ext/conditional/objects/Game_Battler.js:59` |
 | `_j._omni._quest._destinationTimer` | `new J_Timer(15)` | `omni/ext/quest/objects/Game_Map.js:44` |
 
-The four character-like timers are declared on `Game_CharacterBase` / `Game_Character`, so one
-declaration per class covers player, followers, vehicles, and events alike — the router is what keeps
-events out, not a per-host difference in the declaration.
+The four character-like timers are *assigned* on `Game_CharacterBase` / `Game_Character`, but they
+must be **declared** on each concrete class a savefile actually holds — `Game_Player`,
+`Game_Follower`, `Game_Vehicle` — because codec lookup is an exact-constructor `Map` hit and
+declarations do not inherit. Events need no declaration; their whole `_j` is dropped by the
+`Game_Event` codec. See
+[A codec is resolved by exact constructor](#a-codec-is-resolved-by-exact-constructor-so-declare-on-the-classes-that-are-saved).
 
 Timer paths as they appear in a save, for the sweep:
 
@@ -970,10 +1108,19 @@ version here just makes Phase 1's own deliverable verifiable.
 
 ### Phase 2 — storage layer
 
-**New:** `SaveFileSystem.js`, `StorageManager.js`, `SaveManifest.js`.
-**Modified:** `initialization.js` (add `StorageManager` / `ConfigManager` alias maps), `JsonEx.js`.
+**New:** `SaveFileSystem.js`, `StorageManager.js`, `SaveManifest.js`, `SaveStorageError.js`.
+**Modified:** `initialization.js` (add the `ConfigManager` alias map and the retention parameter),
+`_annotations.js` (the parameter itself), `DataManager.js`.
 
-0. **Finish the registration sweep first, before anything points at the new encoder.** Phase 1
+✅ **Phase 2 is done**, alongside Phase 3 — the two landed together, and the reason is step 2 below.
+
+**The cutover moved to the end of Phase 3.** Step 2 as written switches `StorageManager` over before
+`SaveSectionRouter` exists, which forces a throwaway single-section split that gets deleted days
+later. Since both phases land in one PR anyway, the real order was: registrations, CA plugin removal,
+`SaveFileSystem` + `SaveManifest` with a section-agnostic API, `SaveDocument` + `SaveSectionRouter`,
+then **one** cutover with the real sections, then the scopes.
+
+0. ✅ **Finish the registration sweep first, before anything points at the new encoder.** Phase 1
    registered only what `_base` owns; the moment `StorageManager` calls `SaveEncoder`, the first save
    throws `unregisteredType` on the first class it meets that nobody claimed. The census in
    [The real Phase 1 worklist](#the-real-phase-1-worklist-is-registration-completeness-not-type-map-size)
@@ -981,20 +1128,35 @@ version here just makes Phase 1's own deliverable verifiable.
    and `RPG_Skill` / `RPG_SkillDamage` (J-Base's database models, reachable through J-Passive's
    `_passiveSources`).
 
+   **It is five, not four.** `RPG_Skill.effects` holds `RPG_UsableEffect` instances, so registering
+   the skill drags that in too — the census read it as cache-only because in that snapshot every
+   other occurrence was inside a battler cache. All five are registered, each with an explicit seed:
+   `JABS_DeathContext` and `RPG_UsableEffect` because their initializers take arguments,
+   `DifficultyConfig` and `RPG_SkillDamage` by copying a blank instance, and `RPG_Skill` from
+   `RPG_Skill.createEmpty(0)`.
+
    `JABS_Timer` is **not** one of them. It is transient by type, so it reaches the encoder only if one
    of the forty-six holder declarations was missed — treat an `unregisteredType` on `JABS_Timer` as a
-   missing transient declaration, not as a class needing registration.
+   missing transient declaration, not as a class needing registration. All 47 non-event holders are
+   now declared, on `Game_Player` / `Game_Follower` / `Game_Vehicle` / `Game_Actor` / `Game_Map` —
+   see [A codec is resolved by exact constructor](#a-codec-is-resolved-by-exact-constructor-so-declare-on-the-classes-that-are-saved)
+   for why not on the classes that assign them.
 
-0b. **Remove CGMZ_Core, EliMZ_Book, and SoR_MiniMapAndScene from CA before the cutover.** A real save
-   carries `$.cgmz` and `$.eli` as top-level keys, written by two of those plugins through their own
-   `makeSaveContents` aliases. `CGMZ_Core` and `Eli_SavedContents` are unregistered and nothing in
+0b. ✅ **Remove CGMZ_Core, EliMZ_Book, and SoR_MiniMapAndScene from CA before the cutover.** A real
+   save carries `$.cgmz` and `$.eli` as top-level keys, written by two of those plugins through their
+   own `makeSaveContents` aliases. `CGMZ_Core` and `Eli_SavedContents` are unregistered and nothing in
    this repo can register them, so the first save after `StorageManager` points at `SaveEncoder`
    throws on whichever it meets first.
 
-   This is a **cross-repo ordering dependency**, not a code defect: the plugins are already slated
-   for removal, and once they are gone the keys go with them. It is recorded here because nothing
-   else in the plan says the removal has to happen *first*. Verify with a fresh save containing
-   neither key before cutting over.
+   **Four entries came out of `plugins.js`, not two, and `SoR_MiniMapAndScene` was never in it.** The
+   two cores have dependents that cannot load without them: `CGMZ_SaveFile` (the save/load scene) and
+   `EliMZ_Zoom`. Jeremy approved removing all four. Evidence gathered first: zero references to either
+   plugin family anywhere in CA's `data/*.json`, and none in any J plugin, so nothing in an event or
+   a script call breaks. `CGMZ_ExitToDesktop` is on disk but was already not in `plugins.js`.
+
+   Consequences to know about: **CA is on the vanilla save/load scene with no autosave** until
+   `J.BASE.EXT.SAVE` exists, and the Eli zoom plugin command is gone. The `.js` files remain in
+   `js/plugins/` — only the `plugins.js` entries were removed.
 
    Each plugin registers **its own** classes and calls `SerializableRegistry.extend` for the
    `_j.<plugin>` transients it contributes to an engine host — the omnipedia caches on `Game_Party`,
@@ -1005,42 +1167,86 @@ version here just makes Phase 1's own deliverable verifiable.
    over every registered type; the practical one is that a save now throws rather than silently
    writing something the decoder cannot rebuild.
 
-1. Implement `SaveFileSystem` with the exact save and load sequences above. Synchronous `fs` calls
-   inside `new Promise(...)` — `StorageManager`'s contract is Promise-returning and this repo forbids
-   `async` / `await`.
-2. Replace `StorageManager.saveObject` / `loadObject` / `exists` / `remove` / `filePath`. Delete the
-   `pako` and `localforage` paths. **This is where the `JsonEx` `Map`/`Set` overrides get deleted**,
-   because this is the step that stops `JsonEx` being the save path; the two component suites covering
-   them (`_base/_component/jsonex-map-set-direct` and `…-save-load-integration`) retire with them, their
-   coverage having moved to the `Map` / `Set` codecs.
-3. Pretty-print with `JSON.stringify(value, null, 2)`.
-4. Implement `SaveManifest` and the load-menu read path that touches only `manifest.json`.
-5. Implement retention and pruning. Default three generations; make it a plugin parameter.
-6. Define behavior for a disk that is full, locked, or permission-denied — real on Windows, and more
-   likely with more files. Surface it, leave `current` untouched, never report success.
+1. ✅ `SaveFileSystem`, with the save and load sequences above. Synchronous `fs` calls inside
+   `new Promise(...)`, reached through `StorageManager`'s `fs*` helpers rather than a local
+   `require('fs')` — which is where the engine already put them and is what lets the crash-injection
+   tests fail step N by stubbing one method.
 
-**Acceptance:** crash injection at every step of a save leaves the previous generation loadable. A
-truncated newest generation falls back to the prior one. The load menu renders without decoding a
-world.
+   **`fsync` on a directory is best-effort.** Windows refuses to open a directory as a file, and CA
+   ships on Windows; treating it as fatal would cost every save on that platform to buy durability on
+   another. The pointer rename carries atomicity regardless.
+
+2. ✅ Replaced `StorageManager.saveObject` / `loadObject` / `exists` / `remove` / `filePath`. The
+   `pako` and `localforage` paths are unreachable. Slots and documents are told apart by name —
+   `/^file\d+$/` is a slot, anything else is a single document — so `ConfigManager` needed no change
+   to land on `config.json`.
+
+   **The `JsonEx` `Map`/`Set` overrides do *not* get deleted, and this step said they would.** `JsonEx`
+   stops being the *save* path but does not stop being used: `JsonEx.makeDeepCopy` is live in
+   `_base/objects/Game_Actor.js`, `_base/windows/Window_EquipItem.js`, `abs/core/managers/JABS_Engine.js`,
+   and vanilla `rmmz_windows.js`, and two of those deep-copy a **`Game_Actor`** — which holds
+   `_j._sks._slotMap` and friends. Deleting the override would silently drop every `Map` from an equip
+   preview. The same override also carries the fix that stops `_encode` mutating the live graph, which
+   is a bug that was found the hard way and must not be reintroduced. Both suites
+   (`_base/_component/jsonex-map-set-direct` and `…-save-load-integration`) stay for the same reason.
+3. ✅ Pretty-printed with `JSON.stringify(value, null, 2)`.
+4. ✅ `SaveManifest`, and a load-menu path that reads only `manifest.json` — asserted by a test that
+   fails if any section file is opened.
+5. ✅ Retention and pruning, parameterized as `retainedSaveGenerations` (default 3).
+
+   Two defects surfaced here that the sequence in [Storage](#storage-generations-behind-an-atomic-pointer)
+   does not anticipate. **Orphans must be recognized against the pointer the save started from**: the
+   original "anything newer than the pointer" test runs after the swap, by which time a crashed
+   write's leftovers are *older* than the new pointer and read as a legitimate previous generation.
+   And **retention has to count generations, not compare numbers**: stepping over an orphan leaves a
+   gap in the numbering, and a number-based window reads that gap as several saves' worth of age and
+   deletes files that are still the newest ones there are.
+6. ✅ A refused write throws `SaveStorageError.writeFailed` naming the file, leaves `current`
+   untouched, and never reports success.
+
+**Acceptance:** ✅ met, in `test/plugins/_base/core/save/save-storage-layer.test.js`. Crash injection
+at every write step of a save leaves the previous generation live and loadable; a newest generation
+that is truncated, malformed, versioned wrong, or merely undecodable falls back to the prior one; the
+load menu reads a manifest without touching a section.
 
 ### Phase 3 — scopes and routing
 
-**New:** `SaveSectionRouter.js`, `ConfigManager.js`.
+**New:** `SaveSectionRouter.js`, `SaveDocument.js`, `ConfigManager.js`, `ProfileManager.js`.
 
-1. Implement the section router: split the slot object into sections, lift each `_j.<plugin>`
-   namespace out of its hosts into `systems/<plugin>.json` keyed by host, and restore on load.
-   Runtime homes are unchanged — this is purely a file-layout concern.
-   **The router skips `$gameMap._events` on both encode and decode** — those slices are transient
-   per Phase 0, so a system file has six host keys, never seven. Re-seeding on load is the plugin's
-   own event `initMembers` path, exactly as after a map transfer.
-2. Move keybinds from `$gameSystem._j._abs._input._mappings` to installation scope. Add them to
-   `ConfigManager` via the new pipeline.
-3. Move `ConfigManager` itself off `config.rmmzsave` onto `config.json`.
-4. Stand up profile scope: `save/profile.json`, a registration seam for profile-scoped codecs, and
-   read/write plumbing. Populating it is content work and is not part of this item.
+✅ **Phase 3 is done.**
+
+1. ✅ The section router. Runtime homes are unchanged — this is purely a file-layout concern.
+
+   **The router skips `$gameMap._events` on both encode and decode**, and a system file has **seven**
+   host keys, never six: `system`, `party`, `player`, `map`, `actors`, `followers`, `vehicles`. The
+   "six" in the earlier draft contradicted the design section's own host table, which is right —
+   `$gameMap` itself carries `_j` and is a host. Dropping event state is the `Game_Event` codec's job,
+   not the router's; see [Eight hosts](#eight-hosts-carry-_j-slices-not-seven).
+
+   **Namespace routing is opt-in and nothing is lost by not opting in.** `SaveSectionRouter.registerNamespace('_abs', 'abs')`
+   is what produces `systems/abs.json`; an unregistered namespace stays inline on its host and is
+   written with it. That is what keeps the router keyed on a list of real plugins rather than on
+   whatever `Object.keys(_j)` returns — four keys on `_j` hold a boolean or an array rather than a
+   namespace, and a naive router would write `systems/_textPopRequest.json` containing `false`.
+   **The sweep of the 27 real namespaces is outstanding**; the seam and its tests are in place, and
+   each plugin opting in is a one-line change with no behavioral consequence.
+2. ✅ Keybinds moved to installation scope. Both stores — the controller mappings and the `Input`
+   registry snapshot — live on `ConfigManager` and are written the moment they change, because
+   installation scope has no save to wait for. The `Game_System` methods kept their names, since every
+   caller already reaches for them there; only the storage moved.
+   `initializeJabsInputForLegacySaveIfMissing` became `initializeJabsInputIfMissing`, which is what it
+   now does: seed the store from the controllers' own defaults on a first run.
+3. ✅ `ConfigManager` is on `config.json`, by way of `StorageManager` routing it as a document. It
+   also grew a registration seam — `ConfigManager.registerField(key, defaultFactory)` — which is what
+   the keybind move needed and what vanilla's seven fixed fields never allowed.
+4. ✅ Profile scope: `ProfileManager`, `save/profile.json`, the same registration seam, read at boot
+   through `Scene_Boot.loadPlayerData` and waited on by `isPlayerDataLoaded`. Nothing populates it
+   yet, on purpose — what belongs at that lifetime is content design.
 
 **Acceptance:** a fresh install with no `save/` produces sane defaults for every scope. Rebinding a
 key in one slot is visible in another. Deleting `save/file1/` leaves config and profile intact.
+**These are in-engine checks and remain outstanding** — the automated coverage asserts the mechanics
+beneath them, not the player-visible outcome.
 
 ### Phase 4 — JAFTING refinement lineage
 
@@ -1225,6 +1431,13 @@ Once codecs exist, these hand-rolled pairs collapse into declarations:
 
 Retire them **as their types gain codecs**, not in a big-bang pass, and keep the behavior identical
 across the swap.
+
+**None of them are retired yet, as of the close of Phase 3, and nothing is broken by that.** Each one
+compensates for `JsonEx` restoring an object without running its constructor, and the new pipeline
+simply does the same work twice — the omnipedia caches are still written to disk and still rebuilt on
+load by their own hooks. Retiring them is a per-plugin change: declare the eager cache as a transient
+with a rebuilding factory, then delete the pair of hooks. It belongs with the namespace-registration
+sweep, since both are "walk the plugins once and opt each one in".
 
 ### Conventions that bite in this work
 
