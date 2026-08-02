@@ -783,6 +783,57 @@ describe('save codec core (direct src import)', () =>
       // Assert
       expect({ ...decoded }).toEqual({ ...fresh });
     });
+
+    it('keeps a seeded key inside a namespace the file only partly describes', () =>
+    {
+      // Arrange- the `_j` case: a file written before a plugin existed still carries `_j`, and a
+      // plain assignment would replace the whole seeded namespace with the older partial one.
+      SerializableRegistry.register(Seeded, { id: 'seeded' });
+
+      // Act
+      const decoded = SaveDecoder.decode({ nested: { other: 'from-file' }, '@': 'seeded' });
+
+      // Assert
+      expect(decoded.nested).toEqual({ deep: 'default-deep', other: 'from-file' });
+    });
+
+    it('lets the file win over the seed for a key both of them hold', () =>
+    {
+      // Arrange
+      SerializableRegistry.register(Seeded, { id: 'seeded' });
+
+      // Act
+      const decoded = SaveDecoder.decode({ nested: { deep: 'from-file' }, '@': 'seeded' });
+
+      // Assert
+      expect(decoded.nested.deep).toBe('from-file');
+    });
+
+    it('replaces rather than merges when the decoded value is an instance', () =>
+    {
+      // Arrange
+      SerializableRegistry.register(Seeded, { id: 'seeded' });
+      SerializableRegistry.register(Leaf, { id: 'leaf' });
+
+      // Act
+      const decoded = SaveDecoder.decode({ nested: { id: 7, '@': 'leaf' }, '@': 'seeded' });
+
+      // Assert
+      expect(decoded.nested.constructor).toBe(Leaf);
+      expect(decoded.nested.deep).toBe(undefined);
+    });
+
+    it('replaces rather than merges when the decoded value is an array', () =>
+    {
+      // Arrange
+      SerializableRegistry.register(Seeded, { id: 'seeded' });
+
+      // Act
+      const decoded = SaveDecoder.decode({ nested: [ 1, 2 ], '@': 'seeded' });
+
+      // Assert
+      expect(decoded.nested).toEqual([ 1, 2 ]);
+    });
   });
 
   describe('round trip', () =>

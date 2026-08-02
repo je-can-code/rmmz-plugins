@@ -16,36 +16,20 @@ Game_System.prototype.initMembers = function()
 };
 
 /**
- * Initializes members used for storing JABS input mappings and controller references.
+ * Ensures the installation-scoped stores backing every accessor below exist.
+ *
+ * **Keybinds belong to the person, not to the playthrough.** They live on {@link ConfigManager},
+ * beside volume and touch UI, so rebinding a key in one save is visible in every other one and
+ * deleting every savefile does not cost the player their controls. The methods here stay on
+ * `Game_System` because that is where every caller already reaches for them; only the storage moved.
  */
 Game_System.prototype.initJabsInputConfigMembers = function()
 {
-  /**
-   * Root namespace for J-related data stored on the system object.
-   */
-  this._j ||= {};
+  // the fields are registered with defaults by the extension's own config registration, so these
+  // are here for the case where a controller is remapped before anything has read the config file.
+  ConfigManager.jabsInputMappings ||= {};
 
-  /**
-   * ABS (JABS) namespace stored under the J-root on the system object.
-   */
-  this._j._abs ||= {};
-
-  /**
-   * Input extension namespace stored under the ABS namespace on the system object.
-   */
-  this._j._abs._input ||= {};
-
-  /**
-   * Dictionary of controllerKey -> mapping object `{ [button]: symbol }`.
-   * @type {Object<string, Object<string, string>>}
-   */
-  this._j._abs._input._mappings ||= {};
-
-  /**
-   * Snapshot of the full Input registry bindings across all namespaces.
-   * @type {Object<string, Object<string, string[]>>}
-   */
-  this._j._abs._input._bindings ||= {};
+  ConfigManager.jabsInputBindings ||= {};
 };
 
 /**
@@ -55,17 +39,23 @@ Game_System.prototype.initJabsInputConfigMembers = function()
 Game_System.prototype.getJabsInputMappings = function()
 {
   // return the full mappings dictionary.
-  return this._j._abs._input._mappings;
+  return ConfigManager.jabsInputMappings;
 };
 
 /**
  * Overwrites the stored mapping dictionary of controllerKey -> mapping object.
+ *
+ * The config document is written immediately rather than at the next save, because installation
+ * scope has no save to wait for- the player rebinding a key expects it to still be bound after they
+ * quit without saving.
  * @param {Object<string, Object<string,string>>} mappings The new mappings dictionary.
  */
 Game_System.prototype.setJabsInputMappings = function(mappings)
 {
   // assign the provided mappings dictionary.
-  this._j._abs._input._mappings = mappings;
+  ConfigManager.jabsInputMappings = mappings;
+
+  ConfigManager.save();
 };
 
 /**
@@ -119,7 +109,7 @@ Game_System.prototype.getJabsInputConfig = function(controllerKey)
 Game_System.prototype.getInputBindingsSnapshot = function()
 {
   // return the stored snapshot bag of input bindings.
-  return this._j._abs._input._bindings;
+  return ConfigManager.jabsInputBindings;
 };
 
 /**
@@ -128,7 +118,9 @@ Game_System.prototype.getInputBindingsSnapshot = function()
  */
 Game_System.prototype.setInputBindings = function(bindings)
 {
-  this._j._abs._input._bindings = bindings;
+  ConfigManager.jabsInputBindings = bindings;
+
+  ConfigManager.save();
 };
 
 /**
@@ -275,22 +267,22 @@ Game_System.prototype.resolveJabsControllerKey = function(controller, index)
 };
 
 /**
- * Initializes JABS input data for legacy saves that predate persistence.
- * If both the stored controller mappings and Input bindings snapshot are missing,
- * this seeds defaults one time so subsequent saves/loads work normally.
+ * Seeds the stored input configuration from the controllers' own defaults when nothing is stored.
+ *
+ * This is the first-run path: a fresh installation has an empty config document, so the defaults
+ * every controller can build for itself become the stored configuration once, and everything after
+ * that is the player's own.
  */
-Game_System.prototype.initializeJabsInputForLegacySaveIfMissing = function()
+Game_System.prototype.initializeJabsInputIfMissing = function()
 {
-  // Ensure the JABS input scaffolding exists on loaded saves- this unconditionally seeds
-  // this._j._abs._input._mappings/._bindings to {} when missing, so both reads below are always
-  // real (possibly-empty) objects, never null/undefined.
+  // ensure both stores exist before they are read, however early this runs.
   this.initJabsInputConfigMembers();
 
-  // Determine if any mappings exist in the save.
-  const hasMappings = Object.keys(this._j._abs._input._mappings).length > 0;
+  // Determine if any mappings are stored.
+  const hasMappings = Object.keys(this.getJabsInputMappings()).length > 0;
 
-  // Determine if any bindings exist in the save.
-  const hasBindings = Object.keys(this._j._abs._input._bindings).length > 0;
+  // Determine if any bindings are stored.
+  const hasBindings = Object.keys(this.getInputBindingsSnapshot()).length > 0;
 
   // If neither mappings nor bindings exist, initialize defaults for old saves.
   if (hasMappings === false && hasBindings === false)
@@ -348,8 +340,8 @@ Game_System.prototype.onAfterLoad = function()
   J.ABS.EXT.INPUT.Aliased.Game_System.get('onAfterLoad')
     .call(this);
 
-  // Perform one-time initialization for legacy saves if required.
-  this.initializeJabsInputForLegacySaveIfMissing();
+  // seed the stored configuration from defaults if this installation has none yet.
+  this.initializeJabsInputIfMissing();
 
   // apply the persisted Input bindings back into the live registry.
   this.applyAllInputBindingsToInput();

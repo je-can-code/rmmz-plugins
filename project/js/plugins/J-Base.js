@@ -7251,6 +7251,7 @@ var SaveFileSystem = class {
 	* @param {SaveManifest} manifest The manifest describing them.
 	*/
 	static writeGeneration(slotName, sections, manifest) {
+		const orphanCutoff = this.generationNumber(this.currentGenerationName(slotName));
 		const generationName = this.generationName(this.nextGenerationNumber(slotName));
 		const generationDirectory = this.generationDirectory(slotName, generationName);
 		StorageManager.fsMkdirRecursive(generationDirectory);
@@ -7260,7 +7261,7 @@ var SaveFileSystem = class {
 		this.writeJson(`${generationDirectory}${this.manifestFileName}`, manifest);
 		StorageManager.fsSyncDirectory(generationDirectory);
 		this.swapPointer(slotName, generationName);
-		this.pruneGenerations(slotName);
+		this.pruneGenerations(slotName, orphanCutoff);
 	}
 	/**
 	* Points a slot at a generation, atomically.
@@ -7293,20 +7294,29 @@ var SaveFileSystem = class {
 	/**
 	* Deletes the generations a slot no longer keeps.
 	*
-	* Everything newer than the pointer is an orphan and goes regardless of the retention count; below
-	* the pointer, the configured number of generations is kept.
+	* Two different things get deleted here, and conflating them was a bug worth naming. **Orphans**
+	* are directories left by a write that never reached its pointer swap; they are recognized as
+	* anything that appeared after the pointer this save started from, and they go regardless of the
+	* retention count. **Retired** generations are real, complete ones that have simply fallen off the
+	* end of the window.
+	*
+	* Retention counts generations rather than comparing numbers, because numbers are not dense: a
+	* write that steps over an orphan leaves a gap, and a number-based window would read that gap as
+	* several generations' worth of age and delete saves that are still the newest ones there are.
 	* @param {string} slotName The slot's name.
+	* @param {number} orphanCutoff The generation number the pointer held before this save.
 	*/
-	static pruneGenerations(slotName) {
+	static pruneGenerations(slotName, orphanCutoff) {
 		const current = this.currentGenerationName(slotName);
 		if (current === String.empty) return;
 		const currentNumber = this.generationNumber(current);
-		const retained = this.retainedGenerations();
-		this.generationNames(slotName).filter((name) => {
+		const all = this.generationNames(slotName);
+		const orphans = all.filter((name) => {
 			const number = this.generationNumber(name);
-			if (number > currentNumber) return true;
-			return number <= currentNumber - retained;
-		}).forEach((name) => StorageManager.fsRemoveDirectory(this.generationDirectory(slotName, name)));
+			return number > orphanCutoff && number !== currentNumber;
+		});
+		const retired = all.filter((name) => this.generationNumber(name) <= currentNumber).slice(this.retainedGenerations());
+		orphans.concat(retired).forEach((name) => StorageManager.fsRemoveDirectory(this.generationDirectory(slotName, name)));
 	}
 	/**
 	* Writes one pretty-printed JSON document durably.
