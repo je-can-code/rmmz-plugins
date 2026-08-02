@@ -9,6 +9,11 @@ globalThis.J ||= {};
 J.BASE = {};
 
 /**
+ * The plugin umbrella that governs all extensions of J-Base.
+ */
+J.BASE.EXT = {};
+
+/**
  * The `metadata` associated with this plugin, such as version.
  */
 J.BASE.Metadata = {};

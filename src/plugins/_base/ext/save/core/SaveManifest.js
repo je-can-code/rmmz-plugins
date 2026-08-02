@@ -1,5 +1,4 @@
 //region SaveManifest
-import SerializableRegistry from './../SerializableRegistry.js';
 
 /**
  * The index of one generation: what it holds, when it was written, and enough about the playthrough

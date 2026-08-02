@@ -1,9 +1,9 @@
 //region StorageManager
 import SaveFileSystem from './SaveFileSystem.js';
-import SaveSectionRouter from './../core/save/SaveSectionRouter.js';
-import SaveManifest from './../core/save/SaveManifest.js';
-import SaveEncoder from './../core/save/SaveEncoder.js';
-import SaveDecoder from './../core/save/SaveDecoder.js';
+import SaveSectionRouter from './../core/SaveSectionRouter.js';
+import SaveManifest from './../core/SaveManifest.js';
+import SaveEncoder from './../core/SaveEncoder.js';
+import SaveDecoder from './../core/SaveDecoder.js';
 
 /**
  * The save pipeline, replaced end to end.

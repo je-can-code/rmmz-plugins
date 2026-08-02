@@ -1,7 +1,6 @@
 //region registerEngineSaveCodecs
 import SaveDecoder from './SaveDecoder.js';
 import SaveEncoder from './SaveEncoder.js';
-import SerializableRegistry from './../SerializableRegistry.js';
 
 /**
  * Every codec here describes a type J-Base does not own: two native collections, and the eighteen

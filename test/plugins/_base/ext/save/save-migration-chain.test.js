@@ -65,12 +65,16 @@ describe('save migration chain (direct src import)', () =>
       get: () => '',
     });
 
-    globalThis.J = { BASE: { Metadata: { retainedSaveGenerations: 3 } } };
+    globalThis.J = { BASE: { EXT: { SAVE: { Metadata: { retainedSaveGenerations: 3 } } } } };
 
-    ({ default: SaveManifest } = await import('../../../../../../src/plugins/_base/core/core/save/SaveManifest.js'));
+    // J-Base-Save reads the registry as a hoisted global rather than importing across ships.
+    ({ default: globalThis.SerializableRegistry } = await import(
+      '../../../../../src/plugins/_base/core/core/SerializableRegistry.js'));
+
+    ({ default: SaveManifest } = await import('../../../../../src/plugins/_base/ext/save/core/SaveManifest.js'));
     ({ default: SaveMigrationRegistry } = await import(
-      '../../../../../../src/plugins/_base/core/core/save/SaveMigrationRegistry.js'));
-    ({ default: SaveFileSystem } = await import('../../../../../../src/plugins/_base/core/managers/SaveFileSystem.js'));
+      '../../../../../src/plugins/_base/ext/save/core/SaveMigrationRegistry.js'));
+    ({ default: SaveFileSystem } = await import('../../../../../src/plugins/_base/ext/save/managers/SaveFileSystem.js'));
 
     shippedSchemaVersion = SaveManifest.schemaVersion;
   });

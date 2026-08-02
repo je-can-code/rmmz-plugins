@@ -1,7 +1,7 @@
 //region plugins/_base/_component/save-load-real-engine.test.js
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import { installFakeSaveFilesystem } from '../core/save/fixtures/install-fake-save-filesystem.js';
+import { installFakeSaveFilesystem } from '../../ext/save/fixtures/install-fake-save-filesystem.js';
 import { installRealRmmzEngine } from '../../../../setup/rmmz-engine-loader.js';
 
 /**
@@ -211,17 +211,21 @@ describe('save and load through the real engine objects', () =>
     };
 
     // J-Base's namespace, reduced to what the save pipeline actually reads off it.
-    globalThis.J = { BASE: { Metadata: { retainedSaveGenerations: 3 } } };
+    globalThis.J = { BASE: { EXT: { SAVE: { Metadata: { retainedSaveGenerations: 3 } } } } };
+
+    // J-Base-Save reads the registry as a hoisted global rather than importing across ships.
+    ({ default: globalThis.SerializableRegistry } = await import(
+      '../../../../../src/plugins/_base/core/core/SerializableRegistry.js'));
 
     // the fake filesystem has to be in place before J-Base's StorageManager augments it, because
     // that file defines the real `fs*` helpers and would otherwise win.
     fake = installFakeSaveFilesystem();
     const fakeFilesystem = { ...fake.storageManager };
 
-    await import('../../../../../src/plugins/_base/core/core/save/SaveDocument.js');
-    await import('../../../../../src/plugins/_base/core/core/save/registerEngineSaveCodecs.js');
-    ({ default: SaveFileSystem } = await import('../../../../../src/plugins/_base/core/managers/SaveFileSystem.js'));
-    await import('../../../../../src/plugins/_base/core/managers/StorageManager.js');
+    await import('../../../../../src/plugins/_base/ext/save/core/SaveDocument.js');
+    await import('../../../../../src/plugins/_base/ext/save/core/registerEngineSaveCodecs.js');
+    ({ default: SaveFileSystem } = await import('../../../../../src/plugins/_base/ext/save/managers/SaveFileSystem.js'));
+    await import('../../../../../src/plugins/_base/ext/save/managers/StorageManager.js');
 
     // put the in-memory helpers back over the real ones the import just installed.
     Object.assign(globalThis.StorageManager, fakeFilesystem);

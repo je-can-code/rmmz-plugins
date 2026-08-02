@@ -1,7 +1,7 @@
 //region ProfileManager
 import SaveFileSystem from './SaveFileSystem.js';
-import SaveEncoder from './../core/save/SaveEncoder.js';
-import SaveDecoder from './../core/save/SaveDecoder.js';
+import SaveEncoder from './../core/SaveEncoder.js';
+import SaveDecoder from './../core/SaveDecoder.js';
 
 /**
  * Profile scope: anything that outlives a single playthrough without being a machine setting.

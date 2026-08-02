@@ -1,6 +1,5 @@
 //region SaveDecoder
 import SaveDecodeError from './SaveDecodeError.js';
-import SerializableRegistry from './../SerializableRegistry.js';
 
 /**
  * Rebuilds live objects out of the plain data a savefile holds.

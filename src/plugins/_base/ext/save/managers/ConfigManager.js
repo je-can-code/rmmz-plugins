@@ -58,11 +58,11 @@ ConfigManager.registerField = function(key, defaultValueFactory)
  * Also writes every plugin-registered field into the config document.
  * @returns {object} The config data, extended.
  */
-J.BASE.Aliased.ConfigManager.set('makeData', ConfigManager.makeData);
+J.BASE.EXT.SAVE.Aliased.ConfigManager.set('makeData', ConfigManager.makeData);
 ConfigManager.makeData = function()
 {
   // perform original logic.
-  const config = J.BASE.Aliased.ConfigManager.get('makeData')
+  const config = J.BASE.EXT.SAVE.Aliased.ConfigManager.get('makeData')
     .call(this);
 
   this.registeredFields()
@@ -84,11 +84,11 @@ ConfigManager.makeData = function()
  * than a leftover.
  * @param {object} config The config data read from disk.
  */
-J.BASE.Aliased.ConfigManager.set('applyData', ConfigManager.applyData);
+J.BASE.EXT.SAVE.Aliased.ConfigManager.set('applyData', ConfigManager.applyData);
 ConfigManager.applyData = function(config)
 {
   // perform original logic.
-  J.BASE.Aliased.ConfigManager.get('applyData')
+  J.BASE.EXT.SAVE.Aliased.ConfigManager.get('applyData')
     .call(this, config);
 
   this.registeredFields()

@@ -1,6 +1,5 @@
 //region SaveEncoder
 import SaveEncodeError from './SaveEncodeError.js';
-import SerializableRegistry from './../SerializableRegistry.js';
 
 /**
  * Turns the live object graph into the plain data a savefile holds.

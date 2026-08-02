@@ -17,10 +17,14 @@ describe('save codec core (direct src import)', () =>
       get: () => '',
     });
 
-    ({ default: SerializableRegistry } = await import('../../../../../../src/plugins/_base/core/core/SerializableRegistry.js'));
-    ({ default: SaveCodec } = await import('../../../../../../src/plugins/_base/core/core/save/SaveCodec.js'));
-    ({ default: SaveEncoder } = await import('../../../../../../src/plugins/_base/core/core/save/SaveEncoder.js'));
-    ({ default: SaveDecoder } = await import('../../../../../../src/plugins/_base/core/core/save/SaveDecoder.js'));
+    ({ default: SerializableRegistry } = await import('../../../../../src/plugins/_base/core/core/SerializableRegistry.js'));
+
+    // the walkers live in J-Base-Save and read the registry as a hoisted global, because it belongs
+    // to J-Base and a ship may never import across into another. This reproduces that at test time.
+    globalThis.SerializableRegistry = SerializableRegistry;
+    ({ default: SaveCodec } = await import('../../../../../src/plugins/_base/core/core/SaveCodec.js'));
+    ({ default: SaveEncoder } = await import('../../../../../src/plugins/_base/ext/save/core/SaveEncoder.js'));
+    ({ default: SaveDecoder } = await import('../../../../../src/plugins/_base/ext/save/core/SaveDecoder.js'));
   });
 
   beforeEach(() =>

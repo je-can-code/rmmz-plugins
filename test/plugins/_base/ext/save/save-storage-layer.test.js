@@ -38,18 +38,22 @@ describe('save storage layer (direct src import)', () =>
     });
 
     // the registry is a real global for these files; nothing here exercises codec behavior.
-    globalThis.J = { BASE: { Metadata: { retainedSaveGenerations: 3 } } };
+    globalThis.J = { BASE: { EXT: { SAVE: { Metadata: { retainedSaveGenerations: 3 } } } } };
 
-    ({ default: SaveManifest } = await import('../../../../../../src/plugins/_base/core/core/save/SaveManifest.js'));
-    ({ default: SaveFileSystem } = await import('../../../../../../src/plugins/_base/core/managers/SaveFileSystem.js'));
-    ({ default: SaveDocument } = await import('../../../../../../src/plugins/_base/core/core/save/SaveDocument.js'));
-    ({ default: SaveSectionRouter } = await import('../../../../../../src/plugins/_base/core/core/save/SaveSectionRouter.js'));
+    // J-Base-Save reads the registry as a hoisted global rather than importing across ships.
+    ({ default: globalThis.SerializableRegistry } = await import(
+      '../../../../../src/plugins/_base/core/core/SerializableRegistry.js'));
+
+    ({ default: SaveManifest } = await import('../../../../../src/plugins/_base/ext/save/core/SaveManifest.js'));
+    ({ default: SaveFileSystem } = await import('../../../../../src/plugins/_base/ext/save/managers/SaveFileSystem.js'));
+    ({ default: SaveDocument } = await import('../../../../../src/plugins/_base/ext/save/core/SaveDocument.js'));
+    ({ default: SaveSectionRouter } = await import('../../../../../src/plugins/_base/ext/save/core/SaveSectionRouter.js'));
   });
 
   beforeEach(() =>
   {
     fake = installFakeSaveFilesystem();
-    globalThis.J.BASE.Metadata.retainedSaveGenerations = 3;
+    globalThis.J.BASE.EXT.SAVE.Metadata.retainedSaveGenerations = 3;
   });
 
   //region writing
@@ -138,7 +142,7 @@ describe('save storage layer (direct src import)', () =>
     it('never prunes below one generation, whatever the parameter says', async () =>
     {
       // Arrange
-      globalThis.J.BASE.Metadata.retainedSaveGenerations = 0;
+      globalThis.J.BASE.EXT.SAVE.Metadata.retainedSaveGenerations = 0;
       await writeGeneration('file1');
 
       // Act

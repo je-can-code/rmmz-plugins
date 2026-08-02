@@ -1,7 +1,7 @@
 //region plugins/_base/core/save/save-codec-registry-sweep.test.js
 import { beforeAll, describe, expect, it } from 'vitest';
 
-import { installRealRmmzEngine } from '../../../../../setup/rmmz-engine-loader.js';
+import { installRealRmmzEngine } from '../../../../setup/rmmz-engine-loader.js';
 
 /**
  * Two fixture-driven sweeps over the whole registry, rather than one test per type.
@@ -85,7 +85,7 @@ describe('save codec registry sweeps (direct src import)', () =>
       isObjectCharacter: () => false,
       isBigCharacter: () => false,
     };
-    globalThis.J = { BASE: { Metadata: { retainedSaveGenerations: 3 } } };
+    globalThis.J = { BASE: { EXT: { SAVE: { Metadata: { retainedSaveGenerations: 3 } } } } };
 
     // `Game_Player.initMembers` - which is that class's derived seed - constructs a
     // `Game_Followers`, whose own `setup()` sizes itself from `$gameParty.maxBattleMembers()`. A
@@ -110,12 +110,16 @@ describe('save codec registry sweeps (direct src import)', () =>
     };
 
     ({ default: SerializableRegistry } = await import(
-      '../../../../../../src/plugins/_base/core/core/SerializableRegistry.js'));
-    ({ default: SaveEncoder } = await import('../../../../../../src/plugins/_base/core/core/save/SaveEncoder.js'));
-    ({ default: SaveDecoder } = await import('../../../../../../src/plugins/_base/core/core/save/SaveDecoder.js'));
+      '../../../../../src/plugins/_base/core/core/SerializableRegistry.js'));
 
-    await import('../../../../../../src/plugins/_base/core/core/save/registerEngineSaveCodecs.js');
-    await import('../../../../../../src/plugins/_base/core/core/save/SaveManifest.js');
+    // the walkers live in J-Base-Save and read the registry as a hoisted global, because it belongs
+    // to J-Base and a ship may never import across into another. This reproduces that at test time.
+    globalThis.SerializableRegistry = SerializableRegistry;
+    ({ default: SaveEncoder } = await import('../../../../../src/plugins/_base/ext/save/core/SaveEncoder.js'));
+    ({ default: SaveDecoder } = await import('../../../../../src/plugins/_base/ext/save/core/SaveDecoder.js'));
+
+    await import('../../../../../src/plugins/_base/ext/save/core/registerEngineSaveCodecs.js');
+    await import('../../../../../src/plugins/_base/ext/save/core/SaveManifest.js');
 
     nativeCollections = [ Map, Set ];
   });

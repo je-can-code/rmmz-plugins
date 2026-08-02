@@ -1,5 +1,5 @@
 //region SerializableRegistry
-import SaveCodec from './save/SaveCodec.js';
+import SaveCodec from './SaveCodec.js';
 
 /**
  * A central registry of constructors that {@link JsonEx} can use for reliable

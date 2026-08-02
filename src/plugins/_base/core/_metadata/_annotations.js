@@ -291,10 +291,4 @@
  * @desc The base TP for enemies is this amount. Any formulai add onto this.
  * @default 100
  *
- * @param retainedSaveGenerations
- * @type number
- * @min 1
- * @text Retained Save Generations
- * @desc How many past versions of a save slot are kept on disk for rollback.
- * @default 3
  */

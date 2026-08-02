@@ -1,7 +1,7 @@
 //region SaveFileSystem
-import SaveStorageError from './../core/save/SaveStorageError.js';
-import SaveManifest from './../core/save/SaveManifest.js';
-import SaveMigrationRegistry from './../core/save/SaveMigrationRegistry.js';
+import SaveStorageError from './../core/SaveStorageError.js';
+import SaveManifest from './../core/SaveManifest.js';
+import SaveMigrationRegistry from './../core/SaveMigrationRegistry.js';
 
 /**
  * The bottom of the save pipeline: everything about *files*, and nothing about what they mean.
@@ -71,7 +71,7 @@ class SaveFileSystem
   static retainedGenerations()
   {
     // never fewer than one: pruning the live generation would delete the save being written.
-    return Math.max(1, J.BASE.Metadata.retainedSaveGenerations);
+    return Math.max(1, J.BASE.EXT.SAVE.Metadata.retainedSaveGenerations);
   }
 
   //region paths

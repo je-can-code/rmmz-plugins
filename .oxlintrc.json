@@ -324,6 +324,7 @@
     "JTargeting_PluginMetadata": "writable",
     "J_AbsPluginMetadata": "writable",
     "J_AllyAiPluginMetadata": "writable",
+    "J_BaseSavePluginMetadata": "writable",
     "J_CaModsPluginMetadata": "writable",
     "J_ChargePluginMetadata": "writable",
     "J_CmsEquip_PluginMetadata": "writable",
