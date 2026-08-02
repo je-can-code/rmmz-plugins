@@ -14,6 +14,11 @@ describe('Game_Party ext/utils augments (direct src import)', () =>
     {
     }
 
+    // J-Base owns the raw container accessors this file prunes through.
+    StubGameParty.prototype.rawItems = function() { return this._items; };
+    StubGameParty.prototype.rawWeapons = function() { return this._weapons; };
+    StubGameParty.prototype.rawArmors = function() { return this._armors; };
+
     globalThis.Game_Party = StubGameParty;
 
     await import('../../../../../src/plugins/utils/core/objects/Game_Party.js');

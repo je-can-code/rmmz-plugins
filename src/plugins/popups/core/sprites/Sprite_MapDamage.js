@@ -8,10 +8,44 @@ import PopupNumericDisplay from './../helpers/PopupNumericDisplay.js';
 class Sprite_MapDamage
   extends Sprite_Damage
 {
+
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+
+  /**
+   * Gets the duration.
+   * @returns {number} The duration.
+   */
+  duration()
+  {
+    // hand back the duration.
+    return this._duration;
+  }
+
+  /**
+   * Sets the duration.
+   * @param {number} newDuration The new duration.
+   */
+  setDuration(newDuration)
+  {
+    // assign the duration.
+    this._duration = newDuration;
+  }
+  //endregion properties
+
   /**
    * Constructor.
    * @param {...*} args Forwarded to {@link #initialize}.
    */
+
   constructor(...args)
   {
     super();
@@ -90,11 +124,11 @@ class Sprite_MapDamage
   {
     Sprite.prototype.update.call(this);
 
-    if (this._duration > 0)
+    if (this.duration() > 0)
     {
-      if (this._j._popups._mapAccumulatePhase !== true)
+      if (this.j()._popups._mapAccumulatePhase !== true)
       {
-        this._duration--;
+        this.setDuration(this.duration() - 1);
       }
 
       for (let i = 0; i < this.children.length; i++)
@@ -114,21 +148,21 @@ class Sprite_MapDamage
    */
   updateMergeCombinePulse()
   {
-    const idx = this._j._popups._mergePulseFrameIndex;
-    const total = this._j._popups._mergePulseTotalFrames;
-    const holdFrames = this._j._popups._mergePulseHoldFrames;
+    const idx = this.j()._popups._mergePulseFrameIndex;
+    const total = this.j()._popups._mergePulseTotalFrames;
+    const holdFrames = this.j()._popups._mergePulseHoldFrames;
 
     if (idx >= total)
     {
       this.scale.x = 1;
       this.scale.y = 1;
-      this._j._popups._mergePulseFlashAlpha = 0;
+      this.j()._popups._mergePulseFlashAlpha = 0;
 
       // exit early without a payload.
       return;
     }
 
-    const peak = this._j._popups._mergePulsePeakScale;
+    const peak = this.j()._popups._mergePulsePeakScale;
     let scale = peak;
 
     // once the hold phase ends, ease the pulse back down to normal size.
@@ -142,20 +176,20 @@ class Sprite_MapDamage
     }
 
     // fade the pulse flash over the full pulse lifetime so crit additions flare, then cool.
-    const flashMaxAlpha = this._j._popups._mergePulseFlashMaxAlpha;
+    const flashMaxAlpha = this.j()._popups._mergePulseFlashMaxAlpha;
     if (flashMaxAlpha > 0)
     {
       const fadeRatio = 1 - (idx / Math.max(total, 1));
-      this._j._popups._mergePulseFlashAlpha = Math.round(flashMaxAlpha * fadeRatio);
+      this.j()._popups._mergePulseFlashAlpha = Math.round(flashMaxAlpha * fadeRatio);
     }
     else
     {
-      this._j._popups._mergePulseFlashAlpha = 0;
+      this.j()._popups._mergePulseFlashAlpha = 0;
     }
 
     this.scale.x = scale;
     this.scale.y = scale;
-    this._j._popups._mergePulseFrameIndex = idx + 1;
+    this.j()._popups._mergePulseFrameIndex = idx + 1;
   }
 
   /**
@@ -166,29 +200,29 @@ class Sprite_MapDamage
   kickMergeCombinePulse(largePulse = false)
   {
     // shorthand the baseline frame count so crit pulses can stretch the same curve longer.
-    const baseFrames = this._j._popups._mergePulseBaseFrames;
+    const baseFrames = this.j()._popups._mergePulseBaseFrames;
 
     // a critical contribution should read more loudly than an ordinary merge bump.
-    this._j._popups._mergePulsePeakScale = largePulse
+    this.j()._popups._mergePulsePeakScale = largePulse
       ? 1.90
       : 1.33;
 
     // critical contributions should linger longer so the eye catches them more reliably.
-    this._j._popups._mergePulseTotalFrames = largePulse
+    this.j()._popups._mergePulseTotalFrames = largePulse
       ? baseFrames * 3
       : baseFrames;
 
     // crit contributions should sit on the peak briefly before shrinking back down.
-    this._j._popups._mergePulseHoldFrames = largePulse
+    this.j()._popups._mergePulseHoldFrames = largePulse
       ? 6
       : 0;
 
     // only critical contributions get the extra flash accent.
-    this._j._popups._mergePulseFlashMaxAlpha = largePulse
+    this.j()._popups._mergePulseFlashMaxAlpha = largePulse
       ? 192
       : 0;
 
-    this._j._popups._mergePulseFrameIndex = 0;
+    this.j()._popups._mergePulseFrameIndex = 0;
   }
 
   /**
@@ -196,13 +230,13 @@ class Sprite_MapDamage
    */
   releaseAccumulatePhase()
   {
-    this._j._popups._mapAccumulatePhase = false;
+    this.j()._popups._mapAccumulatePhase = false;
 
     const baseDuration = J.POPUPS.Layout.BaseDuration;
 
-    if (this._duration < baseDuration)
+    if (this.duration() < baseDuration)
     {
-      this._duration = baseDuration;
+      this.setDuration(baseDuration);
     }
   }
 
@@ -216,19 +250,19 @@ class Sprite_MapDamage
   {
     let healingPopup = false;
 
-    if (this._j._popups._sourcePopup && this._j._popups._sourcePopup.healing === true)
+    if (this.j()._popups._sourcePopup && this.j()._popups._sourcePopup.healing === true)
     {
       healingPopup = true;
     }
 
     const displayString = PopupNumericDisplay.formatNumericPopupDisplayString(valueString, healingPopup);
 
-    if (this._j._popups._sourcePopup)
+    if (this.j()._popups._sourcePopup)
     {
-      this._j._popups._sourcePopup.value = displayString;
+      this.j()._popups._sourcePopup.value = displayString;
     }
 
-    const iconRef = this._j._popups._iconSprite;
+    const iconRef = this.j()._popups._iconSprite;
 
     const textSprite = this.children.find(child =>
       child !== iconRef && child.bitmap && child.bitmap.width === J.POPUPS.Layout.ValueBitmapWidth);
@@ -245,14 +279,14 @@ class Sprite_MapDamage
 
     let fontSize = 20;
 
-    if (this._j._popups._isCritical)
+    if (this.j()._popups._isCritical)
     {
       fontSize += 12;
       textSprite.bitmap.fontBold = true;
     }
     else
     {
-      const accent = this._j._popups._textAccent;
+      const accent = this.j()._popups._textAccent;
 
       // mitigation labels (parry/evade/miss) render smaller and italic.
       const accentSmallItalic = accent === 'miss' || accent === 'evade' || accent === 'parry';
@@ -290,16 +324,16 @@ class Sprite_MapDamage
    */
   updateChild(sprite)
   {
-    if (this._j._popups._mapAccumulatePhase === true)
+    if (this.j()._popups._mapAccumulatePhase === true)
     {
-      const mergePulseFlashAlpha = this._j._popups._mergePulseFlashAlpha;
+      const mergePulseFlashAlpha = this.j()._popups._mergePulseFlashAlpha;
       if (mergePulseFlashAlpha > 0)
       {
         sprite.setBlendColor([ 255, 64, 64, mergePulseFlashAlpha ]);
       }
       else
       {
-        sprite.setBlendColor(this._flashColor);
+        sprite.setBlendColor(this.flashColor());
       }
 
       // exit early without a payload.

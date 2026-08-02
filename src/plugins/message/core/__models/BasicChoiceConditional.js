@@ -48,12 +48,12 @@ class BasicChoiceConditional
       // validate the leader is in fact the correct leader.
       case BasicChoiceConditional.Types.Leader:
         return ($gameParty.leader() && $gameParty.leader()
-          ?.actorId() === this.id);
+          .actorId() === this.id);
 
       // validate the leader is in fact the not the specified leader.
       case BasicChoiceConditional.Types.NotLeader:
         return ($gameParty.leader() && $gameParty.leader()
-          ?.actorId() !== this.id);
+          .actorId() !== this.id);
 
       // validate the conditional switch is ON.
       case BasicChoiceConditional.Types.SwitchOn:

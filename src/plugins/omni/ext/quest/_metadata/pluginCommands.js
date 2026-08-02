@@ -30,7 +30,12 @@ PluginManager.registerCommand(J.OMNI.EXT.QUEST.Metadata.name, "finalize-quest", 
     state
   } = args;
   const quest = QuestManager.quest(key);
-  switch (state)
+
+  // the editor hands every plugin command argument over as a string, and the cases below are
+  // matched with strict equality- so the state has to become a number before it can match anything.
+  const finalizedState = parseInt(state);
+
+  switch (finalizedState)
   {
     case 0:
       quest.flagAsCompleted();
@@ -53,6 +58,11 @@ PluginManager.registerCommand(J.OMNI.EXT.QUEST.Metadata.name, "set-quest-trackin
     key,
     trackingState
   } = args;
-  QuestManager.setQuestTrackingByKey(key, trackingState);
+
+  // the editor's stringy "false" is a truthy value, and this state is assigned straight onto the
+  // quest- so it has to become a real boolean or untracking a quest would instead keep it tracked.
+  const shouldTrack = trackingState === 'true';
+
+  QuestManager.setQuestTrackingByKey(key, shouldTrack);
 });
 //endregion plugin commands

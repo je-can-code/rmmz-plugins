@@ -7,40 +7,32 @@ import AptitudeSkillAggregate from './../_models/AptitudeSkillAggregate.js';
 class Window_AptitudeAggregateList
   extends Window_Command
 {
-  //region properties
-  /**
-   * The actor bound to this window.
-   * @type {Game_Actor|null}
-   */
-  _actor = null;
-
-  /**
-   * The list of aggregates bound to this window.
-   * @type {AptitudeSkillAggregate[]}
-   */
-  _aggregates = [];
-
-  //endregion properties
-
   //region init
   constructor(rect)
   {
-    // call parent ctor.
+    // call parent ctor, which seeds this window's members via initMembers before building the list.
     super(rect);
-
-    // initialize members.
-    this.initMembers();
   }
 
   /**
+   * Implements {@link Window_Command.initMembers}.<br/>
    * Initializes the members of this window.
+   *
+   * These cannot be class field declarations: JavaScript applies those only after `super()` returns,
+   * by which point the command list has already been built from them and found them undefined.
    */
   initMembers()
   {
-    // initialize members.
+    /**
+     * The actor bound to this window.
+     * @type {Game_Actor|null}
+     */
     this._actor = null;
 
-    // initialize the aggregates bucket.
+    /**
+     * The list of aggregates bound to this window.
+     * @type {AptitudeSkillAggregate[]}
+     */
     this._aggregates = [];
   }
 
@@ -79,7 +71,7 @@ class Window_AptitudeAggregateList
    */
   aggregates()
   {
-    return this._aggregates || [];
+    return this._aggregates;
   }
 
   /**

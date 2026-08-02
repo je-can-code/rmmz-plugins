@@ -10,12 +10,36 @@
  */
 class JAFTING_Trait
 {
+
+  //region properties
+  /**
+   * Gets the code.
+   * @returns {*} The code.
+   */
+  code()
+  {
+    // hand back the code.
+    return this._code;
+  }
+
+  /**
+   * Gets the data id.
+   * @returns {number} The dataId.
+   */
+  dataId()
+  {
+    // hand back the data id.
+    return this._dataId;
+  }
+  //endregion properties
+
   /**
    * Initializes the members of this class.
    * @param {number} code The code of the trait.
    * @param {number} dataId The dataId of the trait.
    * @param {number} value The value of the trait.
    */
+
   constructor(code, dataId, value)
   {
     this._code = code;
@@ -69,7 +93,7 @@ class JAFTING_Trait
    */
   convertToRmTrait()
   {
-    return RPG_Trait.fromValues(this._code, this._dataId, this._value);
+    return RPG_Trait.fromValues(this.code(), this.dataId(), this._value);
   }
 }
 

@@ -26,7 +26,7 @@ if (J.ABS)
   JABS_StandardController.prototype.getMinimapFocusPressedPrev = function()
   {
     // return the prior pressed state.
-    return this._minimapFocusPressedPrev === true;
+    return this.minimapFocusPressedPrev() === true;
   };
 
   /**
@@ -159,4 +159,16 @@ if (J.ABS)
     JABS_InputAdapter.performMinimapFocusEnd();
   };
 }
+
+//region properties
+/**
+ * Gets the minimap focus pressed prev.
+ * @returns {*} The minimapFocusPressedPrev.
+ */
+JABS_StandardController.prototype.minimapFocusPressedPrev = function()
+{
+  // hand back the minimap focus pressed prev.
+  return this._minimapFocusPressedPrev;
+};
+//endregion properties
 //endregion JABS_InputController

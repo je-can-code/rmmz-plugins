@@ -29,10 +29,6 @@ function jabsRemapActionLookupMaps()
   labels[JABS_Button.Offhand] = 'Offhand';
   labels[JABS_Button.Tool] = 'Tool';
   labels[JABS_Button.Dodge] = 'Dodge';
-  labels[JABS_Button.CombatSkill1] = 'Skill Trigger + Mainhand';
-  labels[JABS_Button.CombatSkill2] = 'Skill Trigger + Offhand';
-  labels[JABS_Button.CombatSkill3] = 'Skill Trigger + Dodge';
-  labels[JABS_Button.CombatSkill4] = 'Skill Trigger + Tool';
   labels[JABS_Button.Sprint] = 'Sprint';
   labels[JABS_Button.SkillTrigger] = 'Skill Trigger';
   labels[JABS_Button.Strafe] = 'Strafe';
@@ -40,6 +36,18 @@ function jabsRemapActionLookupMaps()
   labels[JABS_Button.Guard] = 'Guard';
   labels[JABS_Button.Menu] = 'Menu';
   labels[JABS_Button.Select] = 'Party Cycle';
+
+  // derive the combat skill labels from their compositions rather than spelling them out. writing
+  // them by hand is how "Skill Trigger + Dodge" survived long after the dodge input was folded into
+  // sprint- deriving them means a change to the composition can never leave a label behind.
+  const compositions = JABS_Button.combatSkillCompositions();
+  Object.keys(compositions)
+    .forEach(combatSkillButton =>
+    {
+      // join each component button's own label to describe what produces this combat skill.
+      labels[combatSkillButton] = compositions[combatSkillButton].map(component => labels[component])
+        .join(' + ');
+    });
 
   const help = {};
   help[JABS_Button.Menu] = 'Open the JABS quick menu.\nAccess actions, tools, and options.';
@@ -81,14 +89,13 @@ class Window_JabsRemapActions
   constructor(rect)
   {
     super(rect);
-    this.initMembers();
     this.select(this.firstActionIndex());
   }
 
   //region init
   /**
+   * Implements {@link Window_Command.initMembers}.<br/>
    * Ensures `this._j._abs._input._actions` exists and seeds state/view bags.
-   * Also hydrates the assignable button list when empty.
    */
   initMembers()
   {
@@ -104,12 +111,19 @@ class Window_JabsRemapActions
       _buttons: [],
     };
     actions._view = { _helpWindow: null };
-
-    if (this.getButtons().length === 0)
-    {
-      this.setButtons(this.buildButtonList());
-    }
   }
+
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
 
   //endregion init
 
@@ -120,7 +134,7 @@ class Window_JabsRemapActions
    */
   getMapping()
   {
-    return this._state()._mapping || {};
+    return this._state()._mapping;
   }
 
   /**
@@ -140,7 +154,7 @@ class Window_JabsRemapActions
    */
   getExternalMapping()
   {
-    return this._state()._externalMapping || {};
+    return this._state()._externalMapping;
   }
 
   /**
@@ -225,44 +239,23 @@ class Window_JabsRemapActions
   }
 
   /**
-   * Ensures the `_j._abs._input._actions` chain exists.
-   * Lazily mirrors ctor init so accessors stay valid when this window is touched without a full
-   * new-game init path (continued saves, aliased entry, or future scene wiring).
-   */
-  _root()
-  {
-    this._j ||= {};
-    this._j._abs ||= {};
-    this._j._abs._input ||= {};
-    this._j._abs._input._actions ||= {};
-  }
-
-  /**
-   * Lazily ensures and returns the window-local state bag.
+   * Returns the window-local state bag, seeded by {@link #initMembers}.
    * @returns {{_mapping:Object<string,string[]>, _externalMapping:Object<string, string[]>, _buttons:string[]}}
    */
   _state()
   {
-    this._root();
-    const actions = this._j._abs._input._actions;
-    actions._state ||= {
-      _mapping: {},
-      _externalMapping: {},
-      _buttons: [],
-    };
-    return actions._state;
+    // hand back the bag every state accessor reads through.
+    return this.j()._abs._input._actions._state;
   }
 
   /**
-   * Lazily ensures and returns the window-local view bag.
+   * Returns the window-local view bag, seeded by {@link #initMembers}.
    * @returns {{_helpWindow:Window_Help|null}}
    */
   _view()
   {
-    this._root();
-    const actions = this._j._abs._input._actions;
-    actions._view ||= { _helpWindow: null };
-    return actions._view;
+    // hand back the bag every view accessor reads through.
+    return this.j()._abs._input._actions._view;
   }
 
   //endregion accessors
@@ -290,7 +283,6 @@ class Window_JabsRemapActions
           JABS_Button.SkillTrigger,
           JABS_Button.Rotate,
           JABS_Button.Strafe,
-          JABS_Button.Dodge,
         ],
       },
       {
@@ -455,7 +447,7 @@ class Window_JabsRemapActions
   drawItem(index)
   {
     const rect = this.itemRectWithPadding(index);
-    const cmd = this._list[index];
+    const cmd = this.commandList()[index];
     if (!cmd)
     {
       // exit early without a payload.
@@ -660,9 +652,9 @@ class Window_JabsRemapActions
    */
   firstActionIndex()
   {
-    for (let i = 0; i < this._list.length; i++)
+    for (let i = 0; i < this.commandList().length; i++)
     {
-      const cmd = this._list[i];
+      const cmd = this.commandList()[i];
       if (cmd && cmd.enabled !== false)
       {
         return i;

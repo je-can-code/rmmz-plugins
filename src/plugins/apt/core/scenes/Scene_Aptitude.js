@@ -8,9 +8,13 @@ import Window_AptitudeSourceList from '../windows/Window_AptitudeSourceList.js';
 
 /**
  * The scene for viewing aptitude progress.
+ *
+ * Layout is inherited from {@link Scene_ActorFacetBase}, which supplies the actor ribbon and the
+ * control legend and hands down {@link Scene_ActorFacetBase.contentAreaRect} as the region left over.
+ * This scene positions only its lists and detail panels within that region.
  */
 class Scene_Aptitude
-  extends Scene_MenuBase
+  extends Scene_ActorFacetBase
 {
   /**
    * Pushes this current scene onto the stack, forcing it into action.
@@ -51,6 +55,18 @@ class Scene_Aptitude
     // initialize the primary members for the scene.
     this.initPrimaryMembers();
   }
+
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
 
   /**
    * Initializes the core aptitude members.
@@ -110,12 +126,6 @@ class Scene_Aptitude
      * A grouping of all windows for this scene.
      */
     this._j._aptitude._windows = {};
-
-    /**
-     * The ribbon window to display the actor and their name.
-     * @type {Window_AptitudeRibbon|null}
-     */
-    this._j._aptitude._windows._ribbon = null;
 
     /**
      * The list window that displays the per-skill aggregates.
@@ -191,7 +201,7 @@ class Scene_Aptitude
       .actorId();
 
     // pull from the map; default to 0 if not yet set.
-    const map = this._j._aptitude._lastAggregateIndexByActor;
+    const map = this.j()._aptitude._lastAggregateIndexByActor;
     if (map[actorId] === undefined)
     {
       map[actorId] = 0;
@@ -212,7 +222,7 @@ class Scene_Aptitude
       .actorId();
 
     // update the remembered index for this actor.
-    this._j._aptitude._lastAggregateIndexByActor[actorId] = index;
+    this.j()._aptitude._lastAggregateIndexByActor[actorId] = index;
   }
 
   /**
@@ -226,7 +236,7 @@ class Scene_Aptitude
       .actorId();
 
     // pull from the map; default to 0 if not yet set.
-    const map = this._j._aptitude._lastSourceIndexByActor;
+    const map = this.j()._aptitude._lastSourceIndexByActor;
     if (map[actorId] === undefined)
     {
       map[actorId] = 0;
@@ -247,7 +257,7 @@ class Scene_Aptitude
       .actorId();
 
     // update the remembered index for this actor.
-    this._j._aptitude._lastSourceIndexByActor[actorId] = index;
+    this.j()._aptitude._lastSourceIndexByActor[actorId] = index;
   }
 
   /**
@@ -261,14 +271,14 @@ class Scene_Aptitude
       .actorId();
 
     // ensure aggregate index exists.
-    const aggMap = this._j._aptitude._lastAggregateIndexByActor;
+    const aggMap = this.j()._aptitude._lastAggregateIndexByActor;
     if (aggMap[actorId] === undefined)
     {
       aggMap[actorId] = 0;
     }
 
     // ensure source index exists.
-    const srcMap = this._j._aptitude._lastSourceIndexByActor;
+    const srcMap = this.j()._aptitude._lastSourceIndexByActor;
     if (srcMap[actorId] === undefined)
     {
       srcMap[actorId] = 0;
@@ -282,7 +292,7 @@ class Scene_Aptitude
   aggregates()
   {
     // return the cached aggregates.
-    return this._j._aptitude._aggregates;
+    return this.j()._aptitude._aggregates;
   }
 
   /**
@@ -291,7 +301,7 @@ class Scene_Aptitude
    */
   setAggregates(aggregates)
   {
-    this._j._aptitude._aggregates = aggregates;
+    this.j()._aptitude._aggregates = aggregates;
   }
 
   /**
@@ -313,7 +323,7 @@ class Scene_Aptitude
    */
   sources()
   {
-    return this._j._aptitude._sources;
+    return this.j()._aptitude._sources;
   }
 
   /**
@@ -322,7 +332,7 @@ class Scene_Aptitude
    */
   setSources(sources)
   {
-    this._j._aptitude._sources = sources;
+    this.j()._aptitude._sources = sources;
   }
 
   /**
@@ -345,7 +355,7 @@ class Scene_Aptitude
    */
   viewMode()
   {
-    return this._j._aptitude._viewMode;
+    return this.j()._aptitude._viewMode;
   }
 
   /**
@@ -353,10 +363,7 @@ class Scene_Aptitude
    */
   setViewModeToAggregate()
   {
-    this._j._aptitude._viewMode = Scene_Aptitude.viewMode.AGGREGATE;
-
-    this.aptitudeRibbonWindow()
-      .setToggleHintTarget('the sources');
+    this.j()._aptitude._viewMode = Scene_Aptitude.viewMode.AGGREGATE;
   }
 
   /**
@@ -364,10 +371,7 @@ class Scene_Aptitude
    */
   setViewModeToSource()
   {
-    this._j._aptitude._viewMode = Scene_Aptitude.viewMode.SOURCE;
-
-    this.aptitudeRibbonWindow()
-      .setToggleHintTarget('your skills');
+    this.j()._aptitude._viewMode = Scene_Aptitude.viewMode.SOURCE;
   }
 
   /**
@@ -462,9 +466,6 @@ class Scene_Aptitude
     // rebuild sources once for the initial actor.
     this.rebuildSourcesForActor();
 
-    // create the ribbon window.
-    this.createAptitudeRibbonWindow();
-
     // create the list window for aptitudes aggregations.
     this.createAptitudeAggregateListWindow();
 
@@ -483,62 +484,25 @@ class Scene_Aptitude
 
   //region ribbon
   /**
-   * Creates the aptitude ribbon window.
+   * Overrides {@link Scene_ActorFacetBase.buildActorRibbonWindow}.<br/>
+   * Supplies the aptitude ribbon, which shows the actor plus a hint about the view toggle.
+   *
+   * Only the contents differ from the default ribbon; the base decides where it sits and how tall it is.
+   * @param {Rectangle} rectangle The rectangle to build the window within.
+   * @returns {Window_AptitudeRibbon}
    */
-  createAptitudeRibbonWindow()
+  buildActorRibbonWindow(rectangle)
   {
-    // define the rectangle.
-    const rect = this.aptitudeRibbonRect();
-
-    // build the window.
-    const win = new Window_AptitudeRibbon(rect);
-
-    // initialize the actor.
-    win.setActor(this.actor());
-
-    // assign the view mode for the toggle hint.
-    win.setToggleHintTarget('the sources');
-
-    // assign the window.
-    this._j._aptitude._windows._ribbon = win;
-
-    // add the window to the scene.
-    this.addWindow(win);
+    return new Window_AptitudeRibbon(rectangle);
   }
 
   /**
-   * Gets the rectangle for the aptitude ribbon window.
-   * @returns {Rectangle}
-   */
-  aptitudeRibbonRect()
-  {
-    // compute the centered container width (~66% of the screen width).
-    const containerW = Math.floor(Graphics.boxWidth * this.containerWidthPercent());
-
-    // compute the x offset to center the container.
-    const containerX = Math.floor((Graphics.boxWidth - containerW) / 2);
-
-    // place the ribbon at the top of the container.
-    const x = containerX;
-    const y = 0;
-
-    // keep ribbon width proportional to list column.
-    const w = Math.floor(containerW * this.listColumnWidthPercent());
-
-    // keep the same visual height used previously for ribbon rows.
-    const height = (36 * 3);
-
-    // return the rectangle for the ribbon window.
-    return new Rectangle(x, y, w, height);
-  }
-
-  /**
-   * Gets the aptitude ribbon window.
-   * @returns {Window_AptitudeRibbon|null}
+   * Gets the actor ribbon window under the name this scene refers to it by.
+   * @returns {Window_AptitudeRibbon}
    */
   aptitudeRibbonWindow()
   {
-    return this._j._aptitude._windows._ribbon;
+    return this.getActorRibbonWindow();
   }
 
   //endregion ribbon
@@ -569,7 +533,7 @@ class Scene_Aptitude
     win.setHandler('actor-next', this.onCycleActorRight.bind(this));
 
     // store and add to the scene.
-    this._j._aptitude._windows._aggregateList = win;
+    this.j()._aptitude._windows._aggregateList = win;
     this.addWindow(win);
   }
 
@@ -579,29 +543,11 @@ class Scene_Aptitude
    */
   aptitudeAggregateListWindowRect()
   {
-    // compute the centered container width (~66% of the screen width).
-    const containerW = Math.floor(Graphics.boxWidth * this.containerWidthPercent());
+    // start from the region the base leaves beneath the ribbon.
+    const contentArea = this.contentAreaRect();
 
-    // compute the x offset to center the container.
-    const containerX = Math.floor((Graphics.boxWidth - containerW) / 2);
-
-    // grab some data from the ribbon window.
-    const {
-      y: ribbonY,
-      height: ribbonHeight
-    } = this.aptitudeRibbonRect();
-
-    // compute the top of the list to sit directly under the ribbon.
-    const wy = ribbonY + ribbonHeight;
-
-    // use the main area height for window height.
-    const wh = Graphics.boxHeight - ribbonHeight;
-
-    // keep the list width proportional to the container width.
-    const listW = Math.floor(containerW * this.listColumnWidthPercent());
-
-    // return the rectangle for the list on the left of the container.
-    return new Rectangle(containerX, wy, listW, wh);
+    // return the rectangle for the list down the left of that region.
+    return new Rectangle(contentArea.x, contentArea.y, this.listColumnWidth(), contentArea.height);
   }
 
   /**
@@ -611,7 +557,7 @@ class Scene_Aptitude
   aptitudeAggregateListWindow()
   {
     // return the list window or null.
-    return this._j._aptitude._windows._aggregateList;
+    return this.j()._aptitude._windows._aggregateList;
   }
 
   //endregion aggregate list
@@ -646,7 +592,7 @@ class Scene_Aptitude
     win.deactivate();
 
     // store and add to the scene.
-    this._j._aptitude._windows._sourceList = win;
+    this.j()._aptitude._windows._sourceList = win;
     this.addWindow(win);
   }
 
@@ -665,7 +611,7 @@ class Scene_Aptitude
    */
   aptitudeSourceListWindow()
   {
-    return this._j._aptitude._windows._sourceList;
+    return this.j()._aptitude._windows._sourceList;
   }
 
   //endregion source list
@@ -686,7 +632,7 @@ class Scene_Aptitude
     win.setActor(this.actor());
 
     // store and add to the scene.
-    this._j._aptitude._windows._aggregateDetails = win;
+    this.j()._aptitude._windows._aggregateDetails = win;
     this.addWindow(win);
   }
 
@@ -696,25 +642,17 @@ class Scene_Aptitude
    */
   aptitudeAggregateDetailsWindowRect()
   {
-    // compute the centered container width (~66% of the screen width).
-    const containerW = Math.floor(Graphics.boxWidth * this.containerWidthPercent());
+    // the list has already claimed its share of the content area.
+    const listRect = this.aptitudeAggregateListWindowRect();
+    const contentArea = this.contentAreaRect();
 
-    // compute the x offset to center the container.
-    const containerX = Math.floor((Graphics.boxWidth - containerW) / 2);
-
-    // use the same main area vertical bounds.
-    const wy = this.mainAreaTop();
-    const wh = Graphics.boxHeight;
-
-    // split the container between list and details using the same list-column proportion.
-    const listW = Math.floor(containerW * this.listColumnWidthPercent());
-    const detailsW = containerW - listW;
-
-    // place details immediately to the right of the list.
-    const dx = containerX + listW;
-
-    // return the rectangle for the details window.
-    return new Rectangle(dx, wy, detailsW, wh);
+    // take what remains beside it, defined as the remainder rather than its own fraction so the two
+    // cannot drift apart.
+    return new Rectangle(
+      listRect.x + listRect.width,
+      listRect.y,
+      contentArea.width - listRect.width,
+      listRect.height);
   }
 
   /**
@@ -724,7 +662,7 @@ class Scene_Aptitude
   aptitudeAggregateDetailsWindow()
   {
     // return the details window or null.
-    return this._j._aptitude._windows._aggregateDetails;
+    return this.j()._aptitude._windows._aggregateDetails;
   }
 
   //endregion aggregate details
@@ -748,7 +686,7 @@ class Scene_Aptitude
     win.hide();
 
     // store and add to the scene.
-    this._j._aptitude._windows._sourceDetails = win;
+    this.j()._aptitude._windows._sourceDetails = win;
     this.addWindow(win);
   }
 
@@ -767,30 +705,66 @@ class Scene_Aptitude
    */
   aptitudeSourceDetailsWindow()
   {
-    return this._j._aptitude._windows._sourceDetails;
+    return this.j()._aptitude._windows._sourceDetails;
   }
 
   //endregion source details
 
-  containerWidthPercent()
-  {
-    return 0.90;
-  }
-
   /**
-   * The percentage of the container width allotted to the list column (and, by
-   * extension, the ribbon above it). Widened from the original 0.25 so that long
-   * skill/source names and their right-aligned AP counts don't collide.
+   * The proportion of the content area allotted to the list column.
+   *
+   * Wide enough that long skill and source names do not collide with their right-aligned AP counts.
    * @returns {number}
    */
   listColumnWidthPercent()
   {
-    return 0.32;
+    return 0.36;
   }
 
-  containerHeightPercent()
+  /**
+   * The width of the list column.
+   * @returns {number}
+   */
+  listColumnWidth()
   {
-    return 0.80;
+    return Math.round(this.contentAreaRect().width * this.listColumnWidthPercent());
+  }
+
+  /**
+   * Overrides {@link Scene_MenuFacetBase.hasHelpWindow}.<br/>
+   * Declines the help strip across the top.
+   *
+   * Both view modes already devote most of the screen to a detail panel describing whatever is
+   * highlighted, and the list commands carry no help text of their own to put in a second one. Reserving
+   * the strip would have left a blank band above the ribbon.
+   * @returns {boolean}
+   */
+  hasHelpWindow()
+  {
+    return false;
+  }
+
+  /**
+   * Implements {@link Scene_MenuFacetBase.controlLegendEntries}.<br/>
+   * Describes the controls this scene responds to.
+   * @returns {{semantic: (string|string[]), label: string}[]}
+   */
+  controlLegendEntries()
+  {
+    return [
+      {
+        semantic: 'context',
+        label: 'skills / sources',
+      },
+      {
+        semantic: [ 'actor-prev', 'actor-next' ],
+        label: 'switch character',
+      },
+      {
+        semantic: 'cancel',
+        label: 'back',
+      },
+    ];
   }
 
   //endregion create
@@ -993,25 +967,9 @@ class Scene_Aptitude
 
   //region actions
   /**
-   * Cycles to the previous actor.
-   */
-  onCycleActorLeft()
-  {
-    // move to the previous actor.
-    this.previousActor();
-  }
-
-  /**
-   * Cycles to the next actor.
-   */
-  onCycleActorRight()
-  {
-    // move to the next actor.
-    this.nextActor();
-  }
-
-  /**
-   * Handles the "more" action- aka the shift key/square button from the either list.
+   * Swaps between the per-skill aggregate view and the per-source view.
+   *
+   * Bound to the `context` semantic, which is what the control legend resolves its glyph from.
    */
   toggleViewMode()
   {
@@ -1070,9 +1028,8 @@ class Scene_Aptitude
    */
   rebindAllWindowsToActor(actor)
   {
-    // update the ribbon window with the new actor.
-    this.aptitudeRibbonWindow()
-      .setActor(actor);
+    // the ribbon is deliberately absent from this list; the base repoints it in onActorChange, and
+    // doing it again here would only be a second assignment of the same value.
 
     // update both list windows with the new actor.
     this.aptitudeAggregateListWindow()

@@ -4,6 +4,29 @@
  */
 class Time_Snapshot
 {
+
+  //region properties
+  /**
+   * Gets the season of year id.
+   * @returns {number} The seasonOfYearId.
+   */
+  seasonOfYearId()
+  {
+    // hand back the season of year id.
+    return this._seasonOfYearId;
+  }
+
+  /**
+   * Gets the time of day id.
+   * @returns {number} The timeOfDayId.
+   */
+  timeOfDayId()
+  {
+    // hand back the time of day id.
+    return this._timeOfDayId;
+  }
+  //endregion properties
+
   /**
    * @constructor
    * @param {number} seconds The seconds of the current time.
@@ -15,6 +38,7 @@ class Time_Snapshot
    * @param {number} timeOfDayId The id of the time of day.
    * @param {number} seasonOfYearId The id of the season of the year.
    */
+
   constructor(seconds, minutes, hours, days, months, years, timeOfDayId, seasonOfYearId)
   {
     /**
@@ -224,7 +248,7 @@ class Time_Snapshot
    */
   get seasonOfTheYearName()
   {
-    return Time_Snapshot.SeasonsName(this._seasonOfYearId);
+    return Time_Snapshot.SeasonsName(this.seasonOfYearId());
   };
 
   /**
@@ -233,7 +257,7 @@ class Time_Snapshot
    */
   get seasonOfTheYearIcon()
   {
-    return Time_Snapshot.SeasonsIconIndex(this._seasonOfYearId);
+    return Time_Snapshot.SeasonsIconIndex(this.seasonOfYearId());
   };
 
   /**
@@ -242,7 +266,7 @@ class Time_Snapshot
    */
   get timeOfDayName()
   {
-    return Time_Snapshot.TimesOfDayName(this._timeOfDayId);
+    return Time_Snapshot.TimesOfDayName(this.timeOfDayId());
   };
 
   /**
@@ -251,7 +275,7 @@ class Time_Snapshot
    */
   get timeOfDayIcon()
   {
-    return Time_Snapshot.TimesOfDayIcon(this._timeOfDayId);
+    return Time_Snapshot.TimesOfDayIcon(this.timeOfDayId());
   };
 
   /**

@@ -5,40 +5,32 @@
 class Window_AptitudeSourceList
   extends Window_Command
 {
-  //region properties
-  /**
-   * The actor bound to this window.
-   * @type {Game_Actor|null}
-   */
-  _actor = null;
-
-  /**
-   * The list of sources bound to this window.
-   * @type {(RPG_Actor|RPG_Class|RPG_EquipItem|RPG_Weapon|RPG_Armor|RPG_Skill|RPG_State)[]}
-   */
-  _sources = [];
-
-  //endregion properties
-
   //region init
   constructor(rect)
   {
-    // call parent ctor.
+    // call parent ctor, which seeds this window's members via initMembers before building the list.
     super(rect);
-
-    // initialize members.
-    this.initMembers();
   }
 
   /**
+   * Implements {@link Window_Command.initMembers}.<br/>
    * Initializes the members of this window.
+   *
+   * These cannot be class field declarations: JavaScript applies those only after `super()` returns,
+   * by which point the command list has already been built from them and found them undefined.
    */
   initMembers()
   {
-    // initialize the actor.
+    /**
+     * The actor bound to this window.
+     * @type {Game_Actor|null}
+     */
     this._actor = null;
 
-    // initialize the sources bucket.
+    /**
+     * The list of sources bound to this window.
+     * @type {(RPG_Actor|RPG_Class|RPG_EquipItem|RPG_Weapon|RPG_Armor|RPG_Skill|RPG_State)[]}
+     */
     this._sources = [];
   }
 
@@ -69,7 +61,7 @@ class Window_AptitudeSourceList
    */
   sources()
   {
-    return this._sources || [];
+    return this._sources;
   }
 
   /**

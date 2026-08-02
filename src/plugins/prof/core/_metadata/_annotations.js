@@ -151,6 +151,12 @@
  * - Decreasing the proficiency will NOT undo rewards gained.
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.0
+ *    Learning a skill through proficiency now announces in the dia log,
+ *    naming the practiced skill, instead of only producing a floating text
+ *    pop on the same visual channel as damage numbers and gold. A skill's own
+ *    message1/message2 overrides the line.
+ *    Converted the last SDP duck-type in this ship to a namespace check.
  * - 2.1.0
  *    Registers 'p' as a formula context variable via Game_Action.registerFormulaContext.
  *    Damage formulas can now use 'p' for skill proficiency without J-Elementalistics

@@ -232,6 +232,15 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.3.0
+ *    BREAKING (tag semantics): ex- and sp-parameter growth tags now take whole
+ *    percents, matching the buff tags beside them. The growth path stored its
+ *    flat bonus raw while the buff path divided by 100, so the same value in
+ *    the two families differed by a factor of one hundred on any parameter the
+ *    engine keeps as a 0-1 fraction: <hitBuffPlus:[5]> meant five percent hit
+ *    while <hitGrowthPlus:[5]> meant five hundred, applied per level. Base
+ *    parameters and max TP are untouched, since those are whole numbers where
+ *    a tag of ten has always meant ten points.
  * - 2.2.0
  *    Added HAR (Healing Rate) growth and buff support — not a native param
  *    array member, so it gets its own dedicated tag set like max tp:

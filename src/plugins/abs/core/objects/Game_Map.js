@@ -345,6 +345,18 @@ Game_Map.prototype.newBattlerEvents = function()
 
 /**
  * Adds a provided event to the current map's event list.
+ *
+ * INVARIANT- an event's INDEX IS ITS ID. Vanilla resolves events with `this._events[eventId]`, so
+ * a slot can never shift; {@link Game_Map#removeEvent} nulls the slot rather than splicing, and
+ * this method refills those nulls before appending.
+ *
+ * That reuse is only safe because `removeEvent` is called exclusively on SPAWNED events- expired
+ * JABS actions and expired loot. Editor-placed events are never removed, so every hole sits above
+ * the real-event range and reuse can never steal a real event's id.
+ *
+ * Removing an editor-placed event would break that, and nothing here can stop you: the reused slot
+ * would hand its id to an unrelated event, and every `$gameMap.event(id)` lookup for it would
+ * silently resolve to the wrong thing.
  * @param {Game_Event} event The `Game_Event` to add to this map.
  */
 Game_Map.prototype.addEvent = function(event)
@@ -353,13 +365,13 @@ Game_Map.prototype.addEvent = function(event)
   // whether or not we found a spot to insert.
   let inserted = false;
 
-  for (let i = 0; i < this._events.length; i++)
+  for (let i = 0; i < this.rawEvents().length; i++)
   {
     // if the slot is empty/nullish, then reuse it.
-    if (!this._events[i])
+    if (!this.rawEvents()[i])
     {
       // assign into the first available hole.
-      this._events[i] = event;
+      this.setEventByIndex(i, event);
       // flag that we inserted.
       inserted = true;
       // stop looking for holes.
@@ -371,7 +383,7 @@ Game_Map.prototype.addEvent = function(event)
   if (!inserted)
   {
     // append to the end.
-    this._events.push(event);
+    this.rawEvents().push(event);
   }
 };
 
@@ -382,7 +394,7 @@ Game_Map.prototype.addEvent = function(event)
 Game_Map.prototype.removeEvent = function(eventToRemove)
 {
   // find the index of the event we're trying to remove.
-  const eventIndex = this._events.findIndex(event => event === eventToRemove);
+  const eventIndex = this.rawEvents().findIndex(event => event === eventToRemove);
 
   // confirm we found the event to remove.
   if (eventIndex > -1)
@@ -393,9 +405,9 @@ Game_Map.prototype.removeEvent = function(eventToRemove)
     // remove it if it's a loot event.
     this.handleLootEventRemoval(eventToRemove);
 
-    // mark the slot as empty to avoid sparseness while preserving indices.
-    // keep array dense and reusable.
-    this._events[eventIndex] = null;
+    // null the slot rather than splicing- an index IS an event id, so removing the entry would
+    // renumber every event after it. See the invariant on addEvent().
+    this.clearEventByIndex(eventIndex);
   }
 };
 
@@ -440,7 +452,7 @@ Game_Map.prototype.handleLootEventRemoval = function(lootToRemove)
   if (!lootToRemove.isJabsLoot()) return;
 
   // get the relevant metadatas for the loot.
-  const lootMetadatas = this.lootEventsFromDataMapByUuid(lootToRemove.getJabsLoot().uuid);
+  const lootMetadatas = this.lootEventsFromDataMapByUuid(lootToRemove.getJabsLoot().uuid());
 
   // iterate over each of the metadatas for deletion.
   lootMetadatas.forEach(lootMetadata =>
@@ -497,6 +509,10 @@ Game_Map.prototype.clearExpiredLootEvent = function(lootEvent)
  * Handles event interaction for events in front of the player. If they exist,
  * and the player meets the criteria to interact with the event, then do so.
  * It also prevents the player from swinging their weapon willy nilly at NPCs.
+ * Checks the player's own occupied tile before the front tile: under pixel movement a
+ * feet-anchored body can legitimately be standing on an event's tile (doorstep geometry), and
+ * the attack-vs-interact decision has to agree with wherever {@link Game_Player#startMapEvent}
+ * will actually look, or the button press swings a weapon instead of interacting.
  * @param {JABS_Battler} jabsBattler The battler to check the fore-facing events of.
  * @returns {boolean} True if there is an event infront of the player, false otherwise.
  */
@@ -505,14 +521,26 @@ Game_Map.prototype.hasInteractableEventInFront = function(jabsBattler)
   const player = jabsBattler.getCharacter();
   const direction = player.direction();
 
-  // player coordinates are fractional with pixel movement; round to the nearest tile
-  // before computing the look-ahead so eventsXy() can match event positions correctly.
-  const x1 = Math.round(player.x);
-  const y1 = Math.round(player.y);
+  const triggers = [ 0, 1, 2 ];
+
+  // resolve the tile this character's body actually occupies.
+  const x1 = player.occupiedTileX();
+  const y1 = player.occupiedTileY();
   const x2 = $gameMap.roundXWithDirection(x1, direction);
   const y2 = $gameMap.roundYWithDirection(y1, direction);
 
-  const triggers = [ 0, 1, 2 ];
+  // look over events on the player's own tile first; overlap geometry means an interactable
+  // event can be right underfoot rather than strictly "in front".
+  for (const event of this.eventsXy(x1, y1))
+  {
+    // if the player is standing on/overlapping an enemy, let them continue attacking.
+    if (event.isJabsBattler()) return false;
+
+    if (event.isTriggerIn(triggers) && event.isNormalPriority() === true)
+    {
+      return true;
+    }
+  }
 
   // look over events directly infront of the player.
   for (const event of this.eventsXy(x2, y2))

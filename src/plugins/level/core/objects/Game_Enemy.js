@@ -41,7 +41,7 @@ Game_Enemy.prototype.initMembers = function()
  */
 Game_Enemy.prototype.setSkillLearning = function(skillId, level)
 {
-  this._j._level._skillLearnings[skillId] = level;
+  this.skillLearnings()[skillId] = level;
 };
 
 Game_Enemy.prototype.getCachedLevelOverride = function()
@@ -124,7 +124,7 @@ Game_Enemy.prototype.canMapActionToSkill = function(action)
  */
 Game_Enemy.prototype.isLearnedSkillByLevel = function(action)
 {
-  const levelLearned = this._j._level._skillLearnings[action.skillId];
+  const levelLearned = this.skillLearnings()[action.skillId];
 
   // if the skill didn't map, then the value will be undefined.
   if (levelLearned === undefined) return true;
@@ -224,4 +224,16 @@ Game_Enemy.prototype.getLevelBalancer = function()
   // we don't have any balancing required.
   return 0;
 };
+
+//region properties
+/**
+ * Gets the skill learnings.
+ * @returns {*} The skillLearnings.
+ */
+Game_Enemy.prototype.skillLearnings = function()
+{
+  // hand back the skill learnings.
+  return this._j._level._skillLearnings;
+};
+//endregion properties
 //endregion Game_Enemy

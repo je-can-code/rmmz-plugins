@@ -78,6 +78,9 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       .forEach(key => { Game_Event.prototype[key] = function() {}; });
     Game_Event.prototype.findProperPageIndex = originalFindProperPageIndex;
     Game_Event.prototype.page = originalPage;
+    // vanilla accessor the abs layer reads through.
+    Game_Event.prototype.eventId = function() { return this._eventId; };
+
     globalThis.Game_Event = Game_Event;
 
     // sibling model dependencies- mocked entirely per the unit-tier convention.
@@ -113,6 +116,25 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
     }));
 
     await import('../../../../../src/plugins/abs/core/objects/Game_Event.js');
+
+    // RMMZ exposes map coordinates as native properties on Game_CharacterBase.
+    Object.defineProperties(globalThis.Game_Event.prototype, {
+      // vanilla exposes these read-only; the double allows writes so tests can position freely.
+      x: { get() { return this._x; }, set(v) { this._x = v; }, configurable: true },
+      y: { get() { return this._y; }, set(v) { this._y = v; }, configurable: true },
+    });
+
+    // J-Base coordinate accessors the pixel/abs layers read and write through.
+    globalThis.Game_Event.prototype.setX = function(v) { this._x = v; };
+    globalThis.Game_Event.prototype.setY = function(v) { this._y = v; };
+    globalThis.Game_Event.prototype.realX = function() { return this._realX; };
+    globalThis.Game_Event.prototype.realY = function() { return this._realY; };
+    globalThis.Game_Event.prototype.setRealX = function(v) { this._realX = v; };
+    globalThis.Game_Event.prototype.setRealY = function(v) { this._realY = v; };
+
+    // J-Base accessors the production code now reads through.
+    globalThis.Game_Event.prototype.pageIndex = function() { return this._pageIndex; };
+    globalThis.Game_Event.prototype.setPageIndex = function(v) { this._pageIndex = v; };
   });
 
   beforeEach(() =>

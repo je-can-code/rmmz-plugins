@@ -39,6 +39,28 @@ class Window_SkillEquipDetail
     this.refresh();
   }
 
+  //region properties
+  /**
+   * Gets the actor.
+   * @returns {Game_Actor|null} The actor.
+   */
+  actor()
+  {
+    // hand back the actor.
+    return this._actor;
+  }
+
+  /**
+   * Gets the skill id.
+   * @returns {number} The skillId.
+   */
+  skillId()
+  {
+    // hand back the skill id.
+    return this._skillId;
+  }
+  //endregion properties
+
   /**
    * Assigns the actor for this window.
    * @param {Game_Actor} actor The actor to assign.
@@ -74,10 +96,10 @@ class Window_SkillEquipDetail
   skill()
   {
     // if we do not have a skill id, then there is no skill.
-    if (!this._skillId) return null;
+    if (!this.skillId()) return null;
 
     // return the base skill from the database.
-    return $dataSkills[this._skillId];
+    return $dataSkills[this.skillId()];
   }
 
   /**
@@ -110,8 +132,8 @@ class Window_SkillEquipDetail
     // draw costs: MP/TP + Slot cost.
     const mpCost = skill.mpCost || 0;
     const tpCost = skill.tpCost || 0;
-    const slotCost = this._actor
-      ? this._actor.skillSlotCost(skill.id, 0)
+    const slotCost = this.actor()
+      ? this.actor().skillSlotCost(skill.id, 0)
       : (J.SKS.Metadata.defaultSkillSlotCost || 1);
     this.drawText(`MP: ${mpCost}`, 0, y, 120, 'left');
     this.drawText(`TP: ${tpCost}`, 120, y, 120, 'left');

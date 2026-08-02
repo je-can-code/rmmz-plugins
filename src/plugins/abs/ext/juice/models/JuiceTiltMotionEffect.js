@@ -6,11 +6,75 @@ import JuiceBaseEffect from './JuiceBaseEffect.js';
  */
 class JuiceTiltMotionEffect extends JuiceBaseEffect
 {
+
+  //region properties
+  /**
+   * Gets the sprite.
+   * @returns {*} The sprite.
+   */
+  sprite()
+  {
+    // hand back the sprite.
+    return this._sprite;
+  }
+
+  /**
+   * Gets the base rotation.
+   * @returns {*} The baseRotation.
+   */
+  baseRotation()
+  {
+    // hand back the base rotation.
+    return this._baseRotation;
+  }
+
+  /**
+   * Gets the frame.
+   * @returns {number} The frame.
+   */
+  frame()
+  {
+    // hand back the frame.
+    return this._frame;
+  }
+
+  /**
+   * Sets the frame.
+   * @param {number} newFrame The new frame.
+   */
+  setFrame(newFrame)
+  {
+    // assign the frame.
+    this._frame = newFrame;
+  }
+
+  /**
+   * Gets the duration frames.
+   * @returns {number} The durationFrames.
+   */
+  durationFrames()
+  {
+    // hand back the duration frames.
+    return this._durationFrames;
+  }
+
+  /**
+   * Gets the peak radians.
+   * @returns {*} The peakRadians.
+   */
+  peakRadians()
+  {
+    // hand back the peak radians.
+    return this._peakRadians;
+  }
+  //endregion properties
+
   /**
    * @param {Sprite} sprite The Pixi sprite being driven.
    * @param {number} peakRadians Peak rotation magnitude (radians).
    * @param {number} durationFrames Frames to run.
    */
+
   constructor(sprite, peakRadians, durationFrames)
   {
     super();
@@ -32,7 +96,7 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
    */
   isSpriteAlive()
   {
-    return !!this._sprite.transform;
+    return !!this.sprite().transform;
   }
 
   /**
@@ -40,7 +104,7 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
    */
   restore()
   {
-    this._sprite.rotation = this._baseRotation;
+    this.sprite().rotation = this.baseRotation();
   }
 
   /**
@@ -49,15 +113,15 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
    */
   tick()
   {
-    this._frame++;
-    const t = this._frame / this._durationFrames;
+    this.setFrame(this.frame() + 1);
+    const t = this.frame() / this.durationFrames();
     const envelope = Math.sin(t * Math.PI);
-    this._sprite.rotation = this._baseRotation + envelope * this._peakRadians;
+    this.sprite().rotation = this.baseRotation() + envelope * this.peakRadians();
 
-    if (this._frame >= this._durationFrames)
+    if (this.frame() >= this.durationFrames())
     {
       this.restore();
-      JuiceMotionManager.relinquishSpriteLock(this._sprite);
+      JuiceMotionManager.relinquishSpriteLock(this.sprite());
       return false;
     }
 

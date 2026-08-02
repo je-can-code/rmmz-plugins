@@ -56,7 +56,7 @@ Game_Battler.prototype.initPassiveStatesMembers = function()
  */
 Game_Battler.prototype.getPassiveStateIds = function()
 {
-  return this._j._passive._stateIds;
+  return this.stateIds();
 };
 
 /**
@@ -65,7 +65,7 @@ Game_Battler.prototype.getPassiveStateIds = function()
  */
 Game_Battler.prototype.passiveExternalStateSources = function()
 {
-  return this._j._passive._externalStateSources;
+  return this.externalStateSources();
 };
 
 /**
@@ -75,7 +75,7 @@ Game_Battler.prototype.passiveExternalStateSources = function()
  */
 Game_Battler.prototype.passiveCapableSources = function()
 {
-  return this._j._passive._passiveSources;
+  return this.passiveSources();
 };
 
 /**
@@ -87,8 +87,8 @@ Game_Battler.prototype.cachePassiveCapableSources = function()
 {
   const allSources = this.getPassiveStateSources();
 
-  this._j._passive._passiveSources = allSources.filter(source =>
-    this.sourceHasAnyPassiveIds(source));
+  this.setPassiveSources(allSources.filter(source =>
+    this.sourceHasAnyPassiveIds(source)));
 };
 
 /**
@@ -137,7 +137,7 @@ Game_Battler.prototype.addPassiveStateExternalSourceByStateIds = function(stateI
 Game_Battler.prototype.addPassiveStateExternalSource = function(source, deferRefresh = false)
 {
   // add the converted item to the list.
-  this._j._passive._externalStateSources.push(source);
+  this.externalStateSources().push(source);
 
   // if we are not deferring refreshing, then do it now.
   if (deferRefresh === true) return;
@@ -153,7 +153,7 @@ Game_Battler.prototype.addPassiveStateExternalSource = function(source, deferRef
 Game_Battler.prototype.clearPassiveStateExternalSources = function(deferRefresh = false)
 {
   // empty the external sources list.
-  this._j._passive._externalStateSources = [];
+  this.setExternalStateSources([]);
 
   // if we're deferring the refresh, then don't do it.
   if (deferRefresh === true) return;
@@ -241,13 +241,17 @@ Game_Battler.prototype.getPassiveStates = function()
 Game_Battler.prototype.clearPassiveStates = function()
 {
   // empty the state tracker.
-  this._j._passive._stateIds = [];
+  this.setStateIds([]);
 };
 
 /**
  * Clears and updates the passive state tracker with the latest.
+ * @param {boolean=} deferRefresh Whether or not to defer the trailing battler-data-change
+ * notification; defaults to false. Callers that already know a follow-up notification is coming
+ * (e.g. {@link Game_Enemy.onSetup} pairing this with the base setup notification) should pass true
+ * so the expensive note-regex cascade behind {@link #onBattlerDataChange} only runs once.
  */
-Game_Battler.prototype.refreshPassiveStates = function()
+Game_Battler.prototype.refreshPassiveStates = function(deferRefresh = false)
 {
   // remove all currently tracked passive states.
   this.clearPassiveStates();
@@ -283,6 +287,10 @@ Game_Battler.prototype.refreshPassiveStates = function()
 
   // rebuild the filtered source cache so drift checks skip non-passive sources next cycle.
   this.cachePassiveCapableSources();
+
+  // if the caller is deferring the notification, stop here- they're responsible for triggering
+  // the battler-data-change cascade themselves once, later.
+  if (deferRefresh === true) return;
 
   // flag that battler data has changed.
   this.onBattlerDataChange();
@@ -465,7 +473,7 @@ Game_Battler.prototype.getPassiveStateSourcedSkills = function()
 Game_Battler.prototype.isPassiveState = function(stateId)
 {
   // then the answer lies in whether or not the given state id is in that list.
-  return this._j._passive._stateIds.includes(stateId);
+  return this.stateIds().includes(stateId);
 };
 
 /**
@@ -582,4 +590,66 @@ Game_Battler.prototype.onStateRemoval = function(stateId)
   // refresh our passive state list.
   this.refreshPassiveStates();
 };
+
+//region properties
+/**
+ * Gets the state ids.
+ * @returns {*} The stateIds.
+ */
+Game_Battler.prototype.stateIds = function()
+{
+  // hand back the state ids.
+  return this._j._passive._stateIds;
+};
+
+/**
+ * Sets the state ids.
+ * @param {*} newStateIds The new stateIds.
+ */
+Game_Battler.prototype.setStateIds = function(newStateIds)
+{
+  // assign the state ids.
+  this._j._passive._stateIds = newStateIds;
+};
+
+/**
+ * Gets the external state sources.
+ * @returns {*} The externalStateSources.
+ */
+Game_Battler.prototype.externalStateSources = function()
+{
+  // hand back the external state sources.
+  return this._j._passive._externalStateSources;
+};
+
+/**
+ * Sets the external state sources.
+ * @param {*} newExternalStateSources The new externalStateSources.
+ */
+Game_Battler.prototype.setExternalStateSources = function(newExternalStateSources)
+{
+  // assign the external state sources.
+  this._j._passive._externalStateSources = newExternalStateSources;
+};
+
+/**
+ * Gets the passive sources.
+ * @returns {*} The passiveSources.
+ */
+Game_Battler.prototype.passiveSources = function()
+{
+  // hand back the passive sources.
+  return this._j._passive._passiveSources;
+};
+
+/**
+ * Sets the passive sources.
+ * @param {*} newPassiveSources The new passiveSources.
+ */
+Game_Battler.prototype.setPassiveSources = function(newPassiveSources)
+{
+  // assign the passive sources.
+  this._j._passive._passiveSources = newPassiveSources;
+};
+//endregion properties
 //endregion Game_Battler

@@ -9,6 +9,29 @@ import ArrayHelper from './../_utilities/ArrayHelper.js';
 class RPGManager
 {
   //region caching
+
+  //region properties
+  /**
+   * Gets the note cache.
+   * @returns {*} The noteCache.
+   */
+  static noteCache()
+  {
+    // hand back the note cache.
+    return this._noteCache;
+  }
+
+  /**
+   * Gets the eval cache.
+   * @returns {*} The evalCache.
+   */
+  static evalCache()
+  {
+    // hand back the eval cache.
+    return this._evalCache;
+  }
+  //endregion properties
+
   /**
    * Backing field for {@link _noteCache}, built lazily on first access rather than as an eager
    * static-field initializer. RPG_Base now imports this class (for its {@code types()} method),
@@ -19,6 +42,7 @@ class RPGManager
    * whole module graph has finished loading regardless of entry order.
    * @type {JCache|null}
    */
+
   static #noteCache = null;
 
   /**
@@ -58,7 +82,7 @@ class RPGManager
   static cached(object, tagKey, computeFn)
   {
     // the note-text cache has no battler dimension, so this is just object + tagKey.
-    return this._noteCache.get(object, tagKey, computeFn);
+    return this.noteCache().get(object, tagKey, computeFn);
   }
 
   /**
@@ -74,7 +98,7 @@ class RPGManager
   static cachedForBattler(battler, object, tagKey, computeFn)
   {
     // the eval cache is dimensioned battler-then-object, so all three keys are required in order.
-    return this._evalCache.get(battler, object, tagKey, computeFn);
+    return this.evalCache().get(battler, object, tagKey, computeFn);
   }
 
   /**
@@ -86,7 +110,7 @@ class RPGManager
   {
     // drop this object's note-text bucket; used by OverlayManager whenever an overlay changes a
     // base skill/state's effective note.
-    return this._noteCache.invalidate(object);
+    return this.noteCache().invalidate(object);
   }
 
   /**
@@ -98,7 +122,7 @@ class RPGManager
   static invalidateBattlerEval(battler)
   {
     // drop every database object's eval entry nested under this battler.
-    return this._evalCache.invalidate(battler);
+    return this.evalCache().invalidate(battler);
   }
 
   /**
@@ -107,8 +131,8 @@ class RPGManager
   static clearCache()
   {
     // drop every cached note-text and eval result, across every object and every battler.
-    this._noteCache.clear();
-    this._evalCache.clear();
+    this.noteCache().clear();
+    this.evalCache().clear();
   }
 
   //endregion caching

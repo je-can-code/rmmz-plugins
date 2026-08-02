@@ -8,6 +8,334 @@ class Sprite_FlowingGauge
   extends Sprite
 {
   //region properties
+  
+
+  //region properties
+
+  //region properties
+  /**
+   * Gets the background bitmap.
+   * @returns {*} The backgroundBitmap.
+   */
+  backgroundBitmap()
+  {
+    // hand back the background bitmap.
+    return this._backgroundBitmap;
+  }
+
+  /**
+   * Sets the is ready.
+   * @param {boolean} newIsReady The new isReady.
+   */
+  setIsReady(newIsReady)
+  {
+    // assign the is ready.
+    this._isReady = newIsReady;
+  }
+  //endregion properties
+
+  /**
+   * Gets the gauge bitmap.
+   * @returns {Bitmap|null} The gaugeBitmap.
+   */
+
+  gaugeBitmap()
+  {
+    // hand back the gauge bitmap.
+    return this._gaugeBitmap;
+  }
+
+  /**
+   * Sets the gauge bitmap.
+   * @param {Bitmap|null} newGaugeBitmap The new gaugeBitmap.
+   */
+  setGaugeBitmap(newGaugeBitmap)
+  {
+    // assign the gauge bitmap.
+    this._gaugeBitmap = newGaugeBitmap;
+  }
+
+  /**
+   * Gets the gauge background.
+   * @returns {Sprite} The gaugeBackground.
+   */
+  gaugeBackground()
+  {
+    // hand back the gauge background.
+    return this._gaugeBackground;
+  }
+
+  /**
+   * Sets the gauge background.
+   * @param {Sprite} newGaugeBackground The new gaugeBackground.
+   */
+  setGaugeBackground(newGaugeBackground)
+  {
+    // assign the gauge background.
+    this._gaugeBackground = newGaugeBackground;
+  }
+
+  /**
+   * Gets the gauge current sprite.
+   * @returns {Sprite} The gaugeCurrentSprite.
+   */
+  gaugeCurrentSprite()
+  {
+    // hand back the gauge current sprite.
+    return this._gaugeCurrentSprite;
+  }
+
+  /**
+   * Sets the gauge current sprite.
+   * @param {Sprite} newGaugeCurrentSprite The new gaugeCurrentSprite.
+   */
+  setGaugeCurrentSprite(newGaugeCurrentSprite)
+  {
+    // assign the gauge current sprite.
+    this._gaugeCurrentSprite = newGaugeCurrentSprite;
+  }
+
+  /**
+   * Gets the gauge actual sprite.
+   * @returns {Sprite} The gaugeActualSprite.
+   */
+  gaugeActualSprite()
+  {
+    // hand back the gauge actual sprite.
+    return this._gaugeActualSprite;
+  }
+
+  /**
+   * Sets the gauge actual sprite.
+   * @param {Sprite} newGaugeActualSprite The new gaugeActualSprite.
+   */
+  setGaugeActualSprite(newGaugeActualSprite)
+  {
+    // assign the gauge actual sprite.
+    this._gaugeActualSprite = newGaugeActualSprite;
+  }
+
+  /**
+   * Gets the gauge current.
+   * @returns {number} The gaugeCurrent.
+   */
+  gaugeCurrent()
+  {
+    // hand back the gauge current.
+    return this._gaugeCurrent;
+  }
+
+  /**
+   * Sets the gauge current.
+   * @param {number} newGaugeCurrent The new gaugeCurrent.
+   */
+  setGaugeCurrent(newGaugeCurrent)
+  {
+    // assign the gauge current.
+    this._gaugeCurrent = newGaugeCurrent;
+  }
+
+  /**
+   * Gets the gauge target.
+   * @returns {number} The gaugeTarget.
+   */
+  gaugeTarget()
+  {
+    // hand back the gauge target.
+    return this._gaugeTarget;
+  }
+
+  /**
+   * Sets the gauge target.
+   * @param {number} newGaugeTarget The new gaugeTarget.
+   */
+  setGaugeTarget(newGaugeTarget)
+  {
+    // assign the gauge target.
+    this._gaugeTarget = newGaugeTarget;
+  }
+
+  /**
+   * Gets the gauge max.
+   * @returns {number} The gaugeMax.
+   */
+  gaugeMax()
+  {
+    // hand back the gauge max.
+    return this._gaugeMax;
+  }
+
+  /**
+   * Sets the gauge max.
+   * @param {number} newGaugeMax The new gaugeMax.
+   */
+  setGaugeMax(newGaugeMax)
+  {
+    // assign the gauge max.
+    this._gaugeMax = newGaugeMax;
+  }
+
+  /**
+   * Gets the battler.
+   * @returns {Game_Enemy|null} The battler.
+   */
+  battler()
+  {
+    // hand back the battler.
+    return this._battler;
+  }
+
+  /**
+   * Sets the battler.
+   * @param {Game_Enemy|null} newBattler The new battler.
+   */
+  setBattler(newBattler)
+  {
+    // assign the battler.
+    this._battler = newBattler;
+  }
+
+  /**
+   * Gets the gauge type.
+   * @returns {Sprite_FlowingGauge.Types} The gaugeType.
+   */
+  gaugeType()
+  {
+    // hand back the gauge type.
+    return this._gaugeType;
+  }
+
+  /**
+   * Sets the gauge type.
+   * @param {Sprite_FlowingGauge.Types} newGaugeType The new gaugeType.
+   */
+  setGaugeType(newGaugeType)
+  {
+    // assign the gauge type.
+    this._gaugeType = newGaugeType;
+  }
+
+  /**
+   * Gets the gauge slice fill min x.
+   * @returns {number} The gaugeSliceFillMinX.
+   */
+  gaugeSliceFillMinX()
+  {
+    // hand back the gauge slice fill min x.
+    return this._gaugeSliceFillMinX;
+  }
+
+  /**
+   * Sets the gauge slice fill min x.
+   * @param {number} newGaugeSliceFillMinX The new gaugeSliceFillMinX.
+   */
+  setGaugeSliceFillMinX(newGaugeSliceFillMinX)
+  {
+    // assign the gauge slice fill min x.
+    this._gaugeSliceFillMinX = newGaugeSliceFillMinX;
+  }
+
+  /**
+   * Gets the gauge slice fill inner width.
+   * @returns {number} The gaugeSliceFillInnerWidth.
+   */
+  gaugeSliceFillInnerWidth()
+  {
+    // hand back the gauge slice fill inner width.
+    return this._gaugeSliceFillInnerWidth;
+  }
+
+  /**
+   * Sets the gauge slice fill inner width.
+   * @param {number} newGaugeSliceFillInnerWidth The new gaugeSliceFillInnerWidth.
+   */
+  setGaugeSliceFillInnerWidth(newGaugeSliceFillInnerWidth)
+  {
+    // assign the gauge slice fill inner width.
+    this._gaugeSliceFillInnerWidth = newGaugeSliceFillInnerWidth;
+  }
+
+  /**
+   * Gets the gauge actual flow limit.
+   * @returns {*} The gaugeActualFlowLimit.
+   */
+  gaugeActualFlowLimit()
+  {
+    // hand back the gauge actual flow limit.
+    return this._gaugeActualFlowLimit;
+  }
+
+  /**
+   * Sets the gauge actual flow limit.
+   * @param {*} newGaugeActualFlowLimit The new gaugeActualFlowLimit.
+   */
+  setGaugeActualFlowLimit(newGaugeActualFlowLimit)
+  {
+    // assign the gauge actual flow limit.
+    this._gaugeActualFlowLimit = newGaugeActualFlowLimit;
+  }
+
+  /**
+   * Gets the gauge actual flow current.
+   * @returns {number} The gaugeActualFlowCurrent.
+   */
+  gaugeActualFlowCurrent()
+  {
+    // hand back the gauge actual flow current.
+    return this._gaugeActualFlowCurrent;
+  }
+
+  /**
+   * Sets the gauge actual flow current.
+   * @param {number} newGaugeActualFlowCurrent The new gaugeActualFlowCurrent.
+   */
+  setGaugeActualFlowCurrent(newGaugeActualFlowCurrent)
+  {
+    // assign the gauge actual flow current.
+    this._gaugeActualFlowCurrent = newGaugeActualFlowCurrent;
+  }
+
+  /**
+   * Gets the gauge background track min x.
+   * @returns {number} The gaugeBackgroundTrackMinX.
+   */
+  gaugeBackgroundTrackMinX()
+  {
+    // hand back the gauge background track min x.
+    return this._gaugeBackgroundTrackMinX;
+  }
+
+  /**
+   * Sets the gauge background track min x.
+   * @param {number} newGaugeBackgroundTrackMinX The new gaugeBackgroundTrackMinX.
+   */
+  setGaugeBackgroundTrackMinX(newGaugeBackgroundTrackMinX)
+  {
+    // assign the gauge background track min x.
+    this._gaugeBackgroundTrackMinX = newGaugeBackgroundTrackMinX;
+  }
+
+  /**
+   * Gets the gauge background track inner width.
+   * @returns {number} The gaugeBackgroundTrackInnerWidth.
+   */
+  gaugeBackgroundTrackInnerWidth()
+  {
+    // hand back the gauge background track inner width.
+    return this._gaugeBackgroundTrackInnerWidth;
+  }
+
+  /**
+   * Sets the gauge background track inner width.
+   * @param {number} newGaugeBackgroundTrackInnerWidth The new gaugeBackgroundTrackInnerWidth.
+   */
+  setGaugeBackgroundTrackInnerWidth(newGaugeBackgroundTrackInnerWidth)
+  {
+    // assign the gauge background track inner width.
+    this._gaugeBackgroundTrackInnerWidth = newGaugeBackgroundTrackInnerWidth;
+  }
+  //endregion properties
+
   static Types = {
     HP: "hp",
     MP: "mp",
@@ -191,7 +519,7 @@ class Sprite_FlowingGauge
   setForegroundBitmap(bitmap)
   {
     // assign the bitmap for re-use.
-    this._gaugeBitmap = bitmap;
+    this.setGaugeBitmap(bitmap);
   }
 
   /**
@@ -200,10 +528,10 @@ class Sprite_FlowingGauge
   createGaugeBackground()
   {
     // establish the new sprite based on the given bitmap.
-    this._gaugeBackground = new Sprite(this._backgroundBitmap);
-    this._gaugeBackground.x = J.HUD.EXT.TARGET.Metadata.BackgroundGaugeImageX;
-    this._gaugeBackground.y = J.HUD.EXT.TARGET.Metadata.BackgroundGaugeImageY;
-    this.addChild(this._gaugeBackground);
+    this.setGaugeBackground(new Sprite(this.backgroundBitmap()));
+    this.gaugeBackground().x = J.HUD.EXT.TARGET.Metadata.BackgroundGaugeImageX;
+    this.gaugeBackground().y = J.HUD.EXT.TARGET.Metadata.BackgroundGaugeImageY;
+    this.addChild(this.gaugeBackground());
   }
 
   /**
@@ -212,16 +540,16 @@ class Sprite_FlowingGauge
   createGaugeForeground()
   {
     // generate the middleground of the gauge.
-    this._gaugeCurrentSprite = new Sprite(this._gaugeBitmap);
-    this._gaugeCurrentSprite.x = J.HUD.EXT.TARGET.Metadata.MiddlegroundGaugeImageX;
-    this._gaugeCurrentSprite.y = J.HUD.EXT.TARGET.Metadata.MiddlegroundGaugeImageY;
-    this.addChild(this._gaugeCurrentSprite);
+    this.setGaugeCurrentSprite(new Sprite(this.gaugeBitmap()));
+    this.gaugeCurrentSprite().x = J.HUD.EXT.TARGET.Metadata.MiddlegroundGaugeImageX;
+    this.gaugeCurrentSprite().y = J.HUD.EXT.TARGET.Metadata.MiddlegroundGaugeImageY;
+    this.addChild(this.gaugeCurrentSprite());
 
     // generate the foreground of the gauge
-    this._gaugeActualSprite = new Sprite(this._gaugeBitmap);
-    this._gaugeActualSprite.x = J.HUD.EXT.TARGET.Metadata.ForegroundGaugeImageX;
-    this._gaugeActualSprite.y = J.HUD.EXT.TARGET.Metadata.ForegroundGaugeImageY;
-    this.addChild(this._gaugeActualSprite);
+    this.setGaugeActualSprite(new Sprite(this.gaugeBitmap()));
+    this.gaugeActualSprite().x = J.HUD.EXT.TARGET.Metadata.ForegroundGaugeImageX;
+    this.gaugeActualSprite().y = J.HUD.EXT.TARGET.Metadata.ForegroundGaugeImageY;
+    this.addChild(this.gaugeActualSprite());
   }
 
   /**
@@ -229,9 +557,9 @@ class Sprite_FlowingGauge
    */
   resetValues()
   {
-    this._gaugeCurrent = 0;
-    this._gaugeTarget = 0;
-    this._gaugeMax = 0;
+    this.setGaugeCurrent(0);
+    this.setGaugeTarget(0);
+    this.setGaugeMax(0);
   }
 
   /**
@@ -239,7 +567,7 @@ class Sprite_FlowingGauge
    */
   clearBattler()
   {
-    this._battler = null;
+    this.setBattler(null);
   }
 
   /**
@@ -250,7 +578,7 @@ class Sprite_FlowingGauge
    */
   current()
   {
-    return this._gaugeCurrent;
+    return this.gaugeCurrent();
   }
 
   /**
@@ -260,7 +588,7 @@ class Sprite_FlowingGauge
    */
   target()
   {
-    if (this._battler)
+    if (this.battler())
     {
       return this.#targetByType();
     }
@@ -276,14 +604,14 @@ class Sprite_FlowingGauge
    */
   #targetByType()
   {
-    switch (this._gaugeType)
+    switch (this.gaugeType())
     {
       case Sprite_FlowingGauge.Types.HP:
-        return this._battler.hp;
+        return this.battler().hp;
       case Sprite_FlowingGauge.Types.MP:
-        return this._battler.mp;
+        return this.battler().mp;
       case Sprite_FlowingGauge.Types.TP:
-        return this._battler.tp;
+        return this.battler().tp;
       default:
         return 0;
     }
@@ -296,7 +624,7 @@ class Sprite_FlowingGauge
    */
   max()
   {
-    if (this._battler)
+    if (this.battler())
     {
       return this.#maxByType();
     }
@@ -312,14 +640,14 @@ class Sprite_FlowingGauge
    */
   #maxByType()
   {
-    switch (this._gaugeType)
+    switch (this.gaugeType())
     {
       case Sprite_FlowingGauge.Types.HP:
-        return this._battler.mhp;
+        return this.battler().mhp;
       case Sprite_FlowingGauge.Types.MP:
-        return this._battler.mmp;
+        return this.battler().mmp;
       case Sprite_FlowingGauge.Types.TP:
-        return this._battler.maxTp();
+        return this.battler().maxTp();
       default:
         return 0;
     }
@@ -333,10 +661,10 @@ class Sprite_FlowingGauge
   setup(battler, gaugeType = Sprite_FlowingGauge.Types.HP)
   {
     // assign the battler.
-    this._battler = battler;
+    this.setBattler(battler);
 
     // assign the gauge type and setup accordingly.
-    this._gaugeType = gaugeType;
+    this.setGaugeType(gaugeType);
     this.setupGaugeByType();
 
     // show the gauge when it is setup for battle.
@@ -348,9 +676,9 @@ class Sprite_FlowingGauge
    */
   setupGaugeByType()
   {
-    this._gaugeCurrentSprite.setColorTone(this.greyTone());
+    this.gaugeCurrentSprite().setColorTone(this.greyTone());
 
-    switch (this._gaugeType)
+    switch (this.gaugeType())
     {
       case Sprite_FlowingGauge.Types.HP:
         this.setupGaugeAsHp();
@@ -369,10 +697,10 @@ class Sprite_FlowingGauge
    */
   setupGaugeAsHp()
   {
-    this._gaugeCurrent = this._battler.hp;
-    this._gaugeTarget = this._battler.hp;
-    this._gaugeMax = this._battler.mhp;
-    this._gaugeActualSprite.setHue(this.hpGaugeHue());
+    this.setGaugeCurrent(this.battler().hp);
+    this.setGaugeTarget(this.battler().hp);
+    this.setGaugeMax(this.battler().mhp);
+    this.gaugeActualSprite().setHue(this.hpGaugeHue());
   }
 
   hpGaugeHue()
@@ -385,10 +713,10 @@ class Sprite_FlowingGauge
    */
   setupGaugeAsMp()
   {
-    this._gaugeCurrent = this._battler.mp;
-    this._gaugeTarget = this._battler.mp;
-    this._gaugeMax = this._battler.mmp;
-    this._gaugeActualSprite.setHue(this.mpGaugeHue());
+    this.setGaugeCurrent(this.battler().mp);
+    this.setGaugeTarget(this.battler().mp);
+    this.setGaugeMax(this.battler().mmp);
+    this.gaugeActualSprite().setHue(this.mpGaugeHue());
   }
 
   mpGaugeHue()
@@ -401,10 +729,10 @@ class Sprite_FlowingGauge
    */
   setupGaugeAsTp()
   {
-    this._gaugeCurrent = this._battler.tp;
-    this._gaugeTarget = this._battler.tp;
-    this._gaugeMax = this._battler.maxTp();
-    this._gaugeActualSprite.setHue(this.tpGaugeHue());
+    this.setGaugeCurrent(this.battler().tp);
+    this.setGaugeTarget(this.battler().tp);
+    this.setGaugeMax(this.battler().maxTp());
+    this.gaugeActualSprite().setHue(this.tpGaugeHue());
   }
 
   tpGaugeHue()
@@ -472,7 +800,7 @@ class Sprite_FlowingGauge
     this.updateFlowMax();
 
     // and now we are ready to draw gauges.
-    this._isReady = true;
+    this.setIsReady(true);
   }
 
   /**
@@ -482,11 +810,11 @@ class Sprite_FlowingGauge
   {
     // keep the flowing frame inside the bitmap slice while respecting the measured fill inset.
     const sliceW = this.gaugeWidth();
-    const maxFlow = sliceW - this._gaugeSliceFillMinX - this._gaugeSliceFillInnerWidth;
+    const maxFlow = sliceW - this.gaugeSliceFillMinX() - this.gaugeSliceFillInnerWidth();
 
     // store  gauge actual flow limit on the instance for later reads.
-    this._gaugeActualFlowLimit = Math.max(1, maxFlow);
-    this._gaugeActualFlowCurrent = Math.floor(Math.random() * this._gaugeActualFlowLimit);
+    this.setGaugeActualFlowLimit(Math.max(1, maxFlow));
+    this.setGaugeActualFlowCurrent(Math.floor(Math.random() * this.gaugeActualFlowLimit()));
   }
 
   /**
@@ -546,17 +874,17 @@ class Sprite_FlowingGauge
   processCurrentValueIncrease(changeRate)
   {
     // if so, reduce the current by the change rate until we hit the target.
-    this._gaugeCurrent -= changeRate;
+    this.setGaugeCurrent(this.gaugeCurrent() - changeRate);
 
     // check to make sure we didn't pass the target with the incremental change rate.
     if (this.current() < this.target())
     {
       // if we did, just re-assign that.
-      this._gaugeCurrent = this._gaugeTarget;
+      this.setGaugeCurrent(this.gaugeTarget());
     }
 
     // if the gauge is going down, set the tone to be red.
-    this._gaugeCurrentSprite.setColorTone(this.downTone());
+    this.gaugeCurrentSprite().setColorTone(this.downTone());
   }
 
   /**
@@ -565,17 +893,17 @@ class Sprite_FlowingGauge
   processCurrentValueDecrease(changeRate)
   {
     // if so, increase the current by the change rate until we hit the target.
-    this._gaugeCurrent += changeRate;
+    this.setGaugeCurrent(this.gaugeCurrent() + changeRate);
 
     // check to make sure we didn't pass the target with the incremental change rate.
     if (this.current() > this.target())
     {
       // if we did, just re-assign that.
-      this._gaugeCurrent = this._gaugeTarget;
+      this.setGaugeCurrent(this.gaugeTarget());
     }
 
     // if the gauge is going up, set the tone to be green.
-    this._gaugeCurrentSprite.setColorTone(this.upTone());
+    this.gaugeCurrentSprite().setColorTone(this.upTone());
   }
 
   /**
@@ -584,7 +912,7 @@ class Sprite_FlowingGauge
   handleCurrentValueUnchanged()
   {
     // if the gauge isn't going anywhere, then set it to grey.
-    this._gaugeCurrentSprite.setColorTone(this.greyTone());
+    this.gaugeCurrentSprite().setColorTone(this.greyTone());
   }
 
   /**
@@ -593,7 +921,7 @@ class Sprite_FlowingGauge
    */
   canUpdateCurrent()
   {
-    if (!this._battler) return false;
+    if (!this.battler()) return false;
 
     return true;
   }
@@ -605,7 +933,7 @@ class Sprite_FlowingGauge
    */
   isHpGaugeEmpty()
   {
-    if (this._gaugeType !== Sprite_FlowingGauge.Types.HP) return false;
+    if (this.gaugeType() !== Sprite_FlowingGauge.Types.HP) return false;
 
     if (this.target() !== 0) return false;
 
@@ -673,13 +1001,13 @@ class Sprite_FlowingGauge
   updateFlow()
   {
     // update the x coordinate of where to set the frame to emulate "flowing" gauges.
-    this._gaugeActualFlowCurrent += 0.3;
+    this.setGaugeActualFlowCurrent(this.gaugeActualFlowCurrent() + 0.3);
 
     // if the current flow exceeds the limit, reset it.
-    if (this._gaugeActualFlowCurrent > this._gaugeActualFlowLimit)
+    if (this.gaugeActualFlowCurrent() > this.gaugeActualFlowLimit())
     {
       // reset the current flow to 0.
-      this._gaugeActualFlowCurrent = 0;
+      this.setGaugeActualFlowCurrent(0);
     }
   }
 
@@ -706,11 +1034,11 @@ class Sprite_FlowingGauge
     const gaugeHeight = this.gaugeHeight();
 
     // determine the actual width to draw inside the measured fill band.
-    const factor = (this.current() / this.max()) * this._gaugeSliceFillInnerWidth;
+    const factor = (this.current() / this.max()) * this.gaugeSliceFillInnerWidth();
 
     // set the flowed-frame of the gauge.
-    const frameX = this._gaugeActualFlowCurrent + this._gaugeSliceFillMinX;
-    this._gaugeCurrentSprite.setFrame(frameX, gaugeHeight, factor, gaugeHeight);
+    const frameX = this.gaugeActualFlowCurrent() + this.gaugeSliceFillMinX();
+    this.gaugeCurrentSprite().setFrame(frameX, gaugeHeight, factor, gaugeHeight);
   }
 
   /**
@@ -723,11 +1051,11 @@ class Sprite_FlowingGauge
     const gaugeHeight = this.gaugeHeight();
 
     // determine the actual width to draw inside the measured fill band.
-    const factor = (this.target() / this.max()) * this._gaugeSliceFillInnerWidth;
+    const factor = (this.target() / this.max()) * this.gaugeSliceFillInnerWidth();
 
     // set the flowed-frame of the gauge.
-    const frameX = this._gaugeActualFlowCurrent + this._gaugeSliceFillMinX;
-    this._gaugeActualSprite.setFrame(frameX, 0, factor, gaugeHeight);
+    const frameX = this.gaugeActualFlowCurrent() + this.gaugeSliceFillMinX();
+    this.gaugeActualSprite().setFrame(frameX, 0, factor, gaugeHeight);
   }
 
   /**
@@ -736,7 +1064,7 @@ class Sprite_FlowingGauge
    */
   gaugeWidth()
   {
-    return Math.floor(this._gaugeBitmap.width / 3);
+    return Math.floor(this.gaugeBitmap().width / 3);
   }
 
   /**
@@ -745,7 +1073,7 @@ class Sprite_FlowingGauge
    */
   gaugeHeight()
   {
-    return Math.floor(this._gaugeBitmap.height / 2);
+    return Math.floor(this.gaugeBitmap().height / 2);
   }
 
   /**
@@ -755,12 +1083,12 @@ class Sprite_FlowingGauge
   measureGaugeArtExtents()
   {
     // default to full-slice behavior if anything is missing or measurement fails.
-    this._gaugeSliceFillMinX = 0;
-    this._gaugeSliceFillInnerWidth = 1;
-    this._gaugeBackgroundTrackMinX = 0;
-    this._gaugeBackgroundTrackInnerWidth = 1;
+    this.setGaugeSliceFillMinX(0);
+    this.setGaugeSliceFillInnerWidth(1);
+    this.setGaugeBackgroundTrackMinX(0);
+    this.setGaugeBackgroundTrackInnerWidth(1);
 
-    if (!this._gaugeBitmap) return;
+    if (!this.gaugeBitmap()) return;
 
     const sliceW = this.gaugeWidth();
     const sliceH = this.gaugeHeight();
@@ -768,26 +1096,26 @@ class Sprite_FlowingGauge
     if (sliceW === 0 || sliceH === 0) return;
 
     // store  gauge slice fill inner width on the instance for later reads.
-    this._gaugeSliceFillInnerWidth = sliceW;
-    this._gaugeBackgroundTrackInnerWidth = this._backgroundBitmap
-      ? this._backgroundBitmap.width
-      : sliceW;
+    this.setGaugeSliceFillInnerWidth(sliceW);
+    this.setGaugeBackgroundTrackInnerWidth(this.backgroundBitmap()
+      ? this.backgroundBitmap().width
+      : sliceW);
 
-    if (!this._backgroundBitmap) return;
+    if (!this.backgroundBitmap()) return;
 
     // Caps on the frame art read as "bright" while the trough reads as near-black; a naive bright min/max would span
     // cap-to-cap and pretend the gutter is part of the interior (wrong width + wrong left edge).
     const bgTrack = this.measureLongestOpaqueDarkHorizontalRun(
-      this._backgroundBitmap,
+      this.backgroundBitmap(),
       0,
       0,
-      this._backgroundBitmap.width,
-      this._backgroundBitmap.height,
+      this.backgroundBitmap().width,
+      this.backgroundBitmap().height,
       80
     );
 
     const topTrack = this.measureBrightHorizontalExtent(
-      this._gaugeBitmap,
+      this.gaugeBitmap(),
       0,
       0,
       sliceW,
@@ -796,7 +1124,7 @@ class Sprite_FlowingGauge
     );
 
     const bottomTrack = this.measureBrightHorizontalExtent(
-      this._gaugeBitmap,
+      this.gaugeBitmap(),
       0,
       sliceH,
       sliceW,
@@ -811,10 +1139,10 @@ class Sprite_FlowingGauge
     const trackInnerW = Math.max(1, bgTrack.maxX - bgTrack.minX + 1);
 
     // store  gauge slice fill min x on the instance for later reads.
-    this._gaugeSliceFillMinX = fillMinX;
-    this._gaugeSliceFillInnerWidth = fillInnerW;
-    this._gaugeBackgroundTrackMinX = bgTrack.minX;
-    this._gaugeBackgroundTrackInnerWidth = trackInnerW;
+    this.setGaugeSliceFillMinX(fillMinX);
+    this.setGaugeSliceFillInnerWidth(fillInnerW);
+    this.setGaugeBackgroundTrackMinX(bgTrack.minX);
+    this.setGaugeBackgroundTrackInnerWidth(trackInnerW);
   }
 
   /**
@@ -822,9 +1150,9 @@ class Sprite_FlowingGauge
    */
   alignGaugeForegroundToBackgroundTrack()
   {
-    if (!this._gaugeCurrentSprite || !this._gaugeActualSprite) return;
+    if (!this.gaugeCurrentSprite() || !this.gaugeActualSprite()) return;
 
-    if (this._gaugeSliceFillInnerWidth <= 0 || this._gaugeBackgroundTrackInnerWidth <= 0) return;
+    if (this.gaugeSliceFillInnerWidth() <= 0 || this.gaugeBackgroundTrackInnerWidth() <= 0) return;
 
     const bgX = J.HUD.EXT.TARGET.Metadata.BackgroundGaugeImageX;
 
@@ -833,22 +1161,22 @@ class Sprite_FlowingGauge
     // the right clamp assumed one coordinate system and the hand-tuned X another — e.g. trough starts at column 1 but
     // defaults put the fill at 2, so a green underlay shows in that column and HP vs MP could disagree if anything
     // differed between layers. One `fillLeftX` and one `ratio` keeps both strips locked.
-    const fillLeftX = bgX + this._gaugeBackgroundTrackMinX;
+    const fillLeftX = bgX + this.gaugeBackgroundTrackMinX();
 
-    const troughRightExclusive = bgX + this._gaugeBackgroundTrackMinX + this._gaugeBackgroundTrackInnerWidth;
+    const troughRightExclusive = bgX + this.gaugeBackgroundTrackMinX() + this.gaugeBackgroundTrackInnerWidth();
 
     const effectiveBarWidth = Math.max(
       1,
-      Math.min(this._gaugeBackgroundTrackInnerWidth, troughRightExclusive - fillLeftX)
+      Math.min(this.gaugeBackgroundTrackInnerWidth(), troughRightExclusive - fillLeftX)
     );
 
-    const ratio = effectiveBarWidth / this._gaugeSliceFillInnerWidth;
+    const ratio = effectiveBarWidth / this.gaugeSliceFillInnerWidth();
 
-    this._gaugeCurrentSprite.scale.x = ratio;
-    this._gaugeActualSprite.scale.x = ratio;
+    this.gaugeCurrentSprite().scale.x = ratio;
+    this.gaugeActualSprite().scale.x = ratio;
 
-    this._gaugeCurrentSprite.x = fillLeftX;
-    this._gaugeActualSprite.x = fillLeftX;
+    this.gaugeCurrentSprite().x = fillLeftX;
+    this.gaugeActualSprite().x = fillLeftX;
   }
 
   /**

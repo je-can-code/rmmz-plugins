@@ -51,16 +51,16 @@ Spriteset_Map.prototype.createPixelAbsHitboxRevealLayer = function()
    * The container for battler hitbox reveal outlines.
    * @type {Sprite}
    */
-  this._j._pixel._abs._hitboxRevealLayer = new Sprite();
+  this.setHitboxRevealLayer(new Sprite());
 
   /**
    * Direct tracking for reveal sprites by their stable key.
    * @type {Record<string, Sprite>}
    */
-  this._j._pixel._abs._hitboxRevealSprites = {};
+  this.setHitboxRevealSprites({});
 
   // mount beside the existing battler overlay layers.
-  this.addChild(this._j._pixel._abs._hitboxRevealLayer);
+  this.addChild(this.hitboxRevealLayer());
 };
 
 /**
@@ -69,7 +69,7 @@ Spriteset_Map.prototype.createPixelAbsHitboxRevealLayer = function()
  */
 Spriteset_Map.prototype.getPixelAbsHitboxRevealLayer = function()
 {
-  return this._j._pixel._abs._hitboxRevealLayer;
+  return this.hitboxRevealLayer();
 };
 
 /**
@@ -78,7 +78,7 @@ Spriteset_Map.prototype.getPixelAbsHitboxRevealLayer = function()
  */
 Spriteset_Map.prototype.getPixelAbsHitboxRevealSprites = function()
 {
-  return this._j._pixel._abs._hitboxRevealSprites;
+  return this.hitboxRevealSprites();
 };
 
 /**
@@ -311,4 +311,46 @@ Spriteset_Map.prototype.getPixelAbsRevealHitboxStyle = function()
     lineWidth: pulseStyle.lineWidth,
   };
 };
+
+//region properties
+/**
+ * Gets the hitbox reveal layer.
+ * @returns {*} The hitboxRevealLayer.
+ */
+Spriteset_Map.prototype.hitboxRevealLayer = function()
+{
+  // hand back the hitbox reveal layer.
+  return this._j._pixel._abs._hitboxRevealLayer;
+};
+
+/**
+ * Sets the hitbox reveal layer.
+ * @param {*} newHitboxRevealLayer The new hitboxRevealLayer.
+ */
+Spriteset_Map.prototype.setHitboxRevealLayer = function(newHitboxRevealLayer)
+{
+  // assign the hitbox reveal layer.
+  this._j._pixel._abs._hitboxRevealLayer = newHitboxRevealLayer;
+};
+
+/**
+ * Gets the hitbox reveal sprites.
+ * @returns {*} The hitboxRevealSprites.
+ */
+Spriteset_Map.prototype.hitboxRevealSprites = function()
+{
+  // hand back the hitbox reveal sprites.
+  return this._j._pixel._abs._hitboxRevealSprites;
+};
+
+/**
+ * Sets the hitbox reveal sprites.
+ * @param {*} newHitboxRevealSprites The new hitboxRevealSprites.
+ */
+Spriteset_Map.prototype.setHitboxRevealSprites = function(newHitboxRevealSprites)
+{
+  // assign the hitbox reveal sprites.
+  this._j._pixel._abs._hitboxRevealSprites = newHitboxRevealSprites;
+};
+//endregion properties
 //endregion Spriteset_Map

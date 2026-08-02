@@ -95,13 +95,25 @@ class Sprite_ActorValue
     this._j._autoCounter = 60;
   }
 
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   /**
    * Gets the parameter being tracked by this sprite.
    * @returns {string}
    */
   getParameter()
   {
-    return this._j._parameter;
+    return this.j()._parameter;
   }
 
   /**
@@ -110,7 +122,7 @@ class Sprite_ActorValue
    */
   getActor()
   {
-    return this._j._actor;
+    return this.j()._actor;
   }
 
   /**
@@ -119,7 +131,7 @@ class Sprite_ActorValue
    */
   getAutoCounter()
   {
-    return this._j._autoCounter;
+    return this.j()._autoCounter;
   }
 
   /**
@@ -127,7 +139,7 @@ class Sprite_ActorValue
    */
   decrementAutoCounter()
   {
-    this._j._autoCounter--;
+    this.j()._autoCounter--;
   }
 
   /**
@@ -135,7 +147,7 @@ class Sprite_ActorValue
    */
   resetAutoCounter()
   {
-    this._j._autoCounter = 60;
+    this.j()._autoCounter = 60;
   }
 
   /**
@@ -229,10 +241,10 @@ class Sprite_ActorValue
       case Window_PartyFrame.gaugeTypes.HP:
       {
         // check for hp change.
-        changed = actor.hp !== this._j._last._hp;
+        changed = actor.hp !== this.j()._last._hp;
 
         // update the last-known hp if changed.
-        if (changed) this._j._last._hp = actor.hp;
+        if (changed) this.j()._last._hp = actor.hp;
 
         // end case.
         return changed;
@@ -240,10 +252,10 @@ class Sprite_ActorValue
       case Window_PartyFrame.gaugeTypes.MP:
       {
         // check for mp change.
-        changed = actor.mp !== this._j._last._mp;
+        changed = actor.mp !== this.j()._last._mp;
 
         // update the last-known mp if changed.
-        if (changed) this._j._last._mp = actor.mp;
+        if (changed) this.j()._last._mp = actor.mp;
 
         // end case.
         return changed;
@@ -251,10 +263,10 @@ class Sprite_ActorValue
       case Window_PartyFrame.gaugeTypes.TP:
       {
         // check for tp change.
-        changed = actor.tp !== this._j._last._tp;
+        changed = actor.tp !== this.j()._last._tp;
 
         // update the last-known tp if changed.
-        if (changed) this._j._last._tp = actor.tp;
+        if (changed) this.j()._last._tp = actor.tp;
 
         // end case.
         return changed;
@@ -265,10 +277,10 @@ class Sprite_ActorValue
         const current = actor.currentExp();
 
         // check for exp change.
-        changed = current !== this._j._last._xp;
+        changed = current !== this.j()._last._xp;
 
         // update the last-known exp if changed.
-        if (changed) this._j._last._xp = current;
+        if (changed) this.j()._last._xp = current;
 
         // end case.
         return changed;
@@ -276,10 +288,10 @@ class Sprite_ActorValue
       case Window_PartyFrame.gaugeTypes.Level:
       {
         // check for level change.
-        changed = actor.level !== this._j._last._lvl;
+        changed = actor.level !== this.j()._last._lvl;
 
         // update the last-known level if changed.
-        if (changed) this._j._last._lvl = actor.level;
+        if (changed) this.j()._last._lvl = actor.level;
 
         // end case.
         return changed;
@@ -457,7 +469,7 @@ class Sprite_ActorValue
    */
   fontSize()
   {
-    return $gameSystem.mainFontSize() + this._j._fontSizeMod;
+    return $gameSystem.mainFontSize() + this.j()._fontSizeMod;
   }
 
   /**

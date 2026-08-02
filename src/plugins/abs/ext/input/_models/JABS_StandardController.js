@@ -57,6 +57,15 @@ class JABS_StandardController
   }
 
   /**
+   * Sets whether the battler was in combat on the previous frame.
+   * @param {boolean} lastInCombat Whether the battler was in combat.
+   */
+  setLastInCombat(lastInCombat)
+  {
+    this._lastInCombat = lastInCombat;
+  }
+
+  /**
    * Initialize the button-to-input mappings.
    * Seeds from current JABS defaults.
    */
@@ -558,7 +567,7 @@ class JABS_StandardController
     if (inCombat)
     {
       // update last-known combat state for subsequent frames.
-      this._lastInCombat = true;
+      this.setLastInCombat(true);
 
       // return whether Sprint was newly triggered this frame.
       return this.isActionTriggered(JABS_Button.Sprint);
@@ -566,7 +575,7 @@ class JABS_StandardController
 
     // not in combat → classic sprint is a held input.
     // update last-known combat state before returning.
-    this._lastInCombat = false;
+    this.setLastInCombat(false);
 
     // return whether Sprint is currently held.
     return this.isActionPressed(JABS_Button.Sprint);

@@ -123,13 +123,25 @@ class Window_InputFrame
     this._j._flip._direction = 0;
   }
 
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   /**
    * Gets whether or not the skill trigger is held.
    * @returns {boolean}
    */
   skillTriggerHeld()
   {
-    return this._j._last._skillTriggerHeld;
+    return this.j()._last._skillTriggerHeld;
   }
 
   /**
@@ -138,7 +150,7 @@ class Window_InputFrame
    */
   setSkillTriggerHeld(value)
   {
-    this._j._last._skillTriggerHeld = value;
+    this.j()._last._skillTriggerHeld = value;
   }
 
   /**
@@ -147,7 +159,7 @@ class Window_InputFrame
    */
   partyInCombat()
   {
-    return this._j._last._partyInCombat;
+    return this.j()._last._partyInCombat;
   }
 
   /**
@@ -156,7 +168,7 @@ class Window_InputFrame
    */
   setPartyInCombat(value)
   {
-    this._j._last._partyInCombat = value;
+    this.j()._last._partyInCombat = value;
   }
 
   /**
@@ -166,7 +178,7 @@ class Window_InputFrame
   getFlipProgress()
   {
     // store under a dedicated bag to avoid accidental overlap.
-    return this._j._flip._progress;
+    return this.j()._flip._progress;
   }
 
   /**
@@ -175,7 +187,7 @@ class Window_InputFrame
    */
   setFlipProgress(value)
   {
-    this._j._flip._progress = Math.max(0, value);
+    this.j()._flip._progress = Math.max(0, value);
   }
 
   /**
@@ -184,7 +196,7 @@ class Window_InputFrame
    */
   getFlipMax()
   {
-    return this._j._flip._max;
+    return this.j()._flip._max;
   }
 
   /**
@@ -193,7 +205,7 @@ class Window_InputFrame
    */
   setFlipMax(value)
   {
-    this._j._flip._max = Math.max(0, value);
+    this.j()._flip._max = Math.max(0, value);
   }
 
   /**
@@ -202,7 +214,7 @@ class Window_InputFrame
    */
   getFlipDirection()
   {
-    return this._j._flip._direction;
+    return this.j()._flip._direction;
   }
 
   /**
@@ -217,15 +229,15 @@ class Window_InputFrame
     // normalize to -1, 0, or +1 only.
     if (dir < 0)
     {
-      this._j._flip._direction = -1;
+      this.j()._flip._direction = -1;
     }
     else if (dir > 0)
     {
-      this._j._flip._direction = 1;
+      this.j()._flip._direction = 1;
     }
     else
     {
-      this._j._flip._direction = 0;
+      this.j()._flip._direction = 0;
     }
   }
 
@@ -277,17 +289,17 @@ class Window_InputFrame
     const key = this.makeInputKeySlotSpriteKey(skillSlot, inputType);
 
     // check if the key already maps to a cached sprite.
-    if (this._j._spriteCache.has(key))
+    if (this.j()._spriteCache.has(key))
     {
       // if it does, just return that.
-      return this._j._spriteCache.get(key);
+      return this.j()._spriteCache.get(key);
     }
 
     // create a new sprite.
     const sprite = new Sprite_InputKeySlot(skillSlot, $jabsEngine.getPlayer1());
 
     // cache the sprite.
-    this._j._spriteCache.set(key, sprite);
+    this.j()._spriteCache.set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -307,7 +319,7 @@ class Window_InputFrame
    */
   requestInternalRefresh()
   {
-    this._j._needsRefresh = true;
+    this.j()._needsRefresh = true;
   }
 
   /**
@@ -316,7 +328,7 @@ class Window_InputFrame
    */
   needsInternalRefresh()
   {
-    return this._j._needsRefresh;
+    return this.j()._needsRefresh;
   }
 
   /**
@@ -324,7 +336,7 @@ class Window_InputFrame
    */
   acknowledgeInternalRefresh()
   {
-    this._j._needsRefresh = false;
+    this.j()._needsRefresh = false;
   }
 
   /**
@@ -347,7 +359,7 @@ class Window_InputFrame
   hideSprites()
   {
     // hide all the sprites.
-    this._j._spriteCache.forEach((sprite, _) => sprite.hide());
+    this.j()._spriteCache.forEach((sprite, _) => sprite.hide());
 
     this.requestInternalRefresh();
   }
@@ -484,7 +496,7 @@ class Window_InputFrame
    */
   handlePlayerInterference()
   {
-    this._j._spriteCache.forEach((sprite, _) =>
+    this.j()._spriteCache.forEach((sprite, _) =>
     {
       // if we are above 64, rapidly decrement by -15 until we get below 64.
       if (sprite.opacity > 64)
@@ -500,7 +512,7 @@ class Window_InputFrame
    */
   revertInterferenceOpacity()
   {
-    this._j._spriteCache.forEach((sprite, _) =>
+    this.j()._spriteCache.forEach((sprite, _) =>
     {
       // if we are below 255, rapidly increment by +15 until we get to 255.
       if (sprite.opacity < 255)
@@ -599,7 +611,7 @@ class Window_InputFrame
     this.contentsBack.clear();
 
     // hide all the sprites and let each update its own bitmap.
-    this._j._spriteCache.forEach((sprite =>
+    this.j()._spriteCache.forEach((sprite =>
     {
       sprite.hide();
       sprite.drawInputKey();

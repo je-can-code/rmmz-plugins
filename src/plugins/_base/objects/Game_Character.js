@@ -85,3 +85,43 @@ Game_Character.prototype.isVisible = function()
   // default: all characters are visible unless a subclass says otherwise.
   return true;
 };
+
+/**
+ * Gets the remaining frames this character must wait before its next move.
+ * @returns {number} The waitCount.
+ */
+Game_Character.prototype.waitCount = function()
+{
+  // hand back the remaining frames this character must wait before its next move.
+  return this._waitCount;
+};
+
+/**
+ * Sets the remaining frames this character must wait before its next move.
+ * @param {number} newWaitCount The new waitCount.
+ */
+Game_Character.prototype.setWaitCount = function(newWaitCount)
+{
+  // assign the remaining frames this character must wait before its next move.
+  this._waitCount = newWaitCount;
+};
+
+/**
+ * Gets the move route this character is currently following.
+ * @returns {object} The moveRoute.
+ */
+Game_Character.prototype.moveRoute = function()
+{
+  // hand back the move route this character is currently following.
+  return this._moveRoute;
+};
+
+/**
+ * Gets how far through the current move route this character is.
+ * @returns {number} The moveRouteIndex.
+ */
+Game_Character.prototype.moveRouteIndex = function()
+{
+  // hand back how far through the current move route this character is.
+  return this._moveRouteIndex;
+};

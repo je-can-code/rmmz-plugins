@@ -10,9 +10,57 @@ import JaftingSalvageManager from './../managers/JaftingSalvageManager.js';
 class Window_SalvagePreview
   extends Window_Base
 {
+
+  //region properties
+  /**
+   * Gets the refund two column.
+   * @returns {*} The refundTwoColumn.
+   */
+  
+
+  //region properties
+  /**
+   * Gets the dismantle amount.
+   * @returns {number} The dismantleAmount.
+   */
+  dismantleAmount()
+  {
+    // hand back the dismantle amount.
+    return this._dismantleAmount;
+  }
+
+  /**
+   * Gets the datum.
+   * @returns {*} The datum.
+   */
+  datum()
+  {
+    // hand back the datum.
+    return this._datum;
+  }
+  //endregion properties
+
   /**
    * @param {Rectangle} rect Window geometry (repositioned by {@link Scene_JaftingSalvage#layoutSalvagePanels}).
    */
+
+  isRefundTwoColumn()
+  {
+    // hand back the refund two column.
+    return this._refundTwoColumn;
+  }
+
+  /**
+   * Sets the refund two column.
+   * @param {*} newRefundTwoColumn The new refundTwoColumn.
+   */
+  setRefundTwoColumn(newRefundTwoColumn)
+  {
+    // assign the refund two column.
+    this._refundTwoColumn = newRefundTwoColumn;
+  }
+  //endregion properties
+
   constructor(rect)
   {
     super(rect);
@@ -29,7 +77,7 @@ class Window_SalvagePreview
    */
   setRefundTwoColumnMode(flag)
   {
-    this._refundTwoColumn = flag === true;
+    this.setRefundTwoColumn(flag === true);
   }
 
   /**
@@ -72,7 +120,7 @@ class Window_SalvagePreview
 
     this.contents.clear();
 
-    if (this._datum === null || this._datum === undefined)
+    if (this.datum() === null || this.datum() === undefined)
     {
       this.drawText('Select an item to preview refunds.', 0, 0, this.contentsWidth(), 'left');
 
@@ -80,7 +128,7 @@ class Window_SalvagePreview
       return;
     }
 
-    const raw = JaftingSalvageManager.getLedgerForDatum(this._datum);
+    const raw = JaftingSalvageManager.getLedgerForDatum(this.datum());
 
     if (!raw || !raw.rows || raw.rows.length === 0)
     {
@@ -90,7 +138,7 @@ class Window_SalvagePreview
       return;
     }
 
-    const snap = JaftingSalvageManager.getSalvageLedgerSnapshotExpanded(this._datum);
+    const snap = JaftingSalvageManager.getSalvageLedgerSnapshotExpanded(this.datum());
 
     if (!snap || !snap.rows || snap.rows.length === 0)
     {
@@ -108,8 +156,8 @@ class Window_SalvagePreview
 
     const visibleRows = Window_SalvagePreview.collectNonBannedRows(snap.rows);
 
-    const stack = $gameParty.numItems(this._datum);
-    const batch = this._dismantleAmount;
+    const stack = $gameParty.numItems(this.datum());
+    const batch = this.dismantleAmount();
     let y = 0;
     const lh = this.lineHeight();
     const countCol = 72;
@@ -119,7 +167,7 @@ class Window_SalvagePreview
     this.drawText('Selected item', 0, y, this.contentsWidth(), 'left');
     y += lh;
     this.resetTextColor();
-    this.drawItemName(this._datum, 0, y, nameW);
+    this.drawItemName(this.datum(), 0, y, nameW);
     this.drawText(`×${stack}`, nameW, y, countCol, 'right');
     y += lh;
 
@@ -174,7 +222,7 @@ class Window_SalvagePreview
    */
   paintExpandedRefundRows(y, visibleRows, batch, lh, countCol, nameW)
   {
-    if (this._refundTwoColumn === false)
+    if (this.isRefundTwoColumn() === false)
     {
       this.paintExpandedRefundRowsSingle(y, visibleRows, batch, lh, countCol, nameW);
 

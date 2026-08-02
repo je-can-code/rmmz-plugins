@@ -182,7 +182,7 @@ Sprite_Character.prototype.update = function()
  */
 Sprite_Character.prototype.isJabsBattlerReady = function()
 {
-  return this._j._abs._jabsBattlerSetupComplete;
+  return this.isJabsBattlerSetupComplete();
 };
 
 /**
@@ -191,7 +191,7 @@ Sprite_Character.prototype.isJabsBattlerReady = function()
  */
 Sprite_Character.prototype.finalizeJabsBattlerSetup = function()
 {
-  this._j._abs._jabsBattlerSetupComplete = true;
+  this.setJabsBattlerSetupComplete(true);
 };
 
 /**
@@ -204,7 +204,7 @@ Sprite_Character.prototype.getBattler = function()
   if (this.isJabsBattler())
   {
     // grab the battler associated with this sprite.
-    return this._character.getJabsBattler()
+    return this.character().getJabsBattler()
       .getBattler();
   }
   // otherwise, this must be a regular sprite for an event.
@@ -255,7 +255,7 @@ Sprite_Character.prototype.isJabsAction = function()
  */
 Sprite_Character.prototype.isLootReady = function()
 {
-  return this._j._abs._loot._lootSetupComplete;
+  return this.isLootSetupComplete();
 };
 
 /**
@@ -264,7 +264,7 @@ Sprite_Character.prototype.isLootReady = function()
  */
 Sprite_Character.prototype.finalizeLootSetup = function()
 {
-  this._j._abs._loot._lootSetupComplete = true;
+  this.setLootSetupComplete(true);
 };
 
 /**
@@ -594,15 +594,42 @@ Sprite_Character.prototype.applyActionDebug = function(skill)
     {
       this.addChild(this._j._abs._visDebugGizmo); // attach gizmo.
     }
-    this._j._abs._visDebugGizmo.visible = true; // show while debugging.
+    this.visDebugGizmo().visible = true; // show while debugging.
     return;
   }
 
   // hide when not debugging.
-  if (this._j._abs._visDebugGizmo)
+  if (this.visDebugGizmo())
   {
-    this._j._abs._visDebugGizmo.visible = false;
+    this.visDebugGizmo().visible = false;
   }
+};
+
+/**
+ * Gets the gizmo drawn over this character while visual debugging is on.
+ * @returns {Sprite|null}
+ */
+Sprite_Character.prototype.visDebugGizmo = function()
+{
+  return this._j._abs._visDebugGizmo;
+};
+
+/**
+ * Gets the stripe drawn beneath this battler's name to mark their tier.
+ * @returns {Sprite|null}
+ */
+Sprite_Character.prototype.battlerNameTierStripe = function()
+{
+  return this._j._abs._battlerNameTierStripe;
+};
+
+/**
+ * Sets the stripe drawn beneath this battler's name to mark their tier.
+ * @param {Sprite|null} stripe The sprite to track, or null when there is none.
+ */
+Sprite_Character.prototype.setBattlerNameTierStripe = function(stripe)
+{
+  this._j._abs._battlerNameTierStripe = stripe;
 };
 
 /**
@@ -634,22 +661,22 @@ Sprite_Character.prototype.setupStateOverlay = function()
   const battler = this.getBattler();
 
   // check if we already have an overlay sprite available.
-  if (this._j._abs._stateOverlaySprite)
+  if (this.stateOverlaySprite())
   {
     // assign the current battler to the overlay sprite.
-    this._j._abs._stateOverlaySprite.setup(battler);
+    this.stateOverlaySprite().setup(battler);
   }
   // if we don't have an overlay, the build it.
   else
   {
     // create and assign the state overlay sprite..
-    this._j._abs._stateOverlaySprite = this.createStateOverlaySprite();
+    this.setStateOverlaySprite(this.createStateOverlaySprite());
 
     // assign the current battler to the overlay sprite.
-    this._j._abs._stateOverlaySprite.setup(battler);
+    this.stateOverlaySprite().setup(battler);
 
     // add it to this sprite's tracking.
-    this.addChild(this._j._abs._stateOverlaySprite);
+    this.addChild(this.stateOverlaySprite());
   }
 };
 
@@ -694,7 +721,7 @@ Sprite_Character.prototype.canUpdateStateOverlay = function()
   if (!this.isJabsBattler()) return false;
 
   // if this sprite doesn't even exist yet, then it shouldn't update.
-  if (!this._j._abs._stateOverlaySprite) return false;
+  if (!this.stateOverlaySprite()) return false;
 
   // we should update!
   return true;
@@ -705,7 +732,7 @@ Sprite_Character.prototype.canUpdateStateOverlay = function()
  */
 Sprite_Character.prototype.showStateOverlay = function()
 {
-  this._j._abs._stateOverlaySprite.show();
+  this.stateOverlaySprite().show();
 };
 
 /**
@@ -713,7 +740,7 @@ Sprite_Character.prototype.showStateOverlay = function()
  */
 Sprite_Character.prototype.hideStateOverlay = function()
 {
-  this._j._abs._stateOverlaySprite.hide();
+  this.stateOverlaySprite().hide();
 };
 //endregion state overlay
 
@@ -752,20 +779,20 @@ Sprite_Character.prototype.setupHpGauge = function()
 Sprite_Character.prototype.setupCastGauge = function()
 {
   // determine the current battler & character for this sprite.
-  const jabsBattler = this._character.getJabsBattler();
-  const expectedCharacter = this._character;
+  const jabsBattler = this.character().getJabsBattler();
+  const expectedCharacter = this.character();
 
   // if we already have a cast gauge, rebind it to the current battler/character and exit.
-  if (this._j._abs._gauges._castGauge)
+  if (this.castGauge())
   {
     // rebind for cast logic + validity.
-    this._j._abs._gauges._castGauge.setupJabs(jabsBattler, expectedCharacter);
+    this.castGauge().setupJabs(jabsBattler, expectedCharacter);
 
     // ensure it’s ready to update when needed (visibility is controlled elsewhere).
-    this._j._abs._gauges._castGauge.activateGauge();
+    this.castGauge().activateGauge();
 
     // reposition in case dimensions changed (defensive; typically unchanged).
-    const sprite = this._j._abs._gauges._castGauge;
+    const sprite = this.castGauge();
 
     // Snap to integer pixels to avoid subpixel blur and keep placement predictable.
     const x = -Math.round(sprite.bitmapWidth() / 2);
@@ -784,7 +811,7 @@ Sprite_Character.prototype.setupCastGauge = function()
   sprite.activateGauge();
 
   // assign for later access.
-  this._j._abs._gauges._castGauge = sprite;
+  this.setCastGauge(sprite);
 
   // position above the HP gauge, snapped and slightly raised.
   const x = -Math.round(sprite.bitmapWidth() / 2);
@@ -842,15 +869,15 @@ Sprite_Character.prototype.updateGauges = function()
  */
 Sprite_Character.prototype.setupAfflictionStrip = function()
 {
-  if (!this._j._abs._gauges._afflictionStrip)
+  if (!this.afflictionStrip())
   {
     const strip = new Sprite_MapAfflictionStrip();
 
-    this._j._abs._gauges._afflictionStrip = strip;
+    this.setAfflictionStrip(strip);
     this.addChild(strip);
   }
 
-  this._j._abs._gauges._afflictionStrip.setupBattler(this.getBattler());
+  this.afflictionStrip().setupBattler(this.getBattler());
   this.repositionAfflictionStrip();
 };
 
@@ -923,12 +950,12 @@ Sprite_Character.prototype.canUpdateAfflictionStrip = function()
     return false;
   }
 
-  if (!this._j._abs._gauges._afflictionStrip)
+  if (!this.afflictionStrip())
   {
     return false;
   }
 
-  const jabsBattler = this._character.getJabsBattler();
+  const jabsBattler = this.character().getJabsBattler();
 
   if (!jabsBattler)
   {
@@ -948,12 +975,12 @@ Sprite_Character.prototype.canUpdateAfflictionStrip = function()
  */
 Sprite_Character.prototype.hideAfflictionStrip = function()
 {
-  if (!this._j._abs._gauges._afflictionStrip)
+  if (!this.afflictionStrip())
   {
     return;
   }
 
-  this._j._abs._gauges._afflictionStrip.hide();
+  this.afflictionStrip().hide();
 };
 
 /**
@@ -969,7 +996,7 @@ Sprite_Character.prototype.canUpdateHpGauge = function()
   if (!this.isJabsBattler()) return false;
 
   // if we aren't allowed to show the gauge, then it shouldn't update.
-  if (!this._character.getJabsBattler()
+  if (!this.character().getJabsBattler()
     .showHpBar())
   {
     return false;
@@ -992,10 +1019,10 @@ Sprite_Character.prototype.canUpdateCastGauge = function()
   if (!this.isJabsBattler()) return false;
 
   // if we don't have a cast gauge sprite, we can't update it.
-  if (!this._j._abs._gauges._castGauge) return false;
+  if (!this.castGauge()) return false;
 
   // use the current JABS battler's live casting/channeling state as the gate.
-  const jabs = this._character.getJabsBattler();
+  const jabs = this.character().getJabsBattler();
   if (!jabs) return false; // no battler
 
   // must be actively casting or channeling.
@@ -1022,7 +1049,7 @@ Sprite_Character.prototype.updateHpGauge = function()
   this.showHpGauge();
 
   // ensure the hp gauge matches the current battler.
-  this._j._abs._gauges._hpGauge._battler = this.getBattler();
+  this.setBattler(this.getBattler());
 };
 
 /**
@@ -1034,21 +1061,21 @@ Sprite_Character.prototype.updateCastGauge = function()
   this.showCastGauge();
 
   // ensure the gauge rebinds if host/jabs changed (post-swap safe).
-  const gauge = this._j._abs._gauges._castGauge;
+  const gauge = this.castGauge();
   if (gauge)
   {
-    const currentJabs = this._character.getJabsBattler();
+    const currentJabs = this.character().getJabsBattler();
 
     // if the bound JABS battler or its expected host changed, rebind.
     // eslint-disable-next-line max-len
-    const needsRebind = (gauge._jabsBattler !== currentJabs || gauge._expectedCharacter !== this._character || gauge._expectedUuid !== (currentJabs
+    const needsRebind = (gauge._jabsBattler !== currentJabs || gauge._expectedCharacter !== this.character() || gauge._expectedUuid !== (currentJabs
       ? currentJabs.getUuid()
       : null));
 
     if (needsRebind)
     {
       // bind JABS battler (for casting state) + expected character (host guard) + underlying battler.
-      gauge.setupJabs(currentJabs, this._character);
+      gauge.setupJabs(currentJabs, this.character());
     }
 
     // keep the underlying base battler fresh for Sprite_Gauge internals.
@@ -1077,7 +1104,7 @@ Sprite_Character.prototype.hideHpGauge = function()
  */
 Sprite_Character.prototype.showCastGauge = function()
 {
-  const gauge = this._j._abs._gauges._castGauge;
+  const gauge = this.castGauge();
   if (gauge)
   {
     gauge.activateGauge();
@@ -1090,7 +1117,7 @@ Sprite_Character.prototype.showCastGauge = function()
  */
 Sprite_Character.prototype.hideCastGauge = function()
 {
-  const gauge = this._j._abs._gauges._castGauge;
+  const gauge = this.castGauge();
   if (gauge)
   {
     gauge.hide();
@@ -1105,20 +1132,20 @@ Sprite_Character.prototype.hideCastGauge = function()
 Sprite_Character.prototype.setupBattlerName = function()
 {
   // check if we already have a battler name present.
-  if (this._j._abs._battlerName)
+  if (this.battlerName())
   {
     // get the name of this battler.
-    const { name, colorHex } = this.getBattlerName();
+    const { name, colorHex, tier } = this.getBattlerName();
 
     // redraw the new battler name.
-    this._j._abs._battlerName.setText(name);
-    this._j._abs._battlerName.setColor('#ffffff');
+    this.battlerName().setText(name);
+    this.battlerName().setColor('#ffffff');
 
     // refresh the tier stripe bitmap when the stripe exists and the color is still valid.
-    if (this._j._abs._battlerNameTierStripe && this.shouldDrawMapTierStripe(colorHex))
+    if (this.battlerNameTierStripe() && this.shouldDrawMapTierStripe(colorHex))
     {
-      const fontSize = this._j._abs._battlerName.fontSize();
-      this._j._abs._battlerNameTierStripe.bitmap = this.buildMapTierStripeBitmap(colorHex, fontSize);
+      const fontSize = this.battlerName().fontSize();
+      this.battlerNameTierStripe().bitmap = this.buildMapTierStripeBitmap(colorHex, fontSize, tier);
     }
 
     // if we already have the sprite, no need to recreate it.
@@ -1126,15 +1153,15 @@ Sprite_Character.prototype.setupBattlerName = function()
   }
 
   // build and assign the battler name sprite.
-  this._j._abs._battlerName = this.createBattlerNameSprite();
+  this.setBattlerName(this.createBattlerNameSprite());
 
   // add stripe behind the text so the name draws on top.
-  if (this._j._abs._battlerNameTierStripe)
+  if (this.battlerNameTierStripe())
   {
-    this.addChild(this._j._abs._battlerNameTierStripe);
+    this.addChild(this.battlerNameTierStripe());
   }
 
-  this.addChild(this._j._abs._battlerName);
+  this.addChild(this.battlerName());
 };
 
 /**
@@ -1144,7 +1171,7 @@ Sprite_Character.prototype.setupBattlerName = function()
 Sprite_Character.prototype.createBattlerNameSprite = function()
 {
   const battlerNameData = this.getBattlerName();
-  const { name, colorHex } = battlerNameData;
+  const { name, colorHex, tier } = battlerNameData;
   const fontSize = 16;
 
   // construct text sprite for the next step in this routine.
@@ -1156,18 +1183,18 @@ Sprite_Character.prototype.createBattlerNameSprite = function()
 
   textSprite.move(-70, 0);
 
-  this._j._abs._battlerNameTierStripe = null;
+  this.setBattlerNameTierStripe(null);
 
   if (this.shouldDrawMapTierStripe(colorHex))
   {
     const stripeSprite = new Sprite();
-    stripeSprite.bitmap = this.buildMapTierStripeBitmap(colorHex, fontSize);
+    stripeSprite.bitmap = this.buildMapTierStripeBitmap(colorHex, fontSize, tier);
     const outerW = stripeSprite.bitmap.width;
     const outerH = stripeSprite.bitmap.height;
     const GAP = 4;
     const stripeY = this.computeMapTierStripeY(textSprite, outerH);
     stripeSprite.move(-70 - GAP - outerW, stripeY);
-    this._j._abs._battlerNameTierStripe = stripeSprite;
+    this.setBattlerNameTierStripe(stripeSprite);
   }
 
   return textSprite;
@@ -1204,24 +1231,64 @@ Sprite_Character.prototype.isValidMapTierStripeHex = function(color)
 };
 
 /**
+ * Clamps a raw tier rank down to the number of pips the stripe should draw.
+ * `0` or `1` both mean "no pip subdivision" (single solid block, matches legacy stripe shape).
+ * @param {number} tier The raw tier rank from {@link JABS_BattlerName#tier}.
+ * @returns {number} The pip count to draw, at least 1 and at most 5.
+ */
+Sprite_Character.prototype.computeTierPipCount = function(tier)
+{
+  const MAX_PIPS = 5;
+
+  // no tag (0) or the lowest tier (1) both render as a single solid block, same as before this feature existed.
+  if (!tier || tier <= 1) return 1;
+
+  // higher tiers cap at MAX_PIPS so a mis-tagged value cannot blow out the stripe bitmap width.
+  return Math.min(tier, MAX_PIPS);
+};
+
+/**
  * Builds the bordered stripe bitmap used beside map tier labels.
+ * A pip count of 1 draws the original single solid block; anything higher draws that many thin
+ * vertical pips instead, so tier rank is visually legible without memorizing per-tier hex colors.
  * @param {string} colorHex The color hex driving this step.
  * @param {number} fontSize The font size driving this step.
+ * @param {number} tier The tier rank driving how many pips to draw.
  * @returns {Bitmap}
  */
-Sprite_Character.prototype.buildMapTierStripeBitmap = function(colorHex, fontSize)
+Sprite_Character.prototype.buildMapTierStripeBitmap = function(colorHex, fontSize, tier)
 {
   const BORDER = 1;
-  const INNER_W = 4;
-  const outerW = INNER_W + BORDER * 2;
   const outerH = fontSize;
+  const innerH = outerH - BORDER * 2;
+  const pipCount = this.computeTierPipCount(tier);
+
+  // single solid block: identical output to the pre-pip stripe, so untagged/tier-1 states never change visually.
+  if (pipCount <= 1)
+  {
+    const INNER_W = 4;
+    const outerW = INNER_W + BORDER * 2;
+    const bitmap = new Bitmap(outerW, outerH);
+    bitmap.fillRect(0, 0, outerW, outerH, '#000000');
+    bitmap.fillRect(BORDER, BORDER, INNER_W, innerH, colorHex);
+
+    return bitmap;
+  }
+
+  // multiple pips: each pip is a thin bar with a gap between, sized to fit the pip count.
+  const PIP_W = 2;
+  const PIP_GAP = 1;
+  const innerW = (pipCount * PIP_W) + ((pipCount - 1) * PIP_GAP);
+  const outerW = innerW + BORDER * 2;
   const bitmap = new Bitmap(outerW, outerH);
 
   bitmap.fillRect(0, 0, outerW, outerH, '#000000');
 
-  const innerH = outerH - BORDER * 2;
-
-  bitmap.fillRect(BORDER, BORDER, INNER_W, innerH, colorHex);
+  for (let pipIndex = 0; pipIndex < pipCount; pipIndex++)
+  {
+    const pipX = BORDER + (pipIndex * (PIP_W + PIP_GAP));
+    bitmap.fillRect(pipX, BORDER, PIP_W, innerH, colorHex);
+  }
 
   return bitmap;
 };
@@ -1295,7 +1362,7 @@ Sprite_Character.prototype.canUpdateBattlerName = function()
   if (!this.isJabsBattler()) return false;
 
   // if we aren't allowed to show the battler name, then it shouldn't update.
-  if (!this._character.getJabsBattler()
+  if (!this.character().getJabsBattler()
     .showBattlerName())
   {
     return false;
@@ -1310,11 +1377,11 @@ Sprite_Character.prototype.canUpdateBattlerName = function()
  */
 Sprite_Character.prototype.showBattlerName = function()
 {
-  this._j._abs._battlerName.show();
+  this.battlerName().show();
 
-  if (this._j._abs._battlerNameTierStripe)
+  if (this.battlerNameTierStripe())
   {
-    this._j._abs._battlerNameTierStripe.show();
+    this.battlerNameTierStripe().show();
   }
 };
 
@@ -1323,11 +1390,11 @@ Sprite_Character.prototype.showBattlerName = function()
  */
 Sprite_Character.prototype.hideBattlerName = function()
 {
-  this._j._abs._battlerName.hide();
+  this.battlerName().hide();
 
-  if (this._j._abs._battlerNameTierStripe)
+  if (this.battlerNameTierStripe())
   {
-    this._j._abs._battlerNameTierStripe.hide();
+    this.battlerNameTierStripe().hide();
   }
 };
 //endregion battler name
@@ -1365,7 +1432,7 @@ Sprite_Character.prototype.hasLootDrawn = function()
 Sprite_Character.prototype.setupLootSprite = function()
 {
   // flag this character is "through", so they don't block movement of others.
-  this._character._through = true;
+  this.character()._through = true;
 
   // create the image sprite icon.
   const lootSprite = this.createLootSprite();
@@ -1425,7 +1492,7 @@ Sprite_Character.prototype.createLootSprite = function()
  */
 Sprite_Character.prototype.getLootData = function()
 {
-  return this._character.getJabsLoot();
+  return this.character().getJabsLoot();
 };
 
 /**
@@ -1434,7 +1501,7 @@ Sprite_Character.prototype.getLootData = function()
  */
 Sprite_Character.prototype.getLootIcon = function()
 {
-  return this.getLootData().lootIcon ?? -1;
+  return this.getLootData().lootIcon() ?? -1;
 };
 
 /**
@@ -1443,7 +1510,7 @@ Sprite_Character.prototype.getLootIcon = function()
  */
 Sprite_Character.prototype.getLootExpired = function()
 {
-  return this.getLootData().expired ?? true;
+  return this.getLootData().isExpired() ?? true;
 };
 
 /**
@@ -1473,7 +1540,7 @@ Sprite_Character.prototype.deleteLootSprite = function()
  */
 Sprite_Character.prototype.isLoot = function()
 {
-  return this._character.isJabsLoot();
+  return this.character().isJabsLoot();
 };
 
 /**
@@ -1482,7 +1549,7 @@ Sprite_Character.prototype.isLoot = function()
  */
 Sprite_Character.prototype.lootSwing = function()
 {
-  return this._j._abs._loot._swing;
+  return this.isSwing();
 };
 
 /**
@@ -1491,9 +1558,9 @@ Sprite_Character.prototype.lootSwing = function()
  */
 Sprite_Character.prototype.lootSwingUp = function(amount = 0)
 {
-  this._j._abs._loot._swing = true;
+  this.setSwing(true);
 
-  this._j._abs._loot._oy -= amount;
+  this.setOy(this.oy() - amount);
 };
 
 /**
@@ -1502,9 +1569,9 @@ Sprite_Character.prototype.lootSwingUp = function(amount = 0)
  */
 Sprite_Character.prototype.lootSwingDown = function(amount = 0)
 {
-  this._j._abs._loot._swing = false;
+  this.setSwing(false);
 
-  this._j._abs._loot._oy += amount;
+  this.setOy(this.oy() + amount);
 };
 
 /**
@@ -1541,10 +1608,10 @@ Sprite_Character.prototype.handleLootDuration = function()
 Sprite_Character.prototype.expireLoot = function()
 {
   // don't reset the removal if its already set.
-  if (this._character.getLootNeedsRemoving()) return;
+  if (this.character().getLootNeedsRemoving()) return;
 
   // set the loot to be removed.
-  this._character.setLootNeedsRemoving(true);
+  this.character().setLootNeedsRemoving(true);
   $jabsEngine.requestClearLoot = true;
 };
 
@@ -1621,7 +1688,7 @@ Sprite_Character.prototype.lootFloatDown = function()
  */
 Sprite_Character.prototype.shouldSwingUp = function()
 {
-  return this._j._abs._loot._oy > 5;
+  return this.oy() > 5;
 };
 
 /**
@@ -1650,7 +1717,189 @@ Sprite_Character.prototype.lootFloatUp = function()
  */
 Sprite_Character.prototype.shouldSwingDown = function()
 {
-  return this._j._abs._loot._oy < -5;
+  return this.oy() < -5;
 };
 //endregion loot
+
+//region properties
+/**
+ * Gets the jabs battler setup complete.
+ * @returns {*} The jabsBattlerSetupComplete.
+ */
+Sprite_Character.prototype.isJabsBattlerSetupComplete = function()
+{
+  // hand back the jabs battler setup complete.
+  return this._j._abs._jabsBattlerSetupComplete;
+};
+
+/**
+ * Sets the jabs battler setup complete.
+ * @param {*} newJabsBattlerSetupComplete The new jabsBattlerSetupComplete.
+ */
+Sprite_Character.prototype.setJabsBattlerSetupComplete = function(newJabsBattlerSetupComplete)
+{
+  // assign the jabs battler setup complete.
+  this._j._abs._jabsBattlerSetupComplete = newJabsBattlerSetupComplete;
+};
+
+/**
+ * Gets the loot setup complete.
+ * @returns {*} The lootSetupComplete.
+ */
+Sprite_Character.prototype.isLootSetupComplete = function()
+{
+  // hand back the loot setup complete.
+  return this._j._abs._loot._lootSetupComplete;
+};
+
+/**
+ * Sets the loot setup complete.
+ * @param {*} newLootSetupComplete The new lootSetupComplete.
+ */
+Sprite_Character.prototype.setLootSetupComplete = function(newLootSetupComplete)
+{
+  // assign the loot setup complete.
+  this._j._abs._loot._lootSetupComplete = newLootSetupComplete;
+};
+
+/**
+ * Gets the state overlay sprite.
+ * @returns {Sprite} The stateOverlaySprite.
+ */
+Sprite_Character.prototype.stateOverlaySprite = function()
+{
+  // hand back the state overlay sprite.
+  return this._j._abs._stateOverlaySprite;
+};
+
+/**
+ * Sets the state overlay sprite.
+ * @param {Sprite} newStateOverlaySprite The new stateOverlaySprite.
+ */
+Sprite_Character.prototype.setStateOverlaySprite = function(newStateOverlaySprite)
+{
+  // assign the state overlay sprite.
+  this._j._abs._stateOverlaySprite = newStateOverlaySprite;
+};
+
+/**
+ * Gets the cast gauge.
+ * @returns {*} The castGauge.
+ */
+Sprite_Character.prototype.castGauge = function()
+{
+  // hand back the cast gauge.
+  return this._j._abs._gauges._castGauge;
+};
+
+/**
+ * Sets the cast gauge.
+ * @param {*} newCastGauge The new castGauge.
+ */
+Sprite_Character.prototype.setCastGauge = function(newCastGauge)
+{
+  // assign the cast gauge.
+  this._j._abs._gauges._castGauge = newCastGauge;
+};
+
+/**
+ * Gets the affliction strip.
+ * @returns {*} The afflictionStrip.
+ */
+Sprite_Character.prototype.afflictionStrip = function()
+{
+  // hand back the affliction strip.
+  return this._j._abs._gauges._afflictionStrip;
+};
+
+/**
+ * Sets the affliction strip.
+ * @param {*} newAfflictionStrip The new afflictionStrip.
+ */
+Sprite_Character.prototype.setAfflictionStrip = function(newAfflictionStrip)
+{
+  // assign the affliction strip.
+  this._j._abs._gauges._afflictionStrip = newAfflictionStrip;
+};
+
+/**
+ * Gets the JABS battler this character sprite is rendering.
+ * @returns {JABS_Battler} The rendered battler.
+ */
+Sprite_Character.prototype.battler = function()
+{
+  // hand back the battler.
+  return this._j._abs._gauges._hpGauge._battler;
+};
+
+/**
+ * Binds this character sprite to the JABS battler it renders.
+ * @param {JABS_Battler} newBattler The battler to render.
+ */
+Sprite_Character.prototype.setBattler = function(newBattler)
+{
+  // assign the battler.
+  this._j._abs._gauges._hpGauge._battler = newBattler;
+};
+
+/**
+ * Gets the battler name.
+ * @returns {string} The battlerName.
+ */
+Sprite_Character.prototype.battlerName = function()
+{
+  // hand back the battler name.
+  return this._j._abs._battlerName;
+};
+
+/**
+ * Sets the battler name.
+ * @param {string} newBattlerName The new battlerName.
+ */
+Sprite_Character.prototype.setBattlerName = function(newBattlerName)
+{
+  // assign the battler name.
+  this._j._abs._battlerName = newBattlerName;
+};
+
+/**
+ * Gets whether this loot sprite is mid-swing in its idle bobbing animation.
+ * @returns {boolean} True while swinging outward.
+ */
+Sprite_Character.prototype.isSwing = function()
+{
+  // hand back the swing.
+  return this._j._abs._loot._swing;
+};
+
+/**
+ * Sets which half of the idle bobbing animation this loot sprite is in.
+ * @param {boolean} newSwing True to swing outward.
+ */
+Sprite_Character.prototype.setSwing = function(newSwing)
+{
+  // assign the swing.
+  this._j._abs._loot._swing = newSwing;
+};
+
+/**
+ * Gets the vertical offset currently applied by the loot bobbing animation.
+ * @returns {number} The vertical offset in pixels.
+ */
+Sprite_Character.prototype.oy = function()
+{
+  // hand back the oy.
+  return this._j._abs._loot._oy;
+};
+
+/**
+ * Sets the vertical offset applied by the loot bobbing animation.
+ * @param {number} newOy The vertical offset in pixels.
+ */
+Sprite_Character.prototype.setOy = function(newOy)
+{
+  // assign the oy.
+  this._j._abs._loot._oy = newOy;
+};
+//endregion properties
 //endregion Sprite_Character

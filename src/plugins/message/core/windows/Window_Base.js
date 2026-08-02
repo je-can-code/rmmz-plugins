@@ -348,42 +348,17 @@ Window_Base.prototype.translateParamTextCode = function(text)
 };
 
 /**
- * Translates the text code into the name and icon of the corresponding quest.
- * @param {string} text The text that has a text code in it.
- * @returns {string} The new text to parse.
+ * Translates the quest text code into the quest's name and icon.
+ *
+ * Core does not know what a quest is- this is a no-op hook that J-Omnipedia's quest extension
+ * overrides to supply the real behavior. Core never probes for extensions.
+ * @param {string} text The text that may contain a quest text code.
+ * @returns {string} The text, unchanged.
  */
 Window_Base.prototype.translateQuestTextCode = function(text)
 {
-  // if not using the Questopedia system, then don't try to process the text.
-  if (!J.OMNI?.EXT?.QUEST) return text;
-
-  return text.replace(/\\quest\[([\w.-]+)]/gi, (_, p1) =>
-  {
-    // determine the quest key.
-    const questKey = p1 ?? String.empty;
-
-    // if no key was provided, then do not parse the quest.
-    if (!questKey) return text;
-
-    // grab the quest by its key.
-    const quest = QuestManager.quest(questKey);
-
-    // if the quest doesn't exist, then do not parse the quest.
-    if (!quest) return text;
-
-    // grab the name of the quest.
-    const questName = quest.name()
-    //   .replace(/[\\]{1}(.)/gi, originalText =>
-    // {
-    //   return `\\${originalText}`;
-    // });
-
-    // for quests, the icon displayed is the category icon instead.
-    const questIconIndex = QuestManager.category(quest.categoryKey).iconIndex;
-
-    // return the constructed replacement string.
-    return `\\I[${questIconIndex}]\\C[1]${questName}\\C[0]`;
-  });
+  // without the quest extension loaded, there is nothing to translate.
+  return text;
 };
 //endregion more database text codes
 

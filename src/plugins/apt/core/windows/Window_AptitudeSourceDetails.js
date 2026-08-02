@@ -113,7 +113,7 @@ class Window_AptitudeSourceDetails
    */
   nextY()
   {
-    return this._nextY || 0;
+    return this._nextY;
   }
 
   /**

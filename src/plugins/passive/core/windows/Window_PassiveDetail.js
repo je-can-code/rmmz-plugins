@@ -23,10 +23,58 @@
 class Window_PassiveDetail
   extends Window_Base
 {
+
+  //region properties
+  /**
+   * Gets the column start y.
+   * @returns {number} The columnStartY.
+   */
+  
+
+  //region properties
+  /**
+   * Gets the actor.
+   * @returns {Game_Actor|null} The actor.
+   */
+  actor()
+  {
+    // hand back the actor.
+    return this._actor;
+  }
+
+  /**
+   * Gets the state.
+   * @returns {RPG_State|null} The state.
+   */
+  state()
+  {
+    // hand back the state.
+    return this._state;
+  }
+  //endregion properties
+
   /**
    * Constructor.
    * @param {Rectangle} rect The rectangle for this window.
    */
+
+  columnStartY()
+  {
+    // hand back the column start y.
+    return this._columnStartY;
+  }
+
+  /**
+   * Sets the column start y.
+   * @param {number} newColumnStartY The new columnStartY.
+   */
+  setColumnStartY(newColumnStartY)
+  {
+    // assign the column start y.
+    this._columnStartY = newColumnStartY;
+  }
+  //endregion properties
+
   constructor(rect)
   {
     // call super when having extended constructors.
@@ -129,7 +177,7 @@ class Window_PassiveDetail
   switchToColumn(columnIndex)
   {
     this.currentX = columnIndex * (this.columnWidth + 8);
-    this.currentY = this._columnStartY;
+    this.currentY = this.columnStartY();
   }
 
   /**
@@ -181,12 +229,12 @@ class Window_PassiveDetail
     this.contents.clear();
 
     // nothing to show when there is no state.
-    if (!this._state) return;
+    if (!this.state()) return;
 
     // reset the cursors and paint the full detail view.
     this.currentX = 0;
     this.currentY = 0;
-    this.drawPassiveStateDetail(this._state);
+    this.drawPassiveStateDetail(this.state());
   }
 
   /**
@@ -205,7 +253,7 @@ class Window_PassiveDetail
     this.drawStateHeader(state);
 
     // record the y where all three columns start, then fill the left column.
-    this._columnStartY = this.currentY;
+    this.setColumnStartY(this.currentY);
     this.drawCombatSection(state);
     this.drawAilmentsSection(state);
 
@@ -481,7 +529,7 @@ class Window_PassiveDetail
     const formula = RPGManager.getStringFromNoteByRegex(state, J.RESOURCES.RegExp.HpCostReduction);
     if (!formula) return null;
 
-    const evaluated = Number(this.evaluateFormula(formula, this._actor));
+    const evaluated = Number(this.evaluateFormula(formula, this.actor()));
     return {
       icon:  IconManager.param(0),
       label: 'Life Cost',
@@ -542,7 +590,7 @@ class Window_PassiveDetail
     const formula = RPGManager.getStringFromNoteByRegex(state, J.ABS.RegExp.GlobalCooldownReduction);
     if (!formula) return null;
 
-    const evaluated = Number(this.evaluateFormula(formula, this._actor));
+    const evaluated = Number(this.evaluateFormula(formula, this.actor()));
     return {
       icon:  IconManager.cdr(),
       label: 'Cooldown Rate',
@@ -697,7 +745,7 @@ class Window_PassiveDetail
       const formula = RPGManager.getStringFromNoteByRegex(state, regexp);
       if (formula)
       {
-        const evaluated = this.evaluateFormula(formula, this._actor);
+        const evaluated = this.evaluateFormula(formula, this.actor());
         // prepend + for non-negative values so drawDetailRow applies green color coding.
         const sign = Number(evaluated) >= 0 ? '+' : '';
         // growth values communicate "per level" intent rather than an immediate flat bonus.
@@ -989,19 +1037,19 @@ class Window_PassiveDetail
       const expFormula = RPGManager.getStringFromNoteByRegex(state, J.NATURAL.RegExp.RewardExp);
       if (expFormula)
       {
-        rows.push({ icon: 0, label: 'EXP Bonus', value: this.evaluateFormula(expFormula, this._actor) });
+        rows.push({ icon: 0, label: 'EXP Bonus', value: this.evaluateFormula(expFormula, this.actor()) });
       }
 
       const goldFormula = RPGManager.getStringFromNoteByRegex(state, J.NATURAL.RegExp.RewardGold);
       if (goldFormula)
       {
-        rows.push({ icon: 0, label: 'Gold Bonus', value: this.evaluateFormula(goldFormula, this._actor) });
+        rows.push({ icon: 0, label: 'Gold Bonus', value: this.evaluateFormula(goldFormula, this.actor()) });
       }
 
       const sdpFormula = RPGManager.getStringFromNoteByRegex(state, J.NATURAL.RegExp.RewardSdps);
       if (sdpFormula)
       {
-        rows.push({ icon: 0, label: 'SDP Bonus', value: this.evaluateFormula(sdpFormula, this._actor) });
+        rows.push({ icon: 0, label: 'SDP Bonus', value: this.evaluateFormula(sdpFormula, this.actor()) });
       }
     }
 

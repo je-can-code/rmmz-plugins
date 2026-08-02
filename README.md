@@ -56,4 +56,5 @@ bun run test              # build:all + vitest
 bun run defs:generate     # refresh src/defs/generated/rmmz/
 ```
 
-See `.junie/guidelines.md` for style, harness layout, and namespace rules.
+See `CLAUDE.md` for style, architecture, and namespace rules, and `docs/project-structure.md` for the
+repository layout.

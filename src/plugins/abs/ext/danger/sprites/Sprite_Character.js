@@ -47,19 +47,19 @@ Sprite_Character.prototype.setupDangerIndicator = function()
   const dangerIndicatorIcon = this.getDangerIndicatorIcon();
 
   // check if we already have an indicator present.
-  if (this._j._dangerIndicator)
+  if (this.dangerIndicator())
   {
     // overwrite the icon on it.
-    this._j._dangerIndicator.setIconIndex(dangerIndicatorIcon);
+    this.dangerIndicator().setIconIndex(dangerIndicatorIcon);
   }
   // if we don't have an indicator, then build it.
   else
   {
     // create and assign the danger indicator sprite.
-    this._j._dangerIndicator = this.createDangerIndicatorSprite(dangerIndicatorIcon);
+    this.setDangerIndicator(this.createDangerIndicatorSprite(dangerIndicatorIcon));
 
     // add it to this sprite's tracking.
-    this.addChild(this._j._dangerIndicator);
+    this.addChild(this.dangerIndicator());
   }
 };
 
@@ -140,7 +140,7 @@ Sprite_Character.prototype.canUpdateDangerIndicator = function()
   if (!this.isJabsBattler()) return false;
 
   // if we aren't allowed to show the indicator, then it shouldn't update.
-  if (!this._character.getJabsBattler()
+  if (!this.character().getJabsBattler()
     .showDangerIndicator())
   {
     return false;
@@ -164,7 +164,7 @@ Sprite_Character.prototype.updateDangerIndicator = function()
  */
 Sprite_Character.prototype.showDangerIndicator = function()
 {
-  this._j._dangerIndicator.show();
+  this.dangerIndicator().show();
 };
 
 /**
@@ -172,6 +172,28 @@ Sprite_Character.prototype.showDangerIndicator = function()
  */
 Sprite_Character.prototype.hideDangerIndicator = function()
 {
-  this._j._dangerIndicator.hide();
+  this.dangerIndicator().hide();
 };
+
+//region properties
+/**
+ * Gets the danger indicator.
+ * @returns {*} The dangerIndicator.
+ */
+Sprite_Character.prototype.dangerIndicator = function()
+{
+  // hand back the danger indicator.
+  return this._j._dangerIndicator;
+};
+
+/**
+ * Sets the danger indicator.
+ * @param {*} newDangerIndicator The new dangerIndicator.
+ */
+Sprite_Character.prototype.setDangerIndicator = function(newDangerIndicator)
+{
+  // assign the danger indicator.
+  this._j._dangerIndicator = newDangerIndicator;
+};
+//endregion properties
 //endregion Sprite_Character

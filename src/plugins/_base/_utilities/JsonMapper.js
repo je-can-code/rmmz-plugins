@@ -86,17 +86,40 @@ class JsonMapper
    */
   static parseString(str)
   {
+    // peel off the quotes RMMZ leaves on JSON-encoded list entries before interpreting the token.
+    const unquoted = this.unquoteString(str);
+
     // check if its actually boolean true.
-    if (str.toLowerCase() === "true")
+    if (unquoted.toLowerCase() === "true")
     {
       return true;
     }// check if its actually boolean false.
-    else if (str.toLowerCase() === "false") return false;
+    else if (unquoted.toLowerCase() === "false") return false;
 
     // check if its actually a number.
-    if (!Number.isNaN(parseFloat(str))) return parseFloat(str);
+    if (!Number.isNaN(parseFloat(unquoted))) return parseFloat(unquoted);
 
     // it must just be a word or something.
+    return unquoted;
+  }
+
+  /**
+   * Strips a single matching pair of surrounding double quotes from a token.
+   *
+   * RMMZ serializes list-type plugin parameters as a JSON string, so every entry arrives still
+   * wrapped in its own quotes. Left in place they defeat downstream comparisons entirely-
+   * `Number('"7"')` is NaN and `'"physical"'` never matches `'physical'`.
+   * @param {string} str The token to unwrap.
+   * @returns {string} The token without its surrounding quotes.
+   */
+  static unquoteString(str)
+  {
+    // a bare quote or an empty string has no pair to peel.
+    if (str.length < 2) return str;
+
+    // only strip when both ends agree, so an interior quote is left untouched.
+    if (str.startsWith('"') && str.endsWith('"')) return str.slice(1, -1);
+
     return str;
   }
 }

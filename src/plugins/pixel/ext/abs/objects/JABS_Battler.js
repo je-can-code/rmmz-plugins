@@ -62,21 +62,21 @@ JABS_Battler.pixelIdleStuckLimit = 90;
 JABS_Battler.prototype.updatePixelIdleWander = function()
 {
   // ensure properties are present (handles pre-plugin saves).
-  this._pixelIdleDest ??= null;
-  this._pixelIdleWait ??= 0;
-  this._pixelIdleStuckFrames ??= 0;
+  this.setPixelIdleDest(this.pixelIdleDest() ?? null);
+  this.setPixelIdleWait(this.pixelIdleWait() ?? 0);
+  this.setPixelIdleStuckFrames(this.pixelIdleStuckFrames() ?? 0);
 
   // waiting — tick down and hold position.
-  if (this._pixelIdleWait > 0)
+  if (this.pixelIdleWait() > 0)
   {
-    this._pixelIdleWait--;
+    this.setPixelIdleWait(this.pixelIdleWait() - 1);
     return;
   }
 
   // traveling — move toward the chosen destination.
-  if (this._pixelIdleDest !== null)
+  if (this.pixelIdleDest() !== null)
   {
-    const { x, y } = this._pixelIdleDest;
+    const { x, y } = this.pixelIdleDest();
 
     // arrived when within a comfortable fraction of a tile.
     const arrived = Math.hypot(this.getX() - x, this.getY() - y) < 0.25;
@@ -84,14 +84,14 @@ JABS_Battler.prototype.updatePixelIdleWander = function()
     if (arrived === false)
     {
       // count consecutive frames spent trying to reach this destination.
-      this._pixelIdleStuckFrames++;
+      this.setPixelIdleStuckFrames(this.pixelIdleStuckFrames() + 1);
 
       // if stuck too long, abandon the destination rather than twitching forever.
-      if (this._pixelIdleStuckFrames >= JABS_Battler.pixelIdleStuckLimit)
+      if (this.pixelIdleStuckFrames() >= JABS_Battler.pixelIdleStuckLimit)
       {
-        this._pixelIdleDest = null;
-        this._pixelIdleStuckFrames = 0;
-        this._pixelIdleWait = this._rollIdleWaitDuration();
+        this.setPixelIdleDest(null);
+        this.setPixelIdleStuckFrames(0);
+        this.setPixelIdleWait(this._rollIdleWaitDuration());
         return;
       }
 
@@ -101,9 +101,9 @@ JABS_Battler.prototype.updatePixelIdleWander = function()
     }
 
     // arrived — clear the destination and start the post-arrival wait.
-    this._pixelIdleDest = null;
-    this._pixelIdleStuckFrames = 0;
-    this._pixelIdleWait = this._rollIdleWaitDuration();
+    this.setPixelIdleDest(null);
+    this.setPixelIdleStuckFrames(0);
+    this.setPixelIdleWait(this._rollIdleWaitDuration());
     return;
   }
 
@@ -113,13 +113,13 @@ JABS_Battler.prototype.updatePixelIdleWander = function()
   // if all candidates were impassable, wait a cycle before trying again.
   if (dest === null)
   {
-    this._pixelIdleWait = this._rollIdleWaitDuration();
+    this.setPixelIdleWait(this._rollIdleWaitDuration());
     return;
   }
 
   // store  pixel idle dest on the instance for later reads.
-  this._pixelIdleDest = dest;
-  this._pixelIdleStuckFrames = 0;
+  this.setPixelIdleDest(dest);
+  this.setPixelIdleStuckFrames(0);
 };
 
 /**
@@ -267,16 +267,6 @@ JABS_Battler.prototype.smartMoveAwayFromTarget = function()
     return;
   }
 
-  // Define a small hysteresis so we retreat until clearly outside the close band.
-  const hysteresis = 0.25;
-
-  // If we already passed closeBand + hysteresis, then stop retreating.
-  if (currentDistance >= (JABS_Battler.closeDistance + hysteresis))
-  {
-    // We are outside the danger band far enough; stop retreating.
-    return;
-  }
-
   // If we have an active retreat micro-route and it remains passable, honor it.
   if (chr.isMicroRouting())
   {
@@ -402,9 +392,11 @@ JABS_Battler.prototype.smartMoveAwayFromTarget = function()
       // Right.
       simX += straightStep;
     }
-    else if (dir === J.ABS.Directions.LEFT)
+    else
     {
-      // Left.
+      // Left- the only candidate left once the other seven have been ruled out, since the candidate
+      // list above is exactly the eight directions and this chain tests all of them. re-checking for
+      // LEFT here would be a condition that can never be false.
       simX -= straightStep;
     }
 
@@ -922,4 +914,66 @@ JABS_Battler.prototype.canDirectionalDodgeStepPass = function(character, directi
   // straight directions use the pixel movement passability check.
   return character.canPassStraight(direction8);
 };
+
+//region properties
+/**
+ * Gets the pixel idle dest.
+ * @returns {*} The pixelIdleDest.
+ */
+JABS_Battler.prototype.pixelIdleDest = function()
+{
+  // hand back the pixel idle dest.
+  return this._pixelIdleDest;
+};
+
+/**
+ * Sets the pixel idle dest.
+ * @param {*} newPixelIdleDest The new pixelIdleDest.
+ */
+JABS_Battler.prototype.setPixelIdleDest = function(newPixelIdleDest)
+{
+  // assign the pixel idle dest.
+  this._pixelIdleDest = newPixelIdleDest;
+};
+
+/**
+ * Gets the pixel idle wait.
+ * @returns {*} The pixelIdleWait.
+ */
+JABS_Battler.prototype.pixelIdleWait = function()
+{
+  // hand back the pixel idle wait.
+  return this._pixelIdleWait;
+};
+
+/**
+ * Sets the pixel idle wait.
+ * @param {*} newPixelIdleWait The new pixelIdleWait.
+ */
+JABS_Battler.prototype.setPixelIdleWait = function(newPixelIdleWait)
+{
+  // assign the pixel idle wait.
+  this._pixelIdleWait = newPixelIdleWait;
+};
+
+/**
+ * Gets the pixel idle stuck frames.
+ * @returns {number} The pixelIdleStuckFrames.
+ */
+JABS_Battler.prototype.pixelIdleStuckFrames = function()
+{
+  // hand back the pixel idle stuck frames.
+  return this._pixelIdleStuckFrames;
+};
+
+/**
+ * Sets the pixel idle stuck frames.
+ * @param {number} newPixelIdleStuckFrames The new pixelIdleStuckFrames.
+ */
+JABS_Battler.prototype.setPixelIdleStuckFrames = function(newPixelIdleStuckFrames)
+{
+  // assign the pixel idle stuck frames.
+  this._pixelIdleStuckFrames = newPixelIdleStuckFrames;
+};
+//endregion properties
 //endregion JABS_Battler

@@ -41,6 +41,21 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Battler.js', () => ({ default: class {} }));
 
     await import('../../../../../src/plugins/abs/core/objects/Game_Player.js');
+
+    // RMMZ exposes map coordinates as native properties on Game_CharacterBase.
+    Object.defineProperties(globalThis.Game_Player.prototype, {
+      // vanilla exposes these read-only; the double allows writes so tests can position freely.
+      x: { get() { return this._x; }, set(v) { this._x = v; }, configurable: true },
+      y: { get() { return this._y; }, set(v) { this._y = v; }, configurable: true },
+    });
+
+    // J-Base coordinate accessors the pixel/abs layers read and write through.
+    globalThis.Game_Player.prototype.setX = function(v) { this._x = v; };
+    globalThis.Game_Player.prototype.setY = function(v) { this._y = v; };
+    globalThis.Game_Player.prototype.realX = function() { return this._realX; };
+    globalThis.Game_Player.prototype.realY = function() { return this._realY; };
+    globalThis.Game_Player.prototype.setRealX = function(v) { this._realX = v; };
+    globalThis.Game_Player.prototype.setRealY = function(v) { this._realY = v; };
   });
 
   beforeEach(() =>
@@ -53,7 +68,6 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
 
     globalThis.$jabsEngine = {
       absEnabled: false,
-      requestAbsMenu: false,
       absPause: false,
       getPlayer1: vi.fn(() => ({ hasUninterruptibleMovementLock: vi.fn(() => false) })),
       initializePlayer1: vi.fn(),
@@ -223,16 +237,6 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
   //region canMove
   describe('canMove', () =>
   {
-    it('denies movement when the abs menu is requested', () =>
-    {
-      // Arrange
-      const player = buildPlayer();
-      globalThis.$jabsEngine.requestAbsMenu = true;
-
-      // Act/Assert
-      expect(player.canMove()).toEqual(false);
-    });
-
     it('denies movement when abs is paused', () =>
     {
       // Arrange
@@ -386,7 +390,7 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
       // Arrange
       const player = buildPlayer();
       const lootData = { id: 1 };
-      const lootDrop = { getJabsLoot: vi.fn(() => ({ useOnPickup: true, lootData })) };
+      const lootDrop = { getJabsLoot: vi.fn(() => ({ isUseOnPickup: () => true, lootData: () => lootData })) };
       vi.spyOn(player, 'canCollectLoot').mockReturnValue(true);
       vi.spyOn(player, 'useOnPickup').mockImplementation(() => {});
       vi.spyOn(player, 'removeLoot').mockImplementation(() => {});
@@ -405,7 +409,7 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
     {
       // Arrange
       const player = buildPlayer();
-      const lootDrop = { getJabsLoot: vi.fn(() => ({ useOnPickup: false })) };
+      const lootDrop = { getJabsLoot: vi.fn(() => ({ isUseOnPickup: () => false })) };
       vi.spyOn(player, 'canCollectLoot').mockReturnValue(true);
       vi.spyOn(player, 'pickupLootCollection').mockImplementation(() => {});
 
@@ -474,8 +478,8 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
       const player = buildPlayer();
       const lootDataA = { id: 1 };
       const lootDataB = { id: 2 };
-      const lootA = { getJabsLoot: vi.fn(() => ({ lootData: lootDataA })) };
-      const lootB = { getJabsLoot: vi.fn(() => ({ lootData: lootDataB })) };
+      const lootA = { getJabsLoot: vi.fn(() => ({ lootData: () => lootDataA })) };
+      const lootB = { getJabsLoot: vi.fn(() => ({ lootData: () => lootDataB })) };
       vi.spyOn(player, 'storeOnPickup').mockImplementation(() => {});
       vi.spyOn(player, 'removeLoot').mockImplementation(() => {});
 
@@ -524,7 +528,7 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
       // Arrange
       const player = buildPlayer();
       const lootData = { id: 1 };
-      const lootEvent = { getJabsLoot: vi.fn(() => ({ useOnPickup: true, lootData })) };
+      const lootEvent = { getJabsLoot: vi.fn(() => ({ isUseOnPickup: () => true, lootData: () => lootData })) };
       vi.spyOn(player, 'useOnPickup').mockImplementation(() => {});
       vi.spyOn(player, 'storeOnPickup').mockImplementation(() => {});
 
@@ -541,7 +545,7 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
       // Arrange
       const player = buildPlayer();
       const lootData = { id: 1 };
-      const lootEvent = { getJabsLoot: vi.fn(() => ({ useOnPickup: false, lootData })) };
+      const lootEvent = { getJabsLoot: vi.fn(() => ({ isUseOnPickup: () => false, lootData: () => lootData })) };
       vi.spyOn(player, 'useOnPickup').mockImplementation(() => {});
       vi.spyOn(player, 'storeOnPickup').mockImplementation(() => {});
 

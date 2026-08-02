@@ -43,10 +43,11 @@ describe('J-Aptitude plugin commands (direct src import)', () =>
     delete globalThis.$gameActors;
   });
 
-  it('registers both mod-ap-all and mod-ap under the J-Aptitude plugin name', () =>
+  it('registers every aptitude command under the J-Aptitude plugin name', () =>
   {
-    expect(registeredCommands.has('mod-ap-all')).toBe(true);
-    expect(registeredCommands.has('mod-ap')).toBe(true);
+    expect([ ...registeredCommands.keys() ]).toEqual([
+      'mod-ap-all', 'mod-ap', 'refresh-required-ap-all', 'refresh-required-ap',
+    ]);
   });
 
   it('mod-ap-all grants the parsed AP amount to every party member', () =>
@@ -69,6 +70,32 @@ describe('J-Aptitude plugin commands (direct src import)', () =>
     registeredCommands.get('mod-ap')({ actorId: '3', points: '7' });
 
     expect(actorLookup).toHaveBeenCalledWith(3);
+  });
+
+  it('refresh-required-ap-all re-syncs every party member against current notetags', () =>
+  {
+    // Arrange- persisted requiredAp goes stale whenever the database notetags change under an
+    // existing save, so this command exists to walk it back into agreement.
+    const actorA = { getAllAptitudeProgresses: () => ({}) };
+    const actorB = { getAllAptitudeProgresses: () => ({}) };
+    globalThis.$gameParty = { members: () => [ actorA, actorB ] };
+
+    // Act & Assert
+    expect(() => registeredCommands.get('refresh-required-ap-all')()).not.toThrow();
+  });
+
+  it('refresh-required-ap re-syncs only the actor resolved by id', () =>
+  {
+    // Arrange
+    const actor = { getAllAptitudeProgresses: () => ({}) };
+    const actorLookup = vi.fn(() => actor);
+    globalThis.$gameActors = { actor: actorLookup };
+
+    // Act
+    registeredCommands.get('refresh-required-ap')({ actorId: '4' });
+
+    // Assert- the id arrives as a string from the editor and has to be parsed before lookup.
+    expect(actorLookup).toHaveBeenCalledWith(4);
   });
 });
 //endregion plugins/apt/core/_component/plugin-commands-direct.test.js

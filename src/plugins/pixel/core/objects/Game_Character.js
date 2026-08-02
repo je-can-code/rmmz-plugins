@@ -65,10 +65,10 @@ Game_Character.prototype.updateRoutineMove = function()
 Game_Character.prototype.handlePixelRoutineMove = function()
 {
   // check if we are waiting in the move route.
-  if (this._waitCount > 0)
+  if (this.waitCount() > 0)
   {
     // decrement wait count and stop processing.
-    this._waitCount--;
+    this.setWaitCount(this.waitCount() - 1);
 
     // stop processing while waiting.
     return;
@@ -78,7 +78,7 @@ Game_Character.prototype.handlePixelRoutineMove = function()
   this.setMovementSuccess(true);
 
   // extract the current move route command.
-  const command = this._moveRoute.list[this._moveRouteIndex];
+  const command = this.moveRoute().list[this.moveRouteIndex()];
 
   // nothing to do if no command is present at this index.
   if (command === undefined) return;
@@ -133,5 +133,43 @@ Game_Character.prototype.canStartPixelRepeatMove = function(command)
 
   // all checks passed; start repeating.
   return true;
+};
+
+/**
+ * Overwrites {@link Game_Character.moveRandom}.<br/>
+ * Vanilla rolls a brand-new random cardinal direction on every single call. Under pixel
+ * movement, {@link Game_Character#handlePixelRoutineMove} repeats a "Move Random" route
+ * command every frame to cover a full tile's worth of sub-pixel distance, so the vanilla
+ * version re-rolls dozens of times before a tile is crossed - visibly twitching in place
+ * instead of travelling. This caches the rolled direction using the same micro-route hold
+ * primitives ({@link Game_CharacterBase#setMicroRouteDirection} etc.) already used by JABS'
+ * AI idle-wander/retreat logic, and reuses it for one full tile's worth of frames.
+ */
+Game_Character.prototype.moveRandom = function()
+{
+  // reuse a still-active cached direction rather than rolling a new one every frame.
+  if (this.isMicroRouting())
+  {
+    // step in the cached direction; moveStraight re-validates passability every frame,
+    // so a direction that becomes blocked mid-hold simply stops the character in place.
+    this.moveStraight(this.getMicroRouteDirection());
+
+    // count down the remaining frames this cached direction should be held for.
+    this.decrementMicroRouteFrames();
+
+    // stop here; do not roll a new direction while the cache is still active.
+    return;
+  }
+
+  // roll a fresh random cardinal direction, matching vanilla's own algorithm.
+  const direction = 2 + (Math.floor(Math.random() * 4) * 2);
+
+  // cache it for one full tile's worth of frames so the repeat cycle above keeps
+  // moving the same way instead of re-rolling and twitching in place.
+  this.setMicroRouteDirection(direction);
+  this.setMicroRouteFrames(this.pixelRepeatCountForRoute());
+
+  // take the first step immediately in the newly-rolled direction.
+  this.moveStraight(direction);
 };
 //endregion Game_Character

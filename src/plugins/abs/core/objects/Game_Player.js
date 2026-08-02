@@ -36,8 +36,8 @@ Game_Player.prototype.startMapEvent = function(x, y, triggers, normal)
 J.ABS.Aliased.Game_Player.set('canMove', Game_Player.prototype.canMove);
 Game_Player.prototype.canMove = function()
 {
-  // check if something related to JABS is causing the player to stop moving.
-  const isMenuRequested = $jabsEngine.requestAbsMenu;
+  // check if something related to JABS is causing the player to stop moving. Note that the menu is no
+  // longer among them: it is a scene now, so Scene_Map is not even running while it is open.
   const isAbsPaused = $jabsEngine.absPause;
 
   // casting/channeling only roots the player outright when the in-flight skill opts into
@@ -50,7 +50,7 @@ Game_Player.prototype.canMove = function()
     .hasUninterruptibleMovementLock();
 
   // any of these will prevent the player from moving.
-  const jabsDeniesMovement = (isMenuRequested || isAbsPaused || isPlayerRooted);
+  const jabsDeniesMovement = (isAbsPaused || isPlayerRooted);
 
   // check if JABS is denying movement.
   if (jabsDeniesMovement)
@@ -155,10 +155,10 @@ Game_Player.prototype.processLootCollection = function(lootDrops)
     const jabsLootDrop = lootDrop.getJabsLoot();
 
     // check if the loot is to be used immediately on-pickup.
-    if (jabsLootDrop.useOnPickup)
+    if (jabsLootDrop.isUseOnPickup())
     {
       // use and remove it from tracking if it is.
-      this.useOnPickup(jabsLootDrop.lootData);
+      this.useOnPickup(jabsLootDrop.lootData());
 
       // remove the loot drop from the map.
       this.removeLoot(lootDrop);
@@ -207,7 +207,8 @@ Game_Player.prototype.pickupLootCollection = function(lootCollected)
   lootCollected.forEach(loot =>
   {
     // get the underlying loot item.
-    const { lootData } = loot.getJabsLoot();
+    const lootData = loot.getJabsLoot()
+      .lootData();
 
     // store the loot on-pickup.
     this.storeOnPickup(lootData);
@@ -233,7 +234,7 @@ Game_Player.prototype.pickupLootCollection = function(lootCollected)
  */
 Game_Player.prototype.isTouchingLoot = function(lootDrop)
 {
-  const distance = $gameMap.distance(lootDrop._realX, lootDrop._realY, this._realX, this._realY);
+  const distance = $gameMap.distance(lootDrop._realX, lootDrop._realY, this.realX(), this.realY());
   return distance <= J.ABS.Metadata.LootPickupRange;
 };
 
@@ -245,8 +246,8 @@ Game_Player.prototype.pickupLoot = function(lootEvent)
 {
   // extract the loot data.
   const lootMetadata = lootEvent.getJabsLoot();
-  const { lootData } = lootMetadata;
-  lootMetadata.useOnPickup
+  const lootData = lootMetadata.lootData();
+  lootMetadata.isUseOnPickup()
     ? this.useOnPickup(lootData)
     : this.storeOnPickup(lootData);
 };

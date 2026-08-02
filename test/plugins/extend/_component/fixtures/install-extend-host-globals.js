@@ -29,6 +29,16 @@ export function setPluginContextToJExtend(sandbox = globalThis)
 }
 
 /**
+ * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-Extend-ABS's own identity.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ */
+export function setPluginContextToJExtendAbs(sandbox = globalThis)
+{
+  sandbox.__PLUGIN_NAME__ = 'J-Extend-ABS';
+  sandbox.__PLUGIN_VERSION__ = '1.0.0';
+}
+
+/**
  * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-Extend-SKS's own identity.
  * @param {object} [sandbox] Defaults to `globalThis`.
  */

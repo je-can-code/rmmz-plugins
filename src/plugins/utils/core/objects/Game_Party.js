@@ -56,9 +56,9 @@ Game_Party.prototype.removeInvalidItemsFromParty = function()
     }
   };
 
-  purgeContainer(this._items, $dataItems);
-  purgeContainer(this._weapons, $dataWeapons);
-  purgeContainer(this._armors, $dataArmors);
+  purgeContainer(this.rawItems(), $dataItems);
+  purgeContainer(this.rawWeapons(), $dataWeapons);
+  purgeContainer(this.rawArmors(), $dataArmors);
 
   const members = this.members();
   for (let i = 0; i < members.length; i++)

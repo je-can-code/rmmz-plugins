@@ -61,13 +61,25 @@ class Sprite_SkillSlotIcon
     this._j._pulseFrames = 0;
   }
 
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   /**
    * Sets the skill slot for this sprite's icon.
    * @param {JABS_SkillSlot} skillSlot The skill slot being assigned.
    */
   setSkillSlot(skillSlot)
   {
-    this._j._skillSlot = skillSlot;
+    this.j()._skillSlot = skillSlot;
   }
 
   /**
@@ -76,7 +88,7 @@ class Sprite_SkillSlotIcon
    */
   hasSkillSlot()
   {
-    return !!this._j._skillSlot;
+    return !!this.j()._skillSlot;
   }
 
   /**
@@ -85,7 +97,7 @@ class Sprite_SkillSlotIcon
    */
   skillSlot()
   {
-    return this._j._skillSlot;
+    return this.j()._skillSlot;
   }
 
   /**
@@ -98,13 +110,13 @@ class Sprite_SkillSlotIcon
   skillSlotIcon()
   {
     // if there is no skill slot, return whatever is currently there.
-    if (!this.hasSkillSlot()) return this._j._iconIndex;
+    if (!this.hasSkillSlot()) return this.j()._iconIndex;
 
     // grab the party leader; they are the source of transform resolution for the icon.
     const leader = $gameParty.leader();
 
     // if there is no leader, do not try to translate the slot into an icon.
-    if (!leader) return this._j._iconIndex;
+    if (!leader) return this.j()._iconIndex;
 
     // resolve through the transform layer so the icon shows the effective skill.
     const resolvedId = leader.getResolvedSkillId(this.skillSlot().key);
@@ -125,7 +137,7 @@ class Sprite_SkillSlotIcon
    */
   skillSlotKey()
   {
-    return this._j._skillSlot.key;
+    return this.j()._skillSlot.key;
   }
 
   /**
@@ -147,8 +159,8 @@ class Sprite_SkillSlotIcon
     // cooldown-driven updates require an assigned skill slot.
     if (!this.hasSkillSlot()) return;
 
-    // resolve the leader JABS battler; the engine may not be ready on early frames.
-    const jabsBattler = $jabsEngine?.getPlayer1();
+    // resolve the leader JABS battler.
+    const jabsBattler = $jabsEngine.getPlayer1();
     if (!jabsBattler) return;
 
     // fetch the cooldown object for this slot's key.
@@ -169,7 +181,7 @@ class Sprite_SkillSlotIcon
   getOrCreateCooldownOverlaySprite()
   {
     // return the existing overlay if it was already created.
-    if (this._j._cooldownOverlaySprite) return this._j._cooldownOverlaySprite;
+    if (this.j()._cooldownOverlaySprite) return this.j()._cooldownOverlaySprite;
 
     // create the overlay using the icon index configured in the plugin parameters.
     const overlay = new Sprite_Icon(J.HUD.EXT.INPUT.Metadata.CooldownOverlayIconIndex);
@@ -184,7 +196,7 @@ class Sprite_SkillSlotIcon
     this.addChild(overlay);
 
     // cache the reference so we never create a second one.
-    this._j._cooldownOverlaySprite = overlay;
+    this.j()._cooldownOverlaySprite = overlay;
 
     return overlay;
   }
@@ -250,30 +262,30 @@ class Sprite_SkillSlotIcon
     const comboReady = cooldown.isComboReady();
 
     // rising edge: base cooldown just finished.
-    if (!this._j._prevBaseReady && baseReady)
+    if (!this.j()._prevBaseReady && baseReady)
     {
-      this._j._pulseFrames = 12;
+      this.j()._pulseFrames = 12;
     }
 
     // rising edge: combo delay elapsed and the follow-up window just opened.
-    if (!this._j._prevComboReady && comboReady)
+    if (!this.j()._prevComboReady && comboReady)
     {
-      this._j._pulseFrames = 12;
+      this.j()._pulseFrames = 12;
     }
 
     // record states for comparison on the next frame.
-    this._j._prevBaseReady = baseReady;
-    this._j._prevComboReady = comboReady;
+    this.j()._prevBaseReady = baseReady;
+    this.j()._prevComboReady = comboReady;
 
     // apply the scale pop while a pulse is active.
-    if (this._j._pulseFrames > 0)
+    if (this.j()._pulseFrames > 0)
     {
       // smooth arc: peaks at mid-pulse (sin(π/2) = 1) and returns to 1.0 at both ends.
-      const t = this._j._pulseFrames / 12;
+      const t = this.j()._pulseFrames / 12;
       const s = 1 + Math.sin(t * Math.PI) * 0.25;
       this.scale.x = s;
       this.scale.y = s;
-      this._j._pulseFrames--;
+      this.j()._pulseFrames--;
     }
     else
     {

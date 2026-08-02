@@ -4,12 +4,66 @@
  */
 class JABS_Timer
 {
+
+  //region properties
+  /**
+   * Gets the timer.
+   * @returns {number} The timer.
+   */
+  timer()
+  {
+    // hand back the timer.
+    return this._timer;
+  }
+
+  /**
+   * Sets the timer.
+   * @param {number} newTimer The new timer.
+   */
+  setTimer(newTimer)
+  {
+    // assign the timer.
+    this._timer = newTimer;
+  }
+
+  /**
+   * Gets the timer max.
+   * @returns {number} The timerMax.
+   */
+  timerMax()
+  {
+    // hand back the timer max.
+    return this._timerMax;
+  }
+
+  /**
+   * Sets the timer max.
+   * @param {number} newTimerMax The new timerMax.
+   */
+  setTimerMax(newTimerMax)
+  {
+    // assign the timer max.
+    this._timerMax = newTimerMax;
+  }
+
+  /**
+   * Gets the stop counting.
+   * @returns {boolean} The stopCounting.
+   */
+  stopCounting()
+  {
+    // hand back the stop counting.
+    return this._stopCounting;
+  }
+  //endregion properties
+
   /**
    * A key or name for this timer.
    * This is not strictly enforced by the timer, so this is for
    * developer convenience if needed.
    * @type {string}
    */
+
   _key = String.empty;
 
   /**
@@ -83,7 +137,7 @@ class JABS_Timer
    */
   getCurrentTime()
   {
-    return this._timer;
+    return this.timer();
   }
 
   /**
@@ -94,7 +148,7 @@ class JABS_Timer
    */
   setCurrentTime(time)
   {
-    this._timer = time;
+    this.setTimer(time);
 
     // handle the possibility of the timer becoming incomplete.
     this._handleIfIncomplete();
@@ -113,7 +167,7 @@ class JABS_Timer
   modCurrentTime(time)
   {
     // modify by this amount.
-    this._timer += time;
+    this.setTimer(this.timer() + time);
 
     // handle the possibility of the timer becoming incomplete.
     this._handleIfIncomplete();
@@ -122,7 +176,7 @@ class JABS_Timer
     this._handleIfComplete();
 
     // for convenience, returns the new total.
-    return this._timer;
+    return this.timer();
   }
 
   /**
@@ -131,7 +185,7 @@ class JABS_Timer
    */
   getMaxTime()
   {
-    return this._timerMax;
+    return this.timerMax();
   }
 
   /**
@@ -140,7 +194,7 @@ class JABS_Timer
    */
   setMaxTime(maxTime)
   {
-    this._timerMax = maxTime;
+    this.setTimerMax(maxTime);
   }
 
   /**
@@ -149,7 +203,7 @@ class JABS_Timer
    */
   shouldStopCounting()
   {
-    return this._stopCounting;
+    return this.stopCounting();
   }
 
   /**
@@ -164,7 +218,7 @@ class JABS_Timer
     if (!this.shouldStopCounting()) return;
 
     // reset the time to the max time.
-    this._timer = this.getMaxTime();
+    this.setTimer(this.getMaxTime());
   }
 
   /**
@@ -182,7 +236,7 @@ class JABS_Timer
   reset()
   {
     // re-initialize the timer.
-    this._timer = 0;
+    this.setTimer(0);
 
     // re-initialize the completion flag.
     this._timerComplete = false;
@@ -209,7 +263,7 @@ class JABS_Timer
     if (this.isTimerComplete()) return;
 
     // increment the timer.
-    this._timer++;
+    this.setTimer(this.timer() + 1);
   }
 
   /**
@@ -227,7 +281,7 @@ class JABS_Timer
   _handleIfIncomplete()
   {
     // check if we are below the max time duration.
-    if (this._timer < this._timerMax)
+    if (this.timer() < this.timerMax())
     {
       // going below the timer marks this timer as incomplete.
       this._timerComplete = false;
@@ -246,7 +300,7 @@ class JABS_Timer
     if (this.isTimerComplete()) return;
 
     // check if we have reached or exceeded the max time duration.
-    if (this._timer >= this._timerMax)
+    if (this.timer() >= this.timerMax())
     {
       // surpassing the timer marks this timer as complete.
       this._timerComplete = true;

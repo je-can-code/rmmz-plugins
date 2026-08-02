@@ -28,6 +28,18 @@ Game_System.prototype.initialize = function()
 };
 
 /**
+ * Seeds the content sync session slot when it is absent, leaving any loaded session intact.
+ *
+ * Saves written before this plugin existed have no slot at all; this fills it without disturbing
+ * a session that was already restored.
+ */
+Game_System.prototype.initContentSyncSessionIfAbsent = function()
+{
+  // only seed when the slot is missing entirely.
+  this._j._levelSync._contentSyncSession ??= null;
+};
+
+/**
  * Gets the active content sync session.
  * @returns {{ level: number, uplevel: boolean }|null}
  */
@@ -77,7 +89,7 @@ Game_System.prototype.onAfterLoad = function()
 
   // re-initialize session storage in case this save predates this plugin.
   this._j._levelSync ||= {};
-  this._j._levelSync._contentSyncSession ??= null;
+  this.initContentSyncSessionIfAbsent();
 
   // refresh all party members so stats reflect the loaded session state.
   $gameParty.members().forEach(actor =>

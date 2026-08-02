@@ -97,7 +97,7 @@ Game_Actor.prototype.getAllAptitudeProgresses = function()
   // emergency initialize for existing saves.
   if (!this._j._aptitude) this.initAptitudeMembers();
 
-  return this._j._aptitude._progress;
+  return this.progress();
 };
 
 /**
@@ -109,7 +109,7 @@ Game_Actor.prototype.getAllAptitudeSkillsLearned = function()
   // emergency initialize for existing saves.
   if (!this._j._aptitude) this.initAptitudeMembers();
 
-  return this._j._aptitude._learned;
+  return this.learned();
 };
 
 /**
@@ -178,7 +178,7 @@ Game_Actor.prototype.getAptitudeProgress = function(key)
   if (!this._j._aptitude) this.initAptitudeMembers();
 
   // get the progress, or coalesce politely to null if it doesn't exist.
-  return this._j._aptitude._progress[key] ?? null;
+  return this.progress()[key] ?? null;
 };
 
 /**
@@ -188,7 +188,7 @@ Game_Actor.prototype.getAptitudeProgress = function(key)
  */
 Game_Actor.prototype.hasAptitudeProgress = function(key)
 {
-  return this._j._aptitude._progress[key] !== undefined;
+  return this.progress()[key] !== undefined;
 };
 
 /**
@@ -301,7 +301,7 @@ Game_Actor.prototype.getAptitudeSources = function()
  */
 Game_Actor.prototype.hasAptitudeSkill = function(skillId)
 {
-  return this._j._aptitude._learned[skillId] !== undefined;
+  return this.learned()[skillId] !== undefined;
 };
 
 /**
@@ -311,7 +311,7 @@ Game_Actor.prototype.hasAptitudeSkill = function(skillId)
  */
 Game_Actor.prototype.getAptitudeSkill = function(skillId)
 {
-  return this._j._aptitude._learned[skillId];
+  return this.learned()[skillId];
 };
 
 /**
@@ -322,7 +322,7 @@ Game_Actor.prototype.getAptitudeSkill = function(skillId)
 Game_Actor.prototype.setAptitudeSkill = function(skillId, aptitudeSkill)
 {
   // set the aptitude.
-  this._j._aptitude._learned[skillId] = aptitudeSkill;
+  this.learned()[skillId] = aptitudeSkill;
 };
 
 /**
@@ -383,4 +383,26 @@ Game_Actor.prototype.createAptitudeSkill = function(skillId, isLearned = false)
   // generate the new aptitude skill.
   return new AptitudeSkill(skillId, isLearned);
 };
+
+//region properties
+/**
+ * Gets the accumulated aptitude progress, keyed by aptitude.
+ * @returns {Object<string, number>} The progress per aptitude.
+ */
+Game_Actor.prototype.progress = function()
+{
+  // hand back the progress.
+  return this._j._aptitude._progress;
+};
+
+/**
+ * Gets the aptitude-granted skills this actor has already learned.
+ * @returns {Object<string, number[]>} The learned skills per aptitude.
+ */
+Game_Actor.prototype.learned = function()
+{
+  // hand back the learned.
+  return this._j._aptitude._learned;
+};
+//endregion properties
 //endregion Game_Actor

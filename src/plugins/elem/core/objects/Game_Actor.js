@@ -6,9 +6,10 @@ J.ELEM.Aliased.Game_Actor.set("elementRate", Game_Actor.prototype.elementRate);
 Game_Actor.prototype.elementRate = function(elementId)
 {
   // perform original logic.
-  const baseRate = J.ELEM.Aliased.Game_Enemy.get("elementRate")
+  const baseRate = J.ELEM.Aliased.Game_Actor.get("elementRate")
     .call(this, elementId);
 
+  // an absorbed element inverts the rate, which is what turns incoming damage into healing.
   const isAbsorbed = this.isElementAbsorbed(elementId)
     ? -1
     : 1;

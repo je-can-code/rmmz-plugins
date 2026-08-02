@@ -56,12 +56,12 @@ Game_Party.prototype.initJaftingCreationMembers = function()
 Game_Party.prototype.populateJaftingTrackings = function()
 {
   // populate the recipes.
-  this._j._crafting._recipeTrackings = J.JAFTING.EXT.CREATE.Metadata.recipes
-    .map(recipe => new RecipeTracking(recipe.key, recipe.unlockedByDefault));
+  this.setRecipeTrackings(J.JAFTING.EXT.CREATE.Metadata.recipes
+    .map(recipe => new RecipeTracking(recipe.key, recipe.unlockedByDefault)));
 
   // populate the categories.
-  this._j._crafting._categoryTrackings = J.JAFTING.EXT.CREATE.Metadata.categories
-    .map(category => new CategoryTracking(category.key, category.unlockedByDefault));
+  this.setCategoryTrackings(J.JAFTING.EXT.CREATE.Metadata.categories
+    .map(category => new CategoryTracking(category.key, category.unlockedByDefault)));
 };
 
 /**
@@ -126,7 +126,7 @@ Game_Party.prototype.updateCategoriesFromConfig = function()
  */
 Game_Party.prototype.getAllRecipeTrackings = function()
 {
-  return this._j._crafting._recipeTrackings;
+  return this.recipeTrackings();
 };
 
 /**
@@ -135,7 +135,7 @@ Game_Party.prototype.getAllRecipeTrackings = function()
  */
 Game_Party.prototype.getAllCategoryTrackings = function()
 {
-  return this._j._crafting._categoryTrackings;
+  return this.categoryTrackings();
 };
 
 /**
@@ -504,4 +504,46 @@ Game_Party.prototype.updateVariableWithCraftedCountByCategories = function(varia
   // update the variable requested with the total count.
   $gameVariables.setValue(variableId, count);
 };
+
+//region properties
+/**
+ * Gets the recipe trackings.
+ * @returns {*} The recipeTrackings.
+ */
+Game_Party.prototype.recipeTrackings = function()
+{
+  // hand back the recipe trackings.
+  return this._j._crafting._recipeTrackings;
+};
+
+/**
+ * Sets the recipe trackings.
+ * @param {*} newRecipeTrackings The new recipeTrackings.
+ */
+Game_Party.prototype.setRecipeTrackings = function(newRecipeTrackings)
+{
+  // assign the recipe trackings.
+  this._j._crafting._recipeTrackings = newRecipeTrackings;
+};
+
+/**
+ * Gets the category trackings.
+ * @returns {*} The categoryTrackings.
+ */
+Game_Party.prototype.categoryTrackings = function()
+{
+  // hand back the category trackings.
+  return this._j._crafting._categoryTrackings;
+};
+
+/**
+ * Sets the category trackings.
+ * @param {*} newCategoryTrackings The new categoryTrackings.
+ */
+Game_Party.prototype.setCategoryTrackings = function(newCategoryTrackings)
+{
+  // assign the category trackings.
+  this._j._crafting._categoryTrackings = newCategoryTrackings;
+};
+//endregion properties
 //endregion Game_Party

@@ -13,7 +13,7 @@ Scene_Menu.prototype.createCommandWindow = function()
     .call(this);
 
   // set the handler for our custom command.
-  this._commandWindow.setHandler('aptitude', this.commandAptitude.bind(this));
+  this.commandWindow().setHandler('aptitude', this.commandAptitude.bind(this));
 };
 
 /**

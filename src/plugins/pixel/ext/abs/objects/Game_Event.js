@@ -53,12 +53,6 @@ Game_Event.prototype.initPixelAbsHitboxData = function()
  */
 Game_Event.prototype.getPixelAbsHitboxSizeData = function()
 {
-  // if our cache was somehow never initialized, then do so now.
-  if (!this._j || !this._j._pixel || !this._j._pixel._abs)
-  {
-    this.initPixelAbsHitboxData();
-  }
-
   return this._j._pixel._abs._hitboxSizeData;
 };
 
@@ -68,12 +62,6 @@ Game_Event.prototype.getPixelAbsHitboxSizeData = function()
  */
 Game_Event.prototype.setPixelAbsHitboxSizeData = function(hitboxSizeData)
 {
-  // if our cache was somehow never initialized, then do so now.
-  if (!this._j || !this._j._pixel || !this._j._pixel._abs)
-  {
-    this.initPixelAbsHitboxData();
-  }
-
   // null means this event should use the vanilla PIXEL footprint.
   if (hitboxSizeData === null)
   {
@@ -159,12 +147,6 @@ Game_Event.prototype.getPixelAbsHitboxSizeCommentOverride = function()
  */
 Game_Event.prototype.getPixelAbsHitboxRevealRange = function()
 {
-  // if our cache was somehow never initialized, then do so now.
-  if (!this._j || !this._j._pixel || !this._j._pixel._abs)
-  {
-    this.initPixelAbsHitboxData();
-  }
-
   return this._j._pixel._abs._hitboxRevealRange;
 };
 
@@ -174,12 +156,6 @@ Game_Event.prototype.getPixelAbsHitboxRevealRange = function()
  */
 Game_Event.prototype.setPixelAbsHitboxRevealRange = function(hitboxRevealRange)
 {
-  // if our cache was somehow never initialized, then do so now.
-  if (!this._j || !this._j._pixel || !this._j._pixel._abs)
-  {
-    this.initPixelAbsHitboxData();
-  }
-
   // store the resolved reveal range for later visibility checks.
   this._j._pixel._abs._hitboxRevealRange = hitboxRevealRange;
 };
@@ -353,21 +329,8 @@ Game_Event.prototype.canShowPixelAbsHitboxReveal = function()
  */
 Game_Event.prototype.getPixelAbsHitboxTileAabb = function(logicalX = this.x, logicalY = this.y)
 {
-  // build the hitbox against the event's current pivoting rules.
-  const pivotX = logicalX + this.getCollisionPivotX();
-  const pivotY = logicalY + this.getCollisionPivotY();
-  const hitbox = this._pixelHitbox(this.getEffectiveRadius());
-  const left = pivotX + hitbox.hx;
-  const top = pivotY + hitbox.hy;
-
-  return {
-    left,
-    top,
-    right: left + hitbox.w,
-    bottom: top + hitbox.h,
-    width: hitbox.w,
-    height: hitbox.h,
-  };
+  // this event's own hitbox and pivot overrides already feed the shared PIXEL footprint builder.
+  return this.getCollisionAabbAt(logicalX, logicalY, this.getEffectiveRadius());
 };
 
 /**

@@ -93,6 +93,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.1
+ *    Cleaned up the popup guards that the passive-refresh ordering fix in
+ *    J-Passive made redundant.
  * - 1.3.0
  *    Per-target strike/slip aggregates (no per-attacker lanes); combat slip/reward/mitigation merge buckets +
  *    idle/combo/map flush hooks; requires J-Popups v2.1.0+ merge stack (`Sprite_MapDamage`, merge controller).

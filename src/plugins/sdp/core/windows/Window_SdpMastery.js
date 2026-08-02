@@ -55,8 +55,11 @@ class Window_SdpMastery
 
     // line 1: subgroup identity — the family this mastery belongs to.
     const iconPad = 4;
+
+    // note: the icon width lives on `ImageManager` in MZ; `Window_Base._iconWidth` is an MV property
+    // that does not exist here, and reaching for it silently yields a NaN x that renders nothing.
     const textX = subgroupIcon >= 0
-      ? Window_Base._iconWidth + iconPad
+      ? ImageManager.iconWidth + iconPad
       : 0;
 
     if (subgroupIcon >= 0)

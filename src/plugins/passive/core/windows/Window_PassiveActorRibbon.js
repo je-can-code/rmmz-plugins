@@ -7,17 +7,17 @@
 class Window_PassiveActorRibbon
   extends Window_ActorRibbon
 {
+
   /**
    * Constructor.
+   *
+   * No explicit `initialize()` call: {@link Window_ActorRibbon}'s own constructor performs one, and a
+   * second would initialize this window twice.
    * @param {Rectangle} rect The rectangle for this window.
    */
   constructor(rect)
   {
-    // call super when having extended constructors.
     super(rect);
-
-    // jumpstart initialization on creation.
-    this.initialize(rect);
   }
 
   //region draw
@@ -40,7 +40,7 @@ class Window_PassiveActorRibbon
   drawActorName()
   {
     // no actor means nothing to draw.
-    if (!this._actor) return;
+    if (!this.actor()) return;
 
     // the text column starts just past the face graphic.
     const textX = this.faceWidth() + 8;
@@ -48,7 +48,7 @@ class Window_PassiveActorRibbon
     const textY = Math.floor((this.innerHeight - this.lineHeight()) / 2);
 
     // draw the actor name.
-    this.drawText(this._actor.name(), textX, textY, textWidth, 'left');
+    this.drawText(this.actor().name(), textX, textY, textWidth, 'left');
   }
   //endregion draw
 }

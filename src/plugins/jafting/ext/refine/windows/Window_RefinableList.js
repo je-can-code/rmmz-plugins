@@ -75,9 +75,9 @@ class Window_RefinableList
    */
   constructor(rect)
   {
+    // perform original logic, which seeds this window's members via initMembers and then builds the
+    // command list from them.
     super(rect);
-    this.initialize(rect);
-    this.initMembers();
   }
 
   /**

@@ -17,9 +17,6 @@ class ParameterGroups
   static DEFENSIVE = 'defensive';
 
   /** @type {string} */
-  static MOBILITY = 'mobility';
-
-  /** @type {string} */
   static FATE = 'fate';
 
   /** @type {string} */
@@ -34,7 +31,6 @@ class ParameterGroups
     ParameterGroups.COMBAT,
     ParameterGroups.PRECISION,
     ParameterGroups.DEFENSIVE,
-    ParameterGroups.MOBILITY,
     ParameterGroups.FATE,
     ParameterGroups.SUPPORT,
   ];

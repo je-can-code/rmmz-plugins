@@ -10,4 +10,5 @@ Sprite.prototype.hasSelfManagedOpacity = function()
   // by default, sprites do not self-manage opacity.
   return false;
 };
+
 //endregion Sprite

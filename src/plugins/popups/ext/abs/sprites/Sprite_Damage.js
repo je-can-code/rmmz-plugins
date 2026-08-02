@@ -9,8 +9,8 @@ J.POPUPS.EXT.ABS.Aliased.Sprite_Damage.set('damageColor', Sprite_Damage.prototyp
 Sprite_Damage.prototype.damageColor = function()
 {
   return PopupResourceDisplayColor.resolvePopupFillColor(
-    this._j._popups._sourcePopup,
-    this._j._popups._damageColor,
+    this.j()._popups._sourcePopup,
+    this.j()._popups._damageColor,
   );
 };
 
@@ -21,7 +21,7 @@ Sprite_Damage.prototype.damageColor = function()
 J.POPUPS.EXT.ABS.Aliased.Sprite_Damage.set('outlineColor', Sprite_Damage.prototype.outlineColor);
 Sprite_Damage.prototype.outlineColor = function()
 {
-  return PopupResourceDisplayColor.resolvePopupOutlineColor(this._j._popups._sourcePopup);
+  return PopupResourceDisplayColor.resolvePopupOutlineColor(this.j()._popups._sourcePopup);
 };
 
 /**
@@ -32,8 +32,20 @@ J.POPUPS.EXT.ABS.Aliased.Sprite_Damage.set('outlineWidth', Sprite_Damage.prototy
 Sprite_Damage.prototype.outlineWidth = function()
 {
   return PopupResourceDisplayColor.resolvePopupOutlineWidth(
-    this._j._popups._sourcePopup,
+    this.j()._popups._sourcePopup,
     this.isDamage(),
   );
 };
+
+//region properties
+/**
+ * Gets the plugin data namespace carried by this popup sprite.
+ * @returns {object} The plugin namespace root.
+ */
+Sprite_Damage.prototype.j = function()
+{
+  // hand back the j.
+  return this._j;
+};
+//endregion properties
 //endregion Sprite_Damage

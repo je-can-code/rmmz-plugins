@@ -89,7 +89,7 @@ JABS_Battler.prototype.getChargingTierData = function()
  */
 JABS_Battler.prototype.hasChargingTierData = function()
 {
-  return this._chargingTiers.length > 0;
+  return this.getChargingTierData().length > 0;
 };
 
 /**

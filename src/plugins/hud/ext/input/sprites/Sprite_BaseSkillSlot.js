@@ -34,13 +34,25 @@ class Sprite_BaseSkillSlot
     this._j._skillSlot = null;
   }
 
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   /**
    * Gets the skill slot associated with this sprite.
    * @returns {JABS_SkillSlot|null}
    */
   skillSlot()
   {
-    return this._j._skillSlot;
+    return this.j()._skillSlot;
   }
 
   /**
@@ -50,7 +62,7 @@ class Sprite_BaseSkillSlot
    */
   hasSkillSlot()
   {
-    return !!this._j._skillSlot;
+    return !!this.j()._skillSlot;
   }
 
   /**
@@ -59,7 +71,7 @@ class Sprite_BaseSkillSlot
    */
   setSkillSlot(skillSlot)
   {
-    this._j._skillSlot = skillSlot;
+    this.j()._skillSlot = skillSlot;
     this.setText(this.skillName());
   }
 

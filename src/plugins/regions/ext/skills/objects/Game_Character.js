@@ -147,8 +147,10 @@ Game_Character.prototype.executeRegionSkills = function()
     const currentDummyCaster = $jabsEngine.getMapDamageBattler();
 
     // validations for whether or not we need to update the dummy casting the skill.
-    const correctCaster = currentDummyCaster?.getBattlerId() === casterId;
-    const correctTeam = currentDummyCaster?.isFriendlyTeam(targetJabsBattler.getTeam()) === isFriendly;
+    const hasDummyCaster = currentDummyCaster !== null && currentDummyCaster !== undefined;
+    const correctCaster = hasDummyCaster && currentDummyCaster.getBattlerId() === casterId;
+    const correctTeam = hasDummyCaster
+      && currentDummyCaster.isFriendlyTeam(targetJabsBattler.getTeam()) === isFriendly;
 
     // make sure we're using the right dummy.
     if (!correctCaster || !correctTeam)

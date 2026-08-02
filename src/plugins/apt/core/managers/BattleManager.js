@@ -14,10 +14,10 @@ BattleManager.makeRewards = function()
     .call(this);
 
   // Extend the rewards to include AP.
-  this._rewards = {
-    ...this._rewards,
+  this.setRewards({
+    ...this.rewards(),
     aptitudeAp: $gameTroop.aptitudeApTotal(),
-  };
+  });
 };
 
 /**
@@ -42,7 +42,7 @@ BattleManager.gainRewards = function()
 BattleManager.gainAptitudeApRewards = function()
 {
   // Extract the AP that was earned.
-  const { aptitudeAp } = this._rewards;
+  const { aptitudeAp } = this.rewards();
 
   // If there was no AP, then there is nothing to do.
   if (!aptitudeAp) return;
@@ -74,7 +74,7 @@ BattleManager.displayRewards = function()
 BattleManager.displayAptitudeAp = function()
 {
   // Extract the AP that was earned.
-  const { aptitudeAp } = this._rewards;
+  const { aptitudeAp } = this.rewards();
 
   // If no AP was earned, do not display anything.
   if (!aptitudeAp) return;

@@ -55,25 +55,25 @@ Game_Character.prototype.initJabsActionMembers = function()
    * The actual action for this character.
    * @type {JABS_Action|null}
    */
-  this._j._abs._action.actionData = null;
+  this._j._abs._action._jabsAction = null;
 
   /**
    * Whether or not this action needs to be added to the map visually.
    * @type {boolean}
    */
-  this._j._abs._action.needsAdding = false;
+  this._j._abs._action._actionSpriteNeedsAdding = false;
 
   /**
    * Whether or not this action needs to be removed from the map visually.
    * @type {boolean}
    */
-  this._j._abs._action.needsRemoving = false;
+  this._j._abs._action._actionSpriteNeedsRemoving = false;
 
   /**
    * The uuid for this character.
    * @type {string|String.empty}
    */
-  this._j._abs._action.battlerUuid = String.empty;
+  this._j._abs._action._jabsBattlerUuid = String.empty;
 };
 
 /**
@@ -130,7 +130,7 @@ Game_Character.prototype.initJabsLootMembers = function()
  */
 Game_Character.prototype.getJabsAction = function()
 {
-  return this._j._abs._action.actionData;
+  return this._j._abs._action._jabsAction;
 };
 
 /**
@@ -139,7 +139,7 @@ Game_Character.prototype.getJabsAction = function()
  */
 Game_Character.prototype.setJabsAction = function(action)
 {
-  this._j._abs._action.actionData = action;
+  this._j._abs._action._jabsAction = action;
 };
 
 /**
@@ -193,7 +193,7 @@ Game_Character.prototype.getJabsActionUuid = function()
  */
 Game_Character.prototype.getActionSpriteNeedsAdding = function()
 {
-  return this._j._abs._action.needsAdding;
+  return this._j._abs._action._actionSpriteNeedsAdding;
 };
 
 /**
@@ -202,7 +202,7 @@ Game_Character.prototype.getActionSpriteNeedsAdding = function()
  */
 Game_Character.prototype.setActionSpriteNeedsAdding = function(addSprite = true)
 {
-  this._j._abs._action.needsAdding = addSprite;
+  this._j._abs._action._actionSpriteNeedsAdding = addSprite;
 };
 
 // TODO: remove getter/setter for sprite removal, shift responsibility to action?
@@ -211,7 +211,7 @@ Game_Character.prototype.setActionSpriteNeedsAdding = function(addSprite = true)
  */
 Game_Character.prototype.getActionSpriteNeedsRemoving = function()
 {
-  return this._j._abs._action.needsRemoving;
+  return this._j._abs._action._actionSpriteNeedsRemoving;
 };
 
 /**
@@ -220,7 +220,7 @@ Game_Character.prototype.getActionSpriteNeedsRemoving = function()
  */
 Game_Character.prototype.setActionSpriteNeedsRemoving = function(removeSprite = true)
 {
-  this._j._abs._action.needsRemoving = removeSprite;
+  this._j._abs._action._actionSpriteNeedsRemoving = removeSprite;
 };
 //endregion JABS action
 
@@ -230,7 +230,7 @@ Game_Character.prototype.setActionSpriteNeedsRemoving = function(removeSprite = 
  */
 Game_Character.prototype.getJabsBattlerUuid = function()
 {
-  return this._j._abs._action.battlerUuid;
+  return this._j._abs._action._jabsBattlerUuid;
 };
 
 /**
@@ -239,7 +239,7 @@ Game_Character.prototype.getJabsBattlerUuid = function()
  */
 Game_Character.prototype.setJabsBattlerUuid = function(uuid)
 {
-  this._j._abs._action.battlerUuid = uuid;
+  this._j._abs._action._jabsBattlerUuid = uuid;
 };
 
 /**

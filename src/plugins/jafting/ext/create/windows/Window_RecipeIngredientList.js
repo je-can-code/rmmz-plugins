@@ -2,10 +2,24 @@
 class Window_RecipeIngredientList
   extends Window_Command
 {
+
+  //region properties
+  /**
+   * Gets the components.
+   * @returns {CraftingComponent[]} The components.
+   */
+  components()
+  {
+    // hand back the components.
+    return this._components;
+  }
+  //endregion properties
+
   /**
    * Constructor.
    * @param {Rectangle} rect The rectangle that represents this window.
    */
+
   constructor(rect)
   {
     super(rect);
@@ -58,7 +72,7 @@ class Window_RecipeIngredientList
   buildCommands()
   {
     // grab all recipes in the list.
-    const components = this._components;
+    const components = this.components();
 
     // compile the list of commands.
     const commands = components.map(this.buildCommand, this);

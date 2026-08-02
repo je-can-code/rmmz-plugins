@@ -9,10 +9,124 @@ import PixelDebugSampler from './../_models/PixelDebugSampler.js';
 class Sprite_PixelCollisionOverlay
   extends Sprite
 {
+
+  //region properties
+  /**
+   * Gets the show grid lines.
+   * @returns {*} The showGridLines.
+   */
+  isShowGridLines()
+  {
+    // hand back the show grid lines.
+    return this._showGridLines;
+  }
+
+  /**
+   * Gets the throttle.
+   * @returns {*} The throttle.
+   */
+  throttle()
+  {
+    // hand back the throttle.
+    return this._throttle;
+  }
+
+  /**
+   * Sets the throttle.
+   * @param {*} newThrottle The new throttle.
+   */
+  setThrottle(newThrottle)
+  {
+    // assign the throttle.
+    this._throttle = newThrottle;
+  }
+
+  /**
+   * Gets the last display x.
+   * @returns {number} The lastDisplayX.
+   */
+  lastDisplayX()
+  {
+    // hand back the last display x.
+    return this._lastDisplayX;
+  }
+
+  /**
+   * Sets the last display x.
+   * @param {number} newLastDisplayX The new lastDisplayX.
+   */
+  setLastDisplayX(newLastDisplayX)
+  {
+    // assign the last display x.
+    this._lastDisplayX = newLastDisplayX;
+  }
+
+  /**
+   * Gets the last display y.
+   * @returns {number} The lastDisplayY.
+   */
+  lastDisplayY()
+  {
+    // hand back the last display y.
+    return this._lastDisplayY;
+  }
+
+  /**
+   * Sets the last display y.
+   * @param {number} newLastDisplayY The new lastDisplayY.
+   */
+  setLastDisplayY(newLastDisplayY)
+  {
+    // assign the last display y.
+    this._lastDisplayY = newLastDisplayY;
+  }
+
+  /**
+   * Gets the last player x.
+   * @returns {number} The lastPlayerX.
+   */
+  lastPlayerX()
+  {
+    // hand back the last player x.
+    return this._lastPlayerX;
+  }
+
+  /**
+   * Sets the last player x.
+   * @param {number} newLastPlayerX The new lastPlayerX.
+   */
+  setLastPlayerX(newLastPlayerX)
+  {
+    // assign the last player x.
+    this._lastPlayerX = newLastPlayerX;
+  }
+
+  /**
+   * Gets the last player y.
+   * @returns {number} The lastPlayerY.
+   */
+  lastPlayerY()
+  {
+    // hand back the last player y.
+    return this._lastPlayerY;
+  }
+
+  /**
+   * Sets the last player y.
+   * @param {number} newLastPlayerY The new lastPlayerY.
+   */
+  setLastPlayerY(newLastPlayerY)
+  {
+    // assign the last player y.
+    this._lastPlayerY = newLastPlayerY;
+  }
+  //endregion properties
+
   /**
    * Constructor.
    * @param {...*} args Forwarded to {@link #initialize}.
    */
+
   constructor(...args)
   {
     // Initialize Sprite base.
@@ -84,13 +198,13 @@ class Sprite_PixelCollisionOverlay
     this.y = -Math.floor(dy * th);
 
     // Throttle redraw to every 6 frames.
-    this._throttle++;
-    const needThrottleRedraw = (this._throttle % 6) === 0;
+    this.setThrottle(this.throttle() + 1);
+    const needThrottleRedraw = (this.throttle() % 6) === 0;
 
     // Detect camera or player motion to request redraw.
-    const cameraMoved = (dx !== this._lastDisplayX) || (dy !== this._lastDisplayY);
+    const cameraMoved = (dx !== this.lastDisplayX()) || (dy !== this.lastDisplayY());
     const player = $gamePlayer;
-    const playerMoved = player && (player.x !== this._lastPlayerX || player.y !== this._lastPlayerY);
+    const playerMoved = player && (player.x !== this.lastPlayerX() || player.y !== this.lastPlayerY());
 
     // If neither throttle nor relevant movement, skip.
     if (!needThrottleRedraw && cameraMoved === false && playerMoved === false)
@@ -100,13 +214,13 @@ class Sprite_PixelCollisionOverlay
     }
 
     // Cache state for next frame.
-    this._lastDisplayX = dx;
-    this._lastDisplayY = dy;
+    this.setLastDisplayX(dx);
+    this.setLastDisplayY(dy);
     if (player)
     {
       // Cache the player position for next frame.
-      this._lastPlayerX = player.x;
-      this._lastPlayerY = player.y;
+      this.setLastPlayerX(player.x);
+      this.setLastPlayerY(player.y);
     }
 
     // Redraw the visible region.
@@ -192,7 +306,7 @@ class Sprite_PixelCollisionOverlay
     }
 
     // Optionally draw faint subgrid lines to help visualize seams.
-    if (this._showGridLines)
+    if (this.isShowGridLines())
     {
       // Draw vertical and horizontal subcell grid lines.
       this._drawGridLines(tileStartX, tileStartY, tileEndX, tileEndY, stepCount, tw, th, dx, dy);

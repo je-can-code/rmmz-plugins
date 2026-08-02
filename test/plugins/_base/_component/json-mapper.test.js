@@ -180,6 +180,103 @@ describe('JsonMapper', () =>
       // Assert
       expect(result).toEqual([ 1, [ 2, 3 ], 4 ]);
     });
+
+    it('strips the quotes RMMZ leaves on each entry of a string list', () =>
+    {
+      // Arrange- this is verbatim what the parameter panel hands over for a `string[]` parameter.
+      const input = '["physical","fire"]';
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert- left quoted, no entry could ever match a plain string comparison downstream.
+      expect(result).toEqual([ 'physical', 'fire' ]);
+    });
+
+    it('resolves a quoted numeric entry into a real number', () =>
+    {
+      // Arrange- `Number('"7"')` is NaN, which is what made id-based list entries silently inert.
+      const input = '["7","12"]';
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toEqual([ 7, 12 ]);
+    });
+
+    it('handles a list mixing quoted names and quoted numbers', () =>
+    {
+      // Arrange
+      const input = '["physical","7"]';
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toEqual([ 'physical', 7 ]);
+    });
+
+    it('resolves a quoted boolean entry into a real boolean', () =>
+    {
+      // Arrange
+      const input = '["true","false"]';
+
+      // Act
+      const result = JsonMapper.parseObject(input);
+
+      // Assert
+      expect(result).toEqual([ true, false ]);
+    });
+  });
+
+  describe('unquoteString', () =>
+  {
+    it('peels a matching pair of surrounding quotes', () =>
+    {
+      // Arrange & Act & Assert
+      expect(JsonMapper.unquoteString('"wrapped"')).toBe('wrapped');
+    });
+
+    it('leaves an unquoted token alone', () =>
+    {
+      // Arrange & Act & Assert
+      expect(JsonMapper.unquoteString('bare')).toBe('bare');
+    });
+
+    it('leaves a token quoted on only one end alone', () =>
+    {
+      // Arrange- an unbalanced quote is more likely authored content than JSON encoding.
+      // Act & Assert
+      expect(JsonMapper.unquoteString('"halfway')).toBe('"halfway');
+      expect(JsonMapper.unquoteString('halfway"')).toBe('halfway"');
+    });
+
+    it('leaves a lone quote character alone', () =>
+    {
+      // Arrange- a single character has no pair to peel, and slicing it would yield an empty string.
+      // Act & Assert
+      expect(JsonMapper.unquoteString('"')).toBe('"');
+    });
+
+    it('leaves an empty string alone', () =>
+    {
+      // Arrange & Act & Assert
+      expect(JsonMapper.unquoteString('')).toBe('');
+    });
+
+    it('peels only the outermost pair', () =>
+    {
+      // Arrange- a doubly-encoded token should surface its inner quoting rather than lose it.
+      // Act & Assert
+      expect(JsonMapper.unquoteString('""nested""')).toBe('"nested"');
+    });
+
+    it('preserves quotes that sit inside the token', () =>
+    {
+      // Arrange & Act & Assert
+      expect(JsonMapper.unquoteString('say "hi"')).toBe('say "hi"');
+    });
   });
 });
 //endregion plugins/_base/_component/json-mapper.test.js

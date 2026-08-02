@@ -39,16 +39,16 @@ Sprite_Character.prototype.setupMapSprite = function()
 Sprite_Character.prototype.setupShieldGauge = function()
 {
   // if we already have a shield gauge sprite available, just (re)bind and reposition it.
-  if (this._j._abs._gauges._shieldGauge)
+  if (this.shieldGauge())
   {
     // bind the current battler to the shield gauge sprite.
-    this._j._abs._gauges._shieldGauge.setup(this.getBattler(), 'shield');
+    this.shieldGauge().setup(this.getBattler(), 'shield');
 
     // ensure it’s ready to update when needed (visibility is controlled elsewhere).
-    this._j._abs._gauges._shieldGauge.activateGauge();
+    this.shieldGauge().activateGauge();
 
     // reposition in case dimensions changed (defensive; typically unchanged).
-    const sprite = this._j._abs._gauges._shieldGauge;
+    const sprite = this.shieldGauge();
 
     // center it horizontally, stack it between Cast (-28) and HP (-12).
     const x = -Math.round(sprite.bitmapWidth() / 2);
@@ -69,7 +69,7 @@ Sprite_Character.prototype.setupShieldGauge = function()
   sprite.activateGauge();
 
   // assign for later access.
-  this._j._abs._gauges._shieldGauge = sprite;
+  this.setShieldGauge(sprite);
 
   // position between the cast and hp gauges (centered like cast).
   const x = -Math.round(sprite.bitmapWidth() / 2);
@@ -118,7 +118,7 @@ Sprite_Character.prototype.canUpdateShieldGauge = function()
   if (!this.isJabsBattler()) return false;
 
   // if we don't have a shield gauge sprite, we can't update it.
-  if (!this._j._abs._gauges._shieldGauge) return false;
+  if (!this.shieldGauge()) return false;
 
   // require some shield to be present to show on the map.
   const battler = this.getBattler();
@@ -138,7 +138,7 @@ Sprite_Character.prototype.updateShieldGauge = function()
   this.showShieldGauge();
 
   // ensure the gauge rebinds if battler swapped underneath (post-swap safe).
-  const gauge = this._j._abs._gauges._shieldGauge;
+  const gauge = this.shieldGauge();
   if (gauge)
   {
     // keep the underlying base battler fresh for Sprite_Gauge internals.
@@ -151,7 +151,7 @@ Sprite_Character.prototype.updateShieldGauge = function()
  */
 Sprite_Character.prototype.showShieldGauge = function()
 {
-  const gauge = this._j._abs._gauges._shieldGauge;
+  const gauge = this.shieldGauge();
   if (gauge)
   {
     gauge.activateGauge();
@@ -164,11 +164,33 @@ Sprite_Character.prototype.showShieldGauge = function()
  */
 Sprite_Character.prototype.hideShieldGauge = function()
 {
-  const gauge = this._j._abs._gauges._shieldGauge;
+  const gauge = this.shieldGauge();
   if (gauge)
   {
     gauge.hide();
   }
 };
 
+
+//region properties
+/**
+ * Gets the shield gauge.
+ * @returns {*} The shieldGauge.
+ */
+Sprite_Character.prototype.shieldGauge = function()
+{
+  // hand back the shield gauge.
+  return this._j._abs._gauges._shieldGauge;
+};
+
+/**
+ * Sets the shield gauge.
+ * @param {*} newShieldGauge The new shieldGauge.
+ */
+Sprite_Character.prototype.setShieldGauge = function(newShieldGauge)
+{
+  // assign the shield gauge.
+  this._j._abs._gauges._shieldGauge = newShieldGauge;
+};
+//endregion properties
 //endregion Sprite_Character

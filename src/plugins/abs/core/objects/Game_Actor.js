@@ -704,6 +704,19 @@ Game_Actor.prototype.setLastOffhandItemId = function(offhand)
 };
 
 /**
+ * Gets the stored last-offhand id exactly as recorded, without coalescing.
+ *
+ * This is deliberately not {@link Game_Actor#lastOffhandItemId}, which reports 0 for an unseeded
+ * cache. Null means 'never observed' and 0 means 'observed as empty'- two different things.
+ * @returns {number|null} The stored id, or null when the cache was never seeded.
+ */
+Game_Actor.prototype.rawLastOffhandItemId = function()
+{
+  // hand back the stored value with its null sentinel intact.
+  return this._j._abs._lastOffhandItemId;
+};
+
+/**
  * Whether or not this actor has an existing snapshot of the offhand equip.
  *
  * Used to skip the "first observation" path so a freshly loaded actor does not clear
@@ -712,7 +725,7 @@ Game_Actor.prototype.setLastOffhandItemId = function(offhand)
  */
 Game_Actor.prototype.hasLastOffhandSnapshot = function()
 {
-  return this._j._abs._lastOffhandItemId !== null && this._j._abs._lastOffhandItemId !== undefined;
+  return this.rawLastOffhandItemId() !== null && this.rawLastOffhandItemId() !== undefined;
 };
 
 /**
@@ -1003,7 +1016,7 @@ Game_Actor.prototype.switchLocked = function()
  */
 Game_Actor.prototype.needsDeathEffect = function()
 {
-  return this._j._abs._deathEffect;
+  return this.deathEffect();
 };
 
 /**
@@ -1011,7 +1024,7 @@ Game_Actor.prototype.needsDeathEffect = function()
  */
 Game_Actor.prototype.toggleDeathEffect = function()
 {
-  this._j._abs._deathEffect = !this._j._abs._deathEffect;
+  this.setDeathEffect(!this.deathEffect());
 };
 
 /**
@@ -1477,4 +1490,26 @@ Game_Actor.prototype.turnEndOnMap = function()
     .call(this);
 };
 //endregion map effects
+
+//region properties
+/**
+ * Gets the death effect.
+ * @returns {*} The deathEffect.
+ */
+Game_Actor.prototype.deathEffect = function()
+{
+  // hand back the death effect.
+  return this._j._abs._deathEffect;
+};
+
+/**
+ * Sets the death effect.
+ * @param {*} newDeathEffect The new deathEffect.
+ */
+Game_Actor.prototype.setDeathEffect = function(newDeathEffect)
+{
+  // assign the death effect.
+  this._j._abs._deathEffect = newDeathEffect;
+};
+//endregion properties
 //endregion Game_Actor

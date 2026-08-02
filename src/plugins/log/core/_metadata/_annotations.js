@@ -113,6 +113,13 @@
  * JABS integration (when installed) and by plugin commands.
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.3
+ *    Fixed Scene_Map's loot log window accessors reading and writing
+ *    this._j._log._diaLog. Since createAllWindows builds the dia log first,
+ *    the loot log clobbered its tracker and getDiaLogWindow returned the wrong
+ *    window entirely. Nothing called the three accessors yet, so this never
+ *    surfaced in play; it was a landmine for the next caller. The missing
+ *    _lootLog property is now declared alongside its siblings.
  * - 2.2.2
  *    Added ActionLogBuilder#setupStatePurged, a log message for a state
  *    being removed via J-ABS's new <purgeStates> tag.

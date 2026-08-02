@@ -1,7 +1,8 @@
 //region Game_Player
 /**
  * Overwrites {@link Game_Player.checkEventTriggerHere}.<br/>
- * Includes the rounding of the x,y coordinates when checking event triggers for things beneath you.
+ * Checks the tile this character's body actually occupies (the collision pivot's tile) rather
+ * than the fractional `_x`/`_y` vanilla assumes are already integers.
  * @param {number[]} triggers The numeric triggers for this event.
  */
 Game_Player.prototype.checkEventTriggerHere = function(triggers)
@@ -19,18 +20,15 @@ Game_Player.prototype.checkEventTriggerHere = function(triggers)
       }
     }
 
-    // round the x,y coordinates.
-    const roundX = Math.round(this.x);
-    const roundY = Math.round(this.y);
-
-    // start the event with the rounded coordinates.
-    this.startMapEvent(roundX, roundY, effectiveTriggers, false);
+    // start the event at the tile this character's body actually occupies.
+    this.startMapEvent(this.occupiedTileX(), this.occupiedTileY(), effectiveTriggers, false);
   }
 };
 
 /**
  * Extends {@link Game_Player.update}.<br/>
- * Ticks down the foot-touch trigger cooldown after all movement and trigger logic for the frame.
+ * Ticks down the foot-touch trigger cooldown after all movement and trigger logic for the frame,
+ * then fires underfoot touch triggers exactly once per tile entered.
  */
 J.PIXEL.Aliased.Game_Player.set('update', Game_Player.prototype.update);
 Game_Player.prototype.update = function(sceneActive)
@@ -43,12 +41,32 @@ Game_Player.prototype.update = function(sceneActive)
   {
     $gameMap._pixelFootTouchTriggerCooldown--;
   }
+
+  // Vanilla's "check underfoot triggers when a step completes onto a tile" cadence doesn't
+  // exist under pixel movement: onStep fires on accumulated travel distance (updatePixelStepping),
+  // not on tile boundaries, so whether an underfoot check happens while inside a given tile's
+  // window is a function of dash speed and where the distance accumulator started. Detecting the
+  // occupied tile actually changing is the only cadence that's deterministic regardless of speed.
+  const tileX = this.occupiedTileX();
+  const tileY = this.occupiedTileY();
+  if (this.lastOccupiedTileX() !== tileX || this.lastOccupiedTileY() !== tileY)
+  {
+    // Track the new tile before checking, so a started event's own updates can't re-trigger this.
+    this.setLastOccupiedTileX(tileX);
+    this.setLastOccupiedTileY(tileY);
+    this.checkEventTriggerHere([ 1, 2 ]);
+  }
 };
 
 /**
  * Overwrites {@link Game_Player.checkEventTriggerThere}.<br/>
- * Computes the front tile from the current facing using rounded base coordinates,
- * then starts map events there; if that tile is a counter, also checks one tile beyond.
+ * Checks the player's own occupied tile before the front tile: under pixel movement a
+ * feet-anchored body can legitimately be standing on an event's tile (e.g. a doorstep whose
+ * blocking wall is the row behind it) even though the tile "in front" per vanilla's model is
+ * something else entirely (the wall). Vanilla's model — only ever check the tile ahead — assumes
+ * tile-locked movement where that overlap can't happen. Then computes the front tile from the
+ * current facing using the occupied-tile coordinates, and if that tile is a counter, checks one
+ * tile beyond — matching vanilla's own guard against double-starting an event across both checks.
  * @param {number[]} triggers The triggers associated with checking the event at the location.
  */
 Game_Player.prototype.checkEventTriggerThere = function(triggers)
@@ -56,25 +74,30 @@ Game_Player.prototype.checkEventTriggerThere = function(triggers)
   // Check if we can start an event at the target location.
   if (this.canStartLocalEvents() === false) return;
 
-  // Round the base coordinates to the nearest tile for consistent tile addressing.
-  const baseX = Math.round(this.x);
-  const baseY = Math.round(this.y);
+  // Resolve the tile this character's body actually occupies.
+  const baseX = this.occupiedTileX();
+  const baseY = this.occupiedTileY();
+
+  // A doorstep-style event can sit on the player's own occupied tile; check it before
+  // ever looking ahead, so overlap geometry doesn't hide the event behind a "front tile"
+  // that's actually the wall behind it.
+  this.startMapEvent(baseX, baseY, triggers, true);
+
+  // Do not double-start an event if the base-tile check above already started one.
+  if ($gameMap.isAnyEventStarting()) return;
 
   // Acquire the current facing direction (expects cardinal).
   const dir = this.direction();
 
-  // Compute the front tile from the rounded base coordinates and facing.
+  // Compute the front tile from the occupied-tile coordinates and facing.
   const x1 = $gameMap.roundXWithDirection(baseX, dir);
   const y1 = $gameMap.roundYWithDirection(baseY, dir);
 
   // Start any qualifying events on the front tile; treat them as "there"/normal.
   this.startMapEvent(x1, y1, triggers, true);
 
-  // Determine if the front tile is a counter.
-  const isCounter = $gameMap.isCounter(x1, y1);
-
-  // If the front tile is a counter, also check one tile beyond.
-  if (isCounter)
+  // Determine if the front tile is a counter; only look beyond it if nothing already started.
+  if ($gameMap.isAnyEventStarting() === false && $gameMap.isCounter(x1, y1))
   {
     // Compute the tile one more step beyond the counter tile.
     const x2 = $gameMap.roundXWithDirection(x1, dir);
@@ -88,6 +111,13 @@ Game_Player.prototype.checkEventTriggerThere = function(triggers)
 /**
  * Extends {@link checkEventTriggerTouch}.<br/>
  * Handles the triggering of events by using a threshold-type formula to determine if actually touched.
+ * Vanilla's version reports nothing at all, so this asks the map whether an event is now starting
+ * and hands that back- callers need a real answer to know whether to keep searching neighboring
+ * tiles, and {@link Game_Player#checkEventTriggerThere} already uses the same map-level question
+ * as its own short-circuit.
+ * @param {number} x The fractional x coordinate to test for a touch.
+ * @param {number} y The fractional y coordinate to test for a touch.
+ * @returns {boolean} True if an event is starting after this check, false otherwise.
  */
 J.PIXEL.Aliased.Game_Player.set('checkEventTriggerTouch', Game_Player.prototype.checkEventTriggerTouch);
 Game_Player.prototype.checkEventTriggerTouch = function(x, y)
@@ -100,38 +130,46 @@ Game_Player.prototype.checkEventTriggerTouch = function(x, y)
   // trigger only when within 0.3 tiles of the tile center to prevent early/spurious fires.
   const didTrigger = Math.abs(roundX - x) < 0.3 && Math.abs(roundY - y) < 0.3;
 
-  // check if the event was triggered with the threshold coordinates.
-  if (didTrigger)
-  {
-    // return the original logic's result.
-    // perform original logic.
-    return J.PIXEL.Aliased.Game_Player.get('checkEventTriggerTouch')
-      .call(this, roundX, roundY);
-  }
+  // the coordinates were too far from the tile center to count as a touch.
+  if (didTrigger === false) return false;
 
-  // no triggering the event.
-  return false;
+  // perform original logic.
+  J.PIXEL.Aliased.Game_Player.get('checkEventTriggerTouch')
+    .call(this, roundX, roundY);
+
+  // report whether anything is actually starting, since the original logic never says.
+  return $gameMap.isAnyEventStarting();
 };
 
 /**
  * Overwrites {@link Game_Player.checkEventTriggerTouchFront}.<br/>
- * Computes the front tile from the current facing using rounded base coordinates,
- * checks for touch triggers there via PIXEL threshold logic, and if the front tile
- * is a counter, also checks the tile beyond.
+ * Checks the player's own occupied tile first — a blocked player can be overlapping an event's
+ * tile (doorstep geometry) and should still fire its touch trigger, not just the tile ahead. Then
+ * computes the front tile from the current facing using the occupied-tile coordinates, checks for
+ * touch triggers there via PIXEL threshold logic, and if the front tile is a counter, also checks
+ * the tile beyond.
  * @param {number} direction The attempted move direction (ignored; uses current facing).
  * @returns {boolean} True if a touch trigger fired, false otherwise.
  */
 // eslint-disable-next-line no-unused-vars
 Game_Player.prototype.checkEventTriggerTouchFront = function(direction)
 {
-  // Round the base coordinates to the nearest tile for consistent tile addressing.
-  const baseX = Math.round(this.x);
-  const baseY = Math.round(this.y);
+  // Resolve the tile this character's body actually occupies.
+  const baseX = this.occupiedTileX();
+  const baseY = this.occupiedTileY();
+
+  // A blocked player overlapping an event's tile (doorstep geometry) should still
+  // fire that event's touch trigger, before ever looking ahead.
+  if (this.checkEventTriggerTouch(baseX, baseY))
+  {
+    // The base-tile touch trigger fired.
+    return true;
+  }
 
   // Always use the player's current facing for front-touch checks.
   const dir = this.direction();
 
-  // Compute the front tile from the rounded base coordinates and facing.
+  // Compute the front tile from the occupied-tile coordinates and facing.
   const x1 = $gameMap.roundXWithDirection(baseX, dir);
   const y1 = $gameMap.roundYWithDirection(baseY, dir);
 
@@ -362,7 +400,7 @@ Game_Player.prototype.moveByInput = function()
         this.clearPositionalRecords();
 
         // grab the collection of followers.
-        const followers = this._followers._data;
+        const followers = this.followers()._data;
 
         // also reset their positions.
         followers.forEach(follower => follower.clearPositionalRecords());
@@ -371,15 +409,12 @@ Game_Player.prototype.moveByInput = function()
       // flag that movement was not successful.
       this.setMovementSuccess(false);
 
-      // determine the actual direction.
+      // determine the actual direction; a blocked step still answers with the pressed direction,
+      // so there is never a "no direction" case to guard against here.
       direction = this.pixelMoveByInput(direction);
 
-      // if we have a direction, assign it to ourselves.
-      if (direction > 0)
-      {
-        // set the new direction.
-        this.setDirection(direction);
-      }
+      // set the new direction.
+      this.setDirection(direction);
 
       // check if we've succeeded in moving somehow.
       if (this.isMovementSucceeded())
@@ -477,15 +512,12 @@ Game_Player.prototype.pixelMoveTowardDestination = function()
   // reset movement success before attempting the step.
   this.setMovementSuccess(false);
 
-  // execute the pixel step in the A*-derived direction.
+  // execute the pixel step in the A*-derived direction; it always answers with a direction, since
+  // the unreachable case was already handled by the zero check above.
   const facedDirection = this.pixelMoveByInput(dir);
 
-  // update facing if a direction was returned.
-  if (facedDirection > 0)
-  {
-    // face the direction of travel.
-    this.setDirection(facedDirection);
-  }
+  // face the direction of travel.
+  this.setDirection(facedDirection);
 
   // if the step succeeded, keep followers in sync.
   if (this.isMovementSucceeded())
@@ -540,13 +572,13 @@ Game_Player.prototype.processFollowersPixelMoving = function()
   this.recordPixelPosition();
 
   // Grab all the followers the player has.
-  const followers = this._followers._data;
+  const followers = this.followers()._data;
 
   // Iterate over all the followers to do movement things.
   followers.forEach((follower, index) =>
   {
-    // If Ally AI is present and this follower is AI-controlled, do not relocate via follower-train.
-    if (J.ABS.EXT.ALLYAI && follower.getJabsBattler()) return;
+    // A follower claimed by another movement system is not ours to relocate.
+    if (follower.isPixelTrainSuspended()) return;
 
     // Determine who the previous character was in the sequence.
     const precedingCharacter = index > 0
@@ -575,10 +607,10 @@ Game_Player.prototype.processFollowersPixelMoving = function()
 Game_Player.prototype.stopFollowersPixelMoving = function()
 {
   // Iterate over the followers and halt their pixel movement.
-  this._followers._data.forEach(follower =>
+  this.followers()._data.forEach(follower =>
   {
-    // If Ally AI is present and this follower is AI-controlled, do not interfere.
-    if (J.ABS.EXT.ALLYAI && follower.getJabsBattler()) return;
+    // A follower claimed by another movement system is not ours to halt.
+    if (follower.isPixelTrainSuspended()) return;
 
     // Otherwise, stop pixel moving to prevent residual drift.
     follower.stopPixelMoving();
@@ -597,4 +629,46 @@ Game_Player.prototype.getCollisionPivotY = function()
 {
   return 0.70;
 };
+
+//region properties
+/**
+ * Gets the last occupied tile x.
+ * @returns {number} The lastOccupiedTileX.
+ */
+Game_Player.prototype.lastOccupiedTileX = function()
+{
+  // hand back the last occupied tile x.
+  return this._lastOccupiedTileX;
+};
+
+/**
+ * Sets the last occupied tile x.
+ * @param {number} newLastOccupiedTileX The new lastOccupiedTileX.
+ */
+Game_Player.prototype.setLastOccupiedTileX = function(newLastOccupiedTileX)
+{
+  // assign the last occupied tile x.
+  this._lastOccupiedTileX = newLastOccupiedTileX;
+};
+
+/**
+ * Gets the last occupied tile y.
+ * @returns {number} The lastOccupiedTileY.
+ */
+Game_Player.prototype.lastOccupiedTileY = function()
+{
+  // hand back the last occupied tile y.
+  return this._lastOccupiedTileY;
+};
+
+/**
+ * Sets the last occupied tile y.
+ * @param {number} newLastOccupiedTileY The new lastOccupiedTileY.
+ */
+Game_Player.prototype.setLastOccupiedTileY = function(newLastOccupiedTileY)
+{
+  // assign the last occupied tile y.
+  this._lastOccupiedTileY = newLastOccupiedTileY;
+};
+//endregion properties
 //endregion Game_Player

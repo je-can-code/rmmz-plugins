@@ -71,6 +71,18 @@ class Sprite_CooldownGauge
     };
   }
 
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   /**
    * Binds this gauge to show remaining GCD alongside the slot cooldown when the slot maps to a GCD-subject skill.
    * Clears merge state for tool, dodge, and item slots so those inputs never display the shared timer.
@@ -79,14 +91,14 @@ class Sprite_CooldownGauge
    */
   setHudGcdMerge(jabsBattler, skillSlot)
   {
-    this._j._gcdMergeBattler = null;
-    this._j._gcdMergeSkillId = 0;
+    this.j()._gcdMergeBattler = null;
+    this.j()._gcdMergeSkillId = 0;
     if (!jabsBattler || !skillSlot) return;
     const { key } = skillSlot;
     if (key === JABS_Button.Tool || key === JABS_Button.UsableItem || key === JABS_Button.Dodge) return;
     if (skillSlot.isItem()) return;
-    this._j._gcdMergeBattler = jabsBattler;
-    this._j._gcdMergeSkillId = skillSlot.id;
+    this.j()._gcdMergeBattler = jabsBattler;
+    this.j()._gcdMergeSkillId = skillSlot.id;
   }
 
   /**
@@ -98,10 +110,10 @@ class Sprite_CooldownGauge
    */
   globalHudFrames()
   {
-    if (!this._j._gcdMergeBattler || !this._j._gcdMergeSkillId) return 0;
-    const sk = $dataSkills[this._j._gcdMergeSkillId];
+    if (!this.j()._gcdMergeBattler || !this.j()._gcdMergeSkillId) return 0;
+    const sk = $dataSkills[this.j()._gcdMergeSkillId];
     if (JABS_GlobalCooldown.skillIsSubjectToGlobalCooldown(sk) === false) return 0;
-    const globalCd = this._j._gcdMergeBattler.getCooldown(J.ABS.Globals.GlobalCooldownKey);
+    const globalCd = this.j()._gcdMergeBattler.getCooldown(J.ABS.Globals.GlobalCooldownKey);
     if (!globalCd) return 0;
     if (globalCd.isBaseReady() === true) return 0;
     return globalCd.frames;
@@ -127,7 +139,7 @@ class Sprite_CooldownGauge
     // the expire-mode max is derived dynamically and is always valid while the window is live.
     if (this.isInComboExpireMode()) return false;
 
-    return this._j._valueMax === 0;
+    return this.j()._valueMax === 0;
   }
 
   /**
@@ -136,7 +148,7 @@ class Sprite_CooldownGauge
    */
   cooldownData()
   {
-    return this._j._cooldownData;
+    return this.j()._cooldownData;
   }
 
   /**
@@ -145,7 +157,7 @@ class Sprite_CooldownGauge
    */
   setCooldownData(cooldownData)
   {
-    this._j._cooldownData = cooldownData;
+    this.j()._cooldownData = cooldownData;
   }
 
   /**
@@ -174,7 +186,7 @@ class Sprite_CooldownGauge
     // while a combo expiry window is live, the max is the window size it started with.
     if (this.isInComboExpireMode()) return this.cooldownData().comboExpireFramesMax;
 
-    return this._j._valueMax;
+    return this.j()._valueMax;
   }
 
   /**
@@ -183,7 +195,7 @@ class Sprite_CooldownGauge
    */
   setMaxValue(maxValue)
   {
-    this._j._valueMax = maxValue;
+    this.j()._valueMax = maxValue;
   }
 
   /**
@@ -293,7 +305,7 @@ class Sprite_CooldownGauge
     // zero the max value.
     this.setMaxValue(0);
 
-    this._j._gcdHudPeak = 0;
+    this.j()._gcdHudPeak = 0;
 
     // make the sprite invisible.
     this.bitmap.paintOpacity = 0;
@@ -309,11 +321,11 @@ class Sprite_CooldownGauge
     const cd = this.cooldownData();
     const g = this.globalHudFrames();
     const eff = Math.max(cd.frames, g);
-    if (this._j._gcdHudPeak < eff)
+    if (this.j()._gcdHudPeak < eff)
     {
-      this._j._gcdHudPeak = eff;
+      this.j()._gcdHudPeak = eff;
     }
-    this.setMaxValue(this._j._gcdHudPeak);
+    this.setMaxValue(this.j()._gcdHudPeak);
 
     // make the sprite visible.
     this.bitmap.paintOpacity = 255;
@@ -365,9 +377,9 @@ class Sprite_CooldownGauge
 
     // always keep the base-cooldown peak up to date, even while in expire mode,
     // so the bar starts at 100% fill when we switch back to base-cooldown display.
-    if (eff > this._j._gcdHudPeak)
+    if (eff > this.j()._gcdHudPeak)
     {
-      this._j._gcdHudPeak = eff;
+      this.j()._gcdHudPeak = eff;
     }
 
     // during the combo expiry window: stay visible and let currentValue/maxValue/colors handle the rest.
@@ -390,7 +402,7 @@ class Sprite_CooldownGauge
 
     if (cooldown.isBaseReady() === false || g > 0)
     {
-      this.setMaxValue(this._j._gcdHudPeak);
+      this.setMaxValue(this.j()._gcdHudPeak);
       this.bitmap.paintOpacity = 255;
     }
   }

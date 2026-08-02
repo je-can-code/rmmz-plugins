@@ -14,13 +14,13 @@ Game_Message.prototype.clear = function()
    * An object tracking key:value (index:boolean) pairs for whether or not an index of a choice is hidden.
    * @type {Map<number, boolean>}
    */
-  this._hiddenChoiceConditions = new Map();
+  this.setHiddenChoiceConditions(new Map());
 
   /**
    * A container for backing up the choice collection.
    * @type {string[]}
    */
-  this._oldChoices = [];
+  this.setOldChoices([]);
 };
 
 /**
@@ -28,7 +28,7 @@ Game_Message.prototype.clear = function()
  */
 Game_Message.prototype.backupChoices = function()
 {
-  this._oldChoices = this._choices.clone();
+  this.setOldChoices(this.choices().clone());
 };
 
 /**
@@ -36,7 +36,7 @@ Game_Message.prototype.backupChoices = function()
  */
 Game_Message.prototype.restoreChoices = function()
 {
-  this._choices = this._oldChoices.clone();
+  this._choices = this.oldChoices().clone();
 };
 
 /* Returns whether the specified choice is hidden */
@@ -47,9 +47,9 @@ Game_Message.prototype.restoreChoices = function()
  */
 Game_Message.prototype.isChoiceHidden = function(choiceIndex)
 {
-  if (this._hiddenChoiceConditions.has(choiceIndex))
+  if (this.hiddenChoiceConditions().has(choiceIndex))
   {
-    return this._hiddenChoiceConditions.get(choiceIndex);
+    return this.hiddenChoiceConditions().get(choiceIndex);
   }
 
   return false;
@@ -62,6 +62,48 @@ Game_Message.prototype.isChoiceHidden = function(choiceIndex)
  */
 Game_Message.prototype.hideChoice = function(choiceIndex, isHidden)
 {
-  this._hiddenChoiceConditions.set(choiceIndex, isHidden);
+  this.hiddenChoiceConditions().set(choiceIndex, isHidden);
 };
+
+//region properties
+/**
+ * Gets the hidden choice conditions.
+ * @returns {*} The hiddenChoiceConditions.
+ */
+Game_Message.prototype.hiddenChoiceConditions = function()
+{
+  // hand back the hidden choice conditions.
+  return this._hiddenChoiceConditions;
+};
+
+/**
+ * Sets the hidden choice conditions.
+ * @param {*} newHiddenChoiceConditions The new hiddenChoiceConditions.
+ */
+Game_Message.prototype.setHiddenChoiceConditions = function(newHiddenChoiceConditions)
+{
+  // assign the hidden choice conditions.
+  this._hiddenChoiceConditions = newHiddenChoiceConditions;
+};
+
+/**
+ * Gets the old choices.
+ * @returns {*} The oldChoices.
+ */
+Game_Message.prototype.oldChoices = function()
+{
+  // hand back the old choices.
+  return this._oldChoices;
+};
+
+/**
+ * Sets the old choices.
+ * @param {*} newOldChoices The new oldChoices.
+ */
+Game_Message.prototype.setOldChoices = function(newOldChoices)
+{
+  // assign the old choices.
+  this._oldChoices = newOldChoices;
+};
+//endregion properties
 //endregion Game_Message

@@ -58,11 +58,8 @@ Scene_Map.prototype.createAllWindows = function()
  */
 Scene_Map.prototype.createMiniMap = function()
 {
-  /**
-   * The minimap sprite instance.
-   * @type {Sprite_MiniMap}
-   */
-  this._j._map._miniMap = new Sprite_MiniMap();
+  // build the minimap and hand it to its tracker.
+  this.setMiniMap(new Sprite_MiniMap());
 
   // set initial visibility from runtime state.
   let shouldBeVisible = $gameSystem.isMinimapVisible();
@@ -74,10 +71,10 @@ Scene_Map.prototype.createMiniMap = function()
   }
 
   // apply the computed visibility.
-  this._j._map._miniMap.visible = shouldBeVisible;
+  this.getMiniMap().visible = shouldBeVisible;
 
   // add the minimap to the scene.
-  this.addChild(this._j._map._miniMap);
+  this.addChild(this.getMiniMap());
 };
 
 /**
@@ -87,6 +84,15 @@ Scene_Map.prototype.createMiniMap = function()
 Scene_Map.prototype.getMiniMap = function()
 {
   return this._j._map._miniMap;
+};
+
+/**
+ * Sets the minimap sprite.
+ * @param {Sprite_MiniMap} miniMap The sprite to track.
+ */
+Scene_Map.prototype.setMiniMap = function(miniMap)
+{
+  this._j._map._miniMap = miniMap;
 };
 
 /**

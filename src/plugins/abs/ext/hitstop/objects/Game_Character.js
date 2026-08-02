@@ -54,7 +54,7 @@ Game_Character.prototype.getHitstopData = function()
   }
 
   // return the hitstop data model.
-  return this._j._abs._hitstop._data;
+  return this.data();
 };
 
 /**
@@ -90,4 +90,16 @@ Game_Character.prototype.update = function()
   J.ABS.EXT.HITSTOP.Aliased.Game_Character.get('update')
     .call(this);
 };
+
+//region properties
+/**
+ * Gets the hitstop data driving this character's freeze-frame effect.
+ * @returns {JABS_HitstopData} The active hitstop data.
+ */
+Game_Character.prototype.data = function()
+{
+  // hand back the data.
+  return this._j._abs._hitstop._data;
+};
+//endregion properties
 //endregion Game_Character

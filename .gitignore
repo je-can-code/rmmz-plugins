@@ -11,9 +11,10 @@
 .idea/**/aws.xml
 .vs/
 node_modules/
-.cursor/debug-*.log
 .tmp/
-.cursor/rules/context-mode.mdc
+
+# Claude Code — share CLAUDE.md; ignore machine-local settings.
+.claude/settings.local.json
 
 file*.rmmzsave
 out/

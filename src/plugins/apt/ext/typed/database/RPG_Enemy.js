@@ -153,19 +153,9 @@ RPG_Enemy.prototype.computeInferredTypedElementIds = function()
     }
   }
 
-  // uniquify while preserving order.
-  const out = [];
-  const seen = new Set();
-  inferred.forEach(id =>
-  {
-    if (!seen.has(id))
-    {
-      seen.add(id);
-      out.push(id);
-    }
-  });
-
-  // return the final list of ids.
-  return out;
+  // NOTE: no de-duplication is needed here. the loop above visits each element id exactly once and
+  // its two collection paths are mutually exclusive on `prefixed`, so an id can be appended at most
+  // one time. the ids are therefore already unique and already in element order.
+  return inferred;
 };
 //endregion RPG_Enemy

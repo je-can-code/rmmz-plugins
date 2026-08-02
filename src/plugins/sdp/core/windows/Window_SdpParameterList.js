@@ -4,23 +4,35 @@ class Window_SdpParameterList
   extends Window_Command
 {
   /**
-   * The current parameters on the panel being hovered over.
-   * @type {PanelParameter[]}
-   */
-  panelParameters = [];
-
-  /**
-   * The current actor to compare parameters against the panel parameters for.
-   * @type {Game_Actor}
-   */
-  currentActor = null;
-
-  /**
    * Constructor.
+   * @param {Rectangle} rect The rectangle that represents this window.
    */
   constructor(rect)
   {
+    // perform original logic, which seeds this window's members before building the list.
     super(rect);
+  }
+
+  /**
+   * Implements {@link Window_Command.initMembers}.<br/>
+   * Initializes the members of this window.
+   *
+   * These cannot be class field declarations: JavaScript applies those only after `super()` returns,
+   * by which point the command list has already been built from them and found them undefined.
+   */
+  initMembers()
+  {
+    /**
+     * The current parameters on the panel being hovered over.
+     * @type {PanelParameter[]}
+     */
+    this.panelParameters = [];
+
+    /**
+     * The current actor to compare parameters against the panel parameters for.
+     * @type {Game_Actor}
+     */
+    this.currentActor = null;
   }
 
   /**
@@ -61,7 +73,12 @@ class Window_SdpParameterList
    */
   buildCommands()
   {
-    if (!this.panelParameters) return [];
+    // nothing to describe yet, which is the state this window is built in: vanilla's
+    // Window_Command.initialize ends by refreshing, so this runs once before the scene has had any
+    // chance to hand over a panel. Returning early matters more than it looks- the private method
+    // below is not branded onto this instance until `super()` returns, and merely *naming* it as a
+    // map callback is enough to trip that check, empty array or not.
+    if (this.panelParameters.length === 0) return [];
 
     const commands = this.panelParameters.map(this.#buildPanelParameterCommand, this);
 

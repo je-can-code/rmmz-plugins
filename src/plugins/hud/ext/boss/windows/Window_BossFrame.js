@@ -28,55 +28,67 @@ class Window_BossFrame
     this._j._hud._boss._revealing = false;
   }
 
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   requestHideBossFrame()
   {
-    this._j._hud._boss._requestHide = true;
+    this.j()._hud._boss._requestHide = true;
 
     this.beginConcealing();
   }
 
   beginConcealing()
   {
-    this._j._hud._boss._concealing = true;
+    this.j()._hud._boss._concealing = true;
   }
 
   endConcealing()
   {
-    this._j._hud._boss._concealing = false;
+    this.j()._hud._boss._concealing = false;
 
     this.acknowledgeBossFrameHidden();
   }
 
   acknowledgeBossFrameHidden()
   {
-    this._j._hud._boss._requestHide = false;
+    this.j()._hud._boss._requestHide = false;
   }
 
   isStillConcealing()
   {
-    return this._j._hud._boss._concealing;
+    return this.j()._hud._boss._concealing;
   }
 
   requestShowBossFrame()
   {
-    this._j._hud._boss._requestShow = true;
+    this.j()._hud._boss._requestShow = true;
 
     this.beginRevealing();
   }
 
   beginRevealing()
   {
-    this._j._hud._boss._revealing = true;
+    this.j()._hud._boss._revealing = true;
   }
 
   endRevealing()
   {
-    this._j._hud._boss._revealing = false;
+    this.j()._hud._boss._revealing = false;
   }
 
   isStillRevealing()
   {
-    return this._j._hud._boss._revealing;
+    return this.j()._hud._boss._revealing;
   }
 
   //region caching
@@ -101,17 +113,17 @@ class Window_BossFrame
     const key = `bossframe-enemy-hp-gauge`;
 
     // check if the key already maps to a cached sprite.
-    if (this._j._spriteCache.has(key))
+    if (this.j()._spriteCache.has(key))
     {
       // if it does, just return that.
-      return this._j._spriteCache.get(key);
+      return this.j()._spriteCache.get(key);
     }
 
     // create a new enemy gauge sprite.
     const sprite = new Sprite_FlowingGauge();
 
     // cache the sprite.
-    this._j._spriteCache.set(key, sprite);
+    this.j()._spriteCache.set(key, sprite);
 
     // hide the sprite for now.
     sprite.hide();
@@ -159,7 +171,7 @@ class Window_BossFrame
   {
     // perform original logic.
     this.contentsOpacity -= 10;
-    this._j._spriteCache.forEach((sprite, _) => sprite.opacity -= 10);
+    this.j()._spriteCache.forEach((sprite, _) => sprite.opacity -= 10);
 
     // verify the opacities.
     const contentsOpacityZero = this.contentsOpacity <= 0;
@@ -182,7 +194,7 @@ class Window_BossFrame
   {
     // perform original logic.
     this.contentsOpacity += 40;
-    this._j._spriteCache.forEach((sprite, _) => sprite.opacity += 40);
+    this.j()._spriteCache.forEach((sprite, _) => sprite.opacity += 40);
 
     // verify the opacities.
     const contentsOpacityMax = this.contentsOpacity >= 255;

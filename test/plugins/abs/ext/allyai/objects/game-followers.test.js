@@ -20,6 +20,10 @@ describe('J-ABS-AllyAI Game_Followers (unit, all downstream dependencies mocked)
     originalHide = vi.fn();
     Game_Followers.prototype.show = originalShow;
     Game_Followers.prototype.hide = originalHide;
+
+    // vanilla RMMZ accessor the allyai layer iterates through.
+    // mirrors RMMZ's Array#clone, which is a plain slice; rmmz_core is not loaded here.
+    Game_Followers.prototype.data = function() { return this._data.slice(0); };
     globalThis.Game_Followers = Game_Followers;
 
     await import('../../../../../../src/plugins/abs/ext/allyai/objects/Game_Followers.js');
@@ -30,7 +34,6 @@ describe('J-ABS-AllyAI Game_Followers (unit, all downstream dependencies mocked)
     originalShow.mockReset();
     originalHide.mockReset();
     globalThis.$gameMap = { updateAllies: vi.fn(), _interpreter: { isRunning: () => true } };
-    globalThis.$jabsEngine = { requestJabsMenuRefresh: false };
     globalThis.$gamePlayer = { isJumping: () => true, getJabsBattler: () => ({}), deltaXFrom: vi.fn(() => 1), deltaYFrom: vi.fn(() => 2) };
   });
 
@@ -41,25 +44,23 @@ describe('J-ABS-AllyAI Game_Followers (unit, all downstream dependencies mocked)
 
   describe('show', () =>
   {
-    it('performs the original logic then updates allies and requests a menu refresh', () =>
+    it('performs the original logic then updates allies', () =>
     {
       const followers = buildFollowers();
       followers.show();
       expect(originalShow).toHaveBeenCalledTimes(1);
       expect(globalThis.$gameMap.updateAllies).toHaveBeenCalledTimes(1);
-      expect(globalThis.$jabsEngine.requestJabsMenuRefresh).toBe(true);
     });
   });
 
   describe('hide', () =>
   {
-    it('performs the original logic then updates allies and requests a menu refresh', () =>
+    it('performs the original logic then updates allies', () =>
     {
       const followers = buildFollowers();
       followers.hide();
       expect(originalHide).toHaveBeenCalledTimes(1);
       expect(globalThis.$gameMap.updateAllies).toHaveBeenCalledTimes(1);
-      expect(globalThis.$jabsEngine.requestJabsMenuRefresh).toBe(true);
     });
   });
 

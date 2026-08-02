@@ -226,7 +226,9 @@ class TrackedOmniQuest
     const objective = this.objectives.find(o => o.id === actualObjectiveId);
   
     // validate the objective in question is in the state of active, regardless of the quest.
-    return objective?.state === OmniObjective.States.Active;
+    if (objective === undefined) return false;
+
+    return objective.state === OmniObjective.States.Active;
   }
   
   /**
@@ -470,7 +472,7 @@ class TrackedOmniQuest
   immediateObjective()
   {
     return this.activeObjectives()
-      ?.at(0);
+      .at(0);
   }
   
   /**
@@ -714,8 +716,9 @@ class TrackedOmniQuest
    */
   onQuestStateChange()
   {
-    // check if we have the dialog manager.
-    if ($diaLogManager)
+    // check if the log plugin is present to announce through. a bare $diaLogManager reference would
+    // throw a ReferenceError rather than read as falsy when J-Log is not loaded at all.
+    if (J.LOG)
     {
       // handle logging.
       this.handleQuestUpdateLog();

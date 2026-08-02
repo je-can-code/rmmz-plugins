@@ -83,14 +83,19 @@ class Window_AptitudeAggregateDetails
     // do nothing if the actor is unchanged.
     if (this.actor() === actor) return;
 
-    // update the actor.
+    // update the actor. this is the owning mutator, so it assigns the field directly rather than
+    // routing through itself- which would simply recurse until the stack ran out.
     this._actor = actor;
 
     // the previously-selected aggregate belongs to the old actor's source keys- clear it so
     // this refresh shows the "select a skill" hint instead of resolving stale sources against
     // the new actor. The scene supplies a fresh, actor-matched aggregate shortly after via
     // setAggregate(), which triggers its own refresh().
-    this._aggregate = null;
+    //
+    // routed through the owning mutator rather than assigning the field, which costs a redundant redraw
+    // whenever there was an aggregate to clear. That is invisible on a menu window, and worth it to keep
+    // the field's ownership with its one mutator.
+    this.setAggregate(null);
 
     // refresh the contents for the new actor.
     this.refresh();
@@ -127,7 +132,7 @@ class Window_AptitudeAggregateDetails
    */
   nextY()
   {
-    return this._nextY || 0;
+    return this._nextY;
   }
 
   /**

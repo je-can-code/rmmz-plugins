@@ -39,6 +39,11 @@ export default defineConfig({
         // vite build config and the bare plugin entry re-export- build-time only, no runtime logic.
         '**/src/plugins/**/vite.config.*.js',
         '**/src/plugins/**/entry.js',
+        // STAR is an unfinished, in-development plugin that is also disabled in the shipped game.
+        // Its 0% score is expected rather than a gap, and leaving it in the report buries the real
+        // targets under a permanent false alarm. Delete this line once the plugin is finished and
+        // ready to be tested- it is a temporary silence, not a permanent exemption.
+        '**/src/plugins/abs/ext/star/**',
       ],
       all: true,
       clean: true,

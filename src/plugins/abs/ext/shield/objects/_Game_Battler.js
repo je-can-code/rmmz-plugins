@@ -171,7 +171,7 @@ Game_Battler.prototype.onShieldBreak = function(shieldBreakValue = 0)
   }
 
   // identify all the sources from which shield break skills can be pulled from.
-  const sources = this.shieldBreakSources().filter(source => !!source);
+  const sources = this.shieldBreakSources();
 
   /**
    * A reducer function to grab all the shield break skills.

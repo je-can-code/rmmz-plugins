@@ -15,6 +15,10 @@ describe('BattleManager ext/sdp augments (direct src import)', () =>
     };
 
     await import('../../../../../src/plugins/sdp/core/managers/BattleManager.js');
+
+    // J-Base accessors for the vanilla rewards bundle.
+    globalThis.BattleManager.rewards = function() { return this._rewards; };
+    globalThis.BattleManager.setRewards = function(v) { this._rewards = v; };
   });
 
   beforeEach(() =>

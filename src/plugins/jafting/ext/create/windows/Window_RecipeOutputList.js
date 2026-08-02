@@ -4,11 +4,18 @@ import Window_RecipeIngredientList from './Window_RecipeIngredientList.js';
 class Window_RecipeOutputList
   extends Window_Command
 {
+
+  //region properties
   /**
-   * True if the text of this list should be masked, false otherwise.
-   * @type {boolean}
+   * Gets the components.
+   * @returns {CraftingComponent[]} The components.
    */
-  needsMasking = false;
+  components()
+  {
+    // hand back the components.
+    return this._components;
+  }
+  //endregion properties
 
   /**
    * Constructor.
@@ -16,6 +23,7 @@ class Window_RecipeOutputList
    */
   constructor(rect)
   {
+    // perform original logic, which seeds this window's members before building the list.
     super(rect);
 
     // this background is layered ontop of another window, so it should be invisibile.
@@ -23,10 +31,13 @@ class Window_RecipeOutputList
   }
 
   /**
-   * Extends {@link #initialize}.<br/>
-   * Initializes some additional window properies.
+   * Implements {@link Window_Command.initMembers}.<br/>
+   * Initializes the members of this window.
+   *
+   * `needsMasking` cannot be a class field: JavaScript applies those only after `super()` returns, by
+   * which point the command list has already been built from them.
    */
-  initialize(rect)
+  initMembers()
   {
     /**
      * The list of components this window should render.
@@ -34,7 +45,11 @@ class Window_RecipeOutputList
      */
     this._components = [];
 
-    super.initialize(rect);
+    /**
+     * True if the text of this list should be masked, false otherwise.
+     * @type {boolean}
+     */
+    this.needsMasking = false;
   }
 
   setComponents(components)
@@ -71,7 +86,7 @@ class Window_RecipeOutputList
   buildCommands()
   {
     // grab all recipes in the list.
-    const components = this._components;
+    const components = this.components();
 
     // compile the list of commands.
     const commands = components.map(this.buildCommand, this);

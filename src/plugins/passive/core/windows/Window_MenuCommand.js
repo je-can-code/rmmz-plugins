@@ -16,15 +16,17 @@ Window_MenuCommand.prototype.makeCommandList = function()
   // build and insert the Passives command.
   const command = new WindowCommandBuilder(J.PASSIVE.Metadata.commandName)
     .setSymbol('passive-menu')
+    .setHelpText("Review the always-active effects this character benefits from.")
+    .setMenuSection(MenuSection.Actor)
     .setEnabled(true)
     .setIconIndex(J.PASSIVE.Metadata.commandIconIndex)
     .build();
 
   // insert before "End Game" if it is the last entry; otherwise append.
-  const lastCommand = this._list.at(-1);
+  const lastCommand = this.commandList().at(-1);
   if (lastCommand.symbol === 'gameEnd')
   {
-    this._list.splice(this._list.length - 2, 0, command);
+    this.commandList().splice(this.commandList().length - 2, 0, command);
   }
   else
   {

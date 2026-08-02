@@ -25,6 +25,9 @@ function buildMinimalBattler()
     _result: { pushAddedState: vi.fn() },
   };
 
+  // vanilla Game_Battler accessor the production code reads its action result through.
+  battler.result = () => battler._result;
+
   // bind the real handleAddingJabsState implementation onto this plain mock object.
   battler.handleAddingJabsState = globalThis.Game_Battler.prototype.handleAddingJabsState;
 

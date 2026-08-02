@@ -81,19 +81,19 @@ Game_Temp.prototype.findDifficultyLayerByKey = function(key)
 Game_Temp.prototype.setupDifficultySystem = function()
 {
   // iterate over each of the metadatas.
-  this._j._difficulty._metadata.forEach((difficultyMetadata, key) =>
+  this.metadata().forEach((difficultyMetadata, key) =>
   {
     // create the difficulty from metadata.
     const difficultyLayer = DifficultyLayer.fromMetadata(difficultyMetadata);
 
     // add the difficulty layer to the list of available layers.
-    this._j._difficulty._allLayers.set(key, difficultyLayer);
+    this.getAllDifficultyLayers().set(key, difficultyLayer);
 
     // create the config from metadata.
     const difficultyConfig = DifficultyConfig.fromMetadata(difficultyMetadata);
 
     // add the difficulty config to the list of available configs.
-    this._j._difficulty._allConfigs.set(key, difficultyConfig);
+    this.allConfigs().set(key, difficultyConfig);
 
     // also register the configuration with the system for tracking.
     $gameSystem.registerDifficultyConfig(difficultyConfig);
@@ -283,4 +283,26 @@ Game_Temp.prototype.buildAppliedDifficulty = function()
   // return the compiled difficulty.
   return newDifficulty;
 };
+
+//region properties
+/**
+ * Gets the difficulty metadata staged for the layer being edited.
+ * @returns {object} The staged difficulty metadata.
+ */
+Game_Temp.prototype.metadata = function()
+{
+  // hand back the metadata.
+  return this._j._difficulty._metadata;
+};
+
+/**
+ * Gets the all configs.
+ * @returns {*} The allConfigs.
+ */
+Game_Temp.prototype.allConfigs = function()
+{
+  // hand back the all configs.
+  return this._j._difficulty._allConfigs;
+};
+//endregion properties
 //endregion Game_Temp

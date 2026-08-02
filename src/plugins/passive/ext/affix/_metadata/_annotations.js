@@ -167,6 +167,30 @@
  *    prefix.
  *
  * ============================================================================
+ * TIER RANK (PIP COUNT)
+ * Have you ever wanted the map nameplate stripe to communicate not just that
+ * a prefix is special, but how special, without forcing players to memorize
+ * five different tier colors? Well now you can! By applying a tier rank tag
+ * to a prefix state, you too can make the stripe draw that many thin pips
+ * instead of one solid block.
+ *
+ * TAG USAGE:
+ * - States
+ *
+ * TAG FORMAT:
+ *  <affix-tier:N>
+ *    Where N is a positive integer tier rank.
+ *
+ * TAG NOTES:
+ * - No tag (or a tag of 1) draws the original single solid stripe. Full stop.
+ * - Rank is capped at 5 pips regardless of the tagged value.
+ *
+ * TAG EXAMPLES:
+ *  <affix-tier:3>
+ *    Draws three thin pips on the map nameplate stripe when this prefix is
+ *    the selected tier prefix.
+ *
+ * ============================================================================
  * REWARD MULTIPLIERS
  * Have you ever wanted affixed enemies to yield better rewards for the extra
  * challenge they pose? Well now you can! By applying the following tag to

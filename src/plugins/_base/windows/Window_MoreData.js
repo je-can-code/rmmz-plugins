@@ -36,10 +36,9 @@ class Window_MoreData
    */
   constructor(rect)
   {
+    // perform original logic, which seeds this window's members via initMembers and then builds the
+    // command list from them.
     super(rect);
-    this.initialize(rect);
-    this.initMembers();
-    this.refresh();
   }
 
   /**
@@ -179,7 +178,7 @@ class Window_MoreData
   adjustWindowHeight()
   {
     const magicHeight = 800;
-    const calculatedHeight = (this._list.length + 1) * (this.lineHeight() + 8) - 16;
+    const calculatedHeight = (this.commandList().length + 1) * (this.lineHeight() + 8) - 16;
     if (calculatedHeight >= magicHeight)
     {
       // assign height on this instance for callers.

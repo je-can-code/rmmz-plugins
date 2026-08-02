@@ -503,8 +503,10 @@ Game_Actor.prototype.applyNaturalXparamGrowths = function()
     const baseParam = J.NATURAL.Aliased.Game_Actor.get('xparam')
       .call(this, paramId);
 
-    // calculate the flat growth for this parameter.
-    const growthPlus = this.naturalParamBuff(plusStructure, baseParam);
+    // calculate the flat growth for this parameter- divided by 100 because its fractional.
+    // ex-parameters are stored by the engine as 0-1 fractions, so the tag is authored in whole
+    // percents and scaled here, exactly as the matching buff path does.
+    const growthPlus = (this.naturalParamBuff(plusStructure, baseParam) / 100);
 
     // add it to the running total of permanent growth pluses.
     this.modXparamGrowthPlus(paramId, growthPlus);
@@ -570,8 +572,10 @@ Game_Actor.prototype.applyNaturalSparamGrowths = function()
     const baseParam = J.NATURAL.Aliased.Game_Actor.get('sparam')
       .call(this, paramId);
 
-    // calculate the flat growth for this parameter.
-    const growthPlus = this.naturalParamBuff(plusStructure, baseParam);
+    // calculate the flat growth for this parameter- divided by 100 because its fractional.
+    // sp-parameters are stored by the engine as 0-1 fractions, so the tag is authored in whole
+    // percents and scaled here, exactly as the matching buff path does.
+    const growthPlus = (this.naturalParamBuff(plusStructure, baseParam) / 100);
 
     // add it to the running total of permanent growth pluses.
     this.modSparamGrowthPlus(paramId, growthPlus);
@@ -635,10 +639,12 @@ Game_Actor.prototype.applyNaturalHarGrowths = function()
   // destructure out the plus and rate structures for growths.
   const [ , , growthPlusStructure, growthRateStructure ] = this.getRegexForHar();
 
-  // grab the pre-natural HAR value (notetag factor + SDP bonus) for value basing.
-  const baseHar = this.baseHarFactor() + (this.getSdpBonusForParameterKey
+  // grab the pre-natural HAR value (notetag factor + SDP bonus) for value basing; J-SDP is
+  // optional, so its contribution is only asked for when that plugin is actually present.
+  const sdpBonus = J.SDP
     ? this.getSdpBonusForParameterKey('har', 1)
-    : 0);
+    : 0;
+  const baseHar = this.baseHarFactor() + sdpBonus;
 
   // calculate the flat growth for this parameter.
   const growthPlus = this.naturalParamBuff(growthPlusStructure, baseHar);

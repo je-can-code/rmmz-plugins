@@ -18,6 +18,10 @@ describe('Game_Item ext/extend augments (direct src import)', () =>
     StubGameItem.prototype.initialize = vi.fn();
     StubGameItem.prototype.setObject = vi.fn();
     StubGameItem.prototype.object = vi.fn();
+
+    // J-Base owns the data class accessors this file writes through.
+    StubGameItem.prototype.setDataClass = function(newDataClass) { this._dataClass = newDataClass; };
+    StubGameItem.prototype.dataClass = function() { return this._dataClass; };
     globalThis.Game_Item = StubGameItem;
 
     await import('../../../../../src/plugins/extend/core/objects/Game_Item.js');

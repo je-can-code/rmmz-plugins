@@ -28,8 +28,8 @@ describe('JABS_LootDrop (unit, bare J.BASE.Helpers global stubbed)', () =>
     {
       const drop = new JABS_LootDrop(lootObject);
 
-      expect(drop.lootData).toEqual(lootObject);
-      expect(drop.uuid).toEqual('generated-uuid');
+      expect(drop.lootData()).toEqual(lootObject);
+      expect(drop.uuid()).toEqual('generated-uuid');
     });
   });
 
@@ -38,9 +38,9 @@ describe('JABS_LootDrop (unit, bare J.BASE.Helpers global stubbed)', () =>
     it('can be overwritten with a new value', () =>
     {
       const drop = new JABS_LootDrop(lootObject);
-      drop.uuid = 'custom-uuid';
+      drop.setUuid('custom-uuid');
 
-      expect(drop.uuid).toEqual('custom-uuid');
+      expect(drop.uuid()).toEqual('custom-uuid');
     });
   });
 
@@ -50,24 +50,24 @@ describe('JABS_LootDrop (unit, bare J.BASE.Helpers global stubbed)', () =>
     {
       const drop = new JABS_LootDrop(lootObject);
 
-      expect(drop.duration).toEqual(900);
+      expect(drop.duration()).toEqual(900);
     });
 
     it('can be set to a new positive value', () =>
     {
       const drop = new JABS_LootDrop(lootObject);
-      drop.duration = 300;
+      drop.setDuration(300);
 
-      expect(drop.duration).toEqual(300);
+      expect(drop.duration()).toEqual(300);
     });
 
     it('disables expiration when set to -1', () =>
     {
       const drop = new JABS_LootDrop(lootObject);
-      drop.duration = -1;
+      drop.setDuration(-1);
 
       expect(drop.canExpire()).toEqual(false);
-      expect(drop.duration).toEqual(-1);
+      expect(drop.duration()).toEqual(-1);
     });
   });
 
@@ -77,25 +77,25 @@ describe('JABS_LootDrop (unit, bare J.BASE.Helpers global stubbed)', () =>
     {
       const drop = new JABS_LootDrop(lootObject);
       drop.disableExpiration();
-      drop.duration = 0;
+      drop.setDuration(0);
 
-      expect(drop.expired).toEqual(false);
+      expect(drop.isExpired()).toEqual(false);
     });
 
     it('is expired once duration reaches zero while expiration is enabled', () =>
     {
       const drop = new JABS_LootDrop(lootObject);
-      drop.duration = 0;
+      drop.setDuration(0);
 
-      expect(drop.expired).toEqual(true);
+      expect(drop.isExpired()).toEqual(true);
     });
 
     it('is not expired while duration remains positive', () =>
     {
       const drop = new JABS_LootDrop(lootObject);
-      drop.duration = 1;
+      drop.setDuration(1);
 
-      expect(drop.expired).toEqual(false);
+      expect(drop.isExpired()).toEqual(false);
     });
   });
 
@@ -126,7 +126,7 @@ describe('JABS_LootDrop (unit, bare J.BASE.Helpers global stubbed)', () =>
       const drop = new JABS_LootDrop(lootObject);
       drop.countdownDuration();
 
-      expect(drop.duration).toEqual(899);
+      expect(drop.duration()).toEqual(899);
     });
 
     it('does not count down when expiration is disabled', () =>
@@ -135,16 +135,16 @@ describe('JABS_LootDrop (unit, bare J.BASE.Helpers global stubbed)', () =>
       drop.disableExpiration();
       drop.countdownDuration();
 
-      expect(drop.duration).toEqual(900);
+      expect(drop.duration()).toEqual(900);
     });
 
     it('does not count down once duration has already reached zero', () =>
     {
       const drop = new JABS_LootDrop(lootObject);
-      drop.duration = 0;
+      drop.setDuration(0);
       drop.countdownDuration();
 
-      expect(drop.duration).toEqual(0);
+      expect(drop.duration()).toEqual(0);
     });
   });
 
@@ -154,14 +154,14 @@ describe('JABS_LootDrop (unit, bare J.BASE.Helpers global stubbed)', () =>
     {
       const drop = new JABS_LootDrop(lootObject);
 
-      expect(drop.lootIcon).toEqual(7);
+      expect(drop.lootIcon()).toEqual(7);
     });
 
     it('defaults to 0 when the loot object has no icon index', () =>
     {
       const drop = new JABS_LootDrop({});
 
-      expect(drop.lootIcon).toEqual(0);
+      expect(drop.lootIcon()).toEqual(0);
     });
   });
 
@@ -171,14 +171,14 @@ describe('JABS_LootDrop (unit, bare J.BASE.Helpers global stubbed)', () =>
     {
       const drop = new JABS_LootDrop(lootObject);
 
-      expect(drop.useOnPickup).toEqual(true);
+      expect(drop.isUseOnPickup()).toEqual(true);
     });
 
     it('defaults to false when the loot object has no flag set', () =>
     {
       const drop = new JABS_LootDrop({});
 
-      expect(drop.useOnPickup).toEqual(false);
+      expect(drop.isUseOnPickup()).toEqual(false);
     });
   });
 });

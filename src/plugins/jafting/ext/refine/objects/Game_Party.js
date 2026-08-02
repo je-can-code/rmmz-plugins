@@ -89,7 +89,7 @@ Game_Party.prototype.getRefinedArmors = function()
  */
 Game_Party.prototype.addRefinedWeapon = function(equip)
 {
-  this._j._refinement._weapons.push(equip);
+  this.getRefinedWeapons().push(equip);
 };
 
 /**
@@ -98,7 +98,7 @@ Game_Party.prototype.addRefinedWeapon = function(equip)
  */
 Game_Party.prototype.addRefinedArmor = function(equip)
 {
-  this._j._refinement._armors.push(equip);
+  this.getRefinedArmors().push(equip);
 };
 
 /**
@@ -136,7 +136,7 @@ Game_Party.prototype.refreshDatabaseArmors = function()
  */
 Game_Party.prototype.getRefinementCounter = function(refinementType)
 {
-  return this._j._refinement._increments[refinementType];
+  return this.increments()[refinementType];
 };
 
 /**
@@ -145,6 +145,18 @@ Game_Party.prototype.getRefinementCounter = function(refinementType)
  */
 Game_Party.prototype.incrementRefinementCounter = function(refinementType)
 {
-  this._j._refinement._increments[refinementType]++;
+  this.increments()[refinementType]++;
 };
+
+//region properties
+/**
+ * Gets how many times each item has been refined by this party.
+ * @returns {Object<number, number>} The refinement count per item id.
+ */
+Game_Party.prototype.increments = function()
+{
+  // hand back the increments.
+  return this._j._refinement._increments;
+};
+//endregion properties
 //endregion Game_Party

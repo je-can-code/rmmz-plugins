@@ -17,6 +17,9 @@ describe('J-MessageTextCodes Game_Message choice hiding (direct src import)', ()
     setPluginContextToJMessage();
     await import('../../../../src/plugins/message/core/_metadata/initialization.js');
 
+    // vanilla accessor this file reads through.
+    globalThis.Game_Message.prototype.choices = function() { return this._choices; };
+
     // patches globalThis.Game_Message.prototype directly, no vm involved.
     await import('../../../../src/plugins/message/core/objects/Game_Message.js');
   });

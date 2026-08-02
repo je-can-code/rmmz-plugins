@@ -13,9 +13,6 @@ Game_Followers.prototype.show = function()
 
   // update all allies when choosing "show" as an event command.
   $gameMap.updateAllies();
-
-  // refresh the JABS menu.
-  $jabsEngine.requestJabsMenuRefresh = true;
 };
 
 /**
@@ -32,9 +29,6 @@ Game_Followers.prototype.hide = function()
 
   // update all allies when choosing "hide" as an event command.
   $gameMap.updateAllies();
-
-  // refresh the JABS menu.
-  $jabsEngine.requestJabsMenuRefresh = true;
 };
 
 /**
@@ -50,7 +44,7 @@ Game_Followers.prototype.jumpAll = function()
   const playerBattler = $gamePlayer.getJabsBattler();
 
   // iterate over each follower to make them jump as-needed.
-  for (const follower of this._data)
+  for (const follower of this.data())
   {
     // skip followers that don't exist.
     if (!follower || !follower.isVisible()) continue;
@@ -76,7 +70,7 @@ Game_Followers.prototype.jumpAll = function()
  */
 Game_Followers.prototype.setDirectionFixAll = function(isFixed)
 {
-  this._data.forEach(follower =>
+  this.data().forEach(follower =>
   {
     // skip followers that don't exist.
     if (!follower) return;

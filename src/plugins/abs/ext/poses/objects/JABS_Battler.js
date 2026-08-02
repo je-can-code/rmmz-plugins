@@ -138,7 +138,7 @@ JABS_Battler.prototype.isPosing = function()
  */
 JABS_Battler.prototype.startPosing = function()
 {
-  this._posing = true;
+  this.setPosing(true);
 };
 
 /**
@@ -146,7 +146,7 @@ JABS_Battler.prototype.startPosing = function()
  */
 JABS_Battler.prototype.endPosing = function()
 {
-  this._posing = false;
+  this.setPosing(false);
 };
 
 /**
@@ -195,7 +195,7 @@ JABS_Battler.prototype.setPosePattern = function(pattern)
 JABS_Battler.prototype.performActionPose = function(skill)
 {
   // if we are still animating from a previous skill, prematurely end it.
-  if (this._posing)
+  if (this.isPosing())
   {
     this.endAnimation();
   }
@@ -472,4 +472,16 @@ JABS_Battler.prototype.executeDodgeSkill = function(skill, forcedDirection8)
   // TODO: should the function go before or after initial logic?
 };
 //endregion action poses
+
+//region properties
+/**
+ * Sets whether this battler is currently locked into a pose animation.
+ * @param {boolean} newPosing True while posing.
+ */
+JABS_Battler.prototype.setPosing = function(newPosing)
+{
+  // assign the posing.
+  this._posing = newPosing;
+};
+//endregion properties
 //endregion JABS_Battler

@@ -167,6 +167,17 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.0
+ *    Retrofitted the passive viewer onto the shared actor skeleton, so it
+ *    matches the other actor-scoped scenes.
+ *    Constrained the viewer's chrome, which previously spanned the whole
+ *    screen.
+ *    The passive list now names both absences it can report, rather than
+ *    showing one message for two different situations.
+ *    Fixed passive-refresh ordering: Game_Actor/Game_Enemy#onSetup now attach
+ *    passives before the original setup logic runs, so the base setup's own
+ *    notification is the only one that fires instead of cascading a redundant
+ *    second pass through the note-regex-heavy onBattlerDataChange path.
  * - 2.1.0
  *    Added Scene_Passive viewer scene with actor ribbon, state list, and semantic detail window.
  *    Detail window uses a three-column layout with labeled sections: Combat, Parameters,

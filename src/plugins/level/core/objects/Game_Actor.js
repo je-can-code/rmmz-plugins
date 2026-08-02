@@ -253,7 +253,7 @@ Game_Actor.prototype.changeExp = function(exp, show)
   this.setSyncedExp(clampedExp);
 
   // remember the level prior to this exp change so we know whether to show a level-up later.
-  const lastLevel = this._level;
+  const lastLevel = this.getBattlerBaseLevel();
 
   // remember the skill list prior to this exp change so newly-learned skills can be identified.
   const lastSkills = this.skills();
@@ -273,7 +273,7 @@ Game_Actor.prototype.changeExp = function(exp, show)
   }
 
   // if we were asked to show the level-up display and we actually gained a level, show it.
-  if (show && this._level > lastLevel)
+  if (show && this.getBattlerBaseLevel() > lastLevel)
   {
     // display the level-up screen, listing off whatever new skills were picked up along the way.
     this.displayLevelUp(this.findNewSkills(lastSkills));
@@ -302,7 +302,7 @@ Game_Actor.prototype.changeClass = function(classId, keepExp)
   }
 
   // swap the active class outright; level/exp are shared, so there is nothing to reset here.
-  this._classId = classId;
+  this.setClassId(classId);
 
   // grant every learning the new class has at or below our current level, same as a fresh actor
   // would receive via initSkills()- otherwise a high-level actor entering a brand new class would
@@ -328,12 +328,57 @@ Game_Actor.prototype.backfillLearningsForCurrentLevel = function()
   this.currentClass().learnings.forEach(learning =>
   {
     // if our current level already meets or exceeds this learning's requirement, grant it.
-    if (learning.level <= this._level)
+    if (learning.level <= this.getBattlerBaseLevel())
     {
+      // capture whether this skill was already known before granting it. this method is explicitly
+      // safe to call repeatedly, so without this snapshot every backfill would re-announce the
+      // actor's entire class skill list rather than only what genuinely arrived this time.
+      const wasAlreadyKnown = this.isLearnedSkill(learning.skillId);
+
       // learn the skill; this is a no-op if already known.
       this.learnSkill(learning.skillId);
+
+      // only announce skills that were actually new to this actor.
+      if (wasAlreadyKnown === false)
+      {
+        this.handleLevelSkillLearnedLog(learning.skillId);
+      }
     }
   }, this);
+};
+
+/**
+ * Generates a dia log announcing that this actor learned a skill from their current class.
+ * The skill's own message fields act as per-skill overrides for either line, allowing an author to
+ * give a notable skill its own voice without touching this default phrasing.
+ * @param {number} skillId The id of the skill that was learned.
+ */
+Game_Actor.prototype.handleLevelSkillLearnedLog = function(skillId)
+{
+  // the dia log is optional- when J-Log is absent there is simply nowhere to announce this.
+  if (!J.LOG) return;
+
+  // grab the skill so its name and message overrides can be read.
+  const skill = this.skill(skillId);
+
+  // the class that taught this skill is the one currently active on this actor.
+  const sourceName = this.currentClass().name;
+
+  // the skill's own message1 wins when authored; otherwise fall back to the class phrasing.
+  const headline = skill.message1 || `\\C[1]${this.name()}\\C[0] learned \\C[1]${skill.name}\\C[0] from ${sourceName} training!`;
+
+  // the skill's own message2 wins when authored; otherwise remind the player it must be equipped.
+  const instruction = skill.message2 || 'Equip it from the skills menu to use it.';
+
+  // build the two-line log wearing this actor's face so the player knows who grew.
+  const log = new DiaLogBuilder().addLine(headline)
+    .addLine(instruction)
+    .setFaceName(this.faceName())
+    .setFaceIndex(this.faceIndex())
+    .build();
+
+  // push it into the dia log for display.
+  $diaLogManager.addLog(log);
 };
 
 /**
@@ -352,7 +397,7 @@ Game_Actor.prototype.setSyncedExp = function(exp)
     if (!rpgClass) return;
 
     // write the same exp value into this class's slot.
-    this._exp[rpgClass.id] = exp;
+    this.exp()[rpgClass.id] = exp;
   }, this);
 };
 

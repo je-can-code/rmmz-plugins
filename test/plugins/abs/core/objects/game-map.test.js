@@ -28,6 +28,11 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
     originalUpdate = vi.fn();
     Game_Map.prototype.setup = originalSetup;
     Game_Map.prototype.update = originalUpdate;
+
+    // J-Base owns these; the abs layer reads and writes the event list through them.
+    Game_Map.prototype.rawEvents = function() { return this._events; };
+    Game_Map.prototype.setEventByIndex = function(index, newEvent) { this._events[index] = newEvent; };
+    Game_Map.prototype.clearEventByIndex = function(index) { this._events[index] = null; };
     globalThis.Game_Map = Game_Map;
 
     // sibling model/manager dependencies- mocked entirely per the unit-tier convention.
@@ -475,7 +480,7 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
     {
       const metadata = { uuid: 'loot-uuid', lootIndex: 2 };
       globalThis.$dataMap.events = [ null, null, metadata ];
-      const event = { isJabsLoot: () => true, getJabsLoot: () => ({ uuid: 'loot-uuid' }) };
+      const event = { isJabsLoot: () => true, getJabsLoot: () => ({ uuid: () => 'loot-uuid' }) };
       const map = buildMap();
 
       map.handleLootEventRemoval(event);
@@ -523,7 +528,15 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
      */
     function buildJabsBattler(x, y, direction)
     {
-      return { getCharacter: () => ({ x, y, direction: () => direction }) };
+      return {
+        getCharacter: () => ({
+          x,
+          y,
+          direction: () => direction,
+          occupiedTileX: () => x,
+          occupiedTileY: () => y,
+        }),
+      };
     }
 
     it('returns false when an enemy battler event is directly in front', () =>
@@ -584,11 +597,163 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
       expect(map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2))).toEqual(false);
     });
 
+    /**
+     * The cases above leave the tile ahead of the player indistinguishable from the tile beneath
+     * them, because the default direction-rounding stubs hand back the coordinate unchanged. That
+     * makes the player's own tile answer for both lookups, so the front-tile pass never actually
+     * runs. These cases separate the two tiles so the front-tile pass is genuinely exercised.
+     */
+    describe('with the tile ahead distinct from the tile underfoot', () =>
+    {
+      /**
+       * Makes facing down actually advance a tile, and routes each tile's events separately.
+       * @param {object[]} underfoot The events occupying the player's own tile.
+       * @param {object[]} ahead The events occupying the tile the player faces.
+       */
+      const mapWithTiles = (underfoot, ahead) =>
+      {
+        globalThis.$gameMap.roundYWithDirection = (y, direction) => (direction === 2
+          ? y + 1
+          : y);
+
+        return buildMap({
+          eventsXy: (x, y) => (y === 0
+            ? underfoot
+            : ahead),
+        });
+      };
+
+      it('returns false when the tile ahead holds an enemy battler', () =>
+      {
+        // Arrange
+        const map = mapWithTiles([], [ { isJabsBattler: () => true } ]);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        // swinging at an enemy ahead must stay an attack rather than becoming an interaction.
+        expect(result).toEqual(false);
+      });
+
+      it('returns true when the tile ahead holds a normal-priority triggerable event', () =>
+      {
+        // Arrange
+        const map = mapWithTiles([], [
+          {
+            isJabsBattler: () => false,
+            isTriggerIn: () => true,
+            isNormalPriority: () => true,
+          },
+        ]);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        expect(result).toEqual(true);
+      });
+
+      it('keeps looking when the event ahead is not triggerable', () =>
+      {
+        // Arrange
+        const map = mapWithTiles([], [
+          {
+            isJabsBattler: () => false,
+            isTriggerIn: () => false,
+            isNormalPriority: () => true,
+          },
+        ]);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        expect(result).toEqual(false);
+      });
+
+      it('keeps looking when the event ahead is triggerable but not normal priority', () =>
+      {
+        // Arrange
+        const map = mapWithTiles([], [
+          {
+            isJabsBattler: () => false,
+            isTriggerIn: () => true,
+            isNormalPriority: () => false,
+          },
+        ]);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        // an above/below-priority event shares the tile rather than blocking it, so it is not
+        // something the player is standing in front of and reaching for.
+        expect(result).toEqual(false);
+      });
+
+      it('prefers the event underfoot over the one ahead', () =>
+      {
+        // Arrange
+        const map = mapWithTiles(
+          [
+            {
+              isJabsBattler: () => false,
+              isTriggerIn: () => true,
+              isNormalPriority: () => true,
+            },
+          ],
+          [ { isJabsBattler: () => true } ]);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        // the doorstep case: a feet-anchored body standing on an event's tile interacts with it
+        // even when an enemy occupies the tile ahead.
+        expect(result).toEqual(true);
+      });
+    });
+
     it('returns false when nothing interactable is found anywhere', () =>
     {
       const map = buildMap({ eventsXy: () => [] });
 
       expect(map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2))).toEqual(false);
+    });
+
+    it('finds a triggerable event on the player\'s own occupied tile, distinct from the front tile', () =>
+    {
+      // Arrange: a real direction-aware round so the base tile (0,0) and front tile (0,-1)
+      // genuinely differ- this is the doorstep case, where the interactable event is underfoot
+      // rather than strictly ahead.
+      globalThis.$gameMap.roundYWithDirection = (y, d) => y + (d === 8 ? -1 : 0);
+      const onBaseTile = { isJabsBattler: () => false, isTriggerIn: () => true, isNormalPriority: () => true };
+      const map = buildMap({
+        eventsXy: (x, y) => (y === 0 ? [ onBaseTile ] : []),
+      });
+
+      // Act
+      const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 8));
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('preserves battler precedence: a battler on the base tile still blocks interaction, even with nothing in front', () =>
+    {
+      // Arrange
+      globalThis.$gameMap.roundYWithDirection = (y, d) => y + (d === 8 ? -1 : 0);
+      const battlerOnBaseTile = { isJabsBattler: () => true };
+      const map = buildMap({
+        eventsXy: (x, y) => (y === 0 ? [ battlerOnBaseTile ] : []),
+      });
+
+      // Act
+      const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 8));
+
+      // Assert: standing on/overlapping an enemy must never be reinterpreted as "interact".
+      expect(result).toBe(false);
     });
   });
 });

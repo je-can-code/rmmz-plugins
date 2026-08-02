@@ -243,18 +243,17 @@ describe('J-Pixelistics Game_CharacterBase pixel movement helpers (direct src im
     });
   });
 
-  it('_pixelState lazily rebuilds the namespace when _j is entirely absent', () =>
+  it('_pixelState returns the namespace seeded by initMembers', () =>
   {
     // Arrange
     const ch = new globalThis.Game_CharacterBase();
     ch.initMembers();
-    delete ch._j;
 
     // Act
     const state = ch._pixelState();
 
     // Assert
-    expect(state._steps).toBe(0);
+    expect(state).toBe(ch._j._pixel);
   });
 
   describe('repeat-move route state', () =>
@@ -1033,6 +1032,131 @@ describe('J-Pixelistics Game_CharacterBase pixel movement helpers (direct src im
 
       // Cleanup: restore the real aliased original so later tests aren't affected.
       globalThis.J.PIXEL.Aliased.Game_CharacterBase.set('canPass', original);
+    });
+  });
+
+  describe('pos overwrite', () =>
+  {
+    it('matches when the fractional coordinate rounds to the given tile', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_CharacterBase();
+      ch.initMembers();
+      ch._x = 2.9;
+      ch._y = 4.1;
+
+      // Act
+      const matched = ch.pos(3, 4);
+
+      // Assert
+      expect(matched).toBe(true);
+    });
+
+    it('does not match when the fractional coordinate rounds to a different tile', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_CharacterBase();
+      ch.initMembers();
+      ch._x = 2.4;
+      ch._y = 4.1;
+
+      // Act
+      const matched = ch.pos(3, 4);
+
+      // Assert
+      expect(matched).toBe(false);
+    });
+
+    it('matches the tile below when a feet-anchored pivot lands in the round/pivot disagreement band', () =>
+    {
+      // Arrange: pivotY 0.70 puts frac(_y)=0.35 in the [0.30, 0.50) disagreement band, where
+      // Math.round would answer row 4 but the collision pivot's body is actually in row 5.
+      const ch = new globalThis.Game_CharacterBase();
+      ch.initMembers();
+      ch.getCollisionPivotY = () => 0.70;
+      ch._x = 3;
+      ch._y = 4.35;
+
+      // Act
+      const matchesBodyRow = ch.pos(3, 5);
+      const matchesRoundedRow = ch.pos(3, 4);
+
+      // Assert
+      expect(matchesBodyRow).toBe(true);
+      expect(matchesRoundedRow).toBe(false);
+    });
+
+    it('still matches the same row just below the disagreement band boundary', () =>
+    {
+      // Arrange: frac(_y)=0.29 is just outside the [0.30, 0.50) band, so the body is still in row 4.
+      const ch = new globalThis.Game_CharacterBase();
+      ch.initMembers();
+      ch.getCollisionPivotY = () => 0.70;
+      ch._x = 3;
+      ch._y = 4.29;
+
+      // Act
+      const matched = ch.pos(3, 4);
+
+      // Assert
+      expect(matched).toBe(true);
+    });
+
+    it('matches at-rest integer coordinates regardless of pivot, so static events keep working', () =>
+    {
+      // Arrange
+      const ch = new globalThis.Game_CharacterBase();
+      ch.initMembers();
+      ch.getCollisionPivotY = () => 0.70;
+      ch._x = 3;
+      ch._y = 4;
+
+      // Act
+      const matched = ch.pos(3, 4);
+
+      // Assert
+      expect(matched).toBe(true);
+    });
+
+    it('clamps a pivot of 1.0 below the tile boundary so an at-rest custom-hitbox enemy keeps its own tile', () =>
+    {
+      // Arrange: JABS pixel ext anchors custom-hitbox enemies at pivotY 1.0 ("feet on the tile's
+      // bottom edge"). Unclamped, floor(4 + 1.0) would report row 5 instead of the enemy's own row 4.
+      const ch = new globalThis.Game_CharacterBase();
+      ch.initMembers();
+      ch.getCollisionPivotY = () => 1.0;
+      ch._x = 3;
+      ch._y = 4;
+
+      // Act
+      const matchesOwnRow = ch.pos(3, 4);
+      const matchesRowBelow = ch.pos(3, 5);
+
+      // Assert
+      expect(matchesOwnRow).toBe(true);
+      expect(matchesRowBelow).toBe(false);
+    });
+  });
+
+  describe('occupiedTileX/occupiedTileY', () =>
+  {
+    it('matches Math.round semantics on the X axis, where the pivot is always 0.5', () =>
+    {
+      // Arrange
+      const roundsUp = new globalThis.Game_CharacterBase();
+      roundsUp.initMembers();
+      roundsUp._x = 2.9;
+      const roundsDown = new globalThis.Game_CharacterBase();
+      roundsDown.initMembers();
+      roundsDown._x = 2.4;
+
+      // Act
+      const upTile = roundsUp.occupiedTileX();
+      const downTile = roundsDown.occupiedTileX();
+
+      // Assert
+      expect(upTile).toBe(3);
+      expect(downTile).toBe(2);
     });
   });
 });

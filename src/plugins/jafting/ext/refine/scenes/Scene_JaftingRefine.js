@@ -76,10 +76,14 @@ class Scene_JaftingRefine
   }
 
   /**
-   * Initialize all properties for the Refinement scene.
+   * Extends {@link #initMembers}.<br/>
+   * Also initializes all properties for the Refinement scene.
    */
   initMembers()
   {
+    // perform original logic.
+    super.initMembers();
+
     // initialize the root-namespace definition members.
     this.initCoreMembers();
 
@@ -302,11 +306,11 @@ class Scene_JaftingRefine
    */
   createBackground()
   {
-    this._backgroundFilter = new PIXI.filters.AlphaFilter(0.1);
-    this._backgroundSprite = new Sprite();
-    this._backgroundSprite.bitmap = SceneManager.backgroundBitmap();
-    this._backgroundSprite.filters = [ this._backgroundFilter ];
-    this.addChild(this._backgroundSprite);
+    this.setBackgroundFilter(new PIXI.filters.AlphaFilter(0.1));
+    this.setBackgroundSprite(new Sprite());
+    this.backgroundSprite().bitmap = SceneManager.backgroundBitmap();
+    this.backgroundSprite().filters = [ this.backgroundFilter() ];
+    this.addChild(this.backgroundSprite());
     //this.setBackgroundOpacity(220);
   }
 
@@ -588,7 +592,9 @@ class Scene_JaftingRefine
       .setText(helpText ?? String.empty);
 
     const baseRefinable = listWindow.currentExt();
-    this.getRefinementDetailsWindow().primaryEquip = baseRefinable?.data;
+    this.getRefinementDetailsWindow().primaryEquip = baseRefinable === null
+      ? null
+      : baseRefinable.data;
   }
 
   onBaseRefinableListCancel()
@@ -695,7 +701,10 @@ class Scene_JaftingRefine
     listWindow.show();
     listWindow.activate();
 
-    const selected = listWindow.currentExt()?.data;
+    const selectedExt = listWindow.currentExt();
+    const selected = selectedExt === null
+      ? null
+      : selectedExt.data;
     this.setConsumedSelected(selected);
     this.getRefinementDetailsWindow().secondaryEquip = selected;
 

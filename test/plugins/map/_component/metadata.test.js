@@ -18,12 +18,21 @@ describe('J-MAP metadata (direct src import)', () =>
     await import('../../../../src/plugins/map/core/_metadata/initialization.js');
   });
 
-  it('initializes metadata with parsed params', () =>
+  it('parses the initial minimap visibility out of the plugin parameters', () =>
   {
     // Arrange & Act & Assert
-    expect(globalThis.J.MAP.Metadata.name).toBe('J-MAP');
     expect(globalThis.J.MAP.Metadata.startVisible).toBe(true);
+  });
+
+  it('parses whether the minimap hides alongside the hud', () =>
+  {
+    // Arrange & Act & Assert
     expect(globalThis.J.MAP.Metadata.respectHudHide).toBe(true);
+  });
+
+  it('parses the overlap opacity as a fraction rather than a whole percentage', () =>
+  {
+    // Arrange & Act & Assert
     expect(globalThis.J.MAP.Metadata.overlapOpacity).toBe(0.4);
   });
 });

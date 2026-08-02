@@ -29,8 +29,8 @@ describe('J-Elementalistics multi-element, absorb, null, wild, and formula (dire
     await import('../../../../src/plugins/elem/core/_metadata/initialization.js');
 
     await import('../../../../src/plugins/elem/core/objects/Game_Battler.js');
-    await import('../../../../src/plugins/elem/core/objects/Game_Enemy.js');
     await import('../../../../src/plugins/elem/core/objects/Game_Actor.js');
+    await import('../../../../src/plugins/elem/core/objects/Game_Enemy.js');
     await import('../../../../src/plugins/elem/core/objects/Game_Action.js');
   });
 

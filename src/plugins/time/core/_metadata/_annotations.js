@@ -197,6 +197,16 @@
  *
  * =============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Fixed a map tagged <noToneChange> suppressing the tone change outright,
+ *    so no tint was ever issued and the previous map's tone stayed painted on
+ *    screen: walking into a cave at midnight kept it midnight-blue. The tag now
+ *    resolves to a neutral target tone that the existing pipeline applies, and
+ *    the map transfer hook recomputes the tone rather than only flagging one
+ *    as due.
+ *    Fixed overnight time ranges, which had never worked. Date#addDays returns
+ *    a new date instead of mutating, unlike addHours beside it, so discarding
+ *    its result left every overnight range ending before it began.
  * - 1.1.0
  *    Added time-gated event pages/choices: exact-value, range, composite
  *    clock-time, and full-date-range tag families (Page and Choice variants)

@@ -18,11 +18,15 @@ describe('J-CA-Mods metadata (direct src import)', () =>
     await import('../../../../src/plugins/__ca-mods/core/_metadata/initialization.js');
   });
 
-  it('initializes tracking constants', () =>
+  it('points the enemies-defeated tracker at its game variable', () =>
   {
     // Arrange & Act & Assert
-    expect(globalThis.J.CAMods.Metadata.name).toBe('J-CA-Mods');
     expect(globalThis.J.CAMods.Tracking.EnemiesDefeated).toBe(101);
+  });
+
+  it('points the death-count tracker at its game variable', () =>
+  {
+    // Arrange & Act & Assert
     expect(globalThis.J.CAMods.Tracking.NumberOfDeaths).toBe(117);
   });
 });

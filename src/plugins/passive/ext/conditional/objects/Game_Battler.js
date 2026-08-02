@@ -126,7 +126,7 @@ Game_Battler.prototype.initPassiveRuleMembers = function()
  */
 Game_Battler.prototype.getAutoRuleLastFrame = function(ruleKey)
 {
-  return this._j._passive._conditional._autoRuleLastFrame.get(ruleKey) || 0;
+  return this.autoRuleLastFrame().get(ruleKey) || 0;
 };
 
 /**
@@ -136,7 +136,7 @@ Game_Battler.prototype.getAutoRuleLastFrame = function(ruleKey)
  */
 Game_Battler.prototype.setAutoRuleLastFrame = function(ruleKey, frame)
 {
-  this._j._passive._conditional._autoRuleLastFrame.set(ruleKey, frame);
+  this.autoRuleLastFrame().set(ruleKey, frame);
 };
 
 /**
@@ -146,7 +146,7 @@ Game_Battler.prototype.setAutoRuleLastFrame = function(ruleKey, frame)
  */
 Game_Battler.prototype.getAutoRuleTileCredit = function(ruleKey)
 {
-  return this._j._passive._conditional._autoRuleTileCredit.get(ruleKey) || 0;
+  return this.autoRuleTileCredit().get(ruleKey) || 0;
 };
 
 /**
@@ -156,7 +156,7 @@ Game_Battler.prototype.getAutoRuleTileCredit = function(ruleKey)
  */
 Game_Battler.prototype.setAutoRuleTileCredit = function(ruleKey, tiles)
 {
-  this._j._passive._conditional._autoRuleTileCredit.set(ruleKey, tiles);
+  this.autoRuleTileCredit().set(ruleKey, tiles);
 };
 
 /**
@@ -166,7 +166,7 @@ Game_Battler.prototype.setAutoRuleTileCredit = function(ruleKey, tiles)
  */
 Game_Battler.prototype.getPassiveRuleLastMovedFrame = function()
 {
-  return this._j._passive._conditional._lastMovedFrame;
+  return this.lastMovedFrame();
 };
 
 /**
@@ -176,7 +176,7 @@ Game_Battler.prototype.getPassiveRuleLastMovedFrame = function()
  */
 Game_Battler.prototype.getPassiveRuleLastHitFrame = function()
 {
-  return this._j._passive._conditional._lastHitFrame;
+  return this.lastHitFrame();
 };
 
 /**
@@ -186,7 +186,7 @@ Game_Battler.prototype.getPassiveRuleLastHitFrame = function()
  */
 Game_Battler.prototype.getPassiveRuleLastAttackedFrame = function()
 {
-  return this._j._passive._conditional._lastAttackedFrame;
+  return this.lastAttackedFrame();
 };
 
 /**
@@ -195,7 +195,7 @@ Game_Battler.prototype.getPassiveRuleLastAttackedFrame = function()
  */
 Game_Battler.prototype.stampPassiveRuleMovedFrame = function()
 {
-  this._j._passive._conditional._lastMovedFrame = Graphics.frameCount;
+  this.setLastMovedFrame(Graphics.frameCount);
 };
 
 /**
@@ -204,7 +204,7 @@ Game_Battler.prototype.stampPassiveRuleMovedFrame = function()
  */
 Game_Battler.prototype.stampPassiveRuleHitFrame = function()
 {
-  this._j._passive._conditional._lastHitFrame = Graphics.frameCount;
+  this.setLastHitFrame(Graphics.frameCount);
 };
 
 /**
@@ -213,7 +213,7 @@ Game_Battler.prototype.stampPassiveRuleHitFrame = function()
  */
 Game_Battler.prototype.stampPassiveRuleAttackedFrame = function()
 {
-  this._j._passive._conditional._lastAttackedFrame = Graphics.frameCount;
+  this.setLastAttackedFrame(Graphics.frameCount);
 };
 
 /**
@@ -223,7 +223,7 @@ Game_Battler.prototype.stampPassiveRuleAttackedFrame = function()
  */
 Game_Battler.prototype.getPassiveRuleLastHpHealFrame = function()
 {
-  return this._j._passive._conditional._lastHpHealFrame;
+  return this.lastHpHealFrame();
 };
 
 /**
@@ -233,7 +233,7 @@ Game_Battler.prototype.getPassiveRuleLastHpHealFrame = function()
  */
 Game_Battler.prototype.getPassiveRuleLastMpHealFrame = function()
 {
-  return this._j._passive._conditional._lastMpHealFrame;
+  return this.lastMpHealFrame();
 };
 
 /**
@@ -243,7 +243,7 @@ Game_Battler.prototype.getPassiveRuleLastMpHealFrame = function()
  */
 Game_Battler.prototype.getPassiveRuleLastTpHealFrame = function()
 {
-  return this._j._passive._conditional._lastTpHealFrame;
+  return this.lastTpHealFrame();
 };
 
 /**
@@ -251,7 +251,7 @@ Game_Battler.prototype.getPassiveRuleLastTpHealFrame = function()
  */
 Game_Battler.prototype.stampPassiveRuleHpHealFrame = function()
 {
-  this._j._passive._conditional._lastHpHealFrame = Graphics.frameCount;
+  this.setLastHpHealFrame(Graphics.frameCount);
 };
 
 /**
@@ -259,7 +259,7 @@ Game_Battler.prototype.stampPassiveRuleHpHealFrame = function()
  */
 Game_Battler.prototype.stampPassiveRuleMpHealFrame = function()
 {
-  this._j._passive._conditional._lastMpHealFrame = Graphics.frameCount;
+  this.setLastMpHealFrame(Graphics.frameCount);
 };
 
 /**
@@ -267,7 +267,7 @@ Game_Battler.prototype.stampPassiveRuleMpHealFrame = function()
  */
 Game_Battler.prototype.stampPassiveRuleTpHealFrame = function()
 {
-  this._j._passive._conditional._lastTpHealFrame = Graphics.frameCount;
+  this.setLastTpHealFrame(Graphics.frameCount);
 };
 
 /**
@@ -545,19 +545,19 @@ Game_Battler.prototype.buildPassiveCollectionFingerprint = function()
  */
 Game_Battler.prototype.updatePassiveRuleCollectionFingerprint = function()
 {
-  const pending = this._j._passive._conditional._pendingFingerprint;
+  const pending = this.pendingFingerprint();
 
   // consume the stashed fingerprint when the drift-check cycle set one — saves a full
   // third collector pass since the pre-refresh fingerprint is still correct here.
   if (pending !== null)
   {
-    this._j._passive._conditional._collectionFingerprint = pending;
+    this.setCollectionFingerprint(pending);
 
     return;
   }
 
   // no stash means this refresh was triggered outside the reconcile cycle — recompute.
-  this._j._passive._conditional._collectionFingerprint = this.buildPassiveCollectionFingerprint();
+  this.setCollectionFingerprint(this.buildPassiveCollectionFingerprint());
 };
 
 /**
@@ -567,7 +567,7 @@ Game_Battler.prototype.updatePassiveRuleCollectionFingerprint = function()
 Game_Battler.prototype.reconcilePassiveRules = function()
 {
   const nextFingerprint = this.buildPassiveCollectionFingerprint();
-  const previousFingerprint = this._j._passive._conditional._collectionFingerprint;
+  const previousFingerprint = this.collectionFingerprint();
 
   // no drift — skip the expensive passive rebuild.
   if (nextFingerprint === previousFingerprint) return;
@@ -575,13 +575,13 @@ Game_Battler.prototype.reconcilePassiveRules = function()
   // stash the fingerprint before the rebuild so the post-refresh alias can apply it directly.
   // JS is single-threaded: the state that produced nextFingerprint cannot change before
   // refreshPassiveStates completes, so the stash is the correct post-refresh baseline.
-  this._j._passive._conditional._pendingFingerprint = nextFingerprint;
+  this.setPendingFingerprint(nextFingerprint);
 
   // rule context changed — rebuild passive tracker from gated sources.
   this.refreshPassiveStates();
 
   // clear the stash after the refresh alias has consumed it.
-  this._j._passive._conditional._pendingFingerprint = null;
+  this.setPendingFingerprint(null);
 };
 
 /**
@@ -678,4 +678,186 @@ Game_Battler.prototype.onJabsStateInflicted = function(stateId, attacker)
   // evaluate the inflicting battler's own autoModifyCooldowns rules against themselves.
   AutoModifyCooldownManager.scheduleSelfStateInflictedTriggers(attacker, stateId);
 };
+
+//region properties
+/**
+ * Gets the auto rule last frame.
+ * @returns {*} The autoRuleLastFrame.
+ */
+Game_Battler.prototype.autoRuleLastFrame = function()
+{
+  // hand back the auto rule last frame.
+  return this._j._passive._conditional._autoRuleLastFrame;
+};
+
+/**
+ * Gets the auto rule tile credit.
+ * @returns {*} The autoRuleTileCredit.
+ */
+Game_Battler.prototype.autoRuleTileCredit = function()
+{
+  // hand back the auto rule tile credit.
+  return this._j._passive._conditional._autoRuleTileCredit;
+};
+
+/**
+ * Gets the last moved frame.
+ * @returns {*} The lastMovedFrame.
+ */
+Game_Battler.prototype.lastMovedFrame = function()
+{
+  // hand back the last moved frame.
+  return this._j._passive._conditional._lastMovedFrame;
+};
+
+/**
+ * Sets the last moved frame.
+ * @param {*} newLastMovedFrame The new lastMovedFrame.
+ */
+Game_Battler.prototype.setLastMovedFrame = function(newLastMovedFrame)
+{
+  // assign the last moved frame.
+  this._j._passive._conditional._lastMovedFrame = newLastMovedFrame;
+};
+
+/**
+ * Gets the last hit frame.
+ * @returns {*} The lastHitFrame.
+ */
+Game_Battler.prototype.lastHitFrame = function()
+{
+  // hand back the last hit frame.
+  return this._j._passive._conditional._lastHitFrame;
+};
+
+/**
+ * Sets the last hit frame.
+ * @param {*} newLastHitFrame The new lastHitFrame.
+ */
+Game_Battler.prototype.setLastHitFrame = function(newLastHitFrame)
+{
+  // assign the last hit frame.
+  this._j._passive._conditional._lastHitFrame = newLastHitFrame;
+};
+
+/**
+ * Gets the last attacked frame.
+ * @returns {*} The lastAttackedFrame.
+ */
+Game_Battler.prototype.lastAttackedFrame = function()
+{
+  // hand back the last attacked frame.
+  return this._j._passive._conditional._lastAttackedFrame;
+};
+
+/**
+ * Sets the last attacked frame.
+ * @param {*} newLastAttackedFrame The new lastAttackedFrame.
+ */
+Game_Battler.prototype.setLastAttackedFrame = function(newLastAttackedFrame)
+{
+  // assign the last attacked frame.
+  this._j._passive._conditional._lastAttackedFrame = newLastAttackedFrame;
+};
+
+/**
+ * Gets the last hp heal frame.
+ * @returns {*} The lastHpHealFrame.
+ */
+Game_Battler.prototype.lastHpHealFrame = function()
+{
+  // hand back the last hp heal frame.
+  return this._j._passive._conditional._lastHpHealFrame;
+};
+
+/**
+ * Sets the last hp heal frame.
+ * @param {*} newLastHpHealFrame The new lastHpHealFrame.
+ */
+Game_Battler.prototype.setLastHpHealFrame = function(newLastHpHealFrame)
+{
+  // assign the last hp heal frame.
+  this._j._passive._conditional._lastHpHealFrame = newLastHpHealFrame;
+};
+
+/**
+ * Gets the last mp heal frame.
+ * @returns {*} The lastMpHealFrame.
+ */
+Game_Battler.prototype.lastMpHealFrame = function()
+{
+  // hand back the last mp heal frame.
+  return this._j._passive._conditional._lastMpHealFrame;
+};
+
+/**
+ * Sets the last mp heal frame.
+ * @param {*} newLastMpHealFrame The new lastMpHealFrame.
+ */
+Game_Battler.prototype.setLastMpHealFrame = function(newLastMpHealFrame)
+{
+  // assign the last mp heal frame.
+  this._j._passive._conditional._lastMpHealFrame = newLastMpHealFrame;
+};
+
+/**
+ * Gets the last tp heal frame.
+ * @returns {*} The lastTpHealFrame.
+ */
+Game_Battler.prototype.lastTpHealFrame = function()
+{
+  // hand back the last tp heal frame.
+  return this._j._passive._conditional._lastTpHealFrame;
+};
+
+/**
+ * Sets the last tp heal frame.
+ * @param {*} newLastTpHealFrame The new lastTpHealFrame.
+ */
+Game_Battler.prototype.setLastTpHealFrame = function(newLastTpHealFrame)
+{
+  // assign the last tp heal frame.
+  this._j._passive._conditional._lastTpHealFrame = newLastTpHealFrame;
+};
+
+/**
+ * Gets the pending fingerprint.
+ * @returns {*} The pendingFingerprint.
+ */
+Game_Battler.prototype.pendingFingerprint = function()
+{
+  // hand back the pending fingerprint.
+  return this._j._passive._conditional._pendingFingerprint;
+};
+
+/**
+ * Sets the pending fingerprint.
+ * @param {*} newPendingFingerprint The new pendingFingerprint.
+ */
+Game_Battler.prototype.setPendingFingerprint = function(newPendingFingerprint)
+{
+  // assign the pending fingerprint.
+  this._j._passive._conditional._pendingFingerprint = newPendingFingerprint;
+};
+
+/**
+ * Gets the collection fingerprint.
+ * @returns {*} The collectionFingerprint.
+ */
+Game_Battler.prototype.collectionFingerprint = function()
+{
+  // hand back the collection fingerprint.
+  return this._j._passive._conditional._collectionFingerprint;
+};
+
+/**
+ * Sets the collection fingerprint.
+ * @param {*} newCollectionFingerprint The new collectionFingerprint.
+ */
+Game_Battler.prototype.setCollectionFingerprint = function(newCollectionFingerprint)
+{
+  // assign the collection fingerprint.
+  this._j._passive._conditional._collectionFingerprint = newCollectionFingerprint;
+};
+//endregion properties
 //endregion Game_Battler

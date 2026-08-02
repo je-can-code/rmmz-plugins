@@ -6,9 +6,13 @@ import Window_SkillEquipDetail from '../windows/Window_SkillEquipDetail.js';
 
 /**
  * The scene for viewing and managing skill equip slots.
+ *
+ * Layout is inherited from {@link Scene_ActorFacetBase}, which supplies the actor ribbon and the control
+ * legend and hands down {@link Scene_ActorFacetBase.contentAreaRect} as the region left over. Within it,
+ * the slot column takes the same proportional share the sibling facet scenes give their primary list.
  */
 class Scene_SkillEquip
-  extends Scene_MenuBase
+  extends Scene_ActorFacetBase
 {
   /**
    * Pushes this current scene onto the stack, forcing it into action.
@@ -78,12 +82,6 @@ class Scene_SkillEquip
      * A grouping of all windows for this scene.
      */
     this._j._sks._windows = {};
-
-    /**
-     * The ribbon window displayed along the top.
-     * @type {Window_SkillEquipRibbon|null}
-     */
-    this._j._sks._windows._ribbon = null;
 
     /**
      * The slots list window displayed on the left.
@@ -190,9 +188,6 @@ class Scene_SkillEquip
    */
   createAllWindows()
   {
-    // create the ribbon window along the top.
-    this.createRibbonWindow();
-
     // create the slots window on the left side.
     this.createSlotsWindow();
 
@@ -211,55 +206,77 @@ class Scene_SkillEquip
 
   //region ribbon
   /**
-   * Creates the ribbon window across the top.
+   * Overrides {@link Scene_ActorFacetBase.buildActorRibbonWindow}.<br/>
+   * Supplies the skill equip ribbon, which shows the actor plus their slot capacity summary.
+   *
+   * Only the contents differ from the default ribbon; the base decides where it sits and how tall it is.
+   * @param {Rectangle} rectangle The rectangle to build the window within.
+   * @returns {Window_SkillEquipRibbon}
    */
-  createRibbonWindow()
+  buildActorRibbonWindow(rectangle)
   {
-    // build the rectangle for the window.
-    const rect = this.ribbonWindowRect();
-
-    // create the window instance.
-    const win = new Window_SkillEquipRibbon(rect);
-
-    // assign the actor into the window.
-    win.setActor(this.actor());
-
-    // assign the window reference.
-    this._j._sks._windows._ribbon = win;
-
-    // add the window to the scene.
-    this.addWindow(win);
+    return new Window_SkillEquipRibbon(rectangle);
   }
 
   /**
-   * Builds the rectangle for the ribbon window across the top.
-   * @returns {Rectangle}
-   */
-  ribbonWindowRect()
-  {
-    // the ribbon spans the full width of the screen.
-    const ww = Graphics.boxWidth;
-
-    // determine the ribbon height as one line tall.
-    const wh = this.calcWindowHeight(1, false);
-
-    // the ribbon always starts at the left edge.
-    const wx = 0;
-
-    // determine the y position at the top of the main area.
-    const wy = this.mainAreaTop();
-
-    // return the rectangle for the ribbon window.
-    return new Rectangle(wx, wy, ww, wh);
-  }
-
-  /**
-   * Gets the ribbon window.
-   * @returns {Window_SkillEquipRibbon|null}
+   * Gets the actor ribbon window under the name this scene refers to it by.
+   * @returns {Window_SkillEquipRibbon}
    */
   ribbonWindow()
   {
-    return this._j._sks._windows._ribbon;
+    return this.getActorRibbonWindow();
+  }
+
+  /**
+   * The proportion of the content area given to the slot column.
+   *
+   * The same share the sibling facet scenes give their primary list, leaving the remainder for the pool
+   * of candidate skills- which needs the room more, since it lists every skill the actor knows.
+   * @returns {number}
+   */
+  slotColumnRatio()
+  {
+    return 0.4;
+  }
+
+  /**
+   * Overrides {@link Scene_MenuFacetBase.hasHelpWindow}.<br/>
+   * Declines the help strip across the top.
+   *
+   * This scene already carries a detail panel beneath the candidate list, and its command windows have
+   * no help text of their own, so the strip would have sat empty.
+   * @returns {boolean}
+   */
+  hasHelpWindow()
+  {
+    return false;
+  }
+
+  /**
+   * Implements {@link Scene_MenuFacetBase.controlLegendEntries}.<br/>
+   * Describes the controls this scene responds to.
+   * @returns {{semantic: (string|string[]), label: string}[]}
+   */
+  controlLegendEntries()
+  {
+    return [
+      {
+        semantic: 'ok',
+        label: 'equip',
+      },
+      {
+        semantic: 'context',
+        label: 'unequip',
+      },
+      {
+        semantic: [ 'actor-prev', 'actor-next' ],
+        label: 'switch character',
+      },
+      {
+        semantic: 'cancel',
+        label: 'back',
+      },
+    ];
   }
 
   //endregion ribbon
@@ -291,7 +308,7 @@ class Scene_SkillEquip
     win.setHandler('actor-next', this.onCycleActorRight.bind(this));
 
     // assign the window reference.
-    this._j._sks._windows._slots = win;
+    this.setSlotsWindow(win);
 
     // add the window to the scene.
     this.addWindow(win);
@@ -303,25 +320,19 @@ class Scene_SkillEquip
    */
   slotsWindowRect()
   {
-    // determine the total available height below the ribbon.
-    const totalHeight = this.mainAreaHeight() - this.ribbonWindowRect().height;
+    // start from the region the base leaves beneath the ribbon.
+    const contentArea = this.contentAreaRect();
 
-    // keep the width aligned with the ribbon above it.
-    const ww = 420;
+    // take this column's proportional share of it.
+    const ww = Math.round(contentArea.width * this.slotColumnRatio());
 
-    // use the full remaining height below the ribbon.
-    const wh = totalHeight;
-
-    // determine the x position based on the current input mode.
+    // honour the player's preference for which side the interactive column sits on.
     const wx = this.isRightInputMode()
-      ? Graphics.boxWidth - ww
-      : 0;
+      ? contentArea.x + contentArea.width - ww
+      : contentArea.x;
 
-    // place the window directly below the ribbon.
-    const wy = this.ribbonWindowRect().y + this.ribbonWindowRect().height;
-
-    // return the rectangle for the slots window.
-    return new Rectangle(wx, wy, ww, wh);
+    // return the rectangle for the slots window, full height of the region.
+    return new Rectangle(wx, contentArea.y, ww, contentArea.height);
   }
 
   /**
@@ -331,6 +342,15 @@ class Scene_SkillEquip
   slotsWindow()
   {
     return this._j._sks._windows._slots;
+  }
+
+  /**
+   * Sets the slots window.
+   * @param {Window_SkillEquipSlots} window The window to track.
+   */
+  setSlotsWindow(window)
+  {
+    this._j._sks._windows._slots = window;
   }
 
   //endregion slots
@@ -357,7 +377,7 @@ class Scene_SkillEquip
     win.setHandler('cancel', this.onSkillCancel.bind(this));
 
     // assign the window reference.
-    this._j._sks._windows._skills = win;
+    this.setSkillsWindow(win);
 
     // add the window to the scene.
     this.addWindow(win);
@@ -369,25 +389,32 @@ class Scene_SkillEquip
    */
   skillsListWindowRect()
   {
-    // determine the x position based on the current input mode.
+    // the slots have already claimed their share of the region.
+    const contentArea = this.contentAreaRect();
+    const slotsRect = this.slotsWindowRect();
+
+    // sit on whichever side the slots did not take.
     const wx = this.isRightInputMode()
-      ? 0
-      : this.slotsWindowRect().x + this.slotsWindowRect().width;
+      ? contentArea.x
+      : slotsRect.x + slotsRect.width;
 
-    // fill the remaining width of the screen after the slots column.
-    const ww = Graphics.boxWidth - this.slotsWindowRect().width;
+    // take the remainder of the width rather than a second fraction of it.
+    const ww = contentArea.width - slotsRect.width;
 
-    // compute the remaining height below the ribbon shared by both right-side windows.
-    const remainingHeight = this.mainAreaHeight() - this.ribbonWindowRect().height;
-
-    // use 60% of the remaining height for the list portion.
-    const wh = Math.floor(remainingHeight * 0.6);
-
-    // start directly below the ribbon.
-    const wy = this.ribbonWindowRect().y + this.ribbonWindowRect().height;
+    // give the list the upper share of the height; the detail panel gets what is left.
+    const wh = Math.floor(contentArea.height * this.skillsListHeightRatio());
 
     // return the rectangle for the skills list window.
-    return new Rectangle(wx, wy, ww, wh);
+    return new Rectangle(wx, contentArea.y, ww, wh);
+  }
+
+  /**
+   * The proportion of the region's height given to the candidate list, above its detail panel.
+   * @returns {number}
+   */
+  skillsListHeightRatio()
+  {
+    return 0.6;
   }
 
   /**
@@ -397,6 +424,15 @@ class Scene_SkillEquip
   skillsWindow()
   {
     return this._j._sks._windows._skills;
+  }
+
+  /**
+   * Sets the skills list window.
+   * @param {Window_SkillEquipList} window The window to track.
+   */
+  setSkillsWindow(window)
+  {
+    this._j._sks._windows._skills = window;
   }
 
   //endregion skills list
@@ -417,7 +453,7 @@ class Scene_SkillEquip
     win.setActor(this.actor());
 
     // assign the window reference.
-    this._j._sks._windows._detail = win;
+    this.setDetailWindow(win);
 
     // add the window to the scene.
     this.addWindow(win);
@@ -429,20 +465,15 @@ class Scene_SkillEquip
    */
   detailWindowRect()
   {
-    // share the same x position as the skills list.
-    const wx = this.skillsListWindowRect().x;
+    // sit directly beneath the skills list, matching its column exactly.
+    const listRect = this.skillsListWindowRect();
+    const contentArea = this.contentAreaRect();
 
-    // match the width of the skills list.
-    const ww = this.skillsListWindowRect().width;
-
-    // fill the remaining height below both the ribbon and the skills list.
-    const wh = this.mainAreaHeight() - this.ribbonWindowRect().height - this.skillsListWindowRect().height;
-
-    // place the window directly beneath the skills list.
-    const wy = this.skillsListWindowRect().y + this.skillsListWindowRect().height;
+    // take whatever height the list left behind, as the remainder rather than a computed size.
+    const wh = contentArea.height - listRect.height;
 
     // return the rectangle for the detail window.
-    return new Rectangle(wx, wy, ww, wh);
+    return new Rectangle(listRect.x, listRect.y + listRect.height, listRect.width, wh);
   }
 
   /**
@@ -452,6 +483,15 @@ class Scene_SkillEquip
   detailWindow()
   {
     return this._j._sks._windows._detail;
+  }
+
+  /**
+   * Sets the detail window.
+   * @param {Window_SkillEquipDetail} window The window to track.
+   */
+  setDetailWindow(window)
+  {
+    this._j._sks._windows._detail = window;
   }
 
   //endregion detail
@@ -693,24 +733,6 @@ class Scene_SkillEquip
       .setSkillId(skillIdInSlot);
   }
 
-  /**
-   * Cycles to the previous actor.
-   */
-  onCycleActorLeft()
-  {
-    // move to the previous actor.
-    this.previousActor();
-  }
-
-  /**
-   * Cycles to the next actor.
-   */
-  onCycleActorRight()
-  {
-    // move to the next actor.
-    this.nextActor();
-  }
-
   //endregion actions
 
   //region helpers
@@ -756,9 +778,7 @@ class Scene_SkillEquip
    */
   rebindAllWindowsToActor(actor)
   {
-    // update the ribbon window with the new actor.
-    this.ribbonWindow()
-      .setActor(actor);
+    // the ribbon is deliberately absent here; the base repoints it in onActorChange.
 
     // update the slots window with the new actor.
     this.slotsWindow()

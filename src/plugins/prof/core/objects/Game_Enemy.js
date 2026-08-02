@@ -62,8 +62,8 @@ Game_Enemy.prototype.addSkillProficiency = function(skillId, initialProficiency 
 
   // construct proficiency for the next step in this routine.
   const proficiency = new SkillProficiency(skillId, initialProficiency);
-  this._j._profs.push(proficiency);
-  this._j._profs.sort();
+  this.skillProficiencies().push(proficiency);
+  this.skillProficiencies().sort();
   return proficiency;
 };
 

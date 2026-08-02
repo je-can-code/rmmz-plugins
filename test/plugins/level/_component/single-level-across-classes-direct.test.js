@@ -74,6 +74,11 @@ function installVanillaFaithfulGameActor()
     }
   };
 
+  Game_Actor.prototype.isLearnedSkill = function(skillId)
+  {
+    return this._skills.includes(skillId);
+  };
+
   Game_Actor.prototype.skills = function()
   {
     return [ ...this._skills ];
@@ -182,6 +187,10 @@ describe('single level across classes (direct src import)', () =>
 
     // the file under test patches globalThis.Game_Actor.prototype directly.
     await import('../../../../src/plugins/level/core/objects/Game_Actor.js');
+
+    // J-Base accessors the production code now reads through.
+    globalThis.Game_Actor.prototype.exp = function() { return this._exp; };
+    globalThis.Game_Actor.prototype.setClassId = function(v) { this._classId = v; };
   });
 
   afterAll(() =>

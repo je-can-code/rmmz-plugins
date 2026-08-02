@@ -99,14 +99,18 @@ IconManager.registerJabsIcons = function()
 
 //region jabs text registry
 /**
- * A key-value mapping of physical input symbols to ex-text.
- * @type {Record<string, string>}
+ * A key-value mapping of physical input symbols to per-device ex-text.
+ *
+ * Every symbol carries a glyph for each device rather than one combined string, because the player is
+ * only ever holding one of them. Showing both bindings permanently tells a controller player about a
+ * keyboard they are not touching, and doubles the length of every legend to do it.
+ * @type {Record<string, {gamepad: string, keyboard: string}>}
  */
 IconManager._jabsInputTextRegistry = {};
 
 /**
  * Gets the ex-text registry for JABS input symbols.
- * @returns {Record<string, string>}
+ * @returns {Record<string, {gamepad: string, keyboard: string}>}
  */
 IconManager.getJabsInputTextRegistry = function()
 {
@@ -114,11 +118,12 @@ IconManager.getJabsInputTextRegistry = function()
 };
 
 /**
- * Registers custom ex-text for a given symbol.
+ * Registers custom per-device ex-text for a given symbol.
  * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
- * @param {string} text The ex-text to use for the given symbol.
+ * @param {string} gamepadText The ex-text to use while the player is on a gamepad.
+ * @param {string} keyboardText The ex-text to use while the player is on a keyboard.
  */
-IconManager.registerJabsInputText = function(symbol, text)
+IconManager.registerJabsInputText = function(symbol, gamepadText, keyboardText)
 {
   // validate symbol to ensure its a string.
   const validatedSymbol = String(symbol);
@@ -128,25 +133,67 @@ IconManager.registerJabsInputText = function(symbol, text)
     .toLowerCase();
   if (!normalizedSymbol)
   {
-    throw new Error(`Attempting to register an empty symbol for ex-text: ${text}`);
+    throw new Error(`Attempting to register an empty symbol for ex-text: ${gamepadText}`);
   }
 
-  // validate text to ensure its a string.
-  const validatedText = String(text).trim();
-  if (!validatedText)
+  // validate the gamepad text to ensure its a string.
+  const validatedGamepadText = String(gamepadText).trim();
+  if (!validatedGamepadText)
   {
-    throw new Error(`Attempting to register an empty ex-text for symbol: ${normalizedSymbol}`);
+    throw new Error(`Attempting to register empty gamepad ex-text for symbol: ${normalizedSymbol}`);
+  }
+
+  // validate the keyboard text to ensure its a string.
+  const validatedKeyboardText = String(keyboardText).trim();
+  if (!validatedKeyboardText)
+  {
+    throw new Error(`Attempting to register empty keyboard ex-text for symbol: ${normalizedSymbol}`);
   }
 
   // grab the registry for updating.
   const registry = this.getJabsInputTextRegistry();
 
-  // register the ex-text for the symbol.
-  registry[normalizedSymbol] = validatedText;
+  // register both glyphs for the symbol.
+  registry[normalizedSymbol] = {
+    gamepad: validatedGamepadText,
+    keyboard: validatedKeyboardText,
+  };
 };
 
 /**
- * Get the ex-text for a given physical input symbol.
+ * How far a keyboard glyph sits from its gamepad counterpart in the icon sheet.
+ *
+ * The sheet is laid out so that the keyboard row sits exactly one row above the gamepad row, with the
+ * two in identical order- cross above Z, circle above X, and so on all the way along. That regularity
+ * is deliberate on the sheet's part, so it is expressed here once as a rule rather than restated as a
+ * second magic number beside every registration.
+ * @returns {number}
+ */
+IconManager.keyboardIconIndexOffset = function()
+{
+  return 16;
+};
+
+/**
+ * Registers the paired glyphs for a symbol from its gamepad icon index alone.
+ *
+ * The keyboard index is derived via {@link IconManager.keyboardIconIndexOffset}. Anything whose two
+ * glyphs do not follow that layout should call {@link IconManager.registerJabsInputText} directly and
+ * state both.
+ * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
+ * @param {number} gamepadIconIndex The icon index of the gamepad glyph for this symbol.
+ */
+IconManager.registerJabsInputIcon = function(symbol, gamepadIconIndex)
+{
+  // walk back up the sheet to the matching keyboard glyph.
+  const keyboardIconIndex = gamepadIconIndex - this.keyboardIconIndexOffset();
+
+  // register the pair as ex-text so consumers can draw it anywhere text is drawn.
+  this.registerJabsInputText(symbol, `\\I[${gamepadIconIndex}]`, `\\I[${keyboardIconIndex}]`);
+};
+
+/**
+ * Get the ex-text for a given physical input symbol, for whichever device the player is using.
  * @param {string} symbol The physical input symbol (ex: "ok", "pagedown", "l2", "start").
  * @returns {string} The ex-text for the given symbol, or the symbol itself if not mapped.
  */
@@ -161,8 +208,16 @@ IconManager.jabsInputTextForSymbol = function(symbol)
   // normalize the symbol to lowercase.
   const normalizedSymbol = validatedSymbol.toLowerCase();
 
-  // return the ex-text for the symbol, or the symbol itself if not mapped.
-  return registry[normalizedSymbol] || Input.labelForSymbol(normalizedSymbol) || symbol;
+  // look up the pair registered for this symbol.
+  const registered = registry[normalizedSymbol];
+
+  // a symbol nobody has described falls back to the engine's own label, then to the symbol itself.
+  if (registered === undefined) return Input.labelForSymbol(normalizedSymbol) || symbol;
+
+  // hand back only the glyph matching what the player is actually holding.
+  return InputDeviceTracker.isGamepad()
+    ? registered.gamepad
+    : registered.keyboard;
 };
 
 /**
@@ -182,21 +237,38 @@ IconManager.jabsIconTextForSymbol = function(symbol)
 
 /**
  * Registers all JABS input symbols with their respective ex-text.
+ *
+ * Only the gamepad index is stated for each symbol; the keyboard glyph follows from the sheet's layout.
+ * Note that a symbol's name and its keyboard glyph are not expected to agree- the names are borrowed
+ * from the engine's own mapping vocabulary and serve as identifiers, while the glyph shows the key
+ * actually bound to that action.
  */
 IconManager.registerJabsInputTexts = function()
 {
-  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.Mainhand, "\\I[2448] / \\I[2432]");
-  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.Offhand, "\\I[2449] / \\I[2433]");
-  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.Tool, "\\I[2450] / \\I[2434]");
-  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.Dash, "\\I[2451] / \\I[2435]");
+  // the four face buttons, in the order the sheet lays them out: cross, circle, square, triangle.
+  // that order is the gamepad's own button indices, so the pairing here must follow
+  // {@link Input.gamepadMapper} rather than the order the symbols happen to be declared in.
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.Mainhand, 2448);
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.Offhand, 2449);
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.Dash, 2450);
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.Tool, 2451);
 
-  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.SkillTrigger, "\\I[2452] / \\I[2436]");
-  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.StrafeTrigger, "\\I[2454] / \\I[2438]");
-  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.GuardTrigger, "\\I[2453] / \\I[2437]");
-  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.MobilitySkill, "\\I[2455] / \\I[2439]");
+  // the four shoulders and triggers.
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.SkillTrigger, 2452);
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.GuardTrigger, 2453);
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.StrafeTrigger, 2454);
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.MobilitySkill, 2455);
 
-  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.Quickmenu, "\\I[2456] / \\I[2440]");
-  this.registerJabsInputText(J.ABS.EXT.INPUT.Symbols.PartyCycle, "\\I[2457] / \\I[2441]");
+  // the two center buttons, select before start, matching their button indices the same way the
+  // face buttons and shoulders above do.
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.PartyCycle, 2456);
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.Quickmenu, 2457);
+
+  // the four directions, which menus lean on far more heavily than the map does.
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.DirLeft, 2458);
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.DirRight, 2459);
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.DirUp, 2460);
+  this.registerJabsInputIcon(J.ABS.EXT.INPUT.Symbols.DirDown, 2461);
 };
 //endregion jabs text registry
 //endregion IconManager

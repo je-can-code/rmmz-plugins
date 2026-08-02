@@ -20,6 +20,119 @@ import JABS_TargetingSentinelAction from './../_models/JABS_TargetingSentinelAct
 class JABS_TargetingManager
 {
   //region static fields
+
+  //region properties
+  /**
+   * Gets the just began.
+   * @returns {*} The justBegan.
+   */
+  static isJustBegan()
+  {
+    // hand back the just began.
+    return this._justBegan;
+  }
+
+  /**
+   * Sets the just began.
+   * @param {*} newJustBegan The new justBegan.
+   */
+  static setJustBegan(newJustBegan)
+  {
+    // assign the just began.
+    this._justBegan = newJustBegan;
+  }
+
+  /**
+   * Gets the session.
+   * @returns {*} The session.
+   */
+  static session()
+  {
+    // hand back the session.
+    return this._session;
+  }
+
+  /**
+   * Sets the session.
+   * @param {*} newSession The new session.
+   */
+  static setSession(newSession)
+  {
+    // assign the session.
+    this._session = newSession;
+  }
+
+  /**
+   * Gets the cursor.
+   * @returns {*} The cursor.
+   */
+  static cursor()
+  {
+    // hand back the cursor.
+    return this._cursor;
+  }
+
+  /**
+   * Sets the cursor.
+   * @param {*} newCursor The new cursor.
+   */
+  static setCursor(newCursor)
+  {
+    // assign the cursor.
+    this._cursor = newCursor;
+  }
+
+  /**
+   * Gets the sentinel.
+   * @returns {*} The sentinel.
+   */
+  static sentinel()
+  {
+    // hand back the sentinel.
+    return this._sentinel;
+  }
+
+  /**
+   * Gets the previous dir8.
+   * @returns {*} The previousDir8.
+   */
+  static previousDir8()
+  {
+    // hand back the previous dir8.
+    return this._previousDir8;
+  }
+
+  /**
+   * Sets the previous dir8.
+   * @param {*} newPreviousDir8 The new previousDir8.
+   */
+  static setPreviousDir8(newPreviousDir8)
+  {
+    // assign the previous dir8.
+    this._previousDir8 = newPreviousDir8;
+  }
+
+  /**
+   * Gets the previous dpad step.
+   * @returns {*} The previousDpadStep.
+   */
+  static previousDpadStep()
+  {
+    // hand back the previous dpad step.
+    return this._previousDpadStep;
+  }
+
+  /**
+   * Sets the previous dpad step.
+   * @param {*} newPreviousDpadStep The new previousDpadStep.
+   */
+  static setPreviousDpadStep(newPreviousDpadStep)
+  {
+    // assign the previous dpad step.
+    this._previousDpadStep = newPreviousDpadStep;
+  }
+  //endregion properties
+
   /**
    * The currently active targeting session, or null if nobody is aiming.
    * @type {JABS_TargetingSession|null}
@@ -76,7 +189,7 @@ class JABS_TargetingManager
    */
   static isActive()
   {
-    return this._session !== null;
+    return this.session() !== null;
   }
 
   /**
@@ -85,7 +198,7 @@ class JABS_TargetingManager
    */
   static getCursor()
   {
-    return this._cursor;
+    return this.cursor();
   }
 
   /**
@@ -94,7 +207,7 @@ class JABS_TargetingManager
    */
   static getSentinel()
   {
-    return this._sentinel;
+    return this.sentinel();
   }
 
   /**
@@ -148,22 +261,22 @@ class JABS_TargetingManager
 
     // stash the pending actions against a new session; `isActive()` becoming true is itself
     // what the aliased gates check, so nothing new happens while aiming.
-    this._session = new JABS_TargetingSession(battler, actions, onCommit);
+    this.setSession(new JABS_TargetingSession(battler, actions, onCommit));
 
     // build the appropriate aiming state for this skill's flavor.
     const [ primaryAction ] = actions;
-    this._cursor = primaryAction.isDirectAction()
+    this.setCursor(primaryAction.isDirectAction()
       ? this.#buildCycleCursor(battler, primaryAction)
-      : JABS_TargetingCursor.FreeRoam(battler, primaryAction.getProximity());
+      : JABS_TargetingCursor.FreeRoam(battler, primaryAction.getProximity()));
 
     // point the shared sentinel at the real action being aimed.
-    this._sentinel.set(primaryAction);
+    this.sentinel().set(primaryAction);
     this.#syncSentinelPosition();
 
     // don't poll input until next frame; see the field doc on `_justBegan` for why.
-    this._justBegan = true;
-    this._previousDir8 = 0;
-    this._previousDpadStep = 0;
+    this.setJustBegan(true);
+    this.setPreviousDir8(0);
+    this.setPreviousDpadStep(0);
   }
 
   /**
@@ -222,9 +335,9 @@ class JABS_TargetingManager
     if (!this.isActive()) return;
 
     // skip the frame the session began on; see `_justBegan`'s field doc for why.
-    if (this._justBegan)
+    if (this.isJustBegan())
     {
-      this._justBegan = false;
+      this.setJustBegan(false);
       return;
     }
 
@@ -251,7 +364,7 @@ class JABS_TargetingManager
    */
   static #updateCursorMovement()
   {
-    if (this._cursor.isCycleMode())
+    if (this.cursor().isCycleMode())
     {
       this.#updateCycleSelection();
       return;
@@ -265,7 +378,7 @@ class JABS_TargetingManager
 
     // convert the pressed direction into a unit vector, then step the cursor along it.
     const { x: dx, y: dy } = $jabsEngine.dir8ToUnitVector(dir8);
-    const cursor = this._cursor;
+    const cursor = this.cursor();
     const caster = cursor.getCaster();
     let nextX = cursor.getX() + (dx * JABS_TargetingManager.FreeRoamSpeedPerFrame);
     let nextY = cursor.getY() + (dy * JABS_TargetingManager.FreeRoamSpeedPerFrame);
@@ -302,22 +415,22 @@ class JABS_TargetingManager
   {
     // native dir8 (keyboard + analog stick): jump to the best-aligned candidate.
     const { dir8 } = Input;
-    if (dir8 !== 0 && this._previousDir8 === 0)
+    if (dir8 !== 0 && this.previousDir8() === 0)
     {
       const { x: dirX, y: dirY } = $jabsEngine.dir8ToUnitVector(dir8);
-      this._cursor.selectTowards(dirX, dirY);
+      this.cursor().selectTowards(dirX, dirY);
     }
 
-    this._previousDir8 = dir8;
+    this.setPreviousDir8(dir8);
 
     // d-pad: advance through the list by raw index instead.
     const dpadStep = this.#readDpadStep();
-    if (dpadStep !== 0 && this._previousDpadStep === 0)
+    if (dpadStep !== 0 && this.previousDpadStep() === 0)
     {
-      this._cursor.stepIndex(dpadStep);
+      this.cursor().stepIndex(dpadStep);
     }
 
-    this._previousDpadStep = dpadStep;
+    this.setPreviousDpadStep(dpadStep);
   }
 
   /**
@@ -381,21 +494,21 @@ class JABS_TargetingManager
    */
   static #syncSentinelPosition()
   {
-    const cursor = this._cursor;
+    const cursor = this.cursor();
     if (cursor.isCycleMode())
     {
       const selected = cursor.getSelectedBattler();
       if (selected)
       {
         const character = selected.getCharacter();
-        this._sentinel.setPosition(selected.getX(), selected.getY());
-        this._sentinel.setVerticalCenterOffset(JABS_Engine.getBattlerAabbModel(character).h / 2);
+        this.sentinel().setPosition(selected.getX(), selected.getY());
+        this.sentinel().setVerticalCenterOffset(JABS_Engine.getBattlerAabbModel(character).h / 2);
       }
       return;
     }
 
-    this._sentinel.setPosition(cursor.getX(), cursor.getY());
-    this._sentinel.setVerticalCenterOffset(0);
+    this.sentinel().setPosition(cursor.getX(), cursor.getY());
+    this.sentinel().setVerticalCenterOffset(0);
   }
 
   /**
@@ -405,7 +518,7 @@ class JABS_TargetingManager
   static confirm()
   {
     // grab the active session; bail if somehow none is active.
-    const session = this._session;
+    const session = this.session();
     if (!session) return;
 
     const battler = session.getBattler();
@@ -479,7 +592,7 @@ class JABS_TargetingManager
     // the player's explicit pick; may be null if the candidate pool was somehow empty, in which
     // case live resolution's own fallback chain takes over exactly as it would for a
     // non-targeted <directLock> skill.
-    const selected = this._cursor.getSelectedBattler();
+    const selected = this.cursor().getSelectedBattler();
     if (selected)
     {
       // route the pick into whichever "known target" reference this action's scope consults
@@ -512,7 +625,7 @@ class JABS_TargetingManager
    */
   static #resolveTargetXY(battler)
   {
-    const cursor = this._cursor;
+    const cursor = this.cursor();
     if (cursor.isCycleMode())
     {
       // fall back to the caster's own position if the candidate pool is somehow empty.
@@ -542,9 +655,9 @@ class JABS_TargetingManager
   static #endSession()
   {
     // clear the active session and aiming state; the aliased gates immediately stop pausing.
-    this._session = null;
-    this._cursor = null;
-    this._sentinel.reset();
+    this.setSession(null);
+    this.setCursor(null);
+    this.sentinel().reset();
   }
 }
 

@@ -8,6 +8,7 @@ import './_models/JABS_InputAdapter.js';
 import './_models/JABS_StandardController.js';
 import './managers/DataManager.js';
 import './managers/IconManager.js';
+import './managers/InputLegendResolver.js';
 import './managers/Input.js';
 import './managers/JABS_Engine.js';
 import './objects/Game_Player.js';

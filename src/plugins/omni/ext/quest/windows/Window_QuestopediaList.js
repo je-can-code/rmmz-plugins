@@ -4,11 +4,18 @@ import OmniQuest from './../__models/OmniQuest.js';
 class Window_QuestopediaList
   extends Window_Command
 {
+
+  //region properties
   /**
-   * The category that this list is being filtered by. When an empty string, no filter is applied.
-   * @type {string}
+   * Gets the quest filtering.
+   * @returns {*} The questFiltering.
    */
-  _currentCategoryKey = String.empty;
+  questFiltering()
+  {
+    // hand back the quest filtering.
+    return this._questFiltering;
+  }
+  //endregion properties
 
   /**
    * Constructor.
@@ -16,7 +23,24 @@ class Window_QuestopediaList
    */
   constructor(rect)
   {
+    // perform original logic, which seeds this window's members before building the list.
     super(rect);
+  }
+
+  /**
+   * Implements {@link Window_Command.initMembers}.<br/>
+   * Initializes the members of this window.
+   *
+   * This cannot be a class field declaration: JavaScript applies those only after `super()` returns,
+   * by which point the command list has already been built from it and found it undefined.
+   */
+  initMembers()
+  {
+    /**
+     * The category that this list is being filtered by. When an empty string, no filter is applied.
+     * @type {string}
+     */
+    this._currentCategoryKey = String.empty;
   }
 
   /**
@@ -61,7 +85,7 @@ class Window_QuestopediaList
     const questEntries = $gameParty.getQuestopediaEntries();
 
     // filter the quests by various criteria.
-    const filteredQuests = questEntries.filter(this._questFiltering, this);
+    const filteredQuests = questEntries.filter(this.questFiltering(), this);
 
     // no quests to display.
     if (filteredQuests.length === 0) return [];

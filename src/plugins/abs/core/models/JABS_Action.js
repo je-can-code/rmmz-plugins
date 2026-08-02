@@ -115,6 +115,300 @@ class JABS_Action
     this.initCasting();
   }
 
+  //region properties
+  /**
+   * Sets the cast complete.
+   * @param {boolean} newCastComplete The new castComplete.
+   */
+  setCastComplete(newCastComplete)
+  {
+    // assign the cast complete.
+    this._castComplete = newCastComplete;
+  }
+
+  /**
+   * Gets the facing.
+   * @returns {number} The facing.
+   */
+  facing()
+  {
+    // hand back the facing.
+    return this._facing;
+  }
+
+  /**
+   * Sets the is lingering.
+   * @param {boolean} newIsLingering The new isLingering.
+   */
+  setIsLingering(newIsLingering)
+  {
+    // assign the is lingering.
+    this._isLingering = newIsLingering;
+  }
+  //endregion properties
+
+  //region properties
+  /**
+   * Gets the hit at least one.
+   * @returns {boolean} The hitAtLeastOne.
+   */
+  isHitAtLeastOne()
+  {
+    // hand back the hit at least one.
+    return this._hitAtLeastOne;
+  }
+
+  /**
+   * Sets the hit at least one.
+   * @param {boolean} newHitAtLeastOne The new hitAtLeastOne.
+   */
+  setHitAtLeastOne(newHitAtLeastOne)
+  {
+    // assign the hit at least one.
+    this._hitAtLeastOne = newHitAtLeastOne;
+  }
+
+  /**
+   * Gets the played self animation on defeat.
+   * @returns {boolean} The playedSelfAnimationOnDefeat.
+   */
+  isPlayedSelfAnimationOnDefeat()
+  {
+    // hand back the played self animation on defeat.
+    return this._playedSelfAnimationOnDefeat;
+  }
+
+  /**
+   * Sets the played self animation on defeat.
+   * @param {boolean} newPlayedSelfAnimationOnDefeat The new playedSelfAnimationOnDefeat.
+   */
+  setPlayedSelfAnimationOnDefeat(newPlayedSelfAnimationOnDefeat)
+  {
+    // assign the played self animation on defeat.
+    this._playedSelfAnimationOnDefeat = newPlayedSelfAnimationOnDefeat;
+  }
+
+  /**
+   * Gets the collision enabled.
+   * @returns {boolean} The collisionEnabled.
+   */
+  isCollisionEnabled()
+  {
+    // hand back the collision enabled.
+    return this._collisionEnabled;
+  }
+
+  /**
+   * Sets the collision enabled.
+   * @param {boolean} newCollisionEnabled The new collisionEnabled.
+   */
+  setCollisionEnabled(newCollisionEnabled)
+  {
+    // assign the collision enabled.
+    this._collisionEnabled = newCollisionEnabled;
+  }
+
+  /**
+   * Gets the base skill.
+   * @returns {RPG_Skill} The baseSkill.
+   */
+  baseSkill()
+  {
+    // hand back the base skill.
+    return this._baseSkill;
+  }
+
+  /**
+   * Gets the hits per connection bonus.
+   * @returns {*} The hitsPerConnectionBonus.
+   */
+  hitsPerConnectionBonus()
+  {
+    // hand back the hits per connection bonus.
+    return this._hitsPerConnectionBonus;
+  }
+
+  /**
+   * Gets the self animation id.
+   * @returns {number} The selfAnimationId.
+   */
+  selfAnimationId()
+  {
+    // hand back the self animation id.
+    return this._selfAnimationId;
+  }
+
+  /**
+   * Gets the on cast animation id.
+   * @returns {number} The onCastAnimationId.
+   */
+  onCastAnimationId()
+  {
+    // hand back the on cast animation id.
+    return this._onCastAnimationId;
+  }
+
+  /**
+   * Gets the uuid.
+   * @returns {string} The uuid.
+   */
+  uuid()
+  {
+    // hand back the uuid.
+    return this._uuid;
+  }
+
+  /**
+   * Gets the game action.
+   * @returns {Game_Action} The gameAction.
+   */
+  gameAction()
+  {
+    // hand back the game action.
+    return this._gameAction;
+  }
+
+  /**
+   * Gets the caster.
+   * @returns {JABS_Battler} The caster.
+   */
+  caster()
+  {
+    // hand back the caster.
+    return this._caster;
+  }
+
+  /**
+   * Gets the action map visual note holder.
+   * @returns {*} The actionMapVisualNoteHolder.
+   */
+  actionMapVisualNoteHolder()
+  {
+    // hand back the action map visual note holder.
+    return this._actionMapVisualNoteHolder;
+  }
+
+  /**
+   * Sets the action map visual note holder.
+   * @param {*} newActionMapVisualNoteHolder The new actionMapVisualNoteHolder.
+   */
+  setActionMapVisualNoteHolder(newActionMapVisualNoteHolder)
+  {
+    // assign the action map visual note holder.
+    this._actionMapVisualNoteHolder = newActionMapVisualNoteHolder;
+  }
+
+  /**
+   * Gets the action cooldown type.
+   * @returns {string} The actionCooldownType.
+   */
+  actionCooldownType()
+  {
+    // hand back the action cooldown type.
+    return this._actionCooldownType;
+  }
+
+  /**
+   * Sets the action cooldown type.
+   * @param {string} newActionCooldownType The new actionCooldownType.
+   */
+  setActionCooldownType(newActionCooldownType)
+  {
+    // assign the action cooldown type.
+    this._actionCooldownType = newActionCooldownType;
+  }
+
+  /**
+   * Gets the current duration.
+   * @returns {number} The currentDuration.
+   */
+  currentDuration()
+  {
+    // hand back the current duration.
+    return this._currentDuration;
+  }
+
+  /**
+   * Sets the current duration.
+   * @param {number} newCurrentDuration The new currentDuration.
+   */
+  setCurrentDuration(newCurrentDuration)
+  {
+    // assign the current duration.
+    this._currentDuration = newCurrentDuration;
+  }
+
+  /**
+   * Gets the delay.
+   * @returns {*} The delay.
+   */
+  delay()
+  {
+    // hand back the delay.
+    return this._delay;
+  }
+
+  /**
+   * Gets the pierce times left.
+   * @returns {number} The pierceTimesLeft.
+   */
+  pierceTimesLeft()
+  {
+    // hand back the pierce times left.
+    return this._pierceTimesLeft;
+  }
+
+  /**
+   * Sets the pierce times left.
+   * @param {number} newPierceTimesLeft The new pierceTimesLeft.
+   */
+  setPierceTimesLeft(newPierceTimesLeft)
+  {
+    // assign the pierce times left.
+    this._pierceTimesLeft = newPierceTimesLeft;
+  }
+
+  /**
+   * Gets the pierce delay.
+   * @returns {JABS_Timer} The pierceDelay.
+   */
+  pierceDelay()
+  {
+    // hand back the pierce delay.
+    return this._pierceDelay;
+  }
+
+  /**
+   * Gets the current linger.
+   * @returns {number} The currentLinger.
+   */
+  currentLinger()
+  {
+    // hand back the current linger.
+    return this._currentLinger;
+  }
+
+  /**
+   * Sets the current linger.
+   * @param {number} newCurrentLinger The new currentLinger.
+   */
+  setCurrentLinger(newCurrentLinger)
+  {
+    // assign the current linger.
+    this._currentLinger = newCurrentLinger;
+  }
+
+  /**
+   * Gets the linger max frames.
+   * @returns {number} The lingerMaxFrames.
+   */
+  lingerMaxFrames()
+  {
+    // hand back the linger max frames.
+    return this._lingerMaxFrames;
+  }
+  //endregion properties
+
   /**
    * Initializes visual properties.
    */
@@ -272,7 +566,7 @@ class JABS_Action
    */
   makePiercingCount()
   {
-    return this._baseSkill.jabsPierceCount;
+    return this.baseSkill().jabsPierceCount;
   }
 
   /**
@@ -291,9 +585,9 @@ class JABS_Action
 
     const hitsGlobal = gameBattler.getBonusHitsGlobal();
     const hitsBasicOrSkill = isBasicAttack ? gameBattler.getBonusHitsBasic() : gameBattler.getBonusHitsSkill();
-    const hitsFromNote = this._baseSkill.jabsBonusHitsFromSkillNote;
+    const hitsFromNote = this.baseSkill().jabsBonusHitsFromSkillNote;
     const hitsFromNoteFormula = RPGManager.getResultFromNoteByRegex(
-      this._baseSkill,
+      this.baseSkill(),
       J.ABS.RegExp.BonusHitsSkillNoteFormula,
       0,
       gameBattler);
@@ -314,7 +608,7 @@ class JABS_Action
    */
   getHitsPerConnectionBonus()
   {
-    return this._hitsPerConnectionBonus;
+    return this.hitsPerConnectionBonus();
   }
 
   /**
@@ -380,7 +674,7 @@ class JABS_Action
    */
   getSelfAnimationId()
   {
-    return this._selfAnimationId;
+    return this.selfAnimationId();
   }
 
   /**
@@ -391,10 +685,10 @@ class JABS_Action
     const event = this.getActionSprite();
     if (!event) return;
 
-    if (this.hasSelfAnimationId() && !this._playedSelfAnimationOnDefeat)
+    if (this.hasSelfAnimationId() && !this.isPlayedSelfAnimationOnDefeat())
     {
       event.requestAnimation(this.getSelfAnimationId());
-      this._playedSelfAnimationOnDefeat = true;
+      this.setPlayedSelfAnimationOnDefeat(true);
     }
   }
 
@@ -415,7 +709,7 @@ class JABS_Action
   getOnCastAnimationId()
   {
     // return the cached on-cast animation id.
-    return this._onCastAnimationId;
+    return this.onCastAnimationId();
   }
 
   /**
@@ -444,7 +738,7 @@ class JABS_Action
    */
   getUuid()
   {
-    return this._uuid;
+    return this.uuid();
   }
 
   /**
@@ -453,7 +747,7 @@ class JABS_Action
    */
   getBaseSkill()
   {
-    return this._baseSkill;
+    return this.baseSkill();
   }
 
   /**
@@ -462,7 +756,7 @@ class JABS_Action
    */
   getAction()
   {
-    return this._gameAction;
+    return this.gameAction();
   }
 
   /**
@@ -472,10 +766,10 @@ class JABS_Action
   getCaster()
   {
     // grab the caster's uuid.
-    const uuid = this._caster.getUuid();
+    const uuid = this.caster().getUuid();
 
     // determine the real caster, but fallback to the designated caster.
-    const caster = JABS_AiManager.getBattlerByUuid(uuid) ?? this._caster;
+    const caster = JABS_AiManager.getBattlerByUuid(uuid) ?? this.caster();
 
     // return the result.
     return caster;
@@ -505,7 +799,7 @@ class JABS_Action
    */
   completeCast()
   {
-    this._castComplete = true;
+    this.setCastComplete(true);
   }
 
   /**
@@ -543,7 +837,7 @@ class JABS_Action
    */
   direction()
   {
-    return this._facing || this.getActionSprite()
+    return this.facing() || this.getActionSprite()
       .direction();
   }
 
@@ -620,7 +914,7 @@ class JABS_Action
     }
 
     // store  action map visual note holder on the instance for later reads.
-    this._actionMapVisualNoteHolder = { note: synthetic };
+    this.setActionMapVisualNoteHolder({ note: synthetic });
   }
 
   /**
@@ -629,7 +923,7 @@ class JABS_Action
    */
   getActionMapVisualNoteHolder()
   {
-    return this._actionMapVisualNoteHolder;
+    return this.actionMapVisualNoteHolder();
   }
 
   /**
@@ -647,7 +941,7 @@ class JABS_Action
    */
   getCooldownType()
   {
-    return this._actionCooldownType;
+    return this.actionCooldownType();
   }
 
   /**
@@ -656,7 +950,7 @@ class JABS_Action
    */
   setCooldownType(type)
   {
-    this._actionCooldownType = type;
+    this.setActionCooldownType(type);
   }
 
   /**
@@ -664,7 +958,7 @@ class JABS_Action
    */
   getDuration()
   {
-    return this._currentDuration;
+    return this.currentDuration();
   }
 
   /**
@@ -694,8 +988,8 @@ class JABS_Action
    */
   countdownDuration()
   {
-    this._currentDuration++;
-    if (this.getMaxDuration() <= this._currentDuration)
+    this.setCurrentDuration(this.currentDuration() + 1);
+    if (this.getMaxDuration() <= this.currentDuration())
     {
       this.setNeedsRemoval();
     }
@@ -707,8 +1001,8 @@ class JABS_Action
    */
   isActionExpired()
   {
-    const isExpired = this.getMaxDuration() <= this._currentDuration;
-    const minDurationElapsed = this._currentDuration > JABS_Action.getMinimumDuration();
+    const isExpired = this.getMaxDuration() <= this.currentDuration();
+    const minDurationElapsed = this.currentDuration() > JABS_Action.getMinimumDuration();
     return (isExpired && minDurationElapsed);
   }
 
@@ -776,7 +1070,7 @@ class JABS_Action
    */
   countdownDelay()
   {
-    this._delay._delayDuration.update();
+    this.delay()._delayDuration.update();
   }
 
   /**
@@ -791,7 +1085,7 @@ class JABS_Action
     if (this.hasHitAtLeastOneTarget()) return true;
 
     // check if the delay has completed.
-    const isTimerComplete = this._delay._delayDuration.isTimerComplete();
+    const isTimerComplete = this.delay()._delayDuration.isTimerComplete();
 
     // check if this action will delay until triggered.
     const willWaitEndlessly = this.isEndlessDelay();
@@ -808,7 +1102,7 @@ class JABS_Action
    */
   endDelay()
   {
-    this._delay._delayDuration.forceComplete();
+    this.delay()._delayDuration.forceComplete();
   }
 
   /**
@@ -817,7 +1111,7 @@ class JABS_Action
    */
   isEndlessDelay()
   {
-    return this._delay._delayDuration.getMaxTime() === -1;
+    return this.delay()._delayDuration.getMaxTime() === -1;
   }
 
   /**
@@ -830,7 +1124,7 @@ class JABS_Action
    */
   triggerOnTouch()
   {
-    return this._delay._triggerOnTouch || this.isEndlessDelay();
+    return this.delay()._triggerOnTouch || this.isEndlessDelay();
   }
 
   /**
@@ -840,7 +1134,7 @@ class JABS_Action
   getTriggerRadius()
   {
     // return the configured trigger radius, if any.
-    return this._delay._triggerRadius ?? null;
+    return this.delay()._triggerRadius;
   }
 
   /**
@@ -849,7 +1143,7 @@ class JABS_Action
    */
   getPiercingTimes()
   {
-    return this._pierceTimesLeft;
+    return this.pierceTimesLeft();
   }
 
   /**
@@ -861,10 +1155,10 @@ class JABS_Action
   decrementPierceTimes(decrement = 1)
   {
     // reduce the remaining pierce count by the given amount.
-    this._pierceTimesLeft -= decrement;
+    this.setPierceTimesLeft(this.pierceTimesLeft() - decrement);
 
     // once pierce is exhausted, transition into lingering (unless already there).
-    if (this._pierceTimesLeft <= 0 && !this.isLingering())
+    if (this.pierceTimesLeft() <= 0 && !this.isLingering())
     {
       this.startLinger();
     }
@@ -876,7 +1170,7 @@ class JABS_Action
    */
   isPierceReady()
   {
-    return this._pierceDelay.isTimerComplete();
+    return this.pierceDelay().isTimerComplete();
   }
 
   /**
@@ -891,7 +1185,7 @@ class JABS_Action
     const actionSprite = this.getActionSprite();
     if (actionSprite !== null && actionSprite.isHitstopped()) return;
 
-    this._pierceDelay.update();
+    this.pierceDelay().update();
   }
 
   /**
@@ -899,7 +1193,7 @@ class JABS_Action
    */
   resetPierceDelay()
   {
-    this._pierceDelay.reset();
+    this.pierceDelay().reset();
   }
 
   //region update
@@ -1119,7 +1413,7 @@ class JABS_Action
    */
   canProcessCollision()
   {
-    return this._collisionEnabled;
+    return this.isCollisionEnabled();
   }
 
   /**
@@ -1146,10 +1440,10 @@ class JABS_Action
     if (this.isLingering()) return;
 
     // flag this action as now lingering, so future frames tick the fade-out timer instead.
-    this._isLingering = true;
+    this.setIsLingering(true);
 
     // collision no longer applies once lingering begins.
-    this._collisionEnabled = false;
+    this.setCollisionEnabled(false);
 
     // play this action's self-animation, if any, as the visual cue that it has expired.
     this.performSelfAnimation();
@@ -1161,7 +1455,7 @@ class JABS_Action
    */
   getCurrentLinger()
   {
-    return this._currentLinger;
+    return this.currentLinger();
   }
 
   /**
@@ -1170,7 +1464,7 @@ class JABS_Action
    */
   getLingerMaxFrames()
   {
-    return this._lingerMaxFrames;
+    return this.lingerMaxFrames();
   }
 
   /**
@@ -1179,7 +1473,7 @@ class JABS_Action
   updateLinger()
   {
     // advance the linger fade-out counter by one frame.
-    this._currentLinger++;
+    this.setCurrentLinger(this.currentLinger() + 1);
 
     // once the linger window has fully elapsed, clean up this action for real.
     if (this.getCurrentLinger() >= this.getLingerMaxFrames())
@@ -1266,7 +1560,7 @@ class JABS_Action
   onFirstCollision()
   {
     // flag our first hit so we don't do this again.
-    this._hitAtLeastOne = true;
+    this.setHitAtLeastOne(true);
   }
 
   /**
@@ -1390,7 +1684,7 @@ class JABS_Action
    */
   isSupportAction()
   {
-    return this._gameAction.isForFriend();
+    return this.gameAction().isForFriend();
   }
 
   /**
@@ -1712,7 +2006,7 @@ class JABS_Action
    */
   hasHitAtLeastOneTarget()
   {
-    return this._hitAtLeastOne;
+    return this.isHitAtLeastOne();
   }
 
   /**

@@ -39,7 +39,7 @@ Game_Temp.prototype.initMembers = function()
  */
 Game_Temp.prototype.getAptTypedInferredEnemyTypes = function(enemyId)
 {
-  return this._j._apt._typed._aptTypedInferredEnemyTypes[enemyId] || null;
+  return this.aptTypedInferredEnemyTypes()[enemyId] || null;
 };
 
 /**
@@ -53,4 +53,16 @@ Game_Temp.prototype.setAptTypedInferredEnemyTypes = function(enemyId, ids)
     ? ids.slice()
     : [];
 };
+
+//region properties
+/**
+ * Gets the apt typed inferred enemy types.
+ * @returns {*} The aptTypedInferredEnemyTypes.
+ */
+Game_Temp.prototype.aptTypedInferredEnemyTypes = function()
+{
+  // hand back the apt typed inferred enemy types.
+  return this._j._apt._typed._aptTypedInferredEnemyTypes;
+};
+//endregion properties
 //endregion Game_Temp (typed AP caches)

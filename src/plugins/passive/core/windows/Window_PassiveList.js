@@ -180,7 +180,12 @@ class Window_PassiveList
   {
     const entry = this.getData()[this.index()];
 
-    if (entry === null) return null;
+    // two distinct absences, both meaning "nothing is highlighted", and both needing to be named
+    // rather than lumped into a falsy check. `undefined` is an index outside the data, which is what a
+    // deselected list reports when it hands back -1. `null` is the sentinel this window seeds at index
+    // zero when the active tab's filter matched nothing, and which drawItem renders as a placeholder.
+    // Neither is a state, and reaching for `.state` on either throws.
+    if (entry === undefined || entry === null) return null;
 
     return entry.state;
   }

@@ -43,7 +43,16 @@ Object.defineProperty(Game_Actor.prototype, 'dor', {
  * Gets this actor's bonus drop multiplier.
  * @returns {number}
  */
-Game_Actor.prototype.getDropMultiplierBonus = function()
+/**
+ * Assembles a reward multiplier factor from this actor's notes and SDP panels.
+ * Both contributions are expressed in percent-points and are summed before being scaled down
+ * into the factor callers multiply by, so a notetag granting 20 and a panel granting 5 together
+ * produce a factor of 0.25 rather than two separately-rounded factors.
+ * @param {RegExp} structure The notetag structure carrying the multiplier.
+ * @param {string} parameterKey The SDP parameter key contributing to the same multiplier.
+ * @returns {number} The assembled multiplier factor.
+ */
+Game_Actor.prototype.rewardMultiplierFactor = function(structure, parameterKey)
 {
   // define the base multiplier.
   const baseMultiplier = 0;
@@ -52,15 +61,21 @@ Game_Actor.prototype.getDropMultiplierBonus = function()
   const objectsToCheck = this.getAllNotes();
 
   // get the multiplier from anything this battler has available.
-  const multiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.DROPS.RegExp.DropMultiplier);
+  const multiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, structure);
 
-  // add SDP panel bonuses (percent-points, same unit as multiplierBonus).
-  const sdpBonus = this.getSdpBonusForParameterKey
-    ? this.getSdpBonusForParameterKey('dor', 1)
+  // add SDP panel bonuses (percent-points, same unit as multiplierBonus); J-SDP is optional.
+  const sdpBonus = J.SDP
+    ? this.getSdpBonusForParameterKey(parameterKey, 1)
     : 0;
 
   // calculate the multiplier factor including panel bonuses.
-  const factor = (multiplierBonus + baseMultiplier + sdpBonus) / 100;
+  return (multiplierBonus + baseMultiplier + sdpBonus) / 100;
+};
+
+Game_Actor.prototype.getDropMultiplierBonus = function()
+{
+  // assemble the notetag and panel contributions into a factor.
+  const factor = this.rewardMultiplierFactor(J.DROPS.RegExp.DropMultiplier, 'dor');
 
   // add any natural growth bonuses.
   const naturalBonus = this.dorNaturalBonuses();
@@ -112,21 +127,7 @@ Game_Actor.prototype.applyNaturalDorGrowths = function()
  */
 Game_Actor.prototype.getGoldMultiplier = function()
 {
-  // define the base multiplier.
-  const baseMultiplier = 0;
-
-  // grab all the notes.
-  const objectsToCheck = this.getAllNotes();
-
-  // get the multiplier from anything this battler has available.
-  const multiplierBonus = RPGManager.getSumFromAllNotesByRegex(objectsToCheck, J.DROPS.RegExp.GoldMultiplier);
-
-  // add SDP panel bonuses (percent-points, same unit as multiplierBonus).
-  const sdpBonus = this.getSdpBonusForParameterKey
-    ? this.getSdpBonusForParameterKey('gdr', 1)
-    : 0;
-
-  // calculate the multiplier factor including panel bonuses.
-  return (multiplierBonus + baseMultiplier + sdpBonus) / 100;
+  // gold has no natural growth counterpart, so the assembled factor is the whole answer.
+  return this.rewardMultiplierFactor(J.DROPS.RegExp.GoldMultiplier, 'gdr');
 };
 //endregion Game_Actor

@@ -1,0 +1,718 @@
+//region Window_SkillDetail
+import JCMS_ParameterKvp from './../_models/JCMS_ParameterKvp.js';
+
+/**
+ * A window responsible for showing various datapoints of a skill.
+ */
+class Window_SkillDetail
+  extends Window_Base
+{
+  constructor(rect)
+  {
+    super(rect);
+    this.initMembers();
+  }
+
+  initMembers()
+  {
+    /**
+     * The skill id this window is currently presenting data for.
+     * @type {number}
+     */
+    this._skillId = null;
+
+    /**
+     * The sprites for this skill.
+     * @type {Map<string, Sprite>}
+     */
+    this._skillSprites = new Map();
+
+    /**
+     * The actor who owns the skill of this skill.
+     * @type {Game_Actor}
+     */
+    this._actor = null;
+
+    this.refresh();
+  }
+
+  //region properties
+  /**
+   * Gets the skill id.
+   * @returns {number} The skillId.
+   */
+  skillId()
+  {
+    // hand back the skill id.
+    return this._skillId;
+  }
+
+  /**
+   * Gets the actor.
+   * @returns {Game_Actor} The actor.
+   */
+  actor()
+  {
+    // hand back the actor.
+    return this._actor;
+  }
+  //endregion properties
+
+  //region properties
+  /**
+   * Gets the skill sprites.
+   * @returns {Map<string, Sprite>} The skillSprites.
+   */
+  skillSprites()
+  {
+    // hand back the skill sprites.
+    return this._skillSprites;
+  }
+  //endregion properties
+
+  /**
+   * Sets the skill id of the window to this and refreshes the data.
+   * @param {number} newSkillId The new skill id for this window.
+   */
+  setSkillId(newSkillId)
+  {
+    this._skillId = newSkillId;
+    if (this._skillId < 1)
+    {
+      this._skillId = 0;
+      this.clear();
+    }
+    else
+    {
+      this.refresh();
+    }
+  }
+
+  /**
+   * Gets the skill currently being worked with.
+   * @returns {RPG_Skill|null}
+   */
+  skill()
+  {
+    if (!this.skillId())
+    {
+      return null;
+    }
+    else
+    {
+      // if we're using the skill extension plugin, then grab the extended version.
+      if (J.EXTEND && this.actor())
+      {
+        return this.actor().skill(this.skillId());
+      }
+
+      // otherwise, return the base skill.
+      return $dataSkills[this.skillId()];
+    }
+  }
+
+  /**
+   * Sets the actor to be the actor owning the window.
+   * @param {Game_Actor} newActor The actor.
+   */
+  setActor(newActor)
+  {
+    this._actor = newActor;
+    this.refresh();
+  }
+
+  /**
+   * Empties the window.
+   */
+  clear()
+  {
+    this.contents.clear();
+    this.clearSkillImages();
+  }
+
+  /**
+   * Hides all skill images available.
+   */
+  clearSkillImages()
+  {
+    this.skillSprites().forEach(sprite =>
+    {
+      sprite.hide();
+    });
+  }
+
+  /**
+   * Clears and redraws all contents of this window.
+   */
+  refresh()
+  {
+    this.clear();
+    this.drawContents();
+  }
+
+  /**
+   * Draws all contents of this window.
+   */
+  drawContents()
+  {
+    if (!this.skill()) return;
+
+    this.drawHeader();
+    this.drawSkillLogo();
+    this.drawLeftColumn();
+    this.drawMiddleColumn();
+    this.drawRightColumn();
+  }
+
+  /**
+   * Draws the header component of this window.
+   */
+  drawHeader()
+  {
+    this.resetFontSettings();
+    this.contents.fontSize += 12;
+    this.toggleBold();
+    this.drawText(this.skill().name, 0, 0, this.width);
+    this.resetFontSettings();
+  }
+
+  /**
+   * Places the 4x scaled-up skill icon (logo) onto the window.
+   */
+  drawSkillLogo()
+  {
+    this.placeSkillIcon(0, this.skill());
+  }
+
+  /**
+   * Places the corresponding skill icon image.
+   * @param {number} x The `x` coordinate.
+   * @param {RPG_Skill} skill The skill to draw this for.
+   */
+  placeSkillIcon(x, skill)
+  {
+    const key = `skill-${skill.id}-icon-image`;
+    const sprite = this.createIconSprite(key, skill.iconIndex);
+    const y = this.height - (sprite.height * (sprite.scale.x + 1));
+    sprite.move(x, y);
+    sprite.show();
+  }
+
+  /**
+   * Generates the state icon sprite representing an afflicted state.
+   * @param {string} key The key of this sprite.
+   * @param {number} iconIndex The icon index of this sprite.
+   */
+  createIconSprite(key, iconIndex)
+  {
+    let sprite = this.skillSprites().get(key);
+    if (sprite)
+    {
+      return sprite;
+    }
+    // otherwise fall back to the alternate path.
+    else
+    {
+      sprite = new Sprite_Icon(iconIndex);
+      sprite.scale.x = 4.0;
+      sprite.scale.y = 4.0;
+      this.skillSprites().set(key, sprite);
+      this.addInnerChild(sprite);
+      return sprite;
+    }
+  }
+
+  /**
+   * Draws the left column, which mostly includes skill costs.
+   */
+  drawLeftColumn()
+  {
+    const skill = this.skill();
+    const actor = this.actor();
+    const params = [];
+
+    // Append the row to the working collection.
+    params.push(this.makeSkillTypeParam(skill));
+    params.push(this.makeDividerParam());
+
+    if (J.RESOURCES)
+    {
+      params.push(this.makeHpCostParam(skill, actor));
+    }
+
+    // Append the row to the working collection.
+    params.push(this.makeMpCostParam(skill, actor));
+    params.push(this.makeTpCostParam(skill, actor));
+
+    const col = Math.floor(this.innerWidth / 3);
+    const ox = 4;
+    const oy = 60;
+    const lh = this.lineHeight();
+    const nameWidth = Math.floor(col * 0.42);
+    const valueOffset = Math.floor(col * 0.44);
+    const valueWidth = col - valueOffset - 4;
+    params.forEach((param, index) =>
+    {
+      this.resetTextColor();
+      this.changeTextColor(param.color());
+      this.drawText(`${param.name()}`, ox, oy + (lh * index), nameWidth);
+      if (param.value() !== null)
+      {
+        this.drawText(`${param.value()}`, ox + valueOffset, oy + (lh * index), valueWidth);
+      }
+    });
+  }
+
+  /**
+   * Draws the middle column, which contains various data points from the skill.
+   */
+  drawMiddleColumn()
+  {
+    const skill = this.skill();
+    const actor = this.actor();
+    const params = [];
+
+    // Append the row to the working collection.
+    params.push(this.makeProjectedDamageParam(skill, actor));
+    params.push(this.makeHitsParam(skill, actor));
+    params.push(this.makeDividerParam());
+    // Append the row to the working collection.
+    params.push(...this.makeAttackStates(skill, actor));
+
+    const col = Math.floor(this.innerWidth / 3);
+    const ox = col + 4;
+    const oy = 60;
+    const lh = this.lineHeight();
+    const nameWidth = Math.floor(col * 0.44);
+    const valueOffset = Math.floor(col * 0.46);
+    const valueWidth = col - valueOffset - 4;
+    params.forEach((param, index) =>
+    {
+      this.resetTextColor();
+      this.changeTextColor(param.color());
+      this.drawTextEx(`${param.name()}`, ox, oy + (lh * index), nameWidth);
+      if (param.value() !== null)
+      {
+        this.drawTextEx(`${param.value()}`, ox + valueOffset, oy + (lh * index), valueWidth);
+      }
+    });
+  }
+
+  /**
+   * Calculates the projected damage to build a parameter.
+   *
+   * If the skill lacks a formula, it won't try to project.
+   * @param {RPG_Skill} skill The skill.
+   * @param {Game_Actor} actor The actor.
+   * @returns {JCMS_ParameterKvp}
+   */
+  makeProjectedDamageParam(skill, actor)
+  {
+    // if its a skill that doesn't have a formula, don't try to parse it.
+    if (skill.damage.type === 0)
+    {
+      return new JCMS_ParameterKvp(`\\C[8]Raw Damage\\C[0]`, 'n/a');
+    }
+
+    // a, b, v are the standard RMMZ formula binding names; p is proficiency.
+    const a = actor;
+    const b = $gameEnemies.enemy(1);
+    const v = $gameVariables._data;
+    let p = 0;
+    if (J.PROF)
+    {
+      const skillProficiency = actor.skillProficiencyBySkillId(skill.id);
+      if (skillProficiency)
+      {
+        p = skillProficiency.proficiency;
+      }
+    }
+    const sign = [ 3, 4 ].includes(skill.damage.type)
+      ? -1
+      : 1;
+    const value = Math.round(Math.max(new Function('a', 'b', 'v', 'p', `return (${skill.damage.formula})`)(a, b, v, p), 0));
+    const potential = isNaN(value)
+      ? 0
+      : value;
+    const color = sign > 0
+      ? 10
+      : 24;
+    return new JCMS_ParameterKvp(`\\C[${color}]Raw Damage\\C[0]`, potential);
+  }
+
+  /**
+   * Combines the total number of possible hits this skill can hit a foe.
+   * @param {RPG_Skill} skill The skill.
+   * @param {Game_Actor} actor The actor.
+   * @returns {JCMS_ParameterKvp}
+   */
+  // eslint-disable-next-line no-unused-vars
+  makeHitsParam(skill, actor)
+  {
+    const value = (skill.repeats - 1) + skill.jabsPierceCount;
+    return new JCMS_ParameterKvp('Max Possible Hits', `x${value}`, ColorManager.textColor(0));
+  }
+
+  /**
+   * Gets all the states and their chances of application for this skill.
+   * @param {RPG_Skill} skill The skill.
+   * @param {Game_Actor} actor The actor.
+   * @returns {JCMS_ParameterKvp[]}
+   */
+  // eslint-disable-next-line no-unused-vars
+  makeAttackStates(skill, actor)
+  {
+    const stateEffects = skill.effects.filter(effect => effect.code === 21);
+    if (!stateEffects.length) return [];
+
+    const attackStateParams = [];
+    attackStateParams.push(new JCMS_ParameterKvp(`\\C[17]Applies States\\C[0]`, `\\C[1]\\}CHANCE\\{\\C[0]`));
+    stateEffects.forEach(effect =>
+    {
+      const name = `\\State[${effect.dataId}]`;
+      const chance = `${Math.round(effect.value1 * 100)}%`;
+      attackStateParams.push(new JCMS_ParameterKvp(name, chance));
+    });
+
+    return attackStateParams;
+  }
+
+  /**
+   * Draws the right column for proficiency and elements.
+   */
+  drawRightColumn()
+  {
+    const skill = this.skill();
+    const actor = this.actor();
+    /** @type {JCMS_ParameterKvp[]} */
+    const params = [];
+
+    const col = Math.floor(this.innerWidth / 3);
+    const nameWidth = Math.floor(col * 0.55);
+
+    // add the skill proficiency of this skill.
+    if (J.PROF)
+    {
+      params.push(...this.makeSkillProficiency(actor, skill, nameWidth));
+    }
+
+    // Append the row to the working collection.
+    params.push(...this.makeAttackElementsList(skill, actor));
+
+    const ox = col * 2 + 4;
+    const oy = 0;
+    const lh = this.lineHeight();
+    const valueOffset = Math.floor(col * 0.57);
+    const valueWidth = col - valueOffset - 4;
+    params.forEach((param, index) =>
+    {
+      this.drawTextEx(`${param.name()}`, ox, oy + (lh * index), param.value() !== null ? nameWidth : col - 8);
+      if (param.value() !== null)
+      {
+        this.drawTextEx(`${param.value()}`, ox + valueOffset, oy + (lh * index), valueWidth);
+      }
+    });
+  }
+
+  /**
+   * Makes a parameter that displays this actor's proficiency with this skill.
+   * @param {Game_Actor} actor The actor.
+   * @param {RPG_Skill} skill The skill.
+   * @param {number} nameWidth The pixel width available for the name column, used to keep
+   * long related-skill names from overlapping the fixed-position required/current values.
+   * @returns {JCMS_ParameterKvp[]}
+   */
+  makeSkillProficiency(actor, skill, nameWidth)
+  {
+    const proficiencyParams = [];
+    const skillProficiency = actor.tryGetSkillProficiencyBySkillId(skill.id);
+
+    const proficiencyKey = '\\C[21]Proficiency:\\C[0]';
+    const proficiencyValue = `${skillProficiency.proficiency}`;
+    const proficiencyParam = new JCMS_ParameterKvp(proficiencyKey, proficiencyValue);
+    proficiencyParams.push(proficiencyParam);
+    proficiencyParams.push(...this.makeRelatedProficiencyConditionals(actor, skill, nameWidth));
+    proficiencyParams.push(this.makeDividerParam());
+
+    return proficiencyParams;
+  }
+
+  /**
+   * Makes a parameter that displays this actor's proficiency with this skill.
+   * @param {Game_Actor} actor The actor.
+   * @param {RPG_Skill} skill The skill.
+   * @param {number} nameWidth The pixel width available for the name column, used to keep
+   * long related-skill names from overlapping the fixed-position required/current values.
+   * @returns {JCMS_ParameterKvp[]}
+   */
+  makeRelatedProficiencyConditionals(actor, skill, nameWidth)
+  {
+    const conditionals = actor.proficiencyConditionalBySkillId(skill.id);
+    const params = [];
+
+    // each row spends two icon-widths (the learned checkmark, then the skill's own icon)
+    // before any name text starts, so the name only ever gets whatever's left over.
+    const iconAllowance = (ImageManager.standardIconWidth + 4) * 2;
+    const availableNameTextWidth = nameWidth - iconAllowance;
+
+    conditionals.forEach(conditional =>
+    {
+      // if there are no rewards, then don't even draw the "related" section.
+      if (!conditional.skillRewards.length) return;
+
+      conditional.skillRewards.forEach(skillRewardId =>
+      {
+        if (!skillRewardId)
+        {
+          console.warn(conditional);
+          console.log(skillRewardId, "not a valid skill reward.");
+          return;
+        }
+
+        // get the current/required proficiency level for the reward.
+        const proficiencyRequirement = conditional.requirements
+          .find(requirement => requirement.skillId === skill.id);
+
+        const actorKnowsSkill = actor.isLearnedSkill(skillRewardId);
+        const extendedSkill = actor.skill(skillRewardId);
+        const learnedIcon = actorKnowsSkill
+          ? 91
+          : 90;
+
+        // truncate the plain name (with an ellipsis) so the rendered row never runs
+        // into the required/current value, which is drawn afterward at a fixed x.
+        const truncatedName = this.truncateToWidth(extendedSkill.name, availableNameTextWidth);
+        const name = `\\I[${learnedIcon}]\\I[${extendedSkill.iconIndex}]${truncatedName}`;
+        const currentProficiency = proficiencyRequirement.totalProficiency(actor);
+        const requiredProficiency = proficiencyRequirement.proficiency;
+        const value = `${currentProficiency} / ${requiredProficiency}`;
+        params.push(new JCMS_ParameterKvp(name, value));
+      });
+    });
+
+    // if it turns out we have parameters to work with, then add the header.
+    if (params.length)
+    {
+      params.unshift(new JCMS_ParameterKvp(`\\C[17]Related Skills\\C[0]`, `\\C[1]\\}REQUIRED\\{\\C[0]`));
+    }
+
+    return params;
+  }
+
+  /**
+   * Truncates plain (escape-code-free) text with an ellipsis so it fits within the
+   * given pixel width under this window's current font, without touching the
+   * position of whatever is drawn after it.
+   * @param {string} text The plain text to measure and truncate.
+   * @param {number} maxWidth The maximum pixel width the text may occupy.
+   * @returns {string} The original text if it already fits, or an ellipsis-suffixed
+   * truncation of it otherwise.
+   */
+  truncateToWidth(text, maxWidth)
+  {
+    // if it already fits within the available width, there's nothing to do.
+    if (this.textWidth(text) <= maxWidth) return text;
+
+    // shrink one character at a time until the truncated text (plus ellipsis) fits.
+    let truncated = text;
+    while (truncated.length > 0 && this.textWidth(`${truncated}...`) > maxWidth)
+    {
+      truncated = truncated.slice(0, -1);
+    }
+
+    return `${truncated}...`;
+  }
+
+  /**
+   * Creates a list of all elemenets contained by this skill.
+   * @param {RPG_Skill} skill The skill.
+   * @param {Game_Actor} actor The actor.
+   * @returns {JCMS_ParameterKvp[]}
+   */
+  // eslint-disable-next-line no-unused-vars
+  makeAttackElementsList(skill, actor)
+  {
+    const elementParams = [];
+    elementParams.push(new JCMS_ParameterKvp(`\\C[17]Elemental Affiliations\\C[0]`));
+    const attackElements = [ skill.damage.elementId ];
+    // Append the row to the working collection.
+    attackElements.push(...Game_Action.extractElementsFromAction(skill));
+    attackElements.forEach(attackElement =>
+    {
+      const elementName = TextManager.element(attackElement) ?? `(Basic Attack)`;
+      const iconIndex = IconManager.element(attackElement);
+      const paramName = `\\I[${iconIndex}]\\C[6]${elementName}\\C[0]`;
+      elementParams.push(new JCMS_ParameterKvp(paramName))
+    });
+
+    return elementParams;
+  }
+
+  /**
+   * Makes a parameter that is used as a divider between other parameters.
+   * @returns {JCMS_ParameterKvp}
+   */
+  makeDividerParam()
+  {
+    return new JCMS_ParameterKvp("----------------");
+  }
+
+  /**
+   * Makes the skill type key value parameter.
+   * @param {RPG_Skill} skill The skill object.
+   */
+  makeSkillTypeParam(skill)
+  {
+    const support = [ 0 ];
+    const damage = [ 1, 2 ];
+    const healer = [ 3, 4 ];
+    const drain = [ 5, 6 ];
+
+    let name = "";
+    let color = ColorManager.normalColor();
+    switch (true)
+    {
+      case support.includes(skill.damage.type):
+        name = `Support`;
+        color = ColorManager.textColor(0);
+        break;
+      case damage.includes(skill.damage.type):
+        name = "Offensive";
+        color = ColorManager.textColor(2);
+        break;
+      case healer.includes(skill.damage.type):
+        name = "Restorative";
+        color = ColorManager.textColor(3);
+        break;
+      case drain.includes(skill.damage.type):
+        name = "Draining";
+        color = ColorManager.textColor(31);
+        break;
+    }
+
+    return new JCMS_ParameterKvp(name, null, color);
+  }
+
+  /**
+   * Builds a human-readable cost breakdown string from the individual components.
+   *
+   * Only non-zero components are included. Flat and formula amounts are rounded
+   * to whole numbers; the percent component shows both the raw percent and the
+   * translated HP/MP/TP amount so the player understands the actual deduction.
+   *
+   * Examples:
+   *   flat=50, no others           → "50"
+   *   percent=10, calcPercent=70   → "10% (70)"
+   *   flat=50, percent=10(70)      → "50 + 10% (70)"
+   *   all three                    → "50 + 10% (70) + 30"
+   *   all zero                     → "0"
+   * @param {number} flat The flat cost amount (post-rate).
+   * @param {number} percent The raw percent tag value (e.g. 10 for 10%).
+   * @param {number} calculatedPercent The translated percent amount (post-rate).
+   * @param {number} formula The formula cost result (post-rate).
+   * @returns {string}
+   */
+  buildCostBreakdownValue(flat, percent, calculatedPercent, formula)
+  {
+    const parts = [];
+    if (flat !== 0) parts.push(`${Math.round(flat)}`);
+    if (percent !== 0) parts.push(`${percent}% (${Math.round(calculatedPercent)})`);
+    if (formula !== 0) parts.push(`${Math.round(formula)}`);
+    if (parts.length === 0) return '0';
+    return parts.join(' + ');
+  }
+
+  /**
+   * Makes the hp cost key value parameter.
+   * Requires J-Resources to be present.
+   * @param {RPG_Skill} skill The skill object.
+   * @param {Game_Actor} actor The actor.
+   * @returns {JCMS_ParameterKvp}
+   */
+  makeHpCostParam(skill, actor)
+  {
+    const hpName = TextManager.parameterLabel('hcr');
+    const { flat, percent, calculatedPercent, formula } = ResourceCostManager.hpCostBreakdown(actor, skill);
+    const hasAnyCost = flat !== 0 || percent !== 0 || formula !== 0;
+    const hpColor = hasAnyCost
+      ? ColorManager.hpCostColor()
+      : ColorManager.damageColor();
+    const value = this.buildCostBreakdownValue(flat, percent, calculatedPercent, formula);
+    return new JCMS_ParameterKvp(hpName, value, hpColor);
+  }
+
+  /**
+   * Makes the mp cost key value parameter.
+   * @param {RPG_Skill} skill The skill object.
+   * @param {Game_Actor} actor The actor.
+   * @returns {JCMS_ParameterKvp}
+   */
+  makeMpCostParam(skill, actor)
+  {
+    const mpName = TextManager.parameterLabel('mcr');
+    if (J.RESOURCES)
+    {
+      // base vanilla cost is the original skillMpCost result (pre-tag-extras, post-MCR).
+      // perform original logic.
+      const baseCost = J.RESOURCES.Aliased.Game_BattlerBase.get('skillMpCost').call(actor, skill);
+      const {
+        flat: extraFlat,
+        percent,
+        calculatedPercent,
+        formula,
+      } = ResourceCostManager.extraMpCostBreakdown(actor, skill);
+      const combinedFlat = baseCost + extraFlat;
+      const hasAnyCost = combinedFlat !== 0 || percent !== 0 || formula !== 0;
+      const mpColor = hasAnyCost
+        ? ColorManager.mpCostColor()
+        : ColorManager.damageColor();
+      const value = this.buildCostBreakdownValue(combinedFlat, percent, calculatedPercent, formula);
+      return new JCMS_ParameterKvp(mpName, value, mpColor);
+    }
+
+    const mpCost = parseFloat(actor.skillMpCost(skill).toFixed(2));
+    const mpColor = mpCost === 0
+      ? ColorManager.damageColor()
+      : ColorManager.mpCostColor();
+    return new JCMS_ParameterKvp(mpName, mpCost, mpColor);
+  }
+
+  /**
+   * Makes the tp cost key value parameter.
+   * @param {RPG_Skill} skill The skill object.
+   * @param {Game_Actor} actor The actor.
+   * @returns {JCMS_ParameterKvp}
+   */
+  makeTpCostParam(skill, actor)
+  {
+    const tpName = TextManager.parameterLabel('tcr');
+    if (J.RESOURCES)
+    {
+      // base vanilla cost is the original skillTpCost result (pre-tag-extras, no rate in vanilla).
+      // perform original logic.
+      const baseCost = J.RESOURCES.Aliased.Game_BattlerBase.get('skillTpCost').call(actor, skill);
+      const {
+        flat: extraFlat,
+        percent,
+        calculatedPercent,
+        formula,
+      } = ResourceCostManager.extraTpCostBreakdown(actor, skill);
+      const combinedFlat = baseCost + extraFlat;
+      const hasAnyCost = combinedFlat !== 0 || percent !== 0 || formula !== 0;
+      const tpColor = hasAnyCost
+        ? ColorManager.tpCostColor()
+        : ColorManager.damageColor();
+      const value = this.buildCostBreakdownValue(combinedFlat, percent, calculatedPercent, formula);
+      return new JCMS_ParameterKvp(tpName, value, tpColor);
+    }
+
+    const tpCost = parseFloat(actor.skillTpCost(skill).toFixed(2));
+    const tpColor = tpCost === 0
+      ? ColorManager.damageColor()
+      : ColorManager.tpCostColor();
+    return new JCMS_ParameterKvp(tpName, tpCost, tpColor);
+  }
+}
+
+export default Window_SkillDetail;
+//endregion Window_SkillDetail

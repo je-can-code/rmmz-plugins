@@ -49,7 +49,7 @@ class Window_RefinementStepHint
     const { innerWidth } = this;
 
     this.changeTextColor(ColorManager.systemColor());
-    this.drawText(this._text, x, y, innerWidth, 'left');
+    this.drawText(this.getText(), x, y, innerWidth, 'left');
     this.resetTextColor();
   }
 }

@@ -24,6 +24,12 @@ describe('J-Base tiny Game_* object patches (direct src import)', () =>
     function Game_Vehicle()
     {
     }
+    function Game_Interpreter()
+    {
+    }
+    function Game_Item()
+    {
+    }
 
     Game_Temp.prototype.initialize = vi.fn();
 
@@ -32,12 +38,18 @@ describe('J-Base tiny Game_* object patches (direct src import)', () =>
     globalThis.Game_Follower = Game_Follower;
     globalThis.Game_Player = Game_Player;
     globalThis.Game_Vehicle = Game_Vehicle;
+    globalThis.Game_Interpreter = Game_Interpreter;
+    globalThis.Game_Item = Game_Item;
+    globalThis.BattleManager = {};
 
     await import('../../../../src/plugins/_base/objects/Game_Map.js');
     await import('../../../../src/plugins/_base/objects/Game_Temp.js');
     await import('../../../../src/plugins/_base/objects/Game_Follower.js');
     await import('../../../../src/plugins/_base/objects/Game_Player.js');
     await import('../../../../src/plugins/_base/objects/Game_Vehicle.js');
+    await import('../../../../src/plugins/_base/objects/Game_Interpreter.js');
+    await import('../../../../src/plugins/_base/objects/Game_Item.js');
+    await import('../../../../src/plugins/_base/managers/BattleManager.js');
   });
 
   describe('Game_Map#note', () =>
@@ -132,6 +144,104 @@ describe('J-Base tiny Game_* object patches (direct src import)', () =>
 
       // Act & Assert
       expect(vehicle.isVehicle()).toBe(true);
+    });
+  });
+
+  describe('Game_Interpreter accessors', () =>
+  {
+    // vanilla keeps these three on private-by-convention fields with no readers at all; plugins
+    // that need to reason about where an event is mid-execution have nowhere else to look.
+    it('reads back the conditional branch results', () =>
+    {
+      // Arrange
+      const interpreter = new globalThis.Game_Interpreter();
+      interpreter._branch = { 0: true };
+
+      // Act & Assert
+      expect(interpreter.branch()).toEqual({ 0: true });
+    });
+
+    it('reads back the indent depth of the executing command', () =>
+    {
+      // Arrange
+      const interpreter = new globalThis.Game_Interpreter();
+      interpreter._indent = 2;
+
+      // Act & Assert
+      expect(interpreter.indent()).toBe(2);
+    });
+
+    it('reads back the index of the executing command', () =>
+    {
+      // Arrange
+      const interpreter = new globalThis.Game_Interpreter();
+      interpreter._index = 7;
+
+      // Act & Assert
+      expect(interpreter.index()).toBe(7);
+    });
+
+    it('moves the index of the executing command', () =>
+    {
+      // Arrange- writing the index is how a plugin redirects an event mid-list.
+      const interpreter = new globalThis.Game_Interpreter();
+      interpreter._index = 7;
+
+      // Act
+      interpreter.setIndex(3);
+
+      // Assert
+      expect(interpreter.index()).toBe(3);
+    });
+  });
+
+  describe('Game_Item accessors', () =>
+  {
+    it('reads back which database the item belongs to', () =>
+    {
+      // Arrange
+      const item = new globalThis.Game_Item();
+      item._dataClass = 'skill';
+
+      // Act & Assert
+      expect(item.dataClass()).toBe('skill');
+    });
+
+    it('reassigns which database the item belongs to', () =>
+    {
+      // Arrange
+      const item = new globalThis.Game_Item();
+      item._dataClass = 'skill';
+
+      // Act
+      item.setDataClass('item');
+
+      // Assert
+      expect(item.dataClass()).toBe('item');
+    });
+  });
+
+  describe('BattleManager reward accessors', () =>
+  {
+    it('reads back the rewards bundle built when the battle was won', () =>
+    {
+      // Arrange
+      globalThis.BattleManager._rewards = { gold: 100, exp: 250 };
+
+      // Act & Assert
+      expect(globalThis.BattleManager.rewards()).toEqual({ gold: 100, exp: 250 });
+    });
+
+    it('reassigns the rewards bundle', () =>
+    {
+      // Arrange- extensions restyle the victory payout by swapping this wholesale.
+      globalThis.BattleManager._rewards = { gold: 100, exp: 250 };
+
+      // Act
+      globalThis.BattleManager.setRewards({ gold: 5, exp: 1 });
+
+      // Assert
+      expect(globalThis.BattleManager.rewards()).toEqual({ gold: 5, exp: 1 });
     });
   });
 });

@@ -13,6 +13,12 @@ describe('DataManager ext/time augments (direct src import)', () =>
     {
       this.isFake = true;
     });
+
+    // JsonEx restores saved data back onto the real prototype, so a clock coming out of a save
+    // arrives with its full method set. the stand-in has to offer the same, since extraction now
+    // backfills members and recomputes the tone on whatever it loaded.
+    FakeGameTime.prototype.initMembers = vi.fn();
+    FakeGameTime.prototype.updateCurrentTone = vi.fn();
     vi.doMock('../../../../../src/plugins/time/core/_models/Game_Time.js', () => ({ default: FakeGameTime }));
 
     globalThis.J = { TIME: { Aliased: { DataManager: new Map() } } };
@@ -114,6 +120,44 @@ describe('DataManager ext/time augments (direct src import)', () =>
 
       // Assert
       expect(globalThis.$gameTime).toBeInstanceOf(FakeGameTime);
+    });
+
+    it('backfills members the loaded save predates', () =>
+    {
+      // Arrange
+      const contents = { time: new FakeGameTime() };
+
+      // Act
+      globalThis.DataManager.extractSaveContents(contents);
+
+      // Assert
+      expect(FakeGameTime.prototype.initMembers).toHaveBeenCalledTimes(1);
+    });
+
+    it('recomputes the screen tone for the hour that was loaded into', () =>
+    {
+      // Arrange
+      const contents = { time: new FakeGameTime() };
+
+      // Act
+      globalThis.DataManager.extractSaveContents(contents);
+
+      // Assert
+      expect(FakeGameTime.prototype.updateCurrentTone).toHaveBeenCalledTimes(1);
+    });
+
+    it('skips backfilling when there was no clock in the save to begin with', () =>
+    {
+      // Arrange
+      const contents = { time: null };
+
+      // Act
+      globalThis.DataManager.extractSaveContents(contents);
+
+      // Assert
+      // the freshly constructed clock initialized itself in its own constructor; running the backfill
+      // on top of that would be redundant work against a brand new object.
+      expect(FakeGameTime.prototype.initMembers).not.toHaveBeenCalled();
     });
   });
 });

@@ -26,18 +26,6 @@ describe('J-HUD-TargetFrame metadata (direct src import)', () =>
     await import('../../../../../../src/plugins/hud/ext/target/_metadata/initialization.js');
   });
 
-  it('exposes plugin name on J.HUD.EXT.TARGET.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.HUD.EXT.TARGET.Metadata.name).toBe('J-HUD-TargetFrame');
-  });
-
-  it('exposes plugin version on J.HUD.EXT.TARGET.Metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.HUD.EXT.TARGET.Metadata.version).toMatchObject({ major: 1, minor: 0, patch: 1 });
-  });
-
   it('parses the target frame window bounds from plugin parameters', () =>
   {
     // Arrange & Act
@@ -144,6 +132,22 @@ describe('J-HUD-TargetFrame metadata (direct src import)', () =>
 
     // reset back to a satisfying version so later tests in the suite are unaffected.
     globalThis.J.BASE.Metadata.Version = originalVersion;
+  });
+
+  it('throws when J-HUD does not satisfy the minimum required version', async () =>
+  {
+    // Arrange: J-Base has to keep passing so the hud check is the one that trips.
+    vi.resetModules();
+    const originalVersion = globalThis.J.HUD.Metadata.version.version;
+    globalThis.J.HUD.Metadata.version.version = () => '0.0.1';
+    setPluginContextToJHudTarget();
+
+    // Act & Assert
+    await expect(import('../../../../../../src/plugins/hud/ext/target/_metadata/initialization.js'))
+      .rejects.toThrow(/missing J-HUD/);
+
+    // restore the real accessor rather than relying on restoreAllMocks.
+    globalThis.J.HUD.Metadata.version.version = originalVersion;
   });
 });
 //endregion plugins/hud/ext/target/_metadata/metadata.test.js

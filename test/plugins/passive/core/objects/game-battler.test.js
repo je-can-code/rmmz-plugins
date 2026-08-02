@@ -504,6 +504,27 @@ describe('J-Passive Game_Battler (direct src import)', () =>
       // the stackable source itself now qualifies for the capable-sources cache.
       expect(battler.passiveCapableSources()).toContain(stackableSource);
     });
+
+    it('withholds the data-change notification when the caller defers it', () =>
+    {
+      // Arrange
+      const battler = buildBattler();
+      const stackableSource = buildSource({ passiveStateIds: [ 1 ] });
+      battler.__baseDatabaseData = buildSource();
+      battler.__baseSkills = [];
+      battler.__baseStates = [ stackableSource ];
+      battler.__statesById = { 1: buildSource({ id: 1 }) };
+
+      // Act
+      battler.refreshPassiveStates(true);
+
+      // Assert
+      // the passives are still committed- only the trailing notification is skipped, because the
+      // caller has its own follow-up coming and the note-regex cascade behind it is expensive
+      // enough to be worth firing exactly once.
+      expect(battler.getPassiveStateIds()).toEqual([ 1 ]);
+      expect(battler.onBattlerDataChange).not.toHaveBeenCalled();
+    });
   });
 
   describe('isPassiveState', () =>

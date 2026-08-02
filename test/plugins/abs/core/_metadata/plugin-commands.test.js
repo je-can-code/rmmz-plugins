@@ -60,7 +60,7 @@ describe('J-ABS plugin commands (direct src import)', () =>
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  it('registers all thirteen commands under the J-ABS plugin name', () =>
+  it('registers all twelve commands under the J-ABS plugin name', () =>
   {
     // Arrange/Act (registration happened in beforeAll)
 
@@ -75,7 +75,6 @@ describe('J-ABS plugin commands (direct src import)', () =>
       'Rotate Party Members',
       'Disable Party Rotation',
       'Enable Party Rotation',
-      'Refresh JABS Menu',
       'Apply Global Cooldown',
       'Spawn Enemy',
       'Spawn Loot',
@@ -323,18 +322,6 @@ describe('J-ABS plugin commands (direct src import)', () =>
 
       // Assert
       expect(globalThis.$gameParty.enablePartyCycling).toHaveBeenCalled();
-    });
-  });
-
-  describe('Refresh JABS Menu', () =>
-  {
-    it('flags requestJabsMenuRefresh', () =>
-    {
-      // Arrange/Act
-      handlers['Refresh JABS Menu']();
-
-      // Assert
-      expect(globalThis.$jabsEngine.requestJabsMenuRefresh).toEqual(true);
     });
   });
 

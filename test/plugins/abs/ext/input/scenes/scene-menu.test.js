@@ -24,6 +24,9 @@ describe('J-ABS-Input Scene_Menu (unit, all downstream dependencies mocked)', ()
     globalThis.Scene_Menu = Scene_Menu;
 
     await import('../../../../../../src/plugins/abs/ext/input/scenes/Scene_Menu.js');
+
+    // J-Base accessors the production code now reads through.
+    globalThis.Scene_Menu.prototype.commandWindow = function() { return this._commandWindow; };
   });
 
   beforeEach(() =>

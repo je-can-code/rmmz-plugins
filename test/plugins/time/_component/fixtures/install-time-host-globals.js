@@ -8,6 +8,78 @@ const noop = function()
 };
 
 /**
+ * Installs the prototype extensions the shipped runtime already provides by the time TIME loads.
+ *
+ * These live on built-in prototypes rather than on the sandbox, so they are installed globally
+ * rather than per-target. Kept apart from the rest of the fixture so neither grows unwieldy.
+ */
+function installPrototypeExtensions()
+{
+  // rmmz_core.js defines this and TIME's tone pipeline leans on it when copying a computed tone onto
+  // the clock. the fixture ships tone changes disabled, so nothing reached that call until
+  // tone-enabled tests arrived- without this the tone path dies on `tone.clone is not a function`.
+  // mirrors the engine implementation, including the non-enumerable flag that keeps the method from
+  // turning up in for-in loops over arrays.
+  if (typeof Array.prototype.clone !== 'function')
+  {
+    Array.prototype.clone = function()
+    {
+      return this.slice(0);
+    };
+
+    Object.defineProperty(Array.prototype, 'clone', { enumerable: false });
+  }
+
+  // J-Base hangs these off Date, and TIME's time-range checking leans on them when a range runs
+  // overnight or past the top of an hour. copied from _base/_metadata/initialization.js verbatim,
+  // including the asymmetry that addDays hands back a new date while addHours mutates in place-
+  // faithfulness matters here, since that difference is itself the source of a bug TIME once had.
+  if (typeof Date.prototype.addDays !== 'function')
+  {
+    Date.prototype.addDays = function(days)
+    {
+      const result = new Date(this.valueOf());
+      result.setDate(result.getDate() + days);
+      return result;
+    };
+  }
+
+  if (typeof Date.prototype.addHours !== 'function')
+  {
+    Date.prototype.addHours = function(hours)
+    {
+      this.setTime(this.getTime() + (hours * 60 * 60 * 1000));
+      return this;
+    };
+  }
+}
+
+/**
+ * Installs the engine globals the tone and variable pipelines reach for.
+ * @param {object} sandbox The target to install onto.
+ */
+function installTonePipelineGlobals(sandbox)
+{
+  // the tone pipeline hands its final result to the engine's screen tinting; tests only need to know
+  // that it was asked, and with what.
+  sandbox.$gameScreen = sandbox.$gameScreen || {
+    startTint()
+    {
+    },
+  };
+
+  // tone changes consult the active map's notes for an opt-out tag.
+  sandbox.$dataMap = sandbox.$dataMap || { meta: {} };
+
+  // variable assignment writes the current time out to game variables when enabled.
+  sandbox.$gameVariables = sandbox.$gameVariables || {
+    setValue()
+    {
+    },
+  };
+}
+
+/**
  * Globals required for J-TIME's prototype-patch source files (objects/Game_Event.js,
  * objects/Game_Interpreter.js, objects/JABS_InputController.js, managers/JABS_InputAdapter.js) to evaluate
  * when direct-imported into the real Vitest realm instead of a nested vm context. Mirrors the shape of
@@ -112,6 +184,10 @@ export function installTimeHostGlobals(sandbox = globalThis)
   sandbox.JABS_InputAdapter = sandbox.JABS_InputAdapter || {};
 
   sandbox.Graphics = sandbox.Graphics || { frameCount: 0 };
+
+  installPrototypeExtensions();
+
+  installTonePipelineGlobals(sandbox);
 
   sandbox.J = sandbox.J || {};
   sandbox.J.ABS = sandbox.J.ABS || {

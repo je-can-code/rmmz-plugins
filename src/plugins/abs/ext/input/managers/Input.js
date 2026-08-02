@@ -716,11 +716,11 @@ Input._updateGamepadState = function(gamepad)
 Input._ensurePadStates = function(gamepad)
 {
   // read the merged state for this frame.
-  const s = this._currentState;
+  const s = this.currentState();
 
   // resolve the per-pad state snapshot for this index.
-  const padState = this._gamepadStates
-    ? this._gamepadStates[gamepad.index]
+  const padState = this.gamepadStates()
+    ? this.gamepadStates()[gamepad.index]
     : null;
 
   // if either is missing, we cannot proceed.

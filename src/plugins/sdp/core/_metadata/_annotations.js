@@ -479,17 +479,6 @@
  * @default SDP
  *
  *
- * @param JABSconfigs
- * @text JABS-ONLY CONFIG
- * @desc Without JABS, these configurations are irrelevant.
- *
- * @param showInBoth
- * @parent JABSconfigs
- * @type boolean
- * @desc If ON, then show in both JABS quick menu and main menu, otherwise only JABS quick menu.
- * @default false
- *
- *
  * @param sdpPanelCostDefaults
  * @text Panel rank-up defaults (by rarity)
  * @desc Core base / flat coefficient / exponential base (**mult**) per rarity. Panel JSON adds offsets on top.

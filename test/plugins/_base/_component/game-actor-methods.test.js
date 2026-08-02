@@ -138,6 +138,16 @@ describe('J-Base Game_Actor methods (direct src import)', () =>
     {
       return this.id;
     }
+
+    dataClass()
+    {
+      return this._dataClass;
+    }
+
+    underlyingObject()
+    {
+      return this._item;
+    }
   }
 
   function buildActor()
@@ -601,7 +611,7 @@ describe('J-Base Game_Actor methods (direct src import)', () =>
     {
       // Arrange
       const actor = buildActor();
-      actor._equips = [ { itemId: () => 1 } ];
+      actor._equips = [ Object.assign(buildEquip('weapon', {}), { itemId: () => 1 }) ];
       actor.onEquipChange = vi.fn();
       actor.haveEquipsChanged = () => true;
 
@@ -616,7 +626,7 @@ describe('J-Base Game_Actor methods (direct src import)', () =>
     {
       // Arrange
       const actor = buildActor();
-      actor._equips = [ { itemId: () => 1 } ];
+      actor._equips = [ Object.assign(buildEquip('weapon', {}), { itemId: () => 1 }) ];
       actor.onEquipChange = vi.fn();
       actor.haveEquipsChanged = () => false;
 
@@ -628,13 +638,26 @@ describe('J-Base Game_Actor methods (direct src import)', () =>
     });
   });
 
+  /**
+   * Builds a stand-in for a Game_Item exposing the accessors production code reads through.
+   * @param {string} dataClass The database this equip is drawn from.
+   * @param {object} underlying The underlying object this equip points at.
+   */
+  function buildEquip(dataClass, underlying)
+  {
+    return {
+      dataClass: () => dataClass,
+      underlyingObject: () => underlying,
+    };
+  }
+
   describe('haveEquipsChanged', () =>
   {
     it('returns true when the equip counts differ', () =>
     {
       // Arrange
       const actor = buildActor();
-      actor._equips = [ { itemId: () => 1, _dataClass: 'weapon', _item: {} } ];
+      actor._equips = [ Object.assign(buildEquip('weapon', {}), { itemId: () => 1 }) ];
       const oldEquips = [];
 
       // Act & Assert
@@ -645,10 +668,10 @@ describe('J-Base Game_Actor methods (direct src import)', () =>
     {
       // Arrange
       const actor = buildActor();
-      const newItem = { _dataClass: 'weapon', _item: {} };
+      const newItem = buildEquip('weapon', {});
       newItem.itemId = () => 2;
       actor._equips = [ newItem ];
-      const oldItem = { _dataClass: 'weapon', _item: newItem._item };
+      const oldItem = buildEquip('weapon', newItem.underlyingObject());
       oldItem.itemId = () => 1;
 
       // Act & Assert
@@ -660,10 +683,10 @@ describe('J-Base Game_Actor methods (direct src import)', () =>
       // Arrange
       const actor = buildActor();
       const sharedItem = {};
-      const newItem = { _dataClass: 'armor', _item: sharedItem };
+      const newItem = buildEquip('armor', sharedItem);
       newItem.itemId = () => 1;
       actor._equips = [ newItem ];
-      const oldItem = { _dataClass: 'weapon', _item: sharedItem };
+      const oldItem = buildEquip('weapon', sharedItem);
       oldItem.itemId = () => 1;
 
       // Act & Assert
@@ -674,10 +697,10 @@ describe('J-Base Game_Actor methods (direct src import)', () =>
     {
       // Arrange
       const actor = buildActor();
-      const newItem = { _dataClass: 'weapon', _item: {} };
+      const newItem = buildEquip('weapon', {});
       newItem.itemId = () => 1;
       actor._equips = [ newItem ];
-      const oldItem = { _dataClass: 'weapon', _item: {} };
+      const oldItem = buildEquip('weapon', {});
       oldItem.itemId = () => 1;
 
       // Act & Assert
@@ -689,7 +712,7 @@ describe('J-Base Game_Actor methods (direct src import)', () =>
       // Arrange
       const actor = buildActor();
       const sharedItem = {};
-      const equip = { _dataClass: 'weapon', _item: sharedItem };
+      const equip = buildEquip('weapon', sharedItem);
       equip.itemId = () => 1;
       actor._equips = [ equip ];
 

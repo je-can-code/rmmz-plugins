@@ -7,6 +7,19 @@
 class Window_TargetingList
   extends Window_Command
 {
+
+  //region properties
+  /**
+   * Gets the candidates.
+   * @returns {*} The candidates.
+   */
+  candidates()
+  {
+    // hand back the candidates.
+    return this._candidates;
+  }
+  //endregion properties
+
   /**
    * How many font sizes smaller than normal the list entries render at.
    * @type {number}
@@ -45,10 +58,10 @@ class Window_TargetingList
   {
     // this runs once during `super(rect)`, before `_candidates` is ever assigned; nothing to
     // list yet, `setCandidates()` will trigger the real build once the session begins.
-    if (!this._candidates) return;
+    if (!this.candidates()) return;
 
     // one command per eligible battler, name rendered smaller than normal.
-    this._candidates.forEach(candidate =>
+    this.candidates().forEach(candidate =>
     {
       const name = this.modFontSizeForText(Window_TargetingList.FontSizeDelta, candidate.battlerName());
       this.addCommand(name, candidate.getUuid(), true, candidate);

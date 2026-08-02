@@ -24,7 +24,7 @@ Game_Action.prototype.setSkill = function(skillId)
   const skillToSet = OverlayManager.getExtendedSkill(this.subject(), skillId);
 
   // assign the overlayed skill to the object instead.
-  this._item.setObject(skillToSet);
+  this.rawItem().setObject(skillToSet);
 };
 
 /**
@@ -46,7 +46,7 @@ Game_Action.prototype.setItemObject = function(itemObject)
   }
 
   // TODO: sort out how to manage this when both skills AND items come through this way.
-  this._item.setObject(itemObject);
+  this.rawItem().setObject(itemObject);
 };
 
 /**

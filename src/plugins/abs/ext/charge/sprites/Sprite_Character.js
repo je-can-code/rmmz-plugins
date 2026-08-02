@@ -38,20 +38,20 @@ Sprite_Character.prototype.setupMapSprite = function()
 Sprite_Character.prototype.setupChargeGauge = function()
 {
   // determine the current battler and character for this sprite.
-  const jabsBattler = this._character.getJabsBattler();
-  const expectedCharacter = this._character;
+  const jabsBattler = this.character().getJabsBattler();
+  const expectedCharacter = this.character();
 
   // if we already have a charge gauge, rebind it to the current battler/character and exit.
-  if (this._j._abs._gauges._chargeGauge)
+  if (this.chargeGauge())
   {
     // rebind for charge logic and validity.
-    this._j._abs._gauges._chargeGauge.setupJabs(jabsBattler, expectedCharacter);
+    this.chargeGauge().setupJabs(jabsBattler, expectedCharacter);
 
     // ensure it's ready to update when needed.
-    this._j._abs._gauges._chargeGauge.activateGauge();
+    this.chargeGauge().activateGauge();
 
     // reposition defensively in case dimensions changed.
-    const sprite = this._j._abs._gauges._chargeGauge;
+    const sprite = this.chargeGauge();
     sprite.move(-Math.round(sprite.bitmapWidth() / 2), -28);
 
     return;
@@ -65,7 +65,7 @@ Sprite_Character.prototype.setupChargeGauge = function()
   sprite.activateGauge();
 
   // assign for later access.
-  this._j._abs._gauges._chargeGauge = sprite;
+  this.setChargeGauge(sprite);
 
   // position at the same slot as the cast gauge; only one is ever visible at a time.
   sprite.move(-Math.round(sprite.bitmapWidth() / 2), -28);
@@ -108,10 +108,10 @@ Sprite_Character.prototype.canUpdateChargeGauge = function()
   if (!this.isJabsBattler()) return false;
 
   // if we don't have a charge gauge sprite, we can't update it.
-  if (!this._j._abs._gauges._chargeGauge) return false;
+  if (!this.chargeGauge()) return false;
 
   // use the current JABS battler's live charging state as the gate.
-  const jabs = this._character.getJabsBattler();
+  const jabs = this.character().getJabsBattler();
   if (!jabs) return false;
 
   // must be actively charging.
@@ -129,21 +129,21 @@ Sprite_Character.prototype.updateChargeGauge = function()
   this.showChargeGauge();
 
   // ensure the gauge rebinds if host or battler changed.
-  const gauge = this._j._abs._gauges._chargeGauge;
+  const gauge = this.chargeGauge();
   if (gauge)
   {
-    const currentJabs = this._character.getJabsBattler();
+    const currentJabs = this.character().getJabsBattler();
 
     // rebind if anything about the binding has drifted.
     const needsRebind = (
       gauge._jabsBattler !== currentJabs ||
-      gauge._expectedCharacter !== this._character ||
+      gauge._expectedCharacter !== this.character() ||
       gauge._expectedUuid !== (currentJabs ? currentJabs.getUuid() : null)
     );
 
     if (needsRebind)
     {
-      gauge.setupJabs(currentJabs, this._character);
+      gauge.setupJabs(currentJabs, this.character());
     }
 
     // keep the underlying base battler fresh for Sprite_Gauge internals.
@@ -156,7 +156,7 @@ Sprite_Character.prototype.updateChargeGauge = function()
  */
 Sprite_Character.prototype.showChargeGauge = function()
 {
-  const gauge = this._j._abs._gauges._chargeGauge;
+  const gauge = this.chargeGauge();
   if (gauge)
   {
     gauge.activateGauge();
@@ -169,10 +169,32 @@ Sprite_Character.prototype.showChargeGauge = function()
  */
 Sprite_Character.prototype.hideChargeGauge = function()
 {
-  const gauge = this._j._abs._gauges._chargeGauge;
+  const gauge = this.chargeGauge();
   if (gauge)
   {
     gauge.hide();
   }
 };
+
+//region properties
+/**
+ * Gets the charge gauge.
+ * @returns {*} The chargeGauge.
+ */
+Sprite_Character.prototype.chargeGauge = function()
+{
+  // hand back the charge gauge.
+  return this._j._abs._gauges._chargeGauge;
+};
+
+/**
+ * Sets the charge gauge.
+ * @param {*} newChargeGauge The new chargeGauge.
+ */
+Sprite_Character.prototype.setChargeGauge = function(newChargeGauge)
+{
+  // assign the charge gauge.
+  this._j._abs._gauges._chargeGauge = newChargeGauge;
+};
+//endregion properties
 //endregion Sprite_Character

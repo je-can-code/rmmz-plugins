@@ -17,16 +17,16 @@ Game_Action.prototype.subject = function()
   let subject;
 
   // determine if there was an actor id stored.
-  if (this._subjectActorId > 0)
+  if (this.subjectActorId() > 0)
   {
     // assign the subject to be the given actor.
-    subject = $gameActors.actor(this._subjectActorId);
+    subject = $gameActors.actor(this.subjectActorId());
   }
   // it must've been an enemy.
   else
   {
     // assign the subject to be the given enemy.
-    subject = $gameEnemies.enemy(this._subjectEnemyIndex);
+    subject = $gameEnemies.enemy(this.subjectEnemyIndex());
   }
 
   // return the determined subject.
@@ -49,13 +49,13 @@ Game_Action.prototype.setSubject = function(subject)
   {
     case (subject.isActor()):
       // update the battler ids to show the caster is an actor.
-      this._subjectActorId = subject.battlerId();
-      this._subjectEnemyIndex = -1;
+      this.setSubjectActorId(subject.battlerId());
+      this.setSubjectEnemyIndex(-1);
       break;
     case (subject.isEnemy()):
       // update the battler ids to show the caster is an enemy.
-      this._subjectEnemyIndex = subject.battlerId();
-      this._subjectActorId = 0;
+      this.setSubjectEnemyIndex(subject.battlerId());
+      this.setSubjectActorId(0);
       break;
   }
 };

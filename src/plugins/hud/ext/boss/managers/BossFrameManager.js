@@ -295,12 +295,14 @@ class BossFrameManager
     // if the eventId is invalid, we can't create from that.
     if (!eventId) return false;
 
-    // if the eventId is not a valid eventId, we cannot create from that.
-    if (!$gameMap.event(eventId)
-      .getJabsBattler())
-    {
-      return false;
-    }
+    // resolve the event once. An id that is out of range- or that points at a slot vacated by a
+    // despawned action or loot event- yields nothing, and chaining off that is what used to turn
+    // this validation into the very crash it exists to prevent.
+    const bossEvent = $gameMap.event(eventId);
+    if (!bossEvent) return false;
+
+    // an event with no JABS battler has no hp to frame.
+    if (!bossEvent.getJabsBattler()) return false;
 
     // create the boss!
     return true;

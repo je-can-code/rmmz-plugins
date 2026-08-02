@@ -6,6 +6,7 @@ import { installJBaseHostGlobals } from './fixtures/install-j-base-host-globals.
 describe('J-Base Game_Action methods (direct src import)', () =>
 {
   let originalMakeDamageValue;
+  let originalClear;
 
   beforeAll(async () =>
   {
@@ -19,6 +20,10 @@ describe('J-Base Game_Action methods (direct src import)', () =>
     // J.BASE.Aliased captures a real function rather than undefined.
     originalMakeDamageValue = vi.fn(() => -10);
     globalThis.Game_Action.prototype.makeDamageValue = originalMakeDamageValue;
+
+    // same treatment for #clear, which this file aliases to seed the trigger damages.
+    originalClear = vi.fn();
+    globalThis.Game_Action.prototype.clear = originalClear;
 
     globalThis.$gameVariables = { _data: [ 0, 0, 0 ] };
 
@@ -137,12 +142,15 @@ describe('J-Base Game_Action methods (direct src import)', () =>
       expect(action.getTriggerTpDamage()).toBe(3);
     });
 
-    it('defaults each trigger damage getter to 0 when never stamped', () =>
+    it('seeds each trigger damage to 0 when the action is cleared', () =>
     {
       // Arrange
       const action = buildAction();
 
-      // Act & Assert
+      // Act
+      action.clear();
+
+      // Assert
       expect(action.getTriggerHpDamage()).toBe(0);
       expect(action.getTriggerMpDamage()).toBe(0);
       expect(action.getTriggerTpDamage()).toBe(0);

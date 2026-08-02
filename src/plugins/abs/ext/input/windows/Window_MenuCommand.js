@@ -22,20 +22,21 @@ Window_MenuCommand.prototype.addOriginalCommands = function()
 Window_MenuCommand.prototype.addJabsRemapCommand = function()
 {
   // build the JABS remap command.
-  const command = new WindowCommandBuilder('JABS Controls')
+  const command = new WindowCommandBuilder('Remap Controls')
     .setSymbol('jabsRemap')
+    .setHelpText("Rebind the controls used during combat.")
     .setIconIndex(2569)
     .setEnabled(true)
     .build();
 
   // determine what the last command is.
-  const lastCommand = this._list.at(-1);
+  const lastCommand = this.commandList().at(-1);
 
   // check if the last command is the "End Game" command.
   if (lastCommand.symbol === "gameEnd")
   {
     // add it before the "End Game" command.
-    this._list.splice(this._list.length - 2, 0, command);
+    this.commandList().splice(this.commandList().length - 2, 0, command);
   }
   // the last command is something else.
   else

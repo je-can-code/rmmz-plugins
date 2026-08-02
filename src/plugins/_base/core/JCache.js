@@ -11,6 +11,39 @@ import RPG_Base from './../database/base/RPG_Base.js';
  */
 class JCache
 {
+
+  //region properties
+  /**
+   * Gets the battler caches.
+   * @returns {*} The battlerCaches.
+   */
+  static battlerCaches()
+  {
+    // hand back the battler caches.
+    return this._battlerCaches;
+  }
+
+  /**
+   * Gets the root.
+   * @returns {WeakMap} The root.
+   */
+  root()
+  {
+    // hand back the root.
+    return this._root;
+  }
+
+  /**
+   * Sets the root.
+   * @param {WeakMap} newRoot The new root.
+   */
+  setRoot(newRoot)
+  {
+    // assign the root.
+    this._root = newRoot;
+  }
+  //endregion properties
+
   /**
    * Every JCache instance that declared a `'battler'` dimension, so a single bus call
    * ({@link JCache.invalidateAllForBattler}) can clear every battler-scoped cache in the game
@@ -29,7 +62,7 @@ class JCache
   static invalidateAllForBattler(battler)
   {
     // walk every battler-dimensioned cache that has ever been constructed and drop this battler's subtree from each.
-    for (const cache of this._battlerCaches)
+    for (const cache of this.battlerCaches())
     {
       cache.invalidate(battler);
     }
@@ -134,7 +167,7 @@ class JCache
     const stringKey = args.pop();
 
     // start walking from the root weak dimension bucket.
-    let node = this._root;
+    let node = this.root();
 
     // descend through every declared dimension in order, creating buckets lazily as we go.
     for (let i = 0; i < this.dims.length; i++)
@@ -162,13 +195,13 @@ class JCache
     if (node.has(stringKey) === false)
     {
       // record the miss, then compute and store the value.
-      this._metrics.misses++;
+      this.recordMiss();
       node.set(stringKey, computeFn());
     }
     else
     {
       // record the hit; the existing value is returned below.
-      this._metrics.hits++;
+      this.recordHit();
     }
 
     // return whatever now lives at this string key, whether just computed or previously cached.
@@ -193,7 +226,7 @@ class JCache
     }
 
     // start walking from the root weak dimension bucket.
-    let node = this._root;
+    let node = this.root();
 
     // descend through every dimension except the last one, bailing out early if a bucket is missing.
     for (let i = 0; i < prefix.length - 1; i++)
@@ -215,7 +248,7 @@ class JCache
   clear()
   {
     // a fresh WeakMap has no entries and no path back to any previously cached value.
-    this._root = new WeakMap();
+    this.setRoot(new WeakMap());
   }
 
   /**
@@ -225,6 +258,22 @@ class JCache
   {
     // return a copy so callers cannot mutate our internal counters.
     return { ...this._metrics };
+  }
+
+  /**
+   * Records that a lookup found nothing and had to compute.
+   */
+  recordMiss()
+  {
+    this._metrics.misses++;
+  }
+
+  /**
+   * Records that a lookup was served from the cache.
+   */
+  recordHit()
+  {
+    this._metrics.hits++;
   }
 }
 

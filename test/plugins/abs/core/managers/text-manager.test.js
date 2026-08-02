@@ -24,7 +24,7 @@ describe('J-ABS TextManager augments (direct src import)', () =>
 
   it('per returns the display name for the parry extension rate parameter', () =>
   {
-    expect(globalThis.TextManager.per()).toBe('Parry Extension');
+    expect(globalThis.TextManager.per()).toBe('Grace');
   });
 
   it('perDescription returns the description lines for the parry extension rate parameter', () =>

@@ -8,36 +8,47 @@ class Window_SdpCart
   extends Window_Command
 {
   /**
-   * The actor whose wallet + rankings apply.
-   * @type {Game_Actor|null}
-   */
-  actor = null;
-
-  /**
-   * The queued cart levels by panel key.
-   * @type {Map<string, number>}
-   */
-  cart = new Map();
-
-  /**
-   * The cached wallet value for the pinned row.
-   * @type {number}
-   */
-  wallet = 0;
-
-  /**
-   * The cached total cost for the pinned row.
-   * @type {number}
-   */
-  totalCost = 0;
-
-  /**
    * Constructor.
    * @param {Rectangle} rect The rectangle that represents this window.
    */
   constructor(rect)
   {
+    // perform original logic, which seeds this window's members before building the list.
     super(rect);
+  }
+
+  /**
+   * Implements {@link Window_Command.initMembers}.<br/>
+   * Initializes the members of this window.
+   *
+   * These cannot be class field declarations: JavaScript applies those only after `super()` returns,
+   * by which point the command list has already been built from them and found them undefined.
+   */
+  initMembers()
+  {
+    /**
+     * The actor whose wallet + rankings apply.
+     * @type {Game_Actor|null}
+     */
+    this.actor = null;
+
+    /**
+     * The queued cart levels by panel key.
+     * @type {Map<string, number>}
+     */
+    this.cart = new Map();
+
+    /**
+     * The cached wallet value for the pinned row.
+     * @type {number}
+     */
+    this.wallet = 0;
+
+    /**
+     * The cached total cost for the pinned row.
+     * @type {number}
+     */
+    this.totalCost = 0;
   }
 
   /**

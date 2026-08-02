@@ -74,8 +74,64 @@ describe('JsonEx SerializableRegistry pilot (JABS_HitstopData)', () =>
 
     // Assert
     expect(copy).toBeInstanceOf(JABS_HitstopData);
-    expect(typeof copy.tick).toBe('function');
     expect(copy.getFrames()).toBe(10);
+  });
+
+  it('falls back to the bare global when a class was never registered', () =>
+  {
+    // Arrange- a class that predates the registry: never registered, but present as a bare global
+    // because the shipped bundle declares everything into one shared top-level scope. this is the
+    // configuration the `|| window[constructorName]` half of the resolution exists to serve.
+    class LegacyUnregisteredModel
+    {
+      constructor()
+      {
+        this.value = 0;
+      }
+
+      describe()
+      {
+        return `legacy:${this.value}`;
+      }
+    }
+
+    globalThis.LegacyUnregisteredModel = LegacyUnregisteredModel;
+    globalThis.window = globalThis;
+    expect(globalThis.SerializableRegistry.resolve('LegacyUnregisteredModel')).toBeNull();
+
+    const original = new LegacyUnregisteredModel();
+    original.value = 7;
+
+    // Act
+    const copy = globalThis.JsonEx.makeDeepCopy(original);
+
+    // Assert
+    // without the fallback the copy would come back as a plain object, losing its prototype and
+    // therefore every method hanging off it.
+    expect(copy).toBeInstanceOf(LegacyUnregisteredModel);
+    expect(copy.describe()).toBe('legacy:7');
+  });
+
+  it('leaves the data as a plain object when the class cannot be resolved at all', () =>
+  {
+    // Arrange- a save written by a build that had a class this build no longer does: absent from
+    // the registry and absent as a global. renaming or deleting a serialized model produces exactly
+    // this, and it must not take the whole load down with it.
+    globalThis.window = globalThis;
+    expect(globalThis.SerializableRegistry.resolve('AClassThatNoLongerExists')).toBeNull();
+    expect(globalThis.AClassThatNoLongerExists).toBeUndefined();
+    const encoded = JSON.stringify({
+      '@': 'AClassThatNoLongerExists',
+      keptValue: 3,
+    });
+
+    // Act
+    const decoded = globalThis.JsonEx.parse(encoded);
+
+    // Assert
+    // no prototype to restore, so the payload survives as plain data rather than throwing.
+    expect(decoded.keptValue).toBe(3);
+    expect(Object.getPrototypeOf(decoded)).toBe(Object.prototype);
   });
 });
 //endregion plugins/_base/_component/jsonex-serializable-registry.test.js

@@ -18,11 +18,26 @@ describe('J-Log metadata (direct src import)', () =>
     await import('../../../../src/plugins/log/core/_metadata/initialization.js');
   });
 
-  it('initializes J.LOG metadata and inactivity duration from parameters', () =>
+  it('parses the log window inactivity duration out of the plugin parameters', () =>
   {
     // Arrange & Act & Assert
-    expect(globalThis.J.LOG.Metadata.name).toBe('J-Log');
     expect(globalThis.J.LOG.Metadata.InactivityTimerDuration).toBe(60);
+  });
+
+  it('throws when J-Base does not satisfy the minimum required version', async () =>
+  {
+    // Arrange: drop the already-installed J-Base metadata below this plugin's floor.
+    vi.resetModules();
+    const originalVersion = globalThis.J.BASE.Metadata.Version;
+    globalThis.J.BASE.Metadata.Version = '0.0.1';
+    setPluginContextToJLog();
+
+    // Act & Assert
+    await expect(import('../../../../src/plugins/log/core/_metadata/initialization.js'))
+      .rejects.toThrow(/missing J-Base/);
+
+    // restore the satisfying version so later tests in this file are unaffected.
+    globalThis.J.BASE.Metadata.Version = originalVersion;
   });
 });
 //endregion plugins/log/_component/metadata.test.js

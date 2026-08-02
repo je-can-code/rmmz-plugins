@@ -4,10 +4,29 @@
  */
 class JABS_LootDrop
 {
+
+  //region properties
+  /**
+   * Sets the can expire.
+   * @param {boolean} newCanExpire The new canExpire.
+   */
+  setCanExpire(newCanExpire)
+  {
+    // assign the can expire.
+    this._canExpire = newCanExpire;
+  }
+
+  /**
+   * Sets the duration.
+   * @param {*} newDuration The new duration.
+   */
+  //endregion properties
+
   /**
    * The duration that this loot drop will exist on the map.
    * @type {number}
    */
+
   _duration = 900;
 
   /**
@@ -31,14 +50,14 @@ class JABS_LootDrop
 
   constructor(object)
   {
-    this.lootObject = object;
+    this.setLootObject(object);
   }
 
   /**
    * Gets the `uuid` of this loot drop.
    * @returns {string}
    */
-  get uuid()
+  uuid()
   {
     return this._uuid;
   }
@@ -48,7 +67,7 @@ class JABS_LootDrop
    * This overwrites the default-generated `uuid`.
    * @param {string} newUuid The new `uuid`.
    */
-  set uuid(newUuid)
+  setUuid(newUuid)
   {
     this._uuid = newUuid;
   }
@@ -57,7 +76,7 @@ class JABS_LootDrop
    * Gets the duration remaining on this loot drop.
    * @returns {number}
    */
-  get duration()
+  duration()
   {
     return this._duration;
   }
@@ -65,7 +84,7 @@ class JABS_LootDrop
   /**
    * Sets the duration for this loot drop.
    */
-  set duration(newDuration)
+  setDuration(newDuration)
   {
     // -1 is the magic duration means this loot stays forever.
     if (newDuration === -1)
@@ -83,20 +102,20 @@ class JABS_LootDrop
    * If the loot cannot expire, this will always return false, regardless of duration.
    * @returns {boolean}
    */
-  get expired()
+  isExpired()
   {
     // if this loot cannot expire, then it is never expired.
     if (!this.canExpire()) return false;
 
     // return whether or not the duration has expired.
-    return this._duration <= 0;
+    return this.duration() <= 0;
   }
 
   /**
    * Set the underlying loot drop.
    * @param {RPG_EquipItem|RPG_Item|null} newLootObject The loot that this drop represents.
    */
-  set lootObject(newLootObject)
+  setLootObject(newLootObject)
   {
     this._lootObject = newLootObject;
   }
@@ -108,12 +127,12 @@ class JABS_LootDrop
 
   enableExpiration()
   {
-    this._canExpire = true;
+    this.setCanExpire(true);
   }
 
   disableExpiration()
   {
-    this._canExpire = false;
+    this.setCanExpire(false);
   }
 
   /**
@@ -123,7 +142,7 @@ class JABS_LootDrop
   {
     if (!this.canCountdownDuration()) return;
 
-    this._duration--;
+    this.setDuration(this.duration() - 1);
   }
 
   /**
@@ -136,7 +155,7 @@ class JABS_LootDrop
     if (!this.canExpire()) return false;
 
     // do not continue counting if duration has expired.
-    if (this.duration <= 0) return false;
+    if (this.duration() <= 0) return false;
 
     // countdown the duration!
     return true;
@@ -146,7 +165,7 @@ class JABS_LootDrop
    * Gets the underlying loot object.
    * @returns {RPG_BaseItem}
    */
-  get lootData()
+  lootData()
   {
     return this._lootObject;
   }
@@ -155,18 +174,18 @@ class JABS_LootDrop
    * Gets the `iconIndex` for the underlying loot object.
    * @returns {number}
    */
-  get lootIcon()
+  lootIcon()
   {
-    return this._lootObject.iconIndex ?? 0;
+    return this.lootData().iconIndex ?? 0;
   }
 
   /**
    * Gets whether or not this loot should be automatically consumed on pickup.
    * @returns {boolean}
    */
-  get useOnPickup()
+  isUseOnPickup()
   {
-    return this._lootObject.jabsUseOnPickup ?? false;
+    return this.lootData().jabsUseOnPickup ?? false;
   }
 }
 

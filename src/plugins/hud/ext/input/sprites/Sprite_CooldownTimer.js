@@ -42,6 +42,18 @@ class Sprite_CooldownTimer
     this._j._isItem = isItem;
   }
 
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   /**
    * Loads the bitmap into the sprite.
    */
@@ -50,7 +62,7 @@ class Sprite_CooldownTimer
     this.bitmap = new Bitmap(this.bitmapWidth(), this.bitmapHeight());
     this.bitmap.fontFace = this.fontFace();
     this.bitmap.fontSize = this.fontSize();
-    this.bitmap.drawText(this._j._text, 0, 0, this.bitmapWidth(), this.bitmapHeight(), "center");
+    this.bitmap.drawText(this.j()._text, 0, 0, this.bitmapWidth(), this.bitmapHeight(), "center");
   }
 
   update()
@@ -62,7 +74,7 @@ class Sprite_CooldownTimer
   updateCooldownText()
   {
     this.bitmap.clear();
-    const baseCooldown = (this._j._cooldownData.frames / 60).toFixed(1);
+    const baseCooldown = (this.j()._cooldownData.frames / 60).toFixed(1);
     const cooldownBaseText = baseCooldown > 0
       ? baseCooldown
       : String.empty;

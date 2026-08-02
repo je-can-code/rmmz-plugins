@@ -15,19 +15,21 @@ Window_MenuCommand.prototype.makeCommandList = function()
   // build the command.
   const command = new WindowCommandBuilder(J.SDP.Metadata.commandName)
     .setSymbol("sdp-menu")
+    .setHelpText("Spend earned points to grow this character's parameters.")
+    .setMenuSection(MenuSection.Actor)
     .setEnabled($gameParty.hasAnyUnlockedSdps())
     .setIconIndex(J.SDP.Metadata.commandIconIndex)
     .setColorIndex(1)
     .build();
 
   // determine what the last command is.
-  const lastCommand = this._list.at(-1);
+  const lastCommand = this.commandList().at(-1);
 
   // check if the last command is the "End Game" command.
   if (lastCommand.symbol === "gameEnd")
   {
     // add it before the "End Game" command.
-    this._list.splice(this._list.length - 2, 0, command);
+    this.commandList().splice(this.commandList().length - 2, 0, command);
   }
   // the last command is something else.
   else
@@ -38,18 +40,12 @@ Window_MenuCommand.prototype.makeCommandList = function()
 };
 
 /**
- * Determines whether or not the sdp command can be added to the JABS menu.
+ * Determines whether or not the sdp command can be added to the main menu.
  * @returns {boolean} True if the command should be added, false otherwise.
  */
 Window_MenuCommand.prototype.canAddSdpCommand = function()
 {
-  // if the necessary switch isn't ON, don't render the command at all.
-  if (!$gameSwitches.value(J.SDP.Metadata.menuSwitchId)) return false;
-
-  // if we're using JABS but not allowing to show this command in both menus, then skip.
-  if (J.ABS && !J.SDP.Metadata.jabsShowInBothMenus) return false;
-
-  // render the command!
-  return true;
+  // the switch remains the single gate, so the command can stay hidden until the story introduces it.
+  return $gameSwitches.value(J.SDP.Metadata.menuSwitchId);
 };
 //endregion Window_MenuCommand

@@ -326,12 +326,15 @@ Game_Event._timeConditionalTimeRangeMet = function(timeConditional)
 
   // build an ending date based on "end" time.
   const fakeEndTimeArray = [ years, months - 1, days, endHour, endMinute, 0 ];
-  const fakeEndDate = new Date(...fakeEndTimeArray);
+  let fakeEndDate = new Date(...fakeEndTimeArray);
 
   // if the time difference translates to overnight, then add a day.
   if (isOvernight)
   {
-    fakeEndDate.addDays(1);
+    // NOTE: addDays hands back a new date rather than mutating in place, unlike addHours below, so
+    // its result has to be captured. discarding it left overnight ranges ending before they began,
+    // which made a range like 22-6 an empty window that could never be satisfied.
+    fakeEndDate = fakeEndDate.addDays(1);
   }
 
   // if the time difference translates to the next hour, then add an hour.

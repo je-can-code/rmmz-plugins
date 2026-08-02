@@ -104,6 +104,18 @@ class Sprite_BaseText
     this._j._disableManagedOpacity = false;
   }
 
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   /**
    * Sets up the bitmap based on the desired text content.
    */
@@ -170,15 +182,15 @@ class Sprite_BaseText
   bitmapWidth()
   {
     // setup the test bitmap similar to the real one.
-    this._j._testBitmap = new Bitmap(this.bitmap?.width ?? 128, this.bitmapHeight());
-    this._j._testBitmap.fontFace = this.fontFace();
-    this._j._testBitmap.fontSize = this.fontSize();
-    this._j._testBitmap.fontItalic = this.isItalics();
-    this._j._testBitmap.fontBold = this.isBold();
+    this.j()._testBitmap = new Bitmap(this.bitmap ? this.bitmap.width : 128, this.bitmapHeight());
+    this.j()._testBitmap.fontFace = this.fontFace();
+    this.j()._testBitmap.fontSize = this.fontSize();
+    this.j()._testBitmap.fontItalic = this.isItalics();
+    this.j()._testBitmap.fontBold = this.isBold();
 
     // measure the text and respect a configured minimum width, if any.
-    const measured = this._j._testBitmap.measureTextWidth(this.text());
-    const min = this._j._minWidth;
+    const measured = this.j()._testBitmap.measureTextWidth(this.text());
+    const min = this.j()._minWidth;
     return Math.max(measured, min);
   }
 
@@ -189,7 +201,7 @@ class Sprite_BaseText
    */
   bitmapHeight()
   {
-    return this._j._fontSize * 3;
+    return this.j()._fontSize * 3;
   }
 
   /**
@@ -198,7 +210,7 @@ class Sprite_BaseText
    */
   text()
   {
-    return this._j._text;
+    return this.j()._text;
   }
 
   /**
@@ -213,7 +225,7 @@ class Sprite_BaseText
     if (this.text() !== text)
     {
       // assign the new text.
-      this._j._text = text;
+      this.j()._text = text;
 
       // render the text to the bitmap.
       this.refresh();
@@ -229,7 +241,7 @@ class Sprite_BaseText
    */
   color()
   {
-    return this._j._color;
+    return this.j()._color;
   }
 
   /**
@@ -245,7 +257,7 @@ class Sprite_BaseText
 
     if (this.color() !== color)
     {
-      this._j._color = color;
+      this.j()._color = color;
       this.refresh();
     }
 
@@ -281,7 +293,7 @@ class Sprite_BaseText
    */
   alignment()
   {
-    return this._j._alignment;
+    return this.j()._alignment;
   }
 
   /**
@@ -297,7 +309,7 @@ class Sprite_BaseText
 
     if (this.alignment() !== alignment)
     {
-      this._j._alignment = alignment;
+      this.j()._alignment = alignment;
       this.refresh();
     }
 
@@ -325,7 +337,7 @@ class Sprite_BaseText
    */
   isBold()
   {
-    return this._j._bold;
+    return this.j()._bold;
   }
 
   /**
@@ -337,7 +349,7 @@ class Sprite_BaseText
   {
     if (this.isBold() !== bold)
     {
-      this._j._bold = bold;
+      this.j()._bold = bold;
       this.refresh();
     }
 
@@ -351,7 +363,7 @@ class Sprite_BaseText
    */
   isItalics()
   {
-    return this._j._italics;
+    return this.j()._italics;
   }
 
   /**
@@ -363,7 +375,7 @@ class Sprite_BaseText
   {
     if (this.isItalics() !== italics)
     {
-      this._j._italics = italics;
+      this.j()._italics = italics;
       this.refresh();
     }
 
@@ -377,7 +389,7 @@ class Sprite_BaseText
    */
   fontFace()
   {
-    return this._j._fontFace;
+    return this.j()._fontFace;
   }
 
   /**
@@ -391,7 +403,7 @@ class Sprite_BaseText
   {
     if (this.fontFace() !== fontFace)
     {
-      this._j._fontFace = fontFace;
+      this.j()._fontFace = fontFace;
       this.refresh();
     }
 
@@ -405,7 +417,7 @@ class Sprite_BaseText
    */
   fontSize()
   {
-    return this._j._fontSize;
+    return this.j()._fontSize;
   }
 
   /**
@@ -417,7 +429,7 @@ class Sprite_BaseText
   {
     if (this.fontSize() !== fontSize)
     {
-      this._j._fontSize = fontSize;
+      this.j()._fontSize = fontSize;
       this.refresh();
     }
 
@@ -431,7 +443,7 @@ class Sprite_BaseText
    */
   minWidth()
   {
-    return this._j._minWidth;
+    return this.j()._minWidth;
   }
 
   /**
@@ -444,9 +456,9 @@ class Sprite_BaseText
     // guard to make sure the width isn't being set to something negative.
     const w = Math.max(0, width);
 
-    if (this._j._minWidth !== w)
+    if (this.j()._minWidth !== w)
     {
-      this._j._minWidth = w;
+      this.j()._minWidth = w;
       this.refresh();
     }
 
@@ -459,7 +471,7 @@ class Sprite_BaseText
    */
   selfManageOpacity()
   {
-    this._j._disableManagedOpacity = true;
+    this.j()._disableManagedOpacity = true;
   }
 
   /**
@@ -467,7 +479,7 @@ class Sprite_BaseText
    */
   autoManageOpacity()
   {
-    this._j._disableManagedOpacity = false;
+    this.j()._disableManagedOpacity = false;
   }
 
   /**
@@ -476,7 +488,7 @@ class Sprite_BaseText
    */
   hasSelfManagedOpacity()
   {
-    return this._j._disableManagedOpacity;
+    return this.j()._disableManagedOpacity;
   }
 
   /**

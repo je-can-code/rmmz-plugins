@@ -26,6 +26,35 @@ Game_Actor.prototype.databaseData = function()
   return this.actor();
 };
 
+//region properties
+/**
+ * Gets the skill ids this actor has actually learned.
+ *
+ * This is only the learned list. Trait-granted skills live in {@link Game_Actor#addedSkills},
+ * and {@link Game_Actor#skillIds} is the union of the two.
+ * @returns {number[]} The learned skill ids.
+ */
+Game_Actor.prototype.learnedSkillIds = function()
+{
+  // hand back the learned list on its own.
+  return this._skills;
+};
+
+/**
+ * Gets the equipped items as their `Game_Item` wrappers.
+ *
+ * This is deliberately not {@link Game_Actor#equips}, which unwraps each slot into its database
+ * row. Anything comparing or snapshotting equipment needs the wrappers, since two different
+ * wrappers can point at the same row.
+ * @returns {Game_Item[]} The raw, slot-ordered equipment wrappers.
+ */
+Game_Actor.prototype.rawEquips = function()
+{
+  // hand back the wrappers rather than the rows they point at.
+  return this._equips;
+};
+//endregion properties
+
 /**
  * Gets the raw skill ids known to this actor.
  * Combines the actor's learned skill list with any bonus skill ids granted by traits,
@@ -35,7 +64,8 @@ Game_Actor.prototype.databaseData = function()
 Game_Actor.prototype.skillIds = function()
 {
   // merge learned skills and trait-granted skill ids into a single deduplicated list.
-  return [...new Set(this._skills.concat(this.addedSkills()))];
+  return [ ...new Set(this.learnedSkillIds()
+    .concat(this.addedSkills())) ];
 };
 
 /**
@@ -265,14 +295,14 @@ J.BASE.Aliased.Game_Actor.set('changeEquip', Game_Actor.prototype.changeEquip);
 Game_Actor.prototype.changeEquip = function(slotId, item)
 {
   // grab a snapshot of what the equips looked like before changing.
-  const oldEquips = JsonEx.makeDeepCopy(this._equips);
+  const oldEquips = JsonEx.makeDeepCopy(this.rawEquips());
 
   // perform original logic.
   J.BASE.Aliased.Game_Actor.get('changeEquip')
     .call(this, slotId, item);
 
   // determine if the equips array changed from what it was before original logic.
-  const isChanged = !oldEquips.equals(this._equips);
+  const isChanged = !oldEquips.equals(this.rawEquips());
 
   // check if we did actually have change.
   if (isChanged)
@@ -290,14 +320,14 @@ J.BASE.Aliased.Game_Actor.set('discardEquip', Game_Actor.prototype.discardEquip)
 Game_Actor.prototype.discardEquip = function(item)
 {
   // grab a snapshot of what the equips looked like before changing.
-  const oldEquips = JsonEx.makeDeepCopy(this._equips);
+  const oldEquips = JsonEx.makeDeepCopy(this.rawEquips());
 
   // perform original logic.
   J.BASE.Aliased.Game_Actor.get('discardEquip')
     .call(this, item);
 
   // determine if the equips array changed from what it was before original logic.
-  const isChanged = !oldEquips.equals(this._equips);
+  const isChanged = !oldEquips.equals(this.rawEquips());
 
   // check if we did actually have change.
   if (isChanged)
@@ -315,14 +345,14 @@ J.BASE.Aliased.Game_Actor.set('forceChangeEquip', Game_Actor.prototype.forceChan
 Game_Actor.prototype.forceChangeEquip = function(slotId, item)
 {
   // grab a snapshot of what the equips looked like before changing.
-  const oldEquips = JsonEx.makeDeepCopy(this._equips);
+  const oldEquips = JsonEx.makeDeepCopy(this.rawEquips());
 
   // perform original logic.
   J.BASE.Aliased.Game_Actor.get('forceChangeEquip')
     .call(this, slotId, item);
 
   // determine if the equips array changed from what it was before original logic.
-  const isChanged = !oldEquips.equals(this._equips);
+  const isChanged = !oldEquips.equals(this.rawEquips());
 
   // check if we did actually have change.
   if (isChanged)
@@ -340,7 +370,7 @@ J.BASE.Aliased.Game_Actor.set('releaseUnequippableItems', Game_Actor.prototype.r
 Game_Actor.prototype.releaseUnequippableItems = function(forcing)
 {
   // grab a snapshot of what the equips looked like before changing.
-  const oldEquips = JsonEx.makeDeepCopy(this._equips);
+  const oldEquips = JsonEx.makeDeepCopy(this.rawEquips());
 
   // perform original logic.
   J.BASE.Aliased.Game_Actor.get('releaseUnequippableItems')
@@ -365,7 +395,7 @@ Game_Actor.prototype.releaseUnequippableItems = function(forcing)
 Game_Actor.prototype.haveEquipsChanged = function(oldEquips)
 {
   // if the equip lengths are different, then we definitely have change.
-  if (oldEquips.length !== this._equips.length) return true;
+  if (oldEquips.length !== this.rawEquips().length) return true;
 
   // default to no change.
   let hasDifferentEquips = false;
@@ -373,14 +403,17 @@ Game_Actor.prototype.haveEquipsChanged = function(oldEquips)
   // iterate over all the old equips to compare with new.
   oldEquips.forEach((oldEquip, index) =>
   {
+    // grab the equip occupying the same slot now.
+    const currentEquip = this.rawEquips()[index];
+
     // check if their item id is the same.
-    const sameItemId = oldEquip.itemId() === this._equips[index].itemId();
+    const sameItemId = oldEquip.itemId() === currentEquip.itemId();
 
     // check if their equip type is the same.
-    const sameType = oldEquip._dataClass === this._equips[index]._dataClass;
+    const sameType = oldEquip.dataClass() === currentEquip.dataClass();
 
     // check if their underlying item is the same.
-    const sameInnerItem = oldEquip._item === this._equips[index]._item;
+    const sameInnerItem = oldEquip.underlyingObject() === currentEquip.underlyingObject();
 
     // if all three are the same, then no change.
     if (sameItemId && sameType && sameInnerItem) return;
@@ -508,5 +541,35 @@ Game_Actor.prototype.levelDown = function()
 Game_Actor.prototype.getBaseMaxTp = function()
 {
   return J.BASE.Metadata.BaseTpMaxActors;
+};
+
+/**
+ * Gets the id of this actor's current class.
+ * @returns {number} The classId.
+ */
+Game_Actor.prototype.classId = function()
+{
+  // hand back the id of this actor's current class.
+  return this._classId;
+};
+
+/**
+ * Sets the id of this actor's current class.
+ * @param {number} newClassId The new classId.
+ */
+Game_Actor.prototype.setClassId = function(newClassId)
+{
+  // assign the id of this actor's current class.
+  this._classId = newClassId;
+};
+
+/**
+ * Gets the accumulated experience per class id.
+ * @returns {Object<number, number>} The exp.
+ */
+Game_Actor.prototype.exp = function()
+{
+  // hand back the accumulated experience per class id.
+  return this._exp;
 };
 //endregion Game_Actor

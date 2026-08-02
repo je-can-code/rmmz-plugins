@@ -14,13 +14,13 @@ RPG_Skill.prototype.jabsFormulaEffects = function()
   this._j._abs ||= {};
 
   // build and cache on first access.
-  if (!this._j._abs._formulaEffects)
+  if (!this.formulaEffects())
   {
-    this._j._abs._formulaEffects = this.extractJabsFormulaEffects();
+    this.setFormulaEffects(this.extractJabsFormulaEffects());
   }
 
   // return cached (possibly empty) effects.
-  return this._j._abs._formulaEffects;
+  return this.formulaEffects();
 };
 
 /**
@@ -45,4 +45,26 @@ RPG_Skill.prototype.extractJabsFormulaEffects = function()
   // combine and return (possibly empty).
   return [ ...formulaEffects, ...skillEffects ];
 };
+
+//region properties
+/**
+ * Gets the formula effects.
+ * @returns {Array} The formulaEffects.
+ */
+RPG_Skill.prototype.formulaEffects = function()
+{
+  // hand back the formula effects.
+  return this._j._abs._formulaEffects;
+};
+
+/**
+ * Sets the formula effects.
+ * @param {Array} newFormulaEffects The new formulaEffects.
+ */
+RPG_Skill.prototype.setFormulaEffects = function(newFormulaEffects)
+{
+  // assign the formula effects.
+  this._j._abs._formulaEffects = newFormulaEffects;
+};
+//endregion properties
 //endregion RPG_Skill

@@ -50,6 +50,18 @@ class Window_Frame
     /* eslint-enable max-len */
   }
 
+  //region properties
+  /**
+   * Gets the j.
+   * @returns {*} The j.
+   */
+  j()
+  {
+    // hand back the j.
+    return this._j;
+  }
+  //endregion properties
+
   /**
    * Executes any one-time configuration required for this window.
    */
@@ -78,10 +90,10 @@ class Window_Frame
   emptyCache()
   {
     // iterate over each sprite and destroy it properly.
-    this._j._spriteCache.forEach((value, _) => value.destroy());
+    this.j()._spriteCache.forEach((value, _) => value.destroy());
 
     // empty the collection of all references.
-    this._j._spriteCache.clear();
+    this.j()._spriteCache.clear();
   }
 
   /**

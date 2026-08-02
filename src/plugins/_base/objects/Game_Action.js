@@ -49,6 +49,36 @@ Game_Action.prototype.evalFormulaWithContext = function(formula, a, b)
 };
 
 /**
+ * Gets the `Game_Item` wrapper backing this action.
+ *
+ * This is deliberately not {@link Game_Action#item}, which unwraps into the database row. Anything
+ * rebinding what this action points at needs the wrapper to call `setObject` on.
+ * @returns {Game_Item} The raw item wrapper.
+ */
+Game_Action.prototype.rawItem = function()
+{
+  // hand back the wrapper rather than the row it points at.
+  return this._item;
+};
+
+/**
+ * Extends {@link #clear}.<br/>
+ * Also seeds the triggering damage values, so they are always numbers rather than undefined.
+ */
+J.BASE.Aliased.Game_Action.set('clear', Game_Action.prototype.clear);
+Game_Action.prototype.clear = function()
+{
+  // perform original logic.
+  J.BASE.Aliased.Game_Action.get('clear')
+    .call(this);
+
+  // an action that was not triggered by damage was triggered by zero damage.
+  this.setTriggerHpDamage(0);
+  this.setTriggerMpDamage(0);
+  this.setTriggerTpDamage(0);
+};
+
+/**
  * Sets the triggering damage values that caused this action to fire (e.g. a retaliation).
  * These are exposed as `d` (HP), `m` (MP), and `t` (TP) inside damage formulas via
  * {@link Game_Action.registerFormulaContext}.
@@ -58,9 +88,9 @@ Game_Action.prototype.evalFormulaWithContext = function(formula, a, b)
  */
 Game_Action.prototype.setTriggerDamage = function(hpDamage, mpDamage, tpDamage)
 {
-  this._triggerHpDamage = hpDamage;
-  this._triggerMpDamage = mpDamage;
-  this._triggerTpDamage = tpDamage;
+  this.setTriggerHpDamage(hpDamage);
+  this.setTriggerMpDamage(mpDamage);
+  this.setTriggerTpDamage(tpDamage);
 };
 
 /**
@@ -69,7 +99,7 @@ Game_Action.prototype.setTriggerDamage = function(hpDamage, mpDamage, tpDamage)
  */
 Game_Action.prototype.getTriggerHpDamage = function()
 {
-  return this._triggerHpDamage ?? 0;
+  return this.triggerHpDamage();
 };
 
 /**
@@ -78,7 +108,7 @@ Game_Action.prototype.getTriggerHpDamage = function()
  */
 Game_Action.prototype.getTriggerMpDamage = function()
 {
-  return this._triggerMpDamage ?? 0;
+  return this.triggerMpDamage();
 };
 
 /**
@@ -87,7 +117,7 @@ Game_Action.prototype.getTriggerMpDamage = function()
  */
 Game_Action.prototype.getTriggerTpDamage = function()
 {
-  return this._triggerTpDamage ?? 0;
+  return this.triggerTpDamage();
 };
 
 // Register d/m/t as formula context variables available in every skill formula.
@@ -165,4 +195,106 @@ Game_Action.prototype.itemEffectRecoverMp = function(target, effect)
   }
 };
 //endregion HAR
+
+/**
+ * Gets the actor id of this action's subject, or 0 when an enemy.
+ * @returns {number} The subjectActorId.
+ */
+Game_Action.prototype.subjectActorId = function()
+{
+  // hand back the actor id of this action's subject, or 0 when an enemy.
+  return this._subjectActorId;
+};
+
+/**
+ * Sets the actor id of this action's subject, or 0 when an enemy.
+ * @param {number} newSubjectActorId The new subjectActorId.
+ */
+Game_Action.prototype.setSubjectActorId = function(newSubjectActorId)
+{
+  // assign the actor id of this action's subject, or 0 when an enemy.
+  this._subjectActorId = newSubjectActorId;
+};
+
+/**
+ * Gets the troop index of this action's subject, or -1 when an actor.
+ * @returns {number} The subjectEnemyIndex.
+ */
+Game_Action.prototype.subjectEnemyIndex = function()
+{
+  // hand back the troop index of this action's subject, or -1 when an actor.
+  return this._subjectEnemyIndex;
+};
+
+/**
+ * Sets the troop index of this action's subject, or -1 when an actor.
+ * @param {number} newSubjectEnemyIndex The new subjectEnemyIndex.
+ */
+Game_Action.prototype.setSubjectEnemyIndex = function(newSubjectEnemyIndex)
+{
+  // assign the troop index of this action's subject, or -1 when an actor.
+  this._subjectEnemyIndex = newSubjectEnemyIndex;
+};
+
+//region properties
+/**
+ * Gets the trigger hp damage.
+ * @returns {*} The triggerHpDamage.
+ */
+Game_Action.prototype.triggerHpDamage = function()
+{
+  // hand back the trigger hp damage.
+  return this._triggerHpDamage;
+};
+
+/**
+ * Sets the trigger hp damage.
+ * @param {*} newTriggerHpDamage The new triggerHpDamage.
+ */
+Game_Action.prototype.setTriggerHpDamage = function(newTriggerHpDamage)
+{
+  // assign the trigger hp damage.
+  this._triggerHpDamage = newTriggerHpDamage;
+};
+
+/**
+ * Gets the trigger mp damage.
+ * @returns {*} The triggerMpDamage.
+ */
+Game_Action.prototype.triggerMpDamage = function()
+{
+  // hand back the trigger mp damage.
+  return this._triggerMpDamage;
+};
+
+/**
+ * Sets the trigger mp damage.
+ * @param {*} newTriggerMpDamage The new triggerMpDamage.
+ */
+Game_Action.prototype.setTriggerMpDamage = function(newTriggerMpDamage)
+{
+  // assign the trigger mp damage.
+  this._triggerMpDamage = newTriggerMpDamage;
+};
+
+/**
+ * Gets the trigger tp damage.
+ * @returns {*} The triggerTpDamage.
+ */
+Game_Action.prototype.triggerTpDamage = function()
+{
+  // hand back the trigger tp damage.
+  return this._triggerTpDamage;
+};
+
+/**
+ * Sets the trigger tp damage.
+ * @param {*} newTriggerTpDamage The new triggerTpDamage.
+ */
+Game_Action.prototype.setTriggerTpDamage = function(newTriggerTpDamage)
+{
+  // assign the trigger tp damage.
+  this._triggerTpDamage = newTriggerTpDamage;
+};
+//endregion properties
 //endregion Game_Action

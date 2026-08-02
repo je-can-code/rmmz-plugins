@@ -198,6 +198,20 @@ describe('J-Pixelistics Game_CharacterBase movement resolvers (direct src import
       expect(ch._y).toBeGreaterThan(2);
     });
 
+    it('faces the vertical cardinal instead of the raw diagonal code when passable', () =>
+    {
+      // Arrange: characterPatternY only understands cardinals 2/4/6/8; a diagonal code
+      // (1/3/7/9) here would produce a fractional, corrupted sprite-sheet row.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+
+      // Act
+      ch.moveDiagonally(D().RIGHT, D().DOWN);
+
+      // Assert
+      expect(ch.direction()).toBe(D().DOWN);
+    });
+
     it('rotates toward the horizontal component when facing its reverse and blocked', () =>
     {
       // Arrange: facing LEFT (reverse of RIGHT); rmmz rotates unconditionally toward the
@@ -779,6 +793,42 @@ describe('J-Pixelistics Game_CharacterBase movement resolvers (direct src import
       expect(ch._y).toBe(2);
     });
 
+    it('fires a touch-front trigger for the blocked axis on contact, even while sliding succeeds', () =>
+    {
+      // Arrange: wall directly right blocks only the X component of a down-right angle; without
+      // this, hugging a wall/door at a fuzzy analog angle would never fire its touch trigger,
+      // since wall-sliding lets movement "succeed" via the open axis indefinitely and a true full
+      // stop (the old, only trigger point) almost never happens for imprecise stick input.
+      const map = buildWalledPixelGameMap(5, 5, new Set([ '3,2' ]));
+      const ch = makeCharacterOn(map, 2, 2);
+      const touchSpy = vi.spyOn(ch, 'checkEventTriggerTouchFront')
+        .mockImplementation(() => {});
+
+      // Act
+      const moved = ch.vectorMoveByAngle(45);
+
+      // Assert: slide still succeeds, but the blocked (horizontal/RIGHT) axis fired its trigger.
+      expect(moved).toBe(true);
+      expect(touchSpy).toHaveBeenCalledWith(D().RIGHT);
+      touchSpy.mockRestore();
+    });
+
+    it('does not fire a touch-front trigger for an axis that was never blocked', () =>
+    {
+      // Arrange: open floor in every direction, so neither axis is ever blocked.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+      const touchSpy = vi.spyOn(ch, 'checkEventTriggerTouchFront')
+        .mockImplementation(() => {});
+
+      // Act
+      ch.vectorMoveByAngle(45);
+
+      // Assert
+      expect(touchSpy).not.toHaveBeenCalled();
+      touchSpy.mockRestore();
+    });
+
     it('rolls back and returns false when the post-move AABB overlaps a solid tile', () =>
     {
       // Arrange: canPassStraight itself also guards on isOverlappingSolidTiles internally, so
@@ -816,9 +866,11 @@ describe('J-Pixelistics Game_CharacterBase movement resolvers (direct src import
       expect(ch.direction()).toBe(D().LEFT);
     });
 
-    it('moves purely upward at angle 270', () =>
+    it('moves purely upward at angle 270 with zero sideways drift', () =>
     {
-      // Arrange
+      // Arrange: Math.cos(270deg) is ~1e-17 rather than an exact 0 due to floating-point
+      // noise; without snapping that noise to zero, _x would drift by that imperceptible
+      // amount every frame instead of staying exactly put.
       const map = buildWalledPixelGameMap(5, 5);
       const ch = makeCharacterOn(map, 2, 2);
 
@@ -827,9 +879,48 @@ describe('J-Pixelistics Game_CharacterBase movement resolvers (direct src import
 
       // Assert
       expect(moved).toBe(true);
-      expect(ch._x).toBeCloseTo(2);
+      expect(ch._x).toBe(2);
       expect(ch._y).toBeLessThan(2);
       expect(ch.direction()).toBe(D().UP);
+    });
+
+    it('returns false without moving or faking sideways drift when blocked pushing straight up', () =>
+    {
+      // Arrange: a wall directly above blocks the sole (vertical) component of a pure-cardinal
+      // angle. Before the floating-point noise fix, the ~1e-17 "sideways" component from
+      // Math.cos(270deg) would slip past the "fully blocked" check and report a false success-
+      // silently skipping the blocked-movement branch that fires touch-front triggers (doors,
+      // NPC bumps) for every straight-line wall/door bump made via keyboard input.
+      const map = buildWalledPixelGameMap(5, 5, new Set([ '2,1' ]));
+      const ch = makeCharacterOn(map, 2, 2);
+
+      // Act
+      const moved = ch.vectorMoveByAngle(270);
+
+      // Assert
+      expect(moved).toBe(false);
+      expect(ch._x).toBe(2);
+      expect(ch._y).toBe(2);
+    });
+
+    it.each([
+      [ 0, '3,2' ],
+      [ 90, '2,3' ],
+      [ 180, '1,2' ],
+      [ 270, '2,1' ],
+    ])('returns false without moving or faking drift when blocked pushing at %i degrees', (angle, wall) =>
+    {
+      // Arrange: proves the noise-epsilon snap applies uniformly and isn't a one-direction fix.
+      const map = buildWalledPixelGameMap(5, 5, new Set([ wall ]));
+      const ch = makeCharacterOn(map, 2, 2);
+
+      // Act
+      const moved = ch.vectorMoveByAngle(angle);
+
+      // Assert
+      expect(moved).toBe(false);
+      expect(ch._x).toBe(2);
+      expect(ch._y).toBe(2);
     });
   });
 

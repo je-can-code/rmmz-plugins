@@ -90,6 +90,11 @@ export function installNaturalHostGlobals(sandbox = globalThis, naturalPluginPar
     Game_BattlerBase.prototype.initMembers.call(this);
     this._states = [];
   };
+  // mirrors rmmz_objects.js: the base answers no to both, and each subclass claims its own side.
+  // Plugin code uses these to tell actor-only systems (panels, growth) from enemy-safe paths.
+  Game_Battler.prototype.isActor = () => false;
+  Game_Battler.prototype.isEnemy = () => false;
+
   Game_Battler.prototype.paramBase = () => 0;
   Game_Battler.prototype.xparam = () => 0;
   Game_Battler.prototype.sparam = () => 0;
@@ -124,6 +129,7 @@ export function installNaturalHostGlobals(sandbox = globalThis, naturalPluginPar
     // JCache._battlerCaches set is disjoint from the one Game_Battler.js/RPGManager registered into.
     sandbox.JCache?.invalidateAllForBattler(this);
   };
+  Game_Actor.prototype.isActor = () => true;
   Game_Actor.prototype.actorId = () => 1;
   Game_Actor.prototype.actor = function()
   {

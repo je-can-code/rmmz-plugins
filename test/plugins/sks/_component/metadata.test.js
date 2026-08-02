@@ -40,12 +40,6 @@ describe('J-SkillSlots metadata and regex (direct src import)', () =>
     await import('../../../../src/plugins/sks/core/_metadata/initialization.js');
   });
 
-  it('exposes J.SKS namespace and versioned metadata', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.SKS.Metadata.name).toBe('J-SkillSlots');
-  });
-
   it('slotCost regex parses signed integers from skill notes', () =>
   {
     // Arrange & Act

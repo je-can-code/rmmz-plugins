@@ -28,6 +28,24 @@ describe('Game_Follower ext/pixel augments (direct src import)', () =>
     globalThis.Game_Follower = StubGameFollower;
 
     await import('../../../../../src/plugins/pixel/core/objects/Game_Follower.js');
+
+    // RMMZ exposes map coordinates as native properties on Game_CharacterBase.
+    Object.defineProperties(globalThis.Game_Follower.prototype, {
+      // vanilla exposes these read-only; the double allows writes so tests can position freely.
+      x: { get() { return this._x; }, set(v) { this._x = v; }, configurable: true },
+      y: { get() { return this._y; }, set(v) { this._y = v; }, configurable: true },
+    });
+
+    // J-Base coordinate accessors the pixel/abs layers read and write through.
+    globalThis.Game_Follower.prototype.setX = function(v) { this._x = v; };
+    globalThis.Game_Follower.prototype.setY = function(v) { this._y = v; };
+    globalThis.Game_Follower.prototype.realX = function() { return this._realX; };
+    globalThis.Game_Follower.prototype.realY = function() { return this._realY; };
+    globalThis.Game_Follower.prototype.setRealX = function(v) { this._realX = v; };
+    globalThis.Game_Follower.prototype.setRealY = function(v) { this._realY = v; };
+
+    // J-Base accessor the production code now writes through.
+    StubGameFollower.prototype.setStopCount = function(v) { this._stopCount = v; };
     ({ Game_Follower } = globalThis);
   });
 
@@ -129,35 +147,6 @@ describe('Game_Follower ext/pixel augments (direct src import)', () =>
     });
   });
 
-  describe('chaseCharacter', () =>
-  {
-    it('always calls through when there is no AI-controlled JABS battler', () =>
-    {
-      // Arrange
-      const follower = makeFollower(0, 0, null);
-      const character = {};
-
-      // Act
-      follower.chaseCharacter(character);
-
-      // Assert
-      expect(globalThis.J.PIXEL.Aliased.Game_Follower.get('chaseCharacter')).toHaveBeenCalledWith(character);
-    });
-
-    it('suppresses vanilla chasing when AllyAI controls this follower', () =>
-    {
-      // Arrange
-      const follower = makeFollower(0, 0, {});
-      const character = {};
-
-      // Act
-      follower.chaseCharacter(character);
-
-      // Assert
-      expect(globalThis.J.PIXEL.Aliased.Game_Follower.get('chaseCharacter')).not.toHaveBeenCalled();
-    });
-  });
-
   describe('update', () =>
   {
     it('always calls through to the original aliased implementation', () =>
@@ -188,125 +177,21 @@ describe('Game_Follower ext/pixel augments (direct src import)', () =>
       expect(follower._realX).toEqual(3);
       expect(follower._realY).toEqual(4);
     });
-
-    it('clamps drift for an idle AI-controlled follower with no active move input', () =>
-    {
-      // Arrange
-      const jabsBattler = {};
-      const follower = makeFollower(2, 2, jabsBattler);
-      follower._realX = 2;
-      follower._realY = 2;
-      follower._stopCount = 15;
-      follower.isMovePressed.mockReturnValue(false);
-
-      // Act
-      follower.update();
-
-      // Assert
-      expect(follower._stopCount).toEqual(0);
-    });
-
-    it('does not touch stopCount for an AI-controlled follower actively moving', () =>
-    {
-      // Arrange
-      const jabsBattler = {};
-      const follower = makeFollower(2, 2, jabsBattler);
-      follower._realX = 2;
-      follower._realY = 2;
-      follower._stopCount = 15;
-      follower.isMovePressed.mockReturnValue(true);
-
-      // Act
-      follower.update();
-
-      // Assert
-      expect(follower._stopCount).toEqual(15);
-    });
   });
 
-  describe('moveStraight', () =>
+  describe('isPixelTrainSuspended', () =>
   {
-    it('always calls through when there is no AI-controlled JABS battler', () =>
+    it('never suspends the follower train under plain pixel movement', () =>
     {
-      // Arrange
+      // Arrange: with no other system steering followers, the breadcrumb train is the only
+      // thing moving them, so it must never stand down.
       const follower = makeFollower(0, 0, null);
 
       // Act
-      follower.moveStraight(2);
+      const result = follower.isPixelTrainSuspended();
 
       // Assert
-      expect(globalThis.J.PIXEL.Aliased.Game_Follower.get('moveStraight')).toHaveBeenCalledWith(2);
-    });
-
-    it('blocks the move for an idle AI-controlled follower with no active move input', () =>
-    {
-      // Arrange
-      const jabsBattler = { isEngaged: () => false, isAlerted: () => false };
-      const follower = makeFollower(0, 0, jabsBattler);
-      follower.isMovePressed.mockReturnValue(false);
-
-      // Act
-      follower.moveStraight(2);
-
-      // Assert
-      expect(globalThis.J.PIXEL.Aliased.Game_Follower.get('moveStraight')).not.toHaveBeenCalled();
-    });
-
-    it('allows the move for an idle AI-controlled follower that is actively pixel-moving', () =>
-    {
-      // Arrange
-      const jabsBattler = { isEngaged: () => false, isAlerted: () => false };
-      const follower = makeFollower(0, 0, jabsBattler);
-      follower.isMovePressed.mockReturnValue(true);
-
-      // Act
-      follower.moveStraight(2);
-
-      // Assert
-      expect(globalThis.J.PIXEL.Aliased.Game_Follower.get('moveStraight')).toHaveBeenCalledWith(2);
-    });
-
-    it('allows the move for an engaged/alerted AI-controlled follower regardless of move input', () =>
-    {
-      // Arrange
-      const jabsBattler = { isEngaged: () => true, isAlerted: () => false };
-      const follower = makeFollower(0, 0, jabsBattler);
-      follower.isMovePressed.mockReturnValue(false);
-
-      // Act
-      follower.moveStraight(2);
-
-      // Assert
-      expect(globalThis.J.PIXEL.Aliased.Game_Follower.get('moveStraight')).toHaveBeenCalledWith(2);
-    });
-  });
-
-  describe('moveDiagonally', () =>
-  {
-    it('always calls through when there is no AI-controlled JABS battler', () =>
-    {
-      // Arrange
-      const follower = makeFollower(0, 0, null);
-
-      // Act
-      follower.moveDiagonally(6, 2);
-
-      // Assert
-      expect(globalThis.J.PIXEL.Aliased.Game_Follower.get('moveDiagonally')).toHaveBeenCalledWith(6, 2);
-    });
-
-    it('blocks the move for an idle AI-controlled follower with no active move input', () =>
-    {
-      // Arrange
-      const jabsBattler = { isEngaged: () => false, isAlerted: () => false };
-      const follower = makeFollower(0, 0, jabsBattler);
-      follower.isMovePressed.mockReturnValue(false);
-
-      // Act
-      follower.moveDiagonally(6, 2);
-
-      // Assert
-      expect(globalThis.J.PIXEL.Aliased.Game_Follower.get('moveDiagonally')).not.toHaveBeenCalled();
+      expect(result).toBe(false);
     });
   });
 

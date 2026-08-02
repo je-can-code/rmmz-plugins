@@ -23,10 +23,298 @@ describe('J-CriticalFactors metadata (direct src import)', () =>
     await import('../../../../src/plugins/crit/core/_metadata/initialization.js');
   });
 
-  it('sets the metadata name to J-CriticalFactors', () =>
+  describe('boolean crit notetags', () =>
   {
-    // Arrange & Act & Assert
-    expect(globalThis.J.CRIT.Metadata.name).toBe('J-CriticalFactors');
+    it('matches the always-crit marker tag', () =>
+    {
+      // Arrange
+      const { ThisCritsAlways } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const matches = [ ...'<thisCritsAlways>'.matchAll(ThisCritsAlways) ];
+
+      // Assert
+      expect(matches).toHaveLength(1);
+    });
+
+    it('matches the forced crit proc marker tag', () =>
+    {
+      // Arrange
+      const { ForceCritProcs } = globalThis.J.CRIT.RegExp;
+
+      // Act & Assert
+      expect('<forceCritProcs>'.match(ForceCritProcs)).not.toBeNull();
+    });
+  });
+
+  describe('conditional crit notetags', () =>
+  {
+    it('captures the state id and chance bonus from a state-gated crit chance tag', () =>
+    {
+      // Arrange
+      const { ThisCritChanceIfState } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const [ first ] = [ ...'<thisCritChanceIfState:[19, 25]>'.matchAll(ThisCritChanceIfState) ];
+
+      // Assert
+      expect(first[1]).toBe('[19, 25]');
+    });
+
+    it('captures a hyphenated type classifier from a state-type-gated crit chance tag', () =>
+    {
+      // Arrange
+      const { ThisCritChanceIfStateType } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const [ first ] = [ ...'<thisCritChanceIfStateType:[frost-bitten, 30]>'.matchAll(ThisCritChanceIfStateType) ];
+
+      // Assert
+      expect(first[1]).toBe('[frost-bitten, 30]');
+    });
+
+    it('refuses a type classifier that opens with a digit', () =>
+    {
+      // Arrange
+      const { ThisCritChanceIfStateType } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const matches = [ ...'<thisCritChanceIfStateType:[2fast, 30]>'.matchAll(ThisCritChanceIfStateType) ];
+
+      // Assert: classifiers are names, so a leading digit means the tag is simply invalid.
+      expect(matches).toHaveLength(0);
+    });
+
+    it('captures a lone state id from a guaranteed-crit tag', () =>
+    {
+      // Arrange
+      const { ThisCritsAlwaysIfState } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const [ first ] = [ ...'<thisCritsAlwaysIfState:[19]>'.matchAll(ThisCritsAlwaysIfState) ];
+
+      // Assert
+      expect(first[1]).toBe('[19]');
+    });
+
+    it('captures a full list of state ids from a guaranteed-crit tag', () =>
+    {
+      // Arrange
+      const { ThisCritsAlwaysIfState } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const [ first ] = [ ...'<thisCritsAlwaysIfState:[19, 20, 21]>'.matchAll(ThisCritsAlwaysIfState) ];
+
+      // Assert: any one of the listed states is enough, so they arrive together.
+      expect(first[1]).toBe('[19, 20, 21]');
+    });
+  });
+
+  describe('tag scoping', () =>
+  {
+    // the this-skill family and the attacker-wide family are deliberately near-identical in
+    // spelling, so the only thing keeping them apart is the leading `this`. If either pattern
+    // matched the other's text, a skill-only bonus would silently become an always-on one.
+    it('does not let the attacker-wide chance tag match the skill-scoped spelling', () =>
+    {
+      // Arrange
+      const { CritChanceIfState } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const matches = [ ...'<thisCritChanceIfState:[19, 25]>'.matchAll(CritChanceIfState) ];
+
+      // Assert
+      expect(matches).toHaveLength(0);
+    });
+
+    it('does not let the skill-scoped chance tag match the attacker-wide spelling', () =>
+    {
+      // Arrange
+      const { ThisCritChanceIfState } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const matches = [ ...'<critChanceIfState:[19, 25]>'.matchAll(ThisCritChanceIfState) ];
+
+      // Assert
+      expect(matches).toHaveLength(0);
+    });
+
+    it('does not let the attacker-wide apply tag match the skill-scoped spelling', () =>
+    {
+      // Arrange
+      const { OnCritApply } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const matches = [ ...'<thisCritApply:[19, 100]>'.matchAll(OnCritApply) ];
+
+      // Assert
+      expect(matches).toHaveLength(0);
+    });
+  });
+
+  describe('on-crit state application notetags', () =>
+  {
+    it('captures the state and chance applied to the target on a crit', () =>
+    {
+      // Arrange
+      const { ThisCritApply } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const [ first ] = [ ...'<thisCritApply:[19, 100]>'.matchAll(ThisCritApply) ];
+
+      // Assert
+      expect(first[1]).toBe('[19, 100]');
+    });
+
+    it('captures the state and chance applied to oneself on a crit', () =>
+    {
+      // Arrange
+      const { ThisCritSelf } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const [ first ] = [ ...'<thisCritSelf:[42, 50]>'.matchAll(ThisCritSelf) ];
+
+      // Assert
+      expect(first[1]).toBe('[42, 50]');
+    });
+
+    it('captures every application when a note stacks several on-crit tags', () =>
+    {
+      // Arrange
+      const { OnCritApply } = globalThis.J.CRIT.RegExp;
+      const note = '<onCritApply:[19, 100]>\n<onCritApply:[20, 25]>';
+
+      // Act
+      const matches = [ ...note.matchAll(OnCritApply) ];
+
+      // Assert
+      expect(matches.map(match => match[1])).toEqual([ '[19, 100]', '[20, 25]' ]);
+    });
+  });
+
+  describe('crit damage notetags', () =>
+  {
+    it('captures a base crit multiplier value', () =>
+    {
+      // Arrange
+      const { CritDamageMultiplierBase } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const [ first ] = [ ...'<critMultiplierBase:150>'.matchAll(CritDamageMultiplierBase) ];
+
+      // Assert
+      expect(first[1]).toBe('150');
+    });
+
+    it('tolerates the single optional space the tag format allows after the colon', () =>
+    {
+      // Arrange
+      const { CritDamageReduction } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const [ first ] = [ ...'<critReduction: 40>'.matchAll(CritDamageReduction) ];
+
+      // Assert
+      expect(first[1]).toBe('40');
+    });
+
+    it('captures a formula expression from a crit damage growth tag', () =>
+    {
+      // Arrange
+      const { CritDamageMultiplierGrowthPlus } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const [ first ] = [ ...'<cdmGrowthPlus:[(a.level / 2) + 1]>'.matchAll(CritDamageMultiplierGrowthPlus) ];
+
+      // Assert
+      expect(first[1]).toBe('(a.level / 2) + 1');
+    });
+
+    it('captures a formula expression from a crit taken rate buff tag', () =>
+    {
+      // Arrange
+      const { CritTakenRateBuffPlus } = globalThis.J.CRIT.RegExp;
+
+      // Act
+      const [ first ] = [ ...'<ctrBuffPlus:[a.level * 3]>'.matchAll(CritTakenRateBuffPlus) ];
+
+      // Assert
+      expect(first[1]).toBe('a.level * 3');
+    });
+  });
+
+  it('throws when J-Base does not satisfy the minimum required version', async () =>
+  {
+    // Arrange: drop the already-installed J-Base metadata below this plugin's floor.
+    vi.resetModules();
+    const originalVersion = globalThis.J.BASE.Metadata.Version;
+    globalThis.J.BASE.Metadata.Version = '0.0.1';
+    globalThis.__PLUGIN_NAME__ = 'J-CriticalFactors';
+    globalThis.__PLUGIN_VERSION__ = '1.0.0';
+
+    // Act & Assert
+    await expect(import('../../../../src/plugins/crit/core/_metadata/initialization.js'))
+      .rejects.toThrow(/missing J-Base/);
+
+    // restore the satisfying version so later tests in this file are unaffected.
+    globalThis.J.BASE.Metadata.Version = originalVersion;
+  });
+
+  describe('base factor plugin parameters', () =>
+  {
+    /**
+     * Builds a second metadata instance against configured parameters. PluginMetadata keeps a
+     * static name registry that rejects duplicates, so each variation introduces itself under a
+     * name of its own; only the registry key and the parameter lookup care about the name.
+     * @param {Record<string, string>} params The plugin parameters to serve.
+     * @param {string} name The plugin name this instance registers under.
+     */
+    const buildWithParams = async (params, name) =>
+    {
+      const { default: CritPluginMetadata } =
+        await import('../../../../src/plugins/crit/core/_metadata/_pluginMetadata.js');
+      const previous = globalThis.PluginManager;
+      globalThis.PluginManager = { parameters: requested => (requested === name ? params : {}) };
+
+      const metadata = new CritPluginMetadata(name, '1.0.0');
+      globalThis.PluginManager = previous;
+
+      return metadata;
+    };
+
+    it('converts a configured percent-point default into the factor battler math consumes', async () =>
+    {
+      // Arrange & Act- the editor stores these as percent points, and every consumer wants /100.
+      const metadata = await buildWithParams(
+        { critMultiplierBaseDefault: '150.00', critReductionBaseDefault: '25' },
+        'J-CriticalFactors-Configured');
+
+      // Assert
+      expect(metadata.baseCdmFactor).toBe(1.5);
+      expect(metadata.baseCtrFactor).toBe(0.25);
+    });
+
+    it('keeps the built-in default when a configured value cannot be parsed', async () =>
+    {
+      // Arrange & Act
+      const metadata = await buildWithParams(
+        { critMultiplierBaseDefault: 'not-a-number' },
+        'J-CriticalFactors-Unparseable');
+
+      // Assert- a NaN factor would silently zero out every crit in the game.
+      expect(metadata.baseCdmFactor).toBe(0.5);
+    });
+
+    it('keeps the built-in default when the parameter is blank', async () =>
+    {
+      // Arrange & Act
+      const metadata = await buildWithParams(
+        { critMultiplierBaseDefault: '' },
+        'J-CriticalFactors-Blank');
+
+      // Assert
+      expect(metadata.baseCdmFactor).toBe(0.5);
+    });
   });
 });
 //endregion plugins/crit/_component/metadata.test.js

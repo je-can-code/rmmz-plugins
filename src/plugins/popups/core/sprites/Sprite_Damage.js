@@ -80,6 +80,15 @@ Sprite_Damage.prototype.initMembers = function()
 };
 
 /**
+ * Gets the popup this sprite was built from.
+ * @returns {Map_TextPop|null}
+ */
+Sprite_Damage.prototype.sourcePopup = function()
+{
+  return this._j._popups._sourcePopup;
+};
+
+/**
  * Gets whether or not this sprite is a damage popup.
  * @returns {boolean} True if it is a damage popup, false if it is a non-damage popup.
  */
@@ -204,16 +213,16 @@ Sprite_Damage.prototype.createValue = function(value)
 {
   let healingPopup = false;
 
-  if (this._j._popups._sourcePopup && this._j._popups._sourcePopup.healing === true)
+  if (this.sourcePopup() && this.sourcePopup().healing === true)
   {
     healingPopup = true;
   }
 
   const displayValue = PopupNumericDisplay.formatNumericPopupDisplayString(value, healingPopup);
 
-  if (this._j._popups._sourcePopup)
+  if (this.sourcePopup())
   {
-    this._j._popups._sourcePopup.value = displayValue;
+    this.sourcePopup().value = displayValue;
   }
 
   const w = J.POPUPS.Layout.ValueBitmapWidth;
@@ -222,14 +231,14 @@ Sprite_Damage.prototype.createValue = function(value)
 
   let fontSize = 20;
 
-  if (this._j._popups._isCritical)
+  if (this.isCritical())
   {
     fontSize += 12;
     sprite.bitmap.fontBold = true;
   }
   else
   {
-    const accent = this._j._popups._textAccent;
+    const accent = this.textAccent();
 
     // mitigation labels (parry/evade/miss) render smaller and italic.
     const accentSmallItalic = accent === 'miss' || accent === 'evade' || accent === 'parry';
@@ -285,7 +294,7 @@ Sprite_Damage.prototype.addIcon = function(iconIndex)
   sprite.scale.y = iconScale;
 
   // track the icon sprite.
-  this._j._popups._iconSprite = sprite;
+  this.setIconSprite(sprite);
 
   // we want the icon to be vertically centered with the text.
   // since both text and icon now use the same y-offset and anchor=0.5, they align automatically.
@@ -299,7 +308,7 @@ Sprite_Damage.prototype.addIcon = function(iconIndex)
  */
 Sprite_Damage.prototype.repositionChildren = function()
 {
-  const icon = this._j._popups._iconSprite;
+  const icon = this.iconSprite();
   // find the text sprite (it's the one with the large bitmap).
   const text = this.children.find(child =>
     child !== icon && child.bitmap && child.bitmap.width === J.POPUPS.Layout.ValueBitmapWidth);
@@ -310,7 +319,7 @@ Sprite_Damage.prototype.repositionChildren = function()
     const iconWidth = ImageManager.iconWidth * J.POPUPS.Layout.IconScale;
     
     // measure the actual text width.
-    const textWidth = text.bitmap.measureTextWidth(this._j._popups._sourcePopup.value);
+    const textWidth = text.bitmap.measureTextWidth(this.sourcePopup().value);
     const totalWidth = iconWidth + spacing + textWidth;
     
     // the center of the group should be at x=0.
@@ -332,7 +341,7 @@ Sprite_Damage.prototype.repositionChildren = function()
  */
 Sprite_Damage.prototype.addDuration = function(extraDuration)
 {
-  this._duration += extraDuration;
+  this.setDuration(this.duration() + extraDuration);
 };
 
 /**
@@ -343,7 +352,7 @@ Sprite_Damage.prototype.addDuration = function(extraDuration)
 Sprite_Damage.prototype.updateChild = function(sprite)
 {
   // flashing always happens, sorry!
-  sprite.setBlendColor(this._flashColor);
+  sprite.setBlendColor(this.flashColor());
 
   // motion is only for damage and healing.
   const isMotionType = this.isDamage() || this.isHealing();
@@ -456,7 +465,7 @@ Sprite_Damage.prototype.flyawayDamageSpriteMotion = function(sprite)
 {
   sprite.yf3 -= 1;
   sprite.y = -sprite.yf2 + sprite.yf3;
-  if (this._duration > 30)
+  if (this.duration() > 30)
   {
     sprite.opacity += 10;
   }
@@ -473,9 +482,9 @@ Sprite_Damage.prototype.flyawayDamageSpriteMotion = function(sprite)
 Sprite_Damage.prototype.updateOpacity = function()
 {
   const baseDuration = J.POPUPS.Layout.BaseDuration;
-  if (this._duration < baseDuration)
+  if (this.duration() < baseDuration)
   {
-    this.opacity = (255 * this._duration) / baseDuration;
+    this.opacity = (255 * this.duration()) / baseDuration;
   }
 };
 
@@ -508,12 +517,64 @@ Sprite_Damage.prototype.setupCriticalEffect = function()
     .call(this);
 
   // confirm this is indeed a critical popup.
-  this._j._popups._isCritical = true;
+  this.setIsCritical(true);
 
   // make the critical red flash stronger.
-  this._flashColor[3] = 240;
+  this.flashColor()[3] = 240;
 
   // extend the duration for all to see your critical glory!
   this.addDuration(60);
 };
+
+//region properties
+/**
+ * Gets the is critical.
+ * @returns {boolean} The isCritical.
+ */
+Sprite_Damage.prototype.isCritical = function()
+{
+  // hand back the is critical.
+  return this._j._popups._isCritical;
+};
+
+/**
+ * Sets the is critical.
+ * @param {boolean} newIsCritical The new isCritical.
+ */
+Sprite_Damage.prototype.setIsCritical = function(newIsCritical)
+{
+  // assign the is critical.
+  this._j._popups._isCritical = newIsCritical;
+};
+
+/**
+ * Gets the text accent.
+ * @returns {*} The textAccent.
+ */
+Sprite_Damage.prototype.textAccent = function()
+{
+  // hand back the text accent.
+  return this._j._popups._textAccent;
+};
+
+/**
+ * Gets the icon sprite.
+ * @returns {Sprite} The iconSprite.
+ */
+Sprite_Damage.prototype.iconSprite = function()
+{
+  // hand back the icon sprite.
+  return this._j._popups._iconSprite;
+};
+
+/**
+ * Sets the icon sprite.
+ * @param {Sprite} newIconSprite The new iconSprite.
+ */
+Sprite_Damage.prototype.setIconSprite = function(newIconSprite)
+{
+  // assign the icon sprite.
+  this._j._popups._iconSprite = newIconSprite;
+};
+//endregion properties
 //endregion Sprite_Damage

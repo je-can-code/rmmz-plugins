@@ -9,7 +9,7 @@ Window_EquipItem.prototype.updateHelp = function()
   Window_ItemList.prototype.updateHelp.call(this);
 
   // validate we can update the actor comparison data.
-  if (this._actor && this._statusWindow && this._slotId >= 0)
+  if (this.actor() && this.statusWindow() && this.slotId() >= 0)
   {
     // update the actor comparison.
     this.updateActorComparison();
@@ -23,19 +23,19 @@ Window_EquipItem.prototype.updateHelp = function()
 Window_EquipItem.prototype.updateActorComparison = function()
 {
   // duplicate the actor.
-  const actorClone = this.getActorClone(this._actor);
+  const actorClone = this.getActorClone(this.actor());
 
   // perform setup before force-equipping the hovered item.
   this.preEquipSetupActorClone(actorClone);
 
   // force the duplicate actor to equip the hovered item.
-  actorClone.forceChangeEquip(this._slotId, this.item());
+  actorClone.forceChangeEquip(this.slotId(), this.item());
 
   // perform setup after force-equipping the hovered item.
   this.postEquipSetupActorClone(actorClone);
 
   // update the status window with this new item.
-  this._statusWindow.setTempActor(actorClone);
+  this.statusWindow().setTempActor(actorClone);
 };
 
 /**
@@ -69,5 +69,35 @@ Window_EquipItem.prototype.preEquipSetupActorClone = function(actorClone)
 // eslint-disable-next-line no-unused-vars
 Window_EquipItem.prototype.postEquipSetupActorClone = function(actorClone)
 {
+};
+
+/**
+ * Gets the actor whose equipment is being changed.
+ * @returns {Game_Actor} The actor.
+ */
+Window_EquipItem.prototype.actor = function()
+{
+  // hand back the actor whose equipment is being changed.
+  return this._actor;
+};
+
+/**
+ * Gets the status window previewing this selection.
+ * @returns {Window_EquipStatus} The statusWindow.
+ */
+Window_EquipItem.prototype.statusWindow = function()
+{
+  // hand back the status window previewing this selection.
+  return this._statusWindow;
+};
+
+/**
+ * Gets the equipment slot currently being filled.
+ * @returns {number} The slotId.
+ */
+Window_EquipItem.prototype.slotId = function()
+{
+  // hand back the equipment slot currently being filled.
+  return this._slotId;
 };
 //endregion Window_EquipItem

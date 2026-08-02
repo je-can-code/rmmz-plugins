@@ -27,17 +27,17 @@ Spriteset_Map.prototype.createTargetingOverlay = function()
   this._j._targeting ||= {};
 
   // the reticle sits directly on the spriteset (screen-space), same as the debug hitbox layer.
-  this._j._targeting._reticle = new Sprite_TargetingCursor();
-  this.addChild(this._j._targeting._reticle);
+  this.setReticle(new Sprite_TargetingCursor());
+  this.addChild(this.reticle());
 
   // tracking dictionary for AoE-highlight outline sprites, keyed by battler uuid.
-  this._j._targeting._highlightSprites = {};
+  this.setHighlightSprites({});
 
   // one reusable pulse sprite for the AoE preview itself.
-  this._j._targeting._previewPulse = null;
+  this.setPreviewPulse(null);
 
   // one reusable pulse sprite for the max-range ring around the caster.
-  this._j._targeting._rangeRing = null;
+  this.setRangeRing(null);
 };
 
 /**
@@ -79,7 +79,7 @@ Spriteset_Map.prototype.updateTargetingRangeRing = function()
  */
 Spriteset_Map.prototype.hideTargetingRangeRing = function()
 {
-  const ring = this._j._targeting._rangeRing;
+  const ring = this.rangeRing();
   if (ring)
   {
     ring.visible = false;
@@ -93,13 +93,13 @@ Spriteset_Map.prototype.hideTargetingRangeRing = function()
 Spriteset_Map.prototype.showTargetingRangeRing = function(cursor)
 {
   // lazily create the one reusable ring sprite the first time it's needed.
-  let ring = this._j._targeting._rangeRing;
+  let ring = this.rangeRing();
   if (!ring)
   {
     ring = new Sprite_HitboxPulse();
     JABS_HitboxPulseManager.getLayer()
       .addChild(ring);
-    this._j._targeting._rangeRing = ring;
+    this.setRangeRing(ring);
   }
 
   // merge over the manager's configured defaults, but override the style to read as clearly
@@ -165,7 +165,7 @@ Spriteset_Map.prototype.updateTargetingAoePreview = function()
 Spriteset_Map.prototype.hideTargetingAoePreview = function()
 {
   // only hide the pulse if one was ever created.
-  const pulse = this._j._targeting._previewPulse;
+  const pulse = this.previewPulse();
   if (pulse)
   {
     pulse.visible = false;
@@ -188,13 +188,13 @@ Spriteset_Map.prototype.hideTargetingAoePreview = function()
 Spriteset_Map.prototype.showTargetingAoePreviewPulse = function(cursor, sentinel, action)
 {
   // lazily create the one reusable pulse sprite the first time it's needed.
-  let pulse = this._j._targeting._previewPulse;
+  let pulse = this.previewPulse();
   if (!pulse)
   {
     pulse = new Sprite_HitboxPulse();
     JABS_HitboxPulseManager.getLayer()
       .addChild(pulse);
-    this._j._targeting._previewPulse = pulse;
+    this.setPreviewPulse(pulse);
   }
 
   // read the degrees/thickness off the sentinel the same way real hit-resolution would.
@@ -278,7 +278,7 @@ Spriteset_Map.prototype.refreshTargetingHighlightSprites = function(cursor, sent
   const colliding = !action.isSupportAction();
 
   // build/refresh a highlight sprite for every battler currently caught.
-  const dict = this._j._targeting._highlightSprites;
+  const dict = this.highlightSprites();
   const layer = this.getJabsHitboxLayer();
   const tw = $gameMap.tileWidth();
   const th = $gameMap.tileHeight();
@@ -313,7 +313,7 @@ Spriteset_Map.prototype.refreshTargetingHighlightSprites = function(cursor, sent
 Spriteset_Map.prototype.purgeTargetingHighlightSprites = function(stillCaught)
 {
   // build the set of keys that are still legitimately caught this frame.
-  const dict = this._j._targeting._highlightSprites;
+  const dict = this.highlightSprites();
   const layer = this.getJabsHitboxLayer();
   const activeKeys = new Set(stillCaught.map(battler => battler.getUuid()));
 
@@ -332,4 +332,86 @@ Spriteset_Map.prototype.purgeTargetingHighlightSprites = function(stillCaught)
       delete dict[key];
     });
 };
+
+//region properties
+/**
+ * Gets the reticle sprite drawn over the currently selected target.
+ * @returns {Sprite} The targeting reticle.
+ */
+Spriteset_Map.prototype.reticle = function()
+{
+  // hand back the reticle.
+  return this._j._targeting._reticle;
+};
+
+/**
+ * Sets the reticle sprite drawn over the currently selected target.
+ * @param {Sprite} newReticle The targeting reticle.
+ */
+Spriteset_Map.prototype.setReticle = function(newReticle)
+{
+  // assign the reticle.
+  this._j._targeting._reticle = newReticle;
+};
+
+/**
+ * Gets the highlight sprites.
+ * @returns {*} The highlightSprites.
+ */
+Spriteset_Map.prototype.highlightSprites = function()
+{
+  // hand back the highlight sprites.
+  return this._j._targeting._highlightSprites;
+};
+
+/**
+ * Sets the highlight sprites.
+ * @param {*} newHighlightSprites The new highlightSprites.
+ */
+Spriteset_Map.prototype.setHighlightSprites = function(newHighlightSprites)
+{
+  // assign the highlight sprites.
+  this._j._targeting._highlightSprites = newHighlightSprites;
+};
+
+/**
+ * Gets the preview pulse.
+ * @returns {*} The previewPulse.
+ */
+Spriteset_Map.prototype.previewPulse = function()
+{
+  // hand back the preview pulse.
+  return this._j._targeting._previewPulse;
+};
+
+/**
+ * Sets the preview pulse.
+ * @param {*} newPreviewPulse The new previewPulse.
+ */
+Spriteset_Map.prototype.setPreviewPulse = function(newPreviewPulse)
+{
+  // assign the preview pulse.
+  this._j._targeting._previewPulse = newPreviewPulse;
+};
+
+/**
+ * Gets the range ring.
+ * @returns {*} The rangeRing.
+ */
+Spriteset_Map.prototype.rangeRing = function()
+{
+  // hand back the range ring.
+  return this._j._targeting._rangeRing;
+};
+
+/**
+ * Sets the range ring.
+ * @param {*} newRangeRing The new rangeRing.
+ */
+Spriteset_Map.prototype.setRangeRing = function(newRangeRing)
+{
+  // assign the range ring.
+  this._j._targeting._rangeRing = newRangeRing;
+};
+//endregion properties
 //endregion Spriteset_Map (targeting overlay)

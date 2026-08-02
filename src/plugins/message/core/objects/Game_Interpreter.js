@@ -40,7 +40,7 @@ Game_Interpreter.prototype.hideSpecificChoiceBranches = function(params)
   const eventMetadata = $gameMap.event(this.eventId());
   const currentPageCommands = eventMetadata
     ? eventMetadata.page().list
-    : $dataCommonEvents.at(this._commonEventId).list;
+    : $dataCommonEvents.at(this.commonEventId()).list;
 
   // 102 = start show choice
   // 402 = one of the show choice options
@@ -107,7 +107,7 @@ Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandInd
   const eventMetadata = $gameMap.event(this.eventId());
   const currentPageCommands = eventMetadata
     ? eventMetadata.page().list
-    : $dataCommonEvents.at(this._commonEventId).list;
+    : $dataCommonEvents.at(this.commonEventId()).list;
 
   // grab the event subcommand.
   const subEventCommand = currentPageCommands.at(subChoiceCommandIndex);
@@ -140,4 +140,16 @@ Game_Interpreter.prototype.setChoiceHidden = function(choiceIndex, shouldHide = 
   // hide it- or don't.
   $gameMessage.hideChoice(choiceIndex, shouldHide);
 };
+
+//region properties
+/**
+ * Gets the common event id.
+ * @returns {number} The commonEventId.
+ */
+Game_Interpreter.prototype.commonEventId = function()
+{
+  // hand back the common event id.
+  return this._commonEventId;
+};
+//endregion properties
 //endregion Game_Interpreter

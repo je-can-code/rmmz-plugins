@@ -281,14 +281,6 @@ class IconManager
       case  7:
         return 76;   // weapon skills
       case  8:
-        return 68;   // geology (earthie)
-      case  9:
-        return 69;   // nephology (skye)
-      case 10:
-        return 64;   // magmology (cynder)
-      case 11:
-        return 67;   // hydrology (aqualocke)
-      case 12:
         return 2192; // superlatives
       default:
         return 0;

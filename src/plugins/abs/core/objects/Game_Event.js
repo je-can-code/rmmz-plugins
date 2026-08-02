@@ -152,10 +152,10 @@ Game_Event.prototype.jabsEventRefresh = function()
     : this.findProperPageIndex();
 
   // check if the page index changed.
-  if (this._pageIndex !== newPageIndex)
+  if (this.pageIndex() !== newPageIndex)
   {
     // update the page index.
-    this._pageIndex = newPageIndex;
+    this.setPageIndex(newPageIndex);
 
     // run the page setup.
     this.setupPage();
@@ -187,8 +187,8 @@ Game_Event.prototype.page = function()
   console.warn(
     '[JABS] Game_Event#page: missing event data (race / teardown?).',
     {
-      eventId: this._eventId,
-      pageIndex: this._pageIndex,
+      eventId: this.eventId(),
+      pageIndex: this.pageIndex(),
       x: this.x(),
       y: this.y(),
       isJabsAction: this.isJabsAction(),
@@ -1076,10 +1076,10 @@ Game_Event.prototype.existOnCaster = function()
   const c = caster.getCharacter();
 
   // store  real x on the instance for later reads.
-  this._realX = c._realX;
-  this._realY = c._realY;
-  this._x = c._x;
-  this._y = c._y;
+  this.setRealX(c._realX);
+  this.setRealY(c._realY);
+  this.setX(c._x);
+  this.setY(c._y);
   this.straighten();
   this.refreshBushDepth();
 };

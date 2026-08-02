@@ -42,4 +42,20 @@ Game_Event.prototype.getCollisionPivotY = function()
   return 0.70;
 };
 
+/**
+ * Overwrites {@link Game_CharacterBase.checkEventTriggerTouchFront}.<br/>
+ * Vanilla computes the front tile from this event's raw `_x`/`_y`, which are fractional under
+ * pixel movement — the downstream `$gamePlayer.pos(x2, y2)` integer-tile comparison could never
+ * match. Derives the front tile from this event's occupied tile instead, so an Event Touch (NPC
+ * bumps into the player) trigger fires correctly regardless of where mid-step this event is.
+ * @param {number} d The direction this event is moving.
+ */
+Game_Event.prototype.checkEventTriggerTouchFront = function(d)
+{
+  const x2 = $gameMap.roundXWithDirection(this.occupiedTileX(), d);
+  const y2 = $gameMap.roundYWithDirection(this.occupiedTileY(), d);
+
+  this.checkEventTriggerTouch(x2, y2);
+};
+
 //endregion Game_Event

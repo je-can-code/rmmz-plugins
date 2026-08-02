@@ -1,12 +1,65 @@
 //region Window_Command
 import BuiltWindowCommand from './../models/BuiltWindowCommand.js';
+
+//region init
+/**
+ * A hook for subclasses to seed their own members before the command list is first built.
+ *
+ * A no-op here; implement it in the subclass and it will be called at the right moment.
+ *
+ * This exists because {@link Window_Command.initialize} ends by refreshing- which builds the command
+ * list, and therefore runs the subclass's `makeCommandList` before the subclass has had any chance to
+ * set itself up. Both of the obvious places to seed state are too late:
+ *
+ * - the constructor body after `super(rect)`, because `super(rect)` is what triggers the refresh.
+ * - class field declarations, because JavaScript applies those only after `super()` returns.
+ *
+ * And a derived constructor cannot touch `this` before calling `super`, so there is no earlier place to
+ * put it. Seeding state anywhere else yields "cannot read properties of undefined" from inside
+ * `makeCommandList`, on the first frame the window exists.
+ *
+ * Implementations must confine themselves to assigning fields. This runs before the original logic
+ * reaches {@link Window_Base.initialize}, so there is no `contents`, no geometry and no font yet-
+ * anything that draws, measures, or refreshes belongs after `super(rect)` in the constructor instead.
+ *
+ * There is a second, sharper consequence of the same timing, and it applies to `makeCommandList` rather
+ * than to this hook: **a command window's list is built before the instance is fully constructed**, so
+ * nothing on that path may touch a private member. Private fields and methods are branded onto an
+ * instance only once `super()` returns, and until then any `this.#anything` throws:
+ *
+ *   TypeError: Receiver must be an instance of class anonymous
+ *
+ * Note that naming a private method is enough- `array.map(this.#build, this)` evaluates the reference
+ * before `map` runs, so it throws even when the array is empty. So a `makeCommandList` with nothing to
+ * build should return before reaching any private member, which is worth a guard of its own.
+ */
+Window_Command.prototype.initMembers = function()
+{
+};
+
+/**
+ * Extends {@link Window_Command.initialize}.<br/>
+ * Also gives subclasses a chance to seed their members before the command list is built from them.
+ */
+J.BASE.Aliased.Window_Command.set('initialize', Window_Command.prototype.initialize);
+Window_Command.prototype.initialize = function(rect)
+{
+  // let the subclass set itself up while there is still time to matter.
+  this.initMembers();
+
+  // perform original logic, which ends by building the command list.
+  J.BASE.Aliased.Window_Command.get('initialize')
+    .call(this, rect);
+};
+//endregion init
+
 /**
  * Gets all commands currently in this list.
  * @returns {BuiltWindowCommand[]}
  */
 Window_Command.prototype.commandList = function()
 {
-  return this._list ?? [];
+  return this._list;
 };
 
 /**
@@ -378,6 +431,24 @@ Window_Command.prototype.commandHelpText = function(index)
 Window_Command.prototype.currentHelpText = function()
 {
   return this.commandHelpText(this.index()) ?? String.empty;
+};
+
+/**
+ * Overwrites {@link #updateHelp}.<br/>
+ * Describes the highlighted command in the attached help window.
+ *
+ * Commands already carry their own help text, and the engine already tells a window when to refresh its
+ * help- so doing the join here means attaching a help window is the whole of the work. Commands without
+ * help text resolve to an empty string, which reads as a cleared help window.
+ */
+Window_Command.prototype.updateHelp = function()
+{
+  // nothing to describe into if this window was never given a help window.
+  if (!this.helpWindow()) return;
+
+  // describe whatever is currently highlighted.
+  this.helpWindow()
+    .setText(this.currentHelpText());
 };
 
 /**

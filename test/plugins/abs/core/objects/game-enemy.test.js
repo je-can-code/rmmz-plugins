@@ -19,6 +19,10 @@ describe('J-ABS Game_Enemy (unit, all downstream dependencies mocked)', () =>
   {
     vi.resetModules();
 
+    // String.empty is a J-Base runtime augmentation, always present by the time this file's
+    // production code runs in-game; stub it here since this test doesn't boot J-Base itself.
+    String.empty = '';
+
     globalThis.J = {
       ABS: {
         Aliased: { Game_Enemy: new Map() },
@@ -264,6 +268,45 @@ describe('J-ABS Game_Enemy (unit, all downstream dependencies mocked)', () =>
       const enemy = buildEnemy({ databaseData: () => buildReferenceData({ jabsGuardSkillId: 211 }) });
 
       expect(enemy.getGuardSkillId()).toEqual(211);
+    });
+  });
+
+  describe('getUuid()', () =>
+  {
+    it('combines the name with the generated uuid once the enemy has its database record', () =>
+    {
+      // Arrange: a fully set up enemy knows both halves of its identity.
+      const enemy = buildEnemy({
+        enemy: () => ({ name: 'Slime' }),
+        name: () => 'Slime',
+        uuid: () => 'abc-123',
+      });
+
+      // Act.
+      const uuid = enemy.getUuid();
+
+      // Assert: the generated half is what tells two copies of one enemy apart.
+      expect(uuid).toEqual('Slime_abc-123');
+    });
+
+    it('reports no identity while the enemy is still being constructed', () =>
+    {
+      // Arrange: vanilla assigns the enemy id in setup(), which runs after initMembers() has already
+      // reached clearStates() and through it this method- so enemy() has nothing to hand back yet.
+      const enemy = buildEnemy({
+        enemy: () => undefined,
+        name: () =>
+        {
+          throw new Error('name() must not be reached without a database record');
+        },
+        uuid: () => 'abc-123',
+      });
+
+      // Act.
+      const uuid = enemy.getUuid();
+
+      // Assert: the empty sentinel is what clearStates() checks to know there is nothing to purge.
+      expect(uuid).toEqual('');
     });
   });
 

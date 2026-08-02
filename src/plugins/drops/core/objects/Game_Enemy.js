@@ -65,19 +65,18 @@ Game_Enemy.prototype.makeDropItems = function(killer = null)
     // here we're using the number from the database as a percentage chance instead.
     const rate = drop.denominator * multiplier;
 
-    // if the multiplier was so great that the rate is above 100, we always get it.
-    const treasureHunterSkip = rate >= 100;
-
-    // determine if the loot was found.
-    const foundLoot = treasureHunterSkip
-      ? true                          // we were already a boss.
-      : this.didFindLoot(rate, killer); // roll the dice!
+    // determine how many of this loot were found; a rate at or beyond 100 lands on every roll,
+    // so the old "always get it" shortcut is simply what a guaranteed rate now produces.
+    const foundCount = this.howMuchLootFound(rate, killer);
 
     // if we didn't find the loot, then don't proceed.
-    if (foundLoot === false) return;
+    if (foundCount <= 0) return;
 
-    // find the loot.
-    this.findLoot(drop, itemsFound);
+    // find the loot- once per success, since a single drop entry can yield several copies.
+    for (let index = 0; index < foundCount; index++)
+    {
+      this.findLoot(drop, itemsFound);
+    }
   }, this);
 
   // return all earned loot!
@@ -123,37 +122,51 @@ Game_Enemy.prototype.canFindLoot = function(drop)
 };
 
 /**
+ * Determines how many copies of a drop were found at the given rate.
+ *
+ * A drop is a repeatable outcome- finding it twice is a coherent result in a way that "hit twice"
+ * or "critted twice" are not- so this resolves through the shared proc-count path rather than
+ * collapsing to a single yes/no. That is what lets Accumulate Mode roll every one of the killer's
+ * positive rolls and award a copy per success, and lets Encore echo each success further.
+ *
+ * A rate at or beyond 100 succeeds on every roll by construction, so a "guaranteed" drop needs no
+ * special case: it simply lands on all of them.
+ * @param {number} rate The 0-100 integer rate of which to find this loot.
+ * @param {Game_Actor|Game_Enemy=} killer The battler that landed the killing blow, if known.
+ * @returns {number} How many copies of this loot were found; 0 means none.
+ */
+Game_Enemy.prototype.howMuchLootFound = function(rate, killer = null)
+{
+  // with no known killer there is nobody whose rolls, fate or accumulate mode could apply, so
+  // this is a single plain roll with no bonus attempts either way.
+  if (!killer)
+  {
+    return RPGManager.chanceIn100(rate, 1, 0)
+      ? 1
+      : 0;
+  }
+
+  // this is a purely self-scoped proc from the killer's perspective- when known, the killer is
+  // both the roller and the recipient of the drop-chance roll.
+  const positiveRolls = 1 + killer.getPositiveRolls();
+  const negativeRolls = killer.getNegativeRolls();
+
+  // resolve how many copies this drop should yield (Accumulate Mode/Encore aware).
+  return RPGManager.resolveProcCount(killer, rate, positiveRolls, negativeRolls);
+};
+
+/**
  * Determines whether or not loot was found based on the provided rate.
- * This is not deterministic, and the same (non-100) rate
+ * This is not deterministic, and the same (non-100) rate can answer differently each time.
+ * Callers that care how many copies were found should ask {@link #howMuchLootFound} instead.
  * @param {number} rate The 0-100 integer rate of which to find this loot.
  * @param {Game_Actor|Game_Enemy=} killer The battler that landed the killing blow, if known.
  * @returns {boolean} True if we found loot this time, false otherwise.
  */
 Game_Enemy.prototype.didFindLoot = function(rate, killer = null)
 {
-  // locally assign the percent chance to find something.
-  let chance = rate;
-
-  // check if anyone in the party has the double-drop trait.
-  if ($gameParty.hasDropItemDouble())
-  {
-    // double the ratio!
-    chance *= 2;
-  }
-
-  // this is a purely self-scoped proc from the killer's perspective- when known, the killer is
-  // both the roller and the recipient of the drop-chance roll.
-  const positiveRolls = killer ? 1 + killer.getPositiveRolls() : 1;
-  const negativeRolls = killer ? killer.getNegativeRolls() : 0;
-
-  // roll the dice and see if we won! when the killer is known, their fate-override flags
-  // (guaranteed find/guaranteed miss) can short-circuit the roll entirely.
-  const found = killer
-    ? RPGManager.fateOf100(killer, chance, positiveRolls, negativeRolls)
-    : RPGManager.chanceIn100(chance, positiveRolls, negativeRolls);
-
-  // return the result.
-  return found;
+  // whether any loot was found is simply whether at least one copy of it was.
+  return this.howMuchLootFound(rate, killer) > 0;
 };
 
 /**
@@ -226,8 +239,8 @@ Game_Enemy.prototype.dropSources = function()
  */
 Game_Enemy.prototype.extractExtraDrops = function(referenceData)
 {
-  // get the drops found on this enemy.
-  const moreDrops = RPGManager.getArraysFromNotesByRegex(referenceData, J.DROPS.RegExp.ExtraDrop, true) ?? [];
+  // get the drops found on this enemy; an absent tag yields an empty array, never null.
+  const moreDrops = RPGManager.getArraysFromNotesByRegex(referenceData, J.DROPS.RegExp.ExtraDrop, true);
 
   // a mapping function to build proper drop items from the arrays.
   const mapper = drop =>

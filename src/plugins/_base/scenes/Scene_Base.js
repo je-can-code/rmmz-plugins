@@ -59,6 +59,18 @@ Scene_Base.prototype.buildModalDimmerWindow = function()
 };
 
 /**
+ * Gets whether this scene has ever summoned its modal dimmer.
+ *
+ * Asked instead of the getter when the answer only matters for tearing down, since the getter builds
+ * one on first use and would create a dimmer purely to switch it off.
+ * @returns {boolean}
+ */
+Scene_Base.prototype.hasModalDimmerWindow = function()
+{
+  return this._j._modalDimmerWindow !== null;
+};
+
+/**
  * Gets the shared modal dimmer window for this scene, creating it on first use when the engine data layer is live.
  *
  * @returns {Window_Dimmer} The dimmer overlay window.
@@ -82,7 +94,7 @@ Scene_Base.prototype.getModalDimmerWindow = function()
 Scene_Base.prototype.ensureModalDimmerBeforeWindow = function(anchorWindow)
 {
   const dimmer = this.getModalDimmerWindow();
-  const wl = this._windowLayer;
+  const wl = this.windowLayer();
 
   if (dimmer.parent !== null)
   {
@@ -120,12 +132,11 @@ Scene_Base.prototype.showModalDimmer = function(
  */
 Scene_Base.prototype.hideModalDimmer = function()
 {
-  if (this._j._modalDimmerWindow === null)
-  {
-    return;
-  }
+  // nothing to hide when the dimmer was never summoned; reaching for it through its getter would
+  // build one purely to switch it off.
+  if (this.hasModalDimmerWindow() === false) return;
 
-  this._j._modalDimmerWindow.visible = false;
+  this.getModalDimmerWindow().visible = false;
 };
 
 /**
@@ -158,5 +169,15 @@ Scene_Map.prototype.isMapScene = function()
 {
   // this is the map scene.
   return true;
+};
+
+/**
+ * Gets the layer every window of this scene is added to.
+ * @returns {WindowLayer} The windowLayer.
+ */
+Scene_Base.prototype.windowLayer = function()
+{
+  // hand back the layer every window of this scene is added to.
+  return this._windowLayer;
 };
 //endregion Scene_Map

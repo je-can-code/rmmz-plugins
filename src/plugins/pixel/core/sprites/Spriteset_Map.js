@@ -30,19 +30,39 @@ Spriteset_Map.prototype.createPixelCollisionOverlay = function()
   const initialVisibility = (J.PIXEL && J.PIXEL.Metadata)
     ? J.PIXEL.Metadata.OverlayInitiallyVisible
     : false;
-  this._pixelOverlayVisible = this._pixelOverlayVisible || initialVisibility;
+  this.setPixelOverlayVisible(this.pixelOverlayVisible() || initialVisibility);
 
   // Keep debug sample collection in sync with initial visibility.
-  PixelDebugSampler.enabled = this._pixelOverlayVisible;
+  PixelDebugSampler.enabled = this.pixelOverlayVisible();
 
   // Create the overlay sprite.
-  this._pixelCollisionOverlay = new Sprite_PixelCollisionOverlay();
+  const overlay = new Sprite_PixelCollisionOverlay();
 
   // Set initial visibility.
-  this._pixelCollisionOverlay.visible = this._pixelOverlayVisible;
+  overlay.visible = this.pixelOverlayVisible();
+
+  this.setPixelCollisionOverlay(overlay);
 
   // Add to the spriteset on the upper layer.
-  this.addChild(this._pixelCollisionOverlay);
+  this.addChild(overlay);
+};
+
+/**
+ * Gets the sprite drawing the pixel collision overlay.
+ * @returns {Sprite_PixelCollisionOverlay|null}
+ */
+Spriteset_Map.prototype.pixelCollisionOverlay = function()
+{
+  return this._pixelCollisionOverlay;
+};
+
+/**
+ * Sets the sprite drawing the pixel collision overlay.
+ * @param {Sprite_PixelCollisionOverlay} overlay The sprite to track.
+ */
+Spriteset_Map.prototype.setPixelCollisionOverlay = function(overlay)
+{
+  this._pixelCollisionOverlay = overlay;
 };
 
 /**
@@ -75,19 +95,41 @@ Spriteset_Map.prototype.update = function()
   if (Input.isTriggered("pixelOverlay"))
   {
     // Flip the overlay visibility flag.
-    this._pixelOverlayVisible = !this._pixelOverlayVisible;
+    this.setPixelOverlayVisible(!this.pixelOverlayVisible());
 
     // Apply to the overlay sprite if it exists.
-    if (this._pixelCollisionOverlay)
+    if (this.pixelCollisionOverlay())
     {
       // Toggle the visibility.
-      this._pixelCollisionOverlay.visible = this._pixelOverlayVisible;
+      this.pixelCollisionOverlay().visible = this.pixelOverlayVisible();
     }
 
     // Sync the debug sample collection to overlay visibility.
     // When the overlay is hidden, no samples need to be pushed, eliminating
     // the per-frame object allocation in all _pixelCheck* probe loops.
-    PixelDebugSampler.enabled = this._pixelOverlayVisible;
+    PixelDebugSampler.enabled = this.pixelOverlayVisible();
   }
 };
+
+//region properties
+/**
+ * Gets the pixel overlay visible.
+ * @returns {*} The pixelOverlayVisible.
+ */
+Spriteset_Map.prototype.pixelOverlayVisible = function()
+{
+  // hand back the pixel overlay visible.
+  return this._pixelOverlayVisible;
+};
+
+/**
+ * Sets the pixel overlay visible.
+ * @param {*} newPixelOverlayVisible The new pixelOverlayVisible.
+ */
+Spriteset_Map.prototype.setPixelOverlayVisible = function(newPixelOverlayVisible)
+{
+  // assign the pixel overlay visible.
+  this._pixelOverlayVisible = newPixelOverlayVisible;
+};
+//endregion properties
 //endregion Spriteset_Map

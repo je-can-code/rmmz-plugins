@@ -19,6 +19,10 @@ describe('J-SystemUtilities gamepad fresh press logging (direct src import)', ()
 
     // patches globalThis.Input directly, no vm involved.
     await import('../../../../src/plugins/utils/core/managers/Input.js');
+
+    // J-Base accessors the input layer reads through.
+    globalThis.Input.currentState = function() { return this._currentState; };
+    globalThis.Input.gamepadStates = function() { return this._gamepadStates; };
   });
 
   it('logs only fresh presses when enabled', () =>

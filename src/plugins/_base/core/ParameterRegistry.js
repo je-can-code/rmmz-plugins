@@ -7,9 +7,33 @@ import ParameterDefinition from './../models/ParameterDefinition.js';
  */
 class ParameterRegistry
 {
+
+  //region properties
+  /**
+   * Gets the definitions.
+   * @returns {*} The definitions.
+   */
+  static definitions()
+  {
+    // hand back the definitions.
+    return this._definitions;
+  }
+
+  /**
+   * Gets the group cache.
+   * @returns {*} The groupCache.
+   */
+  static groupCache()
+  {
+    // hand back the group cache.
+    return this._groupCache;
+  }
+  //endregion properties
+
   /**
    * @type {Map<string, ParameterDefinition>}
    */
+
   static _definitions = new Map();
 
   /**
@@ -28,14 +52,14 @@ class ParameterRegistry
       throw new Error('ParameterRegistry.register requires a ParameterDefinition instance.');
     }
 
-    if (this._definitions.has(definition.key))
+    if (this.definitions().has(definition.key))
     {
       throw new Error(`ParameterRegistry: duplicate key "${definition.key}".`);
     }
 
     // Register the value on the alias map for runtime lookup.
-    this._definitions.set(definition.key, definition);
-    this._groupCache.clear();
+    this.definitions().set(definition.key, definition);
+    this.groupCache().clear();
   }
 
   /**
@@ -44,9 +68,9 @@ class ParameterRegistry
    */
   static get(key)
   {
-    if (this._definitions.has(key))
+    if (this.definitions().has(key))
     {
-      return this._definitions.get(key);
+      return this.definitions().get(key);
     }
 
     return null;
@@ -58,7 +82,7 @@ class ParameterRegistry
    */
   static has(key)
   {
-    return this._definitions.has(key);
+    return this.definitions().has(key);
   }
 
   /**
@@ -66,7 +90,7 @@ class ParameterRegistry
    */
   static all()
   {
-    return [ ...this._definitions.values() ];
+    return [ ...this.definitions().values() ];
   }
 
   /**
@@ -75,9 +99,9 @@ class ParameterRegistry
    */
   static byGroup(group)
   {
-    if (this._groupCache.has(group))
+    if (this.groupCache().has(group))
     {
-      return this._groupCache.get(group);
+      return this.groupCache().get(group);
     }
 
     const definitions = this.all()
@@ -85,7 +109,7 @@ class ParameterRegistry
       .sort((left, right) => left.sortOrder - right.sortOrder);
 
     // Register the value on the alias map for runtime lookup.
-    this._groupCache.set(group, definitions);
+    this.groupCache().set(group, definitions);
 
     return definitions;
   }

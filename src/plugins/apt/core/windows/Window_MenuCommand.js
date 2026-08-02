@@ -19,6 +19,8 @@ Window_MenuCommand.prototype.addOriginalCommands = function()
     // build the command.
     const builtCommand = new WindowCommandBuilder('Aptitude')
       .setSymbol('aptitude')
+      .setHelpText("Track this character's progress toward learning new skills.")
+      .setMenuSection(MenuSection.Actor)
       .setIconIndex(186)
       .build();
 

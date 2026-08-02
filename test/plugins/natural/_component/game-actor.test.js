@@ -111,9 +111,11 @@ describe('J-NaturalGrowth Game_Actor (direct src import)', () =>
     // Act
     actor.levelUp();
 
-    // Assert
-    expect(actor.xParamGrowthPlus(0)).toBe(4);
-    expect(actor.sParamGrowthPlus(0)).toBe(3);
+    // Assert: ex- and sp-parameters live on a 0-1 scale, so their tags are authored in whole
+    // percents and scaled on the way in- matching the buff tags for the same parameters. Max TP
+    // is a whole number and is stored exactly as written.
+    expect(actor.xParamGrowthPlus(0)).toBeCloseTo(0.04, 10);
+    expect(actor.sParamGrowthPlus(0)).toBeCloseTo(0.03, 10);
     expect(actor.maxTpGrowthPlus()).toBe(12);
   });
 

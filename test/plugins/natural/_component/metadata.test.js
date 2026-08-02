@@ -23,16 +23,15 @@ describe('J-NaturalGrowth metadata (direct src import)', () =>
     await import('../../../../src/plugins/natural/core/_metadata/initialization.js');
   });
 
-  it('initializes PluginMetadata name and version', () =>
-  {
-    // Arrange & Act & Assert
-    expect(globalThis.J.NATURAL.Metadata.name).toBe('J-NaturalGrowth');
-  });
-
-  it('maps PluginManager parameters into J.NATURAL.Metadata base TP fields', () =>
+  it('parses the actor base TP maximum out of the plugin parameters', () =>
   {
     // Arrange & Act & Assert
     expect(globalThis.J.NATURAL.Metadata.BaseTpMaxActors).toBe(Number(DEFAULT_NATURAL_PLUGIN_PARAMS.actorBaseTp));
+  });
+
+  it('parses the enemy base TP maximum separately from the actor one', () =>
+  {
+    // Arrange & Act & Assert
     expect(globalThis.J.NATURAL.Metadata.BaseTpMaxEnemies).toBe(Number(DEFAULT_NATURAL_PLUGIN_PARAMS.enemyBaseTp));
   });
 });

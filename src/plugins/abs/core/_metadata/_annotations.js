@@ -3757,10 +3757,6 @@
  * @desc (Re-)Enables the ability to execute a party rotate.
  * Other conditions still apply (like not rotating to a dead member).
  *
- * @command Refresh JABS Menu
- * @text Refresh JABS Menu
- * @desc Refreshes the JABS menu in case there were any adjustments made to it.
- *
  * @command Apply Global Cooldown
  * @text Apply global cooldown to actor
  * @desc Sets the battler-wide GCD timer on a party actor that is on the map (leader or visible follower).

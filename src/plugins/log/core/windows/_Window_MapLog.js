@@ -20,34 +20,47 @@ class Window_MapLog
   static rowHeight = 16;
 
   /**
-   * The in-window tracking of how long before we reduce opacity for inactivity.
-   * @type {number}
-   */
-  inactivityTimer = 300;
-
-  /**
-   * The duration of which the inactivity timer will be refreshed to.
-   * @type {number}
-   */
-  defaultInactivityDuration = J.LOG.Metadata.InactivityTimerDuration;
-
-  /**
-   * The underlying data source that logs are derived from.
-   * @type {MapLogManager}
-   */
-  logManager = null;
-
-  /**
    * Constructor.
    * @param {Rectangle} rect The rectangle that represents this window.
    * @param {MapLogManager} logManager the manager that this window leverages to get logs from.
    */
   constructor(rect, logManager)
   {
+    // perform original logic, which seeds this window's members before building the list. the manager
+    // cannot be handed over that early- the seeding hook takes no arguments- so the first list is
+    // built against no source at all, which is why it must survive a null manager.
     super(rect);
 
     // bind this log manager.
     this.logManager = logManager;
+  }
+
+  /**
+   * Implements {@link Window_Command.initMembers}.<br/>
+   * Initializes the members of this window.
+   *
+   * These cannot be class field declarations: JavaScript applies those only after `super()` returns,
+   * by which point the command list has already been built from them and found them undefined.
+   */
+  initMembers()
+  {
+    /**
+     * The in-window tracking of how long before we reduce opacity for inactivity.
+     * @type {number}
+     */
+    this.inactivityTimer = 300;
+
+    /**
+     * The duration of which the inactivity timer will be refreshed to.
+     * @type {number}
+     */
+    this.defaultInactivityDuration = J.LOG.Metadata.InactivityTimerDuration;
+
+    /**
+     * The underlying data source that logs are derived from.
+     * @type {MapLogManager}
+     */
+    this.logManager = null;
   }
 
   /**

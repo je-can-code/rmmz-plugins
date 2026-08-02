@@ -219,7 +219,7 @@ Game_Event.prototype.canParseEscriptionComments = function()
   if (J.ABS && (this.isJabsAction() || this.isJabsLoot())) return false;
 
   // don't try to parse events that aren't "present".
-  if (this._pageIndex === -1 || this._pageIndex === -2) return false;
+  if (this.pageIndex() === -1 || this.pageIndex() === -2) return false;
 
   // we can parse!
   return true;

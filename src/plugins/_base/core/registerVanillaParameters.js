@@ -108,7 +108,7 @@ class VanillaParameterRegistration
       ParameterDefinition.Builder()
         .key('har')
         .group(ParameterGroups.VITALITY)
-        .sortOrder(8)
+        .sortOrder(7)
         .label(() => TextManager.har())
         .description(() => TextManager.harDescription())
         .iconIndex(() => IconManager.har())
@@ -153,7 +153,7 @@ class VanillaParameterRegistration
     );
     VanillaParameterRegistration.registerXparam('trg', 9, ParameterGroups.VITALITY, 5, ParameterFormat.REGEN_PER_SECOND);
     VanillaParameterRegistration.registerSparam('rec', 2, ParameterGroups.VITALITY, 6, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.REWARD_RATE);
-    VanillaParameterRegistration.registerSparam('pha', 3, ParameterGroups.VITALITY, 7, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.REWARD_RATE);
+    VanillaParameterRegistration.registerSparam('pha', 3, ParameterGroups.VITALITY, 8, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.REWARD_RATE);
     VanillaParameterRegistration.registerHar();
 
     // combat
@@ -192,8 +192,8 @@ class VanillaParameterRegistration
 
     // precision
     VanillaParameterRegistration.registerXparam('hit', 0, ParameterGroups.PRECISION, 0, ParameterFormat.SCALED_POINTS);
-    VanillaParameterRegistration.registerSparam('grd', 1, ParameterGroups.PRECISION, 1, ParameterFormat.SCALED_OFFSET);
-    VanillaParameterRegistration.registerBparam('agi', 6, ParameterGroups.PRECISION, 2);
+    VanillaParameterRegistration.registerBparam('agi', 6, ParameterGroups.PRECISION, 1);
+    VanillaParameterRegistration.registerSparam('grd', 1, ParameterGroups.PRECISION, 2, ParameterFormat.SCALED_OFFSET);
     VanillaParameterRegistration.registerXparam('cri', 2, ParameterGroups.PRECISION, 4);
     VanillaParameterRegistration.registerXparam('cev', 3, ParameterGroups.PRECISION, 5);
 

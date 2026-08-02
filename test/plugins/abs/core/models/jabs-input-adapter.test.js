@@ -26,7 +26,7 @@ describe('JABS_InputAdapter (direct src import)', () =>
     JABS_InputAdapter.controllers = [];
     globalThis.$gameMap = { hasInteractableEventInFront: () => false };
     globalThis.$gameParty = { canPartyCycle: () => true, _actors: [ 1, 2 ] };
-    globalThis.$jabsEngine = { performPartyCycling: vi.fn(), absPause: false, requestAbsMenu: false };
+    globalThis.$jabsEngine = { performPartyCycling: vi.fn(), absPause: false };
   });
 
   function buildAction(overrides = {})
@@ -488,23 +488,55 @@ describe('JABS_InputAdapter (direct src import)', () =>
 
   describe('performMenuAction()', () =>
   {
-    it('pauses jabs and requests the abs menu', () =>
+    it('pushes the main menu scene', () =>
     {
+      // Arrange: the menu is a scene now, so nothing is paused or flagged- it is simply pushed.
+      globalThis.Scene_Menu = class {};
+      globalThis.SceneManager = { push: vi.fn() };
+      globalThis.$gameSystem = { isMenuEnabled: () => true };
+
+      // Act.
       JABS_InputAdapter.performMenuAction();
-      expect(globalThis.$jabsEngine.absPause).toBe(true);
-      expect(globalThis.$jabsEngine.requestAbsMenu).toBe(true);
+
+      // Assert.
+      expect(globalThis.SceneManager.push).toHaveBeenCalledWith(globalThis.Scene_Menu);
     });
 
     it('does nothing when the menu is not currently permitted', () =>
     {
+      // Arrange.
+      globalThis.Scene_Menu = class {};
+      globalThis.SceneManager = { push: vi.fn() };
       const original = JABS_InputAdapter._canPerformMenuAction;
       JABS_InputAdapter._canPerformMenuAction = () => false;
 
+      // Act.
       JABS_InputAdapter.performMenuAction();
 
-      expect(globalThis.$jabsEngine.absPause).toBe(false);
-      expect(globalThis.$jabsEngine.requestAbsMenu).toBe(false);
+      // Assert.
+      expect(globalThis.SceneManager.push).not.toHaveBeenCalled();
       JABS_InputAdapter._canPerformMenuAction = original;
+    });
+  });
+
+  describe('_canPerformMenuAction()', () =>
+  {
+    it('permits the menu when the game allows it', () =>
+    {
+      // Arrange: this gate moved here from the quick menu's own greyed-out command.
+      globalThis.$gameSystem = { isMenuEnabled: () => true };
+
+      // Act & Assert.
+      expect(JABS_InputAdapter._canPerformMenuAction()).toBe(true);
+    });
+
+    it('refuses the menu when the game forbids it', () =>
+    {
+      // Arrange: events disable the menu outright during cutscenes.
+      globalThis.$gameSystem = { isMenuEnabled: () => false };
+
+      // Act & Assert.
+      expect(JABS_InputAdapter._canPerformMenuAction()).toBe(false);
     });
   });
 });

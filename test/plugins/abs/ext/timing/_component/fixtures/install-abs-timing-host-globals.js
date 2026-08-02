@@ -13,6 +13,6 @@
 export function setPluginContextToJabsTiming(sandbox = globalThis)
 {
   sandbox.__PLUGIN_NAME__ = 'J-ABS-Timing';
-  sandbox.__PLUGIN_VERSION__ = '1.0.2';
+  sandbox.__PLUGIN_VERSION__ = '1.0.3';
 }
 //endregion plugins/abs/ext/timing/_component/fixtures/install-abs-timing-host-globals.js

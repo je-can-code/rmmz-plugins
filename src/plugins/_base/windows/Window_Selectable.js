@@ -73,7 +73,7 @@ Window_Selectable.prototype.isMoreEnabled = function()
  */
 Window_Selectable.prototype.isMoreTriggered = function()
 {
-  return this._canRepeat
+  return this.canRepeat()
     ? Input.isRepeated('shift')
     : Input.isTriggered('shift');
 };
@@ -111,7 +111,7 @@ Window_Selectable.prototype.isContextEnabled = function()
  */
 Window_Selectable.prototype.isContextTriggered = function()
 {
-  return this._canRepeat
+  return this.canRepeat()
     ? Input.isRepeated('tab')
     : Input.isTriggered('tab');
 };
@@ -149,7 +149,7 @@ Window_Selectable.prototype.isContentPrevEnabled = function()
  */
 Window_Selectable.prototype.isContentPrevTriggered = function()
 {
-  return this._canRepeat
+  return this.canRepeat()
     ? Input.isRepeated('l2')
     : Input.isTriggered('l2');
 };
@@ -187,7 +187,7 @@ Window_Selectable.prototype.isContentNextEnabled = function()
  */
 Window_Selectable.prototype.isContentNextTriggered = function()
 {
-  return this._canRepeat
+  return this.canRepeat()
     ? Input.isRepeated('r2')
     : Input.isTriggered('r2');
 };
@@ -225,7 +225,7 @@ Window_Selectable.prototype.isActorPrevEnabled = function()
  */
 Window_Selectable.prototype.isActorPrevTriggered = function()
 {
-  return this._canRepeat
+  return this.canRepeat()
     ? Input.isRepeated('pageup')
     : Input.isTriggered('pageup');
 };
@@ -263,7 +263,7 @@ Window_Selectable.prototype.isActorNextEnabled = function()
  */
 Window_Selectable.prototype.isActorNextTriggered = function()
 {
-  return this._canRepeat
+  return this.canRepeat()
     ? Input.isRepeated('pagedown')
     : Input.isTriggered('pagedown');
 };
@@ -286,16 +286,120 @@ Window_Selectable.prototype.callActorNextHandler = function()
   this.callHandler('actor-next');
 };
 
+//region focus
+/**
+ * Gets whether a focus-previous handler is registered.
+ * @returns {boolean}
+ */
+Window_Selectable.prototype.isFocusPrevEnabled = function()
+{
+  return this.isHandled('focus-prev');
+};
+
+/**
+ * Gets whether a focus-next handler is registered.
+ * @returns {boolean}
+ */
+Window_Selectable.prototype.isFocusNextEnabled = function()
+{
+  return this.isHandled('focus-next');
+};
+
+/**
+ * Processes moving focus to the window on the left.
+ */
+Window_Selectable.prototype.processFocusPrev = function()
+{
+  this.playCursorSound();
+  this.updateInputData();
+  this.callFocusPrevHandler();
+};
+
+/**
+ * Processes moving focus to the window on the right.
+ */
+Window_Selectable.prototype.processFocusNext = function()
+{
+  this.playCursorSound();
+  this.updateInputData();
+  this.callFocusNextHandler();
+};
+
+/**
+ * Calls the handler registered for focus-previous.
+ */
+Window_Selectable.prototype.callFocusPrevHandler = function()
+{
+  this.callHandler('focus-prev');
+};
+
+/**
+ * Calls the handler registered for focus-next.
+ */
+Window_Selectable.prototype.callFocusNextHandler = function()
+{
+  this.callHandler('focus-next');
+};
+
+/**
+ * Extends {@link #cursorLeft}.<br/>
+ * Moves focus to the window on the left when one has been declared.
+ *
+ * Horizontal cursor movement is spatial- it means "go that way"- which the engine can only honour
+ * within a single window, and only when that window has more than one column. A scene laying windows
+ * out side by side has nowhere to express the same intent, so it declares a focus handler and this
+ * routes the input there.
+ *
+ * Note that this is a different idea from `content-prev`, which changes which subset a window is
+ * showing rather than where the player is. Those deliberately answer to different inputs: this to the
+ * directional pad, content cycling to the shoulder buttons. Collapsing them would spend two inputs
+ * on one job and leave the other unexpressible.
+ * @param {boolean} wrap Whether or not to wrap the cursor.
+ */
+J.BASE.Aliased.Window_Selectable.set('cursorLeft', Window_Selectable.prototype.cursorLeft);
+Window_Selectable.prototype.cursorLeft = function(wrap)
+{
+  // a declared neighbour to the left takes precedence over moving within this window.
+  if (this.isFocusPrevEnabled())
+  {
+    return this.processFocusPrev();
+  }
+
+  // perform original logic.
+  return J.BASE.Aliased.Window_Selectable.get('cursorLeft')
+    .call(this, wrap);
+};
+
+/**
+ * Extends {@link #cursorRight}.<br/>
+ * Moves focus to the window on the right when one has been declared.
+ * @param {boolean} wrap Whether or not to wrap the cursor.
+ */
+J.BASE.Aliased.Window_Selectable.set('cursorRight', Window_Selectable.prototype.cursorRight);
+Window_Selectable.prototype.cursorRight = function(wrap)
+{
+  // a declared neighbour to the right takes precedence over moving within this window.
+  if (this.isFocusNextEnabled())
+  {
+    return this.processFocusNext();
+  }
+
+  // perform original logic.
+  return J.BASE.Aliased.Window_Selectable.get('cursorRight')
+    .call(this, wrap);
+};
+//endregion focus
+
 /**
  * Extends the `.select()` to include a hook for executing logic onIndexChange.
  */
 J.BASE.Aliased.Window_Selectable.set('select', Window_Selectable.prototype.select);
 Window_Selectable.prototype.select = function(index)
 {
-  const previousIndex = this._index;
+  const previousIndex = this.index();
   // perform original logic.
   J.BASE.Aliased.Window_Selectable.get('select').call(this, index);
-  if (previousIndex !== this._index)
+  if (previousIndex !== this.index())
   {
     this.onIndexChange();
   }
@@ -308,5 +412,25 @@ Window_Selectable.prototype.select = function(index)
  */
 Window_Selectable.prototype.onIndexChange = function()
 {
+};
+
+/**
+ * Gets whether or not holding a direction repeats the cursor movement.
+ * @returns {boolean} The canRepeat.
+ */
+Window_Selectable.prototype.canRepeat = function()
+{
+  // hand back whether or not holding a direction repeats the cursor movement.
+  return this._canRepeat;
+};
+
+/**
+ * Gets the help window bound to this selection.
+ * @returns {Window_Help} The helpWindow.
+ */
+Window_Selectable.prototype.helpWindow = function()
+{
+  // hand back the help window bound to this selection.
+  return this._helpWindow;
 };
 //endregion Window_Selectable

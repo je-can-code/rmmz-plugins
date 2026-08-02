@@ -75,10 +75,14 @@ class Scene_Monsterpedia
   }
 
   /**
-   * Initialize all properties for our omnipedia.
+   * Extends {@link #initMembers}.<br/>
+   * Also initializes all properties for our omnipedia.
    */
   initMembers()
   {
+    // perform original logic.
+    super.initMembers();
+
     // initialize the root-namespace definition members.
     this.initCoreMembers();
 
@@ -182,11 +186,11 @@ class Scene_Monsterpedia
    */
   createBackground()
   {
-    this._backgroundFilter = new PIXI.filters.AlphaFilter(0.1);
-    this._backgroundSprite = new Sprite();
-    this._backgroundSprite.bitmap = SceneManager.backgroundBitmap();
-    this._backgroundSprite.filters = [ this._backgroundFilter ];
-    this.addChild(this._backgroundSprite);
+    this.setBackgroundFilter(new PIXI.filters.AlphaFilter(0.1));
+    this.setBackgroundSprite(new Sprite());
+    this.backgroundSprite().bitmap = SceneManager.backgroundBitmap();
+    this.backgroundSprite().filters = [ this.backgroundFilter() ];
+    this.addChild(this.backgroundSprite());
     //this.setBackgroundOpacity(220);
   }
 

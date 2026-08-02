@@ -13,7 +13,7 @@ Scene_Menu.prototype.createCommandWindow = function()
     .call(this);
 
   // register the handler that opens the passive viewer.
-  this._commandWindow.setHandler('passive-menu', this.commandPassive.bind(this));
+  this.commandWindow().setHandler('passive-menu', this.commandPassive.bind(this));
 };
 
 /**

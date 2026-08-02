@@ -492,18 +492,18 @@ class JABS_InputAdapter
   }
 
   /**
-   * Calls the JABS quick menu on the map.
+   * Opens the main menu.
+   *
+   * Nothing needs pausing or flagging here, which is the advantage of the menu being a scene: the map
+   * stops updating and the player stops moving because {@link Scene_Map} is not the running scene, not
+   * because something remembered to say so.
    */
   static performMenuAction()
   {
     // if we cannot call the menu, then do not.
     if (!this._canPerformMenuAction()) return;
 
-    // pause JABS.
-    $jabsEngine.absPause = true;
-
-    // request the menu.
-    $jabsEngine.requestAbsMenu = true;
+    SceneManager.push(Scene_Menu);
   }
 
   /**
@@ -512,8 +512,9 @@ class JABS_InputAdapter
    */
   static _canPerformMenuAction()
   {
-    // there are currently no conditions for accessing the JABS menu.
-    return true;
+    // the game can forbid the menu outright, which events do during cutscenes and the like. There is no
+    // command entry to grey out here, so the button itself has to honour it.
+    return $gameSystem.isMenuEnabled();
   }
 }
 

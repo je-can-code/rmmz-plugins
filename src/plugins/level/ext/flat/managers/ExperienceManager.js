@@ -190,8 +190,10 @@ class ExperienceManager
     // if the difference is too large in favor of the defender, then return the maximum experience.
     if (levelDifference > 15) return this.#maximumExperience;
 
-    // return the experience based on the level difference.
-    return this.#experienceMap.get(levelDifference) ?? this.#minimumExperience;
+    // return the experience based on the level difference. the guards above have already handled
+    // every difference outside -15 to 15, and the map holds an entry for every value inside that
+    // span, so this lookup always finds one- no fallback is reachable here.
+    return this.#experienceMap.get(levelDifference);
   }
 
   /**

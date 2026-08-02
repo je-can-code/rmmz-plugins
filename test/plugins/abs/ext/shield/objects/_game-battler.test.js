@@ -339,10 +339,11 @@ describe('J-ABS-Shield _Game_Battler (unit, all downstream dependencies mocked)'
       expect(globalThis.$jabsEngine.forceMapAction).not.toHaveBeenCalled();
     });
 
-    it('filters out falsy sources before pulling shield break skills', () =>
+    it('pulls shield break skills from every source it is handed', () =>
     {
-      // Arrange
-      const battler = buildBattler({ databaseData: vi.fn(() => null), states: vi.fn(() => [ null, { id: 1 } ]) });
+      // Arrange- shieldBreakSources() is contractually non-null, so every entry is queried.
+      const databaseData = { id: 7 };
+      const battler = buildBattler({ databaseData: vi.fn(() => databaseData), states: vi.fn(() => [ { id: 1 } ]) });
       const caster = {};
       globalThis.JABS_AiManager.getBattlerByUuid.mockReturnValue(caster);
 
@@ -350,7 +351,8 @@ describe('J-ABS-Shield _Game_Battler (unit, all downstream dependencies mocked)'
       battler.onShieldBreak(50);
 
       // Assert
-      expect(globalThis.RPGManager.getArrayFromNotesByRegex).toHaveBeenCalledTimes(1);
+      expect(globalThis.RPGManager.getArrayFromNotesByRegex).toHaveBeenCalledTimes(2);
+      expect(globalThis.RPGManager.getArrayFromNotesByRegex).toHaveBeenCalledWith(databaseData, globalThis.J.ABS.EXT.SHIELD.RegExp.Break, true);
       expect(globalThis.RPGManager.getArrayFromNotesByRegex).toHaveBeenCalledWith({ id: 1 }, globalThis.J.ABS.EXT.SHIELD.RegExp.Break, true);
     });
 

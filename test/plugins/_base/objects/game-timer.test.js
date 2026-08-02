@@ -28,6 +28,9 @@ describe('J-Base Game_Timer (direct src import)', () =>
     Game_Timer.prototype.initialize = originalInitialize;
     Game_Timer.prototype.start = originalStart;
 
+    // vanilla accessor this file reads through.
+    Game_Timer.prototype.frames = function() { return this._frames; };
+
     globalThis.Game_Timer = Game_Timer;
 
     await import('../../../../src/plugins/_base/objects/Game_Timer.js');
