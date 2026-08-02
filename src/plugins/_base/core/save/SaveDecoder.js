@@ -162,10 +162,44 @@ class SaveDecoder
           ? null
           : typedValuesNode.children.get(key) ?? null;
 
-        target[key] = this.decodeChild(data[key], typedChild, typedValuesChild, childPath);
+        const decoded = this.decodeChild(data[key], typedChild, typedValuesChild, childPath);
+
+        target[key] = this.mergeOverSeeded(target[key], decoded);
       });
 
     return target;
+  }
+
+  /**
+   * Lays a decoded value over whatever `seed` already established at the same position.
+   *
+   * Plain objects merge; everything else replaces. That distinction is what makes `seed` mean
+   * anything below the top level of a class. Consider `_j`: the seed runs the whole `initMembers`
+   * chain and builds every plugin's namespace, and then the file arrives holding a `_j` written
+   * before half those plugins existed. A plain assignment would replace the complete namespace with
+   * the partial one, and every plugin added since the save was written would find its own state
+   * missing - which is exactly the failure `seed` exists to prevent, reintroduced one level down.
+   *
+   * Merging instead means the file wins wherever it has something to say and the seeded default
+   * survives wherever it does not. Instances, arrays, `Map`s, and primitives replace outright, since
+   * a decoded instance is already the complete answer for its position.
+   * @param {*} seeded Whatever the seed left at this position, which is usually nothing.
+   * @param {*} decoded The value the file produced.
+   * @returns {*} The value to assign.
+   */
+  static mergeOverSeeded(seeded, decoded)
+  {
+    if (this.isPlainObject(seeded) === false) return decoded;
+
+    if (this.isPlainObject(decoded) === false) return decoded;
+
+    Object.keys(decoded)
+      .forEach(key =>
+      {
+        seeded[key] = this.mergeOverSeeded(seeded[key], decoded[key]);
+      });
+
+    return seeded;
   }
 
   /**

@@ -39,3 +39,5 @@ import './windows/Window_OmnipediaList.js';
 import './scenes/Scene_Omnipedia.js';
 import './_metadata/pluginCommands.js';
 
+import './registerOmniQuestSaveCodecs.js';
+

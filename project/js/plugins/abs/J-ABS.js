@@ -17836,6 +17836,24 @@ var JABS_DeathContext = class {
 		return JABS_AiManager.getBattlerByUuid(this.killerUuid);
 	}
 };
+/**
+* A death context survives into a savefile: an actor that died and has not yet been revived carries
+* one at `_j._abs._deathContext`, so the save encoder meets this type and needs a codec for it.
+*
+* The seed is explicit rather than derived because {@link JABS_DeathContext.initMembers} takes the
+* four values as parameters. The decoder never runs a constructor and therefore has nothing to pass
+* it, so the defaults are spelled out here as the cold equivalents of what a killing blow supplies.
+*/
+SerializableRegistry.register(JABS_DeathContext, {
+	id: "jabs-death-context",
+	aliases: ["JABS_DeathContext"],
+	seed: (instance) => {
+		instance.elementIds = [];
+		instance.hitType = String.empty;
+		instance.stypeId = 0;
+		instance.killerUuid = String.empty;
+	}
+});
 
 //#endregion
 //#region src/plugins/abs/core/managers/JABS_Engine.js

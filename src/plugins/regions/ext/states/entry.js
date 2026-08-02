@@ -4,3 +4,5 @@ import './models/RegionStateData.js';
 import './objects/Game_Map.js';
 import './objects/Game_Character.js';
 import './objects/Game_System.js';
+
+import './registerRegionStatesSaveCodecs.js';

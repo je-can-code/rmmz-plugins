@@ -26,3 +26,5 @@ import './models/AutoApplyStateDisplay.js';
 import './models/AutoInflictStateDisplay.js';
 import './models/RemoveStateOnMoveDisplay.js';
 import './windows/Window_PassiveDetail.js';
+
+import './registerPassiveConditionalSaveCodecs.js';

@@ -10,3 +10,5 @@ import './objects/Game_Event.js';
 import './objects/Game_Player.js';
 import './objects/Game_System.js';
 import './sprites/Sprite_Character.js';
+
+import './registerJabsToolsSaveCodecs.js';

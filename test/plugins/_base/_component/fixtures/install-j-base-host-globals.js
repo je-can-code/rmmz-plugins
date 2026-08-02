@@ -181,6 +181,14 @@ export function installJBaseHostGlobals(
   sandbox.TextManager = {};
   sandbox.IconManager = {};
 
+  // models register their save codec at import time against the registry J-Base hoists as a global.
+  // a stub rather than the real class, because a test that cares about codecs imports the registry
+  // itself, and one that does not should not have registrations from an unrelated realm leaking in.
+  sandbox.SerializableRegistry = {
+    register: noop,
+    extend: noop,
+  };
+
   class EventEmitter
   {
     constructor()

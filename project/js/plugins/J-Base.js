@@ -290,8 +290,19 @@
  * @text Enemy Base TP Max
  * @desc The base TP for enemies is this amount. Any formulai add onto this.
  * @default 100
+ *
+ * @param retainedSaveGenerations
+ * @type number
+ * @min 1
+ * @text Retained Save Generations
+ * @desc How many past versions of a save slot are kept on disk for rollback.
+ * @default 3
  */
 
+//#region \0rolldown/runtime.js
+var __commonJSMin = (cb, mod) => () => (mod || (cb((mod = { exports: {} }).exports, mod), cb = null), mod.exports);
+
+//#endregion
 //#region src/plugins/_base/core/JCache.js
 /**
 * A unified typed-cache primitive. A cache declares an ordered list of "weak dimensions" at
@@ -1658,6 +1669,18 @@ J.BASE.Metadata.Version = "3.2.0";
 J.BASE.PluginParameters = PluginManager.parameters(J.BASE.Metadata.Name);
 J.BASE.Metadata.BaseTpMaxActors = Number(J.BASE.PluginParameters["actorBaseTp"]);
 J.BASE.Metadata.BaseTpMaxEnemies = Number(J.BASE.PluginParameters["enemyBaseTp"]);
+/**
+* How many generations of a save slot are kept on disk before the oldest are pruned.
+*
+* Every save writes a whole new generation and then points the slot at it, so the previous ones are
+* still loadable. Keeping three means the failure mode of a bad save is "you lost the last save"
+* rather than "you lost the file", which is the entire promise of the save system.
+*
+* The coalesce is the same pattern the note-parsing helpers use: a parameter the editor has not
+* written into `plugins.js` yet reads as `undefined`, and this one has to hold a usable number from
+* the first boot after the plugin is updated rather than after someone opens the plugin manager.
+*/
+J.BASE.Metadata.retainedSaveGenerations = Number(J.BASE.PluginParameters["retainedSaveGenerations"] ?? 3);
 J.BASE.Metadata.ShowExternalFileLoadInfo = false;
 /**
 * The various traits captured here by id with a more meaningful descriptor.
@@ -1799,6 +1822,7 @@ J.BASE.RegExp.ClassifierType = /<type:[ ]?([a-zA-Z][a-zA-Z0-9_-]*)>/gi;
 J.BASE.Aliased = {
 	AudioManager: new Map(),
 	Bitmap: new Map(),
+	ConfigManager: new Map(),
 	DataManager: new Map(),
 	JsonEx: new Map(),
 	Game_Action: new Map(),
@@ -2144,6 +2168,7 @@ var SaveCodec = class SaveCodec {
 	*/
 	#deriveSeed(type) {
 		if (!type.prototype.initMembers) return () => {};
+		if (type.prototype.initMembers.length > 0) return () => {};
 		return (instance) => instance.initMembers();
 	}
 	/**
@@ -2918,9 +2943,35 @@ var SaveDecoder = class {
 			const childPath = `${path}.${key}`;
 			const typedChild = typedNode === null ? null : typedNode.children.get(key) ?? null;
 			const typedValuesChild = typedValuesNode === null ? null : typedValuesNode.children.get(key) ?? null;
-			target[key] = this.decodeChild(data[key], typedChild, typedValuesChild, childPath);
+			const decoded = this.decodeChild(data[key], typedChild, typedValuesChild, childPath);
+			target[key] = this.mergeOverSeeded(target[key], decoded);
 		});
 		return target;
+	}
+	/**
+	* Lays a decoded value over whatever `seed` already established at the same position.
+	*
+	* Plain objects merge; everything else replaces. That distinction is what makes `seed` mean
+	* anything below the top level of a class. Consider `_j`: the seed runs the whole `initMembers`
+	* chain and builds every plugin's namespace, and then the file arrives holding a `_j` written
+	* before half those plugins existed. A plain assignment would replace the complete namespace with
+	* the partial one, and every plugin added since the save was written would find its own state
+	* missing - which is exactly the failure `seed` exists to prevent, reintroduced one level down.
+	*
+	* Merging instead means the file wins wherever it has something to say and the seeded default
+	* survives wherever it does not. Instances, arrays, `Map`s, and primitives replace outright, since
+	* a decoded instance is already the complete answer for its position.
+	* @param {*} seeded Whatever the seed left at this position, which is usually nothing.
+	* @param {*} decoded The value the file produced.
+	* @returns {*} The value to assign.
+	*/
+	static mergeOverSeeded(seeded, decoded) {
+		if (this.isPlainObject(seeded) === false) return decoded;
+		if (this.isPlainObject(decoded) === false) return decoded;
+		Object.keys(decoded).forEach((key) => {
+			seeded[key] = this.mergeOverSeeded(seeded[key], decoded[key]);
+		});
+		return seeded;
 	}
 	/**
 	* Decodes one child value against whatever its position declares.
@@ -2998,6 +3049,500 @@ var SaveDecoder = class {
 			node = node[segment];
 		});
 		node[segments[segments.length - 1]] = value;
+	}
+};
+
+//#endregion
+//#region src/plugins/_base/core/save/SaveStorageError.js
+/**
+* Thrown while reading or writing the files a slot is made of.
+*
+* These are the failures that have nothing to do with what the document *means*: a pointer naming a
+* generation that is not there, a manifest that will not parse, a section the manifest promised and
+* the directory does not hold, a disk that refused a write. The loader treats most of them as a
+* reason to step back to an older generation, which is exactly why they carry a `kind` - see
+* {@link SaveError}.
+*
+* The path on a storage error is a file path rather than a JSON path, because that is the thing a
+* reader would go look at.
+*/
+var SaveStorageError = class SaveStorageError extends SaveError {
+	/**
+	* Builds the error for a slot with no generations at all.
+	*
+	* This is the "no such savefile" case, and it is normal: an empty slot in the load menu reaches it
+	* every time the player looks at one.
+	* @param {string} slotPath The directory the slot would live in.
+	* @returns {SaveStorageError}
+	*/
+	static noGenerations(slotPath) {
+		return new SaveStorageError("save-storage-no-generations", slotPath, "the slot holds no generations, so there is nothing to load.");
+	}
+	/**
+	* Builds the error for a generation missing a file its manifest promised.
+	* @param {string} filePath The path of the absent file.
+	* @returns {SaveStorageError}
+	*/
+	static missingSection(filePath) {
+		return new SaveStorageError("save-storage-missing-section", filePath, "the manifest lists this section but the file is not there. The generation is incomplete, " + "which is what a torn write looks like.");
+	}
+	/**
+	* Builds the error for a file that is present but is not valid JSON.
+	* @param {string} filePath The path of the unreadable file.
+	* @param {string} reason Whatever `JSON.parse` said about it.
+	* @returns {SaveStorageError}
+	*/
+	static malformedSection(filePath, reason) {
+		return new SaveStorageError("save-storage-malformed-section", filePath, `the file is present but did not parse as JSON: ${reason}`);
+	}
+	/**
+	* Builds the error for a generation written by a schema version this code does not understand.
+	* @param {string} filePath The path of the manifest carrying the version.
+	* @param {number} found The schema version the file claims.
+	* @param {number} supported The schema version this code writes.
+	* @returns {SaveStorageError}
+	*/
+	static unsupportedSchemaVersion(filePath, found, supported) {
+		return new SaveStorageError("save-storage-unsupported-schema-version", filePath, `the generation was written at schema version ${found}, and this build understands ` + `${supported}. A migration is needed before it can be read.`);
+	}
+	/**
+	* Builds the error for a slot where every generation failed, naming what was wrong with each.
+	*
+	* This is the end of the line for a load: stepping back further is not possible, so the message
+	* has to carry the whole story rather than only the last thing that went wrong.
+	* @param {string} slotPath The directory the slot lives in.
+	* @param {string[]} failures One line per generation tried, newest first.
+	* @returns {SaveStorageError}
+	*/
+	static noLoadableGeneration(slotPath, failures) {
+		return new SaveStorageError("save-storage-no-loadable-generation", slotPath, `every generation failed to load. Newest first:\n  ${failures.join("\n  ")}`);
+	}
+	/**
+	* Builds the error for a write the filesystem refused.
+	*
+	* A full, locked, or permission-denied disk is real on Windows and is more likely now that a slot
+	* is a directory of files rather than one. The pointer is deliberately left alone when this
+	* happens, so the previous generation stays live and the player loses nothing but the new save.
+	* @param {string} filePath The path being written when it failed.
+	* @param {string} reason Whatever the filesystem said.
+	* @returns {SaveStorageError}
+	*/
+	static writeFailed(filePath, reason) {
+		return new SaveStorageError("save-storage-write-failed", filePath, `the filesystem refused the write: ${reason}. The previous generation is untouched and is ` + "still the live one.");
+	}
+	/**
+	* @param {string} kind The stable classification of the failure.
+	* @param {string} path The file path that failed.
+	* @param {string} summary The human-readable explanation.
+	*/
+	constructor(kind, path, summary) {
+		super(kind, path, summary);
+		this.name = "SaveStorageError";
+	}
+};
+
+//#endregion
+//#region src/plugins/_base/core/save/SaveManifest.js
+/**
+* The index of one generation: what it holds, when it was written, and enough about the playthrough
+* to draw a row in the load menu.
+*
+* Two jobs, and both of them are about not decoding a world you do not need:
+*
+* - **`sections` makes a torn write detectable.** A generation is a directory of files, and the only
+*   way to know a crash did not land in the middle of it is for one file to say what the complete
+*   set was. The manifest is written last for exactly this reason.
+* - **`display` makes the load menu cheap.** Vanilla keeps a parallel `global.rmmzsave` holding one
+*   summary per slot, which can and does drift from the slots it describes. Here the summary lives
+*   *inside* the generation it summarizes, so it cannot describe a save that is not there.
+*
+* `display` is deliberately a superset of what vanilla's `DataManager.makeSavefileInfo` produces -
+* `title`, `characters`, `faces`, `playtime`, `timestamp` - because {@link Window_SavefileList} reads
+* those by name and is not being rewritten here. Everything past them is ours.
+*
+* The manifest is read as **plain data**, not decoded: the load menu wants five fields off a small
+* JSON document, and running the decoder over it to hand back an instance would buy nothing.
+*/
+var SaveManifest = class SaveManifest {
+	/**
+	* The schema version this build writes, and the only one it can read without a migration.
+	*
+	* Phase 5 turns this into a chain of migrations. Until it does, a mismatch is a hard failure, which
+	* is the correct behavior while saves are still disposable and the wrong one the day a player
+	* exists - see the versioning phase of the save rewrite plan.
+	* @type {number}
+	*/
+	static schemaVersion = 1;
+	/**
+	* The schema version this generation was written at.
+	* @type {number}
+	*/
+	schemaVersion = SaveManifest.schemaVersion;
+	/**
+	* When the generation was written, as an ISO-8601 timestamp.
+	* @type {string}
+	*/
+	savedAt = String.empty;
+	/**
+	* The playtime at the moment of writing, in frames.
+	* @type {number}
+	*/
+	playtimeFrames = 0;
+	/**
+	* The file name of every section this generation is made of, manifest excluded.
+	* @type {string[]}
+	*/
+	sections = [];
+	/**
+	* Everything the load menu draws, so it never has to open a world.
+	* @type {object}
+	*/
+	display = {};
+	/**
+	* Builds the manifest for a generation about to be written.
+	* @param {string[]} sections The file name of every section in the generation, manifest excluded.
+	* @param {object} display Everything the load menu needs to draw this slot.
+	* @param {number} playtimeFrames The playtime at the moment of writing, in frames.
+	* @returns {SaveManifest}
+	*/
+	static create(sections, display, playtimeFrames) {
+		const manifest = new SaveManifest();
+		manifest.schemaVersion = SaveManifest.schemaVersion;
+		manifest.savedAt = new Date().toISOString();
+		manifest.playtimeFrames = playtimeFrames;
+		manifest.sections = sections;
+		manifest.display = display;
+		return manifest;
+	}
+	/**
+	* Determines whether a manifest read off disk was written at a version this build can read.
+	* @param {number} schemaVersion The version the file claims.
+	* @returns {boolean}
+	*/
+	static supportsSchemaVersion(schemaVersion) {
+		return schemaVersion === SaveManifest.schemaVersion;
+	}
+};
+/**
+* Registered because the manifest is written through the encoder like everything else, which keeps
+* one path to disk rather than two. The read side skips the decoder on purpose; see the class
+* summary.
+*/
+SerializableRegistry.register(SaveManifest, {
+	id: "save-manifest",
+	aliases: ["SaveManifest"],
+	seed: (instance) => Object.assign(instance, new SaveManifest())
+});
+
+//#endregion
+//#region src/plugins/_base/core/save/SaveDocument.js
+/**
+* The single place that answers "where does `$gameScreen` go".
+*
+* A slot is written as several JSON documents rather than one, and something has to own the mapping
+* from a top-level key of the save contents to the file it lands in. That is this. It replaces the
+* flat object `DataManager.makeSaveContents` builds - ten engine keys, plus whatever plugins have
+* aliased their way into it over the years.
+*
+* **Registration is optional and the default is to keep the data.** A key nobody registered lands in
+* the fallback section rather than being dropped, because the failure modes are not symmetrical: an
+* unregistered key in the wrong file is untidy, and an unregistered key in no file is a player's
+* progress quietly evaporating. That is the same fail-open stance the codec layer takes on fields.
+*
+* `systems/<plugin>.json` does not appear here. Those files are produced by {@link SaveSectionRouter}
+* from the `_j.<plugin>` slices it lifts off the hosts, not from a top-level key anyone registered.
+*/
+var SaveDocument = class {
+	/**
+	* The section a key lands in when nothing has registered it.
+	*
+	* The world file, rather than a file of its own, because an unregistered key is usually a plugin
+	* that added a top-level key the old way and expects it back exactly as it left it.
+	* @type {string}
+	*/
+	static fallbackSection = "world.json";
+	/**
+	* Which section each registered top-level key belongs to.
+	* @type {Map<string, string>}
+	*/
+	static _sectionsByKey = new Map();
+	/**
+	* Gets which section each registered top-level key belongs to.
+	* @returns {Map<string, string>} The sections, keyed by save-contents key.
+	*/
+	static sectionsByKey() {
+		return this._sectionsByKey;
+	}
+	/**
+	* Declares that a top-level key of the save contents belongs in a particular section file.
+	*
+	* A plugin that adds a top-level key registers it here instead of aliasing
+	* `DataManager.makeSaveContents`, which is how the layout stays describable in one place.
+	* @param {string} key The key as it appears on the save contents object, ex: `party`.
+	* @param {string} sectionName The file it belongs in, ex: `party.json`.
+	*/
+	static registerKey(key, sectionName) {
+		this.sectionsByKey().set(key, sectionName);
+	}
+	/**
+	* Determines which section file a top-level key belongs in.
+	* @param {string} key The key as it appears on the save contents object.
+	* @returns {string} The section's file name.
+	*/
+	static sectionFor(key) {
+		if (this.sectionsByKey().has(key)) {
+			return this.sectionsByKey().get(key);
+		}
+		return this.fallbackSection;
+	}
+};
+/**
+* The vanilla ten, split three ways.
+*
+* `world.json` holds the things that describe where the player is and what the world has been told
+* to do; the party and the actor roster get files of their own because they are the two documents a
+* developer actually opens - "how much gold do I have", "what is this actor's level" - and burying
+* them in a file with the switch table would make that worse rather than better.
+*
+* Followers and vehicles have no entry because they are not top-level keys: they live inside
+* `player` and `map` respectively, and travel with them.
+*/
+SaveDocument.registerKey("system", "world.json");
+SaveDocument.registerKey("screen", "world.json");
+SaveDocument.registerKey("timer", "world.json");
+SaveDocument.registerKey("switches", "world.json");
+SaveDocument.registerKey("variables", "world.json");
+SaveDocument.registerKey("selfSwitches", "world.json");
+SaveDocument.registerKey("map", "world.json");
+SaveDocument.registerKey("player", "world.json");
+SaveDocument.registerKey("party", "party.json");
+SaveDocument.registerKey("actors", "actors.json");
+
+//#endregion
+//#region src/plugins/_base/core/save/SaveSectionRouter.js
+/**
+* Splits one slot into the files it is written as, and puts it back together on load.
+*
+* Two transformations happen here, and they are independent of each other:
+*
+* 1. **Top-level keys are grouped into sections** - `party` into `party.json`, the rest of the
+*    vanilla ten into `world.json` and `actors.json` - per {@link SaveDocument}.
+* 2. **`_j.<plugin>` slices are lifted off their hosts** into `systems/<plugin>.json`, keyed by
+*    which host they came from, so one plugin's state is one file rather than being scattered across
+*    seven objects that happened to be nearby at runtime.
+*
+* **Runtime homes do not change.** `$gameParty._j._omni` is still exactly where it was; only the
+* file layout differs, and the codec knows both ends. No plugin needs refactoring to be reorganized.
+*
+* ### Why the lift happens after encoding, and the merge before decoding
+*
+* The lift moves subtrees out of the **encoded plain data**, never out of the live objects. Reaching
+* into `$gameParty` to pull `_j._omni` off it before encoding would be mutating live state during a
+* save, which is precisely the defect that made the engine's own `JsonEx._encode` dangerous.
+*
+* The merge is the mirror image and its ordering matters more. Slices go back into the plain data
+* **before** anything is decoded, because a host's transients are re-seeded during its own decode: a
+* fresh `JABS_Timer` is written to `_j._regions._skills._timer` as the last step of decoding a
+* `Game_Player`. Merging a `_j._regions` slice onto the finished object afterwards would replace the
+* namespace wholesale and take the freshly-seeded timer with it.
+*
+* ### What is not routed
+*
+* `$gameMap._events` is never walked, on either side. Every `_j.*` slice on a map event has a
+* map-session lifetime and is dropped by the `Game_Event` codec itself, so there is nothing here to
+* lift and no `events` key in a system file.
+*
+* ### A missing host is not an error
+*
+* Follower counts change, vehicles get removed, an actor leaves the roster. A slice whose host is
+* gone is reported and dropped; a host with no slice keeps whatever `seed` gave it, which is the
+* normal case for every plugin added since the save was written.
+*/
+var SaveSectionRouter = class {
+	/**
+	* The directory system files live in, relative to the generation root.
+	* @type {string}
+	*/
+	static systemsDirectory = "systems/";
+	/**
+	* The tag written at the top of a system file, so it is identifiable on sight.
+	* @type {string}
+	*/
+	static sectionTag = "save-section";
+	/**
+	* Which section file each registered `_j` namespace is lifted into, keyed by namespace.
+	* @type {Map<string, string>}
+	*/
+	static _routedNamespaces = new Map();
+	/**
+	* Gets the registered `_j` namespaces and the file each is lifted into.
+	* @returns {Map<string, string>} The section base names, keyed by `_j` namespace key.
+	*/
+	static routedNamespaces() {
+		return this._routedNamespaces;
+	}
+	/**
+	* Declares that a plugin's `_j` namespace should be lifted into a system file of its own.
+	*
+	* Registration is what makes this happen; an unregistered namespace simply stays inline on its
+	* host and is written with it. That is deliberate on two counts. It keeps the router keyed on a
+	* list of real plugins rather than on whatever `Object.keys(_j)` happens to return - four keys on
+	* `_j` hold a boolean or an array rather than a namespace, and a naive router would cheerfully
+	* write `systems/_textPopRequest.json` containing `false`. And it means a plugin opting in is a
+	* layout change and nothing else: nothing is lost by not opting in.
+	* @param {string} namespaceKey The key on `_j`, ex: `_abs`.
+	* @param {string} sectionBaseName The file name without directory or extension, ex: `abs`.
+	*/
+	static registerNamespace(namespaceKey, sectionBaseName) {
+		this.routedNamespaces().set(namespaceKey, `${this.systemsDirectory}${sectionBaseName}.json`);
+	}
+	/**
+	* Turns a live save-contents object into the set of section files a generation is written from.
+	* @param {object} contents The save contents, keyed as `DataManager.makeSaveContents` builds it.
+	* @returns {Object<string, object>} The plain data of each section, keyed by file name.
+	*/
+	static toSections(contents) {
+		const encoded = {};
+		Object.keys(contents).forEach((key) => {
+			encoded[key] = SaveEncoder.encode(contents[key], `$.${key}`);
+		});
+		const sections = this.liftSystemSlices(encoded);
+		Object.keys(encoded).forEach((key) => {
+			const sectionName = SaveDocument.sectionFor(key);
+			sections[sectionName] ||= {};
+			sections[sectionName][key] = encoded[key];
+		});
+		return sections;
+	}
+	/**
+	* Moves every registered `_j` namespace out of the encoded hosts and into system files.
+	* @param {Object<string, object>} encoded The encoded top-level keys, modified in place.
+	* @returns {Object<string, object>} The system sections, keyed by file name.
+	*/
+	static liftSystemSlices(encoded) {
+		const sections = {};
+		const hosts = this.encodedHosts(encoded);
+		this.routedNamespaces().forEach((sectionName, namespaceKey) => {
+			const lifted = this.liftNamespace(hosts, namespaceKey);
+			if (Object.keys(lifted).length === 0) return;
+			sections[sectionName] = {
+				"@": this.sectionTag,
+				plugin: namespaceKey,
+				hosts: lifted
+			};
+		});
+		return sections;
+	}
+	/**
+	* Pulls one namespace off every host that carries it.
+	* @param {Object<string, object>} hosts The encoded hosts, keyed by host kind.
+	* @param {string} namespaceKey The key on `_j` to lift.
+	* @returns {object} The lifted slices, keyed by host kind then by host key.
+	*/
+	static liftNamespace(hosts, namespaceKey) {
+		const lifted = {};
+		Object.keys(hosts).forEach((hostKind) => {
+			const members = hosts[hostKind];
+			Object.keys(members).forEach((hostKey) => {
+				const host = members[hostKey];
+				const slice = this.namespaceOf(host, namespaceKey);
+				if (slice === null) return;
+				delete host._j[namespaceKey];
+				lifted[hostKind] ||= {};
+				lifted[hostKind][hostKey] = slice;
+			});
+		});
+		return lifted;
+	}
+	/**
+	* Turns a set of read section files back into one save-contents object.
+	* @param {Object<string, object>} sections The plain data of each section, keyed by file name.
+	* @returns {object} The decoded save contents, keyed as `DataManager.extractSaveContents` wants.
+	*/
+	static fromSections(sections) {
+		const encoded = {};
+		Object.keys(sections).filter((sectionName) => sectionName.startsWith(this.systemsDirectory) === false).forEach((sectionName) => {
+			Object.assign(encoded, sections[sectionName]);
+		});
+		Object.keys(sections).filter((sectionName) => sectionName.startsWith(this.systemsDirectory)).forEach((sectionName) => this.placeSystemSlices(encoded, sections[sectionName]));
+		const contents = {};
+		Object.keys(encoded).forEach((key) => {
+			contents[key] = SaveDecoder.decode(encoded[key], null, `$.${key}`);
+		});
+		return contents;
+	}
+	/**
+	* Puts every slice from one system file back onto the host it came from.
+	* @param {Object<string, object>} encoded The encoded top-level keys, modified in place.
+	* @param {object} section The system file's plain data.
+	*/
+	static placeSystemSlices(encoded, section) {
+		const hosts = this.encodedHosts(encoded);
+		const namespaceKey = section.plugin;
+		Object.keys(section.hosts).forEach((hostKind) => {
+			const members = section.hosts[hostKind];
+			Object.keys(members).forEach((hostKey) => {
+				const host = hosts[hostKind] ? hosts[hostKind][hostKey] : undefined;
+				if (!host) {
+					console.warn(`[save] dropping the '${namespaceKey}' slice for ${hostKind}.${hostKey}; that host ` + "is not in this save.");
+					return;
+				}
+				host._j ||= {};
+				host._j[namespaceKey] = members[hostKey];
+			});
+		});
+	}
+	/**
+	* Collects every host that can carry a `_j` namespace, keyed by kind and then by host key.
+	*
+	* There are seven kinds, and the one that is easy to miss is `map` itself - `$gameMap` carries
+	* `_j._levelSync`, `_j._omni`, and `_j._regions`, including the only `J_Timer` in a whole save.
+	* `$gameMap._events` is deliberately absent; see the class summary.
+	* @param {Object<string, object>} encoded The encoded top-level keys.
+	* @returns {Object<string, Object<string, object>>} The hosts, keyed by kind then by host key.
+	*/
+	static encodedHosts(encoded) {
+		const hosts = {
+			system: {},
+			party: {},
+			player: {},
+			map: {},
+			actors: {},
+			followers: {},
+			vehicles: {}
+		};
+		if (encoded.system) hosts.system.self = encoded.system;
+		if (encoded.party) hosts.party.self = encoded.party;
+		if (encoded.player) hosts.player.self = encoded.player;
+		if (encoded.map) hosts.map.self = encoded.map;
+		if (encoded.actors && encoded.actors._data) {
+			encoded.actors._data.forEach((actor, index) => {
+				if (actor) hosts.actors[String(index)] = actor;
+			});
+		}
+		if (encoded.player && encoded.player._followers && encoded.player._followers._data) {
+			encoded.player._followers._data.forEach((follower, index) => {
+				if (follower) hosts.followers[String(index)] = follower;
+			});
+		}
+		if (encoded.map && encoded.map._vehicles) {
+			encoded.map._vehicles.forEach((vehicle, index) => {
+				if (!vehicle) return;
+				hosts.vehicles[vehicle._type ? vehicle._type : String(index)] = vehicle;
+			});
+		}
+		return hosts;
+	}
+	/**
+	* Reads one `_j` namespace off an encoded host.
+	* @param {object} host The encoded host.
+	* @param {string} namespaceKey The key on `_j` to read.
+	* @returns {object|null} The slice, or null when this host does not carry that namespace.
+	*/
+	static namespaceOf(host, namespaceKey) {
+		if (!host._j) return null;
+		if (!host._j[namespaceKey]) return null;
+		return host._j[namespaceKey];
 	}
 };
 
@@ -4366,6 +4911,343 @@ var GaugeOptionsBuilder = class {
 var J_EventEmitter = class extends PIXI.utils.EventEmitter {};
 
 //#endregion
+//#region src/plugins/_base/database/_data/RPG_SkillDamage.js
+/**
+* The damage data for the skill, such as the damage formula or associated element.
+*/
+var RPG_SkillDamage = class {
+	/**
+	* Whether or not the damage can produce a critical hit.
+	* @type {boolean}
+	*/
+	critical = false;
+	/**
+	* The element id associated with this damage.
+	* @type {number}
+	*/
+	elementId = -1;
+	/**
+	* The formula to be evaluated in real time to determine damage.
+	* @type {string}
+	*/
+	formula = String.empty;
+	/**
+	* The damage type this is, such as HP damage or MP healing.
+	* @type {1|2|3|4|5|6}
+	*/
+	type = 0;
+	/**
+	* The % of variance this damage can have.
+	* @type {number}
+	*/
+	variance = 0;
+	/**
+	* Constructor.
+	* Maps the skill's damage properties into this object.
+	* @param {RPG_SkillDamage} damage The original damage object to map.
+	*/
+	constructor(damage) {
+		if (damage) {
+			this.critical = damage.critical;
+			this.elementId = damage.elementId;
+			this.formula = damage.formula;
+			this.type = damage.type;
+			this.variance = damage.variance;
+		} else {}
+	}
+};
+
+//#endregion
+//#region src/plugins/_base/database/_data/RPG_UsableEffect.js
+/**
+* A class representing a single effect on an item or skill from the database.
+*/
+var RPG_UsableEffect = class {
+	/**
+	* The type of effect this is.
+	* @type {number}
+	*/
+	code = 0;
+	/**
+	* The dataId further defines what type of effect this is.
+	* @type {number}
+	*/
+	dataId = 0;
+	/**
+	* The first value parameter of the effect.
+	* @type {number}
+	*/
+	value1 = 0;
+	/**
+	* The second value parameter of the effect.
+	* @type {number}
+	*/
+	value2 = 0;
+	/**
+	* Constructor.
+	* @param {RPG_UsableEffect} effect The effect to parse.
+	*/
+	constructor(effect) {
+		this.code = effect.code;
+		this.dataId = effect.dataId;
+		this.value1 = effect.value1;
+		this.value2 = effect.value2;
+	}
+	textName() {
+		switch (this.code) {
+			case 11: return "Recover Life";
+			case 12: return "Recover Magi";
+			case 13: return "Recover Tech";
+			case 21: return "Add State";
+			case 22: return "Remove State";
+			case 31: return "Add Buff";
+			case 32: return "Add Debuff";
+			case 33: return "Remove Buff";
+			case 34: return "Remove Debuff";
+			case 41: return "Special";
+			case 42: return "Core Stat Growth";
+			case 43: return "Learn Skill";
+			case 44: return "Execute Common Event";
+			default:
+				console.warn(`Unsupported code of [${this.code}] was provided.`);
+				return "UNKNOWN";
+		}
+	}
+	textValue() {
+		switch (this.code) {
+			case 11:
+				const flatHp = this.value2;
+				const percHp = this.value1 * 100;
+				let msg = String.empty;
+				if (flatHp) msg += flatHp;
+				if (percHp) msg += ` ${percHp}%`;
+				if (flatHp === 0 && percHp === 0) msg = "0";
+				return msg.trim();
+			case 12: return "Recover Magi";
+			case 13: return "Recover Tech";
+			case 21: return "Add State";
+			case 22: return "Remove State";
+			case 31: return "Add Buff";
+			case 32: return "Add Debuff";
+			case 33: return "Remove Buff";
+			case 34: return "Remove Debuff";
+			case 41: return "Special";
+			case 42: return "Core Stat Growth";
+			case 43: return "Learn Skill";
+			case 44: return "Execute Common Event";
+			default:
+				console.warn(`Unsupported code of [${this.code}] was provided.`);
+				return "UNKNOWN";
+		}
+	}
+};
+
+//#endregion
+//#region src/plugins/_base/database/core/RPG_UsableItem.js
+/**
+* A class representing the base properties for any usable item or skill
+* from the database.
+*/
+var RPG_UsableItem = class extends RPG_BaseItem {
+	/**
+	* The animation id to execute for this skill.
+	* @type {number}
+	*/
+	animationId = -1;
+	/**
+	* The damage data for this skill.
+	* @type {RPG_SkillDamage}
+	*/
+	damage = null;
+	/**
+	* The various effects of this skill.
+	* @type {RPG_UsableEffect[]}
+	*/
+	effects = [];
+	/**
+	* The hit type of this skill.
+	* @type {number}
+	*/
+	hitType = 0;
+	/**
+	* The occasion type when this skill can be used.
+	* @type {number}
+	*/
+	occasion = 0;
+	/**
+	* The number of times this skill repeats.
+	* @type {number}
+	*/
+	repeats = 1;
+	/**
+	* The scope of this skill.
+	* @type {number}
+	*/
+	scope = 0;
+	/**
+	* The speed bonus of this skill.
+	* @type {number}
+	*/
+	speed = 0;
+	/**
+	* The % chance of success for this skill.
+	* @type {number}
+	*/
+	successRate = 100;
+	/**
+	* The amount of TP gained from executing this skill.
+	* @type {number}
+	*/
+	tpGain = 0;
+	/**
+	* Constructor.
+	* @param {RPG_UsableItem} usableItem The usable item to parse.
+	* @param {number} index The index of the skill in the database.
+	*/
+	constructor(usableItem, index) {
+		super(usableItem, index);
+		this.animationId = usableItem.animationId;
+		this.damage = new RPG_SkillDamage(usableItem.damage);
+		this.effects = usableItem.effects.map((effect) => new RPG_UsableEffect(effect));
+		this.hitType = usableItem.hitType;
+		this.occasion = usableItem.occasion;
+		this.repeats = usableItem.repeats;
+		this.scope = usableItem.scope;
+		this.speed = usableItem.speed;
+		this.successRate = usableItem.successRate;
+		this.tpGain = usableItem.tpGain;
+	}
+	/**
+	* Gets the type of implementation this database entry is.
+	* @returns {string}
+	*/
+	implementationType() {
+		return `${super.implementationType()}:usable`;
+	}
+};
+
+//#endregion
+//#region src/plugins/_base/database/implementations/RPG_Skill.js
+/**
+* An class representing a single skill from the database.
+*/
+var RPG_Skill = class RPG_Skill extends RPG_UsableItem {
+	/**
+	* The first line of the message for this skill.
+	* @type {string}
+	*/
+	message1 = String.empty;
+	/**
+	* The second line of the message for this skill.
+	* @type {string}
+	*/
+	message2 = String.empty;
+	/**
+	* The amount of MP required to execute this skill.
+	* @type {number}
+	*/
+	mpCost = 0;
+	/**
+	* The first of two required weapon types to be equipped to execute this skill.
+	* @type {number}
+	*/
+	requiredWtypeId1 = 0;
+	/**
+	* The second of two required weapon types to be equipped to execute this skill.
+	* @type {number}
+	*/
+	requiredWtypeId2 = 0;
+	/**
+	* The skill type that this skill belongs to.
+	* @type {number}
+	*/
+	stypeId = 0;
+	/**
+	* The amount of TP required to execute this skill.
+	* @type {number}
+	*/
+	tpCost = 0;
+	/**
+	* Constructor.
+	* Maps the skill's properties into this object.
+	* @param {RPG_Skill} skill The underlying skill object.
+	* @param {number} index The index of the skill in the database.
+	*/
+	constructor(skill, index) {
+		super(skill, index);
+		this.initMembers(skill);
+	}
+	/**
+	* Maps all the data from the JSON to this object.
+	* @param {RPG_Skill} skill The underlying skill object.
+	*/
+	initMembers(skill) {
+		this.message1 = skill.message1;
+		this.message2 = skill.message2;
+		this.mpCost = skill.mpCost;
+		this.requiredWtypeId1 = skill.requiredWtypeId1;
+		this.requiredWtypeId2 = skill.requiredWtypeId2;
+		this.stypeId = skill.stypeId;
+		this.tpCost = skill.tpCost;
+	}
+	/**
+	* Whether or not this database entry is a skill.
+	* @returns {boolean}
+	*/
+	isSkill() {
+		return true;
+	}
+	/**
+	* Gets the type of implementation this database entry is.
+	* @returns {string}
+	*/
+	implementationType() {
+		return `${super.implementationType()}:skill`;
+	}
+	/**
+	* Hydrated blank skill row—symmetry with other DB wrappers when a slot must read as "unused but valid".
+	*
+	* @param {number} index database id and `$dataSkills` index for this row
+	* @returns {RPG_Skill}
+	*/
+	static createEmpty(index) {
+		const raw = {
+			id: index,
+			message1: String.empty,
+			message2: String.empty,
+			messageType: 1,
+			mpCost: 0,
+			requiredWtypeId1: 0,
+			requiredWtypeId2: 0,
+			stypeId: 1,
+			tpCost: 0,
+			animationId: 0,
+			damage: {
+				critical: false,
+				elementId: 0,
+				formula: "0",
+				type: 0,
+				variance: 20
+			},
+			effects: [],
+			hitType: 0,
+			occasion: 0,
+			repeats: 1,
+			scope: 1,
+			speed: 0,
+			successRate: 100,
+			tpGain: 0,
+			description: String.empty,
+			iconIndex: 0,
+			name: String.empty,
+			note: String.empty,
+			meta: {}
+		};
+		return new RPG_Skill(raw, index);
+	}
+};
+
+//#endregion
 //#region src/plugins/_base/models/J_Timer.js
 /**
 * A reusable timer with some nifty functions.
@@ -4592,6 +5474,51 @@ var J_Timer = class {
 //#endregion
 //#region src/plugins/_base/core/registerJBaseSerializableModels.js
 SerializableRegistry.register(J_Timer);
+/**
+* A hydrated skill row reaches a savefile through J-Passive, which stores whole `RPG_Skill` objects
+* in `_j._passive._passiveSources` rather than the ids they were looked up by. That is a
+* reference-versus-value defect and is tracked as one - a rebalanced skill never reaches a save that
+* already captured a copy of it - but the encoder still has to be able to write what the codebase
+* actually puts in front of it, so the type is registered.
+*
+* Registering it drags in the two types a skill row holds instances of: its damage block, and one
+* effect object per entry in `effects`. Both are declared below.
+*
+* The seed copies a blank row rather than restating three classes' worth of class-field defaults,
+* which keeps the defaults following the constructor chain instead of a transcription of it.
+*/
+SerializableRegistry.register(RPG_Skill, {
+	id: "rpg-skill",
+	aliases: ["RPG_Skill"],
+	typed: {
+		damage: RPG_SkillDamage,
+		effects: RPG_UsableEffect
+	},
+	seed: (instance) => Object.assign(instance, RPG_Skill.createEmpty(0))
+});
+/**
+* The damage block of a usable row. Its constructor tolerates being handed nothing and falls back to
+* its class-field defaults, so a blank instance is exactly the set of defaults the seed wants.
+*/
+SerializableRegistry.register(RPG_SkillDamage, {
+	id: "rpg-skill-damage",
+	aliases: ["RPG_SkillDamage"],
+	seed: (instance) => Object.assign(instance, new RPG_SkillDamage())
+});
+/**
+* One entry from a usable row's effects list. Unlike the damage block, this constructor reads its
+* argument unconditionally, so the defaults are spelled out rather than copied off a blank instance.
+*/
+SerializableRegistry.register(RPG_UsableEffect, {
+	id: "rpg-usable-effect",
+	aliases: ["RPG_UsableEffect"],
+	seed: (instance) => {
+		instance.code = 0;
+		instance.dataId = 0;
+		instance.value1 = 0;
+		instance.value2 = 0;
+	}
+});
 
 //#endregion
 //#region src/plugins/_base/core/save/registerEngineSaveCodecs.js
@@ -4863,12 +5790,28 @@ SerializableRegistry.register(Game_Map, {
 	}
 });
 /**
-* One map event. Reconstructed wholesale by `Game_Map.setupEvents` on the next map setup, which is
-* why every `_j.*` slice on one is transient- but the engine still persists the event itself.
+* One map event.
+*
+* **Everything at `_j` on an event is map-session state and is not written.** An event is rebuilt
+* from scratch by `Game_Map.setupEvents` at the next map setup - and a load always reaches one,
+* because J-ABS overwrites `Scene_Load.reloadMapIfUpdated` to reserve a transfer whenever JABS is
+* enabled rather than only when the database version changed. So a slice hanging off an event was
+* only ever being restored by accident, and restoring it is worse than dropping it: it hands the
+* next session a half-dead enemy's bookkeeping instead of a fresh one.
+*
+* The cold value is the one the seed already established. The decoder runs `seed` before any field
+* from the file lands, and the `initMembers` chain every plugin aliases is what builds `_j` - so by
+* the time a transient factory runs, a complete, freshly-initialized namespace is already sitting
+* there. Handing it back is the whole of the re-seed. This is the third shape a transient takes,
+* alongside the lazy cache that answers with `null` and the eager cache that rebuilds itself.
+*
+* It has to be a transient rather than nothing at all, because `_j` on an event holds `JABS_Timer`s
+* - a type deliberately left unregistered - and the encoder would refuse to write them.
 */
 SerializableRegistry.register(Game_Event, {
 	id: "game-event",
-	aliases: ["Game_Event"]
+	aliases: ["Game_Event"],
+	transients: { _j: (event) => event._j }
 });
 /**
 * One parallel or autorun common event. Holds an interpreter while running.
@@ -6014,6 +6957,550 @@ ColorManager.colorIndexFromHex = function(hexString) {
 };
 
 //#endregion
+//#region src/plugins/_base/managers/ConfigManager.js
+/**
+* Installation scope: the settings that belong to the person playing rather than to a playthrough.
+*
+* Vanilla `ConfigManager` has seven fields, no way for a plugin to add an eighth, and writes them to
+* `config.rmmzsave`. The second of those is why keybinds ended up at
+* `$gameSystem._j._abs._input._mappings` - installation data trapped in slot scope, where rebinding
+* a key in one save leaves every other save on the old bindings and deleting a save loses them.
+*
+* The registration seam below is the eighth field, generalized: a plugin declares what it wants kept
+* at installation scope and what that setting defaults to, and the two halves of the config document
+* pick it up automatically. The file itself moved to `config.json` with everything else, which
+* {@link StorageManager} handles by name - nothing here knows what a file is.
+*/
+/**
+* The over-arching object containing all of my added parameters.
+*/
+ConfigManager._j ||= {};
+/**
+* Every plugin-registered field, mapped to the factory producing its default.
+* @type {Map<string, Function>}
+*/
+ConfigManager._j._registeredFields = new Map();
+/**
+* Gets every plugin-registered field and the factory producing its default.
+* @returns {Map<string, Function>} The fields, keyed by name.
+*/
+ConfigManager.registeredFields = function() {
+	return this._j._registeredFields;
+};
+/**
+* Declares a setting that belongs to the installation rather than to a save.
+*
+* The default is a factory rather than a value because a setting is frequently an object or an
+* array, and one shared instance handed out as "the default" would be mutated by the first thing
+* that touched it.
+*
+* The field is seeded immediately, so it reads correctly between the plugin loading and the config
+* document being read off disk.
+* @param {string} key The field name, which is also the key it is written under.
+* @param {Function} defaultValueFactory Produces the value the field holds on a fresh install.
+*/
+ConfigManager.registerField = function(key, defaultValueFactory) {
+	this.registeredFields().set(key, defaultValueFactory);
+	this[key] = defaultValueFactory();
+};
+/**
+* Extends {@link #makeData}.<br/>
+* Also writes every plugin-registered field into the config document.
+* @returns {object} The config data, extended.
+*/
+J.BASE.Aliased.ConfigManager.set("makeData", ConfigManager.makeData);
+ConfigManager.makeData = function() {
+	const config = J.BASE.Aliased.ConfigManager.get("makeData").call(this);
+	this.registeredFields().forEach((defaultValueFactory, key) => {
+		config[key] = this[key];
+	});
+	return config;
+};
+/**
+* Extends {@link #applyData}.<br/>
+* Also reads every plugin-registered field back out of the config document.
+*
+* A field the document does not carry is reset to its default rather than left as whatever the last
+* session put there. That is the same re-seed rule the save codecs follow, and for the same reason:
+* a setting that is absent from the file has no value, and "no value" has to mean the default rather
+* than a leftover.
+* @param {object} config The config data read from disk.
+*/
+J.BASE.Aliased.ConfigManager.set("applyData", ConfigManager.applyData);
+ConfigManager.applyData = function(config) {
+	J.BASE.Aliased.ConfigManager.get("applyData").call(this, config);
+	this.registeredFields().forEach((defaultValueFactory, key) => {
+		this[key] = key in config ? config[key] : defaultValueFactory();
+	});
+};
+
+//#endregion
+//#region src/plugins/_base/managers/SaveFileSystem.js
+/**
+* The bottom of the save pipeline: everything about *files*, and nothing about what they mean.
+*
+* A slot is a directory holding several immutable generations and a one-line pointer naming the live
+* one:
+*
+* ```
+* save/file1/current        <- "gen-0007"
+* save/file1/gen-0007/manifest.json, world.json, party.json, actors.json, systems/*.json
+* save/file1/gen-0006/      <- kept for rollback
+* ```
+*
+* **The pointer rename is the only atomic step, and it is the whole design.** A generation is written
+* to a directory nothing is reading, fsynced, and only then does one `rename` make it live. A crash
+* anywhere before that leaves the previous generation untouched and the partial one orphaned, which
+* the next successful save prunes. Nothing here ever overwrites a file the game might still need -
+* which matters more now than it did when a slot was one file, because a directory of a dozen files
+* has a dozen chances to be torn.
+*
+* For contrast, vanilla renames the live file to `.rmmzsave_` before writing over it and then never
+* reads that backup on load. The safety net existed and was connected to nothing.
+*
+* Every filesystem call goes through {@link StorageManager}'s `fs*` helpers rather than `require`ing
+* `fs` here. That is where the engine already put them, and it means the crash-injection tests can
+* make step N of a save fail by stubbing one method on a global they already stub.
+*/
+var SaveFileSystem = class {
+	/**
+	* The prefix every generation directory name starts with.
+	* @type {string}
+	*/
+	static generationPrefix = "gen-";
+	/**
+	* How many digits a generation number is padded to, so a directory listing sorts lexically.
+	* @type {number}
+	*/
+	static generationDigits = 4;
+	/**
+	* The file naming the live generation. One line, no newline, no ceremony.
+	* @type {string}
+	*/
+	static pointerFileName = "current";
+	/**
+	* The scratch name the pointer is written to before being renamed into place.
+	* @type {string}
+	*/
+	static pointerTempFileName = "current.tmp";
+	/**
+	* The file every generation must carry, listing what else it is made of.
+	* @type {string}
+	*/
+	static manifestFileName = "manifest.json";
+	/**
+	* How many generations a slot keeps before the oldest are pruned.
+	*
+	* Three is the default because the failure mode of a bad save should be "you lost the last save",
+	* never "you lost the file". Size is not a consideration; see the save rewrite plan.
+	* @returns {number}
+	*/
+	static retainedGenerations() {
+		return Math.max(1, J.BASE.Metadata.retainedSaveGenerations);
+	}
+	/**
+	* Gets the directory every save file lives under, with its trailing separator.
+	* @returns {string}
+	*/
+	static saveDirectory() {
+		return StorageManager.fileDirectoryPath();
+	}
+	/**
+	* Gets the path of a scope-level document such as `config.json` or `profile.json`.
+	* @param {string} fileName The document's file name, extension included.
+	* @returns {string}
+	*/
+	static documentPath(fileName) {
+		return `${this.saveDirectory()}${fileName}`;
+	}
+	/**
+	* Gets the directory one slot lives in.
+	* @param {string} slotName The slot's name, ex: `file1`.
+	* @returns {string}
+	*/
+	static slotDirectory(slotName) {
+		return `${this.saveDirectory()}${slotName}/`;
+	}
+	/**
+	* Gets the path of the file naming a slot's live generation.
+	* @param {string} slotName The slot's name.
+	* @returns {string}
+	*/
+	static pointerPath(slotName) {
+		return `${this.slotDirectory(slotName)}${this.pointerFileName}`;
+	}
+	/**
+	* Gets the path of the scratch file the pointer is written to before the swap.
+	* @param {string} slotName The slot's name.
+	* @returns {string}
+	*/
+	static pointerTempPath(slotName) {
+		return `${this.slotDirectory(slotName)}${this.pointerTempFileName}`;
+	}
+	/**
+	* Gets the directory one generation of one slot lives in.
+	* @param {string} slotName The slot's name.
+	* @param {string} generationName The generation's directory name, ex: `gen-0007`.
+	* @returns {string}
+	*/
+	static generationDirectory(slotName, generationName) {
+		return `${this.slotDirectory(slotName)}${generationName}/`;
+	}
+	/**
+	* Gets the path of one section file inside one generation.
+	* @param {string} slotName The slot's name.
+	* @param {string} generationName The generation's directory name.
+	* @param {string} sectionName The section's file name, which may carry a subdirectory.
+	* @returns {string}
+	*/
+	static sectionPath(slotName, generationName, sectionName) {
+		return `${this.generationDirectory(slotName, generationName)}${sectionName}`;
+	}
+	/**
+	* Renders a generation number as its directory name.
+	* @param {number} generationNumber The generation's number.
+	* @returns {string}
+	*/
+	static generationName(generationNumber) {
+		return `${this.generationPrefix}${String(generationNumber).padStart(this.generationDigits, "0")}`;
+	}
+	/**
+	* Reads the number back out of a generation directory name.
+	* @param {string} generationName The generation's directory name.
+	* @returns {number} The number, or zero when the name is not one of ours.
+	*/
+	static generationNumber(generationName) {
+		const parsed = parseInt(generationName.slice(this.generationPrefix.length), 10);
+		if (Number.isNaN(parsed)) return 0;
+		return parsed;
+	}
+	/**
+	* Reads the name of the generation a slot's pointer currently names.
+	* @param {string} slotName The slot's name.
+	* @returns {string} The generation directory name, or an empty string when there is no pointer.
+	*/
+	static currentGenerationName(slotName) {
+		const pointer = StorageManager.fsReadFile(this.pointerPath(slotName));
+		if (pointer === null) return String.empty;
+		return pointer.trim();
+	}
+	/**
+	* Lists every generation directory a slot holds, newest first.
+	*
+	* This is the directory listing rather than the pointer, so it sees orphans - a generation whose
+	* write crashed before the pointer swap is here, and is exactly what pruning cleans up.
+	* @param {string} slotName The slot's name.
+	* @returns {string[]} The generation directory names, newest first.
+	*/
+	static generationNames(slotName) {
+		const slotDirectory = this.slotDirectory(slotName);
+		if (StorageManager.fsExists(slotDirectory) === false) return [];
+		return StorageManager.fsReaddir(slotDirectory).filter((entry) => entry.startsWith(this.generationPrefix)).filter((entry) => StorageManager.fsIsDirectory(`${slotDirectory}${entry}`)).sort((left, right) => this.generationNumber(right) - this.generationNumber(left));
+	}
+	/**
+	* Builds the order a load should try generations in: the live one, then progressively older ones.
+	*
+	* The pointer leads even though it is usually also the newest, because the pointer is the
+	* authority on which generation completed. Anything newer than it is an orphan from a write that
+	* did not finish, and orphans are excluded rather than tried - a torn generation that happens to
+	* parse would be worse than no generation at all.
+	* @param {string} slotName The slot's name.
+	* @returns {string[]} The generations to try, in order.
+	*/
+	static loadOrder(slotName) {
+		const current = this.currentGenerationName(slotName);
+		if (current === String.empty) return [];
+		const currentNumber = this.generationNumber(current);
+		return this.generationNames(slotName).filter((name) => this.generationNumber(name) <= currentNumber);
+	}
+	/**
+	* Determines whether a slot holds a save the game could load.
+	* @param {string} slotName The slot's name.
+	* @returns {boolean}
+	*/
+	static slotExists(slotName) {
+		const current = this.currentGenerationName(slotName);
+		if (current === String.empty) return false;
+		return StorageManager.fsExists(this.generationDirectory(slotName, current));
+	}
+	/**
+	* Writes a complete generation and makes it live.
+	*
+	* The sequence is the contract, and every step of it is ordered against a crash landing in the
+	* middle: sections first, manifest after them so its presence means the set is complete, the
+	* directory fsynced so the entries are durable, and only then the pointer swap.
+	* @param {string} slotName The slot's name.
+	* @param {Object<string, object>} sections The plain data of each section, keyed by file name.
+	* @param {SaveManifest} manifest The manifest describing them.
+	* @returns {Promise<void>} Resolves once the generation is live.
+	*/
+	static writeSlot(slotName, sections, manifest) {
+		return new Promise((resolve, reject) => {
+			try {
+				this.writeGeneration(slotName, sections, manifest);
+				resolve();
+			} catch (error) {
+				reject(error);
+			}
+		});
+	}
+	/**
+	* Performs the whole write sequence for one generation.
+	* @param {string} slotName The slot's name.
+	* @param {Object<string, object>} sections The plain data of each section, keyed by file name.
+	* @param {SaveManifest} manifest The manifest describing them.
+	*/
+	static writeGeneration(slotName, sections, manifest) {
+		const generationName = this.generationName(this.nextGenerationNumber(slotName));
+		const generationDirectory = this.generationDirectory(slotName, generationName);
+		StorageManager.fsMkdirRecursive(generationDirectory);
+		Object.keys(sections).forEach((sectionName) => {
+			this.writeJson(this.sectionPath(slotName, generationName, sectionName), sections[sectionName]);
+		});
+		this.writeJson(`${generationDirectory}${this.manifestFileName}`, manifest);
+		StorageManager.fsSyncDirectory(generationDirectory);
+		this.swapPointer(slotName, generationName);
+		this.pruneGenerations(slotName);
+	}
+	/**
+	* Points a slot at a generation, atomically.
+	*
+	* Writing the name to a scratch file and renaming it over the pointer is the one step that makes a
+	* torn write survivable: a rename either happened or it did not, so a crash mid-swap leaves the
+	* previous generation live rather than leaving the pointer half-written and the slot unreadable.
+	* @param {string} slotName The slot's name.
+	* @param {string} generationName The generation to make live.
+	*/
+	static swapPointer(slotName, generationName) {
+		const temporaryPath = this.pointerTempPath(slotName);
+		this.writeSynced(temporaryPath, generationName);
+		StorageManager.fsRename(temporaryPath, this.pointerPath(slotName));
+	}
+	/**
+	* Picks the number the next generation gets.
+	*
+	* It is the highest number the directory holds plus one rather than the pointer's plus one, so an
+	* orphan left by a crashed write is stepped over instead of being written into - reusing its name
+	* would mean writing into a directory that already has files in it.
+	* @param {string} slotName The slot's name.
+	* @returns {number}
+	*/
+	static nextGenerationNumber(slotName) {
+		const existing = this.generationNames(slotName);
+		if (existing.length === 0) return 1;
+		return this.generationNumber(existing[0]) + 1;
+	}
+	/**
+	* Deletes the generations a slot no longer keeps.
+	*
+	* Everything newer than the pointer is an orphan and goes regardless of the retention count; below
+	* the pointer, the configured number of generations is kept.
+	* @param {string} slotName The slot's name.
+	*/
+	static pruneGenerations(slotName) {
+		const current = this.currentGenerationName(slotName);
+		if (current === String.empty) return;
+		const currentNumber = this.generationNumber(current);
+		const retained = this.retainedGenerations();
+		this.generationNames(slotName).filter((name) => {
+			const number = this.generationNumber(name);
+			if (number > currentNumber) return true;
+			return number <= currentNumber - retained;
+		}).forEach((name) => StorageManager.fsRemoveDirectory(this.generationDirectory(slotName, name)));
+	}
+	/**
+	* Writes one pretty-printed JSON document durably.
+	*
+	* Two spaces, and no attempt at compactness: the point of this format is that a developer can open
+	* a savefile, read it, edit it, and load the result. Size is explicitly not a consideration.
+	* @param {string} filePath The path to write to.
+	* @param {*} data The plain data to serialize.
+	*/
+	static writeJson(filePath, data) {
+		this.writeSynced(filePath, JSON.stringify(data, null, 2));
+	}
+	/**
+	* Writes a file and does not return until the bytes are on the disk.
+	*
+	* `writeFileSync` returns as soon as the write is handed to the operating system, which is a
+	* different thing from durable- a power loss between the two leaves a file that exists and is
+	* empty. The fsync is what closes that window, and it is affordable here because a save happens
+	* once every few minutes rather than once a frame.
+	* @param {string} filePath The path to write to.
+	* @param {string} contents The text to write.
+	*/
+	static writeSynced(filePath, contents) {
+		const parent = this.parentDirectory(filePath);
+		if (parent !== String.empty) {
+			StorageManager.fsMkdirRecursive(parent);
+		}
+		try {
+			StorageManager.fsWriteFileSynced(filePath, contents);
+		} catch (error) {
+			throw SaveStorageError.writeFailed(filePath, error.message);
+		}
+	}
+	/**
+	* Gets the directory portion of a path, with its trailing separator.
+	*
+	* Both separators are considered because the two halves of a save path come from different
+	* places: the root comes from the engine's `path.join`, which on Windows produces backslashes,
+	* and everything this class appends to it uses forward slashes. Node accepts the mix on every
+	* platform; a parser that only knew one of them would not.
+	* @param {string} filePath The path to take the parent of.
+	* @returns {string} The parent directory, or an empty string when the path has no directory part.
+	*/
+	static parentDirectory(filePath) {
+		const lastSeparator = Math.max(filePath.lastIndexOf("/"), filePath.lastIndexOf("\\"));
+		if (lastSeparator === -1) return String.empty;
+		return filePath.slice(0, lastSeparator + 1);
+	}
+	/**
+	* Reads a slot, stepping back through older generations until one loads.
+	*
+	* The caller supplies what to do with the sections rather than receiving them, because a
+	* generation can fail in ways only the caller can see: a section that parses as JSON but does not
+	* decode is just as torn as one that is missing, and both should fall back to the previous
+	* generation rather than to an error. Handing the consumer in is what puts decode failures inside
+	* the retry loop.
+	* @param {string} slotName The slot's name.
+	* @param {Function} buildFromSections Receives `(sections, manifest)` and returns the loaded value.
+	* @returns {Promise<*>} Whatever `buildFromSections` returned for the newest generation that worked.
+	*/
+	static readSlot(slotName, buildFromSections) {
+		return new Promise((resolve, reject) => {
+			const order = this.loadOrder(slotName);
+			if (order.length === 0) {
+				reject(SaveStorageError.noGenerations(this.slotDirectory(slotName)));
+				return;
+			}
+			const failures = [];
+			for (const generationName of order) {
+				try {
+					resolve(this.readGeneration(slotName, generationName, buildFromSections));
+					return;
+				} catch (error) {
+					failures.push(`${generationName}: ${error.message}`);
+				}
+			}
+			reject(SaveStorageError.noLoadableGeneration(this.slotDirectory(slotName), failures));
+		});
+	}
+	/**
+	* Reads and verifies one generation, then hands its sections to the caller.
+	* @param {string} slotName The slot's name.
+	* @param {string} generationName The generation to read.
+	* @param {Function} buildFromSections Receives `(sections, manifest)` and returns the loaded value.
+	* @returns {*} Whatever `buildFromSections` returned.
+	*/
+	static readGeneration(slotName, generationName, buildFromSections) {
+		const manifest = this.readManifestAt(slotName, generationName);
+		const sections = {};
+		manifest.sections.forEach((sectionName) => {
+			sections[sectionName] = this.readJson(this.sectionPath(slotName, generationName, sectionName));
+		});
+		return buildFromSections(sections, manifest);
+	}
+	/**
+	* Reads the manifest of one generation and verifies this build can understand it.
+	* @param {string} slotName The slot's name.
+	* @param {string} generationName The generation to read the manifest of.
+	* @returns {object} The manifest, as plain data.
+	*/
+	static readManifestAt(slotName, generationName) {
+		const manifestPath = `${this.generationDirectory(slotName, generationName)}${this.manifestFileName}`;
+		const manifest = this.readJson(manifestPath);
+		if (SaveManifest.supportsSchemaVersion(manifest.schemaVersion) === false) {
+			throw SaveStorageError.unsupportedSchemaVersion(manifestPath, manifest.schemaVersion, SaveManifest.schemaVersion);
+		}
+		return manifest;
+	}
+	/**
+	* Reads the manifest of the newest generation that has one, for the load menu.
+	*
+	* This is the cheap path, and it is cheap on purpose: drawing a row of the load menu opens one
+	* small JSON document and never touches a world.
+	* @param {string} slotName The slot's name.
+	* @returns {object|null} The manifest as plain data, or null when the slot has nothing readable.
+	*/
+	static readManifest(slotName) {
+		const order = this.loadOrder(slotName);
+		let manifest = null;
+		order.some((generationName) => {
+			try {
+				manifest = this.readManifestAt(slotName, generationName);
+				return true;
+			} catch {
+				return false;
+			}
+		});
+		return manifest;
+	}
+	/**
+	* Reads one JSON file, failing loudly about which file and why when it cannot.
+	* @param {string} filePath The path to read.
+	* @returns {object} The parsed plain data.
+	*/
+	static readJson(filePath) {
+		const contents = StorageManager.fsReadFile(filePath);
+		if (contents === null) throw SaveStorageError.missingSection(filePath);
+		try {
+			return JSON.parse(contents);
+		} catch (error) {
+			throw SaveStorageError.malformedSection(filePath, error.message);
+		}
+	}
+	/**
+	* Writes a scope-level document - `config.json`, `profile.json` - atomically.
+	*
+	* A single document does not need generations; it needs the same rename that makes a generation
+	* swap safe, so a crash mid-write cannot leave the player's settings half-written.
+	* @param {string} fileName The document's file name.
+	* @param {*} data The plain data to write.
+	* @returns {Promise<void>} Resolves once the document is on disk.
+	*/
+	static writeDocument(fileName, data) {
+		return new Promise((resolve, reject) => {
+			try {
+				const filePath = this.documentPath(fileName);
+				const temporaryPath = `${filePath}.tmp`;
+				this.writeJson(temporaryPath, data);
+				StorageManager.fsRename(temporaryPath, filePath);
+				resolve();
+			} catch (error) {
+				reject(error);
+			}
+		});
+	}
+	/**
+	* Reads a scope-level document.
+	* @param {string} fileName The document's file name.
+	* @returns {Promise<object|null>} The parsed data, or null when the document does not exist yet.
+	*/
+	static readDocument(fileName) {
+		return new Promise((resolve, reject) => {
+			const filePath = this.documentPath(fileName);
+			if (StorageManager.fsExists(filePath) === false) {
+				resolve(null);
+				return;
+			}
+			try {
+				resolve(this.readJson(filePath));
+			} catch (error) {
+				reject(error);
+			}
+		});
+	}
+	/**
+	* Deletes a slot and everything in it.
+	* @param {string} slotName The slot's name.
+	*/
+	static removeSlot(slotName) {
+		StorageManager.fsRemoveDirectory(this.slotDirectory(slotName));
+	}
+};
+
+//#endregion
 //#region src/plugins/_base/database/_data/RPG_Trait.js
 /**
 * A class representing a single trait living on one of the many types
@@ -6547,343 +8034,6 @@ var RPG_State = class RPG_State extends RPG_Traited {
 			meta: {}
 		};
 		return new RPG_State(raw, index);
-	}
-};
-
-//#endregion
-//#region src/plugins/_base/database/_data/RPG_SkillDamage.js
-/**
-* The damage data for the skill, such as the damage formula or associated element.
-*/
-var RPG_SkillDamage = class {
-	/**
-	* Whether or not the damage can produce a critical hit.
-	* @type {boolean}
-	*/
-	critical = false;
-	/**
-	* The element id associated with this damage.
-	* @type {number}
-	*/
-	elementId = -1;
-	/**
-	* The formula to be evaluated in real time to determine damage.
-	* @type {string}
-	*/
-	formula = String.empty;
-	/**
-	* The damage type this is, such as HP damage or MP healing.
-	* @type {1|2|3|4|5|6}
-	*/
-	type = 0;
-	/**
-	* The % of variance this damage can have.
-	* @type {number}
-	*/
-	variance = 0;
-	/**
-	* Constructor.
-	* Maps the skill's damage properties into this object.
-	* @param {RPG_SkillDamage} damage The original damage object to map.
-	*/
-	constructor(damage) {
-		if (damage) {
-			this.critical = damage.critical;
-			this.elementId = damage.elementId;
-			this.formula = damage.formula;
-			this.type = damage.type;
-			this.variance = damage.variance;
-		} else {}
-	}
-};
-
-//#endregion
-//#region src/plugins/_base/database/_data/RPG_UsableEffect.js
-/**
-* A class representing a single effect on an item or skill from the database.
-*/
-var RPG_UsableEffect = class {
-	/**
-	* The type of effect this is.
-	* @type {number}
-	*/
-	code = 0;
-	/**
-	* The dataId further defines what type of effect this is.
-	* @type {number}
-	*/
-	dataId = 0;
-	/**
-	* The first value parameter of the effect.
-	* @type {number}
-	*/
-	value1 = 0;
-	/**
-	* The second value parameter of the effect.
-	* @type {number}
-	*/
-	value2 = 0;
-	/**
-	* Constructor.
-	* @param {RPG_UsableEffect} effect The effect to parse.
-	*/
-	constructor(effect) {
-		this.code = effect.code;
-		this.dataId = effect.dataId;
-		this.value1 = effect.value1;
-		this.value2 = effect.value2;
-	}
-	textName() {
-		switch (this.code) {
-			case 11: return "Recover Life";
-			case 12: return "Recover Magi";
-			case 13: return "Recover Tech";
-			case 21: return "Add State";
-			case 22: return "Remove State";
-			case 31: return "Add Buff";
-			case 32: return "Add Debuff";
-			case 33: return "Remove Buff";
-			case 34: return "Remove Debuff";
-			case 41: return "Special";
-			case 42: return "Core Stat Growth";
-			case 43: return "Learn Skill";
-			case 44: return "Execute Common Event";
-			default:
-				console.warn(`Unsupported code of [${this.code}] was provided.`);
-				return "UNKNOWN";
-		}
-	}
-	textValue() {
-		switch (this.code) {
-			case 11:
-				const flatHp = this.value2;
-				const percHp = this.value1 * 100;
-				let msg = String.empty;
-				if (flatHp) msg += flatHp;
-				if (percHp) msg += ` ${percHp}%`;
-				if (flatHp === 0 && percHp === 0) msg = "0";
-				return msg.trim();
-			case 12: return "Recover Magi";
-			case 13: return "Recover Tech";
-			case 21: return "Add State";
-			case 22: return "Remove State";
-			case 31: return "Add Buff";
-			case 32: return "Add Debuff";
-			case 33: return "Remove Buff";
-			case 34: return "Remove Debuff";
-			case 41: return "Special";
-			case 42: return "Core Stat Growth";
-			case 43: return "Learn Skill";
-			case 44: return "Execute Common Event";
-			default:
-				console.warn(`Unsupported code of [${this.code}] was provided.`);
-				return "UNKNOWN";
-		}
-	}
-};
-
-//#endregion
-//#region src/plugins/_base/database/core/RPG_UsableItem.js
-/**
-* A class representing the base properties for any usable item or skill
-* from the database.
-*/
-var RPG_UsableItem = class extends RPG_BaseItem {
-	/**
-	* The animation id to execute for this skill.
-	* @type {number}
-	*/
-	animationId = -1;
-	/**
-	* The damage data for this skill.
-	* @type {RPG_SkillDamage}
-	*/
-	damage = null;
-	/**
-	* The various effects of this skill.
-	* @type {RPG_UsableEffect[]}
-	*/
-	effects = [];
-	/**
-	* The hit type of this skill.
-	* @type {number}
-	*/
-	hitType = 0;
-	/**
-	* The occasion type when this skill can be used.
-	* @type {number}
-	*/
-	occasion = 0;
-	/**
-	* The number of times this skill repeats.
-	* @type {number}
-	*/
-	repeats = 1;
-	/**
-	* The scope of this skill.
-	* @type {number}
-	*/
-	scope = 0;
-	/**
-	* The speed bonus of this skill.
-	* @type {number}
-	*/
-	speed = 0;
-	/**
-	* The % chance of success for this skill.
-	* @type {number}
-	*/
-	successRate = 100;
-	/**
-	* The amount of TP gained from executing this skill.
-	* @type {number}
-	*/
-	tpGain = 0;
-	/**
-	* Constructor.
-	* @param {RPG_UsableItem} usableItem The usable item to parse.
-	* @param {number} index The index of the skill in the database.
-	*/
-	constructor(usableItem, index) {
-		super(usableItem, index);
-		this.animationId = usableItem.animationId;
-		this.damage = new RPG_SkillDamage(usableItem.damage);
-		this.effects = usableItem.effects.map((effect) => new RPG_UsableEffect(effect));
-		this.hitType = usableItem.hitType;
-		this.occasion = usableItem.occasion;
-		this.repeats = usableItem.repeats;
-		this.scope = usableItem.scope;
-		this.speed = usableItem.speed;
-		this.successRate = usableItem.successRate;
-		this.tpGain = usableItem.tpGain;
-	}
-	/**
-	* Gets the type of implementation this database entry is.
-	* @returns {string}
-	*/
-	implementationType() {
-		return `${super.implementationType()}:usable`;
-	}
-};
-
-//#endregion
-//#region src/plugins/_base/database/implementations/RPG_Skill.js
-/**
-* An class representing a single skill from the database.
-*/
-var RPG_Skill = class RPG_Skill extends RPG_UsableItem {
-	/**
-	* The first line of the message for this skill.
-	* @type {string}
-	*/
-	message1 = String.empty;
-	/**
-	* The second line of the message for this skill.
-	* @type {string}
-	*/
-	message2 = String.empty;
-	/**
-	* The amount of MP required to execute this skill.
-	* @type {number}
-	*/
-	mpCost = 0;
-	/**
-	* The first of two required weapon types to be equipped to execute this skill.
-	* @type {number}
-	*/
-	requiredWtypeId1 = 0;
-	/**
-	* The second of two required weapon types to be equipped to execute this skill.
-	* @type {number}
-	*/
-	requiredWtypeId2 = 0;
-	/**
-	* The skill type that this skill belongs to.
-	* @type {number}
-	*/
-	stypeId = 0;
-	/**
-	* The amount of TP required to execute this skill.
-	* @type {number}
-	*/
-	tpCost = 0;
-	/**
-	* Constructor.
-	* Maps the skill's properties into this object.
-	* @param {RPG_Skill} skill The underlying skill object.
-	* @param {number} index The index of the skill in the database.
-	*/
-	constructor(skill, index) {
-		super(skill, index);
-		this.initMembers(skill);
-	}
-	/**
-	* Maps all the data from the JSON to this object.
-	* @param {RPG_Skill} skill The underlying skill object.
-	*/
-	initMembers(skill) {
-		this.message1 = skill.message1;
-		this.message2 = skill.message2;
-		this.mpCost = skill.mpCost;
-		this.requiredWtypeId1 = skill.requiredWtypeId1;
-		this.requiredWtypeId2 = skill.requiredWtypeId2;
-		this.stypeId = skill.stypeId;
-		this.tpCost = skill.tpCost;
-	}
-	/**
-	* Whether or not this database entry is a skill.
-	* @returns {boolean}
-	*/
-	isSkill() {
-		return true;
-	}
-	/**
-	* Gets the type of implementation this database entry is.
-	* @returns {string}
-	*/
-	implementationType() {
-		return `${super.implementationType()}:skill`;
-	}
-	/**
-	* Hydrated blank skill row—symmetry with other DB wrappers when a slot must read as "unused but valid".
-	*
-	* @param {number} index database id and `$dataSkills` index for this row
-	* @returns {RPG_Skill}
-	*/
-	static createEmpty(index) {
-		const raw = {
-			id: index,
-			message1: String.empty,
-			message2: String.empty,
-			messageType: 1,
-			mpCost: 0,
-			requiredWtypeId1: 0,
-			requiredWtypeId2: 0,
-			stypeId: 1,
-			tpCost: 0,
-			animationId: 0,
-			damage: {
-				critical: false,
-				elementId: 0,
-				formula: "0",
-				type: 0,
-				variance: 20
-			},
-			effects: [],
-			hitType: 0,
-			occasion: 0,
-			repeats: 1,
-			scope: 1,
-			speed: 0,
-			successRate: 100,
-			tpGain: 0,
-			description: String.empty,
-			iconIndex: 0,
-			name: String.empty,
-			note: String.empty,
-			meta: {}
-		};
-		return new RPG_Skill(raw, index);
 	}
 };
 
@@ -7849,6 +8999,67 @@ DataManager.invalidateLoadedBattlerCaches = function() {
 	$gameActors.existingActors().forEach((actor) => actor.onBattlerDataChange());
 };
 /**
+* Extends {@link #makeSavefileInfo}.<br/>
+* Also describes the playthrough well enough that a load menu never has to open a world.
+*
+* The vanilla five - title, characters, faces, playtime, timestamp - stay exactly as they are,
+* because {@link Window_SavefileList} reads them by name. Everything added here is what a save menu
+* worth looking at would want to show, and it costs nothing: this object is written into the
+* generation's manifest, which is the one file the load menu reads.
+* @returns {object} The savefile info, extended.
+*/
+J.BASE.Aliased.DataManager.set("makeSavefileInfo", DataManager.makeSavefileInfo);
+DataManager.makeSavefileInfo = function() {
+	const info = J.BASE.Aliased.DataManager.get("makeSavefileInfo").call(this);
+	const leader = $gameParty.leader();
+	info.mapName = this.savefileMapName();
+	info.leaderName = leader.name();
+	info.level = leader.level;
+	info.gold = $gameParty.gold();
+	info.party = $gameParty.allMembers().map((member) => member.actorId());
+	return info;
+};
+/**
+* Gets the name of the map the player is standing on, for a savefile's summary.
+*
+* The display name is preferred because it is the name the player has actually seen; the editor's
+* name for the map is the fallback for the many maps that have no display name set.
+* @returns {string}
+*/
+DataManager.savefileMapName = function() {
+	const displayName = $gameMap.displayName();
+	if (displayName !== String.empty) return displayName;
+	return $dataMapInfos[$gameMap.mapId()].name;
+};
+/**
+* Overwrites {@link #loadGlobalInfo}.<br/>
+* Builds the savefile index by reading each slot's manifest instead of a parallel index file.
+*
+* Vanilla keeps `global.rmmzsave`, a second document listing what every slot holds, and it can drift
+* from the slots themselves - it is written after the save it describes, so a crash between the two
+* leaves the menu describing a save that is not there, or hiding one that is. Here each generation
+* carries its own summary, so the index is derived rather than stored and cannot disagree with the
+* thing it indexes.
+*/
+DataManager.loadGlobalInfo = function() {
+	const globalInfo = [];
+	for (let savefileId = 1; savefileId <= this.maxSavefiles(); savefileId++) {
+		const manifest = SaveFileSystem.readManifest(this.makeSavename(savefileId));
+		if (manifest === null) continue;
+		globalInfo[savefileId] = manifest.display;
+	}
+	this._globalInfo = globalInfo;
+};
+/**
+* Overwrites {@link #saveGlobalInfo}.<br/>
+* Does nothing, because the index is derived from the manifests rather than written beside them.
+*
+* The in-memory `_globalInfo` the engine updates after a save is still correct for this session;
+* the next boot rebuilds it from the manifests. Deliberately kept as a no-op rather than deleted,
+* since the engine calls it from {@link #saveGame}.
+*/
+DataManager.saveGlobalInfo = function() {};
+/**
 * Extends {@link #setupBattleTest}.<br/>
 * Also clears the RPGManager note cache when entering battle test.
 */
@@ -8584,6 +9795,379 @@ ImageManager.loadBitmapPromise = function(filename, directory) {
 * @type {number}
 */
 ImageManager.iconColumns = 16;
+
+//#endregion
+//#region src/plugins/_base/managers/ProfileManager.js
+/**
+* Profile scope: anything that outlives a single playthrough without being a machine setting.
+*
+* Three lifetimes exist, and until now the engine only had two of them. Installation scope is
+* {@link ConfigManager} - volume, keybinds, window preferences, the things that belong to this copy
+* of the game. Slot scope is a playthrough. Profile scope is the gap between them: a record of what
+* this player has done across every playthrough, which survives deleting all their saves.
+*
+* **Nothing populates it yet, on purpose.** What belongs at this scope - a bestiary that remembers
+* across runs, a new-game-plus unlock, a "you have finished this once" flag - is content design, not
+* plumbing, and inventing entries here would be guessing at decisions nobody has made. This is the
+* seam, ready for the first thing that needs it.
+*
+* The shape deliberately mirrors {@link ConfigManager}: register a field with a default factory, and
+* the document takes care of itself. A plugin that understands one understands the other.
+*/
+var ProfileManager = class {
+	/**
+	* The file the profile document is written as.
+	* @type {string}
+	*/
+	static fileName = "profile.json";
+	/**
+	* Every registered field, mapped to the factory producing its default.
+	* @type {Map<string, Function>}
+	*/
+	static _registeredFields = new Map();
+	/**
+	* The live value of every registered field.
+	* @type {Map<string, *>}
+	*/
+	static _values = new Map();
+	/**
+	* Whether the profile document has been read yet this session.
+	* @type {boolean}
+	*/
+	static _loaded = false;
+	/**
+	* Gets every registered field and the factory producing its default.
+	* @returns {Map<string, Function>} The fields, keyed by name.
+	*/
+	static registeredFields() {
+		return this._registeredFields;
+	}
+	/**
+	* Gets the live value of every registered field.
+	* @returns {Map<string, *>} The values, keyed by field name.
+	*/
+	static values() {
+		return this._values;
+	}
+	/**
+	* Declares a value that belongs to the player's profile rather than to one playthrough.
+	*
+	* The default is a factory for the same reason it is on {@link ConfigManager.registerField}: a
+	* shared mutable default is a bug waiting for its first writer.
+	* @param {string} key The field name, which is also the key it is written under.
+	* @param {Function} defaultValueFactory Produces the value the field holds on a fresh install.
+	*/
+	static registerField(key, defaultValueFactory) {
+		this.registeredFields().set(key, defaultValueFactory);
+		this.values().set(key, defaultValueFactory());
+	}
+	/**
+	* Gets the current value of a registered field.
+	* @param {string} key The field name.
+	* @returns {*} The value.
+	*/
+	static get(key) {
+		return this.values().get(key);
+	}
+	/**
+	* Sets the value of a registered field. Writing the document is the caller's decision.
+	* @param {string} key The field name.
+	* @param {*} value The value to hold.
+	*/
+	static set(key, value) {
+		this.values().set(key, value);
+	}
+	/**
+	* Determines whether the profile document has been read this session.
+	* @returns {boolean}
+	*/
+	static isLoaded() {
+		return this._loaded;
+	}
+	/**
+	* Builds the plain data the profile document is written from.
+	* @returns {object}
+	*/
+	static makeData() {
+		const data = {};
+		this.values().forEach((value, key) => {
+			data[key] = value;
+		});
+		return data;
+	}
+	/**
+	* Applies a read profile document, defaulting anything it does not carry.
+	* @param {object} data The profile data read from disk.
+	*/
+	static applyData(data) {
+		this.registeredFields().forEach((defaultValueFactory, key) => {
+			this.values().set(key, key in data ? data[key] : defaultValueFactory());
+		});
+	}
+	/**
+	* Reads the profile document.
+	*
+	* A fresh install has no document, which is a value rather than a failure: every field is already
+	* sitting at the default its registration seeded.
+	*/
+	static load() {
+		SaveFileSystem.readDocument(this.fileName).then((data) => {
+			if (data !== null) {
+				this.applyData(SaveDecoder.decode(data, null, "$.profile"));
+			}
+			this._loaded = true;
+			return 0;
+		}).catch(() => {
+			this._loaded = true;
+			return 0;
+		});
+	}
+	/**
+	* Writes the profile document.
+	* @returns {Promise<void>}
+	*/
+	static save() {
+		return SaveFileSystem.writeDocument(this.fileName, SaveEncoder.encode(this.makeData(), "$.profile"));
+	}
+};
+
+//#endregion
+//#region __vite-browser-external
+var require___vite_browser_external = /* @__PURE__ */ __commonJSMin(((exports, module) => {
+	module.exports = {};
+}));
+
+//#endregion
+//#region src/plugins/_base/managers/StorageManager.js
+/**
+* The save pipeline, replaced end to end.
+*
+* Vanilla's pipeline is `JsonEx.stringify` into `pako.deflate` into one `.rmmzsave` file, and back.
+* This one encodes through per-type codecs, writes pretty-printed JSON into a directory of sections,
+* and swaps a pointer to make the result live. What the engine calls is unchanged - `saveObject`,
+* `loadObject`, `exists`, `remove` - so `DataManager` and `ConfigManager` keep their shape and the
+* scenes above them notice nothing.
+*
+* **The `localforage` branch is gone rather than abstracted.** `Utils.isLocalMode()` is always true
+* here: this is an NW.js project, external file loading does not work in a browser context, and a
+* second storage backend nobody can reach is a second thing to keep correct. Do not reintroduce it
+* "just in case".
+*
+* **The `pako` branch is gone too.** A savefile being readable by a human is the point of the
+* rewrite, and compression is the one thing that cannot coexist with it. Size is explicitly a
+* non-goal; see the save rewrite plan.
+*
+* Two shapes of thing get saved, and they are told apart by name rather than by a flag:
+*
+* - a **slot** - `file1`, `file2` - is a playthrough, and is written as a generation directory.
+* - a **document** - `config` - is smaller than a slot and has no history worth keeping, so it is
+*   one pretty-printed file swapped atomically into place.
+*/
+/**
+* Determines whether a path exists at all, file or directory.
+* @param {string} path The path to test.
+* @returns {boolean}
+*/
+StorageManager.fsExists = function(path) {
+	const fs = require___vite_browser_external();
+	return fs.existsSync(path);
+};
+/**
+* Determines whether a path is a directory.
+* @param {string} path The path to test.
+* @returns {boolean}
+*/
+StorageManager.fsIsDirectory = function(path) {
+	const fs = require___vite_browser_external();
+	return fs.statSync(path).isDirectory();
+};
+/**
+* Creates a directory and every missing directory above it.
+*
+* The engine's own `fsMkdir` is one level deep, which was enough when every save was a file in one
+* flat directory. A slot is now `save/file1/gen-0007/systems/`, so the recursive form is what this
+* needs.
+* @param {string} path The directory to create.
+*/
+StorageManager.fsMkdirRecursive = function(path) {
+	const fs = require___vite_browser_external();
+	if (!fs.existsSync(path)) {
+		fs.mkdirSync(path, { recursive: true });
+	}
+};
+/**
+* Lists the entries of a directory.
+* @param {string} path The directory to list.
+* @returns {string[]} The entry names, without their directory.
+*/
+StorageManager.fsReaddir = function(path) {
+	const fs = require___vite_browser_external();
+	return fs.readdirSync(path);
+};
+/**
+* Writes a file and does not return until the bytes have reached the disk.
+*
+* `writeFileSync` hands the write to the operating system and returns; a power loss in the window
+* that opens leaves a file that exists and is empty. The explicit fsync closes it, which a save
+* system that promises "it always works" cannot do without.
+* @param {string} path The file to write.
+* @param {string} contents The text to write.
+*/
+StorageManager.fsWriteFileSynced = function(path, contents) {
+	const fs = require___vite_browser_external();
+	const descriptor = fs.openSync(path, "w");
+	try {
+		fs.writeSync(descriptor, contents);
+		fs.fsyncSync(descriptor);
+	} finally {
+		fs.closeSync(descriptor);
+	}
+};
+/**
+* Flushes a directory's own entries to disk, best-effort.
+*
+* Syncing the *files* makes their contents durable; syncing the *directory* is what makes the fact
+* that they exist durable. Both matter for a generation, because a crash could otherwise leave a
+* directory the filesystem has not finished admitting the files into.
+*
+* It is best-effort because Windows refuses to open a directory as a file at all, and CA ships on
+* Windows. Losing this step costs a little durability on one platform; treating it as fatal would
+* cost every save on that platform. The pointer rename is what carries atomicity regardless.
+* @param {string} path The directory to flush.
+*/
+StorageManager.fsSyncDirectory = function(path) {
+	const fs = require___vite_browser_external();
+	try {
+		const descriptor = fs.openSync(path, "r");
+		try {
+			fs.fsyncSync(descriptor);
+		} finally {
+			fs.closeSync(descriptor);
+		}
+	} catch {}
+};
+/**
+* Deletes a directory and everything inside it.
+* @param {string} path The directory to delete.
+*/
+StorageManager.fsRemoveDirectory = function(path) {
+	const fs = require___vite_browser_external();
+	if (fs.existsSync(path)) {
+		fs.rmSync(path, {
+			recursive: true,
+			force: true
+		});
+	}
+};
+/**
+* Determines whether a save name refers to a playthrough slot rather than a scope-level document.
+*
+* `DataManager.makeSavename` builds these as `file` followed by the slot number, and that shape is
+* the whole test. Anything else - `config` today, `profile` tomorrow - is a document.
+* @param {string} saveName The name the engine asked for.
+* @returns {boolean}
+*/
+StorageManager.isSlotName = function(saveName) {
+	return /^file\d+$/.test(saveName);
+};
+/**
+* Gets the file name a scope-level document is written as.
+* @param {string} saveName The name the engine asked for, ex: `config`.
+* @returns {string}
+*/
+StorageManager.documentFileName = function(saveName) {
+	return `${saveName}.json`;
+};
+/**
+* Overwrites {@link StorageManager.saveObject}.<br/>
+* Writes through the codec pipeline instead of `JsonEx` and `pako`.
+* @param {string} saveName The name to save under.
+* @param {object} object The live object graph to persist.
+* @returns {Promise<void>}
+*/
+StorageManager.saveObject = function(saveName, object) {
+	if (this.isSlotName(saveName)) return this.saveSlot(saveName, object);
+	return this.saveDocument(saveName, object);
+};
+/**
+* Overwrites {@link StorageManager.loadObject}.<br/>
+* Reads through the codec pipeline instead of `pako` and `JsonEx`.
+* @param {string} saveName The name to load.
+* @returns {Promise<object|null>}
+*/
+StorageManager.loadObject = function(saveName) {
+	if (this.isSlotName(saveName)) return this.loadSlot(saveName);
+	return this.loadDocument(saveName);
+};
+/**
+* Writes one playthrough slot as a new generation.
+* @param {string} saveName The slot's name.
+* @param {object} contents The save contents, as `DataManager.makeSaveContents` builds them.
+* @returns {Promise<void>}
+*/
+StorageManager.saveSlot = function(saveName, contents) {
+	const sections = SaveSectionRouter.toSections(contents);
+	const manifest = SaveManifest.create(Object.keys(sections), DataManager.makeSavefileInfo(), Graphics.frameCount);
+	return SaveFileSystem.writeSlot(saveName, sections, SaveEncoder.encode(manifest, "$.manifest"));
+};
+/**
+* Reads one playthrough slot, falling back through older generations as needed.
+* @param {string} saveName The slot's name.
+* @returns {Promise<object>} The save contents, ready for `DataManager.extractSaveContents`.
+*/
+StorageManager.loadSlot = function(saveName) {
+	return SaveFileSystem.readSlot(saveName, (sections) => SaveSectionRouter.fromSections(sections));
+};
+/**
+* Writes one scope-level document.
+* @param {string} saveName The document's name, ex: `config`.
+* @param {object} object The data to persist.
+* @returns {Promise<void>}
+*/
+StorageManager.saveDocument = function(saveName, object) {
+	return SaveFileSystem.writeDocument(this.documentFileName(saveName), SaveEncoder.encode(object, `$.${saveName}`));
+};
+/**
+* Reads one scope-level document.
+* @param {string} saveName The document's name.
+* @returns {Promise<object|null>} The data, or null on a fresh install where the file is absent.
+*/
+StorageManager.loadDocument = function(saveName) {
+	return SaveFileSystem.readDocument(this.documentFileName(saveName)).then((data) => {
+		if (data === null) return null;
+		return SaveDecoder.decode(data, null, `$.${saveName}`);
+	});
+};
+/**
+* Overwrites {@link StorageManager.exists}.<br/>
+* @param {string} saveName The name to test.
+* @returns {boolean}
+*/
+StorageManager.exists = function(saveName) {
+	if (this.isSlotName(saveName)) return SaveFileSystem.slotExists(saveName);
+	return this.fsExists(SaveFileSystem.documentPath(this.documentFileName(saveName)));
+};
+/**
+* Overwrites {@link StorageManager.remove}.<br/>
+* @param {string} saveName The name to delete.
+*/
+StorageManager.remove = function(saveName) {
+	if (this.isSlotName(saveName)) {
+		SaveFileSystem.removeSlot(saveName);
+		return;
+	}
+	this.fsUnlink(SaveFileSystem.documentPath(this.documentFileName(saveName)));
+};
+/**
+* Overwrites {@link StorageManager.filePath}.<br/>
+* Answers with the slot directory or the document file, whichever the name refers to.
+* @param {string} saveName The name to resolve.
+* @returns {string}
+*/
+StorageManager.filePath = function(saveName) {
+	if (this.isSlotName(saveName)) return SaveFileSystem.slotDirectory(saveName);
+	return SaveFileSystem.documentPath(this.documentFileName(saveName));
+};
 
 //#endregion
 //#region src/plugins/_base/database/miscellaneous/RPG_SoundEffect.js
@@ -12054,6 +13638,25 @@ Scene_Skill.prototype.skillTypeWindow = function() {
 
 //#endregion
 //#region src/plugins/_base/scenes/Scene_Boot.js
+/**
+* Extends {@link #loadPlayerData}.<br/>
+* Also reads the profile document, alongside the config and the savefile index.
+*/
+J.BASE.Aliased.Scene_Boot.set("loadPlayerData", Scene_Boot.prototype.loadPlayerData);
+Scene_Boot.prototype.loadPlayerData = function() {
+	J.BASE.Aliased.Scene_Boot.get("loadPlayerData").call(this);
+	ProfileManager.load();
+};
+/**
+* Extends {@link #isPlayerDataLoaded}.<br/>
+* Also waits on the profile document before the boot sequence proceeds.
+* @returns {boolean}
+*/
+J.BASE.Aliased.Scene_Boot.set("isPlayerDataLoaded", Scene_Boot.prototype.isPlayerDataLoaded);
+Scene_Boot.prototype.isPlayerDataLoaded = function() {
+	const loaded = J.BASE.Aliased.Scene_Boot.get("isPlayerDataLoaded").call(this);
+	return loaded && ProfileManager.isLoaded();
+};
 /**
 * Extends {@link #onDatabaseLoaded}.<br/>
 * Seeds vanilla engine parameters before downstream plugins extend the catalog.

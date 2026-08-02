@@ -177,6 +177,12 @@ class SaveCodec
     // fields they persist, and forcing each one to declare an empty seed would be noise.
     if (!type.prototype.initMembers) return () => {};
 
+    // an initMembers that takes parameters is a mapper, not a defaulter- `RPG_Skill.initMembers`
+    // reads a database row it is handed, and calling it with nothing throws before it assigns a
+    // single field. there is nothing safe to pass it from a savefile, so a class shaped that way
+    // supplies its own seed and gets a no-op until it does.
+    if (type.prototype.initMembers.length > 0) return () => {};
+
     return instance => instance.initMembers();
   }
 

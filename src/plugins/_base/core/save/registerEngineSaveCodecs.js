@@ -315,12 +315,30 @@ SerializableRegistry.register(Game_Map, {
 });
 
 /**
- * One map event. Reconstructed wholesale by `Game_Map.setupEvents` on the next map setup, which is
- * why every `_j.*` slice on one is transient- but the engine still persists the event itself.
+ * One map event.
+ *
+ * **Everything at `_j` on an event is map-session state and is not written.** An event is rebuilt
+ * from scratch by `Game_Map.setupEvents` at the next map setup - and a load always reaches one,
+ * because J-ABS overwrites `Scene_Load.reloadMapIfUpdated` to reserve a transfer whenever JABS is
+ * enabled rather than only when the database version changed. So a slice hanging off an event was
+ * only ever being restored by accident, and restoring it is worse than dropping it: it hands the
+ * next session a half-dead enemy's bookkeeping instead of a fresh one.
+ *
+ * The cold value is the one the seed already established. The decoder runs `seed` before any field
+ * from the file lands, and the `initMembers` chain every plugin aliases is what builds `_j` - so by
+ * the time a transient factory runs, a complete, freshly-initialized namespace is already sitting
+ * there. Handing it back is the whole of the re-seed. This is the third shape a transient takes,
+ * alongside the lazy cache that answers with `null` and the eager cache that rebuilds itself.
+ *
+ * It has to be a transient rather than nothing at all, because `_j` on an event holds `JABS_Timer`s
+ * - a type deliberately left unregistered - and the encoder would refuse to write them.
  */
 SerializableRegistry.register(Game_Event, {
   id: 'game-event',
   aliases: [ 'Game_Event' ],
+  transients: {
+    _j: event => event._j,
+  },
 });
 
 /**

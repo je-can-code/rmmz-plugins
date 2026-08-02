@@ -22,6 +22,19 @@ J.BASE.PluginParameters = PluginManager.parameters(J.BASE.Metadata.Name);
 J.BASE.Metadata.BaseTpMaxActors = Number(J.BASE.PluginParameters['actorBaseTp']);
 J.BASE.Metadata.BaseTpMaxEnemies = Number(J.BASE.PluginParameters['enemyBaseTp']);
 
+/**
+ * How many generations of a save slot are kept on disk before the oldest are pruned.
+ *
+ * Every save writes a whole new generation and then points the slot at it, so the previous ones are
+ * still loadable. Keeping three means the failure mode of a bad save is "you lost the last save"
+ * rather than "you lost the file", which is the entire promise of the save system.
+ *
+ * The coalesce is the same pattern the note-parsing helpers use: a parameter the editor has not
+ * written into `plugins.js` yet reads as `undefined`, and this one has to hold a usable number from
+ * the first boot after the plugin is updated rather than after someone opens the plugin manager.
+ */
+J.BASE.Metadata.retainedSaveGenerations = Number(J.BASE.PluginParameters['retainedSaveGenerations'] ?? 3);
+
 // TODO: plugin parameterize this and make it "show/minimal/hide".
 J.BASE.Metadata.ShowExternalFileLoadInfo = false;
 
@@ -186,6 +199,7 @@ J.BASE.RegExp.ClassifierType = /<type:[ ]?([a-zA-Z][a-zA-Z0-9_-]*)>/gi;
 J.BASE.Aliased = {
   AudioManager: new Map(),
   Bitmap: new Map(),
+  ConfigManager: new Map(),
   DataManager: new Map(),
   JsonEx: new Map(),
   Game_Action: new Map(),

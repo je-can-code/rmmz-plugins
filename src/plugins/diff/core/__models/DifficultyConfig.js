@@ -73,5 +73,20 @@ class DifficultyConfig
   }
 }
 
+/**
+ * Every difficulty the player has toggled lives in a savefile at
+ * `$gameSystem._j._difficulty._configurations`, so the save encoder meets this type and needs a
+ * codec for it.
+ *
+ * The defaults live in class fields, which only run when a constructor does- and the decoder never
+ * runs one. The seed therefore copies them off a freshly built instance rather than restating them,
+ * which is safe because this constructor defaults every parameter and does nothing but assign.
+ */
+SerializableRegistry.register(DifficultyConfig, {
+  id: 'difficulty-config',
+  aliases: [ 'DifficultyConfig' ],
+  seed: instance => Object.assign(instance, new DifficultyConfig()),
+});
+
 export default DifficultyConfig;
 //endregion DifficultyConfig
