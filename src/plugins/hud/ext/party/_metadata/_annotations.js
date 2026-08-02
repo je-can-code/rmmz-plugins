@@ -42,8 +42,12 @@
  * This plugin has no notetags of its own- it purely reads live battler data
  * for display.
  * ============================================================================
- * CHANGELOG
- * ----------------------------------------------------------------------------
+ * CHANGELOG:
+ * - 1.3.1
+ *    Fixed boot and load failures left behind by the quick menu pare-down:
+ *    Scene_Map#createJabsAbsMenu still called the six create-window methods
+ *    that went with the removed assignment flows, so loading any save crashed
+ *    before the map finished building. The quick menu has one window left.
  * - 1.3.0
  *    Leader affliction rendering now delegates to J-HUD core's shared
  *    StateAfflictionHudPresenter/StateAfflictionHudLayoutSpec instead of a

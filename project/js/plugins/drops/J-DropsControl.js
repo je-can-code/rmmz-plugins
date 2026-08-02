@@ -1,7 +1,7 @@
 //region Introduction
 /*:
  * @target MZ
- * @plugindesc [v2.2.0 DROPS] Enables greater control over loot drops.
+ * @plugindesc [v2.3.0 DROPS] Enables greater control over loot drops.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -209,6 +209,19 @@
  * The party will now gain +175% gold from defeated enemies.
  * ============================================================================
  * CHANGELOG:
+ * - 2.3.0
+ *    Loot drops now resolve through the shared proc-count path, so a killer in
+ *    Accumulate Mode earns a copy per successful roll rather than spending the
+ *    surplus on an already-won roll, and Encore echoes each earned copy. The
+ *    treasure-hunter shortcut is gone as a special case rather than as
+ *    behavior; one consequence is that an absolutely cursed killer can now be
+ *    denied a guaranteed drop, where the shortcut previously bypassed fate.
+ *    didFindLoot keeps its boolean contract and delegates.
+ *    Fixed two compounding rate bugs that made loot far more common than
+ *    authored: the enemy base rate and the party bonus both started from one
+ *    and were summed, doubling every drop in the game; and the double-drop
+ *    accessory was consulted twice per roll, once inside the multiplier and
+ *    again as a bare doubling of the chance.
  * - 2.2.0
  *    Added a NaturalGrowth-integrated drop rate stat (key "dor") via
  *    <dorBuffPlus>/<dorBuffRate>/<dorGrowthPlus>/<dorGrowthRate>, following
@@ -257,7 +270,7 @@ J.DROPS = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.DROPS.Metadata = new J_DropsControlPluginMetadata("J-DropsControl", "2.2.0");
+J.DROPS.Metadata = new J_DropsControlPluginMetadata("J-DropsControl", "2.3.0");
 /**
 * All regular expressions used by this plugin.
 */

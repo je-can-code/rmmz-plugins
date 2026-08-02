@@ -23,6 +23,12 @@
  * All difficulties are defined in an external JSON file.
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.2
+ *    Fixed the scene's initMembers chain never reaching Scene_Base, which left
+ *    the modal dimmer field unseeded. getModalDimmerWindow guards on === null,
+ *    so undefined slipped straight past it and showModalDimmer dereferenced it.
+ *    Command windows now seed state in initMembers, early enough for
+ *    makeCommandList to see it.
  * - 2.0.1
  *    Added flag for showing external file load info.
  *    Removed dead plugin parameter inputs.

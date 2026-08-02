@@ -283,6 +283,12 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.1
+ *    Fixed Game_Actor#elementRate capturing its own original into the actor
+ *    alias map and then invoking the enemy's chain instead. Harmless only by
+ *    coincidence, since vanilla defines elementRate on Game_BattlerBase alone
+ *    and both maps held the same inherited function; the moment either
+ *    subclass gained its own, actors would have silently run the enemy's.
  * - 1.3.0
  *    Changed <boostElement:ELEMENT_ID:PERCENT_BOOST> to <boostElement:[ELEMENT_ID, PERCENT_BOOST]>.
  *    The old colon-separated shape required a bespoke, ad-hoc capture-group reader

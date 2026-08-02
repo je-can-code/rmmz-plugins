@@ -195,6 +195,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.4.0
+ *    Retrofitted the skill equip scene onto the shared actor skeleton, so it
+ *    matches the other actor-scoped scenes.
+ *    Command windows now seed state in initMembers, early enough for
+ *    makeCommandList to see it.
  * - 1.3.0
  *    Added per-battler unslotted-skill exemptions via <unslottedSkills:[...]>.
  *    Stale slot entries are now automatically cleared when the actor no
