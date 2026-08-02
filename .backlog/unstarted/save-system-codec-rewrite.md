@@ -24,11 +24,18 @@ become testable — not shipping boundaries. Do not split them.
 | 5 | versioning and the migration seam |
 | 6 | the test suite |
 
-**One thing is worth carving out, and only one.** Phase 0's first step — invalidating the battler
-caches on load — is a one-line bug fix for a defect that exists today and has nothing to do with this
-rewrite. It is a separate work item, not a phase of this one, and shipping it alone means the
-rebalancing pass stops being lied to immediately instead of when the whole save system lands. See
-[Phase 0](#phase-0--inventory-and-the-stale-cache-bug).
+**Nothing is carved out, and nothing merges early.** An earlier draft proposed shipping Phase 0's
+one-line battler-cache fix ahead of the rest, since it repairs a defect that exists on `main` today.
+That is overruled deliberately: a save format is not partially verifiable, and a branch that has
+merged half of itself is harder to reason about than one that has merged none of it. Everything lands
+together, after the whole thing is verified and functional.
+
+**Branch:** `feat/save-system-codec-rewrite`, cut from `main` at the close of PR #67.
+
+Phases are expected to span several working sessions. Each session should pick up from this document
+rather than from the last session's memory — if something here is unclear or wrong, **fix the
+document as part of the work**. It is the only handoff artifact, and a gap found while executing is
+worth more than a gap found later.
 
 ### Read these before writing anything
 
@@ -548,12 +555,12 @@ Resist the urge to implement transient handling here with `Game_System.onBeforeS
 in one PR you would write them in Phase 0 and delete them in Phase 1. **Do the inventory, not the
 plumbing.**
 
-### The one thing that ships on its own
+### Do step 1 first anyway
 
 Step 1 below — calling `onBattlerDataChange()` on every actor after a load — fixes a defect that
-exists in `main` today and is independent of this rewrite. It is a one-line bug fix, so it is a
-separate work item rather than a split of this one, and it belongs in its own small PR ahead of this
-work. Everything else in Phase 0 waits for Phase 1.
+exists on `main` today and is independent of the rest of this work. It does not ship early, but it
+should be the **first commit on the branch**: it is a few lines, it is verifiable on its own, and
+every subsequent phase is easier to trust when the caches are not already lying.
 
 ### The complete transient inventory
 
@@ -650,7 +657,7 @@ The router sidesteps both by never walking `$gameMap._events`, which leaves the 
 
 ### Acceptance
 
-For the carved-out bug fix, on its own:
+For step 1, verifiable as soon as it is committed:
 
 - Save, edit a state's traits in the database, load: the actor reflects the **new** traits without
   needing an equip change. **Verify this fails before the fix** — if it passes beforehand, you are
@@ -923,9 +930,11 @@ Read `CLAUDE.md` in full; these are the ones this item trips over specifically.
   every model touched here should land as `class` + registry.
 - Related: [`game-action-battler-uuid-refactor`](game-action-battler-uuid-refactor.md) — id-vs-uuid in
   saves is the same reference/value question this item answers for database rows.
-- **PR strategy: one PR.** The phases are build order, not shipping boundaries. The sole exception is
-  the one-line battler-cache invalidation in Phase 0 step 1 — it fixes a defect present in `main`
-  today and is a separate work item rather than a split of this one.
+- **PR strategy: one branch, one PR, no exceptions.** `feat/save-system-codec-rewrite` holds every
+  phase and merges only once the whole thing is verified and functional. The battler-cache fix in
+  Phase 0 step 1 repairs a defect present on `main` today and could technically ship alone; it does
+  not, because a save format is not partially verifiable and a half-merged branch is harder to reason
+  about than an unmerged one.
 - **Ships touched, for the PR-time changelog pass.** `_base` carries the whole pipeline. Downstream
   plugins mostly need no source change, because the router reads `_j.*` generically — but these have
   hand-rolled save behavior that gets retired and will therefore have real diffs: `J-Omni` (quest and
