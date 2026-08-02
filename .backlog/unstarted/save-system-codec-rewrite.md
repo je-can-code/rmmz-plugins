@@ -246,6 +246,7 @@ router can put each slice back where it came from:
     "system":    { },
     "party":     { },
     "player":    { },
+    "map":       { },
     "actors":    { "1": { }, "2": { } },
     "followers": { "0": { }, "1": { } },
     "vehicles":  { "boat": { }, "ship": { }, "airship": { } }
@@ -253,15 +254,50 @@ router can put each slice back where it came from:
 }
 ```
 
-`_j._abs` appears on seven host types at runtime: `$gameSystem`, `$gameParty`, `$gameActor`,
-`$gamePlayer`, `$gamePlayer._followers._data[]`, `$gameMap._vehicles[]`, and `$gameMap._events[]`.
+#### Eight hosts carry `_j.*` slices, not seven
 
-**Six of those seven are routed. `$gameMap._events[]` is not.** Every `_j.*` slice on a map event is
+Measured by walking `save/file1.rmmzsave` on 2026-08-01: **27 plugin namespaces across 57 host-path
+combinations, on 8 distinct host paths.**
+
+| Host path | Routed? |
+|---|---|
+| `$gameSystem` | yes |
+| `$gameParty` | yes |
+| `$gamePlayer` | yes |
+| `$gameActors._data[]` | yes |
+| `$gamePlayer._followers._data[]` | yes |
+| `$gameMap._vehicles[]` | yes |
+| **`$gameMap` itself** | **yes** — carries `_j._levelSync`, `_j._omni`, `_j._regions` |
+| `$gameMap._events[]` | **no** |
+
+`$gameMap` was missing from every list in an earlier draft, which would have silently dropped J-TIME's
+neighbour plugins' map-scoped state — including `_j._omni._quest._destinationTimer`, the lone
+`J_Timer` in the whole save. A system file therefore has **seven** host keys, never six and never
+eight.
+
+**`$gameMap._events[]` is the one host that is not routed.** Every `_j.*` slice on a map event is
 transient per Phase 0 — `Game_Map.setupEvents` reconstructs events from scratch, so that state has a
 map-session lifetime and never reaches disk. The router must therefore **skip events entirely**:
 there is no `events` key in a system file, and the router does not walk `$gameMap._events` on either
 encode or decode. On load, event slices are re-seeded by each plugin's event `initMembers` path, the
 same as after a map transfer.
+
+#### Not every `_j.<key>` is a namespace
+
+Four keys sit directly on `_j` holding a primitive or an array rather than a plugin namespace object:
+
+| Key | Host | Holds |
+|---|---|---|
+| `_j._textPops` | player, followers, vehicles, events | an array of pop requests |
+| `_j._textPopRequest` | same | a boolean |
+| `_j._hcr` | actors | a number |
+| `_j._levelScalingEnabled` | system | a boolean |
+
+A router that assumes `_j.<key>` is always a namespace object would happily write
+`systems/_textPopRequest.json` containing `false`. The first two are already transient per the table
+above; the other two are real persisted state that belongs with its owning plugin's slice, not in a
+file of its own. **The router keys on a registered plugin list, not on whatever `Object.keys(_j)`
+returns** — which is also what stops a stray field added to `_j` from silently minting a section.
 
 ### manifest.json
 
@@ -371,7 +407,7 @@ know is to read the class's `initialize` / `initMembers` and see what it assigns
 |---|---|---|
 | `id` | `string` | Stable save id. Defaults to `constructor.name`; **new registrations should pass it explicitly** so a class rename never touches a save. |
 | `aliases` | `string[]` | Older ids that still resolve here. How a rename ships without a migration. |
-| `transients` | `Object<string, Function>` | Field name to a factory returning its cold value. Never written; always re-seeded. |
+| `transients` | `Object<string, Function>` | Field name to `instance => coldValue`. Never written; always re-seeded. The factory receives the decoded instance so an *eager* cache can rebuild itself from fields that have already landed; lazy caches ignore the argument. |
 | `typed` | `Object<string, Function>` | Field name to the constructor it holds. Arrays and `Map` values declare the *element* constructor. |
 | `seed` | `Function=` | Establishes every field's default on a bare instance before decoded fields land. Defaults to calling `initMembers()` when the class has one. **Required** for classes that set up state in `initialize` instead. Must be side-effect free. |
 | `encode` | `Function=` | Full override. Receives the instance, returns plain data. Skips the default walk. |
@@ -387,6 +423,8 @@ runtime shape — JAFTING lineage in Phase 4 is the motivating case. Most types 
 encode(value, path):
   null or primitive            -> value
   Array                        -> value.map(el => encode(el, path + '[i]'))
+  Map                          -> { '@': 'Map', entries: [ [ encode(k), encode(v) ], ... ] }
+  Set                          -> { '@': 'Set', values: [ encode(v), ... ] }
   plain object                 -> map each own key through encode
   class instance:
     codec = registry.forInstance(value)          // keyed on the constructor, not a name
@@ -404,9 +442,51 @@ defaultEncode(value, codec, path):
   return out
 ```
 
-"Is this a class instance" is decided by `Object.prototype.toString.call(value) === '[object Object]'`
-plus a registry lookup keyed on `value.constructor`. **Not `typeof`, not `instanceof`** — see
+Dispatch is on `Object.prototype.toString.call(value)` — `'[object Map]'`, `'[object Set]'`,
+`'[object Array]'`, `'[object Object]'` — with "is this a class instance" being the `'[object Object]'`
+case plus a registry lookup keyed on `value.constructor`. **Not `typeof`, not `instanceof`** — see
 [Conventions](#conventions-that-bite-in-this-work).
+
+**`Map` and `Set` need their own branches, and it is easy to leave them out.** They do not answer
+`'[object Object]'`, so the class-instance path never sees them; their real entries live in internal
+slots that `Object.keys` cannot reach, so the plain-object path would encode them as `{}`. The existing
+`JsonEx._encode` override already carries exactly these two branches and is the reference. A save holds
+37 `Map`s today, 35 of which survive Phase 0 — among them `$.actors._data[]._j._sks._slotMap`, whose
+silent loss would unequip every skill.
+
+#### The real Phase 1 worklist is registration completeness, not type-map size
+
+Trace `defaultEncode` carefully: the `typed` completeness throw only fires on **direct own keys of a
+registered class**. `Game_Actor._j` is a plain object, so the walk falls into the plain-object branch,
+which has no typed check and simply recurses. `_j._abs._equippedSkills` therefore never needs a
+`Game_Actor.typed` entry.
+
+What it *does* need is for `JABS_SkillSlotManager` to be in the registry — otherwise the encoder throws
+when it reaches one. So type maps stay small, and the binding constraint is that **every class
+reachable anywhere in a save must be registered.**
+
+Measured against `save/file1.rmmzsave` on 2026-08-01: **55 distinct tags, 1,700 tagged nodes.** 23
+classes are registered today. The gap is the worklist:
+
+| Unregistered class | Tags | Where | Disposition |
+|---|---|---|---|
+| `RPG_Trait` | 255 | only inside battler caches | vanishes with the transients |
+| `JABS_Timer` | 110 | five holder paths | register; transient at every holder |
+| `RPG_Skill` / `RPG_SkillDamage` | 61 each | 47 in battler caches, **14 in `$.actors._data[]._j._passive._passiveSources[]`** | register — see below |
+| `RPG_State` / `RPG_UsableEffect` / `RPG_Armor` / `RPG_Actor` / `RPG_Class` / `RPG_Weapon` | 28/28/8/4/4/4 | only inside battler caches | vanishes with the transients |
+| `Map` | 37 | 35 survive | register as a codec, Phase 1 step 5 |
+| `DifficultyConfig` | 17 | `$.system._j._difficulty._configurations[]` | register |
+| `JABS_DeathContext` | 1 | `$.actors._data[]._j._abs._deathContext` | register |
+| `J_Timer` | 1 | `$.map._j._omni._quest._destinationTimer` | register; transient |
+| the 18 engine `Game_*` classes | 94 | the spine of the document | register with type maps, Phase 1 step 6 |
+| `CGMZ_Core`, `Eli_SavedContents` | 1 each | third-party top-level keys | **not registered** — both plugins are being removed from CA |
+
+**`_j._passive._passiveSources` is a genuine reference-vs-value bug, not a registration gap.** It
+persists 14 whole `RPG_Skill` rows — database objects stored by value, so a rebalanced skill never
+reaches a loaded save, exactly the failure JAFTING refinement has in Phase 4. Registering `RPG_Skill`
+would make it encode cleanly and stay wrong. **Raise it with Jeremy rather than quietly fixing it**;
+the fix is to persist skill ids and resolve them on read, which is a change to J-Passive's storage, not
+to the codec layer. Nothing else in this item depends on the answer, so it does not block.
 
 ### Decode
 
@@ -458,6 +538,13 @@ behavior: call `instance.initMembers()` when the class defines one. Classes that
 `_actors` and calls `initAllItems()` directly in `initialize` — **must supply `seed` explicitly**, as
 a function that assigns the same defaults without the side effects. Never call `initialize` itself:
 `Game_Actor.prototype.initialize` takes an actor id and runs `setup()`, which does real work.
+
+**Defaulting `seed` to `initMembers()` inherits the whole alias chain, so verify the chain, not the
+method.** `Game_Battler.prototype.initMembers` is aliased by a dozen plugins, and the default is only
+correct if *every* link is pure assignment. J-Base's link is (`||=` namespaces, then five literal
+assignments), and so are the ones read for Phase 0 step 1 — but that is a property of the current
+chain, not a guarantee. A link that constructs, registers, or reads a global makes the default wrong
+for that class, and the class must then supply `seed` explicitly. Check before relying on the default.
 
 Consequences to accept deliberately:
 
@@ -562,30 +649,71 @@ exists on `main` today and is independent of the rest of this work. It does not 
 should be the **first commit on the branch**: it is a few lines, it is verifiable on its own, and
 every subsequent phase is easier to trust when the caches are not already lying.
 
+**Done** — commit `a388398`. `DataManager.extractSaveContents` now walks `$gameActors.existingActors()`
+(a new accessor on `Game_Actors`, added because `actors()` lazily *constructs* every database actor it
+is asked about and would permanently bloat the roster) and fires `onBattlerDataChange()` on each.
+
 ### The complete transient inventory
 
-| Field | Owner | Cold value | Why |
+Every cold value below was read out of the line that assigns it, cited in the last column. Nothing
+here is inferred from a field's name.
+
+| Field | Owner | Cold value | Assigned at |
 |---|---|---|---|
-| `_cachedTraitObjects` | `Game_BattlerBase` | `null` | rebuilt by `traitObjects()` |
-| `_cachedAllTraits` | `Game_BattlerBase` | `null` | rebuilt by `allTraits()` |
-| `_cachedAllNotes` | `Game_Battler` | `null` | rebuilt by `allNotes()` |
-| `_cachedMaxTpBonuses` | `Game_Battler` | `null` | rebuilt by `getBaseMaxTpBonuses()` |
-| `_cachedHarFactor` | `Game_Battler` | `null` | rebuilt by `baseHarFactor()` |
-| `_questopediaCache` | `Game_Party` | `new Map()` | rebuilt by `translateQuestopediaSaveablesToCache` |
-| `_monsterpediaObservationsCache` | `Game_Party` | `new Map()` | same, monsterpedia |
-| `_textPops` | character-likes | `[]` | render state; serializes as `[]` already |
-| `_textPopRequest` | character-likes | `false` | render state; serializes as `false` already |
-| every `JABS_Timer` | see table below | fresh timer per holder | stopwatches; no player-visible state |
+| `_j._base._cachedTraitObjects` | `Game_BattlerBase` | `null` | `_base/objects/Game_BattlerBase.js:29` |
+| `_j._base._cachedAllTraits` | `Game_BattlerBase` | `null` | `_base/objects/Game_BattlerBase.js:39` |
+| `_j._base._cachedAllNotes` | `Game_Battler` | `null` | `_base/objects/Game_Battler.js:150` |
+| `_j._base._cachedMaxTpBonuses` | `Game_Battler` | `null` | `_base/objects/Game_Battler.js:158` |
+| `_j._base._cachedHarFactor` | `Game_Battler` | `null` | `_base/objects/Game_Battler.js:165` |
+| `_j._omni._questopediaCache` | `Game_Party` | **rebuilt, not blank** — see below | `omni/ext/quest/objects/Game_Party.js:52` |
+| `_j._omni._monsterpediaObservationsCache` | `Game_Party` | **rebuilt, not blank** — see below | `omni/ext/monster/objects/Game_Party.js:47` |
+| `_j._textPops` | character-likes | `[]` | render state; serializes as `[]` already |
+| `_j._textPopRequest` | character-likes | `false` | render state; serializes as `false` already |
+| every `JABS_Timer` / `J_Timer` | see holder table below | a fresh timer, per holder | stopwatches; no player-visible state |
 | every `_j.*` on `$gameMap._events[]` | `Game_Event` | the next map setup | handled by the router in Phase 3, not by a codec |
+
+#### Lazy caches re-seed; eager caches must be rebuilt
+
+The five battler caches are **lazy**: every reader is guarded by `if (this.getCachedX() !== null)`, so
+handing back `null` is a complete answer — the next read rebuilds. Principle 3 is satisfied by the cold
+value alone.
+
+The two omnipedia caches are **eager**, and a cold value alone silently breaks them.
+`getQuestopediaEntryByKey` reads `getQuestopediaEntriesCache().get(questKey)` with no guard and no
+rebuild path, so an empty `Map` does not read as "cold" — it reads as *"this playthrough has no
+quests."* Today `synchronizeQuestopediaAfterLoad` repopulates it from `_questopediaSaveables`, and
+something must keep doing that.
+
+**So a transient factory receives the decoded instance**, not nothing:
+
+```javascript
+transients: {
+  // lazy: the guard rebuilds on next read, so the cold value is the whole answer.
+  _cachedAllNotes: () => null,
+
+  // eager: nothing rebuilds this lazily, so the factory rebuilds it from the fields
+  // that were just decoded.
+  _questopediaCache: party => new Map(
+    party.getSavedQuestopediaEntries()
+      .map(entry => [ entry.key, entry ])),
+},
+```
+
+This is safe because of the assignment order the contract already fixes — **seed, then decoded fields,
+then transients** — so `_questopediaSaveables` is fully decoded by the time the factory runs. The
+signature change costs nothing for the lazy cases, which simply ignore the argument.
+
+**When classifying a transient, the question is not "is this derived?" but "does a reader rebuild it
+on a miss?"** If nothing does, the factory owes the rebuild.
 
 **Map-event state follows the engine.** `Game_Map.setupEvents` does `this._events = []` and
 reconstructs every `Game_Event`, so anything hanging off an event is map-session state that a *load*
 was restoring only by accident. Resulting behavior: reload next to a half-dead enemy and it comes
 back fresh. That is the intent.
 
-**`JABS_Timer` is transient by type.** Nothing it holds is state a player would notice resetting —
-they are stopwatches and kitchen timers. Durable in-world time is J-TIME's `Game_Time`, which does
-not use `JABS_Timer` at all.
+**Timers are transient by type.** Nothing they hold is state a player would notice resetting — they
+are stopwatches and kitchen timers. Durable in-world time is J-TIME's `Game_Time`, which uses neither
+timer class.
 
 The two rules overlap, and the remainder is the part that needs care:
 
@@ -596,51 +724,103 @@ The two rules overlap, and the remainder is the part that needs care:
 | `$gameMap._vehicles[]` | 12 | no — `refereshVehicles` only calls `refresh()` | same |
 | `$gamePlayer` | 4 | no | same |
 | `$gameActors._data[]` (`_j._passive._conditional`) | 2 | no | same |
+| `$gameMap` (`_j._omni._quest`) | 1 | no | same |
 
+Counts re-measured against `save/file1.rmmzsave` on 2026-08-01: 110 `JABS_Timer` plus 1 `J_Timer`.
 The 64 on events never reach a codec — the router skips `$gameMap._events` entirely, and the engine
-re-seeds them at the next map setup. **The other 46 live on hosts that survive a transfer, so each
+re-seeds them at the next map setup. **The other 47 live on hosts that survive a transfer, so each
 holder declares an explicit cold value.** Principle 3 applies to every one of them.
 
-Timer paths, for the sweep:
+**There are two timer classes, not one, and the plan previously named only `JABS_Timer`.** The 47th
+holder is a `J_Timer` on `$gameMap` — a host the routing section also missed; see
+[Hosts](#eight-hosts-carry-_j-slices-not-seven). Both classes need registering.
+
+#### Cold value per holder
+
+Five distinct construction sites cover all 111 timers. Each cold value is the literal expression at
+that site — a factory reproduces it exactly, including the plugin-parameter reads, so a rebalanced
+delay takes effect on the next load rather than being frozen at whatever a save happened to capture.
+
+| Path | Cold value | Constructed at |
+|---|---|---|
+| `_j._tools._grabThrow._grab._wait` | `new JABS_Timer(0)` | `abs/ext/tools/objects/Game_CharacterBase.js:38` |
+| `_j._tools._grabThrow._throw._wait` | `new JABS_Timer(0)` | `abs/ext/tools/objects/Game_CharacterBase.js:54` |
+| `_j._regions._skills._timer` | `new JABS_Timer(J.REGIONS.EXT.SKILLS.Metadata.delayBetweenExecutions)` | `regions/ext/skills/objects/Game_Character.js:42` |
+| `_j._regions._states._timer` | `new JABS_Timer(J.REGIONS.EXT.STATES.Metadata.delayBetweenApplications)` | `regions/ext/states/objects/Game_Character.js:47` |
+| `_j._passive._conditional._timer` | `new JABS_Timer(J.PASSIVE.EXT.CONDITIONAL.Metadata.reconcileDelayFrames \|\| 15)` | `passive/ext/conditional/objects/Game_Battler.js:59` |
+| `_j._omni._quest._destinationTimer` | `new J_Timer(15)` | `omni/ext/quest/objects/Game_Map.js:44` |
+
+The four character-like timers are declared on `Game_CharacterBase` / `Game_Character`, so one
+declaration per class covers player, followers, vehicles, and events alike — the router is what keeps
+events out, not a per-host difference in the declaration.
+
+Timer paths as they appear in a save, for the sweep:
 
 ```
-$.map._events[]._j._tools._grabThrow._grab._wait
-$.map._events[]._j._tools._grabThrow._throw._wait
-$.map._events[]._j._regions._skills._timer
-$.map._events[]._j._regions._states._timer
-$.player._followers._data[]._j.<same four>
-$.map._vehicles[]._j.<same four>
-$.player._j.<same four>
-$.actors._data[]._j._passive._conditional._timer
+$.map._events[]._j._tools._grabThrow._grab._wait          16
+$.map._events[]._j._tools._grabThrow._throw._wait         16
+$.map._events[]._j._regions._skills._timer                16
+$.map._events[]._j._regions._states._timer                16
+$.player._followers._data[]._j.<same four>                28
+$.map._vehicles[]._j.<same four>                          12
+$.player._j.<same four>                                    4
+$.actors._data[]._j._passive._conditional._timer           2
+$.map._j._omni._quest._destinationTimer                    1  (J_Timer)
 ```
 
 ### Steps
 
-1. **Fix the stale cache on load — this is the piece that ships separately.** Extend
-   `DataManager.extractSaveContents` in `src/plugins/_base/managers/DataManager.js` to walk
-   `$gameActors._data` and call `onBattlerDataChange()` on each. That one call nulls all five battler
-   caches *and* runs `JCache.invalidateAllForBattler`, which walks `JCache._battlerCaches` — every
-   battler-dimensioned cache instance ever constructed — and drops this battler's subtree from each.
-   It is self-maintaining: a cache added later is covered without touching this code.
+1. **Fix the stale cache on load.** ✅ Done, commit `a388398`. `DataManager.extractSaveContents` in
+   `src/plugins/_base/managers/DataManager.js` walks the restored actors and calls
+   `onBattlerDataChange()` on each. That one call nulls all five battler caches *and* runs
+   `JCache.invalidateAllForBattler`, which walks `JCache._battlerCaches` — every battler-dimensioned
+   cache instance ever constructed — and drops this battler's subtree from each. It is
+   self-maintaining: a cache added later is covered without touching this code.
 
-   Note that two of the five (`_cachedMaxTpBonuses`, `_cachedHarFactor`) hold **numbers**, so an
-   object-graph walk looking for tagged objects will not find them. Enumerate `_j._base` directly —
-   the same blind spot described in Phase 1 step 6.
+   Two placement details that are load-bearing and were confirmed while doing it:
 
-2. **Complete the transient table above** by confirming each cold value against its owner's
-   `initMembers`. Cold values are read *from the source*, never guessed: `null` for the battler
-   caches because that is what `onBattlerDataChange` assigns, `new Map()` for the omni caches because
-   that is what `initOmnipediaMembers` assigns.
+   - The walk goes **after** the aliased original, not before. Vanilla's
+     `extractSaveContents` body is what assigns `$gameActors`; anything ahead of the call is walking
+     the throwaway object `createGameObjects` just made.
+   - The engine's actor store is **sparse and indexed by actor id**. `forEach` skips holes, an index
+     loop does not, and `Game_Actors.prototype.actor(id)` *constructs* a missing actor rather than
+     reporting its absence — so the new `existingActors()` accessor hands back the raw store instead
+     of routing through `actors()`.
 
-3. **Trace the 46 non-event timer holders** and record the cold value each one needs. This is the
-   only genuinely investigative work in the phase — the paths are listed above, but what a fresh
-   timer should be constructed *with* differs per holder and must come from reading each.
+   Every plugin that aliases `onBattlerDataChange` — LEVEL, SKS, ABS, ABS-SPEED, RESOURCES — was read
+   before wiring this up, because `extractSaveContents` runs before `Scene_Map.create` and therefore
+   before `$dataMap` exists. All of them recompute from the battler's own decoded state plus `$data*`
+   tables; none reaches `$gameMap` or `$dataMap`. **Anything added to that chain later must hold to
+   the same constraint**, which is the same rule the codecs are held to below.
 
-4. **Note which existing hooks become obsolete.** `synchronizeQuestopedia*`,
-   `synchronizeMonsterpedia*`, J-TIME's `initMembers` re-run, and JAFTING's
-   `initPartySalvageStorage` all become declarations in Phase 1. Record the behavior each one
-   currently produces so the swap can be verified as behavior-preserving rather than merely
-   compiling.
+2. **Complete the transient table above.** ✅ Done. Every cold value now cites the line that assigns
+   it. The investigation turned up one thing the table could not express as written — eager caches
+   need a rebuild rather than a blank — which changed the codec contract; see
+   [Lazy caches re-seed; eager caches must be rebuilt](#lazy-caches-re-seed-eager-caches-must-be-rebuilt).
+
+3. **Trace the non-event timer holders.** ✅ Done — 47, not 46, and across two timer classes rather
+   than one. Cold values per holder are tabulated above.
+
+4. **Note which existing hooks become obsolete.** ✅ Done; behaviors recorded below, so the Phase 1
+   swap can be diffed against them rather than merely compiling.
+
+#### Behavior of each hook being retired
+
+| Hook | What it does today | Becomes |
+|---|---|---|
+| `Game_Party.synchronizeQuestopediaDataBeforeSave` | inits omnipedia if absent, then `cache -> saveables`, then `saveables -> cache` | nothing; the encoder skips the transient outright |
+| `Game_Party.synchronizeQuestopediaAfterLoad` | inits omnipedia if absent, then `saveables -> cache`, then `cache -> saveables` | the `_questopediaCache` transient factory, which rebuilds the `Map` from decoded saveables |
+| `Game_Party.synchronizeMonsterpedia*` | identical shape, keyed by `enemyId` instead of quest key | the `_monsterpediaObservationsCache` transient factory |
+| J-TIME `DataManager.extractSaveContents` | assigns `$gameTime`, constructs a fresh `Game_Time` when the save predates TIME, re-runs `initMembers()` (all `??=`) to backfill new members, then `updateCurrentTone()` | `seed` covers the backfill; `updateCurrentTone()` is **derived display state and stays a post-load hook** — it is not a codec's job |
+| JAFTING `initPartySalvageStorage` on `createGameObjects` **and** `extractSaveContents` | `\|\|=` three nested objects into place on `$gameParty._j._jafting`, guarded by a `$gameParty` null check | `seed` on the `Game_Party` codec; the double-call disappears because `seed` runs on the decoded instance rather than the throwaway one |
+
+Note the shared shape: **all five are compensating for `JsonEx` restoring an object without ever
+running its constructor.** That is precisely what `seed` exists to do once, centrally.
+
+Two of them additionally guard against a save predating the plugin (`if (!$gameTime)`,
+`if (!$gameParty)`). Those guards do not survive the swap and should not be reintroduced — a decoded
+`Game_Party` always exists by the time the router runs, and a missing section is the router's normal
+case, not an error.
 
 **Why event `_j.*` is a router concern and never a codec one** — worth recording so nobody tries to
 handle it with a `transients` entry:
@@ -657,17 +837,22 @@ The router sidesteps both by never walking `$gameMap._events`, which leaves the 
 
 ### Acceptance
 
-For step 1, verifiable as soon as it is committed:
+For step 1:
 
-- Save, edit a state's traits in the database, load: the actor reflects the **new** traits without
-  needing an equip change. **Verify this fails before the fix** — if it passes beforehand, you are
-  testing the wrong thing.
+- **Manual, in-engine:** save, edit a state's traits in the database, load — the actor reflects the
+  **new** traits without needing an equip change. This one cannot be automated from outside the editor,
+  so it is a testplay step, and it stays outstanding until someone runs it.
+- **Automated:** the seam is covered as a pair, since both halves already had homes.
+  `_base/_component/game-battler-methods` asserts `onBattlerDataChange` nulls all five caches;
+  `_base/_component/data-manager` asserts `extractSaveContents` fires it on every restored actor and
+  skips the holes in a sparse store. Together those are the whole chain.
 
-For the inventory:
+For the inventory: ✅ all met.
 
-- Every row in the transient table names a cold value traceable to a line in the owner's
-  `initMembers` or equivalent. No row says "probably null."
-- All 46 non-event timer holders are accounted for, with the cold value each needs.
+- Every row in the transient table names a cold value traceable to a specific line. No row says
+  "probably null."
+- All 47 non-event timer holders are accounted for, with the cold value each needs, across both timer
+  classes.
 - The behavior of each obsolete hook is written down well enough to diff against after Phase 1.
 
 The observable outcomes — round-trip produces no `undefined`, quests survive intact, enemies reload
@@ -681,7 +866,7 @@ work. Phase 0 has nothing to assert them against.
 ### Phase 1 — codec core
 
 **New:** `SaveCodec.js`, `SaveEncoder.js`, `SaveDecoder.js`, `SaveError.js`.
-**Modified:** `SerializableRegistry.js`, `JsonEx.js`, `registerJBaseSerializableModels.js`.
+**Modified:** `SerializableRegistry.js`, `registerJBaseSerializableModels.js`.
 
 1. Extend `SerializableRegistry.register` to accept `transients`, `typed`, `encode`, `decode`, and
    normalize them into a `SaveCodec` record. Keep the existing `{ id, aliases }` behavior working —
@@ -692,7 +877,10 @@ work. Phase 0 has nothing to assert them against.
 4. Implement `SaveError` subclasses carrying the JSON path, the offending type, and what was
    expected. Error text is read by whoever hits it at 2am; make it say what to do.
 5. Register codecs for the `Map` and `Set` cases currently handled by the `JsonEx._encode` /
-   `_decode` overrides, then delete those overrides.
+   `_decode` overrides. **Leave the overrides in place.** `JsonEx` is still the live save path until
+   Phase 2 swaps `StorageManager`, so deleting them here breaks saving in a branch that cannot yet
+   save any other way — and reds two component suites that cover them. Adding the codecs is purely
+   additive; the deletion is Phase 2 step 2, alongside the pipeline swap that makes it true.
 6. Register codecs for the engine classes that need a type map: `Game_Actor`, `Game_Party`,
    `Game_Map`, `Game_Player`, `Game_Event`, `Game_Follower`, `Game_Vehicle`, `Game_System`,
    `Game_Actors`, `Game_Followers`, `Game_ActionResult`, `Game_Item`, `Game_Interpreter`,
@@ -715,13 +903,16 @@ fed a payload with tags stripped still rebuilds correctly from type maps alone.
 ### Phase 2 — storage layer
 
 **New:** `SaveFileSystem.js`, `StorageManager.js`, `SaveManifest.js`.
-**Modified:** `initialization.js` (add `StorageManager` / `ConfigManager` alias maps).
+**Modified:** `initialization.js` (add `StorageManager` / `ConfigManager` alias maps), `JsonEx.js`.
 
 1. Implement `SaveFileSystem` with the exact save and load sequences above. Synchronous `fs` calls
    inside `new Promise(...)` — `StorageManager`'s contract is Promise-returning and this repo forbids
    `async` / `await`.
 2. Replace `StorageManager.saveObject` / `loadObject` / `exists` / `remove` / `filePath`. Delete the
-   `pako` and `localforage` paths.
+   `pako` and `localforage` paths. **This is where the `JsonEx` `Map`/`Set` overrides get deleted**,
+   because this is the step that stops `JsonEx` being the save path; the two component suites covering
+   them (`_base/_component/jsonex-map-set-direct` and `…-save-load-integration`) retire with them, their
+   coverage having moved to the `Map` / `Set` codecs.
 3. Pretty-print with `JSON.stringify(value, null, 2)`.
 4. Implement `SaveManifest` and the load-menu read path that touches only `manifest.json`.
 5. Implement retention and pruning. Default three generations; make it a plugin parameter.
@@ -813,7 +1004,7 @@ These are acceptance criteria for "Just Works", not a coverage exercise. Locatio
   host with no slice at its seeded default.
 - **No field is `undefined` after a decode.** Sweep every registered type, construct it, round-trip
   it, assert every declared field holds its declared shape. This catches the re-seed hazard across
-  all 46 timer holders at once rather than one crash at a time in testplay.
+  all 47 timer holders at once rather than one crash at a time in testplay.
 - **Every registered type's fields are covered by its type map.** A fixture-driven sweep, so a typed
   field on a rarely-exercised path (a vehicle nobody boards) cannot reach a player unnoticed — the
   runtime encoder assert only fires on paths testplay actually walks.
@@ -841,8 +1032,14 @@ These are acceptance criteria for "Just Works", not a coverage exercise. Locatio
 | inflated JSON | 351,919 |
 | type tags | 1,700 across 55 classes |
 | type tags surviving Phase 0 | 1,122 across 48 classes |
-| distinct `_j.<plugin>` namespaces | 27, across 58 host-path combinations |
+| distinct `_j.<plugin>` namespaces | 27, across 57 host-path combinations on 8 host paths |
 | heaviest section | `$.party._j._omni` at 99,581 |
+
+Reproducing this: inflate the file and walk it. `readFileSync(path, 'utf8')` yields the deflate stream
+as a binary string exactly as the engine wrote it, so
+`pako.inflate(Uint8Array.from(raw, c => c.charCodeAt(0) & 0xff))` round-trips it. Note that `pako` 3 has
+no default export and does not accept `{ to: 'string' }` on `inflate` — `import * as pako` and decode
+the bytes with `TextDecoder`.
 
 ### Type-map scope
 
