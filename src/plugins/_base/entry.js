@@ -4,6 +4,12 @@ import './_utilities/ArrayHelper.js';
 import './_utilities/JsonMapper.js';
 
 import './core/SerializableRegistry.js';
+import './core/save/SaveError.js';
+import './core/save/SaveEncodeError.js';
+import './core/save/SaveDecodeError.js';
+import './core/save/SaveCodec.js';
+import './core/save/SaveEncoder.js';
+import './core/save/SaveDecoder.js';
 import './core/ParameterFormat.js';
 import './core/ParameterDisplayPolicy.js';
 import './core/ParameterDisplaySentinel.js';
@@ -21,6 +27,7 @@ import './models/ExternalJsonConfigLoaderOptions.js';
 import './models/GaugeOptionsBuilder.js';
 import './models/J_EventEmitter.js';
 import './core/registerJBaseSerializableModels.js';
+import './core/save/registerEngineSaveCodecs.js';
 import './models/WindowCommandBuilder.js';
 import './models/WindowGaugeOptions.js';
 

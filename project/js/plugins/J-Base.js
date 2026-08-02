@@ -2010,10 +2010,245 @@ J.BASE.Helpers.maskString = function(stringToMask, maskingCharacter = "?") {
 };
 
 //#endregion
+//#region src/plugins/_base/core/save/SaveCodec.js
+/**
+* The normalized per-type record the registry stores: everything the encoder and decoder need to
+* know about one class, resolved once at registration time rather than re-derived per node.
+*
+* A codec is built from the loose options object a caller hands
+* {@link SerializableRegistry.register}, and its job is to turn every convenience that object allows
+* into exactly one shape the walkers can rely on. Notably:
+*
+* - `transients` and `typed` accept **dotted paths**, because almost every transient in this project
+*   lives inside a plugin namespace (`_j._base._cachedAllNotes`) rather than directly on the class.
+*   A flat key list could not express a single row of the real inventory.
+* - `seed` is resolved here, not at decode time, so the question "does this class have an
+*   `initMembers` to default from" is asked once per class instead of once per decoded object.
+*
+* The trees this builds are read on every node of a save, so they are plain nested `Map`s rather
+* than anything cleverer- a `Map.get` per path segment is the whole cost.
+*/
+var SaveCodec = class SaveCodec {
+	/**
+	* The constructor this codec describes.
+	* @type {Function}
+	*/
+	#type = null;
+	/**
+	* The stable string this type is written to disk as.
+	* @type {string}
+	*/
+	#id = String.empty;
+	/**
+	* Older save ids that still resolve to this type, so a rename ships without a migration.
+	* @type {string[]}
+	*/
+	#aliases = [];
+	/**
+	* Transient declarations as given: dotted path to a factory producing the cold value.
+	* @type {Map<string, Function>}
+	*/
+	#transients = new Map();
+	/**
+	* The same transient declarations arranged as a tree, for the encoder to skip by while walking.
+	* @type {{value: Function|null, children: Map<string, object>}}
+	*/
+	#transientTree = null;
+	/**
+	* Type declarations arranged as a tree: which fields hold instances, and of what.
+	* @type {{value: Function|null, children: Map<string, object>}}
+	*/
+	#typedTree = null;
+	/**
+	* Dictionary-valued type declarations arranged as a tree: which fields are plain objects whose
+	* *values* are instances.
+	* @type {{value: Function|null, children: Map<string, object>}}
+	*/
+	#typedValuesTree = null;
+	/**
+	* Establishes every field's default on a bare instance, before decoded fields land on it.
+	* @type {Function}
+	*/
+	#seed = null;
+	/**
+	* A full replacement for the default encode walk, or null to use the default.
+	* @type {Function|null}
+	*/
+	#encode = null;
+	/**
+	* A full replacement for the default decode walk, or null to use the default.
+	* @type {Function|null}
+	*/
+	#decode = null;
+	/**
+	* Builds an empty node for the path trees below.
+	* @returns {{value: Function|null, children: Map<string, object>}}
+	*/
+	static emptyNode() {
+		return {
+			value: null,
+			children: new Map()
+		};
+	}
+	/**
+	* Arranges a flat map of dotted paths into a tree, so a walker descending an object graph can
+	* carry its position in the declarations alongside its position in the data.
+	*
+	* A path may be a plain field name, in which case its node hangs directly off the root.
+	* @param {Object<string, Function>} declarations Dotted path to whatever the path declares.
+	* @returns {{value: Function|null, children: Map<string, object>}} The root of the tree.
+	*/
+	static buildPathTree(declarations) {
+		const root = SaveCodec.emptyNode();
+		Object.keys(declarations).forEach((path) => {
+			let node = root;
+			path.split(".").forEach((segment) => {
+				if (node.children.has(segment) === false) {
+					node.children.set(segment, SaveCodec.emptyNode());
+				}
+				node = node.children.get(segment);
+			});
+			node.value = declarations[path];
+		});
+		return root;
+	}
+	/**
+	* @param {Function} type The constructor this codec describes.
+	* @param {object} options The normalization inputs; see {@link SerializableRegistry.register}.
+	* @param {string} options.id The stable save id.
+	* @param {string[]} options.aliases Older save ids that still resolve here.
+	* @param {Object<string, Function>} options.transients Dotted path to a cold-value factory.
+	* @param {Object<string, Function>} options.typed Dotted path to the constructor that field holds.
+	* @param {Object<string, Function>} options.typedValues Dotted path to the constructor that
+	* field's dictionary *values* hold.
+	* @param {Function|null} options.seed An explicit default-establishing step, or null to derive one.
+	* @param {Function|null} options.encode A full encode override, or null.
+	* @param {Function|null} options.decode A full decode override, or null.
+	*/
+	constructor(type, { id, aliases, transients, typed, typedValues, seed, encode, decode }) {
+		this.#type = type;
+		this.#id = id;
+		this.#aliases = aliases;
+		this.#transients = new Map(Object.entries(transients));
+		this.#transientTree = SaveCodec.buildPathTree(transients);
+		this.#typedTree = SaveCodec.buildPathTree(typed);
+		this.#typedValuesTree = SaveCodec.buildPathTree(typedValues);
+		this.#seed = seed ?? this.#deriveSeed(type);
+		this.#encode = encode;
+		this.#decode = decode;
+	}
+	/**
+	* Picks the default seed step for a type that did not supply one.
+	* @param {Function} type The constructor being registered.
+	* @returns {Function} The seed step.
+	*/
+	#deriveSeed(type) {
+		if (!type.prototype.initMembers) return () => {};
+		return (instance) => instance.initMembers();
+	}
+	/**
+	* Gets the constructor this codec describes.
+	* @returns {Function}
+	*/
+	type() {
+		return this.#type;
+	}
+	/**
+	* Gets the stable string this type is written to disk as.
+	* @returns {string}
+	*/
+	id() {
+		return this.#id;
+	}
+	/**
+	* Gets the older save ids that still resolve to this type.
+	* @returns {string[]}
+	*/
+	aliases() {
+		return this.#aliases;
+	}
+	/**
+	* Gets the transient declarations, keyed by dotted path.
+	* @returns {Map<string, Function>}
+	*/
+	transients() {
+		return this.#transients;
+	}
+	/**
+	* Gets the root of the transient path tree, for the encoder to walk alongside the data.
+	* @returns {{value: Function|null, children: Map<string, object>}}
+	*/
+	transientTree() {
+		return this.#transientTree;
+	}
+	/**
+	* Gets the root of the type path tree, for the decoder to walk alongside the data.
+	* @returns {{value: Function|null, children: Map<string, object>}}
+	*/
+	typedTree() {
+		return this.#typedTree;
+	}
+	/**
+	* Gets the root of the dictionary-value type path tree.
+	* @returns {{value: Function|null, children: Map<string, object>}}
+	*/
+	typedValuesTree() {
+		return this.#typedValuesTree;
+	}
+	/**
+	* Establishes every field's default on a bare instance, ahead of any decoded field landing on it.
+	* @param {object} instance The freshly prototyped, unpopulated instance.
+	*/
+	seed(instance) {
+		this.#seed(instance);
+	}
+	/**
+	* Determines whether this codec replaces the default encode walk entirely.
+	* @returns {boolean}
+	*/
+	hasEncodeOverride() {
+		return this.#encode !== null;
+	}
+	/**
+	* Runs this codec's encode override against an instance.
+	* @param {object} instance The live instance being encoded.
+	* @param {string} path The JSON path of the instance, for error context.
+	* @returns {object} The plain data form.
+	*/
+	runEncode(instance, path) {
+		return this.#encode(instance, path);
+	}
+	/**
+	* Determines whether this codec replaces the default decode walk entirely.
+	* @returns {boolean}
+	*/
+	hasDecodeOverride() {
+		return this.#decode !== null;
+	}
+	/**
+	* Runs this codec's decode override against plain data.
+	* @param {object} data The plain data form read from the file.
+	* @param {string} path The JSON path of the node, for error context.
+	* @returns {object} The rebuilt instance.
+	*/
+	runDecode(data, path) {
+		return this.#decode(data, path);
+	}
+};
+
+//#endregion
 //#region src/plugins/_base/core/SerializableRegistry.js
 /**
 * A central registry of constructors that {@link JsonEx} can use for reliable
 * type restoration when deserializing.
+*
+* It is also where the save pipeline's per-type rules live. A registration answers two different
+* questions with one call: "what constructor does this name mean" - which is all {@link JsonEx} ever
+* needed - and "what does this type persist, regenerate, and hold instances of", which is what
+* {@link SaveEncoder} and {@link SaveDecoder} read. The two are deliberately separate lookups rather
+* than one, because {@link JsonEx} wants a bare constructor and the walkers want a {@link SaveCodec};
+* folding them together would mean whichever caller lost the coin toss unwrapping the other's answer
+* on every node.
 */
 var SerializableRegistry = class {
 	/**
@@ -2024,29 +2259,183 @@ var SerializableRegistry = class {
 		return this._constructors;
 	}
 	/**
+	* Gets the codecs, keyed by save id and by every alias.
+	* @returns {Map<string, SaveCodec>} The codecs.
+	*/
+	static codecs() {
+		return this._codecs;
+	}
+	/**
+	* Gets the codecs, keyed by the constructor function itself.
+	* @returns {Map<Function, SaveCodec>} The codecs by type.
+	*/
+	static codecsByType() {
+		return this._codecsByType;
+	}
+	/**
+	* Gets the raw declarations each constructor was registered with.
+	* @returns {Map<Function, object>} The registrations.
+	*/
+	static registrations() {
+		return this._registrations;
+	}
+	/**
 	* The internal collection of registered constructors.
 	* @type {Map<string, Function>}
 	*/
 	static _constructors = new Map();
 	/**
-	* Registers a constructor for {@link JsonEx} deserialization.
+	* The internal collection of registered codecs, keyed by save id and by every alias.
+	* @type {Map<string, SaveCodec>}
+	*/
+	static _codecs = new Map();
+	/**
+	* The internal collection of registered codecs, keyed by the constructor function itself.
+	*
+	* This is the index that lets the encoder answer "what type is this value" with a `Map` lookup on
+	* `value.constructor`, rather than a prototype-chain test or a name comparison. It is keyed on the
+	* function identity, so two classes that happen to share a name cannot collide here the way they
+	* would in the id-keyed map above.
+	* @type {Map<Function, SaveCodec>}
+	*/
+	static _codecsByType = new Map();
+	/**
+	* The options each constructor was registered with, kept so {@link #extend} can merge into them.
+	*
+	* This exists because a codec for an engine class is authored by more than one plugin. J-Base owns
+	* the `Game_Party` registration, but the transients living at `_j._omni` on that same party are
+	* J-Omni's to declare - and J-Base must never know they exist, because a core plugin does not
+	* reach into an optional extension. Keeping the raw declarations means a later contribution merges
+	* rather than clobbers.
+	* @type {Map<Function, object>}
+	*/
+	static _registrations = new Map();
+	/**
+	* Registers a constructor for {@link JsonEx} deserialization and for the save pipeline.
 	*
 	* This enables modern `class` syntax for serializable models without requiring
 	* `window.SomeClass = SomeClass` global exports.
 	*
+	* Everything past `aliases` describes how the save pipeline should treat this type. All of it is
+	* optional, and the defaults are chosen to fail open: a type registered with no options at all
+	* persists every own enumerable field, holds no instances, and seeds from `initMembers` if it has
+	* one. Forgetting to declare something means it gets saved, which is wasteful and harmless- the
+	* opposite mistake loses a player's progress.
+	*
+	* Both `transients` and `typed` accept **dotted paths** as keys, because the fields worth declaring
+	* usually sit inside a plugin namespace rather than directly on the class:
+	*
+	* ```javascript
+	* SerializableRegistry.register(Game_Party, {
+	*   id: 'game-party',
+	*   aliases: [ 'Game_Party' ],
+	*   transients: {
+	*     // lazy: every reader is guarded, so the cold value is the whole answer.
+	*     '_j._base._cachedAllNotes': () => null,
+	*
+	*     // eager: nothing rebuilds this on a miss, so the factory owes the rebuild.
+	*     '_j._omni._questopediaCache': party => new Map(
+	*       party.getSavedQuestopediaEntries().map(entry => [ entry.key, entry ])),
+	*   },
+	*   typed: {
+	*     _lastItem: Game_Item,
+	*   },
+	* });
+	* ```
+	*
 	* @param {Function} constructor The constructor to register.
-	* @param {{id?: string, aliases?: string[]}=} options Options for registration.
+	* @param {{
+	*   id?: string,
+	*   aliases?: string[],
+	*   transients?: Object<string, Function>,
+	*   typed?: Object<string, Function>,
+	*   typedValues?: Object<string, Function>,
+	*   seed?: Function,
+	*   encode?: Function,
+	*   decode?: Function
+	* }=} options Options for registration.
 	*/
 	static register(constructor, options = undefined) {
-		const id = options && options.id ? options.id : constructor.name;
+		const given = options ?? {};
+		const id = given.id ? given.id : constructor.name;
 		this.constructors().set(id, constructor);
-		const aliases = options && options.aliases ? options.aliases : [];
+		const aliases = given.aliases ? given.aliases : [];
 		aliases.forEach((alias) => {
 			this.constructors().set(alias, constructor);
 		});
+		const declarations = {
+			id,
+			aliases,
+			transients: given.transients ?? {},
+			typed: given.typed ?? {},
+			typedValues: given.typedValues ?? {},
+			seed: given.seed ?? null,
+			encode: given.encode ?? null,
+			decode: given.decode ?? null
+		};
+		this.installCodec(constructor, declarations);
+	}
+	/**
+	* Adds declarations to a type another plugin already registered.
+	*
+	* This is how a plugin claims the part of a shared host that belongs to it. `Game_Party` is
+	* registered by J-Base, but the caches at `$gameParty._j._omni` are J-Omni's - and the dependency
+	* only runs one way, so J-Base cannot name them. J-Omni calls this instead, and the two sets of
+	* declarations merge into the one codec that describes the class.
+	*
+	* Merging is per-declaration and last-wins on a collision, which is the same shape as the alias
+	* map pattern: two plugins declaring the same path would be a genuine conflict worth noticing, and
+	* two plugins declaring different paths - the normal case - simply add up.
+	*
+	* The `id`, `aliases`, and `seed` of an existing registration are left alone. Identity belongs to
+	* whoever registered the type, and an extension redefining it would silently repoint every save.
+	* @param {Function} constructor The already-registered constructor to add declarations to.
+	* @param {{
+	*   transients?: Object<string, Function>,
+	*   typed?: Object<string, Function>,
+	*   typedValues?: Object<string, Function>
+	* }} options The declarations to merge in.
+	*/
+	static extend(constructor, options) {
+		const existing = this.registrations().get(constructor);
+		if (!existing) {
+			throw new Error(`cannot extend the save codec for '${constructor.name}' because nothing has registered it. ` + "The plugin that owns the type must load before the one extending it.");
+		}
+		this.installCodec(constructor, {
+			...existing,
+			transients: {
+				...existing.transients,
+				...options.transients ?? {}
+			},
+			typed: {
+				...existing.typed,
+				...options.typed ?? {}
+			},
+			typedValues: {
+				...existing.typedValues,
+				...options.typedValues ?? {}
+			}
+		});
+	}
+	/**
+	* Builds a codec from a complete set of declarations and files it under every key it answers to.
+	* @param {Function} constructor The constructor being described.
+	* @param {object} declarations The complete, normalized declarations.
+	*/
+	static installCodec(constructor, declarations) {
+		this.registrations().set(constructor, declarations);
+		const codec = new SaveCodec(constructor, declarations);
+		this.codecs().set(declarations.id, codec);
+		declarations.aliases.forEach((alias) => {
+			this.codecs().set(alias, codec);
+		});
+		this.codecsByType().set(constructor, codec);
 	}
 	/**
 	* Resolves a previously-registered constructor by id.
+	*
+	* This is {@link JsonEx}'s lookup and returns a bare constructor for that reason; anything working
+	* with the save pipeline wants {@link #codecById} instead.
 	* @param {string} id The serialization id for the constructor.
 	* @returns {Function|null} The resolved constructor, or null when not found.
 	*/
@@ -2055,6 +2444,556 @@ var SerializableRegistry = class {
 			return this.constructors().get(id);
 		}
 		return null;
+	}
+	/**
+	* Resolves a previously-registered codec by the save id written into a file.
+	*
+	* Aliases resolve here too, which is the whole mechanism by which a class rename ships without a
+	* migration: the old id keeps pointing at the codec that replaced it.
+	* @param {string} id The save id read from a type tag.
+	* @returns {SaveCodec|null} The resolved codec, or null when nothing is registered under that id.
+	*/
+	static codecById(id) {
+		if (this.codecs().has(id)) {
+			return this.codecs().get(id);
+		}
+		return null;
+	}
+	/**
+	* Resolves a previously-registered codec by its constructor function.
+	* @param {Function} constructor The constructor to look up.
+	* @returns {SaveCodec|null} The resolved codec, or null when the type is not registered.
+	*/
+	static codecForConstructor(constructor) {
+		if (this.codecsByType().has(constructor)) {
+			return this.codecsByType().get(constructor);
+		}
+		return null;
+	}
+	/**
+	* Resolves the codec describing a live value's type.
+	*
+	* This is how the encoder identifies what it is looking at, and it is keyed on `value.constructor`
+	* rather than on a name or a prototype-chain test- a `Map` lookup on function identity, which is
+	* both faster and immune to two unrelated classes sharing a name.
+	* @param {object} value The live instance to identify.
+	* @returns {SaveCodec|null} The resolved codec, or null when the type is not registered.
+	*/
+	static codecForInstance(value) {
+		return this.codecForConstructor(value.constructor);
+	}
+};
+
+//#endregion
+//#region src/plugins/_base/core/save/SaveError.js
+/**
+* The base of every error the save pipeline throws.
+*
+* Two things separate these from a bare {@link Error}. The first is the path: a savefile is a deep
+* document, and "cannot encode Foo" is useless without knowing which of the eleven hundred nodes was
+* the Foo. Every save error carries the JSON path of the node that failed, written the way a reader
+* would type it - `$.actors._data[3]._j._abs._equippedSkills`.
+*
+* The second is {@link #kind}. The loader steps back through older generations when a newer one
+* fails, and it has to tell *what* failed apart - a missing section file is recoverable by stepping
+* back, an unregistered codec is not, because every generation will have the same problem. That
+* discrimination cannot be a prototype-chain test, which this codebase bans, so the kind is data
+* carried on the error itself.
+*/
+var SaveError = class extends Error {
+	/**
+	* A short, stable, machine-readable classification of what went wrong.
+	* @type {string}
+	*/
+	#kind = String.empty;
+	/**
+	* The JSON path of the node that failed, from the root of the document being processed.
+	* @type {string}
+	*/
+	#path = String.empty;
+	/**
+	* @param {string} kind The stable classification of the failure.
+	* @param {string} path The JSON path of the node that failed.
+	* @param {string} summary The human-readable explanation, which should say what to do about it.
+	*/
+	constructor(kind, path, summary) {
+		super(`[${kind}] at ${path}: ${summary}`);
+		this.name = "SaveError";
+		this.#kind = kind;
+		this.#path = path;
+	}
+	/**
+	* Gets the stable classification of this failure, for callers deciding whether to recover.
+	* @returns {string}
+	*/
+	kind() {
+		return this.#kind;
+	}
+	/**
+	* Gets the JSON path of the node that failed.
+	* @returns {string}
+	*/
+	path() {
+		return this.#path;
+	}
+};
+
+//#endregion
+//#region src/plugins/_base/core/save/SaveEncodeError.js
+/**
+* Thrown while turning the live object graph into plain data, when the graph contains something the
+* codec declarations do not describe.
+*
+* Both cases this covers are **declaration bugs, caught at save time**, and that is deliberate. The
+* alternative to throwing is writing a file that decodes into something subtly wrong - an object with
+* no prototype, a field that comes back as a plain `{}` - and discovering it hours later in testplay
+* as a missing method. Failing at the moment of the omission puts the error in front of the person
+* who created it, holding the exact path of the field they forgot.
+*/
+var SaveEncodeError = class SaveEncodeError extends SaveError {
+	/**
+	* Builds the error for a class instance that no codec claims.
+	*
+	* The fix is a `SerializableRegistry.register` call for that class, not a change to the encoder.
+	* @param {string} path The JSON path of the offending node.
+	* @param {string} typeName The name of the unregistered constructor.
+	* @returns {SaveEncodeError}
+	*/
+	static unregisteredType(path, typeName) {
+		return new SaveEncodeError("save-encode-unregistered", path, `no codec is registered for '${typeName}'. Register it with SerializableRegistry.register(${typeName}).`);
+	}
+	/**
+	* Builds the error for a field holding a class instance that its owner's type map never declared.
+	*
+	* The fix is a `typed` entry on the owning codec naming that field and its constructor - the point
+	* of the check is that every typed field gets classified deliberately by whoever added it.
+	* @param {string} path The JSON path of the offending field.
+	* @param {string} ownerId The save id of the codec that should have declared it.
+	* @param {string} field The name of the undeclared field.
+	* @param {string} typeName The name of the constructor the field holds.
+	* @returns {SaveEncodeError}
+	*/
+	static undeclaredTypedField(path, ownerId, field, typeName) {
+		return new SaveEncodeError("save-encode-undeclared-typed-field", path, `'${field}' holds a ${typeName}, which the codec for '${ownerId}' does not declare. ` + `Add it: typed: { ${field}: ${typeName} }.`);
+	}
+	/**
+	* Builds the error for a graph that descends further than the encoder is willing to follow.
+	*
+	* In practice this means a reference cycle: the walk has no cycle detection, deliberately, because
+	* the shapes it encodes are trees. A depth ceiling turns an unreadable stack overflow into a path.
+	* @param {string} path The JSON path at which the ceiling was reached.
+	* @param {number} maxDepth The ceiling that was exceeded.
+	* @returns {SaveEncodeError}
+	*/
+	static tooDeep(path, maxDepth) {
+		return new SaveEncodeError("save-encode-too-deep", path, `the object graph is deeper than ${maxDepth} levels, which almost always means a reference ` + "cycle. Find the field on this path that points back up the graph.");
+	}
+	/**
+	* @param {string} kind The stable classification of the failure.
+	* @param {string} path The JSON path of the node that failed.
+	* @param {string} summary The human-readable explanation.
+	*/
+	constructor(kind, path, summary) {
+		super(kind, path, summary);
+		this.name = "SaveEncodeError";
+	}
+};
+
+//#endregion
+//#region src/plugins/_base/core/save/SaveDecodeError.js
+/**
+* Thrown while rebuilding live objects out of the plain data a savefile holds.
+*
+* Every case here means the file and the code disagree about what a node is, and none of them is
+* safely recoverable by guessing: a node whose type cannot be resolved would have to come back as a
+* plain object, and a plain object standing in for a `Game_Actor` fails later, somewhere else,
+* without any trace of where it came from. The loader steps back to an older generation instead, and
+* these errors are what tell it to.
+*/
+var SaveDecodeError = class SaveDecodeError extends SaveError {
+	/**
+	* Builds the error for a type tag naming a codec that is not registered.
+	*
+	* Usually this means a plugin that wrote the save is no longer installed, or a class was renamed
+	* without listing its old id in `aliases` - which is exactly what `aliases` is for.
+	* @param {string} path The JSON path of the offending node.
+	* @param {string} id The unresolvable save id.
+	* @returns {SaveDecodeError}
+	*/
+	static unknownSaveId(path, id) {
+		return new SaveDecodeError("save-decode-unknown-id", path, `no codec is registered under the save id '${id}'. Either the plugin that wrote it is no ` + `longer installed, or the class was renamed without adding aliases: [ '${id}' ].`);
+	}
+	/**
+	* Builds the error for a node whose own tag contradicts the type map that expected it.
+	*
+	* The tag is redundant with the type map by design, and this is the integrity check that
+	* redundancy buys: the two disagreeing means the file was written by different code than is
+	* reading it, and continuing would put the wrong prototype on a live object.
+	* @param {string} path The JSON path of the offending node.
+	* @param {string} expectedId The save id the containing type map declared.
+	* @param {string} actualId The save id the node's own tag carries.
+	* @returns {SaveDecodeError}
+	*/
+	static typeMismatch(path, expectedId, actualId) {
+		return new SaveDecodeError("save-decode-type-mismatch", path, `the type map expects '${expectedId}' here but the file says '${actualId}'. The save was ` + "written by different code than is reading it; check for a renamed or re-pointed field.");
+	}
+	/**
+	* Builds the error for an untagged node at a position whose declared constructor has no codec.
+	*
+	* This is the tags-stripped path: with no tag to fall back on, an unregistered declared type
+	* leaves nothing to rebuild from at all.
+	* @param {string} path The JSON path of the offending node.
+	* @param {string} typeName The name of the declared constructor.
+	* @returns {SaveDecodeError}
+	*/
+	static unregisteredDeclaredType(path, typeName) {
+		return new SaveDecodeError("save-decode-unregistered-declared-type", path, `the type map declares '${typeName}' here, but no codec is registered for it. ` + `Register it with SerializableRegistry.register(${typeName}).`);
+	}
+	/**
+	* @param {string} kind The stable classification of the failure.
+	* @param {string} path The JSON path of the node that failed.
+	* @param {string} summary The human-readable explanation.
+	*/
+	constructor(kind, path, summary) {
+		super(kind, path, summary);
+		this.name = "SaveDecodeError";
+	}
+};
+
+//#endregion
+//#region src/plugins/_base/core/save/SaveEncoder.js
+/**
+* Turns the live object graph into the plain data a savefile holds.
+*
+* The walk is type-directed rather than type-blind, which is the whole point of the exercise: the
+* engine's own encoder asks every one of ~1,700 nodes what it is and stamps the answer onto it,
+* whereas this one asks the *registry* what a value's constructor means and consults that type's
+* declarations. The tag still gets written - see {@link #encodeInstance} - but as redundancy for a
+* human reader and an integrity check, not as the mechanism.
+*
+* Nothing here mutates the value being encoded. That is not a stylistic preference: the engine's
+* `JsonEx._encode` writes its tags back onto the live objects, which is invisible for plain shapes
+* and destructive for anything whose encoded form differs from its runtime form.
+*/
+var SaveEncoder = class {
+	/**
+	* How deep the walk will follow a graph before giving up on it.
+	*
+	* There is no cycle detection, deliberately- the shapes being encoded are trees, and a general
+	* cycle check would cost a `Set` insertion on every one of thousands of nodes to catch a bug that
+	* should not exist. The ceiling is the cheap version: it turns an unreadable stack overflow into an
+	* error naming the path that ran away.
+	* @type {number}
+	*/
+	static maxDepth = 100;
+	/**
+	* Encodes any value into its plain data form.
+	* @param {*} value The value to encode.
+	* @param {string=} path The JSON path of this value, used for error context.
+	* @param {number=} depth How many levels down the graph this call sits.
+	* @returns {*} The plain data form, safe to hand to `JSON.stringify`.
+	*/
+	static encode(value, path = "$", depth = 0) {
+		if (depth >= this.maxDepth) throw SaveEncodeError.tooDeep(path, this.maxDepth);
+		if (value === null) return value;
+		const tag = Object.prototype.toString.call(value);
+		if (tag === "[object Array]") {
+			return value.map((element, index) => this.encode(element, `${path}[${index}]`, depth + 1));
+		}
+		if (tag !== "[object Object]" && tag !== "[object Map]" && tag !== "[object Set]") {
+			return value;
+		}
+		if (tag === "[object Object]" && value.constructor === Object) {
+			return this.encodePlainObject(value, null, path, depth);
+		}
+		return this.encodeInstance(value, path, depth);
+	}
+	/**
+	* Encodes a class instance through its registered codec.
+	* @param {object} value The instance to encode.
+	* @param {string} path The JSON path of this value.
+	* @param {number} depth How many levels down the graph this call sits.
+	* @returns {object} The tagged plain data form.
+	*/
+	static encodeInstance(value, path, depth) {
+		const codec = SerializableRegistry.codecForInstance(value);
+		if (codec === null) throw SaveEncodeError.unregisteredType(path, value.constructor.name);
+		const encoded = codec.hasEncodeOverride() ? codec.runEncode(value, path) : this.encodePlainObject(value, codec, path, depth);
+		encoded["@"] = codec.id();
+		return encoded;
+	}
+	/**
+	* Encodes the own enumerable keys of an object into a fresh container.
+	*
+	* This serves both plain objects and registered instances, because the walk is the same either
+	* way- what differs is that an instance brings declarations with it. The `transientNode` argument
+	* is the walker's position in those declarations, which is why the recursion carries it: a
+	* transient like `_j._base._cachedAllNotes` is three plain objects deep, and the skip has to still
+	* apply down there.
+	* @param {object} value The object whose keys are being encoded.
+	* @param {SaveCodec|null} codec The codec owning these declarations, or null for a plain object.
+	* @param {string} path The JSON path of this object.
+	* @param {number} depth How many levels down the graph this call sits.
+	* @returns {object} A fresh plain object holding the encoded keys.
+	*/
+	static encodePlainObject(value, codec, path, depth) {
+		const transientNode = codec === null ? null : codec.transientTree();
+		return this.encodeKeys(value, codec, transientNode, path, depth);
+	}
+	/**
+	* Encodes the own enumerable keys of an object, honoring the transient declarations in scope.
+	* @param {object} value The object whose keys are being encoded.
+	* @param {SaveCodec|null} codec The codec that owns the declarations, or null when none apply.
+	* @param {{value: Function|null, children: Map<string, object>}|null} transientNode The walker's
+	* position in the transient tree, or null when nothing below here is declared transient.
+	* @param {string} path The JSON path of this object.
+	* @param {number} depth How many levels down the graph this call sits.
+	* @returns {object} A fresh plain object holding the encoded keys.
+	*/
+	static encodeKeys(value, codec, transientNode, path, depth) {
+		const encoded = {};
+		Object.keys(value).forEach((key) => {
+			if (key === "@") return;
+			const childPath = `${path}.${key}`;
+			const childNode = transientNode === null ? null : transientNode.children.get(key) ?? null;
+			if (childNode !== null && childNode.value !== null) return;
+			const child = value[key];
+			this.assertTypedFieldDeclared(child, codec, key, childPath);
+			encoded[key] = this.encodeChild(child, childNode, childPath, depth);
+		});
+		return encoded;
+	}
+	/**
+	* Encodes one child value, keeping the declaration walk in step with the data walk when it can.
+	*
+	* Note what is *not* forwarded: the codec. Declarations describe the direct keys of the instance
+	* that owns them, so once the walk descends into a namespace object those keys are no longer that
+	* codec's to police - only the transient waypoint travels down, because a transient path is
+	* explicitly written to reach that far.
+	* @param {*} child The value being encoded.
+	* @param {{value: Function|null, children: Map<string, object>}|null} childNode The child's
+	* position in the transient tree, or null when nothing below it is declared.
+	* @param {string} childPath The JSON path of the child.
+	* @param {number} depth How many levels down the graph this call sits.
+	* @returns {*} The encoded child.
+	*/
+	static encodeChild(child, childNode, childPath, depth) {
+		if (childNode === null || childNode.children.size === 0) {
+			return this.encode(child, childPath, depth + 1);
+		}
+		if (child === null) return child;
+		if (Object.prototype.toString.call(child) !== "[object Object]") return this.encode(child, childPath, depth + 1);
+		if (child.constructor !== Object) return this.encode(child, childPath, depth + 1);
+		return this.encodeKeys(child, null, childNode, childPath, depth + 1);
+	}
+	/**
+	* Throws when a field holds a class instance its owner's type map never declared.
+	*
+	* This is a completeness check on the declaration rather than anything the decoder needs, and it
+	* fires at save time on purpose: it forces every newly-added typed field to be classified by the
+	* person who added it, while they still remember why it is there.
+	*
+	* It applies only to the direct keys of a registered class. A plain object has no declarations of
+	* its own, so a class instance nested inside a namespace object is checked by nothing here- what
+	* protects that case is the encoder refusing to encode an unregistered type at all.
+	* @param {*} child The value held at the field.
+	* @param {SaveCodec|null} codec The codec that owns the field, or null for a plain object.
+	* @param {string} key The field name.
+	* @param {string} childPath The JSON path of the field.
+	*/
+	static assertTypedFieldDeclared(child, codec, key, childPath) {
+		if (codec === null) return;
+		if (child === null) return;
+		if (Object.prototype.toString.call(child) !== "[object Object]") return;
+		if (child.constructor === Object) return;
+		if (codec.typedTree().children.has(key)) return;
+		if (codec.typedValuesTree().children.has(key)) return;
+		throw SaveEncodeError.undeclaredTypedField(childPath, codec.id(), key, child.constructor.name);
+	}
+};
+
+//#endregion
+//#region src/plugins/_base/core/save/SaveDecoder.js
+/**
+* Rebuilds live objects out of the plain data a savefile holds.
+*
+* Two properties of this walk are worth understanding before changing it.
+*
+* **It never runs a constructor.** Instances are built with `Object.create(prototype)`, the same
+* contract `JsonEx._decode` has via `setPrototypeOf`, because a constructor takes arguments a file
+* does not have and does real work a load must not repeat - `Game_Actor.prototype.initialize` runs
+* `setup()`. That is also why `#private` fields are banned in registered classes: a restored object
+* carries the prototype without ever having been branded, so the first `this.#anything` throws.
+*
+* **It can rebuild a file whose tags have been stripped.** Type maps, not tags, are what the decoder
+* is authoritative on; the tags are redundancy. Hand-edit a section down to bare JSON and it still
+* comes back correctly, which is the difference between a save format a developer can work with and
+* one they can only read.
+*/
+var SaveDecoder = class {
+	/**
+	* Decodes plain data back into live objects.
+	* @param {*} data The plain data to decode.
+	* @param {Function|null=} expectedType The constructor the containing type map declares here, or
+	* null when nothing declared it.
+	* @param {string=} path The JSON path of this value, used for error context.
+	* @returns {*} The rebuilt value.
+	*/
+	static decode(data, expectedType = null, path = "$") {
+		if (data === null) return data;
+		const tag = Object.prototype.toString.call(data);
+		if (tag === "[object Array]") {
+			return data.map((element, index) => this.decode(element, expectedType, `${path}[${index}]`));
+		}
+		if (tag !== "[object Object]") return data;
+		if (data["@"]) return this.decodeTagged(data, expectedType, path);
+		if (expectedType !== null) return this.decodeDeclared(data, expectedType, path);
+		return this.decodeKeys(data, null, null, null, path);
+	}
+	/**
+	* Decodes a node that carries its own type tag.
+	* @param {object} data The tagged plain data.
+	* @param {Function|null} expectedType The constructor the containing type map declared, or null.
+	* @param {string} path The JSON path of this node.
+	* @returns {object} The rebuilt instance.
+	*/
+	static decodeTagged(data, expectedType, path) {
+		const codec = SerializableRegistry.codecById(data["@"]);
+		if (codec === null) throw SaveDecodeError.unknownSaveId(path, data["@"]);
+		if (expectedType !== null && codec.type() !== expectedType) {
+			const expectedCodec = SerializableRegistry.codecForConstructor(expectedType);
+			const expectedId = expectedCodec === null ? expectedType.name : expectedCodec.id();
+			throw SaveDecodeError.typeMismatch(path, expectedId, codec.id());
+		}
+		return this.decodeWith(data, codec, path);
+	}
+	/**
+	* Decodes an untagged node using only the constructor its position declares.
+	*
+	* This is the branch that makes a hand-edited file work.
+	* @param {object} data The untagged plain data.
+	* @param {Function} expectedType The declared constructor.
+	* @param {string} path The JSON path of this node.
+	* @returns {object} The rebuilt instance.
+	*/
+	static decodeDeclared(data, expectedType, path) {
+		const codec = SerializableRegistry.codecForConstructor(expectedType);
+		if (codec === null) throw SaveDecodeError.unregisteredDeclaredType(path, expectedType.name);
+		return this.decodeWith(data, codec, path);
+	}
+	/**
+	* Rebuilds an instance through a resolved codec, honoring any decode override it carries.
+	* @param {object} data The plain data for this node.
+	* @param {SaveCodec} codec The codec describing the target type.
+	* @param {string} path The JSON path of this node.
+	* @returns {object} The rebuilt instance.
+	*/
+	static decodeWith(data, codec, path) {
+		if (codec.hasDecodeOverride()) return codec.runDecode(data, path);
+		const instance = Object.create(codec.type().prototype);
+		codec.seed(instance);
+		this.decodeKeys(data, codec, codec.typedTree(), codec.typedValuesTree(), path, instance);
+		codec.transients().forEach((factory, transientPath) => this.assignAtPath(instance, transientPath, factory(instance)));
+		return instance;
+	}
+	/**
+	* Decodes every key of a plain data object onto a target, keeping the type declarations in step.
+	* @param {object} data The plain data whose keys are being decoded.
+	* @param {SaveCodec|null} codec The codec owning the declarations, or null for a plain object.
+	* @param {{value: Function|null, children: Map<string, object>}|null} typedNode The walker's
+	* position in the type tree, or null when nothing below here is declared.
+	* @param {{value: Function|null, children: Map<string, object>}|null} typedValuesNode The walker's
+	* position in the dictionary-value type tree, or null.
+	* @param {string} path The JSON path of this object.
+	* @param {object=} target The object to assign onto; a fresh plain object when omitted.
+	* @returns {object} The target, populated.
+	*/
+	static decodeKeys(data, codec, typedNode, typedValuesNode, path, target = {}) {
+		Object.keys(data).forEach((key) => {
+			if (key === "@") return;
+			const childPath = `${path}.${key}`;
+			const typedChild = typedNode === null ? null : typedNode.children.get(key) ?? null;
+			const typedValuesChild = typedValuesNode === null ? null : typedValuesNode.children.get(key) ?? null;
+			target[key] = this.decodeChild(data[key], typedChild, typedValuesChild, childPath);
+		});
+		return target;
+	}
+	/**
+	* Decodes one child value against whatever its position declares.
+	* @param {*} child The plain data being decoded.
+	* @param {{value: Function|null, children: Map<string, object>}|null} typedChild The child's
+	* position in the type tree, or null.
+	* @param {{value: Function|null, children: Map<string, object>}|null} typedValuesChild The child's
+	* position in the dictionary-value type tree, or null.
+	* @param {string} childPath The JSON path of the child.
+	* @returns {*} The decoded child.
+	*/
+	static decodeChild(child, typedChild, typedValuesChild, childPath) {
+		if (typedValuesChild !== null && typedValuesChild.value !== null) {
+			return this.decodeDictionary(child, typedValuesChild.value, childPath);
+		}
+		if (typedChild !== null && typedChild.value !== null) {
+			return this.decode(child, typedChild.value, childPath);
+		}
+		if (this.isPlainObject(child) && this.hasDeclarationsBelow(typedChild, typedValuesChild)) {
+			return this.decodeKeys(child, null, typedChild, typedValuesChild, childPath);
+		}
+		return this.decode(child, null, childPath);
+	}
+	/**
+	* Decodes a plain-object dictionary whose values are all instances of one declared type.
+	* @param {object} data The dictionary's plain data.
+	* @param {Function} valueType The constructor every value holds.
+	* @param {string} path The JSON path of the dictionary.
+	* @returns {object} A fresh dictionary holding the decoded values.
+	*/
+	static decodeDictionary(data, valueType, path) {
+		const decoded = {};
+		Object.keys(data).forEach((key) => {
+			decoded[key] = this.decode(data[key], valueType, `${path}.${key}`);
+		});
+		return decoded;
+	}
+	/**
+	* Determines whether a value is a plain object rather than an instance, array, or primitive.
+	* @param {*} value The value to classify.
+	* @returns {boolean}
+	*/
+	static isPlainObject(value) {
+		if (value === null) return false;
+		if (Object.prototype.toString.call(value) !== "[object Object]") return false;
+		return value.constructor === Object;
+	}
+	/**
+	* Determines whether either declaration tree still has anything to say below this point.
+	* @param {{value: Function|null, children: Map<string, object>}|null} typedChild The child's
+	* position in the type tree, or null.
+	* @param {{value: Function|null, children: Map<string, object>}|null} typedValuesChild The child's
+	* position in the dictionary-value type tree, or null.
+	* @returns {boolean}
+	*/
+	static hasDeclarationsBelow(typedChild, typedValuesChild) {
+		if (typedChild !== null && typedChild.children.size > 0) return true;
+		return typedValuesChild !== null && typedValuesChild.children.size > 0;
+	}
+	/**
+	* Assigns a value at a dotted path on an instance, creating the namespace objects along the way.
+	*
+	* The waypoints are created rather than assumed because a transient may be declared deeper than
+	* anything else on the instance has reason to build- a plugin namespace that only exists to hold
+	* one cache, on a save written before that plugin was installed.
+	* @param {object} instance The instance to assign onto.
+	* @param {string} path The dotted path to assign at.
+	* @param {*} value The value to assign.
+	*/
+	static assignAtPath(instance, path, value) {
+		const segments = path.split(".");
+		let node = instance;
+		segments.slice(0, -1).forEach((segment) => {
+			node[segment] ||= {};
+			node = node[segment];
+		});
+		node[segments[segments.length - 1]] = value;
 	}
 };
 
@@ -3649,6 +4588,352 @@ var J_Timer = class {
 //#endregion
 //#region src/plugins/_base/core/registerJBaseSerializableModels.js
 SerializableRegistry.register(J_Timer);
+
+//#endregion
+//#region src/plugins/_base/core/save/registerEngineSaveCodecs.js
+/**
+* Every codec here describes a type J-Base does not own: two native collections, and the eighteen
+* engine classes a savefile is made of.
+*
+* Three rules produced the declarations below, and none of them can be shortcut by reading a save:
+*
+* **A field is typed if the class assigns an instance to it**, not if its name sounds like it does.
+* `Game_Party._actors` holds actor *ids*; `_items` / `_weapons` / `_armors` are id-to-count maps.
+* Declaring any of them typed would have the decoder try to rebuild integers into actors. Every
+* `typed` entry below was read out of `initialize` / `initMembers` in `project/js/rmmz_objects.js`.
+*
+* **A `seed` is required wherever the class sets up state in `initialize`.** The decoder never runs a
+* constructor, so without one, any field an older save predates comes back `undefined` forever.
+* Where the engine already has an idempotent, side-effect-free reset - `clear()` on several of these
+* - that is the seed, so the default follows the engine rather than a copy of it that can drift.
+*
+* **Identity is explicit.** Each type gets a stable kebab-case save id plus its class name as an
+* alias, so renaming an engine wrapper never touches a save, and files written by the engine's own
+* `JsonEx` - which always tags with `constructor.name` - still resolve.
+*/
+/**
+* Rebuilds a `Map` from the shape the encoder wrote.
+* @param {{entries: Array}} data The encoded map.
+* @param {string} path The JSON path of the node, for error context.
+* @returns {Map}
+*/
+var decodeMap = (data, path) => new Map(data.entries.map(([key, value], index) => [SaveDecoder.decode(key, null, `${path}.entries[${index}][0]`), SaveDecoder.decode(value, null, `${path}.entries[${index}][1]`)]));
+/**
+* A `Map`'s real entries live in an internal slot that `Object.keys` cannot reach, so the default
+* walk would faithfully encode one as `{}`. Both native collections therefore override the walk
+* outright, in the same wire shape the retiring `JsonEx` override used.
+*/
+SerializableRegistry.register(Map, {
+	id: "Map",
+	encode: (value, path) => ({ entries: [...value.entries()].map(([key, entryValue], index) => [SaveEncoder.encode(key, `${path}.entries[${index}][0]`), SaveEncoder.encode(entryValue, `${path}.entries[${index}][1]`)]) }),
+	decode: decodeMap
+});
+/**
+* A `Set` has the same internal-slot problem as a `Map`, with one value per entry instead of two.
+*/
+SerializableRegistry.register(Set, {
+	id: "Set",
+	encode: (value, path) => ({ values: [...value].map((entryValue, index) => SaveEncoder.encode(entryValue, `${path}.values[${index}]`)) }),
+	decode: (data, path) => new Set(data.values.map((value, index) => SaveDecoder.decode(value, null, `${path}.values[${index}]`)))
+});
+/**
+* The engine's own reference type: it stores a data class and an id and looks the row up, rather
+* than embedding a copy of it. Nothing else in the vanilla graph follows that example, which is the
+* gap Phase 4's lineage work closes for refined equipment.
+*/
+SerializableRegistry.register(Game_Item, {
+	id: "game-item",
+	aliases: ["Game_Item"],
+	seed: (instance) => {
+		instance._dataClass = String.empty;
+		instance._itemId = 0;
+	}
+});
+/**
+* Battle outcome flags for one action. Wholly transient in spirit but persisted by the engine, and
+* `clear()` is exactly the set of defaults its constructor establishes.
+*/
+SerializableRegistry.register(Game_ActionResult, {
+	id: "game-action-result",
+	aliases: ["Game_ActionResult"],
+	seed: (instance) => instance.clear()
+});
+/**
+* Global flags and audio state. Holds no instances at all- the bgm/bgs/me fields are plain audio
+* descriptors, not classes.
+*/
+SerializableRegistry.register(Game_System, {
+	id: "game-system",
+	aliases: ["Game_System"],
+	seed: (instance) => {
+		instance._saveEnabled = true;
+		instance._menuEnabled = true;
+		instance._encounterEnabled = true;
+		instance._formationEnabled = true;
+		instance._battleCount = 0;
+		instance._winCount = 0;
+		instance._escapeCount = 0;
+		instance._saveCount = 0;
+		instance._versionId = 0;
+		instance._savefileId = 0;
+		instance._framesOnSave = 0;
+		instance._bgmOnSave = null;
+		instance._bgsOnSave = null;
+		instance._windowTone = null;
+		instance._battleBgm = null;
+		instance._victoryMe = null;
+		instance._defeatMe = null;
+		instance._savedBgm = null;
+		instance._walkingBgm = null;
+	}
+});
+/**
+* The event-driven countdown, distinct from every `JABS_Timer` in the project.
+*/
+SerializableRegistry.register(Game_Timer, {
+	id: "game-timer",
+	aliases: ["Game_Timer"],
+	seed: (instance) => {
+		instance._frames = 0;
+		instance._working = false;
+	}
+});
+/**
+* Switch values, as a sparse array indexed by switch id.
+*/
+SerializableRegistry.register(Game_Switches, {
+	id: "game-switches",
+	aliases: ["Game_Switches"],
+	seed: (instance) => instance.clear()
+});
+/**
+* Variable values, as a sparse array indexed by variable id.
+*/
+SerializableRegistry.register(Game_Variables, {
+	id: "game-variables",
+	aliases: ["Game_Variables"],
+	seed: (instance) => instance.clear()
+});
+/**
+* Self-switch values, keyed by a `mapId,eventId,letter` tuple rendered as a string.
+*/
+SerializableRegistry.register(Game_SelfSwitches, {
+	id: "game-self-switches",
+	aliases: ["Game_SelfSwitches"],
+	seed: (instance) => instance.clear()
+});
+/**
+* Screen effects. `_pictures` is a sparse array of `Game_Picture`, which is the only instance-valued
+* field on the class- everything else is a tone array or a scalar.
+*/
+SerializableRegistry.register(Game_Screen, {
+	id: "game-screen",
+	aliases: ["Game_Screen"],
+	typed: { _pictures: Game_Picture },
+	seed: (instance) => instance.clear()
+});
+/**
+* One picture on the screen. Held only through {@link Game_Screen}.
+*/
+SerializableRegistry.register(Game_Picture, {
+	id: "game-picture",
+	aliases: ["Game_Picture"],
+	seed: (instance) => {
+		instance.initBasic();
+		instance.initTarget();
+		instance.initTone();
+		instance.initRotation();
+	}
+});
+/**
+* The actor roster. `_data` is sparse and indexed by actor id, and every entry is a live actor.
+*/
+SerializableRegistry.register(Game_Actors, {
+	id: "game-actors",
+	aliases: ["Game_Actors"],
+	typed: { _data: Game_Actor },
+	seed: (instance) => {
+		instance._data = [];
+	}
+});
+/**
+* One actor.
+*
+* The five transients are J-Base's own derived caches, and every one of them is *lazy* - each reader
+* is guarded by a strict `!== null` test that rebuilds on a miss. That is why the cold value is the
+* whole answer here, and why it must be `null` rather than absent: a field that decodes as
+* `undefined` passes that guard and hands the caller `undefined` instead of rebuilding.
+*
+* `_equips` holds `Game_Item`s and `_skills` holds skill *ids*; `_exp` is an id-to-number map. The
+* two `_last*Skill` fields are `Game_Item`s, both assigned in `initMembers`.
+*/
+SerializableRegistry.register(Game_Actor, {
+	id: "game-actor",
+	aliases: ["Game_Actor"],
+	typed: {
+		_equips: Game_Item,
+		_lastMenuSkill: Game_Item,
+		_lastBattleSkill: Game_Item,
+		_actions: Game_Action,
+		_result: Game_ActionResult
+	},
+	transients: {
+		"_j._base._cachedTraitObjects": () => null,
+		"_j._base._cachedAllTraits": () => null,
+		"_j._base._cachedAllNotes": () => null,
+		"_j._base._cachedMaxTpBonuses": () => null,
+		"_j._base._cachedHarFactor": () => null
+	}
+});
+/**
+* One queued action for a battler. Not present in a map save, but reachable from `_actions`.
+*/
+SerializableRegistry.register(Game_Action, {
+	id: "game-action",
+	aliases: ["Game_Action"],
+	typed: { _item: Game_Item },
+	seed: (instance) => instance.clear()
+});
+/**
+* The party.
+*
+* Read the type map against the temptation to add to it: `_actors` is an array of actor **ids**, and
+* `_items` / `_weapons` / `_armors` are plain id-to-count maps. `_lastItem` is the only field on the
+* class that genuinely holds an instance.
+*/
+SerializableRegistry.register(Game_Party, {
+	id: "game-party",
+	aliases: ["Game_Party"],
+	typed: { _lastItem: Game_Item },
+	seed: (instance) => {
+		instance._inBattle = false;
+		instance._gold = 0;
+		instance._steps = 0;
+		instance._lastItem = new Game_Item();
+		instance._menuActorId = 0;
+		instance._targetActorId = 0;
+		instance._actors = [];
+		instance.initAllItems();
+	}
+});
+/**
+* The map.
+*
+* `_events` is typed even though the router never lifts `_j.*` slices off events: the events
+* themselves are still persisted by the engine, and it is only the plugin state hanging from them
+* that has a map-session lifetime.
+*/
+SerializableRegistry.register(Game_Map, {
+	id: "game-map",
+	aliases: ["Game_Map"],
+	typed: {
+		_interpreter: Game_Interpreter,
+		_vehicles: Game_Vehicle,
+		_events: Game_Event,
+		_commonEvents: Game_CommonEvent
+	},
+	seed: (instance) => {
+		instance._interpreter = new Game_Interpreter();
+		instance._mapId = 0;
+		instance._tilesetId = 0;
+		instance._events = [];
+		instance._commonEvents = [];
+		instance._vehicles = [];
+		instance._displayX = 0;
+		instance._displayY = 0;
+		instance._nameDisplay = true;
+		instance._scrollDirection = 2;
+		instance._scrollRest = 0;
+		instance._scrollSpeed = 4;
+		instance._parallaxName = String.empty;
+		instance._parallaxZero = false;
+		instance._parallaxLoopX = false;
+		instance._parallaxLoopY = false;
+		instance._parallaxSx = 0;
+		instance._parallaxSy = 0;
+		instance._parallaxX = 0;
+		instance._parallaxY = 0;
+		instance._battleback1Name = null;
+		instance._battleback2Name = null;
+		instance.createVehicles();
+	}
+});
+/**
+* One map event. Reconstructed wholesale by `Game_Map.setupEvents` on the next map setup, which is
+* why every `_j.*` slice on one is transient- but the engine still persists the event itself.
+*/
+SerializableRegistry.register(Game_Event, {
+	id: "game-event",
+	aliases: ["Game_Event"]
+});
+/**
+* One parallel or autorun common event. Holds an interpreter while running.
+*/
+SerializableRegistry.register(Game_CommonEvent, {
+	id: "game-common-event",
+	aliases: ["Game_CommonEvent"],
+	typed: { _interpreter: Game_Interpreter },
+	seed: (instance) => {
+		instance._commonEventId = 0;
+		instance._interpreter = null;
+	}
+});
+/**
+* An event command interpreter. Nests: a `Show Choices` inside a called common event runs on a child.
+*/
+SerializableRegistry.register(Game_Interpreter, {
+	id: "game-interpreter",
+	aliases: ["Game_Interpreter"],
+	typed: { _childInterpreter: Game_Interpreter },
+	seed: (instance) => {
+		instance._depth = 0;
+		instance._branch = {};
+		instance._indent = 0;
+		instance._frameCount = 0;
+		instance._freezeChecker = 0;
+		instance.clear();
+	}
+});
+/**
+* The player character. Owns the follower collection.
+*/
+SerializableRegistry.register(Game_Player, {
+	id: "game-player",
+	aliases: ["Game_Player"],
+	typed: { _followers: Game_Followers }
+});
+/**
+* The follower collection.
+*
+* Its `setup()` sizes `_data` from `$gameParty.maxBattleMembers()`, which at decode time would be
+* asking the throwaway party built by `createGameObjects`. The seed therefore stops short of it and
+* leaves the collection empty for the file to fill.
+*/
+SerializableRegistry.register(Game_Followers, {
+	id: "game-followers",
+	aliases: ["Game_Followers"],
+	typed: { _data: Game_Follower },
+	seed: (instance) => {
+		instance._visible = $dataSystem.optFollowers;
+		instance._gathering = false;
+		instance._data = [];
+	}
+});
+/**
+* One follower trailing the player.
+*/
+SerializableRegistry.register(Game_Follower, {
+	id: "game-follower",
+	aliases: ["Game_Follower"]
+});
+/**
+* One of the three vehicles. Persisted individually because a boarded vehicle carries the player's
+* position, and `refereshVehicles` only calls `refresh()` rather than rebuilding them.
+*/
+SerializableRegistry.register(Game_Vehicle, {
+	id: "game-vehicle",
+	aliases: ["Game_Vehicle"]
+});
 
 //#endregion
 //#region src/plugins/_base/models/WindowCommandBuilder.js
