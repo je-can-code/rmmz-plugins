@@ -787,23 +787,23 @@ var RefinementWorkflowSession = class RefinementWorkflowSession {
 		this.#phase = RefinementWorkflowSession.Phase.PickingBase;
 	}
 	/**
-	/**
 	* Performs the refinement transaction: remove inputs, stamp the hydrated output row, then register it through
 	* {@link JaftingManager.createRefinedOutput} (dynamic id allocation + party gain).
 	*
-	* @param {Game_Item} baseItem The base item driving this step.
-	* @param {Game_Item} materialItem The material item driving this step.
+	* Both inputs arrive as the database rows themselves rather than `Game_Item` wrappers, because that is what the
+	* refinable list windows carry and what `gainItem` reads an `id` off of further down.
+	*
+	* @param {RPG_EquipItem} baseDatum The base equip driving this step.
+	* @param {RPG_EquipItem} materialDatum The material equip driving this step.
 	* @param {RPG_EquipItem} outputEquip The output equip driving this step.
 	* @returns {{ ok: boolean, reason: string|null }}
 	*/
-	commitRefinement(baseItem, materialItem, outputEquip) {
-		const baseDatum = baseItem.object();
-		const materialDatum = materialItem.object();
+	commitRefinement(baseDatum, materialDatum, outputEquip) {
 		const mergedLedger = JaftingSalvageManager.buildRefinementOutputLedger(baseDatum, materialDatum);
 		const baseLineage = JaftingManager.lineageForDatum(baseDatum);
 		const materialLineage = JaftingManager.lineageForDatum(materialDatum);
-		$gameParty.gainItem(baseItem, -1);
-		$gameParty.gainItem(materialItem, -1);
+		$gameParty.gainItem(baseDatum, -1);
+		$gameParty.gainItem(materialDatum, -1);
 		outputEquip._jaftingSalvageLedger = mergedLedger;
 		JaftingManager.createRefinedOutput(outputEquip, baseLineage, materialLineage);
 		this.markCommittedReturnToBase();

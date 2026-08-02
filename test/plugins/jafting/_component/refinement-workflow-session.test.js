@@ -128,12 +128,14 @@ describe('RefinementWorkflowSession phase state machine', () =>
         return { leafFor: datum.id };
       });
 
-      const baseItem = { object: () => ({ id: 1 }) };
-      const materialItem = { object: () => ({ id: 2 }) };
+      // the refinable list windows hand over the database rows themselves, so that is what commit
+      // receives - the same shape gainItem reads an id off of.
+      const baseDatum = { id: 1 };
+      const materialDatum = { id: 2 };
       const outputEquip = {};
 
       // Act
-      const result = session.commitRefinement(baseItem, materialItem, outputEquip);
+      const result = session.commitRefinement(baseDatum, materialDatum, outputEquip);
 
       // Assert
       expect(callOrder).toEqual([
@@ -153,7 +155,7 @@ describe('RefinementWorkflowSession phase state machine', () =>
       JaftingManager.lineageForDatum.mockImplementation(datum => ({ leafFor: datum.id }));
 
       // Act
-      session.commitRefinement({ object: () => ({ id: 1 }) }, { object: () => ({ id: 2 }) }, {});
+      session.commitRefinement({ id: 1 }, { id: 2 }, {});
 
       // Assert
       const [ , baseLineage, materialLineage ] = JaftingManager.createRefinedOutput.mock.calls.at(-1);
