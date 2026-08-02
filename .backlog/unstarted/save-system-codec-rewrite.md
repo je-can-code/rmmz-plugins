@@ -56,7 +56,25 @@ Work that is understood, is not blocking, and belongs to a later phase or a swee
 - ~~**`SaveManifest.schemaVersion` is 1 and there is no migration chain.**~~ ✅ The seam is in
   (Phase 5). The chain is still deliberately empty, which is correct until the first schema change.
 
-Found while doing Phases 4-6, none of them blocking, all of them belonging to somebody's later sweep:
+Found while doing Phases 4-6. The first is the one to act on:
+
+- **`Game_Party`'s explicit seed does not run the plugin `initialize` alias chain, so no plugin's
+  `_j` namespace on the party is seeded — and Phase 4 now depends on one of them.** Classes that seed
+  from `initMembers` inherit their whole alias chain for free. `Game_Party` is the class that had to
+  supply a seed by hand, because it sets up in `initialize`, and a hand-written seed only knows about
+  the engine's own fields. Seven plugins alias `Game_Party.prototype.initialize` — ABS, ABS-ALLYAI,
+  JAFTING-CREATE, JAFTING-REFINE, OMNI, PASSIVE, SDP — and not one of their namespaces is
+  established by a decode.
+
+  Until Phase 4 this was untidy. It is now a load-crash risk: `Game_System.onAfterLoad` calls
+  `refreshDatabaseWeapons`, which reads `this._j._refinement._weapons`. If that namespace is absent
+  the hook throws during load rather than defaulting. **Every save this build writes carries it**, so
+  it cannot fire today — it fires the first time a save is opened by a build where JAFTING-Refinement
+  loads and the file predates it.
+
+  The shape of a fix is J-Base defining a `Game_Party.prototype.initMembers` holding the engine
+  defaults, having `initialize` call it, and the seven plugins aliasing that instead of `initialize`.
+  That is a seven-plugin sweep and therefore Jeremy's call, not a decision to make mid-phase.
 
 - **`Game_Player`'s derived seed constructs a `Game_Followers`, which reads `$gameParty`.** The seed
   contract says seeds are side-effect free and do not read globals, and this one does both -
@@ -67,15 +85,6 @@ Found while doing Phases 4-6, none of them blocking, all of them belonging to so
   an explicit seed"** - `initMembers` is the alias chain every plugin's `_j` namespace on the player
   is built by, including all four character-like timer holders, and bypassing it would silently stop
   seeding them. It needs a way to run the chain without the construction, and that is a design call.
-- **`Game_Party`'s explicit seed does not run the plugin `initialize` alias chain, so no plugin's
-  `_j` namespace on the party is seeded.** Seven plugins alias `Game_Party.prototype.initialize` -
-  ABS, ABS-ALLYAI, JAFTING-CREATE, JAFTING-REFINE, OMNI, PASSIVE, SDP. Classes that seed from
-  `initMembers` get their chains for free; `Game_Party` is the one that had to supply a seed by hand,
-  and a hand-written seed only knows about the engine's own fields. The consequence is the exact
-  thing `seed` exists to prevent, for one class: a save written before a plugin existed comes back
-  without that plugin's party state. Harmless today because saves are disposable. The shape of a fix
-  is J-Base defining a `Game_Party.prototype.initMembers` for plugins to alias instead, which is a
-  seven-plugin sweep and therefore Jeremy's call.
 - **The `Game_Event` `_j` transient mints an own key holding `undefined` in a J-Base-only install.**
   Its cold value is "whatever the seed built", and it is plugins that build `_j` - vanilla has none.
   With no plugins loaded the factory hands back `undefined` and the decoder assigns it, producing a

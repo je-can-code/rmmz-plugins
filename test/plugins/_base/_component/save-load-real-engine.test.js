@@ -1,5 +1,5 @@
 //region plugins/_base/_component/save-load-real-engine.test.js
-import { beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import { installFakeSaveFilesystem } from '../core/save/fixtures/install-fake-save-filesystem.js';
 import { installRealRmmzEngine } from '../../../setup/rmmz-engine-loader.js';
@@ -244,6 +244,31 @@ describe('save and load through the real engine objects', () =>
     };
   });
 
+  /**
+   * Engine prototypes a single test patched to stand in for a plugin, and what they were before.
+   *
+   * Restoring these inline after the load they are needed for is not enough: a load that rejects
+   * would skip the restore and leave the prototype patched for every test after it, which turns one
+   * failure into a cascade of confusing ones. They are undone here instead, unconditionally.
+   * @type {Array<[object, string, Function]>}
+   */
+  let patchedPrototypes = [];
+
+  /**
+   * Replaces a prototype method for the duration of one test.
+   * @param {object} prototype The prototype to patch.
+   * @param {string} methodName The method to replace.
+   * @param {Function} build Receives the original, returns the replacement.
+   */
+  const patchPrototype = (prototype, methodName, build) =>
+  {
+    const original = prototype[methodName];
+
+    patchedPrototypes.push([ prototype, methodName, original ]);
+
+    prototype[methodName] = build(original);
+  };
+
   beforeEach(() =>
   {
     fake.files.clear();
@@ -253,6 +278,16 @@ describe('save and load through the real engine objects', () =>
     fake.writeCount = 0;
 
     createGameObjects();
+  });
+
+  afterEach(() =>
+  {
+    patchedPrototypes.forEach(([ prototype, methodName, original ]) =>
+    {
+      prototype[methodName] = original;
+    });
+
+    patchedPrototypes = [];
   });
 
   //region the round trip
@@ -445,12 +480,11 @@ describe('save and load through the real engine objects', () =>
       // Arrange
       // the cold value for an event's `_j` is "whatever the initMembers chain built", and it is
       // plugins that build it. This stands in for one, so the seed has something to establish.
-      const originalInitMembers = globalThis.Game_Event.prototype.initMembers;
-      globalThis.Game_Event.prototype.initMembers = function()
+      patchPrototype(globalThis.Game_Event.prototype, 'initMembers', original => function()
       {
-        originalInitMembers.call(this);
+        original.call(this);
         this._j = { _regions: { _skills: { _timer: 'fresh' } } };
-      };
+      });
 
       const event = Object.create(globalThis.Game_Event.prototype);
       event.initMembers();
@@ -460,7 +494,6 @@ describe('save and load through the real engine objects', () =>
       // Act
       await saveGame(1);
       await loadGame(1);
-      globalThis.Game_Event.prototype.initMembers = originalInitMembers;
 
       // Assert
       expect(globalThis.$gameMap._events[1]._j._regions._skills._timer).toBe('fresh');
@@ -562,12 +595,11 @@ describe('save and load through the real engine objects', () =>
       // Arrange
       // a save written before `_added` existed: the file has `_original` and nothing else, and the
       // seed rebuilds both. a plain assignment would replace the namespace and lose `_added`.
-      const originalSeed = globalThis.Game_Party.prototype.initAllItems;
-      globalThis.Game_Party.prototype.initAllItems = function()
+      patchPrototype(globalThis.Game_Party.prototype, 'initAllItems', original => function()
       {
-        originalSeed.call(this);
+        original.call(this);
         this._j = { _demo: { _original: 'seeded', _added: 'seeded' } };
-      };
+      });
 
       globalThis.$gameParty._j = { _demo: { _original: 'saved', _added: 'saved' } };
       await saveGame(1);
@@ -579,7 +611,6 @@ describe('save and load through the real engine objects', () =>
 
       // Act
       await loadGame(1);
-      globalThis.Game_Party.prototype.initAllItems = originalSeed;
 
       // Assert
       expect(globalThis.$gameParty._j._demo._original).toBe('saved');
