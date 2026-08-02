@@ -23,7 +23,7 @@ become testable — not shipping boundaries. Do not split them.
 | 4 | JAFTING refinement lineage | ✅ done |
 | 5 | versioning and the migration seam | ✅ done |
 | 6 | the test suite | ✅ done |
-| 7 | `docs/save-system.md` + the `CLAUDE.md` rewrite — how to code against it afterwards | |
+| 7 | `docs/save-system.md` + the `CLAUDE.md` rewrite — how to code against it afterwards | ✅ done |
 
 **Nothing is carved out, and nothing merges early.** An earlier draft proposed shipping Phase 0's
 one-line battler-cache fix ahead of the rest, since it repairs a defect that exists on `main` today.

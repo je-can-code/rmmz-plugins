@@ -219,9 +219,8 @@ SOME_TYPE.prototype.SOME_METHOD = function(...args)
 
 ### Serialized models
 
-Models saved to file via `JsonEx` use **modern `class` syntax** and call
-`SerializableRegistry.register(ClassName)` at the bottom of the file — after the closing `}`, before
-`//endregion`.
+Models saved to file use **modern `class` syntax** and call `SerializableRegistry.register(ClassName)`
+at the bottom of the file — after the closing `}`, before `//endregion`.
 
 ```javascript
 class SkillEquipSlot
@@ -233,19 +232,44 @@ export default SkillEquipSlot;
 SerializableRegistry.register(SkillEquipSlot);
 ```
 
-This is **mandatory**. Without registration `JsonEx` cannot restore the class on load, so any prototype
-method on the model silently breaks after a save/load cycle. See
-`src/plugins/_base/core/core/SerializableRegistry.js` and `JABS_HitstopData.js` for the reference pattern.
+This is **mandatory**, and that bare form is a complete registration: the defaults fail open, so an
+undeclared type persists every own enumerable field and seeds from `initMembers` if it has one.
 
-**`Map` and `Set` are safe in stored fields.** J-Base extends `JsonEx._encode` / `_decode` to handle
-both (`src/plugins/_base/core/core/JsonEx.js`). Prototype constructors are no longer required for
-serializable models — the registry replaced that workaround.
+**Read [`docs/save-system.md`](docs/save-system.md) before adding a field to one of these.** The rules
+below are the short version; that document is the reasoning, and the save format is invasive enough
+that the reasoning matters.
 
-**No `#private` fields or methods in a registered class** (`verify:no-private-in-serializable`). RMMZ
-rebuilds saved objects from the prototype and copies properties across — **the constructor never runs**.
-Private members are brand-checked against instances the constructor actually produced, so a restored
-object carries the prototype without ever having been branded, and the first `this.#anything` it touches
-throws. Use underscore-prefixed fields with accessors instead.
+- **A missed `typed` declaration throws at save time. A missed `transient` does not.** Add a field
+  holding a class instance and the encoder names the path and the fix. Add a field that should have
+  been transient and it silently persists forever. When adding a field, the question worth stopping
+  on is "does this need to survive a load?"
+- **Transients are re-seeded on decode, never merely omitted.** The cold value must be exactly what
+  the reader's guard tests for — these guards read `!== null`, so a field arriving as `undefined`
+  passes straight through and the accessor returns `undefined` instead of rebuilding.
+- **Decode never runs a constructor.** `seed` establishes defaults on the bare instance first, which
+  is what lets a field added after a save shipped come back at its default rather than `undefined` —
+  so most new fields need no migration. `seed` must be side-effect free and must produce fresh,
+  unshared objects.
+- **Store an id, not a database row.** A row copied into a savefile is frozen at write time, so
+  rebalancing it never reaches the save and nothing reports a problem. `Game_Item` is the pattern.
+- **The owner registers; everyone else `extend`s.** J-Base registers `Game_Party`; the `_j._omni`
+  caches on it are J-Omni's to declare. Declarations do not inherit — codec lookup is by exact
+  constructor, so `Game_Player`, `Game_Follower` and `Game_Vehicle` are each declared individually.
+
+**`Map` and `Set` are safe in stored fields.** Both are registered types with their own codecs. J-Base
+also keeps a `JsonEx` override for them (`src/plugins/_base/core/core/JsonEx.js`), because `JsonEx`
+stopped being the save path but is still the **deep-copy** path — `JsonEx.makeDeepCopy` is live in
+four places, two of which copy a `Game_Actor`.
+
+**No `#private` fields or methods in a registered class** (`verify:no-private-in-serializable`).
+Decoding builds instances with `Object.create(prototype)` — **the constructor never runs** — so a
+restored object carries the prototype without ever having been branded, and the first `this.#anything`
+it touches throws. Use underscore-prefixed fields with accessors instead.
+
+**The declaration lives in J-Base; the meaning lives in J-Base-Save.** `SerializableRegistry` keeps
+what a registration said and answers "what constructor does this name mean" for `JsonEx`. Everything
+that reads a declaration — encoder, decoder, storage, router — is the extension. Pull the extension
+and every registration becomes inert metadata while the engine's own save path resumes.
 
 The registry audit of pre-existing models is ongoing; **new models must always register.**
 
