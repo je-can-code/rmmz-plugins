@@ -23,6 +23,7 @@ become testable — not shipping boundaries. Do not split them.
 | 4 | JAFTING refinement lineage | |
 | 5 | versioning and the migration seam | |
 | 6 | the test suite | |
+| 7 | `docs/save-system.md` + the `CLAUDE.md` rewrite — how to code against it afterwards | |
 
 **Nothing is carved out, and nothing merges early.** An earlier draft proposed shipping Phase 0's
 one-line battler-cache fix ahead of the rest, since it repairs a defect that exists on `main` today.
@@ -1117,6 +1118,45 @@ These are acceptance criteria for "Just Works", not a coverage exercise. Locatio
 - A tag that disagrees with its type map fails loudly.
 - JAFTING lineage replay reproduces indices and picks up a mutated base row.
 - Migration chain: a fixture at version N loads correctly at version N+2.
+
+### Phase 7 — the developer documentation
+
+**JE asked for this explicitly and it is not optional.** Everything above describes how to *build*
+the save system. This phase describes how to *code against it* afterwards, for the person adding a
+field to a model two years from now with nobody to ask.
+
+Two artifacts, following the precedent `docs/testing-scenes-and-windows.md` already sets:
+
+- **`docs/save-system.md`** — the long form, written from the finished code rather than from this
+  plan. This plan is a construction document and stops being true the moment the work lands.
+- **A rewritten "Serialized models" section in `CLAUDE.md`** — the short rules, pointing at the long
+  form. The current section describes `SerializableRegistry.register(ClassName)` and the `JsonEx`
+  contract, both of which this work supersedes. **Leaving it stale is worse than not writing the new
+  doc at all**, because it is auto-loaded and will actively mislead.
+
+The long form must answer, at minimum:
+
+1. **Adding a field to a serialized class.** What must be declared, and what happens when you forget.
+   The asymmetry is the point: a missed `typed` declaration throws at save time, a missed `transient`
+   silently persists forever. One is loud, one is a slow leak.
+2. **Deciding transient vs persisted**, including the lazy/eager cache split — a guarded cache is
+   satisfied by a cold value, an eagerly-read one has to be rebuilt from the decoded instance.
+3. **The `seed` contract.** Why decode never runs a constructor, why `seed` must be side-effect free,
+   and the property it buys: a field added after a save shipped comes back at its default instead of
+   `undefined`, so most new fields need no migration at all.
+4. **Reference versus value.** Database rows are stored as ids and resolved on read. This is the
+   lesson `_passiveSources` and JAFTING refinement both taught the hard way — persisting a database
+   row by value means rebalancing that row never reaches an existing save.
+5. **Ownership and `extend`.** Which plugin declares what on a shared engine host, and why the plugin
+   that owns the feature declares its own slice rather than core knowing about it.
+6. **Dotted-path notation** for fields nested inside a `_j.<plugin>` namespace.
+7. **The standing prohibitions**, each with its reason: no `#private` in a registered class, no
+   reading `$dataMap` during decode, no side effects in `seed`.
+8. **When a migration is genuinely required** versus when a `seed` default covers it.
+9. **How to test a new codec** — the round-trip, and the sweep asserting no field decodes as
+   `undefined`.
+
+Write it for someone who has never read this plan and never will.
 
 ---
 
