@@ -976,8 +976,24 @@ version here just makes Phase 1's own deliverable verifiable.
    registered only what `_base` owns; the moment `StorageManager` calls `SaveEncoder`, the first save
    throws `unregisteredType` on the first class it meets that nobody claimed. The census in
    [The real Phase 1 worklist](#the-real-phase-1-worklist-is-registration-completeness-not-type-map-size)
-   names five: `JABS_Timer` and `JABS_DeathContext` (J-ABS), `DifficultyConfig` (J-Difficulty),
-   `RPG_Skill` and `RPG_SkillDamage` (J-Base's database models, reachable through J-Passive).
+   names four that need an owner: `JABS_DeathContext` (J-ABS), `DifficultyConfig` (J-Difficulty),
+   and `RPG_Skill` / `RPG_SkillDamage` (J-Base's database models, reachable through J-Passive's
+   `_passiveSources`).
+
+   `JABS_Timer` is **not** one of them. It is transient by type, so it reaches the encoder only if one
+   of the forty-six holder declarations was missed — treat an `unregisteredType` on `JABS_Timer` as a
+   missing transient declaration, not as a class needing registration.
+
+0b. **Remove CGMZ_Core, EliMZ_Book, and SoR_MiniMapAndScene from CA before the cutover.** A real save
+   carries `$.cgmz` and `$.eli` as top-level keys, written by two of those plugins through their own
+   `makeSaveContents` aliases. `CGMZ_Core` and `Eli_SavedContents` are unregistered and nothing in
+   this repo can register them, so the first save after `StorageManager` points at `SaveEncoder`
+   throws on whichever it meets first.
+
+   This is a **cross-repo ordering dependency**, not a code defect: the plugins are already slated
+   for removal, and once they are gone the keys go with them. It is recorded here because nothing
+   else in the plan says the removal has to happen *first*. Verify with a fresh save containing
+   neither key before cutting over.
 
    Each plugin registers **its own** classes and calls `SerializableRegistry.extend` for the
    `_j.<plugin>` transients it contributes to an engine host — the omnipedia caches on `Game_Party`,

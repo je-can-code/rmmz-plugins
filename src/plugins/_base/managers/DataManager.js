@@ -557,7 +557,9 @@ DataManager.extractSaveContents = function(contents)
  */
 DataManager.invalidateLoadedBattlerCaches = function()
 {
-  // the store is sparse and indexed by actor id, so forEach skips every id this save never built.
+  // the store must be compacted rather than iterated: a restored one is dense with explicit nulls
+  // where a live one has holes, so relying on iteration to skip the gaps works right up until the
+  // first load and then fails on element zero. existingActors is the accessor that guarantees it.
   $gameActors.existingActors()
     .forEach(actor => actor.onBattlerDataChange());
 };
