@@ -20,9 +20,9 @@ become testable — not shipping boundaries. Do not split them.
 | 1 | codec core: registry extension, encoder, decoder, `seed` | ✅ done |
 | 2 | storage layer: generations, atomic pointer, pretty JSON | ✅ done |
 | 3 | scopes and the section router | ✅ done |
-| 4 | JAFTING refinement lineage | |
-| 5 | versioning and the migration seam | |
-| 6 | the test suite | |
+| 4 | JAFTING refinement lineage | ✅ done |
+| 5 | versioning and the migration seam | ✅ done |
+| 6 | the test suite | ✅ done |
 | 7 | `docs/save-system.md` + the `CLAUDE.md` rewrite — how to code against it afterwards | |
 
 **Nothing is carved out, and nothing merges early.** An earlier draft proposed shipping Phase 0's
@@ -48,9 +48,39 @@ Work that is understood, is not blocking, and belongs to a later phase or a swee
   needs Jeremy's call**, because the fix is a change to J-Passive's storage (persist ids, resolve on
   read), not to the codec layer.
 - **Nothing has saved or loaded in the real engine yet.** Every acceptance criterion below that says
-  "in-engine" is outstanding. The automated suites cover the mechanics; they cannot cover a boot.
-- **`SaveManifest.schemaVersion` is 1 and there is no migration chain.** That is Phase 5, and it has
-  the only external deadline in this document.
+  "in-engine" is outstanding. Phase 6 closes as much of this as automation can - a real
+  `Game_Party` / `Game_Actor` / `Game_Map` now go out through `StorageManager.saveObject` and back in
+  through `loadObject` on an in-memory filesystem - but `Scene_Boot`, `Scene_Load`, and the map setup
+  that follows a load all need a rendering context. **A human at the keyboard is still the only thing
+  that proves the cutover boots.**
+- ~~**`SaveManifest.schemaVersion` is 1 and there is no migration chain.**~~ ✅ The seam is in
+  (Phase 5). The chain is still deliberately empty, which is correct until the first schema change.
+
+Found while doing Phases 4-6, none of them blocking, all of them belonging to somebody's later sweep:
+
+- **`Game_Player`'s derived seed constructs a `Game_Followers`, which reads `$gameParty`.** The seed
+  contract says seeds are side-effect free and do not read globals, and this one does both -
+  `Game_Player.prototype.initMembers` ends with `this._followers = new Game_Followers()`, and that
+  constructor's `setup()` sizes `_data` from `$gameParty.maxBattleMembers()`. It is masked in
+  practice: `createGameObjects()` always runs before `extractSaveContents`, so the global exists, and
+  the file's own `_followers` replaces the seeded one outright. **The fix is not "give `Game_Player`
+  an explicit seed"** - `initMembers` is the alias chain every plugin's `_j` namespace on the player
+  is built by, including all four character-like timer holders, and bypassing it would silently stop
+  seeding them. It needs a way to run the chain without the construction, and that is a design call.
+- **`Game_Party`'s explicit seed does not run the plugin `initialize` alias chain, so no plugin's
+  `_j` namespace on the party is seeded.** Seven plugins alias `Game_Party.prototype.initialize` -
+  ABS, ABS-ALLYAI, JAFTING-CREATE, JAFTING-REFINE, OMNI, PASSIVE, SDP. Classes that seed from
+  `initMembers` get their chains for free; `Game_Party` is the one that had to supply a seed by hand,
+  and a hand-written seed only knows about the engine's own fields. The consequence is the exact
+  thing `seed` exists to prevent, for one class: a save written before a plugin existed comes back
+  without that plugin's party state. Harmless today because saves are disposable. The shape of a fix
+  is J-Base defining a `Game_Party.prototype.initMembers` for plugins to alias instead, which is a
+  seven-plugin sweep and therefore Jeremy's call.
+- **The `Game_Event` `_j` transient mints an own key holding `undefined` in a J-Base-only install.**
+  Its cold value is "whatever the seed built", and it is plugins that build `_j` - vanilla has none.
+  With no plugins loaded the factory hands back `undefined` and the decoder assigns it, producing a
+  key that reads as present rather than absent. Unreachable in CA and in any install with a single
+  `_j`-carrying plugin. Recorded because it is Principle 3's own failure mode in miniature.
 
 Phases are expected to span several working sessions. Each session should pick up from this document
 rather than from the last session's memory — if something here is unclear or wrong, **fix the
@@ -1274,68 +1304,169 @@ each one into the datastore on load via `$dataWeapons[updatedWeapon._key()] = up
 there is already a hand-rolled encode/decode pair here too — a fifth one — and **the datastore index
 is carried on the equip itself (`weapon.index` / `_key()`), not derived from list position.**
 
-1. Persist lineage — `{ index, base, materials: [ ... ] }`, recursive, since a material may itself be
-   refined (`material.jaftingRefinedCount > 0`). This is full provenance.
-2. Replay on load against live `$data*` rows via a `decode` override on the lineage codec, then
-   re-inject at the **stored** `index` — the same slot `refreshDatabaseWeapons` writes to today.
-   Storing the index explicitly rather than deriving it from replay order means a reordered,
-   deduplicated, or partially-failed lineage list can never silently repoint an inventory entry at
-   the wrong item.
-3. `JaftingManager.StartingIndex` is 2001 for **both** datastores, with separate counters in
-   `$gameParty._j._refinement._increments` keyed by refinement type. Persist those counters too;
-   they are the allocator's state, not derivable from the lineage list once an entry is removed.
-4. Define behavior when a lineage names a database row that no longer exists: throw loudly with the
-   missing id named. Post-ship, rows do not disappear; pre-ship, you want to know immediately.
-5. Accept the tradeoff explicitly, in a comment at the codec: derived values follow the deriver, so
-   changing `TraitResolver.refineTraits` shifts every existing refined item on next load. That is the
-   point during rebalancing, and it is version-gateable later if it ever needs not to be.
+✅ **Phase 4 is done.** New: `jafting/ext/refine/__models/JaftingRefinementLineage.js`. Modified:
+`JaftingManager.js`, `RefinementWorkflowSession.js`, `jafting/ext/refine/objects/Game_Party.js`.
 
-**Acceptance:** refine a weapon, save, raise the base weapon's ATK in the database, load — the
-refined copy reflects the new base. Inventory still points at the same item. A three-deep lineage
-replays to the same result twice in a row.
+1. ✅ Persist lineage, recursive, since a material may itself be refined. **One material per node,
+   not a `materials: [ ... ]` array** — a refinement is always exactly base plus one donor, and depth
+   is carried by the recursion on `base`. A node is either a *leaf* naming a database row by
+   `kind` + `id`, or a *refinement* holding a `base` and a `material` that are themselves nodes. One
+   class describes both, so the field is homogeneous and the tags-stripped decode path still works.
+
+   **The recursion is load-bearing rather than thorough.** `JaftingSalvageManager.reclaimDynamicWeaponSlot`
+   splices a refined row's entry out of the party's tracking list *and* writes `RPG_Weapon.createEmpty`
+   over its `$data*` slot the moment its last copy leaves the party — which is what consuming it as a
+   material does. A flat list with nodes referencing each other by index would therefore lose the
+   provenance of every refined item ever used as a donor.
+
+2. ✅ **One field is stored rather than derived, and the plan did not anticipate it: the salvage
+   ledger.** `RefinementWorkflowSession.commitRefinement` stamps the output with
+   `JaftingSalvageManager.buildRefinementOutputLedger(base, material)`, and that reads
+   `$gameParty._j._jafting._salvageLedgers[key].unitLedgers[ordinal]` — the dismantle history of the
+   *specific stack slot* the material came out of. The consuming `gainItem(-1)` then prunes it. So it
+   is an input captured at a moment, not a derivation, and replay cannot reproduce it. The node
+   carries it verbatim; traits, name, and refine count are still re-derived.
+
+3. ✅ **Provenance is captured before the inputs are spent**, alongside the ledger, for the reason the
+   existing code already documents for the ledger: `gainItem(-1)` fires `afterPartyLostItem`, which
+   reclaims and splices. Reading it afterwards finds nothing to nest.
+   `JaftingManager.lineageForDatum` therefore runs in `commitRefinement`, and `createRefinedOutput`
+   receives two finished nodes rather than two equips.
+
+4. ✅ **Replay runs from the post-load hook, not from a `decode` override, and this is a correction.**
+   The plan puts it in the codec. It cannot go there: `SaveFileSystem.readSlot` steps back through
+   older generations when one fails, so a decode that wrote into `$dataWeapons` on its way to
+   throwing would leave a rejected generation's rows behind in the live datastore. The datastore is
+   only ever touched by a load that succeeded, which means `Game_System.onAfterLoad` →
+   `refreshDatabaseWeapons` / `refreshDatabaseArmors`, exactly where it happens today.
+
+   **Consequently those two methods are not retired** — see
+   [Ad-hoc save hooks to retire](#ad-hoc-save-hooks-to-retire), which says they become the lineage
+   codec. They change what they do (replay a lineage instead of re-injecting a stored equip) and stay
+   where they are. `addRefinedWeapon` / `addRefinedArmor` do change: they now take a lineage node.
+
+5. ✅ The deterministic half of `generateRefinedEquip` — the refine-count increment, the `+N` suffix
+   rewrite, and `_updateIndex` — is extracted as `JaftingManager.stampRefinedOutput`, called by both
+   the live path and the replay path. **Two implementations that had to agree would be precisely the
+   bug this phase exists to prevent**, and the plan's step 2 describes a replay of
+   `determineRefinementOutput` alone, which reproduces neither the name nor the count.
+
+6. ✅ The allocator counters in `_j._refinement._increments` were already persisted and stay so.
+
+7. ✅ A lineage naming a row that is gone throws with `'w:404'`-shaped context. So does a node
+   carrying a datastore letter nothing maps to.
+
+8. ✅ The tradeoff is stated at `JaftingManager.replayLineage`: derived values follow the deriver, so
+   changing `TraitResolver.refineTraits` shifts every existing refined item on the next load.
+
+**A latent defect this closed on the way past.** `RPG_Weapon` and `RPG_Armor` are not registered, and
+the old storage put whole `RPG_EquipItem`s on `$gameParty`. The first save taken after any player
+refined anything would have thrown `unregisteredType` — the census never saw it because the measured
+save had no refined equipment in it. Storing lineage removes the reachable path rather than papering
+over it with two more registrations.
+
+**Acceptance:** ✅ automated in `test/plugins/jafting/_component/refine-jafting-manager-direct.test.js`
+(replay picks up a mutated base row, reproduces indices, and is stable across two runs) and
+`…/refinement-lineage-codec.test.js` (a three-deep lineage round-trips through the real encoder and
+decoder, tags stripped or not). The in-engine version — refine, save, raise the base's ATK, load —
+remains a testplay step.
 
 ### Phase 5 — versioning
 
-1. `manifest.json` carries `schemaVersion`.
-2. `SaveMigrationRegistry` maps a version to a pure function producing the next version's document.
-   The loader chains them.
-3. Day one the chain is empty and the loader hard-fails on a mismatch, with a message naming both
-   versions.
-4. **The chain must be real before 1.0 ships, not after.** Pre-release, hard-failing is correct
+✅ **Phase 5 is done.** New: `SaveMigrationRegistry.js`. Modified: `SaveFileSystem.js`,
+`SaveStorageError.js`.
+
+1. ✅ `manifest.json` carries `schemaVersion`; that landed in Phase 2.
+2. ✅ `SaveMigrationRegistry.register(fromVersion, migrate)` maps a version to a pure function
+   producing the next version's document, and the loader chains them.
+
+   **A migration receives and returns `{ manifest, sections }`, not just the sections.** A schema
+   change that renames or splits a section file has to rewrite the manifest's `sections` list too, and
+   a migration handed only the sections could not.
+
+   **The registry stamps the new version, not the migration.** A step that forgot would otherwise
+   spin the chain forever; this way the loop cannot fail to advance.
+
+3. ✅ The chain applies inside `SaveFileSystem.readGeneration`, **on plain data, between reading the
+   sections and handing them on** — the same reason the router merges before decoding. Seeds and type
+   maps describe the current schema and cannot be told to read an older one, so the document has to be
+   brought forward before anything becomes an instance. It also sits **inside the generation retry
+   loop**, so a migration that throws makes its generation fall back like any other unreadable one
+   rather than taking the whole load down.
+4. ✅ `readManifestAt` no longer hard-fails on any mismatch: it fails when no *chain* reaches the
+   current version. That is what lets the load menu show a slot written by an older build, and keeps
+   it hiding one it genuinely cannot open. The error names the first missing step, or says the save
+   is from a newer build when nothing could ever bridge it.
+5. ✅ Day one the chain is empty, which is correct — with no steps registered,
+   `hasPathToCurrent(current)` is trivially true and every older version fails loudly.
+6. **The chain must be real before 1.0 ships, not after.** Pre-release, hard-failing is correct
    because saves are disposable. The day a player exists, that same behavior is a patch that eats
    their file — and a migration cannot be retrofitted onto a version that shipped without a stamp.
-   This is the one phase whose deadline is external.
-5. Every migration ships with a **committed fixture** of the older document shape. That fixture is
-   the only proof a migration written a year later still runs.
+   This is the one phase whose deadline is external. **It is still outstanding**; the seam exists, the
+   first real migration does not, and nothing needs one yet.
+7. ✅ Every migration ships with a **committed fixture** of the older document shape.
+   `test/plugins/_base/core/save/fixtures/legacy-generation-v1.json` is the first one, and it exists
+   before any migration does on purpose: it is what proves the mechanism composes a v1 → v3 chain
+   through the real reader, so the migration written a year from now drops into something already
+   verified.
 
 ### Phase 6 — tests
 
-These are acceptance criteria for "Just Works", not a coverage exercise. Location:
-`test/plugins/_base/core/save/**` for units, `test/plugins/_base/_component/` for the real chain.
+✅ **Phase 6 is done.** These are acceptance criteria for "Just Works", not a coverage exercise. The
+suite stands at **774 files / 12,830 tests**, up 79 across four new files:
 
-- Round-trip per codec: encode → decode → deep-equal, **one `it` per branch**, with inline
-  `// Arrange` / `// Act` / `// Assert`.
-- **`seed` covers every constructor-assigned field.** For each registered type, decode a payload with
-  fields deliberately removed and assert the result matches a freshly constructed instance for those
-  fields. This is the test that proves adding a field post-ship does not strand old saves.
-- Routing places a slice onto a host that exists; drops and logs one whose host is gone; leaves a
-  host with no slice at its seeded default.
-- **No field is `undefined` after a decode.** Sweep every registered type, construct it, round-trip
-  it, assert every declared field holds its declared shape. This catches the re-seed hazard across
-  all 47 timer holders at once rather than one crash at a time in testplay.
-- **Every registered type's fields are covered by its type map.** A fixture-driven sweep, so a typed
-  field on a rarely-exercised path (a vehicle nobody boards) cannot reach a player unnoticed — the
-  runtime encoder assert only fires on paths testplay actually walks.
-- Encoder assertion fires on an undeclared typed field.
-- Transients absent from the file, present and cold on the object.
-- **Crash injection at every step of a save** — between section files, before the pointer swap,
-  during it — leaves the previous generation loadable in all cases. Mock the `fs` methods to throw
-  at step N and iterate N across the whole sequence.
-- Loading a slot whose newest generation is truncated or malformed falls back to the prior one.
-- A save naming a codec that is not registered fails loudly at load, naming the missing id.
-- A tag that disagrees with its type map fails loudly.
-- JAFTING lineage replay reproduces indices and picks up a mutated base row.
-- Migration chain: a fixture at version N loads correctly at version N+2.
+| File | Covers |
+|---|---|
+| `_base/_component/save-load-real-engine.test.js` | the whole pipeline, against real engine objects |
+| `_base/core/save/save-codec-registry-sweep.test.js` | the two fixture-driven sweeps over the registry |
+| `_base/core/save/save-migration-chain.test.js` | the versioning seam, unit and through the real reader |
+| `jafting/_component/refinement-lineage-codec.test.js` | lineage survives a save |
+
+Against the list this phase was written as:
+
+- ✅ Round-trip per codec, one `it` per branch — Phase 1's 61 cases, plus five more from Phase 2.
+- ✅ **`seed` covers every constructor-assigned field**, and it is now a *sweep* rather than a case
+  per type: every entry of `SerializableRegistry.codecsByType()` is seeded and decoded from an empty
+  payload, and any field left holding `undefined` fails the run naming its codec. A type registered
+  next year is covered the day it is registered.
+- ✅ **Seeds produce fresh, unshared objects** — the same sweep seeds each type twice and fails on any
+  field where the two instances hold the same object. This is the boundary condition the merge
+  introduced and nothing else checks.
+- ✅ Routing places a slice, drops an orphan, leaves a host with no slice at its seeded default —
+  Phase 3.
+- ✅ **No field is `undefined` after a decode**, as above.
+- ✅ **Every registered type's fields are covered by its type map** — the second sweep, in two forms:
+  a direct check that every instance-valued field a seed establishes appears in the type tree, and an
+  encode of every seeded instance asserting the completeness throw does not fire.
+- ✅ Encoder assertion fires on an undeclared typed field — Phase 1.
+- ✅ Transients absent from the file, present and cold on the object — asserted at unit level in
+  Phase 1 and end-to-end against a real `Game_Actor` in the round-trip suite.
+- ✅ Crash injection at every step of a save — Phase 2's 44 cases.
+- ✅ A truncated or malformed newest generation falls back — Phase 2, and again end-to-end.
+- ✅ An unregistered codec id and a tag disagreeing with its type map both fail loudly — Phase 1.
+- ✅ JAFTING lineage replay reproduces indices and picks up a mutated base row — Phase 4.
+- ✅ Migration chain: a committed v1 fixture loads at v3, through `SaveFileSystem.readSlot`.
+
+#### The test the plan did not name, and the one it cannot have
+
+**The plan's list is all mechanisms, and the branch's real risk was that none of them had ever run
+together.** The addition is `save-load-real-engine.test.js`: build a world out of real `Game_Party` /
+`Game_Actors` / `Game_Map` / `Game_Player` objects, `StorageManager.saveObject` it, throw the world
+away, `loadObject` it back, and check what comes out. That single path exercises the router, the
+section split, the manifest, the seed merge, the transient re-seeding, and the globals assignment at
+once — and it is the only place any of them meet.
+
+Two things are reproduced rather than imported, for the reason the existing
+`jsonex-map-set-save-load-integration` suite already documents: **`project/js/rmmz_managers.js`
+cannot be loaded in this environment**, because `ImageManager` builds a `Bitmap` at module scope and
+that needs a real `document`. So `makeSaveContents`, `extractSaveContents`, and `createGameObjects`
+are copied verbatim — they are pure key assignment — while everything beneath them is the real,
+imported implementation.
+
+**What no automated test here can reach:** `Scene_Boot`, `Scene_Load`, `Scene_Map.create`, and the
+map setup that follows a load. Those need a rendering context. The in-engine acceptance lines in
+Phases 0, 2, 3, and 4 stay outstanding, and a human at the keyboard is still the only thing that
+proves the cutover boots.
 
 ### Phase 7 — the developer documentation
 
@@ -1435,21 +1566,30 @@ Once codecs exist, these hand-rolled pairs collapse into declarations:
   becomes `seed` plus a post-load hook for the derived tone
 - `JaftingSalvageManager.initPartySalvageStorage()` on both `createGameObjects` and
   `extractSaveContents` — becomes `seed`
-- `Game_Party.addRefinedWeapon` / `addRefinedArmor` storing whole equips, plus
+- ~~`Game_Party.addRefinedWeapon` / `addRefinedArmor` storing whole equips, plus
   `refreshDatabaseWeapons` / `refreshDatabaseArmors` re-injecting them into `$dataWeapons` /
-  `$dataArmors` on load — becomes the Phase 4 lineage codec
+  `$dataArmors` on load — becomes the Phase 4 lineage codec~~ ✅ **done, and half of this line was
+  wrong.** `addRefinedWeapon` / `addRefinedArmor` now take a lineage node instead of an equip. But
+  `refreshDatabaseWeapons` / `refreshDatabaseArmors` are **not** retired and must not be: replaying a
+  lineage writes into `$dataWeapons`, and the loader steps back through generations when one fails,
+  so a codec doing that during decode would leave a rejected generation's rows in the live datastore.
+  Replay belongs in a hook that only runs after a load succeeds, which is exactly where these two
+  already were. Same methods, different contents.
 - `DataManager.makeSaveContents` adding `contents.time` in J-TIME — becomes a `SaveDocument`
   registration
 
 Retire them **as their types gain codecs**, not in a big-bang pass, and keep the behavior identical
 across the swap.
 
-**None of them are retired yet, as of the close of Phase 3, and nothing is broken by that.** Each one
-compensates for `JsonEx` restoring an object without running its constructor, and the new pipeline
-simply does the same work twice — the omnipedia caches are still written to disk and still rebuilt on
-load by their own hooks. Retiring them is a per-plugin change: declare the eager cache as a transient
-with a rebuilding factory, then delete the pair of hooks. It belongs with the namespace-registration
-sweep, since both are "walk the plugins once and opt each one in".
+**The JAFTING refinement pair is resolved by Phase 4; the other four still run, and nothing is broken
+by that.** Each one compensates for `JsonEx` restoring an object without running its constructor, and
+the new pipeline simply does the same work twice — the omnipedia caches are still written to disk and
+still rebuilt on load by their own hooks. Retiring them is a per-plugin change: declare the eager
+cache as a transient with a rebuilding factory, then delete the pair of hooks. It belongs with the
+namespace-registration sweep, since both are "walk the plugins once and opt each one in".
+
+**Neither sweep was needed by Phase 6 and neither was done.** The router works with every namespace
+inline, and the four surviving hooks duplicate work harmlessly. They stay listed.
 
 ### Conventions that bite in this work
 
