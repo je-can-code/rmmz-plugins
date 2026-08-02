@@ -1654,6 +1654,23 @@ Read `CLAUDE.md` in full; these are the ones this item trips over specifically.
   already disposable — reverting costs nothing a player would notice.
 - **Out of scope:** the save scene, slot UI, and autosave policy. Those become `J.BASE.EXT.SAVE`,
   depending on this, and retire CGMZ_SaveFile. This item is the format only.
+
+  **Requirements banked for that ship while they were noticed:**
+
+  - **Deleting a save from inside the game.** There is no way to do it today — a player has to find
+    the save folder and remove it by hand, which is not something you can ask of anyone. Jeremy
+    raised this on 2026-08-02 and it is a real gap rather than a nicety.
+
+    This format makes it *more* pressing and *more* dangerous at the same time. A slot is now a
+    directory holding several retained generations, so a delete is a recursive directory removal
+    rather than one `unlink` — which means it must go through `SaveFileSystem` rather than any
+    scene reaching for `fs` itself, and it must remove the whole slot rather than the newest
+    generation, or the next load will quietly step back to the one before and look like the delete
+    did nothing.
+
+    Deleting the pointer first, then the generations, leaves a half-deleted slot unloadable rather
+    than loadable-but-wrong, which is the failure everyone would rather have.
+  - **Autosave**, which CA has had none of since CGMZ_SaveFile came out.
 - CGMZ_Core, EliMZ_Book, and SoR_MiniMapAndScene are all being removed from CA, so their three
   third-party `makeSaveContents` aliases stop constraining the design. Do not design around them.
 - Version bumps and `_annotations.js` changelog entries are **PR-time work**. Do not touch `meta.js`
