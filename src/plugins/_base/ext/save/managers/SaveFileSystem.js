@@ -326,11 +326,13 @@ class SaveFileSystem
    */
   static slotExists(slotName)
   {
-    const current = this.currentGenerationName(slotName);
-
-    if (current === String.empty) return false;
-
-    return StorageManager.fsExists(this.generationDirectory(slotName, current));
+    // this answers for the whole slot, not for the generation on top of it. asking whether the
+    // pointer's directory is present sounds equivalent and is not: a slot whose newest generation
+    // was lost still holds every older one, and answering "no" for it greys the slot out in the load
+    // menu - which puts the rollback the entire generation scheme exists for out of reach at the one
+    // moment it was built for. `readManifest` already walks the same order to draw the row, so
+    // anything else here lets the menu describe a save it refuses to open.
+    return this.loadOrder(slotName).length > 0;
   }
   //endregion reading the slot's shape
 

@@ -522,7 +522,7 @@ describe('save storage layer (direct src import)', () =>
       expect(exists).toBe(false);
     });
 
-    it('is false when the pointer names a generation that is gone', async () =>
+    it('is false when the only generation there was is gone', async () =>
     {
       // Arrange
       await writeGeneration('file1');
@@ -533,6 +533,37 @@ describe('save storage layer (direct src import)', () =>
 
       // Assert
       expect(exists).toBe(false);
+    });
+
+    it('is true when the pointer names a generation that is gone but older ones remain', async () =>
+    {
+      // Arrange
+      await writeGeneration('file1', { 'world.json': { map: 1 } });
+      await writeGeneration('file1', { 'world.json': { map: 2 } });
+      fake.storageManager.fsRemoveDirectory('save/file1/gen-0002/');
+
+      // Act
+      const exists = SaveFileSystem.slotExists('file1');
+
+      // Assert- this is exactly the case rollback exists for, and answering the pointer's question
+      // instead of the slot's would grey the row out in the load menu: described, but unopenable.
+      expect(exists).toBe(true);
+    });
+
+    it('agrees with what a read of the same slot would actually hand back', async () =>
+    {
+      // Arrange
+      await writeGeneration('file1', { 'world.json': { map: 1 } });
+      await writeGeneration('file1', { 'world.json': { map: 2 } });
+      fake.storageManager.fsRemoveDirectory('save/file1/gen-0002/');
+
+      // Act
+      const exists = SaveFileSystem.slotExists('file1');
+      const loaded = await SaveFileSystem.readSlot('file1', sections => sections);
+
+      // Assert
+      expect(exists).toBe(true);
+      expect(loaded['world.json']).toEqual({ map: 1 });
     });
   });
 
