@@ -16,9 +16,9 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
 
     // the real collection/viewModel/identity classes are pure data shapes with no bare-global
     // dependencies of their own (besides String.empty), so import them for real rather than faking.
-    ({ default: StateAfflictionCollection } = await import('../../../../../../src/plugins/abs/core/models/StateAfflictionCollection.js'));
-    ({ default: StateAfflictionViewModel } = await import('../../../../../../src/plugins/abs/core/models/StateAfflictionViewModel.js'));
-    ({ default: StateAfflictionBattlerIdentity } = await import('../../../../../../src/plugins/abs/core/models/StateAfflictionBattlerIdentity.js'));
+    ({ default: StateAfflictionCollection } = await import('../../../../../src/plugins/abs/core/models/StateAfflictionCollection.js'));
+    ({ default: StateAfflictionViewModel } = await import('../../../../../src/plugins/abs/core/models/StateAfflictionViewModel.js'));
+    ({ default: StateAfflictionBattlerIdentity } = await import('../../../../../src/plugins/abs/core/models/StateAfflictionBattlerIdentity.js'));
     globalThis.StateAfflictionBattlerIdentity = StateAfflictionBattlerIdentity;
 
     // StateAfflictionProvider pulls in the full JABS engine collection pipeline; only its two
@@ -91,7 +91,7 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
     Sprite_BaseText.Alignments = { Left: 'left', Center: 'center', Right: 'right' };
     globalThis.Sprite_BaseText = Sprite_BaseText;
 
-    ({ default: StateAfflictionHudPresenter } = await import('../../../../../../src/plugins/hud/core/presenters/StateAfflictionHudPresenter.js'));
+    ({ default: StateAfflictionHudPresenter } = await import('../../../../../src/plugins/hud/core/presenters/StateAfflictionHudPresenter.js'));
   });
 
   let hostWindow;
