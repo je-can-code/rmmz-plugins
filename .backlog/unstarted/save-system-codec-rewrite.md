@@ -14,15 +14,15 @@ per-type **codecs** that decide what persists, what is regenerated, and what a f
 **This is one pull request.** The phases below are a build order — the sequence in which the pieces
 become testable — not shipping boundaries. Do not split them.
 
-| Phase | Produces |
-|---|---|
-| 0 | the transient inventory, as data; plus the stale-cache bug fix |
-| 1 | codec core: registry extension, encoder, decoder, `seed` |
-| 2 | storage layer: generations, atomic pointer, pretty JSON |
-| 3 | scopes and the section router |
-| 4 | JAFTING refinement lineage |
-| 5 | versioning and the migration seam |
-| 6 | the test suite |
+| Phase | Produces | Status |
+|---|---|---|
+| 0 | the transient inventory, as data; plus the stale-cache bug fix | ✅ done |
+| 1 | codec core: registry extension, encoder, decoder, `seed` | ✅ done |
+| 2 | storage layer: generations, atomic pointer, pretty JSON | next |
+| 3 | scopes and the section router | |
+| 4 | JAFTING refinement lineage | |
+| 5 | versioning and the migration seam | |
+| 6 | the test suite | |
 
 **Nothing is carved out, and nothing merges early.** An earlier draft proposed shipping Phase 0's
 one-line battler-cache fix ahead of the rest, since it repairs a defect that exists on `main` today.
@@ -409,9 +409,49 @@ know is to read the class's `initialize` / `initMembers` and see what it assigns
 | `aliases` | `string[]` | Older ids that still resolve here. How a rename ships without a migration. |
 | `transients` | `Object<string, Function>` | Field name to `instance => coldValue`. Never written; always re-seeded. The factory receives the decoded instance so an *eager* cache can rebuild itself from fields that have already landed; lazy caches ignore the argument. |
 | `typed` | `Object<string, Function>` | Field name to the constructor it holds. Arrays and `Map` values declare the *element* constructor. |
-| `seed` | `Function=` | Establishes every field's default on a bare instance before decoded fields land. Defaults to calling `initMembers()` when the class has one. **Required** for classes that set up state in `initialize` instead. Must be side-effect free. |
-| `encode` | `Function=` | Full override. Receives the instance, returns plain data. Skips the default walk. |
-| `decode` | `Function=` | Full override. Receives plain data, returns an instance. |
+| `typedValues` | `Object<string, Function>` | Field name to the constructor its **dictionary values** hold. For a plain object used as a keyed collection, which `typed` cannot express — see below. |
+| `seed` | `Function=` | Establishes every field's default on a bare instance before decoded fields land. Defaults to calling `initMembers()` when the class has one, and to a no-op when it has neither. **Required** for classes that set up state in `initialize` instead. Must be side-effect free. |
+| `encode` | `Function=` | Full override. Receives `(instance, path)`, returns plain data. Skips the default walk. |
+| `decode` | `Function=` | Full override. Receives `(data, path)`, returns an instance. |
+
+#### `transients` and `typed` take dotted paths
+
+A flat field list could not express one row of the Phase 0 inventory: the caches worth declaring live
+inside a plugin namespace (`_j._base._cachedAllNotes`), not on the class. Keys may therefore be dotted
+paths, which compile once at registration into a tree the walkers descend in step with the data — the
+encoder to skip a transient three plain objects down, the decoder to carry a declared type there.
+
+The typed-field completeness throw applies **only to the direct own keys of a registered class.** A
+namespace object is plain, has no declarations of its own, and is not policed; what protects an
+instance nested inside one is the encoder refusing to encode an unregistered type at all. That is why
+the real Phase 1 constraint was registration completeness rather than type-map size.
+
+#### `typedValues`: a dictionary is not an instance
+
+`typed` says "this field holds an instance of X" and forwards through arrays and `Map` values to their
+elements. It cannot describe a plain object used as a keyed collection — and three exist in a real
+save: `_j._aptitude._progress` keyed by class descriptor, `_j._aptitude._learned` keyed by skill id,
+`_j._jafting._salvageLedgers` keyed by `w:62`-style stack slots.
+
+Declaring one of those under `typed` would have the decoder rebuild the **whole dictionary** into a
+single instance. With tags present the mismatch is invisible, because the `'@'` branch resolves before
+the declaration is consulted; it surfaces only on the tags-stripped path, which is exactly where a
+developer hand-editing a file lives. `typedValues` names that case explicitly.
+
+#### `extend`: a codec for a shared host has more than one author
+
+`Game_Party` is registered by J-Base. The caches at `$gameParty._j._omni` belong to J-Omni, and core
+does not reach into an optional extension — so J-Base cannot name them, and a second `register` call
+would clobber the first. `SerializableRegistry.extend(constructor, options)` merges `transients`,
+`typed`, and `typedValues` into an existing codec, leaving `id`, `aliases`, and `seed` to whoever
+registered the type.
+
+**This is where every plugin-owned transient in the Phase 0 table gets declared** — the omnipedia
+caches, the timer holders, `_textPops` — as each plugin is touched. J-Base declares only its own: the
+five battler caches on `Game_Actor`.
+
+Extending a type nothing has registered throws, naming the load-order problem, rather than quietly
+inventing a codec that the owning plugin would then overwrite.
 
 `encode` / `decode` are the escape hatch for types whose storage shape genuinely differs from their
 runtime shape — JAFTING lineage in Phase 4 is the motivating case. Most types declare only
@@ -427,7 +467,7 @@ encode(value, path):
   Set                          -> { '@': 'Set', values: [ encode(v), ... ] }
   plain object                 -> map each own key through encode
   class instance:
-    codec = registry.forInstance(value)          // keyed on the constructor, not a name
+    codec = registry.codecForInstance(value)     // keyed on the constructor, not a name
     if !codec        -> throw SaveEncodeError(path, value.constructor.name)
     out = codec.encode ? codec.encode(value) : defaultEncode(value, codec, path)
     out['@'] = codec.id
@@ -495,12 +535,12 @@ decode(data, expectedCtor):
   null or primitive            -> data
   Array                        -> data.map(el => decode(el, expectedCtor))
   object with '@':
-    codec = registry.resolve(data['@'])
+    codec = registry.codecById(data['@'])
     if !codec                        -> throw SaveDecodeError(data['@'])
     if expectedCtor and mismatch     -> throw SaveDecodeError(mismatch)
     return codec.decode ? codec.decode(data) : defaultDecode(data, codec)
   object without '@':
-    if expectedCtor -> defaultDecode(data, registry.forConstructor(expectedCtor))
+    if expectedCtor -> defaultDecode(data, registry.codecForConstructor(expectedCtor))
     else            -> map each own key through decode
 
 defaultDecode(data, codec):
@@ -608,10 +648,13 @@ New files:
 | `src/plugins/_base/core/save/SaveEncoder.js` | the encode walk |
 | `src/plugins/_base/core/save/SaveDecoder.js` | the decode walk |
 | `src/plugins/_base/core/save/SaveCodec.js` | the normalized per-type record the registry stores |
+| `src/plugins/_base/core/save/registerEngineSaveCodecs.js` | `Map`, `Set`, and the engine classes |
 | `src/plugins/_base/core/save/SaveManifest.js` | manifest model, registered serializable |
 | `src/plugins/_base/core/save/SaveSectionRouter.js` | slot object <-> section files, `_j.*` lifting |
 | `src/plugins/_base/core/save/SaveMigrationRegistry.js` | version chain |
-| `src/plugins/_base/core/save/SaveError.js` | typed errors with path context |
+| `src/plugins/_base/core/save/SaveError.js` | the error base: path plus a `kind` discriminator |
+| `src/plugins/_base/core/save/SaveEncodeError.js` | encode failures, one named factory per case |
+| `src/plugins/_base/core/save/SaveDecodeError.js` | decode failures, one named factory per case |
 | `src/plugins/_base/managers/SaveFileSystem.js` | generations, pointer, fsync, pruning |
 | `src/plugins/_base/managers/StorageManager.js` | engine augmentation replacing the pipeline |
 | `src/plugins/_base/managers/ConfigManager.js` | installation scope onto the new pipeline |
@@ -868,23 +911,41 @@ work. Phase 0 has nothing to assert them against.
 **New:** `SaveCodec.js`, `SaveEncoder.js`, `SaveDecoder.js`, `SaveError.js`.
 **Modified:** `SerializableRegistry.js`, `registerJBaseSerializableModels.js`.
 
-1. Extend `SerializableRegistry.register` to accept `transients`, `typed`, `encode`, `decode`, and
-   normalize them into a `SaveCodec` record. Keep the existing `{ id, aliases }` behavior working —
-   all 23 current call sites must keep passing.
-2. Add a second index keyed on the **constructor function** so `forInstance(value)` is a `Map` lookup
-   on `value.constructor`. This is how the encoder identifies types without `instanceof`.
-3. Implement `SaveEncoder` and `SaveDecoder` per the pseudocode above.
-4. Implement `SaveError` subclasses carrying the JSON path, the offending type, and what was
-   expected. Error text is read by whoever hits it at 2am; make it say what to do.
-5. Register codecs for the `Map` and `Set` cases currently handled by the `JsonEx._encode` /
-   `_decode` overrides. **Leave the overrides in place.** `JsonEx` is still the live save path until
+✅ **Phase 1 is done**, commit `04595ed`, 61 new tests in
+`test/plugins/_base/core/save/save-codec-core.test.js`. What each step turned into:
+
+1. ✅ `SerializableRegistry.register` accepts `transients`, `typed`, `typedValues`, `seed`, `encode`,
+   `decode`, and normalizes them into a `SaveCodec`. All 23 existing call sites still pass.
+2. ✅ `codecForConstructor` / `codecForInstance` index on the constructor function.
+
+   **`resolve(id)` still returns a bare constructor and must keep doing so.** `JsonEx._decode` reads
+   it directly — `SerializableRegistry.resolve(name) || window[name]` — and hands the result to
+   `Object.setPrototypeOf`. Repointing it at a `SaveCodec` throws on every load until Phase 2 retires
+   that path, and even then the two lookups are worth keeping apart: one caller wants a constructor,
+   the other wants a codec.
+3. ✅ `SaveEncoder` and `SaveDecoder`, per the pseudocode above.
+4. ✅ `SaveError` carries a `kind` discriminator alongside the path, because Phase 2's load loop has
+   to tell a recoverable failure from one every generation will share, and cannot use a
+   prototype-chain test to do it. `SaveEncodeError` / `SaveDecodeError` expose one named factory per
+   case so the message is written once, next to the condition that produces it.
+5. ✅ Register codecs for the `Map` and `Set` cases currently handled by the `JsonEx._encode` /
+   `_decode` overrides, in the same wire shape. **The overrides are still in place.** `JsonEx` is still the live save path until
    Phase 2 swaps `StorageManager`, so deleting them here breaks saving in a branch that cannot yet
    save any other way — and reds two component suites that cover them. Adding the codecs is purely
    additive; the deletion is Phase 2 step 2, alongside the pipeline swap that makes it true.
-6. Register codecs for the engine classes that need a type map: `Game_Actor`, `Game_Party`,
-   `Game_Map`, `Game_Player`, `Game_Event`, `Game_Follower`, `Game_Vehicle`, `Game_System`,
-   `Game_Actors`, `Game_Followers`, `Game_ActionResult`, `Game_Item`, `Game_Interpreter`,
-   `Game_Screen`, `Game_Timer`, `Game_Switches`, `Game_Variables`, `Game_SelfSwitches`.
+6. ✅ Register codecs for the engine classes: `Game_Actor`, `Game_Party`, `Game_Map`, `Game_Player`,
+   `Game_Event`, `Game_CommonEvent`, `Game_Follower`, `Game_Vehicle`, `Game_System`, `Game_Actors`,
+   `Game_Followers`, `Game_Action`, `Game_ActionResult`, `Game_Item`, `Game_Interpreter`,
+   `Game_Screen`, `Game_Picture`, `Game_Timer`, `Game_Switches`, `Game_Variables`,
+   `Game_SelfSwitches`. Each with a stable kebab-case id plus its class name as an alias, so a file
+   the engine's own `JsonEx` wrote — always tagged `constructor.name` — still resolves.
+
+   Thirteen of them set state in `initialize` rather than `initMembers` and therefore carry an
+   explicit `seed`. Where the engine already has an idempotent, side-effect-free reset — `clear()` on
+   `Game_Screen`, `Game_Switches`, `Game_Variables`, `Game_SelfSwitches`, `Game_ActionResult`,
+   `Game_Action` — that *is* the seed, so the defaults follow the engine instead of a copy that can
+   drift. `Game_Followers` is the one that must stop short of its own setup: `setup()` sizes `_data`
+   from `$gameParty.maxBattleMembers()`, which at decode time is the throwaway party.
 
    **Derive each type map by reading that class's `initialize` / `initMembers` in
    `project/js/rmmz_objects.js` — not from the counts in [Type-map scope](#type-map-scope) below.**
@@ -896,9 +957,15 @@ work. Phase 0 has nothing to assert them against.
 
    The counts are a **floor for estimating effort**, never the list to type in.
 
-**Acceptance:** every currently-registered model round-trips to an object that is deep-equal to the
-original and carries the right prototype. The encoder throws on an undeclared typed field. A decoder
-fed a payload with tags stripped still rebuilds correctly from type maps alone.
+**Acceptance:** ✅ met. Round-trip produces a deep-equal object carrying the right prototype; the
+encoder throws on an undeclared typed field; a payload with every tag stripped rebuilds from type maps
+alone.
+
+One acceptance line was added rather than deferred: **a decode with fields deliberately removed
+matches a freshly constructed instance for those fields.** Round-trip alone passes whether `seed` is
+correct, wrong, or absent — a full payload overwrites every default it establishes — so it cannot
+detect the one property `seed` exists for. Phase 6 still sweeps this across every registered type; the
+version here just makes Phase 1's own deliverable verifiable.
 
 ### Phase 2 — storage layer
 
