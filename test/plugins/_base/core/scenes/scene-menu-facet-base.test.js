@@ -38,7 +38,7 @@ describe('Scene_MenuFacetBase', () =>
         : realParameters(name);
     };
 
-    const bundle = path.join(repoRoot, 'project/js/plugins/J-Base.js');
+    const bundle = path.join(repoRoot, 'project/js/plugins/base/J-Base.js');
 
     vm.runInThisContext(fs.readFileSync(bundle, 'utf-8'), { filename: bundle });
   });
