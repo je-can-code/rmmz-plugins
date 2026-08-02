@@ -1,7 +1,7 @@
 //region annotations
 /*:
  * @target MZ
- * @plugindesc [v1.1.0 REGIONS] A plugin that controls passage by region ids.
+ * @plugindesc [v1.2.0 REGIONS] A plugin that controls passage by region ids.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -53,6 +53,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Routed the _regions namespace into its own save section, so region
+ *    effect state lands in systems/regions.json rather than in the system blob.
+ *    Moved the _regions namespace seeding from the initialize alias to
+ *    initMembers, so a decoded save can establish it without a constructor.
  * - 1.0.2
  *    Fixed issue with referencing CycloneMovement.
  * - 1.0.1
@@ -138,7 +143,7 @@ J.REGIONS.Helpers.translateRegionIds = (regionsBlob) => {
 /**
 * The `metadata` associated with this plugin; such as version.
 */
-J.REGIONS.Metadata = new J_RegionEffectsPluginMetadata("J-RegionEffects", "1.1.0");
+J.REGIONS.Metadata = new J_RegionEffectsPluginMetadata("J-RegionEffects", "1.2.0");
 /**
 * A collection of all aliased methods for this plugin.
 */

@@ -151,6 +151,10 @@
  * - Decreasing the proficiency will NOT undo rewards gained.
  * ============================================================================
  * CHANGELOG:
+ * - 2.3.0
+ *    Routed the _proficiency namespace into its own save section, so earned
+ *    proficiency lands in systems/proficiency.json rather than in the system
+ *    blob.
  * - 2.2.0
  *    Learning a skill through proficiency now announces in the dia log,
  *    naming the practiced skill, instead of only producing a floating text

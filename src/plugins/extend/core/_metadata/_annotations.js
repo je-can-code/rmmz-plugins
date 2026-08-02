@@ -433,6 +433,11 @@
  * A three-state cycle: 12 -> 13 -> 14 -> 12 -> ..., one step per execution.
  * ============================================================================
  * CHANGELOG:
+ * - 1.7.1
+ *    Split Game_Item's extension state so the default lands in initMembers
+ *    while the mapping from the constructed item stays in the initialize
+ *    alias. Decoding never runs a constructor, so only the half that does not
+ *    depend on the incoming item can move.
  * - 1.7.0
  *    Renamed plugin from J-SkillExtend to J-Extend (PLUGIN_NAME only; no
  *    functional change, nothing else in the codebase referenced the old

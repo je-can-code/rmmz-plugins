@@ -139,6 +139,11 @@
  * the J-MZ Data Editor app), not tagged on individual database objects.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Routed the _crafting namespace into its own save section, so recipe and
+ *    category tracking land in systems/crafting.json.
+ *    Moved the _crafting namespace seeding from the initialize alias to
+ *    initMembers, so a decoded save can establish it without a constructor.
  * - 1.1.2
  *    Registered RecipeTracking/CategoryTracking with SerializableRegistry so
  *    JsonEx restores keep their prototype methods after a save load.

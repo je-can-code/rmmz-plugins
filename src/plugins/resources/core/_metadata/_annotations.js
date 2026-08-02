@@ -172,6 +172,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Routed the _resources namespace into its own save section, so resource
+ *    state lands in systems/resources.json rather than in the system blob.
  * - 1.0.0
  *    Initial release.
  *    Added HP/MP/TP costs and gains via flat, percent, and formula notetags.

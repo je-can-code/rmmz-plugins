@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.2.0 PASSIVE] Grants passive states from various database objects.
+ * [v2.3.0 PASSIVE] Grants passive states from various database objects.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -167,6 +167,13 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.3.0
+ *    Passive sources are no longer written to savefiles; they are entirely
+ *    derived from equipment, states, and skills, and are now rebuilt on load
+ *    rather than restored from a file that could disagree with the database.
+ *    Routed the _passive namespace into its own save section.
+ *    Moved the _passive namespace seeding from the initialize alias to
+ *    initMembers, so a decoded save can establish it without a constructor.
  * - 2.2.0
  *    Retrofitted the passive viewer onto the shared actor skeleton, so it
  *    matches the other actor-scoped scenes.
@@ -296,7 +303,7 @@ J.PASSIVE.EXT = {};
 * The `metadata` associated with this plugin, such as version and plugin parameter values.
 * @type {JPassive_PluginMetadata}
 */
-J.PASSIVE.Metadata = new JPassive_PluginMetadata("J-Passive", "2.2.0");
+J.PASSIVE.Metadata = new JPassive_PluginMetadata("J-Passive", "2.3.0");
 /**
 * All regular expressions used by this plugin.
 */

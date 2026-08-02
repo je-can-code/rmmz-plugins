@@ -1,7 +1,7 @@
 //region annotations
 /*:
  * @target MZ
- * @plugindesc [v1.0.0 RESOURCES] Extends skill cost/gain system to include HP, MP, and TP.
+ * @plugindesc [v1.1.0 RESOURCES] Extends skill cost/gain system to include HP, MP, and TP.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -172,6 +172,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Routed the _resources namespace into its own save section, so resource
+ *    state lands in systems/resources.json rather than in the system blob.
  * - 1.0.0
  *    Initial release.
  *    Added HP/MP/TP costs and gains via flat, percent, and formula notetags.
@@ -244,7 +247,7 @@ J.RESOURCES.EXT ||= {};
 /**
 * The metadata associated with this plugin.
 */
-J.RESOURCES.Metadata = new JResources_PluginMetadata("J-Resources", "1.0.0");
+J.RESOURCES.Metadata = new JResources_PluginMetadata("J-Resources", "1.1.0");
 /**
 * A collection of all aliased methods for this plugin.
 */

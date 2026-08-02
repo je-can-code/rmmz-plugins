@@ -148,6 +148,20 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Fixed refinement lineage collapsing on save/load. A refined item's
+ *    ancestry was detected by comparing the datum's id against the refinement
+ *    starting index, but refined rows are clones that keep the base item's id -
+ *    only the slot they occupy moves. Every ancestor therefore looked like a
+ *    base item, so a +5 sword came back as +1 carrying only its last material.
+ *    Fixed commitRefinement unwrapping its arguments as Game_Item when the
+ *    scene passes raw datums, which threw before a refinement could complete.
+ *    Fixed the refinement detail panel staying blank after a commit; the
+ *    cursor was already on the row it needed to redraw, so no index change
+ *    was raised to trigger it.
+ *    Removed a call to JaftingManager.combineBaseParameterTraits, which had not
+ *    existed since the module migration and prevented the scene from opening.
+ *    Routed the _refinement namespace into its own save section.
  * - 1.2.0
  *    Replaced ~550 lines of local trait-combining logic with calls to
  *    J-Base's new shared TraitResolver.refineTraits/consolidate.

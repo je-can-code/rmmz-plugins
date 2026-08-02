@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.2 JAFTING-CREATE] An extension for JAFTING to enable recipe creation.
+ * [v1.2.0 JAFTING-CREATE] An extension for JAFTING to enable recipe creation.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -139,6 +139,11 @@
  * the J-MZ Data Editor app), not tagged on individual database objects.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Routed the _crafting namespace into its own save section, so recipe and
+ *    category tracking land in systems/crafting.json.
+ *    Moved the _crafting namespace seeding from the initialize alias to
+ *    initMembers, so a decoded save can establish it without a constructor.
  * - 1.1.2
  *    Registered RecipeTracking/CategoryTracking with SerializableRegistry so
  *    JsonEx restores keep their prototype methods after a save load.
@@ -1297,7 +1302,7 @@ J.JAFTING.EXT.CREATE = {};
 /**
 * The metadata associated with this plugin.
 */
-J.JAFTING.EXT.CREATE.Metadata = new J_CraftingCreatePluginMetadata("J-JAFTING-Creation", "1.1.2");
+J.JAFTING.EXT.CREATE.Metadata = new J_CraftingCreatePluginMetadata("J-JAFTING-Creation", "1.2.0");
 /**
 * A collection of all aliased methods for this plugin.
 */

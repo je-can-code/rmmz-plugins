@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v3.2.0 BASE] The base class for all J plugins.
+ * [v4.0.0 BASE] The base class for all J plugins.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -157,6 +157,24 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.0.0
+ *    BREAKING: the shipped file moved from js/plugins/J-Base.js to
+ *    js/plugins/base/J-Base.js. Every plugin list referencing it must be
+ *    updated, or the project will not boot.
+ *    Added the J.BASE.EXT namespace, so extensions of the base plugin set have
+ *    somewhere to live that is not the core itself.
+ *    SerializableRegistry now holds serialization DECLARATIONS - what a type
+ *    regenerates, what it stores by reference, and what its typed fields are -
+ *    rather than only a list of constructors. The code that interprets those
+ *    declarations lives in J-Base-Save, so the core carries no save format.
+ *    Added register/extend/installDeclarations, plus a revision counter so a
+ *    consumer can tell that a registration was replaced rather than added.
+ *    Added an initMembers hook to Game_Party, Game_Map, Game_Timer, Game_Item,
+ *    and Game_ActionResult. Decoding a saved object never runs its constructor,
+ *    so state declared only in initialize could not be re-established; the hook
+ *    is the seam that makes those types seedable.
+ *    Added Game_Actors accessors - actorIds, actors, data, existingActors -
+ *    replacing direct reads of the underlying sparse array.
  * - 3.2.0
  *    Added skillIds() to Game_Battler (stub returning empty), Game_Actor (learned skills
  *    plus trait-granted ids, deduplicated), and Game_Enemy (action skill ids plus
@@ -1656,7 +1674,7 @@ J.BASE.EXT = {};
 */
 J.BASE.Metadata = {};
 J.BASE.Metadata.Name = "J-Base";
-J.BASE.Metadata.Version = "3.2.0";
+J.BASE.Metadata.Version = "4.0.0";
 /**
 * The actual `plugin parameters` extracted from RMMZ.
 */

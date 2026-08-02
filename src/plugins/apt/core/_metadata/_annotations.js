@@ -128,6 +128,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Routed the _aptitude namespace into its own save section, so aptitude
+ *    state lands in systems/aptitude.json rather than inside the system blob.
  * - 1.2.0
  *    Learning a skill through an aptitude now announces in the dia log, naming
  *    the aptitude source, instead of only producing a floating text pop on the

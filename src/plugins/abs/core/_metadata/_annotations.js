@@ -47,6 +47,13 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.14.0
+ *    Declared what JABS state on the party and the system is worth writing to
+ *    a savefile, and routed the _abs namespace into its own save section.
+ *    Moved the _abs namespace seeding from the initialize alias to initMembers,
+ *    so a decoded save can establish it without running a constructor.
+ *    Declared JABS_SkillSlot's cooldown as a typed field; it was registered as
+ *    serializable while holding a JABS_Cooldown instance nothing declared.
  * - 4.13.0
  *    Added <channel> vessel skills that repeat a child skill over time.
  *    Added cast/channel interruption via movement or <interrupt> hits.

@@ -1,7 +1,7 @@
 //region Introduction
 /*:
  * @target MZ
- * @plugindesc [v2.2.0 PROF] Enables skill proficiency tracking.
+ * @plugindesc [v2.3.0 PROF] Enables skill proficiency tracking.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -151,6 +151,10 @@
  * - Decreasing the proficiency will NOT undo rewards gained.
  * ============================================================================
  * CHANGELOG:
+ * - 2.3.0
+ *    Routed the _proficiency namespace into its own save section, so earned
+ *    proficiency lands in systems/proficiency.json rather than in the system
+ *    blob.
  * - 2.2.0
  *    Learning a skill through proficiency now announces in the dia log,
  *    naming the practiced skill, instead of only producing a floating text
@@ -412,7 +416,7 @@ J.PROF = {};
 * The metadata associated with this plugin.
 * @type {J_ProficiencyPluginMetadata}
 */
-J.PROF.Metadata = new J_ProficiencyPluginMetadata("J-Proficiency", "2.2.0");
+J.PROF.Metadata = new J_ProficiencyPluginMetadata("J-Proficiency", "2.3.0");
 /**
 * The various aliases associated with this plugin.
 */

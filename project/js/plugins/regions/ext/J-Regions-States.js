@@ -1,7 +1,7 @@
 //region annotations
 /*:
  * @target MZ
- * @plugindesc [v1.0.1 REGIONS-STATES] Enables application of states via region ids.
+ * @plugindesc [v1.1.0 REGIONS-STATES] Enables application of states via region ids.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -96,6 +96,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Region state step tracking is no longer written to savefiles for the
+ *    player, followers, or vehicles; it is per-step bookkeeping that means
+ *    nothing across a load, and it now starts fresh.
  * - 1.0.1
  *    Region state application now rolls through the shared on-chance
  *    system (lucky/cursed rolls, Accumulate Mode, Encore) instead of a
@@ -156,7 +160,7 @@ J.REGIONS.EXT.STATES = {};
 /**
 * The metadata associated with this plugin, such as name and version.
 */
-J.REGIONS.EXT.STATES.Metadata = new J_RegionStatesPluginMetadata("J-Region-States", "1.0.1");
+J.REGIONS.EXT.STATES.Metadata = new J_RegionStatesPluginMetadata("J-Region-States", "1.1.0");
 /**
 * A collection of all aliased methods for this plugin.
 */

@@ -2,7 +2,7 @@
  
 /*:
  * @target MZ
- * @plugindesc [v2.0.2 DIFFICULTY] A layered difficulty system.
+ * @plugindesc [v2.1.0 DIFFICULTY] A layered difficulty system.
  * @base J-Base
  * @orderAfter J-Base
  * @author JE
@@ -23,6 +23,11 @@
  * All difficulties are defined in an external JSON file.
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.0
+ *    Routed the _difficulty namespace into its own save section, so difficulty
+ *    state lands in systems/difficulty.json rather than in the system blob.
+ *    Moved the _difficulty namespace seeding from the initialize alias to
+ *    initMembers, so a decoded save can establish it without a constructor.
  * - 2.0.2
  *    Fixed the scene's initMembers chain never reaching Scene_Base, which left
  *    the modal dimmer field unseeded. getModalDimmerWindow guards on === null,
@@ -832,7 +837,7 @@ J.DIFFICULTY = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.DIFFICULTY.Metadata = new J_DiffPluginMetadata("J-Difficulty", "2.0.2");
+J.DIFFICULTY.Metadata = new J_DiffPluginMetadata("J-Difficulty", "2.1.0");
 /**
 * The actual `plugin parameters` extracted from RMMZ.
 */

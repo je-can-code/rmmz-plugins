@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.3.0 ABS-INPUT] A manager for overseeing the input of JABS.
+ * [v2.4.0 ABS-INPUT] A manager for overseeing the input of JABS.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-ABS
@@ -43,6 +43,14 @@
  * objects.
  * ============================================================================
  * CHANGELOG:
+ * - 2.4.0
+ *    Keybinds are now installation scope rather than slot scope, when
+ *    J-Base-Save is installed. They lived inside each savefile only because
+ *    vanilla ConfigManager had no room for an eighth field, which meant
+ *    rebinding a key applied to one savefile, a second playthrough started on
+ *    the defaults, and deleting saves deleted the bindings with them. Both
+ *    stores now register as config fields and persist beside volume.
+ *    Without J-Base-Save installed they stay exactly where they were.
  * - 2.3.0
  *    Added UsableItem as a remappable logical input (R2 by default),
  *    wiring J-ABS core's new usable-item equip slot to its own trigger.
@@ -982,7 +990,7 @@ J.ABS.EXT.INPUT.Symbols.CombatSkill4 = JabsInputSymbols.CombatSkill4;
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.EXT.INPUT.Metadata = new J_InputPluginMetadata("J-ABS-InputManager", "2.3.0");
+J.ABS.EXT.INPUT.Metadata = new J_InputPluginMetadata("J-ABS-InputManager", "2.4.0");
 /**
 * A collection of all aliased methods for this plugin.
 */

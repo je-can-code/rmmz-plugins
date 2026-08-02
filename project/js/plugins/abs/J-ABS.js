@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.13.0 ABS] Enables combat to be carried out on the map.
+ * [v4.14.0 ABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -47,6 +47,13 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.14.0
+ *    Declared what JABS state on the party and the system is worth writing to
+ *    a savefile, and routed the _abs namespace into its own save section.
+ *    Moved the _abs namespace seeding from the initialize alias to initMembers,
+ *    so a decoded save can establish it without running a constructor.
+ *    Declared JABS_SkillSlot's cooldown as a typed field; it was registered as
+ *    serializable while holding a JABS_Cooldown instance nothing declared.
  * - 4.13.0
  *    Added <channel> vessel skills that repeat a child skill over time.
  *    Added cast/channel interruption via movement or <interrupt> hits.
@@ -4307,7 +4314,7 @@ J.ABS.Helpers.loadExternalConfig = (configPath = "data/config.jabs.json") => {
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.13.0");
+J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.14.0");
 J.ABS.Helpers.loadExternalConfig();
 /**
 * The various default values across the engine. Often configurable.
@@ -23745,7 +23752,7 @@ var StateAfflictionProvider = class StateAfflictionProvider {
 //#endregion
 //#region src/plugins/abs/core/_metadata/meta.js
 var PLUGIN_NAME = "J-ABS";
-var PLUGIN_VERSION = "4.13.0";
+var PLUGIN_VERSION = "4.14.0";
 var PLUGIN_DESC_TAG = "ABS";
 
 //#endregion

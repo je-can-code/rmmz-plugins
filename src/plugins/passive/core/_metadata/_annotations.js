@@ -167,6 +167,13 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.3.0
+ *    Passive sources are no longer written to savefiles; they are entirely
+ *    derived from equipment, states, and skills, and are now rebuilt on load
+ *    rather than restored from a file that could disagree with the database.
+ *    Routed the _passive namespace into its own save section.
+ *    Moved the _passive namespace seeding from the initialize alias to
+ *    initMembers, so a decoded save can establish it without a constructor.
  * - 2.2.0
  *    Retrofitted the passive viewer onto the shared actor skeleton, so it
  *    matches the other actor-scoped scenes.

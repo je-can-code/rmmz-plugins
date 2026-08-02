@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.0 ABS-TOOLS] Enable new tool-like tags for use with skills.
+ * [v1.2.0 ABS-TOOLS] Enable new tool-like tags for use with skills.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -156,6 +156,9 @@
  * always fixed. See the plugin parameters below.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Routed the _tools namespace into its own save section, so tool state
+ *    lands in systems/abs-tools.json rather than inside the system blob.
  * - 1.1.0
  *    Gap close tags now require a key: <gapClose:key> / <gapCloseTarget:key>.
  *    Keys must match for gap closing to occur — no cross-mechanic bypass.
@@ -258,7 +261,7 @@ J.ABS.EXT.TOOLS = {};
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.EXT.TOOLS.Metadata = new J_ToolsPluginMetadata("J-ABS-Tools", "1.1.0");
+J.ABS.EXT.TOOLS.Metadata = new J_ToolsPluginMetadata("J-ABS-Tools", "1.2.0");
 /**
 * A collection of all aliased methods for this plugin.
 */

@@ -1,7 +1,7 @@
 //region annotations
 /*:
  * @target MZ
- * @plugindesc [v1.0.0 LEVEL-SYNC] Content level sync for dungeons and trials.
+ * @plugindesc [v1.1.0 LEVEL-SYNC] Content level sync for dungeons and trials.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -112,6 +112,16 @@
  *     - Inner maps do not need any tags
  *
  * ============================================================================
+ * CHANGELOG:
+ * - 1.1.0
+ *    Routed the _levelSync namespace into its own save section, so an active
+ *    sync session lands in systems/level-sync.json rather than in the system
+ *    blob.
+ *    Moved the _levelSync namespace seeding from the initialize aliases to
+ *    initMembers, so a decoded save can establish it without a constructor.
+ * - 1.0.0
+ *    The initial release.
+ * ============================================================================
  *
  * @command setContentSync
  * @text Set Content Sync
@@ -206,7 +216,7 @@ J.LEVEL.EXT.SYNC = {};
 /**
 * The metadata associated with this plugin.
 */
-J.LEVEL.EXT.SYNC.Metadata = new JLevelSync_PluginMetadata("J-Level-Sync", "1.0.0");
+J.LEVEL.EXT.SYNC.Metadata = new JLevelSync_PluginMetadata("J-Level-Sync", "1.1.0");
 /**
 * A collection of all aliased methods for this plugin.
 */

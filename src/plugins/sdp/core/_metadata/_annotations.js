@@ -364,6 +364,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.1.0
+ *    Routed the _sdp namespace into its own save section, so panel investment
+ *    and mastery land in systems/sdp.json rather than in the system blob.
+ *    Moved the _sdp namespace seeding from the initialize aliases to
+ *    initMembers, so a decoded save can establish it without a constructor.
  * - 3.0.0
  *    BREAKING: Rank-up cost spine is defined per **rarity** in plugin parameters; each panel’s `baseCost`,
  *    `flatGrowthCost`, and `multGrowthCost` in `config.sdp.json` are **offsets / scale** (defaults **0 / 0 / 1.0**).

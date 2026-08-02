@@ -1,7 +1,7 @@
 //region initialization
 /*:
  * @target MZ
- * @plugindesc [v1.5.0 LEVEL] Allows levels to have greater control and purpose.
+ * @plugindesc [v1.6.0 LEVEL] Allows levels to have greater control and purpose.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -372,6 +372,11 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.6.0
+ *    Routed the _level namespace into its own save section, so level state
+ *    lands in systems/level.json rather than inside the system blob.
+ *    Moved the _level namespace seeding from the initialize alias to
+ *    initMembers, so a decoded save can establish it without a constructor.
  * - 1.5.0
  *    Learning a skill by levelling now announces in the dia log instead of
  *    only producing a floating text pop on the same visual channel as damage
@@ -554,7 +559,7 @@ J.LEVEL.EXT = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.LEVEL.Metadata = new J_LevelPluginMetadata("J-LevelMaster", "1.5.0");
+J.LEVEL.Metadata = new J_LevelPluginMetadata("J-LevelMaster", "1.6.0");
 /**
 * The maximum level definable in the level. Any level below this can be determined without extra calculations.
 * @type {number}

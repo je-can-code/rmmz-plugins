@@ -53,6 +53,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Routed the _regions namespace into its own save section, so region
+ *    effect state lands in systems/regions.json rather than in the system blob.
+ *    Moved the _regions namespace seeding from the initialize alias to
+ *    initMembers, so a decoded save can establish it without a constructor.
  * - 1.0.2
  *    Fixed issue with referencing CycloneMovement.
  * - 1.0.1

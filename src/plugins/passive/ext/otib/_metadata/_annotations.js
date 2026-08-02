@@ -56,6 +56,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Routed the _otib namespace into its own save section, so one-time item
+ *    boost state lands in systems/otib.json rather than in the system blob.
  * - 1.0.0
  *    The initial release.
  * ============================================================================

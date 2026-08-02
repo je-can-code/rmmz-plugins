@@ -1,7 +1,7 @@
 //region Introduction
 /*:
  * @target MZ
- * @plugindesc [v2.3.0 NATURAL] Enables level-based growth of all parameters.
+ * @plugindesc [v2.4.0 NATURAL] Enables level-based growth of all parameters.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -232,6 +232,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.4.0
+ *    Routed the _natural namespace into its own save section, so accumulated
+ *    growth lands in systems/natural.json rather than in the system blob.
  * - 2.3.0
  *    BREAKING (tag semantics): ex- and sp-parameter growth tags now take whole
  *    percents, matching the buff tags beside them. The growth path stored its
@@ -326,7 +329,7 @@ J.NATURAL = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.NATURAL.Metadata = new J_NaturalGrowthPluginMetadata("J-NaturalGrowth", "2.3.0");
+J.NATURAL.Metadata = new J_NaturalGrowthPluginMetadata("J-NaturalGrowth", "2.4.0");
 /**
 * A collection of all aliased methods for this plugin.
 */

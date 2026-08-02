@@ -195,6 +195,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.5.0
+ *    Routed the _sks namespace into its own save section, so equipped skill
+ *    slots land in systems/sks.json rather than inside the actor blobs.
  * - 1.4.0
  *    Retrofitted the skill equip scene onto the shared actor skeleton, so it
  *    matches the other actor-scoped scenes.

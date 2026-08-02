@@ -156,6 +156,9 @@
  * always fixed. See the plugin parameters below.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Routed the _tools namespace into its own save section, so tool state
+ *    lands in systems/abs-tools.json rather than inside the system blob.
  * - 1.1.0
  *    Gap close tags now require a key: <gapClose:key> / <gapCloseTarget:key>.
  *    Keys must match for gap closing to occur — no cross-mechanic bypass.

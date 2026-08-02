@@ -2,7 +2,7 @@
  
 /*:
  * @target MZ
- * @plugindesc [v3.0.0 SDP] Enables the SDP system, aka Stat Distribution Panels.
+ * @plugindesc [v3.1.0 SDP] Enables the SDP system, aka Stat Distribution Panels.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -364,6 +364,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.1.0
+ *    Routed the _sdp namespace into its own save section, so panel investment
+ *    and mastery land in systems/sdp.json rather than in the system blob.
+ *    Moved the _sdp namespace seeding from the initialize aliases to
+ *    initMembers, so a decoded save can establish it without a constructor.
  * - 3.0.0
  *    BREAKING: Rank-up cost spine is defined per **rarity** in plugin parameters; each panel’s `baseCost`,
  *    `flatGrowthCost`, and `multGrowthCost` in `config.sdp.json` are **offsets / scale** (defaults **0 / 0 / 1.0**).
@@ -2552,7 +2557,7 @@ J.SDP = {};
 /**
 * The metadata associated with this plugin.
 */
-J.SDP.Metadata = new J_SdpPluginMetadata("J-SDP", "3.0.0");
+J.SDP.Metadata = new J_SdpPluginMetadata("J-SDP", "3.1.0");
 /**
 * A collection of all aliased methods for this plugin.
 */

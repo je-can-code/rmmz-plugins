@@ -56,6 +56,10 @@
  * savefiles written by this plugin cannot be read without it. There is no
  * converter. Install it before a project has saves worth keeping.
  * ============================================================================
+ * CHANGELOG:
+ * - 1.0.0
+ *    The initial release.
+ * ============================================================================
  *
  * @param retainedSaveGenerations
  * @type number

@@ -197,6 +197,11 @@
  *
  * =============================================================================
  * CHANGELOG:
+ * - 1.1.2
+ *    Stopped re-running the clock's member backfill after extracting a save.
+ *    Game_Time is registered as serializable, so its seed already runs on the
+ *    bare instance before any saved field lands, making the second pass both
+ *    redundant and dependent on every member being assigned defensively.
  * - 1.1.1
  *    Fixed a map tagged <noToneChange> suppressing the tone change outright,
  *    so no tint was ever issued and the previous map's tone stayed painted on

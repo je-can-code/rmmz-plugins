@@ -311,6 +311,9 @@
  *    Taking even a single step immediately strips it and resets the stand timer.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Conditional passive tracking state is no longer written to savefiles
+ *    where it can be recomputed from the battler's current situation on load.
  * - 1.1.2
  *    Added the whenGlanced condition (this battler suffers a glancing blow as the victim- mutually
  *    exclusive with whenCrit on any single hit), wired into autoApplyState and autoExecuteSkill via

@@ -74,6 +74,13 @@
  * plugin-command driven.
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.0
+ *    Routed the _hud namespace into its own save section, so HUD state lands
+ *    in systems/hud.json rather than inside the system blob.
+ *    Moved the _hud namespace seeding from the initialize alias to initMembers,
+ *    so a decoded save can establish it without running a constructor.
+ *    Fixed four broken import paths in the state affliction presenter's tests
+ *    that resolved outside the repository entirely.
  * - 2.1.0
  *    Added a dual-row (negative/positive) state affliction presenter to the
  *    party HUD frame- icons, timers, and stack counts, sprite-cached per

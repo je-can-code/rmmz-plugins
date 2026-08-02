@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 PASSIVE-OTIB] One-Time Item Boosts as permanent passive states.
+ * [v1.1.0 PASSIVE-OTIB] One-Time Item Boosts as permanent passive states.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -56,6 +56,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Routed the _otib namespace into its own save section, so one-time item
+ *    boost state lands in systems/otib.json rather than in the system blob.
  * - 1.0.0
  *    The initial release.
  * ============================================================================
@@ -103,7 +106,7 @@ J.PASSIVE.EXT.OTIB = {};
 /**
 * The metadata associated with this plugin.
 */
-J.PASSIVE.EXT.OTIB.Metadata = new JPassiveOTIB_PluginMetadata("J-Passive-OTIB", "1.0.0");
+J.PASSIVE.EXT.OTIB.Metadata = new JPassiveOTIB_PluginMetadata("J-Passive-OTIB", "1.1.0");
 /**
 * A collection of all aliased methods for this plugin.
 */

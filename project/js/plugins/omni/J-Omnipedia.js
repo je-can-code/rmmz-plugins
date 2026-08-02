@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.1 OMNI] Enables the "omnipedia" data-centric scene.
+ * [v1.1.0 OMNI] Enables the "omnipedia" data-centric scene.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -26,6 +26,12 @@
  * plug into. Those extensions own their own respective tags.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Routed the _omni namespace into its own save section, so every
+ *    omnipedia extension's data lands in systems/omni.json together rather
+ *    than inside the party and system blobs.
+ *    Moved the _omni namespace seeding from the initialize alias to
+ *    initMembers, so a decoded save can establish it without a constructor.
  * - 1.0.1
  *    Updated JABS menu integration with help text.
  * - 1.0.0
@@ -100,7 +106,7 @@ J.OMNI = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.OMNI.Metadata = new J_Omnipedia_PluginMetadata("J-Omnipedia", "1.0.1");
+J.OMNI.Metadata = new J_Omnipedia_PluginMetadata("J-Omnipedia", "1.1.0");
 /**
 * A collection of all aliased methods for this plugin.
 */
