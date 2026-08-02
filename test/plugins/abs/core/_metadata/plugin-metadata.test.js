@@ -25,7 +25,7 @@ async function buildAbsMetadata(pluginParameterStrings)
   // entry" on the second call. Re-importing PluginMetadata fresh gives every call its own
   // never-registered class, since _pluginMetadata.js reads this bare global at class-declaration
   // time (evaluated fresh here too, thanks to the resetModules() above).
-  ({ default: globalThis.PluginMetadata } = await import('../../../../../src/plugins/_base/models/PluginMetadata.js'));
+  ({ default: globalThis.PluginMetadata } = await import('../../../../../src/plugins/_base/core/models/PluginMetadata.js'));
 
   installPluginManagerWithParams(globalThis, 'J-ABS', pluginParameterStrings);
   setPluginContextToJAbs();
@@ -42,7 +42,7 @@ describe('J-ABS _pluginMetadata.js (direct src import, via initialization.js con
     installAbsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
   });
 
   it('falls back to the default AI update range and state-spread tick interval when their params are omitted', async () =>

@@ -1,6 +1,6 @@
 //region plugins/hud/_component/fixtures/install-hud-host-globals.js
-import { installJBaseHostGlobals } from '../../../_base/_component/fixtures/install-j-base-host-globals.js';
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
+import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 /**
  * The real production defaults for J-HUD-TargetFrame, pulled from project/js/plugins.js so

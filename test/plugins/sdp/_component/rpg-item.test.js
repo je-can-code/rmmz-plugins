@@ -18,10 +18,10 @@ describe('J-SDP RPG_Item notes (direct src import)', () =>
     installSdpHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
-    ({ default: RPG_Item } = await import('../../../../src/plugins/_base/database/implementations/RPG_Item.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: RPG_Item } = await import('../../../../src/plugins/_base/core/database/implementations/RPG_Item.js'));
     globalThis.RPG_Item = RPG_Item;
 
     setPluginContextToJSdp();

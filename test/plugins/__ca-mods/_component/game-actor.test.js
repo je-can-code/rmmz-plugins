@@ -10,7 +10,7 @@ describe('CAMods Game_Actor (real engine direct import)', () =>
     installCaModsHostGlobals();
 
     // J-Base first- __ca-mods's own initialization.js and patch files assume J.BASE already exists.
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     await import('../../../../src/plugins/__ca-mods/core/_metadata/initialization.js');
 

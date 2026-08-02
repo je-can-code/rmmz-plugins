@@ -31,9 +31,9 @@ describe('J-Level-Sync map notes and session storage (direct src import)', () =>
     installLevelHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
     // both the level core and the sync extension alias onAfterLoad, and each captures whatever is on
     // the prototype at its own import time. The stub therefore has to exist before the *first* of

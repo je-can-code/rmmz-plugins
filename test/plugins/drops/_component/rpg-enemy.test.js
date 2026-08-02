@@ -5,7 +5,7 @@ import { installDropsHostGlobals, setPluginContextToJBase, setPluginContextToJDr
 
 describe('J-DropsControl RPG_Enemy (direct src import)', () =>
 {
-  /** @type {typeof import('../../../../src/plugins/_base/database/implementations/RPG_Enemy.js').default} */
+  /** @type {typeof import('../../../../src/plugins/_base/core/database/implementations/RPG_Enemy.js').default} */
   let RPG_Enemy;
 
   beforeAll(async () =>
@@ -15,13 +15,13 @@ describe('J-DropsControl RPG_Enemy (direct src import)', () =>
     installDropsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
-    ({ default: RPG_Enemy } = await import('../../../../src/plugins/_base/database/implementations/RPG_Enemy.js'));
+    ({ default: RPG_Enemy } = await import('../../../../src/plugins/_base/core/database/implementations/RPG_Enemy.js'));
     globalThis.RPG_Enemy = RPG_Enemy;
-    ({ default: globalThis.RPG_DropItem } = await import('../../../../src/plugins/_base/database/_data/RPG_DropItem.js'));
+    ({ default: globalThis.RPG_DropItem } = await import('../../../../src/plugins/_base/core/database/_data/RPG_DropItem.js'));
 
     setPluginContextToJDrops();
     await import('../../../../src/plugins/drops/core/_metadata/initialization.js');

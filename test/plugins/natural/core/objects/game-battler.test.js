@@ -24,12 +24,12 @@ describe('J-NaturalGrowth Game_Battler bonuses (direct src import)', () =>
     installNaturalHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
-    await import('../../../../../src/plugins/_base/objects/Game_BattlerBase.js');
-    await import('../../../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../../../src/plugins/_base/core/objects/Game_BattlerBase.js');
+    await import('../../../../../src/plugins/_base/core/objects/Game_Battler.js');
 
     setPluginContextToJNatural();
     await import('../../../../../src/plugins/natural/core/_metadata/initialization.js');

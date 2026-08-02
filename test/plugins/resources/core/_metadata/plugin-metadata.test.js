@@ -1,7 +1,7 @@
 //region plugins/resources/core/_metadata/plugin-metadata.test.js
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 /**
  * The resources metadata subclass exists to translate one plugin parameter into a usable number.

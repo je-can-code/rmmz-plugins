@@ -5,7 +5,7 @@ import { installExtendHostGlobals, setPluginContextToJBase, setPluginContextToJE
 
 describe('J-SkillExtend Game_Action skill layering (direct src import)', () =>
 {
-  /** @type {typeof import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js').default} */
+  /** @type {typeof import('../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js').default} */
   let RPG_Skill;
 
   beforeAll(async () =>
@@ -15,13 +15,13 @@ describe('J-SkillExtend Game_Action skill layering (direct src import)', () =>
     installExtendHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
-    ({ default: globalThis.JCache } = await import('../../../../src/plugins/_base/core/JCache.js'));
-    ({ default: globalThis.ArrayHelper } = await import('../../../../src/plugins/_base/_utilities/ArrayHelper.js'));
-    ({ default: globalThis.RPG_Base } = await import('../../../../src/plugins/_base/database/base/RPG_Base.js'));
-    ({ default: RPG_Skill } = await import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: globalThis.JCache } = await import('../../../../src/plugins/_base/core/core/JCache.js'));
+    ({ default: globalThis.ArrayHelper } = await import('../../../../src/plugins/_base/core/_utilities/ArrayHelper.js'));
+    ({ default: globalThis.RPG_Base } = await import('../../../../src/plugins/_base/core/database/base/RPG_Base.js'));
+    ({ default: RPG_Skill } = await import('../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js'));
     globalThis.RPG_Skill = RPG_Skill;
 
     setPluginContextToJExtend();
@@ -35,7 +35,7 @@ describe('J-SkillExtend Game_Action skill layering (direct src import)', () =>
 
     // patches globalThis.Game_Action.prototype directly, no vm involved.
     // J-Base owns the rawItem() accessor extend's Game_Action reads through.
-    await import('../../../../src/plugins/_base/objects/Game_Action.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Action.js');
 
     await import('../../../../src/plugins/extend/core/objects/Game_Action.js');
   });

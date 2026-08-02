@@ -34,11 +34,11 @@ describe('fateOf100 / isVeryLucky / isVeryCursed (direct src import)', () =>
     installAbsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: RPGManager } = await import('../../../../../src/plugins/_base/core/managers/RPGManager.js'));
     globalThis.RPGManager = RPGManager;
-    ({ default: globalThis.RPG_Skill } = await import('../../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+    ({ default: globalThis.RPG_Skill } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js'));
     ({ default: globalThis.JABS_OnChanceEffect } = await import('../../../../../src/plugins/abs/core/models/JABS_OnChanceEffect.js'));
 
     setPluginContextToJAbs();

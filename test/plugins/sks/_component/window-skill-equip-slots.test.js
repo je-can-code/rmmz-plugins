@@ -1,7 +1,7 @@
 //region plugins/sks/_component/window-skill-equip-slots.test.js
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
-import WindowCommandBuilder from '../../../../src/plugins/_base/models/WindowCommandBuilder.js';
+import WindowCommandBuilder from '../../../../src/plugins/_base/core/models/WindowCommandBuilder.js';
 
 import { installWindowCommandStub } from './fixtures/window-command-stub.js';
 

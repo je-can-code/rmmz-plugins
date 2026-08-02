@@ -120,11 +120,11 @@ readable file (not an IIFE) per ship into `out/`.
 | **Same ship** | `import` / `export default` between colocated modules. Every new file must be reachable from that ship's `entry.js` |
 | **Cross-ship** | **Never** import from another plugin's tree. After the owning ship loads, use its globally hoisted top-level bindings (`ParameterRegistry`, `IconManager`, …) directly |
 | **RMMZ engine globals** (`TextManager`, `ColorManager`, …) | **Augment in place**: `TextManager.maxTp = function() { … }`. The engine defines them before plugins load |
-| **`IconManager`** (a J-Base global, not an engine one) | **Defined** in `_base/managers/IconManager.js` as a static class. Extension ships **augment** it: `IconManager.foo = function() { … }` |
+| **`IconManager`** (a J-Base global, not an engine one) | **Defined** in `_base/core/managers/IconManager.js` as a static class. Extension ships **augment** it: `IconManager.foo = function() { … }` |
 
 ```javascript
 // BAD — cross-plugin source import bundles a second copy into this ship.
-import ParameterRegistry from '../../../_base/core/ParameterRegistry.js';
+import ParameterRegistry from '../../../_base/core/core/ParameterRegistry.js';
 
 // GOOD — J-Base loads first; the binding is a hoisted global by then.
 ParameterRegistry.register(…);
@@ -235,10 +235,10 @@ SerializableRegistry.register(SkillEquipSlot);
 
 This is **mandatory**. Without registration `JsonEx` cannot restore the class on load, so any prototype
 method on the model silently breaks after a save/load cycle. See
-`src/plugins/_base/core/SerializableRegistry.js` and `JABS_HitstopData.js` for the reference pattern.
+`src/plugins/_base/core/core/SerializableRegistry.js` and `JABS_HitstopData.js` for the reference pattern.
 
 **`Map` and `Set` are safe in stored fields.** J-Base extends `JsonEx._encode` / `_decode` to handle
-both (`src/plugins/_base/core/JsonEx.js`). Prototype constructors are no longer required for
+both (`src/plugins/_base/core/core/JsonEx.js`). Prototype constructors are no longer required for
 serializable models — the registry replaced that workaround.
 
 **No `#private` fields or methods in a registered class** (`verify:no-private-in-serializable`). RMMZ

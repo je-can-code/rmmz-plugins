@@ -82,13 +82,13 @@ describe('J-ABS state lifecycle edge cases (direct src import)', () =>
     installAbsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
-    ({ default: globalThis.RPG_State } = await import('../../../../../src/plugins/_base/database/implementations/RPG_State.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_State } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_State.js'));
 
-    await import('../../../../../src/plugins/_base/objects/Game_BattlerBase.js');
-    await import('../../../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../../../src/plugins/_base/core/objects/Game_BattlerBase.js');
+    await import('../../../../../src/plugins/_base/core/objects/Game_Battler.js');
 
     setPluginContextToJAbs();
     await import('../../../../../src/plugins/abs/core/_metadata/initialization.js');

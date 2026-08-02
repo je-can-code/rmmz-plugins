@@ -5,10 +5,10 @@ import { installExtendHostGlobals, setPluginContextToJBase, setPluginContextToJE
 
 describe('J-SkillExtend Game_Action state effects (direct src import)', () =>
 {
-  /** @type {typeof import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js').default} */
+  /** @type {typeof import('../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js').default} */
   let RPG_Skill;
 
-  /** @type {typeof import('../../../../src/plugins/_base/database/implementations/RPG_State.js').default} */
+  /** @type {typeof import('../../../../src/plugins/_base/core/database/implementations/RPG_State.js').default} */
   let RPG_State;
 
   beforeAll(async () =>
@@ -18,12 +18,12 @@ describe('J-SkillExtend Game_Action state effects (direct src import)', () =>
     installExtendHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
-    ({ default: globalThis.JCache } = await import('../../../../src/plugins/_base/core/JCache.js'));
-    ({ default: RPG_Skill } = await import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
-    ({ default: RPG_State } = await import('../../../../src/plugins/_base/database/implementations/RPG_State.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: globalThis.JCache } = await import('../../../../src/plugins/_base/core/core/JCache.js'));
+    ({ default: RPG_Skill } = await import('../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js'));
+    ({ default: RPG_State } = await import('../../../../src/plugins/_base/core/database/implementations/RPG_State.js'));
 
     setPluginContextToJExtend();
     await import('../../../../src/plugins/extend/core/_metadata/initialization.js');
@@ -40,7 +40,7 @@ describe('J-SkillExtend Game_Action state effects (direct src import)', () =>
 
     // patches globalThis.Game_Action.prototype directly, no vm involved.
     // J-Base owns the rawItem() accessor extend's Game_Action reads through.
-    await import('../../../../src/plugins/_base/objects/Game_Action.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Action.js');
 
     await import('../../../../src/plugins/extend/core/objects/Game_Action.js');
   });

@@ -31,10 +31,10 @@ describe('J-ABS RPG_Skill effects (direct src import)', () =>
     installAbsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
-    ({ default: globalThis.RPG_Skill } = await import('../../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_Skill } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js'));
 
     setPluginContextToJAbs();
     await import('../../../../../src/plugins/abs/core/_metadata/initialization.js');

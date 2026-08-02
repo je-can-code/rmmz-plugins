@@ -26,9 +26,9 @@ describe('JAFTING refinement lineage through the save codecs', () =>
     });
 
     ({ default: globalThis.SerializableRegistry } = await import(
-      '../../../../src/plugins/_base/core/SerializableRegistry.js'));
-    ({ default: SaveEncoder } = await import('../../../../src/plugins/_base/core/save/SaveEncoder.js'));
-    ({ default: SaveDecoder } = await import('../../../../src/plugins/_base/core/save/SaveDecoder.js'));
+      '../../../../src/plugins/_base/core/core/SerializableRegistry.js'));
+    ({ default: SaveEncoder } = await import('../../../../src/plugins/_base/core/core/save/SaveEncoder.js'));
+    ({ default: SaveDecoder } = await import('../../../../src/plugins/_base/core/core/save/SaveDecoder.js'));
 
     // JAFTING core owns the ledger models and loads before the refine extension, which is the same
     // order the shipped bundles load in.

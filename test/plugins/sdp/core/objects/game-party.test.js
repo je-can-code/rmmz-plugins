@@ -22,7 +22,7 @@ describe('J-SDP Game_Party (direct src import)', () =>
     installSdpHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJSdp();
     await import('../../../../../src/plugins/sdp/core/_metadata/initialization.js');

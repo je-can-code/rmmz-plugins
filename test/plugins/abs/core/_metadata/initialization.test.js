@@ -20,7 +20,7 @@ describe('J-ABS initialization.js (direct src import)', () =>
     installAbsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     ({ default: globalThis.JABS_Button } = await import(
       '../../../../../src/plugins/abs/ext/input/_models/JABS_Button.js'

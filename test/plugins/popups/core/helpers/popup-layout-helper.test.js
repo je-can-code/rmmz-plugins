@@ -21,11 +21,11 @@ describe('PopupLayoutHelper (direct src import)', () =>
     installPopupsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     // the popups bootstrap constructs a J_EventEmitter as a bare global, the way the concatenated
     // plugin bundle sees it after vite stitches J-Base and J-Popups together.
-    ({ default: globalThis.J_EventEmitter } = await import('../../../../../src/plugins/_base/models/J_EventEmitter.js'));
+    ({ default: globalThis.J_EventEmitter } = await import('../../../../../src/plugins/_base/core/models/J_EventEmitter.js'));
 
     // the ring layout table is built at module-evaluation time from J.POPUPS.Layout, so the parent
     // plugin's own configuration has to be in place before the helper is imported.

@@ -24,7 +24,7 @@ describe('J-Omni-Questopedia metadata (direct src import)', () =>
     installPluginManagerWithParams(globalThis, 'J-Omni-Questopedia', { 'menu-switch': '42' });
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJOmnipedia();
     await import('../../../../../../src/plugins/omni/core/_metadata/initialization.js');

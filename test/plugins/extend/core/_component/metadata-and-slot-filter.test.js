@@ -18,13 +18,13 @@ describe('J-Extend metadata and skill-slot filtering (direct src import)', () =>
 
     installExtendHostGlobals();
 
-    ({ default: globalThis.JCache } = await import('../../../../../src/plugins/_base/core/JCache.js'));
-    ({ default: globalThis.ArrayHelper } = await import('../../../../../src/plugins/_base/_utilities/ArrayHelper.js'));
-    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
-    ({ default: globalThis.TraitResolver } = await import('../../../../../src/plugins/_base/managers/TraitResolver.js'));
+    ({ default: globalThis.JCache } = await import('../../../../../src/plugins/_base/core/core/JCache.js'));
+    ({ default: globalThis.ArrayHelper } = await import('../../../../../src/plugins/_base/core/_utilities/ArrayHelper.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: globalThis.TraitResolver } = await import('../../../../../src/plugins/_base/core/managers/TraitResolver.js'));
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     realJ = globalThis.J;
   });
@@ -40,7 +40,7 @@ describe('J-Extend metadata and skill-slot filtering (direct src import)', () =>
       globalThis.J.BASE.Metadata.Version = '3.2.0';
       delete globalThis.J.EXTEND;
 
-      const { default: FreshPluginMetadata } = await import('../../../../../src/plugins/_base/models/PluginMetadata.js');
+      const { default: FreshPluginMetadata } = await import('../../../../../src/plugins/_base/core/models/PluginMetadata.js');
       globalThis.PluginMetadata = FreshPluginMetadata;
 
       setPluginContextToJExtend();
@@ -78,7 +78,7 @@ describe('J-Extend metadata and skill-slot filtering (direct src import)', () =>
       globalThis.J.BASE.Metadata.Version = '3.2.0';
       delete globalThis.J.EXTEND;
 
-      const { default: FreshPluginMetadata } = await import('../../../../../src/plugins/_base/models/PluginMetadata.js');
+      const { default: FreshPluginMetadata } = await import('../../../../../src/plugins/_base/core/models/PluginMetadata.js');
       globalThis.PluginMetadata = FreshPluginMetadata;
 
       setPluginContextToJExtend();
@@ -155,7 +155,7 @@ describe('J-Extend metadata and skill-slot filtering (direct src import)', () =>
       globalThis.J.BASE.Metadata.Version = '3.2.0';
       delete globalThis.J.EXTEND;
 
-      const { default: FreshPluginMetadata } = await import('../../../../../src/plugins/_base/models/PluginMetadata.js');
+      const { default: FreshPluginMetadata } = await import('../../../../../src/plugins/_base/core/models/PluginMetadata.js');
       globalThis.PluginMetadata = FreshPluginMetadata;
 
       setPluginContextToJExtend();

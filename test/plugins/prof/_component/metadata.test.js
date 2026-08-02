@@ -12,10 +12,10 @@ describe('J-Proficiency metadata and regex (direct src import)', () =>
     installProfHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     // registerFormulaContext() is a static method prof's own initialization.js calls at import time.
-    await import('../../../../src/plugins/_base/objects/Game_Action.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Action.js');
 
     setPluginContextToJProf();
     await import('../../../../src/plugins/prof/core/_metadata/initialization.js');

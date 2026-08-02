@@ -15,7 +15,7 @@ describe('CmsParameter (direct src import)', () =>
     String.empty = '';
 
     // the real format constant is a pure static-only class with no dependencies of its own.
-    ({ default: globalThis.ParameterFormat } = await import('../../../../../src/plugins/_base/core/ParameterFormat.js'));
+    ({ default: globalThis.ParameterFormat } = await import('../../../../../src/plugins/_base/core/core/ParameterFormat.js'));
 
     // ParameterRegistry itself pulls in the full definition/group machinery; a bare stub of just
     // the `get()` surface CmsParameter actually calls is enough here.

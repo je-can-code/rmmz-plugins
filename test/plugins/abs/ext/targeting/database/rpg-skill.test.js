@@ -1,7 +1,7 @@
 //region plugins/abs/ext/targeting/database/rpg-skill.test.js
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import RPGManager from '../../../../../../src/plugins/_base/managers/RPGManager.js';
+import RPGManager from '../../../../../../src/plugins/_base/core/managers/RPGManager.js';
 
 describe('J-ABS-Targeting RPG_Skill augments (src/plugins/abs/ext/targeting/database/RPG_Skill.js)', () =>
 {

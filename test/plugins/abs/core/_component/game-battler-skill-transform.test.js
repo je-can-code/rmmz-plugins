@@ -29,8 +29,8 @@ describe('J-ABS Game_Battler skill transform resolution (direct src import)', ()
     globalThis.JABS_Button = { Tool: 'tool', UsableItem: 'item' };
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
-    await import('../../../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/objects/Game_Battler.js');
 
     setPluginContextToJAbs();
     await import('../../../../../src/plugins/abs/core/_metadata/initialization.js');

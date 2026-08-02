@@ -12,10 +12,10 @@ describe('J-MessageTextCodes Window_Base text codes (direct src import)', () =>
     installMessageHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     // italics/bold/font-size helpers exercised by this test live in _base now.
-    await import('../../../../src/plugins/_base/windows/Window_Base.js');
+    await import('../../../../src/plugins/_base/core/windows/Window_Base.js');
 
     setPluginContextToJMessage();
     await import('../../../../src/plugins/message/core/_metadata/initialization.js');

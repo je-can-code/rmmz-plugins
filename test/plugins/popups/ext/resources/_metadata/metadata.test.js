@@ -19,12 +19,12 @@ describe('J-Popups-Resources metadata (direct src import)', () =>
     installPopupsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     // J_EventEmitter extends PIXI.utils.EventEmitter at module-evaluation time, so it can only be
     // imported once the fixture's PIXI stub is already standing.
     ({ default: globalThis.J_EventEmitter } =
-      await import('../../../../../../src/plugins/_base/models/J_EventEmitter.js'));
+      await import('../../../../../../src/plugins/_base/core/models/J_EventEmitter.js'));
 
     setPluginContextToJPopups();
     await import('../../../../../../src/plugins/popups/core/_metadata/initialization.js');
@@ -62,7 +62,7 @@ describe('J-Popups-Resources metadata (direct src import)', () =>
       vi.resetModules();
 
       const { default: FreshPluginMetadata } =
-        await import('../../../../../../src/plugins/_base/models/PluginMetadata.js');
+        await import('../../../../../../src/plugins/_base/core/models/PluginMetadata.js');
       globalThis.PluginMetadata = FreshPluginMetadata;
 
       setPluginContextToJPopupsResources();

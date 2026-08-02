@@ -12,7 +12,7 @@ describe('J-Log metadata (direct src import)', () =>
     installLogHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJLog();
     await import('../../../../src/plugins/log/core/_metadata/initialization.js');

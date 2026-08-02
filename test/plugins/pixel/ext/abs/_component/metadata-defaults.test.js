@@ -26,7 +26,7 @@ describe('J-ABS-Pixelistics metadata defaults with no configured parameters (dir
     installPixelCoreHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJPixel();
     await import('../../../../../../src/plugins/pixel/core/_metadata/initialization.js');

@@ -11,7 +11,7 @@ describe('J-Aptitude ApManager (direct src import)', () =>
   /** @type {typeof import('../../../../../src/plugins/apt/core/_models/AptitudeTeachable.js').default} */
   let AptitudeTeachable;
 
-  /** @type {typeof import('../../../../../src/plugins/_base/database/implementations/RPG_Skill.js').default} */
+  /** @type {typeof import('../../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js').default} */
   let RPG_Skill;
 
   beforeAll(async () =>
@@ -20,7 +20,7 @@ describe('J-Aptitude ApManager (direct src import)', () =>
 
     await installAptHostGlobals();
 
-    ({ default: RPG_Skill } = await import('../../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+    ({ default: RPG_Skill } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js'));
     globalThis.RPG_Skill = RPG_Skill;
 
     ({ default: AptitudeTeachable } = await import('../../../../../src/plugins/apt/core/_models/AptitudeTeachable.js'));

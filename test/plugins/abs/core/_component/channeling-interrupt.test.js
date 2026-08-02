@@ -110,14 +110,14 @@ describe('J-ABS channeling and interruption (direct src import)', () =>
     installAbsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
-    ({ default: globalThis.RPG_Skill } = await import('../../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_Skill } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js'));
 
     // RPG_UsableItem.js (abs) patches this bare global's prototype- must be the same module instance
     // RPG_Skill extends, so jabsInterruptMagnifier lands on RPG_Skill's real prototype chain.
-    ({ default: globalThis.RPG_UsableItem } = await import('../../../../../src/plugins/_base/database/core/RPG_UsableItem.js'));
+    ({ default: globalThis.RPG_UsableItem } = await import('../../../../../src/plugins/_base/core/database/core/RPG_UsableItem.js'));
 
     setPluginContextToJAbs();
     await import('../../../../../src/plugins/abs/core/_metadata/initialization.js');

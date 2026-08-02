@@ -1,9 +1,9 @@
 //region plugins/jafting/_component/jafting-core.test.js
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { installJBaseHostGlobals } from '../../_base/_component/fixtures/install-j-base-host-globals.js';
+import { installJBaseHostGlobals } from '../../_base/core/_component/fixtures/install-j-base-host-globals.js';
 import { installMinimalMenuUiStubs } from '../../../setup/install-minimal-menu-ui-stubs.js';
-import PluginMetadata from '../../../../src/plugins/_base/models/PluginMetadata.js';
+import PluginMetadata from '../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 describe('J-JAFTING core (direct src import)', () =>
 {
@@ -24,13 +24,13 @@ describe('J-JAFTING core (direct src import)', () =>
 
     globalThis.__PLUGIN_NAME__ = 'J-Base';
     globalThis.__PLUGIN_VERSION__ = '3.2.0';
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     // J-JAFTING's _pluginMetadata.js subclasses this real J-Base class.
     globalThis.PluginMetadata = PluginMetadata;
 
     // Window_JaftingList.buildSalvageHubCommand() reads this real _base bare global.
-    ({ default: globalThis.WindowCommandBuilder } = await import('../../../../src/plugins/_base/models/WindowCommandBuilder.js'));
+    ({ default: globalThis.WindowCommandBuilder } = await import('../../../../src/plugins/_base/core/models/WindowCommandBuilder.js'));
 
     globalThis.__PLUGIN_NAME__ = 'J-JAFTING';
     globalThis.__PLUGIN_VERSION__ = '1.0.0';

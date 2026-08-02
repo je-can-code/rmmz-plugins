@@ -1,7 +1,7 @@
 //region plugins/extend/_component/fixtures/install-extend-host-globals.js
-import { installJBaseHostGlobals } from '../../../_base/_component/fixtures/install-j-base-host-globals.js';
-import { installJabsOnChanceEffectGlobalStub } from '../../../_base/_component/fixtures/install-jabs-onchance-stub.js';
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
+import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
+import { installJabsOnChanceEffectGlobalStub } from '../../../_base/core/_component/fixtures/install-jabs-onchance-stub.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 const noop = function()
 {

@@ -1,7 +1,7 @@
 //region plugins/sdp/_component/sdp-panel-math.test.js
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { installJBaseHostGlobals } from '../../_base/_component/fixtures/install-j-base-host-globals.js';
+import { installJBaseHostGlobals } from '../../_base/core/_component/fixtures/install-j-base-host-globals.js';
 
 describe('J-SDP StatDistributionPanel math (models only, direct src import)', () =>
 {
@@ -16,7 +16,7 @@ describe('J-SDP StatDistributionPanel math (models only, direct src import)', ()
 
     // real _base sets String.empty at import time; PanelIdentity.fromConfigPanel() falls back to it.
     installJBaseHostGlobals();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     // this suite exercises panel math in isolation (no J-SDP plugin boot, no $gameParty), so
     // rankUpCost() just needs a minimal J.SDP.Metadata stand-in for resolveEffectiveRankUpCostParts.

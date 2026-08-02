@@ -24,9 +24,9 @@ describe('RPG_DropItemBuilder (direct src import)', () =>
     installDropsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPG_DropItem } = await import('../../../../../src/plugins/_base/database/_data/RPG_DropItem.js'));
+    ({ default: globalThis.RPG_DropItem } = await import('../../../../../src/plugins/_base/core/database/_data/RPG_DropItem.js'));
 
     setPluginContextToJDrops();
     await import('../../../../../src/plugins/drops/core/_metadata/initialization.js');

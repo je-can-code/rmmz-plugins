@@ -1,11 +1,11 @@
 //region plugins/jafting/_component/creation-metadata.test.js
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { installJBaseHostGlobals } from '../../_base/_component/fixtures/install-j-base-host-globals.js';
-import PluginMetadata from '../../../../src/plugins/_base/models/PluginMetadata.js';
-import ExternalJsonConfigLoader from '../../../../src/plugins/_base/managers/ExternalJsonConfigLoader.js';
-import ExternalJsonConfigLoaderOptions from '../../../../src/plugins/_base/models/ExternalJsonConfigLoaderOptions.js';
-import PluginVersion from '../../../../src/plugins/_base/models/PluginVersion.js';
+import { installJBaseHostGlobals } from '../../_base/core/_component/fixtures/install-j-base-host-globals.js';
+import PluginMetadata from '../../../../src/plugins/_base/core/models/PluginMetadata.js';
+import ExternalJsonConfigLoader from '../../../../src/plugins/_base/core/managers/ExternalJsonConfigLoader.js';
+import ExternalJsonConfigLoaderOptions from '../../../../src/plugins/_base/core/models/ExternalJsonConfigLoaderOptions.js';
+import PluginVersion from '../../../../src/plugins/_base/core/models/PluginVersion.js';
 
 export const DEFAULT_JAFTING_CREATE_PLUGIN_PARAMS = {
   'menu-switch': '222',
@@ -57,7 +57,7 @@ async function bootJaftingCreate(craftingJson, { bootBase = true, pluginName = '
 
     globalThis.__PLUGIN_NAME__ = 'J-Base';
     globalThis.__PLUGIN_VERSION__ = '3.2.0';
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     globalThis.__PLUGIN_NAME__ = 'J-JAFTING';
     globalThis.__PLUGIN_VERSION__ = '2.1.0';
@@ -226,7 +226,7 @@ describe('J-JAFTING + J-JAFTING-Creation metadata (direct src import)', () =>
     const rebuildAgainstEmptyRegistry = async () =>
     {
       const { default: FreshPluginMetadata } =
-        await import('../../../../src/plugins/_base/models/PluginMetadata.js');
+        await import('../../../../src/plugins/_base/core/models/PluginMetadata.js');
       globalThis.PluginMetadata = FreshPluginMetadata;
 
       await bootJaftingCreate(VITEST_MINIMAL_CRAFTING_JSON,

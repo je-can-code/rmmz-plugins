@@ -12,7 +12,7 @@ describe('CAMods Game_Map (real engine direct import)', () =>
   {
     installCaModsHostGlobals();
 
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
     await import('../../../../src/plugins/__ca-mods/core/_metadata/initialization.js');
 
     // the real engine's setup() loads tilesets/events/etc from $dataMap- far more than this suite

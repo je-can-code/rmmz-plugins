@@ -27,7 +27,7 @@ describe('Game_Enemy (J-HUD-TargetFrame) (direct src import)', () =>
       },
     };
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
     function Game_Enemy()
     {

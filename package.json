@@ -57,7 +57,7 @@
     "build:all": "node ./src/build-tools/build-all.js",
     "build:ca-mods": "vite build --config src/plugins/__ca-mods/core/vite.config.ca-mods-core.js",
     "build:utils": "vite build --config src/plugins/utils/core/vite.config.utils-core.js",
-    "build:base": "vite build --config src/plugins/_base/vite.config.base.js",
+    "build:base": "vite build --config src/plugins/_base/core/vite.config.base.js",
     "build:crit": "vite build --config src/plugins/crit/core/vite.config.crit.js",
     "build:diff": "vite build --config src/plugins/diff/core/vite.config.diff-core.js",
     "build:drops": "vite build --config src/plugins/drops/core/vite.config.drops-core.js",

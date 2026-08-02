@@ -1,6 +1,6 @@
 //region plugins/time/_component/fixtures/install-time-host-globals.js
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
-import SerializableRegistry from '../../../../../src/plugins/_base/core/SerializableRegistry.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
+import SerializableRegistry from '../../../../../src/plugins/_base/core/core/SerializableRegistry.js';
 import { DEFAULT_TIME_PLUGIN_PARAMS } from './time-plugin-params.js';
 
 const noop = function()

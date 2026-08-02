@@ -1,7 +1,7 @@
 //region plugins/sks/_component/rpg-equip-item.test.js
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import RPGManager from '../../../../src/plugins/_base/managers/RPGManager.js';
+import RPGManager from '../../../../src/plugins/_base/core/managers/RPGManager.js';
 
 describe('RPG_EquipItem (src/plugins/sks/core/database/RPG_EquipItem.js)', () =>
 {

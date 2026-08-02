@@ -8,8 +8,8 @@ import {
   skillData,
   weaponData,
 } from './fixtures/install-sks-host-globals.js';
-import RPG_Skill from '../../../../src/plugins/_base/database/implementations/RPG_Skill.js';
-import RPG_EquipItem from '../../../../src/plugins/_base/database/core/RPG_EquipItem.js';
+import RPG_Skill from '../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js';
+import RPG_EquipItem from '../../../../src/plugins/_base/core/database/core/RPG_EquipItem.js';
 
 describe('J-SkillSlots Game_Actor slots (direct src import)', () =>
 {
@@ -20,11 +20,11 @@ describe('J-SkillSlots Game_Actor slots (direct src import)', () =>
     installSksHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
-    await import('../../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Battler.js');
 
     setPluginContextToJSks();
     await import('../../../../src/plugins/sks/core/_metadata/initialization.js');

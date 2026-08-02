@@ -21,7 +21,7 @@ describe('J-ABS-Pixelistics remaining branch coverage (direct src import)', () =
     installPixelCoreHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJPixel();
     await import('../../../../../../src/plugins/pixel/core/_metadata/initialization.js');
@@ -37,7 +37,7 @@ describe('J-ABS-Pixelistics remaining branch coverage (direct src import)', () =
 
     // RPG_Enemy.hitboxSizeDataFromRaw reaches JsonMapper as a bare global, the way the concatenated
     // plugin bundle sees it; a raw src import has to supply it explicitly.
-    ({ default: globalThis.JsonMapper } = await import('../../../../../../src/plugins/_base/_utilities/JsonMapper.js'));
+    ({ default: globalThis.JsonMapper } = await import('../../../../../../src/plugins/_base/core/_utilities/JsonMapper.js'));
 
     await import('../../../../../../src/plugins/pixel/ext/abs/database/RPG_Enemy.js');
     await import('../../../../../../src/plugins/pixel/ext/abs/managers/JABS_AiManager.js');

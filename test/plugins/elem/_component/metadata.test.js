@@ -12,7 +12,7 @@ describe('J-Elementalistics metadata and regex (direct src import)', () =>
     installElemHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJElem();
     await import('../../../../src/plugins/elem/core/_metadata/initialization.js');

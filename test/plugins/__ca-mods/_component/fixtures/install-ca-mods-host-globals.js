@@ -1,5 +1,5 @@
 //region plugins/__ca-mods/_component/fixtures/install-ca-mods-host-globals.js
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 import { installRealRmmzEngine } from '../../../../setup/rmmz-engine-loader.js';
 
 /**

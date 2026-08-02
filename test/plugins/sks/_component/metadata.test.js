@@ -17,7 +17,7 @@ async function buildSksMetadata(pluginParameterStrings)
 {
   vi.resetModules();
 
-  ({ default: globalThis.PluginMetadata } = await import('../../../../src/plugins/_base/models/PluginMetadata.js'));
+  ({ default: globalThis.PluginMetadata } = await import('../../../../src/plugins/_base/core/models/PluginMetadata.js'));
 
   installPluginManagerWithParams(globalThis, 'J-SkillSlots', pluginParameterStrings);
   setPluginContextToJSks();
@@ -34,7 +34,7 @@ describe('J-SkillSlots metadata and regex (direct src import)', () =>
     installSksHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJSks();
     await import('../../../../src/plugins/sks/core/_metadata/initialization.js');

@@ -1,7 +1,7 @@
 //region plugins/cms/_component/fixtures/install-cms-host-globals.js
-import { installJBaseHostGlobals } from '../../../_base/_component/fixtures/install-j-base-host-globals.js';
+import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
 import { installPluginManagerWithParams } from '../../../../setup/install-plugin-manager-with-params.js';
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 /**
  * The help text J-CMS ships configured in the real project/js/plugins.js, so metadata assertions

@@ -18,9 +18,9 @@ describe('J-Popups Game_Character integration (direct src import)', () =>
     installPopupsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.J_EventEmitter } = await import('../../../../src/plugins/_base/models/J_EventEmitter.js'));
+    ({ default: globalThis.J_EventEmitter } = await import('../../../../src/plugins/_base/core/models/J_EventEmitter.js'));
 
     setPluginContextToJPopups();
     await import('../../../../src/plugins/popups/core/_metadata/initialization.js');

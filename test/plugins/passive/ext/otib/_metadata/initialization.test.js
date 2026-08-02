@@ -17,7 +17,7 @@ describe('J-Passive-OTIB initialization.js (direct src import)', () =>
     installPassiveHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJPassive();
     await import('../../../../../../src/plugins/passive/core/_metadata/initialization.js');

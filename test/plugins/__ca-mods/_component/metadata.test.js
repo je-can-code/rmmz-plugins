@@ -12,7 +12,7 @@ describe('J-CA-Mods metadata (direct src import)', () =>
     installCamodsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJCamods();
     await import('../../../../src/plugins/__ca-mods/core/_metadata/initialization.js');

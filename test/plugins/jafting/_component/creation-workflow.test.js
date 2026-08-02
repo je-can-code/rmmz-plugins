@@ -1,12 +1,12 @@
 //region plugins/jafting/_component/creation-workflow.test.js
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { installJBaseHostGlobals } from '../../_base/_component/fixtures/install-j-base-host-globals.js';
+import { installJBaseHostGlobals } from '../../_base/core/_component/fixtures/install-j-base-host-globals.js';
 import { installMinimalMenuUiStubs } from '../../../setup/install-minimal-menu-ui-stubs.js';
-import PluginMetadata from '../../../../src/plugins/_base/models/PluginMetadata.js';
-import ExternalJsonConfigLoader from '../../../../src/plugins/_base/managers/ExternalJsonConfigLoader.js';
-import ExternalJsonConfigLoaderOptions from '../../../../src/plugins/_base/models/ExternalJsonConfigLoaderOptions.js';
-import PluginVersion from '../../../../src/plugins/_base/models/PluginVersion.js';
+import PluginMetadata from '../../../../src/plugins/_base/core/models/PluginMetadata.js';
+import ExternalJsonConfigLoader from '../../../../src/plugins/_base/core/managers/ExternalJsonConfigLoader.js';
+import ExternalJsonConfigLoaderOptions from '../../../../src/plugins/_base/core/models/ExternalJsonConfigLoaderOptions.js';
+import PluginVersion from '../../../../src/plugins/_base/core/models/PluginVersion.js';
 import CraftingCreationSession from '../../../../src/plugins/jafting/ext/create/__models/CraftingCreationSession.js';
 
 /**
@@ -234,7 +234,7 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
 
       globalThis.__PLUGIN_NAME__ = 'J-Base';
       globalThis.__PLUGIN_VERSION__ = '3.2.0';
-      await import('../../../../src/plugins/_base/_metadata/initialization.js');
+      await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
       globalThis.__PLUGIN_NAME__ = 'J-JAFTING';
       globalThis.__PLUGIN_VERSION__ = '2.1.0';

@@ -1,9 +1,9 @@
 //region plugins/diff/_component/fixtures/install-diff-host-globals.js
-import { installJBaseHostGlobals } from '../../../_base/_component/fixtures/install-j-base-host-globals.js';
+import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
 import { installPluginManagerWithParams } from '../../../../setup/install-plugin-manager-with-params.js';
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
-import ExternalJsonConfigLoader from '../../../../../src/plugins/_base/managers/ExternalJsonConfigLoader.js';
-import ExternalJsonConfigLoaderOptions from '../../../../../src/plugins/_base/models/ExternalJsonConfigLoaderOptions.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
+import ExternalJsonConfigLoader from '../../../../../src/plugins/_base/core/managers/ExternalJsonConfigLoader.js';
+import ExternalJsonConfigLoaderOptions from '../../../../../src/plugins/_base/core/models/ExternalJsonConfigLoaderOptions.js';
 import { buildVitestDifficultyConfigJson } from './diff-config-json.js';
 
 const noop = function()

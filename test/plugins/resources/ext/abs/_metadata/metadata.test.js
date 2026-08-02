@@ -21,7 +21,7 @@ describe('J-Resources-ABS metadata (direct src import)', () =>
     installResourcesHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJResourcesAbs();
     await import(RESOURCES_ABS_INIT_PATH);

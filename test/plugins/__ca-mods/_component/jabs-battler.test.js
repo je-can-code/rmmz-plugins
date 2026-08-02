@@ -1,7 +1,7 @@
 //region plugins/__ca-mods/_component/jabs-battler.test.js
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 
-import PluginMetadata from '../../../../src/plugins/_base/models/PluginMetadata.js';
+import PluginMetadata from '../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 describe('CAMods JABS_Battler.getTargetFrameText (direct src import, hand-rolled JABS stand-in)', () =>
 {
@@ -26,7 +26,7 @@ describe('CAMods JABS_Battler.getTargetFrameText (direct src import, hand-rolled
     globalThis.__PLUGIN_VERSION__ = '0.0.0-test';
 
     // J-Base first- gives us String.empty, read by both this file and the patch under test.
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
     await import('../../../../src/plugins/__ca-mods/core/_metadata/initialization.js');
 
     // the file under test- aliases and extends the stand-in getTargetFrameText() above.

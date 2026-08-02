@@ -18,7 +18,7 @@ describe('J-ABS-Pixelistics JABS_Battler angle math and idle wander (direct src 
     installPixelCoreHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJPixel();
     await import('../../../../../../src/plugins/pixel/core/_metadata/initialization.js');

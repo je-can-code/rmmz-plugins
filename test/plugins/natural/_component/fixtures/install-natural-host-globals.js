@@ -1,5 +1,5 @@
 //region plugins/natural/_component/fixtures/install-natural-host-globals.js
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 const noop = function()
 {

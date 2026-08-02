@@ -17,11 +17,11 @@ describe('J-Pixelistics Game_CharacterBase pixel movement helpers (direct src im
     installPixelCoreHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     // patches globalThis.Game_CharacterBase.prototype with isStraightDirection/isDiagonalDirection,
     // which pixel core's own Game_CharacterBase.js relies on.
-    await import('../../../../../src/plugins/_base/objects/Game_CharacterBase.js');
+    await import('../../../../../src/plugins/_base/core/objects/Game_CharacterBase.js');
 
     setPluginContextToJPixel();
     await import('../../../../../src/plugins/pixel/core/_metadata/initialization.js');

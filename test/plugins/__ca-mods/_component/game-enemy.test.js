@@ -9,7 +9,7 @@ describe('CAMods Game_Enemy.dropSources (real engine direct import)', () =>
   {
     installCaModsHostGlobals();
 
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
     await import('../../../../src/plugins/__ca-mods/core/_metadata/initialization.js');
 
     // dropSources() itself is defined by another plugin (not vanilla RMMZ, not __ca-mods)- stand

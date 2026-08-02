@@ -18,7 +18,7 @@ describe('J-ABS-Pixelistics formation helpers on JABS_AiManager (direct src impo
     installPixelCoreHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJPixel();
     await import('../../../../../../src/plugins/pixel/core/_metadata/initialization.js');

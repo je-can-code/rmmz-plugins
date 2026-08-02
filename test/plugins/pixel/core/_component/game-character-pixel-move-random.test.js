@@ -103,8 +103,8 @@ describe('J-Pixelistics Game_Character.moveRandom override (direct src import)',
     installPixelCoreHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
-    await import('../../../../../src/plugins/_base/objects/Game_CharacterBase.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/objects/Game_CharacterBase.js');
 
     setPluginContextToJPixel();
     await import('../../../../../src/plugins/pixel/core/_metadata/initialization.js');

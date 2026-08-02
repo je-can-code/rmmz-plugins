@@ -21,7 +21,7 @@ describe('J-HUD metadata (direct src import)', () =>
     installHudHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     // capture the commands as they register rather than reaching into PluginManager afterward.
     handlers = new Map();

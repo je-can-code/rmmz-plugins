@@ -1,7 +1,7 @@
 //region plugins/crit/_component/game-action-crit-math.test.js
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { installJBaseHostGlobals } from '../../_base/_component/fixtures/install-j-base-host-globals.js';
+import { installJBaseHostGlobals } from '../../_base/core/_component/fixtures/install-j-base-host-globals.js';
 
 describe('J-CriticalFactors Game_Action crit math (direct src import)', () =>
 {
@@ -13,9 +13,9 @@ describe('J-CriticalFactors Game_Action crit math (direct src import)', () =>
 
     globalThis.__PLUGIN_NAME__ = 'J-Base';
     globalThis.__PLUGIN_VERSION__ = '3.2.0';
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
     function Game_Action()
     {

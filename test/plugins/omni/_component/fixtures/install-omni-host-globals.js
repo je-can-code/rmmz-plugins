@@ -1,9 +1,9 @@
 //region plugins/omni/_component/fixtures/install-omni-host-globals.js
-import { installJBaseHostGlobals } from '../../../_base/_component/fixtures/install-j-base-host-globals.js';
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
-import PluginVersion from '../../../../../src/plugins/_base/models/PluginVersion.js';
-import ExternalJsonConfigLoader from '../../../../../src/plugins/_base/managers/ExternalJsonConfigLoader.js';
-import ExternalJsonConfigLoaderOptions from '../../../../../src/plugins/_base/models/ExternalJsonConfigLoaderOptions.js';
+import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
+import PluginVersion from '../../../../../src/plugins/_base/core/models/PluginVersion.js';
+import ExternalJsonConfigLoader from '../../../../../src/plugins/_base/core/managers/ExternalJsonConfigLoader.js';
+import ExternalJsonConfigLoaderOptions from '../../../../../src/plugins/_base/core/models/ExternalJsonConfigLoaderOptions.js';
 
 /**
  * `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` are bare identifiers read once, at import time, by

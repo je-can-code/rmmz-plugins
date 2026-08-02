@@ -18,9 +18,9 @@ describe('J-ABS-Pixelistics Game_Player bridge (direct src import)', () =>
     installPixelCoreHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
-    await import('../../../../../../src/plugins/_base/objects/Game_Character.js');
-    await import('../../../../../../src/plugins/_base/objects/Game_Event.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/objects/Game_Character.js');
+    await import('../../../../../../src/plugins/_base/core/objects/Game_Event.js');
 
     setPluginContextToJPixel();
     await import('../../../../../../src/plugins/pixel/core/_metadata/initialization.js');

@@ -17,7 +17,7 @@ describe('J-HUD-PartyFrame metadata (direct src import)', () =>
     installHudHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJHud();
     await import('../../../../../../src/plugins/hud/core/_metadata/initialization.js');
