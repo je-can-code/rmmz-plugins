@@ -1,6 +1,7 @@
 //region SaveFileSystem
 import SaveStorageError from './../core/save/SaveStorageError.js';
 import SaveManifest from './../core/save/SaveManifest.js';
+import SaveMigrationRegistry from './../core/save/SaveMigrationRegistry.js';
 
 /**
  * The bottom of the save pipeline: everything about *files*, and nothing about what they mean.
@@ -529,7 +530,16 @@ class SaveFileSystem
       sections[sectionName] = this.readJson(this.sectionPath(slotName, generationName, sectionName));
     });
 
-    return buildFromSections(sections, manifest);
+    // migrations run here, on plain data, before anything decodes: the decoder's seeds and type maps
+    // describe the current schema and cannot be told to read an older one. Running inside the retry
+    // loop is deliberate too - a migration that throws makes its generation fall back like any other
+    // unreadable one, rather than taking the whole load down.
+    const migrated = SaveMigrationRegistry.apply({
+      manifest,
+      sections,
+    });
+
+    return buildFromSections(migrated.sections, migrated.manifest);
   }
 
   /**
@@ -543,12 +553,19 @@ class SaveFileSystem
     const manifestPath = `${this.generationDirectory(slotName, generationName)}${this.manifestFileName}`;
     const manifest = this.readJson(manifestPath);
 
-    if (SaveManifest.supportsSchemaVersion(manifest.schemaVersion) === false)
+    // an older generation is readable when a chain of migrations reaches this build's version. this
+    // is checked before the sections are opened so the load menu can tell a slot it will be able to
+    // open from one it cannot, without parsing a world to find out.
+    const understood = SaveManifest.supportsSchemaVersion(manifest.schemaVersion)
+      || SaveMigrationRegistry.hasPathToCurrent(manifest.schemaVersion);
+
+    if (understood === false)
     {
       throw SaveStorageError.unsupportedSchemaVersion(
         manifestPath,
         manifest.schemaVersion,
-        SaveManifest.schemaVersion);
+        SaveManifest.schemaVersion,
+        SaveMigrationRegistry.firstMissingStep(manifest.schemaVersion));
     }
 
     return manifest;

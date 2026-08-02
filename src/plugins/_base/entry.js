@@ -12,6 +12,7 @@ import './core/save/SaveEncoder.js';
 import './core/save/SaveDecoder.js';
 import './core/save/SaveStorageError.js';
 import './core/save/SaveManifest.js';
+import './core/save/SaveMigrationRegistry.js';
 import './core/save/SaveDocument.js';
 import './core/save/SaveSectionRouter.js';
 import './core/ParameterFormat.js';

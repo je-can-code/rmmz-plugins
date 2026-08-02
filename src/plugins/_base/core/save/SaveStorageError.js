@@ -60,19 +60,30 @@ class SaveStorageError extends SaveError
   }
 
   /**
-   * Builds the error for a generation written by a schema version this code does not understand.
+   * Builds the error for a generation written by a schema version this code cannot reach.
+   *
+   * The missing step is named because it is the actionable half of the message: a save two versions
+   * behind with only the second step written fails here, and "write the migration from 3" is a very
+   * different instruction from "this save is from the future".
    * @param {string} filePath The path of the manifest carrying the version.
    * @param {number} found The schema version the file claims.
    * @param {number} supported The schema version this code writes.
+   * @param {number} missingStep The version whose migration is absent, or `0` when none is.
    * @returns {SaveStorageError}
    */
-  static unsupportedSchemaVersion(filePath, found, supported)
+  static unsupportedSchemaVersion(filePath, found, supported, missingStep)
   {
+    // a document ahead of this build has no missing step to name - migrations only run forward, so
+    // there is nothing anybody could write here that would make an older build read a newer save.
+    const remedy = missingStep === 0
+      ? 'It was written by a newer build than this one.'
+      : `No migration is registered from version ${missingStep}.`;
+
     return new SaveStorageError(
       'save-storage-unsupported-schema-version',
       filePath,
       `the generation was written at schema version ${found}, and this build understands `
-      + `${supported}. A migration is needed before it can be read.`);
+      + `${supported}. ${remedy}`);
   }
 
   /**
