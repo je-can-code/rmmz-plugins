@@ -1,5 +1,6 @@
 //region SaveDecoder
 import SaveDecodeError from './SaveDecodeError.js';
+import SaveCodecIndex from './SaveCodecIndex.js';
 
 /**
  * Rebuilds live objects out of the plain data a savefile holds.
@@ -62,7 +63,7 @@ class SaveDecoder
    */
   static decodeTagged(data, expectedType, path)
   {
-    const codec = SerializableRegistry.codecById(data['@']);
+    const codec = SaveCodecIndex.forId(data['@']);
 
     // a tag naming nothing means the file and the installed plugins disagree, and guessing a plain
     // object in its place would only move the failure somewhere with no trace of its cause.
@@ -71,7 +72,7 @@ class SaveDecoder
     // the tag and the type map are redundant by design; this is the integrity check that buys.
     if (expectedType !== null && codec.type() !== expectedType)
     {
-      const expectedCodec = SerializableRegistry.codecForConstructor(expectedType);
+      const expectedCodec = SaveCodecIndex.forConstructor(expectedType);
       const expectedId = expectedCodec === null
         ? expectedType.name
         : expectedCodec.id();
@@ -93,7 +94,7 @@ class SaveDecoder
    */
   static decodeDeclared(data, expectedType, path)
   {
-    const codec = SerializableRegistry.codecForConstructor(expectedType);
+    const codec = SaveCodecIndex.forConstructor(expectedType);
 
     // with no tag to fall back on, an unregistered declared type leaves nothing to rebuild from.
     if (codec === null) throw SaveDecodeError.unregisteredDeclaredType(path, expectedType.name);

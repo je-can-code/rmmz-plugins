@@ -12,12 +12,13 @@ import { installRealRmmzEngine } from '../../../../setup/rmmz-engine-loader.js';
  * a seed that misses a field does not fail loudly at all: it hands back `undefined` at a path a guard
  * reads with a strict `!== null`, which is a wrong answer rather than a crash.
  *
- * Enumerating {@link SerializableRegistry.codecsByType} means a type registered next year is covered
+ * Enumerating {@link SaveCodecIndex.all} means a type registered next year is covered
  * the day it is registered, without anybody remembering to add a case for it.
  */
 describe('save codec registry sweeps (direct src import)', () =>
 {
   let SerializableRegistry;
+  let SaveCodecIndex;
   let SaveEncoder;
   let SaveDecoder;
 
@@ -32,7 +33,7 @@ describe('save codec registry sweeps (direct src import)', () =>
    * Every codec the sweeps apply to: registered, and describing something with fields.
    * @returns {Array<[Function, object]>} Constructor/codec pairs.
    */
-  const sweepableCodecs = () => [ ...SerializableRegistry.codecsByType()
+  const sweepableCodecs = () => [ ...SaveCodecIndex.all()
     .entries() ]
     .filter(([ type ]) => nativeCollections.includes(type) === false);
 
@@ -115,6 +116,7 @@ describe('save codec registry sweeps (direct src import)', () =>
     // the walkers live in J-Base-Save and read the registry as a hoisted global, because it belongs
     // to J-Base and a ship may never import across into another. This reproduces that at test time.
     globalThis.SerializableRegistry = SerializableRegistry;
+    ({ default: SaveCodecIndex } = await import('../../../../../src/plugins/_base/ext/save/core/SaveCodecIndex.js'));
     ({ default: SaveEncoder } = await import('../../../../../src/plugins/_base/ext/save/core/SaveEncoder.js'));
     ({ default: SaveDecoder } = await import('../../../../../src/plugins/_base/ext/save/core/SaveDecoder.js'));
 
@@ -211,7 +213,7 @@ describe('save codec registry sweeps (direct src import)', () =>
           const missing = Object.keys(instance)
             .filter(key => instance[key] !== null)
             .filter(key => Object(instance[key]) === instance[key])
-            .filter(key => SerializableRegistry.codecForInstance(instance[key]) !== null)
+            .filter(key => SaveCodecIndex.forInstance(instance[key]) !== null)
             .filter(key => codec.typedTree()
               .children.has(key) === false);
 
@@ -258,7 +260,7 @@ describe('save codec registry sweeps (direct src import)', () =>
       // Act
       const unresolvable = sweepableCodecs()
         .map(([ , codec ]) => codec.id())
-        .filter(id => SerializableRegistry.codecById(id) === null);
+        .filter(id => SaveCodecIndex.forId(id) === null);
 
       // Assert
       expect(unresolvable).toEqual([]);
@@ -269,7 +271,7 @@ describe('save codec registry sweeps (direct src import)', () =>
       // Arrange
       // Act
       const unreachable = sweepableCodecs()
-        .filter(([ type ]) => SerializableRegistry.codecById(type.name) === null)
+        .filter(([ type ]) => SaveCodecIndex.forId(type.name) === null)
         .map(([ type ]) => type.name);
 
       // Assert

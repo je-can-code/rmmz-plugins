@@ -1,5 +1,6 @@
 //region SaveEncoder
 import SaveEncodeError from './SaveEncodeError.js';
+import SaveCodecIndex from './SaveCodecIndex.js';
 
 /**
  * Turns the live object graph into the plain data a savefile holds.
@@ -81,7 +82,7 @@ class SaveEncoder
    */
   static encodeInstance(value, path, depth)
   {
-    const codec = SerializableRegistry.codecForInstance(value);
+    const codec = SaveCodecIndex.forInstance(value);
 
     // an unregistered class is a declaration bug, and catching it here puts the error in front of
     // whoever added the field rather than in front of a player whose save decoded into rubble.

@@ -5,6 +5,7 @@ describe('save codec core (direct src import)', () =>
 {
   let SerializableRegistry;
   let SaveCodec;
+  let SaveCodecIndex;
   let SaveEncoder;
   let SaveDecoder;
 
@@ -22,7 +23,8 @@ describe('save codec core (direct src import)', () =>
     // the walkers live in J-Base-Save and read the registry as a hoisted global, because it belongs
     // to J-Base and a ship may never import across into another. This reproduces that at test time.
     globalThis.SerializableRegistry = SerializableRegistry;
-    ({ default: SaveCodec } = await import('../../../../../src/plugins/_base/core/core/SaveCodec.js'));
+    ({ default: SaveCodec } = await import('../../../../../src/plugins/_base/ext/save/core/SaveCodec.js'));
+    ({ default: SaveCodecIndex } = await import('../../../../../src/plugins/_base/ext/save/core/SaveCodecIndex.js'));
     ({ default: SaveEncoder } = await import('../../../../../src/plugins/_base/ext/save/core/SaveEncoder.js'));
     ({ default: SaveDecoder } = await import('../../../../../src/plugins/_base/ext/save/core/SaveDecoder.js'));
   });
@@ -30,14 +32,9 @@ describe('save codec core (direct src import)', () =>
   beforeEach(() =>
   {
     // the registry is realm-global static state; wipe it so each test registers into a clean slate.
-    SerializableRegistry.constructors()
-      .clear();
-    SerializableRegistry.codecs()
-      .clear();
-    SerializableRegistry.codecsByType()
-      .clear();
-    SerializableRegistry.registrations()
-      .clear();
+    // the codec index is not reset here on purpose - clearing moves the registry's revision, which
+    // is what tells the index to rebuild, the same path a plugin registering late takes at runtime.
+    SerializableRegistry.clear();
   });
 
   /**
@@ -118,7 +115,7 @@ describe('save codec core (direct src import)', () =>
 
       // Assert
       expect(SerializableRegistry.resolve('Leaf')).toBe(Leaf);
-      expect(SerializableRegistry.codecById('Leaf')
+      expect(SaveCodecIndex.forId('Leaf')
         .id()).toBe('Leaf');
     });
 
@@ -139,7 +136,7 @@ describe('save codec core (direct src import)', () =>
 
       // Assert
       expect(SerializableRegistry.resolve('OldLeaf')).toBe(Leaf);
-      expect(SerializableRegistry.codecById('Leaf')).toBe(SerializableRegistry.codecById('leaf-model'));
+      expect(SaveCodecIndex.forId('Leaf')).toBe(SaveCodecIndex.forId('leaf-model'));
     });
 
     it('keeps resolve() returning a bare constructor, which is what JsonEx reads', () =>
@@ -160,13 +157,13 @@ describe('save codec core (direct src import)', () =>
     it('returns null from codecById() for an unregistered id', () =>
     {
       // Arrange & Act & Assert
-      expect(SerializableRegistry.codecById('NeverRegistered')).toBeNull();
+      expect(SaveCodecIndex.forId('NeverRegistered')).toBeNull();
     });
 
     it('returns null from codecForConstructor() for an unregistered type', () =>
     {
       // Arrange & Act & Assert
-      expect(SerializableRegistry.codecForConstructor(Leaf)).toBeNull();
+      expect(SaveCodecIndex.forConstructor(Leaf)).toBeNull();
     });
 
     it('identifies a live instance by its constructor', () =>
@@ -175,7 +172,7 @@ describe('save codec core (direct src import)', () =>
       SerializableRegistry.register(Leaf, { id: 'leaf-model' });
 
       // Act
-      const codec = SerializableRegistry.codecForInstance(new Leaf(1));
+      const codec = SaveCodecIndex.forInstance(new Leaf(1));
 
       // Assert
       expect(codec.id()).toBe('leaf-model');
@@ -193,7 +190,7 @@ describe('save codec core (direct src import)', () =>
       SerializableRegistry.extend(Seeded, { transients: { beta: () => 99 } });
 
       // Assert
-      const codec = SerializableRegistry.codecById('seeded');
+      const codec = SaveCodecIndex.forId('seeded');
       expect([ ...codec.transients()
         .keys() ]).toEqual([ 'alpha', 'beta' ]);
     });
@@ -207,7 +204,7 @@ describe('save codec core (direct src import)', () =>
       SerializableRegistry.extend(Seeded, { typed: { nested: Leaf } });
 
       // Assert
-      expect(SerializableRegistry.codecById('Seeded')
+      expect(SaveCodecIndex.forId('Seeded')
         .id()).toBe('seeded');
     });
 
@@ -266,7 +263,7 @@ describe('save codec core (direct src import)', () =>
       const instance = Object.create(Seeded.prototype);
 
       // Act
-      SerializableRegistry.codecById('seeded')
+      SaveCodecIndex.forId('seeded')
         .seed(instance);
 
       // Assert
@@ -280,7 +277,7 @@ describe('save codec core (direct src import)', () =>
       const instance = Object.create(Bare.prototype);
 
       // Act
-      SerializableRegistry.codecById('bare')
+      SaveCodecIndex.forId('bare')
         .seed(instance);
 
       // Assert
@@ -300,7 +297,7 @@ describe('save codec core (direct src import)', () =>
       const instance = Object.create(Seeded.prototype);
 
       // Act
-      SerializableRegistry.codecById('seeded')
+      SaveCodecIndex.forId('seeded')
         .seed(instance);
 
       // Assert

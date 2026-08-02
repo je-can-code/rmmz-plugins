@@ -408,6 +408,389 @@ var SaveStorageError = class SaveStorageError extends SaveError {
 };
 
 //#endregion
+//#region src/plugins/_base/ext/save/core/SaveCodec.js
+/**
+* The normalized per-type record the registry stores: everything the encoder and decoder need to
+* know about one class, resolved once at registration time rather than re-derived per node.
+*
+* A codec is built from the loose options object a caller hands
+* {@link SerializableRegistry.register}, and its job is to turn every convenience that object allows
+* into exactly one shape the walkers can rely on. Notably:
+*
+* - `transients` and `typed` accept **dotted paths**, because almost every transient in this project
+*   lives inside a plugin namespace (`_j._base._cachedAllNotes`) rather than directly on the class.
+*   A flat key list could not express a single row of the real inventory.
+* - `seed` is resolved here, not at decode time, so the question "does this class have an
+*   `initMembers` to default from" is asked once per class instead of once per decoded object.
+*
+* The trees this builds are read on every node of a save, so they are plain nested `Map`s rather
+* than anything cleverer- a `Map.get` per path segment is the whole cost.
+*/
+var SaveCodec = class SaveCodec {
+	/**
+	* The constructor this codec describes.
+	* @type {Function}
+	*/
+	#type = null;
+	/**
+	* The stable string this type is written to disk as.
+	* @type {string}
+	*/
+	#id = String.empty;
+	/**
+	* Older save ids that still resolve to this type, so a rename ships without a migration.
+	* @type {string[]}
+	*/
+	#aliases = [];
+	/**
+	* Transient declarations as given: dotted path to a factory producing the cold value.
+	* @type {Map<string, Function>}
+	*/
+	#transients = new Map();
+	/**
+	* The same transient declarations arranged as a tree, for the encoder to skip by while walking.
+	* @type {{value: Function|null, children: Map<string, object>}}
+	*/
+	#transientTree = null;
+	/**
+	* Type declarations arranged as a tree: which fields hold instances, and of what.
+	* @type {{value: Function|null, children: Map<string, object>}}
+	*/
+	#typedTree = null;
+	/**
+	* Dictionary-valued type declarations arranged as a tree: which fields are plain objects whose
+	* *values* are instances.
+	* @type {{value: Function|null, children: Map<string, object>}}
+	*/
+	#typedValuesTree = null;
+	/**
+	* Establishes every field's default on a bare instance, before decoded fields land on it.
+	* @type {Function}
+	*/
+	#seed = null;
+	/**
+	* A full replacement for the default encode walk, or null to use the default.
+	* @type {Function|null}
+	*/
+	#encode = null;
+	/**
+	* A full replacement for the default decode walk, or null to use the default.
+	* @type {Function|null}
+	*/
+	#decode = null;
+	/**
+	* Builds an empty node for the path trees below.
+	* @returns {{value: Function|null, children: Map<string, object>}}
+	*/
+	static emptyNode() {
+		return {
+			value: null,
+			children: new Map()
+		};
+	}
+	/**
+	* Arranges a flat map of dotted paths into a tree, so a walker descending an object graph can
+	* carry its position in the declarations alongside its position in the data.
+	*
+	* A path may be a plain field name, in which case its node hangs directly off the root.
+	* @param {Object<string, Function>} declarations Dotted path to whatever the path declares.
+	* @returns {{value: Function|null, children: Map<string, object>}} The root of the tree.
+	*/
+	static buildPathTree(declarations) {
+		const root = SaveCodec.emptyNode();
+		Object.keys(declarations).forEach((path) => {
+			let node = root;
+			path.split(".").forEach((segment) => {
+				if (node.children.has(segment) === false) {
+					node.children.set(segment, SaveCodec.emptyNode());
+				}
+				node = node.children.get(segment);
+			});
+			node.value = declarations[path];
+		});
+		return root;
+	}
+	/**
+	* @param {Function} type The constructor this codec describes.
+	* @param {object} options The normalization inputs; see {@link SerializableRegistry.register}.
+	* @param {string} options.id The stable save id.
+	* @param {string[]} options.aliases Older save ids that still resolve here.
+	* @param {Object<string, Function>} options.transients Dotted path to a cold-value factory.
+	* @param {Object<string, Function>} options.typed Dotted path to the constructor that field holds.
+	* @param {Object<string, Function>} options.typedValues Dotted path to the constructor that
+	* field's dictionary *values* hold.
+	* @param {Function|null} options.seed An explicit default-establishing step, or null to derive one.
+	* @param {Function|null} options.encode A full encode override, or null.
+	* @param {Function|null} options.decode A full decode override, or null.
+	*/
+	constructor(type, { id, aliases, transients, typed, typedValues, seed, encode, decode }) {
+		this.#type = type;
+		this.#id = id;
+		this.#aliases = aliases;
+		this.#transients = new Map(Object.entries(transients));
+		this.#transientTree = SaveCodec.buildPathTree(transients);
+		this.#typedTree = SaveCodec.buildPathTree(typed);
+		this.#typedValuesTree = SaveCodec.buildPathTree(typedValues);
+		this.#seed = seed ?? this.#deriveSeed(type);
+		this.#encode = encode;
+		this.#decode = decode;
+	}
+	/**
+	* Picks the default seed step for a type that did not supply one.
+	* @param {Function} type The constructor being registered.
+	* @returns {Function} The seed step.
+	*/
+	#deriveSeed(type) {
+		if (!type.prototype.initMembers) return () => {};
+		if (type.prototype.initMembers.length > 0) return () => {};
+		return (instance) => instance.initMembers();
+	}
+	/**
+	* Gets the constructor this codec describes.
+	* @returns {Function}
+	*/
+	type() {
+		return this.#type;
+	}
+	/**
+	* Gets the stable string this type is written to disk as.
+	* @returns {string}
+	*/
+	id() {
+		return this.#id;
+	}
+	/**
+	* Gets the older save ids that still resolve to this type.
+	* @returns {string[]}
+	*/
+	aliases() {
+		return this.#aliases;
+	}
+	/**
+	* Gets the transient declarations, keyed by dotted path.
+	* @returns {Map<string, Function>}
+	*/
+	transients() {
+		return this.#transients;
+	}
+	/**
+	* Gets the root of the transient path tree, for the encoder to walk alongside the data.
+	* @returns {{value: Function|null, children: Map<string, object>}}
+	*/
+	transientTree() {
+		return this.#transientTree;
+	}
+	/**
+	* Gets the root of the type path tree, for the decoder to walk alongside the data.
+	* @returns {{value: Function|null, children: Map<string, object>}}
+	*/
+	typedTree() {
+		return this.#typedTree;
+	}
+	/**
+	* Gets the root of the dictionary-value type path tree.
+	* @returns {{value: Function|null, children: Map<string, object>}}
+	*/
+	typedValuesTree() {
+		return this.#typedValuesTree;
+	}
+	/**
+	* Establishes every field's default on a bare instance, ahead of any decoded field landing on it.
+	* @param {object} instance The freshly prototyped, unpopulated instance.
+	*/
+	seed(instance) {
+		this.#seed(instance);
+	}
+	/**
+	* Determines whether this codec replaces the default encode walk entirely.
+	* @returns {boolean}
+	*/
+	hasEncodeOverride() {
+		return this.#encode !== null;
+	}
+	/**
+	* Runs this codec's encode override against an instance.
+	* @param {object} instance The live instance being encoded.
+	* @param {string} path The JSON path of the instance, for error context.
+	* @returns {object} The plain data form.
+	*/
+	runEncode(instance, path) {
+		return this.#encode(instance, path);
+	}
+	/**
+	* Determines whether this codec replaces the default decode walk entirely.
+	* @returns {boolean}
+	*/
+	hasDecodeOverride() {
+		return this.#decode !== null;
+	}
+	/**
+	* Runs this codec's decode override against plain data.
+	* @param {object} data The plain data form read from the file.
+	* @param {string} path The JSON path of the node, for error context.
+	* @returns {object} The rebuilt instance.
+	*/
+	runDecode(data, path) {
+		return this.#decode(data, path);
+	}
+};
+
+//#endregion
+//#region src/plugins/_base/ext/save/core/SaveCodecIndex.js
+/**
+* The lookup the walkers use to go from a value, or from a tag in a file, to the codec describing it.
+*
+* {@link SerializableRegistry} keeps what each registration *said* - the raw declarations - and
+* deliberately does not know what any of it means, because it lives in J-Base and the save format is
+* an optional extension of it. Interpreting a declaration is this ship's job, so building codecs out
+* of those declarations happens here.
+*
+* **The index is built lazily, on first lookup, rather than at load.** Plugins register their models
+* at module scope, and several of them load *after* this one - so an index built while this file is
+* being evaluated would be missing everything registered later. The first save or load happens long
+* after every plugin has finished loading, which makes first-lookup the earliest moment the answer
+* is complete.
+*
+* It rebuilds whenever the registry has grown or shrunk since the last build. That covers the two
+* cases that matter: a plugin registering after the first build, and a test clearing the registry
+* between cases.
+*
+* Note that the three lookups below refresh the index and the three accessors do not. That split is
+* deliberate: an accessor that rebuilt on read would have to read its own field to decide whether to,
+* which is the recursion the accessor rules exist to prevent.
+*/
+var SaveCodecIndex = class {
+	/**
+	* Codecs keyed by save id and by every alias they answer to.
+	* @type {Map<string, SaveCodec>}
+	*/
+	static _byId = new Map();
+	/**
+	* Codecs keyed by the constructor function itself.
+	* @type {Map<Function, SaveCodec>}
+	*/
+	static _byType = new Map();
+	/**
+	* The registry revision this index was built from, used to notice a stale one.
+	*
+	* Deliberately the revision rather than the registration count: a registration being *replaced*
+	* leaves the count where it was, so a size check would hold a stale codec for a type someone had
+	* just re-declared.
+	* @type {number}
+	*/
+	static _builtFrom = -1;
+	/**
+	* Gets the codecs, keyed by save id and by every alias.
+	* @returns {Map<string, SaveCodec>} The codecs by id.
+	*/
+	static byId() {
+		return this._byId;
+	}
+	/**
+	* Sets the codecs keyed by save id.
+	* @param {Map<string, SaveCodec>} value The rebuilt index.
+	*/
+	static setById(value) {
+		this._byId = value;
+	}
+	/**
+	* Gets the codecs, keyed by the constructor function itself.
+	* @returns {Map<Function, SaveCodec>} The codecs by type.
+	*/
+	static byType() {
+		return this._byType;
+	}
+	/**
+	* Sets the codecs keyed by constructor.
+	* @param {Map<Function, SaveCodec>} value The rebuilt index.
+	*/
+	static setByType(value) {
+		this._byType = value;
+	}
+	/**
+	* Gets the registry revision the current index was built from.
+	* @returns {number} The revision at build time.
+	*/
+	static builtFrom() {
+		return this._builtFrom;
+	}
+	/**
+	* Sets the registry revision the current index was built from.
+	* @param {number} value The revision.
+	*/
+	static setBuiltFrom(value) {
+		this._builtFrom = value;
+	}
+	/**
+	* Rebuilds both indices when the registry no longer matches what they were built from.
+	*/
+	static rebuildIfStale() {
+		const revision = SerializableRegistry.revision();
+		if (this.builtFrom() === revision) return;
+		const registrations = SerializableRegistry.registrations();
+		const byId = new Map();
+		const byType = new Map();
+		registrations.forEach((declarations, constructor) => {
+			const codec = new SaveCodec(constructor, declarations);
+			byId.set(declarations.id, codec);
+			declarations.aliases.forEach((alias) => byId.set(alias, codec));
+			byType.set(constructor, codec);
+		});
+		this.setById(byId);
+		this.setByType(byType);
+		this.setBuiltFrom(revision);
+	}
+	/**
+	* Gets every registered codec, keyed by constructor, with the index refreshed first.
+	*
+	* This is the enumeration entry point, and it exists separately from {@link #byType} because that
+	* one is the bare accessor the field rules require and must not rebuild on read. Anything walking
+	* the whole registry - a sweep asserting every type declares what it holds, for instance - wants
+	* this, so that a type registered after the last lookup is included.
+	* @returns {Map<Function, SaveCodec>} Every codec, by constructor.
+	*/
+	static all() {
+		this.rebuildIfStale();
+		return this.byType();
+	}
+	/**
+	* Resolves a codec by the save id written into a file.
+	*
+	* Aliases resolve here too, which is the whole mechanism by which a class rename ships without a
+	* migration: the old id keeps pointing at the codec that replaced it.
+	* @param {string} id The save id read from a type tag.
+	* @returns {SaveCodec|null} The resolved codec, or null when nothing is registered under that id.
+	*/
+	static forId(id) {
+		this.rebuildIfStale();
+		if (this.byId().has(id)) {
+			return this.byId().get(id);
+		}
+		return null;
+	}
+	/**
+	* Resolves a codec by its constructor function.
+	* @param {Function} constructor The constructor to look up.
+	* @returns {SaveCodec|null} The resolved codec, or null when the type is not registered.
+	*/
+	static forConstructor(constructor) {
+		this.rebuildIfStale();
+		if (this.byType().has(constructor)) {
+			return this.byType().get(constructor);
+		}
+		return null;
+	}
+	/**
+	* Resolves the codec describing a live value's type.
+	* @param {object} value The live instance to identify.
+	* @returns {SaveCodec|null} The resolved codec, or null when the type is not registered.
+	*/
+	static forInstance(value) {
+		return this.forConstructor(value.constructor);
+	}
+};
+
+//#endregion
 //#region src/plugins/_base/ext/save/core/SaveEncoder.js
 /**
 * Turns the live object graph into the plain data a savefile holds.
@@ -467,7 +850,7 @@ var SaveEncoder = class {
 	* @returns {object} The tagged plain data form.
 	*/
 	static encodeInstance(value, path, depth) {
-		const codec = SerializableRegistry.codecForInstance(value);
+		const codec = SaveCodecIndex.forInstance(value);
 		if (codec === null) throw SaveEncodeError.unregisteredType(path, value.constructor.name);
 		const encoded = codec.hasEncodeOverride() ? codec.runEncode(value, path) : this.encodePlainObject(value, codec, path, depth);
 		encoded["@"] = codec.id();
@@ -609,10 +992,10 @@ var SaveDecoder = class {
 	* @returns {object} The rebuilt instance.
 	*/
 	static decodeTagged(data, expectedType, path) {
-		const codec = SerializableRegistry.codecById(data["@"]);
+		const codec = SaveCodecIndex.forId(data["@"]);
 		if (codec === null) throw SaveDecodeError.unknownSaveId(path, data["@"]);
 		if (expectedType !== null && codec.type() !== expectedType) {
-			const expectedCodec = SerializableRegistry.codecForConstructor(expectedType);
+			const expectedCodec = SaveCodecIndex.forConstructor(expectedType);
 			const expectedId = expectedCodec === null ? expectedType.name : expectedCodec.id();
 			throw SaveDecodeError.typeMismatch(path, expectedId, codec.id());
 		}
@@ -628,7 +1011,7 @@ var SaveDecoder = class {
 	* @returns {object} The rebuilt instance.
 	*/
 	static decodeDeclared(data, expectedType, path) {
-		const codec = SerializableRegistry.codecForConstructor(expectedType);
+		const codec = SaveCodecIndex.forConstructor(expectedType);
 		if (codec === null) throw SaveDecodeError.unregisteredDeclaredType(path, expectedType.name);
 		return this.decodeWith(data, codec, path);
 	}

@@ -5,6 +5,8 @@ import './core/SaveError.js';
 import './core/SaveEncodeError.js';
 import './core/SaveDecodeError.js';
 import './core/SaveStorageError.js';
+import './core/SaveCodec.js';
+import './core/SaveCodecIndex.js';
 import './core/SaveEncoder.js';
 import './core/SaveDecoder.js';
 import './core/SaveManifest.js';

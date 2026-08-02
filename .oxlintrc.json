@@ -491,6 +491,7 @@
     "ResourcesAbsParameterRegistration": "writable",
     "ResourcesParameterRegistration": "writable",
     "SaveCodec": "writable",
+    "SaveCodecIndex": "writable",
     "SaveDecodeError": "writable",
     "SaveDecoder": "writable",
     "SaveDocument": "writable",

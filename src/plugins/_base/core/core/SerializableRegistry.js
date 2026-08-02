@@ -1,17 +1,16 @@
 //region SerializableRegistry
-import SaveCodec from './SaveCodec.js';
-
 /**
  * A central registry of constructors that {@link JsonEx} can use for reliable
  * type restoration when deserializing.
  *
- * It is also where the save pipeline's per-type rules live. A registration answers two different
- * questions with one call: "what constructor does this name mean" - which is all {@link JsonEx} ever
- * needed - and "what does this type persist, regenerate, and hold instances of", which is what
- * {@link SaveEncoder} and {@link SaveDecoder} read. The two are deliberately separate lookups rather
- * than one, because {@link JsonEx} wants a bare constructor and the walkers want a {@link SaveCodec};
- * folding them together would mean whichever caller lost the coin toss unwrapping the other's answer
- * on every node.
+ * It is also where each type's save declarations are kept - but only kept. This class stores what a
+ * registration said and answers "what constructor does this name mean"; it does not know what a
+ * transient or a typed field *means*, because that is the save format's business and the save
+ * format is an optional extension. J-Base-Save reads these declarations and builds its own codecs
+ * from them.
+ *
+ * That division is what lets the extension be uninstalled: without it, every registration here is
+ * inert metadata that nothing interprets, and the engine's own save path carries on unchanged.
  */
 class SerializableRegistry
 {
@@ -28,26 +27,6 @@ class SerializableRegistry
   }
 
   /**
-   * Gets the codecs, keyed by save id and by every alias.
-   * @returns {Map<string, SaveCodec>} The codecs.
-   */
-  static codecs()
-  {
-    // hand back the codecs.
-    return this._codecs;
-  }
-
-  /**
-   * Gets the codecs, keyed by the constructor function itself.
-   * @returns {Map<Function, SaveCodec>} The codecs by type.
-   */
-  static codecsByType()
-  {
-    // hand back the codecs by type.
-    return this._codecsByType;
-  }
-
-  /**
    * Gets the raw declarations each constructor was registered with.
    * @returns {Map<Function, object>} The registrations.
    */
@@ -55,6 +34,29 @@ class SerializableRegistry
   {
     // hand back the registrations.
     return this._registrations;
+  }
+
+  /**
+   * Gets how many times a registration has been filed or amended.
+   *
+   * Anything caching a view of this registry compares against this rather than against the map's
+   * size, because size does not move when a registration is replaced - and a test that clears the
+   * registry and re-registers the same count would otherwise keep a stale cache silently.
+   * @returns {number} The revision.
+   */
+  static revision()
+  {
+    // hand back the revision.
+    return this._revision;
+  }
+
+  /**
+   * Sets the revision.
+   * @param {number} value The new revision.
+   */
+  static setRevision(value)
+  {
+    this._revision = value;
   }
   //endregion properties
 
@@ -64,23 +66,6 @@ class SerializableRegistry
    */
 
   static _constructors = new Map();
-
-  /**
-   * The internal collection of registered codecs, keyed by save id and by every alias.
-   * @type {Map<string, SaveCodec>}
-   */
-  static _codecs = new Map();
-
-  /**
-   * The internal collection of registered codecs, keyed by the constructor function itself.
-   *
-   * This is the index that lets the encoder answer "what type is this value" with a `Map` lookup on
-   * `value.constructor`, rather than a prototype-chain test or a name comparison. It is keyed on the
-   * function identity, so two classes that happen to share a name cannot collide here the way they
-   * would in the id-keyed map above.
-   * @type {Map<Function, SaveCodec>}
-   */
-  static _codecsByType = new Map();
 
   /**
    * The options each constructor was registered with, kept so {@link #extend} can merge into them.
@@ -93,6 +78,12 @@ class SerializableRegistry
    * @type {Map<Function, object>}
    */
   static _registrations = new Map();
+
+  /**
+   * How many times a registration has been filed or amended, so a cache can tell it has gone stale.
+   * @type {number}
+   */
+  static _revision = 0;
 
   /**
    * Registers a constructor for {@link JsonEx} deserialization and for the save pipeline.
@@ -177,7 +168,7 @@ class SerializableRegistry
       decode: given.decode ?? null,
     };
 
-    this.installCodec(constructor, declarations);
+    this.installDeclarations(constructor, declarations);
   }
 
   /**
@@ -215,7 +206,7 @@ class SerializableRegistry
         + 'The plugin that owns the type must load before the one extending it.');
     }
 
-    this.installCodec(constructor, {
+    this.installDeclarations(constructor, {
       ...existing,
       transients: { ...existing.transients, ...(options.transients ?? {}) },
       typed: { ...existing.typed, ...(options.typed ?? {}) },
@@ -224,37 +215,46 @@ class SerializableRegistry
   }
 
   /**
-   * Builds a codec from a complete set of declarations and files it under every key it answers to.
+   * Empties the registry entirely.
+   *
+   * This exists so nothing has to reach into the two maps to reset them. Clearing them from outside
+   * would leave the revision where it was, and any cached view comparing against that revision would
+   * decide it was still current while holding codecs for types that are no longer registered.
+   */
+  static clear()
+  {
+    this.constructors()
+      .clear();
+
+    this.registrations()
+      .clear();
+
+    // an emptying is a change like any other, and anything caching a view has to hear about it.
+    this.setRevision(this.revision() + 1);
+  }
+
+  /**
+   * Files a complete set of declarations against the constructor they describe.
    * @param {Function} constructor The constructor being described.
    * @param {object} declarations The complete, normalized declarations.
    */
-  static installCodec(constructor, declarations)
+  static installDeclarations(constructor, declarations)
   {
-    // remember the declarations verbatim so a later extend() has something to merge into.
+    // remember the declarations verbatim, both so a later extend() has something to merge into and
+    // so the save extension has something to build a codec out of.
     this.registrations()
       .set(constructor, declarations);
 
-    const codec = new SaveCodec(constructor, declarations);
-
-    // the codec answers to its id, to every alias, and to the constructor itself.
-    this.codecs()
-      .set(declarations.id, codec);
-
-    declarations.aliases.forEach(alias =>
-    {
-      this.codecs()
-        .set(alias, codec);
-    });
-
-    this.codecsByType()
-      .set(constructor, codec);
+    // moving the revision is what tells any cached view of this registry that it is out of date.
+    this.setRevision(this.revision() + 1);
   }
 
   /**
    * Resolves a previously-registered constructor by id.
    *
-   * This is {@link JsonEx}'s lookup and returns a bare constructor for that reason; anything working
-   * with the save pipeline wants {@link #codecById} instead.
+   * This is {@link JsonEx}'s lookup, and it hands back a bare constructor because that is all
+   * {@link JsonEx} has ever wanted. Anything reading save declarations goes through the index the
+   * save extension builds instead.
    * @param {string} id The serialization id for the constructor.
    * @returns {Function|null} The resolved constructor, or null when not found.
    */
@@ -271,54 +271,23 @@ class SerializableRegistry
   }
 
   /**
-   * Resolves a previously-registered codec by the save id written into a file.
+   * Resolves the declarations a live value's type was registered with.
    *
-   * Aliases resolve here too, which is the whole mechanism by which a class rename ships without a
-   * migration: the old id keeps pointing at the codec that replaced it.
-   * @param {string} id The save id read from a type tag.
-   * @returns {SaveCodec|null} The resolved codec, or null when nothing is registered under that id.
-   */
-  static codecById(id)
-  {
-    if (this.codecs()
-      .has(id))
-    {
-      return this.codecs()
-        .get(id);
-    }
-
-    return null;
-  }
-
-  /**
-   * Resolves a previously-registered codec by its constructor function.
-   * @param {Function} constructor The constructor to look up.
-   * @returns {SaveCodec|null} The resolved codec, or null when the type is not registered.
-   */
-  static codecForConstructor(constructor)
-  {
-    if (this.codecsByType()
-      .has(constructor))
-    {
-      return this.codecsByType()
-        .get(constructor);
-    }
-
-    return null;
-  }
-
-  /**
-   * Resolves the codec describing a live value's type.
-   *
-   * This is how the encoder identifies what it is looking at, and it is keyed on `value.constructor`
-   * rather than on a name or a prototype-chain test- a `Map` lookup on function identity, which is
-   * both faster and immune to two unrelated classes sharing a name.
+   * Keyed on `value.constructor` rather than on a name or a prototype-chain test, which is both a
+   * plain `Map` lookup and immune to two unrelated classes sharing a name.
    * @param {object} value The live instance to identify.
-   * @returns {SaveCodec|null} The resolved codec, or null when the type is not registered.
+   * @returns {object|null} The declarations, or null when the type is not registered.
    */
-  static codecForInstance(value)
+  static registrationForInstance(value)
   {
-    return this.codecForConstructor(value.constructor);
+    if (this.registrations()
+      .has(value.constructor))
+    {
+      return this.registrations()
+        .get(value.constructor);
+    }
+
+    return null;
   }
 }
 
