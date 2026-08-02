@@ -718,6 +718,18 @@ Consequences to accept deliberately:
 
 - `seed` must be **free of side effects**. It assigns defaults and nothing else. This is the same bar
   `is*` / `can*` / `should*` methods are already held to.
+- **`seed` must also produce fresh, unshared objects.** `mergeOverSeeded` writes into the seeded
+  object in place, so an `initMembers` that assigns a shared constant rather than a fresh literal
+  would have that shared default mutated on every load, corrupting it for every other instance.
+  Nothing in the tree does this today — verified by review on 2026-08-02 — which is exactly why it
+  needs writing down before someone adds the first one. This is a stricter bar than side-effect
+  freedom and it did not exist before the merge did.
+- **The merge cannot represent a deletion.** Where `seed` produces a *non-empty* plain-object
+  dictionary and the runtime can `delete` keys from it, a key removed before the save is resurrected
+  on load: the file says it is gone, the seed says it exists, and the merge sides with the seed.
+  Currently harmless — the engine does delete this way (`Game_Party` drops an item key when its stack
+  hits zero) but seeds those containers empty, so there is nothing to resurrect. A future field that
+  seeds non-empty *and* supports deletion must use an array, a `Map`, or an explicit tombstone.
 - Assignment order is **seed, then decoded fields, then transients**. Decoded values always win over
   seeded defaults; transients always win over both.
 - A field added to a class after a save shipped comes back at its seeded default instead of
