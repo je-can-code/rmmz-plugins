@@ -6,3 +6,4 @@ import './objects/Game_Battler.js';
 import './scenes/Scene_Boot.js';
 import './_metadata/pluginCommands.js';
 
+import './registerOtibSaveRoutes.js';

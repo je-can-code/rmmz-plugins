@@ -32,3 +32,4 @@ import './scenes/Scene_Menu.js';
 import './windows/Window_MenuCommand.js';
 import './_metadata/pluginCommands.js';
 
+import './registerAptitudeSaveRoutes.js';

@@ -32,4 +32,11 @@ SerializableRegistry.extend(Game_Follower, {
 SerializableRegistry.extend(Game_Vehicle, {
   transients: jabsToolsTimerTransients,
 });
+/**
+ * Lifts the tools slice out of its hosts and into a section file of its own.
+ */
+if (J.BASE.EXT.SAVE)
+{
+  SaveSectionRouter.registerNamespace('_tools', 'abs-tools');
+}
 //endregion registerJabsToolsSaveCodecs

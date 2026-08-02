@@ -14,7 +14,12 @@
  * on what their defaults are and they are not constructed yet at this point. `initializeJabsInputIfMissing`
  * is what fills an empty store from them.
  */
-ConfigManager.registerField('jabsInputMappings', () => ({}));
+// `registerField` is J-Base-Save's addition to `ConfigManager`, and that plugin is optional - so
+// without it these two stay where they were, inside each savefile, exactly as they always were.
+if (J.BASE.EXT.SAVE)
+{
+  ConfigManager.registerField('jabsInputMappings', () => ({}));
 
-ConfigManager.registerField('jabsInputBindings', () => ({}));
+  ConfigManager.registerField('jabsInputBindings', () => ({}));
+}
 //endregion registerJabsInputConfigFields

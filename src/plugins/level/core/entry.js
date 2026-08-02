@@ -18,3 +18,5 @@ import './objects/Game_Temp.js';
 import './objects/Game_Troop.js';
 
 import './sprites/Sprite_Character.js';
+
+import './registerLevelSaveRoutes.js';

@@ -23,3 +23,4 @@ import './scenes/Scene_Jafting.js';
 import './windows/Window_JaftingList.js';
 import './_metadata/pluginCommands.js';
 
+import './registerJaftingCreateSaveRoutes.js';

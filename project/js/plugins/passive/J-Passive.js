@@ -3222,6 +3222,12 @@ SerializableRegistry.extend(Game_Actor, { transients: { "_j._passive._passiveSou
 	battler.cachePassiveCapableSources();
 	return battler.passiveSources();
 } } });
+/**
+* Lifts the passive slice out of its hosts and into a section file of its own.
+*/
+if (J.BASE.EXT.SAVE) {
+	SaveSectionRouter.registerNamespace("_passive", "passive");
+}
 
 //#endregion
 //# sourceMappingURL=J-Passive.js.map

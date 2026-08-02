@@ -8,3 +8,5 @@ import './_metadata/pluginCommands.js';
 import './windows/Window_StatusBase.js';
 import './windows/Window_TargetFrame.js';
 import './sprites/Sprite_ActorValue.js';
+
+import './registerLevelSyncSaveRoutes.js';

@@ -1056,8 +1056,10 @@ JABS_InputAdapter.getAllControllers = function() {
 * on what their defaults are and they are not constructed yet at this point. `initializeJabsInputIfMissing`
 * is what fills an empty store from them.
 */
-ConfigManager.registerField("jabsInputMappings", () => ({}));
-ConfigManager.registerField("jabsInputBindings", () => ({}));
+if (J.BASE.EXT.SAVE) {
+	ConfigManager.registerField("jabsInputMappings", () => ({}));
+	ConfigManager.registerField("jabsInputBindings", () => ({}));
+}
 
 //#endregion
 //#region src/plugins/abs/ext/input/managers/DataManager.js

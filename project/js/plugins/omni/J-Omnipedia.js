@@ -520,4 +520,20 @@ Window_MenuCommand.prototype.canAddOmnipediaCommand = function() {
 };
 
 //#endregion
+//#region src/plugins/omni/core/registerOmniSaveRoutes.js
+/**
+* Lifts this plugin's slice out of whatever host carries it and into its own section file.
+*
+* Without this the namespace still saves correctly - it simply rides inline on the host it was
+* assigned to, which is where every plugin's state lived before the router existed. Registering
+* is what gives J-Omnipedia a file of its own to read.
+*
+* The namespace check is the one this codebase allows: J-Base-Save is genuinely optional, and
+* without it the engine's own save path carries this state inline just as it always did.
+*/
+if (J.BASE.EXT.SAVE) {
+	SaveSectionRouter.registerNamespace("_omni", "omni");
+}
+
+//#endregion
 //# sourceMappingURL=J-Omnipedia.js.map
