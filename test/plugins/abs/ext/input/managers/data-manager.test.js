@@ -34,6 +34,10 @@ describe('J-ABS-Input DataManager (unit, all downstream dependencies mocked)', (
     globalThis.IconManager.registerJabsInputTexts.mockReset();
     FakeJABS_StandardController.mockClear();
     globalThis.$jabsController1 = null;
+
+    // the real `createGameObjects` builds `$gameSystem` before this extension's alias runs, so the
+    // system object is present by the time the keybinds are pushed onto the fresh controller.
+    globalThis.$gameSystem = { applyJabsInputConfiguration: vi.fn() };
   });
 
   describe('createGameObjects', () =>
@@ -66,6 +70,17 @@ describe('J-ABS-Input DataManager (unit, all downstream dependencies mocked)', (
 
       expect(FakeJABS_StandardController).not.toHaveBeenCalled();
       expect(globalThis.$jabsController1).toBe(existing);
+    });
+
+    it('applies the stored keybind configuration, on a new game as much as on a loaded one', () =>
+    {
+      // Act
+      globalThis.DataManager.createGameObjects();
+
+      // Assert- this hook runs down both paths, which is the whole reason the apply lives here.
+      // hanging it off the load hook instead left a new game running the built-in defaults while
+      // the player's own bindings sat unread in the config file.
+      expect(globalThis.$gameSystem.applyJabsInputConfiguration).toHaveBeenCalledTimes(1);
     });
   });
 });

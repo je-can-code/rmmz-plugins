@@ -15,6 +15,8 @@ import './core/SaveDocument.js';
 import './core/SaveSectionRouter.js';
 import './core/registerEngineSaveCodecs.js';
 
+import './objects/Game_System.js';
+
 import './managers/SaveFileSystem.js';
 import './managers/StorageManager.js';
 import './managers/ConfigManager.js';

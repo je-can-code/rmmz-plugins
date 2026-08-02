@@ -231,7 +231,8 @@ StorageManager.saveSlot = function(saveName, contents)
   const manifest = SaveManifest.create(
     Object.keys(sections),
     DataManager.makeSavefileInfo(),
-    Graphics.frameCount);
+    Graphics.frameCount,
+    $gameSystem.playthroughId());
 
   return SaveFileSystem.writeSlot(saveName, sections, SaveEncoder.encode(manifest, '$.manifest'));
 };

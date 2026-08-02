@@ -30,6 +30,7 @@ describe('save and load through the real engine objects', () =>
   let StorageManager;
   let SaveFileSystem;
   let fake;
+  let uuidsIssued = 0;
 
   /**
    * Verbatim from `DataManager.makeSaveContents()` in `project/js/rmmz_managers.js`.
@@ -210,8 +211,22 @@ describe('save and load through the real engine objects', () =>
       isBigCharacter: () => false,
     };
 
-    // J-Base's namespace, reduced to what the save pipeline actually reads off it.
-    globalThis.J = { BASE: { EXT: { SAVE: { Metadata: { retainedSaveGenerations: 3 } } } } };
+    // J-Base's namespace, reduced to what the save pipeline actually reads off it. `generateUuid`
+    // stands in for J-Base's, and counts rather than randomizes so a test can name the id it expects
+    // - the save system only ever compares these for equality.
+    globalThis.J = {
+      BASE: {
+        Helpers: {
+          generateUuid: () => `playthrough-${++uuidsIssued}`,
+        },
+        EXT: {
+          SAVE: {
+            Metadata: { retainedSaveGenerations: 3 },
+            Aliased: { Game_System: new Map() },
+          },
+        },
+      },
+    };
 
     // `Game_Party` sets up in `initialize`, which a decode can never re-run, so J-Base gives it an
     // `initMembers` hook that plugins alias and its codec seed calls. J-Base is not loaded here, so
@@ -248,6 +263,10 @@ describe('save and load through the real engine objects', () =>
     // that file defines the real `fs*` helpers and would otherwise win.
     fake = installFakeSaveFilesystem();
     const fakeFilesystem = { ...fake.storageManager };
+
+    // the real augment, imported after the `initMembers` stub above so it aliases that stub exactly
+    // as it would alias J-Base's. this is what puts `playthroughId` on the system object.
+    await import('../../../../../src/plugins/_base/ext/save/objects/Game_System.js');
 
     await import('../../../../../src/plugins/_base/ext/save/core/SaveDocument.js');
     await import('../../../../../src/plugins/_base/ext/save/core/registerEngineSaveCodecs.js');

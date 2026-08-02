@@ -380,22 +380,50 @@ describe('J-ABS-Input Game_System (unit, all downstream dependencies mocked)', (
     });
   });
 
-  describe('onAfterLoad()', () =>
+  describe('applyJabsInputConfiguration()', () =>
   {
-    it('performs original logic then seeds missing defaults, bindings, and controller configs', () =>
+    it('seeds missing defaults, then applies bindings and controller configs', () =>
     {
+      // Arrange
       const system = buildSystem();
       system.initJabsInputConfigMembers();
-      const legacySpy = vi.spyOn(system, 'initializeJabsInputIfMissing').mockImplementation(() => {});
+      const seedSpy = vi.spyOn(system, 'initializeJabsInputIfMissing').mockImplementation(() => {});
       const applyBindingsSpy = vi.spyOn(system, 'applyAllInputBindingsToInput').mockImplementation(() => {});
       const applyConfigsSpy = vi.spyOn(system, 'applyAllJabsInputConfigs').mockImplementation(() => {});
 
-      system.onAfterLoad();
+      // Act
+      system.applyJabsInputConfiguration();
 
-      expect(originalOnAfterLoad).toHaveBeenCalled();
-      expect(legacySpy).toHaveBeenCalled();
+      // Assert
+      expect(seedSpy).toHaveBeenCalled();
       expect(applyBindingsSpy).toHaveBeenCalled();
       expect(applyConfigsSpy).toHaveBeenCalled();
+
+      seedSpy.mockRestore();
+      applyBindingsSpy.mockRestore();
+      applyConfigsSpy.mockRestore();
+    });
+  });
+
+  describe('onAfterLoad()', () =>
+  {
+    it('leaves keybinds alone, because they no longer arrive with a savefile', () =>
+    {
+      // Arrange
+      const system = buildSystem();
+      system.initJabsInputConfigMembers();
+      const seedSpy = vi.spyOn(system, 'initializeJabsInputIfMissing').mockImplementation(() => {});
+
+      // Act
+      system.onAfterLoad();
+
+      // Assert- keybinds are installation scope and are applied when the game objects are created,
+      // which covers a new game as well as a loaded one. re-applying them here would be dead work,
+      // and having them ONLY here is the bug that put a fresh playthrough on the built-in defaults
+      // while the player's own bindings sat unread in the config file.
+      expect(seedSpy).not.toHaveBeenCalled();
+
+      seedSpy.mockRestore();
     });
   });
 });

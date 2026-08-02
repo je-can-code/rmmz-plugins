@@ -330,16 +330,15 @@ Game_System.prototype.onBeforeSave = function()
 };
 
 /**
- * Extends {@link #onAfterLoad}.<br/>
- * Applies stored mappings after loading.
+ * Pushes the stored keybind configuration into the live input registry and every controller.
+ *
+ * This runs whenever a game world comes up, not when a savefile is read. Keybinds are installation
+ * scope- they are read from {@link ConfigManager}, and a new game has exactly as much claim on them
+ * as a loaded one does. Hanging this off the load hook instead would leave a fresh playthrough
+ * running the built-in defaults while the player's own bindings sat in the config file, unread.
  */
-J.ABS.EXT.INPUT.Aliased.Game_System.set('onAfterLoad', Game_System.prototype.onAfterLoad);
-Game_System.prototype.onAfterLoad = function()
+Game_System.prototype.applyJabsInputConfiguration = function()
 {
-  // perform original logic.
-  J.ABS.EXT.INPUT.Aliased.Game_System.get('onAfterLoad')
-    .call(this);
-
   // seed the stored configuration from defaults if this installation has none yet.
   this.initializeJabsInputIfMissing();
 

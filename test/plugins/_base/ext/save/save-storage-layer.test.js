@@ -15,18 +15,21 @@ describe('save storage layer (direct src import)', () =>
    * Builds the manifest a write needs, without going through the encoder- these tests are about
    * files, and the encoder has its own suite.
    * @param {Object<string, object>} sections The sections being written.
+   * @param {string=} playthroughId The playthrough to attribute the generation to.
    * @returns {object}
    */
-  const manifestFor = sections => SaveManifest.create(Object.keys(sections), { title: 'test' }, 100);
+  const manifestFor = (sections, playthroughId = 'playthrough-a') =>
+    SaveManifest.create(Object.keys(sections), { title: 'test' }, 100, playthroughId);
 
   /**
    * Writes one generation of a slot, with whatever sections the caller cares about.
    * @param {string} slotName The slot to write.
    * @param {Object<string, object>=} sections The sections to write.
+   * @param {string=} playthroughId The playthrough to attribute the generation to.
    * @returns {Promise<void>}
    */
-  const writeGeneration = (slotName, sections = { 'world.json': { map: 1 } }) =>
-    SaveFileSystem.writeSlot(slotName, sections, manifestFor(sections));
+  const writeGeneration = (slotName, sections = { 'world.json': { map: 1 } }, playthroughId = 'playthrough-a') =>
+    SaveFileSystem.writeSlot(slotName, sections, manifestFor(sections, playthroughId));
 
   beforeAll(async () =>
   {
@@ -66,9 +69,21 @@ describe('save storage layer (direct src import)', () =>
       await writeGeneration('file1');
 
       // Assert
-      expect(fake.files.get('save/file1/current')).toBe('gen-0001');
+      expect(SaveFileSystem.currentGenerationName('file1')).toBe('gen-0001');
       expect(fake.files.has('save/file1/gen-0001/world.json')).toBe(true);
       expect(fake.files.has('save/file1/gen-0001/manifest.json')).toBe(true);
+    });
+
+    it('records the playthrough in the pointer, alongside the generation', async () =>
+    {
+      // Arrange
+      // Act
+      await writeGeneration('file1', { 'world.json': { map: 1 } }, 'playthrough-z');
+
+      // Assert- the identity rides in the pointer rather than in the manifest, so a generation torn
+      // badly enough to be unloadable cannot also take down the slot's answer to "whose is this".
+      expect(fake.files.get('save/file1/current')).toBe('gen-0001 playthrough-z');
+      expect(SaveFileSystem.currentPlaythroughId('file1')).toBe('playthrough-z');
     });
 
     it('writes each subsequent save as a new generation and repoints the slot', async () =>
@@ -80,7 +95,7 @@ describe('save storage layer (direct src import)', () =>
       await writeGeneration('file1');
 
       // Assert
-      expect(fake.files.get('save/file1/current')).toBe('gen-0002');
+      expect(SaveFileSystem.currentGenerationName('file1')).toBe('gen-0002');
       expect(fake.files.has('save/file1/gen-0001/world.json')).toBe(true);
     });
 
@@ -162,7 +177,7 @@ describe('save storage layer (direct src import)', () =>
       await writeGeneration('file1');
 
       // Assert
-      expect(fake.files.get('save/file1/current')).toBe('gen-0010');
+      expect(SaveFileSystem.currentGenerationName('file1')).toBe('gen-0010');
     });
 
     it('prunes an orphan left by a write that never reached the pointer', async () =>
@@ -214,7 +229,7 @@ describe('save storage layer (direct src import)', () =>
         await writeGeneration('file1', sections)
           .catch(() => 0);
 
-        outcomes.push(fake.files.get('save/file1/current'));
+        outcomes.push(SaveFileSystem.currentGenerationName('file1'));
       }
 
       // Assert
@@ -260,6 +275,88 @@ describe('save storage layer (direct src import)', () =>
       await writeGeneration('file1', { 'world.json': { map: 1 } });
       await writeGeneration('file1', { 'world.json': { map: 2 } });
       fake.files.set('save/file1/gen-0002/manifest.json', '{ truncated');
+
+      // Act
+      const loaded = await SaveFileSystem.readSlot('file1', sections => sections);
+
+      // Assert
+      expect(loaded['world.json']).toEqual({ map: 1 });
+    });
+
+    it('says so when it steps back, rather than quietly handing over an older save', async () =>
+    {
+      // Arrange
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await writeGeneration('file1', { 'world.json': { map: 1 } });
+      await writeGeneration('file1', { 'world.json': { map: 2 } });
+      fake.files.set('save/file1/gen-0002/manifest.json', '{ truncated');
+
+      // Act
+      await SaveFileSystem.readSlot('file1', sections => sections);
+
+      // Assert- the player asked for their newest save and did not get it. unannounced, that reads
+      // as "I lost my last ten minutes", which sends anyone debugging it at the save path instead
+      // of the load path.
+      expect(warn).toHaveBeenCalled();
+      expect(warn.mock.calls[0][0]).toContain('gen-0001');
+
+      warn.mockRestore();
+    });
+
+    it('stays quiet when the generation the pointer names loads', async () =>
+    {
+      // Arrange
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      await writeGeneration('file1', { 'world.json': { map: 1 } });
+
+      // Act
+      await SaveFileSystem.readSlot('file1', sections => sections);
+
+      // Assert
+      expect(warn).not.toHaveBeenCalled();
+
+      warn.mockRestore();
+    });
+
+    it('will not step back into a playthrough that merely shares the slot', async () =>
+    {
+      // Arrange- one game saved twice, then a different game saved over the same slot. all three
+      // generations live in the same folder, and only the newest belongs to the game being loaded.
+      await writeGeneration('file1', { 'world.json': { map: 1 } }, 'playthrough-a');
+      await writeGeneration('file1', { 'world.json': { map: 2 } }, 'playthrough-a');
+      await writeGeneration('file1', { 'world.json': { map: 3 } }, 'playthrough-b');
+      fake.files.set('save/file1/gen-0003/manifest.json', '{ truncated');
+
+      // Act
+      const attempt = SaveFileSystem.readSlot('file1', sections => sections);
+
+      // Assert- counting backwards alone would have landed on map 2: a different party, a different
+      // story position, and a load that looks entirely successful. failing is the correct answer.
+      await expect(attempt).rejects.toThrow();
+    });
+
+    it('steps back through generations that do belong to the same playthrough', async () =>
+    {
+      // Arrange
+      await writeGeneration('file1', { 'world.json': { map: 1 } }, 'playthrough-b');
+      await writeGeneration('file1', { 'world.json': { map: 2 } }, 'playthrough-b');
+      fake.files.set('save/file1/gen-0002/manifest.json', '{ truncated');
+
+      // Act
+      const loaded = await SaveFileSystem.readSlot('file1', sections => sections);
+
+      // Assert
+      expect(loaded['world.json']).toEqual({ map: 1 });
+    });
+
+    it('treats a slot written before playthrough ids existed as fully reachable', async () =>
+    {
+      // Arrange- a pointer from before the second field existed names only a generation, so the
+      // slot cannot say whose it is and nothing can be ruled out by an id.
+      await writeGeneration('file1', { 'world.json': { map: 1 } });
+      await writeGeneration('file1', { 'world.json': { map: 2 } });
+      fake.files.set('save/file1/current', 'gen-0002');
+      fake.files.delete('save/file1/gen-0002/world.json');
 
       // Act
       const loaded = await SaveFileSystem.readSlot('file1', sections => sections);

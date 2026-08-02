@@ -15,7 +15,7 @@ save/
   config.json               settings that outlive every save
   profile.json              anything that outlives one playthrough
   file1/
-    current                 one line naming the live generation
+    current                 the live generation, and whose playthrough it is
     gen-0007/
       manifest.json         what the load menu reads
       world.json
@@ -24,6 +24,13 @@ save/
       systems/
     gen-0006/               retained for rollback
 ```
+
+A slot is a folder, and a folder is not a playthrough. Start a new game and save it over an old
+slot and both games' generations end up side by side, so rolling back far enough would otherwise
+hand back a game the player has no relationship to. Every game mints a `playthroughId` at
+`Game_System.initMembers`, a save writes it into the pointer, and `loadOrder` steps back only
+through generations that do not claim someone else. Nothing you write needs to think about this;
+it is here so the extra field in `current` is not a surprise.
 
 This document is about writing code that lives in that file. It assumes nothing about how the system
 was built.

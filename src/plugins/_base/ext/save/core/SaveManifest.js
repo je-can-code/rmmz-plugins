@@ -51,6 +51,19 @@ class SaveManifest
   playtimeFrames = 0;
 
   /**
+   * The playthrough this generation belongs to.
+   *
+   * A slot is a folder, and a folder is not a playthrough. Saving a new game over an old slot leaves
+   * both games' generations sitting side by side, so a rollback that only counted backwards could
+   * land in a game the player has no relationship to. Every generation records whose it is, and the
+   * loader steps back only through generations that answer with the same id.
+   *
+   * Empty when the generation predates this field, which reads as "unknown" rather than "nobody".
+   * @type {string}
+   */
+  playthroughId = String.empty;
+
+  /**
    * The file name of every section this generation is made of, manifest excluded.
    * @type {string[]}
    */
@@ -67,9 +80,10 @@ class SaveManifest
    * @param {string[]} sections The file name of every section in the generation, manifest excluded.
    * @param {object} display Everything the load menu needs to draw this slot.
    * @param {number} playtimeFrames The playtime at the moment of writing, in frames.
+   * @param {string} playthroughId The playthrough this generation belongs to.
    * @returns {SaveManifest}
    */
-  static create(sections, display, playtimeFrames)
+  static create(sections, display, playtimeFrames, playthroughId)
   {
     const manifest = new SaveManifest();
 
@@ -79,6 +93,8 @@ class SaveManifest
     manifest.savedAt = new Date().toISOString();
 
     manifest.playtimeFrames = playtimeFrames;
+
+    manifest.playthroughId = playthroughId;
 
     manifest.sections = sections;
 

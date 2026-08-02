@@ -24,5 +24,12 @@ DataManager.createGameObjects = function()
     // TODO: figure out how to prevent duplicate registration of controllers.
     $jabsController1 = new JABS_StandardController();
   }
+
+  // push the player's stored keybinds onto the controller that was just built. this sits here rather
+  // than on the load hook because both new games and loaded ones pass through here, and keybinds
+  // belong to neither- they belong to the installation. a loaded save replaces `$gameSystem` after
+  // this runs, which costs nothing: the configuration is applied to `Input` and the controllers
+  // themselves, and it is read from `ConfigManager` rather than from anything a save carries.
+  $gameSystem.applyJabsInputConfiguration();
 };
 //endregion DataManager

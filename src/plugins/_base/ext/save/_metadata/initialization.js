@@ -27,5 +27,6 @@ J.BASE.EXT.SAVE.Metadata = new J_BaseSavePluginMetadata(__PLUGIN_NAME__, __PLUGI
 J.BASE.EXT.SAVE.Aliased = {};
 J.BASE.EXT.SAVE.Aliased.ConfigManager = new Map();
 J.BASE.EXT.SAVE.Aliased.DataManager = new Map();
+J.BASE.EXT.SAVE.Aliased.Game_System = new Map();
 J.BASE.EXT.SAVE.Aliased.Scene_Boot = new Map();
 //endregion initialization
