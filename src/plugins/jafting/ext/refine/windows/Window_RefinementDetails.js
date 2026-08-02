@@ -194,10 +194,11 @@ class Window_RefinementDetails
    */
   drawEquip(equip, x, type)
   {
+    // parseTraits already consolidates same-dataId parameter traits for display, so what it hands
+    // back is what gets drawn.
     const parsedTraits = JaftingManager.parseTraits(equip);
-    const jaftingTraits = JaftingManager.combineBaseParameterTraits(parsedTraits);
     this.drawEquipTitle(equip, x, type);
-    this.drawEquipTraits(jaftingTraits, x);
+    this.drawEquipTraits(parsedTraits, x);
   }
 
   /**

@@ -1739,9 +1739,8 @@ var Window_RefinementDetails = class extends Window_Base {
 	*/
 	drawEquip(equip, x, type) {
 		const parsedTraits = JaftingManager.parseTraits(equip);
-		const jaftingTraits = JaftingManager.combineBaseParameterTraits(parsedTraits);
 		this.drawEquipTitle(equip, x, type);
-		this.drawEquipTraits(jaftingTraits, x);
+		this.drawEquipTraits(parsedTraits, x);
 	}
 	/**
 	* Draws the title for this portion of the equip details.
