@@ -2221,7 +2221,6 @@ DataManager.extractSaveContents = function(contents) {
 		console.info("J-Time did not exist in the loaded save file- creating anew.");
 		return;
 	}
-	$gameTime.initMembers();
 	$gameTime.updateCurrentTone();
 };
 

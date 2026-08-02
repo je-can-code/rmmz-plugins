@@ -46,12 +46,6 @@ DataManager.extractSaveContents = function(contents)
     return;
   }
 
-  // a save from before some member existed rehydrates without it, leaving that member undefined
-  // forever after. re-running initialization backfills anything missing- every persisted member is
-  // assigned with `??=`, so values that did come out of the save are left exactly as they were.
-  // this is what makes it safe to add new members to TIME without stranding existing saves.
-  $gameTime.initMembers();
-
   // initialization deliberately clears the screen tone, since that is derived display state rather
   // than something worth trusting from a save. recompute it for the hour we actually loaded into so
   // the map tints correctly instead of holding whatever tone it happened to boot with.
