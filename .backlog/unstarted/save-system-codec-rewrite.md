@@ -972,6 +972,22 @@ version here just makes Phase 1's own deliverable verifiable.
 **New:** `SaveFileSystem.js`, `StorageManager.js`, `SaveManifest.js`.
 **Modified:** `initialization.js` (add `StorageManager` / `ConfigManager` alias maps), `JsonEx.js`.
 
+0. **Finish the registration sweep first, before anything points at the new encoder.** Phase 1
+   registered only what `_base` owns; the moment `StorageManager` calls `SaveEncoder`, the first save
+   throws `unregisteredType` on the first class it meets that nobody claimed. The census in
+   [The real Phase 1 worklist](#the-real-phase-1-worklist-is-registration-completeness-not-type-map-size)
+   names five: `JABS_Timer` and `JABS_DeathContext` (J-ABS), `DifficultyConfig` (J-Difficulty),
+   `RPG_Skill` and `RPG_SkillDamage` (J-Base's database models, reachable through J-Passive).
+
+   Each plugin registers **its own** classes and calls `SerializableRegistry.extend` for the
+   `_j.<plugin>` transients it contributes to an engine host — the omnipedia caches on `Game_Party`,
+   the four character-like timers, `_textPops` / `_textPopRequest`. Core cannot do this on their
+   behalf; that is what `extend` exists for.
+
+   The census was measured from one save, so it is a floor. The mechanical check is the Phase 6 sweep
+   over every registered type; the practical one is that a save now throws rather than silently
+   writing something the decoder cannot rebuild.
+
 1. Implement `SaveFileSystem` with the exact save and load sequences above. Synchronous `fs` calls
    inside `new Promise(...)` — `StorageManager`'s contract is Promise-returning and this repo forbids
    `async` / `await`.

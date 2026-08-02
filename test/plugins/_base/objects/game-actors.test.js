@@ -144,9 +144,9 @@ describe('J-Base Game_Actors (direct src import)', () =>
       expect(result).toEqual([]);
     });
 
-    it('preserves the holes of a sparse, id-indexed store', () =>
+    it('compacts away the holes of a store built during play', () =>
     {
-      // Arrange- ids 1 and 3 were built, id 2 never was.
+      // Arrange- ids 1 and 3 were built, id 2 never was, and there is no actor 0.
       const actorsInstance = buildActors();
       const store = [];
       store[ 1 ] = { id: 1 };
@@ -155,12 +155,30 @@ describe('J-Base Game_Actors (direct src import)', () =>
 
       // Act
       const result = actorsInstance.existingActors();
-      const visited = [];
-      result.forEach(actor => visited.push(actor));
 
-      // Assert- length spans the ids, but iteration only ever sees the two real actors.
-      expect(result.length).toBe(4);
-      expect(visited).toEqual([ { id: 1 }, { id: 3 } ]);
+      // Assert
+      expect(result).toEqual([ { id: 1 }, { id: 3 } ]);
+    });
+
+    it('compacts away the explicit nulls a store carries after a save round-trip', () =>
+    {
+      // Arrange- JSON.stringify writes a hole as null, and JSON.parse hands it back as an element,
+      // so a restored store is dense with nulls where a live one had holes.
+      const actorsInstance = buildActors();
+      const live = [];
+      live[ 1 ] = { id: 1 };
+      live[ 3 ] = { id: 3 };
+      const restored = JSON.parse(JSON.stringify(live));
+      actorsInstance._data = restored;
+
+      // Assert the premise before asserting the behavior- iteration does not skip these.
+      expect(restored[ 0 ]).toBeNull();
+
+      // Act
+      const result = actorsInstance.existingActors();
+
+      // Assert
+      expect(result).toEqual([ { id: 1 }, { id: 3 } ]);
     });
   });
 });

@@ -24,6 +24,10 @@ class SaveEncoder
    * cycle check would cost a `Set` insertion on every one of thousands of nodes to catch a bug that
    * should not exist. The ceiling is the cheap version: it turns an unreadable stack overflow into an
    * error naming the path that ran away.
+   *
+   * It covers the default walk only. A codec with an `encode` override re-enters {@link #encode} at
+   * depth zero, so a cycle threaded through one- a `Map` holding a value that points back at the map
+   * - still overflows the stack rather than reporting a path.
    * @type {number}
    */
   static maxDepth = 100;

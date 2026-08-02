@@ -39,21 +39,37 @@ Game_Actors.prototype.actors = function()
 };
 
 /**
- * Gets the actor store exactly as the engine keeps it: a sparse array indexed by actor id, holding
- * only the actors this playthrough has actually built.
+ * Gets the raw actor store: the array the engine indexes by actor id.
+ *
+ * Almost nothing wants this. {@link #existingActors} is the readable form, and it is the one to reach
+ * for unless you specifically need the id-to-actor indexing that only survives here.
+ * @returns {Game_Actor[]}
+ */
+Game_Actors.prototype.data = function()
+{
+  return this._data;
+};
+
+/**
+ * Gets every actor this playthrough has actually built, compacted.
  *
  * This is deliberately not {@link #actors}. That one walks the database and hands each id to
  * {@link Game_Actors.actor}, which lazily constructs any actor it does not find- so asking it "who
  * exists right now" answers by making the answer true. Anything that wants to touch the actors a
  * save genuinely knows about must read the store instead.
  *
- * The holes are left in place. `forEach`, `filter`, and `map` all skip them by definition, so a
- * caller iterating this array only ever sees real actors.
+ * The compaction is not a guard against a broken contract; it is the contract. The engine indexes
+ * this store by actor id and never fills the gaps, and **the gaps change shape across a save**: a
+ * store built during play carries real holes, which iteration skips for free, while one restored from
+ * a file carries explicit nulls, because `JSON.stringify` writes a hole as `null` and `JSON.parse`
+ * hands it back as a real element. Index 0 is always one of them- there is no actor 0. A caller that
+ * iterated the raw store would work until the first load and then fail on its very first element.
  * @returns {Game_Actor[]}
  */
 Game_Actors.prototype.existingActors = function()
 {
-  return this._data;
+  return this.data()
+    .filter(actor => actor !== null);
 };
 
 //endregion Game_Actors

@@ -40,6 +40,9 @@ describe('DataManager (direct src import)', () =>
 
     // patches globalThis.DataManager directly, no vm involved.
     await import('../../../../src/plugins/_base/managers/DataManager.js');
+
+    // the real accessor, so the load walk can be exercised against a genuine actor store.
+    await import('../../../../src/plugins/_base/objects/Game_Actors.js');
   });
 
   afterAll(() =>
@@ -331,15 +334,12 @@ describe('DataManager (direct src import)', () =>
 
   describe('invalidateLoadedBattlerCaches', () =>
   {
-    it('skips the holes a sparse actor store leaves for ids that were never built', () =>
+    it('touches every actor the store hands back', () =>
     {
-      // Arrange- ids 1 and 3 exist, id 2 was never materialized.
+      // Arrange- ids 1 and 3 exist, id 2 was never materialized, and the accessor has compacted.
       const first = { onBattlerDataChange: vi.fn() };
       const third = { onBattlerDataChange: vi.fn() };
-      const store = [];
-      store[ 1 ] = first;
-      store[ 3 ] = third;
-      globalThis.$gameActors = { existingActors: () => store };
+      globalThis.$gameActors = { existingActors: () => [ first, third ] };
 
       // Act
       globalThis.DataManager.invalidateLoadedBattlerCaches();
@@ -347,6 +347,26 @@ describe('DataManager (direct src import)', () =>
       // Assert
       expect(first.onBattlerDataChange).toHaveBeenCalledTimes(1);
       expect(third.onBattlerDataChange).toHaveBeenCalledTimes(1);
+    });
+
+    it('survives the explicit nulls a restored actor store carries', () =>
+    {
+      // Arrange- exercise the real accessor against a round-tripped store rather than a stub, since
+      // this walk only ever runs on a store that has just come back out of a savefile.
+      const first = { onBattlerDataChange: vi.fn() };
+      const live = [];
+      live[ 1 ] = { marker: 'first' };
+      const restored = JSON.parse(JSON.stringify(live));
+      restored[ 1 ] = first;
+      const actors = new globalThis.Game_Actors();
+      actors._data = restored;
+      globalThis.$gameActors = actors;
+
+      // Act
+      globalThis.DataManager.invalidateLoadedBattlerCaches();
+
+      // Assert
+      expect(first.onBattlerDataChange).toHaveBeenCalledTimes(1);
     });
   });
 
