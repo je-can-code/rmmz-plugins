@@ -16,8 +16,8 @@ describe('JCache', () =>
       const computeFn = vi.fn(() => 0);
 
       // Act
-      const first = cache.get(target, 'k', computeFn);
-      const second = cache.get(target, 'k', computeFn);
+      const first = cache.get([ target ], 'k', computeFn);
+      const second = cache.get([ target ], 'k', computeFn);
 
       // Assert
       expect(first).toBe(0);
@@ -33,8 +33,8 @@ describe('JCache', () =>
       const computeFn = vi.fn(() => null);
 
       // Act
-      cache.get(target, 'k', computeFn);
-      cache.get(target, 'k', computeFn);
+      cache.get([ target ], 'k', computeFn);
+      cache.get([ target ], 'k', computeFn);
 
       // Assert
       expect(computeFn).toHaveBeenCalledOnce();
@@ -48,8 +48,8 @@ describe('JCache', () =>
       const computeFn = vi.fn(() => false);
 
       // Act
-      cache.get(target, 'k', computeFn);
-      cache.get(target, 'k', computeFn);
+      cache.get([ target ], 'k', computeFn);
+      cache.get([ target ], 'k', computeFn);
 
       // Assert
       expect(computeFn).toHaveBeenCalledOnce();
@@ -67,8 +67,8 @@ describe('JCache', () =>
       const computeFn = vi.fn(() => 'shared-value');
 
       // Act
-      const fromCloneA = cache.get(cloneA, 'k', computeFn);
-      const fromCloneB = cache.get(cloneB, 'k', computeFn);
+      const fromCloneA = cache.get([ cloneA ], 'k', computeFn);
+      const fromCloneB = cache.get([ cloneB ], 'k', computeFn);
 
       // Assert
       expect(fromCloneA).toBe('shared-value');
@@ -101,8 +101,8 @@ describe('JCache', () =>
       const sharedObject = {};
 
       // Act
-      const resultA = cache.get(battlerA, sharedObject, 'k', () => 'a-value');
-      const resultB = cache.get(battlerB, sharedObject, 'k', () => 'b-value');
+      const resultA = cache.get([ battlerA, sharedObject ], 'k', () => 'a-value');
+      const resultB = cache.get([ battlerB, sharedObject ], 'k', () => 'b-value');
 
       // Assert
       expect(resultA).toBe('a-value');
@@ -116,15 +116,15 @@ describe('JCache', () =>
       const battlerA = {};
       const battlerB = {};
       const sharedObject = {};
-      cache.get(battlerA, sharedObject, 'k', () => 'a-stale');
-      cache.get(battlerB, sharedObject, 'k', () => 'b-stale');
+      cache.get([ battlerA, sharedObject ], 'k', () => 'a-stale');
+      cache.get([ battlerB, sharedObject ], 'k', () => 'b-stale');
 
       // Act
-      cache.invalidate(battlerA);
+      cache.invalidate([ battlerA ]);
 
       // Assert
-      expect(cache.get(battlerA, sharedObject, 'k', () => 'a-fresh')).toBe('a-fresh');
-      expect(cache.get(battlerB, sharedObject, 'k', () => 'b-fresh')).toBe('b-stale');
+      expect(cache.get([ battlerA, sharedObject ], 'k', () => 'a-fresh')).toBe('a-fresh');
+      expect(cache.get([ battlerB, sharedObject ], 'k', () => 'b-fresh')).toBe('b-stale');
     });
   });
 
@@ -162,15 +162,15 @@ describe('JCache', () =>
       const cacheTwo = JCache.battlerThenObject({ name: 'test:bus-two' });
       const battler = {};
       const sharedObject = {};
-      cacheOne.get(battler, 'k', () => 'stale-one');
-      cacheTwo.get(battler, sharedObject, 'k', () => 'stale-two');
+      cacheOne.get([ battler ], 'k', () => 'stale-one');
+      cacheTwo.get([ battler, sharedObject ], 'k', () => 'stale-two');
 
       // Act
       JCache.invalidateAllForBattler(battler);
 
       // Assert
-      expect(cacheOne.get(battler, 'k', () => 'fresh-one')).toBe('fresh-one');
-      expect(cacheTwo.get(battler, sharedObject, 'k', () => 'fresh-two')).toBe('fresh-two');
+      expect(cacheOne.get([ battler ], 'k', () => 'fresh-one')).toBe('fresh-one');
+      expect(cacheTwo.get([ battler, sharedObject ], 'k', () => 'fresh-two')).toBe('fresh-two');
     });
   });
 
@@ -182,7 +182,7 @@ describe('JCache', () =>
       const cache = JCache.objectScoped({ name: 'test:invalidate-miss' });
 
       // Act
-      const result = cache.invalidate({});
+      const result = cache.invalidate([ {} ]);
 
       // Assert
       expect(result).toBe(false);
@@ -193,13 +193,13 @@ describe('JCache', () =>
       // Arrange
       const cache = JCache.objectScoped({ name: 'test:invalidate-clear-all' });
       const target = {};
-      cache.get(target, 'k', () => 'stale');
+      cache.get([ target ], 'k', () => 'stale');
 
       // Act
       cache.invalidate();
 
       // Assert
-      expect(cache.get(target, 'k', () => 'fresh')).toBe('fresh');
+      expect(cache.get([ target ], 'k', () => 'fresh')).toBe('fresh');
     });
 
     it('returns false on a multi-dimension cache when an intermediate bucket in the prefix is missing', () =>
@@ -212,7 +212,7 @@ describe('JCache', () =>
       const someObject = {};
 
       // Act
-      const result = cache.invalidate(neverCachedBattler, someObject);
+      const result = cache.invalidate([ neverCachedBattler, someObject ]);
 
       // Assert
       expect(result).toBe(false);
@@ -227,14 +227,14 @@ describe('JCache', () =>
       const battler = {};
       const objectOne = {};
       const objectTwo = {};
-      cache.get(battler, objectOne, objectTwo, 'k', () => 'stale');
+      cache.get([ battler, objectOne, objectTwo ], 'k', () => 'stale');
 
       // Act
-      const result = cache.invalidate(battler, objectOne, objectTwo);
+      const result = cache.invalidate([ battler, objectOne, objectTwo ]);
 
       // Assert
       expect(result).toBe(true);
-      expect(cache.get(battler, objectOne, objectTwo, 'k', () => 'fresh')).toBe('fresh');
+      expect(cache.get([ battler, objectOne, objectTwo ], 'k', () => 'fresh')).toBe('fresh');
     });
   });
 
@@ -244,7 +244,7 @@ describe('JCache', () =>
     {
       // Arrange
       const cache = JCache.objectScoped({ name: 'test:metrics-copy' });
-      cache.get({}, 'k', () => 'value');
+      cache.get([ {} ], 'k', () => 'value');
 
       // Act
       const { metrics } = cache;

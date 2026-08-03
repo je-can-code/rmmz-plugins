@@ -16,7 +16,7 @@ class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
   //region properties
   /**
    * Gets the sprite.
-   * @returns {*} The sprite.
+   * @returns {Sprite} The sprite.
    */
   sprite()
   {
@@ -26,7 +26,7 @@ class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the base rotation.
-   * @returns {*} The baseRotation.
+   * @returns {number} The baseRotation.
    */
   baseRotation()
   {
@@ -86,7 +86,7 @@ class JuiceFlipBodyMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the direction sign.
-   * @returns {*} The directionSign.
+   * @returns {number} The directionSign.
    */
   directionSign()
   {

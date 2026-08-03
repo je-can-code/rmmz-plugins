@@ -12,7 +12,7 @@ class Sprite_HitboxPulse
   //region properties
   /**
    * Gets the sustained.
-   * @returns {*} The sustained.
+   * @returns {boolean} The sustained.
    */
   isSustained()
   {
@@ -152,7 +152,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the line color.
-   * @returns {*} The lineColor.
+   * @returns {number} The lineColor.
    */
   lineColor()
   {
@@ -162,7 +162,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the line color.
-   * @param {*} newLineColor The new lineColor.
+   * @param {number} newLineColor The new lineColor.
    */
   setLineColor(newLineColor)
   {
@@ -212,7 +212,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the fill color.
-   * @returns {*} The fillColor.
+   * @returns {number} The fillColor.
    */
   fillColor()
   {
@@ -222,7 +222,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the fill color.
-   * @param {*} newFillColor The new fillColor.
+   * @param {number} newFillColor The new fillColor.
    */
   setFillColor(newFillColor)
   {
@@ -252,7 +252,7 @@ class Sprite_HitboxPulse
 
   /**
    * Gets the shape.
-   * @returns {*} The shape.
+   * @returns {string} The shape.
    */
   shape()
   {
@@ -262,7 +262,7 @@ class Sprite_HitboxPulse
 
   /**
    * Sets the shape.
-   * @param {*} newShape The new shape.
+   * @param {string} newShape The new shape.
    */
   setShape(newShape)
   {

@@ -10,7 +10,7 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
   //region properties
   /**
    * Gets the sprite.
-   * @returns {*} The sprite.
+   * @returns {Sprite} The sprite.
    */
   sprite()
   {
@@ -40,7 +40,7 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the base blend color.
-   * @returns {*} The baseBlendColor.
+   * @returns {[number, number, number, number]} The baseBlendColor.
    */
   baseBlendColor()
   {
@@ -50,7 +50,7 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the base color tone.
-   * @returns {*} The baseColorTone.
+   * @returns {[number, number, number, number]} The baseColorTone.
    */
   baseColorTone()
   {
@@ -80,7 +80,7 @@ class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the amplitude scale.
-   * @returns {*} The amplitudeScale.
+   * @returns {number} The amplitudeScale.
    */
   amplitudeScale()
   {

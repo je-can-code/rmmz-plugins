@@ -64,7 +64,8 @@ class Sprite_SkillSlotIcon
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_skillSlot: JABS_SkillSlot|null, _cooldownOverlaySprite: Sprite|null,
+   * _prevBaseReady: boolean, _prevComboReady: boolean, _pulseFrames: number}} The j.
    */
   j()
   {

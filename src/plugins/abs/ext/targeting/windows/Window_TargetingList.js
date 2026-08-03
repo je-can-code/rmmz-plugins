@@ -11,7 +11,7 @@ class Window_TargetingList
   //region properties
   /**
    * Gets the candidates.
-   * @returns {*} The candidates.
+   * @returns {JABS_Battler[]} The candidates.
    */
   candidates()
   {

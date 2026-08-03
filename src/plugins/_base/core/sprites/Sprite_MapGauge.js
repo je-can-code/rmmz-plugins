@@ -11,7 +11,8 @@ class Sprite_MapGauge
   //region properties
   /**
    * Gets the gauge.
-   * @returns {*} The gauge.
+   * @returns {{_bitmapWidth: number, _bitmapHeight: number, _gaugeHeight: number, _label: string,
+   * _value: number|null, _iconIndex: number, _iconSprite: Sprite|null, _activated: boolean}} The gauge.
    */
   gauge()
   {

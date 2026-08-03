@@ -11,7 +11,7 @@ class Window_EquipActorRibbon
   //region properties
   /**
    * Gets the actor.
-   * @returns {*} The actor.
+   * @returns {Game_Actor} The actor.
    */
   actor()
   {

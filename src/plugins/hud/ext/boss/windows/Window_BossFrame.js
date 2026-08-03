@@ -31,7 +31,8 @@ class Window_BossFrame
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_hud: {_boss: {_requestHide: boolean, _concealing: boolean, _requestShow: boolean,
+   * _revealing: boolean}}}} The j.
    */
   j()
   {

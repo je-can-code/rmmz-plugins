@@ -489,7 +489,7 @@ Game_Party.prototype.unlockEverythingCompletely = function()
   this.revealAllKnownRecipes();
 };
 
-Game_Party.prototype.updateVariableWithCraftedCountByCategories = function(variableId, ...categoryKeys)
+Game_Party.prototype.updateVariableWithCraftedCountByCategories = function(variableId, categoryKeys)
 {
   // initialize with zero crafted entries.
   let count = 0;
@@ -508,7 +508,7 @@ Game_Party.prototype.updateVariableWithCraftedCountByCategories = function(varia
 //region properties
 /**
  * Gets the recipe trackings.
- * @returns {*} The recipeTrackings.
+ * @returns {RecipeTracking[]} The recipeTrackings.
  */
 Game_Party.prototype.recipeTrackings = function()
 {
@@ -518,7 +518,7 @@ Game_Party.prototype.recipeTrackings = function()
 
 /**
  * Sets the recipe trackings.
- * @param {*} newRecipeTrackings The new recipeTrackings.
+ * @param {RecipeTracking[]} newRecipeTrackings The new recipeTrackings.
  */
 Game_Party.prototype.setRecipeTrackings = function(newRecipeTrackings)
 {
@@ -528,7 +528,7 @@ Game_Party.prototype.setRecipeTrackings = function(newRecipeTrackings)
 
 /**
  * Gets the category trackings.
- * @returns {*} The categoryTrackings.
+ * @returns {CategoryTracking[]} The categoryTrackings.
  */
 Game_Party.prototype.categoryTrackings = function()
 {
@@ -538,7 +538,7 @@ Game_Party.prototype.categoryTrackings = function()
 
 /**
  * Sets the category trackings.
- * @param {*} newCategoryTrackings The new categoryTrackings.
+ * @param {CategoryTracking[]} newCategoryTrackings The new categoryTrackings.
  */
 Game_Party.prototype.setCategoryTrackings = function(newCategoryTrackings)
 {

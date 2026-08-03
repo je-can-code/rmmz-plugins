@@ -12,11 +12,16 @@ class JABS_BattlerRole
 {
   /**
    * Constructor.
-   * @param {...*} args Forwarded to {@link #initialize}.
+   * @param {boolean=} leader Whether this battler coordinates nearby followers.
+   * @param {boolean=} follower Whether this battler defers to a nearby leader.
+   * @param {boolean=} guardian Whether this battler protects a nearby ward.
+   * @param {boolean=} ward Whether this battler should be protected by nearby guardians.
+   * @param {boolean=} solo Whether this battler explicitly opts out of all coordination.
+   * @param {boolean=} sentinel Whether this battler holds position rather than pursuing.
    */
-  constructor(...args)
+  constructor(leader = false, follower = false, guardian = false, ward = false, solo = false, sentinel = false)
   {
-    this.initialize(...args);
+    this.initialize(leader, follower, guardian, ward, solo, sentinel);
   }
 
   /**

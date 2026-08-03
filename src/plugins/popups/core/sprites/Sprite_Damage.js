@@ -549,7 +549,7 @@ Sprite_Damage.prototype.setIsCritical = function(newIsCritical)
 
 /**
  * Gets the text accent.
- * @returns {*} The textAccent.
+ * @returns {string|null} The textAccent.
  */
 Sprite_Damage.prototype.textAccent = function()
 {

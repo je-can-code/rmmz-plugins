@@ -5,18 +5,6 @@ class Window_QuestopediaList
   extends Window_Command
 {
 
-  //region properties
-  /**
-   * Gets the quest filtering.
-   * @returns {*} The questFiltering.
-   */
-  questFiltering()
-  {
-    // hand back the quest filtering.
-    return this._questFiltering;
-  }
-  //endregion properties
-
   /**
    * Constructor.
    * @param {Rectangle} rect The rectangle that represents this window.
@@ -85,7 +73,7 @@ class Window_QuestopediaList
     const questEntries = $gameParty.getQuestopediaEntries();
 
     // filter the quests by various criteria.
-    const filteredQuests = questEntries.filter(this.questFiltering(), this);
+    const filteredQuests = questEntries.filter(this._questFiltering, this);
 
     // no quests to display.
     if (filteredQuests.length === 0) return [];

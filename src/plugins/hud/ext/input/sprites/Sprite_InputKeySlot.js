@@ -61,7 +61,8 @@ class Sprite_InputKeySlot
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_skillSlot: JABS_SkillSlot|null, _battler: JABS_Battler|null,
+   * _spriteCache: Map<string, Sprite>}} The j.
    */
   j()
   {

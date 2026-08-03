@@ -662,7 +662,7 @@ JABS_StandardController.prototype.canChargeCombatAction4 = function()
 //region properties
 /**
  * Gets the charge input delay.
- * @returns {*} The chargeInputDelay.
+ * @returns {Map<string, JABS_Timer>} The chargeInputDelay.
  */
 JABS_StandardController.prototype.chargeInputDelay = function()
 {

@@ -175,7 +175,7 @@ Sprite_Character.prototype.hideShieldGauge = function()
 //region properties
 /**
  * Gets the shield gauge.
- * @returns {*} The shieldGauge.
+ * @returns {Sprite_ShieldMapGauge|null} The shieldGauge.
  */
 Sprite_Character.prototype.shieldGauge = function()
 {
@@ -185,7 +185,7 @@ Sprite_Character.prototype.shieldGauge = function()
 
 /**
  * Sets the shield gauge.
- * @param {*} newShieldGauge The new shieldGauge.
+ * @param {Sprite_ShieldMapGauge|null} newShieldGauge The new shieldGauge.
  */
 Sprite_Character.prototype.setShieldGauge = function(newShieldGauge)
 {

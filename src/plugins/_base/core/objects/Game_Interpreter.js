@@ -1,7 +1,7 @@
 //region Game_Interpreter
 /**
  * Gets the conditional branch results by indent depth.
- * @returns {Object<number, *>} The branch.
+ * @returns {Object<number, number|boolean>} The branch.
  */
 Game_Interpreter.prototype.branch = function()
 {

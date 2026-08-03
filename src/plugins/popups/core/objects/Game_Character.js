@@ -113,7 +113,7 @@ Game_Character.prototype.clearPendingTextPops = function()
 //region properties
 /**
  * Gets the text pop request.
- * @returns {*} The textPopRequest.
+ * @returns {boolean} The textPopRequest.
  */
 Game_Character.prototype.isTextPopRequest = function()
 {
@@ -123,7 +123,7 @@ Game_Character.prototype.isTextPopRequest = function()
 
 /**
  * Sets the text pop request.
- * @param {*} newTextPopRequest The new textPopRequest.
+ * @param {boolean} newTextPopRequest The new textPopRequest.
  */
 Game_Character.prototype.setTextPopRequest = function(newTextPopRequest)
 {

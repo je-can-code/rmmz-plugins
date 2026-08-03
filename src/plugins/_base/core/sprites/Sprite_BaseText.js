@@ -107,7 +107,9 @@ class Sprite_BaseText
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_testBitmap: Bitmap, _text: string, _color: string, _alignment: string,
+   * _italics: boolean, _bold: boolean, _fontFace: string, _fontSize: number, _minWidth: number,
+   * _disableManagedOpacity: boolean}} The j.
    */
   j()
   {
@@ -237,7 +239,7 @@ class Sprite_BaseText
 
   /**
    * Gets the current color assigned to this sprite's text.
-   * @returns {string|*}
+   * @returns {string}
    */
   color()
   {

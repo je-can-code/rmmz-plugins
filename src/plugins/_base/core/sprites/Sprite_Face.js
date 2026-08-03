@@ -7,12 +7,13 @@ class Sprite_Face
 {
   /**
    * Constructor.
-   * @param {...*} args Forwarded to {@link #initialize}.
+   * @param {string} faceName The name of the face file.
+   * @param {number} faceIndex The index of the face.
    */
-  constructor(...args)
+  constructor(faceName, faceIndex)
   {
     super();
-    this.initialize(...args);
+    this.initialize(faceName, faceIndex);
   }
 
   /**
@@ -44,7 +45,7 @@ class Sprite_Face
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_faceName: string, _faceIndex: number}} The j.
    */
   j()
   {

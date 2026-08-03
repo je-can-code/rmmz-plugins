@@ -90,7 +90,7 @@ if (J.HUD && J.HUD.EXT.TARGET)
 //region properties
 /**
  * Gets the affliction presenter.
- * @returns {*} The afflictionPresenter.
+ * @returns {StateAfflictionHudPresenter} The afflictionPresenter.
  */
 Window_TargetFrame.prototype.afflictionPresenter = function()
 {
@@ -110,7 +110,7 @@ Window_TargetFrame.prototype.battler = function()
 
 /**
  * Gets the inactivity timer.
- * @returns {*} The inactivityTimer.
+ * @returns {number} The inactivityTimer.
  */
 Window_TargetFrame.prototype.inactivityTimer = function()
 {

@@ -89,7 +89,7 @@ Game_Actor.prototype.extractFloorDamageRate = function(referenceData)
 /**
  * Gets all sources that can possibly yield damage by stepping.
  * Open for extension.
- * @returns {*[]}
+ * @returns {{note: string}[]}
  */
 Game_Actor.prototype.floorDamageSources = function()
 {

@@ -18,7 +18,7 @@ class JABS_LootDrop
 
   /**
    * Sets the duration.
-   * @param {*} newDuration The new duration.
+   * @param {number} newDuration The new duration.
    */
   //endregion properties
 

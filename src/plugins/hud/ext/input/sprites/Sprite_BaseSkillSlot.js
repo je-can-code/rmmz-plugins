@@ -37,7 +37,7 @@ class Sprite_BaseSkillSlot
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_skillSlot: JABS_SkillSlot|null}} The j.
    */
   j()
   {

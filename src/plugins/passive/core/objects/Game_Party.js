@@ -250,7 +250,7 @@ Game_Party.prototype.setStates = function(newStates)
 
 /**
  * Gets the cached states.
- * @returns {*} The cachedStates.
+ * @returns {RPG_State[]} The cachedStates.
  */
 Game_Party.prototype.cachedStates = function()
 {
@@ -260,7 +260,7 @@ Game_Party.prototype.cachedStates = function()
 
 /**
  * Sets the cached states.
- * @param {*} newCachedStates The new cachedStates.
+ * @param {RPG_State[]} newCachedStates The new cachedStates.
  */
 Game_Party.prototype.setCachedStates = function(newCachedStates)
 {

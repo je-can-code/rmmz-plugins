@@ -146,7 +146,7 @@ class SaveFileModeRewind
    * Implements {@link SaveFileMode.execute}.<br/>
    * Loads the exact generation chosen, with no fallback to a newer one.
    * @param {SaveFileEntry} entry The row chosen.
-   * @returns {Promise<*>}
+   * @returns {Promise<void>}
    */
   execute(entry)
   {

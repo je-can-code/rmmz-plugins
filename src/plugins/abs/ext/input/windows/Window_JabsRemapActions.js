@@ -116,7 +116,8 @@ class Window_JabsRemapActions
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_abs: {_input: {_actions: {_state: {_mapping: object, _externalMapping: object,
+   * _buttons: string[]}, _view: {_helpWindow: Window_Base|null}}}}}} The j.
    */
   j()
   {

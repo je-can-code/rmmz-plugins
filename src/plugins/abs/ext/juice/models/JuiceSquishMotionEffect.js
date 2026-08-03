@@ -10,7 +10,7 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
   //region properties
   /**
    * Gets the sprite.
-   * @returns {*} The sprite.
+   * @returns {Sprite} The sprite.
    */
   sprite()
   {
@@ -70,7 +70,7 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the intensity scale.
-   * @returns {*} The intensityScale.
+   * @returns {number} The intensityScale.
    */
   intensityScale()
   {
@@ -80,7 +80,7 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the repeats remaining.
-   * @returns {*} The repeatsRemaining.
+   * @returns {number} The repeatsRemaining.
    */
   repeatsRemaining()
   {
@@ -90,7 +90,7 @@ class JuiceSquishMotionEffect extends JuiceBaseEffect
 
   /**
    * Sets the repeats remaining.
-   * @param {*} newRepeatsRemaining The new repeatsRemaining.
+   * @param {number} newRepeatsRemaining The new repeatsRemaining.
    */
   setRepeatsRemaining(newRepeatsRemaining)
   {

@@ -9,7 +9,7 @@ class OverlayManager
   //region properties
   /**
    * Gets the skill cache.
-   * @returns {*} The skillCache.
+   * @returns {JCache} The skillCache.
    */
   static skillCache()
   {
@@ -19,7 +19,7 @@ class OverlayManager
 
   /**
    * Gets the state cache.
-   * @returns {*} The stateCache.
+   * @returns {JCache} The stateCache.
    */
   static stateCache()
   {
@@ -87,8 +87,8 @@ class OverlayManager
    */
   static invalidate(battler)
   {
-    this.skillCache().invalidate(battler);
-    this.stateCache().invalidate(battler);
+    this.skillCache().invalidate([ battler ]);
+    this.stateCache().invalidate([ battler ]);
   }
 
   /**
@@ -130,7 +130,7 @@ class OverlayManager
     // the cache is always invalidated wholesale via invalidate(battler) on any learnSkill /
     // forgetSkill call, so skillId alone is a stable key within one cache lifetime — encoding the
     // overlay set in the key is redundant overhead.
-    return this.skillCache().get(caster, String(skillId), () =>
+    return this.skillCache().get([ caster ], String(skillId), () =>
     {
       // cache miss: get all known skill ids for this caster.
       const knownIds = caster.skillIds();
@@ -234,7 +234,7 @@ class OverlayManager
 
     // fast-path: JCache.get() itself checks the per-battler bucket before running the compute
     // function below, so a cache hit never allocates, walks allStateIds, or touches the guard.
-    return this.stateCache().get(battler, String(stateId), () =>
+    return this.stateCache().get([ battler ], String(stateId), () =>
     {
       // cache miss: get all raw state ids, preserving stacks and duplicates.
       const allIds = battler.allStateIds();

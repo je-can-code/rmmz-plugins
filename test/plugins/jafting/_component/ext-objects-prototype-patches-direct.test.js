@@ -137,7 +137,7 @@ describe('JAFTING extension object prototype patches (direct src import)', () =>
 
       globalThis.$gameVariables = { setValue: vi.fn() };
 
-      party.updateVariableWithCraftedCountByCategories(5, 'c1');
+      party.updateVariableWithCraftedCountByCategories(5, [ 'c1' ]);
 
       expect($gameVariables.setValue).toHaveBeenCalledWith(5, 1);
 

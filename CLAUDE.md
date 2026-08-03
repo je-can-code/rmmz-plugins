@@ -65,7 +65,7 @@ That is three phases, and it is more than a build:
 
 | Phase | What runs |
 |---|---|
-| `verify-pre-compile` | `lint`, then eight source gates: `verify:docs`, `no-typeof`, `no-instanceof`, `no-optional-chaining`, `no-direct-property-getset`, `no-private-in-serializable`, `no-late-window-command-state`, `no-self-calling-accessors` |
+| `verify-pre-compile` | `lint`, then eleven source gates: `verify:docs`, `no-typeof`, `no-instanceof`, `no-optional-chaining`, `no-direct-property-getset`, `no-private-in-serializable`, `no-late-window-command-state`, `no-self-calling-accessors`, `no-chained-call-arguments`, `no-phantom-calls`, `no-rest-parameters` |
 | `compile` | `clean:out`, then `build:all` |
 | `verify-post-compile` | `verify:ships`, **the full test suite**, then `copy:to-all` |
 
@@ -344,6 +344,12 @@ Use `RPGManager` for all notetag parsing. **Never parse a `note` string by hand.
   bundler output, not source style.
 - **No optional chaining (`?.`), ever.** Code that appears to need it should be rewritten so it does not.
 - **No nested ternaries.** Spell them out as `if` blocks.
+- **Never pass an expression chain as a call argument.** Name it first, then pass the name. An argument
+  that is itself a chain has to be read in full before you learn what the outer call is even receiving,
+  so the whole line gets read inside-out. Hoist it to a `const`, or extract a small builder method that
+  returns the finished thing. One step is fine — `drawTextEx(this.prompt(), 0, 0, width)` and
+  `setRoot(new WeakMap())` ask nothing of a reader; two is where it starts. Callbacks are exempt, being
+  a separate body read on its own terms. `verify:no-chained-call-arguments` enforces it.
 
 ### Comments and JSDocs
 

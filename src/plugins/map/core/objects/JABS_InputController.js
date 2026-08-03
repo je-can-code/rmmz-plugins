@@ -163,7 +163,7 @@ if (J.ABS)
 //region properties
 /**
  * Gets the minimap focus pressed prev.
- * @returns {*} The minimapFocusPressedPrev.
+ * @returns {boolean} The minimapFocusPressedPrev.
  */
 JABS_StandardController.prototype.minimapFocusPressedPrev = function()
 {

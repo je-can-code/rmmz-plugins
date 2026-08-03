@@ -65,7 +65,7 @@ Window_ChoiceList.prototype.callOkHandler = function()
 //region properties
 /**
  * Gets the choice map.
- * @returns {*} The choiceMap.
+ * @returns {number[]} The choiceMap.
  */
 Window_ChoiceList.prototype.choiceMap = function()
 {
@@ -75,7 +75,7 @@ Window_ChoiceList.prototype.choiceMap = function()
 
 /**
  * Sets the choice map.
- * @param {*} newChoiceMap The new choiceMap.
+ * @param {number[]} newChoiceMap The new choiceMap.
  */
 Window_ChoiceList.prototype.setChoiceMap = function(newChoiceMap)
 {

@@ -24,7 +24,7 @@ class JABS_TargetingManager
   //region properties
   /**
    * Gets the just began.
-   * @returns {*} The justBegan.
+   * @returns {boolean} The justBegan.
    */
   static isJustBegan()
   {
@@ -34,7 +34,7 @@ class JABS_TargetingManager
 
   /**
    * Sets the just began.
-   * @param {*} newJustBegan The new justBegan.
+   * @param {boolean} newJustBegan The new justBegan.
    */
   static setJustBegan(newJustBegan)
   {
@@ -44,7 +44,7 @@ class JABS_TargetingManager
 
   /**
    * Gets the session.
-   * @returns {*} The session.
+   * @returns {JABS_TargetingSession|null} The session.
    */
   static session()
   {
@@ -54,7 +54,7 @@ class JABS_TargetingManager
 
   /**
    * Sets the session.
-   * @param {*} newSession The new session.
+   * @param {JABS_TargetingSession|null} newSession The new session.
    */
   static setSession(newSession)
   {
@@ -64,7 +64,7 @@ class JABS_TargetingManager
 
   /**
    * Gets the cursor.
-   * @returns {*} The cursor.
+   * @returns {JABS_TargetingCursor|null} The cursor.
    */
   static cursor()
   {
@@ -74,7 +74,7 @@ class JABS_TargetingManager
 
   /**
    * Sets the cursor.
-   * @param {*} newCursor The new cursor.
+   * @param {JABS_TargetingCursor|null} newCursor The new cursor.
    */
   static setCursor(newCursor)
   {
@@ -84,7 +84,7 @@ class JABS_TargetingManager
 
   /**
    * Gets the sentinel.
-   * @returns {*} The sentinel.
+   * @returns {JABS_TargetingSentinelAction} The sentinel.
    */
   static sentinel()
   {
@@ -94,7 +94,7 @@ class JABS_TargetingManager
 
   /**
    * Gets the previous dir8.
-   * @returns {*} The previousDir8.
+   * @returns {number} The previousDir8.
    */
   static previousDir8()
   {
@@ -104,7 +104,7 @@ class JABS_TargetingManager
 
   /**
    * Sets the previous dir8.
-   * @param {*} newPreviousDir8 The new previousDir8.
+   * @param {number} newPreviousDir8 The new previousDir8.
    */
   static setPreviousDir8(newPreviousDir8)
   {
@@ -114,7 +114,7 @@ class JABS_TargetingManager
 
   /**
    * Gets the previous dpad step.
-   * @returns {*} The previousDpadStep.
+   * @returns {number} The previousDpadStep.
    */
   static previousDpadStep()
   {
@@ -124,7 +124,7 @@ class JABS_TargetingManager
 
   /**
    * Sets the previous dpad step.
-   * @param {*} newPreviousDpadStep The new previousDpadStep.
+   * @param {number} newPreviousDpadStep The new previousDpadStep.
    */
   static setPreviousDpadStep(newPreviousDpadStep)
   {

@@ -214,12 +214,12 @@ class JABS_AllyAI
 
   /**
    * Constructor.
-   * @param {...*} args Forwarded to {@link #initialize}.
+   * @param {string=} presetKey The preset key to apply on construction.
    */
-  constructor(...args)
+  constructor(presetKey)
   {
     super();
-    this.initialize(...args);
+    this.initialize(presetKey);
   }
 
   //region initialize

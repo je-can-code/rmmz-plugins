@@ -356,7 +356,7 @@ Spriteset_Map.prototype.setReticle = function(newReticle)
 
 /**
  * Gets the highlight sprites.
- * @returns {*} The highlightSprites.
+ * @returns {Record<string, Sprite>} The highlightSprites.
  */
 Spriteset_Map.prototype.highlightSprites = function()
 {
@@ -366,7 +366,7 @@ Spriteset_Map.prototype.highlightSprites = function()
 
 /**
  * Sets the highlight sprites.
- * @param {*} newHighlightSprites The new highlightSprites.
+ * @param {Record<string, Sprite>} newHighlightSprites The new highlightSprites.
  */
 Spriteset_Map.prototype.setHighlightSprites = function(newHighlightSprites)
 {
@@ -376,7 +376,7 @@ Spriteset_Map.prototype.setHighlightSprites = function(newHighlightSprites)
 
 /**
  * Gets the preview pulse.
- * @returns {*} The previewPulse.
+ * @returns {Sprite_HitboxPulse|null} The previewPulse.
  */
 Spriteset_Map.prototype.previewPulse = function()
 {
@@ -386,7 +386,7 @@ Spriteset_Map.prototype.previewPulse = function()
 
 /**
  * Sets the preview pulse.
- * @param {*} newPreviewPulse The new previewPulse.
+ * @param {Sprite_HitboxPulse|null} newPreviewPulse The new previewPulse.
  */
 Spriteset_Map.prototype.setPreviewPulse = function(newPreviewPulse)
 {
@@ -396,7 +396,7 @@ Spriteset_Map.prototype.setPreviewPulse = function(newPreviewPulse)
 
 /**
  * Gets the range ring.
- * @returns {*} The rangeRing.
+ * @returns {Sprite_HitboxPulse|null} The rangeRing.
  */
 Spriteset_Map.prototype.rangeRing = function()
 {
@@ -406,7 +406,7 @@ Spriteset_Map.prototype.rangeRing = function()
 
 /**
  * Sets the range ring.
- * @param {*} newRangeRing The new rangeRing.
+ * @param {Sprite_HitboxPulse|null} newRangeRing The new rangeRing.
  */
 Spriteset_Map.prototype.setRangeRing = function(newRangeRing)
 {

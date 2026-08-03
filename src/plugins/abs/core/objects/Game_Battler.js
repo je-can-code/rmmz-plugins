@@ -2210,7 +2210,7 @@ Game_Battler.prototype.regenerateAll = function()
 //region properties
 /**
  * Gets the last damage source.
- * @returns {*} The lastDamageSource.
+ * @returns {{type: string, uuid: string, id: number}|null} The lastDamageSource.
  */
 Game_Battler.prototype.lastDamageSource = function()
 {
@@ -2220,7 +2220,7 @@ Game_Battler.prototype.lastDamageSource = function()
 
 /**
  * Sets the last damage source.
- * @param {*} newLastDamageSource The new lastDamageSource.
+ * @param {{type: string, uuid: string, id: number}|null} newLastDamageSource The new lastDamageSource.
  */
 Game_Battler.prototype.setLastDamageSource = function(newLastDamageSource)
 {
@@ -2242,7 +2242,7 @@ Game_Battler.prototype.uuid = function()
 
 /**
  * Gets the encore repeats.
- * @returns {*} The encoreRepeats.
+ * @returns {number} The encoreRepeats.
  */
 Game_Battler.prototype.encoreRepeats = function()
 {

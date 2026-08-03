@@ -140,7 +140,9 @@ class Scene_SDP
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_sdp: {_windows: {_sdpList: Window_Base|null, _sdpHeader: Window_Base|null,
+   * _sdpParameterList: Window_Base|null, _sdpRewardList: Window_Base|null,
+   * _sdpMastery: Window_Base|null, _sdpCart: Window_Base|null}}}} The j.
    */
   j()
   {

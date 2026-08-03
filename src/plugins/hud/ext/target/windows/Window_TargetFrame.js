@@ -105,7 +105,9 @@ class Window_TargetFrame
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_spriteCache: Map<string, Sprite>, _name: string, _nameColorHex: string, _text: string,
+   * _icon: number, _battler: Game_Battler|null, _requestTargetRefresh: boolean,
+   * _inactivityTimer: number}} The j.
    */
   j()
   {

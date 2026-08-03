@@ -61,7 +61,7 @@ Window_Base.prototype.convertEscapeCharacters = function(text)
 /**
  * Translates the text code into the name and icon of the weapon.
  * @param {string} text The text that has a text code in it.
- * @returns {*}
+ * @returns {string}
  */
 Window_Base.prototype.translateWeaponTextCode = function(text)
 {

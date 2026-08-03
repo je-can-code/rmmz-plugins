@@ -45,7 +45,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the focus mode.
-   * @returns {*} The focusMode.
+   * @returns {boolean} The focusMode.
    */
   isFocusMode()
   {
@@ -85,7 +85,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the smooth fx.
-   * @returns {*} The smoothFx.
+   * @returns {number} The smoothFx.
    */
   smoothFx()
   {
@@ -95,7 +95,7 @@ class Sprite_MiniMap
 
   /**
    * Sets the smooth fx.
-   * @param {*} newSmoothFx The new smoothFx.
+   * @param {number} newSmoothFx The new smoothFx.
    */
   setSmoothFx(newSmoothFx)
   {
@@ -105,7 +105,7 @@ class Sprite_MiniMap
 
   /**
    * Gets the smooth fy.
-   * @returns {*} The smoothFy.
+   * @returns {number} The smoothFy.
    */
   smoothFy()
   {
@@ -115,7 +115,7 @@ class Sprite_MiniMap
 
   /**
    * Sets the smooth fy.
-   * @param {*} newSmoothFy The new smoothFy.
+   * @param {number} newSmoothFy The new smoothFy.
    */
   setSmoothFy(newSmoothFy)
   {
@@ -175,7 +175,8 @@ class Sprite_MiniMap
 
   /**
    * Gets the pre focus state.
-   * @returns {*} The preFocusState.
+   * @returns {{mapRange: number, scale: number, width: number, height: number, x: number, y: number,
+   * smoothFx: number, smoothFy: number}|null} The preFocusState.
    */
   preFocusState()
   {
@@ -185,7 +186,8 @@ class Sprite_MiniMap
 
   /**
    * Sets the pre focus state.
-   * @param {*} newPreFocusState The new preFocusState.
+   * @param {{mapRange: number, scale: number, width: number, height: number, x: number, y: number,
+   * smoothFx: number, smoothFy: number}|null} newPreFocusState The new preFocusState.
    */
   setPreFocusState(newPreFocusState)
   {

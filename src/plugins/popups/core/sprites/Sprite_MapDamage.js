@@ -12,7 +12,10 @@ class Sprite_MapDamage
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_popups: {_mapAccumulatePhase: boolean, _mergePulseFrameIndex: number,
+   * _mergePulseTotalFrames: number, _mergePulseBaseFrames: number, _mergePulseHoldFrames: number,
+   * _mergePulsePeakScale: number, _mergePulseFlashMaxAlpha: number,
+   * _mergePulseFlashAlpha: number}}} The j.
    */
   j()
   {
@@ -43,13 +46,11 @@ class Sprite_MapDamage
 
   /**
    * Constructor.
-   * @param {...*} args Forwarded to {@link #initialize}.
    */
-
-  constructor(...args)
+  constructor()
   {
     super();
-    this.initialize(...args);
+    this.initialize();
   }
 
   /**

@@ -220,7 +220,7 @@ class JABS_Action
 
   /**
    * Gets the hits per connection bonus.
-   * @returns {*} The hitsPerConnectionBonus.
+   * @returns {number} The hitsPerConnectionBonus.
    */
   hitsPerConnectionBonus()
   {
@@ -280,7 +280,7 @@ class JABS_Action
 
   /**
    * Gets the action map visual note holder.
-   * @returns {*} The actionMapVisualNoteHolder.
+   * @returns {{ note: string }|null} The actionMapVisualNoteHolder.
    */
   actionMapVisualNoteHolder()
   {
@@ -290,7 +290,7 @@ class JABS_Action
 
   /**
    * Sets the action map visual note holder.
-   * @param {*} newActionMapVisualNoteHolder The new actionMapVisualNoteHolder.
+   * @param {{ note: string }|null} newActionMapVisualNoteHolder The new actionMapVisualNoteHolder.
    */
   setActionMapVisualNoteHolder(newActionMapVisualNoteHolder)
   {
@@ -340,7 +340,7 @@ class JABS_Action
 
   /**
    * Gets the delay.
-   * @returns {*} The delay.
+   * @returns {{_delayDuration: JABS_Timer, _triggerOnTouch: boolean, _triggerRadius: number|null}} The delay.
    */
   delay()
   {

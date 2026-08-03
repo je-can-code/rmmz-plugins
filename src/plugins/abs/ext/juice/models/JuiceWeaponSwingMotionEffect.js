@@ -104,7 +104,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the motion type.
-   * @returns {*} The motionType.
+   * @returns {string} The motionType.
    */
   motionType()
   {
@@ -124,7 +124,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the trail.
-   * @returns {*} The trail.
+   * @returns {{sprite: Sprite, ttl: number}[]} The trail.
    */
   trail()
   {
@@ -134,7 +134,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Sets the trail.
-   * @param {*} newTrail The new trail.
+   * @param {{sprite: Sprite, ttl: number}[]} newTrail The new trail.
    */
   setTrail(newTrail)
   {
@@ -144,7 +144,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the arc span degrees.
-   * @returns {*} The arcSpanDegrees.
+   * @returns {number} The arcSpanDegrees.
    */
   arcSpanDegrees()
   {
@@ -154,7 +154,7 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the base rotation.
-   * @returns {*} The baseRotation.
+   * @returns {number} The baseRotation.
    */
   baseRotation()
   {

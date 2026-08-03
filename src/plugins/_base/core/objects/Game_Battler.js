@@ -565,7 +565,7 @@ Game_Battler.prototype.setCachedHarFactor = function(value)
 //region properties
 /**
  * Gets the test note sources.
- * @returns {*} The testNoteSources.
+ * @returns {{note: string}[]} The testNoteSources.
  */
 Game_Battler.prototype.testNoteSources = function()
 {

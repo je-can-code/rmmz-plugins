@@ -13,7 +13,7 @@ class HealEventManager
   //region properties
   /**
    * Gets the current depth.
-   * @returns {*} The currentDepth.
+   * @returns {number} The currentDepth.
    */
   static currentDepth()
   {
@@ -23,7 +23,7 @@ class HealEventManager
 
   /**
    * Sets the current depth.
-   * @param {*} newCurrentDepth The new currentDepth.
+   * @param {number} newCurrentDepth The new currentDepth.
    */
   static setCurrentDepth(newCurrentDepth)
   {
@@ -33,7 +33,7 @@ class HealEventManager
 
   /**
    * Gets the self blocked tags.
-   * @returns {*} The selfBlockedTags.
+   * @returns {Set<string>} The selfBlockedTags.
    */
   static selfBlockedTags()
   {

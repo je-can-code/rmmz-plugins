@@ -35,7 +35,7 @@ class ProfileManager
 
   /**
    * The live value of every registered field.
-   * @type {Map<string, *>}
+   * @type {Map<string, object|Array|Map|Set|string|number|boolean|null>}
    */
   static _values = new Map();
 
@@ -56,7 +56,7 @@ class ProfileManager
 
   /**
    * Gets the live value of every registered field.
-   * @returns {Map<string, *>} The values, keyed by field name.
+   * @returns {Map<string, object|Array|Map|Set|string|number|boolean|null>} The values, keyed by field name.
    */
   static values()
   {
@@ -84,7 +84,7 @@ class ProfileManager
   /**
    * Gets the current value of a registered field.
    * @param {string} key The field name.
-   * @returns {*} The value.
+   * @returns {object|Array|Map|Set|string|number|boolean|null} The value.
    */
   static get(key)
   {
@@ -95,7 +95,7 @@ class ProfileManager
   /**
    * Sets the value of a registered field. Writing the document is the caller's decision.
    * @param {string} key The field name.
-   * @param {*} value The value to hold.
+   * @param {object|Array|Map|Set|string|number|boolean|null} value The value to hold.
    */
   static set(key, value)
   {

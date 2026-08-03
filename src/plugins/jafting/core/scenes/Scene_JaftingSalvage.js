@@ -14,7 +14,7 @@ class Scene_JaftingSalvage
   //region properties
   /**
    * Gets the last preview datum.
-   * @returns {*} The lastPreviewDatum.
+   * @returns {RPG_Item|RPG_Weapon|RPG_Armor|null} The lastPreviewDatum.
    */
   lastPreviewDatum()
   {
@@ -24,7 +24,7 @@ class Scene_JaftingSalvage
 
   /**
    * Sets the last preview datum.
-   * @param {*} newLastPreviewDatum The new lastPreviewDatum.
+   * @param {RPG_Item|RPG_Weapon|RPG_Armor|null} newLastPreviewDatum The new lastPreviewDatum.
    */
   setLastPreviewDatum(newLastPreviewDatum)
   {
@@ -34,7 +34,7 @@ class Scene_JaftingSalvage
 
   /**
    * Gets the last preview stack.
-   * @returns {*} The lastPreviewStack.
+   * @returns {number|null} The lastPreviewStack.
    */
   lastPreviewStack()
   {
@@ -44,7 +44,7 @@ class Scene_JaftingSalvage
 
   /**
    * Sets the last preview stack.
-   * @param {*} newLastPreviewStack The new lastPreviewStack.
+   * @param {number|null} newLastPreviewStack The new lastPreviewStack.
    */
   setLastPreviewStack(newLastPreviewStack)
   {

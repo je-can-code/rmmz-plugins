@@ -10,11 +10,11 @@ class JABS_BattlerCoreData
 {
   /**
    * Constructor.
-   * @param {...*} args Forwarded to {@link #initialize}.
+   * @param {object} coreData The bundle of core properties; see {@link #initialize} for its shape.
    */
-  constructor(...args)
+  constructor(coreData)
   {
-    this.initialize(...args);
+    this.initialize(coreData);
   }
 
   /**

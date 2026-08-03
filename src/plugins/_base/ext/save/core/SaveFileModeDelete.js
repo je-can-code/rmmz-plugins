@@ -84,7 +84,7 @@ class SaveFileModeDelete
    * so deleting the last remaining save without rebuilding it leaves Continue lit up and pointing at
    * nothing.
    * @param {SaveFileEntry} entry The row chosen.
-   * @returns {Promise<*>}
+   * @returns {Promise<void>}
    */
   execute(entry)
   {

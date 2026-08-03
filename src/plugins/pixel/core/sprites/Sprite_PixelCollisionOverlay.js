@@ -13,7 +13,7 @@ class Sprite_PixelCollisionOverlay
   //region properties
   /**
    * Gets the show grid lines.
-   * @returns {*} The showGridLines.
+   * @returns {boolean} The showGridLines.
    */
   isShowGridLines()
   {
@@ -23,7 +23,7 @@ class Sprite_PixelCollisionOverlay
 
   /**
    * Gets the throttle.
-   * @returns {*} The throttle.
+   * @returns {number} The throttle.
    */
   throttle()
   {
@@ -33,7 +33,7 @@ class Sprite_PixelCollisionOverlay
 
   /**
    * Sets the throttle.
-   * @param {*} newThrottle The new throttle.
+   * @param {number} newThrottle The new throttle.
    */
   setThrottle(newThrottle)
   {
@@ -124,14 +124,12 @@ class Sprite_PixelCollisionOverlay
 
   /**
    * Constructor.
-   * @param {...*} args Forwarded to {@link #initialize}.
    */
-
-  constructor(...args)
+  constructor()
   {
     // Initialize Sprite base.
     super();
-    this.initialize(...args);
+    this.initialize();
   }
 
   /**

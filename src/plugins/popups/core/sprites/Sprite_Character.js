@@ -283,7 +283,7 @@ Sprite_Character.prototype.updateNonDamagePopLocation = function(nonDamageSprite
 //region properties
 /**
  * Gets the damage pop sprites.
- * @returns {*} The damagePopSprites.
+ * @returns {Sprite_Damage[]} The damagePopSprites.
  */
 Sprite_Character.prototype.damagePopSprites = function()
 {
@@ -293,7 +293,7 @@ Sprite_Character.prototype.damagePopSprites = function()
 
 /**
  * Sets the damage pop sprites.
- * @param {*} newDamagePopSprites The new damagePopSprites.
+ * @param {Sprite_Damage[]} newDamagePopSprites The new damagePopSprites.
  */
 Sprite_Character.prototype.setDamagePopSprites = function(newDamagePopSprites)
 {
@@ -303,7 +303,7 @@ Sprite_Character.prototype.setDamagePopSprites = function(newDamagePopSprites)
 
 /**
  * Gets the non damage pop sprites.
- * @returns {*} The nonDamagePopSprites.
+ * @returns {Sprite_Damage[]} The nonDamagePopSprites.
  */
 Sprite_Character.prototype.nonDamagePopSprites = function()
 {
@@ -313,7 +313,7 @@ Sprite_Character.prototype.nonDamagePopSprites = function()
 
 /**
  * Sets the non damage pop sprites.
- * @param {*} newNonDamagePopSprites The new nonDamagePopSprites.
+ * @param {Sprite_Damage[]} newNonDamagePopSprites The new nonDamagePopSprites.
  */
 Sprite_Character.prototype.setNonDamagePopSprites = function(newNonDamagePopSprites)
 {

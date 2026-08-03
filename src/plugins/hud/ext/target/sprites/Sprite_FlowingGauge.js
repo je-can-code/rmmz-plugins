@@ -15,7 +15,7 @@ class Sprite_FlowingGauge
   //region properties
   /**
    * Gets the background bitmap.
-   * @returns {*} The backgroundBitmap.
+   * @returns {Bitmap|null} The backgroundBitmap.
    */
   backgroundBitmap()
   {
@@ -257,7 +257,7 @@ class Sprite_FlowingGauge
 
   /**
    * Gets the gauge actual flow limit.
-   * @returns {*} The gaugeActualFlowLimit.
+   * @returns {number} The gaugeActualFlowLimit.
    */
   gaugeActualFlowLimit()
   {
@@ -267,7 +267,7 @@ class Sprite_FlowingGauge
 
   /**
    * Sets the gauge actual flow limit.
-   * @param {*} newGaugeActualFlowLimit The new gaugeActualFlowLimit.
+   * @param {number} newGaugeActualFlowLimit The new gaugeActualFlowLimit.
    */
   setGaugeActualFlowLimit(newGaugeActualFlowLimit)
   {

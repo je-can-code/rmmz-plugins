@@ -55,7 +55,7 @@ class BuiltWindowCommand
   /**
    * The underlying data associated with this command.
    * Usually populated with whatever this command represents data-wise.
-   * @type {null|any}
+   * @type {object|null}
    */
   #extensionData = null;
 
@@ -215,7 +215,7 @@ class BuiltWindowCommand
 
   /**
    * Gets the underlying extension data for this command, if any is available.
-   * @returns {*|null}
+   * @returns {object|null}
    */
   get ext()
   {

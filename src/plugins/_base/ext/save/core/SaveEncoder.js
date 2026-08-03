@@ -34,10 +34,10 @@ class SaveEncoder
 
   /**
    * Encodes any value into its plain data form.
-   * @param {*} value The value to encode.
+   * @param {object|Array|Map|Set|string|number|boolean|null} value The value to encode.
    * @param {string=} path The JSON path of this value, used for error context.
    * @param {number=} depth How many levels down the graph this call sits.
-   * @returns {*} The plain data form, safe to hand to `JSON.stringify`.
+   * @returns {object|Array|string|number|boolean|null} The plain data form, safe to hand to `JSON.stringify`.
    */
   static encode(value, path = '$', depth = 0)
   {
@@ -176,12 +176,12 @@ class SaveEncoder
    * that owns them, so once the walk descends into a namespace object those keys are no longer that
    * codec's to police - only the transient waypoint travels down, because a transient path is
    * explicitly written to reach that far.
-   * @param {*} child The value being encoded.
+   * @param {object|Array|Map|Set|string|number|boolean|null} child The value being encoded.
    * @param {{value: Function|null, children: Map<string, object>}|null} childNode The child's
    * position in the transient tree, or null when nothing below it is declared.
    * @param {string} childPath The JSON path of the child.
    * @param {number} depth How many levels down the graph this call sits.
-   * @returns {*} The encoded child.
+   * @returns {object|Array|string|number|boolean|null} The encoded child.
    */
   static encodeChild(child, childNode, childPath, depth)
   {
@@ -212,7 +212,7 @@ class SaveEncoder
    * It applies only to the direct keys of a registered class. A plain object has no declarations of
    * its own, so a class instance nested inside a namespace object is checked by nothing here- what
    * protects that case is the encoder refusing to encode an unregistered type at all.
-   * @param {*} child The value held at the field.
+   * @param {object|Array|Map|Set|string|number|boolean|null} child The value held at the field.
    * @param {SaveCodec|null} codec The codec that owns the field, or null for a plain object.
    * @param {string} key The field name.
    * @param {string} childPath The JSON path of the field.

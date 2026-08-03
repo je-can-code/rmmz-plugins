@@ -55,7 +55,7 @@ class TrackedOmniObjective
 
   /**
    * Gets the target coordinate range.
-   * @returns {*} The targetCoordinateRange.
+   * @returns {[[number, number],[number, number]]} The targetCoordinateRange.
    */
   targetCoordinateRange()
   {
@@ -65,7 +65,7 @@ class TrackedOmniObjective
 
   /**
    * Sets the target coordinate range.
-   * @param {*} newTargetCoordinateRange The new targetCoordinateRange.
+   * @param {[[number, number],[number, number]]} newTargetCoordinateRange The new targetCoordinateRange.
    */
   setTargetCoordinateRange(newTargetCoordinateRange)
   {
@@ -632,13 +632,13 @@ class TrackedOmniObjective
     switch (this.type())
     {
       case OmniObjective.Types.Indiscriminate:
-        return OmniObjective.FulfillmentTemplate(this.type(), this.indiscriminateTargetData());
+        return OmniObjective.FulfillmentTemplate(this.type(), [ this.indiscriminateTargetData() ]);
   
       case OmniObjective.Types.Destination:
         // TODO: validate this stringifies as intended.
         const point1 = `${this.targetCoordinateRange().at(0)}`;
         const point2 = `${this.targetCoordinateRange().at(1)}`;
-        return OmniObjective.FulfillmentTemplate(this.type(), $gameMap.displayName(), point1, point2);
+        return OmniObjective.FulfillmentTemplate(this.type(), [ $gameMap.displayName(), point1, point2 ]);
   
       case OmniObjective.Types.Fetch:
         const fetchColor = (this.currentItemFetchQuantity() < this.targetItemFetchQuantity())
@@ -647,20 +647,20 @@ class TrackedOmniObjective
   
         const targetItemText = `${this.fetchDataSourceTextPrefix()}[${this.targetItemId()}]`;
         const quantity = `\\C[${fetchColor}]${this.currentItemFetchQuantity()} / ${this.targetItemFetchQuantity()}\\C[0]`;
-        return OmniObjective.FulfillmentTemplate(this.type(), quantity, targetItemText);
+        return OmniObjective.FulfillmentTemplate(this.type(), [ quantity, targetItemText ]);
   
       case OmniObjective.Types.Slay:
         const slayColor = (this.currentEnemyAmount() < this.targetEnemyAmount())
           ? notEnoughColor
           : enoughColor;
         const targetEnemyText = `\\C[${slayColor}]${this.currentEnemyAmount()} / ${this.targetEnemyAmount()}\\C[0]`;
-        return OmniObjective.FulfillmentTemplate(this.type(), targetEnemyText, this.targetEnemyId());
+        return OmniObjective.FulfillmentTemplate(this.type(), [ targetEnemyText, this.targetEnemyId() ]);
   
       case OmniObjective.Types.Quest:
         const questNames = this.targetQuestKeys()
           .map(questKey => `'\\quest[${questKey}]'`);
         const questNamesWithCommas = questNames.join(', ');
-        return OmniObjective.FulfillmentTemplate(this.type(), questNamesWithCommas);
+        return OmniObjective.FulfillmentTemplate(this.type(), [ questNamesWithCommas ]);
     }
   }
   

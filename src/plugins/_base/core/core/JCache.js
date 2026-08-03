@@ -15,7 +15,7 @@ class JCache
   //region properties
   /**
    * Gets the battler caches.
-   * @returns {*} The battlerCaches.
+   * @returns {Set<JCache>} The battlerCaches.
    */
   static battlerCaches()
   {
@@ -64,7 +64,7 @@ class JCache
     // walk every battler-dimensioned cache that has ever been constructed and drop this battler's subtree from each.
     for (const cache of this.battlerCaches())
     {
-      cache.invalidate(battler);
+      cache.invalidate([ battler ]);
     }
   }
 
@@ -153,19 +153,19 @@ class JCache
 
   /**
    * Reads the cached value for the given dimension keys + string key, computing and storing it on
-   * a miss. Call shape is `get(...weakKeys, stringKey, computeFn)`, where `weakKeys.length` must
-   * equal `this.dims.length`.
-   * @param {...*} args The weak dimension keys, followed by the string key, followed by the compute function.
+   * a miss.
+   *
+   * The weak keys arrive as one array rather than as leading arguments so the call site states how
+   * many dimensions it is addressing. Spread across the argument list, `get(a, b, key, fn)` and
+   * `get(a, key, fn)` read identically, and telling them apart meant knowing the dimension count
+   * this cache was constructed with- which is declared in an entirely different file.
+   * @param {object[]} weakKeys The weak dimension keys, outermost first; length must equal `dims`.
+   * @param {string} stableKey The stable string key within the innermost bucket.
+   * @param {Function} computeFn Produces the value on a miss.
    * @returns {any} The cached or freshly computed value.
    */
-  get(...args)
+  get(weakKeys, stableKey, computeFn)
   {
-    // the compute function is always the last argument; pull it off first.
-    const computeFn = args.pop();
-
-    // the stable string key is always the argument just before the compute function.
-    const stringKey = args.pop();
-
     // start walking from the root weak dimension bucket.
     let node = this.root();
 
@@ -173,7 +173,7 @@ class JCache
     for (let i = 0; i < this.dims.length; i++)
     {
       // resolve this dimension's raw key to its actual bucket identity (handles clone resolution).
-      const k = this.#resolve(this.dims[i], args[i]);
+      const k = this.#resolve(this.dims[i], weakKeys[i]);
 
       // look for an existing bucket at this key.
       let next = node.get(k);
@@ -192,11 +192,11 @@ class JCache
     }
 
     // use .has() rather than truthiness so a cached 0 / null / false / '' does not recompute forever.
-    if (node.has(stringKey) === false)
+    if (node.has(stableKey) === false)
     {
       // record the miss, then compute and store the value.
       this.recordMiss();
-      node.set(stringKey, computeFn());
+      node.set(stableKey, computeFn());
     }
     else
     {
@@ -205,18 +205,18 @@ class JCache
     }
 
     // return whatever now lives at this string key, whether just computed or previously cached.
-    return node.get(stringKey);
+    return node.get(stableKey);
   }
 
   /**
-   * Drops the cached subtree at the given dimension-key prefix. `invalidate(battler)` (a
+   * Drops the cached subtree at the given dimension-key prefix. `invalidate([battler])` (a
    * one-element prefix) is the common case: it drops every entry nested under that battler,
-   * regardless of how many further dimensions this cache declares. Calling with zero arguments
-   * clears the entire cache.
-   * @param {...object} prefix The dimension keys identifying the subtree to drop, outermost first.
+   * regardless of how many further dimensions this cache declares. An empty prefix clears the
+   * entire cache.
+   * @param {object[]=} prefix The dimension keys identifying the subtree to drop, outermost first.
    * @returns {boolean} True if something was found and removed at that prefix, false otherwise.
    */
-  invalidate(...prefix)
+  invalidate(prefix = [])
   {
     // no prefix means "drop everything"; delegate to clear() for that case.
     if (prefix.length === 0)

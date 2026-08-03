@@ -130,7 +130,7 @@ class Scene_Passive
   //region properties
   /**
    * Gets the tab registry.
-   * @returns {*} The tabRegistry.
+   * @returns {Array<{key: string, label: string, filter: Function|null}>} The tabRegistry.
    */
   static tabRegistry()
   {
@@ -140,7 +140,8 @@ class Scene_Passive
 
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_passive: {_windows: {_tabHeader: Window_Base|null, _list: Window_Base|null,
+   * _detail: Window_Base|null}, _tabIndex: number}}} The j.
    */
   j()
   {

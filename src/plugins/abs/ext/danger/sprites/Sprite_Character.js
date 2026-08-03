@@ -178,7 +178,7 @@ Sprite_Character.prototype.hideDangerIndicator = function()
 //region properties
 /**
  * Gets the danger indicator.
- * @returns {*} The dangerIndicator.
+ * @returns {Sprite_Icon} The dangerIndicator.
  */
 Sprite_Character.prototype.dangerIndicator = function()
 {
@@ -188,7 +188,7 @@ Sprite_Character.prototype.dangerIndicator = function()
 
 /**
  * Sets the danger indicator.
- * @param {*} newDangerIndicator The new dangerIndicator.
+ * @param {Sprite_Icon} newDangerIndicator The new dangerIndicator.
  */
 Sprite_Character.prototype.setDangerIndicator = function(newDangerIndicator)
 {

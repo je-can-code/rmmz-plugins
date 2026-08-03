@@ -81,35 +81,35 @@ describe('OmniObjective (omni ext/quest, direct src import)', () =>
   {
     it('renders the indiscriminate template as the raw hint text', () =>
     {
-      const text = OmniObjective.FulfillmentTemplate(OmniObjective.Types.Indiscriminate, 'go find the thing');
+      const text = OmniObjective.FulfillmentTemplate(OmniObjective.Types.Indiscriminate, [ 'go find the thing' ]);
 
       expect(text).toBe('go find the thing');
     });
 
     it('renders the destination template with the map name and both coordinates', () =>
     {
-      const text = OmniObjective.FulfillmentTemplate(OmniObjective.Types.Destination, 'Town', 1, 2);
+      const text = OmniObjective.FulfillmentTemplate(OmniObjective.Types.Destination, [ 'Town', 1, 2 ]);
 
       expect(text).toBe('Navigate to Town at [1, 2].');
     });
 
     it('renders the fetch template with quantity and item text', () =>
     {
-      const text = OmniObjective.FulfillmentTemplate(OmniObjective.Types.Fetch, '3 / 5', '\\Item[7]');
+      const text = OmniObjective.FulfillmentTemplate(OmniObjective.Types.Fetch, [ '3 / 5', '\\Item[7]' ]);
 
       expect(text).toBe('Acquire \\*3 / 5\\* \\Item[7].');
     });
 
     it('renders the slay template with quantity and enemy id', () =>
     {
-      const text = OmniObjective.FulfillmentTemplate(OmniObjective.Types.Slay, '1 / 2', 12);
+      const text = OmniObjective.FulfillmentTemplate(OmniObjective.Types.Slay, [ '1 / 2', 12 ]);
 
       expect(text).toBe('Defeat \\*1 / 2\\* \\Enemy[12].');
     });
 
     it('renders the quest template with the joined quest names', () =>
     {
-      const text = OmniObjective.FulfillmentTemplate(OmniObjective.Types.Quest, "'a', 'b'");
+      const text = OmniObjective.FulfillmentTemplate(OmniObjective.Types.Quest, [ "'a', 'b'" ]);
 
       expect(text).toBe("Complete the other quest(s): 'a', 'b'.");
     });

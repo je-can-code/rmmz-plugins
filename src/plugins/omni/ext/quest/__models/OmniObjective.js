@@ -187,10 +187,10 @@ class OmniObjective
    *   Quest: Should be the name of the quest or some other clue to fulfill the objective.
    * </pre>
    * @param {number} type The type that aligns with one of {@link OmniObjective.Types}.
-   * @param {string[]=} templateDetails The details to plug into the fulfillment template- varies by what type it is.
+   * @param {(string|number)[]} templateDetails The details plugged into the template; the slots vary by type.
    * @returns {string} The templated fulfillment for this objective.
    */
-  static FulfillmentTemplate(type, ...templateDetails)
+  static FulfillmentTemplate(type, templateDetails)
   {
     switch (type)
     {

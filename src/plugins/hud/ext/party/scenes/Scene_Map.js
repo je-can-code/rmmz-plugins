@@ -157,7 +157,7 @@ Scene_Map.prototype.handleRefreshPartyFrameImageCache = function()
 //region properties
 /**
  * Gets the party frame.
- * @returns {*} The partyFrame.
+ * @returns {Window_PartyFrame} The partyFrame.
  */
 Scene_Map.prototype.partyFrame = function()
 {
@@ -167,7 +167,7 @@ Scene_Map.prototype.partyFrame = function()
 
 /**
  * Sets the party frame.
- * @param {*} newPartyFrame The new partyFrame.
+ * @param {Window_PartyFrame} newPartyFrame The new partyFrame.
  */
 Scene_Map.prototype.setPartyFrame = function(newPartyFrame)
 {
