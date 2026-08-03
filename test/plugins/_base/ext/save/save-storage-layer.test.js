@@ -620,6 +620,58 @@ describe('save storage layer (direct src import)', () =>
       expect(written[1]).toBe(0xD8);
     });
 
+    it('turns a POSIX save path into a url with the scheme on the front', () =>
+    {
+      // Arrange
+      // Act
+      const url = SaveFileSystem.fileUrl('/home/je/games/ca/save/file1/gen-0001/snapshot.jpg');
+
+      // Assert
+      expect(url).toBe('file:///home/je/games/ca/save/file1/gen-0001/snapshot.jpg');
+    });
+
+    it('turns a Windows save path into a url, which is the whole reason this exists', () =>
+    {
+      // Arrange
+      // `path.join` produces backslashes and a drive letter on Windows, and `<img>` cannot resolve
+      // either - it reads the result as relative and quietly fails, on the platform CA ships on.
+      // Act
+      const url = SaveFileSystem.fileUrl('C:\\Games\\ChefAdventure\\save\\file1\\gen-0001\\snapshot.jpg');
+
+      // Assert
+      expect(url).toBe('file:///C:/Games/ChefAdventure/save/file1/gen-0001/snapshot.jpg');
+    });
+
+    it('escapes the spaces a game installed under "My Games" puts in every path it builds', () =>
+    {
+      // Arrange
+      // Act
+      const url = SaveFileSystem.fileUrl('C:\\My Games\\Chef Adventure\\save\\file1\\snapshot.jpg');
+
+      // Assert
+      expect(url).toBe('file:///C:/My%20Games/Chef%20Adventure/save/file1/snapshot.jpg');
+    });
+
+    it('escapes a hash, which would otherwise truncate the path into a fragment', () =>
+    {
+      // Arrange
+      // Act
+      const url = SaveFileSystem.fileUrl('/home/je/games #2/save/file1/snapshot.jpg');
+
+      // Assert
+      expect(url).toBe('file:///home/je/games%20%232/save/file1/snapshot.jpg');
+    });
+
+    it('builds a generation\'s picture url through the same conversion', () =>
+    {
+      // Arrange
+      // Act
+      const url = SaveFileSystem.thumbnailUrl('file1', 'gen-0003');
+
+      // Assert
+      expect(url).toBe('file:///save/file1/gen-0003/snapshot.jpg');
+    });
+
     it('reports a picture that is there', () =>
     {
       // Arrange

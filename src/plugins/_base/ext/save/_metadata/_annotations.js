@@ -51,6 +51,33 @@
  * only what actually had to be remembered.
  *
  * ----------------------------------------------------------------------------
+ * THE FILES SCENE:
+ * This plugin also replaces Scene_Save and Scene_Load with a single scene that
+ * saves, loads, deletes, and rewinds. What it offers depends entirely on where
+ * it was opened from:
+ *
+ *    save platform     Save, Load, Rewind
+ *    main menu         Load, Rewind
+ *    title screen      Load, Delete
+ *
+ * Commands an origin does not offer are omitted rather than greyed out. The
+ * player should never learn that these are the same screen.
+ *
+ * REWINDING is loading an older generation of the slot being played, listed
+ * newest first and labelled by how long ago each one was written. It is NOT a
+ * delete: the pointer stays where it is and the next save writes a new
+ * generation on top, so the state rewound away from remains on disk until
+ * retention retires it normally. Rewinding is itself undoable.
+ *
+ * DELETING is the only irreversible thing in the scene, which is why it exists
+ * only at the title screen. It takes the whole slot, pointer first.
+ *
+ * Every save also writes a snapshot.jpg into its generation - the map, cropped
+ * around where the player was standing - which the list draws beside each row.
+ * It is deliberately not named in the manifest, so a lost picture can never
+ * cost anybody a save.
+ *
+ * ----------------------------------------------------------------------------
  * NOTE ABOUT SAVE COMPATIBILITY:
  * Savefiles written by vanilla RPG Maker MZ cannot be read by this plugin, and
  * savefiles written by this plugin cannot be read without it. There is no
@@ -59,6 +86,19 @@
  * CHANGELOG:
  * - 1.0.0
  *    The initial release.
+ *    Added Scene_Files, one scene for saving, loading, deleting and rewinding,
+ *    replacing Scene_Save and Scene_Load. What it offers is decided by where it
+ *    was opened from and never by $gameSystem, since save access persists into
+ *    savefiles and would leak.
+ *    Added Rewind, which loads one named generation of the slot being played
+ *    with no fallback to a newer one, and deletes nothing doing it.
+ *    Added Delete, offered only from the title screen.
+ *    Saving now writes a snapshot.jpg beside the sections, cropped from the map
+ *    capture the menu backdrop already takes. It is absent from the manifest's
+ *    section list on purpose, so losing it cannot fail a generation.
+ *    maxSavefiles now answers with the number of slots the scene renders, so
+ *    New Game can no longer claim a slot the scene never draws.
+ *    The menu's save command became a Files command, ungated by save access.
  * ============================================================================
  *
  * @param retainedSaveGenerations

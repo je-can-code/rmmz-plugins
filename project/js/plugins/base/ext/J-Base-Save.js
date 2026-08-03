@@ -51,6 +51,33 @@
  * only what actually had to be remembered.
  *
  * ----------------------------------------------------------------------------
+ * THE FILES SCENE:
+ * This plugin also replaces Scene_Save and Scene_Load with a single scene that
+ * saves, loads, deletes, and rewinds. What it offers depends entirely on where
+ * it was opened from:
+ *
+ *    save platform     Save, Load, Rewind
+ *    main menu         Load, Rewind
+ *    title screen      Load, Delete
+ *
+ * Commands an origin does not offer are omitted rather than greyed out. The
+ * player should never learn that these are the same screen.
+ *
+ * REWINDING is loading an older generation of the slot being played, listed
+ * newest first and labelled by how long ago each one was written. It is NOT a
+ * delete: the pointer stays where it is and the next save writes a new
+ * generation on top, so the state rewound away from remains on disk until
+ * retention retires it normally. Rewinding is itself undoable.
+ *
+ * DELETING is the only irreversible thing in the scene, which is why it exists
+ * only at the title screen. It takes the whole slot, pointer first.
+ *
+ * Every save also writes a snapshot.jpg into its generation - the map, cropped
+ * around where the player was standing - which the list draws beside each row.
+ * It is deliberately not named in the manifest, so a lost picture can never
+ * cost anybody a save.
+ *
+ * ----------------------------------------------------------------------------
  * NOTE ABOUT SAVE COMPATIBILITY:
  * Savefiles written by vanilla RPG Maker MZ cannot be read by this plugin, and
  * savefiles written by this plugin cannot be read without it. There is no
@@ -59,6 +86,19 @@
  * CHANGELOG:
  * - 1.0.0
  *    The initial release.
+ *    Added Scene_Files, one scene for saving, loading, deleting and rewinding,
+ *    replacing Scene_Save and Scene_Load. What it offers is decided by where it
+ *    was opened from and never by $gameSystem, since save access persists into
+ *    savefiles and would leak.
+ *    Added Rewind, which loads one named generation of the slot being played
+ *    with no fallback to a newer one, and deletes nothing doing it.
+ *    Added Delete, offered only from the title screen.
+ *    Saving now writes a snapshot.jpg beside the sections, cropped from the map
+ *    capture the menu backdrop already takes. It is absent from the manifest's
+ *    section list on purpose, so losing it cannot fail a generation.
+ *    maxSavefiles now answers with the number of slots the scene renders, so
+ *    New Game can no longer claim a slot the scene never draws.
+ *    The menu's save command became a Files command, ungated by save access.
  * ============================================================================
  *
  * @param retainedSaveGenerations
@@ -2916,12 +2956,46 @@ var SaveFileSystem = class {
 		this.writeSynced(this.thumbnailPath(slotName, generationName), bytes);
 	}
 	/**
+	* Gets the url a picture can actually be loaded through.
+	*
+	* There is no reader to pair with the writer, because `Bitmap.load` assigns its argument straight
+	* onto an `<img>`'s `src` and an `<img>` opens a local file itself - so the only thing needed on the
+	* way back in is a url rather than an operating system path. **Those are not the same string**, and
+	* the difference does not show up on the machine this was written on:
+	*
+	* - `StorageManager.fileDirectoryPath` builds the save root with Node's `path.join`, so on Linux it
+	*   produces `/home/…/save/` and on Windows `C:\Games\…\save\`.
+	* - A POSIX absolute path resolves correctly against the `file:///` origin an NW.js game runs under,
+	*   so it loads with no scheme at all and everything looks finished.
+	* - A Windows one does not. `C:\Games\…` is not a valid url, so it is treated as relative, resolved
+	*   against the game's own directory, and fails - leaving a row that draws nothing, on the platform
+	*   CA ships on and not on the one it is developed on.
+	*
+	* Hence the explicit scheme, the separator normalization, and the escaping: a game installed under
+	* `My Games` has a space in every path it builds.
+	* @param {string} slotName The slot's name.
+	* @param {string} generationName The generation's directory name.
+	* @returns {string}
+	*/
+	static thumbnailUrl(slotName, generationName) {
+		return this.fileUrl(this.thumbnailPath(slotName, generationName));
+	}
+	/**
+	* Renders a local file path as a url an `<img>` will accept.
+	* @param {string} filePath The path to render.
+	* @returns {string}
+	*/
+	static fileUrl(filePath) {
+		const normalized = filePath.replace(/\\/g, "/");
+		const rooted = normalized.replace(/^\/+/, "");
+		const escaped = encodeURI(rooted).replace(/#/g, "%23").replace(/\?/g, "%3F");
+		return `file:///${escaped}`;
+	}
+	/**
 	* Determines whether a generation has a picture beside it.
 	*
-	* There is no reader to pair with this. `Bitmap.load` assigns the url straight onto an `<img>`, and
-	* an `<img>` opens a local path directly, so a row that wants the picture asks for the path. Absent
-	* simply means "no image" - a lost picture must never cost somebody a save, which is also why the
-	* manifest's `sections` array never names it.
+	* Absent simply means "no image" - a lost picture must never cost somebody a save, which is also why
+	* the manifest's `sections` array never names it.
 	* @param {string} slotName The slot's name.
 	* @param {string} generationName The generation's directory name.
 	* @returns {boolean}
@@ -3107,11 +3181,14 @@ var SaveFileEntry = class SaveFileEntry {
 		return SaveFileSystem.hasThumbnail(this.slotName(), this.sourceGenerationName());
 	}
 	/**
-	* Gets the path of the picture this row draws.
+	* Gets the url this row's picture loads through.
+	*
+	* A url rather than the path it is built from, because `Bitmap.load` hands its argument to an
+	* `<img>` and a Windows path is not something an `<img>` can resolve.
 	* @returns {string}
 	*/
-	thumbnailPath() {
-		return SaveFileSystem.thumbnailPath(this.slotName(), this.sourceGenerationName());
+	thumbnailUrl() {
+		return SaveFileSystem.thumbnailUrl(this.slotName(), this.sourceGenerationName());
 	}
 };
 
@@ -4090,12 +4167,12 @@ var Window_FilesList = class extends Window_Command {
 	* @returns {Bitmap}
 	*/
 	thumbnailFor(entry) {
-		const path = entry.thumbnailPath();
-		if (this.thumbnails().has(path)) {
-			return this.thumbnails().get(path);
+		const url = entry.thumbnailUrl();
+		if (this.thumbnails().has(url)) {
+			return this.thumbnails().get(url);
 		}
-		const bitmap = Bitmap.load(path);
-		this.thumbnails().set(path, bitmap);
+		const bitmap = Bitmap.load(url);
+		this.thumbnails().set(url, bitmap);
 		bitmap.addLoadListener(() => this.refresh());
 		return bitmap;
 	}
@@ -4389,6 +4466,7 @@ var Scene_Files = class Scene_Files extends Scene_MenuFacetBase {
 		window.setHandler("cancel", this.popScene.bind(this));
 		window.setHelpWindow(this.helpWindow());
 		window.setEntryMode(this.entryMode());
+		window.select(0);
 		this.setCommandWindow(window);
 		this.addWindow(window);
 	}

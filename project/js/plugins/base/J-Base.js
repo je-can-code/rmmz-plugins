@@ -176,6 +176,9 @@
  *    is the seam that makes those types seedable.
  *    Added Game_Actors accessors - actorIds, actors, data, existingActors -
  *    replacing direct reads of the underlying sparse array.
+ *    Added Scene_Title commandWindow accessors, matching the pair Scene_Menu
+ *    already carried, so a plugin replacing a title command does not have to
+ *    reach past them into the field.
  * - 3.2.0
  *    Added skillIds() to Game_Battler (stub returning empty), Game_Actor (learned skills
  *    plus trait-granted ids, deduplicated), and Game_Enemy (action skill ids plus

@@ -324,21 +324,21 @@ class Window_FilesList
    */
   thumbnailFor(entry)
   {
-    const path = entry.thumbnailPath();
+    const url = entry.thumbnailUrl();
 
     if (this.thumbnails()
-      .has(path))
+      .has(url))
     {
       return this.thumbnails()
-        .get(path);
+        .get(url);
     }
 
-    // `Bitmap.load` assigns the url straight onto an `<img>`, and an `<img>` opens a local file path
-    // directly - so there is no decoding to do on the way back in.
-    const bitmap = Bitmap.load(path);
+    // `Bitmap.load` assigns the url straight onto an `<img>`, so there is no decoding to do on the way
+    // back in - only the scheme, which `thumbnailUrl` has already put on the front.
+    const bitmap = Bitmap.load(url);
 
     this.thumbnails()
-      .set(path, bitmap);
+      .set(url, bitmap);
 
     bitmap.addLoadListener(() => this.refresh());
 

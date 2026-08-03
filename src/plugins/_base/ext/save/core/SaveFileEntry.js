@@ -212,12 +212,15 @@ class SaveFileEntry
   }
 
   /**
-   * Gets the path of the picture this row draws.
+   * Gets the url this row's picture loads through.
+   *
+   * A url rather than the path it is built from, because `Bitmap.load` hands its argument to an
+   * `<img>` and a Windows path is not something an `<img>` can resolve.
    * @returns {string}
    */
-  thumbnailPath()
+  thumbnailUrl()
   {
-    return SaveFileSystem.thumbnailPath(this.slotName(), this.sourceGenerationName());
+    return SaveFileSystem.thumbnailUrl(this.slotName(), this.sourceGenerationName());
   }
 }
 

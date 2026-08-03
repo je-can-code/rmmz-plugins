@@ -258,6 +258,11 @@ class Scene_Files
     // telling it where the player came from is what builds its commands for real.
     window.setEntryMode(this.entryMode());
 
+    // `Window_Command.initialize` already selected row zero of a list that did not exist yet, and a
+    // refresh does not describe the selection again - so without this the help strip sits blank until
+    // the player first moves the cursor.
+    window.select(0);
+
     // update the tracker with the new window.
     this.setCommandWindow(window);
 

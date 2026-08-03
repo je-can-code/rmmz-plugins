@@ -970,12 +970,59 @@ class SaveFileSystem
   }
 
   /**
+   * Gets the url a picture can actually be loaded through.
+   *
+   * There is no reader to pair with the writer, because `Bitmap.load` assigns its argument straight
+   * onto an `<img>`'s `src` and an `<img>` opens a local file itself - so the only thing needed on the
+   * way back in is a url rather than an operating system path. **Those are not the same string**, and
+   * the difference does not show up on the machine this was written on:
+   *
+   * - `StorageManager.fileDirectoryPath` builds the save root with Node's `path.join`, so on Linux it
+   *   produces `/home/…/save/` and on Windows `C:\Games\…\save\`.
+   * - A POSIX absolute path resolves correctly against the `file:///` origin an NW.js game runs under,
+   *   so it loads with no scheme at all and everything looks finished.
+   * - A Windows one does not. `C:\Games\…` is not a valid url, so it is treated as relative, resolved
+   *   against the game's own directory, and fails - leaving a row that draws nothing, on the platform
+   *   CA ships on and not on the one it is developed on.
+   *
+   * Hence the explicit scheme, the separator normalization, and the escaping: a game installed under
+   * `My Games` has a space in every path it builds.
+   * @param {string} slotName The slot's name.
+   * @param {string} generationName The generation's directory name.
+   * @returns {string}
+   */
+  static thumbnailUrl(slotName, generationName)
+  {
+    return this.fileUrl(this.thumbnailPath(slotName, generationName));
+  }
+
+  /**
+   * Renders a local file path as a url an `<img>` will accept.
+   * @param {string} filePath The path to render.
+   * @returns {string}
+   */
+  static fileUrl(filePath)
+  {
+    const normalized = filePath.replace(/\\/g, '/');
+
+    // the scheme supplies the leading separator, so a POSIX path must not also bring its own - while a
+    // Windows path opens on its drive letter and has none to drop.
+    const rooted = normalized.replace(/^\/+/, '');
+
+    // `#` and `?` are legal in a directory name on both platforms and would otherwise be read as the
+    // start of a fragment or a query, silently truncating the path. `encodeURI` leaves both alone.
+    const escaped = encodeURI(rooted)
+      .replace(/#/g, '%23')
+      .replace(/\?/g, '%3F');
+
+    return `file:///${escaped}`;
+  }
+
+  /**
    * Determines whether a generation has a picture beside it.
    *
-   * There is no reader to pair with this. `Bitmap.load` assigns the url straight onto an `<img>`, and
-   * an `<img>` opens a local path directly, so a row that wants the picture asks for the path. Absent
-   * simply means "no image" - a lost picture must never cost somebody a save, which is also why the
-   * manifest's `sections` array never names it.
+   * Absent simply means "no image" - a lost picture must never cost somebody a save, which is also why
+   * the manifest's `sections` array never names it.
    * @param {string} slotName The slot's name.
    * @param {string} generationName The generation's directory name.
    * @returns {boolean}
