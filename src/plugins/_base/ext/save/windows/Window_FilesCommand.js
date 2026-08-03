@@ -94,31 +94,63 @@ class Window_FilesCommand
    */
   makeCommandList()
   {
-    // built once during construction before the scene has said where the player came from, and an
-    // origin nobody has named offers nothing.
-    if (this.entryMode() === String.empty) return;
+    // grab all the commands available.
+    const commands = this.buildCommands();
 
-    this.modes()
-      .filter(mode => mode.isOfferedFrom(this.entryMode()))
-      .forEach(mode => this.addModeCommand(mode));
-
-    // leaving is always available, and always last.
-    this.addBuiltCommand(new WindowCommandBuilder('Back').setSymbol(this.backSymbol())
-      .setHelpText('Return to what you were doing.')
-      .build());
+    // build all the commands.
+    commands.forEach(this.addBuiltCommand, this);
   }
 
   /**
-   * Adds the command for one mode.
-   * @param {SaveFileMode} mode The mode being offered.
+   * Builds all commands for this command window.
+   * Whatever the origin offers, and then a way out.
+   * @returns {BuiltWindowCommand[]}
    */
-  addModeCommand(mode)
+  buildCommands()
   {
-    this.addBuiltCommand(new WindowCommandBuilder(mode.label()).setSymbol(mode.key())
+    // built once during construction before the scene has said where the player came from, and an
+    // origin nobody has named offers nothing.
+    if (this.entryMode() === String.empty) return [];
+
+    // grab the modes this origin is willing to offer.
+    const offered = this.modes()
+      .filter(mode => mode.isOfferedFrom(this.entryMode()));
+
+    // compile the list of commands.
+    const commands = offered.map(this.buildCommand, this);
+
+    // leaving is always available, and always last.
+    commands.push(this.buildBackCommand());
+
+    // return the compiled list of commands.
+    return commands;
+  }
+
+  /**
+   * Builds a {@link BuiltWindowCommand} for one mode.
+   * @param {SaveFileMode} mode The mode being offered.
+   * @returns {BuiltWindowCommand}
+   */
+  buildCommand(mode)
+  {
+    return new WindowCommandBuilder(mode.label())
+      .setSymbol(mode.key())
       .setHelpText(mode.helpText())
       .setEnabled(mode.isEnabled())
       .setIconIndex(mode.iconIndex())
-      .build());
+      .build();
+  }
+
+  /**
+   * Builds the {@link BuiltWindowCommand} that leaves the scene.
+   * @returns {BuiltWindowCommand}
+   */
+  buildBackCommand()
+  {
+    return new WindowCommandBuilder('Back')
+      .setSymbol(this.backSymbol())
+      .setHelpText('Return to what you were doing.')
+      .build();
   }
 }
 

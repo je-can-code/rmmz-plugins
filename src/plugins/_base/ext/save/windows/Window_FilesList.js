@@ -175,18 +175,48 @@ class Window_FilesList
    */
   makeCommandList()
   {
-    // built once during construction before the scene has chosen a mode, and no mode means no rows.
-    if (this.mode() === null) return;
+    // grab all the rows available.
+    const commands = this.buildCommands();
 
-    this.entries()
-      .forEach((entry, index) =>
-      {
-        this.addBuiltCommand(new WindowCommandBuilder(String.empty).setSymbol('entry')
-          .setEnabled(this.mode()
-            .isEntrySelectable(entry))
-          .setExtensionData(index)
-          .build());
-      });
+    // build all the commands.
+    commands.forEach(this.addBuiltCommand, this);
+  }
+
+  /**
+   * Builds all commands for this command window.
+   * One per row the active mode is listing, in the order the mode gave them.
+   * @returns {BuiltWindowCommand[]}
+   */
+  buildCommands()
+  {
+    // built once during construction before the scene has chosen a mode, and no mode means no rows.
+    if (this.mode() === null) return [];
+
+    // compile the list of commands.
+    return this.entries()
+      .map(this.buildCommand, this);
+  }
+
+  /**
+   * Builds a {@link BuiltWindowCommand} for one row.
+   *
+   * The name is empty because nothing about a row is a label- the picture, the map, the party and the
+   * timestamp are all drawn by {@link #drawItem}. The index rides along as extension data so that
+   * drawing can find its way back to the entry it belongs to.
+   * @param {SaveFileEntry} entry The row being built.
+   * @param {number} index The row's position in the list.
+   * @returns {BuiltWindowCommand}
+   */
+  buildCommand(entry, index)
+  {
+    const selectable = this.mode()
+      .isEntrySelectable(entry);
+
+    return new WindowCommandBuilder(String.empty)
+      .setSymbol('entry')
+      .setEnabled(selectable)
+      .setExtensionData(index)
+      .build();
   }
 
   /**

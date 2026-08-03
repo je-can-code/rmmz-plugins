@@ -4275,8 +4275,7 @@ J.ABS.Helpers = {};
 */
 J.ABS.Helpers.forceMapReload = () => {
 	const mapId = $gameMap.mapId();
-	const { x } = $gamePlayer;
-	const { y } = $gamePlayer;
+	const { x, y } = $gamePlayer;
 	$gamePlayer.reserveTransfer(mapId, x, y);
 	$gamePlayer.requestMapReload();
 };

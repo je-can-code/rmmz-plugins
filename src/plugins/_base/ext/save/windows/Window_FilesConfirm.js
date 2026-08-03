@@ -127,11 +127,29 @@ class Window_FilesConfirm
    */
   makeCommandList()
   {
-    this.addBuiltCommand(new WindowCommandBuilder('Yes').setSymbol(this.confirmSymbol())
-      .build());
+    // grab the two answers available.
+    const commands = this.buildCommands();
 
-    this.addBuiltCommand(new WindowCommandBuilder('No').setSymbol(this.denySymbol())
-      .build());
+    // build all the commands.
+    commands.forEach(this.addBuiltCommand, this);
+  }
+
+  /**
+   * Builds all commands for this command window.
+   * A question only ever has the two answers, in the order a reader expects them.
+   * @returns {BuiltWindowCommand[]}
+   */
+  buildCommands()
+  {
+    const yes = new WindowCommandBuilder('Yes')
+      .setSymbol(this.confirmSymbol())
+      .build();
+
+    const no = new WindowCommandBuilder('No')
+      .setSymbol(this.denySymbol())
+      .build();
+
+    return [ yes, no ];
   }
 
   /**
