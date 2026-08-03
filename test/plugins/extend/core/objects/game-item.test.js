@@ -15,7 +15,14 @@ describe('Game_Item ext/extend augments (direct src import)', () =>
     {
     }
 
-    StubGameItem.prototype.initialize = vi.fn();
+    StubGameItem.prototype.initMembers = vi.fn();
+
+    // J-Base calls the hook from `initialize`; this file aliases both, so the stub has to reach the
+    // hook the way the real chain does.
+    StubGameItem.prototype.initialize = vi.fn(function()
+    {
+      this.initMembers();
+    });
     StubGameItem.prototype.setObject = vi.fn();
     StubGameItem.prototype.object = vi.fn();
 
@@ -33,7 +40,7 @@ describe('Game_Item ext/extend augments (direct src import)', () =>
     vi.clearAllMocks();
   });
 
-  describe('initialize/underlyingObject', () =>
+  describe('initMembers/underlyingObject', () =>
   {
     it('always calls through to the original aliased implementation', () =>
     {
@@ -63,11 +70,11 @@ describe('Game_Item ext/extend augments (direct src import)', () =>
 
     it('defaults the underlying item to null when none is provided', () =>
     {
-      // Arrange
+      // Arrange- the default lives in the hook, which is the half a decode can run.
       const item = new Game_Item();
 
       // Act
-      item.initialize(null);
+      item.initMembers();
 
       // Assert
       expect(item.underlyingObject()).toEqual(null);

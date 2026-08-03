@@ -1,11 +1,11 @@
 //region plugins/abs/_component/fixtures/install-abs-host-globals.js
-import { installJBaseHostGlobals } from '../../../_base/_component/fixtures/install-j-base-host-globals.js';
+import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
 import { installMinimalMenuUiStubs } from '../../../../setup/install-minimal-menu-ui-stubs.js';
 import { installPluginManagerWithParams } from '../../../../setup/install-plugin-manager-with-params.js';
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
-import ExternalJsonConfigLoader from '../../../../../src/plugins/_base/managers/ExternalJsonConfigLoader.js';
-import ExternalJsonConfigLoaderOptions from '../../../../../src/plugins/_base/models/ExternalJsonConfigLoaderOptions.js';
-import SerializableRegistry from '../../../../../src/plugins/_base/core/SerializableRegistry.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
+import ExternalJsonConfigLoader from '../../../../../src/plugins/_base/core/managers/ExternalJsonConfigLoader.js';
+import ExternalJsonConfigLoaderOptions from '../../../../../src/plugins/_base/core/models/ExternalJsonConfigLoaderOptions.js';
+import SerializableRegistry from '../../../../../src/plugins/_base/core/core/SerializableRegistry.js';
 
 const noop = function()
 {

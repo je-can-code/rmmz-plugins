@@ -17,3 +17,5 @@ import './windows/Window_DifficultyPoints.js';
 import './windows/Window_DifficultyEffects.js';
 import './scenes/Scene_Difficulty.js';
 import './_metadata/pluginCommands.js';
+
+import './registerDifficultySaveRoutes.js';

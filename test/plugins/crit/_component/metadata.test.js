@@ -1,8 +1,8 @@
 //region plugins/crit/_component/metadata.test.js
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
-import { installJBaseHostGlobals } from '../../_base/_component/fixtures/install-j-base-host-globals.js';
-import PluginMetadata from '../../../../src/plugins/_base/models/PluginMetadata.js';
+import { installJBaseHostGlobals } from '../../_base/core/_component/fixtures/install-j-base-host-globals.js';
+import PluginMetadata from '../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 describe('J-CriticalFactors metadata (direct src import)', () =>
 {
@@ -16,7 +16,7 @@ describe('J-CriticalFactors metadata (direct src import)', () =>
 
     globalThis.__PLUGIN_NAME__ = 'J-Base';
     globalThis.__PLUGIN_VERSION__ = '3.2.0';
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     globalThis.__PLUGIN_NAME__ = 'J-CriticalFactors';
     globalThis.__PLUGIN_VERSION__ = '1.0.0';

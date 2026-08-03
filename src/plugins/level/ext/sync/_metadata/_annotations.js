@@ -112,6 +112,16 @@
  *     - Inner maps do not need any tags
  *
  * ============================================================================
+ * CHANGELOG:
+ * - 1.1.0
+ *    Routed the _levelSync namespace into its own save section, so an active
+ *    sync session lands in systems/level-sync.json rather than in the system
+ *    blob.
+ *    Moved the _levelSync namespace seeding from the initialize aliases to
+ *    initMembers, so a decoded save can establish it without a constructor.
+ * - 1.0.0
+ *    The initial release.
+ * ============================================================================
  *
  * @command setContentSync
  * @text Set Content Sync

@@ -1,10 +1,10 @@
 //region Game_ActionResult
 /**
- * Extends {@link Game_ActionResult.initialize}.<br/>
+ * Extends {@link Game_ActionResult.initMembers}.<br/>
  * Initializes additional members.
  */
-J.ABS.Aliased.Game_ActionResult.set('initialize', Game_ActionResult.prototype.initialize);
-Game_ActionResult.prototype.initialize = function()
+J.ABS.Aliased.Game_ActionResult.set('initMembers', Game_ActionResult.prototype.initMembers);
+Game_ActionResult.prototype.initMembers = function()
 {
   /**
    * Whether or not the result was guarded.
@@ -31,7 +31,7 @@ Game_ActionResult.prototype.initialize = function()
   this.reduced = 0;
 
   // perform original logic.
-  J.ABS.Aliased.Game_ActionResult.get('initialize')
+  J.ABS.Aliased.Game_ActionResult.get('initMembers')
     .call(this);
 };
 

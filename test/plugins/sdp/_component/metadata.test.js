@@ -25,7 +25,7 @@ describe('J-SDP metadata (direct src import)', () =>
     installSdpHostGlobals(globalThis, sdpConfigJson);
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJSdp();
     await import('../../../../src/plugins/sdp/core/_metadata/initialization.js');

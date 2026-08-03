@@ -12,3 +12,5 @@ import './managers/IconManager.js';
 import './core/registerProfParameters.js';
 import './scenes/Scene_Boot.js';
 import './_metadata/pluginCommands.js';
+
+import './registerProficiencySaveRoutes.js';

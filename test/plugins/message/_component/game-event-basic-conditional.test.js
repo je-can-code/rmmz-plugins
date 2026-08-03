@@ -2,7 +2,7 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { installMessageHostGlobals, setPluginContextToJBase, setPluginContextToJMessage } from './fixtures/install-message-host-globals.js';
-import JsonMapper from '../../../../src/plugins/_base/_utilities/JsonMapper.js';
+import JsonMapper from '../../../../src/plugins/_base/core/_utilities/JsonMapper.js';
 
 describe('J-MessageTextCodes BasicChoiceConditional via Game_Event (direct src import)', () =>
 {
@@ -13,7 +13,7 @@ describe('J-MessageTextCodes BasicChoiceConditional via Game_Event (direct src i
     installMessageHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJMessage();
     await import('../../../../src/plugins/message/core/_metadata/initialization.js');

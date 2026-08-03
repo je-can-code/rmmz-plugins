@@ -73,22 +73,22 @@ describe('J-ABS-Pixelistics enemy hitbox size (direct src import)', () =>
     installPixelCoreHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/managers/RPGManager.js'));
-    ({ default: globalThis.JsonMapper } = await import('../../../../../../src/plugins/_base/_utilities/JsonMapper.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: globalThis.JsonMapper } = await import('../../../../../../src/plugins/_base/core/_utilities/JsonMapper.js'));
 
     setPluginContextToJPixel();
     await import('../../../../../../src/plugins/pixel/core/_metadata/initialization.js');
 
     // patches globalThis.Game_Character.prototype with distanceFromPlayer(), which ext/abs's own
     // Game_Event.js relies on for hitbox-reveal-range gating.
-    await import('../../../../../../src/plugins/_base/objects/Game_Character.js');
+    await import('../../../../../../src/plugins/_base/core/objects/Game_Character.js');
 
     // patches globalThis.Game_Event.prototype with the real getValidCommentCommands()/
     // extractValueByRegex()- the shared pixel fixture's placeholders are dead stand-ins that never
     // actually get exercised once this real implementation is loaded, same as the shipped runtime.
-    await import('../../../../../../src/plugins/_base/objects/Game_Event.js');
+    await import('../../../../../../src/plugins/_base/core/objects/Game_Event.js');
 
     // patches the core pixel prototype chain directly, no vm involved.
     await import('../../../../../../src/plugins/pixel/core/objects/Game_CharacterBase.js');

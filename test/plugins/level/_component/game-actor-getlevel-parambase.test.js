@@ -17,18 +17,18 @@ describe('J-LevelMaster Game_Actor getLevel and paramBase (direct src import)', 
     installLevelHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
     // patches globalThis.Game_BattlerBase.prototype/statics and Game_Battler.prototype with
     // knownBaseParameterIds()/getAllNotes(), which level's own Game_Battler.js/Game_Temp.js rely on.
-    await import('../../../../src/plugins/_base/objects/Game_BattlerBase.js');
-    await import('../../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_BattlerBase.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Battler.js');
 
     // patches globalThis.Game_Actor.prototype with databaseData() -> this.actor(), which getAllNotes()
     // (and therefore getLevelSources()) relies on to include the actor's own database note.
-    await import('../../../../src/plugins/_base/objects/Game_Actor.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Actor.js');
 
     setPluginContextToJLevel();
     await import('../../../../src/plugins/level/core/_metadata/initialization.js');

@@ -22,18 +22,18 @@ describe('J-Passive core database extensions (direct src import)', () =>
     installPassiveHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
-    ({ default: RPG_BaseBattler } = await import('../../../../../src/plugins/_base/database/core/RPG_BaseBattler.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: RPG_BaseBattler } = await import('../../../../../src/plugins/_base/core/database/core/RPG_BaseBattler.js'));
     globalThis.RPG_BaseBattler = RPG_BaseBattler;
-    ({ default: RPG_Class } = await import('../../../../../src/plugins/_base/database/implementations/RPG_Class.js'));
+    ({ default: RPG_Class } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_Class.js'));
     globalThis.RPG_Class = RPG_Class;
-    ({ default: RPG_State } = await import('../../../../../src/plugins/_base/database/implementations/RPG_State.js'));
+    ({ default: RPG_State } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_State.js'));
     globalThis.RPG_State = RPG_State;
-    ({ default: RPG_Actor } = await import('../../../../../src/plugins/_base/database/implementations/RPG_Actor.js'));
+    ({ default: RPG_Actor } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_Actor.js'));
     globalThis.RPG_Actor = RPG_Actor;
-    ({ default: RPG_Enemy } = await import('../../../../../src/plugins/_base/database/implementations/RPG_Enemy.js'));
+    ({ default: RPG_Enemy } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_Enemy.js'));
     globalThis.RPG_Enemy = RPG_Enemy;
 
     setPluginContextToJPassive();

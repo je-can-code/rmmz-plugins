@@ -30,13 +30,13 @@ describe('J-ABS Game_Battler CDR/PER (direct src import)', () =>
     installAbsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     // patches globalThis.Game_Battler.prototype with getAllNotes/initMembers/etc, which J-ABS's
     // own Game_Battler.js aliases and builds on top of.
-    await import('../../../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../../../src/plugins/_base/core/objects/Game_Battler.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
     setPluginContextToJAbs();
     await import('../../../../../src/plugins/abs/core/_metadata/initialization.js');

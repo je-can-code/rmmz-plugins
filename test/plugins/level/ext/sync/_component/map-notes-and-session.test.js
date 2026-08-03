@@ -31,9 +31,9 @@ describe('J-Level-Sync map notes and session storage (direct src import)', () =>
     installLevelHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
     // both the level core and the sync extension alias onAfterLoad, and each captures whatever is on
     // the prototype at its own import time. The stub therefore has to exist before the *first* of
@@ -68,9 +68,15 @@ describe('J-Level-Sync map notes and session storage (direct src import)', () =>
 
     // the sync layer aliases both of these, capturing whatever exists at import time. Recording the
     // calls here is what lets the tests below prove the extension still calls through.
-    globalThis.Game_Map.prototype.initialize = function()
+    // the sync layer aliases the hook rather than `initialize`, because that is the half a decode
+    // can run. J-Base is what calls the hook from `initialize`, and this stands in for it.
+    globalThis.Game_Map.prototype.initMembers = function()
     {
       this.originalInitializeRan = true;
+    };
+    globalThis.Game_Map.prototype.initialize = function()
+    {
+      this.initMembers();
     };
     globalThis.Game_Map.prototype.setup = function(mapId)
     {

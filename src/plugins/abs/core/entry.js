@@ -74,6 +74,7 @@ import './objects/Game_Party.js';
 import './objects/Game_Player.js';
 import './objects/Game_Unit.js';
 import './scenes/Scene_Boot.js';
+import './scenes/Scene_Files.js';
 import './scenes/Scene_Load.js';
 import './scenes/Scene_Map.js';
 import './sprites/Sprite_Animation.js';
@@ -86,3 +87,5 @@ import './sprites/Sprite_MapHpGauge.js';
 import './sprites/Sprite_MapAfflictionSlot.js';
 import './sprites/Sprite_MapAfflictionStrip.js';
 import './sprites/Spriteset_Map.js';
+
+import './registerJabsSaveRoutes.js';

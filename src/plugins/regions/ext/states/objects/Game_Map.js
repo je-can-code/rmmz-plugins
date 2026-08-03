@@ -2,14 +2,14 @@
 import RegionStateData from './../models/RegionStateData.js';
 
 /**
- * Extends {@link #initialize}.<br/>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes the region states properties.
  */
-J.REGIONS.EXT.STATES.Aliased.Game_Map.set('initialize', Game_Map.prototype.initialize);
-Game_Map.prototype.initialize = function()
+J.REGIONS.EXT.STATES.Aliased.Game_Map.set('initMembers', Game_Map.prototype.initMembers);
+Game_Map.prototype.initMembers = function()
 {
   // perform original logic.
-  J.REGIONS.EXT.STATES.Aliased.Game_Map.get('initialize')
+  J.REGIONS.EXT.STATES.Aliased.Game_Map.get('initMembers')
     .call(this);
 
   // initialize the region states.

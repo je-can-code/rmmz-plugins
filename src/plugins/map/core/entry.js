@@ -11,3 +11,5 @@ import './objects/JABS_InputController.js';
 import './windows/Window_JabsRemapActions.js';
 import './scenes/Scene_Map.js';
 import './_metadata/pluginCommands.js';
+
+import './registerMapSaveRoutes.js';

@@ -186,10 +186,10 @@ Game_Action.prototype.thisCritSelfStates = function()
  */
 Game_Action.prototype.onCritTargetStates = function()
 {
-  return RPGManager.getOnChanceEffectsFromDatabaseObjects(
-    this.subject().getAllNotes(),
-    J.CRIT.RegExp.OnCritApply
-  );
+  const notes = this.subject()
+    .getAllNotes();
+
+  return RPGManager.getOnChanceEffectsFromDatabaseObjects(notes, J.CRIT.RegExp.OnCritApply);
 };
 
 /**
@@ -199,10 +199,10 @@ Game_Action.prototype.onCritTargetStates = function()
  */
 Game_Action.prototype.onCritSelfStates = function()
 {
-  return RPGManager.getOnChanceEffectsFromDatabaseObjects(
-    this.subject().getAllNotes(),
-    J.CRIT.RegExp.OnCritSelf
-  );
+  const notes = this.subject()
+    .getAllNotes();
+
+  return RPGManager.getOnChanceEffectsFromDatabaseObjects(notes, J.CRIT.RegExp.OnCritSelf);
 };
 
 /**

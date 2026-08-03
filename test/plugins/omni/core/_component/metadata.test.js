@@ -7,9 +7,9 @@ import {
   setPluginContextToJOmnipedia,
 } from '../../_component/fixtures/install-omni-host-globals.js';
 
-const jBaseInitPath = '../../../../../src/plugins/_base/_metadata/initialization.js';
+const jBaseInitPath = '../../../../../src/plugins/_base/core/_metadata/initialization.js';
 const omniInitPath = '../../../../../src/plugins/omni/core/_metadata/initialization.js';
-const pluginMetadataPath = '../../../../../src/plugins/_base/models/PluginMetadata.js';
+const pluginMetadataPath = '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 /**
  * The J umbrella object as J-Base built it, captured once and restored before every test.

@@ -15,7 +15,7 @@ describe('J-ABS Game_Party (unit, all downstream dependencies mocked)', () =>
     {
     }
     originalInitialize = vi.fn();
-    Game_Party.prototype.initialize = originalInitialize;
+    Game_Party.prototype.initMembers = originalInitialize;
     globalThis.Game_Party = Game_Party;
 
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Battler.js', () => ({ default: class {} }));
@@ -41,7 +41,7 @@ describe('J-ABS Game_Party (unit, all downstream dependencies mocked)', () =>
     return Object.assign(Object.create(globalThis.Game_Party.prototype), overrides);
   }
 
-  describe('initialize', () =>
+  describe('initMembers', () =>
   {
     it('performs the original logic then initializes JABS party data', () =>
     {
@@ -50,7 +50,7 @@ describe('J-ABS Game_Party (unit, all downstream dependencies mocked)', () =>
       vi.spyOn(party, 'initJabsPartyData').mockImplementation(() => {});
 
       // Act
-      party.initialize();
+      party.initMembers();
 
       // Assert
       expect(originalInitialize).toHaveBeenCalled();

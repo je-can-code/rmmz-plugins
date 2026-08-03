@@ -19,7 +19,7 @@ describe('J-CMS-Equip metadata (direct src import)', () =>
     installCmsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     // the equip menu is an extension of the main menu and gates on it, so the core has to stand
     // before this one can load at all.

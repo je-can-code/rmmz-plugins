@@ -17,7 +17,7 @@ describe('J-NaturalGrowth metadata (direct src import)', () =>
     installNaturalHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJNatural();
     await import('../../../../src/plugins/natural/core/_metadata/initialization.js');

@@ -29,12 +29,12 @@ class J_LevelPluginMetadata
   {
     // this file is required- a missing or invalid config crashes boot, same as every other config-driven
     // plugin in this codebase (J-ABS, J-SDP, J-JAFTING-Creation, Omni-Quest, J-Diff, J-Prof).
-    const config = ExternalJsonConfigLoader.load(
-      J_LevelPluginMetadata.CONFIG_PATH,
-      ExternalJsonConfigLoaderOptions.Builder()
-        .pluginName('J-LevelMaster')
-        .configName('level configuration')
-        .build());
+    const options = ExternalJsonConfigLoaderOptions.Builder()
+      .pluginName('J-LevelMaster')
+      .configName('level configuration')
+      .build();
+
+    const config = ExternalJsonConfigLoader.load(J_LevelPluginMetadata.CONFIG_PATH, options);
 
     /**
      * Whether or not the scaling functionality is enabled.

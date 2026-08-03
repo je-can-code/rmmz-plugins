@@ -7,7 +7,7 @@ describe('RPG_Enemy#typedApRewards (direct src import)', () =>
   {
     vi.resetModules();
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
     // mirrors the real J.APT.EXT.TYPED.RegExp.ApTypedReward from
     // src/plugins/apt/ext/typed/_metadata/initialization.js- keep these two in lockstep.

@@ -9,7 +9,7 @@ describe('CAMods Game_Party (real engine direct import)', () =>
   {
     installCaModsHostGlobals();
 
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
     await import('../../../../src/plugins/__ca-mods/core/_metadata/initialization.js');
 
     // the file under test- adds extraDropSources/elementalActors/elementalJabsBattlers/isLeaderActor

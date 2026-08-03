@@ -12,7 +12,7 @@ describe('J-SystemUtilities gamepad fresh press logging (direct src import)', ()
     installUtilsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJUtils();
     await import('../../../../src/plugins/utils/core/_metadata/initialization.js');

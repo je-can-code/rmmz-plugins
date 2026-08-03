@@ -120,6 +120,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Region skill step tracking is no longer written to savefiles for the
+ *    player, followers, or vehicles; it is per-step bookkeeping that means
+ *    nothing across a load, and it now starts fresh.
  * - 1.0.1
  *    Region skill triggers now roll through the shared on-chance system
  *    (lucky/cursed rolls, Accumulate Mode, Encore) instead of a flat

@@ -11,31 +11,31 @@ Scene_Boot.prototype.onDatabaseLoaded = function()
     .call(this);
 
   // register CDR with the parameter catalog.
-  ParameterRegistry.register(
-    ParameterDefinition.Builder()
-      .key('cdr')
-      .group(ParameterGroups.SUPPORT)
-      .sortOrder(3)
-      .label(() => TextManager.cdr())
-      .description(() => TextManager.cdrDescription())
-      .iconIndex(() => IconManager.cdr())
-      .format(ParameterFormat.PERCENT_SUFFIX)
-      .getValue(battler => battler.cdr)
-      .build()
-  );
+  const cooldownReduction = ParameterDefinition.Builder()
+    .key('cdr')
+    .group(ParameterGroups.SUPPORT)
+    .sortOrder(3)
+    .label(() => TextManager.cdr())
+    .description(() => TextManager.cdrDescription())
+    .iconIndex(() => IconManager.cdr())
+    .format(ParameterFormat.PERCENT_SUFFIX)
+    .getValue(battler => battler.cdr)
+    .build();
+
+  ParameterRegistry.register(cooldownReduction);
 
   // register PER with the parameter catalog.
-  ParameterRegistry.register(
-    ParameterDefinition.Builder()
-      .key('per')
-      .group(ParameterGroups.PRECISION)
-      .sortOrder(3)
-      .label(() => TextManager.per())
-      .description(() => TextManager.perDescription())
-      .iconIndex(() => IconManager.per())
-      .format(ParameterFormat.PERCENT_SUFFIX)
-      .getValue(battler => battler.per)
-      .build()
-  );
+  const parryExtension = ParameterDefinition.Builder()
+    .key('per')
+    .group(ParameterGroups.PRECISION)
+    .sortOrder(3)
+    .label(() => TextManager.per())
+    .description(() => TextManager.perDescription())
+    .iconIndex(() => IconManager.per())
+    .format(ParameterFormat.PERCENT_SUFFIX)
+    .getValue(battler => battler.per)
+    .build();
+
+  ParameterRegistry.register(parryExtension);
 };
 //endregion Scene_Boot

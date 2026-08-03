@@ -3,14 +3,14 @@ import RecipeTracking from './../__models/RecipeTracking.js';
 import CategoryTracking from './../__models/CategoryTracking.js';
 
 /**
- * Extends {@link #initialize}.<br/>
+ * Extends {@link #initMembers}.<br/>
  * Also initializes our jafting members.
  */
-J.JAFTING.EXT.CREATE.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);
-Game_Party.prototype.initialize = function()
+J.JAFTING.EXT.CREATE.Aliased.Game_Party.set('initMembers', Game_Party.prototype.initMembers);
+Game_Party.prototype.initMembers = function()
 {
   // perform original logic.
-  J.JAFTING.EXT.CREATE.Aliased.Game_Party.get('initialize')
+  J.JAFTING.EXT.CREATE.Aliased.Game_Party.get('initMembers')
     .call(this);
 
   // init the members.

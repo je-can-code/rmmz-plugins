@@ -232,6 +232,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.4.0
+ *    Routed the _natural namespace into its own save section, so accumulated
+ *    growth lands in systems/natural.json rather than in the system blob.
  * - 2.3.0
  *    BREAKING (tag semantics): ex- and sp-parameter growth tags now take whole
  *    percents, matching the buff tags beside them. The growth path stored its

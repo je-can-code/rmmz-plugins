@@ -1,9 +1,9 @@
 //region plugins/sks/_component/fixtures/install-sks-host-globals.js
-import { installJBaseHostGlobals } from '../../../_base/_component/fixtures/install-j-base-host-globals.js';
+import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
 import { installPluginManagerWithParams } from '../../../../setup/install-plugin-manager-with-params.js';
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
-import RPG_Skill from '../../../../../src/plugins/_base/database/implementations/RPG_Skill.js';
-import RPG_Weapon from '../../../../../src/plugins/_base/database/implementations/RPG_Weapon.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
+import RPG_Skill from '../../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js';
+import RPG_Weapon from '../../../../../src/plugins/_base/core/database/implementations/RPG_Weapon.js';
 
 export const DEFAULT_SKS_PLUGIN_PARAMS = {
   'menu-switch': '101',

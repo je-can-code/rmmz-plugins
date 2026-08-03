@@ -120,8 +120,10 @@ class FormulaEffect
   static isValidTrigger(trigger)
   {
     // Check membership in the triggers set.
-    return this.#TRIGGERS.has(String(trigger ?? "")
-      .toLowerCase());
+    const normalized = String(trigger ?? "")
+      .toLowerCase();
+
+    return this.#TRIGGERS.has(normalized);
   }
 
   /**
@@ -132,8 +134,10 @@ class FormulaEffect
   static isValidAffect(affect)
   {
     // Check membership in the affects set.
-    return this.#AFFECTS.has(String(affect ?? "")
-      .toLowerCase());
+    const normalized = String(affect ?? "")
+      .toLowerCase();
+
+    return this.#AFFECTS.has(normalized);
   }
 
   /**
@@ -144,8 +148,10 @@ class FormulaEffect
   static isValidResource(resource)
   {
     // Check membership in the resources set.
-    return this.#RESOURCES.has(String(resource ?? "")
-      .toLowerCase());
+    const normalized = String(resource ?? "")
+      .toLowerCase();
+
+    return this.#RESOURCES.has(normalized);
   }
 
   /**
@@ -156,8 +162,10 @@ class FormulaEffect
   static isValidMode(mode)
   {
     // Check membership in the modes set.
-    return this.#MODES.has(String(mode ?? "")
-      .toLowerCase());
+    const normalized = String(mode ?? "")
+      .toLowerCase();
+
+    return this.#MODES.has(normalized);
   }
 
   /**

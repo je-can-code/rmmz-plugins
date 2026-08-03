@@ -15,3 +15,4 @@ import './scenes/Scene_JaftingSalvage.js';
 import './scenes/Scene_JaftingSalvageHubRouting.js';
 import './_metadata/pluginCommands.js';
 
+import './registerJaftingSaveRoutes.js';

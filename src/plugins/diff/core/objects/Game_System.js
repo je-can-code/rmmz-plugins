@@ -2,11 +2,11 @@
 /**
  * Extends the `.initialize()` with our difficulty initialization.
  */
-J.DIFFICULTY.Aliased.Game_System.set('initialize', Game_System.prototype.initialize);
-Game_System.prototype.initialize = function()
+J.DIFFICULTY.Aliased.Game_System.set('initMembers', Game_System.prototype.initMembers);
+Game_System.prototype.initMembers = function()
 {
   // perform original logic.
-  J.DIFFICULTY.Aliased.Game_System.get('initialize')
+  J.DIFFICULTY.Aliased.Game_System.get('initMembers')
     .call(this);
 
   // initializes members for this plugin.

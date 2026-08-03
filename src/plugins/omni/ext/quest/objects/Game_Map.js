@@ -5,11 +5,11 @@ import QuestManager from './../managers/QuestManager.js';
  * Extends {@link initialize}.<br/>
  * Also initializes the questopedia members.
  */
-J.OMNI.EXT.QUEST.Aliased.Game_Map.set('initialize', Game_Map.prototype.initialize);
-Game_Map.prototype.initialize = function()
+J.OMNI.EXT.QUEST.Aliased.Game_Map.set('initMembers', Game_Map.prototype.initMembers);
+Game_Map.prototype.initMembers = function()
 {
   // perform original logic.
-  J.OMNI.EXT.QUEST.Aliased.Game_Map.get('initialize')
+  J.OMNI.EXT.QUEST.Aliased.Game_Map.get('initMembers')
     .call(this);
 
   // also initialize our members.

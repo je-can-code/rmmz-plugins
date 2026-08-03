@@ -12,7 +12,7 @@ describe('J-MAP plugin command toggle-minimap (direct src import)', () =>
     installMapHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJMap();
     await import('../../../../src/plugins/map/core/_metadata/initialization.js');

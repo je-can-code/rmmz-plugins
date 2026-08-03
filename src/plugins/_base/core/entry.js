@@ -1,0 +1,107 @@
+import './_metadata/initialization.js';
+
+import './_utilities/ArrayHelper.js';
+import './_utilities/JsonMapper.js';
+
+import './core/SerializableRegistry.js';
+import './core/ParameterFormat.js';
+import './core/ParameterDisplayPolicy.js';
+import './core/ParameterDisplaySentinel.js';
+import './core/ParameterGroups.js';
+import './core/ParameterKeys.js';
+import './core/JsonEx.js';
+import './core/Bitmap.js';
+
+import './models/PluginVersion.js';
+import './models/PluginMetadata.js';
+import './models/MenuSection.js';
+import './models/InputDevice.js';
+import './models/BuiltWindowCommand.js';
+import './models/ExternalJsonConfigLoaderOptions.js';
+import './models/GaugeOptionsBuilder.js';
+import './models/J_EventEmitter.js';
+import './core/registerJBaseSerializableModels.js';
+import './models/WindowCommandBuilder.js';
+import './models/WindowGaugeOptions.js';
+
+import './managers/BattleManager.js';
+import './managers/ColorManager.js';
+import './managers/DataManager.js';
+import './managers/ExternalJsonConfigLoader.js';
+import './managers/Graphics.js';
+import './managers/IconManager.js';
+import './managers/InputDeviceTracker.js';
+import './managers/Input.js';
+import './managers/InputLegendResolver.js';
+import './managers/ImageManager.js';
+import './managers/RPGManager.js';
+import './managers/SoundManager.js';
+import './managers/TextManager.js';
+import './managers/TraitManager.js';
+import './managers/TraitResolver.js';
+
+import './core/registerVanillaParameters.js';
+import './core/AffiliationDisplay.js';
+
+import './objects/Game_Action.js';
+import './objects/Game_Actor.js';
+import './objects/Game_ActionResult.js';
+import './objects/Game_Actors.js';
+import './objects/Game_Battler.js';
+import './objects/Game_BattlerBase.js';
+import './objects/Game_Character.js';
+import './objects/Game_CharacterBase.js';
+import './objects/Game_Enemies.js';
+import './objects/Game_Enemy.js';
+import './objects/Game_Event.js';
+import './objects/Game_Follower.js';
+import './objects/Game_Item.js';
+import './objects/Game_Interpreter.js';
+import './objects/Game_Map.js';
+import './objects/Game_Party.js';
+import './objects/Game_Player.js';
+import './objects/Game_Screen.js';
+import './objects/Game_System.js';
+import './objects/Game_Temp.js';
+import './objects/Game_Timer.js';
+import './objects/Game_Vehicle.js';
+
+import './scenes/Scene_Base.js';
+import './scenes/Scene_Equip.js';
+import './scenes/Scene_Map.js';
+import './scenes/Scene_Menu.js';
+import './scenes/Scene_Title.js';
+import './scenes/Scene_MenuBase.js';
+import './scenes/Scene_Skill.js';
+import './scenes/Scene_Boot.js';
+import './scenes/Scene_MenuFacetBase.js';
+import './scenes/Scene_ActorFacetBase.js';
+
+import './sprites/Sprite.js';
+import './sprites/Sprite_BaseText.js';
+import './sprites/Sprite_Character.js';
+import './sprites/Sprite_Face.js';
+import './sprites/Sprite_Icon.js';
+import './sprites/Sprite_MapGauge.js';
+import './sprites/Sprite_Animation.js';
+import './sprites/Sprite_AnimationMV.js';
+import './sprites/Sprite_Damage.js';
+import './sprites/Sprite_Gauge.js';
+import './sprites/Spriteset_Map.js';
+
+import './windows/TileMap.js';
+import './windows/Window_ActorRibbon.js';
+import './windows/Window_Base.js';
+import './windows/Window_Command.js';
+import './windows/Window_ControlLegend.js';
+import './windows/Window_Dimmer.js';
+import './windows/Window_EquipItem.js';
+import './windows/Window_Help.js';
+import './windows/Window_MoreData.js';
+import './windows/Window_Selectable.js';
+import './windows/Window_ChoiceList.js';
+import './windows/Window_EquipStatus.js';
+import './windows/Window_SkillList.js';
+import './windows/Window_SkillType.js';
+import './windows/Window_Status.js';
+import './windows/WindowLayer.js';

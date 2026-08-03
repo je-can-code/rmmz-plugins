@@ -12,7 +12,7 @@ describe('J-MessageTextCodes Game_Message choice hiding (direct src import)', ()
     installMessageHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJMessage();
     await import('../../../../src/plugins/message/core/_metadata/initialization.js');

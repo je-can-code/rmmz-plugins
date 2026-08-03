@@ -1,7 +1,7 @@
 //region plugins/passive/_component/fixtures/install-passive-host-globals.js
-import { installJBaseHostGlobals } from '../../../_base/_component/fixtures/install-j-base-host-globals.js';
+import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
 import { installMinimalMenuUiStubs } from '../../../../setup/install-minimal-menu-ui-stubs.js';
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 const noop = function()
 {
@@ -226,6 +226,10 @@ export function installPassiveHostGlobals(sandbox = globalThis)
   };
 
   sandbox.Game_Party.prototype.initialize = noop;
+
+  // J-Base defines this hook and calls it from an aliased `initialize`; plugins adding party state
+  // alias the hook rather than `initialize`, so it has to exist here for their chain to capture.
+  sandbox.Game_Party.prototype.initMembers = noop;
 }
 
 /**

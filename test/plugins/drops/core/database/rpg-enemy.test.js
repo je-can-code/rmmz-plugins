@@ -24,10 +24,10 @@ describe('J-DropsControl RPG_Enemy drop filter (direct src import)', () =>
     installDropsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
-    ({ default: RPG_Enemy } = await import('../../../../../src/plugins/_base/database/implementations/RPG_Enemy.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: RPG_Enemy } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_Enemy.js'));
     globalThis.RPG_Enemy = RPG_Enemy;
 
     setPluginContextToJDrops();

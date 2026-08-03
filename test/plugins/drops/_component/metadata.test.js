@@ -12,7 +12,7 @@ describe('J-DropsControl metadata (direct src import)', () =>
     installDropsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJDrops();
     await import('../../../../src/plugins/drops/core/_metadata/initialization.js');

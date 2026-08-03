@@ -14,33 +14,42 @@ Window_MenuCommand.prototype.addMainCommands = function()
   // the item scene concerns the party's shared inventory rather than any one actor.
   if (this.needsCommand("item"))
   {
-    this.addBuiltCommand(new WindowCommandBuilder(TextManager.item).setSymbol("item")
+    const item = new WindowCommandBuilder(TextManager.item)
+      .setSymbol("item")
       .setHelpText(J.CMS.Metadata.helpTextFor("item"))
       .setEnabled(enabled)
       .setIconIndex(2567)
       .setMenuSection(MenuSection.Party)
-      .build());
+      .build();
+
+    this.addBuiltCommand(item);
   }
 
   // the remaining three each open a scene about a single actor.
   if (this.needsCommand("skill"))
   {
-    this.addBuiltCommand(new WindowCommandBuilder(TextManager.skill).setSymbol("skill")
+    const skill = new WindowCommandBuilder(TextManager.skill)
+      .setSymbol("skill")
       .setHelpText(J.CMS.Metadata.helpTextFor("skill"))
       .setEnabled(enabled)
       .setIconIndex(2564)
       .setMenuSection(MenuSection.Actor)
-      .build());
+      .build();
+
+    this.addBuiltCommand(skill);
   }
 
   if (this.needsCommand("equip"))
   {
-    this.addBuiltCommand(new WindowCommandBuilder(TextManager.equip).setSymbol("equip")
+    const equip = new WindowCommandBuilder(TextManager.equip)
+      .setSymbol("equip")
       .setHelpText(J.CMS.Metadata.helpTextFor("equip"))
       .setEnabled(enabled)
       .setIconIndex(2565)
       .setMenuSection(MenuSection.Actor)
-      .build());
+      .build();
+
+    this.addBuiltCommand(equip);
   }
 };
 
@@ -57,12 +66,15 @@ Window_MenuCommand.prototype.addOptionsCommand = function()
   const enabled = this.isOptionsEnabled();
 
   // options concern the game rather than any actor.
-  this.addBuiltCommand(new WindowCommandBuilder(TextManager.options).setSymbol("options")
+  const options = new WindowCommandBuilder(TextManager.options)
+    .setSymbol("options")
     .setHelpText(J.CMS.Metadata.helpTextFor("options"))
     .setEnabled(enabled)
     .setIconIndex(2566)
     .setMenuSection(MenuSection.Party)
-    .build());
+    .build();
+
+  this.addBuiltCommand(options);
 };
 
 /**
@@ -75,10 +87,13 @@ Window_MenuCommand.prototype.addGameEndCommand = function()
   const enabled = this.isGameEndEnabled();
 
   // quitting concerns the game rather than any actor.
-  this.addBuiltCommand(new WindowCommandBuilder(TextManager.gameEnd).setSymbol("gameEnd")
+  const gameEnd = new WindowCommandBuilder(TextManager.gameEnd)
+    .setSymbol("gameEnd")
     .setHelpText(J.CMS.Metadata.helpTextFor("gameEnd"))
     .setEnabled(enabled)
     .setIconIndex(2562)
     .setMenuSection(MenuSection.Party)
-    .build());
+    .build();
+
+  this.addBuiltCommand(gameEnd);
 };

@@ -12,10 +12,10 @@ describe('J-SkillExtend Game_Action state roll threading (direct src import)', (
     installExtendHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
-    ({ default: globalThis.JCache } = await import('../../../../src/plugins/_base/core/JCache.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: globalThis.JCache } = await import('../../../../src/plugins/_base/core/core/JCache.js'));
 
     setPluginContextToJExtend();
     await import('../../../../src/plugins/extend/core/_metadata/initialization.js');

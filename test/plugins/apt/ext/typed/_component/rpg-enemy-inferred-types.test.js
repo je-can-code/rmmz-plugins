@@ -15,7 +15,7 @@ describe('RPG_Enemy inferred typed elements (direct src import)', () =>
   {
     vi.resetModules();
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/core/managers/RPGManager.js'));
     ({ default: ApTypeKey } = await import('../../../../../../src/plugins/apt/ext/typed/_models/ApTypeKey.js'));
 
     globalThis.ApManager = { resolveDomainId: vi.fn(() => NaN) };

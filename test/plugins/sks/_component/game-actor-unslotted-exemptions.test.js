@@ -2,7 +2,7 @@
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { installSksHostGlobals, setPluginContextToJBase, setPluginContextToJSks, skillData } from './fixtures/install-sks-host-globals.js';
-import RPG_Skill from '../../../../src/plugins/_base/database/implementations/RPG_Skill.js';
+import RPG_Skill from '../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js';
 
 describe('J-SkillSlots Game_Actor forced-unslotted exemptions & stale slot pruning (direct src import)', () =>
 {
@@ -15,11 +15,11 @@ describe('J-SkillSlots Game_Actor forced-unslotted exemptions & stale slot pruni
     installSksHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
-    await import('../../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Battler.js');
 
     // a base onBattlerDataChange must exist before sks/core's Game_Actor.js aliases it, since
     // nothing else in this fixture provides one- the real engine's Game_Battler.js does.

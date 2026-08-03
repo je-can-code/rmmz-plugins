@@ -20,7 +20,7 @@ describe('J-Pixelistics (core) metadata (direct src import)', () =>
     installPixelCoreHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJPixel();
 

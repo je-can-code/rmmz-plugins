@@ -69,9 +69,9 @@ describe('J-Regions-States Game_Map / Game_Character (direct src import)', () =>
     installRegionsStatesStackHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
     setPluginContextToJRegions();
     await import('../../../../../../src/plugins/regions/core/_metadata/initialization.js');

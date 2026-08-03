@@ -17,7 +17,13 @@ describe('J-ABS Game_Interpreter (unit, all downstream dependencies mocked)', ()
   {
     vi.resetModules();
 
-    globalThis.J = { ABS: { Aliased: { Game_Interpreter: new Map() } } };
+    // `BASE` is always present in a real game, since J-ABS declares J-Base as a hard dependency. Its
+    // `EXT.SAVE` is what is genuinely optional, so it starts absent here and the one test that cares
+    // about the other branch installs it for itself.
+    globalThis.J = {
+      ABS: { Aliased: { Game_Interpreter: new Map() } },
+      BASE: { EXT: {} },
+    };
 
     function Game_Interpreter()
     {
@@ -417,14 +423,45 @@ describe('J-ABS Game_Interpreter (unit, all downstream dependencies mocked)', ()
       expect(interpreter.command352()).toEqual('original-command352');
     });
 
-    it('pushes the save scene', () =>
+    it('pushes vanilla\'s save scene when J-Base-Save is not installed', () =>
     {
+      // Arrange
       const interpreter = buildInterpreter();
 
+      // Act
       const result = interpreter.command352();
 
+      // Assert
       expect(result).toEqual(true);
-      expect(globalThis.SceneManager.push).toHaveBeenCalledWith(globalThis.Scene_Save);
+      expect(globalThis.SceneManager.push)
+        .toHaveBeenCalledWith(globalThis.Scene_Save);
+    });
+
+    it('opens the files scene when J-Base-Save is installed', () =>
+    {
+      // Arrange
+      globalThis.Scene_Files = class
+      {
+      };
+      globalThis.Scene_Files.callFromSavePoint = vi.fn();
+      globalThis.J.BASE.EXT.SAVE = {};
+
+      const interpreter = buildInterpreter();
+
+      // Act
+      const result = interpreter.command352();
+
+      // Assert
+      expect(result).toEqual(true);
+      expect(globalThis.Scene_Files.callFromSavePoint)
+        .toHaveBeenCalled();
+      expect(globalThis.SceneManager.push)
+        .not
+        .toHaveBeenCalled();
+
+      // the namespace is shared across this file's tests, so it does not get to leak into them.
+      delete globalThis.J.BASE.EXT.SAVE;
+      delete globalThis.Scene_Files;
     });
   });
 });

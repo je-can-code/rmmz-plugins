@@ -38,6 +38,27 @@ J.ABS.EXT = {};
 J.ABS.Helpers = {};
 
 /**
+ * Transfers the player onto a freshly built copy of the map they are standing on.
+ *
+ * Vanilla only rebuilds a map after a load when the database's version has moved on since the save was
+ * written. That is not enough for JABS: a map's enemies are built from its events when the map loads
+ * and do not survive being restored out of a savefile, so the map has to be rebuilt on every load
+ * regardless of whether anything in the database changed.
+ *
+ * It lives here rather than on a scene because two scenes need it - vanilla's load screen, and the
+ * files scene that replaces it when J-Base-Save is installed. Written twice, the two would eventually
+ * stop matching each other, and the symptom would be "enemies are missing, but only sometimes".
+ */
+J.ABS.Helpers.forceMapReload = () =>
+{
+  const mapId = $gameMap.mapId();
+  const { x, y } = $gamePlayer;
+
+  $gamePlayer.reserveTransfer(mapId, x, y);
+  $gamePlayer.requestMapReload();
+};
+
+/**
  * A collection of helper functions for the use with the plugin manager.
  */
 J.ABS.Helpers.PluginManager = {};
@@ -108,13 +129,12 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
 J.ABS.Helpers.loadExternalConfig = (configPath = 'data/config.jabs.json') =>
 {
   // load the external config; the JMZ editor guarantees the root shape.
-  const parsedConfig = ExternalJsonConfigLoader.load(
-    configPath,
-    ExternalJsonConfigLoaderOptions.Builder()
-      .pluginName('J-ABS')
-      .configName('external configuration')
-      .build()
-  );
+  const options = ExternalJsonConfigLoaderOptions.Builder()
+    .pluginName('J-ABS')
+    .configName('external configuration')
+    .build();
+
+  const parsedConfig = ExternalJsonConfigLoader.load(configPath, options);
 
   // assign the external config and extracted teams into metadata.
   const metadata = J.ABS.Metadata;
@@ -1651,6 +1671,7 @@ J.ABS.Aliased = {
   RPG_Skill: new Map(),
 
   Scene_Boot: new Map(),
+  Scene_Files: new Map(),
   Scene_Load: new Map(),
   Scene_Map: new Map(),
 

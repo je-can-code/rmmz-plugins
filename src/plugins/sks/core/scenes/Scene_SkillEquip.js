@@ -610,8 +610,10 @@ class Scene_SkillEquip
   onSlotOk()
   {
     // record the newly focused slot index.
-    this.setFocusedSlotIndex(this.slotsWindow()
-      .index());
+    const slotIndex = this.slotsWindow()
+      .index();
+
+    this.setFocusedSlotIndex(slotIndex);
 
     // deactivate the slots window while the skill list is active.
     this.slotsWindow()
@@ -724,9 +726,11 @@ class Scene_SkillEquip
       .activate();
 
     // determine the skill equipped in the currently selected slot.
+    const slotIndex = this.slotsWindow()
+      .index();
+
     const skillIdInSlot = this.actor()
-      .getSkillIdInSlot(this.slotsWindow()
-        .index());
+      .getSkillIdInSlot(slotIndex);
 
     // update the detail window to reflect the equipped skill for the current slot.
     this.detailWindow()
@@ -758,14 +762,18 @@ class Scene_SkillEquip
   wireWindows()
   {
     // provide the initial slot context to the skills list.
+    const initialSlotIndex = this.slotsWindow()
+      .index();
+
     this.skillsWindow()
-      .setSlotContext(this.slotsWindow()
-        .index());
+      .setSlotContext(initialSlotIndex);
 
     // determine the skill equipped in the first slot.
+    const firstSlotIndex = this.slotsWindow()
+      .index();
+
     const skillIdInSlot = this.actor()
-      .getSkillIdInSlot(this.slotsWindow()
-        .index());
+      .getSkillIdInSlot(firstSlotIndex);
 
     // set the detail to show the skill in the first slot.
     this.detailWindow()
@@ -807,9 +815,11 @@ class Scene_SkillEquip
       .refresh();
 
     // update the skills list context for the currently selected slot.
+    const selectedSlotIndex = this.slotsWindow()
+      .index();
+
     this.skillsWindow()
-      .setSlotContext(this.slotsWindow()
-        .index());
+      .setSlotContext(selectedSlotIndex);
 
     // refresh the skills list.
     this.skillsWindow()
@@ -820,9 +830,13 @@ class Scene_SkillEquip
       .item();
 
     // prefer the highlighted skill; fall back to the skill equipped in the current slot.
+    const slotIndex = this.slotsWindow()
+      .index();
+
     const skillId = currentSkill
       ? currentSkill.id
-      : this.actor().getSkillIdInSlot(this.slotsWindow().index());
+      : this.actor()
+        .getSkillIdInSlot(slotIndex);
 
     // update the detail window with the resolved skill.
     this.detailWindow()

@@ -26,7 +26,10 @@ class J_SkillExtendPluginMetadata extends PluginMetadata
   registerNonCombiningKey(regexp, asBoolean = false)
   {
     // derive the tag key from the regexp and normalize to lowercase for case-insensitive matching.
-    this.#nonCombiningKeys.add(J.BASE.Helpers.getKeyFromRegexp(regexp, asBoolean).toLowerCase());
+    const key = J.BASE.Helpers.getKeyFromRegexp(regexp, asBoolean)
+      .toLowerCase();
+
+    this.#nonCombiningKeys.add(key);
   }
 
   /**

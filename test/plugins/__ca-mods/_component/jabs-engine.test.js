@@ -1,7 +1,7 @@
 //region plugins/__ca-mods/_component/jabs-engine.test.js
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import PluginMetadata from '../../../../src/plugins/_base/models/PluginMetadata.js';
+import PluginMetadata from '../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 describe('CAMods JABS_Engine (direct src import, hand-rolled JABS stand-in)', () =>
 {
@@ -42,7 +42,7 @@ describe('CAMods JABS_Engine (direct src import, hand-rolled JABS stand-in)', ()
     globalThis.__PLUGIN_VERSION__ = '0.0.0-test';
 
     // J-Base first- gives us J.BASE.Helpers.modVariable(), which reads/writes $gameVariables.
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
     await import('../../../../src/plugins/__ca-mods/core/_metadata/initialization.js');
 
     // the file under test- aliases and extends the stand-in methods above.

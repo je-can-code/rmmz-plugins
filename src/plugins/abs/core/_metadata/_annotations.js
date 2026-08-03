@@ -7,6 +7,7 @@
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
  * @orderAfter J-Base
+ * @orderAfter J-Base-Save
  * @help
  * ============================================================================
  * OVERVIEW
@@ -47,6 +48,21 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.14.0
+ *    Declared what JABS state on the party and the system is worth writing to
+ *    a savefile, and routed the _abs namespace into its own save section.
+ *    Moved the _abs namespace seeding from the initialize alias to initMembers,
+ *    so a decoded save can establish it without running a constructor.
+ *    Declared JABS_SkillSlot's cooldown as a typed field; it was registered as
+ *    serializable while holding a JABS_Cooldown instance nothing declared.
+ *    command352 now opens J-Base-Save's files scene when that plugin is
+ *    installed, and vanilla's save scene when it is not. Previously the JABS
+ *    branch named Scene_Save outright, so every save platform bypassed the
+ *    files scene entirely.
+ *    Added an @orderAfter for J-Base-Save, which the namespace guard alone does
+ *    not cover: reaching Scene_Files needs the class, not just the namespace.
+ *    The forced map reload JABS needs after any load moved to a shared helper,
+ *    so vanilla's load scene and the files scene cannot drift apart on it.
  * - 4.13.0
  *    Added <channel> vessel skills that repeat a child skill over time.
  *    Added cast/channel interruption via movement or <interrupt> hits.

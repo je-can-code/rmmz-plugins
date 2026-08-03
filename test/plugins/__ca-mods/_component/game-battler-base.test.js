@@ -11,7 +11,7 @@ describe('CAMods Game_BattlerBase.recoverAll (real engine direct import)', () =>
 
     // J-Base's initialization.js first- __ca-mods's own initialization.js and patch files assume
     // globalThis.J.BASE already exists (it's always loaded before __ca-mods in the real ship build).
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     // __ca-mods's own initialization.js- sets up J.CAMods.Aliased.Game_BattlerBase, the map the
     // patch file under test immediately reads from to stash the original recoverAll.

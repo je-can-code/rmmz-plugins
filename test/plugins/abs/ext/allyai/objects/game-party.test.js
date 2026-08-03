@@ -22,7 +22,7 @@ describe('J-ABS-AllyAI Game_Party (unit, all downstream dependencies mocked)', (
     originalInitialize = vi.fn();
     originalAddActor = vi.fn();
     originalRemoveActor = vi.fn();
-    Game_Party.prototype.initialize = originalInitialize;
+    Game_Party.prototype.initMembers = originalInitialize;
     Game_Party.prototype.addActor = originalAddActor;
     Game_Party.prototype.removeActor = originalRemoveActor;
     globalThis.Game_Party = Game_Party;
@@ -41,16 +41,16 @@ describe('J-ABS-AllyAI Game_Party (unit, all downstream dependencies mocked)', (
   function buildParty()
   {
     const party = Object.create(globalThis.Game_Party.prototype);
-    party.initialize();
+    party.initMembers();
     return party;
   }
 
-  describe('initialize / initAllyAi', () =>
+  describe('initMembers / initAllyAi', () =>
   {
     it('calls the original then defaults aggro to false and formation to the metadata default', () =>
     {
       const party = Object.create(globalThis.Game_Party.prototype);
-      party.initialize();
+      party.initMembers();
       expect(originalInitialize).toHaveBeenCalledTimes(1);
       expect(party.isAggro()).toBe(false);
       expect(party.getPartyFormation()).toBe('line');

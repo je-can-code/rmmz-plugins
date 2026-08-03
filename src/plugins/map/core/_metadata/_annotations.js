@@ -147,6 +147,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Routed the _map namespace into its own save section, so minimap state
+ *    lands in systems/map.json rather than inside the system blob.
  * - 1.1.0
  *    Added an orange-diamond minimap marker for inanimate JABS enemies
  *    (pots, crates), distinct from the red-diamond hostile marker.

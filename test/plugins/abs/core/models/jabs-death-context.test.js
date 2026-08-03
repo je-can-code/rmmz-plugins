@@ -14,6 +14,11 @@ describe('JABS_DeathContext (unit, all downstream dependencies mocked)', () =>
   beforeAll(async () =>
   {
     vi.resetModules();
+
+    // the file registers its save codec at import time, against the registry J-Base hoists as a
+    // global. nothing here exercises the registry, so a stub is the whole of what it needs.
+    globalThis.SerializableRegistry = { register: vi.fn() };
+
     getBattlerByUuidMock = vi.fn();
     vi.doMock('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js', () => ({
       default: class

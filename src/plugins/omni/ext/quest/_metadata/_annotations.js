@@ -138,6 +138,13 @@
  * This choice is only shown while objective 2 of that quest is completed.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    The questopedia lookup cache is no longer written to savefiles. It held
+ *    the same entries as the saveables it is built from, keyed for lookup,
+ *    which made it the single largest thing in a savefile - 44,109 characters
+ *    in a real one. It now rebuilds from the saveables on load.
+ *    The destination timer is no longer written either; the map gets a fresh
+ *    one, since it measures nothing the player can observe.
  * - 1.1.0
  *    Added <pageQuestCondition>/<choiceQuestCondition>, gating an event
  *    page or a single "Show Choices" branch behind quest/objective state

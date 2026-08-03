@@ -1,6 +1,6 @@
 //region plugins/regions/_component/fixtures/install-regions-host-globals.js
-import { installJBaseHostGlobals } from '../../../_base/_component/fixtures/install-j-base-host-globals.js';
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
+import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 const noop = function()
 {
@@ -112,9 +112,19 @@ function installRegionsBaseGameMapPrototype(sandbox)
 {
   const Gp = sandbox.Game_Map.prototype;
 
+  // J-Base adds this hook and calls it from an aliased `initialize`; plugins adding state to the map
+  // alias the hook rather than `initialize`, so their chain needs it to exist and to be reached.
+  if (typeof Gp.initMembers !== 'function')
+  {
+    Gp.initMembers = noop;
+  }
+
   if (typeof Gp.initialize !== 'function')
   {
-    Gp.initialize = noop;
+    Gp.initialize = function()
+    {
+      this.initMembers();
+    };
   }
 
   if (typeof Gp.setup !== 'function')

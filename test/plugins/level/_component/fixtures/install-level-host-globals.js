@@ -1,8 +1,8 @@
 //region plugins/level/_component/fixtures/install-level-host-globals.js
-import { installJBaseHostGlobals } from '../../../_base/_component/fixtures/install-j-base-host-globals.js';
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
-import ExternalJsonConfigLoader from '../../../../../src/plugins/_base/managers/ExternalJsonConfigLoader.js';
-import ExternalJsonConfigLoaderOptions from '../../../../../src/plugins/_base/models/ExternalJsonConfigLoaderOptions.js';
+import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
+import ExternalJsonConfigLoader from '../../../../../src/plugins/_base/core/managers/ExternalJsonConfigLoader.js';
+import ExternalJsonConfigLoaderOptions from '../../../../../src/plugins/_base/core/models/ExternalJsonConfigLoaderOptions.js';
 import { DEFAULT_LEVEL_CONFIG_JSON } from './engine-stubs.js';
 
 const noop = function()
@@ -119,7 +119,14 @@ export function installLevelHostGlobals(sandbox = globalThis, levelConfigJson = 
     }
   }
 
-  sandbox.Game_System.prototype.initialize = noop;
+  sandbox.Game_System.prototype.initialize = function()
+  {
+    this.initMembers();
+  };
+
+  // J-Base adds this hook and calls it from an aliased `initialize`; plugins adding state to
+  // this host alias the hook rather than `initialize`, so their chain needs it to exist.
+  sandbox.Game_System.prototype.initMembers = noop;
   sandbox.Game_Event.prototype.initMembers = noop;
   sandbox.Game_Temp.prototype.initMembers = noop;
 

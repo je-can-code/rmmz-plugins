@@ -6,7 +6,7 @@ import {
   setPluginContextToJBase,
   setPluginContextToJEscribe,
 } from './fixtures/install-escribe-host-globals.js';
-import PluginMetadata from '../../../../src/plugins/_base/models/PluginMetadata.js';
+import PluginMetadata from '../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 describe('J-Escriptions Game_Event escription parsing (direct src import)', () =>
 {
@@ -20,7 +20,7 @@ describe('J-Escriptions Game_Event escription parsing (direct src import)', () =
     globalThis.PluginMetadata = PluginMetadata;
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJEscribe();
     await import('../../../../src/plugins/escribe/core/_metadata/initialization.js');

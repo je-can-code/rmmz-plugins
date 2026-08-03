@@ -19,7 +19,7 @@ describe('TextPopBuilder (direct src import)', () =>
 
     // the builder leans on `String.empty`, which J-Base installs onto the String constructor.
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     ({ default: Map_TextPop } = await import('../../../../../src/plugins/popups/core/_models/Map_TextPop.js'));
     ({ default: TextPopBuilder } = await import('../../../../../src/plugins/popups/core/_models/TextPopBuilder.js'));

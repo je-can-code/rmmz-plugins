@@ -6,6 +6,7 @@ import './_models/JABS_Battler.js';
 import './_models/JABS_Button.js';
 import './_models/JABS_InputAdapter.js';
 import './_models/JABS_StandardController.js';
+import './registerJabsInputConfigFields.js';
 import './managers/DataManager.js';
 import './managers/IconManager.js';
 import './managers/InputLegendResolver.js';
@@ -21,4 +22,4 @@ import './windows/Window_JabsRemapPrompt.js';
 import './windows/Window_JabsRemapUsageHelp.js';
 import './windows/Window_MenuCommand.js';
 import './windows/Window_Selectable.js';
-
+

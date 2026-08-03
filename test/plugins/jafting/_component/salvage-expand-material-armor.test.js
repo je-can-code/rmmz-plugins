@@ -2,7 +2,7 @@
 import { afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 
 import JaftingSalvageManager from '../../../../src/plugins/jafting/core/managers/JaftingSalvageManager.js';
-import RPG_Armor from '../../../../src/plugins/_base/database/implementations/RPG_Armor.js';
+import RPG_Armor from '../../../../src/plugins/_base/core/database/implementations/RPG_Armor.js';
 
 /**
  * Direct-import coverage for JaftingSalvageManager.expandWeaponArmorRowsForSalvage's material-armor

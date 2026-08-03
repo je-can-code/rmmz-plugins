@@ -1,0 +1,41 @@
+{
+  "manifest": {
+    "schemaVersion": 1,
+    "savedAt": "2026-08-02T04:11:09.512Z",
+    "playtimeFrames": 91240,
+    "sections": [ "world.json", "party.json" ],
+    "display": {
+      "title": "Chef Adventure",
+      "characters": [ [ "Actor1", 0 ] ],
+      "faces": [ [ "Actor1", 0 ] ],
+      "playtime": "00:25:20",
+      "timestamp": 1754107869512,
+      "mapName": "Riverside Kitchen",
+      "leaderName": "Jerald",
+      "level": 7,
+      "gold": 412,
+      "party": [ 1 ]
+    }
+  },
+  "sections": {
+    "world.json": {
+      "system": {
+        "@": "game-system",
+        "_saveCount": 3,
+        "_versionId": 88123
+      },
+      "switches": {
+        "@": "game-switches",
+        "_data": [ null, true ]
+      }
+    },
+    "party.json": {
+      "party": {
+        "@": "game-party",
+        "_gold": 412,
+        "_steps": 4180,
+        "_actors": [ 1 ]
+      }
+    }
+  }
+}

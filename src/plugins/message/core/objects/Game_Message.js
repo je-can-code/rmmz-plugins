@@ -28,7 +28,10 @@ Game_Message.prototype.clear = function()
  */
 Game_Message.prototype.backupChoices = function()
 {
-  this.setOldChoices(this.choices().clone());
+  const backup = this.choices()
+    .clone();
+
+  this.setOldChoices(backup);
 };
 
 /**

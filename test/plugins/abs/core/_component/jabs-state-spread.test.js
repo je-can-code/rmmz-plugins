@@ -103,14 +103,14 @@ describe('J-ABS state spread (direct src import)', () =>
     installAbsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
-    ({ default: globalThis.RPG_State } = await import('../../../../../src/plugins/_base/database/implementations/RPG_State.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_State } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_State.js'));
 
     // patches globalThis.Game_Battler.prototype with getAllNotes()- abs's own Game_Battler.js
     // (below) and JABS_State construction both rely on this already being present.
-    await import('../../../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../../../src/plugins/_base/core/objects/Game_Battler.js');
 
     setPluginContextToJAbs();
     await import('../../../../../src/plugins/abs/core/_metadata/initialization.js');

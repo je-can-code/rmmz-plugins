@@ -16,10 +16,10 @@ describe('J-LevelMaster Sprite_Character.getBattlerName (direct src import)', ()
     installLevelHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     // J-Base owns the `character()` accessor the level sprite reads through.
-    await import('../../../../src/plugins/_base/sprites/Sprite_Character.js');
+    await import('../../../../src/plugins/_base/core/sprites/Sprite_Character.js');
 
     setPluginContextToJLevel();
     await import('../../../../src/plugins/level/core/_metadata/initialization.js');

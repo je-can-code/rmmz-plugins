@@ -952,6 +952,12 @@ class Scene_JaftingRefine
     listWindow.refresh();
     listWindow.select(0);
 
+    // select() only raises onIndexChange when the index actually moves, and after a commit the
+    // cursor is already sitting on row zero - so nothing refills the details panel that was cleared
+    // above, and it stays blank through every further selection of that same row. Re-deriving it
+    // here is what makes the freshly refined equip appear on the right.
+    this.onBaseRefinableListIndexChange();
+
     this.getConsumableRefinableListWindow()
       .refresh();
   }

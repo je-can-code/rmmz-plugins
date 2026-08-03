@@ -1,6 +1,18 @@
 //region plugins/jafting/core/managers/salvage-refinement-lineage.test.js
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+// the refinement lineage is a J-JAFTING-Refinement type, and this file is testing J-JAFTING core -
+// which is the point of the two cases that import it below. The model registers itself with the save
+// registry at module scope, so both globals that registration reads have to exist before the import
+// graph is evaluated.
+vi.hoisted(() =>
+{
+  globalThis.SerializableRegistry = { register: () => {} };
+  globalThis.JaftingSalvageLedgerSnapshot = class JaftingSalvageLedgerSnapshot {};
+  globalThis.String.empty = '';
+});
+
+import JaftingRefinementLineage from '../../../../../src/plugins/jafting/ext/refine/__models/JaftingRefinementLineage.js';
 import JaftingSalvageManager from '../../../../../src/plugins/jafting/core/managers/JaftingSalvageManager.js';
 import JaftingSalvageLedger from '../../../../../src/plugins/jafting/core/__models/JaftingSalvageLedger.js';
 import JaftingSalvageLedgerRow from '../../../../../src/plugins/jafting/core/__models/JaftingSalvageLedgerRow.js';
@@ -326,6 +338,57 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
 
       // Assert
       expect($gameParty._refinedWeapons.length).toBe(1);
+    });
+
+    it('splices a real lineage node, which is what the tracking list actually holds', () =>
+    {
+      // Arrange: this is the one place core reaches into the refinement extension's storage, and it
+      // matches on a field name. The list holds provenance rather than equips, so the match has to
+      // keep landing on the node's own datastore slot.
+      const weapon = fakeDatum('w', JaftingSalvageManager.DynamicEquipIndexMin);
+      const doomed = JaftingRefinementLineage.refinement(
+        weapon.id,
+        JaftingRefinementLineage.leaf('w', 5),
+        JaftingRefinementLineage.leaf('w', 9),
+        null);
+      const survivor = JaftingRefinementLineage.refinement(
+        weapon.id + 1,
+        JaftingRefinementLineage.leaf('w', 5),
+        JaftingRefinementLineage.leaf('w', 9),
+        null);
+      $gameParty._refinedWeapons = [ doomed, survivor ];
+
+      // Act
+      JaftingSalvageManager.reclaimDynamicWeaponSlot(weapon);
+
+      // Assert
+      expect($gameParty._refinedWeapons).toEqual([ survivor ]);
+    });
+
+    it('leaves a reclaimed node nested inside a surviving lineage intact', () =>
+    {
+      // Arrange: a refined donor is reclaimed the moment it is consumed, so the output that consumed
+      // it is the only remaining record of what it was. Splicing the top-level entry must not reach
+      // into the tree that nests it, or replaying the survivor loses its own base.
+      const donor = JaftingRefinementLineage.refinement(
+        JaftingSalvageManager.DynamicEquipIndexMin,
+        JaftingRefinementLineage.leaf('w', 5),
+        JaftingRefinementLineage.leaf('w', 9),
+        null);
+      const output = JaftingRefinementLineage.refinement(
+        JaftingSalvageManager.DynamicEquipIndexMin + 1,
+        donor,
+        JaftingRefinementLineage.leaf('w', 9),
+        null);
+      $gameParty._refinedWeapons = [ donor, output ];
+
+      // Act
+      JaftingSalvageManager.reclaimDynamicWeaponSlot(fakeDatum('w', donor.index));
+
+      // Assert
+      expect($gameParty._refinedWeapons).toEqual([ output ]);
+      expect(output.base).toBe(donor);
+      expect(output.base.base.id).toBe(5);
     });
   });
 

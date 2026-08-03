@@ -5,7 +5,7 @@ describe('J-DropsControl RPG_DropItem#toImplementation (direct src import)', () 
 {
   beforeAll(async () =>
   {
-    ({ default: globalThis.RPG_DropItem } = await import('../../../../src/plugins/_base/database/_data/RPG_DropItem.js'));
+    ({ default: globalThis.RPG_DropItem } = await import('../../../../src/plugins/_base/core/database/_data/RPG_DropItem.js'));
 
     // patches globalThis.RPG_DropItem.prototype directly, no vm involved.
     await import('../../../../src/plugins/drops/core/database/RPG_DropItem.js');

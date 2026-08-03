@@ -1,11 +1,11 @@
 //region plugins/prof/core/core/_component/register-prof-parameters-direct.test.js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import ParameterDefinition from '../../../../../../src/plugins/_base/models/ParameterDefinition.js';
-import ParameterFormat from '../../../../../../src/plugins/_base/core/ParameterFormat.js';
-import ParameterGroups from '../../../../../../src/plugins/_base/core/ParameterGroups.js';
-import ParameterRegistry from '../../../../../../src/plugins/_base/core/ParameterRegistry.js';
-import SdpParameterBinding from '../../../../../../src/plugins/_base/models/SdpParameterBinding.js';
+import ParameterDefinition from '../../../../../../src/plugins/_base/core/models/ParameterDefinition.js';
+import ParameterFormat from '../../../../../../src/plugins/_base/core/core/ParameterFormat.js';
+import ParameterGroups from '../../../../../../src/plugins/_base/core/core/ParameterGroups.js';
+import ParameterRegistry from '../../../../../../src/plugins/_base/core/core/ParameterRegistry.js';
+import SdpParameterBinding from '../../../../../../src/plugins/_base/core/models/SdpParameterBinding.js';
 
 /**
  * registerProfParameters.js is not itself an ES module consumer of these classes- in the

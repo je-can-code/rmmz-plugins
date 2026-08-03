@@ -12,3 +12,5 @@ import './windows/Window_MonsterpediaDetail.js';
 import './scenes/Scene_Monsterpedia.js';
 import './windows/Window_OmnipediaList.js';
 import './scenes/Scene_Omnipedia.js';
+
+import './registerOmniMonsterSaveCodecs.js';

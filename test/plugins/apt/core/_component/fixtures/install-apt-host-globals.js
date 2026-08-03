@@ -1,5 +1,5 @@
 //region plugins/apt/core/_component/fixtures/install-apt-host-globals.js
-import { installJBaseHostGlobals } from '../../../../_base/_component/fixtures/install-j-base-host-globals.js';
+import { installJBaseHostGlobals } from '../../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
 import { installPluginManagerWithParams } from '../../../../../setup/install-plugin-manager-with-params.js';
 
 /**
@@ -64,15 +64,15 @@ export async function installAptHostGlobals(sandbox = globalThis, aptPluginParam
   sandbox.__PLUGIN_NAME__ = 'J-Base';
 
   // real production code- establishes J.BASE.Helpers, J.BASE.Metadata, and RPGManager's dependents.
-  await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+  await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
   // real production code- exposes RPGManager.getArraysFromNotesByRegex/getSumFromAllNotesByRegex/etc.
-  const { default: RPGManager } = await import('../../../../../../src/plugins/_base/managers/RPGManager.js');
+  const { default: RPGManager } = await import('../../../../../../src/plugins/_base/core/managers/RPGManager.js');
   sandbox.RPGManager = RPGManager;
 
   // J-Aptitude's own metadata model (JAptitude_PluginMetadata) extends the bare `PluginMetadata`
   // global the shipped build provides after J-Base loads.
-  const { default: PluginMetadata } = await import('../../../../../../src/plugins/_base/models/PluginMetadata.js');
+  const { default: PluginMetadata } = await import('../../../../../../src/plugins/_base/core/models/PluginMetadata.js');
   sandbox.PluginMetadata = PluginMetadata;
 
   // flip the bare __PLUGIN_NAME__ to J-Aptitude's own identity before its initialization.js reads it.

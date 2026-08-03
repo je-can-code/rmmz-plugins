@@ -5,13 +5,13 @@ import { installAptHostGlobals } from './fixtures/install-apt-host-globals.js';
 
 describe('RPG_Base / RPG_Enemy aptitude additions (direct src import)', () =>
 {
-  /** @type {typeof import('../../../../../src/plugins/_base/database/base/RPG_Base.js').default} */
+  /** @type {typeof import('../../../../../src/plugins/_base/core/database/base/RPG_Base.js').default} */
   let RPG_Base;
 
-  /** @type {typeof import('../../../../../src/plugins/_base/database/implementations/RPG_Weapon.js').default} */
+  /** @type {typeof import('../../../../../src/plugins/_base/core/database/implementations/RPG_Weapon.js').default} */
   let RPG_Weapon;
 
-  /** @type {typeof import('../../../../../src/plugins/_base/database/implementations/RPG_Enemy.js').default} */
+  /** @type {typeof import('../../../../../src/plugins/_base/core/database/implementations/RPG_Enemy.js').default} */
   let RPG_Enemy;
 
   beforeAll(async () =>
@@ -22,9 +22,9 @@ describe('RPG_Base / RPG_Enemy aptitude additions (direct src import)', () =>
 
     // apt's RPG_Base.js/RPG_Enemy.js patch these as bare globals (the shipped build exposes real
     // _base database classes ambiently once J-Base loads); wire the real classes in for that reason.
-    ({ default: RPG_Base } = await import('../../../../../src/plugins/_base/database/base/RPG_Base.js'));
-    ({ default: RPG_Weapon } = await import('../../../../../src/plugins/_base/database/implementations/RPG_Weapon.js'));
-    ({ default: RPG_Enemy } = await import('../../../../../src/plugins/_base/database/implementations/RPG_Enemy.js'));
+    ({ default: RPG_Base } = await import('../../../../../src/plugins/_base/core/database/base/RPG_Base.js'));
+    ({ default: RPG_Weapon } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_Weapon.js'));
+    ({ default: RPG_Enemy } = await import('../../../../../src/plugins/_base/core/database/implementations/RPG_Enemy.js'));
     globalThis.RPG_Base = RPG_Base;
     globalThis.RPG_Weapon = RPG_Weapon;
     globalThis.RPG_Enemy = RPG_Enemy;

@@ -2,11 +2,11 @@
 /**
  * Extends the `initialize()` to include our hud data for remembering.
  */
-J.HUD.Aliased.Game_System.set('initialize', Game_System.prototype.initialize);
-Game_System.prototype.initialize = function()
+J.HUD.Aliased.Game_System.set('initMembers', Game_System.prototype.initMembers);
+Game_System.prototype.initMembers = function()
 {
   // perform original logic.
-  J.HUD.Aliased.Game_System.get('initialize')
+  J.HUD.Aliased.Game_System.get('initMembers')
     .call(this);
   this._j ||= {};
   this._j._hud ||= {

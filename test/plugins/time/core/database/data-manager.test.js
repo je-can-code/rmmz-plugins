@@ -122,7 +122,7 @@ describe('DataManager ext/time augments (direct src import)', () =>
       expect(globalThis.$gameTime).toBeInstanceOf(FakeGameTime);
     });
 
-    it('backfills members the loaded save predates', () =>
+    it('leaves backfilling members to the codec seed rather than re-running it here', () =>
     {
       // Arrange
       const contents = { time: new FakeGameTime() };
@@ -130,8 +130,11 @@ describe('DataManager ext/time augments (direct src import)', () =>
       // Act
       globalThis.DataManager.extractSaveContents(contents);
 
-      // Assert
-      expect(FakeGameTime.prototype.initMembers).toHaveBeenCalledTimes(1);
+      // Assert- `Game_Time` registers with no explicit seed, so its codec derives one from
+      // `initMembers` and runs it on the bare instance *before* any field from the file lands.
+      // Re-running it here would have been a second pass over an object already decoded, and one
+      // that only worked because every member was assigned with `??=`.
+      expect(FakeGameTime.prototype.initMembers).not.toHaveBeenCalled();
     });
 
     it('recomputes the screen tone for the hour that was loaded into', () =>

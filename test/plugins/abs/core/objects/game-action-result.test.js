@@ -15,7 +15,7 @@ describe('J-ABS Game_ActionResult augments (direct src import)', () =>
     {
     }
 
-    StubGameActionResult.prototype.initialize = vi.fn();
+    StubGameActionResult.prototype.initMembers = vi.fn();
     StubGameActionResult.prototype.clear = vi.fn();
     globalThis.Game_ActionResult = StubGameActionResult;
 
@@ -28,7 +28,7 @@ describe('J-ABS Game_ActionResult augments (direct src import)', () =>
     vi.clearAllMocks();
   });
 
-  describe('initialize', () =>
+  describe('initMembers', () =>
   {
     it('sets the guard/parry/glance/reduced members to their defaults', () =>
     {
@@ -36,7 +36,7 @@ describe('J-ABS Game_ActionResult augments (direct src import)', () =>
       const result = new Game_ActionResult();
 
       // Act
-      result.initialize();
+      result.initMembers();
 
       // Assert
       expect(result.guarded).toBe(false);
@@ -51,10 +51,10 @@ describe('J-ABS Game_ActionResult augments (direct src import)', () =>
       const result = new Game_ActionResult();
 
       // Act
-      result.initialize();
+      result.initMembers();
 
       // Assert
-      expect(globalThis.J.ABS.Aliased.Game_ActionResult.get('initialize')).toHaveBeenCalledTimes(1);
+      expect(globalThis.J.ABS.Aliased.Game_ActionResult.get('initMembers')).toHaveBeenCalledTimes(1);
     });
   });
 

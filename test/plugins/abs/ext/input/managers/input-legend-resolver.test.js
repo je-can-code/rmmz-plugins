@@ -16,7 +16,7 @@ describe('J-ABS-InputManager legend resolver (direct src import)', () =>
     String.empty = '';
 
     ({ default: InputLegendResolver } =
-      await import('../../../../../../src/plugins/_base/managers/InputLegendResolver.js'));
+      await import('../../../../../../src/plugins/_base/core/managers/InputLegendResolver.js'));
     ({ default: JabsInputSymbols } =
       await import('../../../../../../src/plugins/abs/ext/input/_models/JabsInputSymbols.js'));
 

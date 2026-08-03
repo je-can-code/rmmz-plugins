@@ -1,6 +1,6 @@
 //region plugins/time/_component/fixtures/install-time-host-globals.js
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
-import SerializableRegistry from '../../../../../src/plugins/_base/core/SerializableRegistry.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
+import SerializableRegistry from '../../../../../src/plugins/_base/core/core/SerializableRegistry.js';
 import { DEFAULT_TIME_PLUGIN_PARAMS } from './time-plugin-params.js';
 
 const noop = function()
@@ -65,6 +65,15 @@ function installTonePipelineGlobals(sandbox)
   sandbox.$gameScreen = sandbox.$gameScreen || {
     startTint()
     {
+    },
+
+    // the tone the screen is heading toward, which is what tells the clock whether a tint on screen
+    // is one of its own. a fresh screen is heading nowhere, which is neutral.
+    _toneTarget: [ 0, 0, 0, 0 ],
+
+    toneTarget()
+    {
+      return this._toneTarget;
     },
   };
 

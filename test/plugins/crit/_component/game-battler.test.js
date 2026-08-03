@@ -17,13 +17,13 @@ describe('J-CriticalFactors Game_Battler (direct src import)', () =>
     installCritHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
-    await import('../../../../src/plugins/_base/objects/Game_BattlerBase.js');
-    await import('../../../../src/plugins/_base/objects/Game_Battler.js');
-    await import('../../../../src/plugins/_base/objects/Game_Actor.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_BattlerBase.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Battler.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Actor.js');
 
     // stand-in for J-NaturalGrowth's Game_Battler.js, which crit's own Game_Battler.js aliases/calls.
     installNaturalCompanionStubs();

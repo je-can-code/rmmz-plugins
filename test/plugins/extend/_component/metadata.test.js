@@ -12,7 +12,7 @@ describe('J-Extend metadata (direct src import)', () =>
     installExtendHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJExtend();
     await import('../../../../src/plugins/extend/core/_metadata/initialization.js');

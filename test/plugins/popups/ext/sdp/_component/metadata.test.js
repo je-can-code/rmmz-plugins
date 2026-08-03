@@ -7,9 +7,9 @@ import {
   setPluginContextToJPopupsSdp,
 } from '../../../_component/fixtures/install-popups-host-globals.js';
 
-const jBaseInitPath = '../../../../../../src/plugins/_base/_metadata/initialization.js';
+const jBaseInitPath = '../../../../../../src/plugins/_base/core/_metadata/initialization.js';
 const sdpInitPath = '../../../../../../src/plugins/popups/ext/sdp/_metadata/initialization.js';
-const pluginMetadataPath = '../../../../../../src/plugins/_base/models/PluginMetadata.js';
+const pluginMetadataPath = '../../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 describe('J-Popups-SDP metadata (direct src import)', () =>
 {

@@ -2,11 +2,11 @@
 /**
  * Extends initialization to include the ally AI configurations.
  */
-J.ABS.EXT.ALLYAI.Aliased.Game_Party.set('initialize', Game_Party.prototype.initialize);
-Game_Party.prototype.initialize = function()
+J.ABS.EXT.ALLYAI.Aliased.Game_Party.set('initMembers', Game_Party.prototype.initMembers);
+Game_Party.prototype.initMembers = function()
 {
   // perform original logic.
-  J.ABS.EXT.ALLYAI.Aliased.Game_Party.get('initialize')
+  J.ABS.EXT.ALLYAI.Aliased.Game_Party.get('initMembers')
     .call(this);
 
   // initialize our ally ai members.

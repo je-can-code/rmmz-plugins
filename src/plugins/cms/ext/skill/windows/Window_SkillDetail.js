@@ -330,7 +330,11 @@ class Window_SkillDetail
     const sign = [ 3, 4 ].includes(skill.damage.type)
       ? -1
       : 1;
-    const value = Math.round(Math.max(new Function('a', 'b', 'v', 'p', `return (${skill.damage.formula})`)(a, b, v, p), 0));
+    const evaluateFormula = new Function('a', 'b', 'v', 'p', `return (${skill.damage.formula})`);
+
+    const rawValue = evaluateFormula(a, b, v, p);
+
+    const value = Math.round(Math.max(rawValue, 0));
     const potential = isNaN(value)
       ? 0
       : value;
@@ -670,7 +674,10 @@ class Window_SkillDetail
       return new JCMS_ParameterKvp(mpName, value, mpColor);
     }
 
-    const mpCost = parseFloat(actor.skillMpCost(skill).toFixed(2));
+    const roundedMpCost = actor.skillMpCost(skill)
+      .toFixed(2);
+
+    const mpCost = parseFloat(roundedMpCost);
     const mpColor = mpCost === 0
       ? ColorManager.damageColor()
       : ColorManager.mpCostColor();
@@ -706,7 +713,10 @@ class Window_SkillDetail
       return new JCMS_ParameterKvp(tpName, value, tpColor);
     }
 
-    const tpCost = parseFloat(actor.skillTpCost(skill).toFixed(2));
+    const roundedTpCost = actor.skillTpCost(skill)
+      .toFixed(2);
+
+    const tpCost = parseFloat(roundedTpCost);
     const tpColor = tpCost === 0
       ? ColorManager.damageColor()
       : ColorManager.tpCostColor();

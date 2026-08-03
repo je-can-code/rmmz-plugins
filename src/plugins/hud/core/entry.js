@@ -16,3 +16,4 @@ import './models/StateAfflictionHudLayoutSpec.js';
 
 import './presenters/StateAfflictionHudPresenter.js';
 
+import './registerHudSaveRoutes.js';

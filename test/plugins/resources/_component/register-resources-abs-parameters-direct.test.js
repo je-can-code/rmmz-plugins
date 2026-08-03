@@ -1,12 +1,12 @@
 //region plugins/resources/_component/register-resources-abs-parameters-direct.test.js
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import ParameterDefinition from '../../../../src/plugins/_base/models/ParameterDefinition.js';
-import ParameterDisplayPolicy from '../../../../src/plugins/_base/core/ParameterDisplayPolicy.js';
-import ParameterFormat from '../../../../src/plugins/_base/core/ParameterFormat.js';
-import ParameterGroups from '../../../../src/plugins/_base/core/ParameterGroups.js';
-import ParameterRegistry from '../../../../src/plugins/_base/core/ParameterRegistry.js';
-import SdpParameterBinding from '../../../../src/plugins/_base/models/SdpParameterBinding.js';
+import ParameterDefinition from '../../../../src/plugins/_base/core/models/ParameterDefinition.js';
+import ParameterDisplayPolicy from '../../../../src/plugins/_base/core/core/ParameterDisplayPolicy.js';
+import ParameterFormat from '../../../../src/plugins/_base/core/core/ParameterFormat.js';
+import ParameterGroups from '../../../../src/plugins/_base/core/core/ParameterGroups.js';
+import ParameterRegistry from '../../../../src/plugins/_base/core/core/ParameterRegistry.js';
+import SdpParameterBinding from '../../../../src/plugins/_base/core/models/SdpParameterBinding.js';
 
 /**
  * Same technique as register-resources-parameters-direct.test.js: real _base classes hung off

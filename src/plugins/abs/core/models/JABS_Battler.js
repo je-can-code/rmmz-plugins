@@ -4019,7 +4019,10 @@ class JABS_Battler
       this.executeChannelTick();
 
       // reset using the vessel's own tick speed (may itself be a plugin-param fallback).
-      this.setChannelTickCountdown(this.channelSourceAction().getBaseSkill().jabsChannelTickSpeed);
+      const tickSpeed = this.channelSourceAction()
+        .getBaseSkill().jabsChannelTickSpeed;
+
+      this.setChannelTickCountdown(tickSpeed);
     }
 
     // count down the total channel duration; once it expires, the channel is over.
@@ -4586,8 +4589,10 @@ class JABS_Battler
     }
 
     // if the target is no longer valid, disengage and end combat.
-    this.removeAggroIfInvalid(this.getTarget()
-      .getUuid());
+    const targetUuid = this.getTarget()
+      .getUuid();
+
+    this.removeAggroIfInvalid(targetUuid);
 
     const allAggros = this.getAggrosSortedHighestToLowest();
 
@@ -7182,7 +7187,10 @@ class JABS_Battler
     const slipResources = [ this.stateSlipHp(state), this.stateSlipMp(state), this.stateSlipTp(state) ];
 
     // grab the state tracker from the engine.
-    const jabsState = $jabsEngine.getJabsStateByUuidAndStateId(this.getBattler().getUuid(), state.id);
+    const battlerUuid = this.getBattler()
+      .getUuid();
+
+    const jabsState = $jabsEngine.getJabsStateByUuidAndStateId(battlerUuid, state.id);
 
     // iterate the resources to apply slip to.
     slipResources.forEach((slipAmount, index) => this.processSlipEffect(slipAmount, index, jabsState), this);

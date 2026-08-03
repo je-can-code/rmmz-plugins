@@ -94,6 +94,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.0.2
+ *    Moved the ally AI namespace seeding from the initialize alias to
+ *    initMembers, so a decoded save can establish it without a constructor.
  * - 3.0.1
  *    Ally idle-check now also treats channeling as busy (J-ABS Channel).
  *    Fixed applyBattleMemories' inverted check; memories went unrecorded.

@@ -1,9 +1,9 @@
 //region plugins/elem/_component/fixtures/install-elem-host-globals.js
-import { installJBaseHostGlobals } from '../../../_base/_component/fixtures/install-j-base-host-globals.js';
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
-import RPG_Skill from '../../../../../src/plugins/_base/database/implementations/RPG_Skill.js';
-import RPG_Enemy from '../../../../../src/plugins/_base/database/implementations/RPG_Enemy.js';
-import RPG_Actor from '../../../../../src/plugins/_base/database/implementations/RPG_Actor.js';
+import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
+import RPG_Skill from '../../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js';
+import RPG_Enemy from '../../../../../src/plugins/_base/core/database/implementations/RPG_Enemy.js';
+import RPG_Actor from '../../../../../src/plugins/_base/core/database/implementations/RPG_Actor.js';
 
 /**
  * `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` are bare identifiers read once, at import time, by

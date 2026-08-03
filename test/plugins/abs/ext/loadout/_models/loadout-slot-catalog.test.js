@@ -1,7 +1,7 @@
 //region plugins/abs/ext/loadout/_models/loadout-slot-catalog.test.js
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import InputLegendResolver from '../../../../../../src/plugins/_base/managers/InputLegendResolver.js';
+import InputLegendResolver from '../../../../../../src/plugins/_base/core/managers/InputLegendResolver.js';
 import JABS_Button from '../../../../../../src/plugins/abs/ext/input/_models/JABS_Button.js';
 
 describe('J-ABS-Loadout LoadoutSlotCatalog (unit, real JABS_Button + InputLegendResolver)', () =>

@@ -8,3 +8,4 @@ import './objects/Game_System.js';
 import './scenes/Scene_Menu.js';
 import './windows/Window_MenuCommand.js';
 
+import './registerOmniSaveRoutes.js';

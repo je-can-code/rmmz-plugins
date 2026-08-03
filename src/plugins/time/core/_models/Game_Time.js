@@ -726,11 +726,36 @@ class Game_Time
 
     // if we reached this point, then grab the target tone
     const tone = this.targetTone();
-    if (!this.isSameTone(tone))
+    if (this.isSameTone(tone)) return;
+
+    // suppressing the cycle means "no tint of TIME's own", which is not the same thing as "no tint at
+    // all". An event that deliberately tinted an interior owns that tint, and driving the screen to
+    // neutral here would erase it - on arrival, and then again on every single load, forever.
+    //
+    // the bookkeeping still moves, so that leaving this map is recognised as a change and re-tints
+    // properly. Only the visible transition is withheld, because the visible tone is not ours.
+    if (this.isToneSuppressedByMap() && this.hasForeignScreenTone())
     {
       this.setCurrentTone(tone.clone());
-      this.setNeedsToneChange(true);
+
+      return;
     }
+
+    this.setCurrentTone(tone.clone());
+    this.setNeedsToneChange(true);
+  }
+
+  /**
+   * Determines whether the screen is showing a tint that something other than the clock asked for.
+   *
+   * The comparison is against the screen's *destination* rather than its current value, because a
+   * tint runs over a duration: partway through one of the clock's own fades the live tone is an
+   * interpolation matching nobody, and comparing against it would call the clock's own work foreign.
+   * @returns {boolean}
+   */
+  hasForeignScreenTone()
+  {
+    return TimeToneResolver.isSameTone($gameScreen.toneTarget(), this.getCurrentTone()) === false;
   }
 
   /**

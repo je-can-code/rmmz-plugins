@@ -8,10 +8,10 @@ import {
   setPluginContextToJExtendAbs,
 } from '../../../_component/fixtures/install-extend-host-globals.js';
 
-const jBaseInitPath = '../../../../../../src/plugins/_base/_metadata/initialization.js';
+const jBaseInitPath = '../../../../../../src/plugins/_base/core/_metadata/initialization.js';
 const extendInitPath = '../../../../../../src/plugins/extend/core/_metadata/initialization.js';
 const absInitPath = '../../../../../../src/plugins/extend/ext/abs/_metadata/initialization.js';
-const pluginMetadataPath = '../../../../../../src/plugins/_base/models/PluginMetadata.js';
+const pluginMetadataPath = '../../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 describe('J-Extend-ABS metadata (direct src import)', () =>
 {
@@ -22,7 +22,7 @@ describe('J-Extend-ABS metadata (direct src import)', () =>
   {
     installExtendHostGlobals();
 
-    ({ default: globalThis.JCache } = await import('../../../../../../src/plugins/_base/core/JCache.js'));
+    ({ default: globalThis.JCache } = await import('../../../../../../src/plugins/_base/core/core/JCache.js'));
 
     setPluginContextToJBase();
     await import(jBaseInitPath);

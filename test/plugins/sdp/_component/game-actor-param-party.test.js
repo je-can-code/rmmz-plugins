@@ -74,15 +74,15 @@ describe('J-SDP Game_Actor.param (ATK) and Game_Party SDP helpers (direct src im
     installSdpHostGlobals(globalThis, sdpConfigJson);
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    await import('../../../../src/plugins/_base/objects/Game_BattlerBase.js');
-    await import('../../../../src/plugins/_base/objects/Game_Battler.js');
-    await import('../../../../src/plugins/_base/objects/Game_Actor.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_BattlerBase.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Battler.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Actor.js');
 
     // sdp's own Game_Actor.js#getSdpBonusForCoreParam relies on this bare global to translate a
     // core param id (e.g. ATK=2, MHP=0) into its registry key (e.g. 'atk', 'mhp').
-    ({ default: globalThis.ParameterKeys } = await import('../../../../src/plugins/_base/core/ParameterKeys.js'));
+    ({ default: globalThis.ParameterKeys } = await import('../../../../src/plugins/_base/core/core/ParameterKeys.js'));
 
     setPluginContextToJSdp();
     await import('../../../../src/plugins/sdp/core/_metadata/initialization.js');

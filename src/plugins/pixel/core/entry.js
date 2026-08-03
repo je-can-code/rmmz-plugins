@@ -11,3 +11,4 @@ import './objects/Game_Player.js';
 import './sprites/Sprite_PixelCollisionOverlay.js';
 import './sprites/Spriteset_Map.js';
 
+import './registerPixelSaveRoutes.js';

@@ -45,9 +45,9 @@ describe('JAFTING extension object prototype patches (direct src import)', () =>
       {
       }
 
-      Game_Party.prototype.initialize = vi.fn(() =>
+      Game_Party.prototype.initMembers = vi.fn(() =>
       {
-        aliasedCalls.push('initialize');
+        aliasedCalls.push('initMembers');
       });
 
       globalThis.Game_Party = Game_Party;
@@ -67,12 +67,12 @@ describe('JAFTING extension object prototype patches (direct src import)', () =>
       delete globalThis.Game_Party;
     });
 
-    it('initialize chains the original then seeds jafting members and trackings from metadata', () =>
+    it('initMembers chains the original then seeds jafting members and trackings from metadata', () =>
     {
       const party = new Game_Party();
-      party.initialize();
+      party.initMembers();
 
-      expect(aliasedCalls).toEqual([ 'initialize' ]);
+      expect(aliasedCalls).toEqual([ 'initMembers' ]);
       expect(party.getAllRecipeTrackings().map(t => t.key)).toEqual([ 'r1', 'r2' ]);
       expect(party.getAllCategoryTrackings().map(t => t.key)).toEqual([ 'c1' ]);
       expect(party.getUnlockedRecipeTrackings().map(t => t.key)).toEqual([ 'r1' ]);
@@ -81,7 +81,7 @@ describe('JAFTING extension object prototype patches (direct src import)', () =>
     it('lockRecipe/unlockRecipe toggle the matching tracking, and warn without throwing for an unknown key', () =>
     {
       const party = new Game_Party();
-      party.initialize();
+      party.initMembers();
 
       party.lockRecipe('r1');
       expect(party.getRecipeTrackingByKey('r1').isUnlocked()).toBe(false);
@@ -97,7 +97,7 @@ describe('JAFTING extension object prototype patches (direct src import)', () =>
     it('getUnlockedRecipes resolves tracking keys back to full recipe objects via the metadata map', () =>
     {
       const party = new Game_Party();
-      party.initialize();
+      party.initMembers();
       party.unlockAllRecipes();
 
       const unlocked = party.getUnlockedRecipes();
@@ -120,7 +120,7 @@ describe('JAFTING extension object prototype patches (direct src import)', () =>
     it('unlockEverythingCompletely unlocks all recipes/categories and reveals proficiency', () =>
     {
       const party = new Game_Party();
-      party.initialize();
+      party.initMembers();
 
       party.unlockEverythingCompletely();
 
@@ -132,7 +132,7 @@ describe('JAFTING extension object prototype patches (direct src import)', () =>
     it('updateVariableWithCraftedCountByCategories sums crafted counts across categories into a game variable', () =>
     {
       const party = new Game_Party();
-      party.initialize();
+      party.initMembers();
       party.getRecipeTrackingByKey('r1').improveProficiency();
 
       globalThis.$gameVariables = { setValue: vi.fn() };
@@ -245,24 +245,19 @@ describe('JAFTING extension object prototype patches (direct src import)', () =>
       {
       }
 
-      Game_Party.prototype.initialize = vi.fn(() =>
+      Game_Party.prototype.initMembers = vi.fn(() =>
       {
-        aliasedCalls.push('initialize');
+        aliasedCalls.push('initMembers');
       });
 
       globalThis.Game_Party = Game_Party;
-      globalThis.RPG_Weapon = function RPG_Weapon(weapon, index)
-      {
-        this.index = index;
-        this.source = weapon;
-        this._key = () => index;
-      };
-      globalThis.RPG_Armor = function RPG_Armor(armor, index)
-      {
-        this.index = index;
-        this.source = armor;
-        this._key = () => index;
-      };
+
+      // this file reaches JaftingManager, which reaches the lineage model, which registers itself
+      // with the save registry at module scope. both globals that registration reads are J-Base and
+      // JAFTING-core bindings that only exist once the whole bundle has loaded, so they are stubbed.
+      globalThis.SerializableRegistry = { register: () => {} };
+      globalThis.JaftingSalvageLedgerSnapshot = class JaftingSalvageLedgerSnapshot {};
+      globalThis.String.empty = '';
 
       await import('../../../../src/plugins/jafting/ext/refine/objects/Game_Party.js');
     });
@@ -282,20 +277,20 @@ describe('JAFTING extension object prototype patches (direct src import)', () =>
     {
       delete globalThis.J;
       delete globalThis.Game_Party;
-      delete globalThis.RPG_Weapon;
-      delete globalThis.RPG_Armor;
+      delete globalThis.SerializableRegistry;
+      delete globalThis.JaftingSalvageLedgerSnapshot;
     });
 
-    it('initialize chains the original then seeds refinement counters at JaftingManager.StartingIndex', async () =>
+    it('initMembers chains the original then seeds refinement counters at JaftingManager.StartingIndex', async () =>
     {
       const { default: JaftingManager } = await import(
         '../../../../src/plugins/jafting/ext/refine/managers/JaftingManager.js'
       );
 
       const party = new Game_Party();
-      party.initialize();
+      party.initMembers();
 
-      expect(aliasedCalls).toEqual([ 'initialize' ]);
+      expect(aliasedCalls).toEqual([ 'initMembers' ]);
       expect(party.getRefinementCounter(JaftingManager.RefinementTypes.Weapon)).toBe(JaftingManager.StartingIndex);
       expect(party.getRefinementCounter(JaftingManager.RefinementTypes.Armor)).toBe(JaftingManager.StartingIndex);
       expect(party.getRefinedWeapons()).toEqual([]);
@@ -304,36 +299,43 @@ describe('JAFTING extension object prototype patches (direct src import)', () =>
 
     it('addRefinedWeapon/addRefinedArmor track new entries; incrementRefinementCounter advances the index', async () =>
     {
+      // Arrange
       const { default: JaftingManager } = await import(
         '../../../../src/plugins/jafting/ext/refine/managers/JaftingManager.js'
       );
-
       const party = new Game_Party();
-      party.initialize();
+      party.initMembers();
+      const lineage = { index: 2001 };
 
-      const weapon = { name: 'Sword' };
-      party.addRefinedWeapon(weapon);
-      expect(party.getRefinedWeapons()).toEqual([ weapon ]);
-
+      // Act
+      party.addRefinedWeapon(lineage);
       party.incrementRefinementCounter(JaftingManager.RefinementTypes.Weapon);
+
+      // Assert
+      expect(party.getRefinedWeapons()).toEqual([ lineage ]);
       expect(party.getRefinementCounter(JaftingManager.RefinementTypes.Weapon)).toBe(JaftingManager.StartingIndex + 1);
     });
 
-    it('refreshDatabaseWeapons/refreshDatabaseArmors rebuild $data* entries from tracked refined equips', () =>
+    it('refreshDatabaseWeapons/refreshDatabaseArmors replay tracked provenance into $data*', async () =>
     {
-      globalThis.$dataWeapons = {};
-      globalThis.$dataArmors = {};
-
+      // Arrange
+      const { default: JaftingRefinementLineage } = await import(
+        '../../../../src/plugins/jafting/ext/refine/__models/JaftingRefinementLineage.js'
+      );
+      globalThis.$dataWeapons = { 5: { name: 'Sword', _key: () => 5 } };
+      globalThis.$dataArmors = { 5: { name: 'Shield', _key: () => 5 } };
       const party = new Game_Party();
-      party.initialize();
-      party.addRefinedWeapon({ index: 2001, name: 'Sword +1' });
-      party.addRefinedArmor({ index: 2001, name: 'Shield +1' });
+      party.initMembers();
+      party.addRefinedWeapon(JaftingRefinementLineage.leaf('w', 5));
+      party.addRefinedArmor(JaftingRefinementLineage.leaf('a', 5));
 
+      // Act
       party.refreshDatabaseWeapons();
       party.refreshDatabaseArmors();
 
-      expect($dataWeapons[2001]).toBeInstanceOf(RPG_Weapon);
-      expect($dataArmors[2001]).toBeInstanceOf(RPG_Armor);
+      // Assert
+      expect($dataWeapons[5].name).toBe('Sword');
+      expect($dataArmors[5].name).toBe('Shield');
     });
   });
 

@@ -12,7 +12,7 @@ describe('J.ABS.RegExp.ConfigNotInanimate (direct src import)', () =>
     installAbsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     // real production code- sets up J.ABS.RegExp.ConfigNotInanimate.
     setPluginContextToJAbs();

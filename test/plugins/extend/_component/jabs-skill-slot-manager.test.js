@@ -5,7 +5,7 @@ import { installExtendHostGlobals, setPluginContextToJBase, setPluginContextToJE
 
 describe('J-SkillExtend JABS_SkillSlotManager (direct src import)', () =>
 {
-  /** @type {typeof import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js').default} */
+  /** @type {typeof import('../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js').default} */
   let RPG_Skill;
 
   beforeAll(async () =>
@@ -15,11 +15,11 @@ describe('J-SkillExtend JABS_SkillSlotManager (direct src import)', () =>
     installExtendHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
-    ({ default: globalThis.RPG_Base } = await import('../../../../src/plugins/_base/database/base/RPG_Base.js'));
-    ({ default: RPG_Skill } = await import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_Base } = await import('../../../../src/plugins/_base/core/database/base/RPG_Base.js'));
+    ({ default: RPG_Skill } = await import('../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js'));
     globalThis.RPG_Skill = RPG_Skill;
 
     setPluginContextToJExtend();

@@ -16,10 +16,10 @@ describe('J-Popups metadata (direct src import)', () =>
     installPopupsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     // real J-Base class- extends PIXI.utils.EventEmitter, so must be imported after PIXI is stubbed.
-    ({ default: globalThis.J_EventEmitter } = await import('../../../../src/plugins/_base/models/J_EventEmitter.js'));
+    ({ default: globalThis.J_EventEmitter } = await import('../../../../src/plugins/_base/core/models/J_EventEmitter.js'));
 
     setPluginContextToJPopups();
     await import('../../../../src/plugins/popups/core/_metadata/initialization.js');

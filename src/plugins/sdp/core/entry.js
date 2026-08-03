@@ -47,3 +47,5 @@ import './scenes/Scene_Boot.js';
 import './scenes/Scene_Map.js';
 import './scenes/Scene_Menu.js';
 import './_metadata/pluginCommands.js';
+
+import './registerSdpSaveRoutes.js';

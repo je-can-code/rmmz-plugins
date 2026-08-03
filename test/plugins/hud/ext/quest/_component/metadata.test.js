@@ -7,9 +7,9 @@ import {
   setPluginContextToJHudQuest,
 } from '../../../_component/fixtures/install-hud-host-globals.js';
 
-const jBaseInitPath = '../../../../../../src/plugins/_base/_metadata/initialization.js';
+const jBaseInitPath = '../../../../../../src/plugins/_base/core/_metadata/initialization.js';
 const questInitPath = '../../../../../../src/plugins/hud/ext/quest/_metadata/initialization.js';
-const pluginMetadataPath = '../../../../../../src/plugins/_base/models/PluginMetadata.js';
+const pluginMetadataPath = '../../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 describe('J-HUD-QuestFrame metadata (direct src import)', () =>
 {

@@ -1,7 +1,7 @@
 //region plugins/abs/core/database/rpg-item.test.js
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
-import RPGManager from '../../../../../src/plugins/_base/managers/RPGManager.js';
+import RPGManager from '../../../../../src/plugins/_base/core/managers/RPGManager.js';
 
 describe('RPG_Item (src/plugins/abs/core/database/RPG_Item.js)', () =>
 {

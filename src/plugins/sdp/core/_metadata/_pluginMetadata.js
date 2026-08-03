@@ -492,21 +492,22 @@ class J_SdpPluginMetadata
   {
     // classify each panel and subgroup from configuration.
     const canLogLoadInfo = J_SdpPluginMetadata.#hasMinimumBaseVersion();
-    const classifiedConfiguration = ExternalJsonConfigLoader.load(
-      J_SdpPluginMetadata.CONFIG_PATH,
-      ExternalJsonConfigLoaderOptions.Builder()
-        .pluginName('J-SDP')
-        .configName('sdp configuration')
-        .mapper(parsed => J_SdpPluginMetadata.classifyConfiguration(parsed))
-        .logSummary(canLogLoadInfo
-          ? result => [
-            `- ${result.panels().length} panels`,
-            `- ${result.subgroups().length} subgroups`,
-            `- ${result.families().length} families`,
-          ]
-          : null)
-        .build()
-    );
+    const summarize = canLogLoadInfo
+      ? result => [
+        `- ${result.panels().length} panels`,
+        `- ${result.subgroups().length} subgroups`,
+        `- ${result.families().length} families`,
+      ]
+      : null;
+
+    const options = ExternalJsonConfigLoaderOptions.Builder()
+      .pluginName('J-SDP')
+      .configName('sdp configuration')
+      .mapper(parsed => J_SdpPluginMetadata.classifyConfiguration(parsed))
+      .logSummary(summarize)
+      .build();
+
+    const classifiedConfiguration = ExternalJsonConfigLoader.load(J_SdpPluginMetadata.CONFIG_PATH, options);
 
     /**
      * The collection of all defined SDPs.

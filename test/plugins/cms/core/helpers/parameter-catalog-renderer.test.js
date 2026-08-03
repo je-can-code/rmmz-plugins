@@ -16,7 +16,7 @@ describe('ParameterCatalogRenderer (direct src import)', () =>
     String.empty = '';
 
     // the real format constant is a pure static-only class with no dependencies of its own.
-    ({ default: ParameterFormat } = await import('../../../../../src/plugins/_base/core/ParameterFormat.js'));
+    ({ default: ParameterFormat } = await import('../../../../../src/plugins/_base/core/core/ParameterFormat.js'));
     globalThis.ParameterFormat = ParameterFormat;
 
     // ParameterCatalogRenderer/CmsParameter only ever call the .get()/.byGroup() surface, so a bare

@@ -521,7 +521,10 @@ class J_AbsPluginMetadata
    */
   static parseMapAfflictionMaxSlots(rawValue)
   {
-    const parsedValue = Number.parseInt(String(rawValue).trim(), 10);
+    const trimmedValue = String(rawValue)
+      .trim();
+
+    const parsedValue = Number.parseInt(trimmedValue, 10);
 
     if (Number.isFinite(parsedValue) === false || parsedValue < 1)
     {

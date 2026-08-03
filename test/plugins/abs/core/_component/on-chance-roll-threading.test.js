@@ -45,11 +45,11 @@ describe('J-ABS on-chance-effect roll threading (direct src import)', () =>
     installAbsHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/managers/RPGManager.js'));
-    await import('../../../../../src/plugins/_base/objects/Game_BattlerBase.js');
-    await import('../../../../../src/plugins/_base/objects/Game_Battler.js');
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    await import('../../../../../src/plugins/_base/core/objects/Game_BattlerBase.js');
+    await import('../../../../../src/plugins/_base/core/objects/Game_Battler.js');
 
     setPluginContextToJAbs();
     await import('../../../../../src/plugins/abs/core/_metadata/initialization.js');

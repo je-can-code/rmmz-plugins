@@ -42,6 +42,13 @@ describe('J-ABS-Input Game_System (unit, all downstream dependencies mocked)', (
     originalOnBeforeSave.mockClear();
     originalOnAfterLoad.mockClear();
     globalThis.JABS_InputAdapter = { getAllControllers: vi.fn(() => []) };
+
+    // keybinds are installation scope now, so the stores these methods read live on ConfigManager.
+    globalThis.ConfigManager = {
+      jabsInputMappings: {},
+      jabsInputBindings: {},
+      save: vi.fn(),
+    };
     globalThis.Input = {
       exportAllBindingsForSave: vi.fn(() => ({})),
       importAllBindingsFromSave: vi.fn(),
@@ -304,7 +311,7 @@ describe('J-ABS-Input Game_System (unit, all downstream dependencies mocked)', (
     });
   });
 
-  describe('initializeJabsInputForLegacySaveIfMissing()', () =>
+  describe('initializeJabsInputIfMissing()', () =>
   {
     it('seeds defaults for every controller when neither mappings nor bindings exist', () =>
     {
@@ -312,7 +319,7 @@ describe('J-ABS-Input Game_System (unit, all downstream dependencies mocked)', (
       const controller = buildController();
       globalThis.JABS_InputAdapter.getAllControllers.mockReturnValue([ controller ]);
 
-      system.initializeJabsInputForLegacySaveIfMissing();
+      system.initializeJabsInputIfMissing();
 
       expect(globalThis.Input.ensureRemapBootstrapped).toHaveBeenCalled();
       expect(controller.setAllInputs).toHaveBeenCalledWith({ Main: [ 'ok' ] });
@@ -327,7 +334,7 @@ describe('J-ABS-Input Game_System (unit, all downstream dependencies mocked)', (
       const controller = buildController();
       globalThis.JABS_InputAdapter.getAllControllers.mockReturnValue([ controller ]);
 
-      system.initializeJabsInputForLegacySaveIfMissing();
+      system.initializeJabsInputIfMissing();
 
       expect(globalThis.Input.ensureRemapBootstrapped).not.toHaveBeenCalled();
     });
@@ -340,19 +347,18 @@ describe('J-ABS-Input Game_System (unit, all downstream dependencies mocked)', (
       const controller = buildController();
       globalThis.JABS_InputAdapter.getAllControllers.mockReturnValue([ controller ]);
 
-      system.initializeJabsInputForLegacySaveIfMissing();
+      system.initializeJabsInputIfMissing();
 
       expect(globalThis.Input.ensureRemapBootstrapped).not.toHaveBeenCalled();
     });
 
     it('seeds defaults from a completely uninitialized instance (no _j namespace at all yet)', () =>
     {
-      // covers the method running on a genuinely fresh instance, before its own
-      // initJabsInputConfigMembers() call has ever seeded the _j._abs._input namespace.
+      // covers the method running before anything has seeded the config stores it reads.
       const system = buildSystem();
       globalThis.JABS_InputAdapter.getAllControllers.mockReturnValue([]);
 
-      expect(() => system.initializeJabsInputForLegacySaveIfMissing()).not.toThrow();
+      expect(() => system.initializeJabsInputIfMissing()).not.toThrow();
       expect(globalThis.Input.ensureRemapBootstrapped).toHaveBeenCalled();
     });
   });
@@ -374,22 +380,50 @@ describe('J-ABS-Input Game_System (unit, all downstream dependencies mocked)', (
     });
   });
 
-  describe('onAfterLoad()', () =>
+  describe('applyJabsInputConfiguration()', () =>
   {
-    it('performs original logic then restores legacy defaults, bindings, and controller configs', () =>
+    it('seeds missing defaults, then applies bindings and controller configs', () =>
     {
+      // Arrange
       const system = buildSystem();
       system.initJabsInputConfigMembers();
-      const legacySpy = vi.spyOn(system, 'initializeJabsInputForLegacySaveIfMissing').mockImplementation(() => {});
+      const seedSpy = vi.spyOn(system, 'initializeJabsInputIfMissing').mockImplementation(() => {});
       const applyBindingsSpy = vi.spyOn(system, 'applyAllInputBindingsToInput').mockImplementation(() => {});
       const applyConfigsSpy = vi.spyOn(system, 'applyAllJabsInputConfigs').mockImplementation(() => {});
 
-      system.onAfterLoad();
+      // Act
+      system.applyJabsInputConfiguration();
 
-      expect(originalOnAfterLoad).toHaveBeenCalled();
-      expect(legacySpy).toHaveBeenCalled();
+      // Assert
+      expect(seedSpy).toHaveBeenCalled();
       expect(applyBindingsSpy).toHaveBeenCalled();
       expect(applyConfigsSpy).toHaveBeenCalled();
+
+      seedSpy.mockRestore();
+      applyBindingsSpy.mockRestore();
+      applyConfigsSpy.mockRestore();
+    });
+  });
+
+  describe('onAfterLoad()', () =>
+  {
+    it('leaves keybinds alone, because they no longer arrive with a savefile', () =>
+    {
+      // Arrange
+      const system = buildSystem();
+      system.initJabsInputConfigMembers();
+      const seedSpy = vi.spyOn(system, 'initializeJabsInputIfMissing').mockImplementation(() => {});
+
+      // Act
+      system.onAfterLoad();
+
+      // Assert- keybinds are installation scope and are applied when the game objects are created,
+      // which covers a new game as well as a loaded one. re-applying them here would be dead work,
+      // and having them ONLY here is the bug that put a fresh playthrough on the built-in defaults
+      // while the player's own bindings sat unread in the config file.
+      expect(seedSpy).not.toHaveBeenCalled();
+
+      seedSpy.mockRestore();
     });
   });
 });

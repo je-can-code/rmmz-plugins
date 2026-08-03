@@ -218,7 +218,10 @@ class Window_SkillEquipSlots
   computeRenderableSlotCount()
   {
     // start with the actor's dedicated slot-count stat.
-    const baseline = Number(this.actor().maxSlots()) || 0;
+    const maxSlots = this.actor()
+      .maxSlots();
+
+    const baseline = Number(maxSlots) || 0;
 
     // find the highest equipped slot index, if any.
     let highest = -1;

@@ -19,7 +19,7 @@ describe('J-Omni-Monsterpedia metadata (direct src import)', () =>
     installOmniHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJOmnipedia();
     await import('../../../../../../src/plugins/omni/core/_metadata/initialization.js');

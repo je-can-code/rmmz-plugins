@@ -1,11 +1,11 @@
 //region plugins/sdp/_component/fixtures/install-sdp-host-globals.js
-import { installJBaseHostGlobals } from '../../../_base/_component/fixtures/install-j-base-host-globals.js';
+import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures/install-j-base-host-globals.js';
 import { installMinimalMenuUiStubs } from '../../../../setup/install-minimal-menu-ui-stubs.js';
-import PluginMetadata from '../../../../../src/plugins/_base/models/PluginMetadata.js';
-import ExternalJsonConfigLoader from '../../../../../src/plugins/_base/managers/ExternalJsonConfigLoader.js';
-import ExternalJsonConfigLoaderOptions from '../../../../../src/plugins/_base/models/ExternalJsonConfigLoaderOptions.js';
-import PluginVersion from '../../../../../src/plugins/_base/models/PluginVersion.js';
-import SerializableRegistry from '../../../../../src/plugins/_base/core/SerializableRegistry.js';
+import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
+import ExternalJsonConfigLoader from '../../../../../src/plugins/_base/core/managers/ExternalJsonConfigLoader.js';
+import ExternalJsonConfigLoaderOptions from '../../../../../src/plugins/_base/core/models/ExternalJsonConfigLoaderOptions.js';
+import PluginVersion from '../../../../../src/plugins/_base/core/models/PluginVersion.js';
+import SerializableRegistry from '../../../../../src/plugins/_base/core/core/SerializableRegistry.js';
 
 const noop = function()
 {
@@ -212,7 +212,14 @@ export function installSdpHostGlobals(sandbox = globalThis, sdpConfigJson = '{"s
 
   sandbox.Game_Player.prototype.useOnPickup = noop;
 
-  sandbox.Game_System.prototype.initialize = noop;
+  sandbox.Game_System.prototype.initialize = function()
+  {
+    this.initMembers();
+  };
+
+  // J-Base adds this hook and calls it from an aliased `initialize`; plugins adding state to
+  // this host alias the hook rather than `initialize`, so their chain needs it to exist.
+  sandbox.Game_System.prototype.initMembers = noop;
 
   function Game_Troop()
   {

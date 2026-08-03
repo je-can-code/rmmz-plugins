@@ -1,6 +1,6 @@
 //region plugins/sks/ext/abs/_component/end-to-end-pipeline.test.js
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import RPG_Skill from '../../../../../../src/plugins/_base/database/implementations/RPG_Skill.js';
+import RPG_Skill from '../../../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js';
 
 /**
  * Builds a real {@link RPG_Skill}-shaped object for note-parsing tests without going through
@@ -115,13 +115,13 @@ describe('SKS -> JABS quick menus -> passive states, end-to-end pipeline (direct
     };
     // the real RPGManager, not a fake- sks/core's notetag parsing (e.g. the <unslotted> and
     // <baseSlots:[...]> tags exercised below) needs genuine regex/formula evaluation, not a stub.
-    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../../../src/plugins/_base/core/managers/RPGManager.js'));
     globalThis.JABS_Button = { Mainhand: 'mainhand', Offhand: 'offhand' };
 
     await import('../../../../../../src/plugins/abs/core/objects/Game_Actor.js');
 
     // sks/core: real notetag-driven slot/point budget and equip primitives.
-    globalThis.PluginMetadata = (await import('../../../../../../src/plugins/_base/models/PluginMetadata.js')).default;
+    globalThis.PluginMetadata = (await import('../../../../../../src/plugins/_base/core/models/PluginMetadata.js')).default;
     globalThis.SerializableRegistry = { register() {} };
     globalThis.PluginManager = {
       parameters(name)
@@ -144,7 +144,7 @@ describe('SKS -> JABS quick menus -> passive states, end-to-end pipeline (direct
     };
     globalThis.__PLUGIN_NAME__ = 'J-Base';
     globalThis.__PLUGIN_VERSION__ = '3.2.0';
-    await import('../../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     globalThis.__PLUGIN_NAME__ = 'J-SkillSlots';
     globalThis.__PLUGIN_VERSION__ = '1.0.0';

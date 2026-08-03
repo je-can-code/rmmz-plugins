@@ -19,21 +19,21 @@ describe('J-Passive Game_Battler / Game_Actor (direct src import)', () =>
     installPassiveHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
     // RPG_BaseItem.js/RPG_BaseBattler.js (passive) patch these bare globals' prototypes directly-
     // must be the same module instances RPG_Actor/RPG_Class/etc. (imported below) extend.
-    ({ default: globalThis.RPG_BaseItem } = await import('../../../../src/plugins/_base/database/base/RPG_BaseItem.js'));
-    ({ default: globalThis.RPG_BaseBattler } = await import('../../../../src/plugins/_base/database/core/RPG_BaseBattler.js'));
+    ({ default: globalThis.RPG_BaseItem } = await import('../../../../src/plugins/_base/core/database/base/RPG_BaseItem.js'));
+    ({ default: globalThis.RPG_BaseBattler } = await import('../../../../src/plugins/_base/core/database/core/RPG_BaseBattler.js'));
 
-    ({ default: globalThis.RPG_Actor } = await import('../../../../src/plugins/_base/database/implementations/RPG_Actor.js'));
-    ({ default: globalThis.RPG_Class } = await import('../../../../src/plugins/_base/database/implementations/RPG_Class.js'));
-    ({ default: globalThis.RPG_Skill } = await import('../../../../src/plugins/_base/database/implementations/RPG_Skill.js'));
-    ({ default: globalThis.RPG_State } = await import('../../../../src/plugins/_base/database/implementations/RPG_State.js'));
-    ({ default: globalThis.RPG_Weapon } = await import('../../../../src/plugins/_base/database/implementations/RPG_Weapon.js'));
-    ({ default: globalThis.RPG_Enemy } = await import('../../../../src/plugins/_base/database/implementations/RPG_Enemy.js'));
+    ({ default: globalThis.RPG_Actor } = await import('../../../../src/plugins/_base/core/database/implementations/RPG_Actor.js'));
+    ({ default: globalThis.RPG_Class } = await import('../../../../src/plugins/_base/core/database/implementations/RPG_Class.js'));
+    ({ default: globalThis.RPG_Skill } = await import('../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js'));
+    ({ default: globalThis.RPG_State } = await import('../../../../src/plugins/_base/core/database/implementations/RPG_State.js'));
+    ({ default: globalThis.RPG_Weapon } = await import('../../../../src/plugins/_base/core/database/implementations/RPG_Weapon.js'));
+    ({ default: globalThis.RPG_Enemy } = await import('../../../../src/plugins/_base/core/database/implementations/RPG_Enemy.js'));
     fixtures = buildPassiveTestFixtures({
       RPG_Actor: globalThis.RPG_Actor,
       RPG_Class: globalThis.RPG_Class,
@@ -46,9 +46,9 @@ describe('J-Passive Game_Battler / Game_Actor (direct src import)', () =>
     // patches globalThis.Game_BattlerBase.prototype with traitObjects(), Game_Battler.prototype with
     // allStates(), and Game_Actor.prototype with databaseData() -> this.actor()- all of which
     // passive's own Game_Battler.js/Game_Actor.js rely on.
-    await import('../../../../src/plugins/_base/objects/Game_BattlerBase.js');
-    await import('../../../../src/plugins/_base/objects/Game_Battler.js');
-    await import('../../../../src/plugins/_base/objects/Game_Actor.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_BattlerBase.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Battler.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Actor.js');
 
     setPluginContextToJPassive();
     await import('../../../../src/plugins/passive/core/_metadata/initialization.js');

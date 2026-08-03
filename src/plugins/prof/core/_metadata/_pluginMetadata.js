@@ -50,15 +50,16 @@ class J_ProficiencyPluginMetadata
    */
   initializeProficiencies()
   {
+    const options = ExternalJsonConfigLoaderOptions.Builder()
+      .pluginName('J-Proficiency')
+      .configName('proficiency configuration')
+      .mapper(J_ProficiencyPluginMetadata.classifyConditionals.bind(J_ProficiencyPluginMetadata))
+      .logSummary(result => [ `- ${result.length} proficiency conditionals` ])
+      .build();
+
     const classifiedConditionalData = ExternalJsonConfigLoader.load(
       J_ProficiencyPluginMetadata.CONFIG_PATH,
-      ExternalJsonConfigLoaderOptions.Builder()
-        .pluginName('J-Proficiency')
-        .configName('proficiency configuration')
-        .mapper(J_ProficiencyPluginMetadata.classifyConditionals.bind(J_ProficiencyPluginMetadata))
-        .logSummary(result => [ `- ${result.length} proficiency conditionals` ])
-        .build()
-    );
+      options);
 
     /**
      * The collection of all defined skill proficiencies.

@@ -286,8 +286,10 @@ Game_Party.prototype.getQuestopediaEntryByKey = function(questKey)
  */
 Game_Party.prototype.getQuestopediaEntries = function()
 {
-  return Array.from(this.getQuestopediaEntriesCache()
-    .values());
+  const entries = this.getQuestopediaEntriesCache()
+    .values();
+
+  return Array.from(entries);
 };
 
 // TODO: relocate this to a more central location.

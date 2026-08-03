@@ -42,13 +42,13 @@ const SRC_PLUGINS_DIR = './src/plugins';
  * @type {string[]}
  */
 const ALLOWLIST = [
-  path.normalize('src/plugins/_base/managers/RPGManager.js'),
+  path.normalize('src/plugins/_base/core/managers/RPGManager.js'),
   path.normalize('src/plugins/abs/core/models/JABS_HitboxPulseOptions.js'),
   path.normalize('src/plugins/abs/ext/input/_models/JABS_StandardController.js'),
   path.normalize('src/plugins/time/core/scenes/Scene_Base.js'),
-  path.normalize('src/plugins/_base/core/ParameterRegistry.js'),
-  path.normalize('src/plugins/_base/core/JsonEx.js'),
-  path.normalize('src/plugins/_base/core/JCache.js'),
+  path.normalize('src/plugins/_base/core/core/ParameterRegistry.js'),
+  path.normalize('src/plugins/_base/core/core/JsonEx.js'),
+  path.normalize('src/plugins/_base/core/core/JCache.js'),
 ];
 
 /**

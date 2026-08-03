@@ -18,9 +18,9 @@ describe('J-Passive Game_Battler (direct src import)', () =>
     installPassiveHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: RPG_BaseItem } = await import('../../../../../src/plugins/_base/database/base/RPG_BaseItem.js'));
+    ({ default: RPG_BaseItem } = await import('../../../../../src/plugins/_base/core/database/base/RPG_BaseItem.js'));
     globalThis.RPG_BaseItem = RPG_BaseItem;
 
     setPluginContextToJPassive();

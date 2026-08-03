@@ -52,11 +52,11 @@ describe('J-SDP families (direct src import)', () =>
     installSdpHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    await import('../../../../src/plugins/_base/objects/Game_BattlerBase.js');
-    await import('../../../../src/plugins/_base/objects/Game_Battler.js');
-    await import('../../../../src/plugins/_base/objects/Game_Actor.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_BattlerBase.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Battler.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Actor.js');
 
     setPluginContextToJSdp();
     await import('../../../../src/plugins/sdp/core/_metadata/initialization.js');

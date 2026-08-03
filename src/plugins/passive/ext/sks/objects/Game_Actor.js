@@ -15,8 +15,10 @@ Game_Actor.prototype.getPassiveStateSourcedSkills = function()
     .call(this);
 
   // build a lookup of every skill id currently sitting in an SKS slot.
-  const equippedIds = new Set(this.equippedSkills()
-    .map(skill => skill.id));
+  const equippedSkillIds = this.equippedSkills()
+    .map(skill => skill.id);
+
+  const equippedIds = new Set(equippedSkillIds);
 
   // grab this battler's own per-actor slot-requirement exemptions.
   const forcedUnslottedIds = this.forcedUnslottedSkillIds();

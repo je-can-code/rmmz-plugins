@@ -109,15 +109,15 @@ describe('J-Passive-Conditional (direct src import)', () =>
     installPassiveHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
-    ({ default: globalThis.RPG_BaseItem } = await import('../../../../src/plugins/_base/database/base/RPG_BaseItem.js'));
-    ({ default: globalThis.RPG_BaseBattler } = await import('../../../../src/plugins/_base/database/core/RPG_BaseBattler.js'));
-    ({ default: globalThis.RPG_Actor } = await import('../../../../src/plugins/_base/database/implementations/RPG_Actor.js'));
-    ({ default: globalThis.RPG_State } = await import('../../../../src/plugins/_base/database/implementations/RPG_State.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: globalThis.RPG_BaseItem } = await import('../../../../src/plugins/_base/core/database/base/RPG_BaseItem.js'));
+    ({ default: globalThis.RPG_BaseBattler } = await import('../../../../src/plugins/_base/core/database/core/RPG_BaseBattler.js'));
+    ({ default: globalThis.RPG_Actor } = await import('../../../../src/plugins/_base/core/database/implementations/RPG_Actor.js'));
+    ({ default: globalThis.RPG_State } = await import('../../../../src/plugins/_base/core/database/implementations/RPG_State.js'));
 
-    await import('../../../../src/plugins/_base/objects/Game_BattlerBase.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_BattlerBase.js');
 
     // _base's own Game_Battler.js aliases these at import time (vanilla RMMZ engine behavior this
     // lightweight fixture doesn't model); real gainHp/gainMp/gainTp just apply the delta.
@@ -125,8 +125,8 @@ describe('J-Passive-Conditional (direct src import)', () =>
     globalThis.Game_Battler.prototype.gainMp = function(value) { this._mp = (this._mp || 0) + value; };
     globalThis.Game_Battler.prototype.gainTp = function(value) { this._tp = (this._tp || 0) + value; };
 
-    await import('../../../../src/plugins/_base/objects/Game_Battler.js');
-    await import('../../../../src/plugins/_base/objects/Game_Actor.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Battler.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Actor.js');
 
     setPluginContextToJPassive();
     await import('../../../../src/plugins/passive/core/_metadata/initialization.js');

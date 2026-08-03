@@ -251,13 +251,18 @@ Game_Interpreter.prototype.command351 = function()
  * Enables saving with JABS.
  * Removed the check for seeing if the player is in-battle, because the player is
  * technically ALWAYS in-battle while the ABS is enabled.
+ *
+ * The JABS branch has to name a scene rather than defer, because deferring is what it is here to avoid:
+ * vanilla refuses to open the save screen mid-battle, and with the ABS enabled the player is always
+ * technically mid-battle. That makes the choice of scene this method's problem, so it asks whether
+ * J-Base-Save is installed and opens whichever screen actually exists.
  */
 J.ABS.Aliased.Game_Interpreter.set('command352', Game_Interpreter.prototype.command352);
 Game_Interpreter.prototype.command352 = function()
 {
   if ($jabsEngine.absEnabled)
   {
-    SceneManager.push(Scene_Save);
+    this.openSaveScene();
     return true;
   }
   // otherwise fall back to the alternate path.
@@ -266,5 +271,29 @@ Game_Interpreter.prototype.command352 = function()
     // perform original logic.
     return J.ABS.Aliased.Game_Interpreter.get('command352').call(this);
   }
+};
+
+/**
+ * Opens whichever save screen this project actually has.
+ *
+ * J-Base-Save replaces vanilla's save and load scenes with a single files scene, and it is genuinely
+ * optional - J-ABS must keep working in a project without it. This is the sanctioned cross-plugin
+ * check: one test, at the namespace, in a path that is honestly optional.
+ *
+ * Note that the namespace existing is not by itself enough to reach `Scene_Files`; the *class* has to
+ * have been defined, which means J-Base-Save must have loaded first. That is what the `@orderAfter`
+ * declaration in this plugin's annotations is for, and why it is `@orderAfter` rather than `@base` -
+ * `@base` would make the save plugin mandatory and destroy the optionality this check exists to keep.
+ */
+Game_Interpreter.prototype.openSaveScene = function()
+{
+  if (J.BASE.EXT.SAVE)
+  {
+    Scene_Files.callFromSavePoint();
+
+    return;
+  }
+
+  SceneManager.push(Scene_Save);
 };
 //endregion Game_Interpreter

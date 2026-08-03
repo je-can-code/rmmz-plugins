@@ -23,7 +23,7 @@ describe('J-Pixelistics PIXEL_CollisionManager (direct src import)', () =>
     installPixelCoreHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJPixel();
     await import('../../../../../src/plugins/pixel/core/_metadata/initialization.js');

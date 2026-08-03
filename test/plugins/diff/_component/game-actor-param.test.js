@@ -12,7 +12,7 @@ describe('J-Difficulty Game_Actor.param (direct src import)', () =>
     installDiffHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJDiff();
     await import('../../../../src/plugins/diff/core/_metadata/initialization.js');

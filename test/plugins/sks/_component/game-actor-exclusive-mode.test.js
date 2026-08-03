@@ -9,7 +9,7 @@ import {
   skillData,
 } from './fixtures/install-sks-host-globals.js';
 import { installPluginManagerWithParams } from '../../../setup/install-plugin-manager-with-params.js';
-import RPG_Skill from '../../../../src/plugins/_base/database/implementations/RPG_Skill.js';
+import RPG_Skill from '../../../../src/plugins/_base/core/database/implementations/RPG_Skill.js';
 
 /**
  * Swaps the active J.SKS.Metadata for one built from the given params, without repeating the full
@@ -28,7 +28,7 @@ async function setSksMode(pluginParameterStrings)
 {
   vi.resetModules();
 
-  ({ default: globalThis.PluginMetadata } = await import('../../../../src/plugins/_base/models/PluginMetadata.js'));
+  ({ default: globalThis.PluginMetadata } = await import('../../../../src/plugins/_base/core/models/PluginMetadata.js'));
 
   installPluginManagerWithParams(globalThis, 'J-SkillSlots', pluginParameterStrings);
   setPluginContextToJSks();
@@ -58,11 +58,11 @@ describe('J-SkillSlots Game_Actor exclusive mode (direct src import)', () =>
     installSksHostGlobals();
 
     setPluginContextToJBase();
-    await import('../../../../src/plugins/_base/_metadata/initialization.js');
+    await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
-    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/managers/RPGManager.js'));
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
-    await import('../../../../src/plugins/_base/objects/Game_Battler.js');
+    await import('../../../../src/plugins/_base/core/objects/Game_Battler.js');
 
     setPluginContextToJSks();
     await import('../../../../src/plugins/sks/core/_metadata/initialization.js');

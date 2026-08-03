@@ -8,11 +8,7 @@ Scene_Load.prototype.reloadMapIfUpdated = function()
 {
   if ($jabsEngine.absEnabled)
   {
-    const mapId = $gameMap.mapId();
-    const {x} = $gamePlayer;
-    const {y} = $gamePlayer;
-    $gamePlayer.reserveTransfer(mapId, x, y);
-    $gamePlayer.requestMapReload();
+    J.ABS.Helpers.forceMapReload();
   }
   else
   {

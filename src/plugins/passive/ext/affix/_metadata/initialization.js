@@ -76,7 +76,10 @@ J.PASSIVE.EXT.AFFIX.Helpers.parseRewardMultipliers = function(databaseData)
   const lines = databaseData.note.split(/[\r\n]+/);
 
   // build a non-global scanner so we do not carry lastIndex between lines.
-  const scan = new RegExp(regex.source, regex.flags.replace('g', '').replace('y', ''));
+  const stickyFreeFlags = regex.flags.replace('g', '')
+    .replace('y', '');
+
+  const scan = new RegExp(regex.source, stickyFreeFlags);
 
   lines.forEach(line =>
   {

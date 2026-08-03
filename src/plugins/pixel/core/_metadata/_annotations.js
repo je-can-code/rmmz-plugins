@@ -45,6 +45,9 @@
  * entirely plugin-parameter driven.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Routed the _pixel namespace into its own save section, so pixel movement
+ *    state lands in systems/pixel.json rather than inside the system blob.
  * - 1.0.3
  *    Fixed Game_CharacterBase#pos comparing fractional coordinates for exact
  *    equality. Under pixel movement _x/_y are fractional almost always, so

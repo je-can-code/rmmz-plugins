@@ -268,7 +268,9 @@ class Scene_JabsLoadout
     const window = new Window_LoadoutSpine(this.spineWindowRect());
 
     // adopt the slot columns' row height so each label sits beside the row it names.
-    window.setRowHeight(this.slotColumns()[0].itemHeight());
+    const rowHeight = this.slotColumns()[0].itemHeight();
+
+    window.setRowHeight(rowHeight);
 
     // update the tracker with the new window.
     this.setSpineWindow(window);
@@ -581,10 +583,12 @@ class Scene_JabsLoadout
   commitAssignment(skillId)
   {
     // commit the assignment.
+    const slotKey = this.focusedPicker()
+      .slotKey();
+
     this.focusedPicker()
       .actor()
-      .setEquippedSkill(this.focusedPicker()
-        .slotKey(), skillId);
+      .setEquippedSkill(slotKey, skillId);
 
     // acknowledge the change.
     SoundManager.playEquip();

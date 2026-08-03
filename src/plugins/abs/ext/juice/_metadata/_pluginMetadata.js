@@ -139,9 +139,10 @@ class JAbsJuice_PluginMetadata
      * `default` is guaranteed to exist by the editor.
      * @type {Object<string, { tiltMul: number, swingMul: number }>}
      */
-    this.weaponStyleMultipliers = Object.fromEntries(
-      Object.keys(profiles).map(key => [ key, { tiltMul: profiles[key].tiltMul, swingMul: profiles[key].swingMul } ])
-    );
+    const styleEntries = Object.keys(profiles)
+      .map(key => [ key, { tiltMul: profiles[key].tiltMul, swingMul: profiles[key].swingMul } ]);
+
+    this.weaponStyleMultipliers = Object.fromEntries(styleEntries);
   }
 }
 

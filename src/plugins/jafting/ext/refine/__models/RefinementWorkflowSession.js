@@ -92,32 +92,37 @@ class RefinementWorkflowSession
   }
 
   /**
-  /**
    * Performs the refinement transaction: remove inputs, stamp the hydrated output row, then register it through
    * {@link JaftingManager.createRefinedOutput} (dynamic id allocation + party gain).
    *
-   * @param {Game_Item} baseItem The base item driving this step.
-   * @param {Game_Item} materialItem The material item driving this step.
+   * Both inputs arrive as the database rows themselves rather than `Game_Item` wrappers, because that is what the
+   * refinable list windows carry and what `gainItem` reads an `id` off of further down.
+   *
+   * @param {RPG_EquipItem} baseDatum The base equip driving this step.
+   * @param {RPG_EquipItem} materialDatum The material equip driving this step.
    * @param {RPG_EquipItem} outputEquip The output equip driving this step.
    * @returns {{ ok: boolean, reason: string|null }}
    */
-  commitRefinement(baseItem, materialItem, outputEquip)
+  commitRefinement(baseDatum, materialDatum, outputEquip)
   {
-    // unwrap the Game_Item wrappers to get the underlying RPG datums.
-    const baseDatum = baseItem.object();
-    const materialDatum = materialItem.object();
 
     // snapshot lineage **before** `gainItem` removes copies—`afterPartyLostItem` can clear keyed party bags or
     // resync `unitLedgers` once counts drop, which would otherwise merge from an empty base and drop craft stamps.
     const mergedLedger = JaftingSalvageManager.buildRefinementOutputLedger(baseDatum, materialDatum);
 
-    $gameParty.gainItem(baseItem, -1);
-    $gameParty.gainItem(materialItem, -1);
+    // refinement provenance is captured here for the same reason and one step further: when an input was itself a
+    // refined row, spending its last copy makes `reclaimDynamicWeaponSlot` splice its lineage out of the party's
+    // tracking list *and* blank its `$data*` slot. Reading it after the spend would find nothing to nest.
+    const baseLineage = JaftingManager.lineageForDatum(baseDatum);
+    const materialLineage = JaftingManager.lineageForDatum(materialDatum);
+
+    $gameParty.gainItem(baseDatum, -1);
+    $gameParty.gainItem(materialDatum, -1);
 
     outputEquip._jaftingSalvageLedger = mergedLedger;
 
     // hands the stamped RPG row to JAFTING core so it picks the next dynamic weapon/armor slot and `gainItem`s it.
-    JaftingManager.createRefinedOutput(outputEquip);
+    JaftingManager.createRefinedOutput(outputEquip, baseLineage, materialLineage);
     this.markCommittedReturnToBase();
 
     return { ok: true, reason: null };
