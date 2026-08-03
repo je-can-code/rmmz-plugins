@@ -541,10 +541,14 @@ class JABS_TargetingManager
     // resolve the real target location from the cursor's current state, facing wherever the
     // caster is currently facing regardless of mode.
     const { x, y } = this.#resolveTargetXY(battler);
+
+    const direction = battler.getCharacter()
+      .direction();
+
     const location = JABS_Location.Builder()
       .setX(x)
       .setY(y)
-      .setDirection(battler.getCharacter().direction())
+      .setDirection(direction)
       .build();
 
     // attach the resolved location to every action's options, preserving every other

@@ -24,9 +24,13 @@ SerializableRegistry.extend(Game_Map, {
  */
 SerializableRegistry.extend(Game_Party, {
   transients: {
-    '_j._omni._questopediaCache': party => new Map(
-      party.getSavedQuestopediaEntries()
-        .map(entry => [ entry.key, entry ])),
+    '_j._omni._questopediaCache': party =>
+    {
+      const keyedEntries = party.getSavedQuestopediaEntries()
+        .map(entry => [ entry.key, entry ]);
+
+      return new Map(keyedEntries);
+    },
   },
 });
 //endregion registerOmniQuestSaveCodecs

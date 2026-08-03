@@ -9,19 +9,19 @@ class SpeedParameterRegistration
    */
   static registerAll()
   {
-    ParameterRegistry.register(
-      ParameterDefinition.Builder()
-        .key('msb')
-        .group(ParameterGroups.SUPPORT)
-        .sortOrder(2)
-        .label(() => TextManager.movespeed())
-        .description(() => TextManager.moveSpeedDescription())
-        .iconIndex(() => IconManager.movespeed())
-        .format(ParameterFormat.FLAT)
-        .getValue(battler => battler.msb)
-        .sdpBinding(SdpParameterBinding.byKey('msb', () => 0))
-        .build()
-    );
+    const moveSpeedBoost = ParameterDefinition.Builder()
+      .key('msb')
+      .group(ParameterGroups.SUPPORT)
+      .sortOrder(2)
+      .label(() => TextManager.movespeed())
+      .description(() => TextManager.moveSpeedDescription())
+      .iconIndex(() => IconManager.movespeed())
+      .format(ParameterFormat.FLAT)
+      .getValue(battler => battler.msb)
+      .sdpBinding(SdpParameterBinding.byKey('msb', () => 0))
+      .build();
+
+    ParameterRegistry.register(moveSpeedBoost);
   }
 }
 

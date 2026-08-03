@@ -1370,8 +1370,10 @@ Game_Battler.prototype.clearStates = function()
   if ($jabsEngine && this.getUuid() !== String.empty)
   {
     // snapshot the tracked states now, since removeState() below mutates the tracker map as it goes.
-    const trackedStates = Array.from($jabsEngine.getJabsStatesByUuid(this.getUuid())
-      .values());
+    const trackedStateValues = $jabsEngine.getJabsStatesByUuid(this.getUuid())
+      .values();
+
+    const trackedStates = Array.from(trackedStateValues);
 
     trackedStates.forEach(trackedState =>
     {

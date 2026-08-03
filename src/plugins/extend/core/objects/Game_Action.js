@@ -224,9 +224,10 @@ Game_Action.prototype.applyOnHitApplyStates = function(target)
 {
   // grab caster-wide applyState entries from all of the attacker's notes. each
   // <applyState:[...]> tag is a single bracket, so it parses directly into a tuple.
-  const casterEntries = RPGManager.getArraysFromAllNotesByRegex(
-    this.subject().getAllNotes(),
-    J.EXTEND.RegExp.ApplyState);
+  const notes = this.subject()
+    .getAllNotes();
+
+  const casterEntries = RPGManager.getArraysFromAllNotesByRegex(notes, J.EXTEND.RegExp.ApplyState);
 
   // grab skill-scoped thisApplyState entries from the executing skill only.
   const skillEntries = RPGManager.getArraysFromNotesByRegex(this.item(), J.EXTEND.RegExp.ThisApplyState);

@@ -452,7 +452,10 @@ Game_Map.prototype.handleLootEventRemoval = function(lootToRemove)
   if (!lootToRemove.isJabsLoot()) return;
 
   // get the relevant metadatas for the loot.
-  const lootMetadatas = this.lootEventsFromDataMapByUuid(lootToRemove.getJabsLoot().uuid());
+  const lootUuid = lootToRemove.getJabsLoot()
+    .uuid();
+
+  const lootMetadatas = this.lootEventsFromDataMapByUuid(lootUuid);
 
   // iterate over each of the metadatas for deletion.
   lootMetadatas.forEach(lootMetadata =>

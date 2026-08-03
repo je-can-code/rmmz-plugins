@@ -61,7 +61,10 @@ class Window_EquipActorRibbon
     const textY = Math.floor((this.innerHeight - this.lineHeight()) / 2);
 
     // draw the actor name.
-    this.drawText(this.actor().name(), textX, textY, textWidth, 'left');
+    const actorName = this.actor()
+      .name();
+
+    this.drawText(actorName, textX, textY, textWidth, 'left');
   }
   //endregion draw
 }

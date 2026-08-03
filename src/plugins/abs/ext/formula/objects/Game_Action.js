@@ -174,8 +174,10 @@ Game_Action.prototype.evaluateFormula = function(formula, source, recipient, ite
   }
 
   // smoother small decimals.
-  return parseFloat(Number(result)
-    .toFixed(3));
+  const rounded = Number(result)
+    .toFixed(3);
+
+  return parseFloat(rounded);
 };
 
 /**

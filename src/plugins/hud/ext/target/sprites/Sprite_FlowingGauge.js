@@ -731,7 +731,10 @@ class Sprite_FlowingGauge
   {
     this.setGaugeCurrent(this.battler().tp);
     this.setGaugeTarget(this.battler().tp);
-    this.setGaugeMax(this.battler().maxTp());
+    const maxTp = this.battler()
+      .maxTp();
+
+    this.setGaugeMax(maxTp);
     this.gaugeActualSprite().setHue(this.tpGaugeHue());
   }
 

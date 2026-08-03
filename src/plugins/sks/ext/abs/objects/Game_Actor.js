@@ -9,8 +9,10 @@
 function filterToEquippedOrExempt(actor, candidates)
 {
   // build a lookup of every skill id currently sitting in an SKS slot.
-  const equippedIds = new Set(actor.equippedSkills()
-    .map(skill => skill.id));
+  const equippedSkillIds = actor.equippedSkills()
+    .map(skill => skill.id);
+
+  const equippedIds = new Set(equippedSkillIds);
 
   // keep only skills that are exempt from slotting entirely, or actually equipped.
   return candidates.filter(skill => skill.unslotted === true || equippedIds.has(skill.id));
@@ -63,8 +65,10 @@ Game_Actor.prototype.buildOffhandAssignableSkillPool = function()
   const mainhandProvidedSkillId = this.getMainhandProvidedOffhandSkillId();
 
   // build a lookup of every skill id currently sitting in an SKS slot.
-  const equippedIds = new Set(this.equippedSkills()
-    .map(skill => skill.id));
+  const equippedSkillIds = this.equippedSkills()
+    .map(skill => skill.id);
+
+  const equippedIds = new Set(equippedSkillIds);
 
   // keep skills that are exempt from slotting, actually equipped, or the weapon-granted skill.
   return candidates.filter(skill => skill.unslotted === true

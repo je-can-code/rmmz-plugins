@@ -118,7 +118,10 @@ class StateAfflictionHudPresenter
 
     if (StateAfflictionProvider.canCollect() === true)
     {
-      const trackedStates = Array.from($jabsEngine.getJabsStatesByUuid(battler.getUuid()).values());
+      const trackedStateValues = $jabsEngine.getJabsStatesByUuid(battler.getUuid())
+        .values();
+
+      const trackedStates = Array.from(trackedStateValues);
 
       for (const trackedState of trackedStates)
       {

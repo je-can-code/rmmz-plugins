@@ -134,7 +134,10 @@ Game_BattlerBase.prototype.allTraits = function()
   }
 
   // flatten all traits from all trait-bearing objects and cache the result.
-  this.setCachedAllTraits(this.traitObjects().reduce((r, obj) => r.concat(obj.traits), []));
+  const allTraits = this.traitObjects()
+    .reduce((r, obj) => r.concat(obj.traits), []);
+
+  this.setCachedAllTraits(allTraits);
 
   return this.getCachedAllTraits();
 };

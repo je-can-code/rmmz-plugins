@@ -851,8 +851,10 @@ Spriteset_Map.prototype.purgeOrphanedCastPreviewSprites = function ()
   const layer = this.getCastPreviewLayer(); // parent layer for previews.
 
   // compute active keys for this frame.
-  const activeKeys = new Set(this.collectActiveCastPreviewItems()
-    .map(it => it.key));
+  const activeCastPreviewKeys = this.collectActiveCastPreviewItems()
+    .map(it => it.key);
+
+  const activeKeys = new Set(activeCastPreviewKeys);
 
   // walk current dict and remove non-active ones.
   Object.keys(dict)
@@ -1419,9 +1421,10 @@ Spriteset_Map.prototype.refreshExistingActionHitboxSprites = function ()
 Spriteset_Map.prototype.purgeOrphanedActionHitboxSprites = function ()
 {
   // compute the set of active keys (uuids) on the map now.
-  const activeKeys = new Set($gameMap.actionEvents()
-    .map(ev => ev.getJabsActionUuid()) // all active keys.
-  );
+  const activeActionUuids = $gameMap.actionEvents()
+    .map(ev => ev.getJabsActionUuid());
+
+  const activeKeys = new Set(activeActionUuids);
 
   // walk the dict and remove any sprites whose keys aren’t active.
   const dict = this.getActionHitboxSprites(); // existing sprites.
@@ -1893,8 +1896,10 @@ Spriteset_Map.prototype.refreshExistingBattlerHitboxSprites = function (itemMode
 Spriteset_Map.prototype.purgeOrphanedBattlerHitboxSprites = function (itemMode = 'all')
 {
   // compute the set of active keys now.
-  const active = new Set(this.collectBattlerOverlayItems(itemMode)
-    .map(it => it.key)); // active keys.
+  const activeOverlayKeys = this.collectBattlerOverlayItems(itemMode)
+    .map(it => it.key);
+
+  const active = new Set(activeOverlayKeys);
 
   // walk the dict and remove any sprites whose keys aren’t active.
   const dict = this.getBattlerHitboxSprites(); // existing sprites.

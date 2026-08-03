@@ -2864,9 +2864,11 @@ class JABS_Engine
     // route.
     actionEventSprite.setMoveRoute(pageData.moveRoute);
     // stamp which way the caster was facing at fire time (cardinal row hint for $ sheets).
-    actionEventSprite.setCastedDirection(action.getCaster()
+    const casterDirection = action.getCaster()
       .getCharacter()
-      .direction());
+      .direction();
+
+    actionEventSprite.setCastedDirection(casterDirection);
 
     this.applyActionToActionEventSprite(actionEventSprite, action);
 
@@ -3937,7 +3939,10 @@ class JABS_Engine
     if (action.isRetaliation()) return;
 
     // do not retaliate against being targeted by battlers of the same team.
-    if (JABS_TeamRules.isFriendly(action.getCaster().getTeam(), targetBattler.getTeam()))
+    const casterTeam = action.getCaster()
+      .getTeam();
+
+    if (JABS_TeamRules.isFriendly(casterTeam, targetBattler.getTeam()))
     {
       return;
     }
@@ -4206,10 +4211,13 @@ class JABS_Engine
       for (let i = 0; i < procCount; i++)
       {
         // build the outgoing retaliation actions.
+        const retaliationOptions = JABS_ActionOptions.Builder()
+          .setIsRetaliation(true)
+          .build();
+
         const retaliationActions = retaliator.createJabsActionFromSkill(
           skillChance.skillId,
-          JABS_ActionOptions.Builder().setIsRetaliation(true).build()
-        );
+          retaliationOptions);
 
         // stamp the triggering damage onto each action so formulas can use d/m/t.
         retaliationActions.forEach(retaliationAction =>

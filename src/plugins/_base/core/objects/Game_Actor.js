@@ -64,8 +64,10 @@ Game_Actor.prototype.rawEquips = function()
 Game_Actor.prototype.skillIds = function()
 {
   // merge learned skills and trait-granted skill ids into a single deduplicated list.
-  return [ ...new Set(this.learnedSkillIds()
-    .concat(this.addedSkills())) ];
+  const allSkillIds = this.learnedSkillIds()
+    .concat(this.addedSkills());
+
+  return [ ...new Set(allSkillIds) ];
 };
 
 /**

@@ -273,7 +273,10 @@ JABS_Battler.prototype.pullToCaster = function(action, caster)
 
   // pull-forward is dampened by the exact same resistance stat that dampens push knockback-
   // resistance to being forcibly displaced is one stat, regardless of which direction it goes.
-  const resist = RPGManager.getSumFromAllNotesByRegex(this.getBattler().getAllNotes(), J.ABS.RegExp.KnockbackResist);
+  const notes = this.getBattler()
+    .getAllNotes();
+
+  const resist = RPGManager.getSumFromAllNotesByRegex(notes, J.ABS.RegExp.KnockbackResist);
   if (resist >= 100) return;
   const effectiveMagnitude = pullMagnitude * ((100 - resist) / 100);
 

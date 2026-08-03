@@ -233,7 +233,10 @@ class Sprite_MapChargeGauge
     // always keep the base gauge bound to the correct underlying battler each frame.
     if (this.getJabsBattler())
     {
-      this.setBattler(this.getJabsBattler().getBattler());
+      const battler = this.getJabsBattler()
+        .getBattler();
+
+      this.setBattler(battler);
     }
 
     // determine validity for this frame.

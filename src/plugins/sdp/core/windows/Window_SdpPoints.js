@@ -61,7 +61,10 @@ class Window_SdpPoints
     const y = this.ribbonTextY();
     const nameMaxWidth = this.sdpWalletAnchorX() - nameX - 8;
 
-    this.drawText(this.actor().name(), nameX, y, nameMaxWidth, 'left');
+    const actorName = this.actor()
+      .name();
+
+    this.drawText(actorName, nameX, y, nameMaxWidth, 'left');
   }
 
   /**

@@ -24,19 +24,19 @@ class VanillaParameterRegistration
    */
   static registerBparam(key, paramId, group, sortOrder, format = ParameterFormat.FLAT)
   {
-    ParameterRegistry.register(
-      ParameterDefinition.Builder()
-        .key(key)
-        .group(group)
-        .sortOrder(sortOrder)
-        .label(() => TextManager.param(paramId))
-        .description(() => TextManager.bparamDescription(paramId))
-        .iconIndex(() => IconManager.param(paramId))
-        .format(format)
-        .getValue(battler => battler.param(paramId))
-        .sdpBinding(SdpParameterBinding.bparam(paramId))
-        .build()
-    );
+    const definition = ParameterDefinition.Builder()
+      .key(key)
+      .group(group)
+      .sortOrder(sortOrder)
+      .label(() => TextManager.param(paramId))
+      .description(() => TextManager.bparamDescription(paramId))
+      .iconIndex(() => IconManager.param(paramId))
+      .format(format)
+      .getValue(battler => battler.param(paramId))
+      .sdpBinding(SdpParameterBinding.bparam(paramId))
+      .build();
+
+    ParameterRegistry.register(definition);
   }
 
   /**
@@ -49,19 +49,19 @@ class VanillaParameterRegistration
    */
   static registerXparam(key, xparamId, group, sortOrder, format = ParameterFormat.PERCENT)
   {
-    ParameterRegistry.register(
-      ParameterDefinition.Builder()
-        .key(key)
-        .group(group)
-        .sortOrder(sortOrder)
-        .label(() => TextManager.xparam(xparamId))
-        .description(() => TextManager.xparamDescription(xparamId))
-        .iconIndex(() => IconManager.xparam(xparamId))
-        .format(format)
-        .getValue(battler => battler.xparam(xparamId))
-        .sdpBinding(SdpParameterBinding.xparam(xparamId))
-        .build()
-    );
+    const definition = ParameterDefinition.Builder()
+      .key(key)
+      .group(group)
+      .sortOrder(sortOrder)
+      .label(() => TextManager.xparam(xparamId))
+      .description(() => TextManager.xparamDescription(xparamId))
+      .iconIndex(() => IconManager.xparam(xparamId))
+      .format(format)
+      .getValue(battler => battler.xparam(xparamId))
+      .sdpBinding(SdpParameterBinding.xparam(xparamId))
+      .build();
+
+    ParameterRegistry.register(definition);
   }
 
   /**
@@ -81,20 +81,20 @@ class VanillaParameterRegistration
     format = ParameterFormat.PERCENT_CENTERED,
     displayPolicy = ParameterDisplayPolicy.NONE)
   {
-    ParameterRegistry.register(
-      ParameterDefinition.Builder()
-        .key(key)
-        .group(group)
-        .sortOrder(sortOrder)
-        .label(() => TextManager.sparam(sparamId))
-        .description(() => TextManager.sparamDescription(sparamId))
-        .iconIndex(() => IconManager.sparam(sparamId))
-        .format(format)
-        .displayPolicy(displayPolicy)
-        .getValue(battler => battler.sparam(sparamId))
-        .sdpBinding(SdpParameterBinding.sparam(sparamId))
-        .build()
-    );
+    const definition = ParameterDefinition.Builder()
+      .key(key)
+      .group(group)
+      .sortOrder(sortOrder)
+      .label(() => TextManager.sparam(sparamId))
+      .description(() => TextManager.sparamDescription(sparamId))
+      .iconIndex(() => IconManager.sparam(sparamId))
+      .format(format)
+      .displayPolicy(displayPolicy)
+      .getValue(battler => battler.sparam(sparamId))
+      .sdpBinding(SdpParameterBinding.sparam(sparamId))
+      .build();
+
+    ParameterRegistry.register(definition);
   }
 
   /**
@@ -104,19 +104,95 @@ class VanillaParameterRegistration
    */
   static registerHar()
   {
-    ParameterRegistry.register(
-      ParameterDefinition.Builder()
-        .key('har')
-        .group(ParameterGroups.VITALITY)
-        .sortOrder(7)
-        .label(() => TextManager.har())
-        .description(() => TextManager.harDescription())
-        .iconIndex(() => IconManager.har())
-        .format(ParameterFormat.PERCENT_CENTERED)
-        .getValue(battler => battler.har)
-        .sdpBinding(SdpParameterBinding.byKey('har', () => 1))
-        .build()
-    );
+    const definition = ParameterDefinition.Builder()
+      .key('har')
+      .group(ParameterGroups.VITALITY)
+      .sortOrder(7)
+      .label(() => TextManager.har())
+      .description(() => TextManager.harDescription())
+      .iconIndex(() => IconManager.har())
+      .format(ParameterFormat.PERCENT_CENTERED)
+      .getValue(battler => battler.har)
+      .sdpBinding(SdpParameterBinding.byKey('har', () => 1))
+      .build();
+
+    ParameterRegistry.register(definition);
+  }
+
+  /**
+   * Registers max TP with the catalog.
+   * Needs its own builder rather than the generic bparam helper, because its SDP binding reads a
+   * custom base rather than a native param id.
+   */
+  static registerMtp()
+  {
+    const definition = ParameterDefinition.Builder()
+      .key('mtp')
+      .group(ParameterGroups.VITALITY)
+      .sortOrder(4)
+      .label(() => TextManager.maxTp())
+      .description(() => TextManager.bparamDescription(30))
+      .iconIndex(() => IconManager.maxTp())
+      .format(ParameterFormat.FLAT)
+      .getValue(battler => battler.maxTp())
+      .sdpBinding(SdpParameterBinding.custom(
+        (actor, base) =>
+        {
+          if (!J.SDP) return 0;
+          if (!actor.maxTpSdpBonuses) return 0;
+
+          return actor.maxTpSdpBonuses(base);
+        },
+        actor => actor.getBaseMaxTp()
+      ))
+      .build();
+
+    ParameterRegistry.register(definition);
+  }
+
+  /**
+   * Registers counter attack rate with the catalog.
+   * Needs its own builder rather than the generic xparam helper, because it carries a display policy
+   * and a format the helper does not offer for xparams.
+   */
+  static registerCnt()
+  {
+    const definition = ParameterDefinition.Builder()
+      .key('cnt')
+      .group(ParameterGroups.COMBAT)
+      .sortOrder(2)
+      .label(() => TextManager.xparam(6))
+      .description(() => TextManager.xparamDescription(6))
+      .iconIndex(() => IconManager.xparam(6))
+      .format(ParameterFormat.PERCENT_SUFFIX)
+      .displayPolicy(ParameterDisplayPolicy.REWARD_RATE)
+      .getValue(battler => battler.cnt)
+      .sdpBinding(SdpParameterBinding.xparam(6))
+      .build();
+
+    ParameterRegistry.register(definition);
+  }
+
+  /**
+   * Registers magic reflection rate with the catalog.
+   * Needs its own builder for the same reason as {@link #registerCnt}.
+   */
+  static registerMrf()
+  {
+    const definition = ParameterDefinition.Builder()
+      .key('mrf')
+      .group(ParameterGroups.COMBAT)
+      .sortOrder(3)
+      .label(() => TextManager.xparam(5))
+      .description(() => TextManager.xparamDescription(5))
+      .iconIndex(() => IconManager.xparam(5))
+      .format(ParameterFormat.PERCENT_SUFFIX)
+      .displayPolicy(ParameterDisplayPolicy.REWARD_RATE)
+      .getValue(battler => battler.mrf)
+      .sdpBinding(SdpParameterBinding.xparam(5))
+      .build();
+
+    ParameterRegistry.register(definition);
   }
 
   /**
@@ -129,28 +205,7 @@ class VanillaParameterRegistration
     VanillaParameterRegistration.registerXparam('hrg', 7, ParameterGroups.VITALITY, 1, ParameterFormat.REGEN_PER_SECOND);
     VanillaParameterRegistration.registerBparam('mmp', 1, ParameterGroups.VITALITY, 2, ParameterFormat.FLAT_LARGE);
     VanillaParameterRegistration.registerXparam('mrg', 8, ParameterGroups.VITALITY, 3, ParameterFormat.REGEN_PER_SECOND);
-    ParameterRegistry.register(
-      ParameterDefinition.Builder()
-        .key('mtp')
-        .group(ParameterGroups.VITALITY)
-        .sortOrder(4)
-        .label(() => TextManager.maxTp())
-        .description(() => TextManager.bparamDescription(30))
-        .iconIndex(() => IconManager.maxTp())
-        .format(ParameterFormat.FLAT)
-        .getValue(battler => battler.maxTp())
-        .sdpBinding(SdpParameterBinding.custom(
-          (actor, base) =>
-          {
-            if (!J.SDP) return 0;
-            if (!actor.maxTpSdpBonuses) return 0;
-
-            return actor.maxTpSdpBonuses(base);
-          },
-          actor => actor.getBaseMaxTp()
-        ))
-        .build()
-    );
+    VanillaParameterRegistration.registerMtp();
     VanillaParameterRegistration.registerXparam('trg', 9, ParameterGroups.VITALITY, 5, ParameterFormat.REGEN_PER_SECOND);
     VanillaParameterRegistration.registerSparam('rec', 2, ParameterGroups.VITALITY, 6, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.REWARD_RATE);
     VanillaParameterRegistration.registerSparam('pha', 3, ParameterGroups.VITALITY, 8, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.REWARD_RATE);
@@ -159,34 +214,8 @@ class VanillaParameterRegistration
     // combat
     VanillaParameterRegistration.registerBparam('atk', 2, ParameterGroups.COMBAT, 0);
     VanillaParameterRegistration.registerBparam('mat', 4, ParameterGroups.COMBAT, 1);
-    ParameterRegistry.register(
-      ParameterDefinition.Builder()
-        .key('cnt')
-        .group(ParameterGroups.COMBAT)
-        .sortOrder(2)
-        .label(() => TextManager.xparam(6))
-        .description(() => TextManager.xparamDescription(6))
-        .iconIndex(() => IconManager.xparam(6))
-        .format(ParameterFormat.PERCENT_SUFFIX)
-        .displayPolicy(ParameterDisplayPolicy.REWARD_RATE)
-        .getValue(battler => battler.cnt)
-        .sdpBinding(SdpParameterBinding.xparam(6))
-        .build()
-    );
-    ParameterRegistry.register(
-      ParameterDefinition.Builder()
-        .key('mrf')
-        .group(ParameterGroups.COMBAT)
-        .sortOrder(3)
-        .label(() => TextManager.xparam(5))
-        .description(() => TextManager.xparamDescription(5))
-        .iconIndex(() => IconManager.xparam(5))
-        .format(ParameterFormat.PERCENT_SUFFIX)
-        .displayPolicy(ParameterDisplayPolicy.REWARD_RATE)
-        .getValue(battler => battler.mrf)
-        .sdpBinding(SdpParameterBinding.xparam(5))
-        .build()
-    );
+    VanillaParameterRegistration.registerCnt();
+    VanillaParameterRegistration.registerMrf();
     VanillaParameterRegistration.registerSparam('mcr', 4, ParameterGroups.COMBAT, 7, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.COST_RATE);
     VanillaParameterRegistration.registerSparam('tcr', 5, ParameterGroups.COMBAT, 9, ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.COST_RATE);
 

@@ -877,9 +877,14 @@ class JABS_Action
   {
     const lines = [];
 
-    if (eventData && eventData.note && String(eventData.note).trim())
+    const trimmedNote = eventData && eventData.note
+      ? String(eventData.note)
+        .trim()
+      : String.empty;
+
+    if (trimmedNote)
     {
-      lines.push(String(eventData.note).trim());
+      lines.push(trimmedNote);
     }
 
     if (!pageData || !pageData.list || pageData.list.length === 0)

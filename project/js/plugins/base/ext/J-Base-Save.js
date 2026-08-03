@@ -5477,7 +5477,8 @@ DataManager.saveGlobalInfo = function() {};
 * is a rendering decision made fresh every time the menu opens, not state written anywhere.
 */
 Window_MenuCommand.prototype.addSaveCommand = function() {
-	this.addBuiltCommand(new WindowCommandBuilder("Files").setSymbol("save").setHelpText("Save, load, or step back through this playthrough.").setIconIndex(2568).setMenuSection(MenuSection.Party).build());
+	const files = new WindowCommandBuilder("Files").setSymbol("save").setHelpText("Save, load, or step back through this playthrough.").setIconIndex(2568).setMenuSection(MenuSection.Party).build();
+	this.addBuiltCommand(files);
 };
 
 //#endregion

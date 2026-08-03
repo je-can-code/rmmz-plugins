@@ -84,7 +84,11 @@ RPG_Enemy.prototype.computeInferredTypedElementIds = function()
     }
     else
     {
-      excludedNames.add(String(entry).trim().toLowerCase());
+      const normalizedName = String(entry)
+        .trim()
+        .toLowerCase();
+
+      excludedNames.add(normalizedName);
     }
   });
 

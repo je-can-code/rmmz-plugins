@@ -129,13 +129,12 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
 J.ABS.Helpers.loadExternalConfig = (configPath = 'data/config.jabs.json') =>
 {
   // load the external config; the JMZ editor guarantees the root shape.
-  const parsedConfig = ExternalJsonConfigLoader.load(
-    configPath,
-    ExternalJsonConfigLoaderOptions.Builder()
-      .pluginName('J-ABS')
-      .configName('external configuration')
-      .build()
-  );
+  const options = ExternalJsonConfigLoaderOptions.Builder()
+    .pluginName('J-ABS')
+    .configName('external configuration')
+    .build();
+
+  const parsedConfig = ExternalJsonConfigLoader.load(configPath, options);
 
   // assign the external config and extracted teams into metadata.
   const metadata = J.ABS.Metadata;

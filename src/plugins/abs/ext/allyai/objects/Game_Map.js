@@ -27,9 +27,10 @@ Game_Map.prototype.parseBattlers = function()
  */
 Game_Map.prototype.parseAllyBattlers = function()
 {
-  return JABS_AiManager
-    .convertFollowersToBattlers($gamePlayer.followers()
-      .data());
+  const followers = $gamePlayer.followers()
+    .data();
+
+  return JABS_AiManager.convertFollowersToBattlers(followers);
 };
 
 /**

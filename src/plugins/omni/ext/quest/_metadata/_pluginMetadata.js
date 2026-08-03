@@ -70,20 +70,21 @@ class J_QUEST_PluginMetadata
   initializeQuests()
   {
     const canLogLoadInfo = J_QUEST_PluginMetadata.#hasMinimumBaseVersion();
-    const parsedConfiguration = ExternalJsonConfigLoader.load(
-      J_QUEST_PluginMetadata.CONFIG_PATH,
-      ExternalJsonConfigLoaderOptions.Builder()
-        .pluginName('J-Omni-Questopedia')
-        .configName('quest configuration')
-        .logSummary(canLogLoadInfo
-          ? result => [
-            `- ${result.quests.length} quests`,
-            `- ${result.categories.length} categories`,
-            `- ${result.tags.length} tags`,
-          ]
-          : null)
-        .build()
-    );
+    const summarize = canLogLoadInfo
+      ? result => [
+        `- ${result.quests.length} quests`,
+        `- ${result.categories.length} categories`,
+        `- ${result.tags.length} tags`,
+      ]
+      : null;
+
+    const options = ExternalJsonConfigLoaderOptions.Builder()
+      .pluginName('J-Omni-Questopedia')
+      .configName('quest configuration')
+      .logSummary(summarize)
+      .build();
+
+    const parsedConfiguration = ExternalJsonConfigLoader.load(J_QUEST_PluginMetadata.CONFIG_PATH, options);
 
     const classifiedQuests = J_QUEST_PluginMetadata.classifyQuests(parsedConfiguration.quests);
 

@@ -850,11 +850,10 @@ Game_Action.prototype.applyStateDamageMultipliers = function(baseDamage, target)
 Game_Action.prototype.calculatePerDebuffBonusPct = function(target)
 {
   // sum all perDebuffBuff:N values from the caster's note sources.
-  const totalN = RPGManager.getSumFromAllNotesByRegex(
-    this.subject()
-      .getAllNotes(),
-    J.ABS.RegExp.PerDebuffBuff
-  );
+  const notes = this.subject()
+    .getAllNotes();
+
+  const totalN = RPGManager.getSumFromAllNotesByRegex(notes, J.ABS.RegExp.PerDebuffBuff);
 
   // if no tags exist on this caster, there is no bonus.
   if (totalN === 0) return 0;
@@ -1007,11 +1006,10 @@ Game_Action.prototype.calculateThisBonusDamageIfSelfStatePct = function()
 Game_Action.prototype.calculateBonusDamagePct = function()
 {
   // sum all bonusDamage:PCT values from every note source on the caster.
-  return RPGManager.getSumFromAllNotesByRegex(
-    this.subject()
-      .getAllNotes(),
-    J.ABS.RegExp.BonusDamage
-  );
+  const notes = this.subject()
+    .getAllNotes();
+
+  return RPGManager.getSumFromAllNotesByRegex(notes, J.ABS.RegExp.BonusDamage);
 };
 
 /**
@@ -1326,11 +1324,10 @@ Game_Action.prototype.countTargetStatesAuthoredByCaster = function(target)
 Game_Action.prototype.calculateBonusForMyStateCountPct = function(target)
 {
   // sum all bonusDamageForMyStateCount:N values from the caster's note sources.
-  const perStatePct = RPGManager.getSumFromAllNotesByRegex(
-    this.subject()
-      .getAllNotes(),
-    J.ABS.RegExp.BonusDamageForMyStateCount
-  );
+  const notes = this.subject()
+    .getAllNotes();
+
+  const perStatePct = RPGManager.getSumFromAllNotesByRegex(notes, J.ABS.RegExp.BonusDamageForMyStateCount);
 
   // if no tags exist on this caster, there is no bonus.
   if (perStatePct === 0) return 0;
@@ -1496,11 +1493,10 @@ Game_Action.prototype.calculateGeneralSkillHistoryBonusPct = function(uuid)
   // collect the raw bracket text from every note source for the general variant tag-
   // deliberately not routed through getArraysFromNotesByRegex's JSON-ish parsing, since
   // parseGeneralSkillHistoryBracket below does its own parsing of the bracket content.
-  const rawTags = RPGManager.getStringsFromAllNotesByRegex(
-    this.subject()
-      .getAllNotes(),
-    J.ABS.RegExp.SkillHistoryBonus
-  );
+  const notes = this.subject()
+    .getAllNotes();
+
+  const rawTags = RPGManager.getStringsFromAllNotesByRegex(notes, J.ABS.RegExp.SkillHistoryBonus);
 
   // if there are no tags anywhere, there is nothing to sum.
   if (!rawTags.length) return 0;
@@ -1671,11 +1667,10 @@ Game_Action.prototype.calculateThisCastTimeDamageBonusPctPerSec = function()
 Game_Action.prototype.calculateGeneralCastTimeDamageBonusPctPerSec = function()
 {
   // sum every matching tag across the caster's full note stack.
-  return RPGManager.getSumFromAllNotesByRegex(
-    this.subject()
-      .getAllNotes(),
-    J.ABS.RegExp.CastTimeDamageBonus
-  );
+  const notes = this.subject()
+    .getAllNotes();
+
+  return RPGManager.getSumFromAllNotesByRegex(notes, J.ABS.RegExp.CastTimeDamageBonus);
 };
 //endregion cast time damage bonus
 //endregion action application

@@ -81,8 +81,14 @@ JABS_Engine.prototype.applyBattleMemories = function(result, action, target)
   if (!this.canApplyBattleMemories(target)) return;
 
   // generate the new battle memory of the action and its result for the target.
-  const newMemory = new JABS_BattleMemory(target.getBattlerId(), action.getBaseSkill().id, action.getAction()
-    .calculateRawElementRate(target.getBattler()), result.hpDamage);
+  const elementRate = action.getAction()
+    .calculateRawElementRate(target.getBattler());
+
+  const newMemory = new JABS_BattleMemory(
+    target.getBattlerId(),
+    action.getBaseSkill().id,
+    elementRate,
+    result.hpDamage);
 
   // determine the one who who executed the action.
   const attacker = action.getCaster();
