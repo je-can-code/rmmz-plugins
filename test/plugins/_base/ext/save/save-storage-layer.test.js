@@ -602,8 +602,9 @@ describe('save storage layer (direct src import)', () =>
 
   describe('SaveFileSystem thumbnails', () =>
   {
-    // a one-pixel JPEG is real enough to prove the base64 was decoded rather than stored as text.
-    const dataUrl = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAg=';
+    // a one-pixel PNG is real enough to prove the base64 was decoded rather than stored as text.
+    const dataUrl = 'data:image/png;base64,'
+      + 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAAAAAA6fptVAAAACklEQVR4nGMAAQAABQAB';
 
     it('writes real bytes rather than the data url text', () =>
     {
@@ -612,12 +613,12 @@ describe('save storage layer (direct src import)', () =>
       SaveFileSystem.writeThumbnail('file1', 'gen-0001', dataUrl);
 
       // Assert
-      const written = fake.files.get('save/file1/gen-0001/snapshot.jpg');
+      const written = fake.files.get('save/file1/gen-0001/snapshot.png');
       expect(Buffer.isBuffer(written)).toBe(true);
 
-      // the JPEG magic number, which the data url text would not have started with.
-      expect(written[0]).toBe(0xFF);
-      expect(written[1]).toBe(0xD8);
+      // the PNG magic number, which the data url text would not have started with.
+      expect(written[0]).toBe(0x89);
+      expect(written[1]).toBe(0x50);
     });
 
     it('turns a POSIX save path into a url with the scheme on the front', () =>
@@ -669,7 +670,7 @@ describe('save storage layer (direct src import)', () =>
       const url = SaveFileSystem.thumbnailUrl('file1', 'gen-0003');
 
       // Assert
-      expect(url).toBe('file:///save/file1/gen-0003/snapshot.jpg');
+      expect(url).toBe('file:///save/file1/gen-0003/snapshot.png');
     });
 
     it('reports a picture that is there', () =>
@@ -703,7 +704,7 @@ describe('save storage layer (direct src import)', () =>
       await SaveFileSystem.writeSlot('file1', sections, manifestFor(sections), dataUrl);
 
       // Assert
-      expect(fake.files.has('save/file1/gen-0001/snapshot.jpg')).toBe(true);
+      expect(fake.files.has('save/file1/gen-0001/snapshot.png')).toBe(true);
 
       // naming it in `sections` would let a lost picture fail the whole generation into a rollback.
       const manifest = SaveFileSystem.readManifest('file1');
@@ -719,7 +720,7 @@ describe('save storage layer (direct src import)', () =>
       await SaveFileSystem.writeSlot('file1', sections, manifestFor(sections), '');
 
       // Assert
-      expect(fake.files.has('save/file1/gen-0001/snapshot.jpg')).toBe(false);
+      expect(fake.files.has('save/file1/gen-0001/snapshot.png')).toBe(false);
     });
 
     it('loads a generation whose picture is missing, since a picture is never part of the set', async () =>
@@ -727,7 +728,7 @@ describe('save storage layer (direct src import)', () =>
       // Arrange
       const sections = { 'world.json': { map: 1 } };
       await SaveFileSystem.writeSlot('file1', sections, manifestFor(sections), dataUrl);
-      fake.files.delete('save/file1/gen-0001/snapshot.jpg');
+      fake.files.delete('save/file1/gen-0001/snapshot.png');
 
       // Act
       const read = await SaveFileSystem.readSlot('file1', loaded => loaded);

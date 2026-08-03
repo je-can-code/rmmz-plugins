@@ -31,6 +31,42 @@ class SaveThumbnail
   static aspectHeight = 9;
 
   /**
+   * The height the picture will actually be drawn at, or zero when nobody has said.
+   * @type {number}
+   */
+  static #requestedHeight = 0;
+
+  /**
+   * Gets the height the picture will actually be drawn at.
+   * @returns {number} The height in pixels, or zero when nobody has said.
+   */
+  static requestedHeight()
+  {
+    return SaveThumbnail.#requestedHeight;
+  }
+
+  /**
+   * Declares the size the picture will actually be drawn at.
+   *
+   * Every scaling step costs sharpness, and there are only ever two available: the crop can be resized
+   * on the way in, and it can be resized again on the way out. Told what the display needs, this takes
+   * exactly that many pixels and neither step happens at all - the file is a lossless slice of the
+   * screen and the row draws it one for one.
+   *
+   * The alternative was for this file to work the layout out for itself, which means a second copy of
+   * a chain running from the screen size through the help window and the control legend into a row
+   * height. Two copies of that drift, and the day they disagree the pictures go quietly soft.
+   *
+   * Left unset, the crop falls back to {@link SaveThumbnail.cropScale}, which is what a save triggered
+   * from somewhere with no list to draw into gets.
+   * @param {number} height The height in pixels the picture will be drawn at.
+   */
+  static requestSize(height)
+  {
+    SaveThumbnail.#requestedHeight = height;
+  }
+
+  /**
    * How much of the source's height the crop takes.
    *
    * Half, which reads as a two-times zoom on wherever the player was standing. A full-screen crop would
@@ -41,14 +77,19 @@ class SaveThumbnail
   static cropScale = 0.5;
 
   /**
-   * How hard the JPEG is compressed.
+   * The format the picture is stored in.
    *
-   * JPEG over PNG deliberately: roughly 8-15KB against 40-90KB for a map render, and indistinguishable
-   * at the size a row draws it. Save size is explicitly not a goal of this format, but the load menu
-   * reads one of these per row every time it opens, so cheap is still better than not.
-   * @type {number}
+   * PNG rather than JPEG, and the content is why. JPEG's transform is built for photographs, where
+   * neighbouring pixels mostly resemble one another; tile art is the opposite, all hard boundaries
+   * between flat colours, and it is exactly those boundaries JPEG spends its error budget on. Every
+   * tile edge in a map picks up a halo, and no quality setting removes them so much as makes them
+   * smaller in exchange for the size advantage that was the only reason to be there.
+   *
+   * PNG is lossless, so the stored picture is precisely what was on the screen. It costs perhaps five
+   * times the bytes, which against a format that already declares size a non-goal is nothing.
+   * @type {string}
    */
-  static quality = 0.7;
+  static format = 'image/png';
 
   /**
    * The aspect the crop and the stored image both hold to.
@@ -99,8 +140,14 @@ class SaveThumbnail
    */
   static cropRect(centerX, centerY, sourceWidth, sourceHeight)
   {
-    // start from the share of the source's height being kept, never asking for more than exists.
-    const requestedHeight = Math.min(sourceHeight, Math.round(sourceHeight * SaveThumbnail.cropScale));
+    // start from the share of the source's height being kept, never asking for more than exists. a
+    // consumer that has said what size it draws at wins outright, because a crop that measures exactly
+    // what will be drawn is never resampled by anybody - see `requestSize`.
+    const preferredHeight = SaveThumbnail.requestedHeight() === 0
+      ? Math.round(sourceHeight * SaveThumbnail.cropScale)
+      : SaveThumbnail.requestedHeight();
+
+    const requestedHeight = Math.min(sourceHeight, preferredHeight);
 
     // the width that height implies, likewise capped at what the source can supply - which is what
     // bites on a source narrower than 16:9.
@@ -155,7 +202,7 @@ class SaveThumbnail
     canvas.getContext('2d')
       .drawImage(source.canvas, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 
-    return canvas.toDataURL('image/jpeg', SaveThumbnail.quality);
+    return canvas.toDataURL('image/png');
   }
 }
 

@@ -26,6 +26,10 @@ describe('save thumbnail (direct src import)', () =>
   beforeEach(() =>
   {
     globalThis.SceneManager = { backgroundBitmap: () => null };
+
+    // the requested size is a static, so a test that sets it would otherwise decide the answer for
+    // every test after it in this file. Cleared back to "nobody has said" before each one.
+    SaveThumbnail.requestSize(0);
   });
 
   //region cropping
@@ -39,6 +43,33 @@ describe('save thumbnail (direct src import)', () =>
 
       // Assert
       expect(sh).toBe(540);
+    });
+
+    it('takes exactly the height a display has asked for, so nothing rescales it', () =>
+    {
+      // Arrange
+      SaveThumbnail.requestSize(414);
+
+      // Act
+      const { sw, sh } = SaveThumbnail.cropRect(960, 540, 1920, 1080);
+
+      // Assert- cropping precisely what will be drawn is the whole point: the file is then a lossless
+      // slice of the screen and the row draws it one pixel for one, with no resampling either way.
+      expect(sh).toBe(414);
+      expect(sw).toBe(736);
+    });
+
+    it('still clamps a requested size larger than the capture itself', () =>
+    {
+      // Arrange
+      SaveThumbnail.requestSize(2000);
+
+      // Act
+      const { sh } = SaveThumbnail.cropRect(960, 540, 1920, 1080);
+
+      // Assert- asking for more than exists cannot be honoured, and stretching to cover the shortfall
+      // would be the resampling this exists to avoid.
+      expect(sh).toBe(1080);
     });
 
     it('holds the crop to the stored aspect', () =>

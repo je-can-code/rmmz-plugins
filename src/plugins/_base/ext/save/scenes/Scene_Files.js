@@ -3,6 +3,7 @@ import Window_FilesCommand from './../windows/Window_FilesCommand.js';
 import Window_FilesList from './../windows/Window_FilesList.js';
 import Window_FilesConfirm from './../windows/Window_FilesConfirm.js';
 import SaveFileEntryMode from './../core/SaveFileEntryMode.js';
+import SaveThumbnail from './../core/SaveThumbnail.js';
 
 /**
  * One scene for saving, loading, deleting and rewinding.
@@ -284,6 +285,12 @@ class Scene_Files
     // the list is visible from the outset but never focused until a command is chosen.
     window.deactivate();
     window.deselect();
+
+    // tell the capture how large a picture this list will actually draw, so a save taken from here
+    // crops exactly that many pixels and nothing rescales it in either direction. The window is the
+    // only thing that knows - the size falls out of the screen size, the help window and the control
+    // legend, and having the capture work that chain out a second time would be a copy that drifts.
+    SaveThumbnail.requestSize(window.thumbnailHeight());
 
     // update the tracker with the new window.
     this.setListWindow(window);

@@ -69,7 +69,7 @@ class SaveFileSystem
    * rollback. Losing a picture must never cost somebody a save.
    * @type {string}
    */
-  static thumbnailFileName = 'snapshot.jpg';
+  static thumbnailFileName = 'snapshot.png';
 
   /**
    * How many generations a slot keeps before the oldest are pruned.
