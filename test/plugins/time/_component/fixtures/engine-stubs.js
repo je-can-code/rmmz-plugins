@@ -34,6 +34,15 @@ export function installTimeEngineStubs(sandbox)
 
   sandbox.$gameScreen = {
     startTint: noop,
+
+    // the tone the screen is heading toward, which is what tells the clock whether a tint on screen
+    // is one of its own. a fresh screen is heading nowhere, which is neutral.
+    _toneTarget: [ 0, 0, 0, 0 ],
+
+    toneTarget()
+    {
+      return this._toneTarget;
+    },
   };
 
   sandbox.$dataMap = {

@@ -883,8 +883,10 @@ describe('Game_Time', () =>
       J.TIME.Metadata.ChangeToneByTime = true;
       t.unlockTone();
       t.setHours(3);
-      // arrive carrying the deep night tone the outdoor map left behind.
+      // arrive carrying the deep night tone the outdoor map left behind, with the screen still
+      // heading toward that same tone - which is what makes it the clock's own to clear.
       t.setCurrentTone([ -100, -100, -30, 100 ]);
+      $gameScreen._toneTarget = [ -100, -100, -30, 100 ];
       $dataMap = { meta: { noToneChange: true } };
 
       // Act
@@ -893,6 +895,28 @@ describe('Game_Time', () =>
       // Assert
       expect(t.getCurrentTone()).toEqual([ 0, 0, 0, 0 ]);
       expect(t.getNeedsToneChange()).toBe(true);
+    });
+
+    it('leaves a tint it did not apply alone, rather than neutralizing over the top of it', () =>
+    {
+      // Arrange
+      const t = new Game_Time();
+      J.TIME.Metadata.ChangeToneByTime = true;
+      t.unlockTone();
+      t.setHours(3);
+      t.setCurrentTone([ -100, -100, -30, 100 ]);
+      // an event has deliberately tinted this interior something the clock never asked for.
+      $gameScreen._toneTarget = [ 34, -34, -34, 0 ];
+      $dataMap = { meta: { noToneChange: true } };
+
+      // Act
+      t.updateCurrentTone();
+
+      // Assert- the bookkeeping still moves to neutral, so that leaving this map reads as a change
+      // and re-tints correctly. Only the visible transition is withheld, because the tint is not the
+      // clock's to erase - and without this it was erased again on every load, forever.
+      expect(t.getCurrentTone()).toEqual([ 0, 0, 0, 0 ]);
+      expect(t.getNeedsToneChange()).toBe(false);
     });
   });
 

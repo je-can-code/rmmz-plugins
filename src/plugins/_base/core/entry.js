@@ -60,6 +60,7 @@ import './objects/Game_Interpreter.js';
 import './objects/Game_Map.js';
 import './objects/Game_Party.js';
 import './objects/Game_Player.js';
+import './objects/Game_Screen.js';
 import './objects/Game_System.js';
 import './objects/Game_Temp.js';
 import './objects/Game_Timer.js';
