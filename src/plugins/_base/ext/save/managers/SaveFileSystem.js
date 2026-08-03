@@ -62,6 +62,16 @@ class SaveFileSystem
   static manifestFileName = 'manifest.json';
 
   /**
+   * The picture taken of the map at the moment a generation was written.
+   *
+   * Deliberately absent from a manifest's `sections`: that array is the torn-write completeness check,
+   * so naming the picture there would let a missing image fail an otherwise perfect generation into a
+   * rollback. Losing a picture must never cost somebody a save.
+   * @type {string}
+   */
+  static thumbnailFileName = 'snapshot.jpg';
+
+  /**
    * How many generations a slot keeps before the oldest are pruned.
    *
    * Three is the default because the failure mode of a bad save should be "you lost the last save",
@@ -346,9 +356,10 @@ class SaveFileSystem
    * @param {string} slotName The slot's name.
    * @param {Object<string, object>} sections The plain data of each section, keyed by file name.
    * @param {SaveManifest} manifest The manifest describing them.
+   * @param {string=} thumbnail The picture of where the player was; defaults to none.
    * @returns {Promise<void>} Resolves once the generation is live.
    */
-  static writeSlot(slotName, sections, manifest)
+  static writeSlot(slotName, sections, manifest, thumbnail = String.empty)
   {
     // the whole pipeline is Promise-shaped because StorageManager's contract is, but the work is
     // synchronous fs calls: this project bans async/await, and a save must not interleave anyway.
@@ -356,7 +367,7 @@ class SaveFileSystem
     {
       try
       {
-        this.writeGeneration(slotName, sections, manifest);
+        this.writeGeneration(slotName, sections, manifest, thumbnail);
 
         resolve();
       }
@@ -369,11 +380,16 @@ class SaveFileSystem
 
   /**
    * Performs the whole write sequence for one generation.
+   *
+   * The picture is passed in rather than taken here, and it has to be: the generation's directory name
+   * is worked out inside this method, so nothing upstream knows where to put a file. Taking it here
+   * instead would mean reaching into the running scene from the filesystem layer.
    * @param {string} slotName The slot's name.
    * @param {Object<string, object>} sections The plain data of each section, keyed by file name.
    * @param {SaveManifest} manifest The manifest describing them.
+   * @param {string=} thumbnail The picture of where the player was; defaults to none.
    */
-  static writeGeneration(slotName, sections, manifest)
+  static writeGeneration(slotName, sections, manifest, thumbnail = String.empty)
   {
     // remembered before anything moves, because it is the only way to tell an orphan from a keeper
     // afterwards: once the pointer swings forward, a directory left by a crashed write is
@@ -392,6 +408,14 @@ class SaveFileSystem
       {
         this.writeJson(this.sectionPath(slotName, generationName, sectionName), sections[sectionName]);
       });
+
+    // the picture goes in with the sections rather than after the manifest, so a crash mid-save
+    // orphans it along with everything else in the directory. It is still deliberately absent from the
+    // manifest's `sections`, so a *missing* one can never fail an otherwise complete generation.
+    if (thumbnail !== String.empty)
+    {
+      this.writeThumbnail(slotName, generationName, thumbnail);
+    }
 
     this.writeJson(`${generationDirectory}${this.manifestFileName}`, manifest);
 
@@ -659,6 +683,35 @@ class SaveFileSystem
   }
 
   /**
+   * Reads one named generation and nothing else.
+   *
+   * This is the front door {@link readSlot} deliberately is not. `readSlot` always takes the newest
+   * generation that works, because a player asking to load a slot wants the best save in it. A player
+   * stepping back through a slot's history has already looked at a list and pointed at one row, and
+   * silently handing them a different generation is precisely the failure the whole scene exists to
+   * make visible - "reload to five minutes ago" landing somewhere else is worse than not landing at
+   * all. **There is no fallback here, on purpose.**
+   * @param {string} slotName The slot's name.
+   * @param {string} generationName The generation to read, ex: `gen-0007`.
+   * @param {Function} buildFromSections Receives `(sections, manifest)` and returns the loaded value.
+   * @returns {Promise<*>} Whatever `buildFromSections` returned, or a rejection carrying why not.
+   */
+  static readGenerationAt(slotName, generationName, buildFromSections)
+  {
+    return new Promise((resolve, reject) =>
+    {
+      try
+      {
+        resolve(this.readGeneration(slotName, generationName, buildFromSections));
+      }
+      catch (error)
+      {
+        reject(error);
+      }
+    });
+  }
+
+  /**
    * Reads and verifies one generation, then hands its sections to the caller.
    * @param {string} slotName The slot's name.
    * @param {string} generationName The generation to read.
@@ -729,28 +782,71 @@ class SaveFileSystem
    */
   static readManifest(slotName)
   {
-    const order = this.loadOrder(slotName);
+    return this.readableGeneration(slotName).manifest;
+  }
 
+  /**
+   * Finds the newest generation of a slot that describes itself, and hands back both halves.
+   *
+   * The name matters as much as the manifest to anything that reads more than one file per
+   * generation- a picture beside a save, say. Answering with only the manifest would leave the caller
+   * guessing which generation it came from, and the obvious guess (the pointer's) is wrong in exactly
+   * the case this walk exists for: a slot whose newest write was torn describes itself with an older
+   * generation, and everything else about that row has to come from the same one.
+   * @param {string} slotName The slot's name.
+   * @returns {{generationName: string, manifest: object|null}} The generation and its manifest, or
+   * empty and null when the slot has nothing readable.
+   */
+  static readableGeneration(slotName)
+  {
     // an empty slot is the normal case here - the load menu asks about every slot, every time.
-    let manifest = null;
+    let found = {
+      generationName: String.empty,
+      manifest: null,
+    };
 
-    order.some(generationName =>
-    {
-      try
+    this.loadOrder(slotName)
+      .some(generationName =>
       {
-        manifest = this.readManifestAt(slotName, generationName);
+        const manifest = this.readManifestQuietly(slotName, generationName);
 
-        return true;
-      }
-      catch
-      {
         // a generation whose manifest will not read is one the loader would step over too, so the
         // menu steps over it as well rather than showing the slot as broken.
-        return false;
-      }
-    });
+        if (manifest === null) return false;
 
-    return manifest;
+        found = {
+          generationName,
+          manifest,
+        };
+
+        return true;
+      });
+
+    return found;
+  }
+
+  /**
+   * Reads one generation's manifest without letting an unreadable one take a listing down.
+   *
+   * {@link readManifestAt} throws for a manifest that is missing, malformed, or written at a schema
+   * this build cannot reach, and all three are real states for a generation a menu is asked to show-
+   * `loadOrder` deliberately leaves in a generation that cannot say whose it is, so it can fail on its
+   * own terms rather than vanishing from the history. A row that cannot describe itself should draw as
+   * empty; it should not stop the other rows from drawing.
+   * @param {string} slotName The slot's name.
+   * @param {string} generationName The generation to read the manifest of.
+   * @returns {object|null} The manifest as plain data, or null when it cannot be read.
+   */
+  static readManifestQuietly(slotName, generationName)
+  {
+    try
+    {
+      return this.readManifestAt(slotName, generationName);
+    }
+    catch
+    {
+      return null;
+    }
   }
 
   /**
@@ -838,6 +934,57 @@ class SaveFileSystem
     });
   }
   //endregion documents
+
+  //region thumbnails
+  /**
+   * Gets the path of the picture belonging to one generation.
+   *
+   * The name is fixed rather than recorded anywhere, because there is exactly one per generation and a
+   * field naming it could only ever disagree with the file it names.
+   * @param {string} slotName The slot's name.
+   * @param {string} generationName The generation's directory name.
+   * @returns {string}
+   */
+  static thumbnailPath(slotName, generationName)
+  {
+    return `${this.generationDirectory(slotName, generationName)}${this.thumbnailFileName}`;
+  }
+
+  /**
+   * Writes the picture taken at the moment a generation was saved.
+   *
+   * The data URL is decoded to real bytes first, so what lands on disk is a genuine JPEG that opens in
+   * any image viewer. Writing the `data:image/jpeg;base64,...` text under a `.jpg` name would produce
+   * a file that lies about what it is, which is precisely the opposite of the premise this save format
+   * was built on. No new filesystem primitive is needed for it: `writeSynced` is contents-agnostic and
+   * Node's `writeSync` is overloaded for a string or a Buffer.
+   * @param {string} slotName The slot's name.
+   * @param {string} generationName The generation's directory name.
+   * @param {string} dataUrl The picture, as `canvas.toDataURL` produced it.
+   */
+  static writeThumbnail(slotName, generationName, dataUrl)
+  {
+    const bytes = Buffer.from(dataUrl.slice(dataUrl.indexOf(',') + 1), 'base64');
+
+    this.writeSynced(this.thumbnailPath(slotName, generationName), bytes);
+  }
+
+  /**
+   * Determines whether a generation has a picture beside it.
+   *
+   * There is no reader to pair with this. `Bitmap.load` assigns the url straight onto an `<img>`, and
+   * an `<img>` opens a local path directly, so a row that wants the picture asks for the path. Absent
+   * simply means "no image" - a lost picture must never cost somebody a save, which is also why the
+   * manifest's `sections` array never names it.
+   * @param {string} slotName The slot's name.
+   * @param {string} generationName The generation's directory name.
+   * @returns {boolean}
+   */
+  static hasThumbnail(slotName, generationName)
+  {
+    return StorageManager.fsExists(this.thumbnailPath(slotName, generationName));
+  }
+  //endregion thumbnails
 
   /**
    * Deletes a slot and everything in it.

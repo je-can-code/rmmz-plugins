@@ -74,6 +74,7 @@ import './objects/Game_Party.js';
 import './objects/Game_Player.js';
 import './objects/Game_Unit.js';
 import './scenes/Scene_Boot.js';
+import './scenes/Scene_Files.js';
 import './scenes/Scene_Load.js';
 import './scenes/Scene_Map.js';
 import './sprites/Sprite_Animation.js';

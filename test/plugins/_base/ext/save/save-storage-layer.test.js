@@ -498,6 +498,193 @@ describe('save storage layer (direct src import)', () =>
     });
   });
 
+  describe('SaveFileSystem.readableGeneration()', () =>
+  {
+    it('names the generation the manifest came from', async () =>
+    {
+      // Arrange
+      await writeGeneration('file1', { 'world.json': { map: 1 } });
+      await writeGeneration('file1', { 'world.json': { map: 2 } });
+
+      // Act
+      const { generationName, manifest } = SaveFileSystem.readableGeneration('file1');
+
+      // Assert
+      expect(generationName).toBe('gen-0002');
+      expect(manifest.display).toEqual({ title: 'test' });
+    });
+
+    it('names the older generation when the newest one will not read', async () =>
+    {
+      // Arrange
+      await writeGeneration('file1', { 'world.json': { map: 1 } });
+      await writeGeneration('file1', { 'world.json': { map: 2 } });
+      fake.files.set('save/file1/gen-0002/manifest.json', 'nope');
+
+      // Act
+      const { generationName } = SaveFileSystem.readableGeneration('file1');
+
+      // Assert
+      expect(generationName).toBe('gen-0001');
+    });
+
+    it('answers with nothing at all for a slot that holds nothing', () =>
+    {
+      // Arrange
+      // Act
+      const found = SaveFileSystem.readableGeneration('file4');
+
+      // Assert
+      expect(found).toEqual({
+        generationName: '',
+        manifest: null,
+      });
+    });
+  });
+
+  describe('SaveFileSystem.readManifestQuietly()', () =>
+  {
+    it('answers with the manifest when it reads', async () =>
+    {
+      // Arrange
+      await writeGeneration('file1');
+
+      // Act
+      const manifest = SaveFileSystem.readManifestQuietly('file1', 'gen-0001');
+
+      // Assert
+      expect(manifest.playtimeFrames).toBe(100);
+    });
+
+    it('answers with null rather than throwing when it does not', async () =>
+    {
+      // Arrange
+      await writeGeneration('file1');
+      fake.files.set('save/file1/gen-0001/manifest.json', 'not json');
+
+      // Act
+      const manifest = SaveFileSystem.readManifestQuietly('file1', 'gen-0001');
+
+      // Assert
+      expect(manifest).toBe(null);
+    });
+  });
+
+  describe('SaveFileSystem.readGenerationAt()', () =>
+  {
+    it('reads the exact generation asked for rather than the newest one', async () =>
+    {
+      // Arrange
+      await writeGeneration('file1', { 'world.json': { map: 1 } });
+      await writeGeneration('file1', { 'world.json': { map: 2 } });
+
+      // Act
+      const sections = await SaveFileSystem.readGenerationAt('file1', 'gen-0001', read => read);
+
+      // Assert
+      expect(sections['world.json']).toEqual({ map: 1 });
+    });
+
+    it('rejects rather than falling back when the generation asked for is torn', async () =>
+    {
+      // Arrange
+      await writeGeneration('file1', { 'world.json': { map: 1 } });
+      await writeGeneration('file1', { 'world.json': { map: 2 } });
+      fake.files.delete('save/file1/gen-0002/world.json');
+
+      // Act
+      const attempt = SaveFileSystem.readGenerationAt('file1', 'gen-0002', read => read);
+
+      // Assert
+      await expect(attempt).rejects.toThrow();
+    });
+  });
+
+  describe('SaveFileSystem thumbnails', () =>
+  {
+    // a one-pixel JPEG is real enough to prove the base64 was decoded rather than stored as text.
+    const dataUrl = 'data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAg=';
+
+    it('writes real bytes rather than the data url text', () =>
+    {
+      // Arrange
+      // Act
+      SaveFileSystem.writeThumbnail('file1', 'gen-0001', dataUrl);
+
+      // Assert
+      const written = fake.files.get('save/file1/gen-0001/snapshot.jpg');
+      expect(Buffer.isBuffer(written)).toBe(true);
+
+      // the JPEG magic number, which the data url text would not have started with.
+      expect(written[0]).toBe(0xFF);
+      expect(written[1]).toBe(0xD8);
+    });
+
+    it('reports a picture that is there', () =>
+    {
+      // Arrange
+      SaveFileSystem.writeThumbnail('file1', 'gen-0001', dataUrl);
+
+      // Act
+      const has = SaveFileSystem.hasThumbnail('file1', 'gen-0001');
+
+      // Assert
+      expect(has).toBe(true);
+    });
+
+    it('reports a picture that is not', () =>
+    {
+      // Arrange
+      // Act
+      const has = SaveFileSystem.hasThumbnail('file1', 'gen-0001');
+
+      // Assert
+      expect(has).toBe(false);
+    });
+
+    it('writes the picture beside a generation without naming it in the manifest', async () =>
+    {
+      // Arrange
+      const sections = { 'world.json': { map: 1 } };
+
+      // Act
+      await SaveFileSystem.writeSlot('file1', sections, manifestFor(sections), dataUrl);
+
+      // Assert
+      expect(fake.files.has('save/file1/gen-0001/snapshot.jpg')).toBe(true);
+
+      // naming it in `sections` would let a lost picture fail the whole generation into a rollback.
+      const manifest = SaveFileSystem.readManifest('file1');
+      expect(manifest.sections).toEqual([ 'world.json' ]);
+    });
+
+    it('writes no picture at all when the save had none to give', async () =>
+    {
+      // Arrange
+      const sections = { 'world.json': { map: 1 } };
+
+      // Act
+      await SaveFileSystem.writeSlot('file1', sections, manifestFor(sections), '');
+
+      // Assert
+      expect(fake.files.has('save/file1/gen-0001/snapshot.jpg')).toBe(false);
+    });
+
+    it('loads a generation whose picture is missing, since a picture is never part of the set', async () =>
+    {
+      // Arrange
+      const sections = { 'world.json': { map: 1 } };
+      await SaveFileSystem.writeSlot('file1', sections, manifestFor(sections), dataUrl);
+      fake.files.delete('save/file1/gen-0001/snapshot.jpg');
+
+      // Act
+      const read = await SaveFileSystem.readSlot('file1', loaded => loaded);
+
+      // Assert
+      expect(read['world.json']).toEqual({ map: 1 });
+    });
+  });
+
   describe('SaveFileSystem.slotExists()', () =>
   {
     it('is true for a slot whose pointer names a generation that is there', async () =>

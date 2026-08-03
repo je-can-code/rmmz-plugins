@@ -200,7 +200,11 @@ describe('save and load through the real engine objects', () =>
 
     globalThis.Graphics = { frameCount: 91240 };
     globalThis.AudioManager = { saveBgm: () => ({}), saveBgs: () => ({}) };
-    globalThis.SceneManager = {};
+    // `StorageManager.saveSlot` photographs the map through this on every save. The engine seeds it to
+    // null until the first non-battle scene exit, and a headless save has never had one - which is the
+    // state a real game is in when saving from a boot-time event, and the one the picture code treats
+    // as "no image" rather than as a failure.
+    globalThis.SceneManager = { backgroundBitmap: () => null };
 
     // `Game_Vehicle.loadSystemSettings` reaches this through `setImage` during construction. Nothing
     // here renders, so a no-op reserve is the whole of what it needs.
@@ -713,5 +717,73 @@ describe('save and load through the real engine objects', () =>
     });
   });
   //endregion recovery
+
+  //region rewind
+  describe('rewinding to an older generation', () =>
+  {
+    /**
+     * The rewind half of `DataManager.loadGeneration`: a fresh set of objects, then the one generation
+     * the player pointed at decoded over them.
+     * @param {number} savefileId The slot to read from.
+     * @param {string} generationName The generation to read.
+     * @returns {Promise<void>}
+     */
+    const loadGeneration = (savefileId, generationName) =>
+    {
+      createGameObjects();
+
+      return StorageManager.loadGeneration(`file${savefileId}`, generationName)
+        .then(contents => extractSaveContents(contents));
+    };
+
+    it('loads the exact generation asked for rather than the newest one that works', async () =>
+    {
+      // Arrange
+      globalThis.$gameParty.gainGold(100);
+      await saveGame(1);
+      globalThis.$gameParty.gainGold(400);
+      await saveGame(1);
+
+      // Act
+      await loadGeneration(1, 'gen-0001');
+
+      // Assert
+      expect(globalThis.$gameParty.gold()).toBe(100);
+    });
+
+    it('leaves the generation rewound away from on disk, so rewinding is itself undoable', async () =>
+    {
+      // Arrange
+      globalThis.$gameParty.gainGold(100);
+      await saveGame(1);
+      globalThis.$gameParty.gainGold(400);
+      await saveGame(1);
+
+      // Act
+      await loadGeneration(1, 'gen-0001');
+
+      // Assert
+      expect(fake.files.has('save/file1/gen-0002/party.json')).toBe(true);
+      expect(fake.files.get('save/file1/current')
+        .startsWith('gen-0002')).toBe(true);
+    });
+
+    it('refuses rather than silently handing back a different generation when the one asked for is torn',
+      async () =>
+      {
+        // Arrange
+        // the whole point of the scene is that the player looked at a list and pointed at one row.
+        await saveGame(1);
+        await saveGame(1);
+        fake.files.delete('save/file1/gen-0001/party.json');
+
+        // Act
+        const attempt = StorageManager.loadGeneration('file1', 'gen-0001');
+
+        // Assert
+        await expect(attempt).rejects.toThrow();
+      });
+  });
+  //endregion rewind
 });
 //endregion plugins/_base/_component/save-load-real-engine.test.js

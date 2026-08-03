@@ -40,6 +40,7 @@ const RUNTIME_GLOBALS = [
   'nw', // nw.js desktop shell RPG Maker MZ deploys games with by default.
   'require', // nw.js/Node interop, intentionally used in abs/ext/poses for on-disk asset checks.
   'process', // same nw.js interop- see abs/ext/poses/_metadata/initialization.js.
+  'Buffer', // same nw.js interop- decoding a save thumbnail's base64 into the bytes that hit disk.
   '__PLUGIN_NAME__', // vite `define` build-time string substitution, not a real identifier at runtime.
   '__PLUGIN_VERSION__', // see vite-plugin_rmmz-header-prepender.js- same substitution mechanism.
 ];

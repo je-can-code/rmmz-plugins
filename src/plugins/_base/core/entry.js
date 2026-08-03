@@ -69,6 +69,7 @@ import './scenes/Scene_Base.js';
 import './scenes/Scene_Equip.js';
 import './scenes/Scene_Map.js';
 import './scenes/Scene_Menu.js';
+import './scenes/Scene_Title.js';
 import './scenes/Scene_MenuBase.js';
 import './scenes/Scene_Skill.js';
 import './scenes/Scene_Boot.js';

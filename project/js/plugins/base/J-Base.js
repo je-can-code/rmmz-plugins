@@ -11060,6 +11060,23 @@ Scene_Menu.prototype.setCommandWindow = function(newCommandWindow) {
 };
 
 //#endregion
+//#region src/plugins/_base/core/scenes/Scene_Title.js
+/**
+* Gets the window listing the title screen's commands.
+* @returns {Window_TitleCommand} The commandWindow.
+*/
+Scene_Title.prototype.commandWindow = function() {
+	return this._commandWindow;
+};
+/**
+* Sets the window listing the title screen's commands.
+* @param {Window_TitleCommand} newCommandWindow The new commandWindow.
+*/
+Scene_Title.prototype.setCommandWindow = function(newCommandWindow) {
+	this._commandWindow = newCommandWindow;
+};
+
+//#endregion
 //#region src/plugins/_base/core/scenes/Scene_MenuBase.js
 /**
 * Gets the sprite rendering this scene's blurred background.

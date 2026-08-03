@@ -4,6 +4,7 @@ import SaveSectionRouter from './../core/SaveSectionRouter.js';
 import SaveManifest from './../core/SaveManifest.js';
 import SaveEncoder from './../core/SaveEncoder.js';
 import SaveDecoder from './../core/SaveDecoder.js';
+import SaveThumbnail from './../core/SaveThumbnail.js';
 
 /**
  * The save pipeline, replaced end to end.
@@ -234,7 +235,12 @@ StorageManager.saveSlot = function(saveName, contents)
     Graphics.frameCount,
     $gameSystem.playthroughId());
 
-  return SaveFileSystem.writeSlot(saveName, sections, SaveEncoder.encode(manifest, '$.manifest'));
+  // taken here and now, synchronously, rather than anywhere inside the promise below: the capture it
+  // reads from is destroyed and replaced by the next `snapForBackground()`, so the only safe moment to
+  // look at it is the moment the save is asked for.
+  const thumbnail = SaveThumbnail.capture();
+
+  return SaveFileSystem.writeSlot(saveName, sections, SaveEncoder.encode(manifest, '$.manifest'), thumbnail);
 };
 
 /**
@@ -247,6 +253,22 @@ StorageManager.loadSlot = function(saveName)
   // the router runs inside the read rather than after it, so a generation that parses as JSON but
   // fails to decode falls back to the previous one exactly like a truncated one does.
   return SaveFileSystem.readSlot(saveName, sections => SaveSectionRouter.fromSections(sections));
+};
+
+/**
+ * Reads one specific generation of one slot, with no fallback to a newer one.
+ *
+ * Mirrors {@link StorageManager.loadSlot} exactly, save for which generation it opens - the router
+ * still runs inside the read, so the sections arrive as an object graph rather than as plain data. The
+ * absent fallback is the point: this exists for a player who looked at a list of their own history and
+ * pointed at one row, and handing them a different one would make the list a lie.
+ * @param {string} saveName The slot's name.
+ * @param {string} generationName The generation to read, ex: `gen-0007`.
+ * @returns {Promise<object>} The save contents, ready for `DataManager.extractSaveContents`.
+ */
+StorageManager.loadGeneration = function(saveName, generationName)
+{
+  return SaveFileSystem.readGenerationAt(saveName, generationName, sections => SaveSectionRouter.fromSections(sections));
 };
 
 /**

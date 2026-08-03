@@ -29,4 +29,5 @@ J.BASE.EXT.SAVE.Aliased.ConfigManager = new Map();
 J.BASE.EXT.SAVE.Aliased.DataManager = new Map();
 J.BASE.EXT.SAVE.Aliased.Game_System = new Map();
 J.BASE.EXT.SAVE.Aliased.Scene_Boot = new Map();
+J.BASE.EXT.SAVE.Aliased.Scene_Map = new Map();
 //endregion initialization
