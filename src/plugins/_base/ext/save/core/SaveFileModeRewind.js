@@ -110,7 +110,17 @@ class SaveFileModeRewind
    */
   confirmText(_entry)
   {
-    return 'Step back to this save? Nothing is deleted, and you can step forward again.';
+    return 'Step back to this save?';
+  }
+
+  /**
+   * Implements {@link SaveFileMode.confirmDetail}.<br/>
+   * @param {SaveFileEntry} _entry The row being asked about.
+   * @returns {string}
+   */
+  confirmDetail(_entry)
+  {
+    return 'Nothing is deleted and you can step forward again.';
   }
 
   /**

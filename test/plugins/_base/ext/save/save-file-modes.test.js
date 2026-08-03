@@ -376,11 +376,13 @@ describe('save file modes (direct src import)', () =>
       const mode = new SaveFileModeDelete();
 
       // Act
-      const text = mode.confirmText(filledEntry(1));
+      const question = mode.confirmText(filledEntry(1));
+      const detail = mode.confirmDetail(filledEntry(1));
 
-      // Assert
-      expect(text).toContain('Permanently delete');
-      expect(text).toContain('cannot be undone');
+      // Assert- the warning lives on the second line rather than trailing the question, because
+      // `drawTextEx` does not wrap and one sentence carrying both ran off the edge of the window.
+      expect(question).toContain('Permanently delete');
+      expect(detail).toContain('cannot be undone');
     });
 
     it('says nothing is deleted when rewinding, since the word invites the opposite', () =>
@@ -389,10 +391,23 @@ describe('save file modes (direct src import)', () =>
       const mode = new SaveFileModeRewind();
 
       // Act
-      const text = mode.confirmText(filledEntry(1));
+      const detail = mode.confirmDetail(filledEntry(1));
 
       // Assert
-      expect(text).toContain('Nothing is deleted');
+      expect(detail).toContain('Nothing is deleted');
+    });
+
+    it('leaves the second line empty for a command that needs no warning', () =>
+    {
+      // Arrange
+      const mode = new SaveFileModeSave();
+
+      // Act
+      const detail = mode.confirmDetail(emptyEntry(2));
+
+      // Assert- saving to an empty slot costs nothing, and inventing a reassurance to fill the line
+      // would be noise. The window reserves the space either way so the answers do not shift.
+      expect(detail).toBe('');
     });
   });
 

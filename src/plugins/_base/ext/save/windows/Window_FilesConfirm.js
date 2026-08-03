@@ -24,6 +24,12 @@ class Window_FilesConfirm
      * @type {string}
      */
     this._prompt = String.empty;
+
+    /**
+     * What answering yes will cost, drawn beneath the question.
+     * @type {string}
+     */
+    this._detail = String.empty;
   }
 
   /**
@@ -36,14 +42,41 @@ class Window_FilesConfirm
   }
 
   /**
-   * Sets the question being asked and redraws around it.
-   * @param {string} prompt The question to ask.
+   * Gets what answering yes will cost.
+   * @returns {string}
    */
-  setPrompt(prompt)
+  detail()
+  {
+    return this._detail;
+  }
+
+  /**
+   * Sets the question being asked and redraws around it.
+   *
+   * The two arrive together because they are drawn together, and setting one without the other would
+   * leave the window briefly describing a different command than the one it is asking about.
+   * @param {string} prompt The question to ask.
+   * @param {string} detail What answering yes will cost, or an empty string when nothing needs saying.
+   */
+  setPrompt(prompt, detail)
   {
     this._prompt = prompt;
 
+    this.setDetail(detail);
+
     this.refresh();
+  }
+
+  /**
+   * Sets what answering yes will cost.
+   *
+   * Deliberately does not redraw: it is only ever written as half of a question, and {@link #setPrompt}
+   * refreshes once both halves are in place rather than twice while they disagree.
+   * @param {string} detail What answering yes will cost.
+   */
+  setDetail(detail)
+  {
+    this._detail = detail;
   }
 
   /**
@@ -114,6 +147,12 @@ class Window_FilesConfirm
     if (this.prompt() === String.empty) return;
 
     this.drawTextEx(this.prompt(), 0, 0, this.innerWidth);
+
+    // the second line is optional, and the space above the answers is reserved for it either way, so
+    // a command that needs no qualification does not shuffle its answers upward.
+    if (this.detail() === String.empty) return;
+
+    this.drawTextEx(this.detail(), 0, this.lineHeight(), this.innerWidth);
   }
 }
 

@@ -51,7 +51,17 @@ class SaveFileModeDelete
    */
   confirmText(entry)
   {
-    return `Permanently delete slot ${entry.savefileId()}? This cannot be undone.`;
+    return `Permanently delete slot ${entry.savefileId()}?`;
+  }
+
+  /**
+   * Implements {@link SaveFileMode.confirmDetail}.<br/>
+   * @param {SaveFileEntry} _entry The row being asked about.
+   * @returns {string}
+   */
+  confirmDetail(_entry)
+  {
+    return 'This cannot be undone.';
   }
 
   /**

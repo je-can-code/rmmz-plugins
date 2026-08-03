@@ -16,16 +16,19 @@
 class SaveThumbnail
 {
   /**
-   * The width the picture is stored at.
+   * The width of the aspect the crop holds to.
+   *
+   * This describes a *shape*, not a size. The picture is stored at whatever the crop actually measured
+   * rather than resampled to fixed dimensions - see {@link SaveThumbnail.encode}.
    * @type {number}
    */
-  static outputWidth = 640;
+  static aspectWidth = 16;
 
   /**
-   * The height the picture is stored at, making the stored aspect 16:9.
+   * The height of the aspect the crop holds to.
    * @type {number}
    */
-  static outputHeight = 360;
+  static aspectHeight = 9;
 
   /**
    * How much of the source's height the crop takes.
@@ -53,7 +56,7 @@ class SaveThumbnail
    */
   static aspectRatio()
   {
-    return SaveThumbnail.outputWidth / SaveThumbnail.outputHeight;
+    return SaveThumbnail.aspectWidth / SaveThumbnail.aspectHeight;
   }
 
   /**
@@ -122,6 +125,16 @@ class SaveThumbnail
 
   /**
    * Copies the chosen region into a canvas of our own and encodes it.
+   *
+   * **Stored at exactly the size it was cropped at, deliberately.** Resampling to fixed dimensions here
+   * would resample the picture twice: once down to whatever number was chosen, and then back up by the
+   * row that draws it, which is wider than any number small enough to feel like a thumbnail. The first
+   * pass throws detail away and the second magnifies what survived, and the result is soft in a way no
+   * amount of JPEG quality recovers.
+   *
+   * Storing the crop untouched means the picture can never be the bottleneck: a row scaling it *down*
+   * stays sharp at any size, and the size it needs is a property of the window's layout and the screen
+   * resolution, neither of which this file can see.
    * @param {Bitmap} source The capture to draw from.
    * @param {number} sx The left edge of the region to copy.
    * @param {number} sy The top edge of the region to copy.
@@ -133,8 +146,8 @@ class SaveThumbnail
   {
     const canvas = document.createElement('canvas');
 
-    canvas.width = SaveThumbnail.outputWidth;
-    canvas.height = SaveThumbnail.outputHeight;
+    canvas.width = sw;
+    canvas.height = sh;
 
     // `Bitmap.canvas` lazily builds a 2D canvas backing the texture, which is what makes this readable
     // at all. Drawing into our own canvas rather than the source's is the whole of the "never draw

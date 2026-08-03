@@ -62,7 +62,17 @@ class SaveFileModeLoad
    */
   confirmText(entry)
   {
-    return `Load slot ${entry.savefileId()}? Anything since your last save will be lost.`;
+    return `Load slot ${entry.savefileId()}?`;
+  }
+
+  /**
+   * Implements {@link SaveFileMode.confirmDetail}.<br/>
+   * @param {SaveFileEntry} _entry The row being asked about.
+   * @returns {string}
+   */
+  confirmDetail(_entry)
+  {
+    return 'Anything since your last save will be lost.';
   }
 
   /**

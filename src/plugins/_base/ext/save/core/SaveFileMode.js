@@ -148,6 +148,23 @@ class SaveFileMode
   }
 
   /**
+   * The consequence of answering yes, on its own line beneath the question.
+   *
+   * Split from the question rather than trailing it in one sentence because `drawTextEx` does not
+   * wrap: a single sentence long enough to say both things runs off the edge of any window narrow
+   * enough to sit over a row without hiding it. They are two different things anyway - one is what is
+   * being asked, the other is what it costs - and a reader takes them faster on two lines.
+   *
+   * Empty for a command whose question needs no qualification.
+   * @param {SaveFileEntry} _entry The row being asked about.
+   * @returns {string}
+   */
+  confirmDetail(_entry)
+  {
+    return String.empty;
+  }
+
+  /**
    * Determines whether the confirmation window opens with the cursor on "no".
    *
    * Only for a command that cannot be taken back. Everywhere else, starting on "no" adds a keypress to

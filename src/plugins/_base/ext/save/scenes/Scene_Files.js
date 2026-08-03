@@ -369,7 +369,7 @@ class Scene_Files
    */
   confirmWidthRatio()
   {
-    return 0.8;
+    return 0.5;
   }
 
   /**
@@ -449,7 +449,7 @@ class Scene_Files
 
     const window = this.confirmWindow();
 
-    window.setPrompt(mode.confirmText(entry));
+    window.setPrompt(mode.confirmText(entry), mode.confirmDetail(entry));
 
     window.show();
     window.activate();

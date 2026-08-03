@@ -2130,15 +2130,18 @@ SerializableRegistry.register(Game_Vehicle, {
 */
 var SaveThumbnail = class SaveThumbnail {
 	/**
-	* The width the picture is stored at.
+	* The width of the aspect the crop holds to.
+	*
+	* This describes a *shape*, not a size. The picture is stored at whatever the crop actually measured
+	* rather than resampled to fixed dimensions - see {@link SaveThumbnail.encode}.
 	* @type {number}
 	*/
-	static outputWidth = 640;
+	static aspectWidth = 16;
 	/**
-	* The height the picture is stored at, making the stored aspect 16:9.
+	* The height of the aspect the crop holds to.
 	* @type {number}
 	*/
-	static outputHeight = 360;
+	static aspectHeight = 9;
 	/**
 	* How much of the source's height the crop takes.
 	*
@@ -2162,7 +2165,7 @@ var SaveThumbnail = class SaveThumbnail {
 	* @returns {number}
 	*/
 	static aspectRatio() {
-		return SaveThumbnail.outputWidth / SaveThumbnail.outputHeight;
+		return SaveThumbnail.aspectWidth / SaveThumbnail.aspectHeight;
 	}
 	/**
 	* Takes the picture for a save about to be written.
@@ -2204,6 +2207,16 @@ var SaveThumbnail = class SaveThumbnail {
 	}
 	/**
 	* Copies the chosen region into a canvas of our own and encodes it.
+	*
+	* **Stored at exactly the size it was cropped at, deliberately.** Resampling to fixed dimensions here
+	* would resample the picture twice: once down to whatever number was chosen, and then back up by the
+	* row that draws it, which is wider than any number small enough to feel like a thumbnail. The first
+	* pass throws detail away and the second magnifies what survived, and the result is soft in a way no
+	* amount of JPEG quality recovers.
+	*
+	* Storing the crop untouched means the picture can never be the bottleneck: a row scaling it *down*
+	* stays sharp at any size, and the size it needs is a property of the window's layout and the screen
+	* resolution, neither of which this file can see.
 	* @param {Bitmap} source The capture to draw from.
 	* @param {number} sx The left edge of the region to copy.
 	* @param {number} sy The top edge of the region to copy.
@@ -2213,8 +2226,8 @@ var SaveThumbnail = class SaveThumbnail {
 	*/
 	static encode(source, sx, sy, sw, sh) {
 		const canvas = document.createElement("canvas");
-		canvas.width = SaveThumbnail.outputWidth;
-		canvas.height = SaveThumbnail.outputHeight;
+		canvas.width = sw;
+		canvas.height = sh;
 		canvas.getContext("2d").drawImage(source.canvas, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
 		return canvas.toDataURL("image/jpeg", SaveThumbnail.quality);
 	}
@@ -3315,6 +3328,21 @@ var SaveFileMode = class {
 		return String.empty;
 	}
 	/**
+	* The consequence of answering yes, on its own line beneath the question.
+	*
+	* Split from the question rather than trailing it in one sentence because `drawTextEx` does not
+	* wrap: a single sentence long enough to say both things runs off the edge of any window narrow
+	* enough to sit over a row without hiding it. They are two different things anyway - one is what is
+	* being asked, the other is what it costs - and a reader takes them faster on two lines.
+	*
+	* Empty for a command whose question needs no qualification.
+	* @param {SaveFileEntry} _entry The row being asked about.
+	* @returns {string}
+	*/
+	confirmDetail(_entry) {
+		return String.empty;
+	}
+	/**
 	* Determines whether the confirmation window opens with the cursor on "no".
 	*
 	* Only for a command that cannot be taken back. Everywhere else, starting on "no" adds a keypress to
@@ -3481,7 +3509,15 @@ var SaveFileModeLoad = class extends SaveFileMode {
 	* @returns {string}
 	*/
 	confirmText(entry) {
-		return `Load slot ${entry.savefileId()}? Anything since your last save will be lost.`;
+		return `Load slot ${entry.savefileId()}?`;
+	}
+	/**
+	* Implements {@link SaveFileMode.confirmDetail}.<br/>
+	* @param {SaveFileEntry} _entry The row being asked about.
+	* @returns {string}
+	*/
+	confirmDetail(_entry) {
+		return "Anything since your last save will be lost.";
 	}
 	/**
 	* Overrides {@link SaveFileMode.resumesGame}.<br/>
@@ -3550,7 +3586,15 @@ var SaveFileModeDelete = class extends SaveFileMode {
 	* @returns {string}
 	*/
 	confirmText(entry) {
-		return `Permanently delete slot ${entry.savefileId()}? This cannot be undone.`;
+		return `Permanently delete slot ${entry.savefileId()}?`;
+	}
+	/**
+	* Implements {@link SaveFileMode.confirmDetail}.<br/>
+	* @param {SaveFileEntry} _entry The row being asked about.
+	* @returns {string}
+	*/
+	confirmDetail(_entry) {
+		return "This cannot be undone.";
 	}
 	/**
 	* Overrides {@link SaveFileMode.confirmDefaultsToNo}.<br/>
@@ -3666,7 +3710,15 @@ var SaveFileModeRewind = class extends SaveFileMode {
 	* @returns {string}
 	*/
 	confirmText(_entry) {
-		return "Step back to this save? Nothing is deleted, and you can step forward again.";
+		return "Step back to this save?";
+	}
+	/**
+	* Implements {@link SaveFileMode.confirmDetail}.<br/>
+	* @param {SaveFileEntry} _entry The row being asked about.
+	* @returns {string}
+	*/
+	confirmDetail(_entry) {
+		return "Nothing is deleted and you can step forward again.";
 	}
 	/**
 	* Overrides {@link SaveFileMode.resumesGame}.<br/>
@@ -4211,6 +4263,11 @@ var Window_FilesConfirm = class extends Window_Command {
 		* @type {string}
 		*/
 		this._prompt = String.empty;
+		/**
+		* What answering yes will cost, drawn beneath the question.
+		* @type {string}
+		*/
+		this._detail = String.empty;
 	}
 	/**
 	* Gets the question being asked.
@@ -4220,12 +4277,34 @@ var Window_FilesConfirm = class extends Window_Command {
 		return this._prompt;
 	}
 	/**
-	* Sets the question being asked and redraws around it.
-	* @param {string} prompt The question to ask.
+	* Gets what answering yes will cost.
+	* @returns {string}
 	*/
-	setPrompt(prompt) {
+	detail() {
+		return this._detail;
+	}
+	/**
+	* Sets the question being asked and redraws around it.
+	*
+	* The two arrive together because they are drawn together, and setting one without the other would
+	* leave the window briefly describing a different command than the one it is asking about.
+	* @param {string} prompt The question to ask.
+	* @param {string} detail What answering yes will cost, or an empty string when nothing needs saying.
+	*/
+	setPrompt(prompt, detail) {
 		this._prompt = prompt;
+		this.setDetail(detail);
 		this.refresh();
+	}
+	/**
+	* Sets what answering yes will cost.
+	*
+	* Deliberately does not redraw: it is only ever written as half of a question, and {@link #setPrompt}
+	* refreshes once both halves are in place rather than twice while they disagree.
+	* @param {string} detail What answering yes will cost.
+	*/
+	setDetail(detail) {
+		this._detail = detail;
 	}
 	/**
 	* The symbol of the answer that goes ahead.
@@ -4274,6 +4353,8 @@ var Window_FilesConfirm = class extends Window_Command {
 		super.refresh();
 		if (this.prompt() === String.empty) return;
 		this.drawTextEx(this.prompt(), 0, 0, this.innerWidth);
+		if (this.detail() === String.empty) return;
+		this.drawTextEx(this.detail(), 0, this.lineHeight(), this.innerWidth);
 	}
 };
 
@@ -4532,7 +4613,7 @@ var Scene_Files = class Scene_Files extends Scene_MenuFacetBase {
 	* @returns {number}
 	*/
 	confirmWidthRatio() {
-		return .8;
+		return .5;
 	}
 	/**
 	* How many lines the confirmation prompt is tall: the question, then the two answers.
@@ -4576,7 +4657,7 @@ var Scene_Files = class Scene_Files extends Scene_MenuFacetBase {
 		const mode = this.currentMode();
 		const entry = this.listWindow().currentEntry();
 		const window = this.confirmWindow();
-		window.setPrompt(mode.confirmText(entry));
+		window.setPrompt(mode.confirmText(entry), mode.confirmDetail(entry));
 		window.show();
 		window.activate();
 		window.select(mode.confirmDefaultsToNo() ? 1 : 0);
