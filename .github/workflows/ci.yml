@@ -23,7 +23,14 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
+
+      # .gitattributes pins *.js and *.json to eol=crlf while every build tool writes LF, so git
+      # announces the conversion once per file it touches - seventy-eight lines of noise around the
+      # one line that matters. The conversion is deliberate and lossless here; only the commentary
+      # is unwanted.
+      - name: Quiet the line-ending commentary
+        run: git config core.safecrlf false
 
       # Bun is the only runtime this repo uses. Some package scripts shell out to node internally,
       # which the Bun action's bundled node satisfies without a separate setup-node step.

@@ -61,6 +61,12 @@ Run `codegraph status`, compare its file count against a real `find`, and if the
 bun run hotfix
 ```
 
+**One-time local setup:** `git config core.safecrlf false`. `.gitattributes` pins `*.js` and `*.json`
+to `eol=crlf` while every build tool writes LF, so without it git announces
+`LF will be replaced by CRLF` once per file on every `git add` — seventy-eight lines of noise around
+whatever actually changed. The conversion is deliberate and lossless; only the commentary is unwanted.
+It is machine-local config and cannot be committed, so a fresh clone needs it again. CI sets it too.
+
 That is three phases, and it is more than a build:
 
 | Phase | What runs |
