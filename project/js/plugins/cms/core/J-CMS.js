@@ -44,21 +44,21 @@
  * @type multiline_string
  * @text Abilities
  * @desc Describes the abilities command in the menu's help window.
- * @default Review every ability this character knows.
+ * @default Review the abilities you've learned.
  *
  * @param help-equip
  * @parent parentConfig
  * @type multiline_string
  * @text Equipment
  * @desc Describes the equipment command in the menu's help window.
- * @default Change the weapons and armor this character has equipped.
+ * @default Change the weapons and armor you have equipped.
  *
  * @param help-status
  * @parent parentConfig
  * @type multiline_string
  * @text Status
  * @desc Describes the status command in the menu's help window.
- * @default Inspect this character's parameters in detail.
+ * @default Inspect your parameters in detail.
  *
  * @param help-options
  * @parent parentConfig
@@ -313,6 +313,80 @@ var MenuCommandBroadcaster = class {
 	*/
 	windows() {
 		return this.#windows;
+	}
+};
+
+//#endregion
+//#region src/plugins/cms/core/helpers/MenuStatusCatalog.js
+/**
+* The contents of a single actor's cell in the main menu's party display, decided but not drawn.
+*
+* What belongs in a cell is a policy question that keeps changing as the game grows; how a line of
+* text lands on a bitmap is not. Separating the two means the policy can be exercised directly-
+* asking what an actor with an empty weapon slot reads as should not require standing up a window,
+* a bitmap, and a font metric to find out.
+*
+* Every method here is static and takes the actor rather than the window, because nothing in this
+* class measures or draws. These are answers about a battler, not about a rectangle.
+*/
+var MenuStatusCatalog = class MenuStatusCatalog {
+	/**
+	* Stands in for the item name of a slot holding nothing.
+	* @type {string}
+	*/
+	static EMPTY_SLOT_TEXT = "nothing equipped";
+	/**
+	* Stands in for the experience readout of an actor with no further levels to earn.
+	* @type {string}
+	*/
+	static MAX_LEVEL_TEXT = "MAX";
+	/**
+	* Builds one row per equipment slot the actor wears, in the order they are worn.
+	*
+	* Empty slots are kept rather than dropped. A missing weapon is itself information, and dropping
+	* the row would leave the player counting slots to work out which one they forgot to fill- while
+	* also making the block shift height every time a piece of gear comes or goes.
+	* @param {Game_Actor} actor The actor whose loadout is being catalogued.
+	* @returns {{item: RPG_EquipItem, slotName: string, isEquipped: boolean}[]}
+	*/
+	static equipmentRows(actor) {
+		const slotTypeIds = actor.equipSlots();
+		const equips = actor.equips();
+		return slotTypeIds.map((slotTypeId, index) => {
+			const item = equips.at(index);
+			return MenuStatusCatalog.buildEquipmentRow(slotTypeId, item);
+		});
+	}
+	/**
+	* Builds a single equipment row from a slot type and whatever currently occupies it.
+	*
+	* The slot name is resolved here rather than at draw time so that an empty row still knows what
+	* it stands for. A filled row identifies itself by the item's own icon and name, but an empty one
+	* has neither and would otherwise be an anonymous blank line.
+	* @param {number} slotTypeId The 1-based equip type this slot accepts.
+	* @param {RPG_EquipItem} item The equipment in the slot, or null while the slot is empty.
+	* @returns {{item: RPG_EquipItem, slotName: string, isEquipped: boolean}}
+	*/
+	static buildEquipmentRow(slotTypeId, item) {
+		return {
+			item,
+			slotName: TextManager.equipType(slotTypeId),
+			isEquipped: item !== null
+		};
+	}
+	/**
+	* The experience readout for an actor, phrased as the distance still to travel.
+	*
+	* Deliberately derived from the actor rather than stated as a constant. The size of a level is a
+	* plugin parameter of J-Level-Flat, so a readout naming today's interval would quietly begin
+	* lying the moment that parameter changed- and nothing would report the discrepancy.
+	* @param {Game_Actor} actor The actor whose progress is being described.
+	* @returns {string}
+	*/
+	static experienceLabel(actor) {
+		if (actor.isMaxLevel()) return MenuStatusCatalog.MAX_LEVEL_TEXT;
+		const remaining = actor.nextLevelExp() - actor.currentExp();
+		return `${remaining} to next level`;
 	}
 };
 
@@ -1160,38 +1234,181 @@ Window_MenuStatus.prototype.itemHeight = function() {
 };
 /**
 * Overwrites {@link #drawItemImage}.<br/>
-* Draws the actor's face at the top of their column.
+* Draws the actor's face and map sprite side by side at the top of their column.
 *
-* This is the only place in the game a full-size portrait appears. Concentrating it here is what
-* permits every other actor-scoped scene to carry a compact ribbon instead of re-rendering the same
-* artwork in a layout that has better uses for the space.
+* Two graphics rather than one because they answer different questions. The face is who this person
+* is in a conversation; the map sprite is who the player has actually been looking at for the last
+* several hours of play, and in an action game that is the stronger identification of the two.
+* Showing them together is what makes the cell read as a specific character rather than a data row.
 * @param {number} index The index of the party member being rendered.
 */
 Window_MenuStatus.prototype.drawItemImage = function(index) {
 	const actor = this.actor(index);
 	const rect = this.itemRect(index);
-	const faceX = rect.x + Math.floor((rect.width - ImageManager.faceWidth) / 2);
-	this.drawActorFace(actor, faceX, rect.y, ImageManager.faceWidth, ImageManager.faceHeight);
+	const pairWidth = ImageManager.faceWidth + this.walkSpriteGap() + this.walkSpriteWidth();
+	const pairX = rect.x + Math.floor((rect.width - pairWidth) / 2);
+	this.drawActorFace(actor, pairX, rect.y, ImageManager.faceWidth, ImageManager.faceHeight);
+	const spriteCenterX = pairX + ImageManager.faceWidth + this.walkSpriteGap() + this.walkSpriteWidth() / 2;
+	this.drawActorWalkSprite(actor, Math.floor(spriteCenterX), rect.y + ImageManager.faceHeight);
+};
+/**
+* Draws an actor's map sprite in its neutral standing pose, facing the player.
+*
+* The engine's own {@link Window_Base.drawCharacter} selects exactly this frame, but blits it at
+* native size- and a 48 pixel sprite beside a 144 pixel portrait reads as an afterthought rather than
+* a companion. This exists solely to draw that same frame enlarged, so the pair carries equal weight.
+*
+* Nothing here requests the sheet in advance. The party's own map sprites are necessarily cached by
+* the time a menu can be opened at all, and the scene refreshes this window again on start, which is
+* the same safety net the face graphics beside them have always relied on.
+* @param {Game_Actor} actor The actor whose map sprite is being drawn.
+* @param {number} x The horizontal center of the drawn sprite.
+* @param {number} y The baseline the sprite stands on.
+*/
+Window_MenuStatus.prototype.drawActorWalkSprite = function(actor, x, y) {
+	const characterName = actor.characterName();
+	const bitmap = ImageManager.loadCharacter(characterName);
+	const isBig = ImageManager.isBigCharacter(characterName);
+	const frameWidth = bitmap.width / (isBig ? 3 : 12);
+	const frameHeight = bitmap.height / (isBig ? 4 : 8);
+	const position = isBig ? 0 : actor.characterIndex();
+	const sourceX = (position % 4 * 3 + 1) * frameWidth;
+	const sourceY = Math.floor(position / 4) * 4 * frameHeight;
+	const scale = this.walkSpriteScale();
+	const drawWidth = frameWidth * scale;
+	const drawHeight = frameHeight * scale;
+	const destinationX = x - Math.floor(drawWidth / 2);
+	const destinationY = y - drawHeight;
+	const { context } = this.contents;
+	context.imageSmoothingEnabled = false;
+	this.contents.blt(bitmap, sourceX, sourceY, frameWidth, frameHeight, destinationX, destinationY, drawWidth, drawHeight);
+	context.imageSmoothingEnabled = true;
+};
+/**
+* How much larger than native the map sprite is drawn.
+*
+* Whole numbers only- these are pixel art, and a fractional scale resamples them into mush.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.walkSpriteScale = function() {
+	return 2;
+};
+/**
+* The horizontal space the drawn map sprite claims.
+*
+* Derived from the map's tile size rather than measured off the sheet, because the layout has to
+* know this width before the sheet has necessarily finished loading.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.walkSpriteWidth = function() {
+	return $gameMap.tileWidth() * this.walkSpriteScale();
+};
+/**
+* Clear air between the face and the map sprite.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.walkSpriteGap = function() {
+	return 16;
 };
 /**
 * Overwrites {@link #drawItemStatus}.<br/>
 * Draws a member's details beneath their portrait.
 *
-* Deliberately sparse for now- name, level, class, and the basic gauges. What else belongs here is a
-* question better answered against a working skeleton than guessed at in advance.
+* Ordered by how often the answer is wanted rather than by how the data happens to be stored: who
+* this is, how they are holding up, how close the next level is, and what they are carrying into it.
 * @param {number} index The index of the party member being rendered.
 */
 Window_MenuStatus.prototype.drawItemStatus = function(index) {
 	const actor = this.actor(index);
 	const rect = this.itemRect(index);
-	const y = rect.y + ImageManager.faceHeight + this.lineHeight();
 	const padding = this.itemPadding();
 	const x = rect.x + padding;
 	const width = rect.width - padding * 2;
+	const lineHeight = this.lineHeight();
+	let y = rect.y + ImageManager.faceHeight + lineHeight;
 	this.drawActorName(actor, x, y, width);
-	this.drawActorLevel(actor, x, y + this.lineHeight());
-	this.drawActorClass(actor, x, y + this.lineHeight() * 2, width);
-	this.placeBasicGauges(actor, x, y + this.lineHeight() * 3);
+	y += lineHeight;
+	this.drawActorLevel(actor, x, y);
+	y += lineHeight;
+	this.drawActorClass(actor, x, y, width);
+	y += lineHeight;
+	this.placeBasicGauges(actor, x, y);
+	y += this.basicGaugesHeight();
+	this.drawExperience(actor, x, y, width);
+	y += lineHeight + this.detailBlockGap();
+	this.drawEquipment(actor, x, y, width);
+};
+/**
+* The vertical space the three basic gauges occupy.
+*
+* The gauges are sprites rather than drawn content, so the window cannot measure them after placing
+* them and has to reserve their space up front instead.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.basicGaugesHeight = function() {
+	return this.gaugeLineHeight() * 2 + this.lineHeight();
+};
+/**
+* Clear air separating one block of details from the next.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.detailBlockGap = function() {
+	return 12;
+};
+/**
+* Draws how much further this actor must earn to reach their next level.
+*
+* Phrased as the remaining distance rather than a position along a curve, because that is the form
+* the question actually takes- nobody opens a menu wondering what their cumulative experience total
+* is. The label mirrors the level row above it so that the two read as a pair.
+* @param {Game_Actor} actor The actor whose progress is being drawn.
+* @param {number} x The left edge of the row.
+* @param {number} y The top of the row.
+* @param {number} width The width available to the row.
+*/
+Window_MenuStatus.prototype.drawExperience = function(actor, x, y, width) {
+	const label = MenuStatusCatalog.experienceLabel(actor);
+	this.changeTextColor(ColorManager.systemColor());
+	this.drawText(TextManager.expA, x, y, width);
+	this.resetTextColor();
+	this.drawText(label, x, y, width, "right");
+};
+/**
+* Draws everything this actor is wearing, one slot per line.
+* @param {Game_Actor} actor The actor whose loadout is being drawn.
+* @param {number} x The left edge of the block.
+* @param {number} y The top of the block.
+* @param {number} width The width available to each row.
+*/
+Window_MenuStatus.prototype.drawEquipment = function(actor, x, y, width) {
+	const rows = MenuStatusCatalog.equipmentRows(actor);
+	rows.forEach((row, index) => {
+		const rowY = y + this.lineHeight() * index;
+		this.drawEquipmentRow(row, x, rowY, width);
+	});
+};
+/**
+* Draws a single equipment slot.
+*
+* A filled slot needs no label- the item's own icon and name identify it more precisely than the slot
+* name ever could. An empty one has neither, so it borrows the name of the slot it stands for and is
+* drawn dimmed, which is what keeps a run of empty slots reading as absences rather than as more gear.
+* @param {{item: RPG_EquipItem, slotName: string, isEquipped: boolean}} row The row to draw.
+* @param {number} x The left edge of the row.
+* @param {number} y The top of the row.
+* @param {number} width The width available to the row.
+*/
+Window_MenuStatus.prototype.drawEquipmentRow = function(row, x, y, width) {
+	if (row.isEquipped) {
+		this.drawItemName(row.item, x, y, width);
+		return;
+	}
+	const textMargin = ImageManager.standardIconWidth + 4;
+	const textX = x + textMargin;
+	const textWidth = Math.max(0, width - textMargin);
+	this.changePaintOpacity(false);
+	this.drawText(`${row.slotName} - ${MenuStatusCatalog.EMPTY_SLOT_TEXT}`, textX, y, textWidth);
+	this.changePaintOpacity(true);
 };
 
 //#endregion

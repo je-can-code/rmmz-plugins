@@ -44,21 +44,21 @@
  * @type multiline_string
  * @text Abilities
  * @desc Describes the abilities command in the menu's help window.
- * @default Review every ability this character knows.
+ * @default Review the abilities you've learned.
  *
  * @param help-equip
  * @parent parentConfig
  * @type multiline_string
  * @text Equipment
  * @desc Describes the equipment command in the menu's help window.
- * @default Change the weapons and armor this character has equipped.
+ * @default Change the weapons and armor you have equipped.
  *
  * @param help-status
  * @parent parentConfig
  * @type multiline_string
  * @text Status
  * @desc Describes the status command in the menu's help window.
- * @default Inspect this character's parameters in detail.
+ * @default Inspect your parameters in detail.
  *
  * @param help-options
  * @parent parentConfig
