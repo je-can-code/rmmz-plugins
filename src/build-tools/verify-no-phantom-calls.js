@@ -58,7 +58,6 @@ const ENGINE_FILES = [
   './project/js/rmmz_scenes.js',
   './project/js/rmmz_sprites.js',
   './project/js/rmmz_windows.js',
-  './src/external/rmmz_movement.js',
 ];
 
 /**

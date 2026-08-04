@@ -19,13 +19,6 @@ class J_BossPluginMetadata
   extends PluginMetadata
 {
   /**
-   * The project-relative path to this plugin's external configuration file. Encounters are authored
-   * as data so a fight can be revised without touching a single event command.
-   * @type {string}
-   */
-  static CONFIG_PATH = 'data/config.boss.json';
-
-  /**
    * Constructor.
    */
   constructor(name, version)
@@ -48,19 +41,18 @@ class J_BossPluginMetadata
 
   /**
    * Reads every boss encounter out of configuration and hands them to the manager.
+   *
+   * Encounters live in the `bosses` block of `config.jabs.json` rather than in a file of their own,
+   * the same way J-ABS-Juice reads its `juice` block. One file per plugin family keeps the editor's
+   * boards mapping one-to-one onto config files, and means an extension never has to own the loading
+   * of its own configuration.
    */
   initializeBossEncounters()
   {
-    // this file is required- a missing or invalid config crashes boot, same as every other
-    // config-driven plugin in this codebase.
-    const options = ExternalJsonConfigLoaderOptions.Builder()
-      .pluginName('J-ABS-Boss')
-      .configName('boss encounter configuration')
-      .build();
+    // J-ABS guarantees the parsed root is on its metadata by the time extensions postInitialize().
+    const { bosses } = J.ABS.Metadata.ExternalConfig;
 
-    const config = ExternalJsonConfigLoader.load(J_BossPluginMetadata.CONFIG_PATH, options);
-
-    const encounters = config.encounters.map(rawEncounter => this.#parseEncounter(rawEncounter));
+    const encounters = bosses.map(rawEncounter => this.#parseEncounter(rawEncounter));
 
     JabsBossManager.registerEncounters(encounters);
   }

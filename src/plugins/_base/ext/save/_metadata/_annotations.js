@@ -84,6 +84,10 @@
  * converter. Install it before a project has saves worth keeping.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    The retainedSaveGenerations parameter is now read as a number rather than
+ *    as the string RMMZ hands over, so a configured value survives arithmetic
+ *    and not only comparisons that happen to coerce.
  * - 1.0.0
  *    The initial release.
  *    Added Scene_Files, one scene for saving, loading, deleting and rewinding,

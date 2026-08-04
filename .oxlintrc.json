@@ -16,7 +16,6 @@
     "**/dist/**",
     "**/rmmz_*.js",
     "**/*.d.ts",
-    "src/external/**",
     "project/**"
   ],
   "env": {
