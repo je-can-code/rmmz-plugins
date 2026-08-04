@@ -298,7 +298,7 @@ if (J.HUD && J.HUD.EXT.PARTY)
 //region properties
 /**
  * Gets the hud sprites.
- * @returns {*} The hudSprites.
+ * @returns {Map<string, Sprite>} The hudSprites.
  */
 Window_PartyFrame.prototype.hudSprites = function()
 {

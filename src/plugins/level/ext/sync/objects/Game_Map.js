@@ -140,7 +140,7 @@ Game_Map.prototype.setContentSyncLevel = function(newContentSyncLevel)
 
 /**
  * Gets the content sync uplevel.
- * @returns {*} The contentSyncUplevel.
+ * @returns {boolean} The contentSyncUplevel.
  */
 Game_Map.prototype.contentSyncUplevel = function()
 {
@@ -150,7 +150,7 @@ Game_Map.prototype.contentSyncUplevel = function()
 
 /**
  * Sets the content sync uplevel.
- * @param {*} newContentSyncUplevel The new contentSyncUplevel.
+ * @param {boolean} newContentSyncUplevel The new contentSyncUplevel.
  */
 Game_Map.prototype.setContentSyncUplevel = function(newContentSyncUplevel)
 {

@@ -207,7 +207,7 @@ class SaveFileMode
    * Always a promise, even for the modes whose work is synchronous, so the scene has one success path
    * and one failure path rather than a branch on which command it is running.
    * @param {SaveFileEntry} _entry The row chosen.
-   * @returns {Promise<*>}
+   * @returns {Promise<void>}
    */
   execute(_entry)
   {

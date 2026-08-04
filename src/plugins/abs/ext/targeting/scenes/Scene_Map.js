@@ -120,7 +120,7 @@ Scene_Map.prototype.setTargetingListWindow = function(newTargetingListWindow)
 
 /**
  * Gets the targeting was active.
- * @returns {*} The targetingWasActive.
+ * @returns {boolean} The targetingWasActive.
  */
 Scene_Map.prototype.targetingWasActive = function()
 {
@@ -130,7 +130,7 @@ Scene_Map.prototype.targetingWasActive = function()
 
 /**
  * Sets the targeting was active.
- * @param {*} newTargetingWasActive The new targetingWasActive.
+ * @param {boolean} newTargetingWasActive The new targetingWasActive.
  */
 Scene_Map.prototype.setTargetingWasActive = function(newTargetingWasActive)
 {

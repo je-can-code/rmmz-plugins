@@ -88,7 +88,8 @@ class Window_JabsRemapPrompt
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_abs: {_input: {_remapCaptured: string|null, _remapActive: boolean,
+   * _remapWarmup: number, _remapTimeout: number, _remapButtonLabel: string}}}} The j.
    */
   j()
   {

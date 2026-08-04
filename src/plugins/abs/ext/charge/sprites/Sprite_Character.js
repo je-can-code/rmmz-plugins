@@ -179,7 +179,7 @@ Sprite_Character.prototype.hideChargeGauge = function()
 //region properties
 /**
  * Gets the charge gauge.
- * @returns {*} The chargeGauge.
+ * @returns {Sprite_MapChargeGauge|null} The chargeGauge.
  */
 Sprite_Character.prototype.chargeGauge = function()
 {
@@ -189,7 +189,7 @@ Sprite_Character.prototype.chargeGauge = function()
 
 /**
  * Sets the charge gauge.
- * @param {*} newChargeGauge The new chargeGauge.
+ * @param {Sprite_MapChargeGauge|null} newChargeGauge The new chargeGauge.
  */
 Sprite_Character.prototype.setChargeGauge = function(newChargeGauge)
 {

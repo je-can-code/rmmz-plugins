@@ -25,7 +25,7 @@ class JABS_Battler
   //region properties
   /**
    * Gets the prepare ready.
-   * @returns {*} The prepareReady.
+   * @returns {boolean} The prepareReady.
    */
   
 
@@ -516,7 +516,7 @@ class JABS_Battler
 
   /**
    * Gets the wait timer.
-   * @returns {*} The waitTimer.
+   * @returns {JABS_Timer} The waitTimer.
    */
   waitTimer()
   {

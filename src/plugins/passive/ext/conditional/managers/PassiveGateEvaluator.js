@@ -11,15 +11,15 @@ class PassiveGateEvaluator
   /**
    * Evaluates one gate rule kind against the battler's current map context.<br/>
    * Discrete kinds dispatch in the switch; threshold kinds fall through to {@link #evaluateThresholdKind}.
-   * Variadic params mirror the tag tuple slots after the kind: [threshold, scope?, range?] for
+   * The params array mirrors the tag tuple slots after the kind: [threshold, scope?, range?] for
    * resource gates; a single scalar for most other gates.
    * @param {Game_Battler} battler The battler whose context we evaluate.
    * @param {string} kind Rule kind from a parsed note tuple.
-   * @param {...(number|string)} params Remaining tuple slots after the kind.
+   * @param {(number|string)[]=} params Remaining tuple slots after the kind.
    * @returns {boolean} Whether this single tuple passes right now.
    */
   // oxlint-disable-next-line complexity
-  static evaluate(battler, kind, ...params)
+  static evaluate(battler, kind, params = [])
   {
     // unpack the first param for gates that take a single scalar.
     const [param, scope, range] = params;

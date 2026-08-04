@@ -53,7 +53,7 @@ class Window_Frame
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_spriteCache: Map<string, Sprite>}} The j.
    */
   j()
   {

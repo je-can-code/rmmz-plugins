@@ -8,7 +8,7 @@ class JAFTING_RefinementData
   //region properties
   /**
    * Gets the notes.
-   * @returns {*} The notes.
+   * @returns {string[]} The notes.
    */
   notes()
   {

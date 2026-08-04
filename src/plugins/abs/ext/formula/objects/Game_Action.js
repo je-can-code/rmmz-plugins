@@ -495,7 +495,7 @@ Game_Action.prototype.applyGlobal = function()
 //region properties
 /**
  * Gets the filter formula eligible battler.
- * @returns {*} The filterFormulaEligibleBattler.
+ * @returns {Function} The filterFormulaEligibleBattler.
  */
 Game_Action.prototype.filterFormulaEligibleBattler = function()
 {

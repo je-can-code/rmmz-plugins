@@ -20,7 +20,7 @@ Sprite_Character.prototype.updatePosition = function()
 //region properties
 /**
  * Gets the juice flipping.
- * @returns {*} The juiceFlipping.
+ * @returns {boolean} The juiceFlipping.
  */
 Sprite_Character.prototype.juiceFlipping = function()
 {

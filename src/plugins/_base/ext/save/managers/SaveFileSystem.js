@@ -518,7 +518,7 @@ class SaveFileSystem
    * Two spaces, and no attempt at compactness: the point of this format is that a developer can open
    * a savefile, read it, edit it, and load the result. Size is explicitly not a consideration.
    * @param {string} filePath The path to write to.
-   * @param {*} data The plain data to serialize.
+   * @param {object} data The plain data to serialize.
    */
   static writeJson(filePath, data)
   {
@@ -591,7 +591,7 @@ class SaveFileSystem
    * the retry loop.
    * @param {string} slotName The slot's name.
    * @param {Function} buildFromSections Receives `(sections, manifest)` and returns the loaded value.
-   * @returns {Promise<*>} Whatever `buildFromSections` returned for the newest generation that worked.
+   * @returns {Promise<object>} Whatever `buildFromSections` returned for the newest generation that worked.
    */
   static readSlot(slotName, buildFromSections)
   {
@@ -694,7 +694,7 @@ class SaveFileSystem
    * @param {string} slotName The slot's name.
    * @param {string} generationName The generation to read, ex: `gen-0007`.
    * @param {Function} buildFromSections Receives `(sections, manifest)` and returns the loaded value.
-   * @returns {Promise<*>} Whatever `buildFromSections` returned, or a rejection carrying why not.
+   * @returns {Promise<object>} Whatever `buildFromSections` returned, or a rejection carrying why not.
    */
   static readGenerationAt(slotName, generationName, buildFromSections)
   {
@@ -716,7 +716,7 @@ class SaveFileSystem
    * @param {string} slotName The slot's name.
    * @param {string} generationName The generation to read.
    * @param {Function} buildFromSections Receives `(sections, manifest)` and returns the loaded value.
-   * @returns {*} Whatever `buildFromSections` returned.
+   * @returns {object} Whatever `buildFromSections` returned.
    */
   static readGeneration(slotName, generationName, buildFromSections)
   {
@@ -878,7 +878,7 @@ class SaveFileSystem
    * A single document does not need generations; it needs the same rename that makes a generation
    * swap safe, so a crash mid-write cannot leave the player's settings half-written.
    * @param {string} fileName The document's file name.
-   * @param {*} data The plain data to write.
+   * @param {object} data The plain data to write.
    * @returns {Promise<void>} Resolves once the document is on disk.
    */
   static writeDocument(fileName, data)

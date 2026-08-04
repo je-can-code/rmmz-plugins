@@ -11,7 +11,7 @@ class ParameterRegistry
   //region properties
   /**
    * Gets the definitions.
-   * @returns {*} The definitions.
+   * @returns {Map<string, ParameterDefinition>} The definitions.
    */
   static definitions()
   {
@@ -21,7 +21,7 @@ class ParameterRegistry
 
   /**
    * Gets the group cache.
-   * @returns {*} The groupCache.
+   * @returns {Map<string, ParameterDefinition[]>} The groupCache.
    */
   static groupCache()
   {

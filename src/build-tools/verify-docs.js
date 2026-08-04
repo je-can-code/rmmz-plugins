@@ -92,10 +92,24 @@ function parseJsdocBlock(raw)
     if (line.startsWith('@'))
     {
       tags.push(line);
+
+      continue;
     }
-    else if (tags.length === 0 && line.length > 0)
+
+    // prose before the first tag is the summary.
+    if (tags.length === 0)
     {
-      descriptionLines.push(line);
+      if (line.length > 0) descriptionLines.push(line);
+
+      continue;
+    }
+
+    // a tag may wrap across lines, and long types force it to- a ten-element tuple leaves no room
+    // for a name and a description on one line. The continuation belongs to the tag above it, so
+    // folding it back in is what lets the prose check see prose that is genuinely there.
+    if (line.length > 0)
+    {
+      tags[tags.length - 1] = `${tags[tags.length - 1]} ${line}`;
     }
   }
 

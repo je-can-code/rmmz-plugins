@@ -57,7 +57,7 @@ Game_Temp.prototype.setAptTypedInferredEnemyTypes = function(enemyId, ids)
 //region properties
 /**
  * Gets the apt typed inferred enemy types.
- * @returns {*} The aptTypedInferredEnemyTypes.
+ * @returns {Record<number, number[]>} The aptTypedInferredEnemyTypes.
  */
 Game_Temp.prototype.aptTypedInferredEnemyTypes = function()
 {

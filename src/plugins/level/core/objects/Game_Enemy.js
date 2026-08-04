@@ -228,7 +228,7 @@ Game_Enemy.prototype.getLevelBalancer = function()
 //region properties
 /**
  * Gets the skill learnings.
- * @returns {*} The skillLearnings.
+ * @returns {Record<number, number>} The skillLearnings.
  */
 Game_Enemy.prototype.skillLearnings = function()
 {

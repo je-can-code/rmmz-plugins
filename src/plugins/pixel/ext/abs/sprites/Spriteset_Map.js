@@ -315,7 +315,7 @@ Spriteset_Map.prototype.getPixelAbsRevealHitboxStyle = function()
 //region properties
 /**
  * Gets the hitbox reveal layer.
- * @returns {*} The hitboxRevealLayer.
+ * @returns {Sprite} The hitboxRevealLayer.
  */
 Spriteset_Map.prototype.hitboxRevealLayer = function()
 {
@@ -325,7 +325,7 @@ Spriteset_Map.prototype.hitboxRevealLayer = function()
 
 /**
  * Sets the hitbox reveal layer.
- * @param {*} newHitboxRevealLayer The new hitboxRevealLayer.
+ * @param {Sprite} newHitboxRevealLayer The new hitboxRevealLayer.
  */
 Spriteset_Map.prototype.setHitboxRevealLayer = function(newHitboxRevealLayer)
 {
@@ -335,7 +335,7 @@ Spriteset_Map.prototype.setHitboxRevealLayer = function(newHitboxRevealLayer)
 
 /**
  * Gets the hitbox reveal sprites.
- * @returns {*} The hitboxRevealSprites.
+ * @returns {Record<string, Sprite>} The hitboxRevealSprites.
  */
 Spriteset_Map.prototype.hitboxRevealSprites = function()
 {
@@ -345,7 +345,7 @@ Spriteset_Map.prototype.hitboxRevealSprites = function()
 
 /**
  * Sets the hitbox reveal sprites.
- * @param {*} newHitboxRevealSprites The new hitboxRevealSprites.
+ * @param {Record<string, Sprite>} newHitboxRevealSprites The new hitboxRevealSprites.
  */
 Spriteset_Map.prototype.setHitboxRevealSprites = function(newHitboxRevealSprites)
 {

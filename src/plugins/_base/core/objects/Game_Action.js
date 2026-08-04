@@ -15,7 +15,8 @@ Game_Action.formulaContextProviders = [];
  * The return value of the getter becomes the value of `name` inside every
  * formula evaluated by {@link Game_Action#evalFormulaWithContext}.
  * @param {string} name The variable name exposed inside the formula (e.g. `'p'`, `'s'`).
- * @param {function(Game_Action, Game_Battler, Game_Battler): *} getter A function returning the value.
+ * @param {function(Game_Action, Game_Battler, Game_Battler): number|string|boolean|object} getter
+ * A function returning the value exposed under `name`.
  */
 Game_Action.registerFormulaContext = function(name, getter)
 {
@@ -239,7 +240,7 @@ Game_Action.prototype.setSubjectEnemyIndex = function(newSubjectEnemyIndex)
 //region properties
 /**
  * Gets the trigger hp damage.
- * @returns {*} The triggerHpDamage.
+ * @returns {number} The triggerHpDamage.
  */
 Game_Action.prototype.triggerHpDamage = function()
 {
@@ -249,7 +250,7 @@ Game_Action.prototype.triggerHpDamage = function()
 
 /**
  * Sets the trigger hp damage.
- * @param {*} newTriggerHpDamage The new triggerHpDamage.
+ * @param {number} newTriggerHpDamage The new triggerHpDamage.
  */
 Game_Action.prototype.setTriggerHpDamage = function(newTriggerHpDamage)
 {
@@ -259,7 +260,7 @@ Game_Action.prototype.setTriggerHpDamage = function(newTriggerHpDamage)
 
 /**
  * Gets the trigger mp damage.
- * @returns {*} The triggerMpDamage.
+ * @returns {number} The triggerMpDamage.
  */
 Game_Action.prototype.triggerMpDamage = function()
 {
@@ -269,7 +270,7 @@ Game_Action.prototype.triggerMpDamage = function()
 
 /**
  * Sets the trigger mp damage.
- * @param {*} newTriggerMpDamage The new triggerMpDamage.
+ * @param {number} newTriggerMpDamage The new triggerMpDamage.
  */
 Game_Action.prototype.setTriggerMpDamage = function(newTriggerMpDamage)
 {
@@ -279,7 +280,7 @@ Game_Action.prototype.setTriggerMpDamage = function(newTriggerMpDamage)
 
 /**
  * Gets the trigger tp damage.
- * @returns {*} The triggerTpDamage.
+ * @returns {number} The triggerTpDamage.
  */
 Game_Action.prototype.triggerTpDamage = function()
 {
@@ -289,7 +290,7 @@ Game_Action.prototype.triggerTpDamage = function()
 
 /**
  * Sets the trigger tp damage.
- * @param {*} newTriggerTpDamage The new triggerTpDamage.
+ * @param {number} newTriggerTpDamage The new triggerTpDamage.
  */
 Game_Action.prototype.setTriggerTpDamage = function(newTriggerTpDamage)
 {

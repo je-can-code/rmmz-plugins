@@ -49,7 +49,7 @@ class JABS_SkillSlotManager
   //region properties
   /**
    * Gets the slots.
-   * @returns {*} The slots.
+   * @returns {JABS_SkillSlot[]} The slots.
    */
   slots()
   {

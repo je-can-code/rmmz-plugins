@@ -31,7 +31,7 @@ class Sprite_MapCastGauge
 
   /**
    * Gets the expected character.
-   * @returns {*} The expectedCharacter.
+   * @returns {Game_Character|null} The expectedCharacter.
    */
   expectedCharacter()
   {
@@ -41,7 +41,7 @@ class Sprite_MapCastGauge
 
   /**
    * Sets the expected character.
-   * @param {*} newExpectedCharacter The new expectedCharacter.
+   * @param {Game_Character|null} newExpectedCharacter The new expectedCharacter.
    */
   setExpectedCharacter(newExpectedCharacter)
   {
@@ -51,7 +51,7 @@ class Sprite_MapCastGauge
 
   /**
    * Gets the expected uuid.
-   * @returns {*} The expectedUuid.
+   * @returns {string|null} The expectedUuid.
    */
   expectedUuid()
   {
@@ -61,7 +61,7 @@ class Sprite_MapCastGauge
 
   /**
    * Sets the expected uuid.
-   * @param {*} newExpectedUuid The new expectedUuid.
+   * @param {string|null} newExpectedUuid The new expectedUuid.
    */
   setExpectedUuid(newExpectedUuid)
   {
@@ -71,7 +71,8 @@ class Sprite_MapCastGauge
 
   /**
    * Gets the gauge.
-   * @returns {*} The gauge.
+   * @returns {{_bitmapWidth: number, _bitmapHeight: number, _gaugeHeight: number, _label: string,
+   * _value: number|null, _iconIndex: number, _iconSprite: Sprite|null, _activated: boolean}} The gauge.
    */
   gauge()
   {
@@ -82,13 +83,14 @@ class Sprite_MapCastGauge
 
   /**
    * Constructor.
-   * @param {...*} args Forwarded to {@link #initialize}.
+   * @param {number=} bitmapWidth The bitmap width of this gauge.
+   * @param {number=} bitmapHeight The bitmap height of this gauge.
+   * @param {number=} gaugeHeight The height of the filled strip.
    */
-
-  constructor(...args)
+  constructor(bitmapWidth = 128, bitmapHeight = 24, gaugeHeight = 10)
   {
     super();
-    this.initialize(...args);
+    this.initialize(bitmapWidth, bitmapHeight, gaugeHeight);
   }
 
   /**

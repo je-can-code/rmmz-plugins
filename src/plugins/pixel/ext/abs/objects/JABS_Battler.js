@@ -918,7 +918,7 @@ JABS_Battler.prototype.canDirectionalDodgeStepPass = function(character, directi
 //region properties
 /**
  * Gets the pixel idle dest.
- * @returns {*} The pixelIdleDest.
+ * @returns {{x: number, y: number}|null} The pixelIdleDest.
  */
 JABS_Battler.prototype.pixelIdleDest = function()
 {
@@ -928,7 +928,7 @@ JABS_Battler.prototype.pixelIdleDest = function()
 
 /**
  * Sets the pixel idle dest.
- * @param {*} newPixelIdleDest The new pixelIdleDest.
+ * @param {{x: number, y: number}|null} newPixelIdleDest The new pixelIdleDest.
  */
 JABS_Battler.prototype.setPixelIdleDest = function(newPixelIdleDest)
 {
@@ -938,7 +938,7 @@ JABS_Battler.prototype.setPixelIdleDest = function(newPixelIdleDest)
 
 /**
  * Gets the pixel idle wait.
- * @returns {*} The pixelIdleWait.
+ * @returns {number} The pixelIdleWait.
  */
 JABS_Battler.prototype.pixelIdleWait = function()
 {
@@ -948,7 +948,7 @@ JABS_Battler.prototype.pixelIdleWait = function()
 
 /**
  * Sets the pixel idle wait.
- * @param {*} newPixelIdleWait The new pixelIdleWait.
+ * @param {number} newPixelIdleWait The new pixelIdleWait.
  */
 JABS_Battler.prototype.setPixelIdleWait = function(newPixelIdleWait)
 {

@@ -14,7 +14,7 @@ class JAFTING_Trait
   //region properties
   /**
    * Gets the code.
-   * @returns {*} The code.
+   * @returns {number} The code.
    */
   code()
   {

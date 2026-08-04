@@ -18,7 +18,7 @@ class SerializableRegistry
   //region properties
   /**
    * Gets the constructors.
-   * @returns {*} The constructors.
+   * @returns {Map<string, Function>} The constructors.
    */
   static constructors()
   {

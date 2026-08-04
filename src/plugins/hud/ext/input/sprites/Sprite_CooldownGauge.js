@@ -74,7 +74,7 @@ class Sprite_CooldownGauge
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_gcdMergeBattler: JABS_Battler|null, _gcdMergeSkillId: number}} The j.
    */
   j()
   {

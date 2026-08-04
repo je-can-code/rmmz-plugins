@@ -10,7 +10,7 @@ class PIXEL_CollisionManager
   //region properties
   /**
    * Gets the table.
-   * @returns {*} The table.
+   * @returns {number[]} The table.
    */
   static table()
   {
@@ -20,7 +20,7 @@ class PIXEL_CollisionManager
 
   /**
    * Sets the table.
-   * @param {*} newTable The new table.
+   * @param {number[]} newTable The new table.
    */
   static setTable(newTable)
   {

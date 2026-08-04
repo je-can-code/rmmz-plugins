@@ -22,11 +22,11 @@ class SaveDecoder
 {
   /**
    * Decodes plain data back into live objects.
-   * @param {*} data The plain data to decode.
+   * @param {object|Array|string|number|boolean|null} data The plain data to decode.
    * @param {Function|null=} expectedType The constructor the containing type map declares here, or
    * null when nothing declared it.
    * @param {string=} path The JSON path of this value, used for error context.
-   * @returns {*} The rebuilt value.
+   * @returns {object|Array|Map|Set|string|number|boolean|null} The rebuilt value.
    */
   static decode(data, expectedType = null, path = '$')
   {
@@ -183,9 +183,10 @@ class SaveDecoder
    * Merging instead means the file wins wherever it has something to say and the seeded default
    * survives wherever it does not. Instances, arrays, `Map`s, and primitives replace outright, since
    * a decoded instance is already the complete answer for its position.
-   * @param {*} seeded Whatever the seed left at this position, which is usually nothing.
-   * @param {*} decoded The value the file produced.
-   * @returns {*} The value to assign.
+   * @param {object|Array|Map|Set|string|number|boolean|null|undefined} seeded Whatever the seed left
+   * at this position, which is usually nothing.
+   * @param {object|Array|Map|Set|string|number|boolean|null} decoded The value the file produced.
+   * @returns {object|Array|Map|Set|string|number|boolean|null} The value to assign.
    */
   static mergeOverSeeded(seeded, decoded)
   {
@@ -204,13 +205,13 @@ class SaveDecoder
 
   /**
    * Decodes one child value against whatever its position declares.
-   * @param {*} child The plain data being decoded.
+   * @param {object|Array|string|number|boolean|null} child The plain data being decoded.
    * @param {{value: Function|null, children: Map<string, object>}|null} typedChild The child's
    * position in the type tree, or null.
    * @param {{value: Function|null, children: Map<string, object>}|null} typedValuesChild The child's
    * position in the dictionary-value type tree, or null.
    * @param {string} childPath The JSON path of the child.
-   * @returns {*} The decoded child.
+   * @returns {object|Array|Map|Set|string|number|boolean|null} The decoded child.
    */
   static decodeChild(child, typedChild, typedValuesChild, childPath)
   {
@@ -259,7 +260,7 @@ class SaveDecoder
 
   /**
    * Determines whether a value is a plain object rather than an instance, array, or primitive.
-   * @param {*} value The value to classify.
+   * @param {object|Array|Map|Set|string|number|boolean|null|undefined} value The value to classify.
    * @returns {boolean}
    */
   static isPlainObject(value)
@@ -294,7 +295,7 @@ class SaveDecoder
    * one cache, on a save written before that plugin was installed.
    * @param {object} instance The instance to assign onto.
    * @param {string} path The dotted path to assign at.
-   * @param {*} value The value to assign.
+   * @param {object|Array|Map|Set|string|number|boolean|null} value The value to assign.
    */
   static assignAtPath(instance, path, value)
   {

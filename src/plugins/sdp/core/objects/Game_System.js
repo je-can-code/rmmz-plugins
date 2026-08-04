@@ -54,7 +54,7 @@ Game_System.prototype.disableForcedSdpDrops = function()
 
 /**
  * Determines whether or not the DEBUG functionality of forced-panel-dropping is active.
- * @returns {boolean|*|boolean}
+ * @returns {boolean}
  */
 Game_System.prototype.shouldForceDropSdp = function()
 {

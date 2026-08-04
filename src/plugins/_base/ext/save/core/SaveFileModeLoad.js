@@ -96,7 +96,7 @@ class SaveFileModeLoad
   /**
    * Implements {@link SaveFileMode.execute}.<br/>
    * @param {SaveFileEntry} entry The row chosen.
-   * @returns {Promise<*>}
+   * @returns {Promise<void>}
    */
   execute(entry)
   {

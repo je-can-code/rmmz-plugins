@@ -126,7 +126,9 @@ class Window_InputFrame
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_battler: JABS_Battler|null, _needsRefresh: boolean,
+   * _last: {_skillTriggerHeld: boolean, _partyInCombat: boolean},
+   * _flip: {_progress: number, _max: number, _direction: number}}} The j.
    */
   j()
   {

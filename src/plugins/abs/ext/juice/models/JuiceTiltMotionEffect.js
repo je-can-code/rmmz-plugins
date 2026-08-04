@@ -10,7 +10,7 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
   //region properties
   /**
    * Gets the sprite.
-   * @returns {*} The sprite.
+   * @returns {Sprite} The sprite.
    */
   sprite()
   {
@@ -20,7 +20,7 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the base rotation.
-   * @returns {*} The baseRotation.
+   * @returns {number} The baseRotation.
    */
   baseRotation()
   {
@@ -60,7 +60,7 @@ class JuiceTiltMotionEffect extends JuiceBaseEffect
 
   /**
    * Gets the peak radians.
-   * @returns {*} The peakRadians.
+   * @returns {number} The peakRadians.
    */
   peakRadians()
   {

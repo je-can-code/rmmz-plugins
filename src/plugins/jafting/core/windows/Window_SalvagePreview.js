@@ -14,7 +14,7 @@ class Window_SalvagePreview
   //region properties
   /**
    * Gets the refund two column.
-   * @returns {*} The refundTwoColumn.
+   * @returns {boolean} The refundTwoColumn.
    */
   
 
@@ -31,7 +31,7 @@ class Window_SalvagePreview
 
   /**
    * Gets the datum.
-   * @returns {*} The datum.
+   * @returns {RPG_Item|RPG_Weapon|RPG_Armor|null} The datum.
    */
   datum()
   {
@@ -52,7 +52,7 @@ class Window_SalvagePreview
 
   /**
    * Sets the refund two column.
-   * @param {*} newRefundTwoColumn The new refundTwoColumn.
+   * @param {boolean} newRefundTwoColumn The new refundTwoColumn.
    */
   setRefundTwoColumn(newRefundTwoColumn)
   {

@@ -398,7 +398,7 @@ Game_CharacterBase.prototype.glideTo = function(xPlus, yPlus)
 //region properties
 /**
  * Gets the no jump arc.
- * @returns {*} The noJumpArc.
+ * @returns {boolean} The noJumpArc.
  */
 Game_CharacterBase.prototype.isNoJumpArc = function()
 {
@@ -408,7 +408,7 @@ Game_CharacterBase.prototype.isNoJumpArc = function()
 
 /**
  * Sets the no jump arc.
- * @param {*} newNoJumpArc The new noJumpArc.
+ * @param {boolean} newNoJumpArc The new noJumpArc.
  */
 Game_CharacterBase.prototype.setNoJumpArc = function(newNoJumpArc)
 {

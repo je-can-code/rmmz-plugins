@@ -133,6 +133,7 @@ Sprite_Character.prototype.initGaugeMembers = function()
 
   /**
    * The cast gauge for this sprite.
+   * @type {Sprite_MapCastGauge|null}
    */
   this._j._abs._gauges._castGauge = null;
 
@@ -1724,7 +1725,7 @@ Sprite_Character.prototype.shouldSwingDown = function()
 //region properties
 /**
  * Gets the jabs battler setup complete.
- * @returns {*} The jabsBattlerSetupComplete.
+ * @returns {boolean} The jabsBattlerSetupComplete.
  */
 Sprite_Character.prototype.isJabsBattlerSetupComplete = function()
 {
@@ -1734,7 +1735,7 @@ Sprite_Character.prototype.isJabsBattlerSetupComplete = function()
 
 /**
  * Sets the jabs battler setup complete.
- * @param {*} newJabsBattlerSetupComplete The new jabsBattlerSetupComplete.
+ * @param {boolean} newJabsBattlerSetupComplete The new jabsBattlerSetupComplete.
  */
 Sprite_Character.prototype.setJabsBattlerSetupComplete = function(newJabsBattlerSetupComplete)
 {
@@ -1744,7 +1745,7 @@ Sprite_Character.prototype.setJabsBattlerSetupComplete = function(newJabsBattler
 
 /**
  * Gets the loot setup complete.
- * @returns {*} The lootSetupComplete.
+ * @returns {boolean} The lootSetupComplete.
  */
 Sprite_Character.prototype.isLootSetupComplete = function()
 {
@@ -1754,7 +1755,7 @@ Sprite_Character.prototype.isLootSetupComplete = function()
 
 /**
  * Sets the loot setup complete.
- * @param {*} newLootSetupComplete The new lootSetupComplete.
+ * @param {boolean} newLootSetupComplete The new lootSetupComplete.
  */
 Sprite_Character.prototype.setLootSetupComplete = function(newLootSetupComplete)
 {
@@ -1784,7 +1785,7 @@ Sprite_Character.prototype.setStateOverlaySprite = function(newStateOverlaySprit
 
 /**
  * Gets the cast gauge.
- * @returns {*} The castGauge.
+ * @returns {Sprite_MapCastGauge|null} The castGauge.
  */
 Sprite_Character.prototype.castGauge = function()
 {
@@ -1794,7 +1795,7 @@ Sprite_Character.prototype.castGauge = function()
 
 /**
  * Sets the cast gauge.
- * @param {*} newCastGauge The new castGauge.
+ * @param {Sprite_MapCastGauge|null} newCastGauge The new castGauge.
  */
 Sprite_Character.prototype.setCastGauge = function(newCastGauge)
 {
@@ -1804,7 +1805,7 @@ Sprite_Character.prototype.setCastGauge = function(newCastGauge)
 
 /**
  * Gets the affliction strip.
- * @returns {*} The afflictionStrip.
+ * @returns {Sprite_MapAfflictionStrip|null} The afflictionStrip.
  */
 Sprite_Character.prototype.afflictionStrip = function()
 {
@@ -1814,7 +1815,7 @@ Sprite_Character.prototype.afflictionStrip = function()
 
 /**
  * Sets the affliction strip.
- * @param {*} newAfflictionStrip The new afflictionStrip.
+ * @param {Sprite_MapAfflictionStrip|null} newAfflictionStrip The new afflictionStrip.
  */
 Sprite_Character.prototype.setAfflictionStrip = function(newAfflictionStrip)
 {

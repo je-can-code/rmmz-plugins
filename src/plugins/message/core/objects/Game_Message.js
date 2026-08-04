@@ -71,7 +71,7 @@ Game_Message.prototype.hideChoice = function(choiceIndex, isHidden)
 //region properties
 /**
  * Gets the hidden choice conditions.
- * @returns {*} The hiddenChoiceConditions.
+ * @returns {Map<number, boolean>} The hiddenChoiceConditions.
  */
 Game_Message.prototype.hiddenChoiceConditions = function()
 {
@@ -81,7 +81,7 @@ Game_Message.prototype.hiddenChoiceConditions = function()
 
 /**
  * Sets the hidden choice conditions.
- * @param {*} newHiddenChoiceConditions The new hiddenChoiceConditions.
+ * @param {Map<number, boolean>} newHiddenChoiceConditions The new hiddenChoiceConditions.
  */
 Game_Message.prototype.setHiddenChoiceConditions = function(newHiddenChoiceConditions)
 {
@@ -91,7 +91,7 @@ Game_Message.prototype.setHiddenChoiceConditions = function(newHiddenChoiceCondi
 
 /**
  * Gets the old choices.
- * @returns {*} The oldChoices.
+ * @returns {string[]} The oldChoices.
  */
 Game_Message.prototype.oldChoices = function()
 {
@@ -101,7 +101,7 @@ Game_Message.prototype.oldChoices = function()
 
 /**
  * Sets the old choices.
- * @param {*} newOldChoices The new oldChoices.
+ * @param {string[]} newOldChoices The new oldChoices.
  */
 Game_Message.prototype.setOldChoices = function(newOldChoices)
 {

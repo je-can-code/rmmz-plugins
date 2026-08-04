@@ -1183,8 +1183,8 @@ describe('OverlayManager skill and state extension (direct src import)', () =>
       OverlayManager.invalidate(battler);
 
       // Assert
-      expect(skillSpy).toHaveBeenCalledWith(battler);
-      expect(stateSpy).toHaveBeenCalledWith(battler);
+      expect(skillSpy).toHaveBeenCalledWith([ battler ]);
+      expect(stateSpy).toHaveBeenCalledWith([ battler ]);
 
       skillSpy.mockRestore();
       stateSpy.mockRestore();

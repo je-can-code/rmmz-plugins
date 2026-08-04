@@ -2139,7 +2139,7 @@ Spriteset_Map.prototype.destroyBattlerHitboxSprite = function (sprite)
 //region properties
 /**
  * Gets the debug hitbox layer.
- * @returns {*} The debugHitboxLayer.
+ * @returns {Sprite} The debugHitboxLayer.
  */
 Spriteset_Map.prototype.debugHitboxLayer = function()
 {
@@ -2149,7 +2149,7 @@ Spriteset_Map.prototype.debugHitboxLayer = function()
 
 /**
  * Sets the debug hitbox layer.
- * @param {*} newDebugHitboxLayer The new debugHitboxLayer.
+ * @param {Sprite} newDebugHitboxLayer The new debugHitboxLayer.
  */
 Spriteset_Map.prototype.setDebugHitboxLayer = function(newDebugHitboxLayer)
 {
@@ -2159,7 +2159,7 @@ Spriteset_Map.prototype.setDebugHitboxLayer = function(newDebugHitboxLayer)
 
 /**
  * Gets the debug action hitbox sprites.
- * @returns {*} The debugActionHitboxSprites.
+ * @returns {Record<string, Sprite>} The debugActionHitboxSprites.
  */
 Spriteset_Map.prototype.debugActionHitboxSprites = function()
 {
@@ -2169,7 +2169,7 @@ Spriteset_Map.prototype.debugActionHitboxSprites = function()
 
 /**
  * Sets the debug action hitbox sprites.
- * @param {*} newDebugActionHitboxSprites The new debugActionHitboxSprites.
+ * @param {Record<string, Sprite>} newDebugActionHitboxSprites The new debugActionHitboxSprites.
  */
 Spriteset_Map.prototype.setDebugActionHitboxSprites = function(newDebugActionHitboxSprites)
 {
@@ -2179,7 +2179,7 @@ Spriteset_Map.prototype.setDebugActionHitboxSprites = function(newDebugActionHit
 
 /**
  * Gets the debug battler hitbox sprites.
- * @returns {*} The debugBattlerHitboxSprites.
+ * @returns {Record<string, Sprite>} The debugBattlerHitboxSprites.
  */
 Spriteset_Map.prototype.debugBattlerHitboxSprites = function()
 {
@@ -2189,7 +2189,7 @@ Spriteset_Map.prototype.debugBattlerHitboxSprites = function()
 
 /**
  * Sets the debug battler hitbox sprites.
- * @param {*} newDebugBattlerHitboxSprites The new debugBattlerHitboxSprites.
+ * @param {Record<string, Sprite>} newDebugBattlerHitboxSprites The new debugBattlerHitboxSprites.
  */
 Spriteset_Map.prototype.setDebugBattlerHitboxSprites = function(newDebugBattlerHitboxSprites)
 {
@@ -2199,7 +2199,7 @@ Spriteset_Map.prototype.setDebugBattlerHitboxSprites = function(newDebugBattlerH
 
 /**
  * Gets the cast preview sprites.
- * @returns {*} The castPreviewSprites.
+ * @returns {Record<string, Sprite>} The castPreviewSprites.
  */
 Spriteset_Map.prototype.castPreviewSprites = function()
 {
@@ -2209,7 +2209,7 @@ Spriteset_Map.prototype.castPreviewSprites = function()
 
 /**
  * Sets the cast preview sprites.
- * @param {*} newCastPreviewSprites The new castPreviewSprites.
+ * @param {Record<string, Sprite>} newCastPreviewSprites The new castPreviewSprites.
  */
 Spriteset_Map.prototype.setCastPreviewSprites = function(newCastPreviewSprites)
 {
@@ -2219,7 +2219,7 @@ Spriteset_Map.prototype.setCastPreviewSprites = function(newCastPreviewSprites)
 
 /**
  * Gets the cast preview layer.
- * @returns {*} The castPreviewLayer.
+ * @returns {Sprite} The castPreviewLayer.
  */
 Spriteset_Map.prototype.castPreviewLayer = function()
 {
@@ -2229,7 +2229,7 @@ Spriteset_Map.prototype.castPreviewLayer = function()
 
 /**
  * Sets the cast preview layer.
- * @param {*} newCastPreviewLayer The new castPreviewLayer.
+ * @param {Sprite} newCastPreviewLayer The new castPreviewLayer.
  */
 Spriteset_Map.prototype.setCastPreviewLayer = function(newCastPreviewLayer)
 {
@@ -2239,7 +2239,7 @@ Spriteset_Map.prototype.setCastPreviewLayer = function(newCastPreviewLayer)
 
 /**
  * Gets the hitbox pulse layer.
- * @returns {*} The hitboxPulseLayer.
+ * @returns {Sprite} The hitboxPulseLayer.
  */
 Spriteset_Map.prototype.hitboxPulseLayer = function()
 {
@@ -2249,7 +2249,7 @@ Spriteset_Map.prototype.hitboxPulseLayer = function()
 
 /**
  * Sets the hitbox pulse layer.
- * @param {*} newHitboxPulseLayer The new hitboxPulseLayer.
+ * @param {Sprite} newHitboxPulseLayer The new hitboxPulseLayer.
  */
 Spriteset_Map.prototype.setHitboxPulseLayer = function(newHitboxPulseLayer)
 {

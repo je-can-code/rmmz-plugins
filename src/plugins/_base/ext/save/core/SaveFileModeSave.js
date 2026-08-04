@@ -77,7 +77,7 @@ class SaveFileModeSave
    * Implements {@link SaveFileMode.execute}.<br/>
    * Follows vanilla's own save sequence, which several plugins hang state-flushing off.
    * @param {SaveFileEntry} entry The row chosen.
-   * @returns {Promise<*>}
+   * @returns {Promise<void>}
    */
   execute(entry)
   {

@@ -98,7 +98,9 @@ class Sprite_ActorValue
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_parameter: string, _actor: Game_Actor, _fontSizeMod: number,
+   * _last: {_hp: number, _mp: number, _tp: number, _xp: number, _lvl: number},
+   * _autoCounter: number}} The j.
    */
   j()
   {

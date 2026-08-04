@@ -7,12 +7,14 @@ class Sprite_CooldownTimer
 {
   /**
    * Constructor.
-   * @param {...*} args Forwarded to {@link #initialize}.
+   * @param {string} skillType The slot's skill type key.
+   * @param {JABS_Cooldown} cooldownData The cooldown this timer reflects.
+   * @param {boolean=} isItem Whether the slot holds an item rather than a skill.
    */
-  constructor(...args)
+  constructor(skillType, cooldownData, isItem = false)
   {
     super();
-    this.initialize(...args);
+    this.initialize(skillType, cooldownData, isItem);
   }
 
   /**
@@ -45,7 +47,7 @@ class Sprite_CooldownTimer
   //region properties
   /**
    * Gets the j.
-   * @returns {*} The j.
+   * @returns {{_skillType: string, _cooldownData: JABS_Cooldown, _isItem: boolean}} The j.
    */
   j()
   {

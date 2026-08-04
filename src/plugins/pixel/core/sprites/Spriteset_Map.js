@@ -114,7 +114,7 @@ Spriteset_Map.prototype.update = function()
 //region properties
 /**
  * Gets the pixel overlay visible.
- * @returns {*} The pixelOverlayVisible.
+ * @returns {boolean} The pixelOverlayVisible.
  */
 Spriteset_Map.prototype.pixelOverlayVisible = function()
 {
@@ -124,7 +124,7 @@ Spriteset_Map.prototype.pixelOverlayVisible = function()
 
 /**
  * Sets the pixel overlay visible.
- * @param {*} newPixelOverlayVisible The new pixelOverlayVisible.
+ * @param {boolean} newPixelOverlayVisible The new pixelOverlayVisible.
  */
 Spriteset_Map.prototype.setPixelOverlayVisible = function(newPixelOverlayVisible)
 {

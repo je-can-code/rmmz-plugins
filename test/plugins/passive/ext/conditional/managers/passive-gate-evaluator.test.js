@@ -67,7 +67,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([]);
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesNearby', 1);
+      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesNearby', [ 1 ]);
 
       // Assert
       expect(result).toEqual(false);
@@ -80,7 +80,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([ {}, {} ]);
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesNearby', 2);
+      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesNearby', [ 2 ]);
 
       // Assert
       expect(result).toEqual(true);
@@ -92,7 +92,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeBattler();
 
       // Act
-      PassiveGateEvaluator.evaluate(battler, 'enemiesNearby', 1, 3);
+      PassiveGateEvaluator.evaluate(battler, 'enemiesNearby', [ 1, 3 ]);
 
       // Assert
       expect(FakePassiveRuleJabsAccess.nearbyEnemies).toHaveBeenCalledWith(battler, 3);
@@ -108,7 +108,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([]);
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesNearbyBelow', 1, 1);
+      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesNearbyBelow', [ 1, 1 ]);
 
       // Assert
       expect(result).toEqual(true);
@@ -121,7 +121,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([ {} ]);
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesNearbyBelow', 1, 1);
+      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesNearbyBelow', [ 1, 1 ]);
 
       // Assert
       expect(result).toEqual(false);
@@ -133,7 +133,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeBattler();
 
       // Act
-      PassiveGateEvaluator.evaluate(battler, 'enemiesNearbyBelow', 1, 1);
+      PassiveGateEvaluator.evaluate(battler, 'enemiesNearbyBelow', [ 1, 1 ]);
 
       // Assert
       expect(FakePassiveRuleJabsAccess.nearbyEnemies).toHaveBeenCalledWith(battler, 1);
@@ -145,7 +145,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeBattler();
 
       // Act
-      PassiveGateEvaluator.evaluate(battler, 'enemiesNearbyBelow', 1);
+      PassiveGateEvaluator.evaluate(battler, 'enemiesNearbyBelow', [ 1 ]);
 
       // Assert
       expect(FakePassiveRuleJabsAccess.nearbyEnemies).toHaveBeenCalledWith(battler, null);
@@ -161,7 +161,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.nearbyAlliesExcludingSelf.mockReturnValue([]);
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'alliesNearby', 1);
+      const result = PassiveGateEvaluator.evaluate(battler, 'alliesNearby', [ 1 ]);
 
       // Assert
       expect(result).toEqual(false);
@@ -174,7 +174,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.nearbyAlliesExcludingSelf.mockReturnValue([ {} ]);
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'alliesNearby', 1);
+      const result = PassiveGateEvaluator.evaluate(battler, 'alliesNearby', [ 1 ]);
 
       // Assert
       expect(result).toEqual(true);
@@ -186,7 +186,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeBattler();
 
       // Act
-      PassiveGateEvaluator.evaluate(battler, 'alliesNearby', 1, 8);
+      PassiveGateEvaluator.evaluate(battler, 'alliesNearby', [ 1, 8 ]);
 
       // Assert
       expect(FakePassiveRuleJabsAccess.nearbyAlliesExcludingSelf).toHaveBeenCalledWith(battler, 8);
@@ -202,7 +202,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.nearbyAlliesExcludingSelf.mockReturnValue([]);
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'alliesNearbyBelow', 1);
+      const result = PassiveGateEvaluator.evaluate(battler, 'alliesNearbyBelow', [ 1 ]);
 
       // Assert
       expect(result).toEqual(true);
@@ -215,7 +215,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.nearbyAlliesExcludingSelf.mockReturnValue([ {} ]);
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'alliesNearbyBelow', 1);
+      const result = PassiveGateEvaluator.evaluate(battler, 'alliesNearbyBelow', [ 1 ]);
 
       // Assert
       expect(result).toEqual(false);
@@ -227,7 +227,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeBattler();
 
       // Act
-      PassiveGateEvaluator.evaluate(battler, 'alliesNearbyBelow', 1, 8);
+      PassiveGateEvaluator.evaluate(battler, 'alliesNearbyBelow', [ 1, 8 ]);
 
       // Assert
       expect(FakePassiveRuleJabsAccess.nearbyAlliesExcludingSelf).toHaveBeenCalledWith(battler, 8);
@@ -243,7 +243,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.enemiesTargetingMe.mockReturnValue([]);
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMe', 1);
+      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMe', [ 1 ]);
 
       // Assert
       expect(result).toEqual(false);
@@ -256,7 +256,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.enemiesTargetingMe.mockReturnValue([ {}, {} ]);
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMe', 2);
+      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMe', [ 2 ]);
 
       // Assert
       expect(result).toEqual(true);
@@ -268,7 +268,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeBattler();
 
       // Act
-      PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMe', 1, 3);
+      PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMe', [ 1, 3 ]);
 
       // Assert
       expect(FakePassiveRuleJabsAccess.enemiesTargetingMe).toHaveBeenCalledWith(battler);
@@ -284,7 +284,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.enemiesTargetingMe.mockReturnValue([]);
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMeBelow', 1);
+      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMeBelow', [ 1 ]);
 
       // Assert
       expect(result).toEqual(true);
@@ -297,7 +297,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.enemiesTargetingMe.mockReturnValue([ {} ]);
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMeBelow', 1);
+      const result = PassiveGateEvaluator.evaluate(battler, 'enemiesTargetingMeBelow', [ 1 ]);
 
       // Assert
       expect(result).toEqual(false);
@@ -312,7 +312,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler({ hp: 50, mhp: 100 });
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'hpAbove', 50)).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'hpAbove', [ 50 ])).toBe(true);
     });
 
     it('hpBelow fails above the threshold', () =>
@@ -321,7 +321,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler({ hp: 90, mhp: 100 });
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'hpBelow', 25)).toBe(false);
+      expect(PassiveGateEvaluator.evaluate(battler, 'hpBelow', [ 25 ])).toBe(false);
     });
 
     it('mpAbove/mpBelow read the mp resource', () =>
@@ -330,8 +330,8 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler({ mp: 40, mmp: 50 });
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'mpAbove', 80)).toBe(true);
-      expect(PassiveGateEvaluator.evaluate(battler, 'mpBelow', 80)).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'mpAbove', [ 80 ])).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'mpBelow', [ 80 ])).toBe(true);
     });
 
     it('tpAbove/tpBelow read the tp resource', () =>
@@ -340,8 +340,8 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler({ tp: 10, maxTp: () => 100 });
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'tpAbove', 10)).toBe(true);
-      expect(PassiveGateEvaluator.evaluate(battler, 'tpBelow', 10)).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'tpAbove', [ 10 ])).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'tpBelow', [ 10 ])).toBe(true);
     });
 
     it('resolves an anyAlly scope to allied battlers within the given (or default) range', () =>
@@ -352,7 +352,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler({ hp: 0, mhp: 100 });
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'hpAbove', 100, 'anyAlly');
+      const result = PassiveGateEvaluator.evaluate(battler, 'hpAbove', [ 100, 'anyAlly' ]);
 
       // Assert- anyAlly passes when at least one target satisfies it, ignoring the evaluator's own hp.
       expect(FakePassiveRuleJabsAccess.alliedBattlersWithinRange).toHaveBeenCalledWith(battler, 5);
@@ -365,7 +365,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler();
 
       // Act
-      PassiveGateEvaluator.evaluate(battler, 'hpAbove', 0, 'anyAlly', 9);
+      PassiveGateEvaluator.evaluate(battler, 'hpAbove', [ 0, 'anyAlly', 9 ]);
 
       // Assert
       expect(FakePassiveRuleJabsAccess.alliedBattlersWithinRange).toHaveBeenCalledWith(battler, 9);
@@ -382,7 +382,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler({ hp: 100, mhp: 100 });
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'hpAbove', 50, 'allAllies')).toBe(false);
+      expect(PassiveGateEvaluator.evaluate(battler, 'hpAbove', [ 50, 'allAllies' ])).toBe(false);
     });
 
     it('resolves an anyEnemy scope from opposing battlers within range', () =>
@@ -393,7 +393,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler();
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'hpAbove', 50, 'anyEnemy');
+      const result = PassiveGateEvaluator.evaluate(battler, 'hpAbove', [ 50, 'anyEnemy' ]);
 
       // Assert
       expect(FakePassiveRuleJabsAccess.opposingBattlersWithinRange).toHaveBeenCalledWith(battler, 5);
@@ -408,7 +408,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler();
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'hpAbove', 50, 'allEnemies')).toBe(false);
+      expect(PassiveGateEvaluator.evaluate(battler, 'hpAbove', [ 50, 'allEnemies' ])).toBe(false);
     });
 
     it('filters out an allied/opposing jabs wrapper with no resolvable Game_Battler', () =>
@@ -418,7 +418,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler({ hp: 100, mhp: 100 });
 
       // Act & Assert- no valid targets means .every() vacuously passes.
-      expect(PassiveGateEvaluator.evaluate(battler, 'hpAbove', 50, 'allAllies')).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'hpAbove', [ 50, 'allAllies' ])).toBe(true);
     });
   });
 
@@ -430,7 +430,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler({ hp: 1, mhp: 100, mp: 1, mmp: 100, tp: 90, maxTp: () => 100 });
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'anyAbove', 80)).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'anyAbove', [ 80 ])).toBe(true);
     });
 
     it('anyBelow passes when at least one of hp/mp/tp satisfies the threshold', () =>
@@ -439,7 +439,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler({ hp: 5, mhp: 100, mp: 90, mmp: 100, tp: 90, maxTp: () => 100 });
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'anyBelow', 10)).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'anyBelow', [ 10 ])).toBe(true);
     });
 
     it('allAbove requires every one of hp/mp/tp to satisfy the threshold', () =>
@@ -448,7 +448,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler({ hp: 90, mhp: 100, mp: 90, mmp: 100, tp: 1, maxTp: () => 100 });
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'allAbove', 80)).toBe(false);
+      expect(PassiveGateEvaluator.evaluate(battler, 'allAbove', [ 80 ])).toBe(false);
     });
 
     it('allBelow requires every one of hp/mp/tp to satisfy the threshold', () =>
@@ -457,7 +457,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler({ hp: 1, mhp: 100, mp: 1, mmp: 100, tp: 1, maxTp: () => 100 });
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'allBelow', 10)).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'allBelow', [ 10 ])).toBe(true);
     });
 
     it('anyAbove forwards an explicit range instead of the plugin default', () =>
@@ -466,7 +466,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler();
 
       // Act
-      PassiveGateEvaluator.evaluate(battler, 'anyAbove', 50, 'anyAlly', 12);
+      PassiveGateEvaluator.evaluate(battler, 'anyAbove', [ 50, 'anyAlly', 12 ]);
 
       // Assert
       expect(FakePassiveRuleJabsAccess.alliedBattlersWithinRange).toHaveBeenCalledWith(battler, 12);
@@ -478,7 +478,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler();
 
       // Act
-      PassiveGateEvaluator.evaluate(battler, 'allAbove', 50, 'anyAlly', 13);
+      PassiveGateEvaluator.evaluate(battler, 'allAbove', [ 50, 'anyAlly', 13 ]);
 
       // Assert
       expect(FakePassiveRuleJabsAccess.alliedBattlersWithinRange).toHaveBeenCalledWith(battler, 13);
@@ -493,7 +493,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = { isStateAffected: vi.fn(() => true) };
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'hasState', 14);
+      const result = PassiveGateEvaluator.evaluate(battler, 'hasState', [ 14 ]);
 
       // Assert
       expect(battler.isStateAffected).toHaveBeenCalledWith(14);
@@ -510,7 +510,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       };
 
       // Act
-      const result = PassiveGateEvaluator.evaluate(battler, 'negativeStateCount', 1);
+      const result = PassiveGateEvaluator.evaluate(battler, 'negativeStateCount', [ 1 ]);
 
       // Assert
       expect(result).toBe(true);
@@ -539,7 +539,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.getJabsBattler.mockReturnValue(null);
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate({}, 'slotOnCooldown', 'mainhand')).toBe(false);
+      expect(PassiveGateEvaluator.evaluate({}, 'slotOnCooldown', [ 'mainhand' ])).toBe(false);
     });
 
     it('slotOnCooldown is true when the resolved slot is not cooldown-ready', () =>
@@ -550,7 +550,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.resolveSlotKey.mockReturnValue('Main');
 
       // Act
-      const result = PassiveGateEvaluator.evaluate({}, 'slotOnCooldown', 'mainhand');
+      const result = PassiveGateEvaluator.evaluate({}, 'slotOnCooldown', [ 'mainhand' ]);
 
       // Assert
       expect(jabsBattler.isSkillTypeCooldownReady).toHaveBeenCalledWith('Main');
@@ -563,7 +563,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.getJabsBattler.mockReturnValue(null);
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate({}, 'slotOffCooldown', 'mainhand')).toBe(true);
+      expect(PassiveGateEvaluator.evaluate({}, 'slotOffCooldown', [ 'mainhand' ])).toBe(true);
     });
 
     it('slotOffCooldown is true when the resolved slot is cooldown-ready', () =>
@@ -573,7 +573,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.getJabsBattler.mockReturnValue(jabsBattler);
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate({}, 'slotOffCooldown', 'mainhand')).toBe(true);
+      expect(PassiveGateEvaluator.evaluate({}, 'slotOffCooldown', [ 'mainhand' ])).toBe(true);
     });
   });
 
@@ -719,7 +719,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       globalThis.Graphics.frameCount = 1000;
 
       // Act & Assert- 100 frames elapsed, meets the 100-frame requirement.
-      expect(PassiveGateEvaluator.evaluate(battler, 'sinceLastMoved', 100)).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'sinceLastMoved', [ 100 ])).toBe(true);
     });
 
     it('sinceLastHit treats a never-stamped frame (0) as "since forever"', () =>
@@ -729,7 +729,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       globalThis.Graphics.frameCount = 500;
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'sinceLastHit', 100)).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'sinceLastHit', [ 100 ])).toBe(true);
     });
 
     it('sinceLastAttacked fails when not enough frames have elapsed', () =>
@@ -739,7 +739,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       globalThis.Graphics.frameCount = 1000;
 
       // Act & Assert- only 50 frames elapsed, short of the 100-frame requirement.
-      expect(PassiveGateEvaluator.evaluate(battler, 'sinceLastAttacked', 100)).toBe(false);
+      expect(PassiveGateEvaluator.evaluate(battler, 'sinceLastAttacked', [ 100 ])).toBe(false);
     });
 
     it('movedWithin passes while inside the window', () =>
@@ -749,7 +749,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       globalThis.Graphics.frameCount = 1000;
 
       // Act & Assert- 20 frames elapsed, within the 100-frame window.
-      expect(PassiveGateEvaluator.evaluate(battler, 'movedWithin', 100)).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'movedWithin', [ 100 ])).toBe(true);
     });
 
     it('hitWithin fails once outside the window', () =>
@@ -759,7 +759,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       globalThis.Graphics.frameCount = 1000;
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'hitWithin', 100)).toBe(false);
+      expect(PassiveGateEvaluator.evaluate(battler, 'hitWithin', [ 100 ])).toBe(false);
     });
 
     it('attackedWithin passes at exactly the window boundary (inclusive)', () =>
@@ -769,7 +769,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       globalThis.Graphics.frameCount = 1000;
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'attackedWithin', 100)).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'attackedWithin', [ 100 ])).toBe(true);
     });
 
     it('onHealHp passes while within the window since the last hp heal', () =>
@@ -779,7 +779,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       globalThis.Graphics.frameCount = 1000;
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'onHealHp', 100)).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'onHealHp', [ 100 ])).toBe(true);
     });
 
     it('onHealMp passes while within the window since the last mp heal', () =>
@@ -789,7 +789,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       globalThis.Graphics.frameCount = 1000;
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'onHealMp', 100)).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'onHealMp', [ 100 ])).toBe(true);
     });
 
     it('onHealTp fails once outside the window since the last tp heal', () =>
@@ -799,7 +799,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       globalThis.Graphics.frameCount = 1000;
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'onHealTp', 100)).toBe(false);
+      expect(PassiveGateEvaluator.evaluate(battler, 'onHealTp', [ 100 ])).toBe(false);
     });
   });
 
@@ -812,7 +812,7 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       FakePassiveRuleJabsAccess.allAlliedBattlersIncludingSelf.mockReturnValue([ ally ]);
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate({}, 'allAlliesHpAbove', 50)).toBe(true);
+      expect(PassiveGateEvaluator.evaluate({}, 'allAlliesHpAbove', [ 50 ])).toBe(true);
     });
 
     it('resolves a non-switch, non-allAllies threshold kind (e.g. a max-resource gate)', () =>
@@ -822,13 +822,13 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       const battler = makeResourceBattler({ parameter: (key) => (key === 'mhp' ? 150 : 0) });
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'mhpAbove', 100)).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'mhpAbove', [ 100 ])).toBe(true);
     });
 
     it('fails closed for a completely unrecognized kind', () =>
     {
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate({}, 'notARealGateKind', 1)).toBe(false);
+      expect(PassiveGateEvaluator.evaluate({}, 'notARealGateKind', [ 1 ])).toBe(false);
     });
   });
 });

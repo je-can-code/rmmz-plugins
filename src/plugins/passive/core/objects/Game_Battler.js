@@ -594,7 +594,7 @@ Game_Battler.prototype.onStateRemoval = function(stateId)
 //region properties
 /**
  * Gets the state ids.
- * @returns {*} The stateIds.
+ * @returns {number[]|null} The stateIds.
  */
 Game_Battler.prototype.stateIds = function()
 {
@@ -604,7 +604,7 @@ Game_Battler.prototype.stateIds = function()
 
 /**
  * Sets the state ids.
- * @param {*} newStateIds The new stateIds.
+ * @param {number[]|null} newStateIds The new stateIds.
  */
 Game_Battler.prototype.setStateIds = function(newStateIds)
 {
@@ -614,7 +614,7 @@ Game_Battler.prototype.setStateIds = function(newStateIds)
 
 /**
  * Gets the external state sources.
- * @returns {*} The externalStateSources.
+ * @returns {RPG_BaseItem[]} The externalStateSources.
  */
 Game_Battler.prototype.externalStateSources = function()
 {
@@ -624,7 +624,7 @@ Game_Battler.prototype.externalStateSources = function()
 
 /**
  * Sets the external state sources.
- * @param {*} newExternalStateSources The new externalStateSources.
+ * @param {RPG_BaseItem[]} newExternalStateSources The new externalStateSources.
  */
 Game_Battler.prototype.setExternalStateSources = function(newExternalStateSources)
 {
@@ -634,7 +634,7 @@ Game_Battler.prototype.setExternalStateSources = function(newExternalStateSource
 
 /**
  * Gets the passive sources.
- * @returns {*} The passiveSources.
+ * @returns {RPG_BaseItem[]} The passiveSources.
  */
 Game_Battler.prototype.passiveSources = function()
 {
@@ -644,7 +644,7 @@ Game_Battler.prototype.passiveSources = function()
 
 /**
  * Sets the passive sources.
- * @param {*} newPassiveSources The new passiveSources.
+ * @param {RPG_BaseItem[]} newPassiveSources The new passiveSources.
  */
 Game_Battler.prototype.setPassiveSources = function(newPassiveSources)
 {

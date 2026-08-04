@@ -332,9 +332,64 @@ function collectNamespaces(astsByPath)
  * @param {Set<string>} namespaces The known namespace segments.
  * @returns {object[]} The violations found.
  */
+/**
+ * Finds the position of the first chain segment that is not a namespace, which is the field.
+ * @param {string[]} chain The member chain, outermost segment first.
+ * @param {Set<string>} namespaces The known namespace prefixes.
+ * @returns {number} The index of the field, or -1 when the chain is all namespace.
+ */
+function firstNonNamespaceIndex(chain, namespaces)
+{
+  for (let index = 0; index < chain.length; index++)
+  {
+    if (namespaces.has(chain.slice(0, index + 1).join('.')) === false) return index;
+  }
+
+  return -1;
+}
+
+/**
+ * Collects the names of every method a file declares, in either authoring style.
+ * @param {object} ast The parsed source.
+ * @returns {Set<string>} The declared method names.
+ */
+function collectDeclaredMethodNames(ast)
+{
+  const names = new Set();
+
+  walk(ast, node =>
+  {
+    // modern class bodies.
+    if (node.type === 'MethodDefinition' && node.key && node.key.type === 'Identifier')
+    {
+      names.add(node.key.name);
+
+      return;
+    }
+
+    // prototype patches, which is how the tree extends engine classes.
+    if (node.type !== 'AssignmentExpression') return;
+    if (node.left.type !== 'MemberExpression') return;
+    if (node.left.property.type !== 'Identifier') return;
+
+    const isFunction = node.right.type === 'FunctionExpression' || node.right.type === 'ArrowFunctionExpression';
+    if (isFunction === false) return;
+
+    names.add(node.left.property.name);
+  });
+
+  return names;
+}
+
 function collectViolations(filePath, ast, namespaces)
 {
   const violations = [];
+
+  // every method this file declares, so an underscore-prefixed *method* is not mistaken for a
+  // field. `this._doThing()` was already exempt as a call, but a method handed to `filter` or
+  // `map` as a reference is the same thing with no parentheses- and demanding an accessor around
+  // it produces a getter that returns a function, which is not state and has nothing to guard.
+  const methodNames = collectDeclaredMethodNames(ast);
 
   walk(ast, node =>
   {
@@ -375,19 +430,13 @@ function collectViolations(filePath, ast, namespaces)
       const chain = chainOf(inner);
       if (!chain) return;
 
-      // walk down the chain to the first segment that is not a namespace; that is the field.
-      let fieldIndex = -1;
-      for (let index = 0; index < chain.length; index++)
-      {
-        if (!namespaces.has(chain.slice(0, index + 1).join('.')))
-        {
-          fieldIndex = index;
-          break;
-        }
-      }
+      const fieldIndex = firstNonNamespaceIndex(chain, namespaces);
 
       // an all-namespace chain touches no field at all.
       if (fieldIndex === -1) return;
+
+      // a bare reference to a method this file declares is behaviour, not state.
+      if (chain.length === 1 && methodNames.has(chain[0])) return;
 
       // report the field itself, not the longer expressions built on top of it.
       if (chain.length !== fieldIndex + 1) return;

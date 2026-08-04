@@ -1494,7 +1494,7 @@ Game_Actor.prototype.turnEndOnMap = function()
 //region properties
 /**
  * Gets the death effect.
- * @returns {*} The deathEffect.
+ * @returns {boolean} The deathEffect.
  */
 Game_Actor.prototype.deathEffect = function()
 {
@@ -1504,7 +1504,7 @@ Game_Actor.prototype.deathEffect = function()
 
 /**
  * Sets the death effect.
- * @param {*} newDeathEffect The new deathEffect.
+ * @param {boolean} newDeathEffect The new deathEffect.
  */
 Game_Actor.prototype.setDeathEffect = function(newDeathEffect)
 {
