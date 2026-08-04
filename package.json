@@ -97,6 +97,7 @@
     "build:jafting-refine": "vite build --config ./src/plugins/jafting/ext/refine/vite.config.jafting-refine.js",
     "build:jabs": "vite build --config src/plugins/abs/core/vite.config.jabs-core.js",
     "build:jabs-allyai": "vite build --config src/plugins/abs/ext/allyai/vite.config.jabs-allyai.js",
+    "build:jabs-boss": "vite build --config src/plugins/abs/ext/boss/vite.config.jabs-boss.js",
     "build:jabs-charge": "vite build --config src/plugins/abs/ext/charge/vite.config.jabs-charge.js",
     "build:jabs-danger": "vite build --config src/plugins/abs/ext/danger/vite.config.jabs-danger.js",
     "build:jabs-diag": "vite build --config src/plugins/abs/ext/diag/vite.config.jabs-diag.js",
