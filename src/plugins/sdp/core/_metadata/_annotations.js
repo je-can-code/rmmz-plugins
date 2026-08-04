@@ -364,7 +364,13 @@
  *
  * ============================================================================
  * CHANGELOG:
- * - 3.1.1
+ * - 3.2.0
+ *    Unspent points now appear on each party member's cell in the main menu,
+ *    beside their level and the distance to the next one. A currency nobody is
+ *    reminded of is a currency nobody spends, and the points are otherwise
+ *    invisible until the player already went looking for them.
+ *    This is drawn through the extension hook J-CMS reserves for exactly this,
+ *    and does nothing at all when that plugin is not installed.
  *    The family strip, header, mastery, and parameter list windows no longer
  *    declare private members. A window's constructor reaches initialize, and
  *    through it the drawing hooks, before a derived class installs its own

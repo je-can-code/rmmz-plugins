@@ -30,10 +30,29 @@
  * ============================================================================
  * CHANGELOG:
  * - 1.1.0
- *    Each party member's cell now carries their map sprite beside their
- *    portrait, the experience remaining until their next level, and every
- *    equipment slot they wear. Empty slots are named and dimmed rather than
- *    omitted, so the block keeps its shape as gear comes and goes.
+ *    Each party member's cell is now a character card rather than a data row.
+ *    It is headed by their name with their class beneath it, carries their map
+ *    sprite beside their portrait, and is banded into sections by rules.
+ *    Level and remaining experience share a row, since a level means little
+ *    without knowing how close the next one is.
+ *    Resources are drawn as segmented gauges spanning the cell, marked by icon
+ *    rather than by abbreviation and trailed by their current and maximum
+ *    values.
+ *    Afflicting states are listed by icon, and an actor suffering none says so
+ *    rather than leaving the row blank.
+ *    Every equipment slot is listed, with empty ones named and dimmed rather
+ *    than omitted, so the block keeps its shape as gear comes and goes.
+ *    A drawExtensionData hook sits alongside level and experience for other
+ *    plugins to contribute to; it returns the position it finished at, so any
+ *    number of them may each claim a row without knowing about one another.
+ *    The party display no longer tints each cell behind its contents. That
+ *    tint marks which row a cursor is on, and nothing selects a party member
+ *    here- it advertised an interaction that does not exist.
+ *    Fixed the party display overrunning the currency strip by the height of
+ *    the control legend. It was measuring its own floor from the bottom of the
+ *    screen by the strip's height rather than stopping at the strip's position,
+ *    and the sixty pixels it overran were hidden underneath the very window
+ *    that caused it.
  *    Command help text no longer refers to "this character", which pointed at
  *    a referent the menu never identifies.
  * - 1.0.0
@@ -351,6 +370,83 @@ var MenuStatusCatalog = class MenuStatusCatalog {
 	* @type {string}
 	*/
 	static MAX_LEVEL_TEXT = "MAX";
+	/**
+	* Separates the level from the distance to the next one.
+	* @type {string}
+	*/
+	static LEVEL_DIVIDER = "-";
+	/**
+	* Stands in for the state icons of an actor suffering nothing at all.
+	*
+	* An empty row would read as "this section has not loaded" rather than as good news. Saying it
+	* outright costs one line and removes the ambiguity.
+	* @type {string}
+	*/
+	static UNAFFLICTED_TEXT = "Unafflicted";
+	/**
+	* The level readout for an actor.
+	*
+	* The bare number, with no word naming it. The icon drawn beside it says what it is, and it says
+	* so in the same visual language every other measure in this menu uses- a player who has learned
+	* one of these icons has learned all of them, which is worth more than a word repeated on every
+	* row.
+	* @param {Game_Actor} actor The actor whose level is being described.
+	* @returns {string}
+	*/
+	static levelValue(actor) {
+		return `${actor.level}`;
+	}
+	/**
+	* The resources worth showing for an actor, in the order they are drawn.
+	*
+	* Each row carries the numbers and the fill rate, but names its resource with a key rather than a
+	* color- what blue means is a question for whatever draws the row, and answering it here would
+	* drag ColorManager into a class that otherwise never touches the screen.
+	*
+	* Tech is included only when the database says to display it, which is the same condition the
+	* engine's own gauge placement honors.
+	* @param {Game_Actor} actor The actor whose resources are being catalogued.
+	* @returns {{key: string, label: string, current: number, max: number, rate: number}[]}
+	*/
+	static resourceRows(actor) {
+		const rows = [MenuStatusCatalog.buildResourceRow("hp", TextManager.hpA, actor.hp, actor.mhp), MenuStatusCatalog.buildResourceRow("mp", TextManager.mpA, actor.mp, actor.mmp)];
+		if ($dataSystem.optDisplayTp) {
+			rows.push(MenuStatusCatalog.buildResourceRow("tp", TextManager.tpA, actor.tp, actor.maxTp()));
+		}
+		return rows;
+	}
+	/**
+	* Builds a single resource row, including the fill rate its gauge needs.
+	*
+	* A resource with no capacity reads as empty rather than as a division by zero. That is a real
+	* state rather than a defensive one- an actor with no magic at all has an mmp of zero, and the row
+	* still has to render something.
+	* @param {string} key Which resource this is, being one of 'hp', 'mp', or 'tp'.
+	* @param {string} label The abbreviation the database names this resource with.
+	* @param {number} current How much of the resource the actor currently holds.
+	* @param {number} max How much of the resource the actor can hold.
+	* @returns {{key: string, label: string, current: number, max: number, rate: number}}
+	*/
+	static buildResourceRow(key, label, current, max) {
+		return {
+			key,
+			label,
+			current,
+			max,
+			rate: max === 0 ? 0 : current / max
+		};
+	}
+	/**
+	* The icons of every state currently afflicting an actor.
+	*
+	* States without an icon are dropped rather than drawn as a gap. A state that chose not to show
+	* itself in the status bar has no business claiming space in the menu either.
+	* @param {Game_Actor} actor The actor whose afflictions are being catalogued.
+	* @returns {number[]}
+	*/
+	static stateIcons(actor) {
+		return actor.states().map((state) => state.iconIndex).filter((iconIndex) => iconIndex > 0);
+	}
 	/**
 	* Builds one row per equipment slot the actor wears, in the order they are worn.
 	*
@@ -1244,30 +1340,108 @@ Window_MenuStatus.prototype.itemHeight = function() {
 	return this.innerHeight;
 };
 /**
+* Overwrites {@link Window_Selectable.drawItemBackground}.<br/>
+* Draws no backing behind a member's cell.
+*
+* The tinted rectangle behind a row exists to show which row the cursor is on. Nothing selects a
+* party member here- the two command columns own the cursor and this window is read-only- so the
+* tint marks nothing, and reads as a panel the player ought to be able to interact with. The engine
+* does the same for its own read-only {@link Window_StatusParams}.
+* @param {number} _index The index of the party member whose cell would have been backed.
+*/
+Window_MenuStatus.prototype.drawItemBackground = function(_index) {};
+/**
 * Overwrites {@link #drawItemImage}.<br/>
-* Draws the actor's face and map sprite side by side at the top of their column.
+* Draws the actor's name across the top, then their face and map sprite beneath it.
+*
+* The name leads because a cell without a header reads as a data row rather than as a person- the
+* player has to infer whose column this is from the artwork. Naming it first turns the column into a
+* card, which is the difference between a menu and a screen worth looking at.
 *
 * Two graphics rather than one because they answer different questions. The face is who this person
-* is in a conversation; the map sprite is who the player has actually been looking at for the last
-* several hours of play, and in an action game that is the stronger identification of the two.
-* Showing them together is what makes the cell read as a specific character rather than a data row.
+* is in a conversation; the map sprite is who the player has been looking at for the last several
+* hours of play, and in an action game that is the stronger identification of the two.
 * @param {number} index The index of the party member being rendered.
 */
 Window_MenuStatus.prototype.drawItemImage = function(index) {
 	const actor = this.actor(index);
 	const rect = this.itemRect(index);
+	this.drawActorNameHeader(actor, rect);
+	this.drawActorClassSubtitle(actor, rect);
+	const artY = rect.y + this.headerHeight();
 	const pairWidth = ImageManager.faceWidth + this.walkSpriteGap() + this.walkSpriteWidth();
 	const pairX = rect.x + Math.floor((rect.width - pairWidth) / 2);
-	this.drawActorFace(actor, pairX, rect.y, ImageManager.faceWidth, ImageManager.faceHeight);
+	this.drawActorFace(actor, pairX, artY, ImageManager.faceWidth, ImageManager.faceHeight);
 	const spriteCenterX = pairX + ImageManager.faceWidth + this.walkSpriteGap() + this.walkSpriteWidth() / 2;
-	this.drawActorWalkSprite(actor, Math.floor(spriteCenterX), rect.y + ImageManager.faceHeight);
+	this.drawActorWalkSprite(actor, Math.floor(spriteCenterX), artY + ImageManager.faceHeight);
+};
+/**
+* Draws the actor's name across the top of their cell, enlarged and centered.
+*
+* Enlarged because this is the one piece of text in the cell that identifies everything below it,
+* and centered because the artwork beneath it is centered- a left-aligned name over centered
+* portraits reads as a mistake rather than as a choice.
+* @param {Game_Actor} actor The actor being named.
+* @param {Rectangle} rect The bounds of the cell.
+*/
+Window_MenuStatus.prototype.drawActorNameHeader = function(actor, rect) {
+	this.contents.fontSize = $gameSystem.mainFontSize() + this.headerFontBoost();
+	this.drawText(actor.name(), rect.x, rect.y, rect.width, "center");
+	this.resetFontSettings();
+};
+/**
+* Draws the actor's class beneath their name, as a subtitle.
+*
+* Upper-cased and shrunk because it is a category rather than a proper noun- the name is who this
+* person is and the class is what they currently are, and the two carrying identical weight would
+* make the header read as two names. Tinted for the same reason, so the eye can tell at a glance
+* which line is the one it was looking for.
+* @param {Game_Actor} actor The actor whose class is being named.
+* @param {Rectangle} rect The bounds of the cell.
+*/
+Window_MenuStatus.prototype.drawActorClassSubtitle = function(actor, rect) {
+	this.resetFontSettings();
+	const className = actor.currentClass().name.toUpperCase();
+	const shrunk = this.modFontSizeForText(this.classSubtitleFontShrink(), className);
+	const subtitle = this.colorizeText(this.classSubtitleColorIndex(), shrunk);
+	const subtitleWidth = this.textSizeEx(subtitle).width;
+	const subtitleX = rect.x + Math.floor((rect.width - subtitleWidth) / 2);
+	this.drawTextEx(subtitle, subtitleX, rect.y + this.lineHeight(), rect.width);
+};
+/**
+* How much larger than body text the cell's name header is drawn.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.headerFontBoost = function() {
+	return 8;
+};
+/**
+* How much smaller than body text the class subtitle is drawn.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.classSubtitleFontShrink = function() {
+	return -6;
+};
+/**
+* The palette index the class subtitle is tinted with.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.classSubtitleColorIndex = function() {
+	return 1;
+};
+/**
+* The vertical space the name and class claim before the artwork begins.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.headerHeight = function() {
+	return this.lineHeight() * 2;
 };
 /**
 * Draws an actor's map sprite in its neutral standing pose, facing the player.
 *
 * The engine's own {@link Window_Base.drawCharacter} selects exactly this frame, but blits it at
-* native size- and a 48 pixel sprite beside a 144 pixel portrait reads as an afterthought rather than
-* a companion. This exists solely to draw that same frame enlarged, so the pair carries equal weight.
+* native size, which leaves it dwarfed by the portrait beside it. This exists solely to draw that
+* same frame enlarged.
 *
 * Nothing here requests the sheet in advance. The party's own map sprites are necessarily cached by
 * the time a menu can be opened at all, and the scene refreshes this window again on start, which is
@@ -1298,6 +1472,11 @@ Window_MenuStatus.prototype.drawActorWalkSprite = function(actor, x, y) {
 /**
 * How much larger than native the map sprite is drawn.
 *
+* Matching the portrait's height is the wrong target. Chibi proportions spend most of a frame on the
+* head, so a sprite standing as tall as a face does not read as its equal- it reads as looming. Two
+* keeps the sprite a companion to the portrait rather than a competitor, which is the relationship
+* worth preserving even if these proportions are later replaced with something less top-heavy.
+*
 * Whole numbers only- these are pixel art, and a fractional scale resamples them into mush.
 * @returns {number}
 */
@@ -1325,8 +1504,10 @@ Window_MenuStatus.prototype.walkSpriteGap = function() {
 * Overwrites {@link #drawItemStatus}.<br/>
 * Draws a member's details beneath their portrait.
 *
-* Ordered by how often the answer is wanted rather than by how the data happens to be stored: who
-* this is, how they are holding up, how close the next level is, and what they are carrying into it.
+* Ordered by how often the answer is wanted rather than by how the data happens to be stored: how
+* far along they are, how they are holding up, what is currently wrong with them, and what they are
+* carrying. Each block is separated by a rule, because five stacks of text at one rhythm reads as a
+* single undifferentiated list no matter how well the individual rows are drawn.
 * @param {number} index The index of the party member being rendered.
 */
 Window_MenuStatus.prototype.drawItemStatus = function(index) {
@@ -1335,54 +1516,227 @@ Window_MenuStatus.prototype.drawItemStatus = function(index) {
 	const padding = this.itemPadding();
 	const x = rect.x + padding;
 	const width = rect.width - padding * 2;
-	const lineHeight = this.lineHeight();
-	let y = rect.y + ImageManager.faceHeight + lineHeight;
-	this.drawActorName(actor, x, y, width);
-	y += lineHeight;
-	this.drawActorLevel(actor, x, y);
-	y += lineHeight;
-	this.drawActorClass(actor, x, y, width);
-	y += lineHeight;
-	this.placeBasicGauges(actor, x, y);
-	y += this.basicGaugesHeight();
-	this.drawExperience(actor, x, y, width);
-	y += lineHeight + this.detailBlockGap();
+	let y = rect.y + this.headerHeight() + ImageManager.faceHeight + this.sectionGap();
+	this.drawLevelAndExperience(actor, x, y, width);
+	y += this.lineHeight();
+	y = this.drawExtensionData(actor, x, y, width);
+	y = this.drawSectionBreak(x, y, width);
+	y = this.drawActorResources(actor, x, y, width);
+	y = this.drawSectionBreak(x, y, width);
+	this.drawActorStates(actor, x, y, width);
+	y += this.lineHeight();
+	y = this.drawSectionBreak(x, y, width);
 	this.drawEquipment(actor, x, y, width);
 };
 /**
-* The vertical space the three basic gauges occupy.
-*
-* The gauges are sprites rather than drawn content, so the window cannot measure them after placing
-* them and has to reserve their space up front instead.
+* Clear air on either side of the rule dividing one block of details from the next.
 * @returns {number}
 */
-Window_MenuStatus.prototype.basicGaugesHeight = function() {
-	return this.gaugeLineHeight() * 2 + this.lineHeight();
+Window_MenuStatus.prototype.sectionGap = function() {
+	return Math.floor(this.lineHeight() / 2);
 };
 /**
-* Clear air separating one block of details from the next.
+* The thickness of the rule dividing one block of details from the next.
+*
+* Four rather than the two {@link Window_Base.drawHorizontalLine} defaults to, because that default
+* cannot draw its own color- see {@link #drawSectionBreak} for why.
 * @returns {number}
 */
-Window_MenuStatus.prototype.detailBlockGap = function() {
-	return 12;
+Window_MenuStatus.prototype.sectionRuleHeight = function() {
+	return 4;
 };
 /**
-* Draws how much further this actor must earn to reach their next level.
+* Draws the rule dividing one block of details from the next.
 *
-* Phrased as the remaining distance rather than a position along a curve, because that is the form
-* the question actually takes- nobody opens a menu wondering what their cumulative experience total
-* is. The label mirrors the level row above it so that the two read as a pair.
+* Returns the y the following block begins at rather than expecting the caller to add the gap twice
+* and get it right- a divider is one thing, and the space it occupies should be one number.
+* @param {number} x The left edge of the rule.
+* @param {number} y The top of the space the divider occupies.
+* @param {number} width The width available to the rule.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.drawSectionBreak = function(x, y, width) {
+	const gap = this.sectionGap();
+	this.resetTextColor();
+	this.drawHorizontalLine(x, y + Math.floor(gap / 2), width, this.sectionRuleHeight());
+	return y + gap;
+};
+/**
+* Draws the actor's level and the distance to their next one as a single row.
+*
+* These are one thought rather than two- a level means little without knowing how close the next one
+* is, and separating them by three gauges is what left the experience readout looking stranded when
+* it lived on its own. The divider between them is what keeps a left-aligned and a right-aligned
+* value from reading as two unrelated pieces of text that happen to share a line.
 * @param {Game_Actor} actor The actor whose progress is being drawn.
 * @param {number} x The left edge of the row.
 * @param {number} y The top of the row.
 * @param {number} width The width available to the row.
 */
-Window_MenuStatus.prototype.drawExperience = function(actor, x, y, width) {
-	const label = MenuStatusCatalog.experienceLabel(actor);
-	this.changeTextColor(ColorManager.systemColor());
-	this.drawText(TextManager.expA, x, y, width);
+Window_MenuStatus.prototype.drawLevelAndExperience = function(actor, x, y, width) {
+	const levelValue = MenuStatusCatalog.levelValue(actor);
+	const experienceLabel = MenuStatusCatalog.experienceLabel(actor);
+	const iconY = y + Math.floor((this.lineHeight() - ImageManager.iconHeight) / 2);
+	this.drawIcon(IconManager.level(), x, iconY);
+	const levelMargin = ImageManager.standardIconWidth + 8;
 	this.resetTextColor();
-	this.drawText(label, x, y, width, "right");
+	this.drawText(levelValue, x + levelMargin, y, width - levelMargin, "left");
+	this.drawText(experienceLabel, x, y, width, "right");
+	const levelWidth = levelMargin + this.textWidth(levelValue);
+	const experienceWidth = this.textWidth(experienceLabel);
+	const gapWidth = width - levelWidth - experienceWidth;
+	if (gapWidth <= 0) return;
+	this.changePaintOpacity(false);
+	this.drawText(MenuStatusCatalog.LEVEL_DIVIDER, x + levelWidth, y, gapWidth, "center");
+	this.changePaintOpacity(true);
+};
+/**
+* Draws every resource this actor carries, one gauge per line.
+* @param {Game_Actor} actor The actor whose resources are being drawn.
+* @param {number} x The left edge of the block.
+* @param {number} y The top of the block.
+* @param {number} width The width available to each row.
+* @returns {number} The y coordinate immediately beneath the block.
+*/
+Window_MenuStatus.prototype.drawActorResources = function(actor, x, y, width) {
+	const rows = MenuStatusCatalog.resourceRows(actor);
+	rows.forEach((row, index) => {
+		const rowY = y + this.lineHeight() * index;
+		this.drawResourceRow(row, x, rowY, width);
+	});
+	return y + this.lineHeight() * rows.length;
+};
+/**
+* Draws a single resource as a label, a gauge, and the numbers behind it.
+*
+* The three share one line rather than stacking, because a resource is one fact and three lines of
+* vertical space is more than one fact is worth in a cell that has five other blocks to fit.
+* @param {{key: string, label: string, current: number, max: number, rate: number}} row The row.
+* @param {number} x The left edge of the row.
+* @param {number} y The top of the row.
+* @param {number} width The width available to the row.
+*/
+Window_MenuStatus.prototype.drawResourceRow = function(row, x, y, width) {
+	const iconY = y + Math.floor((this.lineHeight() - ImageManager.iconHeight) / 2);
+	this.drawIcon(this.resourceIconIndex(row.key), x, iconY);
+	this.resetTextColor();
+	this.drawText(`${row.current} / ${row.max}`, x, y, width, "right");
+	const gaugeX = x + this.resourceLabelWidth();
+	const gaugeWidth = width - this.resourceLabelWidth() - this.resourceValueWidth();
+	const gaugeY = y + Math.floor((this.lineHeight() - this.gaugeHeight()) / 2);
+	const gaugeRect = new Rectangle(gaugeX, gaugeY, gaugeWidth, this.gaugeHeight());
+	this.drawGauge(gaugeRect, row.rate, this.resourceGaugeOptions(row));
+};
+/**
+* Overwrites {@link Window_Base.gaugeHeight}.<br/>
+* The thickness of a gauge drawn in this window.
+*
+* J-Base's default of ten is sized for the tighter windows it was written against, and a ten pixel
+* bar sitting in a thirty-six pixel line reads as a hairline rather than as a measure of anything.
+* This window has the room to draw a gauge that looks like a gauge.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.gaugeHeight = function() {
+	return 18;
+};
+/**
+* The space reserved for a resource's icon before its gauge begins.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.resourceLabelWidth = function() {
+	return ImageManager.standardIconWidth + 12;
+};
+/**
+* The icon standing for a given resource.
+*
+* An icon rather than the database's abbreviation, because the abbreviations are two letters that
+* differ by one character and the icons are distinguishable at a glance- which is the whole job of
+* the leftmost thing on a row the player is scanning rather than reading.
+*
+* Resolved through IconManager for the same reason the colors are resolved through ColorManager: a
+* resource should look the way it looks everywhere else in the game, and neither decision belongs
+* to this window.
+* @param {string} key Which resource is being marked, being one of 'hp', 'mp', or 'tp'.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.resourceIconIndex = function(key) {
+	switch (key) {
+		case "mp": return IconManager.param(1);
+		case "tp": return IconManager.maxTp();
+		default: return IconManager.param(0);
+	}
+};
+/**
+* The space reserved for a resource's current and maximum values.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.resourceValueWidth = function() {
+	return 160;
+};
+/**
+* Builds the styling for a resource gauge.
+*
+* Kept as one method taking the whole row so that changing the house style is a single edit- these
+* four gauge shapes are trivially interchangeable, and settling on one is a matter of looking at
+* them rather than of reasoning about them.
+*
+* Segmented rather than solid because a solid bar answers "how full" and a segmented one also
+* answers "how much", which is the more useful question when the number beside it is the thing the
+* player is actually budgeting against.
+* @param {{key: string, label: string, current: number, max: number, rate: number}} row The row.
+* @returns {WindowGaugeOptions}
+*/
+Window_MenuStatus.prototype.resourceGaugeOptions = function(row) {
+	const [leftColor, rightColor] = this.resourceGaugeColors(row.key);
+	const segments = Math.max(1, Math.ceil(row.max / this.resourceSegmentValue()));
+	return WindowGaugeOptions.Builder().gaugeType(Window_Base.GAUGE_TYPES.Segmented).segments(segments).gap(2).leftGradientColor(leftColor).rightGradientColor(rightColor).backColor(this.gaugeBackColor()).build();
+};
+/**
+* How much of a resource one segment of its gauge stands for.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.resourceSegmentValue = function() {
+	return 20;
+};
+/**
+* The gradient a given resource's gauge is drawn in.
+*
+* Deferred to the engine's own gauge colors rather than chosen here, so a resource looks the same in
+* this menu as it does everywhere else the player has already learned to read it.
+* @param {string} key Which resource the gauge renders, being one of 'hp', 'mp', or 'tp'.
+* @returns {[string, string]}
+*/
+Window_MenuStatus.prototype.resourceGaugeColors = function(key) {
+	switch (key) {
+		case "mp": return [ColorManager.mpGaugeColor1(), ColorManager.mpGaugeColor2()];
+		case "tp": return [ColorManager.tpGaugeColor1(), ColorManager.tpGaugeColor2()];
+		default: return [ColorManager.hpGaugeColor1(), ColorManager.hpGaugeColor2()];
+	}
+};
+/**
+* Draws the icons of every state currently afflicting this actor.
+*
+* An actor suffering nothing says so in words rather than leaving the row blank. A blank row reads
+* as something that failed to load; "Unafflicted" reads as good news, and good news is worth the
+* line it costs.
+* @param {Game_Actor} actor The actor whose afflictions are being drawn.
+* @param {number} x The left edge of the row.
+* @param {number} y The top of the row.
+* @param {number} width The width available to the row.
+*/
+Window_MenuStatus.prototype.drawActorStates = function(actor, x, y, width) {
+	const iconIndices = MenuStatusCatalog.stateIcons(actor);
+	if (iconIndices.length === 0) {
+		this.changePaintOpacity(false);
+		this.drawText(MenuStatusCatalog.UNAFFLICTED_TEXT, x, y, width, "left");
+		this.changePaintOpacity(true);
+		return;
+	}
+	const iconY = y + Math.floor((this.lineHeight() - ImageManager.iconHeight) / 2);
+	iconIndices.forEach((iconIndex, index) => {
+		const iconX = x + index * (ImageManager.standardIconWidth + 4);
+		this.drawIcon(iconIndex, iconX, iconY);
+	});
 };
 /**
 * Draws everything this actor is wearing, one slot per line.
@@ -1390,6 +1744,7 @@ Window_MenuStatus.prototype.drawExperience = function(actor, x, y, width) {
 * @param {number} x The left edge of the block.
 * @param {number} y The top of the block.
 * @param {number} width The width available to each row.
+* @returns {number} The y coordinate immediately beneath the block.
 */
 Window_MenuStatus.prototype.drawEquipment = function(actor, x, y, width) {
 	const rows = MenuStatusCatalog.equipmentRows(actor);
@@ -1397,6 +1752,7 @@ Window_MenuStatus.prototype.drawEquipment = function(actor, x, y, width) {
 		const rowY = y + this.lineHeight() * index;
 		this.drawEquipmentRow(row, x, rowY, width);
 	});
+	return y + this.lineHeight() * rows.length;
 };
 /**
 * Draws a single equipment slot.
@@ -1420,6 +1776,31 @@ Window_MenuStatus.prototype.drawEquipmentRow = function(row, x, y, width) {
 	this.changePaintOpacity(false);
 	this.drawText(`${row.slotName} - ${MenuStatusCatalog.EMPTY_SLOT_TEXT}`, textX, y, textWidth);
 	this.changePaintOpacity(true);
+};
+/**
+* Draws whatever other plugins have to contribute about this actor's advancement.
+*
+* Deliberately empty. J-CMS knows nothing about the systems layered on top of it, and the things
+* genuinely worth a row here- unspent node points, for one- belong to the plugins that own them.
+* Those plugins alias this method rather than J-CMS reaching across for data it has no business
+* knowing about.
+*
+* Positioned alongside level and experience rather than at the foot of the cell, because what an
+* extension has to say about a character is almost always another measure of how far along they
+* are, and a currency waiting to be spent belongs beside the two numbers it will be spent on- not
+* stranded beneath their gear.
+*
+* An implementation must return the y its own drawing ended at, so that several extensions can each
+* claim a row without any of them knowing what the others drew. Doing nothing returns the y it was
+* given, which costs the cell no space at all.
+* @param {Game_Actor} _actor The actor being described.
+* @param {number} _x The left edge of the space available.
+* @param {number} y The top of the space available.
+* @param {number} _width The width available.
+* @returns {number}
+*/
+Window_MenuStatus.prototype.drawExtensionData = function(_actor, _x, y, _width) {
+	return y;
 };
 
 //#endregion
@@ -1526,7 +1907,7 @@ Scene_Menu.prototype.helpWindowLineCount = function() {
 */
 Scene_Menu.prototype.statusWindowRect = function() {
 	const wy = this.helpWindowRect().height;
-	const wh = Graphics.boxHeight - wy - this.goldWindowRect().height;
+	const wh = this.goldWindowRect().y - wy;
 	return new Rectangle(this.centerStackX(), wy, this.centerStackWidth(), wh);
 };
 /**

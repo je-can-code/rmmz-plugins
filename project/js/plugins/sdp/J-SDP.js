@@ -2,7 +2,7 @@
  
 /*:
  * @target MZ
- * @plugindesc [v3.1.1 SDP] Enables the SDP system, aka Stat Distribution Panels.
+ * @plugindesc [v3.2.0 SDP] Enables the SDP system, aka Stat Distribution Panels.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -364,7 +364,13 @@
  *
  * ============================================================================
  * CHANGELOG:
- * - 3.1.1
+ * - 3.2.0
+ *    Unspent points now appear on each party member's cell in the main menu,
+ *    beside their level and the distance to the next one. A currency nobody is
+ *    reminded of is a currency nobody spends, and the points are otherwise
+ *    invisible until the player already went looking for them.
+ *    This is drawn through the extension hook J-CMS reserves for exactly this,
+ *    and does nothing at all when that plugin is not installed.
  *    The family strip, header, mastery, and parameter list windows no longer
  *    declare private members. A window's constructor reaches initialize, and
  *    through it the drawing hooks, before a derived class installs its own
@@ -2565,7 +2571,7 @@ J.SDP = {};
 /**
 * The metadata associated with this plugin.
 */
-J.SDP.Metadata = new J_SdpPluginMetadata("J-SDP", "3.1.1");
+J.SDP.Metadata = new J_SdpPluginMetadata("J-SDP", "3.2.0");
 /**
 * A collection of all aliased methods for this plugin.
 */
@@ -2585,7 +2591,8 @@ J.SDP.Aliased = {
 	Scene_Boot: new Map(),
 	Scene_Map: new Map(),
 	Scene_Menu: new Map(),
-	Window_MenuCommand: new Map()
+	Window_MenuCommand: new Map(),
+	Window_MenuStatus: new Map()
 };
 /**
 * All regular expressions used by this plugin.
@@ -3639,6 +3646,58 @@ Window_MenuCommand.prototype.makeCommandList = function() {
 Window_MenuCommand.prototype.canAddSdpCommand = function() {
 	return $gameSwitches.value(J.SDP.Metadata.menuSwitchId);
 };
+
+//#endregion
+//#region src/plugins/sdp/core/windows/Window_MenuStatus.js
+/**
+* J-CMS reserves a block at the foot of each party member's menu cell for whatever the plugins
+* layered on top of it have to say. Unspent node points are the clearest thing this plugin can
+* contribute there: they are a currency the player is holding rather than spending, and a currency
+* nobody is reminded of is one nobody spends.
+*
+* The check is for J-CMS itself rather than for the method, because this is the one honestly
+* optional dependency in play- the main menu redesign may simply not be installed, in which case
+* there is no cell to draw into and nothing here should exist.
+*/
+if (J.CMS) {
+	/**
+	* Extends {@link #drawExtensionData}.<br/>
+	* Also reports how many node points this actor is holding unspent.
+	*
+	* Draws beneath whatever the original returned rather than at the y it was handed, so that this
+	* plugin claims a row of its own without needing to know whether anything else already claimed
+	* one above it.
+	* @param {Game_Actor} actor The actor being described.
+	* @param {number} x The left edge of the space available.
+	* @param {number} y The top of the space available.
+	* @param {number} width The width available.
+	* @returns {number}
+	*/
+	J.SDP.Aliased.Window_MenuStatus.set("drawExtensionData", Window_MenuStatus.prototype.drawExtensionData);
+	Window_MenuStatus.prototype.drawExtensionData = function(actor, x, y, width) {
+		const nextY = J.SDP.Aliased.Window_MenuStatus.get("drawExtensionData").call(this, actor, x, y, width);
+		this.drawSdpPoints(actor, x, nextY, width);
+		return nextY + this.lineHeight();
+	};
+	/**
+	* Draws how many node points this actor has available to spend.
+	*
+	* Drawn even at zero rather than hidden when empty. A row that appears only sometimes teaches the
+	* player nothing about where to look for it, and a standing zero is what makes a later non-zero
+	* legible as a change worth acting on.
+	* @param {Game_Actor} actor The actor whose points are being reported.
+	* @param {number} x The left edge of the row.
+	* @param {number} y The top of the row.
+	* @param {number} width The width available to the row.
+	*/
+	Window_MenuStatus.prototype.drawSdpPoints = function(actor, x, y, width) {
+		const points = actor.getSdpPoints();
+		this.drawIcon(J.SDP.Metadata.sdpIconIndex, x, y);
+		const valueX = x + ImageManager.standardIconWidth + 8;
+		this.resetTextColor();
+		this.drawText(`${points}`, valueX, y, width - (valueX - x), "left");
+	};
+}
 
 //#endregion
 //#region src/plugins/sdp/core/managers/SdpFamilyFilter.js

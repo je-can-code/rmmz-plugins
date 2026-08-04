@@ -152,8 +152,11 @@ Scene_Menu.prototype.statusWindowRect = function()
   // begin immediately beneath the help window.
   const wy = this.helpWindowRect().height;
 
-  // claim everything between the help window and the currency strip.
-  const wh = Graphics.boxHeight - wy - this.goldWindowRect().height;
+  // stop where the currency strip begins, rather than measuring back from the bottom of the screen
+  // by that strip's height- the strip does not sit at the bottom, the control legend does, so
+  // measuring by height rather than by position ran this window a full legend past its own floor.
+  // Deriving the end from the neighbor's position also survives anything else being added below.
+  const wh = this.goldWindowRect().y - wy;
 
   // return the built rectangle.
   return new Rectangle(this.centerStackX(), wy, this.centerStackWidth(), wh);

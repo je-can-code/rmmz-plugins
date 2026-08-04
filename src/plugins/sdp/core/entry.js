@@ -32,6 +32,7 @@ import './managers/IconManager.js';
 import './managers/TextManager.js';
 import './core/registerSdpParameters.js';
 import './windows/Window_MenuCommand.js';
+import './windows/Window_MenuStatus.js';
 import './windows/Window_SdpList.js';
 import './windows/Window_SdpHeader.js';
 import './windows/Window_SdpParameterList.js';
