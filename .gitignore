@@ -27,5 +27,7 @@ package-lock.json
 yarn.lock
 
 # the save system writes real directories now rather than one .rmmzsave file, and a testplay run
-# from the project folder leaves one behind.
-save/
+# from the repo root leaves one behind. Anchored with a leading slash on purpose: a bare `save/`
+# matches a directory of that name at *any* depth, which silently swallowed every test under
+# test/plugins/_base/ext/save/.
+/save/
