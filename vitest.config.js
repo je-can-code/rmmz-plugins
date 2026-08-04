@@ -6,6 +6,19 @@ export default defineConfig({
     environment: 'node',
     include: [ 'test/**/*.test.js' ],
     silent: 'passed-only',
+    // the counts, the failures, and nothing else.
+    //
+    // The default reporter prints one `✓ path (n tests)` line per file - eight hundred of them here -
+    // but only in some terminals. It depends on how the reporter reads the environment it is attached
+    // to, and the answer differs between a plain pipe, a pseudo-terminal, a CI runner and an editor's
+    // integrated terminal. That made the volume unpredictable and, more to the point, unfixable by
+    // guessing at flags: the same command was quiet on one machine and eight hundred lines on another.
+    //
+    // `agent` never emits the roll-call under any of them, and still reports the pass/fail counts and
+    // the full assertion diff for anything that fails. `test:watch` and `test:verbose` opt back into
+    // the default reporter, because a live view is the entire point of the first and detail is the
+    // entire point of the second.
+    reporters: [ 'agent' ],
     coverage: {
       provider: 'v8',
       reporter: [ 'text', 'html', 'json-summary', 'lcov' ],
