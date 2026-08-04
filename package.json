@@ -50,7 +50,7 @@
     "compile": "bun run clean:out && bun run build:all",
     "verify-post-compile": "bun run verify:ships && bun run test && bun run copy:to-all",
     "hotfix": "bun run verify-pre-compile && bun run compile && bun run verify-post-compile",
-    "verify:ci": "bun run verify-pre-compile && bun run compile && bun run verify:ships && vitest run --coverage --coverage.reporter=text-summary",
+    "verify:ci": "bun run verify-pre-compile && bun run compile && bun run verify:ships && vitest run --coverage --reporter=agent --coverage.reporter=text-summary",
     "verify:no-build-drift": "bun run copy:to-test && git diff --exit-code -- project/js/plugins",
     "verify:ships": "node ./src/build-tools/verify-ships.js",
     "migrate:sdp-keys": "node ./src/build-tools/migrate-sdp-parameter-keys.mjs",
