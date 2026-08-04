@@ -61,11 +61,12 @@ Run `codegraph status`, compare its file count against a real `find`, and if the
 bun run hotfix
 ```
 
-**One-time local setup:** `git config core.safecrlf false`. `.gitattributes` pins `*.js` and `*.json`
-to `eol=crlf` while every build tool writes LF, so without it git announces
-`LF will be replaced by CRLF` once per file on every `git add` — seventy-eight lines of noise around
-whatever actually changed. The conversion is deliberate and lossless; only the commentary is unwanted.
-It is machine-local config and cannot be committed, so a fresh clone needs it again. CI sets it too.
+**Line endings are LF everywhere** — in the repository and in the working tree, pinned by
+`.gitattributes`. Git always stored LF; the `eol=crlf` that used to sit there decided only what landed
+on disk after checkout, and it dated from the repo being Windows-first. Every build tool writes LF, so
+on a Linux checkout the two disagreed on every generated file and git narrated the conversion once per
+file. Nothing at runtime cares. If a stray `LF will be replaced by CRLF` warning ever reappears,
+something has reintroduced a `eol=crlf` rule rather than anything being wrong with the file.
 
 That is three phases, and it is more than a build:
 
