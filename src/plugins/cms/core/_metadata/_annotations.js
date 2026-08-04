@@ -28,6 +28,17 @@
  * This plugin has no notetags of its own- it is purely a scene/window
  * redesign of the native main menu.
  * ============================================================================
+ * CHANGELOG:
+ * - 1.1.0
+ *    Each party member's cell now carries their map sprite beside their
+ *    portrait, the experience remaining until their next level, and every
+ *    equipment slot they wear. Empty slots are named and dimmed rather than
+ *    omitted, so the block keeps its shape as gear comes and goes.
+ *    Command help text no longer refers to "this character", which pointed at
+ *    a referent the menu never identifies.
+ * - 1.0.0
+ *    The initial release.
+ * ============================================================================
  *
  * @param parentConfig
  * @text COMMAND DESCRIPTIONS

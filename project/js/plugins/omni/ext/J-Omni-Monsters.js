@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.2.0 OMNI-MONSTER] Extends the Omnipedia with a Monsterpedia entry.
+ * [v1.2.1 OMNI-MONSTER] Extends the Omnipedia with a Monsterpedia entry.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -57,6 +57,11 @@
  * one per tag, in the order they appear on the note.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    The monsterpedia detail window no longer declares private members. A
+ *    window's constructor reaches initialize, and through it the drawing
+ *    hooks, before a derived class installs its own members- so anything
+ *    private was being touched on an object that did not yet have it.
  * - 1.2.0
  *    The monsterpedia lookup cache is no longer written to savefiles. It held
  *    the same observations as the saveables it is built from, keyed by enemy
@@ -145,7 +150,7 @@ J.OMNI.EXT.MONSTER = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.OMNI.EXT.MONSTER.Metadata = new J_OmniMonster_PluginMetadata("J-Omni-Monsterpedia", "1.2.0");
+J.OMNI.EXT.MONSTER.Metadata = new J_OmniMonster_PluginMetadata("J-Omni-Monsterpedia", "1.2.1");
 /**
 * A collection of all aliased methods for this plugin.
 */

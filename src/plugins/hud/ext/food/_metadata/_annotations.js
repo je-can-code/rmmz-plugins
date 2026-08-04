@@ -25,6 +25,11 @@
  * Those responsibilities belong to J-ABS-Food.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    The food frame no longer declares private members. A window's constructor
+ *    reaches initialize, and through it the drawing hooks, before a derived
+ *    class installs its own members- so anything private was being touched on
+ *    an object that did not yet have it.
  * - 1.0.0
  *    Initial release.
  * ============================================================================

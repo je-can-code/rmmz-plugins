@@ -139,6 +139,11 @@
  * the J-MZ Data Editor app), not tagged on individual database objects.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    The plugin metadata class and the category badge and recipe detail
+ *    windows no longer declare private members. Both base constructors reach
+ *    an overridable hook before a derived class installs its own members- so
+ *    anything private was being touched on an object that did not yet have it.
  * - 1.2.0
  *    Routed the _crafting namespace into its own save section, so recipe and
  *    category tracking land in systems/crafting.json.

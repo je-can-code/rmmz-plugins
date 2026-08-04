@@ -364,6 +364,12 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.1.1
+ *    The family strip, header, mastery, and parameter list windows no longer
+ *    declare private members. A window's constructor reaches initialize, and
+ *    through it the drawing hooks, before a derived class installs its own
+ *    members- so anything private was being touched on an object that did not
+ *    yet have it.
  * - 3.1.0
  *    Routed the _sdp namespace into its own save section, so panel investment
  *    and mastery land in systems/sdp.json rather than in the system blob.

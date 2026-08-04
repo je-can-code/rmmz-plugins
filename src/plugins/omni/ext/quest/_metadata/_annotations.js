@@ -138,6 +138,11 @@
  * This choice is only shown while objective 2 of that quest is completed.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    The questopedia description window no longer declares private members. A
+ *    window's constructor reaches initialize, and through it the drawing
+ *    hooks, before a derived class installs its own members- so anything
+ *    private was being touched on an object that did not yet have it.
  * - 1.2.0
  *    The questopedia lookup cache is no longer written to savefiles. It held
  *    the same entries as the saveables it is built from, keyed for lookup,

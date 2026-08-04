@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 CMS] A redesign of the main menu.
+ * [v1.1.0 CMS] A redesign of the main menu.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -27,6 +27,17 @@
  * NOTE ABOUT NOTETAGS:
  * This plugin has no notetags of its own- it is purely a scene/window
  * redesign of the native main menu.
+ * ============================================================================
+ * CHANGELOG:
+ * - 1.1.0
+ *    Each party member's cell now carries their map sprite beside their
+ *    portrait, the experience remaining until their next level, and every
+ *    equipment slot they wear. Empty slots are named and dimmed rather than
+ *    omitted, so the block keeps its shape as gear comes and goes.
+ *    Command help text no longer refers to "this character", which pointed at
+ *    a referent the menu never identifies.
+ * - 1.0.0
+ *    The initial release.
  * ============================================================================
  *
  * @param parentConfig
@@ -161,7 +172,7 @@ J.CMS = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.CMS.Metadata = new J_CmsMain_PluginMetadata("J-CMS", "1.0.0");
+J.CMS.Metadata = new J_CmsMain_PluginMetadata("J-CMS", "1.1.0");
 /**
 * The plugin umbrella that governs all extensions of this plugin.
 */

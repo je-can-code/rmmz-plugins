@@ -2,7 +2,7 @@
  
 /*:
  * @target MZ
- * @plugindesc [v3.1.0 SDP] Enables the SDP system, aka Stat Distribution Panels.
+ * @plugindesc [v3.1.1 SDP] Enables the SDP system, aka Stat Distribution Panels.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -364,6 +364,12 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.1.1
+ *    The family strip, header, mastery, and parameter list windows no longer
+ *    declare private members. A window's constructor reaches initialize, and
+ *    through it the drawing hooks, before a derived class installs its own
+ *    members- so anything private was being touched on an object that did not
+ *    yet have it.
  * - 3.1.0
  *    Routed the _sdp namespace into its own save section, so panel investment
  *    and mastery land in systems/sdp.json rather than in the system blob.
@@ -2559,7 +2565,7 @@ J.SDP = {};
 /**
 * The metadata associated with this plugin.
 */
-J.SDP.Metadata = new J_SdpPluginMetadata("J-SDP", "3.1.0");
+J.SDP.Metadata = new J_SdpPluginMetadata("J-SDP", "3.1.1");
 /**
 * A collection of all aliased methods for this plugin.
 */

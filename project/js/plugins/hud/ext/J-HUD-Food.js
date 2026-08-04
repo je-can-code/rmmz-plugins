@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 HUD-FOOD] A J-HUD extension that displays the current food chain status on screen.
+ * [v1.0.1 HUD-FOOD] A J-HUD extension that displays the current food chain status on screen.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -25,6 +25,11 @@
  * Those responsibilities belong to J-ABS-Food.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    The food frame no longer declares private members. A window's constructor
+ *    reaches initialize, and through it the drawing hooks, before a derived
+ *    class installs its own members- so anything private was being touched on
+ *    an object that did not yet have it.
  * - 1.0.0
  *    Initial release.
  * ============================================================================
@@ -152,7 +157,7 @@ J.HUD.EXT.FOOD ||= {};
 /**
 * The metadata associated with this plugin.
 */
-J.HUD.EXT.FOOD.Metadata = new JFoodHud_PluginMetadata("J-HUD-FOOD", "1.0.0");
+J.HUD.EXT.FOOD.Metadata = new JFoodHud_PluginMetadata("J-HUD-FOOD", "1.0.1");
 /**
 * A collection of all aliased methods for this plugin.
 */

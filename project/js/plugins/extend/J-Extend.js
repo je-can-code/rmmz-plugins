@@ -1,7 +1,7 @@
 //region Introduction
 /*:
  * @target MZ
- * @plugindesc [v1.7.1 EXTEND] Extends the capabilities of skills/actions.
+ * @plugindesc [v1.7.2 EXTEND] Extends the capabilities of skills/actions.
  * @base J-Base
  * @orderAfter J-Base
  * @author JE
@@ -433,6 +433,11 @@
  * A three-state cycle: 12 -> 13 -> 14 -> 12 -> ..., one step per execution.
  * ============================================================================
  * CHANGELOG:
+ * - 1.7.2
+ *    The plugin metadata class no longer declares private members. Its base
+ *    constructor reaches postInitialize before a derived class installs its
+ *    own, so anything private was being touched on an object that did not yet
+ *    have it.
  * - 1.7.1
  *    Split Game_Item's extension state so the default lands in initMembers
  *    while the mapping from the constructed item stays in the initialize
@@ -573,7 +578,7 @@ J.EXTEND = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.EXTEND.Metadata = new J_SkillExtendPluginMetadata("J-Extend", "1.7.1");
+J.EXTEND.Metadata = new J_SkillExtendPluginMetadata("J-Extend", "1.7.2");
 /**
 * A collection of all aliased methods for this plugin.
 */

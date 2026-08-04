@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 ABS-BOSS] Data-driven boss encounters for J-ABS.
+ * [v1.0.1 ABS-BOSS] Data-driven boss encounters for J-ABS.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -120,6 +120,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    The plugin metadata class no longer declares private members. Its base
+ *    constructor reaches postInitialize before a derived class installs its
+ *    own, so anything private was being touched on an object that did not yet
+ *    have it, which threw during boot.
  * - 1.0.0
  *    The initial release.
  * ============================================================================
@@ -810,7 +815,7 @@ J.ABS.EXT.BOSS = {};
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.EXT.BOSS.Metadata = new J_BossPluginMetadata("J-ABS-Boss", "1.0.0");
+J.ABS.EXT.BOSS.Metadata = new J_BossPluginMetadata("J-ABS-Boss", "1.0.1");
 /**
 * A collection of all aliased methods for this plugin.
 */

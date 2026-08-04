@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.2.0 JAFTING-CREATE] An extension for JAFTING to enable recipe creation.
+ * [v1.2.1 JAFTING-CREATE] An extension for JAFTING to enable recipe creation.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -139,6 +139,11 @@
  * the J-MZ Data Editor app), not tagged on individual database objects.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    The plugin metadata class and the category badge and recipe detail
+ *    windows no longer declare private members. Both base constructors reach
+ *    an overridable hook before a derived class installs its own members- so
+ *    anything private was being touched on an object that did not yet have it.
  * - 1.2.0
  *    Routed the _crafting namespace into its own save section, so recipe and
  *    category tracking land in systems/crafting.json.
@@ -1304,7 +1309,7 @@ J.JAFTING.EXT.CREATE = {};
 /**
 * The metadata associated with this plugin.
 */
-J.JAFTING.EXT.CREATE.Metadata = new J_CraftingCreatePluginMetadata("J-JAFTING-Creation", "1.2.0");
+J.JAFTING.EXT.CREATE.Metadata = new J_CraftingCreatePluginMetadata("J-JAFTING-Creation", "1.2.1");
 /**
 * A collection of all aliased methods for this plugin.
 */
