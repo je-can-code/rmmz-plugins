@@ -4,19 +4,19 @@
  * OVERVIEW
  * This nodejs script is intended to be used to quickly scaffold a group of
  * common directories using this opinionated way of dividing up RMMZ plugin
- * code logic. This also assumes it will be ran from the convenient npm package.json
+ * code logic. This also assumes it will be ran from the convenient package.json
  * commands found in the root package.json of this plugins monorepo project.
  *
  * USAGE:
- * To use this nodejs script, just run it with a single argument:
+ * To use this script, just run it with a single argument:
  *  1st arg = root path directory.
  *
  * SAMPLE INPUT:
- * $ node init.js abs/ext/charge
+ * $ bun init.js abs/ext/charge
  *
  * OR
  * RUNNING FROM THE PLUGIN-PROJECT-LEVEL
- * $ npm run plugin:init abs/ext/charge
+ * $ bun run plugin:init abs/ext/charge
  *
  * SAMPLE OUTPUT:
  * 🔉 working directory: Z:\dev\gaming\rmmz-plugins
@@ -24,7 +24,8 @@
  * ✨ copied [Z:\dev\gaming\rmmz-plugins\src\plugin-template] to [Z:\dev\gaming\rmmz-plugins\src\plugins\abs\ext\poses]
  * ✨ Initter™ has completed execution. 💯✅
  *
- * After init, read SCAFFOLD.md in the new plugin folder (namespace, vite config, package.json build script).
+ * After init, read SCAFFOLD.md in the new plugin folder (namespace, vite config, entry imports). The
+ * vite config is what registers the ship with the build; there is no build script to add.
  */
 
 import Mirror from './mirror.js';

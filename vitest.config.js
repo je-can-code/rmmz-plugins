@@ -6,6 +6,19 @@ export default defineConfig({
     environment: 'node',
     include: [ 'test/**/*.test.js' ],
     silent: 'passed-only',
+    // the counts, the failures, and nothing else.
+    //
+    // The default reporter prints one `✓ path (n tests)` line per file - eight hundred of them here -
+    // but only in some terminals. It depends on how the reporter reads the environment it is attached
+    // to, and the answer differs between a plain pipe, a pseudo-terminal, a CI runner and an editor's
+    // integrated terminal. That made the volume unpredictable and, more to the point, unfixable by
+    // guessing at flags: the same command was quiet on one machine and eight hundred lines on another.
+    //
+    // `agent` never emits the roll-call under any of them, and still reports the pass/fail counts and
+    // the full assertion diff for anything that fails. `test:watch` and `test:verbose` opt back into
+    // the default reporter, because a live view is the entire point of the first and detail is the
+    // entire point of the second.
+    reporters: [ 'agent' ],
     coverage: {
       provider: 'v8',
       reporter: [ 'text', 'html', 'json-summary', 'lcov' ],
@@ -27,9 +40,20 @@ export default defineConfig({
         '**/*.d.ts',
         '**/*.test.*',
         'test/**',
-        '**/src/plugins/**/scenes/**',
+        // the view layer is excluded by default and lifted per family as tests land, rather than all
+        // at once- flipping it wholesale would add hundreds of 0% files and bury the real targets.
+        //
+        // J-Base-Save is the first family lifted, which is why these read as three patterns each
+        // instead of one: a bare `!` negation entry is not a negation to this matcher, it inverts the
+        // whole set and empties the report. Peeling the exception out segment by segment with extglob
+        // is what leaves `_base/ext/save/{scenes,windows}` measured while everything else stays out.
+        '**/src/plugins/!(_base)/**/scenes/**',
+        '**/src/plugins/_base/!(ext)/**/scenes/**',
+        '**/src/plugins/_base/ext/!(save)/**/scenes/**',
         '**/src/plugins/**/sprites/**',
-        '**/src/plugins/**/windows/**',
+        '**/src/plugins/!(_base)/**/windows/**',
+        '**/src/plugins/_base/!(ext)/**/windows/**',
+        '**/src/plugins/_base/ext/!(save)/**/windows/**',
         // pure JSDoc annotation blocks and trivial plugin-metadata re-exports- never contain
         // executable logic, so 0% here is permanent and not a real coverage gap. initialization.js
         // and pluginCommands.js are deliberately NOT excluded- they hold real, partially-tested
@@ -48,6 +72,21 @@ export default defineConfig({
       all: true,
       clean: true,
       excludeAfterRemap: true,
+      // a floor, not a target. The suite runs well above this - the point of setting it here is that
+      // CI fails a pull request that drops beneath it, which is a thing no amount of remembering to
+      // run `hotfix` can catch.
+      //
+      // Ninety rather than the current number on purpose. Lifting a family's view exclusion
+      // mechanically *lowers* the percentage the moment it happens - the newly measured scenes and
+      // windows start at zero and get covered afterwards - so a threshold pinned to today's figure
+      // would block the very work that improves it. This leaves room for that to happen a family at
+      // a time, while still catching a real regression.
+      thresholds: {
+        statements: 90,
+        branches: 90,
+        functions: 90,
+        lines: 90,
+      },
     },
   },
 });

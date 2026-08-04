@@ -16,7 +16,6 @@
     "**/dist/**",
     "**/rmmz_*.js",
     "**/*.d.ts",
-    "src/external/**",
     "project/**"
   ],
   "env": {
@@ -326,6 +325,7 @@
     "J_AbsPluginMetadata": "writable",
     "J_AllyAiPluginMetadata": "writable",
     "J_BaseSavePluginMetadata": "writable",
+    "J_BossPluginMetadata": "writable",
     "J_CaModsPluginMetadata": "writable",
     "J_ChargePluginMetadata": "writable",
     "J_CmsEquip_PluginMetadata": "writable",
@@ -372,6 +372,11 @@
     "J_TimingPluginMetadata": "writable",
     "J_ToolsPluginMetadata": "writable",
     "J_UtilsPluginMetadata": "writable",
+    "JabsBossEncounter": "writable",
+    "JabsBossManager": "writable",
+    "JabsBossParticipant": "writable",
+    "JabsBossRoutine": "writable",
+    "JabsBossStep": "writable",
     "JabsInputSymbols": "writable",
     "JaftingManager": "writable",
     "JaftingRefinementLineage": "writable",

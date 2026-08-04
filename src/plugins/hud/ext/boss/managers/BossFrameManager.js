@@ -71,6 +71,16 @@ class BossFrameManager
    */
   static getBossGameBattler()
   {
+    // a running encounter is the authority on who the boss is. This frame is a view of that fact,
+    // not the owner of it- what a boss is (a battler, a health pool, a set of behaviors) is combat
+    // knowledge, and it lives with the battle system. J-ABS-Boss is genuinely optional though, so
+    // this frame must still stand on its own when that plugin is absent.
+    const bossManager = globalThis.JabsBossManager;
+    if (bossManager && bossManager.hasActiveEncounter())
+    {
+      return bossManager.getBossGameBattler();
+    }
+
     // if there is no boss, then there is no jabs battler.
     if (!this.boss) return null;
 
@@ -84,6 +94,14 @@ class BossFrameManager
    */
   static getBossJabsBattler()
   {
+    // as with the game battler, a running encounter already knows which body is the boss and has
+    // resolved it from the map directly, so there is no reason to re-derive it from a uuid here.
+    const bossManager = globalThis.JabsBossManager;
+    if (bossManager && bossManager.hasActiveEncounter())
+    {
+      return bossManager.getBossJabsBattler();
+    }
+
     // if there is no boss, then there is no jabs battler.
     if (!this.boss) return null;
 

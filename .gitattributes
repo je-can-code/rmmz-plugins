@@ -1,7 +1,15 @@
 # Set the default behavior, in case people don't have core.autocrlf set.
 * text=auto
-*.js text eol=crlf
-*.json text eol=crlf
+
+# LF in the working tree, not just in the repository.
+#
+# Git has always stored these as LF; the `eol=crlf` this replaced only decided what landed on disk
+# after a checkout, and it dated from the repo being Windows-first. Every build tool here writes LF,
+# so on a Linux checkout the two disagreed on every generated file and git narrated the conversion
+# once per file on every `git add`. Nothing at runtime cares - NW.js and every JS engine accept both -
+# so the only thing the mismatch produced was noise.
+*.js text eol=lf
+*.json text eol=lf
 *.sh text eol=lf
 
 # Denote all files that are truly binary and should not be modified.

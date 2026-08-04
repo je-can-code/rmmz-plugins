@@ -40,7 +40,7 @@ class J_BaseSavePluginMetadata
      * save", never "you lost the file". Size is deliberately not a consideration here.
      * @type {number}
      */
-    this.retainedSaveGenerations = this.parsedPluginParameters['retainedSaveGenerations'] ?? 3;
+    this.retainedSaveGenerations = Number(this.parsedPluginParameters['retainedSaveGenerations'] ?? 3);
   }
 }
 

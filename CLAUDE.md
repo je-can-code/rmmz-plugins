@@ -61,6 +61,13 @@ Run `codegraph status`, compare its file count against a real `find`, and if the
 bun run hotfix
 ```
 
+**Line endings are LF everywhere** — in the repository and in the working tree, pinned by
+`.gitattributes`. Git always stored LF; the `eol=crlf` that used to sit there decided only what landed
+on disk after checkout, and it dated from the repo being Windows-first. Every build tool writes LF, so
+on a Linux checkout the two disagreed on every generated file and git narrated the conversion once per
+file. Nothing at runtime cares. If a stray `LF will be replaced by CRLF` warning ever reappears,
+something has reintroduced a `eol=crlf` rule rather than anything being wrong with the file.
+
 That is three phases, and it is more than a build:
 
 | Phase | What runs |
@@ -76,13 +83,14 @@ Most of the style rules below are not honor-system: there is a gate with a match
 gate's source file opens with a long comment explaining its reasoning. When a rule surprises you, read
 the gate — that is where the argument lives.
 
-**`hotfix` is the build.** Do not run `bun run build:<plugin>` plus a manual `cp` to save time — the full
-run is sub-second in practice, and single-ship runs risk a partial `out/`, skipped destinations, and
-drift from what actually gets committed. Never copy built plugin files by hand. If `hotfix` fails, fix
-the root cause rather than falling back to manual copies.
+**`hotfix` is the build, and it is the only one.** There are no per-ship build scripts — the
+seventy-eight `build:<plugin>` entries are gone, and nothing replaced them. `build-all.js` discovers
+ships by globbing `src/plugins/**/vite.config.*.js`, so a ship is registered by having a vite config
+and by nothing else. The full run is sub-second in practice.
 
-*(Exception: a one-off `build:<plugin>` is fine when Jeremy explicitly asks for it and expects no
-mirroring.)*
+Never copy built plugin files by hand, and never reach for a partial build to save time — it risks a
+half-populated `out/`, skipped destinations, and drift from what actually gets committed. If `hotfix`
+fails, fix the root cause rather than falling back to manual copies.
 
 `verify:ships` fails the build if:
 

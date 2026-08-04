@@ -2,19 +2,26 @@
  * BUILDER
  *
  * OVERVIEW
- * This nodejs script is intended to be used to quickly execute ALL "once:" types
- * of builds present in ../ directory's package.json. This is designed to run them
- * in parallel
+ * Builds every plugin ship in the monorepo, in parallel, by finding them on disk.
  *
- * NOTE:
- * This takes advantage of import assertions to get the package.json. You may need
- * to ensure you have the latest nodejs installed to run it.
+ * A ship is defined by its vite config, and that is the whole registry: a directory under
+ * src/plugins holding a `vite.config.*.js` is a ship, and it is built. There is no second list to
+ * keep in step, which is the point - this used to iterate the `scripts` block of package.json and
+ * run each `build:` entry, and every problem that arrangement had came from the same root. A new
+ * ship needed a hand-written script or it silently never built. The two lists drifted (three of the
+ * seventy-eight spelled their config path differently, and nothing could notice). Any script that
+ * did not match one of a dozen ignored prefixes was swept into the build, so adding an unrelated
+ * one could make the build invoke itself. And it shelled out to `npm`, in a repo where bun is the
+ * only sanctioned runtime.
+ *
+ * Where each bundle lands is unchanged, because it was never this script's decision: the output
+ * path comes from the `input` key inside each ship's own vite config.
  *
  * USAGE:
- * There are no additional arguments required, just use node to run it.
+ * There are no arguments. Run it with bun.
  *
  * SAMPLE INPUT:
- * $ node build-all.js
+ * $ bun ./src/build-tools/build-all.js
  *
  * SAMPLE OUTPUT:
  *
@@ -24,48 +31,38 @@
  */
 
 import { exec } from 'child_process';
-import * as fs from 'fs/promises';
+import { glob } from 'glob';
 
-const pkg = JSON.parse(await fs.readFile('./package.json', 'utf-8'));
 import Logger, { LogStyle } from './logger.js';
 
 // start for timings sake.
 const start = performance.now();
 
-// don't recursively build everything, or start generating a bunch of empty directories.
-const ignoredKeys = [
-  'plugin:',
-  'copy:',
-  'build:all',
-  'hotfix',
-  'verify-pre-compile',
-  'compile',
-  'verify-post-compile',
-  'test',
-  'clean:',
-  'migrate:',
-  'verify:',
-  'defs:',
-  'lint',
-];
+/**
+ * Every ship's vite config, which is also the list of ships.
+ *
+ * Sorted so the build log reads the same way twice, and so a failure is findable in it. `glob`
+ * makes no promise about order on its own.
+ * @type {string[]}
+ */
+const configPaths = (await glob('src/plugins/**/vite.config.*.js')).sort();
 
-// extract the scripts section of our package.json.
-const { scripts } = pkg;
+// a tree with no ships in it means the glob is wrong rather than that there is nothing to do, and
+// finishing successfully having built nothing is the one outcome that must not look like success.
+if (configPaths.length === 0)
+{
+  Logger.logAnyway('Builder™ found no vite configs under src/plugins - refusing to report success.', LogStyle.red);
+  process.exit(1);
+}
 
 // initialize the collection of executions.
 const executions = [];
 
-// iterate over all the scripts from the "scripts" section of the package.json.
-for (const key in scripts)
+// iterate over every ship discovered on disk.
+for (const configPath of configPaths)
 {
-  if (ignoredKeys.some(ignoredKey => key.startsWith(ignoredKey)))
-  {
-    Logger.log(`skipping: [${key}] because it starts with an ignored prefix.`);
-    continue;
-  }
-
-  // dictate the command.
-  const command = `npm run ${key}`;
+  // bun runs vite directly; there is no package.json script in between anymore.
+  const command = `bunx vite build --config ${configPath}`;
 
   // capture the execution as a promise for parallelization.
   const execution = new Promise((resolve, reject) =>
@@ -76,7 +73,7 @@ for (const key in scripts)
       {
         const stderrText = stderr === undefined || stderr === null ? '' : String(stderr).trim();
         const snippet = stderrText.length > 0 ? stderrText.slice(0, 800) : '';
-        const lines = [`${command} failed: ${error.message}`];
+        const lines = [ `${command} failed: ${error.message}` ];
         if (snippet.length > 0)
         {
           lines.push(snippet);
