@@ -11,7 +11,7 @@ class Window_SdpMastery
   /**
    * @type {StatDistributionPanel|null}
    */
-  #panel = null;
+  _panel = null;
 
   /**
    * Binds the hovered panel to this mastery strip.
@@ -19,7 +19,16 @@ class Window_SdpMastery
    */
   setPanel(panel)
   {
-    this.#panel = panel;
+    this._panel = panel;
+  }
+
+  /**
+   * The panel currently bound to this mastery strip.
+   * @returns {StatDistributionPanel|null}
+   */
+  panel()
+  {
+    return this._panel;
   }
 
   /**
@@ -28,7 +37,7 @@ class Window_SdpMastery
    */
   drawContent()
   {
-    const panel = this.#panel;
+    const panel = this.panel();
     if (!panel)
     {
       return;

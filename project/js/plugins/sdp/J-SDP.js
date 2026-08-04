@@ -4020,20 +4020,27 @@ var Window_SdpHeader = class extends Window_Base {
 	/**
 	* @type {StatDistributionPanel|null}
 	*/
-	#panel = null;
+	_panel = null;
 	/**
 	* Binds the hovered panel to this header.
 	* @param {StatDistributionPanel|null} panel The hovered panel.
 	*/
 	setPanel(panel) {
-		this.#panel = panel;
+		this._panel = panel;
+	}
+	/**
+	* The panel currently bound to this header.
+	* @returns {StatDistributionPanel|null}
+	*/
+	panel() {
+		return this._panel;
 	}
 	/**
 	* Implements {@link Window_Base.drawContent}.<br/>
 	* Renders the single-line summary for the hovered panel.
 	*/
 	drawContent() {
-		const panel = this.#panel;
+		const panel = this.panel();
 		if (!panel) {
 			return;
 		}
@@ -4111,10 +4118,10 @@ var Window_SdpParameterList = class extends Window_Command {
 	*/
 	buildCommands() {
 		if (this.panelParameters.length === 0) return [];
-		const commands = this.panelParameters.map(this.#buildPanelParameterCommand, this);
+		const commands = this.panelParameters.map(this.buildPanelParameterCommand, this);
 		return commands;
 	}
-	#buildPanelParameterCommand(panelParameter) {
+	buildPanelParameterCommand(panelParameter) {
 		const { parameterKey, isCore } = panelParameter;
 		const definition = ParameterRegistry.get(parameterKey);
 		const colorIndex = isCore ? 14 : 0;
@@ -4123,12 +4130,12 @@ var Window_SdpParameterList = class extends Window_Command {
 		const paramValue = this.currentActor.parameter(parameterKey);
 		const paramDescription = definition ? definition.description() : [String.empty];
 		const prettyValue = definition ? definition.prettyValue(paramValue, false, this.currentActor) : Math.trunc(paramValue).toString();
-		const { modifierColorIndex, modifierText } = this.#determineModifierData(panelParameter);
+		const { modifierColorIndex, modifierText } = this.determineModifierData(panelParameter);
 		const commandName = `${paramName} ( ${prettyValue} )`;
 		const command = new WindowCommandBuilder(commandName).setSymbol(parameterKey).addTextLines(paramDescription).setIconIndex(paramIcon).setColorIndex(colorIndex).setRightText(modifierText).setRightColorIndex(modifierColorIndex).setExtensionData(panelParameter).build();
 		return command;
 	}
-	#determineModifierData(panelParameter) {
+	determineModifierData(panelParameter) {
 		const calculateAfterRankUpValue = (paramValue, modifier, isFlat) => {
 			return isFlat ? Number((paramValue + modifier).toFixed(2)) : paramValue + paramValue * (modifier / 100);
 		};
@@ -4317,20 +4324,27 @@ var Window_SdpMastery = class extends Window_Base {
 	/**
 	* @type {StatDistributionPanel|null}
 	*/
-	#panel = null;
+	_panel = null;
 	/**
 	* Binds the hovered panel to this mastery strip.
 	* @param {StatDistributionPanel|null} panel The hovered panel.
 	*/
 	setPanel(panel) {
-		this.#panel = panel;
+		this._panel = panel;
+	}
+	/**
+	* The panel currently bound to this mastery strip.
+	* @returns {StatDistributionPanel|null}
+	*/
+	panel() {
+		return this._panel;
 	}
 	/**
 	* Implements {@link Window_Base.drawContent}.<br>
 	* Renders subgroup mastery enrollment for the hovered panel.
 	*/
 	drawContent() {
-		const panel = this.#panel;
+		const panel = this.panel();
 		if (!panel) {
 			return;
 		}
@@ -4900,7 +4914,7 @@ var Window_SdpFamilyStrip = class extends Window_Base {
 	* Active family-filter key ({@link SdpFamilyFilter.ALL}, {@link SdpFamilyFilter.UNKNOWN}, or a family key).
 	* @type {string}
 	*/
-	#filterKey = SdpFamilyFilter.ALL;
+	_filterKey = SdpFamilyFilter.ALL;
 	/**
 	* @param {Rectangle} rect The dimensions of the window.
 	*/
@@ -4913,15 +4927,22 @@ var Window_SdpFamilyStrip = class extends Window_Base {
 	* @param {string} filterKey The filter key driving this step.
 	*/
 	setFilterKey(filterKey) {
-		this.#filterKey = filterKey;
+		this._filterKey = filterKey;
 		this.refresh();
+	}
+	/**
+	* The family filter currently driving this strip.
+	* @returns {string}
+	*/
+	filterKey() {
+		return this._filterKey;
 	}
 	/**
 	* Implements {@link Window_Base.drawContent}.<br/>
 	* Renders the current family filter label and icon.
 	*/
 	drawContent() {
-		const filterKey = this.#filterKey;
+		const filterKey = this.filterKey();
 		const label = SdpFamilyFilter.displayNameForFilterKey(filterKey);
 		const iconIndex = SdpFamilyFilter.iconIndexForFilterKey(filterKey);
 		const iconPad = 4;

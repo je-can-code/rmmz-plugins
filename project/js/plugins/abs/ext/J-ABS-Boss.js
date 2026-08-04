@@ -734,19 +734,24 @@ var J_BossPluginMetadata = class extends PluginMetadata {
 	*/
 	initializeBossEncounters() {
 		const { bosses } = J.ABS.Metadata.ExternalConfig;
-		const encounters = bosses.map((rawEncounter) => this.#parseEncounter(rawEncounter));
+		const encounters = bosses.map((rawEncounter) => this.parseEncounter(rawEncounter));
 		JabsBossManager.registerEncounters(encounters);
 	}
 	/**
 	* Builds one encounter out of its raw configuration.
+	*
+	* None of the parse helpers below may be `#private`. The whole chain runs out of
+	* {@link PluginMetadata}'s constructor by way of `postInitialize`, and a derived class installs its
+	* private members only after `super()` returns- so a private helper does not exist yet at the moment
+	* this runs, and touching one throws before the game finishes booting.
 	* @param {any} rawEncounter The unparsed encounter from configuration.
 	* @returns {JabsBossEncounter}
 	*/
-	#parseEncounter(rawEncounter) {
-		const participants = rawEncounter.participants.map((raw) => this.#parseParticipant(raw));
+	parseEncounter(rawEncounter) {
+		const participants = rawEncounter.participants.map((raw) => this.parseParticipant(raw));
 		const aiControl = rawEncounter.aiControl ?? J.ABS.EXT.BOSS.AiControl.Shared;
 		const rawRoutines = rawEncounter.routines ?? [];
-		const routines = rawRoutines.map((raw) => this.#parseRoutine(raw));
+		const routines = rawRoutines.map((raw) => this.parseRoutine(raw));
 		return new JabsBossEncounter(rawEncounter.key, rawEncounter.map, participants, aiControl, routines);
 	}
 	/**
@@ -754,7 +759,7 @@ var J_BossPluginMetadata = class extends PluginMetadata {
 	* @param {any} rawParticipant The unparsed participant from configuration.
 	* @returns {JabsBossParticipant}
 	*/
-	#parseParticipant(rawParticipant) {
+	parseParticipant(rawParticipant) {
 		const { key, eventId, enemyId, expect } = rawParticipant;
 		return new JabsBossParticipant(key, eventId, enemyId, expect);
 	}
@@ -763,9 +768,9 @@ var J_BossPluginMetadata = class extends PluginMetadata {
 	* @param {any} rawRoutine The unparsed routine from configuration.
 	* @returns {JabsBossRoutine}
 	*/
-	#parseRoutine(rawRoutine) {
+	parseRoutine(rawRoutine) {
 		const cadenceFrames = Math.round(rawRoutine.cadence * FRAMES_PER_SECOND);
-		const steps = rawRoutine.steps.map((raw) => this.#parseStep(raw));
+		const steps = rawRoutine.steps.map((raw) => this.parseStep(raw));
 		return new JabsBossRoutine(rawRoutine.key, cadenceFrames, steps);
 	}
 	/**
@@ -773,7 +778,7 @@ var J_BossPluginMetadata = class extends PluginMetadata {
 	* @param {any} rawStep The unparsed step from configuration.
 	* @returns {JabsBossStep}
 	*/
-	#parseStep(rawStep) {
+	parseStep(rawStep) {
 		const { verb, skill, expect } = rawStep;
 		const cast = rawStep.cast !== false;
 		return new JabsBossStep(verb, skill, expect, cast);

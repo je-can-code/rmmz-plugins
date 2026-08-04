@@ -517,7 +517,7 @@ var J_SkillExtendPluginMetadata = class extends PluginMetadata {
 	* Plugins opt in by calling {@link registerNonCombiningKey} during Scene_Boot.
 	* @type {Set<string>}
 	*/
-	#nonCombiningKeys = new Set();
+	_nonCombiningKeys = new Set();
 	/**
 	* Constructor.
 	*/
@@ -533,14 +533,23 @@ var J_SkillExtendPluginMetadata = class extends PluginMetadata {
 	*/
 	registerNonCombiningKey(regexp, asBoolean = false) {
 		const key = J.BASE.Helpers.getKeyFromRegexp(regexp, asBoolean).toLowerCase();
-		this.#nonCombiningKeys.add(key);
+		this.nonCombiningKeys().add(key);
+	}
+	/**
+	* The live set of registered non-combining tag keys.
+	* Registration mutates this set directly; readers should prefer {@link getNonCombiningKeys}, which
+	* hands back a copy rather than the collection itself.
+	* @returns {Set<string>} The backing set.
+	*/
+	nonCombiningKeys() {
+		return this._nonCombiningKeys;
 	}
 	/**
 	* Gets all registered non-combining tag keys as an array.
 	* @returns {string[]} The registered keys, all lowercase.
 	*/
 	getNonCombiningKeys() {
-		return [...this.#nonCombiningKeys];
+		return [...this.nonCombiningKeys()];
 	}
 };
 

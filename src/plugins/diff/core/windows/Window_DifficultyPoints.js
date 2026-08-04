@@ -9,7 +9,7 @@ class Window_DifficultyPoints
    * The difficulty layer that the cursor is currently hovering over.
    * @type {DifficultyLayer|null}
    */
-  #hoveredDifficulty = null;
+  _hoveredDifficulty = null;
 
   /**
    * Constructor.
@@ -27,7 +27,7 @@ class Window_DifficultyPoints
    */
   getHoveredDifficulty()
   {
-    return this.#hoveredDifficulty;
+    return this._hoveredDifficulty;
   }
 
   /**
@@ -36,7 +36,7 @@ class Window_DifficultyPoints
    */
   setHoveredDifficulty(difficulty)
   {
-    this.#hoveredDifficulty = difficulty;
+    this._hoveredDifficulty = difficulty;
   }
 
   /**

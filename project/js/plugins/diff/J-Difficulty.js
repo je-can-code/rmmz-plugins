@@ -1482,7 +1482,7 @@ var Window_DifficultyPoints = class extends Window_Base {
 	* The difficulty layer that the cursor is currently hovering over.
 	* @type {DifficultyLayer|null}
 	*/
-	#hoveredDifficulty = null;
+	_hoveredDifficulty = null;
 	/**
 	* Constructor.
 	* @param {Rectangle} rect The rectangle that represents this window.
@@ -1495,14 +1495,14 @@ var Window_DifficultyPoints = class extends Window_Base {
 	* @returns {DifficultyLayer}
 	*/
 	getHoveredDifficulty() {
-		return this.#hoveredDifficulty;
+		return this._hoveredDifficulty;
 	}
 	/**
 	* Set the currently hovered difficulty used by this window.
 	* @param {DifficultyLayer} difficulty The difficulty currently hovered.
 	*/
 	setHoveredDifficulty(difficulty) {
-		this.#hoveredDifficulty = difficulty;
+		this._hoveredDifficulty = difficulty;
 	}
 	/**
 	* Implements {@link Window_Base.drawContent}.<br/>

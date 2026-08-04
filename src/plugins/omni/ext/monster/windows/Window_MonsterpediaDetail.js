@@ -6,31 +6,31 @@ class Window_MonsterpediaDetail
    * The player's observations of the currently highlighted enemy.
    * @type {MonsterpediaObservations|null}
    */
-  #currentObservations = null;
+  _currentObservations = null;
 
   /**
    * A cache of all sprites associated with enemies in the monsterpedia.
    * @type {Map<number, Sprite_Enemy>}
    */
-  #battlerImageCache = new Map();
+  _battlerImageCache = new Map();
 
   /**
    * A cache of all sprites associated with base parameters.
    * @type {Map<number, Sprite_Icon>}
    */
-  #baseParameterIconCache = new Map();
+  _baseParameterIconCache = new Map();
 
   /**
    * A cache of all sprites associated with sp parameters.
    * @type {Map<number, Sprite_Icon>}
    */
-  #spParameterIconCache = new Map();
+  _spParameterIconCache = new Map();
 
   /**
    * A cache of all sprites associated with ex parameters.
    * @type {Map<number, Sprite_Icon>}
    */
-  #exParameterIconCache = new Map();
+  _exParameterIconCache = new Map();
 
   //endregion properties
 
@@ -49,7 +49,7 @@ class Window_MonsterpediaDetail
    */
   getObservations()
   {
-    return this.#currentObservations;
+    return this._currentObservations;
   }
 
   /**
@@ -58,7 +58,7 @@ class Window_MonsterpediaDetail
    */
   setObservations(observations)
   {
-    this.#currentObservations = observations;
+    this._currentObservations = observations;
   }
 
   //region image caching
@@ -68,7 +68,7 @@ class Window_MonsterpediaDetail
    */
   getEnemyImageCache()
   {
-    return this.#battlerImageCache;
+    return this._battlerImageCache;
   }
 
   /**
@@ -77,7 +77,7 @@ class Window_MonsterpediaDetail
    */
   getBaseParameterIconCache()
   {
-    return this.#baseParameterIconCache;
+    return this._baseParameterIconCache;
   }
 
   /**
@@ -86,7 +86,7 @@ class Window_MonsterpediaDetail
    */
   getSpParameterIconCache()
   {
-    return this.#spParameterIconCache;
+    return this._spParameterIconCache;
   }
 
   /**
@@ -95,7 +95,7 @@ class Window_MonsterpediaDetail
    */
   getExParameterIconCache()
   {
-    return this.#exParameterIconCache;
+    return this._exParameterIconCache;
   }
 
   /**
@@ -1341,8 +1341,8 @@ class Window_MonsterpediaDetail
     this.modFontSize(-4);
 
     // build prefixed rows (family / traits / tools) so we know how tall the block is.
-    const taxonomy = this.#collectMonsterpediaTaxonomyRows(gameEnemy);
-    const taxonomyLineCount = this.#countMonsterpediaTaxonomyDrawLines(taxonomy);
+    const taxonomy = this.collectMonsterpediaTaxonomyRows(gameEnemy);
+    const taxonomyLineCount = this.countMonsterpediaTaxonomyDrawLines(taxonomy);
     const damageTypeCount = 10;
 
     // share one vertical budget so taxonomy width does not stack under damage and shove the grid into parameters.
@@ -1367,7 +1367,7 @@ class Window_MonsterpediaDetail
     const damageStartRow = 0;
     const taxonomyStartRow = 0;
 
-    this.#drawMonsterpediaTaxonomySections(
+    this.drawMonsterpediaTaxonomySections(
       taxonomyColumnX,
       yTop,
       lh,
@@ -1379,7 +1379,7 @@ class Window_MonsterpediaDetail
     damageElementIds.forEach((elementId, index) =>
     {
       const row = damageStartRow + index;
-      this.#drawMonsterpediaDamageElementRow(damageColumnX, yTop, lh, row, observations, elementId);
+      this.drawMonsterpediaDamageElementRow(damageColumnX, yTop, lh, row, observations, elementId);
     });
   }
 
@@ -1392,7 +1392,7 @@ class Window_MonsterpediaDetail
    *   tool: {elementId: number, label: string, rate: number}[]
    * }}
    */
-  #collectMonsterpediaTaxonomyRows(gameEnemy)
+  collectMonsterpediaTaxonomyRows(gameEnemy)
   {
     const names = $dataSystem.elements;
     const vs = [];
@@ -1457,7 +1457,7 @@ class Window_MonsterpediaDetail
    * @param {{ vs: object[], x: object[], tool: object[] }} taxonomy The grouped taxonomy rows.
    * @returns {number}
    */
-  #countMonsterpediaTaxonomyDrawLines(taxonomy)
+  countMonsterpediaTaxonomyDrawLines(taxonomy)
   {
     let lines = 0;
 
@@ -1489,20 +1489,20 @@ class Window_MonsterpediaDetail
    * @param {{ vs: object[], x: object[], tool: object[] }} taxonomy The grouped taxonomy rows.
    * @returns {number} The next row index after drawing taxonomy content.
    */
-  #drawMonsterpediaTaxonomySections(x, y, lh, row, observations, taxonomy)
+  drawMonsterpediaTaxonomySections(x, y, lh, row, observations, taxonomy)
   {
     let r = row;
 
     // continue the routine with the next policy step.
-    r = this.#drawMonsterpediaTaxonomyBucket(
+    r = this.drawMonsterpediaTaxonomyBucket(
       x, y, lh, r, observations, taxonomy.vs, 'Family');
 
     // continue the routine with the next policy step.
-    r = this.#drawMonsterpediaTaxonomyBucket(
+    r = this.drawMonsterpediaTaxonomyBucket(
       x, y, lh, r, observations, taxonomy.x, 'Traits');
 
     // continue the routine with the next policy step.
-    r = this.#drawMonsterpediaTaxonomyBucket(
+    r = this.drawMonsterpediaTaxonomyBucket(
       x, y, lh, r, observations, taxonomy.tool, 'Tools');
 
     return r;
@@ -1519,7 +1519,7 @@ class Window_MonsterpediaDetail
    * @param {string} headerText The section title.
    * @returns {number} The next row index after this bucket.
    */
-  #drawMonsterpediaTaxonomyBucket(x, y, lh, row, observations, rows, headerText)
+  drawMonsterpediaTaxonomyBucket(x, y, lh, row, observations, rows, headerText)
   {
     if (rows.length === 0) return row;
 
@@ -1538,7 +1538,7 @@ class Window_MonsterpediaDetail
     rows.forEach(entry =>
     {
       const { elementId, label, rate } = entry;
-      this.#drawMonsterpediaTaxonomyElementRow(x, y, lh, cursor, observations, elementId, label, rate);
+      this.drawMonsterpediaTaxonomyElementRow(x, y, lh, cursor, observations, elementId, label, rate);
       cursor += 1;
     });
 
@@ -1556,7 +1556,7 @@ class Window_MonsterpediaDetail
    * @param {string} label The display label (prefix stripped).
    * @param {number} rate The rounded percent rate.
    */
-  #drawMonsterpediaTaxonomyElementRow(x, y, lh, row, observations, elementId, label, rate)
+  drawMonsterpediaTaxonomyElementRow(x, y, lh, row, observations, elementId, label, rate)
   {
     this.resetFontSettings();
     this.modFontSize(-4);
@@ -1605,7 +1605,7 @@ class Window_MonsterpediaDetail
    * @param {MonsterpediaObservations} observations The active observations.
    * @param {number} elementId The database element id.
    */
-  #drawMonsterpediaDamageElementRow(x, y, lh, row, observations, elementId)
+  drawMonsterpediaDamageElementRow(x, y, lh, row, observations, elementId)
   {
     this.resetFontSettings();
     this.modFontSize(-4);

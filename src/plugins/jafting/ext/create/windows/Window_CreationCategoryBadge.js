@@ -8,7 +8,7 @@ class Window_CreationCategoryBadge
   /**
    * @type {CraftingCategory|null}
    */
-  #category = null;
+  _category = null;
 
   /**
    * @param {Rectangle} rect The rectangle that represents this window.
@@ -23,7 +23,7 @@ class Window_CreationCategoryBadge
    */
   setCategory(category)
   {
-    this.#category = category;
+    this._category = category;
     this.refresh();
   }
 
@@ -32,8 +32,17 @@ class Window_CreationCategoryBadge
    */
   clearCategory()
   {
-    this.#category = null;
+    this._category = null;
     this.refresh();
+  }
+
+  /**
+   * The category this badge is currently rendering, or null when cleared.
+   * @returns {CraftingCategory|null}
+   */
+  category()
+  {
+    return this._category;
   }
 
   /**
@@ -41,14 +50,15 @@ class Window_CreationCategoryBadge
    */
   drawContent()
   {
-    if (this.#category === null)
+    const category = this.category();
+    if (category === null)
     {
       return;
     }
 
     this.resetFontSettings();
 
-    const { iconIndex, name } = this.#category;
+    const { iconIndex, name } = category;
     const lh = this.lineHeight();
     const iy = Math.floor((this.innerHeight - lh) / 2);
     const iconSlot = ImageManager.standardIconWidth + 8;

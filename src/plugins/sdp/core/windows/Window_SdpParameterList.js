@@ -80,12 +80,12 @@ class Window_SdpParameterList
     // map callback is enough to trip that check, empty array or not.
     if (this.panelParameters.length === 0) return [];
 
-    const commands = this.panelParameters.map(this.#buildPanelParameterCommand, this);
+    const commands = this.panelParameters.map(this.buildPanelParameterCommand, this);
 
     return commands;
   }
 
-  #buildPanelParameterCommand(panelParameter)
+  buildPanelParameterCommand(panelParameter)
   {
     // extract a couple parameter data points for building the display information.
     const {
@@ -120,7 +120,7 @@ class Window_SdpParameterList
     const {
       modifierColorIndex,
       modifierText
-    } = this.#determineModifierData(panelParameter);
+    } = this.determineModifierData(panelParameter);
 
     // build the command name.
     const commandName = `${paramName} ( ${prettyValue} )`;
@@ -140,7 +140,7 @@ class Window_SdpParameterList
     return command;
   }
 
-  #determineModifierData(panelParameter)
+  determineModifierData(panelParameter)
   {
     // a small helper function for calculating the next rank's value.
     const calculateAfterRankUpValue = (paramValue, modifier, isFlat) =>

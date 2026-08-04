@@ -201,7 +201,7 @@ class Window_FoodFrame
     }
 
     // determine which segment is currently active before drawing anything.
-    const activeId = this.#resolveActiveStateId(leader, plan);
+    const activeId = this.resolveActiveStateId(leader, plan);
 
     // if no segment from the plan is active, the chain has fully expired.
     if (activeId === 0)
@@ -212,9 +212,9 @@ class Window_FoodFrame
 
     // chain is running — show the strip and draw the full food chain display.
     this.show();
-    this.#drawActiveStateIcon(activeId);
-    this.#drawVerticalBar(plan, player.getUuid(), activeId);
-    this.#drawChainLabels(plan, activeId);
+    this.drawActiveStateIcon(activeId);
+    this.drawVerticalBar(plan, player.getUuid(), activeId);
+    this.drawChainLabels(plan, activeId);
   }
 
   /**
@@ -222,7 +222,7 @@ class Window_FoodFrame
    * of the content area.
    * @param {number} activeId The state id currently active on the leader.
    */
-  #drawActiveStateIcon(activeId)
+  drawActiveStateIcon(activeId)
   {
     // look up the icon index from the active state's database entry.
     const iconIndex = $dataStates[activeId]
@@ -246,7 +246,7 @@ class Window_FoodFrame
    * @param {string} uuid The UUID of the leader's JABS battler for duration lookup.
    * @param {number} activeId The state id currently active on the leader.
    */
-  #drawVerticalBar(plan, uuid, activeId)
+  drawVerticalBar(plan, uuid, activeId)
   {
     const { segments } = plan;
     const totalFrames = segments.reduce((sum, seg) => sum + seg.frames, 0);
@@ -260,7 +260,7 @@ class Window_FoodFrame
     const barW = Window_FoodFrame.BAR_WIDTH;
     const barH = Window_FoodFrame.BAR_HEIGHT;
 
-    this.#drawBarFrame(barX, barY, barW, barH);
+    this.drawBarFrame(barX, barY, barW, barH);
 
     // segments render inside the inset track, not on the raw map tiles.
     const inner = Window_FoodFrame.#barInnerRect(barX, barY, barW, barH);
@@ -292,7 +292,7 @@ class Window_FoodFrame
 
       const isActive = (i === activeIndex);
 
-      this.#drawBarSegment(inner.x, cumY, inner.width, segH, segment, i, activeIndex, isActive, uuid, isLast);
+      this.drawBarSegment(inner.x, cumY, inner.width, segH, segment, i, activeIndex, isActive, uuid, isLast);
 
       cumY += segH;
     }
@@ -305,7 +305,7 @@ class Window_FoodFrame
    * @param {number} width Outer width including the frame.
    * @param {number} height Outer height including the frame.
    */
-  #drawBarFrame(x, y, width, height)
+  drawBarFrame(x, y, width, height)
   {
     const border = Window_FoodFrame.BAR_BORDER_THICKNESS;
 
@@ -322,7 +322,7 @@ class Window_FoodFrame
     );
 
     // crisp outline on top of the fill so edges stay sharp when scaled.
-    this.#strokeBarOutline(x, y, width, height);
+    this.strokeBarOutline(x, y, width, height);
   }
 
   /**
@@ -332,7 +332,7 @@ class Window_FoodFrame
    * @param {number} width Outer width including the frame.
    * @param {number} height Outer height including the frame.
    */
-  #strokeBarOutline(x, y, width, height)
+  strokeBarOutline(x, y, width, height)
   {
     const ctx = this.contents.context;
 
@@ -378,7 +378,7 @@ class Window_FoodFrame
    * @param {string} uuid UUID for JABS state tracker duration lookup.
    * @param {boolean} isLast Whether this is the final slice in the chain (touches the track floor).
    */
-  #drawBarSegment(x, y, width, height, segment, index, activeIndex, isActive, uuid, isLast)
+  drawBarSegment(x, y, width, height, segment, index, activeIndex, isActive, uuid, isLast)
   {
     const bgColor = ColorManager.gaugeBackColor();
 
@@ -390,7 +390,7 @@ class Window_FoodFrame
     else if (isActive)
     {
       // active segment — fill from the top down by the remaining-time ratio.
-      const fillRatio = this.#calculateFillRatio(segment, uuid);
+      const fillRatio = this.calculateFillRatio(segment, uuid);
 
       // round so a nearly-full phase does not leave a 1px empty line above the segment floor.
       let fillH = Math.round(height * fillRatio);
@@ -427,7 +427,7 @@ class Window_FoodFrame
    * @param {JABS_FoodChainPlan} plan The active food chain plan.
    * @param {number} activeId The state id currently active on the leader.
    */
-  #drawChainLabels(plan, activeId)
+  drawChainLabels(plan, activeId)
   {
     const { segments } = plan;
     const rowH = Window_FoodFrame.LABEL_ROW_HEIGHT;
@@ -446,7 +446,7 @@ class Window_FoodFrame
       const labelY = Window_FoodFrame.LABELS_START_Y + i * rowH;
       const isActive = (i === activeIndex);
 
-      this.#drawChainLabel(state.name, labelY, isActive);
+      this.drawChainLabel(state.name, labelY, isActive);
     }
   }
 
@@ -456,11 +456,11 @@ class Window_FoodFrame
    * @param {number} y The y coordinate in contents space.
    * @param {boolean} isActive Whether this row is the currently active chain phase.
    */
-  #drawChainLabel(rawName, y, isActive)
+  drawChainLabel(rawName, y, isActive)
   {
     // expand $codes and \\codes, then apply the smaller chain-label font size.
     let text = this.convertEscapeCharacters(rawName);
-    text = this.#applyChainLabelFontSize(text);
+    text = this.applyChainLabelFontSize(text);
 
     if (isActive)
     {
@@ -469,7 +469,7 @@ class Window_FoodFrame
 
     // measure the rendered width so we can center the row under the bar.
     const { width: textWidth } = this.textSizeEx(text);
-    const drawX = this.#chainLabelCenterX(textWidth);
+    const drawX = this.chainLabelCenterX(textWidth);
     const drawWidth = Math.min(textWidth, this.contentsWidth());
 
     if (isActive)
@@ -493,7 +493,7 @@ class Window_FoodFrame
    * @param {number} textWidth The measured width of the label text.
    * @returns {number}
    */
-  #chainLabelCenterX(textWidth)
+  chainLabelCenterX(textWidth)
   {
     const contentsW = this.contentsWidth();
 
@@ -510,7 +510,7 @@ class Window_FoodFrame
    * @param {string} text The label text (may already include escape codes).
    * @returns {string}
    */
-  #applyChainLabelFontSize(text)
+  applyChainLabelFontSize(text)
   {
     return this.modFontSizeForText(Window_FoodFrame.CHAIN_LABEL_FONT_DELTA, text);
   }
@@ -522,7 +522,7 @@ class Window_FoodFrame
    * @param {JABS_FoodChainPlan} plan The active food chain plan.
    * @returns {number} The active state id, or 0.
    */
-  #resolveActiveStateId(leader, plan)
+  resolveActiveStateId(leader, plan)
   {
     for (const segment of plan.segments)
     {
@@ -540,7 +540,7 @@ class Window_FoodFrame
    * @param {string} uuid UUID for the JABS battler state tracker.
    * @returns {number} Fill ratio clamped to [0, 1].
    */
-  #calculateFillRatio(segment, uuid)
+  calculateFillRatio(segment, uuid)
   {
     const jabsStateMap = $jabsEngine.getJabsStatesByUuid(uuid);
 

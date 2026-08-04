@@ -10,7 +10,7 @@ class Window_SdpHeader
   /**
    * @type {StatDistributionPanel|null}
    */
-  #panel = null;
+  _panel = null;
 
   /**
    * Binds the hovered panel to this header.
@@ -18,7 +18,16 @@ class Window_SdpHeader
    */
   setPanel(panel)
   {
-    this.#panel = panel;
+    this._panel = panel;
+  }
+
+  /**
+   * The panel currently bound to this header.
+   * @returns {StatDistributionPanel|null}
+   */
+  panel()
+  {
+    return this._panel;
   }
 
   /**
@@ -27,7 +36,7 @@ class Window_SdpHeader
    */
   drawContent()
   {
-    const panel = this.#panel;
+    const panel = this.panel();
     if (!panel)
     {
       return;

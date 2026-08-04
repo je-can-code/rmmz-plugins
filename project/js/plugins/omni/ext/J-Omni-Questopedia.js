@@ -2594,7 +2594,7 @@ var Window_QuestopediaDescription = class extends Window_Base {
 	* The current selected quest in the quest list window.
 	* @type {TrackedOmniQuest}
 	*/
-	#currentQuest = null;
+	_currentQuest = null;
 	/**
 	* Constructor.
 	* @param {Rectangle} rect The rectangle that represents this window.
@@ -2607,14 +2607,14 @@ var Window_QuestopediaDescription = class extends Window_Base {
 	* @returns {TrackedOmniQuest}
 	*/
 	getCurrentQuest() {
-		return this.#currentQuest;
+		return this._currentQuest;
 	}
 	/**
 	* Sets the quest currently being displayed.
 	* @param {TrackedOmniQuest} quest The quest to display data for.
 	*/
 	setCurrentQuest(quest) {
-		this.#currentQuest = quest;
+		this._currentQuest = quest;
 	}
 	drawContent() {
 		const quest = this.getCurrentQuest();
