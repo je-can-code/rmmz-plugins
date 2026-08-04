@@ -12,7 +12,7 @@ class Window_SdpFamilyStrip
    * Active family-filter key ({@link SdpFamilyFilter.ALL}, {@link SdpFamilyFilter.UNKNOWN}, or a family key).
    * @type {string}
    */
-  #filterKey = SdpFamilyFilter.ALL;
+  _filterKey = SdpFamilyFilter.ALL;
 
   /**
    * @param {Rectangle} rect The dimensions of the window.
@@ -29,8 +29,17 @@ class Window_SdpFamilyStrip
    */
   setFilterKey(filterKey)
   {
-    this.#filterKey = filterKey;
+    this._filterKey = filterKey;
     this.refresh();
+  }
+
+  /**
+   * The family filter currently driving this strip.
+   * @returns {string}
+   */
+  filterKey()
+  {
+    return this._filterKey;
   }
 
   /**
@@ -39,7 +48,7 @@ class Window_SdpFamilyStrip
    */
   drawContent()
   {
-    const filterKey = this.#filterKey;
+    const filterKey = this.filterKey();
     const label = SdpFamilyFilter.displayNameForFilterKey(filterKey);
     const iconIndex = SdpFamilyFilter.iconIndexForFilterKey(filterKey);
     const iconPad = 4;

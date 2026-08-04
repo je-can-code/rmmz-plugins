@@ -72,7 +72,7 @@ That is three phases, and it is more than a build:
 
 | Phase | What runs |
 |---|---|
-| `verify-pre-compile` | `lint`, then eleven source gates: `verify:docs`, `no-typeof`, `no-instanceof`, `no-optional-chaining`, `no-direct-property-getset`, `no-private-in-serializable`, `no-late-window-command-state`, `no-self-calling-accessors`, `no-chained-call-arguments`, `no-phantom-calls`, `no-rest-parameters` |
+| `verify-pre-compile` | `lint`, then eleven source gates: `verify:docs`, `no-typeof`, `no-instanceof`, `no-optional-chaining`, `no-direct-property-getset`, `no-private-before-construction`, `no-late-window-command-state`, `no-self-calling-accessors`, `no-chained-call-arguments`, `no-phantom-calls`, `no-rest-parameters` |
 | `compile` | `clean:out`, then `build:all` |
 | `verify-post-compile` | `verify:ships`, **the full test suite**, then `copy:to-all` |
 
@@ -269,10 +269,11 @@ also keeps a `JsonEx` override for them (`src/plugins/_base/core/core/JsonEx.js`
 stopped being the save path but is still the **deep-copy** path — `JsonEx.makeDeepCopy` is live in
 four places, two of which copy a `Game_Actor`.
 
-**No `#private` fields or methods in a registered class** (`verify:no-private-in-serializable`).
+**No `#private` fields or methods in a registered class** (`verify:no-private-before-construction`).
 Decoding builds instances with `Object.create(prototype)` — **the constructor never runs** — so a
 restored object carries the prototype without ever having been branded, and the first `this.#anything`
-it touches throws. Use underscore-prefixed fields with accessors instead.
+it touches throws. Use underscore-prefixed fields with accessors instead. The same gate covers the
+other half of that rule — see [Private members and constructors](#private-members-and-constructors).
 
 **The declaration lives in J-Base; the meaning lives in J-Base-Save.** `SerializableRegistry` keeps
 what a registration said and answers "what constructor does this name mean" for `JsonEx`. Everything
@@ -290,6 +291,34 @@ state. Both natural places to put state are too late.
 
 Seed it in the `initMembers` hook instead, which runs early enough to be visible to `makeCommandList`.
 `verify:no-late-window-command-state` enforces this.
+
+### Private members and constructors
+
+A `#private` member is not on the prototype. It is installed onto an individual object, at the moment
+the constructor that declares it reaches that point. **Any object that exists without that having
+happened will throw on first touch** — `TypeError: Receiver must be an instance of class Foo`.
+
+Two routine situations produce such an object, and `verify:no-private-before-construction` gates both:
+
+- **Save decode.** `SerializableRegistry` rebuilds with `Object.create(prototype)`; the constructor
+  never runs. Detonates on load, never in a fresh game.
+- **A base constructor that calls an overridable hook.** `PluginMetadata`'s constructor runs
+  `initializePlugin` → `postInitialize`; every `Window_*` constructor runs `initialize` →
+  `createContents` / `refresh` → `makeCommandList`. A derived class installs its own members only
+  *after* `super()` returns, so the whole hook executes on an object that does not have them yet.
+  Detonates at boot.
+
+So: **no `#private` instance fields or methods on any class registered as serializable, extending
+`PluginMetadata`, or extending anything named `Window_*`.** Private methods simply drop the sigil;
+private fields become `_underscore` behind accessors, which is this repo's ordinary convention anyway.
+
+`static #private` is always safe and is never reported — statics are installed on the constructor
+function when the class is defined, before any instance exists.
+
+Public class fields fail the same way in the second case; they just read `undefined` instead of
+throwing, which is what `verify:no-late-window-command-state` above is for. **The two gates are the
+loud half and the quiet half of one problem.** If you find a third way to hold an unconstructed
+object, widen the gate rather than adding a fourth one.
 
 ### Database objects at runtime
 

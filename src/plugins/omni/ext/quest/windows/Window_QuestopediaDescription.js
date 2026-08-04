@@ -5,7 +5,7 @@ class Window_QuestopediaDescription
    * The current selected quest in the quest list window.
    * @type {TrackedOmniQuest}
    */
-  #currentQuest = null;
+  _currentQuest = null;
 
   /**
    * Constructor.
@@ -22,7 +22,7 @@ class Window_QuestopediaDescription
    */
   getCurrentQuest()
   {
-    return this.#currentQuest;
+    return this._currentQuest;
   }
 
   /**
@@ -31,7 +31,7 @@ class Window_QuestopediaDescription
    */
   setCurrentQuest(quest)
   {
-    this.#currentQuest = quest;
+    this._currentQuest = quest;
   }
 
   drawContent()

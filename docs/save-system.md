@@ -275,9 +275,13 @@ transient three plain objects deep is skipped exactly where it lives.
 ## The standing prohibitions
 
 **No `#private` fields or methods in a registered class** — enforced by
-`verify:no-private-in-serializable`. Decoding builds instances with `Object.create(prototype)`, so a
-restored object carries the prototype without the constructor ever having branded it, and the first
+`verify:no-private-before-construction`. Decoding builds instances with `Object.create(prototype)`, so
+a restored object carries the prototype without the constructor ever having branded it, and the first
 `this.#anything` it touches throws. Use underscore-prefixed fields with accessors.
+
+That gate covers a second case too, for the same underlying reason: a class extending `PluginMetadata`
+or a `Window_*` has its members installed only after `super()` returns, while those base constructors
+call overridable hooks before that point. Nothing to do with saves, identical failure.
 
 **No reading `$dataMap` during decode.** `DataManager.loadGame` decodes before `Scene_Map.create`
 calls `DataManager.loadMapData`, so map data for the saved map is not loaded yet. Anything needing it

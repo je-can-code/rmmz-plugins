@@ -24,7 +24,7 @@ class Window_RecipeDetails
    * The currently selected recipe being detailed.
    * @type {CraftingRecipe}
    */
-  #currentRecipe = null;
+  _currentRecipe = null;
 
   /**
    * True if the text of this list should be masked, false otherwise.
@@ -39,12 +39,12 @@ class Window_RecipeDetails
 
   getCurrentRecipe()
   {
-    return this.#currentRecipe;
+    return this._currentRecipe;
   }
 
   setCurrentRecipe(recipe)
   {
-    this.#currentRecipe = recipe;
+    this._currentRecipe = recipe;
   }
 
   setNeedsMasking(needsMasking)
@@ -78,17 +78,17 @@ class Window_RecipeDetails
    */
   componentListRowsInnerStartY()
   {
-    return this.#recipeComponentHeaderBandEndInnerY();
+    return this.recipeComponentHeaderBandEndInnerY();
   }
 
   /**
    * Inner Y just below the unified horizontal rules under INGREDIENTS / TOOLS / OUTPUTS.
    * @returns {number}
    */
-  #recipeComponentHeaderBandEndInnerY()
+  recipeComponentHeaderBandEndInnerY()
   {
     const cw = this.detailsQuarterWidth();
-    const { ruleTopY } = this.#tripleColumnHeaderRuleTopInnerY(cw);
+    const { ruleTopY } = this.tripleColumnHeaderRuleTopInnerY(cw);
     const ruleH = Window_RecipeDetails.#COMPONENT_HEADER_RULE_HEIGHT;
     const gapAfterRule = Window_RecipeDetails.#COMPONENT_HEADER_RULE_GAP_AFTER;
 
@@ -98,7 +98,7 @@ class Window_RecipeDetails
   /**
    * Prepares the smaller italic face used under column titles.
    */
-  #prepareItalicsSubtextFont()
+  prepareItalicsSubtextFont()
   {
     this.resetFontSettings();
     this.modFontSize(-12);
@@ -108,7 +108,7 @@ class Window_RecipeDetails
   /**
    * Restores default font after italic subtext measurement or drawing.
    */
-  #restoreAfterItalicsSubtextFont()
+  restoreAfterItalicsSubtextFont()
   {
     this.toggleItalics();
     this.resetFontSettings();
@@ -121,7 +121,7 @@ class Window_RecipeDetails
    * @param {number} maxWidth The max width driving this step.
    * @returns {string[]}
    */
-  #splitLongToken(token, maxWidth)
+  splitLongToken(token, maxWidth)
   {
     const segments = [];
     let chunk = '';
@@ -154,7 +154,7 @@ class Window_RecipeDetails
     return segments;
   }
 
-  #wrapPlainTextToLines(text, maxWidth)
+  wrapPlainTextToLines(text, maxWidth)
   {
     if (text === '')
     {
@@ -188,7 +188,7 @@ class Window_RecipeDetails
       }
       else
       {
-        const segments = this.#splitLongToken(word, maxWidth);
+        const segments = this.splitLongToken(word, maxWidth);
 
         for (let si = 0; si < segments.length; si++)
         {
@@ -224,12 +224,12 @@ class Window_RecipeDetails
    * @param {number} bandWidth The band width driving this step.
    * @returns {string[]}
    */
-  #measureItalicSubtextLines(subtext, bandWidth)
+  measureItalicSubtextLines(subtext, bandWidth)
   {
-    this.#prepareItalicsSubtextFont();
+    this.prepareItalicsSubtextFont();
     const usableW = Math.max(1, bandWidth - 4);
-    const lines = this.#wrapPlainTextToLines(subtext, usableW);
-    this.#restoreAfterItalicsSubtextFont();
+    const lines = this.wrapPlainTextToLines(subtext, usableW);
+    this.restoreAfterItalicsSubtextFont();
 
     return lines;
   }
@@ -240,7 +240,7 @@ class Window_RecipeDetails
    * @param {number} cw column inner width
    * @returns {{ ruleTopY: number, layouts: { titleH: number, lines: string[], subLineHeight: number }[] }}
    */
-  #tripleColumnHeaderRuleTopInnerY(cw)
+  tripleColumnHeaderRuleTopInnerY(cw)
   {
     const subtexts = [
       Window_RecipeDetails.#SUBTEXT_INGREDIENTS,
@@ -249,9 +249,9 @@ class Window_RecipeDetails
     ];
 
     // continue the routine with the next policy step.
-    this.#prepareItalicsSubtextFont();
+    this.prepareItalicsSubtextFont();
     const subLineHeight = this.lineHeight();
-    this.#restoreAfterItalicsSubtextFont();
+    this.restoreAfterItalicsSubtextFont();
 
     const layouts = [];
 
@@ -263,7 +263,7 @@ class Window_RecipeDetails
       const titleH = this.lineHeight();
       this.toggleBold();
 
-      const lines = this.#measureItalicSubtextLines(subtexts[i], cw);
+      const lines = this.measureItalicSubtextLines(subtexts[i], cw);
 
       // Append the row to the working collection.
       layouts.push({ titleH, lines, subLineHeight });
@@ -298,7 +298,7 @@ class Window_RecipeDetails
    * @param {string[]} lines The lines driving this step.
    * @param {number} subLineHeight The sub line height driving this step.
    */
-  #drawColumnTitleAndSubtext(x, y, bandWidth, title, lines, subLineHeight)
+  drawColumnTitleAndSubtext(x, y, bandWidth, title, lines, subLineHeight)
   {
     this.resetFontSettings();
     this.modFontSize(4);
@@ -308,7 +308,7 @@ class Window_RecipeDetails
     this.toggleBold();
 
     // continue the routine with the next policy step.
-    this.#prepareItalicsSubtextFont();
+    this.prepareItalicsSubtextFont();
 
     for (let li = 0; li < lines.length; li++)
     {
@@ -317,7 +317,7 @@ class Window_RecipeDetails
     }
 
     // continue the routine with the next policy step.
-    this.#restoreAfterItalicsSubtextFont();
+    this.restoreAfterItalicsSubtextFont();
   }
 
   /**
@@ -357,13 +357,13 @@ class Window_RecipeDetails
    */
   drawContent()
   {
-    if (!this.#canDrawContent()) return;
+    if (!this.canDrawContent()) return;
 
     const [ x, y ] = [ 0, 0 ];
     const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(this.innerWidth);
     const wDetail = cw + remainder;
 
-    const { ruleTopY, layouts } = this.#tripleColumnHeaderRuleTopInnerY(cw);
+    const { ruleTopY, layouts } = this.tripleColumnHeaderRuleTopInnerY(cw);
     const titles = [ 'INGREDIENTS', 'TOOLS', 'OUTPUTS' ];
     const inset = Window_RecipeDetails.#COMPONENT_HEADER_RULE_SIDE_INSET;
     const ruleH = Window_RecipeDetails.#COMPONENT_HEADER_RULE_HEIGHT;
@@ -372,7 +372,7 @@ class Window_RecipeDetails
     {
       const L = layouts[col];
 
-      this.#drawColumnTitleAndSubtext(x + cw * col, y, cw, titles[col], L.lines, L.subLineHeight);
+      this.drawColumnTitleAndSubtext(x + cw * col, y, cw, titles[col], L.lines, L.subLineHeight);
 
       const ruleW = Math.max(1, cw - inset * 2);
       this.drawHorizontalLine(x + cw * col + inset, ruleTopY, ruleW, ruleH);
@@ -385,10 +385,10 @@ class Window_RecipeDetails
    * Determines if the content for this window can be drawn.
    * @return {boolean}
    */
-  #canDrawContent()
+  canDrawContent()
   {
     // if there is no recipe, then we cannot draw its detail.
-    if (this.#currentRecipe === undefined || this.#currentRecipe === null) return false;
+    if (this.getCurrentRecipe() === undefined || this.getCurrentRecipe() === null) return false;
 
     // we can draw content!
     return true;
@@ -408,12 +408,12 @@ class Window_RecipeDetails
     const lh = this.lineHeight();
     const textW = Math.max(48, bandWidth - 8);
 
-    const proficiency = `Proficiency: ${this.#currentRecipe.getProficiency()}`;
+    const proficiency = `Proficiency: ${this.getCurrentRecipe().getProficiency()}`;
     this.drawText(proficiency, x, y, textW);
 
     const bodyY = this.componentListRowsInnerStartY();
 
-    const primaryOutput = this.#currentRecipe.outputs.at(0);
+    const primaryOutput = this.getCurrentRecipe().outputs.at(0);
 
     switch (primaryOutput.getComponentType())
     {
@@ -444,7 +444,7 @@ class Window_RecipeDetails
     const lh = this.lineHeight() - 4;
 
     // grab the underlying item we're working with.
-    const output = this.#currentRecipe.outputs.at(0)
+    const output = this.getCurrentRecipe().outputs.at(0)
       .getItem();
 
     const lifeY = y + (lh * 1);
@@ -659,7 +659,7 @@ class Window_RecipeDetails
     // grab all the food-specific state effects.
     const foodStateEffects = output.effects
       .filter(effect => // it has to add one of OUR states.
-        effect.code === Game_Action.EFFECT_ADD_STATE && this.#foodStateIds()
+        effect.code === Game_Action.EFFECT_ADD_STATE && this.foodStateIds()
           .includes(effect.dataId));
 
     // shorthand the line height.
@@ -688,7 +688,7 @@ class Window_RecipeDetails
     foodStateEffects.forEach(forEacher, this);
   }
 
-  #foodStateIds()
+  foodStateIds()
   {
     return [ 82, 83, 84, 85, 86, 87, 88 ];
   }
@@ -702,7 +702,7 @@ class Window_RecipeDetails
     const lh = this.lineHeight() - 4;
 
     // grab the underlying weapon we're working with.
-    const output = this.#currentRecipe.outputs.at(0)
+    const output = this.getCurrentRecipe().outputs.at(0)
       .getItem();
 
     const coreParamsY = y + (lh * 1);
@@ -820,7 +820,7 @@ class Window_RecipeDetails
     const lh = this.lineHeight() - 4;
 
     // grab the underlying resource we're working with.
-    const output = this.#currentRecipe.outputs.at(0)
+    const output = this.getCurrentRecipe().outputs.at(0)
       .getItem();
 
     const tw = this.detailsQuarterTextWidth();
@@ -838,7 +838,7 @@ class Window_RecipeDetails
     const lh = this.lineHeight() - 4;
 
     // grab the underlying resource we're working with.
-    const output = this.#currentRecipe.outputs.at(0)
+    const output = this.getCurrentRecipe().outputs.at(0)
       .getItem();
 
     const tw = this.detailsQuarterTextWidth();

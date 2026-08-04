@@ -39,6 +39,7 @@ J.SDP.Aliased = {
   Scene_Menu: new Map(),
 
   Window_MenuCommand: new Map(),
+  Window_MenuStatus: new Map(),
 };
 
 /**

@@ -230,10 +230,10 @@ class J_CraftingCreatePluginMetadata
   usingSdp()
   {
     // if we're not connected, then do not.
-    if (!this.#hasSdpConnection()) return false;
+    if (!this.hasSdpConnection()) return false;
 
     // if we're not high enough version, then do not.
-    if (!this.#hasMinimumSdpVersion()) return false;
+    if (!this.hasMinimumSdpVersion()) return false;
 
     // lets do it!
     return true;
@@ -243,7 +243,7 @@ class J_CraftingCreatePluginMetadata
    * Checks if the plugin metadata is detected for the SDP system.
    * @return {boolean}
    */
-  #hasSdpConnection()
+  hasSdpConnection()
   {
     // both plugins are not registered.
     if (!PluginMetadata.hasPlugin('J-SDP')) return false;
@@ -257,10 +257,10 @@ class J_CraftingCreatePluginMetadata
    * connecting with this crafting system.
    * @return {boolean}
    */
-  #hasMinimumSdpVersion()
+  hasMinimumSdpVersion()
   {
     // grab the minimum verison.
-    const minimumVersion = this.#minimumSdpVersion();
+    const minimumVersion = this.minimumSdpVersion();
 
     // check if we meet the minimum version threshold.
     const meetsThreshold = J.SDP.Metadata.version
@@ -278,7 +278,7 @@ class J_CraftingCreatePluginMetadata
    * this crafting will communicate with.
    * @return {PluginVersion}
    */
-  #minimumSdpVersion()
+  minimumSdpVersion()
   {
     return PluginVersion.builder
       .major('2')

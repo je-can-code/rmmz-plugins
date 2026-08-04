@@ -433,6 +433,11 @@
  * A three-state cycle: 12 -> 13 -> 14 -> 12 -> ..., one step per execution.
  * ============================================================================
  * CHANGELOG:
+ * - 1.7.2
+ *    The plugin metadata class no longer declares private members. Its base
+ *    constructor reaches postInitialize before a derived class installs its
+ *    own, so anything private was being touched on an object that did not yet
+ *    have it.
  * - 1.7.1
  *    Split Game_Item's extension state so the default lands in initMembers
  *    while the mapping from the constructed item stays in the initialize

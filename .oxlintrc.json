@@ -408,6 +408,7 @@
     "Map_TextPop": "writable",
     "MenuCommandBroadcaster": "writable",
     "MenuSection": "writable",
+    "MenuStatusCatalog": "writable",
     "MinimapEventType": "writable",
     "MonsterpediaObservations": "writable",
     "MoveStateRemovalManager": "writable",
