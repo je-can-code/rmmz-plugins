@@ -185,6 +185,89 @@ describe('J-JAFTING + J-JAFTING-Creation metadata (direct src import)', () =>
 
   });
 
+  describe('categorical ingredient parsing', () =>
+  {
+    /**
+     * Builds a crafting config whose single recipe carries the given components.
+     * @param {object[]} ingredients The ingredient blobs to parse.
+     * @param {object[]} [outputs] The output blobs to parse.
+     * @returns {string}
+     */
+    const craftingJsonWith = (ingredients, outputs = [ { id: 2, type: 'i', count: 1 } ]) => JSON.stringify({
+      recipes: [
+        {
+          name: 'Vitest Recipe',
+          key: 'vitest_recipe',
+          categoryKeys: [ 'vitest_cat' ],
+          iconIndex: 1,
+          description: 'vitest recipe description',
+          unlockedByDefault: true,
+          maskedUntilCrafted: false,
+          tools: [],
+          ingredients,
+          outputs,
+        },
+      ],
+      categories: [],
+    });
+
+    it('builds a categorical component when the ingredient declares categories', async () =>
+    {
+      // Arrange & Act
+      await bootJaftingCreate(
+        craftingJsonWith([ { categories: [ 'protein', 'meat' ], count: 2 } ]),
+        { bootBase: false, pluginName: 'J-JAFTING-Creation-Categorical' });
+
+      // Assert
+      const [ recipe ] = globalThis.J.JAFTING.EXT.CREATE.Metadata.recipes;
+      const [ ingredient ] = recipe.ingredients;
+      expect(ingredient.isCategorical()).toBe(true);
+      expect(ingredient.categories()).toEqual([ 'protein', 'meat' ]);
+      expect(ingredient.quantity()).toBe(2);
+    });
+
+    it('builds an id-based component when categories are absent', async () =>
+    {
+      // Arrange - the overwhelming majority of existing config takes this path unchanged.
+      // Act
+      await bootJaftingCreate(
+        craftingJsonWith([ { id: 386, type: 'a', count: 1 } ]),
+        { bootBase: false, pluginName: 'J-JAFTING-Creation-IdBased' });
+
+      // Assert
+      const [ recipe ] = globalThis.J.JAFTING.EXT.CREATE.Metadata.recipes;
+      const [ ingredient ] = recipe.ingredients;
+      expect(ingredient.isCategorical()).toBe(false);
+      expect(ingredient.isArmor()).toBe(true);
+    });
+
+    it('treats an empty categories array as id-based', async () =>
+    {
+      // Arrange & Act
+      await bootJaftingCreate(
+        craftingJsonWith([ { id: 1, type: 'i', count: 1, categories: [] } ]),
+        { bootBase: false, pluginName: 'J-JAFTING-Creation-EmptyCategories' });
+
+      // Assert
+      const [ recipe ] = globalThis.J.JAFTING.EXT.CREATE.Metadata.recipes;
+      const [ ingredient ] = recipe.ingredients;
+      expect(ingredient.isCategorical()).toBe(false);
+    });
+
+    it('throws when an output declares categories', async () =>
+    {
+      // Arrange - an output has to name exactly what it produces; there is nothing to resolve against.
+      const json = craftingJsonWith(
+        [ { id: 1, type: 'i', count: 1 } ],
+        [ { categories: [ 'protein' ], count: 1 } ]);
+
+      // Act & Assert
+      await expect(bootJaftingCreate(json,
+        { bootBase: false, pluginName: 'J-JAFTING-Creation-CategoricalOutput' }))
+        .rejects.toThrow(/categorical output/);
+    });
+  });
+
   describe('optional SDP linkage', () =>
   {
     /**

@@ -41,4 +41,5 @@ J.JAFTING.Aliased = {};
 J.JAFTING.Aliased.Game_Party = new Map();
 J.JAFTING.Aliased.DataManager = new Map();
 J.JAFTING.Aliased.Scene_Jafting = new Map();
+J.JAFTING.Aliased.Scene_Map = new Map();
 //endregion Introduction

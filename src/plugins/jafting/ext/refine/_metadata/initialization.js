@@ -161,6 +161,7 @@ J.JAFTING.EXT.REFINE.Aliased.Game_System = new Map();
 J.JAFTING.EXT.REFINE.Aliased.RPG_Base = new Map();
 J.JAFTING.EXT.REFINE.Aliased.RPG_EquipItem = new Map();
 J.JAFTING.EXT.REFINE.Aliased.Scene_Jafting = new Map();
+J.JAFTING.EXT.REFINE.Aliased.Scene_Map = new Map();
 J.JAFTING.EXT.REFINE.Aliased.Window_JaftingList = new Map();
 
 /**

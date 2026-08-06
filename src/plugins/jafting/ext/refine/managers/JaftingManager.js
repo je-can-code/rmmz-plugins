@@ -284,11 +284,22 @@ class JaftingManager
     if (outputEquip.wtypeId)
     {
       this.generateRefinedEquip($dataWeapons, outputEquip, this.RefinementTypes.Weapon, baseLineage, materialLineage);
+
+      return;
     }
-    else if (outputEquip.atypeId)
+
+    if (outputEquip.atypeId)
     {
       this.generateRefinedEquip($dataArmors, outputEquip, this.RefinementTypes.Armor, baseLineage, materialLineage);
+
+      return;
     }
+
+    // refusing here rather than falling through silently, because there is no third datastore to pick
+    // and the alternative is worse than a throw: {@link generateRefinedEquip} writes its row *before*
+    // recording lineage, so guessing a datastore would leave an orphaned row behind on its way to
+    // failing anyway.
+    throw new Error('a refinement output was neither weapon nor armor, so there is no datastore for it.');
   };
 
   /**

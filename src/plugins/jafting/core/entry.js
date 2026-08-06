@@ -11,6 +11,7 @@ import './windows/Window_SalvageCandidateList.js';
 import './windows/Window_SalvagePreview.js';
 import './windows/Window_SalvageConfirmation.js';
 import './scenes/Scene_Jafting.js';
+import './scenes/Scene_Map.js';
 import './scenes/Scene_JaftingSalvage.js';
 import './scenes/Scene_JaftingSalvageHubRouting.js';
 import './_metadata/pluginCommands.js';

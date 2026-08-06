@@ -132,6 +132,38 @@ describe('CraftingComponent currencies (direct src import)', () =>
   //endregion resolving the underlying thing
 
   //region how much is held
+  describe('currency predicates', () =>
+  {
+    /**
+     * These are read from outside the class - {@link JaftingSalvageLedger.rowsFromCraftingComponents}
+     * routes ledger rows by asking a component what kind of currency it is - so they are part of the
+     * contract regardless of whether anything inside this file happens to branch on them.
+     */
+    it('isSdp is true for an SDP component', () =>
+    {
+      // Arrange, Act, Assert
+      expect(makeComponent(CraftingComponent.Types.SDP).isSdp()).toBe(true);
+    });
+
+    it('isSdp is false for a gold component', () =>
+    {
+      // Arrange, Act, Assert
+      expect(makeComponent(CraftingComponent.Types.Gold).isSdp()).toBe(false);
+    });
+
+    it('isGold is true for a gold component', () =>
+    {
+      // Arrange, Act, Assert
+      expect(makeComponent(CraftingComponent.Types.Gold).isGold()).toBe(true);
+    });
+
+    it('isGold is false for an SDP component', () =>
+    {
+      // Arrange, Act, Assert
+      expect(makeComponent(CraftingComponent.Types.SDP).isGold()).toBe(false);
+    });
+  });
+
   describe('getHandledQuantity', () =>
   {
     it('reads gold from the party purse', () =>
@@ -160,16 +192,12 @@ describe('CraftingComponent currencies (direct src import)', () =>
       // Arrange: J-SDP is optional, so a recipe referencing it in a game without it must not
       // claim the player has points to spend.
       globalThis.J.JAFTING.EXT.CREATE.Metadata.usingSdp = () => false;
-      const warn = vi.spyOn(console, 'warn')
-        .mockImplementation(() => {});
 
       // Act
       const held = makeComponent(CraftingComponent.Types.SDP).getHandledQuantity();
 
       // Assert
       expect(held).toBe(0);
-
-      warn.mockRestore();
     });
   });
   //endregion how much is held

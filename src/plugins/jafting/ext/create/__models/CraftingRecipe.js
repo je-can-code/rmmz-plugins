@@ -97,11 +97,24 @@ class CraftingRecipe
 
   /**
    * Checks if the party has the required materials to perform the crafting.
+   *
+   * Ingredients are allocated against a single shared tally rather than checked independently. Two
+   * slots that can both be filled by the same stack would each see the party's full count and both
+   * report satisfied - and since `Game_Party.gainItem` clamps at zero, the second `loseItem` would
+   * quietly do nothing and the player would pay once for two ingredients. Overlapping eligibility is
+   * the normal case once slots are categorical, so the tally is what keeps the answer honest.
+   *
+   * Tools are checked against raw inventory because they are never consumed and therefore never
+   * compete for a stack.
+   * @returns {boolean}
    */
   canCraft()
   {
-    // check over all ingredients to see if we have enough to craft recipe.
-    const hasIngredients = this.ingredients.every(component => component.hasEnough());
+    /** @type {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>} */
+    const tally = new Map();
+
+    // allocate in authored order, deducting as each slot claims what it needs.
+    const hasIngredients = this.ingredients.every(component => component.allocateFrom(tally));
 
     // check over all tools to see if we have them on-hand to craft this recipe.
     const hasTools = this.tools.every(component => component.hasEnough());
@@ -112,19 +125,50 @@ class CraftingRecipe
   }
 
   /**
+   * The indices of every ingredient that needs the player to choose which entry fills it.
+   *
+   * Only ingredients are listed. Tools may be categorical too, but they are never consumed, so which
+   * eligible tool the party happens to hold cannot change anything and asking would be noise.
+   * @returns {number[]}
+   */
+  categoricalIngredientIndices()
+  {
+    const indices = [];
+
+    this.ingredients.forEach((component, index) =>
+    {
+      // a slot naming a specific row has nothing to choose between.
+      if (component.isCategorical()) indices.push(index);
+    });
+
+    return indices;
+  }
+
+  /**
+   * Whether crafting this recipe requires the player to pick entries before it can execute.
+   * @returns {boolean}
+   */
+  needsIngredientSelection()
+  {
+    return this.categoricalIngredientIndices().length > 0;
+  }
+
+  /**
    * Executes the crafting of the recipe.<br>
    * This includes consuming the ingredients, generating the outputs, and improving proficiency.
+   * @param {Map<number, RPG_Item|RPG_Weapon|RPG_Armor>} selections The entry chosen for each
+   * categorical ingredient, keyed by its index in {@link ingredients}.
    */
-  craft()
+  craft(selections = new Map())
   {
-    // consume all the inputs.
-    this.ingredients.forEach(component => component.consume());
+    // consume all the inputs, spending whichever entry was chosen for each categorical slot.
+    this.ingredients.forEach((component, index) => component.consume(selections.get(index)));
 
     // generate all the outputs.
     this.outputs.forEach(component => component.generate());
 
     // stamp ingredient ancestry onto outputs so later refinement stacks still carry salvage lineage for core.
-    JaftingSalvageManager.applyCraftRecipeOutputs(this);
+    JaftingSalvageManager.applyCraftRecipeOutputs(this, selections);
 
     // improve the proficiency for the recipe.
     $gameParty

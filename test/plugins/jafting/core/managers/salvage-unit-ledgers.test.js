@@ -24,14 +24,38 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
    * @param {number} id The database id.
    * @returns {object}
    */
-  function fakeDatum(kind, id)
+  function fakeDatum(kind, id, index = id)
   {
     return {
       id,
+      index,
+      _key()
+      {
+        return this.index;
+      },
       isItem: () => kind === 'i',
       isWeapon: () => kind === 'w',
       isArmor: () => kind === 'a',
     };
+  }
+
+  /**
+   * The key a real `Game_Party` container uses: kind plus instance slot, never the template id.
+   *
+   * J-Base overwrites `numItems` and `gainItem` to key on `_key()`, so a stub keyed on `id` cannot tell a dynamic
+   * instance apart from the base stack it was cloned from.
+   * @param {object} datum The datum to key.
+   * @returns {string}
+   */
+  function instanceKey(datum)
+  {
+    if (datum.isItem()) return `i:${datum._key()}`;
+
+    if (datum.isWeapon()) return `w:${datum._key()}`;
+
+    if (datum.isArmor()) return `a:${datum._key()}`;
+
+    return `?:${datum._key()}`;
   }
 
   /**
@@ -51,13 +75,11 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
       _counts: {},
       numItems(datum)
       {
-        const key = JaftingSalvageManager.containerKeyFromDatum(datum) ?? `?:${datum.id}`;
-
-        return this._counts[key] ?? 0;
+        return this._counts[instanceKey(datum)] ?? 0;
       },
       setCount(datum, n)
       {
-        this._counts[JaftingSalvageManager.containerKeyFromDatum(datum)] = n;
+        this._counts[instanceKey(datum)] = n;
       },
       gainItem: () => {},
       loseItem: () => {},
@@ -71,6 +93,10 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
     globalThis.RPG_Weapon = { createEmpty: id => ({ id, empty: true }) };
     globalThis.RPG_Armor = { createEmpty: id => ({ id, empty: true }) };
 
+    // per-copy ledgers are sized against every copy held, and a worn copy is held without being in the container -
+    // so the manager asks the actors too. an empty cast is the "nobody is wearing anything" baseline.
+    globalThis.$gameActors = { existingActors: () => [] };
+
     JaftingSalvageManager.initPartySalvageStorage();
   });
 
@@ -82,6 +108,7 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
     delete globalThis.$dataItems;
     delete globalThis.RPG_Weapon;
     delete globalThis.RPG_Armor;
+    delete globalThis.$gameActors;
   });
 
   //region merged view
@@ -156,9 +183,10 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
       expect(bag.unitLedgers.length).toBe(3);
     });
 
-    it('shrinks the unit array to match a smaller stack', () =>
+    it('refuses to shrink, because a copy out of the bag may still be held', () =>
     {
-      // Arrange: spending copies drops slots off the tail, matching the LIFO stamping order.
+      // Arrange: this runs on every loss, and at that instant a copy that was equipped looks exactly like one that
+      // was sold. Trimming here would throw away the provenance of gear somebody is wearing.
       const datum = fakeDatum('i', 1);
       $gameParty.setCount(datum, 1);
       const bag = { unitLedgers: [ snapshotOf(1), snapshotOf(2), snapshotOf(3) ], rows: [] };
@@ -167,21 +195,38 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
       JaftingSalvageManager.syncPartyLedgerUnitCountToStack(bag, datum);
 
       // Assert
-      expect(bag.unitLedgers.length).toBe(1);
+      expect(bag.unitLedgers.length).toBe(3);
     });
 
-    it('keeps the earliest stamped units when shrinking', () =>
+    it('counts a worn copy toward the stack it grows to', () =>
     {
-      // Arrange
+      // Arrange: two in the bag and one on an actor is three copies held, even though the container says two.
       const datum = fakeDatum('i', 1);
-      $gameParty.setCount(datum, 1);
-      const bag = { unitLedgers: [ snapshotOf(7), snapshotOf(8) ], rows: [] };
+      $gameParty.setCount(datum, 2);
+      globalThis.$gameActors = { existingActors: () => [ { equips: () => [ datum ] } ] };
+      const bag = { unitLedgers: [], rows: [] };
 
       // Act
       JaftingSalvageManager.syncPartyLedgerUnitCountToStack(bag, datum);
 
       // Assert
-      expect(bag.unitLedgers[0].rows[0].id).toBe(7);
+      expect(bag.unitLedgers.length).toBe(3);
+    });
+
+    it('counts two worn copies of one row separately', () =>
+    {
+      // Arrange: two accessory slots can hold two of the same thing, so worn copies are tallied rather than
+      // merely detected.
+      const datum = fakeDatum('a', 4);
+      $gameParty.setCount(datum, 0);
+      globalThis.$gameActors = { existingActors: () => [ { equips: () => [ datum, null, datum ] } ] };
+      const bag = { unitLedgers: [], rows: [] };
+
+      // Act
+      JaftingSalvageManager.syncPartyLedgerUnitCountToStack(bag, datum);
+
+      // Assert
+      expect(bag.unitLedgers.length).toBe(2);
     });
 
     it('creates the unit array when the bag has none', () =>
@@ -198,18 +243,104 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
       expect(bag.unitLedgers.length).toBe(2);
     });
 
-    it('rebuilds the merged summary from whatever survived the resize', () =>
+    it('rebuilds the merged summary from every surviving copy', () =>
     {
-      // Arrange: losing the top copy must not leave its materials in the shared summary.
+      // Arrange
       const datum = fakeDatum('i', 1);
-      $gameParty.setCount(datum, 1);
+      $gameParty.setCount(datum, 2);
       const bag = { unitLedgers: [ snapshotOf(1, 2), snapshotOf(1, 3) ], rows: [] };
 
       // Act
       JaftingSalvageManager.syncPartyLedgerUnitCountToStack(bag, datum);
 
       // Assert
-      expect(bag.rows[0].n).toBe(2);
+      expect(bag.rows[0].n).toBe(5);
+    });
+  });
+
+  describe('resizeTemplateLedgerBags', () =>
+  {
+    it('trims the tail down to the copies actually held', () =>
+    {
+      // Arrange: the deferred half of sizing, run from a settled state where a missing copy really is gone.
+      const datum = fakeDatum('i', 1);
+      $dataItems[1] = datum;
+      $gameParty.setCount(datum, 3);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, snapshotOf(9), 3);
+      $gameParty.setCount(datum, 1);
+
+      // Act
+      JaftingSalvageManager.resizeTemplateLedgerBags();
+
+      // Assert
+      expect($gameParty._j._jafting._salvageLedgers['i:1'].unitLedgers.length).toBe(1);
+    });
+
+    it('resolves a weapon bag back to its own template row', () =>
+    {
+      // Arrange- the key carries only a letter and an id, so the letter is the whole of what picks
+      // which datastore to look the template up in. A weapon key resolved against items or armors
+      // would hand back the wrong row entirely, and the held count taken off it would be somebody
+      // else's - trimming this bag to a length that has nothing to do with what the player owns.
+      const datum = fakeDatum('w', 7);
+      $dataWeapons[7] = datum;
+      $gameParty.setCount(datum, 3);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, snapshotOf(9), 3);
+      $gameParty.setCount(datum, 2);
+
+      // Act
+      JaftingSalvageManager.resizeTemplateLedgerBags();
+
+      // Assert
+      expect($gameParty._j._jafting._salvageLedgers['w:7'].unitLedgers.length).toBe(2);
+    });
+
+    it('spares a copy somebody is wearing', () =>
+    {
+      // Arrange: the whole reason shrinking waits until here.
+      const datum = fakeDatum('a', 4);
+      $dataArmors[4] = datum;
+      $gameParty.setCount(datum, 1);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, snapshotOf(9), 1);
+      $gameParty.setCount(datum, 0);
+      globalThis.$gameActors = { existingActors: () => [ { equips: () => [ datum ] } ] };
+
+      // Act
+      JaftingSalvageManager.resizeTemplateLedgerBags();
+
+      // Assert
+      expect($gameParty._j._jafting._salvageLedgers['a:4'].unitLedgers.length).toBe(1);
+    });
+
+    it('drops a bag once its last copy is gone for good', () =>
+    {
+      // Arrange
+      const datum = fakeDatum('i', 1);
+      $dataItems[1] = datum;
+      $gameParty.setCount(datum, 1);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, snapshotOf(9), 1);
+      $gameParty.setCount(datum, 0);
+
+      // Act
+      JaftingSalvageManager.resizeTemplateLedgerBags();
+
+      // Assert
+      expect($gameParty._j._jafting._salvageLedgers['i:1']).toBeUndefined();
+    });
+
+    it('leaves a bag already matching its stack untouched', () =>
+    {
+      // Arrange: this runs on every map entry, so the no-op case is the common one.
+      const datum = fakeDatum('i', 1);
+      $dataItems[1] = datum;
+      $gameParty.setCount(datum, 2);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, snapshotOf(9), 2);
+
+      // Act
+      JaftingSalvageManager.resizeTemplateLedgerBags();
+
+      // Assert
+      expect($gameParty._j._jafting._salvageLedgers['i:1'].unitLedgers.length).toBe(2);
     });
   });
 
@@ -244,6 +375,23 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
       expect($gameParty._j._jafting._salvageLedgers['i:1'].unitLedgers.length).toBe(2);
     });
   });
+  describe('appendStampedUnitsToPartyStack', () =>
+  {
+    it('leaves the template bag untouched when the datum is a dynamic instance', () =>
+    {
+      // Arrange: a dynamic row keeps its stamp on the row itself. it reports base id 5, so a guard reading the id
+      // would route the stamp into the base stack's bag and quietly rewrite the history of items the player
+      // separately owns.
+      const refined = fakeDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty.setCount(refined, 1);
+
+      // Act
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(refined, snapshotOf(12), 1);
+
+      // Assert
+      expect($gameParty._j._jafting._salvageLedgers['w:5']).toBeUndefined();
+    });
+  });
   //endregion stack synchronization
 
   //region reading a single unit
@@ -265,8 +413,9 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
     it('ignores the ordinal for a refinement row, which owns a single snapshot', () =>
     {
       // Arrange: refined equipment gets its own datastore index, so there is no stack to
-      // index into even though the UI still passes a slot ordinal.
-      const datum = fakeDatum('w', JaftingSalvageManager.DynamicEquipIndexMin);
+      // index into even though the UI still passes a slot ordinal. the row still reports base id 5, so the ordinal
+      // is only skipped if the guard reads the instance slot rather than the template it was cloned from.
+      const datum = fakeDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
       const snapshot = snapshotOf(4);
       datum._jaftingSalvageLedger = snapshot;
 
@@ -296,6 +445,11 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
       // Arrange: without a container key there is nowhere for a bag to live.
       const datum = {
         id: 1,
+        index: 1,
+        _key()
+        {
+          return this.index;
+        },
         isItem: () => false,
         isWeapon: () => false,
         isArmor: () => false,
@@ -379,6 +533,11 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
     {
       return {
         id: 1,
+        index: 1,
+        _key()
+        {
+          return this.index;
+        },
         isItem: () => false,
         isWeapon: () => false,
         isArmor: () => false,
@@ -425,9 +584,10 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
       expect(act).not.toThrow();
     });
 
-    it('prunes the bag on gain once a stamped stack is emptied', () =>
+    it('keeps a bag whose stack has emptied, leaving the decision to the sweep', () =>
     {
-      // Arrange: the bag survives only while some slot still carries lineage.
+      // Arrange: an emptied container is not proof the copies are gone - they may be worn. This hook fires from
+      // inside transactions, so it defers the call to {@link resizeTemplateLedgerBags}.
       const datum = fakeDatum('i', 1);
       $gameParty.setCount(datum, 1);
       JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, snapshotOf(7), 1);
@@ -437,7 +597,7 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
       JaftingSalvageManager.afterPartyGainedItem(datum, 1);
 
       // Assert
-      expect($gameParty._j._jafting._salvageLedgers['i:1']).toBeUndefined();
+      expect($gameParty._j._jafting._salvageLedgers['i:1']).toBeDefined();
     });
   });
   //endregion unrecognized datums

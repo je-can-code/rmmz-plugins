@@ -22,6 +22,8 @@ describe('CraftingRecipe (direct src import)', () =>
   {
     return {
       hasEnough: vi.fn(() => hasEnough),
+      // ingredients are allocated against a shared tally rather than polled independently.
+      allocateFrom: vi.fn(() => hasEnough),
       consume: vi.fn(),
       generate: vi.fn(),
       getItem: vi.fn(() => item),
@@ -84,6 +86,119 @@ describe('CraftingRecipe (direct src import)', () =>
 
       expect(recipe.canCraft()).toBe(false);
     });
+
+    it('allocates every ingredient against one shared tally', () =>
+    {
+      // Arrange
+      const first = fakeComponent({ hasEnough: true });
+      const second = fakeComponent({ hasEnough: true });
+      const recipe = new CraftingRecipe(
+        'Potion', 'potion', [ 'alchemy' ], 1, 'desc', true, false,
+        [ first, second ], [], [],
+      );
+
+      // Act
+      recipe.canCraft();
+
+      // Assert - both slots must draw from the same map, or two slots could spend one stack.
+      const [ [ firstTally ] ] = first.allocateFrom.mock.calls;
+      const [ [ secondTally ] ] = second.allocateFrom.mock.calls;
+      expect(firstTally).toBeInstanceOf(Map);
+      expect(secondTally).toBe(firstTally);
+    });
+
+    it('does not allocate tools against the ingredient tally', () =>
+    {
+      // Arrange - tools are never consumed, so they must not deplete what ingredients can claim.
+      const tool = fakeComponent({ hasEnough: true });
+      const recipe = new CraftingRecipe(
+        'Potion', 'potion', [ 'alchemy' ], 1, 'desc', true, false,
+        [], [ tool ], [],
+      );
+
+      // Act
+      recipe.canCraft();
+
+      // Assert
+      expect(tool.hasEnough).toHaveBeenCalledTimes(1);
+      expect(tool.allocateFrom).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('categoricalIngredientIndices', () =>
+  {
+    /**
+     * Builds a fake component that reports whether it is categorical.
+     * @param {boolean} isCategorical Whether the slot names types rather than an id.
+     * @returns {object}
+     */
+    function slot(isCategorical)
+    {
+      return {
+        ...fakeComponent(),
+        isCategorical: () => isCategorical,
+      };
+    }
+
+    it('lists only the ingredients that name types', () =>
+    {
+      // Arrange
+      const recipe = new CraftingRecipe(
+        'Stew', 'stew', [ 'cooking' ], 1, 'desc', true, false,
+        [ slot(false), slot(true), slot(false), slot(true) ], [], [],
+      );
+
+      // Act
+      const result = recipe.categoricalIngredientIndices();
+
+      // Assert
+      expect(result).toEqual([ 1, 3 ]);
+    });
+
+    it('ignores categorical tools', () =>
+    {
+      // Arrange - a tool is never consumed, so which eligible one is held cannot matter.
+      const recipe = new CraftingRecipe(
+        'Stew', 'stew', [ 'cooking' ], 1, 'desc', true, false,
+        [ slot(false) ], [ slot(true) ], [],
+      );
+
+      // Act
+      const result = recipe.categoricalIngredientIndices();
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+
+    it('needsIngredientSelection is true when any ingredient names types', () =>
+    {
+      // Arrange
+      const recipe = new CraftingRecipe(
+        'Stew', 'stew', [ 'cooking' ], 1, 'desc', true, false,
+        [ slot(false), slot(true) ], [], [],
+      );
+
+      // Act
+      const result = recipe.needsIngredientSelection();
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('needsIngredientSelection is false when every ingredient names an id', () =>
+    {
+      // Arrange
+      const recipe = new CraftingRecipe(
+        'Stew', 'stew', [ 'cooking' ], 1, 'desc', true, false,
+        [ slot(false), slot(false) ], [], [],
+      );
+
+      // Act
+      const result = recipe.needsIngredientSelection();
+
+      // Assert
+      expect(result).toBe(false);
+    });
   });
 
   describe('craft', () =>
@@ -101,9 +216,26 @@ describe('CraftingRecipe (direct src import)', () =>
 
       expect(ingredient.consume).toHaveBeenCalledTimes(1);
       expect(output.generate).toHaveBeenCalledTimes(1);
-      expect(JaftingSalvageManager.applyCraftRecipeOutputs).toHaveBeenCalledWith(recipe);
+      expect(JaftingSalvageManager.applyCraftRecipeOutputs).toHaveBeenCalledWith(recipe, expect.any(Map));
       expect($gameParty.getRecipeTrackingByKey).toHaveBeenCalledWith('potion');
       expect(tracking.improveProficiency).toHaveBeenCalledTimes(1);
+    });
+
+    it('spends the selected entry for a categorical ingredient', () =>
+    {
+      // Arrange
+      const chosen = { id: 388, name: 'Grim Flank' };
+      const ingredient = fakeComponent();
+      const recipe = new CraftingRecipe(
+        'Stew', 'stew', [ 'cooking' ], 1, 'desc', true, false,
+        [ ingredient ], [], [],
+      );
+
+      // Act
+      recipe.craft(new Map([ [ 0, chosen ] ]));
+
+      // Assert - the pick reaches consume, rather than the component resolving one on its own.
+      expect(ingredient.consume).toHaveBeenCalledWith(chosen);
     });
   });
 

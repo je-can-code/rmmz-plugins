@@ -18,6 +18,7 @@ import './windows/Window_RefinementDetails.js';
 import './windows/Window_RefinementConfirmation.js';
 import './scenes/Scene_JaftingRefine.js';
 import './scenes/Scene_Jafting.js';
+import './scenes/Scene_Map.js';
 import './windows/Window_JaftingList.js';
 import './_metadata/pluginCommands.js';
 

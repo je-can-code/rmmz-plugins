@@ -246,6 +246,17 @@ describe('JaftingManager (direct src import)', () =>
       expect($dataArmors[2001]).toBe(armorOutput);
     });
 
+    it('refuses an output that is neither weapon nor armor', () =>
+    {
+      // Arrange - there is no third datastore to pick, and guessing one would leave an orphaned row
+      // behind when the lineage step then failed anyway.
+      const neither = fakeEquip({ name: 'Potion', jaftingRefinedCount: 0 });
+
+      // Act & Assert
+      expect(() => JaftingManager.createRefinedOutput(neither, baseLineage(), materialLineage()))
+        .toThrow(/neither weapon nor armor/);
+    });
+
     it('records provenance rather than the refined equip itself', () =>
     {
       // Arrange
@@ -662,6 +673,17 @@ describe('JaftingManager (direct src import)', () =>
       globalThis.JaftingSalvageLedger.isMaterialArmorDatum.mockImplementation(e => e === materialEquip);
       $gameParty.equipItems.mockReturnValue([ materialEquip ]);
 
+      expect(JaftingManager.partyHasEnterableRefinementBase()).toBe(false);
+    });
+
+    it('filters out configured material-type weapons as well as armors', () =>
+    {
+      // Arrange - the weapon-side exclusion is a separate branch from the armor one.
+      const materialWeapon = fakeEquip();
+      globalThis.JaftingSalvageLedger.isMaterialWeaponDatum.mockImplementation(e => e === materialWeapon);
+      $gameParty.equipItems.mockReturnValue([ materialWeapon ]);
+
+      // Act & Assert
       expect(JaftingManager.partyHasEnterableRefinementBase()).toBe(false);
     });
 

@@ -262,6 +262,11 @@ var CraftingComponent = class CraftingComponent {
 		Gold: "g",
 		SDP: "s"
 	};
+	/**
+	* The icon shown for a categorical slot that currently has nothing eligible to represent it.
+	* @type {number}
+	*/
+	static CategorySlotIconIndex = 93;
 	static Typed = {
 		Gold: () => CraftingComponent.builder.id(0).type(CraftingComponent.Types.Gold).build(),
 		SDP: () => CraftingComponent.builder.id(0).type(CraftingComponent.Types.SDP).build()
@@ -282,9 +287,15 @@ var CraftingComponent = class CraftingComponent {
 	*/
 	#type = String.empty;
 	/**
+	* The ingredient types a satisfying entry must carry, or empty when this component names a specific
+	* database row instead.
+	* @type {string[]}
+	*/
+	#categories = [];
+	/**
 	* Constructor.
 	*/
-	constructor(count, id, type) {
+	constructor(count, id, type, categories = []) {
 		/**
 		* How many of this component is required.
 		* @type {number}
@@ -300,6 +311,50 @@ var CraftingComponent = class CraftingComponent {
 		* @type {string}
 		*/
 		this.#type = type;
+		/**
+		* The ingredient types this component accepts in place of a specific id.
+		* @type {string[]}
+		*/
+		this.#categories = categories;
+	}
+	/**
+	* Whether this component is satisfied by any entry carrying its ingredient types, rather than by
+	* one specific database row.
+	* @returns {boolean}
+	*/
+	isCategorical() {
+		return this.#categories.length > 0;
+	}
+	/**
+	* The ingredient types a satisfying entry must carry.
+	* @returns {string[]}
+	*/
+	categories() {
+		return this.#categories;
+	}
+	/**
+	* Every inventory entry that could satisfy this component.
+	*
+	* Scoped to what the party is carrying rather than to the database on purpose: you can only craft
+	* with what you hold, and scanning three full datastores on every window refresh is the slow way to
+	* reach the same answer.
+	* @returns {(RPG_Item|RPG_Weapon|RPG_Armor)[]}
+	*/
+	eligibleEntries() {
+		const wanted = this.categories();
+		return $gameParty.allItems().filter((entry) => wanted.every((type) => entry.ingredientTypes().includes(type)));
+	}
+	/**
+	* The single eligible entry the party holds the most of.
+	*
+	* A slot resolves to exactly one entry, so the best candidate is the one most likely to satisfy the
+	* required count on its own.
+	* @returns {RPG_Item|RPG_Weapon|RPG_Armor|null} The best candidate, or null when none are held.
+	*/
+	bestEligibleEntry() {
+		const entries = this.eligibleEntries();
+		if (entries.length === 0) return null;
+		return entries.reduce((best, entry) => $gameParty.numItems(entry) > $gameParty.numItems(best) ? entry : best);
 	}
 	/**
 	* Sets the count or quantity of this component to a given value.
@@ -311,6 +366,9 @@ var CraftingComponent = class CraftingComponent {
 	/**
 	* Gets the underlying item associated with the component.
 	*
+	* A categorical component has no single row of its own, so it answers with the best entry the party
+	* currently holds. That makes this the one accessor here that can return null - a slot with nothing
+	* eligible in inventory is an ordinary state, not a broken one.
 	*
 	* @apinote If the underlying component is gold or SDP points, the object will
 	* be of type {@link CraftingComponent}, and also have these properties:
@@ -321,20 +379,17 @@ var CraftingComponent = class CraftingComponent {
 	*   iconIndex: number
 	* }
 	* </pre>
-	* @return {RPG_Item|RPG_Weapon|RPG_Armor|CraftingComponent}
+	* @return {RPG_Item|RPG_Weapon|RPG_Armor|CraftingComponent|null}
 	*/
 	getItem() {
+		if (this.isCategorical()) return this.bestEligibleEntry();
 		if (this.isDatabaseEntry()) {
 			return this.#getDatabaseEntry();
 		}
 		if (this.isGold()) {
 			return this.#getGoldComponent();
 		}
-		if (this.isSdp()) {
-			return this.#getSdpComponent();
-		}
-		console.warn("attempted to retrieve an unsupported type; this will probably break.", this);
-		return null;
+		return this.#getSdpComponent();
 	}
 	getComponentType() {
 		return this.#type;
@@ -354,6 +409,7 @@ var CraftingComponent = class CraftingComponent {
 	* @return {boolean}
 	*/
 	isDatabaseEntry() {
+		if (this.isCategorical()) return true;
 		switch (this.#type) {
 			case CraftingComponent.Types.Item:
 			case CraftingComponent.Types.Weapon:
@@ -370,14 +426,9 @@ var CraftingComponent = class CraftingComponent {
 	* @return {RPG_Item|RPG_Weapon|RPG_Armor}
 	*/
 	#getDatabaseEntry() {
-		switch (this.#type) {
-			case CraftingComponent.Types.Item: return $dataItems.at(this.#id);
-			case CraftingComponent.Types.Weapon: return $dataWeapons.at(this.#id);
-			case CraftingComponent.Types.Armor: return $dataArmors.at(this.#id);
-			default:
-				console.warn("attempted to retrieve an unsupported type.", this);
-				return null;
-		}
+		if (this.#type === CraftingComponent.Types.Item) return $dataItems.at(this.#id);
+		if (this.#type === CraftingComponent.Types.Weapon) return $dataWeapons.at(this.#id);
+		return $dataArmors.at(this.#id);
 	}
 	/**
 	* Checks if the underlying item associated with the component is just gold.
@@ -416,6 +467,7 @@ var CraftingComponent = class CraftingComponent {
 	* @return {string}
 	*/
 	getName() {
+		if (this.isCategorical()) return this.getCategoryLabel();
 		if (this.isDatabaseEntry()) {
 			return this.getItem().name;
 		}
@@ -429,6 +481,10 @@ var CraftingComponent = class CraftingComponent {
 	* @return {number}
 	*/
 	getIconIndex() {
+		if (this.isCategorical()) {
+			const best = this.bestEligibleEntry();
+			return best === null ? CraftingComponent.CategorySlotIconIndex : best.iconIndex;
+		}
 		if (this.isDatabaseEntry()) {
 			return this.getItem().iconIndex;
 		}
@@ -442,14 +498,15 @@ var CraftingComponent = class CraftingComponent {
 	* @return {number}
 	*/
 	getHandledQuantity() {
+		if (this.isCategorical()) {
+			const best = this.bestEligibleEntry();
+			return best === null ? 0 : $gameParty.numItems(best);
+		}
 		if (this.isDatabaseEntry()) return $gameParty.numItems(this.getItem());
 		if (this.isGold()) return $gameParty.gold();
 		if (J.JAFTING.EXT.CREATE.Metadata.usingSdp()) {
-			if (this.isSdp()) {
-				return $gameParty.leader().getSdpPoints();
-			}
+			return $gameParty.leader().getSdpPoints();
 		}
-		console.warn("an unsupported component type was presented for quantity.", this);
 		return 0;
 	}
 	/**
@@ -460,19 +517,24 @@ var CraftingComponent = class CraftingComponent {
 			$gameParty.gainItem(this.getItem(), this.#count);
 		} else if (this.isGold()) {
 			$gameParty.gainGold(this.#count);
-		} else if (this.isSdp()) {
+		} else {
 			$gameParty.members().forEach((actor) => actor.modSdpPoints(this.#count));
 		}
 	}
 	/**
 	* Consumes this particular component based on it's type.
+	* @param {RPG_Item|RPG_Weapon|RPG_Armor|null} selected The entry chosen to fill a categorical slot.
 	*/
-	consume() {
+	consume(selected = null) {
+		if (this.isCategorical()) {
+			$gameParty.loseItem(selected, this.#count);
+			return;
+		}
 		if (this.isDatabaseEntry()) {
 			$gameParty.loseItem(this.getItem(), this.#count);
 		} else if (this.isGold()) {
 			$gameParty.loseGold(this.#count);
-		} else if (this.isSdp()) {
+		} else {
 			$gameParty.members().forEach((actor) => actor.modSdpPoints(-this.#count));
 		}
 	}
@@ -488,15 +550,63 @@ var CraftingComponent = class CraftingComponent {
 	* @return {boolean}
 	*/
 	hasEnough() {
+		if (this.isCategorical()) return this.#count <= this.getHandledQuantity();
 		if (this.isDatabaseEntry()) {
 			const count = $gameParty.numItems(this.getItem());
 			return this.#count <= count;
-		} else if (this.isGold()) {
-			return this.#count <= $gameParty.gold();
-		} else if (this.isSdp()) {
-			return this.#count <= $gameParty.leader().getSdpPoints();
 		}
-		return false;
+		if (this.isGold()) {
+			return this.#count <= $gameParty.gold();
+		}
+		return this.#count <= $gameParty.leader().getSdpPoints();
+	}
+	/**
+	* The display label for a categorical slot, such as `Any Meat`.
+	*
+	* Categories are authored broad-to-specific, so the last one is the most descriptive thing to show
+	* a player - a slot wanting `[protein, meat]` reads better as "Any Meat" than as "Any Protein".
+	* @returns {string}
+	*/
+	getCategoryLabel() {
+		const categories = this.categories();
+		const mostSpecific = categories.at(-1);
+		const titleCased = mostSpecific.charAt(0).toUpperCase() + mostSpecific.slice(1);
+		return `Any ${titleCased}`;
+	}
+	/**
+	* How many of the given entry remain unclaimed within an in-progress allocation.
+	*
+	* A tally starts empty and only gains a key once something has been deducted from it, so an absent
+	* key means nothing has claimed that entry yet and the party's full count is available.
+	* @param {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>} tally The running allocation.
+	* @param {RPG_Item|RPG_Weapon|RPG_Armor} entry The entry being measured.
+	* @returns {number}
+	*/
+	static remainingOf(tally, entry) {
+		return tally.has(entry) ? tally.get(entry) : $gameParty.numItems(entry);
+	}
+	/**
+	* Claims this component's requirement out of an in-progress allocation, deducting what it takes.
+	*
+	* Checking each component against raw inventory independently is what lets two slots both believe
+	* they can spend the same stack - and because `Game_Party.gainItem` clamps at zero, the second
+	* `loseItem` is a silent no-op that hands the player a discount. Allocating against a shared,
+	* decrementing tally is what makes overlapping slots honest.
+	*
+	* Candidate choice is best-fit: the smallest eligible stack that still covers the requirement, so
+	* larger stacks stay available for the slots that will need them. It is a heuristic rather than an
+	* exhaustive search, which is sufficient because a slot only ever resolves to a single entry.
+	* @param {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>} tally The running allocation, mutated on success.
+	* @returns {boolean} True when this component could be satisfied from what remains.
+	*/
+	allocateFrom(tally) {
+		if (!this.isDatabaseEntry()) return this.hasEnough();
+		const candidates = this.isCategorical() ? this.eligibleEntries() : [this.getItem()];
+		const sufficient = candidates.filter((entry) => CraftingComponent.remainingOf(tally, entry) >= this.#count);
+		if (sufficient.length === 0) return false;
+		const chosen = sufficient.reduce((best, entry) => CraftingComponent.remainingOf(tally, entry) < CraftingComponent.remainingOf(tally, best) ? entry : best);
+		tally.set(chosen, CraftingComponent.remainingOf(tally, chosen) - this.#count);
+		return true;
 	}
 	/**
 	* A builder class for building {@link CraftingComponent}s.
@@ -518,8 +628,13 @@ var CraftingComponent = class CraftingComponent {
 		* @type {String.empty|'i'|'w'|'a'|'g'|'s'}
 		*/
 		#type = String.empty;
+		/**
+		* The ingredient types of the given component.
+		* @type {string[]}
+		*/
+		#categories = [];
 		build() {
-			const builtComponent = new CraftingComponent(this.#count, this.#id, this.#type);
+			const builtComponent = new CraftingComponent(this.#count, this.#id, this.#type, this.#categories);
 			this.#clear();
 			return builtComponent;
 		}
@@ -527,6 +642,7 @@ var CraftingComponent = class CraftingComponent {
 			this.#count = 0;
 			this.#id = 0;
 			this.#type = String.empty;
+			this.#categories = [];
 		}
 		count(count) {
 			this.#count = count;
@@ -538,6 +654,10 @@ var CraftingComponent = class CraftingComponent {
 		}
 		type(type) {
 			this.#type = type;
+			return this;
+		}
+		categories(categories) {
+			this.#categories = categories;
 			return this;
 		}
 	}();
@@ -676,21 +796,56 @@ var CraftingRecipe = class {
 	}
 	/**
 	* Checks if the party has the required materials to perform the crafting.
+	*
+	* Ingredients are allocated against a single shared tally rather than checked independently. Two
+	* slots that can both be filled by the same stack would each see the party's full count and both
+	* report satisfied - and since `Game_Party.gainItem` clamps at zero, the second `loseItem` would
+	* quietly do nothing and the player would pay once for two ingredients. Overlapping eligibility is
+	* the normal case once slots are categorical, so the tally is what keeps the answer honest.
+	*
+	* Tools are checked against raw inventory because they are never consumed and therefore never
+	* compete for a stack.
+	* @returns {boolean}
 	*/
 	canCraft() {
-		const hasIngredients = this.ingredients.every((component) => component.hasEnough());
+		/** @type {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>} */
+		const tally = new Map();
+		const hasIngredients = this.ingredients.every((component) => component.allocateFrom(tally));
 		const hasTools = this.tools.every((component) => component.hasEnough());
 		const canCraft = hasIngredients && hasTools;
 		return canCraft;
 	}
 	/**
+	* The indices of every ingredient that needs the player to choose which entry fills it.
+	*
+	* Only ingredients are listed. Tools may be categorical too, but they are never consumed, so which
+	* eligible tool the party happens to hold cannot change anything and asking would be noise.
+	* @returns {number[]}
+	*/
+	categoricalIngredientIndices() {
+		const indices = [];
+		this.ingredients.forEach((component, index) => {
+			if (component.isCategorical()) indices.push(index);
+		});
+		return indices;
+	}
+	/**
+	* Whether crafting this recipe requires the player to pick entries before it can execute.
+	* @returns {boolean}
+	*/
+	needsIngredientSelection() {
+		return this.categoricalIngredientIndices().length > 0;
+	}
+	/**
 	* Executes the crafting of the recipe.<br>
 	* This includes consuming the ingredients, generating the outputs, and improving proficiency.
+	* @param {Map<number, RPG_Item|RPG_Weapon|RPG_Armor>} selections The entry chosen for each
+	* categorical ingredient, keyed by its index in {@link ingredients}.
 	*/
-	craft() {
-		this.ingredients.forEach((component) => component.consume());
+	craft(selections = new Map()) {
+		this.ingredients.forEach((component, index) => component.consume(selections.get(index)));
 		this.outputs.forEach((component) => component.generate());
-		JaftingSalvageManager.applyCraftRecipeOutputs(this);
+		JaftingSalvageManager.applyCraftRecipeOutputs(this, selections);
 		$gameParty.getRecipeTrackingByKey(this.key).improveProficiency();
 	}
 	/**
@@ -995,7 +1150,8 @@ var CraftingCreationSession = class CraftingCreationSession {
 	*/
 	static Phase = {
 		BrowsingCategories: "browsing_categories",
-		BrowsingRecipes: "browsing_recipes"
+		BrowsingRecipes: "browsing_recipes",
+		SelectingIngredients: "selecting_ingredients"
 	};
 	/**
 	* @type {string}
@@ -1012,12 +1168,53 @@ var CraftingCreationSession = class CraftingCreationSession {
 	*/
 	#lastCraftOutcome = null;
 	/**
+	* The entry chosen for each categorical ingredient of the recipe being crafted, keyed by that
+	* ingredient's index in the recipe.
+	*
+	* This is session state rather than recipe state on purpose. Recipes are parsed once at boot and
+	* shared by every craft, so a choice written onto one would outlive the craft that made it and leak
+	* into the next. It also never reaches a savefile - the session is not serialized, and persisting
+	* database rows by value is precisely what the refinement lineage design exists to avoid.
+	* @type {Map<number, RPG_Item|RPG_Weapon|RPG_Armor>}
+	*/
+	#selections = new Map();
+	/**
 	* Resets session when the Creation scene is entered fresh.
 	*/
 	reset() {
 		this.#phase = CraftingCreationSession.Phase.BrowsingCategories;
 		this.#categoryKey = null;
 		this.#lastCraftOutcome = null;
+		this.#selections = new Map();
+	}
+	/**
+	* Gets the entries chosen so far for the craft in progress.
+	* @returns {Map<number, RPG_Item|RPG_Weapon|RPG_Armor>}
+	*/
+	getSelections() {
+		return this.#selections;
+	}
+	/**
+	* Begins choosing entries for a recipe's categorical ingredients, discarding any earlier picks.
+	*/
+	beginIngredientSelection() {
+		this.#selections = new Map();
+		this.#phase = CraftingCreationSession.Phase.SelectingIngredients;
+	}
+	/**
+	* Records the entry the player chose for one categorical ingredient.
+	* @param {number} ingredientIndex The ingredient's index within the recipe.
+	* @param {RPG_Item|RPG_Weapon|RPG_Armor} entry The entry chosen to fill it.
+	*/
+	recordSelection(ingredientIndex, entry) {
+		this.#selections.set(ingredientIndex, entry);
+	}
+	/**
+	* Abandons the craft in progress and returns to browsing recipes.
+	*/
+	cancelIngredientSelection() {
+		this.#selections = new Map();
+		this.#phase = CraftingCreationSession.Phase.BrowsingRecipes;
 	}
 	/**
 	* @returns {string}
@@ -1086,7 +1283,9 @@ var CraftingCreationSession = class CraftingCreationSession {
 			};
 			return this.#lastCraftOutcome;
 		}
-		recipe.craft();
+		recipe.craft(this.#selections);
+		this.#selections = new Map();
+		this.#phase = CraftingCreationSession.Phase.BrowsingRecipes;
 		this.#lastCraftOutcome = {
 			crafted: true,
 			playedSuccessSound: true,
@@ -1127,14 +1326,18 @@ var J_CraftingCreatePluginMetadata = class J_CraftingCreatePluginMetadata extend
 	*/
 	static parseRecipes(parsedRecipesBlob) {
 		const componentMapper = (mappableComponent) => {
-			const { count, id, type } = mappableComponent;
-			const newComponent = new CraftingComponent(count, id, type);
+			const { count, id, type, categories } = mappableComponent;
+			const newComponent = new CraftingComponent(count, id, type, categories ?? []);
 			return newComponent;
 		};
 		const recipeMapper = (mappableRecipe) => {
 			const parsedIngredients = mappableRecipe.ingredients.map(componentMapper, this);
 			const parsedTools = mappableRecipe.tools.map(componentMapper, this);
 			const parsedOutputs = mappableRecipe.outputs.map(componentMapper, this);
+			const categoricalOutput = parsedOutputs.find((output) => output.isCategorical());
+			if (categoricalOutput !== undefined) {
+				throw new Error(`recipe '${mappableRecipe.key}' declares a categorical output, which cannot be produced.`);
+			}
 			const newJaftingRecipe = new CraftingRecipe(mappableRecipe.name, mappableRecipe.key, mappableRecipe.categoryKeys, mappableRecipe.iconIndex, mappableRecipe.description, mappableRecipe.unlockedByDefault, mappableRecipe.maskedUntilCrafted, parsedIngredients, parsedTools, parsedOutputs);
 			return newJaftingRecipe;
 		};
@@ -1174,8 +1377,7 @@ var J_CraftingCreatePluginMetadata = class J_CraftingCreatePluginMetadata extend
 	* Loads and classifies crafting recipes and categories from {@link J_CraftingCreatePluginMetadata.CONFIG_PATH}.
 	*/
 	initializeConfiguration() {
-		const canLogLoadInfo = J_CraftingCreatePluginMetadata.#hasMinimumBaseVersion();
-		const summarize = canLogLoadInfo ? (result) => [`- ${result.recipes().length} recipes`, `- ${result.categories().length} categories`] : null;
+		const summarize = (result) => [`- ${result.recipes().length} recipes`, `- ${result.categories().length} categories`];
 		const options = ExternalJsonConfigLoaderOptions.Builder().pluginName("J-JAFTING-Creation").configName("crafting configuration").mapper(J_CraftingCreatePluginMetadata.classify.bind(J_CraftingCreatePluginMetadata)).logSummary(summarize).build();
 		const classifiedCraftingConfig = ExternalJsonConfigLoader.load(J_CraftingCreatePluginMetadata.CONFIG_PATH, options);
 		/**
@@ -1260,24 +1462,6 @@ var J_CraftingCreatePluginMetadata = class J_CraftingCreatePluginMetadata extend
 	minimumSdpVersion() {
 		return PluginVersion.builder.major("2").minor("0").patch("0").build();
 	}
-	/**
-	* Checks if the BASE plugin meets the minimum version requirement for this plugin.
-	* @return {boolean}
-	*/
-	static #hasMinimumBaseVersion() {
-		const minimumVersion = this.#minimumBaseVersion();
-		const actualVersion = new PluginVersion(J.BASE.Metadata.Version);
-		const meetsThreshold = actualVersion.satisfiesPluginVersion(minimumVersion);
-		if (!meetsThreshold) return false;
-		return true;
-	}
-	/**
-	* Gets the current minimum version of the J-BASE system this plugin requires.
-	* @returns {PluginVersion}
-	*/
-	static #minimumBaseVersion() {
-		return PluginVersion.builder.major("2").minor("3").patch("1").build();
-	}
 };
 
 //#endregion
@@ -1318,6 +1502,45 @@ J.JAFTING.EXT.CREATE.Aliased.Game_Party = new Map();
 J.JAFTING.EXT.CREATE.Aliased.Game_System = new Map();
 J.JAFTING.EXT.CREATE.Aliased.Scene_Jafting = new Map();
 J.JAFTING.EXT.CREATE.Aliased.Window_JaftingList = new Map();
+/**
+* A collection of all regular expressions used by this plugin.
+*/
+J.JAFTING.EXT.CREATE.RegExp = {};
+/**
+* A type this database entry can satisfy when a recipe asks for a category rather than a specific id.
+*
+* Repeat the tag on separate lines to declare several types; the note is scanned line-by-line, so two
+* tags sharing a line would only yield the first.
+*
+* <pre>
+* Structure:
+*  <ingredientType:TYPE>
+*
+* Example:
+*  <ingredientType:protein>
+*  <ingredientType:meat>
+*
+* Translation:
+*  This entry can fill a slot asking for 'protein', and a slot asking for 'meat'.
+* </pre>
+* @type {RegExp}
+*/
+J.JAFTING.EXT.CREATE.RegExp.IngredientType = /<ingredientType:[ ]?(\w+)>/i;
+
+//#endregion
+//#region src/plugins/jafting/ext/create/database/RPG_Base.js
+/**
+* The ingredient types this entry can satisfy when a recipe asks for a category rather than a
+* specific database id.
+*
+* Empty for the overwhelming majority of database entries, which is the correct answer - most things
+* are not ingredients. Only entries deliberately tagged participate in categorical matching, so the
+* empty array is a meaningful "this fills no slots" rather than a missing value.
+* @returns {string[]}
+*/
+RPG_Base.prototype.ingredientTypes = function() {
+	return RPGManager.getStringsFromNoteByRegex(this, J.JAFTING.EXT.CREATE.RegExp.IngredientType);
+};
 
 //#endregion
 //#region src/plugins/jafting/ext/create/objects/Game_Party.js
@@ -2729,6 +2952,143 @@ var Window_RecipeOutputList = class extends Window_Command {
 };
 
 //#endregion
+//#region src/plugins/jafting/ext/create/windows/Window_IngredientSelection.js
+/**
+* A window for choosing which inventory entry fills a single categorical ingredient slot.
+*
+* A categorical slot names a kind of thing rather than a database row, so more than one entry can
+* satisfy it. This window is where the player says which one they are spending. It never appears for
+* an id-based slot, and never for a tool - tools are not consumed, so which one is held cannot matter.
+*/
+var Window_IngredientSelection = class extends Window_Command {
+	/**
+	* Implements {@link Window_Command.initMembers}.<br/>
+	* Initializes the members of this window.
+	*
+	* These cannot be class field declarations: JavaScript applies those only after `super()` returns,
+	* by which point the command list has already been built from them and found them undefined.
+	*/
+	initMembers() {
+		/**
+		* The entries the player may choose between for this slot.
+		* @type {(RPG_Item|RPG_Weapon|RPG_Armor)[]}
+		*/
+		this._entries = [];
+		/**
+		* How many of the chosen entry the slot will spend.
+		* @type {number}
+		*/
+		this._required = 0;
+		/**
+		* How much of each entry earlier slots in this same craft have already claimed.
+		* @type {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>}
+		*/
+		this._claimed = new Map();
+	}
+	/**
+	* Gets the entries the player may choose between.
+	* @returns {(RPG_Item|RPG_Weapon|RPG_Armor)[]}
+	*/
+	entries() {
+		return this._entries;
+	}
+	/**
+	* Gets how many of the chosen entry this slot will spend.
+	* @returns {number}
+	*/
+	required() {
+		return this._required;
+	}
+	/**
+	* Gets the quantities already claimed by earlier slots in this craft.
+	* @returns {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>}
+	*/
+	claimed() {
+		return this._claimed;
+	}
+	/**
+	* Sets the entries the player may choose between.
+	* @param {(RPG_Item|RPG_Weapon|RPG_Armor)[]} entries The eligible entries.
+	*/
+	setEntries(entries) {
+		this._entries = entries;
+	}
+	/**
+	* Sets how many of the chosen entry this slot will spend.
+	* @param {number} required The quantity the slot requires.
+	*/
+	setRequired(required) {
+		this._required = required;
+	}
+	/**
+	* Sets the quantities already claimed by earlier slots in this craft.
+	* @param {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>} claimed What earlier slots already took.
+	*/
+	setClaimed(claimed) {
+		this._claimed = claimed;
+	}
+	/**
+	* Points this window at one categorical slot.
+	* @param {(RPG_Item|RPG_Weapon|RPG_Armor)[]} entries The entries eligible for the slot.
+	* @param {number} required How many of the chosen entry the slot spends.
+	* @param {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>} claimed What earlier slots already took.
+	*/
+	setSlot(entries, required, claimed) {
+		this.setEntries(entries);
+		this.setRequired(required);
+		this.setClaimed(claimed);
+	}
+	/**
+	* How many of the given entry remain after what earlier slots in this craft have claimed.
+	*
+	* Raw inventory would offer the player an entry an earlier slot has already spoken for, and the
+	* craft would then quietly come up short.
+	* @param {RPG_Item|RPG_Weapon|RPG_Armor} entry The entry being measured.
+	* @returns {number}
+	*/
+	remainingOf(entry) {
+		const alreadyClaimed = this.claimed().has(entry) ? this.claimed().get(entry) : 0;
+		return $gameParty.numItems(entry) - alreadyClaimed;
+	}
+	/**
+	* Implements {@link #makeCommandList}.<br/>
+	* Creates one command per eligible entry.
+	*/
+	makeCommandList() {
+		this.clearCommandList();
+		const commands = this.buildCommands();
+		commands.forEach(this.addBuiltCommand, this);
+	}
+	/**
+	* Builds all commands for this command window.
+	* @returns {BuiltWindowCommand[]}
+	*/
+	buildCommands() {
+		return this.entries().map(this.buildCommand, this);
+	}
+	/**
+	* Builds a {@link BuiltWindowCommand} for one eligible entry.
+	* @param {RPG_Item|RPG_Weapon|RPG_Armor} entry The entry to represent.
+	* @returns {BuiltWindowCommand}
+	*/
+	buildCommand(entry) {
+		const remaining = this.remainingOf(entry);
+		const need = this.required();
+		const isSufficient = remaining >= need;
+		const quantityColor = isSufficient ? 24 : 18;
+		return new WindowCommandBuilder(entry.name).setSymbol(`entry-${entry.id}`).setExtensionData(entry).setIconIndex(entry.iconIndex).setHelpText(entry.name).setEnabled(isSufficient).setRightText(`x${remaining}`).setRightColorIndex(quantityColor).setTextLines([`(need: ${need})`]).build();
+	}
+	/**
+	* Overwrites {@link #itemHeight}.<br/>
+	* Matches the ingredient list's row height so the two read as one column.
+	* @returns {number}
+	*/
+	itemHeight() {
+		return this.lineHeight() * 1.5;
+	}
+};
+
+//#endregion
 //#region src/plugins/jafting/ext/create/scenes/Scene_JaftingCreate.js
 var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 	/**
@@ -2859,6 +3219,94 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 		* @type {Window_RecipeOutputList}
 		*/
 		this._j._crafting._create._recipeOutputList = null;
+		/**
+		* The window for choosing which entry fills a categorical ingredient slot.
+		* @type {Window_IngredientSelection|null}
+		*/
+		this._j._crafting._create._ingredientSelection = null;
+		/**
+		* The recipe awaiting ingredient choices, or null when no craft is mid-flight.
+		* @type {CraftingRecipe|null}
+		*/
+		this._j._crafting._create._pendingRecipe = null;
+		/**
+		* How far through the categorical slots the player has progressed.
+		* @type {number}
+		*/
+		this._j._crafting._create._pendingSlotPosition = 0;
+	}
+	/**
+	* Gets the recipe awaiting ingredient choices.
+	* @returns {CraftingRecipe|null}
+	*/
+	getPendingRecipe() {
+		return this._j._crafting._create._pendingRecipe;
+	}
+	/**
+	* Sets the recipe awaiting ingredient choices.
+	* @param {CraftingRecipe|null} recipe The recipe being crafted, or null once it is done.
+	*/
+	setPendingRecipe(recipe) {
+		this._j._crafting._create._pendingRecipe = recipe;
+	}
+	/**
+	* Gets how far through the categorical slots the player has progressed.
+	* @returns {number}
+	*/
+	getPendingSlotPosition() {
+		return this._j._crafting._create._pendingSlotPosition;
+	}
+	/**
+	* Sets how far through the categorical slots the player has progressed.
+	* @param {number} position The next slot to ask about.
+	*/
+	setPendingSlotPosition(position) {
+		this._j._crafting._create._pendingSlotPosition = position;
+	}
+	/**
+	* Gets the IngredientSelection window being tracked.
+	* @returns {Window_IngredientSelection}
+	*/
+	getIngredientSelectionWindow() {
+		return this._j._crafting._create._ingredientSelection;
+	}
+	/**
+	* Sets the IngredientSelection window tracking.
+	* @param {Window_IngredientSelection} someWindow The window to track.
+	*/
+	setIngredientSelectionWindow(someWindow) {
+		this._j._crafting._create._ingredientSelection = someWindow;
+	}
+	/**
+	* Creates the IngredientSelection window.
+	*/
+	createIngredientSelectionWindow() {
+		const window = this.buildIngredientSelectionWindow();
+		this.setIngredientSelectionWindow(window);
+		this.addWindow(window);
+	}
+	/**
+	* Builds and configures the IngredientSelection window.
+	* @returns {Window_IngredientSelection}
+	*/
+	buildIngredientSelectionWindow() {
+		const rectangle = this.getIngredientSelectionRectangle();
+		const window = new Window_IngredientSelection(rectangle);
+		window.setHandler("cancel", this.onIngredientSelectionCancel.bind(this));
+		window.setHandler("ok", this.onIngredientSelection.bind(this));
+		window.hide();
+		window.deactivate();
+		return window;
+	}
+	/**
+	* Gets the rectangle associated with this window.
+	*
+	* Shares the recipe column's footprint, since it stands in for that column while a craft is being
+	* assembled and the two are never on screen at once.
+	* @returns {Rectangle}
+	*/
+	getIngredientSelectionRectangle() {
+		return this.getRecipeListRectangle();
 	}
 	/**
 	* @returns {CraftingCreationSession}
@@ -2893,6 +3341,7 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 		this.createRecipeIngredientListWindow();
 		this.createRecipeToolListWindow();
 		this.createRecipeOutputListWindow();
+		this.createIngredientSelectionWindow();
 	}
 	/**
 	* Configures all windows.
@@ -3195,6 +3644,17 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 	}
 	onRecipeListSelection() {
 		const recipe = this.getRecipeListWindow().currentExt();
+		if (recipe !== null && recipe.needsIngredientSelection() && recipe.canCraft()) {
+			this.beginIngredientSelection(recipe);
+			return;
+		}
+		this.executeCraft(recipe);
+	}
+	/**
+	* Executes a craft and returns the recipe column to its resting state.
+	* @param {CraftingRecipe|null} recipe The recipe being crafted.
+	*/
+	executeCraft(recipe) {
 		const outcome = this.craftingCreationSession().tryCraftRecipe(recipe);
 		if (outcome.playedSuccessSound === true) {
 			SoundManager.playShop();
@@ -3203,6 +3663,90 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 		listWindow.refresh();
 		this.onRecipeListIndexChange();
 		listWindow.activate();
+	}
+	/**
+	* Begins walking the player through one choice per categorical ingredient.
+	* @param {CraftingRecipe} recipe The recipe being crafted.
+	*/
+	beginIngredientSelection(recipe) {
+		const session = this.craftingCreationSession();
+		session.beginIngredientSelection();
+		this.setPendingRecipe(recipe);
+		this.setPendingSlotPosition(0);
+		this.getRecipeListWindow().deactivate();
+		this.promptNextIngredientSlot();
+	}
+	/**
+	* Shows the choice for the next unfilled categorical slot, or crafts once they are all filled.
+	*/
+	promptNextIngredientSlot() {
+		const recipe = this.getPendingRecipe();
+		const slots = recipe.categoricalIngredientIndices();
+		const position = this.getPendingSlotPosition();
+		if (position >= slots.length) {
+			this.finishIngredientSelection();
+			return;
+		}
+		const ingredientIndex = slots.at(position);
+		const component = recipe.ingredients.at(ingredientIndex);
+		const selectionWindow = this.getIngredientSelectionWindow();
+		selectionWindow.setSlot(component.eligibleEntries(), component.quantity(), this.claimedSoFar());
+		selectionWindow.refresh();
+		selectionWindow.select(0);
+		selectionWindow.show();
+		selectionWindow.activate();
+	}
+	/**
+	* How much of each entry the picks made so far in this craft have already spoken for.
+	* @returns {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>}
+	*/
+	claimedSoFar() {
+		const recipe = this.getPendingRecipe();
+		const selections = this.craftingCreationSession().getSelections();
+		/** @type {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>} */
+		const claimed = new Map();
+		selections.forEach((entry, ingredientIndex) => {
+			const taken = recipe.ingredients.at(ingredientIndex).quantity();
+			const running = claimed.has(entry) ? claimed.get(entry) : 0;
+			claimed.set(entry, running + taken);
+		});
+		return claimed;
+	}
+	/**
+	* Records the chosen entry and moves to the next slot.
+	*/
+	onIngredientSelection() {
+		const recipe = this.getPendingRecipe();
+		const slots = recipe.categoricalIngredientIndices();
+		const position = this.getPendingSlotPosition();
+		const chosen = this.getIngredientSelectionWindow().currentExt();
+		this.craftingCreationSession().recordSelection(slots.at(position), chosen);
+		this.setPendingSlotPosition(position + 1);
+		this.promptNextIngredientSlot();
+	}
+	/**
+	* Abandons the craft and hands control back to the recipe column.
+	*/
+	onIngredientSelectionCancel() {
+		this.craftingCreationSession().cancelIngredientSelection();
+		this.closeIngredientSelectionWindow();
+		this.getRecipeListWindow().activate();
+	}
+	/**
+	* Executes the craft now that every categorical slot has an entry against it.
+	*/
+	finishIngredientSelection() {
+		this.closeIngredientSelectionWindow();
+		this.executeCraft(this.getPendingRecipe());
+		this.setPendingRecipe(null);
+	}
+	/**
+	* Puts the selection window away.
+	*/
+	closeIngredientSelectionWindow() {
+		const selectionWindow = this.getIngredientSelectionWindow();
+		selectionWindow.hide();
+		selectionWindow.deactivate();
 	}
 	/**
 	* Creates the RecipeDetails window.

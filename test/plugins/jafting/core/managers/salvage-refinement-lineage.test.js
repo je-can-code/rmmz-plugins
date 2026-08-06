@@ -37,7 +37,11 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
   const materialWeaponTypeId = 5;
 
   /**
-   * Builds a minimal RPG datum with just the surface the manager reads.
+   * Builds a minimal RPG datum carrying both halves of a row's identity.
+   *
+   * `id` says what the row is OF and `index` says which instance it is; `_key()` hands back the index, which is what
+   * real containers and datastores are keyed by. The two coincide here by default because that is true of every row
+   * authored in the database editor - see {@link dynamicDatum} for the case where they diverge.
    * @param {'i'|'w'|'a'} kind The datum kind.
    * @param {number} id The database id.
    * @param {object} [extra] Additional properties such as atypeId.
@@ -47,11 +51,53 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
   {
     return {
       id,
+      index: id,
+      _key()
+      {
+        return this.index;
+      },
       isItem: () => kind === 'i',
       isWeapon: () => kind === 'w',
       isArmor: () => kind === 'a',
       ...extra,
     };
+  }
+
+  /**
+   * Builds a dynamic instance: a clone of some base row that has been moved into its own datastore slot.
+   *
+   * This is the shape refinement actually produces, and the shape that matters - `stampRefinedOutput` moves only the
+   * index, so the row keeps reporting its base's `id` forever. A fixture where the two agree cannot tell whether
+   * production code asked the right question.
+   * @param {'i'|'w'|'a'} kind The datum kind.
+   * @param {number} baseId The id of the row this was cloned from.
+   * @param {number} slot The dynamic datastore slot it now occupies.
+   * @param {object} [extra] Additional properties such as atypeId.
+   * @returns {object}
+   */
+  function dynamicDatum(kind, baseId, slot, extra = {})
+  {
+    return fakeDatum(kind, baseId, {
+      index: slot,
+      ...extra,
+    });
+  }
+
+  /**
+   * The key a real `Game_Party` container uses for a datum: its kind plus its instance slot.
+   *
+   * J-Base overwrites `numItems` and `gainItem` to key on `_key()`, so a stub keyed on `id` would report a refined
+   * instance and the base stack it was cloned from as the same holding.
+   * @param {object} datum The datum to key.
+   * @returns {string}
+   */
+  function instanceKey(datum)
+  {
+    if (datum.isItem()) return `i:${datum._key()}`;
+
+    if (datum.isWeapon()) return `w:${datum._key()}`;
+
+    return `a:${datum._key()}`;
   }
 
   /**
@@ -82,13 +128,11 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
       _refinedArmors: [],
       numItems(datum)
       {
-        const key = JaftingSalvageManager.containerKeyFromDatum(datum) ?? `?:${datum.id}`;
-
-        return this._counts[key] ?? 0;
+        return this._counts[instanceKey(datum)] ?? 0;
       },
       setCount(datum, n)
       {
-        this._counts[JaftingSalvageManager.containerKeyFromDatum(datum)] = n;
+        this._counts[instanceKey(datum)] = n;
       },
       getRefinedWeapons()
       {
@@ -109,11 +153,18 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
       Types: { Item: 'i', Weapon: 'w', Armor: 'a', Gold: 'g', SDP: 's' },
     };
 
+    // the reclaim path asks the actor roster whether anybody is wearing the slot.
+    globalThis.$gameActors = { existingActors: () => [] };
+
     globalThis.$dataWeapons = {};
     globalThis.$dataArmors = {};
     globalThis.$dataItems = {};
     globalThis.RPG_Weapon = { createEmpty: id => ({ id, empty: true }) };
     globalThis.RPG_Armor = { createEmpty: id => ({ id, empty: true }) };
+
+    // collection and per-copy sizing both ask who is wearing what; an empty cast is the neutral baseline, and the
+    // cases that care about worn gear install their own roster.
+    globalThis.$gameActors = { existingActors: () => [] };
 
     JaftingSalvageManager.initPartySalvageStorage();
   });
@@ -123,11 +174,13 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
     delete globalThis.J;
     delete globalThis.CraftingComponent;
     delete globalThis.$gameParty;
+    delete globalThis.$gameActors;
     delete globalThis.$dataWeapons;
     delete globalThis.$dataArmors;
     delete globalThis.$dataItems;
     delete globalThis.RPG_Weapon;
     delete globalThis.RPG_Armor;
+    delete globalThis.$gameActors;
   });
 
   //region donor classification
@@ -305,33 +358,36 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
     {
       // Arrange: refined rows are tracked for save hydration, so a stale reference would
       // resurrect a weapon that no longer exists on the next load.
-      const weapon = fakeDatum('w', JaftingSalvageManager.DynamicEquipIndexMin);
-      $gameParty._refinedWeapons = [ { index: weapon.id }, { index: weapon.id + 1 } ];
+      const weapon = dynamicDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty._refinedWeapons = [ { index: weapon.index }, { index: weapon.index + 1 } ];
 
       // Act
       JaftingSalvageManager.reclaimDynamicWeaponSlot(weapon);
 
       // Assert
-      expect($gameParty._refinedWeapons.map(entry => entry.index)).toEqual([ weapon.id + 1 ]);
+      expect($gameParty._refinedWeapons.map(entry => entry.index)).toEqual([ weapon.index + 1 ]);
     });
 
-    it('blanks the datastore row so the id can be handed out again', () =>
+    it('blanks its own slot rather than the base row it was cloned from', () =>
     {
-      // Arrange
-      const weapon = fakeDatum('w', JaftingSalvageManager.DynamicEquipIndexMin);
+      // Arrange: the instance lives in slot 2001 while still reporting the base weapon's id of 5. Reading the id
+      // here would hand back slot 5, which is a weapon the player may well still be carrying.
+      const weapon = dynamicDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      $dataWeapons[5] = { id: 5, name: 'Iron Sword' };
 
       // Act
       JaftingSalvageManager.reclaimDynamicWeaponSlot(weapon);
 
       // Assert
-      expect($dataWeapons[weapon.id].empty).toBe(true);
+      expect($dataWeapons[weapon.index].empty).toBe(true);
+      expect($dataWeapons[5].name).toBe('Iron Sword');
     });
 
     it('leaves unrelated refinement entries alone', () =>
     {
       // Arrange
-      const weapon = fakeDatum('w', JaftingSalvageManager.DynamicEquipIndexMin);
-      $gameParty._refinedWeapons = [ { index: weapon.id + 5 } ];
+      const weapon = dynamicDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty._refinedWeapons = [ { index: weapon.index + 5 } ];
 
       // Act
       JaftingSalvageManager.reclaimDynamicWeaponSlot(weapon);
@@ -345,14 +401,14 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
       // Arrange: this is the one place core reaches into the refinement extension's storage, and it
       // matches on a field name. The list holds provenance rather than equips, so the match has to
       // keep landing on the node's own datastore slot.
-      const weapon = fakeDatum('w', JaftingSalvageManager.DynamicEquipIndexMin);
+      const weapon = dynamicDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
       const doomed = JaftingRefinementLineage.refinement(
-        weapon.id,
+        weapon.index,
         JaftingRefinementLineage.leaf('w', 5),
         JaftingRefinementLineage.leaf('w', 9),
         null);
       const survivor = JaftingRefinementLineage.refinement(
-        weapon.id + 1,
+        weapon.index + 1,
         JaftingRefinementLineage.leaf('w', 5),
         JaftingRefinementLineage.leaf('w', 9),
         null);
@@ -383,7 +439,7 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
       $gameParty._refinedWeapons = [ donor, output ];
 
       // Act
-      JaftingSalvageManager.reclaimDynamicWeaponSlot(fakeDatum('w', donor.index));
+      JaftingSalvageManager.reclaimDynamicWeaponSlot(dynamicDatum('w', 5, donor.index));
 
       // Assert
       expect($gameParty._refinedWeapons).toEqual([ output ]);
@@ -397,33 +453,35 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
     it('drops the tracked refinement entry for the reclaimed armor', () =>
     {
       // Arrange
-      const armor = fakeDatum('a', JaftingSalvageManager.DynamicEquipIndexMin);
-      $gameParty._refinedArmors = [ { index: armor.id }, { index: armor.id + 1 } ];
+      const armor = dynamicDatum('a', 7, JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty._refinedArmors = [ { index: armor.index }, { index: armor.index + 1 } ];
 
       // Act
       JaftingSalvageManager.reclaimDynamicArmorSlot(armor);
 
       // Assert
-      expect($gameParty._refinedArmors.map(entry => entry.index)).toEqual([ armor.id + 1 ]);
+      expect($gameParty._refinedArmors.map(entry => entry.index)).toEqual([ armor.index + 1 ]);
     });
 
-    it('blanks the datastore row so the id can be handed out again', () =>
+    it('blanks its own slot rather than the base row it was cloned from', () =>
     {
-      // Arrange
-      const armor = fakeDatum('a', JaftingSalvageManager.DynamicEquipIndexMin);
+      // Arrange: twin of the weapon case - the instance reports base armor id 7 while living in slot 2001.
+      const armor = dynamicDatum('a', 7, JaftingSalvageManager.DynamicEquipIndexMin);
+      $dataArmors[7] = { id: 7, name: 'Leather Vest' };
 
       // Act
       JaftingSalvageManager.reclaimDynamicArmorSlot(armor);
 
       // Assert
-      expect($dataArmors[armor.id].empty).toBe(true);
+      expect($dataArmors[armor.index].empty).toBe(true);
+      expect($dataArmors[7].name).toBe('Leather Vest');
     });
 
     it('leaves unrelated refinement entries alone', () =>
     {
       // Arrange
-      const armor = fakeDatum('a', JaftingSalvageManager.DynamicEquipIndexMin);
-      $gameParty._refinedArmors = [ { index: armor.id + 5 } ];
+      const armor = dynamicDatum('a', 7, JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty._refinedArmors = [ { index: armor.index + 5 } ];
 
       // Act
       JaftingSalvageManager.reclaimDynamicArmorSlot(armor);
@@ -482,30 +540,48 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
       expect(JaftingSalvageManager.getLedgerForDatum(datum)).toBe(null);
     });
 
-    it('reclaims the datastore slot when a refined weapon is fully gone', () =>
+    it('reclaims no weapon slot, because leaving the bag is not leaving the game', () =>
     {
-      // Arrange
-      const weapon = fakeDatum('w', JaftingSalvageManager.DynamicEquipIndexMin);
-      $gameParty._refinedWeapons = [ { index: weapon.id } ];
+      // Arrange: this hook fires mid-equip too, when the row is briefly held nowhere at all.
+      const weapon = dynamicDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty._refinedWeapons = [ { index: weapon.index } ];
 
       // Act
       JaftingSalvageManager.afterPartyLostItem(weapon, 1);
 
       // Assert
-      expect($gameParty._refinedWeapons).toEqual([]);
+      expect($gameParty._refinedWeapons).toHaveLength(1);
     });
 
-    it('reclaims the datastore slot when a refined armor is fully gone', () =>
+    it('reclaims no armor slot either', () =>
     {
       // Arrange
-      const armor = fakeDatum('a', JaftingSalvageManager.DynamicEquipIndexMin);
-      $gameParty._refinedArmors = [ { index: armor.id } ];
+      const armor = dynamicDatum('a', 7, JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty._refinedArmors = [ { index: armor.index } ];
 
       // Act
       JaftingSalvageManager.afterPartyLostItem(armor, 1);
 
       // Assert
-      expect($gameParty._refinedArmors).toEqual([]);
+      expect($gameParty._refinedArmors).toHaveLength(1);
+    });
+
+    it('leaves the base row\'s salvage bag alone when a refined clone of it is discarded', () =>
+    {
+      // Arrange: the refined sword reports base id 5, so anything keying the party bag off its id would delete the
+      // bag belonging to the plain Iron Swords still in the player's inventory - stripping their dismantle refunds
+      // as a side effect of throwing away something else entirely.
+      const baseWeapon = fakeDatum('w', 5);
+      $gameParty.setCount(baseWeapon, 3);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(baseWeapon, snapshotOf(31), 3);
+      const refined = dynamicDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty._refinedWeapons = [ { index: refined.index } ];
+
+      // Act
+      JaftingSalvageManager.afterPartyLostItem(refined, 1);
+
+      // Assert
+      expect(JaftingSalvageManager.getLedgerForDatum(baseWeapon)).toBeTruthy();
     });
 
     it('does nothing for a datum of no recognizable kind', () =>
@@ -513,6 +589,8 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
       // Arrange: without a container key there is no bag to prune.
       const datum = {
         id: 1,
+        index: 1,
+        _key: () => 1,
         isItem: () => false,
         isWeapon: () => false,
         isArmor: () => false,
@@ -538,6 +616,173 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
       expect($gameParty._refinedWeapons.length).toBe(1);
     });
   });
+  //region collecting unreferenced slots
+  /**
+   * Collection is a garbage collector rather than an allocator: the refinement counter only counts upward, so no
+   * future refinement waits on a freed slot. That is what lets it run from a quiet moment instead of from the
+   * middle of an equip - and the whole burden of correctness lands on one question, "does anything still hold
+   * this row", which has two answers and both of them have burned this code before.
+   */
+  describe('reclaimUnreferencedDynamicSlots', () =>
+  {
+    /**
+     * Registers a tracked refined weapon occupying a dynamic slot.
+     * @param {number} slot The dynamic slot it occupies.
+     * @returns {object} The datum written into the datastore.
+     */
+    function trackedWeapon(slot)
+    {
+      const row = dynamicDatum('w', 5, slot);
+      $dataWeapons[slot] = row;
+      $gameParty._refinedWeapons.push({ index: slot });
+
+      return row;
+    }
+
+    /**
+     * Installs a roster of actors, each wearing whatever equips are handed over.
+     * @param {object[][]} equipsPerActor One array of equipped rows per actor.
+     */
+    function actorsWearing(equipsPerActor)
+    {
+      globalThis.$gameActors = {
+        existingActors: () => equipsPerActor.map(equips => ({ equips: () => equips })),
+      };
+    }
+
+    beforeEach(() =>
+    {
+      actorsWearing([]);
+    });
+
+    afterEach(() =>
+    {
+      delete globalThis.$gameActors;
+    });
+
+    it('collects a slot nothing holds any more', () =>
+    {
+      // Arrange
+      const row = trackedWeapon(JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty.setCount(row, 0);
+
+      // Act
+      JaftingSalvageManager.reclaimUnreferencedDynamicSlots();
+
+      // Assert
+      expect($gameParty._refinedWeapons).toEqual([]);
+      expect($dataWeapons[row.index].empty).toBe(true);
+    });
+
+    it('spares a slot still sitting in the bag', () =>
+    {
+      // Arrange
+      const row = trackedWeapon(JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty.setCount(row, 1);
+
+      // Act
+      JaftingSalvageManager.reclaimUnreferencedDynamicSlots();
+
+      // Assert
+      expect($gameParty._refinedWeapons).toHaveLength(1);
+    });
+
+    it('spares a slot somebody is wearing', () =>
+    {
+      // Arrange: equipped rows are not in any container, so the bag reads zero while the sword is in a hand.
+      const row = trackedWeapon(JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty.setCount(row, 0);
+      actorsWearing([ [ row ] ]);
+
+      // Act
+      JaftingSalvageManager.reclaimUnreferencedDynamicSlots();
+
+      // Assert
+      expect($gameParty._refinedWeapons).toHaveLength(1);
+      expect($dataWeapons[row.index]).toBe(row);
+    });
+
+    it('spares a slot worn by an actor who is not in the party right now', () =>
+    {
+      // Arrange: Chef Adventure splits its two leads across halves of a dungeon, so the character who is not
+      // currently travelling with you still has their gear on. `existingActors` is read rather than the party
+      // roster precisely so that sword survives the sweep.
+      const row = trackedWeapon(JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty.setCount(row, 0);
+      $gameParty._actors = [];
+      actorsWearing([ [], [ row ] ]);
+
+      // Act
+      JaftingSalvageManager.reclaimUnreferencedDynamicSlots();
+
+      // Assert
+      expect($gameParty._refinedWeapons).toHaveLength(1);
+    });
+
+    it('reads past an empty equip slot rather than tripping over it', () =>
+    {
+      // Arrange: an unfilled equip slot resolves to null by contract, so the list genuinely holds gaps.
+      const row = trackedWeapon(JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty.setCount(row, 0);
+      actorsWearing([ [ null, row ] ]);
+
+      // Act
+      const act = () => JaftingSalvageManager.reclaimUnreferencedDynamicSlots();
+
+      // Assert
+      expect(act).not.toThrow();
+      expect($gameParty._refinedWeapons).toHaveLength(1);
+    });
+
+    it('collects every dead slot in one pass without losing its place', () =>
+    {
+      // Arrange: collection splices the list being walked, so the slots are snapshotted up front. Without that,
+      // the second entry shifts into the index already visited and survives.
+      const first = trackedWeapon(JaftingSalvageManager.DynamicEquipIndexMin);
+      const second = trackedWeapon(JaftingSalvageManager.DynamicEquipIndexMin + 1);
+      $gameParty.setCount(first, 0);
+      $gameParty.setCount(second, 0);
+
+      // Act
+      JaftingSalvageManager.reclaimUnreferencedDynamicSlots();
+
+      // Assert
+      expect($gameParty._refinedWeapons).toEqual([]);
+    });
+
+    it('collects a dead armor slot alongside the weapons', () =>
+    {
+      // Arrange
+      const armorSlot = JaftingSalvageManager.DynamicEquipIndexMin;
+      const armor = dynamicDatum('a', 7, armorSlot);
+      $dataArmors[armorSlot] = armor;
+      $gameParty._refinedArmors.push({ index: armorSlot });
+      $gameParty.setCount(armor, 0);
+
+      // Act
+      JaftingSalvageManager.reclaimUnreferencedDynamicSlots();
+
+      // Assert
+      expect($gameParty._refinedArmors).toEqual([]);
+      expect($dataArmors[armorSlot].empty).toBe(true);
+    });
+
+    it('changes nothing on a second pass over the same state', () =>
+    {
+      // Arrange: a sweep runs on every map entry, so it has to be safe to run when there is nothing to do.
+      const row = trackedWeapon(JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty.setCount(row, 0);
+      JaftingSalvageManager.reclaimUnreferencedDynamicSlots();
+
+      // Act
+      const act = () => JaftingSalvageManager.reclaimUnreferencedDynamicSlots();
+
+      // Assert
+      expect(act).not.toThrow();
+      expect($gameParty._refinedWeapons).toEqual([]);
+    });
+  });
+  //endregion collecting unreferenced slots
   //endregion reclaiming dynamic slots
 
   //region row and component vocabulary
@@ -720,5 +965,73 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
     });
   });
   //endregion row and component vocabulary
+
+  //region only collecting slots nothing is holding
+  describe('reclaimWeaponSlotWhenUnreferenced / reclaimArmorSlotWhenUnreferenced', () =>
+  {
+    it('leaves a weapon slot alone while a copy is still held', () =>
+    {
+      // Arrange- collecting a slot somebody still owns would swap the item out from under them, and
+      // the row it points at would be reused by the next refinement.
+      const weapon = dynamicDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      globalThis.$dataWeapons = [];
+      globalThis.$dataWeapons[weapon.index] = weapon;
+      $gameParty._refinedWeapons = [ { index: weapon.index } ];
+      $gameParty.setCount(weapon, 1);
+
+      // Act
+      JaftingSalvageManager.reclaimWeaponSlotWhenUnreferenced(weapon.index);
+
+      // Assert
+      expect($gameParty._refinedWeapons.map(entry => entry.index)).toEqual([ weapon.index ]);
+    });
+
+    it('collects a weapon slot once nothing holds it', () =>
+    {
+      // Arrange
+      const weapon = dynamicDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      globalThis.$dataWeapons = [];
+      globalThis.$dataWeapons[weapon.index] = weapon;
+      $gameParty._refinedWeapons = [ { index: weapon.index } ];
+
+      // Act
+      JaftingSalvageManager.reclaimWeaponSlotWhenUnreferenced(weapon.index);
+
+      // Assert
+      expect($gameParty._refinedWeapons).toEqual([]);
+    });
+
+    it('leaves an armor slot alone while a copy is still held', () =>
+    {
+      // Arrange
+      const armor = dynamicDatum('a', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      globalThis.$dataArmors = [];
+      globalThis.$dataArmors[armor.index] = armor;
+      $gameParty._refinedArmors = [ { index: armor.index } ];
+      $gameParty.setCount(armor, 1);
+
+      // Act
+      JaftingSalvageManager.reclaimArmorSlotWhenUnreferenced(armor.index);
+
+      // Assert
+      expect($gameParty._refinedArmors.map(entry => entry.index)).toEqual([ armor.index ]);
+    });
+
+    it('collects an armor slot once nothing holds it', () =>
+    {
+      // Arrange
+      const armor = dynamicDatum('a', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      globalThis.$dataArmors = [];
+      globalThis.$dataArmors[armor.index] = armor;
+      $gameParty._refinedArmors = [ { index: armor.index } ];
+
+      // Act
+      JaftingSalvageManager.reclaimArmorSlotWhenUnreferenced(armor.index);
+
+      // Assert
+      expect($gameParty._refinedArmors).toEqual([]);
+    });
+  });
+  //endregion only collecting slots nothing is holding
 });
 //endregion plugins/jafting/core/managers/salvage-refinement-lineage.test.js

@@ -152,13 +152,38 @@ JaftingSalvageLedger.mergeDuplicateRows = function(rows)
 };
 
 /**
+ * Maps a database entry onto the ledger row letter that routes its stash and refund handling.
+ *
+ * Used where the letter cannot be read off a {@link CraftingComponent}, which is the case for a
+ * categorical slot: the component names types rather than a datastore, so only the entry actually
+ * spent knows which table it came from.
+ * @param {RPG_Item|RPG_Weapon|RPG_Armor} datum The entry to classify.
+ * @returns {string} The datastore letter: `i`, `w`, or `a`.
+ */
+JaftingSalvageLedger.typeLetterForDatum = function(datum)
+{
+  if (datum.isWeapon()) return 'w';
+
+  if (datum.isArmor()) return 'a';
+
+  return 'i';
+};
+
+/**
  * Builds ledger rows from recipe ingredients (what crafting consumed).<br>
  * Tools are intentionally omitted — salvage stamps track consumed inputs only.
  *
+ * A categorical ingredient has no fixed row of its own, so the entry the player actually spent must be
+ * supplied. Falling back to whatever the component resolves to on its own would stamp the *first
+ * eligible* entry rather than the spent one — a wrong ancestry that never throws and only surfaces
+ * much later as a mismatched salvage refund.
+ *
  * @param {CraftingComponent[]} ingredients The ingredients driving this step.
+ * @param {Map<number, RPG_Item|RPG_Weapon|RPG_Armor>} selections The entry spent for each categorical
+ * ingredient, keyed by its index in the ingredients collection.
  * @returns {JaftingSalvageLedgerRow[]}
  */
-JaftingSalvageLedger.rowsFromCraftingComponents = function(ingredients)
+JaftingSalvageLedger.rowsFromCraftingComponents = function(ingredients, selections = new Map())
 {
   const rows = [];
 
@@ -168,8 +193,15 @@ JaftingSalvageLedger.rowsFromCraftingComponents = function(ingredients)
 
     if (component.isDatabaseEntry())
     {
+      // a recorded selection is the authority on what was actually spent; asking the component would
+      // answer with whatever it resolves to on its own, which for a categorical slot is merely the
+      // first eligible entry rather than the chosen one.
+      const wasSelected = selections.has(i);
+      const datum = wasSelected
+        ? selections.get(i)
+        : component.getItem();
+
       // mirror {@link CraftingComponent} letter codes into ledger row type letters for stash/refund routing.
-      const datum = component.getItem();
       let typeLetter = 'i';
 
       if (component.isWeapon())
@@ -179,6 +211,12 @@ JaftingSalvageLedger.rowsFromCraftingComponents = function(ingredients)
       else if (component.isArmor())
       {
         typeLetter = 'a';
+      }
+
+      // a selected entry carries no component type to read, so the row itself decides the routing.
+      if (wasSelected)
+      {
+        typeLetter = JaftingSalvageLedger.typeLetterForDatum(datum);
       }
 
       // Append the row to the working collection.

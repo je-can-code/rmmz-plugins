@@ -707,6 +707,7 @@
     "Window_Gold": "writable",
     "Window_Help": "writable",
     "Window_HorzCommand": "writable",
+    "Window_IngredientSelection": "writable",
     "Window_InputFrame": "writable",
     "Window_ItemCategory": "writable",
     "Window_ItemList": "writable",

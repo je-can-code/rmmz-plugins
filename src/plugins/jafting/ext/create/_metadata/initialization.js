@@ -49,4 +49,30 @@ J.JAFTING.EXT.CREATE.Aliased.Game_Party = new Map();
 J.JAFTING.EXT.CREATE.Aliased.Game_System = new Map();
 J.JAFTING.EXT.CREATE.Aliased.Scene_Jafting = new Map();
 J.JAFTING.EXT.CREATE.Aliased.Window_JaftingList = new Map();
+
+/**
+ * A collection of all regular expressions used by this plugin.
+ */
+J.JAFTING.EXT.CREATE.RegExp = {};
+
+/**
+ * A type this database entry can satisfy when a recipe asks for a category rather than a specific id.
+ *
+ * Repeat the tag on separate lines to declare several types; the note is scanned line-by-line, so two
+ * tags sharing a line would only yield the first.
+ *
+ * <pre>
+ * Structure:
+ *  <ingredientType:TYPE>
+ *
+ * Example:
+ *  <ingredientType:protein>
+ *  <ingredientType:meat>
+ *
+ * Translation:
+ *  This entry can fill a slot asking for 'protein', and a slot asking for 'meat'.
+ * </pre>
+ * @type {RegExp}
+ */
+J.JAFTING.EXT.CREATE.RegExp.IngredientType = /<ingredientType:[ ]?(\w+)>/i;
 //endregion initialization

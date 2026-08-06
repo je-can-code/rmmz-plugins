@@ -3,6 +3,7 @@ import CraftingCreationSession from './../__models/CraftingCreationSession.js';
 import Window_CategoryList from '../windows/Window_CategoryList.js';
 import Window_CreationCategoryBadge from '../windows/Window_CreationCategoryBadge.js';
 import Window_CreationDescription from '../windows/Window_CreationDescription.js';
+import Window_IngredientSelection from '../windows/Window_IngredientSelection.js';
 import Window_RecipeDetails from '../windows/Window_RecipeDetails.js';
 import Window_RecipeIngredientList from '../windows/Window_RecipeIngredientList.js';
 import Window_RecipeList from '../windows/Window_RecipeList.js';
@@ -188,6 +189,131 @@ class Scene_JaftingCreate
      * @type {Window_RecipeOutputList}
      */
     this._j._crafting._create._recipeOutputList = null;
+
+    /**
+     * The window for choosing which entry fills a categorical ingredient slot.
+     * @type {Window_IngredientSelection|null}
+     */
+    this._j._crafting._create._ingredientSelection = null;
+
+    /**
+     * The recipe awaiting ingredient choices, or null when no craft is mid-flight.
+     * @type {CraftingRecipe|null}
+     */
+    this._j._crafting._create._pendingRecipe = null;
+
+    /**
+     * How far through the categorical slots the player has progressed.
+     * @type {number}
+     */
+    this._j._crafting._create._pendingSlotPosition = 0;
+  }
+
+  /**
+   * Gets the recipe awaiting ingredient choices.
+   * @returns {CraftingRecipe|null}
+   */
+  getPendingRecipe()
+  {
+    return this._j._crafting._create._pendingRecipe;
+  }
+
+  /**
+   * Sets the recipe awaiting ingredient choices.
+   * @param {CraftingRecipe|null} recipe The recipe being crafted, or null once it is done.
+   */
+  setPendingRecipe(recipe)
+  {
+    this._j._crafting._create._pendingRecipe = recipe;
+  }
+
+  /**
+   * Gets how far through the categorical slots the player has progressed.
+   * @returns {number}
+   */
+  getPendingSlotPosition()
+  {
+    return this._j._crafting._create._pendingSlotPosition;
+  }
+
+  /**
+   * Sets how far through the categorical slots the player has progressed.
+   * @param {number} position The next slot to ask about.
+   */
+  setPendingSlotPosition(position)
+  {
+    this._j._crafting._create._pendingSlotPosition = position;
+  }
+
+  /**
+   * Gets the IngredientSelection window being tracked.
+   * @returns {Window_IngredientSelection}
+   */
+  getIngredientSelectionWindow()
+  {
+    return this._j._crafting._create._ingredientSelection;
+  }
+
+  /**
+   * Sets the IngredientSelection window tracking.
+   * @param {Window_IngredientSelection} someWindow The window to track.
+   */
+  setIngredientSelectionWindow(someWindow)
+  {
+    this._j._crafting._create._ingredientSelection = someWindow;
+  }
+
+  /**
+   * Creates the IngredientSelection window.
+   */
+  createIngredientSelectionWindow()
+  {
+    // create the window.
+    const window = this.buildIngredientSelectionWindow();
+
+    // update the tracker with the new window.
+    this.setIngredientSelectionWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Builds and configures the IngredientSelection window.
+   * @returns {Window_IngredientSelection}
+   */
+  buildIngredientSelectionWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.getIngredientSelectionRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_IngredientSelection(rectangle);
+
+    // assign cancel functionality.
+    window.setHandler('cancel', this.onIngredientSelectionCancel.bind(this));
+
+    // assign on-select functionality.
+    window.setHandler('ok', this.onIngredientSelection.bind(this));
+
+    // also put the window away.
+    window.hide();
+    window.deactivate();
+
+    // return the built and configured window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with this window.
+   *
+   * Shares the recipe column's footprint, since it stands in for that column while a craft is being
+   * assembled and the two are never on screen at once.
+   * @returns {Rectangle}
+   */
+  getIngredientSelectionRectangle()
+  {
+    return this.getRecipeListRectangle();
   }
 
   /**
@@ -242,6 +368,7 @@ class Scene_JaftingCreate
     this.createRecipeIngredientListWindow();
     this.createRecipeToolListWindow();
     this.createRecipeOutputListWindow();
+    this.createIngredientSelectionWindow();
   }
 
   /**
@@ -751,7 +878,27 @@ class Scene_JaftingCreate
   onRecipeListSelection()
   {
     const recipe = this.getRecipeListWindow().currentExt();
-    const outcome = this.craftingCreationSession().tryCraftRecipe(recipe);
+
+    // a recipe with categorical slots cannot execute until the player says which entries to spend.
+    // asking before checking requirements would be rude, so the affordability gate still comes first.
+    if (recipe !== null && recipe.needsIngredientSelection() && recipe.canCraft())
+    {
+      this.beginIngredientSelection(recipe);
+
+      return;
+    }
+
+    this.executeCraft(recipe);
+  }
+
+  /**
+   * Executes a craft and returns the recipe column to its resting state.
+   * @param {CraftingRecipe|null} recipe The recipe being crafted.
+   */
+  executeCraft(recipe)
+  {
+    const outcome = this.craftingCreationSession()
+      .tryCraftRecipe(recipe);
 
     if (outcome.playedSuccessSound === true)
     {
@@ -766,6 +913,139 @@ class Scene_JaftingCreate
   }
 
   //endregion recipe list
+
+  //region ingredient selection
+  /**
+   * Begins walking the player through one choice per categorical ingredient.
+   * @param {CraftingRecipe} recipe The recipe being crafted.
+   */
+  beginIngredientSelection(recipe)
+  {
+    const session = this.craftingCreationSession();
+    session.beginIngredientSelection();
+
+    // remember what we are choosing for, and how far through the list we are.
+    this.setPendingRecipe(recipe);
+    this.setPendingSlotPosition(0);
+
+    this.getRecipeListWindow()
+      .deactivate();
+
+    this.promptNextIngredientSlot();
+  }
+
+  /**
+   * Shows the choice for the next unfilled categorical slot, or crafts once they are all filled.
+   */
+  promptNextIngredientSlot()
+  {
+    const recipe = this.getPendingRecipe();
+    const slots = recipe.categoricalIngredientIndices();
+    const position = this.getPendingSlotPosition();
+
+    // every slot has an entry against it, so there is nothing left to ask.
+    if (position >= slots.length)
+    {
+      this.finishIngredientSelection();
+
+      return;
+    }
+
+    const ingredientIndex = slots.at(position);
+    const component = recipe.ingredients.at(ingredientIndex);
+    const selectionWindow = this.getIngredientSelectionWindow();
+
+    // claimed quantities keep an earlier slot's pick from being offered again as though it were free.
+    selectionWindow.setSlot(component.eligibleEntries(), component.quantity(), this.claimedSoFar());
+    selectionWindow.refresh();
+    selectionWindow.select(0);
+    selectionWindow.show();
+    selectionWindow.activate();
+  }
+
+  /**
+   * How much of each entry the picks made so far in this craft have already spoken for.
+   * @returns {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>}
+   */
+  claimedSoFar()
+  {
+    const recipe = this.getPendingRecipe();
+    const selections = this.craftingCreationSession()
+      .getSelections();
+
+    /** @type {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>} */
+    const claimed = new Map();
+
+    selections.forEach((entry, ingredientIndex) =>
+    {
+      const taken = recipe.ingredients.at(ingredientIndex)
+        .quantity();
+      const running = claimed.has(entry)
+        ? claimed.get(entry)
+        : 0;
+
+      claimed.set(entry, running + taken);
+    });
+
+    return claimed;
+  }
+
+  /**
+   * Records the chosen entry and moves to the next slot.
+   */
+  onIngredientSelection()
+  {
+    const recipe = this.getPendingRecipe();
+    const slots = recipe.categoricalIngredientIndices();
+    const position = this.getPendingSlotPosition();
+    const chosen = this.getIngredientSelectionWindow()
+      .currentExt();
+
+    this.craftingCreationSession()
+      .recordSelection(slots.at(position), chosen);
+
+    this.setPendingSlotPosition(position + 1);
+
+    this.promptNextIngredientSlot();
+  }
+
+  /**
+   * Abandons the craft and hands control back to the recipe column.
+   */
+  onIngredientSelectionCancel()
+  {
+    this.craftingCreationSession()
+      .cancelIngredientSelection();
+
+    this.closeIngredientSelectionWindow();
+
+    this.getRecipeListWindow()
+      .activate();
+  }
+
+  /**
+   * Executes the craft now that every categorical slot has an entry against it.
+   */
+  finishIngredientSelection()
+  {
+    this.closeIngredientSelectionWindow();
+
+    this.executeCraft(this.getPendingRecipe());
+
+    this.setPendingRecipe(null);
+  }
+
+  /**
+   * Puts the selection window away.
+   */
+  closeIngredientSelectionWindow()
+  {
+    const selectionWindow = this.getIngredientSelectionWindow();
+
+    selectionWindow.hide();
+    selectionWindow.deactivate();
+  }
+  //endregion ingredient selection
 
   //region recipe details
   /**
