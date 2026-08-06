@@ -89,9 +89,9 @@ Game_Party.prototype.rawArmors = function()
  */
 Game_Party.prototype.pruneMissingInventoryEntries = function()
 {
-  const prunedItems = this.pruneMissingFromContainer(this.rawItems(), $dataItems, 'item');
-  const prunedWeapons = this.pruneMissingFromContainer(this.rawWeapons(), $dataWeapons, 'weapon');
-  const prunedArmors = this.pruneMissingFromContainer(this.rawArmors(), $dataArmors, 'armor');
+  const prunedItems = this.pruneMissingFromContainer(this.rawItems(), $dataItems, 'i');
+  const prunedWeapons = this.pruneMissingFromContainer(this.rawWeapons(), $dataWeapons, 'w');
+  const prunedArmors = this.pruneMissingFromContainer(this.rawArmors(), $dataArmors, 'a');
   const pruned = prunedItems.concat(prunedWeapons, prunedArmors);
 
   // staying quiet is the overwhelmingly common case, and a message every map entry would train the reader to
@@ -112,10 +112,10 @@ Game_Party.prototype.pruneMissingInventoryEntries = function()
  * anything authored in the editor, and dynamically created rows are the reason the distinction exists.
  * @param {Object<number, number>} container The raw key-to-quantity map to prune.
  * @param {RPG_BaseItem[]} datastore The table those keys are supposed to index.
- * @param {string} label What kind of thing this container holds, for the report.
- * @returns {{ label: string, key: number, quantity: number }[]} One entry per key removed.
+ * @param {string} type The datastore letter this container holds - `i`, `w`, or `a`.
+ * @returns {string[]} One `type`-prefixed key per entry removed, such as `w181`.
  */
-Game_Party.prototype.pruneMissingFromContainer = function(container, datastore, label)
+Game_Party.prototype.pruneMissingFromContainer = function(container, datastore, type)
 {
   const pruned = [];
 
@@ -128,11 +128,7 @@ Game_Party.prototype.pruneMissingFromContainer = function(container, datastore, 
         return;
       }
 
-      pruned.push({
-        label,
-        key: Number(key),
-        quantity: container[key],
-      });
+      pruned.push(`${type}${key}`);
 
       delete container[key];
     });
@@ -141,31 +137,23 @@ Game_Party.prototype.pruneMissingFromContainer = function(container, datastore, 
 };
 
 /**
- * Shouts about inventory entries that were dropped because their database rows are gone.
+ * Announces, in one line, the inventory entries that were dropped because their database rows are gone.
  *
- * Loud on purpose, and specific on purpose. The failure this replaces was a `TypeError` several systems away from
- * the deletion that caused it, so the report names the exact keys and how many were held - enough to decide
- * whether the deletion was intended without opening a save file.
- * @param {{ label: string, key: number, quantity: number }[]} pruned Everything that was removed.
+ * Deliberately a single message rather than one per entry. Deletions come in families - a whole tier of weapons
+ * retired at once - so a per-entry report is dozens of near-identical lines that bury the very pattern that makes
+ * the cause recognisable. The keys are listed in the same `i` / `w` / `a` shorthand the salvage ledger uses, so a
+ * reader already knows how to read them.
+ * @param {string[]} pruned Every dropped entry, already type-prefixed.
  */
 Game_Party.prototype.reportPrunedInventoryEntries = function(pruned)
 {
-  const banner = '='.repeat(110);
+  const plural = pruned.length === 1
+    ? 'entry'
+    : 'entries';
+  const listed = pruned.join(',');
 
-  console.warn(banner);
-  console.warn(`J-BASE INVENTORY RECONCILIATION: dropped ${pruned.length} entr${pruned.length === 1 ? 'y' : 'ies'} `
-    + 'that no longer exist in the database.');
-  console.warn('This is what happens when rows are deleted from the database after a save was written. If those '
-    + 'deletions were intended, this message is the confirmation and nothing is wrong. If they were not, the save '
-    + 'just lost these permanently.');
-  console.warn(banner);
-
-  pruned.forEach(entry =>
-  {
-    console.warn(`  dropped ${entry.label} #${entry.key} (x${entry.quantity}) - no such row in the database.`);
-  });
-
-  console.warn(banner);
+  console.warn(`J-BASE: dropped ${pruned.length} inventory ${plural} whose database rows no longer exist `
+    + `(rows deleted after this save was written): [${listed}]`);
 };
 //endregion reconciliation
 

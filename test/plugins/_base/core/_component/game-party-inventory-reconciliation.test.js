@@ -127,9 +127,10 @@ describe('Game_Party inventory reconciliation (direct src import)', () =>
       expect(party.rawWeapons()[2002]).toBe(1);
     });
 
-    it('reports the quantity that was held, not merely the key', () =>
+    it('names the dropped key in the datastore shorthand the rest of the codebase uses', () =>
     {
-      // Arrange - enough to judge whether the loss matters without opening a save file.
+      // Arrange - `w200` rather than "weapon #200", matching the letters the salvage ledger keys its rows by, so a
+      // reader already knows how to read the list.
       const party = buildParty({ weapons: { 200: 7 } });
       const warn = captureWarnings();
 
@@ -140,8 +141,7 @@ describe('Game_Party inventory reconciliation (direct src import)', () =>
       const said = warn.mock.calls.flat()
         .join('\n');
 
-      expect(said).toContain('weapon #200');
-      expect(said).toContain('x7');
+      expect(said).toContain('w200');
       warn.mockRestore();
     });
   });
@@ -189,7 +189,7 @@ describe('Game_Party inventory reconciliation (direct src import)', () =>
       const said = warn.mock.calls.flat()
         .join('\n');
 
-      expect(said).toContain('dropped 3 entries');
+      expect(said).toContain('dropped 3 inventory entries');
       warn.mockRestore();
     });
 
@@ -238,25 +238,45 @@ describe('Game_Party inventory reconciliation (direct src import)', () =>
       const said = warn.mock.calls.flat()
         .join('\n');
 
-      expect(said).toContain('dropped 1 entry');
+      expect(said).toContain('dropped 1 inventory entry');
       warn.mockRestore();
     });
 
-    it('names each kind of container it dropped from', () =>
+    it('says everything in exactly one message, however much was dropped', () =>
     {
-      // Arrange
-      const party = buildParty({ items: { 900: 1 }, armors: { 777: 1 } });
+      // Arrange - forty entries is the realistic case, since deletions come in families. One line per entry buries
+      // the shape of what happened under a wall of near-identical text.
+      const weapons = {};
+
+      for (let key = 181; key <= 220; key++)
+      {
+        weapons[key] = 1;
+      }
+
+      const party = buildParty({ weapons });
       const warn = captureWarnings();
 
       // Act
       party.pruneMissingInventoryEntries();
 
       // Assert
-      const said = warn.mock.calls.flat()
-        .join('\n');
+      expect(warn).toHaveBeenCalledTimes(1);
+      expect(warn.mock.calls[0][0]).toContain('[w181,w182,');
+      expect(warn.mock.calls[0][0]).toContain(',w220]');
+      warn.mockRestore();
+    });
 
-      expect(said).toContain('item #900');
-      expect(said).toContain('armor #777');
+    it('lists every container together in one bracketed run', () =>
+    {
+      // Arrange
+      const party = buildParty({ items: { 900: 1 }, weapons: { 200: 1 }, armors: { 777: 1 } });
+      const warn = captureWarnings();
+
+      // Act
+      party.pruneMissingInventoryEntries();
+
+      // Assert
+      expect(warn.mock.calls[0][0]).toContain('[i900,w200,a777]');
       warn.mockRestore();
     });
   });
