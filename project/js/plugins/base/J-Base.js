@@ -2662,20 +2662,45 @@ JsonEx._decode = function(value) {
 //#endregion
 //#region src/plugins/_base/core/core/Bitmap.js
 /**
-* RMMZ {@link Window_Base.prototype.flushTextState} calls {@link Bitmap.prototype.drawText}
-* without an alignment argument. Older engines treated that like left alignment; NW.js 0.110+
-* warns when assigning undefined to {@link CanvasRenderingContext2D#textAlign}.
+* The alignments a canvas will actually accept for {@link CanvasRenderingContext2D#textAlign}.
+*
+* Kept as an allowlist rather than a type check, because the question being asked is not "is this a string" but
+* "is this something the canvas understands" - and a wrong string is every bit as broken as a number.
+* @type {string[]}
+*/
+var validTextAlignments = [
+	"left",
+	"center",
+	"right",
+	"start",
+	"end"
+];
+/**
+* Normalizes the alignment RMMZ hands down, because the engine hands down two different wrong things.
+*
+* `Window_Base.prototype.drawText` takes `(text, x, y, maxWidth, align)` while `Bitmap.prototype.drawText` takes
+* `(text, x, y, maxWidth, lineHeight, align)` - five parameters against six, with `align` and `lineHeight` sitting
+* in the same slot. Vanilla confuses the two in three separate places, and every one lands here:
+*
+* - `Window_Base.flushTextState` calls with no alignment at all, so `align` arrives `undefined`.
+* - `Window_EquipSlot.drawItem` and `Window_StatusEquip.drawItem` both pass `rect.height`, so `align` arrives as
+*   the line height - `36` by default, which the console then rejects once per equipment slot per refresh.
+*
+* Older Chromium quietly ignored an unusable `textAlign`; NW.js 0.110+ warns instead, which is why engine code
+* that has been wrong for years only started saying so recently. **This is not a guard against our own contract**
+* - it is the boundary with engine code that cannot be corrected at the source, and every one of those callers
+* meant the default, so the default is what they get.
 *
 * @param {string} text The text that will be drawn.
 * @param {number} x The x coordinate for the left of the text.
 * @param {number} y The y coordinate for the top of the text.
 * @param {number} maxWidth The maximum allowed width of the text.
 * @param {number} lineHeight The height of the text line.
-* @param {string} [align] The alignment of the text; defaults to left when omitted.
+* @param {string} [align] The alignment of the text; defaults to left when unusable or omitted.
 */
 J.BASE.Aliased.Bitmap.set("drawText", Bitmap.prototype.drawText);
 Bitmap.prototype.drawText = function(text, x, y, maxWidth, lineHeight, align) {
-	const resolvedAlign = align === undefined ? "left" : align;
+	const resolvedAlign = validTextAlignments.includes(align) ? align : "left";
 	J.BASE.Aliased.Bitmap.get("drawText").call(this, text, x, y, maxWidth, lineHeight, resolvedAlign);
 };
 
