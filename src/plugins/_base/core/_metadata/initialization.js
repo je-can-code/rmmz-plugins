@@ -223,6 +223,7 @@ J.BASE.Aliased = {
   Input: new Map(),
   Scene_Base: new Map(),
   Scene_Boot: new Map(),
+  Scene_Map: new Map(),
   Scene_MenuBase: new Map(),
   SoundManager: new Map(),
   Window_Base: new Map(),

@@ -70,6 +70,105 @@ Game_Party.prototype.rawArmors = function()
 };
 //endregion properties
 
+//region reconciliation
+/**
+ * Drops every inventory entry whose database row no longer exists, and shouts about each one.
+ *
+ * **A savefile outlives the database it was written against.** Deleting a row during development is ordinary and
+ * correct - a whole family of weapons stops being part of the game - but every save written beforehand still holds
+ * that row in its containers. Those containers store quantities against keys, so a deleted row leaves a key
+ * pointing at nothing, and `Game_Party.weapons` resolves it by handing back `undefined`.
+ *
+ * Vanilla survives that only by luck: `DataManager.isItem` reads `item && …`, so engine windows silently skip the
+ * gaps. Plugin code that asks a row a question first - `datum.isArmor()` - dies instead, somewhere entirely
+ * unrelated to the deletion, with a stack trace that names neither the row nor the reason.
+ *
+ * So the reconciliation happens once, out loud, in one place. This is deliberately **not** a guard sprinkled across
+ * every predicate that touches inventory: the entry is genuinely gone, and the honest thing is to say so and drop
+ * it, rather than teach fifty callers to tiptoe around a hole.
+ */
+Game_Party.prototype.pruneMissingInventoryEntries = function()
+{
+  const prunedItems = this.pruneMissingFromContainer(this.rawItems(), $dataItems, 'item');
+  const prunedWeapons = this.pruneMissingFromContainer(this.rawWeapons(), $dataWeapons, 'weapon');
+  const prunedArmors = this.pruneMissingFromContainer(this.rawArmors(), $dataArmors, 'armor');
+  const pruned = prunedItems.concat(prunedWeapons, prunedArmors);
+
+  // staying quiet is the overwhelmingly common case, and a message every map entry would train the reader to
+  // ignore the one that matters.
+  if (pruned.length === 0)
+  {
+    return;
+  }
+
+  this.reportPrunedInventoryEntries(pruned);
+};
+
+/**
+ * Removes the keys of one container that no longer resolve to a row, reporting what was removed.
+ *
+ * Keys are read against the datastore rather than trusted, because that is the whole question being asked. Note
+ * this is indexed by the container's own key, which is the row's index rather than its id - the two agree for
+ * anything authored in the editor, and dynamically created rows are the reason the distinction exists.
+ * @param {Object<number, number>} container The raw key-to-quantity map to prune.
+ * @param {RPG_BaseItem[]} datastore The table those keys are supposed to index.
+ * @param {string} label What kind of thing this container holds, for the report.
+ * @returns {{ label: string, key: number, quantity: number }[]} One entry per key removed.
+ */
+Game_Party.prototype.pruneMissingFromContainer = function(container, datastore, label)
+{
+  const pruned = [];
+
+  Object.keys(container)
+    .forEach(key =>
+    {
+      // a row that resolves is none of this method's business.
+      if (datastore[key])
+      {
+        return;
+      }
+
+      pruned.push({
+        label,
+        key: Number(key),
+        quantity: container[key],
+      });
+
+      delete container[key];
+    });
+
+  return pruned;
+};
+
+/**
+ * Shouts about inventory entries that were dropped because their database rows are gone.
+ *
+ * Loud on purpose, and specific on purpose. The failure this replaces was a `TypeError` several systems away from
+ * the deletion that caused it, so the report names the exact keys and how many were held - enough to decide
+ * whether the deletion was intended without opening a save file.
+ * @param {{ label: string, key: number, quantity: number }[]} pruned Everything that was removed.
+ */
+Game_Party.prototype.reportPrunedInventoryEntries = function(pruned)
+{
+  const banner = '='.repeat(110);
+
+  console.warn(banner);
+  console.warn(`J-BASE INVENTORY RECONCILIATION: dropped ${pruned.length} entr${pruned.length === 1 ? 'y' : 'ies'} `
+    + 'that no longer exist in the database.');
+  console.warn('This is what happens when rows are deleted from the database after a save was written. If those '
+    + 'deletions were intended, this message is the confirmation and nothing is wrong. If they were not, the save '
+    + 'just lost these permanently.');
+  console.warn(banner);
+
+  pruned.forEach(entry =>
+  {
+    console.warn(`  dropped ${entry.label} #${entry.key} (x${entry.quantity}) - no such row in the database.`);
+  });
+
+  console.warn(banner);
+};
+//endregion reconciliation
+
 /**
  * Overwrites {@link #gainItem}.<br/>
  * Replaces item gain and management with index-based management instead.
