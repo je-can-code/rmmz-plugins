@@ -767,6 +767,10 @@ Game_Actor.prototype.reconcileOffhandPinAgainstEquip = function()
 //region JABS battler properties
 /**
  * Actors have fixed `uuid`s, and thus it can be calculated as-is.
+ *
+ * An actor that has not been given a database row yet has no identity to report, which happens ordinarily enough -
+ * the party allocates its members before a save has finished restoring them. That is a moment to wait through, not
+ * a fault, so it answers with the empty sentinel rather than narrating it.
  * @returns {string}
  */
 Game_Actor.prototype.getUuid = function()
@@ -778,8 +782,7 @@ Game_Actor.prototype.getUuid = function()
     return `actor-${this.actorId()}`;
   }
 
-  // Surface a non-fatal warning for operator triage.
-  console.warn("no uuid currently available for this actor.", this);
+  // nothing to identify yet.
   return String.empty;
 };
 
