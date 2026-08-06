@@ -488,6 +488,7 @@
     "RPG_Weapon": "writable",
     "RecipeTracking": "writable",
     "Rectangle": "writable",
+    "RefinementEligibility": "writable",
     "RefinementWorkflowSession": "writable",
     "RegionSkillData": "writable",
     "RegionStateData": "writable",

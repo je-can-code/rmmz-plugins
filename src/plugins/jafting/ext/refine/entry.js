@@ -11,6 +11,7 @@ import './objects/Game_Item.js';
 import './objects/Game_Party.js';
 import './objects/Game_System.js';
 import './managers/JaftingManager.js';
+import './managers/RefinementEligibility.js';
 import './windows/Window_RefinementStepHint.js';
 import './windows/Window_RefinementDescription.js';
 import './windows/Window_RefinableList.js';
