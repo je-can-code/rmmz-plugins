@@ -602,6 +602,37 @@ needed. Reserve VM-style bundle evaluation for prototype-patch and metadata test
 - If writing a test surfaces a real bug or dead code, **stop and raise it** rather than testing around
   it. A block that only calls `console.error` is a deletion candidate, not a coverage gap.
 
+### Coverage is 100%, and it stays 100%
+
+Every measured file in `src/plugins/**` is at **100% of statements, branches, functions and lines**.
+That is a floor, not an aspiration: **do not leave a session having lowered it.** The number is only
+useful while it is exactly 100 — at 99.4% nobody can tell a deliberate gap from a forgotten one, and
+the whole thing decays into a dashboard.
+
+So a change is not finished when it works. It is finished when every branch it introduced is covered
+and the total is still 100. Practically: after touching source, run coverage and read the file you
+changed, because a drop is reported against the file, not against your diff.
+
+**Two things make that number easy to fake, and both have already bitten:**
+
+- **A test that loads a built bundle scores nothing.** `vm.runInThisContext` over `out/**` or
+  `project/js/plugins/**` genuinely exercises the code and attributes **zero** to `src/**`. The tests
+  pass, the source file silently drops, and it reads as a regression in a file nobody touched. Import
+  the module under test **directly from `src/`**; bundle-load only the *host* plugin whose globals you
+  need. See [`docs/testing-scenes-and-windows.md`](docs/testing-scenes-and-windows.md) and the direct-
+  import fixtures under `test/plugins/_base/core/_component/fixtures/`.
+- **Green proves nothing about whether the test is checking anything.** A tautological test covers a
+  line without constraining it. Before claiming a branch is covered, break the source on purpose and
+  confirm the test goes red. If it stays green, the test is decoration. Mutate through a script that
+  **asserts the edit matched** — a silent no-op mutation reads as "my tests are worthless" and is
+  itself a false result.
+
+**What 100% does *not* currently include.** `vitest.config.js` excludes `scenes/**`, `sprites/**` and
+`windows/**` outside `_base/ext/save`, so "100%" means 100% of everything else. That exclusion is a
+tracked debt, not a licence: it is lifted **per family as tests land**, and the view layer is the last
+untested corner rather than a permanent carve-out. Do not describe the repo as fully covered without
+naming that gap.
+
 ---
 
 ## Git and pull requests

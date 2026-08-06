@@ -8,17 +8,21 @@ import { repoRoot } from '../../../../setup/repo-root.js';
 import { installMinimalDatabase, installRmmzViewLayer } from '../../../../setup/rmmz-view-harness.js';
 
 /**
- * A savefile outlives the database it was written against, and deleting a row mid-development is ordinary. What is
- * not ordinary is the consequence: the containers store quantities against keys, so a deleted row leaves a key
- * pointing at nothing, and `Game_Party.weapons` resolves it to `undefined`. Vanilla skates past that because its
- * predicates read `item && …` first; plugin code that asks the row a question dies somewhere unrelated to the
- * deletion that caused it.
+ * Wiring only. The reconciliation rules themselves are covered against the source module in
+ * `_component/game-party-inventory-reconciliation.test.js`; what cannot be checked there is *when* they run, and
+ * that turned out to be the hard half of the problem.
  *
- * The rule these cover is narrow and worth stating exactly: **a key is dropped only when the datastore genuinely has
- * nothing at it.** A row that exists but is blank stays, and - the case that dictated where this runs at all - a row
- * created at runtime and written back into `$data*` during load is a legitimate holding, not a hole.
+ * Every earlier candidate for the hook is wrong, and wrong in a way that costs the player their belongings. Rows
+ * created at runtime are written back into `$data*` from `Game_System.onAfterLoad`, which does not fire until
+ * `Scene_Load.terminate` - so reconciling during `DataManager.extractSaveContents` would read a legitimately
+ * restored row as a deleted one and drop it. Aliasing `onAfterLoad` fails the same way, because J-Base loads first
+ * and its body therefore runs ahead of every extension's replay in that chain. `Scene_Load` cannot be the hook
+ * either, since J-Base-Save loads through a scene of its own and never touches it.
+ *
+ * Every one of those paths ends up on the map. This proves the reconciliation actually happens there, and that the
+ * alias still calls through - a `Scene_Map.start` that stopped starting the map would be a black screen.
  */
-describe('Game_Party inventory reconciliation (real engine)', () =>
+describe('Game_Party inventory reconciliation wiring (real view layer)', () =>
 {
   beforeAll(() =>
   {
@@ -60,156 +64,11 @@ describe('Game_Party inventory reconciliation (real engine)', () =>
     vi.restoreAllMocks();
   });
 
-  /**
-   * Silences and records the reconciliation report.
-   * @returns {import('vitest').MockInstance}
-   */
-  function captureWarnings()
+  it('reconciles from the map, which is the one point where the answer can be trusted', () =>
   {
-    return vi.spyOn(console, 'warn')
+    // Arrange
+    const warn = vi.spyOn(console, 'warn')
       .mockImplementation(() => {});
-  }
-
-  it('drops a weapon key whose row has been deleted from the database', () =>
-  {
-    // Arrange: exactly the shape a save carries after a family of weapons is cut - the key survives the deletion.
-    const warn = captureWarnings();
-    globalThis.$gameParty.rawWeapons()[200] = 1;
-
-    // Act
-    globalThis.$gameParty.pruneMissingInventoryEntries();
-
-    // Assert
-    expect(globalThis.$gameParty.rawWeapons()[200]).toBeUndefined();
-    warn.mockRestore();
-  });
-
-  it('drops a deleted item key', () =>
-  {
-    // Arrange
-    const warn = captureWarnings();
-    globalThis.$gameParty.rawItems()[900] = 3;
-
-    // Act
-    globalThis.$gameParty.pruneMissingInventoryEntries();
-
-    // Assert
-    expect(globalThis.$gameParty.rawItems()[900]).toBeUndefined();
-    warn.mockRestore();
-  });
-
-  it('drops a deleted armor key', () =>
-  {
-    // Arrange
-    const warn = captureWarnings();
-    globalThis.$gameParty.rawArmors()[777] = 2;
-
-    // Act
-    globalThis.$gameParty.pruneMissingInventoryEntries();
-
-    // Assert
-    expect(globalThis.$gameParty.rawArmors()[777]).toBeUndefined();
-    warn.mockRestore();
-  });
-
-  it('keeps a key whose row still exists', () =>
-  {
-    // Arrange
-    globalThis.$gameParty.rawWeapons()[1] = 4;
-
-    // Act
-    globalThis.$gameParty.pruneMissingInventoryEntries();
-
-    // Assert
-    expect(globalThis.$gameParty.rawWeapons()[1]).toBe(4);
-  });
-
-  it('keeps a row created at runtime and written back into the datastore', () =>
-  {
-    // Arrange: this is the case that decided where the reconciliation runs. Refinement mints rows into the dynamic
-    // range and restores them from `Game_System.onAfterLoad`, so anything asking this question earlier in the load
-    // would read a legitimately restored weapon as a deleted one and take it off the player.
-    globalThis.$dataWeapons[2001] = globalThis.RPG_Weapon.createEmpty(2001);
-    globalThis.$gameParty.rawWeapons()[2001] = 1;
-
-    // Act
-    globalThis.$gameParty.pruneMissingInventoryEntries();
-
-    // Assert
-    expect(globalThis.$gameParty.rawWeapons()[2001]).toBe(1);
-  });
-
-  it('keeps a row that exists but is blank', () =>
-  {
-    // Arrange: a reclaimed dynamic slot is a hydrated blank rather than a hole, and the player may still hold one.
-    globalThis.$dataWeapons[2002] = globalThis.RPG_Weapon.createEmpty(2002);
-    globalThis.$gameParty.rawWeapons()[2002] = 1;
-
-    // Act
-    globalThis.$gameParty.pruneMissingInventoryEntries();
-
-    // Assert
-    expect(globalThis.$gameParty.rawWeapons()[2002]).toBe(1);
-  });
-
-  it('says nothing at all when every key resolves', () =>
-  {
-    // Arrange: the overwhelmingly common case. A report on every map entry would train the reader to ignore the one
-    // that matters.
-    const warn = captureWarnings();
-    globalThis.$gameParty.rawItems()[1] = 1;
-
-    // Act
-    globalThis.$gameParty.pruneMissingInventoryEntries();
-
-    // Assert
-    expect(warn).not.toHaveBeenCalled();
-    warn.mockRestore();
-  });
-
-  it('names the kind, the key and the quantity it dropped', () =>
-  {
-    // Arrange: the failure this replaced was a TypeError several systems from its cause, so the report has to carry
-    // enough to judge whether the deletion was intended without opening a save file.
-    const warn = captureWarnings();
-    globalThis.$gameParty.rawWeapons()[200] = 7;
-
-    // Act
-    globalThis.$gameParty.pruneMissingInventoryEntries();
-
-    // Assert
-    const said = warn.mock.calls.flat()
-      .join('\n');
-
-    expect(said).toContain('weapon #200');
-    expect(said).toContain('x7');
-    warn.mockRestore();
-  });
-
-  it('reconciles every container in one pass', () =>
-  {
-    // Arrange
-    const warn = captureWarnings();
-    globalThis.$gameParty.rawItems()[900] = 1;
-    globalThis.$gameParty.rawWeapons()[200] = 1;
-    globalThis.$gameParty.rawArmors()[777] = 1;
-
-    // Act
-    globalThis.$gameParty.pruneMissingInventoryEntries();
-
-    // Assert
-    const said = warn.mock.calls.flat()
-      .join('\n');
-
-    expect(said).toContain('dropped 3 entries');
-    warn.mockRestore();
-  });
-
-  it('runs from the map, which is the point where the answer is trustworthy', () =>
-  {
-    // Arrange: every load path - vanilla's or J-Base-Save's own scene - ends up here, and by now anything that
-    // intends to populate a datastore has done so.
-    const warn = captureWarnings();
     globalThis.$gameParty.rawWeapons()[200] = 1;
 
     // Act
@@ -218,6 +77,19 @@ describe('Game_Party inventory reconciliation (real engine)', () =>
     // Assert
     expect(globalThis.$gameParty.rawWeapons()[200]).toBeUndefined();
     warn.mockRestore();
+  });
+
+  it('leaves a row that exists alone, so a load cannot cost the player anything', () =>
+  {
+    // Arrange - the guard against the whole family of "reconciled too early" mistakes.
+    globalThis.$dataWeapons[2001] = globalThis.RPG_Weapon.createEmpty(2001);
+    globalThis.$gameParty.rawWeapons()[2001] = 1;
+
+    // Act
+    new globalThis.Scene_Map().start();
+
+    // Assert
+    expect(globalThis.$gameParty.rawWeapons()[2001]).toBe(1);
   });
 
   it('still performs the engine\'s own map start logic', () =>
