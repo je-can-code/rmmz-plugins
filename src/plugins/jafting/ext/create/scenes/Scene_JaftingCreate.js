@@ -313,7 +313,14 @@ class Scene_JaftingCreate
    */
   getIngredientSelectionRectangle()
   {
-    return this.getRecipeListRectangle();
+    // sits where the recipe list sits, because it replaces it for the duration of the choice - but it is not the
+    // same shape. The recipe column is deliberately narrow and dense so that many recipes fit; this column carries
+    // an item name, a held count, and a needed count, so it needs the width to keep them apart.
+    const recipeList = this.getRecipeListRectangle();
+    const widest = Graphics.boxWidth - recipeList.x - Graphics.horizontalPadding;
+    const width = Math.min(recipeList.width * 2, widest);
+
+    return new Rectangle(recipeList.x, recipeList.y, width, recipeList.height);
   }
 
   /**

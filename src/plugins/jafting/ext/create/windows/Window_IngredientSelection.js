@@ -180,12 +180,16 @@ class Window_IngredientSelection
 
   /**
    * Overwrites {@link #itemHeight}.<br/>
-   * Matches the ingredient list's row height so the two read as one column.
+   * Gives each row the two full lines it actually draws.
+   *
+   * A row carries the entry's name and, beneath it, how many the recipe needs. At one and a half lines the second
+   * line has nowhere to go and eats the top of the row below it, which is the sort of thing that reads as a broken
+   * window rather than a cramped one.
    * @returns {number}
    */
   itemHeight()
   {
-    return this.lineHeight() * 1.5;
+    return this.lineHeight() * 2;
   }
 }
 
