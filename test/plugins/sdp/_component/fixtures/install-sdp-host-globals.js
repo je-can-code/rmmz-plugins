@@ -190,6 +190,10 @@ export function installSdpHostGlobals(sandbox = globalThis, sdpConfigJson = '{"s
 
   sandbox.Game_Party.prototype.initialize = noop;
 
+  // J-Base adds this hook and calls it from an aliased `initialize`; plugins adding party state
+  // alias the hook rather than `initialize`, so their chain needs it to exist to be extended.
+  sandbox.Game_Party.prototype.initMembers = noop;
+
   sandbox.$gameActors = {
     _byId: {},
     actor(id)

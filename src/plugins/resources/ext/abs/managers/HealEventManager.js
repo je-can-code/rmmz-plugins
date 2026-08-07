@@ -268,37 +268,30 @@ class HealEventManager
     const globalMaxDepth = J.RESOURCES.EXT.ABS.Metadata.healChainDepth;
     const tuples = [];
 
+    // every family/trigger/output combination has a regex declared in initialization.js, so both
+    // lookups above always resolve; there is nothing to check for before using them.
     for (const databaseData of notes)
     {
-      // collect tuples from the specific trigger regexp.
-      if (specificRegexp)
+      // collect tuples from the specific trigger regexp, then from the Any variant - the latter
+      // fires on any trigger resource, and a battler may legitimately carry both.
+      [ specificRegexp, anyRegexp ].forEach(regexp =>
       {
-        const results = RPGManager.getArraysFromNotesByRegex(databaseData, specificRegexp);
+        const results = RPGManager.getArraysFromNotesByRegex(databaseData, regexp);
 
-        for (const result of results)
+        results.forEach(result =>
         {
+          // a tag needs at least a percent and a range to mean anything; anything shorter would
+          // compare every distance against an undefined range.
           if (Array.isArray(result) && result.length >= 2)
           {
-            const maxDepth = result.length >= 3 ? Number(result[2]) : globalMaxDepth;
-            tuples.push([Number(result[0]), Number(result[1]), maxDepth]);
+            // a tag may cap its own chain shorter than the game-wide setting by naming a third value.
+            const maxDepth = result.length >= 3
+              ? Number(result[2])
+              : globalMaxDepth;
+            tuples.push([ Number(result[0]), Number(result[1]), maxDepth ]);
           }
-        }
-      }
-
-      // also collect tuples from the Any variant — it fires on any trigger resource.
-      if (anyRegexp)
-      {
-        const results = RPGManager.getArraysFromNotesByRegex(databaseData, anyRegexp);
-
-        for (const result of results)
-        {
-          if (Array.isArray(result) && result.length >= 2)
-          {
-            const maxDepth = result.length >= 3 ? Number(result[2]) : globalMaxDepth;
-            tuples.push([Number(result[0]), Number(result[1]), maxDepth]);
-          }
-        }
-      }
+        });
+      });
     }
 
     return tuples;

@@ -755,5 +755,131 @@ describe('ParameterDefinition (direct src import)', () =>
       expect(result).toBe('4.0/s');
     });
   });
+
+  //region which direction reads as an improvement
+  describe('isIncreaseBeneficial', () =>
+  {
+    it('treats a rise as good for the common case', () =>
+    {
+      // Arrange
+      const definition = buildDefinition(ParameterFormat.FLAT, ParameterDisplayPolicy.NONE);
+
+      // Act & Assert
+      expect(definition.isIncreaseBeneficial()).toBe(true);
+    });
+
+    it('treats a rise as bad for a damage-intake rate', () =>
+    {
+      // Arrange- taking more damage is worse, so an equip that raises this should read red rather
+      // than green in the comparison panel.
+      const definition = buildDefinition(ParameterFormat.PERCENT, ParameterDisplayPolicy.DAMAGE_RATE);
+
+      // Act & Assert
+      expect(definition.isIncreaseBeneficial()).toBe(false);
+    });
+
+    it('treats a rise as bad for a cost rate', () =>
+    {
+      // Arrange- skills costing more is worse for the same reason.
+      const definition = buildDefinition(ParameterFormat.PERCENT, ParameterDisplayPolicy.COST_RATE);
+
+      // Act & Assert
+      expect(definition.isIncreaseBeneficial()).toBe(false);
+    });
+  });
+  //endregion which direction reads as an improvement
+
+  //region the parenthetical beside a compared value
+  describe('prettyDelta', () =>
+  {
+    it('signs a positive flat change', () =>
+    {
+      // Arrange
+      const definition = buildDefinition(ParameterFormat.FLAT, ParameterDisplayPolicy.NONE);
+
+      // Act & Assert
+      expect(definition.prettyDelta(12)).toBe('+12');
+    });
+
+    it('leaves a negative flat change to carry its own sign', () =>
+    {
+      // Arrange
+      const definition = buildDefinition(ParameterFormat.FLAT, ParameterDisplayPolicy.NONE);
+
+      // Act & Assert
+      expect(definition.prettyDelta(-12)).toBe('-12');
+    });
+
+    it('scales a percent-shaped change into whole percent and suffixes it', () =>
+    {
+      // Arrange- these are stored as 0-1 rates, so the raw diff has to be scaled before it reads
+      // as the number the player sees on the row above it.
+      const definition = buildDefinition(ParameterFormat.PERCENT, ParameterDisplayPolicy.NONE);
+
+      // Act & Assert
+      expect(definition.prettyDelta(0.15)).toBe('+15%');
+    });
+
+    it('drops a trailing .0 rather than showing a decimal that means nothing', () =>
+    {
+      // Arrange
+      const definition = buildDefinition(ParameterFormat.PERCENT, ParameterDisplayPolicy.NONE);
+
+      // Act & Assert
+      expect(definition.prettyDelta(0.1)).toBe('+10%');
+    });
+
+    it('drops a trailing .0 that only appeared after rounding', () =>
+    {
+      // Arrange- a raw diff of 0.1004 scales to 10.04, which is not an integer and so takes the
+      // `toFixed(1)` path; that produces "10.0", and showing the player a decimal place carrying no
+      // information is exactly what the trim exists to prevent.
+      const definition = buildDefinition(ParameterFormat.PERCENT, ParameterDisplayPolicy.NONE);
+
+      // Act & Assert
+      expect(definition.prettyDelta(0.1004)).toBe('+10%');
+    });
+
+    it('keeps one decimal place for a change that actually has one', () =>
+    {
+      // Arrange
+      const definition = buildDefinition(ParameterFormat.PERCENT, ParameterDisplayPolicy.NONE);
+
+      // Act & Assert
+      expect(definition.prettyDelta(0.155)).toBe('+15.5%');
+    });
+
+    it('converts a regen change into per-second using the battler\'s own tick cadence', () =>
+    {
+      // Arrange- regen ticks on a configurable interval, so the same raw number means different
+      // amounts per second for different battlers.
+      const definition = buildDefinition(ParameterFormat.REGEN_PER_SECOND, ParameterDisplayPolicy.NONE);
+      const actor = { getNaturalRegenTickInterval: () => 30 };
+
+      // Act & Assert- 0.1 raw -> 10 per tick -> two ticks a second -> 20.0.
+      expect(definition.prettyDelta(0.1, actor)).toBe('+20.0');
+    });
+
+    it('assumes one tick a second for a battler that cannot report its cadence', () =>
+    {
+      // Arrange- the comparison panel renders before a battler is bound in some scenes.
+      const definition = buildDefinition(ParameterFormat.REGEN_PER_SECOND, ParameterDisplayPolicy.NONE);
+
+      // Act & Assert
+      expect(definition.prettyDelta(0.1)).toBe('+10.0');
+    });
+
+    it('omits the per-second unit, which the value beside it already carries', () =>
+    {
+      // Arrange- "(+12.0)" beside "12.0/s" rather than "(+12.0/s)", which would double the width of
+      // an already-long row.
+      const definition = buildDefinition(ParameterFormat.REGEN_PER_SECOND, ParameterDisplayPolicy.NONE);
+      const actor = { getNaturalRegenTickInterval: () => 60 };
+
+      // Act & Assert
+      expect(definition.prettyDelta(-0.05, actor)).toBe('-5.0');
+    });
+  });
+  //endregion the parenthetical beside a compared value
 });
 //endregion plugins/_base/models/parameter-definition.test.js

@@ -186,6 +186,53 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
       // Assert
       expect(staleIconSprite.visible).toEqual(false);
     });
+
+    it('does not sweep again while the target has not changed', () =>
+    {
+      // Arrange- the target frame re-renders every frame against the same battler, so the sweep has
+      // to be gated on an actual change rather than running on every pass.
+      const previousBattler = { getUuid: () => 'uuid-old' };
+      const staleIconSprite = new globalThis.Sprite_Icon(1);
+      spriteCache.set('affliction-icon-1-uuid-old', staleIconSprite);
+      const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
+      globalThis.StateAfflictionProvider.collectForBattler.mockReturnValue(new StateAfflictionCollection());
+      const layoutSpec = { slotX: vi.fn(), negativeRowY: vi.fn(), positiveRowY: vi.fn() };
+      presenter.render(previousBattler, layoutSpec);
+      presenter.render(battler, layoutSpec);
+
+      // the departing battler's sprite is back on screen; only another target switch may take it
+      // away again, and this render is not one.
+      staleIconSprite.show();
+
+      // Act
+      presenter.render(battler, layoutSpec);
+
+      // Assert
+      expect(staleIconSprite.visible).toEqual(true);
+    });
+
+    it('leaves another battler\'s sprites alone while sweeping the departing one', () =>
+    {
+      // Arrange- every affliction key is suffixed with its owner's uuid, and the sweep filters by
+      // that suffix. A looser match would blank the incoming target's icons along with the old.
+      const previousBattler = { getUuid: () => 'uuid-old' };
+      const staleSprite = new globalThis.Sprite_Icon(1);
+      const otherSprite = new globalThis.Sprite_Icon(2);
+      staleSprite.show();
+      otherSprite.show();
+      spriteCache.set('affliction-icon-1-uuid-old', staleSprite);
+      spriteCache.set('affliction-icon-1-uuid-someone-else', otherSprite);
+      const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
+      globalThis.StateAfflictionProvider.collectForBattler.mockReturnValue(new StateAfflictionCollection());
+      presenter.render(previousBattler, { slotX: vi.fn(), negativeRowY: vi.fn(), positiveRowY: vi.fn() });
+
+      // Act
+      presenter.render(battler, { slotX: vi.fn(), negativeRowY: vi.fn(), positiveRowY: vi.fn() });
+
+      // Assert
+      expect(staleSprite.visible).toEqual(false);
+      expect(otherSprite.visible).toEqual(true);
+    });
   });
 
   describe('hideStaleSlots', () =>
@@ -446,6 +493,41 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
 
       // Act/Assert (no throw)
       expect(() => presenter.hideSlotSprites(identity, 42)).not.toThrow();
+    });
+
+    it('blanks the timer text as well as hiding it, so a stale count cannot reappear', () =>
+    {
+      // Arrange- the sprite is reused for whatever state next occupies the slot, and text left
+      // behind would flash the previous affliction's remaining turns for one frame.
+      const identity = StateAfflictionBattlerIdentity.fromBattler(battler);
+      const timerSprite = new globalThis.Sprite_BaseText();
+      timerSprite.show();
+      spriteCache.set(identity.buildTimerKey(9), timerSprite);
+      const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
+
+      // Act
+      presenter.hideSlotSprites(identity, 9);
+
+      // Assert
+      expect(timerSprite.visible).toEqual(false);
+      expect(timerSprite.text).toEqual(String.empty);
+    });
+
+    it('blanks the stack text as well as hiding it', () =>
+    {
+      // Arrange
+      const identity = StateAfflictionBattlerIdentity.fromBattler(battler);
+      const stackSprite = new globalThis.Sprite_BaseText();
+      stackSprite.show();
+      spriteCache.set(identity.buildStackKey(9), stackSprite);
+      const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
+
+      // Act
+      presenter.hideSlotSprites(identity, 9);
+
+      // Assert
+      expect(stackSprite.visible).toEqual(false);
+      expect(stackSprite.text).toEqual(String.empty);
     });
   });
 

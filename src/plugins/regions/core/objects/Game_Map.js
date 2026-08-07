@@ -190,9 +190,6 @@ Game_Map.prototype.refreshAllowRegionEffects = function()
   // grab the regions.
   const allowedRegions = RPGManager.getArrayFromNotesByRegex({ note: this.note() }, J.REGIONS.RegExp.AllowRegions)
 
-  // stop processing if there was nothing found.
-  if (!allowedRegions) return;
-
   // add each of the regions found to the list for this map.
   allowedRegions.forEach(this.addAllowEffectRegionId, this);
 };
@@ -204,9 +201,6 @@ Game_Map.prototype.refreshDenyRegionEffects = function()
 {
   // grab the regions.
   const deniedRegions = RPGManager.getArrayFromNotesByRegex({ note: this.note() }, J.REGIONS.RegExp.DenyRegions)
-
-  // stop processing if there was nothing found.
-  if (!deniedRegions) return;
 
   // add each of the regions found to the list for this map.
   deniedRegions.forEach(this.addDenyEffectRegionId, this);

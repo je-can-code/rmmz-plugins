@@ -21,8 +21,9 @@ class J_MAP__PluginMetadata extends PluginMetadata
 
   initializeMetadata()
   {
-    // Pull parsed plugin parameters from base class.
-    const pp = this.parsedPluginParameters ?? {};
+    // Pull parsed plugin parameters from base class. `PluginManager.parameters` answers with an
+    // object for any plugin, configured or not, so this is always something to read keys off of.
+    const pp = this.parsedPluginParameters;
 
     /**
      * The minimap's X position in pixels; -1 = auto bottom-right.

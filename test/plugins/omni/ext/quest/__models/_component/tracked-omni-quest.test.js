@@ -390,6 +390,23 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
       expect(alreadyFulfilled.state).toBe(OmniObjective.States.Completed);
       expect(quest.state).toBe(OmniQuest.States.Completed);
     });
+
+    it('activates the next objective when none were active to complete first', () =>
+    {
+      // Arrange- a quest is unlocked with everything inactive, and this is what walks the cursor
+      // onto the first step. Requiring an active objective to already exist would leave a freshly
+      // unlocked quest permanently showing nothing to do.
+      const first = fakeObjective(0, OmniObjective.States.Inactive);
+      const second = fakeObjective(1, OmniObjective.States.Inactive);
+      const quest = new TrackedOmniQuest('quest-key', 'main', [ first, second ]);
+
+      // Act
+      quest.progressObjectives();
+
+      // Assert
+      expect(first.state).toBe(OmniObjective.States.Active);
+      expect(second.state).toBe(OmniObjective.States.Inactive);
+    });
   });
 
   describe('activeObjectives / immediateObjective', () =>
@@ -636,6 +653,127 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
       quest.setState(OmniQuest.States.Inactive);
 
       expect(globalThis.$diaLogManager.addLog).not.toHaveBeenCalled();
+    });
+
+    /**
+     * Stands up the announcement path and hands back the builder it will run through.
+     * @returns {object} The stubbed builder.
+     */
+    function installLogBuilder()
+    {
+      const builder = {
+        setLines: vi.fn()
+          .mockReturnThis(),
+        build: vi.fn(() => ({})),
+      };
+
+      globalThis.DiaLogBuilder = function()
+      {
+        return builder;
+      };
+
+      globalThis.J.LOG = {};
+      globalThis.$diaLogManager = { addLog: vi.fn() };
+
+      return builder;
+    }
+
+    [
+      [ 'Active', 'Quest unlocked.' ],
+      [ 'Completed', 'Quest completed.' ],
+      [ 'Failed', 'Quest failed.' ],
+      [ 'Missed', 'Quest missed.' ],
+    ].forEach(([ stateName, expectedLine ]) =>
+    {
+      it(`announces the ${stateName.toLowerCase()} transition in the player's own words`, () =>
+      {
+        // Arrange- the journal is the only place a quest state change is visible, so a state with no
+        // sentence is a change the player never learns about.
+        const quest = new TrackedOmniQuest('quest-key', 'main', [ fakeObjective(0, OmniObjective.States.Inactive) ]);
+        const builder = installLogBuilder();
+
+        // Act
+        quest.setState(OmniQuest.States[stateName]);
+
+        // Assert
+        expect(builder.setLines).toHaveBeenCalledWith([ '\\C[1][Quest Name]\\C[0]', expectedLine ]);
+      });
+    });
+
+    it('announces nothing for a state it has no sentence for', () =>
+    {
+      // Arrange- `setState` refuses an out-of-range state outright, so the only way to arrive here
+      // is a state that got onto the instance without going through it: a savefile carrying a value
+      // this build no longer recognizes. It warns rather than throwing, because a journal line is
+      // not worth taking a load down over.
+      const quest = new TrackedOmniQuest('quest-key', 'main', [ fakeObjective(0, OmniObjective.States.Inactive) ]);
+      installLogBuilder();
+      quest.state = 999;
+      const warned = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // Act
+      quest.handleQuestUpdateLog();
+
+      // Assert
+      expect(globalThis.$diaLogManager.addLog).not.toHaveBeenCalled();
+      expect(warned).toHaveBeenCalled();
+
+      warned.mockRestore();
+    });
+  });
+
+  describe('isFinalized', () =>
+  {
+    it('is finalized once the quest has failed', () =>
+    {
+      // Arrange- failed and missed are distinct endings but both are endings, and a quest that
+      // reported either as unfinished would keep re-evaluating its objectives forever.
+      const quest = new TrackedOmniQuest('quest-key', 'main', [ fakeObjective(0, OmniObjective.States.Inactive) ]);
+      quest.state = OmniQuest.States.Failed;
+
+      // Act & Assert
+      expect(quest.isFinalized()).toBe(true);
+    });
+
+    it('is finalized once the quest has been missed', () =>
+    {
+      // Arrange
+      const quest = new TrackedOmniQuest('quest-key', 'main', [ fakeObjective(0, OmniObjective.States.Inactive) ]);
+      quest.state = OmniQuest.States.Missed;
+
+      // Act & Assert
+      expect(quest.isFinalized()).toBe(true);
+    });
+
+    it('is not finalized while the quest is still active', () =>
+    {
+      // Arrange
+      const quest = new TrackedOmniQuest('quest-key', 'main', [ fakeObjective(0, OmniObjective.States.Inactive) ]);
+      quest.state = OmniQuest.States.Active;
+
+      // Act & Assert
+      expect(quest.isFinalized()).toBe(false);
+    });
+  });
+
+  describe('flagAsFailed', () =>
+  {
+    it('fails the objectives that had not resolved yet, and leaves the resolved ones alone', () =>
+    {
+      // Arrange- an objective the player already completed stays completed; failing the quest must
+      // not rewrite history it already showed them in the journal.
+      const completed = fakeObjective(0, OmniObjective.States.Completed);
+      const active = fakeObjective(1, OmniObjective.States.Active);
+      const inactive = fakeObjective(2, OmniObjective.States.Inactive);
+      const quest = new TrackedOmniQuest('quest-key', 'main', [ completed, active, inactive ]);
+
+      // Act
+      quest.flagAsFailed();
+
+      // Assert
+      expect(completed.state).toBe(OmniObjective.States.Completed);
+      expect(active.state).toBe(OmniObjective.States.Failed);
+      expect(inactive.state).toBe(OmniObjective.States.Failed);
     });
   });
 });

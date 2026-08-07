@@ -94,9 +94,6 @@ Game_Actor.prototype.onBattlerDataChange = function()
  */
 Game_Actor.prototype.getAllAptitudeProgresses = function()
 {
-  // emergency initialize for existing saves.
-  if (!this._j._aptitude) this.initAptitudeMembers();
-
   return this.progress();
 };
 
@@ -106,9 +103,6 @@ Game_Actor.prototype.getAllAptitudeProgresses = function()
  */
 Game_Actor.prototype.getAllAptitudeSkillsLearned = function()
 {
-  // emergency initialize for existing saves.
-  if (!this._j._aptitude) this.initAptitudeMembers();
-
   return this.learned();
 };
 
@@ -174,9 +168,6 @@ Game_Actor.prototype.getAptitudeSkillAggregates = function()
  */
 Game_Actor.prototype.getAptitudeProgress = function(key)
 {
-  // emergency initialize for existing saves.
-  if (!this._j._aptitude) this.initAptitudeMembers();
-
   // get the progress, or coalesce politely to null if it doesn't exist.
   return this.progress()[key] ?? null;
 };

@@ -113,5 +113,31 @@ describe('J-ABS-FOOD metadata (direct src import)', () =>
       globalThis.J.ABS.Metadata.version.version = originalVersion;
     });
   });
+describe('unconfigured parameters', () =>
+  {
+    it('falls back to its shipped defaults when the project never set any parameters', async () =>
+    {
+      // Arrange- a project that installs the plugin and never opens its parameter panel gets an
+      // empty parameter object, and every default below is what stands in for the missing value.
+      //
+      // Constructed directly under its own name rather than re-imported: `PluginMetadata` keeps a
+      // static registry of every plugin it has seen and throws on a duplicate, and that registry
+      // outlives `vi.resetModules()` because the class reaches this realm as a bare global.
+      const { default: Metadata } = await import(
+        '../../../../../../src/plugins/abs/ext/food/_metadata/_pluginMetadata.js');
+      const previous = globalThis.PluginManager;
+      globalThis.PluginManager = {
+        parameters: () => ({}),
+        registerCommand() {},
+      };
+
+      // Act
+      const metadata = new Metadata('J-ABS-Food-Unconfigured', '1.0.0');
+      globalThis.PluginManager = previous;
+
+      // Assert
+      expect(metadata.EquipFoodText).toEqual('Equip Food');
+    });
+  });
 });
 //endregion plugins/abs/ext/food/_metadata/metadata.test.js

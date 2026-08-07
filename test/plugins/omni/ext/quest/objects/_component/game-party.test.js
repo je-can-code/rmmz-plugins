@@ -171,47 +171,36 @@ describe('Game_Party (omni ext/quest, direct src import)', () =>
 
   describe('synchronizeQuestopediaDataBeforeSave/synchronizeQuestopediaAfterLoad', () =>
   {
-    it('initializes the omnipedia first if it was not yet initialized, before saving', () =>
+    it('rebuilds the cache from the saveables on load', () =>
     {
-      // Arrange
-      const party = new globalThis.Game_Party();
-      party.isOmnipediaInitialized = vi.fn().mockReturnValue(false);
-      party.initOmnipediaMembers = vi.fn(() => party.initQuestopediaMembers());
-
-      // Act
-      party.synchronizeQuestopediaDataBeforeSave();
-
-      // Assert
-      expect(party.initOmnipediaMembers).toHaveBeenCalled();
-    });
-
-    it('does not re-initialize the omnipedia when already initialized, before saving', () =>
-    {
-      // Arrange
+      // Arrange- the cache is the live view and the saveables are what a savefile carries, so a load
+      // that skipped this would leave every quest reading as untouched.
       const party = new globalThis.Game_Party();
       party.initQuestopediaMembers();
-      party.isOmnipediaInitialized = vi.fn().mockReturnValue(true);
-      party.initOmnipediaMembers = vi.fn();
-
-      // Act
-      party.synchronizeQuestopediaDataBeforeSave();
-
-      // Assert
-      expect(party.initOmnipediaMembers).not.toHaveBeenCalled();
-    });
-
-    it('initializes the omnipedia first if it was not yet initialized, after load', () =>
-    {
-      // Arrange
-      const party = new globalThis.Game_Party();
-      party.isOmnipediaInitialized = vi.fn().mockReturnValue(false);
-      party.initOmnipediaMembers = vi.fn(() => party.initQuestopediaMembers());
+      party.setSavedQuestopediaEntries([ { key: 'quest-1' } ]);
 
       // Act
       party.synchronizeQuestopediaAfterLoad();
 
       // Assert
-      expect(party.initOmnipediaMembers).toHaveBeenCalled();
+      expect(party.getQuestopediaEntriesCache()
+        .get('quest-1')).toEqual({ key: 'quest-1' });
+    });
+
+    it('folds the cache back into the saveables before a save', () =>
+    {
+      // Arrange- everything the player did this session lives only in the cache until this runs.
+      const party = new globalThis.Game_Party();
+      party.initQuestopediaMembers();
+      party.getQuestopediaEntriesCache()
+        .set('quest-1', { key: 'quest-1' });
+
+      // Act
+      party.synchronizeQuestopediaDataBeforeSave();
+
+      // Assert
+      expect(party.getSavedQuestopediaEntries())
+        .toEqual([ { key: 'quest-1' } ]);
     });
   });
 

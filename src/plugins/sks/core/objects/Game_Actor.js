@@ -274,7 +274,7 @@ Game_Actor.prototype.forcedUnslottedSkillIds = function()
 
   // scan every note source for the tag, yielding one raw array of ids per tag found.
   const arraysFound = RPGManager.getArraysFromAllNotesByRegex(
-    this.getAllNotes(), J.SKS.RegExp.UnslottedSkills, true, false) ?? [];
+    this.getAllNotes(), J.SKS.RegExp.UnslottedSkills, true, false);
 
   // flatten every array found into a single deduplicated set of skill ids.
   this._j._sks._forcedUnslottedSkillIds = new Set(arraysFound.flat());
@@ -354,11 +354,10 @@ Game_Actor.prototype.canEquipSkillToSlot = function(slotIndex, skillId)
   // so treating this as "new" usage would wrongly double-count it.
   if (this.getEquippedSkillIndex(skillId) !== -1) return true;
 
-  // check what is currently occupying the target slot.
+  // check what is currently occupying the target slot. A slot already holding this very skill is
+  // covered by the check above- `getEquippedSkillIndex` scans every slot, target included - so
+  // whatever is here is necessarily a different skill being displaced.
   const currentSkillId = this.getSkillIdInSlot(slotIndex);
-
-  // replacing a slot with the same skill it already holds is always allowed.
-  if (currentSkillId === skillId) return true;
 
   // resolve whether points and count each independently permit this equip.
   const pointsOk = this.canAffordSkillSlotPoints(slotIndex, skillId, currentSkillId);
@@ -566,6 +565,11 @@ Game_Actor.prototype.unequipSkill = function(skillId)
  */
 Game_Actor.prototype.moveEquippedSkill = function(fromIndex, toIndex)
 {
+  // dropping a skill back onto the slot it came from is an ordinary gesture in the equip menu, and
+  // it means "leave it alone". Without this the destination check below matches the source, and the
+  // skill gets unequipped out of the very slot it never left.
+  if (fromIndex === toIndex) return;
+
   // determine what skill is in the source slot.
   const skillId = this.getSkillIdInSlot(fromIndex);
 

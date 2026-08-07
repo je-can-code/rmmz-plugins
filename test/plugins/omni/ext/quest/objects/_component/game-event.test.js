@@ -213,6 +213,34 @@ describe('Game_Event ext/quest augments (direct src import)', () =>
       // Act/Assert
       expect(() => globalThis.Game_Event.toQuestConditional(makeComment('<questActive:[quest-1]>'))).toThrow();
     });
+
+    // the three tags above gate a whole event page; these three gate an individual dialogue choice.
+    // Both families run through the same `switch (true)`, and each is matched by its own pattern -
+    // so a choice tag falling through to an event branch would gate the wrong thing entirely.
+    [
+      [ 'a choice gated on a whole quest', '<choiceQuestActive:[quest-1]>', [ 'quest-1' ], null ],
+      [ 'a choice gated on one objective', '<choiceQuestObjectiveActive:[quest-1,2]>', [ 'quest-1', 2 ], 2 ],
+      [
+        'a choice gated on an objective in a named state',
+        '<choiceQuestObjectiveState:[quest-1,2,"completed"]>',
+        [ 'quest-1', 2, 'completed' ],
+        2,
+      ],
+    ].forEach(([ label, tag, parsed, expectedObjectiveId ]) =>
+    {
+      it(`recognizes ${label}`, () =>
+      {
+        // Arrange
+        globalThis.JsonMapper.parseObject.mockReturnValue(parsed);
+
+        // Act
+        const result = globalThis.Game_Event.toQuestConditional(makeComment(tag));
+
+        // Assert
+        expect(result.questKey).toEqual('quest-1');
+        expect(result.objectiveId).toEqual(expectedObjectiveId);
+      });
+    });
   });
 
   describe('filterCommentCommandsByEventQuestConditional', () =>

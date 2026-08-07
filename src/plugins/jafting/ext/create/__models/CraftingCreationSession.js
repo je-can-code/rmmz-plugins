@@ -151,9 +151,10 @@ class CraftingCreationSession
    * Attempts to craft the given recipe when the player confirms on the recipe list.
    *
    * @param {CraftingRecipe|null|undefined} recipe The recipe driving this step.
+   * @param {number} count How many times to craft it; a batch is a shortcut for crafting repeatedly.
    * @returns {{ crafted: boolean, playedSuccessSound: boolean, reason: string|null }}
    */
-  tryCraftRecipe(recipe)
+  tryCraftRecipe(recipe, count = 1)
   {
     if (recipe === null || recipe === undefined)
     {
@@ -175,8 +176,12 @@ class CraftingCreationSession
       return this.#lastCraftOutcome;
     }
 
-    // spend whichever entries were chosen for this craft's categorical slots.
-    recipe.craft(this.#selections);
+    // clamped rather than trusted: the ceiling was read from stock at the moment the prompt opened, and the
+    // same selections have to still cover every repetition by the time it closes.
+    const repetitions = Math.min(count, recipe.maxCraftableCount(this.#selections));
+
+    // spend whichever entries were chosen, once per repetition.
+    recipe.craftMany(repetitions, this.#selections);
 
     // the picks belonged to that craft alone; the next one starts clean.
     this.#selections = new Map();

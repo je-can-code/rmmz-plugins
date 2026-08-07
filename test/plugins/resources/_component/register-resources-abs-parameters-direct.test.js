@@ -98,5 +98,40 @@ describe('ResourcesAbsParameterRegistration.registerAll (resources ext/abs, dire
     expect(ParameterRegistry.get('mst').resolveValue(battler)).toBe(0.2);
     expect(ParameterRegistry.get('tst').resolveValue(battler)).toBe(0.3);
   });
+
+  it('wires magisteal\'s own label, description and icon rather than reusing lifesteal\'s', () =>
+  {
+    // Arrange & Act- the three drain stats are near-identical registrations, which is exactly how a
+    // copy-paste ends up pointing two of them at the same TextManager entry.
+    const mst = ParameterRegistry.get('mst');
+
+    // Assert
+    expect(mst.label()).toBe('Magisteal');
+    expect(mst.description()).toEqual([ 'mst-line' ]);
+    expect(mst.iconIndex()).toBe(929);
+  });
+
+  it('wires techsteal\'s own label, description and icon', () =>
+  {
+    // Arrange & Act
+    const tst = ParameterRegistry.get('tst');
+
+    // Assert
+    expect(tst.label()).toBe('Techsteal');
+    expect(tst.description()).toEqual([ 'tst-line' ]);
+    expect(tst.iconIndex()).toBe(930);
+  });
+
+  it('gives every drain stat an SDP base of one, so a panel point is worth a whole percent', () =>
+  {
+    // Arrange & Act- the base is what an SDP panel's rate is multiplied against, and these are rates
+    // rather than flats: leaving it at the default would scale panel bonuses off the actor's current
+    // lifesteal, which is zero for anyone who has not bought any yet.
+    // Assert
+    [ 'lst', 'mst', 'tst' ].forEach(key =>
+    {
+      expect(ParameterRegistry.get(key).sdpBinding.getBaseForSdp()).toBe(1);
+    });
+  });
 });
 //endregion plugins/resources/_component/register-resources-abs-parameters-direct.test.js

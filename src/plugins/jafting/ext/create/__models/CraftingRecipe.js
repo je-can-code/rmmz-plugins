@@ -125,6 +125,64 @@ class CraftingRecipe
   }
 
   /**
+   * How many times in a row this recipe could be crafted with what the party is holding.
+   *
+   * **Crafting a batch is a shortcut for pressing craft that many times, and nothing more.** So the ceiling is
+   * simply how many repetitions the stock survives - no substituting a Colossal Gelatin once the Big ones run out,
+   * because the player named the entry they wanted spent and a batch must not quietly decide otherwise.
+   *
+   * Demand is summed per entry rather than per slot: a recipe wanting two gels, both filled by Big Gelatin, spends
+   * two of them per craft, so twenty-four in stock is twelve crafts and not twenty-four.
+   *
+   * Tools never bound this. They are checked before crafting and never consumed, so holding one is holding enough
+   * for any number of repetitions.
+   * @param {Map<number, RPG_Item|RPG_Weapon|RPG_Armor>} selections The entry chosen for each categorical slot.
+   * @returns {number} The most repetitions the stock allows, or zero when even one is out of reach.
+   */
+  maxCraftableCount(selections = new Map())
+  {
+    if (!this.canCraft()) return 0;
+
+    /** @type {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>} */
+    const demandPerEntry = new Map();
+
+    this.ingredients.forEach((component, index) =>
+    {
+      const chosen = selections.has(index)
+        ? selections.get(index)
+        : component.getItem();
+
+      // a currency slot answers with no entry; those are tallied by their own accounting below.
+      if (chosen === null) return;
+
+      const alreadyWanted = demandPerEntry.get(chosen) ?? 0;
+
+      demandPerEntry.set(chosen, alreadyWanted + component.quantity());
+    });
+
+    let ceiling = Number.MAX_SAFE_INTEGER;
+
+    demandPerEntry.forEach((wantedPerCraft, entry) =>
+    {
+      const held = $gameParty.numItems(entry);
+
+      ceiling = Math.min(ceiling, Math.floor(held / wantedPerCraft));
+    });
+
+    // gold and panel points hold no entry, so they are measured against what the component itself can see.
+    this.ingredients
+      .filter(component => !component.isDatabaseEntry())
+      .forEach(component =>
+      {
+        const affordable = Math.floor(component.getHandledQuantity() / component.quantity());
+
+        ceiling = Math.min(ceiling, affordable);
+      });
+
+    return Math.max(0, ceiling);
+  }
+
+  /**
    * The indices of every ingredient that needs the player to choose which entry fills it.
    *
    * Only ingredients are listed. Tools may be categorical too, but they are never consumed, so which
@@ -174,6 +232,24 @@ class CraftingRecipe
     $gameParty
       .getRecipeTrackingByKey(this.key)
       .improveProficiency();
+  }
+
+  /**
+   * Crafts this recipe a number of times over.
+   *
+   * Deliberately a loop around the single craft rather than a multiplier threaded through it. Batching is a
+   * shortcut for pressing craft repeatedly, so it has to be indistinguishable from having done exactly that -
+   * every repetition earns its own proficiency, and every output carries its own dismantle stamp rather than one
+   * merged record covering the batch.
+   * @param {number} count How many times to craft.
+   * @param {Map<number, RPG_Item|RPG_Weapon|RPG_Armor>} selections The entry chosen for each categorical slot.
+   */
+  craftMany(count, selections = new Map())
+  {
+    for (let repetition = 0; repetition < count; repetition++)
+    {
+      this.craft(selections);
+    }
   }
 
   /**

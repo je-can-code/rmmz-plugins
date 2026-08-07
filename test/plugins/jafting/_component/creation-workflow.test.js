@@ -234,8 +234,8 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
     {
       // Arrange
       const session = new CraftingCreationSession();
-      const craft = vi.fn();
-      const recipe = { canCraft: () => true, craft };
+      const craftMany = vi.fn();
+      const recipe = { canCraft: () => true, craftMany, maxCraftableCount: () => 1 };
       const chosen = { id: 388 };
       session.recordSelection(0, chosen);
 
@@ -243,7 +243,7 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
       session.tryCraftRecipe(recipe);
 
       // Assert
-      const [ [ passed ] ] = craft.mock.calls;
+      const [ [ , passed ] ] = craftMany.mock.calls;
       expect(passed.get(0)).toBe(chosen);
     });
 
@@ -251,7 +251,7 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
     {
       // Arrange - picks belong to one craft; carrying them forward would spend the wrong entry.
       const session = new CraftingCreationSession();
-      const recipe = { canCraft: () => true, craft: vi.fn() };
+      const recipe = { canCraft: () => true, craftMany: vi.fn(), maxCraftableCount: () => 1 };
       session.recordSelection(0, { id: 388 });
 
       // Act
@@ -265,7 +265,7 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
     {
       // Arrange
       const session = new CraftingCreationSession();
-      const recipe = { canCraft: () => true, craft: vi.fn() };
+      const recipe = { canCraft: () => true, craftMany: vi.fn(), maxCraftableCount: () => 1 };
       session.beginIngredientSelection();
 
       // Act
@@ -316,14 +316,14 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
     {
       // Arrange
       const session = new CraftingCreationSession();
-      const craft = vi.fn();
-      const recipe = { canCraft: () => true, craft };
+      const craftMany = vi.fn();
+      const recipe = { canCraft: () => true, craftMany, maxCraftableCount: () => 1 };
 
       // Act
       const out = session.tryCraftRecipe(recipe);
 
-      // Assert
-      expect(craft).toHaveBeenCalledTimes(1);
+      // Assert - one repetition by default, since the count is only ever raised deliberately.
+      expect(craftMany).toHaveBeenCalledWith(1, expect.any(Map));
       expect(out).toEqual({ crafted: true, playedSuccessSound: true, reason: null });
     });
 

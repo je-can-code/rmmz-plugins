@@ -288,11 +288,6 @@ Game_Event.prototype.update = function()
   J.ESCRIBE.Aliased.Game_Event.get('update')
     .call(this);
 
-  if (this.eventId() === 3)
-  {
-    console.log();
-  }
-
   // check if this event has describe data.
   if (this.hasProximityEscriptionData())
   {

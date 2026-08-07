@@ -101,8 +101,16 @@ class Window_FilesList
    */
   currentEntry()
   {
+    const index = this.index();
+
+    // nothing highlighted is an ordinary state here - the scene deselects this list every time focus
+    // moves back to the commands - and it arrives as a negative index, which `Array.at` reads from the
+    // end. Answering with the last row instead of nothing would point a confirmation at a file the
+    // player never chose.
+    if (index < 0) return null;
+
     return this.entries()
-      .at(this.index()) ?? null;
+      .at(index) ?? null;
   }
 
   //endregion properties

@@ -198,5 +198,25 @@ describe('J-CriticalFactors Game_Action.rollAndApplyCritStates roll threading (d
     // Assert
     expect(calls[0]).toBe(attacker);
   });
+
+  it('does not even resolve the attacker when there is nothing to roll', () =>
+    {
+      // Arrange- this runs on every critical hit, and the overwhelming majority of skills carry no
+      // crit-state tags at all. Bailing before `subject()` is what keeps that common case free.
+      let subjectReads = 0;
+      const action = Object.create(globalThis.Game_Action.prototype);
+      action.subject = () =>
+      {
+        subjectReads += 1;
+
+        return {};
+      };
+
+      // Act
+      action.rollAndApplyCritStates({ addState: () => {} }, []);
+
+      // Assert
+      expect(subjectReads).toBe(0);
+    });
 });
 //endregion plugins/crit/_component/crit-state-roll-threading.test.js

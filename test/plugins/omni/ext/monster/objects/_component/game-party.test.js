@@ -115,36 +115,62 @@ describe('Game_Party (omni ext/monster, direct src import)', () =>
       expect(cache.get(2)).toBe(observation);
       expect(cache.size).toBe(1);
     });
+
+    it('skips a slot that was explicitly emptied rather than merely never filled', () =>
+    {
+      // Arrange- a sparse hole is skipped by `forEach` on its own, but a slot holding null is
+      // iterated. Caching it would put an entry the monsterpedia then tries to render.
+      const party = new globalThis.Game_Party();
+      party.initOmnipediaMembers();
+      const observation = new MonsterpediaObservations(2);
+      const saveables = party.getSavedMonsterpediaObservations();
+      saveables[1] = null;
+      saveables[2] = observation;
+
+      // Act
+      party.translateMonsterpediaSaveablesToCache();
+
+      // Assert
+      const cache = party.getMonsterpediaObservationsCache();
+      expect(cache.has(1)).toBe(false);
+      expect(cache.size).toBe(1);
+    });
   });
 
   describe('synchronizeMonsterpediaDataBeforeSave / synchronizeMonsterpediaAfterLoad', () =>
   {
-    it('initializes the omnipedia first when it was not yet initialized, before save', () =>
+    it('folds the cache back into the saveables before a save', () =>
     {
-      const party = new globalThis.Game_Party();
-      // _j is not yet set up at all, so isOmnipediaInitialized() is false.
-      party.initOmnipediaMembers = vi.fn(function()
-      {
-        this._j = { _omni: {} };
-        this.getSavedMonsterpediaObservations = () => [];
-        this.getMonsterpediaObservationsCache = () => new Map();
-        this.setMonsterpediaObservationsCache = () => {};
-      });
-
-      party.synchronizeMonsterpediaDataBeforeSave();
-
-      expect(party.initOmnipediaMembers).toHaveBeenCalled();
-    });
-
-    it('does not re-initialize when already initialized, on load', () =>
-    {
+      // Arrange- every monster observed this session lives only in the cache until this runs.
       const party = new globalThis.Game_Party();
       party.initOmnipediaMembers();
-      const reinitSpy = vi.spyOn(party, 'initOmnipediaMembers');
+      const observation = { id: 7 };
+      party.getMonsterpediaObservationsCache()
+        .set(7, observation);
 
+      // Act
+      party.synchronizeMonsterpediaDataBeforeSave();
+
+      // Assert
+      expect(party.getSavedMonsterpediaObservations())
+        .toContain(observation);
+    });
+
+    it('rebuilds the cache from the saveables on load', () =>
+    {
+      // Arrange- the saveables are what a savefile carries and the cache is the live view, so a load
+      // that skipped this would leave every monster reading as never observed.
+      const party = new globalThis.Game_Party();
+      party.initOmnipediaMembers();
+      const observation = { id: 7 };
+      party.getSavedMonsterpediaObservations()[7] = observation;
+
+      // Act
       party.synchronizeMonsterpediaAfterLoad();
 
-      expect(reinitSpy).not.toHaveBeenCalled();
+      // Assert
+      expect(party.getMonsterpediaObservationsCache()
+        .get(7)).toBe(observation);
     });
   });
 });

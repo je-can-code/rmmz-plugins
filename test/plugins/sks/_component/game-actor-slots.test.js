@@ -240,5 +240,103 @@ describe('J-SkillSlots Game_Actor slots (direct src import)', () =>
     expect(actor.getSkillIdInSlot(1)).toBe(1);
     expect(actor.getEquippedSkillIndex(1)).toBe(1);
   });
+
+  //region taking skills back out and shuffling them around
+  describe('unequipSkill', () =>
+  {
+    it('clears the slot the skill was occupying', () =>
+    {
+      // Arrange
+      const actor = makeActorWithSkills([ 1 ]);
+      withMaxSlotPoints(actor, 10);
+      actor.equipSkillToSlot(0, 1);
+
+      // Act
+      actor.unequipSkill(1);
+
+      // Assert
+      expect(actor.getSkillIdInSlot(0)).toBe(0);
+    });
+
+    it('does nothing for a skill that is not equipped anywhere', () =>
+    {
+      // Arrange- the menu offers unequip against any known skill, so being asked about one that is
+      // not in a slot is ordinary rather than exceptional.
+      const actor = makeActorWithSkills([ 1, 2 ]);
+      withMaxSlotPoints(actor, 10);
+      actor.equipSkillToSlot(0, 1);
+
+      // Act
+      actor.unequipSkill(2);
+
+      // Assert
+      expect(actor.getSkillIdInSlot(0)).toBe(1);
+    });
+  });
+
+  describe('moveEquippedSkill', () =>
+  {
+    it('moves the skill out of its old slot and into the new one', () =>
+    {
+      // Arrange
+      const actor = makeActorWithSkills([ 1 ]);
+      withMaxSlotPoints(actor, 10);
+      actor.equipSkillToSlot(0, 1);
+
+      // Act
+      actor.moveEquippedSkill(0, 1);
+
+      // Assert
+      expect(actor.getSkillIdInSlot(1)).toBe(1);
+      expect(actor.getSkillIdInSlot(0)).toBe(0);
+    });
+
+    it('does nothing when the source slot is empty', () =>
+    {
+      // Arrange- dragging from an empty slot is something the equip menu allows the cursor to do.
+      const actor = makeActorWithSkills([ 1 ]);
+      withMaxSlotPoints(actor, 10);
+      actor.equipSkillToSlot(1, 1);
+
+      // Act
+      actor.moveEquippedSkill(0, 1);
+
+      // Assert
+      expect(actor.getSkillIdInSlot(1)).toBe(1);
+    });
+
+    it('leaves a skill dropped back onto its own slot exactly where it was', () =>
+    {
+      // Arrange- dropping a skill on the slot it came from is an ordinary equip-menu gesture. The
+      // source clear that follows a successful move would otherwise fire against the same slot the
+      // skill was just written into, and the skill would vanish off the bar entirely.
+      const actor = makeActorWithSkills([ 1 ]);
+      withMaxSlotPoints(actor, 10);
+      actor.equipSkillToSlot(0, 1);
+
+      // Act
+      actor.moveEquippedSkill(0, 0);
+
+      // Assert
+      expect(actor.getSkillIdInSlot(0)).toBe(1);
+    });
+
+    it('leaves the source slot filled when the destination refused the skill', () =>
+    {
+      // Arrange- a destination that cannot afford the skill rejects the equip, and the move must
+      // not then clear the source: that would lose the skill instead of merely declining to move it.
+      const actor = makeActorWithSkills([ 1, 2 ]);
+      withMaxSlotPoints(actor, 10);
+      actor.equipSkillToSlot(0, 1);
+      actor.canEquipSkillToSlot = () => false;
+
+      // Act
+      actor.moveEquippedSkill(0, 1);
+
+      // Assert
+      expect(actor.getSkillIdInSlot(0)).toBe(1);
+    });
+  });
+  //endregion taking skills back out and shuffling them around
 });
 //endregion plugins/sks/_component/game-actor-slots.test.js

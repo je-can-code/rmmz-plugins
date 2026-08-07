@@ -193,5 +193,216 @@ describe('J-RegionEffects Game_Map passage (direct src import)', () =>
       expect(passable).toBe(true);
     });
   });
+
+  //region the region id tables
+  describe('addAllowEffectRegionId', () =>
+  {
+    it('tracks a region id it has not seen before', () =>
+    {
+      // Arrange
+      const map = new globalThis.Game_Map();
+      map.initialize();
+
+      // Act
+      map.addAllowEffectRegionId(31);
+
+      // Assert
+      expect(map.getAllowEffectRegionIds()).toContain(31);
+    });
+
+    it('does not track the same region id twice', () =>
+    {
+      // Arrange: the same id arrives twice whenever a map carries both a global and a local tag for
+      // it, and a duplicated entry means the region is scanned twice for every passage check.
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      map.addAllowEffectRegionId(31);
+
+      // Act
+      map.addAllowEffectRegionId(31);
+
+      // Assert
+      expect(map.getAllowEffectRegionIds().filter(id => id === 31).length).toBe(1);
+    });
+  });
+
+  describe('addDenyEffectRegionId', () =>
+  {
+    it('tracks a region id it has not seen before', () =>
+    {
+      // Arrange
+      const map = new globalThis.Game_Map();
+      map.initialize();
+
+      // Act
+      map.addDenyEffectRegionId(41);
+
+      // Assert
+      expect(map.getDenyEffectRegionIds()).toContain(41);
+    });
+
+    it('does not track the same region id twice', () =>
+    {
+      // Arrange
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      map.addDenyEffectRegionId(41);
+
+      // Act
+      map.addDenyEffectRegionId(41);
+
+      // Assert
+      expect(map.getDenyEffectRegionIds().filter(id => id === 41).length).toBe(1);
+    });
+  });
+  //endregion the region id tables
+
+  //region refreshing from the map notes
+  describe('canRefreshRegionEffects', () =>
+  {
+    it('can refresh once the map data has landed', () =>
+    {
+      // Arrange
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      globalThis.$dataMap = { note: '' };
+
+      // Act & Assert
+      expect(map.canRefreshRegionEffects()).toBe(true);
+    });
+
+    it('cannot refresh before the map data has landed', () =>
+    {
+      // Arrange: `setup` runs ahead of the map data during a transfer, and reading a note off
+      // nothing would take the whole transfer down.
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      globalThis.$dataMap = null;
+
+      // Act & Assert
+      expect(map.canRefreshRegionEffects()).toBe(false);
+    });
+  });
+
+  describe('refreshAllowRegionEffects', () =>
+  {
+    it('adds every region the map tagged as allowed', () =>
+    {
+      // Arrange
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      globalThis.$dataMap = { note: '<allowRegions:[7,8]>' };
+      map.clearAllowEffectRegionIds();
+
+      // Act
+      map.refreshAllowRegionEffects();
+
+      // Assert
+      expect(map.getAllowEffectRegionIds()).toEqual(expect.arrayContaining([ 7, 8 ]));
+    });
+
+    it('leaves the table alone on a map carrying no allow tag', () =>
+    {
+      // Arrange
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      globalThis.$dataMap = { note: '<someOtherTag>' };
+      map.clearAllowEffectRegionIds();
+
+      // Act
+      map.refreshAllowRegionEffects();
+
+      // Assert
+      expect(map.getAllowEffectRegionIds()).toEqual([]);
+    });
+  });
+
+  describe('refreshDenyRegionEffects', () =>
+  {
+    it('adds every region the map tagged as denied', () =>
+    {
+      // Arrange
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      globalThis.$dataMap = { note: '<denyRegions:[17,18]>' };
+      map.clearDenyEffectRegionIds();
+
+      // Act
+      map.refreshDenyRegionEffects();
+
+      // Assert
+      expect(map.getDenyEffectRegionIds()).toEqual(expect.arrayContaining([ 17, 18 ]));
+    });
+
+    it('leaves the table alone on a map carrying no deny tag', () =>
+    {
+      // Arrange
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      globalThis.$dataMap = { note: '<someOtherTag>' };
+      map.clearDenyEffectRegionIds();
+
+      // Act
+      map.refreshDenyRegionEffects();
+
+      // Assert
+      expect(map.getDenyEffectRegionIds()).toEqual([]);
+    });
+  });
+
+  describe('refreshRegionEffects', () =>
+  {
+    it('does nothing at all before the map data has landed', () =>
+    {
+      // Arrange
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      globalThis.$dataMap = null;
+      const refreshAllow = vi.spyOn(map, 'refreshAllowRegionEffects');
+
+      // Act
+      map.refreshRegionEffects();
+
+      // Assert
+      expect(refreshAllow).not.toHaveBeenCalled();
+
+      refreshAllow.mockRestore();
+    });
+
+    it('rebuilds the pixel collision table when J-Pixelistics is installed', () =>
+    {
+      // Arrange: passage is what region effects change, and Pixelistics caches passage into a
+      // collision table - so a region refresh that skipped this would leave the player walking
+      // through walls the map no longer has.
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      globalThis.$dataMap = { note: '' };
+      const setupCollision = vi.fn();
+      globalThis.PIXEL_CollisionManager = { setupCollision };
+
+      // Act
+      map.refreshRegionEffects();
+
+      // Assert
+      expect(setupCollision).toHaveBeenCalled();
+
+      delete globalThis.PIXEL_CollisionManager;
+    });
+
+    it('refreshes without a collision table when J-Pixelistics is not installed', () =>
+    {
+      // Arrange
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      globalThis.$dataMap = { note: '<allowRegions:[7]>' };
+
+      // Act
+      map.refreshRegionEffects();
+
+      // Assert
+      expect(map.getAllowEffectRegionIds()).toContain(7);
+    });
+  });
+  //endregion refreshing from the map notes
 });
 //endregion plugins/regions/core/_component/game-map-region-effects.test.js

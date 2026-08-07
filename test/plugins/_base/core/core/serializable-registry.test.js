@@ -93,5 +93,35 @@ describe('SerializableRegistry (direct src import)', () =>
       expect(result).toBeNull();
     });
   });
+
+  describe('registrationForInstance', () =>
+  {
+    it('identifies a live instance by its own constructor', () =>
+    {
+      // Arrange- keyed on the constructor rather than on a name or a prototype-chain walk, which is
+      // both a plain Map lookup and immune to two unrelated classes sharing a name.
+      class Registered {}
+
+      SerializableRegistry.register(Registered, { id: 'registered-for-instance' });
+
+      // Act
+      const declaration = SerializableRegistry.registrationForInstance(new Registered());
+
+      // Assert
+      expect(declaration.id).toBe('registered-for-instance');
+    });
+
+    it('answers null for an instance of a type nobody registered', () =>
+    {
+      // Arrange- the encoder asks this of every value it walks, and most of them are plain objects.
+      class Unregistered {}
+
+      // Act
+      const declaration = SerializableRegistry.registrationForInstance(new Unregistered());
+
+      // Assert
+      expect(declaration).toBeNull();
+    });
+  });
 });
 //endregion plugins/_base/core/serializable-registry.test.js

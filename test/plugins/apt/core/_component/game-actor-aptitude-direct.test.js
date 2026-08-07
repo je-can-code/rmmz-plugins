@@ -163,6 +163,46 @@ describe('Game_Actor aptitude additions (direct src import)', () =>
       expect(actor.getAptitudeSkill(12).learnedFrom()).toBe('weapon:5');
     });
 
+    it('learnAptitudeSkill reuses an aptitude skill that already exists but is not yet learned', () =>
+    {
+      // Arrange- a skill can be started from one source and finished from another, so the record
+      // already exists by the time the learn lands. Rebuilding it here would throw away whichever
+      // source got there first.
+      const actor = buildActor();
+      const existing = new AptitudeSkill(12, false);
+      actor.setAptitudeSkill(12, existing);
+      actor.initializeAptitudeProgress('weapon:5', 12, 40, 40);
+
+      // Act
+      actor.learnAptitudeSkill(12, 'weapon:5');
+
+      // Assert
+      expect(actor.getAptitudeSkill(12)).toBe(existing);
+      expect(actor.hasLearnedAptitudeSkill(12)).toBe(true);
+    });
+
+    it('onBattlerDataChange clears the cached apr so the next read recalculates it', () =>
+    {
+      // Arrange- apr is derived from traits, and equipment changes fire this hook; a cache that
+      // survived would keep scaling AP by the multiplier from the gear the actor took off.
+      //
+      // the alias captured whatever this host fixture had at import time, which is nothing; give
+      // the chain something real to call through to so the extension half can be reached.
+      const original = vi.fn();
+      globalThis.J.APT.Aliased.Game_Actor.set('onBattlerDataChange', original);
+      const actor = buildActor();
+      actor.setCachedApr(2.5);
+
+      // Act
+      actor.onBattlerDataChange();
+
+      // Assert- the original still runs; the cache invalidation is additive.
+      expect(original).toHaveBeenCalled();
+
+      // Assert
+      expect(actor.getCachedApr()).toBeNull();
+    });
+
     it('learnAptitudeSkill is a no-op when the skill is already learned', () =>
     {
       const actor = buildActor();

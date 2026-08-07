@@ -1,0 +1,194 @@
+//region plugins/regions/ext/states/objects/_component/game-map.test.js
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import {
+  installRegionsStatesStackHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJRegions,
+  setPluginContextToJRegionsStates,
+} from '../../../../_component/fixtures/install-regions-host-globals.js';
+
+/**
+ * The map's side of region states: the per-region table, and where it comes from.
+ *
+ * The table is rebuilt from the map's notes on every `setup`, which is what makes the clear-then-
+ * refresh order load-bearing - a map entered twice would otherwise accumulate two copies of every
+ * tag and fire each region state twice.
+ */
+describe('J-Regions-States Game_Map', () =>
+{
+  /**
+   * Builds a map already set up against whatever note is currently staged.
+   * @returns {Game_Map} The map under test.
+   */
+  const buildMap = () =>
+  {
+    const map = new globalThis.Game_Map();
+    map.initialize();
+    map.setup(1);
+
+    return map;
+  };
+
+  beforeAll(async () =>
+  {
+    vi.resetModules();
+
+    installRegionsStatesStackHostGlobals();
+
+    setPluginContextToJBase();
+    await import('../../../../../../../src/plugins/_base/core/_metadata/initialization.js');
+
+    ({ default: globalThis.RPGManager } = await import(
+      '../../../../../../../src/plugins/_base/core/managers/RPGManager.js'));
+
+    setPluginContextToJRegions();
+    await import('../../../../../../../src/plugins/regions/core/_metadata/initialization.js');
+    await import('../../../../../../../src/plugins/regions/core/objects/Game_Map.js');
+
+    setPluginContextToJRegionsStates();
+    await import('../../../../../../../src/plugins/regions/ext/states/_metadata/initialization.js');
+
+    await import('../../../../../../../src/plugins/regions/ext/states/objects/Game_Map.js');
+  });
+
+  beforeEach(() =>
+  {
+    globalThis.$dataMap = { note: '' };
+  });
+
+  //region reading the table
+  describe('getRegionStatesByRegionId()', () =>
+  {
+    it('finds the states tagged to a region', () =>
+    {
+      // Arrange
+      globalThis.$dataMap = { note: '<regionAddState:[1, 3, 100, 0]>' };
+
+      // Act
+      const found = buildMap()
+        .getRegionStatesByRegionId(1);
+
+      // Assert
+      expect(found.length)
+        .toBe(1);
+    });
+
+    it('answers with an empty list for a region nothing is tagged to', () =>
+    {
+      // Arrange: every character asks this every cadence, so an untagged region is the common case
+      // and it has to answer with something iterable rather than nothing.
+      globalThis.$dataMap = { note: '<regionAddState:[1, 3, 100, 0]>' };
+
+      // Act
+      const found = buildMap()
+        .getRegionStatesByRegionId(9);
+
+      // Assert
+      expect(found)
+        .toEqual([]);
+    });
+  });
+  //endregion reading the table
+
+  //region building the table
+  describe('addRegionStateDataByRegionId()', () =>
+  {
+    it('starts a region\'s list with the first state tagged to it', () =>
+    {
+      // Arrange
+      const map = buildMap();
+
+      // Act
+      map.addRegionStateDataByRegionId(4, { stateId: 11 });
+
+      // Assert
+      expect(map.getRegionStatesByRegionId(4)
+        .map(data => data.stateId))
+        .toEqual([ 11 ]);
+    });
+
+    it('stacks a second state onto a region that already has one', () =>
+    {
+      // Arrange: stacking is deliberate - a region tagged twice fires both, because that is how an
+      // author layers a damaging floor with a slowing one.
+      const map = buildMap();
+      map.addRegionStateDataByRegionId(4, { stateId: 11 });
+
+      // Act
+      map.addRegionStateDataByRegionId(4, { stateId: 12 });
+
+      // Assert
+      expect(map.getRegionStatesByRegionId(4)
+        .map(data => data.stateId))
+        .toEqual([ 11, 12 ]);
+    });
+  });
+
+  describe('clearRegionStates()', () =>
+  {
+    it('empties the table so a re-entered map does not fire everything twice', () =>
+    {
+      // Arrange
+      const map = buildMap();
+      map.addRegionStateDataByRegionId(4, { stateId: 11 });
+
+      // Act
+      map.clearRegionStates();
+
+      // Assert
+      expect(map.getRegionStatesByRegionId(4))
+        .toEqual([]);
+    });
+  });
+  //endregion building the table
+
+  //region where the table comes from
+  describe('refreshRegionStates()', () =>
+  {
+    it('parses every tagged region off the map\'s notes', () =>
+    {
+      // Arrange
+      globalThis.$dataMap = { note: '<regionAddState:[1, 3, 100, 0]>\n<regionAddState:[2, 4, 50, 0]>' };
+
+      // Act
+      const map = buildMap();
+
+      // Assert
+      expect(map.getRegionStatesByRegionId(1).length)
+        .toBe(1);
+      expect(map.getRegionStatesByRegionId(2).length)
+        .toBe(1);
+    });
+
+    it('leaves the table alone on a map carrying no region state tags', () =>
+    {
+      // Arrange
+      globalThis.$dataMap = { note: '<someOtherTag>' };
+
+      // Act
+      const map = buildMap();
+
+      // Assert
+      expect(map.getRegionStates().size)
+        .toBe(0);
+    });
+
+    it('does nothing at all when there is no map data to read yet', () =>
+    {
+      // Arrange: `setup` runs before the map data lands during a load, and reading a note off
+      // nothing would take the whole map transfer down.
+      const map = buildMap();
+      globalThis.$dataMap = null;
+
+      // Act
+      map.refreshRegionStates();
+
+      // Assert
+      expect(map.getRegionStates().size)
+        .toBe(0);
+    });
+  });
+  //endregion where the table comes from
+});
+//endregion plugins/regions/ext/states/objects/_component/game-map.test.js

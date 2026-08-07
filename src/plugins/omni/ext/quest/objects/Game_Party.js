@@ -126,11 +126,10 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
         // if the new objectives don't go as far as they previously did, don't process it.
         if (!omniquest.objectives.at(index)) return;
 
-        // update the fulfillment data for the obejctive.
+        // update the fulfillment data for the objective. the guard above already established that
+        // this index exists on the metadata, so there is nothing further to check for here.
         const sourceObjective = omniquest.objectives.at(index);
-        objective.populateFulfillmentData(sourceObjective === undefined
-          ? undefined
-          : sourceObjective.fulfillment);
+        objective.populateFulfillmentData(sourceObjective.fulfillment);
 
         // grab the new objective from the tracking for comparison.
         const newObjective = newTracking.objectives.at(index);
@@ -233,13 +232,6 @@ Game_Party.prototype.translateQuestopediaSaveablesToCache = function()
  */
 Game_Party.prototype.synchronizeQuestopediaDataBeforeSave = function()
 {
-  // validate the omnipedia is initialized.
-  if (!this.isOmnipediaInitialized())
-  {
-    // initialize the omnipedia if it wasn't already.
-    this.initOmnipediaMembers();
-  }
-
   // translate the cache into saveables.
   this.translateQuestopediaCacheToSaveables();
 
@@ -252,13 +244,6 @@ Game_Party.prototype.synchronizeQuestopediaDataBeforeSave = function()
  */
 Game_Party.prototype.synchronizeQuestopediaAfterLoad = function()
 {
-  // validate the omnipedia is initialized.
-  if (!this.isOmnipediaInitialized())
-  {
-    // initialize the omnipedia if it wasn't already.
-    this.initOmnipediaMembers();
-  }
-
   // translate the saveables into cache.
   this.translateQuestopediaSaveablesToCache();
 

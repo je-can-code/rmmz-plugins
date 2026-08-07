@@ -104,16 +104,6 @@ describe('Game_Battler ext/resources augments (direct src import)', () =>
       expect(() => battler.paySkillHpCost(5)).not.toThrow();
     });
 
-    it('does not pop when the JABS battler has no character', () =>
-    {
-      // Arrange
-      const battler = new Game_Battler();
-      globalThis.JABS_AiManager.getBattlerByUuid.mockReturnValue({ getCharacter: () => null, getUuid: () => 'battler-uuid' });
-
-      // Act/Assert (no throw)
-      expect(() => battler.paySkillHpCost(5)).not.toThrow();
-    });
-
     it('routes an hp-damage strike pop with the paid amount', () =>
     {
       // Arrange
@@ -212,5 +202,82 @@ describe('Game_Battler ext/resources augments (direct src import)', () =>
       );
     });
   });
+
+  //region the guards every gain shares
+  //
+  // All three gains carry the identical three-guard preamble, and each guard exists for a different
+  // reason: a zero gain would pop a "0" over the player's head every time a resource tick did
+  // nothing, a missing JABS namespace means there is no map to pop onto at all, and an untracked
+  // battler is an ordinary state for anything off-screen.
+  [
+    [ 'gainHpFromResource', 'gainHpFromResource' ],
+    [ 'gainMpFromResource', 'gainMpFromResource' ],
+    [ 'gainTpFromResource', 'gainTpFromResource' ],
+  ].forEach(([ describeName, method ]) =>
+  {
+    describe(`${describeName} guards`, () =>
+    {
+      it('does not pop a zero gain', () =>
+      {
+        // Arrange
+        globalThis.JABS_PopupMergeController = { routeStrikePop: vi.fn() };
+        const character = {};
+        globalThis.JABS_AiManager.getBattlerByUuid.mockReturnValue({
+          getCharacter: () => character,
+          getUuid: () => 'battler-uuid',
+        });
+        const battler = new Game_Battler();
+
+        // Act
+        battler[method](0);
+
+        // Assert
+        expect(globalThis.JABS_PopupMergeController.routeStrikePop).not.toHaveBeenCalled();
+      });
+
+      it('does not pop when JABS is not installed', () =>
+      {
+        // Arrange
+        globalThis.JABS_PopupMergeController = { routeStrikePop: vi.fn() };
+        globalThis.J.ABS = false;
+        const battler = new Game_Battler();
+
+        // Act
+        battler[method](5);
+
+        // Assert
+        expect(globalThis.JABS_PopupMergeController.routeStrikePop).not.toHaveBeenCalled();
+      });
+
+      it('does not pop when the battler is not tracked on the map', () =>
+      {
+        // Arrange
+        globalThis.JABS_PopupMergeController = { routeStrikePop: vi.fn() };
+        globalThis.JABS_AiManager.getBattlerByUuid.mockReturnValue(null);
+        const battler = new Game_Battler();
+
+        // Act
+        battler[method](5);
+
+        // Assert
+        expect(globalThis.JABS_PopupMergeController.routeStrikePop).not.toHaveBeenCalled();
+      });
+
+      it('still performs the original gain regardless of whether it pops', () =>
+      {
+        // Arrange: the pop is decoration; the resource change itself must never be gated behind it.
+        globalThis.J.ABS = false;
+        const battler = new Game_Battler();
+
+        // Act
+        battler[method](5);
+
+        // Assert
+        expect(globalThis.J.POPUPS.EXT.RESOURCES.Aliased.Game_Battler.get(method))
+          .toHaveBeenCalledWith(5);
+      });
+    });
+  });
+  //endregion the guards every gain shares
 });
 //endregion plugins/popups/ext/resources/objects/game-battler.test.js

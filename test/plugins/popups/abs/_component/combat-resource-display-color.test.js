@@ -239,5 +239,60 @@ describe('PopupResourceDisplayColor (direct src import)', () =>
       expect(result).toBe(4);
     });
   });
+
+  describe('parseCssColor', () =>
+  {
+    it('reads the three channels out of a full hex color', () =>
+    {
+      // Arrange
+      // Act
+      const parsed = PopupResourceDisplayColor.parseCssColor('#ff8000');
+
+      // Assert
+      expect(parsed).toEqual({ r: 255, g: 128, b: 0 });
+    });
+
+    it('reads the three channels out of an rgb() color', () =>
+    {
+      // Arrange- `ColorManager.textColor` answers in hex, but the engine's own gauge colors and
+      // anything a plugin parameter supplies arrive as rgb(), so both forms reach here.
+      // Act
+      const parsed = PopupResourceDisplayColor.parseCssColor('rgb(12, 34, 56)');
+
+      // Assert
+      expect(parsed).toEqual({ r: 12, g: 34, b: 56 });
+    });
+
+    it('tolerates the whitespace an rgb() string is allowed to carry', () =>
+    {
+      // Arrange
+      // Act
+      const parsed = PopupResourceDisplayColor.parseCssColor('rgb(1,2,3)');
+
+      // Assert
+      expect(parsed).toEqual({ r: 1, g: 2, b: 3 });
+    });
+
+    it('falls back to white for a color string in neither form', () =>
+    {
+      // Arrange- white is the safe fallback because the channels are only ever used to dim a color,
+      // so an unparseable one renders at full brightness rather than as an invisible black pop.
+      // Act
+      const parsed = PopupResourceDisplayColor.parseCssColor('rebeccapurple');
+
+      // Assert
+      expect(parsed).toEqual({ r: 255, g: 255, b: 255 });
+    });
+
+    it('falls back to white for a shorthand hex it cannot split into channels', () =>
+    {
+      // Arrange
+      // Act
+      const parsed = PopupResourceDisplayColor.parseCssColor('#f80');
+
+      // Assert
+      expect(parsed).toEqual({ r: 255, g: 255, b: 255 });
+    });
+  });
 });
 //endregion plugins/popups/abs/_component/combat-resource-display-color.test.js

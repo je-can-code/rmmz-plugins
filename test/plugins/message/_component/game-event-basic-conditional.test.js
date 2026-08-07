@@ -62,5 +62,66 @@ describe('J-MessageTextCodes BasicChoiceConditional via Game_Event (direct src i
     expect(onConditional.isMet()).toBe(true);
     expect(offConditional.isMet()).toBe(true);
   });
+
+  describe('filterCommentCommandsForBasicConditionals', () =>
+  {
+    it('keeps a comment carrying any of the four conditional tags', () =>
+    {
+      // Arrange
+      const command = { parameters: [ '<leaderChoiceCondition:7>' ] };
+
+      // Act
+      const kept = globalThis.Game_Event.filterCommentCommandsForBasicConditionals(command);
+
+      // Assert
+      expect(kept).toBe(true);
+    });
+
+    it('drops a comment that carries none of them', () =>
+    {
+      // Arrange- event pages are full of ordinary developer comments, and every one of them reaches
+      // this filter.
+      const command = { parameters: [ 'just a note to self' ] };
+
+      // Act
+      const kept = globalThis.Game_Event.filterCommentCommandsForBasicConditionals(command);
+
+      // Assert
+      expect(kept).toBe(false);
+    });
+
+    it('drops a command with no comment text at all', () =>
+    {
+      // Arrange- a comment command's continuation rows arrive with an empty parameter, and testing a
+      // regex against nothing is what this guard exists to avoid.
+      const command = { parameters: [ '' ] };
+
+      // Act
+      const kept = globalThis.Game_Event.filterCommentCommandsForBasicConditionals(command);
+
+      // Assert
+      expect(kept).toBe(false);
+    });
+  });
+
+  describe('isMet for an unrecognized conditional type', () =>
+  {
+    it('permits the choice rather than hiding it', () =>
+    {
+      // Arrange- a conditional whose type matches no known case is a tag this build does not
+      // understand. Showing the choice is the safe answer: hiding it would silently remove a branch
+      // of dialogue with nothing anywhere reporting why.
+      const conditional = globalThis.Game_Event.toBasicConditional({
+        parameters: [ '<leaderChoiceCondition:7>' ],
+      });
+      conditional.type = 'a type from some future build';
+
+      // Act
+      const isMet = conditional.isMet();
+
+      // Assert
+      expect(isMet).toBe(true);
+    });
+  });
 });
 //endregion plugins/message/_component/game-event-basic-conditional.test.js

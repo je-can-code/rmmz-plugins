@@ -40,5 +40,57 @@ describe('J-SystemUtilities gamepad fresh press logging (direct src import)', ()
     expect(logSpy.mock.calls.flat().join(' ')).toContain('ok');
     logSpy.mockRestore();
   });
+
+  it('names the pad by its own id when the browser reported one', () =>
+  {
+    // Arrange- a real controller reports a descriptive id, and that is far more useful in a log than
+    // a bare slot number when several pads are connected.
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    globalThis.J.UTILS.GamepadLog.enabled = true;
+    globalThis.Input.gamepadMapper[0] = 'ok';
+    globalThis.Input._gamepadStates[1] = [ false ];
+
+    // Act
+    globalThis.Input._updateGamepadState({ index: 1, id: 'DualSense Wireless Controller' });
+
+    // Assert
+    expect(logSpy.mock.calls.flat().join(' ')).toContain('DualSense Wireless Controller');
+    logSpy.mockRestore();
+  });
+
+  it('ignores a pressed button that maps to no known symbol', () =>
+  {
+    // Arrange- controllers report more buttons than RMMZ binds, so unmapped indices are pressed all
+    // the time and logging a bare index would be noise rather than information.
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    globalThis.J.UTILS.GamepadLog.enabled = true;
+    delete globalThis.Input.gamepadMapper[15];
+    globalThis.Input._gamepadStates[2] = [];
+
+    // Act
+    globalThis.J.UTILS.GamepadLog.logFreshPresses({ index: 2 }, [], Object.assign([], { 15: true }));
+
+    // Assert
+    expect(logSpy).not.toHaveBeenCalled();
+    logSpy.mockRestore();
+  });
+
+  it('starts a pad it has never seen from an empty previous state rather than from nothing', () =>
+  {
+    // Arrange- a controller connected mid-session has no recorded history to diff against. Standing
+    // in an empty array is what keeps the comparison working at all; the cost is that its very first
+    // frame reads whatever is held as fresh, which is the right trade for one frame of log noise.
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    globalThis.J.UTILS.GamepadLog.enabled = true;
+    globalThis.Input.gamepadMapper[0] = 'ok';
+    delete globalThis.Input._gamepadStates[9];
+
+    // Act
+    const update = () => globalThis.Input._updateGamepadState({ index: 9 });
+
+    // Assert
+    expect(update).not.toThrow();
+    logSpy.mockRestore();
+  });
 });
 //endregion plugins/utils/_component/gamepad-log.test.js

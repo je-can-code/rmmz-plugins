@@ -421,6 +421,63 @@ describe('JABS_PopupManager (direct src import)', () =>
       // Assert
       expect(pop.critical).toEqual(true);
     });
+
+    it('marks a positive mp result with the enemy-damage ring', () =>
+    {
+      // Arrange
+      const action = { getBaseSkill: () => ({}), getCaster: () => ({}), getAction: () => ({ calcElementRate: () => 1 }) };
+      const target = { getBattler: () => ({ result: () => makeActionResult({ mpDamage: 10 }) }) };
+      const engine = { determineElementalIcon: () => 99 };
+
+      // Act
+      const pop = JABS_PopupManager.buildDamagePop(action, target, engine);
+
+      // Assert
+      expect(pop.calls).toEqual(expect.arrayContaining([ [ 'forEnemyDamageRing' ] ]));
+    });
+
+    it('marks a negative mp result as a restore with the incoming-heal ring', () =>
+    {
+      // Arrange- RMMZ models restoration as negative damage, so an ether reads as mpDamage below
+      // zero and has to render as a gain rather than as an attack on the target's mana.
+      const action = { getBaseSkill: () => ({}), getCaster: () => ({}), getAction: () => ({ calcElementRate: () => 1 }) };
+      const target = { getBattler: () => ({ result: () => makeActionResult({ mpDamage: -10 }) }) };
+      const engine = { determineElementalIcon: () => 99 };
+
+      // Act
+      const pop = JABS_PopupManager.buildDamagePop(action, target, engine);
+
+      // Assert
+      expect(pop.calls).toEqual(expect.arrayContaining([ [ 'isMpDamage' ], [ 'forIncomingHealRing' ] ]));
+    });
+
+    it('marks a positive tp result with the enemy-damage ring', () =>
+    {
+      // Arrange
+      const action = { getBaseSkill: () => ({}), getCaster: () => ({}), getAction: () => ({ calcElementRate: () => 1 }) };
+      const target = { getBattler: () => ({ result: () => makeActionResult({ tpDamage: 10 }) }) };
+      const engine = { determineElementalIcon: () => 99 };
+
+      // Act
+      const pop = JABS_PopupManager.buildDamagePop(action, target, engine);
+
+      // Assert
+      expect(pop.calls).toEqual(expect.arrayContaining([ [ 'forEnemyDamageRing' ] ]));
+    });
+
+    it('marks a negative tp result as a restore with the incoming-heal ring', () =>
+    {
+      // Arrange
+      const action = { getBaseSkill: () => ({}), getCaster: () => ({}), getAction: () => ({ calcElementRate: () => 1 }) };
+      const target = { getBattler: () => ({ result: () => makeActionResult({ tpDamage: -10 }) }) };
+      const engine = { determineElementalIcon: () => 99 };
+
+      // Act
+      const pop = JABS_PopupManager.buildDamagePop(action, target, engine);
+
+      // Assert
+      expect(pop.calls).toEqual(expect.arrayContaining([ [ 'isTpDamage' ], [ 'forIncomingHealRing' ] ]));
+    });
   });
 
   describe('showSkillUsedPop', () =>
@@ -616,6 +673,126 @@ describe('JABS_PopupManager (direct src import)', () =>
         expect.anything(),
         character,
         { attackerUuid: 'caster-uuid', targetUuid: 'target-uuid', amount: 6 },
+      );
+    });
+
+    /**
+     * Builds the caster/target pair `showItemAppliedPop` is handed, around one action result.
+     * @param {object} result The action result the target should report.
+     * @returns {{character: object, caster: object, target: object}} The trio.
+     */
+    function makeAppliedTrio(result)
+    {
+      const character = {};
+
+      return {
+        character,
+        caster: { getCharacter: () => character, getUuid: () => 'caster-uuid' },
+        target: {
+          getBattler: () => ({ result: () => result }),
+          getCharacter: () => ({ getJabsBattlerUuid: () => 'target-uuid' }),
+        },
+      };
+    }
+
+    it('renders a negative hp result as healing rather than as damage', () =>
+    {
+      // Arrange- RMMZ models healing as negative damage, so the sign is the only thing telling a
+      // cure apart from a hit.
+      const { caster, target } = makeAppliedTrio(makeActionResult({ hpDamage: -8 }));
+
+      // Act
+      JABS_PopupManager.showItemAppliedPop({}, {}, caster, target);
+
+      // Assert
+      const [ [ pop ] ] = FakeJABSPopupMergeController.routeStrikePop.mock.calls;
+      expect(pop.calls).toEqual(expect.arrayContaining([ [ 'forIncomingHealRing' ] ]));
+    });
+
+    it('applies the glancing accent for a glancing hp hit', () =>
+    {
+      // Arrange
+      const { caster, target } = makeAppliedTrio(makeActionResult({ hpDamage: 8, glancing: true }));
+
+      // Act
+      JABS_PopupManager.showItemAppliedPop({}, {}, caster, target);
+
+      // Assert
+      const [ [ pop ] ] = FakeJABSPopupMergeController.routeStrikePop.mock.calls;
+      expect(pop.calls).toEqual(expect.arrayContaining([ [ 'setTextAccent', 'glance' ], [ 'setTextColorIndex', 7 ] ]));
+    });
+
+    it('routes the mp amount when nothing landed on hp', () =>
+    {
+      // Arrange
+      const { character, caster, target } = makeAppliedTrio(makeActionResult({ mpDamage: 4 }));
+
+      // Act
+      JABS_PopupManager.showItemAppliedPop({}, {}, caster, target);
+
+      // Assert
+      expect(FakeJABSPopupMergeController.routeStrikePop).toHaveBeenCalledWith(
+        expect.anything(),
+        character,
+        { attackerUuid: 'caster-uuid', targetUuid: 'target-uuid', amount: 4 },
+      );
+    });
+
+    it('renders a negative mp result as a restore', () =>
+    {
+      // Arrange
+      const { caster, target } = makeAppliedTrio(makeActionResult({ mpDamage: -4 }));
+
+      // Act
+      JABS_PopupManager.showItemAppliedPop({}, {}, caster, target);
+
+      // Assert
+      const [ [ pop ] ] = FakeJABSPopupMergeController.routeStrikePop.mock.calls;
+      expect(pop.calls).toEqual(expect.arrayContaining([ [ 'isMpDamage' ], [ 'forIncomingHealRing' ] ]));
+    });
+
+    it('routes the tp amount when nothing landed on hp or mp', () =>
+    {
+      // Arrange
+      const { character, caster, target } = makeAppliedTrio(makeActionResult({ tpDamage: 3 }));
+
+      // Act
+      JABS_PopupManager.showItemAppliedPop({}, {}, caster, target);
+
+      // Assert
+      expect(FakeJABSPopupMergeController.routeStrikePop).toHaveBeenCalledWith(
+        expect.anything(),
+        character,
+        { attackerUuid: 'caster-uuid', targetUuid: 'target-uuid', amount: 3 },
+      );
+    });
+
+    it('renders a negative tp result as a restore', () =>
+    {
+      // Arrange
+      const { caster, target } = makeAppliedTrio(makeActionResult({ tpDamage: -3 }));
+
+      // Act
+      JABS_PopupManager.showItemAppliedPop({}, {}, caster, target);
+
+      // Assert
+      const [ [ pop ] ] = FakeJABSPopupMergeController.routeStrikePop.mock.calls;
+      expect(pop.calls).toEqual(expect.arrayContaining([ [ 'isTpDamage' ], [ 'forIncomingHealRing' ] ]));
+    });
+
+    it('falls back to the hp amount when the action landed nothing anywhere', () =>
+    {
+      // Arrange- a fully resisted hit still pops, so the player learns it connected and did nothing.
+      const { character, caster, target } = makeAppliedTrio(makeActionResult());
+
+      // Act
+      JABS_PopupManager.showItemAppliedPop({}, {}, caster, target);
+
+      // Assert
+      expect(FakeJABSPopupMergeController.routeStrikePop).toHaveBeenCalledWith(
+        expect.anything(),
+        character,
+        { attackerUuid: 'caster-uuid', targetUuid: 'target-uuid', amount: 0 },
       );
     });
   });

@@ -129,13 +129,6 @@ Game_Party.prototype.translateMonsterpediaSaveablesToCache = function()
  */
 Game_Party.prototype.synchronizeMonsterpediaDataBeforeSave = function()
 {
-  // validate the omnipedia is initialized.
-  if (!this.isOmnipediaInitialized())
-  {
-    // initialize the omnipedia if it wasn't already.
-    this.initOmnipediaMembers();
-  }
-
   // translate the cache into saveables.
   this.translateMonsterpediaCacheForSaving();
 
@@ -148,13 +141,6 @@ Game_Party.prototype.synchronizeMonsterpediaDataBeforeSave = function()
  */
 Game_Party.prototype.synchronizeMonsterpediaAfterLoad = function()
 {
-  // validate the omnipedia is initialized.
-  if (!this.isOmnipediaInitialized())
-  {
-    // initialize the omnipedia if it wasn't already.
-    this.initOmnipediaMembers();
-  }
-
   // translate the saveables into cache.
   this.translateMonsterpediaSaveablesToCache();
 

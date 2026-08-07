@@ -87,5 +87,15 @@ describe('J-SkillSlots metadata exclusive mode params enabled (direct src import
     // Assert
     expect(metadata.slotsOnly).toBe(true);
   });
+
+  it('treats an unconfigured skill-type list as none rather than failing to parse', async () =>
+  {
+    // Act- an untouched parameter panel leaves this key absent entirely, and handing `undefined` to
+    // `JSON.parse` throws during boot rather than yielding an empty list.
+    const metadata = await buildSksMetadata({ ...DEFAULT_SKS_PLUGIN_PARAMS, 'equippable-skill-type-ids': undefined });
+
+    // Assert
+    expect(metadata.equippableSkillTypeIds).toEqual([]);
+  });
 });
 //endregion plugins/sks/_component/metadata.test.js

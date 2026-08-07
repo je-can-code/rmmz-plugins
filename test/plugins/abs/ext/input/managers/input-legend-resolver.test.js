@@ -95,6 +95,16 @@ describe('J-ABS-InputManager legend resolver (direct src import)', () =>
       expect(InputLegendResolver.resolve('cart-inc', 'More'))
         .toBe(`glyph:${JabsInputSymbols.DirRight}`);
     });
+
+    it('resolves bulk quantity adjustment to the shoulders, distinctly from cycling actors', () =>
+    {
+      // Arrange & Act & Assert- these share their bindings with actor cycling but not their meaning,
+      // so they get their own semantics rather than borrowing that pair's.
+      expect(InputLegendResolver.resolve('cart-dec-bulk', 'Much less'))
+        .toBe(`glyph:${JabsInputSymbols.SkillTrigger}`);
+      expect(InputLegendResolver.resolve('cart-inc-bulk', 'Much more'))
+        .toBe(`glyph:${JabsInputSymbols.GuardTrigger}`);
+    });
   });
 
   describe('semantics it cannot describe', () =>

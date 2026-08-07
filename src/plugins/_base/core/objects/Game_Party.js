@@ -173,7 +173,7 @@ Game_Party.prototype.gainItem = function(item, amount, includeEquip)
     return;
   }
 
-  // grab the container of items.S
+  // grab the container of items.
   const container = this.itemContainer(item);
 
   // check to make sure we have a container.

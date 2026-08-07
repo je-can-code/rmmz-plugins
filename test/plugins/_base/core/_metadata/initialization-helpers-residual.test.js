@@ -171,5 +171,121 @@ describe('J-Base initialization.js residual helpers (direct src import)', () =>
       expect(result).toBe('***');
     });
   });
+
+  describe('J.BASE.Helpers.satisfies', () =>
+  {
+    it('accepts a version above the floor', () =>
+    {
+      // Arrange & Act & Assert- every extension gates its own boot on this, so a wrong answer is
+      // either a plugin refusing to load or one loading against a host missing what it needs.
+      expect(globalThis.J.BASE.Helpers.satisfies('3.2.0', '3.1.0')).toBe(true);
+    });
+
+    it('rejects a version below the floor', () =>
+    {
+      // Arrange & Act & Assert
+      expect(globalThis.J.BASE.Helpers.satisfies('3.0.9', '3.1.0')).toBe(false);
+    });
+
+    it('accepts a version exactly at the floor', () =>
+    {
+      // Arrange & Act & Assert- the loop runs out without either comparison tripping, which is what
+      // the trailing return is for.
+      expect(globalThis.J.BASE.Helpers.satisfies('3.1.0', '3.1.0')).toBe(true);
+    });
+
+    it('compares the major segment before ever reaching the patch', () =>
+    {
+      // Arrange & Act & Assert- a higher major wins outright even with a lower patch behind it.
+      expect(globalThis.J.BASE.Helpers.satisfies('4.0.0', '3.9.9')).toBe(true);
+    });
+  });
+
+  describe('J.BASE.Helpers.generateUuid', () =>
+  {
+    it('renders a full-length RFC-4122 shaped identifier', () =>
+    {
+      // Arrange & Act
+      const uuid = globalThis.J.BASE.Helpers.generateUuid();
+
+      // Assert
+      expect(uuid).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
+    });
+
+    it('does not hand out the same identifier twice', () =>
+    {
+      // Arrange- every battler on the map is keyed by one of these, and a collision would have two
+      // of them sharing state.
+      const uuids = new Set();
+
+      // Act
+      for (let i = 0; i < 50; i++)
+      {
+        uuids.add(globalThis.J.BASE.Helpers.generateUuid());
+      }
+
+      // Assert
+      expect(uuids.size).toBe(50);
+    });
+  });
+
+  describe('J.BASE.Helpers.shortUuid', () =>
+  {
+    it('renders six hexadecimal digits split across a dash', () =>
+    {
+      // Arrange & Act- deliberately carries no variant placeholder: `y` marks the RFC-4122 variant
+      // position, and a short id has no variant to encode.
+      const uuid = globalThis.J.BASE.Helpers.shortUuid();
+
+      // Assert
+      expect(uuid).toMatch(/^[0-9a-f]{3}-[0-9a-f]{3}$/);
+    });
+  });
+
+  describe('J.BASE.Helpers.modVariable', () =>
+  {
+    it('adjusts a variable by an amount rather than replacing it', () =>
+    {
+      // Arrange- this is what every tracked statistic in the game accumulates through.
+      const values = { 12: 40 };
+      globalThis.$gameVariables = {
+        value: id => values[id],
+        setValue: (id, value) =>
+        {
+          values[id] = value;
+        },
+      };
+
+      // Act
+      globalThis.J.BASE.Helpers.modVariable(12, 5);
+
+      // Assert
+      expect(values[12]).toBe(45);
+    });
+  });
+
+  describe('J.BASE.Helpers.getKeyFromRegexp', () =>
+  {
+    it('lifts the tag name out of a value-carrying structure', () =>
+    {
+      // Arrange- the name between the opening bracket and the colon is the key an editor board
+      // writes under, so this is how a regex and a data file stay in agreement.
+      // Act
+      const key = globalThis.J.BASE.Helpers.getKeyFromRegexp(/<someTag:[ ]?(\d+)>/i);
+
+      // Assert
+      expect(key).toBe('someTag');
+    });
+
+    it('lifts the tag name out of a boolean structure, which ends at the bracket instead', () =>
+    {
+      // Arrange- a marker tag carries no colon at all, so the closing character has to change.
+      // Act
+      const key = globalThis.J.BASE.Helpers.getKeyFromRegexp(/<someMarker>/i, true);
+
+      // Assert
+      expect(key).toBe('someMarker');
+    });
+  });
 });
 //endregion plugins/_base/_metadata/initialization-helpers-residual.test.js

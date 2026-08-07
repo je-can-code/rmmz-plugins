@@ -249,6 +249,21 @@ describe('QuestManager (omni ext/quest, direct src import)', () =>
       expect(QuestManager.getValidDestinationObjectives()).toEqual([]);
     });
 
+    it('getValidDestinationObjectives ignores an objective of some other type entirely', () =>
+    {
+      // Arrange- this runs on every step the player takes, so bailing on the wrong type first is
+      // what keeps a quest log full of fetch objectives off the movement hot path.
+      const quest = questWithObjective(OmniQuest.States.Active, OmniObjective.Types.Fetch);
+      globalThis.$gameParty = { getQuestopediaEntriesCache: () => new Map([ [ 'a', quest ] ]) };
+      globalThis.$gameMap = { mapId: () => 1 };
+
+      // Act
+      const found = QuestManager.getValidDestinationObjectives();
+
+      // Assert
+      expect(found).toEqual([]);
+    });
+
     it('excludes quests in states outside Inactive/Active from every getValid* helper', () =>
     {
       const quest = questWithObjective(OmniQuest.States.Completed, OmniObjective.Types.Destination);
@@ -292,6 +307,45 @@ describe('QuestManager (omni ext/quest, direct src import)', () =>
       globalThis.$gameParty = { getQuestopediaEntriesCache: () => new Map([ [ 'a', quest ] ]) };
 
       expect(QuestManager.getValidQuestCompletionObjectives()).toEqual(quest.objectives);
+    });
+
+    // each helper is asked on a hot path- destinations on every step, fetches on every item gained,
+    // slays on every kill - so each one bails on a quest with nothing of its own type rather than
+    // walking the whole quest log four times per event.
+    [
+      [ 'getValidFetchObjectives', OmniObjective.Types.Fetch ],
+      [ 'getValidSlayObjectives', OmniObjective.Types.Slay ],
+      [ 'getValidQuestCompletionObjectives', OmniObjective.Types.Quest ],
+    ].forEach(([ helper, matchingType ]) =>
+    {
+      it(`${helper} ignores an objective of some other type entirely`, () =>
+      {
+        // Arrange
+        const quest = questWithObjective(OmniQuest.States.Active, OmniObjective.Types.Indiscriminate);
+        globalThis.$gameParty = { getQuestopediaEntriesCache: () => new Map([ [ 'a', quest ] ]) };
+        globalThis.$gameMap = { mapId: () => 1 };
+
+        // Act
+        const found = QuestManager[helper]();
+
+        // Assert
+        expect(found).toEqual([]);
+      });
+
+      it(`${helper} ignores a quest that is already finished`, () =>
+      {
+        // Arrange- a completed quest keeps its objectives forever, and re-evaluating them would
+        // re-fire completion side effects every time the player picked up the same item.
+        const quest = questWithObjective(OmniQuest.States.Completed, matchingType);
+        globalThis.$gameParty = { getQuestopediaEntriesCache: () => new Map([ [ 'a', quest ] ]) };
+        globalThis.$gameMap = { mapId: () => 1 };
+
+        // Act
+        const found = QuestManager[helper]();
+
+        // Assert
+        expect(found).toEqual([]);
+      });
     });
   });
 });

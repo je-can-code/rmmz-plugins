@@ -354,5 +354,26 @@ describe('TextManager (direct src import)', () =>
       warnSpy.mockRestore();
     });
   });
+
+  describe('hasParameter', () =>
+  {
+    it('confirms a key the catalog actually knows', () =>
+    {
+      // Arrange- this exists so a caller can tell "the registry has no such key" apart from a
+      // legitimately falsy result: `parameterLabel`, `parameterIcon` and `parameterColor` each fall
+      // back to a plausible-looking default rather than surfacing the miss.
+      const known = ParameterRegistry.all()
+        .at(0);
+
+      // Act & Assert
+      expect(globalThis.TextManager.hasParameter(known.key)).toBe(true);
+    });
+
+    it('denies a key nothing ever registered', () =>
+    {
+      // Arrange & Act & Assert
+      expect(globalThis.TextManager.hasParameter('not-a-real-parameter')).toBe(false);
+    });
+  });
 });
 //endregion plugins/_base/managers/text-manager.test.js
