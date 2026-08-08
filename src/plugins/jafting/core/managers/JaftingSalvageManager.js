@@ -258,11 +258,8 @@ class JaftingSalvageManager
       $gameParty._j._jafting._salvageLedgers[key] = working;
     }
 
-    if (!Array.isArray(working.unitLedgers))
-    {
-      working.unitLedgers = [];
-    }
-
+    // shape-fixing the unit array belongs to the sync alone - it normalizes before it reads, so a bag
+    // arriving without one is already handled by the time anything here could care.
     JaftingSalvageManager.syncPartyLedgerUnitCountToStack(working, datum);
   }
 

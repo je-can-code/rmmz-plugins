@@ -231,6 +231,23 @@ describe('CraftingComponent categories (direct src import)', () =>
       expect(result).toBe(flank);
     });
 
+    it('picks the largest stack even when it is not the last one held', () =>
+    {
+      // Arrange- inventory order must not decide this. With the biggest stack listed last, "keep the
+      // largest" and "keep whichever came last" agree, and the comparison could be doing nothing at
+      // all without any test noticing. Listing it first is what separates the two.
+      const flank = entry(1, 'Grim Flank', [ 'meat' ], 6);
+      const ribs = entry(2, 'Boney Ribs', [ 'meat' ], 1);
+      inventory = [ flank, ribs ];
+      const component = categorical([ 'meat' ]);
+
+      // Act
+      const result = component.getItem();
+
+      // Assert
+      expect(result).toBe(flank);
+    });
+
     it('returns null when nothing eligible is held', () =>
     {
       // Arrange - this is the one accessor on the class that can answer null, and an empty slot is an

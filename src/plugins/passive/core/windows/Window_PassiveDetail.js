@@ -552,7 +552,7 @@ class Window_PassiveDetail
     const rows = [];
 
     // crit reduction — protects the bearer from incoming critical hits; more is better.
-    const critReduce = RPGManager.getNumberFromNoteByRegex(state, J.CRIT.RegExp.CritDamageReduction);
+    const critReduce = RPGManager.getSumFromNoteByRegex(state, J.CRIT.RegExp.CritDamageReduction);
     if (critReduce)
     {
       rows.push({
@@ -563,7 +563,7 @@ class Window_PassiveDetail
     }
 
     // crit multiplier — amplifies the bearer's outgoing critical damage.
-    const critMult = RPGManager.getNumberFromNoteByRegex(state, J.CRIT.RegExp.CritDamageMultiplier);
+    const critMult = RPGManager.getSumFromNoteByRegex(state, J.CRIT.RegExp.CritDamageMultiplier);
     if (critMult)
     {
       rows.push({
@@ -995,13 +995,13 @@ class Window_PassiveDetail
 
     if (J.DROPS)
     {
-      const dropMult = RPGManager.getNumberFromNoteByRegex(state, J.DROPS.RegExp.DropMultiplier);
+      const dropMult = RPGManager.getSumFromNoteByRegex(state, J.DROPS.RegExp.DropMultiplier);
       if (dropMult)
       {
         rows.push({ icon: IconManager.parameterIcon('dor'), label: 'Drop Rate', value: `${dropMult > 0 ? '+' : ''}${dropMult}%` });
       }
 
-      const goldMult = RPGManager.getNumberFromNoteByRegex(state, J.DROPS.RegExp.GoldMultiplier);
+      const goldMult = RPGManager.getSumFromNoteByRegex(state, J.DROPS.RegExp.GoldMultiplier);
       if (goldMult)
       {
         rows.push({ icon: IconManager.parameterIcon('gdr'), label: 'Gold', value: `${goldMult > 0 ? '+' : ''}${goldMult}%` });
@@ -1010,7 +1010,7 @@ class Window_PassiveDetail
 
     if (J.SDP)
     {
-      const sdpMult = RPGManager.getNumberFromNoteByRegex(state, J.SDP.RegExp.SdpMultiplier);
+      const sdpMult = RPGManager.getSumFromNoteByRegex(state, J.SDP.RegExp.SdpMultiplier);
       if (sdpMult)
       {
         rows.push({ icon: IconManager.parameterIcon('sdr'), label: 'SDP Points', value: `${sdpMult > 0 ? '+' : ''}${sdpMult}%` });
@@ -1019,7 +1019,7 @@ class Window_PassiveDetail
 
     if (J.APT)
     {
-      const aptMult = RPGManager.getNumberFromNoteByRegex(state, J.APT.RegExp.AptMultiplier);
+      const aptMult = RPGManager.getSumFromNoteByRegex(state, J.APT.RegExp.AptMultiplier);
       if (aptMult)
       {
         rows.push({ icon: IconManager.parameterIcon('apr'), label: 'APT Rate', value: `${aptMult > 0 ? '+' : ''}${aptMult}%` });
@@ -1028,7 +1028,7 @@ class Window_PassiveDetail
 
     if (J.PROF)
     {
-      const profBonus = RPGManager.getNumberFromNoteByRegex(state, J.PROF.RegExp.ProficiencyBonus);
+      const profBonus = RPGManager.getSumFromNoteByRegex(state, J.PROF.RegExp.ProficiencyBonus);
       if (profBonus) rows.push({ icon: IconManager.parameterIcon('prof'), label: 'Proficiency Bonus', value: `+${profBonus}` });
     }
 

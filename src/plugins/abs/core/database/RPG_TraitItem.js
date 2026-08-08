@@ -7,7 +7,7 @@
 Object.defineProperty(RPG_Traited.prototype, 'jabsBonusHitsScopeGlobal', {
   get: function()
   {
-    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.BonusHitsScopeGlobal);
+    return RPGManager.getSumFromNoteByRegex(this, J.ABS.RegExp.BonusHitsScopeGlobal);
   },
 });
 
@@ -18,7 +18,7 @@ Object.defineProperty(RPG_Traited.prototype, 'jabsBonusHitsScopeGlobal', {
 Object.defineProperty(RPG_Traited.prototype, 'jabsBonusHitsScopeBasic', {
   get: function()
   {
-    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.BonusHitsScopeBasic);
+    return RPGManager.getSumFromNoteByRegex(this, J.ABS.RegExp.BonusHitsScopeBasic);
   },
 });
 
@@ -29,7 +29,7 @@ Object.defineProperty(RPG_Traited.prototype, 'jabsBonusHitsScopeBasic', {
 Object.defineProperty(RPG_Traited.prototype, 'jabsBonusHitsScopeSkill', {
   get: function()
   {
-    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.BonusHitsScopeSkill);
+    return RPGManager.getSumFromNoteByRegex(this, J.ABS.RegExp.BonusHitsScopeSkill);
   },
 });
 //endregion bonusHitsScopes

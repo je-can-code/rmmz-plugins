@@ -412,6 +412,7 @@
     "MinimapEventType": "writable",
     "MonsterpediaObservations": "writable",
     "MoveStateRemovalManager": "writable",
+    "NoteResolver": "writable",
     "OmniCategory": "writable",
     "OmniConditional": "writable",
     "OmniConfiguration": "writable",

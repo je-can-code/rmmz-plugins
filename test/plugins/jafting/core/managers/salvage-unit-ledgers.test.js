@@ -697,5 +697,43 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
     });
   });
   //endregion non-item refunds
+
+  //region party transaction hooks
+  describe('afterPartyGainedItem', () =>
+  {
+    it('grows the unit array to match a stack that just grew', () =>
+    {
+      // Arrange: the parallel array is the stack's shadow, so a gained copy needs a slot waiting for it. stamping
+      // one copy first is what keeps the bag alive through the prune this hook ends with, which isolates the
+      // sizing behavior from the pruning behavior.
+      const datum = fakeDatum('i', 1);
+      $gameParty.setCount(datum, 1);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, snapshotOf(7), 1);
+      $gameParty.setCount(datum, 3);
+
+      // Act
+      JaftingSalvageManager.afterPartyGainedItem(datum, 2);
+
+      // Assert
+      expect($gameParty._j._jafting._salvageLedgers['i:1'].unitLedgers).toHaveLength(3);
+    });
+
+    it('leaves bookkeeping untouched when nothing was actually gained', () =>
+    {
+      // Arrange: vanilla fires this hook for every transaction, including ones that moved no quantity. an amount
+      // of nothing must resize nothing, or a stack that never changed still gets rewritten.
+      const datum = fakeDatum('i', 1);
+      $gameParty.setCount(datum, 1);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, snapshotOf(7), 1);
+      $gameParty.setCount(datum, 3);
+
+      // Act
+      JaftingSalvageManager.afterPartyGainedItem(datum, 0);
+
+      // Assert
+      expect($gameParty._j._jafting._salvageLedgers['i:1'].unitLedgers).toHaveLength(1);
+    });
+  });
+  //endregion party transaction hooks
 });
 //endregion plugins/jafting/core/managers/salvage-unit-ledgers.test.js

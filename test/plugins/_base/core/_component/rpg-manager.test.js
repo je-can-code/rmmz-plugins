@@ -307,9 +307,120 @@ describe('RPGManager', () =>
     });
   });
 
+  describe('getSumFromNoteByRegex', () =>
+  {
+    it('sums every match on one note rather than keeping the last', () =>
+    {
+      // Arrange- this is the whole distinction from getNumberFromNoteByRegex. A bonus declared twice on
+      // one row means both apply; keeping only the last would discard one silently.
+      const data = { note: '<n:3>\n<n:5>' };
+      const re = /<n:([\d.]+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromNoteByRegex(data, re);
+
+      // Assert
+      expect(result).toBe(8);
+    });
+
+    it('parses decimals while summing', () =>
+    {
+      // Arrange
+      const data = { note: '<n:1.5>\n<n:2.25>' };
+      const re = /<n:([\d.]+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromNoteByRegex(data, re);
+
+      // Assert
+      expect(result).toBe(3.75);
+    });
+
+    it('returns 0 when nothing matched and nullIfEmpty is false', () =>
+    {
+      // Arrange
+      const data = { note: '<other:4>' };
+      const re = /<n:(\d+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromNoteByRegex(data, re, false);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('returns null when nothing matched and nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const data = { note: '<other:4>' };
+      const re = /<n:(\d+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toBe(null);
+    });
+
+    it('returns the zero it actually summed rather than null when tags were present', () =>
+    {
+      // Arrange- "matched tags totalling zero" and "matched no tags at all" are different answers, and a
+      // caller opting into nullIfEmpty is asking to tell them apart. Testing the total alone cannot.
+      const data = { note: '<n:0>\n<n:0>' };
+      const re = /<n:(\d+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('returns 0 for an unparsable database object when nullIfEmpty is false', () =>
+    {
+      // Arrange
+      const re = /<n:(\d+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromNoteByRegex(null, re, false);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('returns null for an unparsable database object when nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const re = /<n:(\d+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromNoteByRegex(null, re, true);
+
+      // Assert
+      expect(result).toBe(null);
+    });
+  });
+
   describe('getSumFromAllNotesByRegex', () =>
   {
-    it('sums the last value from each database object', () =>
+    it('sums within each note as well as across them', () =>
+    {
+      // Arrange- one row carrying two of the same bonus is exactly what a merged note produces, so the
+      // across-objects sum has to see both contributions rather than the last one.
+      const re = /<n:(\d+)>/;
+      const rows = [
+        { note: '<n:1>\n<n:2>' },
+        { note: '<n:4>' },
+      ];
+
+      // Act
+      const result = RPGManager.getSumFromAllNotesByRegex(rows, re);
+
+      // Assert
+      expect(result).toBe(7);
+    });
+
+    it('sums a single value from each database object', () =>
     {
       // Arrange
       const re = /<n:(\d+)>/;
@@ -1448,6 +1559,46 @@ describe('RPGManager', () =>
     {
       // Arrange & Act & Assert
       expect(RPGManager.getArrayFromNotesByRegex(null, /<missingTag:[ ]?(\[.*])>/i)).toEqual([]);
+    });
+
+    it('answers an empty array for a strings tag on an unparseable row', () =>
+    {
+      // Arrange- every note reader is handed rows during boot that have no note yet, so each one
+      // needs its own proof that it turns them away rather than reading through them.
+      // Act & Assert
+      expect(RPGManager.getStringsFromNoteByRegex(null, /<id:(\w+)>/)).toEqual([]);
+    });
+
+    it('answers null rather than an empty array for a strings tag on an unparseable row', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getStringsFromNoteByRegex(null, /<id:(\w+)>/, true)).toBeNull();
+    });
+
+    it('answers an empty array for a numbers tag on an unparseable row', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getNumbersFromNoteByRegex(null, /<n:(\d+)>/)).toEqual([]);
+    });
+
+    it('answers null rather than an empty array for a numbers tag on an unparseable row', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getNumbersFromNoteByRegex(null, /<n:(\d+)>/, true)).toBeNull();
+    });
+
+    it('answers null rather than zero when summing across an empty collection', () =>
+    {
+      // Arrange- the collection readers short-circuit on an empty list before they ever look at a
+      // note, and that is a separate decision from the per-row emptiness the tests above cover.
+      // Act & Assert
+      expect(RPGManager.getSumFromAllNotesByRegex([], /<n:(\d+)>/, true)).toBeNull();
+    });
+
+    it('answers null rather than zero when resolving results across an empty collection', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getResultsFromAllNotesByRegex([], /<f:\[(.*)]>/, 0, null, true)).toBeNull();
     });
 
     it('answers null rather than zero for a formula tag on an unparseable row', () =>

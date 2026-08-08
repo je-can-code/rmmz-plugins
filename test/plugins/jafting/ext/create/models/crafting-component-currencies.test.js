@@ -99,6 +99,35 @@ describe('CraftingComponent currencies (direct src import)', () =>
       expect(item.name).toBe(expectedName);
     });
 
+    it('resolves a gold component to a gold component carrying its count', () =>
+    {
+      // Arrange- gold has no database row, so it answers with a synthesized component instead. Pinning
+      // this is what stops the gold branch from being satisfied by the SDP one below it.
+      // Act
+      const item = makeComponent(CraftingComponent.Types.Gold, 250)
+        .getItem();
+
+      // Assert
+      expect(item.isGold())
+        .toBe(true);
+      expect(item.quantity())
+        .toBe(250);
+    });
+
+    it('resolves an SDP component to an SDP component carrying its count', () =>
+    {
+      // Arrange- SDP is the fall-through, so nothing above it may claim it.
+      // Act
+      const item = makeComponent(CraftingComponent.Types.SDP, 40)
+        .getItem();
+
+      // Assert
+      expect(item.isSdp())
+        .toBe(true);
+      expect(item.quantity())
+        .toBe(40);
+    });
+
     it('refuses outright to classify a type it does not understand', () =>
     {
       // Arrange: an unrecognized type letter means the recipe config and this model disagree,
@@ -161,6 +190,30 @@ describe('CraftingComponent currencies (direct src import)', () =>
     {
       // Arrange, Act, Assert
       expect(makeComponent(CraftingComponent.Types.SDP).isGold()).toBe(false);
+    });
+
+    it('isItem is true for an item component', () =>
+    {
+      // Arrange, Act, Assert
+      expect(makeComponent(CraftingComponent.Types.Item).isItem()).toBe(true);
+    });
+
+    it('isItem is false for a weapon component', () =>
+    {
+      // Arrange, Act, Assert- without this the predicate could answer true for everything unnoticed.
+      expect(makeComponent(CraftingComponent.Types.Weapon).isItem()).toBe(false);
+    });
+
+    it('isArmor is true for an armor component', () =>
+    {
+      // Arrange, Act, Assert
+      expect(makeComponent(CraftingComponent.Types.Armor).isArmor()).toBe(true);
+    });
+
+    it('isArmor is false for an item component', () =>
+    {
+      // Arrange, Act, Assert
+      expect(makeComponent(CraftingComponent.Types.Item).isArmor()).toBe(false);
     });
   });
 

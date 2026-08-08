@@ -287,6 +287,19 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
       expect(out).toEqual({ crafted: false, playedSuccessSound: false, reason: 'no_recipe' });
     });
 
+    it('tryCraftRecipe records no_recipe when recipe is undefined', () =>
+    {
+      // Arrange- the signature documents undefined as a real input, and it is what an empty recipe list
+      // hands back. Only testing null leaves that half of the guard doing nothing detectable.
+      const session = new CraftingCreationSession();
+
+      // Act
+      const out = session.tryCraftRecipe(undefined);
+
+      // Assert
+      expect(out).toEqual({ crafted: false, playedSuccessSound: false, reason: 'no_recipe' });
+    });
+
     it('tryCraftRecipe stores the no_recipe outcome as the last craft outcome', () =>
     {
       // Arrange

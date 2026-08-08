@@ -90,6 +90,7 @@ describe('OverlayManager extension resolution (direct src import)', () =>
     ({ default: globalThis.ArrayHelper } = await import('../../../../../src/plugins/_base/core/_utilities/ArrayHelper.js'));
     ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/core/managers/RPGManager.js'));
     ({ default: globalThis.TraitResolver } = await import('../../../../../src/plugins/_base/core/managers/TraitResolver.js'));
+    ({ default: globalThis.NoteResolver } = await import('../../../../../src/plugins/_base/core/managers/NoteResolver.js'));
 
     setPluginContextToJBase();
     await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');

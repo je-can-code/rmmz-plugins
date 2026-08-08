@@ -140,6 +140,23 @@ describe('J-JAFTING-Creation Game_Party (direct src import)', () =>
         .isUnlocked()).toBe(true);
     });
 
+    it('does not add a second tracking for a recipe it already has', () =>
+    {
+      // Arrange- reconciling runs on every load, so a find-or-create that always created would grow the
+      // list without bound. Asserting the unlock state survives is not enough to catch that: lookups go
+      // through `find`, which happily returns the first of two and reads as correct.
+      useRecipes([ { key: 'known', unlockedByDefault: false } ]);
+      party.updateRecipesFromConfig();
+
+      // Act
+      party.updateRecipesFromConfig();
+      party.updateRecipesFromConfig();
+
+      // Assert
+      expect(party.getAllRecipeTrackings().length)
+        .toBe(1);
+    });
+
     it('skips divider entries when reconciling', () =>
     {
       // Arrange
@@ -180,6 +197,22 @@ describe('J-JAFTING-Creation Game_Party (direct src import)', () =>
       // Assert
       expect(party.getCategoryTrackingByKey('blades')
         .isUnlocked()).toBe(true);
+    });
+
+    it('does not add a second tracking for a category it already has', () =>
+    {
+      // Arrange- same find-or-create shape as the recipe side, and the same reason the unlock-state
+      // assertion above cannot catch a duplicate.
+      useCategories([ { key: 'blades', name: 'Blades', unlockedByDefault: false } ]);
+      party.updateCategoriesFromConfig();
+
+      // Act
+      party.updateCategoriesFromConfig();
+      party.updateCategoriesFromConfig();
+
+      // Assert
+      expect(party.getAllCategoryTrackings().length)
+        .toBe(1);
     });
 
     it('skips a category whose name is a divider even when its key is not', () =>

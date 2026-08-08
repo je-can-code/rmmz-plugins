@@ -110,6 +110,42 @@ describe('TraitResolver (direct src import)', () =>
       ]);
     });
 
+    it('strips only the base entry matching the overlay on both code and dataId', () =>
+    {
+      // Arrange- three base entries share pieces of the overlay's identity: one matches it exactly,
+      // one shares only its dataId, and one carries the opposing code at a different dataId. Only
+      // the exact match and a same-dataId opposing entry may go, so both survivors are load-bearing.
+      const base = [ trait(41, 3, 1), trait(31, 3, 1), trait(42, 9, 1) ];
+      const overlay = [ trait(41, 3, 2) ];
+
+      // Act
+      const result = shapes(TraitResolver.overlayTraits(base, overlay));
+
+      // Assert
+      expect(result).toEqual([
+        { code: 31, dataId: 3, value: 1 },
+        { code: 41, dataId: 3, value: 2 },
+        { code: 42, dataId: 9, value: 1 },
+      ]);
+    });
+
+    it('strips no opposing code for an overlay code that belongs to no pair', () =>
+    {
+      // Arrange- attack-element has no opposite, so the base's unlock entry at the same dataId is
+      // not its business. A lookup that returned a pair member for an unpaired code would take it.
+      const base = [ trait(41, 5, 1) ];
+      const overlay = [ trait(31, 5, 1) ];
+
+      // Act
+      const result = shapes(TraitResolver.overlayTraits(base, overlay));
+
+      // Assert
+      expect(result).toEqual([
+        { code: 31, dataId: 5, value: 1 },
+        { code: 41, dataId: 5, value: 1 },
+      ]);
+    });
+
     it('returns a clone of base (not the same array or trait instances) when overlay is empty', () =>
     {
       // Arrange
@@ -254,6 +290,184 @@ describe('TraitResolver (direct src import)', () =>
 
       // Assert
       expect(result).toEqual([ { code: 21, dataId: 9, value: 1.1 } ]);
+    });
+
+    it('cancels only the opposed dataId, leaving a same-code sibling in the base', () =>
+    {
+      // Arrange- cancellation is keyed on code AND dataId together. a base carrying two unlock
+      // entries where only one is opposed is what tells those two keys apart: a cancellation keyed
+      // on code alone takes the sibling with it.
+      const base = [ trait(41, 3, 1), trait(41, 7, 1) ];
+      const material = [ trait(42, 3, 1) ];
+
+      // Act
+      const result = shapes(TraitResolver.refineTraits(base, material));
+
+      // Assert
+      expect(result).toEqual([ { code: 41, dataId: 7, value: 1 } ]);
+    });
+
+    it('cancels only the opposed dataId when the base carries the "b" side', () =>
+    {
+      // Arrange- the same distinction from the other direction, so the reverse cross-list scan is
+      // held to it too rather than inheriting the first one's evidence.
+      const base = [ trait(42, 3, 1), trait(42, 8, 1) ];
+      const material = [ trait(41, 3, 1) ];
+
+      // Act
+      const result = shapes(TraitResolver.refineTraits(base, material));
+
+      // Assert
+      expect(result).toEqual([ { code: 42, dataId: 8, value: 1 } ]);
+    });
+
+    it('cancels only the opposed dataId within the base list', () =>
+    {
+      // Arrange- a within-list opposition on dataId 2, plus an unopposed sibling on dataId 9 that
+      // shares the learn-skill code and must outlive the cancellation.
+      const base = [ trait(43, 2, 1), trait(44, 2, 1), trait(43, 9, 1) ];
+      const material = [];
+
+      // Act
+      const result = shapes(TraitResolver.refineTraits(base, material));
+
+      // Assert
+      expect(result).toEqual([ { code: 43, dataId: 9, value: 1 } ]);
+    });
+
+    it('cancels only the opposed dataId within the material list', () =>
+    {
+      // Arrange- the within-list twin on the material side, which is scanned separately.
+      const base = [];
+      const material = [ trait(43, 2, 1), trait(44, 2, 1), trait(43, 9, 1) ];
+
+      // Act
+      const result = shapes(TraitResolver.refineTraits(base, material));
+
+      // Assert
+      expect(result).toEqual([ { code: 43, dataId: 9, value: 1 } ]);
+    });
+
+    it('does not let an unrelated code drag its dataId into the cancellation', () =>
+    {
+      // Arrange- only entries belonging to the opposing pair may contribute a conflicting dataId.
+      // the base attack-element entry shares dataId 7 with a material lock entry, so a scan that
+      // ignored codes would cancel that lock entry for a collision that means nothing.
+      const base = [ trait(41, 3, 1), trait(31, 7, 1) ];
+      const material = [ trait(42, 3, 1), trait(42, 7, 1) ];
+
+      // Act
+      const result = shapes(TraitResolver.refineTraits(base, material));
+
+      // Assert
+      expect(result).toEqual([
+        { code: 31, dataId: 7, value: 1 },
+        { code: 42, dataId: 7, value: 1 },
+      ]);
+    });
+
+    it('spares an unrelated code that happens to share a cancelled dataId', () =>
+    {
+      // Arrange- dataId 3 is cancelled for the opposing pair, and the attack-element entry happens
+      // to carry that same dataId. only entries belonging to the pair may be stripped for it.
+      const base = [ trait(41, 3, 1), trait(31, 3, 1) ];
+      const material = [ trait(42, 3, 1) ];
+
+      // Act
+      const result = shapes(TraitResolver.refineTraits(base, material));
+
+      // Assert
+      expect(result).toEqual([ { code: 31, dataId: 3, value: 1 } ]);
+    });
+
+    it('drops only the no-duplicate entry the base owns, keeping its unowned sibling', () =>
+    {
+      // Arrange- the base owns attack-element 5 but not 9, and separately carries an action-plus
+      // entry at dataId 9. a dedupe keyed on either half of code+dataId alone takes the 9 entry.
+      const base = [ trait(31, 5, 1), trait(34, 9, 1) ];
+      const material = [ trait(31, 5, 1), trait(31, 9, 1) ];
+
+      // Act
+      const result = shapes(TraitResolver.refineTraits(base, material));
+
+      // Assert
+      expect(result).toEqual([
+        { code: 31, dataId: 5, value: 1 },
+        { code: 31, dataId: 9, value: 1 },
+        { code: 34, dataId: 9, value: 1 },
+      ]);
+    });
+
+    it('leaves the base alone for an always-replace code the material does not carry', () =>
+    {
+      // Arrange- the material is non-empty but carries no basic-attack-skill entry, so there is
+      // nothing to replace and the base entry must survive intact.
+      const base = [ trait(35, 1, 1) ];
+      const material = [ trait(31, 2, 1) ];
+
+      // Act
+      const result = shapes(TraitResolver.refineTraits(base, material));
+
+      // Assert
+      expect(result).toEqual([
+        { code: 31, dataId: 2, value: 1 },
+        { code: 35, dataId: 1, value: 1 },
+      ]);
+    });
+
+    it('strips only the replaced code from the base, not its unrelated neighbours', () =>
+    {
+      // Arrange- the material's basic-attack-skill entry replaces the base's, and the base's
+      // attack-element entry has nothing to do with that and must be left where it is.
+      const base = [ trait(35, 1, 1), trait(31, 4, 1) ];
+      const material = [ trait(35, 2, 1) ];
+
+      // Act
+      const result = shapes(TraitResolver.refineTraits(base, material));
+
+      // Assert
+      expect(result).toEqual([
+        { code: 31, dataId: 4, value: 1 },
+        { code: 35, dataId: 2, value: 1 },
+      ]);
+    });
+
+    it('pairs keep-better entries by dataId, not merely by code', () =>
+    {
+      // Arrange- action-plus at dataId 1 has no material counterpart and must survive untouched,
+      // while dataId 2 loses to the material's higher value. a pairing that matched on code alone
+      // would judge dataId 1 against the wrong entry and drop it.
+      const base = [ trait(61, 1, 3), trait(61, 2, 1) ];
+      const material = [ trait(61, 2, 5), trait(22, 1, 0.5) ];
+
+      // Act
+      const result = shapes(TraitResolver.refineTraits(base, material));
+
+      // Assert
+      expect(result).toEqual([
+        { code: 22, dataId: 1, value: 0.5 },
+        { code: 61, dataId: 1, value: 3 },
+        { code: 61, dataId: 2, value: 5 },
+      ]);
+    });
+
+    it('keeps a non-keep-better base code out of the comparison entirely', () =>
+    {
+      // Arrange- the ex-param entry sits at dataId 2, which is also where the material's action-plus
+      // entry sits. Keep-better must reject it on its code before dataId is ever consulted, or it
+      // gets judged against a value from a code it shares nothing with and loses.
+      const base = [ trait(61, 1, 3), trait(22, 2, 0.5) ];
+      const material = [ trait(61, 2, 5) ];
+
+      // Act
+      const result = shapes(TraitResolver.refineTraits(base, material));
+
+      // Assert
+      expect(result).toEqual([
+        { code: 22, dataId: 2, value: 0.5 },
+        { code: 61, dataId: 1, value: 3 },
+        { code: 61, dataId: 2, value: 5 },
+      ]);
     });
 
     it('drops a no-duplicate-code material entry the base already owns', () =>

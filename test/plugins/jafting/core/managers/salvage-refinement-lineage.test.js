@@ -525,6 +525,23 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
       expect(JaftingSalvageManager.getLedgerForDatum(datum)).toBeTruthy();
     });
 
+    it('sizes a short unit array back to the stack while copies remain', () =>
+    {
+      // Arrange: this hook's whole job on a surviving stack is keeping the bag sized to what it describes, and a
+      // bag can arrive lagging behind - a copy coming back from an equip slot is held again without the array
+      // having grown for it. one stamped copy keeps the bag alive so the sizing is what is being observed.
+      const datum = fakeDatum('i', 1);
+      $gameParty.setCount(datum, 1);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, snapshotOf(7), 1);
+      $gameParty.setCount(datum, 2);
+
+      // Act
+      JaftingSalvageManager.afterPartyLostItem(datum, 1);
+
+      // Assert
+      expect($gameParty._j._jafting._salvageLedgers['i:1'].unitLedgers).toHaveLength(2);
+    });
+
     it('scrubs the ledger once the final copy leaves', () =>
     {
       // Arrange

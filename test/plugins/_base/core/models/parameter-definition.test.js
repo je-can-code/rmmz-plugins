@@ -116,6 +116,17 @@ describe('ParameterDefinition (direct src import)', () =>
       expect(result).toBe(' 000');
     });
 
+    it('reserves no leading space for a positive magnitude even when reserveSignColumn is true', () =>
+    {
+      // Arrange & Act- the reserved column exists so a zero lines up under a signed neighbour; a
+      // positive value that prints no sign still occupies its own column and must not be indented
+      // on top of it.
+      const result = ParameterDefinition.padSignedMagnitude(5, 3, true, false);
+
+      // Assert
+      expect(result).toBe('005');
+    });
+
     it('does not reserve a leading space for zero when reserveSignColumn is false', () =>
     {
       // Arrange & Act
@@ -632,6 +643,43 @@ describe('ParameterDefinition (direct src import)', () =>
       expect(result).toBe('50%');
     });
 
+    it('appends a percent sign for a PERCENT_SUFFIX value', () =>
+    {
+      // Arrange- each member of the percent family reaches the suffix through its own clause of the
+      // same condition, so one member passing says nothing about its siblings.
+      const definition = buildDefinition(ParameterFormat.PERCENT_SUFFIX, ParameterDisplayPolicy.NONE);
+
+      // Act
+      const result = definition.prettyValue(0.5);
+
+      // Assert
+      expect(result).toBe('50%');
+    });
+
+    it('appends a percent sign for a PERCENT_CENTERED value', () =>
+    {
+      // Arrange- centered formats also subtract their baseline, so the magnitude reads negative here.
+      const definition = buildDefinition(ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.NONE);
+
+      // Act
+      const result = definition.prettyValue(0.5);
+
+      // Assert
+      expect(result).toBe('-50%');
+    });
+
+    it('appends a percent sign for a MULTIPLIER_PERCENT value', () =>
+    {
+      // Arrange
+      const definition = buildDefinition(ParameterFormat.MULTIPLIER_PERCENT, ParameterDisplayPolicy.NONE);
+
+      // Act
+      const result = definition.prettyValue(0.5);
+
+      // Assert
+      expect(result).toBe('50%');
+    });
+
     it('omits the padding step when withPadding is false', () =>
     {
       // Arrange
@@ -743,6 +791,31 @@ describe('ParameterDefinition (direct src import)', () =>
       expect(result).toBe('042');
     });
 
+    it('pads a PERCENT_SUFFIX base to 3 digits', () =>
+    {
+      // Arrange- the three-digit percent rule is written as one condition per format, so each needs
+      // its own case or the others coast on whichever sibling the suite happens to exercise.
+      const definition = buildDefinition(ParameterFormat.PERCENT_SUFFIX, ParameterDisplayPolicy.NONE);
+
+      // Act
+      const result = definition.applyPaddedDisplay('7', 7);
+
+      // Assert
+      expect(result).toBe('007');
+    });
+
+    it('pads a MULTIPLIER_PERCENT base to 3 digits', () =>
+    {
+      // Arrange
+      const definition = buildDefinition(ParameterFormat.MULTIPLIER_PERCENT, ParameterDisplayPolicy.NONE);
+
+      // Act
+      const result = definition.applyPaddedDisplay('7', 7);
+
+      // Assert
+      expect(result).toBe('007');
+    });
+
     it('returns the base string unchanged for a format with no padding rule', () =>
     {
       // Arrange
@@ -818,6 +891,54 @@ describe('ParameterDefinition (direct src import)', () =>
 
       // Act & Assert
       expect(definition.prettyDelta(0.15)).toBe('+15%');
+    });
+
+    it('scales and suffixes a PERCENT_SUFFIX change', () =>
+    {
+      // Arrange- the delta path re-derives the percent family in two separate conditions, one
+      // deciding the x100 scale and one deciding the suffix; a format has to be named in both.
+      const definition = buildDefinition(ParameterFormat.PERCENT_SUFFIX, ParameterDisplayPolicy.NONE);
+
+      // Act & Assert
+      expect(definition.prettyDelta(0.15)).toBe('+15%');
+    });
+
+    it('scales and suffixes a PERCENT_CENTERED change without re-centering it', () =>
+    {
+      // Arrange- the centering baseline cancels out of a difference of two values, so unlike
+      // prettyValue this reads as a plain positive change rather than a negative magnitude.
+      const definition = buildDefinition(ParameterFormat.PERCENT_CENTERED, ParameterDisplayPolicy.NONE);
+
+      // Act & Assert
+      expect(definition.prettyDelta(0.15)).toBe('+15%');
+    });
+
+    it('scales and suffixes a MULTIPLIER_PERCENT change', () =>
+    {
+      // Arrange
+      const definition = buildDefinition(ParameterFormat.MULTIPLIER_PERCENT, ParameterDisplayPolicy.NONE);
+
+      // Act & Assert
+      expect(definition.prettyDelta(0.15)).toBe('+15%');
+    });
+
+    it('scales a SCALED_POINTS change without suffixing it', () =>
+    {
+      // Arrange- scaled point formats are stored as rates and so take the x100, but they are not
+      // percentages on screen and must not gain a percent sign from it.
+      const definition = buildDefinition(ParameterFormat.SCALED_POINTS, ParameterDisplayPolicy.NONE);
+
+      // Act & Assert
+      expect(definition.prettyDelta(0.15)).toBe('+15');
+    });
+
+    it('scales a SCALED_OFFSET change without suffixing it', () =>
+    {
+      // Arrange
+      const definition = buildDefinition(ParameterFormat.SCALED_OFFSET, ParameterDisplayPolicy.NONE);
+
+      // Act & Assert
+      expect(definition.prettyDelta(0.15)).toBe('+15');
     });
 
     it('drops a trailing .0 rather than showing a decimal that means nothing', () =>

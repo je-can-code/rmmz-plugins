@@ -633,6 +633,96 @@ class RPGManager
   }
 
   /**
+   * Gets the sum of every numeric value matching the regex on a single object's note.
+   *
+   * The counterpart to {@link getNumberFromNoteByRegex}, and the distinction is the whole point: that
+   * one keeps the *last* match and discards the rest, which is correct for a setting - an id, a cap, a
+   * hitbox dimension - where two declarations mean the later one wins. This one is for a *bonus*, where
+   * two declarations mean both apply.
+   *
+   * Reading a bonus with the last-wins variant loses values silently, and it is the shape any merged
+   * note produces: two contributions landing on one row rather than on two.
+   * @param {RPG_Base} databaseData The database object to inspect.
+   * @param {RegExp} structure The regular expression to filter notes by.
+   * @param {boolean=} nullIfEmpty Whether or not to return 0 if nothing matched, or null.
+   * @returns {number|null} The sum across every matching line, or zero/null.
+   */
+  static getSumFromNoteByRegex(databaseData, structure, nullIfEmpty = false)
+  {
+    // validate the incoming data object.
+    if (this.#canParsedatabaseData(databaseData) === false)
+    {
+      // handle the return.
+      return nullIfEmpty
+        ? null
+        : 0;
+    }
+
+    // define the unique key for this regex and option set.
+    const key = `numsum:${structure.source}::${structure.flags}::nullIfEmpty=${nullIfEmpty}`;
+
+    // grab the result (potentially cached).
+    return this.cached(
+      databaseData,
+      key,
+      () => this.#getSumFromNoteByRegex(databaseData, structure, nullIfEmpty)
+    );
+  }
+
+  /**
+   * Sums every numeric value matching the regex across one object's note lines.
+   * @param {RPG_Base} databaseData The database object to inspect.
+   * @param {RegExp} structure The regular expression to filter notes by.
+   * @param {boolean=} nullIfEmpty Whether or not to return 0 if nothing matched, or null.
+   * @returns {number|null} The sum across every matching line, or zero/null.
+   */
+  static #getSumFromNoteByRegex(databaseData, structure, nullIfEmpty = false)
+  {
+    // build a non-global, non-sticky scanner to avoid lastIndex side effects across lines.
+    const safeFlags = structure.flags
+      .replace('g', '')
+      .replace('y', '');
+    const scan = new RegExp(structure.source, safeFlags);
+
+    // get the note data from this object.
+    const lines = databaseData.note.split(/[\r\n]+/);
+
+    // tracked separately from the total, so "matched nothing" stays distinguishable from "summed to 0".
+    let found = false;
+    let val = 0;
+
+    // iterate over each valid line of the note.
+    lines.forEach(line =>
+    {
+      // grab the regex execution result for this note line.
+      const result = scan.exec(line);
+
+      // skip if this line has nothing to contribute.
+      if (result === null) return;
+
+      // extract the captured value.
+      const [ /* skip first index */, numericResult ] = result;
+
+      found = true;
+
+      // every match contributes rather than replacing what came before.
+      val += parseFloat(numericResult);
+    });
+
+    // check if we found anything.
+    if (found === false)
+    {
+      // return null or 0 depending on provided options.
+      return nullIfEmpty
+        ? null
+        : 0;
+    }
+
+    // return the accumulated total.
+    return val;
+  }
+
+  /**
    * Gathers all numbers found in arrays on the database object provided.
    *
    * This accepts a regex structure, assuming the capture group is an numeric value,
@@ -733,8 +823,10 @@ class RPGManager
     // iterate over each database object to get the values.
     databaseDatas.forEach(databaseData =>
     {
-      // add the value from all the notes of each database object.
-      val += this.getNumberFromNoteByRegex(databaseData, structure);
+      // sum within each note as well as across them. a caller reaching for this function has already
+      // declared the tag additive, so a note carrying two of them means both apply - the last-wins
+      // reader would have kept one and dropped the other without saying so.
+      val += this.getSumFromNoteByRegex(databaseData, structure);
     });
 
     // check if we turned up empty and are using the nullIfEmpty flag.

@@ -34,6 +34,7 @@ import './managers/InputDeviceTracker.js';
 import './managers/Input.js';
 import './managers/InputLegendResolver.js';
 import './managers/ImageManager.js';
+import './managers/NoteResolver.js';
 import './managers/RPGManager.js';
 import './managers/SoundManager.js';
 import './managers/TextManager.js';
