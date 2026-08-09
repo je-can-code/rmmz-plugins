@@ -1565,6 +1565,7 @@ var Window_RefinableList = class extends Window_Command {
 	*/
 	constructor(rect) {
 		super(rect);
+		this.opacity = 0;
 	}
 	/**
 	* Initializes the properties of this class.
@@ -1718,8 +1719,21 @@ var Window_RefinableList = class extends Window_Command {
 			extData.unitOrdinal = unitSlot.unitOrdinal;
 			extData.unitsTotal = unitSlot.unitsTotal;
 		}
-		const command = new WindowCommandBuilder(label.name).setSymbol("refine-object").setEnabled(enabled).setExtensionData(extData).setIconIndex(iconIndex).setColorIndex(label.colorIndex).setRightText(rightText).setHelpText(equip.description).build();
+		const helpText = enabled ? equip.description : this.blockedReasonText(verdict);
+		const command = new WindowCommandBuilder(label.name).setSymbol("refine-object").setEnabled(enabled).setExtensionData(extData).setIconIndex(iconIndex).setColorIndex(label.colorIndex).setRightText(rightText).setHelpText(helpText).build();
 		this.addBuiltCommand(command);
+	}
+	/**
+	* The verdict's reasons, tidied into something a two-line help window can show.
+	*
+	* The reasons accumulate as a run-on string because more than one can apply at once, and they are not
+	* consistent about how they end - some close with a newline, some with `<br>`. Normalizing here rather
+	* than at each message keeps the messages readable as sentences.
+	* @param {{ enabled: boolean, iconIndex: number, errorText: string }} verdict This row's eligibility.
+	* @returns {string}
+	*/
+	blockedReasonText(verdict) {
+		return verdict.errorText.replaceAll("<br>", String.empty).split("\n").map((line) => line.trim()).filter((line) => line.length > 0).join("\n");
 	}
 	/**
 	* Whether this row is the exact physical copy the player already committed as the base.
@@ -1797,7 +1811,7 @@ var Window_RefinableList = class extends Window_Command {
 /**
 * The window containing the chosen equips for refinement and also the projected results.
 */
-var Window_RefinementDetails = class extends Window_Base {
+var Window_RefinementDetails = class Window_RefinementDetails extends Window_Base {
 	/**
 	* @constructor
 	* @param {Rectangle} rect The rectangle that represents this window.
@@ -1874,129 +1888,402 @@ var Window_RefinementDetails = class extends Window_Base {
 		this._resultingEquip = equip;
 	}
 	/**
-	* Width of each preview column (base / material / output) from {@link #innerWidth}.
+	* The width each of the two list columns occupies.
+	*
+	* Fixed rather than a share of the panel, so an equip name has a predictable amount of room no matter
+	* how wide the screen is. The result column takes whatever remains, which is deliberate - the result
+	* is the answer the scene exists to give, so it should be the widest thing on it.
 	* @returns {number}
 	*/
-	refinementColumnWidth() {
-		return Math.max(96, Math.floor(this.innerWidth / 3));
+	static ListColumnWidthCap = 470;
+	/**
+	* The width one list column takes out of a given inner width.
+	*
+	* A share rather than a constant, capped so it stops growing once a name has all the room it could
+	* want. A fixed width starved the result column at lower resolutions; an uncapped share made the lists
+	* absurdly wide at higher ones.
+	*
+	* **This is the single source for the split** - the scene positions its two list windows against this
+	* same function, so the columns and the headings above them cannot disagree.
+	* @param {number} innerWidth The drawable width of the panel.
+	* @returns {number}
+	*/
+	static listColumnWidthFromInner(innerWidth) {
+		return Math.min(Window_RefinementDetails.ListColumnWidthCap, Math.floor(innerWidth * .3));
 	}
 	/**
-	* Max draw width for names and traits inside one column.
+	* The three column origins, in this window's inner coordinates.
+	* @returns {number[]}
+	*/
+	columnXs() {
+		const listWidth = Window_RefinementDetails.listColumnWidthFromInner(this.innerWidth);
+		return [
+			0,
+			listWidth,
+			listWidth * 2
+		];
+	}
+	/**
+	* The width of the result column, which is everything the two lists did not take.
 	* @returns {number}
 	*/
-	refinementColumnTextWidth() {
-		return Math.max(64, this.refinementColumnWidth() - 12);
+	resultColumnWidth() {
+		const listWidth = Window_RefinementDetails.listColumnWidthFromInner(this.innerWidth);
+		return Math.max(96, this.innerWidth - listWidth * 2);
+	}
+	/**
+	* Max draw width for text inside one column.
+	* @param {number} columnWidth The width of the column being drawn into.
+	* @returns {number}
+	*/
+	columnTextWidth(columnWidth) {
+		return Math.max(64, columnWidth - 12);
+	}
+	/**
+	* The inner Y where each column's content begins - below the titles and the rule under them.
+	*
+	* The scene positions the two list windows against this, which is the reason the headers live on this
+	* window rather than on three of their own: one measurement, one baseline, and the columns cannot
+	* drift apart.
+	* @returns {number}
+	*/
+	columnContentInnerStartY() {
+		return this.lineHeight() * 2 + 10;
 	}
 	refresh() {
 		this.contents.clear();
 		this.drawContent();
 	}
 	/**
+	* The heading each column carries, paired with a line saying what the column is for.
+	*
+	* The lists themselves used to be unlabelled entirely, which was survivable while only one was on
+	* screen at a time and a hint bar narrated which phase you were in. Two similar-looking columns of
+	* equipment need saying which is which.
+	* @returns {{title: string, subtext: string}[]}
+	*/
+	columnHeadings() {
+		return [
+			{
+				title: J.JAFTING.EXT.REFINE.Messages.TitleBase,
+				subtext: "The equipment being upgraded."
+			},
+			{
+				title: J.JAFTING.EXT.REFINE.Messages.TitleMaterial,
+				subtext: "Consumed; its effects merge into the base."
+			},
+			{
+				title: J.JAFTING.EXT.REFINE.Messages.TitleOutput,
+				subtext: "What you get if you confirm."
+			}
+		];
+	}
+	/**
 	* Draws all content in this window.
+	*
+	* The headers draw unconditionally: they are the labels for two list windows that are always on
+	* screen, so withholding them until something is selected would leave those lists unlabelled exactly
+	* when the player most needs to know what they are choosing between.
 	*/
 	drawContent() {
-		if (!this.primaryEquip) return;
 		this.drawRefinementHeaders();
-		this.drawRefinementTarget();
-		this.drawRefinementMaterial();
 		this.drawRefinementResult();
 	}
 	/**
-	* Draws all columns' titles.
+	* Draws every column's title, its explanatory line, and the rule that separates them from content.
 	*/
 	drawRefinementHeaders() {
-		const columnWidth = this.refinementColumnWidth();
-		const labelWidth = this.refinementColumnTextWidth();
-		const ox = 0;
-		this.modFontSize(6);
-		this.toggleBold(true);
-		const baseX = ox + columnWidth * 0;
-		this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleBase, baseX, 0, labelWidth);
-		const consumableX = ox + columnWidth * 1;
-		this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleMaterial, consumableX, 0, labelWidth);
-		const outputX = ox + columnWidth * 2;
-		this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleOutput, outputX, 0, labelWidth);
-		this.resetFontSettings();
-	}
-	/**
-	* Draws the primary equip that is being used as a base for refinement.
-	* Will draw whatever is being hovered over if nothing is selected.
-	*/
-	drawRefinementTarget() {
-		this.drawEquip(this.primaryEquip, 0, "base");
-	}
-	/**
-	* Draws the secondary equip that is being used as a material for refinement.
-	* Will draw whatever is being hovered over if nothing is selected.
-	*/
-	drawRefinementMaterial() {
-		if (!this.secondaryEquip) return;
-		this.drawEquip(this.secondaryEquip, this.refinementColumnWidth(), "material");
-	}
-	/**
-	* Draws one column of a piece of equip and it's traits.
-	* @param {RPG_EquipItem} equip The equip to draw details for.
-	* @param {number} x The `x` coordinate to start drawing at.
-	* @param {string} type Which column this is.
-	*/
-	drawEquip(equip, x, type) {
-		const parsedTraits = JaftingManager.parseTraits(equip);
-		this.drawEquipTitle(equip, x, type);
-		this.drawEquipTraits(parsedTraits, x);
-	}
-	/**
-	* Draws the title for this portion of the equip details.
-	* @param {RPG_EquipItem} equip The equip to draw details for.
-	* @param {number} x The `x` coordinate to start drawing at.
-	* @param {string} type Which column this is.
-	*/
-	drawEquipTitle(equip, x, type) {
-		const lh = this.lineHeight();
-		const textW = this.refinementColumnTextWidth();
-		if (type === "output") {
-			if (equip.jaftingRefinedCount === 0) {
-				this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${equip.name} +1\\C[0]`, x, lh * 1, textW);
-			} else {
-				const suffix = `+${equip.jaftingRefinedCount + 1}`;
-				const index = equip.name.lastIndexOf("+");
-				if (index > -1) {
-					const name = `${equip.name.slice(0, index)}${suffix}`;
-					this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${name}\\C[0]`, x, lh * 1, textW);
-				} else {
-					const name = `${equip.name} ${suffix}`;
-					this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${name}\\C[0]`, x, lh * 1, textW);
-				}
-			}
-		} else {
-			this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${equip.name}\\C[0]`, x, lh * 1, textW);
-		}
-	}
-	/**
-	* Draws all transferable traits on this piece of equipment.
-	* @param {JAFTING_Trait[]} traits A list of transferable traits.
-	* @param {number} x The `x` coordinate to start drawing at.
-	*/
-	drawEquipTraits(traits, x) {
-		const lh = this.lineHeight();
-		const textW = this.refinementColumnTextWidth();
-		if (!traits.length) {
-			this.drawTextEx(`${J.JAFTING.EXT.REFINE.Messages.NoTransferableTraits}`, x, lh * 2, textW);
-			return;
-		}
-		traits.sort((a, b) => a._code - b._code);
-		traits.forEach((trait, index) => {
-			const y = lh * 2 + index * lh;
-			this.drawTextEx(`${trait.nameAndValue}`, x, y, textW);
+		const headings = this.columnHeadings();
+		const columnXs = this.columnXs();
+		const listWidth = Window_RefinementDetails.listColumnWidthFromInner(this.innerWidth);
+		const ruleY = this.columnContentInnerStartY() - 8;
+		headings.forEach((heading, index) => {
+			const columnWidth = index === 2 ? this.resultColumnWidth() : listWidth;
+			const textWidth = this.columnTextWidth(columnWidth);
+			const x = columnXs[index];
+			this.resetFontSettings();
+			this.modFontSize(4);
+			this.toggleBold(true);
+			this.drawText(heading.title, x, 0, textWidth, Window_Base.TextAlignments.Left);
+			this.toggleBold(false);
+			this.resetFontSettings();
+			this.modFontSize(-4);
+			this.changeTextColor(ColorManager.textColor(7));
+			this.drawText(heading.subtext, x, this.lineHeight(), textWidth, Window_Base.TextAlignments.Left);
+			this.resetTextColor();
+			this.resetFontSettings();
+			this.drawHorizontalLine(x, ruleY, textWidth);
 		});
 	}
 	/**
-	* Draws the projected refinement result of fusing the material into the base.
+	* The name a refined output carries, with its `+N` suffix advanced by one.
+	* @param {RPG_EquipItem} equip The projected output.
+	* @returns {string}
+	*/
+	outputDisplayName(equip) {
+		const suffix = `+${equip.jaftingRefinedCount + 1}`;
+		const plusIndex = equip.name.lastIndexOf("+");
+		if (plusIndex === -1) return `${equip.name} ${suffix}`;
+		return `${equip.name.slice(0, plusIndex)}${suffix}`;
+	}
+	/**
+	* Pairs up what the base has now against what the projected result would have, per effect.
+	*
+	* Keyed on code and dataId together, because that pair is what identifies an effect - two traits
+	* sharing a code are different stats. An effect the base does not carry arrives with a null `before`,
+	* which is what lets the column say "new" rather than quietly listing it alongside the rest.
+	* @param {RPG_EquipItem} result The projected refinement output.
+	* @returns {{key: string, trait: JAFTING_Trait, before: (JAFTING_Trait|null)}[]}
+	*/
+	buildResultComparison(result) {
+		const keyOf = (trait) => `${trait.code()}:${trait.dataId()}`;
+		const baseTraits = new Map();
+		JaftingManager.parseTraits(this.primaryEquip).forEach((trait) => baseTraits.set(keyOf(trait), trait));
+		const resultTraits = new Map();
+		JaftingManager.parseTraits(result).forEach((trait) => resultTraits.set(keyOf(trait), trait));
+		const keys = [...new Set([...baseTraits.keys(), ...resultTraits.keys()])];
+		const rows = keys.map((key) => {
+			const before = baseTraits.has(key) ? baseTraits.get(key) : null;
+			const after = resultTraits.has(key) ? resultTraits.get(key) : null;
+			return {
+				key,
+				before,
+				after
+			};
+		});
+		return rows.sort((a, b) => {
+			const left = a.after === null ? a.before : a.after;
+			const right = b.after === null ? b.before : b.after;
+			return left.code() - right.code() || left.dataId() - right.dataId();
+		});
+	}
+	/**
+	* The neutral value a trait code sits at when nothing is contributing to it.
+	*
+	* Needed to size the gain on an effect the base did not carry: the "before" is not zero, it is whatever
+	* that code treats as no-effect, and the two differ. Matches what {@link TraitResolver} uses when it
+	* combines same-code traits.
+	* @param {number} code The trait code.
+	* @returns {number}
+	*/
+	neutralValueForCode(code) {
+		if (code === 22) return 0;
+		return 1;
+	}
+	/**
+	* How much a row moved, in the same units the values display in.
+	*
+	* Every one of the three parameter codes formats as a hundredths shift - codes 21 and 23 as
+	* `(value * 100) - 100`, code 22 as `value * 100` - so the difference between two of them is the same
+	* arithmetic regardless of which code it is.
+	* @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
+	* @returns {number|null} The shift in display units, or null for a code with no numeric reading.
+	*/
+	rowDeltaPoints(row) {
+		const sample = row.after === null ? row.before : row.after;
+		const code = sample.code();
+		if (code !== 21 && code !== 22 && code !== 23) return null;
+		const neutral = this.neutralValueForCode(code);
+		const beforeValue = row.before === null ? neutral : row.before.convertToRmTrait().value;
+		const afterValue = row.after === null ? neutral : row.after.convertToRmTrait().value;
+		return Math.round((afterValue - beforeValue) * 100);
+	}
+	/**
+	* Draws the projected refinement result into the third column, as a before-and-after.
+	*
+	* Only the result is drawn here now. The base and the donor are each visible in their own list, so
+	* repeating them in this window was showing the player two things they had just chosen and calling it
+	* detail. What is genuinely only knowable here is the *change*, which is what this column reports.
 	*/
 	drawRefinementResult() {
 		if (!this.primaryEquip || !this.secondaryEquip) return;
 		const result = JaftingManager.determineRefinementOutput(this.primaryEquip, this.secondaryEquip);
-		this.drawEquip(result, this.refinementColumnWidth() * 2, "output");
+		const [, , x] = this.columnXs();
+		const columnWidth = this.resultColumnWidth();
+		const textWidth = this.columnTextWidth(columnWidth);
+		const lh = this.lineHeight();
+		let y = this.columnContentInnerStartY();
+		this.drawTextEx(`\\I[${result.iconIndex}] \\C[6]${this.outputDisplayName(result)}\\C[0]`, x, y, textWidth);
+		y += Math.floor(lh * 1.5);
+		const comparison = this.buildResultComparison(result);
+		if (comparison.length === 0) {
+			this.drawTextEx(`${J.JAFTING.EXT.REFINE.Messages.NoTransferableTraits}`, x, y, textWidth);
+		} else {
+			const quantified = comparison.filter((row) => this.isQuantifiedRow(row));
+			const granted = comparison.filter((row) => !this.isQuantifiedRow(row));
+			if (quantified.length > 0) {
+				y = this.drawResultComparisonHeader(x, y, textWidth);
+				quantified.forEach((row) => {
+					this.drawResultComparisonRow(row, x, y, textWidth);
+					y += lh;
+				});
+				if (granted.length > 0) y += Math.floor(lh * .5);
+			}
+			granted.forEach((row) => {
+				this.drawGrantedRow(row, x, y, textWidth);
+				y += lh;
+			});
+		}
+		this.drawRefinementCounter(result, x, y + Math.floor(lh * .5), textWidth);
 		this.outputEquip = result;
+	}
+	/**
+	* Whether this row's effect is an amount that can be compared, rather than a thing that is simply had.
+	*
+	* Only the three parameter codes carry a value worth putting in a before-and-after. Everything else
+	* formats as a name - a skill to learn, an element to strike with, a slot to seal - and the only news
+	* about one of those is whether the merge brought it along.
+	* @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
+	* @returns {boolean}
+	*/
+	isQuantifiedRow(row) {
+		const sample = row.after === null ? row.before : row.after;
+		const code = sample.code();
+		return code === 21 || code === 22 || code === 23;
+	}
+	/**
+	* Draws an effect that is had rather than measured, on one full-width line.
+	*
+	* The whole row width goes to the label, because these read as sentences - "Learn: Palate Cleanser" -
+	* and the only column beside it says whether it is arriving or leaving.
+	* @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
+	* @param {number} x The column origin.
+	* @param {number} y The vertical position to draw at.
+	* @param {number} textWidth The drawable width of the result column.
+	*/
+	drawGrantedRow(row, x, y, textWidth) {
+		const { colW } = this.resultComparisonColumns(textWidth);
+		const sample = row.after === null ? row.before : row.after;
+		const iconIndex = sample.convertToRmTrait().iconIndex();
+		const isLost = row.after === null;
+		const isNew = row.before === null;
+		const isCarried = !isLost && !isNew;
+		const labelWidth = textWidth - colW - 8;
+		const name = isCarried ? `\\C[7]${sample.nameAndValue}\\C[0]` : sample.nameAndValue;
+		const label = iconIndex > 0 ? `\\I[${iconIndex}]${name}` : name;
+		this.drawTextEx(label, x, y, labelWidth);
+		if (isCarried) return;
+		this.changeTextColor(ColorManager.textColor(isLost ? 18 : 24));
+		this.drawText(isLost ? "lost" : "new", x + labelWidth + 8, y, colW, Window_Base.TextAlignments.Right);
+		this.resetTextColor();
+	}
+	/**
+	* The x offsets, relative to the column origin, of the before / after / delta columns.
+	*
+	* The three numeric columns are kept deliberately narrow and adjacent rather than spread across the
+	* full width. Three numbers that belong to one row have to be readable as a group; spacing them evenly
+	* across the column made each row look like three unrelated facts.
+	* @param {number} textWidth The drawable width of the result column.
+	* @returns {{beforeX: number, afterX: number, deltaX: number, colW: number, nameWidth: number}}
+	*/
+	resultComparisonColumns(textWidth) {
+		const colW = 96;
+		const groupWidth = colW * 3;
+		const nameWidth = Math.max(120, textWidth - groupWidth - 8);
+		return {
+			beforeX: nameWidth + 8,
+			afterX: nameWidth + 8 + colW,
+			deltaX: nameWidth + 8 + colW * 2,
+			colW,
+			nameWidth
+		};
+	}
+	/**
+	* Labels the before and after columns so the two numbers on each row are not ambiguous.
+	* @param {number} x The column origin.
+	* @param {number} y The vertical position to draw at.
+	* @param {number} textWidth The drawable width of the result column.
+	* @returns {number} The vertical position the first row should start at.
+	*/
+	drawResultComparisonHeader(x, y, textWidth) {
+		const { beforeX, afterX, colW } = this.resultComparisonColumns(textWidth);
+		this.modFontSize(-4);
+		this.changeTextColor(ColorManager.textColor(7));
+		this.drawText("now", x + beforeX, y, colW, Window_Base.TextAlignments.Right);
+		this.drawText("after", x + afterX, y, colW, Window_Base.TextAlignments.Right);
+		this.resetTextColor();
+		this.resetFontSettings();
+		return y + this.lineHeight();
+	}
+	/**
+	* Draws one effect's before, after, and what changed between them.
+	* @param {{trait: JAFTING_Trait, before: (JAFTING_Trait|null)}} row The paired effect.
+	* @param {number} x The column origin.
+	* @param {number} y The vertical position to draw at.
+	* @param {number} textWidth The drawable width of the result column.
+	*/
+	drawResultComparisonRow(row, x, y, textWidth) {
+		const { beforeX, afterX, deltaX, colW, nameWidth } = this.resultComparisonColumns(textWidth);
+		const sample = row.after === null ? row.before : row.after;
+		const iconIndex = sample.convertToRmTrait().iconIndex();
+		const label = iconIndex > 0 ? `\\I[${iconIndex}]${sample.name}` : sample.name;
+		this.drawTextEx(label, x, y, nameWidth);
+		const beforeText = row.before === null ? "-" : row.before.value;
+		const afterText = row.after === null ? "-" : row.after.value;
+		this.drawText(beforeText, x + beforeX, y, colW, Window_Base.TextAlignments.Right);
+		this.drawText(afterText, x + afterX, y, colW, Window_Base.TextAlignments.Right);
+		this.drawResultComparisonDelta(row, x + deltaX, y, colW);
+	}
+	/**
+	* Draws what changed on one row, as the signed amount rather than a word.
+	*
+	* The sign carries the direction, so no arrow is needed on top of it - and a number says how much,
+	* which "up" never did. A row whose value the merge did not move says so plainly instead of claiming a
+	* gain it did not deliver.
+	* @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
+	* @param {number} x The delta column's absolute origin.
+	* @param {number} y The vertical position to draw at.
+	* @param {number} colW The delta column's width.
+	*/
+	drawResultComparisonDelta(row, x, y, colW) {
+		const alignRight = Window_Base.TextAlignments.Right;
+		if (row.after === null) {
+			this.changeTextColor(ColorManager.textColor(18));
+			this.drawText("lost", x, y, colW, alignRight);
+			this.resetTextColor();
+			return;
+		}
+		const delta = this.rowDeltaPoints(row);
+		if (delta === null) {
+			const colorIndex = row.before === null ? 24 : 7;
+			this.changeTextColor(ColorManager.textColor(colorIndex));
+			this.drawText(row.before === null ? "new" : "-", x, y, colW, alignRight);
+			this.resetTextColor();
+			return;
+		}
+		if (delta === 0) {
+			this.changeTextColor(ColorManager.textColor(7));
+			this.drawText("-", x, y, colW, alignRight);
+			this.resetTextColor();
+			return;
+		}
+		const isGain = delta > 0;
+		this.changeTextColor(ColorManager.textColor(isGain ? 24 : 18));
+		this.drawText(`${isGain ? "+" : ""}${delta}`, x, y, colW, alignRight);
+		this.resetTextColor();
+	}
+	/**
+	* Draws how many refinements this equip will have used, against its ceiling.
+	* @param {RPG_EquipItem} result The projected refinement output.
+	* @param {number} x The column origin.
+	* @param {number} y The vertical position to draw at.
+	* @param {number} textWidth The drawable width of the result column.
+	*/
+	drawRefinementCounter(result, x, y, textWidth) {
+		const { beforeX, afterX, deltaX, colW, nameWidth } = this.resultComparisonColumns(textWidth);
+		const cap = this.primaryEquip.jaftingMaxRefineCount;
+		this.modFontSize(-2);
+		this.changeTextColor(ColorManager.systemColor());
+		this.drawText("refinements", x, y, nameWidth, Window_Base.TextAlignments.Left);
+		this.resetTextColor();
+		this.drawText(`${this.primaryEquip.jaftingRefinedCount}`, x + beforeX, y, colW, Window_Base.TextAlignments.Right);
+		this.drawText(`${result.jaftingRefinedCount + 1}`, x + afterX, y, colW, Window_Base.TextAlignments.Right);
+		if (cap > 0) {
+			this.changeTextColor(ColorManager.textColor(7));
+			this.drawText(`of ${cap}`, x + deltaX, y, colW, Window_Base.TextAlignments.Right);
+			this.resetTextColor();
+		}
+		this.resetFontSettings();
 	}
 };
 
@@ -2202,9 +2489,9 @@ var Scene_JaftingRefine = class Scene_JaftingRefine extends Scene_MenuBase {
 	createAllWindows() {
 		this.createRefinementStepHintWindow();
 		this.createRefinementDescriptionWindow();
+		this.createRefinementDetailsWindow();
 		this.createBaseRefinableListWindow();
 		this.createConsumableRefinableListWindow();
-		this.createRefinementDetailsWindow();
 		this.createRefinementConfirmationWindow();
 	}
 	/**
@@ -2258,18 +2545,21 @@ var Scene_JaftingRefine = class Scene_JaftingRefine extends Scene_MenuBase {
 		return this._cachedRefinementStepHintHeight;
 	}
 	/**
-	* @returns {number} Width shared by the left refinable lists (~10% wider than the original 350px column).
+	* @returns {number} Width shared by the two refinable lists, as the panel itself computes it.
 	*/
 	getBaseRefinableListColumnWidth() {
-		return Math.round(350 * 1.1);
+		const panelRect = this.getRefinementPanelRectangle();
+		const panelWindow = this.getRefinementDetailsWindow();
+		const innerWidth = panelRect.width - panelWindow.padding * 2;
+		return Window_RefinementDetails.listColumnWidthFromInner(innerWidth);
 	}
 	/**
 	* @returns {Rectangle}
 	*/
 	getRefinementStepHintRectangle() {
 		const [ox, oy] = Graphics.boxOrigin;
-		const x = ox + Graphics.horizontalPadding;
-		const width = Graphics.boxWidth - Graphics.horizontalPadding * 2;
+		const x = ox;
+		const width = Graphics.boxWidth - Graphics.horizontalPadding;
 		const height = this.getRefinementStepHintHeight();
 		return new Rectangle(x, oy, width, height);
 	}
@@ -2331,13 +2621,58 @@ var Scene_JaftingRefine = class Scene_JaftingRefine extends Scene_MenuBase {
 	* @returns {Rectangle}
 	*/
 	getRefinementDescriptionRectangle() {
-		const listRect = this.getBaseRefinableListRectangle();
-		const [ox] = Graphics.boxOrigin;
-		const x = listRect.x + listRect.width + Graphics.horizontalPadding;
-		const { y } = listRect;
-		const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
-		const height = 100;
+		const [ox, oy] = Graphics.boxOrigin;
+		const x = ox;
+		const y = oy + this.getRefinementStepHintHeight();
+		const width = Graphics.boxWidth - Graphics.horizontalPadding;
+		const height = this.calcWindowHeight(2, false);
 		return new Rectangle(x, y, width, height);
+	}
+	/**
+	* The panel every column of the refinement workflow is drawn inside.
+	*
+	* One backing window rather than a header per column: it owns the titles, the rules beneath them, and
+	* the result itself, so the three columns share a baseline by construction instead of by three
+	* windows agreeing with each other.
+	* @returns {Rectangle}
+	*/
+	getRefinementPanelRectangle() {
+		const [ox, oy] = Graphics.boxOrigin;
+		const descriptionRect = this.getRefinementDescriptionRectangle();
+		const x = ox;
+		const y = descriptionRect.y + descriptionRect.height;
+		const width = Graphics.boxWidth - Graphics.horizontalPadding;
+		const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
+		return new Rectangle(x, y, width, height);
+	}
+	/**
+	* The shared column geometry for everything drawn inside the refinement panel.
+	*
+	* The two lists take a fixed column each and the result takes whatever is left, because the result is
+	* the answer the scene exists to give - it should be the widest thing on screen, not an equal third.
+	* @returns {{listWidth: number, resultWidth: number, columnX: number[], contentY: number, height: number}}
+	*/
+	getRefinementPanelLayout() {
+		const panelRect = this.getRefinementPanelRectangle();
+		const panelWindow = this.getRefinementDetailsWindow();
+		const pad = panelWindow.padding;
+		const innerX = panelRect.x + pad;
+		const innerWidth = panelRect.width - pad * 2;
+		const listWidth = this.getBaseRefinableListColumnWidth();
+		const resultWidth = innerWidth - listWidth * 2;
+		const contentY = panelRect.y + pad + panelWindow.columnContentInnerStartY();
+		const height = panelRect.y + panelRect.height - contentY - pad;
+		return {
+			listWidth,
+			resultWidth,
+			columnX: [
+				innerX,
+				innerX + listWidth,
+				innerX + listWidth * 2
+			],
+			contentY,
+			height
+		};
 	}
 	/**
 	* Gets the RefinementDescription window being tracked.
@@ -2373,11 +2708,8 @@ var Scene_JaftingRefine = class Scene_JaftingRefine extends Scene_MenuBase {
 	* @returns {Rectangle}
 	*/
 	getBaseRefinableListRectangle() {
-		const [ox, oy] = Graphics.boxOrigin;
-		const hintHeight = this.getRefinementStepHintHeight();
-		const width = this.getBaseRefinableListColumnWidth();
-		const height = Graphics.boxHeight - Graphics.verticalPadding - hintHeight;
-		return new Rectangle(ox, oy + hintHeight, width, height);
+		const layout = this.getRefinementPanelLayout();
+		return new Rectangle(layout.columnX[0], layout.contentY, layout.listWidth, layout.height);
 	}
 	/**
 	* Gets the RefinableList window being tracked.
@@ -2400,7 +2732,6 @@ var Scene_JaftingRefine = class Scene_JaftingRefine extends Scene_MenuBase {
 	}
 	deselectBaseRefinableListWindow() {
 		const listWindow = this.getBaseRefinableListWindow();
-		listWindow.hide();
 		listWindow.deactivate();
 	}
 	onBaseRefinableListIndexChange() {
@@ -2445,7 +2776,8 @@ var Scene_JaftingRefine = class Scene_JaftingRefine extends Scene_MenuBase {
 	* @returns {Rectangle}
 	*/
 	getConsumableRefinableListRectangle() {
-		return this.getBaseRefinableListRectangle();
+		const layout = this.getRefinementPanelLayout();
+		return new Rectangle(layout.columnX[1], layout.contentY, layout.listWidth, layout.height);
 	}
 	/**
 	* Gets the consumable RefinableList window being tracked.
@@ -2515,14 +2847,7 @@ var Scene_JaftingRefine = class Scene_JaftingRefine extends Scene_MenuBase {
 	* @returns {Rectangle}
 	*/
 	getRefinementDetailsRectangle() {
-		const [ox, oy] = Graphics.boxOrigin;
-		const listRect = this.getBaseRefinableListRectangle();
-		const descWindow = this.getRefinementDescriptionWindow();
-		const x = listRect.x + listRect.width + Graphics.horizontalPadding;
-		const y = listRect.y + descWindow.height + Graphics.verticalPadding;
-		const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
-		const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
-		return new Rectangle(x, y, width, height);
+		return this.getRefinementPanelRectangle();
 	}
 	/**
 	* Gets the RefinementDetails window being tracked.

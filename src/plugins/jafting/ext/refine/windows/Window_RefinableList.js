@@ -52,6 +52,10 @@ class Window_RefinableList
     // perform original logic, which seeds this window's members via initMembers and then builds the
     // command list from them.
     super(rect);
+
+    // this list sits inside the refinement panel, which draws the frame and the column heading above it.
+    // a second frame here would box a column that is already boxed.
+    this.opacity = 0;
   }
 
   /**
@@ -275,6 +279,13 @@ class Window_RefinableList
       extData.unitsTotal = unitSlot.unitsTotal;
     }
 
+    // a row the player cannot use answers the question they are actually asking. Its flavour text is no
+    // longer the interesting thing about it, and the verdict already knows why - it was being computed,
+    // carried this far, and then discarded in favour of the description.
+    const helpText = enabled
+      ? equip.description
+      : this.blockedReasonText(verdict);
+
     // construct command for the next step in this routine.
     const command = new WindowCommandBuilder(label.name)
       .setSymbol('refine-object')
@@ -283,10 +294,28 @@ class Window_RefinableList
       .setIconIndex(iconIndex)
       .setColorIndex(label.colorIndex)
       .setRightText(rightText)
-      .setHelpText(equip.description)
+      .setHelpText(helpText)
       .build();
 
     this.addBuiltCommand(command);
+  }
+
+  /**
+   * The verdict's reasons, tidied into something a two-line help window can show.
+   *
+   * The reasons accumulate as a run-on string because more than one can apply at once, and they are not
+   * consistent about how they end - some close with a newline, some with `<br>`. Normalizing here rather
+   * than at each message keeps the messages readable as sentences.
+   * @param {{ enabled: boolean, iconIndex: number, errorText: string }} verdict This row's eligibility.
+   * @returns {string}
+   */
+  blockedReasonText(verdict)
+  {
+    return verdict.errorText.replaceAll('<br>', String.empty)
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .join('\n');
   }
 
   /**

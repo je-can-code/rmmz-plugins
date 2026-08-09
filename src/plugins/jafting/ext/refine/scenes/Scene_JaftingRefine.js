@@ -258,9 +258,13 @@ class Scene_JaftingRefine
     // create all the windows.
     this.createRefinementStepHintWindow();
     this.createRefinementDescriptionWindow();
+
+    // the panel comes before the lists that sit inside it: the column geometry is derived from how tall
+    // the panel's own headers turned out, so it has to exist before anything can be positioned against it.
+    this.createRefinementDetailsWindow();
+
     this.createBaseRefinableListWindow();
     this.createConsumableRefinableListWindow();
-    this.createRefinementDetailsWindow();
     this.createRefinementConfirmationWindow();
   }
 
@@ -345,11 +349,17 @@ class Scene_JaftingRefine
   }
 
   /**
-   * @returns {number} Width shared by the left refinable lists (~10% wider than the original 350px column).
+   * @returns {number} Width shared by the two refinable lists, as the panel itself computes it.
    */
   getBaseRefinableListColumnWidth()
   {
-    return Math.round(350 * 1.1);
+    const panelRect = this.getRefinementPanelRectangle();
+    const panelWindow = this.getRefinementDetailsWindow();
+    const innerWidth = panelRect.width - (panelWindow.padding * 2);
+
+    // deferred to the panel so the lists and the headings drawn above them share one number. two
+    // independent copies of this drifted apart the moment one of them was tuned.
+    return Window_RefinementDetails.listColumnWidthFromInner(innerWidth);
   }
 
   /**
@@ -358,8 +368,10 @@ class Scene_JaftingRefine
   getRefinementStepHintRectangle()
   {
     const [ ox, oy ] = Graphics.boxOrigin;
-    const x = ox + Graphics.horizontalPadding;
-    const width = Graphics.boxWidth - Graphics.horizontalPadding * 2;
+
+    // shares the base list's left edge. insetting only this one left the two visibly out of line.
+    const x = ox;
+    const width = Graphics.boxWidth - Graphics.horizontalPadding;
     const height = this.getRefinementStepHintHeight();
 
     return new Rectangle(x, oy, width, height);
@@ -460,14 +472,68 @@ class Scene_JaftingRefine
    */
   getRefinementDescriptionRectangle()
   {
-    const listRect = this.getBaseRefinableListRectangle();
-    const [ ox ] = Graphics.boxOrigin;
-    const x = listRect.x + listRect.width + Graphics.horizontalPadding;
-    const {y} = listRect;
-    const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
-    const height = 100;
+    const [ ox, oy ] = Graphics.boxOrigin;
+
+    // full width, directly beneath the phase hint. it describes whatever the player is hovering in
+    // either list, so tucking it above one column implied it belonged to that column.
+    const x = ox;
+    const y = oy + this.getRefinementStepHintHeight();
+    const width = Graphics.boxWidth - Graphics.horizontalPadding;
+    const height = this.calcWindowHeight(2, false);
 
     return new Rectangle(x, y, width, height);
+  }
+
+  /**
+   * The panel every column of the refinement workflow is drawn inside.
+   *
+   * One backing window rather than a header per column: it owns the titles, the rules beneath them, and
+   * the result itself, so the three columns share a baseline by construction instead of by three
+   * windows agreeing with each other.
+   * @returns {Rectangle}
+   */
+  getRefinementPanelRectangle()
+  {
+    const [ ox, oy ] = Graphics.boxOrigin;
+    const descriptionRect = this.getRefinementDescriptionRectangle();
+
+    const x = ox;
+    const y = descriptionRect.y + descriptionRect.height;
+    const width = Graphics.boxWidth - Graphics.horizontalPadding;
+    const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
+
+    return new Rectangle(x, y, width, height);
+  }
+
+  /**
+   * The shared column geometry for everything drawn inside the refinement panel.
+   *
+   * The two lists take a fixed column each and the result takes whatever is left, because the result is
+   * the answer the scene exists to give - it should be the widest thing on screen, not an equal third.
+   * @returns {{listWidth: number, resultWidth: number, columnX: number[], contentY: number, height: number}}
+   */
+  getRefinementPanelLayout()
+  {
+    const panelRect = this.getRefinementPanelRectangle();
+    const panelWindow = this.getRefinementDetailsWindow();
+    const pad = panelWindow.padding;
+
+    const innerX = panelRect.x + pad;
+    const innerWidth = panelRect.width - pad * 2;
+    const listWidth = this.getBaseRefinableListColumnWidth();
+    const resultWidth = innerWidth - listWidth * 2;
+
+    // the lists start below the tallest header, which the panel itself measures.
+    const contentY = panelRect.y + pad + panelWindow.columnContentInnerStartY();
+    const height = panelRect.y + panelRect.height - contentY - pad;
+
+    return {
+      listWidth,
+      resultWidth,
+      columnX: [ innerX, innerX + listWidth, innerX + listWidth * 2 ],
+      contentY,
+      height,
+    };
   }
 
   /**
@@ -534,12 +600,9 @@ class Scene_JaftingRefine
    */
   getBaseRefinableListRectangle()
   {
-    const [ ox, oy ] = Graphics.boxOrigin;
-    const hintHeight = this.getRefinementStepHintHeight();
-    const width = this.getBaseRefinableListColumnWidth();
-    const height = Graphics.boxHeight - Graphics.verticalPadding - hintHeight;
+    const layout = this.getRefinementPanelLayout();
 
-    return new Rectangle(ox, oy + hintHeight, width, height);
+    return new Rectangle(layout.columnX[0], layout.contentY, layout.listWidth, layout.height);
   }
 
   /**
@@ -578,8 +641,8 @@ class Scene_JaftingRefine
     // grab the window.
     const listWindow = this.getBaseRefinableListWindow();
 
-    // reveal the window.
-    listWindow.hide();
+    // stays on screen, merely loses focus. hiding it would empty the column it labels and put the player
+    // back to guessing what they had chosen.
     listWindow.deactivate();
   }
 
@@ -670,7 +733,12 @@ class Scene_JaftingRefine
    */
   getConsumableRefinableListRectangle()
   {
-    return this.getBaseRefinableListRectangle();
+    // sits beside the base list rather than on top of it. Both lists stay on screen for the whole
+    // workflow, which is what removes the mode: the left column is always "what am I refining" and the
+    // middle is always "what am I feeding it", instead of one column meaning different things by phase.
+    const layout = this.getRefinementPanelLayout();
+
+    return new Rectangle(layout.columnX[1], layout.contentY, layout.listWidth, layout.height);
   }
 
   /**
@@ -719,7 +787,8 @@ class Scene_JaftingRefine
     // grab the window.
     const listWindow = this.getConsumableRefinableListWindow();
 
-    // reveal the window.
+    // unlike the base list, this one does empty out: both callers are returning to base selection, and a
+    // donor column still listing candidates for a base you have backed away from would be lying.
     listWindow.hide();
     listWindow.deactivate();
   }
@@ -793,16 +862,8 @@ class Scene_JaftingRefine
    */
   getRefinementDetailsRectangle()
   {
-    const [ ox, oy ] = Graphics.boxOrigin;
-    const listRect = this.getBaseRefinableListRectangle();
-    const descWindow = this.getRefinementDescriptionWindow();
-
-    const x = listRect.x + listRect.width + Graphics.horizontalPadding;
-    const y = listRect.y + descWindow.height + Graphics.verticalPadding;
-    const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
-    const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
-
-    return new Rectangle(x, y, width, height);
+    // this window is the panel the whole workflow is drawn inside, so it takes the panel's shape.
+    return this.getRefinementPanelRectangle();
   }
 
   /**

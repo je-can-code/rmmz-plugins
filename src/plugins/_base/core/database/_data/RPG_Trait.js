@@ -1,4 +1,6 @@
 //region RPG_Trait
+import IconManager from './../../managers/IconManager.js';
+
 /**
  * A class representing a single trait living on one of the many types
  * of database classes that leverage traits.
@@ -52,6 +54,38 @@ class RPG_Trait
     this.code = trait.code;
     this.dataId = trait.dataId;
     this.value = trait.value;
+  }
+
+  /**
+   * The icon representing what this trait affects, or 0 when it has no natural one.
+   *
+   * The three parameter codes line up exactly with the three parameter icon lookups already in
+   * {@link IconManager}, so a trait carrying a stat can always be shown as that stat's icon rather than
+   * spelled out. Everything else - element rates, skill seals, party abilities - has no single icon that
+   * means it, and answers 0 so a caller can fall back to words instead of inventing artwork.
+   * @returns {number}
+   */
+  iconIndex()
+  {
+    // base parameters: MHP through LUK.
+    if (this.code === 21) return IconManager.param(this.dataId);
+
+    // ex-parameters: HIT through TRG.
+    if (this.code === 22) return IconManager.xparam(this.dataId);
+
+    // sp-parameters: TGR through EXR.
+    if (this.code === 23) return IconManager.sparam(this.dataId);
+
+    // an element the bearer strikes with, or resists.
+    if (this.code === 11 || this.code === 31) return IconManager.element(this.dataId);
+
+    // a state this resists; the state already has a face.
+    if (this.code === 14) return $dataStates.at(this.dataId).iconIndex;
+
+    // a skill granted, sealed, or attacked with; likewise.
+    if (this.code === 35 || this.code === 43 || this.code === 44) return $dataSkills.at(this.dataId).iconIndex;
+
+    return 0;
   }
 
   /**

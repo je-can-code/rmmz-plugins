@@ -103,21 +103,76 @@ class Window_RefinementDetails
   }
 
   /**
-   * Width of each preview column (base / material / output) from {@link #innerWidth}.
+   * The width each of the two list columns occupies.
+   *
+   * Fixed rather than a share of the panel, so an equip name has a predictable amount of room no matter
+   * how wide the screen is. The result column takes whatever remains, which is deliberate - the result
+   * is the answer the scene exists to give, so it should be the widest thing on it.
    * @returns {number}
    */
-  refinementColumnWidth()
+  static ListColumnWidthCap = 470;
+
+  /**
+   * The width one list column takes out of a given inner width.
+   *
+   * A share rather than a constant, capped so it stops growing once a name has all the room it could
+   * want. A fixed width starved the result column at lower resolutions; an uncapped share made the lists
+   * absurdly wide at higher ones.
+   *
+   * **This is the single source for the split** - the scene positions its two list windows against this
+   * same function, so the columns and the headings above them cannot disagree.
+   * @param {number} innerWidth The drawable width of the panel.
+   * @returns {number}
+   */
+  static listColumnWidthFromInner(innerWidth)
   {
-    return Math.max(96, Math.floor(this.innerWidth / 3));
+    return Math.min(Window_RefinementDetails.ListColumnWidthCap, Math.floor(innerWidth * 0.3));
   }
 
   /**
-   * Max draw width for names and traits inside one column.
+   * The three column origins, in this window's inner coordinates.
+   * @returns {number[]}
+   */
+  columnXs()
+  {
+    const listWidth = Window_RefinementDetails.listColumnWidthFromInner(this.innerWidth);
+
+    return [ 0, listWidth, listWidth * 2 ];
+  }
+
+  /**
+   * The width of the result column, which is everything the two lists did not take.
    * @returns {number}
    */
-  refinementColumnTextWidth()
+  resultColumnWidth()
   {
-    return Math.max(64, this.refinementColumnWidth() - 12);
+    const listWidth = Window_RefinementDetails.listColumnWidthFromInner(this.innerWidth);
+
+    return Math.max(96, this.innerWidth - (listWidth * 2));
+  }
+
+  /**
+   * Max draw width for text inside one column.
+   * @param {number} columnWidth The width of the column being drawn into.
+   * @returns {number}
+   */
+  columnTextWidth(columnWidth)
+  {
+    return Math.max(64, columnWidth - 12);
+  }
+
+  /**
+   * The inner Y where each column's content begins - below the titles and the rule under them.
+   *
+   * The scene positions the two list windows against this, which is the reason the headers live on this
+   * window rather than on three of their own: one measurement, one baseline, and the columns cannot
+   * drift apart.
+   * @returns {number}
+   */
+  columnContentInnerStartY()
+  {
+    // title line, the subtext line beneath it, then the rule and a little air under that.
+    return (this.lineHeight() * 2) + 10;
   }
 
   refresh()
@@ -128,163 +183,509 @@ class Window_RefinementDetails
   }
 
   /**
+   * The heading each column carries, paired with a line saying what the column is for.
+   *
+   * The lists themselves used to be unlabelled entirely, which was survivable while only one was on
+   * screen at a time and a hint bar narrated which phase you were in. Two similar-looking columns of
+   * equipment need saying which is which.
+   * @returns {{title: string, subtext: string}[]}
+   */
+  columnHeadings()
+  {
+    return [
+      {
+        title: J.JAFTING.EXT.REFINE.Messages.TitleBase,
+        subtext: 'The equipment being upgraded.',
+      },
+      {
+        title: J.JAFTING.EXT.REFINE.Messages.TitleMaterial,
+        subtext: 'Consumed; its effects merge into the base.',
+      },
+      {
+        title: J.JAFTING.EXT.REFINE.Messages.TitleOutput,
+        subtext: 'What you get if you confirm.',
+      },
+    ];
+  }
+
+  /**
    * Draws all content in this window.
+   *
+   * The headers draw unconditionally: they are the labels for two list windows that are always on
+   * screen, so withholding them until something is selected would leave those lists unlabelled exactly
+   * when the player most needs to know what they are choosing between.
    */
   drawContent()
   {
-    // if we don't have anything in the target slot, do not draw anything.
-    if (!this.primaryEquip) return;
-
     this.drawRefinementHeaders();
 
-    this.drawRefinementTarget();
-    this.drawRefinementMaterial();
     this.drawRefinementResult();
   }
 
   /**
-   * Draws all columns' titles.
+   * Draws every column's title, its explanatory line, and the rule that separates them from content.
    */
   drawRefinementHeaders()
   {
-    const columnWidth = this.refinementColumnWidth();
-    const labelWidth = this.refinementColumnTextWidth();
-    const ox = 0;
+    const headings = this.columnHeadings();
+    const columnXs = this.columnXs();
+    const listWidth = Window_RefinementDetails.listColumnWidthFromInner(this.innerWidth);
+    const ruleY = this.columnContentInnerStartY() - 8;
 
-    this.modFontSize(6);
-    this.toggleBold(true);
-
-    const baseX = ox + (columnWidth * 0);
-    this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleBase, baseX, 0, labelWidth);
-
-    const consumableX = ox + (columnWidth * 1);
-    this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleMaterial, consumableX, 0, labelWidth);
-
-    const outputX = ox + (columnWidth * 2);
-    this.drawText(J.JAFTING.EXT.REFINE.Messages.TitleOutput, outputX, 0, labelWidth);
-
-    this.resetFontSettings();
-  }
-
-  /**
-   * Draws the primary equip that is being used as a base for refinement.
-   * Will draw whatever is being hovered over if nothing is selected.
-   */
-  drawRefinementTarget()
-  {
-    this.drawEquip(this.primaryEquip, 0, "base");
-  }
-
-  /**
-   * Draws the secondary equip that is being used as a material for refinement.
-   * Will draw whatever is being hovered over if nothing is selected.
-   */
-  drawRefinementMaterial()
-  {
-    if (!this.secondaryEquip) return;
-
-    this.drawEquip(this.secondaryEquip, this.refinementColumnWidth(), "material");
-  }
-
-  /**
-   * Draws one column of a piece of equip and it's traits.
-   * @param {RPG_EquipItem} equip The equip to draw details for.
-   * @param {number} x The `x` coordinate to start drawing at.
-   * @param {string} type Which column this is.
-   */
-  drawEquip(equip, x, type)
-  {
-    // parseTraits already consolidates same-dataId parameter traits for display, so what it hands
-    // back is what gets drawn.
-    const parsedTraits = JaftingManager.parseTraits(equip);
-    this.drawEquipTitle(equip, x, type);
-    this.drawEquipTraits(parsedTraits, x);
-  }
-
-  /**
-   * Draws the title for this portion of the equip details.
-   * @param {RPG_EquipItem} equip The equip to draw details for.
-   * @param {number} x The `x` coordinate to start drawing at.
-   * @param {string} type Which column this is.
-   */
-  drawEquipTitle(equip, x, type)
-  {
-    const lh = this.lineHeight();
-    const textW = this.refinementColumnTextWidth();
-
-    if (type === "output")
+    headings.forEach((heading, index) =>
     {
-      if (equip.jaftingRefinedCount === 0)
-      {
-        this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${equip.name} +1\\C[0]`, x, lh * 1, textW);
-      }
-      else
-      {
-        const suffix = `+${equip.jaftingRefinedCount + 1}`;
-        const index = equip.name.lastIndexOf("+");
-        if (index > -1)
-        {
-          // if we found a +, then strip it out and add the suffix to it.
-          const name = `${equip.name.slice(0, index)}${suffix}`;
-          this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${name}\\C[0]`, x, lh * 1, textW);
-        }
-        else
-        {
-          // in cases where a refined equip is being used as a material for a never-before refined
-          // equip, then there won't be any string manipulation for it's name.
-          const name = `${equip.name} ${suffix}`;
-          this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${name}\\C[0]`, x, lh * 1, textW);
-        }
-      }
-    }
-    else
-    {
-      this.drawTextEx(`\\I[${equip.iconIndex}] \\C[6]${equip.name}\\C[0]`, x, lh * 1, textW);
-    }
-  }
+      const columnWidth = index === 2
+        ? this.resultColumnWidth()
+        : listWidth;
+      const textWidth = this.columnTextWidth(columnWidth);
+      const x = columnXs[index];
 
-  /**
-   * Draws all transferable traits on this piece of equipment.
-   * @param {JAFTING_Trait[]} traits A list of transferable traits.
-   * @param {number} x The `x` coordinate to start drawing at.
-   */
-  drawEquipTraits(traits, x)
-  {
-    const lh = this.lineHeight();
-    const textW = this.refinementColumnTextWidth();
+      // the title, a size up and bold, so it reads as chrome rather than content.
+      this.resetFontSettings();
+      this.modFontSize(4);
+      this.toggleBold(true);
+      this.drawText(heading.title, x, 0, textWidth, Window_Base.TextAlignments.Left);
+      this.toggleBold(false);
+      this.resetFontSettings();
 
-    if (!traits.length)
-    {
-      this.drawTextEx(`${J.JAFTING.EXT.REFINE.Messages.NoTransferableTraits}`, x, lh * 2, textW);
-      return;
-    }
+      // the explanatory line, smaller and dimmer, in the manner of the crafting scene's column blurbs.
+      this.modFontSize(-4);
+      this.changeTextColor(ColorManager.textColor(7));
+      this.drawText(heading.subtext, x, this.lineHeight(), textWidth, Window_Base.TextAlignments.Left);
+      this.resetTextColor();
+      this.resetFontSettings();
 
-    // Order rows so later logic can assume stable sequencing.
-    traits.sort((a, b) => a._code - b._code);
-
-    traits.forEach((trait, index) =>
-    {
-      const y = (lh * 2) + (index * lh);
-      this.drawTextEx(`${trait.nameAndValue}`, x, y, textW);
+      // one rule per column rather than a single rule across all three, so the columns read as separate
+      // places rather than as one banded table.
+      this.drawHorizontalLine(x, ruleY, textWidth);
     });
   }
 
   /**
-   * Draws the projected refinement result of fusing the material into the base.
+   * The name a refined output carries, with its `+N` suffix advanced by one.
+   * @param {RPG_EquipItem} equip The projected output.
+   * @returns {string}
+   */
+  outputDisplayName(equip)
+  {
+    const suffix = `+${equip.jaftingRefinedCount + 1}`;
+    const plusIndex = equip.name.lastIndexOf('+');
+
+    // a never-before-refined base has no suffix to replace, and neither does one whose name simply has
+    // no `+` in it - a refined equip used as material against a fresh base lands here too.
+    if (plusIndex === -1) return `${equip.name} ${suffix}`;
+
+    return `${equip.name.slice(0, plusIndex)}${suffix}`;
+  }
+
+  /**
+   * Pairs up what the base has now against what the projected result would have, per effect.
+   *
+   * Keyed on code and dataId together, because that pair is what identifies an effect - two traits
+   * sharing a code are different stats. An effect the base does not carry arrives with a null `before`,
+   * which is what lets the column say "new" rather than quietly listing it alongside the rest.
+   * @param {RPG_EquipItem} result The projected refinement output.
+   * @returns {{key: string, trait: JAFTING_Trait, before: (JAFTING_Trait|null)}[]}
+   */
+  buildResultComparison(result)
+  {
+    const keyOf = trait => `${trait.code()}:${trait.dataId()}`;
+
+    const baseTraits = new Map();
+    JaftingManager.parseTraits(this.primaryEquip)
+      .forEach(trait => baseTraits.set(keyOf(trait), trait));
+
+    const resultTraits = new Map();
+    JaftingManager.parseTraits(result)
+      .forEach(trait => resultTraits.set(keyOf(trait), trait));
+
+    // the union of both sides, not just the result. an effect the merge cancelled out is gone from the
+    // result entirely, and listing only the result would have it vanish from the report as well - which
+    // is the one outcome a player most needs told about.
+    const keys = [ ...new Set([ ...baseTraits.keys(), ...resultTraits.keys() ]) ];
+
+    const rows = keys.map(key =>
+    {
+      const before = baseTraits.has(key)
+        ? baseTraits.get(key)
+        : null;
+      const after = resultTraits.has(key)
+        ? resultTraits.get(key)
+        : null;
+
+      return { key, before, after };
+    });
+
+    // stable ordering so the same merge always reads the same way down the column.
+    return rows.sort((a, b) =>
+    {
+      const left = a.after === null
+        ? a.before
+        : a.after;
+      const right = b.after === null
+        ? b.before
+        : b.after;
+
+      return (left.code() - right.code()) || (left.dataId() - right.dataId());
+    });
+  }
+
+  /**
+   * The neutral value a trait code sits at when nothing is contributing to it.
+   *
+   * Needed to size the gain on an effect the base did not carry: the "before" is not zero, it is whatever
+   * that code treats as no-effect, and the two differ. Matches what {@link TraitResolver} uses when it
+   * combines same-code traits.
+   * @param {number} code The trait code.
+   * @returns {number}
+   */
+  neutralValueForCode(code)
+  {
+    // x-params accumulate from nothing; base and sp params are multipliers sitting at 1.
+    if (code === 22) return 0;
+
+    return 1;
+  }
+
+  /**
+   * How much a row moved, in the same units the values display in.
+   *
+   * Every one of the three parameter codes formats as a hundredths shift - codes 21 and 23 as
+   * `(value * 100) - 100`, code 22 as `value * 100` - so the difference between two of them is the same
+   * arithmetic regardless of which code it is.
+   * @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
+   * @returns {number|null} The shift in display units, or null for a code with no numeric reading.
+   */
+  rowDeltaPoints(row)
+  {
+    const sample = row.after === null
+      ? row.before
+      : row.after;
+    const code = sample.code();
+
+    // only the three parameter codes have a value worth subtracting; the rest are names and flags.
+    if (code !== 21 && code !== 22 && code !== 23) return null;
+
+    const neutral = this.neutralValueForCode(code);
+    const beforeValue = row.before === null
+      ? neutral
+      : row.before.convertToRmTrait().value;
+    const afterValue = row.after === null
+      ? neutral
+      : row.after.convertToRmTrait().value;
+
+    return Math.round((afterValue - beforeValue) * 100);
+  }
+
+  /**
+   * Draws the projected refinement result into the third column, as a before-and-after.
+   *
+   * Only the result is drawn here now. The base and the donor are each visible in their own list, so
+   * repeating them in this window was showing the player two things they had just chosen and calling it
+   * detail. What is genuinely only knowable here is the *change*, which is what this column reports.
    */
   drawRefinementResult()
   {
-    // don't try to draw the result if the player hasn't made it to the material yet.
+    // nothing to project until both halves have been picked; the headings still stand on their own.
     if (!this.primaryEquip || !this.secondaryEquip) return;
 
     // produce the potential result if confirmed.
     const result = JaftingManager.determineRefinementOutput(this.primaryEquip, this.secondaryEquip);
 
-    // render the projected merge results.
-    this.drawEquip(result, this.refinementColumnWidth() * 2, "output");
+    const [ , , x ] = this.columnXs();
+    const columnWidth = this.resultColumnWidth();
+    const textWidth = this.columnTextWidth(columnWidth);
+    const lh = this.lineHeight();
+    let y = this.columnContentInnerStartY();
+
+    // the name it will carry once refined.
+    this.drawTextEx(`\\I[${result.iconIndex}] \\C[6]${this.outputDisplayName(result)}\\C[0]`, x, y, textWidth);
+    y += Math.floor(lh * 1.5);
+
+    const comparison = this.buildResultComparison(result);
+
+    if (comparison.length === 0)
+    {
+      this.drawTextEx(`${J.JAFTING.EXT.REFINE.Messages.NoTransferableTraits}`, x, y, textWidth);
+    }
+    else
+    {
+      // two kinds of effect, and they cannot share a row shape. A parameter has an amount that moved, so
+      // it wants before and after. A granted skill or an attack element has a *name* - there is no
+      // quantity to compare, only whether you now have it, and forcing one into a numeric column
+      // overflows it and collides with the column beside it.
+      const quantified = comparison.filter(row => this.isQuantifiedRow(row));
+      const granted = comparison.filter(row => !this.isQuantifiedRow(row));
+
+      if (quantified.length > 0)
+      {
+        y = this.drawResultComparisonHeader(x, y, textWidth);
+
+        quantified.forEach(row =>
+        {
+          this.drawResultComparisonRow(row, x, y, textWidth);
+          y += lh;
+        });
+
+        // a little air before the granted block, so the two shapes do not read as one broken table.
+        if (granted.length > 0) y += Math.floor(lh * 0.5);
+      }
+
+      granted.forEach(row =>
+      {
+        this.drawGrantedRow(row, x, y, textWidth);
+        y += lh;
+      });
+    }
+
+    // the refinement counter, which the `+N` suffix only ever hinted at.
+    this.drawRefinementCounter(result, x, y + Math.floor(lh * 0.5), textWidth);
 
     // assign it for ease of retrieving from the scene.
     this.outputEquip = result;
+  }
+
+  /**
+   * Whether this row's effect is an amount that can be compared, rather than a thing that is simply had.
+   *
+   * Only the three parameter codes carry a value worth putting in a before-and-after. Everything else
+   * formats as a name - a skill to learn, an element to strike with, a slot to seal - and the only news
+   * about one of those is whether the merge brought it along.
+   * @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
+   * @returns {boolean}
+   */
+  isQuantifiedRow(row)
+  {
+    const sample = row.after === null
+      ? row.before
+      : row.after;
+    const code = sample.code();
+
+    return code === 21 || code === 22 || code === 23;
+  }
+
+  /**
+   * Draws an effect that is had rather than measured, on one full-width line.
+   *
+   * The whole row width goes to the label, because these read as sentences - "Learn: Palate Cleanser" -
+   * and the only column beside it says whether it is arriving or leaving.
+   * @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
+   * @param {number} x The column origin.
+   * @param {number} y The vertical position to draw at.
+   * @param {number} textWidth The drawable width of the result column.
+   */
+  drawGrantedRow(row, x, y, textWidth)
+  {
+    const { colW } = this.resultComparisonColumns(textWidth);
+    const sample = row.after === null
+      ? row.before
+      : row.after;
+    const iconIndex = sample.convertToRmTrait()
+      .iconIndex();
+
+    const isLost = row.after === null;
+    const isNew = row.before === null;
+    const isCarried = !isLost && !isNew;
+
+    // the label takes everything except the verdict column on the right.
+    const labelWidth = textWidth - colW - 8;
+
+    // an effect the base already had recedes. this panel answers "what changes", and a row that changes
+    // nothing is context rather than an answer - four of them at full strength read as the news.
+    const name = isCarried
+      ? `\\C[7]${sample.nameAndValue}\\C[0]`
+      : sample.nameAndValue;
+    const label = iconIndex > 0
+      ? `\\I[${iconIndex}]${name}`
+      : name;
+    this.drawTextEx(label, x, y, labelWidth);
+
+    // and needs no announcement in the verdict column either.
+    if (isCarried) return;
+
+    this.changeTextColor(ColorManager.textColor(isLost
+      ? 18
+      : 24));
+    this.drawText(isLost
+      ? 'lost'
+      : 'new', x + labelWidth + 8, y, colW, Window_Base.TextAlignments.Right);
+    this.resetTextColor();
+  }
+
+  /**
+   * The x offsets, relative to the column origin, of the before / after / delta columns.
+   *
+   * The three numeric columns are kept deliberately narrow and adjacent rather than spread across the
+   * full width. Three numbers that belong to one row have to be readable as a group; spacing them evenly
+   * across the column made each row look like three unrelated facts.
+   * @param {number} textWidth The drawable width of the result column.
+   * @returns {{beforeX: number, afterX: number, deltaX: number, colW: number, nameWidth: number}}
+   */
+  resultComparisonColumns(textWidth)
+  {
+    const colW = 96;
+    const groupWidth = colW * 3;
+
+    // the name takes what the number group does not, capped so a long stat name cannot shove the numbers
+    // off the right edge.
+    const nameWidth = Math.max(120, textWidth - groupWidth - 8);
+
+    return {
+      beforeX: nameWidth + 8,
+      afterX: nameWidth + 8 + colW,
+      deltaX: nameWidth + 8 + (colW * 2),
+      colW,
+      nameWidth,
+    };
+  }
+
+  /**
+   * Labels the before and after columns so the two numbers on each row are not ambiguous.
+   * @param {number} x The column origin.
+   * @param {number} y The vertical position to draw at.
+   * @param {number} textWidth The drawable width of the result column.
+   * @returns {number} The vertical position the first row should start at.
+   */
+  drawResultComparisonHeader(x, y, textWidth)
+  {
+    const { beforeX, afterX, colW } = this.resultComparisonColumns(textWidth);
+
+    this.modFontSize(-4);
+    this.changeTextColor(ColorManager.textColor(7));
+    this.drawText('now', x + beforeX, y, colW, Window_Base.TextAlignments.Right);
+    this.drawText('after', x + afterX, y, colW, Window_Base.TextAlignments.Right);
+    this.resetTextColor();
+    this.resetFontSettings();
+
+    return y + this.lineHeight();
+  }
+
+  /**
+   * Draws one effect's before, after, and what changed between them.
+   * @param {{trait: JAFTING_Trait, before: (JAFTING_Trait|null)}} row The paired effect.
+   * @param {number} x The column origin.
+   * @param {number} y The vertical position to draw at.
+   * @param {number} textWidth The drawable width of the result column.
+   */
+  drawResultComparisonRow(row, x, y, textWidth)
+  {
+    const { beforeX, afterX, deltaX, colW, nameWidth } = this.resultComparisonColumns(textWidth);
+    const sample = row.after === null
+      ? row.before
+      : row.after;
+    const iconIndex = sample.convertToRmTrait()
+      .iconIndex();
+
+    // the icon where one exists; the name carries the meaning either way.
+    const label = iconIndex > 0
+      ? `\\I[${iconIndex}]${sample.name}`
+      : sample.name;
+    this.drawTextEx(label, x, y, nameWidth);
+
+    // an absent side reads as a dash rather than a zero, which would claim it sat at zero.
+    const beforeText = row.before === null
+      ? '-'
+      : row.before.value;
+    const afterText = row.after === null
+      ? '-'
+      : row.after.value;
+
+    this.drawText(beforeText, x + beforeX, y, colW, Window_Base.TextAlignments.Right);
+    this.drawText(afterText, x + afterX, y, colW, Window_Base.TextAlignments.Right);
+
+    this.drawResultComparisonDelta(row, x + deltaX, y, colW);
+  }
+
+  /**
+   * Draws what changed on one row, as the signed amount rather than a word.
+   *
+   * The sign carries the direction, so no arrow is needed on top of it - and a number says how much,
+   * which "up" never did. A row whose value the merge did not move says so plainly instead of claiming a
+   * gain it did not deliver.
+   * @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
+   * @param {number} x The delta column's absolute origin.
+   * @param {number} y The vertical position to draw at.
+   * @param {number} colW The delta column's width.
+   */
+  drawResultComparisonDelta(row, x, y, colW)
+  {
+    const alignRight = Window_Base.TextAlignments.Right;
+
+    // an effect the merge removed outright is the loudest thing that can happen to a row.
+    if (row.after === null)
+    {
+      this.changeTextColor(ColorManager.textColor(18));
+      this.drawText('lost', x, y, colW, alignRight);
+      this.resetTextColor();
+
+      return;
+    }
+
+    const delta = this.rowDeltaPoints(row);
+
+    // a code with no numeric reading can only report that it arrived, not by how much.
+    if (delta === null)
+    {
+      const colorIndex = row.before === null
+        ? 24
+        : 7;
+      this.changeTextColor(ColorManager.textColor(colorIndex));
+      this.drawText(row.before === null
+        ? 'new'
+        : '-', x, y, colW, alignRight);
+      this.resetTextColor();
+
+      return;
+    }
+
+    // unchanged is its own answer. saying "up" here was claiming a gain the refinement never made.
+    if (delta === 0)
+    {
+      this.changeTextColor(ColorManager.textColor(7));
+      this.drawText('-', x, y, colW, alignRight);
+      this.resetTextColor();
+
+      return;
+    }
+
+    const isGain = delta > 0;
+    this.changeTextColor(ColorManager.textColor(isGain
+      ? 24
+      : 18));
+    this.drawText(`${isGain ? '+' : ''}${delta}`, x, y, colW, alignRight);
+    this.resetTextColor();
+  }
+
+  /**
+   * Draws how many refinements this equip will have used, against its ceiling.
+   * @param {RPG_EquipItem} result The projected refinement output.
+   * @param {number} x The column origin.
+   * @param {number} y The vertical position to draw at.
+   * @param {number} textWidth The drawable width of the result column.
+   */
+  drawRefinementCounter(result, x, y, textWidth)
+  {
+    const { beforeX, afterX, deltaX, colW, nameWidth } = this.resultComparisonColumns(textWidth);
+    const cap = this.primaryEquip.jaftingMaxRefineCount;
+
+    this.modFontSize(-2);
+    this.changeTextColor(ColorManager.systemColor());
+    this.drawText('refinements', x, y, nameWidth, Window_Base.TextAlignments.Left);
+    this.resetTextColor();
+
+    this.drawText(`${this.primaryEquip.jaftingRefinedCount}`, x + beforeX, y, colW, Window_Base.TextAlignments.Right);
+    this.drawText(`${result.jaftingRefinedCount + 1}`, x + afterX, y, colW, Window_Base.TextAlignments.Right);
+
+    // the ceiling belongs in the third column with the other per-row verdicts, and only when there is
+    // one - a cap of zero is the tag being absent, not a limit of none, so it says nothing at all.
+    if (cap > 0)
+    {
+      this.changeTextColor(ColorManager.textColor(7));
+      this.drawText(`of ${cap}`, x + deltaX, y, colW, Window_Base.TextAlignments.Right);
+      this.resetTextColor();
+    }
+
+    this.resetFontSettings();
   }
 }
 
