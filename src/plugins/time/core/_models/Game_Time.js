@@ -669,10 +669,11 @@ class Game_Time
       return false;
     }
 
-    // if we don't have a map to inspect, don't try to interpret it.
+    // if we don't have a map to inspect, don't try to interpret it. this is asked once a frame, and a transfer
+    // leaves `$dataMap` empty for as long as the next map takes to load - so this is a state to wait out rather
+    // than report, and saying so every frame buries anything worth reading.
     if (!$dataMap || !$dataMap.meta)
     {
-      console.warn("no datamap to inspect.");
       return false;
     }
 

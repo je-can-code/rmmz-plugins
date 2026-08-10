@@ -23,8 +23,9 @@ Input._updateGamepadState = function(gamepad)
   // perform original logic.
   J.UTILS.Aliased.Input.get("_updateGamepadState").call(this, gamepad);
 
-  // extract the updated button state array populated by the original logic.
-  const next = this.gamepadStates()[gamepad.index] || [];
+  // extract the updated button state array populated by the original logic. Unlike `prev` above,
+  // this one always exists: the original unconditionally assigns the slot before returning.
+  const next = this.gamepadStates()[gamepad.index];
 
   // log only fresh presses resolved through the centralized mapper.
   J.UTILS.GamepadLog.logFreshPresses(gamepad, prev, next);

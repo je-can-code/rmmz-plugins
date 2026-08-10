@@ -97,6 +97,48 @@ describe('Game_BattlerBase / Game_Battler lst/mst/tst + onHeal (resources ext/ab
 
       expect(battler.tst).toBeCloseTo(0.2);
     });
+
+    it('leaves magisteal at its note-derived rate when the SDP system is not installed', () =>
+    {
+      // Arrange- J-SDP is optional, and a battler without it has no bonus method at all rather than
+      // a method answering zero.
+      const battler = new globalThis.Game_Battler();
+      battler.getAllNotes = () => [];
+      globalThis.RPGManager.getSumFromAllNotesByRegex.mockImplementation((_notes, regexp) =>
+        (regexp === globalThis.J.RESOURCES.EXT.ABS.RegExp.Manasteal ? 10 : 0));
+
+      // Act & Assert
+      expect(battler.mst).toBeCloseTo(0.1);
+    });
+
+    it('adds the SDP bonus to lifesteal under its own parameter key', () =>
+    {
+      // Arrange- the three drain rates are separate registry keys, and a copy-paste that left all
+      // three asking for the same key would hand a lifesteal panel's bonus to magisteal too.
+      const battler = new globalThis.Game_Battler();
+      battler.getAllNotes = () => [];
+      globalThis.RPGManager.getSumFromAllNotesByRegex.mockImplementation((_notes, regexp) =>
+        (regexp === globalThis.J.RESOURCES.EXT.ABS.RegExp.Lifesteal ? 10 : 0));
+      battler.getSdpBonusForParameterKey = vi.fn(() => 0.05);
+
+      // Act & Assert
+      expect(battler.lst).toBeCloseTo(0.15);
+      expect(battler.getSdpBonusForParameterKey).toHaveBeenCalledWith('lst', 1);
+    });
+
+    it('adds the SDP bonus to techsteal under its own parameter key', () =>
+    {
+      // Arrange
+      const battler = new globalThis.Game_Battler();
+      battler.getAllNotes = () => [];
+      globalThis.RPGManager.getSumFromAllNotesByRegex.mockImplementation((_notes, regexp) =>
+        (regexp === globalThis.J.RESOURCES.EXT.ABS.RegExp.Techsteal ? 20 : 0));
+      battler.getSdpBonusForParameterKey = vi.fn(() => 0.05);
+
+      // Act & Assert
+      expect(battler.tst).toBeCloseTo(0.25);
+      expect(battler.getSdpBonusForParameterKey).toHaveBeenCalledWith('tst', 1);
+    });
   });
 
   describe('onHeal aliasing', () =>

@@ -105,6 +105,24 @@ describe('CAMods Game_Actor (real engine direct import)', () =>
       expect(actor.basicFloorDamage()).toBe(10);
     });
 
+    it('routes basicFloorDamage through the calculated version once the map carries meta', () =>
+    {
+      // Arrange- the engine's flat 10 is what a map without any damage-floor tags gets; a tagged map
+      // must reach the calculation instead, or every damage floor in the game deals the same amount.
+      const actor = buildActor();
+      globalThis.$dataMap = { note: String.empty, meta: {} };
+      const calculateFloorDamage = vi.spyOn(actor, 'calculateFloorDamage').mockReturnValue(42);
+
+      // Act
+      const damage = actor.basicFloorDamage();
+
+      // Assert
+      expect(damage).toBe(42);
+      expect(calculateFloorDamage).toHaveBeenCalled();
+
+      calculateFloorDamage.mockRestore();
+    });
+
     it('uses calculateFloorDamage() when $dataMap and its meta are both present', () =>
     {
       const actor = buildActor();

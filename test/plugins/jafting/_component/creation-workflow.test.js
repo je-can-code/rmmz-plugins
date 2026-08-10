@@ -140,6 +140,141 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
       expect(session.getCategoryKey()).toBe(null);
     });
 
+    it('starts with no ingredient selections', () =>
+    {
+      // Arrange
+      const session = new CraftingCreationSession();
+
+      // Act
+      const selections = session.getSelections();
+
+      // Assert
+      expect(selections.size).toBe(0);
+    });
+
+    it('beginIngredientSelection enters the selecting phase', () =>
+    {
+      // Arrange
+      const session = new CraftingCreationSession();
+
+      // Act
+      session.beginIngredientSelection();
+
+      // Assert
+      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.SelectingIngredients);
+    });
+
+    it('beginIngredientSelection discards picks left over from an abandoned craft', () =>
+    {
+      // Arrange
+      const session = new CraftingCreationSession();
+      session.recordSelection(0, { id: 1 });
+
+      // Act
+      session.beginIngredientSelection();
+
+      // Assert
+      expect(session.getSelections().size).toBe(0);
+    });
+
+    it('recordSelection stores the chosen entry against its ingredient index', () =>
+    {
+      // Arrange
+      const session = new CraftingCreationSession();
+      const chosen = { id: 388, name: 'Grim Flank' };
+
+      // Act
+      session.recordSelection(2, chosen);
+
+      // Assert
+      expect(session.getSelections().get(2)).toBe(chosen);
+    });
+
+    it('cancelIngredientSelection returns to browsing recipes', () =>
+    {
+      // Arrange
+      const session = new CraftingCreationSession();
+      session.beginIngredientSelection();
+
+      // Act
+      session.cancelIngredientSelection();
+
+      // Assert
+      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingRecipes);
+    });
+
+    it('cancelIngredientSelection throws away the picks made so far', () =>
+    {
+      // Arrange
+      const session = new CraftingCreationSession();
+      session.beginIngredientSelection();
+      session.recordSelection(0, { id: 1 });
+
+      // Act
+      session.cancelIngredientSelection();
+
+      // Assert
+      expect(session.getSelections().size).toBe(0);
+    });
+
+    it('reset clears selections along with the rest of the session', () =>
+    {
+      // Arrange
+      const session = new CraftingCreationSession();
+      session.recordSelection(0, { id: 1 });
+
+      // Act
+      session.reset();
+
+      // Assert
+      expect(session.getSelections().size).toBe(0);
+    });
+
+    it('tryCraftRecipe hands the recorded selections to the recipe', () =>
+    {
+      // Arrange
+      const session = new CraftingCreationSession();
+      const craftMany = vi.fn();
+      const recipe = { canCraft: () => true, craftMany, maxCraftableCount: () => 1 };
+      const chosen = { id: 388 };
+      session.recordSelection(0, chosen);
+
+      // Act
+      session.tryCraftRecipe(recipe);
+
+      // Assert
+      const [ [ , passed ] ] = craftMany.mock.calls;
+      expect(passed.get(0)).toBe(chosen);
+    });
+
+    it('tryCraftRecipe clears selections so the next craft starts clean', () =>
+    {
+      // Arrange - picks belong to one craft; carrying them forward would spend the wrong entry.
+      const session = new CraftingCreationSession();
+      const recipe = { canCraft: () => true, craftMany: vi.fn(), maxCraftableCount: () => 1 };
+      session.recordSelection(0, { id: 388 });
+
+      // Act
+      session.tryCraftRecipe(recipe);
+
+      // Assert
+      expect(session.getSelections().size).toBe(0);
+    });
+
+    it('tryCraftRecipe returns to browsing recipes after a successful craft', () =>
+    {
+      // Arrange
+      const session = new CraftingCreationSession();
+      const recipe = { canCraft: () => true, craftMany: vi.fn(), maxCraftableCount: () => 1 };
+      session.beginIngredientSelection();
+
+      // Act
+      session.tryCraftRecipe(recipe);
+
+      // Assert
+      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingRecipes);
+    });
+
     it('tryCraftRecipe records no_recipe when recipe is null', () =>
     {
       // Arrange
@@ -147,6 +282,19 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
 
       // Act
       const out = session.tryCraftRecipe(null);
+
+      // Assert
+      expect(out).toEqual({ crafted: false, playedSuccessSound: false, reason: 'no_recipe' });
+    });
+
+    it('tryCraftRecipe records no_recipe when recipe is undefined', () =>
+    {
+      // Arrange- the signature documents undefined as a real input, and it is what an empty recipe list
+      // hands back. Only testing null leaves that half of the guard doing nothing detectable.
+      const session = new CraftingCreationSession();
+
+      // Act
+      const out = session.tryCraftRecipe(undefined);
 
       // Assert
       expect(out).toEqual({ crafted: false, playedSuccessSound: false, reason: 'no_recipe' });
@@ -181,14 +329,14 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
     {
       // Arrange
       const session = new CraftingCreationSession();
-      const craft = vi.fn();
-      const recipe = { canCraft: () => true, craft };
+      const craftMany = vi.fn();
+      const recipe = { canCraft: () => true, craftMany, maxCraftableCount: () => 1 };
 
       // Act
       const out = session.tryCraftRecipe(recipe);
 
-      // Assert
-      expect(craft).toHaveBeenCalledTimes(1);
+      // Assert - one repetition by default, since the count is only ever raised deliberately.
+      expect(craftMany).toHaveBeenCalledWith(1, expect.any(Map));
       expect(out).toEqual({ crafted: true, playedSuccessSound: true, reason: null });
     });
 

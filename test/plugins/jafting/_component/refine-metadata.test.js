@@ -58,6 +58,26 @@ describe('J-JAFTING + J-JAFTING-Refinement metadata (direct src import)', () =>
       .toBe(Number(DEFAULT_JAFTING_REFINE_PLUGIN_PARAMS['menu-icon']));
   });
 
+  it('falls back to a default command name when the parameter is absent', async () =>
+  {
+    // Arrange - a cleared menu-name parameter still has to name the command in the menu.
+    vi.resetModules();
+    globalThis.PluginManager = {
+      parameters: () => ({ 'menu-switch': '333', 'menu-icon': '77' }),
+      registerCommand()
+      {
+      },
+    };
+    globalThis.__PLUGIN_NAME__ = 'J-JAFTING-Refinement-NoName';
+    globalThis.__PLUGIN_VERSION__ = '2.1.0';
+
+    // Act
+    await import('../../../../src/plugins/jafting/ext/refine/_metadata/initialization.js');
+
+    // Assert
+    expect(globalThis.J.JAFTING.EXT.REFINE.Metadata.commandName).toBe('Refinement');
+  });
+
   describe('host version requirements', () =>
   {
     it('throws when J-Base does not satisfy the minimum required version', async () =>

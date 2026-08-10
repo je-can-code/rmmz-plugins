@@ -19,7 +19,7 @@ describe('J-ABS-Speed RPG_Base (unit, all downstream dependencies mocked)', () =
       },
     };
 
-    globalThis.RPGManager = { getNumberFromNoteByRegex: vi.fn() };
+    globalThis.RPGManager = { getSumFromNoteByRegex: vi.fn() };
 
     function RPG_Base()
     {
@@ -32,22 +32,24 @@ describe('J-ABS-Speed RPG_Base (unit, all downstream dependencies mocked)', () =
 
   beforeEach(() =>
   {
-    globalThis.RPGManager.getNumberFromNoteByRegex.mockReset();
+    globalThis.RPGManager.getSumFromNoteByRegex.mockReset();
   });
 
   describe('jabsSpeedBoost', () =>
   {
-    it('reads the walk-speed-boost tag from notes', () =>
+    it('sums the walk-speed-boost tag across the note rather than keeping the last', () =>
     {
+      // a boost declared twice on one row means both apply - `refreshSpeedBoots` adds these up across
+      // every note source, so a per-source read that kept only the last would drop one silently.
       // Arrange
       const dbObject = Object.create(globalThis.RPG_Base.prototype);
-      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(25);
+      globalThis.RPGManager.getSumFromNoteByRegex.mockReturnValue(25);
 
       // Act
       const result = dbObject.jabsSpeedBoost;
 
       // Assert
-      expect(globalThis.RPGManager.getNumberFromNoteByRegex).toHaveBeenCalledWith(dbObject, WALK_SPEED_BOOST_REGEX, true);
+      expect(globalThis.RPGManager.getSumFromNoteByRegex).toHaveBeenCalledWith(dbObject, WALK_SPEED_BOOST_REGEX, true);
       expect(result).toBe(25);
     });
   });

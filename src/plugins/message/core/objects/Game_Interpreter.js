@@ -69,7 +69,6 @@ Game_Interpreter.prototype.hideSpecificChoiceBranches = function(params)
   // convert the indices into an array of arrays that represent the actual choice code embedded within the choices.
   const choiceGroups = showChoiceIndices.reduce((runningCollection, choiceIndex, index) =>
   {
-    if (showChoiceIndices.length < index) return;
     const startIndex = choiceIndex;
     const endIndex = showChoiceIndices.at(index + 1);
 

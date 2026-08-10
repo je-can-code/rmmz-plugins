@@ -180,6 +180,235 @@ J.BASE.RegExp.ParsableComment = /^<[[\]\w :"',.!+\-*/\\]+>$/i;
  */
 J.BASE.RegExp.MaxTp = /<maxTp: ?(-?\d+)>/i;
 
+//region this-parameter bases
+/**
+ * A flat amount of one parameter that **this row itself carries**, rather than one it grants its bearer.
+ *
+ * <pre>
+ * Structure:
+ *  <this{PARAM}:AMOUNT>
+ *
+ * Example:
+ *  <thisAtk:15>
+ *
+ * Translation:
+ *  This row contributes 15 points of ATK of its own.
+ * </pre>
+ *
+ * **Why these exist.** RMMZ gives equipment a `params` array for the eight base parameters and nothing at
+ * all for the twenty ex- and sp-parameters, which can only ever arrive as traits. A trait has no amount
+ * of its own to speak of - it multiplies whatever the *battler* already has - so there is no way in the
+ * editor to say "this shield is worth 25 points of parry". These tags are that missing field, in the same
+ * manner {@link J.BASE.RegExp.MaxTp} is the missing field for a resource RMMZ never modelled.
+ *
+ * That matters because it is what lets a percentage scale the *item* instead of its wearer. A `+25% ATK`
+ * on a sword can multiply the sword's own contribution once the sword has one, which keeps a legendary
+ * blade permanently worth more than a plussed-up Iron Sword - and stops a defensive stat being piled onto
+ * anything that will hold it.
+ *
+ * All twenty-eight are declared, including the eight the editor already covers via `params`. A refinement
+ * merge can produce any of them, so a `<thisAtk:>` arriving on a merged output needs somewhere to land
+ * rather than a special case. Where a row declares both, the two sum.
+ *
+ * **Amounts are in display units** - the same numbers the editor and the UI show, not the internal rates.
+ * `<thisGrd:25>` is twenty-five points of parry, matching the convention `<sar:25>` already uses.
+ */
+
+//region base parameters
+/**
+ * Flat max hit points this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisMhp = /<thisMhp: ?(-?\d+)>/i;
+
+/**
+ * Flat max magi this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisMmp = /<thisMmp: ?(-?\d+)>/i;
+
+/**
+ * Flat max tech this row carries.
+ *
+ * Belongs beside max life and max magi - {@link ParameterKeys} files it as a long parameter alongside them
+ * and `PassiveRuleThreshold` treats all three as max resources - and it is only absent from the eight
+ * because RMMZ fixed tech at a flat hundred for every battler rather than modelling it.
+ *
+ * Distinct from {@link J.BASE.RegExp.MaxTp}, which grants its **bearer** extra max tech wherever it is
+ * declared. This one is an amount the row itself is worth, so a percentage can scale it. A row may carry
+ * both, and they mean different things.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisMtp = /<thisMtp: ?(-?\d+)>/i;
+
+/**
+ * Flat attack this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisAtk = /<thisAtk: ?(-?\d+)>/i;
+
+/**
+ * Flat defense this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisDef = /<thisDef: ?(-?\d+)>/i;
+
+/**
+ * Flat magic attack this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisMat = /<thisMat: ?(-?\d+)>/i;
+
+/**
+ * Flat magic defense this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisMdf = /<thisMdf: ?(-?\d+)>/i;
+
+/**
+ * Flat agility this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisAgi = /<thisAgi: ?(-?\d+)>/i;
+
+/**
+ * Flat luck this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisLuk = /<thisLuk: ?(-?\d+)>/i;
+//endregion base parameters
+
+//region ex-parameters
+/**
+ * Flat accuracy this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisHit = /<thisHit: ?(-?\d+)>/i;
+
+/**
+ * Flat evasion this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisEva = /<thisEva: ?(-?\d+)>/i;
+
+/**
+ * Flat critical hit chance this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisCri = /<thisCri: ?(-?\d+)>/i;
+
+/**
+ * Flat critical evasion this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisCev = /<thisCev: ?(-?\d+)>/i;
+
+/**
+ * Flat magic evasion this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisMev = /<thisMev: ?(-?\d+)>/i;
+
+/**
+ * Flat magic reflection this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisMrf = /<thisMrf: ?(-?\d+)>/i;
+
+/**
+ * Flat counter attack chance this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisCnt = /<thisCnt: ?(-?\d+)>/i;
+
+/**
+ * Flat hp regeneration this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisHrg = /<thisHrg: ?(-?\d+)>/i;
+
+/**
+ * Flat magi regeneration this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisMrg = /<thisMrg: ?(-?\d+)>/i;
+
+/**
+ * Flat tech regeneration this row carries.
+ *
+ * Mind the neighbour: this is regeneration, while {@link J.BASE.RegExp.ThisTgr} one region below is
+ * target rate. The two abbreviations are a transposition apart and mean unrelated things.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisTrg = /<thisTrg: ?(-?\d+)>/i;
+//endregion ex-parameters
+
+//region sp-parameters
+/**
+ * Flat target rate this row carries - how much aggro it draws.
+ *
+ * Mind the neighbour: this is target rate, while {@link J.BASE.RegExp.ThisTrg} one region above is tech
+ * regeneration.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisTgr = /<thisTgr: ?(-?\d+)>/i;
+
+/**
+ * Flat guard rate this row carries - parry.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisGrd = /<thisGrd: ?(-?\d+)>/i;
+
+/**
+ * Flat recovery rate this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisRec = /<thisRec: ?(-?\d+)>/i;
+
+/**
+ * Flat pharmacology this row carries - potency of consumed items.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisPha = /<thisPha: ?(-?\d+)>/i;
+
+/**
+ * Flat magi cost reduction this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisMcr = /<thisMcr: ?(-?\d+)>/i;
+
+/**
+ * Flat tech charge rate this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisTcr = /<thisTcr: ?(-?\d+)>/i;
+
+/**
+ * Flat physical damage rate this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisPdr = /<thisPdr: ?(-?\d+)>/i;
+
+/**
+ * Flat magical damage rate this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisMdr = /<thisMdr: ?(-?\d+)>/i;
+
+/**
+ * Flat floor damage rate this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisFdr = /<thisFdr: ?(-?\d+)>/i;
+
+/**
+ * Flat experience rate this row carries.
+ * @type {RegExp}
+ */
+J.BASE.RegExp.ThisExr = /<thisExr: ?(-?\d+)>/i;
+//endregion sp-parameters
+//endregion this-parameter bases
+
 /**
  * One or more type classifiers assigned to a state.
  * Multiple tags on the same state are all collected.
@@ -223,6 +452,7 @@ J.BASE.Aliased = {
   Input: new Map(),
   Scene_Base: new Map(),
   Scene_Boot: new Map(),
+  Scene_Map: new Map(),
   Scene_MenuBase: new Map(),
   SoundManager: new Map(),
   Window_Base: new Map(),

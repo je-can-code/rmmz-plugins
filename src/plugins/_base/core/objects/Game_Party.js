@@ -70,6 +70,93 @@ Game_Party.prototype.rawArmors = function()
 };
 //endregion properties
 
+//region reconciliation
+/**
+ * Drops every inventory entry whose database row no longer exists, and shouts about each one.
+ *
+ * **A savefile outlives the database it was written against.** Deleting a row during development is ordinary and
+ * correct - a whole family of weapons stops being part of the game - but every save written beforehand still holds
+ * that row in its containers. Those containers store quantities against keys, so a deleted row leaves a key
+ * pointing at nothing, and `Game_Party.weapons` resolves it by handing back `undefined`.
+ *
+ * Vanilla survives that only by luck: `DataManager.isItem` reads `item && …`, so engine windows silently skip the
+ * gaps. Plugin code that asks a row a question first - `datum.isArmor()` - dies instead, somewhere entirely
+ * unrelated to the deletion, with a stack trace that names neither the row nor the reason.
+ *
+ * So the reconciliation happens once, out loud, in one place. This is deliberately **not** a guard sprinkled across
+ * every predicate that touches inventory: the entry is genuinely gone, and the honest thing is to say so and drop
+ * it, rather than teach fifty callers to tiptoe around a hole.
+ */
+Game_Party.prototype.pruneMissingInventoryEntries = function()
+{
+  const prunedItems = this.pruneMissingFromContainer(this.rawItems(), $dataItems, 'i');
+  const prunedWeapons = this.pruneMissingFromContainer(this.rawWeapons(), $dataWeapons, 'w');
+  const prunedArmors = this.pruneMissingFromContainer(this.rawArmors(), $dataArmors, 'a');
+  const pruned = prunedItems.concat(prunedWeapons, prunedArmors);
+
+  // staying quiet is the overwhelmingly common case, and a message every map entry would train the reader to
+  // ignore the one that matters.
+  if (pruned.length === 0)
+  {
+    return;
+  }
+
+  this.reportPrunedInventoryEntries(pruned);
+};
+
+/**
+ * Removes the keys of one container that no longer resolve to a row, reporting what was removed.
+ *
+ * Keys are read against the datastore rather than trusted, because that is the whole question being asked. Note
+ * this is indexed by the container's own key, which is the row's index rather than its id - the two agree for
+ * anything authored in the editor, and dynamically created rows are the reason the distinction exists.
+ * @param {Object<number, number>} container The raw key-to-quantity map to prune.
+ * @param {RPG_BaseItem[]} datastore The table those keys are supposed to index.
+ * @param {string} type The datastore letter this container holds - `i`, `w`, or `a`.
+ * @returns {string[]} One `type`-prefixed key per entry removed, such as `w181`.
+ */
+Game_Party.prototype.pruneMissingFromContainer = function(container, datastore, type)
+{
+  const pruned = [];
+
+  Object.keys(container)
+    .forEach(key =>
+    {
+      // a row that resolves is none of this method's business.
+      if (datastore[key])
+      {
+        return;
+      }
+
+      pruned.push(`${type}${key}`);
+
+      delete container[key];
+    });
+
+  return pruned;
+};
+
+/**
+ * Announces, in one line, the inventory entries that were dropped because their database rows are gone.
+ *
+ * Deliberately a single message rather than one per entry. Deletions come in families - a whole tier of weapons
+ * retired at once - so a per-entry report is dozens of near-identical lines that bury the very pattern that makes
+ * the cause recognisable. The keys are listed in the same `i` / `w` / `a` shorthand the salvage ledger uses, so a
+ * reader already knows how to read them.
+ * @param {string[]} pruned Every dropped entry, already type-prefixed.
+ */
+Game_Party.prototype.reportPrunedInventoryEntries = function(pruned)
+{
+  const plural = pruned.length === 1
+    ? 'entry'
+    : 'entries';
+  const listed = pruned.join(',');
+
+  console.warn(`J-BASE: dropped ${pruned.length} inventory ${plural} whose database rows no longer exist `
+    + `(rows deleted after this save was written): [${listed}]`);
+};
+//endregion reconciliation
+
 /**
  * Overwrites {@link #gainItem}.<br/>
  * Replaces item gain and management with index-based management instead.
@@ -86,7 +173,7 @@ Game_Party.prototype.gainItem = function(item, amount, includeEquip)
     return;
   }
 
-  // grab the container of items.S
+  // grab the container of items.
   const container = this.itemContainer(item);
 
   // check to make sure we have a container.

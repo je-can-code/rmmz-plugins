@@ -15,6 +15,38 @@ Window_EquipItem.prototype.initialize = function(rect)
 };
 
 /**
+ * Extends {@link #makeItemList}.<br/>
+ * Orders the list by database id rather than by the datastore slot each row happens to occupy.
+ *
+ * A refined equip keeps the id of the thing it was refined from and only takes a new slot, so slot order
+ * strands every refined copy in a block at the bottom of the list, far from the plain one it came from.
+ * Ordering by id sits them together, which is how a player thinks of them - one weapon, several states of
+ * it - and it makes two copies of the same equip adjacent instead of scattered.
+ *
+ * The empty row that means "take this slot off" is not an item and has no id, so it stays pinned last.
+ */
+J.CMS.EXT.EQUIP.Aliased.Window_EquipItem.set('makeItemList', Window_EquipItem.prototype.makeItemList);
+Window_EquipItem.prototype.makeItemList = function()
+{
+  // perform original logic.
+  J.CMS.EXT.EQUIP.Aliased.Window_EquipItem.get('makeItemList')
+    .call(this);
+
+  // sorted in place; the accessor hands back the same array the original logic just built.
+  this.data()
+    .sort((left, right) =>
+    {
+      // the unequip row is the one entry with nothing to compare; it belongs at the end either way.
+      if (left === null) return 1;
+      if (right === null) return -1;
+
+      // a shared id means copies of one equip in differing states of refinement, and the slot orders
+      // those - which puts the plain one ahead of everything refined from it.
+      return (left.id - right.id) || (left._index() - right._index());
+    });
+};
+
+/**
  * Refreshes the more data window.
  */
 Window_EquipItem.prototype.refreshMoreData = function()

@@ -276,6 +276,18 @@ export function installBitmapMock()
       };
     },
   });
+
+  // replacing the constructor wholesale drops the statics the real `Bitmap` carries, and this is the
+  // one anything reads an image through. The result arrives already loaded and generously sized, for
+  // the same reason `ImageManager` hands back oversized mocks: a consumer that slices the result into
+  // a grid throws against anything smaller, and a test about drawing should not fail over that.
+  globalThis.Bitmap.load = function(url)
+  {
+    const loaded = new globalThis.Bitmap(816, 624);
+    loaded.url = url;
+
+    return loaded;
+  };
 }
 
 /**

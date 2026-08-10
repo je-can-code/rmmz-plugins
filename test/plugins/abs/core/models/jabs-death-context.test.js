@@ -106,5 +106,41 @@ describe('JABS_DeathContext (unit, all downstream dependencies mocked)', () =>
       expect(getBattlerByUuidMock).toHaveBeenCalledWith('killer-uuid');
     });
   });
+
+  describe('save codec seed', () =>
+  {
+    it('spells out the cold equivalent of every value a killing blow would supply', () =>
+    {
+      // Arrange- `initMembers` takes all four as parameters and the decoder never runs a
+      // constructor, so anything this seed omits comes back off disk as `undefined`. An undefined
+      // `elementIds` in particular would throw the first time a death was inspected for its element.
+      const [ [ , declaration ] ] = globalThis.SerializableRegistry.register.mock.calls;
+      const instance = Object.create(JABS_DeathContext.prototype);
+
+      // Act
+      declaration.seed(instance);
+
+      // Assert
+      expect(instance.elementIds).toEqual([]);
+      expect(instance.hitType).toBe(String.empty);
+      expect(instance.stypeId).toBe(0);
+      expect(instance.killerUuid).toBe(String.empty);
+    });
+
+    it('hands each decoded context its own element array rather than a shared one', () =>
+    {
+      // Arrange- a shared array would have every death in a savefile appending to the same list.
+      const [ [ , declaration ] ] = globalThis.SerializableRegistry.register.mock.calls;
+      const first = Object.create(JABS_DeathContext.prototype);
+      const second = Object.create(JABS_DeathContext.prototype);
+
+      // Act
+      declaration.seed(first);
+      declaration.seed(second);
+
+      // Assert
+      expect(first.elementIds).not.toBe(second.elementIds);
+    });
+  });
 });
 //endregion plugins/abs/core/models/jabs-death-context.test.js

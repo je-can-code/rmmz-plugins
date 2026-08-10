@@ -11,6 +11,7 @@ import './objects/Game_Item.js';
 import './objects/Game_Party.js';
 import './objects/Game_System.js';
 import './managers/JaftingManager.js';
+import './managers/RefinementEligibility.js';
 import './windows/Window_RefinementStepHint.js';
 import './windows/Window_RefinementDescription.js';
 import './windows/Window_RefinableList.js';
@@ -18,6 +19,7 @@ import './windows/Window_RefinementDetails.js';
 import './windows/Window_RefinementConfirmation.js';
 import './scenes/Scene_JaftingRefine.js';
 import './scenes/Scene_Jafting.js';
+import './scenes/Scene_Map.js';
 import './windows/Window_JaftingList.js';
 import './_metadata/pluginCommands.js';
 

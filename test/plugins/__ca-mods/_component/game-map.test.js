@@ -86,6 +86,17 @@ describe('CAMods Game_Map (real engine direct import)', () =>
 
       expect(map.checkPassage(0, 0, 0x0f)).toBe(false);
     });
+
+    it('refuses passage for a tile that blocks only some of the requested directions', () =>
+    {
+      // Arrange- a flag overlapping the requested bits partially matches neither the fully-open nor
+      // the fully-closed case, so it falls out of the loop entirely. Defaulting that to impassable
+      // is the safe answer: letting it through would walk the player into geometry.
+      const map = buildMapWithFlag(0x01);
+
+      // Act & Assert
+      expect(map.checkPassage(0, 0, 0x0f)).toBe(false);
+    });
   });
 
   describe('setup', () =>

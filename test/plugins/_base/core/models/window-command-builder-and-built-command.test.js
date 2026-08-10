@@ -5,10 +5,16 @@ describe('WindowCommandBuilder / BuiltWindowCommand (direct src import)', () =>
 {
   let WindowCommandBuilder;
   let BuiltWindowCommand;
+  let MenuSection;
 
   beforeAll(async () =>
   {
     String.empty = '';
+
+    // both the builder and the command validate against this as a bare global, the way the shipped
+    // bundle hoists it.
+    ({ default: MenuSection } = await import('../../../../../src/plugins/_base/core/models/MenuSection.js'));
+    globalThis.MenuSection = MenuSection;
 
     ({ default: BuiltWindowCommand } = await import('../../../../../src/plugins/_base/core/models/BuiltWindowCommand.js'));
     ({ default: WindowCommandBuilder } = await import('../../../../../src/plugins/_base/core/models/WindowCommandBuilder.js'));
@@ -197,5 +203,49 @@ describe('WindowCommandBuilder / BuiltWindowCommand (direct src import)', () =>
       expect(command.subText).toEqual([]);
     });
   });
+
+  //region which half of a split menu a command belongs to
+  describe('menuSection', () =>
+  {
+    it('carries a section set through the builder onto the built command', () =>
+    {
+      // Arrange- assigned after construction rather than as a thirteenth positional parameter,
+      // which every existing call site would otherwise have had to grow.
+      // Act
+      const command = new WindowCommandBuilder('Files')
+        .setMenuSection(MenuSection.Party)
+        .build();
+
+      // Assert
+      expect(command.menuSection).toBe(MenuSection.Party);
+    });
+
+    it('carries an actor-scoped section just as readily', () =>
+    {
+      // Arrange
+      // Act
+      const command = new WindowCommandBuilder('Equip')
+        .setMenuSection(MenuSection.Actor)
+        .build();
+
+      // Assert
+      expect(command.menuSection).toBe(MenuSection.Actor);
+    });
+
+    it('leaves the safe default in place when handed something that is not a section', () =>
+    {
+      // Arrange- a typo in a section name would otherwise put the command in a menu half that does
+      // not exist, and it would simply stop being drawn anywhere.
+      const command = new WindowCommandBuilder('Files').build();
+      const original = command.menuSection;
+
+      // Act
+      command.menuSection = 'not-a-real-section';
+
+      // Assert
+      expect(command.menuSection).toBe(original);
+    });
+  });
+  //endregion which half of a split menu a command belongs to
 });
 //endregion plugins/_base/models/window-command-builder-and-built-command.test.js

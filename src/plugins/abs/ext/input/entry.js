@@ -22,4 +22,3 @@ import './windows/Window_JabsRemapPrompt.js';
 import './windows/Window_JabsRemapUsageHelp.js';
 import './windows/Window_MenuCommand.js';
 import './windows/Window_Selectable.js';
-

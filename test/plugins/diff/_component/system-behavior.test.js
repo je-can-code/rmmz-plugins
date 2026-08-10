@@ -122,5 +122,24 @@ describe('J-Difficulty runtime merge and battler hooks (direct src import)', () 
     expect(keys).toContain(VITEST_DIFF_KEY);
     expect(keys).toContain(VITEST_HARD_KEY);
   });
+
+  it('applies the default layer outright when the player has enabled nothing', () =>
+  {
+    // Arrange- a fresh game and a fully-cleared difficulty menu both land here, and merging an
+    // empty set would otherwise produce a layer of neutral multipliers rather than the authored
+    // default the whole game is balanced around.
+    bootstrapDifficultyRuntime();
+    globalThis.$gameSystem.getAllDifficultyConfigs()
+      .forEach(config =>
+      {
+        config.enabled = false;
+      });
+
+    // Act
+    const applied = globalThis.$gameTemp.buildAppliedDifficulty();
+
+    // Assert
+    expect(applied.key).toBe(VITEST_DIFF_KEY);
+  });
 });
 //endregion plugins/diff/_component/system-behavior.test.js

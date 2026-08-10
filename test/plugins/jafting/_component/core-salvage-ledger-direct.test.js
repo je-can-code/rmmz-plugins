@@ -207,6 +207,68 @@ describe('JaftingSalvageLedger (direct src import)', () =>
       expect(rows.length).toBe(1);
       expect(rows[0].n).toBe(5);
     });
+
+    it('records the selected entry rather than whatever the component resolves to', () =>
+    {
+      // Arrange - a categorical component resolves to the first eligible entry on its own, which is
+      // not necessarily the one that was spent. Stamping that would be a silently wrong ancestry.
+      const spent = { id: 388, isWeapon: () => false, isArmor: () => false };
+      const ingredients = [
+        fakeComponent({ isDb: true, item: { id: 386 }, qty: 1 }),
+      ];
+
+      // Act
+      const rows = JaftingSalvageLedger.rowsFromCraftingComponents(ingredients, new Map([ [ 0, spent ] ]));
+
+      // Assert
+      expect(rows.length).toBe(1);
+      expect(rows[0].id).toBe(388);
+    });
+
+    it('takes the row letter from the selected entry, which carries no component type', () =>
+    {
+      // Arrange
+      const spent = { id: 50, isWeapon: () => false, isArmor: () => true };
+      const ingredients = [
+        fakeComponent({ isDb: true, item: { id: 1 }, qty: 1 }),
+      ];
+
+      // Act
+      const rows = JaftingSalvageLedger.rowsFromCraftingComponents(ingredients, new Map([ [ 0, spent ] ]));
+
+      // Assert
+      expect(rows[0].t).toBe('a');
+    });
+  });
+
+  describe('typeLetterForDatum', () =>
+  {
+    it('reports the weapon letter for a weapon', () =>
+    {
+      // Arrange, Act
+      const result = JaftingSalvageLedger.typeLetterForDatum({ isWeapon: () => true, isArmor: () => false });
+
+      // Assert
+      expect(result).toBe('w');
+    });
+
+    it('reports the armor letter for an armor', () =>
+    {
+      // Arrange, Act
+      const result = JaftingSalvageLedger.typeLetterForDatum({ isWeapon: () => false, isArmor: () => true });
+
+      // Assert
+      expect(result).toBe('a');
+    });
+
+    it('reports the item letter for anything else', () =>
+    {
+      // Arrange, Act
+      const result = JaftingSalvageLedger.typeLetterForDatum({ isWeapon: () => false, isArmor: () => false });
+
+      // Assert
+      expect(result).toBe('i');
+    });
   });
 
   describe('mergeRowArrays', () =>

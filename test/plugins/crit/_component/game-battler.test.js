@@ -61,6 +61,24 @@ describe('J-CriticalFactors Game_Battler (direct src import)', () =>
       expect(actor._j._natural._ctrPlus).toBe(0);
       expect(actor._j._natural._ctrRate).toBe(0);
     });
+
+    it('stores no growth slots at all when J-Natural is not installed', () =>
+    {
+      // Arrange- the slots exist to be grown by J-Natural, so without it there is nothing to grow
+      // and seeding them would leave four fields nothing ever reads or writes. Note this bails
+      // before the original too, which is correct: the original is J-Natural's own hook.
+      const savedNatural = globalThis.J.NATURAL;
+      delete globalThis.J.NATURAL;
+
+      // Act
+      const actor = buildActor();
+
+      // Assert
+      expect(actor._j._natural)
+        .toBeUndefined();
+
+      globalThis.J.NATURAL = savedNatural;
+    });
   });
 
   describe('baseCriticalMultiplier', () =>

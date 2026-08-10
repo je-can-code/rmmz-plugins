@@ -320,5 +320,54 @@ describe('single level across classes (direct src import)', () =>
 
     expect(classOneCurve).not.toBe(classTwoCurve);
   });
+
+  it('drops levels when exp is taken back below the current level\'s threshold', () =>
+  {
+    // Arrange- exp loss is a real mechanic here, so the descent loop is not a theoretical inverse of
+    // the climb; a shared level that only ever climbed would strand the actor at their high-water mark.
+    const actor = new globalThis.Game_Actor();
+    actor.initExp();
+    actor.changeExp(actor.expForLevel(5), false);
+
+    // Act
+    actor.changeExp(actor.expForLevel(2), false);
+
+    // Assert
+    expect(actor._level).toBe(2);
+  });
+
+  it('shows the level-up display when asked and a level was actually gained', () =>
+  {
+    // Arrange
+    const actor = new globalThis.Game_Actor();
+    actor.initExp();
+    const displayLevelUp = vi.spyOn(actor, 'displayLevelUp');
+
+    // Act
+    actor.changeExp(actor.expForLevel(5), true);
+
+    // Assert
+    expect(displayLevelUp).toHaveBeenCalled();
+
+    displayLevelUp.mockRestore();
+  });
+
+  it('shows nothing when asked but no level was gained', () =>
+  {
+    // Arrange- exp that lands short of the next threshold is by far the common case, and popping a
+    // level-up banner for it would fire on nearly every kill.
+    const actor = new globalThis.Game_Actor();
+    actor.initExp();
+    actor.changeExp(actor.expForLevel(5), false);
+    const displayLevelUp = vi.spyOn(actor, 'displayLevelUp');
+
+    // Act
+    actor.changeExp(actor.expForLevel(5), true);
+
+    // Assert
+    expect(displayLevelUp).not.toHaveBeenCalled();
+
+    displayLevelUp.mockRestore();
+  });
 });
 //endregion plugins/level/_component/single-level-across-classes-direct.test.js

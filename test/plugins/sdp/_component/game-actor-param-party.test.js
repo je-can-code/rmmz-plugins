@@ -254,6 +254,34 @@ describe('J-SDP Game_Actor.param (ATK) and Game_Party SDP helpers (direct src im
       // Assert
       expect(party.isSdpUnlocked('vitest_atk_flat')).toBe(false);
     });
+
+    it('seeds its SDP namespace off the shared initMembers hook', () =>
+    {
+      // Arrange- the hook rather than `initialize` is where party state belongs, because every
+      // plugin adding party state extends the same one and `initialize` is the engine's.
+      const party = new globalThis.Game_Party();
+
+      // Act
+      party.initMembers();
+
+      // Assert
+      expect(party._j._sdp).toEqual({});
+    });
+
+    it('leaves an already-seeded SDP namespace alone across a re-init', () =>
+    {
+      // Arrange- `initMembers` runs again on refresh, and rebuilding here would discard whatever
+      // sibling extensions had already hung off the same namespace.
+      const party = new globalThis.Game_Party();
+      party.initMembers();
+      party._j._sdp.somethingElse = 'placed by a sibling extension';
+
+      // Act
+      party.initSdpMembers();
+
+      // Assert
+      expect(party._j._sdp.somethingElse).toBe('placed by a sibling extension');
+    });
   });
 });
 //endregion plugins/sdp/_component/game-actor-param-party.test.js

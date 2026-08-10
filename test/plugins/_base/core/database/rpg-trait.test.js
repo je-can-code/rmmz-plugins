@@ -27,8 +27,8 @@ describe('RPG_Trait (direct src import)', () =>
       equipTypes: [ '', 'Weapon', 'Armor' ],
       skillTypes: [ '', 'Magic' ],
     };
-    globalThis.$dataStates = [ null, { name: 'Poison' } ];
-    globalThis.$dataSkills = [ null, { name: 'Fireball' } ];
+    globalThis.$dataStates = [ null, { name: 'Poison', iconIndex: 4 } ];
+    globalThis.$dataSkills = [ null, { name: 'Fireball', iconIndex: 64 } ];
   });
 
   function trait(code, dataId = 0, value = 1)
@@ -333,5 +333,92 @@ describe('RPG_Trait (direct src import)', () =>
       expect(trait(64, 999).translatePartyAbility()).toBeUndefined();
     });
   });
+
+  //region what a trait looks like
+  describe('iconIndex', () =>
+  {
+    it('resolves a base-parameter trait to that parameter icon', () =>
+    {
+      // Arrange & Act & Assert- code 21 is a base param, and dataId 0 is MHP.
+      expect(trait(21, 0).iconIndex())
+        .toBe(928);
+    });
+
+    it('resolves an ex-parameter trait to that parameter icon', () =>
+    {
+      // Arrange & Act & Assert- code 22 is an x-param, and dataId 0 is HIT.
+      expect(trait(22, 0).iconIndex())
+        .toBe(944);
+    });
+
+    it('resolves an sp-parameter trait to that parameter icon', () =>
+    {
+      // Arrange & Act & Assert- code 23 is an s-param, and dataId 6 is PDR.
+      expect(trait(23, 6).iconIndex())
+        .toBe(966);
+    });
+
+    it('distinguishes the three parameter codes rather than sharing one lookup', () =>
+    {
+      // Arrange & Act & Assert- the same dataId means a different stat under each code, so all three
+      // must reach a different icon. One lookup serving all of them would pass every test above.
+      const icons = [ trait(21, 1).iconIndex(), trait(22, 1).iconIndex(), trait(23, 1).iconIndex() ];
+
+      expect(new Set(icons).size)
+        .toBe(3);
+    });
+
+    it('resolves an element rate to that element icon', () =>
+    {
+      // Arrange & Act & Assert- code 11 resists an element, and dataId 4 is heat.
+      expect(trait(11, 4).iconIndex())
+        .toBe(915);
+    });
+
+    it('resolves an attack element to that element icon', () =>
+    {
+      // Arrange & Act & Assert- code 31 strikes with an element; same lookup, different meaning.
+      expect(trait(31, 4).iconIndex())
+        .toBe(915);
+    });
+
+    it('borrows the state icon for a state resistance', () =>
+    {
+      // Arrange & Act & Assert- a state already has a face; inventing a second one for "resists it"
+      // would mean the player learning two pictures for one thing.
+      expect(trait(14, 1).iconIndex())
+        .toBe(4);
+    });
+
+    it('borrows the skill icon for a granted skill', () =>
+    {
+      // Arrange & Act & Assert- code 43 grants a skill, and the skill carries its own icon.
+      expect(trait(43, 1).iconIndex())
+        .toBe(64);
+    });
+
+    it('borrows the skill icon for a sealed skill too', () =>
+    {
+      // Arrange & Act & Assert- code 44 seals rather than grants, but names the same skill.
+      expect(trait(44, 1).iconIndex())
+        .toBe(64);
+    });
+
+    it('borrows the skill icon for an attack skill', () =>
+    {
+      // Arrange & Act & Assert- code 35 replaces the basic attack with a skill.
+      expect(trait(35, 1).iconIndex())
+        .toBe(64);
+    });
+
+    it('answers zero for a trait no single icon could mean', () =>
+    {
+      // Arrange & Act & Assert- a special flag names no element, state or skill, so there is nothing to
+      // borrow. Zero is the signal for a caller to fall back to words rather than draw a wrong picture.
+      expect(trait(62, 0).iconIndex())
+        .toBe(0);
+    });
+  });
+  //endregion what a trait looks like
 });
 //endregion plugins/_base/database/rpg-trait.test.js

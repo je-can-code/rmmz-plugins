@@ -113,5 +113,42 @@ describe('J-LevelMaster beyond-max param curves (direct src import)', () =>
     expect(row.length).toBeGreaterThanOrEqual(1000);
     expect(row[999]).toBeDefined();
   });
+
+  describe('authored growth curves', () =>
+  {
+    it('evaluates the class\'s own curve for a param that has one tagged', () =>
+    {
+      // Arrange- an authored curve is the source of truth past 99, replacing the slope guess
+      // outright. That is the whole point of the tag: a designer who wants a specific late-game
+      // shape gets it, rather than whatever the last five baked levels happened to imply.
+      globalThis.$dataClasses[1].note = '<atkGrowthCurve:[a.level * 10]>';
+      globalThis.RPGManager.clearCache();
+
+      // Act
+      globalThis.$gameTemp.buildBeyondMaxData();
+
+      // Assert
+      const atkRow = globalThis.$gameTemp.getBeyondMaxData(1)
+        .at(2);
+      expect(atkRow[150]).toBe(1500);
+      expect(atkRow[999]).toBe(9990);
+    });
+
+    it('still extrapolates a slope for the params the same class left untagged', () =>
+    {
+      // Arrange- tagging one param must not opt the other seven out of growing.
+      globalThis.$dataClasses[1].note = '<atkGrowthCurve:[a.level * 10]>';
+      globalThis.RPGManager.clearCache();
+
+      // Act
+      globalThis.$gameTemp.buildBeyondMaxData();
+
+      // Assert
+      const defRow = globalThis.$gameTemp.getBeyondMaxData(1)
+        .at(3);
+      expect(defRow[150]).not.toBe(1500);
+      expect(defRow[150]).toBeGreaterThan(defRow[100]);
+    });
+  });
 });
 //endregion plugins/level/_component/game-temp-beyond-max.test.js

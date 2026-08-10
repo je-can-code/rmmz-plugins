@@ -15,6 +15,19 @@ describe('ParameterCatalogRenderer (direct src import)', () =>
     // production code runs in-game; stub it here since this test doesn't boot J-Base itself.
     String.empty = '';
 
+    // `padZero` is vanilla RMMZ's own prototype augmentation from `rmmz_core.js`, which this file
+    // does not boot either. The padded affiliation values are built through it.
+    Number.prototype.padZero = function(length)
+    {
+      return String(this)
+        .padZero(length);
+    };
+
+    String.prototype.padZero = function(length)
+    {
+      return this.padStart(length, '0');
+    };
+
     // the real format constant is a pure static-only class with no dependencies of its own.
     ({ default: ParameterFormat } = await import('../../../../../src/plugins/_base/core/core/ParameterFormat.js'));
     globalThis.ParameterFormat = ParameterFormat;
@@ -32,6 +45,16 @@ describe('ParameterCatalogRenderer (direct src import)', () =>
     };
 
     globalThis.ImageManager = { iconWidth: 32 };
+
+    // the real one rather than a stand-in. It depends only on `ParameterDefinition.padSignedMagnitude`,
+    // and the whole point of the affiliation rows is which rates are worth a row at all - a stub of
+    // `formatDelta` would be a copy of the policy under test rather than a check on it.
+    ({ default: globalThis.ParameterDefinition } = await import(
+      '../../../../../src/plugins/_base/core/models/ParameterDefinition.js'));
+    ({ default: globalThis.AffiliationDisplay } = await import(
+      '../../../../../src/plugins/_base/core/core/AffiliationDisplay.js'));
+
+    globalThis.IconManager = { element: vi.fn(index => 1000 + index) };
 
     ({ default: ParameterCatalogRenderer } =
       await import('../../../../../src/plugins/cms/core/helpers/ParameterCatalogRenderer.js'));
@@ -88,7 +111,29 @@ describe('ParameterCatalogRenderer (direct src import)', () =>
       changePaintOpacity: vi.fn(),
       drawHorizontalLine: vi.fn(),
       drawVerticalLine: vi.fn(),
+      modFontSize: vi.fn(),
       contents: { fontBold: false },
+      ...overrides,
+    };
+  }
+
+  /**
+   * Builds a battler answering the four rate questions the affiliation rows ask it.
+   *
+   * Every one of them is read through the combat-facing accessor rather than summed from traits, so
+   * what the panel claims and what a fight actually does cannot drift apart.
+   */
+  function makeAffiliationActor(overrides = {})
+  {
+    return {
+      isElementAbsorbed: vi.fn()
+        .mockReturnValue(false),
+      elementRate: vi.fn()
+        .mockReturnValue(1),
+      isStateResist: vi.fn()
+        .mockReturnValue(false),
+      stateRate: vi.fn()
+        .mockReturnValue(1),
       ...overrides,
     };
   }
@@ -732,5 +777,415 @@ describe('ParameterCatalogRenderer (direct src import)', () =>
       expect(window.drawText).toHaveBeenCalledWith('Combat', 42, 36, 168, 'left');
     });
   });
+
+  //region affiliations
+  describe('affiliation rows', () =>
+  {
+    beforeEach(() =>
+    {
+      // index zero is the engine's own unnamed element, which the rows rename rather than skip.
+      globalThis.$dataSystem = {
+        elements: [ '', 'Fire', 'Ice', 'Thunder' ],
+      };
+
+      // index zero is always null in an RMMZ database table, and the band the rows read starts at 4.
+      globalThis.$dataStates = [
+        null, null, null, null,
+        {
+          id: 4,
+          name: 'Poison',
+          iconIndex: 20,
+        },
+        {
+          id: 5,
+          name: 'Blind',
+          iconIndex: 21,
+        },
+        {
+          id: 6,
+          name: 'Silence',
+          iconIndex: 22,
+        },
+      ];
+
+      // the namespace exists in every running game; whether the elementalistics extension is one of
+      // its members is the branch that actually varies.
+      globalThis.J = {};
+    });
+
+    describe('affiliationFontSizeModifier', () =>
+    {
+      it('shrinks affiliation rows relative to the catalog rows above them', () =>
+      {
+        // Arrange
+        // Act
+        const modifier = ParameterCatalogRenderer.affiliationFontSizeModifier();
+
+        // Assert: these are exceptions rather than standing facts, so they read smaller than the
+        // parameters they sit beneath.
+        expect(modifier).toEqual(-6);
+      });
+    });
+
+    describe('ailmentStateIdRange', () =>
+    {
+      it('reports a narrow band rather than every state in the database', () =>
+      {
+        // Arrange
+        // Act
+        const [ firstId, lastId ] = ParameterCatalogRenderer.ailmentStateIdRange();
+
+        // Assert: the database holds over a thousand states, almost all of them passives, affixes and
+        // food buffs the player never resists.
+        expect(firstId).toEqual(4);
+        expect(lastId).toEqual(18);
+      });
+    });
+
+    describe('affiliationSeparatorY', () =>
+    {
+      it('places the rule one line below the section anchor, matching the catalog groups', () =>
+      {
+        // Arrange
+        const window = makeWindow();
+
+        // Act
+        const y = ParameterCatalogRenderer.affiliationSeparatorY(window, 100);
+
+        // Assert
+        expect(y).toEqual(100 + 8 - 2 + 36 - 4);
+      });
+    });
+
+    describe('collectElementAffiliationRows', () =>
+    {
+      it('omits an element sitting at the baseline, which is not worth a row of its own', () =>
+      {
+        // Arrange
+        const actor = makeAffiliationActor();
+
+        // Act
+        const rows = ParameterCatalogRenderer.collectElementAffiliationRows(actor);
+
+        // Assert
+        expect(rows).toEqual([]);
+      });
+
+      it('reports a weakness as a positive deviation from the baseline', () =>
+      {
+        // Arrange
+        const actor = makeAffiliationActor({
+          elementRate: vi.fn(index => (index === 1 ? 2 : 1)),
+        });
+
+        // Act
+        const rows = ParameterCatalogRenderer.collectElementAffiliationRows(actor);
+
+        // Assert
+        expect(rows.length).toEqual(1);
+        expect(rows[0].name).toEqual('Fire');
+        expect(rows[0].value).toContain('+');
+        expect(rows[0].iconIndex).toEqual(1001);
+      });
+
+      it('reports a resistance as a negative deviation from the baseline', () =>
+      {
+        // Arrange
+        const actor = makeAffiliationActor({
+          elementRate: vi.fn(index => (index === 2 ? 0.5 : 1)),
+        });
+
+        // Act
+        const rows = ParameterCatalogRenderer.collectElementAffiliationRows(actor);
+
+        // Assert
+        expect(rows[0].name).toEqual('Ice');
+        expect(rows[0].value).toContain('-');
+      });
+
+      it('reports a nulled element as immunity rather than a hundred percent reduction', () =>
+      {
+        // Arrange
+        const actor = makeAffiliationActor({
+          elementRate: vi.fn(index => (index === 3 ? 0 : 1)),
+        });
+
+        // Act
+        const rows = ParameterCatalogRenderer.collectElementAffiliationRows(actor);
+
+        // Assert
+        expect(rows[0].name).toEqual('Thunder');
+        expect(rows[0].value).toEqual('IMMUNE');
+      });
+
+      it('names the engine\'s unnamed element rather than drawing a row with no label', () =>
+      {
+        // Arrange
+        const actor = makeAffiliationActor({
+          elementRate: vi.fn(index => (index === 0 ? 1.5 : 1)),
+        });
+
+        // Act
+        const rows = ParameterCatalogRenderer.collectElementAffiliationRows(actor);
+
+        // Assert
+        expect(rows[0].name).toEqual('Neutral');
+      });
+
+      it('never asks about absorption when the elementalistics extension is not installed', () =>
+      {
+        // Arrange: core must not probe for an extension's behavior, and the namespace check is the one
+        // sanctioned way to ask whether the extension is even present.
+        const actor = makeAffiliationActor({
+          elementRate: vi.fn(index => (index === 1 ? 2 : 1)),
+        });
+
+        // Act
+        const rows = ParameterCatalogRenderer.collectElementAffiliationRows(actor);
+
+        // Assert
+        expect(actor.isElementAbsorbed).not.toHaveBeenCalled();
+        expect(rows[0].value).toContain('+');
+      });
+
+      it('reports absorption when the elementalistics extension says an element heals', () =>
+      {
+        // Arrange
+        globalThis.J.ELEM = {};
+        const actor = makeAffiliationActor({
+          isElementAbsorbed: vi.fn(index => index === 1),
+          elementRate: vi.fn(index => (index === 1 ? -1 : 1)),
+        });
+
+        // Act
+        const rows = ParameterCatalogRenderer.collectElementAffiliationRows(actor);
+
+        // Assert
+        expect(rows.length).toEqual(1);
+        expect(rows[0].value).toContain('ABSORB');
+      });
+
+      it('inspects only as many elements as it was asked to', () =>
+      {
+        // Arrange
+        const actor = makeAffiliationActor({
+          elementRate: vi.fn(index => (index === 3 ? 2 : 1)),
+        });
+
+        // Act
+        const rows = ParameterCatalogRenderer.collectElementAffiliationRows(actor, 2);
+
+        // Assert
+        expect(rows).toEqual([]);
+      });
+    });
+
+    describe('collectAilmentAffiliationRows', () =>
+    {
+      it('omits an ailment sitting at the baseline', () =>
+      {
+        // Arrange
+        const actor = makeAffiliationActor();
+
+        // Act
+        const rows = ParameterCatalogRenderer.collectAilmentAffiliationRows(actor);
+
+        // Assert
+        expect(rows).toEqual([]);
+      });
+
+      it('reports a partial resistance as a deviation from the baseline', () =>
+      {
+        // Arrange
+        const actor = makeAffiliationActor({
+          stateRate: vi.fn(id => (id === 4 ? 0.75 : 1)),
+        });
+
+        // Act
+        const rows = ParameterCatalogRenderer.collectAilmentAffiliationRows(actor);
+
+        // Assert
+        expect(rows.length).toEqual(1);
+        expect(rows[0].name).toEqual('Poison');
+        expect(rows[0].iconIndex).toEqual(20);
+        expect(rows[0].value).toContain('-');
+      });
+
+      it('reports a full resistance as immunity without consulting the rate at all', () =>
+      {
+        // Arrange
+        const actor = makeAffiliationActor({
+          isStateResist: vi.fn(id => id === 5),
+        });
+
+        // Act
+        const rows = ParameterCatalogRenderer.collectAilmentAffiliationRows(actor);
+
+        // Assert
+        expect(rows.length).toEqual(1);
+        expect(rows[0].name).toEqual('Blind');
+        expect(rows[0].value).toEqual('IMMUNE');
+      });
+
+      it('steps over the empty slots a database table carries', () =>
+      {
+        // Arrange: the band starts at 4, but a project is free to leave holes inside it.
+        globalThis.$dataStates[6] = null;
+        const actor = makeAffiliationActor({
+          stateRate: vi.fn(() => 0.5),
+        });
+
+        // Act
+        const rows = ParameterCatalogRenderer.collectAilmentAffiliationRows(actor);
+
+        // Assert
+        expect(rows.map(row => row.name)).toEqual([ 'Poison', 'Blind' ]);
+      });
+    });
+
+    describe('drawAffiliationRow', () =>
+    {
+      it('draws the icon, the name, and the deviation hugging the inner window edge', () =>
+      {
+        // Arrange
+        const window = makeWindow();
+        const row = {
+          name: 'Fire',
+          value: '+0100%',
+          iconIndex: 1001,
+          colorIndex: 10,
+        };
+
+        // Act
+        ParameterCatalogRenderer.drawAffiliationRow(window, row, 10, 50, 300);
+
+        // Assert
+        expect(window.modFontSize).toHaveBeenCalledWith(-6);
+        expect(window.drawIcon).toHaveBeenCalledWith(1001, 10, 50);
+        expect(window.drawText).toHaveBeenCalledWith('Fire', 46, 50, expect.any(Number), 'left');
+        expect(window.drawStyledPaddedValue).toHaveBeenCalledWith(10, 50, '+0100%', 300, 8, 10);
+      });
+
+      it('never lets the name column collapse below a legible width', () =>
+      {
+        // Arrange: a narrow section with a long value would otherwise compute a negative width.
+        const window = makeWindow();
+        const row = {
+          name: 'Fire',
+          value: 'ABSORB (+0100%)',
+          iconIndex: 1001,
+          colorIndex: 5,
+        };
+
+        // Act
+        ParameterCatalogRenderer.drawAffiliationRow(window, row, 0, 0, 60);
+
+        // Assert
+        const [ firstCall ] = window.drawText.mock.calls;
+        const [ , , , nameWidth ] = firstCall;
+        expect(nameWidth).toEqual(48);
+      });
+    });
+
+    describe('drawAffiliationBaselineRow', () =>
+    {
+      it('says so plainly rather than leaving a bare heading with nothing beneath it', () =>
+      {
+        // Arrange
+        const window = makeWindow();
+
+        // Act
+        ParameterCatalogRenderer.drawAffiliationBaselineRow(window, 10, 50, 300);
+
+        // Assert
+        expect(window.drawText).toHaveBeenCalledWith('All standard', 10, 50, 300, 'center');
+        expect(window.changeTextColor).toHaveBeenCalledWith('color-7');
+      });
+    });
+
+    describe('drawAffiliationRows', () =>
+    {
+      it('draws the placeholder and reserves one line for it when nothing deviates', () =>
+      {
+        // Arrange
+        const window = makeWindow();
+
+        // Act
+        const bottom = ParameterCatalogRenderer.drawAffiliationRows(window, 0, 100, 300, []);
+
+        // Assert
+        expect(window.drawText).toHaveBeenCalledWith('All standard', 0, 144, 300, 'center');
+        expect(bottom).toEqual(180);
+      });
+
+      it('stacks one line per row and reports where the section ends', () =>
+      {
+        // Arrange
+        const window = makeWindow();
+        const rows = [
+          {
+            name: 'Fire',
+            value: '+0100%',
+            iconIndex: 1,
+            colorIndex: 10,
+          },
+          {
+            name: 'Ice',
+            value: '-0050%',
+            iconIndex: 2,
+            colorIndex: 3,
+          },
+        ];
+
+        // Act
+        const bottom = ParameterCatalogRenderer.drawAffiliationRows(window, 0, 100, 300, rows);
+
+        // Assert
+        expect(window.drawIcon).toHaveBeenCalledTimes(2);
+        expect(bottom).toEqual(100 + (3 * 36) + 8);
+      });
+    });
+
+    describe('drawElementAffiliations', () =>
+    {
+      it('draws the heading, its rule, and whatever deviates beneath them', () =>
+      {
+        // Arrange
+        const window = makeWindow();
+        const actor = makeAffiliationActor({
+          elementRate: vi.fn(index => (index === 1 ? 2 : 1)),
+        });
+
+        // Act
+        ParameterCatalogRenderer.drawElementAffiliations(window, actor, 0, 100, 300);
+
+        // Assert
+        expect(window.drawText).toHaveBeenCalledWith('Elements', 32, 101, 268, 'center');
+        expect(window.drawHorizontalLine).toHaveBeenCalledWith(0, 138, 300, 3);
+        expect(window.drawText).toHaveBeenCalledWith('Fire', 36, 144, expect.any(Number), 'left');
+      });
+    });
+
+    describe('drawAilmentAffiliations', () =>
+    {
+      it('draws the heading, its rule, and whatever deviates beneath them', () =>
+      {
+        // Arrange
+        const window = makeWindow();
+        const actor = makeAffiliationActor({
+          isStateResist: vi.fn(id => id === 4),
+        });
+
+        // Act
+        ParameterCatalogRenderer.drawAilmentAffiliations(window, actor, 0, 100, 300);
+
+        // Assert
+        expect(window.drawText).toHaveBeenCalledWith('Ailments', 32, 101, 268, 'center');
+        expect(window.drawHorizontalLine).toHaveBeenCalledWith(0, 138, 300, 3);
+        expect(window.drawText).toHaveBeenCalledWith('Poison', 36, 144, expect.any(Number), 'left');
+      });
+    });
+  });
+  //endregion affiliations
 });
 //endregion plugins/cms/core/helpers/parameter-catalog-renderer.test.js

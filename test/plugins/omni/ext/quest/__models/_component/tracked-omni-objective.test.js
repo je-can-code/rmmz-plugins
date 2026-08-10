@@ -480,5 +480,432 @@ describe('TrackedOmniObjective (omni ext/quest, direct src import)', () =>
       expect(tracked.fetchItemDataSource()).toBe(globalThis.$dataArmors);
     });
   });
+
+  //region what the objective reads as
+  describe('indiscriminateTargetData()', () =>
+  {
+    it('hands back the hint the fulfillment data carried in', () =>
+    {
+      // Arrange
+      const fulfillment = new OmniFulfillmentData({ hint: 'go talk to the mayor' });
+
+      // Act
+      const tracked = buildTracked(OmniObjective.Types.Indiscriminate, fulfillment);
+
+      // Assert
+      expect(tracked.indiscriminateTargetData())
+        .toBe('go talk to the mayor');
+    });
+  });
+
+  describe('targetEnemyId()', () =>
+  {
+    it('hands back the enemy this objective is counting', () =>
+    {
+      // Arrange
+      const slay = Object.assign(new SlayData(), { id: 15, amount: 3 });
+
+      // Act
+      const tracked = buildTracked(OmniObjective.Types.Slay, new OmniFulfillmentData(undefined, undefined, undefined,
+        slay));
+
+      // Assert
+      expect(tracked.targetEnemyId())
+        .toBe(15);
+    });
+  });
+
+  describe('fetchData()', () =>
+  {
+    it('pairs the wanted item with how many of it are wanted', () =>
+    {
+      // Arrange
+      const fetch = Object.assign(new FetchData(), { type: 0, id: 9, amount: 4 });
+      const tracked = buildTracked(OmniObjective.Types.Fetch, new OmniFulfillmentData(undefined, undefined, fetch));
+
+      // Act
+      const data = tracked.fetchData();
+
+      // Assert
+      expect(data)
+        .toEqual([ 9, 4 ]);
+    });
+  });
+
+  describe('slayData()', () =>
+  {
+    it('pairs the wanted enemy with how many of it are wanted', () =>
+    {
+      // Arrange
+      const slay = Object.assign(new SlayData(), { id: 15, amount: 3 });
+      const tracked = buildTracked(OmniObjective.Types.Slay, new OmniFulfillmentData(undefined, undefined, undefined,
+        slay));
+
+      // Act
+      const data = tracked.slayData();
+
+      // Assert
+      expect(data)
+        .toEqual([ 15, 3 ]);
+    });
+  });
+
+  describe('description()', () =>
+  {
+    it('reads the objective\'s description off the quest metadata rather than storing a copy', () =>
+    {
+      // Arrange: a description copied into the tracker at save time would freeze there, and rewording
+      // a quest would then never reach a playthrough already carrying it.
+      const tracked = buildTracked(OmniObjective.Types.Indiscriminate, new OmniFulfillmentData());
+
+      // Act
+      const description = tracked.description();
+
+      // Assert
+      expect(description)
+        .toBe('a description');
+    });
+  });
+
+  describe('log()', () =>
+  {
+    [
+      [ 'Inactive', 'inactive-log' ],
+      [ 'Active', 'active-log' ],
+      [ 'Completed', 'completed-log' ],
+      [ 'Failed', 'failed-log' ],
+      [ 'Missed', 'missed-log' ],
+    ].forEach(([ stateName, expected ]) =>
+    {
+      it(`reads the ${stateName.toLowerCase()} line while the objective sits in that state`, () =>
+      {
+        // Arrange
+        const tracked = buildTracked(OmniObjective.Types.Indiscriminate, new OmniFulfillmentData());
+        tracked.state = OmniObjective.States[stateName];
+
+        // Act
+        const log = tracked.log();
+
+        // Assert: the quest journal shows one of five sentences per objective, and which one is the
+        // only thing distinguishing "go find the mayor" from "you found the mayor".
+        expect(log)
+          .toBe(expected);
+      });
+    });
+  });
+
+  describe('iconIndexByState()', () =>
+  {
+    [
+      [ 'Inactive', 93 ],
+      [ 'Active', 92 ],
+      [ 'Completed', 91 ],
+      [ 'Failed', 90 ],
+      [ 'Missed', 95 ],
+    ].forEach(([ stateName, expected ]) =>
+    {
+      it(`marks a ${stateName.toLowerCase()} objective with its own icon`, () =>
+      {
+        // Arrange
+        const tracked = buildTracked(OmniObjective.Types.Indiscriminate, new OmniFulfillmentData());
+        tracked.state = OmniObjective.States[stateName];
+
+        // Act
+        const iconIndex = tracked.iconIndexByState();
+
+        // Assert
+        expect(iconIndex)
+          .toBe(expected);
+      });
+    });
+  });
+
+  describe('fulfillmentText()', () =>
+  {
+    it('states an indiscriminate objective as the hint it was written with', () =>
+    {
+      // Arrange
+      const fulfillment = new OmniFulfillmentData({ hint: 'go talk to the mayor' });
+      const tracked = buildTracked(OmniObjective.Types.Indiscriminate, fulfillment);
+
+      // Act
+      const text = tracked.fulfillmentText();
+
+      // Assert
+      expect(text)
+        .toBe('go talk to the mayor');
+    });
+
+    it('states a destination as the map and the corners of its region', () =>
+    {
+      // Arrange
+      const destination = Object.assign(new DestinationData(), {
+        mapId: 3,
+        x1: 1,
+        y1: 2,
+        x2: 5,
+        y2: 6,
+      });
+      const tracked = buildTracked(OmniObjective.Types.Destination, new OmniFulfillmentData(undefined, destination));
+      globalThis.$gameMap = { displayName: () => 'The Kitchen' };
+
+      // Act
+      const text = tracked.fulfillmentText();
+
+      // Assert
+      expect(text)
+        .toBe('Navigate to The Kitchen at [1,2, 5,6].');
+    });
+
+    it('colors a fetch objective as falling short while the count is under target', () =>
+    {
+      // Arrange
+      const fetch = Object.assign(new FetchData(), {
+        type: 0,
+        id: 9,
+        amount: 4,
+      });
+      const tracked = buildTracked(OmniObjective.Types.Fetch, new OmniFulfillmentData(undefined, undefined, fetch));
+      tracked.setCurrentItemFetchQuantity(1);
+
+      // Act
+      const text = tracked.fulfillmentText();
+
+      // Assert: 25 is the power-down color, which is what tells a glance apart from a read.
+      expect(text)
+        .toContain('\\C[25]1 / 4\\C[0]');
+      expect(text)
+        .toContain('\\Item[9]');
+    });
+
+    it('colors a fetch objective as satisfied once the count reaches target', () =>
+    {
+      // Arrange
+      const fetch = Object.assign(new FetchData(), {
+        type: 0,
+        id: 9,
+        amount: 4,
+      });
+      const tracked = buildTracked(OmniObjective.Types.Fetch, new OmniFulfillmentData(undefined, undefined, fetch));
+      tracked.setCurrentItemFetchQuantity(4);
+
+      // Act
+      const text = tracked.fulfillmentText();
+
+      // Assert
+      expect(text)
+        .toContain('\\C[24]4 / 4\\C[0]');
+    });
+
+    it('colors a slay objective as falling short while the count is under target', () =>
+    {
+      // Arrange
+      const slay = Object.assign(new SlayData(), {
+        id: 15,
+        amount: 3,
+      });
+      const tracked = buildTracked(OmniObjective.Types.Slay, new OmniFulfillmentData(undefined, undefined, undefined,
+        slay));
+      tracked.setCurrentEnemyAmount(1);
+
+      // Act
+      const text = tracked.fulfillmentText();
+
+      // Assert
+      expect(text)
+        .toBe('Defeat \\*\\C[25]1 / 3\\C[0]\\* \\Enemy[15].');
+    });
+
+    it('colors a slay objective as satisfied once the count reaches target', () =>
+    {
+      // Arrange
+      const slay = Object.assign(new SlayData(), {
+        id: 15,
+        amount: 3,
+      });
+      const tracked = buildTracked(OmniObjective.Types.Slay, new OmniFulfillmentData(undefined, undefined, undefined,
+        slay));
+      tracked.setCurrentEnemyAmount(3);
+
+      // Act
+      const text = tracked.fulfillmentText();
+
+      // Assert
+      expect(text)
+        .toContain('\\C[24]3 / 3\\C[0]');
+    });
+
+    it('states a quest objective as the quests it is waiting on, by name', () =>
+    {
+      // Arrange
+      const quest = Object.assign(new QuestData(), { keys: [ 'first-quest', 'second-quest' ] });
+      const tracked = buildTracked(OmniObjective.Types.Quest,
+        new OmniFulfillmentData(undefined, undefined, undefined, undefined, quest));
+
+      // Act
+      const text = tracked.fulfillmentText();
+
+      // Assert: the escape code resolves each key to its own title, so the journal never shows a key.
+      expect(text)
+        .toBe("Complete the other quest(s): '\\quest[first-quest]', '\\quest[second-quest]'.");
+    });
+  });
+  //endregion what the objective reads as
+
+  //region what counts toward the objective
+  describe('isFetchTarget()', () =>
+  {
+    it('rejects an item when the objective wants a weapon', () =>
+    {
+      // Arrange
+      const fetch = Object.assign(new FetchData(), {
+        type: 1,
+        id: 9,
+        amount: 4,
+      });
+      const tracked = buildTracked(OmniObjective.Types.Fetch, new OmniFulfillmentData(undefined, undefined, fetch));
+
+      // Act
+      const isTarget = tracked.isFetchTarget({
+        id: 9,
+        isItem: () => true,
+        isWeapon: () => false,
+        isArmor: () => false,
+      });
+
+      // Assert: a matching id across the wrong table would otherwise count a potion as a sword.
+      expect(isTarget)
+        .toBe(false);
+    });
+
+    it('rejects an item when the objective wants armor', () =>
+    {
+      // Arrange
+      const fetch = Object.assign(new FetchData(), {
+        type: 2,
+        id: 9,
+        amount: 4,
+      });
+      const tracked = buildTracked(OmniObjective.Types.Fetch, new OmniFulfillmentData(undefined, undefined, fetch));
+
+      // Act
+      const isTarget = tracked.isFetchTarget({
+        id: 9,
+        isItem: () => true,
+        isWeapon: () => false,
+        isArmor: () => false,
+      });
+
+      // Assert
+      expect(isTarget)
+        .toBe(false);
+    });
+  });
+
+  describe('hasFetchedEnoughItems()', () =>
+  {
+    it('is never satisfied by an objective that is not a fetch at all', () =>
+    {
+      // Arrange
+      const tracked = buildTracked(OmniObjective.Types.Slay, new OmniFulfillmentData());
+
+      // Act
+      const hasEnough = tracked.hasFetchedEnoughItems();
+
+      // Assert
+      expect(hasEnough)
+        .toBe(false);
+    });
+  });
+
+  describe('hasSlainEnoughEnemies()', () =>
+  {
+    it('is never satisfied by an objective that is not a slay at all', () =>
+    {
+      // Arrange
+      const tracked = buildTracked(OmniObjective.Types.Fetch, new OmniFulfillmentData());
+
+      // Act
+      const hasEnough = tracked.hasSlainEnoughEnemies();
+
+      // Assert
+      expect(hasEnough)
+        .toBe(false);
+    });
+  });
+  //endregion what counts toward the objective
+
+  //region the rest of the finalization messages
+  describe('handleObjectiveUpdateLog()', () =>
+  {
+    /**
+     * Stands up the announcement path and hands back the builder it will run through.
+     * @returns {object} The stubbed builder.
+     */
+    const installLogBuilder = () =>
+    {
+      const builder = {
+        setLines: vi.fn()
+          .mockReturnThis(),
+        build: vi.fn(() => ({})),
+      };
+
+      globalThis.DiaLogBuilder = function()
+      {
+        return builder;
+      };
+
+      globalThis.J.LOG = {};
+      globalThis.$diaLogManager = { addLog: vi.fn() };
+
+      return builder;
+    };
+
+    it('says an objective failed when that is how it finalized', () =>
+    {
+      // Arrange
+      const tracked = buildTracked(OmniObjective.Types.Indiscriminate, new OmniFulfillmentData());
+      tracked.state = OmniObjective.States.Failed;
+      const builder = installLogBuilder();
+
+      // Act
+      tracked.handleObjectiveUpdateLog();
+
+      // Assert
+      expect(builder.setLines)
+        .toHaveBeenCalledWith([ '\\C[1][Quest Name]\\C[0] updated.', 'Objective failed.' ]);
+    });
+
+    it('says an objective was missed when that is how it finalized', () =>
+    {
+      // Arrange
+      const tracked = buildTracked(OmniObjective.Types.Indiscriminate, new OmniFulfillmentData());
+      tracked.state = OmniObjective.States.Missed;
+      const builder = installLogBuilder();
+
+      // Act
+      tracked.handleObjectiveUpdateLog();
+
+      // Assert
+      expect(builder.setLines)
+        .toHaveBeenCalledWith([ '\\C[1][Quest Name]\\C[0] updated.', 'Objective missed.' ]);
+    });
+
+    it('throws rather than announcing a finalization it has no sentence for', () =>
+    {
+      // Arrange: a state that reports as finalized but matches no case is a contradiction, and a
+      // silent log line would hide it until somebody noticed the journal had gone quiet.
+      const tracked = buildTracked(OmniObjective.Types.Indiscriminate, new OmniFulfillmentData());
+      tracked.state = 999;
+      tracked.isFinalized = () => true;
+      installLogBuilder();
+
+      // Act
+      // Assert
+      expect(() => tracked.handleObjectiveUpdateLog())
+        .toThrow('Unknown finalization state for objective update message.');
+    });
+  });
+  //endregion the rest of the finalization messages
 });
 //endregion plugins/omni/ext/quest/__models/_component/tracked-omni-objective.test.js

@@ -47,6 +47,13 @@ const SEMANTIC_TO_SYMBOL = {
   // input serving two meanings in two different scenes is the arrangement working, not a collision.
   'cart-dec': JabsInputSymbols.DirLeft,
   'cart-inc': JabsInputSymbols.DirRight,
+
+  // the same adjustment taken in strides rather than steps, for quantities large enough that nudging one at a time
+  // is a chore. Distinct semantics rather than `actor-prev`/`actor-next`, which happen to be bound to these same
+  // two shoulders: cycling actors and changing a number by ten are not the same thing, and a legend that borrowed
+  // the actor semantic would go silently wrong the day either binding moves.
+  'cart-dec-bulk': JabsInputSymbols.SkillTrigger,
+  'cart-inc-bulk': JabsInputSymbols.GuardTrigger,
 };
 
 /**

@@ -1,43 +1,17 @@
 //region Window_RefinableList
-import JaftingManager from './../managers/JaftingManager.js';
+import RefinementEligibility from './../managers/RefinementEligibility.js';
 
 /**
- * Refinement equip list helpers + {@link Window_RefinableList}.<br>
+ * Refinement equip list + its one remaining paint helper.<br>
  * <br>
- * **Two different questions:** {@link refinableEquipTemplateSortHasSalvageLineage} drives **list ordering** (anything
- * with dismantle history or a refine counter sorts like a “stamped” row). {@link refinableEquipHasSalvageStamp} drives
- * **per-row paint** when the stack UI passes a `unitOrdinal` so only the expanded slot shows the hollow diamond from
+ * **Two different questions, and only one of them lives here now.** Whether a row is usable, and how usable rows
+ * order against unusable ones, is {@link RefinementEligibility} - decided for every row before any row is drawn,
+ * because a sort cannot put the usable ones first while each row only learns its own verdict as it is built.
+ * {@link refinableEquipHasSalvageStamp} stays, and drives **per-row paint** when the stack UI passes a `unitOrdinal`
+ * so only the expanded copy shows the hollow diamond from
  * {@link J.JAFTING.EXT.REFINE.Messages.RefinableListSalvageStampPrefix}.<br>
- * Keep those roles split—sorting on `unitOrdinal` would scramble templates every frame.
+ * Keep those roles split—ordering on a `unitOrdinal` would scramble identical rows every refresh.
  */
-/**
- * True when this row should sort with stamped-lineage priority (salvage bag, dynamic ledger, or any refine +N).
- *
- * @param {RPG_EquipItem} equip The equip driving this step.
- * @returns {boolean}
- */
-function refinableEquipTemplateSortHasSalvageLineage(equip)
-{
-  if (equip.jaftingRefinedCount > 0)
-  {
-    return true;
-  }
-
-  const ledger = JaftingSalvageManager.getLedgerForDatum(equip);
-
-  if (ledger === null || ledger === undefined)
-  {
-    return false;
-  }
-
-  if (!ledger.rows || ledger.rows.length === 0)
-  {
-    return false;
-  }
-
-  return true;
-}
-
 /**
  * True when this row should show dismantle lineage styling (per stack slot when expanded).
  *
@@ -78,6 +52,10 @@ class Window_RefinableList
     // perform original logic, which seeds this window's members via initMembers and then builds the
     // command list from them.
     super(rect);
+
+    // this list sits inside the refinement panel, which draws the frame and the column heading above it.
+    // a second frame here would box a column that is already boxed.
+    this.opacity = 0;
   }
 
   /**
@@ -208,33 +186,24 @@ class Window_RefinableList
       });
     }
 
-    // sort: stamped salvage lineage first, then weapons before armor, then by id descending to group equips.
-    equips.sort((a, b) =>
-    {
-      const stampA = refinableEquipTemplateSortHasSalvageLineage(a) ? 1 : 0;
-      const stampB = refinableEquipTemplateSortHasSalvageLineage(b) ? 1 : 0;
+    // drop whatever could never fill this role at all. offering a row and then refusing it is a tease, which is a
+    // rule this list already followed for outright-unrefinable gear; the per-role flags mean the same thing.
+    const offerable = equips.filter(equip => !RefinementEligibility.isPermanentlyExcluded(equip, this.isPrimary));
 
-      if (stampA !== stampB)
-      {
-        return stampB - stampA;
-      }
+    // judge every row up front, then order them. doing it in this order is the entire fix: eligibility used to be
+    // worked out while a row was being drawn, so the sort ran first against nothing and a player hunting for their
+    // one valid donor scrolled past every invalid one to reach it.
+    const judged = offerable.map(equip => ({
+      equip,
+      verdict: RefinementEligibility.evaluate(equip, this.isPrimary, this.baseSelection),
+    }));
 
-      if (a.etypeId > b.etypeId) return 1;
-      if (a.etypeId < b.etypeId) return -1;
-      if (a.id > b.id) return 1;
-      if (a.id < b.id) return -1;
-
-      return 0;
-    });
+    judged.sort(RefinementEligibility.compareCandidates);
 
     // one row per physical copy for normal weapons/armors; stack counts only for configured material types.
-    equips.forEach(equip =>
+    judged.forEach(candidate =>
     {
-      if (equip.jaftingUnrefinable)
-      {
-        return;
-      }
-
+      const { equip, verdict } = candidate;
       const isStackCountedRow = JaftingSalvageLedger.isStackCountedRefinableEquip(equip);
       const count = $gameParty.numItems(equip);
 
@@ -245,7 +214,7 @@ class Window_RefinableList
 
       if (isStackCountedRow)
       {
-        this.addRefinableEquipCommand(equip, null);
+        this.addRefinableEquipCommand(equip, null, verdict);
 
         // exit early without a payload.
         return;
@@ -253,188 +222,55 @@ class Window_RefinableList
 
       for (let u = 0; u < count; u++)
       {
-        this.addRefinableEquipCommand(equip, { unitOrdinal: u, unitsTotal: count });
+        const unitSlot = { unitOrdinal: u, unitsTotal: count };
+
+        this.addRefinableEquipCommand(equip, unitSlot, verdict);
       }
     });
   }
 
   /**
-   * Builds and appends refinable rows (enable rules, icons, salvage stamp label, optional stack counts).
+   * Builds and appends one refinable row (salvage stamp label, optional stack count, per-copy markers).
+   *
+   * The verdict arrives already decided by {@link RefinementEligibility}, shared by every copy of this template.
+   * What is left here is genuinely per-copy: marking the exact copy the player committed as the base, and refusing
+   * to feed that copy to itself. Neither is knowable from the template alone.
    *
    * @param {RPG_EquipItem} equip The equip driving this step.
    * @param {{ unitOrdinal: number, unitsTotal: number }|null} unitSlot Pass null for stack-counted material rows.
+   * @param {{ enabled: boolean, iconIndex: number, errorText: string }} verdict This template's eligibility.
    */
-  // eslint-disable-next-line complexity -- refinement eligibility stays flat so designers can scan every branch.
-  addRefinableEquipCommand(equip, unitSlot)
+  addRefinableEquipCommand(equip, unitSlot, verdict)
   {
-    // don't render equipment that are totally unrefinable. That's a tease!
-    if (equip.jaftingUnrefinable)
-    {
-      return;
-    }
-
-    const equipCount = $gameParty.numItems(equip);
     const isStackCountedRow = JaftingSalvageLedger.isStackCountedRefinableEquip(equip);
-    const hasUnit = unitSlot !== null && unitSlot !== undefined;
+    const hasUnit = unitSlot !== null;
 
-    if (isStackCountedRow && hasUnit)
+    // a stack-counted template gets exactly one row and a per-copy template gets exactly one row per copy, so these
+    // agreeing means the caller and this method disagree about which kind of row is being built.
+    if (isStackCountedRow === hasUnit)
     {
       return;
     }
 
-    if (!isStackCountedRow && !hasUnit)
-    {
-      return;
-    }
+    const rowOrdinal = hasUnit
+      ? unitSlot.unitOrdinal
+      : null;
+    const isChosenBaseCopy = this.isChosenBaseCopy(equip, rowOrdinal);
+    const label = this.rowLabelFor(equip, rowOrdinal);
 
-    let rightText = String.empty;
-
-    if (isStackCountedRow)
-    {
-      rightText = `x${equipCount}`;
-    }
-
-    // dismantle lineage stamps the hollow diamond; refinement (+N) always carries the same accent so outputs stay
-    // visually consistent even when merged salvage rows are empty (vendor-only material, etc.).
-    const hasSalvageStamp = refinableEquipHasSalvageStamp(equip, hasUnit ? unitSlot.unitOrdinal : undefined);
-    const hasRefinementAccent = equip.jaftingRefinedCount > 0;
-    const stamped = hasSalvageStamp || hasRefinementAccent;
-    const rowName = stamped
-      ? `${J.JAFTING.EXT.REFINE.Messages.RefinableListSalvageStampPrefix}${equip.name}`
-      : equip.name;
-    const nameColorIndex = stamped ? 6 : 0;
-
-    const sameTemplate = equip === this.baseSelection;
-    const rowOrdinal = hasUnit ? unitSlot.unitOrdinal : null;
-    const baseOrdinal = this.baseSelectionUnitOrdinal;
-
-    let samePhysicalUnit = false;
-
-    if (sameTemplate)
-    {
-      if (rowOrdinal !== null && rowOrdinal !== undefined
-        && baseOrdinal !== null && baseOrdinal !== undefined)
-      {
-        samePhysicalUnit = rowOrdinal === baseOrdinal;
-      }
-    }
-
-    const templateStack = this.baseSelection
-      ? $gameParty.numItems(this.baseSelection)
-      : 0;
-    const canSelectThisMaterial = sameTemplate === false
-      || (templateStack > 1 && samePhysicalUnit === false);
-
-    let enabled = this.isPrimary
-      ? true
-      : canSelectThisMaterial;
-
-    let { iconIndex } = equip;
-
-    let errorText = "";
-
-    // if the equipment is completely unable to
-    if (equip.jaftingUnrefinable)
-    {
-      enabled = false;
-      iconIndex = 90;
-    }
-
-    // if this is the second equip window...
-    if (!this.isPrimary)
-    {
-      // and the equipment has no transferable traits, then disable it.
-      if (!JaftingManager.parseTraits(equip).length)
-      {
-        enabled = false;
-        errorText += `${J.JAFTING.EXT.REFINE.Messages.NoTraitsOnMaterial}\n`;
-      }
-
-      // prevent equipment explicitly marked as "not usable as material" from being used.
-      if (equip.jaftingNotRefinementMaterial)
-      {
-        enabled = false;
-        iconIndex = 90;
-      }
-
-      // or the projected equips combined would result in over the max refined count, then disable it.
-      if (this.baseSelection)
-      {
-        const primaryHasMaxRefineCount = this.baseSelection.jaftingMaxRefineCount > 0;
-        if (primaryHasMaxRefineCount)
-        {
-          const primaryMaxRefineCount = this.baseSelection.jaftingMaxRefineCount;
-          const projectedCount = this.baseSelection.jaftingRefinedCount + equip.jaftingRefinedCount;
-          const overRefinementCount = primaryMaxRefineCount < projectedCount;
-          if (overRefinementCount)
-          {
-            enabled = false;
-            iconIndex = 90;
-            // eslint-disable-next-line max-len
-            errorText += `${J.JAFTING.EXT.REFINE.Messages.ExceedRefineCount} ${projectedCount}/${primaryMaxRefineCount}.<br>\n`;
-          }
-        }
-
-        // check the max traits of the base equip and compare with the projected result of this item.
-        // if the count is greater than the max (if there is a max), then prevent this item from being used.
-        const baseMaxTraitCount = this.baseSelection.jaftingMaxTraitCount;
-        const projectedResult = JaftingManager.determineRefinementOutput(this.baseSelection, equip);
-        const projectedResultTraitCount = JaftingManager.parseTraits(projectedResult).length;
-        const overMaxTraitCount = baseMaxTraitCount > 0 && projectedResultTraitCount > baseMaxTraitCount;
-        if (overMaxTraitCount)
-        {
-          enabled = false;
-          iconIndex = 92;
-          // eslint-disable-next-line max-len
-          errorText += `${J.JAFTING.EXT.REFINE.Messages.ExceedTraitCount} ${projectedResultTraitCount}/${baseMaxTraitCount}.<br>\n`;
-        }
-      }
-
-      // if this is the primary equip window...
-    }
-    else
-    {
-      const equipIsMaxRefined = (equip.jaftingMaxRefineCount === 0)
-        ? false // 0 max refinements means you can refine as much as you want.
-        : equip.jaftingMaxRefineCount <= equip.jaftingRefinedCount;
-      const equipHasMaxTraits = equip.jaftingMaxTraitCount === 0
-        ? false // 0 max traits means you can have as many as you want.
-        : equip.jaftingMaxTraitCount <= JaftingManager.parseTraits(equip).length;
-      if (equipIsMaxRefined)
-      {
-        enabled = false;
-        iconIndex = 92;
-        errorText += `${J.JAFTING.EXT.REFINE.Messages.AlreadyMaxRefineCount}\n`;
-      }
-
-      if (equipHasMaxTraits)
-      {
-        enabled = false;
-        iconIndex = 92;
-        errorText += `${J.JAFTING.EXT.REFINE.Messages.AlreadyMaxTraitCount}\n`;
-      }
-
-      // prevent equipment explicitly marked as "not usable as base" from being used.
-      if (equip.jaftingNotRefinementBase)
-      {
-        enabled = false;
-        iconIndex = 92;
-      }
-    }
-
-    const isChosenBaseRow = sameTemplate
-      && rowOrdinal !== null && rowOrdinal !== undefined
-      && baseOrdinal !== null && baseOrdinal !== undefined
-      && rowOrdinal === baseOrdinal;
-
-    if (isChosenBaseRow)
-    {
-      iconIndex = 91;
-    }
+    // the template's verdict is the floor; a donor row additionally cannot be the very copy already committed as
+    // the base, which is the one thing the template could not have told us.
+    const enabled = verdict.enabled && this.isSpendableCopy(equip, isChosenBaseCopy);
+    const iconIndex = isChosenBaseCopy
+      ? RefinementEligibility.ChosenBaseIcon
+      : verdict.iconIndex;
+    const rightText = isStackCountedRow
+      ? `x${$gameParty.numItems(equip)}`
+      : String.empty;
 
     const extData = {
       data: equip,
-      error: errorText,
+      error: verdict.errorText,
     };
 
     if (hasUnit)
@@ -443,18 +279,136 @@ class Window_RefinableList
       extData.unitsTotal = unitSlot.unitsTotal;
     }
 
+    // a row the player cannot use answers the question they are actually asking. Its flavour text is no
+    // longer the interesting thing about it, and the verdict already knows why - it was being computed,
+    // carried this far, and then discarded in favour of the description.
+    const helpText = enabled
+      ? equip.description
+      : this.blockedReasonText(verdict);
+
     // construct command for the next step in this routine.
-    const command = new WindowCommandBuilder(rowName)
+    const command = new WindowCommandBuilder(label.name)
       .setSymbol('refine-object')
       .setEnabled(enabled)
       .setExtensionData(extData)
       .setIconIndex(iconIndex)
-      .setColorIndex(nameColorIndex)
+      .setColorIndex(label.colorIndex)
       .setRightText(rightText)
-      .setHelpText(equip.description)
+      .setHelpText(helpText)
       .build();
 
     this.addBuiltCommand(command);
+  }
+
+  /**
+   * The verdict's reasons, tidied into something a two-line help window can show.
+   *
+   * The reasons accumulate as a run-on string because more than one can apply at once, and they are not
+   * consistent about how they end - some close with a newline, some with `<br>`. Normalizing here rather
+   * than at each message keeps the messages readable as sentences.
+   * @param {{ enabled: boolean, iconIndex: number, errorText: string }} verdict This row's eligibility.
+   * @returns {string}
+   */
+  blockedReasonText(verdict)
+  {
+    return verdict.errorText.replaceAll('<br>', String.empty)
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .join('\n');
+  }
+
+  /**
+   * Whether this row is the exact physical copy the player already committed as the base.
+   *
+   * Both halves matter. The same template is not enough - a player who owns three of a weapon may refine one into
+   * another - and an ordinal only means something once a base copy has actually been locked in.
+   *
+   * @param {RPG_EquipItem} equip The equip this row draws.
+   * @param {number|null} rowOrdinal Which copy this row is, or null for a stack-counted row.
+   * @returns {boolean}
+   */
+  isChosenBaseCopy(equip, rowOrdinal)
+  {
+    if (equip !== this.baseSelection)
+    {
+      return false;
+    }
+
+    if (rowOrdinal === null)
+    {
+      return false;
+    }
+
+    const baseOrdinal = this.baseSelectionUnitOrdinal;
+
+    if (baseOrdinal === null)
+    {
+      return false;
+    }
+
+    return rowOrdinal === baseOrdinal;
+  }
+
+  /**
+   * Whether this copy may be spent as the donor.
+   *
+   * A template can be fed to itself - two of the same sword merging is legitimate - but only when a second copy
+   * exists to be consumed, and never using the very copy standing in as the base.
+   *
+   * @param {RPG_EquipItem} equip The equip this row draws.
+   * @param {boolean} isChosenBaseCopy Whether this row is the committed base copy.
+   * @returns {boolean}
+   */
+  isSpendableCopy(equip, isChosenBaseCopy)
+  {
+    // the base list spends nothing, so there is no copy to protect.
+    if (this.isPrimary)
+    {
+      return true;
+    }
+
+    // a different template can never collide with the base.
+    if (equip !== this.baseSelection)
+    {
+      return true;
+    }
+
+    const templateStack = $gameParty.numItems(this.baseSelection);
+
+    return templateStack > 1 && isChosenBaseCopy === false;
+  }
+
+  /**
+   * The name and colour a row draws with.
+   *
+   * Dismantle lineage earns the hollow diamond, and a refine counter earns the same accent even when the merged
+   * salvage rows came out empty - a `+N` output should not look like stock gear just because its donor was a
+   * vendor shell with nothing to refund.
+   *
+   * @param {RPG_EquipItem} equip The equip this row draws.
+   * @param {number|null} rowOrdinal Which copy this row is, or null for a stack-counted row.
+   * @returns {{ name: string, colorIndex: number }}
+   */
+  rowLabelFor(equip, rowOrdinal)
+  {
+    const hasSalvageStamp = refinableEquipHasSalvageStamp(equip, rowOrdinal);
+    const stamped = hasSalvageStamp || equip.jaftingRefinedCount > 0;
+
+    if (!stamped)
+    {
+      return {
+        name: equip.name,
+        colorIndex: 0,
+      };
+    }
+
+    const { RefinableListSalvageStampPrefix } = J.JAFTING.EXT.REFINE.Messages;
+
+    return {
+      name: `${RefinableListSalvageStampPrefix}${equip.name}`,
+      colorIndex: 6,
+    };
   }
 }
 

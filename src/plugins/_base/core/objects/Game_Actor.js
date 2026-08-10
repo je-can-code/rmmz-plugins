@@ -478,6 +478,49 @@ Game_Actor.prototype.equippedEquips = function()
 };
 
 /**
+ * Overwrites {@link Game_BattlerBase#localisedEquips}.<br/>
+ * An actor's worn equipment is exactly the set of trait sources whose percentages describe the item
+ * rather than the actor wearing it.
+ * @returns {RPG_EquipItem[]}
+ */
+Game_Actor.prototype.localisedEquips = function()
+{
+  return this.equippedEquips();
+};
+
+/**
+ * Overwrites {@link Game_Actor#paramPlus}.<br/>
+ * Each equipped item contributes its own base for the parameter, amplified by its own percentages.
+ *
+ * Previously an equip's percentage was pooled into the actor's global rate, so a sword's `+25% ATK` lifted
+ * the class curve and every other worn item along with it. Now it lifts only what that sword is worth,
+ * which is what makes a percentage bounded by the thing carrying it.
+ *
+ * Deliberately an overwrite rather than an extension: vanilla's implementation already adds each equip's
+ * `params` entry, and {@link RPG_EquipItem#thisBParam} includes that same entry, so aliasing would count
+ * it twice. The actor's own permanent plus is fetched from the battler implementation directly, the way
+ * {@link #traitObjects} reaches past its own vanilla version.
+ * @param {number} paramId The base parameter id, 0 through 7.
+ * @returns {number}
+ */
+Game_Actor.prototype.paramPlus = function(paramId)
+{
+  // the permanent plus from events and items, which belongs to the actor rather than to any one item.
+  const actorPlus = Game_Battler.prototype.paramPlus.call(this, paramId);
+
+  // each item's own worth for this parameter, scaled by the percentages sitting on that same item.
+  const equipPlus = this.equippedEquips()
+    .reduce((total, equip) =>
+    {
+      const ownRate = equip.ownRate(Game_BattlerBase.TRAIT_PARAM, paramId);
+
+      return total + (equip.thisBParam(paramId) * ownRate);
+    }, 0);
+
+  return actorPlus + equipPlus;
+};
+
+/**
  * Sets the level of this actor to the given level.
  * @param {number} level The level to set this actor to.
  */

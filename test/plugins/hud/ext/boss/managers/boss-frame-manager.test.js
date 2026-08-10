@@ -88,6 +88,17 @@ describe('BossFrameManager (direct src import)', () =>
       expect(() => BossFrameManager.setBossByEventId(5)).toThrow();
     });
 
+    it('throws when the event id points at a slot nothing occupies', () =>
+    {
+      // Arrange- an id that is out of range, or that names a slot vacated by a despawned action or
+      // loot event, resolves to nothing. Chaining off that is what used to turn this validation into
+      // the very crash it exists to prevent.
+      globalThis.$gameMap.event.mockReturnValue(undefined);
+
+      // Act/Assert
+      expect(() => BossFrameManager.setBossByEventId(5)).toThrow();
+    });
+
     it('builds and sets a boss FramedTarget from the event JABS battler', () =>
     {
       // Arrange
@@ -129,6 +140,46 @@ describe('BossFrameManager (direct src import)', () =>
       // Assert
       expect(result).toBe(boss.battler);
     });
+
+    it('defers to a running encounter over whatever frame was set by hand', () =>
+    {
+      // Arrange- a running encounter is the authority on who the boss is; this frame is a view of
+      // that fact rather than the owner of it. J-ABS-Boss is optional, which is why the frame can
+      // also stand on its own, but when both exist the encounter wins.
+      const encounterBattler = { name: () => 'Gluttonwolf' };
+      globalThis.JabsBossManager = {
+        hasActiveEncounter: () => true,
+        getBossGameBattler: () => encounterBattler,
+      };
+      BossFrameManager.setBossFrame(makeBoss(100));
+
+      // Act
+      const result = BossFrameManager.getBossGameBattler();
+
+      // Assert
+      expect(result).toBe(encounterBattler);
+
+      delete globalThis.JabsBossManager;
+    });
+
+    it('falls back to its own frame while the boss plugin is installed but idle', () =>
+    {
+      // Arrange
+      globalThis.JabsBossManager = {
+        hasActiveEncounter: () => false,
+        getBossGameBattler: () => ({ name: () => 'Gluttonwolf' }),
+      };
+      const boss = makeBoss(100);
+      BossFrameManager.setBossFrame(boss);
+
+      // Act
+      const result = BossFrameManager.getBossGameBattler();
+
+      // Assert
+      expect(result).toBe(boss.battler);
+
+      delete globalThis.JabsBossManager;
+    });
   });
 
   describe('getBossJabsBattler', () =>
@@ -156,6 +207,45 @@ describe('BossFrameManager (direct src import)', () =>
       // Assert
       expect(globalThis.JABS_AiManager.getBattlerByUuid).toHaveBeenCalledWith('boss-uuid');
       expect(result).toBe(jabsBattler);
+    });
+
+    it('defers to a running encounter, which already knows which body is the boss', () =>
+    {
+      // Arrange
+      const encounterJabsBattler = {};
+      globalThis.JabsBossManager = {
+        hasActiveEncounter: () => true,
+        getBossJabsBattler: () => encounterJabsBattler,
+      };
+      BossFrameManager.setBossFrame(makeBoss(100));
+
+      // Act
+      const result = BossFrameManager.getBossJabsBattler();
+
+      // Assert
+      expect(result).toBe(encounterJabsBattler);
+
+      delete globalThis.JabsBossManager;
+    });
+
+    it('resolves by uuid while the boss plugin is installed but idle', () =>
+    {
+      // Arrange
+      globalThis.JabsBossManager = {
+        hasActiveEncounter: () => false,
+        getBossJabsBattler: () => ({}),
+      };
+      BossFrameManager.setBossFrame(makeBoss(100));
+      const jabsBattler = {};
+      globalThis.JABS_AiManager.getBattlerByUuid.mockReturnValue(jabsBattler);
+
+      // Act
+      const result = BossFrameManager.getBossJabsBattler();
+
+      // Assert
+      expect(result).toBe(jabsBattler);
+
+      delete globalThis.JabsBossManager;
     });
   });
 

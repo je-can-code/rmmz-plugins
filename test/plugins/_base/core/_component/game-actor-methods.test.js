@@ -55,6 +55,18 @@ describe('J-Base Game_Actor methods (direct src import)', () =>
     {
       this._actorId = actorId;
     };
+    // the actor's permanent plus from events and items, which paramPlus reaches past its own
+    // overwrite to collect. Non-zero so an assertion can prove this half was actually included.
+    globalThis.Game_Battler.prototype.paramPlus = function(_paramId)
+    {
+      return 7;
+    };
+    // vanilla equips() yields null for an empty slot; equippedEquips() is what filters those, so the
+    // stub has to produce them rather than hand back an already-clean list.
+    globalThis.Game_Actor.prototype.equips = function()
+    {
+      return this._equips ?? [];
+    };
     globalThis.Game_Actor.prototype.learnSkill = function(skillId)
     {
       if (!this._skills.includes(skillId)) this._skills.push(skillId);
@@ -852,6 +864,107 @@ describe('J-Base Game_Actor methods (direct src import)', () =>
       expect(actor.onLevelDown).toHaveBeenCalled();
     });
   });
+
+  //region localised equipment parameters
+  /**
+   * Builds a stand-in equip exposing only what paramPlus asks of one.
+   *
+   * Deliberately not a real RPG_EquipItem: written from the caller's side, so a change in how the model
+   * computes either value cannot silently agree with a wrong expectation here.
+   * @param {number} thisBParam What this item is worth for the parameter, base field and tag combined.
+   * @param {number} ownRate The multiplier this item's own percentages apply to that worth.
+   * @returns {{thisBParam: Function, ownRate: Function}}
+   */
+  const fakeEquip = (thisBParam, ownRate) => ({
+    thisBParam: () => thisBParam,
+    ownRate: () => ownRate,
+  });
+
+  describe('localisedEquips', () =>
+  {
+    it('answers with the actor currently equipped items', () =>
+    {
+      // Arrange- the null is an empty slot, which equippedEquips is responsible for dropping.
+      const actor = buildActor();
+      const sword = fakeEquip(40, 1.0);
+      actor._equips = [ sword, null ];
+
+      // Act
+      const result = actor.localisedEquips();
+
+      // Assert
+      expect(result).toEqual([ sword ]);
+    });
+  });
+
+  describe('paramPlus', () =>
+  {
+    it('includes the actor own permanent plus alongside equipment', () =>
+    {
+      // Arrange- nothing equipped, so only the battler half can be contributing.
+      const actor = buildActor();
+
+      // Act
+      const result = actor.paramPlus(2);
+
+      // Assert
+      expect(result).toBe(7);
+    });
+
+    it('scales an equip worth by that same equip own rate', () =>
+    {
+      // Arrange- a sword worth 40 attack carrying its own +50%.
+      const actor = buildActor();
+      actor._equips = [ fakeEquip(40, 1.5) ];
+
+      // Act
+      const result = actor.paramPlus(2);
+
+      // Assert- 7 from the actor, plus 40 * 1.5 from the sword.
+      expect(result).toBe(67);
+    });
+
+    it('leaves an equip carrying no percentages at its face worth', () =>
+    {
+      // Arrange
+      const actor = buildActor();
+      actor._equips = [ fakeEquip(40, 1.0) ];
+
+      // Act
+      const result = actor.paramPlus(2);
+
+      // Assert
+      expect(result).toBe(47);
+    });
+
+    it('applies each equip own rate to itself rather than to the pooled total', () =>
+    {
+      // Arrange- this is the whole point of the change. One item carries a rate and the other does not,
+      // so pooling would multiply the plain item's worth as well.
+      const actor = buildActor();
+      actor._equips = [ fakeEquip(40, 1.5), fakeEquip(100, 1.0) ];
+
+      // Act
+      const result = actor.paramPlus(2);
+
+      // Assert- 7 + (40 * 1.5) + (100 * 1.0). Pooling the rate would have given 7 + 210 instead.
+      expect(result).toBe(167);
+    });
+
+    it('skips the empty slots that equips reports as null', () =>
+    {
+      // Arrange
+      const actor = buildActor();
+      actor._equips = [ null, fakeEquip(40, 1.0), null ];
+
+      // Act
+      const result = actor.paramPlus(2);
+
+      // Assert
+      expect(result).toBe(47);
+    });
+  });
+  //endregion localised equipment parameters
 
   describe('getBaseMaxTp', () =>
   {

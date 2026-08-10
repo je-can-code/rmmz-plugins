@@ -298,6 +298,39 @@ describe('J-CriticalFactors Game_Action crit math (direct src import)', () =>
       // Act & Assert
       expect(action.isGuaranteedCritVsTarget(buildTarget([ 3 ]))).toBe(false);
     });
+
+    it('is true when the attacker globally guarantees against a state *type* the target carries', () =>
+    {
+      // Arrange- the attacker's own equipment and states can carry the guarantee, and the type form
+      // is the last of the four checks. Everything ahead of it has to miss for this one to be read.
+      const action = buildAction({
+        item: () => ({ thisCritsAlwaysIfStates: [], thisCritsAlwaysIfStateTypes: [] }),
+        subject: () => ({
+          getAllNotes: () => [ { critAlwaysIfStates: [], critAlwaysIfStateTypes: [ 'poison' ] } ],
+        }),
+        targetHasActiveStateType: (target, type) => type === 'poison',
+      });
+
+      // Act & Assert
+      expect(action.isGuaranteedCritVsTarget(buildTarget([]))).toBe(true);
+    });
+
+    it('is true when the skill guarantees against a state *type* the target carries', () =>
+    {
+      // Arrange- the type form covers every state carrying a classifier, which is how a skill can
+      // say "always crits the poisoned" without enumerating every poison in the database.
+      const action = buildAction({
+        item: () => ({
+          thisCritsAlwaysIfStates: [],
+          thisCritsAlwaysIfStateTypes: [ 'poison' ],
+        }),
+        subject: () => ({ getAllNotes: () => [] }),
+        targetHasActiveStateType: (target, type) => type === 'poison',
+      });
+
+      // Act & Assert
+      expect(action.isGuaranteedCritVsTarget(buildTarget([]))).toBe(true);
+    });
   });
 
   describe('thisCritChanceIfStateBonus', () =>
@@ -328,6 +361,37 @@ describe('J-CriticalFactors Game_Action crit math (direct src import)', () =>
       // Act & Assert
       expect(action.thisCritChanceIfStateBonus({})).toBe(0);
     });
+
+    it('sums bonuses for pairs whose state *type* the target carries', () =>
+    {
+      // Arrange- the type-classified form is what lets one tag cover every poison in the database
+      // rather than naming each state id, so it accumulates alongside the id-based pairs.
+      const action = buildAction({
+        item: () => ({
+          thisCritChanceIfStates: [],
+          thisCritChanceIfStateTypes: [ [ 'poison', 30 ] ],
+        }),
+      });
+      const target = { isStateAffected: () => false, states: () => [ { types: () => [ 'poison' ] } ] };
+
+      // Act & Assert
+      expect(action.thisCritChanceIfStateBonus(target)).toBeCloseTo(0.3, 5);
+    });
+
+    it('adds nothing for a state type the target does not carry', () =>
+    {
+      // Arrange
+      const action = buildAction({
+        item: () => ({
+          thisCritChanceIfStates: [],
+          thisCritChanceIfStateTypes: [ [ 'poison', 30 ] ],
+        }),
+      });
+      const target = { isStateAffected: () => false, states: () => [ { types: () => [ 'burn' ] } ] };
+
+      // Act & Assert
+      expect(action.thisCritChanceIfStateBonus(target)).toBe(0);
+    });
   });
 
   describe('critChanceIfStateBonus', () =>
@@ -348,6 +412,63 @@ describe('J-CriticalFactors Game_Action crit math (direct src import)', () =>
       // Act & Assert
       // only state 2's 25 bonus applies; 25 / 100 = 0.25.
       expect(action.critChanceIfStateBonus(target)).toBeCloseTo(0.25, 5);
+    });
+
+    it('still applies a type-only global bonus, with no id-based pairs present at all', () =>
+    {
+      // Arrange- the two tag families are independent, so an attacker carrying only the type form
+      // must still contribute. Short-circuiting on the id-based collection alone silently discarded
+      // every type-based global bonus in the game.
+      const action = buildAction({
+        subject: () => ({
+          getAllNotes: () => [ { critChanceIfStates: [], critChanceIfStateTypes: [ [ 'poison', 30 ] ] } ],
+        }),
+      });
+      const target = { isStateAffected: () => false, states: () => [ { types: () => [ 'poison' ] } ] };
+
+      // Act & Assert
+      expect(action.critChanceIfStateBonus(target)).toBeCloseTo(0.3, 5);
+    });
+
+    it('returns 0 when the attacker carries neither kind of conditional pair', () =>
+    {
+      // Arrange- this runs on every single hit, so the short circuit still earns its keep for the
+      // overwhelming majority of attackers, who carry no crit tags at all.
+      const action = buildAction({
+        subject: () => ({ getAllNotes: () => [ { critChanceIfStates: [], critChanceIfStateTypes: [] } ] }),
+      });
+      const target = { isStateAffected: () => false, states: () => [ { types: () => [ 'poison' ] } ] };
+
+      // Act & Assert
+      expect(action.critChanceIfStateBonus(target)).toBe(0);
+    });
+
+    it('sums the attacker\'s global bonuses for a state type the target carries', () =>
+    {
+      // Arrange
+      const action = buildAction({
+        subject: () => ({
+          getAllNotes: () => [ { critChanceIfStates: [ [ 9, 0 ] ], critChanceIfStateTypes: [ [ 'poison', 30 ] ] } ],
+        }),
+      });
+      const target = { isStateAffected: () => false, states: () => [ { types: () => [ 'poison' ] } ] };
+
+      // Act & Assert
+      expect(action.critChanceIfStateBonus(target)).toBeCloseTo(0.3, 5);
+    });
+
+    it('adds nothing globally for a state type the target does not carry', () =>
+    {
+      // Arrange
+      const action = buildAction({
+        subject: () => ({
+          getAllNotes: () => [ { critChanceIfStates: [ [ 9, 0 ] ], critChanceIfStateTypes: [ [ 'poison', 30 ] ] } ],
+        }),
+      });
+      const target = { isStateAffected: () => false, states: () => [ { types: () => [ 'burn' ] } ] };
+
+      // Act & Assert
+      expect(action.critChanceIfStateBonus(target)).toBe(0);
     });
   });
 

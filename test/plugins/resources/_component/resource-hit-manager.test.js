@@ -213,6 +213,46 @@ describe('ResourceHitManager (resources ext/abs)', () =>
 
       expect(targetBattler.gainHpFromResource).toHaveBeenCalledWith(7);
     });
+
+    it('grants the mp and tp side of a when-hit tag as well as the hp side', () =>
+    {
+      // Arrange- all three are calculated on every hit, so a tag that only ever restored hp would
+      // look correct in a testplay of a project that never wrote the other two.
+      const source = {};
+      const targetBattler = buildBattler({ result: () => ({ hpDamage: 80 }), hcrSources: () => [ source ] });
+
+      getNumberFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === regexNamespace.WhenHitMpGainFlat) return 3;
+        if (regexp === regexNamespace.WhenHitTpGainFlat) return 4;
+        return 0;
+      });
+
+      // Act
+      ResourceHitManager.applyWhenHitEffects({}, { getBattler: () => targetBattler });
+
+      // Assert
+      expect(targetBattler.gainMpFromResource).toHaveBeenCalledWith(3);
+      expect(targetBattler.gainTpFromResource).toHaveBeenCalledWith(4);
+    });
+
+    it('grants nothing at all when the battler carries no when-hit tags', () =>
+    {
+      // Arrange- this runs on every hit taken by every battler on the map, and a zero-valued gain
+      // would still pop a "0" over their head.
+      const source = {};
+      const targetBattler = buildBattler({ result: () => ({ hpDamage: 80 }), hcrSources: () => [ source ] });
+
+      getNumberFromNoteByRegexMock.mockImplementation(() => 0);
+
+      // Act
+      ResourceHitManager.applyWhenHitEffects({}, { getBattler: () => targetBattler });
+
+      // Assert
+      expect(targetBattler.gainHpFromResource).not.toHaveBeenCalled();
+      expect(targetBattler.gainMpFromResource).not.toHaveBeenCalled();
+      expect(targetBattler.gainTpFromResource).not.toHaveBeenCalled();
+    });
   });
 });
 //endregion plugins/resources/_component/resource-hit-manager.test.js

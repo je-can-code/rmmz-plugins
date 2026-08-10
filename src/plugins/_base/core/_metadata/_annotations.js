@@ -157,6 +157,39 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.4.0
+ *    Parameter percentages carried by equipment now scale that equipment's own
+ *    contribution rather than the wearer's total. A weapon granting +25% attack
+ *    lifts what the weapon is worth, not the class curve and every other worn
+ *    item along with it, which is what makes such a bonus bounded by the thing
+ *    carrying it.
+ *    Added RPG_EquipItem.ownRate, answering what an equip amplifies its own base
+ *    by for one parameter. Codes 21 and 23 store deltas from 1.0 while code 22
+ *    stores them from 0; this normalises all three onto one multiplier so a
+ *    single subtraction can remove equipment's share from any of them.
+ *    Added a localisedEquips hook to Game_BattlerBase, answering with nothing at
+ *    that level. Enemies carry no equipment, so every formula below is a no-op
+ *    for them rather than a special case.
+ *    Game_BattlerBase.paramRate, sparam and the newly added xparam override now
+ *    subtract equipment's share from the battler-wide aggregate and, for the two
+ *    parameter families with no field of their own, re-apply it against each
+ *    item's own base.
+ *    Game_Actor.paramPlus is overwritten rather than extended, because vanilla
+ *    already adds each equip's params entry and thisBParam includes that same
+ *    entry - aliasing would have counted it twice.
+ *    Equipment contributions are cached per parameter and invalidated by
+ *    onBattlerDataChange, matching every other note-derived value on a battler.
+ *    The reads behind them scan a note string once per equipped item, and
+ *    parameters are asked for during damage resolution and once per row of every
+ *    parameter catalog refresh.
+ *    NoteResolver gained a summing policy for numeric tags. Stacking those as
+ *    repeated lines cannot work - an exact duplicate line is dropped within a
+ *    single note, so a value written twice collapses to one and reads as half
+ *    what it should forever. Totalling them into one line is the only shape that
+ *    survives being merged again.
+ *    Added Window_ItemList data and setData accessors, so a list reordering or
+ *    filtering its rows has a way in that is not a reach into storage it does
+ *    not own.
  * - 3.3.0
  *    The shipped file moved from js/plugins/J-Base.js to
  *    js/plugins/base/J-Base.js, following the base plugin set's split into a

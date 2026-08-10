@@ -16,6 +16,13 @@ describe('Game_Party (omni core, direct src import)', () =>
       this._j ??= {};
     };
 
+    // J-Base adds this hook and calls it from an aliased `initialize`; the omnipedia hangs off it
+    // rather than off `initialize` itself, so the chain needs it to exist to be extended.
+    Game_Party.prototype.initMembers = vi.fn(function()
+    {
+      this._j ??= {};
+    });
+
     globalThis.Game_Party = Game_Party;
     globalThis.J = { OMNI: { Aliased: { Game_Party: new Map() } } };
 
@@ -36,6 +43,35 @@ describe('Game_Party (omni core, direct src import)', () =>
     party.initialize();
 
     expect(party._j).toEqual({});
+  });
+
+  it('still performs the original initMembers it extends', () =>
+  {
+    // Arrange
+    const party = new globalThis.Game_Party();
+
+    // Act
+    party.initMembers();
+
+    // Assert- omni owns none of the party's other state, so dropping the original here would strip
+    // every field J-Base and its siblings seeded.
+    expect(globalThis.J.OMNI.Aliased.Game_Party.get('initMembers')).toHaveBeenCalled();
+  });
+
+  it('reaches the omnipedia hook so extensions get a chance to seed their own members', () =>
+  {
+    // Arrange- the hook is empty in core on purpose; each omnipedia extension patches it, and this
+    // is the single call site that gives all of them their opening.
+    const party = new globalThis.Game_Party();
+    const initOmnipediaMembers = vi.spyOn(party, 'initOmnipediaMembers');
+
+    // Act
+    party.initMembers();
+
+    // Assert
+    expect(initOmnipediaMembers).toHaveBeenCalled();
+
+    initOmnipediaMembers.mockRestore();
   });
 
   it('initOmnipediaMembers is a no-op hook available for extension plugins to patch', () =>

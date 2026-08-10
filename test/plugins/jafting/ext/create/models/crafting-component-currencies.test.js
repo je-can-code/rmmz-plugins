@@ -99,6 +99,35 @@ describe('CraftingComponent currencies (direct src import)', () =>
       expect(item.name).toBe(expectedName);
     });
 
+    it('resolves a gold component to a gold component carrying its count', () =>
+    {
+      // Arrange- gold has no database row, so it answers with a synthesized component instead. Pinning
+      // this is what stops the gold branch from being satisfied by the SDP one below it.
+      // Act
+      const item = makeComponent(CraftingComponent.Types.Gold, 250)
+        .getItem();
+
+      // Assert
+      expect(item.isGold())
+        .toBe(true);
+      expect(item.quantity())
+        .toBe(250);
+    });
+
+    it('resolves an SDP component to an SDP component carrying its count', () =>
+    {
+      // Arrange- SDP is the fall-through, so nothing above it may claim it.
+      // Act
+      const item = makeComponent(CraftingComponent.Types.SDP, 40)
+        .getItem();
+
+      // Assert
+      expect(item.isSdp())
+        .toBe(true);
+      expect(item.quantity())
+        .toBe(40);
+    });
+
     it('refuses outright to classify a type it does not understand', () =>
     {
       // Arrange: an unrecognized type letter means the recipe config and this model disagree,
@@ -132,6 +161,62 @@ describe('CraftingComponent currencies (direct src import)', () =>
   //endregion resolving the underlying thing
 
   //region how much is held
+  describe('currency predicates', () =>
+  {
+    /**
+     * These are read from outside the class - {@link JaftingSalvageLedger.rowsFromCraftingComponents}
+     * routes ledger rows by asking a component what kind of currency it is - so they are part of the
+     * contract regardless of whether anything inside this file happens to branch on them.
+     */
+    it('isSdp is true for an SDP component', () =>
+    {
+      // Arrange, Act, Assert
+      expect(makeComponent(CraftingComponent.Types.SDP).isSdp()).toBe(true);
+    });
+
+    it('isSdp is false for a gold component', () =>
+    {
+      // Arrange, Act, Assert
+      expect(makeComponent(CraftingComponent.Types.Gold).isSdp()).toBe(false);
+    });
+
+    it('isGold is true for a gold component', () =>
+    {
+      // Arrange, Act, Assert
+      expect(makeComponent(CraftingComponent.Types.Gold).isGold()).toBe(true);
+    });
+
+    it('isGold is false for an SDP component', () =>
+    {
+      // Arrange, Act, Assert
+      expect(makeComponent(CraftingComponent.Types.SDP).isGold()).toBe(false);
+    });
+
+    it('isItem is true for an item component', () =>
+    {
+      // Arrange, Act, Assert
+      expect(makeComponent(CraftingComponent.Types.Item).isItem()).toBe(true);
+    });
+
+    it('isItem is false for a weapon component', () =>
+    {
+      // Arrange, Act, Assert- without this the predicate could answer true for everything unnoticed.
+      expect(makeComponent(CraftingComponent.Types.Weapon).isItem()).toBe(false);
+    });
+
+    it('isArmor is true for an armor component', () =>
+    {
+      // Arrange, Act, Assert
+      expect(makeComponent(CraftingComponent.Types.Armor).isArmor()).toBe(true);
+    });
+
+    it('isArmor is false for an item component', () =>
+    {
+      // Arrange, Act, Assert
+      expect(makeComponent(CraftingComponent.Types.Item).isArmor()).toBe(false);
+    });
+  });
+
   describe('getHandledQuantity', () =>
   {
     it('reads gold from the party purse', () =>
@@ -160,16 +245,12 @@ describe('CraftingComponent currencies (direct src import)', () =>
       // Arrange: J-SDP is optional, so a recipe referencing it in a game without it must not
       // claim the player has points to spend.
       globalThis.J.JAFTING.EXT.CREATE.Metadata.usingSdp = () => false;
-      const warn = vi.spyOn(console, 'warn')
-        .mockImplementation(() => {});
 
       // Act
       const held = makeComponent(CraftingComponent.Types.SDP).getHandledQuantity();
 
       // Assert
       expect(held).toBe(0);
-
-      warn.mockRestore();
     });
   });
   //endregion how much is held

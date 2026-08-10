@@ -88,6 +88,21 @@ describe('AptitudeSkillAggregate', () =>
     expect(aggregate.cheapestSource()).toBe(cheap);
   });
 
+  it('cheapestSource keeps the first candidate when a later one is no cheaper', () =>
+  {
+    // Arrange- the comparison has to reject a worse candidate as well as accept a better one, or
+    // the answer becomes "whichever source happened to be listed last".
+    const aggregate = new AptitudeSkillAggregate(1, buildSkill());
+    const cheap = new AptitudeSkillSourceProgress('cheap', 1, 5, 10, false);
+    const expensive = new AptitudeSkillSourceProgress('expensive', 1, 0, 100, false);
+
+    aggregate.addSource(cheap);
+    aggregate.addSource(expensive);
+
+    // Act & Assert
+    expect(aggregate.cheapestSource()).toBe(cheap);
+  });
+
   it('cheapestSource falls back to the first source when everything is already learned', () =>
   {
     const aggregate = new AptitudeSkillAggregate(1, buildSkill());

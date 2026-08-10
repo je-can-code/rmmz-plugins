@@ -181,6 +181,28 @@ describe('J-Difficulty metadata (direct src import)', () =>
       globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = false;
       logSpy.mockRestore();
     });
+
+    it('names an unmistakable placeholder default when no default difficulty was configured', async () =>
+    {
+      // Arrange- the key is looked up against the layer table, so a project that never chose one
+      // gets a miss that reads as a configuration mistake rather than silently resolving to
+      // whichever layer happened to be first.
+      const { default: DiffPluginMetadata } =
+        await import('../../../../src/plugins/diff/core/_metadata/_pluginMetadata.js');
+      globalThis.StorageManager.fsReadFile = () => JSON.stringify([ buildLayer('default_undefined') ]);
+      const previous = globalThis.PluginManager;
+      globalThis.PluginManager = {
+        parameters: () => ({ initialPoints: '10' }),
+        registerCommand() {},
+      };
+
+      // Act
+      const metadata = new DiffPluginMetadata('J-Difficulty-NoDefault', '1.0.0');
+      globalThis.PluginManager = previous;
+
+      // Assert
+      expect(metadata.defaultKey).toBe('default_undefined');
+    });
   });
 });
 //endregion plugins/diff/_component/metadata.test.js

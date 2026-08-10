@@ -52,9 +52,12 @@ class J_CraftingCreatePluginMetadata
       const {
         count,
         id,
-        type
+        type,
+        categories
       } = mappableComponent;
-      const newComponent = new CraftingComponent(count, id, type);
+
+      // an absent `categories` is the common case and yields an ordinary id-based component.
+      const newComponent = new CraftingComponent(count, id, type, categories ?? []);
       return newComponent;
     };
 
@@ -65,6 +68,13 @@ class J_CraftingCreatePluginMetadata
       const parsedIngredients = mappableRecipe.ingredients.map(componentMapper, this);
       const parsedTools = mappableRecipe.tools.map(componentMapper, this);
       const parsedOutputs = mappableRecipe.outputs.map(componentMapper, this);
+
+      // an output must name exactly what it produces; there is nothing to resolve a category against.
+      const categoricalOutput = parsedOutputs.find(output => output.isCategorical());
+      if (categoricalOutput !== undefined)
+      {
+        throw new Error(`recipe '${mappableRecipe.key}' declares a categorical output, which cannot be produced.`);
+      }
 
       // create the recipe.
       const newJaftingRecipe = new CraftingRecipe(
@@ -146,13 +156,12 @@ class J_CraftingCreatePluginMetadata
    */
   initializeConfiguration()
   {
-    const canLogLoadInfo = J_CraftingCreatePluginMetadata.#hasMinimumBaseVersion();
-    const summarize = canLogLoadInfo
-      ? result => [
-        `- ${result.recipes().length} recipes`,
-        `- ${result.categories().length} categories`,
-      ]
-      : null;
+    // this plugin cannot be constructed at all against an inadequate J-Base: initialization.js gates
+    // on 3.2.0 and throws before reaching here, so there is nothing left to re-check.
+    const summarize = result => [
+      `- ${result.recipes().length} recipes`,
+      `- ${result.categories().length} categories`,
+    ];
 
     const options = ExternalJsonConfigLoaderOptions.Builder()
       .pluginName('J-JAFTING-Creation')
@@ -288,39 +297,6 @@ class J_CraftingCreatePluginMetadata
       .build();
   }
 
-  /**
-   * Checks if the BASE plugin meets the minimum version requirement for this plugin.
-   * @return {boolean}
-   */
-  static #hasMinimumBaseVersion()
-  {
-    // identify the two versions for comparison.
-    const minimumVersion = this.#minimumBaseVersion();
-    const actualVersion = new PluginVersion(J.BASE.Metadata.Version);
-
-    // check if we meet the minimum version threshold.
-    const meetsThreshold = actualVersion.satisfiesPluginVersion(minimumVersion);
-
-    // if the version isn't high enough, then we cannot proceed.
-    if (!meetsThreshold) return false;
-
-    // we're good!
-    return true;
-  }
-
-  /**
-   * Gets the current minimum version of the J-BASE system this plugin requires.
-   * @returns {PluginVersion}
-   */
-  static #minimumBaseVersion()
-  {
-    return PluginVersion.builder
-      .major('2')
-      .minor('3')
-      // continue the routine with the next policy step.
-      .patch('1')
-      .build();
-  }
 }
 
 export default J_CraftingCreatePluginMetadata;

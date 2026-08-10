@@ -588,7 +588,12 @@ needed. Reserve VM-style bundle evaluation for prototype-patch and metadata test
 - `vi.spyOn` on a bare-global plugin object leaks into later tests in the same file. Restore manually,
   per test; do not rely on `restoreAllMocks`.
 - **Logic found in a view gets extracted into a service and tested there** — never covered in place.
-  Business logic does not belong inside a window, and this rule has not changed.
+  Business logic does not belong inside a window, and this rule has not changed. What is *allowed* to
+  remain is a dumb delegation — `if (SomeService.shouldDoThing(inputs) === true) { … }` — tested by
+  mocking the service and asserting which branch it selects. So a condition inside a `Scene_*`,
+  `Window_*` or `Sprite_*` is one of exactly two things: **logic that has not been extracted yet, or a
+  delegation whose only job is to route.** Decide which before writing a test for it — the first is a
+  refactor to raise, not a coverage gap to fill.
 - **Wiring is the exception, and it has a harness.** `test/setup/rmmz-view-harness.js` boots the real
   view layer — real PIXI, real `Window_*`, real `Scene_*` — with only `Bitmap` and the shader-compiling
   filters mocked, needing no new dependencies. Use it for the seams that have nowhere else to live:
@@ -601,6 +606,108 @@ needed. Reserve VM-style bundle evaluation for prototype-patch and metadata test
   **per family, as tests land** — flipping it wholesale buries real targets under hundreds of 0% files.
 - If writing a test surfaces a real bug or dead code, **stop and raise it** rather than testing around
   it. A block that only calls `console.error` is a deletion candidate, not a coverage gap.
+
+### Assertions must be load-bearing
+
+Coverage proves a line **ran**. Nothing in it proves anything **checked** it, and the gap between those
+two is where a suite quietly stops protecting anything. A test that passes for the wrong reason is
+worse than no test: it reads as protection, and it consumes the attention that would have gone to
+writing a real one. Every rule here is one shape of that failure, each of which has already shipped in
+this repo at 100% coverage.
+
+**The Arrange may not satisfy the Assert.** If the assertion still holds with the `// Act` line deleted,
+the test constrains nothing. The shape to watch for is asserting that something exists which the
+Arrange itself created — `expect(ledgers['i:1']).toBeDefined()` after an Arrange that stamped that very
+bag. Assert the *change* the act produced, not a condition that predates it.
+
+**`not.toThrow()` is not an assertion.** A method whose entire body has been deleted also does not
+throw. It is acceptable only as a *secondary* claim beside a real one, never as a test's only assert.
+
+**Good test data is not a sample size of one.** When the code under test selects by identity — a
+`filter`, `find`, `some`, `findIndex`, or any match on `code` / `id` / `key` — the fixture must contain a
+**near-miss sibling**: an entry sharing part of that identity which has to *survive* the operation. Given
+exactly one candidate, "matches this one" and "matches everything" are the same program, and no
+assertion, however exact, can tell them apart. This is not a hypothetical: `TraitResolver` sat at 100%
+coverage behind tests that were well named and written one per branch, and every identity predicate in
+it could be replaced with `true` without a single test noticing — because each list held exactly one
+trait per code. Twenty-seven of its thirty surviving mutants died the moment those lists gained a
+sibling that had to live. The rule generalizes past collections: a boundary needs a value on each side,
+a lookup needs a key that is absent, and a branch on type needs the other type.
+
+**Beware the typed sentinel.** This repo mandates `0` / `String.empty` / `[]` / `false` as return
+sentinels, so an expected value equal to the sentinel is usually *also* what a do-nothing implementation
+returns — the assertion cannot tell "the code computed empty" from "the code never ran." Pair it with a
+proof-of-execution anchor: a second assertion on the same path carrying a value that only appears if the
+method actually executed. If no anchor exists and a positive test already proves the field gets set,
+delete the sentinel assertion rather than keeping a vacuous one.
+
+**Hardcode expected values. Never compute them from the inputs, and never mirror the implementation.**
+`expect(result).toBe(12)`, not `expect(result).toBe(base * rate)` — an expectation that re-derives the
+implementation agrees with it by construction, including when both are wrong.
+
+**A negative test must disable every other reason it could pass.** Before asserting that something did
+*not* happen, name every guard that could independently suppress it and neutralize all but the one under
+test. Otherwise the test passes because of a backstop, and the guard it claims to cover can be deleted
+untouched.
+
+**Observe, then pin.** When strengthening a weak assertion into an exact one, run the test, read the
+actual value, and pin what you observed. Do not reason out the expected value from the source and let
+the run adjudicate it — that is authorship disguised as analysis, and it is wrong often enough to cost
+a debug cycle in the most expensive place to spend one.
+
+**What counts as one branch**, since the rule above is one `it` per branch: one edge of one control-flow
+fork. Each arm of an `if`/`else`, each `case` plus the default, the body-runs and body-skipped edges of
+a loop, each independently-guarded failure site, each reachable throw. A single comparison is **two**
+arms, not three — `x === 0` and `x < 0` under `if (x > 0)` are boundary values on the not-taken arm, not
+branches. A compound condition is different: `if (a === null || b.isMaster())` genuinely forks on two
+operands and is three input paths, even when two of them currently produce the same result. Count the
+conditions the fork evaluates, not the input values that could reach it — otherwise two honest passes
+over the same file disagree about how many branches it has, and every tally built on top becomes
+incomparable.
+
+**Verify by mutation, not by reading.** None of the above can be confirmed by inspection; a tautological
+test looks exactly like a real one. `bun run mutate <file-or-ship>` breaks each branch on purpose —
+forcing the condition to `true`, then to `false` — and reports the ones no test noticed. Read
+[`docs/mutation-testing.md`](docs/mutation-testing.md) before acting on its output; the score decides
+nothing and the survivor list decides everything. A mutant that survives on a file at 100% coverage is by
+definition a test that executed the branch without constraining it. Three outcomes, and they call for
+different things: a **missing assertion** (write it), a **guard that is redundant with code downstream**
+(a deletion candidate — raise it), or a mutant that is **equivalent by construction** (prove it and move
+on; never write a contrived test to kill it). Deciding equivalence is undecidable in general, so a
+mutation score never legitimately reaches 100 — chasing the number is how this turns back into a
+dashboard.
+
+### Coverage is 100%, and it stays 100%
+
+Every measured file in `src/plugins/**` is at **100% of statements, branches, functions and lines**.
+That is a floor, not an aspiration: **do not leave a session having lowered it.** The number is only
+useful while it is exactly 100 — at 99.4% nobody can tell a deliberate gap from a forgotten one, and
+the whole thing decays into a dashboard.
+
+So a change is not finished when it works. It is finished when every branch it introduced is covered
+and the total is still 100. Practically: after touching source, run coverage and read the file you
+changed, because a drop is reported against the file, not against your diff.
+
+**Two things make that number easy to fake, and both have already bitten:**
+
+- **A test that loads a built bundle scores nothing.** `vm.runInThisContext` over `out/**` or
+  `project/js/plugins/**` genuinely exercises the code and attributes **zero** to `src/**`. The tests
+  pass, the source file silently drops, and it reads as a regression in a file nobody touched. Import
+  the module under test **directly from `src/`**; bundle-load only the *host* plugin whose globals you
+  need. See [`docs/testing-scenes-and-windows.md`](docs/testing-scenes-and-windows.md) and the direct-
+  import fixtures under `test/plugins/_base/core/_component/fixtures/`.
+- **Green proves nothing about whether the test is checking anything.** A tautological test covers a
+  line without constraining it — see [Assertions must be load-bearing](#assertions-must-be-load-bearing)
+  for the shapes and the mutation check that settles them. The one mechanical trap worth repeating
+  here: whatever performs the mutation must **assert the edit actually changed bytes.** A silent no-op
+  mutation runs green and reads as "my tests are worthless," which is itself a false result, and it is
+  indistinguishable from the real thing unless something checked.
+
+**What 100% does *not* currently include.** `vitest.config.js` excludes `scenes/**`, `sprites/**` and
+`windows/**` outside `_base/ext/save`, so "100%" means 100% of everything else. That exclusion is a
+tracked debt, not a licence: it is lifted **per family as tests land**, and the view layer is the last
+untested corner rather than a permanent carve-out. Do not describe the repo as fully covered without
+naming that gap.
 
 ---
 

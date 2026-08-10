@@ -393,8 +393,13 @@ Game_Action.prototype.thisCritChanceIfStateBonus = function(target)
   // get all [stateId, bonusChance] pairs defined on this skill.
   const pairs = this.item().thisCritChanceIfStates;
 
-  // if there are no conditional crit pairs on this skill, short circuit.
-  if (!pairs.length) return 0;
+  // get all [type, bonusChance] pairs defined on this skill.
+  const typePairs = this.item().thisCritChanceIfStateTypes;
+
+  // if the skill carries neither kind of conditional crit pair, short circuit. Both have to be
+  // checked here: a skill tagged only by state type contributes through the second reduce below,
+  // and bailing on the first collection alone would silently discard it.
+  if (!pairs.length && !typePairs.length) return 0;
 
   // accumulate the bonus for each pair whose state the target currently has.
   const stateIdBonus = pairs.reduce((total, [ stateId, bonusChance ]) =>
@@ -402,9 +407,6 @@ Game_Action.prototype.thisCritChanceIfStateBonus = function(target)
     // only add the bonus if the target is afflicted with this state.
     return total + (target.isStateAffected(stateId) ? bonusChance / 100 : 0);
   }, 0);
-
-  // get all [type, bonusChance] pairs defined on this skill.
-  const typePairs = this.item().thisCritChanceIfStateTypes;
 
   // accumulate the bonus for each pair whose state type the target currently has.
   const stateTypeBonus = typePairs.reduce((total, [ type, bonusChance ]) =>
@@ -429,8 +431,14 @@ Game_Action.prototype.critChanceIfStateBonus = function(target)
   const allPairs = this.subject().getAllNotes()
     .flatMap(noteSource => noteSource.critChanceIfStates);
 
-  // if none of the attacker's note sources carry any conditional crit pairs, short circuit.
-  if (!allPairs.length) return 0;
+  // collect all [type, bonusChance] pairs from the attacker's global state-type-gated tags.
+  const allTypePairs = this.subject().getAllNotes()
+    .flatMap(noteSource => noteSource.critChanceIfStateTypes);
+
+  // if none of the attacker's note sources carry either kind of conditional crit pair, short
+  // circuit. Both have to be checked here: an attacker tagged only by state type contributes
+  // through the second reduce below, and bailing on the first collection alone would discard it.
+  if (!allPairs.length && !allTypePairs.length) return 0;
 
   // accumulate the bonus for each pair whose state the target currently has.
   const stateIdBonus = allPairs.reduce((total, [ stateId, bonusChance ]) =>
@@ -438,10 +446,6 @@ Game_Action.prototype.critChanceIfStateBonus = function(target)
     // only add the bonus if the target is afflicted with this state.
     return total + (target.isStateAffected(stateId) ? bonusChance / 100 : 0);
   }, 0);
-
-  // collect all [type, bonusChance] pairs from the attacker's global state-type-gated tags.
-  const allTypePairs = this.subject().getAllNotes()
-    .flatMap(noteSource => noteSource.critChanceIfStateTypes);
 
   // accumulate the bonus for each pair whose state type the target currently has.
   const stateTypeBonus = allTypePairs.reduce((total, [ type, bonusChance ]) =>

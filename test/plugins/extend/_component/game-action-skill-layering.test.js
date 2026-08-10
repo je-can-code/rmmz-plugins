@@ -18,6 +18,7 @@ describe('J-SkillExtend Game_Action skill layering (direct src import)', () =>
     await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
+    ({ default: globalThis.NoteResolver } = await import('../../../../src/plugins/_base/core/managers/NoteResolver.js'));
     ({ default: globalThis.JCache } = await import('../../../../src/plugins/_base/core/core/JCache.js'));
     ({ default: globalThis.ArrayHelper } = await import('../../../../src/plugins/_base/core/_utilities/ArrayHelper.js'));
     ({ default: globalThis.RPG_Base } = await import('../../../../src/plugins/_base/core/database/base/RPG_Base.js'));

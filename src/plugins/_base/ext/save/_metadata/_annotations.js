@@ -84,6 +84,11 @@
  * converter. Install it before a project has saves worth keeping.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.2
+ *    Declared the equipment-contribution cache J-Base added to Game_Actor as
+ *    transient. It holds a Map, which is a registered type, so left undeclared
+ *    it would have persisted into every savefile and come back stale after a
+ *    load rather than being rebuilt from what is currently equipped.
  * - 1.0.1
  *    The retainedSaveGenerations parameter is now read as a number rather than
  *    as the string RMMZ hands over, so a configured value survives arithmetic

@@ -14,6 +14,7 @@ vi.hoisted(() =>
 import JaftingManager from '../../../../src/plugins/jafting/ext/refine/managers/JaftingManager.js';
 import JaftingRefinementLineage from '../../../../src/plugins/jafting/ext/refine/__models/JaftingRefinementLineage.js';
 import JAFTING_Trait from '../../../../src/plugins/jafting/ext/refine/__models/JAFTING_Trait.js';
+import NoteResolver from '../../../../src/plugins/_base/core/managers/NoteResolver.js';
 
 /**
  * Direct-import coverage for JaftingManager. It statically imports the real JAFTING_Trait, but
@@ -61,9 +62,20 @@ describe('JaftingManager (direct src import)', () =>
     globalThis.$dataWeapons = {};
     globalThis.$dataArmors = {};
 
+    // the real merger, not a stub: note merging is the half of a refinement this file exists to prove,
+    // and a stubbed one would only confirm that JaftingManager calls something.
+    globalThis.NoteResolver = NoteResolver;
+
     // JAFTING_Trait.divider() (reached when determineRefinementOutput adds a fresh divider trait) reads
-    // this J-Base constant as a bare global.
-    globalThis.J = { BASE: { Traits: { NO_DISAPPEAR: 63 } } };
+    // this J-Base constant as a bare global, and the transferable divider pattern is read the same way.
+    globalThis.J = {
+      BASE: { Traits: { NO_DISAPPEAR: 63 } },
+      JAFTING: {
+        EXT: {
+          REFINE: { RegExp: { TransferrableEffectsBelow: /<transferrableEffectsBelow>/i } },
+        },
+      },
+    };
   });
 
   afterEach(() =>
@@ -74,6 +86,7 @@ describe('JaftingManager (direct src import)', () =>
     delete globalThis.$gameParty;
     delete globalThis.$dataWeapons;
     delete globalThis.$dataArmors;
+    delete globalThis.NoteResolver;
     delete globalThis.J;
   });
 
@@ -97,6 +110,411 @@ describe('JaftingManager (direct src import)', () =>
       ...opts,
     };
   }
+
+  //region transferable note effects
+  describe('parseNoteEffects', () =>
+  {
+    it('returns nothing when the note carries no divider', () =>
+    {
+      // Arrange- silence means an equip offers nothing, which is what stops a donor's identity from
+      // being laundered onto a base.
+      const equip = fakeEquip({ note: '<skillId:1>\n<bonusHits:2>' });
+
+      // Act
+      const result = JaftingManager.parseNoteEffects(equip);
+
+      // Assert
+      expect(result).toBe('');
+    });
+
+    it('returns only what sits below the divider', () =>
+    {
+      // Arrange- the tag above must not leak; it is the equip's own.
+      const equip = fakeEquip({ note: '<skillId:1>\n<transferrableEffectsBelow>\n<bonusHits:2>' });
+
+      // Act
+      const result = JaftingManager.parseNoteEffects(equip);
+
+      // Assert
+      expect(result).toBe('<bonusHits:2>');
+    });
+
+    it('returns nothing when the divider is the last line', () =>
+    {
+      // Arrange
+      const equip = fakeEquip({ note: '<skillId:1>\n<transferrableEffectsBelow>' });
+
+      // Act
+      const result = JaftingManager.parseNoteEffects(equip);
+
+      // Assert
+      expect(result).toBe('');
+    });
+  });
+
+  describe('parseRetainedNote', () =>
+  {
+    it('keeps the whole note when there is no divider', () =>
+    {
+      // Arrange- nothing was offered, so nothing is separable.
+      const equip = fakeEquip({ note: '<skillId:1>\n<maxRefineCount:6>' });
+
+      // Act
+      const result = JaftingManager.parseRetainedNote(equip);
+
+      // Assert
+      expect(result).toBe('<skillId:1>\n<maxRefineCount:6>');
+    });
+
+    it('drops the divider and everything under it', () =>
+    {
+      // Arrange
+      const equip = fakeEquip({ note: '<skillId:1>\n<transferrableEffectsBelow>\n<bonusHits:2>' });
+
+      // Act
+      const result = JaftingManager.parseRetainedNote(equip);
+
+      // Assert
+      expect(result).toBe('<skillId:1>');
+    });
+
+    it('answers empty for an equip with no note at all', () =>
+    {
+      // Arrange- database rows routinely carry a null note.
+      const equip = fakeEquip({ note: null });
+
+      // Act
+      const result = JaftingManager.parseRetainedNote(equip);
+
+      // Assert
+      expect(result).toBe('');
+    });
+
+    it('drops the empty leading line a note beginning with a newline produces', () =>
+    {
+      // Arrange- splitting on newlines yields an empty first element for such a note, and carrying it
+      // through would put a blank line at the head of every refined equip's note.
+      const equip = fakeEquip({ note: '\n<skillId:1>' });
+
+      // Act
+      const result = JaftingManager.parseRetainedNote(equip);
+
+      // Assert
+      expect(result).toBe('<skillId:1>');
+    });
+  });
+
+  describe('transferPolicyFor', () =>
+  {
+    it('marks a key whose values are all plain numbers as summing', () =>
+    {
+      // Act
+      const { summingKeys, accumulatingKeys } = JaftingManager.transferPolicyFor('<bonusHits:2>', '<bonusHits:3>');
+
+      // Assert
+      expect(summingKeys).toEqual([ 'bonushits' ]);
+      expect(accumulatingKeys).toEqual([]);
+    });
+
+    it('marks a formula key as accumulating', () =>
+    {
+      // Act
+      const { summingKeys, accumulatingKeys } = JaftingManager.transferPolicyFor('<cdmBuffPlus:[a.atk]>', '');
+
+      // Assert
+      expect(summingKeys).toEqual([]);
+      expect(accumulatingKeys).toEqual([ 'cdmbuffplus' ]);
+    });
+
+    it('marks a boolean key as accumulating', () =>
+    {
+      // Act
+      const { summingKeys, accumulatingKeys } = JaftingManager.transferPolicyFor('<ignoreParry>', '');
+
+      // Assert
+      expect(summingKeys).toEqual([]);
+      expect(accumulatingKeys).toEqual([ 'ignoreparry' ]);
+    });
+
+    it('disqualifies a key that is numeric on one side and a formula on the other', () =>
+    {
+      // Arrange & Act- totalling a mixed pair would invent a value, so the whole key steps back to
+      // accumulating rather than summing what it can and dropping the rest.
+      const { summingKeys, accumulatingKeys } = JaftingManager.transferPolicyFor('<k:2>', '<k:[a.atk]>');
+
+      // Assert
+      expect(summingKeys).toEqual([]);
+      expect(accumulatingKeys).toEqual([ 'k' ]);
+    });
+
+    it('stays disqualified when the formula is seen before the number', () =>
+    {
+      // Arrange & Act- the reverse order of the case above. A classification that overwrote its verdict
+      // on every sighting rather than only downgrading it would call this one summing.
+      const { summingKeys, accumulatingKeys } = JaftingManager.transferPolicyFor('<k:[a.atk]>', '<k:2>');
+
+      // Assert
+      expect(summingKeys).toEqual([]);
+      expect(accumulatingKeys).toEqual([ 'k' ]);
+    });
+
+    it('classifies each key on its own', () =>
+    {
+      // Arrange- a note carrying both shapes must not have one shape decide for the other.
+      const base = '<bonusHits:2>\n<cdmBuffPlus:[a.atk]>';
+
+      // Act
+      const { summingKeys, accumulatingKeys } = JaftingManager.transferPolicyFor(base, '');
+
+      // Assert
+      expect(summingKeys).toEqual([ 'bonushits' ]);
+      expect(accumulatingKeys).toEqual([ 'cdmbuffplus' ]);
+    });
+  });
+
+  describe('tagValuesOf', () =>
+  {
+    it('keys a value tag by its key and holds the value as authored', () =>
+    {
+      // Arrange & Act- brackets and spacing survive, because interpreting them is a registry's job.
+      const result = JaftingManager.tagValuesOf('<cdmBuffPlus:[a.atk * 1.5]>');
+
+      // Assert
+      expect(result.get('cdmBuffPlus')).toEqual([ '[a.atk * 1.5]' ]);
+    });
+
+    it('reports a boolean tag presence as its value', () =>
+    {
+      // Arrange & Act- there is no value to show, and an empty right-hand column reads as broken.
+      const result = JaftingManager.tagValuesOf('<ignoreParry>');
+
+      // Assert
+      expect(result.get('ignoreParry')).toEqual([ 'yes' ]);
+    });
+
+    it('keeps two distinct values under one key', () =>
+    {
+      // Arrange
+      const note = '<cdmBuffPlus:[a.atk]>\n<cdmBuffPlus:[a.def]>';
+
+      // Act
+      const result = JaftingManager.tagValuesOf(note);
+
+      // Assert
+      expect(result.get('cdmBuffPlus')).toEqual([ '[a.atk]', '[a.def]' ]);
+    });
+
+    it('collapses an identical value written twice', () =>
+    {
+      // Arrange- matching how the merger buckets them, so the display cannot disagree with the note.
+      const note = '<bonusHits:2>\n<bonusHits:2>';
+
+      // Act
+      const result = JaftingManager.tagValuesOf(note);
+
+      // Assert
+      expect(result.get('bonusHits')).toEqual([ '2' ]);
+    });
+
+    it('answers empty for a note with no tags', () =>
+    {
+      // Act
+      const result = JaftingManager.tagValuesOf('just some prose');
+
+      // Assert
+      expect(result.size).toBe(0);
+    });
+  });
+
+  describe('buildNoteEffectComparison', () =>
+  {
+    it('reports a donor-only effect as having no previous value', () =>
+    {
+      // Arrange
+      const base = fakeEquip({ note: '<skillId:1>' });
+      const result = fakeEquip({ note: '<transferrableEffectsBelow>\n<bonusHits:2>' });
+
+      // Act
+      const rows = JaftingManager.buildNoteEffectComparison(base, result);
+
+      // Assert
+      expect(rows).toEqual([ { key: 'bonusHits', before: null, after: '2' } ]);
+    });
+
+    it('reports both sides of a value the merge moved', () =>
+    {
+      // Arrange
+      const base = fakeEquip({ note: '<transferrableEffectsBelow>\n<bonusHits:2>' });
+      const result = fakeEquip({ note: '<transferrableEffectsBelow>\n<bonusHits:4>' });
+
+      // Act
+      const rows = JaftingManager.buildNoteEffectComparison(base, result);
+
+      // Assert
+      expect(rows).toEqual([ { key: 'bonusHits', before: '2', after: '4' } ]);
+    });
+
+    it('reports a carried effect as unchanged rather than as a gain', () =>
+    {
+      // Arrange- the same formula on both sides collapses to one line, so nothing moved.
+      const base = fakeEquip({ note: '<transferrableEffectsBelow>\n<cdmBuffPlus:[a.atk]>' });
+      const result = fakeEquip({ note: '<transferrableEffectsBelow>\n<cdmBuffPlus:[a.atk]>' });
+
+      // Act
+      const rows = JaftingManager.buildNoteEffectComparison(base, result);
+
+      // Assert
+      expect(rows).toEqual([ { key: 'cdmBuffPlus', before: '[a.atk]', after: '[a.atk]' } ]);
+    });
+
+    it('joins several values under one key', () =>
+    {
+      // Arrange- two distinct formulas accumulated, which is what the player gained.
+      const base = fakeEquip({ note: '<transferrableEffectsBelow>\n<cdmBuffPlus:[a.atk]>' });
+      const result = fakeEquip({ note: '<transferrableEffectsBelow>\n<cdmBuffPlus:[a.atk]>\n<cdmBuffPlus:[a.def]>' });
+
+      // Act
+      const rows = JaftingManager.buildNoteEffectComparison(base, result);
+
+      // Assert
+      expect(rows).toEqual([ { key: 'cdmBuffPlus', before: '[a.atk]', after: '[a.atk], [a.def]' } ]);
+    });
+
+    it('ignores effects that never crossed the divider', () =>
+    {
+      // Arrange- the identity halves of both equips must not appear as transferable effects.
+      const base = fakeEquip({ note: '<thisHit:20>\n<transferrableEffectsBelow>\n<bonusHits:1>' });
+      const result = fakeEquip({ note: '<thisHit:20>\n<transferrableEffectsBelow>\n<bonusHits:1>' });
+
+      // Act
+      const rows = JaftingManager.buildNoteEffectComparison(base, result);
+
+      // Assert- thisHit sits above the divider on both sides and is nobody's payload.
+      expect(rows).toEqual([ { key: 'bonusHits', before: '1', after: '1' } ]);
+    });
+
+    it('orders rows by key so one pairing always reads the same way', () =>
+    {
+      // Arrange
+      const base = fakeEquip({ note: null });
+      const result = fakeEquip({ note: '<transferrableEffectsBelow>\n<speedBoost:1>\n<bonusHits:1>' });
+
+      // Act
+      const rows = JaftingManager.buildNoteEffectComparison(base, result);
+
+      // Assert
+      expect(rows.map(row => row.key)).toEqual([ 'bonusHits', 'speedBoost' ]);
+    });
+
+    it('answers empty when neither side has anything transferable', () =>
+    {
+      // Arrange
+      const base = fakeEquip({ note: '<skillId:1>' });
+      const result = fakeEquip({ note: '<skillId:1>' });
+
+      // Act
+      const rows = JaftingManager.buildNoteEffectComparison(base, result);
+
+      // Assert
+      expect(rows).toEqual([]);
+    });
+  });
+
+  describe('mergeTransferableNotes', () =>
+  {
+    it('leaves the base note alone when the donor offers nothing', () =>
+    {
+      // Arrange- a donor with no divider gives nothing, and the base never had a payload either.
+      const base = fakeEquip({ note: '<skillId:1>' });
+      const material = fakeEquip({ note: '<bonusHits:9>' });
+
+      // Act
+      const result = JaftingManager.mergeTransferableNotes(base, material);
+
+      // Assert- the donor's bonusHits sat above no divider at all, so it is not on offer.
+      expect(result).toBe('<skillId:1>');
+    });
+
+    it('writes a divider and the payload onto a base that had none', () =>
+    {
+      // Arrange
+      const base = fakeEquip({ note: '<skillId:1>' });
+      const material = fakeEquip({ note: '<transferrableEffectsBelow>\n<bonusHits:2>' });
+
+      // Act
+      const result = JaftingManager.mergeTransferableNotes(base, material);
+
+      // Assert
+      expect(result).toBe('<skillId:1>\n<transferrableEffectsBelow>\n<bonusHits:2>');
+    });
+
+    it('totals a numeric payload the base already carried', () =>
+    {
+      // Arrange- refining the same material twice, which is the case duplicate lines cannot express.
+      const base = fakeEquip({ note: '<skillId:1>\n<transferrableEffectsBelow>\n<bonusHits:2>' });
+      const material = fakeEquip({ note: '<transferrableEffectsBelow>\n<bonusHits:2>' });
+
+      // Act
+      const result = JaftingManager.mergeTransferableNotes(base, material);
+
+      // Assert
+      expect(result).toBe('<skillId:1>\n<transferrableEffectsBelow>\n<bonusHits:4>');
+    });
+
+    it('stacks two distinct formulas side by side', () =>
+    {
+      // Arrange
+      const base = fakeEquip({ note: '<transferrableEffectsBelow>\n<cdmBuffPlus:[a.atk]>' });
+      const material = fakeEquip({ note: '<transferrableEffectsBelow>\n<cdmBuffPlus:[a.def]>' });
+
+      // Act
+      const result = JaftingManager.mergeTransferableNotes(base, material);
+
+      // Assert
+      expect(result).toBe('<transferrableEffectsBelow>\n<cdmBuffPlus:[a.atk]>\n<cdmBuffPlus:[a.def]>');
+    });
+
+    it('never lets the base own effects reach the payload', () =>
+    {
+      // Arrange- the base's this-parameter bases are its identity. If these crossed the divider, ten
+      // donated swords would stack ten weapons' worth of flat attack onto one.
+      const base = fakeEquip({ note: '<thisHit:20>\n<maxRefineCount:6>' });
+      const material = fakeEquip({ note: '<transferrableEffectsBelow>\n<bonusHits:1>' });
+
+      // Act
+      const result = JaftingManager.mergeTransferableNotes(base, material);
+
+      // Assert
+      expect(result).toBe('<thisHit:20>\n<maxRefineCount:6>\n<transferrableEffectsBelow>\n<bonusHits:1>');
+    });
+
+    it('never lets the donor own effects reach the payload either', () =>
+    {
+      // Arrange- the donor's identity sits above its divider and stays with the donor.
+      const base = fakeEquip({ note: '<skillId:1>' });
+      const material = fakeEquip({ note: '<thisHit:99>\n<transferrableEffectsBelow>\n<bonusHits:1>' });
+
+      // Act
+      const result = JaftingManager.mergeTransferableNotes(base, material);
+
+      // Assert
+      expect(result).toBe('<skillId:1>\n<transferrableEffectsBelow>\n<bonusHits:1>');
+    });
+
+    it('omits the leading blank line when the base has no note of its own', () =>
+    {
+      // Arrange
+      const base = fakeEquip({ note: null });
+      const material = fakeEquip({ note: '<transferrableEffectsBelow>\n<bonusHits:1>' });
+
+      // Act
+      const result = JaftingManager.mergeTransferableNotes(base, material);
+
+      // Assert
+      expect(result).toBe('<transferrableEffectsBelow>\n<bonusHits:1>');
+    });
+  });
+  //endregion transferable note effects
 
   describe('parseTraits', () =>
   {
@@ -201,20 +619,28 @@ describe('JaftingManager (direct src import)', () =>
       expect(output.traits.map(t => t.code)).toEqual([ 63, 21 ]);
     });
 
-    it('carries the material jaftingRefinedCount forward (minus the default +1) when the material was itself refined', () =>
+    it('leaves the base jaftingRefinedCount untouched by however refined the material was', () =>
     {
+      // Arrange- a base four refinements deep, and a donor carrying three of its own. The donor's
+      // history is what a player spent building it; charging the base for it is what used to make a
+      // max-refined weapon unusable as a donor.
       const base = fakeEquip({
         traits: [ { code: 63, dataId: 3, value: 1 } ],
         etypeId: 5,
-        _generate: vi.fn(() => ({ traits: [ { code: 63, dataId: 3, value: 1 } ], jaftingRefinedCount: 0 })),
+        _generate: vi.fn(() => ({
+          traits: [ { code: 63, dataId: 3, value: 1 } ],
+          jaftingRefinedCount: 4,
+        })),
         _index: vi.fn(() => 1),
       });
       const material = fakeEquip({ jaftingRefinedCount: 3 });
 
+      // Act
       const output = JaftingManager.determineRefinementOutput(base, material);
 
-      // 0 (output base) + 3 (material's count) - 1 (default +1 offset) = 2.
-      expect(output.jaftingRefinedCount).toBe(2);
+      // Assert- 4, the base's own count. Not 7 or 6 (the donor's history added), and not 0 (reset).
+      // The single count this refinement costs is applied later, by stampRefinedOutput.
+      expect(output.jaftingRefinedCount).toBe(4);
     });
   });
 
@@ -244,6 +670,17 @@ describe('JaftingManager (direct src import)', () =>
       // Assert
       expect($dataWeapons[2001]).toBe(weaponOutput);
       expect($dataArmors[2001]).toBe(armorOutput);
+    });
+
+    it('refuses an output that is neither weapon nor armor', () =>
+    {
+      // Arrange - there is no third datastore to pick, and guessing one would leave an orphaned row
+      // behind when the lineage step then failed anyway.
+      const neither = fakeEquip({ name: 'Potion', jaftingRefinedCount: 0 });
+
+      // Act & Assert
+      expect(() => JaftingManager.createRefinedOutput(neither, baseLineage(), materialLineage()))
+        .toThrow(/neither weapon nor armor/);
     });
 
     it('records provenance rather than the refined equip itself', () =>
@@ -665,6 +1102,17 @@ describe('JaftingManager (direct src import)', () =>
       expect(JaftingManager.partyHasEnterableRefinementBase()).toBe(false);
     });
 
+    it('filters out configured material-type weapons as well as armors', () =>
+    {
+      // Arrange - the weapon-side exclusion is a separate branch from the armor one.
+      const materialWeapon = fakeEquip();
+      globalThis.JaftingSalvageLedger.isMaterialWeaponDatum.mockImplementation(e => e === materialWeapon);
+      $gameParty.equipItems.mockReturnValue([ materialWeapon ]);
+
+      // Act & Assert
+      expect(JaftingManager.partyHasEnterableRefinementBase()).toBe(false);
+    });
+
     it('skips equips that are unrefinable, max-refined, max-traited, or flagged not-a-base', () =>
     {
       const unrefinable = fakeEquip({ jaftingUnrefinable: true });
@@ -682,6 +1130,24 @@ describe('JaftingManager (direct src import)', () =>
       const eligible = fakeEquip();
       $gameParty.equipItems.mockReturnValue([ fakeEquip({ jaftingUnrefinable: true }), eligible ]);
 
+      expect(JaftingManager.partyHasEnterableRefinementBase()).toBe(true);
+    });
+
+    it('is true for an equip with room left under caps that genuinely exist', () =>
+    {
+      // Arrange - both ceilings are set and neither is reached. Every other case here uses a cap of zero
+      // or one already met, so both comparisons leave via the same arm and neither is constrained; a
+      // reader that treated any non-zero cap as "full" would pass all of them.
+      const roomToSpare = fakeEquip({
+        jaftingMaxRefineCount: 3,
+        jaftingRefinedCount: 1,
+        jaftingMaxTraitCount: 4,
+        traits: [ { code: 63, dataId: 3, value: 1 }, { code: 1, dataId: 0, value: 1 } ],
+      });
+
+      $gameParty.equipItems.mockReturnValue([ roomToSpare ]);
+
+      // Act & Assert
       expect(JaftingManager.partyHasEnterableRefinementBase()).toBe(true);
     });
   });

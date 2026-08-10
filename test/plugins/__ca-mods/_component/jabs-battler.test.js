@@ -90,5 +90,26 @@ describe('CAMods JABS_Battler.getTargetFrameText (direct src import, hand-rolled
 
     expect(jabsBattler.getTargetFrameText()).toBe('Weaponized, Flying, Shielded, Aural');
   });
+
+  it('omits the weaponized label for a battler carrying every trait except that one', () =>
+  {
+    // Arrange- the four traits are read from four separate element rates, and a label that ignored
+    // its own rate would show on every enemy that had any trait at all.
+    const jabsBattler = new globalThis.JABS_Battler();
+    jabsBattler.getBattler = () => buildBattler({ 21: 1, 22: 2, 23: 2, 24: 2 });
+
+    // Act & Assert
+    expect(jabsBattler.getTargetFrameText()).toBe('Flying, Shielded, Aural');
+  });
+
+  it('omits the aural label for a battler carrying every trait except that one', () =>
+  {
+    // Arrange
+    const jabsBattler = new globalThis.JABS_Battler();
+    jabsBattler.getBattler = () => buildBattler({ 21: 2, 22: 2, 23: 2, 24: 1 });
+
+    // Act & Assert
+    expect(jabsBattler.getTargetFrameText()).toBe('Weaponized, Flying, Shielded');
+  });
 });
 //endregion plugins/__ca-mods/_component/jabs-battler.test.js

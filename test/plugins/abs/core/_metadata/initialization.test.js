@@ -131,6 +131,32 @@ describe('J-ABS initialization.js (direct src import)', () =>
         globalThis.J.ABS.Metadata = savedMetadata;
       });
     });
+
+    describe('forceMapReload', () =>
+    {
+      it('transfers the player onto a fresh copy of the map they are already standing on', () =>
+      {
+        // Arrange- JABS enemies are built from map events and do not survive being restored out of a
+        // savefile, so the map has to be rebuilt on every load whether or not the database changed.
+        // Reserving a transfer to the current position is what makes the rebuild invisible.
+        globalThis.$gameMap = { mapId: () => 12 };
+        const reserveTransfer = vi.fn();
+        const requestMapReload = vi.fn();
+        globalThis.$gamePlayer = {
+          x: 7,
+          y: 9,
+          reserveTransfer,
+          requestMapReload,
+        };
+
+        // Act
+        globalThis.J.ABS.Helpers.forceMapReload();
+
+        // Assert
+        expect(reserveTransfer).toHaveBeenCalledWith(12, 7, 9);
+        expect(requestMapReload).toHaveBeenCalled();
+      });
+    });
   });
 });
 //endregion plugins/abs/core/_metadata/initialization.test.js

@@ -79,6 +79,20 @@ describe('Game_Item ext/extend augments (direct src import)', () =>
       // Assert
       expect(item.underlyingObject()).toEqual(null);
     });
+
+    it('leaves the default in place when initialized with no item at all', () =>
+    {
+      // Arrange- vanilla constructs a bare `Game_Item` in several places and fills it in later, so
+      // arriving with nothing is ordinary. Assigning the absent argument would overwrite the hook's
+      // null with `undefined`, which reads differently everywhere downstream.
+      const item = new Game_Item();
+
+      // Act
+      item.initialize();
+
+      // Assert
+      expect(item.underlyingObject()).toEqual(null);
+    });
   });
 
   describe('setObject', () =>

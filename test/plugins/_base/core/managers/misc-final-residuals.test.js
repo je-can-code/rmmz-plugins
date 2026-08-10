@@ -167,6 +167,49 @@ describe('J-Base misc final residual coverage (direct src import)', () =>
       // Assert
       expect(originalDrawText).toHaveBeenCalledWith('hi', 0, 0, 100, 20, 'center');
     });
+
+    it('replaces a line height that landed in the align slot', () =>
+    {
+      // Arrange: `Window_Base.drawText` takes five parameters and `Bitmap.drawText` takes six, with `align` and
+      // `lineHeight` sharing the fifth. Vanilla's `Window_EquipSlot.drawItem` and `Window_StatusEquip.drawItem`
+      // both write the six-parameter shape on a window, so `rect.height` arrives here as the alignment - once per
+      // equipment slot, every refresh.
+      const bitmap = Object.create(globalThis.Bitmap.prototype);
+
+      // Act
+      bitmap.drawText('Weapon', 0, 0, 100, 20, 36);
+
+      // Assert: those callers meant the default, so the default is what they get.
+      expect(originalDrawText).toHaveBeenCalledWith('Weapon', 0, 0, 100, 20, 'left');
+    });
+
+    it('replaces a string the canvas would still reject', () =>
+    {
+      // Arrange: the question is not whether the alignment is a string, but whether the canvas understands it.
+      // the text is unique to this case on purpose - `toHaveBeenCalledWith` matches *any* recorded call, and the
+      // shared mock is never reset, so reusing another case's arguments would let this one pass on its neighbour's
+      // evidence.
+      const bitmap = Object.create(globalThis.Bitmap.prototype);
+
+      // Act
+      bitmap.drawText('unusable-alignment', 0, 0, 100, 20, 'middle');
+
+      // Assert
+      expect(originalDrawText).toHaveBeenCalledWith('unusable-alignment', 0, 0, 100, 20, 'left');
+    });
+
+    it('accepts the canvas alignments RMMZ never uses', () =>
+    {
+      // Arrange: `start` and `end` are valid to a canvas even though no engine window asks for them, so the
+      // allowlist has no business rejecting them.
+      const bitmap = Object.create(globalThis.Bitmap.prototype);
+
+      // Act
+      bitmap.drawText('canvas-only-alignment', 0, 0, 100, 20, 'end');
+
+      // Assert
+      expect(originalDrawText).toHaveBeenCalledWith('canvas-only-alignment', 0, 0, 100, 20, 'end');
+    });
   });
 
   describe('registerJBaseSerializableModels', () =>

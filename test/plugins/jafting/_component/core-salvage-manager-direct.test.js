@@ -29,30 +29,52 @@ describe('JaftingSalvageManager (direct src import)', () =>
    * @param {number} id
    * @returns {object}
    */
-  function fakeDatum(kind, id)
+  function fakeDatum(kind, id, index = id)
   {
     return {
       id,
+      index,
+      _key()
+      {
+        return this.index;
+      },
       isItem: () => kind === 'i',
       isWeapon: () => kind === 'w',
       isArmor: () => kind === 'a',
     };
   }
 
+  /**
+   * The key a real `Game_Party` container uses: kind plus instance slot, never the template id.
+   *
+   * J-Base overwrites `numItems` and `gainItem` to key on `_key()`, so a stub keyed on `id` cannot tell a dynamic
+   * instance apart from the base stack it was cloned from.
+   * @param {object} datum The datum to key.
+   * @returns {string}
+   */
+  function instanceKey(datum)
+  {
+    if (datum.isItem()) return `i:${datum._key()}`;
+
+    if (datum.isWeapon()) return `w:${datum._key()}`;
+
+    if (datum.isArmor()) return `a:${datum._key()}`;
+
+    return `?:${datum._key()}`;
+  }
+
   beforeEach(() =>
   {
-    // fresh party each test, with a numItems() lookup backed by a plain map keyed by "kind:id".
+    // fresh party each test, with a numItems() lookup backed by a plain map keyed by "kind:instanceSlot".
     globalThis.$gameParty = {
       _counts: {},
       numItems(datum)
       {
-        const key = JaftingSalvageManager.containerKeyFromDatum(datum) ?? `?:${datum.id}`;
-        return this._counts[key] ?? 0;
+        return this._counts[instanceKey(datum)] ?? 0;
       },
       setCount(datum, n)
       {
-        const key = JaftingSalvageManager.containerKeyFromDatum(datum);
-        this._counts[key] = n;
+        this._counts[instanceKey(datum)] = n;
       },
       gainItem: () => {},
       loseItem: () => {},
@@ -65,6 +87,10 @@ describe('JaftingSalvageManager (direct src import)', () =>
     globalThis.$dataItems = {};
     globalThis.RPG_Weapon = { createEmpty: id => ({ id, empty: true }) };
     globalThis.RPG_Armor = { createEmpty: id => ({ id, empty: true }) };
+
+    // per-copy ledgers are sized against every copy held, and a worn copy is held without being in the container -
+    // so the manager asks the actors too. an empty cast is the "nobody is wearing anything" baseline.
+    globalThis.$gameActors = { existingActors: () => [] };
 
     // real game code reaches this point via DataManager.createGameObjects before anything touches
     // ledgers (see core/objects/DataManager.js); tests that assign $gameParty by hand must do the same.
@@ -79,6 +105,7 @@ describe('JaftingSalvageManager (direct src import)', () =>
     delete globalThis.$dataItems;
     delete globalThis.RPG_Weapon;
     delete globalThis.RPG_Armor;
+    delete globalThis.$gameActors;
   });
 
   describe('containerKeyFromDatum', () =>
@@ -143,6 +170,20 @@ describe('JaftingSalvageManager (direct src import)', () =>
       const datum = fakeDatum('i', 1);
 
       expect(JaftingSalvageManager.getLedgerForDatum(datum)).toBe(null);
+    });
+
+    it('refuses to fall back to a party bag for a dynamic instance carrying no ledger of its own', () =>
+    {
+      // Arrange- a dynamic row's key resolves to the *base* it was cloned from, so continuing past
+      // here would read some other item's history and, worse, resize that stack's per-unit array to
+      // this instance's count on the way past.
+      const datum = fakeDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+
+      // Act
+      const ledger = JaftingSalvageManager.getLedgerForDatum(datum);
+
+      // Assert
+      expect(ledger).toBe(null);
     });
 
     it('appendStampedUnitsToPartyStack stamps the tail of the stack (LIFO) with the incoming ledger', () =>
@@ -274,18 +315,22 @@ describe('JaftingSalvageManager (direct src import)', () =>
       expect($gameParty._j._jafting._salvageLedgers['i:1']).toBeUndefined();
     });
 
-    it('afterPartyLostItem clears the ledger and reclaims the dynamic slot once the last copy is gone', () =>
+    it('afterPartyLostItem leaves a dynamic instance entirely alone, ledger and slot both', () =>
     {
-      const datum = fakeDatum('w', JaftingSalvageManager.DynamicEquipIndexMin);
-      datum._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot([]);
-      $dataWeapons[datum.id] = datum;
-      $gameParty.getRefinedWeapons = () => [ { index: datum.id } ];
+      // a row leaving the bag is not a row leaving the game - equipping spends it out of inventory before the
+      // slot is filled, so tearing anything down here would destroy the equip mid-transaction. collection is the
+      // sweep's job, from a point where the answer has settled.
+      const datum = fakeDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      const ledger = new JaftingSalvageLedgerSnapshot([]);
+      datum._jaftingSalvageLedger = ledger;
+      $dataWeapons[datum.index] = datum;
+      $gameParty.getRefinedWeapons = () => [ { index: datum.index } ];
       $gameParty.setCount(datum, 0);
 
       JaftingSalvageManager.afterPartyLostItem(datum, 1);
 
-      expect(datum._jaftingSalvageLedger).toBe(null);
-      expect($dataWeapons[datum.id]).toEqual({ id: datum.id, empty: true });
+      expect(datum._jaftingSalvageLedger).toBe(ledger);
+      expect($dataWeapons[datum.index]).toBe(datum);
     });
 
     it('afterPartyLostItem stops early while the party still holds copies of the item', () =>
@@ -517,22 +562,112 @@ describe('JaftingSalvageManager (direct src import)', () =>
       expect(called).toBe(false);
     });
 
-    it('executeSalvage refunds and removes the stack when eligible', () =>
+    it('executeSalvage refunds half of a unique row\'s cost and consumes it', () =>
     {
-      const datum = fakeDatum('w', JaftingSalvageManager.DynamicEquipIndexMin);
+      // a refined instance is always exactly one copy - each refinement mints its own slot - so its single snapshot
+      // is the whole payout, halved and rounded up.
+      const datum = fakeDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
       datum._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot([ new JaftingSalvageLedgerRow('g', 0, 5) ]);
-      $gameParty.setCount(datum, 3);
+      $gameParty.setCount(datum, 1);
 
       let gainedGold = 0;
       let lostArgs = null;
       $gameParty.gainGold = n => { gainedGold += n; };
       $gameParty.loseItem = (d, n) => { lostArgs = [ d, n ]; };
 
-      const result = JaftingSalvageManager.executeSalvage(datum, 2);
+      const result = JaftingSalvageManager.executeSalvage(datum, 1);
 
       expect(result).toBe(true);
-      expect(gainedGold).toBe(10);
-      expect(lostArgs).toEqual([ datum, 2 ]);
+      expect(gainedGold).toBe(3);
+      expect(lostArgs).toEqual([ datum, 1 ]);
+      expect(datum._jaftingSalvageLedger).toBe(null);
+    });
+
+    it('executeSalvage pays for the copy destroyed, not for the whole stack it came from', () =>
+    {
+      // three copies each costing two horns summarise as six in `bag.rows`. paying from that summary is what let a
+      // player craft a batch, dismantle it one at a time, and walk away with more material than they spent.
+      const sword = fakeDatum('w', 9);
+      $dataWeapons[9] = sword;
+      $dataItems[77] = fakeDatum('i', 77);
+      $gameParty.setCount(sword, 3);
+      const perCopy = new JaftingSalvageLedgerSnapshot([ new JaftingSalvageLedgerRow('i', 77, 2) ]);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(sword, perCopy, 3);
+
+      const gained = [];
+      $gameParty.gainItem = (d, n) => gained.push([ d.id, n ]);
+      $gameParty.loseItem = () => {};
+
+      const result = JaftingSalvageManager.executeSalvage(sword, 1);
+
+      // one copy cost two horns, so half rounded up is one.
+      expect(result).toBe(true);
+      expect(gained).toEqual([ [ 77, 1 ] ]);
+      expect($gameParty._j._jafting._salvageLedgers['w:9'].unitLedgers.length).toBe(2);
+    });
+
+    it('executeSalvage rounds a single-unit ingredient up so it comes back whole', () =>
+    {
+      // rounding down would make one-of ingredients evaporate, and a dish built from six different single things
+      // would refund nothing at all.
+      const dish = fakeDatum('i', 30);
+      $dataItems[30] = dish;
+      $dataItems[77] = fakeDatum('i', 77);
+      $gameParty.setCount(dish, 1);
+      const perCopy = new JaftingSalvageLedgerSnapshot([ new JaftingSalvageLedgerRow('i', 77, 1) ]);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(dish, perCopy, 1);
+
+      const gained = [];
+      $gameParty.gainItem = (d, n) => gained.push([ d.id, n ]);
+      $gameParty.loseItem = () => {};
+
+      JaftingSalvageManager.executeSalvage(dish, 1);
+
+      expect(gained).toEqual([ [ 77, 1 ] ]);
+    });
+
+    it('executeSalvage rounds an odd cost up rather than down', () =>
+    {
+      // nine of something comes back as five.
+      const dish = fakeDatum('i', 31);
+      $dataItems[31] = dish;
+      $dataItems[77] = fakeDatum('i', 77);
+      $gameParty.setCount(dish, 1);
+      const perCopy = new JaftingSalvageLedgerSnapshot([ new JaftingSalvageLedgerRow('i', 77, 9) ]);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(dish, perCopy, 1);
+
+      const gained = [];
+      $gameParty.gainItem = (d, n) => gained.push([ d.id, n ]);
+      $gameParty.loseItem = () => {};
+
+      JaftingSalvageManager.executeSalvage(dish, 1);
+
+      expect(gained).toEqual([ [ 77, 5 ] ]);
+    });
+
+    it('executeSalvage consumes the most recently stamped copy first', () =>
+    {
+      // LIFO, matching the order copies are stamped. the older copy's provenance is what survives.
+      const dish = fakeDatum('i', 32);
+      $dataItems[32] = dish;
+      $dataItems[70] = fakeDatum('i', 70);
+      $dataItems[71] = fakeDatum('i', 71);
+      $gameParty.setCount(dish, 1);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(
+        dish, new JaftingSalvageLedgerSnapshot([ new JaftingSalvageLedgerRow('i', 70, 2) ]), 1);
+      $gameParty.setCount(dish, 2);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(
+        dish, new JaftingSalvageLedgerSnapshot([ new JaftingSalvageLedgerRow('i', 71, 2) ]), 1);
+
+      const gained = [];
+      $gameParty.gainItem = (d, n) => gained.push([ d.id, n ]);
+      $gameParty.loseItem = () => {};
+
+      JaftingSalvageManager.executeSalvage(dish, 1);
+
+      // the newer copy (71) paid out, and the older copy (70) is the one still on file.
+      expect(gained).toEqual([ [ 71, 1 ] ]);
+      expect($gameParty._j._jafting._salvageLedgers['i:32'].unitLedgers[0].rows[0].id).toBe(70);
     });
 
     it('executeSalvage returns false when there is no ledger, no expanded rows, non-positive amount, or too few in stock', () =>

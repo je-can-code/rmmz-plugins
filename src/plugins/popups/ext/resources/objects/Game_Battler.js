@@ -20,9 +20,8 @@ Game_Battler.prototype.paySkillHpCost = function(amount)
   const jabsBattler = JABS_AiManager.getBattlerByUuid(this.getUuid());
   if (!jabsBattler) return;
 
-  // validate we have a character to display the popup on.
+  // grab the character to display the popup on.
   const character = jabsBattler.getCharacter();
-  if (!character) return;
 
   // build the popup.
   const pop = new TextPopBuilder(amount)
@@ -60,9 +59,8 @@ Game_Battler.prototype.gainHpFromResource = function(amount)
   const jabsBattler = JABS_AiManager.getBattlerByUuid(this.getUuid());
   if (!jabsBattler) return;
 
-  // validate we have a character to display the popup on.
+  // grab the character to display the popup on.
   const character = jabsBattler.getCharacter();
-  if (!character) return;
 
   // build the popup.
   const pop = new TextPopBuilder(-amount)
@@ -100,9 +98,8 @@ Game_Battler.prototype.gainMpFromResource = function(amount)
   const jabsBattler = JABS_AiManager.getBattlerByUuid(this.getUuid());
   if (!jabsBattler) return;
 
-  // validate we have a character to display the popup on.
+  // grab the character to display the popup on.
   const character = jabsBattler.getCharacter();
-  if (!character) return;
 
   // build the popup.
   const pop = new TextPopBuilder(-amount)
@@ -140,9 +137,8 @@ Game_Battler.prototype.gainTpFromResource = function(amount)
   const jabsBattler = JABS_AiManager.getBattlerByUuid(this.getUuid());
   if (!jabsBattler) return;
 
-  // validate we have a character to display the popup on.
+  // grab the character to display the popup on.
   const character = jabsBattler.getCharacter();
-  if (!character) return;
 
   // build the popup.
   const pop = new TextPopBuilder(-amount)

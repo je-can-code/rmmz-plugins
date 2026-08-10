@@ -1,8 +1,11 @@
 //region Scene_JaftingCreate
 import CraftingCreationSession from './../__models/CraftingCreationSession.js';
+import RecipeSpendResolver from '../managers/RecipeSpendResolver.js';
 import Window_CategoryList from '../windows/Window_CategoryList.js';
 import Window_CreationCategoryBadge from '../windows/Window_CreationCategoryBadge.js';
 import Window_CreationDescription from '../windows/Window_CreationDescription.js';
+import Window_IngredientSelection from '../windows/Window_IngredientSelection.js';
+import Window_CraftConfirmation from '../windows/Window_CraftConfirmation.js';
 import Window_RecipeDetails from '../windows/Window_RecipeDetails.js';
 import Window_RecipeIngredientList from '../windows/Window_RecipeIngredientList.js';
 import Window_RecipeList from '../windows/Window_RecipeList.js';
@@ -188,6 +191,346 @@ class Scene_JaftingCreate
      * @type {Window_RecipeOutputList}
      */
     this._j._crafting._create._recipeOutputList = null;
+
+    /**
+     * The window for choosing which entry fills a categorical ingredient slot.
+     * @type {Window_IngredientSelection|null}
+     */
+    this._j._crafting._create._ingredientSelection = null;
+
+    /**
+     * The window asking how many of the pending recipe to craft.
+     * @type {Window_CraftConfirmation|null}
+     */
+    this._j._crafting._create._craftConfirmation = null;
+
+    /**
+     * The legend teaching how to change the craft quantity.
+     * @type {Window_ControlLegend|null}
+     */
+    this._j._crafting._create._craftLegend = null;
+
+    /**
+     * The recipe awaiting ingredient choices, or null when no craft is mid-flight.
+     * @type {CraftingRecipe|null}
+     */
+    this._j._crafting._create._pendingRecipe = null;
+
+    /**
+     * How far through the categorical slots the player has progressed.
+     * @type {number}
+     */
+    this._j._crafting._create._pendingSlotPosition = 0;
+  }
+
+  /**
+   * Gets the recipe awaiting ingredient choices.
+   * @returns {CraftingRecipe|null}
+   */
+  getPendingRecipe()
+  {
+    return this._j._crafting._create._pendingRecipe;
+  }
+
+  /**
+   * Sets the recipe awaiting ingredient choices.
+   * @param {CraftingRecipe|null} recipe The recipe being crafted, or null once it is done.
+   */
+  setPendingRecipe(recipe)
+  {
+    this._j._crafting._create._pendingRecipe = recipe;
+  }
+
+  /**
+   * Gets how far through the categorical slots the player has progressed.
+   * @returns {number}
+   */
+  getPendingSlotPosition()
+  {
+    return this._j._crafting._create._pendingSlotPosition;
+  }
+
+  /**
+   * Sets how far through the categorical slots the player has progressed.
+   * @param {number} position The next slot to ask about.
+   */
+  setPendingSlotPosition(position)
+  {
+    this._j._crafting._create._pendingSlotPosition = position;
+  }
+
+  /**
+   * Gets the IngredientSelection window being tracked.
+   * @returns {Window_IngredientSelection}
+   */
+  getIngredientSelectionWindow()
+  {
+    return this._j._crafting._create._ingredientSelection;
+  }
+
+  /**
+   * Sets the IngredientSelection window tracking.
+   * @param {Window_IngredientSelection} someWindow The window to track.
+   */
+  setIngredientSelectionWindow(someWindow)
+  {
+    this._j._crafting._create._ingredientSelection = someWindow;
+  }
+
+  /**
+   * Gets the CraftConfirmation window being tracked.
+   * @returns {Window_CraftConfirmation}
+   */
+  getCraftConfirmationWindow()
+  {
+    return this._j._crafting._create._craftConfirmation;
+  }
+
+  /**
+   * Sets the CraftConfirmation window tracking.
+   * @param {Window_CraftConfirmation} someWindow The window to track.
+   */
+  setCraftConfirmationWindow(someWindow)
+  {
+    this._j._crafting._create._craftConfirmation = someWindow;
+  }
+
+  /**
+   * Creates the CraftConfirmation window.
+   */
+  createCraftConfirmationWindow()
+  {
+    // create the window.
+    const window = this.buildCraftConfirmationWindow();
+
+    // update the tracker with the new window.
+    this.setCraftConfirmationWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Builds and configures the CraftConfirmation window.
+   * @returns {Window_CraftConfirmation}
+   */
+  buildCraftConfirmationWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.getCraftConfirmationRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_CraftConfirmation(rectangle);
+
+    window.setHandler('craft-confirm', this.onCraftConfirmed.bind(this));
+    window.setHandler('craft-cancel', this.onCraftCancelled.bind(this));
+    window.setHandler('cancel', this.onCraftCancelled.bind(this));
+
+    // pageup and pagedown are deliberately left unhandled: the window reads the shoulders itself to step the count
+    // coarsely, and the engine only routes them to the cursor hooks while no handler has claimed them.
+
+    // also put the window away.
+    window.hide();
+    window.deactivate();
+
+    // return the built and configured window.
+    return window;
+  }
+
+  /**
+   * Gets the craft quantity legend being tracked.
+   * @returns {Window_ControlLegend}
+   */
+  getCraftLegendWindow()
+  {
+    return this._j._crafting._create._craftLegend;
+  }
+
+  /**
+   * Sets the craft quantity legend tracking.
+   * @param {Window_ControlLegend} someWindow The window to track.
+   */
+  setCraftLegendWindow(someWindow)
+  {
+    this._j._crafting._create._craftLegend = someWindow;
+  }
+
+  /**
+   * Creates the legend that teaches how to change the craft quantity.
+   */
+  createCraftLegendWindow()
+  {
+    // create the window.
+    const window = this.buildCraftLegendWindow();
+
+    // update the tracker with the new window.
+    this.setCraftLegendWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Builds and configures the craft quantity legend.
+   *
+   * A real {@link Window_ControlLegend} rather than a line of prose inside the prompt. It resolves each control
+   * through whatever owns the input mapping, so the glyphs follow the player's own remapping and the device
+   * currently in their hands - and quietly fall back to readable words when no mapping plugin is installed. Saying
+   * "L1" in a sentence would be a guess that goes wrong for anyone on a keyboard.
+   * @returns {Window_ControlLegend}
+   */
+  buildCraftLegendWindow()
+  {
+    const rectangle = this.getCraftLegendRectangle();
+
+    const window = new Window_ControlLegend(rectangle);
+
+    window.setEntries(this.craftLegendEntries());
+
+    // also put the window away.
+    window.hide();
+
+    // return the built and configured window.
+    return window;
+  }
+
+  /**
+   * The controls the craft quantity prompt teaches.
+   *
+   * Only the quantity controls. Confirming and cancelling are named by the two answers themselves, so a legend
+   * repeating them would be spending a line to say what is already on screen.
+   * @returns {{semantic: (string|string[]), label: string}[]}
+   */
+  craftLegendEntries()
+  {
+    return [
+      {
+        semantic: [ 'cart-dec', 'cart-inc' ],
+        label: 'by one',
+      },
+      {
+        semantic: [ 'cart-dec-bulk', 'cart-inc-bulk' ],
+        label: `by ${Window_CraftConfirmation.CoarseStep}`,
+      },
+    ];
+  }
+
+  /**
+   * The rectangle for the craft quantity legend.
+   *
+   * A placeholder shape only. The prompt above it resizes to whatever the chosen recipe spends, so the legend is
+   * repositioned against the prompt's finished geometry each time it opens.
+   * @returns {Rectangle}
+   */
+  getCraftLegendRectangle()
+  {
+    const width = Math.min(620, Graphics.boxWidth - 160);
+    const height = this.calcWindowHeight(1, false);
+    const x = (Graphics.boxWidth - width) / 2;
+
+    return new Rectangle(x, 0, width, height);
+  }
+
+  /**
+   * Parks the legend directly beneath the prompt, wherever the prompt has settled.
+   *
+   * The prompt centers itself around a height that depends on the recipe, so neither window's position is knowable
+   * until the bill has been handed over.
+   */
+  positionCraftLegendWindow()
+  {
+    const confirmationWindow = this.getCraftConfirmationWindow();
+    const legendWindow = this.getCraftLegendWindow();
+
+    const y = confirmationWindow.y + confirmationWindow.height;
+
+    legendWindow.move(confirmationWindow.x, y, confirmationWindow.width, legendWindow.height);
+  }
+
+  /**
+   * Creates the IngredientSelection window.
+   */
+  createIngredientSelectionWindow()
+  {
+    // create the window.
+    const window = this.buildIngredientSelectionWindow();
+
+    // update the tracker with the new window.
+    this.setIngredientSelectionWindow(window);
+
+    // add the window to the scene manager's tracking.
+    this.addWindow(window);
+  }
+
+  /**
+   * Builds and configures the IngredientSelection window.
+   * @returns {Window_IngredientSelection}
+   */
+  buildIngredientSelectionWindow()
+  {
+    // define the rectangle of the window.
+    const rectangle = this.getIngredientSelectionRectangle();
+
+    // create the window with the rectangle.
+    const window = new Window_IngredientSelection(rectangle);
+
+    // assign cancel functionality.
+    window.setHandler('cancel', this.onIngredientSelectionCancel.bind(this));
+
+    // assign on-select functionality.
+    window.setHandler('ok', this.onIngredientSelection.bind(this));
+
+    // also put the window away.
+    window.hide();
+    window.deactivate();
+
+    // return the built and configured window.
+    return window;
+  }
+
+  /**
+   * Gets the rectangle associated with this window.
+   *
+   * Shares the recipe column's footprint, since it stands in for that column while a craft is being
+   * assembled and the two are never on screen at once.
+   * @returns {Rectangle}
+   */
+  getIngredientSelectionRectangle()
+  {
+    // sits where the recipe list sits, because it replaces it for the duration of the choice - but it is not the
+    // same shape. The recipe column is deliberately narrow and dense so that many recipes fit; this column carries
+    // an item name, a held count, and a needed count, so it needs the width to keep them apart.
+    const recipeList = this.getRecipeListRectangle();
+    const widest = Graphics.boxWidth - recipeList.x - Graphics.horizontalPadding;
+    const width = Math.min(recipeList.width * 2, widest);
+
+    return new Rectangle(recipeList.x, recipeList.y, width, recipeList.height);
+  }
+
+  /**
+   * The rectangle for the window asking how many of a recipe to craft.
+   *
+   * Centered, and sized to its contents rather than to any of the scene's columns. It interrupts the whole scene
+   * rather than belonging to one part of it, and a prompt wearing a column's geometry reads as that column having
+   * failed to draw rather than as a question being asked.
+   * @returns {Rectangle}
+   */
+  getCraftConfirmationRectangle()
+  {
+    // wide enough for the control legend to stay on one line, without spanning the whole scene.
+    const width = Math.min(620, Graphics.boxWidth - 160);
+
+    // the two answers are selectable rows, which are eight pixels taller than a line of text; the quantity and the
+    // legend beneath them are plain lines. Measuring each in its own unit is what makes the readout land exactly
+    // on the bottom of the contents rather than floating short of it or drawing past it.
+    const answerRows = this.calcWindowHeight(2, true);
+    const readoutLines = Window_Base.prototype.lineHeight() * 2;
+    const height = answerRows + readoutLines + Window_CraftConfirmation.DividerGap;
+
+    const x = (Graphics.boxWidth - width) / 2;
+    const y = (Graphics.boxHeight - height) / 2;
+
+    return new Rectangle(x, y, width, height);
   }
 
   /**
@@ -242,6 +585,11 @@ class Scene_JaftingCreate
     this.createRecipeIngredientListWindow();
     this.createRecipeToolListWindow();
     this.createRecipeOutputListWindow();
+    this.createIngredientSelectionWindow();
+    this.createCraftConfirmationWindow();
+
+    // last, so it draws above the prompt it belongs to.
+    this.createCraftLegendWindow();
   }
 
   /**
@@ -751,7 +1099,119 @@ class Scene_JaftingCreate
   onRecipeListSelection()
   {
     const recipe = this.getRecipeListWindow().currentExt();
-    const outcome = this.craftingCreationSession().tryCraftRecipe(recipe);
+
+    // a recipe with categorical slots cannot execute until the player says which entries to spend.
+    // asking before checking requirements would be rude, so the affordability gate still comes first.
+    if (recipe !== null && recipe.needsIngredientSelection() && recipe.canCraft())
+    {
+      this.beginIngredientSelection(recipe);
+
+      return;
+    }
+
+    // an unaffordable recipe still reports itself, rather than opening a prompt offering a craft of zero.
+    if (recipe === null || !recipe.canCraft())
+    {
+      this.executeCraft(recipe);
+
+      return;
+    }
+
+    this.setPendingRecipe(recipe);
+    this.beginCraftConfirmation(recipe);
+  }
+
+  /**
+   * Opens the confirmation, asking how many of this recipe to craft.
+   * @param {CraftingRecipe} recipe The recipe about to be crafted.
+   */
+  beginCraftConfirmation(recipe)
+  {
+    const selections = this.craftingCreationSession()
+      .getSelections();
+    const confirmationWindow = this.getCraftConfirmationWindow();
+
+    confirmationWindow.setMaximum(recipe.maxCraftableCount(selections));
+
+    // the bill goes in last, because taking it reshapes the window around however many entries it names.
+    const spendLines = RecipeSpendResolver.aggregated(recipe.ingredients, selections);
+    confirmationWindow.setSpendLines(spendLines);
+
+    confirmationWindow.select(0);
+    confirmationWindow.show();
+    confirmationWindow.activate();
+
+    this.positionCraftLegendWindow();
+
+    // a ceiling of one leaves nothing to adjust, and a legend for controls that do nothing is worse than no legend.
+    const legendWindow = this.getCraftLegendWindow();
+
+    if (confirmationWindow.maximum() > 1) legendWindow.show();
+
+    // the panel behind the prompt describes the same craft, so it stops guessing at the categorical slots too.
+    this.getRecipeIngredientListWindow()
+      .setSelections(selections);
+  }
+
+  /**
+   * Crafts the pending recipe as many times as was asked for.
+   */
+  onCraftConfirmed()
+  {
+    const confirmationWindow = this.getCraftConfirmationWindow();
+    const count = confirmationWindow.count();
+
+    this.closeCraftConfirmationWindow();
+
+    this.executeCraft(this.getPendingRecipe(), count);
+
+    this.setPendingRecipe(null);
+  }
+
+  /**
+   * Abandons the craft, spending nothing.
+   */
+  onCraftCancelled()
+  {
+    this.closeCraftConfirmationWindow();
+
+    // the selections were only ever gathered for this craft, so they leave with it.
+    this.craftingCreationSession()
+      .cancelIngredientSelection();
+    this.setPendingRecipe(null);
+
+    const listWindow = this.getRecipeListWindow();
+
+    listWindow.activate();
+  }
+
+  /**
+   * Puts the confirmation away.
+   */
+  closeCraftConfirmationWindow()
+  {
+    const confirmationWindow = this.getCraftConfirmationWindow();
+
+    confirmationWindow.hide();
+    confirmationWindow.deactivate();
+
+    this.getCraftLegendWindow()
+      .hide();
+
+    // the choices belonged to the craft being answered, so they leave with the question.
+    this.getRecipeIngredientListWindow()
+      .clearSelections();
+  }
+
+  /**
+   * Executes a craft and returns the recipe column to its resting state.
+   * @param {CraftingRecipe|null} recipe The recipe being crafted.
+   * @param {number} count How many times to craft it.
+   */
+  executeCraft(recipe, count = 1)
+  {
+    const outcome = this.craftingCreationSession()
+      .tryCraftRecipe(recipe, count);
 
     if (outcome.playedSuccessSound === true)
     {
@@ -766,6 +1226,137 @@ class Scene_JaftingCreate
   }
 
   //endregion recipe list
+
+  //region ingredient selection
+  /**
+   * Begins walking the player through one choice per categorical ingredient.
+   * @param {CraftingRecipe} recipe The recipe being crafted.
+   */
+  beginIngredientSelection(recipe)
+  {
+    const session = this.craftingCreationSession();
+    session.beginIngredientSelection();
+
+    // remember what we are choosing for, and how far through the list we are.
+    this.setPendingRecipe(recipe);
+    this.setPendingSlotPosition(0);
+
+    this.getRecipeListWindow()
+      .deactivate();
+
+    this.promptNextIngredientSlot();
+  }
+
+  /**
+   * Shows the choice for the next unfilled categorical slot, or crafts once they are all filled.
+   */
+  promptNextIngredientSlot()
+  {
+    const recipe = this.getPendingRecipe();
+    const slots = recipe.categoricalIngredientIndices();
+    const position = this.getPendingSlotPosition();
+
+    // every slot has an entry against it, so there is nothing left to ask.
+    if (position >= slots.length)
+    {
+      this.finishIngredientSelection();
+
+      return;
+    }
+
+    const ingredientIndex = slots.at(position);
+    const component = recipe.ingredients.at(ingredientIndex);
+    const selectionWindow = this.getIngredientSelectionWindow();
+
+    // claimed quantities keep an earlier slot's pick from being offered again as though it were free.
+    selectionWindow.setSlot(component.eligibleEntries(), component.quantity(), this.claimedSoFar());
+    selectionWindow.refresh();
+    selectionWindow.select(0);
+    selectionWindow.show();
+    selectionWindow.activate();
+  }
+
+  /**
+   * How much of each entry the picks made so far in this craft have already spoken for.
+   * @returns {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>}
+   */
+  claimedSoFar()
+  {
+    const recipe = this.getPendingRecipe();
+    const selections = this.craftingCreationSession()
+      .getSelections();
+
+    /** @type {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>} */
+    const claimed = new Map();
+
+    selections.forEach((entry, ingredientIndex) =>
+    {
+      const taken = recipe.ingredients.at(ingredientIndex)
+        .quantity();
+      const running = claimed.has(entry)
+        ? claimed.get(entry)
+        : 0;
+
+      claimed.set(entry, running + taken);
+    });
+
+    return claimed;
+  }
+
+  /**
+   * Records the chosen entry and moves to the next slot.
+   */
+  onIngredientSelection()
+  {
+    const recipe = this.getPendingRecipe();
+    const slots = recipe.categoricalIngredientIndices();
+    const position = this.getPendingSlotPosition();
+    const chosen = this.getIngredientSelectionWindow()
+      .currentExt();
+
+    this.craftingCreationSession()
+      .recordSelection(slots.at(position), chosen);
+
+    this.setPendingSlotPosition(position + 1);
+
+    this.promptNextIngredientSlot();
+  }
+
+  /**
+   * Abandons the craft and hands control back to the recipe column.
+   */
+  onIngredientSelectionCancel()
+  {
+    this.craftingCreationSession()
+      .cancelIngredientSelection();
+
+    this.closeIngredientSelectionWindow();
+
+    this.getRecipeListWindow()
+      .activate();
+  }
+
+  /**
+   * Asks how many to craft, now that every categorical slot has an entry against it.
+   */
+  finishIngredientSelection()
+  {
+    this.closeIngredientSelectionWindow();
+
+    this.beginCraftConfirmation(this.getPendingRecipe());
+  }
+
+  /**
+   * Puts the selection window away.
+   */
+  closeIngredientSelectionWindow()
+  {
+    const selectionWindow = this.getIngredientSelectionWindow();
+
+    selectionWindow.hide();
+    selectionWindow.deactivate();
+  }
+  //endregion ingredient selection
 
   //region recipe details
   /**

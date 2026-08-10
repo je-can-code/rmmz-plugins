@@ -139,6 +139,32 @@ describe('ApManager (direct src import)', () =>
       expect(ApManager.resolveStaticSourceByKey('@base:mystery:1')).toBe(null);
     });
 
+    // a savefile keeps source keys by id, and a database row can be deleted between builds - so
+    // every table lookup has to answer null rather than handing back a hole in the array. The
+    // resync pass downstream reads that null as "nothing to resync against" and moves on.
+    [
+      [ 'skill', '$dataSkills', '@base:usable:skill:99' ],
+      [ 'weapon', '$dataWeapons', '@base:traited:equip:weapon:99' ],
+      [ 'armor', '$dataArmors', '@base:traited:equip:armor:99' ],
+      [ 'state', '$dataStates', '@base:traited:state:99' ],
+      [ 'class', '$dataClasses', '@base:class:99' ],
+      [ 'actor', '$dataActors', '@base:actor:99' ],
+      [ 'item', '$dataItems', '@base:usable:item:99' ],
+    ].forEach(([ label, table, key ]) =>
+    {
+      it(`answers null for a ${label} key whose row is gone from the database`, () =>
+      {
+        // Arrange
+        globalThis[table] = [ null ];
+
+        // Act
+        const resolved = ApManager.resolveStaticSourceByKey(key);
+
+        // Assert
+        expect(resolved).toBe(null);
+      });
+    });
+
     it('returns null for a key with no numeric id', () =>
     {
       expect(ApManager.resolveStaticSourceByKey('bad')).toBe(null);
@@ -440,6 +466,127 @@ describe('ApManager (direct src import)', () =>
       ApManager.gainAp(actor, 5, 'test');
 
       expect(learnSkill).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('gainAp scaling', () =>
+  {
+    it('awards nothing when a low multiplier rounds the whole award away', () =>
+    {
+      // Arrange- an actor with a heavy aptitude penalty can scale a small award below half a point.
+      // Proceeding with zero would walk every active source and persist a no-op progress write on
+      // every single kill.
+      const activeTeachables = vi.spyOn(ApManager, 'activeTeachables')
+        .mockReturnValue([]);
+      const actor = {
+        isDead: () => false,
+        apr: 0.01,
+        getAptitudeSources: () => [],
+      };
+
+      // Act
+      ApManager.gainAp(actor, 5, 'test');
+
+      // Assert
+      expect(activeTeachables).not.toHaveBeenCalled();
+
+      activeTeachables.mockRestore();
+    });
+
+    it('awards the raw amount for an actor with no aptitude multiplier at all', () =>
+    {
+      // Arrange- `apr` is a J-Natural-derived rate that only exists once something grants it, so an
+      // actor without one must still gain the plain amount rather than being scaled by undefined.
+      const activeTeachables = vi.spyOn(ApManager, 'activeTeachables')
+        .mockReturnValue([]);
+      const actor = {
+        isDead: () => false,
+        getAptitudeSources: () => [],
+      };
+
+      // Act
+      ApManager.gainAp(actor, 5, 'test');
+
+      // Assert
+      expect(activeTeachables).toHaveBeenCalled();
+
+      activeTeachables.mockRestore();
+    });
+  });
+
+  describe('isSourceActive over several sources', () =>
+  {
+    it('keeps scanning past a source whose key does not match', () =>
+    {
+      // Arrange- an actor carries a weapon, an armor and any number of states at once, so the
+      // wanted key is routinely not the first one in the list.
+      const wrongSource = { id: 1, implementationType: () => '@base:weapon' };
+      const rightSource = { id: 5, implementationType: () => '@base:weapon' };
+      const actor = { getAptitudeSources: () => [ wrongSource, rightSource ] };
+
+      // Act
+      const isActive = ApManager.isSourceActive(actor, '@base:weapon:5');
+
+      // Assert
+      expect(isActive).toBe(true);
+    });
+  });
+
+  describe('refreshRequiredAp', () =>
+  {
+    it('resyncs a persisted learning to the notetag\'s current requirement', () =>
+    {
+      // Arrange- normal AP gain only resyncs the next time that source grants AP, so a save that
+      // started a learning before a retune would otherwise honor the stale number forever.
+      const setRequiredAp = vi.fn();
+      const progress = {
+        hasLearning: () => true,
+        learningBySkillId: () => ({ setRequiredAp }),
+      };
+      globalThis.$dataSkills = [ null, { id: 1, aptitudeTeachings: [ { skillId: 7, requiredAp: 250 } ] } ];
+      const actor = { getAllAptitudeProgresses: () => ({ '@base:usable:skill:1': progress }) };
+
+      // Act
+      ApManager.refreshRequiredAp(actor);
+
+      // Assert
+      expect(setRequiredAp).toHaveBeenCalledWith(250);
+    });
+
+    it('skips a source whose database row no longer exists', () =>
+    {
+      // Arrange- the key outlives the row, and a deleted skill must not take the whole resync down.
+      globalThis.$dataSkills = [ null ];
+      const progress = {
+        hasLearning: vi.fn(() => true),
+        learningBySkillId: vi.fn(),
+      };
+      const actor = { getAllAptitudeProgresses: () => ({ '@base:usable:skill:99': progress }) };
+
+      // Act
+      ApManager.refreshRequiredAp(actor);
+
+      // Assert
+      expect(progress.hasLearning).not.toHaveBeenCalled();
+    });
+
+    it('skips a teachable the actor never started learning', () =>
+    {
+      // Arrange- a source teaches several skills and the actor may have begun only one of them;
+      // there is nothing persisted to resync for the others.
+      const learningBySkillId = vi.fn();
+      const progress = {
+        hasLearning: () => false,
+        learningBySkillId,
+      };
+      globalThis.$dataSkills = [ null, { id: 1, aptitudeTeachings: [ { skillId: 7, requiredAp: 250 } ] } ];
+      const actor = { getAllAptitudeProgresses: () => ({ '@base:usable:skill:1': progress }) };
+
+      // Act
+      ApManager.refreshRequiredAp(actor);
+
+      // Assert
+      expect(learningBySkillId).not.toHaveBeenCalled();
     });
   });
 });

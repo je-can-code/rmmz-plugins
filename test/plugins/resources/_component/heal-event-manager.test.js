@@ -248,5 +248,288 @@ describe('HealEventManager (resources ext/abs)', () =>
     // depth must be restored, not left incremented, since dispatch bailed before entering the try block.
     expect(HealEventManager._currentDepth).toBe(globalThis.J.RESOURCES.EXT.ABS.Metadata.healChainDepth);
   });
+
+  //region which resource a trigger names
+  it('routes an mp trigger through the mp tag family', () =>
+  {
+    // Arrange- the three resources share one dispatch, and the trigger only reaches the right tags
+    // by way of the string-to-key conversion. A wrong mapping silently fires hp tags on mana heals.
+    const note = {};
+    const recipient = buildBattler('recipient', [ note ]);
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnSelfMpHealTp) return [ [ 50, 0 ] ];
+      return [];
+    });
+
+    // Act
+    HealEventManager.dispatch(recipient, 'mp', 100);
+
+    // Assert
+    expect(recipient.gainTpFromResource).toHaveBeenCalledWith(50);
+  });
+
+  it('routes a tp trigger through the tp tag family', () =>
+  {
+    // Arrange
+    const note = {};
+    const recipient = buildBattler('recipient', [ note ]);
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnSelfTpHealHp) return [ [ 50, 0 ] ];
+      return [];
+    });
+
+    // Act
+    HealEventManager.dispatch(recipient, 'tp', 100);
+
+    // Assert
+    expect(recipient.gainHpFromResource).toHaveBeenCalledWith(50);
+  });
+  //endregion which resource a trigger names
+
+  //region the tag shape itself
+  it('honors a per-tag depth override written as the tag\'s third value', () =>
+  {
+    // Arrange- a tag may cap its own chain shorter than the global setting, which is how a designer
+    // stops one particular echo from participating in long chains without lowering the whole game's.
+    const note = {};
+    const recipient = buildBattler('recipient', [ note ]);
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnSelfHpHealMp) return [ [ 50, 0, 0 ] ];
+      return [];
+    });
+    HealEventManager._currentDepth = 1;
+
+    // Act
+    HealEventManager.dispatch(recipient, 'hp', 100);
+
+    // Assert
+    expect(recipient.gainMpFromResource).not.toHaveBeenCalled();
+  });
+
+  it('ignores a malformed tag rather than reading undefined values out of it', () =>
+  {
+    // Arrange- a tag needs at least a percent and a range; one that parsed to a single value would
+    // otherwise produce a range of `undefined` and compare every distance against it.
+    const note = {};
+    const recipient = buildBattler('recipient', [ note ]);
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnSelfHpHealMp) return [ [ 50 ] ];
+      return [];
+    });
+
+    // Act
+    HealEventManager.dispatch(recipient, 'hp', 100);
+
+    // Assert
+    expect(recipient.gainMpFromResource).not.toHaveBeenCalled();
+  });
+
+  it('also fires the any-trigger variant of a tag', () =>
+  {
+    // Arrange- the Any family exists so a designer can write one tag instead of three, and it is
+    // collected alongside the specific one rather than instead of it.
+    const note = {};
+    const recipient = buildBattler('recipient', [ note ]);
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnSelfAnyHealMp) return [ [ 50, 0 ] ];
+      return [];
+    });
+
+    // Act
+    HealEventManager.dispatch(recipient, 'tp', 100);
+
+    // Assert
+    expect(recipient.gainMpFromResource).toHaveBeenCalledWith(50);
+  });
+
+  it('applies nothing when the proportion rounds down to zero', () =>
+  {
+    // Arrange- a 1% echo off a 10-point heal is zero, and popping a "0" over the player would be
+    // worse than staying silent.
+    const note = {};
+    const recipient = buildBattler('recipient', [ note ]);
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnSelfHpHealMp) return [ [ 1, 0 ] ];
+      return [];
+    });
+
+    // Act
+    HealEventManager.dispatch(recipient, 'hp', 10);
+
+    // Assert
+    expect(recipient.gainMpFromResource).not.toHaveBeenCalled();
+  });
+
+  it('does not echo a tag back into itself within one chain', () =>
+  {
+    // Arrange- an hp tag that heals hp would otherwise re-enter its own dispatch forever; the block
+    // is keyed per tag and per battler so only the self-echo is stopped.
+    const note = {};
+    const recipient = buildBattler('recipient', [ note ]);
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnSelfHpHealHp) return [ [ 50, 0 ] ];
+      return [];
+    });
+
+    // Act
+    HealEventManager.dispatch(recipient, 'hp', 100);
+
+    // Assert: exactly one echo, not an unbounded cascade.
+    expect(recipient.gainHpFromResource).toHaveBeenCalledTimes(1);
+  });
+  //endregion the tag shape itself
+
+  //region the ally splash
+  it('skips the ally splash entirely for a battler that is not on the JABS map', () =>
+  {
+    // Arrange- an actor in a menu or an enemy already despawned has no JABS battler to measure
+    // range from, and asking for allies around nothing would throw.
+    const note = {};
+    const recipient = buildBattler('recipient', [ note ]);
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnSelfHpHealMp) return [ [ 50, 5 ] ];
+      return [];
+    });
+    globalThis.JABS_AiManager.getBattlerByUuid.mockReturnValue(undefined);
+
+    // Act
+    HealEventManager.dispatch(recipient, 'hp', 100);
+
+    // Assert: the self-heal still lands; only the splash is skipped.
+    expect(recipient.gainMpFromResource).toHaveBeenCalledWith(50);
+    expect(globalThis.JABS_AiManager.getAlliedBattlersWithinRange).not.toHaveBeenCalled();
+  });
+
+  it('stops a self-echo from re-entering the same tag when the heal really does re-dispatch', () =>
+  {
+    // Arrange- in-game the resource gain itself dispatches again, which is the whole reason the
+    // block exists. The mocks elsewhere in this file stop short of that, so this one closes the loop
+    // on purpose and checks that the second pass finds its own key already blocked.
+    const note = {};
+    const recipient = buildBattler('recipient', [ note ]);
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnSelfHpHealHp) return [ [ 50, 0 ] ];
+      return [];
+    });
+    recipient.gainHpFromResource = vi.fn(amount => HealEventManager.dispatch(recipient, 'hp', amount));
+
+    // Act
+    HealEventManager.dispatch(recipient, 'hp', 100);
+
+    // Assert: one echo, and the re-entry it triggers finds the block rather than cascading.
+    expect(recipient.gainHpFromResource).toHaveBeenCalledTimes(1);
+  });
+  //endregion the ally splash
+
+  //region what an onlooking ally reacts to
+  /**
+   * Builds the pair of JABS battlers the observer path walks, at a chosen distance apart.
+   * @param {object} healTarget The battler that was healed.
+   * @param {object} observer The ally watching it happen.
+   * @param {number} distance How far apart they stand.
+   */
+  function stageObserver(healTarget, observer, distance)
+  {
+    const jabsHealTarget = {
+      getBattler: () => healTarget,
+      distanceToDesignatedTarget: () => distance,
+    };
+    const jabsObserver = { getBattler: () => observer };
+
+    globalThis.JABS_AiManager.getBattlerByUuid.mockReturnValue(jabsHealTarget);
+    globalThis.JABS_AiManager.getAlliedBattlers.mockReturnValue([ jabsHealTarget, jabsObserver ]);
+  }
+
+  it('never treats the healed battler as its own observer', () =>
+  {
+    // Arrange- the healed battler is in its own allied list, and reacting to itself here would
+    // double every onSelf tag it already processed.
+    const note = {};
+    const healTarget = buildBattler('healed', [ note ]);
+    const observer = buildBattler('observer', []);
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnAllyHpHealMp) return [ [ 50, 5 ] ];
+      return [];
+    });
+    stageObserver(healTarget, observer, 1);
+
+    // Act
+    HealEventManager.dispatch(healTarget, 'hp', 100);
+
+    // Assert
+    expect(healTarget.gainMpFromResource).not.toHaveBeenCalled();
+  });
+
+  it('lets an observer react when the healed ally is inside its tag range', () =>
+  {
+    // Arrange
+    const note = {};
+    const healTarget = buildBattler('healed', []);
+    const observer = buildBattler('observer', [ note ]);
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnAllyHpHealMp) return [ [ 50, 5 ] ];
+      return [];
+    });
+    stageObserver(healTarget, observer, 3);
+
+    // Act
+    HealEventManager.dispatch(healTarget, 'hp', 100);
+
+    // Assert
+    expect(observer.gainMpFromResource).toHaveBeenCalledWith(50);
+  });
+
+  it('holds an observer to its own per-tag depth cap', () =>
+  {
+    // Arrange
+    const note = {};
+    const healTarget = buildBattler('healed', []);
+    const observer = buildBattler('observer', [ note ]);
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnAllyHpHealMp) return [ [ 50, 5, 0 ] ];
+      return [];
+    });
+    stageObserver(healTarget, observer, 1);
+    HealEventManager._currentDepth = 1;
+
+    // Act
+    HealEventManager.dispatch(healTarget, 'hp', 100);
+
+    // Assert
+    expect(observer.gainMpFromResource).not.toHaveBeenCalled();
+  });
+
+  it('applies nothing to an observer when its proportion rounds down to zero', () =>
+  {
+    // Arrange
+    const note = {};
+    const healTarget = buildBattler('healed', []);
+    const observer = buildBattler('observer', [ note ]);
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnAllyHpHealMp) return [ [ 1, 5 ] ];
+      return [];
+    });
+    stageObserver(healTarget, observer, 1);
+
+    // Act
+    HealEventManager.dispatch(healTarget, 'hp', 10);
+
+    // Assert
+    expect(observer.gainMpFromResource).not.toHaveBeenCalled();
+  });
+  //endregion what an onlooking ally reacts to
 });
 //endregion plugins/resources/_component/heal-event-manager.test.js

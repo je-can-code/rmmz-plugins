@@ -307,9 +307,120 @@ describe('RPGManager', () =>
     });
   });
 
+  describe('getSumFromNoteByRegex', () =>
+  {
+    it('sums every match on one note rather than keeping the last', () =>
+    {
+      // Arrange- this is the whole distinction from getNumberFromNoteByRegex. A bonus declared twice on
+      // one row means both apply; keeping only the last would discard one silently.
+      const data = { note: '<n:3>\n<n:5>' };
+      const re = /<n:([\d.]+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromNoteByRegex(data, re);
+
+      // Assert
+      expect(result).toBe(8);
+    });
+
+    it('parses decimals while summing', () =>
+    {
+      // Arrange
+      const data = { note: '<n:1.5>\n<n:2.25>' };
+      const re = /<n:([\d.]+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromNoteByRegex(data, re);
+
+      // Assert
+      expect(result).toBe(3.75);
+    });
+
+    it('returns 0 when nothing matched and nullIfEmpty is false', () =>
+    {
+      // Arrange
+      const data = { note: '<other:4>' };
+      const re = /<n:(\d+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromNoteByRegex(data, re, false);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('returns null when nothing matched and nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const data = { note: '<other:4>' };
+      const re = /<n:(\d+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toBe(null);
+    });
+
+    it('returns the zero it actually summed rather than null when tags were present', () =>
+    {
+      // Arrange- "matched tags totalling zero" and "matched no tags at all" are different answers, and a
+      // caller opting into nullIfEmpty is asking to tell them apart. Testing the total alone cannot.
+      const data = { note: '<n:0>\n<n:0>' };
+      const re = /<n:(\d+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('returns 0 for an unparsable database object when nullIfEmpty is false', () =>
+    {
+      // Arrange
+      const re = /<n:(\d+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromNoteByRegex(null, re, false);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('returns null for an unparsable database object when nullIfEmpty is true', () =>
+    {
+      // Arrange
+      const re = /<n:(\d+)>/;
+
+      // Act
+      const result = RPGManager.getSumFromNoteByRegex(null, re, true);
+
+      // Assert
+      expect(result).toBe(null);
+    });
+  });
+
   describe('getSumFromAllNotesByRegex', () =>
   {
-    it('sums the last value from each database object', () =>
+    it('sums within each note as well as across them', () =>
+    {
+      // Arrange- one row carrying two of the same bonus is exactly what a merged note produces, so the
+      // across-objects sum has to see both contributions rather than the last one.
+      const re = /<n:(\d+)>/;
+      const rows = [
+        { note: '<n:1>\n<n:2>' },
+        { note: '<n:4>' },
+      ];
+
+      // Act
+      const result = RPGManager.getSumFromAllNotesByRegex(rows, re);
+
+      // Assert
+      expect(result).toBe(7);
+    });
+
+    it('sums a single value from each database object', () =>
     {
       // Arrange
       const re = /<n:(\d+)>/;
@@ -1259,5 +1370,297 @@ describe('RPGManager', () =>
       expect(result).toBe(0);
     });
   });
+
+  //region rolling with fate on the scale
+  describe('countSuccessesFateOf100', () =>
+  {
+    /**
+     * Builds a battler with the two fate-override flags set explicitly.
+     * @param {boolean} lucky Whether every attempt counts as a success.
+     * @param {boolean} cursed Whether no attempt can ever succeed.
+     * @returns {object} The roller.
+     */
+    const buildRoller = (lucky, cursed) => ({
+      isVeryLucky: () => lucky,
+      isVeryCursed: () => cursed,
+    });
+
+    it('counts every attempt as a success under an absolute blessing', () =>
+    {
+      // Arrange
+      const roller = buildRoller(true, false);
+
+      // Act
+      const successes = RPGManager.countSuccessesFateOf100(roller, 1, 5);
+
+      // Assert- a 1% chance still lands all five, which is what "absolute" means here.
+      expect(successes).toBe(5);
+    });
+
+    it('counts nothing as a success under an absolute curse', () =>
+    {
+      // Arrange
+      const roller = buildRoller(false, true);
+
+      // Act
+      const successes = RPGManager.countSuccessesFateOf100(roller, 100, 5);
+
+      // Assert- and a guaranteed chance still lands none.
+      expect(successes).toBe(0);
+    });
+
+    it('rolls normally when neither fate flag is set', () =>
+    {
+      // Arrange
+      const roller = buildRoller(false, false);
+
+      // Act
+      const successes = RPGManager.countSuccessesFateOf100(roller, 100, 3);
+
+      // Assert
+      expect(successes).toBe(3);
+    });
+  });
+
+  describe('resolveProcCount', () =>
+  {
+    /**
+     * Builds a battler with every knob this resolution reads.
+     * @param {object} overrides Which knobs to change.
+     * @returns {object} The roller.
+     */
+    const buildRoller = (overrides = {}) => ({
+      isVeryLucky: () => false,
+      isVeryCursed: () => false,
+      isAccumulating: () => false,
+      getEncoreRepeats: () => 0,
+      ...overrides,
+    });
+
+    it('resolves an ordinary success to exactly one execution', () =>
+    {
+      // Arrange
+      const roller = buildRoller();
+
+      // Act
+      const count = RPGManager.resolveProcCount(roller, 100, 1, 0);
+
+      // Assert
+      expect(count).toBe(1);
+    });
+
+    it('resolves an ordinary failure to none', () =>
+    {
+      // Arrange
+      const roller = buildRoller();
+
+      // Act
+      const count = RPGManager.resolveProcCount(roller, 0, 1, 0);
+
+      // Assert
+      expect(count).toBe(0);
+    });
+
+    it('counts every roll under Accumulate Mode instead of stopping at the first success', () =>
+    {
+      // Arrange- accumulating turns a proc from "did it happen" into "how many times", which is the
+      // whole reason this entry point exists separately from `fateOf100`.
+      const roller = buildRoller({ isAccumulating: () => true });
+
+      // Act
+      const count = RPGManager.resolveProcCount(roller, 100, 4, 0);
+
+      // Assert
+      expect(count).toBe(4);
+    });
+
+    it('echoes each success by the roller\'s encore repeats', () =>
+    {
+      // Arrange- one success, echoing twice more, is three executions.
+      const roller = buildRoller({ getEncoreRepeats: () => 2 });
+
+      // Act
+      const count = RPGManager.resolveProcCount(roller, 100, 1, 0);
+
+      // Assert
+      expect(count).toBe(3);
+    });
+
+    it('multiplies accumulated successes by the encore repeats rather than adding to them', () =>
+    {
+      // Arrange- two accumulated successes each echoing once more is four, not three.
+      const roller = buildRoller({
+        isAccumulating: () => true,
+        getEncoreRepeats: () => 1,
+      });
+
+      // Act
+      const count = RPGManager.resolveProcCount(roller, 100, 2, 0);
+
+      // Assert
+      expect(count).toBe(4);
+    });
+
+    it('echoes nothing when nothing succeeded in the first place', () =>
+    {
+      // Arrange
+      const roller = buildRoller({ getEncoreRepeats: () => 5 });
+
+      // Act
+      const count = RPGManager.resolveProcCount(roller, 0, 1, 0);
+
+      // Assert
+      expect(count).toBe(0);
+    });
+  });
+  //endregion rolling with fate on the scale
+
+  //region opting into null instead of a sentinel
+  //
+  // Every note reader defaults to a typed sentinel and lets a caller opt into null, because null
+  // carries "the tag is absent" while 0 and [] cannot be told apart from a tag that says zero or
+  // nothing. Callers that opt in immediately coalesce into a plugin-parameter default; the ones that
+  // do not want the sentinel. Both halves of each pair therefore matter.
+  describe('nullIfEmpty across the note readers', () =>
+  {
+    /**
+     * Builds a database row carrying a note that matches nothing this suite looks for.
+     * @returns {object} The row.
+     */
+    const emptyRow = () => ({ note: '<someUnrelatedTag>' });
+
+    it('answers null rather than zero for an absent numeric tag', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getNumberFromNoteByRegex(emptyRow(), /<missingTag:[ ]?(\d+)>/i, true)).toBeNull();
+    });
+
+    it('answers zero for an absent numeric tag by default', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getNumberFromNoteByRegex(emptyRow(), /<missingTag:[ ]?(\d+)>/i)).toBe(0);
+    });
+
+    it('answers null rather than an empty array for an absent array tag', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getArrayFromNotesByRegex(emptyRow(), /<missingTag:[ ]?(\[.*])>/i, true, true)).toBeNull();
+    });
+
+    it('answers null for an array tag read off something that cannot be parsed at all', () =>
+    {
+      // Arrange- a row with no note reaches these readers during boot, before the database is
+      // hydrated.
+      // Act & Assert
+      expect(RPGManager.getArrayFromNotesByRegex(null, /<missingTag:[ ]?(\[.*])>/i, true, true)).toBeNull();
+    });
+
+    it('answers an empty array for an unparseable row by default', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getArrayFromNotesByRegex(null, /<missingTag:[ ]?(\[.*])>/i)).toEqual([]);
+    });
+
+    it('answers an empty array for a strings tag on an unparseable row', () =>
+    {
+      // Arrange- every note reader is handed rows during boot that have no note yet, so each one
+      // needs its own proof that it turns them away rather than reading through them.
+      // Act & Assert
+      expect(RPGManager.getStringsFromNoteByRegex(null, /<id:(\w+)>/)).toEqual([]);
+    });
+
+    it('answers null rather than an empty array for a strings tag on an unparseable row', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getStringsFromNoteByRegex(null, /<id:(\w+)>/, true)).toBeNull();
+    });
+
+    it('answers an empty array for a numbers tag on an unparseable row', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getNumbersFromNoteByRegex(null, /<n:(\d+)>/)).toEqual([]);
+    });
+
+    it('answers null rather than an empty array for a numbers tag on an unparseable row', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getNumbersFromNoteByRegex(null, /<n:(\d+)>/, true)).toBeNull();
+    });
+
+    it('answers null rather than zero when summing across an empty collection', () =>
+    {
+      // Arrange- the collection readers short-circuit on an empty list before they ever look at a
+      // note, and that is a separate decision from the per-row emptiness the tests above cover.
+      // Act & Assert
+      expect(RPGManager.getSumFromAllNotesByRegex([], /<n:(\d+)>/, true)).toBeNull();
+    });
+
+    it('answers null rather than zero when resolving results across an empty collection', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getResultsFromAllNotesByRegex([], /<f:\[(.*)]>/, 0, null, true)).toBeNull();
+    });
+
+    it('answers null rather than zero for a formula tag on an unparseable row', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getResultFromNoteByRegex(null, /<missingTag:\[(.*)]>/i, 0, null, true)).toBeNull();
+    });
+
+    it('answers zero for a formula tag on an unparseable row by default', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getResultFromNoteByRegex(null, /<missingTag:\[(.*)]>/i, 0)).toBe(0);
+    });
+
+    it('answers null rather than zero when handed no rows to sum formulas across', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getResultsFromAllNotesByRegex([], /<missingTag:\[(.*)]>/i, 0, null, true)).toBeNull();
+    });
+
+    it('answers zero when handed no rows to sum formulas across by default', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getResultsFromAllNotesByRegex([], /<missingTag:\[(.*)]>/i)).toBe(0);
+    });
+
+    it('answers null rather than false for an absent boolean marker', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.checkForBooleanFromNoteByRegex(emptyRow(), /<missingMarker>/i, true)).toBeNull();
+    });
+
+    it('answers false for an absent boolean marker by default', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.checkForBooleanFromNoteByRegex(emptyRow(), /<missingMarker>/i)).toBe(false);
+    });
+
+    it('answers null rather than an empty list for absent strings across every row', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getStringsFromAllNotesByRegex([ emptyRow() ], /<missingTag:[ ]?(.*)>/i, true)).toBeNull();
+    });
+
+    it('answers null rather than an empty list for an absent multi-string tag on one row', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getStringsFromNoteByRegex(emptyRow(), /<missingTag:[ ]?(.*)>/i, true)).toBeNull();
+    });
+
+    it('answers null rather than an empty list for an absent numeric array tag', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getNumbersFromNoteByRegex(emptyRow(), /<missingTag:[ ]?(\[.*])>/i, true)).toBeNull();
+    });
+
+    it('answers an empty list for an absent numeric array tag by default', () =>
+    {
+      // Arrange & Act & Assert
+      expect(RPGManager.getNumbersFromNoteByRegex(emptyRow(), /<missingTag:[ ]?(\[.*])>/i)).toEqual([]);
+    });
+  });
+  //endregion opting into null instead of a sentinel
 });
 //endregion plugins/_base/_component/rpg-manager.test.js

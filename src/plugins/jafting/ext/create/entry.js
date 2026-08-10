@@ -8,6 +8,9 @@ import './__models/CraftingCreationSession.js';
 
 import './_metadata/initialization.js';
 
+import './managers/RecipeSpendResolver.js';
+
+import './database/RPG_Base.js';
 import './objects/Game_Party.js';
 import './objects/Game_System.js';
 import './windows/Window_CreationDescription.js';
@@ -18,6 +21,8 @@ import './windows/Window_RecipeDetails.js';
 import './windows/Window_RecipeIngredientList.js';
 import './windows/Window_RecipeToolList.js';
 import './windows/Window_RecipeOutputList.js';
+import './windows/Window_IngredientSelection.js';
+import './windows/Window_CraftConfirmation.js';
 import './scenes/Scene_JaftingCreate.js';
 import './scenes/Scene_Jafting.js';
 import './windows/Window_JaftingList.js';

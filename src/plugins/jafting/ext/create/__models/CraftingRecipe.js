@@ -97,11 +97,24 @@ class CraftingRecipe
 
   /**
    * Checks if the party has the required materials to perform the crafting.
+   *
+   * Ingredients are allocated against a single shared tally rather than checked independently. Two
+   * slots that can both be filled by the same stack would each see the party's full count and both
+   * report satisfied - and since `Game_Party.gainItem` clamps at zero, the second `loseItem` would
+   * quietly do nothing and the player would pay once for two ingredients. Overlapping eligibility is
+   * the normal case once slots are categorical, so the tally is what keeps the answer honest.
+   *
+   * Tools are checked against raw inventory because they are never consumed and therefore never
+   * compete for a stack.
+   * @returns {boolean}
    */
   canCraft()
   {
-    // check over all ingredients to see if we have enough to craft recipe.
-    const hasIngredients = this.ingredients.every(component => component.hasEnough());
+    /** @type {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>} */
+    const tally = new Map();
+
+    // allocate in authored order, deducting as each slot claims what it needs.
+    const hasIngredients = this.ingredients.every(component => component.allocateFrom(tally));
 
     // check over all tools to see if we have them on-hand to craft this recipe.
     const hasTools = this.tools.every(component => component.hasEnough());
@@ -112,24 +125,131 @@ class CraftingRecipe
   }
 
   /**
+   * How many times in a row this recipe could be crafted with what the party is holding.
+   *
+   * **Crafting a batch is a shortcut for pressing craft that many times, and nothing more.** So the ceiling is
+   * simply how many repetitions the stock survives - no substituting a Colossal Gelatin once the Big ones run out,
+   * because the player named the entry they wanted spent and a batch must not quietly decide otherwise.
+   *
+   * Demand is summed per entry rather than per slot: a recipe wanting two gels, both filled by Big Gelatin, spends
+   * two of them per craft, so twenty-four in stock is twelve crafts and not twenty-four.
+   *
+   * Tools never bound this. They are checked before crafting and never consumed, so holding one is holding enough
+   * for any number of repetitions.
+   * @param {Map<number, RPG_Item|RPG_Weapon|RPG_Armor>} selections The entry chosen for each categorical slot.
+   * @returns {number} The most repetitions the stock allows, or zero when even one is out of reach.
+   */
+  maxCraftableCount(selections = new Map())
+  {
+    if (!this.canCraft()) return 0;
+
+    /** @type {Map<RPG_Item|RPG_Weapon|RPG_Armor, number>} */
+    const demandPerEntry = new Map();
+
+    this.ingredients.forEach((component, index) =>
+    {
+      const chosen = selections.has(index)
+        ? selections.get(index)
+        : component.getItem();
+
+      // a currency slot answers with no entry; those are tallied by their own accounting below.
+      if (chosen === null) return;
+
+      const alreadyWanted = demandPerEntry.get(chosen) ?? 0;
+
+      demandPerEntry.set(chosen, alreadyWanted + component.quantity());
+    });
+
+    let ceiling = Number.MAX_SAFE_INTEGER;
+
+    demandPerEntry.forEach((wantedPerCraft, entry) =>
+    {
+      const held = $gameParty.numItems(entry);
+
+      ceiling = Math.min(ceiling, Math.floor(held / wantedPerCraft));
+    });
+
+    // gold and panel points hold no entry, so they are measured against what the component itself can see.
+    this.ingredients
+      .filter(component => !component.isDatabaseEntry())
+      .forEach(component =>
+      {
+        const affordable = Math.floor(component.getHandledQuantity() / component.quantity());
+
+        ceiling = Math.min(ceiling, affordable);
+      });
+
+    return Math.max(0, ceiling);
+  }
+
+  /**
+   * The indices of every ingredient that needs the player to choose which entry fills it.
+   *
+   * Only ingredients are listed. Tools may be categorical too, but they are never consumed, so which
+   * eligible tool the party happens to hold cannot change anything and asking would be noise.
+   * @returns {number[]}
+   */
+  categoricalIngredientIndices()
+  {
+    const indices = [];
+
+    this.ingredients.forEach((component, index) =>
+    {
+      // a slot naming a specific row has nothing to choose between.
+      if (component.isCategorical()) indices.push(index);
+    });
+
+    return indices;
+  }
+
+  /**
+   * Whether crafting this recipe requires the player to pick entries before it can execute.
+   * @returns {boolean}
+   */
+  needsIngredientSelection()
+  {
+    return this.categoricalIngredientIndices().length > 0;
+  }
+
+  /**
    * Executes the crafting of the recipe.<br>
    * This includes consuming the ingredients, generating the outputs, and improving proficiency.
+   * @param {Map<number, RPG_Item|RPG_Weapon|RPG_Armor>} selections The entry chosen for each
+   * categorical ingredient, keyed by its index in {@link ingredients}.
    */
-  craft()
+  craft(selections = new Map())
   {
-    // consume all the inputs.
-    this.ingredients.forEach(component => component.consume());
+    // consume all the inputs, spending whichever entry was chosen for each categorical slot.
+    this.ingredients.forEach((component, index) => component.consume(selections.get(index)));
 
     // generate all the outputs.
     this.outputs.forEach(component => component.generate());
 
     // stamp ingredient ancestry onto outputs so later refinement stacks still carry salvage lineage for core.
-    JaftingSalvageManager.applyCraftRecipeOutputs(this);
+    JaftingSalvageManager.applyCraftRecipeOutputs(this, selections);
 
     // improve the proficiency for the recipe.
     $gameParty
       .getRecipeTrackingByKey(this.key)
       .improveProficiency();
+  }
+
+  /**
+   * Crafts this recipe a number of times over.
+   *
+   * Deliberately a loop around the single craft rather than a multiplier threaded through it. Batching is a
+   * shortcut for pressing craft repeatedly, so it has to be indistinguishable from having done exactly that -
+   * every repetition earns its own proficiency, and every output carries its own dismantle stamp rather than one
+   * merged record covering the batch.
+   * @param {number} count How many times to craft.
+   * @param {Map<number, RPG_Item|RPG_Weapon|RPG_Armor>} selections The entry chosen for each categorical slot.
+   */
+  craftMany(count, selections = new Map())
+  {
+    for (let repetition = 0; repetition < count; repetition++)
+    {
+      this.craft(selections);
+    }
   }
 
   /**

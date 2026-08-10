@@ -35,5 +35,36 @@ describe('J-MAP metadata (direct src import)', () =>
     // Arrange & Act & Assert
     expect(globalThis.J.MAP.Metadata.overlapOpacity).toBe(0.4);
   });
+
+  describe('unconfigured parameters', () =>
+  {
+    it('falls back to its shipped defaults when the project never set any parameters', async () =>
+    {
+      // Arrange- a project that installs the minimap and never opens its parameter panel gets an
+      // empty parameter object. The negative coordinates are the "auto-place me" sentinel rather
+      // than a literal position, and both toggles default on so the minimap is visible out of the box.
+      //
+      // Constructed directly under its own name rather than re-imported: `PluginMetadata` keeps a
+      // static registry of every plugin it has seen and throws on a duplicate, and that registry
+      // outlives `vi.resetModules()` because the class reaches this realm as a bare global.
+      const { default: Metadata } = await import('../../../../src/plugins/map/core/_metadata/_pluginMetadata.js');
+      const previous = globalThis.PluginManager;
+      globalThis.PluginManager = {
+        parameters: () => ({}),
+        registerCommand() {},
+      };
+
+      // Act
+      const metadata = new Metadata('J-MAP-Unconfigured', '1.0.0');
+      globalThis.PluginManager = previous;
+
+      // Assert
+      expect(metadata.minimapX).toBe(-1);
+      expect(metadata.minimapY).toBe(-1);
+      expect(metadata.startVisible).toBe(true);
+      expect(metadata.respectHudHide).toBe(true);
+      expect(metadata.overlapOpacity).toBe(0.4);
+    });
+  });
 });
 //endregion plugins/map/_component/metadata.test.js
