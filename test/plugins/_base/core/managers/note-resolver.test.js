@@ -236,6 +236,65 @@ describe('NoteResolver (direct src import)', () =>
   //endregion bucketing
 
   //region merging buckets
+  describe('_sumScalarLines', () =>
+  {
+    it('totals two single scalar lines', () =>
+    {
+      // Act
+      const result = NoteResolver._sumScalarLines([ '<k:2>' ], [ '<k:3>' ]);
+
+      // Assert
+      expect(result).toBe('<k:5>');
+    });
+
+    it('declines when the base side holds more than one line', () =>
+    {
+      // Act
+      const result = NoteResolver._sumScalarLines([ '<k:1>', '<k:2>' ], [ '<k:3>' ]);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('declines when the overlay side holds more than one line', () =>
+    {
+      // Arrange & Act- the other half of the same guard; testing only the base side leaves this one
+      // free to be deleted.
+      const result = NoteResolver._sumScalarLines([ '<k:1>' ], [ '<k:2>', '<k:3>' ]);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('declines when only the base side is a formula', () =>
+    {
+      // Arrange & Act- each operand of the shape guard needs a case where it alone is the reason,
+      // otherwise whichever is checked second can be removed unnoticed.
+      const result = NoteResolver._sumScalarLines([ '<k:[a.atk]>' ], [ '<k:3>' ]);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('declines when only the overlay side is a formula', () =>
+    {
+      // Act
+      const result = NoteResolver._sumScalarLines([ '<k:2>' ], [ '<k:[a.def]>' ]);
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('totals decimals without trailing float dust', () =>
+    {
+      // Arrange & Act- 0.1 + 0.2 is 0.30000000000000004 in binary floating point.
+      const result = NoteResolver._sumScalarLines([ '<k:0.1>' ], [ '<k:0.2>' ]);
+
+      // Assert
+      expect(result).toBe('<k:0.3>');
+    });
+  });
+
   describe('_mergeBuckets', () =>
   {
     /**
@@ -308,6 +367,88 @@ describe('NoteResolver (direct src import)', () =>
 
       // Assert
       expect(merged.map.k).toEqual([ '<k:1>' ]);
+    });
+
+    it('keeps the base lines when the overlay bucket for that key is empty', () =>
+    {
+      // Arrange- present-but-empty is not the same as absent, and it must not be read as the overlay
+      // having something to say.
+      const oldBuckets = buildBuckets({ k: [ '<k:1>' ] });
+      const newBuckets = buildBuckets({ k: [] });
+
+      // Act
+      const merged = NoteResolver._mergeBuckets(oldBuckets, newBuckets, []);
+
+      // Assert
+      expect(merged.map.k).toEqual([ '<k:1>' ]);
+    });
+
+    it('totals two scalar values into one line for a summing key', () =>
+    {
+      // Arrange- the same material refined twice. Keeping both lines cannot work, because a note that
+      // carries an exact duplicate loses one of them the moment it is bucketed again.
+      const oldBuckets = buildBuckets({ bonushits: [ '<bonusHits:2>' ] });
+      const newBuckets = buildBuckets({ bonushits: [ '<bonusHits:2>' ] });
+
+      // Act
+      const merged = NoteResolver._mergeBuckets(oldBuckets, newBuckets, [], [ 'bonushits' ]);
+
+      // Assert
+      expect(merged.map.bonushits).toEqual([ '<bonusHits:4>' ]);
+    });
+
+    it('totals a negative scalar downward rather than treating it as a magnitude', () =>
+    {
+      // Arrange
+      const oldBuckets = buildBuckets({ k: [ '<k:10>' ] });
+      const newBuckets = buildBuckets({ k: [ '<k:-4>' ] });
+
+      // Act
+      const merged = NoteResolver._mergeBuckets(oldBuckets, newBuckets, [], [ 'k' ]);
+
+      // Assert
+      expect(merged.map.k).toEqual([ '<k:6>' ]);
+    });
+
+    it('keeps the base spelling of a summing key rather than recasing it', () =>
+    {
+      // Arrange- the buckets key case-insensitively, so the surviving line has to come from somewhere;
+      // taking the overlay's spelling would rewrite a tag the base's author wrote.
+      const oldBuckets = buildBuckets({ k: [ '<bonusHits:1>' ] });
+      const newBuckets = buildBuckets({ k: [ '<BONUSHITS:1>' ] });
+
+      // Act
+      const merged = NoteResolver._mergeBuckets(oldBuckets, newBuckets, [], [ 'k' ]);
+
+      // Assert
+      expect(merged.map.k).toEqual([ '<bonusHits:2>' ]);
+    });
+
+    it('accumulates instead of replacing when a summing key holds a formula', () =>
+    {
+      // Arrange- a mis-declared summing key must not discard what the base had. Falling back to replace
+      // would lose the base's formula entirely, which is worse than an unmerged pair.
+      const oldBuckets = buildBuckets({ k: [ '<k:[a.atk * 2]>' ] });
+      const newBuckets = buildBuckets({ k: [ '<k:[a.def * 3]>' ] });
+
+      // Act
+      const merged = NoteResolver._mergeBuckets(oldBuckets, newBuckets, [], [ 'k' ]);
+
+      // Assert
+      expect(merged.map.k).toEqual([ '<k:[a.atk * 2]>', '<k:[a.def * 3]>' ]);
+    });
+
+    it('accumulates instead of summing when a side already carries several lines', () =>
+    {
+      // Arrange- two lines under one key is not a scalar, whatever the values look like.
+      const oldBuckets = buildBuckets({ k: [ '<k:1>', '<k:2>' ] });
+      const newBuckets = buildBuckets({ k: [ '<k:5>' ] });
+
+      // Act
+      const merged = NoteResolver._mergeBuckets(oldBuckets, newBuckets, [], [ 'k' ]);
+
+      // Assert
+      expect(merged.map.k).toEqual([ '<k:1>', '<k:2>', '<k:5>' ]);
     });
 
     it('appends overlay-only keys after the base keys', () =>

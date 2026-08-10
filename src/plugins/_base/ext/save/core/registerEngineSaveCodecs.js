@@ -247,6 +247,7 @@ SerializableRegistry.register(Game_Actor, {
     '_j._base._cachedAllNotes': () => null,
     '_j._base._cachedMaxTpBonuses': () => null,
     '_j._base._cachedHarFactor': () => null,
+    '_j._base._cachedEquipContributions': () => null,
   },
 });
 

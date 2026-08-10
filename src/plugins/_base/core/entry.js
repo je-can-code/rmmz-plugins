@@ -98,6 +98,7 @@ import './windows/Window_ControlLegend.js';
 import './windows/Window_Dimmer.js';
 import './windows/Window_EquipItem.js';
 import './windows/Window_Help.js';
+import './windows/Window_ItemList.js';
 import './windows/Window_MoreData.js';
 import './windows/Window_Selectable.js';
 import './windows/Window_ChoiceList.js';

@@ -12,12 +12,16 @@
  * merge that consulted a global would silently produce different results once another plugin registered
  * a key. Passing the policy in makes the output a function of nothing but its arguments.
  *
- * Two behaviors, and they line up with how the tags are read back:
+ * Three behaviors, and they line up with how the tags are read back:
  * - **replace** (the default) suits a tag read by a scalar reader like
  *   {@link RPGManager.getNumberFromNoteByRegex}, which takes the last match on a note and ignores the
  *   rest. Appending a second one would silently discard the first.
  * - **accumulate** suits a tag read by a collecting reader like
  *   {@link RPGManager.getArraysFromNotesByRegex}, where every occurrence contributes.
+ * - **sum** suits a numeric tag that should total rather than choose between two values. Stacking those
+ *   as repeated lines cannot work: {@link #_toKeyBuckets} drops an exact duplicate line *within* a single
+ *   note, so `<bonusHits:2>` written twice collapses to one and reads as two forever. Totalling them into
+ *   one line is the only representation that survives being merged again.
  */
 class NoteResolver
 {
@@ -53,9 +57,12 @@ class NoteResolver
    * @param {string} overlayNote The note being merged in.
    * @param {string[]} accumulatingKeys Keys that gain the overlay's lines instead of being replaced by
    * them. Empty means every key replaces, which is the conservative reading.
+   * @param {string[]} summingKeys Keys whose two scalar values total into one line. A key listed here that
+   * does not hold a single plain number on each side falls back to accumulating, never to replacing, so a
+   * mis-declared key cannot silently discard what the base already had.
    * @returns {string} The merged note, newline-joined.
    */
-  static merge(baseNote, overlayNote, accumulatingKeys = [])
+  static merge(baseNote, overlayNote, accumulatingKeys = [], summingKeys = [])
   {
     // database rows routinely carry null notes, so both sides normalize to empty before tokenizing.
     const oldNote = baseNote || String.empty;
@@ -69,8 +76,8 @@ class NoteResolver
     const oldBuckets = this._toKeyBuckets(oldTokens.tags);
     const newBuckets = this._toKeyBuckets(newTokens.tags);
 
-    // apply replace-or-accumulate per key.
-    const merged = this._mergeBuckets(oldBuckets, newBuckets, accumulatingKeys);
+    // apply replace, accumulate, or sum per key.
+    const merged = this._mergeBuckets(oldBuckets, newBuckets, accumulatingKeys, summingKeys);
 
     // free-form lines are kept from both, base order first.
     const mergedUnsupported = this._mergeUnsupported(oldTokens.unsupported, newTokens.unsupported);
@@ -230,9 +237,10 @@ class NoteResolver
    * @param {{order: string[], map: Record<string, string[]>}} oldBuckets The base note's buckets.
    * @param {{order: string[], map: Record<string, string[]>}} newBuckets The overlay note's buckets.
    * @param {string[]} accumulatingKeys Keys that gain the overlay's lines rather than being replaced.
+   * @param {string[]} summingKeys Keys whose two scalar values total into one line.
    * @returns {{ order: string[], map: Record<string, string[]> }} The merged buckets.
    */
-  static _mergeBuckets(oldBuckets, newBuckets, accumulatingKeys)
+  static _mergeBuckets(oldBuckets, newBuckets, accumulatingKeys, summingKeys = [])
   {
     const mergedMap = Object.create(null);
     const mergedOrder = [];
@@ -256,21 +264,38 @@ class NoteResolver
     // step 1: walk old keys first to preserve their order baseline.
     oldBuckets.order.forEach(key =>
     {
-      const accumulates = accumulatingKeys.includes(key);
       const oldLines = oldBuckets.map[key];
       const newLines = newBuckets.map[key];
-      const overlayHasAny = newLines && newLines.length > 0;
 
-      // a replacing key hands the whole bucket over to the overlay.
-      if (overlayHasAny && accumulates === false)
+      // a genuine boolean, because the branches below compare against false explicitly - the bucket map
+      // is prototype-less, so a key the overlay never mentioned reads as undefined rather than absent.
+      const overlayHasAny = newLines !== undefined && newLines.length > 0;
+
+      // the overlay said nothing about this key, so it stands.
+      if (overlayHasAny === false)
       {
-        appendKey(key, newLines);
+        appendKey(key, oldLines);
 
         return;
       }
 
-      // an accumulating key keeps what it had and takes what is new to it.
-      if (accumulates && overlayHasAny)
+      // a summing key totals its two scalars into one line.
+      if (summingKeys.includes(key))
+      {
+        const summed = this._sumScalarLines(oldLines, newLines);
+
+        if (summed !== null)
+        {
+          appendKey(key, [ summed ]);
+
+          return;
+        }
+      }
+
+      // an accumulating key keeps what it had and takes what is new to it. A summing key that could not
+      // be totalled lands here too rather than falling through to replacement, because losing the base's
+      // value is the one outcome worse than an unmerged pair of lines.
+      if (accumulatingKeys.includes(key) || summingKeys.includes(key))
       {
         const combined = oldLines.slice(0);
 
@@ -284,8 +309,8 @@ class NoteResolver
         return;
       }
 
-      // the overlay said nothing about this key, so it stands.
-      appendKey(key, oldLines);
+      // a replacing key hands the whole bucket over to the overlay.
+      appendKey(key, newLines);
     });
 
     // step 2: append any keys only the overlay had, in its own order.
@@ -298,6 +323,38 @@ class NoteResolver
       order: mergedOrder,
       map: mergedMap,
     };
+  }
+
+  /**
+   * Totals two single-line scalar tags into one line, or reports that it cannot.
+   *
+   * Both sides must hold exactly one line, and both values must read as a plain number. A key already
+   * carrying several lines is not a scalar - whatever it is, adding it up would be inventing a number
+   * nobody wrote - so it declines rather than guessing.
+   *
+   * The base's spelling of the key is kept, so a merge never quietly recases a tag the author wrote.
+   * @param {string[]} oldLines The base note's lines for this key.
+   * @param {string[]} newLines The overlay note's lines for this key.
+   * @returns {string|null} The totalled line, or null when the pair is not two scalars.
+   */
+  static _sumScalarLines(oldLines, newLines)
+  {
+    // a key holding more than one line is something other than a scalar.
+    if (oldLines.length !== 1 || newLines.length !== 1) return null;
+
+    const scalarShape = /^<([^:]+):\s*(-?\d+(?:\.\d+)?)\s*>$/;
+    const oldMatch = oldLines[0].match(scalarShape);
+    const newMatch = newLines[0].match(scalarShape);
+
+    // either side holding a formula, an array, or prose is not summable.
+    if (oldMatch === null || newMatch === null) return null;
+
+    const total = parseFloat(oldMatch[2]) + parseFloat(newMatch[2]);
+
+    // rounded to shed the float dust two decimals can produce, then re-parsed to drop a trailing zero.
+    const tidied = parseFloat(total.toFixed(4));
+
+    return `<${oldMatch[1]}:${tidied}>`;
   }
 
   /**

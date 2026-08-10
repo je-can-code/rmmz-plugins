@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.3.0 JAFTING-REFINE] An extension for JAFTING to enable equip refinement.
+ * [v1.4.0 JAFTING-REFINE] An extension for JAFTING to enable equip refinement.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -148,6 +148,45 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.4.0
+ *    A refinement now costs the base exactly one count, whatever the donor had
+ *    accumulated. Previously a donor's own history was added to the output and
+ *    charged against the base's ceiling, which meant a fully-refined weapon
+ *    could not be spent on anything - the pairing was barred before it could be
+ *    offered. A maxed donor hands over everything it gathered for the price of a
+ *    single count, which is what makes building one worth doing.
+ *    The refine-count ceiling no longer consults the donor either, so the case
+ *    that used to read as an unexplained refusal now simply projects one more
+ *    than the base has spent.
+ *    Added the transferrableEffectsBelow note tag, the note-side counterpart to
+ *    the divider trait. Everything above it describes what an equip is and never
+ *    leaves it; everything below is what a donor hands over when consumed. An
+ *    equip without the tag offers no note effects at all - the absence means
+ *    nothing transfers rather than everything does, which is what keeps an
+ *    equip's own identity from being launderable.
+ *    Note effects now merge on refinement, where previously only traits did. The
+ *    base keeps its retained half verbatim and the two transferable halves
+ *    combine beneath a fresh divider, so an output is itself donatable. Numeric
+ *    tags total, distinct formulas and arrays stack side by side, and identical
+ *    lines collapse to one.
+ *    The refinement result column shows what an equip will be worth rather than
+ *    the raw trait values behind it: a before and after per parameter, with the
+ *    percentage responsible in a third column. A percentage landing on a stat the
+ *    item has none of now reads plainly as zero to zero instead of looking like a
+ *    gain.
+ *    Transferable note effects are listed too, as authored - tag key on the left,
+ *    value on the right, both sides shown when a value moves. Nothing interprets
+ *    what a tag means yet, so these read as written rather than as a friendlier
+ *    guess.
+ *    The column headings are drawn on the output's name line and no longer depend
+ *    on a numeric row existing, so switching between donors that grant an amount
+ *    and donors that grant a name stopped moving every row a line.
+ *    An effect the base already carried is no longer dimmed. The rightmost column
+ *    says what happened to every row, and grey is what the donor list already
+ *    uses for rows that cannot be picked.
+ *    Fixed the details panel continuing to project a merge after backing out of
+ *    the donor list. The last-highlighted donor stayed selected internally while
+ *    nothing on screen said which one it was.
  * - 1.3.0
  *    Fixed refinement lineage collapsing on save/load. A refined item's
  *    ancestry was detected by comparing the datum's id against the refinement
@@ -498,6 +537,15 @@ var JaftingManager = class JaftingManager {
 	*/
 	static StartingIndex = 2001;
 	/**
+	* The literal note line separating an equip's own effects from the ones it hands over when consumed.
+	*
+	* Written verbatim onto a refinement output, so a refined equip can itself be donated later. The
+	* matching pattern lives on {@link J.JAFTING.EXT.REFINE.RegExp.TransferrableEffectsBelow}; this is the
+	* text, because a RegExp cannot be turned back into the thing it recognizes.
+	* @type {string}
+	*/
+	static TransferrableEffectsDivider = "<transferrableEffectsBelow>";
+	/**
 	* Parses all traits off the equipment that are below the "divider".
 	* The divider is NOT parameterized, the "collapse effect" trait is the perfect trait
 	* to use for this purpose since it has 0 use on actor equipment.
@@ -512,6 +560,159 @@ var JaftingManager = class JaftingManager {
 		if (availableTraits.length === 0) return Array.empty;
 		const consolidated = TraitResolver.consolidate(availableTraits);
 		return consolidated.map((t) => new JAFTING_Trait(t.code, t.dataId, t.value));
+	}
+	/**
+	* The note text below the transferable divider - what this equip hands over when consumed.
+	*
+	* No divider means no note effects transfer at all. That is the deliberate default and the mirror of
+	* {@link parseTraits}: an equip says what it is willing to give away, and silence means nothing. The
+	* alternative - transferring everything unless told otherwise - would hand a donor's identity over,
+	* including the `<this{PARAM}:N>` bases that make a percentage bounded by the item carrying it.
+	* @param {RPG_EquipItem} equip An equip to read transferable effects from.
+	* @returns {string} The transferable note text, or an empty string when there is none.
+	*/
+	static parseNoteEffects(equip) {
+		const lines = this.#noteLinesOf(equip);
+		const dividerIndex = this.#dividerIndexOf(lines);
+		if (dividerIndex === -1) return String.empty;
+		return lines.slice(dividerIndex + 1).join("\n");
+	}
+	/**
+	* The note text at and above the transferable divider - what an equip keeps no matter what.
+	*
+	* An equip with no divider keeps its whole note, since none of it was ever offered.
+	* @param {RPG_EquipItem} equip An equip to read retained effects from.
+	* @returns {string} The retained note text.
+	*/
+	static parseRetainedNote(equip) {
+		const lines = this.#noteLinesOf(equip);
+		const dividerIndex = this.#dividerIndexOf(lines);
+		if (dividerIndex === -1) {
+			return lines.join("\n");
+		}
+		return lines.slice(0, dividerIndex).join("\n");
+	}
+	/**
+	* Splits a note into its non-empty lines.
+	* @param {RPG_EquipItem} equip The equip whose note to split.
+	* @returns {string[]}
+	*/
+	static #noteLinesOf(equip) {
+		const note = equip.note || String.empty;
+		return note.split(/[\r\n]+/).filter((line) => line.length > 0);
+	}
+	/**
+	* Locates the transferable divider among a note's lines.
+	* @param {string[]} lines The note's lines.
+	* @returns {number} The divider's line index, or -1 when absent.
+	*/
+	static #dividerIndexOf(lines) {
+		const pattern = J.JAFTING.EXT.REFINE.RegExp.TransferrableEffectsBelow;
+		return lines.findIndex((line) => pattern.test(line));
+	}
+	/**
+	* Decides how each tag key in a pair of transferable notes should merge.
+	*
+	* Derived from the shape of the values rather than from a list of known keys, because the divider is
+	* what declares a tag transferable - so the set of keys that can arrive here is whatever an author
+	* writes, not something this plugin can enumerate ahead of time.
+	*
+	* A key whose every value is a plain number **sums**: two `<bonusHits:2>` become four hits, which is
+	* what a player refining the same material twice expects. Everything else - arrays, formulas, booleans,
+	* prose - **accumulates**: distinct lines stack side by side, and identical ones collapse to one, which
+	* lands exactly where the same formula appearing twice ought to.
+	* @param {string} baseNote The base's transferable note text.
+	* @param {string} overlayNote The donor's transferable note text.
+	* @returns {{accumulatingKeys: string[], summingKeys: string[]}}
+	*/
+	static transferPolicyFor(baseNote, overlayNote) {
+		const scalarShape = /^<([^:]+):\s*(-?\d+(?:\.\d+)?)\s*>$/;
+		const tags = [...this.#tagsOf(baseNote), ...this.#tagsOf(overlayNote)];
+		const scalarByKey = new Map();
+		tags.forEach((tag) => {
+			const inner = tag.substring(1, tag.length - 1);
+			const colonIndex = inner.indexOf(":");
+			const rawKey = colonIndex === -1 ? inner : inner.substring(0, colonIndex);
+			const key = rawKey.trim().toLowerCase();
+			const isScalar = scalarShape.test(tag);
+			if (scalarByKey.has(key) === false) {
+				scalarByKey.set(key, isScalar);
+				return;
+			}
+			if (isScalar === false) scalarByKey.set(key, false);
+		});
+		const summingKeys = [];
+		const accumulatingKeys = [];
+		scalarByKey.forEach((isScalar, key) => {
+			if (isScalar) {
+				summingKeys.push(key);
+				return;
+			}
+			accumulatingKeys.push(key);
+		});
+		return {
+			accumulatingKeys,
+			summingKeys
+		};
+	}
+	/**
+	* Extracts the angle-bracketed tags from a note.
+	* @param {string} note The note text to read.
+	* @returns {string[]}
+	*/
+	static #tagsOf(note) {
+		const text = note || String.empty;
+		return text.match(/<[^>]+>/g) || [];
+	}
+	/**
+	* Groups a note's tags into their authored values, keyed by tag key.
+	*
+	* Values are kept exactly as written, brackets and all. Nothing here interprets what a tag *means* -
+	* that is a job for a tag registry, and inventing a friendlier reading in the meantime would produce
+	* something confidently wrong rather than something plainly unfinished.
+	*
+	* A boolean tag has no value to report, so its presence is the value.
+	* @param {string} note The note text to read.
+	* @returns {Map<string, string[]>} Each key's authored values, in the order written.
+	*/
+	static tagValuesOf(note) {
+		const values = new Map();
+		this.#tagsOf(note).forEach((tag) => {
+			const inner = tag.substring(1, tag.length - 1);
+			const colonIndex = inner.indexOf(":");
+			const key = colonIndex === -1 ? inner.trim() : inner.substring(0, colonIndex).trim();
+			const value = colonIndex === -1 ? "yes" : inner.substring(colonIndex + 1).trim();
+			if (values.has(key) === false) {
+				values.set(key, []);
+			}
+			const existing = values.get(key);
+			if (existing.includes(value) === false) existing.push(value);
+		});
+		return values;
+	}
+	/**
+	* Pairs the base's transferable note effects against the projected output's, per tag key.
+	*
+	* Only the output's keys are walked, because the merge cannot drop one: every key the base carried is
+	* appended in some form, whether it stood alone, accumulated, or was totalled. A key with no `before`
+	* is therefore genuinely arriving from the donor.
+	* @param {RPG_EquipItem} base The equip being refined.
+	* @param {RPG_EquipItem} result The projected refinement output.
+	* @returns {{key: string, before: (string|null), after: string}[]} One row per key, key-ordered.
+	*/
+	static buildNoteEffectComparison(base, result) {
+		const before = this.tagValuesOf(this.parseNoteEffects(base));
+		const after = this.tagValuesOf(this.parseNoteEffects(result));
+		const rows = [];
+		after.forEach((values, key) => {
+			const beforeValues = before.has(key) ? before.get(key).join(", ") : null;
+			rows.push({
+				key,
+				before: beforeValues,
+				after: values.join(", ")
+			});
+		});
+		return rows.sort((left, right) => left.key.localeCompare(right.key));
 	}
 	/**
 	* Determines the result of refining a given base with a given material.
@@ -534,10 +735,35 @@ var JaftingManager = class JaftingManager {
 			output.traits.splice(dividerIndex + 1);
 		}
 		mergedTraits.forEach((t) => output.traits.push(t));
-		if (material.jaftingRefinedCount > 0) {
-			output.jaftingRefinedCount += material.jaftingRefinedCount - 1;
-		}
+		output.note = this.mergeTransferableNotes(base, material);
 		return output;
+	}
+	/**
+	* Builds the note a refinement output carries.
+	*
+	* The base's retained half is reproduced verbatim, then the two transferable halves are merged and
+	* written back beneath a divider - so the output is itself donatable, carrying forward everything it
+	* was given without ever offering the identity it kept.
+	*
+	* A divider is only written when there is something under it. An output with nothing transferable
+	* should not advertise an empty payload, and an equip that never had a divider should not gain one for
+	* free.
+	* @param {RPG_EquipItem} base The equip being refined.
+	* @param {RPG_EquipItem} material The equip being consumed.
+	* @returns {string} The output's note.
+	*/
+	static mergeTransferableNotes(base, material) {
+		const retained = this.parseRetainedNote(base);
+		const baseTransferable = this.parseNoteEffects(base);
+		const materialTransferable = this.parseNoteEffects(material);
+		const { accumulatingKeys, summingKeys } = this.transferPolicyFor(baseTransferable, materialTransferable);
+		const merged = NoteResolver.merge(baseTransferable, materialTransferable, accumulatingKeys, summingKeys);
+		if (merged.length === 0) return retained;
+		const divider = JaftingManager.TransferrableEffectsDivider;
+		if (retained.length === 0) {
+			return `${divider}\n${merged}`;
+		}
+		return `${retained}\n${divider}\n${merged}`;
 	}
 	/**
 	* Stamps a freshly-merged output equip with the identity a refined row carries: one more refine on
@@ -903,7 +1129,7 @@ J.JAFTING.EXT.REFINE = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.JAFTING.EXT.REFINE.Metadata = new J_CraftingRefinePluginMetadata("J-JAFTING-Refinement", "1.3.0");
+J.JAFTING.EXT.REFINE.Metadata = new J_CraftingRefinePluginMetadata("J-JAFTING-Refinement", "1.4.0");
 /**
 * A helpful mapping of the various messages that we use in JAFTING.
 */
@@ -1015,6 +1241,32 @@ J.JAFTING.EXT.REFINE.RegExp.Unrefinable = /<noRefine>/i;
 J.JAFTING.EXT.REFINE.RegExp.MaxRefineCount = /<maxRefineCount:[ ]?(\d+)>/i;
 J.JAFTING.EXT.REFINE.RegExp.MaxRefinedTraits = /<maxRefinedTraits:[ ]?(\d+)>/i;
 J.JAFTING.EXT.REFINE.RegExp.MaxTraitCount = /<maxTraitCount:[ ]?(\d+)>/i;
+/**
+* Marks the point in a note past which effects are refinement payload.
+*
+* Everything above it describes what the equip *is* and never leaves it; everything below is what a donor
+* hands over when consumed. The absence of this tag means an equip has no note effects to give - not that
+* all of them transfer - which is what keeps a weapon's own identity from being launderable.
+*
+* This is the note-side counterpart to the code-63 trait divider {@link JaftingManager.parseTraits} reads.
+*
+* <pre>
+* Structure:
+*  <transferrableEffectsBelow>
+*
+* Example:
+*  <skillId:1>
+*  <maxRefineCount:6>
+*  <transferrableEffectsBelow>
+*  <bonusHits:2>
+*
+* Translation:
+*  This equip uses skill 1 and refines six times, neither of which transfers.
+*  A donor consuming it hands over two bonus hits.
+* </pre>
+* @type {RegExp}
+*/
+J.JAFTING.EXT.REFINE.RegExp.TransferrableEffectsBelow = /<transferrableEffectsBelow>/i;
 
 //#endregion
 //#region src/plugins/jafting/ext/refine/database/RPG_Base.js
@@ -1386,18 +1638,22 @@ var RefinementEligibility = class RefinementEligibility {
 		return verdict;
 	}
 	/**
-	* Bars a donor that would push the base past how many times it is allowed to be refined.
+	* Bars a donor when the base has already been refined as many times as it is allowed to be.
+	*
+	* The donor itself is not consulted. Every refinement costs the base exactly one count regardless of
+	* how much history the donor brought with it, so what a donor accumulated has no bearing on whether
+	* the base can accept it.
 	*
 	* @param {{ enabled: boolean, iconIndex: number, errorText: string }} verdict The verdict being amended.
-	* @param {RPG_EquipItem} equip The donor being considered.
+	* @param {RPG_EquipItem} _equip The donor being considered, which this ceiling does not depend on.
 	* @param {RPG_EquipItem} baseSelection The chosen base.
 	*/
-	static applyRefineCountCeiling(verdict, equip, baseSelection) {
+	static applyRefineCountCeiling(verdict, _equip, baseSelection) {
 		const cap = baseSelection.jaftingMaxRefineCount;
 		if (cap === 0) {
 			return;
 		}
-		const projected = baseSelection.jaftingRefinedCount + equip.jaftingRefinedCount;
+		const projected = baseSelection.jaftingRefinedCount + 1;
 		if (cap >= projected) {
 			return;
 		}
@@ -2071,24 +2327,6 @@ var Window_RefinementDetails = class Window_RefinementDetails extends Window_Bas
 		return 1;
 	}
 	/**
-	* How much a row moved, in the same units the values display in.
-	*
-	* Every one of the three parameter codes formats as a hundredths shift - codes 21 and 23 as
-	* `(value * 100) - 100`, code 22 as `value * 100` - so the difference between two of them is the same
-	* arithmetic regardless of which code it is.
-	* @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
-	* @returns {number|null} The shift in display units, or null for a code with no numeric reading.
-	*/
-	rowDeltaPoints(row) {
-		const sample = row.after === null ? row.before : row.after;
-		const code = sample.code();
-		if (code !== 21 && code !== 22 && code !== 23) return null;
-		const neutral = this.neutralValueForCode(code);
-		const beforeValue = row.before === null ? neutral : row.before.convertToRmTrait().value;
-		const afterValue = row.after === null ? neutral : row.after.convertToRmTrait().value;
-		return Math.round((afterValue - beforeValue) * 100);
-	}
-	/**
 	* Draws the projected refinement result into the third column, as a before-and-after.
 	*
 	* Only the result is drawn here now. The base and the donor are each visible in their own list, so
@@ -2104,6 +2342,7 @@ var Window_RefinementDetails = class Window_RefinementDetails extends Window_Bas
 		const lh = this.lineHeight();
 		let y = this.columnContentInnerStartY();
 		this.drawTextEx(`\\I[${result.iconIndex}] \\C[6]${this.outputDisplayName(result)}\\C[0]`, x, y, textWidth);
+		this.drawResultComparisonHeadings(x, y, textWidth);
 		y += Math.floor(lh * 1.5);
 		const comparison = this.buildResultComparison(result);
 		if (comparison.length === 0) {
@@ -2111,16 +2350,22 @@ var Window_RefinementDetails = class Window_RefinementDetails extends Window_Bas
 		} else {
 			const quantified = comparison.filter((row) => this.isQuantifiedRow(row));
 			const granted = comparison.filter((row) => !this.isQuantifiedRow(row));
-			if (quantified.length > 0) {
-				y = this.drawResultComparisonHeader(x, y, textWidth);
-				quantified.forEach((row) => {
-					this.drawResultComparisonRow(row, x, y, textWidth);
-					y += lh;
-				});
-				if (granted.length > 0) y += Math.floor(lh * .5);
-			}
+			quantified.forEach((row) => {
+				this.drawResultComparisonRow(row, result, x, y, textWidth);
+				y += lh;
+			});
+			if (quantified.length > 0 && granted.length > 0) y += Math.floor(lh * .5);
 			granted.forEach((row) => {
 				this.drawGrantedRow(row, x, y, textWidth);
+				y += lh;
+			});
+		}
+		const noteEffects = JaftingManager.buildNoteEffectComparison(this.primaryEquip, result);
+		if (noteEffects.length > 0) {
+			y += Math.floor(lh * .5);
+			y = this.drawNoteEffectsHeading(x, y, textWidth);
+			noteEffects.forEach((row) => {
+				this.drawNoteEffectRow(row, x, y, textWidth);
 				y += lh;
 			});
 		}
@@ -2145,7 +2390,7 @@ var Window_RefinementDetails = class Window_RefinementDetails extends Window_Bas
 	* Draws an effect that is had rather than measured, on one full-width line.
 	*
 	* The whole row width goes to the label, because these read as sentences - "Learn: Palate Cleanser" -
-	* and the only column beside it says whether it is arriving or leaving.
+	* and the only column beside it says whether it is arriving, leaving, or staying put.
 	* @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
 	* @param {number} x The column origin.
 	* @param {number} y The vertical position to draw at.
@@ -2155,16 +2400,80 @@ var Window_RefinementDetails = class Window_RefinementDetails extends Window_Bas
 		const { colW } = this.resultComparisonColumns(textWidth);
 		const sample = row.after === null ? row.before : row.after;
 		const iconIndex = sample.convertToRmTrait().iconIndex();
-		const isLost = row.after === null;
-		const isNew = row.before === null;
-		const isCarried = !isLost && !isNew;
 		const labelWidth = textWidth - colW - 8;
-		const name = isCarried ? `\\C[7]${sample.nameAndValue}\\C[0]` : sample.nameAndValue;
-		const label = iconIndex > 0 ? `\\I[${iconIndex}]${name}` : name;
+		const label = iconIndex > 0 ? `\\I[${iconIndex}]${sample.nameAndValue}` : sample.nameAndValue;
 		this.drawTextEx(label, x, y, labelWidth);
-		if (isCarried) return;
-		this.changeTextColor(ColorManager.textColor(isLost ? 18 : 24));
-		this.drawText(isLost ? "lost" : "new", x + labelWidth + 8, y, colW, Window_Base.TextAlignments.Right);
+		this.drawGrantedVerdict(row, x + labelWidth + 8, y, colW);
+	}
+	/**
+	* Draws what became of one granted effect, in the column its numeric siblings use for their modifier.
+	*
+	* Every row gets an answer here, including the ones that arrived untouched. The alternative - dimming
+	* the label of a carried effect and leaving this column empty - meant brightness carried meaning for
+	* one row shape and none for the other, and grey is already what this scene's donor list uses for rows
+	* you cannot pick. A carried effect is the opposite of unavailable.
+	* @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
+	* @param {number} x The verdict column's absolute origin.
+	* @param {number} y The vertical position to draw at.
+	* @param {number} colW The verdict column's width.
+	*/
+	drawGrantedVerdict(row, x, y, colW) {
+		const alignRight = Window_Base.TextAlignments.Right;
+		if (row.after === null) {
+			this.changeTextColor(ColorManager.textColor(18));
+			this.drawText("lost", x, y, colW, alignRight);
+			this.resetTextColor();
+			return;
+		}
+		if (row.before === null) {
+			this.changeTextColor(ColorManager.textColor(24));
+			this.drawText("new", x, y, colW, alignRight);
+			this.resetTextColor();
+			return;
+		}
+		this.changeTextColor(ColorManager.textColor(7));
+		this.drawText("-", x, y, colW, alignRight);
+		this.resetTextColor();
+	}
+	/**
+	* Labels the note-effect block, so a raw tag key is not mistaken for a broken trait row.
+	*
+	* These rows read differently from everything above them - a key as authored on the left, a value as
+	* authored on the right - and saying so is what stops `cdmBuffPlus` looking like a rendering fault.
+	* @param {number} x The column origin.
+	* @param {number} y The vertical position to draw at.
+	* @param {number} textWidth The drawable width of the result column.
+	* @returns {number} The vertical position the first row should start at.
+	*/
+	drawNoteEffectsHeading(x, y, textWidth) {
+		this.modFontSize(-4);
+		this.changeTextColor(ColorManager.textColor(7));
+		this.drawText("note effects", x, y, textWidth, Window_Base.TextAlignments.Left);
+		this.resetTextColor();
+		this.resetFontSettings();
+		return y + this.lineHeight();
+	}
+	/**
+	* Draws one transferable note effect: its tag key, and what its value becomes.
+	*
+	* Presented exactly as authored, because nothing here knows what a tag means. A value that changed
+	* shows both sides so the movement is visible; one arriving from the donor shows only what it will be,
+	* since it had no previous value to move from.
+	* @param {{key: string, before: (string|null), after: string}} row The paired effect.
+	* @param {number} x The column origin.
+	* @param {number} y The vertical position to draw at.
+	* @param {number} textWidth The drawable width of the result column.
+	*/
+	drawNoteEffectRow(row, x, y, textWidth) {
+		const { nameWidth } = this.resultComparisonColumns(textWidth);
+		const valueWidth = textWidth - nameWidth - 8;
+		this.drawText(row.key, x, y, nameWidth, Window_Base.TextAlignments.Left);
+		const isNew = row.before === null;
+		const isUnchanged = row.before === row.after;
+		const valueText = isNew || isUnchanged ? row.after : `${row.before} -> ${row.after}`;
+		const colorIndex = isUnchanged ? 7 : 24;
+		this.changeTextColor(ColorManager.textColor(colorIndex));
+		this.drawText(valueText, x + nameWidth + 8, y, valueWidth, Window_Base.TextAlignments.Right);
 		this.resetTextColor();
 	}
 	/**
@@ -2189,53 +2498,84 @@ var Window_RefinementDetails = class Window_RefinementDetails extends Window_Bas
 		};
 	}
 	/**
-	* Labels the before and after columns so the two numbers on each row are not ambiguous.
+	* Labels the three numeric columns, on the same line as the output's name.
+	*
+	* Drawn on every refresh rather than only when a numeric row exists, so the block beneath keeps one
+	* fixed starting height. Switching between a donor that grants an amount and one that grants a name
+	* otherwise moved every row a line up or down, which read as the panel twitching.
 	* @param {number} x The column origin.
-	* @param {number} y The vertical position to draw at.
+	* @param {number} y The vertical position to draw at, shared with the output's name.
 	* @param {number} textWidth The drawable width of the result column.
-	* @returns {number} The vertical position the first row should start at.
 	*/
-	drawResultComparisonHeader(x, y, textWidth) {
-		const { beforeX, afterX, colW } = this.resultComparisonColumns(textWidth);
+	drawResultComparisonHeadings(x, y, textWidth) {
+		const { beforeX, afterX, deltaX, colW } = this.resultComparisonColumns(textWidth);
 		this.modFontSize(-4);
 		this.changeTextColor(ColorManager.textColor(7));
 		this.drawText("now", x + beforeX, y, colW, Window_Base.TextAlignments.Right);
 		this.drawText("after", x + afterX, y, colW, Window_Base.TextAlignments.Right);
+		this.drawText("mod", x + deltaX, y, colW, Window_Base.TextAlignments.Right);
 		this.resetTextColor();
 		this.resetFontSettings();
-		return y + this.lineHeight();
 	}
 	/**
-	* Draws one effect's before, after, and what changed between them.
+	* Draws one effect's before, after, and the percentage responsible for the difference.
+	*
+	* The projected output arrives as a parameter rather than being read off {@link outputEquip}, which is
+	* not assigned until this column has finished drawing - reading it here would measure the previous
+	* pairing the player looked at.
 	* @param {{trait: JAFTING_Trait, before: (JAFTING_Trait|null)}} row The paired effect.
+	* @param {RPG_EquipItem} result The projected refinement output.
 	* @param {number} x The column origin.
 	* @param {number} y The vertical position to draw at.
 	* @param {number} textWidth The drawable width of the result column.
 	*/
-	drawResultComparisonRow(row, x, y, textWidth) {
+	drawResultComparisonRow(row, result, x, y, textWidth) {
 		const { beforeX, afterX, deltaX, colW, nameWidth } = this.resultComparisonColumns(textWidth);
 		const sample = row.after === null ? row.before : row.after;
 		const iconIndex = sample.convertToRmTrait().iconIndex();
 		const label = iconIndex > 0 ? `\\I[${iconIndex}]${sample.name}` : sample.name;
 		this.drawTextEx(label, x, y, nameWidth);
-		const beforeText = row.before === null ? "-" : row.before.value;
-		const afterText = row.after === null ? "-" : row.after.value;
-		this.drawText(beforeText, x + beforeX, y, colW, Window_Base.TextAlignments.Right);
-		this.drawText(afterText, x + afterX, y, colW, Window_Base.TextAlignments.Right);
-		this.drawResultComparisonDelta(row, x + deltaX, y, colW);
+		const code = sample.code();
+		const dataId = sample.dataId();
+		const before = this.localWorthFor(this.primaryEquip, code, dataId);
+		const after = this.localWorthFor(result, code, dataId);
+		this.drawText(`${before}`, x + beforeX, y, colW, Window_Base.TextAlignments.Right);
+		this.drawText(`${after}`, x + afterX, y, colW, Window_Base.TextAlignments.Right);
+		this.drawResultComparisonModifier(row, x + deltaX, y, colW);
 	}
 	/**
-	* Draws what changed on one row, as the signed amount rather than a word.
+	* What an equip is worth for one parameter on its own, as a whole number ready to draw.
 	*
-	* The sign carries the direction, so no arrow is needed on top of it - and a number says how much,
-	* which "up" never did. A row whose value the merge did not move says so plainly instead of claiming a
-	* gain it did not deliver.
-	* @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
-	* @param {number} x The delta column's absolute origin.
-	* @param {number} y The vertical position to draw at.
-	* @param {number} colW The delta column's width.
+	* Its base for that stat amplified by its own percentages - the same arithmetic the battler performs
+	* when it asks equipment what it contributes, so this column cannot disagree with the stat screen.
+	* Base parameters read a flat amount; the other two families are already whole percents.
+	* @param {RPG_EquipItem} equip The equip to measure.
+	* @param {number} code The trait code: 21, 22, or 23.
+	* @param {number} dataId The parameter id within that family.
+	* @returns {number}
 	*/
-	drawResultComparisonDelta(row, x, y, colW) {
+	localWorthFor(equip, code, dataId) {
+		const ownRate = equip.ownRate(code, dataId);
+		if (code === 21) {
+			return Math.round(equip.thisBParam(dataId) * ownRate);
+		}
+		if (code === 22) {
+			return Math.round(equip.thisXParam(dataId) * ownRate);
+		}
+		return Math.round(equip.thisSParam(dataId) * ownRate);
+	}
+	/**
+	* Draws the percentage the projected result carries for this row.
+	*
+	* The two columns to the left say what the equip is worth before and after, which is the number a
+	* player acts on. This column says what is producing that difference - the modifier itself - so a row
+	* reads as a claim and its evidence rather than as a bare percentage of nothing in particular.
+	* @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
+	* @param {number} x The modifier column's absolute origin.
+	* @param {number} y The vertical position to draw at.
+	* @param {number} colW The modifier column's width.
+	*/
+	drawResultComparisonModifier(row, x, y, colW) {
 		const alignRight = Window_Base.TextAlignments.Right;
 		if (row.after === null) {
 			this.changeTextColor(ColorManager.textColor(18));
@@ -2243,24 +2583,44 @@ var Window_RefinementDetails = class Window_RefinementDetails extends Window_Bas
 			this.resetTextColor();
 			return;
 		}
-		const delta = this.rowDeltaPoints(row);
-		if (delta === null) {
+		const points = this.rowModifierPoints(row);
+		if (points === null) {
 			const colorIndex = row.before === null ? 24 : 7;
 			this.changeTextColor(ColorManager.textColor(colorIndex));
 			this.drawText(row.before === null ? "new" : "-", x, y, colW, alignRight);
 			this.resetTextColor();
 			return;
 		}
-		if (delta === 0) {
+		if (points === 0) {
 			this.changeTextColor(ColorManager.textColor(7));
 			this.drawText("-", x, y, colW, alignRight);
 			this.resetTextColor();
 			return;
 		}
-		const isGain = delta > 0;
+		const isGain = points > 0;
 		this.changeTextColor(ColorManager.textColor(isGain ? 24 : 18));
-		this.drawText(`${isGain ? "+" : ""}${delta}`, x, y, colW, alignRight);
+		this.drawText(`${isGain ? "+" : ""}${points}%`, x, y, colW, alignRight);
 		this.resetTextColor();
+	}
+	/**
+	* The percentage the projected result carries for one row, in whole points.
+	*
+	* Read off the result's own value rather than the difference between the two sides, because this column
+	* answers "what is this item's modifier now" - the movement is already visible in the before and after
+	* beside it. Codes 21 and 23 store their values as deltas from 1.0 and code 22 from 0, which is the only
+	* thing separating the two arms here.
+	*
+	* **The row must have an `after`.** A merge that dropped an effect has no modifier left to report, and
+	* {@link drawResultComparisonModifier} answers that case itself before reaching this.
+	* @param {{before: (JAFTING_Trait|null), after: JAFTING_Trait}} row The paired effect, still present in the result.
+	* @returns {number|null} The modifier in whole percents, or null for a code with no numeric reading.
+	*/
+	rowModifierPoints(row) {
+		const code = row.after.code();
+		if (code !== 21 && code !== 22 && code !== 23) return null;
+		const neutral = this.neutralValueForCode(code);
+		const { value } = row.after.convertToRmTrait();
+		return Math.round((value - neutral) * 100);
 	}
 	/**
 	* Draws how many refinements this equip will have used, against its ceiling.
@@ -2819,6 +3179,7 @@ var Scene_JaftingRefine = class Scene_JaftingRefine extends Scene_MenuBase {
 	}
 	onConsumableRefinableListCancel() {
 		this.refinementSession().returnToBaseSelection();
+		this.getRefinementDetailsWindow().secondaryEquip = null;
 		this.deselectConsumableRefinableListWindow();
 		this.selectBaseRefinableListWindow();
 	}

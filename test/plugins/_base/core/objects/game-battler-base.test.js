@@ -9,6 +9,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 describe('J-Base Game_BattlerBase (direct src import)', () =>
 {
   let originalInitMembers;
+  let originalXparam;
 
   beforeAll(async () =>
   {
@@ -19,6 +20,7 @@ describe('J-Base Game_BattlerBase (direct src import)', () =>
     }
 
     // vanilla RMMZ statics this file's overrides key their trait lookups by.
+    Game_BattlerBase.TRAIT_XPARAM = 22;
     Game_BattlerBase.TRAIT_SPARAM = 23;
     Game_BattlerBase.TRAIT_ELEMENT_RATE = 11;
     Game_BattlerBase.TRAIT_PARAM = 21;
@@ -27,7 +29,21 @@ describe('J-Base Game_BattlerBase (direct src import)', () =>
     originalInitMembers = vi.fn();
     Game_BattlerBase.prototype.initMembers = originalInitMembers;
 
+    // xparam is aliased rather than overwritten, so the original has to exist before the import or the
+    // alias captures undefined and every call through it explodes.
+    originalXparam = vi.fn(() => 0);
+    Game_BattlerBase.prototype.xparam = originalXparam;
+
     globalThis.Game_BattlerBase = Game_BattlerBase;
+
+    // J-Base adds Array.empty in initialization.js, which this bare-global harness does not load.
+    if (Array.empty === undefined)
+    {
+      Object.defineProperty(Array, 'empty', {
+        get: () => Array.of(),
+        configurable: true,
+      });
+    }
 
     await import('../../../../../src/plugins/_base/core/objects/Game_BattlerBase.js');
   });
@@ -35,11 +51,29 @@ describe('J-Base Game_BattlerBase (direct src import)', () =>
   beforeEach(() =>
   {
     originalInitMembers.mockClear();
+    originalXparam.mockClear();
+    originalXparam.mockReturnValue(0);
   });
 
   function buildBattler()
   {
     return Object.create(globalThis.Game_BattlerBase.prototype);
+  }
+
+  /**
+   * A battler that has been through `initMembers`, as every real one has.
+   *
+   * The bare {@link buildBattler} above exists so the `initMembers` tests can observe a virgin object.
+   * Everything reading a parameter needs the `_j._base` cache namespace that `initMembers` establishes,
+   * because in the engine that always runs from the constructor before anything can ask for a stat.
+   * @returns {Game_BattlerBase}
+   */
+  function buildInitializedBattler()
+  {
+    const battler = buildBattler();
+    battler.initMembers();
+
+    return battler;
   }
 
   describe('initMembers', () =>
@@ -277,7 +311,7 @@ describe('J-Base Game_BattlerBase (direct src import)', () =>
     it('additively stacks sparam trait deltas instead of multiplying them', () =>
     {
       // Arrange
-      const battler = buildBattler();
+      const battler = buildInitializedBattler();
       battler.traitsWithId = (code, id) => (code === 23 && id === 2 ? [ { value: 1.5 }, { value: 1.5 } ] : []);
 
       // Act
@@ -285,6 +319,234 @@ describe('J-Base Game_BattlerBase (direct src import)', () =>
 
       // Assert- 1.0 + (0.5 + 0.5) = 2.0, not the multiplicative 2.25.
       expect(result).toBeCloseTo(2.0);
+    });
+
+    it('replaces equipment share of the stacked total with each item own scaled base', () =>
+    {
+      // Arrange- the flattened traits total +1.0, of which +0.5 came from this shield. Localised, the
+      // shield instead contributes (30 / 100) * 1.5 = 0.45 against its own parry base.
+      const battler = buildInitializedBattler();
+      battler.traitsWithId = (code, id) => (code === 23 && id === 1 ? [ { value: 1.5 }, { value: 1.5 } ] : []);
+      battler.localisedEquips = () => [ fakeEquip(1.5, 0, 30) ];
+
+      // Act
+      const result = battler.sparam(1);
+
+      // Assert- (1.0 + 1.0 - 0.5) + 0.45.
+      expect(result).toBeCloseTo(1.95);
+    });
+  });
+
+  //region localised equipment parameters
+  describe('localisedEquips', () =>
+  {
+    it('answers with nothing at the battler level, since only actors wear equipment', () =>
+    {
+      // Arrange
+      const battler = buildInitializedBattler();
+
+      // Act
+      const result = battler.localisedEquips();
+
+      // Assert
+      expect(result).toEqual([]);
+    });
+  });
+
+  /**
+   * Builds a stand-in equip exposing only what the contribution helpers ask of one.
+   *
+   * Written from the caller's side rather than mirrored from RPG_EquipItem, so a change in how the real
+   * class computes `ownRate` cannot quietly agree with a wrong expectation here.
+   * @param {number} ownRate The multiplier this item applies to its own base.
+   * @param {number} xBase The ex-parameter base this item is worth, in whole percents.
+   * @param {number} sBase The sp-parameter base this item is worth, in whole percents.
+   * @returns {{ownRate: Function, thisXParam: Function, thisSParam: Function}}
+   */
+  const fakeEquip = (ownRate, xBase = 0, sBase = 0) => ({
+    ownRate: () => ownRate,
+    thisXParam: () => xBase,
+    thisSParam: () => sBase,
+  });
+
+  describe('buildEquipParameterContribution', () =>
+  {
+    it('answers with zero on both counts when nothing is equipped', () =>
+    {
+      // Arrange
+      const battler = buildInitializedBattler();
+
+      // Act
+      const result = battler.buildEquipParameterContribution(21, 2);
+
+      // Assert
+      expect(result.delta).toBe(0);
+      expect(result.local).toBe(0);
+    });
+
+    it('sums each item distance from the neutral multiplier into the delta', () =>
+    {
+      // Arrange- two items at different rates, so a reader that took only the first or only the last
+      // would land on 0.5 or 0.25 rather than their sum.
+      const battler = buildInitializedBattler();
+      battler.localisedEquips = () => [ fakeEquip(1.5), fakeEquip(1.25) ];
+
+      // Act
+      const result = battler.buildEquipParameterContribution(21, 2);
+
+      // Assert- 0.5 + 0.25.
+      expect(result.delta).toBeCloseTo(0.75);
+    });
+
+    it('contributes no local half for a base parameter, whatever bases the item carries', () =>
+    {
+      // Arrange- the item carries both an ex and an sp base, and neither may reach the result. Reading
+      // either one would mean asking for a different family with a base-parameter id; paramPlus owns
+      // this half. Without the guard the sp base leaks through as (90 / 100) * 2.0.
+      const battler = buildInitializedBattler();
+      battler.localisedEquips = () => [ fakeEquip(2.0, 40, 90) ];
+
+      // Act
+      const result = battler.buildEquipParameterContribution(21, 2);
+
+      // Assert- the delta anchors that the item was visited at all, so the zero is a decision and not
+      // an empty loop.
+      expect(result.local).toBe(0);
+      expect(result.delta).toBeCloseTo(1.0);
+    });
+
+    it('reads the ex-parameter base for code 22', () =>
+    {
+      // Arrange- the two bases differ so reading the wrong one is visible in the result.
+      const battler = buildInitializedBattler();
+      battler.localisedEquips = () => [ fakeEquip(2.0, 40, 90) ];
+
+      // Act
+      const result = battler.buildEquipParameterContribution(22, 0);
+
+      // Assert- (40 / 100) * 2.0, proving the ex base was taken and scaled by the item's own rate.
+      expect(result.local).toBeCloseTo(0.8);
+    });
+
+    it('reads the sp-parameter base for any other code', () =>
+    {
+      // Arrange- same fixture, different family. This is the other arm of the base conditional.
+      const battler = buildInitializedBattler();
+      battler.localisedEquips = () => [ fakeEquip(2.0, 40, 90) ];
+
+      // Act
+      const result = battler.buildEquipParameterContribution(23, 1);
+
+      // Assert- (90 / 100) * 2.0.
+      expect(result.local).toBeCloseTo(1.8);
+    });
+  });
+
+  describe('equipParameterContribution', () =>
+  {
+    it('allocates the cache when it is cold', () =>
+    {
+      // Arrange
+      const battler = buildInitializedBattler();
+
+      // Act
+      battler.equipParameterContribution(21, 2);
+
+      // Assert
+      expect(battler.getCachedEquipContributions()).toBeInstanceOf(Map);
+    });
+
+    it('serves a repeat ask for the same parameter without recomputing', () =>
+    {
+      // Arrange- asserting on the returned values instead would pass with no cache at all, so the claim
+      // has to be about how many times the builder ran.
+      const battler = buildInitializedBattler();
+      const builder = vi.spyOn(battler, 'buildEquipParameterContribution');
+
+      // Act
+      battler.equipParameterContribution(21, 2);
+      battler.equipParameterContribution(21, 2);
+
+      // Assert
+      expect(builder).toHaveBeenCalledOnce();
+
+      // spies on this battler are restored by hand; restoreAllMocks does not reach them reliably here.
+      builder.mockRestore();
+    });
+
+    it('computes separately for a different parameter within the same family', () =>
+    {
+      // Arrange- proves the key carries the dataId, not merely "something has been cached".
+      const battler = buildInitializedBattler();
+      const builder = vi.spyOn(battler, 'buildEquipParameterContribution');
+
+      // Act
+      battler.equipParameterContribution(21, 2);
+      battler.equipParameterContribution(21, 5);
+
+      // Assert
+      expect(builder).toHaveBeenCalledTimes(2);
+
+      builder.mockRestore();
+    });
+
+    it('computes separately for the same parameter id in a different family', () =>
+    {
+      // Arrange- and proves the key carries the code too; xparam 2 and sparam 2 are unrelated stats.
+      const battler = buildInitializedBattler();
+      const builder = vi.spyOn(battler, 'buildEquipParameterContribution');
+
+      // Act
+      battler.equipParameterContribution(22, 2);
+      battler.equipParameterContribution(23, 2);
+
+      // Assert
+      expect(builder).toHaveBeenCalledTimes(2);
+
+      builder.mockRestore();
+    });
+  });
+
+  describe('xparam', () =>
+  {
+    it('performs the original aggregation', () =>
+    {
+      // Arrange
+      const battler = buildInitializedBattler();
+
+      // Act
+      battler.xparam(0);
+
+      // Assert
+      expect(originalXparam).toHaveBeenCalledOnce();
+    });
+
+    it('replaces equipment share of the global sum with each item own scaled base', () =>
+    {
+      // Arrange- the battler-wide sum is 0.9, of which 0.5 came from this sword. Localised, the sword
+      // instead contributes (40 / 100) * 1.5 = 0.6 measured against its own accuracy base.
+      const battler = buildInitializedBattler();
+      originalXparam.mockReturnValue(0.9);
+      battler.localisedEquips = () => [ fakeEquip(1.5, 40) ];
+
+      // Act
+      const result = battler.xparam(0);
+
+      // Assert- (0.9 - 0.5) + 0.6.
+      expect(result).toBeCloseTo(1.0);
+    });
+
+    it('leaves a battler wearing nothing on the original aggregation alone', () =>
+    {
+      // Arrange- the anchor value proves the method ran rather than returning an untouched zero.
+      const battler = buildInitializedBattler();
+      originalXparam.mockReturnValue(0.35);
+
+      // Act
+      const result = battler.xparam(0);
+
+      // Assert
+      expect(result).toBeCloseTo(0.35);
     });
   });
 
@@ -322,7 +584,7 @@ describe('J-Base Game_BattlerBase (direct src import)', () =>
     it('additively stacks param rate trait deltas', () =>
     {
       // Arrange
-      const battler = buildBattler();
+      const battler = buildInitializedBattler();
       battler.traitsWithId = () => [ { value: 1.5 }, { value: 1.5 } ];
 
       // Act
@@ -335,7 +597,7 @@ describe('J-Base Game_BattlerBase (direct src import)', () =>
     it('floors the result at 0 when stacked negative deltas would go negative', () =>
     {
       // Arrange
-      const battler = buildBattler();
+      const battler = buildInitializedBattler();
       battler.traitsWithId = () => [ { value: -5 } ];
 
       // Act
@@ -343,6 +605,22 @@ describe('J-Base Game_BattlerBase (direct src import)', () =>
 
       // Assert
       expect(result).toBe(0);
+    });
+
+    it('subtracts equipment share without re-adding it, since paramPlus carries that half', () =>
+    {
+      // Arrange- the flattened traits total +1.0, of which +0.5 came from this sword. Base parameters
+      // have somewhere to be added, so the sword's own scaled worth lands in paramPlus and only the
+      // subtraction happens here. The sp base on the fixture must not leak into the result.
+      const battler = buildInitializedBattler();
+      battler.traitsWithId = () => [ { value: 1.5 }, { value: 1.5 } ];
+      battler.localisedEquips = () => [ fakeEquip(1.5, 0, 30) ];
+
+      // Act
+      const result = battler.paramRate(2);
+
+      // Assert- 1.0 + 1.0 - 0.5, with no local term added back.
+      expect(result).toBeCloseTo(1.5);
     });
   });
 

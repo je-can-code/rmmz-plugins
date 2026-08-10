@@ -712,6 +712,16 @@ class Window_RecipeDetails
     this.drawTraits(output, x, traitsY);
   }
 
+  /**
+   * Draws the eight base parameters a crafted weapon or armor will be worth.
+   *
+   * Read through {@link RPG_EquipItem#thisBParam} rather than off the `params` array, because an equip's
+   * worth for a parameter is that field plus any `<this{PARAM}:N>` tag it carries. Reading the array alone
+   * would quietly understate anything authored as a tag.
+   * @param {RPG_EquipItem} output The equip this recipe produces.
+   * @param {number} x The origin to draw from.
+   * @param {number} y The vertical position to draw at.
+   */
   drawCoreParams(output, x, y)
   {
     // start from scratch.
@@ -727,7 +737,7 @@ class Window_RecipeDetails
     const mhpY = y;
     const mhp = this.needsMasking
       ? '??'
-      : output.params.at(0);
+      : output.thisBParam(0);
     this.drawIcon(IconManager.param(0), leftX, mhpY);
     this.drawText(mhp, leftX + 40, mhpY);
 
@@ -735,7 +745,7 @@ class Window_RecipeDetails
     const mmpY = y + (lh * 1);
     const mmp = this.needsMasking
       ? '??'
-      : output.params.at(1);
+      : output.thisBParam(1);
     this.drawIcon(IconManager.param(1), leftX, mmpY);
     this.drawText(mmp, leftX + 40, mmpY);
 
@@ -743,7 +753,7 @@ class Window_RecipeDetails
     const atkY = y + (lh * 2);
     const atk = this.needsMasking
       ? '??'
-      : output.params.at(2);
+      : output.thisBParam(2);
     this.drawIcon(IconManager.param(2), leftX, atkY);
     this.drawText(atk, leftX + 40, atkY);
 
@@ -751,7 +761,7 @@ class Window_RecipeDetails
     const defY = y + (lh * 3);
     const def = this.needsMasking
       ? '??'
-      : output.params.at(3);
+      : output.thisBParam(3);
     this.drawIcon(IconManager.param(3), leftX, defY);
     this.drawText(def, leftX + 40, defY);
 
@@ -759,7 +769,7 @@ class Window_RecipeDetails
     const agiY = y;
     const agi = this.needsMasking
       ? '??'
-      : output.params.at(6);
+      : output.thisBParam(6);
     this.drawIcon(IconManager.param(6), rightX, agiY);
     this.drawText(agi, rightX + 40, agiY);
 
@@ -767,7 +777,7 @@ class Window_RecipeDetails
     const lukY = y + (lh * 1);
     const luk = this.needsMasking
       ? '??'
-      : output.params.at(7);
+      : output.thisBParam(7);
     this.drawIcon(IconManager.param(7), rightX, lukY);
     this.drawText(luk, rightX + 40, lukY);
 
@@ -775,7 +785,7 @@ class Window_RecipeDetails
     const matY = y + (lh * 2);
     const mat = this.needsMasking
       ? '??'
-      : output.params.at(4);
+      : output.thisBParam(4);
     this.drawIcon(IconManager.param(4), rightX, matY);
     this.drawText(mat, rightX + 40, matY);
 
@@ -783,7 +793,7 @@ class Window_RecipeDetails
     const mdfY = y + (lh * 3);
     const mdf = this.needsMasking
       ? '??'
-      : output.params.at(5);
+      : output.thisBParam(5);
     this.drawIcon(IconManager.param(5), rightX, mdfY);
     this.drawText(mdf, rightX + 40, mdfY);
   }

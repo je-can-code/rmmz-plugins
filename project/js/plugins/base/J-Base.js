@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v3.3.0 BASE] The base class for all J plugins.
+ * [v3.4.0 BASE] The base class for all J plugins.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -157,6 +157,39 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.4.0
+ *    Parameter percentages carried by equipment now scale that equipment's own
+ *    contribution rather than the wearer's total. A weapon granting +25% attack
+ *    lifts what the weapon is worth, not the class curve and every other worn
+ *    item along with it, which is what makes such a bonus bounded by the thing
+ *    carrying it.
+ *    Added RPG_EquipItem.ownRate, answering what an equip amplifies its own base
+ *    by for one parameter. Codes 21 and 23 store deltas from 1.0 while code 22
+ *    stores them from 0; this normalises all three onto one multiplier so a
+ *    single subtraction can remove equipment's share from any of them.
+ *    Added a localisedEquips hook to Game_BattlerBase, answering with nothing at
+ *    that level. Enemies carry no equipment, so every formula below is a no-op
+ *    for them rather than a special case.
+ *    Game_BattlerBase.paramRate, sparam and the newly added xparam override now
+ *    subtract equipment's share from the battler-wide aggregate and, for the two
+ *    parameter families with no field of their own, re-apply it against each
+ *    item's own base.
+ *    Game_Actor.paramPlus is overwritten rather than extended, because vanilla
+ *    already adds each equip's params entry and thisBParam includes that same
+ *    entry - aliasing would have counted it twice.
+ *    Equipment contributions are cached per parameter and invalidated by
+ *    onBattlerDataChange, matching every other note-derived value on a battler.
+ *    The reads behind them scan a note string once per equipped item, and
+ *    parameters are asked for during damage resolution and once per row of every
+ *    parameter catalog refresh.
+ *    NoteResolver gained a summing policy for numeric tags. Stacking those as
+ *    repeated lines cannot work - an exact duplicate line is dropped within a
+ *    single note, so a value written twice collapses to one and reads as half
+ *    what it should forever. Totalling them into one line is the only shape that
+ *    survives being merged again.
+ *    Added Window_ItemList data and setData accessors, so a list reordering or
+ *    filtering its rows has a way in that is not a reach into storage it does
+ *    not own.
  * - 3.3.0
  *    The shipped file moved from js/plugins/J-Base.js to
  *    js/plugins/base/J-Base.js, following the base plugin set's split into a
@@ -1729,7 +1762,7 @@ J.BASE.EXT = {};
 */
 J.BASE.Metadata = {};
 J.BASE.Metadata.Name = "J-Base";
-J.BASE.Metadata.Version = "3.3.0";
+J.BASE.Metadata.Version = "3.4.0";
 /**
 * The actual `plugin parameters` extracted from RMMZ.
 */
@@ -6505,6 +6538,29 @@ var RPG_EquipItem = class extends RPG_Traited {
 	thisExr() {
 		return RPGManager.getSumFromNoteByRegex(this, J.BASE.RegExp.ThisExr);
 	}
+	/**
+	* How much this equip amplifies its own base for a given parameter.
+	*
+	* A percentage on equipment scales what that equipment is worth rather than what its wearer is worth,
+	* so the multiplier has to be assembled from this item's own traits. It cannot come from the battler's
+	* flattened trait list, which no longer knows which item each trait arrived on.
+	*
+	* Returns a multiplier centred on 1.0 whichever family is asked for. Codes 21 and 23 store their values
+	* as deltas from 1.0 while code 22 stores them as deltas from 0, and normalising the two here is what
+	* lets one subtraction remove equipment's share from all three battler aggregates.
+	*
+	* Every trait counts, including any sitting below a JAFTING divider. A worn item's below-divider traits
+	* are live - the divider is a transfer marker, not a switch - so a percentage there scales this item
+	* exactly like one above it.
+	* @param {number} code The trait code: 21 for base, 22 for ex-, 23 for sp-parameters.
+	* @param {number} dataId The parameter id within that family.
+	* @returns {number}
+	*/
+	ownRate(code, dataId) {
+		const baseline = code === 22 ? 0 : 1;
+		const matching = this.traits.filter((trait) => trait.code === code && trait.dataId === dataId);
+		return matching.reduce((total, trait) => total + (trait.value - baseline), 1);
+	}
 };
 
 //#endregion
@@ -8150,12 +8206,16 @@ ImageManager.iconColumns = 16;
 * merge that consulted a global would silently produce different results once another plugin registered
 * a key. Passing the policy in makes the output a function of nothing but its arguments.
 *
-* Two behaviors, and they line up with how the tags are read back:
+* Three behaviors, and they line up with how the tags are read back:
 * - **replace** (the default) suits a tag read by a scalar reader like
 *   {@link RPGManager.getNumberFromNoteByRegex}, which takes the last match on a note and ignores the
 *   rest. Appending a second one would silently discard the first.
 * - **accumulate** suits a tag read by a collecting reader like
 *   {@link RPGManager.getArraysFromNotesByRegex}, where every occurrence contributes.
+* - **sum** suits a numeric tag that should total rather than choose between two values. Stacking those
+*   as repeated lines cannot work: {@link #_toKeyBuckets} drops an exact duplicate line *within* a single
+*   note, so `<bonusHits:2>` written twice collapses to one and reads as two forever. Totalling them into
+*   one line is the only representation that survives being merged again.
 */
 var NoteResolver = class NoteResolver {
 	/**
@@ -8187,16 +8247,19 @@ var NoteResolver = class NoteResolver {
 	* @param {string} overlayNote The note being merged in.
 	* @param {string[]} accumulatingKeys Keys that gain the overlay's lines instead of being replaced by
 	* them. Empty means every key replaces, which is the conservative reading.
+	* @param {string[]} summingKeys Keys whose two scalar values total into one line. A key listed here that
+	* does not hold a single plain number on each side falls back to accumulating, never to replacing, so a
+	* mis-declared key cannot silently discard what the base already had.
 	* @returns {string} The merged note, newline-joined.
 	*/
-	static merge(baseNote, overlayNote, accumulatingKeys = []) {
+	static merge(baseNote, overlayNote, accumulatingKeys = [], summingKeys = []) {
 		const oldNote = baseNote || String.empty;
 		const newNote = overlayNote || String.empty;
 		const oldTokens = this._tokenizeNote(oldNote);
 		const newTokens = this._tokenizeNote(newNote);
 		const oldBuckets = this._toKeyBuckets(oldTokens.tags);
 		const newBuckets = this._toKeyBuckets(newTokens.tags);
-		const merged = this._mergeBuckets(oldBuckets, newBuckets, accumulatingKeys);
+		const merged = this._mergeBuckets(oldBuckets, newBuckets, accumulatingKeys, summingKeys);
 		const mergedUnsupported = this._mergeUnsupported(oldTokens.unsupported, newTokens.unsupported);
 		return this._reconstructNote(mergedUnsupported, merged);
 	}
@@ -8293,9 +8356,10 @@ var NoteResolver = class NoteResolver {
 	* @param {{order: string[], map: Record<string, string[]>}} oldBuckets The base note's buckets.
 	* @param {{order: string[], map: Record<string, string[]>}} newBuckets The overlay note's buckets.
 	* @param {string[]} accumulatingKeys Keys that gain the overlay's lines rather than being replaced.
+	* @param {string[]} summingKeys Keys whose two scalar values total into one line.
 	* @returns {{ order: string[], map: Record<string, string[]> }} The merged buckets.
 	*/
-	static _mergeBuckets(oldBuckets, newBuckets, accumulatingKeys) {
+	static _mergeBuckets(oldBuckets, newBuckets, accumulatingKeys, summingKeys = []) {
 		const mergedMap = Object.create(null);
 		const mergedOrder = [];
 		/**
@@ -8309,15 +8373,21 @@ var NoteResolver = class NoteResolver {
 			mergedOrder.push(key);
 		};
 		oldBuckets.order.forEach((key) => {
-			const accumulates = accumulatingKeys.includes(key);
 			const oldLines = oldBuckets.map[key];
 			const newLines = newBuckets.map[key];
-			const overlayHasAny = newLines && newLines.length > 0;
-			if (overlayHasAny && accumulates === false) {
-				appendKey(key, newLines);
+			const overlayHasAny = newLines !== undefined && newLines.length > 0;
+			if (overlayHasAny === false) {
+				appendKey(key, oldLines);
 				return;
 			}
-			if (accumulates && overlayHasAny) {
+			if (summingKeys.includes(key)) {
+				const summed = this._sumScalarLines(oldLines, newLines);
+				if (summed !== null) {
+					appendKey(key, [summed]);
+					return;
+				}
+			}
+			if (accumulatingKeys.includes(key) || summingKeys.includes(key)) {
 				const combined = oldLines.slice(0);
 				newLines.forEach((line) => {
 					if (combined.includes(line) === false) combined.push(line);
@@ -8325,7 +8395,7 @@ var NoteResolver = class NoteResolver {
 				appendKey(key, combined);
 				return;
 			}
-			appendKey(key, oldLines);
+			appendKey(key, newLines);
 		});
 		newBuckets.order.forEach((key) => {
 			if (mergedOrder.includes(key) === false) appendKey(key, newBuckets.map[key]);
@@ -8334,6 +8404,28 @@ var NoteResolver = class NoteResolver {
 			order: mergedOrder,
 			map: mergedMap
 		};
+	}
+	/**
+	* Totals two single-line scalar tags into one line, or reports that it cannot.
+	*
+	* Both sides must hold exactly one line, and both values must read as a plain number. A key already
+	* carrying several lines is not a scalar - whatever it is, adding it up would be inventing a number
+	* nobody wrote - so it declines rather than guessing.
+	*
+	* The base's spelling of the key is kept, so a merge never quietly recases a tag the author wrote.
+	* @param {string[]} oldLines The base note's lines for this key.
+	* @param {string[]} newLines The overlay note's lines for this key.
+	* @returns {string|null} The totalled line, or null when the pair is not two scalars.
+	*/
+	static _sumScalarLines(oldLines, newLines) {
+		if (oldLines.length !== 1 || newLines.length !== 1) return null;
+		const scalarShape = /^<([^:]+):\s*(-?\d+(?:\.\d+)?)\s*>$/;
+		const oldMatch = oldLines[0].match(scalarShape);
+		const newMatch = newLines[0].match(scalarShape);
+		if (oldMatch === null || newMatch === null) return null;
+		const total = parseFloat(oldMatch[2]) + parseFloat(newMatch[2]);
+		const tidied = parseFloat(total.toFixed(4));
+		return `<${oldMatch[1]}:${tidied}>`;
 	}
 	/**
 	* Merges free-form lines, base order first, without duplicates.
@@ -9828,6 +9920,38 @@ Game_Actor.prototype.equippedEquips = function() {
 	return this.equips().filter((equip) => !!equip);
 };
 /**
+* Overwrites {@link Game_BattlerBase#localisedEquips}.<br/>
+* An actor's worn equipment is exactly the set of trait sources whose percentages describe the item
+* rather than the actor wearing it.
+* @returns {RPG_EquipItem[]}
+*/
+Game_Actor.prototype.localisedEquips = function() {
+	return this.equippedEquips();
+};
+/**
+* Overwrites {@link Game_Actor#paramPlus}.<br/>
+* Each equipped item contributes its own base for the parameter, amplified by its own percentages.
+*
+* Previously an equip's percentage was pooled into the actor's global rate, so a sword's `+25% ATK` lifted
+* the class curve and every other worn item along with it. Now it lifts only what that sword is worth,
+* which is what makes a percentage bounded by the thing carrying it.
+*
+* Deliberately an overwrite rather than an extension: vanilla's implementation already adds each equip's
+* `params` entry, and {@link RPG_EquipItem#thisBParam} includes that same entry, so aliasing would count
+* it twice. The actor's own permanent plus is fetched from the battler implementation directly, the way
+* {@link #traitObjects} reaches past its own vanilla version.
+* @param {number} paramId The base parameter id, 0 through 7.
+* @returns {number}
+*/
+Game_Actor.prototype.paramPlus = function(paramId) {
+	const actorPlus = Game_Battler.prototype.paramPlus.call(this, paramId);
+	const equipPlus = this.equippedEquips().reduce((total, equip) => {
+		const ownRate = equip.ownRate(Game_BattlerBase.TRAIT_PARAM, paramId);
+		return total + equip.thisBParam(paramId) * ownRate;
+	}, 0);
+	return actorPlus + equipPlus;
+};
+/**
 * Sets the level of this actor to the given level.
 * @param {number} level The level to set this actor to.
 */
@@ -10163,6 +10287,7 @@ Game_Battler.prototype.onBattlerDataChange = function() {
 	this.setCachedTraitObjects(null);
 	this.setCachedAllTraits(null);
 	this.setCachedMaxTpBonuses(null);
+	this.setCachedEquipContributions(null);
 	this.setCachedHarFactor(null);
 	JCache.invalidateAllForBattler(this);
 };
@@ -10398,6 +10523,14 @@ Game_BattlerBase.prototype.initMembers = function() {
 	* @type {MV.Trait[]|null}
 	*/
 	this._j._base._cachedAllTraits = null;
+	/**
+	* The cached equipment contributions for this battler, keyed by `code:dataId`.
+	* Null when the cache is cold; each parameter is resolved on first ask and held for the rest of
+	* the cycle, because the reads behind it scan note strings once per equipped item.
+	* Invalidated by {@link #onBattlerDataChange}.
+	* @type {Map<string, {delta: number, local: number}>|null}
+	*/
+	this._j._base._cachedEquipContributions = null;
 };
 /**
 * Gets the cached trait objects for this battler, or null if the cache is cold.
@@ -10474,6 +10607,87 @@ Game_BattlerBase.prototype.allTraits = function() {
 	const allTraits = this.traitObjects().reduce((r, obj) => r.concat(obj.traits), []);
 	this.setCachedAllTraits(allTraits);
 	return this.getCachedAllTraits();
+};
+/**
+* Gets the cached equipment contributions for this battler, or null if the cache is cold.
+* @returns {Map<string, {delta: number, local: number}>|null}
+*/
+Game_BattlerBase.prototype.getCachedEquipContributions = function() {
+	return this._j._base._cachedEquipContributions;
+};
+/**
+* Sets the cached equipment contributions for this battler.
+* @param {Map<string, {delta: number, local: number}>|null} contributions The new cached value, or null to invalidate.
+*/
+Game_BattlerBase.prototype.setCachedEquipContributions = function(contributions) {
+	this._j._base._cachedEquipContributions = contributions;
+};
+/**
+* The trait sources on this battler whose parameter percentages apply only to themselves.
+*
+* Equipment is the one kind of trait source that is a discrete object the player swaps in and out, so a
+* percentage on it describes the item rather than its wearer. Battlers with no equipment answer with
+* nothing, which makes every localisation formula below a no-op for them rather than a special case.
+* @returns {RPG_EquipItem[]}
+*/
+Game_BattlerBase.prototype.localisedEquips = function() {
+	return Array.empty;
+};
+/**
+* What equipment contributes to a parameter, split into the share to remove from the battler-wide
+* aggregate and the share to re-apply locally.
+*
+* Cached per parameter for the rest of the data-change cycle, because the reads behind it scan a note
+* string once per equipped item and parameters are asked for during damage resolution and once per row
+* of every parameter catalog refresh.
+* @param {number} code The trait code: 21, 22, or 23.
+* @param {number} dataId The parameter id within that family.
+* @returns {{delta: number, local: number}}
+*/
+Game_BattlerBase.prototype.equipParameterContribution = function(code, dataId) {
+	if (this.getCachedEquipContributions() === null) {
+		this.setCachedEquipContributions(new Map());
+	}
+	const cache = this.getCachedEquipContributions();
+	const key = `${code}:${dataId}`;
+	if (cache.has(key)) return cache.get(key);
+	cache.set(key, this.buildEquipParameterContribution(code, dataId));
+	return cache.get(key);
+};
+/**
+* Computes equipment's contribution to one parameter from scratch.
+*
+* `delta` is what equipment contributed to the battler-wide total, in that family's own units, and gets
+* subtracted back out. `local` is each item's own base for the parameter amplified by that same item's
+* own percentages. Both are expressed through {@link RPG_EquipItem#ownRate}, which normalises all three
+* families onto one 1.0-centred multiplier so a single subtraction serves each of them.
+*
+* `local` is always zero for base parameters — {@link Game_Actor#paramPlus} owns their local half, since
+* those are the one family with an existing field to scale.
+*
+* Tags are authored as whole percents while the engine works in rate space, hence the hundredth - the
+* same conversion J-NaturalGrowths applies to its own growth tags.
+*
+* Separated from the caching wrapper above so the arithmetic can be read and tested without the cache in
+* the way, mirroring how {@link #buildTraitObjects} sits behind {@link #traitObjects}.
+* @param {number} code The trait code: 21, 22, or 23.
+* @param {number} dataId The parameter id within that family.
+* @returns {{delta: number, local: number}}
+*/
+Game_BattlerBase.prototype.buildEquipParameterContribution = function(code, dataId) {
+	let delta = 0;
+	let local = 0;
+	this.localisedEquips().forEach((equip) => {
+		const ownRate = equip.ownRate(code, dataId);
+		delta += ownRate - 1;
+		if (code === Game_BattlerBase.TRAIT_PARAM) return;
+		const base = code === Game_BattlerBase.TRAIT_XPARAM ? equip.thisXParam(dataId) : equip.thisSParam(dataId);
+		local += base / 100 * ownRate;
+	});
+	return {
+		delta,
+		local
+	};
 };
 /**
 * Returns a list of known base parameter ids.
@@ -10557,7 +10771,25 @@ Game_BattlerBase.prototype.traitsDeltaSum = function(code, id) {
 */
 J.BASE.Aliased.Game_BattlerBase.set("sparam", Game_BattlerBase.prototype.sparam);
 Game_BattlerBase.prototype.sparam = function(sparamId) {
-	return 1 + this.traitsDeltaSum(Game_BattlerBase.TRAIT_SPARAM, sparamId);
+	const { delta, local } = this.equipParameterContribution(Game_BattlerBase.TRAIT_SPARAM, sparamId);
+	const global = 1 + this.traitsDeltaSum(Game_BattlerBase.TRAIT_SPARAM, sparamId) - delta;
+	return global + local;
+};
+/**
+* Overwrites {@link Game_BattlerBase#xparam}.<br/>
+* Scopes each equipped item's percentages to that item's own base rather than the battler's total.
+*
+* Vanilla aggregation is already additive here, so nothing about the stacking changes. What changes is
+* whose value a percentage on a sword is a percentage *of*: previously the wearer's whole accuracy, now
+* the sword's. Equipment's share is subtracted from the battler-wide sum and re-applied per item.
+* @param {number} xparamId The xparam index (0-9).
+* @returns {number}
+*/
+J.BASE.Aliased.Game_BattlerBase.set("xparam", Game_BattlerBase.prototype.xparam);
+Game_BattlerBase.prototype.xparam = function(xparamId) {
+	const global = J.BASE.Aliased.Game_BattlerBase.get("xparam").call(this, xparamId);
+	const { delta, local } = this.equipParameterContribution(Game_BattlerBase.TRAIT_XPARAM, xparamId);
+	return global - delta + local;
 };
 /**
 * Overwrites {@link Game_BattlerBase#elementRate}.<br/>
@@ -10596,7 +10828,8 @@ Game_BattlerBase.prototype.elementRate = function(elementId) {
 */
 J.BASE.Aliased.Game_BattlerBase.set("paramRate", Game_BattlerBase.prototype.paramRate);
 Game_BattlerBase.prototype.paramRate = function(paramId) {
-	const rate = 1 + this.traitsDeltaSum(Game_BattlerBase.TRAIT_PARAM, paramId);
+	const { delta } = this.equipParameterContribution(Game_BattlerBase.TRAIT_PARAM, paramId);
+	const rate = 1 + this.traitsDeltaSum(Game_BattlerBase.TRAIT_PARAM, paramId) - delta;
 	return Math.max(0, rate);
 };
 /**
@@ -15041,6 +15274,28 @@ Window_Help.prototype.refresh = function() {
 Window_Help.prototype.renderText = function() {
 	const { x, y, width } = this.baseTextRect();
 	this.drawTextEx(this.getText(), x, y, width);
+};
+
+//#endregion
+//#region src/plugins/_base/core/windows/Window_ItemList.js
+/**
+* Gets the rows this list is currently displaying.
+*
+* Vanilla builds `_data` in {@link #makeItemList} and then reads the field directly from half a dozen
+* places. Anything extending one of those - reordering the rows, filtering them, appending to them -
+* needs a way in that is not a reach into storage it does not own, and every J-owned list window already
+* carries this same pair.
+* @returns {(RPG_BaseItem|null)[]}
+*/
+Window_ItemList.prototype.data = function() {
+	return this._data;
+};
+/**
+* Sets the rows this list displays.
+* @param {(RPG_BaseItem|null)[]} newData The rows to display.
+*/
+Window_ItemList.prototype.setData = function(newData) {
+	this._data = newData;
 };
 
 //#endregion

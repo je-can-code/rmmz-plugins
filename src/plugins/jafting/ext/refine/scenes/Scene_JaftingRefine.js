@@ -809,6 +809,11 @@ class Scene_JaftingRefine
   {
     this.refinementSession().returnToBaseSelection();
 
+    // forget the donor that was last under the cursor. Hiding the list stops it being *shown* as chosen
+    // while the details panel would go on projecting a merge against it - a result column describing a
+    // pairing the player just backed out of, with nothing on screen to say which donor produced it.
+    this.getRefinementDetailsWindow().secondaryEquip = null;
+
     this.deselectConsumableRefinableListWindow();
 
     this.selectBaseRefinableListWindow();

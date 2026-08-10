@@ -1,5 +1,10 @@
 # Localised equipment parameters
 
+> **Status: steps 1-8 executed.** Code and data are in the working trees of both repos, `hotfix` is
+> green, coverage is 100%, and the four changed J-Base / JAFTING source files are at 100% mutation
+> score. Outstanding: step 9 (version bumps and changelogs, PR-time only) and the material payload
+> re-tuning in D7, which is authoring work. Two findings from execution are recorded at the bottom.
+
 Percentages on equipment scale **that item's own contribution**, not the wearer's total.
 
 An item's identity becomes its base: `params[]` plus the `<this{PARAM}:N>` tags already shipped in
@@ -1006,3 +1011,37 @@ in neither place. It does mean:
 - Do not playtest between steps 2 and 5, and do not file the missing accuracy as a bug.
 - `bun run hotfix` staying green through step 4 is the correct signal at that point, since the suite
   tests the arithmetic rather than the authored data.
+
+---
+
+## 8. Notes from execution
+
+Two things the plan did not anticipate, and one deliberate deviation.
+
+**The `Array.empty` fixture gap was real but not the failure that happened.** §4.2 predicted the
+bare-global harness in `game-battler-base.test.js` would need `Array.empty` defined. It does, and it was
+added — but the actual breakage was different: `buildBattler()` returns `Object.create(prototype)` and
+**never runs `initMembers`**, so `this._j` did not exist when the new cache accessor touched it. Fixed by
+adding a `buildInitializedBattler()` helper beside it; the bare builder stays for the `initMembers` tests
+that need a virgin object. The real engine always constructs through `initMembers`, so the fixture was
+the unfaithful party.
+
+**The same harness never defined `Game_BattlerBase.TRAIT_XPARAM`**, so `code === TRAIT_XPARAM` compared
+against `undefined` and every code-22 read silently fell through to `thisSParam`. Caught only because
+§4.2 required the two bases on the fixture to hold *distinct* values — equal ones would have made both
+arms of that conditional return the same number and the test would have passed against a wired-wrong
+implementation. Added `TRAIT_XPARAM = 22` to the harness.
+
+**Deviation from 5.1: zero-valued traits are left in place rather than dropped.** 186 of the 567
+above-divider parameter traits are worth nothing (`code 22 dataId 1 value 0` — an EVA placeholder), and
+every one sits on an **unnamed, unbuilt armor row**. Transcribing them would have emitted `<thisEva:0>`
+onto 186 rows that mean nothing yet, burying the 204 rows that changed for real. A zero trait is inert
+under either scheme, so they stay as authoring scaffolding. Net: 204 rows changed, 381 tags emitted, 186
+rows untouched.
+
+**Pre-existing mutation survivors, raised not fixed.** `JaftingManager.js` sits at 88.7% with 8
+survivors, all in trait-merge and lineage code untouched by this work: the divider searches at lines 39 /
+85 / 86, the empty-payload guard at 48, the seal-slot filter at 79, `lineage.index === slot` at 243, and
+the empty-inventory guard at 359. Four others in the same area *were* fixed, because they were the same
+"cap comparison never constrained on its not-taken arm" shape as the refine ceilings this work changed —
+`RefinementEligibility.js` is now at 100%.

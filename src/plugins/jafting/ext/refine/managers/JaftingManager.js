@@ -24,6 +24,16 @@ class JaftingManager
   static StartingIndex = 2001;
 
   /**
+   * The literal note line separating an equip's own effects from the ones it hands over when consumed.
+   *
+   * Written verbatim onto a refinement output, so a refined equip can itself be donated later. The
+   * matching pattern lives on {@link J.JAFTING.EXT.REFINE.RegExp.TransferrableEffectsBelow}; this is the
+   * text, because a RegExp cannot be turned back into the thing it recognizes.
+   * @type {string}
+   */
+  static TransferrableEffectsDivider = '<transferrableEffectsBelow>';
+
+  /**
    * Parses all traits off the equipment that are below the "divider".
    * The divider is NOT parameterized, the "collapse effect" trait is the perfect trait
    * to use for this purpose since it has 0 use on actor equipment.
@@ -52,6 +62,231 @@ class JaftingManager
 
     // map consolidated traits into JAFTING traits.
     return consolidated.map(t => new JAFTING_Trait(t.code, t.dataId, t.value));
+  }
+
+  /**
+   * The note text below the transferable divider - what this equip hands over when consumed.
+   *
+   * No divider means no note effects transfer at all. That is the deliberate default and the mirror of
+   * {@link parseTraits}: an equip says what it is willing to give away, and silence means nothing. The
+   * alternative - transferring everything unless told otherwise - would hand a donor's identity over,
+   * including the `<this{PARAM}:N>` bases that make a percentage bounded by the item carrying it.
+   * @param {RPG_EquipItem} equip An equip to read transferable effects from.
+   * @returns {string} The transferable note text, or an empty string when there is none.
+   */
+  static parseNoteEffects(equip)
+  {
+    const lines = this.#noteLinesOf(equip);
+    const dividerIndex = this.#dividerIndexOf(lines);
+
+    // no divider means this equip offers nothing from its note.
+    if (dividerIndex === -1) return String.empty;
+
+    return lines.slice(dividerIndex + 1)
+      .join('\n');
+  }
+
+  /**
+   * The note text at and above the transferable divider - what an equip keeps no matter what.
+   *
+   * An equip with no divider keeps its whole note, since none of it was ever offered.
+   * @param {RPG_EquipItem} equip An equip to read retained effects from.
+   * @returns {string} The retained note text.
+   */
+  static parseRetainedNote(equip)
+  {
+    const lines = this.#noteLinesOf(equip);
+    const dividerIndex = this.#dividerIndexOf(lines);
+
+    // no divider means the entire note is the equip's own.
+    if (dividerIndex === -1)
+    {
+      return lines.join('\n');
+    }
+
+    return lines.slice(0, dividerIndex)
+      .join('\n');
+  }
+
+  /**
+   * Splits a note into its non-empty lines.
+   * @param {RPG_EquipItem} equip The equip whose note to split.
+   * @returns {string[]}
+   */
+  static #noteLinesOf(equip)
+  {
+    const note = equip.note || String.empty;
+
+    return note.split(/[\r\n]+/)
+      .filter(line => line.length > 0);
+  }
+
+  /**
+   * Locates the transferable divider among a note's lines.
+   * @param {string[]} lines The note's lines.
+   * @returns {number} The divider's line index, or -1 when absent.
+   */
+  static #dividerIndexOf(lines)
+  {
+    const pattern = J.JAFTING.EXT.REFINE.RegExp.TransferrableEffectsBelow;
+
+    return lines.findIndex(line => pattern.test(line));
+  }
+
+  /**
+   * Decides how each tag key in a pair of transferable notes should merge.
+   *
+   * Derived from the shape of the values rather than from a list of known keys, because the divider is
+   * what declares a tag transferable - so the set of keys that can arrive here is whatever an author
+   * writes, not something this plugin can enumerate ahead of time.
+   *
+   * A key whose every value is a plain number **sums**: two `<bonusHits:2>` become four hits, which is
+   * what a player refining the same material twice expects. Everything else - arrays, formulas, booleans,
+   * prose - **accumulates**: distinct lines stack side by side, and identical ones collapse to one, which
+   * lands exactly where the same formula appearing twice ought to.
+   * @param {string} baseNote The base's transferable note text.
+   * @param {string} overlayNote The donor's transferable note text.
+   * @returns {{accumulatingKeys: string[], summingKeys: string[]}}
+   */
+  static transferPolicyFor(baseNote, overlayNote)
+  {
+    const scalarShape = /^<([^:]+):\s*(-?\d+(?:\.\d+)?)\s*>$/;
+    const tags = [ ...this.#tagsOf(baseNote), ...this.#tagsOf(overlayNote) ];
+
+    // a key stays a summing candidate only while every line under it reads as a plain number; one array
+    // or formula anywhere disqualifies it, since totalling a mixed pair would invent a value.
+    const scalarByKey = new Map();
+
+    tags.forEach(tag =>
+    {
+      const inner = tag.substring(1, tag.length - 1);
+      const colonIndex = inner.indexOf(':');
+      const rawKey = colonIndex === -1
+        ? inner
+        : inner.substring(0, colonIndex);
+      const key = rawKey.trim()
+        .toLowerCase();
+      const isScalar = scalarShape.test(tag);
+
+      if (scalarByKey.has(key) === false)
+      {
+        scalarByKey.set(key, isScalar);
+
+        return;
+      }
+
+      if (isScalar === false) scalarByKey.set(key, false);
+    });
+
+    const summingKeys = [];
+    const accumulatingKeys = [];
+
+    scalarByKey.forEach((isScalar, key) =>
+    {
+      if (isScalar)
+      {
+        summingKeys.push(key);
+
+        return;
+      }
+
+      accumulatingKeys.push(key);
+    });
+
+    return {
+      accumulatingKeys,
+      summingKeys,
+    };
+  }
+
+  /**
+   * Extracts the angle-bracketed tags from a note.
+   * @param {string} note The note text to read.
+   * @returns {string[]}
+   */
+  static #tagsOf(note)
+  {
+    const text = note || String.empty;
+
+    return text.match(/<[^>]+>/g) || [];
+  }
+
+  /**
+   * Groups a note's tags into their authored values, keyed by tag key.
+   *
+   * Values are kept exactly as written, brackets and all. Nothing here interprets what a tag *means* -
+   * that is a job for a tag registry, and inventing a friendlier reading in the meantime would produce
+   * something confidently wrong rather than something plainly unfinished.
+   *
+   * A boolean tag has no value to report, so its presence is the value.
+   * @param {string} note The note text to read.
+   * @returns {Map<string, string[]>} Each key's authored values, in the order written.
+   */
+  static tagValuesOf(note)
+  {
+    const values = new Map();
+
+    this.#tagsOf(note)
+      .forEach(tag =>
+      {
+        const inner = tag.substring(1, tag.length - 1);
+        const colonIndex = inner.indexOf(':');
+        const key = colonIndex === -1
+          ? inner.trim()
+          : inner.substring(0, colonIndex)
+            .trim();
+        const value = colonIndex === -1
+          ? 'yes'
+          : inner.substring(colonIndex + 1)
+            .trim();
+
+        if (values.has(key) === false)
+        {
+          values.set(key, []);
+        }
+
+        const existing = values.get(key);
+
+        // an identical value written twice says nothing twice, matching how the merger buckets them.
+        if (existing.includes(value) === false) existing.push(value);
+      });
+
+    return values;
+  }
+
+  /**
+   * Pairs the base's transferable note effects against the projected output's, per tag key.
+   *
+   * Only the output's keys are walked, because the merge cannot drop one: every key the base carried is
+   * appended in some form, whether it stood alone, accumulated, or was totalled. A key with no `before`
+   * is therefore genuinely arriving from the donor.
+   * @param {RPG_EquipItem} base The equip being refined.
+   * @param {RPG_EquipItem} result The projected refinement output.
+   * @returns {{key: string, before: (string|null), after: string}[]} One row per key, key-ordered.
+   */
+  static buildNoteEffectComparison(base, result)
+  {
+    const before = this.tagValuesOf(this.parseNoteEffects(base));
+    const after = this.tagValuesOf(this.parseNoteEffects(result));
+
+    const rows = [];
+
+    after.forEach((values, key) =>
+    {
+      const beforeValues = before.has(key)
+        ? before.get(key)
+          .join(', ')
+        : null;
+
+      rows.push({
+        key,
+        before: beforeValues,
+        after: values.join(', '),
+      });
+    });
+
+    // stable ordering, so the same pairing always reads the same way down the column.
+    return rows.sort((left, right) => left.key.localeCompare(right.key));
   }
 
   /**
@@ -97,13 +332,51 @@ class JaftingManager
     // push all merged traits after the divider.
     mergedTraits.forEach(t => output.traits.push(t));
 
-    if (material.jaftingRefinedCount > 0)
+    // notes merge the same way traits do: the base keeps everything it never offered, and the two
+    // transferable halves combine below the divider.
+    output.note = this.mergeTransferableNotes(base, material);
+
+    // the donor's own history is deliberately not carried onto the output. One refinement costs one
+    // count no matter how refined the donor was, which is what makes a spent max-refined weapon usable
+    // as a donor for the price of a single count. Its accumulated payload transfers; its tally does not.
+    return output;
+  }
+
+  /**
+   * Builds the note a refinement output carries.
+   *
+   * The base's retained half is reproduced verbatim, then the two transferable halves are merged and
+   * written back beneath a divider - so the output is itself donatable, carrying forward everything it
+   * was given without ever offering the identity it kept.
+   *
+   * A divider is only written when there is something under it. An output with nothing transferable
+   * should not advertise an empty payload, and an equip that never had a divider should not gain one for
+   * free.
+   * @param {RPG_EquipItem} base The equip being refined.
+   * @param {RPG_EquipItem} material The equip being consumed.
+   * @returns {string} The output's note.
+   */
+  static mergeTransferableNotes(base, material)
+  {
+    const retained = this.parseRetainedNote(base);
+    const baseTransferable = this.parseNoteEffects(base);
+    const materialTransferable = this.parseNoteEffects(material);
+
+    const { accumulatingKeys, summingKeys } = this.transferPolicyFor(baseTransferable, materialTransferable);
+    const merged = NoteResolver.merge(baseTransferable, materialTransferable, accumulatingKeys, summingKeys);
+
+    // nothing was transferable on either side, so the output keeps the base's note and no divider.
+    if (merged.length === 0) return retained;
+
+    const divider = JaftingManager.TransferrableEffectsDivider;
+
+    // a base with an empty note still gets a well-formed payload rather than a leading blank line.
+    if (retained.length === 0)
     {
-      // the -1 at the end is to accommodate the default of +1 that occurs when an equip is refined.
-      output.jaftingRefinedCount += material.jaftingRefinedCount - 1;
+      return `${divider}\n${merged}`;
     }
 
-    return output;
+    return `${retained}\n${divider}\n${merged}`;
   }
 
   /**

@@ -479,6 +479,41 @@ class RPG_EquipItem
   }
   //endregion sp-parameters
   //endregion this-parameter bases
+
+  //region own rates
+  /**
+   * How much this equip amplifies its own base for a given parameter.
+   *
+   * A percentage on equipment scales what that equipment is worth rather than what its wearer is worth,
+   * so the multiplier has to be assembled from this item's own traits. It cannot come from the battler's
+   * flattened trait list, which no longer knows which item each trait arrived on.
+   *
+   * Returns a multiplier centred on 1.0 whichever family is asked for. Codes 21 and 23 store their values
+   * as deltas from 1.0 while code 22 stores them as deltas from 0, and normalising the two here is what
+   * lets one subtraction remove equipment's share from all three battler aggregates.
+   *
+   * Every trait counts, including any sitting below a JAFTING divider. A worn item's below-divider traits
+   * are live - the divider is a transfer marker, not a switch - so a percentage there scales this item
+   * exactly like one above it.
+   * @param {number} code The trait code: 21 for base, 22 for ex-, 23 for sp-parameters.
+   * @param {number} dataId The parameter id within that family.
+   * @returns {number}
+   */
+  ownRate(code, dataId)
+  {
+    // ex-parameters count up from nothing; the other two families are multipliers resting at 1.0.
+    const baseline = code === 22
+      ? 0
+      : 1;
+
+    // only this item's own traits for this exact parameter contribute.
+    const matching = this.traits.filter(trait => trait.code === code && trait.dataId === dataId);
+
+    // fold each trait's distance from its family's neutral value onto a 1.0 baseline.
+    return matching.reduce((total, trait) => total + (trait.value - baseline), 1.0);
+  }
+
+  //endregion own rates
 }
 
 

@@ -139,6 +139,11 @@
  * the J-MZ Data Editor app), not tagged on individual database objects.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.2
+ *    The recipe detail window reads a crafted weapon or armor's base parameters
+ *    through thisBParam rather than off the params array. An equip's worth for a
+ *    parameter is that field plus any this-parameter tag it carries, so reading
+ *    the array alone understated anything authored as a tag.
  * - 1.2.1
  *    The plugin metadata class and the category badge and recipe detail
  *    windows no longer declare private members. Both base constructors reach

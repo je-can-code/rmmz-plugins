@@ -174,4 +174,31 @@ J.JAFTING.EXT.REFINE.RegExp.Unrefinable = /<noRefine>/i;
 J.JAFTING.EXT.REFINE.RegExp.MaxRefineCount = /<maxRefineCount:[ ]?(\d+)>/i;
 J.JAFTING.EXT.REFINE.RegExp.MaxRefinedTraits = /<maxRefinedTraits:[ ]?(\d+)>/i;
 J.JAFTING.EXT.REFINE.RegExp.MaxTraitCount = /<maxTraitCount:[ ]?(\d+)>/i;
+
+/**
+ * Marks the point in a note past which effects are refinement payload.
+ *
+ * Everything above it describes what the equip *is* and never leaves it; everything below is what a donor
+ * hands over when consumed. The absence of this tag means an equip has no note effects to give - not that
+ * all of them transfer - which is what keeps a weapon's own identity from being launderable.
+ *
+ * This is the note-side counterpart to the code-63 trait divider {@link JaftingManager.parseTraits} reads.
+ *
+ * <pre>
+ * Structure:
+ *  <transferrableEffectsBelow>
+ *
+ * Example:
+ *  <skillId:1>
+ *  <maxRefineCount:6>
+ *  <transferrableEffectsBelow>
+ *  <bonusHits:2>
+ *
+ * Translation:
+ *  This equip uses skill 1 and refines six times, neither of which transfers.
+ *  A donor consuming it hands over two bonus hits.
+ * </pre>
+ * @type {RegExp}
+ */
+J.JAFTING.EXT.REFINE.RegExp.TransferrableEffectsBelow = /<transferrableEffectsBelow>/i;
 //endregion Introduction

@@ -164,13 +164,17 @@ class RefinementEligibility
   }
 
   /**
-   * Bars a donor that would push the base past how many times it is allowed to be refined.
+   * Bars a donor when the base has already been refined as many times as it is allowed to be.
+   *
+   * The donor itself is not consulted. Every refinement costs the base exactly one count regardless of
+   * how much history the donor brought with it, so what a donor accumulated has no bearing on whether
+   * the base can accept it.
    *
    * @param {{ enabled: boolean, iconIndex: number, errorText: string }} verdict The verdict being amended.
-   * @param {RPG_EquipItem} equip The donor being considered.
+   * @param {RPG_EquipItem} _equip The donor being considered, which this ceiling does not depend on.
    * @param {RPG_EquipItem} baseSelection The chosen base.
    */
-  static applyRefineCountCeiling(verdict, equip, baseSelection)
+  static applyRefineCountCeiling(verdict, _equip, baseSelection)
   {
     const cap = baseSelection.jaftingMaxRefineCount;
 
@@ -180,7 +184,9 @@ class RefinementEligibility
       return;
     }
 
-    const projected = baseSelection.jaftingRefinedCount + equip.jaftingRefinedCount;
+    // a refinement costs exactly one count, whatever the donor accumulated before it got here. Charging
+    // the donor's history instead is what used to bar a max-refined weapon from being spent on anything.
+    const projected = baseSelection.jaftingRefinedCount + 1;
 
     if (cap >= projected)
     {

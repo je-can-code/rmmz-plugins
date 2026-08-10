@@ -270,6 +270,9 @@ Game_Battler.prototype.onBattlerDataChange = function()
   // invalidate the max-tp-bonuses cache so the next getBaseMaxTpBonuses() call recomputes.
   this.setCachedMaxTpBonuses(null);
 
+  // invalidate equipment contributions so the next parameter read reflects what is now equipped.
+  this.setCachedEquipContributions(null);
+
   // invalidate the HAR factor cache so the next baseHarFactor() call recomputes.
   this.setCachedHarFactor(null);
 

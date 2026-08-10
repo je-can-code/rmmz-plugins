@@ -348,36 +348,6 @@ class Window_RefinementDetails
   }
 
   /**
-   * How much a row moved, in the same units the values display in.
-   *
-   * Every one of the three parameter codes formats as a hundredths shift - codes 21 and 23 as
-   * `(value * 100) - 100`, code 22 as `value * 100` - so the difference between two of them is the same
-   * arithmetic regardless of which code it is.
-   * @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
-   * @returns {number|null} The shift in display units, or null for a code with no numeric reading.
-   */
-  rowDeltaPoints(row)
-  {
-    const sample = row.after === null
-      ? row.before
-      : row.after;
-    const code = sample.code();
-
-    // only the three parameter codes have a value worth subtracting; the rest are names and flags.
-    if (code !== 21 && code !== 22 && code !== 23) return null;
-
-    const neutral = this.neutralValueForCode(code);
-    const beforeValue = row.before === null
-      ? neutral
-      : row.before.convertToRmTrait().value;
-    const afterValue = row.after === null
-      ? neutral
-      : row.after.convertToRmTrait().value;
-
-    return Math.round((afterValue - beforeValue) * 100);
-  }
-
-  /**
    * Draws the projected refinement result into the third column, as a before-and-after.
    *
    * Only the result is drawn here now. The base and the donor are each visible in their own list, so
@@ -398,8 +368,13 @@ class Window_RefinementDetails
     const lh = this.lineHeight();
     let y = this.columnContentInnerStartY();
 
-    // the name it will carry once refined.
+    // the name it will carry once refined, sharing its line with the numeric column headings. Those are
+    // drawn unconditionally: the refinement counter at the foot of this column always occupies the same
+    // two columns, so they always have something to label - and pinning them here means the rows below
+    // begin at one fixed height whatever kind of donor is selected, instead of jumping a line when the
+    // donor happens to grant a name rather than an amount.
     this.drawTextEx(`\\I[${result.iconIndex}] \\C[6]${this.outputDisplayName(result)}\\C[0]`, x, y, textWidth);
+    this.drawResultComparisonHeadings(x, y, textWidth);
     y += Math.floor(lh * 1.5);
 
     const comparison = this.buildResultComparison(result);
@@ -417,23 +392,34 @@ class Window_RefinementDetails
       const quantified = comparison.filter(row => this.isQuantifiedRow(row));
       const granted = comparison.filter(row => !this.isQuantifiedRow(row));
 
-      if (quantified.length > 0)
+      quantified.forEach(row =>
       {
-        y = this.drawResultComparisonHeader(x, y, textWidth);
+        this.drawResultComparisonRow(row, result, x, y, textWidth);
+        y += lh;
+      });
 
-        quantified.forEach(row =>
-        {
-          this.drawResultComparisonRow(row, x, y, textWidth);
-          y += lh;
-        });
-
-        // a little air before the granted block, so the two shapes do not read as one broken table.
-        if (granted.length > 0) y += Math.floor(lh * 0.5);
-      }
+      // a little air between the two shapes, so they do not read as one broken table.
+      if (quantified.length > 0 && granted.length > 0) y += Math.floor(lh * 0.5);
 
       granted.forEach(row =>
       {
         this.drawGrantedRow(row, x, y, textWidth);
+        y += lh;
+      });
+    }
+
+    // note effects are their own block: a formula does not fit a ninety-six pixel column, and these are
+    // shown as authored rather than interpreted, so they cannot share the trait rows' shape.
+    const noteEffects = JaftingManager.buildNoteEffectComparison(this.primaryEquip, result);
+
+    if (noteEffects.length > 0)
+    {
+      y += Math.floor(lh * 0.5);
+      y = this.drawNoteEffectsHeading(x, y, textWidth);
+
+      noteEffects.forEach(row =>
+      {
+        this.drawNoteEffectRow(row, x, y, textWidth);
         y += lh;
       });
     }
@@ -468,7 +454,7 @@ class Window_RefinementDetails
    * Draws an effect that is had rather than measured, on one full-width line.
    *
    * The whole row width goes to the label, because these read as sentences - "Learn: Palate Cleanser" -
-   * and the only column beside it says whether it is arriving or leaving.
+   * and the only column beside it says whether it is arriving, leaving, or staying put.
    * @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
    * @param {number} x The column origin.
    * @param {number} y The vertical position to draw at.
@@ -483,32 +469,113 @@ class Window_RefinementDetails
     const iconIndex = sample.convertToRmTrait()
       .iconIndex();
 
-    const isLost = row.after === null;
-    const isNew = row.before === null;
-    const isCarried = !isLost && !isNew;
-
     // the label takes everything except the verdict column on the right.
     const labelWidth = textWidth - colW - 8;
 
-    // an effect the base already had recedes. this panel answers "what changes", and a row that changes
-    // nothing is context rather than an answer - four of them at full strength read as the news.
-    const name = isCarried
-      ? `\\C[7]${sample.nameAndValue}\\C[0]`
-      : sample.nameAndValue;
     const label = iconIndex > 0
-      ? `\\I[${iconIndex}]${name}`
-      : name;
+      ? `\\I[${iconIndex}]${sample.nameAndValue}`
+      : sample.nameAndValue;
     this.drawTextEx(label, x, y, labelWidth);
 
-    // and needs no announcement in the verdict column either.
-    if (isCarried) return;
+    this.drawGrantedVerdict(row, x + labelWidth + 8, y, colW);
+  }
 
-    this.changeTextColor(ColorManager.textColor(isLost
-      ? 18
-      : 24));
-    this.drawText(isLost
-      ? 'lost'
-      : 'new', x + labelWidth + 8, y, colW, Window_Base.TextAlignments.Right);
+  /**
+   * Draws what became of one granted effect, in the column its numeric siblings use for their modifier.
+   *
+   * Every row gets an answer here, including the ones that arrived untouched. The alternative - dimming
+   * the label of a carried effect and leaving this column empty - meant brightness carried meaning for
+   * one row shape and none for the other, and grey is already what this scene's donor list uses for rows
+   * you cannot pick. A carried effect is the opposite of unavailable.
+   * @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
+   * @param {number} x The verdict column's absolute origin.
+   * @param {number} y The vertical position to draw at.
+   * @param {number} colW The verdict column's width.
+   */
+  drawGrantedVerdict(row, x, y, colW)
+  {
+    const alignRight = Window_Base.TextAlignments.Right;
+
+    // an effect the merge dropped is the loudest thing that can happen to a row.
+    if (row.after === null)
+    {
+      this.changeTextColor(ColorManager.textColor(18));
+      this.drawText('lost', x, y, colW, alignRight);
+      this.resetTextColor();
+
+      return;
+    }
+
+    if (row.before === null)
+    {
+      this.changeTextColor(ColorManager.textColor(24));
+      this.drawText('new', x, y, colW, alignRight);
+      this.resetTextColor();
+
+      return;
+    }
+
+    // came through untouched, said plainly - the same dash an unchanged numeric row reports.
+    this.changeTextColor(ColorManager.textColor(7));
+    this.drawText('-', x, y, colW, alignRight);
+    this.resetTextColor();
+  }
+
+  /**
+   * Labels the note-effect block, so a raw tag key is not mistaken for a broken trait row.
+   *
+   * These rows read differently from everything above them - a key as authored on the left, a value as
+   * authored on the right - and saying so is what stops `cdmBuffPlus` looking like a rendering fault.
+   * @param {number} x The column origin.
+   * @param {number} y The vertical position to draw at.
+   * @param {number} textWidth The drawable width of the result column.
+   * @returns {number} The vertical position the first row should start at.
+   */
+  drawNoteEffectsHeading(x, y, textWidth)
+  {
+    this.modFontSize(-4);
+    this.changeTextColor(ColorManager.textColor(7));
+    this.drawText('note effects', x, y, textWidth, Window_Base.TextAlignments.Left);
+    this.resetTextColor();
+    this.resetFontSettings();
+
+    return y + this.lineHeight();
+  }
+
+  /**
+   * Draws one transferable note effect: its tag key, and what its value becomes.
+   *
+   * Presented exactly as authored, because nothing here knows what a tag means. A value that changed
+   * shows both sides so the movement is visible; one arriving from the donor shows only what it will be,
+   * since it had no previous value to move from.
+   * @param {{key: string, before: (string|null), after: string}} row The paired effect.
+   * @param {number} x The column origin.
+   * @param {number} y The vertical position to draw at.
+   * @param {number} textWidth The drawable width of the result column.
+   */
+  drawNoteEffectRow(row, x, y, textWidth)
+  {
+    const { nameWidth } = this.resultComparisonColumns(textWidth);
+    const valueWidth = textWidth - nameWidth - 8;
+
+    this.drawText(row.key, x, y, nameWidth, Window_Base.TextAlignments.Left);
+
+    const isNew = row.before === null;
+    const isUnchanged = row.before === row.after;
+
+    // an unchanged value states itself once; repeating it either side of an arrow would dress standing
+    // still as a change.
+    const valueText = (isNew || isUnchanged)
+      ? row.after
+      : `${row.before} -> ${row.after}`;
+
+    // arriving and moving both read as gains; standing still is context.
+    const colorIndex = isUnchanged
+      ? 7
+      : 24;
+
+    this.changeTextColor(ColorManager.textColor(colorIndex));
+    this.drawText(valueText, x + nameWidth + 8, y, valueWidth, Window_Base.TextAlignments.Right);
     this.resetTextColor();
   }
 
@@ -540,34 +607,44 @@ class Window_RefinementDetails
   }
 
   /**
-   * Labels the before and after columns so the two numbers on each row are not ambiguous.
+   * Labels the three numeric columns, on the same line as the output's name.
+   *
+   * Drawn on every refresh rather than only when a numeric row exists, so the block beneath keeps one
+   * fixed starting height. Switching between a donor that grants an amount and one that grants a name
+   * otherwise moved every row a line up or down, which read as the panel twitching.
    * @param {number} x The column origin.
-   * @param {number} y The vertical position to draw at.
+   * @param {number} y The vertical position to draw at, shared with the output's name.
    * @param {number} textWidth The drawable width of the result column.
-   * @returns {number} The vertical position the first row should start at.
    */
-  drawResultComparisonHeader(x, y, textWidth)
+  drawResultComparisonHeadings(x, y, textWidth)
   {
-    const { beforeX, afterX, colW } = this.resultComparisonColumns(textWidth);
+    const { beforeX, afterX, deltaX, colW } = this.resultComparisonColumns(textWidth);
 
     this.modFontSize(-4);
     this.changeTextColor(ColorManager.textColor(7));
     this.drawText('now', x + beforeX, y, colW, Window_Base.TextAlignments.Right);
     this.drawText('after', x + afterX, y, colW, Window_Base.TextAlignments.Right);
+
+    // the third column holds a percentage now rather than a verdict word, so it needs naming too - three
+    // numbers on a row with only two of them labelled reads as one of them being unexplained.
+    this.drawText('mod', x + deltaX, y, colW, Window_Base.TextAlignments.Right);
     this.resetTextColor();
     this.resetFontSettings();
-
-    return y + this.lineHeight();
   }
 
   /**
-   * Draws one effect's before, after, and what changed between them.
+   * Draws one effect's before, after, and the percentage responsible for the difference.
+   *
+   * The projected output arrives as a parameter rather than being read off {@link outputEquip}, which is
+   * not assigned until this column has finished drawing - reading it here would measure the previous
+   * pairing the player looked at.
    * @param {{trait: JAFTING_Trait, before: (JAFTING_Trait|null)}} row The paired effect.
+   * @param {RPG_EquipItem} result The projected refinement output.
    * @param {number} x The column origin.
    * @param {number} y The vertical position to draw at.
    * @param {number} textWidth The drawable width of the result column.
    */
-  drawResultComparisonRow(row, x, y, textWidth)
+  drawResultComparisonRow(row, result, x, y, textWidth)
   {
     const { beforeX, afterX, deltaX, colW, nameWidth } = this.resultComparisonColumns(textWidth);
     const sample = row.after === null
@@ -582,36 +659,66 @@ class Window_RefinementDetails
       : sample.name;
     this.drawTextEx(label, x, y, nameWidth);
 
-    // an absent side reads as a dash rather than a zero, which would claim it sat at zero.
-    const beforeText = row.before === null
-      ? '-'
-      : row.before.value;
-    const afterText = row.after === null
-      ? '-'
-      : row.after.value;
+    const code = sample.code();
+    const dataId = sample.dataId();
 
-    this.drawText(beforeText, x + beforeX, y, colW, Window_Base.TextAlignments.Right);
-    this.drawText(afterText, x + afterX, y, colW, Window_Base.TextAlignments.Right);
+    // what the equip is worth for this stat on its own, before and after. A percentage on equipment
+    // scales that equipment, so the number a player can act on is this one - "+25%" alone never said of
+    // what, and a percentage landing on a stat the item has none of reads plainly here as 0 to 0.
+    const before = this.localWorthFor(this.primaryEquip, code, dataId);
+    const after = this.localWorthFor(result, code, dataId);
 
-    this.drawResultComparisonDelta(row, x + deltaX, y, colW);
+    this.drawText(`${before}`, x + beforeX, y, colW, Window_Base.TextAlignments.Right);
+    this.drawText(`${after}`, x + afterX, y, colW, Window_Base.TextAlignments.Right);
+
+    this.drawResultComparisonModifier(row, x + deltaX, y, colW);
   }
 
   /**
-   * Draws what changed on one row, as the signed amount rather than a word.
+   * What an equip is worth for one parameter on its own, as a whole number ready to draw.
    *
-   * The sign carries the direction, so no arrow is needed on top of it - and a number says how much,
-   * which "up" never did. A row whose value the merge did not move says so plainly instead of claiming a
-   * gain it did not deliver.
-   * @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
-   * @param {number} x The delta column's absolute origin.
-   * @param {number} y The vertical position to draw at.
-   * @param {number} colW The delta column's width.
+   * Its base for that stat amplified by its own percentages - the same arithmetic the battler performs
+   * when it asks equipment what it contributes, so this column cannot disagree with the stat screen.
+   * Base parameters read a flat amount; the other two families are already whole percents.
+   * @param {RPG_EquipItem} equip The equip to measure.
+   * @param {number} code The trait code: 21, 22, or 23.
+   * @param {number} dataId The parameter id within that family.
+   * @returns {number}
    */
-  drawResultComparisonDelta(row, x, y, colW)
+  localWorthFor(equip, code, dataId)
+  {
+    const ownRate = equip.ownRate(code, dataId);
+
+    if (code === 21)
+    {
+      return Math.round(equip.thisBParam(dataId) * ownRate);
+    }
+
+    if (code === 22)
+    {
+      return Math.round(equip.thisXParam(dataId) * ownRate);
+    }
+
+    return Math.round(equip.thisSParam(dataId) * ownRate);
+  }
+
+  /**
+   * Draws the percentage the projected result carries for this row.
+   *
+   * The two columns to the left say what the equip is worth before and after, which is the number a
+   * player acts on. This column says what is producing that difference - the modifier itself - so a row
+   * reads as a claim and its evidence rather than as a bare percentage of nothing in particular.
+   * @param {{before: (JAFTING_Trait|null), after: (JAFTING_Trait|null)}} row The paired effect.
+   * @param {number} x The modifier column's absolute origin.
+   * @param {number} y The vertical position to draw at.
+   * @param {number} colW The modifier column's width.
+   */
+  drawResultComparisonModifier(row, x, y, colW)
   {
     const alignRight = Window_Base.TextAlignments.Right;
 
-    // an effect the merge removed outright is the loudest thing that can happen to a row.
+    // an effect the merge removed outright is the loudest thing that can happen to a row, and it has no
+    // modifier left to report - the two columns beside this one already show the drop.
     if (row.after === null)
     {
       this.changeTextColor(ColorManager.textColor(18));
@@ -621,10 +728,10 @@ class Window_RefinementDetails
       return;
     }
 
-    const delta = this.rowDeltaPoints(row);
+    const points = this.rowModifierPoints(row);
 
     // a code with no numeric reading can only report that it arrived, not by how much.
-    if (delta === null)
+    if (points === null)
     {
       const colorIndex = row.before === null
         ? 24
@@ -638,8 +745,8 @@ class Window_RefinementDetails
       return;
     }
 
-    // unchanged is its own answer. saying "up" here was claiming a gain the refinement never made.
-    if (delta === 0)
+    // a modifier of nothing is its own answer; drawing "+0%" would dress a no-op as a change.
+    if (points === 0)
     {
       this.changeTextColor(ColorManager.textColor(7));
       this.drawText('-', x, y, colW, alignRight);
@@ -648,12 +755,38 @@ class Window_RefinementDetails
       return;
     }
 
-    const isGain = delta > 0;
+    const isGain = points > 0;
     this.changeTextColor(ColorManager.textColor(isGain
       ? 24
       : 18));
-    this.drawText(`${isGain ? '+' : ''}${delta}`, x, y, colW, alignRight);
+    this.drawText(`${isGain ? '+' : ''}${points}%`, x, y, colW, alignRight);
     this.resetTextColor();
+  }
+
+  /**
+   * The percentage the projected result carries for one row, in whole points.
+   *
+   * Read off the result's own value rather than the difference between the two sides, because this column
+   * answers "what is this item's modifier now" - the movement is already visible in the before and after
+   * beside it. Codes 21 and 23 store their values as deltas from 1.0 and code 22 from 0, which is the only
+   * thing separating the two arms here.
+   *
+   * **The row must have an `after`.** A merge that dropped an effect has no modifier left to report, and
+   * {@link drawResultComparisonModifier} answers that case itself before reaching this.
+   * @param {{before: (JAFTING_Trait|null), after: JAFTING_Trait}} row The paired effect, still present in the result.
+   * @returns {number|null} The modifier in whole percents, or null for a code with no numeric reading.
+   */
+  rowModifierPoints(row)
+  {
+    const code = row.after.code();
+
+    // only the three parameter codes carry a percentage; the rest are names and flags.
+    if (code !== 21 && code !== 22 && code !== 23) return null;
+
+    const neutral = this.neutralValueForCode(code);
+    const { value } = row.after.convertToRmTrait();
+
+    return Math.round((value - neutral) * 100);
   }
 
   /**

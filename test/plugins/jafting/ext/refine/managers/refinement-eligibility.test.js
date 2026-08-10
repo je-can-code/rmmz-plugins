@@ -165,6 +165,20 @@ describe('RefinementEligibility (direct src import)', () =>
       expect(verdict.errorText).toContain('max refines');
     });
 
+    it('allows an equip with refines left under a real cap', () =>
+    {
+      // Arrange - a cap that exists and has not been reached. Without this the cap comparison itself is
+      // unconstrained: only "no cap" and "at the cap" were covered, and both take the same branch out.
+      const datum = equip({ jaftingMaxRefineCount: 3, jaftingRefinedCount: 1 });
+
+      // Act
+      const verdict = RefinementEligibility.evaluate(datum, true, null);
+
+      // Assert
+      expect(verdict.enabled).toBe(true);
+      expect(verdict.iconIndex).toBe(50);
+    });
+
     it('treats a trait cap of zero as no cap at all', () =>
     {
       // Arrange
@@ -188,6 +202,19 @@ describe('RefinementEligibility (direct src import)', () =>
       // Assert
       expect(verdict.enabled).toBe(false);
       expect(verdict.errorText).toContain('max traits');
+    });
+
+    it('allows an equip with room left under a real trait cap', () =>
+    {
+      // Arrange - the other half of the same gap: a trait cap that exists and has not been filled.
+      const datum = equip({ jaftingMaxTraitCount: 4, traitCount: 2 });
+
+      // Act
+      const verdict = RefinementEligibility.evaluate(datum, true, null);
+
+      // Assert
+      expect(verdict.enabled).toBe(true);
+      expect(verdict.iconIndex).toBe(50);
     });
   });
   //endregion judging a base
@@ -218,11 +245,12 @@ describe('RefinementEligibility (direct src import)', () =>
       expect(verdict.enabled).toBe(true);
     });
 
-    it('bars a donor that would push the base past its refine ceiling', () =>
+    it('bars any donor once the base has spent its last refine count', () =>
     {
-      // Arrange
+      // Arrange - the donor is pristine, so the only thing that can be barring it is the base being
+      // full. A refined donor here would leave it ambiguous which of the two triggered the block.
       const base = equip({ jaftingMaxRefineCount: 2, jaftingRefinedCount: 2 });
-      const donor = equip({ jaftingRefinedCount: 1 });
+      const donor = equip({ jaftingRefinedCount: 0 });
 
       // Act
       const verdict = RefinementEligibility.evaluate(donor, false, base);
@@ -231,6 +259,20 @@ describe('RefinementEligibility (direct src import)', () =>
       expect(verdict.enabled).toBe(false);
       expect(verdict.iconIndex).toBe(RefinementEligibility.BlockedIcon);
       expect(verdict.errorText).toContain('over refines');
+    });
+
+    it('allows a fully-refined donor onto a partly-refined base, charging only one count', () =>
+    {
+      // Arrange - a maxed donor onto a base three deep, under a cap of six. The donor's own six counts
+      // are its owner's spent effort, not a debt the base inherits, so this costs the base exactly one.
+      const base = equip({ jaftingMaxRefineCount: 6, jaftingRefinedCount: 3 });
+      const donor = equip({ jaftingRefinedCount: 6 });
+
+      // Act
+      const verdict = RefinementEligibility.evaluate(donor, false, base);
+
+      // Assert - projects 4 of 6. Adding the donor's history instead would project 9 and bar it.
+      expect(verdict.enabled).toBe(true);
     });
 
     it('ignores the refine ceiling when the base is uncapped', () =>
