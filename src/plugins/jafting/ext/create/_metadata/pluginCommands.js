@@ -1,5 +1,6 @@
 //region plugin commands
 import Scene_JaftingCreate from '../scenes/Scene_JaftingCreate.js';
+import Scene_JaftingStudy from '../scenes/Scene_JaftingStudy.js';
 
 /**
  * A plugin command.<br>
@@ -8,6 +9,15 @@ import Scene_JaftingCreate from '../scenes/Scene_JaftingCreate.js';
 PluginManager.registerCommand(J.JAFTING.EXT.CREATE.Metadata.name, "call-menu", () =>
 {
   Scene_JaftingCreate.callScene();
+});
+
+/**
+ * A plugin command.<br>
+ * Calls the menu for buying recipes from somebody who knows them.
+ */
+PluginManager.registerCommand(J.JAFTING.EXT.CREATE.Metadata.name, "call-study-shop", () =>
+{
+  Scene_JaftingStudy.callScene();
 });
 
 /**

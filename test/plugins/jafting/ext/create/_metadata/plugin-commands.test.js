@@ -5,6 +5,7 @@ describe('J-JAFTING-Creation plugin commands (direct src import)', () =>
 {
   let handlers;
   let FakeSceneJaftingCreate;
+  let FakeSceneJaftingStudy;
 
   beforeAll(async () =>
   {
@@ -12,6 +13,11 @@ describe('J-JAFTING-Creation plugin commands (direct src import)', () =>
 
     FakeSceneJaftingCreate = { callScene: vi.fn() };
     vi.doMock('../../../../../../src/plugins/jafting/ext/create/scenes/Scene_JaftingCreate.js', () => ({ default: FakeSceneJaftingCreate }));
+
+    // both scenes are stood in for, since importing either would evaluate every window it builds- and
+    // a class extending a bare-global Window_Base cannot even be declared without the view layer up.
+    FakeSceneJaftingStudy = { callScene: vi.fn() };
+    vi.doMock('../../../../../../src/plugins/jafting/ext/create/scenes/Scene_JaftingStudy.js', () => ({ default: FakeSceneJaftingStudy }));
 
     globalThis.J = {
       JAFTING: {
@@ -56,8 +62,9 @@ describe('J-JAFTING-Creation plugin commands (direct src import)', () =>
 
     // Assert
     expect(Object.keys(handlers)).toEqual([
-      'call-menu', 'unlock-categories', 'lock-categories', 'unlock-recipes', 'lock-recipes',
-      'unlock-all-categories', 'lock-all-categories', 'unlock-all-recipes', 'lock-all-recipes',
+      'call-menu', 'call-study-shop', 'unlock-categories', 'lock-categories', 'unlock-recipes',
+      'lock-recipes', 'unlock-all-categories', 'lock-all-categories', 'unlock-all-recipes',
+      'lock-all-recipes',
     ]);
   });
 
@@ -66,8 +73,19 @@ describe('J-JAFTING-Creation plugin commands (direct src import)', () =>
     // Arrange/Act
     handlers['call-menu']();
 
-    // Assert
+    // Assert- and not the shop, which is the neighbouring scene it could be confused with.
     expect(FakeSceneJaftingCreate.callScene).toHaveBeenCalled();
+    expect(FakeSceneJaftingStudy.callScene).not.toHaveBeenCalled();
+  });
+
+  it('call-study-shop calls the jafting-study scene', () =>
+  {
+    // Arrange/Act
+    handlers['call-study-shop']();
+
+    // Assert
+    expect(FakeSceneJaftingStudy.callScene).toHaveBeenCalled();
+    expect(FakeSceneJaftingCreate.callScene).not.toHaveBeenCalled();
   });
 
   it('unlock-categories unlocks each parsed key', () =>

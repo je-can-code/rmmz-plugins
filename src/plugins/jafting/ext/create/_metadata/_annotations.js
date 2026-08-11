@@ -201,6 +201,10 @@
  * @text Call the Creation Menu
  * @desc Calls the JAFTING Creation scene.
  *
+ * @command call-study-shop
+ * @text Call the Study Shop
+ * @desc Calls the scene for buying recipes. Scope it the same way the crafting menu is scoped.
+ *
  * @command unlock-categories
  * @text Unlock Categories
  * @desc Unlocks all crafting categories matching the provided keys.
