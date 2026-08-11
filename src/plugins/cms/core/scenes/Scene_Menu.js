@@ -1,5 +1,6 @@
 import Window_MenuActorCommand from './../windows/Window_MenuActorCommand.js';
 import Window_MenuPartyCommand from './../windows/Window_MenuPartyCommand.js';
+import Window_Currencies from './../windows/Window_Currencies.js';
 import MenuCommandBroadcaster from './../_models/MenuCommandBroadcaster.js';
 
 /**
@@ -160,6 +161,49 @@ Scene_Menu.prototype.statusWindowRect = function()
 
   // return the built rectangle.
   return new Rectangle(this.centerStackX(), wy, this.centerStackWidth(), wh);
+};
+
+/**
+ * Overwrites {@link #createGoldWindow}.<br/>
+ * Builds the currency strip rather than vanilla's gold-only window.
+ *
+ * The slot keeps vanilla's name because vanilla's `Scene_Menu.create` is what calls it, and because
+ * everything measuring against `_goldWindow` should go on finding it there.
+ */
+Scene_Menu.prototype.createGoldWindow = function()
+{
+  // define the rectangle of the window.
+  const rectangle = this.goldWindowRect();
+
+  // create the window with the rectangle.
+  const window = new Window_Currencies(rectangle);
+
+  // update the tracker with the new window.
+  this.setGoldWindow(window);
+
+  // add the window to the scene manager's tracking.
+  this.addWindow(window);
+};
+
+/**
+ * Gets the currency strip.
+ * @returns {Window_Currencies}
+ */
+Scene_Menu.prototype.goldWindow = function()
+{
+  return this._goldWindow;
+};
+
+/**
+ * Sets the currency strip to the given window.
+ *
+ * Written into vanilla's own slot rather than into this plugin's namespace, because vanilla's
+ * `Scene_Menu` reads `_goldWindow` itself and anything else measuring against it should keep working.
+ * @param {Window_Currencies} window The window to track.
+ */
+Scene_Menu.prototype.setGoldWindow = function(window)
+{
+  this._goldWindow = window;
 };
 
 /**

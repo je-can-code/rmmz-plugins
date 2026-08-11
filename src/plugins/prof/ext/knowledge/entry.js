@@ -7,4 +7,6 @@ import './managers/KnowledgeExchangeManager.js';
 import './objects/Game_Party.js';
 import './objects/Game_Actor.js';
 
+import './registerKnowledgeCurrencies.js';
+
 import './_metadata/pluginCommands.js';
