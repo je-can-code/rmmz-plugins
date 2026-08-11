@@ -67,6 +67,20 @@ class CraftingRecipe
    */
   outputs = [];
 
+  /**
+   * The components that must be paid once, to learn this recipe from somebody who knows it.
+   *
+   * **This is not part of crafting, and must never be iterated alongside the three arrays above it.**
+   * Rolling all four together is the obvious tidy-up and it is wrong: the cost buys the knowledge a
+   * single time, so a recipe swept into `canCraft` or the consume loop would charge its tuition again
+   * on every single craft forever after.
+   *
+   * An empty cost means the recipe is not for sale, which is what every recipe authored before this
+   * existed says by saying nothing.
+   * @type {CraftingComponent[]}
+   */
+  cost = [];
+
   //endregion
 
   constructor(
@@ -79,7 +93,8 @@ class CraftingRecipe
     maskedUntilCrafted,
     ingredients,
     tools,
-    outputs)
+    outputs,
+    cost = [])
   {
     this.name = name;
     this.key = key;
@@ -93,6 +108,39 @@ class CraftingRecipe
     this.ingredients = ingredients;
     this.tools = tools;
     this.outputs = outputs;
+    this.cost = cost;
+  }
+
+  /**
+   * Whether this recipe is something a shop could sell.
+   *
+   * A recipe with nothing to pay is not free, it is simply not for sale- every recipe authored before
+   * study existed says exactly that by having no cost at all.
+   * @returns {boolean}
+   */
+  isPurchasable()
+  {
+    return this.cost.length > 0;
+  }
+
+  /**
+   * Whether the party is currently carrying everything this recipe's tuition asks for.
+   * @returns {boolean}
+   */
+  canAffordStudy()
+  {
+    return this.cost.every(component => component.hasEnough());
+  }
+
+  /**
+   * Hands over everything this recipe's tuition asks for.
+   *
+   * Unlike crafting, there is no shared tally to allocate against, because a cost is paid once and the
+   * thing it buys cannot be bought twice.
+   */
+  payStudyCost()
+  {
+    this.cost.forEach(component => component.consume());
   }
 
   /**
@@ -292,11 +340,7 @@ class CraftingRecipe
   getRecipeName()
   {
     // initialize the name.
-    let name = (!this.name.trim().length)
-      // use the primary output's name if we didn't define one.
-      ? this.getPrimaryOutput().name
-      // we defined a name to use.
-      : this.name;
+    let name = this.getUnmaskedRecipeName();
 
     // check if we need masking.
     if (this.needsMasking())
@@ -342,11 +386,7 @@ class CraftingRecipe
   getRecipeIcon()
   {
     // initialize the icon.
-    let iconIndex = (this.iconIndex <= -1)
-      // use the primary output's icon if we didn't define one.
-      ? this.getPrimaryOutput().iconIndex
-      // we defined an icon to use.
-      : this.iconIndex;
+    let iconIndex = this.getUnmaskedRecipeIcon();
 
     // check if we need masking.
     if (this.needsMasking())
@@ -357,6 +397,38 @@ class CraftingRecipe
 
     // return our determination.
     return iconIndex;
+  }
+
+  /**
+   * Gets the recipe's name without ever masking it.
+   *
+   * A shop needs this. Every recipe it has to sell is by definition one nobody has crafted, so asking
+   * for the masked name would price a row of question marks and leave the player buying a mystery -
+   * which is a different offer from the one being made. What stays hidden until it is crafted is the
+   * description and what goes into it; the name on the price tag is the point of the price tag.
+   * @return {string}
+   */
+  getUnmaskedRecipeName()
+  {
+    return (!this.name.trim().length)
+      // use the primary output's name if we didn't define one.
+      ? this.getPrimaryOutput().name
+      // we defined a name to use.
+      : this.name;
+  }
+
+  /**
+   * Gets the recipe's icon index without ever masking it.<br/>
+   * Wanted for the same reason as {@link #getUnmaskedRecipeName}.
+   * @return {number}
+   */
+  getUnmaskedRecipeIcon()
+  {
+    return (this.iconIndex <= -1)
+      // use the primary output's icon if we didn't define one.
+      ? this.getPrimaryOutput().iconIndex
+      // we defined an icon to use.
+      : this.iconIndex;
   }
 
   /**

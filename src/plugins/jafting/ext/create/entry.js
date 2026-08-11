@@ -9,6 +9,7 @@ import './__models/CraftingCreationSession.js';
 import './_metadata/initialization.js';
 
 import './managers/RecipeSpendResolver.js';
+import './managers/StudyPurchaseService.js';
 
 import './database/RPG_Base.js';
 import './objects/Game_Party.js';

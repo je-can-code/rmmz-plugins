@@ -493,5 +493,104 @@ describe('J-JAFTING-Creation Game_Party (direct src import)', () =>
     });
   });
   //endregion crafted counts
+
+  //region purchasable recipes
+  describe('getPurchasableRecipesByCategory', () =>
+  {
+    /**
+     * Builds a recipe definition of the shape the shelf filters over.
+     * @param {string} key The recipe's key.
+     * @param {string[]} cost The cost components, where an empty list means not for sale.
+     * @param {string} categoryKey The category it belongs to.
+     * @returns {object}
+     */
+    function purchasableRecipe(key, cost, categoryKey)
+    {
+      return {
+        key,
+        cost,
+        categoryKeys: [ categoryKey ],
+        isPurchasable()
+        {
+          return this.cost.length > 0;
+        },
+      };
+    }
+
+    it('offers a costed recipe of the category asked for', () =>
+    {
+      // Arrange
+      useRecipes([ purchasableRecipe('sellable', [ {} ], 'blades') ]);
+
+      // Act
+      const purchasable = party.getPurchasableRecipesByCategory('blades');
+
+      // Assert
+      expect(purchasable.length).toBe(1);
+      expect(purchasable[0].key).toBe('sellable');
+    });
+
+    it('withholds a recipe carrying no cost, which is not for sale rather than free', () =>
+    {
+      // Arrange- the near-miss: identical but for the cost, and nothing shipped before study has one.
+      useRecipes([
+        purchasableRecipe('sellable', [ {} ], 'blades'),
+        purchasableRecipe('free_ride', [], 'blades'),
+      ]);
+
+      // Act
+      const purchasable = party.getPurchasableRecipesByCategory('blades');
+
+      // Assert
+      expect(purchasable.map(recipe => recipe.key)).toEqual([ 'sellable' ]);
+    });
+
+    it('withholds the divider rows that pad the configuration', () =>
+    {
+      // Arrange- dividers are never unlocked, so a shelf built from what is locked is built from these.
+      useRecipes([
+        purchasableRecipe('sellable', [ {} ], 'blades'),
+        purchasableRecipe('_DIVIDER', [ {} ], 'blades'),
+        purchasableRecipe('==SECTION', [ {} ], 'blades'),
+      ]);
+
+      // Act
+      const purchasable = party.getPurchasableRecipesByCategory('blades');
+
+      // Assert
+      expect(purchasable.map(recipe => recipe.key)).toEqual([ 'sellable' ]);
+    });
+
+    it('withholds a costed recipe belonging to some other category', () =>
+    {
+      // Arrange
+      useRecipes([
+        purchasableRecipe('sellable', [ {} ], 'blades'),
+        purchasableRecipe('elsewhere', [ {} ], 'spears'),
+      ]);
+
+      // Act
+      const purchasable = party.getPurchasableRecipesByCategory('blades');
+
+      // Assert
+      expect(purchasable.map(recipe => recipe.key)).toEqual([ 'sellable' ]);
+    });
+
+    it('keeps offering a recipe the party already knows', () =>
+    {
+      // Arrange- a shop that hides what you bought cannot show you how much of it there was; the
+      // window greys these and sorts them last rather than the accessor dropping them.
+      useRecipes([ purchasableRecipe('sellable', [ {} ], 'blades') ]);
+      party.updateRecipesFromConfig();
+      party.unlockRecipe('sellable');
+
+      // Act
+      const purchasable = party.getPurchasableRecipesByCategory('blades');
+
+      // Assert
+      expect(purchasable.length).toBe(1);
+    });
+  });
+  //endregion purchasable recipes
 });
 //endregion plugins/jafting/ext/create/objects/game-party-crafting.test.js

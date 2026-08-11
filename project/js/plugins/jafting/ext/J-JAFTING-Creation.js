@@ -787,7 +787,20 @@ var CraftingRecipe = class {
 	* @type {CraftingComponent[]}
 	*/
 	outputs = [];
-	constructor(name, key, categoryKeys, iconIndex, description, unlockedByDefault, maskedUntilCrafted, ingredients, tools, outputs) {
+	/**
+	* The components that must be paid once, to learn this recipe from somebody who knows it.
+	*
+	* **This is not part of crafting, and must never be iterated alongside the three arrays above it.**
+	* Rolling all four together is the obvious tidy-up and it is wrong: the cost buys the knowledge a
+	* single time, so a recipe swept into `canCraft` or the consume loop would charge its tuition again
+	* on every single craft forever after.
+	*
+	* An empty cost means the recipe is not for sale, which is what every recipe authored before this
+	* existed says by saying nothing.
+	* @type {CraftingComponent[]}
+	*/
+	cost = [];
+	constructor(name, key, categoryKeys, iconIndex, description, unlockedByDefault, maskedUntilCrafted, ingredients, tools, outputs, cost = []) {
 		this.name = name;
 		this.key = key;
 		this.categoryKeys = categoryKeys;
@@ -798,6 +811,33 @@ var CraftingRecipe = class {
 		this.ingredients = ingredients;
 		this.tools = tools;
 		this.outputs = outputs;
+		this.cost = cost;
+	}
+	/**
+	* Whether this recipe is something a shop could sell.
+	*
+	* A recipe with nothing to pay is not free, it is simply not for sale- every recipe authored before
+	* study existed says exactly that by having no cost at all.
+	* @returns {boolean}
+	*/
+	isPurchasable() {
+		return this.cost.length > 0;
+	}
+	/**
+	* Whether the party is currently carrying everything this recipe's tuition asks for.
+	* @returns {boolean}
+	*/
+	canAffordStudy() {
+		return this.cost.every((component) => component.hasEnough());
+	}
+	/**
+	* Hands over everything this recipe's tuition asks for.
+	*
+	* Unlike crafting, there is no shared tally to allocate against, because a cost is paid once and the
+	* thing it buys cannot be bought twice.
+	*/
+	payStudyCost() {
+		this.cost.forEach((component) => component.consume());
 	}
 	/**
 	* Checks if the party has the required materials to perform the crafting.
@@ -927,7 +967,7 @@ var CraftingRecipe = class {
 	* @return {string}
 	*/
 	getRecipeName() {
-		let name = !this.name.trim().length ? this.getPrimaryOutput().name : this.name;
+		let name = this.getUnmaskedRecipeName();
 		if (this.needsMasking()) {
 			name = name.replace(/[A-Za-z\-!?',.]/gi, "?");
 		}
@@ -951,11 +991,31 @@ var CraftingRecipe = class {
 	* @return {number}
 	*/
 	getRecipeIcon() {
-		let iconIndex = this.iconIndex <= -1 ? this.getPrimaryOutput().iconIndex : this.iconIndex;
+		let iconIndex = this.getUnmaskedRecipeIcon();
 		if (this.needsMasking()) {
 			iconIndex = 93;
 		}
 		return iconIndex;
+	}
+	/**
+	* Gets the recipe's name without ever masking it.
+	*
+	* A shop needs this. Every recipe it has to sell is by definition one nobody has crafted, so asking
+	* for the masked name would price a row of question marks and leave the player buying a mystery -
+	* which is a different offer from the one being made. What stays hidden until it is crafted is the
+	* description and what goes into it; the name on the price tag is the point of the price tag.
+	* @return {string}
+	*/
+	getUnmaskedRecipeName() {
+		return !this.name.trim().length ? this.getPrimaryOutput().name : this.name;
+	}
+	/**
+	* Gets the recipe's icon index without ever masking it.<br/>
+	* Wanted for the same reason as {@link #getUnmaskedRecipeName}.
+	* @return {number}
+	*/
+	getUnmaskedRecipeIcon() {
+		return this.iconIndex <= -1 ? this.getPrimaryOutput().iconIndex : this.iconIndex;
 	}
 	/**
 	* Gets the underlying item for the primary output of this recipe.
@@ -1392,11 +1452,13 @@ var J_CraftingCreatePluginMetadata = class J_CraftingCreatePluginMetadata extend
 			const parsedIngredients = mappableRecipe.ingredients.map(componentMapper, this);
 			const parsedTools = mappableRecipe.tools.map(componentMapper, this);
 			const parsedOutputs = mappableRecipe.outputs.map(componentMapper, this);
+			const rawCost = mappableRecipe.cost ?? [];
+			const parsedCost = rawCost.map(componentMapper, this);
 			const categoricalOutput = parsedOutputs.find((output) => output.isCategorical());
 			if (categoricalOutput !== undefined) {
 				throw new Error(`recipe '${mappableRecipe.key}' declares a categorical output, which cannot be produced.`);
 			}
-			const newJaftingRecipe = new CraftingRecipe(mappableRecipe.name, mappableRecipe.key, mappableRecipe.categoryKeys, mappableRecipe.iconIndex, mappableRecipe.description, mappableRecipe.unlockedByDefault, mappableRecipe.maskedUntilCrafted, parsedIngredients, parsedTools, parsedOutputs);
+			const newJaftingRecipe = new CraftingRecipe(mappableRecipe.name, mappableRecipe.key, mappableRecipe.categoryKeys, mappableRecipe.iconIndex, mappableRecipe.description, mappableRecipe.unlockedByDefault, mappableRecipe.maskedUntilCrafted, parsedIngredients, parsedTools, parsedOutputs, parsedCost);
 			return newJaftingRecipe;
 		};
 		/** @type {CraftingRecipe[]} */
@@ -1696,6 +1758,76 @@ var RecipeSpendResolver = class RecipeSpendResolver {
 };
 
 //#endregion
+//#region src/plugins/jafting/ext/create/managers/StudyPurchaseService.js
+/**
+* A static service for buying the knowledge of a recipe from somebody who already has it.
+*
+* A purchase is three questions and two writes, and none of it belongs in the scene that triggers it -
+* a rule kept inside a window is a rule nothing can test. The scene asks for an outcome and decides
+* what noise to make about it; everything that decides whether the transaction happens lives here.
+*
+* Buying is not crafting, and the difference is the whole reason this is separate: crafting spends
+* ingredients against a shared tally every time it runs, while a cost is paid once for a thing that
+* cannot be bought twice.
+*/
+var StudyPurchaseService = class StudyPurchaseService {
+	/**
+	* Constructor.<br/>
+	* This is a static class; it should not be instantiated.
+	*/
+	constructor() {
+		throw new Error("The StudyPurchaseService is a static class.");
+	}
+	/**
+	* The reasons a purchase can fail to happen.
+	* @type {Object<string, string>}
+	*/
+	static Reasons = {
+		NoRecipe: "no_recipe",
+		NotForSale: "not_for_sale",
+		AlreadyKnown: "already_known",
+		CannotAfford: "cannot_afford"
+	};
+	/**
+	* Buys a recipe, if everything about it permits being bought.
+	* @param {CraftingRecipe|null|undefined} recipe The recipe being purchased.
+	* @returns {{ purchased: boolean, reason: string|null }}
+	*/
+	static tryPurchase(recipe) {
+		if (recipe === null || recipe === undefined) {
+			return StudyPurchaseService.#refusal(StudyPurchaseService.Reasons.NoRecipe);
+		}
+		if (recipe.isPurchasable() === false) {
+			return StudyPurchaseService.#refusal(StudyPurchaseService.Reasons.NotForSale);
+		}
+		const tracking = $gameParty.getRecipeTrackingByKey(recipe.key);
+		if (tracking.isUnlocked() === true) {
+			return StudyPurchaseService.#refusal(StudyPurchaseService.Reasons.AlreadyKnown);
+		}
+		if (recipe.canAffordStudy() === false) {
+			return StudyPurchaseService.#refusal(StudyPurchaseService.Reasons.CannotAfford);
+		}
+		recipe.payStudyCost();
+		$gameParty.unlockRecipe(recipe.key);
+		return {
+			purchased: true,
+			reason: null
+		};
+	}
+	/**
+	* Builds the outcome of a purchase that did not happen.
+	* @param {string} reason Which of {@link StudyPurchaseService.Reasons} explains it.
+	* @returns {{ purchased: boolean, reason: string }}
+	*/
+	static #refusal(reason) {
+		return {
+			purchased: false,
+			reason
+		};
+	}
+};
+
+//#endregion
 //#region src/plugins/jafting/ext/create/database/RPG_Base.js
 /**
 * The ingredient types this entry can satisfy when a recipe asks for a category rather than a
@@ -1845,6 +1977,29 @@ Game_Party.prototype.getUnlockedRecipesByCategory = function(categoryKey) {
 	const recipes = this.getUnlockedRecipes();
 	const unlocked = recipes.filter((recipe) => recipe.categoryKeys.includes(categoryKey));
 	return unlocked;
+};
+/**
+* Gets every recipe of a given category that a shop could put on its shelf.
+*
+* Three filters, and leaving any one of them out breaks the shop in a different way:
+*
+* - **Carries a cost.** Nothing authored before study existed has one, so without this the shelf holds
+*   every recipe in the game, priced at nothing.
+* - **{@link #canGainEntry}.** The divider rows that pad the configuration are never *unlocked*, which
+*   is the only reason nobody has ever seen one. A shelf built out of what is locked is built out of
+*   precisely the rows that guard exists to hide.
+* - **Belongs to the category.** The shop shows one category at a time, as the crafting menu does.
+*
+* Note that this deliberately does *not* filter out what the party already knows. A recipe already
+* learned still belongs on the shelf, greyed and sorted to the bottom, because a shop that hides what
+* you have bought cannot show you how much of it there was.
+* @param {string} categoryKey The category to get all purchasable recipes for.
+* @returns {CraftingRecipe[]}
+*/
+Game_Party.prototype.getPurchasableRecipesByCategory = function(categoryKey) {
+	const recipesMap = this.getAllRecipesAsMap();
+	const allRecipes = Array.from(recipesMap.values());
+	return allRecipes.filter((recipe) => recipe.isPurchasable()).filter((recipe) => this.canGainEntry(recipe.key)).filter((recipe) => recipe.categoryKeys.includes(categoryKey));
 };
 /**
 * Gets all unlocked recipes that are a part of a given category that have

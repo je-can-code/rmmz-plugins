@@ -69,6 +69,11 @@ class J_CraftingCreatePluginMetadata
       const parsedTools = mappableRecipe.tools.map(componentMapper, this);
       const parsedOutputs = mappableRecipe.outputs.map(componentMapper, this);
 
+      // a recipe with no cost is not for sale, which is what every recipe authored before study
+      // existed says by omitting the block entirely.
+      const rawCost = mappableRecipe.cost ?? [];
+      const parsedCost = rawCost.map(componentMapper, this);
+
       // an output must name exactly what it produces; there is nothing to resolve a category against.
       const categoricalOutput = parsedOutputs.find(output => output.isCategorical());
       if (categoricalOutput !== undefined)
@@ -87,7 +92,8 @@ class J_CraftingCreatePluginMetadata
         mappableRecipe.maskedUntilCrafted,
         parsedIngredients,
         parsedTools,
-        parsedOutputs
+        parsedOutputs,
+        parsedCost
       );
 
       return newJaftingRecipe;

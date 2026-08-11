@@ -646,6 +646,7 @@
     "StateAfflictionProvider": "writable",
     "StateAfflictionViewModel": "writable",
     "StorageManager": "writable",
+    "StudyPurchaseService": "writable",
     "TextManager": "writable",
     "TextPopBuilder": "writable",
     "TextPopManager": "writable",
