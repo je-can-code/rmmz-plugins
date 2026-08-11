@@ -2,11 +2,15 @@
 /**
  * Proficiency conditionals JSON for Vitest (shape expected by {@link J_ProficiencyPluginMetadata.classifyConditionals}).
  *
+ * Carries a sibling block alongside `conditionals` on purpose. The whole parsed root is published for
+ * extensions to read their own blocks off, and with only one block present a loader that returned the
+ * root and one that returned just the conditionals would be indistinguishable.
  * @returns {string}
  */
 export function buildVitestProficiencyConfigJson()
 {
   return JSON.stringify({
+    vitestSiblingBlock: 'untouched',
     conditionals: [
       {
         key: 'vitest_unlock_skill',
