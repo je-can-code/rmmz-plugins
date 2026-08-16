@@ -5,7 +5,7 @@ import SdpFamilyFilter from '../managers/SdpFamilyFilter.js';
  * The SDP window containing the list of all unlocked panels.
  */
 class Window_SdpList
-  extends Window_Command
+  extends Window_FilterableList
 {
   /**
    * @constructor
@@ -18,31 +18,22 @@ class Window_SdpList
   }
 
   /**
-   * Implements {@link Window_Command.initMembers}.<br/>
-   * Initializes the members of this window.
+   * Extends {@link Window_FilterableList.initMembers}.<br/>
+   * Adds the actor and cart this list draws against.
    *
    * These cannot be class field declarations: JavaScript applies those only after `super()` returns,
    * by which point the command list has already been built from them and found them undefined.
    */
   initMembers()
   {
+    // perform original logic, which seeds the family filter and the actionable-only toggle.
+    super.initMembers();
+
     /**
      * The currently selected actor for listing unlocked panels and drawing ranks/costs.
      * @type {Game_Actor}
      */
     this.currentActor = null;
-
-    /**
-     * Whether panels already at max rank are hidden from the list.
-     * @type {boolean}
-     */
-    this.filterNoMaxedPanels = false;
-
-    /**
-     * Active family-filter key for the panel list.
-     * @type {string}
-     */
-    this.familyFilterKey = SdpFamilyFilter.ALL;
 
     /**
      * The queued cart levels by panel key.
@@ -72,45 +63,6 @@ class Window_SdpList
   }
 
   /**
-   * Gets whether or not the no-max-panels filter is enabled.
-   * @returns {boolean}
-   */
-  usingNoMaxPanelsFilter()
-  {
-    return this.filterNoMaxedPanels;
-  }
-
-  /**
-   * Toggles the "hide max panels" filter for this window.
-   */
-  toggleNoMaxPanelsFilter()
-  {
-    this.filterNoMaxedPanels = !this.filterNoMaxedPanels;
-  }
-
-  /**
-   * Sets the active family filter and refreshes the list.
-   * @param {string} familyFilterKey The family filter key driving this step.
-   */
-  setFamilyFilterKey(familyFilterKey)
-  {
-    // nothing to redraw when the value has not changed.
-    if (this.familyFilterKey === familyFilterKey) return;
-
-    this.familyFilterKey = familyFilterKey;
-    this.refresh();
-  }
-
-  /**
-   * Gets the active family filter key.
-   * @returns {string}
-   */
-  getFamilyFilterKey()
-  {
-    return this.familyFilterKey;
-  }
-
-  /**
    * Overwrites {@link #itemTextAlign}.<br/>
    * Sets the alignment for this command window to be left-aligned.
    */
@@ -120,89 +72,93 @@ class Window_SdpList
   }
 
   /**
-   * Overwrites {@link #makeCommandList}.<br/>
-   * Creates the command list for this window.
+   * Implements {@link Window_FilterableList.sourceItems}.<br/>
+   * The panels this actor has unlocked.
+   *
+   * The rankings-to-panels resolution happens here so the rest of the pipeline only ever sees real panels.
+   * A ranking whose panel is missing from the metadata map is dropped at this one point; every step
+   * downstream may then assume a panel exists. The actor itself is legitimately absent until the scene
+   * calls {@link #setActor}, because `initialize` refreshes before the scene gets a chance.
+   * @returns {StatDistributionPanel[]}
    */
-  makeCommandList()
+  sourceItems()
   {
-    // grab the actor.
     const actor = this.currentActor;
 
-    // don't render the list of there is no actor.
-    if (!actor) return;
+    // the first refresh happens inside `initialize`, before the scene has assigned an actor.
+    if (actor === null) return [];
 
-    // grab all the panelRankings the actor has unlocked.
-    const panelRankings = actor.getAllUnlockedSdps();
-
-    // check if there even are any panels unlocked.
-    if (panelRankings.length === 0) return;
-
-    // iterate over each of the unlocked rankings to render the panel in the list.
-    const commands = panelRankings
-      .map(panelRanking =>
-      {
-        // grab the actual panel for its data.
-        const panel = J.SDP.Metadata.panelsMap.get(panelRanking.key);
-
-        // construct the SDP command.
-        const command = this.makeCommand(panel);
-
-        // if the command is invalid, do not add it.
-        if (!command) return null;
-
-        // add the command.
-        return command;
-      }, this)
-      .filter(command => command !== null);
-
-    // order rows by family, then subgroup, then subgroup tier (alphabetical-by-key fallback).
-    commands.sort((left, right) => SdpFamilyFilter.comparePanels(left.ext, right.ext));
-
-    commands.forEach(this.addBuiltCommand, this);
+    return actor.getAllUnlockedSdps()
+      .map(panelRanking => J.SDP.Metadata.panelsMap.get(panelRanking.key))
+      .filter(panel => panel !== undefined);
   }
 
   /**
-   * Builds a single command for the SDP list based on a given panel.
+   * Implements {@link Window_FilterableList.matchesFilter}.<br/>
+   * Whether a panel belongs under the active family tab.
+   * @param {StatDistributionPanel} panel The panel driving this step.
+   * @param {string} filterKey The active family filter key.
+   * @returns {boolean}
+   */
+  matchesFilter(panel, filterKey)
+  {
+    return SdpFamilyFilter.panelMatchesFilter(panel, filterKey);
+  }
+
+  /**
+   * Implements {@link Window_FilterableList.isActionable}.<br/>
+   * A panel is actionable while there are ranks left to buy in it.
+   * @param {StatDistributionPanel} panel The panel driving this step.
+   * @returns {boolean}
+   */
+  isActionable(panel)
+  {
+    return this.isMaxRank(panel) === false;
+  }
+
+  /**
+   * Implements {@link Window_FilterableList.compareItems}.<br/>
+   * Orders rows by family, then subgroup, then subgroup tier (alphabetical-by-key fallback).
+   * @param {StatDistributionPanel} left The first panel driving this step.
+   * @param {StatDistributionPanel} right The second panel driving this step.
+   * @returns {number}
+   */
+  compareItems(left, right)
+  {
+    return SdpFamilyFilter.comparePanels(left, right);
+  }
+
+  /**
+   * Whether this actor has already taken a panel as far as it goes.
+   * @param {StatDistributionPanel} panel The panel driving this step.
+   * @returns {boolean}
+   */
+  isMaxRank(panel)
+  {
+    const { currentRank } = this.currentActor.getSdpByKey(panel.key);
+
+    return panel.maxRank <= currentRank;
+  }
+
+  /**
+   * Implements {@link Window_FilterableList.buildCommand}.<br/>
+   * Builds a single row for the SDP list based on a given panel.
    * @param {StatDistributionPanel} panel The panel to build a command for.
    * @returns {BuiltWindowCommand}
    */
-  makeCommand(panel)
+  buildCommand(panel)
   {
-    const actor = this.currentActor;
     const {
       name,
       key,
-      iconIndex,
-      maxRank
+      iconIndex
     } = panel;
 
     const colorIndex = panel.getPanelRarityColorIndex();
 
-    // get the ranking for a given panel by its key.
-    const panelRanking = actor.getSdpByKey(key);
-
-    // grab the current rank of the panel.
-    const { currentRank } = panelRanking;
-
-    // check if we're at max rank already.
-    const isMaxRank = maxRank <= currentRank;
-
-    // check if the panel is max rank AND we're using the no max panels filter.
-    if (isMaxRank && this.usingNoMaxPanelsFilter())
-    {
-      // don't render this panel.
-      return null;
-    }
-
-    // apply the active family filter.
-    if (SdpFamilyFilter.panelMatchesFilter(panel, this.familyFilterKey) === false)
-    {
-      return null;
-    }
-
     // keep rows selectable even when the wallet cannot afford the next rank alone — cart totals and
     // queued levels change continuously; disabling by snapshot points goes stale quickly.
-    const enabled = !isMaxRank;
+    const enabled = this.isMaxRank(panel) === false;
 
     // construct the SDP command.
     const command = new WindowCommandBuilder(name)

@@ -42,7 +42,6 @@ import './windows/Window_SdpCart.js';
 import './windows/Window_SdpConfirmation.js';
 import './windows/Window_SdpPoints.js';
 import './windows/Window_SdpHelp.js';
-import './windows/Window_SdpFamilyStrip.js';
 import './scenes/Scene_SDP.js';
 import './scenes/Scene_Boot.js';
 import './scenes/Scene_Map.js';
