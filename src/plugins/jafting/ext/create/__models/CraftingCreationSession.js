@@ -9,7 +9,6 @@ class CraftingCreationSession
    * High-level UX phases for the Creation menu.
    */
   static Phase = {
-    BrowsingCategories: 'browsing_categories',
     BrowsingRecipes: 'browsing_recipes',
     SelectingIngredients: 'selecting_ingredients',
   };
@@ -17,13 +16,7 @@ class CraftingCreationSession
   /**
    * @type {string}
    */
-  #phase = CraftingCreationSession.Phase.BrowsingCategories;
-
-  /**
-   * Category key driving the recipe list after the user picks a category.
-   * @type {string|null}
-   */
-  #categoryKey = null;
+  #phase = CraftingCreationSession.Phase.BrowsingRecipes;
 
   /**
    * Outcome of the last {@link #tryCraftRecipe} for UI or tests.
@@ -48,8 +41,7 @@ class CraftingCreationSession
    */
   reset()
   {
-    this.#phase = CraftingCreationSession.Phase.BrowsingCategories;
-    this.#categoryKey = null;
+    this.#phase = CraftingCreationSession.Phase.BrowsingRecipes;
     this.#lastCraftOutcome = null;
     this.#selections = new Map();
   }
@@ -100,14 +92,6 @@ class CraftingCreationSession
   }
 
   /**
-   * @returns {string|null}
-   */
-  getCategoryKey()
-  {
-    return this.#categoryKey;
-  }
-
-  /**
    * @returns {{ crafted: boolean, playedSuccessSound: boolean, reason: string|null }|null}
    */
   getLastCraftOutcome()
@@ -116,35 +100,14 @@ class CraftingCreationSession
   }
 
   /**
-   * @returns {{ phase: string, categoryKey: string|null, lastCraftOutcome: object|null }}
+   * @returns {{ phase: string, lastCraftOutcome: object|null }}
    */
   snapshot()
   {
     return {
       phase: this.#phase,
-      categoryKey: this.#categoryKey,
       lastCraftOutcome: this.#lastCraftOutcome,
     };
-  }
-
-  /**
-   * User locked in a category; recipe list should filter to {@link categoryKey}.
-   *
-   * @param {string} categoryKey The category key driving this step.
-   */
-  enterRecipeBrowsing(categoryKey)
-  {
-    this.#categoryKey = categoryKey;
-    this.#phase = CraftingCreationSession.Phase.BrowsingRecipes;
-  }
-
-  /**
-   * User backed out of the recipe column to categories.
-   */
-  returnToCategoryBrowsing()
-  {
-    this.#phase = CraftingCreationSession.Phase.BrowsingCategories;
-    this.#categoryKey = null;
   }
 
   /**

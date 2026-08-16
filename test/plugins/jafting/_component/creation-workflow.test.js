@@ -47,22 +47,13 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
 {
   describe('CraftingCreationSession', () =>
   {
-    it('starts in category browsing with no category key', () =>
+    it('starts on the recipe list, which is the only place the scene opens now', () =>
     {
       // Arrange & Act
       const session = new CraftingCreationSession();
 
       // Assert
-      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingCategories);
-    });
-
-    it('starts with a null category key', () =>
-    {
-      // Arrange & Act
-      const session = new CraftingCreationSession();
-
-      // Assert
-      expect(session.getCategoryKey()).toBe(null);
+      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingRecipes);
     });
 
     it('starts with a null last craft outcome', () =>
@@ -74,70 +65,19 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
       expect(session.getLastCraftOutcome()).toBe(null);
     });
 
-    it('reset clears phase, category, and last craft outcome back to their initial values', () =>
+    it('reset returns phase and last craft outcome to their initial values', () =>
     {
-      // Arrange
+      // Arrange- leave the session somewhere other than where it started, so reset has work to do.
       const session = new CraftingCreationSession();
-      session.enterRecipeBrowsing('vitest_cat');
+      session.beginIngredientSelection();
       session.tryCraftRecipe(null);
 
       // Act
       session.reset();
 
       // Assert
-      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingCategories);
-      expect(session.getCategoryKey()).toBe(null);
-      expect(session.getLastCraftOutcome()).toBe(null);
-    });
-
-    it('enterRecipeBrowsing locks the phase to browsing recipes', () =>
-    {
-      // Arrange
-      const session = new CraftingCreationSession();
-
-      // Act
-      session.enterRecipeBrowsing('vitest_cat');
-
-      // Assert
       expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingRecipes);
-    });
-
-    it('enterRecipeBrowsing locks the category key', () =>
-    {
-      // Arrange
-      const session = new CraftingCreationSession();
-
-      // Act
-      session.enterRecipeBrowsing('vitest_cat');
-
-      // Assert
-      expect(session.getCategoryKey()).toBe('vitest_cat');
-    });
-
-    it('returnToCategoryBrowsing returns to category browsing phase', () =>
-    {
-      // Arrange
-      const session = new CraftingCreationSession();
-      session.enterRecipeBrowsing('vitest_cat');
-
-      // Act
-      session.returnToCategoryBrowsing();
-
-      // Assert
-      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingCategories);
-    });
-
-    it('returnToCategoryBrowsing clears the category key', () =>
-    {
-      // Arrange
-      const session = new CraftingCreationSession();
-      session.enterRecipeBrowsing('vitest_cat');
-
-      // Act
-      session.returnToCategoryBrowsing();
-
-      // Assert
-      expect(session.getCategoryKey()).toBe(null);
+      expect(session.getLastCraftOutcome()).toBe(null);
     });
 
     it('starts with no ingredient selections', () =>
@@ -340,19 +280,18 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
       expect(out).toEqual({ crafted: true, playedSuccessSound: true, reason: null });
     });
 
-    it('snapshot reflects the current phase, category, and last outcome', () =>
+    it('snapshot reflects the current phase and last outcome', () =>
     {
-      // Arrange
+      // Arrange- move off the opening phase so the snapshot has to report where the session actually is.
       const session = new CraftingCreationSession();
-      session.enterRecipeBrowsing('vitest_cat');
+      session.beginIngredientSelection();
       session.tryCraftRecipe(null);
 
       // Act
       const snap = session.snapshot();
 
       // Assert
-      expect(snap.phase).toBe(CraftingCreationSession.Phase.BrowsingRecipes);
-      expect(snap.categoryKey).toBe('vitest_cat');
+      expect(snap.phase).toBe(CraftingCreationSession.Phase.SelectingIngredients);
       expect(snap.lastCraftOutcome.reason).toBe('no_recipe');
     });
   });

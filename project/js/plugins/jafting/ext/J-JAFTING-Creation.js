@@ -1269,19 +1269,13 @@ var CraftingCreationSession = class CraftingCreationSession {
 	* High-level UX phases for the Creation menu.
 	*/
 	static Phase = {
-		BrowsingCategories: "browsing_categories",
 		BrowsingRecipes: "browsing_recipes",
 		SelectingIngredients: "selecting_ingredients"
 	};
 	/**
 	* @type {string}
 	*/
-	#phase = CraftingCreationSession.Phase.BrowsingCategories;
-	/**
-	* Category key driving the recipe list after the user picks a category.
-	* @type {string|null}
-	*/
-	#categoryKey = null;
+	#phase = CraftingCreationSession.Phase.BrowsingRecipes;
 	/**
 	* Outcome of the last {@link #tryCraftRecipe} for UI or tests.
 	* @type {{ crafted: boolean, playedSuccessSound: boolean, reason: string|null }|null}
@@ -1302,8 +1296,7 @@ var CraftingCreationSession = class CraftingCreationSession {
 	* Resets session when the Creation scene is entered fresh.
 	*/
 	reset() {
-		this.#phase = CraftingCreationSession.Phase.BrowsingCategories;
-		this.#categoryKey = null;
+		this.#phase = CraftingCreationSession.Phase.BrowsingRecipes;
 		this.#lastCraftOutcome = null;
 		this.#selections = new Map();
 	}
@@ -1343,42 +1336,19 @@ var CraftingCreationSession = class CraftingCreationSession {
 		return this.#phase;
 	}
 	/**
-	* @returns {string|null}
-	*/
-	getCategoryKey() {
-		return this.#categoryKey;
-	}
-	/**
 	* @returns {{ crafted: boolean, playedSuccessSound: boolean, reason: string|null }|null}
 	*/
 	getLastCraftOutcome() {
 		return this.#lastCraftOutcome;
 	}
 	/**
-	* @returns {{ phase: string, categoryKey: string|null, lastCraftOutcome: object|null }}
+	* @returns {{ phase: string, lastCraftOutcome: object|null }}
 	*/
 	snapshot() {
 		return {
 			phase: this.#phase,
-			categoryKey: this.#categoryKey,
 			lastCraftOutcome: this.#lastCraftOutcome
 		};
-	}
-	/**
-	* User locked in a category; recipe list should filter to {@link categoryKey}.
-	*
-	* @param {string} categoryKey The category key driving this step.
-	*/
-	enterRecipeBrowsing(categoryKey) {
-		this.#categoryKey = categoryKey;
-		this.#phase = CraftingCreationSession.Phase.BrowsingRecipes;
-	}
-	/**
-	* User backed out of the recipe column to categories.
-	*/
-	returnToCategoryBrowsing() {
-		this.#phase = CraftingCreationSession.Phase.BrowsingCategories;
-		this.#categoryKey = null;
 	}
 	/**
 	* Attempts to craft the given recipe when the player confirms on the recipe list.
@@ -2220,111 +2190,6 @@ Game_System.prototype.onAfterLoad = function() {
 var Window_CreationDescription = class extends Window_Help {
 	constructor(rect) {
 		super(rect);
-	}
-};
-
-//#endregion
-//#region src/plugins/jafting/ext/create/windows/Window_CreationCategoryBadge.js
-/**
-* Recipe-browsing chrome: shows the active crafting category icon + name beside the help window.
-*/
-var Window_CreationCategoryBadge = class extends Window_Base {
-	/**
-	* @type {CraftingCategory|null}
-	*/
-	_category = null;
-	/**
-	* @param {Rectangle} rect The rectangle that represents this window.
-	*/
-	constructor(rect) {
-		super(rect);
-	}
-	/**
-	* @param {CraftingCategory|null} category The category to render, or null to clear.
-	*/
-	setCategory(category) {
-		this._category = category;
-		this.refresh();
-	}
-	/**
-	* Clears the badge contents (used when leaving recipe browsing).
-	*/
-	clearCategory() {
-		this._category = null;
-		this.refresh();
-	}
-	/**
-	* The category this badge is currently rendering, or null when cleared.
-	* @returns {CraftingCategory|null}
-	*/
-	category() {
-		return this._category;
-	}
-	/**
-	* Implements {@link Window_Base.drawContent}.
-	*/
-	drawContent() {
-		const category = this.category();
-		if (category === null) {
-			return;
-		}
-		this.resetFontSettings();
-		const { iconIndex, name } = category;
-		const lh = this.lineHeight();
-		const iy = Math.floor((this.innerHeight - lh) / 2);
-		const iconSlot = ImageManager.standardIconWidth + 8;
-		this.drawIcon(iconIndex, 8, iy);
-		this.drawText(name, iconSlot, iy, Math.max(48, this.innerWidth - iconSlot - 8), Window_Base.TextAlignments.Left);
-	}
-};
-
-//#endregion
-//#region src/plugins/jafting/ext/create/windows/Window_CategoryList.js
-/**
-* A window containing the list of all crafting categories.
-*/
-var Window_CategoryList = class extends Window_Command {
-	/**
-	* Constructor.
-	* @param {Rectangle} rect The rectangle that represents this window.
-	*/
-	constructor(rect) {
-		super(rect);
-	}
-	/**
-	* Implements {@link #makeCommandList}.<br/>
-	* Creates the command list of unlocked crafting categories.
-	*/
-	makeCommandList() {
-		this.clearCommandList();
-		const commands = this.buildCommands();
-		commands.forEach(this.addBuiltCommand, this);
-	}
-	/**
-	* Builds all commands for this command window.
-	* Adds all categories to the list that are unlocked.
-	* @returns {BuiltWindowCommand[]}
-	*/
-	buildCommands() {
-		const categories = $gameParty.getUnlockedCategories();
-		const commands = categories.map(this.buildCommand, this);
-		return commands;
-	}
-	/**
-	* Builds a {@link BuiltWindowCommand} based on the category data.
-	* @param {CraftingCategory} category The category data.
-	* @returns {BuiltWindowCommand} The built command based on this enemy.
-	*/
-	buildCommand(category) {
-		return new WindowCommandBuilder(category.name).setSymbol(category.key).setExtensionData(category).setIconIndex(category.iconIndex).setHelpText(category.description).setEnabled(category.hasAnyRecipes()).build();
-	}
-	/**
-	* Overwrites {@link #itemHeight}.<br/>
-	* Makes the command rows bigger so there can be additional lines.
-	* @returns {number}
-	*/
-	itemHeight() {
-		return this.lineHeight() * 2;
 	}
 };
 
@@ -4074,14 +3939,14 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 		this._j._crafting._create._creationDescription = null;
 		/**
 		* Recipe-browsing chrome: icon + name for the active category (aligned with the help band).
-		* @type {Window_CreationCategoryBadge}
+		* @type {Window_FilterStrip}
 		*/
 		this._j._crafting._create._creationCategoryBadge = null;
 		/**
 		* The window that shows the list of unlocked categories.
-		* @type {Window_CategoryList}
+		* @type {FilterCycle}
 		*/
-		this._j._crafting._create._categoryList = null;
+		this._j._crafting._create._categoryFilter = new FilterCycle();
 		/**
 		* The window that shows the list of unlocked recipes.
 		* @type {Window_RecipeList}
@@ -4359,8 +4224,9 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 	*/
 	createDisplayObjects() {
 		this.createAllWindows();
-		this.getCategoryListWindow().refresh();
-		this.configureAllWindows();
+		this.categoryFilter().setPositions(this.availableCategories());
+		this.applyActiveCategory();
+		this.selectRecipeListWindow();
 	}
 	/**
 	* Creates all windows in this scene.
@@ -4368,7 +4234,6 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 	createAllWindows() {
 		this.createCreationDescriptionWindow();
 		this.createCreationCategoryBadgeWindow();
-		this.createCategoryListWindow();
 		this.createRecipeListWindow();
 		this.createRecipeDetailsWindow();
 		this.createRecipeIngredientListWindow();
@@ -4381,8 +4246,79 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 	/**
 	* Configures all windows.
 	*/
-	configureAllWindows() {
-		this.getCreationDescriptionWindow().setText(this.getCategoryListWindow().currentHelpText() ?? String.empty);
+	/**
+	* The categories this station deals in, which the calling event decided before opening the scene.
+	* @returns {CraftingCategory[]}
+	*/
+	availableCategories() {
+		return $gameParty.getUnlockedCategories();
+	}
+	/**
+	* The L2/R2 ring of categories this station deals in.
+	* @returns {FilterCycle}
+	*/
+	categoryFilter() {
+		return this._j._crafting._create._categoryFilter;
+	}
+	/**
+	* Points the strip and the recipe list at whichever category is now selected.
+	*/
+	applyActiveCategory() {
+		const categoryFilter = this.categoryFilter();
+		this.getCreationCategoryBadgeWindow().setPosition(categoryFilter.activePosition());
+		this.getRecipeListWindow().setCurrentCategory(categoryFilter.activeKey());
+	}
+	/**
+	* Walks the category ring, wrapping at either end.
+	*
+	* Categories with nothing in them are stepped onto rather than skipped, matching the study shop: a
+	* shoulder button that sometimes moves one place and sometimes three reads as broken, and an empty lane
+	* says "go learn some dairy recipes" rather than that dairy does not exist.
+	* @param {boolean} isForward Whether to walk forwards.
+	*/
+	cycleCategories(isForward) {
+		const categoryFilter = this.categoryFilter();
+		const listWindow = this.getRecipeListWindow();
+		if (categoryFilter.canCycle() === false) {
+			SoundManager.playBuzzer();
+			listWindow.activate();
+			return;
+		}
+		if (isForward) {
+			categoryFilter.next();
+		} else {
+			categoryFilter.previous();
+		}
+		SoundManager.playCursor();
+		this.applyActiveCategory();
+		this.clampRecipeListSelection();
+		this.onRecipeListIndexChange();
+		listWindow.activate();
+	}
+	/**
+	* Flips the craftable-only filter and keeps the cursor somewhere real.
+	*/
+	onToggleCraftableOnly() {
+		const listWindow = this.getRecipeListWindow();
+		listWindow.toggleActionableOnly();
+		this.clampRecipeListSelection();
+		this.onRecipeListIndexChange();
+		listWindow.activate();
+	}
+	/**
+	* Keeps the recipe list selection in bounds after the rows underneath it change.
+	*/
+	clampRecipeListSelection() {
+		const listWindow = this.getRecipeListWindow();
+		const commandCount = listWindow.commandList().length;
+		if (commandCount === 0) {
+			listWindow.deselect();
+			return;
+		}
+		const index = listWindow.index();
+		if (index < 0 || index >= commandCount) {
+			listWindow.select(Math.max(0, Math.min(index, commandCount - 1)));
+		}
 	}
 	/**
 	* Overwrites {@link Scene_MenuBase.prototype.createBackground}.<br/>
@@ -4426,7 +4362,7 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 	* @returns {number}
 	*/
 	getCreationListColumnWidth() {
-		return this.getCategoryListRectangle().width;
+		return Math.round(300 * 1.1);
 	}
 	/**
 	* Gets the rectangle associated with this window.
@@ -4465,11 +4401,11 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 		this.addWindow(window);
 	}
 	/**
-	* @returns {Window_CreationCategoryBadge}
+	* @returns {Window_FilterStrip}
 	*/
 	buildCreationCategoryBadgeWindow() {
 		const rectangle = this.getCreationCategoryBadgeRectangle();
-		return new Window_CreationCategoryBadge(rectangle);
+		return new Window_FilterStrip(rectangle);
 	}
 	/**
 	* Top-left slot beside the help window: same width as the list column; height matches
@@ -4483,96 +4419,16 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 		return new Rectangle(ox, oy, w, h);
 	}
 	/**
-	* @returns {Window_CreationCategoryBadge}
+	* @returns {Window_FilterStrip}
 	*/
 	getCreationCategoryBadgeWindow() {
 		return this._j._crafting._create._creationCategoryBadge;
 	}
 	/**
-	* @param {Window_CreationCategoryBadge} someWindow The some window driving this step.
+	* @param {Window_FilterStrip} someWindow The some window driving this step.
 	*/
 	setCreationCategoryBadgeWindow(someWindow) {
 		this._j._crafting._create._creationCategoryBadge = someWindow;
-	}
-	/**
-	* Creates the CategoryList window.
-	*/
-	createCategoryListWindow() {
-		const window = this.buildCategoryListWindow();
-		this.setCategoryListWindow(window);
-		this.addWindow(window);
-	}
-	buildCategoryListWindow() {
-		const rectangle = this.getCategoryListRectangle();
-		const window = new Window_CategoryList(rectangle);
-		window.setHandler("cancel", this.onCategoryListCancel.bind(this));
-		window.setHandler("ok", this.onCategoryListSelection.bind(this));
-		window.onIndexChange = this.onCategoryListIndexChange.bind(this);
-		return window;
-	}
-	/**
-	* Gets the rectangle associated with this window.
-	* @returns {Rectangle}
-	*/
-	getCategoryListRectangle() {
-		const [x, y] = Graphics.boxOrigin;
-		const width = Math.round(300 * 1.1);
-		const height = Graphics.boxHeight - Graphics.verticalPadding * 2;
-		return new Rectangle(x, y, width, height);
-	}
-	/**
-	* Gets the CategoryList window being tracked.
-	*/
-	getCategoryListWindow() {
-		return this._j._crafting._create._categoryList;
-	}
-	/**
-	* Sets the CategoryList window tracking.
-	*/
-	setCategoryListWindow(someWindow) {
-		this._j._crafting._create._categoryList = someWindow;
-	}
-	onCategoryListIndexChange() {
-		const helpText = this.getCategoryListWindow().currentHelpText();
-		this.getCreationDescriptionWindow().setText(helpText ?? String.empty);
-	}
-	onCategoryListCancel() {
-		SceneManager.pop();
-	}
-	onCategoryListSelection() {
-		const categoryListWindow = this.getCategoryListWindow();
-		const currentCategory = categoryListWindow.currentSymbol();
-		this.craftingCreationSession().enterRecipeBrowsing(currentCategory);
-		const recipeListWindow = this.getRecipeListWindow();
-		recipeListWindow.setCurrentCategory(currentCategory);
-		this.deselectCategoryListWindow();
-		this.selectRecipeListWindow();
-		const ingredientListWindow = this.getRecipeIngredientListWindow();
-		ingredientListWindow.show();
-		ingredientListWindow.deselect();
-		const toolListWindow = this.getRecipeToolListWindow();
-		toolListWindow.show();
-		toolListWindow.deselect();
-		const outputListWindow = this.getRecipeOutputListWindow();
-		outputListWindow.show();
-		outputListWindow.deselect();
-	}
-	/**
-	* Selects the window by revealing and activating it.
-	*/
-	selectCategoryListWindow() {
-		const categoryListWindow = this.getCategoryListWindow();
-		categoryListWindow.show();
-		categoryListWindow.activate();
-		this.getCreationDescriptionWindow().setText(categoryListWindow.currentHelpText());
-	}
-	/**
-	* Deselects the window by hiding and deactivating it.
-	*/
-	deselectCategoryListWindow() {
-		const window = this.getCategoryListWindow();
-		window.hide();
-		window.deactivate();
 	}
 	/**
 	* Creates the RecipeList window.
@@ -4587,6 +4443,9 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 		const window = new Window_RecipeList(rectangle);
 		window.setHandler("cancel", this.onRecipeListCancel.bind(this));
 		window.setHandler("ok", this.onRecipeListSelection.bind(this));
+		window.setHandler("content-next", this.cycleCategories.bind(this, true));
+		window.setHandler("content-prev", this.cycleCategories.bind(this, false));
+		window.setHandler("context", this.onToggleCraftableOnly.bind(this));
 		window.onIndexChange = this.onRecipeListIndexChange.bind(this);
 		window.hide();
 		window.deactivate();
@@ -4673,9 +4532,7 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 		outputListWindow.refresh();
 	}
 	onRecipeListCancel() {
-		this.craftingCreationSession().returnToCategoryBrowsing();
-		this.deselectRecipeListWindow();
-		this.selectCategoryListWindow();
+		SceneManager.pop();
 	}
 	onRecipeListSelection() {
 		const recipe = this.getRecipeListWindow().currentExt();

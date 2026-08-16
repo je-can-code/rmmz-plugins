@@ -15,8 +15,6 @@ import './database/RPG_Base.js';
 import './objects/Game_Party.js';
 import './objects/Game_System.js';
 import './windows/Window_CreationDescription.js';
-import './windows/Window_CreationCategoryBadge.js';
-import './windows/Window_CategoryList.js';
 import './windows/Window_RecipeList.js';
 import './windows/Window_RecipeDetails.js';
 import './windows/Window_RecipeIngredientList.js';
