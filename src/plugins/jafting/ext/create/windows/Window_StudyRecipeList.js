@@ -10,21 +10,20 @@
  * accessors would price a row of question marks- which is a different offer from the one being made.
  */
 class Window_StudyRecipeList
-  extends Window_Command
+  extends Window_FilterableList
 {
   /**
-   * Implements {@link Window_Command.initMembers}.
+   * Overrides {@link Window_FilterableList.initialFilterKey}.<br/>
+   * Starts on no shelf at all rather than on the everything-sentinel.
    *
-   * Seeded here rather than as a class field or in the constructor, because `Window_Command.initialize`
-   * refreshes- and therefore calls `makeCommandList`- before either of those has run.
+   * This shelf's source is a keyed lookup rather than a list it narrows, so the everything-sentinel would
+   * become a request for a category the party has never heard of. An empty key asks for an empty shelf,
+   * which is the honest thing to show before the scene has pointed this anywhere.
+   * @returns {string}
    */
-  initMembers()
+  initialFilterKey()
   {
-    /**
-     * The category whose shelf is currently being shown.
-     * @type {string}
-     */
-    this.currentCategory = String.empty;
+    return String.empty;
   }
 
   /**
@@ -33,7 +32,7 @@ class Window_StudyRecipeList
    */
   getCurrentCategory()
   {
-    return this.currentCategory;
+    return this.filterKey();
   }
 
   /**
@@ -42,44 +41,47 @@ class Window_StudyRecipeList
    */
   setCurrentCategory(newCategory)
   {
-    if (this.currentCategory === newCategory) return;
-
-    this.currentCategory = newCategory;
-
-    this.refresh();
+    this.setFilterKey(newCategory);
   }
 
   /**
-   * Implements {@link Window_Command.makeCommandList}.
+   * Implements {@link Window_FilterableList.sourceItems}.<br/>
+   * The recipes this vendor is offering on the current shelf.
+   *
+   * The category is part of the question asked of the party rather than a test applied to the answer, so
+   * this list leaves {@link Window_FilterableList.matchesFilter} alone- everything that comes back already
+   * belongs to the active shelf.
+   * @returns {CraftingRecipe[]}
    */
-  makeCommandList()
+  sourceItems()
   {
-    // empty the current list.
-    this.clearCommandList();
-
-    // grab all the listings available.
-    const commands = this.buildCommands();
-
-    // build all the commands.
-    commands.forEach(this.addBuiltCommand, this);
+    return $gameParty.getPurchasableRecipesByCategory(this.filterKey());
   }
 
   /**
-   * Builds a command for every recipe on this category's shelf.
-   * @returns {BuiltWindowCommand[]}
+   * Implements {@link Window_FilterableList.compareItems}.<br/>
+   * Floats what can still be bought above what has already been learned.
+   *
+   * Recipes the party knows stay on the shelf greyed out rather than vanishing, so that buying one does not
+   * make it disappear from the place you just found it.
+   * @param {CraftingRecipe} left The first recipe driving this step.
+   * @param {CraftingRecipe} right The second recipe driving this step.
+   * @returns {number}
    */
-  buildCommands()
+  compareItems(left, right)
   {
-    const currentCategory = this.getCurrentCategory();
-    const recipes = $gameParty.getPurchasableRecipesByCategory(currentCategory);
+    return Number(this.isAlreadyKnown(left)) - Number(this.isAlreadyKnown(right));
+  }
 
-    const unknown = recipes.filter(recipe => this.isAlreadyKnown(recipe) === false);
-    const known = recipes.filter(recipe => this.isAlreadyKnown(recipe));
-
-    // what can still be bought floats to the top; what has been bought settles beneath it.
-    const sorted = unknown.concat(known);
-
-    return sorted.map(this.buildCommand, this);
+  /**
+   * Implements {@link Window_FilterableList.isActionable}.<br/>
+   * A row is actionable when there is something left to buy and the means to buy it.
+   * @param {CraftingRecipe} recipe The recipe driving this step.
+   * @returns {boolean}
+   */
+  isActionable(recipe)
+  {
+    return this.isAlreadyKnown(recipe) === false && recipe.canAffordStudy();
   }
 
   /**
@@ -101,10 +103,9 @@ class Window_StudyRecipeList
   buildCommand(recipe)
   {
     const alreadyKnown = this.isAlreadyKnown(recipe);
-    const affordable = recipe.canAffordStudy();
 
     // a row is selectable only when there is something to buy and the means to buy it.
-    const selectable = (alreadyKnown === false) && affordable;
+    const selectable = this.isActionable(recipe);
 
     const subtexts = [];
 

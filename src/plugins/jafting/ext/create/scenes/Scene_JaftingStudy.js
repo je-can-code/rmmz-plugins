@@ -1,6 +1,5 @@
 //region Scene_JaftingStudy
 import StudyPurchaseService from '../managers/StudyPurchaseService.js';
-import Window_CreationCategoryBadge from '../windows/Window_CreationCategoryBadge.js';
 import Window_CreationDescription from '../windows/Window_CreationDescription.js';
 import Window_StudyCostList from '../windows/Window_StudyCostList.js';
 import Window_StudyRecipeList from '../windows/Window_StudyRecipeList.js';
@@ -108,7 +107,7 @@ class Scene_JaftingStudy
 
     /**
      * The badge naming the category currently being browsed.
-     * @type {Window_CreationCategoryBadge|null}
+     * @type {Window_FilterStrip|null}
      */
     this._j._crafting._study._categoryBadge = null;
 
@@ -125,10 +124,10 @@ class Scene_JaftingStudy
     this._j._crafting._study._costList = null;
 
     /**
-     * Which of the unlocked categories is being browsed.
-     * @type {number}
+     * The L2/R2 ring of categories this vendor is dealing in.
+     * @type {FilterCycle}
      */
-    this._j._crafting._study._categoryIndex = 0;
+    this._j._crafting._study._categoryFilter = new FilterCycle();
   }
 
   /**
@@ -152,6 +151,8 @@ class Scene_JaftingStudy
     this.createAllWindows();
 
     // point everything at whichever category we opened on.
+    this.categoryFilter()
+      .setPositions(this.availableCategories());
     this.refreshCategory();
   }
 
@@ -259,13 +260,13 @@ class Scene_JaftingStudy
 
   /**
    * Builds the category badge window.
-   * @returns {Window_CreationCategoryBadge}
+   * @returns {Window_FilterStrip}
    */
   buildStudyCategoryBadgeWindow()
   {
     const rectangle = this.getStudyCategoryBadgeRectangle();
 
-    return new Window_CreationCategoryBadge(rectangle);
+    return new Window_FilterStrip(rectangle);
   }
 
   /**
@@ -281,7 +282,7 @@ class Scene_JaftingStudy
 
   /**
    * Gets the category badge window being tracked.
-   * @returns {Window_CreationCategoryBadge}
+   * @returns {Window_FilterStrip}
    */
   getStudyCategoryBadgeWindow()
   {
@@ -290,7 +291,7 @@ class Scene_JaftingStudy
 
   /**
    * Sets the category badge window being tracked.
-   * @param {Window_CreationCategoryBadge} window The window to track.
+   * @param {Window_FilterStrip} window The window to track.
    */
   setStudyCategoryBadgeWindow(window)
   {
@@ -456,18 +457,9 @@ class Scene_JaftingStudy
    * Which of the unlocked categories is currently being browsed.
    * @returns {number}
    */
-  categoryIndex()
+  categoryFilter()
   {
-    return this._j._crafting._study._categoryIndex;
-  }
-
-  /**
-   * Sets which of the unlocked categories is being browsed.
-   * @param {number} index The index into the unlocked categories.
-   */
-  setCategoryIndex(index)
-  {
-    this._j._crafting._study._categoryIndex = index;
+    return this._j._crafting._study._categoryFilter;
   }
 
   /**
@@ -505,13 +497,16 @@ class Scene_JaftingStudy
    */
   stepCategoryBy(step)
   {
-    const categories = this.availableCategories();
+    const categoryFilter = this.categoryFilter();
 
-    const total = categories.length;
-    const current = this.categoryIndex();
-    const next = (current + step + total) % total;
-
-    this.setCategoryIndex(next);
+    if (step > 0)
+    {
+      categoryFilter.next();
+    }
+    else
+    {
+      categoryFilter.previous();
+    }
 
     this.refreshCategory();
 
@@ -523,14 +518,14 @@ class Scene_JaftingStudy
    */
   refreshCategory()
   {
-    const categories = this.availableCategories();
-    const category = categories.at(this.categoryIndex());
+    const categoryFilter = this.categoryFilter();
 
+    // a CraftingCategory already carries a key, a name and an icon, which is exactly a ring position.
     this.getStudyCategoryBadgeWindow()
-      .setCategory(category);
+      .setPosition(categoryFilter.activePosition());
 
     const recipeListWindow = this.getStudyRecipeListWindow();
-    recipeListWindow.setCurrentCategory(category.key);
+    recipeListWindow.setCurrentCategory(categoryFilter.activeKey());
     recipeListWindow.select(0);
 
     this.onStudyIndexChange();
