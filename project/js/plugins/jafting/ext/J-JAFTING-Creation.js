@@ -4494,21 +4494,16 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuFacetBase 
 		recipeListWindow.onIndexChange();
 		const detailsWindow = this.getRecipeDetailsWindow();
 		detailsWindow.show();
+		const ingredientListWindow = this.getRecipeIngredientListWindow();
+		ingredientListWindow.show();
+		ingredientListWindow.deselect();
+		const toolListWindow = this.getRecipeToolListWindow();
+		toolListWindow.show();
+		toolListWindow.deselect();
+		const outputListWindow = this.getRecipeOutputListWindow();
+		outputListWindow.show();
+		outputListWindow.deselect();
 		this.getCreationCategoryBadgeWindow().show();
-	}
-	/**
-	* Deselects the window by hiding and deactivating it.
-	*/
-	deselectRecipeListWindow() {
-		const listWindow = this.getRecipeListWindow();
-		listWindow.select(0);
-		listWindow.hide();
-		listWindow.deactivate();
-		this.getCreationCategoryBadgeWindow().hide();
-		this.getRecipeDetailsWindow().hide();
-		this.getRecipeIngredientListWindow().hide();
-		this.getRecipeToolListWindow().hide();
-		this.getRecipeOutputListWindow().hide();
 	}
 	onRecipeListIndexChange() {
 		const recipeListWindow = this.getRecipeListWindow();

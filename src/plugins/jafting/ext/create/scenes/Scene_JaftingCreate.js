@@ -977,38 +977,24 @@ class Scene_JaftingCreate
     // reveal that window, too.
     detailsWindow.show();
 
+    // the three component columns are separate windows sitting inside the details frame, so the frame
+    // appearing without them is a set of headings over nothing. They are built hidden, and this is the
+    // one place that reveals them.
+    const ingredientListWindow = this.getRecipeIngredientListWindow();
+    ingredientListWindow.show();
+    ingredientListWindow.deselect();
+
+    const toolListWindow = this.getRecipeToolListWindow();
+    toolListWindow.show();
+    toolListWindow.deselect();
+
+    const outputListWindow = this.getRecipeOutputListWindow();
+    outputListWindow.show();
+    outputListWindow.deselect();
+
     // the strip is pointed at the active tab by applyActiveCategory, so revealing it is all that is left.
     this.getCreationCategoryBadgeWindow()
       .show();
-  }
-
-  /**
-   * Deselects the window by hiding and deactivating it.
-   */
-  deselectRecipeListWindow()
-  {
-    // grab the window.
-    const listWindow = this.getRecipeListWindow();
-
-    // put the window away.
-    listWindow.select(0);
-    listWindow.hide();
-    listWindow.deactivate();
-
-    // the strip keeps naming the active tab; it is put away rather than blanked, so returning to the
-    // list does not flash an empty header on the way back in.
-    this.getCreationCategoryBadgeWindow()
-      .hide();
-
-    // hide all those windows.
-    this.getRecipeDetailsWindow()
-      .hide();
-    this.getRecipeIngredientListWindow()
-      .hide();
-    this.getRecipeToolListWindow()
-      .hide();
-    this.getRecipeOutputListWindow()
-      .hide();
   }
 
   onRecipeListIndexChange()
