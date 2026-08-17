@@ -959,12 +959,9 @@ class Scene_JaftingCreate
     // reveal that window, too.
     detailsWindow.show();
 
-    const badgeWindow = this.getCreationCategoryBadgeWindow();
-    const categoryKey = recipeListWindow.getCurrentCategory();
-    const category = $gameParty.getCategoryByKey(categoryKey);
-
-    badgeWindow.setCategory(category);
-    badgeWindow.show();
+    // the strip is pointed at the active tab by applyActiveCategory, so revealing it is all that is left.
+    this.getCreationCategoryBadgeWindow()
+      .show();
   }
 
   /**
@@ -980,10 +977,10 @@ class Scene_JaftingCreate
     listWindow.hide();
     listWindow.deactivate();
 
-    const badgeWindow = this.getCreationCategoryBadgeWindow();
-
-    badgeWindow.hide();
-    badgeWindow.clearCategory();
+    // the strip keeps naming the active tab; it is put away rather than blanked, so returning to the
+    // list does not flash an empty header on the way back in.
+    this.getCreationCategoryBadgeWindow()
+      .hide();
 
     // hide all those windows.
     this.getRecipeDetailsWindow()
@@ -1004,6 +1001,16 @@ class Scene_JaftingCreate
     // shorthand the currently-selected recipe.
     /** @type {CraftingRecipe} */
     const currentRecipe = recipeListWindow.currentExt();
+
+    // a lane with nothing in it is a place the player can legitimately stand, so there may be no recipe
+    // to describe. `currentExt` answers null for an empty list or the -1 index a cleared filter leaves
+    // behind, and every panel below reads the recipe, so there is nothing to show until one exists.
+    if (currentRecipe === null)
+    {
+      this.clearRecipeDetailWindows();
+      return;
+    }
+
     const {
       ingredients,
       tools,
@@ -1034,6 +1041,34 @@ class Scene_JaftingCreate
     const outputListWindow = this.getRecipeOutputListWindow();
     outputListWindow.setNeedsMasking(currentRecipe.needsMasking())
     outputListWindow.setComponents(outputs);
+    outputListWindow.refresh();
+  }
+
+  /**
+   * Blanks every panel that describes a recipe, for when no recipe is highlighted.
+   *
+   * Reachable now that empty lanes are stepped onto rather than skipped: cycling into a lane the player
+   * has learned nothing in leaves the list with no rows and the cursor with nothing under it.
+   */
+  clearRecipeDetailWindows()
+  {
+    this.getCreationDescriptionWindow()
+      .setText(String.empty);
+
+    const detailsWindow = this.getRecipeDetailsWindow();
+    detailsWindow.setCurrentRecipe(null);
+    detailsWindow.refresh();
+
+    const ingredientListWindow = this.getRecipeIngredientListWindow();
+    ingredientListWindow.setComponents([]);
+    ingredientListWindow.refresh();
+
+    const toolListWindow = this.getRecipeToolListWindow();
+    toolListWindow.setComponents([]);
+    toolListWindow.refresh();
+
+    const outputListWindow = this.getRecipeOutputListWindow();
+    outputListWindow.setComponents([]);
     outputListWindow.refresh();
   }
 

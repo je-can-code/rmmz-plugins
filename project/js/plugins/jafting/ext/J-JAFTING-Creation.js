@@ -4488,11 +4488,7 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 		recipeListWindow.onIndexChange();
 		const detailsWindow = this.getRecipeDetailsWindow();
 		detailsWindow.show();
-		const badgeWindow = this.getCreationCategoryBadgeWindow();
-		const categoryKey = recipeListWindow.getCurrentCategory();
-		const category = $gameParty.getCategoryByKey(categoryKey);
-		badgeWindow.setCategory(category);
-		badgeWindow.show();
+		this.getCreationCategoryBadgeWindow().show();
 	}
 	/**
 	* Deselects the window by hiding and deactivating it.
@@ -4502,9 +4498,7 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 		listWindow.select(0);
 		listWindow.hide();
 		listWindow.deactivate();
-		const badgeWindow = this.getCreationCategoryBadgeWindow();
-		badgeWindow.hide();
-		badgeWindow.clearCategory();
+		this.getCreationCategoryBadgeWindow().hide();
 		this.getRecipeDetailsWindow().hide();
 		this.getRecipeIngredientListWindow().hide();
 		this.getRecipeToolListWindow().hide();
@@ -4514,6 +4508,10 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 		const recipeListWindow = this.getRecipeListWindow();
 		/** @type {CraftingRecipe} */
 		const currentRecipe = recipeListWindow.currentExt();
+		if (currentRecipe === null) {
+			this.clearRecipeDetailWindows();
+			return;
+		}
 		const { ingredients, tools, outputs } = currentRecipe;
 		this.getCreationDescriptionWindow().setText(currentRecipe.getRecipeDescription());
 		const detailsWindow = this.getRecipeDetailsWindow();
@@ -4529,6 +4527,27 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 		const outputListWindow = this.getRecipeOutputListWindow();
 		outputListWindow.setNeedsMasking(currentRecipe.needsMasking());
 		outputListWindow.setComponents(outputs);
+		outputListWindow.refresh();
+	}
+	/**
+	* Blanks every panel that describes a recipe, for when no recipe is highlighted.
+	*
+	* Reachable now that empty lanes are stepped onto rather than skipped: cycling into a lane the player
+	* has learned nothing in leaves the list with no rows and the cursor with nothing under it.
+	*/
+	clearRecipeDetailWindows() {
+		this.getCreationDescriptionWindow().setText(String.empty);
+		const detailsWindow = this.getRecipeDetailsWindow();
+		detailsWindow.setCurrentRecipe(null);
+		detailsWindow.refresh();
+		const ingredientListWindow = this.getRecipeIngredientListWindow();
+		ingredientListWindow.setComponents([]);
+		ingredientListWindow.refresh();
+		const toolListWindow = this.getRecipeToolListWindow();
+		toolListWindow.setComponents([]);
+		toolListWindow.refresh();
+		const outputListWindow = this.getRecipeOutputListWindow();
+		outputListWindow.setComponents([]);
 		outputListWindow.refresh();
 	}
 	onRecipeListCancel() {
