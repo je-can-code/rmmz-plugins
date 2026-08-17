@@ -998,8 +998,9 @@ class Scene_JaftingCreate
     // grab the this list window.
     const recipeListWindow = this.getRecipeListWindow();
 
-    // shorthand the currently-selected recipe.
-    /** @type {CraftingRecipe} */
+    // shorthand the currently-selected recipe. `currentExt` answers null whenever nothing is highlighted,
+    // which is a reachable state rather than a broken one- see the guard below.
+    /** @type {CraftingRecipe|null} */
     const currentRecipe = recipeListWindow.currentExt();
 
     // a lane with nothing in it is a place the player can legitimately stand, so there may be no recipe

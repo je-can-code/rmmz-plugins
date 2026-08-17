@@ -4506,7 +4506,7 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 	}
 	onRecipeListIndexChange() {
 		const recipeListWindow = this.getRecipeListWindow();
-		/** @type {CraftingRecipe} */
+		/** @type {CraftingRecipe|null} */
 		const currentRecipe = recipeListWindow.currentExt();
 		if (currentRecipe === null) {
 			this.clearRecipeDetailWindows();
@@ -5265,7 +5265,7 @@ var Scene_JaftingStudy = class Scene_JaftingStudy extends Scene_MenuBase {
 	*/
 	onStudyIndexChange() {
 		const recipeListWindow = this.getStudyRecipeListWindow();
-		/** @type {CraftingRecipe} */
+		/** @type {CraftingRecipe|null} */
 		const currentRecipe = recipeListWindow.currentExt();
 		const costListWindow = this.getStudyCostListWindow();
 		const descriptionWindow = this.getStudyDescriptionWindow();

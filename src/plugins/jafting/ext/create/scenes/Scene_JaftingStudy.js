@@ -540,7 +540,7 @@ class Scene_JaftingStudy
   {
     const recipeListWindow = this.getStudyRecipeListWindow();
 
-    /** @type {CraftingRecipe} */
+    /** @type {CraftingRecipe|null} */
     const currentRecipe = recipeListWindow.currentExt();
 
     const costListWindow = this.getStudyCostListWindow();
@@ -565,6 +565,8 @@ class Scene_JaftingStudy
   {
     const recipeListWindow = this.getStudyRecipeListWindow();
 
+    // never null here, unlike everywhere else `currentExt` is read: `Window_Command.isCurrentItemEnabled`
+    // answers false when nothing is highlighted, so the engine buzzes rather than calling this handler.
     /** @type {CraftingRecipe} */
     const currentRecipe = recipeListWindow.currentExt();
 
