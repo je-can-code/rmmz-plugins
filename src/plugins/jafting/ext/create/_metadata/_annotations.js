@@ -196,6 +196,44 @@
  * @desc The icon of the command used for JAFTING's Creation.
  * @default 2565
  *
+ * @param tuitionConfig
+ * @text TUITION
+ *
+ * @param tier-prices
+ * @parent tuitionConfig
+ * @type number[]
+ * @text Tier Prices
+ * @desc How much scrap a recipe costs to learn, by tier. The first entry is tier 1, and so on.
+ * @default ["10","25","50","100"]
+ *
+ * @param scrap-cook
+ * @parent tuitionConfig
+ * @type item
+ * @text Cooking Scrap
+ * @desc The item spent to learn a cooking recipe.
+ * @default 151
+ *
+ * @param scrap-smith
+ * @parent tuitionConfig
+ * @type item
+ * @text Smithing Scrap
+ * @desc The item spent to learn a smithing or manufacturing recipe.
+ * @default 152
+ *
+ * @param scrap-survive
+ * @parent tuitionConfig
+ * @type item
+ * @text Survival Scrap
+ * @desc The item spent to learn a survival recipe.
+ * @default 153
+ *
+ * @param scrap-alchemy
+ * @parent tuitionConfig
+ * @type item
+ * @text Alchemy Scrap
+ * @desc The item spent to learn an alchemy recipe.
+ * @default 154
+ *
  *
  * @command call-menu
  * @text Call the Creation Menu

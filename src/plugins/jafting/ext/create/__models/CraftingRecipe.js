@@ -81,6 +81,13 @@ class CraftingRecipe
    */
   cost = [];
 
+  /**
+   * How far up its family this recipe sits, which prices it when it names no cost of its own.
+   * Zero means untiered, and an untiered recipe with no cost is simply not for sale.
+   * @type {number}
+   */
+  tier = 0;
+
   //endregion
 
   constructor(
@@ -94,7 +101,8 @@ class CraftingRecipe
     ingredients,
     tools,
     outputs,
-    cost = [])
+    cost = [],
+    tier = 0)
   {
     this.name = name;
     this.key = key;
@@ -108,6 +116,19 @@ class CraftingRecipe
     this.ingredients = ingredients;
     this.tools = tools;
     this.outputs = outputs;
+    this.cost = cost;
+    this.tier = tier;
+  }
+
+  /**
+   * Sets what this recipe charges to be taught.
+   *
+   * Used once at boot, when a recipe that named no cost of its own is priced from its tier. A recipe
+   * that named a cost keeps it- the tier is the rule and the cost is the exception.
+   * @param {CraftingComponent[]} cost The tuition this recipe now charges.
+   */
+  setCost(cost)
+  {
     this.cost = cost;
   }
 

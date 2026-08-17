@@ -196,6 +196,44 @@
  * @desc The icon of the command used for JAFTING's Creation.
  * @default 2565
  *
+ * @param tuitionConfig
+ * @text TUITION
+ *
+ * @param tier-prices
+ * @parent tuitionConfig
+ * @type number[]
+ * @text Tier Prices
+ * @desc How much scrap a recipe costs to learn, by tier. The first entry is tier 1, and so on.
+ * @default ["10","25","50","100"]
+ *
+ * @param scrap-cook
+ * @parent tuitionConfig
+ * @type item
+ * @text Cooking Scrap
+ * @desc The item spent to learn a cooking recipe.
+ * @default 151
+ *
+ * @param scrap-smith
+ * @parent tuitionConfig
+ * @type item
+ * @text Smithing Scrap
+ * @desc The item spent to learn a smithing or manufacturing recipe.
+ * @default 152
+ *
+ * @param scrap-survive
+ * @parent tuitionConfig
+ * @type item
+ * @text Survival Scrap
+ * @desc The item spent to learn a survival recipe.
+ * @default 153
+ *
+ * @param scrap-alchemy
+ * @parent tuitionConfig
+ * @type item
+ * @text Alchemy Scrap
+ * @desc The item spent to learn an alchemy recipe.
+ * @default 154
+ *
  *
  * @command call-menu
  * @text Call the Creation Menu
@@ -804,7 +842,13 @@ var CraftingRecipe = class {
 	* @type {CraftingComponent[]}
 	*/
 	cost = [];
-	constructor(name, key, categoryKeys, iconIndex, description, unlockedByDefault, maskedUntilCrafted, ingredients, tools, outputs, cost = []) {
+	/**
+	* How far up its family this recipe sits, which prices it when it names no cost of its own.
+	* Zero means untiered, and an untiered recipe with no cost is simply not for sale.
+	* @type {number}
+	*/
+	tier = 0;
+	constructor(name, key, categoryKeys, iconIndex, description, unlockedByDefault, maskedUntilCrafted, ingredients, tools, outputs, cost = [], tier = 0) {
 		this.name = name;
 		this.key = key;
 		this.categoryKeys = categoryKeys;
@@ -815,6 +859,17 @@ var CraftingRecipe = class {
 		this.ingredients = ingredients;
 		this.tools = tools;
 		this.outputs = outputs;
+		this.cost = cost;
+		this.tier = tier;
+	}
+	/**
+	* Sets what this recipe charges to be taught.
+	*
+	* Used once at boot, when a recipe that named no cost of its own is priced from its tier. A recipe
+	* that named a cost keeps it- the tier is the rule and the cost is the exception.
+	* @param {CraftingComponent[]} cost The tuition this recipe now charges.
+	*/
+	setCost(cost) {
 		this.cost = cost;
 	}
 	/**
@@ -1432,7 +1487,7 @@ var J_CraftingCreatePluginMetadata = class J_CraftingCreatePluginMetadata extend
 			if (categoricalOutput !== undefined) {
 				throw new Error(`recipe '${mappableRecipe.key}' declares a categorical output, which cannot be produced.`);
 			}
-			const newJaftingRecipe = new CraftingRecipe(mappableRecipe.name, mappableRecipe.key, mappableRecipe.categoryKeys, mappableRecipe.iconIndex, mappableRecipe.description, mappableRecipe.unlockedByDefault, mappableRecipe.maskedUntilCrafted, parsedIngredients, parsedTools, parsedOutputs, parsedCost);
+			const newJaftingRecipe = new CraftingRecipe(mappableRecipe.name, mappableRecipe.key, mappableRecipe.categoryKeys, mappableRecipe.iconIndex, mappableRecipe.description, mappableRecipe.unlockedByDefault, mappableRecipe.maskedUntilCrafted, parsedIngredients, parsedTools, parsedOutputs, parsedCost, mappableRecipe.tier ?? 0);
 			return newJaftingRecipe;
 		};
 		/** @type {CraftingRecipe[]} */
@@ -1466,6 +1521,7 @@ var J_CraftingCreatePluginMetadata = class J_CraftingCreatePluginMetadata extend
 		super.postInitialize();
 		this.initializeConfiguration();
 		this.initializeMetadata();
+		this.applyTieredTuition();
 	}
 	/**
 	* Loads and classifies crafting recipes and categories from {@link J_CraftingCreatePluginMetadata.CONFIG_PATH}.
@@ -1519,6 +1575,65 @@ var J_CraftingCreatePluginMetadata = class J_CraftingCreatePluginMetadata extend
 		* @type {number}
 		*/
 		this.commandIconIndex = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters["menu-icon"], 0);
+	}
+	/**
+	* The scrap price for each tier, lowest first.
+	*
+	* Read from parameters rather than from the crafting config, because the config is rewritten wholesale
+	* by the editor and because retuning an economy should never be a data edit. A tier with no entry here
+	* simply has no price, which is how a roster can grow past the table without pricing itself by accident.
+	* @returns {number[]}
+	*/
+	tierPrices() {
+		const configured = this.parsedPluginParameters["tier-prices"];
+		if (Array.isArray(configured) === false) return [];
+		return configured.map((price) => J.BASE.Helpers.parsePluginInt(price, 0));
+	}
+	/**
+	* The scrap a recipe is bought with, decided by the profession it belongs to.
+	*
+	* The first category wins, matching the authoring rule that a recipe lives in the lane of its first
+	* output. Material recipes go to smithing, since that is the station that teaches them.
+	* @param {string[]} categoryKeys The categories the recipe is filed under.
+	* @returns {number} The item id, or 0 when the profession has no scrap of its own.
+	*/
+	scrapIdForCategories(categoryKeys) {
+		const [primaryCategory] = categoryKeys;
+		const parameters = this.parsedPluginParameters;
+		if (primaryCategory.startsWith("cook-")) return J.BASE.Helpers.parsePluginInt(parameters["scrap-cook"], 0);
+		if (primaryCategory.startsWith("survive-")) return J.BASE.Helpers.parsePluginInt(parameters["scrap-survive"], 0);
+		if (primaryCategory.startsWith("alchemy-")) return J.BASE.Helpers.parsePluginInt(parameters["scrap-alchemy"], 0);
+		if (primaryCategory.startsWith("smith-")) return J.BASE.Helpers.parsePluginInt(parameters["scrap-smith"], 0);
+		if (primaryCategory.startsWith("material-")) return J.BASE.Helpers.parsePluginInt(parameters["scrap-smith"], 0);
+		return 0;
+	}
+	/**
+	* Prices every tiered recipe that named no cost of its own.
+	*
+	* This runs after parsing rather than during it, because the parser is static and the prices are
+	* plugin parameters that only an instance holds. A recipe that named its own cost is left alone: the
+	* tier is the rule and the cost is the exception.
+	*/
+	applyTieredTuition() {
+		this.recipes.filter((recipe) => recipe.cost.length === 0).forEach((recipe) => recipe.setCost(this.tuitionForTier(recipe)), this);
+	}
+	/**
+	* Builds the tuition a tiered recipe charges, for a recipe that named no cost of its own.
+	*
+	* An untiered recipe, a tier past the end of the price table, and a profession with no scrap all
+	* answer the same way: an empty cost, which reads downstream as simply not being for sale.
+	* @param {CraftingRecipe} recipe The recipe being priced.
+	* @returns {CraftingComponent[]}
+	*/
+	tuitionForTier(recipe) {
+		const { tier } = recipe;
+		if (tier <= 0) return [];
+		const price = this.tierPrices().at(tier - 1) ?? 0;
+		if (price <= 0) return [];
+		const scrapId = this.scrapIdForCategories(recipe.categoryKeys);
+		if (scrapId <= 0) return [];
+		const tuition = new CraftingComponent(price, scrapId, CraftingComponent.Types.Item);
+		return [tuition];
 	}
 	/**
 	* Determine if the SDP system is available for use with this crafting system.

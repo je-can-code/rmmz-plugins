@@ -93,7 +93,8 @@ class J_CraftingCreatePluginMetadata
         parsedIngredients,
         parsedTools,
         parsedOutputs,
-        parsedCost
+        parsedCost,
+        mappableRecipe.tier ?? 0
       );
 
       return newJaftingRecipe;
@@ -155,6 +156,9 @@ class J_CraftingCreatePluginMetadata
 
     // initialize this plugin from configuration.
     this.initializeMetadata();
+
+    // price the tiered recipes, which needs both the recipes and the parameters to already exist.
+    this.applyTieredTuition();
   }
 
   /**
@@ -236,6 +240,88 @@ class J_CraftingCreatePluginMetadata
      * @type {number}
      */
     this.commandIconIndex = J.BASE.Helpers.parsePluginInt(this.parsedPluginParameters['menu-icon'], 0);
+  }
+
+  /**
+   * The scrap price for each tier, lowest first.
+   *
+   * Read from parameters rather than from the crafting config, because the config is rewritten wholesale
+   * by the editor and because retuning an economy should never be a data edit. A tier with no entry here
+   * simply has no price, which is how a roster can grow past the table without pricing itself by accident.
+   * @returns {number[]}
+   */
+  tierPrices()
+  {
+    const configured = this.parsedPluginParameters['tier-prices'];
+
+    // the parameter parser hands back a real array, but an unset parameter hands back nothing at all.
+    if (Array.isArray(configured) === false) return [];
+
+    return configured.map(price => J.BASE.Helpers.parsePluginInt(price, 0));
+  }
+
+  /**
+   * The scrap a recipe is bought with, decided by the profession it belongs to.
+   *
+   * The first category wins, matching the authoring rule that a recipe lives in the lane of its first
+   * output. Material recipes go to smithing, since that is the station that teaches them.
+   * @param {string[]} categoryKeys The categories the recipe is filed under.
+   * @returns {number} The item id, or 0 when the profession has no scrap of its own.
+   */
+  scrapIdForCategories(categoryKeys)
+  {
+    const [ primaryCategory ] = categoryKeys;
+    const parameters = this.parsedPluginParameters;
+
+    if (primaryCategory.startsWith('cook-')) return J.BASE.Helpers.parsePluginInt(parameters['scrap-cook'], 0);
+    if (primaryCategory.startsWith('survive-')) return J.BASE.Helpers.parsePluginInt(parameters['scrap-survive'], 0);
+    if (primaryCategory.startsWith('alchemy-')) return J.BASE.Helpers.parsePluginInt(parameters['scrap-alchemy'], 0);
+    if (primaryCategory.startsWith('smith-')) return J.BASE.Helpers.parsePluginInt(parameters['scrap-smith'], 0);
+    if (primaryCategory.startsWith('material-')) return J.BASE.Helpers.parsePluginInt(parameters['scrap-smith'], 0);
+
+    return 0;
+  }
+
+  /**
+   * Prices every tiered recipe that named no cost of its own.
+   *
+   * This runs after parsing rather than during it, because the parser is static and the prices are
+   * plugin parameters that only an instance holds. A recipe that named its own cost is left alone: the
+   * tier is the rule and the cost is the exception.
+   */
+  applyTieredTuition()
+  {
+    this.recipes
+      .filter(recipe => recipe.cost.length === 0)
+      .forEach(recipe => recipe.setCost(this.tuitionForTier(recipe)), this);
+  }
+
+  /**
+   * Builds the tuition a tiered recipe charges, for a recipe that named no cost of its own.
+   *
+   * An untiered recipe, a tier past the end of the price table, and a profession with no scrap all
+   * answer the same way: an empty cost, which reads downstream as simply not being for sale.
+   * @param {CraftingRecipe} recipe The recipe being priced.
+   * @returns {CraftingComponent[]}
+   */
+  tuitionForTier(recipe)
+  {
+    const { tier } = recipe;
+
+    if (tier <= 0) return [];
+
+    const price = this.tierPrices()
+      .at(tier - 1) ?? 0;
+
+    if (price <= 0) return [];
+
+    const scrapId = this.scrapIdForCategories(recipe.categoryKeys);
+
+    if (scrapId <= 0) return [];
+
+    const tuition = new CraftingComponent(price, scrapId, CraftingComponent.Types.Item);
+
+    return [ tuition ];
   }
 
   /**
