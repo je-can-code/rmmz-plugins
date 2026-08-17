@@ -3843,7 +3843,7 @@ var Window_StudyCostList = class extends Window_Command {
 
 //#endregion
 //#region src/plugins/jafting/ext/create/scenes/Scene_JaftingCreate.js
-var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
+var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuFacetBase {
 	/**
 	* Whether Creation can open: at least one unlocked category has recipes the party may craft.
 	* @returns {boolean}
@@ -4351,31 +4351,43 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 		return window;
 	}
 	/**
+	* Overrides {@link Scene_MenuFacetBase.controlLegendEntries}.<br/>
+	* Teaches the controls that have no other way of being found.
+	*
+	* The tab cycle and the craftable-only filter are the two that need saying: neither leaves a mark on
+	* screen until it is pressed, so a player who never tries them never learns the menu has lanes at all.
+	* Confirm and cancel are named by what they land on and are left out.
+	* @returns {{semantic: (string|string[]), label: string}[]}
+	*/
+	controlLegendEntries() {
+		return [{
+			semantic: ["content-prev", "content-next"],
+			label: "category"
+		}, {
+			semantic: "context",
+			label: "craftable only"
+		}];
+	}
+	/**
 	* Shared height for the help band and the category badge (recipe browsing chrome).
 	* @returns {number}
 	*/
 	creationHeaderBandHeight() {
-		return 100;
+		return this.calcWindowHeight(1, false);
 	}
 	/**
 	* Width of the left column shared by category list, recipe list, and category badge windows.
 	* @returns {number}
 	*/
 	getCreationListColumnWidth() {
-		return Math.round(300 * 1.1);
+		return this.commandColumnWidth();
 	}
 	/**
 	* Gets the rectangle associated with this window.
 	* @returns {Rectangle}
 	*/
 	getCreationDescriptionRectangle() {
-		const [ox, oy] = Graphics.boxOrigin;
-		const listColumnWidth = this.getCreationListColumnWidth();
-		const x = ox + listColumnWidth + Graphics.horizontalPadding;
-		const y = oy;
-		const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
-		const height = this.creationHeaderBandHeight();
-		return new Rectangle(x, y, width, height);
+		return new Rectangle(0, this.helpAreaTop(), Graphics.boxWidth, this.helpAreaHeight());
 	}
 	/**
 	* Gets the CreationDescription window being tracked.
@@ -4413,10 +4425,8 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 	* @returns {Rectangle}
 	*/
 	getCreationCategoryBadgeRectangle() {
-		const [ox, oy] = Graphics.boxOrigin;
-		const w = this.getCreationListColumnWidth();
-		const h = this.creationHeaderBandHeight();
-		return new Rectangle(ox, oy, w, h);
+		const facetArea = this.facetAreaRect();
+		return new Rectangle(facetArea.x, facetArea.y, this.getCreationListColumnWidth(), this.creationHeaderBandHeight());
 	}
 	/**
 	* @returns {Window_FilterStrip}
@@ -4456,13 +4466,9 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 	* @returns {Rectangle}
 	*/
 	getRecipeListRectangle() {
-		const [ox, oy] = Graphics.boxOrigin;
-		const w = this.getCreationListColumnWidth();
-		const header = this.creationHeaderBandHeight();
-		const gap = Graphics.verticalPadding;
-		const y = oy + header + gap;
-		const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
-		return new Rectangle(ox, y, w, height);
+		const facetArea = this.facetAreaRect();
+		const y = facetArea.y + this.creationHeaderBandHeight();
+		return new Rectangle(facetArea.x, y, this.getCreationListColumnWidth(), facetArea.y + facetArea.height - y);
 	}
 	/**
 	* Gets the RecipeList window being tracked.
@@ -4731,14 +4737,9 @@ var Scene_JaftingCreate = class Scene_JaftingCreate extends Scene_MenuBase {
 	* @returns {Rectangle}
 	*/
 	getRecipeDetailsRectangle() {
-		const [ox, oy] = Graphics.boxOrigin;
-		const listRect = this.getRecipeListRectangle();
-		const { x: listX, y: listY } = listRect;
-		const x = listX + listRect.width + Graphics.horizontalPadding;
-		const y = listY;
-		const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
-		const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
-		return new Rectangle(x, y, width, height);
+		const facetArea = this.facetAreaRect();
+		const x = facetArea.x + this.getCreationListColumnWidth();
+		return new Rectangle(x, facetArea.y, facetArea.x + facetArea.width - x, facetArea.height);
 	}
 	/**
 	* Gets the RecipeDetails window being tracked.

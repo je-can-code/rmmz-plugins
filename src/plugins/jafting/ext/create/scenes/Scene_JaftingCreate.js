@@ -11,7 +11,7 @@ import Window_RecipeOutputList from '../windows/Window_RecipeOutputList.js';
 import Window_RecipeToolList from '../windows/Window_RecipeToolList.js';
 
 class Scene_JaftingCreate
-  extends Scene_MenuBase
+  extends Scene_MenuFacetBase
 {
   /**
    * Whether Creation can open: at least one unlocked category has recipes the party may craft.
@@ -755,12 +755,35 @@ class Scene_JaftingCreate
   }
 
   /**
+   * Overrides {@link Scene_MenuFacetBase.controlLegendEntries}.<br/>
+   * Teaches the controls that have no other way of being found.
+   *
+   * The tab cycle and the craftable-only filter are the two that need saying: neither leaves a mark on
+   * screen until it is pressed, so a player who never tries them never learns the menu has lanes at all.
+   * Confirm and cancel are named by what they land on and are left out.
+   * @returns {{semantic: (string|string[]), label: string}[]}
+   */
+  controlLegendEntries()
+  {
+    return [
+      {
+        semantic: [ 'content-prev', 'content-next' ],
+        label: 'category',
+      },
+      {
+        semantic: 'context',
+        label: 'craftable only',
+      },
+    ];
+  }
+
+  /**
    * Shared height for the help band and the category badge (recipe browsing chrome).
    * @returns {number}
    */
   creationHeaderBandHeight()
   {
-    return 100;
+    return this.calcWindowHeight(1, false);
   }
 
   /**
@@ -769,7 +792,7 @@ class Scene_JaftingCreate
    */
   getCreationListColumnWidth()
   {
-    return Math.round(300 * 1.1);
+    return this.commandColumnWidth();
   }
 
   /**
@@ -778,14 +801,7 @@ class Scene_JaftingCreate
    */
   getCreationDescriptionRectangle()
   {
-    const [ ox, oy ] = Graphics.boxOrigin;
-    const listColumnWidth = this.getCreationListColumnWidth();
-    const x = ox + listColumnWidth + Graphics.horizontalPadding;
-    const y = oy;
-    const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
-    const height = this.creationHeaderBandHeight();
-
-    return new Rectangle(x, y, width, height);
+    return new Rectangle(0, this.helpAreaTop(), Graphics.boxWidth, this.helpAreaHeight());
   }
 
   /**
@@ -835,11 +851,13 @@ class Scene_JaftingCreate
    */
   getCreationCategoryBadgeRectangle()
   {
-    const [ ox, oy ] = Graphics.boxOrigin;
-    const w = this.getCreationListColumnWidth();
-    const h = this.creationHeaderBandHeight();
+    const facetArea = this.facetAreaRect();
 
-    return new Rectangle(ox, oy, w, h);
+    return new Rectangle(
+      facetArea.x,
+      facetArea.y,
+      this.getCreationListColumnWidth(),
+      this.creationHeaderBandHeight());
   }
 
   /**
@@ -912,14 +930,14 @@ class Scene_JaftingCreate
    */
   getRecipeListRectangle()
   {
-    const [ ox, oy ] = Graphics.boxOrigin;
-    const w = this.getCreationListColumnWidth();
-    const header = this.creationHeaderBandHeight();
-    const gap = Graphics.verticalPadding;
-    const y = oy + header + gap;
-    const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
+    const facetArea = this.facetAreaRect();
+    const y = facetArea.y + this.creationHeaderBandHeight();
 
-    return new Rectangle(ox, y, w, height);
+    return new Rectangle(
+      facetArea.x,
+      y,
+      this.getCreationListColumnWidth(),
+      facetArea.y + facetArea.height - y);
   }
 
   /**
@@ -1377,16 +1395,14 @@ class Scene_JaftingCreate
    */
   getRecipeDetailsRectangle()
   {
-    const [ ox, oy ] = Graphics.boxOrigin;
-    const listRect = this.getRecipeListRectangle();
+    const facetArea = this.facetAreaRect();
+    const x = facetArea.x + this.getCreationListColumnWidth();
 
-    const { x: listX, y: listY } = listRect;
-    const x = listX + listRect.width + Graphics.horizontalPadding;
-    const y = listY;
-    const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
-    const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
-
-    return new Rectangle(x, y, width, height);
+    return new Rectangle(
+      x,
+      facetArea.y,
+      facetArea.x + facetArea.width - x,
+      facetArea.height);
   }
 
   /**
