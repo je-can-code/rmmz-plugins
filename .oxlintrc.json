@@ -160,6 +160,7 @@
     "CraftingComponent": "writable",
     "CraftingConfiguration": "writable",
     "CraftingCreationSession": "writable",
+    "CraftingProfession": "writable",
     "CraftingRecipe": "writable",
     "CritParameterRegistration": "writable",
     "CurrencyDefinition": "writable",

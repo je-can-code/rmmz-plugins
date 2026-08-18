@@ -137,6 +137,21 @@
  * This plugin has no notetags of its own- recipes and categories are
  * entirely defined in the external JSON configuration file (authored via
  * the J-MZ Data Editor app), not tagged on individual database objects.
+ * ----------------------------------------------------------------------------
+ * PROFESSIONS
+ * A profession is a family of categories that share a currency and a price
+ * ladder. Each category names the profession it belongs to, and the profession
+ * says which item is spent to learn its recipes and what each tier costs.
+ *
+ * The price table is indexed by tier with the lowest first, so its length is
+ * how deep that profession goes- one craft can run four tiers while another
+ * runs ten, and neither needs to know about the other. A recipe tiered past
+ * the end of its profession's table has no price, and a profession with no
+ * currency or no prices at all is simply not for sale, which is correct for a
+ * craft whose recipes are found in the world rather than taught by a shop.
+ *
+ * Professions live in the same configuration file as recipes and categories,
+ * so retuning an economy is done in the data editor rather than here.
  * ============================================================================
  * CHANGELOG:
  * - 1.2.2
@@ -195,45 +210,6 @@
  * @text Menu Icon
  * @desc The icon of the command used for JAFTING's Creation.
  * @default 2565
- *
- * @param tuitionConfig
- * @text TUITION
- *
- * @param tier-prices
- * @parent tuitionConfig
- * @type number[]
- * @text Tier Prices
- * @desc How much scrap a recipe costs to learn, by tier. The first entry is tier 1, and so on.
- * @default ["10","25","50","100"]
- *
- * @param scrap-cook
- * @parent tuitionConfig
- * @type item
- * @text Cooking Scrap
- * @desc The item spent to learn a cooking recipe.
- * @default 151
- *
- * @param scrap-smith
- * @parent tuitionConfig
- * @type item
- * @text Smithing Scrap
- * @desc The item spent to learn a smithing or manufacturing recipe.
- * @default 152
- *
- * @param scrap-survive
- * @parent tuitionConfig
- * @type item
- * @text Survival Scrap
- * @desc The item spent to learn a survival recipe.
- * @default 153
- *
- * @param scrap-alchemy
- * @parent tuitionConfig
- * @type item
- * @text Alchemy Scrap
- * @desc The item spent to learn an alchemy recipe.
- * @default 154
- *
  *
  * @command call-menu
  * @text Call the Creation Menu

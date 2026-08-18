@@ -1,5 +1,6 @@
 import './__models/CraftingComponent.js';
 import './__models/CraftingCategory.js';
+import './__models/CraftingProfession.js';
 import './__models/CraftingConfiguration.js';
 import './__models/CraftingRecipe.js';
 import './__models/RecipeTracking.js';
