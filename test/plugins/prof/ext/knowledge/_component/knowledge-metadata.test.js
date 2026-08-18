@@ -154,6 +154,16 @@ describe('J-Proficiency-Knowledge metadata (direct src import)', () =>
       expect(() => globalThis.J.PROF.EXT.KNOWLEDGE.Metadata.exchangeByKey('vitest_nonexistent'))
         .toThrow(`there is no knowledge exchange with the key of 'vitest_nonexistent'.`);
     });
+
+    it('names the exchanges that do exist when refusing an unknown key', () =>
+    {
+      // Arrange- the likeliest mistake is naming a tag where an exchange goes, so the message has to
+      // be enough to correct it without opening the configuration.
+
+      // Act & Assert
+      expect(() => globalThis.J.PROF.EXT.KNOWLEDGE.Metadata.exchangeByKey('vitest_nonexistent'))
+        .toThrow(/known exchanges: .*vitest_patterns/);
+    });
   });
 
   describe('validating configuration', () =>

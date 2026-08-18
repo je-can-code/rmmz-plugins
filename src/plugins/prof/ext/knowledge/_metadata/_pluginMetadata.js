@@ -194,7 +194,11 @@ class J_KnowledgePluginMetadata
   {
     if (this.exchangesMap.has(exchangeKey) === false)
     {
-      throw new Error(`there is no knowledge exchange with the key of '${exchangeKey}'.`);
+      // naming the alternatives, because the likeliest mistake is naming a tag where an exchange goes -
+      // the two sit beside each other in configuration and a tag key is the more memorable of the pair.
+      const known = [ ...this.exchangesMap.keys() ].join(', ');
+
+      throw new Error(`there is no knowledge exchange with the key of '${exchangeKey}'. known exchanges: ${known}.`);
     }
 
     return this.exchangesMap.get(exchangeKey);
