@@ -114,7 +114,7 @@ class RefinementEligibility
     }
 
     const traitCap = equip.jaftingMaxTraitCount;
-    const currentTraits = JaftingManager.parseTraits(equip).length;
+    const currentTraits = JaftingManager.countRefinedEffects(equip);
     const hasMaxTraits = traitCap === 0
       ? false
       : traitCap <= currentTraits;
@@ -281,7 +281,7 @@ class RefinementEligibility
     }
 
     const projectedOutput = JaftingManager.determineRefinementOutput(baseSelection, equip);
-    const projectedTraits = JaftingManager.parseTraits(projectedOutput).length;
+    const projectedTraits = JaftingManager.countRefinedEffects(projectedOutput);
 
     if (cap >= projectedTraits)
     {

@@ -65,6 +65,26 @@ class JaftingManager
   }
 
   /**
+   * How many refined effects an equip is carrying, counting both channels a refinement can add to.
+   *
+   * Refinement hands over two things: the traits below the trait divider, and the note lines below the
+   * transferable divider. Both are effects the player chose and paid for, so a ceiling that counted only
+   * the trait array would let an equip accumulate note effects without limit while claiming to be full.
+   * @param {RPG_EquipItem} equip An equip to count refined effects on.
+   * @returns {number}
+   */
+  static countRefinedEffects(equip)
+  {
+    const traits = JaftingManager.parseTraits(equip).length;
+    const noteEffects = JaftingManager.parseNoteEffects(equip);
+
+    // an equip offering nothing from its note contributes no lines rather than one empty one.
+    if (noteEffects === String.empty) return traits;
+
+    return traits + noteEffects.split('\n').length;
+  }
+
+  /**
    * The note text below the transferable divider - what this equip hands over when consumed.
    *
    * No divider means no note effects transfer at all. That is the deliberate default and the mirror of
@@ -673,7 +693,7 @@ class JaftingManager
 
       const equipHasMaxTraits = equip.jaftingMaxTraitCount === 0
         ? false
-        : equip.jaftingMaxTraitCount <= JaftingManager.parseTraits(equip).length;
+        : equip.jaftingMaxTraitCount <= JaftingManager.countRefinedEffects(equip);
 
       if (equipHasMaxTraits)
       {

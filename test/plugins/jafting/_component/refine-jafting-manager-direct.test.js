@@ -152,6 +152,74 @@ describe('JaftingManager (direct src import)', () =>
     });
   });
 
+  describe('countRefinedEffects', () =>
+  {
+    /**
+     * Builds an equip carrying the given traits below a divider.
+     * @param {string} note The equip's note.
+     * @param {number} traitsBelow How many traits sit below the trait divider.
+     * @returns {object}
+     */
+    const withEffects = (note, traitsBelow) => fakeEquip({
+      note,
+      traits: [
+        { code: 31, dataId: 1, value: 0 },
+        { code: 63, dataId: 0, value: 0 },
+        ...new Array(traitsBelow)
+          .fill(0)
+          .map((_, i) => ({ code: 22, dataId: i, value: 0.1 })),
+      ],
+    });
+
+    it('counts the traits below the divider when the note offers nothing', () =>
+    {
+      // Arrange - a note with no divider contributes no effects, so only the traits are counted.
+      const equip = withEffects('<skillId:1>\n<bonusHits:2>', 3);
+
+      // Act
+      const result = JaftingManager.countRefinedEffects(equip);
+
+      // Assert
+      expect(result).toBe(3);
+    });
+
+    it('counts note effects alongside the traits', () =>
+    {
+      // Arrange - two traits and two transferable note lines is four effects, not two.
+      const equip = withEffects('<skillId:1>\n<transferrableEffectsBelow>\n<bonusHits:2>\n<speedBoost:5>', 2);
+
+      // Act
+      const result = JaftingManager.countRefinedEffects(equip);
+
+      // Assert
+      expect(result).toBe(4);
+    });
+
+    it('counts note effects on an equip carrying no traits at all', () =>
+    {
+      // Arrange - the channel that used to go entirely uncounted.
+      const equip = fakeEquip({ note: '<transferrableEffectsBelow>\n<bonusHits:2>\n<speedBoost:5>' });
+
+      // Act
+      const result = JaftingManager.countRefinedEffects(equip);
+
+      // Assert
+      expect(result).toBe(2);
+    });
+
+    it('counts a divider with nothing under it as no note effects', () =>
+    {
+      // Arrange - an empty offer must not read as one effect.
+      const equip = withEffects('<skillId:1>\n<transferrableEffectsBelow>', 1);
+
+      // Act
+      const result = JaftingManager.countRefinedEffects(equip);
+
+      // Assert
+      expect(result).toBe(1);
+    });
+  });
+
   describe('parseRetainedNote', () =>
   {
     it('keeps the whole note when there is no divider', () =>
