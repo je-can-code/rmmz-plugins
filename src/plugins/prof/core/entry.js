@@ -7,6 +7,7 @@ import './objects/Game_Actor.js';
 import './objects/Game_Enemy.js';
 import './objects/Game_Action.js';
 import './objects/Game_System.js';
+import './objects/JABS_Battler.js';
 import './managers/TextManager.js';
 import './managers/IconManager.js';
 import './core/registerProfParameters.js';

@@ -132,10 +132,14 @@ if (J.ABS)
 
     // handle tp generation from the guard skill.
     const skillId = jabsBattler.getGuardSkillId();
+    const battler = jabsBattler.getBattler();
+
+    // the same amount an attack would earn. a flat 1 here left every bonus to proficiency gain applying
+    // to offense only, which quietly made defensive knowledge the slower of the two to bank.
+    const amount = battler.skillProficiencyAmount();
 
     // gain some proficiency for the parry skill.
-    jabsBattler.getBattler()
-      .increaseSkillProficiency(skillId, 1);
+    battler.increaseSkillProficiency(skillId, amount);
   };
 
   /**

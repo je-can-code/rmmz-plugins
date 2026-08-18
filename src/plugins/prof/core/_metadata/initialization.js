@@ -76,6 +76,7 @@ J.PROF.Aliased = {
   Game_Battler: new Map(),
   Game_Enemy: new Map(),
   Game_System: new Map(),
+  JABS_Battler: new Map(),
 
   IconManager: new Map(),
   Scene_Boot: new Map(),
