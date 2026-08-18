@@ -200,6 +200,52 @@ describe('FilterCycle (direct src import)', () =>
       expect(cycle.activeKey())
         .toBe('alpha');
     });
+
+    it('leaves an empty ring alone rather than poisoning the index', () =>
+    {
+      // Arrange - a modulo by zero would answer NaN, which no later position lookup could recover from.
+      const cycle = new FilterCycle([]);
+
+      // Act
+      cycle.previous();
+
+      // Assert
+      expect(cycle.activePosition())
+        .toBe(FilterCycle.EMPTY_POSITION);
+      expect(cycle.activeKey())
+        .toBe(FilterCycle.EMPTY_POSITION.key);
+    });
+  });
+
+  describe('cycling an empty ring', () =>
+  {
+    it('leaves an empty ring alone when advancing', () =>
+    {
+      // Arrange
+      const cycle = new FilterCycle([]);
+
+      // Act
+      cycle.next();
+
+      // Assert
+      expect(cycle.activePosition())
+        .toBe(FilterCycle.EMPTY_POSITION);
+    });
+
+    it('still lands on the first position once the ring is filled after being cycled while empty', () =>
+    {
+      // Arrange - proves the index survived the empty steps rather than merely reading as empty.
+      const cycle = new FilterCycle([]);
+      cycle.next();
+      cycle.previous();
+
+      // Act
+      cycle.setPositions([ positionFor('alpha'), positionFor('beta') ]);
+
+      // Assert
+      expect(cycle.activeKey())
+        .toBe('alpha');
+    });
   });
 
   describe('setPositions()', () =>
