@@ -596,11 +596,21 @@ class Scene_JaftingCreate
    */
   /**
    * The categories this station deals in, which the calling event decided before opening the scene.
-   * @returns {CraftingCategory[]}
+   *
+   * An everything-tab leads, so there is always one tab holding whatever the player knows. Without it a
+   * player who has learned five dishes of one kind walks a ring of empty lanes to find them, which
+   * reads as a broken menu rather than as an early game.
+   * @returns {Array<{key: string, name: string, iconIndex: number}>}
    */
   availableCategories()
   {
-    return $gameParty.getUnlockedCategories();
+    const everything = {
+      key: FilterCycle.ALL,
+      name: 'All',
+      iconIndex: J.JAFTING.EXT.CREATE.Metadata.commandIconIndex,
+    };
+
+    return [ everything, ...$gameParty.getUnlockedCategories() ];
   }
 
   /**
@@ -969,28 +979,18 @@ class Scene_JaftingCreate
     // reveal the window.
     recipeListWindow.show();
     recipeListWindow.activate();
+
+    this.getRecipeIngredientListWindow()
+      .deselect();
+    this.getRecipeToolListWindow()
+      .deselect();
+    this.getRecipeOutputListWindow()
+      .deselect();
+
+    // the details frame and its three columns are revealed by onIndexChange, which is the only thing
+    // that knows whether there is a recipe to describe. Revealing them here as well would strand them
+    // visible over an empty lane.
     recipeListWindow.onIndexChange();
-
-    // also grab the details.
-    const detailsWindow = this.getRecipeDetailsWindow();
-
-    // reveal that window, too.
-    detailsWindow.show();
-
-    // the three component columns are separate windows sitting inside the details frame, so the frame
-    // appearing without them is a set of headings over nothing. They are built hidden, and this is the
-    // one place that reveals them.
-    const ingredientListWindow = this.getRecipeIngredientListWindow();
-    ingredientListWindow.show();
-    ingredientListWindow.deselect();
-
-    const toolListWindow = this.getRecipeToolListWindow();
-    toolListWindow.show();
-    toolListWindow.deselect();
-
-    const outputListWindow = this.getRecipeOutputListWindow();
-    outputListWindow.show();
-    outputListWindow.deselect();
 
     // the strip is pointed at the active tab by applyActiveCategory, so revealing it is all that is left.
     this.getCreationCategoryBadgeWindow()
@@ -1031,29 +1031,34 @@ class Scene_JaftingCreate
     detailsWindow.setNeedsMasking(currentRecipe.needsMasking());
     detailsWindow.setCurrentRecipe(recipeListWindow.currentExt());
     detailsWindow.refresh();
+    detailsWindow.show();
 
     // refresh the ingredients list.
     const ingredientListWindow = this.getRecipeIngredientListWindow();
     ingredientListWindow.setComponents(ingredients);
     ingredientListWindow.refresh();
+    ingredientListWindow.show();
 
     // refresh the tools list.
     const toolListWindow = this.getRecipeToolListWindow();
     toolListWindow.setComponents(tools);
     toolListWindow.refresh();
+    toolListWindow.show();
 
     // refresh the outputs list.
     const outputListWindow = this.getRecipeOutputListWindow();
     outputListWindow.setNeedsMasking(currentRecipe.needsMasking())
     outputListWindow.setComponents(outputs);
     outputListWindow.refresh();
+    outputListWindow.show();
   }
 
   /**
-   * Blanks every panel that describes a recipe, for when no recipe is highlighted.
+   * Hides every panel that describes a recipe, for when no recipe is highlighted.
    *
-   * Reachable now that empty lanes are stepped onto rather than skipped: cycling into a lane the player
-   * has learned nothing in leaves the list with no rows and the cursor with nothing under it.
+   * Hidden rather than blanked, because a blanked tools column still announces "No tools required." -
+   * an empty component list is also how a toolless recipe looks. Paired with the reveals in
+   * {@link #onRecipeListIndexChange}, which is the only other place these windows change visibility.
    */
   clearRecipeDetailWindows()
   {
@@ -1062,19 +1067,14 @@ class Scene_JaftingCreate
 
     const detailsWindow = this.getRecipeDetailsWindow();
     detailsWindow.setCurrentRecipe(null);
-    detailsWindow.refresh();
+    detailsWindow.hide();
 
-    const ingredientListWindow = this.getRecipeIngredientListWindow();
-    ingredientListWindow.setComponents([]);
-    ingredientListWindow.refresh();
-
-    const toolListWindow = this.getRecipeToolListWindow();
-    toolListWindow.setComponents([]);
-    toolListWindow.refresh();
-
-    const outputListWindow = this.getRecipeOutputListWindow();
-    outputListWindow.setComponents([]);
-    outputListWindow.refresh();
+    this.getRecipeIngredientListWindow()
+      .hide();
+    this.getRecipeToolListWindow()
+      .hide();
+    this.getRecipeOutputListWindow()
+      .hide();
   }
 
   onRecipeListCancel()
@@ -1455,7 +1455,7 @@ class Scene_JaftingCreate
     const detailsWindow = this.getRecipeDetailsWindow();
     const pad = detailsWindow.padding;
     const innerW = detailsR.width - pad * 2;
-    const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(innerW);
+    const { cw, remainder } = Window_RecipeDetails.componentColumnWidths(innerW);
     const leftX = detailsR.x + pad;
     const rowInset = Window_RecipeIngredientList.recipeComponentRowTopInsetPx();
     const listInnerTop = detailsR.y + pad + detailsWindow.componentListRowsInnerStartY() - rowInset;

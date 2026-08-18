@@ -505,34 +505,68 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
       ));
     });
 
-    describe('quarterWidthsFromInner', () =>
+    describe('componentColumnWidths', () =>
     {
-      it('floors width into four bands with remainder on the last', () =>
+      it('gives the three columns more width than the detail pane beside them', () =>
       {
         // Arrange & Act
-        const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(350);
+        const {
+          cw,
+          detailWidth
+        } = Window_RecipeDetails.componentColumnWidths(1440);
 
         // Assert
-        expect(cw).toBe(87);
-        expect(remainder).toBe(350 - cw * 4);
+        expect(cw).toBe(400);
+        expect(detailWidth).toBe(240);
       });
 
-      it('accounts for every pixel of the inner width across the four bands plus remainder', () =>
+      it('accounts for every pixel of the inner width across the columns, remainder and pane', () =>
       {
         // Arrange & Act
-        const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(350);
+        const {
+          cw,
+          remainder,
+          detailWidth
+        } = Window_RecipeDetails.componentColumnWidths(350);
 
         // Assert
-        expect(cw * 4 + remainder).toBe(350);
+        expect(cw * 3 + remainder + detailWidth).toBe(350);
       });
 
-      it('clamps each band to at least 80px for a narrow inner width', () =>
+      it('hands the leftover pixels to the columns rather than the pane', () =>
       {
         // Arrange & Act
-        const { cw } = Window_RecipeDetails.quarterWidthsFromInner(100);
+        const {
+          cw,
+          remainder
+        } = Window_RecipeDetails.componentColumnWidths(350);
+
+        // Assert
+        expect(cw).toBe(97);
+        expect(remainder).toBe(1);
+      });
+
+      it('clamps each column to at least 80px for a narrow inner width', () =>
+      {
+        // Arrange & Act
+        const { cw } = Window_RecipeDetails.componentColumnWidths(100);
 
         // Assert
         expect(cw).toBe(80);
+      });
+
+      it('surrenders the pane entirely rather than reporting negative width when the floor bites', () =>
+      {
+        // Arrange - 100px cannot hold three 80px columns, so the pane is what gives way.
+        // Act
+        const {
+          remainder,
+          detailWidth
+        } = Window_RecipeDetails.componentColumnWidths(100);
+
+        // Assert
+        expect(detailWidth).toBe(0);
+        expect(remainder).toBe(0);
       });
     });
 

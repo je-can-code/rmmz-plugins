@@ -38,13 +38,18 @@ describe('Window_RecipeList', () =>
   });
 
   /**
-   * Stands up a party that has learned the given recipes.
+   * Stands up a party that has learned the given recipes, at a station stocking the given lanes.
    * @param {object[]} recipes What the party knows.
+   * @param {string[]|null} stockedKeys The lanes this station deals in; defaults to every lane the
+   * recipes name, which is the ordinary case of a station that stocks what it can make.
    */
-  const useKnownRecipes = recipes =>
+  const useKnownRecipes = (recipes, stockedKeys = null) =>
   {
+    const lanes = stockedKeys ?? [ ...new Set(recipes.flatMap(recipe => recipe.categoryKeys)) ];
+
     globalThis.$gameParty = {
       getUnlockedRecipes: () => recipes,
+      getUnlockedCategories: () => lanes.map(key => ({ key })),
     };
   };
 
@@ -87,6 +92,61 @@ describe('Window_RecipeList', () =>
       // Assert
       expect(window.getCurrentCategory())
         .toBe(String.empty);
+    });
+  });
+
+  describe('sourceItems()', () =>
+  {
+    it('leaves out a known recipe whose lane this station does not stock', () =>
+    {
+      // Arrange - the party knows both, but this bench only deals in alchemy.
+      useKnownRecipes(
+        [
+          recipeFor('gem', [ 'alchemy-gems' ], true),
+          recipeFor('wings', [ 'cook-protein' ], true),
+        ],
+        [ 'alchemy-gems' ]);
+      const window = new Window_RecipeList(new Rectangle(0, 0, 330, 400));
+
+      // Act
+      window.setCurrentCategory(FilterCycle.ALL);
+
+      // Assert
+      expect(symbolsOf(window))
+        .toEqual([ 'gem' ]);
+    });
+
+    it('keeps a recipe filed under both a stocked lane and an unstocked one', () =>
+    {
+      // Arrange
+      useKnownRecipes(
+        [ recipeFor('shared', [ 'cook-protein', 'alchemy-gems' ], true) ],
+        [ 'alchemy-gems' ]);
+      const window = new Window_RecipeList(new Rectangle(0, 0, 330, 400));
+
+      // Act
+      window.setCurrentCategory(FilterCycle.ALL);
+
+      // Assert
+      expect(symbolsOf(window))
+        .toEqual([ 'shared' ]);
+    });
+
+    it('collects every stocked lane under the everything-tab', () =>
+    {
+      // Arrange
+      useKnownRecipes([
+        recipeFor('scrambies', [ 'cook-protein' ], true),
+        recipeFor('porridge', [ 'cook-carb' ], true),
+      ]);
+      const window = new Window_RecipeList(new Rectangle(0, 0, 330, 400));
+
+      // Act
+      window.setCurrentCategory(FilterCycle.ALL);
+
+      // Assert
+      expect(symbolsOf(window))
+        .toEqual([ 'scrambies', 'porridge' ]);
     });
   });
 

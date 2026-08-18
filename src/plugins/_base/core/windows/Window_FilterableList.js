@@ -191,6 +191,39 @@ class Window_FilterableList
   {
     throw new Error('A Window_FilterableList must implement buildCommand.');
   }
+
+  /**
+   * What to say when the list has nothing in it, since an empty frame reads as one that failed to draw.
+   * Answer {@link String.empty} to stay silent.
+   * @returns {string}
+   */
+  emptyListText()
+  {
+    return 'Nothing here.';
+  }
+
+  /**
+   * Overwrites {@link Window_Selectable.drawAllItems}.<br/>
+   * Explains an empty list rather than presenting a blank frame.
+   * @override
+   */
+  drawAllItems()
+  {
+    if (this.maxItems() > 0)
+    {
+      Window_Command.prototype.drawAllItems.call(this);
+      return;
+    }
+
+    const message = this.emptyListText();
+
+    // a list that would rather say nothing gets to say nothing.
+    if (message === String.empty) return;
+
+    this.resetFontSettings();
+    this.changeTextColor(ColorManager.systemColor());
+    this.drawText(message, 0, 0, this.innerWidth, Window_Base.TextAlignments.Center);
+  }
 }
 
 export default Window_FilterableList;

@@ -49,12 +49,21 @@ class Window_RecipeList
 
   /**
    * Implements {@link Window_FilterableList.sourceItems}.<br/>
-   * Every recipe the party has learned, across every category.
+   * Every recipe the party has learned that this station actually deals in.
+   *
+   * Scoped to the unlocked categories, which is how a station says what it makes: the calling event
+   * unlocks its own and locks them again afterwards. Without this the mortar and pestle would happily
+   * offer to fry a pile of wings.
    * @returns {CraftingRecipe[]}
    */
   sourceItems()
   {
-    return $gameParty.getUnlockedRecipes();
+    const stockedKeys = $gameParty.getUnlockedCategories()
+      .map(category => category.key);
+    const stocked = new Set(stockedKeys);
+
+    return $gameParty.getUnlockedRecipes()
+      .filter(recipe => recipe.categoryKeys.some(key => stocked.has(key)));
   }
 
   /**
@@ -66,6 +75,9 @@ class Window_RecipeList
    */
   matchesFilter(recipe, filterKey)
   {
+    // the everything-tab narrows nothing further; the source is already this station's stock.
+    if (filterKey === FilterCycle.ALL) return true;
+
     return recipe.categoryKeys.includes(filterKey);
   }
 
@@ -115,6 +127,19 @@ class Window_RecipeList
    */
   drawBackgroundRect(_)
   {
+  }
+
+  /**
+   * Overrides {@link Window_FilterableList.emptyListText}.<br/>
+   * Names the reason this lane is bare, which is always the same reason.
+   *
+   * A category the player has learned nothing in is the ordinary early state of every lane but one, so
+   * this is read far more often than it sounds like it would be.
+   * @returns {string}
+   */
+  emptyListText()
+  {
+    return 'No recipes known here.';
   }
 }
 
