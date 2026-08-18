@@ -129,12 +129,12 @@ class Window_StudyRecipeList
 
   /**
    * Overwrites {@link #itemHeight}.<br/>
-   * One line per row, since a shelf is a list of names rather than a set of cards.
+   * Leaves room beneath the name for the line marking a recipe already learned.
    * @returns {number}
    */
   itemHeight()
   {
-    return this.lineHeight();
+    return this.lineHeight() * 2;
   }
 
   /**
@@ -144,6 +144,19 @@ class Window_StudyRecipeList
    */
   drawBackgroundRect(_)
   {
+  }
+
+  /**
+   * Overrides {@link Window_FilterableList.emptyListText}.<br/>
+   * Says the shelf is bare rather than that the category is.
+   *
+   * A vendor with nothing left in a category has usually sold it all to this player already, which is a
+   * different thing from a category being empty and worth wording differently.
+   * @returns {string}
+   */
+  emptyListText()
+  {
+    return 'Nothing for sale here.';
   }
 }
 

@@ -131,6 +131,16 @@ class Window_StudyCostList
   }
 
   /**
+   * Overwrites {@link #itemHeight}.<br/>
+   * Leaves room beneath each part of the price for the line saying how much of it the party holds.
+   * @returns {number}
+   */
+  itemHeight()
+  {
+    return this.lineHeight() * 1.5;
+  }
+
+  /**
    * Overwrites {@link #drawBackgroundRect}.<br/>
    * A price tag is read, not chosen from, so its rows want no selection backdrop.
    * @param {Rectangle} _ The rectangle that would have been drawn into.

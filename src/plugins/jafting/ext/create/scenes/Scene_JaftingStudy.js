@@ -1,6 +1,10 @@
 //region Scene_JaftingStudy
 import StudyPurchaseService from '../managers/StudyPurchaseService.js';
 import Window_CreationDescription from '../windows/Window_CreationDescription.js';
+import Window_RecipeDetails from '../windows/Window_RecipeDetails.js';
+import Window_RecipeIngredientList from '../windows/Window_RecipeIngredientList.js';
+import Window_RecipeOutputList from '../windows/Window_RecipeOutputList.js';
+import Window_RecipeToolList from '../windows/Window_RecipeToolList.js';
 import Window_StudyCostList from '../windows/Window_StudyCostList.js';
 import Window_StudyRecipeList from '../windows/Window_StudyRecipeList.js';
 
@@ -14,9 +18,14 @@ import Window_StudyRecipeList from '../windows/Window_StudyRecipeList.js';
  * Which categories are on offer is decided before the scene opens, exactly as the crafting stations
  * decide it: the event unlocks what its vendor deals in, opens this, then locks it again. That is why
  * nothing here filters by vendor- the caller already did.
+ *
+ * The panels describing a recipe are the same windows the crafting scene uses, deliberately. What a
+ * recipe consumes is how a player decides which one to buy- a surplus of one ingredient is the whole
+ * reason to prefer one dish over another- so a shop that only quotes a price is asking for a decision
+ * while withholding what the decision is made of.
  */
 class Scene_JaftingStudy
-  extends Scene_MenuBase
+  extends Scene_MenuFacetBase
 {
   /**
    * The symbol representing the command for this scene from other menus.
@@ -124,6 +133,30 @@ class Scene_JaftingStudy
     this._j._crafting._study._costList = null;
 
     /**
+     * The frame describing whatever is highlighted, and the headings its columns sit under.
+     * @type {Window_RecipeDetails|null}
+     */
+    this._j._crafting._study._recipeDetails = null;
+
+    /**
+     * What the highlighted recipe consumes.
+     * @type {Window_RecipeIngredientList|null}
+     */
+    this._j._crafting._study._ingredientList = null;
+
+    /**
+     * What the highlighted recipe requires but does not consume.
+     * @type {Window_RecipeToolList|null}
+     */
+    this._j._crafting._study._toolList = null;
+
+    /**
+     * What the highlighted recipe produces.
+     * @type {Window_RecipeOutputList|null}
+     */
+    this._j._crafting._study._outputList = null;
+
+    /**
      * The L2/R2 ring of categories this vendor is dealing in.
      * @type {FilterCycle}
      */
@@ -165,6 +198,10 @@ class Scene_JaftingStudy
     this.createStudyCategoryBadgeWindow();
     this.createStudyRecipeListWindow();
     this.createStudyCostListWindow();
+
+    // the detail frame is built after the list, because its columns are measured from the frame and the
+    // frame is measured from the column the list occupies.
+    this.createStudyRecipeDetailWindows();
   }
 
   /**
@@ -218,12 +255,9 @@ class Scene_JaftingStudy
    */
   getStudyDescriptionRectangle()
   {
-    const [ ox, oy ] = Graphics.boxOrigin;
-    const listColumnWidth = this.getStudyListColumnWidth();
-    const x = ox + listColumnWidth + Graphics.horizontalPadding;
-    const width = ox + Graphics.boxWidth - x - Graphics.horizontalPadding;
-
-    return new Rectangle(x, oy, width, this.studyHeaderBandHeight());
+    // this scene's description is the base's help band rather than a panel of its own, which is what
+    // keeps the strip from being reserved across the top and then left empty.
+    return new Rectangle(0, this.helpAreaTop(), Graphics.boxWidth, this.helpAreaHeight());
   }
 
   /**
@@ -275,9 +309,13 @@ class Scene_JaftingStudy
    */
   getStudyCategoryBadgeRectangle()
   {
-    const [ ox, oy ] = Graphics.boxOrigin;
+    const facetArea = this.facetAreaRect();
 
-    return new Rectangle(ox, oy, this.getStudyListColumnWidth(), this.studyHeaderBandHeight());
+    return new Rectangle(
+      facetArea.x,
+      facetArea.y,
+      this.getStudyListColumnWidth(),
+      this.studyHeaderBandHeight());
   }
 
   /**
@@ -346,11 +384,13 @@ class Scene_JaftingStudy
    */
   getStudyRecipeListRectangle()
   {
-    const [ ox, oy ] = Graphics.boxOrigin;
-    const y = oy + this.studyHeaderBandHeight() + Graphics.verticalPadding;
-    const height = oy + Graphics.boxHeight - y - Graphics.verticalPadding;
+    const facetArea = this.facetAreaRect();
+    const y = facetArea.y + this.studyHeaderBandHeight();
 
-    return new Rectangle(ox, y, this.getStudyListColumnWidth(), height);
+    // the shelf gives up its foot to the price, which is the one fact a shopper needs beside the name.
+    const height = facetArea.y + facetArea.height - y - this.studyPriceBandHeight();
+
+    return new Rectangle(facetArea.x, y, this.getStudyListColumnWidth(), height);
   }
 
   /**
@@ -395,8 +435,10 @@ class Scene_JaftingStudy
 
     const window = new Window_StudyCostList(rectangle);
 
-    // no command functionality despite being a command window.
+    // no command functionality despite being a command window, and no cursor either - deactivating
+    // alone would leave row zero highlighted as though the price were something you pick.
     window.deactivate();
+    window.deselect();
 
     return window;
   }
@@ -407,10 +449,13 @@ class Scene_JaftingStudy
    */
   getStudyCostListRectangle()
   {
-    const description = this.getStudyDescriptionRectangle();
     const recipeList = this.getStudyRecipeListRectangle();
 
-    return new Rectangle(description.x, recipeList.y, description.width, recipeList.height);
+    return new Rectangle(
+      recipeList.x,
+      recipeList.y + recipeList.height,
+      recipeList.width,
+      this.studyPriceBandHeight());
   }
 
   /**
@@ -432,23 +477,225 @@ class Scene_JaftingStudy
   }
   //endregion cost list window
 
+  //region recipe detail windows
+  /**
+   * Creates the frame describing the highlighted recipe, and the three columns inside it.
+   *
+   * The columns are separate windows sitting within the frame's headings, so they are created together
+   * and revealed together; a heading over nothing is worse than no heading.
+   */
+  createStudyRecipeDetailWindows()
+  {
+    const detailsWindow = new Window_RecipeDetails(this.getStudyRecipeDetailsRectangle());
+    this.setStudyRecipeDetailsWindow(detailsWindow);
+    this.addWindow(detailsWindow);
+
+    // these are read, never driven. deactivating stops them taking input but leaves the cursor sitting
+    // on row zero, which draws as a selection bar over a column nobody is in.
+    const ingredientListWindow = new Window_RecipeIngredientList(this.getStudyIngredientListRectangle());
+    ingredientListWindow.deactivate();
+    ingredientListWindow.deselect();
+    this.setStudyIngredientListWindow(ingredientListWindow);
+    this.addWindow(ingredientListWindow);
+
+    const toolListWindow = new Window_RecipeToolList(this.getStudyToolListRectangle());
+    toolListWindow.deactivate();
+    toolListWindow.deselect();
+    this.setStudyToolListWindow(toolListWindow);
+    this.addWindow(toolListWindow);
+
+    const outputListWindow = new Window_RecipeOutputList(this.getStudyOutputListRectangle());
+    outputListWindow.deactivate();
+    outputListWindow.deselect();
+    this.setStudyOutputListWindow(outputListWindow);
+    this.addWindow(outputListWindow);
+  }
+
+  /**
+   * Gets the rectangle for the details frame, which fills the facet area beside the shelf.
+   * @returns {Rectangle}
+   */
+  getStudyRecipeDetailsRectangle()
+  {
+    const facetArea = this.facetAreaRect();
+    const x = facetArea.x + this.getStudyListColumnWidth();
+
+    return new Rectangle(x, facetArea.y, facetArea.x + facetArea.width - x, facetArea.height);
+  }
+
+  /**
+   * Gets the rectangle for the ingredient column.
+   * @returns {Rectangle}
+   */
+  getStudyIngredientListRectangle()
+  {
+    const layout = this.getStudyLowerPanelLayout();
+
+    return new Rectangle(layout.leftX, layout.y, layout.colW, layout.height);
+  }
+
+  /**
+   * Gets the rectangle for the tool column.
+   * @returns {Rectangle}
+   */
+  getStudyToolListRectangle()
+  {
+    const layout = this.getStudyLowerPanelLayout();
+
+    return new Rectangle(layout.leftX + layout.colW, layout.y, layout.colW, layout.height);
+  }
+
+  /**
+   * Gets the rectangle for the output column.
+   * @returns {Rectangle}
+   */
+  getStudyOutputListRectangle()
+  {
+    const layout = this.getStudyLowerPanelLayout();
+    const x = layout.leftX + layout.colW * 2;
+
+    return new Rectangle(x, layout.y, layout.colW + layout.remainder, layout.height);
+  }
+
+  /**
+   * @returns {Window_RecipeDetails}
+   */
+  getStudyRecipeDetailsWindow()
+  {
+    return this._j._crafting._study._recipeDetails;
+  }
+
+  /**
+   * @param {Window_RecipeDetails} window The window to track.
+   */
+  setStudyRecipeDetailsWindow(window)
+  {
+    this._j._crafting._study._recipeDetails = window;
+  }
+
+  /**
+   * @returns {Window_RecipeIngredientList}
+   */
+  getStudyIngredientListWindow()
+  {
+    return this._j._crafting._study._ingredientList;
+  }
+
+  /**
+   * @param {Window_RecipeIngredientList} window The window to track.
+   */
+  setStudyIngredientListWindow(window)
+  {
+    this._j._crafting._study._ingredientList = window;
+  }
+
+  /**
+   * @returns {Window_RecipeToolList}
+   */
+  getStudyToolListWindow()
+  {
+    return this._j._crafting._study._toolList;
+  }
+
+  /**
+   * @param {Window_RecipeToolList} window The window to track.
+   */
+  setStudyToolListWindow(window)
+  {
+    this._j._crafting._study._toolList = window;
+  }
+
+  /**
+   * @returns {Window_RecipeOutputList}
+   */
+  getStudyOutputListWindow()
+  {
+    return this._j._crafting._study._outputList;
+  }
+
+  /**
+   * @param {Window_RecipeOutputList} window The window to track.
+   */
+  setStudyOutputListWindow(window)
+  {
+    this._j._crafting._study._outputList = window;
+  }
+  //endregion recipe detail windows
+
   //region layout
   /**
-   * The shared height of the description band and the category badge beside it.
+   * Overrides {@link Scene_MenuFacetBase.controlLegendEntries}.<br/>
+   * Teaches the one control that leaves no mark on screen until it is pressed.
+   *
+   * The shelf binds nothing else of its own- confirm buys what is under the cursor and cancel leaves,
+   * both of which are named by what they land on. Listing a filter this scene does not bind would be
+   * worse than listing nothing, so the legend stays honest and short.
+   * @returns {{semantic: (string|string[]), label: string}[]}
+   */
+  controlLegendEntries()
+  {
+    return [
+      {
+        semantic: [ 'content-prev', 'content-next' ],
+        label: 'category',
+      },
+    ];
+  }
+
+  /**
+   * The height of the category badge crowning the shelf.
    * @returns {number}
    */
   studyHeaderBandHeight()
   {
-    return 100;
+    return this.calcWindowHeight(1, false);
   }
 
   /**
-   * The width of the left column the shelf and its badge share.
+   * The height of the price band beneath the shelf, sized for three parts of a price.
+   * @returns {number}
+   */
+  studyPriceBandHeight()
+  {
+    return this.calcWindowHeight(3 * 1.5, false);
+  }
+
+  /**
+   * The width of the left column the shelf, its badge and its price share.
    * @returns {number}
    */
   getStudyListColumnWidth()
   {
-    return Math.round(300 * 1.1);
+    return this.commandColumnWidth();
+  }
+
+  /**
+   * Positions the ingredient, tool and output columns inside the details frame, below the headings the
+   * frame draws for them.
+   * @returns {{ leftX: number, y: number, colW: number, remainder: number, height: number }}
+   */
+  getStudyLowerPanelLayout()
+  {
+    const detailsR = this.getStudyRecipeDetailsRectangle();
+    const detailsWindow = this.getStudyRecipeDetailsWindow();
+    const pad = detailsWindow.padding;
+    const innerW = detailsR.width - pad * 2;
+    const {
+      cw,
+      remainder
+    } = Window_RecipeDetails.componentColumnWidths(innerW);
+    const leftX = detailsR.x + pad;
+    const rowInset = Window_RecipeIngredientList.recipeComponentRowTopInsetPx();
+    const listInnerTop = detailsR.y + pad + detailsWindow.componentListRowsInnerStartY() - rowInset;
+    const height = detailsR.y + detailsR.height - listInnerTop - pad;
+
+    return {
+      leftX,
+      y: listInnerTop,
+      colW: cw,
+      remainder,
+      height
+    };
   }
   //endregion layout
 
@@ -464,11 +711,17 @@ class Scene_JaftingStudy
 
   /**
    * The categories this vendor is dealing in, which the calling event decided before opening the scene.
+   *
+   * A category nothing was ever priced in is dropped rather than shown empty. That is a static fact -
+   * the filter asks whether a recipe here has a cost at all, not whether the player still lacks it - so
+   * a lane bought out over the course of a game keeps its tab and reports itself empty, while alchemy,
+   * which prices nothing by design, never appears at all.
    * @returns {CraftingCategory[]}
    */
   availableCategories()
   {
-    return $gameParty.getUnlockedCategories();
+    return $gameParty.getUnlockedCategories()
+      .filter(category => $gameParty.getPurchasableRecipesByCategory(category.key).length > 0);
   }
 
   /**
@@ -543,19 +796,72 @@ class Scene_JaftingStudy
     /** @type {CraftingRecipe|null} */
     const currentRecipe = recipeListWindow.currentExt();
 
-    const costListWindow = this.getStudyCostListWindow();
-    const descriptionWindow = this.getStudyDescriptionWindow();
-
-    // an empty shelf leaves nothing highlighted, and a price tag for nothing is a blank price tag.
+    // an empty shelf leaves nothing highlighted, and every panel below describes a recipe.
     if (currentRecipe === null || currentRecipe === undefined)
     {
-      costListWindow.setComponents([]);
-      descriptionWindow.setText(String.empty);
+      this.clearStudyDetailWindows();
       return;
     }
 
+    const {
+      ingredients,
+      tools,
+      outputs
+    } = currentRecipe;
+
+    this.getStudyDescriptionWindow()
+      .setText(currentRecipe.getRecipeDescription());
+
+    const costListWindow = this.getStudyCostListWindow();
     costListWindow.setComponents(currentRecipe.cost);
-    descriptionWindow.setText(currentRecipe.getRecipeDescription());
+    costListWindow.show();
+
+    // nothing on this shelf has been crafted, so masking would hide every recipe on offer from the
+    // person deciding whether to buy it.
+    const detailsWindow = this.getStudyRecipeDetailsWindow();
+    detailsWindow.setNeedsMasking(false);
+    detailsWindow.setCurrentRecipe(currentRecipe);
+    detailsWindow.refresh();
+    detailsWindow.show();
+
+    const ingredientListWindow = this.getStudyIngredientListWindow();
+    ingredientListWindow.setComponents(ingredients);
+    ingredientListWindow.refresh();
+    ingredientListWindow.show();
+
+    const toolListWindow = this.getStudyToolListWindow();
+    toolListWindow.setComponents(tools);
+    toolListWindow.refresh();
+    toolListWindow.show();
+
+    const outputListWindow = this.getStudyOutputListWindow();
+    outputListWindow.setNeedsMasking(false);
+    outputListWindow.setComponents(outputs);
+    outputListWindow.refresh();
+    outputListWindow.show();
+  }
+
+  /**
+   * Hides every panel that describes a recipe, for when the shelf is empty.
+   *
+   * Hidden rather than blanked, or an empty category presents three column headings over nothing.
+   * Paired with the reveals in {@link #onStudyIndexChange}, the only other place these change.
+   */
+  clearStudyDetailWindows()
+  {
+    this.getStudyDescriptionWindow()
+      .setText(String.empty);
+
+    this.getStudyCostListWindow()
+      .hide();
+    this.getStudyRecipeDetailsWindow()
+      .hide();
+    this.getStudyIngredientListWindow()
+      .hide();
+    this.getStudyToolListWindow()
+      .hide();
+    this.getStudyOutputListWindow()
+      .hide();
   }
 
   /**
