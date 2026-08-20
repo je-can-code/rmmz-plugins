@@ -17,6 +17,11 @@ function buildEngine()
   return {
     checkImplicitFullParry: globalThis.JABS_Engine.prototype.checkImplicitFullParry,
     checkGlancingBlow: globalThis.JABS_Engine.prototype.checkGlancingBlow,
+
+    // borrowed rather than stubbed so the parry-ignore resolution stays part of the real chain.
+    getIgnoreParryPct: globalThis.JABS_Engine.prototype.getIgnoreParryPct,
+    getFlatIgnoreParryPct: globalThis.JABS_Engine.prototype.getFlatIgnoreParryPct,
+    getThisIgnoreParryPct: globalThis.JABS_Engine.prototype.getThisIgnoreParryPct,
     isParryPossible: () => true,
   };
 }
@@ -35,6 +40,8 @@ function buildJabsBattler(positiveRolls = 0, negativeRolls = 0)
       getNegativeRollsForSkill: () => negativeRolls,
       isVeryLucky: () => false,
       isVeryCursed: () => false,
+      // the caster's own equips and states contribute parry-ignore; nothing is equipped here.
+      getAllNotes: () => [],
     }),
   };
 }

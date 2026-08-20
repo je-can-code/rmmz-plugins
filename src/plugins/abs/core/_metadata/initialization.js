@@ -768,6 +768,7 @@ J.ABS.RegExp = {
 
   // parry-related.
   IgnoreParry: /<ignoreParry:[ ]?(\d+)>/gi,
+  ThisIgnoreParry: /<thisIgnoreParry:[ ]?(\d+)>/gi,
   //endregion ON EQUIPS
 
   //region ON ITEMS

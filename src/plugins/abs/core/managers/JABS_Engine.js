@@ -3775,6 +3775,49 @@ class JABS_Engine
   }
 
   /**
+   * Computes how much of the defender's guard pressure does not apply, summing the caster's
+   * unconditional `<ignoreParry:PCT>` tags with this specific skill's `<thisIgnoreParry:PCT>`.
+   *
+   * The total is capped at 100 because the pressure formula scales guard by `(100 - pct) / 100`-
+   * past 100 that factor inverts and hands the defender negative pressure, making the attacker
+   * easier to parry the more parry-ignore they stacked.
+   * @param {JABS_Battler} caster The battler performing the action.
+   * @param {JABS_Action} action The action being executed.
+   * @returns {number} The percent of guard pressure ignored, 0 through 100.
+   */
+  getIgnoreParryPct(caster, action)
+  {
+    const total = this.getFlatIgnoreParryPct(caster) + this.getThisIgnoreParryPct(action);
+
+    return Math.min(100, total);
+  }
+
+  /**
+   * Sums every `<ignoreParry:PCT>` tag across the caster's own note sources- a weapon or accessory
+   * that always cuts through some of the defender's guard, no matter which skill is swinging.
+   * @param {JABS_Battler} caster The battler performing the action.
+   * @returns {number} The total percent of guard pressure ignored; 0 if untagged.
+   */
+  getFlatIgnoreParryPct(caster)
+  {
+    const casterNotes = caster.getBattler()
+      .getAllNotes();
+
+    return RPGManager.getSumFromAllNotesByRegex(casterNotes, J.ABS.RegExp.IgnoreParry) ?? 0;
+  }
+
+  /**
+   * Reads the `<thisIgnoreParry:PCT>` tag from the executing skill's own note only, so it applies
+   * while this skill is swinging and at no other time.
+   * @param {JABS_Action} action The action being executed.
+   * @returns {number} The percent of guard pressure ignored; 0 if untagged.
+   */
+  getThisIgnoreParryPct(action)
+  {
+    return action.getBaseSkill().jabsIgnoreParry ?? 0;
+  }
+
+  /**
    * Calculates whether or not the attack was parried by implicit (passive) parry.
    * Calculates whether the implicit parry roll succeeds as a full negate.
    * Uses the standard A/D pressure formula scaled down by {@link J.ABS.Metadata.ImplicitParryScaleFactor},
@@ -3794,7 +3837,7 @@ class JABS_Engine
       return false;
     }
 
-    const ignoreParryPercent = action.getBaseSkill().jabsIgnoreParry ?? 0;
+    const ignoreParryPercent = this.getIgnoreParryPct(caster, action);
 
     // the base formula gives the raw chance; scale it down so full negation is rare.
     const rawChance = JABS_Engine.implicitParryChancePercent(caster, target, ignoreParryPercent);
@@ -3829,7 +3872,7 @@ class JABS_Engine
       return false;
     }
 
-    const ignoreParryPercent = action.getBaseSkill().jabsIgnoreParry ?? 0;
+    const ignoreParryPercent = this.getIgnoreParryPct(caster, action);
     const glancingChancePercent = JABS_Engine.glancingBlowChancePercent(caster, target, ignoreParryPercent);
 
     // same role reversal as checkImplicitFullParry: the defender wants this to succeed.
