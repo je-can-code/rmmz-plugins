@@ -357,6 +357,25 @@ describe('J-Pixelistics Game_CharacterBase collision kernel (direct src import)'
       expect(ch.canPassDiagonally(2, 2, globalThis.J.PIXEL.Directions.LEFT, globalThis.J.PIXEL.Directions.UP)).toBe(true);
     });
 
+    it('approves both mixed leg pairs on an open map', () =>
+    {
+      // Arrange: the two open cases above pair RIGHT with DOWN and LEFT with UP, so the horizontal
+      // and vertical checks always agree and the mixed pairs are never built at all. These two are
+      // the remaining destination combinations.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+
+      // Act
+      const upperRight = ch.canPassDiagonally(
+        2, 2, globalThis.J.PIXEL.Directions.RIGHT, globalThis.J.PIXEL.Directions.UP);
+      const lowerLeft = ch.canPassDiagonally(
+        2, 2, globalThis.J.PIXEL.Directions.LEFT, globalThis.J.PIXEL.Directions.DOWN);
+
+      // Assert
+      expect(upperRight).toBe(true);
+      expect(lowerLeft).toBe(true);
+    });
+
     it('rejects when a character occupies the diagonal landing point', () =>
     {
       // Arrange

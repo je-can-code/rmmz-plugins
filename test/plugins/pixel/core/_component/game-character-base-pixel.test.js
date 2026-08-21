@@ -126,6 +126,37 @@ describe('J-Pixelistics Game_CharacterBase pixel movement helpers (direct src im
     expect(ch._x).toBe(before);
   });
 
+  it.each([
+    [ 'through', ch => ch.setThrough(true) ],
+    [ 'debug-through', ch =>
+    {
+      ch.isDebugThrough = () => true;
+    } ],
+  ])('movePixelDistance keeps a %s move that lands on solid ground', (_label, enablePassage) =>
+  {
+    // Arrange: the post-move revert exists to undo a step that ended up inside terrain, and both
+    // passage flags are meant to bypass it - that is what walking through walls means. The revert
+    // case above leaves both flags off, so neither could be forced on without the outcome staying
+    // identical, and a revert that ignored them would strand a debugging playtester the instant
+    // they tried to walk into anything.
+    globalThis.$gameMap.isPassable = function()
+    {
+      return false;
+    };
+    globalThis.PIXEL_CollisionManager.setupCollision();
+    const ch = new globalThis.Game_CharacterBase();
+    ch.initMembers();
+    ch.relocate(0.5, 0.5);
+    enablePassage(ch);
+    const before = ch._x;
+
+    // Act
+    ch.movePixelDistance(globalThis.J.PIXEL.Directions.RIGHT, 0.2);
+
+    // Assert
+    expect(ch._x).toBeGreaterThan(before);
+  });
+
   it('stopPixelMoving syncs _realX/_realY to the logical tile position', () =>
   {
     // Arrange
