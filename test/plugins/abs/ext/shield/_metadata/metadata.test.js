@@ -9,8 +9,6 @@ import {
 import { setPluginContextToJabsShield } from '../_component/fixtures/install-abs-shield-host-globals.js';
 import { installPluginManagerWithParams } from '../../../../../setup/install-plugin-manager-with-params.js';
 
-const INIT_PATH = '../../../../../../src/plugins/abs/ext/shield/_metadata/initialization.js';
-
 describe('J-ABS-Shield metadata (direct src import)', () =>
 {
   /** @type {Map<string, Function>} formula-context variables this plugin registers at import time. */
@@ -39,7 +37,7 @@ describe('J-ABS-Shield metadata (direct src import)', () =>
     installPluginManagerWithParams(globalThis, 'J-ABS-Shield', {});
 
     setPluginContextToJabsShield();
-    await import(INIT_PATH);
+    await import('../../../../../../src/plugins/abs/ext/shield/_metadata/initialization.js');
   });
 
   it('declares an aliased-method map for every class the plugin patches', () =>
@@ -125,7 +123,8 @@ describe('J-ABS-Shield metadata (direct src import)', () =>
       setPluginContextToJabsShield();
 
       // Act & Assert
-      await expect(import(INIT_PATH)).rejects.toThrow(/missing J-Base/);
+      await expect(import('../../../../../../src/plugins/abs/ext/shield/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-Base/);
 
       // restore the satisfying version so later tests in this file are unaffected.
       globalThis.J.BASE.Metadata.Version = originalVersion;
@@ -140,7 +139,8 @@ describe('J-ABS-Shield metadata (direct src import)', () =>
       setPluginContextToJabsShield();
 
       // Act & Assert
-      await expect(import(INIT_PATH)).rejects.toThrow(/missing J-ABS/);
+      await expect(import('../../../../../../src/plugins/abs/ext/shield/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-ABS/);
 
       // restore the real accessor rather than relying on restoreAllMocks.
       globalThis.J.ABS.Metadata.version.version = originalVersion;

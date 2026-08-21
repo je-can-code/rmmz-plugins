@@ -139,6 +139,60 @@ describe('J-Pixelistics PIXEL_CollisionManager authoring layer (direct src impor
       expect(passable).toBe(true);
     });
 
+    /**
+     * Where two blocked sides meet, the tile gets an extra single-subcell blocker in the corner
+     * between them, drawn after the edge lines so it overwrites whichever edge got there first.
+     *
+     * The distinction the assertions rest on: an edge subcell refuses only the one direction it
+     * names, while a corner subcell refuses every direction. So sampling the corner while moving in
+     * a direction *neither* adjacent edge would block separates the two - if the corner were never
+     * drawn, or drawn in the wrong quadrant, that sample would land on a plain edge and answer
+     * passable. Both the four corner conditions and the two position ternaries inside the corner
+     * writer depend on it.
+     */
+    describe('corner blockers where two blocked sides meet', () =>
+    {
+      it.each([
+        [ 'top-left', true, false, true, false, 0.1, 0.1, 'DOWN' ],
+        [ 'top-right', true, true, false, false, 0.8, 0.1, 'DOWN' ],
+        [ 'bottom-left', false, false, true, true, 0.1, 0.8, 'UP' ],
+        [ 'bottom-right', false, true, false, true, 0.8, 0.8, 'UP' ],
+      ])(
+        'blocks the %s corner subcell in every direction',
+        (_label, passDown, passLeft, passRight, passUp, sampleX, sampleY, unblockedDirKey) =>
+        {
+          // Arrange
+          globalThis.PIXEL_CollisionManager.initConfig();
+          globalThis.PIXEL_CollisionManager.setupCollision();
+
+          // Act
+          globalThis.PIXEL_CollisionManager._applyTileCollision(0, 0, passDown, passLeft, passRight, passUp);
+
+          // Assert: neither edge meeting at this corner names this direction, so only the corner
+          // blocker itself can refuse it.
+          const passable = globalThis.PIXEL_CollisionManager
+            .isPositionPassable(sampleX, sampleY, globalThis.J.PIXEL.Directions[ unblockedDirKey ]);
+          expect(passable).toBe(false);
+        });
+
+      it('leaves the opposite corner of the same tile alone', () =>
+      {
+        // Arrange: blocked on the left and above, so the corner belongs in the top-left quadrant.
+        // The bottom-right quadrant is untouched by either edge line, and a corner drawn into the
+        // wrong quadrant would show up here rather than where it belongs.
+        globalThis.PIXEL_CollisionManager.initConfig();
+        globalThis.PIXEL_CollisionManager.setupCollision();
+
+        // Act
+        globalThis.PIXEL_CollisionManager._applyTileCollision(0, 0, true, false, true, false);
+
+        // Assert
+        const passable = globalThis.PIXEL_CollisionManager
+          .isPositionPassable(0.8, 0.8, globalThis.J.PIXEL.Directions.DOWN);
+        expect(passable).toBe(true);
+      });
+    });
+
     it('collapses a non-uniform tile to one merged code when using a single subcell per tile', () =>
     {
       // Arrange: at a step count of 1 there is no room to draw edges or corners, so the tile's

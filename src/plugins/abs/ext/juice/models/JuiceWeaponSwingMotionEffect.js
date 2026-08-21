@@ -490,7 +490,9 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
    */
   static stabBladeRotationRadians(dir, tipAngleRadians)
   {
-    const tip = tipAngleRadians !== undefined && tipAngleRadians !== null && Number.isFinite(tipAngleRadians)
+    // an untagged weapon leaves the tip angle undefined, which Number.isFinite already answers
+    // false for - as it does for null - so this one check covers absence and nonsense alike.
+    const tip = Number.isFinite(tipAngleRadians)
       ? tipAngleRadians
       : JuiceWeaponSwingMotionEffect.StabIconTipAngleRadians;
 
@@ -620,14 +622,15 @@ class JuiceWeaponSwingMotionEffect extends JuiceBaseEffect
      * Stab tip axis (radians); ignored except stab-forward.
      * @type {number}
      */
-    this._stabTipAngleRadians = stabTipAngleRadians !== undefined && stabTipAngleRadians !== null
-      && Number.isFinite(stabTipAngleRadians)
+    // an omitted argument arrives as undefined, which Number.isFinite already answers false for -
+    // as it does for null - so this one check covers absence and nonsense alike.
+    this._stabTipAngleRadians = Number.isFinite(stabTipAngleRadians)
       ? stabTipAngleRadians
       : JuiceWeaponSwingMotionEffect.StabIconTipAngleRadians;
 
     // remember hand-neutral placement so bash / recoil can offset spawn pose without drifting the ease track.
-    if (neutralBaseX !== undefined && neutralBaseX !== null && Number.isFinite(neutralBaseX)
-      && neutralBaseY !== undefined && neutralBaseY !== null && Number.isFinite(neutralBaseY))
+    // both axes must be real numbers; half a placement is not a placement.
+    if (Number.isFinite(neutralBaseX) && Number.isFinite(neutralBaseY))
     {
       this._baseX = neutralBaseX;
       this._baseY = neutralBaseY;

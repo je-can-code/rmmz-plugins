@@ -7,8 +7,6 @@ import {
   setPluginContextToJResourcesAbs,
 } from '../../../_component/fixtures/install-resources-host-globals.js';
 
-const RESOURCES_ABS_INIT_PATH = '../../../../../../src/plugins/resources/ext/abs/_metadata/initialization.js';
-
 describe('J-Resources-ABS metadata (direct src import)', () =>
 {
   /** @type {object} the regexp table this plugin publishes for its notetags. */
@@ -24,7 +22,7 @@ describe('J-Resources-ABS metadata (direct src import)', () =>
     await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJResourcesAbs();
-    await import(RESOURCES_ABS_INIT_PATH);
+    await import('../../../../../../src/plugins/resources/ext/abs/_metadata/initialization.js');
 
     ({ RegExp } = globalThis.J.RESOURCES.EXT.ABS);
   });

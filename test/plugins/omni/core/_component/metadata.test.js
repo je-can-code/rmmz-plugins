@@ -7,10 +7,6 @@ import {
   setPluginContextToJOmnipedia,
 } from '../../_component/fixtures/install-omni-host-globals.js';
 
-const jBaseInitPath = '../../../../../src/plugins/_base/core/_metadata/initialization.js';
-const omniInitPath = '../../../../../src/plugins/omni/core/_metadata/initialization.js';
-const pluginMetadataPath = '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
-
 /**
  * The J umbrella object as J-Base built it, captured once and restored before every test.
  *
@@ -30,7 +26,7 @@ describe('J-Omnipedia core metadata (direct src import)', () =>
     installOmniHostGlobals();
 
     setPluginContextToJBase();
-    await import(jBaseInitPath);
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     realJ = globalThis.J;
   });
@@ -49,7 +45,8 @@ describe('J-Omnipedia core metadata (direct src import)', () =>
     // throws outright on a duplicate name. Re-importing the class after the module reset gives each
     // test a private, empty registry, so constructing J-Omnipedia's metadata a second time exercises
     // the constructor instead of dying on "Duplicate plugin entry detected".
-    const { default: FreshPluginMetadata } = await import(pluginMetadataPath);
+    const { default: FreshPluginMetadata } =
+      await import('../../../../../src/plugins/_base/core/models/PluginMetadata.js');
     globalThis.PluginMetadata = FreshPluginMetadata;
 
     setPluginContextToJOmnipedia();
@@ -60,7 +57,7 @@ describe('J-Omnipedia core metadata (direct src import)', () =>
     it('initializes the plugin when J-Base satisfies the required version', async () =>
     {
       // Arrange & Act
-      await import(omniInitPath);
+      await import('../../../../../src/plugins/omni/core/_metadata/initialization.js');
 
       // Assert: the alias surface is declared after the version gate, so its presence is what
       // proves initialization ran all the way through rather than throwing partway.
@@ -75,7 +72,7 @@ describe('J-Omnipedia core metadata (direct src import)', () =>
       globalThis.J.BASE.Metadata.Version = '1.0.0';
 
       // Act & Assert
-      await expect(import(omniInitPath)).rejects.toThrow(
+      await expect(import('../../../../../src/plugins/omni/core/_metadata/initialization.js')).rejects.toThrow(
         'Either missing J-Base or has a lower version than the required: 3.2.0');
     });
 
@@ -87,7 +84,8 @@ describe('J-Omnipedia core metadata (direct src import)', () =>
       delete globalThis.J;
 
       // Act & Assert
-      await expect(import(omniInitPath)).rejects.toThrow(TypeError);
+      await expect(import('../../../../../src/plugins/omni/core/_metadata/initialization.js'))
+        .rejects.toThrow(TypeError);
     });
 
     it('reuses the existing J umbrella rather than replacing it', async () =>
@@ -96,7 +94,7 @@ describe('J-Omnipedia core metadata (direct src import)', () =>
       const umbrellaBeforeImport = globalThis.J;
 
       // Act
-      await import(omniInitPath);
+      await import('../../../../../src/plugins/omni/core/_metadata/initialization.js');
 
       // Assert- the truthy side of `globalThis.J ||= {}` leaves the original object untouched, which
       // is what lets every J plugin share one namespace instead of clobbering each other.
@@ -109,7 +107,7 @@ describe('J-Omnipedia core metadata (direct src import)', () =>
   {
     beforeEach(async () =>
     {
-      await import(omniInitPath);
+      await import('../../../../../src/plugins/omni/core/_metadata/initialization.js');
     });
 
     it('creates an aliased-method map for every class the plugin patches', () =>
@@ -130,7 +128,7 @@ describe('J-Omnipedia core metadata (direct src import)', () =>
   {
     beforeEach(async () =>
     {
-      await import(omniInitPath);
+      await import('../../../../../src/plugins/omni/core/_metadata/initialization.js');
     });
 
     it('builds the menu command descriptor during postInitialize', () =>

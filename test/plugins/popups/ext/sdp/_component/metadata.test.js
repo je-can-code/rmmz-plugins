@@ -7,10 +7,6 @@ import {
   setPluginContextToJPopupsSdp,
 } from '../../../_component/fixtures/install-popups-host-globals.js';
 
-const jBaseInitPath = '../../../../../../src/plugins/_base/core/_metadata/initialization.js';
-const sdpInitPath = '../../../../../../src/plugins/popups/ext/sdp/_metadata/initialization.js';
-const pluginMetadataPath = '../../../../../../src/plugins/_base/core/models/PluginMetadata.js';
-
 describe('J-Popups-SDP metadata (direct src import)', () =>
 {
   /** @type {object} the J umbrella as J-Base built it; its bootstrap is once-per-realm. */
@@ -21,7 +17,7 @@ describe('J-Popups-SDP metadata (direct src import)', () =>
     installPopupsHostGlobals();
 
     setPluginContextToJBase();
-    await import(jBaseInitPath);
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     realJ = globalThis.J;
   });
@@ -36,7 +32,8 @@ describe('J-Popups-SDP metadata (direct src import)', () =>
     // namespaces, so those have to be cleared to observe the `||=` behaviour honestly.
     delete globalThis.J.POPUPS;
 
-    const { default: FreshPluginMetadata } = await import(pluginMetadataPath);
+    const { default: FreshPluginMetadata } = await import(
+      '../../../../../../src/plugins/_base/core/models/PluginMetadata.js');
     globalThis.PluginMetadata = FreshPluginMetadata;
 
     setPluginContextToJPopupsSdp();
@@ -45,7 +42,7 @@ describe('J-Popups-SDP metadata (direct src import)', () =>
   it('creates the aliased-method map for the engine class it patches', async () =>
   {
     // Arrange & Act
-    await import(sdpInitPath);
+    await import('../../../../../../src/plugins/popups/ext/sdp/_metadata/initialization.js');
 
     // Assert- JABS_Engine is where the SDP point popup is actually emitted from.
     expect(globalThis.J.POPUPS.EXT.SDP.Aliased.JABS_Engine).toBeInstanceOf(Map);
@@ -56,7 +53,7 @@ describe('J-Popups-SDP metadata (direct src import)', () =>
     // Arrange- plugin load order is user-controlled, so this extension cannot assume the parent
     // already staked out its namespace.
     // Act
-    await import(sdpInitPath);
+    await import('../../../../../../src/plugins/popups/ext/sdp/_metadata/initialization.js');
 
     // Assert
     expect(globalThis.J.POPUPS.EXT).toBeDefined();
@@ -68,7 +65,7 @@ describe('J-Popups-SDP metadata (direct src import)', () =>
     globalThis.J.POPUPS = { EXT: {}, placedEarlier: true };
 
     // Act
-    await import(sdpInitPath);
+    await import('../../../../../../src/plugins/popups/ext/sdp/_metadata/initialization.js');
 
     // Assert
     expect(globalThis.J.POPUPS.placedEarlier).toBe(true);
@@ -81,7 +78,7 @@ describe('J-Popups-SDP metadata (direct src import)', () =>
     globalThis.J.POPUPS = { EXT: { SDP: { placedEarlier: true } } };
 
     // Act
-    await import(sdpInitPath);
+    await import('../../../../../../src/plugins/popups/ext/sdp/_metadata/initialization.js');
 
     // Assert
     expect(globalThis.J.POPUPS.EXT.SDP.placedEarlier).toBe(true);
@@ -94,7 +91,7 @@ describe('J-Popups-SDP metadata (direct src import)', () =>
     globalThis.J.POPUPS = { EXT: { SDP: { Aliased: { SomethingElse: new Map() } } } };
 
     // Act
-    await import(sdpInitPath);
+    await import('../../../../../../src/plugins/popups/ext/sdp/_metadata/initialization.js');
 
     // Assert
     expect(globalThis.J.POPUPS.EXT.SDP.Aliased.SomethingElse).toBeInstanceOf(Map);
@@ -107,7 +104,7 @@ describe('J-Popups-SDP metadata (direct src import)', () =>
     const umbrellaBeforeImport = globalThis.J;
 
     // Act
-    await import(sdpInitPath);
+    await import('../../../../../../src/plugins/popups/ext/sdp/_metadata/initialization.js');
 
     // Assert
     expect(globalThis.J).toBe(umbrellaBeforeImport);
@@ -120,7 +117,7 @@ describe('J-Popups-SDP metadata (direct src import)', () =>
     delete globalThis.J;
 
     // Act
-    await import(sdpInitPath);
+    await import('../../../../../../src/plugins/popups/ext/sdp/_metadata/initialization.js');
 
     // Assert: the whole namespace chain has to be rebuilt from scratch, right down to the alias
     // map the patching code later reaches for.

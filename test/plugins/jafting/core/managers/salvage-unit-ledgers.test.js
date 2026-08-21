@@ -216,10 +216,15 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
     it('counts two worn copies of one row separately', () =>
     {
       // Arrange: two accessory slots can hold two of the same thing, so worn copies are tallied rather than
-      // merely detected.
+      // merely detected. The roster deliberately mixes in an empty slot and a *different* armor, because a
+      // roster holding nothing but copies of the row under test cannot tell "counts this slot" apart from
+      // "counts every equip an actor has on" - both answer two, and the slot comparison could be deleted.
       const datum = fakeDatum('a', 4);
+      const otherArmor = fakeDatum('a', 5);
       $gameParty.setCount(datum, 0);
-      globalThis.$gameActors = { existingActors: () => [ { equips: () => [ datum, null, datum ] } ] };
+      globalThis.$gameActors = {
+        existingActors: () => [ { equips: () => [ datum, null, otherArmor, datum ] } ],
+      };
       const bag = { unitLedgers: [], rows: [] };
 
       // Act
@@ -440,6 +445,62 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
       expect(unit.rows[0].n).toBe(2);
     });
 
+    it('falls back to the merged bag when the ordinal arrives undefined rather than null', () =>
+    {
+      // Arrange: "no ordinal" reaches this method two ways - a caller that passes null on purpose and a caller
+      // that simply omits the argument - and only the null spelling had a case. With the undefined operand
+      // deleted, an omitted ordinal falls through to the stack lookup and indexes `unitLedgers[undefined]`,
+      // which quietly answers nothing for a stack that is in fact stamped.
+      const datum = fakeDatum('i', 1);
+      $gameParty.setCount(datum, 1);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, snapshotOf(1, 2), 1);
+
+      // Act
+      const unit = JaftingSalvageManager.getLedgerUnitForDatum(datum, undefined);
+
+      // Assert
+      expect(unit.rows[0].n).toBe(2);
+    });
+
+    it('mints no bag for a stack it was asked about but never found one for', () =>
+    {
+      // Arrange: reading is not writing. Coercion fails open and hands back a fresh bag for an absent slot, so
+      // skipping the absence check would answer null all the same while leaving an empty bag behind in party
+      // storage on every UI read of an unstamped row. The stamped sibling is here so the assertion is a pin on
+      // what the map actually holds rather than on it merely being empty.
+      const unstamped = fakeDatum('i', 1);
+      const stamped = fakeDatum('i', 2);
+      $gameParty.setCount(unstamped, 1);
+      $gameParty.setCount(stamped, 1);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(stamped, snapshotOf(7), 1);
+
+      // Act
+      const unit = JaftingSalvageManager.getLedgerUnitForDatum(unstamped, 0);
+
+      // Assert
+      expect(unit).toBe(null);
+      expect(Object.keys($gameParty._j._jafting._salvageLedgers)).toEqual([ 'i:2' ]);
+    });
+
+    it('reports nothing for a slot whose snapshot exists but records nothing', () =>
+    {
+      // Arrange: an empty snapshot is not the same absence as a missing one, and both have to answer nothing.
+      // A copy can be stamped with a lineage that later expands away, and returning that hollow snapshot would
+      // put a dismantle row in the UI that refunds nothing when the player commits to it.
+      const datum = fakeDatum('i', 1);
+      $gameParty.setCount(datum, 1);
+      $gameParty._j._jafting._salvageLedgers['i:1'] = {
+        unitLedgers: [ new JaftingSalvageLedgerSnapshot([]) ],
+        rows: [],
+      };
+
+      // Act
+      const unit = JaftingSalvageManager.getLedgerUnitForDatum(datum, 0);
+
+      // Assert
+      expect(unit).toBe(null);
+    });
+
     it('reports nothing for a datum of no recognizable kind', () =>
     {
       // Arrange: without a container key there is nowhere for a bag to live.
@@ -546,11 +607,18 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
 
     it('stamps nothing onto a datum with no container to stamp', () =>
     {
-      // Arrange & Act
-      const act = () => JaftingSalvageManager.appendStampedUnitsToPartyStack(kindlessDatum(), snapshotOf(1), 1);
+      // Arrange: not throwing is the weaker half of this. Without the key check the method carries on and mints
+      // a bag under the key `null`, which is a slot no reader can ever ask for again and which rides along in
+      // every save from then on. The stamped sibling proves the map is live and that its real entry survived.
+      const stamped = fakeDatum('i', 2);
+      $gameParty.setCount(stamped, 1);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(stamped, snapshotOf(7), 1);
+
+      // Act
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(kindlessDatum(), snapshotOf(1), 1);
 
       // Assert
-      expect(act).not.toThrow();
+      expect(Object.keys($gameParty._j._jafting._salvageLedgers)).toEqual([ 'i:2' ]);
     });
 
     it('clears nothing for a datum with no container', () =>
@@ -695,6 +763,24 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
       // Assert
       expect($gameParty._j._jafting._salvageLedgers['i:1']).toBeTruthy();
     });
+
+    it('drops a bag whose only snapshot records nothing', () =>
+    {
+      // Arrange: the earlier prune cases hold `null` in every slot, and a null slot is turned away by the first
+      // half of the lineage test before the row count is ever consulted - so "this slot has rows" and "this slot
+      // is stamped at all" were indistinguishable. A snapshot carrying an empty row list is stamped without being
+      // lineage, and treating it as lineage would keep an unbounded keyed bag alive in every save forever.
+      $gameParty._j._jafting._salvageLedgers['i:1'] = {
+        unitLedgers: [ new JaftingSalvageLedgerSnapshot([]) ],
+        rows: [],
+      };
+
+      // Act
+      JaftingSalvageManager.pruneEmptyPartyLedgerBag('i:1');
+
+      // Assert
+      expect($gameParty._j._jafting._salvageLedgers['i:1']).toBeUndefined();
+    });
   });
   //endregion non-item refunds
 
@@ -732,6 +818,26 @@ describe('JaftingSalvageManager per-unit ledgers (direct src import)', () =>
 
       // Assert
       expect($gameParty._j._jafting._salvageLedgers['i:1'].unitLedgers).toHaveLength(1);
+    });
+
+    it('resizes no template bag when the row gained is a dynamic instance', () =>
+    {
+      // Arrange: a refined sword still reports the base sword's id, so its container key resolves to the base
+      // stack's bag. Letting it through would size *that* bag against the refined instance's own holding - the
+      // plain Iron Swords in the bag would grow phantom slots measured by something the player owns separately.
+      // The counts are deliberately unequal, because growth is the only direction sizing moves here: with both
+      // at the same number the wrong bag would be resized to exactly the length it already had.
+      const baseWeapon = fakeDatum('w', 5);
+      $gameParty.setCount(baseWeapon, 1);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(baseWeapon, snapshotOf(7), 1);
+      const refined = fakeDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty.setCount(refined, 4);
+
+      // Act
+      JaftingSalvageManager.afterPartyGainedItem(refined, 1);
+
+      // Assert
+      expect($gameParty._j._jafting._salvageLedgers['w:5'].unitLedgers).toHaveLength(1);
     });
   });
   //endregion party transaction hooks

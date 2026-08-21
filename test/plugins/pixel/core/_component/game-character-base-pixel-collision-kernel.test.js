@@ -357,6 +357,25 @@ describe('J-Pixelistics Game_CharacterBase collision kernel (direct src import)'
       expect(ch.canPassDiagonally(2, 2, globalThis.J.PIXEL.Directions.LEFT, globalThis.J.PIXEL.Directions.UP)).toBe(true);
     });
 
+    it('approves both mixed leg pairs on an open map', () =>
+    {
+      // Arrange: the two open cases above pair RIGHT with DOWN and LEFT with UP, so the horizontal
+      // and vertical checks always agree and the mixed pairs are never built at all. These two are
+      // the remaining destination combinations.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+
+      // Act
+      const upperRight = ch.canPassDiagonally(
+        2, 2, globalThis.J.PIXEL.Directions.RIGHT, globalThis.J.PIXEL.Directions.UP);
+      const lowerLeft = ch.canPassDiagonally(
+        2, 2, globalThis.J.PIXEL.Directions.LEFT, globalThis.J.PIXEL.Directions.DOWN);
+
+      // Assert
+      expect(upperRight).toBe(true);
+      expect(lowerLeft).toBe(true);
+    });
+
     it('rejects when a character occupies the diagonal landing point', () =>
     {
       // Arrange
@@ -571,6 +590,77 @@ describe('J-Pixelistics Game_CharacterBase collision kernel (direct src import)'
       expect(ch.canPassDiagonalByDirection(globalThis.J.PIXEL.Directions[dirKey])).toBe(true);
     });
 
+    /**
+     * Each row walls two of the four neighbours, which leaves exactly one diagonal with both of
+     * its legs passable - and that must be the only one approved.
+     *
+     * The two cases above wall every neighbour or none, so all four diagonals agree and any one of
+     * them could be resolved from the wrong pair of legs without a test noticing. These rows are
+     * what make each direction check load-bearing, since resolving the wrong pair here flips the
+     * answer.
+     *
+     * A caution for whoever edits this next: which pair of legs a given wall arrangement leaves
+     * open is **not** intuitive, and is not worth deriving by hand. Walling the left and upward
+     * neighbours leaves LEFT and UP passable while blocking RIGHT and DOWN - the collision radius
+     * of 0.3 is wider than the 0.25 subcell band drawn along a blocked edge, so a character resting
+     * at the tile centre already overlaps those bands. Measure the legs before changing a row here
+     * rather than reasoning about which way the walls face.
+     */
+    it.each([
+      [ 'left and upward', [ '1,2', '2,1' ], 'UPPERLEFT' ],
+      [ 'right and downward', [ '3,2', '2,3' ], 'LOWERRIGHT' ],
+      [ 'left and downward', [ '1,2', '2,3' ], 'LOWERLEFT' ],
+      [ 'right and upward', [ '3,2', '2,1' ], 'UPPERRIGHT' ],
+    ])('walling the %s neighbours leaves only one diagonal open', (_label, walls, openDirKey) =>
+    {
+      [ 'LOWERLEFT', 'LOWERRIGHT', 'UPPERLEFT', 'UPPERRIGHT' ].forEach(dirKey =>
+      {
+        // Arrange
+        const map = buildWalledPixelGameMap(5, 5, new Set(walls));
+        const ch = makeCharacterOn(map, 2, 2);
+
+        // Act
+        const canPass = ch.canPassDiagonalByDirection(globalThis.J.PIXEL.Directions[ dirKey ]);
+
+        // Assert
+        expect(canPass).toBe(dirKey === openDirKey);
+      });
+    });
+
+    it.each([
+      [ 'LOWERLEFT', -1, 1 ],
+      [ 'LOWERRIGHT', 1, 1 ],
+      [ 'UPPERLEFT', -1, -1 ],
+      [ 'UPPERRIGHT', 1, -1 ],
+    ])('probes the %s landing point away from the origin on both axes', (dirKey, xSign, ySign) =>
+    {
+      // Arrange: the landing point is the last of several collision probes - the leg tests come
+      // first - so the final call is the diagonal one. The existing case stubs the collision check
+      // to answer true whatever it is handed, which means the offsets it is handed were never
+      // observed at all and could each be dropped, or applied for the wrong diagonal, unnoticed.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+      const probes = [];
+      ch.isCharacterCollisionAt = (nx, ny) =>
+      {
+        probes.push({
+          nx,
+          ny,
+        });
+
+        return false;
+      };
+
+      // Act
+      ch.canPassDiagonalByDirection(globalThis.J.PIXEL.Directions[ dirKey ]);
+
+      // Assert: the character stands at exactly (2, 2), so each axis must have moved off it in
+      // the direction this diagonal names - which no other diagonal's offsets would produce.
+      const landing = probes.at(-1);
+      expect(Math.sign(landing.nx - 2)).toBe(xSign);
+      expect(Math.sign(landing.ny - 2)).toBe(ySign);
+    });
+
     it('rejects when both legs are clear but a character occupies the landing point', () =>
     {
       // Arrange
@@ -621,6 +711,35 @@ describe('J-Pixelistics Game_CharacterBase collision kernel (direct src import)'
 
       // Act & Assert
       expect(ch.isCharacterCollisionAt(2.5, 2.5)).toBe(false);
+    });
+
+    // Overlap is four edge comparisons and-ed together. The non-overlap case above sits diagonally
+    // away, which makes all four false at once - so any single one could be forced true and the
+    // other three would still refuse the overlap. Each row here separates the candidate along one
+    // axis only and leaves it aligned on the other, which is the arrangement where exactly one
+    // comparison carries the answer. Two characters a couple of tiles apart in the same row or
+    // column is about as ordinary as map traffic gets, and calling that a collision would wedge a
+    // follower behind whoever it was trailing.
+    it.each([
+      [ 'directly below', 2, 4 ],
+      [ 'directly above', 2, 0 ],
+      [ 'directly right', 4, 2 ],
+      [ 'directly left', 0, 2 ],
+    ])('is false for a candidate %s of the probe and aligned on the other axis', (_label, ex, ey) =>
+    {
+      // Arrange
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+      const neighbour = new globalThis.Game_Event();
+      neighbour.initMembers();
+      neighbour.relocate(ex, ey);
+      map.events = () => [ neighbour ];
+
+      // Act
+      const collided = ch.isCharacterCollisionAt(2.5, 2.5);
+
+      // Assert
+      expect(collided).toBe(false);
     });
 
     it('excludes erased events from collision candidates', () =>
@@ -706,6 +825,33 @@ describe('J-Pixelistics Game_CharacterBase collision kernel (direct src import)'
 
       // Assert
       expect(result).toBe(false);
+      delete globalThis.J.ABS;
+    });
+
+    it('keeps a JABS action sprite out of the candidate list itself, not merely out of the result', () =>
+    {
+      // Arrange: the collision check filters JABS actions twice - once when the candidate list is
+      // built, and again immediately before measuring, the second one commented as extra defense
+      // against anything that slipped through. That redundancy means neither filter can be seen
+      // through the collision result alone: remove either and the survivor catches it. Asking the
+      // candidate list directly is what holds the first one to account, so it cannot quietly stop
+      // working and leave the whole burden on its backstop.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+      const actionSprite = new globalThis.Game_Event();
+      actionSprite.initMembers();
+      actionSprite.relocate(2.5, 2.5);
+      actionSprite._jabsAction = true;
+      map.events = () => [ actionSprite ];
+      globalThis.J.ABS = {};
+
+      // Act
+      const candidates = ch.getCollisionCandidates();
+
+      // Assert
+      expect(candidates).not.toContain(actionSprite);
+
+      // restore the bare-global namespace rather than leaking it into later tests in this file.
       delete globalThis.J.ABS;
     });
 

@@ -196,6 +196,39 @@ describe('JuiceWeaponSwingOverlay (unit, all downstream dependencies mocked)', (
     });
   });
 
+  describe('play() - per-direction hand profile', () =>
+  {
+    // The hand profile is chosen by an eight-way switch on the swing direction, and nothing here
+    // read the result of it - the anchor cases above hold the direction fixed at 2, and the
+    // direction cases read only which direction was forwarded to the motion effect, never where
+    // the overlay was actually placed. So every case in that switch could have resolved to the
+    // same profile and the weapon would sit in the same spot regardless of facing. The four
+    // diagonals are blends of their two cardinals, which is why they land between them.
+    it.each([
+      [ 2, 13, -6.56, 1.5 ],
+      [ 4, -23, -20.96, 1.65 ],
+      [ 6, 29, -20.96, 1.65 ],
+      [ 8, 3, -35.36, 1.5 ],
+      [ 1, -5, -13.76, 1.575 ],
+      [ 3, 21, -13.76, 1.575 ],
+      [ 7, -10, -28.16, 1.575 ],
+      [ 9, 16, -28.16, 1.575 ],
+    ])('places the overlay in the hand profile for direction %i', (dir, expectedX, expectedY, expectedScale) =>
+    {
+      // Arrange
+      const parentSprite = buildParentSprite();
+
+      // Act
+      JuiceWeaponSwingOverlay.play(parentSprite, 5, 0.5, 20, 'bash', 120, dir);
+
+      // Assert
+      const [ , overlay ] = MotionEffectCtor.mock.calls.at(-1);
+      expect(overlay.x).toBeCloseTo(expectedX, 3);
+      expect(overlay.y).toBeCloseTo(expectedY, 3);
+      expect(overlay.scale.x).toBeCloseTo(expectedScale, 3);
+    });
+  });
+
   describe('play() - weapon tip / spin count resolution', () =>
   {
     it('falls back to the default stab tip angle for a missing weaponTipRadians', () =>

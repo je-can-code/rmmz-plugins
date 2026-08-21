@@ -3,6 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   installNaturalHostGlobals,
+  notetagNameOf,
   setPluginContextToJBase,
   setPluginContextToJNatural,
 } from '../../_component/fixtures/install-natural-host-globals.js';
@@ -252,15 +253,31 @@ describe('J-NaturalGrowth Game_Actor growths (direct src import)', () =>
     });
   });
 
+  /**
+   * The growth tables mirror the buff tables on {@link Game_Battler}, one pair of notetags per
+   * parameter id. Pinning the pair's identity rather than its length is what makes the mapping
+   * load-bearing: every case returns two elements, so a case resolving to the neighbouring
+   * parameter's tags would satisfy a length check just as well as the correct answer.
+   */
   describe('getGrowthRegexByBparamId', () =>
   {
-    it.each([ 0, 1, 2, 3, 4, 5, 6, 7 ])('resolves a growth regex pair for base param %i', (paramId) =>
+    it.each([
+      [ 0, 'mhpGrowthPlus', 'mhpGrowthRate' ],
+      [ 1, 'mmpGrowthPlus', 'mmpGrowthRate' ],
+      [ 2, 'atkGrowthPlus', 'atkGrowthRate' ],
+      [ 3, 'defGrowthPlus', 'defGrowthRate' ],
+      [ 4, 'matGrowthPlus', 'matGrowthRate' ],
+      [ 5, 'mdfGrowthPlus', 'mdfGrowthRate' ],
+      [ 6, 'agiGrowthPlus', 'agiGrowthRate' ],
+      [ 7, 'lukGrowthPlus', 'lukGrowthRate' ],
+    ])('resolves base param %i to the %s / %s tag pair', (paramId, plusTag, rateTag) =>
     {
       // Arrange & Act
-      const structures = actor.getGrowthRegexByBparamId(paramId);
+      const [ plusStructure, rateStructure ] = actor.getGrowthRegexByBparamId(paramId);
 
       // Assert
-      expect(structures.length).toBe(2);
+      expect(notetagNameOf(plusStructure)).toBe(plusTag);
+      expect(notetagNameOf(rateStructure)).toBe(rateTag);
     });
 
     it('resolves nothing for a base param id outside the eight', () =>
@@ -348,13 +365,25 @@ describe('J-NaturalGrowth Game_Actor growths (direct src import)', () =>
       expect(result).toBe(0);
     });
 
-    it.each([ 0, 9 ])('resolves an ex-param growth regex pair for id %i', (paramId) =>
+    it.each([
+      [ 0, 'hitGrowthPlus', 'hitGrowthRate' ],
+      [ 1, 'evaGrowthPlus', 'evaGrowthRate' ],
+      [ 2, 'criGrowthPlus', 'criGrowthRate' ],
+      [ 3, 'cevGrowthPlus', 'cevGrowthRate' ],
+      [ 4, 'mevGrowthPlus', 'mevGrowthRate' ],
+      [ 5, 'mrfGrowthPlus', 'mrfGrowthRate' ],
+      [ 6, 'cntGrowthPlus', 'cntGrowthRate' ],
+      [ 7, 'hrgGrowthPlus', 'hrgGrowthRate' ],
+      [ 8, 'mrgGrowthPlus', 'mrgGrowthRate' ],
+      [ 9, 'trgGrowthPlus', 'trgGrowthRate' ],
+    ])('resolves ex-param %i to the %s / %s tag pair', (paramId, plusTag, rateTag) =>
     {
       // Arrange & Act
-      const structures = actor.getGrowthRegexByXparamId(paramId);
+      const [ plusStructure, rateStructure ] = actor.getGrowthRegexByXparamId(paramId);
 
       // Assert
-      expect(structures.length).toBe(2);
+      expect(notetagNameOf(plusStructure)).toBe(plusTag);
+      expect(notetagNameOf(rateStructure)).toBe(rateTag);
     });
 
     it('resolves no ex-param growth regex for an id outside the ten', () =>
@@ -366,13 +395,25 @@ describe('J-NaturalGrowth Game_Actor growths (direct src import)', () =>
       expect(structures).toBeNull();
     });
 
-    it.each([ 0, 9 ])('resolves an sp-param growth regex pair for id %i', (paramId) =>
+    it.each([
+      [ 0, 'tgrGrowthPlus', 'tgrGrowthRate' ],
+      [ 1, 'grdGrowthPlus', 'grdGrowthRate' ],
+      [ 2, 'recGrowthPlus', 'recGrowthRate' ],
+      [ 3, 'phaGrowthPlus', 'phaGrowthRate' ],
+      [ 4, 'mcrGrowthPlus', 'mcrGrowthRate' ],
+      [ 5, 'tcrGrowthPlus', 'tcrGrowthRate' ],
+      [ 6, 'pdrGrowthPlus', 'pdrGrowthRate' ],
+      [ 7, 'mdrGrowthPlus', 'mdrGrowthRate' ],
+      [ 8, 'fdrGrowthPlus', 'fdrGrowthRate' ],
+      [ 9, 'exrGrowthPlus', 'exrGrowthRate' ],
+    ])('resolves sp-param %i to the %s / %s tag pair', (paramId, plusTag, rateTag) =>
     {
       // Arrange & Act
-      const structures = actor.getGrowthRegexBySparamId(paramId);
+      const [ plusStructure, rateStructure ] = actor.getGrowthRegexBySparamId(paramId);
 
       // Assert
-      expect(structures.length).toBe(2);
+      expect(notetagNameOf(plusStructure)).toBe(plusTag);
+      expect(notetagNameOf(rateStructure)).toBe(rateTag);
     });
 
     it('resolves no sp-param growth regex for an id outside the ten', () =>

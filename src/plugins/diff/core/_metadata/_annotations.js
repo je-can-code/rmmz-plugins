@@ -23,6 +23,12 @@
  * All difficulties are defined in an external JSON file.
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.2
+ *    Difficulty scaling can no longer reduce max hp below one. The engine floors
+ *    it at one inside its own param call, and the difficulty multiplier was
+ *    applied to the result - outside that clamp - so a max hp multiplier of zero
+ *    produced a battler with no maximum hp and broke every ratio computed from
+ *    it. Other parameters still scale to zero, which is a legitimate setting.
  * - 2.1.1
  *    The difficulty points window no longer declares private members. A
  *    window's constructor reaches initialize, and through it the drawing

@@ -311,6 +311,12 @@
  *    Taking even a single step immediately strips it and resets the stand timer.
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Passive states no longer appear in the JABS affliction strip. A passive is
+ *    permanent and neither waits out nor cures, so listing it beside poison and
+ *    paralysis filled the strip with rows the player could do nothing about.
+ *    This exclusion previously lived in J-ABS, which had to reach across for it;
+ *    it belongs here, where passives and JABS already meet.
  * - 1.2.0
  *    Conditional passive tracking state is no longer written to savefiles
  *    where it can be recomputed from the battler's current situation on load.

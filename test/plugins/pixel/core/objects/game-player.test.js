@@ -511,11 +511,18 @@ describe('J-Pixelistics Game_Player (direct src import)', () =>
         .toBe(true);
     });
 
+    // The three refusals below each disable one of the eligibility conditions. Every one of them
+    // holds the dash button down while doing it, and that is what makes them mean anything: the
+    // permitted branch sets dash from the button, so with the button *up* it also lands on false
+    // and the two arms of the check become indistinguishable. Holding it makes the branches
+    // disagree, so a `false` here proves this condition refused rather than merely that no dash
+    // input arrived.
     it('stops dashing when the player cannot move at all', () =>
     {
       // Arrange
       const player = makePlayer(2, 2);
       player._canMove = false;
+      player._dashButtonPressed = true;
       player._dashing = true;
 
       // Act
@@ -531,6 +538,7 @@ describe('J-Pixelistics Game_Player (direct src import)', () =>
       // Arrange
       const player = makePlayer(2, 2);
       player._vehicleType = 'boat';
+      player._dashButtonPressed = true;
       player._dashing = true;
 
       // Act
@@ -546,6 +554,7 @@ describe('J-Pixelistics Game_Player (direct src import)', () =>
       // Arrange
       const player = makePlayer(2, 2);
       globalThis.$gameMap._dashDisabled = true;
+      player._dashButtonPressed = true;
       player._dashing = true;
 
       // Act
@@ -859,6 +868,31 @@ describe('J-Pixelistics Game_Player (direct src import)', () =>
       // Assert
       expect(globalThis.$gameTemp.isDestinationValid())
         .toBe(false);
+    });
+
+    it.each([
+      [ 'the same column but a different row', 2, 5, 'DOWN' ],
+      [ 'the same row but a different column', 5, 2, 'RIGHT' ],
+    ])('keeps pathing toward a destination on %s', (_label, destX, destY, dirKey) =>
+    {
+      // Arrange: arrival is both coordinates matching, and the case above matches both at once -
+      // so either half could be forced true and the other would still report arrival. A
+      // destination sharing one axis with the player is the ordinary mid-journey state of any
+      // click-to-move path, and calling that arrival would abandon the route halfway.
+      // A path direction has to be supplied, or the separate no-route-available branch gives up
+      // and clears the destination for its own reasons, which would mask the arrival check.
+      const player = makePlayer(2, 2);
+      globalThis.$gameTemp._valid = true;
+      globalThis.$gameTemp._x = destX;
+      globalThis.$gameTemp._y = destY;
+      player._forcedPathDirection = globalThis.J.PIXEL.Directions[ dirKey ];
+
+      // Act
+      player.pixelMoveTowardDestination();
+
+      // Assert
+      expect(globalThis.$gameTemp.isDestinationValid())
+        .toBe(true);
     });
 
     it('releases the move flag upon arrival', () =>

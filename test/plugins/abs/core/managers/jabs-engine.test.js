@@ -3294,6 +3294,34 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(targetBattler.setLastHitSource).toHaveBeenCalledWith('skill', 'caster-uuid', 42);
     });
 
+    it.each([
+      [ 'mp', 'mpDamage' ],
+      [ 'tp', 'tpDamage' ],
+    ])('records the last-hit source for a hit that only drained %s', (_label, field) =>
+    {
+      // Arrange: damage is a three-way or, and every case above drives it through hp alone - so
+      // the other two operands carry nothing and could each be forced false unnoticed. A skill
+      // that only burns mp or tp is a real hit, and forgetting it would let an earlier, unrelated
+      // attacker keep the credit for whatever happens next.
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      const result = buildResult({ [ field ]: 10 });
+      const targetBattler = buildTargetBattler(result);
+      const target = buildTarget({ getBattler: () => targetBattler });
+      const gameAction = {
+        apply: vi.fn(),
+        item: () => ({ id: 42 }),
+      };
+      const action = buildAction({ getAction: () => gameAction });
+
+      // Act
+      engine.executeSkillEffects(action, target);
+
+      // Assert
+      expect(targetBattler.setLastHitSource).toHaveBeenCalledWith('skill', 'caster-uuid', 42);
+    });
+
     it('does not record a last-hit source when the action dealt no damage (miss/parry)', () =>
     {
       const engine = new JABS_Engine();
@@ -3595,6 +3623,30 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.applyAggroEffects(action, target);
 
       expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 15);
+    });
+
+    it.each([
+      [ 'hp', 'hpDamage' ],
+      [ 'mp', 'mpDamage' ],
+      [ 'tp', 'tpDamage' ],
+    ])('ignores restored %s rather than letting it subtract aggro', (_label, field) =>
+    {
+      // Arrange: healing is negative damage in this engine, so each of these guards is what keeps
+      // a restorative hit from running the aggro arithmetic backwards. Every fixture here leaves
+      // the damage fields at zero or sets them positive, and zero times a rate is zero either way
+      // - so the guards could all be dropped and the totals would not move. A negative value is
+      // the only input that tells them apart, and without them a healer topping up an enemy would
+      // quietly make that enemy care about them less.
+      const engine = new JABS_Engine();
+      const attacker = buildAttacker();
+      const target = buildTarget(buildAggroResult({ [ field ]: -10 }));
+      const action = buildAction(attacker);
+
+      // Act
+      engine.applyAggroEffects(action, target);
+
+      // Assert
+      expect(target.addUpdateAggro).toHaveBeenCalledWith('attacker-uuid', 5);
     });
 
     it('adds mp-damage aggro on top of the base', () =>

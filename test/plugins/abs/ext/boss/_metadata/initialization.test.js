@@ -9,8 +9,6 @@ import {
 import { setPluginContextToJabsBoss } from '../_component/fixtures/install-abs-boss-host-globals.js';
 import { installPluginManagerWithParams } from '../../../../../setup/install-plugin-manager-with-params.js';
 
-const INIT_PATH = '../../../../../../src/plugins/abs/ext/boss/_metadata/initialization.js';
-
 /**
  * The bootstrap this ship establishes before any of its own code can run.
  *
@@ -64,7 +62,7 @@ describe('J-ABS-Boss initialization', () =>
     };
 
     setPluginContextToJabsBoss();
-    await import(INIT_PATH);
+    await import('../../../../../../src/plugins/abs/ext/boss/_metadata/initialization.js');
   });
 
   //region the namespace the ship hangs from
@@ -144,7 +142,7 @@ describe('J-ABS-Boss initialization', () =>
 
       // Act
       // Assert
-      await expect(import(INIT_PATH))
+      await expect(import('../../../../../../src/plugins/abs/ext/boss/_metadata/initialization.js'))
         .rejects.toThrow(/missing J-Base/);
 
       // restore the satisfying version so later tests in this file are unaffected.
@@ -161,7 +159,7 @@ describe('J-ABS-Boss initialization', () =>
 
       // Act
       // Assert
-      await expect(import(INIT_PATH))
+      await expect(import('../../../../../../src/plugins/abs/ext/boss/_metadata/initialization.js'))
         .rejects.toThrow(/missing J-ABS/);
 
       // restore the real accessor rather than relying on restoreAllMocks.

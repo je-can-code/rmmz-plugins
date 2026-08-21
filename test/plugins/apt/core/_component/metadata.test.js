@@ -35,8 +35,6 @@ describe('J-Aptitude metadata (direct src import)', () =>
 
   describe('host version requirements', () =>
   {
-    const INIT_PATH = '../../../../../src/plugins/apt/core/_metadata/initialization.js';
-
     it('throws when J-Base does not satisfy the minimum required version', async () =>
     {
       // Arrange: drop the already-installed J-Base metadata below this plugin's floor.
@@ -47,7 +45,8 @@ describe('J-Aptitude metadata (direct src import)', () =>
       globalThis.__PLUGIN_VERSION__ = '1.0.0';
 
       // Act & Assert
-      await expect(import(INIT_PATH)).rejects.toThrow(/missing J-Base/);
+      await expect(import('../../../../../src/plugins/apt/core/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-Base/);
 
       // restore the satisfying version so later tests in this file are unaffected.
       globalThis.J.BASE.Metadata.Version = originalVersion;
@@ -63,7 +62,8 @@ describe('J-Aptitude metadata (direct src import)', () =>
       globalThis.__PLUGIN_VERSION__ = '1.0.0';
 
       // Act & Assert
-      await expect(import(INIT_PATH)).rejects.toThrow(/missing J-ABS/);
+      await expect(import('../../../../../src/plugins/apt/core/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-ABS/);
 
       // restore the real accessor rather than relying on restoreAllMocks.
       globalThis.J.ABS.Metadata.version.version = originalVersion;

@@ -141,6 +141,24 @@ describe('JABS_AllyAI (unit, JABS_AI/RPGManager stubbed)', () =>
       expect(ai.getPresetKey()).toEqual('medic');
       expect(ai.getRisk()).toEqual(JABS_AllyAI.Risk.CAREFUL);
     });
+
+    it('skips preset application entirely when no starting preset is given', () =>
+    {
+      // Arrange
+      // applying an undefined key is a no-op too- applyPreset logs and bails- so the resulting
+      // axes look identical whether the guard short-circuits or the call is made and refused.
+      // the absent call is the only evidence the guard is what stopped it.
+      const applyPresetSpy = vi.spyOn(JABS_AllyAI.prototype, 'applyPreset');
+
+      // Act
+      const ai = new JABS_AllyAI();
+
+      // Assert
+      expect(ai.getPresetKey()).toEqual('generalist');
+      expect(applyPresetSpy).not.toHaveBeenCalled();
+
+      applyPresetSpy.mockRestore();
+    });
   });
 
   describe('isDoNothing()/setDoNothing()', () =>
@@ -311,7 +329,10 @@ describe('JABS_AllyAI (unit, JABS_AI/RPGManager stubbed)', () =>
       const ai = new JABS_AllyAI();
       vi.spyOn(ai, 'decideCleansing').mockReturnValue(1);
 
-      expect(ai.decideSupportFirst([ 1 ], buildBattler(), buildBattler())).toEqual([ 1 ]);
+      // the usable pool is deliberately disjoint from the cleanse pick. sharing an id made this
+      // indistinguishable from the cleanse guard being skipped entirely, because the eventual
+      // fall-through to cautious offense would have picked that same id out of the pool.
+      expect(ai.decideSupportFirst([ 7 ], buildBattler(), buildBattler())).toEqual([ 1 ]);
     });
 
     it('falls through to healing when no cleansing is needed', () =>
@@ -358,6 +379,27 @@ describe('JABS_AllyAI (unit, JABS_AI/RPGManager stubbed)', () =>
       expect(offenseSpy).toHaveBeenCalled();
     });
 
+    it('goes straight to offense when every nearby ally is above the danger threshold', () =>
+    {
+      // Arrange
+      // the empty-ally case above never runs the hp predicate at all, so nothing constrained the
+      // < 0.6 comparison itself. a healthy ally forces it to answer, and the RNG roll is set to
+      // succeed so that failing the hp test is the only thing that can route this to offense.
+      const ai = new JABS_AllyAI();
+      const ally = { getBattler: () => ({ currentHpPercent: () => 0.9 }) };
+      const user = buildBattler({ getAllNearbyAllies: () => [ ally ] });
+      globalThis.RPGManager.chanceIn100.mockReturnValue(true);
+      const supportSpy = vi.spyOn(ai, 'decideSupportFirst').mockReturnValue([ 5 ]);
+      vi.spyOn(ai, 'decideOffense').mockReturnValue([ 9 ]);
+
+      // Act
+      const result = ai.decideBalancedSupport([ 1 ], user, buildBattler());
+
+      // Assert
+      expect(result).toEqual([ 9 ]);
+      expect(supportSpy).not.toHaveBeenCalled();
+    });
+
     it('goes straight to offense when in danger but the RNG roll fails', () =>
     {
       const ai = new JABS_AllyAI();
@@ -402,6 +444,10 @@ describe('JABS_AllyAI (unit, JABS_AI/RPGManager stubbed)', () =>
       const ai = new JABS_AllyAI();
 
       expect(ai.decideOffense([], buildBattler(), buildBattler())).toEqual([]);
+      // an empty pool yields [] from the risk-axis path too, because the random pick lands on
+      // undefined and isSkillIdValid refuses it. only the absent RNG roll proves the guard
+      // short-circuited before any dispatch rather than the sentinel arriving by accident.
+      expect(globalThis.Math.randomInt).not.toHaveBeenCalled();
     });
 
     it('routes to reckless offense for the RECKLESS risk axis', () =>
@@ -483,6 +529,46 @@ describe('JABS_AllyAI (unit, JABS_AI/RPGManager stubbed)', () =>
       vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([ 9 ]);
 
       expect(ai.decideRecklessOffense([ 9 ], buildBattler(), buildBattler())).toEqual([ 9 ]);
+      // both arms of the 50/50 resolve to 9 when the sole memory pick and the strongest skill are
+      // the same id, so the returned value can never distinguish "declined to offer a choice" from
+      // "offered it and the coin happened to land on 9". the unrolled coin is the only evidence.
+      expect(globalThis.RPGManager.chanceIn100).not.toHaveBeenCalled();
+    });
+
+    it('ignores memories belonging to a different battler', () =>
+    {
+      // Arrange
+      // the memory list holds only a near-miss- same shape, different battlerId- so the id
+      // predicate has something it must actually reject. every other case here held exactly one
+      // memory that matched, which makes "matches this target" and "matches anything" identical.
+      const ai = new JABS_AllyAI();
+      ai.memory = [ { battlerId: 2, skillId: 3, wasEffective: () => true } ];
+      vi.spyOn(ai, 'determineStrongestSkill').mockReturnValue(9);
+      vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([ 3 ]);
+
+      // Act
+      const result = ai.decideRecklessOffense([ 3, 9 ], buildBattler(), buildBattler());
+
+      // Assert
+      expect(result).toEqual([ 9 ]);
+    });
+
+    it('uses the strongest skill when memories exist but none of them proved effective', () =>
+    {
+      // Arrange
+      // a matching memory that survives the id filter but leaves nothing after the effectiveness
+      // filter- the one arrangement in which the "more than one effective skill" fork has to
+      // decline. without it, entering that fork by mistake still lands on the strongest skill.
+      const ai = new JABS_AllyAI();
+      ai.memory = [ { battlerId: 1, skillId: 3, wasEffective: () => false } ];
+      vi.spyOn(ai, 'determineStrongestSkill').mockReturnValue(9);
+      vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([]);
+
+      // Act
+      const result = ai.decideRecklessOffense([ 3, 9 ], buildBattler(), buildBattler());
+
+      // Assert
+      expect(result).toEqual([ 9 ]);
     });
 
     it('picks randomly among multiple effective memories', () =>
@@ -533,27 +619,48 @@ describe('JABS_AllyAI (unit, JABS_AI/RPGManager stubbed)', () =>
 
     it('picks randomly among all usable skills when there are no memories at all', () =>
     {
+      // the effectiveness filter is stubbed with ids that appear nowhere in the usable pool even
+      // though no memory should ever reach it- that is what makes "consulted memories anyway"
+      // visible. the RNG roll is set to succeed so a stray memory pick would win outright.
       const ai = new JABS_AllyAI();
+      vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([ 91 ]);
+      globalThis.RPGManager.chanceIn100.mockReturnValue(true);
       globalThis.Math.randomInt.mockReturnValue(1);
 
       expect(ai.decideBalancedOffense([ 5, 6 ], buildBattler(), buildBattler())).toEqual([ 6 ]);
     });
 
-    it('picks the sole filtered skill 50/50 against a random pick (RNG true)', () =>
+    it('ignores memories belonging to a different battler', () =>
     {
+      // a near-miss memory the id predicate has to reject: with it wrongly admitted the filtered
+      // pick 91 wins the coin flip outright, so [ 5 ] can only mean the memory was excluded.
       const ai = new JABS_AllyAI();
-      ai.memory = [ { battlerId: 1, skillId: 5, wasEffective: () => true } ];
-      vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([ 5 ]);
+      ai.memory = [ { battlerId: 2, skillId: 91, wasEffective: () => true } ];
+      vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([ 91 ]);
       globalThis.RPGManager.chanceIn100.mockReturnValue(true);
+      globalThis.Math.randomInt.mockReturnValue(0);
 
       expect(ai.decideBalancedOffense([ 5, 6 ], buildBattler(), buildBattler())).toEqual([ 5 ]);
+    });
+
+    it('picks the sole filtered skill 50/50 against a random pick (RNG true)', () =>
+    {
+      // the filtered id is disjoint from the usable pool on purpose. when both lists shared ids,
+      // skipping the memory step entirely still produced the same answer at the same index, so
+      // nothing here could tell the memory-driven pick apart from the plain random one.
+      const ai = new JABS_AllyAI();
+      ai.memory = [ { battlerId: 1, skillId: 91, wasEffective: () => true } ];
+      vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([ 91 ]);
+      globalThis.RPGManager.chanceIn100.mockReturnValue(true);
+
+      expect(ai.decideBalancedOffense([ 5, 6 ], buildBattler(), buildBattler())).toEqual([ 91 ]);
     });
 
     it('picks a random usable skill 50/50 against the sole filtered skill (RNG false)', () =>
     {
       const ai = new JABS_AllyAI();
-      ai.memory = [ { battlerId: 1, skillId: 5, wasEffective: () => true } ];
-      vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([ 5 ]);
+      ai.memory = [ { battlerId: 1, skillId: 91, wasEffective: () => true } ];
+      vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([ 91 ]);
       globalThis.RPGManager.chanceIn100.mockReturnValue(false);
       globalThis.Math.randomInt.mockReturnValue(1);
 
@@ -562,12 +669,14 @@ describe('JABS_AllyAI (unit, JABS_AI/RPGManager stubbed)', () =>
 
     it('picks randomly among multiple filtered skills', () =>
     {
+      // disjoint again, and indexed past position 0: falling back to the usable pool at the same
+      // index yields 6, so pinning 92 proves the pick came from the filtered list.
       const ai = new JABS_AllyAI();
-      ai.memory = [ { battlerId: 1, skillId: 5, wasEffective: () => true } ];
-      vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([ 5, 6 ]);
+      ai.memory = [ { battlerId: 1, skillId: 91, wasEffective: () => true } ];
+      vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([ 91, 92 ]);
       globalThis.Math.randomInt.mockReturnValue(1);
 
-      expect(ai.decideBalancedOffense([ 5, 6, 7 ], buildBattler(), buildBattler())).toEqual([ 6 ]);
+      expect(ai.decideBalancedOffense([ 5, 6, 7 ], buildBattler(), buildBattler())).toEqual([ 92 ]);
     });
 
     it('returns empty when the chosen skill id is invalid', () =>
@@ -586,14 +695,32 @@ describe('JABS_AllyAI (unit, JABS_AI/RPGManager stubbed)', () =>
       const ai = new JABS_AllyAI();
 
       expect(ai.decideCautiousOffense([], buildBattler(), buildBattler())).toEqual([]);
+      // the random fallback also returns [] on an empty pool- undefined fails isSkillIdValid- so
+      // the sentinel proves nothing on its own. the unrolled RNG is what pins the short-circuit.
+      expect(globalThis.Math.randomInt).not.toHaveBeenCalled();
     });
 
     it('falls back to a random pick when there are no memories', () =>
     {
+      // the effectiveness filter is stubbed with ids absent from the usable pool despite no
+      // memory existing to reach it, so consulting memories anyway becomes visible as a 92.
       const ai = new JABS_AllyAI();
+      vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([ 91, 92 ]);
       globalThis.Math.randomInt.mockReturnValue(1);
 
       expect(ai.decideCautiousOffense([ 5, 6 ], buildBattler(), buildBattler())).toEqual([ 6 ]);
+    });
+
+    it('ignores memories belonging to a different battler', () =>
+    {
+      // a near-miss memory the id predicate must reject: admitting it would return 91 out of the
+      // filtered list, so [ 5 ] can only mean the memory was excluded and the fallback ran.
+      const ai = new JABS_AllyAI();
+      ai.memory = [ { battlerId: 2, skillId: 91, wasEffective: () => true } ];
+      vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([ 91, 92 ]);
+      globalThis.Math.randomInt.mockReturnValue(0);
+
+      expect(ai.decideCautiousOffense([ 5, 6 ], buildBattler(), buildBattler())).toEqual([ 5 ]);
     });
 
     it('falls back to a random pick when memories exist but filter out everything', () =>
@@ -609,11 +736,13 @@ describe('JABS_AllyAI (unit, JABS_AI/RPGManager stubbed)', () =>
     it('picks randomly among the remembered-effective skills when present', () =>
     {
       const ai = new JABS_AllyAI();
-      ai.memory = [ { battlerId: 1, skillId: 5, wasEffective: () => true } ];
-      vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([ 5 ]);
+      // the remembered id is disjoint from the usable pool: sharing one made this pass identically
+      // when the whole memory branch was skipped, since the fallback pick landed on that same id.
+      ai.memory = [ { battlerId: 1, skillId: 91, wasEffective: () => true } ];
+      vi.spyOn(ai, 'filterMemoriesByEffectiveness').mockReturnValue([ 91 ]);
       globalThis.Math.randomInt.mockReturnValue(0);
 
-      expect(ai.decideCautiousOffense([ 5, 6 ], buildBattler(), buildBattler())).toEqual([ 5 ]);
+      expect(ai.decideCautiousOffense([ 5, 6 ], buildBattler(), buildBattler())).toEqual([ 91 ]);
     });
 
     it('returns empty when the remembered-effective pick resolves to an invalid skill id', () =>

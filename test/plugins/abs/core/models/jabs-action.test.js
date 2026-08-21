@@ -583,6 +583,36 @@ describe('JABS_Action (direct src import)', () =>
       // Assert
       expect(action.isActionExpired()).toBe(false);
     });
+
+    it('does not flag removal while the action is still well short of its max duration', () =>
+    {
+      // Arrange- the sibling case above only ever counted all the way to the max, so the
+      // duration comparison could answer "spent" on every single frame unnoticed.
+      const action = buildAction({ skill: buildSkill({ jabsDuration: 100 }) });
+
+      // Act
+      action.countdownDuration();
+
+      // Assert
+      expect(action.getNeedsRemoval()).toBe(false);
+    });
+
+    it('is not expired past the minimum duration while max duration still remains', () =>
+    {
+      // Arrange- the other non-expired case sits below the minimum-duration floor, which answers
+      // "not expired" all by itself. Nine frames clears the floor, so only the max-duration
+      // comparison can still be what keeps this alive.
+      const action = buildAction({ skill: buildSkill({ jabsDuration: 100 }) });
+
+      // Act
+      for (let i = 0; i < 9; i++)
+      {
+        action.countdownDuration();
+      }
+
+      // Assert
+      expect(action.isActionExpired()).toBe(false);
+    });
   });
 
   describe('getNeedsRemoval / setNeedsRemoval', () =>
@@ -737,6 +767,18 @@ describe('JABS_Action (direct src import)', () =>
       expect(action.triggerOnTouch()).toBe(true);
     });
 
+    it('does not trigger on touch when neither the tag nor an endless delay applies', () =>
+    {
+      // Arrange- both operands of the touch decision were only ever exercised on their true side,
+      // so either one could have been carrying the whole condition on its own.
+      const action = buildAction({
+        skill: buildSkill({ jabsDelayDuration: 10, jabsDelayTriggerByTouch: false }),
+      });
+
+      // Act & Assert
+      expect(action.triggerOnTouch()).toBe(false);
+    });
+
     it('returns null trigger radius when the skill has none configured', () =>
     {
       // Arrange & Act
@@ -778,11 +820,23 @@ describe('JABS_Action (direct src import)', () =>
       // Act
       action.decrementPierceTimes();
 
-      // Assert
+      // Assert- the old assertions here only proved the counter moved, never that exhausting it
+      // actually transitioned the action into its linger phase.
+      expect(action.isLingering()).toBe(true);
       expect(action.getNeedsRemoval()).toBe(false);
-      // linger start disables collision as an observable side effect.
+    });
+
+    it('does not start lingering while pierce hits still remain', () =>
+    {
+      // Arrange- three hits authored, one spent, two left.
+      const action = buildAction({ skill: buildSkill({ jabsPierceCount: 3 }) });
+
+      // Act
       action.decrementPierceTimes();
-      expect(action.getPiercingTimes()).toBeLessThanOrEqual(0);
+
+      // Assert- an exhaustion check that always answers "spent" would linger this action on its
+      // very first hit, ending a three-pierce skill two connections early.
+      expect(action.isLingering()).toBe(false);
     });
 
     it('is pierce-ready once the pierce delay timer completes', () =>
@@ -981,6 +1035,48 @@ describe('JABS_Action (direct src import)', () =>
       expect(action.getDuration()).toBe(0);
     });
 
+    it('canMainUpdate is false for a non-touch action whose delay has not completed', () =>
+    {
+      // Arrange- the predicate itself, tested apart from its caller: nothing ever asserted it
+      // answered false, so a version that always green-lit the update read identically.
+      const action = buildAction({ skill: buildSkill({ jabsDelayDuration: 100, jabsDelayTriggerByTouch: false }) });
+
+      // Act & Assert
+      expect(action.canMainUpdate()).toBe(false);
+    });
+
+    it('never reaches collision while the main-update gate stays closed', () =>
+    {
+      // Arrange- duration staying at 0 was not enough to pin the gate: the un-completed delay
+      // independently suppresses the countdown, so an ignored gate looked identical. Collision is
+      // reachable on the second frame once the pierce delay ticks, which is what this catches.
+      const action = buildAction({
+        skill: buildSkill({ jabsDelayDuration: 100, jabsDelayTriggerByTouch: false, jabsPierceDelay: 0 }),
+      });
+
+      // Act
+      action.update();
+      action.update();
+
+      // Assert
+      expect(globalThis.$jabsEngine.getCollisionTargets).not.toHaveBeenCalled();
+    });
+
+    it('does not count down duration while a touch-triggered action is still delaying', () =>
+    {
+      // Arrange- touch-triggering opens the main-update gate, so the action genuinely runs its
+      // update body. The only thing withholding the duration countdown is the delay check.
+      const action = buildAction({
+        skill: buildSkill({ jabsDelayDuration: 100, jabsDelayTriggerByTouch: true, jabsDuration: 100 }),
+      });
+
+      // Act
+      action.update();
+
+      // Assert
+      expect(action.getDuration()).toBe(0);
+    });
+
     it('counts down duration once the delay has completed', () =>
     {
       // Arrange
@@ -1057,7 +1153,9 @@ describe('JABS_Action (direct src import)', () =>
         action.update();
       }
 
-      // Assert
+      // Assert- removal alone is ambiguous: the duration countdown flags removal on its own at
+      // the max, so only the linger phase actually proves the transition happened here.
+      expect(action.isLingering()).toBe(true);
       expect(action.getNeedsRemoval()).toBe(true);
     });
 
@@ -1099,6 +1197,59 @@ describe('JABS_Action (direct src import)', () =>
       expect(sprite._realY).toBe(42);
     });
 
+    it('re-anchors to the caster when the frozen location resolves an X but no Y', () =>
+    {
+      // Arrange- a half-resolved target tile. Both coordinate checks were only ever satisfied
+      // together, so either one could have been carrying the whole "leave it in place" decision.
+      const character = { _realX: 41, _realY: 42, _x: 41, _y: 42, requestAnimation: vi.fn() };
+      const caster = buildCaster({ getCharacter: () => character });
+      const action = buildAction({
+        caster,
+        skill: buildSkill({ jabsDirect: true, jabsDelayDuration: 0, jabsDuration: 100 }),
+      });
+      const sprite = { _realX: 0, _realY: 0, _x: 0, _y: 0, isHitstopped: () => false };
+      action.setActionSprite(sprite);
+      action.setActionOptions({
+        getTargetLocation: () => ({
+          getX: () => 5,
+          getY: () => null,
+        }),
+      });
+
+      // Act
+      action.update();
+
+      // Assert- an incomplete tile is not a tile; body-anchoring is the correct fallback.
+      expect(sprite._realX).toBe(41);
+      expect(sprite._realY).toBe(42);
+    });
+
+    it('re-anchors to the caster when the frozen location resolves a Y but no X', () =>
+    {
+      // Arrange- the mirror of the case above, isolating the other coordinate check.
+      const character = { _realX: 41, _realY: 42, _x: 41, _y: 42, requestAnimation: vi.fn() };
+      const caster = buildCaster({ getCharacter: () => character });
+      const action = buildAction({
+        caster,
+        skill: buildSkill({ jabsDirect: true, jabsDelayDuration: 0, jabsDuration: 100 }),
+      });
+      const sprite = { _realX: 0, _realY: 0, _x: 0, _y: 0, isHitstopped: () => false };
+      action.setActionSprite(sprite);
+      action.setActionOptions({
+        getTargetLocation: () => ({
+          getX: () => null,
+          getY: () => 5,
+        }),
+      });
+
+      // Act
+      action.update();
+
+      // Assert
+      expect(sprite._realX).toBe(41);
+      expect(sprite._realY).toBe(42);
+    });
+
     it('does not sync sprite position for a non-direct action', () =>
     {
       // Arrange
@@ -1120,6 +1271,62 @@ describe('JABS_Action (direct src import)', () =>
 
       // Act & Assert: no throw means the missing-action-sprite guard was taken.
       expect(() => action.checkTriggerTouchAndArm()).not.toThrow();
+      expect(action.isDelayCompleted()).toBe(false);
+    });
+
+    it('arms a touch-triggered action early when a target enters the trigger radius', () =>
+    {
+      // Arrange- the fully-working baseline the two refusals below are measured against: delay
+      // still running, touch-triggering on, a radius authored, a sprite to anchor the query, and
+      // the engine reporting somebody inside the ring.
+      const action = buildAction({
+        skill: buildSkill({ jabsDelayDuration: 100, jabsDelayTriggerByTouch: true, jabsDelayTriggerRadius: 3 }),
+      });
+      action.setActionSprite({ id: 'sprite' });
+      globalThis.$jabsEngine.getTriggerTouchTargets = vi.fn(() => [ { id: 'victim' } ]);
+
+      // Act
+      action.checkTriggerTouchAndArm();
+
+      // Assert
+      expect(action.isDelayCompleted()).toBe(true);
+    });
+
+    it('does not re-query trigger targets once the delay has already completed', () =>
+    {
+      // Arrange- identical to the baseline above but for the delay already being finished. The
+      // engine query is the observable, because a completed delay cannot be "completed again"
+      // and isDelayCompleted() would read true either way.
+      const action = buildAction({
+        skill: buildSkill({ jabsDelayDuration: 100, jabsDelayTriggerByTouch: true, jabsDelayTriggerRadius: 3 }),
+      });
+      action.setActionSprite({ id: 'sprite' });
+      globalThis.$jabsEngine.getTriggerTouchTargets = vi.fn(() => [ { id: 'victim' } ]);
+      action.endDelay();
+
+      // Act
+      action.checkTriggerTouchAndArm();
+
+      // Assert
+      expect(globalThis.$jabsEngine.getTriggerTouchTargets).not.toHaveBeenCalled();
+    });
+
+    it('does not query trigger targets for an action that is not touch-triggered', () =>
+    {
+      // Arrange- the baseline with exactly one flip: the touch tag is off and the delay is finite,
+      // so nothing forces touch-triggering on. A radius is still authored, so only the
+      // touch-trigger check can be what keeps the engine from being asked.
+      const action = buildAction({
+        skill: buildSkill({ jabsDelayDuration: 100, jabsDelayTriggerByTouch: false, jabsDelayTriggerRadius: 3 }),
+      });
+      action.setActionSprite({ id: 'sprite' });
+      globalThis.$jabsEngine.getTriggerTouchTargets = vi.fn(() => [ { id: 'victim' } ]);
+
+      // Act
+      action.checkTriggerTouchAndArm();
+
+      // Assert
+      expect(globalThis.$jabsEngine.getTriggerTouchTargets).not.toHaveBeenCalled();
       expect(action.isDelayCompleted()).toBe(false);
     });
 
@@ -1453,6 +1660,35 @@ describe('JABS_Action (direct src import)', () =>
       J.ABS.Metadata.HitboxPulse = savedMeta;
       vi.restoreAllMocks();
     });
+
+    it('holds the pulse open at its start values when fade animation is disabled', () =>
+    {
+      // Arrange- deliberately distinct start/end values on both axes. Only the fade-enabled arm
+      // was ever asserted, so a fade check stuck on "enabled" would have quietly given every
+      // sustained pulse a 30-frame life and faded it out, which is the opposite of sustained.
+      vi.spyOn(JABS_Engine, 'getMeleeVisualOriginPixelsFromCharacter')
+        .mockReturnValue({
+          x: 0,
+          y: 0,
+        });
+      const savedMeta = J.ABS.Metadata.HitboxPulse;
+      J.ABS.Metadata.HitboxPulse = {
+        useFadeAnimation: false, duration: 30, endAlpha: 0, scaleEnd: 2, startAlpha: 1, scaleStart: 1,
+      };
+      const action = buildAction();
+
+      // Act
+      const result = action.composeHitboxPulsePlainOptions();
+
+      // Assert
+      expect(result.duration).toBe(999999);
+      expect(result.endAlpha).toBe(1);
+      expect(result.scaleEnd).toBe(1);
+
+      // cleanup
+      J.ABS.Metadata.HitboxPulse = savedMeta;
+      vi.restoreAllMocks();
+    });
   });
 
   describe('postUpdate', () =>
@@ -1524,8 +1760,27 @@ describe('JABS_Action (direct src import)', () =>
 
     it('shouldBeginLingering is false before the minimum duration elapses', () =>
     {
-      const action = buildAction({ skill: buildSkill({ jabsDuration: 8 }) });
+      // Arrange- pierce is deliberately spent, which is on its own enough to justify lingering.
+      // With the fixture's untouched pierce count, neither half of the "or" below was satisfied
+      // and the age gate could be bypassed entirely without changing the answer.
+      const action = buildAction({ skill: buildSkill({ jabsDuration: 100, jabsPierceCount: 1 }) });
+      action.decrementPierceTimes(1);
 
+      // Act & Assert- too young to linger, no matter what the pierce counter says.
+      expect(action.shouldBeginLingering()).toBe(false);
+    });
+
+    it('shouldBeginLingering is false past the minimum duration while unexpired with pierce left', () =>
+    {
+      // Arrange- old enough to be considered, but neither justification applies.
+      const action = buildAction({ skill: buildSkill({ jabsDuration: 100, jabsPierceCount: 3 }) });
+      for (let i = 0; i < 9; i++)
+      {
+        action.countdownDuration();
+      }
+
+      // Act & Assert- every prior case answered true here, so a condition stuck on true would
+      // have retired every action the instant it cleared the minimum-duration floor.
       expect(action.shouldBeginLingering()).toBe(false);
     });
 
@@ -1572,6 +1827,10 @@ describe('JABS_Action (direct src import)', () =>
       action.updateLinger();
 
       expect(action.getCurrentLinger()).toBe(2);
+      // the counter advancing says nothing about the window check- a linger that cleaned up on
+      // frame one would still report 2 here, because cleanup does not stop the increment.
+      expect(action.getNeedsRemoval()).toBe(false);
+      expect(globalThis.$jabsEngine.clearActionEvents).not.toHaveBeenCalled();
     });
   });
 
@@ -1634,7 +1893,18 @@ describe('JABS_Action (direct src import)', () =>
 
     it('returns 0 proximity when the skill has no proximity tag', () =>
     {
-      expect(buildAction({ skill: buildSkill({ scope: 1, jabsProximity: null }) }).getProximity()).toBe(0);
+      // Arrange- a caster carrying a real range buff. With the fixture's all-zero buffs the
+      // modifier math returns 0 for an untagged skill anyway, so the untagged check could be
+      // skipped and an untagged skill would still report 0 by coincidence.
+      const gameBattler = buildGameBattler({ getRangeBuff: () => 4 });
+      const caster = buildCaster({ getBattler: () => gameBattler });
+      const untagged = buildAction({ caster, skill: buildSkill({ scope: 1, jabsProximity: null }) });
+      const tagged = buildAction({ caster, skill: buildSkill({ scope: 1, jabsProximity: 5 }) });
+
+      // Act & Assert- the tagged case anchors that the buff really is reaching the math, so the
+      // 0 below is a genuine "no requirement" rather than a do-nothing return.
+      expect(tagged.getProximity()).toBe(9);
+      expect(untagged.getProximity()).toBe(0);
     });
 
     it('applies proximity modifiers when the skill has a proximity tag', () =>

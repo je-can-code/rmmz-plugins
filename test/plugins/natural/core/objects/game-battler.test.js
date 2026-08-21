@@ -3,6 +3,7 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   installNaturalHostGlobals,
+  notetagNameOf,
   setPluginContextToJBase,
   setPluginContextToJNatural,
 } from '../../_component/fixtures/install-natural-host-globals.js';
@@ -241,15 +242,32 @@ describe('J-NaturalGrowth Game_Battler bonuses (direct src import)', () =>
   //endregion har
 
   //region regex lookups
+  /**
+   * Each of these three tables maps a parameter id onto the pair of notetags that parameter reads
+   * its buff from. Asserting the pair's identity rather than its length is what makes the mapping
+   * load-bearing: every case returns two elements, so a `case` that resolved to the neighbouring
+   * parameter's tags - silently buffing defense from an attack tag - would satisfy a length check
+   * exactly as well as the correct answer does.
+   */
   describe('regex lookups by parameter id', () =>
   {
-    it.each([ 0, 1, 2, 3, 4, 5, 6, 7 ])('resolves a buff regex pair for base param %i', (paramId) =>
+    it.each([
+      [ 0, 'mhpBuffPlus', 'mhpBuffRate' ],
+      [ 1, 'mmpBuffPlus', 'mmpBuffRate' ],
+      [ 2, 'atkBuffPlus', 'atkBuffRate' ],
+      [ 3, 'defBuffPlus', 'defBuffRate' ],
+      [ 4, 'matBuffPlus', 'matBuffRate' ],
+      [ 5, 'mdfBuffPlus', 'mdfBuffRate' ],
+      [ 6, 'agiBuffPlus', 'agiBuffRate' ],
+      [ 7, 'lukBuffPlus', 'lukBuffRate' ],
+    ])('resolves base param %i to the %s / %s tag pair', (paramId, plusTag, rateTag) =>
     {
       // Arrange & Act
-      const structures = battler.getRegexByParamId(paramId);
+      const [ plusStructure, rateStructure ] = battler.getRegexByParamId(paramId);
 
       // Assert
-      expect(structures.length).toBe(2);
+      expect(notetagNameOf(plusStructure)).toBe(plusTag);
+      expect(notetagNameOf(rateStructure)).toBe(rateTag);
     });
 
     it('resolves nothing for a base param id outside the eight', () =>
@@ -263,13 +281,25 @@ describe('J-NaturalGrowth Game_Battler bonuses (direct src import)', () =>
       expect(structures).toBeNull();
     });
 
-    it.each([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ])('resolves a buff regex pair for ex-param %i', (paramId) =>
+    it.each([
+      [ 0, 'hitBuffPlus', 'hitBuffRate' ],
+      [ 1, 'evaBuffPlus', 'evaBuffRate' ],
+      [ 2, 'criBuffPlus', 'criBuffRate' ],
+      [ 3, 'cevBuffPlus', 'cevBuffRate' ],
+      [ 4, 'mevBuffPlus', 'mevBuffRate' ],
+      [ 5, 'mrfBuffPlus', 'mrfBuffRate' ],
+      [ 6, 'cntBuffPlus', 'cntBuffRate' ],
+      [ 7, 'hrgBuffPlus', 'hrgBuffRate' ],
+      [ 8, 'mrgBuffPlus', 'mrgBuffRate' ],
+      [ 9, 'trgBuffPlus', 'trgBuffRate' ],
+    ])('resolves ex-param %i to the %s / %s tag pair', (paramId, plusTag, rateTag) =>
     {
       // Arrange & Act
-      const structures = battler.getRegexByExParamId(paramId);
+      const [ plusStructure, rateStructure ] = battler.getRegexByExParamId(paramId);
 
       // Assert
-      expect(structures.length).toBe(2);
+      expect(notetagNameOf(plusStructure)).toBe(plusTag);
+      expect(notetagNameOf(rateStructure)).toBe(rateTag);
     });
 
     it('resolves nothing for an ex-param id outside the ten', () =>
@@ -281,13 +311,25 @@ describe('J-NaturalGrowth Game_Battler bonuses (direct src import)', () =>
       expect(structures).toBeNull();
     });
 
-    it.each([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ])('resolves a buff regex pair for sp-param %i', (paramId) =>
+    it.each([
+      [ 0, 'tgrBuffPlus', 'tgrBuffRate' ],
+      [ 1, 'grdBuffPlus', 'grdBuffRate' ],
+      [ 2, 'recBuffPlus', 'recBuffRate' ],
+      [ 3, 'phaBuffPlus', 'phaBuffRate' ],
+      [ 4, 'mcrBuffPlus', 'mcrBuffRate' ],
+      [ 5, 'tcrBuffPlus', 'tcrBuffRate' ],
+      [ 6, 'pdrBuffPlus', 'pdrBuffRate' ],
+      [ 7, 'mdrBuffPlus', 'mdrBuffRate' ],
+      [ 8, 'fdrBuffPlus', 'fdrBuffRate' ],
+      [ 9, 'exrBuffPlus', 'exrBuffRate' ],
+    ])('resolves sp-param %i to the %s / %s tag pair', (paramId, plusTag, rateTag) =>
     {
       // Arrange & Act
-      const structures = battler.getRegexBySpParamId(paramId);
+      const [ plusStructure, rateStructure ] = battler.getRegexBySpParamId(paramId);
 
       // Assert
-      expect(structures.length).toBe(2);
+      expect(notetagNameOf(plusStructure)).toBe(plusTag);
+      expect(notetagNameOf(rateStructure)).toBe(rateTag);
     });
 
     it('resolves nothing for an sp-param id outside the ten', () =>

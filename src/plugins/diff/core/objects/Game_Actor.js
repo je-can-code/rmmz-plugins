@@ -18,8 +18,16 @@ Game_Actor.prototype.param = function(paramId)
   // determine the multiplier for the parameter according to the difficulty.
   const multiplier = appliedDifficulty.actorEffects.bparams[paramId] / 100;
 
-  // return the rounded product of the multiplier and the original value.
-  return Math.round(originalValue * multiplier);
+  // the rounded product of the multiplier and the original value.
+  const scaledValue = Math.round(originalValue * multiplier);
+
+  // the engine floors max hp at one, but it does so inside the original call - so scaling the
+  // result afterward steps straight back over that clamp. A difficulty authored with a zero max hp
+  // multiplier would otherwise produce a battler with no maximum hp at all, and every hp-over-mhp
+  // ratio in the game divides by it: gauges, ai health gates, anything reading a health fraction.
+  return (paramId === 0)
+    ? Math.max(1, scaledValue)
+    : scaledValue;
 };
 
 /**

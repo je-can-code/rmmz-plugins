@@ -177,9 +177,30 @@ describe('JuiceProfileResolver (unit, all downstream dependencies mocked)', () =
   {
     it('converts a tagged degree value to radians', () =>
     {
-      const action = buildAction({ getBaseSkill: () => ({ jabsJuiceStabTipDegrees: 180 }) });
+      // Arrange: ninety degrees rather than a hundred and eighty, deliberately. A tagged 180
+      // converts to pi, and the bash/recoil fallback this same call returns when the tag is
+      // ignored is 3.14159 - which toBeCloseTo cannot tell from pi at its default precision. The
+      // tag branch could be skipped entirely and the assertion still passed. A quarter turn
+      // collides with neither fallback.
+      const action = buildAction({ getBaseSkill: () => ({ jabsJuiceStabTipDegrees: 90 }) });
 
-      expect(JuiceProfileResolver.resolveJuiceWeaponTipRadians(action, 'bash')).toBeCloseTo(Math.PI);
+      // Act
+      const radians = JuiceProfileResolver.resolveJuiceWeaponTipRadians(action, 'bash');
+
+      // Assert
+      expect(radians).toBeCloseTo(1.5708, 4);
+    });
+
+    it('honours a tagged degree value over the stab-forward default', () =>
+    {
+      // Arrange: the tag wins for every motion, not only the ones with no default of their own.
+      const action = buildAction({ getBaseSkill: () => ({ jabsJuiceStabTipDegrees: 45 }) });
+
+      // Act
+      const radians = JuiceProfileResolver.resolveJuiceWeaponTipRadians(action, 'stab-forward');
+
+      // Assert
+      expect(radians).toBeCloseTo(0.7854, 4);
     });
 
     it('defaults to the stab tip angle for stab-forward when untagged', () =>
@@ -279,6 +300,49 @@ describe('JuiceProfileResolver (unit, all downstream dependencies mocked)', () =
         .toEqual(20);
     });
 
+    it('keeps using the mainhand for a mainhand skill while dual-wielding', () =>
+    {
+      // Arrange: the existing mainhand case equips a single weapon, so there is no offhand for the
+      // slot check to wrongly reach for and the check could be dropped unnoticed. With two weapons
+      // equipped the two branches finally disagree, and a dual-wielder swinging their mainhand must
+      // show the mainhand.
+      const mainhand = { iconIndex: 10 };
+      const offhand = { iconIndex: 20 };
+      const gb = buildGameBattler({ weapons: () => [ mainhand, offhand ] });
+
+      // Act
+      const iconIndex = JuiceProfileResolver.resolveWeaponIconIndex(
+        buildCaster(gb),
+        buildAction({ getCooldownType: () => 'Main' }));
+
+      // Assert
+      expect(iconIndex).toEqual(10);
+    });
+
+    it('keeps using the mainhand for a mainhand skill even when an armor is tagged for it', () =>
+    {
+      // Arrange: the orb-armor scan belongs to the single-weapon offhand path only. A mainhand
+      // swing must not pick up a shield's icon just because the shield happens to name the same
+      // skill, which is what reaching that path for a non-offhand slot would do.
+      const mainhand = { iconIndex: 10 };
+      const orbArmor = {
+        iconIndex: 40, jabsOffhandSkillId: 1, jabsSkillId: 0,
+      };
+      const gb = buildGameBattler({
+        weapons: () => [ mainhand ],
+        armors: () => [ orbArmor ],
+        isMainhandProvidedOffhandSkill: () => false,
+      });
+
+      // Act
+      const iconIndex = JuiceProfileResolver.resolveWeaponIconIndex(
+        buildCaster(gb),
+        buildAction({ getCooldownType: () => 'Main' }));
+
+      // Assert
+      expect(iconIndex).toEqual(10);
+    });
+
     it('uses the mainhand weapon for a single-weapon offhand skill routed through mainhand-provided path', () =>
     {
       const mainhand = { iconIndex: 30 };
@@ -338,6 +402,52 @@ describe('JuiceProfileResolver (unit, all downstream dependencies mocked)', () =
     {
       const armor = { iconIndex: 2, jabsOffhandSkillId: 0, jabsSkillId: 5 };
       expect(resolveViaOffhand([ armor ], [ null, null ])).toEqual(2);
+    });
+
+    it('walks past armor rows tagged for a different skill to reach the one executing', () =>
+    {
+      // Arrange: the two decoys are tagged, just not for skill 5 - one on each of the two tags the
+      // scan reads. They sit ahead of the real match on purpose. Every fixture in this block held a
+      // single armor that matched exactly, and with one candidate "matches the executing skill" and
+      // "matches any tagged armor at all" are the same program: the scan could have returned the
+      // first tagged row it saw and read as correct. Body armor routinely sorts ahead of the shield
+      // slot here, which is the whole reason this scan exists rather than just reading slot 1.
+      globalThis.DataManager.isArmor.mockReturnValue(false);
+      const decoyTaggedOffhand = {
+        iconIndex: 7, jabsOffhandSkillId: 8, jabsSkillId: 0,
+      };
+      const decoyTaggedMainhand = {
+        iconIndex: 8, jabsOffhandSkillId: 0, jabsSkillId: 9,
+      };
+      const realMatch = {
+        iconIndex: 1, jabsOffhandSkillId: 5, jabsSkillId: 0,
+      };
+
+      // Act
+      const iconIndex = resolveViaOffhand([ decoyTaggedOffhand, decoyTaggedMainhand, realMatch ], [ null, null ]);
+
+      // Assert
+      expect(iconIndex).toEqual(1);
+    });
+
+    it('prefers the offhand tag over a mainhand tag on a later row', () =>
+    {
+      // Arrange: two rows both answer to skill 5, one by each tag. The scan reads both tags per row
+      // before advancing, so the earlier row wins regardless of which tag matched - the order that
+      // matters is row order, not tag precedence across rows.
+      globalThis.DataManager.isArmor.mockReturnValue(false);
+      const mainhandTagged = {
+        iconIndex: 6, jabsOffhandSkillId: 0, jabsSkillId: 5,
+      };
+      const offhandTagged = {
+        iconIndex: 1, jabsOffhandSkillId: 5, jabsSkillId: 0,
+      };
+
+      // Act
+      const iconIndex = resolveViaOffhand([ mainhandTagged, offhandTagged ], [ null, null ]);
+
+      // Assert
+      expect(iconIndex).toEqual(6);
     });
 
     it('falls back to equip slot 1 when it is armor', () =>

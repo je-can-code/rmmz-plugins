@@ -181,6 +181,19 @@ describe('J-ABS-Pixelistics JABS_Battler angle math and idle wander (direct src 
       expect(direction).toBe(4);
     });
 
+    it('maps the negative half of the LEFT sector to LEFT', () =>
+    {
+      // Arrange- LEFT is the one sector that straddles the wrap point, so it is described by two
+      // separate comparisons rather than one range. Every other test in this block lands on the
+      // positive side of it; -170 is on the negative side, and without that half of the condition it
+      // falls past every remaining sector and comes back as the no-direction sentinel.
+      // Act
+      const direction = battler.angleToDirection(-170);
+
+      // Assert
+      expect(direction).toBe(4);
+    });
+
     it('resolves every dir8ToAngle output to the direction it came from', () =>
     {
       // Arrange- this is the contract that matters in play: the keyboard angle producer and this
@@ -463,6 +476,26 @@ describe('J-ABS-Pixelistics JABS_Battler angle math and idle wander (direct src 
       // Assert- the config is populated on demand and the resulting step count is a real number.
       expect(initConfigSpy).toHaveBeenCalled();
       expect(Number.isNaN(battler.__lastDodgeSteps)).toBe(false);
+
+      initConfigSpy.mockRestore();
+    });
+
+    it('leaves an already configured collision manager alone', () =>
+    {
+      // Arrange- the guard exists to make initialization happen once, not every dodge. Re-running it
+      // would rebuild collision configuration mid-combat, and because the rebuild lands on the same
+      // defaults the scaled step count would look correct while the work happened anyway. Only the
+      // call count can tell the two apart.
+      globalThis.PIXEL_CollisionManager.collisionStepCount = 4;
+      const initConfigSpy = vi.spyOn(globalThis.PIXEL_CollisionManager, 'initConfig');
+      const battler = new globalThis.JABS_Battler();
+
+      // Act
+      battler.setDodgeSteps(3);
+
+      // Assert- the scaling still happened, which is what proves the method ran at all.
+      expect(initConfigSpy).not.toHaveBeenCalled();
+      expect(battler.__lastDodgeSteps).toBe(12);
 
       initConfigSpy.mockRestore();
     });

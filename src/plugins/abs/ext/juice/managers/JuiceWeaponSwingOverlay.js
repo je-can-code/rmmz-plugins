@@ -33,7 +33,9 @@ class JuiceWeaponSwingOverlay
    */
   static #coalesceSpinCount(spinCount)
   {
-    if (spinCount === undefined || spinCount === null || Number.isFinite(spinCount) === false)
+    // an absent spin count arrives as undefined, which Number.isFinite already answers false for -
+    // as it does for null - so this one check covers absence and nonsense alike.
+    if (Number.isFinite(spinCount) === false)
     {
       return 1;
     }
@@ -153,7 +155,9 @@ class JuiceWeaponSwingOverlay
   )
   {
     let spanDeg = arcSpanDegrees;
-    if (spanDeg === undefined || spanDeg === null || Number.isFinite(spanDeg) === false)
+
+    // an unspecified span arrives as undefined, which Number.isFinite already answers false for.
+    if (Number.isFinite(spanDeg) === false)
     {
       spanDeg = 120;
     }
@@ -187,7 +191,9 @@ class JuiceWeaponSwingOverlay
     }
 
     let weaponTipResolved = weaponTipRadians;
-    if (weaponTipResolved === undefined || weaponTipResolved === null || Number.isFinite(weaponTipResolved) === false)
+
+    // an untagged weapon leaves this undefined, which Number.isFinite already answers false for.
+    if (Number.isFinite(weaponTipResolved) === false)
     {
       weaponTipResolved = JuiceWeaponSwingMotionEffect.StabIconTipAngleRadians;
     }

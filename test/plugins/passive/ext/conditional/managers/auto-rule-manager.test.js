@@ -304,8 +304,30 @@ describe('AutoRuleManager (direct src import)', () =>
 
     it('does nothing when no battler is given', () =>
     {
-      // Arrange & Act & Assert- must not throw for a missing battler.
-      expect(() => FakeAutoApplyManager.scheduleSelfStateInflictedTriggers(undefined, 10)).not.toThrow();
+      // Arrange- every other reason this could bail has to be switched off first, or the guard
+      // under test proves nothing. ABS is live and state 10 exists, so the missing battler is the
+      // only thing left that can stop the walk. it also has to stop it: `collectRules` calls
+      // `getPassiveStateSources()` on whatever it is handed, so a battler that never arrives is a
+      // TypeError one frame later rather than a quiet miss.
+      globalThis.$jabsEngine = { absEnabled: true };
+      globalThis.$dataStates[10] = { isNegativeType: () => true };
+      const delegatedKinds = [];
+      const FakeDelegationRecordingManager = class extends AutoRuleManager
+      {
+        static get rulesProperty() { return 'fakeRules'; }
+
+        static dispatch() { return true; }
+
+        // records the condition kinds that reached the dispatch loop, which is the only thing an
+        // absent battler leaves observable.
+        static tryDispatch(_battler, conditionKind) { delegatedKinds.push(conditionKind); }
+      };
+
+      // Act
+      FakeDelegationRecordingManager.scheduleSelfStateInflictedTriggers(undefined, 10);
+
+      // Assert- not one condition kind was ever handed to the loop.
+      expect(delegatedKinds).toEqual([]);
     });
 
     it('does nothing when the inflicted state id has no database row', () =>
@@ -416,6 +438,27 @@ describe('AutoRuleManager (direct src import)', () =>
 
       // Act & Assert
       expect(() => FakeAutoApplyManager.creditTileStep(battler)).not.toThrow();
+    });
+
+    it('creditTileStep is a no-op when the engine exists but ABS is switched off', () =>
+    {
+      // Arrange- an absent engine and a disabled one are two different conditions, and only the
+      // absent one was ever on file. every other tile-credit path here runs with ABS live, so
+      // `absEnabled === false` had no fixture that could tell it apart from a constant false.
+      // the rule below is deliberately one step short of its threshold, so with the gate removed
+      // this exact arrangement dispatches- which is what the sibling test one describe down
+      // already demonstrates with ABS on.
+      globalThis.$jabsEngine = { absEnabled: false };
+      const battler = makeBattler([ makeSource(1, [ [ 1, 'move', 3 ] ]) ]);
+      battler.getAutoRuleTileCredit = vi.fn().mockReturnValue(2);
+      battler.setAutoRuleTileCredit = vi.fn();
+
+      // Act
+      FakeAutoApplyManager.creditTileStep(battler);
+
+      // Assert- no dispatch, and no credit written either.
+      expect(battler.dispatched).toEqual([]);
+      expect(battler.setAutoRuleTileCredit).not.toHaveBeenCalled();
     });
   });
 
@@ -568,6 +611,25 @@ describe('AutoRuleManager (direct src import)', () =>
       expect(battler.setAutoRuleLastFrame).toHaveBeenCalled();
     });
 
+    it('dispatches the very first time even when the session is younger than the cooldown', () =>
+    {
+      // Arrange- a rule that has never fired records frame 0, and `lastFrame > 0` is what stops the
+      // elapsed-frame arithmetic from being applied to it. every existing fixture ran at frame
+      // 1000 against cooldowns of 60, where "never fired" and "fired long ago" produce the same
+      // answer. thirty frames into a session, they do not: without the never-fired check a rule
+      // authored with a one-second cooldown would stay silent for its first second of play.
+      globalThis.Graphics.frameCount = 30;
+      const battler = makeBattler([ makeSource(1, [ [ 7, 'time', 60 ] ]) ]);
+      battler.getAutoRuleLastFrame = vi.fn().mockReturnValue(0);
+
+      // Act
+      FakeAutoApplyManager.tryDispatch(battler, 'time');
+
+      // Assert- it fires, and stamps the frame it fired on.
+      expect(battler.dispatched).toEqual([ 7 ]);
+      expect(battler.setAutoRuleLastFrame).toHaveBeenCalledWith(expect.any(String), 30);
+    });
+
     it('does not stamp the cooldown when dispatch itself reports failure', () =>
     {
       // Arrange
@@ -626,6 +688,24 @@ describe('AutoRuleManager (direct src import)', () =>
 
       // Assert
       expect(battler.dispatched).toEqual([]);
+    });
+
+    it('falls back to the default radius when the authored trigger radius is not a number', () =>
+    {
+      // Arrange- the fifth tuple position is optional, and the code treats "absent" and "garbage"
+      // identically by resolving both to null so the plugin default applies downstream. only the
+      // absent shape had a fixture, and absent already resolves to null on its own- so nothing
+      // distinguished the NaN check from a constant. an unparseable radius must not be forwarded
+      // as NaN, which `proximityTiles ?? default` would happily accept and hand to JABS.
+      const battler = makeBattler([ makeSource(1, [ [ 7, 'enemiesNearby', 1, 60, 'wide' ] ]) ]);
+      FakePassiveRuleJabsAccess.nearbyEnemies.mockReturnValue([ {} ]);
+
+      // Act
+      FakeAutoApplyManager.processEnemiesNearbyRules(battler);
+
+      // Assert- null is the "use the plugin default" signal; NaN is not.
+      expect(FakePassiveRuleJabsAccess.nearbyEnemies).toHaveBeenCalledWith(battler, null);
+      expect(battler.dispatched).toEqual([ 7 ]);
     });
 
     it('skips a proximity tuple with an invalid cooldown value', () =>

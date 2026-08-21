@@ -177,6 +177,27 @@ describe('Game_Follower ext/pixel augments (direct src import)', () =>
       expect(follower._realX).toEqual(3);
       expect(follower._realY).toEqual(4);
     });
+
+    it.each([
+      [ 'horizontal', 3, 0, 4, 4 ],
+      [ 'vertical', 3, 3, 4, 0 ],
+    ])('snaps render coordinates when only the %s axis has drifted', (_label, x, realX, y, realY) =>
+    {
+      // Arrange: the case above drifts both axes at once, so either half of the desync check could
+      // be forced false and the other half would still fire the snap. A follower trailing along a
+      // corridor drifts on one axis at a time, and a check that had lost one of its halves would
+      // leave that axis rendering at a stale coordinate while the follower walked on without it.
+      const follower = makeFollower(x, y, null);
+      follower._realX = realX;
+      follower._realY = realY;
+
+      // Act
+      follower.update();
+
+      // Assert
+      expect(follower._realX).toEqual(x);
+      expect(follower._realY).toEqual(y);
+    });
   });
 
   describe('isPixelTrainSuspended', () =>

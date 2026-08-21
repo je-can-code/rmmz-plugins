@@ -8,8 +8,6 @@ import {
   setPluginContextToJHudBoss,
 } from '../../../_component/fixtures/install-hud-host-globals.js';
 
-const BOSS_INIT_PATH = '../../../../../../src/plugins/hud/ext/boss/_metadata/initialization.js';
-
 describe('J-HUD-BossFrame metadata (direct src import)', () =>
 {
   beforeAll(async () =>
@@ -25,7 +23,7 @@ describe('J-HUD-BossFrame metadata (direct src import)', () =>
     await import('../../../../../../src/plugins/hud/core/_metadata/initialization.js');
 
     setPluginContextToJHudBoss();
-    await import(BOSS_INIT_PATH);
+    await import('../../../../../../src/plugins/hud/ext/boss/_metadata/initialization.js');
   });
 
   it('declares the aliased-method map for the hud manager it patches', () =>
@@ -57,7 +55,8 @@ describe('J-HUD-BossFrame metadata (direct src import)', () =>
       setPluginContextToJHudBoss();
 
       // Act & Assert
-      await expect(import(BOSS_INIT_PATH)).rejects.toThrow(/missing J-Base/);
+      await expect(import('../../../../../../src/plugins/hud/ext/boss/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-Base/);
 
       // restore the satisfying version so later tests in this file are unaffected.
       globalThis.J.BASE.Metadata.Version = originalVersion;
@@ -72,7 +71,8 @@ describe('J-HUD-BossFrame metadata (direct src import)', () =>
       setPluginContextToJHudBoss();
 
       // Act & Assert
-      await expect(import(BOSS_INIT_PATH)).rejects.toThrow(/missing J-HUD/);
+      await expect(import('../../../../../../src/plugins/hud/ext/boss/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-HUD/);
 
       // restore the real accessor rather than relying on restoreAllMocks.
       globalThis.J.HUD.Metadata.version.version = originalVersion;

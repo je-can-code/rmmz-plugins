@@ -356,6 +356,65 @@ describe('OverlayManager skill and state extension (direct src import)', () =>
       expect(base.damage.type).toBe(3);
     });
 
+    it('refuses the hp-drain upgrade when the base is not hp damage', () =>
+    {
+      // Arrange- the hp upgrade is a two-operand condition, and the base half of it needs its own
+      // case: with only "hp damage plus a drain overlay" on file, `baseSkill.damage.type === 1`
+      // could read as `true` and nothing would notice. a healing base with a drain overlay is the
+      // input that tells those two programs apart.
+      const base = buildSkill({ damage: { type: 3, critical: false, elementId: 0, variance: 20, formula: '0' } });
+      const overlay = buildSkill({ damage: { type: 5, critical: false, elementId: 0, variance: 20, formula: '0' } });
+
+      // Act
+      OverlayManager.extendDamage(base, overlay);
+
+      // Assert
+      expect(base.damage.type).toBe(3);
+    });
+
+    it('refuses the hp-drain upgrade when the overlay is not hp drain', () =>
+    {
+      // Arrange- the other half of that same condition. an hp-damage base paired with an overlay
+      // that is anything other than hp drain must be left alone, or the merger would quietly
+      // convert every extended attack into a lifesteal.
+      const base = buildSkill({ damage: { type: 1, critical: false, elementId: 0, variance: 20, formula: '0' } });
+      const overlay = buildSkill({ damage: { type: 3, critical: false, elementId: 0, variance: 20, formula: '0' } });
+
+      // Act
+      OverlayManager.extendDamage(base, overlay);
+
+      // Assert
+      expect(base.damage.type).toBe(1);
+    });
+
+    it('refuses the mp-drain upgrade when the base is not mp damage', () =>
+    {
+      // Arrange- the mp upgrade needs the same treatment as the hp one: without a non-mp base
+      // paired against an mp-drain overlay, `baseSkill.damage.type === 2` carries no weight.
+      const base = buildSkill({ damage: { type: 3, critical: false, elementId: 0, variance: 20, formula: '0' } });
+      const overlay = buildSkill({ damage: { type: 6, critical: false, elementId: 0, variance: 20, formula: '0' } });
+
+      // Act
+      OverlayManager.extendDamage(base, overlay);
+
+      // Assert
+      expect(base.damage.type).toBe(3);
+    });
+
+    it('refuses the mp-drain upgrade when the overlay is not mp drain', () =>
+    {
+      // Arrange- and the overlay half of the mp pair, so an mp-damage base extended by an unrelated
+      // overlay type keeps costing mp rather than draining it.
+      const base = buildSkill({ damage: { type: 2, critical: false, elementId: 0, variance: 20, formula: '0' } });
+      const overlay = buildSkill({ damage: { type: 3, critical: false, elementId: 0, variance: 20, formula: '0' } });
+
+      // Act
+      OverlayManager.extendDamage(base, overlay);
+
+      // Assert
+      expect(base.damage.type).toBe(2);
+    });
+
     it('leaves the damage type alone when both agree', () =>
     {
       // Arrange
@@ -504,6 +563,48 @@ describe('OverlayManager skill and state extension (direct src import)', () =>
       // Assert
       expect(base.effects).toEqual([
         { code: 11, dataId: 0, value1: 1 },
+        { code: 21, dataId: 4, value1: 1.0 },
+      ]);
+    });
+
+    it('does not let a non-add-state overlay effect claim ownership of a matching state id', () =>
+    {
+      // Arrange- effect codes and state ids share a numeric namespace by accident, so a recover-mp
+      // effect (code 11) can carry the same dataId as an add-state entry without meaning anything
+      // by it. every earlier fixture kept those ids apart, which made "collect the add-state
+      // effects" and "collect every effect" the same program. here the overlay's non-add-state
+      // entry collides with the base's add-state id, so mistaking one for the other would silently
+      // strip the state the base skill was authored to inflict.
+      const base = buildSkill({ effects: [ { code: 21, dataId: 4, value1: 0.5 } ] });
+      const overlay = buildSkill({ effects: [ { code: 11, dataId: 4, value1: 100 } ] });
+
+      // Act
+      OverlayManager.extendEffects(base, overlay);
+
+      // Assert- the base add-state survives untouched and the overlay effect is appended after it.
+      expect(base.effects).toEqual([
+        { code: 21, dataId: 4, value1: 0.5 },
+        { code: 11, dataId: 4, value1: 100 },
+      ]);
+    });
+
+    it('keeps a base non-add-state effect that happens to share the replaced state id', () =>
+    {
+      // Arrange- the strip pass is keyed on code first and dataId second. with the surviving base
+      // effect carrying an unrelated dataId, "keep everything that is not a superseded add-state"
+      // and "keep everything whose dataId is not superseded" behave identically. giving the base
+      // effect the very dataId being replaced is the near miss that separates them.
+      const base = buildSkill({
+        effects: [ { code: 11, dataId: 4, value1: 100 }, { code: 21, dataId: 4, value1: 0.5 } ],
+      });
+      const overlay = buildSkill({ effects: [ { code: 21, dataId: 4, value1: 1.0 } ] });
+
+      // Act
+      OverlayManager.extendEffects(base, overlay);
+
+      // Assert- only the superseded add-state is dropped; the code-11 sibling lives.
+      expect(base.effects).toEqual([
+        { code: 11, dataId: 4, value1: 100 },
         { code: 21, dataId: 4, value1: 1.0 },
       ]);
     });

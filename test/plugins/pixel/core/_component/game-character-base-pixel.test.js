@@ -126,6 +126,37 @@ describe('J-Pixelistics Game_CharacterBase pixel movement helpers (direct src im
     expect(ch._x).toBe(before);
   });
 
+  it.each([
+    [ 'through', ch => ch.setThrough(true) ],
+    [ 'debug-through', ch =>
+    {
+      ch.isDebugThrough = () => true;
+    } ],
+  ])('movePixelDistance keeps a %s move that lands on solid ground', (_label, enablePassage) =>
+  {
+    // Arrange: the post-move revert exists to undo a step that ended up inside terrain, and both
+    // passage flags are meant to bypass it - that is what walking through walls means. The revert
+    // case above leaves both flags off, so neither could be forced on without the outcome staying
+    // identical, and a revert that ignored them would strand a debugging playtester the instant
+    // they tried to walk into anything.
+    globalThis.$gameMap.isPassable = function()
+    {
+      return false;
+    };
+    globalThis.PIXEL_CollisionManager.setupCollision();
+    const ch = new globalThis.Game_CharacterBase();
+    ch.initMembers();
+    ch.relocate(0.5, 0.5);
+    enablePassage(ch);
+    const before = ch._x;
+
+    // Act
+    ch.movePixelDistance(globalThis.J.PIXEL.Directions.RIGHT, 0.2);
+
+    // Assert
+    expect(ch._x).toBeGreaterThan(before);
+  });
+
   it('stopPixelMoving syncs _realX/_realY to the logical tile position', () =>
   {
     // Arrange
@@ -644,6 +675,31 @@ describe('J-Pixelistics Game_CharacterBase pixel movement helpers (direct src im
       // Assert
       expect(ch._realX).toBe(2);
       expect(ch._realY).toBe(2);
+    });
+
+    it.each([
+      [ 'horizontal', 2, 0, 1, 1 ],
+      [ 'vertical', 1, 1, 2, 0 ],
+    ])('snaps render coordinates when only the %s axis has drifted', (_label, x, realX, y, realY) =>
+    {
+      // Arrange: the snapping case above drifts both axes at once, so either half of the
+      // desync test could be forced false and the other half would still fire the snap. Real
+      // drift is per-axis - a character that moved only horizontally has a matching y - and a
+      // check that had lost one of its halves would leave that axis rendering at a stale
+      // coordinate while the logical position moved on without it.
+      const ch = new globalThis.Game_CharacterBase();
+      ch.initMembers();
+      ch._x = x;
+      ch._y = y;
+      ch._realX = realX;
+      ch._realY = realY;
+
+      // Act
+      ch.update();
+
+      // Assert
+      expect(ch._realX).toBe(x);
+      expect(ch._realY).toBe(y);
     });
 
     it('clears the moved-this-frame flag after engine logic has run', () =>

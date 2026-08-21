@@ -154,6 +154,11 @@
  * so retuning an economy is done in the data editor rather than here.
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.1
+ *    Fixed a recipe carrying an SDP cost throwing when J-SDP is not installed.
+ *    The affordability check read the leader's panel points directly, while the
+ *    held-quantity method it duplicates guards that read and answers zero
+ *    without the plugin; it now defers to that method for every component type.
  * - 1.3.0
  *    Added the study shop - Scene_JaftingStudy, its two windows, and
  *    StudyPurchaseService - so recipes can be bought rather than only found.

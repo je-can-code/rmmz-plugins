@@ -7,10 +7,6 @@ import {
   setPluginContextToJHudQuest,
 } from '../../../_component/fixtures/install-hud-host-globals.js';
 
-const jBaseInitPath = '../../../../../../src/plugins/_base/core/_metadata/initialization.js';
-const questInitPath = '../../../../../../src/plugins/hud/ext/quest/_metadata/initialization.js';
-const pluginMetadataPath = '../../../../../../src/plugins/_base/core/models/PluginMetadata.js';
-
 describe('J-HUD-QuestFrame metadata (direct src import)', () =>
 {
   /** @type {object} the J umbrella as J-Base built it; J-Base's bootstrap is once-per-realm. */
@@ -21,7 +17,7 @@ describe('J-HUD-QuestFrame metadata (direct src import)', () =>
     installHudHostGlobals();
 
     setPluginContextToJBase();
-    await import(jBaseInitPath);
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     realJ = globalThis.J;
   });
@@ -42,7 +38,8 @@ describe('J-HUD-QuestFrame metadata (direct src import)', () =>
 
     // PluginMetadata's registry is a private static that throws on a duplicate name; re-importing the
     // class after the module reset hands each test a private, empty registry.
-    const { default: FreshPluginMetadata } = await import(pluginMetadataPath);
+    const { default: FreshPluginMetadata } = await import(
+      '../../../../../../src/plugins/_base/core/models/PluginMetadata.js');
     globalThis.PluginMetadata = FreshPluginMetadata;
 
     setPluginContextToJHudQuest();
@@ -53,7 +50,7 @@ describe('J-HUD-QuestFrame metadata (direct src import)', () =>
     it('initializes when both J-Base and J-HUD satisfy their required versions', async () =>
     {
       // Arrange & Act
-      await import(questInitPath);
+      await import('../../../../../../src/plugins/hud/ext/quest/_metadata/initialization.js');
 
       // Assert: the alias surface is declared after the version gate, so its presence is what
       // proves initialization ran all the way through rather than throwing partway.
@@ -67,7 +64,7 @@ describe('J-HUD-QuestFrame metadata (direct src import)', () =>
       globalThis.J.BASE.Metadata.Version = '1.0.0';
 
       // Act & Assert
-      await expect(import(questInitPath))
+      await expect(import('../../../../../../src/plugins/hud/ext/quest/_metadata/initialization.js'))
         .rejects.toThrow('Either missing J-Base or has a lower version than the required: 3.2.0');
     });
 
@@ -78,7 +75,7 @@ describe('J-HUD-QuestFrame metadata (direct src import)', () =>
       globalThis.J.HUD.Metadata.version.version = () => '1.0.0';
 
       // Act & Assert
-      await expect(import(questInitPath))
+      await expect(import('../../../../../../src/plugins/hud/ext/quest/_metadata/initialization.js'))
         .rejects.toThrow('Either missing J-HUD or has a lower version than the required: 2.0.0');
     });
 
@@ -88,7 +85,7 @@ describe('J-HUD-QuestFrame metadata (direct src import)', () =>
       const umbrellaBeforeImport = globalThis.J;
 
       // Act
-      await import(questInitPath);
+      await import('../../../../../../src/plugins/hud/ext/quest/_metadata/initialization.js');
 
       // Assert- the truthy side of `globalThis.J ||= {}` keeps every J plugin sharing one namespace.
       expect(globalThis.J).toBe(umbrellaBeforeImport);
@@ -101,7 +98,8 @@ describe('J-HUD-QuestFrame metadata (direct src import)', () =>
       delete globalThis.J;
 
       // Act & Assert
-      await expect(import(questInitPath)).rejects.toThrow(TypeError);
+      await expect(import('../../../../../../src/plugins/hud/ext/quest/_metadata/initialization.js'))
+        .rejects.toThrow(TypeError);
     });
   });
 
@@ -109,7 +107,7 @@ describe('J-HUD-QuestFrame metadata (direct src import)', () =>
   {
     beforeEach(async () =>
     {
-      await import(questInitPath);
+      await import('../../../../../../src/plugins/hud/ext/quest/_metadata/initialization.js');
     });
 
     it('creates an aliased-method map for every class the plugin patches', () =>
@@ -139,11 +137,12 @@ describe('J-HUD-QuestFrame metadata (direct src import)', () =>
       // Arrange- `J.HUD.EXT.QUEST ||= {}` lets a sibling file stake out the namespace first.
       vi.resetModules();
       globalThis.J.HUD.EXT.QUEST = { placedEarlier: true };
-      const { default: FreshPluginMetadata } = await import(pluginMetadataPath);
+      const { default: FreshPluginMetadata } = await import(
+        '../../../../../../src/plugins/_base/core/models/PluginMetadata.js');
       globalThis.PluginMetadata = FreshPluginMetadata;
 
       // Act
-      await import(questInitPath);
+      await import('../../../../../../src/plugins/hud/ext/quest/_metadata/initialization.js');
 
       // Assert
       expect(globalThis.J.HUD.EXT.QUEST.placedEarlier).toBe(true);

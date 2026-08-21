@@ -176,14 +176,60 @@ describe('JaftingSalvageManager (direct src import)', () =>
     {
       // Arrange- a dynamic row's key resolves to the *base* it was cloned from, so continuing past
       // here would read some other item's history and, worse, resize that stack's per-unit array to
-      // this instance's count on the way past.
+      // this instance's count on the way past. The base therefore has to actually own a stamped bag,
+      // or the guard and its absence answer null for the same uninteresting reason - nothing is there.
+      // The two counts differ so the resize damage is visible too: sizing only ever grows.
+      const baseWeapon = fakeDatum('w', 5);
+      $gameParty.setCount(baseWeapon, 1);
+      const baseStamp = new JaftingSalvageLedgerSnapshot([ new JaftingSalvageLedgerRow('i', 7, 1) ]);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(baseWeapon, baseStamp, 1);
+
       const datum = fakeDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty.setCount(datum, 4);
 
       // Act
       const ledger = JaftingSalvageManager.getLedgerForDatum(datum);
 
       // Assert
       expect(ledger).toBe(null);
+      expect($gameParty._j._jafting._salvageLedgers['w:5'].unitLedgers).toHaveLength(1);
+    });
+
+    it('sizes an existing bag up to the copies the party now holds', () =>
+    {
+      // Arrange: reading a ledger is also the moment the bag gets reconciled with the stack it shadows, which
+      // is what keeps a copy acquired since the last stamp from having nowhere to record its own provenance.
+      // Skipping that reconciliation returns the very same bag object, so only the array length tells them apart.
+      const datum = fakeDatum('i', 1);
+      $gameParty.setCount(datum, 1);
+      const stamp = new JaftingSalvageLedgerSnapshot([ new JaftingSalvageLedgerRow('i', 7, 1) ]);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, stamp, 1);
+      $gameParty.setCount(datum, 3);
+
+      // Act
+      JaftingSalvageManager.getLedgerForDatum(datum);
+
+      // Assert
+      expect($gameParty._j._jafting._salvageLedgers['i:1'].unitLedgers).toHaveLength(3);
+    });
+
+    it('answers nothing for a bag that exists but records no lineage', () =>
+    {
+      // Arrange: an existing bag and a *useful* existing bag are different things. A stack whose copies were all
+      // bought rather than crafted still has a bag hanging around between sweeps, and handing it back would put
+      // the row in the salvage list promising a dismantle that pays nothing.
+      const datum = fakeDatum('i', 1);
+      $gameParty.setCount(datum, 1);
+      const bag = new JaftingSalvagePartyLedgerBag();
+      bag.unitLedgers = [ null ];
+      $gameParty._j._jafting._salvageLedgers['i:1'] = bag;
+
+      // Act
+      const ledger = JaftingSalvageManager.getLedgerForDatum(datum);
+
+      // Assert: null despite the bag still being on file, which is what proves the lookup reached it.
+      expect(ledger).toBe(null);
+      expect($gameParty._j._jafting._salvageLedgers['i:1']).toBe(bag);
     });
 
     it('appendStampedUnitsToPartyStack stamps the tail of the stack (LIFO) with the incoming ledger', () =>
@@ -254,6 +300,28 @@ describe('JaftingSalvageManager (direct src import)', () =>
       JaftingSalvageManager.clearLedgerForDatum(stackDatum);
 
       expect($gameParty._j._jafting._salvageLedgers['i:1']).toBeUndefined();
+    });
+
+    it('leaves the base stack\'s bag alone when a dynamic clone of it is cleared', () =>
+    {
+      // Arrange: discarding the last refined Iron Sword must not strip the salvage stamp off the ordinary Iron
+      // Swords. The refined instance reports base id 5 forever, so its container key names the base's bag, and
+      // the only thing standing between "clear this instance" and "delete somebody else's history" is the
+      // instance-slot check. The base has to own a real bag or there is nothing for the mutant to destroy.
+      const baseWeapon = fakeDatum('w', 5);
+      $gameParty.setCount(baseWeapon, 1);
+      const baseStamp = new JaftingSalvageLedgerSnapshot([ new JaftingSalvageLedgerRow('i', 7, 1) ]);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(baseWeapon, baseStamp, 1);
+
+      const refined = fakeDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      refined._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot([ new JaftingSalvageLedgerRow('i', 8, 1) ]);
+
+      // Act
+      JaftingSalvageManager.clearLedgerForDatum(refined);
+
+      // Assert: the instance's own stamp is gone, and the base stack's is untouched.
+      expect(refined._jaftingSalvageLedger).toBe(null);
+      expect($gameParty._j._jafting._salvageLedgers['w:5'].rows[0].id).toBe(7);
     });
 
     it('deletes a keyed bag once both merged rows and every unit slot are empty', () =>
@@ -378,6 +446,46 @@ describe('JaftingSalvageManager (direct src import)', () =>
       const bag = $gameParty._j._jafting._salvageLedgers['i:2'];
       expect(bag.rows[0]).toMatchObject({ t: 'i', id: 1, n: 3 });
     });
+
+    it('stamps only the outputs that are database rows, leaving gold and points alone', () =>
+    {
+      // Arrange: a recipe can pay out gold or panel points alongside gear, and those have no datastore row to
+      // hang a dismantle history on. Asking such a component for an item anyway is not an error - it answers
+      // with whatever it happens to hold - so the wrong output silently acquires a bag of its own. The gear
+      // output is the near-miss that has to keep its stamp, which is what makes the key list an exact pin
+      // rather than a claim that the loop did nothing at all.
+      const currencyDatum = fakeDatum('i', 3);
+      const gearDatum = fakeDatum('i', 2);
+      $gameParty.setCount(gearDatum, 1);
+
+      const ingredientComponent = {
+        isDatabaseEntry: () => true,
+        isGold: () => false,
+        isSdp: () => false,
+        isWeapon: () => false,
+        isArmor: () => false,
+        getItem: () => ({ id: 1 }),
+        quantity: () => 1,
+      };
+      const currencyOutput = {
+        isDatabaseEntry: () => false,
+        getItem: () => currencyDatum,
+        quantity: () => 1,
+      };
+      const gearOutput = {
+        isDatabaseEntry: () => true,
+        getItem: () => gearDatum,
+        quantity: () => 1,
+      };
+
+      const recipe = { ingredients: [ ingredientComponent ], outputs: [ currencyOutput, gearOutput ] };
+
+      // Act
+      JaftingSalvageManager.applyCraftRecipeOutputs(recipe);
+
+      // Assert
+      expect(Object.keys($gameParty._j._jafting._salvageLedgers)).toEqual([ 'i:2' ]);
+    });
   });
 
   describe('refinementMaterialHasNoRecoverableRows / buildRefinementOutputLedger', () =>
@@ -454,6 +562,41 @@ describe('JaftingSalvageManager (direct src import)', () =>
 
       expect(JaftingSalvageManager.datumHasSalvageLedger(datum)).toBe(true);
       expect(JaftingSalvageManager.visibleExpandedRefundRowCount(datum)).toBe(1);
+    });
+
+    it('is false for a stamp that survives storage but expands to nothing', () =>
+    {
+      // Arrange: a stamp naming a vendor shell is real history and stays on file for the UI, but expansion drops
+      // it because vendor equipment refunds nothing. The candidate list is filtered on this answer, so counting
+      // the *stored* rows instead of the expanded ones would offer the player a dismantle that pays out nothing.
+      // Row 999 has no datastore entry, which is exactly how expansion drops a row.
+      const datum = fakeDatum('w', 71);
+      datum._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot([
+        new JaftingSalvageLedgerRow('w', 999, 1),
+      ]);
+
+      // Act
+      const hasLedger = JaftingSalvageManager.datumHasSalvageLedger(datum);
+
+      // Assert: the raw stamp is still readable, which is what proves expansion is what emptied it.
+      expect(hasLedger).toBe(false);
+      expect(JaftingSalvageManager.getLedgerForDatum(datum).rows).toHaveLength(1);
+    });
+
+    it('expands an empty stamp to nothing at all rather than to an empty snapshot', () =>
+    {
+      // Arrange: every caller downstream tests the snapshot for absence before reading it, so a hollow snapshot
+      // and no snapshot are meant to be the same answer. Handing back the hollow one instead makes the two
+      // spellings drift apart, and the next caller written against this method inherits the difference.
+      const datum = fakeDatum('w', 72);
+      datum._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot([]);
+
+      // Act
+      const expanded = JaftingSalvageManager.getSalvageLedgerSnapshotExpanded(datum);
+
+      // Assert: the stamp itself is found, so the null is the emptiness rule rather than a missing ledger.
+      expect(expanded).toBe(null);
+      expect(JaftingSalvageManager.getLedgerForDatum(datum)).toBe(datum._jaftingSalvageLedger);
     });
   });
 
@@ -670,6 +813,75 @@ describe('JaftingSalvageManager (direct src import)', () =>
       expect($gameParty._j._jafting._salvageLedgers['i:32'].unitLedgers[0].rows[0].id).toBe(70);
     });
 
+    it('executeSalvage pays past an unstamped copy caught up in the same dismantle', () =>
+    {
+      // Arrange: a stack mixes crafted copies with ones bought from a shop, which is the whole reason the
+      // per-copy array is allowed to hold nulls. Dismantling the pair takes both, and the unstamped one has to
+      // be dropped before anything tries to read rows off it. Stamping only the tail leaves slot zero empty.
+      const dish = fakeDatum('i', 40);
+      $dataItems[40] = dish;
+      $dataItems[77] = fakeDatum('i', 77);
+      $gameParty.setCount(dish, 2);
+      const perCopy = new JaftingSalvageLedgerSnapshot([ new JaftingSalvageLedgerRow('i', 77, 2) ]);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(dish, perCopy, 1);
+
+      const gained = [];
+      $gameParty.gainItem = (d, n) => gained.push([ d.id, n ]);
+      $gameParty.loseItem = () => {};
+
+      // Act
+      const result = JaftingSalvageManager.executeSalvage(dish, 2);
+
+      // Assert: only the stamped copy contributed, halved and rounded up.
+      expect(result).toBe(true);
+      expect(gained).toEqual([ [ 77, 1 ] ]);
+    });
+
+    it('executeSalvage keeps a banned row banned all the way through the halving', () =>
+    {
+      // Arrange: the ban rides on the row, and the payout loop is the only thing that reads it - so a halving
+      // step that rebuilt the row without the flag would hand back a material the recipe deliberately marked
+      // unrefundable, and nothing else downstream would object. The refundable sibling has to survive, or
+      // "keeps the flag" and "refunds nothing" would look the same.
+      const dish = fakeDatum('i', 41);
+      $dataItems[41] = dish;
+      $dataItems[77] = fakeDatum('i', 77);
+      $dataItems[88] = fakeDatum('i', 88);
+      $gameParty.setCount(dish, 1);
+      const perCopy = new JaftingSalvageLedgerSnapshot([
+        new JaftingSalvageLedgerRow('i', 77, 2),
+        new JaftingSalvageLedgerRow('i', 88, 2, true),
+      ]);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(dish, perCopy, 1);
+
+      const gained = [];
+      $gameParty.gainItem = (d, n) => gained.push([ d.id, n ]);
+      $gameParty.loseItem = () => {};
+
+      // Act
+      JaftingSalvageManager.executeSalvage(dish, 1);
+
+      // Assert
+      expect(gained).toEqual([ [ 77, 1 ] ]);
+    });
+
+    it('executeSalvage declines an unstamped row the party genuinely holds', () =>
+    {
+      // Arrange: the stock check is what turned the earlier no-ledger case away, because that fixture held no
+      // copies either - so the ledger check itself was never the reason for the refusal. Holding a copy disables
+      // that backstop and leaves the missing stamp as the only thing that can stop the dismantle. Without it the
+      // payout walks straight into a bag that was never created.
+      const datum = fakeDatum('i', 42);
+      $dataItems[42] = datum;
+      $gameParty.setCount(datum, 1);
+
+      // Act
+      const result = JaftingSalvageManager.executeSalvage(datum, 1);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
     it('executeSalvage returns false when there is no ledger, no expanded rows, non-positive amount, or too few in stock', () =>
     {
       const noLedgerDatum = fakeDatum('i', 70);
@@ -718,6 +930,28 @@ describe('JaftingSalvageManager (direct src import)', () =>
 
       // inner row (3 per unit) scaled by the outer stack count (2) = 6.
       expect(expanded).toEqual([ new JaftingSalvageLedgerRow('i', 1, 6) ]);
+    });
+
+    it('carries a nested row\'s banned flag out through the scaling', () =>
+    {
+      // Arrange: banned lineage is recorded so the UI can dim it, and dropping the flag on the way out of a
+      // nested ledger turns a deliberately unrefundable material into a refundable one - the flag is the only
+      // thing the payout loop consults. The unbanned sibling in the same nested ledger is what stops "keeps the
+      // flag" and "flags everything" from looking alike.
+      $dataWeapons[100] = fakeDatum('w', 100);
+      $dataWeapons[100]._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot([
+        new JaftingSalvageLedgerRow('i', 1, 3),
+        new JaftingSalvageLedgerRow('i', 2, 1, true),
+      ]);
+
+      const rows = [ new JaftingSalvageLedgerRow('w', 100, 2) ];
+
+      // Act
+      const expanded = JaftingSalvageManager.expandWeaponArmorRowsForSalvage(rows, {});
+
+      // Assert
+      expect(expanded.find(row => row.id === 2).banned).toBe(true);
+      expect(expanded.find(row => row.id === 1).banned).toBeUndefined();
     });
 
     it('breaks self-referential cycles via the visited map instead of recursing forever', () =>

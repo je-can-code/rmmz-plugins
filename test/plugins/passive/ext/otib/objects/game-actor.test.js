@@ -142,6 +142,24 @@ describe('Game_Actor ext/otib augments (direct src import)', () =>
       // Assert
       expect(result).toEqual(false);
     });
+
+    it('is false when the only unlock on file belongs to a different item', () =>
+    {
+      // Arrange: the case above searches an empty list, where the answer is false whatever the
+      // match rule says - so the rule itself was never read. An unlock for a neighbouring item is
+      // what separates "this item is unlocked" from "anything at all is unlocked", and getting
+      // that wrong would hand the player every one-time bonus off the back of a single unrelated
+      // consumable.
+      const actor = new Game_Actor();
+      actor.initMembers();
+      actor.addOtibUnlock(new FakeOtibUnlockRecord(7, [ 5 ]));
+
+      // Act
+      const result = actor.isOtibUnlocked(3);
+
+      // Assert
+      expect(result).toEqual(false);
+    });
   });
 
   describe('handleOtibUnlock', () =>

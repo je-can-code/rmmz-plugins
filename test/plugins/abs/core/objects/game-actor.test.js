@@ -33,9 +33,9 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
           ConfigAutoAssignSkills: /configAutoAssignSkills/i,
           NoAutoAssign: /noAutoAssign/i,
           UpgradeOnlySkill: /upgradeOnlySkill/i,
+          BlacklistAutoAssignSkillType: /noAutoAssignType/i,
         },
       },
-      PASSIVE: { RegExp: { EquippedPassiveStateIds: /equippedPassiveStateIds/i } },
     };
 
     globalThis.RPGManager = {
@@ -354,8 +354,16 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
   {
     it('returns 0 when two-handed and the mainhand does not declare an offhand skill', () =>
     {
-      const actor = buildActor({ isEquipTypeSealed: () => true, equips: () => [ {} ] });
+      // Arrange- the offhand equip genuinely grants a skill, which the sibling dual-wield case
+      // below resolves to 12. Without it, the "no base offhand skill" gate further down returned 0
+      // on its own and the entire seal check could be bypassed with nothing noticing.
+      const actor = buildActor({
+        isEquipTypeSealed: () => true,
+        isDualWield: () => false,
+        equips: () => [ {}, { jabsSkillId: 12 } ],
+      });
 
+      // Act & Assert
       expect(actor.getOffhandSkill()).toEqual(0);
     });
 
@@ -477,8 +485,15 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
 
     it('returns true on a direct match against the mainhand-provided skill', () =>
     {
-      const actor = buildActor({ equips: () => [ { jabsOffhandSkillId: 5 } ] });
+      // Arrange- a live transform sends 5 somewhere else on purpose. With the fixture's identity
+      // resolver the transformed-match arm right below answers true for the same input, so the
+      // direct-match comparison could be skipped entirely and this still passed.
+      const actor = buildActor({
+        equips: () => [ { jabsOffhandSkillId: 5 } ],
+        resolveEquippedSkillId: (id) => (id === 5 ? 55 : id),
+      });
 
+      // Act & Assert
       expect(actor.isMainhandProvidedOffhandSkill(5)).toEqual(true);
     });
 
@@ -636,6 +651,55 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
       expect(ids).toEqual([ 1, 4, 3 ]);
       expect(actor.isOffhandSkillAssignable(1)).toEqual(true);
       expect(actor.isOffhandSkillAssignable(99)).toEqual(false);
+    });
+
+    it('omits both equip-provided sources from the pool when neither hand grants a skill', () =>
+    {
+      // Arrange- every prior case had both hands granting a real skill id, so the truthiness half
+      // of each push gate was only ever satisfied. Bare hands report 0 from both accessors, and a
+      // gate that always opened would seed the pinning pool with a pair of unusable zeroes.
+      const actor = buildActor({
+        skills: () => [ { id: 1, offhandEligible: true } ],
+        equips: () => [ null, null ],
+      });
+
+      // Act
+      const ids = actor.buildOffhandAssignableSkillIds();
+
+      // Assert
+      expect(ids).toEqual([ 1 ]);
+    });
+
+    it('does not re-add the offhand-equipped skill that is already an eligible learned skill', () =>
+    {
+      // Arrange- the same id arrives from two sources. The dedupe half of the push gate had never
+      // been made to answer "already present", so an always-open gate would list 5 twice.
+      const actor = buildActor({
+        skills: () => [ { id: 5, offhandEligible: true } ],
+        equips: () => [ null, { jabsSkillId: 5 } ],
+      });
+
+      // Act
+      const ids = actor.buildOffhandAssignableSkillIds();
+
+      // Assert
+      expect(ids).toEqual([ 5 ]);
+    });
+
+    it('does not re-add the mainhand-provided skill that is already an eligible learned skill', () =>
+    {
+      // Arrange- the mainhand's push gate carries its own dedupe half, independent of the offhand
+      // one above, and it had the same untested arm.
+      const actor = buildActor({
+        skills: () => [ { id: 7, offhandEligible: true } ],
+        equips: () => [ { jabsOffhandSkillId: 7 }, null ],
+      });
+
+      // Act
+      const ids = actor.buildOffhandAssignableSkillIds();
+
+      // Assert
+      expect(ids).toEqual([ 7 ]);
     });
   });
 
@@ -1221,16 +1285,25 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
   {
     it('returns false when auto-upgrade is disallowed', () =>
     {
+      // Arrange- the slot-targeting gate at the end of the chain is armed to pass (the new skill
+      // names slot 1 as its upgrade target). Left at the fixture default of null it answered false
+      // by itself, so this case passed with the config gate deleted.
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(1);
       const actor = buildActor();
 
+      // Act & Assert
       expect(actor.canUpgradeSkill({ id: 1 }, 2)).toEqual(false);
     });
 
     it('returns false when the current skill blocks auto-upgrade', () =>
     {
+      // Arrange- same treatment: with the slot-targeting gate armed, only the per-skill block tag
+      // can still be what refuses this upgrade.
       globalThis.RPGManager.checkForBooleanFromNoteByRegex.mockReturnValueOnce(true).mockReturnValueOnce(true);
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(1);
       const actor = buildActor();
 
+      // Act & Assert
       expect(actor.canUpgradeSkill({ id: 1 }, 2)).toEqual(false);
     });
 
@@ -1323,6 +1396,87 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
       expect(actor.setEquippedSkill).not.toHaveBeenCalled();
     });
 
+    /**
+     * Arranges an actor for whom every auto-assign gate except one is deliberately open, so a
+     * refusal can only be attributed to the gate a caller chooses to close.<br/>
+     * The three tag-driven gates share one mocked predicate, hence routing by regex identity: the
+     * config gate answers true and the block/upgrade-only gates answer false.
+     * @param {object} [overrides] Actor stub overrides for the gate under test.
+     * @returns {object} A stubbed Game_Actor instance.
+     */
+    function buildAutoAssignReadyActor(overrides = {})
+    {
+      globalThis.RPGManager.checkForBooleanFromNoteByRegex
+        .mockImplementation((_object, regex) => regex === globalThis.J.ABS.RegExp.ConfigAutoAssignSkills);
+
+      return buildActor({
+        getEmptySecondarySkills: () => [ { key: 'combat-2' } ],
+        skill: () => ({ stypeId: 1 }),
+        ...overrides,
+      });
+    }
+
+    it('permits auto-assign when every gate is open', () =>
+    {
+      // Arrange- the unflipped baseline the three refusal cases below are measured against.
+      const actor = buildAutoAssignReadyActor();
+
+      // Act & Assert
+      expect(actor.canAutoAssignSkillOnLevelup(5)).toEqual(true);
+    });
+
+    it('refuses auto-assign purely on the config tag being absent', () =>
+    {
+      // Arrange- an empty slot exists and the skill is clean, so the downstream gates that used to
+      // do this refusal's work on their own are all open. Only the config tag is closed.
+      globalThis.RPGManager.checkForBooleanFromNoteByRegex.mockReset().mockReturnValue(false);
+      const actor = buildActor({
+        getEmptySecondarySkills: () => [ { key: 'combat-2' } ],
+        skill: () => ({ stypeId: 1 }),
+      });
+
+      // Act & Assert
+      expect(actor.canAutoAssignSkillOnLevelup(5)).toEqual(false);
+    });
+
+    it('refuses auto-assign purely because this skill already occupies a combat slot', () =>
+    {
+      // Arrange- slot 4 is a near-miss sibling that must survive the scan; with only the matching
+      // slot present, "holds this skill" and "holds anything" would be the same program.
+      const actor = buildAutoAssignReadyActor({
+        getSkillSlotManager: () => buildSkillSlotManager({
+          getAllSecondarySlots: () => [ { id: 4 }, { id: 5 } ],
+        }),
+      });
+
+      // Act & Assert
+      expect(actor.canAutoAssignSkillOnLevelup(5)).toEqual(false);
+    });
+
+    it('permits auto-assign when the combat slots hold other skills but not this one', () =>
+    {
+      // Arrange- the mirror of the case above: occupied slots that do not match must not be read
+      // as "already equipped", which is what an always-matching comparison would do.
+      const actor = buildAutoAssignReadyActor({
+        getSkillSlotManager: () => buildSkillSlotManager({
+          getAllSecondarySlots: () => [ { id: 4 }, { id: 6 } ],
+        }),
+      });
+
+      // Act & Assert
+      expect(actor.canAutoAssignSkillOnLevelup(5)).toEqual(true);
+    });
+
+    it('refuses auto-assign purely because no secondary slot is empty', () =>
+    {
+      // Arrange- the existing "no empty slots" case above left the skill data at the fixture's
+      // null, which tripped the block-tag gate instead; real skill data removes that backstop.
+      const actor = buildAutoAssignReadyActor({ getEmptySecondarySkills: () => [] });
+
+      // Act & Assert
+      expect(actor.canAutoAssignSkillOnLevelup(5)).toEqual(false);
+    });
+
     it('assigns into the first empty secondary slot when every gate passes', () =>
     {
       // only the "auto-assign enabled" config gate should pass- the block/upgrade-only gates
@@ -1372,18 +1526,29 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
 
     it('does not assign a skill whose type is blacklisted', () =>
     {
+      // Arrange: the blacklist is read off a notetag, and the tag it reads has to be pinned rather
+      // than assumed. Returning the same ids for every regex asked about cannot tell the intended
+      // tag from any other one, which is how this gate spent its life reading a tag belonging to a
+      // different plugin entirely while still refusing the assignment for the wrong reason.
       globalThis.RPGManager.checkForBooleanFromNoteByRegex
         .mockImplementation((_object, regex) => regex === globalThis.J.ABS.RegExp.ConfigAutoAssignSkills);
-      globalThis.RPGManager.getNumbersFromNoteByRegex.mockReturnValue([ 1 ]);
+      globalThis.RPGManager.getNumbersFromNoteByRegex
+        .mockImplementation((_object, regex) => (regex === globalThis.J.ABS.RegExp.BlacklistAutoAssignSkillType)
+          ? [ 1 ]
+          : []);
       const actor = buildActor({
         getEmptySecondarySkills: () => [ { key: 'combat-2' } ],
         getAllNotes: () => [ {} ],
         skill: () => ({ stypeId: 1 }),
       });
 
+      // Act
       actor.autoAssignSkillIfRequired(5);
 
+      // Assert
       expect(actor.setEquippedSkill).not.toHaveBeenCalled();
+      expect(globalThis.RPGManager.getNumbersFromNoteByRegex)
+        .toHaveBeenCalledWith(expect.anything(), globalThis.J.ABS.RegExp.BlacklistAutoAssignSkillType);
     });
   });
 
@@ -1462,20 +1627,39 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
 
   describe('turnEndOnMap()', () =>
   {
+    // Whether the original ran is the entire behaviour of this override, and both cases below used
+    // to assert only that nothing threw - which is true of a body that does nothing at all, and is
+    // why the guard sat inverted without a test noticing. Watch the aliased original instead.
     it('does nothing while JABS is enabled', () =>
     {
+      // Arrange: JABS runs regeneration and poison on its own clock, so letting the built-in
+      // turn-end pass run as well would apply both.
       globalThis.$jabsEngine.absEnabled = true;
+      const original = vi.fn();
+      globalThis.J.ABS.Aliased.Game_Actor.set('turnEndOnMap', original);
       const actor = buildActor();
 
-      expect(() => actor.turnEndOnMap()).not.toThrow();
+      // Act
+      actor.turnEndOnMap();
+
+      // Assert
+      expect(original).not.toHaveBeenCalled();
     });
 
     it('falls through to the original logic when JABS is disabled', () =>
     {
+      // Arrange: with JABS off nothing else is applying regeneration or poison, so the built-in
+      // pass has to run or an actor gets no turn-end effects at all.
       globalThis.$jabsEngine.absEnabled = false;
+      const original = vi.fn();
+      globalThis.J.ABS.Aliased.Game_Actor.set('turnEndOnMap', original);
       const actor = buildActor();
 
-      expect(() => actor.turnEndOnMap()).not.toThrow();
+      // Act
+      actor.turnEndOnMap();
+
+      // Assert
+      expect(original).toHaveBeenCalled();
     });
   });
   //endregion map effects

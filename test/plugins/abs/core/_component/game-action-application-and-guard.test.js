@@ -549,15 +549,25 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
 
     it('returns the original damage unchanged when neither parrying nor guarding', () =>
     {
-      // Arrange
+      // Arrange- the guard reduction is deliberately non-zero. With the fixture's default of 0%
+      // this battler would come back out of the guard branch holding exactly 100 anyway, so an
+      // unconditional "yes, guarding" was indistinguishable from falling through to the return.
       const action = buildAction();
-      const jabsBattler = buildJabsBattler();
+      const gainTp = vi.fn();
+      const jabsBattler = buildJabsBattler({
+        percGuardReduction: () => -50,
+        getBattler: () => ({
+          gainTp,
+          result: () => ({ reduced: 0 }),
+        }),
+      });
 
       // Act
       const result = action.handleGuardEffects(100, jabsBattler);
 
-      // Assert
+      // Assert- the untouched damage, plus proof the guard side effect never fired.
       expect(result).toBe(100);
+      expect(gainTp).not.toHaveBeenCalled();
     });
 
     describe('processParry / onParry', () =>
@@ -583,10 +593,16 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
 
       it('grants 10x the guard skill\'s tp and skips the parry animation when disabled (id 0)', () =>
       {
-        // Arrange
+        // Arrange- the character stub carries a stable spy rather than the fixture's default of a
+        // fresh vi.fn() per getCharacter() call. Nothing could observe that throwaway spy, so a
+        // parry that ignored the disabled-animation gate and requested animation 0 read as a pass.
         const action = buildAction();
         const gainTp = vi.fn();
-        const jabsBattler = buildJabsBattler({ getBattler: () => ({ gainTp }) });
+        const requestAnimation = vi.fn();
+        const jabsBattler = buildJabsBattler({
+          getBattler: () => ({ gainTp }),
+          getCharacter: () => ({ requestAnimation }),
+        });
         action.getTpFromGuardSkill = () => 3;
         const originalAnimId = globalThis.J.ABS.Metadata.ParryCharacterAnimationId;
         globalThis.J.ABS.Metadata.ParryCharacterAnimationId = 0;
@@ -596,6 +612,7 @@ describe('J-ABS Game_Action application and guard-related damage modification (d
 
         // Assert
         expect(gainTp).toHaveBeenCalledWith(30);
+        expect(requestAnimation).not.toHaveBeenCalled();
         globalThis.J.ABS.Metadata.ParryCharacterAnimationId = originalAnimId;
       });
 

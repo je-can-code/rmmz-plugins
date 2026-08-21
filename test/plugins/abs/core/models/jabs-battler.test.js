@@ -3459,6 +3459,24 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.resolveDirectTargetNonInanimate(5)).toBeNull();
     });
 
+    it('keeps a known target inside a real proximity limit', () =>
+    {
+      // Arrange: the refusal above is paired with nothing that gets accepted under the same
+      // non-zero limit, so the distance comparison had only ever been watched saying no - which a
+      // comparison that always said no would satisfy, leaving every capped skill unable to reach
+      // anything at all.
+      const jabsBattler = buildBattler();
+      const target = { isInanimate: () => false };
+      jabsBattler.setTarget(target);
+      jabsBattler.distanceToDesignatedTarget = () => 3;
+
+      // Act
+      const resolved = jabsBattler.resolveDirectTargetNonInanimate(5);
+
+      // Assert
+      expect(resolved).toBe(target);
+    });
+
     it('prefers getTarget() over getBattlerLastHit()', () =>
     {
       const jabsBattler = buildBattler();
@@ -3478,6 +3496,24 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.distanceToDesignatedTarget = () => 0;
 
       expect(jabsBattler.resolveDirectTargetNonInanimate(0)).toBe(lastHit);
+    });
+
+    it('treats a proximity limit of zero as uncapped rather than as a distance of zero', () =>
+    {
+      // Arrange: every other case here that passes a limit of zero also sits at a distance of
+      // zero, so the two readings agree and the short-circuit could be dropped unnoticed. A
+      // distant target under an uncapped limit is where they part ways - reading zero as a literal
+      // cap would reject every target that is not standing on top of the caster.
+      const jabsBattler = buildBattler();
+      const target = { isInanimate: () => false };
+      jabsBattler.setTarget(target);
+      jabsBattler.distanceToDesignatedTarget = () => 50;
+
+      // Act
+      const resolved = jabsBattler.resolveDirectTargetNonInanimate(0);
+
+      // Assert
+      expect(resolved).toBe(target);
     });
   });
 
@@ -3611,6 +3647,23 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.distanceToDesignatedTarget = () => 3;
 
       expect(jabsBattler.resolveDirectTargetInanimateFallback(5)).toBe(lastHit);
+    });
+
+    it('treats a proximity limit of zero as uncapped rather than as a distance of zero', () =>
+    {
+      // Arrange: this is the last resort in the targeting chain, so reading an uncapped limit as a
+      // literal cap of zero would leave a skill with no proximity tag unable to fall back to
+      // anything at all unless it was standing on top of the caster.
+      const jabsBattler = buildBattler();
+      const target = {};
+      jabsBattler.setTarget(target);
+      jabsBattler.distanceToDesignatedTarget = () => 50;
+
+      // Act
+      const resolved = jabsBattler.resolveDirectTargetInanimateFallback(0);
+
+      // Assert
+      expect(resolved).toBe(target);
     });
   });
   //endregion updates: targeting resolution
@@ -6187,6 +6240,75 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       const { action, user } = buildActionAndUser({ isForUser: () => true });
 
       expect(jabsBattler.isWithinScope(action, user)).toBe(true);
+    });
+
+    it('refuses a single-scope action that already hit, even when the target would otherwise qualify', async () =>
+    {
+      // Arrange: the existing already-hit case arranges no scope that could have said yes, so the
+      // action was going to be refused whether or not the single-target guard ran. Pair it with a
+      // target the opponent scope genuinely covers, and the guard becomes the only thing standing
+      // between one hit and a single-target skill sweeping a crowd.
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isFriendly = vi.fn(() => false);
+      JABS_TeamRules.isOpposed = vi.fn(() => true);
+      const jabsBattler = buildBattler();
+      const { action } = buildActionAndUser({
+        isForOne: () => true,
+        isForOpponent: () => true,
+      });
+      const target = {
+        getUuid: () => 'target-uuid',
+        isInanimate: () => false,
+      };
+
+      // Act
+      const withinScope = jabsBattler.isWithinScope(action, target, true);
+
+      // Assert
+      expect(withinScope).toBe(false);
+    });
+
+    it('recognises the caster as the target by uuid, not only by an explicit self scope', async () =>
+    {
+      // Arrange: the self-scope case above sets isForUser, which makes the target read as the
+      // caster on its own - so the uuid comparison beside it never has to work. An ally-scoped
+      // heal aimed at the caster is the case that needs the comparison, and refusing it would
+      // leave a healer unable to heal themselves.
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isFriendly = vi.fn(() => false);
+      JABS_TeamRules.isOpposed = vi.fn(() => false);
+      const jabsBattler = buildBattler();
+      const { action, user } = buildActionAndUser({ isForFriend: () => true });
+
+      // Act
+      const withinScope = jabsBattler.isWithinScope(action, user);
+
+      // Assert
+      expect(withinScope).toBe(true);
+
+      // restore the team rules this file's later cases expect, rather than leaking them onward.
+      JABS_TeamRules.isOpposed = vi.fn(() => true);
+    });
+
+    it('refuses the caster as the target when the action reaches neither allies nor self', async () =>
+    {
+      // Arrange: an opponent-scoped action aimed at its own caster, with nobody opposed. Nothing
+      // here covers the caster, so the self branch must fall through rather than answer yes -
+      // which is what keeps an offensive skill from detonating on the battler who cast it.
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      JABS_TeamRules.isFriendly = vi.fn(() => false);
+      JABS_TeamRules.isOpposed = vi.fn(() => false);
+      const jabsBattler = buildBattler();
+      const { action, user } = buildActionAndUser({ isForOpponent: () => true });
+
+      // Act
+      const withinScope = jabsBattler.isWithinScope(action, user);
+
+      // Assert
+      expect(withinScope).toBe(false);
+
+      // restore the team rules this file's later cases expect, rather than leaking them onward.
+      JABS_TeamRules.isOpposed = vi.fn(() => true);
     });
 
     it('is true when the target is the caster and the scope is everyone, with no other scope flag set', () =>

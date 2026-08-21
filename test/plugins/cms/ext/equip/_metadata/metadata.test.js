@@ -8,8 +8,6 @@ import {
   setPluginContextToJCmsEquip,
 } from '../../../_component/fixtures/install-cms-host-globals.js';
 
-const EQUIP_INIT_PATH = '../../../../../../src/plugins/cms/ext/equip/_metadata/initialization.js';
-
 describe('J-CMS-Equip metadata (direct src import)', () =>
 {
   beforeAll(async () =>
@@ -27,7 +25,7 @@ describe('J-CMS-Equip metadata (direct src import)', () =>
     await import('../../../../../../src/plugins/cms/core/_metadata/initialization.js');
 
     setPluginContextToJCmsEquip();
-    await import(EQUIP_INIT_PATH);
+    await import('../../../../../../src/plugins/cms/ext/equip/_metadata/initialization.js');
   });
 
   it('declares an aliased-method map for every class the plugin patches', () =>
@@ -70,7 +68,8 @@ describe('J-CMS-Equip metadata (direct src import)', () =>
       setPluginContextToJCmsEquip();
 
       // Act & Assert
-      await expect(import(EQUIP_INIT_PATH)).rejects.toThrow(/missing J-Base/);
+      await expect(import('../../../../../../src/plugins/cms/ext/equip/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-Base/);
 
       // restore the satisfying version so later tests in this file are unaffected.
       globalThis.J.BASE.Metadata.Version = originalVersion;
@@ -86,7 +85,8 @@ describe('J-CMS-Equip metadata (direct src import)', () =>
 
       // Act & Assert- without the menu core this extension has no ParameterCatalogRenderer to draw
       // its status page with, so failing loudly at boot beats failing at draw time.
-      await expect(import(EQUIP_INIT_PATH)).rejects.toThrow(/missing J-CMS/);
+      await expect(import('../../../../../../src/plugins/cms/ext/equip/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-CMS/);
 
       // restore the real accessor rather than relying on restoreAllMocks.
       globalThis.J.CMS.Metadata.version.version = originalVersion;

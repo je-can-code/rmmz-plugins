@@ -8,8 +8,6 @@ import {
   setPluginContextToJCmsSkill,
 } from '../../../_component/fixtures/install-cms-host-globals.js';
 
-const SKILL_INIT_PATH = '../../../../../../src/plugins/cms/ext/skill/_metadata/initialization.js';
-
 describe('J-CMS-Skill metadata (direct src import)', () =>
 {
   beforeAll(async () =>
@@ -27,7 +25,7 @@ describe('J-CMS-Skill metadata (direct src import)', () =>
     await import('../../../../../../src/plugins/cms/core/_metadata/initialization.js');
 
     setPluginContextToJCmsSkill();
-    await import(SKILL_INIT_PATH);
+    await import('../../../../../../src/plugins/cms/ext/skill/_metadata/initialization.js');
   });
 
   it('declares an aliased-method map for every class the plugin patches', () =>
@@ -70,7 +68,8 @@ describe('J-CMS-Skill metadata (direct src import)', () =>
       setPluginContextToJCmsSkill();
 
       // Act & Assert
-      await expect(import(SKILL_INIT_PATH)).rejects.toThrow(/missing J-Base/);
+      await expect(import('../../../../../../src/plugins/cms/ext/skill/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-Base/);
 
       // restore the satisfying version so later tests in this file are unaffected.
       globalThis.J.BASE.Metadata.Version = originalVersion;
@@ -87,7 +86,8 @@ describe('J-CMS-Skill metadata (direct src import)', () =>
       // Act & Assert- the skill menu carries no core dependency of its own yet, but it is an
       // extension of the main menu and gates like one, so the requirement stays honest as the
       // plugin grows into it.
-      await expect(import(SKILL_INIT_PATH)).rejects.toThrow(/missing J-CMS/);
+      await expect(import('../../../../../../src/plugins/cms/ext/skill/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-CMS/);
 
       // restore the real accessor rather than relying on restoreAllMocks.
       globalThis.J.CMS.Metadata.version.version = originalVersion;
