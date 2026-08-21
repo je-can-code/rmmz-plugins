@@ -179,6 +179,27 @@ describe('Game_Actor ext/abs (sks) augments (direct src import)', () =>
       expect(result).toEqual([]);
     });
 
+    it('includes an unequipped skill flagged unslotted', () =>
+    {
+      // Arrange: the offhand pool keeps its own copy of the exempt-or-equipped filter rather than
+      // sharing the helper the combat and dodge pools use, and every case here left the unslotted
+      // flag off - so that operand never decided anything and could have been dropped from this
+      // copy alone. An always-available skill would then vanish from the offhand list while still
+      // appearing in the other two.
+      const skill = {
+        id: 3, unslotted: true,
+      };
+      const actor = buildActor({ equippedSkills: () => [] });
+      globalThis.J.SKS.EXT.ABS.Aliased.Game_Actor.get('buildOffhandAssignableSkillPool')
+        .mockReturnValue([ skill ]);
+
+      // Act
+      const result = actor.buildOffhandAssignableSkillPool();
+
+      // Assert
+      expect(result).toEqual([ skill ]);
+    });
+
     it('always includes the mainhand-provided offhand skill, regardless of SKS equip state', () =>
     {
       // Arrange- the weapon-granted skill is never learned/equipped through the normal SKS path.

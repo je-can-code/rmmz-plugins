@@ -27,15 +27,28 @@ describe('DiaLog (direct src import)', () =>
 
   describe('constructor with explicit values', () =>
   {
-    it('stores the provided lines/faceName/faceIndex', () =>
+    it('stores the provided lines/faceName/faceIndex without complaining', () =>
     {
-      // Arrange/Act
+      // Arrange: the non-array complaint below does not stop the value being stored, so the
+      // warning is the only thing that separates a well-formed call from a malformed one. Pinning
+      // its silence here is what makes the array check load-bearing - without it, the check could
+      // fire on every log in the game and the stored lines would look identical.
+      const warnSpy = vi.spyOn(console, 'warn')
+        .mockImplementation(() =>
+        {
+        });
+
+      // Act
       const log = new DiaLog([ 'hello', 'world' ], 'Actor1', 3);
 
       // Assert
       expect(log.lines()).toEqual([ 'hello', 'world' ]);
       expect(log.faceName()).toEqual('Actor1');
       expect(log.faceIndex()).toEqual(3);
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      // Cleanup
+      warnSpy.mockRestore();
     });
 
     it('warns but still stores a non-array value passed for lines', () =>
