@@ -324,9 +324,15 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       expect(PassiveGateEvaluator.evaluate(battler, 'hpBelow', [ 25 ])).toBe(false);
     });
 
-    it('mpAbove/mpBelow read the mp resource', () =>
+    // Both comparisons are inclusive, so a threshold sitting exactly on the resource's percentage
+    // answers true for above and below alike - which is what the two cases below establish, and
+    // also what makes them unable to tell the two gates apart. Every case in this block used such
+    // a threshold, so the whole above/below distinction, and the choice of which resource to read,
+    // could have collapsed with nothing going red. The cases after them sit off the boundary,
+    // where the gates disagree.
+    it('treats a threshold exactly on the resource percentage as satisfying both directions', () =>
     {
-      // Arrange
+      // Arrange: forty of fifty mp is eighty percent.
       const battler = makeResourceBattler({ mp: 40, mmp: 50 });
 
       // Act & Assert
@@ -334,14 +340,39 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       expect(PassiveGateEvaluator.evaluate(battler, 'mpBelow', [ 80 ])).toBe(true);
     });
 
-    it('tpAbove/tpBelow read the tp resource', () =>
+    it('separates mpAbove from mpBelow once the threshold is off the boundary', () =>
+    {
+      // Arrange
+      const battler = makeResourceBattler({ mp: 40, mmp: 50 });
+
+      // Act & Assert
+      expect(PassiveGateEvaluator.evaluate(battler, 'mpAbove', [ 50 ])).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'mpBelow', [ 50 ])).toBe(false);
+    });
+
+    it('separates tpAbove from tpBelow once the threshold is off the boundary', () =>
     {
       // Arrange
       const battler = makeResourceBattler({ tp: 10, maxTp: () => 100 });
 
       // Act & Assert
-      expect(PassiveGateEvaluator.evaluate(battler, 'tpAbove', [ 10 ])).toBe(true);
-      expect(PassiveGateEvaluator.evaluate(battler, 'tpBelow', [ 10 ])).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'tpAbove', [ 50 ])).toBe(false);
+      expect(PassiveGateEvaluator.evaluate(battler, 'tpBelow', [ 50 ])).toBe(true);
+    });
+
+    it('reads the resource each gate names rather than whichever one is handy', () =>
+    {
+      // Arrange: the three resources deliberately disagree at this threshold - hp is at it, mp is
+      // well over it, tp is far under. A gate that had stopped honouring its own resource would
+      // have to answer the same for all three.
+      const battler = makeResourceBattler({
+        hp: 50, mhp: 100, mp: 40, mmp: 50, tp: 10, maxTp: () => 100,
+      });
+
+      // Act & Assert
+      expect(PassiveGateEvaluator.evaluate(battler, 'hpAbove', [ 50 ])).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'mpAbove', [ 50 ])).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'tpAbove', [ 50 ])).toBe(false);
     });
 
     it('resolves an anyAlly scope to allied battlers within the given (or default) range', () =>
@@ -458,6 +489,53 @@ describe('PassiveGateEvaluator (direct src import)', () =>
 
       // Act & Assert
       expect(PassiveGateEvaluator.evaluate(battler, 'allBelow', [ 10 ])).toBe(true);
+    });
+
+    it('keeps every aggregate gate apart from its neighbour on a fully-stocked battler', () =>
+    {
+      // Arrange: all three resources comfortably above the bar. This is the arrangement where the
+      // "above" gates and the "below" gates that follow them in the dispatch answer oppositely -
+      // on a mixed battler both of a pair can be true at once, which leaves either able to stand
+      // in for the other.
+      const battler = makeResourceBattler({
+        hp: 90, mhp: 100, mp: 90, mmp: 100, tp: 90, maxTp: () => 100,
+      });
+
+      // Act & Assert
+      expect(PassiveGateEvaluator.evaluate(battler, 'anyAbove', [ 50 ])).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'anyBelow', [ 50 ])).toBe(false);
+      expect(PassiveGateEvaluator.evaluate(battler, 'allAbove', [ 50 ])).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'allBelow', [ 50 ])).toBe(false);
+    });
+
+    it('keeps tpBelow apart from the aggregate gate that follows it', () =>
+    {
+      // Arrange: every resource under the bar, so a single-resource "below" answers true while
+      // "at least one above" answers false - which is what separates the two.
+      const battler = makeResourceBattler({
+        hp: 10, mhp: 100, mp: 10, mmp: 100, tp: 10, maxTp: () => 100,
+      });
+
+      // Act & Assert
+      expect(PassiveGateEvaluator.evaluate(battler, 'tpBelow', [ 50 ])).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'anyAbove', [ 50 ])).toBe(false);
+    });
+
+    it('keeps the four aggregate gates apart on a battler where they disagree', () =>
+    {
+      // Arrange: each of the four cases above gets its own fixture and is asked only about itself,
+      // so nothing ever compared them and any one could have resolved to another's answer. This
+      // battler is high on two resources and low on the third, which is exactly where "at least
+      // one" and "every one" part company in both directions.
+      const battler = makeResourceBattler({
+        hp: 90, mhp: 100, mp: 90, mmp: 100, tp: 10, maxTp: () => 100,
+      });
+
+      // Act & Assert
+      expect(PassiveGateEvaluator.evaluate(battler, 'anyAbove', [ 50 ])).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'allAbove', [ 50 ])).toBe(false);
+      expect(PassiveGateEvaluator.evaluate(battler, 'anyBelow', [ 50 ])).toBe(true);
+      expect(PassiveGateEvaluator.evaluate(battler, 'allBelow', [ 50 ])).toBe(false);
     });
 
     it('anyAbove forwards an explicit range instead of the plugin default', () =>
@@ -712,6 +790,44 @@ describe('PassiveGateEvaluator (direct src import)', () =>
 
   describe('timing gates (sinceLast*/*Within/onHeal*)', () =>
   {
+    // Each of the nine timing gates below was watched from one side only - some only ever
+    // passing, some only ever failing - and a comparison seen answering one way is satisfied by
+    // one that always answers that way. Nine gates each need both arms, which is what this table
+    // supplies: the elapsed frame count is put on either side of the same hundred-frame bar.
+    // The `sinceLast` family wants at least that many frames to have passed; the `within` and
+    // `onHeal` families want at most that many.
+    it.each([
+      [ 'sinceLastMoved', 'getPassiveRuleLastMovedFrame', 900, true ],
+      [ 'sinceLastMoved', 'getPassiveRuleLastMovedFrame', 950, false ],
+      [ 'sinceLastHit', 'getPassiveRuleLastHitFrame', 900, true ],
+      [ 'sinceLastHit', 'getPassiveRuleLastHitFrame', 950, false ],
+      [ 'sinceLastAttacked', 'getPassiveRuleLastAttackedFrame', 900, true ],
+      [ 'sinceLastAttacked', 'getPassiveRuleLastAttackedFrame', 950, false ],
+      [ 'movedWithin', 'getPassiveRuleLastMovedFrame', 950, true ],
+      [ 'movedWithin', 'getPassiveRuleLastMovedFrame', 800, false ],
+      [ 'hitWithin', 'getPassiveRuleLastHitFrame', 950, true ],
+      [ 'hitWithin', 'getPassiveRuleLastHitFrame', 800, false ],
+      [ 'attackedWithin', 'getPassiveRuleLastAttackedFrame', 950, true ],
+      [ 'attackedWithin', 'getPassiveRuleLastAttackedFrame', 800, false ],
+      [ 'onHealHp', 'getPassiveRuleLastHpHealFrame', 950, true ],
+      [ 'onHealHp', 'getPassiveRuleLastHpHealFrame', 800, false ],
+      [ 'onHealMp', 'getPassiveRuleLastMpHealFrame', 950, true ],
+      [ 'onHealMp', 'getPassiveRuleLastMpHealFrame', 800, false ],
+      [ 'onHealTp', 'getPassiveRuleLastTpHealFrame', 950, true ],
+      [ 'onHealTp', 'getPassiveRuleLastTpHealFrame', 800, false ],
+    ])('%s with a stamp at frame %i answers %s', (gate, getterName, stampFrame, expected) =>
+    {
+      // Arrange
+      const battler = { [ getterName ]: () => stampFrame };
+      globalThis.Graphics.frameCount = 1000;
+
+      // Act
+      const result = PassiveGateEvaluator.evaluate(battler, gate, [ 100 ]);
+
+      // Assert
+      expect(result).toBe(expected);
+    });
+
     it('sinceLastMoved passes once enough frames have elapsed since the last stamp', () =>
     {
       // Arrange
