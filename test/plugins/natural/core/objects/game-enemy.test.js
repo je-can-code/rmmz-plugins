@@ -268,6 +268,53 @@ describe('J-NaturalGrowth Game_Enemy (direct src import)', () =>
   });
   //endregion max tp
 
+  //region sdp reward bonuses
+  /**
+   * SDP is an optional sibling plugin, so this is one of the few places core is permitted a
+   * namespace check. The pair below is what makes that check load-bearing: the buff is forced to a
+   * non-zero value in both, so the only thing standing between a written bonus and an untouched one
+   * is the guard itself.
+   */
+  describe('refreshSdpRewardBonuses', () =>
+  {
+    beforeEach(() =>
+    {
+      // the guard's far side reads the enemy's database row, so give it one to read.
+      enemy._enemyDb = {
+        id: 1, name: '', note: '', sdpPoints: 5,
+      };
+      enemy.naturalParamBuff = () => 7;
+    });
+
+    it('writes the calculated bonus when the SDP system is installed', () =>
+    {
+      // Arrange
+      const previousSdp = globalThis.J.SDP;
+      globalThis.J.SDP = {};
+
+      // Act
+      enemy.refreshSdpRewardBonuses();
+
+      // Assert
+      expect(enemy.sdpsPlus()).toBeCloseTo(7, 10);
+
+      // restore the bare-global namespace rather than leaking it into later tests in this file.
+      globalThis.J.SDP = previousSdp;
+    });
+
+    it('leaves the bonus untouched when the SDP system is absent', () =>
+    {
+      // Arrange: there is no panel currency to reward without SDP loaded, so the whole refresh is
+      // skipped rather than writing a bonus nothing will ever read.
+      // Act
+      enemy.refreshSdpRewardBonuses();
+
+      // Assert
+      expect(enemy.sdpsPlus()).toBe(0);
+    });
+  });
+  //endregion sdp reward bonuses
+
   //region data change
   describe('onBattlerDataChange', () =>
   {

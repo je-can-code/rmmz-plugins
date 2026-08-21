@@ -11,6 +11,22 @@ export const DEFAULT_NATURAL_PLUGIN_PARAMS = {
 };
 
 /**
+ * Reads the notetag name out of a growth/buff RegExp, so a parameter-id lookup can be pinned to the
+ * tag it actually resolves to rather than to the shape of the pair it returns.<br/>
+ * Every one of these tables returns a two-element array for every valid id, which makes a length
+ * assertion unable to tell one case from the next - emptying a `case` falls through to the following
+ * one and still yields a pair of two. The tag name is the only part that differs per id.
+ * @param {RegExp} structure The plus or rate structure to name.
+ * @returns {string} The tag name, e.g. `mhpGrowthPlus`.
+ */
+export function notetagNameOf(structure)
+{
+  const [ , tagName ] = structure.source.match(/^<(\w+):/);
+
+  return tagName;
+}
+
+/**
  * `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` are bare identifiers read once, at import time, by
  * _base/_metadata/initialization.js.
  * @param {object} [sandbox] Defaults to `globalThis`.
