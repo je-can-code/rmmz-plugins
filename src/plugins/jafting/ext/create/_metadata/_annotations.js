@@ -154,6 +154,13 @@
  * so retuning an economy is done in the data editor rather than here.
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Added the study shop - Scene_JaftingStudy, its two windows, and
+ *    StudyPurchaseService - so recipes can be bought rather than only found.
+ *    Recipes now carry a tier and a profession; CraftingProfession describes
+ *    the price ladder a profession charges. The crafting bench gained an
+ *    everything tab and stopped offering the whole menu, and the category
+ *    badge and list windows it replaced are gone.
  * - 1.2.2
  *    The recipe detail window reads a crafted weapon or armor's base parameters
  *    through thisBParam rather than off the params array. An equip's worth for a

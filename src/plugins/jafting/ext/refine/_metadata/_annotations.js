@@ -148,6 +148,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.5.0
+ *    Note effects now count against the refinement ceiling alongside traits.
+ *    An equip could previously accumulate transferable note lines without
+ *    limit while reporting itself full.
  * - 1.4.0
  *    A refinement now costs the base exactly one count, whatever the donor had
  *    accumulated. Previously a donor's own history was added to the output and

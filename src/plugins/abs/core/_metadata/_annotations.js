@@ -48,6 +48,12 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.15.0
+ *    Added <thisIgnoreParry:N> so a skill can carry its own parry-ignore, and
+ *    made <ignoreParry:N> readable from every note source on the attacker rather
+ *    than the skill alone - equipment, states and the actor all contribute now.
+ *    The two sum and clamp at 100, which keeps defensive pressure from inverting
+ *    past the ceiling.
  * - 4.14.0
  *    Declared what JABS state on the party and the system is worth writing to
  *    a savefile, and routed the _abs namespace into its own save section.

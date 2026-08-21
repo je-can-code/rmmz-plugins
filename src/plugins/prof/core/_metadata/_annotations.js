@@ -151,6 +151,10 @@
  * - Decreasing the proficiency will NOT undo rewards gained.
  * ============================================================================
  * CHANGELOG:
+ * - 2.4.0
+ *    Defense earns proficiency the way offense does - guarding and parrying a
+ *    skill now advances proficiency in it, so a defensive player is not frozen
+ *    out of the system.
  * - 2.3.0
  *    Routed the _proficiency namespace into its own save section, so earned
  *    proficiency lands in systems/proficiency.json rather than in the system

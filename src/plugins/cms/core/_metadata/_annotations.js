@@ -29,6 +29,11 @@
  * redesign of the native main menu.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    The menu gold strip is now a currency strip: CurrencyDefinition describes
+ *    a currency, registerCoreCurrencies declares gold, and Window_Currencies
+ *    renders however many are registered. Extensions add their own without
+ *    touching the scene.
  * - 1.1.0
  *    Each party member's cell is now a character card rather than a data row.
  *    It is headed by their name with their class beneath it, carries their map

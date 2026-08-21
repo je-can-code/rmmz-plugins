@@ -364,6 +364,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.3.0
+ *    Scene_SDP now uses the shared filterable list from J-Base rather than its
+ *    own family strip window, which is deleted. SdpFamilyFilter carries the
+ *    family predicate.
  * - 3.2.0
  *    Unspent points now appear on each party member's cell in the main menu,
  *    beside their level and the distance to the next one. A currency nobody is
