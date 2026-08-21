@@ -8,8 +8,6 @@ import {
   setPluginContextToJOmniMonster,
 } from '../../../_component/fixtures/install-omni-host-globals.js';
 
-const MONSTER_INIT_PATH = '../../../../../../src/plugins/omni/ext/monster/_metadata/initialization.js';
-
 describe('J-Omni-Monsterpedia metadata (direct src import)', () =>
 {
   beforeAll(async () =>
@@ -25,7 +23,7 @@ describe('J-Omni-Monsterpedia metadata (direct src import)', () =>
     await import('../../../../../../src/plugins/omni/core/_metadata/initialization.js');
 
     setPluginContextToJOmniMonster();
-    await import(MONSTER_INIT_PATH);
+    await import('../../../../../../src/plugins/omni/ext/monster/_metadata/initialization.js');
   });
 
   describe('omnipedia command contribution', () =>
@@ -109,7 +107,8 @@ describe('J-Omni-Monsterpedia metadata (direct src import)', () =>
       setPluginContextToJOmniMonster();
 
       // Act & Assert
-      await expect(import(MONSTER_INIT_PATH)).rejects.toThrow(/missing J-Base/);
+      await expect(import('../../../../../../src/plugins/omni/ext/monster/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-Base/);
 
       // restore the satisfying version so later tests in this file are unaffected.
       globalThis.J.BASE.Metadata.Version = originalVersion;
@@ -124,7 +123,8 @@ describe('J-Omni-Monsterpedia metadata (direct src import)', () =>
       setPluginContextToJOmniMonster();
 
       // Act & Assert
-      await expect(import(MONSTER_INIT_PATH)).rejects.toThrow(/missing J-Omnipedia/);
+      await expect(import('../../../../../../src/plugins/omni/ext/monster/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-Omnipedia/);
 
       // restore the real accessor rather than relying on restoreAllMocks.
       globalThis.J.OMNI.Metadata.version.version = originalVersion;

@@ -8,8 +8,6 @@ import {
   setPluginContextToJPopupsApt,
 } from '../../../_component/fixtures/install-popups-host-globals.js';
 
-const APT_INIT_PATH = '../../../../../../src/plugins/popups/ext/apt/_metadata/initialization.js';
-
 describe('J-Popups-APT metadata (direct src import)', () =>
 {
   beforeAll(async () =>
@@ -30,7 +28,7 @@ describe('J-Popups-APT metadata (direct src import)', () =>
     await import('../../../../../../src/plugins/popups/core/_metadata/initialization.js');
 
     setPluginContextToJPopupsApt();
-    await import(APT_INIT_PATH);
+    await import('../../../../../../src/plugins/popups/ext/apt/_metadata/initialization.js');
   });
 
   it('declares the aliased-method map for the engine class it patches', () =>
@@ -66,7 +64,7 @@ describe('J-Popups-APT metadata (direct src import)', () =>
       globalThis.PluginMetadata = FreshPluginMetadata;
 
       setPluginContextToJPopupsApt();
-      await import(APT_INIT_PATH);
+      await import('../../../../../../src/plugins/popups/ext/apt/_metadata/initialization.js');
     };
 
     it('rebuilds the whole namespace chain when nothing has loaded yet', async () =>

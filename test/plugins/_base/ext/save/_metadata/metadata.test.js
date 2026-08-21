@@ -4,10 +4,6 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { installJBaseHostGlobals } from '../../../core/_component/fixtures/install-j-base-host-globals.js';
 import { installPluginManagerWithParams } from '../../../../../setup/install-plugin-manager-with-params.js';
 
-const jBaseInitPath = '../../../../../../src/plugins/_base/core/_metadata/initialization.js';
-const saveInitPath = '../../../../../../src/plugins/_base/ext/save/_metadata/initialization.js';
-const pluginMetadataPath = '../../../../../../src/plugins/_base/core/models/PluginMetadata.js';
-
 describe('J-Base-Save metadata (direct src import)', () =>
 {
   /**
@@ -34,13 +30,14 @@ describe('J-Base-Save metadata (direct src import)', () =>
 
     // PluginMetadata tracks registered plugins on a private static field and throws on a duplicate
     // name, so each boot needs a freshly imported class to register into.
-    const { default: FreshPluginMetadata } = await import(pluginMetadataPath);
+    const { default: FreshPluginMetadata } =
+      await import('../../../../../../src/plugins/_base/core/models/PluginMetadata.js');
     globalThis.PluginMetadata = FreshPluginMetadata;
 
     globalThis.__PLUGIN_NAME__ = 'J-Base-Save';
     globalThis.__PLUGIN_VERSION__ = '1.0.0';
 
-    await import(saveInitPath);
+    await import('../../../../../../src/plugins/_base/ext/save/_metadata/initialization.js');
 
     return globalThis.J.BASE.EXT.SAVE.Metadata;
   };
@@ -52,7 +49,7 @@ describe('J-Base-Save metadata (direct src import)', () =>
     globalThis.__PLUGIN_NAME__ = 'J-Base';
     globalThis.__PLUGIN_VERSION__ = '3.2.0';
 
-    await import(jBaseInitPath);
+    await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     realJ = globalThis.J;
   });

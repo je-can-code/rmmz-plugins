@@ -1,8 +1,6 @@
 //region plugins/abs/ext/input/_component/register-jabs-input-config-fields.test.js
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-const MODULE_PATH = '../../../../../../src/plugins/abs/ext/input/registerJabsInputConfigFields.js';
-
 /**
  * Where a player's keybinds live, and the one thing that decides it.
  *
@@ -40,7 +38,7 @@ describe('registerJabsInputConfigFields', () =>
     globalThis.J = { BASE: { EXT: { SAVE: {} } } };
 
     // Act
-    await import(MODULE_PATH);
+    await import('../../../../../../src/plugins/abs/ext/input/registerJabsInputConfigFields.js');
 
     // Assert: both in `config.json` beside volume and touch UI, which makes bindings global.
     expect(registered.map(field => field.name))
@@ -54,7 +52,7 @@ describe('registerJabsInputConfigFields', () =>
     globalThis.J = { BASE: { EXT: {} } };
 
     // Act
-    await import(MODULE_PATH);
+    await import('../../../../../../src/plugins/abs/ext/input/registerJabsInputConfigFields.js');
 
     // Assert
     expect(registered)
@@ -68,7 +66,7 @@ describe('registerJabsInputConfigFields', () =>
     globalThis.J = { BASE: { EXT: { SAVE: {} } } };
 
     // Act
-    await import(MODULE_PATH);
+    await import('../../../../../../src/plugins/abs/ext/input/registerJabsInputConfigFields.js');
 
     // Assert
     registered.forEach(field =>
@@ -82,7 +80,7 @@ describe('registerJabsInputConfigFields', () =>
   {
     // Arrange
     globalThis.J = { BASE: { EXT: { SAVE: {} } } };
-    await import(MODULE_PATH);
+    await import('../../../../../../src/plugins/abs/ext/input/registerJabsInputConfigFields.js');
 
     // Act
     const [ mappings, bindings ] = registered;

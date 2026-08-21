@@ -7,8 +7,6 @@ import {
   setPluginContextToJHud,
 } from '../../_component/fixtures/install-hud-host-globals.js';
 
-const HUD_INIT_PATH = '../../../../../src/plugins/hud/core/_metadata/initialization.js';
-
 describe('J-HUD metadata (direct src import)', () =>
 {
   /** @type {Map<string, Function>} the plugin commands this ship registers at import time. */
@@ -32,7 +30,7 @@ describe('J-HUD metadata (direct src import)', () =>
     };
 
     setPluginContextToJHud();
-    await import(HUD_INIT_PATH);
+    await import('../../../../../src/plugins/hud/core/_metadata/initialization.js');
   });
 
   describe('plugin commands', () =>
@@ -133,7 +131,8 @@ describe('J-HUD metadata (direct src import)', () =>
       setPluginContextToJHud();
 
       // Act & Assert
-      await expect(import(HUD_INIT_PATH)).rejects.toThrow(/missing J-Base/);
+      await expect(import('../../../../../src/plugins/hud/core/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-Base/);
 
       // restore the satisfying version so later tests in this file are unaffected.
       globalThis.J.BASE.Metadata.Version = originalVersion;
@@ -148,7 +147,8 @@ describe('J-HUD metadata (direct src import)', () =>
       setPluginContextToJHud();
 
       // Act & Assert
-      await expect(import(HUD_INIT_PATH)).rejects.toThrow(/missing J-ABS/);
+      await expect(import('../../../../../src/plugins/hud/core/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-ABS/);
 
       // restore the real accessor rather than relying on restoreAllMocks.
       globalThis.J.ABS.Metadata.version.version = originalVersion;

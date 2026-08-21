@@ -1,10 +1,6 @@
 //region plugins/apt/ext/typed/_component/metadata-and-commands.test.js
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-const typedInitPath = '../../../../../../src/plugins/apt/ext/typed/_metadata/initialization.js';
-const typedCommandsPath = '../../../../../../src/plugins/apt/ext/typed/_metadata/pluginCommands.js';
-const pluginMetadataPath = '../../../../../../src/plugins/_base/core/models/PluginMetadata.js';
-
 /**
  * `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` are bare identifiers read once, at import time.
  * @param {object} [sandbox] Defaults to `globalThis`.
@@ -30,7 +26,8 @@ describe('J-Aptitude-Typed metadata and plugin commands (direct src import)', ()
     // by hand here rather than dragging in the whole aptitude host fixture. That matches how the
     // other apt/ext/typed tests are set up.
     ({ default: globalThis.JsonMapper } = await import('../../../../../../src/plugins/_base/core/_utilities/JsonMapper.js'));
-    ({ default: globalThis.PluginMetadata } = await import(pluginMetadataPath));
+    ({ default: globalThis.PluginMetadata } =
+      await import('../../../../../../src/plugins/_base/core/models/PluginMetadata.js'));
 
     String.empty = '';
 
@@ -60,8 +57,8 @@ describe('J-Aptitude-Typed metadata and plugin commands (direct src import)', ()
     };
 
     setPluginContextToJAptitudeTyped();
-    await import(typedInitPath);
-    await import(typedCommandsPath);
+    await import('../../../../../../src/plugins/apt/ext/typed/_metadata/initialization.js');
+    await import('../../../../../../src/plugins/apt/ext/typed/_metadata/pluginCommands.js');
   });
 
   beforeEach(() =>

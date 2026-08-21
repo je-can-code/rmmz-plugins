@@ -8,8 +8,6 @@ import {
   setPluginContextToJCms,
 } from '../../_component/fixtures/install-cms-host-globals.js';
 
-const CMS_INIT_PATH = '../../../../../src/plugins/cms/core/_metadata/initialization.js';
-
 describe('J-CMS metadata (direct src import)', () =>
 {
   beforeAll(async () =>
@@ -22,7 +20,7 @@ describe('J-CMS metadata (direct src import)', () =>
     await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
     setPluginContextToJCms();
-    await import(CMS_INIT_PATH);
+    await import('../../../../../src/plugins/cms/core/_metadata/initialization.js');
   });
 
   describe('command help text', () =>
@@ -106,7 +104,8 @@ describe('J-CMS metadata (direct src import)', () =>
       setPluginContextToJCms();
 
       // Act & Assert
-      await expect(import(CMS_INIT_PATH)).rejects.toThrow(/missing J-Base/);
+      await expect(import('../../../../../src/plugins/cms/core/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-Base/);
 
       // restore the satisfying version so later tests in this file are unaffected.
       globalThis.J.BASE.Metadata.Version = originalVersion;
