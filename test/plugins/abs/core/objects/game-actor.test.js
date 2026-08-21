@@ -33,9 +33,9 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
           ConfigAutoAssignSkills: /configAutoAssignSkills/i,
           NoAutoAssign: /noAutoAssign/i,
           UpgradeOnlySkill: /upgradeOnlySkill/i,
+          BlacklistAutoAssignSkillType: /noAutoAssignType/i,
         },
       },
-      PASSIVE: { RegExp: { EquippedPassiveStateIds: /equippedPassiveStateIds/i } },
     };
 
     globalThis.RPGManager = {
@@ -1526,18 +1526,29 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
 
     it('does not assign a skill whose type is blacklisted', () =>
     {
+      // Arrange: the blacklist is read off a notetag, and the tag it reads has to be pinned rather
+      // than assumed. Returning the same ids for every regex asked about cannot tell the intended
+      // tag from any other one, which is how this gate spent its life reading a tag belonging to a
+      // different plugin entirely while still refusing the assignment for the wrong reason.
       globalThis.RPGManager.checkForBooleanFromNoteByRegex
         .mockImplementation((_object, regex) => regex === globalThis.J.ABS.RegExp.ConfigAutoAssignSkills);
-      globalThis.RPGManager.getNumbersFromNoteByRegex.mockReturnValue([ 1 ]);
+      globalThis.RPGManager.getNumbersFromNoteByRegex
+        .mockImplementation((_object, regex) => (regex === globalThis.J.ABS.RegExp.BlacklistAutoAssignSkillType)
+          ? [ 1 ]
+          : []);
       const actor = buildActor({
         getEmptySecondarySkills: () => [ { key: 'combat-2' } ],
         getAllNotes: () => [ {} ],
         skill: () => ({ stypeId: 1 }),
       });
 
+      // Act
       actor.autoAssignSkillIfRequired(5);
 
+      // Assert
       expect(actor.setEquippedSkill).not.toHaveBeenCalled();
+      expect(globalThis.RPGManager.getNumbersFromNoteByRegex)
+        .toHaveBeenCalledWith(expect.anything(), globalThis.J.ABS.RegExp.BlacklistAutoAssignSkillType);
     });
   });
 
@@ -1616,20 +1627,39 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
 
   describe('turnEndOnMap()', () =>
   {
+    // Whether the original ran is the entire behaviour of this override, and both cases below used
+    // to assert only that nothing threw - which is true of a body that does nothing at all, and is
+    // why the guard sat inverted without a test noticing. Watch the aliased original instead.
     it('does nothing while JABS is enabled', () =>
     {
+      // Arrange: JABS runs regeneration and poison on its own clock, so letting the built-in
+      // turn-end pass run as well would apply both.
       globalThis.$jabsEngine.absEnabled = true;
+      const original = vi.fn();
+      globalThis.J.ABS.Aliased.Game_Actor.set('turnEndOnMap', original);
       const actor = buildActor();
 
-      expect(() => actor.turnEndOnMap()).not.toThrow();
+      // Act
+      actor.turnEndOnMap();
+
+      // Assert
+      expect(original).not.toHaveBeenCalled();
     });
 
     it('falls through to the original logic when JABS is disabled', () =>
     {
+      // Arrange: with JABS off nothing else is applying regeneration or poison, so the built-in
+      // pass has to run or an actor gets no turn-end effects at all.
       globalThis.$jabsEngine.absEnabled = false;
+      const original = vi.fn();
+      globalThis.J.ABS.Aliased.Game_Actor.set('turnEndOnMap', original);
       const actor = buildActor();
 
-      expect(() => actor.turnEndOnMap()).not.toThrow();
+      // Act
+      actor.turnEndOnMap();
+
+      // Assert
+      expect(original).toHaveBeenCalled();
     });
   });
   //endregion map effects

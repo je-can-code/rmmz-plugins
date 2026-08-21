@@ -1391,8 +1391,8 @@ Game_Actor.prototype.canAutoAssignSkillOnLevelup = function(skillId)
   // if the skill type is blacklisted, don't allow auto assigning.
   const blacklistedBySkillTypeId = objectsToCheck.some(object =>
   {
-    // grab the blacklisted skills by the actor/class.
-    const skillTypeIds = RPGManager.getNumbersFromNoteByRegex(object, J.PASSIVE.RegExp.EquippedPassiveStateIds);
+    // grab the blacklisted skill types by the actor/class.
+    const skillTypeIds = RPGManager.getNumbersFromNoteByRegex(object, J.ABS.RegExp.BlacklistAutoAssignSkillType);
 
     // if the skill's type was amongst the blacklisted types, don't auto assign it.
     if (skillTypeIds.includes(skillData.stypeId)) return true;
@@ -1484,8 +1484,8 @@ Game_Actor.prototype.performJabsFloorDamage = function()
 J.ABS.Aliased.Game_Actor.set('turnEndOnMap', Game_Actor.prototype.turnEndOnMap);
 Game_Actor.prototype.turnEndOnMap = function()
 {
-  // if JABS is enabled, the fun never stops!
-  if (!$jabsEngine.absEnabled) return;
+  // if JABS is enabled, the fun never stops- it runs regeneration and poison on its own clock.
+  if ($jabsEngine.absEnabled === true) return;
 
   // do normal turn-end things while JABS is disabled.
   // perform original logic.

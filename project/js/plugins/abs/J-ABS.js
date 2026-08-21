@@ -27879,7 +27879,7 @@ Game_Actor.prototype.canAutoAssignSkillOnLevelup = function(skillId) {
 	const onlyUpgradeable = RPGManager.checkForBooleanFromNoteByRegex(skillData, J.ABS.RegExp.UpgradeOnlySkill);
 	if (onlyUpgradeable) return false;
 	const blacklistedBySkillTypeId = objectsToCheck.some((object) => {
-		const skillTypeIds = RPGManager.getNumbersFromNoteByRegex(object, J.PASSIVE.RegExp.EquippedPassiveStateIds);
+		const skillTypeIds = RPGManager.getNumbersFromNoteByRegex(object, J.ABS.RegExp.BlacklistAutoAssignSkillType);
 		if (skillTypeIds.includes(skillData.stypeId)) return true;
 		return false;
 	});
@@ -27934,7 +27934,7 @@ Game_Actor.prototype.performJabsFloorDamage = function() {
 */
 J.ABS.Aliased.Game_Actor.set("turnEndOnMap", Game_Actor.prototype.turnEndOnMap);
 Game_Actor.prototype.turnEndOnMap = function() {
-	if (!$jabsEngine.absEnabled) return;
+	if ($jabsEngine.absEnabled === true) return;
 	J.ABS.Aliased.Game_Actor.get("turnEndOnMap").call(this);
 };
 /**
