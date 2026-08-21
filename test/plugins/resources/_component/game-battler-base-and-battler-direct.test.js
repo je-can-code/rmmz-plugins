@@ -317,6 +317,42 @@ describe('Game_BattlerBase / Game_Battler resource extensions (resources core, d
       expect(battler.canPaySkillCost({})).toBe(true);
     });
 
+    it('allows an hp cost a healthy battler can comfortably survive', () =>
+    {
+      // Arrange: every hp case here was a refusal, so the gate had only ever been watched saying
+      // no. A gate that always said no would read exactly the same, and every hp-cost skill in the
+      // game would be permanently uncastable.
+      const battler = new globalThis.Game_Battler();
+      battler.initResourcesMembers();
+      battler.skillHpCost = () => 10;
+      battler.hp = 500;
+      globalThis.RPGManager.checkForBooleanFromNoteByRegex.mockReturnValue(false);
+
+      // Act
+      const result = battler.canPaySkillCost({});
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('skips the hp gate entirely for a costless skill, even at zero hp', () =>
+    {
+      // Arrange: at zero hp the survival check would refuse anything it was asked about, so a
+      // costless skill has to bypass the gate rather than merely pass it. Without a cost there is
+      // nothing to survive paying.
+      const battler = new globalThis.Game_Battler();
+      battler.initResourcesMembers();
+      battler.skillHpCost = () => 0;
+      battler.hp = 0;
+      globalThis.RPGManager.checkForBooleanFromNoteByRegex.mockReturnValue(false);
+
+      // Act
+      const result = battler.canPaySkillCost({});
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
     it('still checks stack/item costs after an hp sacrifice is allowed, rather than short-circuiting', () =>
     {
       // Arrange: hp-cost-can-kill clears the hp gate, but stacks are insufficient to afford the cast.
