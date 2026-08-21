@@ -571,6 +571,43 @@ describe('J-Pixelistics Game_CharacterBase collision kernel (direct src import)'
       expect(ch.canPassDiagonalByDirection(globalThis.J.PIXEL.Directions[dirKey])).toBe(true);
     });
 
+    /**
+     * Each row walls two of the four neighbours, which leaves exactly one diagonal with both of
+     * its legs passable - and that must be the only one approved.
+     *
+     * The two cases above wall every neighbour or none, so all four diagonals agree and any one of
+     * them could be resolved from the wrong pair of legs without a test noticing. These rows are
+     * what make each direction check load-bearing, since resolving the wrong pair here flips the
+     * answer.
+     *
+     * A caution for whoever edits this next: which pair of legs a given wall arrangement leaves
+     * open is **not** intuitive, and is not worth deriving by hand. Walling the left and upward
+     * neighbours leaves LEFT and UP passable while blocking RIGHT and DOWN - the collision radius
+     * of 0.3 is wider than the 0.25 subcell band drawn along a blocked edge, so a character resting
+     * at the tile centre already overlaps those bands. Measure the legs before changing a row here
+     * rather than reasoning about which way the walls face.
+     */
+    it.each([
+      [ 'left and upward', [ '1,2', '2,1' ], 'UPPERLEFT' ],
+      [ 'right and downward', [ '3,2', '2,3' ], 'LOWERRIGHT' ],
+      [ 'left and downward', [ '1,2', '2,3' ], 'LOWERLEFT' ],
+      [ 'right and upward', [ '3,2', '2,1' ], 'UPPERRIGHT' ],
+    ])('walling the %s neighbours leaves only one diagonal open', (_label, walls, openDirKey) =>
+    {
+      [ 'LOWERLEFT', 'LOWERRIGHT', 'UPPERLEFT', 'UPPERRIGHT' ].forEach(dirKey =>
+      {
+        // Arrange
+        const map = buildWalledPixelGameMap(5, 5, new Set(walls));
+        const ch = makeCharacterOn(map, 2, 2);
+
+        // Act
+        const canPass = ch.canPassDiagonalByDirection(globalThis.J.PIXEL.Directions[ dirKey ]);
+
+        // Assert
+        expect(canPass).toBe(dirKey === openDirKey);
+      });
+    });
+
     it.each([
       [ 'LOWERLEFT', -1, 1 ],
       [ 'LOWERRIGHT', 1, 1 ],
