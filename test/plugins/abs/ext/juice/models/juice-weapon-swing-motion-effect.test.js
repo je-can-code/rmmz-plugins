@@ -214,14 +214,41 @@ describe('JuiceWeaponSwingMotionEffect (unit, JuiceBaseEffect mocked)', () =>
       expect(Number.isFinite(off.y)).toEqual(true);
     });
 
-    // #forwardUnit's cases are private and only reachable indirectly through callers like this one-
-    // exercise every RMMZ 8-direction (plus an unrecognized value for the default branch) here.
-    it.each([ 2, 4, 6, 8, 1, 3, 7, 9, 5 ])('resolves a forward unit vector for direction %i without throwing', (dir) =>
+    // #forwardUnit's cases are private and only reachable indirectly through callers like this one.
+    // Every direction has to be asserted against the offset it actually produces rather than merely
+    // against a finite number: each case returns a finite pair, so a check for finiteness passes
+    // whichever case ran, and the whole lookup could resolve every direction to the same vector
+    // with nothing going red. A bash would then swing the same way regardless of facing.
+    it.each([
+      [ 2, -1.8863, 9.0857 ],
+      [ 4, -9.0857, -1.8863 ],
+      [ 6, 9.0857, 1.8863 ],
+      [ 8, 1.8863, -9.0857 ],
+      [ 1, -7.7584, 5.0908 ],
+      [ 3, 5.0908, 7.7584 ],
+      [ 7, -5.0908, -7.7584 ],
+      [ 9, 7.7584, -5.0908 ],
+    ])('drives the bash along direction %i', (dir, expectedX, expectedY) =>
     {
+      // Arrange & Act
       const off = JuiceWeaponSwingMotionEffect.computeBashOffset(dir, 48, 0.5);
 
-      expect(Number.isFinite(off.x)).toEqual(true);
-      expect(Number.isFinite(off.y)).toEqual(true);
+      // Assert
+      expect(off.x).toBeCloseTo(expectedX, 4);
+      expect(off.y).toBeCloseTo(expectedY, 4);
+    });
+
+    it('falls back to the leftward unit vector for an unrecognized direction', () =>
+    {
+      // Arrange: the fallback deliberately matches direction 4, so this case cannot be told from
+      // that one by its output alone - it is here to pin that an unknown facing still produces a
+      // usable swing rather than a broken one.
+      // Act
+      const off = JuiceWeaponSwingMotionEffect.computeBashOffset(5, 48, 0.5);
+
+      // Assert
+      expect(off.x).toBeCloseTo(-9.0857, 4);
+      expect(off.y).toBeCloseTo(-1.8863, 4);
     });
   });
 
@@ -468,13 +495,37 @@ describe('JuiceWeaponSwingMotionEffect (unit, JuiceBaseEffect mocked)', () =>
       expect(Number.isFinite(overlay.rotation)).toEqual(true);
     });
 
-    it('drives the ArcReverse motion', () =>
+    // Each motion type routes to its own private tick, and every one of them leaves the overlay
+    // holding finite numbers - so asserting finiteness cannot tell which one ran, and the whole
+    // dispatch could collapse to a single motion with nothing going red. Every weapon would then
+    // animate identically no matter what its skill asked for. These are the poses each type
+    // actually produces on the first frame of a ten-frame swing facing down.
+    it.each([
+      [ 'Arc', -8.4166, -7.8180, 4.4066 ],
+      [ 'ArcReverse', 8.4166, -7.8180, 3.4474 ],
+      [ 'ArcOscillate', 10.2208, -8.8926, 3.3322 ],
+      [ 'Spin', -7.4189, -1.5769, 2.5133 ],
+      [ 'SpinReverse', -18.1401, -20.1466, -2.5133 ],
+      [ 'StabForward', 0, 7.1544, 3.9270 ],
+      [ 'Present', 0, -5.4634, 0 ],
+      [ 'Bash', -0.2317, 0.7621, 3.9506 ],
+      [ 'Recoil', 0, -9.7978, 3.7229 ],
+    ])('poses the overlay for the %s motion', (motionName, expectedX, expectedY, expectedRotation) =>
     {
-      const { effect, overlay } = buildEffect({ motionType: JuiceWeaponSwingMotionEffect.MotionTypes.ArcReverse, durationFrames: 10 });
+      // Arrange
+      const { effect, overlay } = buildEffect({
+        motionType: JuiceWeaponSwingMotionEffect.MotionTypes[ motionName ],
+        durationFrames: 10,
+        repeatCount: 4,
+      });
 
+      // Act
       effect.tick();
 
-      expect(Number.isFinite(overlay.rotation)).toEqual(true);
+      // Assert
+      expect(overlay.x).toBeCloseTo(expectedX, 3);
+      expect(overlay.y).toBeCloseTo(expectedY, 3);
+      expect(overlay.rotation).toBeCloseTo(expectedRotation, 3);
     });
 
     it('drives the ArcOscillate motion across multiple ticks, alternating direction', () =>
