@@ -122,16 +122,21 @@ describe('StateAfflictionProvider', () =>
     expect(collection.negative[0].iconIndex).toBe(0);
   });
 
-  it('filters passive states when J.PASSIVE is present', () =>
+  it('keeps a state J-ABS has no opinion about, passive or otherwise', () =>
   {
+    // Arrange: knowing what a passive state is belongs to J-Passive, so core lists this one. The
+    // exclusion now lives in the passive/JABS bridge, where both halves of that question are in
+    // scope, and is covered there.
     const trackedState = buildTrackedState({ stateId: 1021 });
     const battler = buildBattler(sandbox, { _passiveStateIds: [ 1021 ] });
 
     globalThis.$jabsEngine.getNegativeJabsStatesByUuid.mockReturnValue([ trackedState ]);
 
+    // Act
     const collection = StateAfflictionProvider.collectForBattler(battler);
 
-    expect(collection.isEmpty()).toBe(true);
+    // Assert
+    expect(collection.negative.length).toBe(1);
   });
 
   it('filters expired and death states', () =>
@@ -189,29 +194,39 @@ describe('StateAfflictionProvider', () =>
     expect(collection.positive[0].polarity).toBe('positive');
   });
 
-  it('skips a passive-derived positive row when disqualified', () =>
+  it('keeps a positive row core has no reason to reject', () =>
   {
+    // Arrange: the counterpart of the negative case above. Both polarities route through the same
+    // qualifies check, so the passive exclusion is covered once, on the side of the seam that
+    // knows what a passive is.
     const trackedState = buildTrackedState({ stateId: 1021 });
     const battler = buildBattler(sandbox, { _passiveStateIds: [ 1021 ] });
 
     globalThis.$jabsEngine.getPositiveJabsStatesByUuid.mockReturnValue([ trackedState ]);
 
+    // Act
     const collection = StateAfflictionProvider.collectForBattler(battler);
 
-    expect(collection.isEmpty()).toBe(true);
+    // Assert
+    expect(collection.positive.length).toBe(1);
   });
 
-  it('does not filter passive states when J.PASSIVE is absent', () =>
+  it('skips a positive row disqualified for a reason core does own', () =>
   {
-    delete globalThis.J.PASSIVE;
-    const trackedState = buildTrackedState({ stateId: 1021 });
-    const battler = buildBattler(sandbox, { _passiveStateIds: [ 1021 ] });
+    // Arrange: expiry is J-ABS's own call, so it still disqualifies a row on this side of the
+    // seam. The surviving sibling is what proves the skip is selective rather than total.
+    const expiredBuff = buildTrackedState({ stateId: 1030, expired: true });
+    const liveBuff = buildTrackedState({ stateId: 1031 });
+    const battler = buildBattler(sandbox);
 
-    globalThis.$jabsEngine.getNegativeJabsStatesByUuid.mockReturnValue([ trackedState ]);
+    globalThis.$jabsEngine.getPositiveJabsStatesByUuid.mockReturnValue([ expiredBuff, liveBuff ]);
 
+    // Act
     const collection = StateAfflictionProvider.collectForBattler(battler);
 
-    expect(collection.negative.length).toBe(1);
+    // Assert
+    expect(collection.positive.length).toBe(1);
+    expect(collection.positive[0].stateId).toBe(1031);
   });
 
   it('resolves fill ratio and eternal null', () =>

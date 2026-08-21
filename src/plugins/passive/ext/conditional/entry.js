@@ -22,6 +22,7 @@ import './objects/Game_CharacterBase.js';
 import './managers/JABS_Battler.js';
 import './managers/JABS_Engine.js';
 import './models/JABS_Action.js';
+import './models/StateAfflictionProvider.js';
 import './models/AutoApplyStateDisplay.js';
 import './models/AutoInflictStateDisplay.js';
 import './models/RemoveStateOnMoveDisplay.js';

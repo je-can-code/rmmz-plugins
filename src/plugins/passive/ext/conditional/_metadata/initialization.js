@@ -27,6 +27,7 @@ J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Action = new Map();
 J.PASSIVE.EXT.CONDITIONAL.Aliased.JABS_Engine = new Map();
 J.PASSIVE.EXT.CONDITIONAL.Aliased.Game_CharacterBase = new Map();
 J.PASSIVE.EXT.CONDITIONAL.Aliased.Window_PassiveDetail = new Map();
+J.PASSIVE.EXT.CONDITIONAL.Aliased.StateAfflictionProvider = new Map();
 
 /**
  * All regular expressions used by this plugin.

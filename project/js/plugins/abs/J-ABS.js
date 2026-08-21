@@ -23836,9 +23836,6 @@ var StateAfflictionProvider = class StateAfflictionProvider {
 		if (trackedState.stateId === battler.deathStateId()) {
 			return false;
 		}
-		if (J.PASSIVE && battler.isPassiveState(trackedState.stateId) === true) {
-			return false;
-		}
 		return true;
 	}
 };
