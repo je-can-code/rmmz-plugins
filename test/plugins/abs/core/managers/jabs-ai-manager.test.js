@@ -2369,8 +2369,106 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
     {
       it('returns false for wide (non-narrow) shapes', () =>
       {
-        const battler = buildPhase2Battler({ decidedAction: buildAction({ getShape: () => 'circle' }) });
-        expect(JABS_AiManager.needsAxisAlignment(battler)).toEqual(false);
+        // Arrange: a circle reaches the same distance in every direction, so lateral position
+        // cannot improve it. The target is placed well off-axis on purpose - a misalignment this
+        // large would demand a step for any narrow shape, which is what makes the wide-shape
+        // rejection the only reason this answers false.
+        const battler = buildPhase2Battler({
+          decidedAction: buildAction({
+            getShape: () => 'circle',
+            getThicknessTiles: () => 1,
+          }),
+          getX: () => 0,
+          getY: () => 0,
+          getTarget: () => ({
+            getX: () => 5,
+            getY: () => 3,
+          }),
+        });
+
+        // Act
+        const result = JABS_AiManager.needsAxisAlignment(battler);
+
+        // Assert
+        expect(result).toEqual(false);
+      });
+
+      it('treats a wall shape as narrow, the same as a line', () =>
+      {
+        // Arrange: walls are a flat plane laid across the approach, so a target off to one side
+        // is missed exactly as it would be by a line.
+        const battler = buildPhase2Battler({
+          decidedAction: buildAction({
+            getShape: () => 'wall',
+            getThicknessTiles: () => 1,
+          }),
+          getX: () => 0,
+          getY: () => 0,
+          getTarget: () => ({
+            getX: () => 5,
+            getY: () => 3,
+          }),
+        });
+
+        // Act
+        const result = JABS_AiManager.needsAxisAlignment(battler);
+
+        // Assert
+        expect(result).toEqual(true);
+      });
+
+      it('treats a narrow arc as narrow, and demands a step when the chord cannot reach', () =>
+      {
+        // Arrange: a 30-degree arc at range 4 spans a chord half-width of 4*sin(15deg), roughly
+        // 1.04 tiles - narrower than the three-tile lateral gap below. The existing arc case sits
+        // comfortably inside its tolerance, so this is the one that proves an arc can demand a
+        // step at all rather than always answering false.
+        const battler = buildPhase2Battler({
+          decidedAction: buildAction({
+            getShape: () => 'arc',
+            getDegrees: () => 30,
+            getRange: () => 4,
+          }),
+          getX: () => 0,
+          getY: () => 0,
+          getTarget: () => ({
+            getX: () => 5,
+            getY: () => 3,
+          }),
+        });
+
+        // Act
+        const result = JABS_AiManager.needsAxisAlignment(battler);
+
+        // Assert
+        expect(result).toEqual(true);
+      });
+
+      it('uses the arc chord rather than the tile thickness when sizing an arc tolerance', () =>
+      {
+        // Arrange: this arc's chord half-width is wide enough to cover the gap, while the tile
+        // thickness the line and wall branch would use is not - so the two tolerance branches
+        // disagree here, and only the arc-specific one answers false.
+        const battler = buildPhase2Battler({
+          decidedAction: buildAction({
+            getShape: () => 'arc',
+            getDegrees: () => 180,
+            getRange: () => 8,
+            getThicknessTiles: () => 1,
+          }),
+          getX: () => 0,
+          getY: () => 0,
+          getTarget: () => ({
+            getX: () => 5,
+            getY: () => 3,
+          }),
+        });
+
+        // Act
+        const result = JABS_AiManager.needsAxisAlignment(battler);
+
+        // Assert
+        expect(result).toEqual(false);
       });
 
       it('returns false when there is no relevant target', () =>
@@ -2417,6 +2515,34 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         });
         // dominant axis is Y (dy=5 > dx=3), so misalignment is the X gap (3), tolerance is 1/2=0.5.
         expect(JABS_AiManager.needsAxisAlignment(battler)).toEqual(true);
+      });
+
+      it('picks the perpendicular gap, not merely the larger one, on a Y-dominant approach', () =>
+      {
+        // Arrange: the two axes disagree about the answer here on purpose. A target one tile to
+        // the side and five ahead is already within a four-tile-thick line, so the correct
+        // perpendicular reading (the X gap, 1) is inside the two-tile tolerance and no step is
+        // needed. Reading the Y gap (5) instead would call for a sidestep that walks the ally out
+        // of its own line of fire. The existing Y-dominant case above cannot tell these apart,
+        // since both of its gaps exceed the tolerance.
+        const battler = buildPhase2Battler({
+          decidedAction: buildAction({
+            getShape: () => 'line',
+            getThicknessTiles: () => 4,
+          }),
+          getX: () => 0,
+          getY: () => 0,
+          getTarget: () => ({
+            getX: () => 1,
+            getY: () => 5,
+          }),
+        });
+
+        // Act
+        const result = JABS_AiManager.needsAxisAlignment(battler);
+
+        // Assert
+        expect(result).toEqual(false);
       });
 
       it('uses the arc chord half-width as tolerance for arc shapes', () =>
@@ -2833,101 +2959,224 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         JABS_AiManager.findDefensiveThreatBattler = () => buildBattler();
       }
 
+      /**
+       * Arranges everything downstream so the call would run all the way through and raise guard.
+       * Every rejection test below flips exactly one input off this baseline, which is what makes
+       * its untouched `executeGuard` mean "this guard stopped it" rather than "something further
+       * down did". Without it the suite-wide `chanceIn100` default of false stops all of them, and
+       * each guard could be deleted with nothing turning red.
+       */
+      function arrangeGuardReachable()
+      {
+        stubThreatFound();
+        globalThis.RPGManager.chanceIn100.mockReturnValue(true);
+        globalThis.Graphics.frameCount = 50;
+      }
+
+      /**
+       * A battler hurt enough to clear the hp gate, which is the baseline every rejection below
+       * starts from.
+       * @param {object} [overrides] The single condition this test is flipping off.
+       * @returns {object}
+       */
+      function buildWoundedGuardBattler(overrides = {})
+      {
+        return buildGuardBattler({
+          gameBattler: {
+            hp: 10, mhp: 100,
+          },
+          ...overrides,
+        });
+      }
+
       it('does nothing for a non-actor battler', () =>
       {
-        const battler = buildGuardBattler({ isActor: () => false });
+        // Arrange: enemies have their own guard logic; this path is for party members only.
+        arrangeGuardReachable();
+        const battler = buildWoundedGuardBattler({ isActor: () => false });
+
+        // Act
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
+
+        // Assert
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
       it('does nothing for the player', () =>
       {
-        const battler = buildGuardBattler({ isPlayer: () => true });
+        // Arrange: the player guards by holding the button, so AI must never do it for them.
+        arrangeGuardReachable();
+        const battler = buildWoundedGuardBattler({ isPlayer: () => true });
+
+        // Act
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
+
+        // Assert
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
       it('does nothing when not engaged', () =>
       {
-        const battler = buildGuardBattler({ isEngaged: () => false });
+        // Arrange
+        arrangeGuardReachable();
+        const battler = buildWoundedGuardBattler({ isEngaged: () => false });
+
+        // Act
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
+
+        // Assert
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
       it('does nothing when already guarding', () =>
       {
-        const battler = buildGuardBattler({ guarding: () => true });
+        // Arrange: guard is a toggle rather than a timed action, so re-raising it would drop it.
+        arrangeGuardReachable();
+        const battler = buildWoundedGuardBattler({ guarding: () => true });
+
+        // Act
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
+
+        // Assert
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
       it('does nothing when hp is above the defensive guard threshold', () =>
       {
-        stubThreatFound();
-        const battler = buildGuardBattler({ gameBattler: { hp: 90, mhp: 100 } });
+        // Arrange: a healthy ally keeps attacking rather than turtling.
+        arrangeGuardReachable();
+        const battler = buildGuardBattler({
+          gameBattler: {
+            hp: 90, mhp: 100,
+          },
+        });
+
+        // Act
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
+
+        // Assert
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
-      it('does nothing when there is no valid guard skill resolved', () =>
+      it('skips the hp gate when the threshold is configured at zero or less', () =>
       {
-        JABS_Battler.isGuardSkillById = () => false;
-        stubThreatFound();
-        const battler = buildGuardBattler({ gameBattler: { hp: 10, mhp: 100 } });
+        // Arrange: a threshold of zero disables the gate from the other side, the way a threshold
+        // of one disables it from above - so a battler at full health still guards.
+        arrangeGuardReachable();
+        J.ABS.Metadata.AiAllyDefensiveGuardHpThresholdPercent = 0;
+        const battler = buildGuardBattler({
+          gameBattler: {
+            hp: 100, mhp: 100,
+          },
+        });
+
+        // Act
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
-        expect(battler.executeGuard).not.toHaveBeenCalled();
+
+        // Assert
+        expect(battler.executeGuard).toHaveBeenCalledWith(true);
+
+        // restore for later tests.
+        J.ABS.Metadata.AiAllyDefensiveGuardHpThresholdPercent = 0.5;
+      });
+
+      it('skips the hp gate for a battler with no maximum hp to measure against', () =>
+      {
+        // Arrange: dividing by a zero mhp would yield NaN, and NaN compares false against the
+        // gate - so the gate is skipped explicitly rather than being left to that accident.
+        arrangeGuardReachable();
+        const battler = buildGuardBattler({
+          gameBattler: {
+            hp: 0, mhp: 0,
+          },
+        });
+
+        // Act
+        JABS_AiManager.tryRaiseAllyCombatGuard(battler);
+
+        // Assert
+        expect(battler.executeGuard).toHaveBeenCalledWith(true);
       });
 
       it('does nothing when there is no active threat', () =>
       {
+        // Arrange
+        arrangeGuardReachable();
         JABS_AiManager.findDefensiveThreatBattler = () => null;
-        const battler = buildGuardBattler({ gameBattler: { hp: 10, mhp: 100 } });
+        const battler = buildWoundedGuardBattler();
+
+        // Act
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
+
+        // Assert
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
       it('does nothing while the guard cooldown is still active', () =>
       {
-        stubThreatFound();
-        globalThis.Graphics.frameCount = 5;
-        const battler = buildGuardBattler({ gameBattler: { hp: 10, mhp: 100 }, _aiAllyDefensiveGuardReadyFrame: 100 });
+        // Arrange: guard has no resource cost, so only this cooldown stops an ally re-raising it
+        // the instant it drops.
+        arrangeGuardReachable();
+        const battler = buildWoundedGuardBattler({ _aiAllyDefensiveGuardReadyFrame: 100 });
+
+        // Act
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
+
+        // Assert
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
       it('does nothing when RNG does not favor raising guard', () =>
       {
-        stubThreatFound();
+        // Arrange
+        arrangeGuardReachable();
         globalThis.RPGManager.chanceIn100.mockReturnValue(false);
-        const battler = buildGuardBattler({ gameBattler: { hp: 10, mhp: 100 } });
+        const battler = buildWoundedGuardBattler();
+
+        // Act
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
+
+        // Assert
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
       it('does nothing when the battler has no guard skill equipped', () =>
       {
-        stubThreatFound();
-        globalThis.RPGManager.chanceIn100.mockReturnValue(true);
-        const battler = buildGuardBattler({ gameBattler: { hp: 10, mhp: 100 }, isGuardSkillEquipped: () => false });
+        // Arrange
+        arrangeGuardReachable();
+        const battler = buildWoundedGuardBattler({ isGuardSkillEquipped: () => false });
+
+        // Act
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
+
+        // Assert
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
       it('does nothing when there is no usable guard data', () =>
       {
-        stubThreatFound();
-        globalThis.RPGManager.chanceIn100.mockReturnValue(true);
-        const battler = buildGuardBattler({ gameBattler: { hp: 10, mhp: 100 }, getGuardData: () => null });
+        // Arrange
+        arrangeGuardReachable();
+        const battler = buildWoundedGuardBattler({ getGuardData: () => null });
+
+        // Act
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
+
+        // Assert
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
       it('does nothing when the guard data reports it cannot guard right now', () =>
       {
-        stubThreatFound();
-        globalThis.RPGManager.chanceIn100.mockReturnValue(true);
-        const battler = buildGuardBattler({ gameBattler: { hp: 10, mhp: 100 }, getGuardData: () => ({ canGuard: () => false }) });
+        // Arrange: guard data exists but is on its own cooldown, which is a separate rejection
+        // from the data being absent entirely.
+        arrangeGuardReachable();
+        const battler = buildWoundedGuardBattler({ getGuardData: () => ({ canGuard: () => false }) });
+
+        // Act
         JABS_AiManager.tryRaiseAllyCombatGuard(battler);
+
+        // Assert
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
@@ -2982,52 +3231,120 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         JABS_AiManager.findDefensiveThreatBattler = originalFindDefensiveThreatBattler;
       });
 
+      /**
+       * Arranges everything downstream of the guards so the call would run all the way through to
+       * the dodge and answer true.<br/>
+       * Every guard test below flips exactly one input off this baseline, which is what makes its
+       * `false` mean "this guard stopped it" rather than "something further down did". Without it
+       * the suite-wide `chanceIn100` default of false answers false for all of them, and each
+       * guard could be deleted with nothing turning red.
+       */
+      function arrangeDodgeReachable()
+      {
+        JABS_AiManager.findDefensiveThreatBattler = () => buildBattler();
+        globalThis.RPGManager.chanceIn100.mockReturnValue(true);
+        globalThis.Graphics.frameCount = 20;
+      }
+
       it('returns false when not engaged', () =>
       {
+        // Arrange: a battler with nobody to fight has nothing to dodge away from yet.
+        arrangeDodgeReachable();
         const battler = buildDodgeBattler({ isEngaged: () => false });
-        expect(JABS_AiManager.tryDefensiveInterrupt(battler)).toEqual(false);
+
+        // Act
+        const result = JABS_AiManager.tryDefensiveInterrupt(battler);
+
+        // Assert
+        expect(result).toEqual(false);
+        expect(battler.tryExecuteAiEmergencyDodgeAwayFrom).not.toHaveBeenCalled();
       });
 
       it('returns false while casting or channeling', () =>
       {
+        // Arrange: dodging out of a cast would silently cancel it, so a committed cast wins.
+        arrangeDodgeReachable();
         const battler = buildDodgeBattler({ isCastingOrChanneling: () => true });
-        expect(JABS_AiManager.tryDefensiveInterrupt(battler)).toEqual(false);
+
+        // Act
+        const result = JABS_AiManager.tryDefensiveInterrupt(battler);
+
+        // Assert
+        expect(result).toEqual(false);
+        expect(battler.tryExecuteAiEmergencyDodgeAwayFrom).not.toHaveBeenCalled();
       });
 
       it('returns false while already dodging', () =>
       {
+        // Arrange: a dodge in flight must play out rather than being restacked every tick.
+        arrangeDodgeReachable();
         const battler = buildDodgeBattler({ isDodging: () => true });
-        expect(JABS_AiManager.tryDefensiveInterrupt(battler)).toEqual(false);
+
+        // Act
+        const result = JABS_AiManager.tryDefensiveInterrupt(battler);
+
+        // Assert
+        expect(result).toEqual(false);
+        expect(battler.tryExecuteAiEmergencyDodgeAwayFrom).not.toHaveBeenCalled();
       });
 
       it('returns false while the dodge cooldown is still active', () =>
       {
-        globalThis.Graphics.frameCount = 5;
+        // Arrange: the cooldown is what keeps a threatened ally from dodging every single frame.
+        arrangeDodgeReachable();
         const battler = buildDodgeBattler({ _aiDefensiveDodgeReadyFrame: 100 });
-        expect(JABS_AiManager.tryDefensiveInterrupt(battler)).toEqual(false);
+
+        // Act
+        const result = JABS_AiManager.tryDefensiveInterrupt(battler);
+
+        // Assert
+        expect(result).toEqual(false);
+        expect(battler.tryExecuteAiEmergencyDodgeAwayFrom).not.toHaveBeenCalled();
       });
 
       it('returns false when there is no threat to dodge away from', () =>
       {
+        // Arrange
+        arrangeDodgeReachable();
         JABS_AiManager.findDefensiveThreatBattler = () => null;
         const battler = buildDodgeBattler();
-        expect(JABS_AiManager.tryDefensiveInterrupt(battler)).toEqual(false);
+
+        // Act
+        const result = JABS_AiManager.tryDefensiveInterrupt(battler);
+
+        // Assert
+        expect(result).toEqual(false);
+        expect(battler.tryExecuteAiEmergencyDodgeAwayFrom).not.toHaveBeenCalled();
       });
 
       it('returns false when RNG does not favor dodging', () =>
       {
-        JABS_AiManager.findDefensiveThreatBattler = () => buildBattler();
+        // Arrange
+        arrangeDodgeReachable();
         globalThis.RPGManager.chanceIn100.mockReturnValue(false);
         const battler = buildDodgeBattler();
-        expect(JABS_AiManager.tryDefensiveInterrupt(battler)).toEqual(false);
+
+        // Act
+        const result = JABS_AiManager.tryDefensiveInterrupt(battler);
+
+        // Assert
+        expect(result).toEqual(false);
+        expect(battler.tryExecuteAiEmergencyDodgeAwayFrom).not.toHaveBeenCalled();
       });
 
       it('returns false when the emergency dodge attempt itself fails', () =>
       {
-        JABS_AiManager.findDefensiveThreatBattler = () => buildBattler();
-        globalThis.RPGManager.chanceIn100.mockReturnValue(true);
+        // Arrange: the dodge can still be refused by the movement layer, which is the one
+        // rejection that happens after the attempt rather than before it.
+        arrangeDodgeReachable();
         const battler = buildDodgeBattler({ tryExecuteAiEmergencyDodgeAwayFrom: vi.fn(() => false) });
-        expect(JABS_AiManager.tryDefensiveInterrupt(battler)).toEqual(false);
+
+        // Act
+        const result = JABS_AiManager.tryDefensiveInterrupt(battler);
+
+        // Assert
+        expect(result).toEqual(false);
+        expect(battler.tryExecuteAiEmergencyDodgeAwayFrom).toHaveBeenCalled();
       });
 
       it('dodges, clears the decided action, and returns true when everything lines up', () =>
