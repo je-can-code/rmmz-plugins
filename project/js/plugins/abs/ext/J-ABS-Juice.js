@@ -1411,7 +1411,7 @@ var JuiceProfileResolver = class JuiceProfileResolver {
 	static resolveJuiceWeaponTipRadians(action, motionKey) {
 		const skill = action.getBaseSkill();
 		const deg = skill.jabsJuiceStabTipDegrees;
-		if (deg !== null && deg !== undefined && Number.isFinite(deg)) {
+		if (Number.isFinite(deg)) {
 			return deg * Math.PI / 180;
 		}
 		if (motionKey === JuiceWeaponSwingMotionEffect.MotionTypes.StabForward || motionKey === JuiceWeaponSwingMotionEffect.MotionTypes.Present) {

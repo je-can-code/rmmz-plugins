@@ -404,6 +404,22 @@ describe('CraftingComponent currencies (direct src import)', () =>
       // Act & Assert
       expect(makeComponent(CraftingComponent.Types.SDP, 100).hasEnough()).toBe(false);
     });
+
+    it('cannot afford an SDP cost at all when the SDP system is not installed', () =>
+    {
+      // Arrange: getSdpPoints is defined by J-SDP and by nothing else, so a leader in a game
+      // without that plugin has no such method to call. The recipe is still perfectly valid - the
+      // optional plugin backing its currency simply is not here - so the honest answer is that the
+      // party holds none of it and never can, rather than an error thrown at the player.
+      globalThis.J.JAFTING.EXT.CREATE.Metadata.usingSdp = () => false;
+      $gameParty._members = [ {} ];
+
+      // Act
+      const affordable = makeComponent(CraftingComponent.Types.SDP, 100).hasEnough();
+
+      // Assert
+      expect(affordable).toBe(false);
+    });
   });
   //endregion affordability
 });

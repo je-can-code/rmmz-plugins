@@ -577,18 +577,17 @@ var CraftingComponent = class CraftingComponent {
 	}
 	/**
 	* Checks if the party has as many of this component as are required.
+	*
+	* Every kind of component answers this the same way - compare the requirement against what the
+	* party holds - and {@link #getHandledQuantity} is already the one place that knows how to read
+	* "what the party holds" for each kind. Asking it rather than re-deriving the figure per type is
+	* what keeps the two from drifting apart, which they had: the categorical rule that a slot is
+	* filled by exactly one stack lives there, and so does the answer for an SDP cost in a game with
+	* no SDP installed.
 	* @return {boolean}
 	*/
 	hasEnough() {
-		if (this.isCategorical()) return this.#count <= this.getHandledQuantity();
-		if (this.isDatabaseEntry()) {
-			const count = $gameParty.numItems(this.getItem());
-			return this.#count <= count;
-		}
-		if (this.isGold()) {
-			return this.#count <= $gameParty.gold();
-		}
-		return this.#count <= $gameParty.leader().getSdpPoints();
+		return this.#count <= this.getHandledQuantity();
 	}
 	/**
 	* The display label for a categorical slot, such as `Any Meat`.

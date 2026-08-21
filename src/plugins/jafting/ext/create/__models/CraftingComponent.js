@@ -375,6 +375,7 @@ class CraftingComponent
     {
       // sdp is all that remains: {@link isDatabaseEntry} throws on an unrecognized type, and gold is
       // the only other thing it answers false for.
+      // TODO: update this to only apply to the leader?
       return $gameParty.leader()
         .getSdpPoints();
     }
@@ -465,35 +466,18 @@ class CraftingComponent
 
   /**
    * Checks if the party has as many of this component as are required.
+   *
+   * Every kind of component answers this the same way - compare the requirement against what the
+   * party holds - and {@link #getHandledQuantity} is already the one place that knows how to read
+   * "what the party holds" for each kind. Asking it rather than re-deriving the figure per type is
+   * what keeps the two from drifting apart, which they had: the categorical rule that a slot is
+   * filled by exactly one stack lives there, and so does the answer for an SDP cost in a game with
+   * no SDP installed.
    * @return {boolean}
    */
   hasEnough()
   {
-    // a slot resolves to one entry, so a single eligible stack has to cover the whole requirement.
-    if (this.isCategorical()) return (this.#count <= this.getHandledQuantity());
-
-    // check if this is a database entry.
-    if (this.isDatabaseEntry())
-    {
-      // determine how many the party has of this particular item.
-      const count = $gameParty.numItems(this.getItem());
-
-      // if we don't have as many as are required, then we don't have enough.
-      return (this.#count <= count);
-    }
-
-    // check if this is just gold.
-    if (this.isGold())
-    {
-      // add the money to the running total.
-      return (this.#count <= $gameParty.gold());
-    }
-
-    // sdp is all that remains: {@link isDatabaseEntry} throws on an unrecognized type, and gold is the
-    // only other thing it answers false for.
-    // TODO: update this to only apply to the leader?
-    return (this.#count <= $gameParty.leader()
-      .getSdpPoints());
+    return (this.#count <= this.getHandledQuantity());
   }
 
   /**

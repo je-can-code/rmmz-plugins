@@ -134,7 +134,10 @@ class JuiceProfileResolver
   {
     const skill = action.getBaseSkill();
     const deg = skill.jabsJuiceStabTipDegrees;
-    if (deg !== null && deg !== undefined && Number.isFinite(deg))
+
+    // an untagged skill leaves this undefined, which Number.isFinite already answers false for -
+    // as it does for null - so this one check covers absence and nonsense alike.
+    if (Number.isFinite(deg))
     {
       return (deg * Math.PI) / 180;
     }
