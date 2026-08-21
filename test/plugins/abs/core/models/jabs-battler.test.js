@@ -6285,6 +6285,9 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       // Assert
       expect(withinScope).toBe(true);
+
+      // restore the team rules this file's later cases expect, rather than leaking them onward.
+      JABS_TeamRules.isOpposed = vi.fn(() => true);
     });
 
     it('refuses the caster as the target when the action reaches neither allies nor self', async () =>
@@ -6303,6 +6306,9 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       // Assert
       expect(withinScope).toBe(false);
+
+      // restore the team rules this file's later cases expect, rather than leaking them onward.
+      JABS_TeamRules.isOpposed = vi.fn(() => true);
     });
 
     it('is true when the target is the caster and the scope is everyone, with no other scope flag set', () =>

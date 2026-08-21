@@ -939,7 +939,7 @@ var JuiceWeaponSwingMotionEffect = class JuiceWeaponSwingMotionEffect extends Ju
 	* @returns {number}
 	*/
 	static stabBladeRotationRadians(dir, tipAngleRadians) {
-		const tip = tipAngleRadians !== undefined && tipAngleRadians !== null && Number.isFinite(tipAngleRadians) ? tipAngleRadians : JuiceWeaponSwingMotionEffect.StabIconTipAngleRadians;
+		const tip = Number.isFinite(tipAngleRadians) ? tipAngleRadians : JuiceWeaponSwingMotionEffect.StabIconTipAngleRadians;
 		const forward = JuiceWeaponSwingMotionEffect.#forwardUnit(dir);
 		const thrustAngle = Math.atan2(forward.y, forward.x);
 		return thrustAngle - tip;
@@ -1035,8 +1035,8 @@ var JuiceWeaponSwingMotionEffect = class JuiceWeaponSwingMotionEffect extends Ju
 		* Stab tip axis (radians); ignored except stab-forward.
 		* @type {number}
 		*/
-		this._stabTipAngleRadians = stabTipAngleRadians !== undefined && stabTipAngleRadians !== null && Number.isFinite(stabTipAngleRadians) ? stabTipAngleRadians : JuiceWeaponSwingMotionEffect.StabIconTipAngleRadians;
-		if (neutralBaseX !== undefined && neutralBaseX !== null && Number.isFinite(neutralBaseX) && neutralBaseY !== undefined && neutralBaseY !== null && Number.isFinite(neutralBaseY)) {
+		this._stabTipAngleRadians = Number.isFinite(stabTipAngleRadians) ? stabTipAngleRadians : JuiceWeaponSwingMotionEffect.StabIconTipAngleRadians;
+		if (Number.isFinite(neutralBaseX) && Number.isFinite(neutralBaseY)) {
 			this._baseX = neutralBaseX;
 			this._baseY = neutralBaseY;
 		} else {
@@ -2203,7 +2203,7 @@ var JuiceWeaponSwingOverlay = class JuiceWeaponSwingOverlay {
 	* @returns {number}
 	*/
 	static #coalesceSpinCount(spinCount) {
-		if (spinCount === undefined || spinCount === null || Number.isFinite(spinCount) === false) {
+		if (Number.isFinite(spinCount) === false) {
 			return 1;
 		}
 		return spinCount;
@@ -2296,7 +2296,7 @@ var JuiceWeaponSwingOverlay = class JuiceWeaponSwingOverlay {
 	*/
 	static play(parentSprite, iconIndex, peakRotationRadians, durationFrames, motionType, arcSpanDegrees, swingDirection, weaponTipRadians, spinCount, profileGun) {
 		let spanDeg = arcSpanDegrees;
-		if (spanDeg === undefined || spanDeg === null || Number.isFinite(spanDeg) === false) {
+		if (Number.isFinite(spanDeg) === false) {
 			spanDeg = 120;
 		}
 		const pw = ImageManager.iconWidth;
@@ -2319,7 +2319,7 @@ var JuiceWeaponSwingOverlay = class JuiceWeaponSwingOverlay {
 			swingDir = parentSprite._character.direction();
 		}
 		let weaponTipResolved = weaponTipRadians;
-		if (weaponTipResolved === undefined || weaponTipResolved === null || Number.isFinite(weaponTipResolved) === false) {
+		if (Number.isFinite(weaponTipResolved) === false) {
 			weaponTipResolved = JuiceWeaponSwingMotionEffect.StabIconTipAngleRadians;
 		}
 		const spinCountResolved = JuiceWeaponSwingOverlay.#coalesceSpinCount(spinCount);
