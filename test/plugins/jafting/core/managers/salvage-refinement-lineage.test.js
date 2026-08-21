@@ -852,6 +852,57 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
       // Assert
       expect(pushed).toBe(false);
     });
+
+    it('passes an ingredient-class armor row straight through', () =>
+    {
+      // Arrange: the armor half of this rule had no case at all - only weapon rows were built - so
+      // the entire armor arm could have been deleted without a test noticing.
+      const flat = [];
+      const row = new JaftingSalvageLedgerRow('a', 13, 1);
+      const equip = fakeDatum('a', 13, { atypeId: materialArmorTypeId });
+
+      // Act
+      const pushed = JaftingSalvageManager.tryPushMaterialEquipmentPassThrough(flat, row, equip);
+
+      // Assert
+      expect(pushed).toBe(true);
+      expect(flat).toHaveLength(1);
+    });
+
+    it('declines an armor row whose equipment is not ingredient-class', () =>
+    {
+      // Arrange
+      const flat = [];
+      const row = new JaftingSalvageLedgerRow('a', 14, 1);
+      const equip = fakeDatum('a', 14, { atypeId: materialArmorTypeId + 1 });
+
+      // Act
+      const pushed = JaftingSalvageManager.tryPushMaterialEquipmentPassThrough(flat, row, equip);
+
+      // Assert
+      expect(pushed).toBe(false);
+    });
+
+    it.each([
+      [ 'a weapon row pointing at ingredient armor', 'w', 'a', { atypeId: 4 } ],
+      [ 'an armor row pointing at an ingredient weapon', 'a', 'w', { wtypeId: 5 } ],
+    ])('declines %s', (_label, rowType, datumKind, extra) =>
+    {
+      // Arrange: the row's declared type and the datum's actual kind are both read, and every case
+      // above agrees on the two - so a rule that had stopped consulting the row type would look
+      // exactly as correct. A mismatched pair is ingredient-class by one reading and not by the
+      // other, and refunding it would hand back a material the row never named.
+      const flat = [];
+      const row = new JaftingSalvageLedgerRow(rowType, 15, 1);
+      const equip = fakeDatum(datumKind, 15, extra);
+
+      // Act
+      const pushed = JaftingSalvageManager.tryPushMaterialEquipmentPassThrough(flat, row, equip);
+
+      // Assert
+      expect(pushed).toBe(false);
+      expect(flat).toEqual([]);
+    });
   });
 
   describe('applyCraftRecipeOutputs', () =>
