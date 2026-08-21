@@ -230,6 +230,42 @@ describe('J-ABS-Pixelistics JABS_Battler smart movement (direct src import)', ()
       expect(character.pixelMoveByInput).toHaveBeenCalledWith(6);
     });
 
+    it('keeps a passable straight primary instead of the diagonal the vector implies', () =>
+    {
+      // Arrange- a target mostly right and slightly down resolves to an 11 degree angle, which is
+      // inside the RIGHT sector. The vector-derived diagonal candidate for the same delta is
+      // LOWERRIGHT and it is equally passable here, so this is the arrangement that separates
+      // "took the angle's primary" from "fell through and took the diagonal": both are available and
+      // only one of them is correct.
+      const character = buildCharacter({ x: 0, y: 0 });
+      const battler = buildBattler(character);
+
+      // Act
+      battler.smartMoveTowardCoordinates(5, 1);
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(6);
+    });
+
+    it('does not consult the tile A* hint once a pixel-aware direction is decided', () =>
+    {
+      // Arrange- A* answers a different direction than the pixel probes do, so adopting it
+      // unconditionally would silently override every decision the pixel-aware chain just made.
+      const character = buildCharacter({
+        x: 0,
+        y: 0,
+        findDirectionTo: vi.fn(() => 4),
+      });
+      const battler = buildBattler(character);
+
+      // Act
+      battler.smartMoveTowardCoordinates(5, 0);
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(6);
+      expect(character.findDirectionTo).not.toHaveBeenCalled();
+    });
+
     it('falls back to the vector diagonal when the primary direction is blocked', () =>
     {
       // Arrange- a target down and to the right gives a 45 degree primary of 3; blocking only the
@@ -568,6 +604,68 @@ describe('J-ABS-Pixelistics JABS_Battler smart movement (direct src import)', ()
       expect(character.pixelMoveByInput).toHaveBeenCalledWith(4);
     });
 
+    it('probes cardinal candidates with the straight check rather than the diagonal one', () =>
+    {
+      // Arrange- every diagonal is blocked and every cardinal is open, so the retreat has to come out
+      // of the cardinal set. The two probes disagree here on purpose: asking the diagonal probe about
+      // a cardinal would reject all eight candidates and hand the decision to the cornered fallback,
+      // which answers LEFT rather than the direction that actually maximises separation.
+      useRealClosenessRules(3);
+      const character = buildCharacter({
+        x: 0,
+        y: 0,
+        canPassStraight: () => true,
+        canPassDiagonalByDirection: () => false,
+      });
+      const battler = buildRetreatingBattler(character, { x: -1, y: 0 });
+
+      // Act
+      battler.smartMoveAwayFromTarget();
+
+      // Assert- the threat is directly left, so stepping right separates furthest.
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(6);
+    });
+
+    it('probes diagonal candidates with the diagonal check rather than the straight one', () =>
+    {
+      // Arrange- the mirror of the case above. The straight probe answers true for everything, so
+      // treating a diagonal as a straight would let the blocked down-right diagonal through and it
+      // would win the loop outright, since it points exactly opposite the threat.
+      useRealClosenessRules(3);
+      const character = buildCharacter({
+        x: 0,
+        y: 0,
+        canPassStraight: () => true,
+        canPassDiagonalByDirection: () => false,
+      });
+      const battler = buildRetreatingBattler(character, { x: -1, y: -1 });
+
+      // Act
+      battler.smartMoveAwayFromTarget();
+
+      // Assert- down is the best remaining cardinal once the diagonals are correctly excluded.
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(2);
+    });
+
+    it('chooses a diagonal when it separates further than any cardinal does', () =>
+    {
+      // Arrange- nothing is blocked, so no candidate is filtered and the winner is decided purely on
+      // simulated separation. Dropping the diagonals from consideration would answer DOWN instead,
+      // which is what makes this the case that proves they are considered at all.
+      useRealClosenessRules(3);
+      const character = buildCharacter({
+        x: 0,
+        y: 0,
+      });
+      const battler = buildRetreatingBattler(character, { x: -1, y: -1 });
+
+      // Act
+      battler.smartMoveAwayFromTarget();
+
+      // Assert- the threat is up and to the left, so down-and-right is the true opposite.
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(3);
+    });
+
     it('falls back to any passable diagonal when no direction increases separation', () =>
     {
       // Arrange- standing exactly on the target makes every simulated step equidistant, so no
@@ -654,6 +752,94 @@ describe('J-ABS-Pixelistics JABS_Battler smart movement (direct src import)', ()
 
       // Assert
       expect(character.setMicroRouteFrames).toHaveBeenCalledWith(2);
+    });
+
+    /**
+     * Each candidate direction owns a branch deciding which way its simulated step displaces the
+     * battler, and the chain ends in an unguarded `else` meaning LEFT. Collapsing any one of those
+     * branches therefore simulates a leftward step for a direction that is not LEFT- and that is
+     * invisible unless leftward movement is the wrong answer in the scenario. Every case below parks
+     * the threat where the direction under test increases separation while a leftward step reduces
+     * it, and keeps LOWERLEFT open but non-improving so the cornered fallback has a visibly different
+     * answer to give.
+     * @param {object} passability The passability overrides describing which directions are open.
+     * @param {{x: number, y: number}} threatPosition Where the threat this battler flees is standing.
+     * @returns {{battler: JABS_Battler, character: object}}
+     */
+    const buildSimulationScenario = (passability, threatPosition) =>
+    {
+      useRealClosenessRules(3);
+
+      const character = buildCharacter({
+        x: 0,
+        y: 0,
+        ...passability,
+      });
+      const battler = buildRetreatingBattler(character, threatPosition);
+
+      return { battler, character };
+    };
+
+    it('simulates an up-and-left step for the upper-left candidate', () =>
+    {
+      // Arrange- the threat sits down and to the left, so retreating up-and-left is the only open
+      // improvement while a plain leftward step would close the gap.
+      const { battler, character } = buildSimulationScenario({
+        canPassStraight: () => false,
+        canPassDiagonalByDirection: direction => direction === 7 || direction === 1,
+      }, { x: -1, y: 1 });
+
+      // Act
+      battler.smartMoveAwayFromTarget();
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(7);
+    });
+
+    it('simulates an up-and-right step for the upper-right candidate', () =>
+    {
+      // Arrange- the threat sits directly left, so up-and-right separates while leftward does not.
+      const { battler, character } = buildSimulationScenario({
+        canPassStraight: () => false,
+        canPassDiagonalByDirection: direction => direction === 9 || direction === 1,
+      }, { x: -1, y: 0 });
+
+      // Act
+      battler.smartMoveAwayFromTarget();
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(9);
+    });
+
+    it('simulates an upward step for the up candidate', () =>
+    {
+      // Arrange- the threat sits down and to the left, so retreating straight up gains ground.
+      const { battler, character } = buildSimulationScenario({
+        canPassStraight: direction => direction === 8,
+        canPassDiagonalByDirection: direction => direction === 1,
+      }, { x: -1, y: 1 });
+
+      // Act
+      battler.smartMoveAwayFromTarget();
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(8);
+    });
+
+    it('simulates a rightward step for the right candidate', () =>
+    {
+      // Arrange- the threat sits directly left, which is the clearest case where a rightward step and
+      // a leftward one are opposites rather than near-equals.
+      const { battler, character } = buildSimulationScenario({
+        canPassStraight: direction => direction === 6,
+        canPassDiagonalByDirection: direction => direction === 1,
+      }, { x: -1, y: 0 });
+
+      // Act
+      battler.smartMoveAwayFromTarget();
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(6);
     });
   });
 
@@ -802,6 +988,64 @@ describe('J-ABS-Pixelistics JABS_Battler smart movement (direct src import)', ()
       expect(character.pixelMoveByInput).toHaveBeenCalledWith(6);
     });
 
+    // The three cases below all sit on an axis, where exactly one of the four "want" flags is set.
+    // That is the only arrangement in which a flag can be wrong without another flag covering for it:
+    // with two flags set the builder returns a diagonal either way, and the fault hides. Each case
+    // opens precisely the diagonal a broken flag would produce, so the wrong answer is reachable and
+    // the right one is not a diagonal at all.
+    it('wants no rightward diagonal when the target sits directly below', () =>
+    {
+      // Arrange- a purely downward delta means neither horizontal flag is set, so no diagonal applies
+      // and the vertical cardinal has to carry the step. LOWERRIGHT is left open as the answer a
+      // spurious rightward want would produce.
+      const { battler, character } = buildFallbackScenario({
+        x: 0,
+        y: 0,
+        canPassDiagonalByDirection: direction => direction === 3,
+      });
+
+      // Act
+      battler.smartMoveTowardCoordinates(0, 10);
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(2);
+    });
+
+    it('wants no upward diagonal when the target sits directly to the left', () =>
+    {
+      // Arrange- a purely leftward delta sets only the leftward want. UPPERLEFT is left open as the
+      // answer a spurious upward want would produce.
+      const { battler, character } = buildFallbackScenario({
+        x: 0,
+        y: 0,
+        canPassDiagonalByDirection: direction => direction === 7,
+      });
+
+      // Act
+      battler.smartMoveTowardCoordinates(-10, 0);
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(4);
+    });
+
+    it('wants no up-and-right diagonal when the target sits directly to the right', () =>
+    {
+      // Arrange- the up-and-right pairing is the last one the builder tests, so it is the one that
+      // falls through to the "no diagonal intent" sentinel. UPPERRIGHT is left open as the answer a
+      // collapsed final pairing would produce.
+      const { battler, character } = buildFallbackScenario({
+        x: 0,
+        y: 0,
+        canPassDiagonalByDirection: direction => direction === 9,
+      });
+
+      // Act
+      battler.smartMoveTowardCoordinates(10, 0);
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(6);
+    });
+
     const cardinalCases = [
       [ 'rightward', 10, 1, 6 ],
       [ 'leftward', -10, 1, 4 ],
@@ -901,6 +1145,125 @@ describe('J-ABS-Pixelistics JABS_Battler smart movement (direct src import)', ()
 
       // Assert
       expect(character.pixelMoveByInput).toHaveBeenCalledWith(2);
+    });
+
+    // The cardinal list is built from the same four "want" flags, and a flag that wrongly reads true
+    // adds a direction the battler never intended to take. That extra entry is only observable when
+    // it is the one the routine would actually pick- so each case below blocks everything the correct
+    // list contains and leaves exactly the spurious entry open.
+    it('omits the upward cardinal when the target shares the horizontal axis exactly', () =>
+    {
+      // Arrange- a zero vertical delta wants neither up nor down, so the list holds only RIGHT.
+      // Blocking RIGHT leaves nothing pixel-aware to take and the A* hint answers instead, which is a
+      // direction no candidate list here could have produced.
+      const { battler, character } = buildFallbackScenario({
+        x: 0,
+        y: 0,
+        canPassDiagonalByDirection: () => false,
+        canPassStraight: direction => direction === 8,
+        findDirectionTo: () => 4,
+      });
+
+      // Act
+      battler.smartMoveTowardCoordinates(10, 0);
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(4);
+    });
+
+    it('omits the leftward cardinal when the target is to the right', () =>
+    {
+      // Arrange- horizontal dominates and the target is right and slightly down, so the list is RIGHT
+      // then DOWN. LEFT is open but must never be queued, which blocking RIGHT makes visible.
+      const { battler, character } = buildFallbackScenario({
+        x: 0,
+        y: 0,
+        canPassDiagonalByDirection: () => false,
+        canPassStraight: direction => direction === 4 || direction === 2,
+      });
+
+      // Act
+      battler.smartMoveTowardCoordinates(10, 1);
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(2);
+    });
+
+    it('omits the downward cardinal when the target is above', () =>
+    {
+      // Arrange- horizontal dominates and the target is right and slightly up, so the list is RIGHT
+      // then UP. DOWN is open and sits earlier in the build order than UP, so a spurious downward
+      // want would take precedence over the direction actually wanted.
+      const { battler, character } = buildFallbackScenario({
+        x: 0,
+        y: 0,
+        canPassDiagonalByDirection: () => false,
+        canPassStraight: direction => direction === 2 || direction === 8,
+      });
+
+      // Act
+      battler.smartMoveTowardCoordinates(10, -1);
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(8);
+    });
+
+    it('omits the upward cardinal when the target is below', () =>
+    {
+      // Arrange- horizontal dominates and the target is right and slightly down, so the list is RIGHT
+      // then DOWN, both of which are blocked. UP is the only open direction and must not be reachable
+      // from this delta, leaving the A* hint to answer.
+      const { battler, character } = buildFallbackScenario({
+        x: 0,
+        y: 0,
+        canPassDiagonalByDirection: () => false,
+        canPassStraight: direction => direction === 8,
+        findDirectionTo: () => 4,
+      });
+
+      // Act
+      battler.smartMoveTowardCoordinates(10, 1);
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(4);
+    });
+
+    it('omits the upward cardinal from the vertical-first list when the target is below', () =>
+    {
+      // Arrange- the vertical-first ordering builds its list in a different order, so each want has to
+      // be pinned twice. Here vertical dominates downward: the list is DOWN then RIGHT, and UP is open
+      // but unwanted. Blocking DOWN proves RIGHT was reached rather than a spurious UP.
+      const { battler, character } = buildFallbackScenario({
+        x: 0,
+        y: 0,
+        canPassDiagonalByDirection: () => false,
+        canPassStraight: direction => direction === 8 || direction === 6,
+      });
+
+      // Act
+      battler.smartMoveTowardCoordinates(1, 10);
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(6);
+    });
+
+    it('omits the rightward cardinal from the vertical-first list when the target is to the left', () =>
+    {
+      // Arrange- vertical dominates and the target is down and slightly left, so the list is DOWN then
+      // LEFT. RIGHT is open and sits ahead of LEFT in the build order, so a spurious rightward want
+      // would win outright.
+      const { battler, character } = buildFallbackScenario({
+        x: 0,
+        y: 0,
+        canPassDiagonalByDirection: () => false,
+        canPassStraight: direction => direction === 6 || direction === 4,
+      });
+
+      // Act
+      battler.smartMoveTowardCoordinates(-1, 10);
+
+      // Assert
+      expect(character.pixelMoveByInput).toHaveBeenCalledWith(4);
     });
   });
 

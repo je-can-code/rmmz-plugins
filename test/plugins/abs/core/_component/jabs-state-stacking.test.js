@@ -406,6 +406,43 @@ describe('J-ABS state stacking (direct src import)', () =>
       // Assert
       expect(jabsState.stackCount).toBe(2);
     });
+
+    it('notifies the battler of the data change when a stack actually lands', () =>
+    {
+      // Arrange- cap of 2 with one stack held, so there is genuine room to grow.
+      registerStateRow(STATE_ID, '<stackMax:2>');
+      const battler = buildGameBattler('carrier');
+      const jabsState = new globalThis.JABS_State(battler, STATE_ID, 0, 100, 1);
+      const dataChangeSpy = vi.spyOn(battler, 'onBattlerDataChange');
+
+      // Act
+      jabsState.incrementStacks(1);
+
+      // Assert- this is the anchor for the at-cap case below; without it, "not called" there
+      // could just as easily mean the notification never happens on any path.
+      expect(dataChangeSpy).toHaveBeenCalledTimes(1);
+      dataChangeSpy.mockRestore();
+    });
+
+    it('does not notify the battler when already at cap, where no stack can land', () =>
+    {
+      // Arrange- sitting exactly on the cap. The stack count is a useless discriminator here
+      // because Math.min clamps it back to the cap either way; the notification is the only
+      // observable that separates "the guard declined the increment" from "the guard ran the
+      // body and the clamp hid it."
+      registerStateRow(STATE_ID, '<stackMax:2>');
+      const battler = buildGameBattler('carrier');
+      const jabsState = new globalThis.JABS_State(battler, STATE_ID, 0, 100, 2);
+      const dataChangeSpy = vi.spyOn(battler, 'onBattlerDataChange');
+
+      // Act
+      jabsState.incrementStacks(1);
+
+      // Assert
+      expect(dataChangeSpy).not.toHaveBeenCalled();
+      expect(jabsState.stackCount).toBe(2);
+      dataChangeSpy.mockRestore();
+    });
   });
 
   describe('stack-conversion threshold (checkStackConversion)', () =>

@@ -164,6 +164,29 @@ describe('OverlayManager extension resolution (direct src import)', () =>
       expect(result).toBe(globalThis.$dataSkills[1]);
     });
 
+    it('never treats the target skill as its own overlay', () =>
+    {
+      // Arrange- a familial extension routinely carries the very type it extends, so a fire-typed
+      // `<extendType:fire>` skill intersects with itself. every other fixture here uses a plain
+      // non-extension target, which means the self-skip never had to hold for anything: the later
+      // `isExtension` check was doing all the work. this row makes the self-skip the only thing
+      // standing between resolution and its own circular-extension error.
+      globalThis.$dataSkills[1] = buildRow(1, {
+        mpCost: 10,
+        isExtension: true,
+        types: () => [ 'fire' ],
+        getExtensionTypes: [ 'fire' ],
+      });
+      const caster = buildCaster([ 1 ]);
+
+      // Act
+      const result = OverlayManager.getExtendedSkill(caster, 1);
+
+      // Assert- no overlays gathered at all, so the untouched database row comes straight back.
+      expect(result).toBe(globalThis.$dataSkills[1]);
+      expect(result.mpCost).toBe(10);
+    });
+
     it('applies an id-based overlay the caster has learned', () =>
     {
       // Arrange- skill 2 declares that it extends skill 1.
@@ -463,6 +486,28 @@ describe('OverlayManager extension resolution (direct src import)', () =>
 
       // Assert
       expect(result).toBe(globalThis.$dataStates[1]);
+    });
+
+    it('never treats the target state as its own overlay', () =>
+    {
+      // Arrange- mirrors the skill-side case, and matters more here: the battler is *carrying* the
+      // state being resolved, so the target id is always present in the walked list. a burn-typed
+      // state that also extends burn-typed states would gather itself and detonate on the circular
+      // guard if the self-skip ever stopped holding.
+      globalThis.$dataStates[1] = buildRow(1, {
+        priority: 50,
+        isExtension: true,
+        types: () => [ 'burn' ],
+        getExtensionTypes: [ 'burn' ],
+      });
+      const battler = buildBattler([ 1 ]);
+
+      // Act
+      const result = OverlayManager.getExtendedState(battler, 1);
+
+      // Assert
+      expect(result).toBe(globalThis.$dataStates[1]);
+      expect(result.priority).toBe(50);
     });
 
     it('applies an id-based state overlay the battler currently carries', () =>

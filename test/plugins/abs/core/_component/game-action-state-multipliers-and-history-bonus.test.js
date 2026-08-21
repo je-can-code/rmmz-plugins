@@ -213,11 +213,35 @@ describe('J-ABS Game_Action state multipliers + skill history bonus (direct src 
       expect(action.applySkillHistoryBonus(-5)).toBe(-5);
     });
 
+    it('leaves a heal (negative damage) alone even when a history bonus is live', () =>
+    {
+      // Arrange- an untagged caster makes the combined-percent gate downstream do the same job as
+      // the non-positive gate, so the case above passes with the sign check deleted. Arming a real
+      // 10% bonus first means only the sign check can be what leaves this at -100.
+      globalThis.$jabsEngine.querySkillExecutionLog.mockReturnValue(1);
+      const skill = buildSkill('<thisSkillHistoryBonus:[3, 10, streak]>');
+      const action = buildAction(buildCaster(), skill);
+
+      // Act
+      const result = action.applySkillHistoryBonus(-100);
+
+      // Assert- heals are negative damage in this engine, so scaling one by a damage bonus would
+      // silently make the caster's own healing stronger the more they spammed the skill.
+      expect(result).toBe(-100);
+    });
+
     it('returns the base damage unchanged when the caster has no uuid', () =>
     {
+      // Arrange- same backstop problem: with no tag anywhere the combined percent is zero and the
+      // damage comes back unchanged regardless of the uuid gate. The tag is armed so that skipping
+      // the gate would query the log with a null uuid and scale the result to 110.
+      globalThis.$jabsEngine.querySkillExecutionLog.mockReturnValue(1);
       const caster = buildCaster({ getUuid: () => null });
-      const action = buildAction(caster, buildSkill(''));
+      const action = buildAction(caster, buildSkill('<thisSkillHistoryBonus:[3, 10, streak]>'));
+
+      // Act & Assert
       expect(action.applySkillHistoryBonus(100)).toBe(100);
+      expect(globalThis.$jabsEngine.querySkillExecutionLog).not.toHaveBeenCalled();
     });
 
     it('returns the base damage unchanged when neither source contributes a bonus', () =>
@@ -295,6 +319,22 @@ describe('J-ABS Game_Action state multipliers + skill history bonus (direct src 
       const action = buildAction(buildCaster(), buildSkill(''));
       expect(action.applyStateDamageMultipliers(0, buildTarget())).toBe(0);
       expect(action.applyStateDamageMultipliers(-10, buildTarget())).toBe(-10);
+    });
+
+    it('leaves a heal (negative damage) alone even when a state bonus is live', () =>
+    {
+      // Arrange- with an untagged caster the combined-percent gate further down returns the damage
+      // unchanged all by itself, so the case above never actually constrained the sign check. A
+      // real 15% bonus removes that backstop: only the sign check can still return -100 here.
+      const caster = buildCaster({ getAllNotes: () => [ buildSkill('<bonusDamage:15>') ] });
+      const action = buildAction(caster, buildSkill(''));
+
+      // Act
+      const result = action.applyStateDamageMultipliers(-100, buildTarget());
+
+      // Assert- heals travel as negative damage, so amplifying one would turn an offensive
+      // exploitation bonus into a healing buff.
+      expect(result).toBe(-100);
     });
 
     it('returns the base damage unchanged when no source contributes a bonus', () =>

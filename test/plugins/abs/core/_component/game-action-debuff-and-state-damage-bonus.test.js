@@ -290,11 +290,15 @@ describe('J-ABS Game_Action debuff-count and state-flag damage bonuses (direct s
 
     it('skips a tagged state that is not currently affecting the target', () =>
     {
-      // Arrange
+      // Arrange- the live tracker is deliberately present and stacked. The suite-wide default of
+      // "no tracker" made the very next guard return 0 on its own, so the affliction check could
+      // be skipped entirely without any test noticing; with a tracker to find, only the affliction
+      // check can still hold this at 0.
       const caster = buildCaster([]);
       const skill = buildSkill('<thisBonusDamagePerStateStack:[10, 5]>');
       const action = buildAction(caster, skill);
       const target = { isStateAffected: () => false, getUuid: () => 'target-uuid' };
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId = () => ({ stackCount: 3 });
 
       // Act & Assert
       expect(action.calculateThisBonusDamagePerStateStackPct(target)).toBe(0);

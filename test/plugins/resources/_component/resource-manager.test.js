@@ -102,6 +102,77 @@ describe('ResourceCostManager (resources core)', () =>
 
       expect(ResourceCostManager.hpCostBySkill(battler, skill)).toBe(0);
     });
+
+    it('charges a flat-only hp cost rather than short-circuiting to zero', () =>
+    {
+      // Arrange
+      // the combined test above makes all three components non-zero at once, which means the
+      // zero-guard's flat operand can never be the one deciding it - its siblings keep the guard
+      // false regardless. isolating flat is what makes that operand load-bearing.
+      const battler = buildBattler({ hcrFactor: () => 0.5 });
+      const skill = {};
+
+      getNumberFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.HpCostFlat) return 20;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.hpCostBySkill(battler, skill);
+
+      // Assert
+      // flat 20 * hcr 0.5 = 10; percent and formula contribute nothing.
+      expect(result).toBe(10);
+    });
+
+    it('charges a percent-only hp cost rather than short-circuiting to zero', () =>
+    {
+      // Arrange
+      // isolates the calculatedPercent operand of the zero-guard the same way.
+      const battler = buildBattler({
+        mhp: 800,
+        hcrFactor: () => 0.5,
+      });
+      const skill = {};
+
+      getNumberFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.HpCostPercent) return 10;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.hpCostBySkill(battler, skill);
+
+      // Assert
+      // 10% of an 800 max hp pool is 80, halved by hcr 0.5.
+      expect(result).toBe(40);
+    });
+
+    it('charges a formula-only hp cost rather than short-circuiting to zero', () =>
+    {
+      // Arrange
+      // isolates the formula operand of the zero-guard; the tag-sourced components are silent.
+      const battler = buildBattler({ hcrFactor: () => 0.5 });
+      const skill = {};
+
+      getResultFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.HpCostFormula) return 30;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.hpCostBySkill(battler, skill);
+
+      // Assert
+      // formula 30 * hcr 0.5 = 15.
+      expect(result).toBe(15);
+    });
   });
 
   describe('extraMpCostBreakdown / extraMpCostBySkill', () =>
@@ -129,6 +200,76 @@ describe('ResourceCostManager (resources core)', () =>
 
       expect(ResourceCostManager.extraMpCostBySkill(battler, skill)).toBe(52);
     });
+
+    it('charges a flat-only extra mp cost rather than short-circuiting to zero', () =>
+    {
+      // Arrange
+      // the combined test leaves every operand of the zero-guard non-zero, so no single operand
+      // is ever the one holding the guard open. this isolates flat.
+      const battler = buildBattler({ mcr: 2 });
+      const skill = {};
+
+      getNumberFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.MpCostFlat) return 5;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.extraMpCostBySkill(battler, skill);
+
+      // Assert
+      // flat 5 * mcr 2 = 10.
+      expect(result).toBe(10);
+    });
+
+    it('charges a percent-only extra mp cost rather than short-circuiting to zero', () =>
+    {
+      // Arrange
+      // isolates the calculatedPercent operand of the zero-guard.
+      const battler = buildBattler({
+        mmp: 500,
+        mcr: 2,
+      });
+      const skill = {};
+
+      getNumberFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.MpCostPercent) return 4;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.extraMpCostBySkill(battler, skill);
+
+      // Assert
+      // 4% of a 500 max mp pool is 20, doubled by mcr 2.
+      expect(result).toBe(40);
+    });
+
+    it('charges a formula-only extra mp cost rather than short-circuiting to zero', () =>
+    {
+      // Arrange
+      // isolates the formula operand of the zero-guard.
+      const battler = buildBattler({ mcr: 2 });
+      const skill = {};
+
+      getResultFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.MpCostFormula) return 1;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.extraMpCostBySkill(battler, skill);
+
+      // Assert
+      // formula 1 * mcr 2 = 2.
+      expect(result).toBe(2);
+    });
   });
 
   describe('extraTpCostBreakdown / extraTpCostBySkill', () =>
@@ -146,6 +287,54 @@ describe('ResourceCostManager (resources core)', () =>
 
       // only flat contributes: 1 * tcr 3 = 3.
       expect(ResourceCostManager.extraTpCostBySkill(battler, skill)).toBe(3);
+    });
+
+    it('charges a percent-only extra tp cost rather than short-circuiting to zero', () =>
+    {
+      // Arrange
+      // the flat-only test above already pins the flat operand of the zero-guard; nothing pinned
+      // calculatedPercent, so that operand could be forced true and the guard would swallow the cost.
+      const battler = buildBattler({
+        mtp: 100,
+        tcr: 3,
+      });
+      const skill = {};
+
+      getNumberFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.TpCostPercent) return 25;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.extraTpCostBySkill(battler, skill);
+
+      // Assert
+      // 25% of a 100 max tp pool is 25, tripled by tcr 3.
+      expect(result).toBe(75);
+    });
+
+    it('charges a formula-only extra tp cost rather than short-circuiting to zero', () =>
+    {
+      // Arrange
+      // isolates the formula operand of the zero-guard.
+      const battler = buildBattler({ tcr: 3 });
+      const skill = {};
+
+      getResultFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.TpCostFormula) return 2;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.extraTpCostBySkill(battler, skill);
+
+      // Assert
+      // formula 2 * tcr 3 = 6.
+      expect(result).toBe(6);
     });
   });
 
@@ -180,6 +369,101 @@ describe('ResourceCostManager (resources core)', () =>
 
       // flat 5 * rec 4 = 20.
       expect(ResourceCostManager.skillGainMp(battler, skill)).toBe(20);
+    });
+
+    it('counts a percentage of max hp toward the gain', () =>
+    {
+      // Arrange
+      // only the flat hp-gain operand of the zero-guard was pinned; a percent-sourced gain could be
+      // swallowed by that guard with nothing noticing.
+      const battler = buildBattler({
+        mhp: 400,
+        rec: 2,
+      });
+      const skill = { id: 1 };
+
+      getNumberFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.HpGainPercent) return 15;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.skillGainHp(battler, skill);
+
+      // Assert
+      // 15% of a 400 max hp pool is 60, doubled by rec 2.
+      expect(result).toBe(120);
+    });
+
+    it('counts a formula-sourced hp gain toward the total', () =>
+    {
+      // Arrange
+      // isolates the formula operand of the hp-gain zero-guard.
+      const battler = buildBattler({ rec: 2 });
+      const skill = { id: 1 };
+
+      getResultFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.HpGainFormula) return 11;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.skillGainHp(battler, skill);
+
+      // Assert
+      // formula 11 * rec 2 = 22.
+      expect(result).toBe(22);
+    });
+
+    it('counts a percentage of max mp toward the gain', () =>
+    {
+      // Arrange
+      // isolates the calculatedPercent operand of the mp-gain zero-guard.
+      const battler = buildBattler({
+        mmp: 250,
+        rec: 3,
+      });
+      const skill = { id: 1 };
+
+      getNumberFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.MpGainPercent) return 20;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.skillGainMp(battler, skill);
+
+      // Assert
+      // 20% of a 250 max mp pool is 50, tripled by rec 3.
+      expect(result).toBe(150);
+    });
+
+    it('counts a formula-sourced mp gain toward the total', () =>
+    {
+      // Arrange
+      // isolates the formula operand of the mp-gain zero-guard.
+      const battler = buildBattler({ rec: 3 });
+      const skill = { id: 1 };
+
+      getResultFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === globalThis.J.RESOURCES.RegExp.MpGainFormula) return 6;
+
+        return 0;
+      });
+
+      // Act
+      const result = ResourceCostManager.skillGainMp(battler, skill);
+
+      // Assert
+      // formula 6 * rec 3 = 18.
+      expect(result).toBe(18);
     });
 
     it('returns 0 for tp gain when every component is exactly zero, without applying rec', () =>

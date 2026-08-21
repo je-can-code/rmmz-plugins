@@ -467,5 +467,171 @@ describe('J-ABS state spread (direct src import)', () =>
       expect(globalThis.RPGManager.chanceIn100).not.toHaveBeenCalled();
     });
   });
+
+  describe('JABS_State handleSpreading guards and ordering', () =>
+  {
+    /**
+     * Arranges a spread pulse that provably reaches addState when nothing is flipped.<br/>
+     * Every negative case below starts from this exact arrangement and changes precisely one
+     * input, so a failure to spread can only be attributed to the guard under test rather than
+     * to some unrelated part of the fixture never having worked in the first place.
+     * @param {string} note The note to register on the spreading state's database row.
+     * @param {object[]} targets The game battlers offered as in-range spread candidates, in order.
+     * @returns {{jabsState: JABS_State, carrierGame: object, sourceGame: object}}
+     */
+    function arrangeReadySpread(note, targets)
+    {
+      registerStateRow(SPREAD_STATE_ID, note);
+
+      const carrierGame = buildGameBattler('carrier');
+      const sourceGame = buildGameBattler('source');
+      const carrierJabs = {
+        processStateTick: vi.fn(),
+        getBattler()
+        {
+          return carrierGame;
+        },
+        distanceToDesignatedTarget(other)
+        {
+          return other.__distance;
+        },
+      };
+      const candidates = targets.map((target, index) => buildJabsBattler(target, index + 1));
+
+      globalThis.JABS_AiManager.getBattlerByUuid = vi.fn(() => carrierJabs);
+      globalThis.JABS_AiManager.getAlliedBattlersWithinRange = vi.fn(() => candidates);
+      globalThis.JABS_AiManager.getAllBattlersWithinRangeSortedByDistance = vi.fn(() => candidates);
+      globalThis.RPGManager.chanceIn100 = vi.fn(() => true);
+
+      const jabsState = new globalThis.JABS_State(carrierGame, SPREAD_STATE_ID, 0, 600, 1, sourceGame);
+
+      return {
+        jabsState,
+        carrierGame,
+        sourceGame,
+      };
+    }
+
+    it('spreads to an in-range candidate when nothing suppresses the pulse', () =>
+    {
+      // Arrange- the unflipped baseline every negative case below is measured against.
+      const target = buildGameBattler('target');
+      const { jabsState, sourceGame } = arrangeReadySpread('<spread:[100, 5]>', [ target ]);
+
+      // Act
+      jabsState.handleSpreading();
+
+      // Assert
+      expect(target.addState).toHaveBeenCalledWith(SPREAD_STATE_ID, sourceGame, null);
+    });
+
+    it('does not spread while abs is disabled', () =>
+    {
+      // Arrange- abs disabled is the single flip against the baseline above.
+      const target = buildGameBattler('target');
+      const { jabsState } = arrangeReadySpread('<spread:[100, 5]>', [ target ]);
+      globalThis.$jabsEngine.absEnabled = false;
+
+      // Act
+      jabsState.handleSpreading();
+
+      // Assert- bailing before the carrier lookup is what proves the abs check stopped it,
+      // rather than some later filter quietly dropping the candidate.
+      expect(globalThis.JABS_AiManager.getBattlerByUuid).not.toHaveBeenCalled();
+      expect(target.addState).not.toHaveBeenCalled();
+    });
+
+    it('does not spread when the authored range is zero despite a full chance', () =>
+    {
+      // Arrange- chance stays at 100 so the leading operand of the validity check cannot be the
+      // thing that stops this; only the range operand can. The getter is shadowed because the
+      // note parser normalizes a zero range away before handleSpreading ever sees it.
+      const target = buildGameBattler('target');
+      const { jabsState } = arrangeReadySpread('<spread:[100, 5]>', [ target ]);
+      Object.defineProperty(globalThis.$dataStates[SPREAD_STATE_ID], 'jabsSpreadRule', {
+        configurable: true,
+        get: () => ({
+          chance: 100,
+          range: 0,
+        }),
+      });
+
+      // Act
+      jabsState.handleSpreading();
+
+      // Assert
+      expect(target.addState).not.toHaveBeenCalled();
+    });
+
+    it('does not spread when the afflicted battler has no resolvable map carrier', () =>
+    {
+      // Arrange- exactly one candidate on purpose. With two or more, a missing carrier detonates
+      // inside the distance sort comparator and the mutant dies of a TypeError instead of by this
+      // assertion, which would tell us nothing about whether the guard is doing its job.
+      const target = buildGameBattler('target');
+      const { jabsState } = arrangeReadySpread('<spread:[100, 5]>', [ target ]);
+      globalThis.JABS_AiManager.getBattlerByUuid = vi.fn(() => null);
+
+      // Act
+      jabsState.handleSpreading();
+
+      // Assert
+      expect(target.addState).not.toHaveBeenCalled();
+    });
+
+    it('reapplies onto an already-afflicted neighbor when spreadSkipAfflicted is absent', () =>
+    {
+      // Arrange- the suite only ever exercised the skip with the tag present, so the tag check
+      // could be satisfied unconditionally and every afflicted neighbor would be skipped anyway.
+      const afflicted = buildGameBattler('afflicted');
+      afflicted._states = [ SPREAD_STATE_ID ];
+      const { jabsState, sourceGame } = arrangeReadySpread('<spread:[100, 5]>', [ afflicted ]);
+
+      // Act
+      jabsState.handleSpreading();
+
+      // Assert
+      expect(afflicted.addState).toHaveBeenCalledWith(SPREAD_STATE_ID, sourceGame, null);
+    });
+
+    it('still spreads onto an unafflicted neighbor when spreadSkipAfflicted is set', () =>
+    {
+      // Arrange- the tag is on, but this target does not carry the state. Without this case the
+      // affliction half of the skip could answer "yes, afflicted" for everybody and the tag would
+      // read as "never spread at all," which no test would have noticed.
+      const clean = buildGameBattler('clean');
+      const { jabsState, sourceGame } = arrangeReadySpread(
+        '<spread:[100, 5]><spreadSkipAfflicted>',
+        [ clean ],
+      );
+
+      // Act
+      jabsState.handleSpreading();
+
+      // Assert
+      expect(clean.addState).toHaveBeenCalledWith(SPREAD_STATE_ID, sourceGame, null);
+    });
+
+    it('preserves distance order when spreadPreferUnafflicted is absent', () =>
+    {
+      // Arrange- the nearest candidate already carries the state and the far one does not, with a
+      // per-tick cap of one so exactly one of them can win. Only the preference test decides which:
+      // untagged, the near afflicted neighbor keeps its place at the front of the queue.
+      const nearAfflicted = buildGameBattler('near');
+      nearAfflicted._states = [ SPREAD_STATE_ID ];
+      const farClean = buildGameBattler('far');
+      const { jabsState } = arrangeReadySpread(
+        '<spread:[100, 5]><spreadPerTick:1>',
+        [ nearAfflicted, farClean ],
+      );
+
+      // Act
+      jabsState.handleSpreading();
+
+      // Assert
+      expect(nearAfflicted.addState).toHaveBeenCalledTimes(1);
+      expect(farClean.addState).not.toHaveBeenCalled();
+    });
+  });
 });
 //endregion plugins/abs/core/_component/jabs-state-spread.test.js

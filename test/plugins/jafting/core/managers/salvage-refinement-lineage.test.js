@@ -235,6 +235,22 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
       expect(noRows).toBe(true);
     });
 
+    it('recovers nothing from a donor whose stamp records no lineage', () =>
+    {
+      // Arrange: carrying a ledger and carrying *history* are different things - a stamp can end up empty, and
+      // treating its mere presence as proof of lineage would let a plain shop weapon that happens to hold one
+      // pass itself off as a crafted donor. Everything after this check is what decides the donor is a gold
+      // sink, so answering early on an empty stamp skips the entire classification.
+      const donor = fakeDatum('w', 12);
+      donor._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot([]);
+
+      // Act
+      const noRows = JaftingSalvageManager.refinementMaterialHasNoRecoverableRows(donor);
+
+      // Assert
+      expect(noRows).toBe(true);
+    });
+
     it('treats a plain stack item as recoverable rather than a vendor shell', () =>
     {
       // Arrange: the vendor-shell rule is scoped to equipment; items fall through it.
@@ -314,6 +330,23 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
       // Arrange: the part itself becomes refundable even though it was never crafted.
       const base = fakeDatum('w', 3);
       const donor = fakeDatum('a', 6, { atypeId: materialArmorTypeId });
+
+      // Act
+      const output = JaftingSalvageManager.buildRefinementOutputLedger(base, donor);
+
+      // Assert
+      expect(output.rows).toEqual([ expect.objectContaining({ t: 'a', id: 6, n: 1 }) ]);
+    });
+
+    it('still synthesizes a row for an ingredient-class armor carrying an empty stamp', () =>
+    {
+      // Arrange: monster parts pick up an empty ledger easily enough - anything that stamps and then expands
+      // away leaves one behind. Reading the stamp's presence rather than its contents makes the donor look like
+      // a crafted piece that donated everything it had, and the part the player actually spent stops being
+      // refundable. The synthetic row is the only thing that carries it.
+      const base = fakeDatum('w', 3);
+      const donor = fakeDatum('a', 6, { atypeId: materialArmorTypeId });
+      donor._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot([]);
 
       // Act
       const output = JaftingSalvageManager.buildRefinementOutputLedger(base, donor);
@@ -509,6 +542,47 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
 
       // Assert
       expect(act).not.toThrow();
+    });
+
+    it('leaves a bag alone entirely when the transaction moved no quantity', () =>
+    {
+      // Arrange: vanilla fires this hook for transactions that spent nothing, and the container reading zero is
+      // an ordinary state - every copy could be equipped. Those two facts together are what make the amount
+      // check load-bearing: with it gone, a no-op transaction reaches the scrub at the bottom and deletes the
+      // history of gear the player is currently wearing.
+      //
+      // Every other reason this bag could survive is deliberately switched off. The datum is present, so the
+      // missing-datum guard cannot fire; it is a template rather than a dynamic instance, so the instance-slot
+      // guard cannot fire; and the stack is empty, so the "copies remain" guard cannot fire either.
+      const datum = fakeDatum('i', 1);
+      $gameParty.setCount(datum, 1);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(datum, snapshotOf(7), 1);
+      $gameParty.setCount(datum, 0);
+
+      // Act
+      JaftingSalvageManager.afterPartyLostItem(datum, 0);
+
+      // Assert
+      expect($gameParty._j._jafting._salvageLedgers['i:1']).toBeDefined();
+    });
+
+    it('resizes no template bag when the row lost is a dynamic instance', () =>
+    {
+      // Arrange: the refined sword names the base sword's bag, so letting it into the template branch sizes that
+      // bag against a holding that has nothing to do with it - the plain Iron Swords grow phantom slots. The
+      // counts differ on purpose, because sizing here only ever grows: matched counts would resize the wrong bag
+      // to precisely the length it already had and no assertion could see it.
+      const baseWeapon = fakeDatum('w', 5);
+      $gameParty.setCount(baseWeapon, 1);
+      JaftingSalvageManager.appendStampedUnitsToPartyStack(baseWeapon, snapshotOf(31), 1);
+      const refined = dynamicDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin);
+      $gameParty.setCount(refined, 4);
+
+      // Act
+      JaftingSalvageManager.afterPartyLostItem(refined, 1);
+
+      // Assert
+      expect($gameParty._j._jafting._salvageLedgers['w:5'].unitLedgers).toHaveLength(1);
     });
 
     it('leaves the ledger alone while copies remain in the stack', () =>
@@ -719,6 +793,25 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
       expect($dataWeapons[row.index]).toBe(row);
     });
 
+    it('collects a slot while an actor stands there wearing something else', () =>
+    {
+      // Arrange: every other collection case runs against an empty roster, so `some` walked zero actors and the
+      // comparison inside it never decided anything - "is anybody wearing *this* slot" and "is anybody wearing
+      // anything" both answered no for the same vacuous reason. A populated roster wearing a different refined
+      // sword is the near-miss: it has to fail the comparison rather than merely be absent, or the sweep stops
+      // collecting the moment any actor has any gear on and the dynamic id space never shrinks again.
+      const row = trackedWeapon(JaftingSalvageManager.DynamicEquipIndexMin);
+      const otherRow = dynamicDatum('w', 5, JaftingSalvageManager.DynamicEquipIndexMin + 7);
+      $gameParty.setCount(row, 0);
+      actorsWearing([ [ null, otherRow ] ]);
+
+      // Act
+      JaftingSalvageManager.reclaimUnreferencedDynamicSlots();
+
+      // Assert
+      expect($gameParty._refinedWeapons).toEqual([]);
+    });
+
     it('spares a slot worn by an actor who is not in the party right now', () =>
     {
       // Arrange: Chef Adventure splits its two leads across halves of a dungeon, so the character who is not
@@ -809,9 +902,13 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
     {
       // Arrange: an unknown letter means the ledger and the refund switch have drifted apart,
       // and silently paying out the wrong currency would be worse than paying out nothing.
+      // The roster matters: panel points are the last arm of the chain, so with nobody in the party an unknown
+      // letter falling through into the panel-point payout awards nothing and looks exactly like being turned
+      // away. An actor has to be standing there for the difference to be observable at all.
       const paid = [];
       $gameParty.gainItem = () => paid.push('item');
       $gameParty.gainGold = () => paid.push('gold');
+      $gameParty.members = () => [ { modSdpPoints: () => paid.push('sdp') } ];
       const ledger = new JaftingSalvageLedgerSnapshot([ new JaftingSalvageLedgerRow('?', 1, 5) ]);
 
       // Act
@@ -902,6 +999,28 @@ describe('JaftingSalvageManager refinement lineage (direct src import)', () =>
       // Assert
       expect(pushed).toBe(false);
       expect(flat).toEqual([]);
+    });
+  });
+
+  describe('expandWeaponArmorRowsForSalvage', () =>
+  {
+    it('passes an ingredient weapon through when its template carries an empty stamp', () =>
+    {
+      // Arrange: refinement stamps monster-part donors as bare rows, and those templates usually have no nested
+      // ledger of their own - but "no ledger" and "a ledger holding nothing" are both how that state shows up
+      // once anything has stamped the template. Only the first spelling reached the pass-through, so a part with
+      // an empty stamp vanished from the refund entirely instead of coming back as itself.
+      const equip = fakeDatum('w', 11, { wtypeId: materialWeaponTypeId });
+      equip._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot([]);
+      $dataWeapons[11] = equip;
+
+      // Act
+      const expanded = JaftingSalvageManager.expandWeaponArmorRowsForSalvage(
+        [ new JaftingSalvageLedgerRow('w', 11, 1) ],
+        {});
+
+      // Assert
+      expect(expanded).toEqual([ expect.objectContaining({ t: 'w', id: 11, n: 1 }) ]);
     });
   });
 

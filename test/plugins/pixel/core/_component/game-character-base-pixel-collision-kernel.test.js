@@ -713,6 +713,35 @@ describe('J-Pixelistics Game_CharacterBase collision kernel (direct src import)'
       expect(ch.isCharacterCollisionAt(2.5, 2.5)).toBe(false);
     });
 
+    // Overlap is four edge comparisons and-ed together. The non-overlap case above sits diagonally
+    // away, which makes all four false at once - so any single one could be forced true and the
+    // other three would still refuse the overlap. Each row here separates the candidate along one
+    // axis only and leaves it aligned on the other, which is the arrangement where exactly one
+    // comparison carries the answer. Two characters a couple of tiles apart in the same row or
+    // column is about as ordinary as map traffic gets, and calling that a collision would wedge a
+    // follower behind whoever it was trailing.
+    it.each([
+      [ 'directly below', 2, 4 ],
+      [ 'directly above', 2, 0 ],
+      [ 'directly right', 4, 2 ],
+      [ 'directly left', 0, 2 ],
+    ])('is false for a candidate %s of the probe and aligned on the other axis', (_label, ex, ey) =>
+    {
+      // Arrange
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+      const neighbour = new globalThis.Game_Event();
+      neighbour.initMembers();
+      neighbour.relocate(ex, ey);
+      map.events = () => [ neighbour ];
+
+      // Act
+      const collided = ch.isCharacterCollisionAt(2.5, 2.5);
+
+      // Assert
+      expect(collided).toBe(false);
+    });
+
     it('excludes erased events from collision candidates', () =>
     {
       // Arrange
@@ -796,6 +825,33 @@ describe('J-Pixelistics Game_CharacterBase collision kernel (direct src import)'
 
       // Assert
       expect(result).toBe(false);
+      delete globalThis.J.ABS;
+    });
+
+    it('keeps a JABS action sprite out of the candidate list itself, not merely out of the result', () =>
+    {
+      // Arrange: the collision check filters JABS actions twice - once when the candidate list is
+      // built, and again immediately before measuring, the second one commented as extra defense
+      // against anything that slipped through. That redundancy means neither filter can be seen
+      // through the collision result alone: remove either and the survivor catches it. Asking the
+      // candidate list directly is what holds the first one to account, so it cannot quietly stop
+      // working and leave the whole burden on its backstop.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+      const actionSprite = new globalThis.Game_Event();
+      actionSprite.initMembers();
+      actionSprite.relocate(2.5, 2.5);
+      actionSprite._jabsAction = true;
+      map.events = () => [ actionSprite ];
+      globalThis.J.ABS = {};
+
+      // Act
+      const candidates = ch.getCollisionCandidates();
+
+      // Assert
+      expect(candidates).not.toContain(actionSprite);
+
+      // restore the bare-global namespace rather than leaking it into later tests in this file.
       delete globalThis.J.ABS;
     });
 

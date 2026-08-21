@@ -168,11 +168,16 @@ describe('J-ABS Game_Action cast time damage bonus (direct src import)', () =>
 
     it.each([ 0, 3, 4 ])('returns damage unchanged for a disqualifying damage type (%i)', (damageType) =>
     {
-      // Arrange
+      // Arrange- a real cast duration and a real rate are stamped on purpose. Left at the fixture
+      // defaults of zero frames and zero rate, the two gates below returned the damage unchanged
+      // by themselves, so the type gate could be bypassed entirely and this still read 100.
       const action = buildAction(buildCaster(), buildSkill(''));
       action.item = () => ({ damage: { type: damageType } });
+      action.getResolvedCastTimeFrames = () => 60;
+      action.calculateThisCastTimeDamageBonusPctPerSec = () => 10;
+      action.calculateGeneralCastTimeDamageBonusPctPerSec = () => 0;
 
-      // Act & Assert
+      // Act & Assert- 60 frames at 10%/sec would have scaled this to 110 had the type gate opened.
       expect(action.applyCastTimeDamageBonus(100)).toBe(100);
     });
 

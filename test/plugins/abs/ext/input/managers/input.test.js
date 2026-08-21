@@ -552,11 +552,21 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
 
     it('stops after d-pad normalization when there are fewer than 2 axes', () =>
     {
-      const gamepad = { index: 0, buttons: [], axes: [ 0 ] };
+      // Arrange
+      // the lone axis is pushed hard right, past the 0.5 threshold, so continuing past the guard
+      // would stamp right onto the per-pad snapshot. the d-pad right button is pressed as the
+      // proof-of-execution anchor- an untouched per-pad snapshot also happens to be what a
+      // method that did nothing at all would leave behind.
+      const buttons = new Array(15).fill(undefined);
+      buttons.push({ pressed: true });
+      const gamepad = { index: 0, buttons, axes: [ 1 ] };
 
+      // Act
       globalThis.Input._updateGamepadState(gamepad);
 
-      expect(globalThis.Input._currentState['dpad-up']).toEqual(false);
+      // Assert
+      expect(globalThis.Input._currentState['dpad-right']).toEqual(true);
+      expect(globalThis.Input._gamepadStates[0].right).toEqual(false);
     });
 
     it('merges keyboard-approximated and axis-derived directions on a full pass', () =>
@@ -618,6 +628,26 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
       expect(padState).toEqual({ 'dpad-up': true, 'dpad-down': false, 'dpad-left': true, 'dpad-right': false });
     });
 
+    it('coerces the complementary pressed d-pad buttons into both state bags', () =>
+    {
+      // Arrange
+      // the fixture above leaves 13 and 15 unpressed, so their expected value is false and
+      // nothing could tell "read button 13" apart from "always false". this is the mirror image:
+      // 13 and 15 pressed with 12 and 14 as near-miss neighbours that must stay false.
+      const buttons = new Array(12).fill(undefined);
+      buttons.push({ pressed: false }, { pressed: true }, { pressed: false }, { pressed: true });
+      const gamepad = { buttons };
+      const s = {};
+      const padState = {};
+
+      // Act
+      globalThis.Input._normalizeDpadFromButtons(gamepad, s, padState);
+
+      // Assert
+      expect(s).toEqual({ 'dpad-up': false, 'dpad-down': true, 'dpad-left': false, 'dpad-right': true });
+      expect(padState).toEqual({ 'dpad-up': false, 'dpad-down': true, 'dpad-left': false, 'dpad-right': true });
+    });
+
     it('defaults every d-pad flag to false when buttons are missing', () =>
     {
       const s = {};
@@ -653,6 +683,9 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
       expect(flags.holdLeft).toEqual(true);
       expect(flags.holdUp).toEqual(true);
       expect(flags.neutralX).toEqual(false);
+      // neutralY had no negative case anywhere: the deadzone test expects it true and the two
+      // hold tests never looked at it, so "!holdUp && !holdDown" could have been a constant true.
+      expect(flags.neutralY).toEqual(false);
     });
 
     it('resolves hold-right/hold-down flags past the positive threshold', () =>
@@ -737,6 +770,17 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
 
       expect(padState).toMatchObject({ up: false, down: false });
     });
+
+    it('leaves vertical state untouched when neither holding nor neutral (mid-transition frame)', () =>
+    {
+      // the horizontal axis had this case and the vertical one did not, which left neutralY as
+      // the only branch condition here that could be forced true unnoticed: every other fixture
+      // either takes an earlier arm or already expects the cleared result.
+      const padState = { up: true, down: false };
+      globalThis.Input._applyAxesToPerPad(padState, { holdLeft: false, holdRight: false, neutralX: true, holdUp: false, holdDown: false, neutralY: false });
+
+      expect(padState).toMatchObject({ up: true, down: false });
+    });
   });
 
   describe('_axesNowFromPadState()', () =>
@@ -745,6 +789,15 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
     {
       expect(globalThis.Input._axesNowFromPadState({ up: true, down: 'truthy-but-not-true', left: false, right: undefined }))
         .toEqual({ up: true, down: false, left: false, right: false });
+    });
+
+    it('strictly interprets the complementary per-pad booleans', () =>
+    {
+      // the fixture above expects false for down, left and right, which is also what a hardcoded
+      // false would produce for those three- and true for up, which a hardcoded true matches.
+      // this inverts every cardinal so each strict comparison has to answer the other way.
+      expect(globalThis.Input._axesNowFromPadState({ up: false, down: true, left: 'truthy-but-not-true', right: true }))
+        .toEqual({ up: false, down: true, left: false, right: true });
     });
   });
 
@@ -789,6 +842,50 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
 
       expect(result.left).toEqual(true);
     });
+
+    it('treats a merged right as keyboard-only when axes did not contribute it last frame', () =>
+    {
+      const result = globalThis.Input._keyboardApproxFromSnapshot(
+        { up: false, down: false, left: false, right: true },
+        { up: false, down: false, left: false, right: false },
+      );
+
+      expect(result.right).toEqual(true);
+    });
+
+    // only the "up" cardinal had a paired case where the axes DID contribute last frame. the
+    // other three were single-sided, so their prevAxes comparison never had to answer false and
+    // both the subtraction and the whole conjunction could have been constants. the three tests
+    // below are that missing half, one per cardinal.
+    it('does not treat a merged down as keyboard-only when axes contributed it last frame', () =>
+    {
+      const result = globalThis.Input._keyboardApproxFromSnapshot(
+        { up: false, down: true, left: false, right: false },
+        { up: false, down: true, left: false, right: false },
+      );
+
+      expect(result.down).toEqual(false);
+    });
+
+    it('does not treat a merged left as keyboard-only when axes contributed it last frame', () =>
+    {
+      const result = globalThis.Input._keyboardApproxFromSnapshot(
+        { up: false, down: false, left: true, right: false },
+        { up: false, down: false, left: true, right: false },
+      );
+
+      expect(result.left).toEqual(false);
+    });
+
+    it('does not treat a merged right as keyboard-only when axes contributed it last frame', () =>
+    {
+      const result = globalThis.Input._keyboardApproxFromSnapshot(
+        { up: false, down: false, left: false, right: true },
+        { up: false, down: false, left: false, right: true },
+      );
+
+      expect(result.right).toEqual(false);
+    });
   });
 
   describe('_rebuildMergedDirections()', () =>
@@ -803,6 +900,47 @@ describe('J-ABS-Input Input (unit, real pure siblings, engine surface stubbed)',
       );
 
       expect(s).toEqual({ up: true, down: false, left: false, right: true });
+    });
+
+    // the mixed fixture above pins exactly two of the eight operands: it contributes up from the
+    // keyboard and right from the axes, and expects false for the other two cardinals. an operand
+    // whose expected value is already false survives being forced false, and one whose expected
+    // value is already true survives being forced true- so six of the eight were unconstrained.
+    // the three cases below walk the source matrix: keyboard-only, axes-only, and neither.
+    it('derives every direction from the keyboard approximation when the axes contribute nothing', () =>
+    {
+      const s = {};
+      globalThis.Input._rebuildMergedDirections(
+        s,
+        { up: true, down: true, left: true, right: true },
+        { up: false, down: false, left: false, right: false },
+      );
+
+      expect(s).toEqual({ up: true, down: true, left: true, right: true });
+    });
+
+    it('derives every direction from the axes when the keyboard contributes nothing', () =>
+    {
+      const s = {};
+      globalThis.Input._rebuildMergedDirections(
+        s,
+        { up: false, down: false, left: false, right: false },
+        { up: true, down: true, left: true, right: true },
+      );
+
+      expect(s).toEqual({ up: true, down: true, left: true, right: true });
+    });
+
+    it('clears every direction when neither source contributes', () =>
+    {
+      const s = {};
+      globalThis.Input._rebuildMergedDirections(
+        s,
+        { up: false, down: false, left: false, right: false },
+        { up: false, down: false, left: false, right: false },
+      );
+
+      expect(s).toEqual({ up: false, down: false, left: false, right: false });
     });
   });
   //endregion gamepad axis normalization

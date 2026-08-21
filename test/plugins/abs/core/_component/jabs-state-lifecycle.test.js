@@ -141,6 +141,51 @@ describe('J-ABS state lifecycle edge cases (direct src import)', () =>
       // Act & Assert
       expect(jabsState.hasDiminishingRefresh()).toBe(true);
     });
+
+    it('is false on a freshly constructed state whose reset counter was never armed', () =>
+    {
+      // Arrange- only the armed side of this predicate was ever asserted, so a version of it
+      // that answers "yes, diminishing" unconditionally read exactly the same to the suite.
+      registerStateRow(STATE_ID, '');
+      const jabsState = new globalThis.JABS_State(buildGameBattler('a'), STATE_ID, 0, 100, 1);
+
+      // Act & Assert
+      expect(jabsState.hasDiminishingRefresh()).toBe(false);
+    });
+  });
+
+  describe('decrementRefreshResetCounter', () =>
+  {
+    it('spends the last frame of an armed counter, disarming the diminishing-refresh flag', () =>
+    {
+      // Arrange- one frame left on the clock.
+      registerStateRow(STATE_ID, '');
+      const jabsState = new globalThis.JABS_State(buildGameBattler('a'), STATE_ID, 0, 100, 1);
+      jabsState.refreshRefreshResetCounter(1);
+
+      // Act
+      jabsState.decrementRefreshResetCounter();
+
+      // Assert- a decrementer that declines to count down leaves this armed forever.
+      expect(jabsState.hasDiminishingRefresh()).toBe(false);
+    });
+
+    it('does not drive an already-spent counter below zero', () =>
+    {
+      // Arrange- the counter is at rest, and timesRefreshed is the only window onto whether it
+      // stayed at exactly zero: handleDiminishedRefresh resets on `=== 0`, so a counter pushed
+      // to -1 silently strands timesRefreshed at its old value forever.
+      registerStateRow(STATE_ID, '');
+      const jabsState = new globalThis.JABS_State(buildGameBattler('a'), STATE_ID, 0, 100, 1);
+      jabsState.timesRefreshed = 3;
+
+      // Act
+      jabsState.decrementRefreshResetCounter();
+      jabsState.handleDiminishedRefresh();
+
+      // Assert
+      expect(jabsState.timesRefreshed).toBe(0);
+    });
   });
 
   describe('decrementDuration', () =>
@@ -415,6 +460,19 @@ describe('J-ABS state lifecycle edge cases (direct src import)', () =>
       // Act & Assert
       expect(jabsState.isAboutToExpire()).toBe(false);
     });
+
+    it('is false while duration still sits above the about-to-expire threshold', () =>
+    {
+      // Arrange- base duration 100 puts the threshold at round(100/5) = 20, and 50 is comfortably
+      // above it. Every prior case was either under the threshold or eternal, so the duration
+      // comparison itself was never made to answer "no" on a normal, non-eternal state.
+      registerStateRow(STATE_ID, '');
+      const jabsState = new globalThis.JABS_State(buildGameBattler('a'), STATE_ID, 0, 100, 1);
+      jabsState.duration = 50;
+
+      // Act & Assert
+      expect(jabsState.isAboutToExpire()).toBe(false);
+    });
   });
 
   describe('getTickInterval', () =>
@@ -430,6 +488,21 @@ describe('J-ABS state lifecycle edge cases (direct src import)', () =>
 
       // Assert
       expect(result).toBe(20);
+    });
+
+    it('falls back to the plugin default when the state row carries no <thisTickSpeed> tag', () =>
+    {
+      // Arrange- an untagged row reports a tick speed of 0, and only the tagged arm of that
+      // ternary was ever asserted. Taking the untagged value as the base interval regardless
+      // collapses the math to the 4-frame tunable floor, which is nowhere near the 60 below.
+      registerStateRow(STATE_ID, '');
+      const jabsState = new globalThis.JABS_State(buildGameBattler('a'), STATE_ID, 0, 100, 1);
+
+      // Act
+      const result = jabsState.getTickInterval();
+
+      // Assert
+      expect(result).toBe(60);
     });
   });
 
@@ -465,6 +538,61 @@ describe('J-ABS state lifecycle edge cases (direct src import)', () =>
       // at all (rather than throwing/skipping) proves the zero-entry branch fired.
       expect(() => jabsState.decrementTickCounter()).not.toThrow();
       expect(globalThis.JABS_AiManager.getBattlerByUuid).toHaveBeenCalled();
+    });
+  });
+
+  describe('decrementTickCounter cadence', () =>
+  {
+    /**
+     * Arranges a tracked state whose slip cadence is a short, explicit interval and whose map
+     * carrier resolves, so that a tick either provably lands on the carrier or provably does not.
+     * @param {number} interval The number of frames between slip ticks.
+     * @returns {{jabsState: JABS_State, carrierJabs: object}}
+     */
+    function arrangeTickCadence(interval)
+    {
+      registerStateRow(STATE_ID, '');
+
+      const carrier = buildGameBattler('carrier');
+      const jabsState = new globalThis.JABS_State(carrier, STATE_ID, 0, 100, 1);
+      const carrierJabs = { processStateTick: vi.fn() };
+
+      jabsState.getTickInterval = () => interval;
+      jabsState.resetTickCounter();
+      globalThis.JABS_AiManager.getBattlerByUuid = vi.fn(() => carrierJabs);
+
+      return {
+        jabsState,
+        carrierJabs,
+      };
+    }
+
+    it('fires exactly one slip tick on the frame the interval is fully spent', () =>
+    {
+      // Arrange
+      const { jabsState, carrierJabs } = arrangeTickCadence(2);
+
+      // Act- two frames against a two-frame interval.
+      jabsState.decrementTickCounter();
+      jabsState.decrementTickCounter();
+
+      // Assert- the exact count is what makes this load-bearing in both directions: a counter
+      // that never counts down never reaches zero and ticks 0 times, while a zero-check that is
+      // always satisfied ticks on every frame and lands 2.
+      expect(carrierJabs.processStateTick).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not tick while frames still remain on the interval', () =>
+    {
+      // Arrange- the only thing standing between this frame and a tick is the counter not yet
+      // being zero; the carrier resolves and the tracker is live, so no other guard can absorb it.
+      const { jabsState, carrierJabs } = arrangeTickCadence(2);
+
+      // Act- one frame against a two-frame interval.
+      jabsState.decrementTickCounter();
+
+      // Assert
+      expect(carrierJabs.processStateTick).not.toHaveBeenCalled();
     });
   });
 

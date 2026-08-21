@@ -677,6 +677,31 @@ describe('J-Pixelistics Game_CharacterBase pixel movement helpers (direct src im
       expect(ch._realY).toBe(2);
     });
 
+    it.each([
+      [ 'horizontal', 2, 0, 1, 1 ],
+      [ 'vertical', 1, 1, 2, 0 ],
+    ])('snaps render coordinates when only the %s axis has drifted', (_label, x, realX, y, realY) =>
+    {
+      // Arrange: the snapping case above drifts both axes at once, so either half of the
+      // desync test could be forced false and the other half would still fire the snap. Real
+      // drift is per-axis - a character that moved only horizontally has a matching y - and a
+      // check that had lost one of its halves would leave that axis rendering at a stale
+      // coordinate while the logical position moved on without it.
+      const ch = new globalThis.Game_CharacterBase();
+      ch.initMembers();
+      ch._x = x;
+      ch._y = y;
+      ch._realX = realX;
+      ch._realY = realY;
+
+      // Act
+      ch.update();
+
+      // Assert
+      expect(ch._realX).toBe(x);
+      expect(ch._realY).toBe(y);
+    });
+
     it('clears the moved-this-frame flag after engine logic has run', () =>
     {
       // Arrange
