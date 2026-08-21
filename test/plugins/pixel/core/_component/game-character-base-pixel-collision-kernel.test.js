@@ -571,6 +571,40 @@ describe('J-Pixelistics Game_CharacterBase collision kernel (direct src import)'
       expect(ch.canPassDiagonalByDirection(globalThis.J.PIXEL.Directions[dirKey])).toBe(true);
     });
 
+    it.each([
+      [ 'LOWERLEFT', -1, 1 ],
+      [ 'LOWERRIGHT', 1, 1 ],
+      [ 'UPPERLEFT', -1, -1 ],
+      [ 'UPPERRIGHT', 1, -1 ],
+    ])('probes the %s landing point away from the origin on both axes', (dirKey, xSign, ySign) =>
+    {
+      // Arrange: the landing point is the last of several collision probes - the leg tests come
+      // first - so the final call is the diagonal one. The existing case stubs the collision check
+      // to answer true whatever it is handed, which means the offsets it is handed were never
+      // observed at all and could each be dropped, or applied for the wrong diagonal, unnoticed.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+      const probes = [];
+      ch.isCharacterCollisionAt = (nx, ny) =>
+      {
+        probes.push({
+          nx,
+          ny,
+        });
+
+        return false;
+      };
+
+      // Act
+      ch.canPassDiagonalByDirection(globalThis.J.PIXEL.Directions[ dirKey ]);
+
+      // Assert: the character stands at exactly (2, 2), so each axis must have moved off it in
+      // the direction this diagonal names - which no other diagonal's offsets would produce.
+      const landing = probes.at(-1);
+      expect(Math.sign(landing.nx - 2)).toBe(xSign);
+      expect(Math.sign(landing.ny - 2)).toBe(ySign);
+    });
+
     it('rejects when both legs are clear but a character occupies the landing point', () =>
     {
       // Arrange
