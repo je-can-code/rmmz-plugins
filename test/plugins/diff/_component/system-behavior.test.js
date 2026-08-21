@@ -95,6 +95,95 @@ describe('J-Difficulty runtime merge and battler hooks (direct src import)', () 
     expect(enemy.gold()).toBe(50);
   });
 
+  //region max hp floor
+  /**
+   * Replaces the applied difficulty with one whose every multiplier is zero.
+   *
+   * The engine floors max hp at one inside its own param call, and these overrides scale the result
+   * afterward - which steps back over that clamp. A difficulty authored with a zero max hp
+   * multiplier is the case that reaches it, and a battler with no maximum hp at all breaks every
+   * hp-over-mhp ratio downstream: gauges divide by it, ai health gates compare against it.
+   */
+  function applyZeroedDifficulty()
+  {
+    const zeroedEffects = () => ({
+      bparams: [ 0, 0, 0 ],
+      sparams: [ 0, 0, 0 ],
+      xparams: [ 0, 0, 0 ],
+    });
+
+    globalThis.$gameTemp.getAppliedDifficulty = () => ({
+      actorEffects: zeroedEffects(),
+      enemyEffects: zeroedEffects(),
+      rewards: {
+        exp: 0, gold: 0, sdp: 0, drops: 0,
+      },
+    });
+  }
+
+  it('floors an actor max hp at one when the difficulty scales it to nothing', () =>
+  {
+    // Arrange
+    bootstrapDifficultyRuntime();
+    applyZeroedDifficulty();
+    const actor = new globalThis.Game_Actor();
+    actor.initMembers();
+
+    // Act
+    const maxHp = actor.param(0);
+
+    // Assert
+    expect(maxHp).toBe(1);
+  });
+
+  it('leaves an actor parameter other than max hp at zero', () =>
+  {
+    // Arrange: the floor is deliberately specific to max hp, matching the engine's own paramMin -
+    // an attack stat of zero is a legitimate difficulty setting, not something to rescue. Without
+    // this case the floor could be applied to every parameter and nothing would notice.
+    bootstrapDifficultyRuntime();
+    applyZeroedDifficulty();
+    const actor = new globalThis.Game_Actor();
+    actor.initMembers();
+
+    // Act
+    const attack = actor.param(2);
+
+    // Assert
+    expect(attack).toBe(0);
+  });
+
+  it('floors an enemy max hp at one when the difficulty scales it to nothing', () =>
+  {
+    // Arrange
+    bootstrapDifficultyRuntime();
+    applyZeroedDifficulty();
+    const enemy = new globalThis.Game_Enemy();
+    enemy.initMembers();
+
+    // Act
+    const maxHp = enemy.param(0);
+
+    // Assert
+    expect(maxHp).toBe(1);
+  });
+
+  it('leaves an enemy parameter other than max hp at zero', () =>
+  {
+    // Arrange
+    bootstrapDifficultyRuntime();
+    applyZeroedDifficulty();
+    const enemy = new globalThis.Game_Enemy();
+    enemy.initMembers();
+
+    // Act
+    const attack = enemy.param(2);
+
+    // Assert
+    expect(attack).toBe(0);
+  });
+  //endregion max hp floor
+
   it('scales map encounter step from merged encounter reward rates', () =>
   {
     // Arrange

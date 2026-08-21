@@ -1293,7 +1293,8 @@ Game_Actor.prototype.param = function(paramId) {
 	const originalValue = J.DIFFICULTY.Aliased.Game_Actor.get("param").call(this, paramId);
 	const appliedDifficulty = $gameTemp.getAppliedDifficulty();
 	const multiplier = appliedDifficulty.actorEffects.bparams[paramId] / 100;
-	return Math.round(originalValue * multiplier);
+	const scaledValue = Math.round(originalValue * multiplier);
+	return paramId === 0 ? Math.max(1, scaledValue) : scaledValue;
 };
 /**
 * Extends {@link #sparam}.<br/>
@@ -1332,7 +1333,8 @@ Game_Enemy.prototype.param = function(paramId) {
 	const originalValue = J.DIFFICULTY.Aliased.Game_Enemy.get("param").call(this, paramId);
 	const appliedDifficulty = $gameTemp.getAppliedDifficulty();
 	const multiplier = appliedDifficulty.enemyEffects.bparams[paramId] / 100;
-	return Math.round(originalValue * multiplier);
+	const scaledValue = Math.round(originalValue * multiplier);
+	return paramId === 0 ? Math.max(1, scaledValue) : scaledValue;
 };
 /**
 * Extends {@link #sparam}.<br/>
