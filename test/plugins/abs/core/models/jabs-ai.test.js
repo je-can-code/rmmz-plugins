@@ -456,6 +456,40 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
       });
 
       expect(ai.decideBuffing(user, [ 1 ])).toEqual(0);
+
+      // nobody needed a buff, so no ally should have been designated as the recipient of one.
+      expect(user.setAllyTarget).not.toHaveBeenCalled();
+    });
+
+    it('ignores effects that are not state-adding, however buff-like they look', () =>
+    {
+      // Arrange: every fixture in this block used effect code 21 exclusively, so the filter could
+      // have been dropped entirely and gone unnoticed. A skill that only heals and only removes
+      // state is not a buff, and treating it as one would have the AI open a fight by casting a
+      // cure on an ally who has nothing to cure.
+      const ai = new JABS_AI();
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId.mockReturnValue(null);
+      const ally = { getUuid: () => 'ally-uuid' };
+      const user = buildBattler({
+        getAllNearbyAllies: () => [ ally ],
+        getSkill: () => ({
+          effects: [
+            {
+              code: 11, dataId: 3,
+            },
+            {
+              code: 22, dataId: 3,
+            },
+          ],
+        }),
+      });
+
+      // Act
+      const chosenSkillId = ai.decideBuffing(user, [ 1 ]);
+
+      // Assert
+      expect(chosenSkillId).toEqual(0);
+      expect(user.setAllyTarget).not.toHaveBeenCalled();
     });
 
     it('picks a skill and sets the ally target when a buff is needed', () =>
@@ -487,6 +521,48 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
 
       expect(ai.decideBuffing(user, [ 5 ])).toEqual(5);
       expect(user.setAllyTarget).toHaveBeenCalledWith(ally);
+    });
+
+    it('keeps the ally chosen by the first satisfied effect rather than a later one', () =>
+    {
+      // Arrange: the two effects disagree about who needs help. State 3 is missing on the first
+      // ally only; state 4 is missing on the second only. The short-circuit means the first
+      // effect's pick stands, so the buff is aimed at the first ally. The existing short-circuit
+      // case above cannot show this - both of its effects nominate the same ally, so letting the
+      // second pass run produces an identical answer and the guard could be deleted untouched.
+      const ai = new JABS_AI();
+      const firstAlly = { getUuid: () => 'first-ally' };
+      const secondAlly = { getUuid: () => 'second-ally' };
+      globalThis.$jabsEngine.getJabsStateByUuidAndStateId.mockImplementation((uuid, stateId) =>
+      {
+        const alreadyHasIt = (stateId === 3)
+          ? uuid === 'second-ally'
+          : uuid === 'first-ally';
+
+        return alreadyHasIt
+          ? { isAboutToExpire: () => false }
+          : null;
+      });
+      const user = buildBattler({
+        getAllNearbyAllies: () => [ firstAlly, secondAlly ],
+        getSkill: () => ({
+          effects: [
+            {
+              code: 21, dataId: 3,
+            },
+            {
+              code: 21, dataId: 4,
+            },
+          ],
+        }),
+      });
+
+      // Act
+      const chosenSkillId = ai.decideBuffing(user, [ 5 ]);
+
+      // Assert
+      expect(chosenSkillId).toEqual(5);
+      expect(user.setAllyTarget).toHaveBeenCalledWith(firstAlly);
     });
   });
 
@@ -723,6 +799,61 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
 
       expect(ai.determineBestSkillForStateCleansing([ 1, 2 ], 5, healer)).toEqual(1);
     });
+
+    it('ignores effects that match only the code or only the state being cleansed', () =>
+    {
+      // Arrange: the two decoys carry a far higher rate than the real cleanse, and each shares
+      // exactly one half of the predicate - a remove-state effect aimed at a different state, and
+      // a different effect code aimed at this one. Either would be picked by a filter that had
+      // degraded to matching on one half, and the resulting skill would cleanse nothing. Every
+      // fixture in this block held only exact matches, so nothing could tell those apart.
+      const ai = new JABS_AI();
+      const healer = buildBattler({
+        getSkill: () => ({
+          effects: [
+            {
+              code: 22, dataId: 9, value1: 0.99,
+            },
+            {
+              code: 21, dataId: 5, value1: 0.99,
+            },
+            {
+              code: 22, dataId: 5, value1: 0.4,
+            },
+          ],
+        }),
+      });
+
+      // Act
+      const bestSkill = ai.determineBestSkillForStateCleansing([ 1 ], 5, healer);
+
+      // Assert
+      expect(bestSkill).toEqual(1);
+    });
+
+    it('returns null when every effect matches only half the predicate', () =>
+    {
+      // Arrange: nothing here removes state 5, so there is no cleansing skill to nominate.
+      const ai = new JABS_AI();
+      const healer = buildBattler({
+        getSkill: () => ({
+          effects: [
+            {
+              code: 22, dataId: 9, value1: 0.99,
+            },
+            {
+              code: 21, dataId: 5, value1: 0.99,
+            },
+          ],
+        }),
+      });
+
+      // Act
+      const bestSkill = ai.determineBestSkillForStateCleansing([ 1 ], 5, healer);
+
+      // Assert
+      expect(bestSkill).toBeNull();
+    });
   });
 
   describe('battle memory', () =>
@@ -752,6 +883,50 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
       const ai = new JABS_AI();
 
       expect(ai.getMemory(99, 99)).toBeUndefined();
+    });
+
+    it('getMemory matches the battler and the skill together, not either one alone', () =>
+    {
+      // Arrange: the two near misses are stored ahead of the real match on purpose. Each shares
+      // exactly one half of the key, so a lookup that had quietly degraded into matching on the
+      // battler alone would return the 20, and one matching on the skill alone would return the
+      // 30. With a single memory on file - which is all this suite held - "matches this pair" and
+      // "matches anything" are the same program and no assertion can separate them.
+      const ai = new JABS_AI();
+      ai.applyMemory({
+        battlerId: 7, skillId: 2, effectiveness: 1, damageApplied: 30,
+      });
+      ai.applyMemory({
+        battlerId: 1, skillId: 3, effectiveness: 1, damageApplied: 20,
+      });
+      ai.applyMemory({
+        battlerId: 1, skillId: 2, effectiveness: 1, damageApplied: 10,
+      });
+
+      // Act
+      const found = ai.getMemory(1, 2);
+
+      // Assert
+      expect(found.damageApplied).toEqual(10);
+    });
+
+    it('getMemory refuses a pair that only half matches something on file', () =>
+    {
+      // Arrange: battler 1 is known and skill 2 is known, but never together - remembering that
+      // combination would be an invention.
+      const ai = new JABS_AI();
+      ai.applyMemory({
+        battlerId: 1, skillId: 3, effectiveness: 1, damageApplied: 20,
+      });
+      ai.applyMemory({
+        battlerId: 7, skillId: 2, effectiveness: 1, damageApplied: 30,
+      });
+
+      // Act
+      const found = ai.getMemory(1, 2);
+
+      // Assert
+      expect(found).toBeUndefined();
     });
 
     it('filterMemoriesByEffectiveness keeps only remembered-effective skills', () =>
