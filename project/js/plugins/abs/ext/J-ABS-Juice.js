@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.0 ABS-JUICE] Procedural map battler motion juice for JABS (squish, tilt, casting pulse, weapon swing).
+ * [v1.1.1 ABS-JUICE] Procedural map battler motion juice for JABS (squish, tilt, casting pulse, weapon swing).
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -168,6 +168,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Simplified six guards that tested a value for null and undefined before
+ *    asking whether it was finite, which Number.isFinite already answers for
+ *    both. No behavioural change; the checks could never have decided anything.
  * - 1.1.0
  *    Added <noJuice> and <juiceMotion:none> to suppress caster motion outright.
  *    Added flip/flip-reverse caster-body full-rotation spin motions.
@@ -338,7 +342,7 @@ J.ABS.EXT.JUICE = {};
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.EXT.JUICE.Metadata = new JAbsJuice_PluginMetadata("J-ABS-Juice", "1.1.0");
+J.ABS.EXT.JUICE.Metadata = new JAbsJuice_PluginMetadata("J-ABS-Juice", "1.1.1");
 /**
 * A collection of all aliased methods for this plugin.
 */
@@ -398,7 +402,7 @@ J.ABS.EXT.JUICE.RegExp = {
 //#endregion
 //#region src/plugins/abs/ext/juice/_metadata/meta.js
 var PLUGIN_NAME = "J-ABS-Juice";
-var PLUGIN_VERSION = "1.1.0";
+var PLUGIN_VERSION = "1.1.1";
 var PLUGIN_DESC_TAG = "ABS-JUICE";
 
 //#endregion

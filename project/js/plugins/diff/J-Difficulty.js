@@ -2,7 +2,7 @@
  
 /*:
  * @target MZ
- * @plugindesc [v2.1.1 DIFFICULTY] A layered difficulty system.
+ * @plugindesc [v2.1.2 DIFFICULTY] A layered difficulty system.
  * @base J-Base
  * @orderAfter J-Base
  * @author JE
@@ -23,6 +23,12 @@
  * All difficulties are defined in an external JSON file.
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.2
+ *    Difficulty scaling can no longer reduce max hp below one. The engine floors
+ *    it at one inside its own param call, and the difficulty multiplier was
+ *    applied to the result - outside that clamp - so a max hp multiplier of zero
+ *    produced a battler with no maximum hp and broke every ratio computed from
+ *    it. Other parameters still scale to zero, which is a legitimate setting.
  * - 2.1.1
  *    The difficulty points window no longer declares private members. A
  *    window's constructor reaches initialize, and through it the drawing
@@ -843,7 +849,7 @@ J.DIFFICULTY = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.DIFFICULTY.Metadata = new J_DiffPluginMetadata("J-Difficulty", "2.1.1");
+J.DIFFICULTY.Metadata = new J_DiffPluginMetadata("J-Difficulty", "2.1.2");
 /**
 * The actual `plugin parameters` extracted from RMMZ.
 */

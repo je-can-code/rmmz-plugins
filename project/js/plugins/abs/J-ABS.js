@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.15.0 ABS] Enables combat to be carried out on the map.
+ * [v4.16.0 ABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -48,6 +48,15 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.16.0
+ *    Fixed turnEndOnMap running the engine's own turn-end effects while JABS was
+ *    active and skipping them while it was disabled - the guard was negated, so
+ *    regeneration and poison applied twice under JABS and not at all without it.
+ *    Fixed <noAutoAssignType:[IDS]> never being read; the blacklist was checking
+ *    a J-Passive notetag instead, so equipped passive state ids were blocking
+ *    skill types by numeric coincidence while the documented tag did nothing.
+ *    Moved the passive-state exclusion out of the affliction strip and into
+ *    J-Passive-Conditional, which is where both halves of that question live.
  * - 4.15.0
  *    Added <thisIgnoreParry:N> so a skill can carry its own parry-ignore, and
  *    made <ignoreParry:N> readable from every note source on the attacker rather
@@ -4349,7 +4358,7 @@ J.ABS.Helpers.loadExternalConfig = (configPath = "data/config.jabs.json") => {
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.15.0");
+J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.16.0");
 J.ABS.Helpers.loadExternalConfig();
 /**
 * The various default values across the engine. Often configurable.
@@ -23843,7 +23852,7 @@ var StateAfflictionProvider = class StateAfflictionProvider {
 //#endregion
 //#region src/plugins/abs/core/_metadata/meta.js
 var PLUGIN_NAME = "J-ABS";
-var PLUGIN_VERSION = "4.15.0";
+var PLUGIN_VERSION = "4.16.0";
 var PLUGIN_DESC_TAG = "ABS";
 
 //#endregion

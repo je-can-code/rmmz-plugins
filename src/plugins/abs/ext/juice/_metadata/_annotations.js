@@ -168,6 +168,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Simplified six guards that tested a value for null and undefined before
+ *    asking whether it was finite, which Number.isFinite already answers for
+ *    both. No behavioural change; the checks could never have decided anything.
  * - 1.1.0
  *    Added <noJuice> and <juiceMotion:none> to suppress caster motion outright.
  *    Added flip/flip-reverse caster-body full-rotation spin motions.

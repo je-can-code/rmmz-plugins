@@ -48,6 +48,15 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.16.0
+ *    Fixed turnEndOnMap running the engine's own turn-end effects while JABS was
+ *    active and skipping them while it was disabled - the guard was negated, so
+ *    regeneration and poison applied twice under JABS and not at all without it.
+ *    Fixed <noAutoAssignType:[IDS]> never being read; the blacklist was checking
+ *    a J-Passive notetag instead, so equipped passive state ids were blocking
+ *    skill types by numeric coincidence while the documented tag did nothing.
+ *    Moved the passive-state exclusion out of the affliction strip and into
+ *    J-Passive-Conditional, which is where both halves of that question live.
  * - 4.15.0
  *    Added <thisIgnoreParry:N> so a skill can carry its own parry-ignore, and
  *    made <ignoreParry:N> readable from every note source on the attacker rather
