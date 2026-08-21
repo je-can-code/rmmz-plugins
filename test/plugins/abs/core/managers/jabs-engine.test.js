@@ -4821,6 +4821,105 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('getIgnoreParryPct', () =>
+  {
+    function buildIgnoreParryCaster()
+    {
+      return { getBattler: () => ({ getAllNotes: () => [] }) };
+    }
+
+    it('sums the caster-wide sources with the skill-scoped one', () =>
+    {
+      // Arrange
+      globalThis.RPGManager.getSumFromAllNotesByRegex.mockReturnValue(30);
+      const engine = new JABS_Engine();
+      const action = { getBaseSkill: () => ({ jabsIgnoreParry: 25 }) };
+
+      // Act
+      const result = engine.getIgnoreParryPct(buildIgnoreParryCaster(), action);
+
+      // Assert
+      expect(result).toBe(55);
+    });
+
+    it('caps the total at 100 so the guard pressure factor never inverts', () =>
+    {
+      // Arrange
+      globalThis.RPGManager.getSumFromAllNotesByRegex.mockReturnValue(80);
+      const engine = new JABS_Engine();
+      const action = { getBaseSkill: () => ({ jabsIgnoreParry: 70 }) };
+
+      // Act
+      const result = engine.getIgnoreParryPct(buildIgnoreParryCaster(), action);
+
+      // Assert
+      expect(result).toBe(100);
+    });
+  });
+
+  describe('getFlatIgnoreParryPct', () =>
+  {
+    it('returns the total summed across the caster note sources', () =>
+    {
+      // Arrange
+      globalThis.RPGManager.getSumFromAllNotesByRegex.mockReturnValue(45);
+      const engine = new JABS_Engine();
+      const notes = [ { note: '<ignoreParry:45>' } ];
+      const caster = { getBattler: () => ({ getAllNotes: () => notes }) };
+
+      // Act
+      const result = engine.getFlatIgnoreParryPct(caster);
+
+      // Assert
+      expect(result).toBe(45);
+      expect(globalThis.RPGManager.getSumFromAllNotesByRegex)
+        .toHaveBeenCalledWith(notes, J.ABS.RegExp.IgnoreParry);
+    });
+
+    it('returns zero when no note source carries the tag', () =>
+    {
+      // Arrange
+      globalThis.RPGManager.getSumFromAllNotesByRegex.mockReturnValue(null);
+      const engine = new JABS_Engine();
+      const caster = { getBattler: () => ({ getAllNotes: () => [] }) };
+
+      // Act
+      const result = engine.getFlatIgnoreParryPct(caster);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('getThisIgnoreParryPct', () =>
+  {
+    it('returns the executing skill own tag value', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const action = { getBaseSkill: () => ({ jabsIgnoreParry: 40 }) };
+
+      // Act
+      const result = engine.getThisIgnoreParryPct(action);
+
+      // Assert
+      expect(result).toBe(40);
+    });
+
+    it('returns zero when the executing skill has no tag', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const action = { getBaseSkill: () => ({ jabsIgnoreParry: null }) };
+
+      // Act
+      const result = engine.getThisIgnoreParryPct(action);
+
+      // Assert
+      expect(result).toBe(0);
+    });
+  });
+
   describe('checkImplicitFullParry', () =>
   {
     function buildTarget(overrides = {})
@@ -4832,7 +4931,10 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     function buildCaster(overrides = {})
     {
       return Object.assign({
-        getBattler: () => ({ getNegativeRollsForSkill: () => 0 }),
+        getBattler: () => ({
+          getNegativeRollsForSkill: () => 0,
+          getAllNotes: () => [],
+        }),
       }, overrides);
     }
 
@@ -4897,7 +4999,10 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     function buildCaster(overrides = {})
     {
       return Object.assign({
-        getBattler: () => ({ getNegativeRollsForSkill: () => 0 }),
+        getBattler: () => ({
+          getNegativeRollsForSkill: () => 0,
+          getAllNotes: () => [],
+        }),
       }, overrides);
     }
 

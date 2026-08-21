@@ -47,19 +47,14 @@ class J_ProficiencyPluginMetadata
 
   /**
    * Initializes the proficiencies from database and external data.
+   *
+   * The file itself was already read when the namespace was set up; only the classification and the
+   * per-actor mapping happen here. Both need `$dataActors`, which is why this waits for the boot scene
+   * rather than running alongside the read.
    */
   initializeProficiencies()
   {
-    const options = ExternalJsonConfigLoaderOptions.Builder()
-      .pluginName('J-Proficiency')
-      .configName('proficiency configuration')
-      .mapper(J_ProficiencyPluginMetadata.classifyConditionals.bind(J_ProficiencyPluginMetadata))
-      .logSummary(result => [ `- ${result.length} proficiency conditionals` ])
-      .build();
-
-    const classifiedConditionalData = ExternalJsonConfigLoader.load(
-      J_ProficiencyPluginMetadata.CONFIG_PATH,
-      options);
+    const classifiedConditionalData = J_ProficiencyPluginMetadata.classifyConditionals(this.ExternalConfig);
 
     /**
      * The collection of all defined skill proficiencies.

@@ -7,8 +7,8 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
  * once at module load, which is why it lives in its own file: a module registry holds one answer
  * per realm, and the companion file covers the plugin loading without J-ABS present.
  *
- * The reward is deliberately flat rather than scaled by the caster's proficiency amount, since
- * defending is not the same practice as landing the skill.
+ * The reward is what any skill use earns, so a bonus to proficiency gain reaches defense as readily
+ * as offense.
  */
 describe('J-Proficiency Game_Action guard rewards with J-ABS (direct src import)', () =>
 {
@@ -46,7 +46,11 @@ describe('J-Proficiency Game_Action guard rewards with J-ABS (direct src import)
    */
   function makeJabsBattler(options = {})
   {
-    const { guardSkillId = 5, canGain = true } = options;
+    const {
+      guardSkillId = 5,
+      canGain = true,
+      proficiencyAmount = 1
+    } = options;
     const awarded = [];
 
     return {
@@ -54,6 +58,7 @@ describe('J-Proficiency Game_Action guard rewards with J-ABS (direct src import)
       getGuardSkillId: () => guardSkillId,
       getBattler: () => ({
         canGainProficiency: () => canGain,
+        skillProficiencyAmount: () => proficiencyAmount,
         increaseSkillProficiency: (skillId, amount) => awarded.push([ skillId, amount ]),
       }),
     };
@@ -102,10 +107,22 @@ describe('J-Proficiency Game_Action guard rewards with J-ABS (direct src import)
   //region awarding
   describe('gainProficiencyFromGuarding', () =>
   {
-    it('awards a flat point to the guard skill', () =>
+    it('awards the guard skill what the battler earns from any skill use', () =>
     {
-      // Arrange: defending earns a fixed amount rather than the caster's skill-use rate.
-      const jabsBattler = makeJabsBattler();
+      // Arrange: a battler carrying a proficiency bonus, so a flat award and a scaled one differ.
+      const jabsBattler = makeJabsBattler({ proficiencyAmount: 4 });
+
+      // Act
+      action.gainProficiencyFromGuarding(jabsBattler);
+
+      // Assert
+      expect(jabsBattler.awarded).toEqual([ [ 5, 4 ] ]);
+    });
+
+    it('awards the base rate to a battler carrying no proficiency bonus', () =>
+    {
+      // Arrange
+      const jabsBattler = makeJabsBattler({ proficiencyAmount: 1 });
 
       // Act
       action.gainProficiencyFromGuarding(jabsBattler);

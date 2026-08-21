@@ -7,8 +7,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 vi.mock('../../../../../../src/plugins/jafting/ext/refine/managers/JaftingManager.js', () => ({
   default: {
     parseTraits: equip => new Array(equip.traitCount ?? 0).fill({}),
+    // a ceiling counts both channels a refinement can add to, so the fixture carries both numbers.
+    countRefinedEffects: equip => (equip.traitCount ?? 0) + (equip.noteEffectCount ?? 0),
     determineRefinementOutput: (base, material) => ({
       traitCount: (base.traitCount ?? 0) + (material.traitCount ?? 0),
+      noteEffectCount: (base.noteEffectCount ?? 0) + (material.noteEffectCount ?? 0),
     }),
   },
 }));
@@ -202,6 +205,40 @@ describe('RefinementEligibility (direct src import)', () =>
       // Assert
       expect(verdict.enabled).toBe(false);
       expect(verdict.errorText).toContain('max traits');
+    });
+
+    it('bars an equip whose note effects fill the ceiling its traits alone would not', () =>
+    {
+      // Arrange - two traits under a cap of four looks like room, until the two note effects are counted.
+      const datum = equip({
+        jaftingMaxTraitCount: 4,
+        traitCount: 2,
+        noteEffectCount: 2,
+      });
+
+      // Act
+      const verdict = RefinementEligibility.evaluate(datum, true, null);
+
+      // Assert
+      expect(verdict.enabled).toBe(false);
+      expect(verdict.errorText).toContain('max traits');
+    });
+
+    it('counts note effects toward the ceiling without them alone filling it', () =>
+    {
+      // Arrange - the near miss of the above: the same note effects, one rung of headroom left.
+      const datum = equip({
+        jaftingMaxTraitCount: 5,
+        traitCount: 2,
+        noteEffectCount: 2,
+      });
+
+      // Act
+      const verdict = RefinementEligibility.evaluate(datum, true, null);
+
+      // Assert
+      expect(verdict.enabled).toBe(true);
+      expect(verdict.iconIndex).toBe(50);
     });
 
     it('allows an equip with room left under a real trait cap', () =>

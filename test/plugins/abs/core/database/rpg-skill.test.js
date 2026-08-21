@@ -69,7 +69,7 @@ describe('J-ABS RPG_Skill effects (direct src import)', () =>
       [ 'jabsDirectStateTarget', '<directStateTarget:12>', 12, null ],
       [ 'jabsSelfAnimationId', '<selfAnimationId:99>', 99, null ],
       [ 'jabsOnCastAnimationId', '<onCastAnimationId:88>', 88, null ],
-      [ 'jabsIgnoreParry', '<ignoreParry:50>', 50, null ],
+      [ 'jabsIgnoreParry', '<thisIgnoreParry:50>', 50, null ],
       [ 'jabsVisZ', '<visZ:12>', 12, null ],
       [ 'jabsBonusHitsFromSkillNote', '<bonus-hits:4>', 4, 0 ],
       [ 'jabsDodgeSteps', '<dodge:3>', 3, 0 ],

@@ -5104,6 +5104,22 @@ class JABS_Battler
 
     // trigger the dodge!
     this.setDodging(true);
+
+    // perform on-dodge effects.
+    this.onDodge(skill);
+  };
+
+  /**
+   * A hook to perform all side effects of executing a dodge skill.
+   *
+   * Dodging needs a hook of its own because it is initiated rather than reacted to- parry and guard
+   * both happen inside an incoming action, which is why their hooks hang off {@link Game_Action}, and
+   * a dodge has no such action to hang from. Extensions alias this to add telemetry, resource gain,
+   * or other behavior.
+   * @param {RPG_Skill} _skill The dodge skill that was executed.
+   */
+  onDodge(_skill)
+  {
   };
 
   /**

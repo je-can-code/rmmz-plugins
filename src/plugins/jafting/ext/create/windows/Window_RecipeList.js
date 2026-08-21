@@ -3,7 +3,7 @@
  * A window containing the list of all crafting recipes.
  */
 class Window_RecipeList
-  extends Window_Command
+  extends Window_FilterableList
 {
   /**
    * Constructor.
@@ -16,19 +16,17 @@ class Window_RecipeList
   }
 
   /**
-   * Implements {@link Window_Command.initMembers}.<br/>
-   * Initializes the members of this window.
+   * Overrides {@link Window_FilterableList.initialFilterKey}.<br/>
+   * Starts on no category rather than on the everything-sentinel.
    *
-   * This cannot be a class field declaration: JavaScript applies those only after `super()` returns,
-   * by which point the command list has already been built from it and found it undefined.
+   * A recipe declares the categories it belongs to, and none of them is the everything-sentinel, so
+   * starting there would quietly show an empty list. An empty key says the same thing honestly, and the
+   * scene points this at a real category before the player ever sees it.
+   * @returns {string}
    */
-  initMembers()
+  initialFilterKey()
   {
-    /**
-     * The currently selected category on the category list window.
-     * @type {string}
-     */
-    this.currentCategory = String.empty;
+    return String.empty;
   }
 
   /**
@@ -37,14 +35,7 @@ class Window_RecipeList
    */
   setCurrentCategory(newCategory)
   {
-    // nothing to redraw when the value has not changed.
-    if (this.currentCategory === newCategory) return;
-
-    // set the new category.
-    this.currentCategory = newCategory;
-
-    // refresh the command list based on this new category.
-    this.refresh();
+    this.setFilterKey(newCategory);
   }
 
   /**
@@ -53,47 +44,52 @@ class Window_RecipeList
    */
   getCurrentCategory()
   {
-    return this.currentCategory;
+    return this.filterKey();
   }
 
   /**
-   * Implements {@link #makeCommandList}.<br/>
-   * Creates the command list of unlocked crafting recipes.
+   * Implements {@link Window_FilterableList.sourceItems}.<br/>
+   * Every recipe the party has learned that this station actually deals in.
+   *
+   * Scoped to the unlocked categories, which is how a station says what it makes: the calling event
+   * unlocks its own and locks them again afterwards. Without this the mortar and pestle would happily
+   * offer to fry a pile of wings.
+   * @returns {CraftingRecipe[]}
    */
-  makeCommandList()
+  sourceItems()
   {
-    // empty the current list.
-    this.clearCommandList();
+    const stockedKeys = $gameParty.getUnlockedCategories()
+      .map(category => category.key);
+    const stocked = new Set(stockedKeys);
 
-    // grab all the listings available.
-    const commands = this.buildCommands();
-
-    // build all the commands.
-    commands.forEach(this.addBuiltCommand, this);
+    return $gameParty.getUnlockedRecipes()
+      .filter(recipe => recipe.categoryKeys.some(key => stocked.has(key)));
   }
 
   /**
-   * Builds all commands for this command window.
-   * Adds all recipes to the list that are unlocked.
-   * @returns {BuiltWindowCommand[]}
+   * Implements {@link Window_FilterableList.matchesFilter}.<br/>
+   * Whether a recipe is filed under the category being browsed.
+   * @param {CraftingRecipe} recipe The recipe driving this step.
+   * @param {string} filterKey The category key being browsed.
+   * @returns {boolean}
    */
-  buildCommands()
+  matchesFilter(recipe, filterKey)
   {
-    // grab all unlocked entries in the list.
-    const recipes = $gameParty.getUnlockedRecipes();
+    // the everything-tab narrows nothing further; the source is already this station's stock.
+    if (filterKey === FilterCycle.ALL) return true;
 
-    // determine the current category selected.
-    const currentCategory = this.getCurrentCategory();
+    return recipe.categoryKeys.includes(filterKey);
+  }
 
-    // only include the recipes that belong to the current category.
-    const categoryRecipes = recipes
-      .filter(recipe => recipe.categoryKeys.includes(currentCategory));
-
-    // compile the list of commands.
-    const commands = categoryRecipes.map(this.buildCommand, this);
-
-    // return the compiled list of commands.
-    return commands;
+  /**
+   * Implements {@link Window_FilterableList.isActionable}.<br/>
+   * A recipe is actionable when the party holds everything it asks for.
+   * @param {CraftingRecipe} recipe The recipe driving this step.
+   * @returns {boolean}
+   */
+  isActionable(recipe)
+  {
+    return recipe.canCraft();
   }
 
   /**
@@ -131,6 +127,19 @@ class Window_RecipeList
    */
   drawBackgroundRect(_)
   {
+  }
+
+  /**
+   * Overrides {@link Window_FilterableList.emptyListText}.<br/>
+   * Names the reason this lane is bare, which is always the same reason.
+   *
+   * A category the player has learned nothing in is the ordinary early state of every lane but one, so
+   * this is read far more often than it sounds like it would be.
+   * @returns {string}
+   */
+  emptyListText()
+  {
+    return 'No recipes known here.';
   }
 }
 

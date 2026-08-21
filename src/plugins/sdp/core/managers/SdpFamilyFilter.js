@@ -107,6 +107,26 @@ class SdpFamilyFilter
   }
 
   /**
+   * Builds the L2/R2 ring positions for the current actor.
+   *
+   * The keys come from {@link SdpFamilyFilter.buildCycleForActor}, which omits families this actor has no
+   * unlocked panels in — a filter over your own panels should never present a tab with nothing behind it.
+   * The label and icon are resolved once here rather than on every draw, which is why a position carries
+   * both and the strip that renders it needs to know nothing about families.
+   * @param {Game_Actor} actor The actor driving this step.
+   * @returns {Array<{key: string, name: string, iconIndex: number}>}
+   */
+  static buildPositionsForActor(actor)
+  {
+    return SdpFamilyFilter.buildCycleForActor(actor)
+      .map(filterKey => ({
+        key: filterKey,
+        name: SdpFamilyFilter.displayNameForFilterKey(filterKey),
+        iconIndex: SdpFamilyFilter.iconIndexForFilterKey(filterKey),
+      }));
+  }
+
+  /**
    * Ordinal position of a family within the authored family list.
    * Unresolved/unknown families sort after every known family.
    * @param {string} familyKey The family key driving this step.

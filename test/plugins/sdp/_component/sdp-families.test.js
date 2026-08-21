@@ -475,6 +475,93 @@ describe('J-SDP families (direct src import)', () =>
       // Assert
       expect(cycle).toEqual([ SdpFamilyFilter.ALL, 'undead' ]);
     });
+
+    describe('SdpFamilyFilter.buildPositionsForActor', () =>
+    {
+      it('resolves a label and an icon for every key in the actor cycle', () =>
+      {
+        // Arrange
+        applyFamilyTestConfiguration(buildFamilyConfig({
+          sdps: [
+            {
+              name: 'Ghosty T1',
+              key: 'ghosty_t1',
+              iconIndex: '1',
+              rarity: 0,
+              unlockedByDefault: true,
+              description: '',
+              topFlavorText: '',
+              maxRank: '1',
+              baseCost: '0',
+              flatGrowthCost: '0',
+              multGrowthCost: '1',
+              panelParameters: [],
+              panelRewards: [],
+              mastery: {
+                subgroupKey: 'ghosty',
+                subgroupTier: 1,
+                masterySkillId: 0,
+              },
+            },
+          ],
+        }));
+        const actor = buildFamilyFilterTestActor();
+        actor.unlockSdpByKey('ghosty_t1');
+
+        // Act
+        const positions = SdpFamilyFilter.buildPositionsForActor(actor);
+
+        // Assert - the ring is All plus the one family this actor has panels in.
+        expect(positions.length).toBe(2);
+        expect(positions.map(position => position.key))
+          .toEqual([ SdpFamilyFilter.ALL, 'undead' ]);
+        expect(positions[ 1 ].name)
+          .toBe(SdpFamilyFilter.displayNameForFilterKey('undead'));
+        expect(positions[ 1 ].iconIndex)
+          .toBe(SdpFamilyFilter.iconIndexForFilterKey('undead'));
+      });
+
+      it('carries a name and an icon on the All position too', () =>
+      {
+        // Arrange - All is synthesised rather than authored, so it is the position most likely to arrive bare.
+        applyFamilyTestConfiguration(buildFamilyConfig({
+          sdps: [
+            {
+              name: 'Ghosty T1',
+              key: 'ghosty_t1',
+              iconIndex: '1',
+              rarity: 0,
+              unlockedByDefault: true,
+              description: '',
+              topFlavorText: '',
+              maxRank: '1',
+              baseCost: '0',
+              flatGrowthCost: '0',
+              multGrowthCost: '1',
+              panelParameters: [],
+              panelRewards: [],
+              mastery: {
+                subgroupKey: 'ghosty',
+                subgroupTier: 1,
+                masterySkillId: 0,
+              },
+            },
+          ],
+        }));
+        const actor = buildFamilyFilterTestActor();
+        actor.unlockSdpByKey('ghosty_t1');
+
+        // Act
+        const [ allPosition ] = SdpFamilyFilter.buildPositionsForActor(actor);
+
+        // Assert
+        expect(allPosition.key).toBe(SdpFamilyFilter.ALL);
+        expect(allPosition.name)
+          .toBe(SdpFamilyFilter.displayNameForFilterKey(SdpFamilyFilter.ALL));
+        expect(allPosition.iconIndex)
+          .toBe(SdpFamilyFilter.iconIndexForFilterKey(SdpFamilyFilter.ALL));
+      });
+    });
   });
 
   describe('SdpFamilyFilter.panelMatchesFilter', () =>

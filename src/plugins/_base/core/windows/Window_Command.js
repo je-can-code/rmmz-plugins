@@ -155,6 +155,11 @@ Window_Command.prototype.drawItem = function(index)
   // determine if we have multiline text to draw.
   const hasMultilineText = extraLines.length > 0 && !isSubtext;
 
+  // the block is lifted by half its own height so it centers on the row. a flat lift would only ever
+  // center one particular line count and leave every other count hanging high or sagging low.
+  const subtextLift = (subtexts.length * this.subtextLineHeight()) / 2;
+  const multilineLift = (extraLines.length * this.multilineLineHeight()) / 2;
+
   // check if we have any subtext.
   if (hasSubtexts)
   {
@@ -162,13 +167,13 @@ Window_Command.prototype.drawItem = function(index)
     commandName = this.boldenText(commandName);
 
     // move the command name up a bit if we have subtext.
-    commandNameY -= this.subtextLineHeight();
+    commandNameY -= subtextLift;
   }
   // check if we alternatively have multiline text instead.
   else if (hasMultilineText)
   {
     // move the command name up a bit if we have additional lines.
-    commandNameY -= this.multilineLineHeight();
+    commandNameY -= multilineLift;
   }
 
   // destruct the face data.
@@ -226,8 +231,8 @@ Window_Command.prototype.drawItem = function(index)
       // bolden the text if we have subtext to make it stand out.
       this.toggleBold(true);
 
-      // move the command name up a bit if we have subtext.
-      rightTextY -= this.subtextLineHeight();
+      // the right text sits on the name's line, so it takes the same lift.
+      rightTextY -= subtextLift;
     }
 
     // execute the color change for right text.
@@ -249,11 +254,12 @@ Window_Command.prototype.drawItem = function(index)
       // the real index starts 1 line past the command name itself.
       const realSubtextIndex = (subtextIndex + 0);
 
-      // calculate the x coordinate for all subtext.
-      const subtextX = rectX + 32;
+      // subtext hangs off the name, so it takes whatever indent the name settled on - the icon, face
+      // and bare cases all move it, and a fixed x only ever lines up with one of them.
+      const subtextX = commandNameX;
 
-      // calculate the new y coordinate for the line.
-      const subtextY = rectY + (realSubtextIndex * this.subtextLineHeight()) + 2;
+      // calculate the new y coordinate for the line, following the name down from the lifted block.
+      const subtextY = rectY - subtextLift + ((realSubtextIndex + 1) * this.subtextLineHeight()) + 2;
 
       // italicize the subtext line.
       const italicsSubtext = this.italicizeText(subtext);
@@ -267,15 +273,8 @@ Window_Command.prototype.drawItem = function(index)
   }
   else if (hasMultilineText)
   {
-    // calculate the x coordinate for all subtext.
-    // align with the command name: skip visual-leader indent when no icon or face is present.
-    let extraLineX = (!commandIcon && !hasFaceData) ? rectX + 4 : rectX + 32;
-
-    // if there was face data rendered, then move this over some.
-    if (hasFaceData)
-    {
-      extraLineX += 44;
-    }
+    // extra lines hang off the name exactly as subtext does, so they take the same indent.
+    const extraLineX = commandNameX;
 
     // iterate over each of the subtexts.
     extraLines.forEach((extraLine, extraLineIndex) =>
@@ -283,8 +282,8 @@ Window_Command.prototype.drawItem = function(index)
       // TODO: is this needed?
       const actualIndex = extraLineIndex + 0;
 
-      // calculate the new y coordinate for the line.
-      const extraLineY = rectY + (actualIndex * this.multilineLineHeight()) + 2;
+      // calculate the new y coordinate for the line, following the name down from the lifted block.
+      const extraLineY = rectY - multilineLift + ((actualIndex + 1) * this.multilineLineHeight()) + 2;
 
       // render the subtext line.
       this.drawTextEx(extraLine, extraLineX, extraLineY, rectWidth);

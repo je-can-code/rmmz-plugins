@@ -10,7 +10,6 @@ import Window_SdpCart from '../windows/Window_SdpCart.js';
 import Window_SdpConfirmation from '../windows/Window_SdpConfirmation.js';
 import Window_SdpPoints from '../windows/Window_SdpPoints.js';
 import Window_SdpHelp from '../windows/Window_SdpHelp.js';
-import Window_SdpFamilyStrip from '../windows/Window_SdpFamilyStrip.js';
 
 /**
  * The scene for managing SDPs that the player has acquired.
@@ -113,7 +112,7 @@ class Scene_SDP
 
     /**
      * Family-filter strip above the panel list.
-     * @type {Window_SdpFamilyStrip}
+     * @type {Window_FilterStrip}
      */
     this._j._sdp._windows._sdpFamilyStrip = null;
 
@@ -124,16 +123,10 @@ class Scene_SDP
     this._j._sdp._cart = new Map();
 
     /**
-     * L2/R2 family-filter cycle keys for the current menu actor.
-     * @type {string[]}
+     * The L2/R2 family-filter ring for the current menu actor.
+     * @type {FilterCycle}
      */
-    this._j._sdp._familyFilterCycle = [];
-
-    /**
-     * Index into {@link this._j._sdp._familyFilterCycle}.
-     * @type {number}
-     */
-    this._j._sdp._familyFilterIndex = 0;
+    this._j._sdp._familyFilter = new FilterCycle();
 
   }
 
@@ -239,12 +232,12 @@ class Scene_SDP
 
   /**
    * Builds the family-filter strip window.
-   * @returns {Window_SdpFamilyStrip}
+   * @returns {Window_FilterStrip}
    */
   buildSdpFamilyStripWindow()
   {
     const rectangle = this.sdpFamilyStripRectangle();
-    return new Window_SdpFamilyStrip(rectangle);
+    return new Window_FilterStrip(rectangle);
   }
 
   /**
@@ -265,7 +258,7 @@ class Scene_SDP
 
   /**
    * Gets the tracked family strip window.
-   * @returns {Window_SdpFamilyStrip}
+   * @returns {Window_FilterStrip}
    */
   getSdpFamilyStripWindow()
   {
@@ -274,7 +267,7 @@ class Scene_SDP
 
   /**
    * Sets the tracked family strip window.
-   * @param {Window_SdpFamilyStrip} familyStripWindow The family strip window driving this step.
+   * @param {Window_FilterStrip} familyStripWindow The family strip window driving this step.
    */
   setSdpFamilyStripWindow(familyStripWindow)
   {
@@ -287,17 +280,19 @@ class Scene_SDP
   rebuildFamilyFilterCycle()
   {
     const actor = $gameParty.menuActor();
-    const cycle = SdpFamilyFilter.buildCycleForActor(actor);
-    const previousKey = this.getActiveFamilyFilterKey();
-    let nextIndex = cycle.indexOf(previousKey);
 
-    if (nextIndex < 0)
-    {
-      nextIndex = 0;
-    }
+    // the ring keeps the player on the same family across the rebuild whenever that family survives it.
+    this.getFamilyFilter()
+      .setPositions(SdpFamilyFilter.buildPositionsForActor(actor));
+  }
 
-    this.j()._sdp._familyFilterCycle = cycle;
-    this.j()._sdp._familyFilterIndex = nextIndex;
+  /**
+   * The L2/R2 family-filter ring for the current menu actor.
+   * @returns {FilterCycle}
+   */
+  getFamilyFilter()
+  {
+    return this.j()._sdp._familyFilter;
   }
 
   /**
@@ -306,14 +301,8 @@ class Scene_SDP
    */
   getActiveFamilyFilterKey()
   {
-    const cycle = this.j()._sdp._familyFilterCycle;
-
-    if (cycle.length === 0)
-    {
-      return SdpFamilyFilter.ALL;
-    }
-
-    return cycle[this.j()._sdp._familyFilterIndex | 0] ?? SdpFamilyFilter.ALL;
+    return this.getFamilyFilter()
+      .activeKey();
   }
 
   /**
@@ -322,12 +311,12 @@ class Scene_SDP
    */
   applyActiveFamilyFilter(clampSelection = true)
   {
-    const filterKey = this.getActiveFamilyFilterKey();
+    const familyFilter = this.getFamilyFilter();
     const listWindow = this.getSdpListWindow();
 
     this.getSdpFamilyStripWindow()
-      .setFilterKey(filterKey);
-    listWindow.setFamilyFilterKey(filterKey);
+      .setPosition(familyFilter.activePosition());
+    listWindow.setFilterKey(familyFilter.activeKey());
 
     if (clampSelection === false)
     {
@@ -366,9 +355,10 @@ class Scene_SDP
    */
   cycleFamilyFilters(isForward = true)
   {
-    const cycle = this.j()._sdp._familyFilterCycle;
+    const familyFilter = this.getFamilyFilter();
 
-    if (cycle.length <= 1)
+    // a ring of one is not a cycle- moving would land exactly where the player already is.
+    if (familyFilter.canCycle() === false)
     {
       SoundManager.playBuzzer();
       this.getSdpListWindow()
@@ -376,13 +366,16 @@ class Scene_SDP
       return;
     }
 
-    const currentIndex = this.j()._sdp._familyFilterIndex | 0;
-    const delta = isForward
-      ? 1
-      : -1;
-    const nextIndex = (currentIndex + delta + cycle.length) % cycle.length;
+    if (isForward)
+    {
+      familyFilter.next();
+    }
+    else
+    {
+      familyFilter.previous();
+    }
 
-    this.j()._sdp._familyFilterIndex = nextIndex;
+    SoundManager.playCursor();
     this.applyActiveFamilyFilter();
     this.onPanelHoveredChange();
     this.getSdpListWindow()
@@ -1220,8 +1213,8 @@ class Scene_SDP
     // grab the window with the list of sdps.
     const sdpListWindow = this.getSdpListWindow();
 
-    // toggle the filter.
-    sdpListWindow.toggleNoMaxPanelsFilter();
+    // toggle the filter, which rebuilds the list.
+    sdpListWindow.toggleActionableOnly();
 
     // trigger a refresh of windows.
     this.onPanelHoveredChange();

@@ -47,22 +47,13 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
 {
   describe('CraftingCreationSession', () =>
   {
-    it('starts in category browsing with no category key', () =>
+    it('starts on the recipe list, which is the only place the scene opens now', () =>
     {
       // Arrange & Act
       const session = new CraftingCreationSession();
 
       // Assert
-      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingCategories);
-    });
-
-    it('starts with a null category key', () =>
-    {
-      // Arrange & Act
-      const session = new CraftingCreationSession();
-
-      // Assert
-      expect(session.getCategoryKey()).toBe(null);
+      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingRecipes);
     });
 
     it('starts with a null last craft outcome', () =>
@@ -74,70 +65,19 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
       expect(session.getLastCraftOutcome()).toBe(null);
     });
 
-    it('reset clears phase, category, and last craft outcome back to their initial values', () =>
+    it('reset returns phase and last craft outcome to their initial values', () =>
     {
-      // Arrange
+      // Arrange- leave the session somewhere other than where it started, so reset has work to do.
       const session = new CraftingCreationSession();
-      session.enterRecipeBrowsing('vitest_cat');
+      session.beginIngredientSelection();
       session.tryCraftRecipe(null);
 
       // Act
       session.reset();
 
       // Assert
-      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingCategories);
-      expect(session.getCategoryKey()).toBe(null);
-      expect(session.getLastCraftOutcome()).toBe(null);
-    });
-
-    it('enterRecipeBrowsing locks the phase to browsing recipes', () =>
-    {
-      // Arrange
-      const session = new CraftingCreationSession();
-
-      // Act
-      session.enterRecipeBrowsing('vitest_cat');
-
-      // Assert
       expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingRecipes);
-    });
-
-    it('enterRecipeBrowsing locks the category key', () =>
-    {
-      // Arrange
-      const session = new CraftingCreationSession();
-
-      // Act
-      session.enterRecipeBrowsing('vitest_cat');
-
-      // Assert
-      expect(session.getCategoryKey()).toBe('vitest_cat');
-    });
-
-    it('returnToCategoryBrowsing returns to category browsing phase', () =>
-    {
-      // Arrange
-      const session = new CraftingCreationSession();
-      session.enterRecipeBrowsing('vitest_cat');
-
-      // Act
-      session.returnToCategoryBrowsing();
-
-      // Assert
-      expect(session.getPhase()).toBe(CraftingCreationSession.Phase.BrowsingCategories);
-    });
-
-    it('returnToCategoryBrowsing clears the category key', () =>
-    {
-      // Arrange
-      const session = new CraftingCreationSession();
-      session.enterRecipeBrowsing('vitest_cat');
-
-      // Act
-      session.returnToCategoryBrowsing();
-
-      // Assert
-      expect(session.getCategoryKey()).toBe(null);
+      expect(session.getLastCraftOutcome()).toBe(null);
     });
 
     it('starts with no ingredient selections', () =>
@@ -340,19 +280,18 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
       expect(out).toEqual({ crafted: true, playedSuccessSound: true, reason: null });
     });
 
-    it('snapshot reflects the current phase, category, and last outcome', () =>
+    it('snapshot reflects the current phase and last outcome', () =>
     {
-      // Arrange
+      // Arrange- move off the opening phase so the snapshot has to report where the session actually is.
       const session = new CraftingCreationSession();
-      session.enterRecipeBrowsing('vitest_cat');
+      session.beginIngredientSelection();
       session.tryCraftRecipe(null);
 
       // Act
       const snap = session.snapshot();
 
       // Assert
-      expect(snap.phase).toBe(CraftingCreationSession.Phase.BrowsingRecipes);
-      expect(snap.categoryKey).toBe('vitest_cat');
+      expect(snap.phase).toBe(CraftingCreationSession.Phase.SelectingIngredients);
       expect(snap.lastCraftOutcome.reason).toBe('no_recipe');
     });
   });
@@ -566,34 +505,68 @@ describe('J-JAFTING-Creation workflow & layout (direct src import)', () =>
       ));
     });
 
-    describe('quarterWidthsFromInner', () =>
+    describe('componentColumnWidths', () =>
     {
-      it('floors width into four bands with remainder on the last', () =>
+      it('gives the three columns more width than the detail pane beside them', () =>
       {
         // Arrange & Act
-        const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(350);
+        const {
+          cw,
+          detailWidth
+        } = Window_RecipeDetails.componentColumnWidths(1440);
 
         // Assert
-        expect(cw).toBe(87);
-        expect(remainder).toBe(350 - cw * 4);
+        expect(cw).toBe(400);
+        expect(detailWidth).toBe(240);
       });
 
-      it('accounts for every pixel of the inner width across the four bands plus remainder', () =>
+      it('accounts for every pixel of the inner width across the columns, remainder and pane', () =>
       {
         // Arrange & Act
-        const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(350);
+        const {
+          cw,
+          remainder,
+          detailWidth
+        } = Window_RecipeDetails.componentColumnWidths(350);
 
         // Assert
-        expect(cw * 4 + remainder).toBe(350);
+        expect(cw * 3 + remainder + detailWidth).toBe(350);
       });
 
-      it('clamps each band to at least 80px for a narrow inner width', () =>
+      it('hands the leftover pixels to the columns rather than the pane', () =>
       {
         // Arrange & Act
-        const { cw } = Window_RecipeDetails.quarterWidthsFromInner(100);
+        const {
+          cw,
+          remainder
+        } = Window_RecipeDetails.componentColumnWidths(350);
+
+        // Assert
+        expect(cw).toBe(97);
+        expect(remainder).toBe(1);
+      });
+
+      it('clamps each column to at least 80px for a narrow inner width', () =>
+      {
+        // Arrange & Act
+        const { cw } = Window_RecipeDetails.componentColumnWidths(100);
 
         // Assert
         expect(cw).toBe(80);
+      });
+
+      it('surrenders the pane entirely rather than reporting negative width when the floor bites', () =>
+      {
+        // Arrange - 100px cannot hold three 80px columns, so the pane is what gives way.
+        // Act
+        const {
+          remainder,
+          detailWidth
+        } = Window_RecipeDetails.componentColumnWidths(100);
+
+        // Assert
+        expect(detailWidth).toBe(0);
+        expect(remainder).toBe(0);
       });
     });
 

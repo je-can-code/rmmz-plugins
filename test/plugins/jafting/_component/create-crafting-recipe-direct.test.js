@@ -582,6 +582,118 @@ describe('CraftingRecipe (direct src import)', () =>
       expect(ingredient.generate).toHaveBeenCalledTimes(1);
       expect(tool.generate).toHaveBeenCalledTimes(1);
     });
+
+    it('leaves the study cost out of it, since tuition is not a crafting material', () =>
+    {
+      // a cost swept in alongside the other three arrays would be charged on every craft forever.
+      const ingredient = fakeComponent();
+      const cost = fakeComponent();
+      const recipe = new CraftingRecipe(
+        'Potion', 'potion', [], 1, 'desc', true, false, [ ingredient ], [], [], [ cost ],
+      );
+
+      recipe.getAllComponents();
+
+      expect(ingredient.generate).toHaveBeenCalledTimes(1);
+      expect(cost.generate).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('study cost', () =>
+  {
+    it('is for sale when it carries a cost', () =>
+    {
+      const recipe = new CraftingRecipe(
+        'Potion', 'potion', [], 1, 'desc', true, false, [], [], [], [ fakeComponent() ],
+      );
+
+      expect(recipe.isPurchasable()).toBe(true);
+    });
+
+    it('is not for sale when it carries none, which is what everything shipped before study says', () =>
+    {
+      const recipe = new CraftingRecipe(
+        'Potion', 'potion', [], 1, 'desc', true, false, [], [], [],
+      );
+
+      expect(recipe.isPurchasable()).toBe(false);
+    });
+
+    it('is affordable only when every part of the cost is on hand', () =>
+    {
+      const recipe = new CraftingRecipe(
+        'Potion', 'potion', [], 1, 'desc', true, false, [], [], [],
+        [ fakeComponent({ hasEnough: true }), fakeComponent({ hasEnough: true }) ],
+      );
+
+      expect(recipe.canAffordStudy()).toBe(true);
+    });
+
+    it('is unaffordable when any one part of the cost is short', () =>
+    {
+      // the near-miss to the above: the first part is covered and the second is not.
+      const recipe = new CraftingRecipe(
+        'Potion', 'potion', [], 1, 'desc', true, false, [], [], [],
+        [ fakeComponent({ hasEnough: true }), fakeComponent({ hasEnough: false }) ],
+      );
+
+      expect(recipe.canAffordStudy()).toBe(false);
+    });
+
+    it('consumes every part of the cost when paid, and nothing else', () =>
+    {
+      const ingredient = fakeComponent();
+      const cost = fakeComponent();
+      const recipe = new CraftingRecipe(
+        'Potion', 'potion', [], 1, 'desc', true, false, [ ingredient ], [], [], [ cost ],
+      );
+
+      recipe.payStudyCost();
+
+      expect(cost.consume).toHaveBeenCalledTimes(1);
+      expect(ingredient.consume).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('unmasked accessors', () =>
+  {
+    it('answers with the real name even while the recipe would otherwise be masked', () =>
+    {
+      // every recipe a shop can sell is by definition one nobody has crafted.
+      const recipe = new CraftingRecipe(
+        'Potion', 'potion', [], 1, 'desc', true, true, [], [], [ fakeComponent({ item: { name: 'Fallback' } }) ],
+      );
+
+      expect(recipe.needsMasking()).toBe(true);
+      expect(recipe.getUnmaskedRecipeName()).toBe('Potion');
+    });
+
+    it('falls back to the primary output for a name it was never given', () =>
+    {
+      const recipe = new CraftingRecipe(
+        '', 'potion', [], 1, 'desc', true, true, [], [], [ fakeComponent({ item: { name: 'Fallback' } }) ],
+      );
+
+      expect(recipe.getUnmaskedRecipeName()).toBe('Fallback');
+    });
+
+    it('answers with the real icon even while the recipe would otherwise be masked', () =>
+    {
+      const recipe = new CraftingRecipe(
+        'Potion', 'potion', [], 7, 'desc', true, true, [], [], [ fakeComponent({ item: { iconIndex: 3 } }) ],
+      );
+
+      expect(recipe.getUnmaskedRecipeIcon()).toBe(7);
+    });
+
+    it('falls back to the primary output for an icon it was never given', () =>
+    {
+      const recipe = new CraftingRecipe(
+        'Potion', 'potion', [], -1, 'desc', true, true, [], [], [ fakeComponent({ item: { iconIndex: 3 } }) ],
+      );
+
+      expect(recipe.getUnmaskedRecipeIcon()).toBe(3);
+    });
   });
 });
 //endregion plugins/jafting/_component/create-crafting-recipe-direct.test.js

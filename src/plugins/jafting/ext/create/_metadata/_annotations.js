@@ -137,8 +137,30 @@
  * This plugin has no notetags of its own- recipes and categories are
  * entirely defined in the external JSON configuration file (authored via
  * the J-MZ Data Editor app), not tagged on individual database objects.
+ * ----------------------------------------------------------------------------
+ * PROFESSIONS
+ * A profession is a family of categories that share a currency and a price
+ * ladder. Each category names the profession it belongs to, and the profession
+ * says which item is spent to learn its recipes and what each tier costs.
+ *
+ * The price table is indexed by tier with the lowest first, so its length is
+ * how deep that profession goes- one craft can run four tiers while another
+ * runs ten, and neither needs to know about the other. A recipe tiered past
+ * the end of its profession's table has no price, and a profession with no
+ * currency or no prices at all is simply not for sale, which is correct for a
+ * craft whose recipes are found in the world rather than taught by a shop.
+ *
+ * Professions live in the same configuration file as recipes and categories,
+ * so retuning an economy is done in the data editor rather than here.
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Added the study shop - Scene_JaftingStudy, its two windows, and
+ *    StudyPurchaseService - so recipes can be bought rather than only found.
+ *    Recipes now carry a tier and a profession; CraftingProfession describes
+ *    the price ladder a profession charges. The crafting bench gained an
+ *    everything tab and stopped offering the whole menu, and the category
+ *    badge and list windows it replaced are gone.
  * - 1.2.2
  *    The recipe detail window reads a crafted weapon or armor's base parameters
  *    through thisBParam rather than off the params array. An equip's worth for a
@@ -196,10 +218,13 @@
  * @desc The icon of the command used for JAFTING's Creation.
  * @default 2565
  *
- *
  * @command call-menu
  * @text Call the Creation Menu
  * @desc Calls the JAFTING Creation scene.
+ *
+ * @command call-study-shop
+ * @text Call the Study Shop
+ * @desc Calls the scene for buying recipes. Scope it the same way the crafting menu is scoped.
  *
  * @command unlock-categories
  * @text Unlock Categories

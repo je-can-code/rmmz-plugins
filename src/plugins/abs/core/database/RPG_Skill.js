@@ -713,13 +713,15 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsBonusHitsFromSkillNote', {
 
 //region ignoreParry
 /**
- * The percent of parry rating ignored by this skill.
+ * The percent of parry rating ignored by this skill alone.<br/>
+ * The caster's equips and states contribute separately, summed against this by
+ * {@link JABS_Engine.getIgnoreParryPct}.
  * @type {number}
  */
 Object.defineProperty(RPG_Skill.prototype, 'jabsIgnoreParry', {
   get: function()
   {
-    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.IgnoreParry, true);
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.ThisIgnoreParry, true);
   },
 });
 //endregion ignoreParry

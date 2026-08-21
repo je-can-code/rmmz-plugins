@@ -53,16 +53,35 @@ class Window_RecipeDetails
   }
 
   /**
-   * Same quarter split as {@link #detailsQuarterWidth}, for sibling list windows sized by scene layout.
-   * @param {number} innerWidth inner pixel width (typically window width minus padding on both sides).
-   * @returns {{ cw: number, remainder: number }} cw = floor division width; remainder = pixels to add to the 4th band.
+   * How much of the inner width the detail pane keeps, leaving the rest to the three columns.
+   *
+   * A sixth rather than a quarter: the pane holds a handful of short stat rows, while the columns hold
+   * ingredient names long enough to collide with their own quantities.
+   * @type {number}
    */
-  static quarterWidthsFromInner(innerWidth)
-  {
-    const cw = Math.max(80, Math.floor(innerWidth / 4));
-    const remainder = innerWidth - cw * 4;
+  static #DETAIL_PANE_RATIO = 1 / 6;
 
-    return { cw, remainder };
+  /**
+   * Splits the inner width into the three component columns and the detail pane beside them, for
+   * sibling list windows sized by scene layout.
+   * @param {number} innerWidth inner pixel width (typically window width minus padding on both sides).
+   * @returns {{ cw: number, remainder: number, detailWidth: number }} cw = one column; remainder =
+   * leftover pixels belonging to the last column; detailWidth = the pane.
+   */
+  static componentColumnWidths(innerWidth)
+  {
+    // the columns are measured first and the pane takes whatever is genuinely left, so the two cannot
+    // both claim the same pixels when the 80px column floor bites on a narrow window.
+    const columnsWidth = innerWidth - Math.floor(innerWidth * Window_RecipeDetails.#DETAIL_PANE_RATIO);
+    const cw = Math.max(80, Math.floor(columnsWidth / 3));
+    const remainder = Math.max(0, columnsWidth - cw * 3);
+    const detailWidth = Math.max(0, innerWidth - cw * 3 - remainder);
+
+    return {
+      cw,
+      remainder,
+      detailWidth
+    };
   }
 
   /**
@@ -321,25 +340,25 @@ class Window_RecipeDetails
   }
 
   /**
-   * Width of each of the four bands (ingredients, tools, outputs, detail pane).
+   * Width of one component column (ingredients, tools, outputs).
    * @returns {number}
    */
   detailsQuarterWidth()
   {
-    const { cw } = Window_RecipeDetails.quarterWidthsFromInner(this.innerWidth);
+    const { cw } = Window_RecipeDetails.componentColumnWidths(this.innerWidth);
 
     return cw;
   }
 
   /**
-   * Width of the fourth band (detail pane), including remainder pixels from {@link #quarterWidthsFromInner}.
+   * Width of the detail pane sitting beside the three columns.
    * @returns {number}
    */
   detailsFourthBandWidth()
   {
-    const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(this.innerWidth);
+    const { detailWidth } = Window_RecipeDetails.componentColumnWidths(this.innerWidth);
 
-    return cw + remainder;
+    return detailWidth;
   }
 
   /**
@@ -360,8 +379,11 @@ class Window_RecipeDetails
     if (!this.canDrawContent()) return;
 
     const [ x, y ] = [ 0, 0 ];
-    const { cw, remainder } = Window_RecipeDetails.quarterWidthsFromInner(this.innerWidth);
-    const wDetail = cw + remainder;
+    const {
+      cw,
+      remainder,
+      detailWidth
+    } = Window_RecipeDetails.componentColumnWidths(this.innerWidth);
 
     const { ruleTopY, layouts } = this.tripleColumnHeaderRuleTopInnerY(cw);
     const titles = [ 'INGREDIENTS', 'TOOLS', 'OUTPUTS' ];
@@ -378,7 +400,9 @@ class Window_RecipeDetails
       this.drawHorizontalLine(x + cw * col + inset, ruleTopY, ruleW, ruleH);
     }
 
-    this.drawPrimaryOutput(x + cw * 3, y, wDetail);
+    // pinned to the right edge rather than measured off the columns, so the leftover pixels the last
+    // column absorbs cannot leave a seam between it and the pane.
+    this.drawPrimaryOutput(x + cw * 3 + remainder, y, detailWidth);
   }
 
   /**

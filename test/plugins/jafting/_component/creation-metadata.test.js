@@ -268,6 +268,272 @@ describe('J-JAFTING + J-JAFTING-Creation metadata (direct src import)', () =>
     });
   });
 
+  describe('profession-driven tuition', () =>
+  {
+    /**
+     * Builds a crafting config whose single tiered recipe is filed under a category, which may or may
+     * not name a profession.
+     * @param {object} options The pieces of the configuration being varied.
+     * @param {object[]} [options.professions] The profession blobs to parse.
+     * @param {string} [options.professionKey] The profession the category names.
+     * @param {number} [options.tier] The rung the recipe sits on.
+     * @param {string[]} [options.categoryKeys] The categories the recipe is filed under.
+     * @param {object[]} [options.cost] A cost authored on the recipe itself.
+     * @returns {string}
+     */
+    const craftingJsonWith = ({
+      professions,
+      professionKey,
+      tier = 2,
+      categoryKeys = [ 'vitest_cat' ],
+      cost,
+    }) => JSON.stringify({
+      recipes: [
+        {
+          name: 'Vitest Recipe',
+          key: 'vitest_recipe',
+          categoryKeys,
+          iconIndex: 1,
+          description: 'vitest recipe description',
+          unlockedByDefault: true,
+          maskedUntilCrafted: false,
+          tools: [],
+          ingredients: [ { id: 1, type: 'i', count: 1 } ],
+          outputs: [ { id: 2, type: 'i', count: 1 } ],
+          tier,
+          cost,
+        },
+      ],
+      categories: [
+        {
+          name: 'Vitest Category',
+          key: 'vitest_cat',
+          iconIndex: 0,
+          description: 'vitest category description',
+          unlockedByDefault: true,
+          professionKey,
+        },
+        // a sibling naming a different profession, so "found the right one" cannot pass by finding any.
+        {
+          name: 'Decoy Category',
+          key: 'decoy_cat',
+          iconIndex: 0,
+          description: 'decoy category description',
+          unlockedByDefault: true,
+          professionKey: 'decoy',
+        },
+      ],
+      professions,
+    });
+
+    const SMITHING = {
+      key: 'smithing',
+      name: 'Smithing',
+      iconIndex: 5,
+      description: 'makes the pointy things',
+      scrapItemId: 152,
+      tierPrices: [ 10, 20, 40 ],
+    };
+
+    // a sibling with a different currency and ladder, so picking the wrong profession is visible.
+    const DECOY = {
+      key: 'decoy',
+      name: 'Decoy',
+      iconIndex: 6,
+      description: 'should never be charged',
+      scrapItemId: 999,
+      tierPrices: [ 777, 777, 777 ],
+    };
+
+    /**
+     * Boots the extension against a config and hands back the single parsed recipe.
+     * @param {string} craftingJson The configuration to parse.
+     * @param {string} pluginName A name unique to this boot.
+     * @returns {Promise<CraftingRecipe>}
+     */
+    async function bootAndReadRecipe(craftingJson, pluginName)
+    {
+      // a component resolves its row through $dataItems rather than exposing the id it was built with,
+      // so which scrap got charged is only observable through the datastore.
+      globalThis.$dataItems = Array.from({ length: 1000 }, (_, id) => ({
+        id,
+        name: `item-${id}`,
+      }));
+
+      await bootJaftingCreate(craftingJson, {
+        bootBase: false,
+        pluginName,
+      });
+
+      const [ recipe ] = globalThis.J.JAFTING.EXT.CREATE.Metadata.recipes;
+      return recipe;
+    }
+
+    it('charges the price its profession sets for the tier the recipe sits on', async () =>
+    {
+      // Arrange & Act
+      const recipe = await bootAndReadRecipe(
+        craftingJsonWith({
+          professions: [ SMITHING, DECOY ],
+          professionKey: 'smithing',
+          tier: 2,
+        }),
+        'J-JAFTING-Creation-Prof-Priced');
+
+      // Assert
+      expect(recipe.cost.length).toBe(1);
+      const [ tuition ] = recipe.cost;
+      expect(tuition.quantity()).toBe(20);
+      expect(tuition.isItem()).toBe(true);
+      expect(tuition.getItem().id).toBe(152);
+    });
+
+    it('classifies every authored profession', async () =>
+    {
+      // Arrange & Act
+      await bootJaftingCreate(
+        craftingJsonWith({
+          professions: [ SMITHING, DECOY ],
+          professionKey: 'smithing',
+        }),
+        {
+          bootBase: false,
+          pluginName: 'J-JAFTING-Creation-Prof-Classified',
+        });
+
+      // Assert
+      const { professions, professionsMap } = globalThis.J.JAFTING.EXT.CREATE.Metadata;
+      expect(professions.length).toBe(2);
+      expect(professionsMap.get('smithing').name).toBe('Smithing');
+      expect(professionsMap.get('smithing').tierPrices).toEqual([ 10, 20, 40 ]);
+    });
+
+    it('treats a profession with no price table as selling nothing', async () =>
+    {
+      // Arrange - alchemy's shape: a currency exists, but the recipes are found rather than taught.
+      // Act
+      const recipe = await bootAndReadRecipe(
+        craftingJsonWith({
+          professions: [ { ...SMITHING, tierPrices: undefined }, DECOY ],
+          professionKey: 'smithing',
+        }),
+        'J-JAFTING-Creation-Prof-NoTable');
+
+      // Assert
+      expect(recipe.cost).toEqual([]);
+    });
+
+    it('charges nothing when the category names no profession', async () =>
+    {
+      // Arrange & Act
+      const recipe = await bootAndReadRecipe(
+        craftingJsonWith({
+          professions: [ SMITHING, DECOY ],
+          professionKey: undefined,
+        }),
+        'J-JAFTING-Creation-Prof-Unnamed');
+
+      // Assert
+      expect(recipe.cost).toEqual([]);
+    });
+
+    it('charges nothing when the category names a profession that does not exist', async () =>
+    {
+      // Arrange & Act
+      const recipe = await bootAndReadRecipe(
+        craftingJsonWith({
+          professions: [ SMITHING, DECOY ],
+          professionKey: 'ghostcraft',
+        }),
+        'J-JAFTING-Creation-Prof-Missing');
+
+      // Assert
+      expect(recipe.cost).toEqual([]);
+    });
+
+    it('charges nothing when the recipe names a category that does not exist', async () =>
+    {
+      // Arrange & Act
+      const recipe = await bootAndReadRecipe(
+        craftingJsonWith({
+          professions: [ SMITHING, DECOY ],
+          professionKey: 'smithing',
+          categoryKeys: [ 'no_such_cat' ],
+        }),
+        'J-JAFTING-Creation-Prof-NoCategory');
+
+      // Assert
+      expect(recipe.cost).toEqual([]);
+    });
+
+    it('charges nothing when the recipe is filed under no category at all', async () =>
+    {
+      // Arrange & Act
+      const recipe = await bootAndReadRecipe(
+        craftingJsonWith({
+          professions: [ SMITHING, DECOY ],
+          professionKey: 'smithing',
+          categoryKeys: [],
+        }),
+        'J-JAFTING-Creation-Prof-NoCategoryKeys');
+
+      // Assert
+      expect(recipe.cost).toEqual([]);
+    });
+
+    it('charges nothing for a tier deeper than its profession ladder reaches', async () =>
+    {
+      // Arrange - a three rung ladder asked for a fourth rung.
+      // Act
+      const recipe = await bootAndReadRecipe(
+        craftingJsonWith({
+          professions: [ SMITHING, DECOY ],
+          professionKey: 'smithing',
+          tier: 4,
+        }),
+        'J-JAFTING-Creation-Prof-TooDeep');
+
+      // Assert
+      expect(recipe.cost).toEqual([]);
+    });
+
+    it('leaves a recipe that authored its own cost alone', async () =>
+    {
+      // Arrange - the tier is the rule and the cost is the exception, so the ladder must not overwrite it.
+      // Act
+      const recipe = await bootAndReadRecipe(
+        craftingJsonWith({
+          professions: [ SMITHING, DECOY ],
+          professionKey: 'smithing',
+          tier: 2,
+          cost: [ { id: 999, type: 'i', count: 3 } ],
+        }),
+        'J-JAFTING-Creation-Prof-OwnCost');
+
+      // Assert
+      expect(recipe.cost.length).toBe(1);
+      const [ tuition ] = recipe.cost;
+      expect(tuition.getItem().id).toBe(999);
+      expect(tuition.quantity()).toBe(3);
+    });
+
+    it('parses no professions at all when the configuration declares none', async () =>
+    {
+      // Arrange - every configuration authored before professions existed takes this path.
+      // Act
+      const recipe = await bootAndReadRecipe(
+        craftingJsonWith({
+          professions: undefined,
+          professionKey: 'smithing',
+        }),
+        'J-JAFTING-Creation-Prof-Absent');
+
+      // Assert
+      expect(globalThis.J.JAFTING.EXT.CREATE.Metadata.professions).toEqual([]);
+      expect(recipe.cost).toEqual([]);
+    });
+  });
+
   describe('optional SDP linkage', () =>
   {
     /**

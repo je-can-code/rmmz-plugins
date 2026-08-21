@@ -1,6 +1,7 @@
 //region crafting configuration
 import CraftingRecipe from './CraftingRecipe.js';
 import CraftingCategory from './CraftingCategory.js';
+import CraftingProfession from './CraftingProfession.js';
 /**
  * The configuration model for crafting config data.
  */
@@ -19,12 +20,19 @@ class CraftingConfiguration
   #categories = [];
 
   /**
+   * All professions defined in configuration.
+   * @type {CraftingProfession[]}
+   */
+  #professions = [];
+
+  /**
    * Constructor.
    */
-  constructor(recipes, categories)
+  constructor(recipes, categories, professions)
   {
     this.#recipes = recipes;
     this.#categories = categories;
+    this.#professions = professions;
   }
 
   /**
@@ -46,6 +54,15 @@ class CraftingConfiguration
   }
 
   /**
+   * Gets the crafting professions that are currently defined in configuration.
+   * @return {CraftingProfession[]}
+   */
+  professions()
+  {
+    return this.#professions;
+  }
+
+  /**
    * A builder class for fluently constructing new {@link CraftingConfiguration}s.
    * @type {CraftingConfigurationBuilder}
    */
@@ -64,12 +81,18 @@ class CraftingConfiguration
     #categories = [];
 
     /**
+     * The crafting profession state for this builder.
+     * @type {CraftingProfession[]}
+     */
+    #professions = [];
+
+    /**
      * Build the instance with the provided fluent parameters.
      * @return {CraftingConfiguration}
      */
     build()
     {
-      const newConfig = new CraftingConfiguration(this.#recipes, this.#categories);
+      const newConfig = new CraftingConfiguration(this.#recipes, this.#categories, this.#professions);
 
       this.#clear();
 
@@ -83,6 +106,7 @@ class CraftingConfiguration
     {
       this.#recipes = [];
       this.#categories = [];
+      this.#professions = [];
     }
 
     /**
@@ -104,6 +128,17 @@ class CraftingConfiguration
     categories(categories)
     {
       this.#categories = categories;
+      return this;
+    }
+
+    /**
+     * Sets the professions for the builder.
+     * @param {CraftingProfession[]} professions The professions from configuration.
+     * @return {CraftingConfigurationBuilder} This builder for fluent-chaining.
+     */
+    professions(professions)
+    {
+      this.#professions = professions;
       return this;
     }
   }

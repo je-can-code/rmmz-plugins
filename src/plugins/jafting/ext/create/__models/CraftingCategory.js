@@ -35,12 +35,19 @@ class CraftingCategory
    */
   unlockedByDefault = false;
 
+  /**
+   * The key of the {@link CraftingProfession} this category belongs to.<br/>
+   * An empty key means this category joins no profession, so nothing in it is for sale.
+   * @type {string}
+   */
+  professionKey = String.empty;
+
   //endregion properties
 
   /**
    * Constructor.
    */
-  constructor(name, key, iconIndex, description, unlockedByDefault)
+  constructor(name, key, iconIndex, description, unlockedByDefault, professionKey)
   {
     this.name = name;
     this.key = key;
@@ -48,6 +55,7 @@ class CraftingCategory
     // assign description on this instance for callers.
     this.description = description;
     this.unlockedByDefault = unlockedByDefault;
+    this.professionKey = professionKey;
   }
 
   /**

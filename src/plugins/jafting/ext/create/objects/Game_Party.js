@@ -226,6 +226,35 @@ Game_Party.prototype.getUnlockedRecipesByCategory = function(categoryKey)
 };
 
 /**
+ * Gets every recipe of a given category that a shop could put on its shelf.
+ *
+ * Three filters, and leaving any one of them out breaks the shop in a different way:
+ *
+ * - **Carries a cost.** Nothing authored before study existed has one, so without this the shelf holds
+ *   every recipe in the game, priced at nothing.
+ * - **{@link #canGainEntry}.** The divider rows that pad the configuration are never *unlocked*, which
+ *   is the only reason nobody has ever seen one. A shelf built out of what is locked is built out of
+ *   precisely the rows that guard exists to hide.
+ * - **Belongs to the category.** The shop shows one category at a time, as the crafting menu does.
+ *
+ * Note that this deliberately does *not* filter out what the party already knows. A recipe already
+ * learned still belongs on the shelf, greyed and sorted to the bottom, because a shop that hides what
+ * you have bought cannot show you how much of it there was.
+ * @param {string} categoryKey The category to get all purchasable recipes for.
+ * @returns {CraftingRecipe[]}
+ */
+Game_Party.prototype.getPurchasableRecipesByCategory = function(categoryKey)
+{
+  const recipesMap = this.getAllRecipesAsMap();
+  const allRecipes = Array.from(recipesMap.values());
+
+  return allRecipes
+    .filter(recipe => recipe.isPurchasable())
+    .filter(recipe => this.canGainEntry(recipe.key))
+    .filter(recipe => recipe.categoryKeys.includes(categoryKey));
+};
+
+/**
  * Gets all unlocked recipes that are a part of a given category that have
  * also been crafted at least once.
  * @param {string} categoryKey The category to get all unlocked recipes for.
