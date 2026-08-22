@@ -58,6 +58,22 @@ class JABS_MetricsManager
     $gameVariables.setValue(variableId, candidate);
   }
 
+  /**
+   * Determines whether a cooldown key belongs to one of the two item-bearing slots.
+   *
+   * Both slots are excluded from the damage tallies, and for the same reason: an item's damage is
+   * authored against the item, not against the character swinging it. A bomb tuned to delete a
+   * boulder in one hit lands for a number no weapon in the game will ever approach, so a single
+   * throw would take permanent ownership of "biggest hit" and drag the lifetime average somewhere
+   * that describes the inventory rather than the player.
+   * @param {string} cooldownType The cooldown key the action was executed from.
+   * @returns {boolean} True if the action came out of the tool or usable item slot.
+   */
+  static isItemSlot(cooldownType)
+  {
+    return cooldownType === JABS_Button.Tool || cooldownType === JABS_Button.UsableItem;
+  }
+
   //region outcomes
   /**
    * Records the defeat of a battler that was not the player.
@@ -321,7 +337,8 @@ class JABS_MetricsManager
       case JABS_Button.UsableItem:
         // both item slots are counted where the item is consumed instead, which catches the ones
         // carrying no skill at all. Landing here is the action an item happened to spawn, and
-        // counting it again would double every item that has one.
+        // counting it again would double every item that has one. See isItemSlot- the same two
+        // keys are excluded from the damage tallies, for a different reason.
         break;
       default:
         // the four assignable combat slots are individually named, but nothing here cares which of

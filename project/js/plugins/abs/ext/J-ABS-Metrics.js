@@ -140,10 +140,17 @@
  * Walking over loot travels the same path and is excluded: picking a potion up
  * is not using one.
  *
- * TOOLS ARE NOT ATTACKS:
- * Anything executed from the tool slot is skipped for damage tracking. A thrown
- * bomb is inventory usage, not swordsmanship, and folding it into the damage
- * tallies would make them describe something the player did not do.
+ * ITEMS ARE NOT ATTACKS:
+ * Anything executed from the tool slot OR the usable item slot is skipped for
+ * damage tracking. A thrown bomb is inventory usage, not swordsmanship.
+ *
+ * The stronger reason is that an item's damage is authored against the item
+ * rather than against the character using it. A bomb tuned to delete a boulder
+ * in one hit lands for a number no weapon in the game will ever approach, so a
+ * single throw would take permanent ownership of "highest damage dealt" and
+ * drag the lifetime total somewhere that describes the inventory instead of the
+ * player. Item usage is still counted- just in its own tallies, where a count
+ * of throws is what it claims to be.
  *
  * ============================================================================
  * CHANGELOG:
@@ -438,6 +445,20 @@ var JABS_MetricsManager = class {
 		$gameVariables.setValue(variableId, candidate);
 	}
 	/**
+	* Determines whether a cooldown key belongs to one of the two item-bearing slots.
+	*
+	* Both slots are excluded from the damage tallies, and for the same reason: an item's damage is
+	* authored against the item, not against the character swinging it. A bomb tuned to delete a
+	* boulder in one hit lands for a number no weapon in the game will ever approach, so a single
+	* throw would take permanent ownership of "biggest hit" and drag the lifetime average somewhere
+	* that describes the inventory rather than the player.
+	* @param {string} cooldownType The cooldown key the action was executed from.
+	* @returns {boolean} True if the action came out of the tool or usable item slot.
+	*/
+	static isItemSlot(cooldownType) {
+		return cooldownType === JABS_Button.Tool || cooldownType === JABS_Button.UsableItem;
+	}
+	/**
 	* Records the defeat of a battler that was not the player.
 	* @param {JABS_Battler} defeatedTarget The battler that was defeated.
 	*/
@@ -632,7 +653,7 @@ JABS_Engine.prototype.handleDefeatedPlayer = function() {
 J.ABS.EXT.METRICS.Aliased.JABS_Engine.set("postExecuteSkillEffects", JABS_Engine.prototype.postExecuteSkillEffects);
 JABS_Engine.prototype.postExecuteSkillEffects = function(action, target) {
 	J.ABS.EXT.METRICS.Aliased.JABS_Engine.get("postExecuteSkillEffects").call(this, action, target);
-	if (action.getCooldownType() === JABS_Button.Tool) return;
+	if (JABS_MetricsManager.isItemSlot(action.getCooldownType())) return;
 	if (target.isEnemy()) {
 		JABS_MetricsManager.trackAttackData(target);
 	} else if (target.isActor()) {

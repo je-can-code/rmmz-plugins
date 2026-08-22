@@ -202,22 +202,27 @@ describe('J-ABS-Metrics JABS_Engine hooks (direct src import)', () =>
       expect(trackDefensiveData).not.toHaveBeenCalled();
     });
 
-    it('records nothing for a tool, which is neither an attack nor a defense', () =>
+    [ 'Tool', 'UsableItem' ].forEach(cooldownType =>
     {
-      // Arrange- the target is an enemy, so the only thing that can suppress the attack tally here
-      // is the tool guard itself.
-      const engine = new globalThis.JABS_Engine();
-      const trackAttackData = vi.spyOn(JABS_MetricsManager, 'trackAttackData')
-        .mockImplementation(() => {});
+      it(`records nothing for a ${cooldownType}, which is neither an attack nor a defense`, () =>
+      {
+        // Arrange- the target is an enemy, so the only thing that can suppress the attack tally
+        // here is the item-slot guard itself. Both slots are covered because a damaging consumable
+        // is equally at home in either, and an item's damage is authored against the item rather
+        // than against whoever threw it.
+        const engine = new globalThis.JABS_Engine();
+        const trackAttackData = vi.spyOn(JABS_MetricsManager, 'trackAttackData')
+          .mockImplementation(() => {});
 
-      // Act
-      engine.postExecuteSkillEffects(
-        { getCooldownType: () => globalThis.JABS_Button.Tool },
-        buildTarget(true, false));
+        // Act
+        engine.postExecuteSkillEffects(
+          { getCooldownType: () => globalThis.JABS_Button[cooldownType] },
+          buildTarget(true, false));
 
-      // Assert
-      expect(originals.postExecuteSkillEffects).toHaveBeenCalledTimes(1);
-      expect(trackAttackData).not.toHaveBeenCalled();
+        // Assert
+        expect(originals.postExecuteSkillEffects).toHaveBeenCalledTimes(1);
+        expect(trackAttackData).not.toHaveBeenCalled();
+      });
     });
   });
 

@@ -140,10 +140,17 @@
  * Walking over loot travels the same path and is excluded: picking a potion up
  * is not using one.
  *
- * TOOLS ARE NOT ATTACKS:
- * Anything executed from the tool slot is skipped for damage tracking. A thrown
- * bomb is inventory usage, not swordsmanship, and folding it into the damage
- * tallies would make them describe something the player did not do.
+ * ITEMS ARE NOT ATTACKS:
+ * Anything executed from the tool slot OR the usable item slot is skipped for
+ * damage tracking. A thrown bomb is inventory usage, not swordsmanship.
+ *
+ * The stronger reason is that an item's damage is authored against the item
+ * rather than against the character using it. A bomb tuned to delete a boulder
+ * in one hit lands for a number no weapon in the game will ever approach, so a
+ * single throw would take permanent ownership of "highest damage dealt" and
+ * drag the lifetime total somewhere that describes the inventory instead of the
+ * player. Item usage is still counted- just in its own tallies, where a count
+ * of throws is what it claims to be.
  *
  * ============================================================================
  * CHANGELOG:

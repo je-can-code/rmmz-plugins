@@ -76,6 +76,28 @@ describe('JABS_MetricsManager (direct src import)', () =>
     expect(() => new JABS_MetricsManager()).toThrow('This is a static class.');
   });
 
+  describe('isItemSlot', () =>
+  {
+    [ 'Tool', 'UsableItem' ].forEach(cooldownType =>
+    {
+      it(`recognizes ${cooldownType} as an item slot`, () =>
+      {
+        // Arrange & Act & Assert
+        expect(JABS_MetricsManager.isItemSlot(globalThis.JABS_Button[cooldownType])).toBe(true);
+      });
+    });
+
+    [ 'Mainhand', 'Offhand', 'Dodge', 'CombatSkill1' ].forEach(cooldownType =>
+    {
+      it(`does not mistake ${cooldownType} for an item slot`, () =>
+      {
+        // Arrange & Act & Assert- near-miss siblings from the same enum, so "matches the two item
+        // keys" is distinguishable from "matches anything".
+        expect(JABS_MetricsManager.isItemSlot(globalThis.JABS_Button[cooldownType])).toBe(false);
+      });
+    });
+  });
+
   describe('recordHighWaterMark', () =>
   {
     it('rewrites the record when the candidate beats it', () =>

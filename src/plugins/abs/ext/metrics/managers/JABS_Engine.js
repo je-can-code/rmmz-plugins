@@ -65,9 +65,9 @@ JABS_Engine.prototype.postExecuteSkillEffects = function(action, target)
   J.ABS.EXT.METRICS.Aliased.JABS_Engine.get('postExecuteSkillEffects')
     .call(this, action, target);
 
-  // tools are consumables rather than combat- counting a thrown bomb as a sword swing would make
-  // the damage tallies say something the player did not do.
-  if (action.getCooldownType() === JABS_Button.Tool) return;
+  // items out of either slot are consumables rather than combat- counting a thrown bomb as a sword
+  // swing would make the damage tallies say something the player did not do.
+  if (JABS_MetricsManager.isItemSlot(action.getCooldownType())) return;
 
   // an enemy on the receiving end means the party was attacking.
   if (target.isEnemy())
