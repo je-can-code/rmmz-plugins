@@ -64,12 +64,16 @@ describe('CAMods Game_Map (real engine direct import)', () =>
 
     it('treats the 0x10 "no effect on passage" bit as a transparent pass-through to the next tile', () =>
     {
+      // Arrange- the first (upper) tile carries 0x10 AND every requested passage bit. The extra bits
+      // are what make this load-bearing: a tile of bare 0x10 would read as openly passable anyway,
+      // so skipping it and evaluating it produce the same answer and the skip proves nothing. Set
+      // the blocking bits too and the two paths diverge- skipped yields the lower tile's `true`,
+      // evaluated yields `false`.
       const map = Object.create(globalThis.Game_Map.prototype);
-      // the first (upper) tile has 0x10 set and should be skipped; the second (lower) tile is
-      // openly passable for the requested bit.
-      map.tilesetFlags = () => [ 0x10, 0x00 ];
+      map.tilesetFlags = () => [ 0x10 | 0x0f, 0x00 ];
       map.allTiles = () => [ 0, 1 ];
 
+      // Act & Assert
       expect(map.checkPassage(0, 0, 0x0f)).toBe(true);
     });
 
@@ -82,8 +86,14 @@ describe('CAMods Game_Map (real engine direct import)', () =>
 
     it('returns false when the requested bit is fully set on the tile\'s flag (impassable)', () =>
     {
-      const map = buildMapWithFlag(0x0f);
+      // Arrange- an openly passable tile sits behind the impassable one and must never be reached.
+      // Without it, an impassable tile that merely fell out of the loop would also answer false,
+      // and the test could not tell "decided here" from "decided by the default at the bottom".
+      const map = Object.create(globalThis.Game_Map.prototype);
+      map.tilesetFlags = () => [ 0x0f, 0x00 ];
+      map.allTiles = () => [ 0, 1 ];
 
+      // Act & Assert
       expect(map.checkPassage(0, 0, 0x0f)).toBe(false);
     });
 
@@ -96,6 +106,20 @@ describe('CAMods Game_Map (real engine direct import)', () =>
 
       // Act & Assert
       expect(map.checkPassage(0, 0, 0x0f)).toBe(false);
+    });
+
+    it('defers a partially-blocking tile to the next tile rather than deciding on it', () =>
+    {
+      // Arrange- the upper tile blocks only one of the requested directions, which is neither the
+      // fully-open nor the fully-closed case, so the loop must move on to the lower tile. That the
+      // lower tile is openly passable is what makes the deferral observable: deciding "impassable"
+      // on the partial match would answer false and never look at it.
+      const map = Object.create(globalThis.Game_Map.prototype);
+      map.tilesetFlags = () => [ 0x01, 0x00 ];
+      map.allTiles = () => [ 0, 1 ];
+
+      // Act & Assert
+      expect(map.checkPassage(0, 0, 0x0f)).toBe(true);
     });
   });
 

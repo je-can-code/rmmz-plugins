@@ -288,6 +288,14 @@ describe('J-CA-Mods JABS_Engine tracking hooks (direct src import)', () =>
         variableId: globalThis.J.CAMods.Tracking.NumberOfParries,
         amount: 1,
       });
+
+      // an ordinary parry must not also be counted as a precise one. The assertion above is what
+      // makes this safe to state negatively: it proves the parry branch ran at all, so a silent
+      // failure to enter it cannot be what produces the absence below.
+      expect(transcript.mods).not.toContainEqual({
+        variableId: globalThis.J.CAMods.Tracking.NumberOfPreciseParries,
+        amount: 1,
+      });
     });
 
     it('counts a precise parry on top of the ordinary parry it also is', () =>

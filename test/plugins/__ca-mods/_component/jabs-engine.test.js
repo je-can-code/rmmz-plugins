@@ -248,14 +248,27 @@ describe('CAMods JABS_Engine (direct src import, hand-rolled JABS stand-in)', ()
       globalThis.$gameParty = { _actors: [ 1, 2, 3 ] };
       globalThis.$gamePlayer = { refresh: vi.fn() };
 
-      // the original stub itself performs no reordering- __ca-mods reads _actors.at(0) both
-      // before and after calling it, so the "original" leader is captured before any mutation.
+      // the original rotates the party until it lands on a living member, so it may shift more than
+      // once and the previous leader can come to rest anywhere. Two rotations- what happens when the
+      // first candidate is dead and gets skipped- is what this models, and the resting place matters
+      // enormously: parked at index 0, "find the leader" and "match anything" agree; parked at the
+      // end, "find the leader" and "found nobody" agree, because splice(-1) removes that same slot.
+      // Only a middle index tells all three apart. Scoped to one call so the stub stays inert
+      // elsewhere in this file.
+      originals.handlePartyCycleMemberChanges.mockImplementationOnce(() =>
+      {
+        const { _actors } = globalThis.$gameParty;
+        _actors.push(_actors.shift());
+        _actors.push(_actors.shift());
+      });
+
       engine.handlePartyCycleMemberChanges();
 
       expect(originals.handlePartyCycleMemberChanges).toHaveBeenCalledTimes(1);
 
-      // former leader (actorId 1) removed from index 0 and reinserted at index 1.
-      expect(globalThis.$gameParty._actors).toEqual([ 2, 1, 3 ]);
+      // former leader (actorId 1) plucked out of wherever the rotation left them and reinserted at
+      // index 1, leaving the actor the cycle actually landed on in the lead.
+      expect(globalThis.$gameParty._actors).toEqual([ 3, 1, 2 ]);
       expect(globalThis.$gamePlayer.refresh).toHaveBeenCalledTimes(1);
       expect(engine.refreshPlayer1Data).toHaveBeenCalledTimes(1);
     });
