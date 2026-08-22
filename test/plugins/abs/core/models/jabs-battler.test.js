@@ -5287,6 +5287,24 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.disengageTarget).not.toHaveBeenCalled();
       expect(jabsBattler._aggros).toEqual([ decoy ]);
     });
+
+    it('removeAggro purges a tracked aggro while nothing is currently targeted', () =>
+    {
+      // Arrange- aggro survives a disengage, so a battler with no target at all can still be asked
+      // to drop one; the uuid matches what would have been the target, leaving the absent target as
+      // the only thing that can keep the disengage from firing.
+      const jabsBattler = buildBattler();
+      jabsBattler._aggros = [ { uuid: () => 'target-uuid' } ];
+      jabsBattler.setTarget(null);
+      jabsBattler.disengageTarget = vi.fn();
+
+      // Act
+      jabsBattler.removeAggro('target-uuid');
+
+      // Assert
+      expect(jabsBattler.disengageTarget).not.toHaveBeenCalled();
+      expect(jabsBattler._aggros).toEqual([]);
+    });
   });
 
   describe('addUpdateAggro / resetOneAggro / resetAllAggro / aggroExists', () =>

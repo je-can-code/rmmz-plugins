@@ -75,6 +75,22 @@ describe('J-ABS-Shield JABS_Shield (unit, all downstream dependencies mocked)', 
       console.error.mockRestore();
     });
 
+    it('binds the attacker to `a` inside a point formula', () =>
+    {
+      // Arrange- a formula that reads off the caster is the entire reason the attacker is a
+      // parameter here. Without one bound, the formula throws, is swallowed, and banks nothing.
+      globalThis.RPGManager.getStringsFromNoteByRegex
+        .mockReturnValueOnce([ 'a.atk * 2' ])
+        .mockReturnValueOnce([]);
+      const attacker = buildTarget({ atk: 10 });
+
+      // Act
+      const result = JABS_Shield.fromStateId(5, buildTarget(), attacker);
+
+      // Assert- a swallowed formula would leave the shield at zero points, which answers null.
+      expect(result.getCurrent()).toBe(20);
+    });
+
     it('scales points by the attacker\'s outgoing shield amplification (sar)', () =>
     {
       globalThis.RPGManager.getStringsFromNoteByRegex

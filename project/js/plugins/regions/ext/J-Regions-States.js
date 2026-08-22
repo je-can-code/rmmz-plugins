@@ -303,7 +303,7 @@ Game_Map.prototype.clearRegionStates = function() {
 */
 Game_Map.prototype.refreshRegionStates = function() {
 	if (!this.canRefreshRegionEffects()) return;
-	const regionStatesData = RPGManager.getArraysFromNotesByRegex({ note: this.note() }, J.REGIONS.EXT.STATES.RegExp.RegionState, true);
+	const regionStatesData = RPGManager.getArraysFromNotesByRegex({ note: this.note() }, J.REGIONS.EXT.STATES.RegExp.RegionState);
 	if (!regionStatesData || !regionStatesData.length) return;
 	regionStatesData.forEach((regionStateData) => {
 		const [regionId, stateId, chanceOfApplication, animationId] = regionStateData;

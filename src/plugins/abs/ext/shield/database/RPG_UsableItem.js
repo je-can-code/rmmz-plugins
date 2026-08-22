@@ -29,7 +29,7 @@ Object.defineProperties(RPG_UsableItem.prototype, {
       }
 
       // parse the numeric list via RPGManager using the canonical regex.
-      return RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.SHIELD.RegExp.Bypass, true);
+      return RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.SHIELD.RegExp.Bypass);
     },
     configurable: true
   },
@@ -62,7 +62,7 @@ Object.defineProperties(RPG_UsableItem.prototype, {
       }
 
       // parameterized tags yield a parsed list; parameterless tags do not.
-      const list = RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.SHIELD.RegExp.Bypass, true, true);
+      const list = RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.SHIELD.RegExp.Bypass, true);
 
       return list === null;
     },

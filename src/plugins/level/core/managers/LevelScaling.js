@@ -114,7 +114,10 @@ class LevelScaling
     const upper = J.LEVEL.Metadata.invariantUpperRange;
     const lower = J.LEVEL.Metadata.invariantLowerRange;
 
-    if (levelDifference <= upper && levelDifference >= lower) return base;
+    // the two ranges are magnitudes measured outward from parity, which is why the arithmetic below
+    // subtracts the upper for positives and adds the lower for negatives. the band has to be read the
+    // same way- comparing against a positive lower bound narrows it to a single point instead.
+    if (levelDifference <= upper && levelDifference >= -lower) return base;
 
     // determine the level difference lesser the invariance range.
     const invariantDifference = levelDifference > 0

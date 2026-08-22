@@ -1640,10 +1640,9 @@ class JABS_Engine
       // and swap them to the end.
       $gameParty._actors.push($gameParty._actors.shift());
 
-      // you can't cycle to yourself.
-      if (partyIndex === 0) continue;
-
-      // identify the newly swapped actorId.
+      // identify the newly swapped actorId. the rotation above already promoted the next member, so
+      // this is the candidate- skipping the first pass would step straight over the member standing
+      // immediately behind the leader, who is the one the player is most likely expecting.
       const [ currentActorId ] = $gameParty._actors;
 
       // grab the actor we are attempting to cycle to.

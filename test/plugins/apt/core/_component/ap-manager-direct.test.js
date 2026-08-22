@@ -423,10 +423,17 @@ describe('ApManager (direct src import)', () =>
 
     it('scales the award by actor.apr and skips entirely when the scaled amount is zero', () =>
     {
-      const actor = buildActor({ apr: 0 });
+      // Arrange- the actor carries the same source that banks AP in the test above, so the zero
+      // multiplier is the only thing left that can hold the award back.
+      const actor = buildActor({
+        apr: 0,
+        getAptitudeSources: () => [ buildTeachingSource() ],
+      });
 
+      // Act
       ApManager.gainAp(actor, 5, 'test');
 
+      // Assert
       expect(actor.setAptitudeProgress).not.toHaveBeenCalled();
     });
 
@@ -589,11 +596,10 @@ describe('ApManager (direct src import)', () =>
       activeTeachables.mockRestore();
     });
 
-    it('awards the raw amount for an actor with no aptitude multiplier at all', () =>
+    it('awards the raw amount for an actor sitting at the identity multiplier', () =>
     {
-      // Arrange- `apr` is only worth consulting once something has granted one, and multiplying by
-      // an absent one would not merely fail to scale the award; it would bank NaN into the learning
-      // and leave that source permanently unfinishable. The award has to land at its plain value.
+      // Arrange- an actor with no aptitude tags still reports an `apr` of 1 off the prototype getter,
+      // which is the overwhelmingly common case; the award has to land at exactly its authored value.
       const source = {
         id: 1,
         implementationType: () => '@base:weapon',
@@ -603,6 +609,7 @@ describe('ApManager (direct src import)', () =>
       const setAptitudeProgress = vi.fn();
       const actor = {
         isDead: () => false,
+        apr: 1,
         getAptitudeSources: () => [ source ],
         hasLearnedAptitudeSkill: () => false,
         hasAptitudeProgress: () => true,
@@ -622,6 +629,41 @@ describe('ApManager (direct src import)', () =>
 
       // Assert
       expect(setAptitudeProgress).toHaveBeenCalledWith('@base:weapon:1', 10, 5);
+    });
+
+    it('banks the scaled amount when the multiplier is anything other than the identity', () =>
+    {
+      // Arrange- a doubled multiplier lands somewhere the raw award never could, so the banked
+      // value alone tells the scaled path apart from the pass-through one.
+      const source = {
+        id: 1,
+        implementationType: () => '@base:weapon',
+        isSkill: () => false,
+        aptitudeTeachings: [ new AptitudeTeachable(10, 40) ],
+      };
+      const setAptitudeProgress = vi.fn();
+      const actor = {
+        isDead: () => false,
+        apr: 2,
+        getAptitudeSources: () => [ source ],
+        hasLearnedAptitudeSkill: () => false,
+        hasAptitudeProgress: () => true,
+        getAptitudeProgress: () => ({
+          hasLearning: () => true,
+          learningBySkillId: () => ({
+            currentAp: 0,
+            isLearned: () => false,
+            setRequiredAp: vi.fn(),
+          }),
+        }),
+        setAptitudeProgress,
+      };
+
+      // Act
+      ApManager.gainAp(actor, 5, 'test');
+
+      // Assert
+      expect(setAptitudeProgress).toHaveBeenCalledWith('@base:weapon:1', 10, 10);
     });
   });
 

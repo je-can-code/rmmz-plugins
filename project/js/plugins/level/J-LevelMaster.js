@@ -819,7 +819,7 @@ var LevelScaling = class LevelScaling {
 		const growth = J.LEVEL.Metadata.growthMultiplier;
 		const upper = J.LEVEL.Metadata.invariantUpperRange;
 		const lower = J.LEVEL.Metadata.invariantLowerRange;
-		if (levelDifference <= upper && levelDifference >= lower) return base;
+		if (levelDifference <= upper && levelDifference >= -lower) return base;
 		const invariantDifference = levelDifference > 0 ? levelDifference - upper : levelDifference + lower;
 		const result = base + invariantDifference * growth;
 		const { min, max } = this.#clampsForScope(scope);

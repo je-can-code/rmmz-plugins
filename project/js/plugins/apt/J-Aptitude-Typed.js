@@ -538,7 +538,7 @@ RPG_Base.prototype.buildAptitudeTeachings = function() {
 	/** @type {AptitudeTeachable[]} */
 	const base = J.APT.EXT.TYPED.Aliased.RPG_Base.get("buildAptitudeTeachings").call(this);
 	/** @type {Array<[number, number, string, string|number]>} */
-	const raw = RPGManager.getArraysFromNotesByRegex(this, J.APT.EXT.TYPED.RegExp.AptitudeTeachableTyped, true);
+	const raw = RPGManager.getArraysFromNotesByRegex(this, J.APT.EXT.TYPED.RegExp.AptitudeTeachableTyped);
 	const typed = raw.map(([skillId, requiredAp, domain, idOrName]) => {
 		const dom = String(domain).trim().toLowerCase();
 		const id = ApManager.resolveDomainId(dom, idOrName);
@@ -558,7 +558,7 @@ RPG_Base.prototype.buildAptitudeTeachings = function() {
 * @returns {ApTypeGrant[]}
 */
 RPG_Enemy.prototype.typedApRewards = function() {
-	const raw = RPGManager.getArraysFromNotesByRegex(this, J.APT.EXT.TYPED.RegExp.ApTypedReward, true);
+	const raw = RPGManager.getArraysFromNotesByRegex(this, J.APT.EXT.TYPED.RegExp.ApTypedReward);
 	return raw.map(([amount, domain, idOrName]) => {
 		const dom = String(domain).trim().toLowerCase();
 		const id = ApManager.resolveDomainId(dom, idOrName);

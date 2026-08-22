@@ -4853,9 +4853,12 @@ class JABS_Battler
     const indexToRemove = this.aggros().findIndex(aggro => aggro.uuid() === uuid);
     if (indexToRemove > -1)
     {
+      // aggro outlives engagement- a battler that just disengaged still tracks everyone who
+      // wronged it, so there may be nothing currently targeted to compare this uuid against.
+      const currentTarget = this.getTarget();
+
       // if currently engaged with the dead target, then disengage.
-      if (this.getTarget()
-        .getUuid() === uuid)
+      if (currentTarget !== null && currentTarget.getUuid() === uuid)
       {
         this.disengageTarget();
       }

@@ -772,7 +772,7 @@ Object.defineProperty(RPG_Base.prototype, "aptitudeTeachings", { get() {
 * @returns {AptitudeTeachable[]} The built list.
 */
 RPG_Base.prototype.buildAptitudeTeachings = function() {
-	const raw = RPGManager.getArraysFromNotesByRegex(this, J.APT.RegExp.AptitudeTeachable, true);
+	const raw = RPGManager.getArraysFromNotesByRegex(this, J.APT.RegExp.AptitudeTeachable);
 	return raw.map(([skillId, requiredAp]) => new AptitudeTeachable(skillId, requiredAp));
 };
 
@@ -1110,7 +1110,7 @@ var ApManager = class ApManager {
 	static gainAp(actor, amount, cause = "victory") {
 		if (this.canGainAp(actor, amount) === false) return;
 		let scaledAmount = amount;
-		if (actor.apr) {
+		if (actor.apr !== 1) {
 			scaledAmount = Math.round(amount * actor.apr);
 		}
 		if (scaledAmount === 0) return;

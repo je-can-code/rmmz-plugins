@@ -10,8 +10,7 @@ Object.defineProperty(RPG_State.prototype, 'removeOnSkillExecutionRules', {
     // pull every skill-execution removal tuple from notes on this state row.
     return RPGManager.getArraysFromNotesByRegex(
       this,
-      J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveOnSkillExecution,
-      true
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveOnSkillExecution
     );
   },
 });
@@ -28,8 +27,7 @@ Object.defineProperty(RPG_State.prototype, 'removeOnSkillResolutionRules', {
     // pull every skill-resolution removal tuple from notes on this state row.
     return RPGManager.getArraysFromNotesByRegex(
       this,
-      J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveOnSkillResolution,
-      true
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveOnSkillResolution
     );
   },
 });
@@ -45,8 +43,7 @@ Object.defineProperty(RPG_State.prototype, 'removeStateOnMoveRules', {
     // pull every move-removal tuple from notes on this state row.
     return RPGManager.getArraysFromNotesByRegex(
       this,
-      J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveStateOnMove,
-      true
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveStateOnMove
     );
   },
 });

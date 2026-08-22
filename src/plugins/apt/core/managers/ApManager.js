@@ -15,9 +15,11 @@ class ApManager
     // don't bother if the AP gained is zero or actor cannot gain.
     if (this.canGainAp(actor, amount) === false) return;
 
-    // scale the award by the actor's aptitude gain multiplier when present.
+    // scale the award by the actor's aptitude gain multiplier. an identity multiplier is skipped
+    // so the award passes through at exactly its authored value- a multiplier of zero, however, is
+    // an actor who has been tagged into earning nothing, and must scale the award away entirely.
     let scaledAmount = amount;
-    if (actor.apr)
+    if (actor.apr !== 1)
     {
       scaledAmount = Math.round(amount * actor.apr);
     }

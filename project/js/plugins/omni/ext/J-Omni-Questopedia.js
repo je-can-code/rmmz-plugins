@@ -3583,7 +3583,6 @@ Game_Enemy.prototype.processSlayQuestsCheck = function() {
 		if (this.enemyId() !== enemyId) return;
 		objective.incrementSlayTargetEnemyAmount();
 		if (!objective.hasSlainEnoughEnemies()) return;
-		console.log(`player has completed the slay objective: ${objective.id} for quest: ${objective.questKey}.`);
 		const questToProgress = QuestManager.quest(objective.questKey);
 		questToProgress.flagObjectiveAsCompleted(objective.id);
 		questToProgress.progressObjectives();
@@ -3795,7 +3794,6 @@ Game_Map.prototype.evaluateDestinationObjectives = function() {
 	activeDestinationObjectives.forEach((objective) => {
 		const [, coordinateRange] = objective.destinationData();
 		if (objective.isPlayerWithinDestinationRange(coordinateRange)) {
-			console.log(`player has achieved the objective! ${objective.questKey}`);
 			const questToProgress = QuestManager.quest(objective.questKey);
 			questToProgress.flagObjectiveAsCompleted(objective.id);
 			questToProgress.progressObjectives();

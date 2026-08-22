@@ -2069,58 +2069,11 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
     describe('handlePartyCycleMemberChanges', () =>
     {
-      it('rotates the party array until landing on a living, unlocked member', () =>
+      it('cycles to the member standing immediately behind the leader', () =>
       {
-        // Arrange- 3 actors in order [1,3,2] so the first candidate landed on after skipping
-        // self (partyIndex 0) is actor 2 (dead), forcing a second rotation onto actor 1 (eligible).
-        // this actually exercises the isDead()-true continue branch, unlike an ordering that
-        // happens to land on the eligible member on the very first candidate check.
-        globalThis.$gameParty = { _actors: [ 1, 3, 2 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
-        globalThis.$gameActors = {
-          actor: (id) => ({
-            isDead: () => id === 2,
-            switchLocked: () => false,
-          }),
-        };
-        globalThis.$gamePlayer = { refresh: vi.fn() };
-        const engine = new JABS_Engine();
-        engine.refreshPlayer1Data = vi.fn();
-
-        engine.handlePartyCycleMemberChanges();
-
-        // rotation stops once actor 1 lands at the front (after 2 rotations: [3,2,1] then [2,1,3]).
-        expect(globalThis.$gameParty._actors[0]).toBe(1);
-        expect(globalThis.$gamePlayer.refresh).toHaveBeenCalledTimes(1);
-        expect(engine.refreshPlayer1Data).toHaveBeenCalledTimes(1);
-      });
-
-      it('skips a living but switch-locked member', () =>
-      {
-        // Arrange- 3 actors in order [1,3,2] so the first candidate landed on after skipping
-        // self is actor 2 (locked), forcing a second rotation onto actor 1 (eligible)- this
-        // actually exercises the switchLocked()-true continue branch.
-        globalThis.$gameParty = { _actors: [ 1, 3, 2 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
-        globalThis.$gameActors = {
-          actor: (id) => ({
-            isDead: () => false,
-            switchLocked: () => id === 2,
-          }),
-        };
-        globalThis.$gamePlayer = { refresh: vi.fn() };
-        const engine = new JABS_Engine();
-        engine.refreshPlayer1Data = vi.fn();
-
-        engine.handlePartyCycleMemberChanges();
-
-        expect(globalThis.$gameParty._actors[0]).toBe(1);
-      });
-
-      it('leaves the party in the exact rotated order it stopped on', () =>
-      {
-        // Arrange- three eligible members, so nothing is skipped for eligibility reasons and
-        // the resulting order is produced purely by the rotate-then-evaluate loop. asserting
-        // only the new leader cannot tell a stopped rotation from a full lap back to the
-        // starting order, which is what every degenerate version of this loop produces.
+        // Arrange- everybody is eligible, so the member directly behind the leader is the one who
+        // takes over. this is the case a loop that steps over its first candidate gets wrong, and
+        // it is also the one a player notices, because that member is who they expect to get.
         globalThis.$gameParty = { _actors: [ 1, 2, 3 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
         globalThis.$gameActors = {
           actor: () => ({
@@ -2135,18 +2088,94 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         // Act
         engine.handlePartyCycleMemberChanges();
 
-        // Assert
-        expect(globalThis.$gameParty._actors).toEqual([ 3, 1, 2 ]);
+        // Assert- the whole order matters, not just the leader: asserting only the front cannot tell
+        // a single rotation from a full lap that happens to end somewhere plausible.
+        expect(globalThis.$gameParty._actors).toEqual([ 2, 3, 1 ]);
+        expect(globalThis.$gamePlayer.refresh).toHaveBeenCalledTimes(1);
+        expect(engine.refreshPlayer1Data).toHaveBeenCalledTimes(1);
       });
 
       it('rotates past a dead candidate and stops on the next eligible one', () =>
       {
-        // Arrange- four members so a single skip cannot coincidentally land back on the
-        // starting order, which is what a three-member party does after one skip.
-        globalThis.$gameParty = { _actors: [ 1, 2, 3, 4 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
+        // Arrange- the member immediately behind the leader is the dead one, which is the only
+        // arrangement that forces the isDead()-true continue before anybody eligible is reached.
+        globalThis.$gameParty = { _actors: [ 1, 2, 3 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
         globalThis.$gameActors = {
           actor: (id) => ({
-            isDead: () => id === 3,
+            isDead: () => id === 2,
+            switchLocked: () => false,
+          }),
+        };
+        globalThis.$gamePlayer = { refresh: vi.fn() };
+        const engine = new JABS_Engine();
+        engine.refreshPlayer1Data = vi.fn();
+
+        // Act
+        engine.handlePartyCycleMemberChanges();
+
+        // Assert- two rotations, landing on actor 3 with the dead member left behind them.
+        expect(globalThis.$gameParty._actors).toEqual([ 3, 1, 2 ]);
+      });
+
+      it('rotates past a switch-locked candidate and stops on the next eligible one', () =>
+      {
+        // Arrange- the locked-member twin of the dead-member case above, arranged identically so
+        // the two continue branches are exercised in isolation from one another.
+        globalThis.$gameParty = { _actors: [ 1, 2, 3 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
+        globalThis.$gameActors = {
+          actor: (id) => ({
+            isDead: () => false,
+            switchLocked: () => id === 2,
+          }),
+        };
+        globalThis.$gamePlayer = { refresh: vi.fn() };
+        const engine = new JABS_Engine();
+        engine.refreshPlayer1Data = vi.fn();
+
+        // Act
+        engine.handlePartyCycleMemberChanges();
+
+        // Assert
+        expect(globalThis.$gameParty._actors).toEqual([ 3, 1, 2 ]);
+      });
+
+      it('reaches every member in turn across repeated cycles', () =>
+      {
+        // Arrange- four eligible members. a single cycle cannot distinguish "advances by one" from
+        // "advances by some other fixed amount", and an implementation that shuffles the order can
+        // strand members permanently out of reach; only walking the whole party proves otherwise.
+        globalThis.$gameParty = { _actors: [ 1, 2, 3, 4 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
+        globalThis.$gameActors = {
+          actor: () => ({
+            isDead: () => false,
+            switchLocked: () => false,
+          }),
+        };
+        globalThis.$gamePlayer = { refresh: vi.fn() };
+        const engine = new JABS_Engine();
+        engine.refreshPlayer1Data = vi.fn();
+
+        // Act- cycle once per member, collecting who leads after each.
+        const leaders = [];
+        for (let cycle = 0; cycle < 4; cycle++)
+        {
+          engine.handlePartyCycleMemberChanges();
+          leaders.push(globalThis.$gameParty._actors[0]);
+        }
+
+        // Assert- everyone takes a turn, in party order, and the party returns to where it started.
+        expect(leaders).toEqual([ 2, 3, 4, 1 ]);
+        expect(globalThis.$gameParty._actors).toEqual([ 1, 2, 3, 4 ]);
+      });
+
+      it('leaves the party untouched when nobody else is eligible', () =>
+      {
+        // Arrange- a two-member party whose only other member is dead. the loop runs out of
+        // candidates and lands back on the original leader, which must not be treated as a cycle.
+        globalThis.$gameParty = { _actors: [ 1, 2 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
+        globalThis.$gameActors = {
+          actor: (id) => ({
+            isDead: () => id === 2,
             switchLocked: () => false,
           }),
         };
@@ -2158,29 +2187,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         engine.handlePartyCycleMemberChanges();
 
         // Assert
-        expect(globalThis.$gameParty._actors).toEqual([ 4, 1, 2, 3 ]);
-      });
-
-      it('rotates past a switch-locked candidate and stops on the next eligible one', () =>
-      {
-        // Arrange- the locked-member twin of the dead-member case above, on the same
-        // four-member party so the stopping point is unambiguous.
-        globalThis.$gameParty = { _actors: [ 1, 2, 3, 4 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
-        globalThis.$gameActors = {
-          actor: (id) => ({
-            isDead: () => false,
-            switchLocked: () => id === 3,
-          }),
-        };
-        globalThis.$gamePlayer = { refresh: vi.fn() };
-        const engine = new JABS_Engine();
-        engine.refreshPlayer1Data = vi.fn();
-
-        // Act
-        engine.handlePartyCycleMemberChanges();
-
-        // Assert
-        expect(globalThis.$gameParty._actors).toEqual([ 4, 1, 2, 3 ]);
+        expect(globalThis.$gameParty._actors).toEqual([ 1, 2 ]);
       });
 
       it('triggers onBattlerDataChange for the new leader', () =>

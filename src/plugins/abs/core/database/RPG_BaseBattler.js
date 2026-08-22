@@ -48,7 +48,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsBonusHitsScopeSkill', {
 Object.defineProperty(RPG_BaseBattler.prototype, 'jabsSkillTransforms', {
   get: function()
   {
-    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform, true);
+    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform);
   },
 });
 //endregion skillTransforms

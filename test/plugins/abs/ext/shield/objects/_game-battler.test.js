@@ -72,15 +72,17 @@ describe('J-ABS-Shield _Game_Battler (unit, all downstream dependencies mocked)'
       originalCreateJabsState.mockReturnValue(builder);
       const shield = {};
       JABS_Shield_mock.fromStateId.mockReturnValue(shield);
-      const target = {};
-      const attacker = {};
+      // the two battlers carry different shapes on purpose- deep equality would otherwise let the
+      // target stand in for the attacker and the argument order would go unpinned.
+      const target = { def: 12 };
+      const attacker = { atk: 40 };
 
       // Act
       const result = battler.createJabsState(target, 5, 10, 60, 1, attacker);
 
-      // Assert
+      // Assert- the attacker rides along as the `a` binding for the shield point formulas.
       expect(originalCreateJabsState).toHaveBeenCalledWith(target, 5, 10, 60, 1, attacker, null);
-      expect(JABS_Shield_mock.fromStateId).toHaveBeenCalledWith(5, target);
+      expect(JABS_Shield_mock.fromStateId).toHaveBeenCalledWith(5, target, attacker);
       expect(builder.setShield).toHaveBeenCalledWith(shield);
       expect(result).toBe(builder);
     });
@@ -383,8 +385,8 @@ describe('J-ABS-Shield _Game_Battler (unit, all downstream dependencies mocked)'
 
       // Assert
       expect(globalThis.RPGManager.getArrayFromNotesByRegex).toHaveBeenCalledTimes(2);
-      expect(globalThis.RPGManager.getArrayFromNotesByRegex).toHaveBeenCalledWith(databaseData, globalThis.J.ABS.EXT.SHIELD.RegExp.Break, true);
-      expect(globalThis.RPGManager.getArrayFromNotesByRegex).toHaveBeenCalledWith({ id: 1 }, globalThis.J.ABS.EXT.SHIELD.RegExp.Break, true);
+      expect(globalThis.RPGManager.getArrayFromNotesByRegex).toHaveBeenCalledWith(databaseData, globalThis.J.ABS.EXT.SHIELD.RegExp.Break);
+      expect(globalThis.RPGManager.getArrayFromNotesByRegex).toHaveBeenCalledWith({ id: 1 }, globalThis.J.ABS.EXT.SHIELD.RegExp.Break);
     });
 
     it('fires every discovered shield-break skill against the caster then clears the stored value', () =>

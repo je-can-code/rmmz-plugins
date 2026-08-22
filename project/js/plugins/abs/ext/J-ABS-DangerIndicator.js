@@ -340,10 +340,8 @@ Game_Battler.prototype.getPowerLevel = function() {
 		const invertedDamageReductionMultiplier = (this.sparam(paramId) * 100 - 100) * -1;
 		powerLevel += invertedDamageReductionMultiplier * 10;
 	});
-	if (Number.isNaN(powerLevel)) {
-		console.warn("what happened to the power level?");
-	}
 	powerLevel += this.level ** 2;
+	if (Number.isNaN(powerLevel)) return 0;
 	return Math.round(powerLevel);
 };
 /**

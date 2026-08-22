@@ -145,8 +145,7 @@ Game_Map.prototype.refreshRegionSkills = function()
   // grab the region data.
   const regionSkillsData = RPGManager.getArraysFromNotesByRegex(
     { note: this.note() },
-    J.REGIONS.EXT.SKILLS.RegExp.RegionSkill,
-    true);
+    J.REGIONS.EXT.SKILLS.RegExp.RegionSkill);
 
   // stop processing if there was nothing found.
   if (!regionSkillsData || !regionSkillsData.length) return;

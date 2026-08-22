@@ -337,7 +337,7 @@ Game_Map.prototype.clearRegionSkills = function() {
 */
 Game_Map.prototype.refreshRegionSkills = function() {
 	if (!this.canRefreshRegionEffects()) return;
-	const regionSkillsData = RPGManager.getArraysFromNotesByRegex({ note: this.note() }, J.REGIONS.EXT.SKILLS.RegExp.RegionSkill, true);
+	const regionSkillsData = RPGManager.getArraysFromNotesByRegex({ note: this.note() }, J.REGIONS.EXT.SKILLS.RegExp.RegionSkill);
 	if (!regionSkillsData || !regionSkillsData.length) return;
 	regionSkillsData.forEach((regionSkillData) => {
 		const [regionId, skillId, chanceOfApplication, casterId, isFriendly] = regionSkillData;

@@ -442,7 +442,7 @@ RPG_Enemy.prototype.initMembers = function(enemy) {
 * Parses the extra drops on the enemy and adds them into the collection.
 */
 RPG_Enemy.prototype.initExtraDrops = function() {
-	const moreDrops = RPGManager.getArraysFromNotesByRegex(this, J.DROPS.RegExp.ExtraDrop, true);
+	const moreDrops = RPGManager.getArraysFromNotesByRegex(this, J.DROPS.RegExp.ExtraDrop);
 	if (moreDrops.length === 0) return;
 	const mapper = (drop) => {
 		const [dropType, dropId, chance] = drop;
@@ -824,7 +824,7 @@ Game_Enemy.prototype.dropSources = function() {
 * @returns {RPG_DropItem[]}
 */
 Game_Enemy.prototype.extractExtraDrops = function(referenceData) {
-	const moreDrops = RPGManager.getArraysFromNotesByRegex(referenceData, J.DROPS.RegExp.ExtraDrop, true);
+	const moreDrops = RPGManager.getArraysFromNotesByRegex(referenceData, J.DROPS.RegExp.ExtraDrop);
 	const mapper = (drop) => {
 		const [dropType, dropId, chance] = drop;
 		return new RPG_DropItemBuilder().setType(RPG_DropItem.TypeFromLetter(dropType)).setId(dropId).setChance(chance).build();

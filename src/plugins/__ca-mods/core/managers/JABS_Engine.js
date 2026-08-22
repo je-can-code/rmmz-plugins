@@ -251,28 +251,4 @@ JABS_Engine.prototype.trackActionData = function(action)
   }
 };
 
-J.CAMods.Aliased.JABS_Engine.set('handlePartyCycleMemberChanges', JABS_Engine.prototype.handlePartyCycleMemberChanges);
-JABS_Engine.prototype.handlePartyCycleMemberChanges = function()
-{
-  // identify the previous leader's actorId.
-  const originalLeaderActorId = $gameParty._actors.at(0);
-
-  // perform original logic.
-  J.CAMods.Aliased.JABS_Engine.get('handlePartyCycleMemberChanges')
-    .call(this);
-
-  // identify the location of the previous leader.
-  const newIndexOfPreviousLeader = $gameParty._actors.findIndex(actorId => actorId === originalLeaderActorId);
-
-  // remove leader from previous location.
-  $gameParty._actors.splice(newIndexOfPreviousLeader, 1);
-
-  // insert them at the secondary index.
-  $gameParty._actors.splice(1, 0, originalLeaderActorId);
-
-  $gamePlayer.refresh();
-
-  // recreate the JABS player battler and set it to the player character.
-  this.refreshPlayer1Data();
-};
 //endregion JABS_Engine

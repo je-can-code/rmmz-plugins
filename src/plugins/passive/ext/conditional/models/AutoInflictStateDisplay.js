@@ -95,8 +95,7 @@ class AutoInflictStateDisplay
   {
     const tuples = RPGManager.getArraysFromNotesByRegex(
       dataRow,
-      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoInflictState,
-      true
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoInflictState
     );
 
     const lines = [];

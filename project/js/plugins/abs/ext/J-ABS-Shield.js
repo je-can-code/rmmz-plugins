@@ -531,7 +531,7 @@ var JABS_Shield = class JABS_Shield {
 		const priority = RPGManager.getNumberFromNoteByRegex(state, J.ABS.EXT.SHIELD.RegExp.Priority);
 		const isProtect = RPGManager.checkForBooleanFromNoteByRegex(state, J.ABS.EXT.SHIELD.RegExp.Protect) === true;
 		const appliedAt = Date.now();
-		const shieldTypes = RPGManager.getArrayFromNotesByRegex(state, J.ABS.EXT.SHIELD.RegExp.Type, true);
+		const shieldTypes = RPGManager.getArrayFromNotesByRegex(state, J.ABS.EXT.SHIELD.RegExp.Type);
 		return new JABS_Shield(totalPoints, normalizedCap, priority, shieldTypes, isProtect, appliedAt);
 	}
 	/**
@@ -800,7 +800,7 @@ Object.defineProperties(RPG_UsableItem.prototype, {
 			if (this.isShieldBypassUniversal) {
 				return null;
 			}
-			return RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.SHIELD.RegExp.Bypass, true);
+			return RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.SHIELD.RegExp.Bypass);
 		},
 		configurable: true
 	},
@@ -825,7 +825,7 @@ Object.defineProperties(RPG_UsableItem.prototype, {
 			if (this.hasShieldBypass === false) {
 				return false;
 			}
-			const list = RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.SHIELD.RegExp.Bypass, true, true);
+			const list = RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.SHIELD.RegExp.Bypass, true);
 			return list === null;
 		},
 		configurable: true
@@ -1089,7 +1089,7 @@ Game_Battler.prototype.baseSerFactor = function() {
 J.ABS.EXT.SHIELD.Aliased.Game_Battler.set("createJabsState", Game_Battler.prototype.createJabsState);
 Game_Battler.prototype.createJabsState = function(target, stateId, iconIndex, totalDuration, stacks, attacker, sourceSkill = null) {
 	const builder = J.ABS.EXT.SHIELD.Aliased.Game_Battler.get("createJabsState").call(this, target, stateId, iconIndex, totalDuration, stacks, attacker, sourceSkill);
-	const shield = JABS_Shield.fromStateId(stateId, target);
+	const shield = JABS_Shield.fromStateId(stateId, target, attacker);
 	builder.setShield(shield);
 	return builder;
 };
@@ -1175,7 +1175,7 @@ Game_Battler.prototype.onShieldBreak = function(shieldBreakValue = 0) {
 	* @param {RPG_Base} source The source from which to pull shield break skills.
 	*/
 	const reducer = (accumulator, source) => {
-		const skillIds = RPGManager.getArrayFromNotesByRegex(source, J.ABS.EXT.SHIELD.RegExp.Break, true);
+		const skillIds = RPGManager.getArrayFromNotesByRegex(source, J.ABS.EXT.SHIELD.RegExp.Break);
 		return accumulator.concat(...skillIds);
 	};
 	const breakSkillIds = sources.reduce(reducer, []);

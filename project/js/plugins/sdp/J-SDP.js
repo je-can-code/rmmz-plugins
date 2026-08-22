@@ -2671,7 +2671,7 @@ Object.defineProperty(RPG_Enemy.prototype, "sdpPoints", { get: function() {
 * @type {[string, number, number]|null}
 */
 Object.defineProperty(RPG_Enemy.prototype, "sdpDropData", { get: function() {
-	const sdpData = RPGManager.getArrayFromNotesByRegex(this, J.SDP.RegExp.SdpDropData, true, true);
+	const sdpData = RPGManager.getArrayFromNotesByRegex(this, J.SDP.RegExp.SdpDropData, true);
 	return sdpData ?? [String.empty, 0];
 } });
 /**

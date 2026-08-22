@@ -38,6 +38,26 @@ describe('J-LevelMaster LevelScaling (direct src import)', () =>
     expect(result).toBe(1);
   });
 
+  it('treats parity as the centre of the invariant band rather than a scaled difference', () =>
+  {
+    // Arrange & Act- a difference of zero is the one value the surrounding cases cannot cover, and
+    // it is the value a band read against a positive lower bound falls straight through.
+    const result = LevelScaling.calculate(0);
+
+    // Assert- combatants of equal level deal exactly their damage, with no bonus in either direction.
+    expect(result).toBe(1);
+  });
+
+  it('stays inside the band one level below parity, as it does one level above', () =>
+  {
+    // Arrange & Act- the band is a magnitude measured outward from parity in both directions, so its
+    // lower edge has to be reachable from the negative side.
+    const result = LevelScaling.calculate(-1);
+
+    // Assert
+    expect(result).toBe(1);
+  });
+
   it('clamps upward growth to the configured maximum multiplier', () =>
   {
     // Arrange & Act

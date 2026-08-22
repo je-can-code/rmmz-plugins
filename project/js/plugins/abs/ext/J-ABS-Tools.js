@@ -669,7 +669,7 @@ Object.defineProperty(RPG_Skill.prototype, "jabsGapClosePosition", { get: functi
 * @type {number[]}
 */
 Object.defineProperty(RPG_Skill.prototype, "jabsThisOnGapCloseEnd", { get: function() {
-	return RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.TOOLS.RegExp.GapCloseEndThis, true);
+	return RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.TOOLS.RegExp.GapCloseEndThis);
 } });
 /**
 * Whether this skill's gap close should respect terrain passability instead of its default
@@ -772,7 +772,7 @@ Game_Battler.prototype.isGapCloseBlocked = function() {
 Game_Battler.prototype.gapCloseEndSkillIds = function() {
 	const ids = [];
 	for (const note of this.getAllNotes()) {
-		const found = RPGManager.getArrayFromNotesByRegex(note, J.ABS.EXT.TOOLS.RegExp.GapCloseEnd, true, true);
+		const found = RPGManager.getArrayFromNotesByRegex(note, J.ABS.EXT.TOOLS.RegExp.GapCloseEnd, true);
 		if (found === null) continue;
 		ids.push(...found);
 	}

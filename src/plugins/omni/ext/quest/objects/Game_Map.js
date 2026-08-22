@@ -113,8 +113,6 @@ Game_Map.prototype.evaluateDestinationObjectives = function()
     // check if the player within the coordinate range.
     if (objective.isPlayerWithinDestinationRange(coordinateRange))
     {
-      console.log(`player has achieved the objective! ${objective.questKey}`);
-
       // grab the quest for reference.
       const questToProgress = QuestManager.quest(objective.questKey);
 

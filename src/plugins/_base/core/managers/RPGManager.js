@@ -774,7 +774,7 @@ class RPGManager
     let vals = [];
 
     // capture what we found.
-    const found = this.getArrayFromNotesByRegex(databaseData, structure, true, true);
+    const found = this.getArrayFromNotesByRegex(databaseData, structure, true);
 
     // validate we found something.
     if (found !== null)
@@ -892,8 +892,13 @@ class RPGManager
     // initialize the value.
     let val = 0;
 
+    // track whether any line matched at all, separately from what those lines summed to. a formula
+    // that evaluates to zero is a real authored answer, and reading it back as "nothing found" makes
+    // it indistinguishable from a tag nobody wrote- which callers then coalesce into their default.
+    let hasMatch = false;
+
     // establish a variable to be used as "a" in the formula- the battler.
-     
+
     const a = context;
 
     // establish a variable to be used as "b" in the formula- the base parameter value.
@@ -919,6 +924,9 @@ class RPGManager
       // if there is no result, then skip.
       if (result === null) return;
 
+      // flag that this object genuinely carries the tag, whatever it evaluates to.
+      hasMatch = true;
+
       // extract the captured formula.
       const [ , formula ] = result;
 
@@ -939,7 +947,8 @@ class RPGManager
       }
     });
 
-    if (!val && nullIfEmpty)
+    // only an absence of the tag answers null; an authored zero answers zero.
+    if (hasMatch === false && nullIfEmpty)
     {
       return null;
     }
@@ -972,15 +981,28 @@ class RPGManager
     // initialize the value to 0.
     let val = 0;
 
+    // as with the single-object reader, "summed to zero" and "nobody carried the tag" are different
+    // answers, and only the second one is an absence.
+    let hasMatch = false;
+
     // scan all the database datas.
     databaseDatas.forEach(databaseData =>
     {
+      // ask for null on absence so a contributor of zero stays visible as a contributor.
+      const result = this.getResultFromNoteByRegex(databaseData, structure, baseParam, context, true);
+
+      // this object does not carry the tag, so it contributes nothing and counts as nothing.
+      if (result === null) return;
+
+      // flag that at least one object answered.
+      hasMatch = true;
+
       // add the eval'd formulas from all the notes of each database object.
-      val += this.getResultFromNoteByRegex(databaseData, structure, baseParam, context);
+      val += result;
     });
 
     // check if we turned up empty and are using the nullIfEmpty flag.
-    if (!val && nullIfEmpty)
+    if (hasMatch === false && nullIfEmpty)
     {
       // we are both, so return null.
       return null;
@@ -1149,16 +1171,15 @@ class RPGManager
    * This accepts a regex structure, assuming the capture group is an array of values
    * all wrapped in hard brackets [].
    *
-   * If the optional flag `tryParse` is true, then it will attempt to parse out
-   * the array of values as well, including translating strings to numbers/booleans
-   * and keeping array structures all intact.
+   * Each captured array is parsed on the way out, translating strings to numbers and booleans and
+   * keeping nested array structures intact- there is no raw-capture mode, because no consumer of a
+   * notetag has ever wanted the unparsed text.
    * @param {RPG_Base} databaseData The database object to parse notes from.
    * @param {RegExp} structure The regular expression to filter notes by.
-   * @param {boolean} tryParse Whether or not to attempt to parse the found array.
    * @param {boolean} nullIfEmpty Whether or not to return null if nothing is found.
    * @returns {any[][]|null} The array of arrays from the notes, or null.
    */
-  static getArraysFromNotesByRegex(databaseData, structure, tryParse = true, nullIfEmpty = false)
+  static getArraysFromNotesByRegex(databaseData, structure, nullIfEmpty = false)
   {
     // validate the incoming data object.
     if (this.#canParsedatabaseData(databaseData) === false)
@@ -1170,13 +1191,13 @@ class RPGManager
     }
 
     // define the unique key for this regex and option set.
-    const key = `any[][]:${structure.source}::${structure.flags}::tryParse=${tryParse}::nullIfEmpty=${nullIfEmpty}`;
+    const key = `any[][]:${structure.source}::${structure.flags}::nullIfEmpty=${nullIfEmpty}`;
 
     // grab the result (potentially cached).
     return this.cached(
       databaseData,
       key,
-      () => this.#getArraysFromNotesByRegex(databaseData, structure, tryParse, nullIfEmpty)
+      () => this.#getArraysFromNotesByRegex(databaseData, structure, nullIfEmpty)
     );
   }
 
@@ -1184,11 +1205,10 @@ class RPGManager
    * Gets an array of arrays matching the regex across every database object provided.
    * @param {RPG_Base[]} databaseDatas The collection of database objects to parse notes from.
    * @param {RegExp} structure The regular expression to filter notes by.
-   * @param {boolean} tryParse Whether or not to attempt to parse the found arrays.
    * @param {boolean} nullIfEmpty Whether or not to return null if nothing is found.
    * @returns {any[][]|null} The array of arrays from the notes across all sources, or empty, or null.
    */
-  static getArraysFromAllNotesByRegex(databaseDatas, structure, tryParse = true, nullIfEmpty = false)
+  static getArraysFromAllNotesByRegex(databaseDatas, structure, nullIfEmpty = false)
   {
     // initialize the running collection.
     const arrays = [];
@@ -1197,7 +1217,7 @@ class RPGManager
     databaseDatas.forEach(databaseData =>
     {
       // gather arrays from this one object.
-      const found = this.getArraysFromNotesByRegex(databaseData, structure, tryParse);
+      const found = this.getArraysFromNotesByRegex(databaseData, structure);
 
       // if any found, concatenate into the running collection.
       if (found.length)
@@ -1220,11 +1240,10 @@ class RPGManager
    * Gets an array of arrays based on the provided regex structure.
    * @param {RPG_Base} databaseData The database object to parse notes from.
    * @param {RegExp} structure The regular expression to filter notes by.
-   * @param {boolean} tryParse Whether or not to attempt to parse the found array.
    * @param {boolean} nullIfEmpty Whether or not to return null if nothing is found.
    * @returns {any[][]|null} The array of arrays from the notes, or null.
    */
-  static #getArraysFromNotesByRegex(databaseData, structure, tryParse = true, nullIfEmpty = false)
+  static #getArraysFromNotesByRegex(databaseData, structure, nullIfEmpty = false)
   {
     // build a non-global, non-sticky scanner to avoid lastIndex side effects across lines.
     const safeFlags = structure.flags
@@ -1269,12 +1288,8 @@ class RPGManager
         : [];
     }
 
-    // check if we're going to attempt to parse it, too.
-    if (tryParse)
-    {
-      // attempt the parsing.
-      val = val.map(JsonMapper.parseObject, JsonMapper);
-    }
+    // the captures are collected raw above, so this pass is what turns each one into real values.
+    val = val.map(JsonMapper.parseObject, JsonMapper);
 
     // return the found value.
     return val;
@@ -1286,16 +1301,16 @@ class RPGManager
    * This accepts a regex structure, assuming the capture group is an array of values
    * all wrapped in hard brackets [].
    *
-   * If the optional flag `tryParse` is true, then it will attempt to parse out
-   * the array of values as well, including translating strings to numbers/booleans
-   * and keeping array structures all intact.
+   * The captured group is parsed as it is read, so the values arrive already translated to
+   * numbers and booleans with any nested array structure intact. The plural sibling
+   * {@link #getArraysFromNotesByRegex} collects raw captures across several lines first and parses
+   * them in one pass at the end, but the values a caller receives are equally parsed either way.
    * @param {RPG_Base} databaseData The contents of the note of a given object.
    * @param {RegExp} structure The regular expression to filter notes by.
-   * @param {boolean} tryParse Whether or not to attempt to parse the found array.
    * @param {boolean=} nullIfEmpty If this is true and nothing is found, null will be returned instead of empty array.
    * @returns {any[]|null} The array from the notes, or null.
    */
-  static getArrayFromNotesByRegex(databaseData, structure, tryParse = true, nullIfEmpty = false)
+  static getArrayFromNotesByRegex(databaseData, structure, nullIfEmpty = false)
   {
     // validate the incoming data object.
     if (this.#canParsedatabaseData(databaseData) === false)
@@ -1307,13 +1322,13 @@ class RPGManager
     }
 
     // define the unique key for this regex and option set.
-    const key = `any[]:${structure.source}::${structure.flags}::tryParse=${tryParse}::nullIfEmpty=${nullIfEmpty}`;
+    const key = `any[]:${structure.source}::${structure.flags}::nullIfEmpty=${nullIfEmpty}`;
 
     // grab the result (potentially cached).
     return this.cached(
       databaseData,
       key,
-      () => this.#getArrayFromNotesByRegex(databaseData, structure, tryParse, nullIfEmpty)
+      () => this.#getArrayFromNotesByRegex(databaseData, structure, nullIfEmpty)
     );
   }
 
@@ -1323,16 +1338,15 @@ class RPGManager
    * This accepts a regex structure, assuming the capture group is an array of values
    * all wrapped in hard brackets [].
    *
-   * If the optional flag `tryParse` is true, then it will attempt to parse out
-   * the array of values as well, including translating strings to numbers/booleans
-   * and keeping array structures all intact.
+   * The capture is parsed where it is read, so the value is already fully translated by the time
+   * the loop ends. A tag whose capture group is optional and did not participate parses to null,
+   * which is reported as-is rather than treated as a collection.
    * @param {RPG_Base} databaseData The contents of the note of a given object.
    * @param {RegExp} structure The regular expression to filter notes by.
-   * @param {boolean} tryParse Whether or not to attempt to parse the found array.
    * @param {boolean=} nullIfEmpty If this is true and nothing is found, null will be returned instead of empty array.
    * @returns {any[]|null} The array from the notes, or null.
    */
-  static #getArrayFromNotesByRegex(databaseData, structure, tryParse = true, nullIfEmpty = false)
+  static #getArrayFromNotesByRegex(databaseData, structure, nullIfEmpty = false)
   {
     // build a non-global, non-sticky scanner to avoid lastIndex side effects across lines.
     const safeFlags = structure.flags
@@ -1375,13 +1389,6 @@ class RPGManager
         : [];
     }
 
-    // check if we're going to attempt to parse it, too.
-    if (tryParse)
-    {
-      // attempt the parsing.
-      val = val.map(JsonMapper.parseObject, JsonMapper);
-    }
-
     // return the found value.
     return val;
   }
@@ -1396,7 +1403,7 @@ class RPGManager
   static getOnChanceEffectsFromDatabaseObject(databaseData, structure)
   {
     // scan the object for matching on-chance data based on the given regex.
-    const foundDatas = this.getArraysFromNotesByRegex(databaseData, structure, true);
+    const foundDatas = this.getArraysFromNotesByRegex(databaseData, structure);
 
     // determine the key based on the regexp provided.
     const key = J.BASE.Helpers.getKeyFromRegexp(structure);

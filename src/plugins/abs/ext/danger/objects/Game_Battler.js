@@ -32,12 +32,13 @@ Game_Battler.prototype.getPowerLevel = function()
     powerLevel += invertedDamageReductionMultiplier * 10;
   });
 
-  if (Number.isNaN(powerLevel))
-  {
-    console.warn('what happened to the power level?');
-  }
-
   powerLevel += (this.level ** 2);
+
+  // a single NaN contributor poisons the whole sum, and a NaN power level is worse than none-
+  // every comparison against it answers false, so the danger indicator silently falls through
+  // to its default instead of ranking the battler. answer with the sentinel instead.
+  if (Number.isNaN(powerLevel)) return 0;
+
   return Math.round(powerLevel);
 };
 

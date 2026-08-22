@@ -6,8 +6,7 @@ import PluginMetadata from '../../../../src/plugins/_base/core/models/PluginMeta
 describe('CAMods JABS_Engine (direct src import, hand-rolled JABS stand-in)', () =>
 {
   /** @type {{canGainReward: Function, addLootDropToMap: Function, handleDefeatedEnemy: Function,
-   *  handleDefeatedPlayer: Function, postExecuteSkillEffects: Function, executeMapAction: Function,
-   *  handlePartyCycleMemberChanges: Function}} */
+   *  handleDefeatedPlayer: Function, postExecuteSkillEffects: Function, executeMapAction: Function}} */
   let originals;
 
   beforeAll(async () =>
@@ -23,7 +22,6 @@ describe('CAMods JABS_Engine (direct src import, hand-rolled JABS stand-in)', ()
       handleDefeatedPlayer: vi.fn(),
       postExecuteSkillEffects: vi.fn(),
       executeMapAction: vi.fn(),
-      handlePartyCycleMemberChanges: vi.fn(),
     };
 
     function JABS_Engine() {}
@@ -238,40 +236,5 @@ describe('CAMods JABS_Engine (direct src import, hand-rolled JABS stand-in)', ()
     });
   });
 
-  describe('handlePartyCycleMemberChanges', () =>
-  {
-    it('moves the previous leader from the front of the party to the second slot', () =>
-    {
-      const engine = new globalThis.JABS_Engine();
-      engine.refreshPlayer1Data = vi.fn();
-
-      globalThis.$gameParty = { _actors: [ 1, 2, 3 ] };
-      globalThis.$gamePlayer = { refresh: vi.fn() };
-
-      // the original rotates the party until it lands on a living member, so it may shift more than
-      // once and the previous leader can come to rest anywhere. Two rotations- what happens when the
-      // first candidate is dead and gets skipped- is what this models, and the resting place matters
-      // enormously: parked at index 0, "find the leader" and "match anything" agree; parked at the
-      // end, "find the leader" and "found nobody" agree, because splice(-1) removes that same slot.
-      // Only a middle index tells all three apart. Scoped to one call so the stub stays inert
-      // elsewhere in this file.
-      originals.handlePartyCycleMemberChanges.mockImplementationOnce(() =>
-      {
-        const { _actors } = globalThis.$gameParty;
-        _actors.push(_actors.shift());
-        _actors.push(_actors.shift());
-      });
-
-      engine.handlePartyCycleMemberChanges();
-
-      expect(originals.handlePartyCycleMemberChanges).toHaveBeenCalledTimes(1);
-
-      // former leader (actorId 1) plucked out of wherever the rotation left them and reinserted at
-      // index 1, leaving the actor the cycle actually landed on in the lead.
-      expect(globalThis.$gameParty._actors).toEqual([ 3, 1, 2 ]);
-      expect(globalThis.$gamePlayer.refresh).toHaveBeenCalledTimes(1);
-      expect(engine.refreshPlayer1Data).toHaveBeenCalledTimes(1);
-    });
-  });
 });
 //endregion plugins/__ca-mods/_component/jabs-engine.test.js

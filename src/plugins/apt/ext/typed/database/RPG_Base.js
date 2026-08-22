@@ -16,7 +16,7 @@ RPG_Base.prototype.buildAptitudeTeachings = function()
 
   // extract typed tuples like [skillId, requiredAp, domain, idOrName].
   /** @type {Array<[number, number, string, string|number]>} */
-  const raw = RPGManager.getArraysFromNotesByRegex(this, J.APT.EXT.TYPED.RegExp.AptitudeTeachableTyped, true);
+  const raw = RPGManager.getArraysFromNotesByRegex(this, J.APT.EXT.TYPED.RegExp.AptitudeTeachableTyped);
 
   // map into enriched AptitudeTeachables.
   const typed = raw

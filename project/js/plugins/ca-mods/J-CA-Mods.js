@@ -537,16 +537,6 @@ JABS_Engine.prototype.trackActionData = function(action) {
 			break;
 	}
 };
-J.CAMods.Aliased.JABS_Engine.set("handlePartyCycleMemberChanges", JABS_Engine.prototype.handlePartyCycleMemberChanges);
-JABS_Engine.prototype.handlePartyCycleMemberChanges = function() {
-	const originalLeaderActorId = $gameParty._actors.at(0);
-	J.CAMods.Aliased.JABS_Engine.get("handlePartyCycleMemberChanges").call(this);
-	const newIndexOfPreviousLeader = $gameParty._actors.findIndex((actorId) => actorId === originalLeaderActorId);
-	$gameParty._actors.splice(newIndexOfPreviousLeader, 1);
-	$gameParty._actors.splice(1, 0, originalLeaderActorId);
-	$gamePlayer.refresh();
-	this.refreshPlayer1Data();
-};
 
 //#endregion
 //#region src/plugins/__ca-mods/core/scenes/Scene_Base.js

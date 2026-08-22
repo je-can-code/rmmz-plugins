@@ -84,7 +84,7 @@ Object.defineProperty(RPG_EquipItem.prototype, 'jabsExpiration', {
 Object.defineProperty(RPG_EquipItem.prototype, 'jabsSkillTransforms', {
   get: function()
   {
-    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform, true);
+    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform);
   },
 });
 //endregion skillTransforms

@@ -60,7 +60,7 @@ describe('J-ABS-Shield RPG_UsableItem (unit, all downstream dependencies mocked)
       // Arrange (mirror RPGManager's nullIfEmpty contract so the two call shapes differ; with both
       // returning null, the universal short-circuit and the parse path are indistinguishable)
       globalThis.RPGManager.checkForBooleanFromNoteByRegex.mockReturnValue(true);
-      globalThis.RPGManager.getArrayFromNotesByRegex.mockImplementation((data, structure, tryParse, nullIfEmpty) => (nullIfEmpty === true
+      globalThis.RPGManager.getArrayFromNotesByRegex.mockImplementation((data, structure, nullIfEmpty) => (nullIfEmpty === true
         ? null
         : []));
 

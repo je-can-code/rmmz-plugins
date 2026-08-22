@@ -49,7 +49,7 @@ Object.defineProperty(RPG_Class.prototype, 'jabsBonusHitsScopeSkill', {
 Object.defineProperty(RPG_Class.prototype, 'jabsSkillTransforms', {
   get: function()
   {
-    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform, true);
+    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform);
   },
 });
 //endregion skillTransforms

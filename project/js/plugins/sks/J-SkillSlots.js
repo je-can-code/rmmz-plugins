@@ -614,7 +614,7 @@ Game_Actor.prototype.equippedSkills = function() {
 */
 Game_Actor.prototype.forcedUnslottedSkillIds = function() {
 	if (this._j._sks._forcedUnslottedSkillIds !== null) return this._j._sks._forcedUnslottedSkillIds;
-	const arraysFound = RPGManager.getArraysFromAllNotesByRegex(this.getAllNotes(), J.SKS.RegExp.UnslottedSkills, true, false);
+	const arraysFound = RPGManager.getArraysFromAllNotesByRegex(this.getAllNotes(), J.SKS.RegExp.UnslottedSkills);
 	this._j._sks._forcedUnslottedSkillIds = new Set(arraysFound.flat());
 	return this._j._sks._forcedUnslottedSkillIds;
 };
