@@ -76,6 +76,28 @@ describe('JCache', () =>
       expect(computeFn).toHaveBeenCalledOnce();
     });
 
+    it('keeps two clones of one RPG_Base source in separate buckets when resolveOriginal is not set', () =>
+    {
+      // Arrange: the near-miss of the case above- the same root and the same two clones, with the
+      // option left at its default, so nothing resolves one level up and each clone keys a bucket
+      // by its own identity. This is the correct behavior for a cache whose entries genuinely
+      // differ per clone rather than per source object.
+      const cache = JCache.objectScoped({ name: 'test:no-resolve-original' });
+      const root = new RPG_Base({ id: 1, meta: {}, name: 'root', note: '<x>' }, 0);
+      const cloneA = root._clone();
+      const cloneB = root._clone();
+      const computeFn = vi.fn(() => 'per-clone-value');
+
+      // Act
+      const fromCloneA = cache.get([ cloneA ], 'k', computeFn);
+      const fromCloneB = cache.get([ cloneB ], 'k', computeFn);
+
+      // Assert
+      expect(fromCloneA).toBe('per-clone-value');
+      expect(fromCloneB).toBe('per-clone-value');
+      expect(computeFn).toHaveBeenCalledTimes(2);
+    });
+
     it('is not registered in the battler-invalidation bus', () =>
     {
       // Arrange
@@ -90,8 +112,54 @@ describe('JCache', () =>
     });
   });
 
+  describe('battlerScoped', () =>
+  {
+    it('leaves a non-object dimension key unresolved even when resolveOriginal is true', () =>
+    {
+      // Arrange: resolveOriginal is scoped to the dimension named 'object', not to the cache as a
+      // whole, so a cache whose only dimension is the battler keys strictly by the identity it was
+      // handed. Clones stand in for that identity here because they are the one key shape where
+      // resolving and not resolving produce visibly different buckets.
+      JCache._battlerCaches.clear();
+      const cache = JCache.battlerScoped({ name: 'test:non-object-dim-resolve', resolveOriginal: true });
+      const root = new RPG_Base({ id: 1, meta: {}, name: 'root', note: '<x>' }, 0);
+      const cloneA = root._clone();
+      const cloneB = root._clone();
+      const computeFn = vi.fn(() => 'per-key-value');
+
+      // Act
+      const fromCloneA = cache.get([ cloneA ], 'k', computeFn);
+      const fromCloneB = cache.get([ cloneB ], 'k', computeFn);
+
+      // Assert
+      expect(fromCloneA).toBe('per-key-value');
+      expect(fromCloneB).toBe('per-key-value');
+      expect(computeFn).toHaveBeenCalledTimes(2);
+    });
+  });
+
   describe('battlerThenObject', () =>
   {
+    it('nests a weak intermediate bucket beneath the root, with a terminal Map at the last dimension', () =>
+    {
+      // Arrange: every dimension bucket but the innermost is a WeakMap, which is what lets a battler
+      // nothing else references fall out of the cache on its own instead of being pinned alive by it.
+      // Only the innermost bucket is a real Map, because its keys are strings a WeakMap cannot hold.
+      const cache = JCache.battlerThenObject({ name: 'test:bucket-shapes' });
+      const battler = {};
+      const target = {};
+
+      // Act
+      cache.get([ battler, target ], 'k', () => 'value');
+
+      // Assert
+      const intermediate = cache.root().get(battler);
+      const terminal = intermediate.get(target);
+      expect(intermediate).toBeInstanceOf(WeakMap);
+      expect(terminal).toBeInstanceOf(Map);
+      expect(terminal.get('k')).toBe('value');
+    });
+
     it('keeps two different battlers on the same object independent of each other', () =>
     {
       // Arrange

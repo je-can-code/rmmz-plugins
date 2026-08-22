@@ -5677,7 +5677,7 @@ ColorManager.sdp = function(rarity) {
 * @returns {boolean}
 */
 ColorManager.isValidHexColor = function(colorHex) {
-	if (!colorHex || colorHex === String.empty) {
+	if (!colorHex) {
 		return false;
 	}
 	const structure = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
@@ -5689,7 +5689,7 @@ ColorManager.isValidHexColor = function(colorHex) {
 * @returns {{r:number,g:number,b:number}|null}
 */
 ColorManager.parseHexStringToRgb = function(hexString) {
-	if (!hexString || hexString === String.empty) {
+	if (!hexString) {
 		return null;
 	}
 	let h = hexString.trim();

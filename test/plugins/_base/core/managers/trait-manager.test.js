@@ -109,7 +109,7 @@ describe('TraitManager (direct src import)', () =>
       const result = TraitManager.slipIcon('hp', -5);
 
       // Assert
-      expect(result).toBeTypeOf('number');
+      expect(result).toBe(951);
     });
 
     it('returns the mp drain icon for a positive mp slip', () =>
@@ -123,11 +123,11 @@ describe('TraitManager (direct src import)', () =>
 
     it('returns the mp regen icon for a negative mp slip', () =>
     {
-      // Arrange & Act
+      // Arrange & Act- real IconManager.xparam(8) resolves to the mrg icon.
       const result = TraitManager.slipIcon('mp', -5);
 
       // Assert
-      expect(result).toBeTypeOf('number');
+      expect(result).toBe(952);
     });
 
     it('returns the tp drain icon for a positive tp slip', () =>
@@ -141,11 +141,11 @@ describe('TraitManager (direct src import)', () =>
 
     it('returns the tp regen icon for a negative tp slip', () =>
     {
-      // Arrange & Act
+      // Arrange & Act- real IconManager.xparam(9) resolves to the trg icon.
       const result = TraitManager.slipIcon('tp', -5);
 
       // Assert
-      expect(result).toBeTypeOf('number');
+      expect(result).toBe(953);
     });
 
     it('returns 0 for an unknown resource type', () =>

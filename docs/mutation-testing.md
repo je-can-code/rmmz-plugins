@@ -51,8 +51,25 @@ recurring shapes here:
   loop immediately declines to run.
 - **Spreading an empty collection.** `if (found.length) push(...found)` — pushing nothing is nothing.
 - **Consecutive `switch` cases returning the same value.** Emptying a case body falls through to a case
-  returning the identical thing. `ColorManager` and `TextManager` are almost entirely this: **60 of
-  J-Base's 181 survivors** came from two lookup tables and not one of them is killable.
+  returning the identical thing. `ColorManager`'s two element tables are this — **30 of its 35
+  survivors**, and not one of them is killable.
+
+  **A lookup table is not equivalent because it is a lookup table.** `TextManager` carried the same
+  reputation on nothing but resemblance, and all **31** of its survivors turned out to be killable:
+  every adjacent case there returns a *distinct* pair of strings, and the fixtures asserted
+  `toHaveLength(2)` against a table where every case returns two elements. Shape held while identity
+  went unchecked, exactly like `TraitResolver`.
+
+  The survivor list tells you which one you have before you read any test, and the tell is **which
+  case is missing**:
+
+  | What survived | What it means |
+  |---|---|
+  | Every case *except the terminator of each run* | Same-value runs. Genuine equivalents — the terminator died only because it falls into the *next* run. |
+  | Every case *except the last one in the whole switch* | Distinct values with a shape-only assertion. All killable — the last one died only because it falls through to `undefined`. |
+
+  Settle it by reading two adjacent cases and asking whether they return the same thing. That is the
+  entire question, and it takes ten seconds.
 
 > **Deciding equivalence is undecidable in general** — it reduces to the halting problem. No tool will
 > ever sort this pile for you, which means a mutation score never legitimately reaches 100. Anyone

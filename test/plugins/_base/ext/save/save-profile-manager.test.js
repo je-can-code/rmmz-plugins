@@ -187,15 +187,21 @@ describe('ProfileManager (direct src import)', () =>
     {
       // Arrange
       ProfileManager.registerField('timesFinished', () => 0);
+      const applyData = vi.spyOn(ProfileManager, 'applyData');
 
       // Act
       ProfileManager.load();
       await flushPendingReads();
 
-      // Assert
+      // Assert: the seeded default is also what a failed apply would leave behind, so the assertion
+      // that carries this test is that nothing was applied at all - there was no document to apply.
+      expect(applyData).not.toHaveBeenCalled();
       expect(ProfileManager.get('timesFinished')).toBe(0);
       expect(ProfileManager.isLoaded())
         .toBe(true);
+
+      // spies on a bare global object leak into later tests in this file unless restored here.
+      applyData.mockRestore();
     });
 
     it('reports itself loaded even when the read fails, so a bad profile cannot block booting', async () =>

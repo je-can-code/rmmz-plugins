@@ -522,11 +522,15 @@ describe('J-ABS RPG_Skill effects (direct src import)', () =>
 
     describe('getJabsVisOffsetFor', () =>
     {
+      // the right-facing row carries an up-right tag it must ignore. Right is the one cardinal whose
+      // case sits immediately above a diagonal, and that diagonal falls back through right - so with
+      // no diagonal tagged, resolving direction 6 and resolving direction 9 are the same program and
+      // no assertion on the answer can separate them.
       it.each([
         [ 8, '<visOffsetU:[1, 1]>', [ 1, 1 ] ],
         [ 2, '<visOffsetD:[2, 2]>', [ 2, 2 ] ],
         [ 4, '<visOffsetL:[3, 3]>', [ 3, 3 ] ],
-        [ 6, '<visOffsetR:[4, 4]>', [ 4, 4 ] ],
+        [ 6, '<visOffsetR:[4, 4]>\n<visOffsetUR:[9, 9]>', [ 4, 4 ] ],
       ])('cardinal direction %i prefers its own directional tag', (direction, tag, expected) =>
       {
         expect(buildSkill(tag).getJabsVisOffsetFor(direction)).toEqual(expected);
@@ -787,10 +791,13 @@ describe('J-ABS RPG_Skill effects (direct src import)', () =>
         expect(skill.getJabsVisOffsetForMergedActionMap(jabsAction, 9)).toEqual([ 4, 4 ]);
       });
 
+      // as above, the right-facing row carries an up-right tag it must ignore, for the same reason:
+      // direction 6's case falls into direction 9's, which resolves back through right whenever no
+      // diagonal is present.
       it.each([
         [ 2, '<visOffsetD:[2, 2]>', [ 2, 2 ] ],
         [ 4, '<visOffsetL:[3, 3]>', [ 3, 3 ] ],
-        [ 6, '<visOffsetR:[4, 4]>', [ 4, 4 ] ],
+        [ 6, '<visOffsetR:[4, 4]>\n<visOffsetUR:[9, 9]>', [ 4, 4 ] ],
       ])('cardinal direction %i resolves its own merged directional tag', (direction, tag, expected) =>
       {
         const skill = buildSkill(tag);

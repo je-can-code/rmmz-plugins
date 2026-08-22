@@ -515,6 +515,20 @@ describe('RPGManager', () =>
       expect(result).toBeNull();
     });
 
+    it('returns the found numbers even when nullIfEmpty is true', () =>
+    {
+      // Arrange- the empty-result early return answers on the same flag this call sets, so a guard
+      // that stopped distinguishing "found nothing" from "found something" would answer null here.
+      const data = { note: '<nums:[1,2,3]>' };
+      const re = /<nums:(\[[^\]]+\])>/;
+
+      // Act
+      const result = RPGManager.getNumbersFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toEqual([ 1, 2, 3 ]);
+    });
+
     it('returns null when the note is parsable but nothing matches and nullIfEmpty is true', () =>
     {
       // Arrange- a non-empty note that has no matching tag reaches the post-scan empty check.

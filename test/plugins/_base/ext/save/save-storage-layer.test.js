@@ -59,6 +59,75 @@ describe('save storage layer (direct src import)', () =>
     globalThis.J.BASE.EXT.SAVE.Metadata.retainedSaveGenerations = 3;
   });
 
+  //region path and write helpers
+  describe('SaveFileSystem.parentDirectory()', () =>
+  {
+    it('returns the directory portion of a path, with its trailing separator', () =>
+    {
+      // Arrange & Act & Assert- a path that actually has a parent is the only input that can tell
+      // "take the directory part" apart from "always answer nothing".
+      expect(SaveFileSystem.parentDirectory('save/slot-a/gen-0001/world.json')).toBe('save/slot-a/gen-0001/');
+    });
+
+    it('reads a backslash as a separator too, for the half of a path the engine builds', () =>
+    {
+      expect(SaveFileSystem.parentDirectory('save\\slot-a\\world.json')).toBe('save\\slot-a\\');
+    });
+
+    it('returns an empty string for a bare file name that has no directory part', () =>
+    {
+      expect(SaveFileSystem.parentDirectory('world.json')).toBe('');
+    });
+  });
+
+  describe('SaveFileSystem.writeSynced()', () =>
+  {
+    it('creates the parent directory before writing a path that has one', () =>
+    {
+      // Arrange- a section name may carry a subdirectory, so the parent may not exist yet.
+      // Act
+      SaveFileSystem.writeSynced('save/slot-a/nested/world.json', '{}');
+
+      // Assert
+      expect(fake.directories.has('save/slot-a/nested/')).toBe(true);
+      expect(fake.files.get('save/slot-a/nested/world.json')).toBe('{}');
+    });
+
+    it('skips directory creation for a bare file name that has no parent', () =>
+    {
+      // Arrange- the fake's mkdir is a no-op for an empty path, so the absence has to be observed at
+      // the call rather than in the resulting directory set. Restored by hand because a spy left on
+      // this object outlives the test.
+      const mkdir = vi.spyOn(fake.storageManager, 'fsMkdirRecursive');
+
+      // Act
+      SaveFileSystem.writeSynced('world.json', '{}');
+
+      // Assert- the write itself is the proof this ran at all, which is what makes the absence
+      // below meaningful rather than vacuous.
+      expect(fake.files.get('world.json')).toBe('{}');
+      expect(mkdir).not.toHaveBeenCalled();
+
+      mkdir.mockRestore();
+    });
+  });
+
+  describe('SaveFileSystem.generationNumber()', () =>
+  {
+    it('reads the number back out of a generation directory name', () =>
+    {
+      expect(SaveFileSystem.generationNumber('gen-0007')).toBe(7);
+    });
+
+    it('answers zero for a directory name that carries no number of ours', () =>
+    {
+      // a sibling directory that is not a generation must sort to the bottom rather than poisoning
+      // every comparison it takes part in, which is what an unguarded NaN would do.
+      expect(SaveFileSystem.generationNumber('thumbnails')).toBe(0);
+    });
+  });
+  //endregion path and write helpers
+
   //region writing
   describe('SaveFileSystem.writeSlot()', () =>
   {
@@ -209,6 +278,43 @@ describe('save storage layer (direct src import)', () =>
   //endregion writing
 
   //region crash injection
+  describe('SaveFileSystem.pruneGenerations()', () =>
+  {
+    it('deletes nothing from a slot that holds generations but has lost its pointer', async () =>
+    {
+      // Arrange- two real generations, then the pointer removed to model a slot whose pointer write
+      // never landed. Without a pointer there is no way to tell a keeper from an orphan, so the
+      // safe answer is to touch nothing; a cutoff of zero would otherwise sweep both.
+      await writeGeneration('slot-a');
+      await writeGeneration('slot-a');
+      fake.files.delete(SaveFileSystem.pointerPath('slot-a'));
+
+      // Act
+      SaveFileSystem.pruneGenerations('slot-a', 0);
+
+      // Assert
+      expect(SaveFileSystem.generationNames('slot-a')).toEqual([ 'gen-0002', 'gen-0001' ]);
+    });
+
+    it('counts only generations the pointer can still reach toward the retention window', async () =>
+    {
+      // Arrange- a retention window of one, two real generations, and an orphan numbered ABOVE the
+      // pointer. The orphan is the near-miss that matters: it is deleted either way by the orphan
+      // pass, so the only thing that distinguishes correct behavior is whether it also consumed the
+      // single retention slot and dragged gen-0002 down with it.
+      globalThis.J.BASE.EXT.SAVE.Metadata.retainedSaveGenerations = 1;
+      await writeGeneration('slot-a');
+      await writeGeneration('slot-a');
+      fake.directories.add(SaveFileSystem.generationDirectory('slot-a', 'gen-0003'));
+
+      // Act
+      SaveFileSystem.pruneGenerations('slot-a', 2);
+
+      // Assert- the live generation survives, the orphan and the aged-out one do not.
+      expect(SaveFileSystem.generationNames('slot-a')).toEqual([ 'gen-0002' ]);
+    });
+  });
+
   describe('SaveFileSystem crash injection', () =>
   {
     it('leaves the previous generation live when a write fails at any step', async () =>
@@ -862,6 +968,32 @@ describe('save storage layer (direct src import)', () =>
   });
   //endregion documents
 
+  //region what a generation claims about itself
+  describe('SaveManifest.supportsSchemaVersion()', () =>
+  {
+    it('accepts a generation written at the version this build ships', () =>
+    {
+      // Arrange: the literal is the shipped schema version rather than a read of the static, so that
+      // bumping the schema is a deliberate edit here instead of a test that agrees with itself.
+      // Act
+      const supported = SaveManifest.supportsSchemaVersion(1);
+
+      // Assert
+      expect(supported).toBe(true);
+    });
+
+    it('refuses a generation written at any other version, migration path or not', () =>
+    {
+      // Arrange
+      // Act
+      const supported = SaveManifest.supportsSchemaVersion(2);
+
+      // Assert
+      expect(supported).toBe(false);
+    });
+  });
+  //endregion what a generation claims about itself
+
   //region routing
   describe('SaveDocument', () =>
   {
@@ -930,6 +1062,61 @@ describe('save storage layer (direct src import)', () =>
 
       // Assert
       expect(sections['systems/abs.json'].hosts.party.self).toEqual({ level: 3 });
+    });
+
+    it('lifts a namespace off the system singleton, keyed as that host kind\'s single member', () =>
+    {
+      // Arrange: only the system singleton carries the namespace. the other two singletons are here
+      // and carry nothing, because a host being present is not what decides whether anything is
+      // lifted off it.
+      SaveSectionRouter.registerNamespace('_abs', 'abs');
+      const contents = {
+        system: { _j: { _abs: { chapter: 2 } } },
+        player: { _x: 5 },
+        map: { _mapId: 4 },
+      };
+
+      // Act
+      const sections = SaveSectionRouter.toSections(contents);
+
+      // Assert
+      expect(sections['systems/abs.json'].hosts).toEqual({ system: { self: { chapter: 2 } } });
+    });
+
+    it('lifts a namespace off the player singleton, keyed as that host kind\'s single member', () =>
+    {
+      // Arrange: the near-miss is the other way around this time, so a router that reached for any
+      // singleton it found rather than the player specifically would answer with the wrong one.
+      SaveSectionRouter.registerNamespace('_abs', 'abs');
+      const contents = {
+        system: { _versionId: 9 },
+        player: { _j: { _abs: { facing: 'down' } } },
+        map: { _mapId: 4 },
+      };
+
+      // Act
+      const sections = SaveSectionRouter.toSections(contents);
+
+      // Assert
+      expect(sections['systems/abs.json'].hosts).toEqual({ player: { self: { facing: 'down' } } });
+    });
+
+    it('lifts a namespace off the map itself, which is the host kind easiest to forget', () =>
+    {
+      // Arrange: the map carries the only `J_Timer` in a whole save, so it is a host in its own right
+      // rather than merely the container the vehicles happen to sit in.
+      SaveSectionRouter.registerNamespace('_abs', 'abs');
+      const contents = {
+        system: { _versionId: 9 },
+        player: { _x: 5 },
+        map: { _mapId: 4, _j: { _abs: { region: 7 } } },
+      };
+
+      // Act
+      const sections = SaveSectionRouter.toSections(contents);
+
+      // Assert
+      expect(sections['systems/abs.json'].hosts).toEqual({ map: { self: { region: 7 } } });
     });
 
     it('removes a lifted namespace from the host it came from', () =>

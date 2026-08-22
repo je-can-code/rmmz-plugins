@@ -212,6 +212,25 @@ describe('J-Base initialization.js residual helpers (direct src import)', () =>
       expect(uuid).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/);
     });
 
+    it('renders the variant placeholder differently from the random ones', () =>
+    {
+      // Arrange- with the randomness pinned to zero, every `x` position renders the raw nibble while
+      // the single `y` position renders the RFC-4122 variant bits instead, so the two placeholders
+      // are separated only by what they produce from identical input.
+      const randomSpy = vi.spyOn(Math, 'random')
+        .mockReturnValue(0);
+
+      // Act
+      const uuid = globalThis.J.BASE.Helpers.generateUuid();
+
+      // restore before asserting- a spy on a bare global outlives this test otherwise, and the
+      // uniqueness check below needs real randomness.
+      randomSpy.mockRestore();
+
+      // Assert
+      expect(uuid).toBe('00000000-0000-4000-8000-000000000000');
+    });
+
     it('does not hand out the same identifier twice', () =>
     {
       // Arrange- every battler on the map is keyed by one of these, and a collision would have two

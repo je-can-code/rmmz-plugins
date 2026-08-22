@@ -210,15 +210,16 @@ describe('J-Base Game_Event methods (direct src import)', () =>
   {
     it('returns the default value when no comment matches the structure', () =>
     {
-      // Arrange
+      // Arrange- the default is a string that the parser would happily convert into the number 5,
+      // so handing it back untouched is the only way this can still be the string it went in as.
       const event = buildEvent();
       event.getValidCommentCommands = () => [ commentCommand('<other:5>') ];
 
       // Act
-      const result = event.extractValueByRegex(/<target:(\d+)>/i, 'fallback');
+      const result = event.extractValueByRegex(/<target:(\d+)>/i, '5');
 
       // Assert
-      expect(result).toBe('fallback');
+      expect(result).toBe('5');
     });
 
     it('returns the parsed value from the last matching comment when multiple match', () =>

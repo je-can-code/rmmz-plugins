@@ -486,6 +486,29 @@ describe('save codec core (direct src import)', () =>
       expect(encoded['@']).toBe('leaf-model');
     });
 
+    it('drops a stray tag from a plain object, which has no codec to re-derive one from', () =>
+    {
+      // Arrange- an instance re-stamps its own '@' afterwards, so a plain object is the only place a
+      // carried-forward tag would survive to disk and lie to the decoder about what it is.
+      const stale = {
+        alpha: 1,
+        '@': 'StaleTag',
+        nested: {
+          '@': 'AlsoStale',
+          beta: 2,
+        },
+      };
+
+      // Act
+      const encoded = SaveEncoder.encode(stale);
+
+      // Assert- toEqual fails on an extra key, so this pins the drop at both depths at once.
+      expect(encoded).toEqual({
+        alpha: 1,
+        nested: { beta: 2 },
+      });
+    });
+
     it('encodes a Map through its registered override', () =>
     {
       // Arrange
@@ -643,6 +666,34 @@ describe('save codec core (direct src import)', () =>
       // Assert
       expect(Object.getPrototypeOf(decoded.alpha['421'])).toBe(Leaf.prototype);
       expect(decoded.alpha.constructor).toBe(Object);
+    });
+
+    it('walks past a dictionary waypoint rather than treating the namespace itself as the dictionary', () =>
+    {
+      // Arrange- a dotted typedValues path puts a declaration-free waypoint above the real dictionary,
+      // and only the leaf may be decoded value-wise. the data is untagged on purpose: with tags present
+      // the tag alone would rebuild the leaves and the declaration would prove nothing.
+      SerializableRegistry.register(Leaf, { id: 'leaf-model' });
+      SerializableRegistry.register(Seeded, { id: 'seeded', typedValues: { 'nested.deep': Leaf } });
+      const data = {
+        nested: {
+          deep: {
+            '421': { id: 3 },
+            '422': { id: 4 },
+          },
+          other: { '423': { id: 9 } },
+        },
+      };
+
+      // Act
+      const decoded = SaveDecoder.decode(data, Seeded);
+
+      // Assert- both declared entries rebuild, and the undeclared sibling beside them stays plain.
+      expect(Object.getPrototypeOf(decoded.nested.deep['421'])).toBe(Leaf.prototype);
+      expect(Object.getPrototypeOf(decoded.nested.deep['422'])).toBe(Leaf.prototype);
+      expect(decoded.nested.deep['421'].id).toBe(3);
+      expect(decoded.nested.deep['422'].id).toBe(4);
+      expect(decoded.nested.other['423'].constructor).toBe(Object);
     });
 
     it('follows a dotted type declaration through a namespace object', () =>

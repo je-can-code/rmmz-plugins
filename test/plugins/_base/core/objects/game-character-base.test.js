@@ -240,14 +240,22 @@ describe('J-Base Game_CharacterBase (direct src import)', () =>
 
     it('returns 0 for an invalid horz/vert combination', () =>
     {
-      // Arrange
+      // Arrange- every pair below is a near-miss of a real diagonal, holding one valid component
+      // beside a garbage one, so each of the four resolution checks has to be discriminating on
+      // both of its halves rather than on whichever half the earlier checks happened to filter out.
       const character = new globalThis.Game_CharacterBase();
 
       // Act
-      const result = character.directionFromHorzVert(4, 4);
+      const leftWithGarbageVert = character.directionFromHorzVert(4, 4);
+      const rightWithGarbageVert = character.directionFromHorzVert(6, 0);
+      const garbageHorzWithDown = character.directionFromHorzVert(0, 2);
+      const garbageHorzWithUp = character.directionFromHorzVert(0, 8);
 
       // Assert
-      expect(result).toBe(0);
+      expect(leftWithGarbageVert).toBe(0);
+      expect(rightWithGarbageVert).toBe(0);
+      expect(garbageHorzWithDown).toBe(0);
+      expect(garbageHorzWithUp).toBe(0);
     });
   });
 });

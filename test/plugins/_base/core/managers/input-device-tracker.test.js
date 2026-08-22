@@ -38,8 +38,9 @@ describe('J-Base InputDeviceTracker (unit, no dependencies)', () =>
       // Act.
       InputDeviceTracker.markKeyboard();
 
-      // Assert.
+      // Assert: the device is exclusive, so claiming one has to release the other.
       expect(InputDeviceTracker.isKeyboard()).toBe(true);
+      expect(InputDeviceTracker.isGamepad()).toBe(false);
     });
   });
 
@@ -50,8 +51,9 @@ describe('J-Base InputDeviceTracker (unit, no dependencies)', () =>
       // Act.
       InputDeviceTracker.markGamepad();
 
-      // Assert.
+      // Assert: the device is exclusive, so claiming one has to release the other.
       expect(InputDeviceTracker.isGamepad()).toBe(true);
+      expect(InputDeviceTracker.isKeyboard()).toBe(false);
     });
   });
 

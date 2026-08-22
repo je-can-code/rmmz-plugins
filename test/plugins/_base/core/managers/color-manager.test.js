@@ -158,7 +158,9 @@ describe('ColorManager (direct src import)', () =>
 
     it('returns null when the string does not start with #', () =>
     {
-      expect(globalThis.ColorManager.parseHexStringToRgb('a1b2c3')).toBeNull();
+      // Arrange- seven characters, so the leading-hash guard is the only thing that can produce this
+      // null: without it the slice leaves six valid hex digits and the length guard cannot fire.
+      expect(globalThis.ColorManager.parseHexStringToRgb('1234567')).toBeNull();
     });
 
     it('expands a 3-digit shorthand into full RGB components', () =>
@@ -173,13 +175,16 @@ describe('ColorManager (direct src import)', () =>
 
     it('returns null for a length that is neither 3 nor 6 digits', () =>
     {
-      expect(globalThis.ColorManager.parseHexStringToRgb('#abcd')).toBeNull();
+      // Arrange- five digits, all of them valid hex, so the length guard is the only thing that can
+      // produce this null: every component still parses to a number and the NaN guard cannot fire.
+      expect(globalThis.ColorManager.parseHexStringToRgb('#12345')).toBeNull();
     });
 
     it('returns null when a component fails to parse as hex', () =>
     {
-      // Arrange- 6 characters but not valid hex digits (parseInt yields NaN).
-      expect(globalThis.ColorManager.parseHexStringToRgb('#gggggg')).toBeNull();
+      // Arrange- only the red component is non-hex, so the red/green half of the NaN guard is the
+      // only thing that can produce this null: blue parses cleanly and cannot cover for it.
+      expect(globalThis.ColorManager.parseHexStringToRgb('#zz3456')).toBeNull();
     });
   });
 

@@ -89,9 +89,32 @@ describe('TextManager (direct src import)', () =>
 
   describe('rewardDescription', () =>
   {
-    it.each([ 0, 1, 2, 3, 4 ])('returns a two-line description for paramId %i', (paramId) =>
+    // the exact text matters- every case returns a distinct pair, so pinning the shape alone would
+    // let any case silently fall through to its neighbour and still satisfy the assertion.
+    it.each([
+      [ 0, [
+        'The resource required to accumulate to rise in level.',
+        'Levels give unseen advantages.',
+      ] ],
+      [ 1, [
+        'The primary currency of the universe.',
+        'Most vendors happily take this in exchange for goods.',
+      ] ],
+      [ 2, [
+        'The rate at which enemies will drop loot.',
+        'Higher rates yield more frequent drops.',
+      ] ],
+      [ 3, [
+        'The frequency of which the party will be engage in battles.',
+        'Lower rates result in less random encounters.',
+      ] ],
+      [ 4, [
+        'The rate of SDP accumulation from any source.',
+        'Bigger rates yield fatter stacks of them sweet SDP points.',
+      ] ],
+    ])('returns the exact two-line description for paramId %i', (paramId, expected) =>
     {
-      expect(globalThis.TextManager.rewardDescription(paramId)).toHaveLength(2);
+      expect(globalThis.TextManager.rewardDescription(paramId)).toEqual(expected);
     });
 
     it('returns undefined for an unmapped paramId', () =>
@@ -146,9 +169,48 @@ describe('TextManager (direct src import)', () =>
 
   describe('bparamDescription', () =>
   {
-    it.each([ 0, 1, 2, 3, 4, 5, 6, 7, 30 ])('returns a description for paramId %i', (paramId) =>
+    // asserting only "is an array" cannot tell a case apart from the one beneath it- every b-param
+    // description is distinct, so the pairs are pinned verbatim.
+    it.each([
+      [ 0, [
+        'The base resource that defines life and death.',
+        'Enemies and allies alike obey the rule of \'0hp = dead\'.',
+      ] ],
+      [ 1, [
+        'The base resource that most magic-based spells consume.',
+        'Without this, spells typically cannot be cast.',
+      ] ],
+      [ 2, [
+        'The base stat that influences physical damage.',
+        'Higher amounts of this yield higher physical damage output.',
+      ] ],
+      [ 3, [
+        'The base stat that reduces physical damage.',
+        'Higher amounts of this will reduce incoming physical damage.',
+      ] ],
+      [ 4, [
+        'The base stat that influences magical damage.',
+        'Higher amounts of this yield higher magical damage output.',
+      ] ],
+      [ 5, [
+        'The base stat that reduces magical damage.',
+        'Higher amounts of this will reduce incoming magical damage.',
+      ] ],
+      [ 6, [
+        'The base stat that governs movement and agility.',
+        'The effects of this are unknown at higher levels.',
+      ] ],
+      [ 7, [
+        'The base stat that governs fortune and luck.',
+        'The effects of this are wide and varied.',
+      ] ],
+      [ 30, [
+        'The base resource that many weapon-based skills utilize.',
+        'Without this, techniques typically cannot be executed.',
+      ] ],
+    ])('returns the exact description for paramId %i', (paramId, expected) =>
     {
-      expect(globalThis.TextManager.bparamDescription(paramId)).toBeInstanceOf(Array);
+      expect(globalThis.TextManager.bparamDescription(paramId)).toEqual(expected);
     });
 
     it('returns undefined for an unmapped paramId', () =>
@@ -159,9 +221,52 @@ describe('TextManager (direct src import)', () =>
 
   describe('xparamDescription', () =>
   {
-    it.each([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ])('returns a description for paramId %i', (paramId) =>
+    // the three regen entries share a second line, so only the first line separates 7 from 8 from 9-
+    // asserting the whole pair is what keeps each case distinguishable from its neighbour.
+    it.each([
+      [ 0, [
+        'The stat representing one\'s skill of accuracy.',
+        'Being more accurate will result in being parried less.',
+      ] ],
+      [ 1, [
+        'The stat representing skill in physically evading attacks.',
+        'Having higher evasion will cause incoming hits to be dodged.',
+      ] ],
+      [ 2, [
+        'A numeric value to one\'s chance of landing a critical hit.',
+        'Critical hits will deal percent-increased damage.',
+      ] ],
+      [ 3, [
+        'A numeric value to one\'s chance of evading a critical hit.',
+        'Enemy critical hit chance is directly reduced by this amount.',
+      ] ],
+      [ 4, [
+        'A numeric value to one\'s chance of evading a magical hit.',
+        'Enemy magical hit chance is directly reduced by this amount.',
+      ] ],
+      [ 5, [
+        'The chance of reflecting a skill back to its caster.',
+        'Aside from it being reflected back, it is as if you casted it.',
+      ] ],
+      [ 6, [
+        'The chance of auto-executing counter skills when struck.',
+        'Being un-reducable, 100 makes countering inevitable.',
+      ] ],
+      [ 7, [
+        'The amount of Life restored over 5 seconds.',
+        'Recovery Rate amplifies this effect.',
+      ] ],
+      [ 8, [
+        'The amount of Magi rejuvenated over 5 seconds.',
+        'Recovery Rate amplifies this effect.',
+      ] ],
+      [ 9, [
+        'The amount of Tech recovered over 5 seconds.',
+        'Recovery Rate amplifies this effect.',
+      ] ],
+    ])('returns the exact description for paramId %i', (paramId, expected) =>
     {
-      expect(globalThis.TextManager.xparamDescription(paramId)).toBeInstanceOf(Array);
+      expect(globalThis.TextManager.xparamDescription(paramId)).toEqual(expected);
     });
 
     it('returns undefined for an unmapped paramId', () =>
@@ -172,9 +277,52 @@ describe('TextManager (direct src import)', () =>
 
   describe('sparamDescription', () =>
   {
-    it.each([ 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 ])('returns a description for paramId %i', (paramId) =>
+    // the damage-rate entries 6 through 8 differ only in one word, which is precisely why the pairs
+    // are pinned verbatim rather than shape-checked.
+    it.each([
+      [ 0, [
+        'The percentage of aggro that will be applied.',
+        'Reduce for stealthing; increase for taunting.',
+      ] ],
+      [ 1, [
+        'A numeric value representing the frequency of parrying.',
+        'More of this will result in auto-parrying faced foes.',
+      ] ],
+      [ 2, [
+        'The percentage effectiveness of incoming healing.',
+        'Higher amounts of this will make healing you need less effort.',
+      ] ],
+      [ 3, [
+        'The percentage effectiveness of items applied to oneself.',
+        'Higher amounts of this will make items more potent.',
+      ] ],
+      [ 4, [
+        'The percentage bonuses being applied to Magi costs.',
+        'Enemy magical hit chance is directly reduced by this amount.',
+      ] ],
+      [ 5, [
+        'The percentage bonuses being applied to Tech generation.',
+        'Taking and dealing damage in combat will earn more Tech.',
+      ] ],
+      [ 6, [
+        'The percentage bonuses being applied to physical damage.',
+        '-100 is immune while 100+ takes double+ physical damage.',
+      ] ],
+      [ 7, [
+        'The percentage bonuses being applied to magical damage.',
+        '-100 is immune while 100+ takes double+ magical damage.',
+      ] ],
+      [ 8, [
+        'The percentage bonuses being applied to floor damage.',
+        '-100 is immune while 100+ takes double+ floor damage.',
+      ] ],
+      [ 9, [
+        'The percentage bonuses being applied to experience gain.',
+        'Higher amounts of this result in faster level growth.',
+      ] ],
+    ])('returns the exact description for paramId %i', (paramId, expected) =>
     {
-      expect(globalThis.TextManager.sparamDescription(paramId)).toBeInstanceOf(Array);
+      expect(globalThis.TextManager.sparamDescription(paramId)).toEqual(expected);
     });
 
     it('returns undefined for an unmapped paramId', () =>
@@ -278,7 +426,17 @@ describe('TextManager (direct src import)', () =>
 
     it('returns String.empty for an invalid id', () =>
     {
-      expect(globalThis.TextManager.getTypeNameByIdAndType(0, [ '', 'Sword' ])).toBe('');
+      // Arrange- an out-of-range id is the only invalid input that proves the guard did the work.
+      // id 0 would pass either way, because slot zero of a type list holds an empty string anyway.
+      const errorSpy = vi.spyOn(console, 'error')
+        .mockImplementation(() => {});
+
+      // Act
+      const result = globalThis.TextManager.getTypeNameByIdAndType(99, [ '', 'Sword' ]);
+
+      // Assert
+      expect(result).toBe('');
+      errorSpy.mockRestore();
     });
   });
 

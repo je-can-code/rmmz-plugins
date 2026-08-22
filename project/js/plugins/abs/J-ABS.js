@@ -25156,11 +25156,7 @@ Object.defineProperty(RPG_Skill.prototype, "jabsVisRotate", { get: function() {
 * @type {[number, number]|null}
 */
 Object.defineProperty(RPG_Skill.prototype, "jabsVisScale", { get: function() {
-	const data = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisScale, true, true);
-	if (data !== null) {
-		return data;
-	}
-	return null;
+	return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisScale, true, true);
 } });
 /**
 * Optional: show a tiny debug cross at the visual origin.
@@ -25267,10 +25263,7 @@ RPG_Skill.mergeJabsVisPairFromNotes = function(skill, holder, regExp) {
 	if (sk !== null) {
 		return sk;
 	}
-	if (ev !== null) {
-		return ev;
-	}
-	return null;
+	return ev;
 };
 /**
 * Prefers skill over action-map synthetic note for one numeric tag.

@@ -118,6 +118,22 @@ describe('J_Timer (direct src import)', () =>
       expect(timer.isTimerComplete()).toBe(true);
     });
 
+    it('keeps completion when set even further above max', () =>
+    {
+      // Arrange- a timer already sitting completed at its max, with the initial completion behind us.
+      const timer = new J_Timer(10);
+      timer.setCurrentTime(10);
+      const completeSpy = vi.spyOn(timer, 'onComplete');
+
+      // Act- shove the time well past max, which must not read as a fresh completion.
+      timer.setCurrentTime(12);
+
+      // Assert- nothing cleared the flag, so completion never fires a second time.
+      expect(completeSpy).not.toHaveBeenCalled();
+      expect(timer.isTimerComplete()).toBe(true);
+      completeSpy.mockRestore();
+    });
+
     it('reverts completion when set back below max', () =>
     {
       // Arrange

@@ -36,8 +36,9 @@ describe('ExternalJsonConfigLoader (direct src import)', () =>
       // Act
       const attempt = () => ExternalJsonConfigLoader.load('data/config.test.json');
 
-      // Assert
-      expect(attempt).toThrow('missing configuration file at data/config.test.json.');
+      // Assert- anchored at both ends, because no plugin or config name was provided and the message
+      // must therefore carry no bracketed context prefix at all, not merely an empty one.
+      expect(attempt).toThrow(/^missing configuration file at data\/config\.test\.json\.$/);
     });
 
     it('throws when the file read returns an empty string', () =>
@@ -73,8 +74,23 @@ describe('ExternalJsonConfigLoader (direct src import)', () =>
       // Act
       const attempt = () => ExternalJsonConfigLoader.load('data/config.test.json', options);
 
-      // Assert
-      expect(attempt).toThrow('missing SDP Panels file at data/config.test.json.');
+      // Assert- anchored, because the absent pluginName must contribute no segment to the prefix
+      // rather than an empty one beside the config name.
+      expect(attempt).toThrow(/^\[SDP Panels] missing SDP Panels file at data\/config\.test\.json\.$/);
+    });
+
+    it('prefixes the error with only the pluginName when no configName is provided', () =>
+    {
+      // Arrange
+      globalThis.StorageManager.fsReadFile = () => null;
+      const options = new ExternalJsonConfigLoaderOptions('J-SDP', null);
+
+      // Act
+      const attempt = () => ExternalJsonConfigLoader.load('data/config.test.json', options);
+
+      // Assert- the absent configName contributes no prefix segment, and the missing-file label
+      // falls back to the generic word rather than borrowing the plugin name.
+      expect(attempt).toThrow(/^\[J-SDP] missing configuration file at data\/config\.test\.json\.$/);
     });
 
     it('prefixes the error with pluginName and configName when both are provided', () =>

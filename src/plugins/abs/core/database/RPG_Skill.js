@@ -958,18 +958,8 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsVisRotate', {
 Object.defineProperty(RPG_Skill.prototype, 'jabsVisScale', {
   get: function()
   {
-    // grab the data for the skill.
-    const data = RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisScale, true, true);
-
-    // validate we have data.
-    if (data !== null)
-    {
-      // and return it.
-      return data;
-    }
-
-    // provide cached value.
-    return null;
+    // a null already means the tag was absent, which is exactly what this property reports.
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.VisScale, true, true);
   },
 });
 
@@ -1146,12 +1136,8 @@ RPG_Skill.mergeJabsVisPairFromNotes = function(skill, holder, regExp)
     return sk;
   }
 
-  if (ev !== null)
-  {
-    return ev;
-  }
-
-  return null;
+  // the action-map note is the fallback, and its own absence is already a null.
+  return ev;
 };
 
 /**
