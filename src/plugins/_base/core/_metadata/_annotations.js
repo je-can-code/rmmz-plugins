@@ -157,6 +157,13 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.6.0
+ *    RPGManager array reads no longer take a tryParse argument. Every caller
+ *    passed true, the false path was dead, and the singular form parsed twice -
+ *    the second pass being what crashed on a tag written without parameters.
+ *    Fixed a formula evaluating to zero reading back as no tag at all, which
+ *    callers then coalesced into their plugin default.
+ *    Scenes no longer create touch ui buttons or reserve the strip for them.
  * - 3.5.0
  *    Added Window_FilterableList and Window_FilterStrip, backed by the new
  *    FilterCycle model, so any ship needing a filtered list with a cycling

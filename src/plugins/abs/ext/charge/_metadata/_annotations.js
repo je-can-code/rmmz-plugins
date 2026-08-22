@@ -163,6 +163,8 @@
  * 1st tier charge skill as a result.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Adapted to the RPGManager array read signature.
  * - 1.1.0
  *    Added a segmented map charge gauge shown above charging battlers.
  *    Registered <chargeTier> as a J-Extend non-combining key.

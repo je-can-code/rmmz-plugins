@@ -53,6 +53,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Added globalDenyTerrainTags, a plugin-level list of terrain tags that block
+ *    passage outright. It joins the region allow and deny lists already here.
  * - 1.2.0
  *    Routed the _regions namespace into its own save section, so region
  *    effect state lands in systems/regions.json rather than in the system blob.

@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.16.0 ABS] Enables combat to be carried out on the map.
+ * [v4.17.0 ABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -48,6 +48,13 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.17.0
+ *    Added <guardInterval:N> so a held guard can refire its own skill on an
+ *    interval rather than only on the frame it went up.
+ *    Fixed party cycling stepping over the member standing immediately behind
+ *    the leader, who is the one the player expects to get next.
+ *    Fixed removeAggro dereferencing a battler that had already been cleaned up.
+ *    Fixed <shieldBypass> crashing when written without parameters.
  * - 4.16.0
  *    Fixed turnEndOnMap running the engine's own turn-end effects while JABS was
  *    active and skipping them while it was disabled - the guard was negated, so
@@ -4358,7 +4365,7 @@ J.ABS.Helpers.loadExternalConfig = (configPath = "data/config.jabs.json") => {
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.16.0");
+J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.17.0");
 J.ABS.Helpers.loadExternalConfig();
 /**
 * The various default values across the engine. Often configurable.
@@ -23925,7 +23932,7 @@ var StateAfflictionProvider = class StateAfflictionProvider {
 //#endregion
 //#region src/plugins/abs/core/_metadata/meta.js
 var PLUGIN_NAME = "J-ABS";
-var PLUGIN_VERSION = "4.16.0";
+var PLUGIN_VERSION = "4.17.0";
 var PLUGIN_DESC_TAG = "ABS";
 
 //#endregion

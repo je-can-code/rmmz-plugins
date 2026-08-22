@@ -1,7 +1,7 @@
 //region Introduction
 /*:
  * @target MZ
- * @plugindesc [v2.3.0 DROPS] Enables greater control over loot drops.
+ * @plugindesc [v2.4.0 DROPS] Enables greater control over loot drops.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -209,6 +209,8 @@
  * The party will now gain +175% gold from defeated enemies.
  * ============================================================================
  * CHANGELOG:
+ * - 2.4.0
+ *    Declared the J.DROPS.EXT namespace so this plugin can carry extensions.
  * - 2.3.0
  *    Loot drops now resolve through the shared proc-count path, so a killer in
  *    Accumulate Mode earns a copy per successful roll rather than spending the
@@ -274,7 +276,7 @@ J.DROPS.EXT = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.DROPS.Metadata = new J_DropsControlPluginMetadata("J-DropsControl", "2.3.0");
+J.DROPS.Metadata = new J_DropsControlPluginMetadata("J-DropsControl", "2.4.0");
 /**
 * All regular expressions used by this plugin.
 */

@@ -48,6 +48,13 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.17.0
+ *    Added <guardInterval:N> so a held guard can refire its own skill on an
+ *    interval rather than only on the frame it went up.
+ *    Fixed party cycling stepping over the member standing immediately behind
+ *    the leader, who is the one the player expects to get next.
+ *    Fixed removeAggro dereferencing a battler that had already been cleaned up.
+ *    Fixed <shieldBypass> crashing when written without parameters.
  * - 4.16.0
  *    Fixed turnEndOnMap running the engine's own turn-end effects while JABS was
  *    active and skipping them while it was disabled - the guard was negated, so

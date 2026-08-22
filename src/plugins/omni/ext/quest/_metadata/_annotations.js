@@ -138,6 +138,8 @@
  * This choice is only shown while objective 2 of that quest is completed.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.2
+ *    Removed two console logs left over from testing.
  * - 1.2.1
  *    The questopedia description window no longer declares private members. A
  *    window's constructor reaches initialize, and through it the drawing

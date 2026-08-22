@@ -1,7 +1,7 @@
 //region annotations
 /*:
  * @target MZ
- * @plugindesc [v1.2.0 REGIONS] A plugin that controls passage by region ids.
+ * @plugindesc [v1.3.0 REGIONS] A plugin that controls passage by region ids.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -53,6 +53,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Added globalDenyTerrainTags, a plugin-level list of terrain tags that block
+ *    passage outright. It joins the region allow and deny lists already here.
  * - 1.2.0
  *    Routed the _regions namespace into its own save section, so region
  *    effect state lands in systems/regions.json rather than in the system blob.
@@ -159,7 +162,7 @@ J.REGIONS.Helpers.translateRegionIds = (regionsBlob) => {
 /**
 * The `metadata` associated with this plugin; such as version.
 */
-J.REGIONS.Metadata = new J_RegionEffectsPluginMetadata("J-RegionEffects", "1.2.0");
+J.REGIONS.Metadata = new J_RegionEffectsPluginMetadata("J-RegionEffects", "1.3.0");
 /**
 * A collection of all aliased methods for this plugin.
 */

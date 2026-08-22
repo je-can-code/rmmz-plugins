@@ -1,7 +1,7 @@
 //region annotations
 /*:
  * @target MZ
- * @plugindesc [v1.5.0 SKS] A plugin enabling actors to equip skills into dedicated skill slots.
+ * @plugindesc [v1.5.1 SKS] A plugin enabling actors to equip skills into dedicated skill slots.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -195,6 +195,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.5.1
+ *    Adapted to the RPGManager array read signature.
  * - 1.5.0
  *    Routed the _sks namespace into its own save section, so equipped skill
  *    slots land in systems/sks.json rather than inside the actor blobs.
@@ -351,7 +353,7 @@ J.SKS.EXT ||= {};
 /**
 * The metadata associated with this plugin.
 */
-J.SKS.Metadata = new JSkillSlots_PluginMetadata("J-SkillSlots", "1.5.0");
+J.SKS.Metadata = new JSkillSlots_PluginMetadata("J-SkillSlots", "1.5.1");
 /**
 * A collection of all aliased methods for this plugin.
 */

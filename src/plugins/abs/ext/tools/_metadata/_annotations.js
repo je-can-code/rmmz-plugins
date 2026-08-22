@@ -156,6 +156,8 @@
  * always fixed. See the plugin parameters below.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Adapted to the RPGManager array read signature.
  * - 1.2.0
  *    Routed the _tools namespace into its own save section, so tool state
  *    lands in systems/abs-tools.json rather than inside the system blob.

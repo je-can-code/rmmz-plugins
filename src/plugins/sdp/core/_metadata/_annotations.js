@@ -364,6 +364,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.3.1
+ *    Adapted to the RPGManager array read signature.
  * - 3.3.0
  *    Scene_SDP now uses the shared filterable list from J-Base rather than its
  *    own family strip window, which is deleted. SdpFamilyFilter carries the

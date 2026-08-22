@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.2.0 ABS-TOOLS] Enable new tool-like tags for use with skills.
+ * [v1.2.1 ABS-TOOLS] Enable new tool-like tags for use with skills.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -156,6 +156,8 @@
  * always fixed. See the plugin parameters below.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Adapted to the RPGManager array read signature.
  * - 1.2.0
  *    Routed the _tools namespace into its own save section, so tool state
  *    lands in systems/abs-tools.json rather than inside the system blob.
@@ -261,7 +263,7 @@ J.ABS.EXT.TOOLS = {};
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.EXT.TOOLS.Metadata = new J_ToolsPluginMetadata("J-ABS-Tools", "1.2.0");
+J.ABS.EXT.TOOLS.Metadata = new J_ToolsPluginMetadata("J-ABS-Tools", "1.2.1");
 /**
 * A collection of all aliased methods for this plugin.
 */

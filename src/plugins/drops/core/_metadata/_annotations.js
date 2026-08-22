@@ -209,6 +209,8 @@
  * The party will now gain +175% gold from defeated enemies.
  * ============================================================================
  * CHANGELOG:
+ * - 2.4.0
+ *    Declared the J.DROPS.EXT namespace so this plugin can carry extensions.
  * - 2.3.0
  *    Loot drops now resolve through the shared proc-count path, so a killer in
  *    Accumulate Mode earns a copy per successful roll rather than spending the

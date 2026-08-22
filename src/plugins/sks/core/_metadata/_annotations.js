@@ -195,6 +195,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.5.1
+ *    Adapted to the RPGManager array read signature.
  * - 1.5.0
  *    Routed the _sks namespace into its own save section, so equipped skill
  *    slots land in systems/sks.json rather than inside the actor blobs.

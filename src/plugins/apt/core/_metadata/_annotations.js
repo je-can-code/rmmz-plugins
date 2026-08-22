@@ -128,6 +128,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.1
+ *    Fixed an aptitude multiplier of zero awarding the full unscaled amount. The
+ *    guard tested truthiness, so the one value that must scale the award away
+ *    entirely was the one value that skipped scaling.
  * - 1.3.0
  *    Routed the _aptitude namespace into its own save section, so aptitude
  *    state lands in systems/aptitude.json rather than inside the system blob.

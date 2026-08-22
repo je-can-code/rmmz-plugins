@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.3.0 APT] A plugin that grants the ability to learn by gaining points.
+ * [v1.3.1 APT] A plugin that grants the ability to learn by gaining points.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -128,6 +128,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.1
+ *    Fixed an aptitude multiplier of zero awarding the full unscaled amount. The
+ *    guard tested truthiness, so the one value that must scale the award away
+ *    entirely was the one value that skipped scaling.
  * - 1.3.0
  *    Routed the _aptitude namespace into its own save section, so aptitude
  *    state lands in systems/aptitude.json rather than inside the system blob.
@@ -705,7 +709,7 @@ J.APT.EXT ||= {};
 /**
 * The metadata associated with this plugin.
 */
-J.APT.Metadata = new JAptitude_PluginMetadata("J-Aptitude", "1.3.0");
+J.APT.Metadata = new JAptitude_PluginMetadata("J-Aptitude", "1.3.1");
 /**
 * A collection of all aliased methods for this plugin.
 */

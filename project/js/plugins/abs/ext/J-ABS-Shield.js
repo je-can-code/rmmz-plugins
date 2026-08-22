@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.0 ABS-SHIELD] A JABS extension that provides state-based HP shields.
+ * [v1.1.1 ABS-SHIELD] A JABS extension that provides state-based HP shields.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -344,6 +344,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Fixed shields computing different values on application and recalculation.
+ *    The attacker was omitted the first time, leaving the point formulas without
+ *    their a binding and the outgoing amplification without its source.
  * - 1.1.0
  *    JABS_State.onShieldBreak now passes the broken shield's cap to Game_Battler.onShieldBreak.
  *    Game_Battler.onShieldBreak stores the value as lastShieldBreakValue before firing break
@@ -417,7 +421,7 @@ J.ABS.EXT.SHIELD ||= {};
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.EXT.SHIELD.Metadata = new JShield_PluginMetadata("J-ABS-Shield", "1.1.0");
+J.ABS.EXT.SHIELD.Metadata = new JShield_PluginMetadata("J-ABS-Shield", "1.1.1");
 /**
 * A collection of all aliased methods for this plugin.
 */

@@ -311,6 +311,8 @@
  *    Taking even a single step immediately strips it and resets the stand timer.
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.1
+ *    Adapted to the RPGManager array read signature.
  * - 1.3.0
  *    Passive states no longer appear in the JABS affliction strip. A passive is
  *    permanent and neither waits out nor cures, so listing it beside poison and
