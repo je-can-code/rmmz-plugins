@@ -90,19 +90,29 @@ describe('J-ABS-Danger Game_Battler (unit, all downstream dependencies mocked)',
       expect(result).toBe(135);
     });
 
-    it('warns when a param produces a NaN power level', () =>
+    it('answers the zero sentinel when the level contributes a NaN power level', () =>
     {
-      // Arrange
-      const warnSpy = vi.spyOn(console, 'warn')
-        .mockImplementation(() => {});
+      // Arrange- the level is the last contributor folded into the sum, so a NaN there is the only
+      // fixture that proves the check sits downstream of every addend rather than merely most of them.
+      const battler = buildBattler({ level: NaN });
+
+      // Act
+      const result = battler.getPowerLevel();
+
+      // Assert- an unguarded sum would surface NaN here, never 0.
+      expect(result).toBe(0);
+    });
+
+    it('answers the zero sentinel when a base param contributes a NaN power level', () =>
+    {
+      // Arrange- the earliest contributor in the sum, to prove the guard is not level-specific.
       const battler = buildBattler({ param: () => NaN });
 
       // Act
-      battler.getPowerLevel();
+      const result = battler.getPowerLevel();
 
       // Assert
-      expect(warnSpy).toHaveBeenCalledWith('what happened to the power level?');
-      warnSpy.mockRestore();
+      expect(result).toBe(0);
     });
   });
 

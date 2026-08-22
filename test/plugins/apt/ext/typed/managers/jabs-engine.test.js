@@ -135,6 +135,29 @@ describe('JABS_Engine ext/typed augments (direct src import)', () =>
       expect(engine.distributeTypedAptitudeRewardsForMember).toHaveBeenCalledWith(member, 10, enemy, explicitTyped, [], 0);
     });
 
+    it('distributes on inferred types alone, with no explicit rewards authored at all', () =>
+    {
+      // Arrange- inferred element AP is the whole point of the implicit percent knob: an enemy that
+      // was never given explicit `<apType:...>` lines still teaches whatever it is aligned with.
+      // Every other distribution test here pairs inferred types with an explicit grant, which lets
+      // the explicit half carry the gate on its own.
+      const engine = new JABS_Engine();
+      engine.canGainAptitudeReward = vi.fn().mockReturnValue(true);
+      engine.distributeTypedAptitudeRewardsForMember = vi.fn();
+      const member = {};
+      globalThis.$gameParty.members.mockReturnValue([ member ]);
+      const inferredTypes = [ new ApTypeKey('element', 1) ];
+      const enemy = makeEnemy({ inferredTypes });
+      globalThis.J.APT.EXT.TYPED.Metadata.ImplicitEnemyElementPercent = 25;
+
+      // Act
+      engine.gainAptitudeReward(10, {}, enemy);
+
+      // Assert
+      expect(engine.distributeTypedAptitudeRewardsForMember)
+        .toHaveBeenCalledWith(member, 10, enemy, [], inferredTypes, 25);
+    });
+
     it('skips a member who fails the canGainAptitudeReward check', () =>
     {
       // Arrange

@@ -147,14 +147,28 @@ describe('JuiceWeaponSwingMotionEffect (unit, JuiceBaseEffect mocked)', () =>
 
   describe('computeArcTravelRadians()', () =>
   {
+    // The three ease branches only exist to keep both sample points inside 0..1 at the ends of the
+    // sweep, and the price of that is a one-sided window: at the boundaries the chord is centred a
+    // half-window away from the ease actually asked for, so the answer differs from the mid-range
+    // formula by a real, visible amount. Asserting finiteness cannot see any of that - all three
+    // branches return finite numbers, so the whole boundary handling could be deleted and the last
+    // frame of every arc would quietly point somewhere else with nothing going red.
     it('computes travel radians near the low ease boundary', () =>
     {
-      expect(Number.isFinite(JuiceWeaponSwingMotionEffect.computeArcTravelRadians(2, 48, 120, false, 0))).toEqual(true);
+      // Arrange & Act
+      const travel = JuiceWeaponSwingMotionEffect.computeArcTravelRadians(2, 48, 120, false, 0);
+
+      // Assert
+      expect(travel).toBeCloseTo(1.0253809, 6);
     });
 
     it('computes travel radians near the high ease boundary', () =>
     {
-      expect(Number.isFinite(JuiceWeaponSwingMotionEffect.computeArcTravelRadians(2, 48, 120, false, 1))).toEqual(true);
+      // Arrange & Act
+      const travel = JuiceWeaponSwingMotionEffect.computeArcTravelRadians(2, 48, 120, false, 1);
+
+      // Assert
+      expect(travel).toBeCloseTo(-1.0253809, 6);
     });
 
     it('computes travel radians in the mid-range', () =>
@@ -162,19 +176,30 @@ describe('JuiceWeaponSwingMotionEffect (unit, JuiceBaseEffect mocked)', () =>
       expect(Number.isFinite(JuiceWeaponSwingMotionEffect.computeArcTravelRadians(2, 48, 120, true, 0.5))).toEqual(true);
     });
 
+    // A near-zero pattern height shrinks the orbit until the two sampled poses sit closer together
+    // than the guard's threshold, which is what sends these through the analytic derivative. A flat
+    // zero would not do: at zero orbit the analytic derivative is also the zero vector, so both
+    // routes hand back the same atan2(0, 0) and the guard could be deleted unnoticed. Kept just
+    // above zero, the sampled chord still has a direction - a different one - so the two disagree.
+    // Both cases sit at ease 0 on purpose: mid-sweep the chord of a circle is exactly the tangent
+    // at its midpoint, so the analytic and sampled reads agree there and cannot be told apart.
     it('falls back to the analytic-derivative branch when sampled velocity degenerates to zero', () =>
     {
-      // a zero pattern height collapses the orbit radius to 0, making the sampled velocity vector zero.
-      const result = JuiceWeaponSwingMotionEffect.computeArcTravelRadians(2, 0, 120, false, 0.5);
+      // Arrange & Act
+      const result = JuiceWeaponSwingMotionEffect.computeArcTravelRadians(2, 1e-7, 120, false, 0);
 
-      expect(Number.isFinite(result)).toEqual(true);
+      // Assert
+      expect(result).toBeCloseTo(1.0471976, 6);
     });
 
     it('falls back to the analytic-derivative branch on the reverse arc too', () =>
     {
-      const result = JuiceWeaponSwingMotionEffect.computeArcTravelRadians(2, 0, 120, true, 0.5);
+      // Arrange & Act: reverse walks the clock the other way, so its derivative points the opposite
+      // way around the orbit - the sign of that term is the only thing the reverse flag changes here.
+      const result = JuiceWeaponSwingMotionEffect.computeArcTravelRadians(2, 1e-7, 120, true, 0);
 
-      expect(Number.isFinite(result)).toEqual(true);
+      // Assert
+      expect(result).toBeCloseTo(2.0943951, 6);
     });
   });
 
@@ -383,6 +408,17 @@ describe('JuiceWeaponSwingMotionEffect (unit, JuiceBaseEffect mocked)', () =>
       expect(effect._arcSpanDegrees).toEqual(120);
     });
 
+    it('clamps an arc span below the lower bound to the 120 default', () =>
+    {
+      // Arrange: 999 above only ever exercises the upper bound, so the lower one has never had to
+      // do anything - a span of 10 is what tells "at least 30 degrees" from "no floor at all", and
+      // without it a skill could ask for a sweep too small to read as a swing.
+      const { effect } = buildEffect({ arcSpanDegrees: 10 });
+
+      // Assert
+      expect(effect._arcSpanDegrees).toEqual(120);
+    });
+
     it('keeps an in-range arc span as-is', () =>
     {
       const { effect } = buildEffect({ arcSpanDegrees: 90 });
@@ -541,6 +577,46 @@ describe('JuiceWeaponSwingMotionEffect (unit, JuiceBaseEffect mocked)', () =>
       expect(Number.isFinite(overlay.rotation)).toEqual(true);
     });
 
+    it('sweeps an odd oscillate slice back the other way', () =>
+    {
+      // Arrange: the pose table above reads oscillate on frame 1, which is always slice 0 and always
+      // sweeps forward - so the flip that gives this motion its name has never had to happen. Four
+      // passes over twenty frames puts frame 6 squarely inside slice 1, the first reversed one, and
+      // the pose there is the proof the alternation is real rather than four identical sweeps.
+      const { effect, overlay } = buildEffect({
+        motionType: JuiceWeaponSwingMotionEffect.MotionTypes.ArcOscillate,
+        durationFrames: 20,
+        repeatCount: 4,
+      });
+
+      // Act
+      for (let i = 0; i < 6; i++) effect.tick();
+
+      // Assert
+      expect(overlay.x).toBeCloseTo(0.4583729, 6);
+      expect(overlay.y).toBeCloseTo(-5.7657604, 6);
+      expect(overlay.rotation).toBeCloseTo(3.9018581, 6);
+    });
+
+    it('keeps the velocity-aligned blade read on the last frame of a reverse arc', () =>
+    {
+      // Arrange: the pose table reads every motion on frame 1, which lands mid-sweep - and mid-sweep
+      // the sampled travel angle happens to equal what the forward-arc formula produces, so the
+      // reverse branch could be dropped there without moving a pixel. The final frame is where the
+      // two part company: the sampling window is one-sided at the ends of the sweep, so the reverse
+      // read trails the forward one, and this is the last frame a player actually sees.
+      const { effect, overlay } = buildEffect({
+        motionType: JuiceWeaponSwingMotionEffect.MotionTypes.ArcReverse,
+        durationFrames: 4,
+      });
+
+      // Act
+      for (let i = 0; i < 4; i++) effect.tick();
+
+      // Assert
+      expect(overlay.rotation).toBeCloseTo(-1.3308136, 6);
+    });
+
     it('drives the Spin motion and spawns a trail afterimage on even frames', () =>
     {
       const { effect, parentSprite } = buildEffect({ motionType: JuiceWeaponSwingMotionEffect.MotionTypes.Spin, durationFrames: 10 });
@@ -569,9 +645,18 @@ describe('JuiceWeaponSwingMotionEffect (unit, JuiceBaseEffect mocked)', () =>
       expect(Number.isFinite(overlay.x)).toEqual(true);
     });
 
+    // The overlay spawns already scaled, and the profile-gun rule is the only thing that rewrites
+    // that scale mid-swing. Every fixture below therefore starts the overlay at a scale the rule
+    // would have to change: leave the spawn scale at +1 and "mirrored", "not mirrored" and "never
+    // touched at all" are three names for the same number, and the whole mirroring rule could be
+    // deleted with nothing going red - side-view gun art would silently point backwards.
     it('drives the StabForward motion with profileGun mirroring active', () =>
     {
-      const { effect, overlay } = buildEffect({
+      // Arrange: west-facing thrust against a zero tip angle lands the alignment near pi, which is
+      // the case the rule answers by mirroring instead of rotating.
+      const overlay = buildOverlay({ scale: { x: 2, y: 2 } });
+      const { effect } = buildEffect({
+        overlay,
         motionType: JuiceWeaponSwingMotionEffect.MotionTypes.StabForward,
         durationFrames: 10,
         swingDirection: 4,
@@ -579,9 +664,34 @@ describe('JuiceWeaponSwingMotionEffect (unit, JuiceBaseEffect mocked)', () =>
         profileGun: true,
       });
 
+      // Act
       effect.tick();
 
-      expect([ -1, 1 ]).toContain(Math.sign(overlay.scale.x) || 1);
+      // Assert
+      expect(overlay.scale.x).toEqual(-2);
+      expect(overlay.scale.y).toEqual(2);
+    });
+
+    it('leaves the overlay scale alone when profileGun is off', () =>
+    {
+      // Arrange: the same west-facing thrust that mirrors above, with the flag off. An overlay that
+      // spawned mirrored must stay mirrored - the rule is opt-in, and rewriting the scale for every
+      // weapon would flip the art of anything spawned with a negative scale.
+      const overlay = buildOverlay({ scale: { x: -2, y: 2 } });
+      const { effect } = buildEffect({
+        overlay,
+        motionType: JuiceWeaponSwingMotionEffect.MotionTypes.StabForward,
+        durationFrames: 10,
+        swingDirection: 4,
+        stabTipAngleRadians: 0,
+        profileGun: false,
+      });
+
+      // Act
+      effect.tick();
+
+      // Assert
+      expect(overlay.scale.x).toEqual(-2);
     });
 
     it('drives the Present motion (lifts toward base rotation)', () =>
@@ -606,7 +716,11 @@ describe('JuiceWeaponSwingMotionEffect (unit, JuiceBaseEffect mocked)', () =>
     {
       // swingDirection 2 (down) + tip 0 resolves nowhere near +/-pi, so mirrorX stays false here-
       // covers the ternary's other branch vs. the mirrorX:true case exercised by the StabForward test.
-      const { effect, overlay } = buildEffect({
+      // The overlay spawns mirrored so that "the rule ran and chose not to mirror" reads differently
+      // from "the rule never ran": an unmirrored spawn would leave both answering +2.
+      const overlay = buildOverlay({ scale: { x: -2, y: 2 } });
+      const { effect } = buildEffect({
+        overlay,
         motionType: JuiceWeaponSwingMotionEffect.MotionTypes.Bash,
         durationFrames: 10,
         swingDirection: 2,
@@ -614,9 +728,11 @@ describe('JuiceWeaponSwingMotionEffect (unit, JuiceBaseEffect mocked)', () =>
         profileGun: true,
       });
 
+      // Act
       effect.tick();
 
-      expect(overlay.scale.x).toEqual(effect._scaleMag);
+      // Assert
+      expect(overlay.scale.x).toEqual(2);
     });
 
     it('drives the Recoil motion', () =>
@@ -636,6 +752,26 @@ describe('JuiceWeaponSwingMotionEffect (unit, JuiceBaseEffect mocked)', () =>
       for (let i = 0; i < 12; i++) effect.tick();
 
       expect(parentSprite.removeChild).toHaveBeenCalled();
+    });
+
+    it('keeps an afterimage alive while its time-to-live has frames left', () =>
+    {
+      // Arrange: the expiry test above only ever proves that something eventually got removed, which
+      // is also true of a trail that discards every ghost the frame after it spawns - and that is
+      // the difference between a spin leaving a streak and leaving a single flickering copy. Two
+      // ticks is one spawn plus one decrement, so the ghost is still owed nine frames of fade.
+      const { effect } = buildEffect({
+        motionType: JuiceWeaponSwingMotionEffect.MotionTypes.Spin,
+        durationFrames: 30,
+      });
+
+      // Act
+      effect.tick();
+      effect.tick();
+
+      // Assert
+      expect(effect.trail()).toHaveLength(1);
+      expect(effect.trail()[0].ttl).toEqual(9);
     });
   });
   //endregion tick() across every motion type

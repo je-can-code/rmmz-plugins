@@ -363,15 +363,23 @@ describe('J-ABS Game_CharacterBase move speed / dodge / jump (direct src import)
 
     it('finishes out a pure vertical path with straight steps once the diagonal axis is exhausted (dx=0)', () =>
     {
+      // Arrange: the diagonal probe is stubbed separately from the straight one so the two paths
+      // are distinguishable- an exhausted X axis must never route through the diagonal branch.
       const character = buildCharacter();
       character.x = 0;
       character.y = 0;
+      character.canPassDiagonallyTerrainOnly = vi.fn(() => true);
       character.canPassTerrainOnly = vi.fn(() => true);
 
+      // Act
       const result = character.canReachTileDelta(0, 3);
 
+      // Assert: exactly one straight downward probe per tile, each from the previous tile.
       expect(result).toBe(true);
-      expect(character.canPassTerrainOnly).toHaveBeenCalledWith(0, 0, globalThis.J.ABS.Directions.DOWN);
+      expect(character.canPassTerrainOnly).toHaveBeenCalledTimes(3);
+      expect(character.canPassTerrainOnly).toHaveBeenNthCalledWith(1, 0, 0, globalThis.J.ABS.Directions.DOWN);
+      expect(character.canPassTerrainOnly).toHaveBeenNthCalledWith(2, 0, 1, globalThis.J.ABS.Directions.DOWN);
+      expect(character.canPassTerrainOnly).toHaveBeenNthCalledWith(3, 0, 2, globalThis.J.ABS.Directions.DOWN);
     });
 
     it('is false when a straight finishing step (X axis) is blocked', () =>
@@ -396,13 +404,24 @@ describe('J-ABS Game_CharacterBase move speed / dodge / jump (direct src import)
 
     it('walks negative deltas (left/up) correctly', () =>
     {
+      // Arrange
       const character = buildCharacter();
       character.x = 5;
       character.y = 5;
-      character.canPassDiagonallyTerrainOnly = () => true;
-      character.canPassTerrainOnly = () => true;
+      character.canPassDiagonallyTerrainOnly = vi.fn(() => true);
+      character.canPassTerrainOnly = vi.fn(() => true);
 
-      expect(character.canReachTileDelta(-2, -2)).toBe(true);
+      // Act
+      const result = character.canReachTileDelta(-2, -2);
+
+      // Assert: both axes still have negative distance on both steps, so both steps are diagonal
+      // up-left probes rather than straight ones- a negative axis must still produce a direction.
+      expect(result).toBe(true);
+      expect(character.canPassDiagonallyTerrainOnly).toHaveBeenCalledTimes(2);
+      expect(character.canPassDiagonallyTerrainOnly)
+        .toHaveBeenNthCalledWith(1, 5, 5, globalThis.J.ABS.Directions.LEFT, globalThis.J.ABS.Directions.UP);
+      expect(character.canPassDiagonallyTerrainOnly)
+        .toHaveBeenNthCalledWith(2, 4, 4, globalThis.J.ABS.Directions.LEFT, globalThis.J.ABS.Directions.UP);
     });
 
     it('rounds fractional deltas to whole tiles before probing', () =>

@@ -168,23 +168,42 @@ describe('StateAfflictionHudPresenter (direct src import)', () =>
 
     it('hides every sprite belonging to the previous battler when the target switches', () =>
     {
-      // Arrange
-      const previousBattler = { getUuid: () => 'uuid-old' };
-      const staleIconSprite = new globalThis.Sprite_Icon(1);
-      staleIconSprite.show();
-      spriteCache.set('affliction-icon-1-uuid-old', staleIconSprite);
+      // Arrange- the departing battler's affliction must be genuinely on screen when the switch
+      // happens. Seeding an already-stale sprite instead would let hideStaleSlots blank it during
+      // the first render, and the assertion below would then pass with the sweep deleted outright.
+      const previousBattler = {
+        getUuid: () => 'uuid-old',
+        state: vi.fn()
+          .mockReturnValue({ iconIndex: 42 }),
+      };
+      const activeCollection = new StateAfflictionCollection();
+      activeCollection.negative = [ makeViewModel({ stateId: 1 }) ];
+      globalThis.StateAfflictionProvider.collectForBattler
+        .mockReturnValueOnce(activeCollection)
+        .mockReturnValueOnce(new StateAfflictionCollection());
       const presenter = new StateAfflictionHudPresenter(hostWindow, spriteCache);
-      const emptyCollection = new StateAfflictionCollection();
-      globalThis.StateAfflictionProvider.collectForBattler.mockReturnValue(emptyCollection);
+      const layoutSpec = {
+        slotX: vi.fn()
+          .mockReturnValue(0),
+        negativeRowY: vi.fn()
+          .mockReturnValue(0),
+        positiveRowY: vi.fn()
+          .mockReturnValue(0),
+      };
 
-      // render once against the previous battler to seed #lastBattler.
-      presenter.render(previousBattler, { slotX: vi.fn(), negativeRowY: vi.fn(), positiveRowY: vi.fn() });
+      // render once against the previous battler to seed #lastBattler and put its icon on screen.
+      presenter.render(previousBattler, layoutSpec);
+
+      // the departing icon is visible going into the switch, so the sweep is the only thing that
+      // can be responsible for taking it away below.
+      const departingIconSprite = spriteCache.get('affliction-icon-1-uuid-old');
+      expect(departingIconSprite.visible).toEqual(true);
 
       // Act
-      presenter.render(battler, { slotX: vi.fn(), negativeRowY: vi.fn(), positiveRowY: vi.fn() });
+      presenter.render(battler, layoutSpec);
 
       // Assert
-      expect(staleIconSprite.visible).toEqual(false);
+      expect(departingIconSprite.visible).toEqual(false);
     });
 
     it('does not sweep again while the target has not changed', () =>

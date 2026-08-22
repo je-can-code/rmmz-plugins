@@ -303,23 +303,36 @@ describe('J-Pixelistics Game_CharacterBase movement resolvers (direct src import
       expect(ch.isMovementSucceeded()).toBe(true);
     });
 
-    it('prefers the horizontal fallback leg when its residual is smaller than the vertical one', () =>
-    {
-      // Arrange: forces diagonalFallback's chooseHorizontalPredicate branch to true —
-      // X sits exactly on the tile center (0 residual) while Y drifted (0.3 residual),
-      // so the horizontal leg is the closer one to re-align through.
-      const map = buildWalledPixelGameMap(5, 5);
-      const ch = makeCharacterOn(map, 2, 2);
-      ch._x = 2;
-      ch._y = 1.7;
-      ch.canPassDiagonalByDirection = () => false;
+    it.each([
+      [ 'LOWERLEFT', 2, 1.7, 'LEFT', 1, 1.7 ],
+      [ 'LOWERLEFT', 2.3, 2, 'DOWN', 2.3, 3 ],
+      [ 'LOWERRIGHT', 2, 1.7, 'RIGHT', 3, 1.7 ],
+      [ 'LOWERRIGHT', 1.7, 2, 'DOWN', 1.7, 3 ],
+      [ 'UPPERLEFT', 2, 2.3, 'LEFT', 1, 2.3 ],
+      [ 'UPPERLEFT', 2.3, 2, 'UP', 2.3, 1 ],
+      [ 'UPPERRIGHT', 2, 2.3, 'RIGHT', 3, 2.3 ],
+      [ 'UPPERRIGHT', 1.7, 2, 'UP', 1.7, 1 ],
+    ])('splits a blocked %s standing at (%d, %d) toward %s, the axis with the smaller residual',
+      (dirKey, x, y, expectedKey, expectedX, expectedY) =>
+      {
+        // Arrange: each quadrant compares its own pair of residuals, and each row leaves exactly one
+        // axis sitting off its tile center so the comparison has a real winner. A tie would answer
+        // the same either way and could not tell the two arms apart.
+        const map = buildWalledPixelGameMap(5, 5);
+        const ch = makeCharacterOn(map, 2, 2);
+        ch._x = x;
+        ch._y = y;
+        ch.canPassDiagonalByDirection = () => false;
 
-      // Act
-      const faced = ch.pixelMoveByInput(D().LOWERRIGHT);
+        // Act
+        const faced = ch.pixelMoveByInput(D()[dirKey]);
 
-      // Assert
-      expect(faced).toBe(D().RIGHT);
-    });
+        // Assert: the chosen leg is also the one that moved, so the facing cannot be right by
+        // accident while the step went the other way.
+        expect(faced).toBe(D()[expectedKey]);
+        expect(ch._x).toBe(expectedX);
+        expect(ch._y).toBe(expectedY);
+      });
 
     it('recurses into the only passable leg (LEFT) when the DOWN leg of LOWERLEFT is blocked', () =>
     {
@@ -500,6 +513,32 @@ describe('J-Pixelistics Game_CharacterBase movement resolvers (direct src import
       expect(ch._x).toBe(1);
       expect(ch._y).toBe(2);
     });
+
+    it.each([
+      [ 'LOWERLEFT', 'DOWN' ],
+      [ 'LOWERRIGHT', 'DOWN' ],
+      [ 'UPPERLEFT', 'UP' ],
+      [ 'UPPERRIGHT', 'UP' ],
+    ])('answers a fully blocked %s with a bare facing rather than a recursion into %s', (dirKey, facingKey) =>
+    {
+      // Arrange: X sits off its tile center, which is the only thing that separates the two
+      // outcomes. Recursing into the bias cardinal would reach that cardinal's own wall-slide,
+      // and a wall-slide always commits a perpendicular nudge before giving up - so it would drag
+      // X toward the tile center and flag the frame as moved. The returned facing is identical
+      // either way, since the recursion falls through to returning the direction it was handed.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+      ch._x = 1.3;
+      ch.canPassStraight = () => false;
+
+      // Act
+      const faced = ch.pixelMoveByInput(D()[dirKey]);
+
+      // Assert
+      expect(faced).toBe(D()[facingKey]);
+      expect(ch._x).toBe(1.3);
+      expect(ch.didMoveThisFrame()).toBe(false);
+    });
   });
 
   describe('pixelMoveByInput straight handling', () =>
@@ -533,6 +572,40 @@ describe('J-Pixelistics Game_CharacterBase movement resolvers (direct src import
       expect(ch._x).toBe(2.4);
     });
 
+    it('re-centers the Y axis after a horizontal move when within snap tolerance', () =>
+    {
+      // Arrange: the vertical counterpart of the two X cases above. A horizontal step never touches
+      // Y itself, so any change to Y here can only have come from the re-centering.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+      ch._y = 2.05;
+
+      // Act
+      const faced = ch.pixelMoveByInput(D().RIGHT);
+
+      // Assert: X advanced a full tile, and Y snapped back to the rounded tile center.
+      expect(faced).toBe(D().RIGHT);
+      expect(ch._x).toBe(3);
+      expect(ch._y).toBe(2);
+    });
+
+    it('does not re-center the Y axis after a horizontal move when drift exceeds snap tolerance', () =>
+    {
+      // Arrange: 0.4 of a tile is well past the tolerance, so the drift is deliberate travel rather
+      // than jitter and must be left alone.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+      ch._y = 2.4;
+
+      // Act
+      const faced = ch.pixelMoveByInput(D().RIGHT);
+
+      // Assert
+      expect(faced).toBe(D().RIGHT);
+      expect(ch._x).toBe(3);
+      expect(ch._y).toBe(2.4);
+    });
+
     it('wall-slide is a no-op when blocked but already centered on the perpendicular axis, still facing the blocked direction', () =>
     {
       // Arrange
@@ -547,6 +620,10 @@ describe('J-Pixelistics Game_CharacterBase movement resolvers (direct src import
       expect(faced).toBe(D().DOWN);
       expect(ch._x).toBe(2);
       expect(ch._y).toBe(2);
+
+      // the blocked step never ran, so the only thing left that could flag the frame as moved is
+      // the wall-slide committing a zero-length nudge instead of bowing out on the centered check.
+      expect(ch.didMoveThisFrame()).toBe(false);
     });
 
     it('wall-slide commits a perpendicular nudge and opens a corridor through when one becomes available', () =>
@@ -645,6 +722,30 @@ describe('J-Pixelistics Game_CharacterBase movement resolvers (direct src import
       expect(faced).toBe(D().RIGHT);
       expect(ch._x).toBe(2);
       expect(ch._y).toBe(2);
+
+      // as with the X-nudge case, a flagged frame here would mean a zero-length nudge was committed
+      // rather than declined.
+      expect(ch.didMoveThisFrame()).toBe(false);
+    });
+
+    it('wall-slide nudges Y for a blocked LEFT, the same as it does for a blocked RIGHT', () =>
+    {
+      // Arrange: LEFT and RIGHT are the two horizontal blocked directions and must classify the
+      // same way, but only RIGHT has ever been observed nudging Y. X already sits on its tile
+      // center, so treating LEFT as a vertical block would find nothing to nudge and bow out.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+      ch._y = 2.3;
+      ch.canPassStraight = () => false;
+
+      // Act
+      const faced = ch.pixelMoveByInput(D().LEFT);
+
+      // Assert: the whole 0.3 residual is inside one frame's travel, so Y lands exactly on center.
+      expect(faced).toBe(D().LEFT);
+      expect(ch._y).toBe(2);
+      expect(ch._x).toBe(2);
+      expect(ch.didMoveThisFrame()).toBe(true);
     });
 
     it('wall-slide Y-nudge is rejected outright when the nudged position would overlap a solid tile', () =>
@@ -711,6 +812,31 @@ describe('J-Pixelistics Game_CharacterBase movement resolvers (direct src import
       // Assert
       expect(faced).toBe(D().LEFT);
       expect(ch._x).toBe(2);
+    });
+
+    it.each([
+      [ 'DOWN' ],
+      [ 'UP' ],
+      [ 'LEFT' ],
+      [ 'RIGHT' ],
+    ])('refuses to step %s into a tile another character occupies', (dirKey) =>
+    {
+      // Arrange: character-vs-character collision is the one refusal that the post-move solid-tile
+      // rollback inside movePixelDistance does not also catch, so a step taken in spite of it would
+      // stand rather than being quietly undone the way a step into terrain is. The map is open and
+      // the character is centered, so the wall-slide has no residual to nudge and cannot move
+      // anything either.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+      ch.isCharacterCollisionAt = () => true;
+
+      // Act
+      const faced = ch.pixelMoveByInput(D()[dirKey]);
+
+      // Assert
+      expect(faced).toBe(D()[dirKey]);
+      expect(ch._x).toBe(2);
+      expect(ch._y).toBe(2);
     });
   });
 
@@ -848,6 +974,43 @@ describe('J-Pixelistics Game_CharacterBase movement resolvers (direct src import
       expect(moved).toBe(false);
       expect(ch._x).toBe(2);
       expect(ch._y).toBe(2);
+    });
+
+    it('keeps a through-flagged step that lands inside a solid tile', () =>
+    {
+      // Arrange: the rollback arrangement above, plus through. Standing inside terrain is the whole
+      // point of through, so the post-move overlap guard has to stand down for it - and unlike the
+      // straight probe, nothing earlier in this method has already answered on the through flag.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+      ch.canPassStraight = () => true;
+      ch.isOverlappingSolidTiles = () => true;
+      ch.setThrough(true);
+
+      // Act
+      const moved = ch.vectorMoveByAngle(0);
+
+      // Assert
+      expect(moved).toBe(true);
+      expect(ch._x).toBe(3);
+    });
+
+    it('keeps a debug-through step that lands inside a solid tile', () =>
+    {
+      // Arrange: playtest debug-through is the second, independent licence to ignore terrain, and
+      // the through flag above cannot speak for it.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 2, 2);
+      ch.canPassStraight = () => true;
+      ch.isOverlappingSolidTiles = () => true;
+      ch.isDebugThrough = () => true;
+
+      // Act
+      const moved = ch.vectorMoveByAngle(0);
+
+      // Assert
+      expect(moved).toBe(true);
+      expect(ch._x).toBe(3);
     });
 
     it('moves purely leftward at angle 180', () =>

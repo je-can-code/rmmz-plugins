@@ -39,7 +39,7 @@ describe('J-ABS-Charge RPG_Skill (unit, all downstream dependencies mocked)', ()
       const result = skill.jabsChargeData;
 
       // Assert
-      expect(globalThis.RPGManager.getArraysFromNotesByRegex).toHaveBeenCalledWith(skill, CHARGE_DATA_REGEX, true);
+      expect(globalThis.RPGManager.getArraysFromNotesByRegex).toHaveBeenCalledWith(skill, CHARGE_DATA_REGEX);
       expect(result).toBe(tiers);
     });
   });

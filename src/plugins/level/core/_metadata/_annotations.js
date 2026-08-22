@@ -372,6 +372,9 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.6.1
+ *    Fixed the level scaling band being read as a single point below parity, so
+ *    battlers at equal levels dealt a bonus instead of no bonus at all.
  * - 1.6.0
  *    Routed the _level namespace into its own save section, so level state
  *    lands in systems/level.json rather than inside the system blob.

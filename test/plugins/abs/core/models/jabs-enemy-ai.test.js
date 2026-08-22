@@ -621,10 +621,14 @@ describe('JABS_EnemyAI (unit, all downstream dependencies mocked)', () =>
     it('filters down to only status-applying skills when any are present', () =>
     {
       const ai = new JABS_EnemyAI();
+      // the rejected sibling carries an effect of its own- an hp recovery, code 11- rather than an
+      // empty effect list. A skill with no effects at all is rejected by the emptiness of the list
+      // instead of by the code, which would let "adds a state" and "has any effect whatsoever"
+      // filter identically.
       const user = buildBattler({
         getSkill: (id) => (id === 1
           ? { effects: [ { code: 21 } ] }
-          : { effects: [] }),
+          : { effects: [ { code: 11 } ] }),
       });
 
       expect(ai.filterForTacticalSkills([ 1, 2 ], user, null)).toEqual([ 1 ]);
@@ -1190,6 +1194,39 @@ describe('JABS_EnemyAI (unit, all downstream dependencies mocked)', () =>
       const result = ai.filterSkillsHealerPriority(user, [ 1, 2 ], allies);
 
       expect(result).toEqual([ 1 ]);
+    });
+
+    it('declines the all-target tier when several allies are hurt but none is hurt badly', () =>
+    {
+      globalThis.$dataSkills = {
+        1: { id: 1 },
+        2: { id: 2 },
+        3: { id: 3 },
+      };
+      // heals of 80, 20 and 100hp measured against a worst-wounded ally missing only 15hp. Skill 3
+      // takes the biggest-heal-all slot and skill 2 the closest-fit-all slot, which is what makes
+      // the two tiers tell-apart-able- with a two-skill fixture both slots land on the same id.
+      mockHealingGameAction({
+        1: -80,
+        2: -20,
+        3: -100,
+      }, { isForAll: true, isForOne: false });
+
+      const ai = new JABS_EnemyAI(true);
+      const user = buildBattler({ getBattler: () => ({}) });
+      // two allies are missing hp, so the ally-count half of the all-target tier passes. The worst
+      // of them still sits at 0.85 though, above the wound threshold- so the tier must decline on
+      // the severity half alone.
+      const allies = [
+        { getBattler: () => ({ hp: 85, mhp: 100 }) },
+        { getBattler: () => ({ hp: 90, mhp: 100 }) },
+      ];
+
+      const result = ai.filterSkillsHealerPriority(user, [ 1, 2, 3 ], allies);
+
+      // no tier fires, so the pick stays on the random slot- the biggest all-target heal- instead
+      // of the closest-fit all-target heal the tier would have imposed.
+      expect(result).toEqual([ 3 ]);
     });
 
     it('falls back to the random skill pick when not careful, not reckless, and no ally is missing hp', () =>

@@ -188,6 +188,23 @@ describe('J-Regions-States Game_Map', () =>
       expect(map.getRegionStates().size)
         .toBe(0);
     });
+
+    it('honors a refusal from the shared region-effects gate even with tags waiting to be read', () =>
+    {
+      // Arrange: the sibling test above finds nothing whether the gate is consulted or not, because
+      // an absent map reads as a blank note either way. Staging a genuinely tagged note leaves the
+      // gate as the only thing standing between the map and a table full of region states.
+      const map = buildMap();
+      globalThis.$dataMap = { note: '<regionAddState:[1, 3, 100, 0]>' };
+      map.canRefreshRegionEffects = () => false;
+
+      // Act
+      map.refreshRegionStates();
+
+      // Assert
+      expect(map.getRegionStates().size)
+        .toBe(0);
+    });
   });
   //endregion where the table comes from
 });

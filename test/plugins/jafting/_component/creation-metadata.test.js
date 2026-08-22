@@ -423,6 +423,24 @@ describe('J-JAFTING + J-JAFTING-Creation metadata (direct src import)', () =>
       expect(recipe.cost).toEqual([]);
     });
 
+    it('treats a profession with no currency as selling nothing, price ladder and all', async () =>
+    {
+      // Arrange - the other half of not being for sale: a scrap item id of zero is how a profession
+      // says nothing of its is bought, and it has to win even while a full ladder sits beside it. The
+      // priced case above charges 20 off this very ladder, so a stray tuition here would be visible.
+      // Act
+      const recipe = await bootAndReadRecipe(
+        craftingJsonWith({
+          professions: [ { ...SMITHING, scrapItemId: 0 }, DECOY ],
+          professionKey: 'smithing',
+          tier: 2,
+        }),
+        'J-JAFTING-Creation-Prof-NoCurrency');
+
+      // Assert
+      expect(recipe.cost).toEqual([]);
+    });
+
     it('charges nothing when the category names no profession', async () =>
     {
       // Arrange & Act

@@ -202,17 +202,23 @@ describe('PassiveStackCountEvaluator (direct src import)', () =>
 
   describe('lessIsMore{Hp,Mp,Tp}', () =>
   {
-    it.each([ 'lessIsMoreHp', 'lessIsMoreMp', 'lessIsMoreTp' ])('scales by floor(missingPercent / param) for %s', (kind) =>
+    it.each([
+      [ 'lessIsMoreHp', 'hp', 7 ], [ 'lessIsMoreMp', 'mp', 4 ], [ 'lessIsMoreTp', 'tp', 1 ],
+    ])('scales by floor(missingPercent / param) for %s', (kind, resourceKey, expectedStacks) =>
     {
-      // Arrange- 30% current means 70% missing; floor(70/10) = 7.
+      // Arrange- each pool sits at a different fill level (hp 30%, mp 60%, tp 90%), so a kind
+      // that read the wrong resource would produce a different stack count rather than the same one.
       const battler = makeBattler();
-      globalThis.FakePassiveRuleThreshold.resolveRuleValue.mockReturnValue(30);
+      const currentPercentByResource = { hp: 30, mp: 60, tp: 90 };
+      globalThis.FakePassiveRuleThreshold.resolveRuleValue
+        .mockImplementation((_battler, key) => currentPercentByResource[key]);
 
       // Act
       const result = PassiveStackCountEvaluator.evaluate(battler, kind, 10);
 
       // Assert
-      expect(result).toBe(7);
+      expect(globalThis.FakePassiveRuleThreshold.resolveRuleValue).toHaveBeenCalledWith(battler, resourceKey);
+      expect(result).toBe(expectedStacks);
     });
 
     it('clamps missing percent at 0 for an overfilled resource (never negative stacks)', () =>

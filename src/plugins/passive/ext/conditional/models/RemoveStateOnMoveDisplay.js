@@ -29,8 +29,7 @@ class RemoveStateOnMoveDisplay
 
     const tuples = RPGManager.getArraysFromNotesByRegex(
       dataRow,
-      J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveStateOnMove,
-      true
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.RemoveStateOnMove
     );
 
     const lines = [];

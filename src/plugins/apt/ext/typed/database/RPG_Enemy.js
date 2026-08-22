@@ -9,7 +9,7 @@ import ApTypeGrant from './../_models/ApTypeGrant.js';
 RPG_Enemy.prototype.typedApRewards = function()
 {
   // pull raw tuples like [amount, domain, idOrName].
-  const raw = RPGManager.getArraysFromNotesByRegex(this, J.APT.EXT.TYPED.RegExp.ApTypedReward, true);
+  const raw = RPGManager.getArraysFromNotesByRegex(this, J.APT.EXT.TYPED.RegExp.ApTypedReward);
 
   // normalize into resolved records.
   return raw

@@ -111,6 +111,9 @@ describe('J-ABS-AllyAI Game_Followers (unit, all downstream dependencies mocked)
 
       followers.jumpAll();
 
+      // an invisible follower is not on screen to jump; nothing else in the loop would stop it,
+      // since its battler is unengaged and the interpreter is running.
+      expect(invisibleFollower.jump).not.toHaveBeenCalled();
       expect(eligibleFollower.jump).toHaveBeenCalledWith(1, 2);
     });
 

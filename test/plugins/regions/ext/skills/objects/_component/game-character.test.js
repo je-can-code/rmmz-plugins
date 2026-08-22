@@ -334,6 +334,26 @@ describe('J-Regions-Skills Game_Character', () =>
         .not.toHaveBeenCalled();
     });
 
+    it('does not even rebuild the dummy caster for a roll that came up short', () =>
+    {
+      // Arrange: a failed roll must abandon the whole proc, not just the cast. The standing dummy is
+      // deliberately the wrong caster here, so nothing but the failed roll is left to stop the
+      // rebuild - and rebuilding one per frame for procs that never fire is pure churn on a path
+      // every character walks sixty times a second.
+      tagRegionWithSkill({ casterId: 99 });
+      procCount = 0;
+      const character = buildCharacter();
+
+      // Act
+      character.executeRegionSkills();
+
+      // Assert
+      expect(jabsEngine.setMapDamageBattler)
+        .not.toHaveBeenCalled();
+      expect(jabsEngine.forceMapAction)
+        .not.toHaveBeenCalled();
+    });
+
     it('casts once per success when the roll accumulated several', () =>
     {
       // Arrange

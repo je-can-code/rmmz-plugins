@@ -102,6 +102,27 @@ describe('J-LevelMaster beyond-max param curves (direct src import)', () =>
     expect(result).toBe(expected);
   });
 
+  it('paramBase builds the beyond-max table once and reads the cache thereafter', () =>
+  {
+    // Arrange- extrapolating every param of every class is expensive enough that doing it per
+    // paramBase call would be felt on any frame that redraws a status window, and paramBase is
+    // called eight times for a single one of those.
+    const actor = new globalThis.Game_Actor();
+    actor.__actorDb = { id: 1, name: '', note: '', classId: 1, maxLevel: 99, traits: [] };
+    actor.initMembers();
+    actor._level = 100;
+    const buildTable = vi.spyOn(globalThis.$gameTemp, 'buildBeyondMaxData');
+
+    // Act
+    actor.paramBase(2);
+    actor.paramBase(3);
+
+    // Assert
+    expect(buildTable).toHaveBeenCalledTimes(1);
+
+    buildTable.mockRestore();
+  });
+
   it('buildBeyondMaxData mirrors the Game_Temp helper used at setupNewGame', () =>
   {
     // Arrange & Act

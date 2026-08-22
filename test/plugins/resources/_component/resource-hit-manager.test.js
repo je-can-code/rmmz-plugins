@@ -175,6 +175,35 @@ describe('ResourceHitManager (resources ext/abs)', () =>
       expect(caster.gainTpFromResource).toHaveBeenCalledWith(10);
     });
 
+    it('pays no drain at all when the hit restored hp instead of removing it', () =>
+    {
+      // Arrange- a heal lands as negative hp damage, so a drain that fired on anything other than a
+      // positive number would bill the caster for restoring their target: floor(-200 * 0.5) is -100,
+      // a loss rather than a gain. The flat tag is here to keep this from passing on silence- the
+      // caster is owed exactly its 10, and nothing the damage figure says may move that number.
+      const caster = buildBattler({ lst: 0.5, mst: 0.2, tst: 0.1 });
+      const targetBattler = { result: () => ({ hpDamage: -200 }) };
+      const action = {
+        getCaster: () => ({ getBattler: () => caster }),
+        getBaseSkill: () => ({}),
+      };
+      const target = { getBattler: () => targetBattler };
+
+      getNumberFromNoteByRegexMock.mockImplementation((_data, regexp) =>
+      {
+        if (regexp === regexNamespace.OnAttackHpGainFlat) return 10;
+        return 0;
+      });
+
+      // Act
+      ResourceHitManager.applyOnAttackEffects(action, target);
+
+      // Assert
+      expect(caster.gainHpFromResource).toHaveBeenCalledWith(10);
+      expect(caster.gainMpFromResource).not.toHaveBeenCalled();
+      expect(caster.gainTpFromResource).not.toHaveBeenCalled();
+    });
+
     it('does not call gain* when there was no hp damage and no tag-driven gain', () =>
     {
       const caster = buildBattler({ lst: 0.5 });

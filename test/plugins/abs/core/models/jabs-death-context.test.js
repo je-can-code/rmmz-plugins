@@ -67,6 +67,10 @@ describe('JABS_DeathContext (unit, all downstream dependencies mocked)', () =>
       const context = new JABS_DeathContext([], 'magical', 0, 'uuid');
 
       expect(context.isMagical()).toEqual(true);
+      // the three predicates read the same field, so each one has to be denied by the other two
+      // hit types- otherwise "is magical" and "is any hit type at all" are the same program.
+      expect(context.isPhysical()).toEqual(false);
+      expect(context.isCertain()).toEqual(false);
     });
 
     it('reports certain for a certain hit type', () =>
@@ -74,6 +78,9 @@ describe('JABS_DeathContext (unit, all downstream dependencies mocked)', () =>
       const context = new JABS_DeathContext([], 'certain', 0, 'uuid');
 
       expect(context.isCertain()).toEqual(true);
+      // same reasoning as the magical case above.
+      expect(context.isPhysical()).toEqual(false);
+      expect(context.isMagical()).toEqual(false);
     });
   });
 

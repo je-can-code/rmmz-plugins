@@ -199,6 +199,45 @@ describe('JABS_SkillSlotManager (direct src import)', () =>
       // skill 10 went to the dodge slot- it should not also get a per-skill slot.
       expect(manager.getSkillSlotByKey('10-Skill10')).toBeUndefined();
     });
+
+    it('does not double-register a skill that already claimed the guard slot', () =>
+    {
+      // Arrange
+      // the dodge classifier stays false, so only the guard half of the skip condition can be what
+      // keeps skill 10 out of the per-skill loop.
+      FakeJABSBattler.isGuardSkillById.mockImplementation(id => id === 10);
+      const manager = new JABS_SkillSlotManager();
+
+      // Act
+      manager.setupSlots(buildEnemy());
+
+      // Assert
+      expect(manager.getSkillSlotByKey('offhand').id).toBe(10);
+      expect(manager.getSkillSlotByKey('10-Skill10')).toBeUndefined();
+      // skill 11 claimed no special slot, so it still earns a per-skill slot of its own.
+      expect(manager.getSkillSlotByKey('11-Skill11').id).toBe(11);
+    });
+
+    it('registers nothing for a battler that reports no basic attack skill', () =>
+    {
+      // Arrange
+      // both classifiers must claim a real skill id: while either of dodge/guard is still the 0
+      // sentinel, an absent basic attack would be skipped by the id-match backstop instead of by
+      // the presence check under test.
+      FakeJABSBattler.isDodgeSkillById.mockImplementation(id => id === 10);
+      FakeJABSBattler.isGuardSkillById.mockImplementation(id => id === 11);
+      const manager = new JABS_SkillSlotManager();
+
+      // Act
+      // the shared enemy fixture reports a basic attack skill id of 0- i.e. it has none.
+      manager.setupSlots(buildEnemy());
+
+      // Assert
+      expect(manager.getAllSlots()).toHaveLength(3);
+      expect(manager.getSkillSlotByKey('0-Skill0')).toBeUndefined();
+      expect(manager.getDodgeSlot().id).toBe(10);
+      expect(manager.getSkillSlotByKey('offhand').id).toBe(11);
+    });
   });
 
   describe('filterActionSkills()', () =>
@@ -317,6 +356,44 @@ describe('JABS_SkillSlotManager (direct src import)', () =>
       manager.setupSlots(buildActor());
 
       expect(manager.getSlotBySkillId(999)).toBeUndefined();
+    });
+
+    it('skips an earlier equipped slot whose base skill id does not match', () =>
+    {
+      // Arrange
+      // mainhand is equipped first and must survive the search- with a single equipped slot,
+      // "matches this id" and "matches anything equipped" return the same slot.
+      const manager = new JABS_SkillSlotManager();
+      manager.setupSlots(buildActor());
+      manager.setSlot('mainhand', 5, false);
+      manager.setSlot('combat1', 7, false);
+
+      // Act
+      const found = manager.getSlotBySkillId(7);
+
+      // Assert
+      expect(found.key).toBe('combat1');
+      expect(found.id).toBe(7);
+    });
+
+    it('skips an earlier equipped slot whose combo skill id does not match', () =>
+    {
+      // Arrange
+      // mainhand carries a near-miss combo id so the combo fallback has to compare rather than
+      // simply hand back the first equipped slot it walks past.
+      const manager = new JABS_SkillSlotManager();
+      manager.setupSlots(buildActor());
+      manager.setSlot('mainhand', 5, false);
+      manager.setSlot('combat1', 7, false);
+      manager.setSlotComboId('mainhand', 8);
+      manager.setSlotComboId('combat1', 9);
+
+      // Act
+      const found = manager.getSlotBySkillId(9);
+
+      // Assert
+      expect(found.key).toBe('combat1');
+      expect(found.comboId).toBe(9);
     });
   });
 
@@ -445,6 +522,27 @@ describe('JABS_SkillSlotManager (direct src import)', () =>
       manager.getSkillSlotByKey('mainhand').getCooldown().setFrames(30);
 
       expect(manager.isAnyCooldownReadyForSlot('mainhand')).toBe(false);
+    });
+
+    it('is not ready when the combo cooldown is open but no combo id is pending', () =>
+    {
+      // Arrange
+      const manager = new JABS_SkillSlotManager();
+      manager.setupSlots(buildActor());
+      manager.setSlot('mainhand', 5, false);
+      const cooldown = manager.getSkillSlotByKey('mainhand').getCooldown();
+      cooldown.setFrames(30);
+      cooldown.setComboFrames(0);
+
+      // Act
+      const result = manager.isAnyCooldownReadyForSlot('mainhand');
+
+      // Assert
+      expect(result).toBe(false);
+      // an open combo cooldown and a running base cooldown are the two other reasons this could
+      // refuse; pinning both leaves the missing combo id as the only explanation left.
+      expect(cooldown.isComboReady()).toBe(true);
+      expect(cooldown.isBaseReady()).toBe(false);
     });
   });
 

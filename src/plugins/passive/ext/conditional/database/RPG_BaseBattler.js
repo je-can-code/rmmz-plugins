@@ -10,8 +10,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'passiveSourceRules', {
     // pull every source-wide gate tuple from notes on this battler row.
     return RPGManager.getArraysFromNotesByRegex(
       this,
-      J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveSourceRule,
-      true
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveSourceRule
     );
   },
 });
@@ -27,8 +26,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'passiveStateRules', {
     // pull every per-state gate tuple from notes on this battler row.
     return RPGManager.getArraysFromNotesByRegex(
       this,
-      J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveStateRule,
-      true
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveStateRule
     );
   },
 });
@@ -44,8 +42,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'passiveStateCounts', {
     // pull every per-state stack scaler tuple from notes on this battler row.
     return RPGManager.getArraysFromNotesByRegex(
       this,
-      J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveStateCount,
-      true
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.PassiveStateCount
     );
   },
 });
@@ -61,8 +58,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'autoApplyStateRules', {
     // pull every auto-apply scheduler tuple from notes on this battler row.
     return RPGManager.getArraysFromNotesByRegex(
       this,
-      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyState,
-      true
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyState
     );
   },
 });
@@ -80,8 +76,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'autoApplyStateOnNearbyRules', 
     // pull every auto-apply-on-nearby scheduler tuple from notes on this battler row.
     return RPGManager.getArraysFromNotesByRegex(
       this,
-      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyStateOnNearby,
-      true
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyStateOnNearby
     );
   },
 });
@@ -97,8 +92,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'autoExecuteSkillRules', {
     // pull every auto-execute scheduler tuple from notes on this battler row.
     return RPGManager.getArraysFromNotesByRegex(
       this,
-      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoExecuteSkill,
-      true
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoExecuteSkill
     );
   },
 });
@@ -115,8 +109,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'autoModifyCooldownRules', {
     // pull every auto-modify-cooldown scheduler tuple from notes on this battler row.
     return RPGManager.getArraysFromNotesByRegex(
       this,
-      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoModifyCooldowns,
-      true
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoModifyCooldowns
     );
   },
 });
@@ -133,8 +126,7 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'autoInflictStateRules', {
     // pull every auto-inflict scheduler tuple from notes on this battler row.
     return RPGManager.getArraysFromNotesByRegex(
       this,
-      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoInflictState,
-      true
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoInflictState
     );
   },
 });

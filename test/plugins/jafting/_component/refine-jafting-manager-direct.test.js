@@ -646,9 +646,14 @@ describe('JaftingManager (direct src import)', () =>
 
     it('strips a merged seal-slot trait (code 54) that would seal the base equip own etype slot', () =>
     {
+      // Arrange- the two near misses carry this test. A seal aimed at some *other* slot is a perfectly
+      // good thing for a refinement to hand over, and an ordinary parameter trait whose dataId happens
+      // to equal the base's etype is not a seal at all. Only the trait matching on both counts may go,
+      // and with one candidate a filter that dropped every 54, or every dataId 5, would look identical.
       globalThis.TraitResolver.refineTraits = vi.fn(() => [
         { code: 54, dataId: 5, value: 1 },
-        { code: 21, dataId: 0, value: 1 },
+        { code: 54, dataId: 4, value: 1 },
+        { code: 21, dataId: 5, value: 1 },
       ]);
 
       const base = fakeEquip({
@@ -659,20 +664,53 @@ describe('JaftingManager (direct src import)', () =>
       });
       const material = fakeEquip();
 
+      // Act
       const output = JaftingManager.determineRefinementOutput(base, material);
 
-      // the seal-slot trait targeting base's own etypeId (5) is filtered out; the other survives.
-      expect(output.traits.some(t => t.code === 54)).toBe(false);
-      expect(output.traits.some(t => t.code === 21)).toBe(true);
+      // Assert- the fresh divider, then both survivors, and nothing else.
+      expect(output.traits.map(t => [ t.code, t.dataId ])).toEqual([ [ 63, 3 ], [ 54, 4 ], [ 21, 5 ] ]);
+    });
+
+    it('writes a divider onto a generated output that arrived without one', () =>
+    {
+      // Arrange- the divider is the whole declaration of what an equip is offering, so an output that
+      // appended its merged traits with no divider above them would hand over its entire trait list
+      // the next time it was donated. The leading code-22 trait is a near miss for the divider search:
+      // a search that answered "found it" for any trait would truncate this equip's own traits away.
+      globalThis.TraitResolver.refineTraits = vi.fn(() => [ { code: 21, dataId: 0, value: 1 } ]);
+
+      const base = fakeEquip({
+        traits: [],
+        etypeId: 5,
+        _generate: vi.fn(() => ({
+          traits: [ { code: 22, dataId: 1, value: 1 } ],
+          jaftingRefinedCount: 0,
+        })),
+        _index: vi.fn(() => 1),
+      });
+      const material = fakeEquip();
+
+      // Act
+      const output = JaftingManager.determineRefinementOutput(base, material);
+
+      // Assert
+      expect(output.traits.map(t => t.code)).toEqual([ 22, 63, 21 ]);
     });
 
     it('truncates an existing divider tail on the generated output before appending merged traits', () =>
     {
+      // Arrange- the code-22 trait sits above the divider and is the output's own, so it has to be
+      // untouched by the truncation. It is also what stops a divider search that simply answered zero
+      // from passing: that would cut this trait off along with the stale tail.
       const base = fakeEquip({
         traits: [ { code: 63, dataId: 3, value: 1 } ],
         etypeId: 5,
         _generate: vi.fn(() => ({
-          traits: [ { code: 63, dataId: 3, value: 1 }, { code: 99, dataId: 0, value: 1 } ],
+          traits: [
+            { code: 22, dataId: 1, value: 1 },
+            { code: 63, dataId: 3, value: 1 },
+            { code: 99, dataId: 0, value: 1 },
+          ],
           jaftingRefinedCount: 0,
         })),
         _index: vi.fn(() => 1),
@@ -684,7 +722,7 @@ describe('JaftingManager (direct src import)', () =>
       const output = JaftingManager.determineRefinementOutput(base, material);
 
       // the stale code-99 trait after the output's own pre-existing divider is dropped before merging.
-      expect(output.traits.map(t => t.code)).toEqual([ 63, 21 ]);
+      expect(output.traits.map(t => t.code)).toEqual([ 22, 63, 21 ]);
     });
 
     it('leaves the base jaftingRefinedCount untouched by however refined the material was', () =>
@@ -900,7 +938,16 @@ describe('JaftingManager (direct src import)', () =>
         JaftingRefinementLineage.leaf('w', 5),
         JaftingRefinementLineage.leaf('w', 9),
         null);
-      $gameParty.getRefinedWeapons = vi.fn(() => [ tracked ]);
+
+      // a second refined weapon the party also owns, sitting ahead of the wanted one in the list. A
+      // lookup that took whatever came first would return this one, and with a list of one there is
+      // nothing to tell "the entry at this slot" apart from "the first entry".
+      const otherSlot = JaftingRefinementLineage.refinement(
+        2002,
+        JaftingRefinementLineage.leaf('w', 7),
+        JaftingRefinementLineage.leaf('w', 8),
+        null);
+      $gameParty.getRefinedWeapons = vi.fn(() => [ otherSlot, tracked ]);
 
       // a refined row is a clone of its base, so it keeps the base's id forever and only its slot
       // moves into the dynamic range. Giving this datum id 2001 would describe a shape the game

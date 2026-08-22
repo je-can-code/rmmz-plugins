@@ -72,15 +72,17 @@ describe('J-ABS-Shield _Game_Battler (unit, all downstream dependencies mocked)'
       originalCreateJabsState.mockReturnValue(builder);
       const shield = {};
       JABS_Shield_mock.fromStateId.mockReturnValue(shield);
-      const target = {};
-      const attacker = {};
+      // the two battlers carry different shapes on purpose- deep equality would otherwise let the
+      // target stand in for the attacker and the argument order would go unpinned.
+      const target = { def: 12 };
+      const attacker = { atk: 40 };
 
       // Act
       const result = battler.createJabsState(target, 5, 10, 60, 1, attacker);
 
-      // Assert
+      // Assert- the attacker rides along as the `a` binding for the shield point formulas.
       expect(originalCreateJabsState).toHaveBeenCalledWith(target, 5, 10, 60, 1, attacker, null);
-      expect(JABS_Shield_mock.fromStateId).toHaveBeenCalledWith(5, target);
+      expect(JABS_Shield_mock.fromStateId).toHaveBeenCalledWith(5, target, attacker);
       expect(builder.setShield).toHaveBeenCalledWith(shield);
       expect(result).toBe(builder);
     });
@@ -175,6 +177,22 @@ describe('J-ABS-Shield _Game_Battler (unit, all downstream dependencies mocked)'
 
       // Assert
       expect(result).toEqual([ withPriority, noPriority ]);
+    });
+
+    it('sorts by priority descending when the higher priority state is inserted first', () =>
+    {
+      // Arrange (insertion order decides which shield the comparator receives as `b`; with the
+      // higher priority inserted first, `bPri` is the operand carrying the whole comparison)
+      const battler = buildBattler();
+      const high = buildShieldState({ shield: { isBroken: vi.fn(() => false), getPriority: vi.fn(() => 5), getAppliedAt: vi.fn(() => 0) } });
+      const low = buildShieldState({ shield: { isBroken: vi.fn(() => false), getPriority: vi.fn(() => 1), getAppliedAt: vi.fn(() => 0) } });
+      globalThis.$jabsEngine.getJabsStatesByUuid.mockReturnValue(new Map([ [ 'high', high ], [ 'low', low ] ]));
+
+      // Act
+      const result = battler.getShieldStates();
+
+      // Assert
+      expect(result).toEqual([ high, low ]);
     });
 
     it('treats a missing priority as zero when comparing, with the falsy priority as the first comparator argument', () =>
@@ -310,6 +328,21 @@ describe('J-ABS-Shield _Game_Battler (unit, all downstream dependencies mocked)'
       expect(globalThis.$jabsEngine.forceMapAction).not.toHaveBeenCalled();
     });
 
+    it('does not fire discovered break skills when there is no JABS caster to fire them from', () =>
+    {
+      // Arrange (break skills are present, so the missing caster is the only thing that can stop
+      // them from firing; the stored value lands on 0 either way and proves nothing on its own)
+      const battler = buildBattler({ states: vi.fn(() => [ { id: 1 } ]) });
+      globalThis.JABS_AiManager.getBattlerByUuid.mockReturnValue(null);
+      globalThis.RPGManager.getArrayFromNotesByRegex.mockReturnValue([ 10, 11 ]);
+
+      // Act
+      battler.onShieldBreak(50);
+
+      // Assert
+      expect(globalThis.$jabsEngine.forceMapAction).not.toHaveBeenCalled();
+    });
+
     it('defaults the break value to 0 when not provided', () =>
     {
       // Arrange
@@ -352,8 +385,8 @@ describe('J-ABS-Shield _Game_Battler (unit, all downstream dependencies mocked)'
 
       // Assert
       expect(globalThis.RPGManager.getArrayFromNotesByRegex).toHaveBeenCalledTimes(2);
-      expect(globalThis.RPGManager.getArrayFromNotesByRegex).toHaveBeenCalledWith(databaseData, globalThis.J.ABS.EXT.SHIELD.RegExp.Break, true);
-      expect(globalThis.RPGManager.getArrayFromNotesByRegex).toHaveBeenCalledWith({ id: 1 }, globalThis.J.ABS.EXT.SHIELD.RegExp.Break, true);
+      expect(globalThis.RPGManager.getArrayFromNotesByRegex).toHaveBeenCalledWith(databaseData, globalThis.J.ABS.EXT.SHIELD.RegExp.Break);
+      expect(globalThis.RPGManager.getArrayFromNotesByRegex).toHaveBeenCalledWith({ id: 1 }, globalThis.J.ABS.EXT.SHIELD.RegExp.Break);
     });
 
     it('fires every discovered shield-break skill against the caster then clears the stored value', () =>

@@ -877,7 +877,7 @@ Game_Action.prototype.calculatePerDebuffBonusPct = function(target)
 Game_Action.prototype.calculateBonusIfStatePct = function(target)
 {
   // collect all [STATE_ID, PCT] pairs from every note source on the caster.
-  // getArraysFromNotesByRegex with tryParse=true returns already-parsed [number, number] arrays.
+  // getArraysFromNotesByRegex returns already-parsed [number, number] arrays.
   const allPairs = this.subject()
     .getAllNotes()
     .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamageIfState));
@@ -1147,7 +1147,7 @@ Game_Action.prototype.targetHasActiveStateType = function(target, type)
 Game_Action.prototype.calculateBonusIfStateTypePct = function(target)
 {
   // collect all [TYPE, PCT] pairs from every note source on the caster.
-  // getArraysFromNotesByRegex with tryParse=true returns already-parsed [string, number] arrays.
+  // getArraysFromNotesByRegex returns already-parsed [string, number] arrays.
   const allPairs = this.subject()
     .getAllNotes()
     .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamageIfStateType));
@@ -1179,7 +1179,7 @@ Game_Action.prototype.calculateBonusIfStateTypePct = function(target)
 Game_Action.prototype.calculatePerStateTypePct = function(target)
 {
   // collect all [TYPE, PCT] pairs from every note source on the caster.
-  // getArraysFromNotesByRegex with tryParse=true returns already-parsed [string, number] arrays.
+  // getArraysFromNotesByRegex returns already-parsed [string, number] arrays.
   const allPairs = this.subject()
     .getAllNotes()
     .flatMap(note => RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.BonusDamagePerStateType));

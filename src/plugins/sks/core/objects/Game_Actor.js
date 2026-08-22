@@ -274,7 +274,7 @@ Game_Actor.prototype.forcedUnslottedSkillIds = function()
 
   // scan every note source for the tag, yielding one raw array of ids per tag found.
   const arraysFound = RPGManager.getArraysFromAllNotesByRegex(
-    this.getAllNotes(), J.SKS.RegExp.UnslottedSkills, true, false);
+    this.getAllNotes(), J.SKS.RegExp.UnslottedSkills);
 
   // flatten every array found into a single deduplicated set of skill ids.
   this._j._sks._forcedUnslottedSkillIds = new Set(arraysFound.flat());

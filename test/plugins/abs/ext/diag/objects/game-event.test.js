@@ -157,15 +157,19 @@ describe('J-ABS-Diagonal Game_Event (unit, all downstream dependencies mocked)',
   {
     it('defers to the original logic when this is not a jabs action', () =>
     {
-      // Arrange
+      // Arrange- a diagonal custom direction is deliberately present; only the action check should
+      // keep this event out of the diagonal movement path, since battler events can carry one too.
       originalMoveStraight.mockReturnValue('original-result');
       const event = buildEvent({ isJabsAction: () => false });
+      event.moveDiagonally = vi.fn();
+      event.setCustomDirection(9);
 
       // Act
       const result = event.moveStraight(6);
 
       // Assert
       expect(originalMoveStraight).toHaveBeenCalledWith(6);
+      expect(event.moveDiagonally).not.toHaveBeenCalled();
       expect(result).toBe('original-result');
     });
 
@@ -334,15 +338,16 @@ describe('J-ABS-Diagonal Game_Event (unit, all downstream dependencies mocked)',
   {
     it('does not rotate when there is no custom direction set', () =>
     {
-      // Arrange
-      const event = buildEvent();
+      // Arrange- the main direction is one the rotation switch below does handle (3 becomes 9), so
+      // the absence of a custom direction is the only thing that can leave it untouched.
+      const event = buildEvent({ _direction: 3 });
 
       // Act
       event.turnLeft90();
 
       // Assert
       expect(originalTurnLeft90).toHaveBeenCalledTimes(1);
-      expect(event._direction).toBe(2);
+      expect(event._direction).toBe(3);
     });
 
     it.each([
@@ -460,8 +465,9 @@ describe('J-ABS-Diagonal Game_Event (unit, all downstream dependencies mocked)',
   {
     it('sets a custom direction excluding the currently-faced direction', () =>
     {
-      // Arrange
-      const event = buildEvent({ _direction: 6 });
+      // Arrange- the currently-faced direction leads the valid list, so dropping it is what shifts
+      // the first pick along to the next direction rather than landing back on the same facing.
+      const event = buildEvent({ _direction: 2 });
       event.getValidDirections = () => [ 2, 4, 6, 8 ];
       globalThis.Math.randomInt.mockReturnValue(0);
 
@@ -470,8 +476,7 @@ describe('J-ABS-Diagonal Game_Event (unit, all downstream dependencies mocked)',
 
       // Assert
       expect(originalTurnRandom).toHaveBeenCalledTimes(1);
-      expect(event.getCustomDirection()).toBe(2);
-      expect(event.getCustomDirection()).not.toBe(6);
+      expect(event.getCustomDirection()).toBe(4);
     });
   });
 

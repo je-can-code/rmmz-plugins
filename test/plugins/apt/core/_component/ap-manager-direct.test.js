@@ -81,6 +81,18 @@ describe('ApManager (direct src import)', () =>
       expect(parsed.types).toEqual([]);
       expect(Number.isNaN(parsed.id)).toBe(true);
     });
+
+    it('refuses to read a bare number as an id, since a key without a type chain names nothing', () =>
+    {
+      // Arrange & Act- 'bad' already reads as NaN by accident of not being numeric; a bare '5'
+      // is the case where dropping the segment-count guard would happily hand back id 5 attached
+      // to no type at all, and every downstream table lookup would then be aimed by guesswork.
+      const parsed = ApManager.parseKey('5');
+
+      // Assert
+      expect(parsed.types).toEqual([]);
+      expect(Number.isNaN(parsed.id)).toBe(true);
+    });
   });
 
   describe('resolveStaticSourceByKey', () =>
@@ -360,21 +372,68 @@ describe('ApManager (direct src import)', () =>
       };
     }
 
+    /**
+     * Builds a source teaching a single skill, so a gainAp scenario has something to actually
+     * distribute into. Without one, `activeTeachables` answers empty and every "nothing happened"
+     * assertion passes for reasons that have nothing to do with the gate under test.
+     * @returns {object} A fake aptitude source carrying one teachable.
+     */
+    function buildTeachingSource()
+    {
+      return {
+        id: 1,
+        implementationType: () => '@base:weapon',
+        isSkill: () => false,
+        aptitudeTeachings: [ new AptitudeTeachable(10, 40) ],
+      };
+    }
+
     it('canGainAp gate prevents applying AP for dead actors', () =>
     {
-      const actor = buildActor({ isDead: () => true });
+      // Arrange- the actor is loaded with a source that would otherwise bank AP, so the only thing
+      // left holding the award back is the death check itself. A nonzero amount likewise keeps the
+      // scaled-to-zero early return from quietly doing this test's job.
+      const actor = buildActor({
+        isDead: () => true,
+        getAptitudeSources: () => [ buildTeachingSource() ],
+      });
 
+      // Act
       ApManager.gainAp(actor, 5, 'test');
 
+      // Assert
       expect(actor.setAptitudeProgress).not.toHaveBeenCalled();
+    });
+
+    it('awards AP through that same loaded source once the actor is alive', () =>
+    {
+      // Arrange- the proof that the fixture above is capable of banking AP at all; without it the
+      // death test would read identically against a source that teaches nothing.
+      const actor = buildActor({
+        isDead: () => false,
+        getAptitudeSources: () => [ buildTeachingSource() ],
+      });
+
+      // Act
+      ApManager.gainAp(actor, 5, 'test');
+
+      // Assert
+      expect(actor.setAptitudeProgress).toHaveBeenCalledWith('@base:weapon:1', 10, 5);
     });
 
     it('scales the award by actor.apr and skips entirely when the scaled amount is zero', () =>
     {
-      const actor = buildActor({ apr: 0 });
+      // Arrange- the actor carries the same source that banks AP in the test above, so the zero
+      // multiplier is the only thing left that can hold the award back.
+      const actor = buildActor({
+        apr: 0,
+        getAptitudeSources: () => [ buildTeachingSource() ],
+      });
 
+      // Act
       ApManager.gainAp(actor, 5, 'test');
 
+      // Assert
       expect(actor.setAptitudeProgress).not.toHaveBeenCalled();
     });
 
@@ -439,6 +498,50 @@ describe('ApManager (direct src import)', () =>
       expect(actor.setAptitudeProgress).not.toHaveBeenCalled();
     });
 
+    it('opens a learning for every skill a source teaches, not just the one that made the progress', () =>
+    {
+      // Arrange- one source routinely teaches several skills, and the progress bag is created by
+      // whichever teachable is reached first. Every later skill therefore arrives at a progress
+      // that already exists but holds no learning of its own, and has to have one opened for it.
+      const source = {
+        id: 1,
+        implementationType: () => '@base:weapon',
+        isSkill: () => false,
+        aptitudeTeachings: [ new AptitudeTeachable(10, 40), new AptitudeTeachable(11, 60) ],
+      };
+
+      // a progress that answers honestly about which learnings it holds, the way the real
+      // AptitudeProgress does- a fixture that always claims to have one hides the whole branch.
+      const learnings = {};
+      const progress = {
+        hasLearning: skillId => learnings[skillId] !== undefined,
+        initializeLearning: (skillId, requiredAp, amount) =>
+        {
+          learnings[skillId] = {
+            currentAp: amount,
+            isLearned: () => false,
+            setRequiredAp: vi.fn(),
+          };
+        },
+        learningBySkillId: skillId => learnings[skillId] ?? null,
+      };
+
+      const setAptitudeProgress = vi.fn();
+      const actor = buildActor({
+        getAptitudeSources: () => [ source ],
+        hasAptitudeProgress: () => true,
+        getAptitudeProgress: () => progress,
+        setAptitudeProgress,
+      });
+
+      // Act
+      ApManager.gainAp(actor, 5, 'test');
+
+      // Assert
+      expect(setAptitudeProgress).toHaveBeenNthCalledWith(1, '@base:weapon:1', 10, 5);
+      expect(setAptitudeProgress).toHaveBeenNthCalledWith(2, '@base:weapon:1', 11, 5);
+    });
+
     it('does not re-learn the engine skill when it is already known', () =>
     {
       const teach = new AptitudeTeachable(10, 5);
@@ -493,24 +596,74 @@ describe('ApManager (direct src import)', () =>
       activeTeachables.mockRestore();
     });
 
-    it('awards the raw amount for an actor with no aptitude multiplier at all', () =>
+    it('awards the raw amount for an actor sitting at the identity multiplier', () =>
     {
-      // Arrange- `apr` is a J-Natural-derived rate that only exists once something grants it, so an
-      // actor without one must still gain the plain amount rather than being scaled by undefined.
-      const activeTeachables = vi.spyOn(ApManager, 'activeTeachables')
-        .mockReturnValue([]);
+      // Arrange- an actor with no aptitude tags still reports an `apr` of 1 off the prototype getter,
+      // which is the overwhelmingly common case; the award has to land at exactly its authored value.
+      const source = {
+        id: 1,
+        implementationType: () => '@base:weapon',
+        isSkill: () => false,
+        aptitudeTeachings: [ new AptitudeTeachable(10, 40) ],
+      };
+      const setAptitudeProgress = vi.fn();
       const actor = {
         isDead: () => false,
-        getAptitudeSources: () => [],
+        apr: 1,
+        getAptitudeSources: () => [ source ],
+        hasLearnedAptitudeSkill: () => false,
+        hasAptitudeProgress: () => true,
+        getAptitudeProgress: () => ({
+          hasLearning: () => true,
+          learningBySkillId: () => ({
+            currentAp: 0,
+            isLearned: () => false,
+            setRequiredAp: vi.fn(),
+          }),
+        }),
+        setAptitudeProgress,
       };
 
       // Act
       ApManager.gainAp(actor, 5, 'test');
 
       // Assert
-      expect(activeTeachables).toHaveBeenCalled();
+      expect(setAptitudeProgress).toHaveBeenCalledWith('@base:weapon:1', 10, 5);
+    });
 
-      activeTeachables.mockRestore();
+    it('banks the scaled amount when the multiplier is anything other than the identity', () =>
+    {
+      // Arrange- a doubled multiplier lands somewhere the raw award never could, so the banked
+      // value alone tells the scaled path apart from the pass-through one.
+      const source = {
+        id: 1,
+        implementationType: () => '@base:weapon',
+        isSkill: () => false,
+        aptitudeTeachings: [ new AptitudeTeachable(10, 40) ],
+      };
+      const setAptitudeProgress = vi.fn();
+      const actor = {
+        isDead: () => false,
+        apr: 2,
+        getAptitudeSources: () => [ source ],
+        hasLearnedAptitudeSkill: () => false,
+        hasAptitudeProgress: () => true,
+        getAptitudeProgress: () => ({
+          hasLearning: () => true,
+          learningBySkillId: () => ({
+            currentAp: 0,
+            isLearned: () => false,
+            setRequiredAp: vi.fn(),
+          }),
+        }),
+        setAptitudeProgress,
+      };
+
+      // Act
+      ApManager.gainAp(actor, 5, 'test');
+
+      // Assert
+      expect(setAptitudeProgress).toHaveBeenCalledWith('@base:weapon:1', 10, 10);
     });
   });
 
@@ -529,6 +682,23 @@ describe('ApManager (direct src import)', () =>
 
       // Assert
       expect(isActive).toBe(true);
+    });
+
+    it('answers false for an unequipped key while other sources are still active', () =>
+    {
+      // Arrange- the interesting question is asked about a source the actor no longer carries, and
+      // an actor is never sourceless when it is asked. Near-miss neighbors that share the type
+      // chain are what force the comparison to be about the whole key rather than merely having
+      // found something to compare against.
+      const weapon = { id: 1, implementationType: () => '@base:weapon' };
+      const armor = { id: 5, implementationType: () => '@base:armor' };
+      const actor = { getAptitudeSources: () => [ weapon, armor ] };
+
+      // Act
+      const isActive = ApManager.isSourceActive(actor, '@base:weapon:5');
+
+      // Assert
+      expect(isActive).toBe(false);
     });
   });
 

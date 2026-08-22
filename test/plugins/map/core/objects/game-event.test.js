@@ -354,6 +354,28 @@ describe('J-MAP Game_Event', () =>
         .toBe(MinimapEventType.Loot);
     });
 
+    it('gives already-collected loot no loot marker, and lets its own tag answer instead', () =>
+    {
+      // Arrange- an erased loot event is a pickup the player already took. The event object lingers
+      // for the rest of the map's life, so without the erasure check the minimap would go on
+      // advertising loot that is no longer there. The comment tag is what the event falls through
+      // to, and it is a marker the loot branch could never have produced.
+      const event = buildEvent({
+        isErased: () => true,
+        isJabsLoot: () => true,
+        getJabsBattler: () => null,
+        getValidCommentCommands: () => [ commentCommand('<minimap:npc>') ],
+        getEventCommandList: () => [],
+      });
+
+      // Act
+      const type = event.minimapEventType();
+
+      // Assert
+      expect(type)
+        .toBe(MinimapEventType.Npc);
+    });
+
     it('gives a hidden enemy no marker at all', () =>
     {
       // Arrange
@@ -541,6 +563,26 @@ describe('J-MAP Game_Event', () =>
       // Assert
       expect(type)
         .toBe(MinimapEventType.QuestProgress);
+    });
+
+    it('leaves a marker above an offer alone even when the event advances a quest', () =>
+    {
+      // Arrange: progress may only fill a marker nothing claimed, or replace an offer. Anything the
+      // author tagged deliberately outranks it- an innkeeper who happens to advance a quest is
+      // still an innkeeper, and the elevation check is the only thing enforcing that.
+      const event = buildEvent({
+        getValidCommentCommands: () => [ commentCommand('<minimap:npc>') ],
+        getEventCommandList: () => [],
+        ...withQuestPlugin(false),
+      });
+      event.hasPluginCommand = vi.fn((name, commands) => commands.includes('progress-quest'));
+
+      // Act
+      const type = event.minimapEventType();
+
+      // Assert
+      expect(type)
+        .toBe(MinimapEventType.Npc);
     });
 
     it('leaves a tagged marker alone when the event only unlocks quests', () =>

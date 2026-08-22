@@ -263,6 +263,21 @@ describe('JABS_SkillSlot (direct src import)', () =>
       expect(slot.isItem()).toBe(false);
       expect(slot.isSkill()).toBe(true);
     });
+
+    it('does not treat either item slot as a skill slot', () =>
+    {
+      // Arrange
+      // the mainhand sibling has to survive alongside the two item keys- without a slot that is
+      // still a skill slot, "inverts isItem" and "always true" are the same implementation.
+      const toolSlot = new JABS_SkillSlot('tool', 5);
+      const usableItemSlot = new JABS_SkillSlot('item', 5);
+      const mainhandSlot = new JABS_SkillSlot('mainhand', 5);
+
+      // Act & Assert
+      expect(toolSlot.isSkill()).toBe(false);
+      expect(usableItemSlot.isSkill()).toBe(false);
+      expect(mainhandSlot.isSkill()).toBe(true);
+    });
   });
 
   describe('isPrimarySlot / isSecondarySlot', () =>

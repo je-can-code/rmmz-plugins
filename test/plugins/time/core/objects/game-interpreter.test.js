@@ -122,6 +122,51 @@ describe('Game_Interpreter ext/time augments (direct src import)', () =>
       expect(result).toBe(false);
     });
 
+    it('shows the branch when the tag is a page conditional rather than a choice conditional', () =>
+    {
+      // Arrange
+      // a near miss for the choice filter: this is a real TIME tag, and one the conditional switch
+      // would happily parse, but page tags govern which event page runs rather than which choice is
+      // offered. the tagged hour deliberately disagrees with the clock, so anything that did treat
+      // it as a choice conditional would hide this branch instead of showing it.
+      globalThis.$gameTime.setTime(0, 0, 9, 1, 1, 2020);
+      const interpreter = interpreterOnEvent([ comment('<hourPage:17>') ]);
+
+      // Act
+      const result = interpreter.shouldHideChoiceBranch(0);
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('shows the branch when the tag-shaped text belongs to a command that is not a comment', () =>
+    {
+      // Arrange
+      // the shared fixture's command filter only asks whether there is a payload at all; the shipped
+      // J-Base filter also rejects any command whose code is not one of the comment codes, and that
+      // rejection is what is under test here. the payload itself is a genuine, currently-unmet choice
+      // conditional, so the command's code is the only thing keeping this branch visible.
+      const previousFilter = globalThis.Game_Event.filterInvalidEventCommand;
+      globalThis.Game_Event.filterInvalidEventCommand = command => command.code === 108;
+
+      globalThis.$gameTime.setTime(0, 0, 9, 1, 1, 2020);
+      const interpreter = interpreterOnEvent([
+        {
+          // 401 is a line of message text, not a comment.
+          code: 401,
+          indent: 0,
+          parameters: [ '<hourChoice:17>' ],
+        },
+      ]);
+
+      // Act
+      const result = interpreter.shouldHideChoiceBranch(0);
+      globalThis.Game_Event.filterInvalidEventCommand = previousFilter;
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
     it('reads the command list off the common event when there is no map event', () =>
     {
       // Arrange

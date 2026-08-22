@@ -664,14 +664,27 @@ describe('J-Passive-Conditional (direct src import)', () =>
     {
       it('does nothing when ABS is not active', () =>
       {
-        // Arrange
-        globalThis.$jabsEngine = { absEnabled: false };
+        // Arrange- everything downstream of the guard is arranged to succeed: a live state with a
+        // guaranteed removal rule, a matching skill, and a winning roll. The disabled engine is
+        // the only thing left that can stop the peel.
+        const stateId = 76;
+        stubMomentumStateRow(stateId, '<removeOnSkillExecution:[0, 100]>');
+        globalThis.$jabsEngine = { absEnabled: false, getJabsStateByUuidAndStateId: () => null };
+        globalThis.$dataSkills = [];
+        globalThis.$dataSkills[76] = { id: 76, stypeId: 1 };
         const actor = buildMomentumToolkitActor([]);
+        actor._states = [ stateId ];
+        actor.getUuid = () => 'test-actor';
         actor.decrementStateStacks = vi.fn();
+        const prevChance = globalThis.RPGManager.chanceIn100;
+        globalThis.RPGManager.chanceIn100 = () => true;
 
-        // Act & Assert
-        expect(() => globalThis.SkillExecutionStateRemovalManager.process(actor, 1)).not.toThrow();
+        // Act
+        globalThis.SkillExecutionStateRemovalManager.process(actor, 76);
+
+        // Assert
         expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+        globalThis.RPGManager.chanceIn100 = prevChance;
       });
 
       it('does nothing when the executed skill id has no database row', () =>
@@ -704,8 +717,9 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
       it('skips removal when the chance/param is non-positive', () =>
       {
-        // Arrange
-        globalThis.$jabsEngine = { absEnabled: true };
+        // Arrange- the roll itself is forced to succeed, which is what a very lucky battler does
+        // to a 0% chance anyway, so the tuple's own chance guard is the only suppressor left.
+        globalThis.$jabsEngine = { absEnabled: true, getJabsStateByUuidAndStateId: () => null };
         const stateId = 71;
         stubMomentumStateRow(stateId, '<removeOnSkillExecution:[0, 0]>');
         const actor = buildMomentumToolkitActor([]);
@@ -714,12 +728,15 @@ describe('J-Passive-Conditional (direct src import)', () =>
         actor.decrementStateStacks = vi.fn();
         globalThis.$dataSkills = [];
         globalThis.$dataSkills[71] = { id: 71, stypeId: 1 };
+        const prevChance = globalThis.RPGManager.chanceIn100;
+        globalThis.RPGManager.chanceIn100 = () => true;
 
         // Act
         globalThis.SkillExecutionStateRemovalManager.process(actor, 71);
 
         // Assert
         expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+        globalThis.RPGManager.chanceIn100 = prevChance;
       });
 
       it('decrements stacks when the executed skill stype matches', () =>
@@ -734,6 +751,9 @@ describe('J-Passive-Conditional (direct src import)', () =>
         actor.decrementStateStacks = (id, count) => decrements.push({ id, count });
         globalThis.$dataSkills = [];
         globalThis.$dataSkills[99] = { id: 99, stypeId: 7 };
+        // four stacks are live, so "peel one" is a distinguishable amount from "peel them all"-
+        // this state row never opted into collapsing at once, so it must peel exactly one.
+        globalThis.$jabsEngine.getJabsStateByUuidAndStateId = () => ({ stackCount: 4 });
         const prevChance = globalThis.RPGManager.chanceIn100;
         globalThis.RPGManager.chanceIn100 = () => true;
 
@@ -869,14 +889,27 @@ describe('J-Passive-Conditional (direct src import)', () =>
     {
       it('does nothing when ABS is not active', () =>
       {
-        // Arrange
-        globalThis.$jabsEngine = { absEnabled: false };
+        // Arrange- everything downstream of the guard is arranged to succeed: a live state with a
+        // guaranteed removal rule, a matching skill, and a winning roll. The disabled engine is
+        // the only thing left that can stop the peel.
+        const stateId = 77;
+        stubMomentumStateRow(stateId, '<removeOnSkillResolution:[0, 100]>');
+        globalThis.$jabsEngine = { absEnabled: false, getJabsStateByUuidAndStateId: () => null };
+        globalThis.$dataSkills = [];
+        globalThis.$dataSkills[77] = { id: 77, stypeId: 1 };
         const actor = buildMomentumToolkitActor([]);
+        actor._states = [ stateId ];
+        actor.getUuid = () => 'test-actor';
         actor.decrementStateStacks = vi.fn();
+        const prevChance = globalThis.RPGManager.chanceIn100;
+        globalThis.RPGManager.chanceIn100 = () => true;
 
-        // Act & Assert
-        expect(() => globalThis.SkillResolutionStateRemovalManager.process(actor, 1)).not.toThrow();
+        // Act
+        globalThis.SkillResolutionStateRemovalManager.process(actor, 77);
+
+        // Assert
         expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+        globalThis.RPGManager.chanceIn100 = prevChance;
       });
 
       it('does nothing when the resolved skill id has no database row', () =>
@@ -918,6 +951,9 @@ describe('J-Passive-Conditional (direct src import)', () =>
         actor.decrementStateStacks = (id, count) => decrements.push({ id, count });
         globalThis.$dataSkills = [];
         globalThis.$dataSkills[61] = { id: 61, stypeId: 7 };
+        // three stacks are live, so "peel one" is a distinguishable amount from "peel them all"-
+        // this state row never opted into collapsing at once, so it must peel exactly one.
+        globalThis.$jabsEngine.getJabsStateByUuidAndStateId = () => ({ stackCount: 3 });
         const prevChance = globalThis.RPGManager.chanceIn100;
         globalThis.RPGManager.chanceIn100 = () => true;
 
@@ -940,12 +976,17 @@ describe('J-Passive-Conditional (direct src import)', () =>
         actor.decrementStateStacks = vi.fn();
         globalThis.$dataSkills = [];
         globalThis.$dataSkills[62] = { id: 62, stypeId: 1 };
+        // the roll itself is forced to succeed, which is what a very lucky battler does to a 0%
+        // chance anyway, so the tuple's own chance guard is the only suppressor left.
+        const prevChance = globalThis.RPGManager.chanceIn100;
+        globalThis.RPGManager.chanceIn100 = () => true;
 
         // Act
         globalThis.SkillResolutionStateRemovalManager.process(actor, 62);
 
         // Assert
         expect(actor.decrementStateStacks).not.toHaveBeenCalled();
+        globalThis.RPGManager.chanceIn100 = prevChance;
       });
 
       it('skips removal when the executed skill stype does not match', () =>
@@ -1258,6 +1299,29 @@ describe('J-Passive-Conditional (direct src import)', () =>
       expect(globalThis.__forcedSkills).toEqual([ 504 ]);
     });
 
+    it('permits one nested auto-execute when the configured max depth is two', () =>
+    {
+      // Arrange- the ceiling is read from plugin metadata rather than hardcoded, so raising it to
+      // two must let exactly one re-entrant execution through before the third is refused.
+      const actor = buildMomentumToolkitActor([ '<autoExecuteSkill:[506, time, 1]>' ]);
+      actor.getUuid = () => 'auto-exec-actor';
+      mockJabsBattler.getBattler = () => actor;
+      globalThis.$dataSkills = [];
+      globalThis.$dataSkills[506] = { id: 506, stypeId: 1 };
+      globalThis.__forceMapActionHook = () => actor.tryAutoExecuteSkills('time');
+      const savedDepth = globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoExecuteSkillMaxDepth;
+      globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoExecuteSkillMaxDepth = 2;
+
+      // Act
+      globalThis.AutoExecuteSkillManager.processTimeRules(actor);
+
+      // Assert
+      expect(globalThis.__forcedSkills).toEqual([ 506, 506 ]);
+
+      // Cleanup
+      globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoExecuteSkillMaxDepth = savedDepth;
+    });
+
     it('credits move auto-execute only after the configured whole-tile count', () =>
     {
       // Arrange
@@ -1310,8 +1374,11 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
     it('dispatch returns false when the battler has no map presence', () =>
     {
-      // Arrange
+      // Arrange- the skill row exists and the engine would happily run it, so the missing map
+      // wrapper is the only reason this dispatch declines.
       globalThis.JABS_AiManager.getBattlerByUuid = () => null;
+      globalThis.$dataSkills = [];
+      globalThis.$dataSkills[500] = { id: 500, stypeId: 1 };
       const actor = buildMomentumToolkitActor([]);
       actor.getUuid = () => 'off-map-actor';
 
@@ -1551,12 +1618,32 @@ describe('J-Passive-Conditional (direct src import)', () =>
       stubPolarityState(10, true);
       const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 0]>' ]);
       const target = { isStateAddable: () => false, addState: vi.fn() };
+      const stampSpy = vi.spyOn(applier, 'setAutoRuleLastFrame');
+
+      // Act
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
+
+      // Assert- a refused dispatch must leave the cooldown unstamped, or the rule would sit out
+      // its window having never actually fired.
+      expect(target.addState).not.toHaveBeenCalled();
+      expect(stampSpy).not.toHaveBeenCalled();
+    });
+
+    it('fires a rule that has never dispatched even while fewer frames have elapsed than its cooldown', () =>
+    {
+      // Arrange- a cooldown far larger than the frames elapsed since boot; treating "never fired"
+      // as "fired on frame zero" would hold this first dispatch hostage until frame 9000.
+      stubPolarityState(10, true);
+      globalThis.Graphics.frameCount = 300;
+      const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 9000]>' ]);
+      const applied = [];
+      const target = { isStateAddable: () => true, addState: (id) => applied.push(id) };
 
       // Act
       globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, target, 10);
 
       // Assert
-      expect(target.addState).not.toHaveBeenCalled();
+      expect(applied).toEqual([ 70 ]);
     });
 
     it('does nothing when the JABS engine is disabled', () =>
@@ -1594,6 +1681,34 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
       // Assert- default max depth is 1: the outer call dispatches, the nested re-entrant call does not.
       expect(dispatchCalls).toEqual([ 'dispatched' ]);
+    });
+
+    it('permits one nested dispatch when the configured max depth is two', () =>
+    {
+      // Arrange- the ceiling is read from plugin metadata rather than hardcoded, so raising it to
+      // two must let exactly one re-entrant application through before the third is refused.
+      const applier = buildMomentumToolkitActor([]);
+      const dispatchCalls = [];
+      const target = {
+        isStateAddable: () => true,
+        addState()
+        {
+          dispatchCalls.push('dispatched');
+          // simulate the newly-applied state itself re-triggering this same manager.
+          globalThis.AutoInflictStateManager.dispatch(target, 70, applier);
+        },
+      };
+      const savedDepth = globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoInflictStateMaxDepth;
+      globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoInflictStateMaxDepth = 2;
+
+      // Act
+      globalThis.AutoInflictStateManager.dispatch(target, 70, applier);
+
+      // Assert
+      expect(dispatchCalls).toEqual([ 'dispatched', 'dispatched' ]);
+
+      // Cleanup
+      globalThis.J.PASSIVE.EXT.CONDITIONAL.Metadata.autoInflictStateMaxDepth = savedDepth;
     });
 
     it('scheduleKnockbackTriggers applies the payload state onto the knocked-back target', () =>
@@ -1705,11 +1820,18 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
     it('scheduleInflictedStateTriggers is a no-op without a valid applier/target pair', () =>
     {
-      // Act & Assert
-      expect(() => globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(null, {}, 10))
-        .not.toThrow();
-      expect(() => globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers({}, null, 10))
-        .not.toThrow();
+      // Arrange- a real inflicted state row and a real matching rule sit behind the guard, so the
+      // missing half of the pair is the only reason the payload never lands.
+      globalThis.$dataStates[9033] = { id: 9033, isNegativeType: () => true };
+      const applier = buildMomentumToolkitActor([ '<autoInflictState:[70, negaStateInflicted, 0]>' ]);
+      const target = { isStateAddable: () => true, addState: vi.fn() };
+
+      // Act
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(null, target, 9033);
+      globalThis.AutoInflictStateManager.scheduleInflictedStateTriggers(applier, null, 9033);
+
+      // Assert
+      expect(target.addState).not.toHaveBeenCalled();
     });
 
     it('scheduleInflictedStateTriggers is a no-op when the inflicted state has no database row', () =>
@@ -1873,9 +1995,10 @@ describe('J-Passive-Conditional (direct src import)', () =>
       expect(act).not.toThrow();
     });
 
-    it('does not throw when the caster has no underlying Game_Battler', () =>
+    it('does not schedule kill triggers when the caster has no underlying Game_Battler', () =>
     {
-      // Arrange
+      // Arrange- the schedulers each carry their own null-battler guard, so asserting "nothing
+      // happened" downstream proves nothing; spy on them and require they are never reached.
       const defeatedTargetJabsBattler = {
         clearFollowers: vi.fn(),
         clearLeader: vi.fn(),
@@ -1886,9 +2009,22 @@ describe('J-Passive-Conditional (direct src import)', () =>
       };
       const casterJabsBattler = { getBattler: () => null };
       const engine = new globalThis.JABS_Engine();
+      const applySpy = vi.spyOn(globalThis.AutoApplyStateManager, 'scheduleKillTriggers');
+      const executeSpy = vi.spyOn(globalThis.AutoExecuteSkillManager, 'scheduleKillTriggers');
+      const cooldownSpy = vi.spyOn(globalThis.AutoModifyCooldownManager, 'scheduleKillTriggers');
 
-      // Act & Assert
-      expect(() => engine.handleDefeatedEnemy(defeatedTargetJabsBattler, casterJabsBattler)).not.toThrow();
+      // Act
+      engine.handleDefeatedEnemy(defeatedTargetJabsBattler, casterJabsBattler);
+
+      // Assert
+      expect(applySpy).not.toHaveBeenCalled();
+      expect(executeSpy).not.toHaveBeenCalled();
+      expect(cooldownSpy).not.toHaveBeenCalled();
+
+      // spies on bare-global plugin statics leak into later tests in this file, so restore by hand.
+      applySpy.mockRestore();
+      executeSpy.mockRestore();
+      cooldownSpy.mockRestore();
     });
   });
 
@@ -1912,15 +2048,23 @@ describe('J-Passive-Conditional (direct src import)', () =>
       expect(knockedBack.addState).toHaveBeenCalledWith(74, caster);
     });
 
-    it('does not throw when either side has no underlying Game_Battler', () =>
+    it('does not schedule knockback triggers when either side has no underlying Game_Battler', () =>
     {
-      // Arrange
+      // Arrange- the scheduler guards its own applier/target pair, so the only way to prove this
+      // hook bailed is to watch whether it was called at all.
       const action = { getCaster: () => ({ getBattler: () => null }) };
       const targetJabsBattler = { getBattler: () => null };
       const engine = new globalThis.JABS_Engine();
+      const knockbackSpy = vi.spyOn(globalThis.AutoInflictStateManager, 'scheduleKnockbackTriggers');
 
-      // Act & Assert
-      expect(() => engine.checkKnockback(action, targetJabsBattler)).not.toThrow();
+      // Act
+      engine.checkKnockback(action, targetJabsBattler);
+
+      // Assert
+      expect(knockbackSpy).not.toHaveBeenCalled();
+
+      // spies on bare-global plugin statics leak into later tests in this file, so restore by hand.
+      knockbackSpy.mockRestore();
     });
   });
 
@@ -1969,6 +2113,44 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
       // Assert
       expect(applied).toEqual([ 91 ]);
+    });
+
+    it('JABS_Engine#postExecuteSkillEffects fires onDamageDealt when only mp was drained', () =>
+    {
+      // Arrange- mp burn is damage too; a hit that never touched hp still counts as damage dealt.
+      const caster = buildMomentumToolkitActor([ '<autoApplyState:[97, onDamageDealt, 0]>' ]);
+      const applied = [];
+      caster.isStateAddable = () => true;
+      caster.addState = (stateId) => applied.push(stateId);
+      const targetBattler = { result: () => ({ hpDamage: 0, mpDamage: 12, tpDamage: 0 }) };
+      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'CombatSkill1' };
+      const target = buildJabsWrapper(targetBattler, 1);
+      const engine = new globalThis.JABS_Engine();
+
+      // Act
+      engine.postExecuteSkillEffects(action, target);
+
+      // Assert
+      expect(applied).toEqual([ 97 ]);
+    });
+
+    it('JABS_Engine#postExecuteSkillEffects fires onDamageDealt when only tp was drained', () =>
+    {
+      // Arrange- same argument for tp: the pool that moved does not change that damage landed.
+      const caster = buildMomentumToolkitActor([ '<autoApplyState:[98, onDamageDealt, 0]>' ]);
+      const applied = [];
+      caster.isStateAddable = () => true;
+      caster.addState = (stateId) => applied.push(stateId);
+      const targetBattler = { result: () => ({ hpDamage: 0, mpDamage: 0, tpDamage: 5 }) };
+      const action = { getCaster: () => buildJabsWrapper(caster, 0), getCooldownType: () => 'CombatSkill1' };
+      const target = buildJabsWrapper(targetBattler, 1);
+      const engine = new globalThis.JABS_Engine();
+
+      // Act
+      engine.postExecuteSkillEffects(action, target);
+
+      // Assert
+      expect(applied).toEqual([ 98 ]);
     });
 
     it('does not fire onDamageDealt for same-team hits (friendly fire)', () =>
@@ -2077,16 +2259,26 @@ describe('J-Passive-Conditional (direct src import)', () =>
       expect(caster.addState).not.toHaveBeenCalled();
     });
 
-    it('does not throw when the caster has no underlying Game_Battler', () =>
+    it('does not schedule damage-dealt or weapon-hit triggers when the caster has no underlying Game_Battler', () =>
     {
-      // Arrange
+      // Arrange- both schedulers guard their own null battler, so watch the calls themselves.
       const targetBattler = { result: () => ({ hpDamage: 50, mpDamage: 0, tpDamage: 0 }) };
       const action = { getCaster: () => buildJabsWrapper(null, 0), getCooldownType: () => 'Main' };
       const target = buildJabsWrapper(targetBattler, 1);
       const engine = new globalThis.JABS_Engine();
+      const damageSpy = vi.spyOn(globalThis.AutoApplyStateManager, 'scheduleDamageDealtTriggers');
+      const weaponSpy = vi.spyOn(globalThis.AutoApplyStateManager, 'scheduleWeaponHitTriggers');
 
-      // Act & Assert
-      expect(() => engine.postExecuteSkillEffects(action, target)).not.toThrow();
+      // Act
+      engine.postExecuteSkillEffects(action, target);
+
+      // Assert
+      expect(damageSpy).not.toHaveBeenCalled();
+      expect(weaponSpy).not.toHaveBeenCalled();
+
+      // spies on bare-global plugin statics leak into later tests in this file, so restore by hand.
+      damageSpy.mockRestore();
+      weaponSpy.mockRestore();
     });
   });
 
@@ -2356,6 +2548,67 @@ describe('J-Passive-Conditional (direct src import)', () =>
       // Assert
       expect(act).not.toThrow();
     });
+
+    it('stamps only the hp heal frame and schedules onHealHp triggers for an hp heal', () =>
+    {
+      // Arrange- the other two pools are asserted untouched, so a branch that stamped the wrong
+      // resource would be visible rather than merely unproven.
+      const battler = buildMomentumToolkitActor([]);
+      globalThis.PassiveRuleJabsAccess.nearbyAlliesExcludingSelf = () => [];
+      const healSpy = vi.spyOn(globalThis.AutoApplyStateManager, 'scheduleHealTriggers');
+
+      // Act
+      battler.onHeal(globalThis.J.BASE.Resource.HP, 10);
+
+      // Assert
+      expect(battler.getPassiveRuleLastHpHealFrame()).toBe(2500);
+      expect(battler.getPassiveRuleLastMpHealFrame()).toBe(0);
+      expect(battler.getPassiveRuleLastTpHealFrame()).toBe(0);
+      expect(healSpy).toHaveBeenCalledWith(battler, 'onHealHp');
+
+      // spies on bare-global plugin statics leak into later tests in this file, so restore by hand.
+      healSpy.mockRestore();
+    });
+
+    it('stamps only the mp heal frame and schedules onHealMp triggers for an mp heal', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      globalThis.PassiveRuleJabsAccess.nearbyAlliesExcludingSelf = () => [];
+      const healSpy = vi.spyOn(globalThis.AutoApplyStateManager, 'scheduleHealTriggers');
+
+      // Act
+      battler.onHeal(globalThis.J.BASE.Resource.MP, 10);
+
+      // Assert
+      expect(battler.getPassiveRuleLastMpHealFrame()).toBe(2500);
+      expect(battler.getPassiveRuleLastHpHealFrame()).toBe(0);
+      expect(battler.getPassiveRuleLastTpHealFrame()).toBe(0);
+      expect(healSpy).toHaveBeenCalledWith(battler, 'onHealMp');
+
+      // spies on bare-global plugin statics leak into later tests in this file, so restore by hand.
+      healSpy.mockRestore();
+    });
+
+    it('stamps only the tp heal frame and schedules onHealTp triggers for a tp heal', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      globalThis.PassiveRuleJabsAccess.nearbyAlliesExcludingSelf = () => [];
+      const healSpy = vi.spyOn(globalThis.AutoApplyStateManager, 'scheduleHealTriggers');
+
+      // Act
+      battler.onHeal(globalThis.J.BASE.Resource.TP, 10);
+
+      // Assert
+      expect(battler.getPassiveRuleLastTpHealFrame()).toBe(2500);
+      expect(battler.getPassiveRuleLastHpHealFrame()).toBe(0);
+      expect(battler.getPassiveRuleLastMpHealFrame()).toBe(0);
+      expect(healSpy).toHaveBeenCalledWith(battler, 'onHealTp');
+
+      // spies on bare-global plugin statics leak into later tests in this file, so restore by hand.
+      healSpy.mockRestore();
+    });
   });
 
   describe('canIncludePassiveStateFromSource (extended)', () =>
@@ -2396,6 +2649,46 @@ describe('J-Passive-Conditional (direct src import)', () =>
       // Act & Assert
       expect(battler.evaluatePassiveGateRulesForSource(baseItem, 1)).toBe(false);
     });
+
+    it('evaluates only the state rules that target the passive being tested', () =>
+    {
+      // Arrange- the sibling rule belongs to a different passive on the same row and would fail
+      // if it were ever evaluated, so a filter that matched everything would veto this passive.
+      const battler = buildMomentumToolkitActor([]);
+      const baseItem = {
+        passiveSourceRules: [],
+        passiveStateRules: [
+          [ 2, 'hpAbove', 200 ],
+          [ 1, 'hpBelow', 200 ],
+        ],
+      };
+      battler._hp = 1;
+      battler._mhp = 100;
+
+      // Act & Assert
+      expect(battler.evaluatePassiveGateRulesForSource(baseItem, 1)).toBe(true);
+    });
+  });
+
+  describe('findPassiveStateCountTuple (extended)', () =>
+  {
+    it('returns the first scaler targeting the requested passive, not merely the first scaler', () =>
+    {
+      // Arrange- a scaler for a different passive sits ahead of the wanted one in author order.
+      const battler = buildMomentumToolkitActor([]);
+      const baseItem = {
+        passiveStateCounts: [
+          [ 9, 'moreIsMoreMp', 10 ],
+          [ 7, 'moreIsMoreHp', 25 ],
+        ],
+      };
+
+      // Act
+      const result = battler.findPassiveStateCountTuple(baseItem, 7);
+
+      // Assert
+      expect(result).toEqual([ 7, 'moreIsMoreHp', 25 ]);
+    });
   });
 
   describe('buildPassiveCollectionFingerprint / reconcilePassiveRules', () =>
@@ -2431,12 +2724,18 @@ describe('J-Passive-Conditional (direct src import)', () =>
       expect(fingerprint.stackEntries).toEqual([ [ 202, 1 ], [ 204, 1 ] ]);
     });
 
-    it('excludes a unique id gated out by canIncludePassiveStateFromSource', () =>
+    it('excludes ids gated out by canIncludePassiveStateFromSource', () =>
     {
-      // Arrange
+      // Arrange- the row carries one of each kind, so the gate is proven to apply to the
+      // stackable list as well as the unique one.
       const battler = buildMomentumToolkitActor([]);
       const source = new globalThis.RPG_BaseItem({
-        id: 1, meta: {}, name: 'Src', note: '<uniquePassive:[301]>', description: String.empty, iconIndex: 0,
+        id: 1,
+        meta: {},
+        name: 'Src',
+        note: '<uniquePassive:[301]>\n<passive:[302]>',
+        description: String.empty,
+        iconIndex: 0,
       }, 1);
       battler._j._passive._passiveSources = [ source ];
       battler.canIncludePassiveStateFromSource = () => false;
@@ -2446,6 +2745,31 @@ describe('J-Passive-Conditional (direct src import)', () =>
 
       // Assert
       expect(fingerprint.uniqueIds).toEqual([]);
+      expect(fingerprint.stackEntries).toEqual([]);
+    });
+
+    it('ignores equip-only passive ids on a source that is not an equip item', () =>
+    {
+      // Arrange- the equipped-passive tags parse on any row, but they only mean anything while
+      // the row is worn, and a non-equip source never is.
+      const battler = buildMomentumToolkitActor([]);
+      const skillSource = new globalThis.RPG_BaseItem({
+        id: 3,
+        meta: {},
+        name: 'Skill',
+        note: '<uniquePassive:[205]>\n<passive:[206]>\n<uniqueEquippedPassive:[207]>\n<equippedPassive:[208]>',
+        description: String.empty,
+        iconIndex: 0,
+      }, 3);
+      skillSource.isEquipItem = () => false;
+      battler._j._passive._passiveSources = [ skillSource ];
+
+      // Act
+      const fingerprint = JSON.parse(battler.buildPassiveCollectionFingerprint());
+
+      // Assert
+      expect(fingerprint.uniqueIds).toEqual([ 205 ]);
+      expect(fingerprint.stackEntries).toEqual([ [ 206, 1 ] ]);
     });
 
     it('accumulates stack contributions across multiple sources granting the same stackable id', () =>
@@ -2515,6 +2839,36 @@ describe('J-Passive-Conditional (direct src import)', () =>
       // Assert- refreshPassiveStates (aliased) re-derives and stores a fresh, non-stale fingerprint.
       expect(battler._j._passive._conditional._collectionFingerprint).not.toBe('stale-fingerprint');
       expect(battler._j._passive._conditional._pendingFingerprint).toBe(null);
+    });
+
+    it('consumes the stashed pending fingerprint when a reconcile cycle left one', () =>
+    {
+      // Arrange- the stash deliberately differs from what a fresh collector pass would produce,
+      // so whichever string lands in storage identifies which path ran.
+      const battler = buildMomentumToolkitActor([]);
+      battler._j._passive._passiveSources = [];
+      battler._j._passive._conditional._pendingFingerprint = 'pending-from-reconcile';
+
+      // Act
+      battler.updatePassiveRuleCollectionFingerprint();
+
+      // Assert
+      expect(battler._j._passive._conditional._collectionFingerprint).toBe('pending-from-reconcile');
+    });
+
+    it('recomputes the fingerprint when no reconcile cycle stashed one', () =>
+    {
+      // Arrange
+      const battler = buildMomentumToolkitActor([]);
+      battler._j._passive._passiveSources = [];
+      battler._j._passive._conditional._pendingFingerprint = null;
+
+      // Act
+      battler.updatePassiveRuleCollectionFingerprint();
+
+      // Assert- an empty source list still produces a real fingerprint, never a null stash.
+      expect(battler._j._passive._conditional._collectionFingerprint)
+        .toBe('{"uniqueIds":[],"stackEntries":[]}');
     });
   });
 
@@ -2849,6 +3203,29 @@ describe('J-Passive-Conditional (direct src import)', () =>
         const processSpy = vi.spyOn(globalThis.MoveStateRemovalManager, 'process').mockImplementation(() => {});
         const jabsBattler = Object.create(globalThis.JABS_Battler.prototype);
         jabsBattler.getCharacter = () => ({ _realX: 6, _realY: 5 });
+        jabsBattler.getBattler = () => battler;
+
+        // Act
+        jabsBattler.updatePassiveRuleMovementTracking();
+
+        // Assert
+        expect(battler.getPassiveRuleLastMovedFrame()).toBe(5000);
+        expect(processSpy).toHaveBeenCalledWith(battler);
+
+        // Cleanup
+        processSpy.mockRestore();
+      });
+
+      it('stamps movement when only the vertical coordinate changed', () =>
+      {
+        // Arrange- walking due north moves the battler without touching x at all, and a tracker
+        // that only watched x would read that as standing still.
+        const battler = buildMomentumToolkitActor([]);
+        battler._j._passive._conditional._lastTrackedX = 5;
+        battler._j._passive._conditional._lastTrackedY = 5;
+        const processSpy = vi.spyOn(globalThis.MoveStateRemovalManager, 'process').mockImplementation(() => {});
+        const jabsBattler = Object.create(globalThis.JABS_Battler.prototype);
+        jabsBattler.getCharacter = () => ({ _realX: 5, _realY: 4 });
         jabsBattler.getBattler = () => battler;
 
         // Act

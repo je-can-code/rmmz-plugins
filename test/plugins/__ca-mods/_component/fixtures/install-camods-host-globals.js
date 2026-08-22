@@ -51,12 +51,6 @@ export function installCamodsHostGlobals(sandbox = globalThis)
 
   installPluginManagerWithParams(sandbox, 'J-CA-Mods', {});
 
-  sandbox.JABS_Button = {
-    Tool: 'tool',
-    Mainhand: 'mainhand',
-    Offhand: 'offhand',
-  };
-
   function JABS_Battler()
   {
   }
@@ -75,10 +69,6 @@ export function installCamodsHostGlobals(sandbox = globalThis)
   {
     return { targetX, targetY, item };
   };
-  JABS_Engine.prototype.handleDefeatedEnemy = noop;
-  JABS_Engine.prototype.handleDefeatedPlayer = noop;
-  JABS_Engine.prototype.postExecuteSkillEffects = noop;
-  JABS_Engine.prototype.executeMapAction = noop;
   JABS_Engine.prototype.handlePartyCycleMemberChanges = noop;
   sandbox.JABS_Engine = sandbox.JABS_Engine || JABS_Engine;
 
@@ -86,19 +76,9 @@ export function installCamodsHostGlobals(sandbox = globalThis)
   {
     return [];
   };
-  sandbox.Game_Actor.prototype.basicFloorDamage = function()
-  {
-    return 0;
-  };
-
   sandbox.Game_BattlerBase.prototype.recoverAll = noop;
 
   sandbox.Game_Map.prototype.setup = noop;
-
-  sandbox.Game_Enemy.prototype.dropSources = function()
-  {
-    return [];
-  };
 
   sandbox.Game_Party.prototype._actors = [];
 

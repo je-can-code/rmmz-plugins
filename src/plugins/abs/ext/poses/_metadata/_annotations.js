@@ -55,6 +55,9 @@
  * This is not a highly tested feature of JABS and may not work as intended.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.6
+ *    Fixed a skill with no pose building a sprite name ending in undefined; the
+ *    absent tag answered an empty array, which is truthy.
  * - 1.0.5
  *    startGuarding no longer takes a skillSlot param, matching J-ABS core;
  *    the guard pose now resolves via getGuardSkillId() instead.

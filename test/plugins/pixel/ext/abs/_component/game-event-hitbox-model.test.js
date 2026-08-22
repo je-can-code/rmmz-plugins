@@ -545,8 +545,14 @@ describe('J-ABS-Pixelistics Game_Event hitbox model (direct src import)', () =>
 
     it('refuses when the resolved range disables the feature', () =>
     {
-      // Arrange
-      const event = buildRevealEvent({ getPixelAbsHitboxRevealRange: () => 0 });
+      // Arrange- the player stands right on top of the battler, which is the one distance a disabled
+      // range would still satisfy on its own if the range check alone decided this. with the player
+      // further off, "range is zero" and "player is out of range" answer false for the same reason
+      // and nothing here would be constraining the disable.
+      const event = buildRevealEvent({
+        getPixelAbsHitboxRevealRange: () => 0,
+        distanceFromPlayer: () => 0,
+      });
 
       // Act & Assert
       expect(proto.canShowPixelAbsHitboxReveal.call(event)).toBe(false);

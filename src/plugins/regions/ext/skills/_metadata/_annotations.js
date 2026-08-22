@@ -120,6 +120,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Adapted to the RPGManager array read signature.
  * - 1.1.0
  *    Region skill step tracking is no longer written to savefiles for the
  *    player, followers, or vehicles; it is per-step bookkeeping that means

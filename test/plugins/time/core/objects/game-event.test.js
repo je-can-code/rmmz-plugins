@@ -406,6 +406,22 @@ describe('Game_Event ext/time augments (direct src import)', () =>
       expect(result).toBe(false);
     });
 
+    it('is satisfied on a matched second', () =>
+    {
+      // Arrange
+      // the other side of the second comparison. a non-zero second is deliberate here: at second
+      // zero the clock's value, the conditional's value and an untouched field are all the same
+      // number, and a match would prove nothing about the comparison having happened.
+      globalThis.$gameTime.setTime(30, 0, 9, 1, 1, 2020);
+      const conditional = conditionalOf({ seconds: 30 });
+
+      // Act
+      const result = globalThis.Game_Event._timeConditionalDirectMet(conditional);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
     it('is unsatisfied on a mismatched time of day', () =>
     {
       // Arrange
@@ -472,6 +488,22 @@ describe('Game_Event ext/time augments (direct src import)', () =>
 
       // Assert
       expect(result).toBe(true);
+    });
+
+    it('leaves the end of a range alone when its minutes do not wrap past the hour', () =>
+    {
+      // Arrange
+      // this range climbs from :00 to :30, so nothing about it runs past the top of an hour and the
+      // end must stay put at half past twelve. the clock sits inside the hour that a spurious
+      // carry would hand it - the one place where adding an hour and not adding one disagree.
+      globalThis.$gameTime.setTime(0, 0, 13, 1, 1, 2020);
+      const conditional = globalThis.Game_Event.toTimeConditional(comment('<timeRangePage:9:00-12:30>'));
+
+      // Act
+      const result = globalThis.Game_Event.timeConditionalMet(conditional);
+
+      // Assert
+      expect(result).toBe(false);
     });
 
     it('carries the end of a range that wraps past the top of the hour', () =>

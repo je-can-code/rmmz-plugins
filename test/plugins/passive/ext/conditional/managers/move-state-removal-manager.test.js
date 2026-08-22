@@ -103,8 +103,12 @@ describe('MoveStateRemovalManager (direct src import)', () =>
 
     it('decrements one stack by default when the state does not force full removal', () =>
     {
-      // Arrange
-      globalThis.$jabsEngine = { absEnabled: true, getJabsStateByUuidAndStateId: vi.fn() };
+      // Arrange- four stacks are live on the tracker, so "peel one" and "peel them all" are
+      // distinguishable amounts; only the state row's policy decides between them.
+      globalThis.$jabsEngine = {
+        absEnabled: true,
+        getJabsStateByUuidAndStateId: vi.fn().mockReturnValue({ stackCount: 4 }),
+      };
       globalThis.$dataStates = { 5: { jabsLoseAllStacksAtOnce: false } };
       const state = { constructor: { name: 'RPG_State' }, removeStateOnMoveRules: [ [ 5 ] ], autoApplyStateRules: [] };
       const battler = makeBattler({ allStates: vi.fn().mockReturnValue([ state ]) });

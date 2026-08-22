@@ -171,6 +171,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Adapted to the RPGManager array read signature.
  * - 1.1.0
  *    Fixed <apTyped:[AMOUNT, DOMAIN, ID_OR_NAME]> never matching — the
  *    regex required a 4th leading numeric field that the documented

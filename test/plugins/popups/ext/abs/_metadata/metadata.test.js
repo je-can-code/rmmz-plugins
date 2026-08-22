@@ -122,6 +122,37 @@ describe('J-Popups-ABS metadata (direct src import)', () =>
       expect(metadata.mergeParams.enableSlip).toBe(true);
     });
 
+    it('disables slip merging on its own toggle', async () =>
+    {
+      // Arrange & Act- each toggle reads its own parameter, so turning one off must be the only
+      // thing it turns off.
+      const metadata = await buildWith('J-Popups-ABS-NoSlipMerge', { enableMergeSlip: 'false' });
+
+      // Assert
+      expect(metadata.mergeParams.enableSlip).toBe(false);
+      expect(metadata.mergeParams.enableCombat).toBe(true);
+    });
+
+    it('disables reward merging on its own toggle', async () =>
+    {
+      // Arrange & Act
+      const metadata = await buildWith('J-Popups-ABS-NoRewardMerge', { enableMergeRewards: 'false' });
+
+      // Assert
+      expect(metadata.mergeParams.enableRewards).toBe(false);
+      expect(metadata.mergeParams.enableCombat).toBe(true);
+    });
+
+    it('disables mitigation merging on its own toggle', async () =>
+    {
+      // Arrange & Act
+      const metadata = await buildWith('J-Popups-ABS-NoMitigationMerge', { enableMergeMitigation: 'false' });
+
+      // Assert
+      expect(metadata.mergeParams.enableMitigation).toBe(false);
+      expect(metadata.mergeParams.enableCombat).toBe(true);
+    });
+
     it('parses a configured idle flush window', async () =>
     {
       // Arrange & Act
@@ -155,6 +186,25 @@ describe('J-Popups-ABS metadata (direct src import)', () =>
       const metadata = await buildWith('J-Popups-ABS-NaNOutline', { healingOutlineWidth: 'thick' });
 
       // Assert
+      expect(metadata.healingOutlineWidth).toBe(4);
+    });
+
+    it('accepts a configured healing outline width in place of the default', async () =>
+    {
+      // Arrange & Act- the heal width has its own parameter and its own fallback, so a configured
+      // value has to reach the metadata rather than being quietly swapped for the default 4.
+      const metadata = await buildWith('J-Popups-ABS-ThinHealOutline', { healingOutlineWidth: '9' });
+
+      // Assert
+      expect(metadata.healingOutlineWidth).toBe(9);
+    });
+
+    it('rejects a negative healing outline width in favor of the default', async () =>
+    {
+      // Arrange & Act
+      const metadata = await buildWith('J-Popups-ABS-NegHealOutline', { healingOutlineWidth: '-3' });
+
+      // Assert: a negative stroke would render as garbage, so the guard falls back.
       expect(metadata.healingOutlineWidth).toBe(4);
     });
   });

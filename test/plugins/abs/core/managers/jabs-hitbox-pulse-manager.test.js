@@ -198,6 +198,25 @@ describe('J-ABS JABS_HitboxPulseManager (direct src import)', () =>
       expect(layer.children).toHaveLength(1);
     });
 
+    it('keeps every pulse alive while the active count is still under the cap', () =>
+    {
+      // Arrange- the default cap of 8 leaves plenty of headroom for two spawns, so nothing may be
+      // evicted. A single spawn cannot prove that: with an empty active list the eviction branch
+      // shifts `undefined` and quietly does nothing, so it looks identical either way.
+      const layer = buildFakeLayer();
+      JABS_HitboxPulseManager.setLayer(layer);
+
+      // Act
+      JABS_HitboxPulseManager.spawn({ x: 1, y: 1, facing: 6 });
+      JABS_HitboxPulseManager.spawn({ x: 2, y: 2, facing: 4 });
+
+      // Assert- an eviction would have recycled the first pulse into the pool and popped it right
+      // back out, leaving one active pulse and only one sprite ever constructed.
+      expect(JABS_HitboxPulseManager.getActive()).toHaveLength(2);
+      expect(FakeSpriteHitboxPulse).toHaveBeenCalledTimes(2);
+      expect(layer.children).toHaveLength(2);
+    });
+
     it('reuses a pooled pulse instead of constructing a new one when the pool has entries', () =>
     {
       const layer = buildFakeLayer();
@@ -233,6 +252,10 @@ describe('J-ABS JABS_HitboxPulseManager (direct src import)', () =>
       expect(JABS_HitboxPulseManager.getPool()).toHaveLength(0);
       expect(first.reset).toHaveBeenCalledTimes(2);
       expect(first.setWorldPosition).toHaveBeenLastCalledWith(2, 2);
+      // the evicted pulse has to be detached before it is re-attached, or the layer accumulates a
+      // second reference to the same sprite on every eviction and leaks children forever.
+      expect(layer.removeChild).toHaveBeenCalledWith(first);
+      expect(layer.children).toEqual([ first ]);
     });
 
     it('tolerates a zero cap where the eviction slot has nothing to shift', () =>
@@ -398,6 +421,24 @@ describe('J-ABS JABS_HitboxPulseManager (direct src import)', () =>
       expect(JABS_HitboxPulseManager.getPool()).toHaveLength(0);
     });
 
+    it('empties the collections without attempting a detach when the layer is already gone', () =>
+    {
+      // Arrange- a map transition drops the layer before the manager is cleared, leaving an active
+      // pulse that was never attached to anything. Both the pulse's parent and the layer are null
+      // here, so a detach check that skipped the layer half of the guard would match `null` against
+      // `null`, decide the pulse is attached, and remove a child from nothing.
+      const pulse = buildFakePulse();
+      JABS_HitboxPulseManager.getActive()
+        .push(pulse);
+
+      // Act
+      JABS_HitboxPulseManager.clear();
+
+      // Assert
+      expect(JABS_HitboxPulseManager.getActive()).toHaveLength(0);
+      expect(JABS_HitboxPulseManager.getPool()).toHaveLength(0);
+    });
+
     it('tolerates an already-clear manager with nothing to do', () =>
     {
       expect(() => JABS_HitboxPulseManager.clear()).not.toThrow();
@@ -534,7 +575,21 @@ describe('J-ABS JABS_HitboxPulseManager (direct src import)', () =>
   {
     it('does nothing when there is no sustained pulse tracked for the uuid', () =>
     {
-      expect(() => JABS_HitboxPulseManager.releaseSustainedPulse('missing-uuid')).not.toThrow();
+      // Arrange- a layer is attached and the pool already holds a sprite, so a release that ran on
+      // past the missing-pulse guard would dereference `undefined` for its parent, and failing that
+      // would file `undefined` into the pool behind the real sprite for a later spawn to pop.
+      const layer = buildFakeLayer();
+      JABS_HitboxPulseManager.setLayer(layer);
+      const pooled = buildFakePulse();
+      JABS_HitboxPulseManager.getPool()
+        .push(pooled);
+
+      // Act
+      JABS_HitboxPulseManager.releaseSustainedPulse('missing-uuid');
+
+      // Assert
+      expect(JABS_HitboxPulseManager.getPool()).toEqual([ pooled ]);
+      expect(layer.removeChild).not.toHaveBeenCalled();
     });
 
     it('detaches only when the pulse is actually attached to the current layer', () =>

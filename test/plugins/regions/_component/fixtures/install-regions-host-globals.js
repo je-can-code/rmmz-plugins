@@ -9,6 +9,7 @@ const noop = function()
 export const DEFAULT_REGION_EFFECTS_PLUGIN_PARAMS = {
   globalAllowRegions: '[]',
   globalDenyRegions: '[]',
+  globalDenyTerrainTags: '[]',
 };
 
 export const DEFAULT_REGION_STATES_PLUGIN_PARAMS = {

@@ -282,12 +282,17 @@ describe('J-ABS Game_Interpreter (unit, all downstream dependencies mocked)', ()
 
     it('uses variable troop designation', () =>
     {
+      // Arrange: troop 20 is deliberately not the id the random-encounter fallback hands back, so
+      // only the variable lookup can account for it.
+      globalThis.$dataTroops[20] = { id: 20 };
       const interpreter = buildInterpreter();
 
-      interpreter.command301([ 1, 0.5, true, true ]);
+      // Act
+      interpreter.command301([ 1, 2, true, true ]);
 
-      // $gameVariables.value(id) => id * 10 per the fixture; 0.5 * 10 = 5.
-      expect(globalThis.BattleManager.setup).toHaveBeenCalledWith(5, true, true);
+      // Assert: $gameVariables.value(id) => id * 10 per the fixture; 2 * 10 = 20.
+      expect(globalThis.BattleManager.setup).toHaveBeenCalledWith(20, true, true);
+      expect(globalThis.$gamePlayer.makeEncounterTroopId).not.toHaveBeenCalled();
     });
 
     it('uses the random encounter troop id for any other designation', () =>

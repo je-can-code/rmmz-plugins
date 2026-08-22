@@ -313,8 +313,10 @@ describe('J-Elementalistics battler elements (direct src import)', () =>
 
     it('applies enemy boosts the same way it does actor boosts', () =>
     {
-      // Arrange & Act
-      const boost = makeEnemy('<boostElement:[3,50]>').elementRateBoost(3);
+      // Arrange: the enemy carries a boost for a neighboring element as well, which has to be
+      // left out of the tally rather than lumped in with the element being asked about.
+      // Act
+      const boost = makeEnemy('<boostElement:[3,50]>\n<boostElement:[4,50]>').elementRateBoost(3);
 
       // Assert
       expect(boost).toBeCloseTo(1.5, 10);

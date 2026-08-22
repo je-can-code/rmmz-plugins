@@ -60,20 +60,30 @@ describe('JaftingSalvageLedger (direct src import)', () =>
   {
     it('is false while the weapon type id is negative (feature disabled by default)', () =>
     {
+      // Arrange - the disabled sentinel is still a number, so a weapon whose own wtypeId happens to be
+      // that same number must not match it; the negative guard is the only thing standing in the way.
       const weapon = { isWeapon: () => true, wtypeId: 0 };
+      const sentinelTypedWeapon = { isWeapon: () => true, wtypeId: -1 };
 
+      // Act & Assert
       expect(JaftingSalvageLedger.isMaterialWeaponDatum(weapon)).toBe(false);
+      expect(JaftingSalvageLedger.isMaterialWeaponDatum(sentinelTypedWeapon)).toBe(false);
     });
 
     it('is true when enabled and the wtypeId matches, even wtypeId 0', () =>
     {
+      // Arrange - type ids are numbered per table, so a non-weapon can legitimately carry the same
+      // number; only the weapon check keeps it from being counted as the configured material weapon.
       globalThis.J.JAFTING.Metadata.materialWeaponTypeId = 0;
 
       const matchingWeapon = { isWeapon: () => true, wtypeId: 0 };
       const wrongWeapon = { isWeapon: () => true, wtypeId: 1 };
+      const notWeapon = { isWeapon: () => false, wtypeId: 0 };
 
+      // Act & Assert
       expect(JaftingSalvageLedger.isMaterialWeaponDatum(matchingWeapon)).toBe(true);
       expect(JaftingSalvageLedger.isMaterialWeaponDatum(wrongWeapon)).toBe(false);
+      expect(JaftingSalvageLedger.isMaterialWeaponDatum(notWeapon)).toBe(false);
     });
   });
 
@@ -143,6 +153,25 @@ describe('JaftingSalvageLedger (direct src import)', () =>
       const merged = JaftingSalvageLedger.mergeDuplicateRows(rows);
 
       expect(merged[0].banned).toBe(true);
+    });
+
+    it('leaves the merged row unbanned when no duplicate was banned', () =>
+    {
+      // Arrange - the ban flag is only ever written on and never off, so a merge of two clean rows is
+      // the only case that proves the write is conditional rather than unconditional.
+      const rows = [
+        new JaftingSalvageLedgerRow('i', 1, 2, false),
+        new JaftingSalvageLedgerRow('i', 1, 3, false),
+      ];
+
+      // Act
+      const merged = JaftingSalvageLedger.mergeDuplicateRows(rows);
+
+      // Assert - the summed count anchors that the duplicate branch really ran, since an unset ban flag
+      // is also what a row that never got merged at all would report.
+      expect(merged.length).toBe(1);
+      expect(merged[0].n).toBe(5);
+      expect(merged[0].banned).toBeUndefined();
     });
   });
 

@@ -133,6 +133,21 @@ describe('Game_Follower ext/pixel augments (direct src import)', () =>
       expect(follower.setDirection).toHaveBeenCalledWith(4);
     });
 
+    it('declines to face anywhere when the preceding character stands on this exact spot', () =>
+    {
+      // Arrange: stacked characters make every axis comparison a tie, so all four facing
+      // conditions have to decline. The record exists here, so the "no record yet" early return
+      // above cannot be what suppresses the facing - only the conditions themselves can.
+      const follower = makeFollower(3, 3);
+      const other = { oldestPositionalRecord: () => ({ x: 3, y: 3 }) };
+
+      // Act
+      follower.pixelFaceCharacter(other);
+
+      // Assert
+      expect(follower.setDirection).not.toHaveBeenCalled();
+    });
+
     it('defaults to $gamePlayer as the other character when none is provided', () =>
     {
       // Arrange

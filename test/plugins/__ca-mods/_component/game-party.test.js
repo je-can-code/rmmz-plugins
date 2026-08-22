@@ -12,8 +12,8 @@ describe('CAMods Game_Party (real engine direct import)', () =>
     await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
     await import('../../../../src/plugins/__ca-mods/core/_metadata/initialization.js');
 
-    // the file under test- adds extraDropSources/elementalActors/elementalJabsBattlers/isLeaderActor
-    // onto the real, engine-provided Game_Party.prototype.
+    // the file under test- adds elementalActors/elementalJabsBattlers/isLeaderActor onto the real,
+    // engine-provided Game_Party.prototype.
     await import('../../../../src/plugins/__ca-mods/core/objects/Game_Party.js');
   });
 
@@ -35,20 +35,6 @@ describe('CAMods Game_Party (real engine direct import)', () =>
   it('exposes the CA elemental ally actor ids as a static list', () =>
   {
     expect(globalThis.Game_Party.ELEMENTAL_ALLY_ACTOR_IDS).toEqual([ 3, 4, 5, 6 ]);
-  });
-
-  describe('extraDropSources', () =>
-  {
-    it('collects allStates() from every battle member into a single flat list', () =>
-    {
-      const party = Object.create(globalThis.Game_Party.prototype);
-      const memberA = { allStates: () => [ 'state-a1', 'state-a2' ] };
-      const memberB = { allStates: () => [ 'state-b1' ] };
-
-      globalThis.$gameParty = { battleMembers: () => [ memberA, memberB ] };
-
-      expect(party.extraDropSources()).toEqual([ 'state-a1', 'state-a2', 'state-b1' ]);
-    });
   });
 
   describe('elementalActors', () =>

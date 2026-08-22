@@ -118,6 +118,27 @@ describe('ParameterCatalogRenderer (direct src import)', () =>
   }
 
   /**
+   * Builds a drawing surface whose text measurement is genuinely proportional - the zero glyph the
+   * styled estimate samples is narrow, every other glyph is wide.
+   *
+   * The default surface above measures a fixed width per character, which is the one shape that
+   * cannot tell the styled monospace estimate apart from a real measurement: both come out to the
+   * same number for every string, so the branch choosing between them has no observable effect.
+   */
+  function makeProportionalWindow(overrides = {})
+  {
+    const textWidth = vi.fn(text => [ ...text ].reduce(
+      (total, character) => total + (character === '0'
+        ? 6
+        : 12), 0));
+
+    return makeWindow({
+      textWidth,
+      ...overrides,
+    });
+  }
+
+  /**
    * Builds a battler answering the four rate questions the affiliation rows ask it.
    *
    * Every one of them is read through the combat-facing accessor rather than summed from traits, so
@@ -295,37 +316,38 @@ describe('ParameterCatalogRenderer (direct src import)', () =>
     it('uses the styled monospace width when padding is active', () =>
     {
       // Arrange
-      const window = makeWindow();
+      const window = makeProportionalWindow();
 
       // Act
       const width = ParameterCatalogRenderer.catalogValueRightMeasureWidth(window, '100', true, false);
 
-      // Assert
+      // Assert- three digit columns, not the proportional measurement of the string itself.
       expect(width).toEqual(18);
     });
 
     it('uses the styled monospace width when the value is a sentinel', () =>
     {
       // Arrange
-      const window = makeWindow();
+      const window = makeProportionalWindow();
 
       // Act
       const width = ParameterCatalogRenderer.catalogValueRightMeasureWidth(window, 'FREE', false, true);
 
-      // Assert
+      // Assert- a sentinel label occupies digit columns too, so its slot stays aligned with the
+      // numeric rows it sits among rather than tracking the width of its own letters.
       expect(width).toEqual(24);
     });
 
     it('measures the raw text width when neither padded nor a sentinel', () =>
     {
       // Arrange
-      const window = makeWindow();
+      const window = makeProportionalWindow();
 
       // Act
       const width = ParameterCatalogRenderer.catalogValueRightMeasureWidth(window, '100', false, false);
 
       // Assert
-      expect(width).toEqual(18);
+      expect(width).toEqual(24);
       expect(window.textWidth).toHaveBeenCalledWith('100');
     });
   });
@@ -608,7 +630,8 @@ describe('ParameterCatalogRenderer (direct src import)', () =>
 
     it('treats a clamped sentinel value as reserving the sign column when not comparing', () =>
     {
-      // Arrange
+      // Arrange- a sentinel label suppresses styled padding, so the sentinel flag is the only thing
+      // left holding this row's value in line with the signed percents around it.
       fakeDefinition.resolveDisplaySentinel.mockReturnValue('FREE');
       const window = makeWindow();
       const parameter = makeParameter();
@@ -616,8 +639,41 @@ describe('ParameterCatalogRenderer (direct src import)', () =>
       // Act
       ParameterCatalogRenderer.drawParameterRight(window, 200, 100, 400, parameter, null);
 
+      // Assert- the value starts one digit column past the divider at 200.
+      expect(window.drawText).toHaveBeenCalledWith('100', 206, 100, 18, 'left');
+    });
+
+    it('draws an unpadded non-sentinel value flush against the divider', () =>
+    {
+      // Arrange- REGEN_PER_SECOND carries its own unit suffix and so renders unpadded; with no
+      // sentinel either, there is nothing left to reserve the sign column for.
+      fakeDefinition.format = ParameterFormat.REGEN_PER_SECOND;
+      const window = makeWindow();
+      const parameter = makeParameter();
+
+      // Act
+      ParameterCatalogRenderer.drawParameterRight(window, 200, 100, 400, parameter, null);
+
       // Assert
-      expect(window.drawText).toHaveBeenCalled();
+      expect(window.drawText).toHaveBeenCalledWith('100', 200, 100, 18, 'left');
+    });
+
+    it('never reserves the sign column while comparing, even for a parameter that has a sentinel', () =>
+    {
+      // Arrange- a comparison always renders as a plain projected value, so the sentinel label the
+      // definition would otherwise supply is not what gets drawn and must not shift the layout.
+      fakeDefinition.resolveDisplaySentinel.mockReturnValue('FREE');
+      const window = makeWindow();
+      const parameter = makeParameter();
+      const actor = { parameter: vi.fn().mockReturnValue(120) };
+      const nextParameter = ParameterCatalogRenderer.makeParameter(actor, 'atk');
+      fakeDefinition.prettyValue.mockReturnValue('120');
+
+      // Act
+      ParameterCatalogRenderer.drawParameterRight(window, 200, 100, 400, parameter, nextParameter);
+
+      // Assert
+      expect(window.drawText).toHaveBeenCalledWith('120 (+5)', 200, 100, 48, 'left');
     });
   });
 
@@ -634,9 +690,17 @@ describe('ParameterCatalogRenderer (direct src import)', () =>
       ParameterCatalogRenderer.drawGroupParameters(window, 0, 0, 300, definitions, actor, null);
 
       // Assert
-      // 3 rows: left, right, left - each draws one icon.
-      expect(window.drawIcon).toHaveBeenCalledTimes(3);
-      expect(window.changePaintOpacity).toHaveBeenLastCalledWith(true);
+      // 3 rows: left, right, left - a left row anchors its icon on the column's left edge, a right
+      // row mirrors it out to the section's outer edge, and the third wraps to the next line.
+      expect(window.drawIcon.mock.calls).toEqual([
+        [ 64, 0, 36 ],
+        [ 64, 268, 36 ],
+        [ 64, 0, 72 ],
+      ]);
+
+      // nothing is being compared, so every row draws at full opacity- including the reset that
+      // keeps the dimming from leaking into whatever draws next.
+      expect(window.changePaintOpacity.mock.calls).toEqual([ [ true ], [ true ], [ true ], [ true ] ]);
     });
 
     it('fades rows that are unchanged while comparing against a candidate actor', () =>
@@ -650,9 +714,8 @@ describe('ParameterCatalogRenderer (direct src import)', () =>
       // Act
       ParameterCatalogRenderer.drawGroupParameters(window, 0, 0, 300, definitions, actor, tempActor);
 
-      // Assert
-      expect(window.changePaintOpacity).toHaveBeenCalledWith(false);
-      expect(window.changePaintOpacity).toHaveBeenLastCalledWith(true);
+      // Assert- the row itself dims; the trailing call is the reset, not a second row.
+      expect(window.changePaintOpacity.mock.calls).toEqual([ [ false ], [ true ] ]);
     });
 
     it('keeps full opacity for rows that are actually changing while comparing', () =>
@@ -666,8 +729,8 @@ describe('ParameterCatalogRenderer (direct src import)', () =>
       // Act
       ParameterCatalogRenderer.drawGroupParameters(window, 0, 0, 300, definitions, actor, tempActor);
 
-      // Assert
-      expect(window.changePaintOpacity).toHaveBeenCalledWith(true);
+      // Assert- the changing row is never dimmed, so no call carries false at all.
+      expect(window.changePaintOpacity.mock.calls).toEqual([ [ true ], [ true ] ]);
     });
   });
 

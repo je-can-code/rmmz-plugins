@@ -127,6 +127,42 @@ describe('JABS_Battler ext/abs augments (direct src import)', () =>
       // Assert
       expect(FakeJABSPopupManager.showSlipPop).toHaveBeenCalled();
     });
+
+    it('does not suppress an hp popup due to an mp-only suppression', () =>
+    {
+      // Arrange- each suppression tag names one resource, so an mp tag must leave the hp tick alone.
+      const battler = makeBattlerWithState({ popupsNoMpSlip: true });
+
+      // Act
+      battler.onSlipRegenTick(5, 0, 1);
+
+      // Assert
+      expect(FakeJABSPopupManager.showSlipPop).toHaveBeenCalled();
+    });
+
+    it('does not suppress an hp popup due to a tp-only suppression', () =>
+    {
+      // Arrange
+      const battler = makeBattlerWithState({ popupsNoTpSlip: true });
+
+      // Act
+      battler.onSlipRegenTick(5, 0, 1);
+
+      // Assert
+      expect(FakeJABSPopupManager.showSlipPop).toHaveBeenCalled();
+    });
+
+    it('does not suppress a tp popup due to an hp-only suppression', () =>
+    {
+      // Arrange- the tp arm has to read its own tag rather than treating any tag as a tp block.
+      const battler = makeBattlerWithState({ popupsNoHpSlip: true });
+
+      // Act
+      battler.onSlipRegenTick(5, 2, 1);
+
+      // Assert
+      expect(FakeJABSPopupManager.showSlipPop).toHaveBeenCalled();
+    });
   });
 
   describe('onItemApplied', () =>

@@ -588,6 +588,38 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
       expect(map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2))).toEqual(false);
     });
 
+    it('returns false when the event beyond the counter is triggerable but not normal priority', () =>
+    {
+      // Arrange: the counter hop happens and the event beyond it is triggerable, leaving its
+      // above/below priority as the only reason the reach across the counter can fail.
+      globalThis.$gameMap.isCounter = () => true;
+      globalThis.$gameMap.eventsXy = vi.fn(() => [
+        { isJabsBattler: () => false, isTriggerIn: () => true, isNormalPriority: () => false },
+      ]);
+      const map = buildMap({ eventsXy: () => [] });
+
+      // Act & Assert
+      expect(map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2))).toEqual(false);
+    });
+
+    it('does not look beyond the front tile when it is not a counter', () =>
+    {
+      // Arrange: an unmistakably interactable event sits on the far side of the front tile while
+      // both nearer tiles are empty, so the counter check is the only gate that can hold it back.
+      globalThis.$gameMap.isCounter = () => false;
+      globalThis.$gameMap.eventsXy = vi.fn(() => [
+        { isJabsBattler: () => false, isTriggerIn: () => true, isNormalPriority: () => true },
+      ]);
+      const map = buildMap({ eventsXy: () => [] });
+
+      // Act
+      const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+      // Assert: without a counter in the way, the tile two steps out is simply out of reach.
+      expect(result).toEqual(false);
+      expect(globalThis.$gameMap.eventsXy).not.toHaveBeenCalled();
+    });
+
     it('returns false when an enemy is found beyond the counter', () =>
     {
       globalThis.$gameMap.isCounter = () => true;
@@ -689,6 +721,29 @@ describe('J-ABS Game_Map (unit, all downstream dependencies mocked)', () =>
         // Assert
         // an above/below-priority event shares the tile rather than blocking it, so it is not
         // something the player is standing in front of and reaching for.
+        expect(result).toEqual(false);
+      });
+
+      it('keeps looking when the event underfoot is triggerable but not normal priority', () =>
+      {
+        // Arrange: nothing ahead either, so the only thing that can produce an interaction is the
+        // underfoot event- and its above/below priority is the only reason it must not.
+        const map = mapWithTiles(
+          [
+            {
+              isJabsBattler: () => false,
+              isTriggerIn: () => true,
+              isNormalPriority: () => false,
+            },
+          ],
+          []);
+
+        // Act
+        const result = map.hasInteractableEventInFront(buildJabsBattler(0, 0, 2));
+
+        // Assert
+        // an event sharing the player's tile at above/below priority is scenery to walk over, not
+        // a doorstep to reach for.
         expect(result).toEqual(false);
       });
 

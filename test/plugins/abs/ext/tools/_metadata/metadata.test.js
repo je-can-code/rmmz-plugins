@@ -11,6 +11,14 @@ import { installPluginManagerWithParams } from '../../../../../setup/install-plu
 
 describe('J-ABS-Tools metadata (direct src import)', () =>
 {
+  /**
+   * A second metadata instance built from explicitly-authored parameters, so that every flag has
+   * a case on each side of its comparison. PluginMetadata registers each instance by name and
+   * throws on a repeat, so this one carries its own name rather than reusing 'J-ABS-Tools'.
+   * @type {import('../../../../../../src/plugins/abs/ext/tools/_metadata/_pluginMetadata.js').default}
+   */
+  let explicitMetadata;
+
   beforeAll(async () =>
   {
     vi.resetModules();
@@ -27,6 +35,46 @@ describe('J-ABS-Tools metadata (direct src import)', () =>
 
     setPluginContextToJabsTools();
     await import('../../../../../../src/plugins/abs/ext/tools/_metadata/initialization.js');
+
+    // the shipped instance above was built with no parameters at all, which only ever exercises
+    // each flag's default side. this one authors both parameters to the opposite of that default.
+    const explicitName = 'J-ABS-Tools-ExplicitParameters';
+    installPluginManagerWithParams(globalThis, explicitName, {
+      grabThrowEnabled: 'false',
+      directionFixAlways: 'true',
+    });
+
+    const { default: J_ToolsPluginMetadata } =
+      await import('../../../../../../src/plugins/abs/ext/tools/_metadata/_pluginMetadata.js');
+    explicitMetadata = new J_ToolsPluginMetadata(explicitName, '1.0.3');
+  });
+
+  describe('plugin parameter mapping', () =>
+  {
+    it('leaves grab-and-throw enabled when the parameter is never authored', () =>
+    {
+      // Arrange & Act & Assert- RMMZ omits a parameter entirely rather than sending a default,
+      // so the absent case is the one that ships for anyone who never opened the plugin config.
+      expect(globalThis.J.ABS.EXT.TOOLS.Metadata.GrabThrowEnabled).toBe(true);
+    });
+
+    it('disables grab-and-throw when the parameter is authored off', () =>
+    {
+      // Arrange & Act & Assert
+      expect(explicitMetadata.GrabThrowEnabled).toBe(false);
+    });
+
+    it('leaves the throw direction unfixed when the parameter is never authored', () =>
+    {
+      // Arrange & Act & Assert
+      expect(globalThis.J.ABS.EXT.TOOLS.Metadata.DirectionFixAlways).toBe(false);
+    });
+
+    it('fixes the throw direction when the parameter is authored on', () =>
+    {
+      // Arrange & Act & Assert
+      expect(explicitMetadata.DirectionFixAlways).toBe(true);
+    });
   });
 
   it('declares an aliased-method map for every class the plugin patches', () =>

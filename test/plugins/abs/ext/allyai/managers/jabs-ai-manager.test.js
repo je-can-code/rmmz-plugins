@@ -141,11 +141,18 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
   {
     it('performs original logic directly for a non-actor battler', () =>
     {
-      const battler = buildBattler({ isActor: () => false });
+      // the leash is deliberately exceeded here: an enemy this far from the leader would be
+      // rubberbanded and skip the original logic if the actor gate were not honored.
+      const battler = buildBattler({
+        isActor: () => false,
+        getCharacter: () => buildCharacter({ _realX: 100, _realY: 100 }),
+        getAllyLeashRange: () => 1,
+      });
 
       globalThis.JABS_AiManager.executeAi(battler);
 
       expect(originalExecuteAi).toHaveBeenCalledWith(battler);
+      expect(battler.lockEngagement).not.toHaveBeenCalled();
     });
 
     it('performs original logic for an actor whose leash is not exceeded', () =>

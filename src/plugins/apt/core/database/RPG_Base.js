@@ -21,7 +21,7 @@ Object.defineProperty(RPG_Base.prototype, 'aptitudeTeachings', {
 RPG_Base.prototype.buildAptitudeTeachings = function()
 {
   // extract the data from the notes- should be [skillId, requiredAp].
-  const raw = RPGManager.getArraysFromNotesByRegex(this, J.APT.RegExp.AptitudeTeachable, true);
+  const raw = RPGManager.getArraysFromNotesByRegex(this, J.APT.RegExp.AptitudeTeachable);
 
   // map all the raw data to DTOs.
   return raw.map(([ skillId, requiredAp ]) => new AptitudeTeachable(skillId, requiredAp));

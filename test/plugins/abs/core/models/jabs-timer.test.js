@@ -198,6 +198,26 @@ describe('JABS_Timer (unit, pure/no dependencies)', () =>
 
       expect(completedCount).toEqual(1);
     });
+
+    it('does not fire again when an already-complete timer is re-set at its max time', () =>
+    {
+      // Arrange
+      // re-setting the time leaves the visible state identical either way- the timer still reads 1
+      // and still reports complete- so the callback tally is the only thing that can tell whether
+      // the incomplete-check correctly declined to un-complete a timer sitting exactly at max.
+      let completedCount = 0;
+      const timer = new JABS_Timer(1);
+      timer.onComplete = () => { completedCount++; };
+
+      // Act
+      timer.setCurrentTime(1);
+      timer.setCurrentTime(1);
+
+      // Assert
+      expect(completedCount).toEqual(1);
+      expect(timer.isTimerComplete()).toEqual(true);
+      expect(timer.getCurrentTime()).toEqual(1);
+    });
   });
 });
 //endregion plugins/abs/core/models/jabs-timer.test.js

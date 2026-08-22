@@ -294,9 +294,12 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
     {
       // Arrange
       const action = buildAction();
+      // a parent target is deliberately present and deliberately different: "self" must mean the
+      // subject even when there is a perfectly good target sitting right there.
+      const parentTarget = { id: 'target' };
 
       // Act
-      const result = action.resolveFormulaRecipients('self', null);
+      const result = action.resolveFormulaRecipients('self', parentTarget);
 
       // Assert
       expect(result).toEqual([ action.subject() ]);
@@ -737,6 +740,20 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
       expect(result).toBe(5);
     });
 
+    it('does not apply the physical damage rate for a non-physical action', () =>
+    {
+      // Arrange- the doubled element rate is the proof-of-execution anchor: a 20 can only come
+      // from a pipeline that actually ran, and a pdr applied on top of it would read 10.
+      const action = buildPipelineAction({ calcElementRate: () => 2 });
+      const target = { result: () => null, pdr: 0.5, mdr: 1 };
+
+      // Act
+      const result = action.pipeFormulaThroughBattleCalculations(target, 10, { resource: 'hp' }, true);
+
+      // Assert
+      expect(result).toBe(20);
+    });
+
     it('applies the magical damage rate for magical actions', () =>
     {
       // Arrange
@@ -748,6 +765,19 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
 
       // Assert- damage always rounds (2.5 -> 3) before the JABS guard-reduction check.
       expect(result).toBe(3);
+    });
+
+    it('does not apply the magical damage rate for a non-magical action', () =>
+    {
+      // Arrange- the doubled element rate anchors execution; an mdr applied on top would read 5.
+      const action = buildPipelineAction({ calcElementRate: () => 2 });
+      const target = { result: () => null, pdr: 1, mdr: 0.25 };
+
+      // Act
+      const result = action.pipeFormulaThroughBattleCalculations(target, 10, { resource: 'hp' }, true);
+
+      // Assert
+      expect(result).toBe(20);
     });
 
     it('applies guard only when this is damage', () =>
@@ -796,6 +826,26 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
       expect(result).toBe(10);
     });
 
+    it('does not apply JABS guard/parry reductions to healing', () =>
+    {
+      // Arrange- every backstop that could independently suppress the reduction is switched off:
+      // the action can handle guard effects, a guarding jabs battler resolves, and the reduction
+      // itself would produce an unmistakable 1. Only the damage-vs-heal branch is left to stop it.
+      const action = buildPipelineAction({
+        calcElementRate: () => 2,
+        canHandleGuardEffects: () => true,
+        handleGuardEffects: () => 1,
+      });
+      globalThis.JABS_AiManager.getBattlerByUuid.mockReturnValue({ id: 'jabs-target' });
+      const target = { result: () => null, pdr: 1, mdr: 1, getUuid: () => 'target-uuid' };
+
+      // Act
+      const result = action.pipeFormulaThroughBattleCalculations(target, 10, { resource: 'hp' }, false);
+
+      // Assert
+      expect(result).toBe(20);
+    });
+
     it('applies REC-based healing adjustment only when this is not damage', () =>
     {
       // Arrange
@@ -807,6 +857,20 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
 
       // Assert
       expect(result).toBe(99);
+    });
+
+    it('does not apply the REC healing adjustment to damage', () =>
+    {
+      // Arrange- the recovery stub would produce an unmistakable 99, so the only thing keeping the
+      // result at the doubled element rate is the damage-vs-heal branch.
+      const action = buildPipelineAction({ calcElementRate: () => 2, applyResourceHealingWithRecovery: () => 99 });
+      const target = { result: () => null, pdr: 1, mdr: 1 };
+
+      // Act
+      const result = action.pipeFormulaThroughBattleCalculations(target, 10, { resource: 'hp' }, true);
+
+      // Assert
+      expect(result).toBe(20);
     });
 
     it('never returns a negative magnitude', () =>
@@ -843,9 +907,13 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
   {
     it('does nothing when the child skill id does not resolve to real data', () =>
     {
-      // Arrange
+      // Arrange- the two downstream backstops are deliberately neutralized: the subject does
+      // resolve to a jabs battler, and that battler would happily build actions for this id. The
+      // missing database row is the only thing left that can stop the forced action.
       const action = buildAction();
       globalThis.$dataSkills = {};
+      const jabsSubject = { createJabsActionFromSkill: vi.fn(() => [ { id: 'action' } ]) };
+      globalThis.JABS_AiManager.getBattlerByUuid.mockReturnValue(jabsSubject);
 
       // Act
       action.executeChildSkillPacket({ skillId: 999 }, null, null);
@@ -966,12 +1034,44 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
       globalThis.J.LOG = true;
       const action = buildAction({ _subject: { name: () => 'Hero' } });
       const recipient = { name: () => 'Slime', result: () => ({ critical: true }) };
+      globalThis.ActionLogBuilder.mockClear();
 
       // Act
       action.generateFormulaActionLogIfAvailable(recipient, -5, 'hp', 3);
 
-      // Assert
+      // Assert- a negative amount is a heal, and the crit flag rides along with it. The magnitude
+      // logged is the absolute value, so the sign only ever survives in the isHeal argument.
+      const builder = globalThis.ActionLogBuilder.mock.instances.at(-1);
+      const [ targetName, casterName, loggedSkillId, magnitude, , isHeal, wasCrit ] =
+        builder.setupExecution.mock.calls.at(-1);
+      expect(targetName).toBe('Slime');
+      expect(casterName).toBe('Hero');
+      expect(loggedSkillId).toBe(3);
+      expect(magnitude).toBe(5);
+      expect(isHeal).toBe(true);
+      expect(wasCrit).toBe(true);
       expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith({ built: true });
+    });
+
+    it('logs a positive amount as damage rather than a heal', () =>
+    {
+      // Arrange
+      globalThis.J.LOG = true;
+      const action = buildAction({ _subject: { name: () => 'Hero' } });
+      const recipient = { name: () => 'Slime', result: () => ({ critical: false }) };
+      globalThis.ActionLogBuilder.mockClear();
+
+      // Act
+      action.generateFormulaActionLogIfAvailable(recipient, 5, 'hp', 3);
+
+      // Assert- the same magnitude as the heal case above, differing only in the two flags, so the
+      // sign and the crit state are the only things these two tests can be telling apart.
+      const builder = globalThis.ActionLogBuilder.mock.instances.at(-1);
+      const [ , , loggedSkillId, magnitude, , isHeal, wasCrit ] = builder.setupExecution.mock.calls.at(-1);
+      expect(loggedSkillId).toBe(3);
+      expect(magnitude).toBe(5);
+      expect(isHeal).toBe(false);
+      expect(wasCrit).toBe(false);
     });
 
     it('falls back to "Unknown" for the caster name when there is no subject', () =>

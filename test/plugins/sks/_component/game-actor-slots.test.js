@@ -274,6 +274,86 @@ describe('J-SkillSlots Game_Actor slots (direct src import)', () =>
     });
   });
 
+  describe('equipSkillToSlot displacement', () =>
+  {
+    it('vacates the previous slot when an equipped skill is placed into another one', () =>
+    {
+      // Arrange- equipping directly rather than through moveEquippedSkill, which clears the source
+      // slot itself once the destination is set and would therefore mask a failure to vacate here.
+      const actor = makeActorWithSkills([ 1 ]);
+      withMaxSlotPoints(actor, 10);
+      actor.equipSkillToSlot(0, 1);
+
+      // Act
+      actor.equipSkillToSlot(1, 1);
+
+      // Assert- one occupant total, not the same skill sitting in two slots at once.
+      expect(actor.getSkillIdInSlot(1)).toBe(1);
+      expect(actor.getSkillIdInSlot(0)).toBe(0);
+      expect(actor.slotMap().size).toBe(1);
+    });
+  });
+
+  describe('equip change hooks', () =>
+  {
+    it('announces nothing unequipped when a fresh skill lands in an empty slot', () =>
+    {
+      // Arrange- two separate paths could announce an unequip during this equip and neither should
+      // fire: the skill is not equipped anywhere, so no previous slot is being vacated, and the
+      // target slot is empty, so nothing is being displaced out of it.
+      const actor = makeActorWithSkills([ 1 ]);
+      withMaxSlotPoints(actor, 10);
+      const unequipped = vi.fn();
+      actor.onSkillUnequipChange = unequipped;
+
+      // Act
+      actor.equipSkillToSlot(0, 1);
+
+      // Assert- the equip landed, so the silence is the absence of a notification rather than the
+      // absence of the operation.
+      expect(actor.getSkillIdInSlot(0)).toBe(1);
+      expect(unequipped).not.toHaveBeenCalled();
+    });
+
+    it('announces the displaced skill before a new one takes its slot', () =>
+    {
+      // Arrange- the incoming skill is not equipped anywhere else, so the only notification this
+      // equip can produce is the one for the occupant being pushed out.
+      const actor = makeActorWithSkills([ 1, 2 ]);
+      withMaxSlotPoints(actor, 10);
+      actor.equipSkillToSlot(0, 1);
+      const unequipped = vi.fn();
+      actor.onSkillUnequipChange = unequipped;
+
+      // Act
+      actor.equipSkillToSlot(0, 2);
+
+      // Assert
+      expect(unequipped).toHaveBeenCalledTimes(1);
+      expect(unequipped).toHaveBeenCalledWith(0, 1);
+    });
+
+    it('announces nothing when asked to clear a slot that was already empty', () =>
+    {
+      // Arrange- the equip menu lets the cursor rest on an empty slot, so being asked to clear one
+      // is ordinary rather than exceptional. Announcing the unequip of nothing would have every
+      // observer redraw for a change that did not happen.
+      const actor = makeActorWithSkills([ 1 ]);
+      withMaxSlotPoints(actor, 10);
+      actor.equipSkillToSlot(0, 1);
+      const unequipped = vi.fn();
+      actor.onSkillUnequipChange = unequipped;
+
+      // Act
+      actor.unequipSkillFromSlot(3);
+
+      // Assert- the genuinely occupied slot is untouched, so nothing was cleared and nothing was
+      // announced.
+      expect(actor.getSkillIdInSlot(0)).toBe(1);
+      expect(unequipped).not.toHaveBeenCalled();
+    });
+  });
+
   describe('moveEquippedSkill', () =>
   {
     it('moves the skill out of its old slot and into the new one', () =>

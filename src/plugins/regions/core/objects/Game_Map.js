@@ -239,6 +239,66 @@ Game_Map.prototype.isPassable = function(x, y, d)
 };
 
 /**
+ * Overwrites {@link #checkPassage}.<br/>
+ * Also refuses passage over any tile carrying a globally-denied terrain tag.
+ *
+ * Vanilla decides passability from the tileset's direction bits alone, which leaves no way to say
+ * "this tile is scenery" for something drawn on an otherwise walkable layer- ceilings and cliff
+ * faces being the usual offenders. Terrain tags already mark those on the tileset, so honoring them
+ * here blocks the whole family across every map at once, and it stops forced displacement such as
+ * knockback from parking a battler somewhere unreachable.
+ * @param {number} x The `x` coordinate.
+ * @param {number} y The `y` coordinate.
+ * @param {number} bit The bitwise operator being checked.
+ * @returns {boolean} True if the tile can be walked on, false otherwise.
+ */
+Game_Map.prototype.checkPassage = function(x, y, bit)
+{
+  // grab all the flags for the tileset.
+  const flags = this.tilesetFlags();
+
+  // grab all the tiles available at the designated location.
+  const tiles = this.allTiles(x, y);
+
+  // grab the terrain tags that are impassable everywhere.
+  const deniedTerrainTags = J.REGIONS.Metadata.globalDenyTerrainTags;
+
+  // iterate over each tile represented at these coordinates.
+  for (const tile of tiles)
+  {
+    // grab the flag for this tile.
+    const flag = flags[tile];
+
+    // represents [*] No effect on passage.
+    if ((flag & 0x10) !== 0)
+    {
+      continue;
+    }
+
+    // a denied terrain tag blocks passage regardless of the direction bits beneath it.
+    if (deniedTerrainTags.includes(flag >> 12))
+    {
+      return false;
+    }
+
+    // represents [o] Passable.
+    if ((flag & bit) === 0)
+    {
+      return true;
+    }
+
+    // represents [x] Impassable.
+    if ((flag & bit) === bit)
+    {
+      return false;
+    }
+  }
+
+  // this tile cannot be passed.
+  return false;
+};
+
+/**
  * Determines whether or not the given region id is a deny region id.
  * @param {number} regionId The given region id.
  * @returns {boolean} True if the region id will deny passage, false otherwise.

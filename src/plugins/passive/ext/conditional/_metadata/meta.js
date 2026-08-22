@@ -4,6 +4,6 @@
 // PLUGIN_VERSION → @@PLUGIN_VERSION@@ in annotations and __PLUGIN_VERSION__ in the ship.
 // PLUGIN_DESC_TAG → @@PLUGIN_DESC_TAG@@ in annotations only.
 export const PLUGIN_NAME = 'J-Passive-Conditional';
-export const PLUGIN_VERSION = '1.3.0';
+export const PLUGIN_VERSION = '1.3.1';
 export const PLUGIN_DESC_TAG = 'PASSIVE-CONDITIONAL';
 //endregion ship-meta

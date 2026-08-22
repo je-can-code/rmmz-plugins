@@ -62,19 +62,17 @@ describe('J-ABS-Danger Game_Enemy (unit, all downstream dependencies mocked)', (
 
     it('returns the configured default when there is no tag', () =>
     {
-      // Arrange
+      // Arrange- the default is deliberately the opposite of what the tagged branch returns, so a
+      // guard that stopped consulting the tag at all could not pass this by returning false anyway.
       const { enemy } = buildEnemy();
       globalThis.RPGManager.checkForBooleanFromNoteByRegex.mockReturnValue(false);
-      globalThis.J.ABS.EXT.DANGER.Metadata.DefaultEnemyShowDangerIndicator = false;
+      globalThis.J.ABS.EXT.DANGER.Metadata.DefaultEnemyShowDangerIndicator = true;
 
       // Act
       const result = enemy.showDangerIndicator();
 
       // Assert
-      expect(result).toBe(false);
-
-      // Cleanup
-      globalThis.J.ABS.EXT.DANGER.Metadata.DefaultEnemyShowDangerIndicator = true;
+      expect(result).toBe(true);
     });
   });
 });

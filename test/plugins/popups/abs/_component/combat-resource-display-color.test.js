@@ -192,6 +192,28 @@ describe('PopupResourceDisplayColor (direct src import)', () =>
     });
   });
 
+  describe('resolveResourceGaugeColor', () =>
+  {
+    it('hands back the gauge color for a resource lane', () =>
+    {
+      // Arrange & Act
+      const result = PopupResourceDisplayColor.resolveResourceGaugeColor(Map_TextPop.Types.HpDamage);
+
+      // Assert
+      expect(result).toBe('#ffcc22');
+    });
+
+    it('hands back null for a lane that has no resource gauge', () =>
+    {
+      // Arrange & Act- the documented contract is a color or null, and callers branch on that null
+      // rather than on an absent return, so the sentinel itself is the answer here.
+      const result = PopupResourceDisplayColor.resolveResourceGaugeColor('gold');
+
+      // Assert
+      expect(result).toBeNull();
+    });
+  });
+
   describe('resolvePopupOutlineWidth', () =>
   {
     it('uses the slimmer damage outline width for a harm damage popup', () =>

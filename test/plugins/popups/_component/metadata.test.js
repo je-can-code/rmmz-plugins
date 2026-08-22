@@ -6,6 +6,7 @@ import {
   setPluginContextToJBase,
   setPluginContextToJPopups,
 } from './fixtures/install-popups-host-globals.js';
+import { installPluginManagerWithParams } from '../../../setup/install-plugin-manager-with-params.js';
 
 describe('J-Popups metadata (direct src import)', () =>
 {
@@ -41,6 +42,21 @@ describe('J-Popups metadata (direct src import)', () =>
 
     // Assert
     expect(result).toBe(false);
+  });
+
+  it('reads disablePopups as true when the parameter is explicitly the string true', async () =>
+  {
+    // Arrange- PluginMetadata's static registry rejects a duplicate name, so this second
+    // configuration introduces itself under a name of its own; only the lookup keys off the name.
+    const { default: PopupsPluginMetadata } =
+      await import('../../../../src/plugins/popups/core/_metadata/_pluginMetadata.js');
+    installPluginManagerWithParams(globalThis, 'J-Popups-Disabled', { disablePopups: 'true' });
+
+    // Act
+    const metadata = new PopupsPluginMetadata('J-Popups-Disabled', '2.1.0');
+
+    // Assert
+    expect(metadata.disablePopups).toBe(true);
   });
 });
 //endregion plugins/popups/_component/metadata.test.js

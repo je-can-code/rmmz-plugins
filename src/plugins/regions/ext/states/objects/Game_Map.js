@@ -145,8 +145,7 @@ Game_Map.prototype.refreshRegionStates = function()
   // grab the region data.
   const regionStatesData = RPGManager.getArraysFromNotesByRegex(
     { note: this.note() },
-    J.REGIONS.EXT.STATES.RegExp.RegionState,
-    true);
+    J.REGIONS.EXT.STATES.RegExp.RegionState);
 
   // stop processing if there was nothing found.
   if (!regionStatesData || !regionStatesData.length) return;

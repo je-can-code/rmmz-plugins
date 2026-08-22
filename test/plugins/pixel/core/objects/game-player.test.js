@@ -199,9 +199,26 @@ describe('J-Pixelistics Game_Player (direct src import)', () =>
     return follower;
   }
 
+  /**
+   * Replaces the ambient gamepad source. Lives at this altitude because both the analog-angle
+   * reader and the vector-movement path in `moveByInput` are driven through it, and because a
+   * gamepad left connected by one test would otherwise silently steer the next one.
+   * @param {Function|undefined} getGamepads The replacement reader, or undefined to remove it.
+   */
+  function useGamepadSource(getGamepads)
+  {
+    Object.defineProperty(globalThis, 'navigator', {
+      configurable: true,
+      value: getGamepads === undefined
+        ? {}
+        : { getGamepads },
+    });
+  }
+
   beforeEach(() =>
   {
     useMap(buildWalledPixelGameMap(10, 10));
+    useGamepadSource(() => []);
     globalThis.Input.dir8 = 0;
     globalThis.J.PIXEL.Metadata.VectorMovementEnabled = false;
     globalThis.$gameTemp = {
@@ -270,20 +287,6 @@ describe('J-Pixelistics Game_Player (direct src import)', () =>
   //region _readGamepadAnalogAngle
   describe('_readGamepadAnalogAngle', () =>
   {
-    /**
-     * Replaces the ambient gamepad source for a single test.
-     * @param {Function|undefined} getGamepads The replacement reader, or undefined to remove it.
-     */
-    function useGamepadSource(getGamepads)
-    {
-      Object.defineProperty(globalThis, 'navigator', {
-        configurable: true,
-        value: getGamepads === undefined
-          ? {}
-          : { getGamepads },
-      });
-    }
-
     it('reports no angle when the Gamepad API is unavailable', () =>
     {
       // Arrange: not every environment the game runs in exposes the Gamepad API at all.
@@ -640,6 +643,41 @@ describe('J-Pixelistics Game_Player (direct src import)', () =>
         .toBe(false);
     });
 
+    it('refuses a pressed direction outright while the player cannot move', () =>
+    {
+      // Arrange: the sibling case for this branch presses nothing, so the fall-through and the
+      // refusal land on the same released flag and cannot be told apart. With a direction held,
+      // the movement lock is the only thing standing between the player and a step - which is
+      // what it is for, since a running event must not be walked out from under.
+      const player = makePlayer(2, 2);
+      player._canMove = false;
+      globalThis.Input.dir8 = globalThis.J.PIXEL.Directions.RIGHT;
+
+      // Act
+      player.moveByInput();
+
+      // Assert
+      expect(player.x)
+        .toBe(2);
+    });
+
+    it('refuses a pressed direction while drifting with the button released', () =>
+    {
+      // Arrange: mid-slide with nothing held is residual motion rather than a fresh command.
+      // Acting on it would keep walking the player after they let go of the direction.
+      const player = makePlayer(2, 2);
+      player.setRealX(1.9);
+      player.setMovePressed(false);
+      globalThis.Input.dir8 = globalThis.J.PIXEL.Directions.RIGHT;
+
+      // Act
+      player.moveByInput();
+
+      // Assert
+      expect(player.x)
+        .toBe(2);
+    });
+
     it('moves the player along the pressed direction', () =>
     {
       // Arrange
@@ -817,6 +855,24 @@ describe('J-Pixelistics Game_Player (direct src import)', () =>
         .toBe(false);
     });
 
+    it('travels at the analog angle rather than the cardinal the d-pad would report', () =>
+    {
+      // Arrange: the stick is pushed right and slightly down, which the digital layer quantizes
+      // to a flat rightward step. Sub-cardinal precision is the entire reason the vector branch
+      // exists, so the y displacement is what proves the analog angle was the one obeyed.
+      globalThis.J.PIXEL.Metadata.VectorMovementEnabled = true;
+      globalThis.Input.dir8 = globalThis.J.PIXEL.Directions.RIGHT;
+      useGamepadSource(() => [ { connected: true, axes: [ 1, 0.5 ] } ]);
+      const player = makePlayer(2, 2);
+
+      // Act
+      player.moveByInput();
+
+      // Assert
+      expect(player.y)
+        .toBeGreaterThan(2);
+    });
+
     it('clears a pending click destination once a direction is pressed', () =>
     {
       // Arrange: pressing a direction is an explicit override of click-to-move.
@@ -847,6 +903,26 @@ describe('J-Pixelistics Game_Player (direct src import)', () =>
       // Assert
       expect(player.x)
         .toBeGreaterThan(2);
+    });
+
+    it('does not path toward a destination that has been invalidated', () =>
+    {
+      // Arrange: $gameTemp keeps the last clicked coordinates around after the destination is
+      // cleared, so a route is still derivable from them. Only the validity flag says whether
+      // anyone actually asked to go there, and pathing anyway would drag the player off on a
+      // journey nobody ordered.
+      const player = makePlayer(2, 2);
+      globalThis.$gameTemp._valid = false;
+      globalThis.$gameTemp._x = 5;
+      globalThis.$gameTemp._y = 2;
+      player._forcedPathDirection = globalThis.J.PIXEL.Directions.RIGHT;
+
+      // Act
+      player.moveByInput();
+
+      // Assert
+      expect(player.x)
+        .toBe(2);
     });
   });
   //endregion moveByInput
@@ -893,6 +969,28 @@ describe('J-Pixelistics Game_Player (direct src import)', () =>
       // Assert
       expect(globalThis.$gameTemp.isDestinationValid())
         .toBe(true);
+    });
+
+    it('counts arrival by the tile the player rounds onto, not an exact coordinate match', () =>
+    {
+      // Arrange: pixel movement almost never parks a character on an integer coordinate, so
+      // arrival has to be judged against the rounded tile or a click-to-move route would never
+      // finish. A route direction is supplied deliberately - without one the no-route branch
+      // would clear the destination for its own reasons and hide what is under test.
+      const player = makePlayer(2.4, 2);
+      globalThis.$gameTemp._valid = true;
+      globalThis.$gameTemp._x = 2;
+      globalThis.$gameTemp._y = 2;
+      player._forcedPathDirection = globalThis.J.PIXEL.Directions.LEFT;
+
+      // Act
+      player.pixelMoveTowardDestination();
+
+      // Assert: arriving stops the journey where it stands rather than stepping again.
+      expect(globalThis.$gameTemp.isDestinationValid())
+        .toBe(false);
+      expect(player.x)
+        .toBe(2.4);
     });
 
     it('releases the move flag upon arrival', () =>
@@ -961,6 +1059,25 @@ describe('J-Pixelistics Game_Player (direct src import)', () =>
       // Assert
       expect(player.direction())
         .toBe(globalThis.J.PIXEL.Directions.RIGHT);
+    });
+
+    it('holds the move flag while a pathed step succeeds', () =>
+    {
+      // Arrange: the flag is what keeps the follower train walking, so a successful step toward
+      // a clicked destination has to raise it just as a held direction would.
+      const player = makePlayer(2, 2);
+      player.setMovePressed(false);
+      globalThis.$gameTemp._valid = true;
+      globalThis.$gameTemp._x = 5;
+      globalThis.$gameTemp._y = 2;
+      player._forcedPathDirection = globalThis.J.PIXEL.Directions.RIGHT;
+
+      // Act
+      player.pixelMoveTowardDestination();
+
+      // Assert
+      expect(player.isMovePressed())
+        .toBe(true);
     });
 
     it('releases the move flag when the pathed step is blocked', () =>
@@ -1069,6 +1186,25 @@ describe('J-Pixelistics Game_Player (direct src import)', () =>
       // Assert
       expect(trailing.facedCharacters)
         .toContain(lead);
+    });
+
+    it('leaves a follower put when the character ahead of it laid down no trail', () =>
+    {
+      // Arrange: a suspended follower is skipped before it ever records a breadcrumb, so the
+      // follower behind it is trailing a character with an empty history. There is nowhere to
+      // walk to, and the only correct answer is to stand still.
+      const player = makePlayer(2, 2);
+      const lead = makeFollower(9, 9);
+      const trailing = makeFollower(8, 8);
+      lead.isPixelTrainSuspended = () => true;
+      player._followers = { _data: [ lead, trailing ] };
+
+      // Act
+      player.processFollowersPixelMoving();
+
+      // Assert
+      expect(trailing.x)
+        .toBe(8);
     });
 
     it('leaves a follower alone once another system has claimed it', () =>

@@ -168,14 +168,15 @@ describe('J-ABS-Timing Game_Battler (unit, all downstream dependencies mocked)',
 
     it('applyCastSpeed returns the original cast time unmodified when no modifiers are present', () =>
     {
-      // Arrange
+      // Arrange- a cast time under the 10-frame floor: the short-circuit hands back exactly what
+      // it was given, where running the calculation would clamp it up to the minimum instead.
       const battler = buildBattler();
 
       // Act
-      const result = battler.applyCastSpeed(20);
+      const result = battler.applyCastSpeed(4);
 
       // Assert
-      expect(result).toBe(20);
+      expect(result).toBe(4);
     });
 
     it('applyCastSpeed combines base, flat, and rate modifiers against the original cast time', () =>
@@ -278,14 +279,15 @@ describe('J-ABS-Timing Game_Battler (unit, all downstream dependencies mocked)',
 
     it('applyFastCooldown returns the original cooldown unmodified when no modifiers are present', () =>
     {
-      // Arrange
+      // Arrange- a cooldown under the 10-frame floor: the short-circuit hands back exactly what it
+      // was given, where running the calculation would clamp it up to the minimum instead.
       const battler = buildBattler();
 
       // Act
-      const result = battler.applyFastCooldown(30);
+      const result = battler.applyFastCooldown(4);
 
       // Assert
-      expect(result).toBe(30);
+      expect(result).toBe(4);
     });
 
     it('applyFastCooldown combines base, flat, and rate modifiers against the original cooldown', () =>

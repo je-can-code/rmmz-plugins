@@ -75,8 +75,10 @@ describe('BossFrameManager (direct src import)', () =>
   {
     it('throws when the eventId is falsy', () =>
     {
-      // Arrange/Act/Assert
-      expect(() => BossFrameManager.setBossByEventId(0)).toThrow();
+      // Arrange/Act/Assert- the message is pinned because every one of these validations also has a
+      // crash waiting one line further down. A bare toThrow() cannot tell the deliberate refusal
+      // apart from the TypeError it exists to prevent, and those two are the whole difference.
+      expect(() => BossFrameManager.setBossByEventId(0)).toThrow('Failed to create boss for boss frame.');
     });
 
     it('throws when the event has no JABS battler', () =>
@@ -85,7 +87,7 @@ describe('BossFrameManager (direct src import)', () =>
       globalThis.$gameMap.event.mockReturnValue({ getJabsBattler: () => null });
 
       // Act/Assert
-      expect(() => BossFrameManager.setBossByEventId(5)).toThrow();
+      expect(() => BossFrameManager.setBossByEventId(5)).toThrow('Failed to create boss for boss frame.');
     });
 
     it('throws when the event id points at a slot nothing occupies', () =>
@@ -96,7 +98,7 @@ describe('BossFrameManager (direct src import)', () =>
       globalThis.$gameMap.event.mockReturnValue(undefined);
 
       // Act/Assert
-      expect(() => BossFrameManager.setBossByEventId(5)).toThrow();
+      expect(() => BossFrameManager.setBossByEventId(5)).toThrow('Failed to create boss for boss frame.');
     });
 
     it('builds and sets a boss FramedTarget from the event JABS battler', () =>

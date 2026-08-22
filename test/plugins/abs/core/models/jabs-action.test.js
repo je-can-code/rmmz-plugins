@@ -1402,15 +1402,28 @@ describe('JABS_Action (direct src import)', () =>
   {
     it('does nothing when there are no collision targets', () =>
     {
-      // Arrange
+      // Arrange- an empty target list must skip the on-collision hook wholesale, not merely skip
+      // the per-target loop: a swing that connected with nobody has not started its pierce clock,
+      // has not ended its delay, and has not hit anything. The pierce count and delay are seeded to
+      // distinctive non-zero values so each of those is observable rather than already at its floor.
       globalThis.$jabsEngine.getCollisionTargets = vi.fn(() => []);
-      const action = buildAction();
+      const action = buildAction({
+        skill: buildSkill({
+          jabsPierceCount: 5,
+          jabsDelayDuration: 100,
+        }),
+      });
 
       // Act
       action.processCollision();
 
-      // Assert
+      // Assert- the collision lookup ran, so this is the guard declining rather than the method
+      // never having executed at all.
+      expect(globalThis.$jabsEngine.getCollisionTargets).toHaveBeenCalledWith(action);
       expect(globalThis.$jabsEngine.applyPrimaryBattleEffects).not.toHaveBeenCalled();
+      expect(action.getPiercingTimes()).toBe(5);
+      expect(action.isDelayCompleted()).toBe(false);
+      expect(action.hasHitAtLeastOneTarget()).toBe(false);
     });
 
     it('applies battle effects once per target by default', () =>

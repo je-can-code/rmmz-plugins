@@ -198,6 +198,27 @@ describe('J-Pixelistics Game_Player trigger overwrites (direct src import)', () 
       expect(event.isStarting())
         .toBe(true);
     });
+
+    it('drops the event-touch trigger too while the foot-touch cooldown is active', () =>
+    {
+      // Arrange: the cooldown has to filter both touch triggers, not just player-touch (1). The
+      // action-button event beside it is the near-miss sibling that must survive the filter, and
+      // it doubles as proof the search actually ran rather than being skipped wholesale.
+      const eventTouch = buildPixelMapEvent(2, 5, 2, false);
+      const actionButton = buildPixelMapEvent(2, 5, 0, false);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ eventTouch, actionButton ]);
+      globalThis.$gameMap._pixelFootTouchTriggerCooldown = 3;
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      player.checkEventTriggerHere([ 0, 1, 2 ]);
+
+      // Assert
+      expect(eventTouch.isStarting())
+        .toBe(false);
+      expect(actionButton.isStarting())
+        .toBe(true);
+    });
   });
   //endregion checkEventTriggerHere
 
@@ -243,6 +264,27 @@ describe('J-Pixelistics Game_Player trigger overwrites (direct src import)', () 
 
       // Act: cross into row 5.
       player._y = 4.65;
+      player.update(true);
+
+      // Assert
+      expect(event.isStarting())
+        .toBe(true);
+    });
+
+    it('fires underfoot triggers when the occupied column changes but the row does not', () =>
+    {
+      // Arrange: the case above crosses on the y axis alone, so the x half of the tile-change
+      // check is never what decides anything there. Walking sideways along a row is the ordinary
+      // way a player meets an underfoot event, and a check missing its x half would carry them
+      // across a whole row of them without firing one.
+      const event = buildPixelMapEvent(3, 5, 1, false);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ event ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.RIGHT);
+      player.setLastOccupiedTileX(player.occupiedTileX());
+      player.setLastOccupiedTileY(player.occupiedTileY());
+
+      // Act: cross into column 3 while staying in row 5.
+      player._x = 2.6;
       player.update(true);
 
       // Assert
@@ -480,6 +522,28 @@ describe('J-Pixelistics Game_Player trigger overwrites (direct src import)', () 
         .toBe(false);
     });
 
+    it.each([
+      [ 'x', 2.4, 5.05 ],
+      [ 'y', 2.05, 5.4 ],
+    ])('declines a touch when only the %s coordinate is too far from the tile center', (_axis, x, y) =>
+    {
+      // Arrange: the case above misses on both axes at once, so either half of the threshold
+      // could be forced true and the other half would still refuse. A body sliding along a row
+      // or a column is off-center on exactly one axis, which is the state this actually guards.
+      const event = buildPixelMapEvent(2, 5, 1, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ event ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      const fired = player.checkEventTriggerTouch(x, y);
+
+      // Assert
+      expect(fired)
+        .toBe(false);
+      expect(event.isStarting())
+        .toBe(false);
+    });
+
     it('reports no start when the touch lands on a tile holding no event', () =>
     {
       // Arrange
@@ -571,6 +635,25 @@ describe('J-Pixelistics Game_Player trigger overwrites (direct src import)', () 
 
       // Assert
       expect(fired)
+        .toBe(false);
+    });
+
+    it('does not touch past a front tile that is not a counter', () =>
+    {
+      // Arrange: only a counter earns the extra tile of reach. The sibling case above puts the
+      // very same event two tiles away with the counter present and expects it to fire, so the
+      // counter flag is the only thing that differs between reaching it and not.
+      const beyond = buildPixelMapEvent(2, 3, 1, true);
+      globalThis.$gameMap = buildTriggerPixelGameMap([ beyond ]);
+      const player = makePlayer(2, 4.65, globalThis.J.PIXEL.Directions.UP);
+
+      // Act
+      const fired = player.checkEventTriggerTouchFront(globalThis.J.PIXEL.Directions.UP);
+
+      // Assert
+      expect(fired)
+        .toBe(false);
+      expect(beyond.isStarting())
         .toBe(false);
     });
 

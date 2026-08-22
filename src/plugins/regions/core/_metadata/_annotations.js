@@ -53,6 +53,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Added globalDenyTerrainTags, a plugin-level list of terrain tags that block
+ *    passage outright. It joins the region allow and deny lists already here.
  * - 1.2.0
  *    Routed the _regions namespace into its own save section, so region
  *    effect state lands in systems/regions.json rather than in the system blob.
@@ -75,6 +78,12 @@
  * @type number[]
  * @text Global Denied Regions
  * @desc The region ids that are always denied on every map.
+ * @default []
+ *
+ * @param globalDenyTerrainTags
+ * @type number[]
+ * @text Global Denied Terrain Tags
+ * @desc The terrain tags that are always impassable on every map. Terrain tags live on the tileset, not the map.
  * @default []
  *
  */

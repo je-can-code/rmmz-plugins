@@ -109,8 +109,7 @@ class AutoApplyStateDisplay
   {
     const tuples = RPGManager.getArraysFromNotesByRegex(
       dataRow,
-      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyState,
-      true
+      J.PASSIVE.EXT.CONDITIONAL.RegExp.AutoApplyState
     );
 
     const lines = [];

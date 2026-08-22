@@ -327,6 +327,25 @@ describe('J-Escriptions Game_Event', () =>
         .toBe(false);
     });
 
+    it('reads an ordinary event even while JABS is installed', () =>
+    {
+      // Arrange: with JABS present every event gets asked whether it is an action or loot, and a
+      // plain villager answers no to both - being asked must not cost it its label.
+      globalThis.J.ABS = {};
+      const event = buildEvent({
+        isJabsAction: () => false,
+        isJabsLoot: () => false,
+      });
+      event._pageIndex = 0;
+
+      // Act
+      const canParse = event.canParseEscriptionComments();
+
+      // Assert
+      expect(canParse)
+        .toBe(true);
+    });
+
     it('never asks about JABS objects when JABS is not installed', () =>
     {
       // Arrange
@@ -361,6 +380,24 @@ describe('J-Escriptions Game_Event', () =>
         .toBe(false);
       expect(event.needsEscribeRemoval())
         .toBe(false);
+    });
+
+    it('builds describe data from an icon alone, with no text beneath it', () =>
+    {
+      // Arrange: a bare icon floating over an event is a complete escription and a deliberate
+      // authoring choice, so the icon has to be able to carry the tag by itself.
+      const event = buildEvent({ getValidCommentCommands: () => [ { parameters: [ '<icon: 12>' ] } ] });
+      event._pageIndex = 0;
+
+      // Act
+      event.parseEscriptionComments();
+
+      // Assert
+      expect(event.escribeData()
+        .iconIndex())
+        .toBe(12);
+      expect(event.needsEscribeAdding())
+        .toBe(true);
     });
   });
 

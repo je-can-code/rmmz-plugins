@@ -124,11 +124,15 @@ describe('J-SkillSlots Game_Actor slot point budget (direct src import)', () =>
 
     it('hasSufficientSlotPoints treats zero-or-negative cost as always affordable', () =>
     {
-      // Arrange
-      const actor = makeActorWithSkills([]);
-      withMaxSlotPoints(actor, 0);
+      // Arrange- the budget is spent down to the last point on purpose. Everything downstream of
+      // the costless-skill guard refuses at that point, so an unconstrained guard would be
+      // indistinguishable from one that simply fell through to the arithmetic.
+      const actor = makeActorWithSkills([ 2 ]);
+      withMaxSlotPoints(actor, 3);
+      actor.equipSkillToSlot(0, 2);
 
       // Act & Assert
+      expect(actor.remainingSlotPoints()).toBe(0);
       expect(actor.hasSufficientSlotPoints(0)).toBe(true);
     });
 
@@ -141,6 +145,19 @@ describe('J-SkillSlots Game_Actor slot point budget (direct src import)', () =>
 
       // Act & Assert
       expect(actor.hasSufficientSlotPoints(1)).toBe(false);
+    });
+
+    it('hasSufficientSlotPoints is false when the cost overruns a budget that still has room', () =>
+    {
+      // Arrange- a point is deliberately left over so the no-budget-remaining guard cannot be what
+      // refuses this. Only the final total comparison can decide a two point skill does not fit.
+      const actor = makeActorWithSkills([ 2 ]);
+      withMaxSlotPoints(actor, 4);
+      actor.equipSkillToSlot(0, 2);
+
+      // Act & Assert
+      expect(actor.remainingSlotPoints()).toBe(1);
+      expect(actor.hasSufficientSlotPoints(2)).toBe(false);
     });
 
     it('hasSufficientSlotPoints is true when the added cost still fits the budget', () =>
@@ -250,6 +267,25 @@ describe('J-SkillSlots Game_Actor slot point budget (direct src import)', () =>
 
       // Act & Assert
       expect(actor.hasEquipSkillPoints(1)).toBe(false);
+    });
+  });
+
+  describe('canAffordSkillSlotPoints', () =>
+  {
+    it('waves a costless skill through even after the budget shrank below what is spent', () =>
+    {
+      // Arrange- bonus <maxSlotPoints> tags come from gear and states, so losing one drops the
+      // maximum underneath what is already committed. A free skill has to remain placeable in that
+      // state; without the costless-skill guard the overspend alone would refuse it forever.
+      const actor = makeActorWithSkills([ 2, 3 ]);
+      withMaxSlotPoints(actor, 10);
+      actor.equipSkillToSlot(0, 2);
+      withMaxSlotPoints(actor, 1);
+
+      // Act & Assert
+      expect(actor.spentSlotPoints()).toBe(3);
+      expect(actor.maxSlotPoints()).toBe(1);
+      expect(actor.canAffordSkillSlotPoints(1, 3, 0)).toBe(true);
     });
   });
 });

@@ -248,6 +248,11 @@ describe('J-ABS Game_Action state multipliers + skill history bonus (direct src 
     {
       const action = buildAction(buildCaster(), buildSkill(''));
       expect(action.applySkillHistoryBonus(100)).toBe(100);
+
+      // the fractional case is the one that proves the zero-percent gate is doing work- percent
+      // guard reduction runs upstream of this call and hands over un-rounded damage, so falling
+      // through to the multiplier instead of returning early would quietly round 112.5 down to 112.
+      expect(action.applySkillHistoryBonus(112.5)).toBe(112.5);
     });
 
     it('scales and rounds the base damage by the combined bonus percent', () =>

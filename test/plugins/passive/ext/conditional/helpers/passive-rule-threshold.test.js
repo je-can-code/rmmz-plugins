@@ -247,8 +247,11 @@ describe('PassiveRuleThreshold (direct src import)', () =>
 
     it('returns null when the kind has no allAllies prefix', () =>
     {
-      // Act & Assert
+      // Act & Assert- a short kind and a kind long enough to survive the nine-character prefix
+      // strip both fail the same way; without the prefix check the long one would parse into a
+      // nonsense key ("rgetingMe") and quietly evaluate as an allAllies gate.
       expect(PassiveRuleThreshold.parseAllAlliesThresholdKind('hpAbove')).toBe(null);
+      expect(PassiveRuleThreshold.parseAllAlliesThresholdKind('enemiesTargetingMeBelow')).toBe(null);
     });
   });
 });

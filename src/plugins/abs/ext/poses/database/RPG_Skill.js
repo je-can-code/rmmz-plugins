@@ -10,6 +10,9 @@
 Object.defineProperty(RPG_Skill.prototype, "jabsPoseData", {
   get: function()
   {
+    // null rather than an empty array on absence, because callers gate on this being truthy before
+    // reading the tuple apart- and an empty array is truthy, which would let a skill with no pose
+    // build a sprite name out of undefined.
     return RPGManager.getArrayFromNotesByRegex(this, J.ABS.EXT.POSES.RegExp.PoseSuffix, true);
   },
 });

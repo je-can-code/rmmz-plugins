@@ -214,6 +214,19 @@ describe('J-ABS Game_Battler state-application immunity (direct src import)', ()
       expect(result).toBe(true);
     });
 
+    it('does not block a typed state whose classifier is not the one immunity was granted for', () =>
+    {
+      // Arrange- both sides of the comparison are non-empty here, unlike the untyped-state case
+      // above, so the type equality itself is the only thing that can decide the outcome.
+      const battler = buildBattler([ '<stateTypeImmune:poison>' ]);
+
+      // Act
+      const result = battler.isStateAddable(CC_TYPED_STATE_ID);
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
     it('type matching is case-insensitive', () =>
     {
       // Arrange
@@ -282,6 +295,20 @@ describe('J-ABS Game_Battler state-application immunity (direct src import)', ()
 
       // Act
       const result = battler.stateTypeResistRate(CC_TYPED_STATE_ID);
+
+      // Assert
+      expect(result).toBe(1.0);
+    });
+
+    it('returns 1.0 for a state id with no database row, even while resist tags are present', () =>
+    {
+      // Arrange- the tags are deliberately present so the no-tags early return cannot be what
+      // answers this; only the missing-row guard can, and without it the summing pass below
+      // would dereference a row that does not exist.
+      const battler = buildBattler([ '<stateTypeResist:[cc, 50]>' ]);
+
+      // Act
+      const result = battler.stateTypeResistRate(9999);
 
       // Assert
       expect(result).toBe(1.0);

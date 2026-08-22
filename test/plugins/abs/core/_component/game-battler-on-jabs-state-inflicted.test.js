@@ -86,6 +86,22 @@ describe('J-ABS Game_Battler#onJabsStateInflicted (direct src import)', () =>
     expect(battler.addNewState).not.toHaveBeenCalled();
   });
 
+  it('registers a first-time application with vanilla tracking before handing off to JABS', () =>
+  {
+    // Arrange- isStateAffected is false, which is what makes this a first application rather
+    // than the reapplication covered above.
+    const battler = buildMinimalBattler();
+    const attacker = { name: 'attacker' };
+
+    // Act
+    battler.handleAddingJabsState(14, attacker);
+
+    // Assert- vanilla's own bookkeeping has to run for a state it has never seen, and the
+    // battler has to be refreshed so the new state's traits take effect.
+    expect(battler.addNewState).toHaveBeenCalledWith(14, attacker);
+    expect(battler.refresh).toHaveBeenCalledTimes(1);
+  });
+
   it('does not fire when the state is not addable', () =>
   {
     // Arrange

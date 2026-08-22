@@ -68,6 +68,16 @@ describe('PopupNumericDisplay.formatNumericPopupDisplayString (direct src import
       // Assert
       expect(result).toBe('Missed');
     });
+
+    it('leaves an already plus-prefixed heal label untouched', () =>
+    {
+      // Arrange & Act- a merge refresh hands back the text it previously rendered, and `+` is not a
+      // signed decimal literal, so the label must survive rather than being re-parsed into a bare 30.
+      const result = PopupNumericDisplay.formatNumericPopupDisplayString('+30');
+
+      // Assert
+      expect(result).toBe('+30');
+    });
   });
 
   describe('normalizes signed integers', () =>

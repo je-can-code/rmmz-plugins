@@ -245,8 +245,9 @@ describe('J-ABS-Shield Game_Action (unit, all downstream dependencies mocked)', 
   {
     it('returns false when there is no shield', () =>
     {
-      // Arrange
-      const action = buildAction();
+      // Arrange (a universal bypass returns true against any real shield, so the missing-shield
+      // guard is the only thing left that can produce false here)
+      const action = buildAction({ item: vi.fn(() => ({ hasShieldBypass: true, isShieldBypassUniversal: true })) });
 
       // Act/Assert
       expect(action.shouldBypassShield(null)).toEqual(false);
@@ -396,11 +397,15 @@ describe('J-ABS-Shield Game_Action (unit, all downstream dependencies mocked)', 
       const target = buildTarget();
       const shield = buildShield({ getCurrent: vi.fn(() => 0) });
       const shieldState = { shield };
+      vi.spyOn(action, 'onShieldDamageAbsorbed');
 
       // Act
       const result = action.absorbDamageIntoShield(shieldState, target, 50, 0);
 
-      // Assert
+      // Assert (the shield reference is present and there is damage to absorb, so the empty-pool
+      // guard is the only thing that can stop the loop before it deducts and pops)
+      expect(shield.setCurrent).not.toHaveBeenCalled();
+      expect(action.onShieldDamageAbsorbed).not.toHaveBeenCalled();
       expect(result).toEqual(50);
     });
 
@@ -454,6 +459,30 @@ describe('J-ABS-Shield Game_Action (unit, all downstream dependencies mocked)', 
 
       // Assert (loop condition is false immediately, nothing happens)
       expect(action.onShieldDamageAbsorbed).not.toHaveBeenCalled();
+      expect(result).toEqual(0);
+    });
+
+    it('keeps absorbing shield-only bonus damage after the HP damage is spent and the pool refills', () =>
+    {
+      // Arrange (4 HP damage plus 30 bonus against a 10-point pool that refills to 100 on break)
+      const action = buildAction();
+      const target = buildTarget();
+      let current = 10;
+      const shield = buildShield({
+        getCurrent: vi.fn(() => current),
+        setCurrent: vi.fn(v => { current = v; }),
+      });
+      const shieldState = { shield, onShieldBreak: vi.fn(() => { current = 100; }) };
+      vi.spyOn(action, 'onShieldDamageAbsorbed');
+
+      // Act
+      const result = action.absorbDamageIntoShield(shieldState, target, 4, 30);
+
+      // Assert (the first tick eats the pool with 4 real + 6 bonus; the leftover 24 bonus is only
+      // absorbed because the loop continues on pending bonus alone, with no HP damage remaining)
+      expect(action.onShieldDamageAbsorbed).toHaveBeenNthCalledWith(1, target, 10);
+      expect(action.onShieldDamageAbsorbed).toHaveBeenNthCalledWith(2, target, 24);
+      expect(shield.setCurrent).toHaveBeenLastCalledWith(76);
       expect(result).toEqual(0);
     });
 

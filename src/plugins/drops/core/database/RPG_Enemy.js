@@ -22,7 +22,7 @@ RPG_Enemy.prototype.initMembers = function(enemy)
 RPG_Enemy.prototype.initExtraDrops = function()
 {
   // get the drops found on this enemy.
-  const moreDrops = RPGManager.getArraysFromNotesByRegex(this, J.DROPS.RegExp.ExtraDrop, true);
+  const moreDrops = RPGManager.getArraysFromNotesByRegex(this, J.DROPS.RegExp.ExtraDrop);
 
   // if there are no more drops, then skip processing.
   if (moreDrops.length === 0) return;

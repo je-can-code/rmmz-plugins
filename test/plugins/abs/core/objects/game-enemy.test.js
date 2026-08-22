@@ -314,10 +314,18 @@ describe('J-ABS Game_Enemy (unit, all downstream dependencies mocked)', () =>
   {
     it('prefers the ATTACK_SPEED trait when present', () =>
     {
+      // Arrange: a non-ATTACK_SPEED trait sits ahead of the real one in the list, so a find that
+      // matched on anything at all would hand back 7 instead of the attack-speed trait's 42.
       const enemy = buildEnemy({
-        databaseData: () => buildReferenceData({ traits: [ { code: 99, value: 42 } ] }),
+        databaseData: () => buildReferenceData({
+          traits: [
+            { code: 98, value: 7 },
+            { code: 99, value: 42 },
+          ],
+        }),
       });
 
+      // Act & Assert
       expect(enemy.prepareTime()).toEqual(42);
     });
 
@@ -408,12 +416,12 @@ describe('J-ABS Game_Enemy (unit, all downstream dependencies mocked)', () =>
   // table-driven coverage for the repeated "positive tag -> true, negative tag -> false (inverted),
   // else inanimate-aware default" boolean getters.
   describe.each([
-    [ 'canIdle', 'jabsConfigCanIdle', 'jabsConfigNoIdle', true ],
-    [ 'showHpBar', 'jabsConfigShowHpBar', 'jabsConfigNoHpBar', true ],
-    [ 'showBattlerName', 'jabsConfigShowName', 'jabsConfigNoName', true ],
-    [ 'isInvincible', 'jabsConfigInvincible', 'jabsConfigNotInvincible', false ],
-    [ 'isInanimate', 'jabsConfigInanimate', 'jabsConfigNotInanimate', false ],
-  ])('%s()', (method, positiveField, negativeField, defaultValue) =>
+    [ 'canIdle', 'jabsConfigCanIdle', 'jabsConfigNoIdle', true, 'DefaultEnemyCanIdle' ],
+    [ 'showHpBar', 'jabsConfigShowHpBar', 'jabsConfigNoHpBar', true, 'DefaultEnemyShowHpBar' ],
+    [ 'showBattlerName', 'jabsConfigShowName', 'jabsConfigNoName', true, 'DefaultEnemyShowBattlerName' ],
+    [ 'isInvincible', 'jabsConfigInvincible', 'jabsConfigNotInvincible', false, 'DefaultEnemyIsInvincible' ],
+    [ 'isInanimate', 'jabsConfigInanimate', 'jabsConfigNotInanimate', false, 'DefaultEnemyIsInanimate' ],
+  ])('%s()', (method, positiveField, negativeField, defaultValue, metadataKey) =>
   {
     it('returns true when the positive tag is present', () =>
     {
@@ -431,9 +439,18 @@ describe('J-ABS Game_Enemy (unit, all downstream dependencies mocked)', () =>
 
     it('inverts the negative/prohibition tag when present', () =>
     {
+      // Arrange: the untagged default is flipped to the opposite of what inversion yields, so a
+      // false answer can only have come from the prohibition tag rather than from the fallback.
       const enemy = buildEnemy({ databaseData: () => buildReferenceData({ [ negativeField ]: true }) });
+      const originalDefault = globalThis.J.ABS.Metadata[ metadataKey ];
+      globalThis.J.ABS.Metadata[ metadataKey ] = true;
 
-      expect(enemy[method]()).toEqual(false);
+      // Act: restore the shared metadata before asserting so a failure cannot leak the flip.
+      const result = enemy[ method ]();
+      globalThis.J.ABS.Metadata[ metadataKey ] = originalDefault;
+
+      // Assert
+      expect(result).toEqual(false);
     });
 
     it(`falls back to the default (${defaultValue}) when untagged and animate`, () =>

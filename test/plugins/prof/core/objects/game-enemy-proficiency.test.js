@@ -70,13 +70,17 @@ describe('J-Proficiency Game_Enemy (direct src import)', () =>
   {
     it('finds a recorded proficiency by its skill', () =>
     {
-      // Arrange
+      // Arrange- a second record is filed first so it stands between the search and its target. A
+      // predicate that matched anything would hand back that sibling instead, which a lookup
+      // against a store holding one entry could never tell apart from the right answer.
+      enemy.addSkillProficiency(9, 3);
       enemy.addSkillProficiency(10, 5);
 
       // Act
       const proficiency = enemy.skillProficiencyBySkillId(10);
 
       // Assert
+      expect(proficiency.skillId).toBe(10);
       expect(proficiency.proficiency).toBe(5);
     });
 
@@ -150,7 +154,11 @@ describe('J-Proficiency Game_Enemy (direct src import)', () =>
   {
     it('returns the existing record when there is one', () =>
     {
-      // Arrange
+      // Arrange- creation is the only thing on this path that logs, and it logs every time it is
+      // asked to shadow a record that already exists. Its silence is therefore what proves the
+      // lookup answered outright rather than falling through to creation and being turned back.
+      const warn = vi.spyOn(console, 'warn')
+        .mockImplementation(() => {});
       enemy.addSkillProficiency(10, 7);
 
       // Act
@@ -158,6 +166,10 @@ describe('J-Proficiency Game_Enemy (direct src import)', () =>
 
       // Assert
       expect(proficiency.proficiency).toBe(7);
+      expect(warn).not.toHaveBeenCalled();
+
+      // restore manually so the spy cannot leak into whichever test runs next in this file.
+      warn.mockRestore();
     });
 
     it('creates a record on demand for an unused skill', () =>
@@ -190,7 +202,11 @@ describe('J-Proficiency Game_Enemy (direct src import)', () =>
   {
     it('improves an existing proficiency by the given amount', () =>
     {
-      // Arrange
+      // Arrange- as with the lookup above, the duplicate-creation warning is the only log on this
+      // path, so its silence proves the existing record was improved in place rather than being
+      // routed through creation first.
+      const warn = vi.spyOn(console, 'warn')
+        .mockImplementation(() => {});
       enemy.addSkillProficiency(10, 5);
 
       // Act
@@ -198,6 +214,10 @@ describe('J-Proficiency Game_Enemy (direct src import)', () =>
 
       // Assert
       expect(enemy.skillProficiencyBySkillId(10).proficiency).toBe(8);
+      expect(warn).not.toHaveBeenCalled();
+
+      // restore manually so the spy cannot leak into whichever test runs next in this file.
+      warn.mockRestore();
     });
 
     it('improves by one when no amount is given', () =>

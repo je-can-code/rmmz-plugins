@@ -123,6 +123,11 @@ describe('J-ABS plugin commands (direct src import)', () =>
     });
   });
 
+  /**
+   * The plugin manager hands every command argument across as a string, numeric fields included, so
+   * every id below is quoted the way the running engine would deliver it. Supplying the parsed
+   * numbers a reader might assume would exercise comparisons that cannot happen in production.
+   */
   describe('Set JABS Skill', () =>
   {
     it('assigns a non-offhand, non-tool/item skill slot using the skillId', () =>
@@ -130,7 +135,7 @@ describe('J-ABS plugin commands (direct src import)', () =>
       // Arrange
       const actor = { setEquippedSkill: vi.fn() };
       globalThis.$gameActors.actor.mockReturnValue(actor);
-      const args = { actorId: '1', skillId: '5', itemId: 0, slot: 'L1A', locked: 'false' };
+      const args = { actorId: '1', skillId: '5', itemId: '0', slot: 'L1A', locked: 'false' };
 
       // Act
       handlers['Set JABS Skill'](args);
@@ -144,7 +149,7 @@ describe('J-ABS plugin commands (direct src import)', () =>
       // Arrange
       const actor = { setEquippedSkill: vi.fn() };
       globalThis.$gameActors.actor.mockReturnValue(actor);
-      const args = { actorId: '1', skillId: '5', itemId: 9, slot: 'Tool', locked: 'true' };
+      const args = { actorId: '1', skillId: '5', itemId: '9', slot: 'Tool', locked: 'true' };
 
       // Act
       handlers['Set JABS Skill'](args);
@@ -158,7 +163,7 @@ describe('J-ABS plugin commands (direct src import)', () =>
       // Arrange
       const actor = { setEquippedSkill: vi.fn() };
       globalThis.$gameActors.actor.mockReturnValue(actor);
-      const args = { actorId: '1', skillId: '5', itemId: 9, slot: 'UsableItem', locked: 'false' };
+      const args = { actorId: '1', skillId: '5', itemId: '9', slot: 'UsableItem', locked: 'false' };
 
       // Act
       handlers['Set JABS Skill'](args);
@@ -172,7 +177,7 @@ describe('J-ABS plugin commands (direct src import)', () =>
       // Arrange
       const actor = { setEquippedSkill: vi.fn() };
       globalThis.$gameActors.actor.mockReturnValue(actor);
-      const args = { actorId: '1', skillId: '5', itemId: 9, slot: 'L1A', locked: 'false' };
+      const args = { actorId: '1', skillId: '5', itemId: '9', slot: 'L1A', locked: 'false' };
 
       // Act
       handlers['Set JABS Skill'](args);
@@ -186,7 +191,7 @@ describe('J-ABS plugin commands (direct src import)', () =>
       // Arrange
       const actor = { setEquippedSkill: vi.fn() };
       globalThis.$gameActors.actor.mockReturnValue(actor);
-      const args = { actorId: '1', skillId: '0', itemId: 0, slot: 'L1A', locked: 'false' };
+      const args = { actorId: '1', skillId: '0', itemId: '0', slot: 'L1A', locked: 'false' };
 
       // Act
       handlers['Set JABS Skill'](args);
@@ -201,7 +206,7 @@ describe('J-ABS plugin commands (direct src import)', () =>
       const slotManager = { getSkillSlotByKey: vi.fn() };
       const actor = { pinOffhandSkill: vi.fn(), getSkillSlotManager: vi.fn(() => slotManager), setEquippedSkill: vi.fn() };
       globalThis.$gameActors.actor.mockReturnValue(actor);
-      const args = { actorId: '1', skillId: '5', itemId: 0, slot: 'Offhand', locked: 'false' };
+      const args = { actorId: '1', skillId: '5', itemId: '0', slot: 'Offhand', locked: 'false' };
 
       // Act
       handlers['Set JABS Skill'](args);
@@ -219,7 +224,7 @@ describe('J-ABS plugin commands (direct src import)', () =>
       const slotManager = { getSkillSlotByKey: vi.fn(() => slot) };
       const actor = { pinOffhandSkill: vi.fn(), getSkillSlotManager: vi.fn(() => slotManager), setEquippedSkill: vi.fn() };
       globalThis.$gameActors.actor.mockReturnValue(actor);
-      const args = { actorId: '1', skillId: '5', itemId: 0, slot: 'Offhand', locked: 'true' };
+      const args = { actorId: '1', skillId: '5', itemId: '0', slot: 'Offhand', locked: 'true' };
 
       // Act
       handlers['Set JABS Skill'](args);
@@ -368,6 +373,22 @@ describe('J-ABS plugin commands (direct src import)', () =>
       expect(jabsBattler.setCooldownCounter).toHaveBeenCalledWith('global', 0);
     });
 
+    it('clears the counter to 0 when frames is negative', () =>
+    {
+      // Arrange- a negative count is finite, so it fails only the positive half of the guard. Zero
+      // cannot make that case on its own: it is both the input and the cleared value, so a guard
+      // that let it straight through would produce the same 0 the rejection does.
+      const jabsBattler = { setCooldownCounter: vi.fn() };
+      JABS_GlobalCooldown_mock.jabsBattlerForActor.mockReturnValue(jabsBattler);
+      const args = { actorId: '1', frames: '-5' };
+
+      // Act
+      handlers['Apply Global Cooldown'](args);
+
+      // Assert
+      expect(jabsBattler.setCooldownCounter).toHaveBeenCalledWith('global', 0);
+    });
+
     it('clears the counter to 0 when frames is not a finite number', () =>
     {
       // Arrange
@@ -385,15 +406,18 @@ describe('J-ABS plugin commands (direct src import)', () =>
 
   describe('Spawn Enemy', () =>
   {
-    it('spawns the enemy without scheduling an animation when spawnAnimationId is falsy', () =>
+    it('spawns the enemy without scheduling an animation when spawnAnimationId is falsy', async () =>
     {
-      // Arrange
+      // Arrange- the enemy spawns successfully, so the only thing that can suppress the animation
+      // is the id check itself rather than the failed-spawn early return below.
       const addedEnemy = { requestAnimation: vi.fn() };
       globalThis.$jabsEngine.addEnemyToMap.mockReturnValue(addedEnemy);
       const args = { x: '3', y: '4', enemyEventId: '7', spawnAnimationId: '0' };
 
-      // Act
+      // Act- the animation is scheduled 50ms out, so the wait has to outlast that timer; asserting
+      // synchronously would pass simply by beating the callback rather than by preventing it.
       handlers['Spawn Enemy'](args);
+      await new Promise(resolve => { setTimeout(resolve, 60); });
 
       // Assert
       expect(globalThis.$jabsEngine.addEnemyToMap).toHaveBeenCalledWith(3, 4, 7);
@@ -431,9 +455,10 @@ describe('J-ABS plugin commands (direct src import)', () =>
 
   describe('Spawn Loot', () =>
   {
-    it('drops every item/weapon/armor and does not schedule an animation when spawnAnimationId is falsy', () =>
+    it('drops every item/weapon/armor and does not schedule an animation when spawnAnimationId is falsy', async () =>
     {
-      // Arrange
+      // Arrange- loot actually drops here, so lastDropped is a real target and the id check is the
+      // only thing left that can keep the animation from being scheduled onto it.
       const lastDropped = { requestAnimation: vi.fn() };
       globalThis.$jabsEngine.addLootDropToMap.mockReturnValue(lastDropped);
       const args = {
@@ -445,8 +470,10 @@ describe('J-ABS plugin commands (direct src import)', () =>
         spawnAnimationId: '0',
       };
 
-      // Act
+      // Act- the animation is scheduled 50ms out, so the wait has to outlast that timer; asserting
+      // synchronously would pass simply by beating the callback rather than by preventing it.
       handlers['Spawn Loot'](args);
+      await new Promise(resolve => { setTimeout(resolve, 60); });
 
       // Assert
       expect(globalThis.$jabsEngine.addLootDropToMap).toHaveBeenCalledWith(1, 2, { kind: 'item', id: 10 });

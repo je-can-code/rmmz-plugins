@@ -228,6 +228,60 @@ describe('single level across classes (direct src import)', () =>
     expect(actor._level).toBe(5);
   });
 
+  it('never re-climbs levels on a class change when shared level is enabled', () =>
+  {
+    // Arrange- vanilla changeClass drops the actor to level zero and re-earns every level from the
+    // banked exp, which re-fires levelUp for each one. Sharing the level means the actor never
+    // leaves level five, so nothing should be re-earned at all.
+    const actor = new globalThis.Game_Actor();
+    actor.initExp();
+    actor.changeExp(actor.expForLevel(5), false);
+    const levelUp = vi.spyOn(actor, 'levelUp');
+
+    // Act
+    actor.changeClass(2, false);
+
+    // Assert- the level and class pin that the change actually happened, so an uncalled levelUp
+    // cannot be explained by a change that never ran.
+    expect(actor._classId).toBe(2);
+    expect(actor._level).toBe(5);
+    expect(levelUp).not.toHaveBeenCalled();
+
+    levelUp.mockRestore();
+  });
+
+  it('seeds every class\'s exp slot at initialization when shared level is enabled', () =>
+  {
+    // Arrange- vanilla only ever seeds the starting class, which leaves every other class holding
+    // undefined until the actor happens to switch into it.
+    const actor = new globalThis.Game_Actor();
+    actor._level = 5;
+
+    // Act
+    actor.initExp();
+
+    // Assert
+    expect(actor._exp[1]).toBe(695);
+    expect(actor._exp[2]).toBe(695);
+  });
+
+  it('seeds only the active class\'s exp slot at initialization when the toggle is off', () =>
+  {
+    // Arrange- class 2 is deliberately the active one, so the seeded value is class 2's own curve
+    // rather than a number the canonical curve could also have produced.
+    globalThis.J.LEVEL.Metadata.useSharedActorLevel = false;
+    const actor = new globalThis.Game_Actor();
+    actor._classId = 2;
+    actor._level = 5;
+
+    // Act
+    actor.initExp();
+
+    // Assert
+    expect(actor._exp[2]).toBe(1011);
+    expect(actor._exp[1]).toBeUndefined();
+  });
+
   it('backfills the destination class\'s learnings up to the current level on class change', () =>
   {
     const actor = new globalThis.Game_Actor();

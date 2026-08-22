@@ -91,6 +91,49 @@ describe('PanelMastery (direct src import)', () =>
   });
   //endregion hasPartialEnrollment
 
+  //region enrolledInSubgroup
+  describe('enrolledInSubgroup', () =>
+  {
+    it('is enrolled when both the key and the tier name a slot', () =>
+    {
+      // Arrange
+      const mastery = PanelMastery.fromFlat('resilience', 2, 0);
+
+      // Act
+      const result = mastery.enrolledInSubgroup();
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('is not enrolled from a tier alone', () =>
+    {
+      // Arrange: a tier with no subgroup beside it points at a slot in no hierarchy at all, which
+      // is why the two fields are checked separately rather than as one truthiness question.
+      const mastery = PanelMastery.fromFlat(String.empty, 2, 0);
+
+      // Act
+      const result = mastery.enrolledInSubgroup();
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('is not enrolled from a subgroup key alone', () =>
+    {
+      // Arrange: tier zero is how an unenrolled row is authored, so a key beside it still leaves
+      // the panel outside the hierarchy.
+      const mastery = PanelMastery.fromFlat('resilience', 0, 0);
+
+      // Act
+      const result = mastery.enrolledInSubgroup();
+
+      // Assert
+      expect(result).toBe(false);
+    });
+  });
+  //endregion enrolledInSubgroup
+
   //region subgroup tier coercion
   describe('subgroup tier coercion', () =>
   {

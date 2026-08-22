@@ -273,6 +273,55 @@ describe('IconManager (direct src import)', () =>
       expect(IconManager.trait(trait)).toBe(expected);
     });
 
+    it('routes trait code 52 to the armor type table rather than the equip type table', () =>
+    {
+      // Arrange- armorType and equipType both answer 16 for every input today, so the returned icon
+      // cannot tell the two lookups apart. Standing in a sentinel for the armor table is what makes
+      // "code 52 consults armor types" an actual claim instead of a coincidence of placeholder data.
+      const armorSpy = vi.spyOn(IconManager, 'armorType')
+        .mockReturnValue(7001);
+      const trait = {
+        _code: 52,
+        _dataId: 4
+      };
+
+      // Act
+      const result = IconManager.trait(trait);
+
+      // Assert
+      expect(result)
+        .toBe(7001);
+      expect(armorSpy)
+        .toHaveBeenCalledWith(4);
+
+      // restore by hand- a spy on a static of the module under test outlives this test otherwise.
+      armorSpy.mockRestore();
+    });
+
+    it('routes trait code 62 to the special flag table rather than the party ability table', () =>
+    {
+      // Arrange- same shape as code 52: specialFlag and partyAbility are both stubbed at 16, so only
+      // a sentinel proves a special flag is read as a special flag and not as a party ability.
+      const specialFlagSpy = vi.spyOn(IconManager, 'specialFlag')
+        .mockReturnValue(7002);
+      const trait = {
+        _code: 62,
+        _dataId: 3
+      };
+
+      // Act
+      const result = IconManager.trait(trait);
+
+      // Assert
+      expect(result)
+        .toBe(7002);
+      expect(specialFlagSpy)
+        .toHaveBeenCalledWith(3);
+
+      // restore by hand- see above.
+      specialFlagSpy.mockRestore();
+    });
+
     it('logs an error and returns false for an unrecognized trait code', () =>
     {
       // Arrange

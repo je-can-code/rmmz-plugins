@@ -106,6 +106,51 @@ describe('J-ABS-Juice JuiceMotionManager (unit, all downstream dependencies mock
     {
       expect(() => JuiceMotionManager.cancelForSprite({})).not.toThrow();
     });
+
+    // Restoring the cancelled effect is only half the job- it also has to leave the frame queue, or
+    // it keeps ticking after its baseline was snapped back and fights whatever replaced it. Nothing
+    // asserted on the queue, and with a single effect in flight "removed the cancelled one" and
+    // "emptied the queue" look identical from outside, so both of these run a second effect on an
+    // unrelated sprite that has to survive the cancellation untouched.
+    it('drops the cancelled effect from the frame queue', () =>
+    {
+      // Arrange
+      const cancelledSprite = {};
+      const survivingSprite = {};
+      const cancelled = buildFakeEffect();
+      const surviving = buildFakeEffect();
+      FakeTilt.mockImplementationOnce(function() { return cancelled; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
+      FakeSquish.mockImplementationOnce(function() { return surviving; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
+      JuiceMotionManager.scheduleTilt(cancelledSprite, 0.2, 8);
+      JuiceMotionManager.scheduleSquish(survivingSprite, 0.1, 10);
+
+      // Act
+      JuiceMotionManager.cancelForSprite(cancelledSprite);
+      JuiceMotionManager.frameTick();
+
+      // Assert
+      expect(cancelled.tick).not.toHaveBeenCalled();
+    });
+
+    it('leaves effects belonging to other sprites in the frame queue', () =>
+    {
+      // Arrange
+      const cancelledSprite = {};
+      const survivingSprite = {};
+      const cancelled = buildFakeEffect();
+      const surviving = buildFakeEffect();
+      FakeTilt.mockImplementationOnce(function() { return cancelled; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
+      FakeSquish.mockImplementationOnce(function() { return surviving; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
+      JuiceMotionManager.scheduleTilt(cancelledSprite, 0.2, 8);
+      JuiceMotionManager.scheduleSquish(survivingSprite, 0.1, 10);
+
+      // Act
+      JuiceMotionManager.cancelForSprite(cancelledSprite);
+      JuiceMotionManager.frameTick();
+
+      // Assert
+      expect(surviving.tick).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('pushExternalEffect', () =>

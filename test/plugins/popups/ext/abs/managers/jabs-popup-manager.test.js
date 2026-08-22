@@ -179,6 +179,33 @@ describe('JABS_PopupManager (direct src import)', () =>
       );
     });
 
+    it('prefers hpDamage over mpDamage when the same hit moved both', () =>
+    {
+      // Arrange- a drain lands on hp and mp at once, and the merged stream is meant to total the
+      // hp line; the fallback order is a priority, not a first-non-zero scan.
+      const character = { getJabsBattlerUuid: () => 'target-uuid' };
+      const action = {
+        getBaseSkill: () => ({ damage: { type: 1 } }),
+        getCaster: () => ({ getUuid: () => 'caster-uuid' }),
+        getAction: () => ({ calcElementRate: () => 1 }),
+      };
+      const target = {
+        getCharacter: () => character,
+        getBattler: () => ({ result: () => makeActionResult({ hpDamage: 12, mpDamage: 7 }) }),
+      };
+      const engine = { determineElementalIcon: () => 5 };
+
+      // Act
+      JABS_PopupManager.showAttackPop(action, target, engine);
+
+      // Assert
+      expect(FakeJABSPopupMergeController.routeStrikePop).toHaveBeenCalledWith(
+        expect.anything(),
+        character,
+        expect.objectContaining({ amount: 12 }),
+      );
+    });
+
     it('falls back to mpDamage when hpDamage is zero', () =>
     {
       // Arrange
@@ -334,8 +361,10 @@ describe('JABS_PopupManager (direct src import)', () =>
       // Act
       const pop = JABS_PopupManager.buildDamagePop(action, target, engine);
 
-      // Assert
+      // Assert- a clean hit must not pick up the glancing styling; the glancing flag is the only
+      // thing that may apply it.
       expect(pop.calls).toEqual(expect.arrayContaining([ [ 'isHpDamage' ], [ 'forEnemyDamageRing' ] ]));
+      expect(pop.calls).not.toContainEqual([ 'setTextAccent', 'glance' ]);
     });
 
     it('marks a negative hp result as healing with the incoming-heal ring', () =>
@@ -639,8 +668,13 @@ describe('JABS_PopupManager (direct src import)', () =>
       // Act
       JABS_PopupManager.showItemAppliedPop({}, {}, caster, target);
 
-      // Assert
-      expect(FakeJABSPopupMergeController.routeMitigationPop).toHaveBeenCalledWith(expect.anything(), character, expect.objectContaining({ mitigationType: 'parry' }));
+      // Assert- the mitigation type is read straight off the result, so only the popup's own label
+      // proves the parry arm of the switch is what built it.
+      expect(FakeJABSPopupMergeController.routeMitigationPop).toHaveBeenCalledWith(
+        expect.objectContaining({ value: 'PARRY!', popupType: 'parry' }),
+        character,
+        expect.objectContaining({ mitigationType: 'parry' }),
+      );
       expect(FakeJABSPopupMergeController.routeStrikePop).not.toHaveBeenCalled();
     });
 
@@ -655,7 +689,11 @@ describe('JABS_PopupManager (direct src import)', () =>
       JABS_PopupManager.showItemAppliedPop({}, {}, caster, target);
 
       // Assert
-      expect(FakeJABSPopupMergeController.routeMitigationPop).toHaveBeenCalledWith(expect.anything(), character, expect.objectContaining({ mitigationType: 'evade' }));
+      expect(FakeJABSPopupMergeController.routeMitigationPop).toHaveBeenCalledWith(
+        expect.objectContaining({ value: 'DODGE', popupType: 'evade' }),
+        character,
+        expect.objectContaining({ mitigationType: 'evade' }),
+      );
     });
 
     it('routes a strike pop with the hp/mp/tp-priority amount for a normal result', () =>
@@ -720,6 +758,66 @@ describe('JABS_PopupManager (direct src import)', () =>
       // Assert
       const [ [ pop ] ] = FakeJABSPopupMergeController.routeStrikePop.mock.calls;
       expect(pop.calls).toEqual(expect.arrayContaining([ [ 'setTextAccent', 'glance' ], [ 'setTextColorIndex', 7 ] ]));
+    });
+
+    it('renders a positive hp result as a clean hit on the enemy-damage ring', () =>
+    {
+      // Arrange- a plain damaging tool: the sign picks the ring, and nothing about it is glancing.
+      const { caster, target } = makeAppliedTrio(makeActionResult({ hpDamage: 8 }));
+
+      // Act
+      JABS_PopupManager.showItemAppliedPop({}, {}, caster, target);
+
+      // Assert
+      const [ [ pop ] ] = FakeJABSPopupMergeController.routeStrikePop.mock.calls;
+      expect(pop.calls).toContainEqual([ 'forEnemyDamageRing' ]);
+      expect(pop.calls).not.toContainEqual([ 'forIncomingHealRing' ]);
+      expect(pop.calls).not.toContainEqual([ 'setTextAccent', 'glance' ]);
+    });
+
+    it('renders a positive mp result as damage on the enemy-damage ring', () =>
+    {
+      // Arrange
+      const { caster, target } = makeAppliedTrio(makeActionResult({ mpDamage: 4 }));
+
+      // Act
+      JABS_PopupManager.showItemAppliedPop({}, {}, caster, target);
+
+      // Assert
+      const [ [ pop ] ] = FakeJABSPopupMergeController.routeStrikePop.mock.calls;
+      expect(pop.calls).toContainEqual([ 'forEnemyDamageRing' ]);
+      expect(pop.calls).not.toContainEqual([ 'forIncomingHealRing' ]);
+    });
+
+    it('renders a positive tp result as damage on the enemy-damage ring', () =>
+    {
+      // Arrange
+      const { caster, target } = makeAppliedTrio(makeActionResult({ tpDamage: 3 }));
+
+      // Act
+      JABS_PopupManager.showItemAppliedPop({}, {}, caster, target);
+
+      // Assert
+      const [ [ pop ] ] = FakeJABSPopupMergeController.routeStrikePop.mock.calls;
+      expect(pop.calls).toContainEqual([ 'forEnemyDamageRing' ]);
+      expect(pop.calls).not.toContainEqual([ 'forIncomingHealRing' ]);
+    });
+
+    it('prefers the hp amount over the mp amount when the tool moved both', () =>
+    {
+      // Arrange- a draining tool touches two resource lines at once, and the popup stream it feeds
+      // is the hp one.
+      const { character, caster, target } = makeAppliedTrio(makeActionResult({ hpDamage: 6, mpDamage: 4 }));
+
+      // Act
+      JABS_PopupManager.showItemAppliedPop({}, {}, caster, target);
+
+      // Assert
+      expect(FakeJABSPopupMergeController.routeStrikePop).toHaveBeenCalledWith(
+        expect.anything(),
+        character,
+        { attackerUuid: 'caster-uuid', targetUuid: 'target-uuid', amount: 6 },
+      );
     });
 
     it('routes the mp amount when nothing landed on hp', () =>
@@ -794,6 +892,21 @@ describe('JABS_PopupManager (direct src import)', () =>
         character,
         { attackerUuid: 'caster-uuid', targetUuid: 'target-uuid', amount: 0 },
       );
+    });
+
+    it('builds the do-nothing result as an hp popup rather than falling into a resource lane', () =>
+    {
+      // Arrange- with every resource line reading zero the switch has no lane to pick, and the
+      // fallback presents the whiff on the hp line the player is already watching.
+      const { caster, target } = makeAppliedTrio(makeActionResult());
+
+      // Act
+      JABS_PopupManager.showItemAppliedPop({}, {}, caster, target);
+
+      // Assert
+      const [ [ pop ] ] = FakeJABSPopupMergeController.routeStrikePop.mock.calls;
+      expect(pop.calls).toContainEqual([ 'isHpDamage' ]);
+      expect(pop.calls).not.toContainEqual([ 'isTpDamage' ]);
     });
   });
 

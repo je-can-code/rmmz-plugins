@@ -377,9 +377,13 @@ describe('PassiveGateEvaluator (direct src import)', () =>
 
     it('resolves an anyAlly scope to allied battlers within the given (or default) range', () =>
     {
-      // Arrange
-      const ally = makeResourceBattler({ hp: 100, mhp: 100 });
-      FakePassiveRuleJabsAccess.alliedBattlersWithinRange.mockReturnValue([ { getBattler: () => ally } ]);
+      // Arrange- one ally clears the threshold and one does not, so "any" and "all" semantics
+      // disagree here and the result proves which one the scope selected.
+      const healthyAlly = makeResourceBattler({ hp: 100, mhp: 100 });
+      const woundedAlly = makeResourceBattler({ hp: 10, mhp: 100 });
+      FakePassiveRuleJabsAccess.alliedBattlersWithinRange.mockReturnValue([
+        { getBattler: () => healthyAlly }, { getBattler: () => woundedAlly },
+      ]);
       const battler = makeResourceBattler({ hp: 0, mhp: 100 });
 
       // Act
@@ -418,9 +422,13 @@ describe('PassiveGateEvaluator (direct src import)', () =>
 
     it('resolves an anyEnemy scope from opposing battlers within range', () =>
     {
-      // Arrange
-      const enemy = makeResourceBattler({ hp: 100, mhp: 100 });
-      FakePassiveRuleJabsAccess.opposingBattlersWithinRange.mockReturnValue([ { getBattler: () => enemy } ]);
+      // Arrange- one enemy clears the threshold and one does not, so a scope that quietly
+      // demanded every enemy satisfy it would come back false instead.
+      const healthyEnemy = makeResourceBattler({ hp: 100, mhp: 100 });
+      const woundedEnemy = makeResourceBattler({ hp: 10, mhp: 100 });
+      FakePassiveRuleJabsAccess.opposingBattlersWithinRange.mockReturnValue([
+        { getBattler: () => healthyEnemy }, { getBattler: () => woundedEnemy },
+      ]);
       const battler = makeResourceBattler();
 
       // Act
@@ -538,6 +546,30 @@ describe('PassiveGateEvaluator (direct src import)', () =>
       expect(PassiveGateEvaluator.evaluate(battler, 'allBelow', [ 50 ])).toBe(false);
     });
 
+    it('anyAbove falls back to the plugin proximity when no range is authored', () =>
+    {
+      // Arrange
+      const battler = makeResourceBattler();
+
+      // Act
+      PassiveGateEvaluator.evaluate(battler, 'anyAbove', [ 50, 'anyAlly' ]);
+
+      // Assert- an omitted range must resolve to the plugin default, never to NaN tiles.
+      expect(FakePassiveRuleJabsAccess.alliedBattlersWithinRange).toHaveBeenCalledWith(battler, 5);
+    });
+
+    it('allAbove falls back to the plugin proximity when no range is authored', () =>
+    {
+      // Arrange
+      const battler = makeResourceBattler();
+
+      // Act
+      PassiveGateEvaluator.evaluate(battler, 'allAbove', [ 50, 'anyAlly' ]);
+
+      // Assert- an omitted range must resolve to the plugin default, never to NaN tiles.
+      expect(FakePassiveRuleJabsAccess.alliedBattlersWithinRange).toHaveBeenCalledWith(battler, 5);
+    });
+
     it('anyAbove forwards an explicit range instead of the plugin default', () =>
     {
       // Arrange
@@ -592,6 +624,22 @@ describe('PassiveGateEvaluator (direct src import)', () =>
 
       // Assert
       expect(result).toBe(true);
+    });
+
+    it('negativeStateCount fails while the battler carries fewer negatives than the threshold', () =>
+    {
+      // Arrange- one negative state against a threshold of three.
+      const battler = {
+        allStates: () => [
+          { isNegativeType: () => true }, { isNegativeType: () => false },
+        ],
+      };
+
+      // Act
+      const result = PassiveGateEvaluator.evaluate(battler, 'negativeStateCount', [ 3 ]);
+
+      // Assert
+      expect(result).toBe(false);
     });
   });
 
@@ -652,6 +700,16 @@ describe('PassiveGateEvaluator (direct src import)', () =>
 
       // Act & Assert
       expect(PassiveGateEvaluator.evaluate({}, 'slotOffCooldown', [ 'mainhand' ])).toBe(true);
+    });
+
+    it('slotOffCooldown is false while the resolved slot is still cooling down', () =>
+    {
+      // Arrange- the inverse of slotOnCooldown: a slot JABS reports as not ready.
+      const jabsBattler = { isSkillTypeCooldownReady: vi.fn(() => false) };
+      FakePassiveRuleJabsAccess.getJabsBattler.mockReturnValue(jabsBattler);
+
+      // Act & Assert
+      expect(PassiveGateEvaluator.evaluate({}, 'slotOffCooldown', [ 'mainhand' ])).toBe(false);
     });
   });
 

@@ -100,10 +100,14 @@ describe('J-Elementalistics Game_Action element math (direct src import)', () =>
   //region applicable elements
   describe('getApplicableElements', () =>
   {
-    it('uses the skill\'s own base element', () =>
+    it('uses the skill\'s own base element, leaving the caster\'s out of it', () =>
     {
-      // Arrange & Act
-      const elements = makeAction({ damage: { elementId: 1 } }).getApplicableElements(makeTarget());
+      // Arrange: a skill that names its own element is fully specified, so the elements the caster
+      // strikes with must not quietly join in - only a normal attack inherits those.
+      const action = makeAction({ damage: { elementId: 1 } }, '', [ 2 ]);
+
+      // Act
+      const elements = action.getApplicableElements(makeTarget());
 
       // Assert
       expect(elements).toEqual([ 1 ]);
@@ -164,13 +168,15 @@ describe('J-Elementalistics Game_Action element math (direct src import)', () =>
   //region rate resolution
   describe('calcElementRate', () =>
   {
-    it('leaves a non-elemental action at neutral damage', () =>
+    it('leaves a non-elemental action at neutral damage, even against a strict target', () =>
     {
-      // Arrange: a none-element action performs no elemental calculation at all.
+      // Arrange: a none-element action performs no elemental calculation at all, so a strict list
+      // that refuses every element the action carries never gets to zero it out.
       const action = makeAction({ damage: { elementId: 0 } });
+      const target = makeTarget({ 1: 0.5 }, '<strictElements:[9]>');
 
       // Act
-      const factor = action.calcElementRate(makeTarget({ 1: 0.5 }));
+      const factor = action.calcElementRate(target);
 
       // Assert
       expect(factor).toBe(1.0);
@@ -258,6 +264,21 @@ describe('J-Elementalistics Game_Action element math (direct src import)', () =>
 
       // Assert
       expect(factor).toBeCloseTo(2, 10);
+    });
+
+    it('resolves a lone element by its own rate without ever reaching anti-null handling', () =>
+    {
+      // Arrange: anti-null is multi-element machinery, and a single surviving element short-
+      // circuits ahead of it - so a lone nullified element stays nullified rather than being
+      // purged into true damage the way a second element would let it be.
+      const action = makeAction({ damage: { elementId: 1 } });
+      action.getAntiNullElementIds = () => [ 1 ];
+
+      // Act
+      const factor = action.calcElementRate(makeTarget({ 1: 0 }));
+
+      // Assert
+      expect(factor).toBe(0);
     });
 
     it('deals true damage when anti-null leaves nothing but nullified elements', () =>

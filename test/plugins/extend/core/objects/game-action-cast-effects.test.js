@@ -93,15 +93,24 @@ describe('Game_Action ext/extend cast effects (direct src import)', () =>
     it('assigns the object directly when a caster is present', () =>
     {
       // Arrange- see finding F1 in the overnight report: this branch deliberately does not apply
-      // extension overlays, which is the open question flagged there.
+      // extension overlays, which is the open question flagged there. The original engine method
+      // assigns the object through the very same setObject call this branch does, so it has to be
+      // swapped for a spy that does nothing- otherwise it stands in as a backstop and the two paths
+      // become indistinguishable from the outside.
+      const original = vi.fn();
+      const realOriginal = aliasMap.get('setItemObject');
+      aliasMap.set('setItemObject', original);
       const action = buildAction();
       const item = { id: 3 };
 
       // Act
       proto.setItemObject.call(action, item);
 
-      // Assert
+      // Assert- the caster-present path assigns directly and never defers to the original.
       expect(action._item.setObject).toHaveBeenCalledWith(item);
+      expect(original).not.toHaveBeenCalled();
+
+      aliasMap.set('setItemObject', realOriginal);
     });
   });
 

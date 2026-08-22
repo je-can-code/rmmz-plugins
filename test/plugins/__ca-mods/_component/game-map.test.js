@@ -39,66 +39,6 @@ describe('CAMods Game_Map (real engine direct import)', () =>
     delete globalThis.$gameVariables;
   });
 
-  /**
-   * Builds a bare Game_Map stubbed with a single tile at (0, 0) carrying the given flag.
-   * @param {number} flag
-   * @returns {Game_Map}
-   */
-  function buildMapWithFlag(flag)
-  {
-    const map = Object.create(globalThis.Game_Map.prototype);
-    map.tilesetFlags = () => [ flag ];
-    map.allTiles = () => [ 0 ];
-    return map;
-  }
-
-  describe('checkPassage', () =>
-  {
-    it('treats terrain tag 1 as always impassable, regardless of the requested passage bit', () =>
-    {
-      // (1 << 12) sets the flag's terrain-id nibble to 1- the CA-specific "ceiling" block.
-      const map = buildMapWithFlag(1 << 12);
-
-      expect(map.checkPassage(0, 0, 0x0f)).toBe(false);
-    });
-
-    it('treats the 0x10 "no effect on passage" bit as a transparent pass-through to the next tile', () =>
-    {
-      const map = Object.create(globalThis.Game_Map.prototype);
-      // the first (upper) tile has 0x10 set and should be skipped; the second (lower) tile is
-      // openly passable for the requested bit.
-      map.tilesetFlags = () => [ 0x10, 0x00 ];
-      map.allTiles = () => [ 0, 1 ];
-
-      expect(map.checkPassage(0, 0, 0x0f)).toBe(true);
-    });
-
-    it('returns true when the requested bit is clear on the tile\'s flag (passable)', () =>
-    {
-      const map = buildMapWithFlag(0x00);
-
-      expect(map.checkPassage(0, 0, 0x0f)).toBe(true);
-    });
-
-    it('returns false when the requested bit is fully set on the tile\'s flag (impassable)', () =>
-    {
-      const map = buildMapWithFlag(0x0f);
-
-      expect(map.checkPassage(0, 0, 0x0f)).toBe(false);
-    });
-
-    it('refuses passage for a tile that blocks only some of the requested directions', () =>
-    {
-      // Arrange- a flag overlapping the requested bits partially matches neither the fully-open nor
-      // the fully-closed case, so it falls out of the loop entirely. Defaulting that to impassable
-      // is the safe answer: letting it through would walk the player into geometry.
-      const map = buildMapWithFlag(0x01);
-
-      // Act & Assert
-      expect(map.checkPassage(0, 0, 0x0f)).toBe(false);
-    });
-  });
-
   describe('setup', () =>
   {
     it('calls the original setup then seeds the rare/named-enemy variable with a random 1-100 value', () =>

@@ -169,6 +169,67 @@ describe('save core edges (direct src import)', () =>
   });
   //endregion a row with nothing in it
 
+  //region a row with something in it
+  describe('SaveFileEntry on a filled slot', () =>
+  {
+    /**
+     * The row a slot that has been saved to produces.
+     *
+     * The manifest is hand-built rather than read off the fake disk because a row never reads anything
+     * else - what the filesystem hands over is exactly this shape, and building it here keeps the
+     * assertion about the row rather than about the reader that fetched it.
+     * @returns {SaveFileEntry} The filled row.
+     */
+    const filledRow = () => new SaveFileEntry(3, 'file3', '', 'gen-0007', {
+      savedAt: '2026-08-05T12:00:00.000Z',
+      playtimeFrames: 91240,
+      display: { mapName: 'The Kitchen' },
+    });
+
+    it('reports the playtime the manifest was written at', () =>
+    {
+      // Arrange
+      const entry = filledRow();
+
+      // Act
+      const playtimeFrames = entry.playtimeFrames();
+
+      // Assert
+      expect(playtimeFrames).toBe(91240);
+    });
+  });
+  //endregion a row with something in it
+
+  //region a slot row against a generation row
+  describe('SaveFileEntry.isGeneration()', () =>
+  {
+    it('reads a row that names a generation as one', () =>
+    {
+      // Arrange
+      const entry = new SaveFileEntry(3, 'file3', 'gen-0007', 'gen-0007', null);
+
+      // Act
+      const isGeneration = entry.isGeneration();
+
+      // Assert
+      expect(isGeneration).toBe(true);
+    });
+
+    it('reads a row that names no generation as the whole slot it describes', () =>
+    {
+      // Arrange: the same row but for the generation name. the source generation stays filled in, so
+      // a row that answered off the generation its picture came from would answer wrongly here.
+      const entry = new SaveFileEntry(3, 'file3', '', 'gen-0007', null);
+
+      // Act
+      const isGeneration = entry.isGeneration();
+
+      // Assert
+      expect(isGeneration).toBe(false);
+    });
+  });
+  //endregion a slot row against a generation row
+
   //region the picture
   describe('SaveThumbnail', () =>
   {
@@ -508,8 +569,12 @@ describe('save core edges (direct src import)', () =>
       // Act
       const encoded = SaveEncoder.encode(new InstanceHost(), '$.instanceHost');
 
-      // Assert
+      // Assert- the tag proves the instance went through its own codec rather than being walked as a
+      // namespace object, and `deep` surviving proves the holder's transient stopped at the boundary:
+      // declarations describe an instance's own keys, so `nest.deep` is not InstanceHost's to skip.
       expect(encoded.nest.kept).toBe('yes');
+      expect(encoded.nest.deep).toBe('a stopwatch');
+      expect(encoded.nest['@']).toBe('Middle');
     });
 
     it('refuses a class instance nothing declared, naming the path and the type', () =>

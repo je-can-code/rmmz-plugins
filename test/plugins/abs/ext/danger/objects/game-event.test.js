@@ -170,8 +170,9 @@ describe('J-ABS-Danger Game_Event (unit, all downstream dependencies mocked)', (
 
     it('ignores comment commands that match neither indicator tag', () =>
     {
-      // Arrange
-      withEnemyIndicator(true);
+      // Arrange- the enemy default is false so a show-tag match would visibly flip the answer;
+      // starting from true would let the show branch fire unnoticed.
+      withEnemyIndicator(false);
       const event = buildEvent({
         getValidCommentCommands: () => [ { parameters: [ '<somethingElse>' ] } ],
       });
@@ -180,7 +181,7 @@ describe('J-ABS-Danger Game_Event (unit, all downstream dependencies mocked)', (
       const result = event.canShowDangerIndicator(1);
 
       // Assert
-      expect(result).toBe(true);
+      expect(result).toBe(false);
     });
   });
 });

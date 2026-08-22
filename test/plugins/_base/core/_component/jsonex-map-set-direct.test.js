@@ -104,6 +104,22 @@ describe('J-Base JsonEx Map/Set encode/decode extension (real engine direct impo
     expect(copy.contents.get(7)).toBe('seven');
   });
 
+  it('round-trips a Map nested inside a plain array', () =>
+  {
+    // Arrange- arrays are walked by the same encode/decode branch that handles plain objects, and a
+    // Map sitting in one is the case that proves it: skip the array and the Map is handed straight to
+    // JSON.stringify, which knows nothing of its entries and flattens it into an empty object.
+    const original = [ 'bag', new Map([ [ 7, 'seven' ] ]) ];
+
+    // Act
+    const copy = globalThis.JsonEx.makeDeepCopy(original);
+
+    // Assert
+    expect(copy[ 0 ]).toBe('bag');
+    expect(copy[ 1 ]).toBeInstanceOf(Map);
+    expect(copy[ 1 ].get(7)).toBe('seven');
+  });
+
   it('still restores an ordinary class instance via the existing @-tag + SerializableRegistry path', async () =>
   {
     const { default: SerializableRegistry } = await import('../../../../../src/plugins/_base/core/core/SerializableRegistry.js');

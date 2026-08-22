@@ -214,6 +214,17 @@ describe('J-ABS-Charge JABS_StandardController (unit, all downstream dependencie
       expect(controller.isMainhandActionCharging()).toBe(false);
     });
 
+    it('is not charging when mainhand cannot be charged even while the button is held', () =>
+    {
+      // Arrange- the held button is the only other reason this could report charging, so it must be on.
+      const controller = buildController();
+      controller.canChargeMainhandAction = () => false;
+      globalThis.Input.isPressed.mockImplementation((sym) => sym === 'A');
+
+      // Act & Assert
+      expect(controller.isMainhandActionCharging()).toBe(false);
+    });
+
     it('is charging when allowed and the mainhand button is held', () =>
     {
       const controller = buildController();
@@ -319,6 +330,17 @@ describe('J-ABS-Charge JABS_StandardController (unit, all downstream dependencie
       expect(controller.isOffhandActionCharging()).toBe(false);
     });
 
+    it('is not charging when offhand cannot be charged even while the button is held', () =>
+    {
+      // Arrange- the held button is the only other reason this could report charging, so it must be on.
+      const controller = buildController();
+      controller.canChargeOffhandAction = () => false;
+      globalThis.Input.isPressed.mockImplementation((sym) => sym === 'B');
+
+      // Act & Assert
+      expect(controller.isOffhandActionCharging()).toBe(false);
+    });
+
     it('cannot charge offhand when the button was just triggered', () =>
     {
       const controller = buildController({ isOffhandActionTriggered: () => true });
@@ -411,6 +433,29 @@ describe('J-ABS-Charge JABS_StandardController (unit, all downstream dependencie
         isCombatSkillUsageEnabled: () => true,
         isCombatAction1Triggered: () => true,
       });
+      expect(controller.isCombatAction1Charging()).toBe(false);
+    });
+
+    it('is not charging when combat skill 1 was just triggered even while a charging button is held', () =>
+    {
+      // Arrange- usage is enabled and a button is held, so the just-triggered gate is the only thing left to say no.
+      const controller = buildController({
+        isCombatSkillUsageEnabled: () => true,
+        isCombatAction1Triggered: () => true,
+      });
+      globalThis.Input.isPressed.mockImplementation((sym) => sym === 'CS1');
+
+      // Act & Assert
+      expect(controller.isCombatAction1Charging()).toBe(false);
+    });
+
+    it('is not charging when combat-skill usage is disabled even while a charging button is held', () =>
+    {
+      // Arrange- nothing was triggered and a button is held, so the usage gate is the only thing left to say no.
+      const controller = buildController();
+      globalThis.Input.isPressed.mockImplementation((sym) => sym === 'CS1');
+
+      // Act & Assert
       expect(controller.isCombatAction1Charging()).toBe(false);
     });
 
@@ -532,6 +577,62 @@ describe('J-ABS-Charge JABS_StandardController (unit, all downstream dependencie
 
         // Act & Assert
         expect(controller[`canChargeCombatAction${n}`]()).toBe(false);
+      },
+    );
+
+    it.each([
+      [ 2, 'CS2' ],
+      [ 3, 'CS3' ],
+      [ 4, 'CS4' ],
+    ])(
+      'combat skill %i is not charging when just triggered even while its button is held',
+      (n, symbol) =>
+      {
+        // Arrange- usage is enabled and the button is held, leaving the just-triggered gate as the only refusal.
+        const controller = buildController({
+          isCombatSkillUsageEnabled: () => true,
+          [`isCombatAction${n}Triggered`]: () => true,
+        });
+        globalThis.Input.isPressed.mockImplementation((sym) => sym === symbol);
+
+        // Act & Assert
+        expect(controller[`isCombatAction${n}Charging`]()).toBe(false);
+      },
+    );
+
+    it.each([
+      [ 2, 'CS2' ],
+      [ 3, 'CS3' ],
+      [ 4, 'CS4' ],
+    ])(
+      'combat skill %i is not charging when usage is disabled even while its button is held',
+      (n, symbol) =>
+      {
+        // Arrange- nothing was triggered and the button is held, leaving the usage gate as the only refusal.
+        const controller = buildController();
+        globalThis.Input.isPressed.mockImplementation((sym) => sym === symbol);
+
+        // Act & Assert
+        expect(controller[`isCombatAction${n}Charging`]()).toBe(false);
+      },
+    );
+
+    it.each([ 2, 3, 4 ])(
+      'combat skill %i handleCombatAction%iCharging performs the charge action when charging',
+      (n) =>
+      {
+        // Arrange
+        const controller = buildController();
+        controller[`isCombatAction${n}Charging`] = () => true;
+        controller.performCombatSkillChargeAction = vi.fn();
+        controller.performCombatSkillChargeAlterAction = vi.fn();
+
+        // Act
+        controller[`handleCombatAction${n}Charging`]();
+
+        // Assert
+        expect(controller.performCombatSkillChargeAction).toHaveBeenCalledWith(`combat${n}`);
+        expect(controller.performCombatSkillChargeAlterAction).not.toHaveBeenCalled();
       },
     );
 

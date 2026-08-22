@@ -270,9 +270,17 @@ describe('JuiceProfileResolver (unit, all downstream dependencies mocked)', () =
 
     it('returns -1 when the caster is not an actor', () =>
     {
-      const gb = buildGameBattler({ isActor: () => false });
+      // Arrange: an enemy, shaped like one. The shared battler double answers weapons() with an
+      // empty array, which produces the same -1 one line later - so the actor gate could be dropped
+      // and this still read as passing. Game_Enemy has no weapons() at all, so a faithful enemy is
+      // also the fixture that proves the gate is what stopped the walk.
+      const gb = { isActor: () => false };
 
-      expect(JuiceProfileResolver.resolveWeaponIconIndex(buildCaster(gb), buildAction())).toEqual(-1);
+      // Act
+      const iconIndex = JuiceProfileResolver.resolveWeaponIconIndex(buildCaster(gb), buildAction());
+
+      // Assert
+      expect(iconIndex).toEqual(-1);
     });
 
     it('returns -1 when the actor has no weapons equipped', () =>
@@ -345,11 +353,25 @@ describe('JuiceProfileResolver (unit, all downstream dependencies mocked)', () =
 
     it('uses the mainhand weapon for a single-weapon offhand skill routed through mainhand-provided path', () =>
     {
+      // Arrange: an orb tagged for this very skill sits in the armor list, so the two routes finally
+      // disagree. Without it the fallback at the end of the offhand path hands back the same
+      // mainhand weapon this branch does, and a swing that belongs to the mainhand would still have
+      // read as correct while quietly picking up whatever shield happened to be equipped.
       const mainhand = { iconIndex: 30 };
-      const gb = buildGameBattler({ weapons: () => [ mainhand ], isMainhandProvidedOffhandSkill: () => true });
+      const orbArmor = { iconIndex: 40, jabsOffhandSkillId: 1, jabsSkillId: 0 };
+      const gb = buildGameBattler({
+        weapons: () => [ mainhand ],
+        armors: () => [ orbArmor ],
+        isMainhandProvidedOffhandSkill: () => true,
+      });
 
-      expect(JuiceProfileResolver.resolveWeaponIconIndex(buildCaster(gb), buildAction({ getCooldownType: () => 'Offhand' })))
-        .toEqual(30);
+      // Act
+      const iconIndex = JuiceProfileResolver.resolveWeaponIconIndex(
+        buildCaster(gb),
+        buildAction({ getCooldownType: () => 'Offhand' }));
+
+      // Assert
+      expect(iconIndex).toEqual(30);
     });
 
     it('uses an orb/shield armor for a single-weapon offhand skill not from the mainhand path', () =>

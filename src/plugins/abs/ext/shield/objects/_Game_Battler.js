@@ -19,8 +19,10 @@ Game_Battler.prototype.createJabsState = function(target, stateId, iconIndex, to
   const builder = J.ABS.EXT.SHIELD.Aliased.Game_Battler.get('createJabsState')
     .call(this, target, stateId, iconIndex, totalDuration, stacks, attacker, sourceSkill);
 
-  // determine the shield.
-  const shield = JABS_Shield.fromStateId(stateId, target);
+  // determine the shield. the attacker rides along because it is both the `a` binding for the
+  // shield point formulas and the source of the outgoing amplification- omitting it would make
+  // the shield compute a different value here than it does on every later recalculation.
+  const shield = JABS_Shield.fromStateId(stateId, target, attacker);
 
   // set the shield.
   builder.setShield(shield);
@@ -181,7 +183,7 @@ Game_Battler.prototype.onShieldBreak = function(shieldBreakValue = 0)
   const reducer = (accumulator, source) =>
   {
     // grab all the skill ids.
-    const skillIds = RPGManager.getArrayFromNotesByRegex(source, J.ABS.EXT.SHIELD.RegExp.Break, true);
+    const skillIds = RPGManager.getArrayFromNotesByRegex(source, J.ABS.EXT.SHIELD.RegExp.Break);
 
     // concat them onto the accumulation.
     return accumulator.concat(...skillIds);

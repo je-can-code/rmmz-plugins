@@ -114,10 +114,13 @@ describe('JABS_PopupMergeController routing/lifecycle (direct src import)', () =
   {
     it('dispatches immediately without opening a session when combat merging is disabled', async () =>
     {
-      // Arrange
-      const { JABS_PopupMergeController, textPopManagerShow, convertSpy } = await importFreshController();
+      // Arrange- the character is given an on-map sprite so the missing-anchor fallback, which also
+      // ends in a plain dispatch, cannot be what produces the result being asserted.
+      const { JABS_PopupMergeController, spriteCharacterFor, textPopManagerShow, convertSpy } =
+        await importFreshController();
       globalThis.J.POPUPS.EXT.ABS.Metadata.mergeParams.enableCombat = false;
       const character = {};
+      spriteCharacterFor(character);
 
       // Act
       JABS_PopupMergeController.routeStrikePop(buildPop(), character, { amount: 10 });
@@ -186,6 +189,23 @@ describe('JABS_PopupMergeController routing/lifecycle (direct src import)', () =
       expect(sprite.kickMergeCombinePulse).toHaveBeenCalledWith(true);
     });
 
+    it('leaves the combine pulse alone when the opening hit of a stream is not critical', async () =>
+    {
+      // Arrange- the sprite does carry a pulse hook, so the only thing that can hold the pulse back
+      // is the hit itself not having crit.
+      const { JABS_PopupMergeController, spriteCharacterFor, convertSpy } = await importFreshController();
+      const character = {};
+      spriteCharacterFor(character);
+      const sprite = { kickMergeCombinePulse: vi.fn(), _j: { _popups: { _sourcePopup: { value: '' } } } };
+      convertSpy.mockReturnValueOnce(sprite);
+
+      // Act
+      JABS_PopupMergeController.routeStrikePop(buildPop({ critical: false }), character, { amount: 5 });
+
+      // Assert
+      expect(sprite.kickMergeCombinePulse).not.toHaveBeenCalled();
+    });
+
     it('does not kick the combine pulse when the sprite has no pulse hook', async () =>
     {
       // Arrange
@@ -237,6 +257,28 @@ describe('JABS_PopupMergeController routing/lifecycle (direct src import)', () =
       expect(sprite._j._popups._sourcePopup.value).toBe('8');
     });
 
+    it('tells the session sprite that a repeat hit was critical', async () =>
+    {
+      // Arrange- the crit flag rides along on the refresh so an already-merged stream can throw the
+      // bigger pulse for the hit that earned it.
+      const { JABS_PopupMergeController, spriteCharacterFor, convertSpy } = await importFreshController();
+      const character = {};
+      spriteCharacterFor(character);
+      const sprite = {
+        refreshDisplayedValue: vi.fn(),
+        kickMergeCombinePulse: vi.fn(),
+        _j: { _popups: { _sourcePopup: { value: '' } } },
+      };
+      convertSpy.mockReturnValueOnce(sprite);
+      JABS_PopupMergeController.routeStrikePop(buildPop({ value: '5' }), character, { amount: 5 });
+
+      // Act
+      JABS_PopupMergeController.routeStrikePop(buildPop({ value: '3', critical: true }), character, { amount: 3 });
+
+      // Assert
+      expect(sprite.refreshDisplayedValue).toHaveBeenCalledWith('8', true);
+    });
+
     it('tolerates a repeat hit landing on a session whose sprite lacks refreshDisplayedValue', async () =>
     {
       // Arrange
@@ -280,6 +322,48 @@ describe('JABS_PopupMergeController routing/lifecycle (direct src import)', () =
 
       // Assert
       expect(globalThis.PopupLayoutHelper.resolveMotionOffset).toHaveBeenCalledTimes(1);
+    });
+
+    it('treats mp-damage as a motion-eligible popup type', async () =>
+    {
+      // Arrange- the popup is harm rather than healing, so the mp lane itself has to be what makes
+      // it motion-eligible.
+      const { JABS_PopupMergeController, spriteCharacterFor } = await importFreshController();
+      globalThis.J.POPUPS.Layout.Motion.Enabled = true;
+      const character = {};
+      spriteCharacterFor(character);
+
+      // Act
+      JABS_PopupMergeController.routeStrikePop(
+        buildPop({ popupType: Map_TextPop.Types.MpDamage, healing: false }),
+        character,
+        { amount: 5 }
+      );
+
+      // Assert
+      expect(globalThis.PopupLayoutHelper.resolveMotionOffset).toHaveBeenCalledTimes(1);
+      expect(globalThis.PopupLayoutHelper.consumeLayoutRingOffset).not.toHaveBeenCalled();
+    });
+
+    it('falls back to a ring offset for a damage popup while motion popups are switched off', async () =>
+    {
+      // Arrange- the popup type is motion-eligible on its own, leaving the global motion switch as
+      // the only thing that can send this back to ring stacking.
+      const { JABS_PopupMergeController, spriteCharacterFor } = await importFreshController();
+      globalThis.J.POPUPS.Layout.Motion.Enabled = false;
+      const character = {};
+      spriteCharacterFor(character);
+
+      // Act
+      JABS_PopupMergeController.routeStrikePop(
+        buildPop({ popupType: Map_TextPop.Types.HpDamage }),
+        character,
+        { amount: 5 }
+      );
+
+      // Assert
+      expect(globalThis.PopupLayoutHelper.consumeLayoutRingOffset).toHaveBeenCalledTimes(1);
+      expect(globalThis.PopupLayoutHelper.resolveMotionOffset).not.toHaveBeenCalled();
     });
 
     it('treats a healing popup of a non-damage type as motion-eligible', async () =>
@@ -341,16 +425,20 @@ describe('JABS_PopupMergeController routing/lifecycle (direct src import)', () =
   {
     it('dispatches immediately without opening a session when slip merging is disabled', async () =>
     {
-      // Arrange
-      const { JABS_PopupMergeController, textPopManagerShow } = await importFreshController();
+      // Arrange- the character is given an on-map sprite so the missing-anchor fallback, which also
+      // ends in a plain dispatch, cannot be what produces the result being asserted.
+      const { JABS_PopupMergeController, spriteCharacterFor, textPopManagerShow, convertSpy } =
+        await importFreshController();
       globalThis.J.POPUPS.EXT.ABS.Metadata.mergeParams.enableSlip = false;
       const character = {};
+      spriteCharacterFor(character);
 
       // Act
       JABS_PopupMergeController.routeSlipPop(buildPop(), character, { amount: 4 });
 
       // Assert
       expect(textPopManagerShow).toHaveBeenCalledTimes(1);
+      expect(convertSpy).not.toHaveBeenCalled();
     });
 
     it('dispatches immediately when the character has no on-map sprite', async () =>
@@ -418,16 +506,20 @@ describe('JABS_PopupMergeController routing/lifecycle (direct src import)', () =
   {
     it('dispatches immediately without opening a session when mitigation merging is disabled', async () =>
     {
-      // Arrange
-      const { JABS_PopupMergeController, textPopManagerShow } = await importFreshController();
+      // Arrange- the character is given an on-map sprite so the missing-anchor fallback, which also
+      // ends in a plain dispatch, cannot be what produces the result being asserted.
+      const { JABS_PopupMergeController, spriteCharacterFor, textPopManagerShow, convertSpy } =
+        await importFreshController();
       globalThis.J.POPUPS.EXT.ABS.Metadata.mergeParams.enableMitigation = false;
       const character = {};
+      spriteCharacterFor(character);
 
       // Act
       JABS_PopupMergeController.routeMitigationPop(buildPop(), character, { mitigationType: 'parry', labelPrefix: 'Parry' });
 
       // Assert
       expect(textPopManagerShow).toHaveBeenCalledTimes(1);
+      expect(convertSpy).not.toHaveBeenCalled();
     });
 
     it('dispatches immediately when the character has no on-map sprite', async () =>
@@ -498,16 +590,20 @@ describe('JABS_PopupMergeController routing/lifecycle (direct src import)', () =
   {
     it('dispatches immediately without opening a session when reward merging is disabled', async () =>
     {
-      // Arrange
-      const { JABS_PopupMergeController, textPopManagerShow } = await importFreshController();
+      // Arrange- the character is given an on-map sprite so the missing-anchor fallback, which also
+      // ends in a plain dispatch, cannot be what produces the result being asserted.
+      const { JABS_PopupMergeController, spriteCharacterFor, textPopManagerShow, convertSpy } =
+        await importFreshController();
       globalThis.J.POPUPS.EXT.ABS.Metadata.mergeParams.enableRewards = false;
       const character = {};
+      spriteCharacterFor(character);
 
       // Act
       JABS_PopupMergeController.routeRewardPop(buildPop(), character, { rewardType: 'gold', amount: 10 });
 
       // Assert
       expect(textPopManagerShow).toHaveBeenCalledTimes(1);
+      expect(convertSpy).not.toHaveBeenCalled();
     });
 
     it('dispatches immediately when the character has no on-map sprite', async () =>
@@ -733,6 +829,49 @@ describe('JABS_PopupMergeController routing/lifecycle (direct src import)', () =
 
       // and the session is gone — a fresh idle tick has nothing left to do.
       expect(() => JABS_PopupMergeController.tickIdleFlush()).not.toThrow();
+    });
+
+    it('still flushes a session on a later tick after an earlier tick found it too young', async () =>
+    {
+      // Arrange- a character whose session survived one idle sweep has to remain on the scan list,
+      // or its sprite would sit in accumulation forever with nothing left to release it.
+      const { JABS_PopupMergeController, spriteCharacterFor, convertSpy } = await importFreshController();
+      const character = {};
+      spriteCharacterFor(character);
+      const sprite = { releaseAccumulatePhase: vi.fn(), destroyed: false, _j: { _popups: { _sourcePopup: { value: '' } } } };
+      convertSpy.mockReturnValueOnce(sprite);
+      JABS_PopupMergeController.routeRewardPop(buildPop(), character, { rewardType: 'gold', amount: 10 });
+      globalThis.Graphics.frameCount = 10;
+      JABS_PopupMergeController.tickIdleFlush();
+
+      // Act
+      globalThis.Graphics.frameCount = 200;
+      JABS_PopupMergeController.tickIdleFlush();
+
+      // Assert
+      expect(sprite.releaseAccumulatePhase).toHaveBeenCalledTimes(1);
+    });
+
+    it('opens a brand new session for a pop that arrives after the anchor-less drop', async () =>
+    {
+      // Arrange- the drop removes the session outright, so the next pop on that same merge key has
+      // nothing to accumulate into and must start its own stream.
+      const { JABS_PopupMergeController, spriteCharacterFor, convertSpy } = await importFreshController();
+      const character = {};
+      spriteCharacterFor(character);
+      JABS_PopupMergeController.routeRewardPop(buildPop(), character, { rewardType: 'gold', amount: 10 });
+
+      // the sweep finds the character off-map exactly once, which is what drops the session.
+      globalThis.PopupSpriteLocator.findSpriteCharacterForGameCharacter.mockReturnValueOnce(null);
+      JABS_PopupMergeController.tickIdleFlush();
+
+      // Act
+      JABS_PopupMergeController.routeRewardPop(buildPop(), character, { rewardType: 'gold', amount: 5 });
+
+      // Assert
+      expect(convertSpy).toHaveBeenCalledTimes(2);
+      const [ , [ secondTemplate ] ] = convertSpy.mock.calls;
+      expect(secondTemplate.value).toBe('5');
     });
 
     it('lets each session on the same character expire on its own independent timeline', async () =>

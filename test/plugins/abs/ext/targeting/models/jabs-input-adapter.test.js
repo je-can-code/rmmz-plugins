@@ -173,6 +173,9 @@ describe('J-ABS-Targeting JABS_InputAdapter (direct src import, JABS_TargetingMa
 
       expect(globalThis.J.ABS.EXT.TARGETING.Aliased.JABS_InputAdapter.get('performOffhandAction'))
         .toHaveBeenCalledWith(battler);
+      // the gate must short-circuit before the peek- every other gate here is satisfied, so a peek
+      // happening at all would mean this gate stopped deciding anything.
+      expect(FakeJABSTargetingManager.peekTargetedActions).not.toHaveBeenCalled();
     });
 
     it('falls through to original logic when the battler cannot use attacks', () =>
@@ -253,6 +256,9 @@ describe('J-ABS-Targeting JABS_InputAdapter (direct src import, JABS_TargetingMa
 
       expect(globalThis.J.ABS.EXT.TARGETING.Aliased.JABS_InputAdapter.get('performCombatAction'))
         .toHaveBeenCalledWith('combat1', battler);
+      // the gate must short-circuit before the peek- every other gate here is satisfied, so a peek
+      // happening at all would mean this gate stopped deciding anything.
+      expect(FakeJABSTargetingManager.peekTargetedActions).not.toHaveBeenCalled();
     });
 
     it('falls through to original logic when the slot is empty', () =>

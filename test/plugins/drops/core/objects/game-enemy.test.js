@@ -254,14 +254,31 @@ describe('J-DropsControl Game_Enemy drop pipeline (direct src import)', () =>
 
     it('skips an empty drop slot without rolling for it', () =>
     {
-      // Arrange
-      enemy._enemyDb.originalDropItems = () => [ { kind: 0, dataId: 0, denominator: 100 } ];
+      // Arrange: RPG Maker pads drop lists with kind-zero placeholders, so a real enemy carries
+      // them right alongside genuine drops. Rolling one anyway resolves to no item, and the
+      // unresolvable-drop warning then names a database row that is not actually broken - which is
+      // the only difference the skip makes, since neither path adds anything to the loot. The real
+      // drop beside it has to come through regardless, or nothing here has been proven to run.
+      globalThis.$dataItems[1] = { id: 1, name: 'Potion' };
+      enemy._enemyDb.originalDropItems = () => [
+        { kind: 0, dataId: 0, denominator: 100 },
+        { kind: 1, dataId: 1, denominator: 100 },
+      ];
+
+      // a guaranteed rate on both entries, so the "found nothing" guard downstream cannot be what
+      // spares the placeholder.
+      const warn = vi.spyOn(console, 'warn')
+        .mockImplementation(() => {});
 
       // Act
       const found = enemy.makeDropItems();
 
       // Assert
-      expect(found).toEqual([]);
+      expect(found).toEqual([ { id: 1, name: 'Potion' } ]);
+      expect(warn).not.toHaveBeenCalled();
+
+      // restore manually so the spy cannot leak into whichever test runs next in this file.
+      warn.mockRestore();
     });
 
     it('yields nothing when the roll fails', () =>

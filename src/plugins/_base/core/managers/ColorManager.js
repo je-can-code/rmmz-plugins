@@ -233,7 +233,7 @@ ColorManager.sdp = function(rarity)
  */
 ColorManager.isValidHexColor = function(colorHex)
 {
-  if (!colorHex || colorHex === String.empty)
+  if (!colorHex)
   {
     return false;
   }
@@ -250,7 +250,7 @@ ColorManager.isValidHexColor = function(colorHex)
  */
 ColorManager.parseHexStringToRgb = function(hexString)
 {
-  if (!hexString || hexString === String.empty)
+  if (!hexString)
   {
     return null;
   }

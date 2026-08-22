@@ -284,6 +284,26 @@ describe('J-ABS JABS_HitboxPulseOptions (direct src import)', () =>
       expect(result.x).toBe(9);
     });
 
+    it('ignores the supplied base entirely when the data is already an instance', () =>
+    {
+      // Arrange- this class declares no fields; `defaults()` is what stamps them on. So a bare
+      // instance carries only what was explicitly set, and that is the one input able to tell
+      // "cloned the instance" apart from "merged the instance over the base"- with a fully
+      // populated instance the two produce byte-identical results.
+      const base = JABS_HitboxPulseOptions.defaults()
+        .withFade(99, 0.9, 0.1);
+      const sparse = new JABS_HitboxPulseOptions()
+        .withRange(7);
+
+      // Act
+      const result = JABS_HitboxPulseOptions.from(sparse, base);
+
+      // Assert- the range proves the instance came through; the absent duration proves the base
+      // never contributed a single field to it.
+      expect(result.range).toBe(7);
+      expect(result.duration).toBeUndefined();
+    });
+
     it('builds from defaults when no base is provided and data is a plain partial', () =>
     {
       const result = JABS_HitboxPulseOptions.from({ x: 5 });

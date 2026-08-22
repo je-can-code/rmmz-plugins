@@ -47,7 +47,7 @@ Game_Battler.prototype.gapCloseEndSkillIds = function()
   for (const note of this.getAllNotes())
   {
     // check this source for the tag and extract its array of IDs.
-    const found = RPGManager.getArrayFromNotesByRegex(note, J.ABS.EXT.TOOLS.RegExp.GapCloseEnd, true, true);
+    const found = RPGManager.getArrayFromNotesByRegex(note, J.ABS.EXT.TOOLS.RegExp.GapCloseEnd, true);
 
     // skip sources that don't carry the tag.
     if (found === null) continue;

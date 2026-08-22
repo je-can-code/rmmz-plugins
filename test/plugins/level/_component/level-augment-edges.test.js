@@ -206,8 +206,11 @@ describe('J-LevelMaster augment edges', () =>
     it('answers zero when no balancing variable was configured', () =>
     {
       // Arrange: zero rather than undefined, because the result is summed straight into a level.
+      // An unconfigured variable id is zero, and `$gameVariables.value(0)` also answers zero, so the
+      // returned number alone cannot say whether the variable was consulted. The spy can.
       const actor = new globalThis.Game_Actor();
       globalThis.J.LEVEL.Metadata.actorBalanceVariable = 0;
+      const readVariable = vi.spyOn(globalThis.$gameVariables, 'value');
 
       // Act
       const balancer = actor.getLevelBalancer();
@@ -215,6 +218,11 @@ describe('J-LevelMaster augment edges', () =>
       // Assert
       expect(balancer)
         .toBe(0);
+      expect(readVariable)
+        .not
+        .toHaveBeenCalled();
+
+      readVariable.mockRestore();
     });
   });
 
@@ -239,9 +247,11 @@ describe('J-LevelMaster augment edges', () =>
 
     it('answers zero when no balancing variable was configured', () =>
     {
-      // Arrange
+      // Arrange: same concern as the actor balancer above- zero is both the honest answer and what
+      // reading variable zero would produce, so the spy is what separates the two.
       const enemy = new globalThis.Game_Enemy();
       globalThis.J.LEVEL.Metadata.enemyBalanceVariable = 0;
+      const readVariable = vi.spyOn(globalThis.$gameVariables, 'value');
 
       // Act
       const balancer = enemy.getLevelBalancer();
@@ -249,6 +259,11 @@ describe('J-LevelMaster augment edges', () =>
       // Assert
       expect(balancer)
         .toBe(0);
+      expect(readVariable)
+        .not
+        .toHaveBeenCalled();
+
+      readVariable.mockRestore();
     });
   });
   //endregion the balancer variables

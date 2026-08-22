@@ -150,13 +150,19 @@ describe('J-Difficulty metadata (direct src import)', () =>
       // reports itself and lets the later definition win.
       const warnSpy = vi.spyOn(console, 'warn')
         .mockImplementation(() => {});
+
+      // a layer with a key of its own, so the warning has something it must stay silent about.
+      // Against a config where every key collides, "warns on a duplicate" and "warns on every
+      // layer it ever reads" produce the same output.
+      const unique = buildLayer('vitest_unique');
       const first = buildLayer(defaultKey);
       const second = { ...buildLayer(defaultKey), name: 'Second Definition' };
 
       // Act
-      const metadata = await buildWithLayers([ first, second ], 'J-Difficulty-Duplicate');
+      const metadata = await buildWithLayers([ unique, first, second ], 'J-Difficulty-Duplicate');
 
       // Assert
+      expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(warnSpy)
         .toHaveBeenCalledWith(`Duplicate difficulty key definition detected for [${defaultKey}].`);
       expect(metadata.allMetadatas.get(defaultKey).name).toBe('Second Definition');

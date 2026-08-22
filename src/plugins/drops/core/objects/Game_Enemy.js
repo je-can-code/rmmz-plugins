@@ -240,7 +240,7 @@ Game_Enemy.prototype.dropSources = function()
 Game_Enemy.prototype.extractExtraDrops = function(referenceData)
 {
   // get the drops found on this enemy; an absent tag yields an empty array, never null.
-  const moreDrops = RPGManager.getArraysFromNotesByRegex(referenceData, J.DROPS.RegExp.ExtraDrop, true);
+  const moreDrops = RPGManager.getArraysFromNotesByRegex(referenceData, J.DROPS.RegExp.ExtraDrop);
 
   // a mapping function to build proper drop items from the arrays.
   const mapper = drop =>

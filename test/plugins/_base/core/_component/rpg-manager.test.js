@@ -515,6 +515,20 @@ describe('RPGManager', () =>
       expect(result).toBeNull();
     });
 
+    it('returns the found numbers even when nullIfEmpty is true', () =>
+    {
+      // Arrange- the empty-result early return answers on the same flag this call sets, so a guard
+      // that stopped distinguishing "found nothing" from "found something" would answer null here.
+      const data = { note: '<nums:[1,2,3]>' };
+      const re = /<nums:(\[[^\]]+\])>/;
+
+      // Act
+      const result = RPGManager.getNumbersFromNoteByRegex(data, re, true);
+
+      // Assert
+      expect(result).toEqual([ 1, 2, 3 ]);
+    });
+
     it('returns null when the note is parsable but nothing matches and nullIfEmpty is true', () =>
     {
       // Arrange- a non-empty note that has no matching tag reaches the post-scan empty check.
@@ -769,31 +783,31 @@ describe('RPGManager', () =>
 
   describe('getArrayFromNotesByRegex', () =>
   {
-    it('parses one bracketed capture with tryParse enabled', () =>
+    it('parses one bracketed capture into real values', () =>
     {
       // Arrange
       const data = { note: '<arr:[10,20]>' };
       const re = /<arr:(\[[^\]]+\])>/;
 
       // Act
-      const result = RPGManager.getArrayFromNotesByRegex(data, re, true, false);
+      const result = RPGManager.getArrayFromNotesByRegex(data, re, false);
 
       // Assert
       expect(result).toEqual([ 10, 20 ]);
     });
 
-    it('skips the second per-element parse pass when tryParse is false', () =>
+    it('reports a matched but non-participating capture group as null', () =>
     {
-      // Arrange- the capture is already parsed once unconditionally during the scan; tryParse
-      // only controls whether each element then gets re-parsed via a .map() pass.
-      const data = { note: '<arr:[10,20]>' };
-      const re = /<arr:(\[[^\]]+\])>/;
+      // Arrange- an optional capture that did not participate parses to null rather than to a
+      // collection, which is how a parameterless tag is told apart from a parameterized one.
+      const data = { note: '<arr>' };
+      const re = /<arr(?::(\[[^\]]+\]))?>/;
 
       // Act
-      const result = RPGManager.getArrayFromNotesByRegex(data, re, false, false);
+      const result = RPGManager.getArrayFromNotesByRegex(data, re, true);
 
       // Assert
-      expect(result).toEqual([ 10, 20 ]);
+      expect(result).toBeNull();
     });
 
     it('returns an empty array when nothing matches and nullIfEmpty is false', () =>
@@ -803,7 +817,7 @@ describe('RPGManager', () =>
       const re = /<arr:(\[[^\]]+\])>/;
 
       // Act
-      const result = RPGManager.getArrayFromNotesByRegex(data, re, true, false);
+      const result = RPGManager.getArrayFromNotesByRegex(data, re, false);
 
       // Assert
       expect(result).toEqual([]);
@@ -816,7 +830,7 @@ describe('RPGManager', () =>
       const re = /<arr:(\[[^\]]+\])>/;
 
       // Act
-      const result = RPGManager.getArrayFromNotesByRegex(data, re, true, true);
+      const result = RPGManager.getArrayFromNotesByRegex(data, re, true);
 
       // Assert
       expect(result).toBeNull();
@@ -832,23 +846,10 @@ describe('RPGManager', () =>
       const re = /<a:(\[[^\]]+\])>/;
 
       // Act
-      const result = RPGManager.getArraysFromNotesByRegex(data, re, true, false);
+      const result = RPGManager.getArraysFromNotesByRegex(data, re, false);
 
       // Assert
       expect(result).toEqual([ [ 1 ], [ 2, 3 ] ]);
-    });
-
-    it('skips the per-element parse pass when tryParse is false', () =>
-    {
-      // Arrange
-      const data = { note: '<a:[1]>' };
-      const re = /<a:(\[[^\]]+\])>/;
-
-      // Act
-      const result = RPGManager.getArraysFromNotesByRegex(data, re, false, false);
-
-      // Assert- the capture group is still returned, just as a raw string rather than a parsed array.
-      expect(result).toEqual([ '[1]' ]);
     });
 
     it('returns an empty array when nothing matches and nullIfEmpty is false', () =>
@@ -858,7 +859,7 @@ describe('RPGManager', () =>
       const re = /<a:(\[[^\]]+\])>/;
 
       // Act
-      const result = RPGManager.getArraysFromNotesByRegex(data, re, true, false);
+      const result = RPGManager.getArraysFromNotesByRegex(data, re, false);
 
       // Assert
       expect(result).toEqual([]);
@@ -871,7 +872,7 @@ describe('RPGManager', () =>
       const re = /<a:(\[[^\]]+\])>/;
 
       // Act
-      const result = RPGManager.getArraysFromNotesByRegex(data, re, true, true);
+      const result = RPGManager.getArraysFromNotesByRegex(data, re, true);
 
       // Assert
       expect(result).toBeNull();
@@ -884,7 +885,7 @@ describe('RPGManager', () =>
       const re = /<a:(\[[^\]]+\])>/;
 
       // Act
-      const result = RPGManager.getArraysFromNotesByRegex(data, re, true, true);
+      const result = RPGManager.getArraysFromNotesByRegex(data, re, true);
 
       // Assert
       expect(result).toBeNull();
@@ -903,7 +904,7 @@ describe('RPGManager', () =>
       ];
 
       // Act
-      const result = RPGManager.getArraysFromAllNotesByRegex(rows, re, true, false);
+      const result = RPGManager.getArraysFromAllNotesByRegex(rows, re, false);
 
       // Assert
       expect(result).toEqual([ [ 1, 2 ], [ 3, 4 ] ]);
@@ -916,7 +917,7 @@ describe('RPGManager', () =>
       const rows = [ { note: 'no tags here' } ];
 
       // Act
-      const result = RPGManager.getArraysFromAllNotesByRegex(rows, re, true, false);
+      const result = RPGManager.getArraysFromAllNotesByRegex(rows, re, false);
 
       // Assert
       expect(result).toEqual([]);
@@ -929,7 +930,7 @@ describe('RPGManager', () =>
       const rows = [ { note: 'no tags here' } ];
 
       // Act
-      const result = RPGManager.getArraysFromAllNotesByRegex(rows, re, true, true);
+      const result = RPGManager.getArraysFromAllNotesByRegex(rows, re, true);
 
       // Assert
       expect(result).toBeNull();
@@ -1544,7 +1545,7 @@ describe('RPGManager', () =>
     it('answers null rather than an empty array for an absent array tag', () =>
     {
       // Arrange & Act & Assert
-      expect(RPGManager.getArrayFromNotesByRegex(emptyRow(), /<missingTag:[ ]?(\[.*])>/i, true, true)).toBeNull();
+      expect(RPGManager.getArrayFromNotesByRegex(emptyRow(), /<missingTag:[ ]?(\[.*])>/i, true)).toBeNull();
     });
 
     it('answers null for an array tag read off something that cannot be parsed at all', () =>
@@ -1552,7 +1553,7 @@ describe('RPGManager', () =>
       // Arrange- a row with no note reaches these readers during boot, before the database is
       // hydrated.
       // Act & Assert
-      expect(RPGManager.getArrayFromNotesByRegex(null, /<missingTag:[ ]?(\[.*])>/i, true, true)).toBeNull();
+      expect(RPGManager.getArrayFromNotesByRegex(null, /<missingTag:[ ]?(\[.*])>/i, true)).toBeNull();
     });
 
     it('answers an empty array for an unparseable row by default', () =>

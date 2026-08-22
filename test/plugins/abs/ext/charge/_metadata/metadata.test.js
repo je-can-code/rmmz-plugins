@@ -119,6 +119,56 @@ describe('J-ABS-Charge metadata (direct src import)', () =>
       // Assert
       expect(Metadata.AllowTierCompleteSEandAnimation).toBe(false);
     });
+
+    describe('with both sound toggles flipped', () =>
+    {
+      /**
+       * A second metadata instance built from the opposite pair of toggle strings. Each toggle needs a
+       * case on both sides of the `=== "true"` comparison, and the shared instance above can only carry
+       * one value per parameter. It registers under its own name because {@link PluginMetadata} throws on
+       * a duplicate plugin name, and its registry survives `vi.resetModules()`.
+       * @type {J_ChargePluginMetadata}
+       */
+      let flippedMetadata;
+
+      beforeAll(async () =>
+      {
+        installPluginManagerWithParams(globalThis, 'J-ABS-Charge-Flipped', {
+          'defaultChargingAnimId': '130',
+          'defaultTierCompleteAnimId': '131',
+          'defaultFullyChargedAnimId': '132',
+          'tierCompleteSE': 'Skill3',
+          'chargeReadySE': 'Skill4',
+          'useDefaultChargingSE': 'false',
+          'allowTierCompleteSEandAnim': 'true',
+        });
+
+        const { default: J_ChargePluginMetadata } =
+          await import('../../../../../../src/plugins/abs/ext/charge/_metadata/_pluginMetadata.js');
+
+        flippedMetadata = new J_ChargePluginMetadata('J-ABS-Charge-Flipped', '1.1.0');
+      });
+
+      it('treats the stringy false as a disabled tier-complete sound', () =>
+      {
+        // Arrange & Act & Assert- anything other than the exact string "true" has to disable this.
+        expect(flippedMetadata.UseTierCompleteSE).toBe(false);
+      });
+
+      it('treats the stringy true as an enabled sound-with-animation allowance', () =>
+      {
+        // Arrange & Act & Assert
+        expect(flippedMetadata.AllowTierCompleteSEandAnimation).toBe(true);
+      });
+
+      it('parses this instance\'s own animation ids rather than reusing the shared ones', () =>
+      {
+        // Arrange & Act & Assert- proves the flipped parameters actually reached this instance.
+        expect(flippedMetadata.DefaultChargingAnimationId).toBe(130);
+        expect(flippedMetadata.DefaultTierCompleteAnimationId).toBe(131);
+        expect(flippedMetadata.DefaultFullyChargedAnimationId).toBe(132);
+      });
+    });
   });
 
   describe('host version requirements', () =>

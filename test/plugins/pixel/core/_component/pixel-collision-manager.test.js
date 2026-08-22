@@ -98,6 +98,33 @@ describe('J-Pixelistics PIXEL_CollisionManager (direct src import)', () =>
     expect(result).toBe(false);
   });
 
+  it('returns false for a position above the map', () =>
+  {
+    // Arrange: the two cases above leave the map on the x axis, so the y half of the bounds
+    // check never decides anything there. The indexer wraps an out-of-range coordinate back
+    // into the table instead of failing, so without its own bounds test a position off the top
+    // edge reads whatever subcell it happens to wrap onto and answers passable.
+    freshOpenCollision();
+
+    // Act
+    const result = globalThis.PIXEL_CollisionManager.isPositionPassable(0.5, -1, globalThis.J.PIXEL.Directions.DOWN);
+
+    // Assert
+    expect(result).toBe(false);
+  });
+
+  it('returns false for a position below the map', () =>
+  {
+    // Arrange
+    freshOpenCollision();
+
+    // Act
+    const result = globalThis.PIXEL_CollisionManager.isPositionPassable(0.5, 5, globalThis.J.PIXEL.Directions.DOWN);
+
+    // Assert
+    expect(result).toBe(false);
+  });
+
   it('skips rebuilding when $gameMap is missing', () =>
   {
     // Arrange
@@ -122,6 +149,66 @@ describe('J-Pixelistics PIXEL_CollisionManager (direct src import)', () =>
     // Assert
     expect(act).not.toThrow();
     globalThis.$dataMap = prevDataMap;
+  });
+
+  describe('tiles no neighbor can enter', () =>
+  {
+    /**
+     * Installs a passability oracle that answers asymmetrically: a tile is freely exitable in
+     * every direction, while named approaches into it refuse. Vanilla's `isPassable` only ever
+     * consults the tile being left, never the one being entered, so this is exactly the shape a
+     * deny-region tile takes - and the shape the "always false" oracle used elsewhere in this
+     * file cannot produce, because that one also seals the tile's own exits.
+     * @param {Set<string>} sealedApproaches Departures that refuse, keyed `"x,y,direction"`.
+     */
+    function useApproachMap(sealedApproaches)
+    {
+      globalThis.$gameMap.isPassable = function(x, y, d)
+      {
+        // a tile off the edge of the map can never be departed from toward anything.
+        if (x < 0 || y < 0 || x >= this.width() || y >= this.height()) return false;
+
+        // every other departure is allowed unless it was explicitly sealed.
+        return sealedApproaches.has(`${x},${y},${d}`) === false;
+      };
+    }
+
+    it('marks a tile solid when nothing can reach it, even though it could be left', () =>
+    {
+      // Arrange: tile (1, 1) sits in the map's bottom-right corner, so two of its neighbors are
+      // off-map; sealing the other two leaves it unreachable while its own four exits stay wide
+      // open. Nothing about the tile itself says "wall", which is precisely why the reachability
+      // question has to be asked separately - a character teleported onto it could walk off, but
+      // no character can ever walk on, so AABB overlap has to treat it as solid.
+      const { Directions } = globalThis.J.PIXEL;
+      useApproachMap(new Set([ `1,0,${Directions.DOWN}`, `0,1,${Directions.RIGHT}` ]));
+      freshOpenCollision();
+
+      // Act
+      const sealed = globalThis.PIXEL_CollisionManager
+        .isPositionPassable(1.5, 1.5, globalThis.J.PIXEL.Directions.DOWN);
+
+      // Assert: the reachable tile beside it is the near-miss sibling that must stay open.
+      expect(sealed).toBe(false);
+      expect(globalThis.PIXEL_CollisionManager.isPositionPassable(0.5, 0.5, Directions.DOWN)).toBe(true);
+    });
+
+    it('leaves a tile open when only a vertical neighbor can reach it', () =>
+    {
+      // Arrange: the same corner tile, with the approach from above left unsealed. One way in is
+      // enough - reachability is a question about any direction, not about the horizontal pair,
+      // and a doorway at the end of a walled corridor is entered on exactly one axis.
+      const { Directions } = globalThis.J.PIXEL;
+      useApproachMap(new Set([ `0,1,${Directions.RIGHT}` ]));
+      freshOpenCollision();
+
+      // Act
+      const result = globalThis.PIXEL_CollisionManager
+        .isPositionPassable(1.5, 1.5, globalThis.J.PIXEL.Directions.DOWN);
+
+      // Assert
+      expect(result).toBe(true);
+    });
   });
 
   describe('subcell table sizing by collisionStepCount', () =>

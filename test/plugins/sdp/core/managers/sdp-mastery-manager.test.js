@@ -272,16 +272,17 @@ describe('SdpMasteryManager guards (direct src import)', () =>
 
     it('ignores a subgroup row that carries no mastery skill id', () =>
     {
-      // Arrange: such a row cannot win or lose a tier contest since it grants nothing.
-      registerPanel('panel_t1', 'resilience', 1, 0);
-      registerPanel('panel_t2', 'resilience', 2, 502);
-      const actor = makeActor([ makeRanking('panel_t1'), makeRanking('panel_t2') ]);
+      // Arrange: the skill-less row sits above the one that grants something, so winning the tier
+      // contest on height alone would hand the actor a skill id of zero and strip the real one.
+      registerPanel('panel_t1', 'resilience', 1, 501);
+      registerPanel('panel_t3', 'resilience', 3, 0);
+      const actor = makeActor([ makeRanking('panel_t1'), makeRanking('panel_t3') ]);
 
       // Act
       SdpMasteryManager.reconcileSubgroupMastery(actor, 'resilience');
 
       // Assert
-      expect(actor.isLearnedSkill(502)).toBe(true);
+      expect([ ...actor.learned ]).toEqual([ 501 ]);
     });
 
     it('ignores maxed panels belonging to a different subgroup', () =>

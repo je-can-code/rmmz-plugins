@@ -125,7 +125,7 @@ Object.defineProperty(RPG_State.prototype, 'jabsAggroLock', {
 Object.defineProperty(RPG_State.prototype, 'jabsSkillTransforms', {
   get: function()
   {
-    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform, true);
+    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform);
   },
 });
 //endregion skillTransforms
@@ -305,7 +305,7 @@ Object.defineProperty(RPG_State.prototype, 'jabsStacksConvertToState', {
   get: function()
   {
     // grab all matching bracket-pairs from the note.
-    const arrays = RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.StacksConvertToState, true);
+    const arrays = RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.StacksConvertToState);
 
     // if nothing was found, there is no conversion defined.
     if (!arrays || arrays.length === 0) return null;
@@ -364,7 +364,7 @@ Object.defineProperty(RPG_State.prototype, 'jabsApplyStateOnExpire', {
   get: function()
   {
     // grab all matching bracket-pairs from the note.
-    const arrays = RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.ApplyStateOnExpire, true);
+    const arrays = RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.ApplyStateOnExpire);
 
     // if nothing was found, there is no follow-up state.
     if (!arrays || arrays.length === 0) return null;
@@ -387,7 +387,7 @@ Object.defineProperty(RPG_State.prototype, 'jabsApplyStateOnExpire', {
 Object.defineProperty(RPG_State.prototype, 'jabsSpreadRule', {
   get: function()
   {
-    const arrays = RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.Spread, true);
+    const arrays = RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.Spread);
 
     if (!arrays || arrays.length === 0) return null;
 

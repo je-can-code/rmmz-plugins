@@ -258,6 +258,24 @@ describe('JABS_Cooldown (direct src import)', () =>
       expect(cooldown.frames).toBe(0);
     });
 
+    it('leaves the combo data and overlay mode untouched once already ready', () =>
+    {
+      // Arrange
+      // becoming ready already requested a combo clear, so acknowledge it first- otherwise the flag
+      // reads as pending on both paths and cannot distinguish an early return from a second reset.
+      const cooldown = new JABS_Cooldown('key');
+      cooldown.setFrames(0);
+      cooldown.acknowledgeComboClear();
+      cooldown.setComboMode('infinite');
+
+      // Act
+      cooldown.updateBaseCooldown();
+
+      // Assert
+      expect(cooldown.comboMode).toBe('infinite');
+      expect(cooldown.needsComboClear()).toBe(false);
+    });
+
     it('decrements a positive cooldown by one frame', () =>
     {
       const cooldown = new JABS_Cooldown('key');
@@ -326,6 +344,22 @@ describe('JABS_Cooldown (direct src import)', () =>
       expect(cooldown.comboFrames).toBe(0);
       expect(cooldown.isComboReady()).toBe(true);
     });
+
+    it('revokes an already-open combo when a new delay is set', () =>
+    {
+      // Arrange
+      // starting from an open combo is the whole point: a fresh cooldown is already not-ready, so
+      // the unready handler would look correct even if it never ran.
+      const cooldown = new JABS_Cooldown('key');
+      cooldown.enableCombo();
+
+      // Act
+      cooldown.setComboFrames(15);
+
+      // Assert
+      expect(cooldown.isComboReady()).toBe(false);
+      expect(cooldown.comboFrames).toBe(15);
+    });
   });
 
   describe('updateComboCooldown / updateComboExpire', () =>
@@ -381,6 +415,10 @@ describe('JABS_Cooldown (direct src import)', () =>
       cooldown.updateComboExpire();
 
       expect(cooldown.comboExpireFrames).toBe(0);
+      // a deadline-less combo stays open forever, so the window must not close and no clear may be
+      // requested- counting down past zero would land on the same 0 while quietly killing the combo.
+      expect(cooldown.isComboReady()).toBe(true);
+      expect(cooldown.needsComboClear()).toBe(false);
     });
 
     it('resets the combo once the expiry window closes', () =>

@@ -80,18 +80,24 @@ describe('Game_Interpreter ext/quest augments (direct src import)', () =>
 
     it('does not hide when the subcommand is not a valid event command', () =>
     {
-      // Arrange
+      // Arrange- everything downstream is primed to hide the branch: the text of this command reads
+      // as a choice conditional and that conditional is unmet. Only the command not being a parsable
+      // comment in the first place can keep the branch visible, which is the point- a line of
+      // dialogue that happens to quote the tag is not a condition.
       const interpreter = new Game_Interpreter();
       globalThis.J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.get('shouldHideChoiceBranch').mockReturnValue(false);
       interpreter.eventId.mockReturnValue(1);
       globalThis.$gameMap.event.mockReturnValue(makeEventWithPage([ {} ]));
       globalThis.Game_Event.filterInvalidEventCommand.mockReturnValue(false);
+      globalThis.Game_Event.filterCommentCommandsByChoiceQuestConditional.mockReturnValue(true);
+      globalThis.Game_Event.questConditionalMet.mockReturnValue(false);
 
       // Act
       const result = interpreter.shouldHideChoiceBranch(0);
 
       // Assert
       expect(result).toEqual(false);
+      expect(globalThis.Game_Event.filterCommentCommandsByChoiceQuestConditional).not.toHaveBeenCalled();
     });
 
     it('does not hide when the subcommand is not a choice quest conditional', () =>

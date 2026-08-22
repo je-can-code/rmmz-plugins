@@ -57,8 +57,14 @@ describe('J-ABS-Shield RPG_UsableItem (unit, all downstream dependencies mocked)
 
     it('returns null for the universal (parameterless) bypass form', () =>
     {
+      // Arrange (mirror RPGManager's nullIfEmpty contract so the two call shapes differ; with both
+      // returning null, the universal short-circuit and the parse path are indistinguishable)
       globalThis.RPGManager.checkForBooleanFromNoteByRegex.mockReturnValue(true);
-      globalThis.RPGManager.getArrayFromNotesByRegex.mockReturnValue(null);
+      globalThis.RPGManager.getArrayFromNotesByRegex.mockImplementation((data, structure, nullIfEmpty) => (nullIfEmpty === true
+        ? null
+        : []));
+
+      // Act/Assert
       expect(buildItem().shieldBypassElements).toBeNull();
     });
 
@@ -74,7 +80,12 @@ describe('J-ABS-Shield RPG_UsableItem (unit, all downstream dependencies mocked)
   {
     it('is false when there is no bypass tag at all', () =>
     {
+      // Arrange (RPGManager hands back null for an absent tag under nullIfEmpty, which is exactly
+      // what the parameterless check reads as "universal" - so the tag guard is load-bearing)
       globalThis.RPGManager.checkForBooleanFromNoteByRegex.mockReturnValue(false);
+      globalThis.RPGManager.getArrayFromNotesByRegex.mockReturnValue(null);
+
+      // Act/Assert
       expect(buildItem().isShieldBypassUniversal).toBe(false);
     });
 

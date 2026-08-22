@@ -61,6 +61,7 @@ describe('J-DropsControl Game_Party (direct src import)', () =>
   {
     party = new globalThis.Game_Party();
     party.__battleMembers = [];
+    party.__reserveMembers = [];
   });
 
   //region strategy resolution
@@ -82,8 +83,10 @@ describe('J-DropsControl Game_Party (direct src import)', () =>
 
     it('considers the active battle party under the combat strategy', () =>
     {
-      // Arrange
+      // Arrange: somebody has to be on the bench, or "the combat party" and "the whole roster"
+      // are the same list and this strategy cannot be told apart from the next one.
       party.__battleMembers = [ makeMember('lead'), makeMember('second') ];
+      party.__reserveMembers = [ makeMember('benched') ];
       globalThis.$gameParty = party;
 
       // Act
@@ -97,13 +100,14 @@ describe('J-DropsControl Game_Party (direct src import)', () =>
     {
       // Arrange
       party.__battleMembers = [ makeMember('lead'), makeMember('second') ];
+      party.__reserveMembers = [ makeMember('benched') ];
       globalThis.$gameParty = party;
 
       // Act
       const members = party.dropsStrategyMembers(DropsPartyStrategy.FullPartyStyle);
 
       // Assert
-      expect(members.map(member => member.name)).toEqual([ 'lead', 'second' ]);
+      expect(members.map(member => member.name)).toEqual([ 'lead', 'second', 'benched' ]);
     });
 
     it('refuses to run at all on a strategy it does not recognize', () =>

@@ -257,5 +257,24 @@ describe('J-Proficiency Game_Action gates (direct src import)', () =>
     });
   });
   //endregion awarding
+
+  //region the J-ABS gate
+  describe('the guard and parry block without J-ABS', () =>
+  {
+    it('installs nothing, because a turn-based game has no per-frame guard to reward', () =>
+    {
+      // Arrange- this realm booted with no ABS namespace, and the gate around the guard block is
+      // evaluated once at import time, so its effect is visible only in what got installed. The
+      // helper is defined solely inside that block, and the parry alias is recorded solely by it;
+      // `apply` is aliased outside the gate and is expected on the map regardless.
+      // Act & Assert
+      expect(globalThis.J.ABS).toBeUndefined();
+      expect(globalThis.Game_Action.prototype.gainProficiencyFromGuarding).toBeUndefined();
+      expect(globalThis.J.PROF.Aliased.Game_Action.has('onParry')).toBe(false);
+      expect(globalThis.J.PROF.Aliased.Game_Action.has('onGuard')).toBe(false);
+      expect(globalThis.J.PROF.Aliased.Game_Action.has('apply')).toBe(true);
+    });
+  });
+  //endregion the J-ABS gate
 });
 //endregion plugins/prof/core/objects/game-action-proficiency.test.js

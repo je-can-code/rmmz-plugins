@@ -202,6 +202,26 @@ describe('JABS_Engine ext/apt-core augments (direct src import)', () =>
       expect(result).toEqual(false);
     });
 
+    it('ignores the level gap entirely when the threshold limit is switched off', () =>
+    {
+      // Arrange- level scaling being on is not the same as the AP threshold being in use; they are
+      // separate knobs, and a player running scaled levels without the aptitude ceiling must still
+      // earn AP from anything they can kill. The threshold is a real number here rather than the
+      // unbounded sentinel, so the gap genuinely exceeds it and only the flag holds the gate open.
+      const engine = new JABS_Engine();
+      globalThis.J.LEVEL = true;
+      globalThis.J.APT.Metadata = { usingLevelThresholdLimit: false, maxLevelThreshold: 5 };
+      globalThis.$gameSystem = { isLevelScalingEnabled: () => true };
+      const actor = { level: 20 };
+      const enemy = { level: 1 };
+
+      // Act
+      const result = engine.canGainAptitudeReward(actor, enemy);
+
+      // Assert
+      expect(result).toEqual(true);
+    });
+
     it('allows the reward when the level gap is within the threshold', () =>
     {
       // Arrange

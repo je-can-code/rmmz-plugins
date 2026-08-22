@@ -433,6 +433,8 @@
  * A three-state cycle: 12 -> 13 -> 14 -> 12 -> ..., one step per execution.
  * ============================================================================
  * CHANGELOG:
+ * - 1.7.3
+ *    Adapted to the RPGManager array read signature.
  * - 1.7.2
  *    The plugin metadata class no longer declares private members. Its base
  *    constructor reaches postInitialize before a derived class installs its

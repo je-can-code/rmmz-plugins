@@ -462,7 +462,7 @@ Game_Battler.prototype.tickSpeedPercentModifier = function(types = [])
   this.getAllNotes()
     .forEach(note =>
     {
-      const tuples = RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.TickSpeedTypePercent, true);
+      const tuples = RPGManager.getArraysFromNotesByRegex(note, J.ABS.RegExp.TickSpeedTypePercent);
 
       tuples.forEach(([ classifier, percent ]) =>
       {

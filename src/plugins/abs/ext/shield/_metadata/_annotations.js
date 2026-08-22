@@ -344,6 +344,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Fixed shields computing different values on application and recalculation.
+ *    The attacker was omitted the first time, leaving the point formulas without
+ *    their a binding and the outgoing amplification without its source.
  * - 1.1.0
  *    JABS_State.onShieldBreak now passes the broken shield's cap to Game_Battler.onShieldBreak.
  *    Game_Battler.onShieldBreak stores the value as lastShieldBreakValue before firing break

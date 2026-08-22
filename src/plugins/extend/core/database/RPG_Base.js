@@ -11,7 +11,7 @@
 Object.defineProperty(RPG_Base.prototype, 'isExtension', {
   get: function()
   {
-    const hasIdExtension = !!RPGManager.getArrayFromNotesByRegex(this, J.EXTEND.RegExp.Extend, true, true);
+    const hasIdExtension = !!RPGManager.getArrayFromNotesByRegex(this, J.EXTEND.RegExp.Extend, true);
     const hasTypeExtension = !!RPGManager.getStringsFromNoteByRegex(this, J.EXTEND.RegExp.ExtendType, true);
     return hasIdExtension || hasTypeExtension;
   },
@@ -25,7 +25,7 @@ Object.defineProperty(RPG_Base.prototype, 'isExtension', {
 Object.defineProperty(RPG_Base.prototype, 'getExtensions', {
   get: function()
   {
-    return RPGManager.getArrayFromNotesByRegex(this, J.EXTEND.RegExp.Extend, true);
+    return RPGManager.getArrayFromNotesByRegex(this, J.EXTEND.RegExp.Extend);
   },
 });
 

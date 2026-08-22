@@ -86,7 +86,7 @@ class JABS_Shield
 
     // grab the shield types from the state.
     // NOTE: if no types are present, then "bypass" only works if its also a typeless bypass.
-    const shieldTypes = RPGManager.getArrayFromNotesByRegex(state, J.ABS.EXT.SHIELD.RegExp.Type, true);
+    const shieldTypes = RPGManager.getArrayFromNotesByRegex(state, J.ABS.EXT.SHIELD.RegExp.Type);
 
     // derive the new state!
     return new JABS_Shield(totalPoints, normalizedCap, priority, shieldTypes, isProtect, appliedAt);

@@ -45,6 +45,14 @@ describe('J-Resources-ABS metadata (direct src import)', () =>
       // Arrange & Act & Assert
       expect(globalThis.J.RESOURCES.EXT.ABS.Metadata.parsedPluginParameters).toBeDefined();
     });
+
+    it('falls back to a cascade depth of five when the project names none', () =>
+    {
+      // Arrange & Act & Assert- this number is the only thing standing between a pair of mutually
+      // triggering heal tags and an unbounded cascade, so it has to be a usable count rather than
+      // whatever an unparsed parameter happens to coerce to.
+      expect(globalThis.J.RESOURCES.EXT.ABS.Metadata.healChainDepth).toBe(5);
+    });
   });
 
   describe('on-attack gain notetags', () =>
