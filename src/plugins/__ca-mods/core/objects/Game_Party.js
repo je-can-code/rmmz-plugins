@@ -6,23 +6,6 @@
 Game_Party.ELEMENTAL_ALLY_ACTOR_IDS = [ 3, 4, 5, 6 ];
 
 /**
- * Gets any additional sources to scan for drops when determining a drop item list on
- * an enemy. In this case, we are including passive skill states to potentially add
- * new items to every enemy.
- * @returns {RPG_BaseItem[]}
- */
-Game_Party.prototype.extraDropSources = function()
-{
-  const extraSources = [];
-
-  // grab all passive skill states from all the members in the party.
-  $gameParty.battleMembers()
-    .forEach(member => extraSources.push(...member.allStates()));
-
-  return extraSources;
-};
-
-/**
  * Gets all current actors that are just the elemental variety.
  * @returns {Game_Actor[]}
  */

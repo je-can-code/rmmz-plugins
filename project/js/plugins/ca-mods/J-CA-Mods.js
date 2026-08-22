@@ -101,28 +101,6 @@ J.CAMods.Metadata = new J_CaModsPluginMetadata("J-CA-Mods", "1.0.0");
 */
 J.CAMods.PluginParameters = J.CAMods.Metadata.parsedPluginParameters;
 /**
-* A collection of data points being tracked for CA.
-* Each of these data points represent a variableId to track data within.
-*/
-J.CAMods.Tracking = {};
-J.CAMods.Tracking.EnemiesDefeated = 101;
-J.CAMods.Tracking.DestructiblesDestroyed = 102;
-J.CAMods.Tracking.TotalDamageDealt = 103;
-J.CAMods.Tracking.HighestDamageDealt = 104;
-J.CAMods.Tracking.NumberOfCritsDealt = 105;
-J.CAMods.Tracking.BiggestCritDealt = 106;
-J.CAMods.Tracking.NumberOfParries = 107;
-J.CAMods.Tracking.NumberOfPreciseParries = 108;
-J.CAMods.Tracking.TotalDamageTaken = 109;
-J.CAMods.Tracking.HighestDamageTaken = 110;
-J.CAMods.Tracking.NumberOfCritsTaken = 111;
-J.CAMods.Tracking.BiggestCritTaken = 112;
-J.CAMods.Tracking.MainhandSkillUsage = 113;
-J.CAMods.Tracking.OffhandSkillUsage = 114;
-J.CAMods.Tracking.AssignedSkillUsage = 115;
-J.CAMods.Tracking.DodgeSkillUsage = 116;
-J.CAMods.Tracking.NumberOfDeaths = 117;
-/**
 * A collection of all aliased methods for this plugin.
 */
 J.CAMods.Aliased = {};
@@ -130,7 +108,6 @@ J.CAMods.Aliased.JABS_Battler = new Map();
 J.CAMods.Aliased.JABS_Engine = new Map();
 J.CAMods.Aliased.Game_Actor = new Map();
 J.CAMods.Aliased.Game_BattlerBase = new Map();
-J.CAMods.Aliased.Game_Enemy = new Map();
 J.CAMods.Aliased.Game_Map = new Map();
 J.CAMods.Aliased.Game_Party = new Map();
 J.CAMods.Aliased.Scene_Boot = new Map();
@@ -282,21 +259,6 @@ Game_BattlerBase.prototype.recoverAll = function() {
 };
 
 //#endregion
-//#region src/plugins/__ca-mods/core/objects/Game_Enemy.js
-/**
-* Extends the drop sources to include passive skill states.
-* This isn't a flavor everyone might like, so this is personal functionality instead.
-* @returns {RPG_BaseItem[]}
-*/
-J.CAMods.Aliased.Game_Enemy.set("dropSources", Game_Enemy.prototype.dropSources);
-Game_Enemy.prototype.dropSources = function() {
-	const sources = J.CAMods.Aliased.Game_Enemy.get("dropSources").call(this);
-	sources.push(...this.allStates());
-	sources.push(...$gameParty.extraDropSources());
-	return sources;
-};
-
-//#endregion
 //#region src/plugins/__ca-mods/core/objects/Game_Map.js
 /**
 * Extends {@link #setup}.<br/>
@@ -321,17 +283,6 @@ Game_Party.ELEMENTAL_ALLY_ACTOR_IDS = [
 	5,
 	6
 ];
-/**
-* Gets any additional sources to scan for drops when determining a drop item list on
-* an enemy. In this case, we are including passive skill states to potentially add
-* new items to every enemy.
-* @returns {RPG_BaseItem[]}
-*/
-Game_Party.prototype.extraDropSources = function() {
-	const extraSources = [];
-	$gameParty.battleMembers().forEach((member) => extraSources.push(...member.allStates()));
-	return extraSources;
-};
 /**
 * Gets all current actors that are just the elemental variety.
 * @returns {Game_Actor[]}
@@ -386,126 +337,6 @@ J.CAMods.Aliased.JABS_Engine.set("addLootDropToMap", JABS_Engine.prototype.addLo
 JABS_Engine.prototype.addLootDropToMap = function(targetX, targetY, item) {
 	const modifiedTargetY = targetY + 1;
 	return J.CAMods.Aliased.JABS_Engine.get("addLootDropToMap").call(this, targetX, modifiedTargetY, item);
-};
-/**
-* Extends the handling of defeated enemies to track data.
-* @param {JABS_Battler} defeatedTarget The `JABS_Battler` that was defeated.
-* @param {JABS_Battler} caster The `JABS_Battler` that defeated the target.
-*/
-J.CAMods.Aliased.JABS_Engine.set("handleDefeatedEnemy", JABS_Engine.prototype.handleDefeatedEnemy);
-JABS_Engine.prototype.handleDefeatedEnemy = function(defeatedTarget, caster) {
-	J.CAMods.Aliased.JABS_Engine.get("handleDefeatedEnemy").call(this, defeatedTarget, caster);
-	if (defeatedTarget.isInanimate()) {
-		J.BASE.Helpers.modVariable(J.CAMods.Tracking.DestructiblesDestroyed, 1);
-	} else {
-		J.BASE.Helpers.modVariable(J.CAMods.Tracking.EnemiesDefeated, 1);
-	}
-};
-/**
-* Extends {@link #handleDefeatedPlayer}.<br/>
-* Also tracks player defeated count.
-*/
-J.CAMods.Aliased.JABS_Engine.set("handleDefeatedPlayer", JABS_Engine.prototype.handleDefeatedPlayer);
-JABS_Engine.prototype.handleDefeatedPlayer = function() {
-	J.BASE.Helpers.modVariable(J.CAMods.Tracking.NumberOfDeaths, 1);
-	J.CAMods.Aliased.JABS_Engine.get("handleDefeatedPlayer").call(this);
-};
-/**
-* Extends {@link #postExecuteSkillEffects}.<br/>
-* Also tracks our combat data in variables.
-* @param {JABS_Action} action The action being executed.
-* @param {JABS_Battler} target The target to apply skill effects against.
-*/
-J.CAMods.Aliased.JABS_Engine.set("postExecuteSkillEffects", JABS_Engine.prototype.postExecuteSkillEffects);
-JABS_Engine.prototype.postExecuteSkillEffects = function(action, target) {
-	J.CAMods.Aliased.JABS_Engine.get("postExecuteSkillEffects").call(this, action, target);
-	if (action.getCooldownType() !== JABS_Button.Tool) {
-		if (target.isEnemy()) {
-			this.trackAttackData(target);
-		} else if (target.isActor()) {
-			this.trackDefensiveData(target);
-		}
-	}
-};
-/**
-* Tracks various attack-related data points and assigns them to variables.
-* @param {JABS_Battler} target The target to analyze.
-*/
-JABS_Engine.prototype.trackAttackData = function(target) {
-	const { hpDamage, critical } = target.getBattler().result();
-	if (hpDamage > 0) {
-		J.BASE.Helpers.modVariable(J.CAMods.Tracking.TotalDamageDealt, hpDamage);
-		const highestDamage = $gameVariables.value(J.CAMods.Tracking.HighestDamageDealt);
-		if (hpDamage > highestDamage) {
-			$gameVariables.setValue(J.CAMods.Tracking.HighestDamageDealt, hpDamage);
-		}
-		if (critical) {
-			J.BASE.Helpers.modVariable(J.CAMods.Tracking.NumberOfCritsDealt, 1);
-			const biggestCrit = $gameVariables.value(J.CAMods.Tracking.BiggestCritDealt);
-			if (hpDamage > biggestCrit) {
-				$gameVariables.setValue(J.CAMods.Tracking.BiggestCritDealt, hpDamage);
-			}
-		}
-	}
-};
-/**
-* Tracks various defensive-related data points and assigns them to variables.
-* @param {JABS_Battler} target The target to analyze.
-*/
-JABS_Engine.prototype.trackDefensiveData = function(target) {
-	const { hpDamage, critical, parried, preciseParried } = target.getBattler().result();
-	if (hpDamage) {
-		J.BASE.Helpers.modVariable(J.CAMods.Tracking.TotalDamageTaken, hpDamage);
-		const highestDamage = $gameVariables.value(J.CAMods.Tracking.HighestDamageTaken);
-		if (hpDamage > highestDamage) {
-			$gameVariables.setValue(J.CAMods.Tracking.HighestDamageTaken, hpDamage);
-		}
-		if (critical) {
-			J.BASE.Helpers.modVariable(J.CAMods.Tracking.NumberOfCritsTaken, 1);
-			const biggestCrit = $gameVariables.value(J.CAMods.Tracking.BiggestCritTaken);
-			if (hpDamage > biggestCrit) {
-				$gameVariables.setValue(J.CAMods.Tracking.BiggestCritTaken, hpDamage);
-			}
-		}
-	} else if (parried) {
-		J.BASE.Helpers.modVariable(J.CAMods.Tracking.NumberOfParries, 1);
-		if (preciseParried) {
-			J.BASE.Helpers.modVariable(J.CAMods.Tracking.NumberOfPreciseParries, 1);
-		}
-	}
-};
-/**
-* Extends {@link #executeMapAction}.<br/>
-* Also tracks action execution data.
-* @param {JABS_Battler} caster The battler executing the action.
-* @param {JABS_Action} action The action being executed.
-* @param {number?} targetX The target's `x` coordinate, if applicable.
-* @param {number?} targetY The target's `y` coordinate, if applicable.
-*/
-J.CAMods.Aliased.JABS_Engine.set("executeMapAction", JABS_Engine.prototype.executeMapAction);
-JABS_Engine.prototype.executeMapAction = function(caster, action, targetX, targetY) {
-	J.CAMods.Aliased.JABS_Engine.get("executeMapAction").call(this, caster, action, targetX, targetY);
-	if (caster.isPlayer()) {
-		this.trackActionData(action);
-	}
-};
-/**
-* Tracks mainhand/offhand/skill usage data points and assigns them to variables.
-* @param {JABS_Action} action The action driving this step.
-*/
-JABS_Engine.prototype.trackActionData = function(action) {
-	const cooldownType = action.getCooldownType();
-	switch (cooldownType) {
-		case JABS_Button.Mainhand:
-			J.BASE.Helpers.modVariable(J.CAMods.Tracking.MainhandSkillUsage, 1);
-			break;
-		case JABS_Button.Offhand:
-			J.BASE.Helpers.modVariable(J.CAMods.Tracking.OffhandSkillUsage, 1);
-			break;
-		default:
-			J.BASE.Helpers.modVariable(J.CAMods.Tracking.AssignedSkillUsage, 1);
-			break;
-	}
 };
 
 //#endregion

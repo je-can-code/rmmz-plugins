@@ -268,6 +268,10 @@ globalThis.J ||= {};
 */
 J.DROPS = {};
 /**
+* The plugin umbrella that governs all extensions related to this plugin.
+*/
+J.DROPS.EXT = {};
+/**
 * The `metadata` associated with this plugin, such as version.
 */
 J.DROPS.Metadata = new J_DropsControlPluginMetadata("J-DropsControl", "2.3.0");
