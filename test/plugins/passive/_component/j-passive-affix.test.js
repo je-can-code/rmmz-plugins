@@ -910,6 +910,50 @@ describe('J-Passive-Affix (direct src import)', () =>
       // Assert
       expect(battler.addPassiveStateExternalSourceByStateIds).toHaveBeenCalledWith([]);
     });
+
+    it('takes the explicit-affix shortcut even when a guaranteed suffix roll is waiting', () =>
+    {
+      // Arrange- state 7 is an explicit passive that is no affix at all, state 1 is a registered
+      // one, so `some` has to reach past a near-miss to find the affix. The suffix pool is primed
+      // to roll id 20 with certainty, which is what the RNG fall-through would add if the
+      // shortcut failed to fire- that extra id is the only thing separating the two paths.
+      globalThis.J.PASSIVE.EXT.AFFIX.Metadata.prefixMap = new Map([ [ 1, 5 ] ]);
+      globalThis.J.PASSIVE.EXT.AFFIX.Metadata.totalPrefixWeight = 5;
+      globalThis.J.PASSIVE.EXT.AFFIX.Metadata.suffixMap = new Map([ [ 20, 5 ] ]);
+      globalThis.J.PASSIVE.EXT.AFFIX.Metadata.totalSuffixWeight = 5;
+      const character = buildCharacter({
+        getPassiveStateIds: () => [ 7, 1 ],
+        getResolvedPassiveAffixSuffixChance: () => 100,
+      });
+      const battler = buildBattler();
+      const jabsBattler = { getCharacter: () => character };
+
+      // Act
+      globalThis.JABS_AiManager.postConvertMutate(battler, jabsBattler);
+
+      // Assert- explicit ids only; the primed suffix never joins them.
+      expect(battler.addPassiveStateExternalSourceByStateIds).toHaveBeenCalledWith([ 7, 1 ]);
+    });
+
+    it('does not push a suffix when the suffix roll is blocked, even at 100% chance', () =>
+    {
+      // Arrange- the chance is certain and the single-entry pool cannot come back empty, so the
+      // block is the only thing left that can keep the suffix off the battler.
+      globalThis.J.PASSIVE.EXT.AFFIX.Metadata.suffixMap = new Map([ [ 20, 5 ] ]);
+      globalThis.J.PASSIVE.EXT.AFFIX.Metadata.totalSuffixWeight = 5;
+      const character = buildCharacter({
+        eventCommentsDisablePassiveAffixSuffixRng: () => true,
+        getResolvedPassiveAffixSuffixChance: () => 100,
+      });
+      const battler = buildBattler();
+      const jabsBattler = { getCharacter: () => character };
+
+      // Act
+      globalThis.JABS_AiManager.postConvertMutate(battler, jabsBattler);
+
+      // Assert
+      expect(battler.addPassiveStateExternalSourceByStateIds).toHaveBeenCalledWith([]);
+    });
   });
 
   describe('JABS_Engine reward multiplier extensions', () =>
@@ -1395,6 +1439,72 @@ describe('J-Passive-Affix (direct src import)', () =>
 
         // Cleanup
         globalThis.J.MESSAGE = savedMessage;
+      });
+
+      it('consumes only the first prefix when two prefix states are present', () =>
+      {
+        // Arrange- both states are prefixes and neither is a suffix, so nothing breaks the scan
+        // early; only the once-per-slot guard can stop the second one from being applied.
+        const prefixState = tierState({ isEnemyPrefix: true, iconIndex: 5, name: 'Fierce' });
+        const secondPrefixState = tierState({ isEnemyPrefix: true, iconIndex: 9, name: 'Savage' });
+        const statesById = { 1: prefixState, 2: secondPrefixState };
+        const battler = {
+          getPassiveStateIds: () => [ 1, 2 ],
+          state: (id) => statesById[id],
+        };
+        const battlerLastHit = buildLastHit({ battler });
+        const framedTarget = { name: 'Slime' };
+
+        // Act
+        globalThis.JABS_Battler.prototype.applyPassiveTierTargetFrameDecoration
+          .call({}, framedTarget, battlerLastHit);
+
+        // Assert- the later prefix contributes neither its name nor its icon.
+        expect(framedTarget.name).toBe('\\I[5]Fierce Slime');
+      });
+
+      it('consumes only the first suffix when two suffix states are present', () =>
+      {
+        // Arrange- both states are suffixes and neither is a prefix, so the scan runs to the end
+        // of the list and only the once-per-slot guard can reject the second one.
+        const suffixState = tierState({ isEnemySuffix: true, iconIndex: 6, name: 'Doom' });
+        const secondSuffixState = tierState({ isEnemySuffix: true, iconIndex: 9, name: 'Ruin' });
+        const statesById = { 1: suffixState, 2: secondSuffixState };
+        const battler = {
+          getPassiveStateIds: () => [ 1, 2 ],
+          state: (id) => statesById[id],
+        };
+        const battlerLastHit = buildLastHit({ battler });
+        const framedTarget = { name: 'Slime' };
+
+        // Act
+        globalThis.JABS_Battler.prototype.applyPassiveTierTargetFrameDecoration
+          .call({}, framedTarget, battlerLastHit);
+
+        // Assert- the later suffix contributes neither its name nor its icon.
+        expect(framedTarget.name).toBe('\\I[6]Slime of Doom');
+      });
+
+      it('keeps scanning for the prefix when the suffix is found first', () =>
+      {
+        // Arrange- passive order puts the suffix ahead of the prefix, so filling the suffix slot
+        // alone must not end the scan; the prefix still has to be picked up on the next pass.
+        const suffixState = tierState({ isEnemySuffix: true, iconIndex: 6, name: 'Doom' });
+        const prefixState = tierState({ isEnemyPrefix: true, iconIndex: 5, name: 'Fierce' });
+        const statesById = { 1: suffixState, 2: prefixState };
+        const battler = {
+          getPassiveStateIds: () => [ 1, 2 ],
+          state: (id) => statesById[id],
+        };
+        const battlerLastHit = buildLastHit({ battler });
+        const framedTarget = { name: 'Slime' };
+
+        // Act
+        globalThis.JABS_Battler.prototype.applyPassiveTierTargetFrameDecoration
+          .call({}, framedTarget, battlerLastHit);
+
+        // Assert- both slots land, and the icons still lead with the prefix icon.
+        expect(framedTarget.name).toBe('\\I[5]\\I[6]Fierce Slime of Doom');
       });
 
       it('does not colorize the label when the prefix defines no tier hex, even with J.MESSAGE present', () =>
