@@ -12,8 +12,16 @@ class JABS_GuardData
    * @param {number[]} counterGuardIds The skill id to counter with when guarding, if any.
    * @param {number[]} counterParryIds The skill ids to counter with when precise-parrying, if any.
    * @param {number} parryDuration The duration of which a precise-parry is available, if any.
+   * @param {number} guardInterval The frames between self-re-executions while guarding, if any.
    */
-  constructor(skillId, flatGuardReduction, percGuardReduction, counterGuardIds, counterParryIds, parryDuration)
+  constructor(
+    skillId,
+    flatGuardReduction,
+    percGuardReduction,
+    counterGuardIds,
+    counterParryIds,
+    parryDuration,
+    guardInterval)
   {
     /**
      * The skill this guard data is associated with.
@@ -50,15 +58,36 @@ class JABS_GuardData
      * @type {number}
      */
     this.parryDuration = parryDuration;
+
+    /**
+     * The number of frames between each self-re-execution while guarding, if any.
+     * @type {number}
+     */
+    this.guardInterval = guardInterval;
   }
 
   /**
    * Gets whether or not this guard data includes the ability to guard at all.
+   *
+   * Damage reduction is the usual reason to hold a stance, but it is not the only one: a guard
+   * that reduces nothing and instead re-executes itself on an interval is still doing work for
+   * as long as it is held. Requiring a reduction here would let such a skill be equipped, pass
+   * every type check, and then silently refuse to start - so anything that does something while
+   * held qualifies.
    * @returns {boolean}
    */
   canGuard()
   {
-    return !!(this.flatGuardReduction || this.percGuardReduction);
+    return !!(this.flatGuardReduction || this.percGuardReduction || this.guardInterval);
+  }
+
+  /**
+   * Gets whether or not this guard data re-executes its skill while the stance is held.
+   * @returns {boolean}
+   */
+  canRefire()
+  {
+    return this.guardInterval > 0;
   }
 
   /**

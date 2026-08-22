@@ -708,6 +708,26 @@ J.ABS.RegExp = {
 
   // guarding-related.
   Guard: /<guard:[ ]?(\[-?\d+,[ ]?-?\d+])>/gi,
+
+  /**
+   * The number of frames between each re-execution of a guard skill while the guard button is
+   * held down. A guard skill declaring this fires itself on that cadence for as long as the
+   * stance is maintained, which is how a guard can do something other than reduce damage -
+   * applying a state, paying an upkeep cost, accumulating a shield.
+   *
+   * <pre>
+   * Structure:
+   *  <guardInterval:FRAMES>
+   *
+   * Example:
+   *  <guardInterval:60>
+   *
+   * Translation:
+   *  While guarding, re-execute this skill once every 60 frames.
+   * </pre>
+   * @type {RegExp}
+   */
+  GuardInterval: /<guardInterval:[ ]?(\d+)>/gi,
   Parry: /<parry:[ ]?(\d+)>/gi,
   CounterParry: /<counterParry:[ ]?(\[\d+(?:\.\d+)?(?:,\s*\d+(?:\.\d+)?)*])>/gi,
   CounterGuard: /<counterGuard:[ ]?(\[\d+(?:\.\d+)?(?:,\s*\d+(?:\.\d+)?)*])>/gi,

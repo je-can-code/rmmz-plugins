@@ -1264,6 +1264,14 @@ class JABS_Battler
     this._guardSkillId = 0;
 
     /**
+     * The cadence on which a held guard skill re-executes itself, if it does at all.
+     *
+     * A max time of zero is how a guard says it does not refire.
+     * @type {JABS_Timer}
+     */
+    this._guardIntervalTimer = new JABS_Timer(0);
+
+    /**
      * Whether or not this battler is in a state of dying.
      * @type {boolean}
      */
@@ -3873,6 +3881,7 @@ class JABS_Battler
     this.processWaitTimer();
     this.processAlertTimer();
     this.processParryTimer();
+    this.processGuardIntervalTimer();
     this.processLastHitTimer();
     this.processCombatTimer();
     this.processCastingTimer();
@@ -3912,6 +3921,37 @@ class JABS_Battler
         .requestAnimation(131);
       this.countdownParryWindow();
     }
+  };
+
+  /**
+   * Updates the re-execution cadence of a guard skill that refires while it is held.
+   *
+   * Unlike the parry window, which is a one-shot grace period at the start of a stance, this
+   * runs for as long as the stance does - so a guard can keep paying a cost and keep renewing
+   * whatever it applies, and letting go is what stops it.
+   */
+  processGuardIntervalTimer()
+  {
+    // a battler not holding a guard has no cadence to advance.
+    if (!this.guarding()) return;
+
+    // shorthand the cadence being advanced.
+    const intervalTimer = this.guardIntervalTimer();
+
+    // a max of zero is how a guard declares that it does not refire at all.
+    if (intervalTimer.getMaxTime() <= 0) return;
+
+    // advance toward the next re-execution.
+    intervalTimer.update();
+
+    // the cadence has not come back around yet.
+    if (!intervalTimer.isTimerComplete()) return;
+
+    // re-arm before firing, so a skill that ends the stance cannot leave a stale cadence.
+    intervalTimer.reset();
+
+    // fire the guard skill again as an ordinary action, so it pays its costs like any other.
+    $jabsEngine.forceMapAction(this, this.getGuardSkillId(), false);
   };
 
   /**
@@ -5528,6 +5568,15 @@ class JABS_Battler
   };
 
   /**
+   * Gets the timer governing how often a held guard skill re-executes itself.
+   * @returns {JABS_Timer} The guardIntervalTimer.
+   */
+  guardIntervalTimer()
+  {
+    return this._guardIntervalTimer;
+  };
+
+  /**
    * Gets all data associated with guarding for this battler.
    *
    * Guard is resolved from whatever the battler's equipped offhand item (or, for enemies,
@@ -5620,6 +5669,13 @@ class JABS_Battler
     this.setCounterGuard(guardData.counterGuardIds);
     this.setCounterParry(guardData.counterParryIds);
     this.setGuardSkillId(guardData.skillId);
+    this.guardIntervalTimer()
+      .setMaxTime(guardData.guardInterval);
+
+    // starting the cadence already complete is what makes a refiring guard fire on press
+    // rather than one full interval after it.
+    this.guardIntervalTimer()
+      .forceComplete();
 
     // calculate parry frames, include eva bonus to parry.
     const totalParryFrames = this.getBonusParryFrames(guardData) + guardData.parryDuration;
@@ -5641,6 +5697,12 @@ class JABS_Battler
 
     // remove any remaining parry time.
     this.setParryWindow(0);
+
+    // a released stance refires nothing, and the next stance re-seeds the cadence.
+    this.guardIntervalTimer()
+      .setMaxTime(0);
+    this.guardIntervalTimer()
+      .reset();
 
     // stop posing.
     this.endAnimation();

@@ -227,6 +227,21 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
           this.resetCalled = true;
           this._complete = false;
         }
+
+        getMaxTime()
+        {
+          return this.maxTime;
+        }
+
+        setMaxTime(maxTime)
+        {
+          this.maxTime = maxTime;
+        }
+
+        forceComplete()
+        {
+          this._complete = true;
+        }
       },
     }));
 
@@ -3692,6 +3707,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.processWaitTimer = vi.fn();
       jabsBattler.processAlertTimer = vi.fn();
       jabsBattler.processParryTimer = vi.fn();
+      jabsBattler.processGuardIntervalTimer = vi.fn();
       jabsBattler.processLastHitTimer = vi.fn();
       jabsBattler.processCombatTimer = vi.fn();
       jabsBattler.processCastingTimer = vi.fn();
@@ -3703,6 +3719,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.processWaitTimer).toHaveBeenCalled();
       expect(jabsBattler.processAlertTimer).toHaveBeenCalled();
       expect(jabsBattler.processParryTimer).toHaveBeenCalled();
+      expect(jabsBattler.processGuardIntervalTimer).toHaveBeenCalled();
       expect(jabsBattler.processLastHitTimer).toHaveBeenCalled();
       expect(jabsBattler.processCombatTimer).toHaveBeenCalled();
       expect(jabsBattler.processCastingTimer).toHaveBeenCalled();
@@ -3748,6 +3765,70 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.processParryTimer();
       expect(requestAnimation).toHaveBeenCalledWith(131);
       expect(jabsBattler.countdownParryWindow).toHaveBeenCalledTimes(1);
+    });
+
+    it('processGuardIntervalTimer does not advance the cadence while not guarding', () =>
+    {
+      const forceMapAction = vi.fn();
+      globalThis.$jabsEngine = { forceMapAction };
+      const jabsBattler = buildBattler();
+      jabsBattler.guarding = () => false;
+      const intervalTimer = jabsBattler.guardIntervalTimer();
+      intervalTimer.setMaxTime(60);
+
+      jabsBattler.processGuardIntervalTimer();
+
+      expect(intervalTimer.updateCalled).toBeUndefined();
+      expect(forceMapAction).not.toHaveBeenCalled();
+    });
+
+    it('processGuardIntervalTimer does not advance the cadence for a guard that does not refire', () =>
+    {
+      const forceMapAction = vi.fn();
+      globalThis.$jabsEngine = { forceMapAction };
+      const jabsBattler = buildBattler();
+      jabsBattler.guarding = () => true;
+      const intervalTimer = jabsBattler.guardIntervalTimer();
+      intervalTimer.setMaxTime(0);
+
+      jabsBattler.processGuardIntervalTimer();
+
+      expect(intervalTimer.updateCalled).toBeUndefined();
+      expect(forceMapAction).not.toHaveBeenCalled();
+    });
+
+    it('processGuardIntervalTimer advances without firing before the cadence elapses', () =>
+    {
+      const forceMapAction = vi.fn();
+      globalThis.$jabsEngine = { forceMapAction };
+      const jabsBattler = buildBattler();
+      jabsBattler.guarding = () => true;
+      const intervalTimer = jabsBattler.guardIntervalTimer();
+      intervalTimer.setMaxTime(60);
+
+      jabsBattler.processGuardIntervalTimer();
+
+      expect(intervalTimer.updateCalled).toBe(true);
+      expect(intervalTimer.resetCalled).toBeUndefined();
+      expect(forceMapAction).not.toHaveBeenCalled();
+    });
+
+    it('processGuardIntervalTimer re-arms and fires the guard skill when the cadence elapses', () =>
+    {
+      const forceMapAction = vi.fn();
+      globalThis.$jabsEngine = { forceMapAction };
+      const jabsBattler = buildBattler();
+      jabsBattler.guarding = () => true;
+      jabsBattler.setGuardSkillId(201);
+      const intervalTimer = jabsBattler.guardIntervalTimer();
+      intervalTimer.setMaxTime(60);
+      intervalTimer.forceComplete();
+
+      jabsBattler.processGuardIntervalTimer();
+
+      expect(intervalTimer.updateCalled).toBe(true);
+      expect(intervalTimer.resetCalled).toBe(true);
+      expect(forceMapAction).toHaveBeenCalledWith(jabsBattler, 201, false);
     });
 
     it('processLastHitTimer counts down only when there is a last-hit battler', () =>

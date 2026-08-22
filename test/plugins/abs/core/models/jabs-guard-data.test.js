@@ -19,23 +19,47 @@ describe('JABS_GuardData (unit, pure/no dependencies)', () =>
   {
     it('returns true when flat reduction is nonzero', () =>
     {
-      const data = new JABS_GuardData(1, 10, 0, [], [], 0);
+      const data = new JABS_GuardData(1, 10, 0, [], [], 0, 0);
 
       expect(data.canGuard()).toEqual(true);
     });
 
     it('returns true when percent reduction is nonzero', () =>
     {
-      const data = new JABS_GuardData(1, 0, 0.5, [], [], 0);
+      const data = new JABS_GuardData(1, 0, 0.5, [], [], 0, 0);
 
       expect(data.canGuard()).toEqual(true);
     });
 
-    it('returns false when neither reduction is set', () =>
+    it('returns true when only a guard interval is set', () =>
     {
-      const data = new JABS_GuardData(1, 0, 0, [], [], 0);
+      const data = new JABS_GuardData(1, 0, 0, [], [], 0, 60);
+
+      expect(data.canGuard()).toEqual(true);
+    });
+
+    it('returns false when neither reduction nor interval is set', () =>
+    {
+      const data = new JABS_GuardData(1, 0, 0, [], [], 0, 0);
 
       expect(data.canGuard()).toEqual(false);
+    });
+  });
+
+  describe('canRefire()', () =>
+  {
+    it('returns true when the guard interval is positive', () =>
+    {
+      const data = new JABS_GuardData(1, 10, 0, [], [], 0, 60);
+
+      expect(data.canRefire()).toEqual(true);
+    });
+
+    it('returns false when the guard interval is zero', () =>
+    {
+      const data = new JABS_GuardData(1, 10, 0, [], [], 0, 0);
+
+      expect(data.canRefire()).toEqual(false);
     });
   });
 

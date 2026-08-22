@@ -340,7 +340,8 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsGuardData', {
       this.jabsGuard[1],
       this.jabsCounterGuard,
       this.jabsCounterParry,
-      this.jabsParry
+      this.jabsParry,
+      this.jabsGuardInterval
     );
   },
 });
@@ -372,6 +373,22 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsParry', {
   },
 });
 //endregion parry
+
+//region guardInterval
+/**
+ * The number of frames between each self-re-execution of this skill while guarding with it.
+ *
+ * Zero means the skill fires once when the stance begins and never again, which is how every
+ * guard skill behaved before this existed.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsGuardInterval', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.GuardInterval, true);
+  },
+});
+//endregion guardInterval
 
 //region counterGuard
 /**
