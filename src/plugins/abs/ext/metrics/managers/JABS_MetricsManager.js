@@ -211,6 +211,11 @@ class JABS_MetricsManager
       case JABS_Button.Offhand:
         this.increment(metadata.offhandSkillUsageVariableId, 1);
         break;
+      case JABS_Button.Dodge:
+        // a dodge executes as a real map action carrying its own cooldown key, so without a case of
+        // its own it lands in the default arm and quietly inflates the equipped-skill tally.
+        this.increment(metadata.dodgeSkillUsageVariableId, 1);
+        break;
       default:
         // the four assignable combat slots are individually named, but nothing here cares which of
         // them it was- they are one bucket called "a skill the player chose to equip".

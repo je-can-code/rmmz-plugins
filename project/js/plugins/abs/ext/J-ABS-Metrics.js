@@ -377,6 +377,9 @@ var JABS_MetricsManager = class {
 			case JABS_Button.Offhand:
 				this.increment(metadata.offhandSkillUsageVariableId, 1);
 				break;
+			case JABS_Button.Dodge:
+				this.increment(metadata.dodgeSkillUsageVariableId, 1);
+				break;
 			default:
 				this.increment(metadata.assignedSkillUsageVariableId, 1);
 				break;

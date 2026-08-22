@@ -432,6 +432,7 @@ describe('JABS_MetricsManager (direct src import)', () =>
     [
       [ 'Mainhand', 'mainhandSkillUsage' ],
       [ 'Offhand', 'offhandSkillUsage' ],
+      [ 'Dodge', 'dodgeSkillUsage' ],
       [ 'CombatSkill1', 'assignedSkillUsage' ],
       [ 'CombatSkill4', 'assignedSkillUsage' ],
     ].forEach(([ cooldownType, configKey ]) =>
