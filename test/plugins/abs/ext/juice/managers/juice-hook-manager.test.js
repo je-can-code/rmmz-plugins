@@ -222,13 +222,31 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
 
     it('runs the flurry garbage collector every 600th frame', () =>
     {
+      // Arrange: the collector keeps no reachable state of its own, but the flurry cache it empties
+      // is readable through the intensity decay - so build a decay up first and watch it vanish.
+      // Three hits one frame apart: the first two land inside the flurry window and decay normally,
+      // and the third lands on frame 600, where the sweep runs before the count is read and hands
+      // back a battler the cache has never seen. Merely calling the hook on frame 600 proves
+      // nothing: a collector that never fires also leaves the rest of the hook working.
+      const action = buildAction();
+      const target = buildBattler();
+
+      globalThis.Graphics.frameCount = 598;
+      JuiceHookManager.onPostPrimaryBattleEffects(action, target);
+      const [ , firstIntensity ] = JuiceMotionManagerMock.scheduleSquish.mock.calls.at(-1);
+
+      globalThis.Graphics.frameCount = 599;
+      JuiceHookManager.onPostPrimaryBattleEffects(action, target);
+      const [ , decayedIntensity ] = JuiceMotionManagerMock.scheduleSquish.mock.calls.at(-1);
+
+      // Act
       globalThis.Graphics.frameCount = 600;
+      JuiceHookManager.onPostPrimaryBattleEffects(action, target);
 
-      // no assertion on internal state directly reachable- just confirms it does not throw
-      // and still proceeds through the rest of the hook normally.
-      JuiceHookManager.onPostPrimaryBattleEffects(buildAction(), buildBattler());
-
-      expect(JuiceMotionManagerMock.scheduleSquish).toHaveBeenCalled();
+      // Assert
+      const [ , sweptIntensity ] = JuiceMotionManagerMock.scheduleSquish.mock.calls.at(-1);
+      expect(decayedIntensity).toBeLessThan(firstIntensity);
+      expect(sweptIntensity).toBeCloseTo(firstIntensity);
     });
 
     it('decays intensity on a rapid repeat hit against the same target within the flurry window', () =>
@@ -401,6 +419,24 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
       expect(JuiceMotionManagerMock.scheduleSquish).toHaveBeenCalledWith(
         expect.anything(), 0.15, 16, 1
       );
+    });
+
+    it('lets an authored motion tag win over the support-skill pulse', () =>
+    {
+      // Arrange: a support skill (damage.type 0) that asked for a weapon motion by name. The pulse
+      // is the shortcut for support skills that said nothing at all - a skill that named its motion
+      // has to reach the strike path, the same way the healing shortcut yields to an authored tag.
+      // Every existing support case leaves the tag empty, so the tag half of that pairing has never
+      // had to be true, and the shortcut could have swallowed authored motions unnoticed.
+      const action = buildAction({
+        getBaseSkill: () => ({ jabsNoJuice: false, jabsJuiceMotion: 'bash', damage: { type: 0 } }),
+      });
+
+      // Act
+      JuiceHookManager.onExecuteMapAction(buildBattler(), action);
+
+      // Assert: the strike path tilts the caster; the support pulse never does.
+      expect(JuiceMotionManagerMock.scheduleTilt).toHaveBeenCalled();
     });
 
     it('falls through to strike juice for a normal attack with no motion tag', () =>

@@ -586,6 +586,28 @@ describe('JABS_StandardController (unit, JABS_BaseController/Input/JABS_InputAda
 
       expect(controller[isTriggeredMethod]()).toEqual(true);
     });
+
+    // the chord button doubles as an ordinary action button, so pressing it without the enabler
+    // must stay with that ordinary action rather than leaking into a combat skill. the keyboard
+    // shortcut is deliberately left untriggered here so the enabler is the only thing saying no.
+    it('does not fire from the chord button alone when the enabler is not held', () =>
+    {
+      const chordInputs = new JABS_StandardController().getInputsForButton(chordButton);
+      globalThis.Input.isTriggered.mockImplementation((s) => chordInputs.includes(s));
+      const controller = new JABS_StandardController();
+
+      expect(controller[isTriggeredMethod]()).toEqual(false);
+    });
+
+    // holding the enabler alone arms the chord without firing it; the chord button is deliberately
+    // left untriggered so it is the only thing that can say no.
+    it('does not fire when the enabler is held but neither the chord button nor the shortcut trigger', () =>
+    {
+      globalThis.Input.isPressed.mockImplementation((s) => s === 'pageup');
+      const controller = new JABS_StandardController();
+
+      expect(controller[isTriggeredMethod]()).toEqual(false);
+    });
   });
 
   describe('performCombatAction()', () =>

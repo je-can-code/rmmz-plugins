@@ -352,13 +352,23 @@ describe('JABS_TargetingManager (unit, all downstream dependencies mocked)', () 
     {
       const battler = buildBattler();
       const action = buildAction({ isSupportAction: () => false });
+      // the visible follower is the near-miss sibling: same follower-ness, opposite visibility, and
+      // it has to survive- otherwise "excludes invisible followers" and "excludes all followers"
+      // would be the same program.
+      const visibleFollower = buildBattler({
+        isFollower: () => true,
+        getCharacter: () => ({ isVisible: () => true }),
+      });
       const invisibleFollower = buildBattler({
         isFollower: () => true,
         getCharacter: () => ({ isVisible: () => false }),
       });
-      globalThis.JABS_AiManager.getBattlersWithinRange.mockReturnValue([ invisibleFollower ]);
+      globalThis.JABS_AiManager.getBattlersWithinRange.mockReturnValue([ visibleFollower, invisibleFollower ]);
 
-      expect(JABS_TargetingManager.gatherScopedCandidates(battler, action, 5)).toEqual([]);
+      const candidates = JABS_TargetingManager.gatherScopedCandidates(battler, action, 5);
+
+      expect(candidates).toHaveLength(1);
+      expect(candidates[0]).toBe(visibleFollower);
     });
   });
 
@@ -422,6 +432,25 @@ describe('JABS_TargetingManager (unit, all downstream dependencies mocked)', () 
       expect(nextX).toBeCloseTo(1); // clamped to the range boundary.
     });
 
+    it('moves a free-roam cursor by a full step when the landing point stays inside range', () =>
+    {
+      const caster = buildBattler({ getX: () => 0, getY: () => 0 });
+      const cursor = buildFakeCursor({ cycleMode: false, caster, x: 0, y: 0, range: 10 });
+      JABS_TargetingManager._session = { tag: 'session' };
+      JABS_TargetingManager._cursor = cursor;
+      globalThis.Input.dir8 = 6;
+      // set the unit vector explicitly- the clamp test above overrides this mock permanently.
+      globalThis.$jabsEngine.dir8ToUnitVector.mockReturnValue({ x: 1, y: 0 });
+
+      JABS_TargetingManager.update();
+
+      // a full unclamped step is exactly one FreeRoamSpeedPerFrame along the pressed axis; clamping
+      // this same step would have thrown it all the way out to the range boundary instead.
+      const [ nextX, nextY ] = cursor.setPosition.mock.calls.at(-1);
+      expect(nextX).toBeCloseTo(0.15);
+      expect(nextY).toBe(0);
+    });
+
     it('does not move the free-roam cursor when no direction is pressed', () =>
     {
       const cursor = buildFakeCursor({ cycleMode: false });
@@ -482,6 +511,53 @@ describe('JABS_TargetingManager (unit, all downstream dependencies mocked)', () 
 
       JABS_TargetingManager.update();
 
+      expect(cursor.stepIndex).not.toHaveBeenCalled();
+    });
+
+    it('leaves the session open on a frame where neither ok nor cancel is triggered', () =>
+    {
+      const selected = buildBattler({ getX: () => 3, getY: () => 4 });
+      const cursor = buildFakeCursor({ cycleMode: true, selectedBattler: selected });
+      JABS_TargetingManager._session = { tag: 'session' };
+      JABS_TargetingManager._cursor = cursor;
+
+      JABS_TargetingManager.update();
+
+      // proof the frame actually ran to the input checks rather than bailing at the just-began or
+      // inactive gate, either of which would make the assertion below pass for the wrong reason.
+      expect(sentinelInstance.setPosition).toHaveBeenCalledWith(3, 4);
+      expect(JABS_TargetingManager.isActive()).toEqual(true);
+    });
+
+    it('does not select towards anything when no native direction is pressed in cycle mode', () =>
+    {
+      const selected = buildBattler({ getX: () => 3, getY: () => 4 });
+      const cursor = buildFakeCursor({ cycleMode: true, selectedBattler: selected });
+      JABS_TargetingManager._session = { tag: 'session' };
+      JABS_TargetingManager._cursor = cursor;
+      globalThis.Input.dir8 = 0;
+
+      JABS_TargetingManager.update();
+
+      // proof the cycle-selection path ran at all; the edge-detect backstop is neutralized by the
+      // zeroed previousDir8, so the only thing left to suppress a selection is dir8 being 0.
+      expect(sentinelInstance.setPosition).toHaveBeenCalledWith(3, 4);
+      expect(cursor.selectTowards).not.toHaveBeenCalled();
+    });
+
+    it('does not step the cycle index when no d-pad direction is pressed', () =>
+    {
+      const selected = buildBattler({ getX: () => 3, getY: () => 4 });
+      const cursor = buildFakeCursor({ cycleMode: true, selectedBattler: selected });
+      JABS_TargetingManager._session = { tag: 'session' };
+      JABS_TargetingManager._cursor = cursor;
+      globalThis.Input.isPressed.mockReturnValue(false);
+
+      JABS_TargetingManager.update();
+
+      // proof the cycle-selection path ran at all; the edge-detect backstop is neutralized by the
+      // zeroed previousDpadStep, so an unpressed d-pad is the only thing left to suppress a step.
+      expect(sentinelInstance.setPosition).toHaveBeenCalledWith(3, 4);
       expect(cursor.stepIndex).not.toHaveBeenCalled();
     });
   });
@@ -607,12 +683,16 @@ describe('JABS_TargetingManager (unit, all downstream dependencies mocked)', () 
       const action1 = buildAction();
       const action2 = buildAction();
       JABS_TargetingManager.beginTargeting(battler, [ action1, action2 ], onCommit);
+      // the caster sits at (0, 0) while the selection sits at (9, 8), so a location built from the
+      // wrong source is visibly the wrong location rather than coincidentally the right one.
       JABS_TargetingManager._cursor = buildFakeCursor({ cycleMode: true, selectedBattler: buildBattler({ getX: () => 9, getY: () => 8 }) });
 
       JABS_TargetingManager.confirm();
 
-      expect(action1.setActionOptions).toHaveBeenCalled();
-      expect(action2.setActionOptions).toHaveBeenCalled();
+      const [ firstRebuilt ] = action1.setActionOptions.mock.calls.at(-1);
+      const [ secondRebuilt ] = action2.setActionOptions.mock.calls.at(-1);
+      expect(firstRebuilt.location).toEqual({ x: 9, y: 8, direction: 2 });
+      expect(secondRebuilt.location).toEqual({ x: 9, y: 8, direction: 2 });
       expect(onCommit).toHaveBeenCalledWith([ action1, action2 ]);
       expect(JABS_TargetingManager.isActive()).toEqual(false);
     });
@@ -664,22 +744,29 @@ describe('JABS_TargetingManager (unit, all downstream dependencies mocked)', () 
       const battler = buildBattler({ getX: () => 7, getY: () => 6 });
       const action = buildAction();
       JABS_TargetingManager.beginTargeting(battler, [ action ], vi.fn());
+      // the cursor's own free-roam point is still (0, 0) here, so a fallback landing on (7, 6)
+      // could only have come from the aiming battler.
       JABS_TargetingManager._cursor = buildFakeCursor({ cycleMode: true, selectedBattler: null });
 
       JABS_TargetingManager.confirm();
 
-      const built = globalThis.JABS_Location.Builder().setX.mock; // sanity: Builder callable again.
-      expect(built).toBeTruthy();
+      const [ rebuilt ] = action.setActionOptions.mock.calls.at(-1);
+      expect(rebuilt.location).toEqual({ x: 7, y: 6, direction: 2 });
     });
 
     it('uses the free-roam cursor position when resolving the target location', () =>
     {
-      const battler = buildBattler();
+      // the caster sits somewhere other than the cursor, so resolving against the caster instead
+      // of the live cursor point produces a visibly different location.
+      const battler = buildBattler({ getX: () => 4, getY: () => 5 });
       const action = buildAction();
       JABS_TargetingManager.beginTargeting(battler, [ action ], vi.fn());
       JABS_TargetingManager._cursor = buildFakeCursor({ cycleMode: false, x: 11, y: 12 });
 
-      expect(() => JABS_TargetingManager.confirm()).not.toThrow();
+      JABS_TargetingManager.confirm();
+
+      const [ rebuilt ] = action.setActionOptions.mock.calls.at(-1);
+      expect(rebuilt.location).toEqual({ x: 11, y: 12, direction: 2 });
     });
   });
 
@@ -687,7 +774,11 @@ describe('JABS_TargetingManager (unit, all downstream dependencies mocked)', () 
   {
     it('does nothing when nobody is aiming', () =>
     {
-      expect(() => JABS_TargetingManager.cancel()).not.toThrow();
+      JABS_TargetingManager.cancel();
+
+      // tearing a session down is the only thing cancel ever does, and resetting the shared
+      // sentinel is the observable half of it- an idle cancel must not touch it.
+      expect(sentinelInstance.reset).not.toHaveBeenCalled();
     });
 
     it('ends the active session', () =>

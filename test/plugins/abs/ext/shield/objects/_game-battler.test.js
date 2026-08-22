@@ -177,6 +177,22 @@ describe('J-ABS-Shield _Game_Battler (unit, all downstream dependencies mocked)'
       expect(result).toEqual([ withPriority, noPriority ]);
     });
 
+    it('sorts by priority descending when the higher priority state is inserted first', () =>
+    {
+      // Arrange (insertion order decides which shield the comparator receives as `b`; with the
+      // higher priority inserted first, `bPri` is the operand carrying the whole comparison)
+      const battler = buildBattler();
+      const high = buildShieldState({ shield: { isBroken: vi.fn(() => false), getPriority: vi.fn(() => 5), getAppliedAt: vi.fn(() => 0) } });
+      const low = buildShieldState({ shield: { isBroken: vi.fn(() => false), getPriority: vi.fn(() => 1), getAppliedAt: vi.fn(() => 0) } });
+      globalThis.$jabsEngine.getJabsStatesByUuid.mockReturnValue(new Map([ [ 'high', high ], [ 'low', low ] ]));
+
+      // Act
+      const result = battler.getShieldStates();
+
+      // Assert
+      expect(result).toEqual([ high, low ]);
+    });
+
     it('treats a missing priority as zero when comparing, with the falsy priority as the first comparator argument', () =>
     {
       // Arrange (insertion order flips which shield the sort comparator passes as `a`, ensuring
@@ -307,6 +323,21 @@ describe('J-ABS-Shield _Game_Battler (unit, all downstream dependencies mocked)'
 
       // Assert
       expect(battler.lastShieldBreakValue).toEqual(0);
+      expect(globalThis.$jabsEngine.forceMapAction).not.toHaveBeenCalled();
+    });
+
+    it('does not fire discovered break skills when there is no JABS caster to fire them from', () =>
+    {
+      // Arrange (break skills are present, so the missing caster is the only thing that can stop
+      // them from firing; the stored value lands on 0 either way and proves nothing on its own)
+      const battler = buildBattler({ states: vi.fn(() => [ { id: 1 } ]) });
+      globalThis.JABS_AiManager.getBattlerByUuid.mockReturnValue(null);
+      globalThis.RPGManager.getArrayFromNotesByRegex.mockReturnValue([ 10, 11 ]);
+
+      // Act
+      battler.onShieldBreak(50);
+
+      // Assert
       expect(globalThis.$jabsEngine.forceMapAction).not.toHaveBeenCalled();
     });
 

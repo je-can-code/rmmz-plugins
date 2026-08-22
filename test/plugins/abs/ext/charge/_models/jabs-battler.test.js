@@ -523,13 +523,21 @@ describe('J-ABS-Charge JABS_Battler (unit, all downstream dependencies mocked)',
 
     it('prefers the last-used skill id over the equipped slot', () =>
     {
-      const skill = { id: 9, jabsChargeData: [ [ 1, 30, 6, 0, 0 ] ] };
+      // Arrange- the two skills must carry different charge data, or resolving either id looks identical.
+      const skillsById = {
+        5: { id: 5, jabsChargeData: [ [ 1, 30, 6, 0, 0 ] ] },
+        9: { id: 9, jabsChargeData: [ [ 1, 30, 77, 0, 0 ] ] },
+      };
       const battler = buildTierBattler({
         getLastUsedSkillId: () => 9,
-        getBattler: () => ({ getEquippedSkillId: () => 5, skill: () => skill }),
+        getBattler: () => ({ getEquippedSkillId: () => 5, skill: (skillId) => skillsById[skillId] }),
       });
+
+      // Act
       const result = battler.getChargingTiers('mainhand');
-      expect(result[0].skillId).toBe(6);
+
+      // Assert- 77 belongs only to the last-used skill; the equipped slot's skill would have yielded 6.
+      expect(result[0].skillId).toBe(77);
     });
 
     it('returns null when the skill has no charge data', () =>
@@ -639,7 +647,10 @@ describe('J-ABS-Charge JABS_Battler (unit, all downstream dependencies mocked)',
   {
     it('is false when not charging', () =>
     {
-      const battler = buildBattler({ isCharging: () => false });
+      // Arrange- a live current tier neutralizes the second guard, so the charging flag is the only refusal left.
+      const battler = buildBattler({ isCharging: () => false, getCurrentChargingTier: () => ({ tier: 1 }) });
+
+      // Act & Assert
       expect(battler.canUpdateCharging()).toBe(false);
     });
 

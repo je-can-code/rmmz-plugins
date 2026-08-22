@@ -158,6 +158,15 @@ describe('J-ABS-Tools gap close (direct src import)', () =>
       expect(battler.hasGapCloseDestination()).toBe(true);
     });
 
+    it('hasGapCloseDestination is true for a purely vertical destination', () =>
+    {
+      // only the origin tile counts as "no destination"- a destination sitting on the X axis
+      // origin is still a real place to travel to, so each axis has to be checked on its own.
+      const battler = buildJabsBattler(buildCharacter());
+      battler.setGapCloseDestination([ 0, 5 ]);
+      expect(battler.hasGapCloseDestination()).toBe(true);
+    });
+
     it('clearGapCloseDestination resets back to [0, 0]', () =>
     {
       const battler = buildJabsBattler(buildCharacter());
@@ -185,9 +194,23 @@ describe('J-ABS-Tools gap close (direct src import)', () =>
 
     it('does nothing when not currently gap closing', () =>
     {
-      const battler = buildJabsBattler(buildCharacter());
-      expect(() => battler.updateGapClosing()).not.toThrow();
+      // Arrange- a leftover destination the battler is already standing on. every downstream
+      // condition (valid destination, arrival, no longer moving) reads as "finish now", so the
+      // gap-closing flag is the only thing that can be holding the landing back.
+      const character = buildCharacter({ x: 5, y: 5 });
+      const battler = buildJabsBattler(character);
+      battler.setGapCloseDestination([ 5, 5 ]);
+      const finishSpy = vi.spyOn(battler, 'onGapCloseFinished')
+        .mockImplementation(() => {});
+
+      // Act
+      battler.updateGapClosing();
+
+      // Assert
+      expect(finishSpy).not.toHaveBeenCalled();
+      expect(battler.gapCloseDestination()).toEqual([ 5, 5 ]);
       expect(battler.isGapClosing()).toBe(false);
+      finishSpy.mockRestore();
     });
 
     it('stops gap closing when the destination becomes invalid mid-flight', () =>
@@ -195,11 +218,17 @@ describe('J-ABS-Tools gap close (direct src import)', () =>
       const battler = buildJabsBattler(buildCharacter());
       battler.beginGapClosing();
       // no destination was ever set (still [0,0]) -> hasGapCloseDestination is false.
+      const finishSpy = vi.spyOn(battler, 'onGapCloseFinished')
+        .mockImplementation(() => {});
 
       battler.updateGapClosing();
 
+      // an aborted gap close is not an arrival- the landing hook must not fire, or a skill with
+      // <thisOnGapCloseEnd> would pay out for a jump that never happened.
+      expect(finishSpy).not.toHaveBeenCalled();
       expect(battler.isGapClosing()).toBe(false);
       expect(battler.gapCloseDestination()).toEqual([ 0, 0 ]);
+      finishSpy.mockRestore();
     });
 
     it('finishes gap closing once the destination is reached', () =>
@@ -252,11 +281,25 @@ describe('J-ABS-Tools gap close (direct src import)', () =>
       expect(battler.isGapClosable()).toBe('event-key');
     });
 
-    it('returns null when neither the battler nor the event carries a key', () =>
+    it('never consults the event comments for a battler that is not an event', () =>
     {
-      const battler = buildJabsBattler(buildCharacter());
+      // Arrange- the character does carry a key, so reading it would be visible. only the
+      // event check stands between the caller and that value.
+      const character = buildCharacter({ gapCloseKey: () => 'event-key' });
+      const battler = buildJabsBattler(character);
       battler.getBattler = () => ({ gapCloseKey: () => null });
       battler.isEvent = () => false;
+
+      // Act & Assert
+      expect(battler.isGapClosable()).toBeNull();
+    });
+
+    it('returns null when neither the battler nor the event carries a key', () =>
+    {
+      const character = buildCharacter({ gapCloseKey: () => null });
+      const battler = buildJabsBattler(character);
+      battler.getBattler = () => ({ gapCloseKey: () => null });
+      battler.isEvent = () => true;
 
       expect(battler.isGapClosable()).toBeNull();
     });
@@ -434,6 +477,20 @@ describe('J-ABS-Tools gap close (direct src import)', () =>
       expect(dx).toBeCloseTo(6.05);
     });
 
+    it('offsets along Y when the approach is purely vertical', () =>
+    {
+      // the horizontal cases above leave the Y unit component at zero, where a broken vertical
+      // component is indistinguishable from a working one. a vertical approach is the sibling
+      // that forces the Y half of the vector math to actually carry the offset.
+      const battler = buildJabsBattler(buildCharacter({ x: 0, y: 0, getEffectiveRadius: () => 0.5 }));
+      const target = buildJabsBattler(buildCharacter({ x: 0, y: 5, getEffectiveRadius: () => 0.5 }));
+
+      const [ dx, dy ] = battler.determineGapCloseCoordinates(target, globalThis.J.ABS.EXT.TOOLS.GapClosePositions.Infront);
+
+      expect(dx).toBeCloseTo(0);
+      expect(dy).toBeCloseTo(3.95);
+    });
+
     it('returns [0, 0] when the caster is already on the target\'s tile (zero magnitude)', () =>
     {
       const battler = buildJabsBattler(buildCharacter({ x: 5, y: 5 }));
@@ -480,6 +537,26 @@ describe('J-ABS-Tools gap close (direct src import)', () =>
     it('is false while still outside wiggle room on the Y axis', () =>
     {
       const character = buildCharacter({ x: 5, y: 0, isMoving: () => false });
+      const battler = buildJabsBattler(character);
+      battler.setGapCloseDestination([ 5, 5 ]);
+
+      expect(battler.hasReachedGapCloseDestination()).toBe(false);
+    });
+
+    it('is false when overshooting the destination on the X axis', () =>
+    {
+      // wiggle room is a window, not a floor- landing well past the goal is just as much a miss
+      // as stopping short of it, and only the upper bound can catch that.
+      const character = buildCharacter({ x: 10, y: 5, isMoving: () => false });
+      const battler = buildJabsBattler(character);
+      battler.setGapCloseDestination([ 5, 5 ]);
+
+      expect(battler.hasReachedGapCloseDestination()).toBe(false);
+    });
+
+    it('is false when overshooting the destination on the Y axis', () =>
+    {
+      const character = buildCharacter({ x: 5, y: 10, isMoving: () => false });
       const battler = buildJabsBattler(character);
       battler.setGapCloseDestination([ 5, 5 ]);
 

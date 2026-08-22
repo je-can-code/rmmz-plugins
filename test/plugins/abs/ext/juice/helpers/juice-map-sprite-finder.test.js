@@ -19,8 +19,20 @@ describe('J-ABS-Juice JuiceMapSpriteFinder (unit, all downstream dependencies mo
   {
     it('returns null when the current scene is not the map scene', () =>
     {
-      globalThis.SceneManager._scene = { isMapScene: () => false };
-      expect(JuiceMapSpriteFinder.findSpriteCharacterFor({})).toBeNull();
+      // Arrange: a non-map scene that nonetheless carries a spriteset willing to answer, which is
+      // what a battle scene looks like. Without one the very next guard returns the same null, so
+      // the map-scene check itself could be dropped and this would still read as passing - and juice
+      // meant for a map character would go hunting through whatever scene happened to be up.
+      globalThis.SceneManager._scene = {
+        isMapScene: () => false,
+        _spriteset: { findTargetSprite: vi.fn(() => ({ id: 'wrong-scene-sprite' })) },
+      };
+
+      // Act
+      const result = JuiceMapSpriteFinder.findSpriteCharacterFor({});
+
+      // Assert
+      expect(result).toBeNull();
     });
 
     it('returns null when the map scene has no spriteset yet', () =>

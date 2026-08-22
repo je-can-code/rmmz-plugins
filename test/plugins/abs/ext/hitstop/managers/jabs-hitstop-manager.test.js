@@ -83,17 +83,22 @@ describe('J-ABS-Hitstop JABS_HitstopManager (unit, all downstream dependencies m
     }, overrides);
   }
 
-  /** Builds a duck-typed Game_Character carrying real hitstop data storage. */
+  /**
+   * Builds a duck-typed Game_Character carrying real hitstop data storage.
+   * The flurry windows are a uuid-to-remaining-frames map exactly like the real model, because the
+   * remaining frames are the only way to observe whether a window was re-flagged or left alone.
+   */
   function buildCharacter()
   {
     const frames = { value: 0 };
-    const flurryWindows = new Set();
+    const flurryWindows = new Map();
     return {
       getHitstopData: () => ({
         getFrames: () => frames.value,
         setFrames: (f) => { frames.value = f; },
+        flurryWindows: () => flurryWindows,
         isInFlurryWindow: (uuid) => flurryWindows.has(uuid),
-        flagFlurryWindow: (uuid) => flurryWindows.add(uuid),
+        flagFlurryWindow: (uuid, windowFrames) => flurryWindows.set(uuid, windowFrames),
       }),
     };
   }
@@ -119,9 +124,12 @@ describe('J-ABS-Hitstop JABS_HitstopManager (unit, all downstream dependencies m
 
     it('returns 0 when the skill declares <noHitstop>', () =>
     {
-      // Arrange
+      // Arrange- the critical flag is what proves the short-circuit happened, since a crit would
+      // otherwise contribute its bonus frames on top of the zeroed base.
       const action = buildAction({ skillDisablesHitstop: () => true });
-      const target = buildJabsBattler(buildCharacter());
+      const target = buildJabsBattler(buildCharacter(), {
+        getBattler: () => ({ result: () => ({ critical: true }) }),
+      });
 
       // Act
       const result = JABS_HitstopManager.durationFor(action, null, target);
@@ -326,13 +334,17 @@ describe('J-ABS-Hitstop JABS_HitstopManager (unit, all downstream dependencies m
       const target = buildJabsBattler(targetChar);
       const attacker = buildJabsBattler(buildCharacter());
 
-      // Act
+      // Act- the first impact opens the flurry window, which is then hand-set to a value the
+      // configured window frames (20) can never produce, so a re-flag is visible as a change.
       JABS_HitstopManager.apply(action, attacker, target);
       targetChar.getHitstopData()
         .setFrames(0);
+      targetChar.getHitstopData()
+        .flagFlurryWindow('action-uuid', 3);
       JABS_HitstopManager.apply(action, attacker, target);
 
-      // Assert
+      // Assert- bailing out happens before the flurry window is refreshed for the next impact.
+      expect(targetChar.getHitstopData().flurryWindows().get('action-uuid')).toBe(3);
       expect(targetChar.getHitstopData().getFrames()).toBe(0);
 
       // Cleanup
@@ -349,13 +361,17 @@ describe('J-ABS-Hitstop JABS_HitstopManager (unit, all downstream dependencies m
       const attacker = buildJabsBattler(buildCharacter());
 
       // Act- first impact flags the flurry window; second impact lands inside it and decays
-      // negative, which must clamp to 0 rather than going negative.
+      // negative, which must clamp to 0 rather than going negative. The window is hand-set to a
+      // value the configured window frames (20) can never produce so a re-flag is visible.
       JABS_HitstopManager.apply(action, attacker, target);
       targetChar.getHitstopData()
         .setFrames(0);
+      targetChar.getHitstopData()
+        .flagFlurryWindow('action-uuid', 3);
       JABS_HitstopManager.apply(action, attacker, target);
 
-      // Assert
+      // Assert- clamping to zero routes into the same bail-out, which never refreshes the window.
+      expect(targetChar.getHitstopData().flurryWindows().get('action-uuid')).toBe(3);
       expect(targetChar.getHitstopData().getFrames()).toBe(0);
 
       // Cleanup
@@ -400,6 +416,24 @@ describe('J-ABS-Hitstop JABS_HitstopManager (unit, all downstream dependencies m
         globalThis.J.ABS.EXT.HITSTOP.Metadata.shakeMinFrames = 2;
       });
 
+      it('shakes on the first flurry hit when configured to only shake on the first', () =>
+      {
+        // Arrange
+        globalThis.J.ABS.EXT.HITSTOP.Metadata.shakeOnlyOnFlurryFirstHit = true;
+        const action = buildAction({ getHitstopFrames: () => 10 });
+        const target = buildJabsBattler(buildCharacter());
+        const attacker = buildJabsBattler(buildCharacter());
+
+        // Act- nothing has opened a flurry window yet, so this impact is the first one.
+        JABS_HitstopManager.apply(action, attacker, target);
+
+        // Assert- power = base(1) + frames(10) * perFrame(0.5) = 6; duration = min(10, 10) = 10.
+        expect(globalThis.$gameScreen.startShake).toHaveBeenCalledWith(6, 5, 10);
+
+        // Cleanup
+        globalThis.J.ABS.EXT.HITSTOP.Metadata.shakeOnlyOnFlurryFirstHit = false;
+      });
+
       it('does not shake on a non-first flurry hit when configured to only shake on the first', () =>
       {
         // Arrange
@@ -411,7 +445,14 @@ describe('J-ABS-Hitstop JABS_HitstopManager (unit, all downstream dependencies m
 
         // Act- first hit shakes and flags the flurry window; second hit should not shake.
         JABS_HitstopManager.apply(action, attacker, target);
+
+        // the first hit must actually have shaken, or the negative assertion below proves nothing.
+        expect(globalThis.$gameScreen.startShake).toHaveBeenCalledTimes(1);
         globalThis.$gameScreen.startShake.mockReset();
+
+        // advance well past the anti-spam cooldown so it cannot be what suppresses the second hit,
+        // and clear the target's frames so the second impact is measured on its own.
+        globalThis.Graphics.frameCount = 1000;
         targetChar.getHitstopData()
           .setFrames(0);
         JABS_HitstopManager.apply(action, attacker, target);
@@ -473,6 +514,47 @@ describe('J-ABS-Hitstop JABS_HitstopManager (unit, all downstream dependencies m
 
         // Assert
         expect(globalThis.$gameScreen.startShake).toHaveBeenCalledTimes(1);
+
+        // Cleanup
+        globalThis.J.ABS.EXT.HITSTOP.Metadata.onlyOnPlayerImpact = false;
+        globalThis.J.ABS.EXT.HITSTOP.Metadata.alsoOnPlayerAsTarget = false;
+      });
+
+      it('does not shake when only the target is the player and alsoOnPlayerAsTarget is disabled', () =>
+      {
+        // Arrange- every other gate is deliberately open: the shake toggle is on, the default 5
+        // frames clear the 2-frame minimum, first-hit-only gating is off, and the cooldown is a
+        // thousand frames in the past. Only the player-as-target allowance can suppress this.
+        globalThis.J.ABS.EXT.HITSTOP.Metadata.onlyOnPlayerImpact = true;
+        const action = buildAction();
+        const target = buildJabsBattler(buildCharacter(), { isPlayer: () => true });
+        const attacker = buildJabsBattler(buildCharacter());
+
+        // Act
+        JABS_HitstopManager.apply(action, attacker, target);
+
+        // Assert
+        expect(globalThis.$gameScreen.startShake).not.toHaveBeenCalled();
+
+        // Cleanup
+        globalThis.J.ABS.EXT.HITSTOP.Metadata.onlyOnPlayerImpact = false;
+      });
+
+      it('does not shake when alsoOnPlayerAsTarget is enabled but the target is not the player', () =>
+      {
+        // Arrange- with the allowance enabled, the target identity is the last thing standing
+        // between this impact and a shake; every other gate is left open.
+        globalThis.J.ABS.EXT.HITSTOP.Metadata.onlyOnPlayerImpact = true;
+        globalThis.J.ABS.EXT.HITSTOP.Metadata.alsoOnPlayerAsTarget = true;
+        const action = buildAction();
+        const target = buildJabsBattler(buildCharacter());
+        const attacker = buildJabsBattler(buildCharacter());
+
+        // Act
+        JABS_HitstopManager.apply(action, attacker, target);
+
+        // Assert
+        expect(globalThis.$gameScreen.startShake).not.toHaveBeenCalled();
 
         // Cleanup
         globalThis.J.ABS.EXT.HITSTOP.Metadata.onlyOnPlayerImpact = false;

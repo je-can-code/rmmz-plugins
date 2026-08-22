@@ -134,6 +134,21 @@ describe('J-ABS-Shield JABS_Shield (unit, all downstream dependencies mocked)', 
       expect(result.isProtected()).toBe(true);
       expect(result.getShieldTypes()).toEqual([ 1, 2 ]);
     });
+
+    it('leaves the protect flag off when the state carries no protect tag', () =>
+    {
+      // Arrange (the point formulas anchor that a shield was genuinely derived, so the `false`
+      // below cannot be mistaken for an untouched field default)
+      globalThis.RPGManager.getStringsFromNoteByRegex.mockReturnValueOnce([ '10' ]).mockReturnValueOnce([]);
+      globalThis.RPGManager.checkForBooleanFromNoteByRegex.mockReturnValue(false);
+
+      // Act
+      const result = JABS_Shield.fromStateId(5, buildTarget(), buildTarget());
+
+      // Assert
+      expect(result.getCurrent()).toBe(10);
+      expect(result.isProtected()).toBe(false);
+    });
   });
 
   describe('setCurrent', () =>
@@ -230,6 +245,17 @@ describe('J-ABS-Shield JABS_Shield (unit, all downstream dependencies mocked)', 
       expect(shield.getShieldTypes()).toEqual([ 1, 2 ]);
       expect(shield.isProtected()).toBe(true);
       expect(shield.getAppliedAt()).toBe(12345);
+    });
+
+    it('reports a shield constructed without the protect flag as unprotected', () =>
+    {
+      // Arrange (the priority assertion anchors that the constructor ran, since `false` is also
+      // the field's cold default)
+      const shield = new JABS_Shield(10, 10, 7, [ 1, 2 ], false, 12345);
+
+      // Act/Assert
+      expect(shield.getPriority()).toBe(7);
+      expect(shield.isProtected()).toBe(false);
     });
   });
 });

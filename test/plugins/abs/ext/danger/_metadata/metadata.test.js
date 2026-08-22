@@ -135,5 +135,50 @@ describe('J-ABS-DangerIndicator metadata (direct src import)', () =>
       globalThis.J.ABS.Metadata.version.version = originalVersion;
     });
   });
+
+  describe('default enemy danger indicator visibility', () =>
+  {
+    /**
+     * Re-derives the metadata from a specific raw checkbox value.
+     * The metadata instance is reused rather than reconstructed because building a second one
+     * would trip the duplicate-plugin registration guard in {@link PluginMetadata}.
+     * RMMZ hands every plugin parameter over as a string, so the checkbox arrives as the literal
+     * text "true" or "false" rather than a boolean.
+     * @param {string} defaultEnemyShowDangerIndicator The raw stringy parameter value.
+     * @returns {boolean} The resolved default visibility.
+     */
+    function resolveIndicatorDefault(defaultEnemyShowDangerIndicator)
+    {
+      const metadata = globalThis.J.ABS.EXT.DANGER.Metadata;
+      const originalParameters = metadata.parsedPluginParameters;
+      metadata.parsedPluginParameters = { defaultEnemyShowDangerIndicator };
+      metadata.initializeMetadata();
+      const resolved = metadata.DefaultEnemyShowDangerIndicator;
+
+      // put the booted parameters back so nothing after this reads the doctored bag.
+      metadata.parsedPluginParameters = originalParameters;
+      metadata.initializeMetadata();
+
+      return resolved;
+    }
+
+    it('shows the indicator by default when the parameter is checked', () =>
+    {
+      // Arrange & Act
+      const resolved = resolveIndicatorDefault('true');
+
+      // Assert
+      expect(resolved).toBe(true);
+    });
+
+    it('hides the indicator by default when the parameter is unchecked', () =>
+    {
+      // Arrange & Act
+      const resolved = resolveIndicatorDefault('false');
+
+      // Assert- an unchecked box must not read as truthy merely for being a non-empty string.
+      expect(resolved).toBe(false);
+    });
+  });
 });
 //endregion plugins/abs/ext/danger/_metadata/metadata.test.js

@@ -258,6 +258,22 @@ describe('J-ABS-Poses JABS_Battler (unit, all downstream dependencies mocked)', 
       expect(battler.endAnimation).toHaveBeenCalledTimes(1);
     });
 
+    it('leaves the prior animation alone when not currently posing', () =>
+    {
+      // Arrange- nothing else in this method can suppress the premature end; the posing state is
+      // the only gate in front of it.
+      const battler = buildBattler();
+      battler.endAnimation = vi.fn();
+      battler.tryStartPose = vi.fn();
+      const skill = { jabsPoseData: null };
+
+      // Act
+      battler.performActionPose(skill);
+
+      // Assert
+      expect(battler.endAnimation).not.toHaveBeenCalled();
+    });
+
     it('does not try to start a pose when the skill has no pose data', () =>
     {
       // Arrange
@@ -419,13 +435,31 @@ describe('J-ABS-Poses JABS_Battler (unit, all downstream dependencies mocked)', 
       expect(battler.endAnimation).toHaveBeenCalledTimes(1);
     });
 
-    it('restores the original sprite when the current sprite differs', () =>
+    it('restores the original sprite when only the sprite sheet differs', () =>
     {
-      // Arrange
+      // Arrange- the index deliberately still matches, so the sheet name is the only thing that
+      // can justify the restore.
       const battler = buildBattler();
       battler.setBaseSpriteImage('Actor1');
       battler.setBaseSpriteIndex(0);
       battler.getCharacter()._characterName = 'Actor1_attack';
+      battler.getCharacter()._characterIndex = 0;
+
+      // Act
+      battler.resetPose();
+
+      // Assert
+      expect(battler.getCharacter().setImage).toHaveBeenCalledWith('Actor1', 0);
+    });
+
+    it('restores the original sprite when only the sprite index differs', () =>
+    {
+      // Arrange- the sheet name deliberately still matches, so the index is the only thing that
+      // can justify the restore.
+      const battler = buildBattler();
+      battler.setBaseSpriteImage('Actor1');
+      battler.setBaseSpriteIndex(0);
+      battler.getCharacter()._characterName = 'Actor1';
       battler.getCharacter()._characterIndex = 1;
 
       // Act

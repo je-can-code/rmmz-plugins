@@ -137,9 +137,21 @@ describe('J-ABS-Food JABS_FoodChainPlan (unit, all downstream dependencies mocke
 
     it('ignores states with no foodChain tag entirely', () =>
     {
-      globalThis.$dataStates = [ null, buildState(1, { chainType: null }) ];
+      // Arrange- state 1 is the untagged near-miss, and it expires into the genuine food-chain
+      // state 2. an untagged state that slipped through the filter would both become an entry
+      // itself and demote state 2 out of entry status, so state 2's registration is what proves
+      // the filter excluded it.
+      globalThis.$dataStates = [
+        null,
+        buildState(1, { chainType: null, expireStateId: 2 }),
+        buildState(2, { chainType: 'protein' }),
+      ];
+
+      // Act
       JABS_FoodChainPlan.buildRegistry();
-      expect(JABS_FoodChainPlan.forChainType('protein')).toBeNull();
+
+      // Assert
+      expect(JABS_FoodChainPlan.forChainType('protein').getEntry().stateId).toBe(2);
     });
   });
 
@@ -260,11 +272,76 @@ describe('J-ABS-Food JABS_FoodChainPlan (unit, all downstream dependencies mocke
       console.warn.mockRestore();
     });
 
-    it('does not warn when an explicit duration tag is present', () =>
+    it('does not warn when the frame-based <stateDuration> tag alone is present', () =>
     {
-      // Arrange
+      // Arrange- only the frame tag answers; the seconds tag must stay absent so that this
+      // operand of the two-part guard is the only thing suppressing the warning.
       globalThis.$dataStates = [ null, buildState(1, { chainType: 'protein', frames: 300 }) ];
-      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(300);
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockImplementation(
+        (state, regex) => (regex === globalThis.J.ABS.RegExp.StateDuration ? 300 : null));
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // Act
+      JABS_FoodChainPlan._walkChain(1);
+
+      // Assert
+      expect(console.warn).not.toHaveBeenCalled();
+      console.warn.mockRestore();
+    });
+
+    it('does not warn when the seconds-based <stateDurationSec> tag alone is present', () =>
+    {
+      // Arrange- the mirror of the case above, so neither operand of the guard can hide
+      // behind the other having already suppressed the warning.
+      globalThis.$dataStates = [ null, buildState(1, { chainType: 'protein', frames: 300 }) ];
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockImplementation(
+        (state, regex) => (regex === globalThis.J.ABS.RegExp.StateDurationSec ? 5 : null));
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // Act
+      JABS_FoodChainPlan._walkChain(1);
+
+      // Assert
+      expect(console.warn).not.toHaveBeenCalled();
+      console.warn.mockRestore();
+    });
+
+    it('does not warn when the state carries no step-based duration at all', () =>
+    {
+      // Arrange- zero frames means there is no mz-capped stepsToRemove value to complain about.
+      // both duration tags stay absent, so the frame count is the only suppressing condition.
+      globalThis.$dataStates = [ null, buildState(1, { chainType: 'protein', frames: 0 }) ];
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // Act
+      JABS_FoodChainPlan._walkChain(1);
+
+      // Assert
+      expect(console.warn).not.toHaveBeenCalled();
+      console.warn.mockRestore();
+    });
+
+    it('does not warn when the duration already exceeds the mz stepsToRemove ceiling', () =>
+    {
+      // Arrange- above 9999 the value cannot have come from stepsToRemove, so there is nothing
+      // to warn about; both duration tags stay absent so the ceiling is the only suppressor.
+      globalThis.$dataStates = [ null, buildState(1, { chainType: 'protein', frames: 10000 }) ];
+      vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // Act
+      JABS_FoodChainPlan._walkChain(1);
+
+      // Assert
+      expect(console.warn).not.toHaveBeenCalled();
+      console.warn.mockRestore();
+    });
+
+    it('does not warn for a walked state that is not part of the food system', () =>
+    {
+      // Arrange- an untagged state can be walked as the entry point, but it is not a food-chain
+      // row, so the stepsToRemove advice does not apply to it. frames sit inside the warn window
+      // and both duration tags stay absent, leaving the foodChain tag as the only suppressor.
+      globalThis.$dataStates = [ null, buildState(1, { chainType: null, frames: 300 }) ];
       vi.spyOn(console, 'warn').mockImplementation(() => {});
 
       // Act

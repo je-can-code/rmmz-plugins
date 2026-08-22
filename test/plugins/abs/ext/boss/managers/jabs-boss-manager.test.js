@@ -246,18 +246,36 @@ describe('J-ABS-Boss JabsBossManager (unit, all downstream dependencies mocked)'
 
     it('answers below-threshold questions against the live boss', () =>
     {
-      // Arrange
+      // Arrange- the boss sits at 40%, so a threshold of 40 is the inclusive edge and a threshold
+      // of 30 is beneath it.
       JabsBossManager.registerEncounters([ buildEncounter(ENEMY_NAME, SKILL_NAME, true) ]);
       JabsBossManager.startEncounter('gluttonwolf');
       $gameMap.event.mockReturnValue({ getJabsBattler: () => buildJabsBattler(false, false, 40) });
 
       // Act
-      const isBelow = JabsBossManager.isBossBelowHpThreshold(40);
-      const isAbove = JabsBossManager.isBossAboveHpThreshold(60);
+      const isBelowEdge = JabsBossManager.isBossBelowHpThreshold(40);
+      const isBelowLower = JabsBossManager.isBossBelowHpThreshold(30);
 
       // Assert
-      expect(isBelow).toBe(true);
-      expect(isAbove).toBe(false);
+      expect(isBelowEdge).toBe(true);
+      expect(isBelowLower).toBe(false);
+    });
+
+    it('answers above-threshold questions against the live boss', () =>
+    {
+      // Arrange- the boss sits at 40%, so a threshold of 40 is the inclusive edge and a threshold
+      // of 60 is out of reach above it.
+      JabsBossManager.registerEncounters([ buildEncounter(ENEMY_NAME, SKILL_NAME, true) ]);
+      JabsBossManager.startEncounter('gluttonwolf');
+      $gameMap.event.mockReturnValue({ getJabsBattler: () => buildJabsBattler(false, false, 40) });
+
+      // Act
+      const isAboveEdge = JabsBossManager.isBossAboveHpThreshold(40);
+      const isAboveHigher = JabsBossManager.isBossAboveHpThreshold(60);
+
+      // Assert
+      expect(isAboveEdge).toBe(true);
+      expect(isAboveHigher).toBe(false);
     });
 
     it('answers threshold questions false when there is no boss', () =>

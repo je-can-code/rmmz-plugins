@@ -104,6 +104,23 @@ describe('J-ABS-Danger Game_Battler (unit, all downstream dependencies mocked)',
       expect(warnSpy).toHaveBeenCalledWith('what happened to the power level?');
       warnSpy.mockRestore();
     });
+
+    it('stays quiet when every param produces a real number', () =>
+    {
+      // Arrange- the guard is the only thing in this method that can reach console.warn, so
+      // nothing else could suppress the call if the check stopped discriminating.
+      const warnSpy = vi.spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      const battler = buildBattler();
+
+      // Act
+      const result = battler.getPowerLevel();
+
+      // Assert- the computed total anchors that the method actually ran to completion.
+      expect(result).toBe(130);
+      expect(warnSpy).not.toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
   });
 
   describe('getDangerIndicatorIcon', () =>

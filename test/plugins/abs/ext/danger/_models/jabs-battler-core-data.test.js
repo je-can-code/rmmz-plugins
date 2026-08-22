@@ -73,6 +73,13 @@ describe('J-ABS-Danger JABS_BattlerCoreData (unit, all downstream dependencies m
 
       // Assert
       expect(data.showDangerIndicator()).toBe(false);
+
+      // Act- flip it back so the animate path has to return something other than the "hidden"
+      // sentinel; a getter that always hid the indicator would satisfy the false case alone.
+      data.setDangerIndicator(true);
+
+      // Assert
+      expect(data.showDangerIndicator()).toBe(true);
     });
 
     it('never shows the indicator on inanimate battlers, regardless of the flag', () =>
