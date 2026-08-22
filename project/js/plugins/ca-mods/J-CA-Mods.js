@@ -299,36 +299,6 @@ Game_Enemy.prototype.dropSources = function() {
 //#endregion
 //#region src/plugins/__ca-mods/core/objects/Game_Map.js
 /**
-* Overwrites {@link #checkPassage}.<br/>
-* Disables the ability to walk over tiles with the terrain ID of 1.
-* In practice, this prevents battlers from getting knocked into otherwise
-* unreachable locations, like what is supposed to be ceiling tiles.
-* @param {number} x The `x` coordinate.
-* @param {number} y The `y` coordinate.
-* @param {number} bit The bitwise operator being checked.
-* @returns {boolean} True if the tile can be walked on, false otherwise.
-*/
-Game_Map.prototype.checkPassage = function(x, y, bit) {
-	const flags = this.tilesetFlags();
-	const tiles = this.allTiles(x, y);
-	for (const tile of tiles) {
-		const flag = flags[tile];
-		if ((flag & 16) !== 0) {
-			continue;
-		}
-		if (flag >> 12 === 1) {
-			return false;
-		}
-		if ((flag & bit) === 0) {
-			return true;
-		}
-		if ((flag & bit) === bit) {
-			return false;
-		}
-	}
-	return false;
-};
-/**
 * Extends {@link #setup}.<br/>
 * Upon map initialization, assigns a random integer between 1-100 to an arbitrary variable.
 * In CA, this value is used to determine the presence of "rare/named" monsters on the map.
@@ -537,38 +507,6 @@ JABS_Engine.prototype.trackActionData = function(action) {
 			break;
 	}
 };
-
-//#endregion
-//#region src/plugins/__ca-mods/core/scenes/Scene_Base.js
-/**
-* Overwrites {@link #buttonAreaHeight}.<br/>
-* Sets the button height to 0- they are not used in CA.
-* @returns {number}
-*/
-Scene_Base.prototype.buttonAreaHeight = function() {
-	return 0;
-};
-/**
-* Overwrites {@link #createButtons}.<br/>
-* Removes logic for button creation- they are not used in CA.
-*/
-Scene_Base.prototype.createButtons = function() {};
-
-//#endregion
-//#region src/plugins/__ca-mods/core/scenes/Scene_Map.js
-/**
-* Overwrites {@link #createButtons}.<br/>
-* Removes logic for button creation- they are not used in CA.
-*/
-Scene_Map.prototype.createButtons = function() {};
-
-//#endregion
-//#region src/plugins/__ca-mods/core/scenes/Scene_MenuBase.js
-/**
-* Overwrites {@link #createButtons}.<br/>
-* Removes logic for button creation- those are not allowed here.
-*/
-Scene_MenuBase.prototype.createButtons = function() {};
 
 //#endregion
 //# sourceMappingURL=J-CA-Mods.js.map

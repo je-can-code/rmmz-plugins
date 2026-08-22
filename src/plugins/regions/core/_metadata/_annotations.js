@@ -77,5 +77,11 @@
  * @desc The region ids that are always denied on every map.
  * @default []
  *
+ * @param globalDenyTerrainTags
+ * @type number[]
+ * @text Global Denied Terrain Tags
+ * @desc The terrain tags that are always impassable on every map. Terrain tags live on the tileset, not the map.
+ * @default []
+ *
  */
 //endregion annotations

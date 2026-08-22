@@ -48,4 +48,15 @@ Scene_MenuBase.prototype.helpWindow = function()
   // hand back the help window describing the current selection.
   return this._helpWindow;
 };
+
+/**
+ * Overwrites {@link #createButtons}.<br/>
+ * Skips creation of the touch ui buttons on menu scenes.
+ *
+ * Vanilla adds its own cancel and page buttons here on top of whatever the scene already built,
+ * which is a second way to do what every menu in this suite already binds and documents itself.
+ */
+Scene_MenuBase.prototype.createButtons = function()
+{
+};
 //endregion Scene_MenuBase

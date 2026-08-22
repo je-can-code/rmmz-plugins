@@ -69,6 +69,12 @@ describe('J-RegionEffects metadata (direct src import)', () =>
       // Arrange & Act & Assert
       expect(globalThis.J.REGIONS.Metadata.globalDenyRegions).toEqual([]);
     });
+
+    it('parses an empty globalDenyTerrainTags default to an empty array', () =>
+    {
+      // Arrange & Act & Assert
+      expect(globalThis.J.REGIONS.Metadata.globalDenyTerrainTags).toEqual([]);
+    });
   });
 
   describe('custom global region params', () =>
@@ -84,6 +90,7 @@ describe('J-RegionEffects metadata (direct src import)', () =>
         ...DEFAULT_REGION_EFFECTS_PLUGIN_PARAMS,
         globalAllowRegions: '[1, 2]',
         globalDenyRegions: '[3]',
+        globalDenyTerrainTags: '[1, 4]',
       };
 
       globalThis.PluginManager = {
@@ -106,6 +113,13 @@ describe('J-RegionEffects metadata (direct src import)', () =>
     {
       // Arrange & Act & Assert
       expect(customMetadata.globalDenyRegions).toEqual([ 3 ]);
+    });
+
+    it('translates the globalDenyTerrainTags ids', () =>
+    {
+      // Arrange & Act & Assert- a second entry proves the list is read as a list rather than
+      // collapsing to whichever tag happens to be first.
+      expect(customMetadata.globalDenyTerrainTags).toEqual([ 1, 4 ]);
     });
   });
 });

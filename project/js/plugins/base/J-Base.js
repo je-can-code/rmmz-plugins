@@ -12283,6 +12283,26 @@ Scene_Map.prototype.isMapScene = function() {
 Scene_Base.prototype.windowLayer = function() {
 	return this._windowLayer;
 };
+/**
+* Overwrites {@link #buttonAreaHeight}.<br/>
+* Reserves no vertical space for the touch ui button row.
+*
+* Vanilla reserves this strip on every scene whether or not any buttons are drawn into it, so a
+* project that does not use them pays for the gap on every window layout it ever writes.
+* @returns {number}
+*/
+Scene_Base.prototype.buttonAreaHeight = function() {
+	return 0;
+};
+/**
+* Overwrites {@link #createButtons}.<br/>
+* Skips creation of the touch ui buttons entirely.
+*
+* The cancel and page buttons are an accessibility affordance for touch devices, and this suite
+* targets keyboard and gamepad instead- every scene here binds its own controls and draws its own
+* legend, so the vanilla buttons would be a second, inconsistent way to do the same thing.
+*/
+Scene_Base.prototype.createButtons = function() {};
 
 //#endregion
 //#region src/plugins/_base/core/scenes/Scene_Equip.js
@@ -12346,6 +12366,14 @@ Scene_Map.prototype.start = function() {
 	J.BASE.Aliased.Scene_Map.get("start").call(this);
 	$gameParty.pruneMissingInventoryEntries();
 };
+/**
+* Overwrites {@link #createButtons}.<br/>
+* Skips creation of the touch ui menu button on the map.
+*
+* The map's button opens the menu, which is already reachable by the bound cancel input, and the
+* sprite would otherwise sit over the hud in the same corner.
+*/
+Scene_Map.prototype.createButtons = function() {};
 
 //#endregion
 //#region src/plugins/_base/core/scenes/Scene_Menu.js
@@ -12418,6 +12446,14 @@ Scene_MenuBase.prototype.setBackgroundFilter = function(newBackgroundFilter) {
 Scene_MenuBase.prototype.helpWindow = function() {
 	return this._helpWindow;
 };
+/**
+* Overwrites {@link #createButtons}.<br/>
+* Skips creation of the touch ui buttons on menu scenes.
+*
+* Vanilla adds its own cancel and page buttons here on top of whatever the scene already built,
+* which is a second way to do what every menu in this suite already binds and documents itself.
+*/
+Scene_MenuBase.prototype.createButtons = function() {};
 
 //#endregion
 //#region src/plugins/_base/core/scenes/Scene_Skill.js

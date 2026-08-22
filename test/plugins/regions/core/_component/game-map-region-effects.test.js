@@ -18,6 +18,7 @@ describe('J-RegionEffects Game_Map passage (direct src import)', () =>
       ...DEFAULT_REGION_EFFECTS_PLUGIN_PARAMS,
       globalAllowRegions: '[10]',
       globalDenyRegions: '[20]',
+      globalDenyTerrainTags: '[1]',
     });
 
     setPluginContextToJBase();
@@ -30,6 +31,100 @@ describe('J-RegionEffects Game_Map passage (direct src import)', () =>
 
     // patches globalThis.Game_Map.prototype directly, no vm involved.
     await import('../../../../../src/plugins/regions/core/objects/Game_Map.js');
+  });
+
+  /**
+   * Builds a bare Game_Map stubbed with a single tile at (0, 0) carrying the given flag.
+   * @param {number} flag The tileset flag for that tile.
+   * @returns {Game_Map}
+   */
+  function buildMapWithFlag(flag)
+  {
+    const map = Object.create(globalThis.Game_Map.prototype);
+    map.tilesetFlags = () => [ flag ];
+    map.allTiles = () => [ 0 ];
+
+    return map;
+  }
+
+  describe('checkPassage', () =>
+  {
+    it('refuses passage over a tile whose terrain tag is globally denied', () =>
+    {
+      // Arrange- (1 << 12) sets the flag's terrain-id nibble to 1, which this suite configures as a
+      // denied tag. Every direction bit is left clear, so the tile would otherwise be openly
+      // passable and only the tag can be what refuses it.
+      const map = buildMapWithFlag(1 << 12);
+
+      // Act & Assert
+      expect(map.checkPassage(0, 0, 0x0f)).toBe(false);
+    });
+
+    it('allows passage over a tile whose terrain tag is not denied', () =>
+    {
+      // Arrange- terrain tag 2 is the near-miss: tagged, but not one of the denied ones. Without it,
+      // "refuses denied tags" and "refuses every tagged tile" are the same program.
+      const map = buildMapWithFlag(2 << 12);
+
+      // Act & Assert
+      expect(map.checkPassage(0, 0, 0x0f)).toBe(true);
+    });
+
+    it('treats the 0x10 "no effect on passage" bit as a transparent pass-through to the next tile', () =>
+    {
+      // Arrange- the upper tile carries 0x10 AND every requested passage bit. The extra bits are
+      // what make this load-bearing: a tile of bare 0x10 reads as openly passable anyway, so
+      // skipping it and evaluating it produce the same answer and the skip proves nothing.
+      const map = Object.create(globalThis.Game_Map.prototype);
+      map.tilesetFlags = () => [ 0x10 | 0x0f, 0x00 ];
+      map.allTiles = () => [ 0, 1 ];
+
+      // Act & Assert
+      expect(map.checkPassage(0, 0, 0x0f)).toBe(true);
+    });
+
+    it('returns true when the requested bit is clear on the tile\'s flag (passable)', () =>
+    {
+      // Arrange & Act & Assert
+      expect(buildMapWithFlag(0x00).checkPassage(0, 0, 0x0f)).toBe(true);
+    });
+
+    it('returns false when the requested bit is fully set on the tile\'s flag (impassable)', () =>
+    {
+      // Arrange- an openly passable tile sits behind the impassable one and must never be reached.
+      // Without it, an impassable tile that merely fell out of the loop would also answer false, and
+      // the test could not tell "decided here" from "decided by the default at the bottom".
+      const map = Object.create(globalThis.Game_Map.prototype);
+      map.tilesetFlags = () => [ 0x0f, 0x00 ];
+      map.allTiles = () => [ 0, 1 ];
+
+      // Act & Assert
+      expect(map.checkPassage(0, 0, 0x0f)).toBe(false);
+    });
+
+    it('refuses passage for a tile that blocks only some of the requested directions', () =>
+    {
+      // Arrange- a flag overlapping the requested bits matches neither the fully-open nor the
+      // fully-closed case, so it falls out of the loop entirely. Defaulting that to impassable is
+      // the safe answer: letting it through would walk the player into geometry.
+      const map = buildMapWithFlag(0x01);
+
+      // Act & Assert
+      expect(map.checkPassage(0, 0, 0x0f)).toBe(false);
+    });
+
+    it('defers a partially-blocking tile to the next tile rather than deciding on it', () =>
+    {
+      // Arrange- the upper tile blocks only one requested direction, so the loop must move on. That
+      // the lower tile is openly passable is what makes the deferral observable: deciding
+      // "impassable" on the partial match would answer false and never look at it.
+      const map = Object.create(globalThis.Game_Map.prototype);
+      map.tilesetFlags = () => [ 0x01, 0x00 ];
+      map.allTiles = () => [ 0, 1 ];
+
+      // Act & Assert
+      expect(map.checkPassage(0, 0, 0x0f)).toBe(true);
+    });
   });
 
   describe('projectCoordinatesByDirection', () =>

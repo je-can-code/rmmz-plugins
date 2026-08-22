@@ -180,4 +180,30 @@ Scene_Base.prototype.windowLayer = function()
   // hand back the layer every window of this scene is added to.
   return this._windowLayer;
 };
+
+/**
+ * Overwrites {@link #buttonAreaHeight}.<br/>
+ * Reserves no vertical space for the touch ui button row.
+ *
+ * Vanilla reserves this strip on every scene whether or not any buttons are drawn into it, so a
+ * project that does not use them pays for the gap on every window layout it ever writes.
+ * @returns {number}
+ */
+Scene_Base.prototype.buttonAreaHeight = function()
+{
+  // no buttons are created, so no room is set aside for them.
+  return 0;
+};
+
+/**
+ * Overwrites {@link #createButtons}.<br/>
+ * Skips creation of the touch ui buttons entirely.
+ *
+ * The cancel and page buttons are an accessibility affordance for touch devices, and this suite
+ * targets keyboard and gamepad instead- every scene here binds its own controls and draws its own
+ * legend, so the vanilla buttons would be a second, inconsistent way to do the same thing.
+ */
+Scene_Base.prototype.createButtons = function()
+{
+};
 //endregion Scene_Map

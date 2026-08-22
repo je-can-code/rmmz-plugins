@@ -36,4 +36,15 @@ Scene_Map.prototype.start = function()
   // drop anything the party is holding that the database no longer defines.
   $gameParty.pruneMissingInventoryEntries();
 };
+
+/**
+ * Overwrites {@link #createButtons}.<br/>
+ * Skips creation of the touch ui menu button on the map.
+ *
+ * The map's button opens the menu, which is already reachable by the bound cancel input, and the
+ * sprite would otherwise sit over the hud in the same corner.
+ */
+Scene_Map.prototype.createButtons = function()
+{
+};
 //endregion Scene_Map
