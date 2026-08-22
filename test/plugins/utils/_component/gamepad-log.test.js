@@ -58,6 +58,27 @@ describe('J-SystemUtilities gamepad fresh press logging (direct src import)', ()
     logSpy.mockRestore();
   });
 
+  it('diffs against the pad own recorded history rather than against nothing', () =>
+  {
+    // Arrange- a button held down across frames must not re-announce itself, which is only true while
+    // the previous state is read out of the pad's own slot. Both other reasons this could stay quiet
+    // are neutralized: logging is on, and index 0 is mapped to a real symbol.
+    const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    globalThis.J.UTILS.GamepadLog.enabled = true;
+    globalThis.Input.gamepadMapper[0] = 'ok';
+    globalThis.Input._gamepadStates[4] = [ true ];
+
+    // Act- the host stub's original logic writes [ true ] back into the slot, so this frame is a hold.
+    globalThis.Input._updateGamepadState({ index: 4 });
+
+    // Assert- and the slot really was written, proving the alias chain ran rather than bailing early.
+    expect(logSpy).not.toHaveBeenCalled();
+    expect(globalThis.Input._gamepadStates[4]).toEqual([ true ]);
+
+    globalThis.J.UTILS.GamepadLog.enabled = false;
+    logSpy.mockRestore();
+  });
+
   it('ignores a pressed button that maps to no known symbol', () =>
   {
     // Arrange- controllers report more buttons than RMMZ binds, so unmapped indices are pressed all

@@ -261,6 +261,26 @@ describe('J-Pixelistics PIXEL_CollisionManager authoring layer (direct src impor
       expect(globalThis.PIXEL_CollisionManager.collisionStepCount).toBe(4);
     });
 
+    it('keeps a configuration that already exists rather than re-reading metadata', () =>
+    {
+      // Arrange: setupCollision runs on every single map transfer, so bootstrapping
+      // unconditionally would throw away a density configured after boot and quietly rebuild
+      // every table at whatever the plugin parameter happened to say. Metadata still reads 4
+      // here, which is what makes a re-read visible rather than indistinguishable.
+      globalThis.PIXEL_CollisionManager.collisionStepCount = 2;
+      globalThis.PIXEL_CollisionManager.collisionSize = 0.5;
+
+      // Act
+      globalThis.PIXEL_CollisionManager.setupCollision();
+
+      // Assert: the table was still built, and it was built at the density already in place.
+      expect(globalThis.PIXEL_CollisionManager.collisionStepCount).toBe(2);
+      expect(globalThis.PIXEL_CollisionManager.table().length).toBe(16);
+
+      // restore a metadata-derived configuration rather than leaking the hand-set one.
+      globalThis.PIXEL_CollisionManager.initConfig();
+    });
+
     it('treats an unwritten subcell as open', () =>
     {
       // Arrange: the table is allocated at full size and then painted, so any subcell the

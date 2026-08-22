@@ -55,5 +55,27 @@ describe('J-Level-Sync metadata defaults with no configured parameters (direct s
     // projects that never opt in.
     expect(metadata.syncAffectsExp).toBe(false);
   });
+
+  it('turns synced-level exp calculation on when the project opted in', async () =>
+  {
+    // Arrange- the opt-in arrives as the literal string 'true', because every RMMZ plugin parameter
+    // reaches a plugin as text regardless of what the parameter panel presented it as. A second
+    // instance under its own name is needed because PluginMetadata keeps a static registry that
+    // rejects a duplicate name.
+    const { default: SyncPluginMetadata } =
+      await import('../../../../../../src/plugins/level/ext/sync/_metadata/_pluginMetadata.js');
+    installPluginManagerWithParams(globalThis, 'J-Level-Sync-ExpOptIn', {
+      'sync-indicator-icon': '88',
+      'sync-affects-exp': 'true',
+    });
+
+    // Act
+    const metadata = new SyncPluginMetadata('J-Level-Sync-ExpOptIn', '1.0.0');
+
+    // Assert- the icon index anchors the claim that this instance genuinely read its parameters,
+    // since a metadata object that read nothing at all would also answer the default for the flag.
+    expect(metadata.syncAffectsExp).toBe(true);
+    expect(metadata.syncIndicatorIconIndex).toBe(88);
+  });
 });
 //endregion plugins/level/ext/sync/_component/metadata-defaults.test.js

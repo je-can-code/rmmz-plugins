@@ -17,6 +17,7 @@ describe('PanelRanking (direct src import)', () =>
 {
   let PanelRanking;
   let PanelRankupReward;
+  let SdpMasteryManager;
 
   beforeAll(async () =>
   {
@@ -32,6 +33,10 @@ describe('PanelRanking (direct src import)', () =>
 
     ({ default: PanelRanking } = await import('../../../../../src/plugins/sdp/core/models/PanelRanking.js'));
     ({ default: PanelRankupReward } = await import('../../../../../src/plugins/sdp/core/models/PanelRankupReward.js'));
+
+    // the ranking reaches the manager through its own import, so the spy has to land on the very
+    // same module instance rather than a second copy pulled in under a fresh registry.
+    ({ default: SdpMasteryManager } = await import('../../../../../src/plugins/sdp/core/managers/SdpMasteryManager.js'));
   });
 
   /**
@@ -103,6 +108,19 @@ describe('PanelRanking (direct src import)', () =>
 
       // Assert
       expect(ranking.isPanelMaxed()).toBe(true);
+    });
+
+    it('leaves the panel unmaxed while it is still short of the cap', () =>
+    {
+      // Arrange: maxing fires the one-time effects, so a rank-up that merely progresses the panel
+      // must not trip them- the cap check is what separates the two.
+      const ranking = makeRanking({ maxRank: 3 });
+
+      // Act
+      ranking.rankUp();
+
+      // Assert
+      expect(ranking.isPanelMaxed()).toBe(false);
     });
 
     it('does not advance past the cap once already there', () =>
@@ -259,5 +277,63 @@ describe('PanelRanking (direct src import)', () =>
     });
   });
   //endregion performRankupEffects
+
+  //region applySubgroupMastery
+  describe('applySubgroupMastery', () =>
+  {
+    it('reconciles the subgroup of a panel that grants a mastery skill', () =>
+    {
+      // Arrange
+      const reconcile = vi.spyOn(SdpMasteryManager, 'reconcileSubgroupMastery')
+        .mockImplementation(() => {});
+      const ranking = makeRanking({ participates: true });
+      const actor = globalThis.$gameActors.actor();
+      globalThis.$gameActors.actor = () => actor;
+
+      // Act
+      ranking.applySubgroupMastery();
+
+      // Assert
+      expect(reconcile).toHaveBeenCalledWith(actor, 'vitest_subgroup');
+
+      // restore manually so the spy cannot leak into whichever test runs next in this file.
+      reconcile.mockRestore();
+    });
+
+    it('reconciles nothing for a panel outside the mastery program', () =>
+    {
+      // Arrange: most panels max out without granting a wrapper skill, and reconciling their
+      // subgroup would strip skills that were never theirs to contest.
+      const reconcile = vi.spyOn(SdpMasteryManager, 'reconcileSubgroupMastery')
+        .mockImplementation(() => {});
+      const ranking = makeRanking({ participates: false });
+
+      // Act
+      ranking.applySubgroupMastery();
+
+      // Assert
+      expect(reconcile).not.toHaveBeenCalled();
+
+      reconcile.mockRestore();
+    });
+
+    it('reconciles nothing when the ranking points at a panel that no longer exists', () =>
+    {
+      // Arrange: a save can outlive a renamed or deleted panel, and there is no mastery row left
+      // to read off of one.
+      const reconcile = vi.spyOn(SdpMasteryManager, 'reconcileSubgroupMastery')
+        .mockImplementation(() => {});
+      const ranking = new PanelRanking('panel_deleted', 1);
+
+      // Act
+      ranking.applySubgroupMastery();
+
+      // Assert
+      expect(reconcile).not.toHaveBeenCalled();
+
+      reconcile.mockRestore();
+    });
+  });
+  //endregion applySubgroupMastery
 });
 //endregion plugins/sdp/core/models/panel-ranking.test.js

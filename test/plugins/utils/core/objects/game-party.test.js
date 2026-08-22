@@ -55,10 +55,21 @@ describe('Game_Party ext/utils augments (direct src import)', () =>
       expect(result).toEqual(true);
     });
 
-    it('is true when the name is undefined/null', () =>
+    it('is true when the name is null', () =>
     {
       // Arrange/Act
       const result = Game_Party.isInvalidInventoryDatum({ name: null });
+
+      // Assert
+      expect(result).toEqual(true);
+    });
+
+    it('is true when the row carries no name property at all', () =>
+    {
+      // Arrange/Act- a row whose name never arrives is the separate half of the null check, and it is
+      // the dangerous half: `String(undefined)` is the perfectly ordinary word "undefined", so a row
+      // that fell through here would read as a legitimately named item rather than as junk.
+      const result = Game_Party.isInvalidInventoryDatum({ id: 7 });
 
       // Assert
       expect(result).toEqual(true);

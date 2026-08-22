@@ -192,6 +192,68 @@ describe('J-RegionEffects Game_Map passage (direct src import)', () =>
       // Assert
       expect(passable).toBe(true);
     });
+
+    it('overrules an impassable tile when the region allows passage', () =>
+    {
+      // Arrange: overruling the tileset is the entire job of an allow region, so the original has to
+      // be saying no underneath it. Against an original that already says yes, taking the allow
+      // branch and falling through to the original produce the same answer and neither is pinned.
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      globalThis.$dataMap = { note: '' };
+      map.setup(1);
+      map.regionId = function(x, y)
+      {
+        return x === 5 && y === 6 ? 10 : 0;
+      };
+      const originalIsPassable = globalThis.J.REGIONS.Aliased.Game_Map.get('isPassable');
+      globalThis.J.REGIONS.Aliased.Game_Map.set('isPassable', () => false);
+
+      // Act
+      let passable;
+      try
+      {
+        passable = map.isPassable(5, 5, 2);
+      }
+      finally
+      {
+        // a failed assertion must not leave the stand-in behind for every later test in this file.
+        globalThis.J.REGIONS.Aliased.Game_Map.set('isPassable', originalIsPassable);
+      }
+
+      // Assert
+      expect(passable).toBe(true);
+    });
+
+    it('leaves an untagged region impassable when the original says so', () =>
+    {
+      // Arrange: the other half of the same pairing - an untagged region must not inherit the allow
+      // list's yes, and only an original answering no can show the difference.
+      const map = new globalThis.Game_Map();
+      map.initialize();
+      globalThis.$dataMap = { note: '' };
+      map.setup(1);
+      map.regionId = function()
+      {
+        return 99;
+      };
+      const originalIsPassable = globalThis.J.REGIONS.Aliased.Game_Map.get('isPassable');
+      globalThis.J.REGIONS.Aliased.Game_Map.set('isPassable', () => false);
+
+      // Act
+      let passable;
+      try
+      {
+        passable = map.isPassable(1, 1, 6);
+      }
+      finally
+      {
+        globalThis.J.REGIONS.Aliased.Game_Map.set('isPassable', originalIsPassable);
+      }
+
+      // Assert
+      expect(passable).toBe(false);
+    });
   });
 
   //region the region id tables

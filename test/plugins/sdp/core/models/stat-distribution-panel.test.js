@@ -209,6 +209,23 @@ describe('StatDistributionPanel (direct src import)', () =>
       // Assert
       expect(result).toBe(0);
     });
+
+    it('accumulates only the parameters authored against the requested key', () =>
+    {
+      // Arrange: a panel commonly touches several parameters at once, so the sibling here has to
+      // survive the filter untouched rather than fold into the total beside the one asked for.
+      const panelParameters = [
+        { parameterKey: 'mdf', perRank: 3, isFlat: true },
+        { parameterKey: 'mhp', perRank: 5, isFlat: true },
+      ];
+      const panel = makePanel({ panelParameters });
+
+      // Act
+      const result = panel.calculateBonusByRank('mhp', 3);
+
+      // Assert
+      expect(result).toBe(15);
+    });
   });
   //endregion bonus calculation
 

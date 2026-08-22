@@ -674,6 +674,49 @@ describe('J-ABS-Pixelistics remaining branch coverage (direct src import)', () =
       aliasMap.Game_Player.set('updateDashing', realOriginal);
     });
 
+    it('suppresses dashing while the leader is barred from moving at all', () =>
+    {
+      // Arrange- the movement lock is the other half of the pivot-guard condition and stands on its
+      // own; guarding is off here so nothing but the lock can be suppressing the dash.
+      const original = vi.fn();
+      const realOriginal = aliasMap.Game_Player.get('updateDashing');
+      aliasMap.Game_Player.set('updateDashing', original);
+      const player = buildPlayer();
+      installJabsLeader(player, { canBattlerMove: () => false });
+
+      // Act
+      globalThis.Game_Player.prototype.updateDashing.call(player);
+
+      // Assert
+      expect(player._dashing).toBe(false);
+      expect(original).not.toHaveBeenCalled();
+
+      aliasMap.Game_Player.set('updateDashing', realOriginal);
+    });
+
+    it('performs original dash logic when the pivot-guarded leader is some other character', () =>
+    {
+      // Arrange- a thoroughly pivot-guarded leader that happens to be driving somebody else. the
+      // guard belongs to whoever the engine leader actually is, so with both halves of the guard
+      // condition on, character identity is the only thing that can stand it down here.
+      const original = vi.fn();
+      const realOriginal = aliasMap.Game_Player.get('updateDashing');
+      aliasMap.Game_Player.set('updateDashing', original);
+      const player = buildPlayer();
+      installJabsLeader({ someOtherCharacter: true }, {
+        canBattlerMove: () => false,
+        guarding: () => true,
+      });
+
+      // Act
+      globalThis.Game_Player.prototype.updateDashing.call(player);
+
+      // Assert
+      expect(original).toHaveBeenCalled();
+
+      aliasMap.Game_Player.set('updateDashing', realOriginal);
+    });
+
     it('performs original dash logic when the leader is free', () =>
     {
       // Arrange

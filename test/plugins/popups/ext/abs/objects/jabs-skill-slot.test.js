@@ -48,9 +48,13 @@ describe('JABS_SkillSlot ext/abs augments (direct src import)', () =>
 
     it('does not notify a combo clear when the cooldown does not need one', () =>
     {
-      // Arrange
+      // Arrange- a battler that genuinely owns this slot is standing by, so the empty battler roster
+      // and the owner check are both taken off the table; only needsComboClear can refuse here.
       const slot = new JABS_SkillSlot('main');
       slot.getCooldown = vi.fn().mockReturnValue({ needsComboClear: () => false });
+      const skillSlotManager = { getSkillSlotByKey: vi.fn().mockReturnValue(slot) };
+      const candidate = { getBattler: () => ({ getSkillSlotManager: () => skillSlotManager }) };
+      globalThis.JABS_AiManager.getAllBattlers.mockReturnValue([ candidate ]);
 
       // Act
       slot.handleComboReadiness();

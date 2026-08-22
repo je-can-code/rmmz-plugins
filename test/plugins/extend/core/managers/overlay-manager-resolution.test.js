@@ -366,6 +366,24 @@ describe('OverlayManager extension resolution (direct src import)', () =>
         .toThrow(/Circular skill extension detected on skill 1/);
     });
 
+    it('still detects a cycle that only closes after an earlier sibling overlay finished', () =>
+    {
+      // Arrange- skill 1 extends skill 3, and both skill 2 and skill 3 extend skill 1, so resolving
+      // skill 1 gathers [2, 3] and resolves them in that order. Skill 2 completes cleanly first,
+      // which is the point: the in-flight marker for skill 1 has to survive a sibling's cleanup, or
+      // skill 3's walk back into skill 1 starts from an empty guard and the cycle goes unnoticed
+      // until it closes somewhere further down and gets blamed on the wrong skill.
+      globalThis.$dataSkills[1] = buildRow(1, { isExtension: true, getExtensions: [ 3 ] });
+      globalThis.$dataSkills[2] = buildRow(2, { isExtension: true, getExtensions: [ 1 ] });
+      globalThis.$dataSkills[3] = buildRow(3, { isExtension: true, getExtensions: [ 1 ] });
+      const caster = buildCaster([ 1, 2, 3 ]);
+
+      // Act & Assert- the id named in the error is the whole assertion; a guard that got wiped by
+      // the sibling still throws, just about skill 3 instead of the skill actually being resolved.
+      expect(() => OverlayManager.getExtendedSkill(caster, 1))
+        .toThrow(/Circular skill extension detected on skill 1/);
+    });
+
     it('leaves the guard clean enough for a later call to succeed after a cycle throws', () =>
     {
       // Arrange- the in-flight marker is cleared in a finally block precisely so one piece of bad
@@ -620,6 +638,22 @@ describe('OverlayManager extension resolution (direct src import)', () =>
       const battler = buildBattler([ 1, 2 ]);
 
       // Act & Assert
+      expect(() => OverlayManager.getExtendedState(battler, 1))
+        .toThrow(/Circular state extension detected on state 1/);
+    });
+
+    it('still detects a state cycle that only closes after an earlier sibling overlay finished', () =>
+    {
+      // Arrange- mirrors the skill-side sibling case. State 1 extends state 3, while states 2 and 3
+      // both extend state 1, so state 2 resolves to completion before state 3 walks back into state
+      // 1. The in-flight marker for state 1 must outlive state 2's cleanup for the cycle to be
+      // blamed on the state actually being resolved.
+      globalThis.$dataStates[1] = buildRow(1, { isExtension: true, getExtensions: [ 3 ] });
+      globalThis.$dataStates[2] = buildRow(2, { isExtension: true, getExtensions: [ 1 ] });
+      globalThis.$dataStates[3] = buildRow(3, { isExtension: true, getExtensions: [ 1 ] });
+      const battler = buildBattler([ 1, 2, 3 ]);
+
+      // Act & Assert- the named id is the assertion; a wiped guard still throws, about state 3.
       expect(() => OverlayManager.getExtendedState(battler, 1))
         .toThrow(/Circular state extension detected on state 1/);
     });

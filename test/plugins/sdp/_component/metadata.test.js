@@ -108,6 +108,13 @@ describe('J-SDP metadata (direct src import)', () =>
       expect(SdpMetadata.parseSubgroups([])).toEqual([]);
     });
 
+    it('returns nothing when the config omits the subgroups key entirely', () =>
+    {
+      // Arrange & Act & Assert- a project config object written before subgroups existed has no
+      // such property at all, which arrives here as undefined rather than an empty list.
+      expect(SdpMetadata.parseSubgroups(undefined)).toEqual([]);
+    });
+
     it('keeps a subgroup whose name is not an editor-only separator', () =>
     {
       // Arrange & Act
@@ -183,6 +190,17 @@ describe('J-SDP metadata (direct src import)', () =>
 
       // Assert
       expect(parsed).toEqual([]);
+    });
+
+    it('drops a blank entry from a family subgroup key list', () =>
+    {
+      // Arrange & Act- the editor leaves an empty row behind when a subgroup slot is cleared, and
+      // keeping it would fail family validation against a subgroup key that names nothing.
+      const [ family ] = SdpMetadata.parseFamilies(
+        [ { name: 'Warrior', key: 'warrior', subgroupKeys: [ 'offense', '' ] } ]);
+
+      // Assert
+      expect(family.subgroupKeys).toEqual([ 'offense' ]);
     });
 
     it('treats a missing subgroupKeys list as an empty one', () =>
@@ -330,8 +348,11 @@ describe('J-SDP metadata (direct src import)', () =>
       // Act
       const metadata = await buildWithParams({}, 'J-SDP-OldBase');
 
-      // Assert- the panels still classified; only the reporting went quiet.
+      // Assert- the panels still classified; only the reporting went quiet, falling back to the
+      // loader's own minimal line rather than the counted summary the previous case produces.
       expect(metadata.panelsMap.size).toBeGreaterThan(0);
+      const [ [ logged ] ] = logSpy.mock.calls;
+      expect(logged).toBe('loaded external JSON from file data/config.sdp.json.');
 
       globalThis.J.BASE.Metadata.Version = originalVersion;
       globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = false;

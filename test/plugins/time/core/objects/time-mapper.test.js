@@ -5,6 +5,7 @@ import TimeMapper from '../../../../../src/plugins/time/core/objects/TimeMapper.
 
 const MinuteRangeChoice = /<minuteRangeChoice:[ ]?(\d+)-(\d+)>/i;
 const DayRangeChoice = /<dayRangeChoice:[ ]?(\d+)-(\d+)>/i;
+const MonthRangeChoice = /<monthRangeChoice:[ ]?(\d+)-(\d+)>/i;
 
 /**
  * The straightforward parsing of every tag shape is covered by the component test that walks them
@@ -126,6 +127,36 @@ describe('TimeMapper', () =>
       // Assert
       // december plus one would be month 13, which is january of the year after.
       expect(conditional.endRange).toEqual([ 59, 59, 23, 5, 1, 2022 ]);
+    });
+  });
+
+  describe('monthRangeToConditional', () =>
+  {
+    it('ends the range in the same year when it does not wrap', () =>
+    {
+      // Arrange
+      clockAt(9, 5, 2021);
+
+      // Act
+      const conditional = TimeMapper.monthRangeToConditional('<monthRangeChoice:3-9>', MonthRangeChoice);
+
+      // Assert
+      expect(conditional.startRange).toEqual([ 0, 0, 0, 1, 3, 2021 ]);
+      expect(conditional.endRange).toEqual([ 59, 59, 23, 30, 9, 2021 ]);
+    });
+
+    it('ends the range in the following year when it wraps past december', () =>
+    {
+      // Arrange
+      clockAt(9, 5, 2021);
+
+      // Act
+      const conditional = TimeMapper.monthRangeToConditional('<monthRangeChoice:9-3>', MonthRangeChoice);
+
+      // Assert
+      // september round to march ends on a lower month than it starts, which is what marks it as
+      // crossing new year rather than as an empty window.
+      expect(conditional.endRange).toEqual([ 59, 59, 23, 30, 3, 2022 ]);
     });
   });
 });

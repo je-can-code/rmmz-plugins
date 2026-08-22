@@ -172,17 +172,42 @@ describe('JABS_StandardController ext/map augments (direct src import)', () =>
   {
     it('does nothing when the current map blocks the minimap', () =>
     {
-      // Arrange
+      // Arrange- the press edge is deliberately armed: pressed now, unpressed last frame is exactly
+      // the state that starts focus mode. Left unarmed, nothing would have started focus anyway and
+      // this test would pass whether the block was honoured or not.
       const controller = new JABS_StandardController();
       controller.initMembers();
+      controller.setMinimapFocusPressedPrev(false);
+      globalThis.Input.isActionPressed.mockReturnValue(true);
       globalThis.$gameMap.isMinimapBlocked.mockReturnValue(true);
 
       // Act
       controller.updateMinimapFocusPeekAction();
 
-      // Assert
+      // Assert- the untouched prior-frame state is the second half of the claim: a blocked map
+      // returns before the press even gets recorded, so a later unblocked frame still sees an edge.
       expect(globalThis.JABS_InputAdapter.performMinimapFocusStart).not.toHaveBeenCalled();
       expect(globalThis.JABS_InputAdapter.performMinimapFocusEnd).not.toHaveBeenCalled();
+      expect(controller.getMinimapFocusPressedPrev()).toEqual(false);
+    });
+
+    it('does neither start nor end on an idle frame with the input untouched', () =>
+    {
+      // Arrange- by far the most common frame: the expand input is not pressed now and was not
+      // pressed last frame either. Without the prior-frame half of the release test, every one of
+      // those frames would read as a release and re-run the focus-end.
+      const controller = new JABS_StandardController();
+      controller.initMembers();
+      controller.setMinimapFocusPressedPrev(false);
+      globalThis.Input.isActionPressed.mockReturnValue(false);
+
+      // Act
+      controller.updateMinimapFocusPeekAction();
+
+      // Assert- the input read anchors that the method ran past the blocked-map guard at all.
+      expect(globalThis.Input.isActionPressed).toHaveBeenCalledWith('J.MAP', 'expand-minimap');
+      expect(globalThis.JABS_InputAdapter.performMinimapFocusEnd).not.toHaveBeenCalled();
+      expect(globalThis.JABS_InputAdapter.performMinimapFocusStart).not.toHaveBeenCalled();
     });
 
     it('starts focus mode on the newly-pressed edge', () =>

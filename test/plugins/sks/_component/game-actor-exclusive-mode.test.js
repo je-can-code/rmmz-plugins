@@ -258,6 +258,41 @@ describe('J-SkillSlots Game_Actor exclusive mode (direct src import)', () =>
       // Assert
       expect(result).toBe(true);
     });
+
+    it('relocates an already-equipped skill into an empty slot with the cap fully consumed', () =>
+    {
+      // Arrange- one slot total, already holding the skill being moved. The count check cannot
+      // tell that a relocation frees the slot it is leaving: asked about an empty target it sees
+      // the cap as full and refuses, which the assertion below pins. Only the already-equipped
+      // short circuit ahead of it can let this through.
+      const actor = makeActorWithSkills([ 1 ]);
+      withCapacity(actor, 1, 10);
+      actor.equipSkillToSlot(0, 1);
+
+      // Act
+      const result = actor.canEquipSkillToSlot(1, 1);
+
+      // Assert
+      expect(actor.canAffordSkillSlotCount(0)).toBe(false);
+      expect(result).toBe(true);
+    });
+
+    it('swaps a new skill in for an occupant with the cap fully consumed', () =>
+    {
+      // Arrange- one slot total and it is occupied by a different skill than the incoming one, so
+      // the already-equipped short circuit does not apply. Replacing an occupant introduces no new
+      // slot usage, which is the only reason this clears a cap that has nothing free left.
+      const actor = makeActorWithSkills([ 1, 3 ]);
+      withCapacity(actor, 1, 10);
+      actor.equipSkillToSlot(0, 1);
+
+      // Act
+      const result = actor.canEquipSkillToSlot(0, 3);
+
+      // Assert
+      expect(actor.hasSufficientSlotCount()).toBe(false);
+      expect(result).toBe(true);
+    });
   });
 
   describe('hasSufficientSlotCount', () =>

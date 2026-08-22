@@ -65,6 +65,33 @@ describe('J-MAP metadata (direct src import)', () =>
       expect(metadata.respectHudHide).toBe(true);
       expect(metadata.overlapOpacity).toBe(0.4);
     });
+
+    it('honours a project that switched both toggles off', async () =>
+    {
+      // Arrange- both toggles default on, so `false` is the only answer a project can give that the
+      // defaults could never have produced. The opacity is set to something distinctive alongside
+      // them purely as proof this instance read the parameter object at all, since `false` is also
+      // what an unread parameter would leave behind.
+      const { default: Metadata } = await import('../../../../src/plugins/map/core/_metadata/_pluginMetadata.js');
+      const previous = globalThis.PluginManager;
+      globalThis.PluginManager = {
+        parameters: () => ({
+          startVisible: 'false',
+          respectHudHide: 'false',
+          overlapOpacityPercent: '55',
+        }),
+        registerCommand() {},
+      };
+
+      // Act
+      const metadata = new Metadata('J-MAP-BothTogglesOff', '1.0.0');
+      globalThis.PluginManager = previous;
+
+      // Assert
+      expect(metadata.startVisible).toBe(false);
+      expect(metadata.respectHudHide).toBe(false);
+      expect(metadata.overlapOpacity).toBe(0.55);
+    });
   });
 });
 //endregion plugins/map/_component/metadata.test.js

@@ -399,6 +399,29 @@ describe('J-Pixelistics Game_CharacterBase diagonals and lanes (direct src impor
       expect(moved).toBe(true);
     });
 
+    it.each([
+      [ 'leftward', 180, 'LEFT' ],
+      [ 'upward', 270, 'UP' ],
+    ])('probes the %s axis it is actually travelling along, not its reverse', (_label, angle, blockedKey) =>
+    {
+      // Arrange: a one-way tile that forbids this exit while leaving the reverse direction open.
+      // A solid wall could not tell these apart - probing the reverse direction would report the
+      // step passable, take it, and then have the post-move overlap guard quietly undo it, landing
+      // on the same refusal by a different road. Nothing is solid here, so a step taken stands.
+      const blocked = globalThis.J.PIXEL.Directions[blockedKey];
+      useMap(buildDirectionalPixelGameMap(10, 10, new Set([ `4,4,${blocked}` ])));
+      const character = makeCharacter(4, 4);
+
+      // Act: half a tile, which is the shortest push that certainly crosses a subcell seam and so
+      // certainly consults the directional rule- a default frame's travel can land inside the
+      // subcell it started in and be approved without ever asking.
+      const moved = character.vectorMoveByAngle(angle, 0.5);
+
+      // Assert
+      expect(moved).toBe(false);
+      expect([ character.x, character.y ]).toEqual([ 4, 4 ]);
+    });
+
     it('reports failure when both axes of a diagonal push are blocked', () =>
     {
       // Arrange: an inner corner blocks both components of a 45 degree push.

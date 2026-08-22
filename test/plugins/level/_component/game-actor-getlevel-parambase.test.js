@@ -92,6 +92,30 @@ describe('J-LevelMaster Game_Actor getLevel and paramBase (direct src import)', 
     expect(result).toBe(19);
   });
 
+  it('getLevel computes once and serves the cache on every later read', () =>
+  {
+    // Arrange- the HUD reads `level` every frame, and computing it walks every note-bearing source
+    // this actor owns. The cache is what keeps that read O(1); without it the walk is per-frame.
+    const actor = new globalThis.Game_Actor();
+    actor.__actorDb = { id: 1, name: '', note: '<level:+3>', classId: 1, maxLevel: 99, traits: [] };
+    actor.initMembers();
+    actor._level = 10;
+    actor.refreshLevel();
+    const compute = vi.spyOn(actor, 'computeLevel');
+
+    // Act
+    const first = actor.getLevel();
+    const second = actor.getLevel();
+
+    // Assert- the priming call in refreshLevel already filled the cache, so a cache-respecting
+    // getLevel never reaches computeLevel again.
+    expect(first).toBe(13);
+    expect(second).toBe(13);
+    expect(compute).not.toHaveBeenCalled();
+
+    compute.mockRestore();
+  });
+
   it('paramBase indexes class curves by getLevel, not raw _level alone', () =>
   {
     // Arrange

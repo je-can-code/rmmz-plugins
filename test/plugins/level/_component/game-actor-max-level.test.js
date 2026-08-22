@@ -110,9 +110,12 @@ describe('J-LevelMaster Game_Actor max level (direct src import)', () =>
 
     it('falls through to the engine\'s own answer for a class with no curve tagged', () =>
     {
-      // Arrange
+      // Arrange- the engine's untagged answer is zero, which is indistinguishable from a curve
+      // evaluated against nothing. A `<maxTp:N>` tag gives the fall-through a value of its own that
+      // only the original calculation can produce.
       const actor = new globalThis.Game_Actor();
       actor.__actorDb = { id: 1, name: '', note: '', classId: 1, maxLevel: 99, traits: [] };
+      actor.__testNoteSources = [ { note: '<maxTp:40>' } ];
       actor.initMembers();
       actor.onBattlerDataChange();
       actor.currentClass = () => ({ note: '' });
@@ -120,10 +123,9 @@ describe('J-LevelMaster Game_Actor max level (direct src import)', () =>
       // Act
       const result = actor.maxTp();
 
-      // Assert- whatever the engine answers, unmodified; the point is that this file did not
-      // substitute a curve of its own for a class that never asked for one.
-      expect(result).toBe(globalThis.J.LEVEL.Aliased.Game_Actor.get('maxTp')
-        .call(actor));
+      // Assert- the point is that this file did not substitute a curve of its own for a class that
+      // never asked for one.
+      expect(result).toBe(40);
     });
   });
 });

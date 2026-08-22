@@ -124,8 +124,24 @@ describe('J-Popups Game_Character integration (direct src import)', () =>
       // Act
       ch.requestTextPop();
 
+      // Assert- read the raw flag rather than hasTextPops(), which carries its own disable guard
+      // and would report false even if requestTextPop had set the flag anyway.
+      expect(ch.isTextPopRequest()).toBe(false);
+    });
+
+    it('hasTextPops stays false even for a character already flagged for pops', () =>
+    {
+      // Arrange- the flag is set through the setter directly, so requestTextPop's own disable guard
+      // cannot be what suppresses the answer here.
+      const ch = new globalThis.Game_Character();
+      ch.initMembers();
+      ch.setTextPopRequest(true);
+
+      // Act
+      const result = ch.hasTextPops();
+
       // Assert
-      expect(ch.hasTextPops()).toBe(false);
+      expect(result).toBe(false);
     });
 
     it('addTextPop does not queue the popup', () =>

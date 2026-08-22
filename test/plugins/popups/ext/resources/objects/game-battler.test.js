@@ -237,8 +237,14 @@ describe('Game_Battler ext/resources augments (direct src import)', () =>
 
       it('does not pop when JABS is not installed', () =>
       {
-        // Arrange
+        // Arrange: the untracked-battler guard sitting right below this one would suppress the pop
+        // all by itself, so the battler is deliberately tracked here - a missing J.ABS namespace has
+        // to be the only reason nothing pops, and the lookup itself must never even be attempted.
         globalThis.JABS_PopupMergeController = { routeStrikePop: vi.fn() };
+        globalThis.JABS_AiManager.getBattlerByUuid.mockReturnValue({
+          getCharacter: () => ({}),
+          getUuid: () => 'battler-uuid',
+        });
         globalThis.J.ABS = false;
         const battler = new Game_Battler();
 
@@ -246,6 +252,7 @@ describe('Game_Battler ext/resources augments (direct src import)', () =>
         battler[method](5);
 
         // Assert
+        expect(globalThis.JABS_AiManager.getBattlerByUuid).not.toHaveBeenCalled();
         expect(globalThis.JABS_PopupMergeController.routeStrikePop).not.toHaveBeenCalled();
       });
 

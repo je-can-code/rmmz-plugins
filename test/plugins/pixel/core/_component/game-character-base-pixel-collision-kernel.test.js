@@ -283,6 +283,26 @@ describe('J-Pixelistics Game_CharacterBase collision kernel (direct src import)'
       const ch = new globalThis.Game_CharacterBase();
       expect(ch.isOverlappingSolidTiles(-1, -1, 0.3)).toBe(true);
     });
+
+    it('treats out-of-bounds as solid on its own, not by way of the passability lookup', () =>
+    {
+      // Arrange: a map answering `isPassable` off its own edges is the ordinary case rather than a
+      // contrived one - the engine indexes a tile array without bounds-checking first, so what comes
+      // back from outside the map is whatever the arithmetic happens to land on. With a map that
+      // answers "open" out there, the bounds check is the only thing left that can refuse.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 0, 0);
+      map.isPassable = () => true;
+
+      // Act
+      const outside = ch.isOverlappingSolidTiles(-1, -1, 0.3);
+      const inside = ch.isOverlappingSolidTiles(2.5, 2.5, 0.3);
+
+      // Assert: the same permissive map reports the in-bounds probe as open, so the refusal above
+      // came from the bounds check rather than from everything being solid.
+      expect(outside).toBe(true);
+      expect(inside).toBe(false);
+    });
   });
 
   describe('canPassDiagonally (Cyclone-like override)', () =>
@@ -316,6 +336,23 @@ describe('J-Pixelistics Game_CharacterBase collision kernel (direct src import)'
       expect(result).toBe(false);
       expect(ch._x).toBe(0);
       expect(ch._y).toBe(0);
+    });
+
+    it('approves a diagonal while through that the geometry itself refuses', () =>
+    {
+      // Arrange: the same off-map destination the case above refuses. The through check runs before
+      // every geometric one precisely so it can overrule them; a through character walking off the
+      // corner of the map is the shape that separates "approved because through" from "approved
+      // because nothing objected".
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 0, 0);
+      ch.setThrough(true);
+
+      // Act
+      const result = ch.canPassDiagonally(0, 0, globalThis.J.PIXEL.Directions.LEFT, globalThis.J.PIXEL.Directions.UP);
+
+      // Assert
+      expect(result).toBe(true);
     });
 
     it('rejects when a leg is blocked by an adjacent wall', () =>
@@ -554,6 +591,90 @@ describe('J-Pixelistics Game_CharacterBase collision kernel (direct src import)'
 
         // Act & Assert
         expect(ch.canPassDiagonally(2, 2, globalThis.J.PIXEL.Directions.LEFT, globalThis.J.PIXEL.Directions.UP)).toBe(false);
+      });
+    });
+
+    describe('the positions each validation stage is handed', () =>
+    {
+      /**
+       * Instruments a character so every passage helper approves and records the position it was
+       * asked about, and so the landing probe records where the diagonal would put the body. Which
+       * position each stage receives is the substance of this method - it revalidates each leg at
+       * the other axis's displacement - and the suites above stub those helpers by outcome alone,
+       * so the coordinates handed to them could each be mirrored onto the wrong side unnoticed.
+       * @param {Game_CharacterBase} ch The character to instrument.
+       * @returns {object} The recorded coordinate pairs, keyed by lowercase helper name.
+       */
+      function recordProbedPositions(ch)
+      {
+        const calls = {
+          left: [],
+          right: [],
+          up: [],
+          down: [],
+          landing: [],
+        };
+
+        // wire each of the four passage helpers to record and approve.
+        [ 'Left', 'Right', 'Up', 'Down' ].forEach(name =>
+        {
+          ch[`_pixelCheck${name}Passage`] = (x, y) =>
+          {
+            calls[name.toLowerCase()].push([ x, y ]);
+
+            return true;
+          };
+        });
+
+        // the landing probe is the last stage, and only runs once everything above approves.
+        ch.isCharacterCollisionAt = (nx, ny) =>
+        {
+          calls.landing.push([ nx, ny ]);
+
+          return false;
+        };
+
+        return calls;
+      }
+
+      it.each([
+        [ 'RIGHT', 'DOWN', 'right', 'down', [ 2, 2.0625 ], [ 2.0625, 2 ], 2.044194173824159 ],
+        [ 'LEFT', 'UP', 'left', 'up', [ 2, 1.9375 ], [ 1.9375, 2 ], 1.9558058261758409 ],
+      ])('displaces the %s/%s revalidations and landing onto the side being travelled toward',
+        (horzKey, vertKey, horzCall, vertCall, atNewY, atNewX, landing) =>
+        {
+          // Arrange: a character standing at exactly (2, 2), so every recorded coordinate reads as a
+          // signed offset from a whole number. One frame's straight step at move speed 4 is 0.0625
+          // of a tile and the diagonal step is that shortened by root-two.
+          const map = buildWalledPixelGameMap(5, 5);
+          const ch = makeCharacterOn(map, 2, 2);
+          const calls = recordProbedPositions(ch);
+
+          // Act
+          ch.canPassDiagonally(2, 2, globalThis.J.PIXEL.Directions[horzKey], globalThis.J.PIXEL.Directions[vertKey]);
+
+          // Assert: the second call to each helper is its revalidation, the first having tested the
+          // leg from the current center. Each of the three positions below is built by its own
+          // branch on the leg direction, and mirroring any one of them lands on the opposite side.
+          expect(calls[horzCall][1]).toEqual(atNewY);
+          expect(calls[vertCall][1]).toEqual(atNewX);
+          expect(calls.landing[0]).toEqual([ landing, landing ]);
+        });
+
+      it('refuses a destination off the map even with every passage stage approving', () =>
+      {
+        // Arrange: against real geometry an off-map destination fails the passage checks as well, so
+        // the bounds check never gets to be the reason for the refusal. Approving every stage leaves
+        // it as the only one that can answer.
+        const map = buildWalledPixelGameMap(5, 5);
+        const ch = makeCharacterOn(map, 0, 0);
+        recordProbedPositions(ch);
+
+        // Act
+        const result = ch.canPassDiagonally(0, 0, globalThis.J.PIXEL.Directions.LEFT, globalThis.J.PIXEL.Directions.UP);
+
+        // Assert
+        expect(result).toBe(false);
       });
     });
   });
@@ -1133,6 +1254,83 @@ describe('J-Pixelistics Game_CharacterBase collision kernel (direct src import)'
 
       // Act & Assert
       expect(ch._pixelCheckHorizontalAtNewYRow(0.2, 0.8, 1, hb, 4)).toBe(false);
+    });
+
+    /**
+     * A step small enough to stay inside the subcell band the body already occupies has entered no
+     * new lane, and a lane it never entered is none of this check's business. Answering "closed" to
+     * every lane leaves the seam test as the only thing that can still approve such a step, which is
+     * what makes the approval mean "nothing was crossed" rather than "what was crossed was open".
+     * @param {Game_CharacterBase} ch The character whose passability lookup gets sealed.
+     */
+    function sealEveryLane(ch)
+    {
+      // no subcell anywhere permits travel in any direction.
+      ch._pixelIsPositionPassable = () => false;
+    }
+
+    it.each([
+      [ 'rightward', 2, 2.05 ],
+      [ 'leftward', 2, 1.95 ],
+    ])('_pixelCheckVerticalAtNewXColumn approves a %s step that crosses no column seam', (_label, from, to) =>
+    {
+      // Arrange: the two travel directions pick their seam from opposite edges of the body, so each
+      // one decides for itself whether a seam was crossed.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 0, 0);
+      const hb = ch._pixelHitbox(0.3);
+      sealEveryLane(ch);
+
+      // Act & Assert
+      expect(ch._pixelCheckVerticalAtNewXColumn(from, to, 2, hb, 4)).toBe(true);
+    });
+
+    it.each([
+      [ 'downward', 2, 2.05 ],
+      [ 'upward', 2, 1.95 ],
+    ])('_pixelCheckHorizontalAtNewYRow approves a %s step that crosses no row seam', (_label, from, to) =>
+    {
+      // Arrange
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 0, 0);
+      const hb = ch._pixelHitbox(0.3);
+      sealEveryLane(ch);
+
+      // Act & Assert
+      expect(ch._pixelCheckHorizontalAtNewYRow(from, to, 2, hb, 4)).toBe(true);
+    });
+
+    it.each([
+      [ 'up', 'UP' ],
+      [ 'down', 'DOWN' ],
+    ])('_pixelCheckVerticalAtNewXColumn approves an entered column whose only open lane is %s', (_label, dirKey) =>
+    {
+      // Arrange: the rule is that *some* lane remains open to slide along, not that both do. The
+      // fully-solid case above closes both at once, so either half of the pair could be carrying
+      // the whole condition. Opening exactly one lane is what separates them, and the lookup is
+      // stubbed because a tile-level map cannot express a one-directional subcell.
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 0, 0);
+      const hb = ch._pixelHitbox(0.3);
+      ch._pixelIsPositionPassable = (_px, _py, d) => d === globalThis.J.PIXEL.Directions[dirKey];
+
+      // Act & Assert: the same coordinates the fully-solid case refuses.
+      expect(ch._pixelCheckVerticalAtNewXColumn(0.2, 0.8, 1, hb, 4)).toBe(true);
+    });
+
+    it.each([
+      [ 'left', 'LEFT' ],
+      [ 'right', 'RIGHT' ],
+    ])('_pixelCheckHorizontalAtNewYRow approves an entered row whose only open lane is %s', (_label, dirKey) =>
+    {
+      // Arrange
+      const map = buildWalledPixelGameMap(5, 5);
+      const ch = makeCharacterOn(map, 0, 0);
+      const hb = ch._pixelHitbox(0.3);
+      ch._pixelIsPositionPassable = (_px, _py, d) => d === globalThis.J.PIXEL.Directions[dirKey];
+
+      // Act & Assert
+      expect(ch._pixelCheckHorizontalAtNewYRow(0.2, 0.8, 1, hb, 4)).toBe(true);
     });
   });
 });

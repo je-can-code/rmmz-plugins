@@ -351,6 +351,26 @@ describe('J-Regions-States Game_Character', () =>
         .toBe(0);
     });
 
+    it('plays no animation for a roll that came up short', () =>
+    {
+      // Arrange: a failed roll must abandon the whole proc rather than only the application. The tag
+      // names a real animation here, so the zero-animation sentinel is not around to hide a proc that
+      // kept going - and an animation with no state behind it tells the player they were poisoned by
+      // a floor that did nothing.
+      tagRegionWithState({ animationId: 42 });
+      procCount = 0;
+      const character = buildCharacter();
+
+      // Act
+      character.applyRegionStates();
+
+      // Assert
+      expect(character.requestAnimation)
+        .not.toHaveBeenCalled();
+      expect(stateCalls.added.length)
+        .toBe(0);
+    });
+
     it('deepens an already-affected state instead of re-adding it fresh', () =>
     {
       // Arrange: two successes within one roll should stack, and adding fresh would instead restart

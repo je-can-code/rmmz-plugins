@@ -139,11 +139,12 @@ describe('J-Passive Game_Battler (direct src import)', () =>
       expect(battler.sourceHasAnyPassiveIds(source)).toBe(false);
     });
 
-    it('returns false for a plain non-equip source with no passive ids', () =>
+    it('returns false for a non-equip source, even one carrying equip-only passive ids', () =>
     {
-      // Arrange
+      // Arrange- the equipped-passive tags parse on any database row, but they can only ever
+      // apply while the row is worn, so they must not make a skill look passive-capable.
       const battler = buildBattler();
-      const source = buildSource();
+      const source = buildSource({ equippedPassiveStateIds: [ 1 ], uniqueEquippedPassiveStateIds: [ 2 ] });
 
       // Act & Assert
       expect(battler.sourceHasAnyPassiveIds(source)).toBe(false);
@@ -402,6 +403,22 @@ describe('J-Passive Game_Battler (direct src import)', () =>
       expect(result).toEqual(new Set([ 1, 2 ]));
     });
 
+    it('ignores equip-only unique ids on a source that is not an equip item', () =>
+    {
+      // Arrange- the mirror of the equip case: the same tags on an unwearable row contribute
+      // nothing, since there is no equip slot for them to be active in.
+      const battler = buildBattler();
+      const skill = buildSource({ uniquePassiveStateIds: [ 1 ], uniqueEquippedPassiveStateIds: [ 2 ] });
+      battler.__baseDatabaseData = buildSource();
+      battler.__baseStates = [ skill ];
+
+      // Act
+      const result = battler.getAllUniquePassiveStateIds();
+
+      // Assert
+      expect(result).toEqual(new Set([ 1 ]));
+    });
+
     it('gates candidates through canIncludePassiveStateFromSource', () =>
     {
       // Arrange
@@ -442,6 +459,22 @@ describe('J-Passive Game_Battler (direct src import)', () =>
       const equip = buildSource({ isEquipItem: () => true, equippedPassiveStateIds: [ 5 ] });
       battler.__baseDatabaseData = buildSource();
       battler.__baseStates = [ equip ];
+
+      // Act
+      const result = battler.getAllStackablePassiveStateIds();
+
+      // Assert
+      expect(result).toEqual(new Map([ [ 5, 1 ] ]));
+    });
+
+    it('ignores equip-only passive ids on a source that is not an equip item', () =>
+    {
+      // Arrange- the mirror of the equip case: the same tags on an unwearable row contribute
+      // nothing, since there is no equip slot for them to be active in.
+      const battler = buildBattler();
+      const skill = buildSource({ passiveStateIds: [ 5 ], equippedPassiveStateIds: [ 6 ] });
+      battler.__baseDatabaseData = buildSource();
+      battler.__baseStates = [ skill ];
 
       // Act
       const result = battler.getAllStackablePassiveStateIds();

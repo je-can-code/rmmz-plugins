@@ -204,9 +204,44 @@ describe('TrackedOmniObjective (omni ext/quest, direct src import)', () =>
       expect(tracked.isFinalized()).toBe(expected);
     });
 
+    it('isHidden is false for an objective the player is allowed to see', () =>
+    {
+      tracked.hidden = false;
+
+      expect(tracked.isHidden()).toBe(false);
+    });
+
+    it('isHidden is true for an objective the player has not uncovered', () =>
+    {
+      tracked.hidden = true;
+
+      expect(tracked.isHidden()).toBe(true);
+    });
+
     it('isValid rejects already-finalized objectives', () =>
     {
+      // the objective is left visible on purpose- a hidden, non-active objective is refused by a
+      // second guard further down, which would answer false here no matter what the state said.
+      tracked.hidden = false;
       tracked.state = OmniObjective.States.Completed;
+
+      expect(tracked.isValid(OmniObjective.Types.Indiscriminate)).toBe(false);
+    });
+
+    it('isValid rejects a failed objective', () =>
+    {
+      // a failed objective is finalized just as firmly as a completed one, and the visibility guard
+      // is again taken out of the picture.
+      tracked.hidden = false;
+      tracked.state = OmniObjective.States.Failed;
+
+      expect(tracked.isValid(OmniObjective.Types.Indiscriminate)).toBe(false);
+    });
+
+    it('isValid rejects a missed objective', () =>
+    {
+      tracked.hidden = false;
+      tracked.state = OmniObjective.States.Missed;
 
       expect(tracked.isValid(OmniObjective.Types.Indiscriminate)).toBe(false);
     });
@@ -349,6 +384,44 @@ describe('TrackedOmniObjective (omni ext/quest, direct src import)', () =>
       expect(tracked.isFetchTarget({ id: 1, isItem: () => true })).toBe(false);
     });
 
+    it('returns false for a non-fetch objective whose item fields happen to line up with the entry', () =>
+    {
+      // Arrange- the fetch fields are dialed in by hand so every downstream check would pass; the
+      // objective's own type is then the only thing left that can refuse the entry.
+      const tracked = buildTracked(OmniObjective.Types.Slay, new OmniFulfillmentData());
+      tracked.setTargetItemType(0);
+      tracked.setTargetItemId(9);
+      const itemEntry = { id: 9, isItem: () => true, isWeapon: () => false, isArmor: () => false };
+
+      // Act & Assert
+      expect(tracked.isFetchTarget(itemEntry)).toBe(false);
+    });
+
+    it('returns true for a weapon the objective is asking for', () =>
+    {
+      // Arrange- each item-type arm reads its own table, so the weapon arm must not be gated on the
+      // entry also being an ordinary item.
+      const fetch = Object.assign(new FetchData(), { type: 1, id: 9, amount: 1 });
+      const fulfillment = new OmniFulfillmentData(undefined, undefined, fetch);
+      const tracked = buildTracked(OmniObjective.Types.Fetch, fulfillment);
+      const weaponEntry = { id: 9, isItem: () => false, isWeapon: () => true, isArmor: () => false };
+
+      // Act & Assert
+      expect(tracked.isFetchTarget(weaponEntry)).toBe(true);
+    });
+
+    it('returns false for the right kind of entry carrying the wrong id', () =>
+    {
+      // Arrange- a potion is not the potion this quest wants; the type match alone cannot decide it.
+      const fetch = Object.assign(new FetchData(), { type: 0, id: 9, amount: 1 });
+      const fulfillment = new OmniFulfillmentData(undefined, undefined, fetch);
+      const tracked = buildTracked(OmniObjective.Types.Fetch, fulfillment);
+      const otherItemEntry = { id: 4, isItem: () => true, isWeapon: () => false, isArmor: () => false };
+
+      // Act & Assert
+      expect(tracked.isFetchTarget(otherItemEntry)).toBe(false);
+    });
+
     it('returns false when the entry type does not match the target item type', () =>
     {
       const fetch = Object.assign(new FetchData(), { type: 0, id: 1, amount: 1 });
@@ -369,6 +442,73 @@ describe('TrackedOmniObjective (omni ext/quest, direct src import)', () =>
       const itemEntry = { id: 1, isItem: () => true, isWeapon: () => false, isArmor: () => false };
 
       expect(tracked.isFetchTarget(itemEntry)).toBe(true);
+    });
+  });
+
+  describe('isPlayerWithinDestinationRange', () =>
+  {
+    /**
+     * Stands up a destination objective covering the rectangle from (2,2) to (5,5) on map 1, and
+     * drops the player at the given tile.
+     * @param {number} x The player's x tile.
+     * @param {number} y The player's y tile.
+     * @returns {TrackedOmniObjective} The objective under test.
+     */
+    function trackedWithPlayerAt(x, y)
+    {
+      const destination = Object.assign(new DestinationData(), { mapId: 1, x1: 2, y1: 2, x2: 5, y2: 5 });
+      const fulfillment = new OmniFulfillmentData(undefined, destination);
+      const tracked = buildTracked(OmniObjective.Types.Destination, fulfillment);
+
+      globalThis.$gameMap = { mapId: () => 1 };
+      globalThis.$gamePlayer = { x, y };
+
+      return tracked;
+    }
+
+    it('accepts a player standing inside the rectangle', () =>
+    {
+      // Arrange
+      const tracked = trackedWithPlayerAt(3, 3);
+
+      // Act & Assert
+      expect(tracked.isPlayerWithinDestinationRange()).toBe(true);
+    });
+
+    it('rejects a player standing west of the rectangle', () =>
+    {
+      // Arrange- every other edge is satisfied, so the western edge is the only one that can refuse.
+      const tracked = trackedWithPlayerAt(1, 3);
+
+      // Act & Assert
+      expect(tracked.isPlayerWithinDestinationRange()).toBe(false);
+    });
+
+    it('rejects a player standing east of the rectangle', () =>
+    {
+      // Arrange
+      const tracked = trackedWithPlayerAt(6, 3);
+
+      // Act & Assert
+      expect(tracked.isPlayerWithinDestinationRange()).toBe(false);
+    });
+
+    it('rejects a player standing north of the rectangle', () =>
+    {
+      // Arrange
+      const tracked = trackedWithPlayerAt(3, 1);
+
+      // Act & Assert
+      expect(tracked.isPlayerWithinDestinationRange()).toBe(false);
+    });
+
+    it('rejects a player standing south of the rectangle', () =>
+    {
+      // Arrange
+      const tracked = trackedWithPlayerAt(3, 6);
+
+      // Act & Assert
+      expect(tracked.isPlayerWithinDestinationRange()).toBe(false);
     });
   });
 
@@ -420,6 +560,27 @@ describe('TrackedOmniObjective (omni ext/quest, direct src import)', () =>
         'Objective completed.',
       ]);
       expect(globalThis.$diaLogManager.addLog).toHaveBeenCalledWith(builtLog);
+    });
+
+    it('announces nothing at all when J-Log is not installed', () =>
+    {
+      // Arrange- the objective is finalized and the log manager is standing by, so the handler's own
+      // not-finalized guard cannot be what keeps the journal quiet; only J-Log's absence can.
+      const tracked = buildTracked(OmniObjective.Types.Indiscriminate, new OmniFulfillmentData());
+      tracked.state = OmniObjective.States.Completed;
+
+      const builder = { setLines: vi.fn().mockReturnThis(), build: vi.fn(() => ({})) };
+      globalThis.DiaLogBuilder = function()
+      {
+        return builder;
+      };
+      globalThis.$diaLogManager = { addLog: vi.fn() };
+
+      // Act
+      tracked.onObjectiveUpdate();
+
+      // Assert
+      expect(globalThis.$diaLogManager.addLog).not.toHaveBeenCalled();
     });
 
     it('does nothing when the objective has not been finalized', () =>

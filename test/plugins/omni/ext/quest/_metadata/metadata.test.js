@@ -246,11 +246,16 @@ describe('J-Omni-Questopedia metadata (direct src import)', () =>
 
     it('still classifies quests when J-Base is too old to report the load summary', async () =>
     {
-      // Arrange: drop J-Base beneath the floor the summary logging requires.
+      // Arrange: drop J-Base beneath the floor the summary logging requires. Load reporting is left
+      // switched on, so the version floor is the only thing that can withhold the summary- with the
+      // flag off, an unbuilt summary and a suppressed one would look exactly alike.
       const { default: QuestPluginMetadata } =
         await import('../../../../../../src/plugins/omni/ext/quest/_metadata/_pluginMetadata.js');
       const originalVersion = globalThis.J.BASE.Metadata.Version;
       globalThis.J.BASE.Metadata.Version = '2.0.0';
+      globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = true;
+      const logSpy = vi.spyOn(console, 'log')
+        .mockImplementation(() => {});
 
       // Act
       const metadata = new QuestPluginMetadata(secondaryName, '1.1.0');
@@ -258,6 +263,13 @@ describe('J-Omni-Questopedia metadata (direct src import)', () =>
       // Assert: reporting is decorative, so the quest data has to survive losing it.
       expect(metadata.quests.map(quest => quest.key)).toEqual([ 'gather-herbs' ]);
 
+      // and the load line falls back to the bare one-liner rather than the counted summary.
+      const [ [ logged ] ] = logSpy.mock.calls;
+      expect(logged).toContain('loaded external JSON from file');
+      expect(logged).not.toContain('quests');
+
+      logSpy.mockRestore();
+      globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = false;
       globalThis.J.BASE.Metadata.Version = originalVersion;
     });
 

@@ -161,7 +161,11 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
   {
     it('active quests can always be tracked', () =>
     {
-      const quest = new TrackedOmniQuest('quest-key', 'main', [ fakeObjective(0, OmniObjective.States.Active) ]);
+      // the lone objective is hidden on purpose- the visible-objective fallback would otherwise
+      // answer true on its own, and the quest being active would prove nothing.
+      const quest = new TrackedOmniQuest('quest-key', 'main', [
+        fakeObjective(0, OmniObjective.States.Active, true),
+      ]);
       quest.state = OmniQuest.States.Active;
 
       expect(quest.canBeTracked()).toBe(true);
@@ -277,6 +281,19 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
       expect(quest.canExecuteObjectiveById(99)).toBe(false);
     });
 
+    it('refuses an objective that exists but is not currently active', () =>
+    {
+      // Arrange- the objective is found, so the missing-objective guard is not in play; only the
+      // state check can refuse it, and a completed step is not one the player can act on again.
+      const quest = new TrackedOmniQuest('quest-key', 'main', [
+        fakeObjective(0, OmniObjective.States.Completed),
+        fakeObjective(1, OmniObjective.States.Active),
+      ]);
+
+      // Act & Assert
+      expect(quest.canExecuteObjectiveById(0)).toBe(false);
+    });
+
     it('isObjectiveCompleted checks the explicit objective id when provided', () =>
     {
       const quest = new TrackedOmniQuest('quest-key', 'main', [
@@ -360,6 +377,28 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
 
       expect(only.state).toBe(OmniObjective.States.Completed);
       expect(quest.state).toBe(OmniQuest.States.Completed);
+      // closing the quest is what sweeps other quests waiting on this one; refreshing the state off
+      // the last objective reaches Completed on its own, so only this proves the closure ran.
+      expect(QuestManager.getValidQuestCompletionObjectives).toHaveBeenCalled();
+    });
+
+    it('keeps taking objectives until it lands on one the player still has to do', () =>
+    {
+      // Arrange- the middle step is already satisfied the moment it activates, so the cursor has to
+      // walk past it rather than stopping there or falling off the end of the quest.
+      const first = fakeObjective(0, OmniObjective.States.Active);
+      const alreadyFulfilled = fakeObjective(1, OmniObjective.States.Inactive);
+      alreadyFulfilled.isFulfilled = () => true;
+      const remaining = fakeObjective(2, OmniObjective.States.Inactive);
+      const quest = new TrackedOmniQuest('quest-key', 'main', [ first, alreadyFulfilled, remaining ]);
+
+      // Act
+      quest.progressObjectives();
+
+      // Assert
+      expect(alreadyFulfilled.state).toBe(OmniObjective.States.Completed);
+      expect(remaining.state).toBe(OmniObjective.States.Active);
+      expect(quest.state).toBe(OmniQuest.States.Active);
     });
 
     it('warns and does not touch objectives when multiple are active at once', () =>
@@ -569,7 +608,10 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
 
     it('is Inactive when every objective is still inactive', () =>
     {
+      // the quest starts out already reading Inactive, so it is nudged to Active first; otherwise
+      // the assertion would hold for a refresh that did nothing at all.
       const quest = new TrackedOmniQuest('quest-key', 'main', [ fakeObjective(0, OmniObjective.States.Inactive) ]);
+      quest.state = OmniQuest.States.Active;
 
       quest.refreshState();
 
@@ -598,6 +640,28 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
       quest.refreshState();
 
       expect(quest.state).toBe(OmniQuest.States.Completed);
+    });
+
+    it('leaves the state alone when a step is finished but another has not started', () =>
+    {
+      // Arrange- nothing failed, not everything is untouched, and nothing is active, so the run
+      // reaches the completion check with a step still waiting: the quest is not over.
+      const quest = new TrackedOmniQuest('quest-key', 'main', [
+        fakeObjective(0, OmniObjective.States.Completed),
+        fakeObjective(1, OmniObjective.States.Inactive),
+      ]);
+      quest.state = OmniQuest.States.Active;
+      const infoSpy = vi.spyOn(console, 'info')
+        .mockImplementation(() => {});
+
+      // Act
+      quest.refreshState();
+
+      // Assert- the notice proves the run fell all the way through rather than stopping earlier.
+      expect(quest.state).toBe(OmniQuest.States.Active);
+      expect(infoSpy).toHaveBeenCalledTimes(1);
+
+      infoSpy.mockRestore();
     });
   });
 
@@ -649,10 +713,17 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
       // J-Log must be present for the announcement path to run at all.
       globalThis.J.LOG = {};
       globalThis.$diaLogManager = { addLog: vi.fn() };
+      const warnSpy = vi.spyOn(console, 'warn')
+        .mockImplementation(() => {});
 
       quest.setState(OmniQuest.States.Inactive);
 
       expect(globalThis.$diaLogManager.addLog).not.toHaveBeenCalled();
+      // resetting a quest is a deliberate act, so it has to bow out quietly rather than falling
+      // through to the unknown-state complaint the way a genuine surprise would.
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      warnSpy.mockRestore();
     });
 
     /**

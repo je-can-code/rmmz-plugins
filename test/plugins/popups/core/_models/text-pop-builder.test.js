@@ -310,6 +310,19 @@ describe('TextPopBuilder (direct src import)', () =>
         expect(popup.textColorIndex).toBe(0);
       });
 
+      it(`leaves ${typeName} colouring alone for a zero value that was flagged as healing`, () =>
+      {
+        // Arrange- a heal that restored nothing still pops, and the zero has no direction to
+        // colour; the healing flag alone must not talk the preset into a heal colour and a plus.
+        // Act
+        const popup = new TextPopBuilder(0).setHealing()[methodName]().build();
+
+        // Assert
+        expect(popup.healing).toBe(true);
+        expect(popup.textColorIndex).toBe(0);
+        expect(popup.value).toBe('0');
+      });
+
       it(`leaves ${typeName} colouring alone for a non-numeric value`, () =>
       {
         // Arrange- a text value sets the base value to zero, taking the same no-colour path.

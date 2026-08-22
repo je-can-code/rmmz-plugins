@@ -701,6 +701,11 @@ describe('Game_Time', () =>
       const t = new Game_Time();
       J.TIME.Metadata.ChangeToneByTime = false;
 
+      // a clock built while tone changes are off starts out with its tone locked, and a lock refuses
+      // just as flatly as the setting does. unlocking leaves the setting as the only thing that can
+      // be answering here.
+      t.unlockTone();
+
       // Act
       const result = t.canUpdateTone();
 

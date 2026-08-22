@@ -2,6 +2,7 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { installUtilsHostGlobals, setPluginContextToJBase, setPluginContextToJUtils } from './fixtures/install-utils-host-globals.js';
+import { installPluginManagerWithParams } from '../../../setup/install-plugin-manager-with-params.js';
 
 describe('J-SystemUtilities metadata (direct src import)', () =>
 {
@@ -38,6 +39,44 @@ describe('J-SystemUtilities metadata (direct src import)', () =>
     expect(globalThis.J.UTILS.Metadata.autoloadDevtools).toBe(false);
   });
 
+  it('turns a truthy autostart-newgame parameter on', async () =>
+  {
+    // Arrange- the shipped default is off, so nothing else in this suite ever walks the enabled arm.
+    // A second plugin name is used because PluginMetadata refuses a duplicate registration.
+    installPluginManagerWithParams(globalThis, 'J-Utils-AutostartOn', {
+      'autostart-newgame': 'true',
+      'autoload-devtools': 'false',
+    });
+    const { default: J_UtilsPluginMetadata } = await import(
+      '../../../../src/plugins/utils/core/_metadata/_pluginMetadata.js');
+
+    // Act
+    const metadata = new J_UtilsPluginMetadata('J-Utils-AutostartOn', '1.0.0');
+
+    // Assert
+    expect(metadata.autostartNewgame).toBe(true);
+    expect(metadata.autoloadDevtools).toBe(false);
+  });
+
+  it('turns a truthy autoload-devtools parameter on', async () =>
+  {
+    // Arrange- the sibling flag, opted into on its own so neither parameter can be seen answering
+    // for the other.
+    installPluginManagerWithParams(globalThis, 'J-Utils-DevtoolsOn', {
+      'autostart-newgame': 'false',
+      'autoload-devtools': 'true',
+    });
+    const { default: J_UtilsPluginMetadata } = await import(
+      '../../../../src/plugins/utils/core/_metadata/_pluginMetadata.js');
+
+    // Act
+    const metadata = new J_UtilsPluginMetadata('J-Utils-DevtoolsOn', '1.0.0');
+
+    // Assert
+    expect(metadata.autoloadDevtools).toBe(true);
+    expect(metadata.autostartNewgame).toBe(false);
+  });
+
   it('exposes Helpers.depth()', () =>
   {
     // Arrange
@@ -47,7 +86,21 @@ describe('J-SystemUtilities metadata (direct src import)', () =>
     const depth = globalThis.J.UTILS.Helpers.depth(o);
 
     // Assert
-    expect(depth).toBeGreaterThan(0);
+    expect(depth).toBe(3);
+  });
+
+  it('bottoms out at zero for a value that is not an object', () =>
+  {
+    // Arrange- a string is the value that separates "not an object" from "an object with nothing in
+    // it". A number or a boolean would answer zero either way, but indexing a string keeps yielding
+    // one-character strings forever, so only this case proves the object test is actually consulted.
+    const primitive = 'hello';
+
+    // Act
+    const depth = globalThis.J.UTILS.Helpers.depth(primitive);
+
+    // Assert
+    expect(depth).toBe(0);
   });
 
   it('overrides Bitmap._createCanvas to use willReadFrequently', () =>

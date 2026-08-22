@@ -335,11 +335,53 @@ describe('J-Proficiency conditionals and battler defaults (direct src import)', 
   //endregion bonus gains
 
   //region actor proficiency lookup
+  describe('addSkillProficiency', () =>
+  {
+    it('refuses to shadow an existing record', () =>
+    {
+      // Arrange- an actor accumulates proficiency over an entire playthrough, so re-creating a
+      // record would silently discard all of it and hand back a fresh zero in its place.
+      const warn = vi.spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      actor.addSkillProficiency(1, 12);
+
+      // Act
+      const second = actor.addSkillProficiency(1, 99);
+
+      // Assert- the original record is handed back, and it is still the only one on file.
+      expect(second.proficiency).toBe(12);
+      expect(actor.skillProficiencies()).toHaveLength(1);
+
+      // restore manually so the spy cannot leak into whichever test runs next in this file.
+      warn.mockRestore();
+    });
+
+    it('reports the duplicate attempt rather than swallowing it', () =>
+    {
+      // Arrange
+      const warn = vi.spyOn(console, 'warn')
+        .mockImplementation(() => {});
+      actor.addSkillProficiency(1, 12);
+
+      // Act
+      actor.addSkillProficiency(1, 99);
+
+      // Assert
+      expect(warn).toHaveBeenCalled();
+
+      warn.mockRestore();
+    });
+  });
+
   describe('tryGetSkillProficiencyBySkillId', () =>
   {
     it('returns the existing record for a skill already practised', () =>
     {
-      // Arrange
+      // Arrange- creation is the only thing on this path that logs, and it logs whenever it is
+      // asked to shadow an existing record. Its silence is what proves the lookup answered
+      // outright rather than falling through to creation and being turned back there.
+      const warn = vi.spyOn(console, 'warn')
+        .mockImplementation(() => {});
       actor.addSkillProficiency(1, 12);
 
       // Act
@@ -347,6 +389,10 @@ describe('J-Proficiency conditionals and battler defaults (direct src import)', 
 
       // Assert
       expect(proficiency.proficiency).toBe(12);
+      expect(warn).not.toHaveBeenCalled();
+
+      // restore manually so the spy cannot leak into whichever test runs next in this file.
+      warn.mockRestore();
     });
 
     it('creates a record on demand for a skill acquired outside of learning it', () =>

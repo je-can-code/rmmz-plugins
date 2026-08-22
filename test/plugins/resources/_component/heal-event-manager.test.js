@@ -233,9 +233,12 @@ describe('HealEventManager (resources ext/abs)', () =>
     const note = {};
     const recipient = buildBattler('recipient', [ note ]);
 
+    // the third value is a per-tag cap of its own, deliberately far above anything reachable. Left to
+    // default, it would equal the global cap and stop this tag on its own, so the game-wide gate would
+    // never be the reason nothing happened.
     getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
     {
-      if (regexp === regexNamespace.OnSelfHpHealMp) return [ [ 50, 0 ] ];
+      if (regexp === regexNamespace.OnSelfHpHealMp) return [ [ 50, 0, 99 ] ];
       return [];
     });
 
@@ -247,6 +250,28 @@ describe('HealEventManager (resources ext/abs)', () =>
     expect(recipient.gainMpFromResource).not.toHaveBeenCalled();
     // depth must be restored, not left incremented, since dispatch bailed before entering the try block.
     expect(HealEventManager._currentDepth).toBe(globalThis.J.RESOURCES.EXT.ABS.Metadata.healChainDepth);
+  });
+
+  it('still dispatches on the last round below the configured healChainDepth', () =>
+  {
+    // Arrange- the far side of that boundary. One rung lower is the deepest cascade the game allows,
+    // and a cap that stopped here would quietly shorten every chain by a round.
+    const note = {};
+    const recipient = buildBattler('recipient', [ note ]);
+
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnSelfHpHealMp) return [ [ 50, 0, 99 ] ];
+      return [];
+    });
+
+    HealEventManager._currentDepth = globalThis.J.RESOURCES.EXT.ABS.Metadata.healChainDepth - 1;
+
+    // Act
+    HealEventManager.dispatch(recipient, 'hp', 100);
+
+    // Assert
+    expect(recipient.gainMpFromResource).toHaveBeenCalledWith(50);
   });
 
   //region which resource a trigger names
@@ -406,6 +431,56 @@ describe('HealEventManager (resources ext/abs)', () =>
     // Assert: the self-heal still lands; only the splash is skipped.
     expect(recipient.gainMpFromResource).toHaveBeenCalledWith(50);
     expect(globalThis.JABS_AiManager.getAlliedBattlersWithinRange).not.toHaveBeenCalled();
+  });
+
+  it('does not go looking for allies at all when the tag names a range of zero', () =>
+  {
+    // Arrange- a range of zero is how a designer writes "me only", and it is the cheap case: asking
+    // JABS for everyone standing nearby is a map-wide walk that a self-only tag has no use for. The
+    // recipient is deliberately on the map with an ally right beside them, so the range is the only
+    // thing left that can keep the splash from happening.
+    const note = {};
+    const recipient = buildBattler('recipient', [ note ]);
+    const ally = buildBattler('ally');
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnSelfHpHealMp) return [ [ 50, 0 ] ];
+      return [];
+    });
+    const jabsRecipient = { getBattler: () => recipient };
+    const jabsAlly = { getBattler: () => ally };
+    globalThis.JABS_AiManager.getBattlerByUuid.mockReturnValue(jabsRecipient);
+    globalThis.JABS_AiManager.getAlliedBattlersWithinRange.mockReturnValue([ jabsAlly ]);
+
+    // Act
+    HealEventManager.dispatch(recipient, 'hp', 100);
+
+    // Assert- the self-heal still lands, which is what proves the tag was processed at all.
+    expect(recipient.gainMpFromResource).toHaveBeenCalledWith(50);
+    expect(globalThis.JABS_AiManager.getAlliedBattlersWithinRange).not.toHaveBeenCalled();
+    expect(ally.gainMpFromResource).not.toHaveBeenCalled();
+  });
+
+  it('never asks for the allies of a battler that is not on the JABS map', () =>
+  {
+    // Arrange- an actor healed from a menu has no JABS battler, and handing that nothing to the
+    // proximity lookup is what the early return exists to prevent. The tag's range is zero so the
+    // onSelf half never consults JABS, leaving the onAlly half as the only possible caller.
+    const note = {};
+    const recipient = buildBattler('recipient', [ note ]);
+    getArraysFromNotesByRegexMock.mockImplementation((_data, regexp) =>
+    {
+      if (regexp === regexNamespace.OnSelfHpHealMp) return [ [ 50, 0 ] ];
+      return [];
+    });
+    globalThis.JABS_AiManager.getBattlerByUuid.mockReturnValue(undefined);
+
+    // Act
+    HealEventManager.dispatch(recipient, 'hp', 100);
+
+    // Assert- the heal itself still happened, so the silence below is the guard and not an early exit.
+    expect(recipient.gainMpFromResource).toHaveBeenCalledWith(50);
+    expect(globalThis.JABS_AiManager.getAlliedBattlers).not.toHaveBeenCalled();
   });
 
   it('stops a self-echo from re-entering the same tag when the heal really does re-dispatch', () =>

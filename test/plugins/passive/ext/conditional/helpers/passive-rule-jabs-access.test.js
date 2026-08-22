@@ -43,8 +43,14 @@ describe('PassiveRuleJabsAccess (direct src import)', () =>
 
   it('returns an empty array when the battler has no map-side JABS wrapper', () =>
   {
-    // Arrange
+    // Arrange- the ai manager is stocked with an enemy that IS targeting this uuid, so the
+    // off-map guard is the only thing standing between the caller and a populated result.
     const battler = { getUuid: undefined };
+    const engagedEnemy = {
+      getUuid: () => 'enemy-1',
+      getTarget: () => ({ getUuid: () => 'self-uuid' }),
+    };
+    globalThis.JABS_AiManager.getOpposingBattlers.mockReturnValueOnce([ engagedEnemy ]);
 
     // Act
     const result = PassiveRuleJabsAccess.enemiesTargetingMe(battler);
@@ -158,6 +164,10 @@ describe('PassiveRuleJabsAccess (direct src import)', () =>
   {
     it('returns an empty array when off-map', () =>
     {
+      // Arrange- the ai manager would happily hand back an ally here, so the off-map guard is the
+      // only reason the result comes back empty.
+      globalThis.JABS_AiManager.getAlliedBattlersWithinRange.mockReturnValueOnce([ { getUuid: () => 'ally-uuid' } ]);
+
       // Act & Assert
       expect(PassiveRuleJabsAccess.nearbyAlliesExcludingSelf({ getUuid: undefined })).toEqual([]);
     });
@@ -196,6 +206,10 @@ describe('PassiveRuleJabsAccess (direct src import)', () =>
   {
     it('returns an empty array when off-map', () =>
     {
+      // Arrange- an enemy is in range as far as the ai manager is concerned; only the off-map
+      // guard keeps it out of the result.
+      globalThis.JABS_AiManager.getOpposingBattlersWithinRange.mockReturnValueOnce([ { getUuid: () => 'enemy-uuid' } ]);
+
       // Act & Assert
       expect(PassiveRuleJabsAccess.nearbyEnemies({ getUuid: undefined })).toEqual([]);
     });
@@ -233,8 +247,11 @@ describe('PassiveRuleJabsAccess (direct src import)', () =>
   {
     it('returns just self when off-map', () =>
     {
-      // Arrange
+      // Arrange- a party ally exists on the map side, so a battler with no wrapper of its own
+      // must still resolve to a set of exactly one: itself.
       const battler = { getUuid: undefined };
+      const partyAlly = { name: 'party-ally' };
+      globalThis.JABS_AiManager.getAlliedBattlers.mockReturnValueOnce([ { getBattler: () => partyAlly } ]);
 
       // Act & Assert
       expect(PassiveRuleJabsAccess.allAlliedBattlersIncludingSelf(battler)).toEqual([ battler ]);
@@ -285,6 +302,9 @@ describe('PassiveRuleJabsAccess (direct src import)', () =>
   {
     it('returns an empty array when off-map', () =>
     {
+      // Arrange- an ally sits inside the requested radius; only the off-map guard suppresses it.
+      globalThis.JABS_AiManager.getAlliedBattlersWithinRange.mockReturnValueOnce([ { getUuid: () => 'ally-uuid' } ]);
+
       // Act & Assert
       expect(PassiveRuleJabsAccess.alliedBattlersWithinRange({ getUuid: undefined }, 5)).toEqual([]);
     });
@@ -310,6 +330,9 @@ describe('PassiveRuleJabsAccess (direct src import)', () =>
   {
     it('returns an empty array when off-map', () =>
     {
+      // Arrange- an enemy sits inside the requested radius; only the off-map guard suppresses it.
+      globalThis.JABS_AiManager.getOpposingBattlersWithinRange.mockReturnValueOnce([ { getUuid: () => 'enemy-uuid' } ]);
+
       // Act & Assert
       expect(PassiveRuleJabsAccess.opposingBattlersWithinRange({ getUuid: undefined }, 5)).toEqual([]);
     });

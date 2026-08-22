@@ -36,15 +36,21 @@ describe('PopupSpriteLocator (direct src import)', () =>
 
   it('returns null when the active scene is not the map scene', () =>
   {
-    // Arrange
+    // Arrange- the off-map scene is given a fully populated spriteset holding the very sprite we
+    // are asking for, so the scene-type check is the only thing that can refuse the lookup.
     function Scene_Battle()
     {
     }
 
-    globalThis.SceneManager = { _scene: new Scene_Battle() };
+    const gameCharacter = { name: 'target' };
+    const scene = new Scene_Battle();
+    scene._spriteset = {
+      _characterSprites: [ { character: () => gameCharacter } ],
+    };
+    globalThis.SceneManager = { _scene: scene };
 
     // Act
-    const result = PopupSpriteLocator.findSpriteCharacterForGameCharacter({});
+    const result = PopupSpriteLocator.findSpriteCharacterForGameCharacter(gameCharacter);
 
     // Assert
     expect(result).toBeNull();

@@ -669,8 +669,12 @@ describe('J-SDP families (direct src import)', () =>
         ],
         sdps: [
           {
+            // this key deliberately sorts after every other key in this fixture. comparePanels
+            // falls back to key order once the hierarchy ties, so a key that agreed with the
+            // hierarchy would let a broken family, subgroup or tier comparison return the right
+            // sign by accident.
             name: 'Ghosty T1',
-            key: 'ghosty_t1',
+            key: 'zz_ghosty_t1',
             iconIndex: '1',
             rarity: 0,
             unlockedByDefault: true,
@@ -768,7 +772,7 @@ describe('J-SDP families (direct src import)', () =>
       });
 
       const panels = classified.panels();
-      ghostyT1 = panels.find(panel => panel.key === 'ghosty_t1');
+      ghostyT1 = panels.find(panel => panel.key === 'zz_ghosty_t1');
       ghostyT2 = panels.find(panel => panel.key === 'ghosty_t2');
       wispT1 = panels.find(panel => panel.key === 'wisp_t1');
       wolfT1 = panels.find(panel => panel.key === 'wolf_t1');
@@ -822,19 +826,19 @@ describe('J-SDP families (direct src import)', () =>
     {
       it('orders by family index first', () =>
       {
-        // Arrange & Act & Assert
+        // Arrange & Act & Assert- undead precedes beast, while the keys say the opposite.
         expect(SdpFamilyFilter.comparePanels(ghostyT1, wolfT1)).toBeLessThan(0);
       });
 
       it('falls back to subgroup index when family indices tie', () =>
       {
-        // Arrange & Act & Assert
+        // Arrange & Act & Assert- ghosty precedes wisp, while the keys say the opposite.
         expect(SdpFamilyFilter.comparePanels(ghostyT1, wispT1)).toBeLessThan(0);
       });
 
       it('falls back to subgroup tier when subgroup indices tie', () =>
       {
-        // Arrange & Act & Assert
+        // Arrange & Act & Assert- tier 1 precedes tier 2, while the keys say the opposite.
         expect(SdpFamilyFilter.comparePanels(ghostyT1, ghostyT2)).toBeLessThan(0);
       });
 

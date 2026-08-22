@@ -78,6 +78,21 @@ describe('J-Pixelistics Game_CharacterBase pixel movement helpers (direct src im
     expect(ch.isPixelOnCooldown()).toBe(true);
   });
 
+  it('reports no cooldown once the last frame of it has ticked away', () =>
+  {
+    // Arrange: one frame of cooldown, so the decrement below lands exactly on the boundary
+    // between "still waiting" and "free to move" rather than somewhere comfortably past it.
+    const ch = new globalThis.Game_CharacterBase();
+    ch.initMembers();
+    ch.setPixelMoveCooldown(1);
+
+    // Act
+    ch.decrementPixelMoveCooldown();
+
+    // Assert
+    expect(ch.isPixelOnCooldown()).toBe(false);
+  });
+
   it('decrementPixelMoveCooldown reduces the remaining cooldown by one', () =>
   {
     // Arrange

@@ -152,7 +152,9 @@ describe('JABS_Engine ext/sdp augments (direct src import)', () =>
       const otherMember = { modSdpPoints: vi.fn().mockReturnValue(9) };
       const character = {};
       const actor = { getBattler: () => defeatingBattler, getCharacter: () => character };
-      globalThis.$gameParty = { members: vi.fn().mockReturnValue([ otherMember, defeatingBattler ]) };
+      // the defeating battler is deliberately not last in the party: whichever member is visited
+      // last would otherwise leave its own amount behind, and the identity check would go unproven.
+      globalThis.$gameParty = { members: vi.fn().mockReturnValue([ defeatingBattler, otherMember ]) };
 
       // Act
       engine.gainSdpReward(10, actor);

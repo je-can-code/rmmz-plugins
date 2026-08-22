@@ -1162,13 +1162,14 @@ describe('Game_Actor ext/sdp augments (direct src import)', () =>
 
     it('adds a flat mtp parameter as rank times per-rank', () =>
     {
-      // Arrange
+      // Arrange: the base is deliberately not 100, because at a base of 100 the percent formula
+      // and the flat formula produce the same number and neither one could be told apart.
       const actor = makeActor();
       J.SDP.Metadata.panelsMap.set('a', makePanel({ mtp: [ { perRank: 5, isFlat: true } ] }));
       actor._j._sdp._ranks.push(makeRanking('a', { currentRank: 3 }));
 
       // Act
-      const result = actor.maxTpSdpBonuses(100);
+      const result = actor.maxTpSdpBonuses(40);
 
       // Assert
       expect(result).toEqual(15);

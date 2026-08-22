@@ -10,6 +10,22 @@ import {
 
 describe('J-LevelMaster metadata (direct src import)', () =>
 {
+  /**
+   * Builds a second metadata instance against a doctored config. PluginMetadata keeps a static
+   * name registry that rejects duplicates, so each variation introduces itself under a name of
+   * its own; only the registry key and the parameter lookup care about the name.
+   * @param {object} overrides Config fields layered over the default level configuration.
+   * @param {string} name The plugin name this instance registers under.
+   */
+  const buildWithConfig = async (overrides, name) =>
+  {
+    const { default: LevelPluginMetadata } =
+      await import('../../../../src/plugins/level/core/_metadata/_pluginMetadata.js');
+    globalThis.StorageManager.fsReadFile = () => JSON.stringify({ ...DEFAULT_LEVEL_CONFIG, ...overrides });
+
+    return new LevelPluginMetadata(name, '1.4.0');
+  };
+
   beforeAll(async () =>
   {
     vi.resetModules();
@@ -69,23 +85,70 @@ describe('J-LevelMaster metadata (direct src import)', () =>
     expect(result).toBe(DEFAULT_LEVEL_CONFIG.trueMaxLevel);
   });
 
+  it('maps useSharedActorLevel from the config when it is on', () =>
+  {
+    // Arrange & Act
+    const result = globalThis.J.LEVEL.Metadata.useSharedActorLevel;
+
+    // Assert
+    expect(result).toBe(true);
+  });
+
+  describe('boolean flag translation', () =>
+  {
+    it('reads the scaling toggle as off when the config says so', async () =>
+    {
+      // Arrange & Act
+      const metadata = await buildWithConfig({ useScaling: false }, 'J-LevelMaster-ScalingOff');
+
+      // Assert- `false` is also what an unparsed config would produce, so the canonical exp basis
+      // anchors the claim that this instance genuinely read a config at all.
+      expect(metadata.enabled).toBe(false);
+      expect(metadata.canonicalExpBasis).toBe(30);
+    });
+
+    it('reads the shared actor level toggle as off when the config says so', async () =>
+    {
+      // Arrange & Act
+      const metadata = await buildWithConfig({ useSharedActorLevel: false }, 'J-LevelMaster-PerClassLevels');
+
+      // Assert- same anchoring concern as the scaling toggle above.
+      expect(metadata.useSharedActorLevel).toBe(false);
+      expect(metadata.canonicalExpBasis).toBe(30);
+    });
+  });
+
   describe('reward multiplier fallbacks', () =>
   {
-    /**
-     * Builds a second metadata instance against a doctored config. PluginMetadata keeps a static
-     * name registry that rejects duplicates, so each variation introduces itself under a name of
-     * its own; only the registry key and the parameter lookup care about the name.
-     * @param {object} overrides Config fields layered over the default level configuration.
-     * @param {string} name The plugin name this instance registers under.
-     */
-    const buildWithConfig = async (overrides, name) =>
+    it('falls back to the combat minimum when the reward minimum is left null', () =>
     {
-      const { default: LevelPluginMetadata } =
-        await import('../../../../src/plugins/level/core/_metadata/_pluginMetadata.js');
-      globalThis.StorageManager.fsReadFile = () => JSON.stringify({ ...DEFAULT_LEVEL_CONFIG, ...overrides });
+      // Arrange & Act- the shipped config leaves both reward multipliers null, so this is the
+      // path every real project takes. `Number(null)` is 0, not NaN, so the finite-check below
+      // does not catch a null slipping past the emptiness test.
+      const result = globalThis.J.LEVEL.Metadata.rewardMinimumMultiplier;
 
-      return new LevelPluginMetadata(name, '1.4.0');
-    };
+      // Assert
+      expect(result).toBe(0.1);
+    });
+
+    it('falls back to the combat minimum when the reward minimum is an empty string', async () =>
+    {
+      // Arrange & Act- `Number('')` is also 0 rather than NaN, so emptiness must be caught here
+      // rather than left to the finite-check.
+      const metadata = await buildWithConfig({ rewardMinMultiplier: '' }, 'J-LevelMaster-EmptyRewardMin');
+
+      // Assert
+      expect(metadata.rewardMinimumMultiplier).toBe(0.1);
+    });
+
+    it('falls back to the combat maximum when the reward maximum is an empty string', async () =>
+    {
+      // Arrange & Act
+      const metadata = await buildWithConfig({ rewardMaxMultiplier: '' }, 'J-LevelMaster-EmptyRewardMax');
+
+      // Assert
+      expect(metadata.rewardMaximumMultiplier).toBe(2);
+    });
 
     it('falls back to the combat minimum when the reward minimum is unreadable', async () =>
     {

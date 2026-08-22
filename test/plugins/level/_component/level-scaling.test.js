@@ -56,6 +56,41 @@ describe('J-LevelMaster LevelScaling (direct src import)', () =>
     expect(result).toBe(0.1);
   });
 
+  it('walks the curve downward for a modest negative level difference', () =>
+  {
+    // Arrange & Act- a difference of -30 lands on the minimum clamp, where the negative and positive
+    // arms of the invariance offset produce the identical floor. -5 stays off the clamp entirely, so
+    // which arm ran is actually observable in the result.
+    const result = LevelScaling.calculate(-5);
+
+    // Assert
+    expect(result).toBe(0.6);
+  });
+
+  it('returns the baseline for a difference sitting inside a widened invariance band', () =>
+  {
+    // Arrange- the shipped band is a single point, where the curve happens to also produce the
+    // baseline. Widening it puts a difference genuinely inside the band whose curve value differs.
+    const originalUpper = globalThis.J.LEVEL.Metadata.invariantUpperRange;
+    const originalLower = globalThis.J.LEVEL.Metadata.invariantLowerRange;
+    globalThis.J.LEVEL.Metadata.invariantUpperRange = 3;
+    globalThis.J.LEVEL.Metadata.invariantLowerRange = 1;
+
+    // Act
+    const inBand = LevelScaling.calculate(2);
+    const outOfBand = LevelScaling.calculate(4);
+
+    // restore the shared metadata singleton before asserting so a failure cannot leak the widened
+    // band into every later test in this file.
+    globalThis.J.LEVEL.Metadata.invariantUpperRange = originalUpper;
+    globalThis.J.LEVEL.Metadata.invariantLowerRange = originalLower;
+
+    // Assert- the baseline is also this plugin's "nothing happened" value, so the out-of-band value
+    // anchors the claim: 1.1 is only reachable when the widened band actually took effect.
+    expect(inBand).toBe(1);
+    expect(outOfBand).toBe(1.1);
+  });
+
   it('returns 1 when scaling is disabled on the game system', () =>
   {
     // Arrange

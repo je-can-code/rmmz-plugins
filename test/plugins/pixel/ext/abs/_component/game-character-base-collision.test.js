@@ -168,19 +168,28 @@ describe('J-ABS-Pixelistics Game_CharacterBase collision (direct src import)', (
       expect(result).toBe(true);
     });
 
-    it('accepts a tile that is passable from a single direction', () =>
+    // passability is an OR across all four cardinals, and each operand has to carry the condition on
+    // its own. one case per cardinal is the only way to tell "this side opens the tile" apart from
+    // "some other side happened to be open too".
+    const cardinals = [ 'DOWN', 'LEFT', 'RIGHT', 'UP' ];
+
+    cardinals.forEach(cardinal =>
     {
-      // Arrange- passability is an OR across the four cardinals, so one open side keeps the tile
-      // walkable rather than solid.
-      const character = buildCharacter({ hasCustomPixelHitbox: () => true });
+      it(`accepts a tile whose only passable cardinal is ${cardinal}`, () =>
+      {
+        // Arrange- every other side of this tile is sealed, so the one open side is the sole reason
+        // the tile reads as walkable rather than as a wall.
+        const character = buildCharacter({ hasCustomPixelHitbox: () => true });
+        const openDirection = globalThis.J.PIXEL.Directions[cardinal];
 
-      // Act
-      const result = overlapWith(character, {
-        isPassable: (tx, ty, direction) => direction === globalThis.J.PIXEL.Directions.UP,
+        // Act
+        const result = overlapWith(character, {
+          isPassable: (tx, ty, direction) => direction === openDirection,
+        });
+
+        // Assert
+        expect(result).toBe(false);
       });
-
-      // Assert
-      expect(result).toBe(false);
     });
 
     it('reports no overlap when every covered tile is open', () =>
