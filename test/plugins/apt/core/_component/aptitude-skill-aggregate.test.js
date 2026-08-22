@@ -74,6 +74,22 @@ describe('AptitudeSkillAggregate', () =>
     expect(aggregate.learnedAny()).toBe(true);
   });
 
+  it('learnedAny is false while every source is still only partway there', () =>
+  {
+    // Arrange- an aggregate almost always carries several sources at once, and one of them being
+    // in progress is not the same as any of them being finished. Without a source that has to stay
+    // unlearned, "any source learned" and "any source at all" answer identically.
+    const aggregate = new AptitudeSkillAggregate(1, buildSkill());
+    aggregate.addSource(new AptitudeSkillSourceProgress('barely-started', 1, 1, 10, false));
+    aggregate.addSource(new AptitudeSkillSourceProgress('nearly-done', 1, 9, 10, false));
+
+    // Act
+    const learnedAny = aggregate.learnedAny();
+
+    // Assert
+    expect(learnedAny).toBe(false);
+  });
+
   it('cheapestSource picks the not-yet-learned source with the least remaining AP', () =>
   {
     const aggregate = new AptitudeSkillAggregate(1, buildSkill());

@@ -372,6 +372,15 @@ describe('J-Difficulty augment edges', () =>
     {
       // Arrange: this runs on every boot against a savefile that already carries the player's
       // choices, and overwriting would silently reset every difficulty they had unlocked.
+      // A second, unrelated config sits in the list so the count below is not merely "one thing
+      // exists"; lookups answer with the first match, so the stale copy of a config appended
+      // behind the real one would never be seen by reading the key alone.
+      globalThis.$gameSystem.registerDifficultyConfig({
+        key: 'gentle',
+        unlocked: true,
+        hidden: false,
+        enabled: true,
+      });
       const original = {
         key: 'brutal',
         unlocked: true,
@@ -389,6 +398,7 @@ describe('J-Difficulty augment edges', () =>
       });
 
       // Assert
+      expect(globalThis.$gameSystem.getAllDifficultyConfigs()).toHaveLength(2);
       expect(globalThis.$gameSystem.getDifficultyConfigByKey('brutal'))
         .toBe(original);
     });

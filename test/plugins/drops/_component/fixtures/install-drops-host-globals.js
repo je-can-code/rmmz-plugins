@@ -108,11 +108,16 @@ export function installDropsHostGlobals(sandbox = globalThis)
   function Game_Party()
   {
     this.__battleMembers = [];
+    this.__reserveMembers = [];
   }
 
+  // the roster and the active battle party are genuinely different lists in the engine, and the
+  // reward strategies exist precisely to choose between them - a stand-in that answered both with
+  // the same array would make "the combat party" and "everyone" indistinguishable. A test that
+  // benches nobody still sees the old behavior, since reserves default to empty.
   Game_Party.prototype.members = function()
   {
-    return this.__battleMembers || [];
+    return [ ...this.__battleMembers, ...this.__reserveMembers ];
   };
   Game_Party.prototype.battleMembers = function()
   {

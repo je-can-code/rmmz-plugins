@@ -2,6 +2,7 @@
 import { beforeAll, describe, expect, it, vi } from 'vitest';
 
 import { installAptHostGlobals } from './fixtures/install-apt-host-globals.js';
+import { installPluginManagerWithParams } from '../../../../setup/install-plugin-manager-with-params.js';
 
 describe('J-Aptitude metadata (direct src import)', () =>
 {
@@ -31,6 +32,40 @@ describe('J-Aptitude metadata (direct src import)', () =>
   {
     // Arrange & Act & Assert: -1 is the "unbounded" sentinel, not a real ceiling.
     expect(globalThis.J.APT.Metadata.usingLevelThresholdLimit).toBe(false);
+  });
+
+  describe('a threshold the author actually configured', () =>
+  {
+    /** @type {JAptitude_PluginMetadata} */
+    let configuredMetadata;
+
+    beforeAll(async () =>
+    {
+      // the host fixture can only boot one parameter set per realm, and it boots the unbounded
+      // sentinel- which cannot tell "no limit was configured" from "limits never engage at all".
+      // Building a second metadata under its own plugin name gets the other arm without a reboot.
+      const { default: JAptitude_PluginMetadata } =
+        await import('../../../../../src/plugins/apt/core/_metadata/_pluginMetadata.js');
+
+      installPluginManagerWithParams(globalThis, 'J-Aptitude-configured-threshold', {
+        'menu-switch': '0',
+        'max-level-threshold': '5',
+      });
+
+      configuredMetadata = new JAptitude_PluginMetadata('J-Aptitude-configured-threshold', '1.0.0');
+    });
+
+    it('treats a zero-or-greater threshold as the limit being in use', () =>
+    {
+      // Arrange & Act & Assert
+      expect(configuredMetadata.usingLevelThresholdLimit).toBe(true);
+    });
+
+    it('keeps the configured ceiling rather than collapsing it to the sentinel', () =>
+    {
+      // Arrange & Act & Assert: the flag above is only meaningful if the number behind it survived.
+      expect(configuredMetadata.maxLevelThreshold).toBe(5);
+    });
   });
 
   describe('host version requirements', () =>

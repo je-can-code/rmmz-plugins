@@ -206,8 +206,12 @@ describe('J-CriticalFactors Game_Battler crit math (direct src import)', () =>
   {
     it('is 0 when J.NATURAL is not loaded', () =>
     {
-      // Arrange
+      // Arrange- the buffs and growths are stocked with the exact values the sibling test below
+      // sums to 15, so the 0 here can only come from the plugin gate and not from having nothing
+      // to add up in the first place.
       const actor = buildActor();
+      actor.__testNoteSources = [ { note: '<cdmBuffPlus:[10]>' } ];
+      actor.modCdmPlus(5);
       const savedNatural = globalThis.J.NATURAL;
       delete globalThis.J.NATURAL;
 
@@ -288,8 +292,11 @@ describe('J-CriticalFactors Game_Battler crit math (direct src import)', () =>
   {
     it('is 0 when J.NATURAL is not loaded', () =>
     {
-      // Arrange
+      // Arrange- stocked with the same buffs and growths the sibling test below sums to 10, so the
+      // 0 here is the plugin gate refusing to contribute rather than an empty tally.
       const actor = buildActor();
+      actor.__testNoteSources = [ { note: '<ctrBuffPlus:[8]>' } ];
+      actor.modCtrPlus(2);
       const savedNatural = globalThis.J.NATURAL;
       delete globalThis.J.NATURAL;
 

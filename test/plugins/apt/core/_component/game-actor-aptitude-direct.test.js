@@ -152,6 +152,21 @@ describe('Game_Actor aptitude additions (direct src import)', () =>
       expect(actor.hasLearnedAptitudeSkill(12)).toBe(true);
     });
 
+    it('hasLearnedAptitudeSkill is false for a registered skill still being worked toward', () =>
+    {
+      // Arrange- the record exists the moment any source starts teaching the skill, so "registered"
+      // and "learned" are genuinely different states; conflating them would hand the actor every
+      // skill it had ever begun studying.
+      const actor = buildActor();
+      actor.setAptitudeSkill(12, new AptitudeSkill(12, false));
+
+      // Act
+      const hasLearned = actor.hasLearnedAptitudeSkill(12);
+
+      // Assert
+      expect(hasLearned).toBe(false);
+    });
+
     it('learnAptitudeSkill creates the aptitude skill on first learn and stamps the source', () =>
     {
       const actor = buildActor();

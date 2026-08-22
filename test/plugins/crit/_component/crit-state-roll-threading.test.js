@@ -199,6 +199,35 @@ describe('J-CriticalFactors Game_Action.rollAndApplyCritStates roll threading (d
     expect(calls[0]).toBe(attacker);
   });
 
+  it('applies the state once per proc the effect resolved', () =>
+  {
+    // Arrange- Accumulate Mode and Encore both express themselves purely as a proc count, so the
+    // loop repeating that many times is the only place a stacked crit proc actually becomes states.
+    const skill = { note: '' };
+    const applied = [];
+    const effect = {
+      skillId: 7,
+      baseSkill: () => skill,
+      resolveProcCount: () => 3,
+    };
+    const attacker = { getPositiveRollsForSkill: () => 0, isForceCritProcs: () => false };
+    const recipient = {
+      addState: (...args) => applied.push(args),
+      getNegativeRolls: () => 0,
+    };
+    const action = buildAction(attacker);
+
+    // Act
+    action.rollAndApplyCritStates(recipient, [ effect ]);
+
+    // Assert
+    expect(applied).toEqual([
+      [ 7, attacker, skill ],
+      [ 7, attacker, skill ],
+      [ 7, attacker, skill ],
+    ]);
+  });
+
   it('does not even resolve the attacker when there is nothing to roll', () =>
     {
       // Arrange- this runs on every critical hit, and the overwhelming majority of skills carry no

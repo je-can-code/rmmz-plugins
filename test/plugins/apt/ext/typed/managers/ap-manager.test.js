@@ -47,11 +47,18 @@ describe('ApManager ext/typed augments (direct src import)', () =>
 
   function makeTeachable({ skillId = 1, requiredAp = 5, typed = false, domain = 'element', id = 0 } = {})
   {
+    // an untyped teachable holds no apType whatsoever, so asking it for one answers undefined -
+    // exactly as the real model does. Handing back a usable key regardless would let a filter that
+    // never checked typedness still look correct, because the domain/id comparison would carry it.
+    const apType = typed
+      ? { domain, id }
+      : undefined;
+
     return {
       skillId,
       requiredAp,
       isTyped: () => typed,
-      apTypeKey: () => ({ domain, id }),
+      apTypeKey: () => apType,
     };
   }
 
@@ -124,8 +131,20 @@ describe('ApManager ext/typed augments (direct src import)', () =>
   {
     it('does nothing when canGainAp rejects the actor/amount', () =>
     {
-      // Arrange
-      const actor = buildActor({ isDead: () => true });
+      // Arrange- the actor carries a source whose teachable matches the requested domain and id
+      // exactly, so neither the "no active sources" path nor the "nothing matched" path can stand
+      // in for the death check. The amount is nonzero for the same reason.
+      const matching = makeTeachable({ skillId: 1, typed: true, domain: 'element', id: 3 });
+      const source = {
+        implementationType: () => 'skill',
+        id: 1,
+        isSkill: () => false,
+        aptitudeTeachings: [ matching ],
+      };
+      const actor = buildActor({
+        isDead: () => true,
+        getAptitudeSources: () => [ source ],
+      });
       const applySpy = vi.spyOn(ApManager, 'applyApToSource');
 
       // Act
