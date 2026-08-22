@@ -46,6 +46,7 @@ describe('J-ABS-Metrics JABS_Engine hooks (direct src import)', () =>
     // methods do is J-ABS's business and is deliberately not modelled here.
     originals = {
       handleDefeatedEnemy: vi.fn(),
+      handleDefeatedAlly: vi.fn(),
       handleDefeatedPlayer: vi.fn(),
       postExecuteSkillEffects: vi.fn(),
       executeMapAction: vi.fn(),
@@ -103,6 +104,25 @@ describe('J-ABS-Metrics JABS_Engine hooks (direct src import)', () =>
       // Assert
       expect(originals.handleDefeatedEnemy).toHaveBeenCalledWith(defeatedTarget, caster);
       expect(trackDefeatedEnemy).toHaveBeenCalledWith(defeatedTarget);
+    });
+  });
+
+  describe('handleDefeatedAlly', () =>
+  {
+    it('records the downing after letting the original run', () =>
+    {
+      // Arrange
+      const engine = new globalThis.JABS_Engine();
+      const trackDefeatedAlly = vi.spyOn(JABS_MetricsManager, 'trackDefeatedAlly')
+        .mockImplementation(() => {});
+      const defeatedAlly = {};
+
+      // Act
+      engine.handleDefeatedAlly(defeatedAlly);
+
+      // Assert
+      expect(originals.handleDefeatedAlly).toHaveBeenCalledWith(defeatedAlly);
+      expect(trackDefeatedAlly).toHaveBeenCalledTimes(1);
     });
   });
 

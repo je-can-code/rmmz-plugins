@@ -41,6 +41,19 @@ class JAbsMetrics_PluginMetadata
   {
     const { metrics } = J.ABS.Metadata.ExternalConfig;
 
+    this.initializeOutcomeMetadata(metrics);
+    this.initializeOffenseMetadata(metrics);
+    this.initializeDamageTakenMetadata(metrics);
+    this.initializeMitigationMetadata(metrics);
+    this.initializeUsageMetadata(metrics);
+  }
+
+  /**
+   * Initializes the variables tracking who died and how often.
+   * @param {object} metrics The parsed `metrics` block.
+   */
+  initializeOutcomeMetadata(metrics)
+  {
     /**
      * The variable counting how many animate enemies have been slain.
      * @type {number}
@@ -55,6 +68,25 @@ class JAbsMetrics_PluginMetadata
      */
     this.destructiblesDestroyedVariableId = metrics.destructiblesDestroyed;
 
+    /**
+     * The variable counting how many times a non-player ally has gone down.
+     * @type {number}
+     */
+    this.alliesDownedVariableId = metrics.alliesDowned;
+
+    /**
+     * The variable counting how many times the player has been defeated.
+     * @type {number}
+     */
+    this.numberOfDeathsVariableId = metrics.numberOfDeaths;
+  }
+
+  /**
+   * Initializes the variables describing what the party dishes out.
+   * @param {object} metrics The parsed `metrics` block.
+   */
+  initializeOffenseMetadata(metrics)
+  {
     /**
      * The variable accumulating every point of hp damage the party has dealt.
      * @type {number}
@@ -80,18 +112,21 @@ class JAbsMetrics_PluginMetadata
     this.biggestCritDealtVariableId = metrics.biggestCritDealt;
 
     /**
-     * The variable counting successful parries of any kind.
+     * The variable counting swings that an enemy evaded outright.
+     *
+     * This is a hit-versus-evasion roll rather than a swing at empty air, so a high count says the
+     * player kept picking fights with things well above their level.
      * @type {number}
      */
-    this.numberOfParriesVariableId = metrics.numberOfParries;
+    this.attacksEvadedByEnemiesVariableId = metrics.attacksEvadedByEnemies;
+  }
 
-    /**
-     * The variable counting parries that landed inside the precise window.
-     * A precise parry also counts toward the plain parry tally- this is a subset, not a sibling.
-     * @type {number}
-     */
-    this.numberOfPreciseParriesVariableId = metrics.numberOfPreciseParries;
-
+  /**
+   * Initializes the variables describing what the party absorbs.
+   * @param {object} metrics The parsed `metrics` block.
+   */
+  initializeDamageTakenMetadata(metrics)
+  {
     /**
      * The variable accumulating every point of hp damage the party has absorbed.
      * @type {number}
@@ -115,7 +150,66 @@ class JAbsMetrics_PluginMetadata
      * @type {number}
      */
     this.biggestCritTakenVariableId = metrics.biggestCritTaken;
+  }
 
+  /**
+   * Initializes the variables describing everything the party did to make an incoming hit hurt less.
+   * @param {object} metrics The parsed `metrics` block.
+   */
+  initializeMitigationMetadata(metrics)
+  {
+    /**
+     * The variable counting fully negated hits of either parry kind.
+     *
+     * Both the passive roll and the deliberate button press write the same outcome, so this is the
+     * combined total. Subtracting the precise tally from it yields the passive one, which is why no
+     * variable is spent holding that separately.
+     * @type {number}
+     */
+    this.numberOfParriesVariableId = metrics.numberOfParries;
+
+    /**
+     * The variable counting parries earned by holding guard inside the parry window.
+     *
+     * The deliberate half of the parry system, and the one worth being smug about.
+     * @type {number}
+     */
+    this.numberOfPreciseParriesVariableId = metrics.numberOfPreciseParries;
+
+    /**
+     * The variable counting glancing blows- the partial parry, which still lands but for less.
+     * @type {number}
+     */
+    this.numberOfGlancingBlowsVariableId = metrics.numberOfGlancingBlows;
+
+    /**
+     * The variable counting hits that landed on a battler who was actively guarding.
+     * @type {number}
+     */
+    this.numberOfGuardedHitsVariableId = metrics.numberOfGuardedHits;
+
+    /**
+     * The variable counting incoming attacks the party evaded outright.
+     * @type {number}
+     */
+    this.attacksEvadedByPartyVariableId = metrics.attacksEvadedByParty;
+
+    /**
+     * The variable accumulating the damage guarding subtracted from incoming hits.
+     *
+     * The single most legible answer to "was holding guard worth it" - a player who never raised it
+     * reads zero here, and one who lived on it reads a number rivaling their total damage taken.
+     * @type {number}
+     */
+    this.damagePreventedByGuardingVariableId = metrics.damagePreventedByGuarding;
+  }
+
+  /**
+   * Initializes the variables describing which inputs the player actually reaches for.
+   * @param {object} metrics The parsed `metrics` block.
+   */
+  initializeUsageMetadata(metrics)
+  {
     /**
      * The variable counting actions executed from the mainhand slot.
      * @type {number}
@@ -141,10 +235,25 @@ class JAbsMetrics_PluginMetadata
     this.dodgeSkillUsageVariableId = metrics.dodgeSkillUsage;
 
     /**
-     * The variable counting how many times the player has been defeated.
+     * The variable counting how many times the player raised their guard.
+     *
+     * Counted on the transition into guarding rather than per frame held, so this answers "how often
+     * did they reach for it" instead of "how long did they lean on it".
      * @type {number}
      */
-    this.numberOfDeathsVariableId = metrics.numberOfDeaths;
+    this.guardActivationsVariableId = metrics.guardActivations;
+
+    /**
+     * The variable counting tool slot usage.
+     * @type {number}
+     */
+    this.toolUsageVariableId = metrics.toolUsage;
+
+    /**
+     * The variable counting usable item slot usage.
+     * @type {number}
+     */
+    this.usableItemUsageVariableId = metrics.usableItemUsage;
   }
 }
 

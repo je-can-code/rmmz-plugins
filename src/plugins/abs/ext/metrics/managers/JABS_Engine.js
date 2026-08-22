@@ -19,6 +19,22 @@ JABS_Engine.prototype.handleDefeatedEnemy = function(defeatedTarget, caster)
 };
 
 /**
+ * Extends {@link #handleDefeatedAlly}.<br/>
+ * Also records that a party member went down.
+ * @param {JABS_Battler} defeatedAlly The ally that was defeated.
+ */
+J.ABS.EXT.METRICS.Aliased.JABS_Engine.set('handleDefeatedAlly', JABS_Engine.prototype.handleDefeatedAlly);
+JABS_Engine.prototype.handleDefeatedAlly = function(defeatedAlly)
+{
+  // perform original logic.
+  J.ABS.EXT.METRICS.Aliased.JABS_Engine.get('handleDefeatedAlly')
+    .call(this, defeatedAlly);
+
+  // record the downing.
+  JABS_MetricsManager.trackDefeatedAlly();
+};
+
+/**
  * Extends {@link #handleDefeatedPlayer}.<br/>
  * Also records the death.
  *

@@ -2,12 +2,12 @@
 /**
  * A static manager that translates combat events into game variables.
  *
- * The engine hooks that feed this live in {@link JABS_Engine}, but the recording itself lives here so
- * that "what counts as a critical hit" is answerable without standing up a battle. It also gives the
- * variable writes a single choke point- every metric in the game flows through
- * {@link JABS_MetricsManager.increment} or {@link JABS_MetricsManager.recordHighWaterMark}, so a
- * question like "which of these is a running total and which is a personal best" is answered by
- * looking at which helper the call used.
+ * The engine hooks that feed this live across {@link JABS_Engine}, {@link Game_Action} and
+ * {@link JABS_Battler}, but the recording itself lives here so that "what counts as a critical hit"
+ * is answerable without standing up a battle. It also gives the variable writes a single choke
+ * point- every metric in the game flows through {@link JABS_MetricsManager.increment} or
+ * {@link JABS_MetricsManager.recordHighWaterMark}, so a question like "which of these is a running
+ * total and which is a personal best" is answered by looking at which helper the call used.
  */
 class JABS_MetricsManager
 {
@@ -58,6 +58,7 @@ class JABS_MetricsManager
     $gameVariables.setValue(variableId, candidate);
   }
 
+  //region outcomes
   /**
    * Records the defeat of a battler that was not the player.
    * @param {JABS_Battler} defeatedTarget The battler that was defeated.
@@ -79,6 +80,14 @@ class JABS_MetricsManager
   }
 
   /**
+   * Records the downing of a non-player ally.
+   */
+  static trackDefeatedAlly()
+  {
+    this.increment(this.metadata().alliesDownedVariableId, 1);
+  }
+
+  /**
    * Records the defeat of the player.
    */
   static trackDefeatedPlayer()
@@ -86,6 +95,9 @@ class JABS_MetricsManager
     this.increment(this.metadata().numberOfDeathsVariableId, 1);
   }
 
+  //endregion outcomes
+
+  //region offense
   /**
    * Records the outcome of a hit the party landed on an enemy.
    * @param {JABS_Battler} target The enemy that was struck.
@@ -97,11 +109,21 @@ class JABS_MetricsManager
     // extract the data points from the battler's action result.
     const {
       hpDamage,
-      critical
+      critical,
+      evaded
     } = target.getBattler()
       .result();
 
-    // a hit that dealt no hp damage- a miss, a pure state application, a heal- is not attack data.
+    // an enemy slipping the swing entirely is the only thing worth recording about a whiff.
+    if (evaded === true)
+    {
+      this.increment(metadata.attacksEvadedByEnemiesVariableId, 1);
+
+      return;
+    }
+
+    // a hit that dealt no hp damage- a pure state application, or a heal arriving as negative
+    // damage- is not attack data, and adding a negative would walk the lifetime total backwards.
     if (hpDamage <= 0) return;
 
     // count all damage dealt.
@@ -120,20 +142,33 @@ class JABS_MetricsManager
     this.recordHighWaterMark(metadata.biggestCritDealtVariableId, hpDamage);
   }
 
+  //endregion offense
+
+  //region defense
   /**
    * Records the outcome of a hit the party absorbed.
    * @param {JABS_Battler} target The ally that was struck.
    */
   static trackDefensiveData(target)
   {
+    const metadata = this.metadata();
+
     // extract the data points from the battler's action result.
     const {
       hpDamage,
       critical,
       parried,
-      preciseParried
+      glancing,
+      evaded
     } = target.getBattler()
       .result();
+
+    // a glancing blow still lands, so it is recorded alongside whatever damage got through rather
+    // than instead of it.
+    if (glancing === true)
+    {
+      this.increment(metadata.numberOfGlancingBlowsVariableId, 1);
+    }
 
     // damage that landed and damage that was turned aside are mutually exclusive outcomes.
     if (hpDamage > 0)
@@ -143,10 +178,18 @@ class JABS_MetricsManager
       return;
     }
 
-    // nothing landed, so the only thing left worth recording is whether it was deflected on purpose.
-    if (parried !== true) return;
+    // nothing landed, so which of the ways it failed to land is what remains to be recorded.
+    if (parried === true)
+    {
+      this.increment(metadata.numberOfParriesVariableId, 1);
 
-    this.trackParry(preciseParried);
+      return;
+    }
+
+    if (evaded === true)
+    {
+      this.increment(metadata.attacksEvadedByPartyVariableId, 1);
+    }
   }
 
   /**
@@ -174,21 +217,79 @@ class JABS_MetricsManager
     this.recordHighWaterMark(metadata.biggestCritTakenVariableId, hpDamage);
   }
 
+  //endregion defense
+
+  //region mitigation
   /**
-   * Records a parry the party pulled off.
-   * @param {boolean} preciseParried Whether or not the parry landed inside the precise window.
+   * Records a parry earned by holding guard inside the parry window.
+   *
+   * The combined parry tally is not touched here: the deliberate parry also writes the same
+   * `parried` outcome the passive one does, so it is already counted where every fully negated hit
+   * is counted. Adding to both from here would double the total and make the passive count- which is
+   * derived by subtraction- come out negative.
    */
-  static trackParry(preciseParried)
+  static trackPreciseParry()
+  {
+    this.increment(this.metadata().numberOfPreciseParriesVariableId, 1);
+  }
+
+  /**
+   * Records a hit that landed on a battler who was actively guarding.
+   */
+  static trackGuardedHit()
+  {
+    this.increment(this.metadata().numberOfGuardedHitsVariableId, 1);
+  }
+
+  /**
+   * Records how much damage guarding subtracted from an incoming hit.
+   * @param {number} originalDamage The damage before the guard reduction was applied.
+   * @param {number} reducedDamage The damage that remained after the guard reduction.
+   */
+  static trackDamagePrevented(originalDamage, reducedDamage)
+  {
+    // work out what guarding actually saved.
+    const prevented = originalDamage - reducedDamage;
+
+    // a guard that improved nothing has nothing to record, and healing runs through this same path
+    // as negative damage- where "prevented" would be a nonsense number pointing the wrong way.
+    if (prevented <= 0) return;
+
+    this.increment(this.metadata().damagePreventedByGuardingVariableId, prevented);
+  }
+
+  //endregion mitigation
+
+  //region usage
+  /**
+   * Records that the player raised their guard.
+   */
+  static trackGuardActivation()
+  {
+    this.increment(this.metadata().guardActivationsVariableId, 1);
+  }
+
+  /**
+   * Records the use of an item out of one of the two item-bearing slots.
+   *
+   * Counted here rather than off the executed map action, because an item only produces a map action
+   * when it has a skill attached to it- so a plain healing potion would never be counted at all.
+   * @param {string} buttonType The slot the item was used from.
+   */
+  static trackItemUsage(buttonType)
   {
     const metadata = this.metadata();
 
-    // count of all types of successful parries.
-    this.increment(metadata.numberOfParriesVariableId, 1);
+    // the two item slots are counted apart: a tool is a piece of equipment the player chose to
+    // carry, while the usable item slot is whatever consumable was to hand.
+    if (buttonType === JABS_Button.Tool)
+    {
+      this.increment(metadata.toolUsageVariableId, 1);
 
-    // a precise parry is a parry that also cleared a tighter bar, so it counts toward both tallies.
-    if (preciseParried !== true) return;
+      return;
+    }
 
-    this.increment(metadata.numberOfPreciseParriesVariableId, 1);
+    this.increment(metadata.usableItemUsageVariableId, 1);
   }
 
   /**
@@ -216,6 +317,12 @@ class JABS_MetricsManager
         // its own it lands in the default arm and quietly inflates the equipped-skill tally.
         this.increment(metadata.dodgeSkillUsageVariableId, 1);
         break;
+      case JABS_Button.Tool:
+      case JABS_Button.UsableItem:
+        // both item slots are counted where the item is consumed instead, which catches the ones
+        // carrying no skill at all. Landing here is the action an item happened to spawn, and
+        // counting it again would double every item that has one.
+        break;
       default:
         // the four assignable combat slots are individually named, but nothing here cares which of
         // them it was- they are one bucket called "a skill the player chose to equip".
@@ -223,6 +330,8 @@ class JABS_MetricsManager
         break;
     }
   }
+
+  //endregion usage
 }
 
 export default JABS_MetricsManager;

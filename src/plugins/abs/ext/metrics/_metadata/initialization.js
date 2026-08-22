@@ -20,5 +20,7 @@ J.ABS.EXT.METRICS.Metadata = new JAbsMetrics_PluginMetadata(__PLUGIN_NAME__, __P
  * A collection of all aliased methods for this plugin.
  */
 J.ABS.EXT.METRICS.Aliased = {};
+J.ABS.EXT.METRICS.Aliased.Game_Action = new Map();
+J.ABS.EXT.METRICS.Aliased.JABS_Battler = new Map();
 J.ABS.EXT.METRICS.Aliased.JABS_Engine = new Map();
 //endregion initialization

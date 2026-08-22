@@ -47,11 +47,24 @@ describe('JABS_MetricsManager (direct src import)', () =>
 
   /**
    * Builds the battler a tracking hook inspects, around one action result.
-   * @param {object} result The action result the battler reports.
+   *
+   * Every outcome flag is spelled out rather than defaulted, because these methods branch on several
+   * of them in sequence and a fixture that omits one would be asserting against `undefined` while
+   * looking like it had made a choice.
+   * @param {object} overrides The outcome flags this particular result carries.
    * @returns {object} The JABS battler stand-in.
    */
-  function buildTarget(result)
+  function buildTarget(overrides)
   {
+    const result = {
+      hpDamage: 0,
+      critical: false,
+      parried: false,
+      glancing: false,
+      evaded: false,
+      ...overrides,
+    };
+
     return {
       getBattler: () => ({ result: () => result }),
     };
@@ -141,6 +154,25 @@ describe('JABS_MetricsManager (direct src import)', () =>
     });
   });
 
+  describe('trackDefeatedAlly', () =>
+  {
+    it('counts the downed ally against its own tally rather than the player death count', () =>
+    {
+      // Arrange
+      const transcript = captureMetricWrites();
+
+      // Act
+      JABS_MetricsManager.trackDefeatedAlly();
+
+      // Assert
+      expect(transcript.mods).toEqual([
+        {
+          variableId: SAMPLE_METRICS_CONFIG.alliesDowned,
+          amount: 1,
+        } ]);
+    });
+  });
+
   describe('trackDefeatedPlayer', () =>
   {
     it('counts the death', () =>
@@ -162,16 +194,34 @@ describe('JABS_MetricsManager (direct src import)', () =>
 
   describe('trackAttackData', () =>
   {
+    it('counts an enemy evasion and records nothing else about the swing', () =>
+    {
+      // Arrange- damage is present and non-zero, so the evasion branch is the only thing that can
+      // keep it out of the damage tallies below.
+      const transcript = captureMetricWrites();
+
+      // Act
+      JABS_MetricsManager.trackAttackData(buildTarget({
+        hpDamage: 120,
+        evaded: true,
+      }));
+
+      // Assert
+      expect(transcript.mods).toEqual([
+        {
+          variableId: SAMPLE_METRICS_CONFIG.attacksEvadedByEnemies,
+          amount: 1,
+        } ]);
+      expect(transcript.sets).toEqual([]);
+    });
+
     it('counts the damage and rewrites the personal best when the hit beats it', () =>
     {
       // Arrange
       const transcript = captureMetricWrites({ [SAMPLE_METRICS_CONFIG.highestDamageDealt]: 50 });
 
       // Act
-      JABS_MetricsManager.trackAttackData(buildTarget({
-        hpDamage: 120,
-        critical: false,
-      }));
+      JABS_MetricsManager.trackAttackData(buildTarget({ hpDamage: 120 }));
 
       // Assert
       expect(transcript.mods).toEqual([
@@ -219,10 +269,7 @@ describe('JABS_MetricsManager (direct src import)', () =>
       const transcript = captureMetricWrites();
 
       // Act
-      JABS_MetricsManager.trackAttackData(buildTarget({
-        hpDamage: 0,
-        critical: false,
-      }));
+      JABS_MetricsManager.trackAttackData(buildTarget({ hpDamage: 0 }));
 
       // Assert
       expect(transcript.mods).toEqual([]);
@@ -236,10 +283,7 @@ describe('JABS_MetricsManager (direct src import)', () =>
       const transcript = captureMetricWrites();
 
       // Act
-      JABS_MetricsManager.trackAttackData(buildTarget({
-        hpDamage: -400,
-        critical: false,
-      }));
+      JABS_MetricsManager.trackAttackData(buildTarget({ hpDamage: -400 }));
 
       // Assert
       expect(transcript.mods).toEqual([]);
@@ -255,12 +299,7 @@ describe('JABS_MetricsManager (direct src import)', () =>
       const transcript = captureMetricWrites({ [SAMPLE_METRICS_CONFIG.highestDamageTaken]: 10 });
 
       // Act
-      JABS_MetricsManager.trackDefensiveData(buildTarget({
-        hpDamage: 80,
-        critical: false,
-        parried: false,
-        preciseParried: false,
-      }));
+      JABS_MetricsManager.trackDefensiveData(buildTarget({ hpDamage: 80 }));
 
       // Assert
       expect(transcript.mods).toEqual([
@@ -275,6 +314,30 @@ describe('JABS_MetricsManager (direct src import)', () =>
         } ]);
     });
 
+    it('counts a glancing blow alongside the damage it let through, not instead of it', () =>
+    {
+      // Arrange- a glancing blow is the partial parry, so unlike the other two outcomes it coexists
+      // with damage rather than excluding it.
+      const transcript = captureMetricWrites();
+
+      // Act
+      JABS_MetricsManager.trackDefensiveData(buildTarget({
+        hpDamage: 40,
+        glancing: true,
+      }));
+
+      // Assert
+      expect(transcript.mods).toEqual([
+        {
+          variableId: SAMPLE_METRICS_CONFIG.numberOfGlancingBlows,
+          amount: 1,
+        },
+        {
+          variableId: SAMPLE_METRICS_CONFIG.totalDamageTaken,
+          amount: 40,
+        } ]);
+    });
+
     it('counts a hit that landed as damage rather than as a parry, even when it was parried', () =>
     {
       // Arrange- a parry that still let damage through is not a parry for records purposes; the two
@@ -284,12 +347,10 @@ describe('JABS_MetricsManager (direct src import)', () =>
       // Act
       JABS_MetricsManager.trackDefensiveData(buildTarget({
         hpDamage: 80,
-        critical: false,
         parried: true,
-        preciseParried: true,
       }));
 
-      // Assert- the damage tally proves the branch ran, which is what makes the absences below
+      // Assert- the damage tally proves the branch ran, which is what makes the absence below
       // attributable to the routing rather than to nothing having happened.
       expect(transcript.mods).toContainEqual({
         variableId: SAMPLE_METRICS_CONFIG.totalDamageTaken,
@@ -297,10 +358,6 @@ describe('JABS_MetricsManager (direct src import)', () =>
       });
       expect(transcript.mods).not.toContainEqual({
         variableId: SAMPLE_METRICS_CONFIG.numberOfParries,
-        amount: 1,
-      });
-      expect(transcript.mods).not.toContainEqual({
-        variableId: SAMPLE_METRICS_CONFIG.numberOfPreciseParries,
         amount: 1,
       });
     });
@@ -311,14 +368,9 @@ describe('JABS_MetricsManager (direct src import)', () =>
       const transcript = captureMetricWrites();
 
       // Act
-      JABS_MetricsManager.trackDefensiveData(buildTarget({
-        hpDamage: 0,
-        critical: false,
-        parried: true,
-        preciseParried: false,
-      }));
+      JABS_MetricsManager.trackDefensiveData(buildTarget({ parried: true }));
 
-      // Assert- exactly one write, so the precise tally provably did not also move.
+      // Assert
       expect(transcript.mods).toEqual([
         {
           variableId: SAMPLE_METRICS_CONFIG.numberOfParries,
@@ -326,18 +378,49 @@ describe('JABS_MetricsManager (direct src import)', () =>
         } ]);
     });
 
-    it('records nothing for a hit that neither landed nor was parried', () =>
+    it('counts a parry rather than an evasion when the hit was both', () =>
     {
-      // Arrange- a plain miss.
+      // Arrange- being fully negated on purpose is the more specific claim of the two, and both
+      // flags being set is what makes this test able to prove which one wins.
       const transcript = captureMetricWrites();
 
       // Act
       JABS_MetricsManager.trackDefensiveData(buildTarget({
-        hpDamage: 0,
-        critical: false,
-        parried: false,
-        preciseParried: false,
+        parried: true,
+        evaded: true,
       }));
+
+      // Assert
+      expect(transcript.mods).toEqual([
+        {
+          variableId: SAMPLE_METRICS_CONFIG.numberOfParries,
+          amount: 1,
+        } ]);
+    });
+
+    it('counts an evasion when the attack never connected and was not parried', () =>
+    {
+      // Arrange
+      const transcript = captureMetricWrites();
+
+      // Act
+      JABS_MetricsManager.trackDefensiveData(buildTarget({ evaded: true }));
+
+      // Assert
+      expect(transcript.mods).toEqual([
+        {
+          variableId: SAMPLE_METRICS_CONFIG.attacksEvadedByParty,
+          amount: 1,
+        } ]);
+    });
+
+    it('records nothing for a hit that neither landed, parried, nor was evaded', () =>
+    {
+      // Arrange- a skill that simply had no hp component against this target.
+      const transcript = captureMetricWrites();
+
+      // Act
+      JABS_MetricsManager.trackDefensiveData(buildTarget({}));
 
       // Assert
       expect(transcript.mods).toEqual([]);
@@ -388,40 +471,140 @@ describe('JABS_MetricsManager (direct src import)', () =>
     });
   });
 
-  describe('trackParry', () =>
+  describe('trackPreciseParry', () =>
   {
-    it('counts a precise parry on top of the ordinary parry it also is', () =>
+    it('counts only the precise tally, leaving the combined total to the outcome that already moved it', () =>
     {
-      // Arrange
+      // Arrange- the deliberate parry writes the same `parried` outcome the passive one does, so it
+      // is already counted where every negated hit is counted. Adding here too would double it and
+      // drive the derived passive count negative.
       const transcript = captureMetricWrites();
 
       // Act
-      JABS_MetricsManager.trackParry(true);
+      JABS_MetricsManager.trackPreciseParry();
 
       // Assert
       expect(transcript.mods).toEqual([
-        {
-          variableId: SAMPLE_METRICS_CONFIG.numberOfParries,
-          amount: 1,
-        },
         {
           variableId: SAMPLE_METRICS_CONFIG.numberOfPreciseParries,
           amount: 1,
         } ]);
     });
+  });
 
-    it('counts only the ordinary parry when it was not precise', () =>
+  describe('trackGuardedHit', () =>
+  {
+    it('counts the hit that landed on a raised guard', () =>
     {
       // Arrange
       const transcript = captureMetricWrites();
 
       // Act
-      JABS_MetricsManager.trackParry(false);
+      JABS_MetricsManager.trackGuardedHit();
 
       // Assert
       expect(transcript.mods).toEqual([
         {
-          variableId: SAMPLE_METRICS_CONFIG.numberOfParries,
+          variableId: SAMPLE_METRICS_CONFIG.numberOfGuardedHits,
+          amount: 1,
+        } ]);
+    });
+  });
+
+  describe('trackDamagePrevented', () =>
+  {
+    it('records the difference guarding actually saved', () =>
+    {
+      // Arrange
+      const transcript = captureMetricWrites();
+
+      // Act
+      JABS_MetricsManager.trackDamagePrevented(100, 30);
+
+      // Assert- 70, not 100 and not 30; the assertion has to distinguish the difference from either
+      // operand, which is why the two inputs are unequal and neither equals the answer.
+      expect(transcript.mods).toEqual([
+        {
+          variableId: SAMPLE_METRICS_CONFIG.damagePreventedByGuarding,
+          amount: 70,
+        } ]);
+    });
+
+    it('records nothing when guarding improved the hit not at all', () =>
+    {
+      // Arrange
+      const transcript = captureMetricWrites();
+
+      // Act
+      JABS_MetricsManager.trackDamagePrevented(100, 100);
+
+      // Assert
+      expect(transcript.mods).toEqual([]);
+    });
+
+    it('records nothing for healing, which runs the same path as negative damage', () =>
+    {
+      // Arrange- a heal reduced by guarding would produce a "prevented" figure pointing the wrong
+      // way, quietly subtracting from a running total that is only supposed to grow.
+      const transcript = captureMetricWrites();
+
+      // Act
+      JABS_MetricsManager.trackDamagePrevented(-100, -30);
+
+      // Assert
+      expect(transcript.mods).toEqual([]);
+    });
+  });
+
+  describe('trackGuardActivation', () =>
+  {
+    it('counts the raised guard', () =>
+    {
+      // Arrange
+      const transcript = captureMetricWrites();
+
+      // Act
+      JABS_MetricsManager.trackGuardActivation();
+
+      // Assert
+      expect(transcript.mods).toEqual([
+        {
+          variableId: SAMPLE_METRICS_CONFIG.guardActivations,
+          amount: 1,
+        } ]);
+    });
+  });
+
+  describe('trackItemUsage', () =>
+  {
+    it('counts a tool against the tool tally', () =>
+    {
+      // Arrange
+      const transcript = captureMetricWrites();
+
+      // Act
+      JABS_MetricsManager.trackItemUsage(globalThis.JABS_Button.Tool);
+
+      // Assert
+      expect(transcript.mods).toEqual([
+        {
+          variableId: SAMPLE_METRICS_CONFIG.toolUsage,
+          amount: 1,
+        } ]);
+    });
+
+    it('counts a usable item against the usable item tally', () =>
+    {
+      // Arrange
+      const transcript = captureMetricWrites();
+
+      // Act
+      JABS_MetricsManager.trackItemUsage(globalThis.JABS_Button.UsableItem);
+
+      // Assert
+      expect(transcript.mods).toEqual([
+        {
+          variableId: SAMPLE_METRICS_CONFIG.usableItemUsage,
           amount: 1,
         } ]);
     });
@@ -452,6 +635,23 @@ describe('JABS_MetricsManager (direct src import)', () =>
             variableId: SAMPLE_METRICS_CONFIG[configKey],
             amount: 1,
           } ]);
+      });
+    });
+
+    [ 'Tool', 'UsableItem' ].forEach(cooldownType =>
+    {
+      it(`counts nothing for the action a ${cooldownType} spawned, since the item itself was counted`, () =>
+      {
+        // Arrange- an item that carries a skill id reaches here in addition to being consumed, so
+        // without an explicit case it would fall to the default arm and be double counted as an
+        // equipped skill on top of its own tally.
+        const transcript = captureMetricWrites();
+
+        // Act
+        JABS_MetricsManager.trackActionData({ getCooldownType: () => globalThis.JABS_Button[cooldownType] });
+
+        // Assert
+        expect(transcript.mods).toEqual([]);
       });
     });
   });

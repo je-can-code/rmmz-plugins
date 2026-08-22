@@ -14,15 +14,15 @@
  * ============================================================================
  * OVERVIEW
  * J-ABS-Metrics quietly keeps score. It hooks the moments JABS already
- * announces- a battler died, a skill effect landed, an action was executed-
- * and files what happened into game variables.
+ * announces- a battler died, a skill effect landed, guard was raised, an item
+ * was consumed- and files what happened into game variables.
  *
  * Nothing in this plugin changes gameplay. It only observes.
  *
  * Integrates with others of mine plugins:
  * - J-Base; to be honest this is just required for all my plugins.
  * - J-ABS; every metric here is a JABS event.
- * - J-ABS-InputManager; defines the slots that skill usage is bucketed by.
+ * - J-ABS-InputManager; defines the slots that usage is bucketed by.
  *
  * ----------------------------------------------------------------------------
  * DETAILS:
@@ -33,11 +33,11 @@
  * maintains, with nothing else to write.
  *
  * The metrics divide into three shapes, and knowing which is which is the
- * difference between a number that means something and a number that does not:
+ * difference between a number that means something and one that does not:
  *
- * - RUNNING TOTALS only ever grow (total damage dealt, enemies defeated).
+ * - RUNNING TOTALS only ever grow (total damage dealt, damage prevented).
  * - PERSONAL BESTS keep the largest value ever seen (biggest crit landed).
- * - COUNTS tally occurrences (number of parries, mainhand skill usage).
+ * - COUNTS tally occurrences (number of parries, guard activations).
  *
  * ============================================================================
  * REQUIRED EXTERNAL CONFIGURATION
@@ -46,35 +46,59 @@
  * under a top-level `metrics` block. The plugin THROWS at startup when the
  * block is missing.
  *
- * A variableId is a bare number that means nothing on its own, and seventeen of
- * them in a plugin parameter panel is seventeen opportunities to point two
+ * A variableId is a bare number that means nothing on its own, and twenty-six
+ * of them in a plugin parameter panel is twenty-six opportunities to point two
  * metrics at the same variable and never find out. In the config file they sit
  * beside the rest of the JABS setup, in a file that diffs.
  *
- * Required shape (all seventeen keys required):
+ * Required shape (all twenty-six keys required):
  *
  *   {
  *     "teams": [ ... ],
  *     "metrics": {
- *       "enemiesDefeated":        101,
- *       "destructiblesDestroyed": 102,
- *       "totalDamageDealt":       103,
- *       "highestDamageDealt":     104,
- *       "numberOfCritsDealt":     105,
- *       "biggestCritDealt":       106,
- *       "numberOfParries":        107,
- *       "numberOfPreciseParries": 108,
- *       "totalDamageTaken":       109,
- *       "highestDamageTaken":     110,
- *       "numberOfCritsTaken":     111,
- *       "biggestCritTaken":       112,
- *       "mainhandSkillUsage":     113,
- *       "offhandSkillUsage":      114,
- *       "assignedSkillUsage":     115,
- *       "dodgeSkillUsage":        116,
- *       "numberOfDeaths":         117
+ *       "enemiesDefeated":           61,
+ *       "destructiblesDestroyed":    62,
+ *       "alliesDowned":              63,
+ *       "numberOfDeaths":            64,
+ *       "totalDamageDealt":          65,
+ *       "highestDamageDealt":        66,
+ *       "numberOfCritsDealt":        67,
+ *       "biggestCritDealt":          68,
+ *       "attacksEvadedByEnemies":    69,
+ *       "totalDamageTaken":          70,
+ *       "highestDamageTaken":        71,
+ *       "numberOfCritsTaken":        72,
+ *       "biggestCritTaken":          73,
+ *       "numberOfParries":           74,
+ *       "numberOfPreciseParries":    75,
+ *       "numberOfGlancingBlows":     76,
+ *       "numberOfGuardedHits":       77,
+ *       "attacksEvadedByParty":      78,
+ *       "damagePreventedByGuarding": 79,
+ *       "mainhandSkillUsage":        80,
+ *       "offhandSkillUsage":         81,
+ *       "assignedSkillUsage":        82,
+ *       "dodgeSkillUsage":           83,
+ *       "guardActivations":          84,
+ *       "toolUsage":                 85,
+ *       "usableItemUsage":           86
  *     }
  *   }
+ *
+ * ============================================================================
+ * WHO COUNTS:
+ * Two rules, applied consistently.
+ *
+ * DEFENSIVE OUTCOMES ARE PARTY-WIDE. Damage taken, parries, glancing blows,
+ * guarded hits, evasions and damage prevented all count for any actor, not only
+ * the one being controlled. An ally soaking a hit soaked it; leaving them out
+ * would make damage-taken and damage-prevented describe different populations
+ * and stop being comparable to each other.
+ *
+ * INPUT METRICS ARE THE PLAYER ONLY. Slot usage, guard activations, dodges and
+ * item usage count only what the person holding the controller did. Ally AI
+ * raises guard on its own schedule, and folding that in would bury the one
+ * number these exist to answer: what did the player actually reach for.
  *
  * ============================================================================
  * WHAT COUNTS AS WHAT:
@@ -84,20 +108,42 @@
  * destructibles. Everything else files under enemies. Keeping them apart means
  * an hour spent harvesting does not read as an hour spent fighting.
  *
+ * THE THREE DEFENSIVE OUTCOMES:
+ * A hit that is fully negated is a PARRY. A hit that lands for reduced damage
+ * because the defender rolled well is a GLANCING BLOW. A hit that never
+ * connects because evasion beat accuracy is an EVASION. All three exist, and
+ * all three are counted separately.
+ *
+ * PARRIES, PRECISE AND OTHERWISE:
+ * A parry happens two ways- passively, when the defender's GRD overwhelms the
+ * attacker's HIT, or deliberately, by holding guard inside the parry window.
+ * Both produce the same outcome, so "number of parries" is the combined total,
+ * and "number of precise parries" is the deliberate subset of it. The passive
+ * count is the difference between the two and deliberately spends no variable
+ * of its own- a stored figure that can disagree with its own operands is worse
+ * than a subtraction performed when someone asks.
+ *
+ * ATTACKS EVADED, BOTH DIRECTIONS:
+ * "By enemies" counts swings that an enemy slipped, which is a statement about
+ * picking fights above one's level rather than about swinging at empty air.
+ * "By party" counts incoming attacks the party slipped.
+ *
+ * DAMAGE PREVENTED BY GUARDING:
+ * Measured as the difference between the hit before and after guard reduction,
+ * at the one moment both figures exist. Healing runs through the same reduction
+ * path as negative damage and is excluded, since "prevented" there would be a
+ * number pointing the wrong way.
+ *
+ * ITEM USAGE IS COUNTED AT CONSUMPTION:
+ * Not at the executed action, because an item only produces an action when it
+ * carries a skill id- so a plain healing potion would never be counted at all.
+ * Walking over loot travels the same path and is excluded: picking a potion up
+ * is not using one.
+ *
  * TOOLS ARE NOT ATTACKS:
- * Anything executed from the tool slot is skipped entirely for damage tracking.
- * A thrown bomb is inventory usage, not swordsmanship, and folding it into the
- * damage tallies would make them describe something the player did not do.
- *
- * PARRIES ARE COUNTED ONLY WHEN NOTHING LANDED:
- * A parry that still let damage through is recorded as damage taken, not as a
- * parry. Precise parries increment both the parry tally and the precise tally,
- * because a precise parry is a parry that also cleared a tighter bar.
- *
- * SKILL USAGE IS THE PLAYER ONLY:
- * Allies and enemies swinging weapons do not move these numbers. Mainhand and
- * offhand each get their own count; the four assignable combat slots share one,
- * because "which of my equipped skills was it" is a question no trophy asks.
+ * Anything executed from the tool slot is skipped for damage tracking. A thrown
+ * bomb is inventory usage, not swordsmanship, and folding it into the damage
+ * tallies would make them describe something the player did not do.
  *
  * ============================================================================
  * CHANGELOG:

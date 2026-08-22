@@ -14,15 +14,15 @@
  * ============================================================================
  * OVERVIEW
  * J-ABS-Metrics quietly keeps score. It hooks the moments JABS already
- * announces- a battler died, a skill effect landed, an action was executed-
- * and files what happened into game variables.
+ * announces- a battler died, a skill effect landed, guard was raised, an item
+ * was consumed- and files what happened into game variables.
  *
  * Nothing in this plugin changes gameplay. It only observes.
  *
  * Integrates with others of mine plugins:
  * - J-Base; to be honest this is just required for all my plugins.
  * - J-ABS; every metric here is a JABS event.
- * - J-ABS-InputManager; defines the slots that skill usage is bucketed by.
+ * - J-ABS-InputManager; defines the slots that usage is bucketed by.
  *
  * ----------------------------------------------------------------------------
  * DETAILS:
@@ -33,11 +33,11 @@
  * maintains, with nothing else to write.
  *
  * The metrics divide into three shapes, and knowing which is which is the
- * difference between a number that means something and a number that does not:
+ * difference between a number that means something and one that does not:
  *
- * - RUNNING TOTALS only ever grow (total damage dealt, enemies defeated).
+ * - RUNNING TOTALS only ever grow (total damage dealt, damage prevented).
  * - PERSONAL BESTS keep the largest value ever seen (biggest crit landed).
- * - COUNTS tally occurrences (number of parries, mainhand skill usage).
+ * - COUNTS tally occurrences (number of parries, guard activations).
  *
  * ============================================================================
  * REQUIRED EXTERNAL CONFIGURATION
@@ -46,35 +46,59 @@
  * under a top-level `metrics` block. The plugin THROWS at startup when the
  * block is missing.
  *
- * A variableId is a bare number that means nothing on its own, and seventeen of
- * them in a plugin parameter panel is seventeen opportunities to point two
+ * A variableId is a bare number that means nothing on its own, and twenty-six
+ * of them in a plugin parameter panel is twenty-six opportunities to point two
  * metrics at the same variable and never find out. In the config file they sit
  * beside the rest of the JABS setup, in a file that diffs.
  *
- * Required shape (all seventeen keys required):
+ * Required shape (all twenty-six keys required):
  *
  *   {
  *     "teams": [ ... ],
  *     "metrics": {
- *       "enemiesDefeated":        101,
- *       "destructiblesDestroyed": 102,
- *       "totalDamageDealt":       103,
- *       "highestDamageDealt":     104,
- *       "numberOfCritsDealt":     105,
- *       "biggestCritDealt":       106,
- *       "numberOfParries":        107,
- *       "numberOfPreciseParries": 108,
- *       "totalDamageTaken":       109,
- *       "highestDamageTaken":     110,
- *       "numberOfCritsTaken":     111,
- *       "biggestCritTaken":       112,
- *       "mainhandSkillUsage":     113,
- *       "offhandSkillUsage":      114,
- *       "assignedSkillUsage":     115,
- *       "dodgeSkillUsage":        116,
- *       "numberOfDeaths":         117
+ *       "enemiesDefeated":           61,
+ *       "destructiblesDestroyed":    62,
+ *       "alliesDowned":              63,
+ *       "numberOfDeaths":            64,
+ *       "totalDamageDealt":          65,
+ *       "highestDamageDealt":        66,
+ *       "numberOfCritsDealt":        67,
+ *       "biggestCritDealt":          68,
+ *       "attacksEvadedByEnemies":    69,
+ *       "totalDamageTaken":          70,
+ *       "highestDamageTaken":        71,
+ *       "numberOfCritsTaken":        72,
+ *       "biggestCritTaken":          73,
+ *       "numberOfParries":           74,
+ *       "numberOfPreciseParries":    75,
+ *       "numberOfGlancingBlows":     76,
+ *       "numberOfGuardedHits":       77,
+ *       "attacksEvadedByParty":      78,
+ *       "damagePreventedByGuarding": 79,
+ *       "mainhandSkillUsage":        80,
+ *       "offhandSkillUsage":         81,
+ *       "assignedSkillUsage":        82,
+ *       "dodgeSkillUsage":           83,
+ *       "guardActivations":          84,
+ *       "toolUsage":                 85,
+ *       "usableItemUsage":           86
  *     }
  *   }
+ *
+ * ============================================================================
+ * WHO COUNTS:
+ * Two rules, applied consistently.
+ *
+ * DEFENSIVE OUTCOMES ARE PARTY-WIDE. Damage taken, parries, glancing blows,
+ * guarded hits, evasions and damage prevented all count for any actor, not only
+ * the one being controlled. An ally soaking a hit soaked it; leaving them out
+ * would make damage-taken and damage-prevented describe different populations
+ * and stop being comparable to each other.
+ *
+ * INPUT METRICS ARE THE PLAYER ONLY. Slot usage, guard activations, dodges and
+ * item usage count only what the person holding the controller did. Ally AI
+ * raises guard on its own schedule, and folding that in would bury the one
+ * number these exist to answer: what did the player actually reach for.
  *
  * ============================================================================
  * WHAT COUNTS AS WHAT:
@@ -84,20 +108,42 @@
  * destructibles. Everything else files under enemies. Keeping them apart means
  * an hour spent harvesting does not read as an hour spent fighting.
  *
+ * THE THREE DEFENSIVE OUTCOMES:
+ * A hit that is fully negated is a PARRY. A hit that lands for reduced damage
+ * because the defender rolled well is a GLANCING BLOW. A hit that never
+ * connects because evasion beat accuracy is an EVASION. All three exist, and
+ * all three are counted separately.
+ *
+ * PARRIES, PRECISE AND OTHERWISE:
+ * A parry happens two ways- passively, when the defender's GRD overwhelms the
+ * attacker's HIT, or deliberately, by holding guard inside the parry window.
+ * Both produce the same outcome, so "number of parries" is the combined total,
+ * and "number of precise parries" is the deliberate subset of it. The passive
+ * count is the difference between the two and deliberately spends no variable
+ * of its own- a stored figure that can disagree with its own operands is worse
+ * than a subtraction performed when someone asks.
+ *
+ * ATTACKS EVADED, BOTH DIRECTIONS:
+ * "By enemies" counts swings that an enemy slipped, which is a statement about
+ * picking fights above one's level rather than about swinging at empty air.
+ * "By party" counts incoming attacks the party slipped.
+ *
+ * DAMAGE PREVENTED BY GUARDING:
+ * Measured as the difference between the hit before and after guard reduction,
+ * at the one moment both figures exist. Healing runs through the same reduction
+ * path as negative damage and is excluded, since "prevented" there would be a
+ * number pointing the wrong way.
+ *
+ * ITEM USAGE IS COUNTED AT CONSUMPTION:
+ * Not at the executed action, because an item only produces an action when it
+ * carries a skill id- so a plain healing potion would never be counted at all.
+ * Walking over loot travels the same path and is excluded: picking a potion up
+ * is not using one.
+ *
  * TOOLS ARE NOT ATTACKS:
- * Anything executed from the tool slot is skipped entirely for damage tracking.
- * A thrown bomb is inventory usage, not swordsmanship, and folding it into the
- * damage tallies would make them describe something the player did not do.
- *
- * PARRIES ARE COUNTED ONLY WHEN NOTHING LANDED:
- * A parry that still let damage through is recorded as damage taken, not as a
- * parry. Precise parries increment both the parry tally and the precise tally,
- * because a precise parry is a parry that also cleared a tighter bar.
- *
- * SKILL USAGE IS THE PLAYER ONLY:
- * Allies and enemies swinging weapons do not move these numbers. Mainhand and
- * offhand each get their own count; the four assignable combat slots share one,
- * because "which of my equipped skills was it" is a question no trophy asks.
+ * Anything executed from the tool slot is skipped for damage tracking. A thrown
+ * bomb is inventory usage, not swordsmanship, and folding it into the damage
+ * tallies would make them describe something the player did not do.
  *
  * ============================================================================
  * CHANGELOG:
@@ -139,6 +185,17 @@ var JAbsMetrics_PluginMetadata = class extends PluginMetadata {
 	*/
 	initializeMetadata() {
 		const { metrics } = J.ABS.Metadata.ExternalConfig;
+		this.initializeOutcomeMetadata(metrics);
+		this.initializeOffenseMetadata(metrics);
+		this.initializeDamageTakenMetadata(metrics);
+		this.initializeMitigationMetadata(metrics);
+		this.initializeUsageMetadata(metrics);
+	}
+	/**
+	* Initializes the variables tracking who died and how often.
+	* @param {object} metrics The parsed `metrics` block.
+	*/
+	initializeOutcomeMetadata(metrics) {
 		/**
 		* The variable counting how many animate enemies have been slain.
 		* @type {number}
@@ -151,6 +208,22 @@ var JAbsMetrics_PluginMetadata = class extends PluginMetadata {
 		* @type {number}
 		*/
 		this.destructiblesDestroyedVariableId = metrics.destructiblesDestroyed;
+		/**
+		* The variable counting how many times a non-player ally has gone down.
+		* @type {number}
+		*/
+		this.alliesDownedVariableId = metrics.alliesDowned;
+		/**
+		* The variable counting how many times the player has been defeated.
+		* @type {number}
+		*/
+		this.numberOfDeathsVariableId = metrics.numberOfDeaths;
+	}
+	/**
+	* Initializes the variables describing what the party dishes out.
+	* @param {object} metrics The parsed `metrics` block.
+	*/
+	initializeOffenseMetadata(metrics) {
 		/**
 		* The variable accumulating every point of hp damage the party has dealt.
 		* @type {number}
@@ -172,16 +245,19 @@ var JAbsMetrics_PluginMetadata = class extends PluginMetadata {
 		*/
 		this.biggestCritDealtVariableId = metrics.biggestCritDealt;
 		/**
-		* The variable counting successful parries of any kind.
+		* The variable counting swings that an enemy evaded outright.
+		*
+		* This is a hit-versus-evasion roll rather than a swing at empty air, so a high count says the
+		* player kept picking fights with things well above their level.
 		* @type {number}
 		*/
-		this.numberOfParriesVariableId = metrics.numberOfParries;
-		/**
-		* The variable counting parries that landed inside the precise window.
-		* A precise parry also counts toward the plain parry tally- this is a subset, not a sibling.
-		* @type {number}
-		*/
-		this.numberOfPreciseParriesVariableId = metrics.numberOfPreciseParries;
+		this.attacksEvadedByEnemiesVariableId = metrics.attacksEvadedByEnemies;
+	}
+	/**
+	* Initializes the variables describing what the party absorbs.
+	* @param {object} metrics The parsed `metrics` block.
+	*/
+	initializeDamageTakenMetadata(metrics) {
 		/**
 		* The variable accumulating every point of hp damage the party has absorbed.
 		* @type {number}
@@ -202,6 +278,57 @@ var JAbsMetrics_PluginMetadata = class extends PluginMetadata {
 		* @type {number}
 		*/
 		this.biggestCritTakenVariableId = metrics.biggestCritTaken;
+	}
+	/**
+	* Initializes the variables describing everything the party did to make an incoming hit hurt less.
+	* @param {object} metrics The parsed `metrics` block.
+	*/
+	initializeMitigationMetadata(metrics) {
+		/**
+		* The variable counting fully negated hits of either parry kind.
+		*
+		* Both the passive roll and the deliberate button press write the same outcome, so this is the
+		* combined total. Subtracting the precise tally from it yields the passive one, which is why no
+		* variable is spent holding that separately.
+		* @type {number}
+		*/
+		this.numberOfParriesVariableId = metrics.numberOfParries;
+		/**
+		* The variable counting parries earned by holding guard inside the parry window.
+		*
+		* The deliberate half of the parry system, and the one worth being smug about.
+		* @type {number}
+		*/
+		this.numberOfPreciseParriesVariableId = metrics.numberOfPreciseParries;
+		/**
+		* The variable counting glancing blows- the partial parry, which still lands but for less.
+		* @type {number}
+		*/
+		this.numberOfGlancingBlowsVariableId = metrics.numberOfGlancingBlows;
+		/**
+		* The variable counting hits that landed on a battler who was actively guarding.
+		* @type {number}
+		*/
+		this.numberOfGuardedHitsVariableId = metrics.numberOfGuardedHits;
+		/**
+		* The variable counting incoming attacks the party evaded outright.
+		* @type {number}
+		*/
+		this.attacksEvadedByPartyVariableId = metrics.attacksEvadedByParty;
+		/**
+		* The variable accumulating the damage guarding subtracted from incoming hits.
+		*
+		* The single most legible answer to "was holding guard worth it" - a player who never raised it
+		* reads zero here, and one who lived on it reads a number rivaling their total damage taken.
+		* @type {number}
+		*/
+		this.damagePreventedByGuardingVariableId = metrics.damagePreventedByGuarding;
+	}
+	/**
+	* Initializes the variables describing which inputs the player actually reaches for.
+	* @param {object} metrics The parsed `metrics` block.
+	*/
+	initializeUsageMetadata(metrics) {
 		/**
 		* The variable counting actions executed from the mainhand slot.
 		* @type {number}
@@ -223,10 +350,23 @@ var JAbsMetrics_PluginMetadata = class extends PluginMetadata {
 		*/
 		this.dodgeSkillUsageVariableId = metrics.dodgeSkillUsage;
 		/**
-		* The variable counting how many times the player has been defeated.
+		* The variable counting how many times the player raised their guard.
+		*
+		* Counted on the transition into guarding rather than per frame held, so this answers "how often
+		* did they reach for it" instead of "how long did they lean on it".
 		* @type {number}
 		*/
-		this.numberOfDeathsVariableId = metrics.numberOfDeaths;
+		this.guardActivationsVariableId = metrics.guardActivations;
+		/**
+		* The variable counting tool slot usage.
+		* @type {number}
+		*/
+		this.toolUsageVariableId = metrics.toolUsage;
+		/**
+		* The variable counting usable item slot usage.
+		* @type {number}
+		*/
+		this.usableItemUsageVariableId = metrics.usableItemUsage;
 	}
 };
 
@@ -248,6 +388,8 @@ J.ABS.EXT.METRICS.Metadata = new JAbsMetrics_PluginMetadata("J-ABS-Metrics", "1.
 * A collection of all aliased methods for this plugin.
 */
 J.ABS.EXT.METRICS.Aliased = {};
+J.ABS.EXT.METRICS.Aliased.Game_Action = new Map();
+J.ABS.EXT.METRICS.Aliased.JABS_Battler = new Map();
 J.ABS.EXT.METRICS.Aliased.JABS_Engine = new Map();
 
 //#endregion
@@ -255,12 +397,12 @@ J.ABS.EXT.METRICS.Aliased.JABS_Engine = new Map();
 /**
 * A static manager that translates combat events into game variables.
 *
-* The engine hooks that feed this live in {@link JABS_Engine}, but the recording itself lives here so
-* that "what counts as a critical hit" is answerable without standing up a battle. It also gives the
-* variable writes a single choke point- every metric in the game flows through
-* {@link JABS_MetricsManager.increment} or {@link JABS_MetricsManager.recordHighWaterMark}, so a
-* question like "which of these is a running total and which is a personal best" is answered by
-* looking at which helper the call used.
+* The engine hooks that feed this live across {@link JABS_Engine}, {@link Game_Action} and
+* {@link JABS_Battler}, but the recording itself lives here so that "what counts as a critical hit"
+* is answerable without standing up a battle. It also gives the variable writes a single choke
+* point- every metric in the game flows through {@link JABS_MetricsManager.increment} or
+* {@link JABS_MetricsManager.recordHighWaterMark}, so a question like "which of these is a running
+* total and which is a personal best" is answered by looking at which helper the call used.
 */
 var JABS_MetricsManager = class {
 	/**
@@ -308,6 +450,12 @@ var JABS_MetricsManager = class {
 		this.increment(metadata.enemiesDefeatedVariableId, 1);
 	}
 	/**
+	* Records the downing of a non-player ally.
+	*/
+	static trackDefeatedAlly() {
+		this.increment(this.metadata().alliesDownedVariableId, 1);
+	}
+	/**
 	* Records the defeat of the player.
 	*/
 	static trackDefeatedPlayer() {
@@ -319,7 +467,11 @@ var JABS_MetricsManager = class {
 	*/
 	static trackAttackData(target) {
 		const metadata = this.metadata();
-		const { hpDamage, critical } = target.getBattler().result();
+		const { hpDamage, critical, evaded } = target.getBattler().result();
+		if (evaded === true) {
+			this.increment(metadata.attacksEvadedByEnemiesVariableId, 1);
+			return;
+		}
 		if (hpDamage <= 0) return;
 		this.increment(metadata.totalDamageDealtVariableId, hpDamage);
 		this.recordHighWaterMark(metadata.highestDamageDealtVariableId, hpDamage);
@@ -332,13 +484,22 @@ var JABS_MetricsManager = class {
 	* @param {JABS_Battler} target The ally that was struck.
 	*/
 	static trackDefensiveData(target) {
-		const { hpDamage, critical, parried, preciseParried } = target.getBattler().result();
+		const metadata = this.metadata();
+		const { hpDamage, critical, parried, glancing, evaded } = target.getBattler().result();
+		if (glancing === true) {
+			this.increment(metadata.numberOfGlancingBlowsVariableId, 1);
+		}
 		if (hpDamage > 0) {
 			this.trackDamageTaken(hpDamage, critical);
 			return;
 		}
-		if (parried !== true) return;
-		this.trackParry(preciseParried);
+		if (parried === true) {
+			this.increment(metadata.numberOfParriesVariableId, 1);
+			return;
+		}
+		if (evaded === true) {
+			this.increment(metadata.attacksEvadedByPartyVariableId, 1);
+		}
 	}
 	/**
 	* Records a hit that got through the party's defenses.
@@ -354,14 +515,52 @@ var JABS_MetricsManager = class {
 		this.recordHighWaterMark(metadata.biggestCritTakenVariableId, hpDamage);
 	}
 	/**
-	* Records a parry the party pulled off.
-	* @param {boolean} preciseParried Whether or not the parry landed inside the precise window.
+	* Records a parry earned by holding guard inside the parry window.
+	*
+	* The combined parry tally is not touched here: the deliberate parry also writes the same
+	* `parried` outcome the passive one does, so it is already counted where every fully negated hit
+	* is counted. Adding to both from here would double the total and make the passive count- which is
+	* derived by subtraction- come out negative.
 	*/
-	static trackParry(preciseParried) {
+	static trackPreciseParry() {
+		this.increment(this.metadata().numberOfPreciseParriesVariableId, 1);
+	}
+	/**
+	* Records a hit that landed on a battler who was actively guarding.
+	*/
+	static trackGuardedHit() {
+		this.increment(this.metadata().numberOfGuardedHitsVariableId, 1);
+	}
+	/**
+	* Records how much damage guarding subtracted from an incoming hit.
+	* @param {number} originalDamage The damage before the guard reduction was applied.
+	* @param {number} reducedDamage The damage that remained after the guard reduction.
+	*/
+	static trackDamagePrevented(originalDamage, reducedDamage) {
+		const prevented = originalDamage - reducedDamage;
+		if (prevented <= 0) return;
+		this.increment(this.metadata().damagePreventedByGuardingVariableId, prevented);
+	}
+	/**
+	* Records that the player raised their guard.
+	*/
+	static trackGuardActivation() {
+		this.increment(this.metadata().guardActivationsVariableId, 1);
+	}
+	/**
+	* Records the use of an item out of one of the two item-bearing slots.
+	*
+	* Counted here rather than off the executed map action, because an item only produces a map action
+	* when it has a skill attached to it- so a plain healing potion would never be counted at all.
+	* @param {string} buttonType The slot the item was used from.
+	*/
+	static trackItemUsage(buttonType) {
 		const metadata = this.metadata();
-		this.increment(metadata.numberOfParriesVariableId, 1);
-		if (preciseParried !== true) return;
-		this.increment(metadata.numberOfPreciseParriesVariableId, 1);
+		if (buttonType === JABS_Button.Tool) {
+			this.increment(metadata.toolUsageVariableId, 1);
+			return;
+		}
+		this.increment(metadata.usableItemUsageVariableId, 1);
 	}
 	/**
 	* Records which slot the player just executed an action from.
@@ -380,6 +579,8 @@ var JABS_MetricsManager = class {
 			case JABS_Button.Dodge:
 				this.increment(metadata.dodgeSkillUsageVariableId, 1);
 				break;
+			case JABS_Button.Tool:
+			case JABS_Button.UsableItem: break;
 			default:
 				this.increment(metadata.assignedSkillUsageVariableId, 1);
 				break;
@@ -399,6 +600,16 @@ J.ABS.EXT.METRICS.Aliased.JABS_Engine.set("handleDefeatedEnemy", JABS_Engine.pro
 JABS_Engine.prototype.handleDefeatedEnemy = function(defeatedTarget, caster) {
 	J.ABS.EXT.METRICS.Aliased.JABS_Engine.get("handleDefeatedEnemy").call(this, defeatedTarget, caster);
 	JABS_MetricsManager.trackDefeatedEnemy(defeatedTarget);
+};
+/**
+* Extends {@link #handleDefeatedAlly}.<br/>
+* Also records that a party member went down.
+* @param {JABS_Battler} defeatedAlly The ally that was defeated.
+*/
+J.ABS.EXT.METRICS.Aliased.JABS_Engine.set("handleDefeatedAlly", JABS_Engine.prototype.handleDefeatedAlly);
+JABS_Engine.prototype.handleDefeatedAlly = function(defeatedAlly) {
+	J.ABS.EXT.METRICS.Aliased.JABS_Engine.get("handleDefeatedAlly").call(this, defeatedAlly);
+	JABS_MetricsManager.trackDefeatedAlly();
 };
 /**
 * Extends {@link #handleDefeatedPlayer}.<br/>
@@ -441,6 +652,94 @@ JABS_Engine.prototype.executeMapAction = function(caster, action, targetX, targe
 	J.ABS.EXT.METRICS.Aliased.JABS_Engine.get("executeMapAction").call(this, caster, action, targetX, targetY);
 	if (caster.isPlayer() === false) return;
 	JABS_MetricsManager.trackActionData(action);
+};
+
+//#endregion
+//#region src/plugins/abs/ext/metrics/objects/Game_Action.js
+/**
+* Extends {@link #onParry}.<br/>
+* Also records the parry as the deliberate kind.
+*
+* This hook is reached only from {@link Game_Action.processGuard}'s sibling
+* {@link Game_Action.processParry}, which in turn only runs while the battler's parry window is
+* open- so arriving here is proof the player earned it on purpose. The passive roll that produces
+* the same `parried` outcome never comes through here, which is what makes the two separable at all.
+* @param {JABS_Battler} jabsBattler The battler that is parrying.
+*/
+J.ABS.EXT.METRICS.Aliased.Game_Action.set("onParry", Game_Action.prototype.onParry);
+Game_Action.prototype.onParry = function(jabsBattler) {
+	J.ABS.EXT.METRICS.Aliased.Game_Action.get("onParry").call(this, jabsBattler);
+	if (jabsBattler.isActor() === false) return;
+	JABS_MetricsManager.trackPreciseParry();
+};
+/**
+* Extends {@link #onGuard}.<br/>
+* Also records that a hit landed on someone who was holding guard.
+* @param {JABS_Battler} jabsBattler The battler that is guarding.
+*/
+J.ABS.EXT.METRICS.Aliased.Game_Action.set("onGuard", Game_Action.prototype.onGuard);
+Game_Action.prototype.onGuard = function(jabsBattler) {
+	J.ABS.EXT.METRICS.Aliased.Game_Action.get("onGuard").call(this, jabsBattler);
+	if (jabsBattler.isActor() === false) return;
+	JABS_MetricsManager.trackGuardedHit();
+};
+/**
+* Extends {@link #calculateGuardDamageReduction}.<br/>
+* Also records the difference between what the hit would have dealt and what it did.
+*
+* Measured here rather than anywhere downstream because this is the only point at which both numbers
+* exist at once- by the time the result carries a figure, the original is gone.
+* @param {JABS_Battler} jabsBattler The battler doing the guarding.
+* @param {number} originalDamage The damage before any guard reduction.
+* @returns {number} The damage after the guard reduction.
+*/
+J.ABS.EXT.METRICS.Aliased.Game_Action.set("calculateGuardDamageReduction", Game_Action.prototype.calculateGuardDamageReduction);
+Game_Action.prototype.calculateGuardDamageReduction = function(jabsBattler, originalDamage) {
+	const reducedDamage = J.ABS.EXT.METRICS.Aliased.Game_Action.get("calculateGuardDamageReduction").call(this, jabsBattler, originalDamage);
+	if (jabsBattler.isActor()) {
+		JABS_MetricsManager.trackDamagePrevented(originalDamage, reducedDamage);
+	}
+	return reducedDamage;
+};
+
+//#endregion
+//#region src/plugins/abs/ext/metrics/_models/JABS_Battler.js
+/**
+* Extends {@link #executeGuard}.<br/>
+* Also records that the player reached for their guard.
+*
+* Counted on the transition into guarding rather than per frame held, and measured by comparing the
+* guard state either side of the original call rather than by re-deriving the conditions- the
+* original refuses the request for several reasons of its own, and duplicating that judgement here
+* would mean two answers to one question that could drift apart.
+* @param {boolean} guarding True if the battler is guarding, false otherwise.
+*/
+J.ABS.EXT.METRICS.Aliased.JABS_Battler.set("executeGuard", JABS_Battler.prototype.executeGuard);
+JABS_Battler.prototype.executeGuard = function(guarding) {
+	const wasGuarding = this.guarding();
+	J.ABS.EXT.METRICS.Aliased.JABS_Battler.get("executeGuard").call(this, guarding);
+	if (this.isPlayer() === false) return;
+	if (wasGuarding === true) return;
+	if (this.guarding() === false) return;
+	JABS_MetricsManager.trackGuardActivation();
+};
+/**
+* Extends {@link #applyToolItemEffects}.<br/>
+* Also records that an item was consumed out of one of the two item-bearing slots.
+*
+* Hooked here rather than at the executed map action because an item only produces an action when it
+* carries a skill id- a plain healing potion never reaches the engine at all, and counting there
+* would silently omit every item that does nothing but heal.
+* @param {number} toolId The id of the item being used.
+* @param {string} buttonType The slot the item was used from.
+* @param {boolean=} isLoot Whether this is a loot pickup rather than a deliberate use.
+*/
+J.ABS.EXT.METRICS.Aliased.JABS_Battler.set("applyToolItemEffects", JABS_Battler.prototype.applyToolItemEffects);
+JABS_Battler.prototype.applyToolItemEffects = function(toolId, buttonType, isLoot = false) {
+	J.ABS.EXT.METRICS.Aliased.JABS_Battler.get("applyToolItemEffects").call(this, toolId, buttonType, isLoot);
+	if (this.isPlayer() === false) return;
+	if (isLoot === true) return;
+	JABS_MetricsManager.trackItemUsage(buttonType);
 };
 
 //#endregion
