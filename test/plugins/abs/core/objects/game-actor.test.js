@@ -830,6 +830,21 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
       expect(actor.hasLastOffhandSnapshot()).toEqual(false);
     });
 
+    it('reports no snapshot when the cache slot holds undefined rather than null', () =>
+    {
+      // Arrange: null is what initJabsMembers writes, but a cache slot that was never established
+      // at all reads as undefined- both mean "never observed" and neither is a real snapshot.
+      const actor = buildActor();
+      actor._j._abs._lastOffhandItemId = undefined;
+
+      // Act
+      const hasSnapshot = actor.hasLastOffhandSnapshot();
+
+      // Assert
+      expect(actor.rawLastOffhandItemId()).toBeUndefined();
+      expect(hasSnapshot).toEqual(false);
+    });
+
     it('records the offhand item id, or 0 when unequipped', () =>
     {
       const actor = buildActor();
@@ -856,6 +871,26 @@ describe('J-ABS Game_Actor (unit, all downstream dependencies mocked)', () =>
       actor.reconcileOffhandPinAgainstEquip();
 
       expect(actor.lastOffhandItemId()).toEqual(3);
+      expect(skillSlotManager.clearOffhandPin).not.toHaveBeenCalled();
+    });
+
+    it('treats an unestablished cache slot as a first observation too', () =>
+    {
+      // Arrange: an actor whose cache slot is undefined rather than null, holding a pin that must
+      // survive- the coalescing accessor would report 0 for this actor and make the live offhand
+      // look like a change, so only the raw undefined check can keep the pin alive.
+      const skillSlotManager = buildSkillSlotManager({ getOffhandPinnedSkillId: () => 11 });
+      const actor = buildActor({
+        getSkillSlotManager: () => skillSlotManager,
+        equips: () => [ null, { id: 7 } ],
+      });
+      actor._j._abs._lastOffhandItemId = undefined;
+
+      // Act
+      actor.reconcileOffhandPinAgainstEquip();
+
+      // Assert: the cache seeded from the live offhand and the pin was left untouched.
+      expect(actor.lastOffhandItemId()).toEqual(7);
       expect(skillSlotManager.clearOffhandPin).not.toHaveBeenCalled();
     });
 

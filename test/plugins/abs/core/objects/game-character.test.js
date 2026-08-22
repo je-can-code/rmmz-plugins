@@ -629,6 +629,55 @@ describe('J-ABS Game_Character (unit, all downstream dependencies mocked)', () =
         expect(character.findDiagonalDirectionTo(4, 0)).toEqual(3);
       });
 
+      /**
+       * Identifies the two-tile wall used by the best-node test below. It occupies (1,0) and
+       * (1,-1), which between them block the direct rightward step and the up-right diagonal
+       * out of the origin, leaving the down-right detour as the only forward progress.
+       * @param {number} x The x coordinate of the tile being entered.
+       * @param {number} y The y coordinate of the tile being entered.
+       * @returns {boolean} True if the tile is walled off, false otherwise.
+       */
+      function isWalledTile(x, y)
+      {
+        return x === 1 && (y === 0 || y === -1);
+      }
+
+      it('answers from the best node tracked so far when the goal sits beyond the search limit', () =>
+      {
+        globalThis.$gameMap = buildRealisticGameMap();
+        const character = buildCharacter({
+          isThrough: () => false,
+          isDebugThrough: () => false,
+          x: 0,
+          y: 0,
+          // two expansions against a goal nine tiles away- the goal is never reached, so the
+          // answer comes entirely from the running best-node tracking rather than from the
+          // goal-reached break that would otherwise overwrite it.
+          searchLimit: () => 2,
+          // the heuristic is wall-blind and would say "straight right"; the expected 3 below is
+          // therefore proof the answer came from the search, not from the fallback.
+          deltaXFrom: () => -9,
+          deltaYFrom: () => 0,
+          isDiagonalDirection: (dir) => [ 1, 3, 7, 9 ].includes(dir),
+          isStraightDirection: (dir) => [ 2, 4, 6, 8 ].includes(dir),
+          getDiagonalDirections: diagonalComponents,
+          canPass: (x, y, dir) =>
+          {
+            const x2 = $gameMap.roundXWithDirection(x, dir);
+            const y2 = $gameMap.roundYWithDirection(y, dir);
+            return !isWalledTile(x2, y2);
+          },
+          canPassDiagonally: (x, y, horz, vert) =>
+          {
+            const x2 = $gameMap.roundXWithDirection(x, horz);
+            const y2 = $gameMap.roundYWithDirection(y, vert);
+            return !isWalledTile(x2, y2);
+          },
+        });
+
+        expect(character.findDiagonalDirectionTo(9, 0)).toEqual(3);
+      });
+
       it('stops expanding once a node hits the search limit, falling back to the best node found', () =>
       {
         globalThis.$gameMap = buildRealisticGameMap();
@@ -714,11 +763,13 @@ describe('J-ABS Game_Character (unit, all downstream dependencies mocked)', () =
         getDiagonalDirections: () => [ 6, 2 ],
         canPass: () => false,
         canPassDiagonally: () => false,
-        deltaXFrom: () => 3,
+        // deliberately a leftward delta: the no-progress fall-through would resolve to 4 on its
+        // own, so a heuristic answer of 6 is the only thing that proves the fallback ran.
+        deltaXFrom: () => -3,
         deltaYFrom: () => 0,
       });
 
-      expect(character.findDiagonalDirectionTo(3, 0)).toEqual(4);
+      expect(character.findDiagonalDirectionTo(3, 0)).toEqual(6);
     });
   });
   //endregion findDiagonalDirectionTo

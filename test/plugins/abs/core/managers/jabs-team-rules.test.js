@@ -94,6 +94,31 @@ describe('JABS_TeamRules (direct src import)', () =>
       expect(JABS_TeamRules.isOpposed(0, 1)).toBe(true);
     });
 
+    it('is false for a team with no definition compared against itself', () =>
+    {
+      // Arrange- team 99 exists on no definition, so the "no definition means opposed" fallback
+      // below would call it hostile to itself. The same-id guard is the only thing standing
+      // between an unconfigured team id and a battler treating its own squadmates as enemies.
+
+      // Act & Assert
+      expect(JABS_TeamRules.isOpposed(99, 99)).toBe(false);
+    });
+
+    it('resolves the opposition list of the requested team rather than the first one defined', () =>
+    {
+      // Arrange- the decoy is deliberately ordered ahead of the team actually being asked about,
+      // and opposes something else entirely. With only one definition in the list, "found team A"
+      // and "found any team" would be indistinguishable.
+      globalThis.J.ABS.Metadata.Teams = [
+        { id: 7, key: 'DECOY', opposes: [ 9 ] },
+        { id: 8, key: 'ASKED', opposes: [ 3 ] },
+      ];
+
+      // Act & Assert
+      expect(JABS_TeamRules.isOpposed(8, 3)).toBe(true);
+      expect(JABS_TeamRules.isOpposed(8, 9)).toBe(false);
+    });
+
     it('falls back to legacy opposed-by-default behavior when team A has no definition', () =>
     {
       // Arrange

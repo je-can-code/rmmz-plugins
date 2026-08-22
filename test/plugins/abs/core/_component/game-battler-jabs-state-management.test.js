@@ -294,6 +294,30 @@ describe('J-ABS Game_Battler JABS state management (direct src import)', () =>
       expect(originalClearStates).toHaveBeenCalledTimes(1);
     });
 
+    it('skips the purge for a battler that has no uuid yet', () =>
+    {
+      // Arrange- a battler mid-initMembers has no database identity, so getUuid() reports the
+      // empty-string sentinel. The tracker is stocked with a live, non-expired, non-death entry
+      // so neither of those two guards can be what spares it from removal here.
+      const battler = buildBattler();
+      battler.getUuid = () => String.empty;
+      battler.deathStateId = () => 1;
+      globalThis.J.ABS.Aliased.Game_Battler.set('clearStates', vi.fn());
+      const getJabsStatesByUuidSpy = vi.fn(() => new Map([ [ 5, { stateId: 5, expired: false } ] ]));
+      globalThis.$jabsEngine.getJabsStatesByUuid = getJabsStatesByUuidSpy;
+      const removeSpy = vi.spyOn(battler, 'removeState')
+        .mockImplementation(() => {});
+
+      // Act
+      battler.clearStates();
+
+      // Assert- the lookup seeds a tracker entry for whatever uuid it is handed, so handing it an
+      // empty one would permanently park a bogus key in the engine's state map.
+      expect(getJabsStatesByUuidSpy).not.toHaveBeenCalled();
+      expect(removeSpy).not.toHaveBeenCalled();
+      removeSpy.mockRestore();
+    });
+
     it('routes a non-expired, non-death tracked state through the normal removal pipeline', () =>
     {
       // Arrange
@@ -572,13 +596,18 @@ describe('J-ABS Game_Battler JABS state management (direct src import)', () =>
       expect(battler.state).toHaveBeenCalledWith(5);
     });
 
-    it('stays indefinite when the override duration is the -1 sentinel', () =>
+    it('stays indefinite when the override duration is the -1 sentinel, boosts and all', () =>
     {
-      // Arrange
+      // Arrange- both boost sources are deliberately non-zero, so running the sentinel through
+      // the ordinary duration math would visibly inflate it instead of leaving it at -1.
       const battler = buildBattler();
-      const stateRow = buildStateRow({ jabsStateHasMapTimer: true, jabsStateDurationFrames: 999 });
+      const stateRow = buildStateRow({
+        jabsStateHasMapTimer: true,
+        jabsStateDurationFrames: 999,
+        jabsThisStateDurationBoost: () => 3,
+      });
       battler.state = () => stateRow;
-      battler.getStateDurationBoost = () => 0;
+      battler.getStateDurationBoost = () => 5;
 
       // Act
       battler.addJabsState(5, null, { duration: -1 });

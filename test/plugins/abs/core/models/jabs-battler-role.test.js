@@ -51,7 +51,45 @@ describe('JABS_BattlerRole (unit, pure/no dependencies)', () =>
       expect(role.hasRole()).toEqual(false);
     });
 
-    it('returns true when any single role flag is true', () =>
+    // every flag gets its own case on purpose: `hasRole` is a six-operand `||`, which is six
+    // independent conditions. Proving it with one flag set leaves the other five free to be
+    // stripped out of the chain without a single test noticing the difference.
+    it('returns true for a leader with no other role', () =>
+    {
+      const role = new JABS_BattlerRole(true, false, false, false, false, false);
+
+      expect(role.hasRole()).toEqual(true);
+    });
+
+    it('returns true for a follower with no other role', () =>
+    {
+      const role = new JABS_BattlerRole(false, true, false, false, false, false);
+
+      expect(role.hasRole()).toEqual(true);
+    });
+
+    it('returns true for a guardian with no other role', () =>
+    {
+      const role = new JABS_BattlerRole(false, false, true, false, false, false);
+
+      expect(role.hasRole()).toEqual(true);
+    });
+
+    it('returns true for a ward with no other role', () =>
+    {
+      const role = new JABS_BattlerRole(false, false, false, true, false, false);
+
+      expect(role.hasRole()).toEqual(true);
+    });
+
+    it('returns true for a solo battler with no other role', () =>
+    {
+      const role = new JABS_BattlerRole(false, false, false, false, true, false);
+
+      expect(role.hasRole()).toEqual(true);
+    });
+
+    it('returns true for a sentinel with no other role', () =>
     {
       const role = new JABS_BattlerRole(false, false, false, false, false, true);
 

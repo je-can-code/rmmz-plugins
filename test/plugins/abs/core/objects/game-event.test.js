@@ -324,11 +324,14 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
 
     it('does not refresh loot events', () =>
     {
-      const event = buildEvent({ isJabsLoot: () => true });
+      // the stale page index deliberately disagrees with the one the lookup would resolve, so
+      // the "page index has not changed" branch cannot be what suppresses the refresh here.
+      const event = buildEvent({ isJabsLoot: () => true, findProperPageIndex: () => 0, _pageIndex: 1 });
 
       event.jabsEventRefresh();
 
       expect(event.setupPage).not.toHaveBeenCalled();
+      expect(event.pageIndex()).toEqual(1);
     });
 
     it('sets the page index to -1 for an erased event and re-runs setup when it changed', () =>
@@ -415,7 +418,12 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
   {
     it('returns false when the page index is less than -1', () =>
     {
-      const event = buildEvent({ findProperPageIndex: () => -2 });
+      // the comment list is otherwise fully parseable- it carries an enemy id- so the page index
+      // is the only thing left that can produce a false here.
+      const event = buildEvent({
+        findProperPageIndex: () => -2,
+        getValidCommentCommands: () => buildCommentCommands([ 'enemyId:5' ]),
+      });
 
       expect(event.canParseEnemyComments()).toEqual(false);
     });
@@ -579,7 +587,9 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
   {
     it('returns null when no comment matches', () =>
     {
-      const event = buildEvent({ getValidCommentCommands: () => [] });
+      // a non-matching comment rather than an empty list, so the parsing loop actually runs and
+      // both flag regexes get their chance to decline- matching the numeric block above.
+      const event = buildEvent({ getValidCommentCommands: () => buildCommentCommands([ 'unrelated' ]) });
 
       expect(event[method]()).toBeNull();
     });
@@ -603,7 +613,9 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
   {
     it('returns null when no comment matches', () =>
     {
-      const event = buildEvent({ getValidCommentCommands: () => [] });
+      // same as the dual-flag block above: a non-matching comment, so the loop runs and the
+      // regexes have to decline on their own merits rather than never being consulted.
+      const event = buildEvent({ getValidCommentCommands: () => buildCommentCommands([ 'unrelated' ]) });
 
       expect(event.getInanimateOverrides()).toBeNull();
     });

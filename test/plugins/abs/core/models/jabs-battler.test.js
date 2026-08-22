@@ -703,12 +703,21 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.getLeader()).toBe('leader-uuid');
     });
 
-    it('getLeaderBattler returns null when there is no leader uuid', () =>
+    it('getLeaderBattler returns null when there is no leader uuid', async () =>
     {
+      // Arrange
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      // the manager answers every lookup, so only the guard can produce the null.
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ id: 'anyone' }));
       const jabsBattler = buildBattler();
       jabsBattler._leaderUuid = String.empty;
 
-      expect(jabsBattler.getLeaderBattler()).toBeNull();
+      // Act
+      const leaderBattler = jabsBattler.getLeaderBattler();
+
+      // Assert
+      expect(leaderBattler).toBeNull();
+      expect(JABS_AiManager.getBattlerByUuid).not.toHaveBeenCalled();
     });
 
     it('getLeaderBattler resolves the leader battler by uuid', async () =>
@@ -772,25 +781,40 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.getFollowerByUuid('a')).toBeNull();
     });
 
-    it('getFollowerByUuid returns null when the uuid is not tracked', () =>
+    it('getFollowerByUuid returns null when the uuid is not tracked', async () =>
     {
+      // Arrange
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      // the manager answers every lookup, so only the not-found guard can produce the null.
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ id: 'anyone' }));
       const jabsBattler = buildBattler();
       jabsBattler.hasFollowers = () => true;
       jabsBattler._followers = [ 'a' ];
 
-      expect(jabsBattler.getFollowerByUuid('b')).toBeNull();
+      // Act
+      const found = jabsBattler.getFollowerByUuid('b');
+
+      // Assert
+      expect(found).toBeNull();
+      expect(JABS_AiManager.getBattlerByUuid).not.toHaveBeenCalled();
     });
 
     it('getFollowerByUuid resolves the matching follower battler', async () =>
     {
+      // Arrange
       const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
-      const followerBattler = { id: 'follower' };
-      JABS_AiManager.getBattlerByUuid = vi.fn(() => followerBattler);
+      JABS_AiManager.getBattlerByUuid = vi.fn(uuid => ({ id: uuid }));
       const jabsBattler = buildBattler();
       jabsBattler.hasFollowers = () => true;
-      jabsBattler._followers = [ 'a' ];
+      // the first entry is a near-miss that must survive the search.
+      jabsBattler._followers = [ 'decoy', 'a' ];
 
-      expect(jabsBattler.getFollowerByUuid('a')).toBe(followerBattler);
+      // Act
+      const found = jabsBattler.getFollowerByUuid('a');
+
+      // Assert
+      expect(found).toEqual({ id: 'a' });
+      expect(JABS_AiManager.getBattlerByUuid).toHaveBeenCalledWith('a');
     });
 
     it('addFollower appends a new follower uuid', () =>
@@ -841,13 +865,23 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.getUuid).not.toHaveBeenCalled();
     });
 
-    it('clearLeader does nothing when this battler has no uuid of its own', () =>
+    it('clearLeader does nothing when this battler has no uuid of its own', async () =>
     {
+      // Arrange
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const removeFollowerByUuid = vi.fn();
+      // the leader is fully resolvable, so only the missing-uuid guard can stop the removal.
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ removeFollowerByUuid }));
       const jabsBattler = buildBattler();
       jabsBattler.getLeader = () => 'leader-uuid';
       jabsBattler.getUuid = () => String.empty;
 
-      expect(() => jabsBattler.clearLeader()).not.toThrow();
+      // Act
+      jabsBattler.clearLeader();
+
+      // Assert
+      expect(removeFollowerByUuid).not.toHaveBeenCalled();
+      expect(JABS_AiManager.getBattlerByUuid).not.toHaveBeenCalled();
     });
 
     it('clearLeader does nothing when the leader battler cannot be resolved', async () =>
@@ -1000,6 +1034,45 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.isFacingTarget({ direction: () => J.ABS.Directions.DOWN })).toBe(false);
     });
 
+    it('is false when facing up and the target is not facing down', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => J.ABS.Directions.UP });
+
+      // Act
+      const isFacing = jabsBattler.isFacingTarget({ direction: () => J.ABS.Directions.LEFT });
+
+      // Assert
+      expect(isFacing).toBe(false);
+    });
+
+    it('is false when facing left and the target is not facing right', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => J.ABS.Directions.LEFT });
+
+      // Act
+      const isFacing = jabsBattler.isFacingTarget({ direction: () => J.ABS.Directions.UP });
+
+      // Assert
+      expect(isFacing).toBe(false);
+    });
+
+    it('is false when facing right and the target is not facing left', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ direction: () => J.ABS.Directions.RIGHT });
+
+      // Act
+      const isFacing = jabsBattler.isFacingTarget({ direction: () => J.ABS.Directions.UP });
+
+      // Assert
+      expect(isFacing).toBe(false);
+    });
+
     it('is false for a diagonal facing not covered by the cardinal switch', () =>
     {
       const jabsBattler = buildBattler();
@@ -1035,6 +1108,20 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getBattler = () => ({ isActor: () => true });
 
       expect(jabsBattler.isActor()).toBe(true);
+    });
+
+    it('isActor is false for a non-player whose battler is not an actor', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.isPlayer = () => false;
+      jabsBattler.getBattler = () => ({ isActor: () => false });
+
+      // Act
+      const isActor = jabsBattler.isActor();
+
+      // Assert
+      expect(isActor).toBe(false);
     });
 
     it('isFollower delegates to the character', () =>
@@ -1598,6 +1685,23 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.getTarget()).toBeNull();
     });
 
+    it('clearBattlerLastHit leaves a non-player\'s target alone', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.isPlayer = () => false;
+      const aiTarget = { id: 'ai-target' };
+      jabsBattler.setTarget(aiTarget);
+      jabsBattler.setBattlerLastHit({ isDead: () => false });
+
+      // Act
+      jabsBattler.clearBattlerLastHit();
+
+      // Assert
+      expect(jabsBattler.getTarget()).toBe(aiTarget);
+      expect(jabsBattler.hasBattlerLastHit()).toBe(false);
+    });
+
     it('setLastBattlerHitCountdown defaults to 900 frames', () =>
     {
       const jabsBattler = buildBattler();
@@ -1629,11 +1733,35 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('countdownLastHit does not clear anything when there was no last-hit battler tracked', () =>
     {
+      // Arrange
       const jabsBattler = buildBattler();
+      // as the player, clearing would also drop the target- which is what proves the guard held.
+      jabsBattler.isPlayer = () => true;
+      const playerTarget = { id: 'player-target' };
+      jabsBattler.setTarget(playerTarget);
       jabsBattler._lastHitCountdown = 0;
 
-      expect(() => jabsBattler.countdownLastHit()).not.toThrow();
+      // Act
+      jabsBattler.countdownLastHit();
+
+      // Assert
+      expect(jabsBattler.getTarget()).toBe(playerTarget);
       expect(jabsBattler.hasBattlerLastHit()).toBe(false);
+    });
+
+    it('countdownLastHit holds the countdown at zero rather than going negative', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler._lastHitCountdown = 1;
+
+      // Act
+      // the first tick spends the last frame; the second must find nothing left to spend.
+      jabsBattler.countdownLastHit();
+      jabsBattler.countdownLastHit();
+
+      // Assert
+      expect(jabsBattler._lastHitCountdown).toBe(0);
     });
   });
 
@@ -1892,6 +2020,22 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.isHome()).toBe(false);
     });
 
+    it('isHome is false when only the y coordinate differs from home', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler._event.x = 3;
+      jabsBattler._event.y = 9;
+      jabsBattler._homeX = 3;
+      jabsBattler._homeY = 4;
+
+      // Act
+      const isHome = jabsBattler.isHome();
+
+      // Assert
+      expect(isHome).toBe(false);
+    });
+
     it('getHomeX/getHomeY return the tracked home coordinates', () =>
     {
       const jabsBattler = buildBattler();
@@ -1930,12 +2074,21 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.getBattlerRole()).toBe('role');
     });
 
-    it('getLeaderAiMode is null without a leader', () =>
+    it('getLeaderAiMode is null without a leader', async () =>
     {
+      // Arrange
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      // the manager would happily answer, so only the no-leader guard can produce the null.
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ getAiMode: () => 'leader-ai' }));
       const jabsBattler = buildBattler();
       jabsBattler.hasLeader = () => false;
 
-      expect(jabsBattler.getLeaderAiMode()).toBeNull();
+      // Act
+      const leaderAiMode = jabsBattler.getLeaderAiMode();
+
+      // Assert
+      expect(leaderAiMode).toBeNull();
+      expect(JABS_AiManager.getBattlerByUuid).not.toHaveBeenCalled();
     });
 
     it('getLeaderAiMode is null when the leader cannot be resolved', async () =>
@@ -2288,6 +2441,20 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getBattler = () => ({ states: () => [ { jabsParalyzed: true } ] });
 
       expect(jabsBattler.canBattlerUseSkills()).toBe(false);
+    });
+
+    it('canBattlerUseSkills is true when states are present but none silence casting', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      // a state carrying the sibling attack-side flag must not read as a mute.
+      jabsBattler.getBattler = () => ({ states: () => [ { jabsDisarmed: true } ] });
+
+      // Act
+      const canUseSkills = jabsBattler.canBattlerUseSkills();
+
+      // Assert
+      expect(canUseSkills).toBe(true);
     });
   });
 
@@ -2842,10 +3009,20 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('isSkillVisibleInOffhandMenu is false for a weapon skill', () =>
     {
+      // Arrange
       JABS_Battler.isDodgeSkillById = vi.fn(() => false);
       JABS_Battler.isGuardSkillById = vi.fn(() => false);
       JABS_Battler.isWeaponSkillById = vi.fn(() => true);
-      expect(JABS_Battler.isSkillVisibleInOffhandMenu({ id: 1 })).toBe(false);
+
+      // Act
+      // the eligibility flag is opted-in, so only the weapon-skill guard can reject this.
+      const isVisible = JABS_Battler.isSkillVisibleInOffhandMenu({
+        id: 1,
+        jabsOffhandEligible: true
+      });
+
+      // Assert
+      expect(isVisible).toBe(false);
       JABS_Battler.isWeaponSkillById = vi.fn(() => false);
     });
 
@@ -2972,28 +3149,43 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('does nothing for a non-player battler', () =>
     {
+      // Arrange
+      // movement intent is present, so being a non-player is the only thing that can suppress this.
+      globalThis.Input.dir8 = 8;
       const jabsBattler = buildInterruptibleBattler({ isPlayer: () => false });
 
+      // Act
       jabsBattler.updateSelfInterruptOnMove();
 
+      // Assert
       expect(jabsBattler.interrupt).not.toHaveBeenCalled();
     });
 
     it('does nothing when not casting or channeling', () =>
     {
+      // Arrange
+      // movement intent is present, so the idle cast state is the only thing that can suppress this.
+      globalThis.Input.dir8 = 8;
       const jabsBattler = buildInterruptibleBattler({ isCastingOrChanneling: () => false });
 
+      // Act
       jabsBattler.updateSelfInterruptOnMove();
 
+      // Assert
       expect(jabsBattler.interrupt).not.toHaveBeenCalled();
     });
 
     it('does nothing when the active cast/channel has an uninterruptible movement lock', () =>
     {
+      // Arrange
+      // movement intent is present, so the root tag is the only thing that can suppress this.
+      globalThis.Input.dir8 = 8;
       const jabsBattler = buildInterruptibleBattler({ hasUninterruptibleMovementLock: () => true });
 
+      // Act
       jabsBattler.updateSelfInterruptOnMove();
 
+      // Assert
       expect(jabsBattler.interrupt).not.toHaveBeenCalled();
     });
 
@@ -3206,16 +3398,32 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('falls through to the opponent priority chain otherwise', () =>
     {
+      // Arrange
       const jabsBattler = buildBattler();
-      jabsBattler.resolveDirectOpponentTarget = vi.fn(() => ({ getX: () => 7, getY: () => 8 }));
+      // an ally target is standing by with its own tile; an opponent-scoped action must ignore it.
+      jabsBattler.setAllyTarget({
+        getX: () => 3,
+        getY: () => 4
+      });
+      jabsBattler.resolveDirectOpponentTarget = vi.fn(() => ({
+        getX: () => 7,
+        getY: () => 8
+      }));
       const skill = { id: 1 };
       const action = {
         isDirectAction: () => true,
-        getAction: () => ({ isForUser: () => false, isForFriend: () => false }),
+        getAction: () => ({
+          isForUser: () => false,
+          isForFriend: () => false
+        }),
         getBaseSkill: () => skill,
       };
 
-      expect(jabsBattler.resolveDirectActionTargetCoordinates(action)).toEqual([ 7, 8 ]);
+      // Act
+      const coordinates = jabsBattler.resolveDirectActionTargetCoordinates(action);
+
+      // Assert
+      expect(coordinates).toEqual([ 7, 8 ]);
       expect(jabsBattler.resolveDirectOpponentTarget).toHaveBeenCalledWith(skill);
     });
 
@@ -3377,9 +3585,15 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.resolveDirectTargetInanimateFallback = vi.fn();
       jabsBattler.resolveDirectTargetInanimateScan = vi.fn();
 
-      const result = jabsBattler.resolveDirectOpponentTarget({ jabsProximity: 5 });
+      const result = jabsBattler.resolveDirectOpponentTarget({
+        jabsProximity: 5,
+        jabsDirectStateTarget: 3
+      });
 
       expect(result).toBe(winner);
+      expect(JABS_AiManager.getBattlersWithinRange).toHaveBeenCalledWith(jabsBattler, 5);
+      // the single scan is what feeds the scan-based tiers; an empty list would starve them.
+      expect(jabsBattler.resolveDirectTargetByState).toHaveBeenCalledWith(3, [ 'candidate' ]);
       expect(jabsBattler.resolveDirectTargetViaScan).not.toHaveBeenCalled();
       expect(jabsBattler.resolveDirectTargetInanimateFallback).not.toHaveBeenCalled();
       expect(jabsBattler.resolveDirectTargetInanimateScan).not.toHaveBeenCalled();
@@ -4132,10 +4346,17 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     {
       it('is false when not casting or channeling', () =>
       {
+        // Arrange
         const jabsBattler = buildBattler();
         jabsBattler.isCastingOrChanneling = () => false;
+        // a rooted skill sits in the decided slot; with nothing in flight it must not root anything.
+        jabsBattler.setDecidedAction([ { getBaseSkill: () => ({ jabsCannotMoveToInterrupt: true }) } ]);
 
-        expect(jabsBattler.hasUninterruptibleMovementLock()).toBe(false);
+        // Act
+        const hasLock = jabsBattler.hasUninterruptibleMovementLock();
+
+        // Assert
+        expect(hasLock).toBe(false);
       });
 
       it('is false without a decided action', () =>
@@ -4167,13 +4388,18 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('does nothing when neither casting nor channeling', () =>
     {
+      // Arrange
       const jabsBattler = buildBattler();
       jabsBattler.isChanneling = () => false;
       jabsBattler.isCasting = () => false;
       jabsBattler.clearDecidedAction = vi.fn();
+      // a decided action is queued but not in-flight; only the cast/channel checks keep it safe.
+      jabsBattler.setDecidedAction([ { getCooldown: () => 100 } ]);
 
+      // Act
       jabsBattler.interrupt();
 
+      // Assert
       expect(globalThis.$jabsEngine.applyCooldownValueForSkill).not.toHaveBeenCalled();
       expect(jabsBattler.clearDecidedAction).not.toHaveBeenCalled();
     });
@@ -4628,7 +4854,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.setInvincible).toHaveBeenCalledWith(true);
     });
 
-    it('sets invincible false outside the iframe window', () =>
+    it('sets invincible false after the iframe window has passed', () =>
     {
       const jabsBattler = buildBattler();
       jabsBattler.isDodging = () => true;
@@ -4639,6 +4865,24 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       jabsBattler.updateDodgeIFrames();
 
+      expect(jabsBattler.setInvincible).toHaveBeenCalledWith(false);
+    });
+
+    it('sets invincible false before the iframe window has opened', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.isDodging = () => true;
+      jabsBattler.incrementDodgeFrame = vi.fn();
+      jabsBattler.getDodgeIFrames = () => [ 2, 5 ];
+      // frame 1 is still inside the window's tail, but the window has not opened yet.
+      jabsBattler.getDodgeFrame = () => 1;
+      jabsBattler.setInvincible = vi.fn();
+
+      // Act
+      jabsBattler.updateDodgeIFrames();
+
+      // Assert
       expect(jabsBattler.setInvincible).toHaveBeenCalledWith(false);
     });
   });
@@ -5028,15 +5272,20 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('removeAggro removes without disengaging when the uuid is not the current target', () =>
     {
+      // Arrange
       const jabsBattler = buildBattler();
-      jabsBattler._aggros = [ { uuid: () => 'other-uuid' } ];
+      // the decoy is listed first, so a predicate that matched anything would take it instead.
+      const decoy = { uuid: () => 'decoy-uuid' };
+      jabsBattler._aggros = [ decoy, { uuid: () => 'other-uuid' } ];
       jabsBattler.setTarget({ getUuid: () => 'target-uuid' });
       jabsBattler.disengageTarget = vi.fn();
 
+      // Act
       jabsBattler.removeAggro('other-uuid');
 
+      // Assert
       expect(jabsBattler.disengageTarget).not.toHaveBeenCalled();
-      expect(jabsBattler._aggros).toEqual([]);
+      expect(jabsBattler._aggros).toEqual([ decoy ]);
     });
   });
 
@@ -5268,8 +5517,12 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.getTarget).toHaveBeenCalledTimes(3);
     });
 
-    it('keeps the current target when it already matches the sole remaining aggro', () =>
+    it('keeps the current target when it already matches the sole remaining aggro', async () =>
     {
+      // Arrange
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      // the sole aggro resolves cleanly, so re-targeting would succeed if the match check let it.
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => ({ id: 'sole-battler' }));
       const jabsBattler = buildBattler();
       jabsBattler.isInanimate = () => false;
       jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
@@ -5277,9 +5530,15 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.setTarget(target);
       jabsBattler.removeAggroIfInvalid = vi.fn();
       jabsBattler.getAggrosSortedHighestToLowest = () => [ { uuid: () => 'sole-uuid' } ];
+      jabsBattler.removeAggro = vi.fn();
+      const setTargetSpy = vi.spyOn(jabsBattler, 'setTarget');
 
+      // Act
       jabsBattler.adjustTargetByAggro();
 
+      // Assert
+      expect(setTargetSpy).not.toHaveBeenCalled();
+      expect(jabsBattler.removeAggro).not.toHaveBeenCalled();
       expect(jabsBattler.getTarget()).toBe(target);
     });
 
@@ -5372,6 +5631,34 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.adjustTargetByAggro();
 
       expect(jabsBattler.engageTarget).toHaveBeenCalledWith(newTarget);
+    });
+
+    it('skips an aggro whose battler no longer exists when picking the highest', async () =>
+    {
+      // Arrange
+      const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
+      const survivingBattler = { id: 'b' };
+      // the top-ranked aggro has no battler behind it anymore; the runner-up does.
+      JABS_AiManager.getBattlerByUuid = vi.fn(uuid => (uuid === 'a'
+        ? null
+        : survivingBattler));
+      const jabsBattler = buildBattler();
+      jabsBattler.isInanimate = () => false;
+      jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
+      jabsBattler.setTarget({ getUuid: () => 'current-uuid' });
+      jabsBattler.removeAggroIfInvalid = vi.fn();
+      jabsBattler.getAggrosSortedHighestToLowest = () => [ { uuid: () => 'a' }, { uuid: () => 'b' } ];
+      jabsBattler.getPursuitRadius = () => 100;
+      jabsBattler.distanceToDesignatedTarget = () => 1;
+      jabsBattler.engageTarget = vi.fn();
+      jabsBattler.removeAggro = vi.fn();
+
+      // Act
+      jabsBattler.adjustTargetByAggro();
+
+      // Assert
+      expect(jabsBattler.engageTarget).toHaveBeenCalledWith(survivingBattler);
+      expect(jabsBattler.removeAggro).not.toHaveBeenCalled();
     });
 
     it('purges the highest in-range aggro when its battler cannot be found', async () =>
@@ -5571,6 +5858,21 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.getDodgeDirection()).toBe(2);
     });
 
+    it('infers the direction from move type when the forced direction is explicitly null', () =>
+    {
+      // Arrange
+      const jabsBattler = buildDodgingBattler();
+      jabsBattler.getCharacter = () => ({ setDodgeModifier: vi.fn() });
+
+      // Act
+      // a null forced direction is an absent one- it must never become the dodge direction.
+      jabsBattler.executeDodgeSkill(buildDodgeSkill({ jabsMoveType: 'backward' }), null);
+
+      // Assert
+      expect(jabsBattler.determineDodgeDirection).toHaveBeenCalledWith('backward');
+      expect(jabsBattler.getDodgeDirection()).toBe(2);
+    });
+
     it('executes the built actions and flags the battler as dodging', () =>
     {
       const action = { setCooldownType: vi.fn() };
@@ -5744,7 +6046,12 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       const threat = { isDead: () => false, getX: () => 0, getY: () => 5 };
       JABS_AiManager.getClosestOpposingBattler = vi.fn(() => threat);
       const jabsBattler = buildBattler();
-      jabsBattler.getCharacter = () => ({ x: 0, y: 0, direction: () => 2 });
+      // the current facing is deliberately not DOWN, so the fallback cannot masquerade as a pick.
+      jabsBattler.getCharacter = () => ({
+        x: 0,
+        y: 0,
+        direction: () => J.ABS.Directions.LEFT
+      });
       // only the exact-opposite direction (toward the threat) is passable- forces the floor
       // all the way down to -999 before anything qualifies.
       jabsBattler.canDirectionalDodgeStepPass = vi.fn((character, dir) => dir === J.ABS.Directions.DOWN);
@@ -6466,6 +6773,32 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       expect(jabsBattler.isWithinScope(action, target)).toBe(false);
     });
+
+    it('is false for an ally target when the action reaches only opponents', async () =>
+    {
+      // Arrange
+      const { default: JABS_TeamRules } = await import('../../../../../src/plugins/abs/core/managers/JABS_TeamRules.js');
+      // a friendly, animate, non-direct target- everything about the ally branch qualifies except
+      // the scope itself, which is what keeps an offensive skill from mowing down the party.
+      JABS_TeamRules.isFriendly = vi.fn(() => true);
+      JABS_TeamRules.isOpposed = vi.fn(() => false);
+      const jabsBattler = buildBattler();
+      const { action } = buildActionAndUser({ isForOpponent: () => true });
+      const target = {
+        getUuid: () => 'target-uuid',
+        isInanimate: () => false
+      };
+
+      // Act
+      const withinScope = jabsBattler.isWithinScope(action, target);
+
+      // Assert
+      expect(withinScope).toBe(false);
+
+      // restore the team rules this file's later cases expect, rather than leaking them onward.
+      JABS_TeamRules.isFriendly = vi.fn(() => false);
+      JABS_TeamRules.isOpposed = vi.fn(() => true);
+    });
   });
 
   describe('createJabsActionFromSkill', () =>
@@ -6572,6 +6905,24 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       });
 
       expect(jabsBattler.battlerHasPermissionForSlot('mainhand')).toBe(true);
+    });
+
+    it('battlerHasPermissionForSlot is false when the raw equipped skill is not known', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      // no combo is armed, so the equipped-skill check is the only thing that can answer.
+      jabsBattler.getComboNextActionId = () => 0;
+      jabsBattler.getBattler = () => ({
+        getEquippedSkillId: () => 3,
+        hasSkill: () => false
+      });
+
+      // Act
+      const hasPermission = jabsBattler.battlerHasPermissionForSlot('mainhand');
+
+      // Assert
+      expect(hasPermission).toBe(false);
     });
 
     it('getSkillIdForAction returns the queued combo id when present', () =>
@@ -6805,11 +7156,21 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('does nothing extra for a no-scope tool relying purely on its skill id', () =>
     {
+      // Arrange
       buildGameActionMock({ item: () => ({ scope: 0 }) });
       const jabsBattler = buildToolableBattler();
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
-      expect(() => jabsBattler.applyToolItemEffects(5, JABS_Button.Tool)).not.toThrow();
+      // Act
+      jabsBattler.applyToolItemEffects(5, JABS_Button.Tool);
+
+      // Assert
       expect(jabsBattler.applyToolToPlayer).not.toHaveBeenCalled();
+      // a scopeless item is a recognized shape, not an unhandled one.
+      expect(warnSpy).not.toHaveBeenCalled();
+      // the tool log proves the method ran all the way through rather than bailing early.
+      expect(jabsBattler.createToolLog).toHaveBeenCalledTimes(1);
+      warnSpy.mockRestore();
     });
 
     it('warns about an unhandled scope combination', () =>
@@ -6866,6 +7227,8 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.applyToolItemEffects(5, JABS_Button.Tool, false);
 
       expect(jabsBattler.modCooldownCounter).toHaveBeenCalledWith(JABS_Button.Tool, 30);
+      // the custom cooldown is the only one applied; the cooldownless default must not stack on it.
+      expect(jabsBattler.modCooldownCounter).toHaveBeenCalledTimes(1);
     });
 
     it('does not apply a cooldown for loot pickups even with copies remaining', () =>
@@ -6889,6 +7252,8 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.applyToolItemEffects(5, JABS_Button.Tool, false);
 
       expect(jabsBattler.modCooldownCounter).toHaveBeenCalledWith(JABS_Button.Tool, 60);
+      // an item with no cooldown of its own must not also spend a zero-length one.
+      expect(jabsBattler.modCooldownCounter).toHaveBeenCalledTimes(1);
     });
 
     it('uses the UsableItem slot key and button type instead of Tool when called with that button type', () =>
@@ -7843,6 +8208,22 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.getBattler = () => ({ findSlotForSkillId: () => ({ key: JABS_Button.Offhand }) });
 
       expect(jabsBattler.isSkillIdBasicAttack(1)).toBe(true);
+    });
+
+    it('is false for an actor whose skill lives in a slot other than the two hands', () =>
+    {
+      // Arrange
+      const jabsBattler = buildBattler();
+      jabsBattler.isEnemy = () => false;
+      jabsBattler.isActor = () => true;
+      // a combat slot holds a real equipped skill; it is simply not a basic attack.
+      jabsBattler.getBattler = () => ({ findSlotForSkillId: () => ({ key: 'combat1' }) });
+
+      // Act
+      const isBasicAttack = jabsBattler.isSkillIdBasicAttack(1);
+
+      // Assert
+      expect(isBasicAttack).toBe(false);
     });
 
     it('warns and returns false for neither actor nor enemy', () =>
@@ -9009,9 +9390,16 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('flags casting false and zeroes the countdown for a non-positive cast time', () =>
     {
+      // Arrange
       const jabsBattler = buildBattler();
+      // start mid-cast, so clearing the flag is something the act has to actually do.
+      jabsBattler.setCastCountdown(10);
+      expect(jabsBattler.isCasting()).toBe(true);
+
+      // Act
       jabsBattler.setCastCountdown(0);
 
+      // Assert
       expect(jabsBattler.isCasting()).toBe(false);
       expect(jabsBattler.getCastTimeCountdown()).toBe(0);
     });

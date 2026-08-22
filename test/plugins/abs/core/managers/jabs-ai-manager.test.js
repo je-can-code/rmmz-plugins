@@ -392,6 +392,69 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
       expect(JABS_AiManager.deriveFreshFacingForAi(battler)).toEqual(6);
     });
+
+    it('turns away from the conventional facing for a target that is off-axis in front', () =>
+    {
+      // Arrange: facing DOWN (0,1) with the target down and far to the right. Every case above
+      // resolves to the same dir8 the battler already faced, which is also what each of this
+      // method's four early exits returns- so none of them could tell a derived answer from a
+      // fallback. This one derives RIGHT while the fallback is DOWN.
+      const target = { getX: () => 5, getY: () => 1 };
+      const battler = buildBattler({
+        getProjectileSpawnBaseDirection: () => 2,
+        getAllyTarget: () => null,
+        getTarget: () => target,
+        getX: () => 0,
+        getY: () => 0,
+      });
+
+      // Act
+      const facing = JABS_AiManager.deriveFreshFacingForAi(battler);
+
+      // Assert
+      expect(facing).toEqual(6);
+    });
+
+    it('derives a facing for a target sharing the battler\'s row', () =>
+    {
+      // Arrange: dy is exactly zero here, which is half of the overlap test. Volleys still need to
+      // be aimed along a row, so the overlap exit must require *both* axes to match rather than
+      // either one.
+      const target = { getX: () => -5, getY: () => 0 };
+      const battler = buildBattler({
+        getProjectileSpawnBaseDirection: () => 7,
+        getAllyTarget: () => null,
+        getTarget: () => target,
+        getX: () => 0,
+        getY: () => 0,
+      });
+
+      // Act
+      const facing = JABS_AiManager.deriveFreshFacingForAi(battler);
+
+      // Assert
+      expect(facing).toEqual(4);
+    });
+
+    it('derives a facing for a target sharing the battler\'s column', () =>
+    {
+      // Arrange: the mirror of the row case- dx is zero and dy is not, so the other half of the
+      // overlap test is the one being pinned.
+      const target = { getX: () => 0, getY: () => -5 };
+      const battler = buildBattler({
+        getProjectileSpawnBaseDirection: () => 9,
+        getAllyTarget: () => null,
+        getTarget: () => target,
+        getX: () => 0,
+        getY: () => 0,
+      });
+
+      // Act
+      const facing = JABS_AiManager.deriveFreshFacingForAi(battler);
+
+      // Assert
+      expect(facing).toEqual(8);
+    });
   });
   //endregion deriveFreshFacingForAi
 
@@ -514,6 +577,72 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
       expect(JABS_AiManager.getLeaderFollowers(leader)).toEqual([ eligibleFollower ]);
     });
+
+    it('includes a follower that is already led by this very leader', () =>
+    {
+      // Arrange: the only led battler in the fixture above pointed at a different leader, so
+      // "already led by me" and "led by anyone else" were never told apart- a leader that lost
+      // that half of the check would silently stop re-issuing orders to its own squad every time
+      // one of them had been assigned. The stranger's follower stays in the list to prove the
+      // comparison still rejects someone.
+      const leader = buildBattler({
+        uuid: 'leader',
+        getBattlerRole: () => ({ leader: true }),
+        getPursuitRadius: () => 10,
+        getUuid: () => 'leader',
+      });
+      const myFollower = buildBattler({
+        uuid: 'my-follower',
+        getBattlerRole: () => ({ follower: true, leader: false, solo: false }),
+        hasLeader: () => true,
+        getLeader: () => 'leader',
+      });
+      const someoneElsesFollower = buildBattler({
+        uuid: 'their-follower',
+        getBattlerRole: () => ({ follower: true, leader: false, solo: false }),
+        hasLeader: () => true,
+        getLeader: () => 'some-other-leader',
+      });
+      JABS_AiManager.addOrUpdateBattlers([ someoneElsesFollower, myFollower ]);
+
+      // Act
+      const followers = JABS_AiManager.getLeaderFollowers(leader);
+
+      // Assert
+      expect(followers).toEqual([ myFollower ]);
+    });
+
+    it('excludes a nearby unled battler that has no follower role at all', () =>
+    {
+      // Arrange: the loner is unled, non-solo and non-actor, so every other clause in the filter
+      // waves it through and only the follower-role test can stop it. Without it a leader would
+      // start barking orders at whatever wandered past.
+      const leader = buildBattler({
+        uuid: 'leader',
+        getBattlerRole: () => ({ leader: true }),
+        getPursuitRadius: () => 10,
+        getUuid: () => 'leader',
+      });
+      const loner = buildBattler({
+        uuid: 'loner',
+        getBattlerRole: () => ({ follower: false, leader: false, solo: false }),
+        hasLeader: () => false,
+        getLeader: () => null,
+      });
+      const realFollower = buildBattler({
+        uuid: 'real-follower',
+        getBattlerRole: () => ({ follower: true, leader: false, solo: false }),
+        hasLeader: () => false,
+        getLeader: () => null,
+      });
+      JABS_AiManager.addOrUpdateBattlers([ loner, realFollower ]);
+
+      // Act
+      const followers = JABS_AiManager.getLeaderFollowers(leader);
+
+      // Assert
+      expect(followers).toEqual([ realFollower ]);
+    });
   });
 
   describe('getAllBattlersDistanceSortedFromBattler()', () =>
@@ -567,6 +696,34 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
       const selected = buildBattler({ uuid: 'selected', getTeam: () => 0 });
 
       expect(JABS_AiManager.getOpposingBattlers(selected)).toEqual([ opposing ]);
+    });
+
+    it('still returns a follower that is currently visible', () =>
+    {
+      // Arrange: the only follower in the fixture above was invisible, so "is a follower" and "is
+      // an invisible follower" were the same population and the visibility half could have been
+      // dropped. Followers are only exempt while party-cycling has them hidden; an on-screen one
+      // is a legitimate target and enemies must be able to see it.
+      const visibleFollower = buildBattler({
+        uuid: 'visible-follower',
+        getTeam: () => 1,
+        isFollower: () => true,
+        getCharacter: () => ({ isVisible: () => true }),
+      });
+      const invisibleFollower = buildBattler({
+        uuid: 'invisible-follower',
+        getTeam: () => 1,
+        isFollower: () => true,
+        getCharacter: () => ({ isVisible: () => false }),
+      });
+      JABS_AiManager.addOrUpdateBattlers([ visibleFollower, invisibleFollower ]);
+      const selected = buildBattler({ uuid: 'selected', getTeam: () => 0 });
+
+      // Act
+      const opponents = JABS_AiManager.getOpposingBattlers(selected);
+
+      // Assert
+      expect(opponents).toEqual([ visibleFollower ]);
     });
   });
 
@@ -623,6 +780,23 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
       expect(JABS_AiManager.getAlliedBattlers(selected)).toEqual([ ally ]);
     });
+
+    it('gives a neutral battler no allies, not even other neutrals', () =>
+    {
+      // Arrange: the case above asked on behalf of a team-0 battler, and team rules already answer
+      // "not friendly" for a neutral on that comparison alone - so the neutral clause carried
+      // nothing. Ask on behalf of a neutral and the two team ids match, which is precisely when
+      // the clause has to do the work: neutrals are bystanders and have no side to be on.
+      const anotherNeutral = buildBattler({ uuid: 'other-neutral', getTeam: () => -1 });
+      JABS_AiManager.addOrUpdateBattlers([ anotherNeutral ]);
+      const neutralSelected = buildBattler({ uuid: 'selected-neutral', getTeam: () => -1 });
+
+      // Act
+      const allies = JABS_AiManager.getAlliedBattlers(neutralSelected);
+
+      // Assert
+      expect(allies).toEqual([]);
+    });
   });
 
   describe('getAlliedBattlersWithinRange()', () =>
@@ -675,9 +849,20 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
     it('returns false when every tracked enemy is dead', () =>
     {
-      JABS_AiManager.addBattler(buildBattler({ isDead: () => true }));
+      // Arrange: the corpse is still holding aggro on a living party member, because aggro is not
+      // cleared on death. Previously it had no aggros at all, which meant the empty-aggro check
+      // further down answered false for it and the liveness filter proved nothing.
+      const deadEnemy = buildBattler({
+        isDead: () => true,
+        getAllAggros: () => [ { isForLivingActor: () => true } ],
+      });
+      JABS_AiManager.addBattler(deadEnemy);
 
-      expect(JABS_AiManager.anyLivingEnemiesAggroedToParty()).toEqual(false);
+      // Act
+      const anyAggro = JABS_AiManager.anyLivingEnemiesAggroedToParty();
+
+      // Assert
+      expect(anyAggro).toEqual(false);
     });
 
     it('returns false when a living enemy has no aggros at all', () =>
@@ -882,6 +1067,22 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
       expect(result.uuid).toEqual('constructed-uuid');
       expect(follower.setJabsBattlerUuid).toHaveBeenCalledWith('constructed-uuid');
+    });
+
+    it('leaves the danger indicator alone when the danger extension is absent', () =>
+    {
+      // Arrange: J-ABS core has no opinion on danger indicators when the extension that draws them
+      // is not installed, so the builder must never be told anything about them. Only the
+      // suppressing case was covered, and its `false` is indistinguishable from the value an
+      // unconditional call would have written.
+      const follower = { actor: () => ({ name: 'ally' }), setJabsBattlerUuid: vi.fn() };
+
+      // Act
+      const result = JABS_AiManager.convertFollowerToBattler(follower);
+
+      // Assert
+      expect(result.coreData).not.toHaveProperty('showDangerIndicator');
+      expect(result.coreData.battler).toEqual({ name: 'ally' });
     });
 
     it('suppresses the danger indicator for allies when the danger extension is present', () =>
@@ -1245,22 +1446,36 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
     {
       it('does nothing when the battler cannot idle', () =>
       {
+        // Arrange: this battler is stopped, unalerted, not idle and not home, which is the exact
+        // recipe for walking home- so the untouched `moveStraight` below is what proves the
+        // no-idle flag stopped it. Watching `moveRandom` alone proved nothing, since the walk-home
+        // branch never calls it in the first place.
         const battler = buildIdleBattler({ canIdle: () => false });
         battler.getCharacter().isStopping = vi.fn(() => true);
 
+        // Act
         JABS_AiManager.aiPhase0(battler);
 
+        // Assert
+        expect(battler.getCharacter().moveStraight).not.toHaveBeenCalled();
         expect(battler.getCharacter().moveRandom).not.toHaveBeenCalled();
       });
 
       it('does nothing while the character is still in motion', () =>
       {
+        // Arrange: RNG is forced to favor idling, because the suite-wide default of false is
+        // itself enough to stop the idle wander- with it left alone this test passes whether or
+        // not anyone checks that the character is standing still.
+        globalThis.RPGManager.chanceIn100.mockReturnValue(true);
         const battler = buildIdleBattler({ isIdle: () => true });
         battler.getCharacter().isStopping = () => false;
 
+        // Act
         JABS_AiManager.aiPhase0(battler);
 
+        // Assert
         expect(battler.getCharacter().moveRandom).not.toHaveBeenCalled();
+        expect(battler.resetIdleAction).not.toHaveBeenCalled();
       });
 
       it('seeks the alerter when stopped and alerted', () =>
@@ -1283,11 +1498,19 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
       it('does nothing when stopped, not idle, not alerted, but already home', () =>
       {
+        // Arrange: a battler standing at home that has not yet been flagged idle is the one
+        // combination none of the three branches wants, and the idle-wander branch is the only
+        // one that could still claim it. RNG is forced favorable so that branch would visibly
+        // fire if its condition stopped being consulted.
+        globalThis.RPGManager.chanceIn100.mockReturnValue(true);
         const battler = buildIdleBattler({ isIdle: () => false, isAlerted: () => false, isHome: () => true });
 
+        // Act
         JABS_AiManager.aiPhase0(battler);
 
+        // Assert
         expect(battler.getCharacter().moveStraight).not.toHaveBeenCalled();
+        expect(battler.getCharacter().moveRandom).not.toHaveBeenCalled();
         expect(battler.resetIdleAction).not.toHaveBeenCalled();
       });
 
@@ -1358,8 +1581,17 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
     {
       it('returns false when the idle action is not ready', () =>
       {
+        // Arrange: RNG is forced favorable so the 1%-chance gate below cannot be the reason for
+        // the false. With the suite default of an unfavorable roll, both gates answered false and
+        // the readiness one carried nothing.
+        globalThis.RPGManager.chanceIn100.mockReturnValue(true);
         const battler = buildIdleBattler({ isIdleActionReady: () => false });
-        expect(JABS_AiManager.canMoveIdly(battler)).toEqual(false);
+
+        // Act
+        const canMove = JABS_AiManager.canMoveIdly(battler);
+
+        // Assert
+        expect(canMove).toEqual(false);
       });
 
       it('returns false when RNG does not favor idling', () =>
@@ -1528,6 +1760,64 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
       expect(guardian.showBalloon).not.toHaveBeenCalled();
       expect(guardian.setTarget).toHaveBeenCalledWith(attacker);
+    });
+
+    it('picks the enemy actually targeting the ward, not merely the first enemy with a target', () =>
+    {
+      // Arrange: the decoy is listed first and is busy fighting someone else entirely. Every
+      // fixture here held a single enemy, so "targets my ward" and "has any target at all" chose
+      // identically- and a guardian that had degraded to the latter would abandon its ward to
+      // charge whichever enemy happened to be scanned first.
+      const ward = buildBattler({ getBattlerRole: () => ({ ward: true }), getUuid: () => 'ward-uuid' });
+      const someoneElse = buildBattler({ getUuid: () => 'other-uuid' });
+      const decoy = buildBattler({ uuid: 'decoy', getTarget: () => someoneElse });
+      const attacker = buildBattler({ uuid: 'attacker', getTarget: () => ward });
+      JABS_AiManager.getAlliedBattlersWithinRange = () => [ ward ];
+      JABS_AiManager.getOpposingBattlers = () => [ decoy, attacker ];
+      const guardian = buildGuardian({ isEngaged: () => true, getTarget: () => null });
+
+      // Act
+      JABS_AiManager.applyGuardianTargeting(guardian);
+
+      // Assert
+      expect(guardian.setTarget).toHaveBeenCalledWith(attacker);
+    });
+
+    it('keeps scanning the remaining wards when the first one is unthreatened', () =>
+    {
+      // Arrange: two wards, and only the second is under attack. The per-ward result is a `find`,
+      // which yields undefined for the safe ward- returning that instead of continuing would both
+      // strand the ward that is actually being hit and hand the caller an undefined where its
+      // contract promises a battler or null.
+      const safeWard = buildBattler({ uuid: 'safe-ward', getBattlerRole: () => ({ ward: true }), getUuid: () => 'safe-ward' });
+      const hitWard = buildBattler({ uuid: 'hit-ward', getBattlerRole: () => ({ ward: true }), getUuid: () => 'hit-ward' });
+      const attacker = buildBattler({ uuid: 'attacker', getTarget: () => hitWard });
+      JABS_AiManager.getAlliedBattlersWithinRange = () => [ safeWard, hitWard ];
+      JABS_AiManager.getOpposingBattlers = () => [ attacker ];
+      const guardian = buildGuardian();
+
+      // Act
+      const found = JABS_AiManager.getGuardianWardAttacker(guardian);
+
+      // Assert
+      expect(found).toBe(attacker);
+    });
+
+    it('reports no attacker as null rather than as a missing find result', () =>
+    {
+      // Arrange: a ward is nearby and an enemy is nearby, but that enemy is chasing someone else.
+      // The contract is null, and callers of this method test it as such.
+      const ward = buildBattler({ getBattlerRole: () => ({ ward: true }), getUuid: () => 'ward-uuid' });
+      const someoneElse = buildBattler({ getUuid: () => 'other-uuid' });
+      JABS_AiManager.getAlliedBattlersWithinRange = () => [ ward ];
+      JABS_AiManager.getOpposingBattlers = () => [ buildBattler({ getTarget: () => someoneElse }) ];
+      const guardian = buildGuardian();
+
+      // Act
+      const found = JABS_AiManager.getGuardianWardAttacker(guardian);
+
+      // Assert
+      expect(found).toBeNull();
     });
 
     it('uses the explicit guard range over the sight radius when scanning for wards', () =>
@@ -1899,6 +2189,25 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         expect(JABS_AiManager.shouldDisengageTarget(battler)).toEqual(false);
       });
 
+      it('lets a guardian pursue past the hard distance cap its guard range exceeds', () =>
+      {
+        // Arrange: a guard range of 30 is deliberately wider than the arbitrary cap of 20 that
+        // every other battler obeys, which is the entire reason the guardian branch returns
+        // instead of falling through. Both existing guardian cases sat on the same side of that
+        // cap as the generic rules would have put them, so the branch could be skipped unnoticed.
+        const battler = buildPhase1Battler({
+          distanceToCurrentTarget: () => 25,
+          getBattlerRole: () => ({ guardian: true }),
+          getGuardRange: () => 30,
+        });
+
+        // Act
+        const shouldDisengage = JABS_AiManager.shouldDisengageTarget(battler);
+
+        // Assert
+        expect(shouldDisengage).toEqual(false);
+      });
+
       it('disengages a sentinel once its target has exceeded the home range', () =>
       {
         const target = { distanceToPoint: () => 999 };
@@ -2163,8 +2472,20 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
     {
       it('returns false when no action has been decided', () =>
       {
-        const battler = buildPhase2Battler({ isActionDecided: () => false });
-        expect(JABS_AiManager.needsActionExecution(battler)).toEqual(false);
+        // Arrange: in position and not casting, so the two gates after this one are both open and
+        // the false can only be coming from the undecided action. The default fixture is out of
+        // position, which meant the next gate answered false for this case as well.
+        const battler = buildPhase2Battler({
+          isActionDecided: () => false,
+          isInPosition: () => true,
+          isCastingOrChanneling: () => false,
+        });
+
+        // Act
+        const needsExecution = JABS_AiManager.needsActionExecution(battler);
+
+        // Assert
+        expect(needsExecution).toEqual(false);
       });
 
       it('returns false when not in position', () =>
@@ -2628,8 +2949,17 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
     {
       it('does nothing when phase 2 movement cannot be performed', () =>
       {
+        // Arrange: the fixture's default distance of 5 is outside the action's proximity of 3, so
+        // the very next question this method asks would send the battler walking. That untouched
+        // `smartMoveTowardTarget` is the load-bearing half; `setInPosition` goes untouched down
+        // the walking branch too, so on its own it could not tell the two apart.
         const battler = buildPhase2Battler({ isActionDecided: () => false });
+
+        // Act
         JABS_AiManager.decideAiPhase2Movement(battler);
+
+        // Assert
+        expect(battler.smartMoveTowardTarget).not.toHaveBeenCalled();
         expect(battler.setInPosition).not.toHaveBeenCalled();
       });
 
@@ -2831,15 +3161,37 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
       it('does nothing for a non-actor battler', () =>
       {
-        const battler = buildGuardBattler({ isActor: () => false });
+        // Arrange: guarding with no guard skill equipped is the shortest route to a forced
+        // release, so this battler would visibly drop guard the moment the ownership gate stops
+        // being consulted. The default fixture is not guarding at all, which is its own reason to
+        // do nothing and left the gate unproven.
+        const battler = buildGuardBattler({
+          isActor: () => false,
+          guarding: () => true,
+          isGuardSkillEquipped: () => false,
+        });
+
+        // Act
         JABS_AiManager.releaseAllyCombatGuardIfStale(battler);
+
+        // Assert
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
       it('does nothing for the player', () =>
       {
-        const battler = buildGuardBattler({ isPlayer: () => true });
+        // Arrange: same reachable setup as the non-actor case- the player holds their own guard
+        // button, and AI must never reach in and drop it for them.
+        const battler = buildGuardBattler({
+          isPlayer: () => true,
+          guarding: () => true,
+          isGuardSkillEquipped: () => false,
+        });
+
+        // Act
         JABS_AiManager.releaseAllyCombatGuardIfStale(battler);
+
+        // Assert
         expect(battler.executeGuard).not.toHaveBeenCalled();
       });
 
@@ -2882,10 +3234,18 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
       it('releases guard when there is no closest hostile', () =>
       {
+        // Arrange: a threat is stubbed in so the final release condition cannot be the one firing.
+        // Left to the real scan the registry is empty, no threat is found, and guard drops at the
+        // bottom of the method regardless of whether anyone ever looked for a closest hostile.
         globalThis.Graphics.frameCount = 10;
         JABS_AiManager.getClosestOpposingBattler = () => null;
+        JABS_AiManager.findDefensiveThreatBattler = () => buildBattler();
         const battler = buildGuardBattler({ guarding: () => true });
+
+        // Act
         JABS_AiManager.releaseAllyCombatGuardIfStale(battler);
+
+        // Assert
         expect(battler.executeGuard).toHaveBeenCalledWith(false);
       });
 
@@ -2900,19 +3260,34 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
       it('releases guard when the hostile has drifted beyond the maintain-guard tile range', () =>
       {
+        // Arrange: as with the no-hostile case, a threat is stubbed in so the release cannot be
+        // blamed on the threat check at the bottom of the method.
         globalThis.Graphics.frameCount = 10;
         JABS_AiManager.getClosestOpposingBattler = () => buildBattler({ isDead: () => false });
+        JABS_AiManager.findDefensiveThreatBattler = () => buildBattler();
         const battler = buildGuardBattler({ guarding: () => true, distanceToDesignatedTarget: () => 99 });
+
+        // Act
         JABS_AiManager.releaseAllyCombatGuardIfStale(battler);
+
+        // Assert
         expect(battler.executeGuard).toHaveBeenCalledWith(false);
       });
 
       it('releases guard when separation cannot be measured', () =>
       {
+        // Arrange: an unmeasurable separation compares false against the tile ceiling, so the
+        // explicit null test is the only thing that can catch it- and it needs a live threat
+        // stubbed in to keep the tail of the method from releasing guard on its own.
         globalThis.Graphics.frameCount = 10;
         JABS_AiManager.getClosestOpposingBattler = () => buildBattler({ isDead: () => false });
+        JABS_AiManager.findDefensiveThreatBattler = () => buildBattler();
         const battler = buildGuardBattler({ guarding: () => true, distanceToDesignatedTarget: () => null });
+
+        // Act
         JABS_AiManager.releaseAllyCombatGuardIfStale(battler);
+
+        // Assert
         expect(battler.executeGuard).toHaveBeenCalledWith(false);
       });
 

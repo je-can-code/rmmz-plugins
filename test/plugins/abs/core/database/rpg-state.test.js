@@ -68,6 +68,34 @@ describe('J-ABS RPG_State effects (direct src import)', () =>
     });
   });
 
+  describe('isNegativeType', () =>
+  {
+    it('is true when a negative classifier sits among other classifiers', () =>
+    {
+      // the elemental classifier is a near-miss sibling: it must be walked past, not matched.
+      const state = buildState('<type:elemental>\n<type:negative>');
+      expect(state.isNegativeType()).toBe(true);
+    });
+
+    it('is false when only non-negative classifiers are present', () =>
+    {
+      // a state that carries classifiers but none of them negative is the case that separates
+      // "matches negative" from "matches anything at all"- ai healing must leave these alone.
+      const state = buildState('<type:elemental>\n<type:positive>');
+      expect(state.isNegativeType()).toBe(false);
+    });
+
+    it('is false when no classifiers are present at all', () =>
+    {
+      expect(buildState('').isNegativeType()).toBe(false);
+    });
+
+    it('matches the negative classifier regardless of authored casing', () =>
+    {
+      expect(buildState('<type:NEGATIVE>').isNegativeType()).toBe(true);
+    });
+  });
+
   describe('aggro amplifiers', () =>
   {
     it('jabsAggroInAmp reads the tag value, null when absent', () =>
@@ -238,6 +266,21 @@ describe('J-ABS RPG_State effects (direct src import)', () =>
     {
       expect(buildState('').jabsStateHasMapTimer).toBe(false);
     });
+
+    it('is false when the frame duration tag is present but zero', () =>
+    {
+      // an authored zero is a present tag, so the null check alone lets it through- only the
+      // positivity check stops a zero-frame timer from being started and expiring the same frame.
+      // the indefinite tag and the seconds tag are both absent, so neither can be why this is false.
+      expect(buildState('<stateDuration:0>').jabsStateHasMapTimer).toBe(false);
+    });
+
+    it('is false when the seconds duration tag is present but zero', () =>
+    {
+      // same authored-zero case on the seconds path, with the frame tag absent so the frame
+      // branch cannot be the one producing the answer.
+      expect(buildState('<stateDurationSec:0>').jabsStateHasMapTimer).toBe(false);
+    });
   });
 
   describe('jabsStateDurationFrames', () =>
@@ -257,6 +300,24 @@ describe('J-ABS RPG_State effects (direct src import)', () =>
       const state = buildState('');
       state.stepsToRemove = 42;
       expect(state.jabsStateDurationFrames).toBe(42);
+    });
+
+    it('falls back to stepsToRemove when the frame tag is present but zero', () =>
+    {
+      // stepsToRemove has to be something other than zero here: a zero frame tag returned as-is
+      // is indistinguishable from the fallback when both are zero, and the fallback is the claim.
+      const state = buildState('<stateDuration:0>');
+      state.stepsToRemove = 300;
+      expect(state.jabsStateDurationFrames).toBe(300);
+    });
+
+    it('falls back to stepsToRemove when the seconds tag is present but zero', () =>
+    {
+      // same reasoning on the seconds path- zero seconds converted to frames is still zero, so
+      // only a distinctive stepsToRemove proves the fallback is what answered.
+      const state = buildState('<stateDurationSec:0>');
+      state.stepsToRemove = 300;
+      expect(state.jabsStateDurationFrames).toBe(300);
     });
   });
 

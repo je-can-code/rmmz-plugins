@@ -343,6 +343,36 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(JABS_Engine.getEnemyCloneList()).toBe(events);
     });
   });
+
+  describe('constructor enemy-map bootstrapping', () =>
+  {
+    it('kicks off enemy-map initialization when the clone list has never been populated', () =>
+    {
+      // Arrange- the shared beforeEach already nulled the clone list and installed a fetch spy.
+      globalThis.fetch.mockClear();
+
+      // Act
+      const engine = new JABS_Engine();
+
+      // Assert- the fetch is the only observable evidence the enemy map bootstrap ran.
+      expect(globalThis.fetch).toHaveBeenCalledWith('data/Map005.json');
+      expect(engine.getAllActionEvents()).toEqual([]);
+    });
+
+    it('skips enemy-map initialization when the clone list is already populated', () =>
+    {
+      // Arrange- a populated list is the near-miss sibling of the null list above.
+      JABS_Engine.setEnemyCloneList([ { id: 'already-loaded' } ]);
+      globalThis.fetch.mockClear();
+
+      // Act
+      const engine = new JABS_Engine();
+
+      // Assert- construction still completes, it just does not re-fetch the map.
+      expect(globalThis.fetch).not.toHaveBeenCalled();
+      expect(engine.getAllActionEvents()).toEqual([]);
+    });
+  });
   //endregion static: enemy clone list
 
   //region static: geometry
@@ -395,6 +425,26 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     it('adds no extra Y offset for an unrecognized facing value', () =>
     {
       expect(JABS_Engine.resolveMeleeOriginPixelOffsetsForFacing(5)).toEqual({ ox: 0, oy: 0 });
+    });
+
+    it('suppresses a non-zero global Y offset for left/right facings only', () =>
+    {
+      // Arrange- the shared metadata fixture configures a zero base Y offset, which makes
+      // "suppressed" and "not suppressed" the same number for every facing. a non-zero base
+      // is the only configuration where the left/right bypass is observable at all.
+      globalThis.J.ABS.Metadata.HitboxMeleeOriginOffsetPxY = 12;
+
+      // Act
+      const facingLeft = JABS_Engine.resolveMeleeOriginPixelOffsetsForFacing(4);
+      const facingRight = JABS_Engine.resolveMeleeOriginPixelOffsetsForFacing(6);
+      const facingOther = JABS_Engine.resolveMeleeOriginPixelOffsetsForFacing(5);
+
+      // Assert- both lateral facings drop the base entirely, the sibling facing keeps it.
+      expect(facingLeft).toEqual({ ox: 0, oy: 0 });
+      expect(facingRight).toEqual({ ox: 0, oy: 0 });
+      expect(facingOther).toEqual({ ox: 0, oy: 12 });
+
+      globalThis.J.ABS.Metadata.HitboxMeleeOriginOffsetPxY = 0;
     });
   });
 
@@ -568,13 +618,31 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(withUndefined).toBe(withZero);
     });
 
-    it('clamps an invalid dominance multiplier to a safe default of 2', () =>
+    it('clamps a dominance multiplier of 0 to the safe default of 2', () =>
     {
       globalThis.J.ABS.Metadata.ImplicitParryDominanceMultiplier = 0;
       const caster = buildBattler({ hit: 5 });
       const target = buildBattler({ grd: 5 });
 
-      expect(() => JABS_Engine.implicitParryChancePercent(caster, target, 0)).not.toThrow();
+      expect(JABS_Engine.implicitParryChancePercent(caster, target, 0)).toBe(50);
+
+      globalThis.J.ABS.Metadata.ImplicitParryDominanceMultiplier = 2;
+    });
+
+    it('clamps a dominance multiplier below 1 to the safe default of 2', () =>
+    {
+      // Arrange- a multiplier of 0.5 is finite but inverts the band (1/M = 2), so honoring it
+      // would make the defender "dominant" at any pressure ratio at or under 2 and pin the
+      // chance at 100. the clamp is what keeps the band widening rather than inverting.
+      globalThis.J.ABS.Metadata.ImplicitParryDominanceMultiplier = 0.5;
+      const caster = buildBattler({ hit: 5 });
+      const target = buildBattler({ grd: 5 });
+
+      // Act
+      const result = JABS_Engine.implicitParryChancePercent(caster, target, 0);
+
+      // Assert
+      expect(result).toBe(50);
 
       globalThis.J.ABS.Metadata.ImplicitParryDominanceMultiplier = 2;
     });
@@ -1023,6 +1091,44 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         engine.addJabsStateByUuid('uuid-1', negativeState);
         expect(engine.getNegativeJabsStatesByUuid('uuid-1')).toEqual([ negativeState ]);
         expect(engine.getPositiveJabsStatesByUuid('uuid-1')).toEqual([]);
+      });
+
+      it('excludes an expired state from the negative results even when it is negative-tagged', () =>
+      {
+        // Arrange- a non-negative expired state would be dropped by the negative-type check
+        // downstream, so the expiry guard could never be seen to matter. tagging it negative
+        // leaves expiry as the only reason it can be excluded, and the live sibling proves the
+        // filter is discriminating rather than rejecting everything.
+        const engine = new JABS_Engine();
+        const negativeBattler = { deathStateId: () => 99, state: () => ({ isNegativeType: () => true }) };
+        const expiredState = buildTrackedState({ stateId: 1, expired: true, battler: negativeBattler });
+        const liveState = buildTrackedState({ stateId: 2, battler: negativeBattler });
+        engine.addJabsStateByUuid('uuid-1', expiredState);
+        engine.addJabsStateByUuid('uuid-1', liveState);
+
+        // Act
+        const result = engine.getNegativeJabsStatesByUuid('uuid-1');
+
+        // Assert
+        expect(result).toEqual([ liveState ]);
+      });
+
+      it('excludes the death state from the negative results even when it is negative-tagged', () =>
+      {
+        // Arrange- same reasoning as the expiry sibling above: the death state is tagged
+        // negative so the death-state guard is the only thing that can exclude it.
+        const engine = new JABS_Engine();
+        const negativeBattler = { deathStateId: () => 99, state: () => ({ isNegativeType: () => true }) };
+        const deathState = buildTrackedState({ stateId: 99, battler: negativeBattler });
+        const liveState = buildTrackedState({ stateId: 2, battler: negativeBattler });
+        engine.addJabsStateByUuid('uuid-1', deathState);
+        engine.addJabsStateByUuid('uuid-1', liveState);
+
+        // Act
+        const result = engine.getNegativeJabsStatesByUuid('uuid-1');
+
+        // Assert
+        expect(result).toEqual([ liveState ]);
       });
     });
 
@@ -1499,6 +1605,26 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         const engine = new JABS_Engine();
         expect(engine.querySkillExecutionLog('uuid-1', 5, 1, 10, 'streak')).toBe(0);
       });
+
+      it('counts only the unbroken tail, not every matching entry in the window', () =>
+      {
+        // Arrange- every other streak fixture puts its non-matching entry at the head, where
+        // "consecutive from the tail" and "all matches in the window" happen to agree. an
+        // interleaved log is the only shape that separates the streak path from the generic
+        // filter-and-count path the other count modes share.
+        const engine = new JABS_Engine();
+        const entries = [ buildEntry(), buildEntry({ matchesSkillId: () => false }), buildEntry() ];
+        engine.getSkillExecutionLog()
+          .set('uuid-1', entries);
+
+        // Act
+        const streak = engine.querySkillExecutionLog('uuid-1', 5, 1, 10, 'streak');
+        const all = engine.querySkillExecutionLog('uuid-1', 5, 1, 10, 'all');
+
+        // Assert
+        expect(streak).toBe(1);
+        expect(all).toBe(2);
+      });
     });
 
     describe('updateSkillExecutionLog', () =>
@@ -1748,14 +1874,24 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
   //region update input
   describe('updateInput', () =>
   {
-    it('does nothing when input updates are not allowed', () =>
+    it('does nothing when input updates are not allowed', async () =>
     {
+      // Arrange- the registered-controller check is the other reason this method stays silent,
+      // so it is forced off here: with a controller registered the method would warn about
+      // nothing either way and the gate under test would carry none of the assertion.
+      const { default: JABS_InputAdapter } = await import('../../../../../src/plugins/abs/core/models/JABS_InputAdapter.js');
+      JABS_InputAdapter.hasControllers = () => false;
       const engine = new JABS_Engine();
       engine.canUpdateInput = () => false;
       vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      // Act
       engine.updateInput();
+
+      // Assert
       expect(console.warn).not.toHaveBeenCalled();
       console.warn.mockRestore();
+      JABS_InputAdapter.hasControllers = () => true;
     });
 
     it('warns when no input controllers have been registered', async () =>
@@ -1979,6 +2115,74 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         expect(globalThis.$gameParty._actors[0]).toBe(1);
       });
 
+      it('leaves the party in the exact rotated order it stopped on', () =>
+      {
+        // Arrange- three eligible members, so nothing is skipped for eligibility reasons and
+        // the resulting order is produced purely by the rotate-then-evaluate loop. asserting
+        // only the new leader cannot tell a stopped rotation from a full lap back to the
+        // starting order, which is what every degenerate version of this loop produces.
+        globalThis.$gameParty = { _actors: [ 1, 2, 3 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
+        globalThis.$gameActors = {
+          actor: () => ({
+            isDead: () => false,
+            switchLocked: () => false,
+          }),
+        };
+        globalThis.$gamePlayer = { refresh: vi.fn() };
+        const engine = new JABS_Engine();
+        engine.refreshPlayer1Data = vi.fn();
+
+        // Act
+        engine.handlePartyCycleMemberChanges();
+
+        // Assert
+        expect(globalThis.$gameParty._actors).toEqual([ 3, 1, 2 ]);
+      });
+
+      it('rotates past a dead candidate and stops on the next eligible one', () =>
+      {
+        // Arrange- four members so a single skip cannot coincidentally land back on the
+        // starting order, which is what a three-member party does after one skip.
+        globalThis.$gameParty = { _actors: [ 1, 2, 3, 4 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
+        globalThis.$gameActors = {
+          actor: (id) => ({
+            isDead: () => id === 3,
+            switchLocked: () => false,
+          }),
+        };
+        globalThis.$gamePlayer = { refresh: vi.fn() };
+        const engine = new JABS_Engine();
+        engine.refreshPlayer1Data = vi.fn();
+
+        // Act
+        engine.handlePartyCycleMemberChanges();
+
+        // Assert
+        expect(globalThis.$gameParty._actors).toEqual([ 4, 1, 2, 3 ]);
+      });
+
+      it('rotates past a switch-locked candidate and stops on the next eligible one', () =>
+      {
+        // Arrange- the locked-member twin of the dead-member case above, on the same
+        // four-member party so the stopping point is unambiguous.
+        globalThis.$gameParty = { _actors: [ 1, 2, 3, 4 ], leader: () => ({ onBattlerDataChange: vi.fn() }) };
+        globalThis.$gameActors = {
+          actor: (id) => ({
+            isDead: () => false,
+            switchLocked: () => id === 3,
+          }),
+        };
+        globalThis.$gamePlayer = { refresh: vi.fn() };
+        const engine = new JABS_Engine();
+        engine.refreshPlayer1Data = vi.fn();
+
+        // Act
+        engine.handlePartyCycleMemberChanges();
+
+        // Assert
+        expect(globalThis.$gameParty._actors).toEqual([ 4, 1, 2, 3 ]);
+      });
+
       it('triggers onBattlerDataChange for the new leader', () =>
       {
         globalThis.$gameParty = { _actors: [ 1 ], leader: vi.fn(() => ({ onBattlerDataChange: vi.fn() })) };
@@ -2110,12 +2314,19 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
     it('does not execute anything when the generated actions cannot be executed', () =>
     {
+      // Arrange- the actions collection is deliberately non-empty. an empty collection is
+      // rejected by canExecuteMapActions anyway, so nothing would execute even if the gate
+      // here were removed entirely and the assertion below would prove nothing.
       const engine = new JABS_Engine();
-      const caster = { createJabsActionFromSkill: () => [] };
+      const caster = { createJabsActionFromSkill: () => [ { id: 'action1' } ] };
+      engine.canExecuteMapActions = vi.fn(() => false);
       engine.executeMapAction = vi.fn();
 
+      // Act
       engine.forceMapAction(caster, 5);
 
+      // Assert
+      expect(engine.canExecuteMapActions).toHaveBeenCalledTimes(1);
       expect(engine.executeMapAction).not.toHaveBeenCalled();
     });
   });
@@ -2218,6 +2429,66 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.executeMapActions(caster, [ action ], null, null);
 
+      expect(engine.executeMapAction).toHaveBeenCalledWith(caster, action, 7, 8);
+    });
+
+    it('prefers explicitly provided coordinates over the frozen target location', () =>
+    {
+      // Arrange- the action carries a frozen location that differs from the coordinates passed
+      // in, so consulting options when it should not is visible in the executed coordinates.
+      const engine = new JABS_Engine();
+      engine.applyOnExecutionEffects = vi.fn();
+      engine.executeMapAction = vi.fn();
+      const caster = { guarding: () => false };
+      const frozenLocation = { getX: () => 7, getY: () => 8 };
+      const action = buildAction({
+        getActionOptions: () => ({ getTargetLocation: () => frozenLocation }),
+      });
+
+      // Act
+      engine.executeMapActions(caster, [ action ], 10, 20);
+
+      // Assert
+      expect(engine.executeMapAction).toHaveBeenCalledWith(caster, action, 10, 20);
+    });
+
+    it('consults the frozen target location when only the x coordinate is omitted', () =>
+    {
+      // Arrange- a half-supplied coordinate pair is unusable, so either omission has to send
+      // the whole pair back to the frozen location rather than only the missing half.
+      const engine = new JABS_Engine();
+      engine.applyOnExecutionEffects = vi.fn();
+      engine.executeMapAction = vi.fn();
+      const caster = { guarding: () => false };
+      const frozenLocation = { getX: () => 7, getY: () => 8 };
+      const action = buildAction({
+        getActionOptions: () => ({ getTargetLocation: () => frozenLocation }),
+      });
+
+      // Act
+      engine.executeMapActions(caster, [ action ], null, 20);
+
+      // Assert
+      expect(engine.executeMapAction).toHaveBeenCalledWith(caster, action, 7, 8);
+    });
+
+    it('consults the frozen target location when only the y coordinate is omitted', () =>
+    {
+      // Arrange- the mirror of the missing-x case, since each half of the coordinate check
+      // is an independent reason to fall back.
+      const engine = new JABS_Engine();
+      engine.applyOnExecutionEffects = vi.fn();
+      engine.executeMapAction = vi.fn();
+      const caster = { guarding: () => false };
+      const frozenLocation = { getX: () => 7, getY: () => 8 };
+      const action = buildAction({
+        getActionOptions: () => ({ getTargetLocation: () => frozenLocation }),
+      });
+
+      // Act
+      engine.executeMapActions(caster, [ action ], 10, null);
+
+      // Assert
       expect(engine.executeMapAction).toHaveBeenCalledWith(caster, action, 7, 8);
     });
 
@@ -2447,6 +2718,42 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(engine.addJabsActionToMap).not.toHaveBeenCalled();
       expect(engine.addActionEvent).toHaveBeenCalledWith(action, null);
     });
+
+    it('does not create a map event for a direct action given only an x coordinate', () =>
+    {
+      // Arrange- half a coordinate pair cannot place an event, so each half of the pair is
+      // independently required. with both halves supplied or both omitted, either half could
+      // be ignored without anything noticing.
+      const engine = new JABS_Engine();
+      engine.buildActionEventData = vi.fn();
+      engine.addJabsActionToMap = vi.fn();
+      engine.addActionEvent = vi.fn();
+      const action = { isDirectAction: () => true };
+
+      // Act
+      engine.handleActionGeneration('caster', action, 3, null);
+
+      // Assert
+      expect(engine.buildActionEventData).not.toHaveBeenCalled();
+      expect(engine.addActionEvent).toHaveBeenCalledWith(action, null);
+    });
+
+    it('does not create a map event for a direct action given only a y coordinate', () =>
+    {
+      // Arrange- the mirror of the x-only case above.
+      const engine = new JABS_Engine();
+      engine.buildActionEventData = vi.fn();
+      engine.addJabsActionToMap = vi.fn();
+      engine.addActionEvent = vi.fn();
+      const action = { isDirectAction: () => true };
+
+      // Act
+      engine.handleActionGeneration('caster', action, null, 4);
+
+      // Assert
+      expect(engine.buildActionEventData).not.toHaveBeenCalled();
+      expect(engine.addActionEvent).toHaveBeenCalledWith(action, null);
+    });
   });
   //endregion actions: update/execute
 
@@ -2622,10 +2929,32 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(engine.actionTravelDirectionToSpritePatternDirection(dir, 2)).toBe(dir);
     });
 
-    it('falls back to a valid casted cardinal for an unrecognized travel direction', () =>
+    it('returns a cardinal travel direction that disagrees with the casted cardinal unchanged', () =>
     {
+      // Arrange- the parametrized cardinal cases above all cast downward, so travel dir 2 and
+      // the casted cardinal are the same number and the early return cannot be distinguished
+      // from the later fall-through that returns the casted cardinal instead.
       const engine = new JABS_Engine();
-      expect(engine.actionTravelDirectionToSpritePatternDirection(999, 6)).toBe(6);
+
+      // Act
+      const result = engine.actionTravelDirectionToSpritePatternDirection(2, 4);
+
+      // Assert
+      expect(result).toBe(2);
+    });
+
+    it.each([ 4, 6, 8 ])('falls back to casted cardinal %i for an unrecognized travel direction', (casted) =>
+    {
+      // Arrange- each cardinal is its own operand of the fall-through validity check, and the
+      // method's own fallback is 2, so only a casted cardinal other than 2 proves the operand
+      // for that cardinal is doing anything.
+      const engine = new JABS_Engine();
+
+      // Act
+      const result = engine.actionTravelDirectionToSpritePatternDirection(999, casted);
+
+      // Assert
+      expect(result).toBe(casted);
     });
 
     it('falls back to DOWN when both travel direction and casted cardinal are unrecognized', () =>
@@ -2886,6 +3215,33 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       expect(caster.setCooldownCounter).toHaveBeenCalledTimes(1);
       expect(caster.setCooldownCounter).toHaveBeenCalledWith('combat1', 30);
+    });
+
+    it('stamps the resolved slot keys rather than the executed cooldown type for a shared-cooldown skill', () =>
+    {
+      // Arrange- the executed cooldown type is deliberately a slot key that appears nowhere in
+      // the equipped list. when the two coincide, stamping "the executed slot" and stamping
+      // "every slot resolving to this skill" write the same key and the unique-vs-shared fork
+      // carries none of the assertion. combat2 is the near-miss sibling: same shape, resolves
+      // to a different skill, and has to survive untouched.
+      const engine = new JABS_Engine();
+      engine.applyComboModeForSkill = vi.fn();
+      const skill = { id: 5, jabsUniqueCooldown: false };
+      const slots = [ { id: 1, key: 'combat1' }, { id: 2, key: 'combat2' } ];
+      const battler = {
+        getAllEquippedSkills: () => slots,
+        resolveEquippedSkillId: (id) => (id === 1 ? 5 : 6),
+      };
+      const caster = { setCooldownCounter: vi.fn(), getBattler: () => battler };
+      const action = { getCooldownType: () => 'combat9', getBaseSkill: () => skill };
+
+      // Act
+      engine.applyCooldownValueForSkill(caster, action, 30);
+
+      // Assert
+      expect(caster.setCooldownCounter).toHaveBeenCalledTimes(1);
+      expect(caster.setCooldownCounter).toHaveBeenCalledWith('combat1', 30);
+      expect(engine.applyComboModeForSkill).toHaveBeenCalledWith(caster, 'combat1', skill);
     });
 
     it('stamps the combo mode for every slot it touches', () =>
@@ -3163,12 +3519,30 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
     it('KNOWN GAP: kicks off enemy-map initialization on demand, but since that fetch is async and unwaited, immediately trying to clone from the still-null list throws synchronously (harmless in practice since the constructor already initializes this well before any real addEnemyToMap call)', () =>
     {
-      JABS_Engine.setEnemyCloneList(null);
-      globalThis.fetch = vi.fn(() => Promise.resolve({ json: () => Promise.resolve({ events: [] }) }));
+      // Arrange- the engine is built while the list is populated so the constructor's own
+      // bootstrap is not the thing that satisfies the fetch assertion below; only then is the
+      // list emptied, leaving this method's own on-demand check as the sole trigger.
       const engine = new JABS_Engine();
+      JABS_Engine.setEnemyCloneList(null);
+      globalThis.fetch.mockClear();
 
+      // Act / Assert
       expect(() => engine.addEnemyToMap(1, 2, 0)).toThrow();
-      expect(globalThis.fetch).toHaveBeenCalled();
+      expect(globalThis.fetch).toHaveBeenCalledWith('data/Map005.json');
+    });
+
+    it('does not re-fetch the enemy map when the clone list is already populated', () =>
+    {
+      // Arrange- the populated-list sibling of the on-demand bootstrap above.
+      const engine = new JABS_Engine();
+      globalThis.fetch.mockClear();
+
+      // Act
+      const result = engine.addEnemyToMap(10, 20, 0);
+
+      // Assert- the clone still lands on the map, it is just built from the cached list.
+      expect(globalThis.fetch).not.toHaveBeenCalled();
+      expect(globalThis.$gameMap.addEvent).toHaveBeenCalledWith(result);
     });
 
     it('logs an error and returns nothing when the enemy clone id does not resolve', () =>
@@ -3350,6 +3724,26 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.executeSkillEffects(action, target);
 
       expect(result.guarded).toBe(true);
+    });
+
+    it('leaves the result unguarded when the target is not guarding', () =>
+    {
+      // Arrange- the guarded flag is only ever written by the guard check, so the seeded false
+      // below can only survive if that check actually declined to fire.
+      const engine = new JABS_Engine();
+      engine.preExecuteSkillEffects = vi.fn();
+      engine.postExecuteSkillEffects = vi.fn();
+      const result = buildResult({ guarded: false });
+      const targetBattler = buildTargetBattler(result);
+      const target = buildTarget({ getBattler: () => targetBattler, guarding: () => false });
+      const action = buildAction();
+
+      // Act
+      engine.executeSkillEffects(action, target);
+
+      // Assert- the applied action is the proof the method ran all the way through.
+      expect(result.guarded).toBe(false);
+      expect(action.getAction().apply).toHaveBeenCalledWith(targetBattler);
     });
 
     it('does not attempt any defensive check when the action is unparryable', () =>
@@ -4203,6 +4597,26 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(caster.enterCombat).not.toHaveBeenCalled();
       expect(target.enterCombat).not.toHaveBeenCalled();
     });
+
+    it('does not enter combat when the result was neither a hit nor a parry', () =>
+    {
+      // Arrange- healing, inanimate targets and unopposed teams each independently suppress
+      // the combat entry below, so all three are set to their permissive values here and the
+      // hit/parry pair is the only remaining reason nothing happens.
+      const engine = buildEngine();
+      const caster = buildCaster();
+      const target = buildTarget({ isHit: () => false, parried: false }, { isInanimate: () => false });
+      const action = buildAction(caster, { isHealing: () => false });
+
+      // Act
+      engine.processOnHitEffects(action, target);
+
+      // Assert- last-hit marking sits outside the combat gate, so it proves the method reached
+      // the opposed-team block rather than bailing out somewhere earlier.
+      expect(caster.setBattlerLastHit).toHaveBeenCalledWith(target);
+      expect(caster.enterCombat).not.toHaveBeenCalled();
+      expect(target.enterCombat).not.toHaveBeenCalled();
+    });
   });
 
   describe('canBeKnockedBack', () =>
@@ -4415,14 +4829,20 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
     it('hops the target in place when the computed knockback is 0', () =>
     {
+      // Arrange- a non-direct action, so the hop is attributable to the zero distance alone.
       const engine = buildEngine();
       const targetSprite = buildTargetSprite();
       const target = buildTarget(targetSprite);
-      const action = buildAction({ getKnockback: () => 0 });
+      const action = buildAction({ getKnockback: () => 0, isDirectAction: () => false });
 
+      // Act
       engine.checkKnockback(action, target);
 
+      // Assert- the walk path also ends in jump(0, 0) when the distance is zero, so the jump
+      // alone cannot tell the hop-in-place shortcut from a full displacement walk that simply
+      // had nowhere to go. skipping the walk entirely is what actually distinguishes them.
       expect(targetSprite.jump).toHaveBeenCalledWith(0, 0);
+      expect(targetSprite.walkInDirectionClamped).not.toHaveBeenCalled();
     });
 
     it('hops the target in place for a direct action regardless of knockback value', () =>
@@ -5625,14 +6045,20 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
     it('auto-counters when neither counterparry nor counterguard fired', () =>
     {
+      // Arrange- the battler neither took a parried result nor is actively parrying, which is
+      // the only configuration where the parry reaction should never be reached at all.
       const engine = new JABS_Engine();
       engine.handleCounterParry = vi.fn(() => false);
       engine.handleCounterGuard = vi.fn(() => false);
       engine.handleAutoCounter = vi.fn();
       const battler = buildBattler();
 
+      // Act
       engine.handleActorRetaliation(battler, 'triggeringAction');
 
+      // Assert- a counter-parry that returns false and one that is never attempted produce the
+      // same auto-counter, so the reaction itself has to be pinned as un-attempted.
+      expect(engine.handleCounterParry).not.toHaveBeenCalled();
       expect(engine.handleAutoCounter).toHaveBeenCalledWith(battler);
     });
 
@@ -5778,6 +6204,10 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       expect(retaliationAction.getAction().setTriggerDamage).toHaveBeenCalledWith(1, 2, 3);
       expect(engine.executeMapAction).toHaveBeenCalledWith(retaliator, retaliationAction, null, null);
+      // location freezing exists to stop a direct action from body-anchoring to the retaliator;
+      // a non-direct action must keep the options it was built with, and null coordinates alone
+      // do not prove that since the freeze rewrites the options without touching them.
+      expect(retaliationAction.setActionOptions).not.toHaveBeenCalled();
     });
 
     it('does not fire when canExecuteMapActions reports the actions cannot execute', () =>
@@ -6494,6 +6924,46 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       expect(engine.collisionRhombus(target, action, 2)).toBe(false);
     });
+
+    it('is false for a target up and to the left whose combined edge gaps exceed the range', () =>
+    {
+      // Arrange- rect spans x:[-84, -36] and y:[-120, -72], so the origin (0, 0) is right of
+      // and below it: gaps of 0.75 and 1.5 tiles sum to 2.25, just past a 2-tile rhombus.
+      // both gaps are deliberately narrow, because a comfortably-out-of-range target stays
+      // out of range even when an edge gap is measured from the wrong edge or dropped to zero,
+      // and every such miscomputation shrinks the distance rather than growing it.
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(-60, -96);
+
+      // Act / Assert
+      expect(engine.collisionRhombus(target, action, 2)).toBe(false);
+    });
+
+    it('is false for a target directly below whose vertical gap alone exceeds the range', () =>
+    {
+      // Arrange- the origin's x sits inside the rect's horizontal span, so the horizontal gap
+      // is a true zero; the 2.25-tile vertical gap alone carries the rejection, and a negative
+      // horizontal gap computed from the wrong edge would pull it back into range.
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(0, 132);
+
+      // Act / Assert
+      expect(engine.collisionRhombus(target, action, 2)).toBe(false);
+    });
+
+    it('is false for a target directly to the right whose horizontal gap alone exceeds the range', () =>
+    {
+      // Arrange- the mirror of the vertical case above: the origin's y sits inside the rect's
+      // vertical span, leaving the 2.25-tile horizontal gap to carry the rejection alone.
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(132, 0);
+
+      // Act / Assert
+      expect(engine.collisionRhombus(target, action, 2)).toBe(false);
+    });
   });
 
   describe('collisionCross', () =>
@@ -6549,6 +7019,18 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       const engine = new JABS_Engine();
       const targetRect = { cx: 200, cy: 50, w: 10, h: 10 };
 
+      expect(engine.collisionOrientedRectFromOrigin(targetRect, 0, 0, J.ABS.Directions.DOWN, 100, 20)).toBe(false);
+    });
+
+    it('is false for a target inside the breadth band but past the end of the forward span', () =>
+    {
+      // Arrange- the forward span is bounded at both ends, and a target behind the origin is
+      // rejected by the near bound alone. only a target dead ahead and beyond the far end
+      // leaves the far bound as the sole reason the rectangle does not reach it.
+      const engine = new JABS_Engine();
+      const targetRect = { cx: 0, cy: 200, w: 10, h: 10 };
+
+      // Act / Assert
       expect(engine.collisionOrientedRectFromOrigin(targetRect, 0, 0, J.ABS.Directions.DOWN, 100, 20)).toBe(false);
     });
   });
@@ -6640,6 +7122,34 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       const target = buildTargetAt(0, 0);
 
       expect(engine.collisionSector(target, action, 1, J.ABS.Directions.DOWN, 30)).toBe(true);
+    });
+
+    it('is true for an over-full sweep against a target directly behind the facing', () =>
+    {
+      // Arrange- a sweep wider than a full turn still describes the whole circle, but the
+      // wedge math would read it as a half-angle past 180 degrees and reject everything that
+      // is not almost dead ahead. the target sits directly behind a downward facing, far
+      // enough that no corner of its box creeps back inside that narrowed sweep.
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(0, -200);
+
+      // Act / Assert
+      expect(engine.collisionSector(target, action, 4, J.ABS.Directions.DOWN, 400)).toBe(true);
+    });
+
+    it('is false for a target level with the origin but perpendicular to a narrow wedge', () =>
+    {
+      // Arrange- the target's center sits exactly level with the arc origin, so its vector has
+      // a zero vertical component while its horizontal component is large. that is the
+      // near-miss sibling of the degenerate origin case: one component is zero, but the point
+      // is nowhere near the origin and a 90 degree downward wedge must not claim it.
+      const engine = new JABS_Engine();
+      const action = buildOriginAction();
+      const target = buildTargetAt(200, 0);
+
+      // Act / Assert
+      expect(engine.collisionSector(target, action, 4, J.ABS.Directions.DOWN, 90)).toBe(false);
     });
   });
 
@@ -7389,6 +7899,22 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.handleDefeatedEnemy(target, null);
 
       expect(start).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not start a death-control event when the target has no event actions', () =>
+    {
+      // Arrange- nothing else in this method touches the character's event, so the untouched
+      // start below belongs to the event-actions check and to nothing else.
+      const engine = new JABS_Engine();
+      const start = vi.fn();
+      const target = buildDefeatedTarget({ hasEventActions: () => false, getCharacter: () => ({ start }) });
+
+      // Act
+      engine.handleDefeatedEnemy(target, null);
+
+      // Assert- flagging the target as dying is the tail of the method and proves it ran.
+      expect(start).not.toHaveBeenCalled();
+      expect(target.setDying).toHaveBeenCalledWith(true);
     });
 
     it('grants rewards and loot when the caster is an actor', () =>

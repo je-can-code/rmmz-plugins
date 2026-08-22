@@ -89,10 +89,22 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
   {
     it('returns false when no combo is ready', () =>
     {
+      // Arrange: every later gate is deliberately left open. with the battler's default of nothing
+      // queued in the slot, the "nothing queued" guard below answered false for this case too, so
+      // this one could have been deleted without a single assertion noticing.
       const ai = new JABS_AI();
-      const user = buildBattler({ hasComboReady: () => false });
+      const user = buildBattler({
+        hasComboReady: () => false,
+        getComboNextActionId: () => 5,
+        canExecuteSkill: () => true,
+        isAiComboHumanizationTimingReady: () => true,
+      });
 
-      expect(ai.shouldFollowWithCombo(user)).toEqual(false);
+      // Act
+      const shouldCombo = ai.shouldFollowWithCombo(user);
+
+      // Assert
+      expect(shouldCombo).toEqual(false);
     });
 
     it('returns false when nothing is queued for the slot', () =>
@@ -188,6 +200,9 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
   {
     it('picks the skill with the higher crit damage over base damage', () =>
     {
+      // Arrange: skill 1 must win purely on its crit, so its base damage is the *weaker* of the
+      // two. Previously it led on both numbers, which meant the base-damage fallback below would
+      // have crowned it anyway and the crit comparison could have been deleted untouched.
       const ai = new JABS_AI();
       const user = buildBattler({
         getSkill: (id) => ({ id, healAmount: id === 1 ? 10 : 5, elementRate: 1 }),
@@ -199,12 +214,16 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
         this.setItemObject = (item) => { this._item = item; };
         this.makeDamageValue = (_target, isCrit) =>
         {
-          if (this._item.id === 1) return isCrit ? 50 : 10;
-          return isCrit ? 20 : 5;
+          if (this._item.id === 1) return isCrit ? 50 : 5;
+          return isCrit ? 20 : 15;
         };
       });
 
-      expect(ai.determineStrongestSkill([ 2, 1 ], user, buildBattler())).toEqual(1);
+      // Act
+      const strongestSkillId = ai.determineStrongestSkill([ 2, 1 ], user, buildBattler());
+
+      // Assert
+      expect(strongestSkillId).toEqual(1);
     });
 
     it('falls back to base damage comparison when crit does not exceed the running best', () =>
@@ -285,9 +304,23 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
   {
     it('returns the list unfiltered when it has one or fewer entries', () =>
     {
+      // Arrange: the lone skill is elementally *useless* against this target on purpose. The
+      // filter would drop it, and leaving a battler with nothing to cast is worse than casting
+      // something resisted- so the count guard is what keeps a choice on the table. A skill with
+      // a neutral rate survives the filter too, which is why the earlier fixture proved nothing.
       const ai = new JABS_AI();
+      GameActionMock.mockImplementation(function(battler)
+      {
+        this.battler = battler;
+        this.setSkill = () => {};
+        this.calcElementRate = () => 0.5;
+      });
 
-      expect(ai.filterElementallyIneffectiveSkills([ 1 ], buildBattler(), buildBattler())).toEqual([ 1 ]);
+      // Act
+      const remaining = ai.filterElementallyIneffectiveSkills([ 1 ], buildBattler(), buildBattler());
+
+      // Assert
+      expect(remaining).toEqual([ 1 ]);
     });
 
     it('filters out skills with an elemental rate below 1', () =>
@@ -312,6 +345,20 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
       const ai = new JABS_AI();
 
       expect(ai.findMostElementallyEffectiveSkill([ 1 ], buildBattler(), buildBattler())).toEqual([ 1 ]);
+    });
+
+    it('returns an empty list untouched rather than reaching into it', () =>
+    {
+      // Arrange: a "careful" enemy runs the ineffective-skill filter before this one, and that
+      // filter can legitimately empty the list when every option is resisted. Without the count
+      // guard the sort result is indexed at [0][0] and the enemy's turn dies on a TypeError.
+      const ai = new JABS_AI();
+
+      // Act
+      const remaining = ai.findMostElementallyEffectiveSkill([], buildBattler(), buildBattler());
+
+      // Assert
+      expect(remaining).toEqual([]);
     });
 
     it('narrows to the single most elementally effective skill', () =>
@@ -373,9 +420,71 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
   {
     it('returns 0 when there are no healing-type skills', () =>
     {
+      // Arrange: a badly wounded ally stands right there, so "returned 0" cannot be explained by
+      // nobody needing help. The early return is also what keeps the healer from re-aiming at that
+      // ally: retargeting on a turn it has no cure for would drag its attacks off the enemy.
       const ai = new JABS_AI();
+      const ally = { getBattler: () => ({ currentHpPercent: () => 0.1 }) };
+      const user = buildBattler({ getAllNearbyAllies: () => [ ally ] });
 
-      expect(ai.decideHealing(buildBattler(), [ 1 ])).toEqual(0);
+      // Act
+      const chosenSkillId = ai.decideHealing(user, [ 1 ]);
+
+      // Assert
+      expect(chosenSkillId).toEqual(0);
+      expect(user.setAllyTarget).not.toHaveBeenCalled();
+    });
+
+    it('ignores a restorative skill that is not aimed at a living friend', () =>
+    {
+      // Arrange: a self-buffing regen or an undead-scorching heal both restore hp without being
+      // aimable at a wounded ally. Every fixture here had all three predicates agreeing, so the
+      // filter could have degraded to any one of them unnoticed.
+      const ai = new JABS_AI();
+      const spy = vi.spyOn(ai, 'bestFitHealingOneSkill').mockReturnValue(42);
+      const ally = { getBattler: () => ({ currentHpPercent: () => 0.1 }) };
+      const user = buildBattler({ getAllNearbyAllies: () => [ ally ] });
+      GameActionMock.mockImplementation(function(battler)
+      {
+        this.battler = battler;
+        this.setSkill = () => {};
+        this.isForAliveFriend = () => false;
+        this.isRecover = () => true;
+        this.isHpEffect = () => true;
+      });
+
+      // Act
+      const chosenSkillId = ai.decideHealing(user, [ 1 ]);
+
+      // Assert
+      expect(chosenSkillId).toEqual(0);
+      expect(spy).not.toHaveBeenCalled();
+    });
+
+    it('ignores a friend-targeting hp skill that does not restore anything', () =>
+    {
+      // Arrange: an hp-effect skill aimed at a living friend is not necessarily a heal- a sacrifice
+      // or hp-cost skill fits that shape exactly, and casting one on the lowest ally would finish
+      // them off.
+      const ai = new JABS_AI();
+      const spy = vi.spyOn(ai, 'bestFitHealingOneSkill').mockReturnValue(42);
+      const ally = { getBattler: () => ({ currentHpPercent: () => 0.1 }) };
+      const user = buildBattler({ getAllNearbyAllies: () => [ ally ] });
+      GameActionMock.mockImplementation(function(battler)
+      {
+        this.battler = battler;
+        this.setSkill = () => {};
+        this.isForAliveFriend = () => true;
+        this.isRecover = () => false;
+        this.isHpEffect = () => true;
+      });
+
+      // Act
+      const chosenSkillId = ai.decideHealing(user, [ 1 ]);
+
+      // Assert
+      expect(chosenSkillId).toEqual(0);
+      expect(spy).not.toHaveBeenCalled();
     });
 
     it('returns 0 when no ally is below the low-hp threshold', () =>
@@ -593,6 +702,24 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
 
       expect(ai.determineLowestHpAlly(healer)).toEqual(lower);
     });
+
+    it('keeps the wounded ally when a healthier one is evaluated after it', () =>
+    {
+      // Arrange: the order is the whole point. Both the "nobody picked yet" seed and the
+      // comparison below assign into the same slot, so a scan that had degraded into "whoever
+      // came last" agrees with the correct answer on any list that happens to end on its lowest
+      // member - which is exactly how the list above is ordered.
+      const ai = new JABS_AI();
+      const lower = { getBattler: () => ({ currentHpPercent: () => 0.2 }) };
+      const higher = { getBattler: () => ({ currentHpPercent: () => 0.8 }) };
+      const healer = buildBattler({ getAllNearbyAllies: () => [ lower, higher ] });
+
+      // Act
+      const lowestAlly = ai.determineLowestHpAlly(healer);
+
+      // Assert
+      expect(lowestAlly).toEqual(lower);
+    });
   });
 
   describe('countLowHpAllies()', () =>
@@ -632,6 +759,33 @@ describe('JABS_AI (unit, all downstream dependencies mocked)', () =>
       });
 
       expect(ai.bestFitHealingOneSkill([ 1 ], healerBattler, lowestAllyBattler)).toEqual(0);
+    });
+
+    it('considers a self-only skill when the healer is itself the lowest ally', () =>
+    {
+      // Arrange: the healer and the wounded ally are the same battler here, which is the only
+      // situation in which a self-only heal is the right call. Every other fixture used two
+      // distinct battlers, so the identity half of that guard could have been dropped and the
+      // healer would have refused to ever heal itself.
+      const ai = new JABS_AI();
+      const selfBattler = { hp: 50, mhp: 100, skill: (id) => ({ id }) };
+      GameActionMock.mockImplementation(function(battler)
+      {
+        this.battler = battler;
+        this._item = null;
+        this.setItemObject = (item) => { this._item = item; };
+        this.isForUser = () => true;
+        this.isForOne = () => true;
+        this.isForAll = () => false;
+        this.isForDeadFriend = () => false;
+        this.makeDamageValue = () => -50;
+      });
+
+      // Act
+      const bestSkillId = ai.bestFitHealingOneSkill([ 3 ], selfBattler, selfBattler);
+
+      // Assert
+      expect(bestSkillId).toEqual(3);
     });
 
     it('skips skills that target neither one, all, nor dead friends', () =>
