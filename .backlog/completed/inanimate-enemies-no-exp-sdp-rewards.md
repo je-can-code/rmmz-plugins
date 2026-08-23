@@ -1,8 +1,3 @@
----
-status: done
-area: bug
----
-
 # Inanimate enemies (trees, shrubs, deposits) should not grant EXP or SDP
 
 ## Symptom

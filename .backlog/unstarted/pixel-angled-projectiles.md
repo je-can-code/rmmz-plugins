@@ -1,8 +1,3 @@
----
-status: open
-area: pixel/ext/abs
----
-
 # Angled projectiles (true vector / degree-based firing)
 
 ## Severity

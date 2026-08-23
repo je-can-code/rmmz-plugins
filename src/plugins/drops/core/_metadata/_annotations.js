@@ -6,6 +6,7 @@
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
  * @orderAfter J-Base
+ * @orderAfter J-Extend
  * @help
  * ============================================================================
  * This plugin rewrites the way gold and item drops from enemies are handled.

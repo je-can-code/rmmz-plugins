@@ -1,8 +1,3 @@
----
-status: done
-area: completed
----
-
 # `onEngage` hook for engagement side effects
 
 ## Source

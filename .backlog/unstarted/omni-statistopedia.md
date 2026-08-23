@@ -1,8 +1,3 @@
----
-status: open
-area: feature
----
-
 # `omni/ext/stats` — a Statistopedia extension
 
 ## Severity
@@ -86,10 +81,39 @@ Grouped as the categories a detail window would page through.
 - monsterpedia completion percent- cross-linked rather than recomputed
 - damage taken from floor and environmental hazards
 
+**Progression**
+- nodes ranked up, total SDP points earned and spent lifetime, highest panel rank
+- levels gained
+- items refined, highest refinement tier reached
+- unique recipes discovered, crafts by category
+
+**Exploration and economy**
+- unique maps visited, chests opened, destructibles broken split by kind
+- steps taken- `$gameParty` already tracks it, so this is a read rather than a counter
+- gold earned and spent lifetime, most expensive single purchase
+
+**Flavour, and the reason it is not filler**
+- times rested at the inn, party cycles, trees chopped
+- enemies defeated per family ("Bearcats Slain: 847"), named `!`-prefix enemies killed
+
+These are screenshot bait, and that is the point- players share them, which makes them the cheapest
+marketing surface in the game. A second use: some stats double as a tutorial that never interrupts
+anyone. A player who reads "Parries: 0" may go and find out what parrying is, which no tooltip has
+ever achieved.
+
 **Derive at render time, never store**
 Crit rate, parry rate, accuracy, damage ratio, implicit-versus-precise split, kills per hour. Each is
 a division of two counters that already exist, and storing the quotient creates a second number that
 can fall out of agreement with the first two.
+
+## Definition of done
+
+- [ ] `src/plugins/omni/ext/stats/` exists with a vite config, and `bun run hotfix` is green
+- [ ] in-game: open the Omnipedia, a Statistopedia row sits beside Monsterpedia and Questopedia
+- [ ] in-game: kill something, save, reload, and the counter survived- proving the model persisted
+      rather than a variable being read
+- [ ] `grep -r 'gameVariables' src/plugins/omni/ext/stats/` returns nothing, per the ownership
+      decision above
 
 ## Notes
 
@@ -98,3 +122,6 @@ can fall out of agreement with the first two.
   `WeakSet` of actions that announced a connection can compare the two at removal time. The set
   collects itself.
 - Requires a `ca` repo change to register the built plugin, unlike most items here.
+- The name predates this item and stays- it fits the Omnipedia `-pedia` convention and CA's tone.
+  This absorbs the older `statistipedia-records-screen` item, whose metric lists are merged above and
+  whose "keep using game variables" architecture is superseded by the decision at the top of this file.

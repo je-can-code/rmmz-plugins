@@ -1,8 +1,3 @@
----
-status: open
-area: architecture
----
-
 # Map log channel registry (one global, three managers)
 
 ## Source

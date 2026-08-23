@@ -1,8 +1,3 @@
----
-status: done
-area: architecture
----
-
 # SDP progressive mastery ladder — count-based steps, optional ladder split, respec-safe reconcile
 
 ## Problem

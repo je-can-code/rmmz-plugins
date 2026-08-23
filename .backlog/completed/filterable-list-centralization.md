@@ -1,5 +1,12 @@
 # Filterable list centralization
 
+> **Shipped in rmmz-plugins#74** (2026-08-20), consumed by ca#63. `FilterCycle`, `Window_FilterStrip`
+> and `Window_FilterableList` live in `_base/core/`; `Window_SdpList`, `Window_RecipeList` and
+> `Window_StudyRecipeList` all extend the base, and both duplicate strip windows
+> (`Window_SdpFamilyStrip`, `Window_CreationCategoryBadge`) are gone. Of the four items under
+> [Open](#open), two settled themselves during execution; the remaining pair are `ca`-side authoring
+> calls that never blocked the code — see the note there.
+
 Extract the "list with a cycling category filter and an actionable-only toggle" pattern into J-Base, and
 put SDP, crafting creation, and the study shop on top of it. Along the way the crafting scene loses its
 category drill-down in favour of L2/R2 tab cycling.
@@ -418,14 +425,22 @@ second reference, and it is where the disagreements surface.
 
 Nothing here blocks. Each is decidable at the point the code reaches it.
 
+**Status at close.** None of these gated the engineering, and two settled themselves during execution.
+The remaining pair are authoring calls in the `ca` repo, not plugin work — they did not justify holding
+this item open, and they are recorded here so the reasoning is findable rather than rediscovered.
+
 - **What `ALL` sorts by** in crafting. Unsorted `ALL` over a large learned roster is worse than tabs;
   craftable-first is the obvious answer and reuses the predicate `isActionable` already provides. Decide when
-  the scrap economy shows how fast the roster grows.
-- **Whether `#categoryKey` survives** on `CraftingCreationSession` once the phase collapses.
+  the scrap economy shows how fast the roster grows. **Still open.**
+- **Whether `#categoryKey` survives** on `CraftingCreationSession` once the phase collapses. **Settled: it
+  did not.** Nothing in `jafting/ext/create` carries it any more; `categoryKeys` on the recipe is the only
+  surviving spelling.
 - **Where `CraftingCategory.description` goes** once the category list dies (hole #10b) — onto the strip, or
-  retired.
+  retired. **Settled by #10b's own fix:** the description follows the highlighted recipe, the way the study
+  scene already did it.
 - **The two dead categories** (`material-mastery`, `survive-extra`) — real data with no purpose, worth a
-  decision of their own now that the cycle no longer hides them.
+  decision of their own now that the cycle no longer hides them. **Still open**, and now visible in-game:
+  both still sit in `ca/chef-adventure/data/config.crafting.json`.
 
 ### Decided without asking
 

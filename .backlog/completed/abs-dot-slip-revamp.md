@@ -1,8 +1,3 @@
----
-status: done
-area: architecture
----
-
 # JABS: damage-over-time (slip) model revamp
 
 ## Severity

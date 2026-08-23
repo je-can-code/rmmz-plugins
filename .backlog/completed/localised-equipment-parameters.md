@@ -1,9 +1,16 @@
 # Localised equipment parameters
 
-> **Status: steps 1-8 executed.** Code and data are in the working trees of both repos, `hotfix` is
-> green, coverage is 100%, and the four changed J-Base / JAFTING source files are at 100% mutation
-> score. Outstanding: step 9 (version bumps and changelogs, PR-time only) and the material payload
-> re-tuning in D7, which is authoring work. Two findings from execution are recorded at the bottom.
+> **Shipped: all nine steps.** The arithmetic and display work merged as rmmz-plugins#73 (2026-08-10),
+> bumping `J-Base`, `J-Base-Save`, `J-JAFTING-Create`, `J-JAFTING-Refine` and `J-CMS-Equip`; the `ca`
+> data migration merged alongside it as ca#62, "Move equipment accuracy and parry onto this-parameter
+> tags". `hotfix` green, coverage 100%, the four changed J-Base / JAFTING source files at 100% mutation
+> score. Two findings from execution are recorded at the bottom.
+>
+> **Carried forward, deliberately: D7.** Re-tuning material payload magnitudes is authoring work in the
+> `ca` repo, not plugin work — a material's `+0.25` code-22 hit used to mean +25 points globally and now
+> means +25% of the item's own accuracy, so the numbers want a balance pass rather than a code change.
+> It does not belong in an rmmz-plugins backlog item and did not justify holding this one open. Raise it
+> as its own `ca` item when the material economy is next touched.
 
 Percentages on equipment scale **that item's own contribution**, not the wearer's total.
 

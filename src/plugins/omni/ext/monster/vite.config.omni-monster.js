@@ -9,7 +9,7 @@ const thisConfig = defineConfig({
   build: {
     rolldownOptions: {
       input: {
-        'omni/ext/J-Omni-Monsters': path.resolve(_dirname, './entry.js'),
+        'omni/ext/J-OMNI-Monsters': path.resolve(_dirname, './entry.js'),
       },
     },
   },

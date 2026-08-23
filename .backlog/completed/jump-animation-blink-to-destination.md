@@ -1,8 +1,3 @@
----
-status: done
-area: bug
----
-
 # Jump animation plays vertical arc then blinks to destination
 
 ## Symptom

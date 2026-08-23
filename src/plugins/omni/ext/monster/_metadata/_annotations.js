@@ -11,6 +11,8 @@
  * @base J-Elementalistics
  * @base J-SDP
  * @base J-Omnipedia
+ * @orderAfter J-HUD
+ * @orderAfter J-HUD-TargetFrame
  * @help
  * ============================================================================
  * OVERVIEW

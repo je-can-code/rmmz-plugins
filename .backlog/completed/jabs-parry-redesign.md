@@ -1,8 +1,3 @@
----
-status: done
-area: abs/core
----
-
 # JABS Parry System Redesign
 
 ## Summary

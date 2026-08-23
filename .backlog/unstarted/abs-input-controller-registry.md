@@ -1,8 +1,3 @@
----
-status: open
-area: architecture
----
-
 # `$jabsController1` → input adapter registry
 
 ## Source

@@ -11,6 +11,8 @@
  * @orderAfter J-Omnipedia
  * @orderAfter J-HUD
  * @orderAfter J-MessageTextCodes
+ * @orderAfter J-ABS
+ * @orderAfter J-ABS-InputManager
  * @help
  * ============================================================================
  * OVERVIEW

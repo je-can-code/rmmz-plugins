@@ -1,8 +1,3 @@
----
-status: open
-area: feature
----
-
 # Editor: Enemies "AI Behavior" tab (archetypes + decision pipeline)
 
 ## Source

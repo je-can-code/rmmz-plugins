@@ -1,8 +1,3 @@
----
-status: open
-area: feature
----
-
 # Editor: Items board (RMMZ-native parity)
 
 ## Source

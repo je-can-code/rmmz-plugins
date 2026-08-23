@@ -76,28 +76,74 @@ describe('Game_Enemy (omni ext/monster, direct src import)', () =>
     });
   });
 
-  describe('makeDropItems / observeDrop', () =>
+  describe('postProcessDroppedLoot / observeDrop', () =>
   {
-    it('observes each drop the original logic returns', () =>
+    it('observes each drop it is handed', () =>
     {
+      // Arrange
       const enemy = new globalThis.Game_Enemy();
       const drops = [ { kind: 'i', id: 1 }, { kind: 'w', id: 2 } ];
-      globalThis.J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.set('makeDropItems', vi.fn(() => drops));
+      const original = vi.fn(() => []);
+      globalThis.J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.set('postProcessDroppedLoot', original);
 
-      const result = enemy.makeDropItems();
+      // Act
+      enemy.postProcessDroppedLoot(drops, null);
 
-      expect(result).toBe(drops);
+      // Assert
       expect(observations.addKnownDrop).toHaveBeenCalledWith('i', 1);
       expect(observations.addKnownDrop).toHaveBeenCalledWith('w', 2);
     });
 
-    it('does not attempt to observe drops when there are none', () =>
+    it('observes the incoming rows rather than the modified ones the original returns', () =>
     {
+      // Arrange - the original stands in for a promotion, returning rows the enemy never listed.
       const enemy = new globalThis.Game_Enemy();
-      globalThis.J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.set('makeDropItems', vi.fn(() => []));
+      const baseDrops = [ { kind: 'i', id: 1 } ];
+      const promotedDrops = [ { kind: 'i', id: 99 } ];
+      globalThis.J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.set(
+        'postProcessDroppedLoot',
+        vi.fn(() => promotedDrops));
 
-      enemy.makeDropItems();
+      // Act
+      const result = enemy.postProcessDroppedLoot(baseDrops, null);
 
+      // Assert - the pedia learns the base row, the player receives the promoted one.
+      expect(observations.addKnownDrop).toHaveBeenCalledWith('i', 1);
+      expect(observations.addKnownDrop).not.toHaveBeenCalledWith('i', 99);
+      expect(result).toBe(promotedDrops);
+    });
+
+    it('forwards both arguments to the original logic', () =>
+    {
+      // Arrange
+      const enemy = new globalThis.Game_Enemy();
+      const drops = [ { kind: 'i', id: 1 } ];
+      const killer = { name: 'the killer' };
+      const original = vi.fn(() => drops);
+      globalThis.J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.set('postProcessDroppedLoot', original);
+
+      // Act
+      enemy.postProcessDroppedLoot(drops, killer);
+
+      // Assert - a swallowed killer is the exact defect this alias shape exists to avoid.
+      expect(original).toHaveBeenCalledWith(drops, killer);
+    });
+
+    it('still hands an empty haul to the original logic', () =>
+    {
+      // Arrange: nothing to observe is not the same as nothing to do - the original still owns
+      // whatever the loot becomes, and short-circuiting here would skip it entirely.
+      const enemy = new globalThis.Game_Enemy();
+      const processed = [];
+      const original = vi.fn(() => processed);
+      globalThis.J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.set('postProcessDroppedLoot', original);
+
+      // Act
+      const result = enemy.postProcessDroppedLoot([], null);
+
+      // Assert
+      expect(original).toHaveBeenCalledWith([], null);
+      expect(result).toBe(processed);
       expect(observations.addKnownDrop).not.toHaveBeenCalled();
     });
 

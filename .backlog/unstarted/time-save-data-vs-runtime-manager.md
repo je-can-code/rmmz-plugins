@@ -1,8 +1,3 @@
----
-status: open
-area: architecture
----
-
 # J-TIME: separate save data from runtime manager
 
 ## Source

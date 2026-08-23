@@ -1,5 +1,4 @@
 ---
-status: done
 parent: monorepo-vite-esm-plugin-migration.md
 updated: 2026-05-24
 ---

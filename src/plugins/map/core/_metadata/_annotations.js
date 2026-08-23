@@ -8,7 +8,11 @@
  * @orderAfter J-Base
  * @orderAfter J-ABS
  * @orderAfter J-HUD
- * @orderafter J-TIME
+ * @orderAfter J-TIME
+ * @orderAfter J-ABS-InputManager
+ * @orderAfter J-Base-Save
+ * @orderAfter J-Omnipedia
+ * @orderAfter J-OMNI-Quests
  * @help
  * ============================================================================
  * OVERVIEW

@@ -1,8 +1,3 @@
----
-status: open
-area: architecture
----
-
 # `cachedActions` Map as primary action store
 
 ## Source

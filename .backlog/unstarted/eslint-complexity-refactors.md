@@ -1,8 +1,3 @@
----
-status: open
-area: code-quality
----
-
 # Complexity refactors (small, safe)
 
 ## Context

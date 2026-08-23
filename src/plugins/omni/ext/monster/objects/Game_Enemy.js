@@ -110,25 +110,27 @@ Game_Enemy.prototype.learnMonsterpediaParameters = function()
 };
 
 /**
- * Extends {@link #makeDropItems}.<br/>
+ * Extends {@link #postProcessDroppedLoot}.<br/>
  * Also observes each drop dropped for monsterpedia purposes.
+ *
+ * Observes the **incoming** list rather than the returned one, deliberately. What arrives here is the
+ * loot as this enemy's database rows describe it; what leaves may have been promoted up a drop
+ * upgrade ladder into rows the enemy does not list at all. The pedia unmasks an enemy's own drop
+ * entries by their base ids, so a promoted row would both credit the wrong entry and leave the real
+ * one masked forever. The drop dropped- it merely also got upgraded on the way out.
+ * @param {RPG_BaseItem[]} itemsFound The loot that successfully dropped, before modifiers.
+ * @param {Game_Actor|Game_Enemy=} killer The battler that landed the killing blow, if known.
+ * @returns {RPG_BaseItem[]}
  */
-J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.set('makeDropItems', Game_Enemy.prototype.makeDropItems);
-Game_Enemy.prototype.makeDropItems = function()
+J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.set('postProcessDroppedLoot', Game_Enemy.prototype.postProcessDroppedLoot);
+Game_Enemy.prototype.postProcessDroppedLoot = function(itemsFound, killer = null)
 {
-  // perform original logic to retrieve original drops.
-  const drops = J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.get('makeDropItems')
-    .call(this);
+  // observe the drops as the enemy actually listed them; an empty haul observes nothing on its own.
+  itemsFound.forEach(this.observeDrop, this);
 
-  // validate we have drops.
-  if (drops.length)
-  {
-    // observe the drops.
-    drops.forEach(this.observeDrop, this);
-  }
-
-  // return all earned loot!
-  return drops;
+  // perform original logic.
+  return J.OMNI.EXT.MONSTER.Aliased.Game_Enemy.get('postProcessDroppedLoot')
+    .call(this, itemsFound, killer);
 };
 
 /**

@@ -1,8 +1,3 @@
----
-status: done
-area: pixel/ext/abs
----
-
 # Per-Enemy Hitbox Sizing (J-ABS-Pixelistics)
 
 ## Severity

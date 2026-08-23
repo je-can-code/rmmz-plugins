@@ -1,8 +1,3 @@
----
-status: open
-area: architecture
----
-
 # `$gameSystem._j` save slice + JABS transient lifecycle
 
 ## Source

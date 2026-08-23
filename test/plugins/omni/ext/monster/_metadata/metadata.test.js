@@ -8,7 +8,7 @@ import {
   setPluginContextToJOmniMonster,
 } from '../../../_component/fixtures/install-omni-host-globals.js';
 
-describe('J-Omni-Monsterpedia metadata (direct src import)', () =>
+describe('J-OMNI-Monsters metadata (direct src import)', () =>
 {
   beforeAll(async () =>
   {

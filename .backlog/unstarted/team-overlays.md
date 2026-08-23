@@ -1,8 +1,3 @@
----
-status: open
-area: architecture
----
-
 # Team overlays (temporary / contextual affiliations)
 
 ## Context

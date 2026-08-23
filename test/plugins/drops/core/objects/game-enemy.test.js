@@ -243,6 +243,8 @@ describe('J-DropsControl Game_Enemy drop pipeline (direct src import)', () =>
         isVeryCursed: () => false,
         isAccumulating: () => true,
         getEncoreRepeats: () => 0,
+        dropUpgradeCount: () => 0,
+        dropQuantityBonus: () => 0,
       };
 
       // Act
@@ -413,5 +415,309 @@ describe('J-DropsControl Game_Enemy drop pipeline (direct src import)', () =>
     });
   });
   //endregion extra drops
+
+  //region loot modifiers
+  /**
+   * Quality and quantity are separate axes from rate, and the whole point of applying them after the
+   * roll is that they cannot silently become a rate change. What makes them easy to get wrong is the
+   * interaction: quantity counts distinct items, promotion changes what "distinct" means, and the two
+   * orders disagree wherever clamping lands two rows on the same rung.
+   */
+  describe('postProcessDroppedLoot', () =>
+  {
+    const ITEM = 1;
+
+    /**
+     * Seeds the item table and its ladder, then hands back rows for assembling expectations.
+     * @param {Object<number, string>} notesById Note text per row id.
+     * @param {number} size How many rows the table holds.
+     */
+    const seedItemLadder = (notesById, size) =>
+    {
+      globalThis.$dataItems = [ null ];
+
+      for (let id = 1; id <= size; id++)
+      {
+        globalThis.$dataItems.push({
+          id,
+          kind: ITEM,
+          name: `item ${id}`,
+          note: notesById[id] ?? '',
+        });
+      }
+
+      globalThis.J.DROPS.Metadata.buildDropLadders([
+        {
+          kind: ITEM,
+          name: 'item',
+          rows: globalThis.$dataItems,
+        },
+      ]);
+    };
+
+    /**
+     * A killer carrying whatever loot modifiers the test needs and nothing else.
+     * @param {number} upgrade The rungs this killer promotes by.
+     * @param {number} quantity The extra copies this killer grants.
+     */
+    const killerWith = (upgrade, quantity) => ({
+      dropUpgradeCount: () => upgrade,
+      dropQuantityBonus: () => quantity,
+    });
+
+    /**
+     * Counts how many of each item id came out, so expectations read as plain totals.
+     * @param {object[]} loot The processed loot.
+     */
+    const tallyIds = loot =>
+    {
+      const tally = {};
+
+      loot.forEach(item =>
+      {
+        tally[item.id] = (tally[item.id] ?? 0) + 1;
+      });
+
+      return tally;
+    };
+
+    beforeEach(() =>
+    {
+      enemy._enemyDb.note = '';
+    });
+
+    it('leaves loot untouched when nothing carries a modifier', () =>
+    {
+      // Arrange: two different rows in a deliberate order, so a pass that rebuilt the list by
+      // grouping would reorder them and be caught. Most kills in the game take this path.
+      seedItemLadder({ 1: '<dropUpgradeId:2>' }, 3);
+      const dropped = [
+        globalThis.$dataItems[1],
+        globalThis.$dataItems[3],
+        globalThis.$dataItems[1],
+      ];
+
+      // Act
+      const result = enemy.postProcessDroppedLoot(dropped, killerWith(0, 0));
+
+      // Assert: the very same array, not a copy and not a regrouping of it.
+      expect(result).toBe(dropped);
+      expect(result.map(item => item.id)).toEqual([ 1, 3, 1 ]);
+    });
+
+    it('resolves a database row only for loot that actually moved', () =>
+    {
+      // Arrange: item 1 climbs to 2, item 3 sits on no ladder, and the panel unlock has no row at
+      // all. Only the first has anything to look up- resolving the other two would either waste a
+      // lookup or, for the synthetic entry, ask the database for a row that does not exist.
+      seedItemLadder({ 1: '<dropUpgradeId:2>' }, 3);
+      const lookups = [];
+      const originalItemObject = globalThis.Game_Enemy.prototype.itemObject;
+      globalThis.Game_Enemy.prototype.itemObject = function(kind, dataId)
+      {
+        lookups.push([ kind, dataId ]);
+
+        return originalItemObject.call(this, kind, dataId);
+      };
+
+      const dropped = [
+        globalThis.$dataItems[1],
+        globalThis.$dataItems[3],
+        {
+          id: 0,
+          sdpKey: 'some-panel',
+        },
+      ];
+
+      // Act
+      enemy.postProcessDroppedLoot(dropped, killerWith(1, 0));
+
+      // Assert: exactly one lookup, for the one row that changed.
+      expect(lookups).toEqual([ [ 1, 2 ] ]);
+
+      // restore by hand; a bare-global prototype patch outlives this file's other tests otherwise.
+      globalThis.Game_Enemy.prototype.itemObject = originalItemObject;
+    });
+
+    it('promotes a dropped row up its ladder', () =>
+    {
+      // Arrange: item 3 is the near-miss sibling - same table, on no ladder, must survive unpromoted.
+      seedItemLadder({ 1: '<dropUpgradeId:2>' }, 3);
+      const dropped = [ globalThis.$dataItems[1], globalThis.$dataItems[3] ];
+
+      // Act
+      const result = enemy.postProcessDroppedLoot(dropped, killerWith(1, 0));
+
+      // Assert
+      expect(tallyIds(result)).toEqual({
+        2: 1,
+        3: 1,
+      });
+    });
+
+    it('sums the enemy and the killer when deciding how far to promote', () =>
+    {
+      // Arrange: one rung from each side reaches rung three, which neither could reach alone.
+      seedItemLadder({
+        1: '<dropUpgradeId:2>',
+        2: '<dropUpgradeId:3>',
+      }, 4);
+      enemy._enemyDb.note = '<dropUpgrade:1>';
+      const dropped = [ globalThis.$dataItems[1] ];
+
+      // Act
+      const result = enemy.postProcessDroppedLoot(dropped, killerWith(1, 0));
+
+      // Assert
+      expect(tallyIds(result)).toEqual({ 3: 1 });
+    });
+
+    it('promotes on the enemy alone when the killer is unknown', () =>
+    {
+      // Arrange: an affixed enemy felled by nothing identifiable still owes what its affix promised.
+      seedItemLadder({ 1: '<dropUpgradeId:2>' }, 3);
+      enemy._enemyDb.note = '<dropUpgrade:1>';
+      const dropped = [ globalThis.$dataItems[1] ];
+
+      // Act
+      const result = enemy.postProcessDroppedLoot(dropped, null);
+
+      // Assert
+      expect(tallyIds(result)).toEqual({ 2: 1 });
+    });
+
+    it('walks downward when the summed count is negative', () =>
+    {
+      // Arrange
+      seedItemLadder({ 1: '<dropUpgradeId:2>' }, 3);
+      const dropped = [ globalThis.$dataItems[2] ];
+
+      // Act
+      const result = enemy.postProcessDroppedLoot(dropped, killerWith(-1, 0));
+
+      // Assert
+      expect(tallyIds(result)).toEqual({ 1: 1 });
+    });
+
+    it('grants the quantity bonus once per distinct item, not once per drop entry', () =>
+    {
+      // Arrange: four copies of item 1 and one of item 3, exactly as five drop entries would land.
+      // Two different items are what stop "groups correctly" from passing as "adds to everything".
+      seedItemLadder({}, 3);
+      const dropped = [
+        globalThis.$dataItems[1],
+        globalThis.$dataItems[1],
+        globalThis.$dataItems[1],
+        globalThis.$dataItems[1],
+        globalThis.$dataItems[3],
+      ];
+
+      // Act
+      const result = enemy.postProcessDroppedLoot(dropped, killerWith(0, 2));
+
+      // Assert: six and three. Applying the bonus per entry would yield twelve and three.
+      expect(tallyIds(result)).toEqual({
+        1: 6,
+        3: 3,
+      });
+    });
+
+    it('removes copies when the quantity bonus is negative', () =>
+    {
+      // Arrange
+      seedItemLadder({}, 3);
+      const dropped = [ globalThis.$dataItems[1], globalThis.$dataItems[1], globalThis.$dataItems[1] ];
+
+      // Act
+      const result = enemy.postProcessDroppedLoot(dropped, killerWith(0, -2));
+
+      // Assert
+      expect(tallyIds(result)).toEqual({ 1: 1 });
+    });
+
+    it('removes an item entirely when the negative exceeds what dropped', () =>
+    {
+      // Arrange: item 3 dropped once and item 1 three times, so one is wiped and one merely dented.
+      seedItemLadder({}, 3);
+      const dropped = [
+        globalThis.$dataItems[1],
+        globalThis.$dataItems[1],
+        globalThis.$dataItems[1],
+        globalThis.$dataItems[3],
+      ];
+
+      // Act
+      const result = enemy.postProcessDroppedLoot(dropped, killerWith(0, -2));
+
+      // Assert: the thin drop is erased despite having passed its roll; the plentiful one survives.
+      expect(tallyIds(result)).toEqual({ 1: 1 });
+      expect(result.length).toBe(1);
+    });
+
+    it('counts distinct items after promotion, not before', () =>
+    {
+      // Arrange: THE ordering case. Item 1 promotes into 2, and 2 is the top rung, so both dropped
+      // rows land on item 2. Grouping before promotion would see two distinct drops and grant the
+      // bonus twice; grouping after sees one kind of thing and grants it once.
+      seedItemLadder({ 1: '<dropUpgradeId:2>' }, 3);
+      const dropped = [ globalThis.$dataItems[1], globalThis.$dataItems[2] ];
+
+      // Act
+      const result = enemy.postProcessDroppedLoot(dropped, killerWith(1, 2));
+
+      // Assert: two dropped rows plus one bonus of two. Grouping first would produce six.
+      expect(tallyIds(result)).toEqual({ 2: 4 });
+    });
+
+    it('passes synthetic loot through without promoting or duplicating it', () =>
+    {
+      // Arrange: J-SDP pushes panel unlocks straight into the found list with no database row behind
+      // them. The real drop beside it is the near-miss - it must still take the bonus, or "skips
+      // synthetic" and "skips everything" would be the same program.
+      seedItemLadder({ 1: '<dropUpgradeId:2>' }, 3);
+      const panelUnlock = {
+        id: 0,
+        sdpKey: 'some-panel',
+      };
+      const dropped = [ panelUnlock, globalThis.$dataItems[1] ];
+
+      // Act
+      const result = enemy.postProcessDroppedLoot(dropped, killerWith(1, 2));
+
+      // Assert: exactly one panel unlock survives, while the real drop promoted and tripled.
+      expect(result.filter(item => item.sdpKey === 'some-panel').length).toBe(1);
+      expect(tallyIds(result)['2']).toBe(3);
+    });
+
+    it('applies the quantity bonus from the enemy alone when the killer is unknown', () =>
+    {
+      // Arrange
+      seedItemLadder({}, 3);
+      enemy._enemyDb.note = '<dropQuantity:2>';
+      const dropped = [ globalThis.$dataItems[1] ];
+
+      // Act
+      const result = enemy.postProcessDroppedLoot(dropped, null);
+
+      // Assert
+      expect(tallyIds(result)).toEqual({ 1: 3 });
+    });
+
+    it('cancels out when the enemy and killer carry opposing counts', () =>
+    {
+      // Arrange: a positive and a negative that sum to nothing must behave as no tag at all, which
+      // is a different claim from either side being ignored.
+      seedItemLadder({ 1: '<dropUpgradeId:2>' }, 3);
+      enemy._enemyDb.note = '<dropUpgrade:2>';
+      const dropped = [ globalThis.$dataItems[1] ];
+
+      // Act
+      const result = enemy.postProcessDroppedLoot(dropped, killerWith(-2, 0));
+
+      // Assert
+      expect(tallyIds(result)).toEqual({ 1: 1 });
+    });
+  });
+  //endregion loot modifiers
 });
 //endregion plugins/drops/core/objects/game-enemy.test.js

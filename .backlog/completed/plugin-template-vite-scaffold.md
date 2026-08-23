@@ -1,6 +1,4 @@
 ---
-status: done
-area: architecture
 completed: 2026-05-24
 parent: monorepo-vite-esm-plugin-migration.md
 ---

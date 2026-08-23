@@ -1,8 +1,3 @@
----
-status: done
-area: ext-pixel
----
-
 # `ext/pixel` completion
 
 ## Source

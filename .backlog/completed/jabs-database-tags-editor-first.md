@@ -1,8 +1,3 @@
----
-status: open
-area: feature
----
-
 # JABS database tags — editor-first authoring (JABS 5.0 data track)
 
 ## Source
@@ -32,7 +27,7 @@ area: feature
 ### Related completed / partial work
 
 - [`team-parameterization.md`](../completed/team-parameterization.md) — **global** team rules in `data/config.jabs.json` only; does **not** cover per-entity database tags.
-- [`jabs-5-static-engine-external-data.md`](jabs-5-static-engine-external-data.md) — mentions external JSON but focuses on engine refactor + global config; **this item owns the eight database types**.
+- [`jabs-5-static-engine-external-data.md`](../unstarted/jabs-5-static-engine-external-data.md) — mentions external JSON but focuses on engine refactor + global config; **this item owns the eight database types**.
 
 ## Context
 

@@ -1,8 +1,3 @@
----
-status: deferred
-area: architecture
----
-
 # `Game_Action` battler identity (UUID vs reference)
 
 ## Schedule

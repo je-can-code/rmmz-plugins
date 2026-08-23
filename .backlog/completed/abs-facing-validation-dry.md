@@ -1,8 +1,3 @@
----
-status: done
-area: code-quality
----
-
 # ABS: dedupe “unsupported facing” handling (`JABS_Engine` vs `Spriteset_Map`)
 
 ## Severity

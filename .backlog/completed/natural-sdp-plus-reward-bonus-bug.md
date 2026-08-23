@@ -1,8 +1,3 @@
----
-status: done
-area: bug
----
-
 # J-NaturalGrowths `sdpPlus` reward bonus not applying
 
 ## Resolution (2026-07-14)

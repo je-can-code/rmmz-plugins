@@ -1,8 +1,3 @@
----
-status: open
-area: feature
----
-
 # JAFTING socketing extension (gem / rune slots on crafted or refined gear)
 
 ## Source

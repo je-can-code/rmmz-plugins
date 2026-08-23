@@ -1,8 +1,3 @@
----
-status: done
-area: architecture
----
-
 # ABS: `Game_Unit#inBattle` always true — document or narrow semantics
 
 ## Resolution (2026-07-14)

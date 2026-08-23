@@ -1,8 +1,3 @@
----
-status: done
-area: completed
----
-
 # Flat EXP-per-level + hand-tuned kill rewards (`.hack//`-style)
 
 ## Source

@@ -1,5 +1,5 @@
 //region ship-meta
-export const PLUGIN_NAME = 'J-ABS-STAR';
+export const PLUGIN_NAME = 'J-ABS-Star';
 export const PLUGIN_VERSION = '1.0.0';
 export const PLUGIN_DESC_TAG = 'ABS-STAR';
 //endregion ship-meta

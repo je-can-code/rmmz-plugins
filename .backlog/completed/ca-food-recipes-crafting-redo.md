@@ -1,8 +1,3 @@
----
-status: open
-area: feature
----
-
 # Chef Adventure: food recipes, unlocks, and crafting redo
 
 > **Depends on (runtime):** [ca-food-group-chain-system](ca-food-group-chain-system.md) — plugins +

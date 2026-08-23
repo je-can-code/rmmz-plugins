@@ -1,8 +1,3 @@
----
-status: done
-area: architecture
----
-
 # `Scene_Files` — one scene for save, load, delete, and rewind
 
 ## What this is

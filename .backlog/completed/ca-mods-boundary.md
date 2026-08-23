@@ -1,8 +1,3 @@
----
-status: open
-area: architecture
----
-
 # Clarify `__ca-mods` boundary vs shipped plugins
 
 ## Severity

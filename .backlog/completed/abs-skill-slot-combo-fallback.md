@@ -1,8 +1,3 @@
----
-status: done
-area: code-quality
----
-
 # ABS: `JABS_SkillSlotManager#getSlotComboId` must not silently return combo id `1`
 
 ## Severity

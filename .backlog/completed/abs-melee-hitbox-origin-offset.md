@@ -1,8 +1,3 @@
----
-status: done
-area: architecture
----
-
 # Melee hitbox origin offset (collision + visuals)
 
 ## Source

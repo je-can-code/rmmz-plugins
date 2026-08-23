@@ -1,8 +1,3 @@
----
-status: done
-area: code-quality
----
-
 # SDP (J-SDP) plugin revisit
 
 ## Severity

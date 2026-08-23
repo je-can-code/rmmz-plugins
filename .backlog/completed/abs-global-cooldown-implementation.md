@@ -1,8 +1,3 @@
----
-status: done
-area: feature
----
-
 # ABS: global cooldown (GCD) implemented
 
 ## Summary

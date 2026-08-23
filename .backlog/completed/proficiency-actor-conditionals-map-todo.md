@@ -1,8 +1,3 @@
----
-status: done
-area: code-quality
----
-
 # Proficiency: replace hardcoded actor conditional map seed
 
 ## Severity

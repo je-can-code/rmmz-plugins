@@ -1,8 +1,3 @@
----
-status: done
-area: code-quality
----
-
 # Reconcile RPG Maker MZ engine `.d.ts` with vanilla `project/js/rmmz_*.js`
 
 ## Summary

@@ -1,8 +1,3 @@
----
-status: open
-area: feature
----
-
 # J-CMS — dynamic damage formula scaling breakdown
 
 ## Source

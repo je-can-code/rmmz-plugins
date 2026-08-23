@@ -1,6 +1,4 @@
 ---
-status: done
-area: architecture
 completed: 2026-05-24
 ---
 
@@ -28,5 +26,5 @@ See [`monorepo-vite-esm-migration-inventory.md`](monorepo-vite-esm-migration-inv
 ## Follow-ups (not this item)
 
 - J-Base metadata modernization (`Metadata.Version` string vs `PluginVersion`; legacy `Metadata.Name` alias).
-- [`repo-unit-testing`](../unstarted/repo-unit-testing.md) — expand Vitest coverage.
-- [`convert-saved-prototype-models-to-modern-classes`](../unstarted/convert-saved-prototype-models-to-modern-classes.md) — save-persisted `class` + registry audit.
+- `repo-unit-testing` (done and deleted; the repo reached 100% coverage) — expand Vitest coverage.
+- [`convert-saved-prototype-models-to-modern-classes`](convert-saved-prototype-models-to-modern-classes.md) — save-persisted `class` + registry audit.

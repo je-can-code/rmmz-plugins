@@ -1,8 +1,3 @@
----
-status: open
-area: architecture
----
-
 # ABS — state application restructure + skill-authored duration/stack overrides
 
 ## Source

@@ -1,8 +1,3 @@
----
-status: done
-area: code-quality
----
-
 # Dedicated audit: `checkForBooleanFromNoteByRegex` and negatively named tags
 
 ## Severity
