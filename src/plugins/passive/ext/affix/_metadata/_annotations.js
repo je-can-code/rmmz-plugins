@@ -141,11 +141,24 @@
  *
  * TAG FORMAT:
  *  <affix-weight:N>
- *    Where N is a positive integer weight.
+ *    Where N is a non-negative integer weight.
+ *
+ * TAG NOTES:
+ * - A weight is a share, not a percent. An affix's odds are its own weight
+ *   divided by the total weight of its slot's pool, so doubling every weight
+ *   in a pool changes nothing at all.
+ * - A weight of zero means "a member of the pool that is never drawn". The
+ *   state stays registered, so an event pinning it via `<passive:[...]>` still
+ *   works and the tier presentation still recognizes it - it simply has no
+ *   presence in the random roll. This is how an affix is reserved for
+ *   something else to hand out later, such as a difficulty layer.
  *
  * TAG EXAMPLES:
  *  <affix-weight:10>
  *    Ten times as likely as an affix with weight 1.
+ *
+ *  <affix-weight:0>
+ *    Never rolled at random; available only when something grants it a weight.
  *
  * ============================================================================
  * TIER STRIPE / TINT

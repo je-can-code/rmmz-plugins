@@ -524,6 +524,76 @@ describe('J-Passive-Affix (direct src import)', () =>
       expect(metadata.isAffixStateId(2)).toBe(true);
       expect(metadata.isAffixStateId(999)).toBe(false);
     });
+
+    it('registers a zero-weight state as pool membership without adding to the total', () =>
+    {
+      // Arrange- a reserved affix sits beside a drawable sibling in the same slot, so "kept the
+      // zero" and "kept everything" cannot look the same.
+      const drawable = affixState(1, true, false, 10);
+      const reserved = affixState(2, true, false, 0);
+      globalThis.$dataStates = [ null, drawable, reserved ];
+      const metadata = buildCustomMetadata({});
+
+      // Act
+      metadata.initializeStateAffixWeights();
+
+      // Assert- present in the map at zero, and contributing nothing to what the roll divides by.
+      expect(metadata.prefixMap)
+        .toEqual(new Map([ [ 1, 10 ], [ 2, 0 ] ]));
+      expect(metadata.totalPrefixWeight).toBe(10);
+    });
+
+    it('still reports a zero-weight state as an affix state', () =>
+    {
+      // Arrange- this is what keeps an explicit <passive:[...]> spawn able to pin a reserved affix.
+      globalThis.$dataStates = [ null, affixState(1, true, false, 0) ];
+      const metadata = buildCustomMetadata({});
+      metadata.initializeStateAffixWeights();
+
+      // Act & Assert
+      expect(metadata.isAffixStateId(1)).toBe(true);
+    });
+  });
+
+  describe('effectivePrefixPool / effectiveSuffixPool', () =>
+  {
+    /** Builds a minimal $dataStates-shaped stub row. */
+    function affixState(id, isEnemyPrefix, isEnemySuffix, affixWeight)
+    {
+      return {
+        id, isEnemyPrefix, isEnemySuffix, affixWeight,
+      };
+    }
+
+    it('hands back the prefix map itself rather than a copy of it', () =>
+    {
+      // Arrange- a suffix sibling exists so "returned the prefix pool" and "returned a pool" differ.
+      globalThis.$dataStates = [ null, affixState(1, true, false, 10), affixState(2, false, true, 20) ];
+      const metadata = buildCustomMetadata({});
+      metadata.initializeStateAffixWeights();
+
+      // Act
+      const pool = metadata.effectivePrefixPool();
+
+      // Assert- reference identity is the claim: an unextended seam rebuilds nothing.
+      expect(pool.map).toBe(metadata.prefixMap);
+      expect(pool.totalWeight).toBe(10);
+    });
+
+    it('hands back the suffix map itself rather than a copy of it', () =>
+    {
+      // Arrange
+      globalThis.$dataStates = [ null, affixState(1, true, false, 10), affixState(2, false, true, 20) ];
+      const metadata = buildCustomMetadata({});
+      metadata.initializeStateAffixWeights();
+
+      // Act
+      const pool = metadata.effectiveSuffixPool();
+
+      // Assert
+      expect(pool.map).toBe(metadata.suffixMap);
+      expect(pool.totalWeight).toBe(20);
+    });
   });
 
   describe('J.PASSIVE.EXT.AFFIX.Helpers.parseRewardMultipliers', () =>
@@ -660,6 +730,17 @@ describe('J-Passive-Affix (direct src import)', () =>
 
       // Act & Assert
       expect(state.affixWeight).toBe(100);
+    });
+
+    it('affixWeight parses an explicit zero rather than falling through to the default', () =>
+    {
+      // Arrange- reserving an affix depends entirely on this: were the tag unmatched, or were the
+      // parsed zero to be treated as absent, the state would silently return to the pool at 100.
+      const state = Object.create(globalThis.RPG_State.prototype);
+      state.note = '<affix-weight:0>';
+
+      // Act & Assert
+      expect(state.affixWeight).toBe(0);
     });
 
     it('affixTier parses the tag', () =>

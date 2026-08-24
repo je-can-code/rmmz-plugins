@@ -6,6 +6,11 @@ export const VITEST_HARD_KEY = 'vitest_hard';
  * Two-layer config: default key {@link VITEST_DIFF_KEY} (80% actor mhp) and {@link VITEST_HARD_KEY}
  * (50% actor/enemy mhp, skewed rewards). Both start enabled for {@link Game_Temp.setupDifficultySystem} merge tests.
  *
+ * The hard layer also carries an `affixEffects` block that J-Difficulty's own classifier knows
+ * nothing about. It is here so that "the raw configuration survives the parse" has something to be
+ * true of - a field the classifier does read would prove nothing, since it would round-trip either
+ * way.
+ *
  * @returns {string} JSON text for {@link StorageManager.fsReadFile}.
  */
 export function buildVitestDifficultyConfigJson()
@@ -67,6 +72,9 @@ export function buildVitestDifficultyConfigJson()
         drops: 100,
         encounters: 200,
         sdp: 100,
+      },
+      affixEffects: {
+        prefixChance: 150,
       },
     },
   ];

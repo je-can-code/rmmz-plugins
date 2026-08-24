@@ -41,6 +41,37 @@ describe('J-Difficulty metadata (direct src import)', () =>
     expect(globalThis.J.DIFFICULTY.Metadata.allMetadatas.size).toBe(2);
   });
 
+  it('keys the retained raw configuration by layer key', () =>
+  {
+    // Arrange & Act
+    const { allRawConfigs } = globalThis.J.DIFFICULTY.Metadata;
+
+    // Assert- keyed by the layer's own key, so a lookup never has to scan.
+    expect(allRawConfigs.size).toBe(2);
+    expect(allRawConfigs.get('vitest_diff').key).toBe('vitest_diff');
+    expect(allRawConfigs.get('vitest_hard').key).toBe('vitest_hard');
+  });
+
+  it('retains a configured field the classifier does not read', () =>
+  {
+    // Arrange- affixEffects is not among the fields classifyDifficulties destructures, so it is
+    // absent from every built object. This is the entire reason the raw blob is kept at all.
+    const builtLayer = globalThis.J.DIFFICULTY.Metadata.allMetadatas.get('vitest_hard');
+
+    // Act
+    const rawLayer = globalThis.J.DIFFICULTY.Metadata.allRawConfigs.get('vitest_hard');
+
+    // Assert- gone from the built metadata, still present in the source it was built from.
+    expect(builtLayer.affixEffects).toBeUndefined();
+    expect(rawLayer.affixEffects.prefixChance).toBe(150);
+  });
+
+  it('does not retain raw configuration for a layer the config never declared', () =>
+  {
+    // Arrange & Act & Assert- the near-miss: a plausible key that was never authored.
+    expect(globalThis.J.DIFFICULTY.Metadata.allRawConfigs.has('vitest_nonexistent')).toBe(false);
+  });
+
   it('keys each loaded difficulty by its own key and keeps its actor effects', () =>
   {
     // Arrange & Act

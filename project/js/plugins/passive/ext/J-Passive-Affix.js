@@ -141,11 +141,24 @@
  *
  * TAG FORMAT:
  *  <affix-weight:N>
- *    Where N is a positive integer weight.
+ *    Where N is a non-negative integer weight.
+ *
+ * TAG NOTES:
+ * - A weight is a share, not a percent. An affix's odds are its own weight
+ *   divided by the total weight of its slot's pool, so doubling every weight
+ *   in a pool changes nothing at all.
+ * - A weight of zero means "a member of the pool that is never drawn". The
+ *   state stays registered, so an event pinning it via `<passive:[...]>` still
+ *   works and the tier presentation still recognizes it - it simply has no
+ *   presence in the random roll. This is how an affix is reserved for
+ *   something else to hand out later, such as a difficulty layer.
  *
  * TAG EXAMPLES:
  *  <affix-weight:10>
  *    Ten times as likely as an affix with weight 1.
+ *
+ *  <affix-weight:0>
+ *    Never rolled at random; available only when something grants it a weight.
  *
  * ============================================================================
  * TIER STRIPE / TINT
@@ -330,7 +343,39 @@ var JPassiveAffix_PluginMetadata = class extends PluginMetadata {
 		});
 	}
 	/**
+	* The prefix pool as it should be rolled against for the spawn happening right now.
+	* Base behavior hands back the boot-time pool untouched; this exists as the single seam an
+	* extension can alias to bias the pool, so that biasing never requires re-implementing the whole
+	* spawn body just to substitute two values into it.
+	*
+	* This must remain a prototype method and never become a class field. A field would install an
+	* own property on the metadata instance, and an extension aliasing the prototype afterward would
+	* never be reached - the bias would silently do nothing.
+	* @returns {{map: Map<number, number>, totalWeight: number}}
+	*/
+	effectivePrefixPool() {
+		return {
+			map: this.prefixMap,
+			totalWeight: this.totalPrefixWeight
+		};
+	}
+	/**
+	* The suffix pool as it should be rolled against for the spawn happening right now.
+	* The suffix twin of {@link #effectivePrefixPool}, and biased by the same extensions - anything
+	* that can add to or reweight one slot's pool has nowhere else to reach the other.
+	* @returns {{map: Map<number, number>, totalWeight: number}}
+	*/
+	effectiveSuffixPool() {
+		return {
+			map: this.suffixMap,
+			totalWeight: this.totalSuffixWeight
+		};
+	}
+	/**
 	* Determines if the provided state id is an affix state.
+	* Membership is independent of weight, so a state weighted at zero still answers true here - it
+	* is a known affix that simply never wins a random roll, and explicit `<passive:[...]>` spawns
+	* still need to recognize it.
 	* @param {number} stateId The state id to check.
 	* @returns {boolean} True if the state is a prefix or suffix, false otherwise.
 	*/
@@ -370,7 +415,7 @@ J.PASSIVE.EXT.AFFIX.Aliased.Window_PassiveDetail = new Map();
 J.PASSIVE.EXT.AFFIX.RegExp = {};
 J.PASSIVE.EXT.AFFIX.RegExp.Prefix = /<enemy-prefix>/i;
 J.PASSIVE.EXT.AFFIX.RegExp.Suffix = /<enemy-suffix>/i;
-J.PASSIVE.EXT.AFFIX.RegExp.Weight = /<affix-weight:([1-9]\d*)>/i;
+J.PASSIVE.EXT.AFFIX.RegExp.Weight = /<affix-weight:(\d+)>/i;
 J.PASSIVE.EXT.AFFIX.RegExp.TierColorHex = /<tier-color-hex:(#[0-9A-F]{6})>/i;
 J.PASSIVE.EXT.AFFIX.RegExp.AffixTier = /<affix-tier:([1-9]\d*)>/i;
 J.PASSIVE.EXT.AFFIX.RegExp.NoRngPassives = /<no-rng-passives>/i;
@@ -593,13 +638,15 @@ JABS_AiManager.postConvertMutate = function(battler, jabsBattler) {
 	const canApplyPrefix = JABS_AiManager.shouldBlockPassivePrefixRng(character, enemyData) === false && RPGManager.chanceIn100(prefixChance);
 	const canApplySuffix = JABS_AiManager.shouldBlockPassiveSuffixRng(character, enemyData) === false && RPGManager.chanceIn100(suffixChance);
 	if (canApplyPrefix) {
-		const prefixStateId = RPGManager.weightedMapChoice(J.PASSIVE.EXT.AFFIX.Metadata.prefixMap, J.PASSIVE.EXT.AFFIX.Metadata.totalPrefixWeight);
+		const { map: prefixPool, totalWeight: prefixPoolWeight } = J.PASSIVE.EXT.AFFIX.Metadata.effectivePrefixPool();
+		const prefixStateId = RPGManager.weightedMapChoice(prefixPool, prefixPoolWeight);
 		if (prefixStateId !== null) {
 			passiveStateIds.push(prefixStateId);
 		}
 	}
 	if (canApplySuffix) {
-		const suffixStateId = RPGManager.weightedMapChoice(J.PASSIVE.EXT.AFFIX.Metadata.suffixMap, J.PASSIVE.EXT.AFFIX.Metadata.totalSuffixWeight);
+		const { map: suffixPool, totalWeight: suffixPoolWeight } = J.PASSIVE.EXT.AFFIX.Metadata.effectiveSuffixPool();
+		const suffixStateId = RPGManager.weightedMapChoice(suffixPool, suffixPoolWeight);
 		if (suffixStateId !== null) {
 			passiveStateIds.push(suffixStateId);
 		}
