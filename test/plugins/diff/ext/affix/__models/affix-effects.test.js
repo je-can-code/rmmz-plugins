@@ -36,7 +36,7 @@ describe('AffixEffects (direct src import)', () =>
     {
       // Arrange & Act- the slot a grant belongs to cannot be known this early, so the split maps
       // must start empty rather than start wrong.
-      const effects = AffixEffects.fromRaw('a-layer', { grants: { '5': 25 } });
+      const effects = AffixEffects.fromRaw('a-layer', { grants: [ { stateId: 5, weight: 25 } ] });
 
       // Assert
       expect(effects.rawGrants()
@@ -112,7 +112,7 @@ describe('AffixEffects (direct src import)', () =>
     {
       // Arrange & Act- granting zero is a no-op rather than an error, and it is how a layer can
       // be authored with a grant it does not currently want to hand out.
-      const effects = AffixEffects.fromRaw('a-layer', { grants: { '5': 0 } });
+      const effects = AffixEffects.fromRaw('a-layer', { grants: [ { stateId: 5, weight: 0 } ] });
 
       // Assert
       expect(effects.rawGrants()
@@ -120,21 +120,27 @@ describe('AffixEffects (direct src import)', () =>
     });
   });
 
-  describe('grant key coercion', () =>
+  describe('grant list', () =>
   {
-    it('converts every JSON string key into the numeric state id the pools use', () =>
+    it('keys each grant by the state id it names', () =>
     {
-      // Arrange & Act- two grants rather than one, so "converted the keys" and "converted a key"
+      // Arrange & Act- two grants rather than one, so "read the list" and "read the first entry"
       // are distinguishable.
       const effects = AffixEffects.fromRaw('a-layer', {
-        grants: {
-          '306': 50,
-          '307': 25,
-        },
+        grants: [
+          {
+            stateId: 306,
+            weight: 50,
+          },
+          {
+            stateId: 307,
+            weight: 25,
+          },
+        ],
       });
 
-      // Assert- numeric lookups hit and string lookups miss; a pool keyed by state.id would
-      // otherwise gain a parallel entry rather than the one the author meant.
+      // Assert- numeric lookups hit, which is what lets a grant match the numerically-keyed affix
+      // pools. A string key here would land beside the real entry rather than replacing it.
       const grants = effects.rawGrants();
       expect(grants.get(306)).toBe(50);
       expect(grants.get(307)).toBe(25);
@@ -176,8 +182,49 @@ describe('AffixEffects (direct src import)', () =>
     it('throws on a negative granted weight', () =>
     {
       // Arrange & Act & Assert
-      expect(() => AffixEffects.fromRaw('bad-layer', { grants: { '5': -10 } }))
+      expect(() => AffixEffects.fromRaw('bad-layer', { grants: [ { stateId: 5, weight: -10 } ] }))
         .toThrow(/layer \[bad-layer\] grants state \[5\] a weight of \[-10\]/);
+    });
+
+    it('throws when one layer grants the same state twice', () =>
+    {
+      // Arrange & Act & Assert- a list can hold a repeat where a keyed object could not, and two
+      // weights for one affix means the author wrote two different intentions.
+      const grants = [
+        {
+          stateId: 306,
+          weight: 50,
+        },
+        {
+          stateId: 306,
+          weight: 25,
+        },
+      ];
+
+      expect(() => AffixEffects.fromRaw('bad-layer', { grants }))
+        .toThrow(/layer \[bad-layer\] grants state \[306\] more than once/);
+    });
+
+    it('allows two different states in one grant list', () =>
+    {
+      // Arrange- the near-miss for the duplicate check: a list of two that must survive it.
+      const grants = [
+        {
+          stateId: 306,
+          weight: 50,
+        },
+        {
+          stateId: 307,
+          weight: 50,
+        },
+      ];
+
+      // Act
+      const effects = AffixEffects.fromRaw('a-layer', { grants });
+
+      // Assert
+      expect(effects.rawGrants()
+        .size).toBe(2);
     });
   });
 
@@ -219,7 +266,7 @@ describe('AffixEffects (direct src import)', () =>
     it('replaces the unsorted grants wholesale', () =>
     {
       // Arrange
-      const effects = AffixEffects.fromRaw('a-layer', { grants: { '5': 10 } });
+      const effects = AffixEffects.fromRaw('a-layer', { grants: [ { stateId: 5, weight: 10 } ] });
 
       // Act
       effects.setRawGrants(new Map([ [ 9, 30 ] ]));

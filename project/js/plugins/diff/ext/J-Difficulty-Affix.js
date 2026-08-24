@@ -48,7 +48,9 @@
  *    "prefixChance": 150,
  *    "suffixChance": 150,
  *    "flatten": 40,
- *    "grants": { "306": 50 }
+ *    "grants": [
+ *      { "stateId": 306, "weight": 50 }
+ *    ]
  *  }
  *
  * CONFIG NOTES:
@@ -119,7 +121,9 @@
  * A grant hands that state a weight, which both unlocks it and prices it.
  *
  * CONFIG FORMAT:
- *  "grants": { "STATE_ID": WEIGHT }
+ *  "grants": [
+ *    { "stateId": ID, "weight": WEIGHT }
+ *  ]
  *
  * EXAMPLE:
  *  A state noted with:
@@ -127,12 +131,20 @@
  *    <affix-weight:0>
  *
  *  ...paired with a layer configured:
- *    "grants": { "306": 50 }
+ *    "grants": [
+ *      { "stateId": 306, "weight": 50 }
+ *    ]
  *
  *  ...means state 306 can only appear while that layer is enabled, at a weight
  *  of 50 against the rest of the prefix pool.
  *
  * CONFIG NOTES:
+ * - Grants are a list of objects rather than an object keyed by state id,
+ *   because JSON object keys are always strings. A keyed form would make every
+ *   id arrive as text and need converting before it could match anything, and
+ *   named fields say which number is the id and which is the weight.
+ * - The same state may not be granted twice by one layer. Two different layers
+ *   granting it is fine and resolves to the larger of the two weights.
  * - Which slot a grant lands in comes from the state's own <enemy-prefix> or
  *   <enemy-suffix> tag, so a grant never has to name it. A state carrying both
  *   is granted in both.
@@ -168,12 +180,6 @@
 var AffixEffects = class AffixEffects {
 	/**
 	* Builds an instance from a layer's raw `affixEffects` JSON block.
-	*
-	* Grant keys are coerced to numbers here rather than anywhere later. JSON object keys are always
-	* strings, while the affix pools are keyed by the numeric `state.id` - so an uncoerced key would
-	* land beside the numeric entry as a second, parallel member of the pool rather than replacing it.
-	* The roll would then be able to return a string, which survives every downstream use because
-	* array indexing coerces it back, leaving a double-counted pool and nothing reporting a problem.
 	* @param {string} layerKey The key of the layer this block was authored on, used in error messages.
 	* @param {object} rawBlock The `affixEffects` object as parsed from the configuration file.
 	* @returns {AffixEffects}
@@ -226,21 +232,33 @@ var AffixEffects = class AffixEffects {
 		return flatten;
 	}
 	/**
-	* Converts the authored grants object into a map keyed by numeric state id.
+	* Converts the authored grants array into a map keyed by state id.
+	*
+	* Grants are authored as a list of objects with named fields rather than as an object keyed by
+	* state id, and the reason is that JSON object keys are always strings. A keyed form would make
+	* every state id arrive as text needing coercion before it could match the numerically-keyed affix
+	* pools - and an id that missed its coercion would land beside the real entry as a parallel member
+	* of the pool rather than replacing it, double-counting the total with nothing reporting it.
+	* Named fields also let a reader see which number is the id and which is the weight.
+	*
 	* Only the shape is checked here. Whether a granted id names a real state, which slot it belongs
 	* to, and whether it was authored at zero weight are all questions needing the database, so they
 	* are asked later by {@link JDifficultyAffix_PluginMetadata#assertGrantsAreValid}.
 	* @param {string} layerKey The layer being validated, for the error message.
-	* @param {object} grants The authored grants object of state id to weight.
+	* @param {object[]} grants The authored grants, each an object of `stateId` and `weight`.
 	* @returns {Map<number, number>}
 	*/
 	static #validatedGrants(layerKey, grants) {
 		const rawGrants = new Map();
-		Object.entries(grants).forEach(([stateId, weight]) => {
+		grants.forEach((grant) => {
+			const { stateId, weight } = grant;
 			if (weight < 0) {
 				throw new Error(`[J-Difficulty-Affix] layer [${layerKey}] grants state [${stateId}] a weight of ` + `[${weight}]; must not be negative.`);
 			}
-			rawGrants.set(parseInt(stateId), weight);
+			if (rawGrants.has(stateId)) {
+				throw new Error(`[J-Difficulty-Affix] layer [${layerKey}] grants state [${stateId}] more than once.`);
+			}
+			rawGrants.set(stateId, weight);
 		});
 		return rawGrants;
 	}

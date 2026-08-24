@@ -48,7 +48,9 @@
  *    "prefixChance": 150,
  *    "suffixChance": 150,
  *    "flatten": 40,
- *    "grants": { "306": 50 }
+ *    "grants": [
+ *      { "stateId": 306, "weight": 50 }
+ *    ]
  *  }
  *
  * CONFIG NOTES:
@@ -119,7 +121,9 @@
  * A grant hands that state a weight, which both unlocks it and prices it.
  *
  * CONFIG FORMAT:
- *  "grants": { "STATE_ID": WEIGHT }
+ *  "grants": [
+ *    { "stateId": ID, "weight": WEIGHT }
+ *  ]
  *
  * EXAMPLE:
  *  A state noted with:
@@ -127,12 +131,20 @@
  *    <affix-weight:0>
  *
  *  ...paired with a layer configured:
- *    "grants": { "306": 50 }
+ *    "grants": [
+ *      { "stateId": 306, "weight": 50 }
+ *    ]
  *
  *  ...means state 306 can only appear while that layer is enabled, at a weight
  *  of 50 against the rest of the prefix pool.
  *
  * CONFIG NOTES:
+ * - Grants are a list of objects rather than an object keyed by state id,
+ *   because JSON object keys are always strings. A keyed form would make every
+ *   id arrive as text and need converting before it could match anything, and
+ *   named fields say which number is the id and which is the weight.
+ * - The same state may not be granted twice by one layer. Two different layers
+ *   granting it is fine and resolves to the larger of the two weights.
  * - Which slot a grant lands in comes from the state's own <enemy-prefix> or
  *   <enemy-suffix> tag, so a grant never has to name it. A state carrying both
  *   is granted in both.

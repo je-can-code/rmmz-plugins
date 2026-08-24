@@ -721,7 +721,7 @@ describe('JDifficultyAffix_PluginMetadata (direct src import)', () =>
         default: { key: 'default' },
         drive: {
           key: 'drive',
-          affixEffects: { grants: { '306': 50 } },
+          affixEffects: { grants: [ { stateId: 306, weight: 50 } ] },
         },
       });
       globalThis.$dataStates = [ null, affixState(1, true, false, 100) ];
@@ -746,7 +746,7 @@ describe('JDifficultyAffix_PluginMetadata (direct src import)', () =>
         default: { key: 'default' },
         drive: {
           key: 'drive',
-          affixEffects: { grants: { '356': 25 } },
+          affixEffects: { grants: [ { stateId: 356, weight: 25 } ] },
         },
       });
       globalThis.$dataStates = [ null ];
@@ -772,7 +772,7 @@ describe('JDifficultyAffix_PluginMetadata (direct src import)', () =>
         default: { key: 'default' },
         drive: {
           key: 'drive',
-          affixEffects: { grants: { '400': 30 } },
+          affixEffects: { grants: [ { stateId: 400, weight: 30 } ] },
         },
       });
       globalThis.$dataStates = [ null ];
@@ -815,7 +815,7 @@ describe('JDifficultyAffix_PluginMetadata (direct src import)', () =>
         default: { key: 'default' },
         never_used: {
           key: 'never_used',
-          affixEffects: { grants: { '999': 50 } },
+          affixEffects: { grants: [ { stateId: 999, weight: 50 } ] },
         },
       });
       globalThis.$dataStates = [ null ];
@@ -833,7 +833,7 @@ describe('JDifficultyAffix_PluginMetadata (direct src import)', () =>
         default: { key: 'default' },
         drive: {
           key: 'drive',
-          affixEffects: { grants: { '999': 50 } },
+          affixEffects: { grants: [ { stateId: 999, weight: 50 } ] },
         },
       });
       globalThis.$dataStates = [ null, affixState(1, true, false, 0) ];
@@ -851,7 +851,7 @@ describe('JDifficultyAffix_PluginMetadata (direct src import)', () =>
         default: { key: 'default' },
         drive: {
           key: 'drive',
-          affixEffects: { grants: { '-1': 50 } },
+          affixEffects: { grants: [ { stateId: -1, weight: 50 } ] },
         },
       });
       globalThis.$dataStates = [ null, affixState(1, true, false, 0) ];
@@ -868,7 +868,7 @@ describe('JDifficultyAffix_PluginMetadata (direct src import)', () =>
         default: { key: 'default' },
         drive: {
           key: 'drive',
-          affixEffects: { grants: { '2': 50 } },
+          affixEffects: { grants: [ { stateId: 2, weight: 50 } ] },
         },
       });
       globalThis.$dataStates = [ null, affixState(1, true, false, 0), affixState(2, false, false, 0) ];
@@ -886,7 +886,7 @@ describe('JDifficultyAffix_PluginMetadata (direct src import)', () =>
         default: { key: 'default' },
         drive: {
           key: 'drive',
-          affixEffects: { grants: { '1': 50 } },
+          affixEffects: { grants: [ { stateId: 1, weight: 50 } ] },
         },
       });
       globalThis.$dataStates = [ null, affixState(1, true, false, 500) ];

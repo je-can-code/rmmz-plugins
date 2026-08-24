@@ -85,7 +85,10 @@ It reads an **optional** per-layer block from `config.difficulty.json`:
   "prefixChance": 150,
   "suffixChance": 150,
   "flatten": 40,
-  "grants": { "306": 50, "307": 25 }
+  "grants": [
+    { "stateId": 306, "weight": 50 },
+    { "stateId": 307, "weight": 25 }
+  ]
 }
 ```
 
@@ -237,19 +240,24 @@ registered in `prefixMap`, so `isAffixStateId` still recognizes it and an event 
 A layer's `grants` block then supplies the weight:
 
 ```json
-"grants": { "306": 50 }
+"grants": [ { "stateId": 306, "weight": 50 } ]
 ```
 
 One declaration both unlocks the affix and sets how rare it is **at that layer** — a later drive can
 price the same affix differently from an earlier one.
 
-**Grant keys arrive from JSON as strings and must be coerced to numbers.** `Object.keys` on that
-block yields `"306"`, while `prefixMap` is keyed by the numeric `state.id`
-(`passive/ext/affix/_metadata/_pluginMetadata.js:84`). Overlaying an unconverted key writes a
-**second, string-keyed entry beside the numeric one**, and `weightedMapChoice` then returns the string
-`"306"` as the chosen state id. That value survives downstream because array indexing canonicalizes
-it, which is worse than failing outright — the pool is silently double-counted and nothing reports it.
-`AffixEffects.fromRaw` parses every grant key with `parseInt`.
+**Grants are a list of objects, not an object keyed by state id, and that is a deliberate choice.**
+JSON object keys are always strings, while `prefixMap` is keyed by the numeric `state.id`
+(`passive/ext/affix/_metadata/_pluginMetadata.js:84`). A keyed form would make every id arrive as
+text needing conversion before it could match anything — and an id that missed its conversion writes
+a **second, string-keyed entry beside the numeric one** rather than replacing it, so
+`weightedMapChoice` returns the string `"306"` and the pool is silently double-counted. That value
+then survives every downstream use, because array indexing coerces it back. Named fields remove the
+conversion step entirely, and say which number is the id and which is the weight.
+
+The same shape makes a **repeated id within one layer** visible, where a keyed object would have
+silently kept the last one. Two weights for one affix means two different intentions were authored,
+so it throws.
 
 **Grants are applied after flattening and are never themselves flattened.** This is the load-bearing
 rule of the whole design. If a granted weight participated in flatten, then `flatten: 100` would

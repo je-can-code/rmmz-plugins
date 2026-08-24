@@ -16,12 +16,6 @@ class AffixEffects
 {
   /**
    * Builds an instance from a layer's raw `affixEffects` JSON block.
-   *
-   * Grant keys are coerced to numbers here rather than anywhere later. JSON object keys are always
-   * strings, while the affix pools are keyed by the numeric `state.id` - so an uncoerced key would
-   * land beside the numeric entry as a second, parallel member of the pool rather than replacing it.
-   * The roll would then be able to return a string, which survives every downstream use because
-   * array indexing coerces it back, leaving a double-counted pool and nothing reporting a problem.
    * @param {string} layerKey The key of the layer this block was authored on, used in error messages.
    * @param {object} rawBlock The `affixEffects` object as parsed from the configuration file.
    * @returns {AffixEffects}
@@ -100,30 +94,50 @@ class AffixEffects
   }
 
   /**
-   * Converts the authored grants object into a map keyed by numeric state id.
+   * Converts the authored grants array into a map keyed by state id.
+   *
+   * Grants are authored as a list of objects with named fields rather than as an object keyed by
+   * state id, and the reason is that JSON object keys are always strings. A keyed form would make
+   * every state id arrive as text needing coercion before it could match the numerically-keyed affix
+   * pools - and an id that missed its coercion would land beside the real entry as a parallel member
+   * of the pool rather than replacing it, double-counting the total with nothing reporting it.
+   * Named fields also let a reader see which number is the id and which is the weight.
+   *
    * Only the shape is checked here. Whether a granted id names a real state, which slot it belongs
    * to, and whether it was authored at zero weight are all questions needing the database, so they
    * are asked later by {@link JDifficultyAffix_PluginMetadata#assertGrantsAreValid}.
    * @param {string} layerKey The layer being validated, for the error message.
-   * @param {object} grants The authored grants object of state id to weight.
+   * @param {object[]} grants The authored grants, each an object of `stateId` and `weight`.
    * @returns {Map<number, number>}
    */
   static #validatedGrants(layerKey, grants)
   {
     const rawGrants = new Map();
 
-    Object.entries(grants)
-      .forEach(([ stateId, weight ]) =>
-      {
-        if (weight < 0)
-        {
-          throw new Error(
-            `[J-Difficulty-Affix] layer [${layerKey}] grants state [${stateId}] a weight of ` +
-            `[${weight}]; must not be negative.`);
-        }
+    grants.forEach(grant =>
+    {
+      const {
+        stateId,
+        weight
+      } = grant;
 
-        rawGrants.set(parseInt(stateId), weight);
-      });
+      if (weight < 0)
+      {
+        throw new Error(
+          `[J-Difficulty-Affix] layer [${layerKey}] grants state [${stateId}] a weight of ` +
+          `[${weight}]; must not be negative.`);
+      }
+
+      // a keyed form silently kept the last of a repeated id; a list can say so instead, and a
+      // repeated id means the author wrote two different intentions for one affix.
+      if (rawGrants.has(stateId))
+      {
+        throw new Error(
+          `[J-Difficulty-Affix] layer [${layerKey}] grants state [${stateId}] more than once.`);
+      }
+
+      rawGrants.set(stateId, weight);
+    });
 
     return rawGrants;
   }
