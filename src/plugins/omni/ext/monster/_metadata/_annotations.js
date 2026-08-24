@@ -59,6 +59,17 @@
  * one per tag, in the order they appear on the note.
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.0
+ *    Renamed from J-Omni-Monsterpedia to J-OMNI-Monsters. The shipped file is
+ *    renamed with it, so an existing plugins.js entry must be updated or the
+ *    plugin will simply not load.
+ *    Drop observation moved from makeDropItems to J-DropsControl's new
+ *    postProcessDroppedLoot hook, and deliberately reads the incoming list
+ *    rather than the returned one. What arrives is the loot as this enemy's own
+ *    rows describe it; what leaves may have been promoted up a drop upgrade
+ *    ladder into rows the enemy never lists. The pedia unmasks drop entries by
+ *    their base ids, so observing the promoted list would credit an entry the
+ *    enemy does not have and leave the real one masked permanently.
  * - 1.2.1
  *    The monsterpedia detail window no longer declares private members. A
  *    window's constructor reaches initialize, and through it the drawing

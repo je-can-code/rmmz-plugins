@@ -214,6 +214,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.2
+ *    Corrected PLUGIN_NAME from J-LEVEL-Flat to J-Level-Flat, matching the name
+ *    the ship has always been built and shipped under.
  * - 1.0.1
  *    Flat experience gain now consults the shared reward-policy gate
  *    (canGainReward), so inanimate enemies grant none.

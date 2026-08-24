@@ -140,6 +140,10 @@
  * This choice is only shown while objective 2 of that quest is completed.
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.0
+ *    Renamed from J-Omni-Questopedia to J-OMNI-Quests. The shipped file is
+ *    renamed with it, so an existing plugins.js entry must be updated or the
+ *    plugin will simply not load.
  * - 1.2.2
  *    Removed two console logs left over from testing.
  * - 1.2.1

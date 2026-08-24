@@ -210,8 +210,20 @@
  * The party will now gain +175% gold from defeated enemies.
  * ============================================================================
  * CHANGELOG:
- * - 2.4.0
- *    Declared the J.DROPS.EXT namespace so this plugin can carry extensions.
+ * - 2.5.0
+ *    Added drop upgrade ladders. A ladder names a chain of rows in ascending
+ *    order, and a battler carrying <dropUpgrade:N> promotes each drop N rungs
+ *    along whichever ladder claims it, so a single authored drop can express a
+ *    whole rarity tier without the enemy listing every rung it might yield.
+ *    Added <dropQuantity:N>, granting extra copies of each item that dropped.
+ *    Both are summed from all note sources on both sides of the kill, because
+ *    an affix graded onto the slain enemy and a harvesting tool carried by the
+ *    killer are the same kind of contribution. An enemy's ordinary states are
+ *    already cleared by death; passive states held externally survive.
+ *    Added the postProcessDroppedLoot hook, which runs after loot is rolled and
+ *    before it is awarded. Extensions that observe or modify a haul alias this
+ *    rather than makeDropItems, so they see the list at a defined point rather
+ *    than racing each other through one override.
  * - 2.3.0
  *    Loot drops now resolve through the shared proc-count path, so a killer in
  *    Accumulate Mode earns a copy per successful roll rather than spending the

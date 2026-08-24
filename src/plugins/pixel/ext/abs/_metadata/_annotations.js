@@ -90,6 +90,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.8
+ *    Corrected PLUGIN_NAME from J-ABS-Pixelistics to J-Pixel-ABS, matching the
+ *    name the ship has always been built and shipped under. The old spelling
+ *    also read as an extension of J-ABS rather than of J-Pixelistics, which is
+ *    the opposite of what this ship is.
  * - 1.0.7
  *    Overrode JABS_Battler#canDirectionalDodgeStepPass to gate directional
  *    dodge steps through PIXEL's own subcell passability
