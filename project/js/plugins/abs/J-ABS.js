@@ -1341,8 +1341,9 @@
  * player (pivot guard clears dash; pixel movement does not reapply dash while
  * guarding).
  *
- * Explicit parry is the <parry:N> window after raising guard; EVA extends
- * that window. Skills may still use <unparryable> and <ignoreParry:N>.
+ * Explicit parry is the <parry:N> window after raising guard; the parry
+ * extension rate extends that window. Skills may still use <unparryable>
+ * and <ignoreParry:N>.
  *
  * NOTE ABOUT GUARD SKILL TYPES:
  * A skill must have the "Guard Skill Type" id to be recognized as a

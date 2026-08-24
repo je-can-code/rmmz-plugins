@@ -113,7 +113,7 @@ class IconManager
       case  0:
         return 944; // hit
       case  1:
-        return 945; // eva (parry boost)
+        return 945; // eva
       case  2:
         return 946; // cri
       case  3:
