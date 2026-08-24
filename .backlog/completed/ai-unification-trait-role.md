@@ -1,8 +1,3 @@
----
-status: done
-area: completed
----
-
 # AI unification + trait/role expansion
 
 Merged on branch `feature/jabs-ai-unification` (PR #29).

@@ -1,8 +1,3 @@
----
-status: done
-area: feature
----
-
 # Ally AI: behavior axes (toggles) vs exclusive modes (playbooks)
 
 ## Source

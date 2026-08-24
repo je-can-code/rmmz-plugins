@@ -1,8 +1,3 @@
----
-status: done
-area: feature
----
-
 # Bonus hit type split (basic vs skill vs all)
 
 ## Source

@@ -1,8 +1,3 @@
----
-status: open
-area: architecture
----
-
 # Convert save-persisted prototype models to modern `class` syntax
 
 ## Why

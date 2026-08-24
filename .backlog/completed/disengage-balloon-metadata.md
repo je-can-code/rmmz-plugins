@@ -1,8 +1,3 @@
----
-status: done
-area: completed
----
-
 # Disengage balloon (plugin-controlled)
 
 ## Source

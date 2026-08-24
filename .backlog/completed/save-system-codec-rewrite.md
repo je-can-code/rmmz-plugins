@@ -1,8 +1,3 @@
----
-status: done
-area: architecture
----
-
 # Save system rewrite: codecs, scopes, and readable JSON
 
 ## Start here
@@ -1633,12 +1628,12 @@ Read `CLAUDE.md` in full; these are the ones this item trips over specifically.
   migration from it. This was confirmed deliberately.
 - Absorbs [`game-system-j-namespace-save-slice`](game-system-j-namespace-save-slice.md) — its Phase 0
   ("classify every field: persisted vs map-session transient vs frame transient") is exactly the
-  transient declaration — and [`time-save-data-vs-runtime-manager`](time-save-data-vs-runtime-manager.md)
+  transient declaration — and [`time-save-data-vs-runtime-manager`](../unstarted/time-save-data-vs-runtime-manager.md)
   ("persist a DTO, not the runtime manager"), which is a codec with an `encode` override. Close both
   when this lands.
 - Overlaps [`convert-saved-prototype-models-to-modern-classes`](convert-saved-prototype-models-to-modern-classes.md);
   every model touched here should land as `class` + registry.
-- Related: [`game-action-battler-uuid-refactor`](game-action-battler-uuid-refactor.md) — id-vs-uuid in
+- Related: [`game-action-battler-uuid-refactor`](../unstarted/game-action-battler-uuid-refactor.md) — id-vs-uuid in
   saves is the same reference/value question this item answers for database rows.
 - **PR strategy: one branch, one PR, no exceptions.** `feat/save-system-codec-rewrite` holds every
   phase and merges only once the whole thing is verified and functional. The battler-cache fix in

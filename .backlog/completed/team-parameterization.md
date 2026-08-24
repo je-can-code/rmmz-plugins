@@ -1,8 +1,3 @@
----
-status: done
-area: architecture
----
-
 # Team parameterization (opposing / friendly)
 
 ## Source

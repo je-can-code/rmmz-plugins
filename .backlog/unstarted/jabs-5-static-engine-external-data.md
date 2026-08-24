@@ -1,8 +1,3 @@
----
-status: open
-area: architecture
----
-
 # JABS 5.0 — static engine, persisted JABS slice, external data
 
 ## Source

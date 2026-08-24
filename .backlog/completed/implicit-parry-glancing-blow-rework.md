@@ -1,8 +1,3 @@
----
-status: done
-area: feature
----
-
 # Implicit parry → glancing blow rework
 
 ## Source
@@ -41,7 +36,7 @@ Replace the binary "full hit / full negate" with a **damage spectrum**:
 
 ## Related
 
-- **[`weapon-tier-hardness-damage-balance.md`](weapon-tier-hardness-damage-balance.md)** — hardness/pierce is the *damage scaling* side; glancing blow is the *hit resolution* side. Both share the "weapon tier matters" philosophy and should coexist in the damage chain. Consider implementing together or sequentially.
+- **`weapon-tier-hardness-damage-balance.md`** (cancelled and deleted 2026-08-23; in git history) — hardness/pierce is the *damage scaling* side; glancing blow is the *hit resolution* side. Both share the "weapon tier matters" philosophy and should coexist in the damage chain. Consider implementing together or sequentially.
 - **Player active parry** (`Game_Action.handleGuardEffects`, timed guard) — stays as-is (full negate + counter). The distinction is: implicit = enemy passive friction → glancing; active = player skill expression → full parry.
 
 ## Severity

@@ -120,6 +120,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.2
+ *    Corrected PLUGIN_NAME from J-Region-Skills to J-Regions-Skills, matching
+ *    the name the ship has always been built and shipped under.
  * - 1.1.1
  *    Adapted to the RPGManager array read signature.
  * - 1.1.0

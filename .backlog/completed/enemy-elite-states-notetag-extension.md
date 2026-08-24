@@ -1,8 +1,3 @@
----
-status: done
-area: completed
----
-
 # Enemy elite / boss stat knobs via passive states + configurable notetag
 
 ## Source

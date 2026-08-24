@@ -1,8 +1,3 @@
----
-status: done
-area: feature
----
-
 # J-Popups: session merge for combos and slip accumulation
 
 ## Severity

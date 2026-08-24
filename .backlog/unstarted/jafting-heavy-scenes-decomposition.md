@@ -1,8 +1,3 @@
----
-status: open
-area: code-quality
----
-
 # JAFTING: decompose oversized scenes (Create / Refine / core hub)
 
 ## Severity

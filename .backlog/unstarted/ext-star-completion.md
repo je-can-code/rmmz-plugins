@@ -1,8 +1,3 @@
----
-status: deferred
-area: ext-star
----
-
 # `ext/star` completion
 
 ## Schedule

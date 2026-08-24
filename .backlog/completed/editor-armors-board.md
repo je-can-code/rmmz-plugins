@@ -1,8 +1,3 @@
----
-status: open
-area: feature
----
-
 # Editor: Armors board (RMMZ-native parity)
 
 ## Source

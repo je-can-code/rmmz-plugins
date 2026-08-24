@@ -1,8 +1,3 @@
----
-status: open
-area: feature
----
-
 # Editor: Weapons board (RMMZ-native parity)
 
 ## Source

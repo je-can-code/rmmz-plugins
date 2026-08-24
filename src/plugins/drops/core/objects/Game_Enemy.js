@@ -79,8 +79,157 @@ Game_Enemy.prototype.makeDropItems = function(killer = null)
     }
   }, this);
 
-  // return all earned loot!
-  return itemsFound;
+  // promote and multiply what was won, then return all earned loot!
+  return this.postProcessDroppedLoot(itemsFound, killer);
+};
+
+/**
+ * Applies the quality and quantity modifiers to loot that has already won its roll.
+ *
+ * Deliberately a pass over the finished list rather than work done inside the drop loop. Quantity has
+ * to see the whole list at once, because it grants copies per distinct item rather than per drop
+ * entry, and an enemy listing the same item four times has dropped one thing. Quality could have
+ * lived in {@link #findLoot}, but that method is aliased elsewhere with a fixed signature and a new
+ * argument would be silently swallowed before it ever arrived.
+ *
+ * Order matters: promotion runs first so the quantity bonus grants more of what you actually
+ * received. Two rows that both clamp onto the same top rung are one item by the time quantity counts
+ * them, which is the intended reading- you got one kind of thing, so you get more of that kind.
+ * @param {RPG_BaseItem[]} itemsFound The loot that successfully dropped.
+ * @param {Game_Actor|Game_Enemy=} killer The battler that landed the killing blow, if known.
+ * @returns {RPG_BaseItem[]} The loot as the player will actually receive it.
+ */
+Game_Enemy.prototype.postProcessDroppedLoot = function(itemsFound, killer = null)
+{
+  // upgrade the quality of what dropped.
+  const promoted = this.promoteDroppedLoot(itemsFound, killer);
+
+  // then adjust how much of it there is.
+  return this.applyDropQuantityBonus(promoted, killer);
+};
+
+/**
+ * Walks each dropped item along its ladder by the resolved number of rungs.
+ * @param {RPG_BaseItem[]} itemsFound The loot that successfully dropped.
+ * @param {Game_Actor|Game_Enemy=} killer The battler that landed the killing blow, if known.
+ * @returns {RPG_BaseItem[]}
+ */
+Game_Enemy.prototype.promoteDroppedLoot = function(itemsFound, killer = null)
+{
+  // resolve how far up or down the ladders this kill moves its loot.
+  const rungs = this.resolveDropUpgradeCount(killer);
+
+  // no promotion means the loot is already what it should be.
+  if (rungs === 0) return itemsFound;
+
+  const promoting = item =>
+  {
+    const promotedId = J.DROPS.Metadata.walkDropLadder(item.kind, item.id, rungs);
+
+    // a row at the end of its ladder, on no ladder, or synthetic loot with no database row behind
+    // it at all, all answer with the id they came in with and are handed straight back. Promotion
+    // needs no special case for panel unlocks; "not on a ladder" already covers them.
+    if (promotedId === item.id) return item;
+
+    return this.itemObject(item.kind, promotedId);
+  };
+
+  return itemsFound.map(promoting, this);
+};
+
+/**
+ * Grants or removes copies of each distinct item that dropped.
+ *
+ * The bonus lands once per distinct row, never once per drop entry- four identical drop entries are
+ * one item as far as the player is concerned, and scaling by how the author split their rows would
+ * make the same tag mean different things on identically-behaving enemies.
+ * @param {RPG_BaseItem[]} itemsFound The loot that successfully dropped.
+ * @param {Game_Actor|Game_Enemy=} killer The battler that landed the killing blow, if known.
+ * @returns {RPG_BaseItem[]}
+ */
+Game_Enemy.prototype.applyDropQuantityBonus = function(itemsFound, killer = null)
+{
+  // resolve how many copies of each distinct item this kill adds or removes.
+  const bonus = this.resolveDropQuantityBonus(killer);
+
+  // no adjustment means the list is already correct.
+  if (bonus === 0) return itemsFound;
+
+  /** @type {Map<string, {item: RPG_BaseItem, count: number}>} */
+  const tallies = new Map();
+
+  // tally each distinct row; synthetic loot is keyed by position so it stays a group of exactly one.
+  itemsFound.forEach((item, index) =>
+  {
+    const key = item.id
+      ? `${item.kind}:${item.id}`
+      : `synthetic:${index}`;
+    const tally = tallies.get(key) ?? {
+      item,
+      count: 0,
+    };
+
+    tally.count += 1;
+    tallies.set(key, tally);
+  });
+
+  const adjusted = [];
+
+  // emit each distinct row at its adjusted count, which may be none at all.
+  tallies.forEach(tally =>
+  {
+    const {
+      item,
+      count
+    } = tally;
+
+    // synthetic loot passes through untouched; a negative may take a real row to zero.
+    const total = item.id
+      ? Math.max(count + bonus, 0)
+      : count;
+
+    for (let index = 0; index < total; index++)
+    {
+      adjusted.push(item);
+    }
+  });
+
+  return adjusted;
+};
+
+/**
+ * How many rungs this kill promotes its drops by, summing both sides of it.
+ *
+ * The enemy's own grade applies whether or not the killer is known- an affixed enemy felled by
+ * something unidentified still drops what its affix promised.
+ * @param {Game_Actor|Game_Enemy=} killer The battler that landed the killing blow, if known.
+ * @returns {number}
+ */
+Game_Enemy.prototype.resolveDropUpgradeCount = function(killer = null)
+{
+  // the grade the enemy itself carries.
+  const enemyCount = this.dropUpgradeCount();
+
+  // with no known killer there is nobody to contribute the other half.
+  if (!killer) return enemyCount;
+
+  return enemyCount + killer.dropUpgradeCount();
+};
+
+/**
+ * How many extra copies this kill grants of each distinct item, summing both sides of it.
+ * @param {Game_Actor|Game_Enemy=} killer The battler that landed the killing blow, if known.
+ * @returns {number}
+ */
+Game_Enemy.prototype.resolveDropQuantityBonus = function(killer = null)
+{
+  // the bonus the enemy itself carries.
+  const enemyBonus = this.dropQuantityBonus();
+
+  // with no known killer there is nobody to contribute the other half.
+  if (!killer) return enemyBonus;
+
+  return enemyBonus + killer.dropQuantityBonus();
 };
 
 /**

@@ -1,8 +1,3 @@
----
-status: open
-area: feature
----
-
 # Editor: UX / UI unification (design system + board layout pass)
 
 ## Source

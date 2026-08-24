@@ -10,7 +10,7 @@ import {
 } from '../../../_component/fixtures/install-omni-host-globals.js';
 import { installPluginManagerWithParams } from '../../../../../setup/install-plugin-manager-with-params.js';
 
-describe('J-Omni-Questopedia metadata (direct src import)', () =>
+describe('J-OMNI-Quests metadata (direct src import)', () =>
 {
   beforeAll(async () =>
   {
@@ -21,7 +21,7 @@ describe('J-Omni-Questopedia metadata (direct src import)', () =>
 
     // the menu switch is the one plugin parameter this metadata actually reads, so it is supplied
     // with a recognizable value rather than left to fall through to its default.
-    installPluginManagerWithParams(globalThis, 'J-Omni-Questopedia', { 'menu-switch': '42' });
+    installPluginManagerWithParams(globalThis, 'J-OMNI-Quests', { 'menu-switch': '42' });
 
     setPluginContextToJBase();
     await import('../../../../../../src/plugins/_base/core/_metadata/initialization.js');
@@ -242,7 +242,7 @@ describe('J-Omni-Questopedia metadata (direct src import)', () =>
     // second instance in this same file has to introduce itself under a name of its own. Only the
     // parameter lookup and the registry key care about the name, and neither is what these two
     // tests are measuring.
-    const secondaryName = 'J-Omni-Questopedia-Secondary';
+    const secondaryName = 'J-OMNI-Quests-Secondary';
 
     it('still classifies quests when J-Base is too old to report the load summary', async () =>
     {

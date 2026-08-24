@@ -1,8 +1,3 @@
----
-status: done
-area: architecture
----
-
 # Implement `JsonEx` serialization registry in J-Base
 
 ## Severity

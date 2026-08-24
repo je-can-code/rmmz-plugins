@@ -1,8 +1,3 @@
----
-status: done
-area: bug
----
-
 > **Shipped 2026-08-06.** All eight guards read `_key()`, both reclaim paths key off the instance slot, and
 > `clearLedgerForDatum` no longer reaches a template bag it does not own. 456 jafting tests green inside a green
 > `hotfix` (13,667 total).

@@ -1,8 +1,3 @@
----
-status: open
-area: architecture
----
-
 # `Game_Character` action sprite flags vs `JABS_Action`
 
 ## Source

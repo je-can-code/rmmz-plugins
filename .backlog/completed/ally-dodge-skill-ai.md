@@ -1,8 +1,3 @@
----
-status: done
-area: feature
----
-
 # Ally dodge-skill AI
 
 ## Source

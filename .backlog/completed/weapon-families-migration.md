@@ -1,8 +1,3 @@
----
-status: done
-area: feature
----
-
 # Weapon families migration — 18 lots, IDs 1–180
 
 ## Source

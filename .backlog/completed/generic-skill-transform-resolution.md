@@ -1,8 +1,3 @@
----
-status: done
-area: feature
----
-
 # Generalize skill transforms across notes and equipped-slot resolution
 
 ## Severity

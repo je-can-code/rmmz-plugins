@@ -1,8 +1,3 @@
----
-status: open
-area: code-quality
----
-
 # ABS: scrub placeholder / debug logging (`omg`, plugin commands, noisy warns)
 
 ## Severity

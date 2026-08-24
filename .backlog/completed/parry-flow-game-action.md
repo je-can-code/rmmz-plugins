@@ -1,8 +1,3 @@
----
-status: done
-area: completed
----
-
 # Parry flow cleanup in `Game_Action`
 
 ## Source

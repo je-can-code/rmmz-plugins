@@ -1,8 +1,3 @@
----
-status: done
-area: feature
----
-
 # Review ally AI combo actions
 
 ## Source

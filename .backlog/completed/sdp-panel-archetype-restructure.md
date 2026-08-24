@@ -1,8 +1,3 @@
----
-status: done
-area: feature
----
-
 # SDP panel archetype restructure — align panel identities with ally AI presets
 
 ## Problem
@@ -72,5 +67,5 @@ Full classification TBD — requires reviewing all 50+ enemy families against th
 ## Related
 
 - Ally AI presets: `src/plugins/abs/ext/allyai/_models/JABS_AllyAI.js` — the ten presets that define the archetype vocabulary
-- [`weapon-tier-hardness-damage-balance.md`](weapon-tier-hardness-damage-balance.md) — SDP growth vs weapon relevance; archetype-consistent scaling helps here
+- `weapon-tier-hardness-damage-balance.md` (cancelled and deleted 2026-08-23; in git history) — SDP growth vs weapon relevance; archetype-consistent scaling helps here
 - [`design-contract.md`](../../../ca/docs/design-contract.md) — "weapon-led identity" and "trophy loop" pillars

@@ -8,7 +8,11 @@
  * @orderAfter J-Base
  * @orderAfter J-ABS
  * @orderAfter J-HUD
- * @orderafter J-TIME
+ * @orderAfter J-TIME
+ * @orderAfter J-ABS-InputManager
+ * @orderAfter J-Base-Save
+ * @orderAfter J-Omnipedia
+ * @orderAfter J-OMNI-Quests
  * @help
  * ============================================================================
  * OVERVIEW
@@ -147,6 +151,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Corrected PLUGIN_NAME from J-MAP to J-Map, matching the name the ship has
+ *    always been built and shipped under.
  * - 1.2.0
  *    Routed the _map namespace into its own save section, so minimap state
  *    lands in systems/map.json rather than inside the system blob.

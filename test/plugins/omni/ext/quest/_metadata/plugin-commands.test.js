@@ -1,7 +1,7 @@
 //region plugins/omni/ext/quest/_metadata/plugin-commands.test.js
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
-describe('J-Omni-Questopedia plugin commands (direct src import)', () =>
+describe('J-OMNI-Quests plugin commands (direct src import)', () =>
 {
   let handlers;
   let FakeQuestManager;
@@ -27,7 +27,7 @@ describe('J-Omni-Questopedia plugin commands (direct src import)', () =>
       '../../../../../../src/plugins/omni/ext/quest/managers/QuestManager.js',
       () => ({ default: FakeQuestManager }));
 
-    globalThis.J = { OMNI: { EXT: { QUEST: { Metadata: { name: 'J-Omni-Questopedia' } } } } };
+    globalThis.J = { OMNI: { EXT: { QUEST: { Metadata: { name: 'J-OMNI-Quests' } } } } };
 
     handlers = {};
     globalThis.PluginManager = {

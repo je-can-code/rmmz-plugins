@@ -1,8 +1,3 @@
----
-status: open
-area: architecture
----
-
 # `$actionMap` bootstrap refactor
 
 ## Source

@@ -1,8 +1,3 @@
----
-status: done
-area: architecture
----
-
 # Unify `TextPopBuilder` prototype extensions (Popups vs Aptitude vs Shield)
 
 ## Severity

@@ -1,8 +1,3 @@
----
-status: done
-area: code-quality
----
-
 # ABS: `Game_Event#page` null-event path — logging hardening (+ optional root-cause follow-up)
 
 ## Shipped (logging)

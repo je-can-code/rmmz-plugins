@@ -1,8 +1,3 @@
----
-status: open
-area: documentation
----
-
 # Comprehensive notetag reference
 
 ## Severity

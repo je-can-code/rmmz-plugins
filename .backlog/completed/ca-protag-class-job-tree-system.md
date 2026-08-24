@@ -1,10 +1,5 @@
----
-status: done
-area: architecture
----
-
 > **Brainstorm complete (2026-06-13):** Class trees for both protagonists fully sketched.
-> Design doc: [`ca/docs/classes/main.md`](../../ca/docs/classes/main.md)
+> Design doc: [`ca/docs/classes/main.md`](../../../ca/docs/classes/main.md)
 
 # Chef Adventure — protag class / job tree system (SD3-style)
 
@@ -58,6 +53,6 @@ SDP panels map enemies to **ten archetypes** (Berserker, Medic, Cleric, Wizard, 
 ## Notes
 
 - Weapon redesign receipt continues under `ca/docs/weapons/` — **staff / wand / tome** = protag **kill / sustain-cast** mindsets; **not** primary heal delivery
-- Related: [`sdp-panel-archetype-restructure.md`](sdp-panel-archetype-restructure.md) (panel stat normalization); [`ca-food-recipes-crafting-redo.md`](ca-food-recipes-crafting-redo.md) (Cleric **PHA** / Kobold **Field Medic** food rhythm); [`ca/docs/sdp/panel-parameters-cheatsheet.md`](../../ca/docs/sdp/panel-parameters-cheatsheet.md) §11 (**%-only panels** — this item is the required base-growth counterpart)
+- Related: [`sdp-panel-archetype-restructure.md`](sdp-panel-archetype-restructure.md) (panel stat normalization); [`ca-food-recipes-crafting-redo.md`](ca-food-recipes-crafting-redo.md) (Cleric **PHA** / Kobold **Field Medic** food rhythm); [`ca/docs/sdp/panel-parameters-cheatsheet.md`](../../../ca/docs/sdp/panel-parameters-cheatsheet.md) §11 (**%-only panels** — this item is the required base-growth counterpart)
 - Party size: 6 (2 protags + 4 elementals) — class system must address **all six**, not only Jerald/Rupert
 - Open: 1:1 **ten archetypes = ten classes**, or fewer playable jobs with archetypes as panel flavor inside branches

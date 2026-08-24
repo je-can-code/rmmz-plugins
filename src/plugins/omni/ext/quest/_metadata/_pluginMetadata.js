@@ -79,7 +79,7 @@ class J_QUEST_PluginMetadata
       : null;
 
     const options = ExternalJsonConfigLoaderOptions.Builder()
-      .pluginName('J-Omni-Questopedia')
+      .pluginName('J-OMNI-Quests')
       .configName('quest configuration')
       .logSummary(summarize)
       .build();

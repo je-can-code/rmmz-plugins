@@ -1,8 +1,3 @@
----
-status: done
-area: pixel/ext/abs
----
-
 # 8-dir projectile aim + vis tag defaults for action templates
 
 ## Outcome

@@ -1,8 +1,3 @@
----
-status: completed
-area: code-quality
----
-
 # Cleanup useless `typeof` in plugin source
 
 ## Severity

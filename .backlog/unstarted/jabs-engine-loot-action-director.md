@@ -1,8 +1,3 @@
----
-status: open
-area: architecture
----
-
 # Loot and action helpers extracted from `JABS_Engine`
 
 ## Source

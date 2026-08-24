@@ -1,8 +1,3 @@
----
-status: open
-area: combat
----
-
 # RMMZ damage floor bypasses element immunity
 
 ## Severity

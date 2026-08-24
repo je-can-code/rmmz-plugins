@@ -1,8 +1,3 @@
----
-status: done
-area: feature
----
-
 # JAFTING salvage extension (material recovery + id reclaim)
 
 ## Source

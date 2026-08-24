@@ -1,8 +1,3 @@
----
-status: done
-area: architecture
----
-
 # JAFTING Creation: category-matched ingredients
 
 > **Shipped 2026-08-06.** All plugin work is built and green: 12 source gates, 78 ships, the full suite,

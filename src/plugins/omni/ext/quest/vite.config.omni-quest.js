@@ -9,7 +9,7 @@ const thisConfig = defineConfig({
   build: {
     rolldownOptions: {
       input: {
-        'omni/ext/J-Omni-Questopedia': path.resolve(_dirname, './entry.js'),
+        'omni/ext/J-OMNI-Quests': path.resolve(_dirname, './entry.js'),
       },
     },
   },

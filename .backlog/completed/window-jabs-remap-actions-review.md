@@ -1,8 +1,3 @@
----
-status: done
-area: completed
----
-
 # `Window_JabsRemapActions` review pass
 
 ## Source

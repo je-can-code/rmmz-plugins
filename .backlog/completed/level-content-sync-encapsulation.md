@@ -1,6 +1,4 @@
 ---
-status: done
-area: completed
 completed: 2026-06-09
 ship: J-Level-Sync (out/level/ext/J-Level-Sync.js)
 ---

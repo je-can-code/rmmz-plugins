@@ -74,6 +74,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Corrected PLUGIN_NAME from J-ABS-FOOD to J-ABS-Food, matching the name the
+ *    ship has always been built and shipped under.
  * - 1.0.0
  *    Initial release.
  * ============================================================================

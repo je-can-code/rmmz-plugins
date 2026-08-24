@@ -1,8 +1,3 @@
----
-status: done
-area: code-quality
----
-
 # Centralize external JSON config load + parse in J-Base
 
 ## Original severity / gain

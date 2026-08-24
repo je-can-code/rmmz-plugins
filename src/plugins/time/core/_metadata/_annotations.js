@@ -4,6 +4,10 @@
  * @plugindesc [v@@PLUGIN_VERSION@@ @@PLUGIN_DESC_TAG@@] A system for tracking time- real or artificial.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
+ * @base J-Base
+ * @orderAfter J-Base
+ * @orderAfter J-ABS
+ * @orderAfter J-ABS-InputManager
  * @help
  * =============================================================================
  * This is a system that tracks time, either artificial or real, and

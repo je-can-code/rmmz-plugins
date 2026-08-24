@@ -66,6 +66,9 @@
  * This battler's movement speed will be increased by ~40%.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Corrected PLUGIN_NAME from J-ABS-SpeedBoosts to J-ABS-Speed, matching the
+ *    name the ship has always been built and shipped under.
  * - 1.1.0
  *    Move speed boost (msb) registered with the shared parameter catalog
  *    and given an SDP panel binding, so it can now be invested via SDP.

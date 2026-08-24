@@ -1,8 +1,3 @@
----
-status: done
-area: feature
----
-
 # J-OneTimeItemBoost rewrite
 
 ## Severity

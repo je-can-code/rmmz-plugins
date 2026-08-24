@@ -1,8 +1,3 @@
----
-status: open
-area: feature
----
-
 # J-Popups-ABS (v1.1): combo streak tracker from merge idle window
 
 ## Target release

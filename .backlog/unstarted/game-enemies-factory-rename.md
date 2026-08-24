@@ -1,8 +1,3 @@
----
-status: open
-area: architecture
----
-
 # `$gameEnemies` factory naming and role clarity
 
 ## Source

@@ -1,6 +1,4 @@
 ---
-status: done
-area: completed
 completed: 2026-06-09
 ---
 
