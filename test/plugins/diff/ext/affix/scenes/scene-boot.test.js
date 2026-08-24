@@ -54,8 +54,8 @@ describe('Scene_Boot grant validation (direct src import)', () =>
 
   it('validates only after the original hook has finished', () =>
   {
-    // Arrange- the affix pools this validation reads are populated by J-Passive-Affix's own alias
-    // sitting underneath this one, so running first would validate against empty pools.
+    // Arrange- the original hook is where the database finishes hydrating, and a grant's slot is
+    // read off a hydrated row. Running first would inspect plain JSON with no slot tags on it.
     const sceneBoot = new globalThis.Scene_Boot();
 
     // Act

@@ -15,7 +15,8 @@ Scene_Boot.prototype.onDatabaseLoaded = function()
   J.DIFFICULTY.EXT.AFFIX.Aliased.Scene_Boot.get('onDatabaseLoaded')
     .call(this);
 
-  // the affix pools were populated by J-Passive-Affix's own alias underneath this one.
+  // the original hook is where the database finished hydrating, which is what makes a grant's
+  // slot tags readable at all.
   J.DIFFICULTY.EXT.AFFIX.Metadata.assertGrantsAreValid();
 };
 //endregion Scene_Boot

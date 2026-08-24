@@ -388,18 +388,40 @@ var JDifficultyAffix_PluginMetadata = class JDifficultyAffix_PluginMetadata exte
 	*/
 	postInitialize() {
 		super.postInitialize();
+		this.initializeMetadata();
 		this.decorateDifficultyMetadatas();
 	}
 	/**
-	* The pool this extension hands out for prefix rolls, or null while the cache is cold.
-	* @type {{map: Map<number, number>, totalWeight: number}|null}
+	* Establishes the cached values this extension folds the enabled layers into.
+	*
+	* Deliberately assigned here rather than declared as class fields. Field initializers run only
+	* after `super()` has returned, and `PluginMetadata`'s constructor drives `postInitialize` before
+	* that - so a field would overwrite anything this hook had already computed, silently and after
+	* the fact.
 	*/
-	_effectivePrefixPool = null;
-	/**
-	* The pool this extension hands out for suffix rolls, or null while the cache is cold.
-	* @type {{map: Map<number, number>, totalWeight: number}|null}
-	*/
-	_effectiveSuffixPool = null;
+	initializeMetadata() {
+		/**
+		* The pool this extension hands out for prefix rolls, or null while the cache is cold.
+		* @type {{map: Map<number, number>, totalWeight: number}|null}
+		*/
+		this._effectivePrefixPool = null;
+		/**
+		* The pool this extension hands out for suffix rolls, or null while the cache is cold.
+		* @type {{map: Map<number, number>, totalWeight: number}|null}
+		*/
+		this._effectiveSuffixPool = null;
+		/**
+		* The multiplier the enabled layers apply to a spawn's prefix chance, as a factor.
+		* Identity until the layers have been folded, which is the honest answer before then.
+		* @type {number}
+		*/
+		this._prefixChanceFactor = 1;
+		/**
+		* The multiplier the enabled layers apply to a spawn's suffix chance, as a factor.
+		* @type {number}
+		*/
+		this._suffixChanceFactor = 1;
+	}
 	/**
 	* The current difficulty-adjusted prefix pool, or null when it has not been built yet.
 	* Null is a real answer rather than a missing one: it is what the aliased seam reads to decide it
@@ -429,6 +451,36 @@ var JDifficultyAffix_PluginMetadata = class JDifficultyAffix_PluginMetadata exte
 	*/
 	setEffectiveSuffixPool(pool) {
 		this._effectiveSuffixPool = pool;
+	}
+	/**
+	* The multiplier the enabled layers apply to a spawn's prefix chance.
+	* Cached rather than folded per spawn: spawns are frequent, difficulty toggles are not, and the
+	* answer cannot change between the two.
+	* @returns {number}
+	*/
+	prefixChanceFactor() {
+		return this._prefixChanceFactor;
+	}
+	/**
+	* The multiplier the enabled layers apply to a spawn's suffix chance.
+	* @returns {number}
+	*/
+	suffixChanceFactor() {
+		return this._suffixChanceFactor;
+	}
+	/**
+	* Replaces the cached prefix chance multiplier.
+	* @param {number} factor The newly folded factor.
+	*/
+	setPrefixChanceFactor(factor) {
+		this._prefixChanceFactor = factor;
+	}
+	/**
+	* Replaces the cached suffix chance multiplier.
+	* @param {number} factor The newly folded factor.
+	*/
+	setSuffixChanceFactor(factor) {
+		this._suffixChanceFactor = factor;
 	}
 	/**
 	* Walks every configured difficulty layer and attaches the affix effects it declared.
@@ -470,7 +522,7 @@ var JDifficultyAffix_PluginMetadata = class JDifficultyAffix_PluginMetadata exte
 	* @param {number} weight The weight this layer hands it.
 	*/
 	assertGrantIsValid(layerKey, affixEffects, stateId, weight) {
-		const state = $dataStates.at(stateId);
+		const state = $dataStates[stateId];
 		if (!state) {
 			throw new Error(`[J-Difficulty-Affix] layer [${layerKey}] grants state [${stateId}], which does not exist.`);
 		}
@@ -595,6 +647,8 @@ var JDifficultyAffix_PluginMetadata = class JDifficultyAffix_PluginMetadata exte
 		const suffixGrants = this.combinedSuffixGrants(allEffects);
 		this.setEffectivePrefixPool(JDifficultyAffix_PluginMetadata.buildPool(prefixMap, flatten, prefixGrants));
 		this.setEffectiveSuffixPool(JDifficultyAffix_PluginMetadata.buildPool(suffixMap, flatten, suffixGrants));
+		this.setPrefixChanceFactor(this.combinedPrefixChanceFactor(allEffects));
+		this.setSuffixChanceFactor(this.combinedSuffixChanceFactor(allEffects));
 	}
 	/**
 	* Builds one difficulty-adjusted pool from a base pool, a flatten, and a set of grants.
@@ -716,8 +770,7 @@ JPassiveAffix_PluginMetadata.prototype.effectiveSuffixPool = function() {
 J.DIFFICULTY.EXT.AFFIX.Aliased.Game_Event.set("getResolvedPassiveAffixPrefixChance", Game_Event.prototype.getResolvedPassiveAffixPrefixChance);
 Game_Event.prototype.getResolvedPassiveAffixPrefixChance = function(enemyData) {
 	const original = J.DIFFICULTY.EXT.AFFIX.Aliased.Game_Event.get("getResolvedPassiveAffixPrefixChance").call(this, enemyData);
-	const allEffects = J.DIFFICULTY.EXT.AFFIX.Metadata.enabledAffixEffects();
-	const factor = J.DIFFICULTY.EXT.AFFIX.Metadata.combinedPrefixChanceFactor(allEffects);
+	const factor = J.DIFFICULTY.EXT.AFFIX.Metadata.prefixChanceFactor();
 	return (original * factor).clamp(0, 100);
 };
 /**
@@ -729,8 +782,7 @@ Game_Event.prototype.getResolvedPassiveAffixPrefixChance = function(enemyData) {
 J.DIFFICULTY.EXT.AFFIX.Aliased.Game_Event.set("getResolvedPassiveAffixSuffixChance", Game_Event.prototype.getResolvedPassiveAffixSuffixChance);
 Game_Event.prototype.getResolvedPassiveAffixSuffixChance = function(enemyData) {
 	const original = J.DIFFICULTY.EXT.AFFIX.Aliased.Game_Event.get("getResolvedPassiveAffixSuffixChance").call(this, enemyData);
-	const allEffects = J.DIFFICULTY.EXT.AFFIX.Metadata.enabledAffixEffects();
-	const factor = J.DIFFICULTY.EXT.AFFIX.Metadata.combinedSuffixChanceFactor(allEffects);
+	const factor = J.DIFFICULTY.EXT.AFFIX.Metadata.suffixChanceFactor();
 	return (original * factor).clamp(0, 100);
 };
 

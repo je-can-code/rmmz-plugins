@@ -34,21 +34,48 @@ class JDifficultyAffix_PluginMetadata
     // execute original logic.
     super.postInitialize();
 
+    // seed the caches before anything can consult them.
+    this.initializeMetadata();
+
     // decorate the layers J-Difficulty already built with the fields its classifier dropped.
     this.decorateDifficultyMetadatas();
   }
 
   /**
-   * The pool this extension hands out for prefix rolls, or null while the cache is cold.
-   * @type {{map: Map<number, number>, totalWeight: number}|null}
+   * Establishes the cached values this extension folds the enabled layers into.
+   *
+   * Deliberately assigned here rather than declared as class fields. Field initializers run only
+   * after `super()` has returned, and `PluginMetadata`'s constructor drives `postInitialize` before
+   * that - so a field would overwrite anything this hook had already computed, silently and after
+   * the fact.
    */
-  _effectivePrefixPool = null;
+  initializeMetadata()
+  {
+    /**
+     * The pool this extension hands out for prefix rolls, or null while the cache is cold.
+     * @type {{map: Map<number, number>, totalWeight: number}|null}
+     */
+    this._effectivePrefixPool = null;
 
-  /**
-   * The pool this extension hands out for suffix rolls, or null while the cache is cold.
-   * @type {{map: Map<number, number>, totalWeight: number}|null}
-   */
-  _effectiveSuffixPool = null;
+    /**
+     * The pool this extension hands out for suffix rolls, or null while the cache is cold.
+     * @type {{map: Map<number, number>, totalWeight: number}|null}
+     */
+    this._effectiveSuffixPool = null;
+
+    /**
+     * The multiplier the enabled layers apply to a spawn's prefix chance, as a factor.
+     * Identity until the layers have been folded, which is the honest answer before then.
+     * @type {number}
+     */
+    this._prefixChanceFactor = 1;
+
+    /**
+     * The multiplier the enabled layers apply to a spawn's suffix chance, as a factor.
+     * @type {number}
+     */
+    this._suffixChanceFactor = 1;
+  }
 
   /**
    * The current difficulty-adjusted prefix pool, or null when it has not been built yet.
@@ -86,6 +113,44 @@ class JDifficultyAffix_PluginMetadata
   setEffectiveSuffixPool(pool)
   {
     this._effectiveSuffixPool = pool;
+  }
+
+  /**
+   * The multiplier the enabled layers apply to a spawn's prefix chance.
+   * Cached rather than folded per spawn: spawns are frequent, difficulty toggles are not, and the
+   * answer cannot change between the two.
+   * @returns {number}
+   */
+  prefixChanceFactor()
+  {
+    return this._prefixChanceFactor;
+  }
+
+  /**
+   * The multiplier the enabled layers apply to a spawn's suffix chance.
+   * @returns {number}
+   */
+  suffixChanceFactor()
+  {
+    return this._suffixChanceFactor;
+  }
+
+  /**
+   * Replaces the cached prefix chance multiplier.
+   * @param {number} factor The newly folded factor.
+   */
+  setPrefixChanceFactor(factor)
+  {
+    this._prefixChanceFactor = factor;
+  }
+
+  /**
+   * Replaces the cached suffix chance multiplier.
+   * @param {number} factor The newly folded factor.
+   */
+  setSuffixChanceFactor(factor)
+  {
+    this._suffixChanceFactor = factor;
   }
 
   /**
@@ -143,7 +208,9 @@ class JDifficultyAffix_PluginMetadata
    */
   assertGrantIsValid(layerKey, affixEffects, stateId, weight)
   {
-    const state = $dataStates.at(stateId);
+    // indexed rather than `at`, which wraps on a negative index and would resolve a grant keyed
+    // "-1" to the last state in the database instead of to nothing at all.
+    const state = $dataStates[stateId];
 
     // a grant naming nothing resolves to nothing at spawn time and simply never appears.
     if (!state)
@@ -333,6 +400,11 @@ class JDifficultyAffix_PluginMetadata
 
     this.setEffectivePrefixPool(JDifficultyAffix_PluginMetadata.buildPool(prefixMap, flatten, prefixGrants));
     this.setEffectiveSuffixPool(JDifficultyAffix_PluginMetadata.buildPool(suffixMap, flatten, suffixGrants));
+
+    // folded here alongside the pools rather than at each spawn: the chance a layer asks for cannot
+    // change between two spawns, and a spawn is the one place in this system that is genuinely hot.
+    this.setPrefixChanceFactor(this.combinedPrefixChanceFactor(allEffects));
+    this.setSuffixChanceFactor(this.combinedSuffixChanceFactor(allEffects));
   }
 
   /**

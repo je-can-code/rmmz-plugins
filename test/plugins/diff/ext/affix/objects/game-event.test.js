@@ -52,9 +52,8 @@ describe('Game_Event affix chance scaling (direct src import)', () =>
   function installFactors(prefixFactor, suffixFactor)
   {
     globalThis.J.DIFFICULTY.EXT.AFFIX.Metadata = {
-      enabledAffixEffects: () => [],
-      combinedPrefixChanceFactor: () => prefixFactor,
-      combinedSuffixChanceFactor: () => suffixFactor,
+      prefixChanceFactor: () => prefixFactor,
+      suffixChanceFactor: () => suffixFactor,
     };
   }
 

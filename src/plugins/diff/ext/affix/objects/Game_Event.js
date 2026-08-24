@@ -19,8 +19,8 @@ Game_Event.prototype.getResolvedPassiveAffixPrefixChance = function(enemyData)
   const original = J.DIFFICULTY.EXT.AFFIX.Aliased.Game_Event.get('getResolvedPassiveAffixPrefixChance')
     .call(this, enemyData);
 
-  const allEffects = J.DIFFICULTY.EXT.AFFIX.Metadata.enabledAffixEffects();
-  const factor = J.DIFFICULTY.EXT.AFFIX.Metadata.combinedPrefixChanceFactor(allEffects);
+  // read from the cache rather than folded here; this runs once per spawned enemy per slot.
+  const factor = J.DIFFICULTY.EXT.AFFIX.Metadata.prefixChanceFactor();
 
   // clamped here rather than trusted from the original, because the plugin-default branch of the
   // base resolver returns its parameter without clamping and multiplying can leave the range anyway.
@@ -42,8 +42,8 @@ Game_Event.prototype.getResolvedPassiveAffixSuffixChance = function(enemyData)
   const original = J.DIFFICULTY.EXT.AFFIX.Aliased.Game_Event.get('getResolvedPassiveAffixSuffixChance')
     .call(this, enemyData);
 
-  const allEffects = J.DIFFICULTY.EXT.AFFIX.Metadata.enabledAffixEffects();
-  const factor = J.DIFFICULTY.EXT.AFFIX.Metadata.combinedSuffixChanceFactor(allEffects);
+  // same cached-factor policy as the prefix slot.
+  const factor = J.DIFFICULTY.EXT.AFFIX.Metadata.suffixChanceFactor();
 
   // same clamping policy as the prefix slot.
   return (original * factor).clamp(0, 100);

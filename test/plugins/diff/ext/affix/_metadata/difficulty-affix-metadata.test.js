@@ -258,18 +258,19 @@ describe('JDifficultyAffix_PluginMetadata (direct src import)', () =>
 
     it('multiplies across layers', () =>
     {
-      // Arrange
+      // Arrange- 2 x 0.5 would land on 1, which is also the reducer's seed and therefore what a
+      // method that ignored its input would return. 2 x 1.5 cannot be reached that way.
       const metadata = metadataForLayers({ default: { key: 'default' } });
       const effects = [
         AffixEffects.fromRaw('a', { suffixChance: 200 }),
-        AffixEffects.fromRaw('b', { suffixChance: 50 }),
+        AffixEffects.fromRaw('b', { suffixChance: 150 }),
       ];
 
       // Act
       const factor = metadata.combinedSuffixChanceFactor(effects);
 
       // Assert
-      expect(factor).toBe(1);
+      expect(factor).toBe(3);
     });
   });
 
@@ -594,6 +595,65 @@ describe('JDifficultyAffix_PluginMetadata (direct src import)', () =>
       expect(metadata.effectiveSuffixPool()).toBe(null);
     });
 
+    it('starts both chance factors at identity', () =>
+    {
+      // Arrange & Act- unlike the pools, a cold chance factor has to be a usable number rather
+      // than null, since a spawn multiplies by it unconditionally.
+      const metadata = metadataForLayers({ default: { key: 'default' } });
+
+      // Assert
+      expect(metadata.prefixChanceFactor()).toBe(1);
+      expect(metadata.suffixChanceFactor()).toBe(1);
+    });
+
+    it('caches both chance factors from the enabled layers', () =>
+    {
+      // Arrange- the two slots differ, so a build that filled one from the other is visible.
+      const metadata = metadataForLayers({
+        default: { key: 'default' },
+        drive: {
+          key: 'drive',
+          affixEffects: {
+            prefixChance: 150,
+            suffixChance: 250,
+          },
+        },
+      });
+      installGameSystemWithEnabledLayers([ 'drive' ]);
+      installPassiveAffixMetadata(new Map([ [ 1, 100 ] ]), new Map([ [ 5, 100 ] ]));
+
+      // Act
+      metadata.buildEffectivePools();
+
+      // Assert
+      expect(metadata.prefixChanceFactor()).toBe(1.5);
+      expect(metadata.suffixChanceFactor()).toBe(2.5);
+    });
+
+    it('returns the chance factors to identity when the last layer is disabled', () =>
+    {
+      // Arrange- the invalidation case. A cache that only ever grew would leave a drive's effects
+      // applying after the player turned it off, which no test of the enabling path would catch.
+      const metadata = metadataForLayers({
+        default: { key: 'default' },
+        drive: {
+          key: 'drive',
+          affixEffects: { prefixChance: 150 },
+        },
+      });
+      installPassiveAffixMetadata(new Map([ [ 1, 100 ] ]), new Map([ [ 5, 100 ] ]));
+
+      installGameSystemWithEnabledLayers([ 'drive' ]);
+      metadata.buildEffectivePools();
+
+      // Act
+      installGameSystemWithEnabledLayers([], [ 'drive' ]);
+      metadata.buildEffectivePools();
+
+      // Assert
+      expect(metadata.prefixChanceFactor()).toBe(1);
+    });
+
     it('builds both slots from the currently enabled layers', () =>
     {
       // Arrange- the prefix and suffix pools differ, so a build that filled one from the other
@@ -781,6 +841,24 @@ describe('JDifficultyAffix_PluginMetadata (direct src import)', () =>
       // Act & Assert
       expect(() => metadata.assertGrantsAreValid())
         .toThrow(/layer \[drive\] grants state \[999\], which does not exist/);
+    });
+
+    it('throws on a grant naming a negative state id rather than wrapping to the last row', () =>
+    {
+      // Arrange- the last row is a perfectly valid reserved affix, so an implementation reaching
+      // for it by a wrapping index would sail through validation and grant the wrong state.
+      const metadata = metadataForLayers({
+        default: { key: 'default' },
+        drive: {
+          key: 'drive',
+          affixEffects: { grants: { '-1': 50 } },
+        },
+      });
+      globalThis.$dataStates = [ null, affixState(1, true, false, 0) ];
+
+      // Act & Assert
+      expect(() => metadata.assertGrantsAreValid())
+        .toThrow(/layer \[drive\] grants state \[-1\], which does not exist/);
     });
 
     it('throws on a grant naming a state that is neither a prefix nor a suffix', () =>
