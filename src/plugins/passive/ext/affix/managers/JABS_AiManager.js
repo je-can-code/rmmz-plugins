@@ -88,11 +88,14 @@ JABS_AiManager.postConvertMutate = function(battler, jabsBattler)
   // validate we can apply a prefix.
   if (canApplyPrefix)
   {
+    // the pool is resolved per spawn rather than read off the metadata, so an extension can bias it.
+    const {
+      map: prefixPool,
+      totalWeight: prefixPoolWeight
+    } = J.PASSIVE.EXT.AFFIX.Metadata.effectivePrefixPool();
+
     // pick a prefix at random.
-    const prefixStateId = RPGManager.weightedMapChoice(
-      J.PASSIVE.EXT.AFFIX.Metadata.prefixMap,
-      J.PASSIVE.EXT.AFFIX.Metadata.totalPrefixWeight
-    );
+    const prefixStateId = RPGManager.weightedMapChoice(prefixPool, prefixPoolWeight);
 
     // add the prefix to the list of passive state ids when the pool produced a choice.
     if (prefixStateId !== null)
@@ -104,11 +107,14 @@ JABS_AiManager.postConvertMutate = function(battler, jabsBattler)
   // validate we can apply a suffix.
   if (canApplySuffix)
   {
+    // same seam as the prefix slot; both pools are equally open to being biased.
+    const {
+      map: suffixPool,
+      totalWeight: suffixPoolWeight
+    } = J.PASSIVE.EXT.AFFIX.Metadata.effectiveSuffixPool();
+
     // pick a suffix at random.
-    const suffixStateId = RPGManager.weightedMapChoice(
-      J.PASSIVE.EXT.AFFIX.Metadata.suffixMap,
-      J.PASSIVE.EXT.AFFIX.Metadata.totalSuffixWeight
-    );
+    const suffixStateId = RPGManager.weightedMapChoice(suffixPool, suffixPoolWeight);
 
     // add the suffix to the list of passive state ids when the pool produced a choice.
     if (suffixStateId !== null)

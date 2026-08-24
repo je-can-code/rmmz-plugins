@@ -24,6 +24,13 @@
  * All difficulties are defined in an external JSON file.
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.0
+ *    Difficulty layers now retain the raw configuration they were built from.
+ *    The classifier reads a fixed set of fields by name, so anything an
+ *    extension adds to a layer was unrecoverable once parsing finished - and
+ *    parsing happens during this plugin's own construction, too early for any
+ *    extension to intervene. Keeping the source is what lets an extension find
+ *    its own fields without reading the file a second time.
  * - 2.1.2
  *    Difficulty scaling can no longer reduce max hp below one. The engine floors
  *    it at one inside its own param call, and the difficulty multiplier was

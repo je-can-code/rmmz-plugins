@@ -5680,7 +5680,7 @@ class JABS_Battler
     this.guardIntervalTimer()
       .forceComplete();
 
-    // calculate parry frames, include eva bonus to parry.
+    // calculate parry frames, including the parry extension bonus.
     const totalParryFrames = this.getBonusParryFrames(guardData) + guardData.parryDuration;
 
     // if the guarding skill has a parry window, apply those frames once.

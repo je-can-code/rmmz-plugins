@@ -176,17 +176,27 @@ class J_DiffPluginMetadata
     const options = ExternalJsonConfigLoaderOptions.Builder()
       .pluginName('J-Difficulty')
       .configName('difficulty configuration')
-      .mapper(J_DiffPluginMetadata.classifyDifficulties.bind(J_DiffPluginMetadata))
-      .logSummary(result => [ `- ${result.size} difficulty layers` ])
+      .logSummary(result => [ `- ${result.length} difficulty layers` ])
       .build();
 
-    const classifiedMetadatas = ExternalJsonConfigLoader.load(J_DiffPluginMetadata.CONFIG_PATH, options);
+    // load the raw blob rather than mapping during the load, so the source survives the trip.
+    const parsedBlob = ExternalJsonConfigLoader.load(J_DiffPluginMetadata.CONFIG_PATH, options);
+
+    /**
+     * The raw JSON blob for each layer, keyed by that layer's key.
+     * Retained because {@link J_DiffPluginMetadata.classifyDifficulties} reads a fixed set of fields
+     * by name, so anything an extension adds to a layer's configuration is not represented anywhere
+     * in the built metadata and would otherwise be unrecoverable. Keeping the source is what lets an
+     * extension find its own fields without reading the file a second time.
+     * @type {Map<string, object>}
+     */
+    this.allRawConfigs = new Map(parsedBlob.map(blob => [ blob.key, blob ]));
 
     /**
      * A map of difficulty layer metadatas by their key.
      * @type {Map<string, DifficultyMetadata>}
      */
-    this.allMetadatas = classifiedMetadatas;
+    this.allMetadatas = J_DiffPluginMetadata.classifyDifficulties(parsedBlob);
   }
 
   initializeMetadata()

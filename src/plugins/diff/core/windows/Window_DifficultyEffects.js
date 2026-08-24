@@ -737,7 +737,7 @@ class Window_DifficultyEffects
   {
     const biggerIsBetterXParameters = [
       false, // hit - hit rate
-      false, // eva - parry rate boost %
+      false, // eva - physical evade
       false, // cri - crit rate
       false, // cev - crit evade
       false, // mev - magic evade ; not used in JABS

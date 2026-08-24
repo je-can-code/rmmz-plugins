@@ -36,7 +36,7 @@ J.PASSIVE.EXT.AFFIX.RegExp = {};
 // on states.
 J.PASSIVE.EXT.AFFIX.RegExp.Prefix = /<enemy-prefix>/i;
 J.PASSIVE.EXT.AFFIX.RegExp.Suffix = /<enemy-suffix>/i;
-J.PASSIVE.EXT.AFFIX.RegExp.Weight = /<affix-weight:([1-9]\d*)>/i;
+J.PASSIVE.EXT.AFFIX.RegExp.Weight = /<affix-weight:(\d+)>/i;
 J.PASSIVE.EXT.AFFIX.RegExp.TierColorHex = /<tier-color-hex:(#[0-9A-F]{6})>/i;
 J.PASSIVE.EXT.AFFIX.RegExp.AffixTier = /<affix-tier:([1-9]\d*)>/i;
 
