@@ -48,6 +48,11 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.17.1
+ *    Corrected the guard documentation, which credited EVA with extending the
+ *    parry window. Parry extension became its own parameter and EVA went back
+ *    to meaning physical evasion; only the prose still pointed at the old
+ *    arrangement.
  * - 4.17.0
  *    Added <guardInterval:N> so a held guard can refire its own skill on an
  *    interval rather than only on the frame it went up.

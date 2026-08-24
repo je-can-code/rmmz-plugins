@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 PASSIVE-AFFIX] Random passive affixes + tier presentation for JABS enemies.
+ * [v1.1.0 PASSIVE-AFFIX] Random passive affixes + tier presentation for JABS enemies.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -246,6 +246,14 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    An affix can now be weighted at zero, making it a member of its pool that
+ *    is never rolled. The state stays recognized everywhere else, so an event
+ *    pinning it explicitly still works - it simply has no presence in the
+ *    random draw until something hands it a weight.
+ *    Affix pools are now resolved through a pair of methods rather than read
+ *    straight off the metadata, so an extension can bias what a spawn rolls
+ *    against without re-implementing the spawn.
  * - 1.0.0
  *    Initial release.
  * ============================================================================
@@ -397,7 +405,7 @@ J.PASSIVE.EXT.AFFIX = {};
 /**
 * The metadata associated with this plugin.
 */
-J.PASSIVE.EXT.AFFIX.Metadata = new JPassiveAffix_PluginMetadata("J-Passive-Affix", "1.0.0");
+J.PASSIVE.EXT.AFFIX.Metadata = new JPassiveAffix_PluginMetadata("J-Passive-Affix", "1.1.0");
 /**
 * A collection of all aliased methods for this plugin.
 */

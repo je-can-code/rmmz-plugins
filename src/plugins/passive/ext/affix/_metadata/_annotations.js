@@ -246,6 +246,14 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    An affix can now be weighted at zero, making it a member of its pool that
+ *    is never rolled. The state stays recognized everywhere else, so an event
+ *    pinning it explicitly still works - it simply has no presence in the
+ *    random draw until something hands it a weight.
+ *    Affix pools are now resolved through a pair of methods rather than read
+ *    straight off the metadata, so an extension can bias what a spawn rolls
+ *    against without re-implementing the spawn.
  * - 1.0.0
  *    Initial release.
  * ============================================================================
