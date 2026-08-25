@@ -38,8 +38,9 @@ Game_Enemy.prototype.canDropSdp = function()
   // if the enemy has a panel that isn't defined, then don't drop it.
   if (!panel)
   {
-    console.warn(`Panel of key ${this.enemy().sdpDropKey} is not defined, but was trying to be dropped.`);
-    console.warn(`Consider defining a panel with the key of ${this.enemy().sdpDropKey}.<br>`);
+    const dropKey = this.enemy().sdpDropKey;
+    const remedy = `consider defining a panel with the key of ${dropKey}.`;
+    Diagnostics.warn('J-SDP', `panel of key ${dropKey} is not defined, but was trying to be dropped; ${remedy}`);
     return false;
   }
 

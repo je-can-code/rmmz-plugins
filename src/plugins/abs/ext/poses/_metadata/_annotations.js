@@ -55,6 +55,10 @@
  * This is not a highly tested feature of JABS and may not work as intended.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.7
+ *    Removed the commented-out warnings for a missing pose sheet, and said in a
+ *    comment why the branch stays silent: it runs on every execution of the
+ *    skill, so a report would repeat for as long as the asset is absent.
  * - 1.0.6
  *    Fixed a skill with no pose building a sprite name ending in undefined; the
  *    absent tag answered an empty array, which is truthy.

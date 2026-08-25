@@ -122,8 +122,9 @@ Sprite_Animation.prototype.targetSpritePosition = function (sprite)
   }
   catch
   {
-    // silently fail and return a neutral point to prevent console flooding.
-    console.log("error happened with sprite targeting anyway: ", sprite);
+    // silently fail and return a neutral point to prevent console flooding. this runs per frame
+    // per animation target, so anything written here arrives thousands of times a second - which
+    // is why it stays silent even though every other catch in this repo reports.
     return new Point(0, 0);
   }
 };

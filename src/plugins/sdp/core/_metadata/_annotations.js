@@ -366,6 +366,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.3.3
+ *    Routed every panel, rarity and rank-reward warning and error through
+ *    J-Base's new Diagnostics, so each names J-SDP in the console.
  * - 3.3.2
  *    Repointed SDP point, panel-unlock and mastery logging at J-Log's new
  *    $mapLogs registry. The $actionLogManager and $diaLogManager globals

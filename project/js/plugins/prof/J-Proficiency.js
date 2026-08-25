@@ -1,7 +1,7 @@
 //region Introduction
 /*:
  * @target MZ
- * @plugindesc [v2.4.1 PROF] Enables skill proficiency tracking.
+ * @plugindesc [v2.4.2 PROF] Enables skill proficiency tracking.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -152,6 +152,11 @@
  * - Decreasing the proficiency will NOT undo rewards gained.
  * ============================================================================
  * CHANGELOG:
+ * - 2.4.2
+ *    Routed every proficiency warning and error through J-Base's new
+ *    Diagnostics, so each names J-Proficiency. The swallowed reward error is now
+ *    reported as an error carrying the caught exception rather than a bare
+ *    console.log of it beneath a separate line.
  * - 2.4.1
  *    Repointed the proficiency-growth announcement at J-Log's new $mapLogs
  *    registry. The $diaLogManager global this called is gone. Requires J-Log
@@ -458,7 +463,7 @@ J.PROF.Helpers.loadExternalConfig = (configPath = J_ProficiencyPluginMetadata.CO
 * The metadata associated with this plugin.
 * @type {J_ProficiencyPluginMetadata}
 */
-J.PROF.Metadata = new J_ProficiencyPluginMetadata("J-Proficiency", "2.4.1");
+J.PROF.Metadata = new J_ProficiencyPluginMetadata("J-Proficiency", "2.4.2");
 J.PROF.Helpers.loadExternalConfig();
 /**
 * The various aliases associated with this plugin.
@@ -630,7 +635,7 @@ Game_Actor.prototype.lockedConditionals = function() {
 */
 Game_Actor.prototype.unlockConditional = function(key) {
 	if (this.isConditionalUnlocked(key)) {
-		console.warn(`Attempted to unlock conditional: [${key}], but it was already unlocked.`);
+		Diagnostics.warn("J-Proficiency", `attempted to unlock conditional: [${key}], but it was already unlocked.`);
 		return;
 	}
 	this.addUnlockedConditional(key);
@@ -699,8 +704,7 @@ Game_Actor.prototype.executeJsRewards = function(conditional) {
 	try {
 		new Function("a", "c", jsRewards)(a, c);
 	} catch (error) {
-		console.error(`there was an error executing the reward for: ${c.key}.<br>`);
-		console.log(error);
+		Diagnostics.error("J-Proficiency", `there was an error executing the reward for: ${c.key}.`, error);
 	}
 };
 /**
@@ -737,7 +741,7 @@ Game_Actor.prototype.tryGetSkillProficiencyBySkillId = function(skillId) {
 Game_Actor.prototype.addSkillProficiency = function(skillId, initialProficiency = 0) {
 	const exists = this.skillProficiencyBySkillId(skillId);
 	if (exists) {
-		console.warn(`Attempted to recreate skill proficiency for skillId: ${skillId}.`);
+		Diagnostics.warn("J-Proficiency", `attempted to recreate skill proficiency for skillId: ${skillId}.`);
 		return exists;
 	}
 	const proficiency = new SkillProficiency(skillId, initialProficiency);
@@ -876,7 +880,7 @@ Game_Enemy.prototype.skillProficiencyBySkillId = function(skillId) {
 Game_Enemy.prototype.addSkillProficiency = function(skillId, initialProficiency = 0) {
 	const exists = this.skillProficiencyBySkillId(skillId);
 	if (exists) {
-		console.warn(`Attempted to recreate skill proficiency for skillId: ${skillId}.`);
+		Diagnostics.warn("J-Proficiency", `attempted to recreate skill proficiency for skillId: ${skillId}.`);
 		return exists;
 	}
 	const proficiency = new SkillProficiency(skillId, initialProficiency);
@@ -948,7 +952,7 @@ Game_Action.prototype.increaseProficiency = function() {
 	const caster = this.subject();
 	const skill = this.item();
 	if (!caster || !skill) {
-		console.warn("attempted to improve prof for an invalid caster or skill.");
+		Diagnostics.warn("J-Proficiency", "attempted to improve proficiency for an invalid caster or skill.");
 		return;
 	}
 	const amount = caster.skillProficiencyAmount();

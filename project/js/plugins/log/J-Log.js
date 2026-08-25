@@ -1,7 +1,7 @@
 //region introduction
 /*:
  * @target MZ
- * @plugindesc [v3.0.0 LOG] A log window for viewing on the map.
+ * @plugindesc [v3.0.1 LOG] A log window for viewing on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -113,6 +113,10 @@
  * JABS integration (when installed) and by plugin commands.
  * ============================================================================
  * CHANGELOG:
+ * - 3.0.1
+ *    Routed the non-array DiaLog warning through J-Base's new Diagnostics. That
+ *    channel is for developer console output and is unrelated to the log windows
+ *    this plugin draws for the player.
  * - 3.0.0
  *    BREAKING: the three log manager globals are gone. $actionLogManager,
  *    $diaLogManager and $lootLogManager are replaced by a single $mapLogs
@@ -278,7 +282,7 @@ J.LOG = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.LOG.Metadata = new J_LogPluginMetadata("J-Log", "3.0.0");
+J.LOG.Metadata = new J_LogPluginMetadata("J-Log", "3.0.1");
 /**
 * A collection of all aliased methods for this plugin.
 */
@@ -368,8 +372,7 @@ var DiaLog = class {
 	*/
 	#setLines(lines) {
 		if (!Array.isArray(lines)) {
-			console.warn("Attempted to set the lines of a DiaLog with a non-array.");
-			console.warn(lines);
+			Diagnostics.warn("J-Log", "attempted to set the lines of a DiaLog with a non-array.", lines);
 		}
 		this.#lines = lines;
 	}

@@ -56,7 +56,7 @@ Game_Enemy.prototype.addSkillProficiency = function(skillId, initialProficiency 
   const exists = this.skillProficiencyBySkillId(skillId);
   if (exists)
   {
-    console.warn(`Attempted to recreate skill proficiency for skillId: ${skillId}.`);
+    Diagnostics.warn('J-Proficiency', `attempted to recreate skill proficiency for skillId: ${skillId}.`);
     return exists;
   }
 

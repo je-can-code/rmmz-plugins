@@ -142,8 +142,6 @@ Game_Party.prototype.updateTrackedOmniQuestsFromConfig = function()
     // if the tracking doesn't exist yet, it should be added.
     else
     {
-      console.log(`adding new quest; ${omniquest.key}`);
-
       // we didn't find one, so create and add a new tracking.
       trackings.push(newTracking);
     }

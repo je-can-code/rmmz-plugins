@@ -468,8 +468,7 @@ class Window_SkillDetail
       {
         if (!skillRewardId)
         {
-          console.warn(conditional);
-          console.log(skillRewardId, "not a valid skill reward.");
+          Diagnostics.warn('J-CMS-Skill', `[${skillRewardId}] is not a valid skill reward.`, conditional);
           return;
         }
 

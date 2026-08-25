@@ -230,7 +230,9 @@ JABS_Battler.prototype.tryStartPose = function(skill)
   // check if the pose sheet exists on disk before swapping the character graphic.
   const spriteExists = J.ABS.EXT.POSES.Helpers.gameAssetExists(spritePath);
 
-  // only actually switch to the other character sprite if it exists.
+  // only actually switch to the other character sprite if it exists. a skill that declares pose
+  // data with no matching sheet on disk simply keeps its current graphic, silently: this runs on
+  // every execution of that skill, so reporting it would repeat for as long as the asset is absent.
   if (spriteExists)
   {
     // load the character into cache.
@@ -239,13 +241,6 @@ JABS_Battler.prototype.tryStartPose = function(skill)
     // actually set the character.
     this.getCharacter()
       .setImage(newCharacterSprite, skill.jabsPoseIndex);
-  }
-  else
-  {
-    // console.warn('Skill executed that declared pose data, but no matching sprite was found.');
-    // console.warn(`Skill of id [ ${skill.id} ]; consider cross-checking the database with your assets.`);
-    // console.warn('Parsed JABS pose data:');
-    // console.warn(skill.jabsPoseData);
   }
 };
 

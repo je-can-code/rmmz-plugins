@@ -3,6 +3,7 @@ import './_metadata/initialization.js';
 import './_utilities/ArrayHelper.js';
 import './_utilities/JsonMapper.js';
 
+import './core/Diagnostics.js';
 import './core/SerializableRegistry.js';
 import './core/ParameterFormat.js';
 import './core/ParameterDisplayPolicy.js';

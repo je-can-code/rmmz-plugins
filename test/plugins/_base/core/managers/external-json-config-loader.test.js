@@ -236,7 +236,7 @@ describe('ExternalJsonConfigLoader (direct src import)', () =>
       // Arrange
       globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = false;
       globalThis.StorageManager.fsReadFile = () => '{"a":1}';
-      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const logSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
 
       // Act
       ExternalJsonConfigLoader.load('data/config.test.json');
@@ -251,13 +251,13 @@ describe('ExternalJsonConfigLoader (direct src import)', () =>
       // Arrange
       globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = true;
       globalThis.StorageManager.fsReadFile = () => '{"a":1}';
-      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const logSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
 
       // Act
       ExternalJsonConfigLoader.load('data/config.test.json');
 
       // Assert
-      expect(logSpy).toHaveBeenCalledWith('loaded external JSON from file data/config.test.json.');
+      expect(logSpy).toHaveBeenCalledWith('[J-Base] loaded external JSON from file data/config.test.json.');
       logSpy.mockRestore();
     });
 
@@ -269,7 +269,7 @@ describe('ExternalJsonConfigLoader (direct src import)', () =>
       const options = ExternalJsonConfigLoaderOptions.Builder()
         .logSummary(() => [ 'line one', 'line two' ])
         .build();
-      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const logSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
 
       // Act
       ExternalJsonConfigLoader.load('data/config.test.json', options);
@@ -288,7 +288,7 @@ describe('ExternalJsonConfigLoader (direct src import)', () =>
       const options = ExternalJsonConfigLoaderOptions.Builder()
         .logSummary(() => 'single summary line')
         .build();
-      const logSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+      const logSpy = vi.spyOn(console, 'info').mockImplementation(() => {});
 
       // Act
       ExternalJsonConfigLoader.load('data/config.test.json', options);

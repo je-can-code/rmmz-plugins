@@ -156,6 +156,10 @@
  * so retuning an economy is done in the data editor rather than here.
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.2
+ *    Routed the unsupported-component-type error and the four recipe/category
+ *    lock and unlock errors through J-Base's new Diagnostics, so each names
+ *    J-JAFTING-Creation in the console.
  * - 1.3.1
  *    Fixed a recipe carrying an SDP cost throwing when J-SDP is not installed.
  *    The affordability check read the leader's panel points directly, while the

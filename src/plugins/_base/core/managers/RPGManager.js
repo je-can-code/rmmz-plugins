@@ -1,5 +1,6 @@
 //region RPGManager
 import JCache from './../core/JCache.js';
+import Diagnostics from './../core/Diagnostics.js';
 import JsonMapper from './../_utilities/JsonMapper.js';
 import ArrayHelper from './../_utilities/ArrayHelper.js';
 
@@ -942,8 +943,7 @@ class RPGManager
       }
       catch (error)
       {
-        console.error(`An error occurred while evaluating the formula: [${formula}].`);
-        console.error(error);
+        Diagnostics.error('J-Base', `an error occurred while evaluating the formula: [${formula}].`, error);
       }
     });
 

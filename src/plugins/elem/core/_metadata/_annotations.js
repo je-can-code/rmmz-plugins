@@ -283,6 +283,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.2
+ *    Routed the damage-formula failure through J-Base's new Diagnostics. It was
+ *    two warnings plus a separate error; it is now one error naming
+ *    J-Elementalistics and the offending skill id, carrying the item and the
+ *    caught error as named keys.
  * - 1.3.1
  *    Fixed Game_Actor#elementRate capturing its own original into the actor
  *    alias map and then invoking the enemy's chain instead. Harmless only by

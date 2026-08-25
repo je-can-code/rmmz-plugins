@@ -109,7 +109,7 @@ class Time_Snapshot
       case 3:
         return "Winter";
       default:
-        console.error(`${seasonId} is not a valid season id.`);
+        Diagnostics.error('J-TIME', `${seasonId} is not a valid season id.`);
         return null;
     }
   };
@@ -155,7 +155,7 @@ class Time_Snapshot
       case "winter":
         return 3;
       default:
-        console.error(`${seasonName} is not a valid season name.`);
+        Diagnostics.error('J-TIME', `${seasonName} is not a valid season name.`);
         return -1;
     }
   }
@@ -182,7 +182,7 @@ class Time_Snapshot
       case 5:
         return "Twilight";  // 8pm-midnight aka 20-2359
       default:
-        console.error(`${timeOfDayId} is not a valid time of day id.`);
+        Diagnostics.error('J-TIME', `${timeOfDayId} is not a valid time of day id.`);
         return null;
     }
   };
@@ -235,7 +235,7 @@ class Time_Snapshot
       case "twilight":
         return 5;  // 8pm-midnight
       default:
-        console.error(`${timeOfDayString} is not a valid time of day name.`);
+        Diagnostics.error('J-TIME', `${timeOfDayString} is not a valid time of day name.`);
         return -1;
     }
   }

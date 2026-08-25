@@ -67,7 +67,7 @@ class GrowthCurveFormula
     catch (error)
     {
       // a malformed formula shouldn't crash the game- log it and fall back to zero.
-      console.error(`Error evaluating growth curve formula: ${formula}`, error);
+      Diagnostics.error('J-LevelMaster', `error evaluating growth curve formula: ${formula}`, error);
       return 0;
     }
   }

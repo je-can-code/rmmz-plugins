@@ -44,8 +44,7 @@ class DiaLog
   {
     if (!Array.isArray(lines))
     {
-      console.warn('Attempted to set the lines of a DiaLog with a non-array.');
-      console.warn(lines);
+      Diagnostics.warn('J-Log', 'attempted to set the lines of a DiaLog with a non-array.', lines);
     }
 
     // continue the routine with the next policy step.

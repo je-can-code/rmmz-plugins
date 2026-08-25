@@ -50,7 +50,7 @@ Game_Party.prototype.unlockSdp = function(key)
   if (J.SDP.Metadata.panelsMap.has(key) === false)
   {
     // stop processing.
-    console.error(`The SDP key of ${key} was not found in the list of panels to unlock.`);
+    Diagnostics.error('J-SDP', `the SDP key of ${key} was not found in the list of panels to unlock.`);
     return;
   }
 
@@ -92,7 +92,7 @@ Game_Party.prototype.lockSdp = function(key)
   if (J.SDP.Metadata.panelsMap.has(key) === false)
   {
     // stop processing.
-    console.error(`The SDP key of ${key} was not found in the list of panels to lock.`);
+    Diagnostics.error('J-SDP', `the SDP key of ${key} was not found in the list of panels to lock.`);
     return;
   }
 
@@ -114,7 +114,7 @@ Game_Party.prototype.getSdpRankByActorAndKey = function(actorId, key)
   const actor = $gameActors.actor(actorId);
   if (!actor)
   {
-    console.error(`The actor id of ${actorId} was invalid.`);
+    Diagnostics.error('J-SDP', `the actor id of ${actorId} was invalid.`);
     return 0;
   }
 

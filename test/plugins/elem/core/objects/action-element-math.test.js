@@ -476,8 +476,6 @@ describe('J-Elementalistics Game_Action element math (direct src import)', () =>
     it('names the offending skill when a formula breaks', () =>
     {
       // Arrange
-      const warn = vi.spyOn(console, 'warn')
-        .mockImplementation(() => {});
       const error = vi.spyOn(console, 'error')
         .mockImplementation(() => {});
       const action = makeAction({ damage: { elementId: 1, formula: 'this.is.not.valid(' } });
@@ -485,10 +483,11 @@ describe('J-Elementalistics Game_Action element math (direct src import)', () =>
       // Act
       action.evalDamageFormula(makeTarget());
 
-      // Assert
-      expect(warn).toHaveBeenCalled();
+      // Assert- the skill id is the whole point; a bare "formula broke" cannot be acted on.
+      expect(error).toHaveBeenCalledWith(
+        '[J-Elementalistics] error with the damage formula for item/skill id: 10.',
+        expect.objectContaining({ error: expect.any(Error) }));
 
-      warn.mockRestore();
       error.mockRestore();
     });
   });

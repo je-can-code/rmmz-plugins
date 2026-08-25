@@ -201,6 +201,10 @@
  *
  * =============================================================================
  * CHANGELOG:
+ * - 1.1.3
+ *    Routed the season and time-of-day validation errors, the unrecognized TIME
+ *    tag warning, and the fresh-clock notice through J-Base's new Diagnostics,
+ *    so each names J-TIME in the console.
  * - 1.1.2
  *    Stopped re-running the clock's member backfill after extracting a save.
  *    Game_Time is registered as serializable, so its seed already runs on the

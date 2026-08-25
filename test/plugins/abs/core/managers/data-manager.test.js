@@ -211,7 +211,11 @@ describe('J-ABS DataManager (unit, all downstream dependencies mocked)', () =>
       globalThis.DataManager.gracefulFail('$dataMap', 'Map005.json', 'data/Map005.json');
 
       // Assert
-      expect(console.error).toHaveBeenCalledWith('$dataMap', 'Map005.json', 'data/Map005.json');
+      expect(console.error).toHaveBeenCalledWith('[J-ABS] failed to load a data file: $dataMap', {
+        name: '$dataMap',
+        src: 'Map005.json',
+        url: 'data/Map005.json',
+      });
     });
   });
 

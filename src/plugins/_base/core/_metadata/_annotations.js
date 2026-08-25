@@ -157,6 +157,12 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.7.0
+ *    Added Diagnostics, the channel every plugin now reports developer-facing
+ *    anomalies through. Diagnostics.warn/error/trace/info each take the emitting
+ *    plugin's name and stamp it on the message, so a console line says which of
+ *    eighty-odd plugins wrote it. They are thin pass-throughs to the real console
+ *    methods, so devtools keeps its own grouping and object inspection.
  * - 3.6.0
  *    RPGManager array reads no longer take a tryParse argument. Every caller
  *    passed true, the false path was dead, and the singular form parsed twice -

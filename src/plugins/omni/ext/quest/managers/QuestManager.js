@@ -30,7 +30,7 @@ class QuestManager
     if (!tracking)
     {
       // stop processing.
-      console.error(`The key of ${key} was not found in the list of quests.`);
+      Diagnostics.error('J-OMNI-Quests', `the key of ${key} was not found in the list of quests.`);
       throw new Error(`Attempted to leverage a non-existent quest with the key of: ${key}.`);
     }
 
@@ -88,7 +88,7 @@ class QuestManager
     if (!category)
     {
       // stop processing.
-      console.error(`The key of ${key} was not found in the list of quest categories.`);
+      Diagnostics.error('J-OMNI-Quests', `the key of ${key} was not found in the list of quest categories.`);
       throw new Error(`Attempted to leverage a non-existent quest category with the key of: ${key}.`);
     }
 
@@ -122,7 +122,7 @@ class QuestManager
     if (!tag)
     {
       // stop processing.
-      console.error(`The key of ${key} was not found in the list of quest tags.`);
+      Diagnostics.error('J-OMNI-Quests', `the key of ${key} was not found in the list of quest tags.`);
       throw new Error(`Attempted to leverage a non-existent quest tag with the key of: ${key}.`);
     }
 
@@ -396,8 +396,9 @@ class QuestManager
           // validate the objective isn't an empty collection of questkeys for some reason- that doesn't count.
           if (objective.questCompletionData().length === 0)
           {
-            // eslint-disable-next-line max-len
-            console.warn(`quest of ${objective.questKey} has objective of id ${objective.id} set to "quest completion", but lacks 'fulfillmentQuestKeys'}.`);
+            const objectiveRef = `quest of ${objective.questKey} has objective of id ${objective.id}`;
+            const problem = `set to "quest completion", but lacks 'fulfillmentQuestKeys'.`;
+            Diagnostics.warn('J-OMNI-Quests', `${objectiveRef} ${problem}`);
             return false;
           }
 

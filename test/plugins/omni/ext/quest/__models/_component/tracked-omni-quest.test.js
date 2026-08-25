@@ -651,17 +651,20 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
         fakeObjective(1, OmniObjective.States.Inactive),
       ]);
       quest.state = OmniQuest.States.Active;
-      const infoSpy = vi.spyOn(console, 'info')
-        .mockImplementation(() => {});
+
+      // every earlier arm of refreshState reaches its outcome by calling setState, and falling all
+      // the way through is the only path that never does. asserting the state is still Active
+      // cannot tell those apart - the Arrange set it to Active - so the spy is what carries this.
+      const setStateSpy = vi.spyOn(quest, 'setState');
 
       // Act
       quest.refreshState();
 
-      // Assert- the notice proves the run fell all the way through rather than stopping earlier.
+      // Assert
+      expect(setStateSpy).not.toHaveBeenCalled();
       expect(quest.state).toBe(OmniQuest.States.Active);
-      expect(infoSpy).toHaveBeenCalledTimes(1);
 
-      infoSpy.mockRestore();
+      setStateSpy.mockRestore();
     });
   });
 

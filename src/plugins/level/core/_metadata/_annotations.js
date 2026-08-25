@@ -373,6 +373,9 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.6.3
+ *    Routed the growth-curve formula error through J-Base's new Diagnostics, so
+ *    it names J-LevelMaster in the console.
  * - 1.6.2
  *    Repointed the skill-learned announcement at J-Log's new $mapLogs
  *    registry. The $diaLogManager global this called is gone. Requires J-Log

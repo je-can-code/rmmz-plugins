@@ -171,6 +171,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.3
+ *    Routed the missing-teachable warning through J-Base's new Diagnostics, so
+ *    it names J-Aptitude-Typed in the console.
  * - 1.1.2
  *    Repointed typed AP gain logging at J-Log's new $mapLogs registry. The
  *    $actionLogManager global this called is gone. Requires J-Log 3.0.0 when

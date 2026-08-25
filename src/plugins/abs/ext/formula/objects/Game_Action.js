@@ -168,8 +168,7 @@ Game_Action.prototype.evaluateFormula = function(formula, source, recipient, ite
   }
   catch (err)
   {
-    console.warn(`J.FORMULA formula failed: [ ${formula} ]`);
-    console.trace();
+    Diagnostics.trace('J-ABS-Formula', `formula failed: [ ${formula} ]`, err);
     throw err;
   }
 

@@ -84,6 +84,10 @@
  * converter. Install it before a project has saves worth keeping.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.3
+ *    Routed the generation-fallback and dropped-slice warnings through J-Base's
+ *    new Diagnostics, replacing the hand-written "[save]" prefix so these read
+ *    the same as every other plugin's console output.
  * - 1.0.2
  *    Declared the equipment-contribution cache J-Base added to Game_Actor as
  *    transient. It holds a Map, which is a registered type, so left undeclared

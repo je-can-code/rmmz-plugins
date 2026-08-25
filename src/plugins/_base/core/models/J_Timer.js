@@ -324,7 +324,7 @@ class J_Timer
 
   onComplete()
   {
-    //console.log(`timer completed`, this);
+    // deliberately empty: this is the extension point subclasses override to react to completion.
   }
 }
 

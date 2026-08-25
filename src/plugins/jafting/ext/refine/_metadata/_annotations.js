@@ -149,6 +149,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.5.1
+ *    Routed the uncapturable-equip error through J-Base's new Diagnostics, so
+ *    it names J-JAFTING-Refinement and carries the equip as its detail rather
+ *    than as a second bare warning beneath it.
  * - 1.5.0
  *    Note effects now count against the refinement ceiling alongside traits.
  *    An equip could previously accumulate transferable note lines without

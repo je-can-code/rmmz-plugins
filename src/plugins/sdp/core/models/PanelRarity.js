@@ -131,7 +131,7 @@ class PanelRarity
       case PanelRarity.RARITY_GODLIKE:
         return PanelRarity.WindowColorGodlike;
       default:
-        console.warn(`PanelRarity.rarityIndexToColorIndex: unknown rarity index [ ${rarityIndex} ].`);
+        Diagnostics.warn('J-SDP', `PanelRarity.rarityIndexToColorIndex: unknown rarity index [ ${rarityIndex} ].`);
         return 0;
     }
   }
@@ -167,7 +167,9 @@ class PanelRarity
     }
 
     // anything else is a misauthored config; surface it and fall back to Common.
-    console.warn(`PanelRarity.normalizeRarityFromJson: out-of-range rarity [ ${raw} ]; clamped to Common.`);
+    Diagnostics.warn(
+      'J-SDP',
+      `PanelRarity.normalizeRarityFromJson: out-of-range rarity [ ${raw} ]; clamped to Common.`);
     return PanelRarity.RARITY_COMMON;
   }
 

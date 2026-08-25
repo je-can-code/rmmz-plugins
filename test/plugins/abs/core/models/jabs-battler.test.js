@@ -8414,7 +8414,12 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       // Assert- the diagnostics are the point of this branch, so assert them, not just the return.
       expect(result).toBe(false);
-      expect(warnSpy).toHaveBeenCalledWith(jabsBattler, 'mainhand');
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[J-ABS] a follower was asked to cast a skill it does not own a cooldown for.',
+        {
+          battler: jabsBattler,
+          skillSlotKey: 'mainhand',
+        });
       expect(traceSpy).toHaveBeenCalledTimes(1);
       warnSpy.mockRestore();
       traceSpy.mockRestore();

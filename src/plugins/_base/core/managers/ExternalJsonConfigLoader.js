@@ -1,5 +1,6 @@
 //region ExternalJsonConfigLoader
 import ExternalJsonConfigLoaderOptions from './../models/ExternalJsonConfigLoaderOptions.js';
+import Diagnostics from './../core/Diagnostics.js';
 
 /**
  * A centralized loader for external JSON configuration files in the project.
@@ -134,15 +135,14 @@ class ExternalJsonConfigLoader
         : [ built ];
 
       // Emit progress to the build log for operator visibility.
-      console.log(`loaded:
-${lines.map(line => `      ${line}`)
-    .join('\n')}
-      from file ${configPath}.`);
+      const indented = lines.map(line => `      ${line}`);
+      const body = indented.join('\n');
+      Diagnostics.info('J-Base', `loaded:\n${body}\n      from file ${configPath}.`);
       return;
     }
 
     // without a summary, fall back to a minimal single-line log.
-    console.log(`loaded external JSON from file ${configPath}.`);
+    Diagnostics.info('J-Base', `loaded external JSON from file ${configPath}.`);
   }
 }
 

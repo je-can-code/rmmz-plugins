@@ -1,5 +1,6 @@
 //region TextManager
 import ParameterRegistry from './../core/ParameterRegistry.js';
+import Diagnostics from './../core/Diagnostics.js';
 
 /**
  * Gets the proper name of "max tp".
@@ -54,7 +55,7 @@ TextManager.resource = function(paramId)
   }
 
   // Surface a non-fatal warning for operator triage.
-  console.warn(`TextManager.resource: unrecognized paramId [${paramId}].`);
+  Diagnostics.warn('J-Base', `TextManager.resource: unrecognized paramId [${paramId}].`);
   return String.empty;
 };
 
@@ -551,14 +552,14 @@ TextManager.isValidTypeId = function(id, types)
   // check if the id was zero, then it was probably a mistake for 1.
   if (id === 0 && types !== $dataSystem.elements)
   {
-    console.error(`requested type id of [0] is always blank, and thus invalid.`);
+    Diagnostics.error('J-Base', `requested type id of [0] is always blank, and thus invalid.`);
     return false;
   }
 
   // check if the id was higher than the number of types even available.
   if (id >= types.length)
   {
-    console.error(`requested type id of [${id}] is higher than the number of types.`);
+    Diagnostics.error('J-Base', `requested type id of [${id}] is higher than the number of types.`);
     return false;
   }
 
@@ -602,7 +603,7 @@ TextManager.usableEffectByCode = function(code)
     case 44:
       return "Execute Common Event";
     default:
-      console.warn(`Unsupported code of [${code}] was provided.`);
+      Diagnostics.warn('J-Base', `unsupported effect code of [${code}] was provided.`);
       return "UNKNOWN";
   }
 };

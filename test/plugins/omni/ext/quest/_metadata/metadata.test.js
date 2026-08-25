@@ -254,7 +254,7 @@ describe('J-OMNI-Quests metadata (direct src import)', () =>
       const originalVersion = globalThis.J.BASE.Metadata.Version;
       globalThis.J.BASE.Metadata.Version = '2.0.0';
       globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = true;
-      const logSpy = vi.spyOn(console, 'log')
+      const logSpy = vi.spyOn(console, 'info')
         .mockImplementation(() => {});
 
       // Act
@@ -278,7 +278,7 @@ describe('J-OMNI-Quests metadata (direct src import)', () =>
       // Arrange
       const { default: QuestPluginMetadata } =
         await import('../../../../../../src/plugins/omni/ext/quest/_metadata/_pluginMetadata.js');
-      const logSpy = vi.spyOn(console, 'log')
+      const logSpy = vi.spyOn(console, 'info')
         .mockImplementation(() => {});
       globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = true;
 

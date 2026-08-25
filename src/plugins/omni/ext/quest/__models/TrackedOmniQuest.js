@@ -326,7 +326,8 @@ class TrackedOmniQuest
     // validate this quest can be unlocked.
     if (!this.canBeUnlocked())
     {
-      console.warn(`Attempted to unlock quest with key ${this.key}, but it cannot be unlocked from state ${this.state}.`);
+      const attempt = `attempted to unlock quest with key ${this.key}`;
+      Diagnostics.warn('J-OMNI-Quests', `${attempt}, but it cannot be unlocked from state ${this.state}.`);
       return;
     }
   
@@ -383,7 +384,9 @@ class TrackedOmniQuest
     if (activeObjectives.length > 1)
     {
       // don't complete them, they must be completed individually!
-      console.warn(`multiple quest objectives are currently active and must be finalized manually by id.`);
+      Diagnostics.warn(
+        'J-OMNI-Quests',
+        'multiple quest objectives are currently active and must be finalized manually by id.');
       return;
     }
   
@@ -682,7 +685,7 @@ class TrackedOmniQuest
       return;
     }
   
-    console.info(`refreshed state without changing state for quest key: ${this.key}`);
+    // falling through every branch above is the ordinary "nothing changed" outcome, not a fault.
   }
   
   /**
@@ -697,7 +700,7 @@ class TrackedOmniQuest
     // validate your inputs!
     if (newState < 0 || newState > 4)
     {
-      console.error(`Attempted to set invalid state for this quest: ${newState}.`);
+      Diagnostics.error('J-OMNI-Quests', `attempted to set invalid state for this quest: ${newState}.`);
       throw new Error('Invalid quest state provided for setting of state.');
     }
   
@@ -753,7 +756,7 @@ class TrackedOmniQuest
         break;
       default:
         // if somehow we got here without a known finalization, ignore.
-        console.warn(`unexpected state change for logging: ${this.state}`);
+        Diagnostics.warn('J-OMNI-Quests', `unexpected state change for logging: ${this.state}`);
         return;
     }
   

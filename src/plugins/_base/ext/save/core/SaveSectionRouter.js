@@ -245,9 +245,8 @@ class SaveSectionRouter
             // shrank, a vehicle was removed. say so once and move on- the save is still good.
             if (!host)
             {
-              console.warn(
-                `[save] dropping the '${namespaceKey}' slice for ${hostKind}.${hostKey}; that host `
-                + 'is not in this save.');
+              const dropped = `dropping the '${namespaceKey}' slice for ${hostKind}.${hostKey}`;
+              Diagnostics.warn('J-Base-Save', `${dropped}; that host is not in this save.`);
 
               return;
             }

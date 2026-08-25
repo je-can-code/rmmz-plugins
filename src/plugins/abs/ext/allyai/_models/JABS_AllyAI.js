@@ -429,7 +429,9 @@ class JABS_AllyAI
     const preset = JABS_AllyAI.getPresetByKey(presetKey);
     if (!preset)
     {
-      console.error(`Attempted to apply ally AI preset: [${presetKey}], but it is not a valid preset.`);
+      Diagnostics.error(
+        'J-ABS-AllyAI',
+        `attempted to apply ally AI preset: [${presetKey}], but it is not a valid preset.`);
       // exit early without a payload.
       return;
     }

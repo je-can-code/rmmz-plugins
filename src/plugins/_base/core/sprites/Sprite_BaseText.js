@@ -1,4 +1,6 @@
 //region Sprite_BaseText
+import Diagnostics from './../core/Diagnostics.js';
+
 /**
  * A sprite that displays some text.
  * This acts as a base class for a number of other text-based sprites.
@@ -282,7 +284,7 @@ class Sprite_BaseText
     if (!isHexColor)
     {
       // and warn the user.
-      console.error(`Attempted to assign ${color} as a hex color to this text sprite:`, this);
+      Diagnostics.error('J-Base', `attempted to assign ${color} as a hex color to this text sprite.`, this);
     }
 
     // return the result.

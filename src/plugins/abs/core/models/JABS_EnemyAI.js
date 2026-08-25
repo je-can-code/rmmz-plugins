@@ -129,7 +129,7 @@ class JABS_EnemyAI
     // warn if reckless has no skills available.
     if (reckless && usableSkills.length === 0)
     {
-      console.warn('a battler with the "reckless" trait was found with no skills.', user);
+      Diagnostics.warn('J-ABS', 'a battler with the "reckless" trait was found with no skills.', user);
     }
 
     // support layer — each method returns [] when nothing is needed for that trait.

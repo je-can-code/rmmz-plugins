@@ -227,7 +227,7 @@ class CraftingComponent
       case CraftingComponent.Types.SDP:
         return false;
       default:
-        console.error(`unsupported item type found: [${this.#type}]`);
+        Diagnostics.error('J-JAFTING-Creation', `unsupported item type found: [${this.#type}]`);
         throw new Error("The type of this component is unsupported.");
     }
   }

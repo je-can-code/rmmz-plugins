@@ -1557,8 +1557,10 @@ class JABS_Engine
     // update the input.
     if (!JABS_InputAdapter.hasControllers())
     {
-      console.warn(`No input managers have been registered with the input adapter!`);
-      console.warn(`if you built your own, be sure to run "JABS_InputAdapter.register(controller)"!`);
+      // the remedy belongs in the message: whoever sees this is almost always someone who wrote
+      // their own controller and never registered it.
+      const remedy = 'if you built your own controller, run "JABS_InputAdapter.register(controller)".';
+      Diagnostics.warn('J-ABS', `no input managers have been registered with the input adapter. ${remedy}`);
     }
   }
 
@@ -2562,7 +2564,7 @@ class JABS_Engine
           : 7;
         break;
       default:
-        console.warn('non-dir8 provided, no rotation performed.');
+        Diagnostics.warn('J-ABS', 'a non-dir8 direction was provided; no rotation was performed.');
         break;
     }
 
@@ -2604,7 +2606,7 @@ class JABS_Engine
         newDirection = 1;
         break;
       default:
-        console.warn('non-dir8 provided, no rotation performed.');
+        Diagnostics.warn('J-ABS', 'a non-dir8 direction was provided; no rotation was performed.');
         break;
     }
 
@@ -2832,8 +2834,16 @@ class JABS_Engine
     // on rare occasions, the timing of adding an action to the map coincides with the removal of the caster.
     if (!actionEventData || !actionEventData.pages.length)
     {
-      // preserve existing behavior.
-      console.error('that rare error occurred!');
+      // the comment above says what this is; the message now says it too, because "that rare
+      // error" tells a reader staring at a console nothing about which rare error they hit.
+      Diagnostics.error(
+        'J-ABS',
+        'an action was added to the map after its caster was removed; it has no event data to render.',
+        {
+          skillName,
+          casterName,
+          index,
+        });
       // stop if invalid.
       return;
     }
@@ -3004,7 +3014,9 @@ class JABS_Engine
     // if there is no data, then we can't clone that id.
     if (!originalEnemyData)
     {
-      console.error(`The enemy id of [ ${enemyCloneEventId} ] did not align with an event on the enemy clone map.`);
+      Diagnostics.error(
+        'J-ABS',
+        `the enemy id of [ ${enemyCloneEventId} ] did not align with an event on the enemy clone map.`);
       return;
     }
 
