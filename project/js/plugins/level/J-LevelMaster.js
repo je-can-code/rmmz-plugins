@@ -1,7 +1,7 @@
 //region initialization
 /*:
  * @target MZ
- * @plugindesc [v1.6.1 LEVEL] Allows levels to have greater control and purpose.
+ * @plugindesc [v1.6.2 LEVEL] Allows levels to have greater control and purpose.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -373,6 +373,10 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.6.2
+ *    Repointed the skill-learned announcement at J-Log's new $mapLogs
+ *    registry. The $diaLogManager global this called is gone. Requires J-Log
+ *    3.0.0 when J-Log is installed at all.
  * - 1.6.1
  *    Fixed the level scaling band being read as a single point below parity, so
  *    battlers at equal levels dealt a bonus instead of no bonus at all.
@@ -564,7 +568,7 @@ J.LEVEL.EXT = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.LEVEL.Metadata = new J_LevelPluginMetadata("J-LevelMaster", "1.6.1");
+J.LEVEL.Metadata = new J_LevelPluginMetadata("J-LevelMaster", "1.6.2");
 /**
 * The maximum level definable in the level. Any level below this can be determined without extra calculations.
 * @type {number}
@@ -1069,7 +1073,7 @@ Game_Actor.prototype.handleLevelSkillLearnedLog = function(skillId) {
 	const headline = skill.message1 || `\\C[1]${this.name()}\\C[0] learned \\C[1]${skill.name}\\C[0] from ${sourceName} training!`;
 	const instruction = skill.message2 || "Equip it from the skills menu to use it.";
 	const log = new DiaLogBuilder().addLine(headline).addLine(instruction).setFaceName(this.faceName()).setFaceIndex(this.faceIndex()).build();
-	$diaLogManager.addLog(log);
+	$mapLogs.dialog.addLog(log);
 };
 /**
 * Writes the given exp value to every class's exp slot, keeping them all in agreement. This keeps

@@ -26,7 +26,7 @@ describe('J-ABS-Food JABS_Battler (unit, all downstream dependencies mocked)', (
       this.setupUsedLastItem = vi.fn().mockReturnThis();
       this.build = vi.fn(() => ({ built: true }));
     });
-    globalThis.$lootLogManager = { addLog: vi.fn() };
+    globalThis.$mapLogs = { loot: { addLog: vi.fn() } };
 
     function JABS_Battler()
     {
@@ -42,7 +42,7 @@ describe('J-ABS-Food JABS_Battler (unit, all downstream dependencies mocked)', (
   beforeEach(() =>
   {
     originalApplyUsableItemEffects.mockReset();
-    globalThis.$lootLogManager.addLog.mockReset();
+    globalThis.$mapLogs.loot.addLog.mockReset();
   });
 
   function buildBattler(overrides = {})
@@ -138,7 +138,7 @@ describe('J-ABS-Food JABS_Battler (unit, all downstream dependencies mocked)', (
 
       // Assert
       expect(skillSlotManager.clearSlot).toHaveBeenCalledWith('usableItem');
-      expect(globalThis.$lootLogManager.addLog).toHaveBeenCalledWith({ built: true });
+      expect(globalThis.$mapLogs.loot.addLog).toHaveBeenCalledWith({ built: true });
       expect(battler.modCooldownCounter).not.toHaveBeenCalled();
     });
   });

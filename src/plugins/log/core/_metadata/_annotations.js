@@ -113,6 +113,14 @@
  * JABS integration (when installed) and by plugin commands.
  * ============================================================================
  * CHANGELOG:
+ * - 3.0.0
+ *    BREAKING: the three log manager globals are gone. $actionLogManager,
+ *    $diaLogManager and $lootLogManager are replaced by a single $mapLogs
+ *    registry that owns all three channels: $mapLogs.action, $mapLogs.dialog
+ *    and $mapLogs.loot. Any code calling the old names must be updated.
+ *    The three feeds are still three separate managers with their own
+ *    capacities and their own windows; only the bootstrap changed, from three
+ *    top-level globals for one service down to one.
  * - 2.2.3
  *    Fixed Scene_Map's loot log window accessors reading and writing
  *    this._j._log._diaLog. Since createAllWindows builds the dia log first,

@@ -46,7 +46,7 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
     globalThis.$dataSkills = {};
     globalThis.$jabsEngine = { forceMapAction: vi.fn() };
     globalThis.$gameVariables = { _data: [] };
-    globalThis.$actionLogManager = { addLog: vi.fn() };
+    globalThis.$mapLogs = { action: { addLog: vi.fn() } };
     globalThis.ActionLogBuilder = vi.fn(function()
     {
       this.setupExecution = vi.fn().mockReturnThis();
@@ -78,7 +78,7 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
     globalThis.JABS_AiManager.getOpposingBattlers.mockReset();
     globalThis.JABS_AiManager.getAllBattlers.mockReset();
     globalThis.$jabsEngine.forceMapAction.mockReset();
-    globalThis.$actionLogManager.addLog.mockReset();
+    globalThis.$mapLogs.action.addLog.mockReset();
     globalThis.J.ABS.EXT.FORMULA.Context.activeTrigger = null;
     globalThis.J.ABS.EXT.FORMULA.Context.suppressCascades = false;
     globalThis.J.ABS.EXT.FORMULA.Context.suppressCommonEvents = false;
@@ -1012,7 +1012,7 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
       action.generateFormulaActionLogIfAvailable({}, 5, 'hp', 1);
 
       // Assert
-      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.action.addLog).not.toHaveBeenCalled();
     });
 
     it('does nothing when the magnitude is zero', () =>
@@ -1025,7 +1025,7 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
       action.generateFormulaActionLogIfAvailable({}, 0, 'hp', 1);
 
       // Assert
-      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.action.addLog).not.toHaveBeenCalled();
     });
 
     it('builds and submits a log entry when logging is available and the magnitude is nonzero', () =>
@@ -1050,7 +1050,7 @@ describe('J-ABS-Formula Game_Action (unit, all downstream dependencies mocked)',
       expect(magnitude).toBe(5);
       expect(isHeal).toBe(true);
       expect(wasCrit).toBe(true);
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith({ built: true });
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledWith({ built: true });
     });
 
     it('logs a positive amount as damage rather than a heal', () =>

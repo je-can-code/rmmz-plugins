@@ -1,5 +1,4 @@
 //region Metadata
-import MapLogManager from './../managers/MapLogManager.js';
 import J_LogPluginMetadata from './_pluginMetadata.js';
 
 /**
@@ -38,23 +37,10 @@ J.LOG.Aliased.DataManager = new Map();
 J.LOG.Aliased.Scene_Map = new Map();
 
 /**
- * One of the log managers that are for {@link Scene_Map}.<br/>
- * This manager handles the window that contains the combat and loot interactions.
- * @type {MapLogManager}
+ * The owner of every log channel belonging to {@link Scene_Map}.<br/>
+ * Holds the combat, dialog, and loot feeds as {@link MapLogManager} instances, each with its own
+ * capacity and its own window: `$mapLogs.action`, `$mapLogs.dialog`, `$mapLogs.loot`.
+ * @type {MapLogRegistry}
  */
-globalThis.$actionLogManager = null;
-
-/**
- * One of the log managers that are for {@link Scene_Map}.<br/>
- * This manager handles the window that contains the various chat messages.
- * @type {MapLogManager}
- */
-globalThis.$diaLogManager = null;
-
-/**
- * One of the log managers that are for {@link Scene_Map}.<br/>
- * This manager handles the window that contains the various loot messages.
- * @type {MapLogManager}
- */
-globalThis.$lootLogManager = null;
+globalThis.$mapLogs = null;
 //endregion introduction

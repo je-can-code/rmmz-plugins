@@ -314,7 +314,7 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
     {
       const { jabsBattler } = buildEatFixture();
       globalThis.$gameParty.items = () => [];
-      globalThis.$lootLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { loot: { addLog: vi.fn() } };
       globalThis.JABS_Button = { UsableItem: 'usableItem' };
       const skillSlotManager = { clearSlot: vi.fn() };
       jabsBattler.getBattler = () => ({ getSkillSlotManager: () => skillSlotManager });
@@ -325,7 +325,7 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
       JABS_FoodChainResolver.resolveEat(5, jabsBattler);
 
       expect(skillSlotManager.clearSlot).not.toHaveBeenCalled();
-      expect(globalThis.$lootLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.loot.addLog).not.toHaveBeenCalled();
     });
   });
 });

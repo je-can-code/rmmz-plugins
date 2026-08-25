@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.0 ABS-FORMULA] An extension for JABS that allows multiple damage formulas.
+ * [v1.1.1 ABS-FORMULA] An extension for JABS that allows multiple damage formulas.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -172,6 +172,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Repointed formula packet logging at J-Log's new $mapLogs registry. The
+ *    $actionLogManager global this called is gone. Requires J-Log 3.0.0 when
+ *    J-Log is installed at all.
  * - 1.1.0
  *   Changed <on-HH:to-AA:by-formula:for-RR:[FORMULA]> to
  *   <onApplyFormula:[HH, AA, RR, FORMULA]>, and <on-HH:to-AA:by-skill:[SKILL_ID]>
@@ -246,7 +250,7 @@ J.ABS.EXT.FORMULA = {};
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.EXT.FORMULA.Metadata = new JFORMULA_PluginMetadata("J-ABS-Formula", "1.1.0");
+J.ABS.EXT.FORMULA.Metadata = new JFORMULA_PluginMetadata("J-ABS-Formula", "1.1.1");
 /**
 * A collection of all aliased methods for this plugin.
 */
@@ -945,7 +949,7 @@ Game_Action.prototype.generateFormulaActionLogIfAvailable = function(recipient, 
 	const recipientResult = recipient ? recipient.result() : null;
 	const wasCrit = recipientResult ? recipientResult.critical === true : false;
 	const log = new ActionLogBuilder().setupExecution(targetName, casterName, skillId || 0, magnitude, String.empty, isHeal, wasCrit).build();
-	$actionLogManager.addLog(log);
+	$mapLogs.action.addLog(log);
 };
 /**
 * Extends {@link Game_Action.applyGlobal}.<br/>

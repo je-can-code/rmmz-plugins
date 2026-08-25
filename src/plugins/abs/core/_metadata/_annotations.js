@@ -48,6 +48,10 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.17.3
+ *    Repointed combat and loot logging at J-Log's new $mapLogs registry. The
+ *    $actionLogManager and $lootLogManager globals this called are gone.
+ *    Requires J-Log 3.0.0 when J-Log is installed at all.
  * - 4.17.2
  *    Fixed losing a state stack leaving the battler's trait caches describing the
  *    deeper stack. Gaining a stack always refreshed them; losing one never did, so

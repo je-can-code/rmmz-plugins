@@ -6110,7 +6110,7 @@ class JABS_Battler
       const lastUsedItemLog = new LootLogBuilder()
         .setupUsedLastItem(item.id)
         .build();
-      $lootLogManager.addLog(lastUsedItemLog);
+      $mapLogs.loot.addLog(lastUsedItemLog);
     }
     else
     {
@@ -6262,7 +6262,7 @@ class JABS_Battler
     const toolUsedLog = new LootLogBuilder()
       .setupUsedItem(item.id)
       .build();
-    $lootLogManager.addLog(toolUsedLog);
+    $mapLogs.loot.addLog(toolUsedLog);
   };
 
   /**

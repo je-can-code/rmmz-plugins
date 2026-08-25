@@ -1,7 +1,7 @@
 //region Introduction
 /*:
  * @target MZ
- * @plugindesc [v2.4.0 PROF] Enables skill proficiency tracking.
+ * @plugindesc [v2.4.1 PROF] Enables skill proficiency tracking.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -152,6 +152,10 @@
  * - Decreasing the proficiency will NOT undo rewards gained.
  * ============================================================================
  * CHANGELOG:
+ * - 2.4.1
+ *    Repointed the proficiency-growth announcement at J-Log's new $mapLogs
+ *    registry. The $diaLogManager global this called is gone. Requires J-Log
+ *    3.0.0 when J-Log is installed at all.
  * - 2.4.0
  *    Defense earns proficiency the way offense does - guarding and parrying a
  *    skill now advances proficiency in it, so a defensive player is not frozen
@@ -454,7 +458,7 @@ J.PROF.Helpers.loadExternalConfig = (configPath = J_ProficiencyPluginMetadata.CO
 * The metadata associated with this plugin.
 * @type {J_ProficiencyPluginMetadata}
 */
-J.PROF.Metadata = new J_ProficiencyPluginMetadata("J-Proficiency", "2.4.0");
+J.PROF.Metadata = new J_ProficiencyPluginMetadata("J-Proficiency", "2.4.1");
 J.PROF.Helpers.loadExternalConfig();
 /**
 * The various aliases associated with this plugin.
@@ -664,7 +668,7 @@ Game_Actor.prototype.handleProficiencySkillLearnedLog = function(conditional, sk
 	const headline = skill.message1 || `\\C[1]${this.name()}\\C[0] learned \\C[1]${skill.name}\\C[0] from ${sourceName} proficiency!`;
 	const instruction = skill.message2 || "Equip it from the skills menu to use it.";
 	const log = new DiaLogBuilder().addLine(headline).addLine(instruction).setFaceName(this.faceName()).setFaceIndex(this.faceIndex()).build();
-	$diaLogManager.addLog(log);
+	$mapLogs.dialog.addLog(log);
 };
 /**
 * Derives a player-facing label describing what was practiced to satisfy a proficiency conditional.

@@ -50,7 +50,7 @@ JABS_Battler.prototype.applyUsableItemEffects = function(itemId, isLoot = false)
     const lastUsedLog = new LootLogBuilder()
       .setupUsedLastItem(item.id)
       .build();
-    $lootLogManager.addLog(lastUsedLog);
+    $mapLogs.loot.addLog(lastUsedLog);
   }
   else
   {

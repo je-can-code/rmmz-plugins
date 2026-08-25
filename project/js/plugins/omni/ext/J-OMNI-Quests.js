@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v2.0.0 OMNI-QUEST] Extends the Omnipedia with a Questopedia entry.
+ * [v2.0.1 OMNI-QUEST] Extends the Omnipedia with a Questopedia entry.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -140,6 +140,10 @@
  * This choice is only shown while objective 2 of that quest is completed.
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.1
+ *    Repointed quest and objective update announcements at J-Log's new
+ *    $mapLogs registry. The $diaLogManager global these called is gone.
+ *    Requires J-Log 3.0.0 when J-Log is installed at all.
  * - 2.0.0
  *    Renamed from J-Omni-Questopedia to J-OMNI-Quests. The shipped file is
  *    renamed with it, so an existing plugins.js entry must be updated or the
@@ -1706,7 +1710,7 @@ var TrackedOmniObjective = class {
 			default: throw new Error("Unknown finalization state for objective update message.");
 		}
 		const log = new DiaLogBuilder().setLines(objectiveMessage).build();
-		$diaLogManager.addLog(log);
+		$mapLogs.dialog.addLog(log);
 	}
 };
 SerializableRegistry.register(TrackedOmniObjective);
@@ -2205,7 +2209,7 @@ var TrackedOmniQuest = class {
 				return;
 		}
 		const log = new DiaLogBuilder().setLines(questUpdatedLines).build();
-		$diaLogManager.addLog(log);
+		$mapLogs.dialog.addLog(log);
 	}
 };
 SerializableRegistry.register(TrackedOmniQuest);
@@ -2409,7 +2413,7 @@ J.OMNI.EXT.QUEST = {};
 /**
 * The metadata associated with this plugin.
 */
-J.OMNI.EXT.QUEST.Metadata = new J_QUEST_PluginMetadata("J-OMNI-Quests", "2.0.0");
+J.OMNI.EXT.QUEST.Metadata = new J_QUEST_PluginMetadata("J-OMNI-Quests", "2.0.1");
 /**
 * A collection of all aliased methods for this plugin.
 */
