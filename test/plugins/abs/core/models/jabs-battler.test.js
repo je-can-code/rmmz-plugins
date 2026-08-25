@@ -5247,14 +5247,21 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('removeAggro does nothing for an untracked uuid', () =>
     {
+      // Arrange- the list has to hold entries that must survive. against an empty list a failed
+      // lookup splices at index -1, which removes nothing and is indistinguishable from the guard
+      // doing its job; with entries present that same splice takes the last one instead.
       const jabsBattler = buildBattler();
-      jabsBattler._aggros = [];
+      const first = { uuid: () => 'first-uuid' };
+      const last = { uuid: () => 'last-uuid' };
+      jabsBattler._aggros = [ first, last ];
       jabsBattler.disengageTarget = vi.fn();
 
-      jabsBattler.removeAggro('uuid');
+      // Act
+      jabsBattler.removeAggro('untracked-uuid');
 
+      // Assert
       expect(jabsBattler.disengageTarget).not.toHaveBeenCalled();
-      expect(jabsBattler._aggros).toEqual([]);
+      expect(jabsBattler._aggros).toEqual([ first, last ]);
     });
 
     it('removeAggro disengages when removing the aggro of the current target', () =>
