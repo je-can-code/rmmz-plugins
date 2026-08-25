@@ -48,6 +48,11 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.17.2
+ *    Fixed losing a state stack leaving the battler's trait caches describing the
+ *    deeper stack. Gaining a stack always refreshed them; losing one never did, so
+ *    additive trait families like element rate kept reporting the resistance of a
+ *    stack depth the battler no longer had.
  * - 4.17.1
  *    Corrected the guard documentation, which credited EVA with extending the
  *    parry window. Parry extension became its own parameter and EVA went back

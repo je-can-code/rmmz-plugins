@@ -218,6 +218,41 @@ describe('J-ABS state lifecycle edge cases (direct src import)', () =>
       // Assert
       expect(jabsState.stackCount).toBe(0);
     });
+
+    it('notifies the battler when the stack count actually moved', () =>
+    {
+      // Arrange- three stacks going in, so one removal leaves a real change behind.
+      registerStateRow(STATE_ID, '');
+      const battler = buildGameBattler('a');
+      const jabsState = new globalThis.JABS_State(battler, STATE_ID, 0, 100, 3);
+      const dataChangeSpy = vi.spyOn(battler, 'onBattlerDataChange');
+
+      // Act
+      jabsState.decrementStacks(1);
+
+      // Assert- the count is what proves the act ran; the notification is what the caches need.
+      expect(jabsState.stackCount).toBe(2);
+      expect(dataChangeSpy).toHaveBeenCalledTimes(1);
+    });
+
+    it('does not notify the battler when the stack count did not move', () =>
+    {
+      // Arrange- already spent, so the subtraction normalizes straight back to the same zero.
+      // refreshDuration is the only other path out of this method that could touch the battler,
+      // and a zero stack count never reaches it, so a call here could only come from the notify.
+      registerStateRow(STATE_ID, '');
+      const battler = buildGameBattler('a');
+      const jabsState = new globalThis.JABS_State(battler, STATE_ID, 0, 100, 1);
+      jabsState.stackCount = 0;
+      const dataChangeSpy = vi.spyOn(battler, 'onBattlerDataChange');
+
+      // Act
+      jabsState.decrementStacks(1);
+
+      // Assert
+      expect(jabsState.stackCount).toBe(0);
+      expect(dataChangeSpy).not.toHaveBeenCalled();
+    });
   });
 
   describe('canChangeStackFromDuration', () =>

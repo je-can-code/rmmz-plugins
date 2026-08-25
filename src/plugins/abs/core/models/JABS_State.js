@@ -275,6 +275,9 @@ class JABS_State
    */
   decrementStacks(stacksToRemove = 1)
   {
+    // remember the count going in, so the battler is only notified of a change that happened.
+    const previousStackCount = this.stackCount;
+
     // if not being forced, then consider losing all stacks at once.
     this.stackCount -= stacksToRemove;
 
@@ -290,6 +293,16 @@ class JABS_State
     {
       // normalize the stack count.
       this.stackCount = 0;
+    }
+
+    // the stack count decides how many copies of this state Game_Battler#states hands to
+    // traitObjects(), so a count that moved leaves the battler's trait caches describing a
+    // stack depth that no longer exists- additive trait families like element rate would keep
+    // reporting the resistance of the deeper stack until some unrelated change cleared them.
+    if (this.stackCount !== previousStackCount)
+    {
+      // notify the battler that its data changed, exactly as incrementStacks() does.
+      this.battler.onBattlerDataChange();
     }
   }
 
