@@ -245,7 +245,7 @@ Game_Enemy.prototype.findLoot = function(drop, itemsFound)
   // validate the drop resolves.
   if (!item)
   {
-    Diagnostics.warn('J-DropsControl', 'an invalid drop resolved; check the DB entry and note tags.', {
+    Diagnostics.warn(__PLUGIN_NAME__, 'an invalid drop resolved; check the DB entry and note tags.', {
       enemy: this.enemy().name,
       kind: drop.kind,
       dataId: drop.dataId,

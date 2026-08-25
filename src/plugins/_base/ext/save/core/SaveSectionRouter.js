@@ -246,7 +246,7 @@ class SaveSectionRouter
             if (!host)
             {
               const dropped = `dropping the '${namespaceKey}' slice for ${hostKind}.${hostKey}`;
-              Diagnostics.warn('J-Base-Save', `${dropped}; that host is not in this save.`);
+              Diagnostics.warn(__PLUGIN_NAME__, `${dropped}; that host is not in this save.`);
 
               return;
             }

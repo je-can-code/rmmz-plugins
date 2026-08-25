@@ -137,12 +137,12 @@ class ExternalJsonConfigLoader
       // Emit progress to the build log for operator visibility.
       const indented = lines.map(line => `      ${line}`);
       const body = indented.join('\n');
-      Diagnostics.info('J-Base', `loaded:\n${body}\n      from file ${configPath}.`);
+      Diagnostics.info(__PLUGIN_NAME__, `loaded:\n${body}\n      from file ${configPath}.`);
       return;
     }
 
     // without a summary, fall back to a minimal single-line log.
-    Diagnostics.info('J-Base', `loaded external JSON from file ${configPath}.`);
+    Diagnostics.info(__PLUGIN_NAME__, `loaded external JSON from file ${configPath}.`);
   }
 }
 

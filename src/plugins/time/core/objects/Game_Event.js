@@ -226,7 +226,7 @@ Game_Event.toTimeConditional = function(commentCommand)
       //endregion choices
 
     default:
-      Diagnostics.warn('J-TIME', `a time conditional was not generated for an identified TIME tag; ${comment}`);
+      Diagnostics.warn(__PLUGIN_NAME__, `a time conditional was not generated for an identified TIME tag; ${comment}`);
       return new TimeConditional();
   }
 };

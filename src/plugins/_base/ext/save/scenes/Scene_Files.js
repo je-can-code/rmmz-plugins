@@ -589,7 +589,7 @@ class Scene_Files
    */
   onExecuteFailure(error)
   {
-    Diagnostics.error('J-Base-Save', 'a save file command failed; the player stays where they were.', error);
+    Diagnostics.error(__PLUGIN_NAME__, 'a save file command failed; the player stays where they were.', error);
 
     SoundManager.playBuzzer();
 

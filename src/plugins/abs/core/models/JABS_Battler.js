@@ -1680,7 +1680,7 @@ class JABS_Battler
     const found = this.getFollowerByUuid(newFollowerUuid);
     if (found)
     {
-      Diagnostics.error('J-ABS', 'this follower already existed within the follower list.', newFollowerUuid);
+      Diagnostics.error(__PLUGIN_NAME__, 'this follower already existed within the follower list.', newFollowerUuid);
     }
     // otherwise fall back to the alternate path.
     else
@@ -6072,7 +6072,7 @@ class JABS_Battler
     }
     else
     {
-      Diagnostics.warn('J-ABS', `unhandled scope for tool: [ ${gameAction.item().scope} ]!`);
+      Diagnostics.warn(__PLUGIN_NAME__, `unhandled scope for tool: [ ${gameAction.item().scope} ]!`);
     }
 
     // applies common events that may be a part of an item's effect.
@@ -6860,7 +6860,7 @@ class JABS_Battler
     if (!cooldown)
     {
       // please stop trying to cast your follower's skills.
-      Diagnostics.trace('J-ABS', 'a follower was asked to cast a skill it does not own a cooldown for.', {
+      Diagnostics.trace(__PLUGIN_NAME__, 'a follower was asked to cast a skill it does not own a cooldown for.', {
         battler: this,
         skillSlotKey,
       });
@@ -6966,7 +6966,7 @@ class JABS_Battler
     }
 
     // handle accordingly if not actor or enemy.
-    Diagnostics.warn('J-ABS', 'a non-actor/non-enemy was checked for basic attack.', this);
+    Diagnostics.warn(__PLUGIN_NAME__, 'a non-actor/non-enemy was checked for basic attack.', this);
     return false;
   };
 
@@ -7648,7 +7648,7 @@ class JABS_Battler
       // check if the eval() produced garbage output despite not throwing.
       if (!Number.isFinite(result))
       {
-        Diagnostics.warn('J-ABS', 'a slip-effect formula produced a non-finite result.', result);
+        Diagnostics.warn(__PLUGIN_NAME__, 'a slip-effect formula produced a non-finite result.', result);
 
         // throw, and then catch to properly log in the next block.
         throw new Error('Invalid formula.');
@@ -7656,7 +7656,7 @@ class JABS_Battler
     }
     catch (err)
     {
-      Diagnostics.trace('J-ABS', `failed to eval() this slip-effect formula: [ ${formula} ]`, err);
+      Diagnostics.trace(__PLUGIN_NAME__, `failed to eval() this slip-effect formula: [ ${formula} ]`, err);
       throw err;
     }
 

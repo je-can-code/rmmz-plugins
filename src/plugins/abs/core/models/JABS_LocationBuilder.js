@@ -126,7 +126,7 @@ class JABS_LocationBuilder
         this.#d = J.ABS.Directions.LOWERLEFT;
         return this.facingLowerLeft();
       case null:
-        Diagnostics.warn('J-ABS', 'attempted to face the reverse of a null direction; facing up instead.');
+        Diagnostics.warn(__PLUGIN_NAME__, 'attempted to face the reverse of a null direction; facing up instead.');
         return this.facingUp();
     }
   }

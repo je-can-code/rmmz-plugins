@@ -77,7 +77,7 @@ class RPG_UsableEffect
       case 44:
         return "Execute Common Event";
       default:
-        Diagnostics.warn('J-Base', `unsupported usable-effect code of [${this.code}] was provided.`);
+        Diagnostics.warn(__PLUGIN_NAME__, `unsupported usable-effect code of [${this.code}] was provided.`);
         return "UNKNOWN";
     }
   }
@@ -119,7 +119,7 @@ class RPG_UsableEffect
       case 44:
         return "Execute Common Event";
       default:
-        Diagnostics.warn('J-Base', `unsupported usable-effect code of [${this.code}] was provided.`);
+        Diagnostics.warn(__PLUGIN_NAME__, `unsupported usable-effect code of [${this.code}] was provided.`);
         return "UNKNOWN";
     }
   }

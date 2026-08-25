@@ -657,9 +657,9 @@ class SaveFileSystem
 
     const substitution = `${current} could not be loaded, so ${generationName} (saved ${savedAt}) was loaded instead`;
     const consequence = 'anything after that point is not in this file.';
-    Diagnostics.warn('J-Base-Save', `${slotName}: ${substitution}. ${consequence}`);
+    Diagnostics.warn(__PLUGIN_NAME__, `${slotName}: ${substitution}. ${consequence}`);
 
-    failures.forEach(failure => Diagnostics.warn('J-Base-Save', `${slotName}: skipped ${failure}`));
+    failures.forEach(failure => Diagnostics.warn(__PLUGIN_NAME__, `${slotName}: skipped ${failure}`));
   }
 
   /**

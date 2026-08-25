@@ -943,7 +943,7 @@ class RPGManager
       }
       catch (error)
       {
-        Diagnostics.error('J-Base', `an error occurred while evaluating the formula: [${formula}].`, error);
+        Diagnostics.error(__PLUGIN_NAME__, `an error occurred while evaluating the formula: [${formula}].`, error);
       }
     });
 

@@ -327,7 +327,7 @@ class TrackedOmniQuest
     if (!this.canBeUnlocked())
     {
       const attempt = `attempted to unlock quest with key ${this.key}`;
-      Diagnostics.warn('J-OMNI-Quests', `${attempt}, but it cannot be unlocked from state ${this.state}.`);
+      Diagnostics.warn(__PLUGIN_NAME__, `${attempt}, but it cannot be unlocked from state ${this.state}.`);
       return;
     }
   
@@ -700,7 +700,7 @@ class TrackedOmniQuest
     // validate your inputs!
     if (newState < 0 || newState > 4)
     {
-      Diagnostics.error('J-OMNI-Quests', `attempted to set invalid state for this quest: ${newState}.`);
+      Diagnostics.error(__PLUGIN_NAME__, `attempted to set invalid state for this quest: ${newState}.`);
       throw new Error('Invalid quest state provided for setting of state.');
     }
   
@@ -756,7 +756,7 @@ class TrackedOmniQuest
         break;
       default:
         // if somehow we got here without a known finalization, ignore.
-        Diagnostics.warn('J-OMNI-Quests', `unexpected state change for logging: ${this.state}`);
+        Diagnostics.warn(__PLUGIN_NAME__, `unexpected state change for logging: ${this.state}`);
         return;
     }
   

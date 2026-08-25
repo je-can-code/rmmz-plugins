@@ -30,7 +30,7 @@ class QuestManager
     if (!tracking)
     {
       // stop processing.
-      Diagnostics.error('J-OMNI-Quests', `the key of ${key} was not found in the list of quests.`);
+      Diagnostics.error(__PLUGIN_NAME__, `the key of ${key} was not found in the list of quests.`);
       throw new Error(`Attempted to leverage a non-existent quest with the key of: ${key}.`);
     }
 
@@ -88,7 +88,7 @@ class QuestManager
     if (!category)
     {
       // stop processing.
-      Diagnostics.error('J-OMNI-Quests', `the key of ${key} was not found in the list of quest categories.`);
+      Diagnostics.error(__PLUGIN_NAME__, `the key of ${key} was not found in the list of quest categories.`);
       throw new Error(`Attempted to leverage a non-existent quest category with the key of: ${key}.`);
     }
 
@@ -122,7 +122,7 @@ class QuestManager
     if (!tag)
     {
       // stop processing.
-      Diagnostics.error('J-OMNI-Quests', `the key of ${key} was not found in the list of quest tags.`);
+      Diagnostics.error(__PLUGIN_NAME__, `the key of ${key} was not found in the list of quest tags.`);
       throw new Error(`Attempted to leverage a non-existent quest tag with the key of: ${key}.`);
     }
 
@@ -398,7 +398,7 @@ class QuestManager
           {
             const objectiveRef = `quest of ${objective.questKey} has objective of id ${objective.id}`;
             const problem = `set to "quest completion", but lacks 'fulfillmentQuestKeys'.`;
-            Diagnostics.warn('J-OMNI-Quests', `${objectiveRef} ${problem}`);
+            Diagnostics.warn(__PLUGIN_NAME__, `${objectiveRef} ${problem}`);
             return false;
           }
 

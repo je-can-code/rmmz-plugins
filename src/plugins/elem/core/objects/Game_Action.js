@@ -413,7 +413,7 @@ Game_Action.prototype.evalDamageFormula = function(target)
   }
   catch (e)
   {
-    Diagnostics.error('J-Elementalistics', `error with the damage formula for item/skill id: ${item.id}.`, {
+    Diagnostics.error(__PLUGIN_NAME__, `error with the damage formula for item/skill id: ${item.id}.`, {
       item,
       error: e,
     });

@@ -40,7 +40,7 @@ Game_Enemy.prototype.canDropSdp = function()
   {
     const dropKey = this.enemy().sdpDropKey;
     const remedy = `consider defining a panel with the key of ${dropKey}.`;
-    Diagnostics.warn('J-SDP', `panel of key ${dropKey} is not defined, but was trying to be dropped; ${remedy}`);
+    Diagnostics.warn(__PLUGIN_NAME__, `panel of key ${dropKey} is not defined, but was trying to be dropped; ${remedy}`);
     return false;
   }
 

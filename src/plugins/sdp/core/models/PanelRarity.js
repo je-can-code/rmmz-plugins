@@ -131,7 +131,7 @@ class PanelRarity
       case PanelRarity.RARITY_GODLIKE:
         return PanelRarity.WindowColorGodlike;
       default:
-        Diagnostics.warn('J-SDP', `PanelRarity.rarityIndexToColorIndex: unknown rarity index [ ${rarityIndex} ].`);
+        Diagnostics.warn(__PLUGIN_NAME__, `PanelRarity.rarityIndexToColorIndex: unknown rarity index [ ${rarityIndex} ].`);
         return 0;
     }
   }

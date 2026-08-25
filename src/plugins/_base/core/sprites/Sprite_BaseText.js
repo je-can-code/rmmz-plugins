@@ -284,7 +284,7 @@ class Sprite_BaseText
     if (!isHexColor)
     {
       // and warn the user.
-      Diagnostics.error('J-Base', `attempted to assign ${color} as a hex color to this text sprite.`, this);
+      Diagnostics.error(__PLUGIN_NAME__, `attempted to assign ${color} as a hex color to this text sprite.`, this);
     }
 
     // return the result.

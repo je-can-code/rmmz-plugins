@@ -20,4 +20,17 @@ import Diagnostics from '../../src/plugins/_base/core/core/Diagnostics.js';
  * would have written. A stub would silently decouple those assertions from the real format.
  */
 globalThis.Diagnostics ??= Diagnostics;
+
+/**
+ * Seeds the ship-name identifier every `Diagnostics` call passes.
+ *
+ * `__PLUGIN_NAME__` is not a runtime value in a shipped plugin - Vite's `define` substitutes it for
+ * a string literal at build time, per ship, out of that ship's own `meta.js`. A direct-import test
+ * has no build step, so the identifier is a bare global that has to exist before any source file
+ * runs, or a warning path throws `ReferenceError` on an identifier that never survives to runtime.
+ *
+ * A family fixture that sets its own ship still wins, because they assign rather than default. The
+ * fallback is `J-Base` because the files reached without any family fixture are J-Base's own.
+ */
+globalThis.__PLUGIN_NAME__ ??= 'J-Base';
 //endregion install-diagnostics-global

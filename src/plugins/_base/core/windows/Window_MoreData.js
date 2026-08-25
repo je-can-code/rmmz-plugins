@@ -119,7 +119,7 @@ class Window_MoreData
         break;
       default:
         this.type = Window_MoreData.Types.Unknown;
-        Diagnostics.warn('J-Base', 'was provided an unknown item type to display more data for.', this.item);
+        Diagnostics.warn(__PLUGIN_NAME__, 'was provided an unknown item type to display more data for.', this.item);
         break;
     }
   }

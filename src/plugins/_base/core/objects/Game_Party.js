@@ -155,7 +155,7 @@ Game_Party.prototype.reportPrunedInventoryEntries = function(pruned)
 
   const cause = 'rows deleted after this save was written';
   const summary = `dropped ${pruned.length} inventory ${plural} whose database rows no longer exist`;
-  Diagnostics.warn('J-Base', `${summary} (${cause}): [${listed}]`);
+  Diagnostics.warn(__PLUGIN_NAME__, `${summary} (${cause}): [${listed}]`);
 };
 //endregion reconciliation
 
@@ -243,7 +243,7 @@ Game_Party.prototype.processItemGain = function(item, amount, includeEquip)
 Game_Party.prototype.processContainerlessItemGain = function(item, amount, includeEquip)
 {
   // do something.
-  Diagnostics.error('J-Base', `an item was gained that is not flagged as a database object: ${item.name}.`, {
+  Diagnostics.error(__PLUGIN_NAME__, `an item was gained that is not flagged as a database object: ${item.name}.`, {
     item,
     amount,
     includeEquip,

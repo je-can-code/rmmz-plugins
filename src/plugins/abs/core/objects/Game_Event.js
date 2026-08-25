@@ -105,7 +105,7 @@ Game_Event.prototype.findProperPageIndex = function()
   }
   catch (err)
   {
-    Diagnostics.trace('J-ABS', 'could not find the page index for this event.', {
+    Diagnostics.trace(__PLUGIN_NAME__, 'could not find the page index for this event.', {
       error: err,
       event: this,
     });

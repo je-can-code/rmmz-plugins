@@ -468,7 +468,7 @@ class Window_SkillDetail
       {
         if (!skillRewardId)
         {
-          Diagnostics.warn('J-CMS-Skill', `[${skillRewardId}] is not a valid skill reward.`, conditional);
+          Diagnostics.warn(__PLUGIN_NAME__, `[${skillRewardId}] is not a valid skill reward.`, conditional);
           return;
         }
 

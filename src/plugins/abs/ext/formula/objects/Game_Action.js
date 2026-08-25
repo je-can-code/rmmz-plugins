@@ -168,7 +168,7 @@ Game_Action.prototype.evaluateFormula = function(formula, source, recipient, ite
   }
   catch (err)
   {
-    Diagnostics.trace('J-ABS-Formula', `formula failed: [ ${formula} ]`, err);
+    Diagnostics.trace(__PLUGIN_NAME__, `formula failed: [ ${formula} ]`, err);
     throw err;
   }
 

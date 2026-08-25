@@ -46,7 +46,7 @@ class PluginMetadata
   {
     if (!name || !version)
     {
-      Diagnostics.trace('J-Base', 'erroneous plugin metadata was provided.', {
+      Diagnostics.trace(__PLUGIN_NAME__, 'erroneous plugin metadata was provided.', {
         name,
         version,
       });

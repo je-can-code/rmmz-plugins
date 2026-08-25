@@ -73,7 +73,7 @@ Game_Map.prototype.note = function()
 {
   if (!$dataMap)
   {
-    Diagnostics.warn('J-Base', `attempted to get the note for a map that isn't available.`, {
+    Diagnostics.warn(__PLUGIN_NAME__, `attempted to get the note for a map that isn't available.`, {
       map: this,
       dataMap: $dataMap,
     });

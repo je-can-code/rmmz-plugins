@@ -92,7 +92,7 @@ PluginManager.registerCommand(J.ABS.Metadata.name, "Unlock JABS Skill Slot", arg
   const leader = $gameParty.leader();
   if (!leader)
   {
-    Diagnostics.warn('J-ABS', 'there is no party leader to manage skill slots for.');
+    Diagnostics.warn(__PLUGIN_NAME__, 'there is no party leader to manage skill slots for.');
     return;
   }
 
@@ -109,7 +109,7 @@ PluginManager.registerCommand(J.ABS.Metadata.name, "Unlock All JABS Skill Slots"
   const leader = $gameParty.leader();
   if (!leader)
   {
-    Diagnostics.warn('J-ABS', 'there is no party leader to manage skill slots for.');
+    Diagnostics.warn(__PLUGIN_NAME__, 'there is no party leader to manage skill slots for.');
     return;
   }
 
@@ -191,7 +191,7 @@ PluginManager.registerCommand(J.ABS.Metadata.name, "Spawn Enemy", args =>
   {
     if (!addedEnemy)
     {
-      Diagnostics.error('J-ABS', 'an enemy failed to be dynamically generated.', addedEnemy);
+      Diagnostics.error(__PLUGIN_NAME__, 'an enemy failed to be dynamically generated.', addedEnemy);
 
       return;
     }

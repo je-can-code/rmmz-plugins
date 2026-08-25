@@ -130,7 +130,7 @@ class J_DiffPluginMetadata
       // check for duplicates in case a warning is necessary.
       if (difficultiesMap.get(key))
       {
-        Diagnostics.warn('J-Difficulty', `duplicate difficulty key definition detected for [${key}].`);
+        Diagnostics.warn(__PLUGIN_NAME__, `duplicate difficulty key definition detected for [${key}].`);
       }
 
       // set the difficulty!

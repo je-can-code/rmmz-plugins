@@ -151,7 +151,7 @@ class PanelRanking
       catch (err)
       {
         const reward = `the rank-${this.currentRank} reward for panel: ${this.key}`;
-        Diagnostics.error('J-SDP', `an error occurred while trying to execute ${reward}`, err);
+        Diagnostics.error(__PLUGIN_NAME__, `an error occurred while trying to execute ${reward}`, err);
       }
     });
   }

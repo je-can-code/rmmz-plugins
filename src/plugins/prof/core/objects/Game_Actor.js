@@ -127,7 +127,7 @@ Game_Actor.prototype.unlockConditional = function(key)
 {
   if (this.isConditionalUnlocked(key))
   {
-    Diagnostics.warn('J-Proficiency', `attempted to unlock conditional: [${key}], but it was already unlocked.`);
+    Diagnostics.warn(__PLUGIN_NAME__, `attempted to unlock conditional: [${key}], but it was already unlocked.`);
     return;
   }
 
@@ -248,7 +248,7 @@ Game_Actor.prototype.executeJsRewards = function(conditional)
   }
   catch (error)
   {
-    Diagnostics.error('J-Proficiency', `there was an error executing the reward for: ${c.key}.`, error);
+    Diagnostics.error(__PLUGIN_NAME__, `there was an error executing the reward for: ${c.key}.`, error);
   }
 };
 
@@ -301,7 +301,7 @@ Game_Actor.prototype.addSkillProficiency = function(skillId, initialProficiency 
   const exists = this.skillProficiencyBySkillId(skillId);
   if (exists)
   {
-    Diagnostics.warn('J-Proficiency', `attempted to recreate skill proficiency for skillId: ${skillId}.`);
+    Diagnostics.warn(__PLUGIN_NAME__, `attempted to recreate skill proficiency for skillId: ${skillId}.`);
     return exists;
   }
 

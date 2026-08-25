@@ -106,7 +106,7 @@ DataManager.onMapGet = function(xhr, name, src, url)
  */
 DataManager.gracefulFail = function(name, src, url)
 {
-  Diagnostics.error('J-ABS', `failed to load a data file: ${name}`, {
+  Diagnostics.error(__PLUGIN_NAME__, `failed to load a data file: ${name}`, {
     name,
     src,
     url,

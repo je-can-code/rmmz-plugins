@@ -6,7 +6,7 @@ class DropsPartyStrategy
   constructor()
   {
     const remedy = 'use the static properties on it directly instead of instantiating it.';
-    Diagnostics.trace('J-DropsControl', `attempted to instantiate the PartyStrategy class; ${remedy}`);
+    Diagnostics.trace(__PLUGIN_NAME__, `attempted to instantiate the PartyStrategy class; ${remedy}`);
     // abort this pass so the operator sees a hard failure.
     throw new Error(`PartyStrategy is a static class that cannot be instantiated.`);
   }

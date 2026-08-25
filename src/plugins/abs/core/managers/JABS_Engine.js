@@ -1560,7 +1560,7 @@ class JABS_Engine
       // the remedy belongs in the message: whoever sees this is almost always someone who wrote
       // their own controller and never registered it.
       const remedy = 'if you built your own controller, run "JABS_InputAdapter.register(controller)".';
-      Diagnostics.warn('J-ABS', `no input managers have been registered with the input adapter. ${remedy}`);
+      Diagnostics.warn(__PLUGIN_NAME__, `no input managers have been registered with the input adapter. ${remedy}`);
     }
   }
 
@@ -2564,7 +2564,7 @@ class JABS_Engine
           : 7;
         break;
       default:
-        Diagnostics.warn('J-ABS', 'a non-dir8 direction was provided; no rotation was performed.');
+        Diagnostics.warn(__PLUGIN_NAME__, 'a non-dir8 direction was provided; no rotation was performed.');
         break;
     }
 
@@ -2606,7 +2606,7 @@ class JABS_Engine
         newDirection = 1;
         break;
       default:
-        Diagnostics.warn('J-ABS', 'a non-dir8 direction was provided; no rotation was performed.');
+        Diagnostics.warn(__PLUGIN_NAME__, 'a non-dir8 direction was provided; no rotation was performed.');
         break;
     }
 

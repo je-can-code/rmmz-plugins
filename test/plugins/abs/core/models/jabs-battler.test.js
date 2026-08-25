@@ -16,6 +16,10 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
   {
     vi.resetModules();
 
+    // the source under test stamps its diagnostics with __PLUGIN_NAME__, which the build
+    // substitutes per ship; declare the realm so the prefix reads as it would in J-ABS.
+    globalThis.__PLUGIN_NAME__ = 'J-ABS';
+
     globalThis.J = {
       ABS: {
         Metadata: {},

@@ -174,7 +174,7 @@ class JABS_FoodChainPlan
           const fallback = `using stepsToRemove=${frames} (~${seconds}s)`;
           const remedy = 'add <stateDuration:FRAMES> per ca/docs/food/food-chain-durations.md.';
           const message = `state ${currentId} (${state.name}) has <foodChain> but no <stateDuration>`;
-          Diagnostics.warn('J-ABS-Food', `${message} - ${fallback}. ${remedy}`);
+          Diagnostics.warn(__PLUGIN_NAME__, `${message} - ${fallback}. ${remedy}`);
         }
       }
 

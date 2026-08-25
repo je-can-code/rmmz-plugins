@@ -41,7 +41,7 @@ DataManager.extractSaveContents = function(contents)
   if (!$gameTime)
   {
     $gameTime = new Game_Time();
-    Diagnostics.info('J-TIME', 'no clock existed in the loaded save file; creating one anew.');
+    Diagnostics.info(__PLUGIN_NAME__, 'no clock existed in the loaded save file; creating one anew.');
 
     return;
   }

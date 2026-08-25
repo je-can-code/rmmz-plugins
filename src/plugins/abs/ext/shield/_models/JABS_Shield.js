@@ -40,7 +40,7 @@ class JABS_Shield
       }
       catch (e)
       {
-        Diagnostics.error('J-ABS-Shield', `error evaluating shield formula: ${formula}`, {
+        Diagnostics.error(__PLUGIN_NAME__, `error evaluating shield formula: ${formula}`, {
           target,
           attacker,
           error: e,
