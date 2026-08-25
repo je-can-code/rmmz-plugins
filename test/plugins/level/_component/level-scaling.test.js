@@ -118,8 +118,10 @@ describe('J-LevelMaster LevelScaling (direct src import)', () =>
     globalThis.$gameSystem.initialize();
     globalThis.$gameSystem.disableLevelScaling();
 
-    // Act
-    const result = LevelScaling.multiplier(10, 10);
+    // Act- the gap has to be one the enabled path scales, or the disabled path cannot be told apart
+    // from it. at parity the curve also returns the baseline, so a ten-level gap is what makes the
+    // disabled short-circuit observable: enabled, this same call returns 1.9.
+    const result = LevelScaling.multiplier(20, 10);
 
     // Assert
     expect(result).toBe(1);
