@@ -302,9 +302,15 @@ describe('JABS_Battler (J-HUD-TargetFrame) (direct src import)', () =>
   {
     it('returns false when the plugin metadata disables the hp gauge', () =>
     {
-      // Arrange
+      // Arrange- every other reason to hide the bar has to be switched off, or the metadata gate is
+      // not what the assertion is measuring. a bare fixture is not an enemy, and that alone answers
+      // false whether the gate exists or not.
       globalThis.J.HUD.EXT.TARGET.Metadata.EnableHP = false;
-      const battler = buildBattler();
+      const battler = buildBattler({
+        isEnemy: () => true,
+        getCharacter: () => ({ showTargetHpBar: () => true }),
+        getBattler: () => ({ showTargetHpBar: () => true }),
+      });
 
       // Act & Assert
       expect(battler.canShowTargetHp()).toBe(false);
@@ -365,9 +371,14 @@ describe('JABS_Battler (J-HUD-TargetFrame) (direct src import)', () =>
   {
     it('returns false when the plugin metadata disables the mp gauge', () =>
     {
-      // Arrange
+      // Arrange- see the hp counterpart: the fixture has to be showable on every other axis so the
+      // metadata gate is the only thing left that can answer false.
       globalThis.J.HUD.EXT.TARGET.Metadata.EnableMP = false;
-      const battler = buildBattler();
+      const battler = buildBattler({
+        isEnemy: () => true,
+        getCharacter: () => ({ showTargetMpBar: () => true }),
+        getBattler: () => ({ showTargetMpBar: () => true }),
+      });
 
       // Act & Assert
       expect(battler.canShowTargetMp()).toBe(false);
@@ -443,7 +454,11 @@ describe('JABS_Battler (J-HUD-TargetFrame) (direct src import)', () =>
     {
       // Arrange
       globalThis.J.HUD.EXT.TARGET.Metadata.EnableTP = false;
-      const battler = buildBattler();
+      const battler = buildBattler({
+        isEnemy: () => true,
+        getCharacter: () => ({ showTargetTpBar: () => true }),
+        getBattler: () => ({ showTargetTpBar: () => true }),
+      });
 
       // Act & Assert
       expect(battler.canShowTargetTp()).toBe(false);
