@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.17.1 ABS] Enables combat to be carried out on the map.
+ * [v4.17.2 ABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -48,6 +48,11 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.17.2
+ *    Fixed losing a state stack leaving the battler's trait caches describing the
+ *    deeper stack. Gaining a stack always refreshed them; losing one never did, so
+ *    additive trait families like element rate kept reporting the resistance of a
+ *    stack depth the battler no longer had.
  * - 4.17.1
  *    Corrected the guard documentation, which credited EVA with extending the
  *    parry window. Parry extension became its own parameter and EVA went back
@@ -4371,7 +4376,7 @@ J.ABS.Helpers.loadExternalConfig = (configPath = "data/config.jabs.json") => {
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.17.1");
+J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.17.2");
 J.ABS.Helpers.loadExternalConfig();
 /**
 * The various default values across the engine. Often configurable.
@@ -17095,12 +17100,16 @@ var JABS_State = class {
 	* @param {number=} stacksToRemove The number of stacks to decrement; defaults to 1.
 	*/
 	decrementStacks(stacksToRemove = 1) {
+		const previousStackCount = this.stackCount;
 		this.stackCount -= stacksToRemove;
 		if (this.stackCount > 0) {
 			this.refreshDuration();
 		}
 		if (this.stackCount < 0) {
 			this.stackCount = 0;
+		}
+		if (this.stackCount !== previousStackCount) {
+			this.battler.onBattlerDataChange();
 		}
 	}
 	/**
@@ -23938,7 +23947,7 @@ var StateAfflictionProvider = class StateAfflictionProvider {
 //#endregion
 //#region src/plugins/abs/core/_metadata/meta.js
 var PLUGIN_NAME = "J-ABS";
-var PLUGIN_VERSION = "4.17.1";
+var PLUGIN_VERSION = "4.17.2";
 var PLUGIN_DESC_TAG = "ABS";
 
 //#endregion
