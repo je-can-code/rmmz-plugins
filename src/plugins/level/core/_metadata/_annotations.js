@@ -373,6 +373,10 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.6.2
+ *    Repointed the skill-learned announcement at J-Log's new $mapLogs
+ *    registry. The $diaLogManager global this called is gone. Requires J-Log
+ *    3.0.0 when J-Log is installed at all.
  * - 1.6.1
  *    Fixed the level scaling band being read as a single point below parity, so
  *    battlers at equal levels dealt a bonus instead of no bonus at all.

@@ -2252,13 +2252,13 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
           this.setupPartyCycle = vi.fn().mockReturnThis();
           this.build = vi.fn(() => ({ built: true }));
         });
-        globalThis.$actionLogManager = { addLog: vi.fn() };
+        globalThis.$mapLogs = { action: { addLog: vi.fn() } };
         const engine = new JABS_Engine();
         engine.setPlayer1({ battlerName: () => 'Hero' });
 
         engine.partyCycleLogging();
 
-        expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith({ built: true });
+        expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledWith({ built: true });
       });
     });
 
@@ -6382,7 +6382,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         this.setupStatePurged = vi.fn().mockReturnThis();
         this.build = vi.fn(() => ({ built: true }));
       });
-      globalThis.$actionLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { action: { addLog: vi.fn() } };
     });
 
     it('does nothing when logging is disabled', () =>
@@ -6393,7 +6393,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.createPurgeStateLogs(target, [ { id: 1 } ]);
 
-      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.action.addLog).not.toHaveBeenCalled();
       globalThis.J.LOG = true;
     });
 
@@ -6405,7 +6405,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.createPurgeStateLogs(target, []);
 
-      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.action.addLog).not.toHaveBeenCalled();
     });
 
     it('emits one log entry per purged state', () =>
@@ -6416,7 +6416,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.createPurgeStateLogs(target, [ { id: 1 }, { id: 2 } ]);
 
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledTimes(2);
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledTimes(2);
     });
 
     it('skips logging for a state explicitly tagged to suppress logs', () =>
@@ -6427,7 +6427,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.createPurgeStateLogs(target, [ { id: 1, jabsNoLogs: true }, { id: 2 } ]);
 
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledTimes(1);
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -6487,7 +6487,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     beforeEach(() =>
     {
       buildActionLogBuilderMock();
-      globalThis.$actionLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { action: { addLog: vi.fn() } };
     });
 
     it('does nothing when logging is disabled', () =>
@@ -6498,7 +6498,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.createAttackLog(buildAction(), target);
 
-      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.action.addLog).not.toHaveBeenCalled();
       globalThis.J.LOG = true;
     });
 
@@ -6512,7 +6512,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       expect(globalThis.ActionLogBuilder.mock.results[0].value.setupParry)
         .toHaveBeenCalledWith('Slime', 'Hero', 7, false);
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledTimes(1);
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledTimes(1);
     });
 
     it('logs an evasion and stops processing further branches', () =>
@@ -6525,7 +6525,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       expect(globalThis.ActionLogBuilder.mock.results[0].value.setupDodge)
         .toHaveBeenCalledWith('Slime', 'Hero', 7);
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledTimes(1);
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledTimes(1);
     });
 
     it('logs a retaliation and falls through to damage/state processing', () =>
@@ -6540,7 +6540,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(globalThis.ActionLogBuilder.mock.results[0].value.setupRetaliation)
         .toHaveBeenCalledWith('Hero');
       // 2 logs: retaliation + the fallthrough damage entry.
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledTimes(2);
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledTimes(2);
     });
 
     it('logs an undamaged hit when no damage or states landed', () =>
@@ -6564,7 +6564,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.createAttackLog(action, target);
 
-      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.action.addLog).not.toHaveBeenCalled();
     });
 
     it('logs an execution entry for mp-only damage, skipping the hp-damage block entirely', () =>
@@ -6575,7 +6575,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.createAttackLog(buildAction(), target);
 
-      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.action.addLog).not.toHaveBeenCalled();
     });
 
     it('formats negative hp damage (healing) without a leading minus sign', () =>
@@ -6657,7 +6657,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.createAttackLog(buildAction(), target);
 
       // only the damage-execution log fires; the state-afflicted entry is suppressed.
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledTimes(1);
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -8172,8 +8172,10 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         this.setupGoldFound = vi.fn().mockReturnThis();
         this.build = vi.fn(() => ({ builtGold: true }));
       });
-      globalThis.$actionLogManager = { addLog: vi.fn() };
-      globalThis.$lootLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = {
+        action: { addLog: vi.fn() },
+        loot: { addLog: vi.fn() },
+      };
     });
 
     it('does nothing when logging is disabled', () =>
@@ -8183,8 +8185,8 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.createRewardsLog(100, 50, { getBattlerDatabaseData: () => ({ name: 'Hero' }) });
 
-      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
-      expect(globalThis.$lootLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.action.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.loot.addLog).not.toHaveBeenCalled();
       globalThis.J.LOG = true;
     });
 
@@ -8196,8 +8198,8 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.createRewardsLog(100, 0, caster);
 
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith({ builtExp: true });
-      expect(globalThis.$lootLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledWith({ builtExp: true });
+      expect(globalThis.$mapLogs.loot.addLog).not.toHaveBeenCalled();
     });
 
     it('logs gold found when gold is non-zero', () =>
@@ -8208,8 +8210,8 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.createRewardsLog(0, 50, caster);
 
-      expect(globalThis.$lootLogManager.addLog).toHaveBeenCalledWith({ builtGold: true });
-      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.loot.addLog).toHaveBeenCalledWith({ builtGold: true });
+      expect(globalThis.$mapLogs.action.addLog).not.toHaveBeenCalled();
     });
   });
 
@@ -8268,7 +8270,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         this.setupLootObtained = vi.fn().mockReturnThis();
         this.build = vi.fn(() => ({ built: true }));
       });
-      globalThis.$lootLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { loot: { addLog: vi.fn() } };
     });
 
     it('does nothing when logging is disabled', () =>
@@ -8278,7 +8280,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 
       engine.createLootLog({ id: 1, itypeId: 1 });
 
-      expect(globalThis.$lootLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.loot.addLog).not.toHaveBeenCalled();
       globalThis.J.LOG = true;
     });
 
@@ -8383,7 +8385,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     it('configures and logs the level-up when logging is enabled', () =>
     {
       globalThis.J.LOG = true;
-      globalThis.$actionLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { action: { addLog: vi.fn() } };
       const engine = new JABS_Engine();
       engine.configureLevelUpLog = vi.fn(() => ({ built: true }));
       const jabsBattler = { getBattler: () => ({ name: () => 'Hero', level: 5 }) };
@@ -8391,7 +8393,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.createLevelUpLog(jabsBattler);
 
       expect(engine.configureLevelUpLog).toHaveBeenCalledWith('Hero', 5);
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith({ built: true });
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledWith({ built: true });
     });
   });
 
@@ -8473,7 +8475,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     it('configures and logs the skill learn when logging is enabled', () =>
     {
       globalThis.J.LOG = true;
-      globalThis.$actionLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { action: { addLog: vi.fn() } };
       const engine = new JABS_Engine();
       engine.configureSkillLearnLog = vi.fn(() => ({ built: true }));
       const player = { getBattlerDatabaseData: () => ({ name: 'Hero' }) };
@@ -8481,7 +8483,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.createSkillLearnLog({ id: 7 }, player);
 
       expect(engine.configureSkillLearnLog).toHaveBeenCalledWith('Hero', 7);
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith({ built: true });
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledWith({ built: true });
     });
   });
 

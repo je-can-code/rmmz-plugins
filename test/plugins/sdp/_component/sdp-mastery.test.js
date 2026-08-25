@@ -614,7 +614,7 @@ describe('J-SDP mastery (direct src import)', () =>
       applyMasteryConfiguration(buildMasteryConfig());
 
       addLog = vi.fn();
-      globalThis.$diaLogManager = { addLog };
+      globalThis.$mapLogs = { dialog: { addLog } };
 
       // J-Log being present is what permits announcing at all.
       globalThis.J.LOG = {};

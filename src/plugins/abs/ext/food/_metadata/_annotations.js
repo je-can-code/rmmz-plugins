@@ -74,6 +74,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.2
+ *    Repointed the last-item-consumed log at J-Log's new $mapLogs registry.
+ *    The $lootLogManager global this called is gone. Requires J-Log 3.0.0
+ *    when J-Log is installed at all.
  * - 1.0.1
  *    Corrected PLUGIN_NAME from J-ABS-FOOD to J-ABS-Food, matching the name the
  *    ship has always been built and shipped under.

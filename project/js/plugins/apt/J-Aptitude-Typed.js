@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.1 APT-TYPED] Adds typed (element/weapon type/skill type) AP gains and teachables.
+ * [v1.1.2 APT-TYPED] Adds typed (element/weapon type/skill type) AP gains and teachables.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -171,6 +171,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.2
+ *    Repointed typed AP gain logging at J-Log's new $mapLogs registry. The
+ *    $actionLogManager global this called is gone. Requires J-Log 3.0.0 when
+ *    J-Log is installed at all.
  * - 1.1.1
  *    Adapted to the RPGManager array read signature.
  * - 1.1.0
@@ -481,7 +485,7 @@ J.APT.EXT.TYPED = J.APT.EXT.TYPED || {};
 * The plugin umbrella that governs all things related to this extension plugin.
 * Name and Version are owned by the metadata instance.
 */
-J.APT.EXT.TYPED.Metadata = new JAptitudeTyped_PluginMetadata("J-Aptitude-Typed", "1.1.1");
+J.APT.EXT.TYPED.Metadata = new JAptitudeTyped_PluginMetadata("J-Aptitude-Typed", "1.1.2");
 /**
 * A collection of all aliased methods for this plugin.
 */
@@ -893,7 +897,7 @@ if (J.ABS) {
 		const { name, icon } = ApManager.apTypeDisplay(apTypeKey);
 		const message = `\\C[16]${battler.battlerName()}\\C[0] gained \\C[29]\\*${apPoints}\\*\\C[0] AP \\i[${icon}] [${name}].`;
 		const apLog = new ActionLogBuilder().setMessage(message).build();
-		$actionLogManager.addLog(apLog);
+		$mapLogs.action.addLog(apLog);
 	};
 }
 

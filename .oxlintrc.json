@@ -81,7 +81,6 @@
     }
   ],
   "globals": {
-    "$actionLogManager": "writable",
     "$actionMap": "writable",
     "$dataActors": "writable",
     "$dataAnimations": "writable",
@@ -98,7 +97,6 @@
     "$dataTilesets": "writable",
     "$dataTroops": "writable",
     "$dataWeapons": "writable",
-    "$diaLogManager": "writable",
     "$gameActors": "writable",
     "$gameEnemies": "writable",
     "$gameMap": "writable",
@@ -117,7 +115,7 @@
     "$hudManager": "writable",
     "$jabsController1": "writable",
     "$jabsEngine": "writable",
-    "$lootLogManager": "writable",
+    "$mapLogs": "writable",
     "$testEvent": "writable",
     "ActionLog": "writable",
     "ActionLogBuilder": "writable",
@@ -417,6 +415,7 @@
     "LoadoutSlotCatalog": "writable",
     "LootLogBuilder": "writable",
     "MapLogManager": "writable",
+    "MapLogRegistry": "writable",
     "Map_TextPop": "writable",
     "MenuCommandBroadcaster": "writable",
     "MenuSection": "writable",

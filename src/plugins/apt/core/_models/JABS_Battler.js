@@ -109,8 +109,8 @@ if (J.ABS)
       .setMessage(`\\C[16]${battler.battlerName()}\\C[0] gained \\C[29]\\*${apPoints}\\*\\C[0] AP.`)
       .build();
 
-    // add the log to the action log manager.
-    $actionLogManager.addLog(apLog);
+    // add the log to the action channel.
+    $mapLogs.action.addLog(apLog);
   };
 }
 //endregion JABS_Battler

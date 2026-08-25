@@ -101,7 +101,7 @@ Game_Actor.prototype.handleOtibUnlock = function(item)
   this.refreshPassiveStates();
 
   // notify the player of each newly unlocked state via DiaLog when J-Log is loaded.
-  if (J.LOG && $diaLogManager)
+  if (J.LOG && $mapLogs)
   {
     this.notifyOtibUnlock(item, stateIds);
   }
@@ -109,7 +109,7 @@ Game_Actor.prototype.handleOtibUnlock = function(item)
 
 /**
  * Fires one DiaLog message per unlocked state, telling the player what was gained.
- * Falls through silently if $diaLogManager is not yet available on the scene.
+ * Falls through silently if $mapLogs is not yet available on the scene.
  * @param {RPG_Item} item The item that triggered the unlock.
  * @param {number[]} stateIds The state ids that were just unlocked.
  */
@@ -123,7 +123,7 @@ Game_Actor.prototype.notifyOtibUnlock = function(item, stateIds)
       .addLine(`Consuming the \\item[${item.id}]`)
       .addLine(`unlocked \\state[${stateId}] effect!`)
       .build();
-    $diaLogManager.addLog(log);
+    $mapLogs.dialog.addLog(log);
   });
 };
 

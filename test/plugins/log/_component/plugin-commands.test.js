@@ -17,7 +17,7 @@ describe('J-Log plugin commands mutate managers (direct src import)', () =>
     setPluginContextToJLog();
     await import('../../../../src/plugins/log/core/_metadata/initialization.js');
 
-    // DataManager.js and pluginCommands.js both need to share the same $actionLogManager instance,
+    // DataManager.js and pluginCommands.js both need to share the same $mapLogs instance,
     // so DataManager.createGameObjects() (called in the test) must come from this same import batch.
     await import('../../../../src/plugins/log/core/managers/DataManager.js');
 
@@ -48,7 +48,7 @@ describe('J-Log plugin commands mutate managers (direct src import)', () =>
     globalThis.__logPluginCommands.get('J-Log:showActionLog')();
 
     // Assert
-    expect(globalThis.$actionLogManager.isVisible()).toBe(true);
+    expect(globalThis.$mapLogs.action.isVisible()).toBe(true);
   });
 
   it('hideActionLog hides the log again', () =>
@@ -61,7 +61,7 @@ describe('J-Log plugin commands mutate managers (direct src import)', () =>
     globalThis.__logPluginCommands.get('J-Log:hideActionLog')();
 
     // Assert
-    expect(globalThis.$actionLogManager.isHidden()).toBe(true);
+    expect(globalThis.$mapLogs.action.isHidden()).toBe(true);
   });
 
   it('addActionLog appends the given text as a log entry', () =>
@@ -73,7 +73,7 @@ describe('J-Log plugin commands mutate managers (direct src import)', () =>
     globalThis.__logPluginCommands.get('J-Log:addActionLog')({ text: 'hello' });
 
     // Assert
-    expect(globalThis.$actionLogManager.getLogs().length).toBe(1);
+    expect(globalThis.$mapLogs.action.getLogs().length).toBe(1);
   });
 
   it('clearActionLog empties the accumulated log entries', () =>
@@ -86,7 +86,7 @@ describe('J-Log plugin commands mutate managers (direct src import)', () =>
     globalThis.__logPluginCommands.get('J-Log:clearActionLog')();
 
     // Assert
-    expect(globalThis.$actionLogManager.getLogs().length).toBe(0);
+    expect(globalThis.$mapLogs.action.getLogs().length).toBe(0);
   });
 
   describe('dia log', () =>
@@ -101,7 +101,7 @@ describe('J-Log plugin commands mutate managers (direct src import)', () =>
       globalThis.__logPluginCommands.get('J-Log:showDiaLog')();
 
       // Assert
-      expect(globalThis.$diaLogManager.isVisible()).toBe(true);
+      expect(globalThis.$mapLogs.dialog.isVisible()).toBe(true);
     });
 
     it('hideDiaLog hides the dialog window again', () =>
@@ -114,7 +114,7 @@ describe('J-Log plugin commands mutate managers (direct src import)', () =>
       globalThis.__logPluginCommands.get('J-Log:hideDiaLog')();
 
       // Assert
-      expect(globalThis.$diaLogManager.isHidden()).toBe(true);
+      expect(globalThis.$mapLogs.dialog.isHidden()).toBe(true);
     });
 
     it('addDiaLog splits the supplied text into one entry across its lines', () =>
@@ -127,8 +127,8 @@ describe('J-Log plugin commands mutate managers (direct src import)', () =>
         { lines: 'first line\nsecond line', faceName: 'Actor1', faceIndex: '2' });
 
       // Assert
-      const [ log ] = globalThis.$diaLogManager.getLogs();
-      expect(globalThis.$diaLogManager.getLogs().length).toBe(1);
+      const [ log ] = globalThis.$mapLogs.dialog.getLogs();
+      expect(globalThis.$mapLogs.dialog.getLogs().length).toBe(1);
       expect(log.lines()).toEqual([ 'first line', 'second line' ]);
     });
 
@@ -143,7 +143,7 @@ describe('J-Log plugin commands mutate managers (direct src import)', () =>
       globalThis.__logPluginCommands.get('J-Log:clearDiaLog')();
 
       // Assert
-      expect(globalThis.$diaLogManager.getLogs().length).toBe(0);
+      expect(globalThis.$mapLogs.dialog.getLogs().length).toBe(0);
     });
   });
 
@@ -158,7 +158,7 @@ describe('J-Log plugin commands mutate managers (direct src import)', () =>
       globalThis.__logPluginCommands.get('J-Log:showLootLog')();
 
       // Assert
-      expect(globalThis.$lootLogManager.isVisible()).toBe(true);
+      expect(globalThis.$mapLogs.loot.isVisible()).toBe(true);
     });
 
     it('hideLootLog hides the loot window again', () =>
@@ -171,7 +171,7 @@ describe('J-Log plugin commands mutate managers (direct src import)', () =>
       globalThis.__logPluginCommands.get('J-Log:hideLootLog')();
 
       // Assert
-      expect(globalThis.$lootLogManager.isHidden()).toBe(true);
+      expect(globalThis.$mapLogs.loot.isHidden()).toBe(true);
     });
 
     it('addLootLog records the obtained loot as an entry', () =>
@@ -183,7 +183,7 @@ describe('J-Log plugin commands mutate managers (direct src import)', () =>
       globalThis.__logPluginCommands.get('J-Log:addLootLog')({ lootId: '1', lootType: 'i' });
 
       // Assert
-      expect(globalThis.$lootLogManager.getLogs().length).toBe(1);
+      expect(globalThis.$mapLogs.loot.getLogs().length).toBe(1);
     });
 
     it('clearLootLog empties the accumulated loot entries', () =>
@@ -196,7 +196,7 @@ describe('J-Log plugin commands mutate managers (direct src import)', () =>
       globalThis.__logPluginCommands.get('J-Log:clearLootLog')();
 
       // Assert
-      expect(globalThis.$lootLogManager.getLogs().length).toBe(0);
+      expect(globalThis.$mapLogs.loot.getLogs().length).toBe(0);
     });
   });
 });

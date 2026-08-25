@@ -68,7 +68,7 @@ describe('Game_Actor level dia log augments (direct src import)', () =>
     vi.clearAllMocks();
 
     addLog = vi.fn();
-    globalThis.$diaLogManager = { addLog };
+    globalThis.$mapLogs = { dialog: { addLog } };
 
     // J-Log being present is what permits announcing at all.
     globalThis.J.LOG = {};

@@ -35,7 +35,7 @@ describe('Game_Actor ext/otib augments (direct src import)', () =>
   {
     vi.clearAllMocks();
     delete globalThis.J.LOG;
-    delete globalThis.$diaLogManager;
+    delete globalThis.$mapLogs;
     delete globalThis.DiaLogBuilder;
   });
 
@@ -232,7 +232,7 @@ describe('Game_Actor ext/otib augments (direct src import)', () =>
       expect(actor.notifyOtibUnlock).not.toHaveBeenCalled();
     });
 
-    it('does not notify when $diaLogManager is not present even if J.LOG is', () =>
+    it('does not notify when $mapLogs is not present even if J.LOG is', () =>
     {
       // Arrange
       const actor = new Game_Actor();
@@ -240,7 +240,7 @@ describe('Game_Actor ext/otib augments (direct src import)', () =>
       actor.refreshPassiveStates = vi.fn();
       actor.notifyOtibUnlock = vi.fn();
       globalThis.J.LOG = true;
-      globalThis.$diaLogManager = undefined;
+      globalThis.$mapLogs = undefined;
       const item = { id: 1, otibStateIds: [ 5 ] };
 
       // Act
@@ -250,7 +250,7 @@ describe('Game_Actor ext/otib augments (direct src import)', () =>
       expect(actor.notifyOtibUnlock).not.toHaveBeenCalled();
     });
 
-    it('notifies of the unlock when both J.LOG and $diaLogManager are present', () =>
+    it('notifies of the unlock when both J.LOG and $mapLogs are present', () =>
     {
       // Arrange
       const actor = new Game_Actor();
@@ -258,7 +258,7 @@ describe('Game_Actor ext/otib augments (direct src import)', () =>
       actor.refreshPassiveStates = vi.fn();
       actor.notifyOtibUnlock = vi.fn();
       globalThis.J.LOG = true;
-      globalThis.$diaLogManager = {};
+      globalThis.$mapLogs = {};
       const item = { id: 1, otibStateIds: [ 5 ] };
 
       // Act
@@ -276,7 +276,7 @@ describe('Game_Actor ext/otib augments (direct src import)', () =>
       // Arrange
       const actor = new Game_Actor();
       const addLog = vi.fn();
-      globalThis.$diaLogManager = { addLog };
+      globalThis.$mapLogs = { dialog: { addLog } };
       const builtLogs = [ 'log-a', 'log-b' ];
       let callIndex = 0;
       globalThis.DiaLogBuilder = vi.fn(function()

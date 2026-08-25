@@ -186,13 +186,13 @@ describe('JABS_Engine ext/sdp augments (direct src import)', () =>
       // Arrange
       const engine = new JABS_Engine();
       globalThis.J.LOG = false;
-      globalThis.$actionLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { action: { addLog: vi.fn() } };
 
       // Act
       engine.createSdpLog(5, { battlerName: () => 'Hero' });
 
       // Assert
-      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.action.addLog).not.toHaveBeenCalled();
     });
 
     it('builds and adds an sdp-acquired log entry when J.LOG is enabled', () =>
@@ -200,7 +200,7 @@ describe('JABS_Engine ext/sdp augments (direct src import)', () =>
       // Arrange
       const engine = new JABS_Engine();
       globalThis.J.LOG = true;
-      globalThis.$actionLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { action: { addLog: vi.fn() } };
       globalThis.ActionLogBuilder = function()
       {
         this.setupSdpAcquired = vi.fn().mockReturnThis();
@@ -211,7 +211,7 @@ describe('JABS_Engine ext/sdp augments (direct src import)', () =>
       engine.createSdpLog(5, { battlerName: () => 'Hero' });
 
       // Assert
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith('built-sdp-log');
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledWith('built-sdp-log');
     });
   });
 
@@ -222,13 +222,13 @@ describe('JABS_Engine ext/sdp augments (direct src import)', () =>
       // Arrange
       const engine = new JABS_Engine();
       globalThis.J.LOG = false;
-      globalThis.$actionLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { action: { addLog: vi.fn() } };
 
       // Act
       engine.createSdpUnlockLog('panel-1');
 
       // Assert
-      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.action.addLog).not.toHaveBeenCalled();
     });
 
     it('builds and adds an sdp-unlocked log entry when J.LOG is enabled', () =>
@@ -236,7 +236,7 @@ describe('JABS_Engine ext/sdp augments (direct src import)', () =>
       // Arrange
       const engine = new JABS_Engine();
       globalThis.J.LOG = true;
-      globalThis.$actionLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { action: { addLog: vi.fn() } };
       globalThis.ActionLogBuilder = function()
       {
         this.setupSdpUnlocked = vi.fn().mockReturnThis();
@@ -247,7 +247,7 @@ describe('JABS_Engine ext/sdp augments (direct src import)', () =>
       engine.createSdpUnlockLog('panel-1');
 
       // Assert
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith('built-unlock-log');
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledWith('built-unlock-log');
     });
   });
 });

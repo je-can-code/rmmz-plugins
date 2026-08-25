@@ -129,6 +129,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.2
+ *    Repointed AP gain and aptitude-growth logging at J-Log's new $mapLogs
+ *    registry. The $actionLogManager and $diaLogManager globals these called
+ *    are gone. Requires J-Log 3.0.0 when J-Log is installed at all.
  * - 1.3.1
  *    Fixed an aptitude multiplier of zero awarding the full unscaled amount. The
  *    guard tested truthiness, so the one value that must scale the award away

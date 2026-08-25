@@ -56,7 +56,7 @@ describe('ApManager dia log announcements (direct src import)', () =>
     vi.clearAllMocks();
 
     addLog = vi.fn();
-    globalThis.$diaLogManager = { addLog };
+    globalThis.$mapLogs = { dialog: { addLog } };
 
     // J-Log being present is what permits announcing at all.
     globalThis.J.LOG = {};

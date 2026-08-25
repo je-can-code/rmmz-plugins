@@ -171,6 +171,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.2
+ *    Repointed typed AP gain logging at J-Log's new $mapLogs registry. The
+ *    $actionLogManager global this called is gone. Requires J-Log 3.0.0 when
+ *    J-Log is installed at all.
  * - 1.1.1
  *    Adapted to the RPGManager array read signature.
  * - 1.1.0

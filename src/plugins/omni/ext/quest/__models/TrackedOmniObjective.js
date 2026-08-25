@@ -915,7 +915,7 @@ class TrackedOmniObjective
    */
   onObjectiveUpdate()
   {
-    // check if the log plugin is present to announce through. a bare $diaLogManager reference would
+    // check if the log plugin is present to announce through. a bare $mapLogs reference would
     // throw a ReferenceError rather than read as falsy when J-Log is not loaded at all.
     if (J.LOG)
     {
@@ -958,7 +958,7 @@ class TrackedOmniObjective
       .build();
   
     // display the log.
-    $diaLogManager.addLog(log);
+    $mapLogs.dialog.addLog(log);
   
   }
 }

@@ -152,6 +152,10 @@
  * - Decreasing the proficiency will NOT undo rewards gained.
  * ============================================================================
  * CHANGELOG:
+ * - 2.4.1
+ *    Repointed the proficiency-growth announcement at J-Log's new $mapLogs
+ *    registry. The $diaLogManager global this called is gone. Requires J-Log
+ *    3.0.0 when J-Log is installed at all.
  * - 2.4.0
  *    Defense earns proficiency the way offense does - guarding and parrying a
  *    skill now advances proficiency in it, so a defensive player is not frozen

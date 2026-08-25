@@ -247,13 +247,13 @@ describe('JABS_Engine ext/apt-core augments (direct src import)', () =>
       // Arrange
       const engine = new JABS_Engine();
       globalThis.J.LOG = false;
-      globalThis.$actionLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { action: { addLog: vi.fn() } };
 
       // Act
       engine.createLogAp(5, { battlerName: () => 'Hero' });
 
       // Assert
-      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.action.addLog).not.toHaveBeenCalled();
     });
 
     it('builds and adds a log entry when J.LOG is enabled', () =>
@@ -261,7 +261,7 @@ describe('JABS_Engine ext/apt-core augments (direct src import)', () =>
       // Arrange
       const engine = new JABS_Engine();
       globalThis.J.LOG = true;
-      globalThis.$actionLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { action: { addLog: vi.fn() } };
       globalThis.ActionLogBuilder = function()
       {
         this.setMessage = vi.fn().mockReturnThis();
@@ -272,7 +272,7 @@ describe('JABS_Engine ext/apt-core augments (direct src import)', () =>
       engine.createLogAp(5, { battlerName: () => 'Hero' });
 
       // Assert
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith('built-log');
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledWith('built-log');
     });
   });
 });

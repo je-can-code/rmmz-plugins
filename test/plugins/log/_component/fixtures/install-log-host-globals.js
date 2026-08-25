@@ -117,11 +117,9 @@ export function installLogHostGlobals(sandbox = globalThis)
   // DataManager.js's createGameObjects alias captures whatever's here as "original".
   sandbox.DataManager.createGameObjects = noop;
 
-  // log/managers/DataManager.js assigns these as bare (undeclared) globals; pre-seed them so the
+  // log/managers/DataManager.js assigns this as a bare (undeclared) global; pre-seed it so the
   // strict-mode module assignment resolves against an existing globalThis property.
-  sandbox.$actionLogManager = null;
-  sandbox.$diaLogManager = null;
-  sandbox.$lootLogManager = null;
+  sandbox.$mapLogs = null;
 
   sandbox.Graphics.boxWidth ??= 1280;
   sandbox.Graphics.boxHeight ??= 720;
