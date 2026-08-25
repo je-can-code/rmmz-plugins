@@ -487,7 +487,7 @@ J.PASSIVE.EXT.AFFIX.Helpers.findFirstEnemyPrefixState = function(battler) {
 J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex = function(battler) {
 	const state = J.PASSIVE.EXT.AFFIX.Helpers.findFirstEnemyPrefixState(battler);
 	if (!state) return String.empty;
-	if (state.tierColorHex && state.tierColorHex !== String.empty) {
+	if (state.tierColorHex) {
 		return state.tierColorHex;
 	}
 	return String.empty;
