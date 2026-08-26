@@ -23969,8 +23969,9 @@ PluginManager.registerCommand(J.ABS.Metadata.name, "Set JABS Skill", (args) => {
 	const skillSlotKey = J.ABS.Helpers.PluginManager.TranslateOptionToSlot(slot);
 	const actor = $gameActors.actor(parseInt(actorId));
 	let assignedId = parseInt(skillId);
-	if (itemId !== 0 && (skillSlotKey === JABS_Button.Tool || skillSlotKey === JABS_Button.UsableItem)) {
-		assignedId = parseInt(itemId);
+	const parsedItemId = parseInt(itemId);
+	if (parsedItemId !== 0 && (skillSlotKey === JABS_Button.Tool || skillSlotKey === JABS_Button.UsableItem)) {
+		assignedId = parsedItemId;
 	}
 	if (assignedId === 0) return;
 	const isLocked = locked === "true";

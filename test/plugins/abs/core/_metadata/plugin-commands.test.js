@@ -172,6 +172,22 @@ describe('J-ABS plugin commands (direct src import)', () =>
       expect(actor.setEquippedSkill).toHaveBeenCalledWith('UsableItem', 9, false);
     });
 
+    it('assigns the skillId to a Tool slot when no item id was chosen', () =>
+    {
+      // Arrange- plugin command arguments arrive as strings, so the unset item id is the string "0"
+      // rather than the number. Comparing it without parsing is true for every input, which sends a
+      // skill-bound tool slot down the item branch and overwrites its id with zero.
+      const actor = { setEquippedSkill: vi.fn() };
+      globalThis.$gameActors.actor.mockReturnValue(actor);
+      const args = { actorId: '1', skillId: '5', itemId: '0', slot: 'Tool', locked: 'false' };
+
+      // Act
+      handlers['Set JABS Skill'](args);
+
+      // Assert- the skill lands in the slot rather than the command silently doing nothing.
+      expect(actor.setEquippedSkill).toHaveBeenCalledWith('Tool', 5, false);
+    });
+
     it('does not overwrite the skillId with itemId for a non tool/item slot even if itemId is set', () =>
     {
       // Arrange

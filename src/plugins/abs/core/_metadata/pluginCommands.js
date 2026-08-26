@@ -49,11 +49,16 @@ PluginManager.registerCommand(J.ABS.Metadata.name, "Set JABS Skill", args =>
   // designate the default assigned id to be the skill id.
   let assignedId = parseInt(skillId);
 
+  // parse before comparing- plugin command arguments arrive as strings, so the unset default reads
+  // as "0", and "0" !== 0 is true for every input. Without the parse this test never fails, and a
+  // skill bound to an item slot gets its id overwritten with a zero it then bails out on.
+  const parsedItemId = parseInt(itemId);
+
   // check if we are assigning to an item-based slot and have an item id available.
-  if (itemId !== 0 && (skillSlotKey === JABS_Button.Tool || skillSlotKey === JABS_Button.UsableItem))
+  if (parsedItemId !== 0 && (skillSlotKey === JABS_Button.Tool || skillSlotKey === JABS_Button.UsableItem))
   {
     // overwrite any possible skill id with the item id instead.
-    assignedId = parseInt(itemId);
+    assignedId = parsedItemId;
   }
 
   // don't try to assign anything if we don't have an id to assign.
