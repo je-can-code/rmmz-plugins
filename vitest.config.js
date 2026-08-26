@@ -5,6 +5,9 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: [ 'test/**/*.test.js' ],
+    // Diagnostics is the one global every ship's source may reach for on a warning path, so it is
+    // installed for every realm rather than by each family's fixture. See the file's own comment.
+    setupFiles: [ './test/setup/install-diagnostics-global.js' ],
     silent: 'passed-only',
     // the counts, the failures, and nothing else.
     //

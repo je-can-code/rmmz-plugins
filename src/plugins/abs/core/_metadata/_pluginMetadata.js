@@ -375,7 +375,7 @@ class J_AbsPluginMetadata
       }
       catch (e)
       {
-        console.warn('J-ABS: globalCooldownSkillTypes JSON parse failed.', e);
+        Diagnostics.warn(__PLUGIN_NAME__, 'globalCooldownSkillTypes JSON parse failed.', e);
       }
     }
     else if (str.length)
@@ -418,7 +418,7 @@ class J_AbsPluginMetadata
     }
     catch (e)
     {
-      console.warn('J-ABS: skillExecutionExcludedSkillTypes JSON parse failed.', e);
+      Diagnostics.warn(__PLUGIN_NAME__, 'skillExecutionExcludedSkillTypes JSON parse failed.', e);
     }
     this.SkillExecutionExcludedSkillTypeSet = excludedSet;
   }

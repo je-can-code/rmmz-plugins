@@ -1,7 +1,7 @@
 //region initialization
 /*:
  * @target MZ
- * @plugindesc [v1.6.2 LEVEL] Allows levels to have greater control and purpose.
+ * @plugindesc [v1.6.3 LEVEL] Allows levels to have greater control and purpose.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -373,6 +373,9 @@
  * This same logic is again applied to gold from each defeated enemy.
  * ============================================================================
  * CHANGELOG:
+ * - 1.6.3
+ *    Routed the growth-curve formula error through J-Base's new Diagnostics, so
+ *    it names J-LevelMaster in the console.
  * - 1.6.2
  *    Repointed the skill-learned announcement at J-Log's new $mapLogs
  *    registry. The $diaLogManager global this called is gone. Requires J-Log
@@ -568,7 +571,7 @@ J.LEVEL.EXT = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.LEVEL.Metadata = new J_LevelPluginMetadata("J-LevelMaster", "1.6.2");
+J.LEVEL.Metadata = new J_LevelPluginMetadata("J-LevelMaster", "1.6.3");
 /**
 * The maximum level definable in the level. Any level below this can be determined without extra calculations.
 * @type {number}
@@ -719,7 +722,7 @@ var GrowthCurveFormula = class {
 			const evaluator = new Function("a", `return (${formula})`);
 			return evaluator(a);
 		} catch (error) {
-			console.error(`Error evaluating growth curve formula: ${formula}`, error);
+			Diagnostics.error("J-LevelMaster", `error evaluating growth curve formula: ${formula}`, error);
 			return 0;
 		}
 	}

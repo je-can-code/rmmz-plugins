@@ -393,7 +393,7 @@ class JABS_SkillSlotManager
     if (!jabsSkillSlot)
     {
       // never return a real database skill id here — a bad key or desync must not execute skill #1 (or any arbitrary id).
-      console.warn(`[J-ABS] getSlotComboId: no skill slot for key "${key}". Returning 0 (no combo).`);
+      Diagnostics.warn(__PLUGIN_NAME__, `getSlotComboId: no skill slot for key "${key}". Returning 0 (no combo).`);
 
       return 0;
     }

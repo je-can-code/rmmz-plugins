@@ -24,6 +24,9 @@
  * All difficulties are defined in an external JSON file.
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.1
+ *    Routed the duplicate-key and lock/unlock/enable/disable warnings through
+ *    J-Base's new Diagnostics, so each one names J-Difficulty in the console.
  * - 2.2.0
  *    Difficulty layers now retain the raw configuration they were built from.
  *    The classifier reads a fixed set of fields by name, so anything an

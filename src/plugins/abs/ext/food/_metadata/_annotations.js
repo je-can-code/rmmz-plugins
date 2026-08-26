@@ -74,6 +74,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.3
+ *    Routed the missing-duration authoring warning through J-Base's new
+ *    Diagnostics, so it names J-ABS-Food in the console rather than the
+ *    J-ABS-FOOD spelling this ship never actually shipped under.
  * - 1.0.2
  *    Repointed the last-item-consumed log at J-Log's new $mapLogs registry.
  *    The $lootLogManager global this called is gone. Requires J-Log 3.0.0

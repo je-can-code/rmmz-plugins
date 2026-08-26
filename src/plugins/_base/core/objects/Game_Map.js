@@ -1,4 +1,6 @@
 //region Game_Map
+import Diagnostics from './../core/Diagnostics.js';
+
 /**
  * Extends {@link Game_Map.initialize}.<br/>
  * Also runs the member-initialization hook every plugin hangs its own state off.
@@ -71,7 +73,10 @@ Game_Map.prototype.note = function()
 {
   if (!$dataMap)
   {
-    console.warn(`attempted to get the note for a map that isn't available.`, this, $dataMap);
+    Diagnostics.warn(__PLUGIN_NAME__, `attempted to get the note for a map that isn't available.`, {
+      map: this,
+      dataMap: $dataMap,
+    });
     return String.empty;
   }
 

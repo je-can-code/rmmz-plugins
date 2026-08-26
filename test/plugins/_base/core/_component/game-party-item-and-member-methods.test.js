@@ -101,18 +101,21 @@ describe('Game_Party item/member methods (direct src import)', () =>
       // Arrange
       const party = buildParty({ itemContainer: () => null });
       const item = buildItem(1);
-      const warnSpy = vi.spyOn(console, 'warn')
-        .mockImplementation(() => {});
       const errorSpy = vi.spyOn(console, 'error')
         .mockImplementation(() => {});
 
       // Act
       party.gainItem(item, 3, false);
 
-      // Assert
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining(item.name));
-      expect(errorSpy).toHaveBeenCalledWith(item, 3, false);
-      warnSpy.mockRestore();
+      // Assert- the message names the offending item, and the details carry the whole call so a
+      // reader can tell which gainItem produced it rather than only that one did.
+      expect(errorSpy).toHaveBeenCalledWith(
+        `[J-Base] an item was gained that is not flagged as a database object: ${item.name}.`,
+        {
+          item,
+          amount: 3,
+          includeEquip: false,
+        });
       errorSpy.mockRestore();
     });
   });

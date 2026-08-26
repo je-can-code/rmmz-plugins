@@ -234,6 +234,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.4.1
+ *    Routed the unrecognized-subclass warning through J-Base's new Diagnostics,
+ *    so it names J-NaturalGrowth in the console.
  * - 2.4.0
  *    Routed the _natural namespace into its own save section, so accumulated
  *    growth lands in systems/natural.json rather than in the system blob.

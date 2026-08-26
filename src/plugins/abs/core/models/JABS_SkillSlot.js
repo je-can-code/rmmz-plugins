@@ -174,7 +174,7 @@ class JABS_SkillSlot
     }
 
     // Surface a non-fatal warning for operator triage.
-    console.warn(`attempted to request a refresh of type: ${costType}, but it isn't implemented.`);
+    Diagnostics.warn(__PLUGIN_NAME__, `attempted to request a refresh of type: ${costType}, but it isn't implemented.`);
     return false;
   }
 
@@ -198,7 +198,9 @@ class JABS_SkillSlot
         this.needsItemCostRefresh = false;
         break;
       default:
-        console.warn(`attempted to acknowledge a refresh of type: ${costType}, but it isn't implemented.`);
+        Diagnostics.warn(
+          'J-ABS',
+          `attempted to acknowledge a refresh of type: ${costType}, but it isn't implemented.`);
         break;
     }
   }
@@ -399,7 +401,7 @@ class JABS_SkillSlot
   {
     if (this.isLocked())
     {
-      console.warn("This slot is currently locked.");
+      Diagnostics.warn(__PLUGIN_NAME__, `a locked skill slot rejected an assignment of skill id ${skillId}.`, this);
       SoundManager.playBuzzer();
       return this;
     }

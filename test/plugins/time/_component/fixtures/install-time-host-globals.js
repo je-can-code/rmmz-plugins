@@ -107,7 +107,10 @@ export function installTimeHostGlobals(sandbox = globalThis)
 
   sandbox.__timeHostGlobalsInstalled = true;
 
-  sandbox.__PLUGIN_NAME__ ??= 'J-TIME';
+  // assigned rather than defaulted: this fixture is declaring that the realm *is* J-TIME, and
+  // J-TIME's own _pluginMetadata.js looks its plugin parameters up by this exact name. Deferring to
+  // whatever was already there hands it another ship's name and its parameter lookup returns null.
+  sandbox.__PLUGIN_NAME__ = 'J-TIME';
   sandbox.__PLUGIN_VERSION__ ??= '0.0.0-test';
 
   // real J-Base class- the shipped runtime concatenates J-Base ahead of every extension plugin, so

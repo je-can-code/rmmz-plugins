@@ -318,7 +318,7 @@ describe('J-SDP metadata (direct src import)', () =>
     it('reports what it loaded when external file load info is enabled', async () =>
     {
       // Arrange
-      const logSpy = vi.spyOn(console, 'log')
+      const logSpy = vi.spyOn(console, 'info')
         .mockImplementation(() => {});
       globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = true;
 
@@ -339,7 +339,7 @@ describe('J-SDP metadata (direct src import)', () =>
     {
       // Arrange- the summary reaches for J-Base helpers, so an out-of-date J-Base means the load
       // still happens but reports nothing rather than failing.
-      const logSpy = vi.spyOn(console, 'log')
+      const logSpy = vi.spyOn(console, 'info')
         .mockImplementation(() => {});
       globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = true;
       const originalVersion = globalThis.J.BASE.Metadata.Version;
@@ -352,7 +352,13 @@ describe('J-SDP metadata (direct src import)', () =>
       // loader's own minimal line rather than the counted summary the previous case produces.
       expect(metadata.panelsMap.size).toBeGreaterThan(0);
       const [ [ logged ] ] = logSpy.mock.calls;
-      expect(logged).toBe('loaded external JSON from file data/config.sdp.json.');
+
+      // the minimal line, and none of the counts the sibling case above asserts are present. the
+      // prefix is deliberately not pinned here: the loader is a J-Base file, so a shipped build
+      // stamps it "[J-Base]", but a direct-import realm has one __PLUGIN_NAME__ and this one is
+      // J-SDP's. Pinning either spelling would be asserting the harness, not the behavior.
+      expect(logged).toContain('loaded external JSON from file data/config.sdp.json.');
+      expect(logged).not.toContain('panels');
 
       globalThis.J.BASE.Metadata.Version = originalVersion;
       globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = false;

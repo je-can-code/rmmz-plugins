@@ -382,7 +382,7 @@ class Scene_Omnipedia
    */
   onRootPediaSelection()
   {
-    console.debug(`selected "${this.getRootOmnipediaKey()}" option.`);
+    // deliberately empty: each pedia overrides this to route its own selection.
   }
 
   //endregion root actions

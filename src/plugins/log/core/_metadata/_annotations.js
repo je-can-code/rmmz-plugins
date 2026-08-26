@@ -113,6 +113,10 @@
  * JABS integration (when installed) and by plugin commands.
  * ============================================================================
  * CHANGELOG:
+ * - 3.0.1
+ *    Routed the non-array DiaLog warning through J-Base's new Diagnostics. That
+ *    channel is for developer console output and is unrelated to the log windows
+ *    this plugin draws for the player.
  * - 3.0.0
  *    BREAKING: the three log manager globals are gone. $actionLogManager,
  *    $diaLogManager and $lootLogManager are replaced by a single $mapLogs

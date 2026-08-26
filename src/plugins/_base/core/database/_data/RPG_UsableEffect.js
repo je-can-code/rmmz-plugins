@@ -1,4 +1,6 @@
 //region RPG_UsableEffect
+import Diagnostics from './../../core/Diagnostics.js';
+
 /**
  * A class representing a single effect on an item or skill from the database.
  */
@@ -75,7 +77,7 @@ class RPG_UsableEffect
       case 44:
         return "Execute Common Event";
       default:
-        console.warn(`Unsupported code of [${this.code}] was provided.`);
+        Diagnostics.warn(__PLUGIN_NAME__, `unsupported usable-effect code of [${this.code}] was provided.`);
         return "UNKNOWN";
     }
   }
@@ -117,7 +119,7 @@ class RPG_UsableEffect
       case 44:
         return "Execute Common Event";
       default:
-        console.warn(`Unsupported code of [${this.code}] was provided.`);
+        Diagnostics.warn(__PLUGIN_NAME__, `unsupported usable-effect code of [${this.code}] was provided.`);
         return "UNKNOWN";
     }
   }

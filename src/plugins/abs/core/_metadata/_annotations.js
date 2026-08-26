@@ -48,6 +48,12 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.17.4
+ *    Routed every console warning and error through J-Base's new Diagnostics, so
+ *    each one names J-ABS in the console. Replaced the placeholder messages left
+ *    behind while debugging - console.warn('omg') and 'that rare error occurred!'
+ *    - with text that states what actually went wrong. The per-frame catch in
+ *    Sprite_Animation now stays silent as its own comment always said it should.
  * - 4.17.3
  *    Repointed combat and loot logging at J-Log's new $mapLogs registry. The
  *    $actionLogManager and $lootLogManager globals this called are gone.

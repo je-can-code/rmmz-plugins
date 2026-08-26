@@ -40,7 +40,11 @@ class JABS_Shield
       }
       catch (e)
       {
-        console.error(`Error evaluating shield formula: ${formula}`, target, attacker, e);
+        Diagnostics.error(__PLUGIN_NAME__, `error evaluating shield formula: ${formula}`, {
+          target,
+          attacker,
+          error: e,
+        });
         return total;
       }
     };

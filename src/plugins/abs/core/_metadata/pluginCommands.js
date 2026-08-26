@@ -92,7 +92,7 @@ PluginManager.registerCommand(J.ABS.Metadata.name, "Unlock JABS Skill Slot", arg
   const leader = $gameParty.leader();
   if (!leader)
   {
-    console.warn("There is no leader to manage skills for.");
+    Diagnostics.warn(__PLUGIN_NAME__, 'there is no party leader to manage skill slots for.');
     return;
   }
 
@@ -109,7 +109,7 @@ PluginManager.registerCommand(J.ABS.Metadata.name, "Unlock All JABS Skill Slots"
   const leader = $gameParty.leader();
   if (!leader)
   {
-    console.warn("There is no leader to manage skills for.");
+    Diagnostics.warn(__PLUGIN_NAME__, 'there is no party leader to manage skill slots for.');
     return;
   }
 
@@ -153,7 +153,10 @@ PluginManager.registerCommand(J.ABS.Metadata.name, "Apply Global Cooldown", args
   const jabsBattler = JABS_GlobalCooldown.jabsBattlerForActor(actor);
   if (!jabsBattler)
   {
-    console.warn('Apply Global Cooldown: actor is not the leader or a visible follower on the map.');
+    Diagnostics.warn(
+      'J-ABS',
+      'Apply Global Cooldown: actor is not the leader or a visible follower on the map.',
+      { actorId });
     return;
   }
   const n = parseInt(frames, 10);
@@ -188,8 +191,7 @@ PluginManager.registerCommand(J.ABS.Metadata.name, "Spawn Enemy", args =>
   {
     if (!addedEnemy)
     {
-      console.error('enemy failed to be dynamically generated.');
-      console.warn(addedEnemy);
+      Diagnostics.error(__PLUGIN_NAME__, 'an enemy failed to be dynamically generated.', addedEnemy);
 
       return;
     }

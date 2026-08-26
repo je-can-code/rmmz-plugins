@@ -994,7 +994,7 @@ Game_Battler.prototype.getRegexBySpParamId = function(sParamId)
 Game_Battler.prototype.getParamBaseNaturalBonuses = function(paramId, baseParam)
 {
   // this is intended to be implemented in subclasses.
-  console.warn(`Leveraged a Game_Battler subclass that isn't recognized by this plugin.`, this);
+  Diagnostics.warn(__PLUGIN_NAME__, `leveraged a Game_Battler subclass that isn't recognized by this plugin.`, this);
   return 0;
 };
 

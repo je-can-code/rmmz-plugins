@@ -24,6 +24,10 @@
  * this plugin.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Routed the invalid skill-reward report through J-Base's new Diagnostics.
+ *    It was a console.log with no message and a bare conditional dumped beside
+ *    it; it now names J-CMS-Skill and states which reward id was rejected.
  * - 1.1.0
  *    Fixed long related-skill names overlapping the fixed-position
  *    required/current proficiency values; names now truncate with an

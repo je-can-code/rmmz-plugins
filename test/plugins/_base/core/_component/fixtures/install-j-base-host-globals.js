@@ -1,4 +1,6 @@
 //region plugins/_base/_component/fixtures/install-j-base-host-globals.js
+import Diagnostics from '../../../../../../src/plugins/_base/core/core/Diagnostics.js';
+
 const noop = function()
 {
 };
@@ -135,6 +137,11 @@ export function installJBaseHostGlobals(
   // direct-import tests exercise raw src/plugins/_base source, where these are still bare identifiers.
   sandbox.__PLUGIN_NAME__ ??= 'J-Base';
   sandbox.__PLUGIN_VERSION__ ??= '0.0.0-test';
+
+  // every ship reports anomalies through this, so any source file under test may reach for it. the
+  // real class rather than a stub: it is a thin pass-through to console, so a test that spies on
+  // console.warn still sees the call, and it sees the prefix the shipped build would have written.
+  sandbox.Diagnostics ??= Diagnostics;
 
   sandbox.ColorManager = {
     textColor()

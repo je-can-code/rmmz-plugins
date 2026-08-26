@@ -25,6 +25,9 @@
  * the player's current target, not a specially-tagged "boss".
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.2
+ *    Routed the boss-creation failure through J-Base's new Diagnostics, so it
+ *    names J-HUD-BossFrame in the console.
  * - 1.0.1
  *    Fixed the HP-percent threshold check using a chained comparison
  *    (lowerRange <= hpPercent <= upperRange), which does not perform a

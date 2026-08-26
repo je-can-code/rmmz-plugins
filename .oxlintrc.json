@@ -168,6 +168,7 @@
     "DestinationData": "writable",
     "DiaLog": "writable",
     "DiaLogBuilder": "writable",
+    "Diagnostics": "writable",
     "DifficultyBattlerEffects": "writable",
     "DifficultyBonusEffects": "writable",
     "DifficultyBuilder": "writable",

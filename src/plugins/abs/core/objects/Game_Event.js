@@ -105,8 +105,10 @@ Game_Event.prototype.findProperPageIndex = function()
   }
   catch (err)
   {
-    console.trace();
-    console.error(`could not find page index for this event.`, err, this);
+    Diagnostics.trace(__PLUGIN_NAME__, 'could not find the page index for this event.', {
+      error: err,
+      event: this,
+    });
 
     return -1;
   }
@@ -184,8 +186,9 @@ Game_Event.prototype.page = function()
   // event data is gone (e.g. update after teardown). log only this event's own fields + stack — never dump whole
   // maps (devtools cost).
   const {stack} = new Error();
-  console.warn(
-    '[JABS] Game_Event#page: missing event data (race / teardown?).',
+  Diagnostics.warn(
+    'J-ABS',
+    'Game_Event#page: missing event data (race / teardown?).',
     {
       eventId: this.eventId(),
       pageIndex: this.pageIndex(),

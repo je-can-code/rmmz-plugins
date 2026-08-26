@@ -94,6 +94,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.0.3
+ *    Routed the invalid-preset error through J-Base's new Diagnostics, so it
+ *    names J-ABS-AllyAI in the console.
  * - 3.0.2
  *    Moved the ally AI namespace seeding from the initialize alias to
  *    initMembers, so a decoded save can establish it without a constructor.

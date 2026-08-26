@@ -2,6 +2,7 @@
 import RPG_UsableItem from './../database/core/RPG_UsableItem.js';
 import RPG_EquipItem from './../database/core/RPG_EquipItem.js';
 import RPG_BaseItem from './../database/base/RPG_BaseItem.js';
+import Diagnostics from './../core/Diagnostics.js';
 /**
  * A window designed to display "more" data.
  * "More" data is typically defined as parameters not found otherwise listed
@@ -118,7 +119,7 @@ class Window_MoreData
         break;
       default:
         this.type = Window_MoreData.Types.Unknown;
-        console.warn('was provided an unknown item type to display more data for.', this.item);
+        Diagnostics.warn(__PLUGIN_NAME__, 'was provided an unknown item type to display more data for.', this.item);
         break;
     }
   }

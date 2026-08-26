@@ -355,7 +355,7 @@ Game_Party.prototype.lockRecipe = function(key)
   if (!tracking)
   {
     // stop processing if there isn't any tracking.
-    console.error(`The recipe key of ${key} was not found in the list of recipes to lock.`);
+    Diagnostics.error(__PLUGIN_NAME__, `the recipe key of ${key} was not found in the list of recipes to lock.`);
     return;
   }
 
@@ -376,7 +376,8 @@ Game_Party.prototype.unlockRecipe = function(key)
   if (!tracking)
   {
     // stop processing if there isn't any tracking.
-    console.error(`The recipe key of ${key} was not found in the list of recipes to unlock.`);
+    const problem = `the recipe key of ${key} was not found in the list of recipes to unlock.`;
+    Diagnostics.error(__PLUGIN_NAME__, problem);
     return;
   }
 
@@ -397,7 +398,8 @@ Game_Party.prototype.lockCategory = function(key)
   if (!tracking)
   {
     // stop processing if there isn't any tracking.
-    console.error(`The category of ${key} was not found in the list of categorys to lock.`);
+    const problem = `the category key of ${key} was not found in the list of categories to lock.`;
+    Diagnostics.error(__PLUGIN_NAME__, problem);
     return;
   }
 
@@ -418,7 +420,8 @@ Game_Party.prototype.unlockCategory = function(key)
   if (!tracking)
   {
     // stop processing if there isn't any tracking.
-    console.error(`The category key of ${key} was not found in the list of categories to unlock.`);
+    const problem = `the category key of ${key} was not found in the list of categories to unlock.`;
+    Diagnostics.error(__PLUGIN_NAME__, problem);
     return;
   }
 

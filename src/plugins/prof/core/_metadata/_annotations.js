@@ -152,6 +152,11 @@
  * - Decreasing the proficiency will NOT undo rewards gained.
  * ============================================================================
  * CHANGELOG:
+ * - 2.4.2
+ *    Routed every proficiency warning and error through J-Base's new
+ *    Diagnostics, so each names J-Proficiency. The swallowed reward error is now
+ *    reported as an error carrying the caught exception rather than a bare
+ *    console.log of it beneath a separate line.
  * - 2.4.1
  *    Repointed the proficiency-growth announcement at J-Log's new $mapLogs
  *    registry. The $diaLogManager global this called is gone. Requires J-Log

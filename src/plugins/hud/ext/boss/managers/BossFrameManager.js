@@ -282,7 +282,7 @@ class BossFrameManager
     // validate we can create a boss from this event.
     if (!this.#canCreateBossFrameFromEventId(eventId))
     {
-      console.error(`could not create a boss from event of id: [ ${eventId} ].`);
+      Diagnostics.error(__PLUGIN_NAME__, `could not create a boss from event of id: [ ${eventId} ].`);
       throw new Error('Failed to create boss for boss frame.');
     }
 

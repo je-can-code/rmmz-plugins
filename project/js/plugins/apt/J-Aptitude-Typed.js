@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.2 APT-TYPED] Adds typed (element/weapon type/skill type) AP gains and teachables.
+ * [v1.1.3 APT-TYPED] Adds typed (element/weapon type/skill type) AP gains and teachables.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -171,6 +171,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.3
+ *    Routed the missing-teachable warning through J-Base's new Diagnostics, so
+ *    it names J-Aptitude-Typed in the console.
  * - 1.1.2
  *    Repointed typed AP gain logging at J-Log's new $mapLogs registry. The
  *    $actionLogManager global this called is gone. Requires J-Log 3.0.0 when
@@ -485,7 +488,7 @@ J.APT.EXT.TYPED = J.APT.EXT.TYPED || {};
 * The plugin umbrella that governs all things related to this extension plugin.
 * Name and Version are owned by the metadata instance.
 */
-J.APT.EXT.TYPED.Metadata = new JAptitudeTyped_PluginMetadata("J-Aptitude-Typed", "1.1.2");
+J.APT.EXT.TYPED.Metadata = new JAptitudeTyped_PluginMetadata("J-Aptitude-Typed", "1.1.3");
 /**
 * A collection of all aliased methods for this plugin.
 */
@@ -963,7 +966,7 @@ Window_AptitudeAggregateDetails.prototype.drawExtensionData = function(sourcePro
 	const teachables = source.aptitudeTeachings;
 	const found = teachables.find((teachable) => teachable.skillId === skillId);
 	if (!found) {
-		console.warn(`Could not find teachable for skillId: ${skillId}`);
+		Diagnostics.warn("J-Aptitude-Typed", `could not find a teachable for skillId: ${skillId}`);
 		return;
 	}
 	const key = found.apTypeKey();
