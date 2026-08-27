@@ -837,9 +837,6 @@ var PanelMastery = class PanelMastery {
 	* @returns {number}
 	*/
 	static #parseIntField(value, defaultValue) {
-		if (value === undefined || value === null || value === "") {
-			return defaultValue;
-		}
 		const parsed = Number.parseInt(String(value), 10);
 		if (Number.isNaN(parsed)) {
 			return defaultValue;
@@ -997,9 +994,6 @@ var PanelIdentity = class PanelIdentity {
 	* @returns {number}
 	*/
 	static #parseIntField(value, defaultValue) {
-		if (value === undefined || value === null || value === "") {
-			return defaultValue;
-		}
 		const parsed = Number.parseInt(String(value), 10);
 		if (Number.isNaN(parsed)) {
 			return defaultValue;
@@ -1094,9 +1088,6 @@ var PanelProgression = class PanelProgression {
 	* @returns {number}
 	*/
 	static #parseIntField(value, defaultValue) {
-		if (value === undefined || value === null || value === "") {
-			return defaultValue;
-		}
 		const parsed = Number.parseInt(String(value), 10);
 		if (Number.isNaN(parsed)) {
 			return defaultValue;
@@ -1109,9 +1100,6 @@ var PanelProgression = class PanelProgression {
 	* @returns {number}
 	*/
 	static #parseFloatField(value, defaultValue) {
-		if (value === undefined || value === null || value === "") {
-			return defaultValue;
-		}
 		const parsed = Number.parseFloat(String(value));
 		if (Number.isNaN(parsed)) {
 			return defaultValue;
@@ -2411,9 +2399,6 @@ var J_SdpPluginMetadata = class J_SdpPluginMetadata extends PluginMetadata {
 	* @returns {number}
 	*/
 	static #parsePositiveFloatOr(value, fallback) {
-		if (value === undefined || value === null || value === "") {
-			return fallback;
-		}
 		const parsed = Number.parseFloat(String(value));
 		if (Number.isFinite(parsed) && parsed > 0) {
 			return parsed;

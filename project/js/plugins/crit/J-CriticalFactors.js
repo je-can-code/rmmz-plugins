@@ -616,9 +616,6 @@ var J_CriticalFactorsPluginMetadata = class J_CriticalFactorsPluginMetadata exte
 	* @returns {number}
 	*/
 	static #parsePercentFactorOr(value, fallback) {
-		if (value === undefined || value === null || value === "") {
-			return fallback;
-		}
 		const parsed = Number.parseFloat(value);
 		if (!Number.isFinite(parsed)) {
 			return fallback;

@@ -94,11 +94,6 @@ class PanelProgression
    */
   static #parseIntField(value, defaultValue)
   {
-    if (value === undefined || value === null || value === '')
-    {
-      return defaultValue;
-    }
-
     const parsed = Number.parseInt(String(value), 10);
 
     if (Number.isNaN(parsed))
@@ -116,11 +111,6 @@ class PanelProgression
    */
   static #parseFloatField(value, defaultValue)
   {
-    if (value === undefined || value === null || value === '')
-    {
-      return defaultValue;
-    }
-
     const parsed = Number.parseFloat(String(value));
 
     if (Number.isNaN(parsed))

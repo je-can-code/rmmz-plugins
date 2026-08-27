@@ -80,13 +80,8 @@ class J_CriticalFactorsPluginMetadata extends PluginMetadata
    */
   static #parsePercentFactorOr(value, fallback)
   {
-    // treat a missing/blank parameter as "use the fallback".
-    if (value === undefined || value === null || value === '')
-    {
-      return fallback;
-    }
-
-    // parse the raw percent-point value out of the plugin parameter string.
+    // parse the raw percent-point value out of the plugin parameter string. a missing or blank
+    // parameter stringifies into something unparseable, which the finite check below rejects.
     const parsed = Number.parseFloat(value);
 
     // reject anything that didn't parse into a usable number.

@@ -149,11 +149,6 @@ class PanelMastery
    */
   static #parseIntField(value, defaultValue)
   {
-    if (value === undefined || value === null || value === '')
-    {
-      return defaultValue;
-    }
-
     const parsed = Number.parseInt(String(value), 10);
 
     if (Number.isNaN(parsed))
