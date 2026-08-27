@@ -9470,12 +9470,7 @@ var JABS_AiManager = class JABS_AiManager {
 	* @param {JABS_Battler} battler The battler to add to tracking.
 	*/
 	static addOrUpdateBattler(battler) {
-		const key = battler.getUuid();
-		if (this.battlers.has(key)) {
-			this.updateBattler(key, battler);
-		} else {
-			this.addBattler(battler);
-		}
+		this.addBattler(battler);
 	}
 	/**
 	* Adds a battler to tracking based on the battler's own uuid.
@@ -9483,14 +9478,6 @@ var JABS_AiManager = class JABS_AiManager {
 	*/
 	static addBattler(battler) {
 		const key = battler.getUuid();
-		this.battlers.set(key, battler);
-	}
-	/**
-	* Updates a given key in the battler tracking with new battler data.
-	* @param {string} key The key of the battler to replace the slot of.
-	* @param {JABS_Battler} battler The updated battler data.
-	*/
-	static updateBattler(key, battler) {
 		this.battlers.set(key, battler);
 	}
 	/**
