@@ -14,7 +14,7 @@ truth in a second.
 | `/src` | All source: plugins, build tooling, type definitions |
 | `/test` | Vitest suites (see [Test layout](#test-layout)) |
 | `/out` | Vite build scratch, **nested by ship** (`out/sdp/J-SDP.js`). Gitignored — this is the intermediate, not the deliverable |
-| `/project` | Not a loadable MZ project — it has no `data/` and no plugin manifest. Two things live here and both are load-bearing: `project/js/plugins/` is the **committed** mirror of `out/` that `hotfix` produces, and `project/js/rmmz_*.js` are the vendored engine scripts the test harnesses execute and the engine-def and phantom-call tooling parse |
+| `/project` | Not a loadable MZ project — no `data/`, no plugin manifest, no bootstrap. Three things live here and all three are load-bearing: `project/js/plugins/` is the **committed** mirror of `out/` that `hotfix` produces; `project/js/rmmz_*.js` are the vendored engine scripts the test harnesses execute and the engine-def and phantom-call tooling parse; `project/js/libs/` holds the real PIXI the view harness runs against |
 | `/docs` | Markdown documentation, including this file. Mostly incomplete |
 | `/.backlog` | Work items: `unstarted/` and `completed/`. Historical record, not active instruction |
 
