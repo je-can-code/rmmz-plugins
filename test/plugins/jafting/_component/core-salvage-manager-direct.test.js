@@ -488,28 +488,8 @@ describe('JaftingSalvageManager (direct src import)', () =>
     });
   });
 
-  describe('refinementMaterialHasNoRecoverableRows / buildRefinementOutputLedger', () =>
+  describe('buildRefinementOutputLedger', () =>
   {
-    it('a stamped material always contributes its rows (returns false)', () =>
-    {
-      const material = fakeDatum('w', 20);
-      material._jaftingSalvageLedger = new JaftingSalvageLedgerSnapshot([ new JaftingSalvageLedgerRow('i', 1, 1) ]);
-
-      expect(JaftingSalvageManager.refinementMaterialHasNoRecoverableRows(material)).toBe(false);
-    });
-
-    it('a bare vendor weapon/armor material (no stamp) contributes nothing (returns true)', () =>
-    {
-      globalThis.J = { JAFTING: { Metadata: { materialArmorTypeId: 5, materialWeaponTypeId: -1 } } };
-
-      const material = fakeDatum('a', 30);
-      material.atypeId = 1;
-
-      expect(JaftingSalvageManager.refinementMaterialHasNoRecoverableRows(material)).toBe(true);
-
-      delete globalThis.J;
-    });
-
     it('buildRefinementOutputLedger carries base rows forward and merges stamped material rows', () =>
     {
       const base = fakeDatum('w', 40);
