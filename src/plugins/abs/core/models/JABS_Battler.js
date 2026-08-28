@@ -2290,15 +2290,10 @@ class JABS_Battler
    */
   clearBattlerLastHit()
   {
+    // this also clears the player's target: setBattlerLastHit mirrors the last hit onto the target
+    // for the player, so storing null there is what removes it.
     this.setBattlerLastHit(null);
     this.setLastBattlerHitCountdown(0);
-
-    // when clearing the last battler hit, also remove the player's target that
-    // was likely added via the above function of "setBattlerLastHit".
-    if (this.isPlayer())
-    {
-      this.setTarget(null);
-    }
   };
 
   /**

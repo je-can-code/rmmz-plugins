@@ -13239,9 +13239,6 @@ var JABS_Battler = class JABS_Battler {
 	clearBattlerLastHit() {
 		this.setBattlerLastHit(null);
 		this.setLastBattlerHitCountdown(0);
-		if (this.isPlayer()) {
-			this.setTarget(null);
-		}
 	}
 	/**
 	* Sets the last battler hit countdown.
