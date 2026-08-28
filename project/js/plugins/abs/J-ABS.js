@@ -7778,11 +7778,7 @@ var JABS_AI = class {
 			const rate = testAction.calcElementRate(target.getBattler());
 			elementalSkillCollection.push([skillId, rate]);
 		});
-		elementalSkillCollection.sort((a, b) => {
-			if (a[1] > b[1]) return -1;
-			if (a[1] < b[1]) return 1;
-			return 0;
-		});
+		elementalSkillCollection.sort((a, b) => b[1] - a[1]);
 		return [elementalSkillCollection[0][0]];
 	}
 	/**
@@ -14755,14 +14751,7 @@ var JABS_Battler = class JABS_Battler {
 	* @returns {JABS_Aggro[]}
 	*/
 	getAggrosSortedHighestToLowest() {
-		const sorting = (a, b) => {
-			if (a.aggro < b.aggro) {
-				return 1;
-			} else if (a.aggro > b.aggro) {
-				return -1;
-			}
-			return 0;
-		};
+		const sorting = (a, b) => b.aggro - a.aggro;
 		const aggros = this.getAllAggros();
 		aggros.sort(sorting);
 		return aggros;

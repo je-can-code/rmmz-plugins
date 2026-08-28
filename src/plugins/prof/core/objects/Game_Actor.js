@@ -412,13 +412,6 @@ Game_Actor.prototype.onBattlerDataChange = function()
  */
 Game_Actor.prototype.updateBonusSkillProficiencyGains = function()
 {
-  // TEMPORARY FIX FOR UPDATING SAVES IN PROGRESS.
-  if (this.bonusSkillProficiencyGains() === undefined
-    || this.bonusSkillProficiencyGains() === null)
-  {
-    this.setBonusSkillProficiencyGains(0);
-  }
-
   this.setBonusSkillProficiencyGains(RPGManager.getSumFromAllNotesByRegex(
     this.getAllNotes(),
     J.PROF.RegExp.ProficiencyBonus))

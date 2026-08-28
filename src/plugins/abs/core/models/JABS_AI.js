@@ -222,13 +222,10 @@ class JABS_AI
       elementalSkillCollection.push([ skillId, rate ]);
     });
 
-    // sort descending by elemental effectiveness.
-    elementalSkillCollection.sort((a, b) =>
-    {
-      if (a[1] > b[1]) return -1;
-      if (a[1] < b[1]) return 1;
-      return 0;
-    });
+    // sort descending by elemental effectiveness. subtracting rather than branching keeps the
+    // comparator consistent- a branch that answers 0 where it should answer a sign still sorts
+    // correctly under V8, which makes the branches impossible to test.
+    elementalSkillCollection.sort((a, b) => b[1] - a[1]);
 
     // wrap result as an array so the caller can use decideFromNoneToManySkills uniformly.
     return [ elementalSkillCollection[0][0] ];

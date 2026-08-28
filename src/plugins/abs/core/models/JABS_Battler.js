@@ -4776,20 +4776,10 @@ class JABS_Battler
    */
   getAggrosSortedHighestToLowest()
   {
-    // a sorting function for determining the highest aggro from a collection.
-    const sorting = (a, b) =>
-    {
-      if (a.aggro < b.aggro)
-      {
-        return 1
-      }
-      else if (a.aggro > b.aggro)
-      {
-        return -1;
-      }
-
-      return 0;
-    };
+    // a sorting function for determining the highest aggro from a collection. subtracting rather than
+    // branching keeps the comparator consistent- an arm that answers 0 where it should answer a sign
+    // still sorts correctly under V8, which makes the branches impossible to test.
+    const sorting = (a, b) => b.aggro - a.aggro;
 
     // grab the aggros.
     const aggros = this.getAllAggros();

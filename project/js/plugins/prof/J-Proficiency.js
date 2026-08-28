@@ -799,9 +799,6 @@ Game_Actor.prototype.onBattlerDataChange = function() {
 * Updates the skill proficiency gains for this actor.
 */
 Game_Actor.prototype.updateBonusSkillProficiencyGains = function() {
-	if (this.bonusSkillProficiencyGains() === undefined || this.bonusSkillProficiencyGains() === null) {
-		this.setBonusSkillProficiencyGains(0);
-	}
 	this.setBonusSkillProficiencyGains(RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.PROF.RegExp.ProficiencyBonus));
 };
 /**
