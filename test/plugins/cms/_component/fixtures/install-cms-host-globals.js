@@ -4,9 +4,13 @@ import { installPluginManagerWithParams } from '../../../../setup/install-plugin
 import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 /**
- * The help text J-CMS ships configured in the real project/js/plugins.js, so metadata assertions
- * exercise realistic strings rather than the empty-object default. `help-formation` is deliberately
- * absent: the real configuration leaves it unset, which is what exercises the fallback.
+ * Production-shaped help text for J-CMS, so metadata assertions exercise realistic strings rather
+ * than the empty-object default. `help-formation` is deliberately absent: a real configuration
+ * leaves it unset, which is what exercises the fallback.
+ *
+ * Transcribed from a real RPG Maker plugin manifest. There is no manifest in this repo to check it
+ * against anymore, so treat this as a fixture in its own right — change an entry only because a test
+ * needs a different value, never in the belief that it is being resynced with somewhere else.
  * @type {Record<string, string>}
  */
 export const DEFAULT_CMS_PLUGIN_PARAMS = {

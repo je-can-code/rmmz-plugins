@@ -567,6 +567,19 @@ Notetags take one of these shapes:
 - Whether duplicate tags are allowed is **contextual** — some plugins permit multiples, others do not.
   Ask rather than deducing, unless you have specific knowledge of the tag in question.
 
+**A PR that adds a tag adds its glossary entry.** [`docs/notetag-reference.md`](docs/notetag-reference.md)
+is the one flat, scannable list of every notetag in the ecosystem — what it does, what it applies to,
+and a real example — and it is what an author reads instead of chasing a dozen plugins'
+`_annotations.js`. A tag that ships without an entry is a tag nobody can find, and the reference stops
+being trustworthy the first time it is incomplete: a reader who has been burned once has to check the
+source anyway, which is the whole cost the document exists to remove.
+
+So the entry lands in the same PR as the tag, never as follow-up work. Match the surrounding format —
+entries are grouped by plugin, and a tag family with several variants shares one entry with a variants
+table rather than one entry per variant. The plugin's own `_annotations.js` remains the authoritative
+source the entry is written from; the reference is the lookup built on top of it, and the two are
+expected to agree.
+
 ---
 
 ## Testing
@@ -730,6 +743,9 @@ naming that gap.
   `meta.js` (`PLUGIN_VERSION`) or the `CHANGELOG:` blocks in `_annotations.js`. At PR time, reverse-
   analyze the diff per ship to decide major / minor / patch, then write the changelog. A ship only gets
   a version section if its tree actually changed.
+- **A new tag ships with its glossary entry**, in the same PR — see [Tags](#tags). Unlike the version
+  bump above, this is not deferred to PR time: write it whenever the tag lands, just never later than
+  the PR that introduces it.
 - Assume a sibling Claude session may be working in this repo right now. Unexplained changes in the tree
   are usually them, not corruption.
 
