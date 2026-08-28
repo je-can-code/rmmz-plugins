@@ -64,6 +64,18 @@ export function installFakeSaveFilesystem()
     fsReaddir: path =>
     {
       const prefix = withTrailingSlash(path);
+
+      // the real implementation is fs.readdirSync, which throws ENOENT rather than answering empty.
+      // a fake that quietly returns [] here lets callers drop their own existence checks without any
+      // test noticing, which is the whole reason those checks exist.
+      if (directories.has(prefix) === false)
+      {
+        const error = new Error(`ENOENT: no such file or directory, scandir '${path}'`);
+        error.code = 'ENOENT';
+
+        throw error;
+      }
+
       const entries = new Set();
 
       const collect = candidate =>
