@@ -549,8 +549,40 @@ State is shaped `this._j.<PLUGIN_ABBREVIATION>.<CONTAINER>.<NAME>` — for examp
 
 ### Logging
 
-Never ship logging in production code. `console.log` is for debugging only; the `J.LOG` namespace is
-in-game logging, which is a different thing entirely.
+Never ship logging in production code. Narrating normal operation — "loaded X", "changed to category
+Y", "adding new quest" — is exactly what that forbids, and a `console.log` left behind after debugging
+is the usual way it gets in.
+
+**Anomalies are different, and they go through `Diagnostics`.** No plugin calls `console.*` directly.
+`Diagnostics` (`_base/core/core/Diagnostics.js`) is a hoisted J-Base class with four methods:
+
+| Method | For |
+|---|---|
+| `warn` | something wrong the game carries on through, usually by falling back to a sentinel |
+| `error` | something wrong it *cannot* carry on through correctly, whether or not it is about to throw |
+| `trace` | an anomaly whose **call path** is the diagnostic — a static class someone instantiated, a method reached from somewhere impossible. Emits the warning and the stack |
+| `info` | the one non-anomaly method: a confirmation somebody **opted into**, like a config load behind `ShowExternalFileLoadInfo`. Not a licence to narrate |
+
+```javascript
+Diagnostics.warn(__PLUGIN_NAME__, `unhandled scope for tool: [ ${scope} ]!`);
+// → [J-ABS] unhandled scope for tool: [ 3 ]!
+```
+
+**Always `__PLUGIN_NAME__`, never a literal.** That is the build-time identifier Vite substitutes per
+ship out of that ship's own `meta.js`, and it works in **any** file of a ship — `define` is a
+whole-bundle substitution, not something special about `initialization.js`. One source of truth per
+ship, and renaming a ship updates every diagnostic it writes. Deliberately not `J.SOMETHING.Metadata.name`:
+substitution bakes a literal, so a message still names its ship in the exact situation where the runtime
+namespace is what broke.
+
+Supporting values are **one optional third argument**, not a variadic tail — `verify:no-rest-parameters`
+forbids the tail, and `{ target, attacker, error }` prints better in devtools than three positional blobs.
+
+Two ships are exempt and stay that way: **`J-SystemUtilities`**, whose console output *is* its product
+(InputLog, map-click inspection, save dumps), and `abs/ext/star` under its standing exclusion.
+
+`J.LOG` is unrelated to any of this — that is the in-game log the *player* reads on the map, and its
+channels live on `$mapLogs`.
 
 ### Tags
 
