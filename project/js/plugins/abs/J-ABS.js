@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.17.4 ABS] Enables combat to be carried out on the map.
+ * [v4.17.5 ABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -48,6 +48,17 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.17.5
+ *    Fixed the Set JABS Skill plugin command assigning nothing when aimed at the
+ *    tool or usable item slot. Plugin command arguments arrive as strings, so an
+ *    unset item id reads as "0" and never equals the numeric zero it was compared
+ *    against - every call took the item branch, overwrote the skill id with a zero
+ *    and then bailed for having no id worth assigning.
+ *    Collapsed addOrUpdateBattler into a single write and removed updateBattler;
+ *    the tracking map is keyed by uuid, so both arms already wrote the same entry.
+ *    Removed the player target clear from clearBattlerLastHit, since storing null
+ *    through setBattlerLastHit is already what clears the player's target.
+ *    Flattened the aggro and elemental-effectiveness comparators to a subtraction.
  * - 4.17.4
  *    Routed every console warning and error through J-Base's new Diagnostics, so
  *    each one names J-ABS in the console. Replaced the placeholder messages left
@@ -4386,7 +4397,7 @@ J.ABS.Helpers.loadExternalConfig = (configPath = "data/config.jabs.json") => {
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.17.4");
+J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.17.5");
 J.ABS.Helpers.loadExternalConfig();
 /**
 * The various default values across the engine. Often configurable.
@@ -23935,7 +23946,7 @@ var StateAfflictionProvider = class StateAfflictionProvider {
 //#endregion
 //#region src/plugins/abs/core/_metadata/meta.js
 var PLUGIN_NAME = "J-ABS";
-var PLUGIN_VERSION = "4.17.4";
+var PLUGIN_VERSION = "4.17.5";
 var PLUGIN_DESC_TAG = "ABS";
 
 //#endregion

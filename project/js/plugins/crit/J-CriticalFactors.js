@@ -1,7 +1,7 @@
 //region Introduction
 /*:
  * @target MZ
- * @plugindesc [v1.3.0 CRIT] Manages critical damage multiplier/reduction of battlers.
+ * @plugindesc [v1.3.1 CRIT] Manages critical damage multiplier/reduction of battlers.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -517,6 +517,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.1
+ *    The percent factor parser no longer pre-checks for a missing or blank plugin
+ *    parameter. Such a value stringifies into something unparseable, which the
+ *    finite check below already rejects into the fallback.
  * - 1.3.0
  *    Added <forceCritProcs> to force every on-crit state application roll
  *    to succeed, without inflating crit chance or touching luck elsewhere.
@@ -644,7 +648,7 @@ J.CRIT = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.CRIT.Metadata = new J_CriticalFactorsPluginMetadata("J-CriticalFactors", "1.3.0");
+J.CRIT.Metadata = new J_CriticalFactorsPluginMetadata("J-CriticalFactors", "1.3.1");
 /**
 * A collection of all aliased methods for this plugin.
 */

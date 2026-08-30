@@ -40,6 +40,11 @@
  * their own respective tags.
  * ============================================================================
  * CHANGELOG:
+ * - 2.2.1
+ *    Removed refinementMaterialHasNoRecoverableRows along with the early exit it
+ *    drove in buildRefinementOutputLedger. A bare vendor donor already reached the
+ *    final return with base lineage alone, so the pre-check spent four branches
+ *    reaching the answer the pipeline arrived at anyway.
  * - 2.2.0
  *    Routed the _jafting namespace into its own save section, so crafting
  *    state lands in systems/jafting.json rather than in the system blob.

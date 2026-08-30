@@ -152,6 +152,10 @@
  * - Decreasing the proficiency will NOT undo rewards gained.
  * ============================================================================
  * CHANGELOG:
+ * - 2.4.3
+ *    Removed the save-migration block from updateBonusSkillProficiencyGains. The
+ *    field is established in initMembers, so the absent value it defended against
+ *    cannot arrive, and the very next statement overwrote whatever it had written.
  * - 2.4.2
  *    Routed every proficiency warning and error through J-Base's new
  *    Diagnostics, so each names J-Proficiency. The swallowed reward error is now
