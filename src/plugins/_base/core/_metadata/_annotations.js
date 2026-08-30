@@ -157,6 +157,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.7.1
+ *    ParsableComment now admits the '#' character, so an event comment may carry
+ *    a hex colour as a tag value. Previously such a comment failed the shape test
+ *    and was discarded before parsing, which read downstream as the tag simply
+ *    not being there.
  * - 3.7.0
  *    Added Diagnostics, the channel every plugin now reports developer-facing
  *    anomalies through. Diagnostics.warn/error/trace/info each take the emitting

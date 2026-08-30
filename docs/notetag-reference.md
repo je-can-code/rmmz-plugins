@@ -5459,6 +5459,98 @@ This choice is only visible while switch 222 is ON.
 
 ---
 
+## J-Motion (`src/plugins/motion/core/`)
+
+### `<motion:[TYPE]>` / `<motion:[TYPE, PARAM, ...]>`
+
+**Applies to:**
+Event page comments
+
+**When:**
+the page becomes active, and for as long as it stays active
+
+**Effect:**
+gives the character's sprite an ongoing motion — breathing, floating, spinning, flickering, tinting,
+and so on. A motion runs for exactly as long as it is declared; nothing expires on its own and
+nothing fires once, so `<motion:[shake]>` shakes until the page changes rather than shaking briefly.
+Timed motion comes from the Apply Motion plugin command, which takes a duration.
+
+Several motions compose on one character — declare as many as you like and each can be withdrawn
+without disturbing the others. Two characters declaring the same motion do **not** animate in
+lockstep; each starts somewhere random within its own cycle, which is what makes a room of thirty
+breathing enemies read as alive. Append `sync` to any cycling motion when you actually want them in
+formation.
+
+Every parameter is positional and optional, filling in left to right from the defaults in
+`data/config.motion.json`. All periods and durations are in frames, at 60 frames per second. All
+angles are in degrees. Colours are written `#rrggbb`.
+
+A tag naming a motion that does not exist, or carrying more parameters than its motion accepts, is
+reported through the console rather than silently ignored.
+
+| Type | Parameters | Does |
+|---|---|---|
+| `breathe` | AMOUNT, PERIOD | swells and narrows, the way a chest does |
+| `stretch` | AMOUNT, PERIOD | grows and shrinks in height only |
+| `pulse` | AMOUNT, PERIOD | grows and shrinks evenly, like a heartbeat |
+| `float` | DISTANCE, PERIOD | hovers above the ground and settles back to it |
+| `sway` | DISTANCE, PERIOD | drifts side to side |
+| `swing` | ANGLE, PERIOD | rocks back and forth about its feet, like a hanging sign |
+| `spin` | PERIOD, DIRECTION | turns in place; DIRECTION is `cw` or `ccw` |
+| `ghost` | MIN, MAX, PERIOD | fades smoothly between two opacities |
+| `flicker` | MIN, MAX, INTERVAL | jumps between opacities, like a failing lamp |
+| `shake` | STRENGTH, AXIS, INTERVAL | vibrates; AXIS is `x`, `y`, or `both` |
+| `hop` | HEIGHT, DURATION, REST | leaps, lands, waits, and leaps again |
+| `throb` | RED, GREEN, BLUE, GRAY, PERIOD | pulses a colour tone in and out |
+| `flash` | COLOR, PERIOD | strobes a colour |
+| `scale` | PERCENT, DURATION | eases to a size and holds it |
+| `angle` | DEGREES, DURATION | eases to an angle and holds it |
+| `fade` | PERCENT, DURATION | eases to an opacity and holds it |
+| `hue` | DEGREES, DURATION | eases to a hue rotation and holds it |
+| `tint` | COLOR, DURATION | eases to a colour tint and holds it |
+
+The last five travel somewhere and stay there, and ease back out when they are removed — so a
+`scale` applied by a state swells the character as the state lands and settles it again when the
+state drops, in both directions, with nothing extra written.
+
+```
+<motion:[breathe]>
+```
+This character breathes at the default depth and rate.
+
+```
+<motion:[swing, 15, 200]>
+```
+This character rocks 15 degrees to either side over a 200 frame cycle.
+
+```
+<motion:[float]>
+<motion:[ghost]>
+```
+This character hovers and fades at the same time.
+
+```
+<motion:[breathe, 0.08, 90, sync]>
+```
+A deeper, quicker breath, deliberately in step with every other character declaring the same thing.
+
+```
+<motion:[scale, 150]>
+```
+This character is permanently half again as large, easing up to it over half a second.
+
+```
+<motion:[tint, #ffa0a0]>
+```
+This character is tinted a pale red.
+
+**A note on cost:** `hue`, `tint`, `throb` and `flash` are more expensive than the rest. Colouring a
+sprite gives it its own render pass for the remainder of its life, and the engine never takes that
+back. On a map holding a dozen coloured characters this is nothing; on one holding a hundred it is
+worth knowing. Everything that only moves, scales or rotates costs nothing beyond the arithmetic.
+
+---
+
 ## J-NaturalGrowths (`src/plugins/natural/core/`)
 
 Level-based and equipment/state-based formulaic growth for every base/ex/sp parameter, plus a

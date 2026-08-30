@@ -171,9 +171,10 @@ J.BASE.RegExp.HealAmplification = /<har:(-?\d+)>/gi;
  *    <someKeyWithArrayAndManyNumberValues:[123,456]>
  *    <someKeyWithStringValue:someValue>
  *    <someKeyWithRangeValue:startRange-endRange>
+ *    <someKeyWithHexColorValue:#ffa0a0>
  *  </pre>
  */
-J.BASE.RegExp.ParsableComment = /^<[[\]\w :"',.!+\-*/\\]+>$/i;
+J.BASE.RegExp.ParsableComment = /^<[[\]\w :"',.!+\-*/\\#]+>$/i;
 
 /**
  * The basic structure for retrieving summable max tech values.

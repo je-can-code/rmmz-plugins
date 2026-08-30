@@ -1,0 +1,175 @@
+//region plugins/motion/core/models/motion-composition.test.js
+import { beforeAll, describe, expect, it } from 'vitest';
+import { installMotionHostGlobals } from '../../fixtures/install-motion-host-globals.js';
+
+describe('MotionComposition', () =>
+{
+  /** @type {typeof import('../../../../../src/plugins/motion/core/models/MotionComposition.js').default} */
+  let MotionComposition;
+
+  /** @type {typeof import('../../../../../src/plugins/motion/core/core/MotionChannels.js').default} */
+  let MotionChannels;
+
+  beforeAll(async () =>
+  {
+    installMotionHostGlobals();
+
+    // literal import paths, so Stryker can map mutants in these files back to this test file.
+    ({ default: MotionComposition } =
+      await import('../../../../../src/plugins/motion/core/models/MotionComposition.js'));
+    ({ default: MotionChannels } =
+      await import('../../../../../src/plugins/motion/core/core/MotionChannels.js'));
+  });
+
+  /**
+   * A stand-in for an effect. The composition only ever compares these by identity, so a bare
+   * object is a truthful collaborator rather than a simplification.
+   * @param {string} name A label, so a failing assertion says which one.
+   * @returns {Object}
+   */
+  const anEffect = name => ({ name });
+
+  describe('construction', () =>
+  {
+    it('starts every channel at the value that means "doing nothing"', () =>
+    {
+      // Act
+      const composition = new MotionComposition();
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.OFFSET_X)).toBe(0);
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBe(1.0);
+      expect(composition.valueFor(MotionChannels.TINT)).toEqual([ 255, 255, 255 ]);
+    });
+
+    it('does not ask for centred rotation until something requests it', () =>
+    {
+      // Act
+      const composition = new MotionComposition();
+
+      // Assert
+      expect(composition.hasCenterRotation()).toBe(false);
+    });
+  });
+
+  describe('contribute', () =>
+  {
+    it('folds an uncontested contribution into the channel', () =>
+    {
+      // Arrange
+      const composition = new MotionComposition();
+      const effect = anEffect('sway');
+
+      // Act
+      composition.contribute(effect, MotionChannels.OFFSET_X, 6);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.OFFSET_X)).toBe(6);
+    });
+
+    it('composes two uncontested contributions to the same channel', () =>
+    {
+      // Arrange
+      const composition = new MotionComposition();
+      const sway = anEffect('sway');
+      const shake = anEffect('shake');
+
+      // Act
+      composition.contribute(sway, MotionChannels.OFFSET_X, 6);
+      composition.contribute(shake, MotionChannels.OFFSET_X, 4);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.OFFSET_X)).toBe(10);
+    });
+
+    it('discards a contribution to a channel somebody else has claimed', () =>
+    {
+      // Arrange
+      const composition = new MotionComposition();
+      const claimant = anEffect('squish');
+      const bystander = anEffect('breathe');
+      composition.awardClaim(MotionChannels.SCALE_Y, claimant);
+
+      // Act
+      composition.contribute(bystander, MotionChannels.SCALE_Y, 1.05);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.SCALE_Y)).toBe(1.0);
+    });
+
+    it('takes the claimant\'s value outright rather than combining it', () =>
+    {
+      // Arrange
+      const composition = new MotionComposition();
+      const claimant = anEffect('squish');
+      composition.awardClaim(MotionChannels.SCALE_Y, claimant);
+
+      // Act
+      composition.contribute(claimant, MotionChannels.SCALE_Y, 1.4);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.SCALE_Y)).toBe(1.4);
+    });
+
+    it('leaves a claimant\'s other channels open to everybody', () =>
+    {
+      // Arrange
+      const composition = new MotionComposition();
+      const claimant = anEffect('squish');
+      const bystander = anEffect('sway');
+      composition.awardClaim(MotionChannels.SCALE_Y, claimant);
+
+      // Act
+      composition.contribute(bystander, MotionChannels.OFFSET_X, 6);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.OFFSET_X)).toBe(6);
+      expect(composition.valueFor(MotionChannels.SCALE_Y)).toBe(1.0);
+    });
+  });
+
+  describe('claimantFor', () =>
+  {
+    it('reports nobody for an uncontested channel', () =>
+    {
+      // Arrange
+      const composition = new MotionComposition();
+
+      // Act
+      const claimant = composition.claimantFor(MotionChannels.ROTATION);
+
+      // Assert
+      expect(claimant).toBeNull();
+    });
+
+    it('reports the effect that was awarded the channel', () =>
+    {
+      // Arrange
+      const composition = new MotionComposition();
+      const claimant = anEffect('spin');
+      composition.awardClaim(MotionChannels.ROTATION, claimant);
+
+      // Act
+      const found = composition.claimantFor(MotionChannels.ROTATION);
+
+      // Assert
+      expect(found).toBe(claimant);
+    });
+  });
+
+  describe('flagCenterRotation', () =>
+  {
+    it('records the request for the view to act on', () =>
+    {
+      // Arrange
+      const composition = new MotionComposition();
+
+      // Act
+      composition.flagCenterRotation();
+
+      // Assert
+      expect(composition.hasCenterRotation()).toBe(true);
+    });
+  });
+});
+//endregion plugins/motion/core/models/motion-composition.test.js
