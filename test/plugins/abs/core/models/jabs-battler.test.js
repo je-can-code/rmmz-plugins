@@ -1677,13 +1677,19 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('clearBattlerLastHit clears the last hit, the countdown, and the player\'s target', () =>
     {
+      // Arrange- the target has to exist before the act, or "it is null afterwards" is a fact about
+      // the fixture rather than about the clearing. a battler that never had a target reads as
+      // cleared no matter what the player-only branch does.
       const jabsBattler = buildBattler();
       jabsBattler.isPlayer = () => true;
+      jabsBattler.setTarget({ id: 'player-target' });
       jabsBattler.setBattlerLastHit({ isDead: () => false });
       jabsBattler.setLastBattlerHitCountdown(500);
 
+      // Act
       jabsBattler.clearBattlerLastHit();
 
+      // Assert
       expect(jabsBattler.hasBattlerLastHit()).toBe(false);
       expect(jabsBattler._lastHitCountdown).toBe(0);
       expect(jabsBattler.getTarget()).toBeNull();
@@ -5251,14 +5257,21 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('removeAggro does nothing for an untracked uuid', () =>
     {
+      // Arrange- the list has to hold entries that must survive. against an empty list a failed
+      // lookup splices at index -1, which removes nothing and is indistinguishable from the guard
+      // doing its job; with entries present that same splice takes the last one instead.
       const jabsBattler = buildBattler();
-      jabsBattler._aggros = [];
+      const first = { uuid: () => 'first-uuid' };
+      const last = { uuid: () => 'last-uuid' };
+      jabsBattler._aggros = [ first, last ];
       jabsBattler.disengageTarget = vi.fn();
 
-      jabsBattler.removeAggro('uuid');
+      // Act
+      jabsBattler.removeAggro('untracked-uuid');
 
+      // Assert
       expect(jabsBattler.disengageTarget).not.toHaveBeenCalled();
-      expect(jabsBattler._aggros).toEqual([]);
+      expect(jabsBattler._aggros).toEqual([ first, last ]);
     });
 
     it('removeAggro disengages when removing the aggro of the current target', () =>
@@ -5460,14 +5473,19 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
     it('leaves the target unset when no battler is found without a current target', async () =>
     {
+      // Arrange- the miss has to return what the real lookup returns. getBattlerByUuid is a Map.get,
+      // so an absent uuid yields undefined, not null; mocking null hands back the exact value an
+      // untouched target already holds, and the guard that avoids assigning it cannot be observed.
       const { default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js');
-      JABS_AiManager.getBattlerByUuid = vi.fn(() => null);
+      JABS_AiManager.getBattlerByUuid = vi.fn(() => undefined);
       const jabsBattler = buildBattler();
       jabsBattler.isInanimate = () => false;
       jabsBattler.getHighestAggro = () => ({ uuid: () => 'uuid' });
 
+      // Act
       jabsBattler.adjustTargetByAggro();
 
+      // Assert
       expect(jabsBattler.getTarget()).toBeNull();
     });
 

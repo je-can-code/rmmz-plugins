@@ -246,6 +246,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    The tier stripe colour resolver no longer tests for an empty string on top of
+ *    testing the value itself. String.empty is falsy, so the first half of that
+ *    condition had already answered for both.
  * - 1.1.0
  *    An affix can now be weighted at zero, making it a member of its pool that
  *    is never rolled. The state stays recognized everywhere else, so an event

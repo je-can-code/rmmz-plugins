@@ -73,6 +73,28 @@ describe('J-HUD-TargetFrame metadata (direct src import)', () =>
     expect(Metadata.EnableTP).toBe(true);
   });
 
+  it('parses a disabled gauge flag as false rather than as merely not-true', () =>
+  {
+    // Arrange- the shipped parameters enable all three, so asserting `true` alone cannot tell
+    // `=== 'true'` apart from a constant. Re-running the parse against a disabled bag is what makes
+    // the comparison itself observable.
+    const { Metadata } = globalThis.J.HUD.EXT.TARGET;
+    const disabled = Object.create(Object.getPrototypeOf(Metadata));
+    disabled.parsedPluginParameters = {
+      enableHp: 'false',
+      enableMp: 'false',
+      enableTp: 'false',
+    };
+
+    // Act
+    disabled.initializeMetadata();
+
+    // Assert
+    expect(disabled.EnableHP).toBe(false);
+    expect(disabled.EnableMP).toBe(false);
+    expect(disabled.EnableTP).toBe(false);
+  });
+
   it('parses the gauge scale and rotation values from plugin parameters', () =>
   {
     // Arrange & Act

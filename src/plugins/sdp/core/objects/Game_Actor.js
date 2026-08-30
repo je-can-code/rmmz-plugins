@@ -322,7 +322,6 @@ Game_Actor.prototype.rankUpPanel = function(panelKey)
  */
 Game_Actor.prototype.getSdpBonusForParameterKey = function(parameterKey, baseParam)
 {
-  if (!J.SDP) return 0;
   if (!parameterKey) return 0;
 
   const panelRankings = this.getAllSdpRankings();

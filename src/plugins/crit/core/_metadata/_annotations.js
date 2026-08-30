@@ -517,6 +517,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.1
+ *    The percent factor parser no longer pre-checks for a missing or blank plugin
+ *    parameter. Such a value stringifies into something unparseable, which the
+ *    finite check below already rejects into the fallback.
  * - 1.3.0
  *    Added <forceCritProcs> to force every on-crit state application roll
  *    to succeed, without inflating crit chance or touching luck elsewhere.

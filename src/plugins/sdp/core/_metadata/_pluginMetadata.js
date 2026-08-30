@@ -446,11 +446,6 @@ class J_SdpPluginMetadata
    */
   static #parsePositiveFloatOr(value, fallback)
   {
-    if (value === undefined || value === null || value === '')
-    {
-      return fallback;
-    }
-
     const parsed = Number.parseFloat(String(value));
 
     if (Number.isFinite(parsed) && parsed > 0)

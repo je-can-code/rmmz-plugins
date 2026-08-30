@@ -500,11 +500,6 @@ J.BASE.Helpers.satisfies = function(currentVersion, minimumVersion)
  */
 J.BASE.Helpers.parsePluginInt = function(value, fallback)
 {
-  if (value === undefined || value === null || value === '')
-  {
-    return fallback;
-  }
-
   const parsed = Number.parseInt(String(value), 10);
 
   if (Number.isFinite(parsed))

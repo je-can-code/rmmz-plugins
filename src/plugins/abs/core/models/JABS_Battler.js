@@ -2290,15 +2290,10 @@ class JABS_Battler
    */
   clearBattlerLastHit()
   {
+    // this also clears the player's target: setBattlerLastHit mirrors the last hit onto the target
+    // for the player, so storing null there is what removes it.
     this.setBattlerLastHit(null);
     this.setLastBattlerHitCountdown(0);
-
-    // when clearing the last battler hit, also remove the player's target that
-    // was likely added via the above function of "setBattlerLastHit".
-    if (this.isPlayer())
-    {
-      this.setTarget(null);
-    }
   };
 
   /**
@@ -4781,20 +4776,10 @@ class JABS_Battler
    */
   getAggrosSortedHighestToLowest()
   {
-    // a sorting function for determining the highest aggro from a collection.
-    const sorting = (a, b) =>
-    {
-      if (a.aggro < b.aggro)
-      {
-        return 1
-      }
-      else if (a.aggro > b.aggro)
-      {
-        return -1;
-      }
-
-      return 0;
-    };
+    // a sorting function for determining the highest aggro from a collection. subtracting rather than
+    // branching keeps the comparator consistent- an arm that answers 0 where it should answer a sign
+    // still sorts correctly under V8, which makes the branches impossible to test.
+    const sorting = (a, b) => b.aggro - a.aggro;
 
     // grab the aggros.
     const aggros = this.getAllAggros();

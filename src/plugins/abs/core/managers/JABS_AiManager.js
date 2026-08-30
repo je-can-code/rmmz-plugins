@@ -532,21 +532,9 @@ class JABS_AiManager
    */
   static addOrUpdateBattler(battler)
   {
-    // grab the key, aka the uuid of the battler.
-    const key = battler.getUuid();
-
-    // check if the battler already is being tracked.
-    if (this.battlers.has(key))
-    {
-      // if it is, just update the battler data.
-      this.updateBattler(key, battler);
-    }
-    // the battler isn't being tracked.
-    else
-    {
-      // just add the battler anew.
-      this.addBattler(battler);
-    }
+    // adding and updating are the same operation here- the tracking map is keyed by uuid, so writing
+    // a battler that is already tracked replaces its own entry rather than creating a second one.
+    this.addBattler(battler);
   }
 
   /**
@@ -558,17 +546,6 @@ class JABS_AiManager
     // grab the key, aka the uuid of the battler.
     const key = battler.getUuid();
 
-    // update the battler key with the newest battler.
-    this.battlers.set(key, battler);
-  }
-
-  /**
-   * Updates a given key in the battler tracking with new battler data.
-   * @param {string} key The key of the battler to replace the slot of.
-   * @param {JABS_Battler} battler The updated battler data.
-   */
-  static updateBattler(key, battler)
-  {
     // update the battler key with the newest battler.
     this.battlers.set(key, battler);
   }

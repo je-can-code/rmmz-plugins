@@ -157,6 +157,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.7.2
+ *    parsePluginInt no longer pre-checks for a missing or blank value. Parsing one
+ *    yields NaN, which the finite check below already turns into the fallback, so
+ *    the guard could never be the reason a caller received its default.
  * - 3.7.1
  *    ParsableComment now admits the '#' character, so an event comment may carry
  *    a hex colour as a tag value. Previously such a comment failed the shape test

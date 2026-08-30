@@ -236,6 +236,19 @@ describe('save storage layer (direct src import)', () =>
       expect(SaveFileSystem.generationNames('file1')).toEqual([ 'gen-0002' ]);
     });
 
+    it('reports no generations for a slot that was never written', () =>
+    {
+      // Arrange- every other case here writes a generation first, so the directory always exists by
+      // the time it is read. A slot nobody has saved into has no directory at all, and reading one
+      // that is absent throws rather than answering empty.
+
+      // Act
+      const generations = SaveFileSystem.generationNames('never-written');
+
+      // Assert
+      expect(generations).toEqual([]);
+    });
+
     it('steps over an orphaned generation rather than writing into it', async () =>
     {
       // Arrange

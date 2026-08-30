@@ -142,7 +142,7 @@ J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex = function(battler)
   if (!state) return String.empty;
 
   // only states with an explicit `<tier-color-hex:...>` note participate; no invented defaults.
-  if (state.tierColorHex && state.tierColorHex !== String.empty)
+  if (state.tierColorHex)
   {
     return state.tierColorHex;
   }
