@@ -172,6 +172,13 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.2
+ *    Routed the formula-failure warning and its stack through J-Base's new
+ *    Diagnostics, so it names J-ABS-Formula in the console.
+ * - 1.1.1
+ *    Repointed formula packet logging at J-Log's new $mapLogs registry. The
+ *    $actionLogManager global this called is gone. Requires J-Log 3.0.0 when
+ *    J-Log is installed at all.
  * - 1.1.0
  *   Changed <on-HH:to-AA:by-formula:for-RR:[FORMULA]> to
  *   <onApplyFormula:[HH, AA, RR, FORMULA]>, and <on-HH:to-AA:by-skill:[SKILL_ID]>

@@ -12,6 +12,10 @@ describe('J-ABS DataManager (unit, all downstream dependencies mocked)', () =>
   {
     vi.resetModules();
 
+    // the source under test stamps its diagnostics with __PLUGIN_NAME__, which the build
+    // substitutes per ship; declare the realm so the prefix reads as it would in J-ABS.
+    globalThis.__PLUGIN_NAME__ = 'J-ABS';
+
     globalThis.J = {
       ABS: {
         Aliased: { DataManager: new Map() },
@@ -211,7 +215,11 @@ describe('J-ABS DataManager (unit, all downstream dependencies mocked)', () =>
       globalThis.DataManager.gracefulFail('$dataMap', 'Map005.json', 'data/Map005.json');
 
       // Assert
-      expect(console.error).toHaveBeenCalledWith('$dataMap', 'Map005.json', 'data/Map005.json');
+      expect(console.error).toHaveBeenCalledWith('[J-ABS] failed to load a data file: $dataMap', {
+        name: '$dataMap',
+        src: 'Map005.json',
+        url: 'data/Map005.json',
+      });
     });
   });
 

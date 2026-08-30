@@ -69,19 +69,25 @@ describe('J-Log MapLogManager (direct src import)', () =>
     expect(mgr.isVisible()).toBe(true);
   });
 
-  it('DataManager.createGameObjects installs managers with max log counts', () =>
+  it('DataManager.createGameObjects installs the registry with per-channel max log counts', () =>
   {
-    // Arrange
+    // Arrange- overfill every channel past its own cap, so each one has to trim to a different
+    // number. One channel alone cannot distinguish "the registry set three caps" from "the
+    // registry set one cap and the others kept MapLogManager's own default of 100".
     globalThis.DataManager.createGameObjects();
 
     // Act
-    for (let i = 0; i < 40; i++)
+    for (let i = 0; i < 200; i++)
     {
-      globalThis.$actionLogManager.addLog({ id: i });
+      globalThis.$mapLogs.action.addLog({ id: i });
+      globalThis.$mapLogs.dialog.addLog({ id: i });
+      globalThis.$mapLogs.loot.addLog({ id: i });
     }
 
     // Assert
-    expect(globalThis.$actionLogManager.getLogs().length).toBe(30);
+    expect(globalThis.$mapLogs.action.getLogs().length).toBe(30);
+    expect(globalThis.$mapLogs.dialog.getLogs().length).toBe(10);
+    expect(globalThis.$mapLogs.loot.getLogs().length).toBe(100);
   });
 });
 //endregion plugins/log/_component/map-log-manager.test.js

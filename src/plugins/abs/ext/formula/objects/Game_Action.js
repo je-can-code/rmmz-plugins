@@ -168,8 +168,7 @@ Game_Action.prototype.evaluateFormula = function(formula, source, recipient, ite
   }
   catch (err)
   {
-    console.warn(`J.FORMULA formula failed: [ ${formula} ]`);
-    console.trace();
+    Diagnostics.trace(__PLUGIN_NAME__, `formula failed: [ ${formula} ]`, err);
     throw err;
   }
 
@@ -474,8 +473,8 @@ Game_Action.prototype.generateFormulaActionLogIfAvailable = function(recipient, 
     .setupExecution(targetName, casterName, skillId || 0, magnitude, String.empty, isHeal, wasCrit)
     .build();
 
-  // submit the built log entry to the manager (assumed present when J.LOG is true).
-  $actionLogManager.addLog(log);
+  // submit the built log entry to the action channel (assumed present when J.LOG is true).
+  $mapLogs.action.addLog(log);
 };
 
 /**

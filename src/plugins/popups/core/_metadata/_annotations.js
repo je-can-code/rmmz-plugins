@@ -45,6 +45,10 @@
  * Resources) build popups on top of.
  * ============================================================================
  * CHANGELOG:
+ * - 2.1.1
+ *    Routed the rejected-text-pop warning through J-Base's new Diagnostics. The
+ *    prefix is now a literal rather than read from J.POPUPS.Metadata.name, so it
+ *    still identifies the ship if the namespace is what went wrong.
  * - 2.1.0
  *    Sprite_MapDamage accumulation phase; merge helpers + PopupEmitter flush hooks.
  *    Merge idle flush is battler-wide (any merged stream refreshes the timer); strike floats release on that idle

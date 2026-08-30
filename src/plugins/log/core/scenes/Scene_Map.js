@@ -89,7 +89,7 @@ Scene_Map.prototype.buildActionLogWindow = function()
   const rectangle = this.actionLogWindowRect();
 
   // create the window with the rectangle.
-  const window = new Window_MapLog(rectangle, $actionLogManager);
+  const window = new Window_MapLog(rectangle, $mapLogs.action);
 
   // deselect/deactivate the window so we don't have it look interactable.
   window.deselect();
@@ -169,7 +169,7 @@ Scene_Map.prototype.buildDiaLogWindow = function()
   const rectangle = this.diaLogWindowRect();
 
   // create the window with the rectangle.
-  const window = new Window_DiaLog(rectangle, $diaLogManager);
+  const window = new Window_DiaLog(rectangle, $mapLogs.dialog);
 
   // deselect/deactivate the window so we don't have it look interactable.
   window.deselect();
@@ -249,7 +249,7 @@ Scene_Map.prototype.buildLootLogWindow = function()
   const rectangle = this.lootLogWindowRect();
 
   // create the window with the rectangle.
-  const window = new Window_LootLog(rectangle, $lootLogManager);
+  const window = new Window_LootLog(rectangle, $mapLogs.loot);
 
   // deselect/deactivate the window so we don't have it look interactable.
   window.deselect();

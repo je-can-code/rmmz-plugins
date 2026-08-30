@@ -245,9 +245,11 @@ Game_Enemy.prototype.findLoot = function(drop, itemsFound)
   // validate the drop resolves.
   if (!item)
   {
-    console.warn(`Invalid drop resolved:
-       enemy=${this.enemy().name}, kind=${drop.kind}, id=${drop.dataId},
-      "(check DB entry and note tags).`);
+    Diagnostics.warn(__PLUGIN_NAME__, 'an invalid drop resolved; check the DB entry and note tags.', {
+      enemy: this.enemy().name,
+      kind: drop.kind,
+      dataId: drop.dataId,
+    });
 
     // don't add junk data to the drop list.
     return;

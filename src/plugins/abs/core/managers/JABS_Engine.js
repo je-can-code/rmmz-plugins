@@ -1557,8 +1557,10 @@ class JABS_Engine
     // update the input.
     if (!JABS_InputAdapter.hasControllers())
     {
-      console.warn(`No input managers have been registered with the input adapter!`);
-      console.warn(`if you built your own, be sure to run "JABS_InputAdapter.register(controller)"!`);
+      // the remedy belongs in the message: whoever sees this is almost always someone who wrote
+      // their own controller and never registered it.
+      const remedy = 'if you built your own controller, run "JABS_InputAdapter.register(controller)".';
+      Diagnostics.warn(__PLUGIN_NAME__, `no input managers have been registered with the input adapter. ${remedy}`);
     }
   }
 
@@ -1717,7 +1719,7 @@ class JABS_Engine
     const partyCycleLog = new ActionLogBuilder()
       .setupPartyCycle(player1.battlerName())
       .build();
-    $actionLogManager.addLog(partyCycleLog);
+    $mapLogs.action.addLog(partyCycleLog);
   }
 
   /**
@@ -2562,7 +2564,7 @@ class JABS_Engine
           : 7;
         break;
       default:
-        console.warn('non-dir8 provided, no rotation performed.');
+        Diagnostics.warn(__PLUGIN_NAME__, 'a non-dir8 direction was provided; no rotation was performed.');
         break;
     }
 
@@ -2604,7 +2606,7 @@ class JABS_Engine
         newDirection = 1;
         break;
       default:
-        console.warn('non-dir8 provided, no rotation performed.');
+        Diagnostics.warn(__PLUGIN_NAME__, 'a non-dir8 direction was provided; no rotation was performed.');
         break;
     }
 
@@ -2832,8 +2834,16 @@ class JABS_Engine
     // on rare occasions, the timing of adding an action to the map coincides with the removal of the caster.
     if (!actionEventData || !actionEventData.pages.length)
     {
-      // preserve existing behavior.
-      console.error('that rare error occurred!');
+      // the comment above says what this is; the message now says it too, because "that rare
+      // error" tells a reader staring at a console nothing about which rare error they hit.
+      Diagnostics.error(
+        'J-ABS',
+        'an action was added to the map after its caster was removed; it has no event data to render.',
+        {
+          skillName,
+          casterName,
+          index,
+        });
       // stop if invalid.
       return;
     }
@@ -3004,7 +3014,9 @@ class JABS_Engine
     // if there is no data, then we can't clone that id.
     if (!originalEnemyData)
     {
-      console.error(`The enemy id of [ ${enemyCloneEventId} ] did not align with an event on the enemy clone map.`);
+      Diagnostics.error(
+        'J-ABS',
+        `the enemy id of [ ${enemyCloneEventId} ] did not align with an event on the enemy clone map.`);
       return;
     }
 
@@ -4390,7 +4402,7 @@ class JABS_Engine
       const log = new ActionLogBuilder()
         .setupStatePurged(targetName, state.id)
         .build();
-      $actionLogManager.addLog(log);
+      $mapLogs.action.addLog(log);
     });
   }
 
@@ -4420,7 +4432,7 @@ class JABS_Engine
       const parryLog = new ActionLogBuilder()
         .setupParry(targetName, casterName, skill.id, target.parrying())
         .build();
-      $actionLogManager.addLog(parryLog);
+      $mapLogs.action.addLog(parryLog);
       return;
     }
     // create evasion logs if it was evaded.
@@ -4429,7 +4441,7 @@ class JABS_Engine
       const dodgeLog = new ActionLogBuilder()
         .setupDodge(targetName, casterName, skill.id)
         .build();
-      $actionLogManager.addLog(dodgeLog);
+      $mapLogs.action.addLog(dodgeLog);
       return;
     }
     // create retaliation logs if it was a retaliation.
@@ -4438,7 +4450,7 @@ class JABS_Engine
       const retaliationLog = new ActionLogBuilder()
         .setupRetaliation(casterName)
         .build();
-      $actionLogManager.addLog(retaliationLog);
+      $mapLogs.action.addLog(retaliationLog);
     }
     // if no damage of any kind was dealt, and no states were applied, then you get a special message!
     // skills with no damage type (support skills) skip this — they have their own log paths.
@@ -4450,7 +4462,7 @@ class JABS_Engine
       const undamagedLog = new ActionLogBuilder()
         .setupUndamaged(targetName, casterName, skill.id)
         .build();
-      $actionLogManager.addLog(undamagedLog);
+      $mapLogs.action.addLog(undamagedLog);
       return;
     }
     if (result.hpDamage)
@@ -4476,14 +4488,14 @@ class JABS_Engine
         const terrainAttackLog = new ActionLogBuilder()
           .setupTerrainDamage(targetName, skill.id, roundedDamage, reducedAmount, !isNotHeal, result.critical)
           .build();
-        $actionLogManager.addLog(terrainAttackLog);
+        $mapLogs.action.addLog(terrainAttackLog);
       }
       else
       {
         const actionExecutedLog = new ActionLogBuilder()
           .setupExecution(targetName, casterName, skill.id, roundedDamage, reducedAmount, !isNotHeal, result.critical)
           .build();
-        $actionLogManager.addLog(actionExecutedLog);
+        $mapLogs.action.addLog(actionExecutedLog);
       }
 
       // fall through in case there were states that were also applied, such as defeating the target.
@@ -4500,7 +4512,7 @@ class JABS_Engine
           const targetDefeatedLog = new ActionLogBuilder()
             .setupTargetDefeated(targetName)
             .build();
-          $actionLogManager.addLog(targetDefeatedLog);
+          $mapLogs.action.addLog(targetDefeatedLog);
           return;
         }
 
@@ -4514,7 +4526,7 @@ class JABS_Engine
         const stateAfflictedLog = new ActionLogBuilder()
           .setupStateAfflicted(targetName, stateId)
           .build();
-        $actionLogManager.addLog(stateAfflictedLog);
+        $mapLogs.action.addLog(stateAfflictedLog);
       });
     }
   }
@@ -5730,7 +5742,7 @@ class JABS_Engine
       const expLog = new ActionLogBuilder()
         .setupExperienceGained(caster.getBattlerDatabaseData().name, experience)
         .build();
-      $actionLogManager.addLog(expLog);
+      $mapLogs.action.addLog(expLog);
     }
 
     if (gold !== 0)
@@ -5738,7 +5750,7 @@ class JABS_Engine
       const goldLog = new LootLogBuilder()
         .setupGoldFound(gold)
         .build();
-      $lootLogManager.addLog(goldLog);
+      $mapLogs.loot.addLog(goldLog);
     }
   }
 
@@ -5787,7 +5799,7 @@ class JABS_Engine
     const lootLog = new LootLogBuilder()
       .setupLootObtained(lootType, item.id)
       .build();
-    $lootLogManager.addLog(lootLog);
+    $mapLogs.loot.addLog(lootLog);
   }
 
   /**
@@ -5826,7 +5838,7 @@ class JABS_Engine
 
     const battler = jabsBattler.getBattler();
     const log = this.configureLevelUpLog(battler.name(), battler.level);
-    $actionLogManager.addLog(log);
+    $mapLogs.action.addLog(log);
   }
 
   /**
@@ -5876,7 +5888,7 @@ class JABS_Engine
     if (!J.LOG) return;
 
     const log = this.configureSkillLearnLog(player.getBattlerDatabaseData().name, skill.id);
-    $actionLogManager.addLog(log);
+    $mapLogs.action.addLog(log);
   }
 
   /**

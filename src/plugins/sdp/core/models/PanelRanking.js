@@ -150,10 +150,8 @@ class PanelRanking
       }
       catch (err)
       {
-        console.error(`
-        An error occurred while trying to execute the rank-${this.currentRank} 
-        reward for panel: ${this.key}`);
-        console.error(err);
+        const reward = `the rank-${this.currentRank} reward for panel: ${this.key}`;
+        Diagnostics.error(__PLUGIN_NAME__, `an error occurred while trying to execute ${reward}`, err);
       }
     });
   }

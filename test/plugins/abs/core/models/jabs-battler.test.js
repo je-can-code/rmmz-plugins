@@ -16,6 +16,10 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
   {
     vi.resetModules();
 
+    // the source under test stamps its diagnostics with __PLUGIN_NAME__, which the build
+    // substitutes per ship; declare the realm so the prefix reads as it would in J-ABS.
+    globalThis.__PLUGIN_NAME__ = 'J-ABS';
+
     globalThis.J = {
       ABS: {
         Metadata: {},
@@ -7126,7 +7130,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
         this.setupUsedLastItem = vi.fn().mockReturnThis();
         this.build = vi.fn(() => ({ built: true }));
       });
-      globalThis.$lootLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { loot: { addLog: vi.fn() } };
     });
 
     it('applies to self for a self-scoped tool', () =>
@@ -7250,7 +7254,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       jabsBattler.applyToolItemEffects(5, JABS_Button.Tool);
 
       expect(clearSlot).toHaveBeenCalledWith(JABS_Button.Tool);
-      expect(globalThis.$lootLogManager.addLog).toHaveBeenCalledWith({ built: true });
+      expect(globalThis.$mapLogs.loot.addLog).toHaveBeenCalledWith({ built: true });
     });
 
     it('applies the item\'s custom cooldown when copies remain and it is not loot', () =>
@@ -7471,7 +7475,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
         this.setupUsedItem = vi.fn().mockReturnThis();
         this.build = vi.fn(() => ({ built: true }));
       });
-      globalThis.$lootLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { loot: { addLog: vi.fn() } };
     });
 
     it('does nothing when logging is disabled', () =>
@@ -7481,7 +7485,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       jabsBattler.createToolLog({ id: 1 });
 
-      expect(globalThis.$lootLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.loot.addLog).not.toHaveBeenCalled();
       globalThis.J.LOG = true;
     });
 
@@ -7492,7 +7496,7 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       jabsBattler.createToolLog({ id: 1 });
 
-      expect(globalThis.$lootLogManager.addLog).toHaveBeenCalledWith({ built: true });
+      expect(globalThis.$mapLogs.loot.addLog).toHaveBeenCalledWith({ built: true });
     });
   });
   //endregion map: tool/item effects
@@ -8432,7 +8436,12 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       // Assert- the diagnostics are the point of this branch, so assert them, not just the return.
       expect(result).toBe(false);
-      expect(warnSpy).toHaveBeenCalledWith(jabsBattler, 'mainhand');
+      expect(warnSpy).toHaveBeenCalledWith(
+        '[J-ABS] a follower was asked to cast a skill it does not own a cooldown for.',
+        {
+          battler: jabsBattler,
+          skillSlotKey: 'mainhand',
+        });
       expect(traceSpy).toHaveBeenCalledTimes(1);
       warnSpy.mockRestore();
       traceSpy.mockRestore();

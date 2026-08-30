@@ -79,7 +79,7 @@ class DifficultyManager
     // we didn't find a difficulty by that key.
     else
     {
-      console.warn(`could not lock difficulty with key: [${key}].`);
+      Diagnostics.warn(__PLUGIN_NAME__, `could not lock difficulty with key: [${key}].`);
     }
   }
 
@@ -101,7 +101,7 @@ class DifficultyManager
     // we didn't find a difficulty by that key.
     else
     {
-      console.warn(`could not lock difficulty with key: [${key}].`);
+      Diagnostics.warn(__PLUGIN_NAME__, `could not lock difficulty with key: [${key}].`);
     }
   }
 
@@ -123,7 +123,7 @@ class DifficultyManager
     // we didn't find a difficulty by that key.
     else
     {
-      console.warn(`could not lock difficulty with key: [${key}].`);
+      Diagnostics.warn(__PLUGIN_NAME__, `could not lock difficulty with key: [${key}].`);
     }
   }
 
@@ -145,7 +145,7 @@ class DifficultyManager
     // we didn't find a difficulty by that key.
     else
     {
-      console.warn(`could not unlock difficulty with key: [${key}].`);
+      Diagnostics.warn(__PLUGIN_NAME__, `could not unlock difficulty with key: [${key}].`);
     }
   }
 
@@ -170,7 +170,7 @@ class DifficultyManager
     // we didn't find a difficulty by that key.
     else
     {
-      console.warn(`could not enable difficulty with key: [${key}].`);
+      Diagnostics.warn(__PLUGIN_NAME__, `could not enable difficulty with key: [${key}].`);
     }
   }
 
@@ -195,7 +195,7 @@ class DifficultyManager
     // we didn't find a difficulty by that key.
     else
     {
-      console.warn(`could not disable difficulty with key: [${key}].`);
+      Diagnostics.warn(__PLUGIN_NAME__, `could not disable difficulty with key: [${key}].`);
     }
   }
 }

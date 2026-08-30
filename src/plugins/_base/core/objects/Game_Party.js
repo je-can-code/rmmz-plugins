@@ -1,5 +1,6 @@
 //region Game_Party
 import RPGManager from './../managers/RPGManager.js';
+import Diagnostics from './../core/Diagnostics.js';
 import RPG_Weapon from './../database/implementations/RPG_Weapon.js';
 import RPG_Item from './../database/implementations/RPG_Item.js';
 import RPG_BaseItem from './../database/base/RPG_BaseItem.js';
@@ -152,8 +153,9 @@ Game_Party.prototype.reportPrunedInventoryEntries = function(pruned)
     : 'entries';
   const listed = pruned.join(',');
 
-  console.warn(`J-BASE: dropped ${pruned.length} inventory ${plural} whose database rows no longer exist `
-    + `(rows deleted after this save was written): [${listed}]`);
+  const cause = 'rows deleted after this save was written';
+  const summary = `dropped ${pruned.length} inventory ${plural} whose database rows no longer exist`;
+  Diagnostics.warn(__PLUGIN_NAME__, `${summary} (${cause}): [${listed}]`);
 };
 //endregion reconciliation
 
@@ -241,8 +243,11 @@ Game_Party.prototype.processItemGain = function(item, amount, includeEquip)
 Game_Party.prototype.processContainerlessItemGain = function(item, amount, includeEquip)
 {
   // do something.
-  console.warn(`an item was gained that is not flagged as a database object; ${item.name}.<br>`);
-  console.error(item, amount, includeEquip);
+  Diagnostics.error(__PLUGIN_NAME__, `an item was gained that is not flagged as a database object: ${item.name}.`, {
+    item,
+    amount,
+    includeEquip,
+  });
 };
 
 /**

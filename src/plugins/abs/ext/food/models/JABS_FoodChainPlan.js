@@ -169,11 +169,12 @@ class JABS_FoodChainPlan
 
         if (hasDurationTag === false && hasDurationSecTag === false)
         {
-          console.warn(
-            `J-ABS-FOOD: State ${currentId} (${state.name}) has <foodChain> but no ` +
-            `<stateDuration> — using stepsToRemove=${frames} (~${Math.round(frames / 60)}s). ` +
-            `Add <stateDuration:FRAMES> per ca/docs/food/food-chain-durations.md.`
-          );
+          // the authoring fix belongs in the message, since whoever sees this is mid-authoring.
+          const seconds = Math.round(frames / 60);
+          const fallback = `using stepsToRemove=${frames} (~${seconds}s)`;
+          const remedy = 'add <stateDuration:FRAMES> per ca/docs/food/food-chain-durations.md.';
+          const message = `state ${currentId} (${state.name}) has <foodChain> but no <stateDuration>`;
+          Diagnostics.warn(__PLUGIN_NAME__, `${message} - ${fallback}. ${remedy}`);
         }
       }
 

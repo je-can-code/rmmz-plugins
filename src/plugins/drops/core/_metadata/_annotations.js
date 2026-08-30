@@ -210,6 +210,10 @@
  * The party will now gain +175% gold from defeated enemies.
  * ============================================================================
  * CHANGELOG:
+ * - 2.5.1
+ *    Routed the static-instantiation and invalid-drop reports through J-Base's
+ *    new Diagnostics, so each names J-DropsControl. The invalid-drop warning now
+ *    shows the enemy, kind and id as named keys instead of a wrapped string.
  * - 2.5.0
  *    Added drop upgrade ladders. A ladder names a chain of rows in ascending
  *    order, and a battler carrying <dropUpgrade:N> promotes each drop N rungs

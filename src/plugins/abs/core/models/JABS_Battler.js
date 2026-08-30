@@ -1680,7 +1680,7 @@ class JABS_Battler
     const found = this.getFollowerByUuid(newFollowerUuid);
     if (found)
     {
-      console.error('this follower already existed within the follower list.');
+      Diagnostics.error(__PLUGIN_NAME__, 'this follower already existed within the follower list.', newFollowerUuid);
     }
     // otherwise fall back to the alternate path.
     else
@@ -6057,7 +6057,7 @@ class JABS_Battler
     }
     else
     {
-      console.warn(`unhandled scope for tool: [ ${gameAction.item().scope} ]!`);
+      Diagnostics.warn(__PLUGIN_NAME__, `unhandled scope for tool: [ ${gameAction.item().scope} ]!`);
     }
 
     // applies common events that may be a part of an item's effect.
@@ -6095,7 +6095,7 @@ class JABS_Battler
       const lastUsedItemLog = new LootLogBuilder()
         .setupUsedLastItem(item.id)
         .build();
-      $lootLogManager.addLog(lastUsedItemLog);
+      $mapLogs.loot.addLog(lastUsedItemLog);
     }
     else
     {
@@ -6247,7 +6247,7 @@ class JABS_Battler
     const toolUsedLog = new LootLogBuilder()
       .setupUsedItem(item.id)
       .build();
-    $lootLogManager.addLog(toolUsedLog);
+    $mapLogs.loot.addLog(toolUsedLog);
   };
 
   /**
@@ -6557,7 +6557,12 @@ class JABS_Battler
     // check that there is a skill slot.
     if (!skillSlot)
     {
-      console.warn('omg');
+      // enemies are not guaranteed to have every slot assigned, so this is reachable in normal
+      // play rather than only through a bug; the caller gets null and is expected to handle it.
+      Diagnostics.warn(
+        'J-ABS',
+        `no skill slot exists for cooldown key "${cooldownKey}"; there is no cooldown to report.`,
+        this);
 
       // TODO: make sure enemies get assigned their slots.
 
@@ -6840,8 +6845,10 @@ class JABS_Battler
     if (!cooldown)
     {
       // please stop trying to cast your follower's skills.
-      console.warn(this, skillSlotKey);
-      console.trace();
+      Diagnostics.trace(__PLUGIN_NAME__, 'a follower was asked to cast a skill it does not own a cooldown for.', {
+        battler: this,
+        skillSlotKey,
+      });
       return false;
     }
 
@@ -6944,7 +6951,7 @@ class JABS_Battler
     }
 
     // handle accordingly if not actor or enemy.
-    console.warn(`non-actor/non-enemy checked for basic attack.`, this);
+    Diagnostics.warn(__PLUGIN_NAME__, 'a non-actor/non-enemy was checked for basic attack.', this);
     return false;
   };
 
@@ -7626,7 +7633,7 @@ class JABS_Battler
       // check if the eval() produced garbage output despite not throwing.
       if (!Number.isFinite(result))
       {
-        console.warn('result was: ', result);
+        Diagnostics.warn(__PLUGIN_NAME__, 'a slip-effect formula produced a non-finite result.', result);
 
         // throw, and then catch to properly log in the next block.
         throw new Error('Invalid formula.');
@@ -7634,8 +7641,7 @@ class JABS_Battler
     }
     catch (err)
     {
-      console.warn(`failed to eval() this formula: [ ${formula} ]`);
-      console.trace();
+      Diagnostics.trace(__PLUGIN_NAME__, `failed to eval() this slip-effect formula: [ ${formula} ]`, err);
       throw err;
     }
 

@@ -28,6 +28,9 @@
  * plug into. Those extensions own their own respective tags.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Removed the console.debug narrating each root pedia selection. The method
+ *    is an extension point every pedia overrides, so it now says that instead.
  * - 1.1.0
  *    Routed the _omni namespace into its own save section, so every
  *    omnipedia extension's data lands in systems/omni.json together rather

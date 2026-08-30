@@ -47,15 +47,15 @@ describe('TrackedOmniObjective (omni ext/quest, direct src import)', () =>
     // objectiveMetadata()/parentQuestMetadata() read straight from the plugin's parsed metadata map.
     globalThis.J = { OMNI: { EXT: { QUEST: { Metadata: { questsMap: new Map() } } } } };
 
-    // $diaLogManager gates onObjectiveUpdate()'s logging side effect; default it off so tests that
+    // $mapLogs gates onObjectiveUpdate()'s logging side effect; default it off so tests that
     // aren't specifically about logging don't need a DiaLogBuilder stub.
-    globalThis.$diaLogManager = undefined;
+    globalThis.$mapLogs = undefined;
   });
 
   afterEach(() =>
   {
     delete globalThis.J;
-    delete globalThis.$diaLogManager;
+    delete globalThis.$mapLogs;
     delete globalThis.$gameMap;
     delete globalThis.$gamePlayer;
     delete globalThis.$gameParty;
@@ -538,7 +538,7 @@ describe('TrackedOmniObjective (omni ext/quest, direct src import)', () =>
 
   describe('logging via handleObjectiveUpdateLog', () =>
   {
-    it('adds a completed-state log line to $diaLogManager when finalized as completed', () =>
+    it('adds a completed-state log line to the dialog channel when finalized as completed', () =>
     {
       const tracked = buildTracked(OmniObjective.Types.Indiscriminate, new OmniFulfillmentData());
       tracked.state = OmniObjective.States.Completed;
@@ -551,7 +551,7 @@ describe('TrackedOmniObjective (omni ext/quest, direct src import)', () =>
       };
       // J-Log must be present for the announcement path to run at all.
       globalThis.J.LOG = {};
-      globalThis.$diaLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { dialog: { addLog: vi.fn() } };
 
       tracked.onObjectiveUpdate();
 
@@ -559,7 +559,7 @@ describe('TrackedOmniObjective (omni ext/quest, direct src import)', () =>
         '\\C[1][Quest Name]\\C[0] updated.',
         'Objective completed.',
       ]);
-      expect(globalThis.$diaLogManager.addLog).toHaveBeenCalledWith(builtLog);
+      expect(globalThis.$mapLogs.dialog.addLog).toHaveBeenCalledWith(builtLog);
     });
 
     it('announces nothing at all when J-Log is not installed', () =>
@@ -574,13 +574,13 @@ describe('TrackedOmniObjective (omni ext/quest, direct src import)', () =>
       {
         return builder;
       };
-      globalThis.$diaLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { dialog: { addLog: vi.fn() } };
 
       // Act
       tracked.onObjectiveUpdate();
 
       // Assert
-      expect(globalThis.$diaLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.dialog.addLog).not.toHaveBeenCalled();
     });
 
     it('does nothing when the objective has not been finalized', () =>
@@ -591,11 +591,11 @@ describe('TrackedOmniObjective (omni ext/quest, direct src import)', () =>
       globalThis.DiaLogBuilder = vi.fn();
       // J-Log must be present for the announcement path to run at all.
       globalThis.J.LOG = {};
-      globalThis.$diaLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { dialog: { addLog: vi.fn() } };
 
       tracked.onObjectiveUpdate();
 
-      expect(globalThis.$diaLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.dialog.addLog).not.toHaveBeenCalled();
     });
   });
 
@@ -1017,7 +1017,7 @@ describe('TrackedOmniObjective (omni ext/quest, direct src import)', () =>
       };
 
       globalThis.J.LOG = {};
-      globalThis.$diaLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { dialog: { addLog: vi.fn() } };
 
       return builder;
     };

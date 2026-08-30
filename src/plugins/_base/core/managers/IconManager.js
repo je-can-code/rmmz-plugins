@@ -1,5 +1,6 @@
 //region IconManager
 import ParameterRegistry from './../core/ParameterRegistry.js';
+import Diagnostics from './../core/Diagnostics.js';
 
 /**
  * A static class that manages the icon to X correlation, such as stats and elements.
@@ -446,7 +447,9 @@ class IconManager
         return this.partyAbility(trait._dataId);
 
       default:
-        console.error(`all traits are accounted for- is this a custom trait code: [${trait._code}]?`);
+        Diagnostics.error(
+          'J-Base',
+          `all traits are accounted for- is this a custom trait code: [${trait._code}]?`);
         return false;
     }
   }

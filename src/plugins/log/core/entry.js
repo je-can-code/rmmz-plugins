@@ -3,6 +3,7 @@ import './_metadata/initialization.js';
 import './_models/ActionLog.js';
 import './_models/DiaLog.js';
 import './managers/MapLogManager.js';
+import './managers/MapLogRegistry.js';
 import './_models/ActionLogBuilder.js';
 import './_models/DiaLogBuilder.js';
 import './_models/LootLogBuilder.js';

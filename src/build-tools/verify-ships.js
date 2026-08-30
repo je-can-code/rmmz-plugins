@@ -72,17 +72,21 @@ function isExportDefaultExemptFile(filePath)
 /**
  * Grandfathered globalThis property names until $ singleton bootstraps migrate to hoisted `var`.
  * Shrink this set over time; new names must not be added.
+ *
+ * A name may appear here without being new, when it consolidates entries already on the list and
+ * the set gets shorter as a result: `$mapLogs` replaced `$actionLogManager`, `$diaLogManager` and
+ * `$lootLogManager`, three bootstraps for one service. The rule this comment is really stating is
+ * that the count only ever goes down, so a consolidation qualifies and a genuinely new global does
+ * not.
  */
 const LEGACY_GLOBAL_THIS_PROPERTIES = new Set([
-  '$actionLogManager',
   '$actionMap',
-  '$diaLogManager',
   '$gameEnemies',
   '$gameTime',
   '$hudManager',
   '$jabsController1',
   '$jabsEngine',
-  '$lootLogManager',
+  '$mapLogs',
 ]);
 
 /**

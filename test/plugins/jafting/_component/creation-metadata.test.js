@@ -166,7 +166,7 @@ describe('J-JAFTING + J-JAFTING-Creation metadata (direct src import)', () =>
     it('reports what it loaded when external file load info is enabled', async () =>
     {
       // Arrange
-      const logSpy = vi.spyOn(console, 'log')
+      const logSpy = vi.spyOn(console, 'info')
         .mockImplementation(() => {});
       globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = true;
 

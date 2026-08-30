@@ -1,3 +1,5 @@
+import Diagnostics from './../core/Diagnostics.js';
+
 /**
  * Gets the underlying `Game_Character` or its appropriate subclass that this
  * sprite represents on the map.
@@ -21,7 +23,7 @@ Sprite_Character.prototype.isErased = function()
   // if we don't have a character, then it must certainly be erased.
   if (!character)
   {
-    console.warn('attempted to check erasure status on a non-existing character:', this);
+    Diagnostics.warn(__PLUGIN_NAME__, 'attempted to check erasure status on a non-existing character.', this);
     return true;
   }
 

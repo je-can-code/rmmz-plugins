@@ -58,7 +58,7 @@ Game_Action.prototype.increaseProficiency = function()
   if (!caster || !skill)
   {
     // Surface a non-fatal warning for operator triage.
-    console.warn('attempted to improve prof for an invalid caster or skill.');
+    Diagnostics.warn(__PLUGIN_NAME__, 'attempted to improve proficiency for an invalid caster or skill.');
     return;
   }
 

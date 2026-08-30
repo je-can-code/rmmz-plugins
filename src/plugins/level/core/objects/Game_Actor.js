@@ -377,8 +377,8 @@ Game_Actor.prototype.handleLevelSkillLearnedLog = function(skillId)
     .setFaceIndex(this.faceIndex())
     .build();
 
-  // push it into the dia log for display.
-  $diaLogManager.addLog(log);
+  // push it into the dialog channel for display.
+  $mapLogs.dialog.addLog(log);
 };
 
 /**

@@ -638,9 +638,6 @@ class Scene_Questopedia
 
     // trigger a potential questopedia index change.
     this.onQuestopediaIndexChange();
-
-    // Emit progress to the build log for operator visibility.
-    console.log(`changed to category: ${categoriesWindow.currentSymbol()}`);
   }
 
   /**
@@ -660,7 +657,6 @@ class Scene_Questopedia
     {
       // toggle whether or not this quest is tracked.
       highlighted.toggleTracked();
-      console.log(`quest ${highlighted.key} is tracked: ${highlighted.isTracked()}`);
     }
 
     // refresh and reactivate the list.
@@ -712,9 +708,6 @@ class Scene_Questopedia
 
     this.getQuestopediaListWindow()
       .activate();
-
-    // Emit progress to the build log for operator visibility.
-    console.log(`old index: ${currentIndex}; new index: ${categoriesWindow.index()}.`);
   }
 
   /**

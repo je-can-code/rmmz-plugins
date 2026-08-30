@@ -286,13 +286,13 @@ describe('JABS_Engine ext/typed augments (direct src import)', () =>
       // Arrange
       const engine = new JABS_Engine();
       globalThis.J.LOG = false;
-      globalThis.$actionLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { action: { addLog: vi.fn() } };
 
       // Act
       engine.createLogApTyped(5, { battlerName: () => 'Hero' }, new ApTypeKey('element', 1));
 
       // Assert
-      expect(globalThis.$actionLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.action.addLog).not.toHaveBeenCalled();
     });
 
     it('builds and adds a typed log entry with the resolved display name/icon when J.LOG is enabled', () =>
@@ -301,7 +301,7 @@ describe('JABS_Engine ext/typed augments (direct src import)', () =>
       const engine = new JABS_Engine();
       globalThis.J.LOG = true;
       globalThis.ApManager.apTypeDisplay.mockReturnValue({ name: 'Fire', icon: 64 });
-      globalThis.$actionLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { action: { addLog: vi.fn() } };
       let capturedMessage;
       globalThis.ActionLogBuilder = function()
       {
@@ -317,8 +317,8 @@ describe('JABS_Engine ext/typed augments (direct src import)', () =>
       engine.createLogApTyped(5, { battlerName: () => 'Hero' }, new ApTypeKey('element', 1));
 
       // Assert
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith(expect.stringContaining('Fire'));
-      expect(globalThis.$actionLogManager.addLog).toHaveBeenCalledWith(expect.stringContaining('\\i[64]'));
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledWith(expect.stringContaining('Fire'));
+      expect(globalThis.$mapLogs.action.addLog).toHaveBeenCalledWith(expect.stringContaining('\\i[64]'));
     });
   });
 });

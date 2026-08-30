@@ -149,8 +149,8 @@ if (J.ABS)
       .setMessage(message)
       .build();
 
-    // add the log to the action log manager.
-    $actionLogManager.addLog(apLog);
+    // add the log to the action channel.
+    $mapLogs.action.addLog(apLog);
   };
 
 }

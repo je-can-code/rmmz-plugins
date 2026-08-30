@@ -1,5 +1,6 @@
 //region PluginMetadata
 import JsonMapper from './../_utilities/JsonMapper.js';
+import Diagnostics from './../core/Diagnostics.js';
 import PluginVersion from './PluginVersion.js';
 
 class PluginMetadata
@@ -45,7 +46,10 @@ class PluginMetadata
   {
     if (!name || !version)
     {
-      console.trace(`Emergency! Erroneous plugin metadata was provided!`);
+      Diagnostics.trace(__PLUGIN_NAME__, 'erroneous plugin metadata was provided.', {
+        name,
+        version,
+      });
       const message = `Erroneous plugin metadata provided: name=[${name}], version=[${version}]`;
       throw new Error(message);
     }

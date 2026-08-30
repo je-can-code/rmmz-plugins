@@ -458,7 +458,7 @@ describe('J-ABS _pluginMetadata.js (direct src import, via initialization.js con
       // Assert
       expect(metadata.GlobalCooldownSkillTypeSet).toEqual(new Set());
       expect(warnSpy).toHaveBeenCalledWith(
-        'J-ABS: globalCooldownSkillTypes JSON parse failed.',
+        '[J-ABS] globalCooldownSkillTypes JSON parse failed.',
         expect.any(Error));
 
       // Cleanup
@@ -510,7 +510,7 @@ describe('J-ABS _pluginMetadata.js (direct src import, via initialization.js con
       // Assert
       expect(metadata.SkillExecutionExcludedSkillTypeSet).toEqual(new Set());
       expect(warnSpy).toHaveBeenCalledWith(
-        'J-ABS: skillExecutionExcludedSkillTypes JSON parse failed.',
+        '[J-ABS] skillExecutionExcludedSkillTypes JSON parse failed.',
         expect.any(Error));
 
       // Cleanup

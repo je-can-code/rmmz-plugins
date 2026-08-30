@@ -195,7 +195,7 @@ describe('J-Difficulty metadata (direct src import)', () =>
       // Assert
       expect(warnSpy).toHaveBeenCalledTimes(1);
       expect(warnSpy)
-        .toHaveBeenCalledWith(`Duplicate difficulty key definition detected for [${defaultKey}].`);
+        .toHaveBeenCalledWith(`[J-Difficulty] duplicate difficulty key definition detected for [${defaultKey}].`);
       expect(metadata.allMetadatas.get(defaultKey).name).toBe('Second Definition');
 
       warnSpy.mockRestore();
@@ -204,7 +204,7 @@ describe('J-Difficulty metadata (direct src import)', () =>
     it('reports how many layers it loaded when external file load info is enabled', async () =>
     {
       // Arrange
-      const logSpy = vi.spyOn(console, 'log')
+      const logSpy = vi.spyOn(console, 'info')
         .mockImplementation(() => {});
       globalThis.J.BASE.Metadata.ShowExternalFileLoadInfo = true;
 

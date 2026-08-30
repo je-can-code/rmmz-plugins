@@ -655,11 +655,11 @@ class SaveFileSystem
   {
     const savedAt = this.savedAtOf(slotName, generationName);
 
-    console.warn(
-      `[save] ${slotName}: ${current} could not be loaded, so ${generationName} (saved ${savedAt}) `
-      + 'was loaded instead. Anything after that point is not in this file.');
+    const substitution = `${current} could not be loaded, so ${generationName} (saved ${savedAt}) was loaded instead`;
+    const consequence = 'anything after that point is not in this file.';
+    Diagnostics.warn(__PLUGIN_NAME__, `${slotName}: ${substitution}. ${consequence}`);
 
-    failures.forEach(failure => console.warn(`[save] ${slotName}: skipped ${failure}`));
+    failures.forEach(failure => Diagnostics.warn(__PLUGIN_NAME__, `${slotName}: skipped ${failure}`));
   }
 
   /**

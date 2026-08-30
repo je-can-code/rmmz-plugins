@@ -9,7 +9,7 @@ import LootLogBuilder from '../_models/LootLogBuilder.js';
  */
 PluginManager.registerCommand(J.LOG.Metadata.name, "showActionLog", () =>
 {
-  $actionLogManager.showLog();
+  $mapLogs.action.showLog();
 });
 
 /**
@@ -17,7 +17,7 @@ PluginManager.registerCommand(J.LOG.Metadata.name, "showActionLog", () =>
  */
 PluginManager.registerCommand(J.LOG.Metadata.name, "hideActionLog", () =>
 {
-  $actionLogManager.hideLog();
+  $mapLogs.action.hideLog();
 });
 
 /**
@@ -29,7 +29,7 @@ PluginManager.registerCommand(J.LOG.Metadata.name, "addActionLog", args =>
   const customActionLog = new ActionLogBuilder()
     .setMessage(text)
     .build();
-  $actionLogManager.addLog(customActionLog);
+  $mapLogs.action.addLog(customActionLog);
 });
 
 /**
@@ -37,7 +37,7 @@ PluginManager.registerCommand(J.LOG.Metadata.name, "addActionLog", args =>
  */
 PluginManager.registerCommand(J.LOG.Metadata.name, "clearActionLog", () =>
 {
-  $actionLogManager.clearLogs();
+  $mapLogs.action.clearLogs();
 });
 
 //endregion action log
@@ -48,7 +48,7 @@ PluginManager.registerCommand(J.LOG.Metadata.name, "clearActionLog", () =>
  */
 PluginManager.registerCommand(J.LOG.Metadata.name, "showDiaLog", () =>
 {
-  $diaLogManager.showLog();
+  $mapLogs.dialog.showLog();
 });
 
 /**
@@ -56,7 +56,7 @@ PluginManager.registerCommand(J.LOG.Metadata.name, "showDiaLog", () =>
  */
 PluginManager.registerCommand(J.LOG.Metadata.name, "hideDiaLog", () =>
 {
-  $diaLogManager.hideLog();
+  $mapLogs.dialog.hideLog();
 });
 
 /**
@@ -75,7 +75,7 @@ PluginManager.registerCommand(J.LOG.Metadata.name, "addDiaLog", args =>
     .setFaceName(faceName)
     .setFaceIndex(faceIndex)
     .build();
-  $diaLogManager.addLog(log);
+  $mapLogs.dialog.addLog(log);
 });
 
 /**
@@ -83,7 +83,7 @@ PluginManager.registerCommand(J.LOG.Metadata.name, "addDiaLog", args =>
  */
 PluginManager.registerCommand(J.LOG.Metadata.name, "clearDiaLog", () =>
 {
-  $diaLogManager.clearLogs();
+  $mapLogs.dialog.clearLogs();
 });
 //endregion dia log
 
@@ -93,7 +93,7 @@ PluginManager.registerCommand(J.LOG.Metadata.name, "clearDiaLog", () =>
  */
 PluginManager.registerCommand(J.LOG.Metadata.name, "showLootLog", () =>
 {
-  $lootLogManager.showLog();
+  $mapLogs.loot.showLog();
 });
 
 /**
@@ -101,7 +101,7 @@ PluginManager.registerCommand(J.LOG.Metadata.name, "showLootLog", () =>
  */
 PluginManager.registerCommand(J.LOG.Metadata.name, "hideLootLog", () =>
 {
-  $lootLogManager.hideLog();
+  $mapLogs.loot.hideLog();
 });
 
 /**
@@ -116,7 +116,7 @@ PluginManager.registerCommand(J.LOG.Metadata.name, "addLootLog", args =>
   const log = new LootLogBuilder()
     .setupLootObtained(lootType, lootId)
     .build();
-  $lootLogManager.addLog(log);
+  $mapLogs.loot.addLog(log);
 });
 
 /**
@@ -124,7 +124,7 @@ PluginManager.registerCommand(J.LOG.Metadata.name, "addLootLog", args =>
  */
 PluginManager.registerCommand(J.LOG.Metadata.name, "clearLootLog", () =>
 {
-  $lootLogManager.clearLogs();
+  $mapLogs.loot.clearLogs();
 });
 //endregion loot log
 

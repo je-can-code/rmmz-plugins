@@ -140,6 +140,15 @@
  * This choice is only shown while objective 2 of that quest is completed.
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.2
+ *    Routed every quest and objective warning and error through J-Base's new
+ *    Diagnostics, so each names J-OMNI-Quests. Removed the console.log lines
+ *    narrating category changes, tracking toggles, index moves, quest additions
+ *    and no-op state refreshes; none reported a fault.
+ * - 2.0.1
+ *    Repointed quest and objective update announcements at J-Log's new
+ *    $mapLogs registry. The $diaLogManager global these called is gone.
+ *    Requires J-Log 3.0.0 when J-Log is installed at all.
  * - 2.0.0
  *    Renamed from J-Omni-Questopedia to J-OMNI-Quests. The shipped file is
  *    renamed with it, so an existing plugins.js entry must be updated or the

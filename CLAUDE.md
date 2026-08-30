@@ -549,8 +549,40 @@ State is shaped `this._j.<PLUGIN_ABBREVIATION>.<CONTAINER>.<NAME>` — for examp
 
 ### Logging
 
-Never ship logging in production code. `console.log` is for debugging only; the `J.LOG` namespace is
-in-game logging, which is a different thing entirely.
+Never ship logging in production code. Narrating normal operation — "loaded X", "changed to category
+Y", "adding new quest" — is exactly what that forbids, and a `console.log` left behind after debugging
+is the usual way it gets in.
+
+**Anomalies are different, and they go through `Diagnostics`.** No plugin calls `console.*` directly.
+`Diagnostics` (`_base/core/core/Diagnostics.js`) is a hoisted J-Base class with four methods:
+
+| Method | For |
+|---|---|
+| `warn` | something wrong the game carries on through, usually by falling back to a sentinel |
+| `error` | something wrong it *cannot* carry on through correctly, whether or not it is about to throw |
+| `trace` | an anomaly whose **call path** is the diagnostic — a static class someone instantiated, a method reached from somewhere impossible. Emits the warning and the stack |
+| `info` | the one non-anomaly method: a confirmation somebody **opted into**, like a config load behind `ShowExternalFileLoadInfo`. Not a licence to narrate |
+
+```javascript
+Diagnostics.warn(__PLUGIN_NAME__, `unhandled scope for tool: [ ${scope} ]!`);
+// → [J-ABS] unhandled scope for tool: [ 3 ]!
+```
+
+**Always `__PLUGIN_NAME__`, never a literal.** That is the build-time identifier Vite substitutes per
+ship out of that ship's own `meta.js`, and it works in **any** file of a ship — `define` is a
+whole-bundle substitution, not something special about `initialization.js`. One source of truth per
+ship, and renaming a ship updates every diagnostic it writes. Deliberately not `J.SOMETHING.Metadata.name`:
+substitution bakes a literal, so a message still names its ship in the exact situation where the runtime
+namespace is what broke.
+
+Supporting values are **one optional third argument**, not a variadic tail — `verify:no-rest-parameters`
+forbids the tail, and `{ target, attacker, error }` prints better in devtools than three positional blobs.
+
+Two ships are exempt and stay that way: **`J-SystemUtilities`**, whose console output *is* its product
+(InputLog, map-click inspection, save dumps), and `abs/ext/star` under its standing exclusion.
+
+`J.LOG` is unrelated to any of this — that is the in-game log the *player* reads on the map, and its
+channels live on `$mapLogs`.
 
 ### Tags
 
@@ -566,6 +598,19 @@ Notetags take one of these shapes:
 - Multi-line tags are acceptable but not preferred; keep one line per value or concept.
 - Whether duplicate tags are allowed is **contextual** — some plugins permit multiples, others do not.
   Ask rather than deducing, unless you have specific knowledge of the tag in question.
+
+**A PR that adds a tag adds its glossary entry.** [`docs/notetag-reference.md`](docs/notetag-reference.md)
+is the one flat, scannable list of every notetag in the ecosystem — what it does, what it applies to,
+and a real example — and it is what an author reads instead of chasing a dozen plugins'
+`_annotations.js`. A tag that ships without an entry is a tag nobody can find, and the reference stops
+being trustworthy the first time it is incomplete: a reader who has been burned once has to check the
+source anyway, which is the whole cost the document exists to remove.
+
+So the entry lands in the same PR as the tag, never as follow-up work. Match the surrounding format —
+entries are grouped by plugin, and a tag family with several variants shares one entry with a variants
+table rather than one entry per variant. The plugin's own `_annotations.js` remains the authoritative
+source the entry is written from; the reference is the lookup built on top of it, and the two are
+expected to agree.
 
 ---
 
@@ -730,6 +775,9 @@ naming that gap.
   `meta.js` (`PLUGIN_VERSION`) or the `CHANGELOG:` blocks in `_annotations.js`. At PR time, reverse-
   analyze the diff per ship to decide major / minor / patch, then write the changelog. A ship only gets
   a version section if its tree actually changed.
+- **A new tag ships with its glossary entry**, in the same PR — see [Tags](#tags). Unlike the version
+  bump above, this is not deferred to PR time: write it whenever the tag lands, just never later than
+  the PR that introduces it.
 - Assume a sibling Claude session may be working in this repo right now. Unexplained changes in the tree
   are usually them, not corruption.
 

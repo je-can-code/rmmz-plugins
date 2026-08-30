@@ -637,8 +637,10 @@ class JaftingManager
     }
     else
     {
-      console.error(`The following equip failed to be captured because it was neither weapon nor armor.`);
-      console.warn(equip);
+      Diagnostics.error(
+        'J-JAFTING-Refinement',
+        'an equip failed to be captured because it was neither weapon nor armor.',
+        equip);
       throw new Error("please stop crafting stuff that isn't valid.");
     }
   }

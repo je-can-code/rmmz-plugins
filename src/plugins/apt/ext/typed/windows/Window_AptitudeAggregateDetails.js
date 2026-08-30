@@ -37,7 +37,7 @@ Window_AptitudeAggregateDetails.prototype.drawExtensionData = function(sourcePro
   // if no teachable was found, then do nothing.
   if (!found)
   {
-    console.warn(`Could not find teachable for skillId: ${skillId}`);
+    Diagnostics.warn(__PLUGIN_NAME__, `could not find a teachable for skillId: ${skillId}`);
     return;
   }
 

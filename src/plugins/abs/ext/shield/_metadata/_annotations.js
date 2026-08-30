@@ -345,6 +345,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.2
+ *    Routed the shield-formula error through J-Base's new Diagnostics, so it
+ *    names J-ABS-Shield and shows the target, attacker and error as named keys
+ *    rather than three positional values.
  * - 1.1.1
  *    Fixed shields computing different values on application and recalculation.
  *    The attacker was omitted the first time, leaving the point formulas without

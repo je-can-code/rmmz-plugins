@@ -3,8 +3,12 @@ import { installJBaseHostGlobals } from '../../../_base/core/_component/fixtures
 import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 /**
- * The real production defaults for J-HUD-TargetFrame, pulled from project/js/plugins.js so
- * metadata assertions exercise realistic values instead of `PluginManager.parameters()`'s empty-object default.
+ * Production-shaped defaults for J-HUD-TargetFrame, so metadata assertions exercise realistic values
+ * instead of `PluginManager.parameters()`'s empty-object default.
+ *
+ * These were transcribed from a real RPG Maker plugin manifest. There is no manifest in this repo to
+ * check them against anymore, so treat them as a fixture in their own right: change one only because
+ * a test needs a different value, never in the belief that it is being resynced with somewhere else.
  */
 export const DEFAULT_HUD_TARGET_PLUGIN_PARAMS = {
   targetFrameX: '400',
@@ -35,13 +39,13 @@ export const DEFAULT_HUD_TARGET_PLUGIN_PARAMS = {
 
 /**
  * J-HUD-FOOD ships with no explicit plugin parameters configured- every field falls back to its
- * own default, same as the real project/js/plugins.js entry.
+ * own default, which is what an empty object models here.
  */
 export const DEFAULT_HUD_FOOD_PLUGIN_PARAMS = {};
 
 /**
  * J-HUD-InputFrame ships with no explicit plugin parameters configured- every field falls back to
- * its own default, same as the real project/js/plugins.js entry.
+ * its own default, which is what an empty object models here.
  */
 export const DEFAULT_HUD_INPUT_PLUGIN_PARAMS = {};
 

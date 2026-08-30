@@ -53,13 +53,13 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
       },
     };
 
-    globalThis.$diaLogManager = undefined;
+    globalThis.$mapLogs = undefined;
   });
 
   afterEach(() =>
   {
     delete globalThis.J;
-    delete globalThis.$diaLogManager;
+    delete globalThis.$mapLogs;
     delete globalThis.DiaLogBuilder;
     vi.clearAllMocks();
   });
@@ -651,17 +651,20 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
         fakeObjective(1, OmniObjective.States.Inactive),
       ]);
       quest.state = OmniQuest.States.Active;
-      const infoSpy = vi.spyOn(console, 'info')
-        .mockImplementation(() => {});
+
+      // every earlier arm of refreshState reaches its outcome by calling setState, and falling all
+      // the way through is the only path that never does. asserting the state is still Active
+      // cannot tell those apart - the Arrange set it to Active - so the spy is what carries this.
+      const setStateSpy = vi.spyOn(quest, 'setState');
 
       // Act
       quest.refreshState();
 
-      // Assert- the notice proves the run fell all the way through rather than stopping earlier.
+      // Assert
+      expect(setStateSpy).not.toHaveBeenCalled();
       expect(quest.state).toBe(OmniQuest.States.Active);
-      expect(infoSpy).toHaveBeenCalledTimes(1);
 
-      infoSpy.mockRestore();
+      setStateSpy.mockRestore();
     });
   });
 
@@ -685,7 +688,7 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
       expect(onChangeSpy).not.toHaveBeenCalled();
     });
 
-    it('logs via $diaLogManager when transitioning to a new, non-inactive state', () =>
+    it('logs via the dialog channel when transitioning to a new, non-inactive state', () =>
     {
       const quest = new TrackedOmniQuest('quest-key', 'main', [ fakeObjective(0, OmniObjective.States.Inactive) ]);
 
@@ -697,12 +700,12 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
       };
       // J-Log must be present for the announcement path to run at all.
       globalThis.J.LOG = {};
-      globalThis.$diaLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { dialog: { addLog: vi.fn() } };
 
       quest.setState(OmniQuest.States.Active);
 
       expect(builder.setLines).toHaveBeenCalledWith([ '\\C[1][Quest Name]\\C[0]', 'Quest unlocked.' ]);
-      expect(globalThis.$diaLogManager.addLog).toHaveBeenCalledWith(builtLog);
+      expect(globalThis.$mapLogs.dialog.addLog).toHaveBeenCalledWith(builtLog);
     });
 
     it('does not log when transitioning back to Inactive', () =>
@@ -712,13 +715,13 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
 
       // J-Log must be present for the announcement path to run at all.
       globalThis.J.LOG = {};
-      globalThis.$diaLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { dialog: { addLog: vi.fn() } };
       const warnSpy = vi.spyOn(console, 'warn')
         .mockImplementation(() => {});
 
       quest.setState(OmniQuest.States.Inactive);
 
-      expect(globalThis.$diaLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.dialog.addLog).not.toHaveBeenCalled();
       // resetting a quest is a deliberate act, so it has to bow out quietly rather than falling
       // through to the unknown-state complaint the way a genuine surprise would.
       expect(warnSpy).not.toHaveBeenCalled();
@@ -744,7 +747,7 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
       };
 
       globalThis.J.LOG = {};
-      globalThis.$diaLogManager = { addLog: vi.fn() };
+      globalThis.$mapLogs = { dialog: { addLog: vi.fn() } };
 
       return builder;
     }
@@ -786,7 +789,7 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
       quest.handleQuestUpdateLog();
 
       // Assert
-      expect(globalThis.$diaLogManager.addLog).not.toHaveBeenCalled();
+      expect(globalThis.$mapLogs.dialog.addLog).not.toHaveBeenCalled();
       expect(warned).toHaveBeenCalled();
 
       warned.mockRestore();
