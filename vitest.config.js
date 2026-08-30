@@ -53,7 +53,12 @@ export default defineConfig({
         '**/src/plugins/!(_base)/**/scenes/**',
         '**/src/plugins/_base/!(ext)/**/scenes/**',
         '**/src/plugins/_base/ext/!(save)/**/scenes/**',
-        '**/src/plugins/**/sprites/**',
+        // J-Motion is the first family with its sprite layer lifted, which is why this reads as two
+        // patterns rather than one. Its Sprite_Character.js is the entire view half of the plugin -
+        // where the composed motion actually reaches the screen - so leaving it unmeasured would
+        // have meant calling the ship covered while the part that draws anything was not.
+        '**/src/plugins/!(motion)/**/sprites/**',
+        '**/src/plugins/motion/!(core)/**/sprites/**',
         '**/src/plugins/!(_base)/**/windows/**',
         '**/src/plugins/_base/!(ext)/**/windows/**',
         '**/src/plugins/_base/ext/!(save)/**/windows/**',
