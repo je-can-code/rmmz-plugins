@@ -39,6 +39,9 @@ describe('J-ABS Game_Enemy (unit, all downstream dependencies mocked)', () =>
           DefaultEnemyShowBattlerName: true,
           DefaultEnemyIsInvincible: false,
           DefaultEnemyIsInanimate: false,
+          DefaultRespawnMethod: '',
+          DefaultRespawnParam: '',
+          DefaultRespawnAnimationId: 0,
         },
       },
       BASE: { Traits: { ATTACK_SPEED: 99 } },
@@ -133,6 +136,9 @@ describe('J-ABS Game_Enemy (unit, all downstream dependencies mocked)', () =>
       jabsConfigNotInvincible: null,
       jabsConfigInanimate: null,
       jabsConfigNotInanimate: null,
+      jabsRespawnData: null,
+      jabsNoRespawn: null,
+      jabsRespawnAnimationId: null,
       ...overrides,
     };
   }
@@ -393,6 +399,110 @@ describe('J-ABS Game_Enemy (unit, all downstream dependencies mocked)', () =>
       const enemy = buildEnemy();
 
       expect(enemy[method]()).toEqual(defaultValue);
+    });
+  });
+
+  describe('respawnData()', () =>
+  {
+    it('returns the tagged pair when present', () =>
+    {
+      // Arrange
+      const taggedPair = [ 'seconds', 90 ];
+      const enemy = buildEnemy({ databaseData: () => buildReferenceData({ jabsRespawnData: taggedPair }) });
+
+      // Act
+      const result = enemy.respawnData();
+
+      // Assert
+      expect(result).toBe(taggedPair);
+    });
+
+    it('returns null when untagged and the world declares no default method', () =>
+    {
+      // Arrange
+      const enemy = buildEnemy();
+
+      // Act
+      const result = enemy.respawnData();
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('builds the pair from the world defaults when untagged and a default method is configured', () =>
+    {
+      // Arrange
+      const originalMethod = globalThis.J.ABS.Metadata.DefaultRespawnMethod;
+      const originalParam = globalThis.J.ABS.Metadata.DefaultRespawnParam;
+      globalThis.J.ABS.Metadata.DefaultRespawnMethod = 'seconds';
+      globalThis.J.ABS.Metadata.DefaultRespawnParam = '300';
+      const enemy = buildEnemy();
+
+      // Act
+      const result = enemy.respawnData();
+
+      // Assert
+      expect(result).toEqual([ 'seconds', '300' ]);
+      globalThis.J.ABS.Metadata.DefaultRespawnMethod = originalMethod;
+      globalThis.J.ABS.Metadata.DefaultRespawnParam = originalParam;
+    });
+  });
+
+  describe('isNoRespawn()', () =>
+  {
+    it('returns true when the note declares permanence', () =>
+    {
+      // Arrange
+      const enemy = buildEnemy({ databaseData: () => buildReferenceData({ jabsNoRespawn: true }) });
+
+      // Act
+      const result = enemy.isNoRespawn();
+
+      // Assert
+      expect(result).toEqual(true);
+    });
+
+    it('returns false when untagged', () =>
+    {
+      // Arrange
+      const enemy = buildEnemy();
+
+      // Act
+      const result = enemy.isNoRespawn();
+
+      // Assert
+      expect(result).toEqual(false);
+    });
+  });
+
+  describe('respawnAnimationId()', () =>
+  {
+    it('returns the tagged animation id when present', () =>
+    {
+      // Arrange
+      const enemy = buildEnemy({ databaseData: () => buildReferenceData({ jabsRespawnAnimationId: 12 }) });
+
+      // Act
+      const result = enemy.respawnAnimationId();
+
+      // Assert
+      expect(result).toEqual(12);
+    });
+
+    it('falls back to the world default when untagged', () =>
+    {
+      // Arrange- a non-zero default anchors that the fallback actually executed, since zero is
+      // also what a do-nothing implementation would produce.
+      const originalDefault = globalThis.J.ABS.Metadata.DefaultRespawnAnimationId;
+      globalThis.J.ABS.Metadata.DefaultRespawnAnimationId = 25;
+      const enemy = buildEnemy();
+
+      // Act
+      const result = enemy.respawnAnimationId();
+
+      // Assert
+      expect(result).toEqual(25);
+      globalThis.J.ABS.Metadata.DefaultRespawnAnimationId = originalDefault;
     });
   });
 

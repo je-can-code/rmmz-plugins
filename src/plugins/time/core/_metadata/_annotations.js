@@ -201,6 +201,12 @@
  *
  * =============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Added a day-of-week vocabulary to Time_Snapshot: DaysOfWeekName and
+ *    DaysOfWeekId translate between names and ids (0-6 starting from Monday),
+ *    and dayOfWeekId/dayOfWeekName derive which weekday a snapshot lands on.
+ *    The artificial calendar anchors day 1 of month 1 of year 0 as a Monday
+ *    and cycles a seven-day week; real-time mode asks the real calendar.
  * - 1.1.3
  *    Routed the season and time-of-day validation errors, the unrecognized TIME
  *    tag warning, and the fresh-clock notice through J-Base's new Diagnostics,

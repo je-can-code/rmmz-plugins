@@ -118,6 +118,13 @@ class J_AbsPluginMetadata
     this.DefaultEnemyShowBattlerName = Boolean(this.parsedPluginParameters['defaultEnemyShowBattlerName'] === 'true');
     this.DefaultEnemyIsInvincible = Boolean(this.parsedPluginParameters['defaultEnemyIsInvincible'] === 'true');
     this.DefaultEnemyIsInanimate = Boolean(this.parsedPluginParameters['defaultEnemyIsInanimate'] === 'true');
+
+    // an empty method means the world default is "no respawn tracking at all", which preserves
+    // the pre-respawn behavior of every battler returning on map re-entry.
+    this.DefaultRespawnMethod = this.parsedPluginParameters['defaultRespawnMethod'] || String.empty;
+    this.DefaultRespawnParam = this.parsedPluginParameters['defaultRespawnParam'] || String.empty;
+    // older parameter sets predate this parameter entirely, so the parse falls back to "no animation".
+    this.DefaultRespawnAnimationId = Number(this.parsedPluginParameters['defaultRespawnAnimationId'] || 0);
   }
 
   /**

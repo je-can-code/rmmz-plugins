@@ -229,6 +229,74 @@ Game_Enemy.prototype.ai = function()
 };
 
 /**
+ * Gets the enemy's respawn declaration from their notes, as a `[METHOD, PARAM]` pair.
+ * This will be overwritten by values provided from an event.
+ * Falls back to the world default from plugin parameters; when the world declares no default
+ * method, this resolves to null and the battler is simply never tracked.
+ * @returns {any[]|null}
+ */
+Game_Enemy.prototype.respawnData = function()
+{
+  // grab the reference data for this battler.
+  const referenceData = this.databaseData();
+
+  // grab the respawn declaration from the notes of the battler.
+  const respawnData = referenceData.jabsRespawnData;
+
+  // check if the respawn declaration is a non-null value.
+  if (respawnData !== null)
+  {
+    // return the parsed respawn declaration.
+    return respawnData;
+  }
+
+  // an empty default method means the world tracks nothing by default.
+  if (J.ABS.Metadata.DefaultRespawnMethod === String.empty) return null;
+
+  // build the pair from the world defaults.
+  return [ J.ABS.Metadata.DefaultRespawnMethod, J.ABS.Metadata.DefaultRespawnParam ];
+};
+
+/**
+ * Gets whether or not this enemy is finite- defeated once, gone for the playthrough.
+ * This will be overwritten by values provided from an event.
+ * There is deliberately no world default for permanence; it is opt-in per species or placement.
+ * @returns {boolean}
+ */
+Game_Enemy.prototype.isNoRespawn = function()
+{
+  // grab the reference data for this battler.
+  const referenceData = this.databaseData();
+
+  // an absent tag simply means the battler is not finite.
+  return referenceData.jabsNoRespawn ?? false;
+};
+
+/**
+ * Gets the animation id to play on this enemy's event when it respawns.
+ * This will be overwritten by values provided from an event.
+ * @returns {number}
+ */
+Game_Enemy.prototype.respawnAnimationId = function()
+{
+  // grab the reference data for this battler.
+  const referenceData = this.databaseData();
+
+  // grab the respawn animation id from the notes of the battler.
+  const respawnAnimationId = referenceData.jabsRespawnAnimationId;
+
+  // check if the respawn animation id is a non-null value.
+  if (respawnAnimationId !== null)
+  {
+    // return the parsed respawn animation id.
+    return respawnAnimationId;
+  }
+
+  // if we don't have a note, then just return the default.
+  return J.ABS.Metadata.DefaultRespawnAnimationId;
+};
+
+/**
  * Gets the enemy's sight range from their notes.
  * This will be overwritten by values provided from an event.
  * @returns {number}

@@ -1848,6 +1848,98 @@ This event behaves as a non-thinking, non-moving prop rather than a combatant.
 
 ---
 
+### `<respawn:[METHOD, PARAM]>`
+
+**Applies to:**
+Enemy events, Enemies (database default), World default (plugin parameter)
+
+**When:**
+the battler is defeated (the timer starts on death, immediately)
+
+**Effect:**
+schedules when this battler returns to the map after defeat. Until the moment arrives, the event
+stays down — through map transitions, saves, and loads — then the battler reappears at its
+authored coordinates while the player watches (no re-entry required). Resolution order is
+`world default < enemy note < event comment`, so one particular placement can be rarer than its
+siblings without touching the enemy. Defeated enemies with no declaration anywhere behave exactly
+as they always have: back on the next map entry.
+
+METHOD names how the wait is measured; PARAM feeds that method. Core ships one method, and
+J-ABS-Time registers the calendar methods:
+
+| Method | Ships in | PARAM | Returns |
+|---|---|---|---|
+| `seconds` | J-ABS | positive whole seconds | after PARAM seconds of playtime |
+| `time-of-day` | J-ABS-Time | `night`/`dawn`/`morning`/`afternoon`/`evening`/`twilight` | when that time of day next begins |
+| `next-day` | J-ABS-Time | clock time as HMM/HHMM (`830`, `1430`) | tomorrow, at that clock time |
+| `day-of-week` | J-ABS-Time | `monday` … `sunday` | midnight on the next such weekday |
+| `month` | J-ABS-Time | month number 1-12 | the first midnight of that month's next occurrence |
+| `season` | J-ABS-Time | `spring`/`summer`/`autumn`/`winter` | the first midnight of that season's next occurrence |
+
+Calendar methods always resolve to the start of the NEXT occurrence, strictly after the moment of
+death — dying during the morning schedules tomorrow's morning, not the one already underway. An
+unknown method (typo, or an uninstalled extension) warns via Diagnostics and tracks nothing.
+
+```
+<respawn:[seconds, 90]>
+```
+This battler returns 90 seconds of playtime after its defeat.
+
+```
+<respawn:[time-of-day, morning]>
+```
+This battler returns the next time morning begins after its defeat.
+
+**See also:** `<noRespawn>`, `<respawnAnimation>`
+
+---
+
+### `<noRespawn>`
+
+**Applies to:**
+Enemy events, Enemies (database default)
+
+**When:**
+the battler is defeated
+
+**Effect:**
+this battler never returns. The permanence is recorded at death and survives every save from then
+on — the world is allowed to be poorer for what the player did to it. Outranks any
+`<respawn:[...]>` declaration on the same battler. Use a switch instead when the *event itself*
+should become something else afterwards (a corpse, an empty throne); use this tag when a species
+should simply be finite with the bookkeeping handled for you.
+
+```
+<noRespawn>
+```
+Once defeated, this battler is gone for the rest of the playthrough.
+
+**See also:** `<respawn>`, `<respawnAnimation>`
+
+---
+
+### `<respawnAnimation:ANIMATION_ID>`
+
+**Applies to:**
+Enemy events, Enemies (database default), World default (plugin parameter)
+
+**When:**
+the battler respawns on the map
+
+**Effect:**
+plays animation ANIMATION_ID on the event as the battler returns, so a node shimmers back into
+existence rather than blinking. Resolution order is `world default < enemy note < event comment`.
+An id of 0 (the shipped default) plays nothing.
+
+```
+<respawnAnimation:12>
+```
+Animation 12 plays on this event as its battler returns.
+
+**See also:** `<respawn>`, `<noRespawn>`
+
+---
+
 ### `<actionId:EVENT_ID>`
 
 **Applies to:**
@@ -4575,6 +4667,16 @@ pauses and a reticle appears for the player to aim before the skill executes.
 <targeted>
 ```
 This skill pauses combat and prompts for a target before executing.
+
+---
+
+## J-ABS-Time (`src/plugins/abs/ext/time/`)
+
+Teaches the JABS respawn system to speak in appointments rather than durations. Registers the
+calendar respawn methods — `time-of-day`, `next-day`, `day-of-week`, `month`, `season` — against
+core's `<respawn:[METHOD, PARAM]>` tag, resolving each to the start of the named moment's next
+occurrence on the J-TIME calendar. Requires J-ABS and J-TIME. Defines no tags of its own; the
+full method table lives with the `<respawn>` entry in the J-ABS section above.
 
 ---
 

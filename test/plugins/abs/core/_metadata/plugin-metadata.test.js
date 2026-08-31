@@ -182,6 +182,9 @@ describe('J-ABS _pluginMetadata.js (direct src import, via initialization.js con
       [ 'mapAfflictionIconScale', 'mapAfflictionIconScale', '0.75', 0.75, 0.5 ],
       [ 'mapAfflictionGaugeHeight', 'mapAfflictionGaugeHeight', '9', 9, 3 ],
       [ 'mapAfflictionGapBelowHpBar', 'mapAfflictionGapBelowHpBar', '8', 8, 2 ],
+      [ 'defaultRespawnMethod', 'DefaultRespawnMethod', 'seconds', 'seconds', '' ],
+      [ 'defaultRespawnParam', 'DefaultRespawnParam', '300', '300', '' ],
+      [ 'defaultRespawnAnimationId', 'DefaultRespawnAnimationId', '25', 25, 0 ],
     ];
 
     it.each(FALLBACK_PARAMETERS)(

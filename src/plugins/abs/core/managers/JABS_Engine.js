@@ -13,6 +13,7 @@ import JABS_ActionOptions from '../models/JABS_ActionOptions.js';
 import JABS_Action from '../models/JABS_Action.js';
 import JABS_Aabb from '../models/JABS_Aabb.js';
 import JABS_DeathContext from '../models/JABS_DeathContext.js';
+import JABS_RespawnManager from './JABS_RespawnManager.js';
 /**
  * This class is the engine that manages JABS and how JABS actions interact
  * with the `JABS_Battler`s on the map.
@@ -173,6 +174,13 @@ class JABS_Engine
    */
   forcedCombat = false;
 
+  /**
+   * The countdown until the next respawn registry sweep, in frames.
+   * Sweeping every frame buys nothing- a respawn landing within the same second is invisible.
+   * @type {number}
+   */
+  respawnSweepCountdown = JABS_Engine.RESPAWN_SWEEP_INTERVAL;
+
   //endregion properties
 
   /**
@@ -192,6 +200,12 @@ class JABS_Engine
   }
 
   //region static
+  /**
+   * The number of frames between respawn registry sweeps.
+   * @type {number}
+   */
+  static RESPAWN_SWEEP_INTERVAL = 60;
+
   /**
    * Gets the collection of enemy clone events currently tracked.
    * @returns {RPG_MapEvent[]}
@@ -829,8 +843,133 @@ class JABS_Engine
     // age and prune the skill execution history log.
     this.updateSkillExecutionLog();
 
+    // return whatever defeated battlers have finished waiting out their respawn.
+    this.updateRespawns();
+
     // handle input from the player(s).
     this.updateInput();
+  }
+
+  /**
+   * Ticks the respawn sweep throttle, and sweeps the current map's records when it lapses.
+   * Respawning must not be a map-transition effect- things return while the player stands there.
+   */
+  updateRespawns()
+  {
+    // tick down the throttle.
+    this.respawnSweepCountdown--;
+
+    // not yet time to look.
+    if (this.respawnSweepCountdown > 0) return;
+
+    // reset the throttle for the next sweep.
+    this.respawnSweepCountdown = JABS_Engine.RESPAWN_SWEEP_INTERVAL;
+
+    // sweep the current map for battlers that have come due.
+    this.processDueRespawns();
+  }
+
+  /**
+   * Sweeps the current map's respawn records and revives every battler that has come due.
+   */
+  processDueRespawns()
+  {
+    // grab all records tracked for the map the player is standing on.
+    const records = $gameSystem.respawnRecordsForMap($gameMap.mapId());
+
+    // iterate over the records and revive whichever have finished waiting.
+    records.forEach(entry =>
+    {
+      // shorthand the pair into variables.
+      const [ eventId, record ] = entry;
+
+      // permanent and not-yet-due records stay right where they are.
+      if (!JABS_RespawnManager.isDue(record)) return;
+
+      // welcome the battler back to the world.
+      this.respawnEnemy(eventId);
+    });
+  }
+
+  /**
+   * Respawns the battler belonging to the given authored event on the current map.
+   *
+   * A respawned battler is an existing event whose battler was destroyed, not a clone- so the
+   * authored slot is rebuilt in place from `$dataMap`, which restores the authored coordinates
+   * regardless of where the battler wandered before it died. This mirrors what a full map
+   * re-entry produces, so one mechanic yields one behavior on both paths.
+   * @param {number} eventId The id of the authored event to rebuild.
+   */
+  respawnEnemy(eventId)
+  {
+    // grab the map id once; everything here happens on the current map.
+    const mapId = $gameMap.mapId();
+
+    // grab the stale event still occupying the authored slot.
+    const staleEvent = $gameMap.event(eventId);
+
+    // a record whose event no longer exists is a husk from a map edited since the save was
+    // written; drop it so it stops being swept forever.
+    if (!staleEvent)
+    {
+      $gameSystem.clearRespawnRecord(mapId, eventId);
+      return;
+    }
+
+    // grab the authored placement of this event.
+    const { x, y } = staleEvent.event();
+
+    // the player standing on the spawn point defers the return to a later sweep- nothing
+    // materializes inside the player.
+    if ($gamePlayer.pos(x, y)) return;
+
+    // rebuild the authored slot with a fresh event; the constructor locates it at the authored
+    // coordinates and runs the page refresh that parses its battler comments.
+    const freshEvent = new Game_Event(mapId, eventId);
+
+    // replace- never null-then-add- so the hole-reuse in addEvent can't steal the authored id.
+    $gameMap.setEventByIndex(eventId, freshEvent);
+
+    // the conversion gate would block a lingering record, and a page that stopped declaring a
+    // battler would otherwise leave this record due-and-swept forever; either way it is spent.
+    $gameSystem.clearRespawnRecord(mapId, eventId);
+
+    // convert the freshly-rebuilt event into a battler again.
+    $gameMap.refreshOneBattler(freshEvent);
+
+    // request the sprite be rebuilt for the returned battler.
+    freshEvent.flagBattlerForAdding();
+    this.requestBattlerRendering = true;
+
+    // announce the arrival visually.
+    this.processRespawnAnimation(freshEvent);
+  }
+
+  /**
+   * Plays the resolved respawn animation on a freshly-respawned event, if any is configured.
+   * Resolution follows the usual ladder: global default < enemy note < event comment.
+   * @param {Game_Event} freshEvent The event that just respawned.
+   */
+  processRespawnAnimation(freshEvent)
+  {
+    // grab the battler that came back with the event.
+    const jabsBattler = freshEvent.getJabsBattler();
+
+    // a page that no longer declares a battler has nothing to announce.
+    if (!jabsBattler) return;
+
+    // grab the underlying enemy for note-based resolution.
+    const enemy = jabsBattler.getBattler();
+
+    // resolve the animation by the usual ladder.
+    const animationId = freshEvent.getRespawnAnimationOverrides() ?? enemy.respawnAnimationId();
+
+    // an animation of zero means nobody wants one.
+    if (animationId === 0) return;
+
+    // the sprite is only built on the next spriteset update, so the animation request waits a
+    // beat- the same delay the Spawn Enemy plugin command uses for the same reason.
+    setTimeout(() => freshEvent.requestAnimation(animationId), 50);
   }
 
   /**
@@ -3035,6 +3174,10 @@ class JABS_Engine
 
     // generate a new event based on this JABS enemy.
     const newEnemy = new Game_Event($gameMap.mapId(), normalizedIndex);
+
+    // clones take appended indices that evaporate on the next map setup, so respawn tracking
+    // must be able to tell them apart from authored events and ignore them.
+    newEnemy.flagAsDynamicSpawn();
 
     // add the enemy to the map and flag it for adding (visually).
     $gameMap.addEvent(newEnemy);
@@ -5574,8 +5717,42 @@ class JABS_Engine
       this.createLootDrops(defeatedTarget, caster);
     }
 
+    // record when- if ever- this battler returns to the map.
+    this.processRespawnTracking(defeatedTarget);
+
     // remove the target's character from the map.
     defeatedTarget.setDying(true);
+  }
+
+  /**
+   * Records the respawn schedule for a defeated enemy, if it declares one.
+   * The timer starts on death, immediately- a player who wants to stand there and wait is
+   * welcome to; that is their time to spend.
+   * @param {JABS_Battler} defeatedTarget The `JABS_Battler` that was defeated.
+   */
+  processRespawnTracking(defeatedTarget)
+  {
+    // grab the event that carried the defeated battler.
+    const character = defeatedTarget.getCharacter();
+
+    // dynamically-spawned clones have ids that can belong to something else after the next map
+    // setup, so only originally-authored events are ever tracked.
+    if (character.isDynamicSpawn()) return;
+
+    // grab the underlying enemy for note-based resolution.
+    const enemy = defeatedTarget.getBattler();
+
+    // resolve the respawn declaration into a record, if there is any declaration at all.
+    const record = JABS_RespawnManager.createRecord(character, enemy);
+
+    // no declaration anywhere means the battler returns on map re-entry, as it always has.
+    if (record === null) return;
+
+    // grab the event's id for registration.
+    const eventId = character.eventId();
+
+    // track the record against this event's place in the world.
+    $gameSystem.setRespawnRecord($gameMap.mapId(), eventId, record);
   }
 
   /**

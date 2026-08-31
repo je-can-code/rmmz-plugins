@@ -1,6 +1,8 @@
 //region plugins/time/_component/time-mapper-direct.test.js
 import { afterEach, describe, expect, it } from 'vitest';
 
+// TimeMapper's import chain reaches Game_Time, which registers its save codec at import time.
+import '../../../setup/install-serializable-registry-stub.js';
 import TimeMapper from '../../../../src/plugins/time/core/objects/TimeMapper.js';
 
 const MinuteChoice = /<minuteChoice:[ ]?(\d+)>/i;

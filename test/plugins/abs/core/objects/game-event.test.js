@@ -62,9 +62,15 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
           AiRoleSentinel: /aiRoleSentinel/i,
           AiTraitLeader: /aiTraitLeader/i,
           AiTraitFollower: /aiTraitFollower/i,
+          Respawn: /respawn:(\[.+])/i,
+          NoRespawn: /noRespawn/i,
+          RespawnAnimation: /respawnAnimation:(\d+)/i,
         },
       },
     };
+
+    // the respawn override parses its captured bracket through J-Base's JsonMapper global.
+    globalThis.JsonMapper = { parseObject: vi.fn() };
 
     function Game_Event()
     {
@@ -230,6 +236,36 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       expect(event._j._abs._battlerData).toBeNull();
       expect(event._j._abs._initialDirection).toEqual(0);
       expect(event._j._abs._castedDirection).toEqual(0);
+      expect(event._j._abs._dynamicSpawn).toEqual(false);
+    });
+  });
+
+  describe('flagAsDynamicSpawn()/isDynamicSpawn()', () =>
+  {
+    it('reports authored events as not dynamically spawned', () =>
+    {
+      // Arrange
+      const event = Object.create(globalThis.Game_Event.prototype);
+      event.initMembers();
+
+      // Act
+      const result = event.isDynamicSpawn();
+
+      // Assert
+      expect(result).toEqual(false);
+    });
+
+    it('reports a flagged event as dynamically spawned', () =>
+    {
+      // Arrange
+      const event = Object.create(globalThis.Game_Event.prototype);
+      event.initMembers();
+
+      // Act
+      event.flagAsDynamicSpawn();
+
+      // Assert
+      expect(event.isDynamicSpawn()).toEqual(true);
     });
   });
 
@@ -539,6 +575,7 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
     [ 'getPursuitRangeOverrides', 'pursuit:5', 5, null ],
     [ 'getGuardRangeOverrides', 'guardRange:5', 5, null ],
     [ 'getAlertDurationOverrides', 'alertDuration:5', 5, null ],
+    [ 'getRespawnAnimationOverrides', 'respawnAnimation:5', 5, null ],
   ])('%s()', (method, matchingComment, expectedValue, defaultValue) =>
   {
     it(`returns ${defaultValue} when no comment matches`, () =>
@@ -553,6 +590,63 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       const event = buildEvent({ getValidCommentCommands: () => buildCommentCommands([ matchingComment ]) });
 
       expect(event[method]()).toEqual(expectedValue);
+    });
+  });
+
+  describe('getRespawnOverrides()', () =>
+  {
+    it('returns null when no comment declares a respawn', () =>
+    {
+      // Arrange
+      const event = buildEvent({ getValidCommentCommands: () => buildCommentCommands([ 'unrelated' ]) });
+
+      // Act
+      const result = event.getRespawnOverrides();
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('parses the captured pair through JsonMapper from a matching comment', () =>
+    {
+      // Arrange
+      const parsedPair = [ 'seconds', 90 ];
+      globalThis.JsonMapper.parseObject.mockReturnValue(parsedPair);
+      const event = buildEvent({ getValidCommentCommands: () => buildCommentCommands([ 'respawn:[seconds, 90]' ]) });
+
+      // Act
+      const result = event.getRespawnOverrides();
+
+      // Assert
+      expect(globalThis.JsonMapper.parseObject).toHaveBeenCalledWith('[seconds, 90]');
+      expect(result).toBe(parsedPair);
+    });
+  });
+
+  describe('getNoRespawnOverrides()', () =>
+  {
+    it('returns null when no comment declares permanence', () =>
+    {
+      // Arrange
+      const event = buildEvent({ getValidCommentCommands: () => buildCommentCommands([ 'unrelated' ]) });
+
+      // Act
+      const result = event.getNoRespawnOverrides();
+
+      // Assert
+      expect(result).toBeNull();
+    });
+
+    it('returns true from a matching comment', () =>
+    {
+      // Arrange
+      const event = buildEvent({ getValidCommentCommands: () => buildCommentCommands([ 'noRespawn' ]) });
+
+      // Act
+      const result = event.getNoRespawnOverrides();
+
+      // Assert
+      expect(result).toEqual(true);
     });
   });
 

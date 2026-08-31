@@ -1,4 +1,6 @@
 //region Time_Snapshot
+import Game_Time from './Game_Time.js';
+
 /**
  * A class representing a snapshot in time of a moment.
  */
@@ -214,6 +216,65 @@ class Time_Snapshot
   };
 
   /**
+   * Translates the numeric day of the week into its proper name.
+   * Day-of-week ids run 0-6 starting from Monday.
+   * @param {number} dayOfWeekId The numeric representation of the day of the week.
+   * @returns {string}
+   */
+  static DaysOfWeekName(dayOfWeekId)
+  {
+    switch (dayOfWeekId)
+    {
+      case 0:
+        return "Monday";
+      case 1:
+        return "Tuesday";
+      case 2:
+        return "Wednesday";
+      case 3:
+        return "Thursday";
+      case 4:
+        return "Friday";
+      case 5:
+        return "Saturday";
+      case 6:
+        return "Sunday";
+      default:
+        Diagnostics.error(__PLUGIN_NAME__, `${dayOfWeekId} is not a valid day of week id.`);
+        return null;
+    }
+  }
+
+  /**
+   * Translates the name of a day of the week into its id.
+   * @param {string} dayOfWeekName The name of the day of the week.
+   * @returns {number}
+   */
+  static DaysOfWeekId(dayOfWeekName)
+  {
+    switch (dayOfWeekName.toLowerCase())
+    {
+      case "monday":
+        return 0;
+      case "tuesday":
+        return 1;
+      case "wednesday":
+        return 2;
+      case "thursday":
+        return 3;
+      case "friday":
+        return 4;
+      case "saturday":
+        return 5;
+      case "sunday":
+        return 6;
+      default:
+        Diagnostics.error(__PLUGIN_NAME__, `${dayOfWeekName} is not a valid day of week name.`);
+        return -1;
+    }
+  }
+
+  /**
    * Translates the name of a time of the day into its id.
    * @param {string} timeOfDayString The name of the time of the day.
    * @returns {number}
@@ -276,6 +337,44 @@ class Time_Snapshot
   get timeOfDayIcon()
   {
     return Time_Snapshot.TimesOfDayIcon(this.timeOfDayId());
+  };
+
+  /**
+   * Gets the day of the week this snapshot lands on, as an id running 0-6 from Monday.
+   *
+   * The artificial calendar has no authored weekday, so one is derived: with 30-day months and
+   * 12-month years, the total day count since day 1 of month 1 of year 0 cycles through a
+   * seven-day week, and that epoch day is declared a Monday. Real time simply asks the real
+   * calendar, remapped from JS's Sunday-first convention to this Monday-first one.
+   * @returns {number}
+   */
+  dayOfWeekId()
+  {
+    // real time asks the real calendar.
+    if (J.TIME.Metadata.UseRealTime)
+    {
+      // construct the date this snapshot represents.
+      const date = new Date(this.years, this.months - 1, this.days, this.hours, this.minutes, this.seconds);
+
+      // JS weeks start on Sunday(0); rotate so Monday is 0.
+      return (date.getDay() + 6) % 7;
+    }
+
+    // count every whole day since the artificial epoch, which is declared a Monday.
+    const totalDays = (((this.years * Game_Time.monthsPerYear) + (this.months - 1)) * Game_Time.daysPerMonth)
+      + (this.days - 1);
+
+    // cycle through the seven-day week.
+    return totalDays % 7;
+  }
+
+  /**
+   * Gets the name of the day of the week this snapshot lands on.
+   * @type {string}
+   */
+  get dayOfWeekName()
+  {
+    return Time_Snapshot.DaysOfWeekName(this.dayOfWeekId());
   };
 
   /**

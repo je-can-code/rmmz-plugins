@@ -41,6 +41,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
   let originalCancelActionSetup;
   let originalSetupActionForNextPhase;
   let originalPerformExecutionAnimation;
+  let respawnIsDueMock;
 
   /**
    * Builds a minimal fake {@link JABS_Battler} test double with sane defaults, overridable per-test.
@@ -189,6 +190,17 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_ActionOptions.js', () => ({ default: class {} }));
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Action.js', () => ({ default: class {} }));
 
+    respawnIsDueMock = vi.fn();
+    vi.doMock('../../../../../src/plugins/abs/core/managers/JABS_RespawnManager.js', () => ({
+      default: class
+      {
+        static isDue(record)
+        {
+          return respawnIsDueMock(record);
+        }
+      },
+    }));
+
     ({ default: JABS_AiManager } = await import('../../../../../src/plugins/abs/core/managers/JABS_AiManager.js'));
 
     originalGetAlliedBattlers = JABS_AiManager.getAlliedBattlers;
@@ -226,6 +238,13 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
     globalThis.Graphics = { frameCount: 0 };
     globalThis.JABS_Button = { Offhand: 'offhand' };
     globalThis.$jabsEngine = { getAllActionEvents: () => [] };
+    // the conversion path consults the respawn registry on the system and the current map id.
+    globalThis.$gameMap = { mapId: () => 7 };
+    globalThis.$gameSystem = {
+      respawnRecord: () => null,
+      clearRespawnRecord: vi.fn(),
+    };
+    respawnIsDueMock.mockReset();
   });
 
   //region dir8ToUnitVector
@@ -964,9 +983,99 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
 
     it('returns true when the event is a jabs battler', () =>
     {
-      const event = { isJabsBattler: () => true };
+      const event = {
+        isJabsBattler: () => true,
+        eventId: () => 1,
+      };
 
       expect(JABS_AiManager.canConvertEventToBattler(event)).toEqual(true);
+    });
+
+    it('returns false when a respawn record still blocks the event', () =>
+    {
+      // Arrange
+      globalThis.$gameSystem = {
+        respawnRecord: () => ({ method: 'seconds' }),
+        clearRespawnRecord: vi.fn(),
+      };
+      respawnIsDueMock.mockReturnValue(false);
+      const event = {
+        isJabsBattler: () => true,
+        eventId: () => 1,
+      };
+
+      // Act
+      const result = JABS_AiManager.canConvertEventToBattler(event);
+
+      // Assert
+      expect(result).toEqual(false);
+    });
+  });
+
+  describe('isRespawnPending()', () =>
+  {
+    it('returns false when no record is tracked for the event', () =>
+    {
+      // Arrange
+      const record = null;
+      globalThis.$gameSystem = {
+        respawnRecord: vi.fn(() => record),
+        clearRespawnRecord: vi.fn(),
+      };
+      const event = {
+        isJabsBattler: () => true,
+        eventId: () => 42,
+      };
+
+      // Act
+      const result = JABS_AiManager.isRespawnPending(event);
+
+      // Assert
+      expect(result).toEqual(false);
+      expect($gameSystem.respawnRecord).toHaveBeenCalledWith(7, 42);
+    });
+
+    it('returns true when the tracked record has not yet come due', () =>
+    {
+      // Arrange
+      const record = { method: 'seconds' };
+      globalThis.$gameSystem = {
+        respawnRecord: () => record,
+        clearRespawnRecord: vi.fn(),
+      };
+      respawnIsDueMock.mockReturnValue(false);
+      const event = {
+        isJabsBattler: () => true,
+        eventId: () => 42,
+      };
+
+      // Act
+      const result = JABS_AiManager.isRespawnPending(event);
+
+      // Assert
+      expect(result).toEqual(true);
+      expect(respawnIsDueMock).toHaveBeenCalledWith(record);
+    });
+
+    it('returns false when the tracked record has come due', () =>
+    {
+      // Arrange
+      const record = { method: 'seconds' };
+      globalThis.$gameSystem = {
+        respawnRecord: () => record,
+        clearRespawnRecord: vi.fn(),
+      };
+      respawnIsDueMock.mockReturnValue(true);
+      const event = {
+        isJabsBattler: () => true,
+        eventId: () => 42,
+      };
+
+      // Act
+      const result = JABS_AiManager.isRespawnPending(event);
+
+      // Assert
+      expect(result).toEqual(false);
     });
   });
 
@@ -1000,12 +1109,37 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         setJabsBattlerUuid: vi.fn(),
         getBattlerId: () => 5,
         getBattlerCoreData: () => ({}),
+        eventId: () => 3,
       };
 
       const result = JABS_AiManager.convertEventToBattler(event);
 
       expect(result.uuid).toEqual('constructed-uuid');
       expect(event.setJabsBattlerUuid).toHaveBeenCalledWith('constructed-uuid');
+    });
+
+    it('consumes any spent respawn record when the conversion succeeds', () =>
+    {
+      // Arrange
+      globalThis.Game_Enemy = class
+      {
+        recoverAll()
+        {
+        }
+      };
+      const event = {
+        isJabsBattler: () => true,
+        setJabsBattlerUuid: vi.fn(),
+        getBattlerId: () => 5,
+        getBattlerCoreData: () => ({}),
+        eventId: () => 3,
+      };
+
+      // Act
+      JABS_AiManager.convertEventToBattler(event);
+
+      // Assert
+      expect($gameSystem.clearRespawnRecord).toHaveBeenCalledWith(7, 3);
     });
   });
 
@@ -1024,6 +1158,7 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
         setJabsBattlerUuid: vi.fn(),
         getBattlerId: () => 1,
         getBattlerCoreData: () => ({}),
+        eventId: () => 1,
       };
       const notConvertable = { isJabsBattler: () => false, setJabsBattlerUuid: vi.fn() };
 

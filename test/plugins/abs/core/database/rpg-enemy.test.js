@@ -28,7 +28,8 @@ describe('J-ABS RPG_BaseBattler jabs* properties (unit, all downstream dependenc
       'AiTraitBerserker', 'AiRoleLeader', 'AiRoleFollower', 'AiRoleGuardian', 'AiRoleWard', 'AiRoleSolo',
       'AiRoleSentinel', 'ConfigCanIdle', 'ConfigNoIdle', 'ConfigShowHpBar', 'ConfigShowStates',
       'ConfigHideStates', 'ConfigNoHpBar', 'ConfigShowName', 'ConfigNoName', 'ConfigInvincible',
-      'ConfigNotInvincible', 'ConfigInanimate', 'ConfigNotInanimate',
+      'ConfigNotInvincible', 'ConfigInanimate', 'ConfigNotInanimate', 'Respawn', 'NoRespawn',
+      'RespawnAnimation',
     ];
     const RegExp_ = {};
     regexKeys.forEach(key => { RegExp_[key] = new globalThis.RegExp(key); });
@@ -42,6 +43,7 @@ describe('J-ABS RPG_BaseBattler jabs* properties (unit, all downstream dependenc
     globalThis.RPGManager = {
       getNumberFromNoteByRegex: vi.fn(),
       checkForBooleanFromNoteByRegex: vi.fn(),
+      getArrayFromNotesByRegex: vi.fn(),
     };
 
     JABS_EnemyAI_ctor = vi.fn(function(...args) { this.args = args; });
@@ -57,6 +59,7 @@ describe('J-ABS RPG_BaseBattler jabs* properties (unit, all downstream dependenc
   {
     globalThis.RPGManager.getNumberFromNoteByRegex.mockReset().mockReturnValue(null);
     globalThis.RPGManager.checkForBooleanFromNoteByRegex.mockReset().mockReturnValue(null);
+    globalThis.RPGManager.getArrayFromNotesByRegex.mockReset().mockReturnValue(null);
     JABS_EnemyAI_ctor.mockClear();
     JABS_BattlerRole_ctor.mockClear();
     battler = Object.create(globalThis.RPG_BaseBattler.prototype);
@@ -73,6 +76,7 @@ describe('J-ABS RPG_BaseBattler jabs* properties (unit, all downstream dependenc
     [ 'jabsAlertDuration', 'AlertDuration' ],
     [ 'jabsAlertedSightBoost', 'AlertedSightBoost' ],
     [ 'jabsAlertedPursuitBoost', 'AlertedPursuitBoost' ],
+    [ 'jabsRespawnAnimationId', 'RespawnAnimation' ],
   ])('%s', (propName, regexKey) =>
   {
     it(`delegates to RPGManager.getNumberFromNoteByRegex with J.ABS.RegExp.${regexKey} and nullIfEmpty:true`, () =>
@@ -92,6 +96,36 @@ describe('J-ABS RPG_BaseBattler jabs* properties (unit, all downstream dependenc
     });
   });
   //endregion numeric note-value properties
+
+  describe('jabsRespawnData', () =>
+  {
+    it('delegates to RPGManager.getArrayFromNotesByRegex with J.ABS.RegExp.Respawn and nullIfEmpty:true', () =>
+    {
+      // Arrange
+      const taggedPair = [ 'seconds', 90 ];
+      globalThis.RPGManager.getArrayFromNotesByRegex.mockReturnValue(taggedPair);
+
+      // Act
+      const result = battler.jabsRespawnData;
+
+      // Assert
+      expect(result).toBe(taggedPair);
+      expect(globalThis.RPGManager.getArrayFromNotesByRegex)
+        .toHaveBeenCalledWith(battler, globalThis.J.ABS.RegExp.Respawn, true);
+    });
+
+    it('returns null when the note tag is absent', () =>
+    {
+      // Arrange
+      globalThis.RPGManager.getArrayFromNotesByRegex.mockReturnValue(null);
+
+      // Act
+      const result = battler.jabsRespawnData;
+
+      // Assert
+      expect(result).toBeNull();
+    });
+  });
 
   //region boolean note-flag properties
   describe.each([
@@ -123,6 +157,7 @@ describe('J-ABS RPG_BaseBattler jabs* properties (unit, all downstream dependenc
     [ 'jabsConfigNotInvincible', 'ConfigNotInvincible' ],
     [ 'jabsConfigInanimate', 'ConfigInanimate' ],
     [ 'jabsConfigNotInanimate', 'ConfigNotInanimate' ],
+    [ 'jabsNoRespawn', 'NoRespawn' ],
   ])('%s', (propName, regexKey) =>
   {
     it(`delegates to RPGManager.checkForBooleanFromNoteByRegex with J.ABS.RegExp.${regexKey} and nullIfEmpty:true`, () =>

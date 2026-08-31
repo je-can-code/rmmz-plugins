@@ -92,6 +92,44 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsGuardSkillId', {
 });
 //endregion guard skillId
 
+//region respawn
+/**
+ * The JABS respawn declaration for this battler, as a `[METHOD, PARAM]` pair.
+ * This defines how long after defeat this battler returns to the map.
+ * An event comment on the placement may override this species-level habit.
+ * @type {any[]|null}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsRespawnData', {
+  get: function()
+  {
+    return RPGManager.getArrayFromNotesByRegex(this, J.ABS.RegExp.Respawn, true);
+  },
+});
+
+/**
+ * The JABS declaration that this battler never respawns once defeated.
+ * This boolean makes the species finite for the rest of the playthrough.
+ * @type {boolean|null}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsNoRespawn', {
+  get: function()
+  {
+    return RPGManager.checkForBooleanFromNoteByRegex(this, J.ABS.RegExp.NoRespawn, true);
+  },
+});
+
+/**
+ * The JABS animation id played on this battler's event when it respawns.
+ * @type {number|null}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsRespawnAnimationId', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.RegExp.RespawnAnimation, true);
+  },
+});
+//endregion respawn
+
 //region alert duration
 /**
  * The JABS alert duration for this battler.

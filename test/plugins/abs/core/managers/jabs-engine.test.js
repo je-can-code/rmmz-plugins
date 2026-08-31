@@ -13,6 +13,8 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
 {
   /** @type {typeof import('../../../../../src/plugins/abs/core/managers/JABS_Engine.js').default} */
   let JABS_Engine;
+  let respawnCreateRecordMock;
+  let respawnIsDueMock;
 
   /** faithful functional stand-in for JABS_Aabb- several static geometry methods construct real
    *  instances and call real methods on them, so a bare mock would be more work than just mirroring
@@ -288,6 +290,23 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
           this.hitType = hitType;
           this.stypeId = stypeId;
           this.killerUuid = killerUuid;
+        }
+      },
+    }));
+
+    respawnCreateRecordMock = vi.fn();
+    respawnIsDueMock = vi.fn();
+    vi.doMock('../../../../../src/plugins/abs/core/managers/JABS_RespawnManager.js', () => ({
+      default: class
+      {
+        static createRecord(event, enemy)
+        {
+          return respawnCreateRecordMock(event, enemy);
+        }
+
+        static isDue(record)
+        {
+          return respawnIsDueMock(record);
         }
       },
     }));
@@ -3520,6 +3539,7 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
         this.mapId = mapId;
         this.eventId = eventId;
         this.flagBattlerForAdding = vi.fn();
+        this.flagAsDynamicSpawn = vi.fn();
       });
       JABS_Engine.setEnemyCloneList([ { id: 'enemy-template', x: 0, y: 0 } ]);
     });
@@ -7853,7 +7873,11 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       return Object.assign({
         clearFollowers: vi.fn(),
         clearLeader: vi.fn(),
-        getCharacter: () => ({ start: vi.fn() }),
+        getCharacter: () => ({
+          start: vi.fn(),
+          isDynamicSpawn: () => false,
+          eventId: () => 4,
+        }),
         isInanimate: () => false,
         hasEventActions: () => false,
         getBattler: () => ({}),
@@ -7864,6 +7888,14 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     beforeEach(() =>
     {
       globalThis.SoundManager = { playEnemyCollapse: vi.fn() };
+      // the respawn tracking path consults the registry on the system and the current map id.
+      globalThis.$gameMap = {
+        tileWidth: () => 48,
+        tileHeight: () => 48,
+        mapId: () => 7,
+      };
+      globalThis.$gameSystem = { setRespawnRecord: vi.fn() };
+      respawnCreateRecordMock.mockReset().mockReturnValue(null);
     });
 
     it('clears followers and leader data', () =>
@@ -7901,7 +7933,14 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     {
       const engine = new JABS_Engine();
       const start = vi.fn();
-      const target = buildDefeatedTarget({ hasEventActions: () => true, getCharacter: () => ({ start }) });
+      const target = buildDefeatedTarget({
+        hasEventActions: () => true,
+        getCharacter: () => ({
+          start,
+          isDynamicSpawn: () => false,
+          eventId: () => 4,
+        }),
+      });
 
       engine.handleDefeatedEnemy(target, null);
 
@@ -7914,7 +7953,14 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       // start below belongs to the event-actions check and to nothing else.
       const engine = new JABS_Engine();
       const start = vi.fn();
-      const target = buildDefeatedTarget({ hasEventActions: () => false, getCharacter: () => ({ start }) });
+      const target = buildDefeatedTarget({
+        hasEventActions: () => false,
+        getCharacter: () => ({
+          start,
+          isDynamicSpawn: () => false,
+          eventId: () => 4,
+        }),
+      });
 
       // Act
       engine.handleDefeatedEnemy(target, null);
@@ -7973,6 +8019,323 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.handleDefeatedEnemy(target, null);
 
       expect(target.setDying).toHaveBeenCalledWith(true);
+    });
+  });
+
+  describe('processRespawnTracking', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$gameMap = Object.assign(globalThis.$gameMap, { mapId: () => 7 });
+      globalThis.$gameSystem = { setRespawnRecord: vi.fn() };
+      respawnCreateRecordMock.mockReset().mockReturnValue(null);
+    });
+
+    /**
+     * Builds a defeated target riding an authored (or dynamically-spawned) event.
+     */
+    function buildRespawnTarget({ dynamicSpawn = false } = {})
+    {
+      const enemy = { name: 'the-defeated-enemy' };
+      return {
+        getCharacter: () => ({
+          isDynamicSpawn: () => dynamicSpawn,
+          eventId: () => 4,
+        }),
+        getBattler: () => enemy,
+        enemy,
+      };
+    }
+
+    it('never tracks a dynamically-spawned clone', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const target = buildRespawnTarget({ dynamicSpawn: true });
+
+      // Act
+      engine.processRespawnTracking(target);
+
+      // Assert
+      expect(respawnCreateRecordMock).not.toHaveBeenCalled();
+      expect($gameSystem.setRespawnRecord).not.toHaveBeenCalled();
+    });
+
+    it('tracks nothing when the battler declares no respawn behavior', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const target = buildRespawnTarget();
+      respawnCreateRecordMock.mockReturnValue(null);
+
+      // Act
+      engine.processRespawnTracking(target);
+
+      // Assert- the resolution ran against the event and its enemy, but nothing registered.
+      expect(respawnCreateRecordMock).toHaveBeenCalledWith(expect.anything(), target.enemy);
+      expect($gameSystem.setRespawnRecord).not.toHaveBeenCalled();
+    });
+
+    it('registers the created record against the current map and event', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const target = buildRespawnTarget();
+      const record = { method: 'seconds', due: 6400 };
+      respawnCreateRecordMock.mockReturnValue(record);
+
+      // Act
+      engine.processRespawnTracking(target);
+
+      // Assert
+      expect($gameSystem.setRespawnRecord).toHaveBeenCalledWith(7, 4, record);
+    });
+  });
+
+  describe('updateRespawns', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$gameSystem = { respawnRecordsForMap: vi.fn(() => []) };
+      globalThis.$gameMap = Object.assign(globalThis.$gameMap, { mapId: () => 7 });
+    });
+
+    it('only ticks the throttle while the countdown has not lapsed', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      engine.respawnSweepCountdown = 5;
+
+      // Act
+      engine.updateRespawns();
+
+      // Assert
+      expect(engine.respawnSweepCountdown).toBe(4);
+      expect($gameSystem.respawnRecordsForMap).not.toHaveBeenCalled();
+    });
+
+    it('sweeps and resets the throttle when the countdown lapses', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      engine.respawnSweepCountdown = 1;
+
+      // Act
+      engine.updateRespawns();
+
+      // Assert
+      expect($gameSystem.respawnRecordsForMap).toHaveBeenCalledWith(7);
+      expect(engine.respawnSweepCountdown).toBe(60);
+    });
+  });
+
+  describe('processDueRespawns', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$gameMap = Object.assign(globalThis.$gameMap, { mapId: () => 7 });
+    });
+
+    it('leaves records that have not come due right where they are', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      engine.respawnEnemy = vi.fn();
+      const record = { method: 'seconds', due: 999999 };
+      globalThis.$gameSystem = { respawnRecordsForMap: () => [ [ 4, record ] ] };
+      respawnIsDueMock.mockReturnValue(false);
+
+      // Act
+      engine.processDueRespawns();
+
+      // Assert
+      expect(respawnIsDueMock).toHaveBeenCalledWith(record);
+      expect(engine.respawnEnemy).not.toHaveBeenCalled();
+    });
+
+    it('revives only the records that have come due', () =>
+    {
+      // Arrange- a not-yet-due sibling must survive the sweep untouched.
+      const engine = new JABS_Engine();
+      engine.respawnEnemy = vi.fn();
+      const dueRecord = { method: 'seconds', due: 100 };
+      const pendingRecord = { method: 'seconds', due: 999999 };
+      globalThis.$gameSystem = {
+        respawnRecordsForMap: () => [ [ 4, dueRecord ], [ 9, pendingRecord ] ],
+      };
+      respawnIsDueMock.mockImplementation(record => record === dueRecord);
+
+      // Act
+      engine.processDueRespawns();
+
+      // Assert
+      expect(engine.respawnEnemy).toHaveBeenCalledTimes(1);
+      expect(engine.respawnEnemy).toHaveBeenCalledWith(4);
+    });
+  });
+
+  describe('respawnEnemy', () =>
+  {
+    /**
+     * Installs the map/player/system collaborators the respawn rebuild touches.
+     */
+    function buildRespawnWorld({
+      staleEvent = {
+        event: () => ({
+          x: 10,
+          y: 20,
+        }),
+      },
+      playerOnTile = false,
+    } = {})
+    {
+      globalThis.$gameMap = {
+        tileWidth: () => 48,
+        tileHeight: () => 48,
+        mapId: () => 7,
+        event: vi.fn(() => staleEvent),
+        setEventByIndex: vi.fn(),
+        refreshOneBattler: vi.fn(),
+      };
+      globalThis.$gamePlayer = { pos: vi.fn(() => playerOnTile) };
+      globalThis.$gameSystem = { clearRespawnRecord: vi.fn() };
+      globalThis.Game_Event = vi.fn(function(mapId, eventId)
+      {
+        this.mapId = mapId;
+        this.eventId = eventId;
+        this.flagBattlerForAdding = vi.fn();
+      });
+    }
+
+    it('drops the record of an event that no longer exists on the map', () =>
+    {
+      // Arrange- a husk from a map edited since the save was written.
+      const engine = new JABS_Engine();
+      buildRespawnWorld({ staleEvent: null });
+
+      // Act
+      engine.respawnEnemy(4);
+
+      // Assert- the husk is dropped and no rebuild is attempted.
+      expect($gameSystem.clearRespawnRecord).toHaveBeenCalledWith(7, 4);
+      expect(globalThis.Game_Event).not.toHaveBeenCalled();
+    });
+
+    it('defers the respawn while the player occupies the authored tile', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      buildRespawnWorld({ playerOnTile: true });
+
+      // Act
+      engine.respawnEnemy(4);
+
+      // Assert- the record survives, so a later sweep can try again.
+      expect($gamePlayer.pos).toHaveBeenCalledWith(10, 20);
+      expect($gameSystem.clearRespawnRecord).not.toHaveBeenCalled();
+      expect($gameMap.setEventByIndex).not.toHaveBeenCalled();
+    });
+
+    it('rebuilds the authored slot and converts the fresh event back into a battler', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      buildRespawnWorld();
+      engine.processRespawnAnimation = vi.fn();
+      engine.requestBattlerRendering = false;
+
+      // Act
+      engine.respawnEnemy(4);
+
+      // Assert- fresh event in the authored slot, spent record cleared, battler and sprite queued.
+      expect(globalThis.Game_Event).toHaveBeenCalledWith(7, 4);
+      const [ [ , freshEvent ] ] = $gameMap.setEventByIndex.mock.calls;
+      expect($gameMap.setEventByIndex).toHaveBeenCalledWith(4, freshEvent);
+      expect($gameSystem.clearRespawnRecord).toHaveBeenCalledWith(7, 4);
+      expect($gameMap.refreshOneBattler).toHaveBeenCalledWith(freshEvent);
+      expect(freshEvent.flagBattlerForAdding).toHaveBeenCalledTimes(1);
+      expect(engine.requestBattlerRendering).toBe(true);
+      expect(engine.processRespawnAnimation).toHaveBeenCalledWith(freshEvent);
+    });
+  });
+
+  describe('processRespawnAnimation', () =>
+  {
+    it('announces nothing when the refreshed page no longer declares a battler', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      const freshEvent = {
+        getJabsBattler: () => null,
+        getRespawnAnimationOverrides: vi.fn(),
+        requestAnimation: vi.fn(),
+      };
+
+      // Act
+      engine.processRespawnAnimation(freshEvent);
+
+      // Assert- resolution never even ran.
+      expect(freshEvent.getRespawnAnimationOverrides).not.toHaveBeenCalled();
+    });
+
+    it('plays nothing when the resolved animation id is zero', () =>
+    {
+      // Arrange
+      vi.useFakeTimers();
+      const engine = new JABS_Engine();
+      const freshEvent = {
+        getJabsBattler: () => ({ getBattler: () => ({ respawnAnimationId: () => 0 }) }),
+        getRespawnAnimationOverrides: () => null,
+        requestAnimation: vi.fn(),
+      };
+
+      // Act
+      engine.processRespawnAnimation(freshEvent);
+      vi.runAllTimers();
+
+      // Assert
+      expect(freshEvent.requestAnimation).not.toHaveBeenCalled();
+      vi.useRealTimers();
+    });
+
+    it('plays the comment-overridden animation over the enemy note animation', () =>
+    {
+      // Arrange- the enemy note carries a decoy animation that must lose to the comment.
+      vi.useFakeTimers();
+      const engine = new JABS_Engine();
+      const freshEvent = {
+        getJabsBattler: () => ({ getBattler: () => ({ respawnAnimationId: () => 99 }) }),
+        getRespawnAnimationOverrides: () => 12,
+        requestAnimation: vi.fn(),
+      };
+
+      // Act
+      engine.processRespawnAnimation(freshEvent);
+      vi.runAllTimers();
+
+      // Assert
+      expect(freshEvent.requestAnimation).toHaveBeenCalledWith(12);
+      vi.useRealTimers();
+    });
+
+    it('falls back to the enemy note animation when no comment overrides it', () =>
+    {
+      // Arrange
+      vi.useFakeTimers();
+      const engine = new JABS_Engine();
+      const freshEvent = {
+        getJabsBattler: () => ({ getBattler: () => ({ respawnAnimationId: () => 99 }) }),
+        getRespawnAnimationOverrides: () => null,
+        requestAnimation: vi.fn(),
+      };
+
+      // Act
+      engine.processRespawnAnimation(freshEvent);
+      vi.runAllTimers();
+
+      // Assert
+      expect(freshEvent.requestAnimation).toHaveBeenCalledWith(99);
+      vi.useRealTimers();
     });
   });
 
