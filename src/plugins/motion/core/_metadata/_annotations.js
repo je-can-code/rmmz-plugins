@@ -123,6 +123,9 @@
  * all beyond the arithmetic.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Adds `passive` to the source ranking, between an event page and an applied
+ *    state, for the motions J-Motion-Passive declares.
  * - 1.1.0
  *    Centred rotation now lifts the sprite instead of dropping it, and scales that
  *    lift by the sprite's own scale, so a character that spins while changing size

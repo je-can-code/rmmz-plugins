@@ -4316,7 +4316,7 @@ This skill's swing uses the `heavy` tilt/swing multiplier row instead of the inf
 ### `<motion:[squish]>` / `<motion:[tilt]>` / `<motion:[flip]>` / `<motion:[charge]>`
 
 **Applies to:**
-Anything that can declare a motion — event pages, states, plugin commands
+Anything that can declare a motion — event pages, states, passive states, plugin commands
 
 **When:**
 for as long as the declaration exists
@@ -5615,6 +5615,10 @@ This choice is only visible while switch 222 is ON.
 **Applies to:**
 Event page comments
 
+Three plugins read this one tag, and which you need depends on where you write it: **J-Motion** for an
+event page, **J-Motion-ABS** for an applied state, **J-Motion-Passive** for a passive state. Same
+syntax and same types in all three — only the trigger differs.
+
 **When:**
 the page becomes active, and for as long as it stays active
 
@@ -5665,6 +5669,7 @@ state drops, in both directions, with nothing extra written.
 That table is the roster core ships with, not the whole vocabulary: extensions register their own
 types and they are usable everywhere these are. J-Motion-ABS adds `collapse`, and J-ABS-Juice adds
 `squish`, `tilt`, `flip` and `charge` — each documented under the plugin that owns it.
+J-Motion-Passive adds no types of its own; it adds a place to write these.
 
 ```
 <motion:[breathe]>
@@ -5709,7 +5714,7 @@ worth knowing. Everything that only moves, scales or rotates costs nothing beyon
 ### `<motion:[TYPE, PARAM, ...]>` on a state
 
 **Applies to:**
-States
+States, when applied normally
 
 **When:**
 the state is applied, and for as long as it remains
@@ -5724,6 +5729,10 @@ Each state's motions are filed under that state alone, so one expiring never dis
 motion the creature was authored with, nor any other state's. A breathing enemy that catches fire is
 breathing *and* flickering, and stops flickering by itself when the fire goes out.
 
+**Passive states are a different plugin.** This extension animates states that were *applied*, and a
+passive is never applied — J-Passive grants it by another route entirely. The same tag on a passive
+needs **J-Motion-Passive**, below. That distinction matters most for affixes, which are passives.
+
 ```
 <motion:[flicker]>
 ```
@@ -5733,10 +5742,9 @@ Anything afflicted by this state flickers while it lasts.
 <motion:[scale, 150]>
 ```
 Anything afflicted by this state swells to half again its size, easing up as the state lands and
-settling back down when it drops. Both directions come free — this is what makes an `origin` or
-champion affix read at a glance.
+settling back down when it drops. Both directions come free.
 
-**See also:** `<deathMotion>`
+**See also:** `<deathMotion>`, `<motion:[TYPE]>` on a passive state
 
 ---
 
@@ -5815,6 +5823,54 @@ death the enemy asked for, and vice versa.
 This enemy handles its own death.
 
 **See also:** `<deathMotion>`
+
+---
+
+## J-Motion-Passive (`src/plugins/motion/ext/passive/`)
+
+### `<motion:[TYPE, PARAM, ...]>` on a passive state
+
+**Applies to:**
+States, when granted as passives
+
+**When:**
+the passive is granted, and for as long as the battler keeps it
+
+**Effect:**
+gives the battler's sprite a motion for as long as it carries the passive. Same tag, same parser,
+same types as everywhere else — see the J-Motion section above.
+
+This is a separate plugin from J-Motion-ABS because a passive is granted by a different mechanism
+than an applied state. An applied state announces its arrival and departure; a passive announces
+neither, being rebuilt wholesale from every source a battler owns. So this reconciles instead of
+listening, and never goes stale as a result:
+
+- an affix rolled onto an enemy at spawn animates from its first frame
+- a passive granted by a weapon starts and stops with the equipping
+- a passive gated on and off mid-fight by J-Passive-Conditional starts and stops with the gate
+- party cycling moves the leader's passive motions to whoever is leading now
+
+A stacked passive animates **once**. Three stacks of one state are still one thing the sprite is
+doing, and animating it three times would move the sprite three times as far as the tag asked for.
+
+**Which motion wins:** when two sources want the same thing from a sprite, the more fleeting one
+takes it, on the reasoning that the shorter something lasts the more likely it is the thing the
+player is meant to be reading. Weakest to strongest: event page, **passive**, applied state, plugin
+command, combat reaction. So an elite's permanent swell is overridden by the flicker of it catching
+fire, and returns when the fire goes out.
+
+```
+<motion:[scale, 150]>
+```
+On a champion affix state: anything wearing that affix is half again its usual size, for as long as
+it wears it. This is what makes an `origin` or champion affix read at a glance.
+
+```
+<motion:[throb, 80, 0, 0, 0, 90]>
+```
+On a passive granted by cursed equipment: the wearer pulses red continuously while it is equipped.
+
+**See also:** `<motion:[TYPE]>`, `<motion:[TYPE]>` on a state, `<passive:[STATE_IDS]>`
 
 ---
 

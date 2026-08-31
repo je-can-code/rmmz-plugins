@@ -35,12 +35,23 @@ class CharacterMotionComposer
 
   /**
    * How strongly a source's claim on a channel outranks another's.
+   *
+   * The order is how transient each kind is, because the more fleeting a motion is the more likely
+   * it is the thing a player is meant to be reading right now. A page's ambient motion is what a
+   * character does forever, a passive is what it does for as long as it is that sort of creature,
+   * an applied state is what it does until the affliction wears off, and a combat reaction is what
+   * it does for a handful of frames.
+   *
+   * Kinds owned by extensions live here rather than with the extension because ranking is a
+   * comparison, and a table that only holds half the entries cannot make one. Core does not need to
+   * know what a passive or a death is to know where it sits.
    * @type {Map<string, number>}
    */
   static #sourcePriorities = new Map([
-    [ 'combat', 4 ],
-    [ 'command', 3 ],
-    [ 'state', 2 ],
+    [ 'combat', 5 ],
+    [ 'command', 4 ],
+    [ 'state', 3 ],
+    [ 'passive', 2 ],
     [ 'page', 1 ],
   ]);
 
