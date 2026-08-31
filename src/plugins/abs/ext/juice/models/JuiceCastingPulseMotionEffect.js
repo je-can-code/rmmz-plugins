@@ -1,183 +1,99 @@
 //region JuiceCastingPulseMotionEffect
-import JuiceMotionManager from './../managers/JuiceMotionManager.js';
-import JuiceBaseEffect from './JuiceBaseEffect.js';
 /**
- * Continuous scale shimmer while a caller-supplied predicate stays true (casting juice).
+ * The shimmer a battler gives off while it is charging a skill.
+ *
+ * Unlike every other juice reaction this one has no duration, because a cast has no duration either
+ * — it lasts until the caster finishes, is interrupted, or dies. It animates for exactly as long as
+ * something keeps declaring it, which is the composer's ordinary contract and needs no clock.
+ *
+ * The pulse accelerates as it runs, from a slow swell to a fast one over about three seconds. That
+ * ramp is the whole reason this is not just a `pulse` oscillator: a steady rhythm reads as ambient
+ * and this needs to read as building toward something.
+ *
+ * `MotionEffect`, `MotionChannels` and `MotionEasing` are reached as globals rather than imports:
+ * they ship inside J-Motion's bundle and are hoisted by the time this one loads.
  */
-class JuiceCastingPulseMotionEffect extends JuiceBaseEffect
+class JuiceCastingPulseMotionEffect
+  extends MotionEffect
 {
-
-  //region properties
   /**
-   * Gets the sprite.
-   * @returns {Sprite} The sprite.
-   */
-  sprite()
-  {
-    // hand back the sprite.
-    return this._sprite;
-  }
-
-  /**
-   * Gets the base scale x.
-   * @returns {number} The baseScaleX.
-   */
-  baseScaleX()
-  {
-    // hand back the base scale x.
-    return this._baseScaleX;
-  }
-
-  /**
-   * Gets the base scale y.
-   * @returns {number} The baseScaleY.
-   */
-  baseScaleY()
-  {
-    // hand back the base scale y.
-    return this._baseScaleY;
-  }
-
-  /**
-   * Gets the base blend color.
-   * @returns {[number, number, number, number]} The baseBlendColor.
-   */
-  baseBlendColor()
-  {
-    // hand back the base blend color.
-    return this._baseBlendColor;
-  }
-
-  /**
-   * Gets the base color tone.
-   * @returns {[number, number, number, number]} The baseColorTone.
-   */
-  baseColorTone()
-  {
-    // hand back the base color tone.
-    return this._baseColorTone;
-  }
-
-  /**
-   * Gets the phase.
-   * @returns {number} The phase.
-   */
-  phase()
-  {
-    // hand back the phase.
-    return this._phase;
-  }
-
-  /**
-   * Sets the phase.
-   * @param {number} newPhase The new phase.
-   */
-  setPhase(newPhase)
-  {
-    // assign the phase.
-    this._phase = newPhase;
-  }
-
-  /**
-   * Gets the amplitude scale.
-   * @returns {number} The amplitudeScale.
-   */
-  amplitudeScale()
-  {
-    // hand back the amplitude scale.
-    return this._amplitudeScale;
-  }
-  //endregion properties
-
-  /**
-   * @param {Sprite} sprite The Pixi sprite being driven.
-   * @param {number} amplitudeScale Scale wobble amplitude (small, e.g. 0.04).
-   * @param {function(): boolean} continuePredicate While true, pulse continues.
-   */
-
-  constructor(sprite, amplitudeScale, continuePredicate)
-  {
-    super();
-    this._sprite = sprite;
-    this._amplitudeScale = amplitudeScale;
-    // store  continue predicate on the instance for later reads.
-    this._continuePredicate = continuePredicate;
-    this._phase = 0;
-    this._baseScaleX = sprite.scale.x;
-    this._baseScaleY = sprite.scale.y;
-
-    // capture the baseline tone + blend so we can restore it exactly after casting ends.
-    this._baseBlendColor = sprite.getBlendColor();
-    this._baseColorTone = sprite.getColorTone();
-  }
-
-  /**
-   * Returns false when the target sprite's Pixi transform has been nulled out.
+   * The channels a casting pulse takes exclusive ownership of.
    *
-   * Pixi sets {@code transform = null} when a sprite is destroyed; it does NOT reliably set
-   * a {@code destroyed} boolean in all RMMZ-bundled versions, so checking transform directly
-   * is the safe guard. A null transform means any scale or blend write would immediately throw.
-   * @returns {boolean}
+   * Scale only. The glow is deliberately left unclaimed so that it resolves against every other
+   * flash on the character by strength — a caster who is also bleeding should show whichever of the
+   * two is currently brighter, rather than the charge-up suppressing the injury outright.
+   * @returns {string[]}
    */
-  isSpriteAlive()
+  claims()
   {
-    return !!this.sprite().transform;
+    return [
+      MotionChannels.SCALE_X,
+      MotionChannels.SCALE_Y,
+    ];
   }
 
   /**
-   * Snaps scale back to the baseline captured at construction time.
+   * How many frames one swell currently takes.
+   *
+   * The period contracts as the cast goes on, which is what turns a rhythm into a build-up. It stops
+   * contracting once the ramp is spent so that a very long cast settles into an urgent pulse rather
+   * than accelerating into a vibration.
+   * @returns {number}
    */
-  restore()
+  periodFrames()
   {
-    this.sprite().scale.x = this.baseScaleX();
-    this.sprite().scale.y = this.baseScaleY();
-
-    // restore original render modifiers.
-    this.sprite().setBlendColor(this.baseBlendColor());
-    this.sprite().setColorTone(this.baseColorTone());
-  }
-
-  /**
-   * Advances one frame of the casting pulse.
-   * @returns {boolean} True while the effect should stay in the runner queue.
-   */
-  tick()
-  {
-    if (this._continuePredicate() === false)
-    {
-      this.restore();
-      JuiceMotionManager.relinquishSpriteLock(this.sprite());
-      return false;
-    }
-
-    // advance the pulse phase.
-    this.setPhase(this.phase() + 1);
-
-    // calculate the next scale multiplier.
-    // this is a uniform "breathing" pulse rather than a squash/stretch, so it reads as a charge-up shimmer.
-    // also, the pulse ramps from slow to faster over time, so it reads like building energy.
     const startPeriodFrames = 60;
     const endPeriodFrames = 24;
     const rampDurationFrames = 180;
-    const t = Math.min(this.phase() / rampDurationFrames, 1);
-    const periodFrames = Math.round(startPeriodFrames + ((endPeriodFrames - startPeriodFrames) * t));
-    const phaseRadians = (this.phase() % periodFrames) / periodFrames * (Math.PI * 2);
-    const wave = Math.sin(phaseRadians);
-    const mul = 1 + (wave * this.amplitudeScale());
+    const ramp = MotionEasing.normalize(this.elapsedFrames() / rampDurationFrames);
 
-    // apply the pulse to both axes equally.
-    this.sprite().scale.x = this.baseScaleX() * mul;
-    this.sprite().scale.y = this.baseScaleY() * mul;
+    return Math.round(startPeriodFrames + ((endPeriodFrames - startPeriodFrames) * ramp));
+  }
 
-    // apply a lightweight casting glow.
-    // this uses blendColor alpha pulsing to fake an additive-ish "charging" overlay.
-    const glowMin = 0;
-    const glowMax = 96;
-    const glowAlpha = Math.round(((wave + 1) / 2) * (glowMax - glowMin) + glowMin);
-    this.sprite().setBlendColor([ 180, 220, 255, glowAlpha ]);
+  /**
+   * Where in the current swell this frame sits, from -1 to 1.
+   * @returns {number}
+   */
+  wave()
+  {
+    const period = this.periodFrames();
+    const phaseRadians = ((this.elapsedFrames() % period) / period) * (Math.PI * 2);
 
-    return true;
+    return Math.sin(phaseRadians);
+  }
+
+  /**
+   * The charge glow for a point in the swell.
+   *
+   * A cold blue-white, at up to roughly a third strength. Anything stronger stops reading as energy
+   * gathering around a caster and starts reading as the sprite being washed out.
+   * @param {number} wave Where in the swell this frame sits, from -1 to 1.
+   * @returns {number[]} The `[r, g, b, a]` blend colour.
+   */
+  glowFor(wave)
+  {
+    const peakAlpha = 96;
+    const strength = (wave + 1) / 2;
+
+    return [ 180, 220, 255, Math.round(strength * peakAlpha) ];
+  }
+
+  /**
+   * Writes this frame of the casting pulse into the composition.
+   * @param {MotionComposition} composition The composition being built for this character.
+   */
+  applyTo(composition)
+  {
+    const { amplitude } = this.parameters();
+    const wave = this.wave();
+    const swell = 1 + (wave * amplitude);
+
+    // both axes swell together: this is a charge-up, not an impact, so nothing is being deformed.
+    composition.contribute(this, MotionChannels.SCALE_X, swell);
+    composition.contribute(this, MotionChannels.SCALE_Y, swell);
+    composition.contribute(this, MotionChannels.FLASH, this.glowFor(wave));
   }
 }
+
 export default JuiceCastingPulseMotionEffect;
 //endregion JuiceCastingPulseMotionEffect

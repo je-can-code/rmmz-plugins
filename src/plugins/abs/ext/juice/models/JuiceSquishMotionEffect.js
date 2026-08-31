@@ -1,180 +1,65 @@
 //region JuiceSquishMotionEffect
-import JuiceMotionManager from './../managers/JuiceMotionManager.js';
-import JuiceBaseEffect from './JuiceBaseEffect.js';
 /**
- * One-shot scale squash / stretch envelope on a sprite (body squish juice).
+ * The body squash a battler gives when it hits something or gets hit.
+ *
+ * A sine envelope, which matters more than it sounds: the shape starts and ends at exactly no
+ * deformation, so a squish can be handed to the composer with a frame budget and simply stop being
+ * declared when the budget runs out. There is no snap back to normal because the last frame it drew
+ * was already normal.
+ *
+ * Width swells as height compresses rather than both shrinking together. That is the whole trick to
+ * making it read as impact — something being flattened rather than something being scaled down.
+ *
+ * `MotionEffect` and `MotionChannels` are reached as globals rather than imports: they ship inside
+ * J-Motion's bundle and are hoisted by the time this one loads.
  */
-class JuiceSquishMotionEffect extends JuiceBaseEffect
+class JuiceSquishMotionEffect
+  extends MotionEffect
 {
-
-  //region properties
   /**
-   * Gets the sprite.
-   * @returns {Sprite} The sprite.
-   */
-  sprite()
-  {
-    // hand back the sprite.
-    return this._sprite;
-  }
-
-  /**
-   * Gets the base scale x.
-   * @returns {number} The baseScaleX.
-   */
-  baseScaleX()
-  {
-    // hand back the base scale x.
-    return this._baseScaleX;
-  }
-
-  /**
-   * Gets the base scale y.
-   * @returns {number} The baseScaleY.
-   */
-  baseScaleY()
-  {
-    // hand back the base scale y.
-    return this._baseScaleY;
-  }
-
-  /**
-   * Gets the frame.
-   * @returns {number} The frame.
-   */
-  frame()
-  {
-    // hand back the frame.
-    return this._frame;
-  }
-
-  /**
-   * Sets the frame.
-   * @param {number} newFrame The new frame.
-   */
-  setFrame(newFrame)
-  {
-    // assign the frame.
-    this._frame = newFrame;
-  }
-
-  /**
-   * Gets the duration frames.
-   * @returns {number} The durationFrames.
-   */
-  durationFrames()
-  {
-    // hand back the duration frames.
-    return this._durationFrames;
-  }
-
-  /**
-   * Gets the intensity scale.
-   * @returns {number} The intensityScale.
-   */
-  intensityScale()
-  {
-    // hand back the intensity scale.
-    return this._intensityScale;
-  }
-
-  /**
-   * Gets the repeats remaining.
-   * @returns {number} The repeatsRemaining.
-   */
-  repeatsRemaining()
-  {
-    // hand back the repeats remaining.
-    return this._repeatsRemaining;
-  }
-
-  /**
-   * Sets the repeats remaining.
-   * @param {number} newRepeatsRemaining The new repeatsRemaining.
-   */
-  setRepeatsRemaining(newRepeatsRemaining)
-  {
-    // assign the repeats remaining.
-    this._repeatsRemaining = newRepeatsRemaining;
-  }
-  //endregion properties
-
-  /**
-   * @param {Sprite} sprite The Pixi sprite being driven.
-   * @param {number} intensityScale Max delta applied via sine envelope (e.g. 0.12).
-   * @param {number} durationFrames Frames to run per repeat cycle.
-   * @param {number} [repeatCount=1] How many times to cycle the squish envelope before finishing.
-   */
-
-  constructor(sprite, intensityScale, durationFrames, repeatCount = 1)
-  {
-    super();
-    this._sprite = sprite;
-    this._intensityScale = intensityScale;
-    // store duration frames on the instance for later reads.
-    this._durationFrames = durationFrames;
-    this._repeatCount = Math.max(1, repeatCount);
-    this._repeatsRemaining = this._repeatCount;
-    this._frame = 0;
-    this._baseScaleX = sprite.scale.x;
-    this._baseScaleY = sprite.scale.y;
-  }
-
-  /**
-   * Returns false when the target sprite's Pixi transform has been nulled out.
+   * The channels a squish takes exclusive ownership of.
    *
-   * Pixi sets {@code transform = null} when a sprite is destroyed; it does NOT reliably set
-   * a {@code destroyed} boolean in all RMMZ-bundled versions, so checking transform directly
-   * is the safe guard. A null transform means any scale/rotation write would immediately
-   * throw "Cannot read properties of null (reading 'scale')".
-   * @returns {boolean}
+   * Scale, and only scale. A combat reaction has to read at the size the designer tuned it to, so
+   * it replaces an ambient breathe for its duration rather than multiplying against it — two
+   * compounding scale motions produce an amplitude neither of them asked for.
+   * @returns {string[]}
    */
-  isSpriteAlive()
+  claims()
   {
-    return !!this.sprite().transform;
+    return [
+      MotionChannels.SCALE_X,
+      MotionChannels.SCALE_Y,
+    ];
   }
 
   /**
-   * Snaps the sprite back to the baseline captured at construction time.
+   * How far through the current squish cycle this frame is, from 0 to 1.
+   *
+   * Cycles are counted by wrapping the elapsed frames rather than by resetting a counter, so a
+   * repeated squish needs no per-cycle bookkeeping and cannot drift.
+   * @returns {number}
    */
-  restore()
+  cycleProgress()
   {
-    this.sprite().scale.x = this.baseScaleX();
-    this.sprite().scale.y = this.baseScaleY();
+    const { duration } = this.parameters();
+
+    return (this.elapsedFrames() % duration) / duration;
   }
 
   /**
-   * Advances one frame of the squish envelope.
-   * @returns {boolean} True while the effect should stay in the runner queue.
+   * Writes this frame of the squish into the composition.
+   * @param {MotionComposition} composition The composition being built for this character.
    */
-  tick()
+  applyTo(composition)
   {
-    this.setFrame(this.frame() + 1);
-    const t = this.frame() / this.durationFrames();
-    const envelope = Math.sin(t * Math.PI);
-    const mul = 1 + envelope * this.intensityScale();
-    this.sprite().scale.x = this.baseScaleX() * mul;
-    this.sprite().scale.y = this.baseScaleY() * (1 / mul);
+    const { intensity } = this.parameters();
+    const envelope = Math.sin(this.cycleProgress() * Math.PI);
+    const swell = 1 + (envelope * intensity);
 
-    if (this.frame() >= this.durationFrames())
-    {
-      this.setRepeatsRemaining(this.repeatsRemaining() - 1);
-
-      // more cycles remain — reset the frame counter and continue.
-      if (this.repeatsRemaining() > 0)
-      {
-        this.setFrame(0);
-        return true;
-      }
-
-      // all cycles exhausted — restore and release the sprite lock.
-      this.restore();
-      JuiceMotionManager.relinquishSpriteLock(this.sprite());
-      return false;
-    }
-
-    return true;
+    composition.contribute(this, MotionChannels.SCALE_X, swell);
+    composition.contribute(this, MotionChannels.SCALE_Y, 1 / swell);
   }
 }
+
 export default JuiceSquishMotionEffect;
 //endregion JuiceSquishMotionEffect

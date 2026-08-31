@@ -85,7 +85,11 @@ function isExcluded(sourcePath)
   // an unfinished plugin's survivors are expected rather than informative.
   if (sourcePath.includes('src/plugins/abs/ext/star/')) return true;
 
-  if (sourcePath.includes('/sprites/')) return true;
+  // J-Motion's core sprite layer is measured for coverage, so it is mutated too. Leaving it in the
+  // blanket exclusion below is how an unconstrained branch in the file that draws every motion
+  // survived a clean run: coverage reported it, mutation never looked at it.
+  const isMotionCore = sourcePath.includes('src/plugins/motion/core/');
+  if (sourcePath.includes('/sprites/') && !isMotionCore) return true;
 
   // the view layer is unmeasured everywhere except the one family already lifted into coverage.
   const isSaveFamily = sourcePath.includes('src/plugins/_base/ext/save/');

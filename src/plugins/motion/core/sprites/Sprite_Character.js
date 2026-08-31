@@ -27,6 +27,16 @@ Sprite_Character.prototype.initMotionMembers = function()
    * @type {boolean}
    */
   this._motionColored = false;
+
+  /**
+   * Where this sprite's anchor sits when no motion is moving it.
+   *
+   * Captured rather than assumed, because the only thing that knows where a character sprite rests
+   * is the engine that just placed it there — and a motion that borrows the anchor has to have
+   * somewhere exact to give it back to.
+   * @type {number}
+   */
+  this._motionRestingAnchorY = this.anchor.y;
 };
 
 /**
@@ -45,6 +55,16 @@ Sprite_Character.prototype.isMotionColored = function()
 Sprite_Character.prototype.flagMotionColored = function()
 {
   this._motionColored = true;
+};
+
+/**
+ * Gets where this sprite's anchor sits when no motion is moving it.
+ * @returns {number} The motionRestingAnchorY.
+ */
+Sprite_Character.prototype.motionRestingAnchorY = function()
+{
+  // hand back the resting anchor.
+  return this._motionRestingAnchorY;
 };
 
 /**
@@ -72,10 +92,6 @@ Sprite_Character.prototype.update = function()
 Sprite_Character.prototype.updateCharacterMotion = function()
 {
   const character = this.character();
-
-  // sprites briefly exist without a character while a spriteset is being built.
-  if (!character) return;
-
   const composition = CharacterMotionComposer.compose(character);
 
   this.applyMotionTransform(composition);
@@ -109,16 +125,46 @@ Sprite_Character.prototype.applyMotionTransform = function(composition)
  *
  * A character sprite is anchored at its feet so that it stands on its tile. Rotating about that
  * point swings the character around like a conker on a string, so a spin asks for the anchor to
- * move — and then the sprite has to drop half its own height to keep standing where it was.
+ * move to the middle — which drops the drawn image by half its own height, because the point the
+ * engine pinned to the tile is now the sprite's waist instead of its feet. Lifting it back by the
+ * same amount is what keeps a spinning character standing where it was.
+ *
+ * The resting anchor is restored on every frame that does not want centred rotation, for the same
+ * reason {@link #applyMotionTransform} writes every channel unconditionally: nothing else in the
+ * engine ever puts an anchor back, so a spin that ended would otherwise leave the character sunk
+ * into the ground for the rest of its life.
  * @param {MotionComposition} composition This character's composed motion.
  */
 Sprite_Character.prototype.applyMotionAnchor = function(composition)
 {
-  // nothing wants centred rotation, so leave the sprite standing on its own feet.
-  if (composition.hasCenterRotation() === false) return;
+  // nothing wants centred rotation, so put the sprite back on its own feet.
+  if (composition.hasCenterRotation() === false)
+  {
+    this.anchor.y = this.motionRestingAnchorY();
+
+    return;
+  }
+
+  const lift = this.motionAnchorLift();
 
   this.anchor.y = 0.5;
-  this.y += this.height / 2;
+  this.y -= lift;
+};
+
+/**
+ * How far the sprite has to climb to stay put while its anchor sits at its middle.
+ *
+ * The engine's `height` is deliberately the raw frame height with no scale applied, but the drop
+ * caused by moving the anchor happens in world space and is therefore scaled along with everything
+ * else. Scaling it here is what keeps a character that spins *and* changes size — a breathing enemy
+ * turning in place, a caster flipping mid-squish — from sliding as its own scale animates.
+ * @returns {number} The distance to lift, in screen pixels.
+ */
+Sprite_Character.prototype.motionAnchorLift = function()
+{
+  const anchorTravel = this.motionRestingAnchorY() - 0.5;
+
+  return anchorTravel * this.height * this.scale.y;
 };
 
 /**

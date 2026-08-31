@@ -117,6 +117,19 @@ class MotionEffect
   }
 
   /**
+   * Takes back a removal request, because whatever withdrew this motion has asked for it again.
+   *
+   * A state that lapses and is immediately re-applied is the case this exists for. Rebuilding the
+   * effect would be visibly wrong — the replacement starts from the channel's rest state, so the
+   * character drops all the way back to normal and climbs again — while resuming the one already
+   * running simply carries on to where it was going.
+   */
+  cancelRemoval()
+  {
+    this.#removalRequested = false;
+  }
+
+  /**
    * Advances this effect by one frame.
    */
   tick()

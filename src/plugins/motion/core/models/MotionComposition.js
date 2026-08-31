@@ -112,6 +112,26 @@ class MotionComposition
   }
 
   /**
+   * Determines whether a contribution from this effect would actually reach a channel.
+   *
+   * An effect that has lost a channel to a claimant is still asked to write it, and the write is
+   * discarded — which is fine for a value, and not fine for anything an effect does *alongside* the
+   * write. Asking first is how an effect avoids acting on a contribution that never lands.
+   * @param {MotionEffect} contributor The effect that wants to contribute.
+   * @param {string} channel The channel it wants to write.
+   * @returns {boolean}
+   */
+  accepts(contributor, channel)
+  {
+    const claimant = this.claimantFor(channel);
+
+    // nobody owns this channel, so everything that reaches it composes.
+    if (claimant === null) return true;
+
+    return claimant === contributor;
+  }
+
+  /**
    * Gets whether the sprite should rotate about its centre this frame.
    * @returns {boolean} The centerRotation.
    */

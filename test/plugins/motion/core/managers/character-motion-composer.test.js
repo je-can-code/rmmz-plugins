@@ -498,6 +498,140 @@ describe('CharacterMotionComposer', () =>
     });
   });
 
+  describe('removeDeclarationKind', () =>
+  {
+    it('withdraws every source of the named kind at once', () =>
+    {
+      // Arrange- two states, because withdrawing "the state one" would look identical to
+      // withdrawing "every state" if there were only one to withdraw.
+      CharacterMotionComposer.declare(character, 'state:7', [ aDeclaration('breathe', [], 'state:7') ]);
+      CharacterMotionComposer.declare(character, 'state:41', [ aDeclaration('float', [], 'state:41') ]);
+
+      // Act
+      CharacterMotionComposer.removeDeclarationKind(character, 'state');
+      composeFor(character, 1);
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(false);
+    });
+
+    it('leaves every other kind of source alone', () =>
+    {
+      // Arrange- the page declaration is the near-miss that has to survive.
+      CharacterMotionComposer.declare(character, 'state:7', [ aDeclaration('breathe', [], 'state:7') ]);
+      CharacterMotionComposer.declare(character, 'page', [ aDeclaration('float', [ 12, 100, 'sync' ], 'page') ]);
+
+      // Act
+      CharacterMotionComposer.removeDeclarationKind(character, 'state');
+      const composition = composeFor(character, 25);
+
+      // Assert- still floating, and no longer breathing.
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(true);
+      expect(composition.valueFor(MotionChannels.OFFSET_Y)).not.toBe(0);
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBe(1);
+    });
+
+    it('is harmless on a character with nothing of that kind declared', () =>
+    {
+      // Arrange
+      CharacterMotionComposer.declare(character, 'page', [ aDeclaration('breathe', [], 'page') ]);
+
+      // Act
+      CharacterMotionComposer.removeDeclarationKind(character, 'state');
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(true);
+    });
+  });
+
+  describe('re-declaring over a motion that is still winding down', () =>
+  {
+    it('resumes a transition rather than stacking a second one on the same channel', () =>
+    {
+      // Arrange- a scale transition parks a channel somewhere visible, so it outlives its own
+      // withdrawal in order to travel home. Half way through that journey, the same source asks
+      // for exactly what it asked for before.
+      const scaleUp = () => [ aDeclaration('scale', [ 200, 30 ], 'state:7') ];
+      CharacterMotionComposer.declare(character, 'state:7', scaleUp());
+      composeFor(character, 30);
+      CharacterMotionComposer.removeDeclarations(character, 'state:7');
+      composeFor(character, 10);
+
+      // Act
+      CharacterMotionComposer.declare(character, 'state:7', scaleUp());
+      const composition = composeFor(character, 1);
+
+      // Assert- one effect holding the target. Two would multiply into roughly 3.4 here.
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBeCloseTo(2, 10);
+    });
+
+    it('discards a transition that was winding down when the source asks for something else', () =>
+    {
+      // Arrange- same journey home, but the source has changed its mind on the way.
+      CharacterMotionComposer.declare(character, 'state:7', [ aDeclaration('scale', [ 200, 30 ], 'state:7') ]);
+      composeFor(character, 30);
+      CharacterMotionComposer.removeDeclarations(character, 'state:7');
+      composeFor(character, 10);
+
+      // Act
+      CharacterMotionComposer.declare(character, 'state:7', [ aDeclaration('scale', [ 150, 30 ], 'state:7') ]);
+      const midFlight = composeFor(character, 5)
+        .valueFor(MotionChannels.SCALE_X);
+      const settled = composeFor(character, 25)
+        .valueFor(MotionChannels.SCALE_X);
+
+      // Assert- the mid-flight frame is the one that matters. Both effects would still be alive
+      // there, and scale multiplies, so a surviving release would report about 1.441 instead of
+      // 1.153. By the time it settles the old one has finished releasing either way, which is why
+      // the final value alone proves nothing.
+      expect(midFlight).toBeCloseTo(1.15278, 4);
+      expect(settled).toBeCloseTo(1.5, 10);
+    });
+
+    it('rebuilds when the source comes back asking for more than it had', () =>
+    {
+      // Arrange- one transition winding down, and a return that wants two motions. Resuming the
+      // one that matches and building the other would leave the source holding a set it never
+      // asked for, so the whole request is built fresh instead.
+      CharacterMotionComposer.declare(character, 'state:7', [ aDeclaration('scale', [ 200, 30 ], 'state:7') ]);
+      composeFor(character, 30);
+      CharacterMotionComposer.removeDeclarations(character, 'state:7');
+      composeFor(character, 10);
+
+      // Act
+      CharacterMotionComposer.declare(character, 'state:7', [
+        aDeclaration('scale', [ 200, 30 ], 'state:7'),
+        aDeclaration('sway', [ 8, 100, 'sync' ], 'state:7'),
+      ]);
+      const composition = composeFor(character, 30);
+
+      // Assert- exactly one scale reaching its target rather than two multiplying into 4, plus the
+      // sway that came with it, mid-cycle and therefore unmistakably running.
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBeCloseTo(2, 10);
+      expect(composition.valueFor(MotionChannels.OFFSET_X)).toBeCloseTo(7.60845, 4);
+    });
+
+    it('rebuilds a motion that stops the instant it is withdrawn, so a repeat replays', () =>
+    {
+      // Arrange- a breathe does not outlive its declaration, so there is nothing to resume and a
+      // fresh one has to start from the top. This is the case that separates "going" from "gone".
+      const breathe = () => [ aDeclaration('breathe', [ 0.5, 100, 'sync' ], 'combat:reaction') ];
+      CharacterMotionComposer.declare(character, 'combat:reaction', breathe());
+      const partway = composeFor(character, 25)
+        .valueFor(MotionChannels.SCALE_X);
+
+      // Act
+      CharacterMotionComposer.removeDeclarations(character, 'combat:reaction');
+      CharacterMotionComposer.declare(character, 'combat:reaction', breathe());
+      const restarted = composeFor(character, 1)
+        .valueFor(MotionChannels.SCALE_X);
+
+      // Assert- back near the start of the cycle rather than continuing from a quarter through.
+      expect(partway).toBeCloseTo(0.5, 10);
+      expect(restarted).toBeCloseTo(0.96861, 4);
+    });
+  });
+
   describe('forget', () =>
   {
     it('discards everything known about a character', () =>

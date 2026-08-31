@@ -171,5 +171,67 @@ describe('MotionComposition', () =>
       expect(composition.hasCenterRotation()).toBe(true);
     });
   });
+
+  describe('accepts', () =>
+  {
+    it('takes anything on a channel nobody owns', () =>
+    {
+      // Arrange
+      const composition = new MotionComposition();
+
+      // Act
+      const accepted = composition.accepts(anEffect('nobody-in-particular'), MotionChannels.ROTATION);
+
+      // Assert
+      expect(accepted).toBe(true);
+    });
+
+    it('takes the owner\'s own contribution', () =>
+    {
+      // Arrange
+      const owner = anEffect('owner');
+      const composition = new MotionComposition();
+      composition.awardClaim(MotionChannels.ROTATION, owner);
+
+      // Act
+      const accepted = composition.accepts(owner, MotionChannels.ROTATION);
+
+      // Assert
+      expect(accepted).toBe(true);
+    });
+
+    it('refuses anybody else on an owned channel', () =>
+    {
+      // Arrange
+      const owner = anEffect('owner');
+      const outsider = anEffect('outsider');
+      const composition = new MotionComposition();
+      composition.awardClaim(MotionChannels.ROTATION, owner);
+
+      // Act
+      const accepted = composition.accepts(outsider, MotionChannels.ROTATION);
+
+      // Assert
+      expect(accepted).toBe(false);
+    });
+
+    it('answers per channel, so losing one says nothing about the rest', () =>
+    {
+      // Arrange- the near-miss. A claim on rotation must not make the same effect unwelcome
+      // everywhere else.
+      const owner = anEffect('owner');
+      const outsider = anEffect('outsider');
+      const composition = new MotionComposition();
+      composition.awardClaim(MotionChannels.ROTATION, owner);
+
+      // Act
+      const onClaimed = composition.accepts(outsider, MotionChannels.ROTATION);
+      const onFree = composition.accepts(outsider, MotionChannels.OFFSET_X);
+
+      // Assert
+      expect(onClaimed).toBe(false);
+      expect(onFree).toBe(true);
+    });
+  });
 });
 //endregion plugins/motion/core/models/motion-composition.test.js

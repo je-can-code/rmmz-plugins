@@ -53,6 +53,27 @@ export const SAMPLE_JUICE_CONFIG = {
 };
 
 /**
+ * Publishes the slice of J-Motion that J-ABS-Juice's boot-time version check reads.
+ *
+ * Only the version is stood up, deliberately. Importing J-Motion's real initialization would demand
+ * its plugin parameters and an external config file on disk, none of which this plugin's metadata
+ * has any relationship to — the check exists purely to fail loudly when the ship that owns every
+ * motion this plugin declares is missing or stale.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ * @param {string} [version] The version J-Motion should report.
+ */
+export function installJMotionVersion(sandbox = globalThis, version = '1.1.0')
+{
+  sandbox.J.MOTION ??= {};
+  sandbox.J.MOTION.Metadata = {
+    name: 'J-Motion',
+    version: {
+      version: () => version,
+    },
+  };
+}
+
+/**
  * Publishes the juice configuration onto J-ABS's metadata, which is where this extension reads it
  * from while translating its own plugin parameters.
  * @param {object} [sandbox] Defaults to `globalThis`.

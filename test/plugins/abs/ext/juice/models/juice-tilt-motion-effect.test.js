@@ -1,97 +1,175 @@
 //region plugins/abs/ext/juice/models/juice-tilt-motion-effect.test.js
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { installJuiceMotionGlobals } from '../fixtures/install-juice-motion-globals.js';
 
-describe('J-ABS-Juice JuiceTiltMotionEffect (unit, all downstream dependencies mocked)', () =>
+describe('JuiceTiltMotionEffect', () =>
 {
+  /** @type {typeof import('../../../../../../src/plugins/abs/ext/juice/models/JuiceTiltMotionEffect.js').default} */
   let JuiceTiltMotionEffect;
-  let JuiceMotionManager;
+
+  /** @type {typeof import('../../../../../../src/plugins/motion/core/models/MotionDeclaration.js').default} */
+  let MotionDeclaration;
+
+  /** @type {typeof import('../../../../../../src/plugins/motion/core/models/MotionComposition.js').default} */
+  let MotionComposition;
+
+  /** @type {typeof import('../../../../../../src/plugins/motion/core/core/MotionChannels.js').default} */
+  let MotionChannels;
 
   beforeAll(async () =>
   {
-    vi.resetModules();
+    installJuiceMotionGlobals();
 
-    vi.doMock('../../../../../../src/plugins/abs/ext/juice/managers/JuiceMotionManager.js', () => ({
-      default: { relinquishSpriteLock: vi.fn() },
-    }));
-
-    ({ default: JuiceTiltMotionEffect } = await import('../../../../../../src/plugins/abs/ext/juice/models/JuiceTiltMotionEffect.js'));
-    ({ default: JuiceMotionManager } = await import('../../../../../../src/plugins/abs/ext/juice/managers/JuiceMotionManager.js'));
+    // literal import paths, so Stryker can map mutants in these files back to this test file.
+    ({ default: JuiceTiltMotionEffect } =
+      await import('../../../../../../src/plugins/abs/ext/juice/models/JuiceTiltMotionEffect.js'));
+    ({ default: MotionDeclaration } =
+      await import('../../../../../../src/plugins/motion/core/models/MotionDeclaration.js'));
+    ({ default: MotionComposition } =
+      await import('../../../../../../src/plugins/motion/core/models/MotionComposition.js'));
+    ({ default: MotionChannels } =
+      await import('../../../../../../src/plugins/motion/core/core/MotionChannels.js'));
   });
 
-  beforeEach(() =>
+  /**
+   * Builds a tilt with the given shape.
+   * @param {number} peak How far the body leans at the peak of the arc.
+   * @param {number} duration How long the lean lasts.
+   * @returns {Object} The effect.
+   */
+  const aTilt = (peak, duration) =>
   {
-    JuiceMotionManager.relinquishSpriteLock.mockReset();
-  });
+    const parameters = { peak, duration };
+    const declaration = new MotionDeclaration('tilt', [ peak, duration ], 'combat:reaction');
 
-  function buildSprite()
-  {
-    return { rotation: 0.5, transform: {} };
-  }
+    return new JuiceTiltMotionEffect(declaration, parameters, 0);
+  };
 
-  describe('constructor', () =>
+  /**
+   * Advances an effect and hands back the composition it writes.
+   * @param {Object} effect The effect to run.
+   * @param {number} frames How many frames to advance first.
+   * @returns {Object} The composition.
+   */
+  const composedAfter = (effect, frames) =>
   {
-    it('captures the sprite\'s current rotation as the baseline', () =>
+    for (let index = 0; index < frames; index++)
     {
-      const sprite = buildSprite();
-      const effect = new JuiceTiltMotionEffect(sprite, 0.3, 10);
-      expect(effect._baseRotation).toBe(0.5);
-    });
-  });
-
-  describe('isSpriteAlive', () =>
-  {
-    it('is true while the sprite has a transform', () =>
-    {
-      const effect = new JuiceTiltMotionEffect(buildSprite(), 0.3, 10);
-      expect(effect.isSpriteAlive()).toBe(true);
-    });
-
-    it('is false once the sprite transform has been nulled', () =>
-    {
-      const sprite = buildSprite();
-      const effect = new JuiceTiltMotionEffect(sprite, 0.3, 10);
-      sprite.transform = null;
-      expect(effect.isSpriteAlive()).toBe(false);
-    });
-  });
-
-  describe('restore', () =>
-  {
-    it('snaps rotation back to the captured baseline', () =>
-    {
-      const sprite = buildSprite();
-      const effect = new JuiceTiltMotionEffect(sprite, 0.3, 10);
-      sprite.rotation = 99;
-      effect.restore();
-      expect(sprite.rotation).toBe(0.5);
-    });
-  });
-
-  describe('tick', () =>
-  {
-    it('applies a sine envelope of the peak rotation on top of the baseline', () =>
-    {
-      const sprite = buildSprite();
-      const effect = new JuiceTiltMotionEffect(sprite, 1, 4);
       effect.tick();
-      expect(sprite.rotation).toBeCloseTo(0.5 + Math.sin(0.25 * Math.PI) * 1);
-    });
+    }
 
-    it('returns true while frames remain', () =>
-    {
-      const effect = new JuiceTiltMotionEffect(buildSprite(), 0.3, 4);
-      expect(effect.tick()).toBe(true);
-    });
+    const composition = new MotionComposition();
+    effect.applyTo(composition);
 
-    it('restores, releases the sprite lock, and returns false once the duration completes', () =>
+    return composition;
+  };
+
+  describe('claims', () =>
+  {
+    it('takes exclusive ownership of rotation', () =>
     {
-      const sprite = buildSprite();
-      const effect = new JuiceTiltMotionEffect(sprite, 0.3, 2);
+      // Arrange
+      const effect = aTilt(0.4, 10);
+
+      // Act
+      const claimed = effect.claims();
+
+      // Assert
+      expect(claimed).toStrictEqual([ MotionChannels.ROTATION ]);
+    });
+  });
+
+  describe('progress', () =>
+  {
+    it('reports how far through the lean a frame sits', () =>
+    {
+      // Arrange
+      const effect = aTilt(0.4, 8);
+
+      // Act
       effect.tick();
-      const result = effect.tick();
-      expect(result).toBe(false);
-      expect(sprite.rotation).toBe(0.5);
-      expect(JuiceMotionManager.relinquishSpriteLock).toHaveBeenCalledWith(sprite);
+      effect.tick();
+
+      // Assert
+      expect(effect.progress()).toBeCloseTo(0.25, 10);
+    });
+
+    it('holds at the end rather than running past it', () =>
+    {
+      // Arrange
+      const effect = aTilt(0.4, 4);
+
+      // Act
+      for (let index = 0; index < 9; index++)
+      {
+        effect.tick();
+      }
+
+      // Assert
+      expect(effect.progress()).toBe(1);
+    });
+  });
+
+  describe('applyTo', () =>
+  {
+    it('starts at no rotation at all, so nothing snaps on the first frame', () =>
+    {
+      // Arrange
+      const atRest = aTilt(0.8, 10);
+      const oneFrameIn = aTilt(0.8, 10);
+
+      // Act
+      const start = composedAfter(atRest, 0)
+        .valueFor(MotionChannels.ROTATION);
+      const next = composedAfter(oneFrameIn, 1)
+        .valueFor(MotionChannels.ROTATION);
+
+      // Assert- the second value is what proves this ran. `0` is the rotation identity, so an
+      // applyTo with no body at all would report it at the start and every frame after.
+      expect(start).toBeCloseTo(0, 10);
+      expect(next).toBeCloseTo(0.24721, 4);
+    });
+
+    it('reaches the full peak halfway through the lean', () =>
+    {
+      // Arrange
+      const effect = aTilt(0.8, 8);
+
+      // Act
+      const composition = composedAfter(effect, 4);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.ROTATION)).toBeCloseTo(0.8, 10);
+    });
+
+    it('returns to no rotation by the end of the lean', () =>
+    {
+      // Arrange
+      const nearlyDone = aTilt(0.8, 8);
+      const done = aTilt(0.8, 8);
+
+      // Act
+      const penultimate = composedAfter(nearlyDone, 7)
+        .valueFor(MotionChannels.ROTATION);
+      const final = composedAfter(done, 8)
+        .valueFor(MotionChannels.ROTATION);
+
+      // Assert- the penultimate frame is the anchor. Landing on the identity only means something
+      // if the frame before it was somewhere else, which is the property the expiry relies on.
+      expect(penultimate).toBeCloseTo(0.30615, 4);
+      expect(final).toBeCloseTo(0, 10);
+    });
+
+    it('leans the other way when handed a negative peak', () =>
+    {
+      // Arrange
+      const effect = aTilt(-0.8, 8);
+
+      // Act
+      const composition = composedAfter(effect, 4);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.ROTATION)).toBeCloseTo(-0.8, 10);
     });
   });
 });

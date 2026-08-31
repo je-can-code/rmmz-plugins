@@ -21,7 +21,7 @@ export function setPluginContextToJBase(sandbox = globalThis)
 export function setPluginContextToJMotion(sandbox = globalThis)
 {
   sandbox.__PLUGIN_NAME__ = 'J-Motion';
-  sandbox.__PLUGIN_VERSION__ = '1.0.0';
+  sandbox.__PLUGIN_VERSION__ = '1.1.0';
 }
 
 /**

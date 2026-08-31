@@ -123,5 +123,34 @@ describe('MotionEffect', () =>
       expect(applying).toThrow('MotionEffect#applyTo must be implemented by a subclass.');
     });
   });
+
+  describe('cancelRemoval', () =>
+  {
+    it('puts a withdrawn effect back to work', () =>
+    {
+      // Arrange
+      const effect = anEffect();
+      effect.requestRemoval();
+
+      // Act
+      effect.cancelRemoval();
+
+      // Assert
+      expect(effect.hasRemovalRequested()).toBe(false);
+      expect(effect.isDiscardable()).toBe(false);
+    });
+
+    it('leaves an effect nobody withdrew exactly as it was', () =>
+    {
+      // Arrange
+      const effect = anEffect();
+
+      // Act
+      effect.cancelRemoval();
+
+      // Assert
+      expect(effect.hasRemovalRequested()).toBe(false);
+    });
+  });
 });
 //endregion plugins/motion/core/models/motion-effect.test.js

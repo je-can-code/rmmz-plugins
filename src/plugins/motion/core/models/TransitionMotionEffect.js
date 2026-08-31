@@ -54,12 +54,31 @@ class TransitionMotionEffect
    */
   requestRemoval()
   {
+    // already on the way home. asking again must not re-capture the starting point, because
+    // `arrivingValue` reports where the outbound journey would be by now rather than where the
+    // sprite has actually reached — so a second request would jump the channel back outward and
+    // ease home from there a second time.
+    if (this.hasRemovalRequested() === true) return;
+
     // capture the current position before the base class flips into removal.
     this.channels()
       .forEach(channel => this.#releaseValues.set(channel, this.arrivingValue(channel)), this);
 
     // perform original logic.
     super.requestRemoval();
+  }
+
+  /**
+   * Extends {@link MotionEffect#cancelRemoval}.<br/>
+   * Abandons the journey home, because there is somewhere to be again.
+   */
+  cancelRemoval()
+  {
+    // perform original logic.
+    super.cancelRemoval();
+
+    this.#releaseFrames = 0;
+    this.#releaseValues.clear();
   }
 
   /**

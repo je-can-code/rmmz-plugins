@@ -1,132 +1,56 @@
 //region JuiceTiltMotionEffect
-import JuiceMotionManager from './../managers/JuiceMotionManager.js';
-import JuiceBaseEffect from './JuiceBaseEffect.js';
 /**
- * One-shot rotation wobble (strike tilt juice) on a sprite.
+ * The lean a battler takes as it swings a weapon.
+ *
+ * This is the caster half of a strike — the weapon overlay does the arc, and this tips the body
+ * into it so the swing looks like it came from somewhere. On its own it is barely visible, which is
+ * the point: a strike that reads as a whole-body action is a dozen small things agreeing, not one
+ * large one.
+ *
+ * Like the squish it rides a sine envelope, so it begins and ends at no rotation at all and can be
+ * withdrawn on any frame without the sprite jumping.
+ *
+ * `MotionEffect`, `MotionChannels` and `MotionEasing` are reached as globals rather than imports:
+ * they ship inside J-Motion's bundle and are hoisted by the time this one loads.
  */
-class JuiceTiltMotionEffect extends JuiceBaseEffect
+class JuiceTiltMotionEffect
+  extends MotionEffect
 {
-
-  //region properties
   /**
-   * Gets the sprite.
-   * @returns {Sprite} The sprite.
-   */
-  sprite()
-  {
-    // hand back the sprite.
-    return this._sprite;
-  }
-
-  /**
-   * Gets the base rotation.
-   * @returns {number} The baseRotation.
-   */
-  baseRotation()
-  {
-    // hand back the base rotation.
-    return this._baseRotation;
-  }
-
-  /**
-   * Gets the frame.
-   * @returns {number} The frame.
-   */
-  frame()
-  {
-    // hand back the frame.
-    return this._frame;
-  }
-
-  /**
-   * Sets the frame.
-   * @param {number} newFrame The new frame.
-   */
-  setFrame(newFrame)
-  {
-    // assign the frame.
-    this._frame = newFrame;
-  }
-
-  /**
-   * Gets the duration frames.
-   * @returns {number} The durationFrames.
-   */
-  durationFrames()
-  {
-    // hand back the duration frames.
-    return this._durationFrames;
-  }
-
-  /**
-   * Gets the peak radians.
-   * @returns {number} The peakRadians.
-   */
-  peakRadians()
-  {
-    // hand back the peak radians.
-    return this._peakRadians;
-  }
-  //endregion properties
-
-  /**
-   * @param {Sprite} sprite The Pixi sprite being driven.
-   * @param {number} peakRadians Peak rotation magnitude (radians).
-   * @param {number} durationFrames Frames to run.
-   */
-
-  constructor(sprite, peakRadians, durationFrames)
-  {
-    super();
-    this._sprite = sprite;
-    this._peakRadians = peakRadians;
-    // store  duration frames on the instance for later reads.
-    this._durationFrames = durationFrames;
-    this._frame = 0;
-    this._baseRotation = sprite.rotation;
-  }
-
-  /**
-   * Returns false when the target sprite's Pixi transform has been nulled out.
+   * The channel a tilt takes exclusive ownership of.
    *
-   * Pixi sets {@code transform = null} when a sprite is destroyed; it does NOT reliably set
-   * a {@code destroyed} boolean in all RMMZ-bundled versions, so checking transform directly
-   * is the safe guard. A null transform means any rotation write would immediately throw.
-   * @returns {boolean}
+   * A strike lean has to be the only thing rotating the body while it runs, or an ambient swing
+   * adds an angle the designer never tuned for and the strike stops reading as deliberate.
+   * @returns {string[]}
    */
-  isSpriteAlive()
+  claims()
   {
-    return !!this.sprite().transform;
+    return [ MotionChannels.ROTATION ];
   }
 
   /**
-   * Snaps rotation back to the baseline captured at construction time.
+   * How far through the tilt this frame is, from 0 to 1.
+   * @returns {number}
    */
-  restore()
+  progress()
   {
-    this.sprite().rotation = this.baseRotation();
+    const { duration } = this.parameters();
+
+    return MotionEasing.normalize(this.elapsedFrames() / duration);
   }
 
   /**
-   * Advances one frame of the tilt envelope.
-   * @returns {boolean} True while the effect should stay in the runner queue.
+   * Writes this frame of the tilt into the composition.
+   * @param {MotionComposition} composition The composition being built for this character.
    */
-  tick()
+  applyTo(composition)
   {
-    this.setFrame(this.frame() + 1);
-    const t = this.frame() / this.durationFrames();
-    const envelope = Math.sin(t * Math.PI);
-    this.sprite().rotation = this.baseRotation() + envelope * this.peakRadians();
+    const { peak } = this.parameters();
+    const envelope = Math.sin(this.progress() * Math.PI);
 
-    if (this.frame() >= this.durationFrames())
-    {
-      this.restore();
-      JuiceMotionManager.relinquishSpriteLock(this.sprite());
-      return false;
-    }
-
-    return true;
+    composition.contribute(this, MotionChannels.ROTATION, envelope * peak);
   }
 }
+
 export default JuiceTiltMotionEffect;
 //endregion JuiceTiltMotionEffect
