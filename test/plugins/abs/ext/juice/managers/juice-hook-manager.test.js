@@ -60,7 +60,8 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
       scheduleFlipBody: vi.fn(),
       scheduleTilt: vi.fn(),
       scheduleCastingPulse: vi.fn(),
-      cancelForSprite: vi.fn(),
+      cancelForCharacter: vi.fn(),
+      cancelCastingPulse: vi.fn(),
     };
     vi.doMock('../../../../../../src/plugins/abs/ext/juice/managers/JuiceMotionManager.js', () => ({
       default: JuiceMotionManagerMock,
@@ -172,13 +173,17 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
       expect(JuiceMotionManagerMock.scheduleSquish).not.toHaveBeenCalled();
     });
 
-    it('does nothing when no sprite is found for the target', () =>
+    it('reacts on a target that is not currently drawn anywhere', () =>
     {
+      // Arrange: a hit reaction is declared on the character, not written to a sprite, so a target
+      // the spriteset has not built yet still records its reaction and plays it on arrival.
       JuiceMapSpriteFinderMock.findSpriteCharacterFor.mockReturnValue(null);
 
+      // Act
       JuiceHookManager.onPostPrimaryBattleEffects(buildAction(), buildBattler());
 
-      expect(JuiceMotionManagerMock.scheduleSquish).not.toHaveBeenCalled();
+      // Assert
+      expect(JuiceMotionManagerMock.scheduleSquish).toHaveBeenCalled();
     });
 
     it('does nothing for a support/utility skill (damage.type 0)', () =>
@@ -350,7 +355,7 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
 
       JuiceHookManager.onExecuteMapAction(buildBattler(), action);
 
-      expect(JuiceMotionManagerMock.scheduleFlipBody).toHaveBeenCalledWith(expect.anything(), 1, 20, 1);
+      expect(JuiceMotionManagerMock.scheduleFlipBody).toHaveBeenCalledWith(expect.anything(), 'cw', 20, 1);
     });
 
     it('applies a counter-clockwise flip for <juiceMotion:flip-reverse>', () =>
@@ -361,7 +366,7 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
 
       JuiceHookManager.onExecuteMapAction(buildBattler(), action);
 
-      expect(JuiceMotionManagerMock.scheduleFlipBody).toHaveBeenCalledWith(expect.anything(), -1, 20, 1);
+      expect(JuiceMotionManagerMock.scheduleFlipBody).toHaveBeenCalledWith(expect.anything(), 'ccw', 20, 1);
     });
 
     it('applies the gentle support pulse for healing with no explicit motion tag', () =>
@@ -428,6 +433,7 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
       // has to reach the strike path, the same way the healing shortcut yields to an authored tag.
       // Every existing support case leaves the tag empty, so the tag half of that pairing has never
       // had to be true, and the shortcut could have swallowed authored motions unnoticed.
+      JuiceProfileResolverMock.resolveWeaponIconIndex.mockReturnValue(5);
       const action = buildAction({
         getBaseSkill: () => ({ jabsNoJuice: false, jabsJuiceMotion: 'bash', damage: { type: 0 } }),
       });
@@ -441,6 +447,7 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
 
     it('falls through to strike juice for a normal attack with no motion tag', () =>
     {
+      JuiceProfileResolverMock.resolveWeaponIconIndex.mockReturnValue(5);
       const action = buildAction({
         getBaseSkill: () => ({ jabsNoJuice: false, jabsJuiceMotion: String.empty, damage: { type: 1 } }),
       });
@@ -450,44 +457,18 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
       expect(JuiceMotionManagerMock.scheduleTilt).toHaveBeenCalled();
     });
 
-    it('does nothing when no sprite is found for the caster (dodge path)', () =>
+    it('reacts on a caster that is not currently drawn anywhere', () =>
     {
-      JuiceMapSpriteFinderMock.findSpriteCharacterFor.mockReturnValue(null);
-      const action = buildAction({ getCooldownType: () => 'Dodge' });
-
-      JuiceHookManager.onExecuteMapAction(buildBattler(), action);
-
-      expect(JuiceMotionManagerMock.scheduleSquish).not.toHaveBeenCalled();
-    });
-
-    it('does nothing when no sprite is found for the caster (squish path)', () =>
-    {
-      JuiceMapSpriteFinderMock.findSpriteCharacterFor.mockReturnValue(null);
-      const action = buildAction({ getBaseSkill: () => ({ jabsNoJuice: false, jabsJuiceMotion: 'squish' }) });
-
-      JuiceHookManager.onExecuteMapAction(buildBattler(), action);
-
-      expect(JuiceMotionManagerMock.scheduleSquish).not.toHaveBeenCalled();
-    });
-
-    it('does nothing when no sprite is found for the caster (pulse path)', () =>
-    {
-      JuiceMapSpriteFinderMock.findSpriteCharacterFor.mockReturnValue(null);
-      const action = buildAction({ getBaseSkill: () => ({ jabsNoJuice: false, jabsJuiceMotion: 'pulse' }) });
-
-      JuiceHookManager.onExecuteMapAction(buildBattler(), action);
-
-      expect(JuiceMotionManagerMock.scheduleSquish).not.toHaveBeenCalled();
-    });
-
-    it('does nothing when no sprite is found for the caster (flip path)', () =>
-    {
+      // Arrange: caster reactions are declared on the character, so a battler the spriteset has not
+      // built yet still reacts. Only the weapon overlay needs a real sprite to hang off.
       JuiceMapSpriteFinderMock.findSpriteCharacterFor.mockReturnValue(null);
       const action = buildAction({ getBaseSkill: () => ({ jabsNoJuice: false, jabsJuiceMotion: 'flip' }) });
 
+      // Act
       JuiceHookManager.onExecuteMapAction(buildBattler(), action);
 
-      expect(JuiceMotionManagerMock.scheduleFlipBody).not.toHaveBeenCalled();
+      // Assert
+      expect(JuiceMotionManagerMock.scheduleFlipBody).toHaveBeenCalledWith(expect.anything(), 'cw', 20, 1);
     });
 
     it('uses a custom repeat count and duration when resolved', () =>
@@ -505,13 +486,19 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
 
   describe('#applyStrikeJuice() via onExecuteMapAction()', () =>
   {
-    it('does nothing when no sprite is found for the caster', () =>
+    it('still leans the caster when no sprite is found, and skips only the overlay', () =>
     {
+      // Arrange: the lean is composed onto the character and needs no sprite; the overlay is a
+      // sprite this plugin parents to the caster's own, and that genuinely cannot happen without one.
+      JuiceProfileResolverMock.resolveWeaponIconIndex.mockReturnValue(5);
       JuiceMapSpriteFinderMock.findSpriteCharacterFor.mockReturnValue(null);
 
+      // Act
       JuiceHookManager.onExecuteMapAction(buildBattler(), buildAction());
 
-      expect(JuiceMotionManagerMock.scheduleTilt).not.toHaveBeenCalled();
+      // Assert
+      expect(JuiceMotionManagerMock.scheduleTilt).toHaveBeenCalled();
+      expect(JuiceWeaponSwingOverlayMock.play).not.toHaveBeenCalled();
     });
 
     it('schedules a weapon swing overlay when a weapon icon resolves', () =>
@@ -559,74 +546,84 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
 
   describe('tickCastingJuice()', () =>
   {
-    it('does nothing when already scheduled', () =>
+    it('renews the pulse with the configured amplitude and a short heartbeat', () =>
     {
-      const battler = buildBattler({ _juiceCastingScheduled: true });
+      // Arrange
+      const battler = buildBattler();
 
+      // Act
       JuiceHookManager.tickCastingJuice(battler);
 
-      expect(JuiceMotionManagerMock.scheduleCastingPulse).not.toHaveBeenCalled();
-    });
-
-    it('does nothing when no sprite is found', () =>
-    {
-      JuiceMapSpriteFinderMock.findSpriteCharacterFor.mockReturnValue(null);
-      const battler = buildBattler({ _juiceCastingScheduled: false });
-
-      JuiceHookManager.tickCastingJuice(battler);
-
-      expect(JuiceMotionManagerMock.scheduleCastingPulse).not.toHaveBeenCalled();
-    });
-
-    it('schedules the casting pulse and flags the battler as scheduled', () =>
-    {
-      const battler = buildBattler({ _juiceCastingScheduled: false });
-
-      JuiceHookManager.tickCastingJuice(battler);
-
+      // Assert
       expect(JuiceMotionManagerMock.scheduleCastingPulse).toHaveBeenCalledWith(
-        expect.anything(), 0.25, expect.any(Function)
+        expect.anything(), 0.25, 4
       );
-      expect(battler._juiceCastingScheduled).toEqual(true);
     });
 
-    it('passes an isCasting predicate through to the scheduled pulse', () =>
+    it('renews on every call rather than only the first, which is what makes it a heartbeat', () =>
     {
-      const battler = buildBattler({ _juiceCastingScheduled: false, isCasting: () => 'still-casting' });
+      // Arrange: the whole point of renewing is that a cast which ends by an unhooked route stops
+      // being renewed and lapses. A once-per-cast schedule would leave the pulse running forever.
+      const battler = buildBattler();
 
+      // Act
+      JuiceHookManager.tickCastingJuice(battler);
+      JuiceHookManager.tickCastingJuice(battler);
       JuiceHookManager.tickCastingJuice(battler);
 
-      const [ , , predicate ] = JuiceMotionManagerMock.scheduleCastingPulse.mock.calls.at(-1);
-      expect(predicate()).toEqual('still-casting');
+      // Assert
+      expect(JuiceMotionManagerMock.scheduleCastingPulse).toHaveBeenCalledTimes(3);
+    });
+
+    it('renews on a caster that is not currently drawn anywhere', () =>
+    {
+      // Arrange
+      JuiceMapSpriteFinderMock.findSpriteCharacterFor.mockReturnValue(null);
+
+      // Act
+      JuiceHookManager.tickCastingJuice(buildBattler());
+
+      // Assert
+      expect(JuiceMotionManagerMock.scheduleCastingPulse).toHaveBeenCalled();
     });
   });
 
   describe('endCastingJuice()', () =>
   {
-    it('clears the scheduled flag regardless of sprite availability', () =>
+    it('settles the caster on the frame the cast actually ended', () =>
     {
-      JuiceMapSpriteFinderMock.findSpriteCharacterFor.mockReturnValue(null);
-      const battler = buildBattler({ _juiceCastingScheduled: true });
+      // Arrange
+      const battler = buildBattler();
 
+      // Act
       JuiceHookManager.endCastingJuice(battler);
 
-      expect(battler._juiceCastingScheduled).toEqual(false);
+      // Assert
+      expect(JuiceMotionManagerMock.cancelCastingPulse).toHaveBeenCalledWith(battler.getCharacter());
     });
 
-    it('does nothing further when no sprite is found', () =>
+    it('leaves a reaction running, because finishing a cast is not a reason to cut one short', () =>
     {
+      // Arrange
+      const battler = buildBattler();
+
+      // Act
+      JuiceHookManager.endCastingJuice(battler);
+
+      // Assert
+      expect(JuiceMotionManagerMock.cancelForCharacter).not.toHaveBeenCalled();
+    });
+
+    it('settles a caster that is not currently drawn anywhere', () =>
+    {
+      // Arrange
       JuiceMapSpriteFinderMock.findSpriteCharacterFor.mockReturnValue(null);
 
+      // Act
       JuiceHookManager.endCastingJuice(buildBattler());
 
-      expect(JuiceMotionManagerMock.cancelForSprite).not.toHaveBeenCalled();
-    });
-
-    it('cancels motion for the sprite when found', () =>
-    {
-      JuiceHookManager.endCastingJuice(buildBattler());
-
-      expect(JuiceMotionManagerMock.cancelForSprite).toHaveBeenCalled();
+      // Assert
+      expect(JuiceMotionManagerMock.cancelCastingPulse).toHaveBeenCalled();
     });
   });
 });

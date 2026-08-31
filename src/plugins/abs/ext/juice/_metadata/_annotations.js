@@ -7,8 +7,10 @@
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
  * @base J-ABS
+ * @base J-Motion
  * @orderAfter J-Base
  * @orderAfter J-ABS
+ * @orderAfter J-Motion
  * @orderAfter J-ABS-InputManager
  * @orderAfter J-ABS-Poses
  * @orderAfter J-ABS-Hitstop
@@ -20,16 +22,25 @@
  * IconSet weapon swing overlays driven by skills or equipped weapons.
  *
  * Load order:
- * Place after J-ABS-InputManager (dodge key binding), J-ABS-Poses (attack poses),
- * and J-ABS-Hitstop (impact timing). Juice wraps engine hooks that chain after
+ * Place after J-Motion (which owns character motion), and after
+ * J-ABS-InputManager (dodge key binding), J-ABS-Poses (attack poses), and
+ * J-ABS-Hitstop (impact timing). Juice wraps engine hooks that chain after
  * those extensions so gameplay semantics stay unchanged.
  *
+ * Relationship to J-Motion:
+ * Juice decides WHEN a battler reacts and HOW HARD; J-Motion decides what the
+ * sprite looks like. Everything a battler does with its own body is declared on
+ * J-Motion's composer under the `combat:reaction` source, so a reaction composes
+ * with whatever ambient motion that battler already has rather than fighting it.
+ * The four reactions register as ordinary motion types — `squish`, `tilt`,
+ * `flip` and `charge` — which means an event page or a state can ask for them by
+ * name too. The weapon swing overlay is the exception: it is a sprite this
+ * plugin creates and owns, so it is driven directly rather than composed.
+ *
  * Coexistence with J-ABS-Poses:
- * Poses swap character sheets / patterns for readable attacks. Juice adjusts
- * Pixi scale and rotation on the live Sprite_Character (plus a short IconSet
- * overlay child for swings). Keep juice intensities modest so pose readability
- * stays primary; if a pose plugin ever writes scale each frame, raise juice
- * timings only after verifying the interaction in-game.
+ * Poses swap character sheets / patterns for readable attacks, which is a
+ * different layer entirely from the transform J-Motion composes. Keep juice
+ * intensities modest so pose readability stays primary.
  *
  * ============================================================================
  * REQUIRED EXTERNAL CONFIGURATION
@@ -168,6 +179,19 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Caster and target body motion is now declared on J-Motion's composer rather
+ *    than written onto the sprite directly, which makes J-Motion a hard dependency.
+ *    A battler's reaction composes with whatever ambient motion it already carries
+ *    instead of cancelling it, and the four reactions register as ordinary motion
+ *    types - squish, tilt, flip and charge - so an event page or a state can ask
+ *    for them by name. Every skill notetag is unchanged.
+ *    The casting pulse is now renewed each frame with a short life rather than
+ *    started once and cancelled, so a cast that ends by any route at all lapses on
+ *    its own. It also holds its own source, so a battler struck while casting
+ *    flinches in full instead of for a single frame, and it stops on death rather
+ *    than shimmering through the corpse's collapse.
+ *    The weapon swing overlay is unchanged and still drives its sprite directly.
  * - 1.1.1
  *    Simplified six guards that tested a value for null and undefined before
  *    asking whether it was finite, which Number.isFinite already answers for

@@ -1,271 +1,456 @@
 //region plugins/abs/ext/juice/managers/juice-motion-manager.test.js
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { installJuiceMotionGlobals, installJuiceMotionTypes } from '../fixtures/install-juice-motion-globals.js';
 
-describe('J-ABS-Juice JuiceMotionManager (unit, all downstream dependencies mocked)', () =>
+describe('JuiceMotionManager', () =>
 {
-  /** duck-typed stand-in shared by every scheduled-effect mock- carries what frameTick reads. */
-  function buildFakeEffect(overrides = {})
-  {
-    return Object.assign({
-      isSpriteAlive: vi.fn(() => true),
-      tick: vi.fn(() => true),
-      restore: vi.fn(),
-    }, overrides);
-  }
-
   /** @type {typeof import('../../../../../../src/plugins/abs/ext/juice/managers/JuiceMotionManager.js').default} */
   let JuiceMotionManager;
-  let FakeTilt;
-  let FakeSquish;
-  let FakeCastingPulse;
-  let FakeFlipBody;
 
-  beforeEach(async () =>
+  /** @type {typeof import('../../../../../../src/plugins/motion/core/managers/CharacterMotionComposer.js').default} */
+  let CharacterMotionComposer;
+
+  /** @type {typeof import('../../../../../../src/plugins/motion/core/core/MotionChannels.js').default} */
+  let MotionChannels;
+
+  /** @type {Object} */
+  let character;
+
+  beforeAll(async () =>
   {
-    vi.resetModules();
+    installJuiceMotionGlobals();
+    await installJuiceMotionTypes();
 
-    // plain (non-arrow) functions invoked with `new` return their explicit object return value
-    // instead of `this`- that lets these mocks work as constructors while still being vi.fn()s
-    // whose per-call return value can be swapped out via mockImplementationOnce. Arrow functions
-    // cannot be used with `new`, so these intentionally stay as function expressions.
-    /* eslint-disable prefer-arrow-callback */
-    FakeTilt = vi.fn(function() { return buildFakeEffect(); });
-    FakeSquish = vi.fn(function() { return buildFakeEffect(); });
-    FakeCastingPulse = vi.fn(function() { return buildFakeEffect(); });
-    FakeFlipBody = vi.fn(function() { return buildFakeEffect(); });
-    /* eslint-enable prefer-arrow-callback */
-
-    vi.doMock('../../../../../../src/plugins/abs/ext/juice/models/JuiceTiltMotionEffect.js', () => ({ default: FakeTilt }));
-    vi.doMock('../../../../../../src/plugins/abs/ext/juice/models/JuiceSquishMotionEffect.js', () => ({ default: FakeSquish }));
-    vi.doMock('../../../../../../src/plugins/abs/ext/juice/models/JuiceCastingPulseMotionEffect.js', () => ({ default: FakeCastingPulse }));
-    vi.doMock('../../../../../../src/plugins/abs/ext/juice/models/JuiceFlipBodyMotionEffect.js', () => ({ default: FakeFlipBody }));
-    vi.doMock('../../../../../../src/plugins/abs/ext/juice/models/JuiceBaseEffect.js', () => ({ default: class {} }));
-
-    ({ default: JuiceMotionManager } = await import('../../../../../../src/plugins/abs/ext/juice/managers/JuiceMotionManager.js'));
+    // literal import paths, so Stryker can map mutants in these files back to this test file.
+    ({ default: JuiceMotionManager } =
+      await import('../../../../../../src/plugins/abs/ext/juice/managers/JuiceMotionManager.js'));
+    ({ default: CharacterMotionComposer } =
+      await import('../../../../../../src/plugins/motion/core/managers/CharacterMotionComposer.js'));
+    ({ default: MotionChannels } =
+      await import('../../../../../../src/plugins/motion/core/core/MotionChannels.js'));
   });
 
-  describe('scheduling', () =>
+  beforeEach(() =>
   {
-    it('scheduleSquish constructs and queues a squish effect for the sprite', () =>
-    {
-      const sprite = {};
-      JuiceMotionManager.scheduleSquish(sprite, 0.1, 10, 2);
-      expect(FakeSquish).toHaveBeenCalledWith(sprite, 0.1, 10, 2);
-    });
-
-    it('scheduleTilt constructs and queues a tilt effect for the sprite', () =>
-    {
-      const sprite = {};
-      JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
-      expect(FakeTilt).toHaveBeenCalledWith(sprite, 0.2, 8);
-    });
-
-    it('scheduleFlipBody constructs and queues a flip effect for the sprite', () =>
-    {
-      const sprite = {};
-      JuiceMotionManager.scheduleFlipBody(sprite, 1, 20, 2);
-      expect(FakeFlipBody).toHaveBeenCalledWith(sprite, 1, 20, 2);
-    });
-
-    it('scheduleCastingPulse constructs and queues a casting pulse effect for the sprite', () =>
-    {
-      const sprite = {};
-      const predicate = () => true;
-      JuiceMotionManager.scheduleCastingPulse(sprite, 0.04, predicate);
-      expect(FakeCastingPulse).toHaveBeenCalledWith(sprite, 0.04, predicate);
-    });
-
-    it('cancels and restores any prior effect already locking the sprite before scheduling a new one', () =>
-    {
-      const sprite = {};
-      const priorEffect = buildFakeEffect();
-      FakeTilt.mockImplementationOnce(function() { return priorEffect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
-
-      JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
-      JuiceMotionManager.scheduleSquish(sprite, 0.1, 10);
-
-      expect(priorEffect.restore).toHaveBeenCalledTimes(1);
-    });
+    character = { name: 'a-battler' };
+    JuiceMotionManager.clearAll();
   });
 
-  describe('cancelForSprite', () =>
+  /**
+   * Composes a character for a number of frames and hands back the last composition.
+   * @param {number} frames How many frames to compose.
+   * @returns {Object} The final composition.
+   */
+  const composeFrames = frames =>
   {
-    it('restores and removes the active effect for the given sprite', () =>
+    let composition = null;
+
+    for (let index = 0; index < frames; index++)
     {
-      const sprite = {};
-      const effect = buildFakeEffect();
-      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
-      JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
+      composition = CharacterMotionComposer.compose(character);
+    }
 
-      JuiceMotionManager.cancelForSprite(sprite);
+    return composition;
+  };
 
-      expect(effect.restore).toHaveBeenCalledTimes(1);
-    });
+  /**
+   * A duck-typed stand-in for a sprite-bound overlay effect, carrying what frameTick reads.
+   * @param {Object} overrides Anything a particular test wants to differ.
+   * @returns {Object} The fake effect.
+   */
+  const buildOverlayEffect = (overrides = {}) => Object.assign({
+    isSpriteAlive: vi.fn(() => true),
+    tick: vi.fn(() => true),
+  }, overrides);
 
-    it('does nothing when the sprite has no active effect', () =>
-    {
-      expect(() => JuiceMotionManager.cancelForSprite({})).not.toThrow();
-    });
-
-    // Restoring the cancelled effect is only half the job- it also has to leave the frame queue, or
-    // it keeps ticking after its baseline was snapped back and fights whatever replaced it. Nothing
-    // asserted on the queue, and with a single effect in flight "removed the cancelled one" and
-    // "emptied the queue" look identical from outside, so both of these run a second effect on an
-    // unrelated sprite that has to survive the cancellation untouched.
-    it('drops the cancelled effect from the frame queue', () =>
+  describe('scheduleSquish', () =>
+  {
+    it('gives the character a squish it did not have before', () =>
     {
       // Arrange
-      const cancelledSprite = {};
-      const survivingSprite = {};
-      const cancelled = buildFakeEffect();
-      const surviving = buildFakeEffect();
-      FakeTilt.mockImplementationOnce(function() { return cancelled; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
-      FakeSquish.mockImplementationOnce(function() { return surviving; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
-      JuiceMotionManager.scheduleTilt(cancelledSprite, 0.2, 8);
-      JuiceMotionManager.scheduleSquish(survivingSprite, 0.1, 10);
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(false);
 
       // Act
-      JuiceMotionManager.cancelForSprite(cancelledSprite);
-      JuiceMotionManager.frameTick();
+      JuiceMotionManager.scheduleSquish(character, 0.5, 8);
 
       // Assert
-      expect(cancelled.tick).not.toHaveBeenCalled();
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(true);
     });
 
-    it('leaves effects belonging to other sprites in the frame queue', () =>
+    it('deforms the body on the axes a squish owns', () =>
     {
       // Arrange
-      const cancelledSprite = {};
-      const survivingSprite = {};
-      const cancelled = buildFakeEffect();
-      const surviving = buildFakeEffect();
-      FakeTilt.mockImplementationOnce(function() { return cancelled; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
-      FakeSquish.mockImplementationOnce(function() { return surviving; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
-      JuiceMotionManager.scheduleTilt(cancelledSprite, 0.2, 8);
-      JuiceMotionManager.scheduleSquish(survivingSprite, 0.1, 10);
+      JuiceMotionManager.scheduleSquish(character, 0.5, 8);
 
       // Act
-      JuiceMotionManager.cancelForSprite(cancelledSprite);
-      JuiceMotionManager.frameTick();
+      const composition = composeFrames(4);
 
       // Assert
-      expect(surviving.tick).toHaveBeenCalledTimes(1);
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBeCloseTo(1.5, 10);
+      expect(composition.valueFor(MotionChannels.SCALE_Y)).toBeCloseTo(1 / 1.5, 10);
+    });
+
+    it('runs for one cycle per repeat before lapsing', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleSquish(character, 0.5, 8, 2);
+
+      // Act
+      composeFrames(15);
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(true);
+    });
+
+    it('lapses once its whole frame budget is spent', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleSquish(character, 0.5, 8, 2);
+
+      // Act
+      composeFrames(16);
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(false);
+    });
+
+    it('restarts from the beginning when the same squish is asked for again', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleSquish(character, 0.5, 8);
+      const atPeak = composeFrames(4)
+        .valueFor(MotionChannels.SCALE_X);
+
+      // Act
+      JuiceMotionManager.scheduleSquish(character, 0.5, 8);
+      const afterRestart = composeFrames(1)
+        .valueFor(MotionChannels.SCALE_X);
+
+      // Assert
+      expect(atPeak).toBeCloseTo(1.5, 10);
+      expect(afterRestart).toBeCloseTo(1.19134, 4);
     });
   });
 
-  describe('pushExternalEffect', () =>
+  describe('scheduleTilt', () =>
   {
-    it('adds the external effect to the frame-tick queue', () =>
+    it('leans the body without touching its scale', () =>
     {
-      const effect = buildFakeEffect();
-      JuiceMotionManager.pushExternalEffect(effect);
+      // Arrange
+      JuiceMotionManager.scheduleTilt(character, 0.8, 8);
 
-      JuiceMotionManager.frameTick();
+      // Act
+      const composition = composeFrames(4);
 
-      expect(effect.tick).toHaveBeenCalledTimes(1);
+      // Assert
+      expect(composition.valueFor(MotionChannels.ROTATION)).toBeCloseTo(0.8, 10);
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBe(1);
+    });
+
+    it('lapses once its duration is spent', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleTilt(character, 0.8, 8);
+
+      // Act
+      composeFrames(8);
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(false);
+    });
+
+    it('replaces a squish that was already running, because a body does one thing at a time', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleSquish(character, 0.5, 8);
+      composeFrames(4);
+
+      // Act
+      JuiceMotionManager.scheduleTilt(character, 0.8, 8);
+      const composition = composeFrames(4);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.ROTATION)).toBeCloseTo(0.8, 10);
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBe(1);
+    });
+  });
+
+  describe('scheduleFlipBody', () =>
+  {
+    it('turns the body the way it was told to', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleFlipBody(character, 'cw', 24);
+
+      // Act
+      const composition = composeFrames(12);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.ROTATION)).toBeCloseTo(Math.PI, 10);
+    });
+
+    it('turns the other way when asked for counter-clockwise', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleFlipBody(character, 'ccw', 24);
+
+      // Act
+      const composition = composeFrames(12);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.ROTATION)).toBeCloseTo(-Math.PI, 10);
+    });
+
+    it('makes as many turns as it was asked for within the same budget', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleFlipBody(character, 'cw', 24, 2);
+
+      // Act
+      const composition = composeFrames(12);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.ROTATION)).toBeCloseTo(2 * Math.PI, 10);
+    });
+  });
+
+  describe('scheduleCastingPulse', () =>
+  {
+    it('starts the character shimmering', () =>
+    {
+      // Act
+      JuiceMotionManager.scheduleCastingPulse(character, 0.5, 4);
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(true);
+    });
+
+    it('lapses shortly after whatever was renewing it stops', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleCastingPulse(character, 0.5, 4);
+
+      // Act
+      composeFrames(4);
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(false);
+    });
+
+    it('keeps building rather than restarting when it is renewed', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleCastingPulse(character, 0.5, 4);
+      composeFrames(2);
+
+      // Act
+      JuiceMotionManager.scheduleCastingPulse(character, 0.5, 4);
+      const composition = composeFrames(1);
+
+      // Assert
+      // a restart would compose 1.05226 here, one frame into a fresh pulse.
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBeCloseTo(1.15704, 4);
+    });
+
+    it('survives longer than its heartbeat while something keeps renewing it', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleCastingPulse(character, 0.5, 4);
+
+      // Act
+      for (let index = 0; index < 20; index++)
+      {
+        JuiceMotionManager.scheduleCastingPulse(character, 0.5, 4);
+        composeFrames(1);
+      }
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(true);
+    });
+  });
+
+  describe('cancelCastingPulse', () =>
+  {
+    it('settles a battler that was charging', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleCastingPulse(character, 0.5, 4);
+      composeFrames(1);
+
+      // Act
+      JuiceMotionManager.cancelCastingPulse(character);
+      composeFrames(1);
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(false);
+    });
+
+    it('leaves a reaction running, because the two are separate things happening at once', () =>
+    {
+      // Arrange- this is the whole reason the pulse has its own source. A battler struck while
+      // casting is doing both, and finishing the cast must not cut the flinch short.
+      JuiceMotionManager.scheduleCastingPulse(character, 0.5, 4);
+      JuiceMotionManager.scheduleSquish(character, 0.5, 8);
+
+      // Act
+      JuiceMotionManager.cancelCastingPulse(character);
+      const composition = composeFrames(4);
+
+      // Assert- still deforming, which only the squish does.
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(true);
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBeCloseTo(1.5, 10);
+    });
+  });
+
+  describe('a reaction landing on a battler that is already charging', () =>
+  {
+    it('plays the reaction in full rather than being wiped by the next renewal', () =>
+    {
+      // Arrange- the heartbeat renews the pulse every frame. Sharing one source key with the
+      // reaction meant each rebuilt the other, so a hit on a caster flinched for exactly one frame.
+      JuiceMotionManager.scheduleCastingPulse(character, 0.5, 4);
+      JuiceMotionManager.scheduleSquish(character, 0.5, 8);
+
+      // Act- keep the cast alive across the whole squish, the way a real cast would.
+      let composition = null;
+      for (let index = 0; index < 4; index++)
+      {
+        JuiceMotionManager.scheduleCastingPulse(character, 0.5, 4);
+        composition = composeFrames(1);
+      }
+
+      // Assert- the squish reached its peak, so it survived four renewals of the pulse.
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBeCloseTo(1.5, 10);
+    });
+
+    it('keeps the charge glow burning underneath the reaction', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleCastingPulse(character, 0.5, 4);
+      JuiceMotionManager.scheduleSquish(character, 0.5, 8);
+
+      // Act
+      const composition = composeFrames(2);
+
+      // Assert- the flash is the pulse's alone; the squish never writes it.
+      const [ red, green, blue ] = composition.valueFor(MotionChannels.FLASH);
+      expect([ red, green, blue ]).toStrictEqual([ 180, 220, 255 ]);
+    });
+  });
+
+  describe('cancelForCharacter', () =>
+  {
+    it('settles a battler that was mid-reaction', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleCastingPulse(character, 0.5, 4);
+      composeFrames(1);
+
+      // Act
+      JuiceMotionManager.cancelForCharacter(character);
+      composeFrames(1);
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(false);
+    });
+
+    it('is harmless on a battler that was not reacting to anything', () =>
+    {
+      // Act
+      JuiceMotionManager.cancelForCharacter(character);
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(false);
     });
   });
 
   describe('frameTick', () =>
   {
-    it('does nothing when there are no queued effects', () =>
+    it('advances every queued overlay effect', () =>
     {
-      expect(() => JuiceMotionManager.frameTick()).not.toThrow();
-    });
+      // Arrange
+      const effect = buildOverlayEffect();
+      JuiceMotionManager.pushExternalEffect(effect);
 
-    it('ticks every alive queued effect', () =>
-    {
-      const sprite = {};
-      const effect = buildFakeEffect();
-      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
-      JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
-
+      // Act
       JuiceMotionManager.frameTick();
 
+      // Assert
       expect(effect.tick).toHaveBeenCalledTimes(1);
     });
 
-    it('skips ticking (and silently discards) an effect whose sprite has died', () =>
+    it('does nothing at all when the queue is empty', () =>
     {
-      const sprite = {};
-      const effect = buildFakeEffect({ isSpriteAlive: () => false });
-      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
-      JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
+      // Arrange
+      const effect = buildOverlayEffect();
 
+      // Act
       JuiceMotionManager.frameTick();
 
+      // Assert
       expect(effect.tick).not.toHaveBeenCalled();
     });
 
-    it('keeps an effect in the queue for the next frame when tick() returns true', () =>
+    it('keeps an effect that reports it has more to do', () =>
     {
-      const sprite = {};
-      const effect = buildFakeEffect({ tick: vi.fn(() => true) });
-      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
-      JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
+      // Arrange
+      const survivor = buildOverlayEffect({ tick: vi.fn(() => true) });
+      JuiceMotionManager.pushExternalEffect(survivor);
 
+      // Act
       JuiceMotionManager.frameTick();
       JuiceMotionManager.frameTick();
 
-      expect(effect.tick).toHaveBeenCalledTimes(2);
+      // Assert
+      expect(survivor.tick).toHaveBeenCalledTimes(2);
     });
 
-    it('drops an effect from the queue once tick() returns false', () =>
+    it('drops an effect that reports it has finished', () =>
     {
-      const sprite = {};
-      const effect = buildFakeEffect({ tick: vi.fn(() => false) });
-      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
-      JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
+      // Arrange
+      const finished = buildOverlayEffect({ tick: vi.fn(() => false) });
+      JuiceMotionManager.pushExternalEffect(finished);
 
+      // Act
       JuiceMotionManager.frameTick();
       JuiceMotionManager.frameTick();
 
-      expect(effect.tick).toHaveBeenCalledTimes(1);
+      // Assert
+      expect(finished.tick).toHaveBeenCalledTimes(1);
+    });
+
+    it('discards an effect whose sprite was destroyed without ticking it', () =>
+    {
+      // Arrange
+      const dead = buildOverlayEffect({ isSpriteAlive: vi.fn(() => false) });
+      const alive = buildOverlayEffect();
+      JuiceMotionManager.pushExternalEffect(dead);
+      JuiceMotionManager.pushExternalEffect(alive);
+
+      // Act
+      JuiceMotionManager.frameTick();
+      JuiceMotionManager.frameTick();
+
+      // Assert
+      expect(dead.tick).not.toHaveBeenCalled();
+      expect(alive.tick).toHaveBeenCalledTimes(2);
     });
   });
 
   describe('clearAll', () =>
   {
-    it('empties the queue so a subsequent frameTick ticks nothing', () =>
+    it('empties the overlay queue so a later frameTick ticks nothing', () =>
     {
-      const sprite = {};
-      const effect = buildFakeEffect();
-      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
-      JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
+      // Arrange
+      const effect = buildOverlayEffect();
+      JuiceMotionManager.pushExternalEffect(effect);
 
+      // Act
       JuiceMotionManager.clearAll();
       JuiceMotionManager.frameTick();
 
+      // Assert
       expect(effect.tick).not.toHaveBeenCalled();
-    });
-
-    it('clears sprite locks too, so a fresh schedule on the same sprite does not restore a stale effect', () =>
-    {
-      const sprite = {};
-      const effect = buildFakeEffect();
-      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
-      JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
-
-      JuiceMotionManager.clearAll();
-      JuiceMotionManager.scheduleSquish(sprite, 0.1, 10);
-
-      expect(effect.restore).not.toHaveBeenCalled();
-    });
-  });
-
-  describe('relinquishSpriteLock', () =>
-  {
-    it('releases the lock so a subsequent cancelForSprite call finds nothing to restore', () =>
-    {
-      const sprite = {};
-      const effect = buildFakeEffect();
-      FakeTilt.mockImplementationOnce(function() { return effect; }); // eslint-disable-line prefer-arrow-callback -- must stay new-able
-      JuiceMotionManager.scheduleTilt(sprite, 0.2, 8);
-
-      JuiceMotionManager.relinquishSpriteLock(sprite);
-      JuiceMotionManager.cancelForSprite(sprite);
-
-      expect(effect.restore).not.toHaveBeenCalled();
     });
   });
 });

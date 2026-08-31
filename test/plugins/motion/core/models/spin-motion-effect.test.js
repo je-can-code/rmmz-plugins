@@ -158,6 +158,21 @@ describe('SpinMotionEffect', () =>
       // Assert
       expect(composition.hasCenterRotation()).toBe(true);
     });
+
+    it('leaves the pivot alone when something else owns the rotation', () =>
+    {
+      // Arrange- a spin whose rotation is being discarded is invisible this frame, and moving the
+      // sprite's anchor for an invisible rotation would lift it half its own height for nothing.
+      const effect = aSpinAt({ period: 120, direction: 'cw' }, 30);
+      const composition = new MotionComposition();
+      composition.awardClaim(MotionChannels.ROTATION, { name: 'somebody-else' });
+
+      // Act
+      effect.applyTo(composition);
+
+      // Assert
+      expect(composition.hasCenterRotation()).toBe(false);
+    });
   });
 });
 //endregion plugins/motion/core/models/spin-motion-effect.test.js

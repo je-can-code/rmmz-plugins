@@ -38,7 +38,10 @@ describe('J-ABS-Juice JABS_Battler (unit, all downstream dependencies mocked)', 
   function buildBattler(overrides = {})
   {
     const battler = Object.create(globalThis.JABS_Battler.prototype);
-    return Object.assign(battler, overrides);
+
+    // alive and not casting unless a test says otherwise, so that every "does not tick" case has to
+    // name the one guard it is actually exercising rather than riding on the other.
+    return Object.assign(battler, { isCasting: () => false, isDead: () => false }, overrides);
   }
 
   describe('processCastingTimer', () =>
@@ -64,6 +67,24 @@ describe('J-ABS-Juice JABS_Battler (unit, all downstream dependencies mocked)', 
 
       battler.processCastingTimer();
 
+      expect(JuiceHookManager.tickCastingJuice).not.toHaveBeenCalled();
+    });
+
+    it('does not tick casting juice for a battler that died mid-cast', async () =>
+    {
+      // Arrange- still casting, which is the point: J-ABS keeps advancing a defeated battler's
+      // timers while its corpse plays out, and nothing clears the casting flag on the way out. The
+      // battler is deliberately left casting so death is the only guard that can stop this.
+      const { default: JuiceHookManager } =
+        await import('../../../../../../src/plugins/abs/ext/juice/managers/JuiceHookManager.js');
+      JuiceHookManager.tickCastingJuice.mockClear();
+      const battler = buildBattler({ isCasting: () => true, isDead: () => true });
+
+      // Act
+      battler.processCastingTimer();
+
+      // Assert
+      expect(originalProcessCastingTimer).toHaveBeenCalledTimes(1);
       expect(JuiceHookManager.tickCastingJuice).not.toHaveBeenCalled();
     });
   });

@@ -24,6 +24,12 @@ class SpinMotionEffect
   applyTo(composition)
   {
     composition.contribute(this, MotionChannels.ROTATION, this.currentRotation());
+
+    // the pivot only moves for a rotation that is actually being drawn. something else owning the
+    // channel means this spin is invisible this frame, and moving the sprite's anchor for an
+    // invisible rotation would shift it half its own height for no reason anyone could see.
+    if (composition.accepts(this, MotionChannels.ROTATION) === false) return;
+
     composition.flagCenterRotation();
   }
 

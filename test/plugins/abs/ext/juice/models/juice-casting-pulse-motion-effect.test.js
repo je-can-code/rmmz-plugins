@@ -1,109 +1,250 @@
 //region plugins/abs/ext/juice/models/juice-casting-pulse-motion-effect.test.js
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { installJuiceMotionGlobals } from '../fixtures/install-juice-motion-globals.js';
 
-describe('J-ABS-Juice JuiceCastingPulseMotionEffect (unit, all downstream dependencies mocked)', () =>
+describe('JuiceCastingPulseMotionEffect', () =>
 {
+  /** @type {typeof import('../../../../../../src/plugins/abs/ext/juice/models/JuiceCastingPulseMotionEffect.js').default} */
   let JuiceCastingPulseMotionEffect;
-  let JuiceMotionManager;
+
+  /** @type {typeof import('../../../../../../src/plugins/motion/core/models/MotionDeclaration.js').default} */
+  let MotionDeclaration;
+
+  /** @type {typeof import('../../../../../../src/plugins/motion/core/models/MotionComposition.js').default} */
+  let MotionComposition;
+
+  /** @type {typeof import('../../../../../../src/plugins/motion/core/core/MotionChannels.js').default} */
+  let MotionChannels;
 
   beforeAll(async () =>
   {
-    vi.resetModules();
+    installJuiceMotionGlobals();
 
-    vi.doMock('../../../../../../src/plugins/abs/ext/juice/managers/JuiceMotionManager.js', () => ({
-      default: { relinquishSpriteLock: vi.fn() },
-    }));
-
-    ({ default: JuiceCastingPulseMotionEffect } = await import('../../../../../../src/plugins/abs/ext/juice/models/JuiceCastingPulseMotionEffect.js'));
-    ({ default: JuiceMotionManager } = await import('../../../../../../src/plugins/abs/ext/juice/managers/JuiceMotionManager.js'));
+    // literal import paths, so Stryker can map mutants in these files back to this test file.
+    ({ default: JuiceCastingPulseMotionEffect } =
+      await import('../../../../../../src/plugins/abs/ext/juice/models/JuiceCastingPulseMotionEffect.js'));
+    ({ default: MotionDeclaration } =
+      await import('../../../../../../src/plugins/motion/core/models/MotionDeclaration.js'));
+    ({ default: MotionComposition } =
+      await import('../../../../../../src/plugins/motion/core/models/MotionComposition.js'));
+    ({ default: MotionChannels } =
+      await import('../../../../../../src/plugins/motion/core/core/MotionChannels.js'));
   });
 
-  beforeEach(() =>
+  /**
+   * Builds a casting pulse at the given amplitude.
+   * @param {number} amplitude How far the body swells at the peak of a pulse.
+   * @returns {Object} The effect.
+   */
+  const aPulse = amplitude =>
   {
-    JuiceMotionManager.relinquishSpriteLock.mockReset();
-  });
+    const declaration = new MotionDeclaration('charge', [ amplitude ], 'combat:reaction');
 
-  function buildSprite()
+    return new JuiceCastingPulseMotionEffect(declaration, { amplitude }, 0);
+  };
+
+  /**
+   * Advances an effect by a number of frames.
+   * @param {Object} effect The effect to run.
+   * @param {number} frames How many frames to advance.
+   * @returns {Object} The same effect.
+   */
+  const advanced = (effect, frames) =>
   {
-    return {
-      scale: { x: 1, y: 1 },
-      transform: {},
-      getBlendColor: vi.fn(() => [ 0, 0, 0, 0 ]),
-      getColorTone: vi.fn(() => [ 0, 0, 0, 0 ]),
-      setBlendColor: vi.fn(),
-      setColorTone: vi.fn(),
-    };
-  }
-
-  describe('isSpriteAlive', () =>
-  {
-    it('is false once the sprite transform has been nulled', () =>
+    for (let index = 0; index < frames; index++)
     {
-      const sprite = buildSprite();
-      const effect = new JuiceCastingPulseMotionEffect(sprite, 0.04, () => true);
-      sprite.transform = null;
-      expect(effect.isSpriteAlive()).toBe(false);
-    });
-  });
-
-  describe('restore', () =>
-  {
-    it('resets scale and reapplies the captured blend/tone baselines', () =>
-    {
-      const sprite = buildSprite();
-      const effect = new JuiceCastingPulseMotionEffect(sprite, 0.04, () => true);
-      sprite.scale.x = 5;
-      effect.restore();
-      expect(sprite.scale.x).toBe(1);
-      expect(sprite.setBlendColor).toHaveBeenCalledWith([ 0, 0, 0, 0 ]);
-      expect(sprite.setColorTone).toHaveBeenCalledWith([ 0, 0, 0, 0 ]);
-    });
-  });
-
-  describe('tick', () =>
-  {
-    it('stops, restores, and releases the sprite lock once the predicate goes false', () =>
-    {
-      const sprite = buildSprite();
-      const effect = new JuiceCastingPulseMotionEffect(sprite, 0.04, () => false);
-
-      const result = effect.tick();
-
-      expect(result).toBe(false);
-      expect(sprite.scale.x).toBe(1);
-      expect(JuiceMotionManager.relinquishSpriteLock).toHaveBeenCalledWith(sprite);
-    });
-
-    it('continues pulsing while the predicate stays true', () =>
-    {
-      const sprite = buildSprite();
-      const effect = new JuiceCastingPulseMotionEffect(sprite, 0.04, () => true);
-
-      const result = effect.tick();
-
-      expect(result).toBe(true);
-      expect(JuiceMotionManager.relinquishSpriteLock).not.toHaveBeenCalled();
-    });
-
-    it('applies a symmetric scale pulse to both axes equally', () =>
-    {
-      const sprite = buildSprite();
-      const effect = new JuiceCastingPulseMotionEffect(sprite, 0.04, () => true);
-
       effect.tick();
+    }
 
-      expect(sprite.scale.x).toBe(sprite.scale.y);
-      expect(sprite.scale.x).not.toBe(1);
+    return effect;
+  };
+
+  describe('claims', () =>
+  {
+    it('takes exclusive ownership of both scale axes', () =>
+    {
+      // Arrange
+      const effect = aPulse(0.04);
+
+      // Act
+      const claimed = effect.claims();
+
+      // Assert
+      expect(claimed).toContain(MotionChannels.SCALE_X);
+      expect(claimed).toContain(MotionChannels.SCALE_Y);
     });
 
-    it('applies a glow blend color scaled by the pulse wave', () =>
+    it('leaves the glow unclaimed, so it resolves against other flashes by strength', () =>
     {
-      const sprite = buildSprite();
-      const effect = new JuiceCastingPulseMotionEffect(sprite, 0.04, () => true);
+      // Arrange
+      const effect = aPulse(0.04);
 
-      effect.tick();
+      // Act
+      const claimed = effect.claims();
 
-      expect(sprite.setBlendColor).toHaveBeenCalledWith([ 180, 220, 255, expect.any(Number) ]);
+      // Assert
+      expect(claimed).not.toContain(MotionChannels.FLASH);
+    });
+  });
+
+  describe('periodFrames', () =>
+  {
+    it('starts at the slow end of the ramp', () =>
+    {
+      // Arrange
+      const effect = aPulse(0.04);
+
+      // Act
+      const period = effect.periodFrames();
+
+      // Assert
+      expect(period).toBe(60);
+    });
+
+    it('has contracted partway through the ramp', () =>
+    {
+      // Arrange
+      const effect = advanced(aPulse(0.04), 90);
+
+      // Act
+      const period = effect.periodFrames();
+
+      // Assert
+      expect(period).toBe(42);
+    });
+
+    it('reaches the fast end exactly when the ramp is spent', () =>
+    {
+      // Arrange
+      const effect = advanced(aPulse(0.04), 180);
+
+      // Act
+      const period = effect.periodFrames();
+
+      // Assert
+      expect(period).toBe(24);
+    });
+
+    it('settles there rather than contracting forever on a very long cast', () =>
+    {
+      // Arrange
+      const effect = advanced(aPulse(0.04), 600);
+
+      // Act
+      const period = effect.periodFrames();
+
+      // Assert
+      expect(period).toBe(24);
+    });
+  });
+
+  describe('wave', () =>
+  {
+    it('begins at the middle of a swell', () =>
+    {
+      // Arrange
+      const effect = aPulse(0.04);
+
+      // Act
+      const wave = effect.wave();
+
+      // Assert
+      expect(wave).toBe(0);
+    });
+
+    it('has risen toward the top of the first swell a quarter of a period in', () =>
+    {
+      // Arrange
+      const effect = advanced(aPulse(0.04), 15);
+
+      // Act
+      const wave = effect.wave();
+
+      // Assert
+      expect(wave).toBeCloseTo(0.99658, 4);
+    });
+  });
+
+  describe('glowFor', () =>
+  {
+    it('is dark at the bottom of a swell', () =>
+    {
+      // Arrange
+      const effect = aPulse(0.04);
+
+      // Act
+      const glow = effect.glowFor(-1);
+
+      // Assert
+      expect(glow).toStrictEqual([ 180, 220, 255, 0 ]);
+    });
+
+    it('is at full strength at the top of a swell', () =>
+    {
+      // Arrange
+      const effect = aPulse(0.04);
+
+      // Act
+      const glow = effect.glowFor(1);
+
+      // Assert
+      expect(glow).toStrictEqual([ 180, 220, 255, 96 ]);
+    });
+
+    it('is halfway lit in the middle of a swell', () =>
+    {
+      // Arrange
+      const effect = aPulse(0.04);
+
+      // Act
+      const glow = effect.glowFor(0);
+
+      // Assert
+      expect(glow).toStrictEqual([ 180, 220, 255, 48 ]);
+    });
+  });
+
+  describe('applyTo', () =>
+  {
+    it('swells both axes together, because a charge-up deforms nothing', () =>
+    {
+      // Arrange
+      const effect = advanced(aPulse(0.5), 15);
+      const composition = new MotionComposition();
+
+      // Act
+      effect.applyTo(composition);
+
+      // Assert
+      const scaleX = composition.valueFor(MotionChannels.SCALE_X);
+      expect(scaleX).toBeCloseTo(1.49829, 4);
+      expect(composition.valueFor(MotionChannels.SCALE_Y)).toBe(scaleX);
+    });
+
+    it('writes the charge glow into the flash channel', () =>
+    {
+      // Arrange
+      const effect = advanced(aPulse(0.5), 15);
+      const composition = new MotionComposition();
+
+      // Act
+      effect.applyTo(composition);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.FLASH)).toStrictEqual([ 180, 220, 255, 96 ]);
+    });
+
+    it('scales the swell by the amplitude it was given', () =>
+    {
+      // Arrange
+      const gentle = advanced(aPulse(0.1), 15);
+      const composition = new MotionComposition();
+
+      // Act
+      gentle.applyTo(composition);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBeCloseTo(1.09966, 4);
     });
   });
 });

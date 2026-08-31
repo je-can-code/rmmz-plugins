@@ -302,6 +302,62 @@ describe('TransitionMotionEffect', () =>
       // Assert
       expect(composition.valueFor(MotionChannels.SCALE_X)).toBeCloseTo(1.75, 10);
     });
+
+    it('ignores a second withdrawal, rather than restarting the journey further out', () =>
+    {
+      // Arrange- the origin is captured from where the OUTBOUND journey would be by now, which
+      // keeps advancing even while the effect is travelling home. Re-capturing it would jump the
+      // channel back outward and ease home a second time from there.
+      const effect = aTransition('scale', { percent: 200, duration: 40 });
+      advance(effect, 20);
+      effect.requestRemoval();
+      advance(effect, 10);
+
+      // Act
+      effect.requestRemoval();
+      const composition = composedFrom(effect);
+
+      // Assert- re-capturing would restart from 1.9375 instead of 1.75 and report 1.52734 here.
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBeCloseTo(1.421875, 10);
+    });
+  });
+
+  describe('cancelRemoval', () =>
+  {
+    it('abandons the journey home and carries on to the target', () =>
+    {
+      // Arrange
+      const effect = aTransition('scale', { percent: 200, duration: 40 });
+      advance(effect, 20);
+      effect.requestRemoval();
+      advance(effect, 10);
+
+      // Act
+      effect.cancelRemoval();
+      const composition = composedFrom(effect);
+
+      // Assert- back on the outbound curve, and no longer counting down to being forgotten.
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBeCloseTo(1.9375, 10);
+      expect(effect.isDiscardable()).toBe(false);
+    });
+
+    it('starts a later withdrawal over from where the sprite has got to', () =>
+    {
+      // Arrange- the release values captured by the first withdrawal have to be forgotten, or the
+      // next one eases home from a position the sprite left a long time ago.
+      const effect = aTransition('scale', { percent: 200, duration: 40 });
+      advance(effect, 10);
+      effect.requestRemoval();
+      effect.cancelRemoval();
+      advance(effect, 30);
+
+      // Act
+      effect.requestRemoval();
+      const composition = composedFrom(effect);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBeCloseTo(2, 10);
+    });
   });
 });
 //endregion plugins/motion/core/models/transition-motion-effect.test.js

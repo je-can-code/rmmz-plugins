@@ -1,114 +1,213 @@
 //region plugins/abs/ext/juice/models/juice-flip-body-motion-effect.test.js
-import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { beforeAll, describe, expect, it } from 'vitest';
+import { installJuiceMotionGlobals } from '../fixtures/install-juice-motion-globals.js';
 
-describe('J-ABS-Juice JuiceFlipBodyMotionEffect (unit, all downstream dependencies mocked)', () =>
+describe('JuiceFlipBodyMotionEffect', () =>
 {
+  /** @type {typeof import('../../../../../../src/plugins/abs/ext/juice/models/JuiceFlipBodyMotionEffect.js').default} */
   let JuiceFlipBodyMotionEffect;
-  let JuiceMotionManager;
+
+  /** @type {typeof import('../../../../../../src/plugins/motion/core/models/MotionDeclaration.js').default} */
+  let MotionDeclaration;
+
+  /** @type {typeof import('../../../../../../src/plugins/motion/core/models/MotionComposition.js').default} */
+  let MotionComposition;
+
+  /** @type {typeof import('../../../../../../src/plugins/motion/core/core/MotionChannels.js').default} */
+  let MotionChannels;
 
   beforeAll(async () =>
   {
-    vi.resetModules();
+    installJuiceMotionGlobals();
 
-    vi.doMock('../../../../../../src/plugins/abs/ext/juice/managers/JuiceMotionManager.js', () => ({
-      default: { relinquishSpriteLock: vi.fn() },
-    }));
-
-    ({ default: JuiceFlipBodyMotionEffect } = await import('../../../../../../src/plugins/abs/ext/juice/models/JuiceFlipBodyMotionEffect.js'));
-    ({ default: JuiceMotionManager } = await import('../../../../../../src/plugins/abs/ext/juice/managers/JuiceMotionManager.js'));
+    // literal import paths, so Stryker can map mutants in these files back to this test file.
+    ({ default: JuiceFlipBodyMotionEffect } =
+      await import('../../../../../../src/plugins/abs/ext/juice/models/JuiceFlipBodyMotionEffect.js'));
+    ({ default: MotionDeclaration } =
+      await import('../../../../../../src/plugins/motion/core/models/MotionDeclaration.js'));
+    ({ default: MotionComposition } =
+      await import('../../../../../../src/plugins/motion/core/models/MotionComposition.js'));
+    ({ default: MotionChannels } =
+      await import('../../../../../../src/plugins/motion/core/core/MotionChannels.js'));
   });
 
-  beforeEach(() =>
+  /**
+   * Builds a flip with the given shape.
+   * @param {number} turns How many complete turns to make.
+   * @param {number} duration How long the whole flip takes.
+   * @param {string} direction Which way it turns.
+   * @returns {Object} The effect.
+   */
+  const aFlip = (turns, duration, direction) =>
   {
-    JuiceMotionManager.relinquishSpriteLock.mockReset();
+    const parameters = { turns, duration, direction };
+    const declaration = new MotionDeclaration('flip', [ turns, duration, direction ], 'combat:reaction');
+
+    return new JuiceFlipBodyMotionEffect(declaration, parameters, 0);
+  };
+
+  /**
+   * Advances an effect and hands back the composition it writes.
+   * @param {Object} effect The effect to run.
+   * @param {number} frames How many frames to advance first.
+   * @returns {Object} The composition.
+   */
+  const composedAfter = (effect, frames) =>
+  {
+    for (let index = 0; index < frames; index++)
+    {
+      effect.tick();
+    }
+
+    const composition = new MotionComposition();
+    effect.applyTo(composition);
+
+    return composition;
+  };
+
+  describe('claims', () =>
+  {
+    it('takes exclusive ownership of rotation', () =>
+    {
+      // Arrange
+      const effect = aFlip(1, 24, 'cw');
+
+      // Act
+      const claimed = effect.claims();
+
+      // Assert
+      expect(claimed).toStrictEqual([ MotionChannels.ROTATION ]);
+    });
   });
 
-  function buildSprite()
+  describe('directionSign', () =>
   {
-    return { rotation: 0, anchor: { x: 0.5, y: 1 }, transform: {}, _juiceFlipping: false };
-  }
-
-  describe('constructor', () =>
-  {
-    it('re-centers the anchor to the visual midpoint for in-place rotation', () =>
+    it('turns clockwise when asked to', () =>
     {
-      const sprite = buildSprite();
-      const effect = new JuiceFlipBodyMotionEffect(sprite, 1, 10);
-      expect(effect).toBeInstanceOf(JuiceFlipBodyMotionEffect);
-      expect(sprite.anchor.x).toBe(0.5);
-      expect(sprite.anchor.y).toBe(0.5);
+      // Arrange
+      const effect = aFlip(1, 24, 'cw');
+
+      // Act
+      const sign = effect.directionSign();
+
+      // Assert
+      expect(sign).toBe(1);
     });
 
-    it('clamps a non-positive repeat count up to 1', () =>
+    it('turns counter-clockwise when asked to', () =>
     {
-      const effect = new JuiceFlipBodyMotionEffect(buildSprite(), 1, 10, 0);
-      expect(effect._repeatCount).toBe(1);
+      // Arrange
+      const effect = aFlip(1, 24, 'ccw');
+
+      // Act
+      const sign = effect.directionSign();
+
+      // Assert
+      expect(sign).toBe(-1);
+    });
+
+    it('turns clockwise for a direction nobody recognises, rather than standing still', () =>
+    {
+      // Arrange
+      const effect = aFlip(1, 24, 'widdershins');
+
+      // Act
+      const sign = effect.directionSign();
+
+      // Assert
+      expect(sign).toBe(1);
     });
   });
 
-  describe('isSpriteAlive', () =>
+  describe('currentRotation', () =>
   {
-    it('is true while the sprite transform is present', () =>
+    it('has travelled a quarter turn a quarter of the way through', () =>
     {
-      const sprite = buildSprite();
-      const effect = new JuiceFlipBodyMotionEffect(sprite, 1, 10);
-      expect(effect.isSpriteAlive()).toBe(true);
+      // Arrange
+      const effect = aFlip(1, 24, 'cw');
+
+      // Act
+      for (let index = 0; index < 6; index++)
+      {
+        effect.tick();
+      }
+
+      // Assert
+      expect(effect.currentRotation()).toBeCloseTo(Math.PI / 2, 10);
     });
 
-    it('is false once the sprite transform has been nulled', () =>
+    it('lands on a whole number of turns at the end, so nothing snaps when it is withdrawn', () =>
     {
-      const sprite = buildSprite();
-      const effect = new JuiceFlipBodyMotionEffect(sprite, 1, 10);
-      sprite.transform = null;
-      expect(effect.isSpriteAlive()).toBe(false);
+      // Arrange
+      const effect = aFlip(2, 24, 'cw');
+
+      // Act
+      for (let index = 0; index < 24; index++)
+      {
+        effect.tick();
+      }
+
+      // Assert
+      expect(effect.currentRotation()).toBeCloseTo(4 * Math.PI, 10);
+    });
+
+    it('travels the same distance backwards when turning counter-clockwise', () =>
+    {
+      // Arrange
+      const effect = aFlip(1, 24, 'ccw');
+
+      // Act
+      for (let index = 0; index < 6; index++)
+      {
+        effect.tick();
+      }
+
+      // Assert
+      expect(effect.currentRotation()).toBeCloseTo(-Math.PI / 2, 10);
     });
   });
 
-  describe('tick', () =>
+  describe('applyTo', () =>
   {
-    it('flags the sprite as juice-flipping on the very first tick', () =>
+    it('writes the current angle into the rotation channel', () =>
     {
-      const sprite = buildSprite();
-      const effect = new JuiceFlipBodyMotionEffect(sprite, 1, 4);
-      effect.tick();
-      expect(sprite._juiceFlipping).toBe(true);
+      // Arrange
+      const effect = aFlip(1, 24, 'cw');
+
+      // Act
+      const composition = composedAfter(effect, 12);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.ROTATION)).toBeCloseTo(Math.PI, 10);
     });
 
-    it('sweeps rotation clockwise for a positive direction sign', () =>
+    it('asks the view to rotate about the middle, so the body turns rather than orbiting its feet', () =>
     {
-      const sprite = buildSprite();
-      const effect = new JuiceFlipBodyMotionEffect(sprite, 1, 4, 1);
-      effect.tick();
-      expect(sprite.rotation).toBeCloseTo(0.25 * Math.PI * 2);
+      // Arrange
+      const effect = aFlip(1, 24, 'cw');
+
+      // Act
+      const composition = composedAfter(effect, 1);
+
+      // Assert
+      expect(composition.hasCenterRotation()).toBe(true);
     });
 
-    it('sweeps rotation counter-clockwise for a negative direction sign', () =>
+    it('leaves the pivot alone when something else owns the rotation', () =>
     {
-      const sprite = buildSprite();
-      const effect = new JuiceFlipBodyMotionEffect(sprite, -1, 4, 1);
-      effect.tick();
-      expect(sprite.rotation).toBeCloseTo(-0.25 * Math.PI * 2);
-    });
+      // Arrange- a battler killed mid-flip is the real case. The collapse claims rotation and
+      // topples the body about its feet on purpose, so a flip that kept asking for a centred pivot
+      // would hoist the corpse half a body-height into the air for the whole death.
+      const effect = aFlip(1, 24, 'cw');
+      const composition = new MotionComposition();
+      composition.awardClaim(MotionChannels.ROTATION, { name: 'the-collapse' });
 
-    it('scales the total sweep by the repeat count', () =>
-    {
-      const sprite = buildSprite();
-      const effect = new JuiceFlipBodyMotionEffect(sprite, 1, 4, 2);
+      // Act
       effect.tick();
-      expect(sprite.rotation).toBeCloseTo(0.25 * Math.PI * 2 * 2);
-    });
+      effect.applyTo(composition);
 
-    it('restores rotation, anchor, and the flipping flag once the duration completes', () =>
-    {
-      const sprite = buildSprite();
-      const effect = new JuiceFlipBodyMotionEffect(sprite, 1, 2);
-      effect.tick();
-      const result = effect.tick();
-      expect(result).toBe(false);
-      expect(sprite._juiceFlipping).toBe(false);
-      expect(sprite.rotation).toBe(0);
-      expect(sprite.anchor.y).toBe(1);
-      expect(JuiceMotionManager.relinquishSpriteLock).toHaveBeenCalledWith(sprite);
+      // Assert
+      expect(composition.hasCenterRotation()).toBe(false);
     });
   });
 });

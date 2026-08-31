@@ -7,6 +7,7 @@ import {
   setPluginContextToJBase,
 } from '../../../_component/fixtures/install-abs-host-globals.js';
 import {
+  installJMotionVersion,
   installJuiceExternalConfig,
   SAMPLE_JUICE_CONFIG,
   setPluginContextToJabsJuice,
@@ -32,6 +33,9 @@ describe('J-ABS-Juice metadata (direct src import)', () =>
     // this extension reads its tuning out of J-ABS's parsed external configuration rather than its
     // own plugin parameters, and J-ABS guarantees that config is present before extensions run.
     installJuiceExternalConfig();
+
+    // J-Motion owns every motion this plugin declares, so boot refuses to continue without it.
+    installJMotionVersion();
 
     setPluginContextToJabsJuice();
     await import('../../../../../../src/plugins/abs/ext/juice/_metadata/initialization.js');
@@ -92,7 +96,6 @@ describe('J-ABS-Juice metadata (direct src import)', () =>
     expect(Aliased.JABS_Engine).toBeInstanceOf(Map);
     expect(Aliased.JABS_Battler).toBeInstanceOf(Map);
     expect(Aliased.Scene_Map).toBeInstanceOf(Map);
-    expect(Aliased.Sprite_Character).toBeInstanceOf(Map);
   });
 
   it('starts every alias map empty so the patching code owns each entry', () =>
@@ -104,7 +107,6 @@ describe('J-ABS-Juice metadata (direct src import)', () =>
     expect(Aliased.JABS_Engine.size).toBe(0);
     expect(Aliased.JABS_Battler.size).toBe(0);
     expect(Aliased.Scene_Map.size).toBe(0);
-    expect(Aliased.Sprite_Character.size).toBe(0);
   });
 
   it('completes the base plugin metadata initialization it extends', () =>
@@ -145,6 +147,24 @@ describe('J-ABS-Juice metadata (direct src import)', () =>
 
       // restore the real accessor rather than relying on restoreAllMocks.
       globalThis.J.ABS.Metadata.version.version = originalVersion;
+    });
+
+    it('throws when J-Motion does not satisfy the minimum required version', async () =>
+    {
+      // Arrange: both earlier checks have to keep passing so this is the one that trips. A stale
+      // J-Motion is the quiet failure this exists for — every class this plugin needs still
+      // resolves, so nothing else in the ship would ever notice.
+      vi.resetModules();
+      const originalVersion = globalThis.J.MOTION.Metadata.version.version;
+      globalThis.J.MOTION.Metadata.version.version = () => '0.0.1';
+      setPluginContextToJabsJuice();
+
+      // Act & Assert
+      await expect(import('../../../../../../src/plugins/abs/ext/juice/_metadata/initialization.js'))
+        .rejects.toThrow(/missing J-Motion/);
+
+      // restore the real accessor rather than relying on restoreAllMocks.
+      globalThis.J.MOTION.Metadata.version.version = originalVersion;
     });
   });
 });

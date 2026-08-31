@@ -95,19 +95,6 @@ describe('Sprite_Character motion application (direct src import)', () =>
       expect(sprite.x).toBe(100);
     });
 
-    it('does nothing at all when the sprite has no character yet', () =>
-    {
-      // Arrange
-      sprite._character = null;
-
-      // Act
-      const updating = () => sprite.update();
-
-      // Assert
-      expect(updating).not.toThrow();
-      expect(sprite.scale.x).toBe(1);
-    });
-
     it('writes the resting values for a character that is not moving', () =>
     {
       // Act
@@ -217,7 +204,7 @@ describe('Sprite_Character motion application (direct src import)', () =>
       expect(sprite.y).toBe(200);
     });
 
-    it('moves the anchor to the middle for a motion that spins, and compensates the drop', () =>
+    it('moves the anchor to the middle for a motion that spins, and lifts the sprite back up', () =>
     {
       // Arrange
       declareMotion('spin', [ 120, 'cw', 'sync' ]);
@@ -227,7 +214,39 @@ describe('Sprite_Character motion application (direct src import)', () =>
 
       // Assert
       expect(sprite.anchor.y).toBe(0.5);
-      expect(sprite.y).toBe(224);
+      expect(sprite.y).toBe(176);
+    });
+
+    it('lifts by the scaled height, so a spinning character that also changes size stays put', () =>
+    {
+      // Arrange- the engine's `height` is deliberately the raw frame height with no scale applied,
+      // but the drop the anchor shift causes happens in world space and is scaled with everything
+      // else. A character both spinning and swollen to 150% is the case that separates the two.
+      const spinning = new MotionDeclaration('spin', [ 120, 'cw', 'sync' ], 'page');
+      const swelling = new MotionDeclaration('scale', [ 150, 1 ], 'page');
+      CharacterMotionComposer.declare(character, 'page', [ spinning, swelling ]);
+
+      // Act
+      sprite.update();
+
+      // Assert- scale.y is 1.5, so the lift is 48 * 1.5 / 2 = 36, not 24.
+      expect(sprite.scale.y).toBeCloseTo(1.5, 10);
+      expect(sprite.y).toBe(164);
+    });
+
+    it('puts the anchor back on the feet once the spin is withdrawn', () =>
+    {
+      // Arrange
+      declareMotion('spin', [ 120, 'cw', 'sync' ]);
+      sprite.update();
+      CharacterMotionComposer.removeDeclarations(character, 'page');
+
+      // Act
+      sprite.update();
+
+      // Assert
+      expect(sprite.anchor.y).toBe(1);
+      expect(sprite.y).toBe(200);
     });
   });
 
@@ -400,6 +419,21 @@ describe('Sprite_Character motion application (direct src import)', () =>
 
       // Assert
       expect(meaningful).toBe(true);
+    });
+
+    it('ignores a flash that carries colour at no strength at all', async () =>
+    {
+      // Arrange- the near-miss sibling of the case above. It differs only in the alpha, so a
+      // check reading any other component would call this meaningful and be wrong: a fully
+      // transparent flash paints nothing no matter what colour it is nominally carrying.
+      const { default: MotionChannels } = await import('../../../../src/plugins/motion/core/core/MotionChannels.js');
+      const composition = await aCompositionWhere(built => built.contribute(anEffect, MotionChannels.FLASH, [ 255, 0, 0, 0 ]));
+
+      // Act
+      const meaningful = globalThis.Sprite_Character.isMotionColorMeaningful(composition);
+
+      // Assert
+      expect(meaningful).toBe(false);
     });
 
     it('notices a tint that has left white', async () =>

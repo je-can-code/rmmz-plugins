@@ -21,10 +21,20 @@ describe('J-ABS-Juice JuiceBaseEffect (unit, pure class, no downstream dependenc
 
   describe('restore', () =>
   {
-    it('is a no-op by default', () =>
+    it('leaves the effect untouched by default, so a subclass opts in rather than out', () =>
     {
+      // Arrange- snapshotting the instance is what makes this load-bearing. `not.toThrow` alone
+      // passes for a restore() that quietly mutates the effect, which is the whole thing the
+      // default is promising not to do.
       const effect = new JuiceBaseEffect();
-      expect(() => effect.restore()).not.toThrow();
+      const before = { ...effect };
+
+      // Act
+      effect.restore();
+
+      // Assert
+      expect({ ...effect }).toStrictEqual(before);
+      expect(Object.keys(effect)).toHaveLength(0);
     });
   });
 

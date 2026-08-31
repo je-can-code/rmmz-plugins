@@ -73,9 +73,27 @@ class CharacterMotionComposer
       return;
     }
 
+    // this source withdrew a moment ago and is already back asking for the same thing, while the
+    // effects it withdrew are still easing home. Take the withdrawal back rather than building a
+    // second set — an effect travelling home and an effect travelling out both write the same
+    // channel, and on a channel nobody claims those two values combine into one nobody asked for.
+    if (CharacterMotionComposer.#reclaimWithdrawn(state, sourceKey, declarations) === true)
+    {
+      state.declarationsBySource.set(sourceKey, declarations);
+      CharacterMotionComposer.#scheduleExpiry(state, sourceKey, expiryFrames);
+
+      return;
+    }
+
     // retire whatever this source had before making its new request. this clears the old clock as
     // well, which is why the new one is set afterwards rather than before.
     CharacterMotionComposer.removeDeclarations(character, sourceKey);
+
+    // and forget anything it left winding down. a source replacing its own declarations is taking
+    // the channel over rather than handing it back, so an effect still easing home from the old
+    // request would compose with the new one for the length of its release.
+    state.effects = state.effects
+      .filter(effect => CharacterMotionComposer.#isFromSource(effect, sourceKey) === false);
 
     state.declarationsBySource.set(sourceKey, declarations);
     declarations.forEach(declaration => state.effects.push(CharacterMotionComposer.#buildEffect(declaration)), this);
@@ -99,6 +117,26 @@ class CharacterMotionComposer
     state.effects
       .filter(effect => CharacterMotionComposer.#isFromSource(effect, sourceKey))
       .forEach(effect => effect.requestRemoval());
+  }
+
+  /**
+   * Withdraws every declaration on a character that came from one kind of source.
+   *
+   * This exists for the case where a character's whole relationship to a kind of source has changed
+   * rather than one declaration within it — most of all a character that now represents somebody
+   * else, which is what party cycling does to the player. Withdrawing declaration by declaration
+   * cannot work there, because the thing that would know which ones to withdraw is exactly the thing
+   * that just changed.
+   * @param {Game_CharacterBase} character The character to clear.
+   * @param {string} sourceKind The kind of source to withdraw, ex: `state`.
+   */
+  static removeDeclarationKind(character, sourceKind)
+  {
+    const state = CharacterMotionComposer.#stateFor(character);
+    const keys = Array.from(state.declarationsBySource.keys());
+    const matching = keys.filter(sourceKey => CharacterMotionComposer.#kindOf(sourceKey) === sourceKind);
+
+    matching.forEach(sourceKey => CharacterMotionComposer.removeDeclarations(character, sourceKey));
   }
 
   /**
@@ -254,12 +292,77 @@ class CharacterMotionComposer
   {
     const sourceKey = effect.declaration()
       .sourceKey();
-    const [ sourceKind ] = sourceKey.split(':');
+    const sourceKind = CharacterMotionComposer.#kindOf(sourceKey);
 
     // an unknown source is treated as ambient, the least assertive rank there is.
     if (CharacterMotionComposer.#sourcePriorities.has(sourceKind) === false) return 0;
 
     return CharacterMotionComposer.#sourcePriorities.get(sourceKind);
+  }
+
+  /**
+   * The kind of source a key names, which is everything in front of the colon.
+   *
+   * Source keys carry an id for anything there can be several of at once — `state:42`, `combat:death`
+   * — and the part in front is what says how the declaration should behave.
+   * @param {string} sourceKey The source key to read.
+   * @returns {string}
+   */
+  static #kindOf(sourceKey)
+  {
+    const [ sourceKind ] = sourceKey.split(':');
+
+    return sourceKind;
+  }
+
+  /**
+   * Resumes a source's withdrawn effects when it comes straight back asking for the same thing.
+   *
+   * Only an exact match resumes. A source that changed its mind about what it wants gets a fresh
+   * set, because the running effects are animating toward targets nobody is asking for any more.
+   * @param {Object} state The character's motion state.
+   * @param {string} sourceKey The source declaring again.
+   * @param {MotionDeclaration[]} declarations What it is asking for now.
+   * @returns {boolean} True when the withdrawal was taken back.
+   */
+  static #reclaimWithdrawn(state, sourceKey, declarations)
+  {
+    const winding = state.effects.filter(effect => CharacterMotionComposer.#isWindingDown(effect, sourceKey));
+
+    // nothing of this source's is still running, so there is nothing to take back.
+    if (winding.length === 0) return false;
+
+    if (winding.length !== declarations.length) return false;
+
+    const sameRequest = winding.every((effect, index) => effect.declaration()
+      .matches(declarations.at(index)));
+
+    if (sameRequest === false) return false;
+
+    winding.forEach(effect => effect.cancelRemoval());
+
+    return true;
+  }
+
+  /**
+   * Determines whether an effect from a source is still travelling back to its rest state.
+   *
+   * This is the difference between an effect that is *gone* and one that is *going*. Most motions
+   * stop the instant their declaration does, and a source that re-declares over the top of one of
+   * those genuinely wants a fresh start — a battler struck twice by the same weapon has to flinch
+   * twice. Only a motion that parks a channel somewhere visible outlives its declaration, and only
+   * that kind is worth resuming rather than rebuilding.
+   * @param {MotionEffect} effect The effect being tested.
+   * @param {string} sourceKey The source declaring again.
+   * @returns {boolean}
+   */
+  static #isWindingDown(effect, sourceKey)
+  {
+    if (CharacterMotionComposer.#isFromSource(effect, sourceKey) === false) return false;
+
+    if (effect.hasRemovalRequested() === false) return false;
+
+    return effect.isDiscardable() === false;
   }
 
   /**

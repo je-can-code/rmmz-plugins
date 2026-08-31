@@ -4215,6 +4215,46 @@ type ids. A `default` row is mandatory in the config as the fallback.
 ```
 This skill's swing uses the `heavy` tilt/swing multiplier row instead of the inferred one.
 
+### `<motion:[squish]>` / `<motion:[tilt]>` / `<motion:[flip]>` / `<motion:[charge]>`
+
+**Applies to:**
+Anything that can declare a motion — event pages, states, plugin commands
+
+**When:**
+for as long as the declaration exists
+
+**Effect:**
+the four shapes a battler makes in combat, registered as ordinary J-Motion types so that anything
+able to declare a motion can ask for one. Combat itself never uses these tags — it declares the same
+four motions directly, with parameters resolved from skill notetags and `data/config.jabs.json` — so
+these exist for the cases combat does not reach: a cutscene, an ambient event, a state.
+
+| Type | Parameters | Does |
+|---|---|---|
+| `squish` | INTENSITY, DURATION, REPEATS | flattens and widens, the shape of an impact |
+| `tilt` | PEAK, DURATION | leans over and comes back, the shape of a swing |
+| `flip` | TURNS, DURATION, DIRECTION | turns end over end; DIRECTION is `cw` or `ccw` |
+| `charge` | AMPLITUDE | swells and glows, accelerating, until it is withdrawn |
+
+Unlike J-Motion's ambient types these claim the channels they use, so a reaction reads exactly as
+tuned rather than compounding with whatever the character was already doing. All four begin and end
+at rest, so any of them can be withdrawn on any frame without the sprite snapping.
+
+`charge` is the only one with no duration — it builds for as long as it is declared, which is what
+lets a cast of any length end cleanly.
+
+```
+<motion:[squish, 0.3, 10]>
+```
+This event flattens by 30% over ten frames whenever the page is active.
+
+```
+<motion:[flip, 2, 48, ccw]>
+```
+This event turns over backwards twice across roughly eight tenths of a second.
+
+**See also:** `<juiceMotion:NAME>`, `<motion:[TYPE]>`
+
 ---
 
 ## J-ABS-Poses (`src/plugins/abs/ext/poses/`)
@@ -5513,6 +5553,10 @@ The last five travel somewhere and stay there, and ease back out when they are r
 `scale` applied by a state swells the character as the state lands and settles it again when the
 state drops, in both directions, with nothing extra written.
 
+That table is the roster core ships with, not the whole vocabulary: extensions register their own
+types and they are usable everywhere these are. J-Motion-ABS adds `collapse`, and J-ABS-Juice adds
+`squish`, `tilt`, `flip` and `charge` — each documented under the plugin that owns it.
+
 ```
 <motion:[breathe]>
 ```
@@ -5548,6 +5592,120 @@ This character is tinted a pale red.
 sprite gives it its own render pass for the remainder of its life, and the engine never takes that
 back. On a map holding a dozen coloured characters this is nothing; on one holding a hundred it is
 worth knowing. Everything that only moves, scales or rotates costs nothing beyond the arithmetic.
+
+---
+
+## J-Motion-ABS (`src/plugins/motion/ext/abs/`)
+
+### `<motion:[TYPE, PARAM, ...]>` on a state
+
+**Applies to:**
+States
+
+**When:**
+the state is applied, and for as long as it remains
+
+**Effect:**
+gives the afflicted battler's sprite a motion for the duration of the state. This is J-Motion's own
+tag, read by the same parser — see the J-Motion section above for every type and parameter. What
+this extension adds is that a state can carry it, which requires knowing which sprite belongs to
+which battler, and only J-ABS holds both.
+
+Each state's motions are filed under that state alone, so one expiring never disturbs the ambient
+motion the creature was authored with, nor any other state's. A breathing enemy that catches fire is
+breathing *and* flickering, and stops flickering by itself when the fire goes out.
+
+```
+<motion:[flicker]>
+```
+Anything afflicted by this state flickers while it lasts.
+
+```
+<motion:[scale, 150]>
+```
+Anything afflicted by this state swells to half again its size, easing up as the state lands and
+settling back down when it drops. Both directions come free — this is what makes an `origin` or
+champion affix read at a glance.
+
+**See also:** `<deathMotion>`
+
+---
+
+### `<deathMotion:STYLE>`
+
+**Applies to:**
+Enemies, States
+
+**When:**
+the enemy is defeated
+
+**Effect:**
+chooses how a battler collapses when it dies. Every enemy has a death animation whether or not one
+was authored — before this plugin they simply stopped rendering on the frame they died — so this tag
+chooses *which*, never *whether*.
+
+Three styles, which are speeds as much as shapes:
+
+| Style | Frames | Reads as |
+|---|---|---|
+| `swift` | 30 | a quick vertical squash. Trash mobs, gone in half a second |
+| `moderate` | 60 | a topple, falling and fading. Something worth having fought |
+| `slow` | 120 | a long shimmering sink. Something whose death is a moment |
+
+**Which declaration wins:** the battler's states are consulted first, and among several the one with
+the highest state **priority** as set in the editor takes it — but only states that actually declare
+a death are considered, so a high-priority affix with no opinion does not silently override a lower
+one that has. Failing any state, the enemy's own note. Failing that, the configured default.
+
+That ordering is what makes affixes work without authoring anything twice: affixes are states, so an
+elite version of an ordinary creature dies harder purely because of what is stuck to it.
+
+The corpse is held on the map for exactly the style's duration and not one frame longer. Rewards and
+loot still drop at the moment of defeat, so gold and items appear while the body is still coming
+apart.
+
+Durations live in `data/config.motion.json` under `death`, so the pacing of every death in the game
+is one file.
+
+```
+<deathMotion:slow>
+```
+This enemy takes its time dying.
+
+```
+<deathMotion:moderate>
+```
+On a champion affix state: anything wearing that affix topples rather than being swatted.
+
+**See also:** `<noDeathMotion>`, `<motion:[TYPE]>`
+
+---
+
+### `<noDeathMotion>`
+
+**Applies to:**
+Enemies, States
+
+**When:**
+the enemy is defeated
+
+**Effect:**
+suppresses the death animation entirely, and with it the delay that holds the corpse on the map. The
+enemy leaves the instant it is defeated, exactly as everything did before this plugin existed.
+
+For anything that runs its own show on death — a boss with a scripted collapse, an enemy whose death
+event actions do something more interesting than melting — the automatic animation is in the way,
+and the frames it holds open are worse than in the way.
+
+This outranks everything, from either a state or the enemy itself. A state carrying it suppresses a
+death the enemy asked for, and vice versa.
+
+```
+<noDeathMotion>
+```
+This enemy handles its own death.
+
+**See also:** `<deathMotion>`
 
 ---
 

@@ -21,6 +21,16 @@ globalThis.J ||= {};
   {
     throw new Error(`Either missing J-ABS or has a lower version than the required: ${requiredJabsVersion}`);
   }
+
+  // Check to ensure we have the minimum required version of the J-Motion plugin, which owns every
+  // motion this plugin declares. Without this check a too-old J-Motion produces no error at all -
+  // just silently wrong motion - because nothing else in this ship ever inspects it.
+  const requiredMotionVersion = '1.1.0';
+  const hasMotionRequirement = J.BASE.Helpers.satisfies(J.MOTION.Metadata.version.version(), requiredMotionVersion);
+  if (hasMotionRequirement === false)
+  {
+    throw new Error(`Either missing J-Motion or has a lower version than the required: ${requiredMotionVersion}`);
+  }
 })();
 
 //endregion version checks
@@ -42,7 +52,6 @@ J.ABS.EXT.JUICE.Aliased = {};
 J.ABS.EXT.JUICE.Aliased.JABS_Engine = new Map();
 J.ABS.EXT.JUICE.Aliased.JABS_Battler = new Map();
 J.ABS.EXT.JUICE.Aliased.Scene_Map = new Map();
-J.ABS.EXT.JUICE.Aliased.Sprite_Character = new Map();
 
 /**
  * All regular expressions used by this plugin.
