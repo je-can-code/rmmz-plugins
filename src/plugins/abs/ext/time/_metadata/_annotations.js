@@ -29,6 +29,12 @@
  * morning schedules tomorrow's morning, not the one already underway.
  *
  * NEW METHODS
+ * - game-minutes: a duration measured on the game clock rather than on
+ *                 playtime, which is what core's [seconds, N] measures.
+ *     <respawn:[game-minutes, 30]>
+ *     Thirty in-game minutes, so it runs at whatever rate the clock is
+ *     configured for and freezes whenever the clock is blocked.
+ *
  * - time-of-day:  the next time a time of day begins.
  *     <respawn:[time-of-day, morning]>
  *     Valid values: night, dawn, morning, afternoon, evening, twilight.

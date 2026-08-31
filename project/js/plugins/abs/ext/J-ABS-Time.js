@@ -29,6 +29,12 @@
  * morning schedules tomorrow's morning, not the one already underway.
  *
  * NEW METHODS
+ * - game-minutes: a duration measured on the game clock rather than on
+ *                 playtime, which is what core's [seconds, N] measures.
+ *     <respawn:[game-minutes, 30]>
+ *     Thirty in-game minutes, so it runs at whatever rate the clock is
+ *     configured for and freezes whenever the clock is blocked.
+ *
  * - time-of-day:  the next time a time of day begins.
  *     <respawn:[time-of-day, morning]>
  *     Valid values: night, dawn, morning, afternoon, evening, twilight.
@@ -198,6 +204,36 @@ var JABS_TimeRespawnMethods = class {
 		]);
 	}
 	/**
+	* Schedules a duration measured on the game clock: come back N in-game minutes from now.
+	*
+	* This is the duration sibling of core's playtime "seconds"- same statement, different clock.
+	* The duration cannot simply be added to the epoch scalar, because that scalar is an ordering
+	* with phantom day-31 gaps at artificial month boundaries; instead the minutes fold through
+	* real calendar arithmetic into a target moment, which then encodes exactly.
+	* @param {string} param The number of in-game minutes to wait.
+	* @returns {number|null} The due scalar, or null for a non-positive or non-numeric duration.
+	*/
+	static scheduleGameMinutes(param) {
+		const minutes = parseInt(param);
+		if (!Number.isFinite(minutes) || minutes <= 0) return null;
+		const now = $gameTime.currentTime();
+		const totalMinutes = now.minutes + minutes;
+		const targetMinute = totalMinutes % 60;
+		const totalHours = now.hours + Math.floor(totalMinutes / 60);
+		const targetHour = totalHours % 24;
+		const dayCount = Math.floor(totalHours / 24);
+		const todayAtClock = $gameTime.toTimeSnapshot([
+			now.seconds,
+			targetMinute,
+			targetHour,
+			now.days,
+			now.months,
+			now.years
+		]);
+		const target = this.addDays(todayAtClock, dayCount);
+		return this.epochOf(target);
+	}
+	/**
 	* Schedules the start of the next occurrence of a time of day, strictly after now.
 	* Dying during the morning schedules tomorrow's morning, not the one already underway.
 	* @param {string} param The name of the time of day, like "morning".
@@ -298,6 +334,20 @@ var JABS_TimeRespawnMethods = class {
 * Register every calendar method with core's respawn registry. Each shares the single epoch-based
 * due check, because every scheduler above encodes into the same scalar space.
 */
+JABS_RespawnManager.registerMethod("game-minutes", {
+	/**
+	* Schedules a duration measured in in-game minutes.
+	* @param {string} param The number of in-game minutes, like 30.
+	* @returns {number|null}
+	*/
+	schedule: (param) => JABS_TimeRespawnMethods.scheduleGameMinutes(param),
+	/**
+	* Determines whether the scheduled calendar moment has passed.
+	* @param {number} due The due scalar for the scheduled moment.
+	* @returns {boolean}
+	*/
+	isDue: (due) => JABS_TimeRespawnMethods.isDue(due)
+});
 JABS_RespawnManager.registerMethod("time-of-day", {
 	/**
 	* Schedules the start of the next occurrence of a time of day.

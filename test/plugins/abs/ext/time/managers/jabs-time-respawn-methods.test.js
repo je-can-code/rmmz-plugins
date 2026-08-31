@@ -252,6 +252,85 @@ describe('JABS_TimeRespawnMethods (unit, all cross-ship globals stubbed)', () =>
     });
   });
 
+  describe('scheduleGameMinutes', () =>
+  {
+    it('schedules nothing for a non-numeric duration', () =>
+    {
+      // Arrange
+      const param = 'a while';
+
+      // Act
+      const due = JABS_TimeRespawnMethods.scheduleGameMinutes(param);
+
+      // Assert
+      expect(due).toBeNull();
+    });
+
+    it('schedules nothing for a zero duration', () =>
+    {
+      // Arrange
+      const param = '0';
+
+      // Act
+      const due = JABS_TimeRespawnMethods.scheduleGameMinutes(param);
+
+      // Assert
+      expect(due).toBeNull();
+    });
+
+    it('schedules within the same hour when the minutes do not carry', () =>
+    {
+      // Arrange- now is 9:15:30; thirty minutes later is 9:45:30 the same day.
+      const expected = JABS_TimeRespawnMethods.epochOf(buildSnapshot(30, 45, 9, 4, 5, 2));
+
+      // Act
+      const due = JABS_TimeRespawnMethods.scheduleGameMinutes('30');
+
+      // Assert
+      expect(due).toBe(expected);
+    });
+
+    it('carries into the next hour when the minutes overflow', () =>
+    {
+      // Arrange- sixty minutes past 9:15:30 is 10:15:30 the same day.
+      const expected = JABS_TimeRespawnMethods.epochOf(buildSnapshot(30, 15, 10, 4, 5, 2));
+
+      // Act
+      const due = JABS_TimeRespawnMethods.scheduleGameMinutes('60');
+
+      // Assert
+      expect(due).toBe(expected);
+    });
+
+    it('carries into the next day when the hours overflow', () =>
+    {
+      // Arrange- a full day of minutes past 9:15:30 is the same clock on day 5.
+      const expected = JABS_TimeRespawnMethods.epochOf(buildSnapshot(30, 15, 9, 5, 5, 2));
+
+      // Act
+      const due = JABS_TimeRespawnMethods.scheduleGameMinutes('1440');
+
+      // Assert
+      expect(due).toBe(expected);
+    });
+
+    it('crosses an artificial month boundary through the calendar rather than the scalar', () =>
+    {
+      // Arrange- the epoch scalar carries phantom day-31 gaps at month ends, so a duration added
+      // straight to it would come due an entire day early here. Dying at 23:30 on the last day of
+      // month 5, an hour later is 00:30 on day 1 of month 6.
+      const lastNight = buildSnapshot(0, 30, 23, 30, 5, 2);
+      globalThis.$gameTime.currentTime = () => lastNight;
+      const expected = JABS_TimeRespawnMethods.epochOf(buildSnapshot(0, 30, 0, 1, 6, 2));
+
+      // Act
+      const due = JABS_TimeRespawnMethods.scheduleGameMinutes('60');
+
+      // Assert
+      expect(due).toBe(expected);
+    });
+  });
+
   describe('scheduleTimeOfDay', () =>
   {
     it('schedules nothing for an unrecognized time of day', () =>
@@ -527,16 +606,24 @@ describe('JABS_TimeRespawnMethods (unit, all cross-ship globals stubbed)', () =>
       return call[1];
     };
 
-    it('registers all five calendar methods with core\'s respawn registry', () =>
+    it('registers all six calendar methods with core\'s respawn registry', () =>
     {
       // Arrange
       const registeredNames = registerMethodMock.mock.calls.map(([ name ]) => name);
 
       // Act & Assert
-      expect(registeredNames).toEqual([ 'time-of-day', 'next-day', 'day-of-week', 'month', 'season' ]);
+      expect(registeredNames).toEqual([
+        'game-minutes',
+        'time-of-day',
+        'next-day',
+        'day-of-week',
+        'month',
+        'season',
+      ]);
     });
 
     describe.each([
+      [ 'game-minutes', 'scheduleGameMinutes', '30' ],
       [ 'time-of-day', 'scheduleTimeOfDay', 'morning' ],
       [ 'next-day', 'scheduleNextDay', '830' ],
       [ 'day-of-week', 'scheduleDayOfWeek', 'monday' ],
@@ -575,6 +662,7 @@ describe('JABS_TimeRespawnMethods (unit, all cross-ship globals stubbed)', () =>
     });
 
     describe.each([
+      [ 'game-minutes' ],
       [ 'time-of-day' ],
       [ 'next-day' ],
       [ 'day-of-week' ],

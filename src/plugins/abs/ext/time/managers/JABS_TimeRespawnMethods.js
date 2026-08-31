@@ -119,6 +119,46 @@ class JABS_TimeRespawnMethods
   }
 
   /**
+   * Schedules a duration measured on the game clock: come back N in-game minutes from now.
+   *
+   * This is the duration sibling of core's playtime "seconds"- same statement, different clock.
+   * The duration cannot simply be added to the epoch scalar, because that scalar is an ordering
+   * with phantom day-31 gaps at artificial month boundaries; instead the minutes fold through
+   * real calendar arithmetic into a target moment, which then encodes exactly.
+   * @param {string} param The number of in-game minutes to wait.
+   * @returns {number|null} The due scalar, or null for a non-positive or non-numeric duration.
+   */
+  static scheduleGameMinutes(param)
+  {
+    // translate the raw parameter into a number of minutes.
+    const minutes = parseInt(param);
+
+    // zero or garbage minutes is a declaration that means nothing.
+    if (!Number.isFinite(minutes) || minutes <= 0) return null;
+
+    // fold the duration into the clock, carrying overflow up through hours into whole days.
+    const now = $gameTime.currentTime();
+    const totalMinutes = now.minutes + minutes;
+    const targetMinute = totalMinutes % 60;
+    const totalHours = now.hours + Math.floor(totalMinutes / 60);
+    const targetHour = totalHours % 24;
+    const dayCount = Math.floor(totalHours / 24);
+
+    // build today's date at the carried clock, then let the calendar carry the whole days.
+    const todayAtClock = $gameTime.toTimeSnapshot([
+      now.seconds,
+      targetMinute,
+      targetHour,
+      now.days,
+      now.months,
+      now.years ]);
+    const target = this.addDays(todayAtClock, dayCount);
+
+    // that is the moment.
+    return this.epochOf(target);
+  }
+
+  /**
    * Schedules the start of the next occurrence of a time of day, strictly after now.
    * Dying during the morning schedules tomorrow's morning, not the one already underway.
    * @param {string} param The name of the time of day, like "morning".
@@ -263,6 +303,22 @@ class JABS_TimeRespawnMethods
  * Register every calendar method with core's respawn registry. Each shares the single epoch-based
  * due check, because every scheduler above encodes into the same scalar space.
  */
+JABS_RespawnManager.registerMethod('game-minutes', {
+  /**
+   * Schedules a duration measured in in-game minutes.
+   * @param {string} param The number of in-game minutes, like 30.
+   * @returns {number|null}
+   */
+  schedule: param => JABS_TimeRespawnMethods.scheduleGameMinutes(param),
+
+  /**
+   * Determines whether the scheduled calendar moment has passed.
+   * @param {number} due The due scalar for the scheduled moment.
+   * @returns {boolean}
+   */
+  isDue: due => JABS_TimeRespawnMethods.isDue(due),
+});
+
 JABS_RespawnManager.registerMethod('time-of-day', {
   /**
    * Schedules the start of the next occurrence of a time of day.

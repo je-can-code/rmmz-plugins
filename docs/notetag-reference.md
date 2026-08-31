@@ -1870,11 +1870,17 @@ J-ABS-Time registers the calendar methods:
 | Method | Ships in | PARAM | Returns |
 |---|---|---|---|
 | `seconds` | J-ABS | positive whole seconds | after PARAM seconds of playtime |
+| `game-minutes` | J-ABS-Time | positive whole minutes | after PARAM minutes on the game clock |
 | `time-of-day` | J-ABS-Time | `night`/`dawn`/`morning`/`afternoon`/`evening`/`twilight` | when that time of day next begins |
 | `next-day` | J-ABS-Time | clock time as HMM/HHMM (`830`, `1430`) | tomorrow, at that clock time |
 | `day-of-week` | J-ABS-Time | `monday` … `sunday` | midnight on the next such weekday |
 | `month` | J-ABS-Time | month number 1-12 | the first midnight of that month's next occurrence |
 | `season` | J-ABS-Time | `spring`/`summer`/`autumn`/`winter` | the first midnight of that season's next occurrence |
+
+**Two of these are durations, and they run on different clocks.** `seconds` counts playtime, which
+is dependency-free and pauses exactly when the game does; `game-minutes` counts the J-TIME clock,
+which runs at whatever rate that plugin is configured for and freezes whenever the clock is blocked.
+A cooldown-flavoured wait wants the first; "the mushrooms need an hour to grow" wants the second.
 
 Calendar methods always resolve to the start of the NEXT occurrence, strictly after the moment of
 death — dying during the morning schedules tomorrow's morning, not the one already underway. An
@@ -4673,7 +4679,8 @@ This skill pauses combat and prompts for a target before executing.
 ## J-ABS-Time (`src/plugins/abs/ext/time/`)
 
 Teaches the JABS respawn system to speak in appointments rather than durations. Registers the
-calendar respawn methods — `time-of-day`, `next-day`, `day-of-week`, `month`, `season` — against
+calendar respawn methods — `game-minutes`, `time-of-day`, `next-day`, `day-of-week`, `month`,
+`season` — against
 core's `<respawn:[METHOD, PARAM]>` tag, resolving each to the start of the named moment's next
 occurrence on the J-TIME calendar. Requires J-ABS and J-TIME. Defines no tags of its own; the
 full method table lives with the `<respawn>` entry in the J-ABS section above.
