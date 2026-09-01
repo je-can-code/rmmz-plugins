@@ -261,4 +261,20 @@ PluginManager.registerCommand(J.ABS.Metadata.name, "Spawn Loot", args =>
     setTimeout(() => lastDropped.requestAnimation(parsedAnimationId), 50);
   }
 });
+
+/**
+ * Registers a plugin command for forcing every defeated battler in the world back onto the map.
+ * Built for the "the world moved on" beat- a night at an inn, a chapter transition.
+ */
+PluginManager.registerCommand(J.ABS.Metadata.name, "forceRespawn", args =>
+{
+  // extract the permanence toggle from the plugin args.
+  const { includePermanent } = args;
+
+  // plugin command arguments always arrive as strings, boolean toggles included.
+  const parsedIncludePermanent = includePermanent === 'true';
+
+  // move the world on.
+  $jabsEngine.forceRespawns(parsedIncludePermanent);
+});
 //endregion Plugin Command Registration

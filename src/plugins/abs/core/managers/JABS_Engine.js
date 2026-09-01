@@ -892,6 +892,47 @@ class JABS_Engine
   }
 
   /**
+   * Forces every battler in the world back from the dead, ignoring whatever they were waiting on.
+   *
+   * This is the deliberate counterpart to the respawn tags rather than a bypass of them: a tag says
+   * how long a placement stays down if the player simply keeps playing, and this says "something
+   * happened that moves the world on". Sleeping at an inn is the shape it was built for, which is
+   * also why it ignores the method a record was scheduled with- a night's rest means the same thing
+   * to a playtime timer as it does to a calendar appointment.
+   *
+   * The other maps in the world need nothing beyond a cleared record, because their events rebuild
+   * from `$dataMap` the next time the player walks in. The current map is already built, so its
+   * placements are rebuilt by hand here.
+   *
+   * One placement can decline: `respawnEnemy` refuses to materialize a battler underneath the
+   * player, and with its record cleared there is no later sweep to catch it. That placement returns
+   * on the next map entry, exactly as an untracked one would.
+   * @param {boolean} includePermanent Whether `<noRespawn>` placements are forced back as well.
+   */
+  forceRespawns(includePermanent)
+  {
+    // capture the current map's records before the wipe; a cleared registry has forgotten who was
+    // waiting, and these ids are what the rebuild below walks.
+    const records = $gameSystem.respawnRecordsForMap($gameMap.mapId());
+
+    // rebuild the placements standing around the player right now.
+    records.forEach(entry =>
+    {
+      // shorthand the pair into variables.
+      const [ eventId, record ] = entry;
+
+      // permanence stays permanent unless the caller explicitly overruled it.
+      if (record.isPermanent() && includePermanent === false) return;
+
+      // welcome the battler back to the world.
+      this.respawnEnemy(eventId);
+    });
+
+    // free everything still waiting anywhere else in the world.
+    $gameSystem.clearAllRespawnRecords(includePermanent);
+  }
+
+  /**
    * Respawns the battler belonging to the given authored event on the current map.
    *
    * A respawned battler is an existing event whose battler was destroyed, not a clone- so the

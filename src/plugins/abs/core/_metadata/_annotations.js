@@ -3145,14 +3145,14 @@
  * @type string
  * @text Default Respawn Method
  * @desc The world-default respawn method for defeated enemies. Leave blank for no respawn tracking at all.
- * @default
+ * @default seconds
  *
  * @param defaultRespawnParam
  * @parent enemyDefaultConfigs
  * @type string
  * @text Default Respawn Param
  * @desc The parameter fed to the world-default respawn method, such as the number of seconds.
- * @default
+ * @default 120
  *
  * @param defaultRespawnAnimationId
  * @parent enemyDefaultConfigs
@@ -3925,6 +3925,17 @@
  * @desc The animation to execute upon the newly spawned enemy.
  * By default, no animation will play.
  * @default 0
+ *
+ * @command forceRespawn
+ * @text Force Respawn
+ * @desc Frees every defeated battler in the world from its respawn timer at once, regardless of the method each was scheduled with.
+ * Use this for the beats that move the world on, such as sleeping at an inn.
+ * @arg includePermanent
+ * @type boolean
+ * @on Revive Permanent, Too
+ * @off Leave Permanent Dead
+ * @desc Whether placements tagged <noRespawn> are also forced back. Story-critical defeats usually should stay defeated.
+ * @default false
  */
 //=================================================================================================
 /*~struct~ElementalIconStruct:

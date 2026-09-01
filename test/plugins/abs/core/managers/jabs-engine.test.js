@@ -8174,6 +8174,91 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('forceRespawns', () =>
+  {
+    /**
+     * Installs the map and registry collaborators the forced reset walks.
+     * @param {[number, object][]} records The event-id-to-record pairs the current map is tracking.
+     */
+    function buildForcedWorld(records)
+    {
+      globalThis.$gameMap = Object.assign(globalThis.$gameMap, { mapId: () => 7 });
+      globalThis.$gameSystem = {
+        respawnRecordsForMap: vi.fn(() => records),
+        clearAllRespawnRecords: vi.fn(),
+      };
+    }
+
+    /**
+     * Builds a record stub carrying only the predicate the forced reset consults.
+     * @param {boolean} permanent Whether this record declares permanence.
+     */
+    function buildRecord(permanent)
+    {
+      return { isPermanent: () => permanent };
+    }
+
+    it('leaves permanent placements down when permanence is not overruled', () =>
+    {
+      // Arrange- a pending sibling on the same map must still come back.
+      const engine = new JABS_Engine();
+      engine.respawnEnemy = vi.fn();
+      buildForcedWorld([ [ 4, buildRecord(true) ], [ 9, buildRecord(false) ] ]);
+
+      // Act
+      engine.forceRespawns(false);
+
+      // Assert
+      expect(engine.respawnEnemy).toHaveBeenCalledTimes(1);
+      expect(engine.respawnEnemy).toHaveBeenCalledWith(9);
+    });
+
+    it('revives permanent placements when permanence is overruled', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      engine.respawnEnemy = vi.fn();
+      buildForcedWorld([ [ 4, buildRecord(true) ], [ 9, buildRecord(false) ] ]);
+
+      // Act
+      engine.forceRespawns(true);
+
+      // Assert
+      expect(engine.respawnEnemy).toHaveBeenCalledTimes(2);
+      expect(engine.respawnEnemy).toHaveBeenCalledWith(4);
+      expect(engine.respawnEnemy).toHaveBeenCalledWith(9);
+    });
+
+    it('rebuilds nothing on a map tracking no records', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      engine.respawnEnemy = vi.fn();
+      buildForcedWorld([]);
+
+      // Act
+      engine.forceRespawns(false);
+
+      // Assert
+      expect($gameSystem.respawnRecordsForMap).toHaveBeenCalledWith(7);
+      expect(engine.respawnEnemy).not.toHaveBeenCalled();
+    });
+
+    it('hands the permanence flag onward to the world-wide wipe', () =>
+    {
+      // Arrange
+      const engine = new JABS_Engine();
+      engine.respawnEnemy = vi.fn();
+      buildForcedWorld([ [ 9, buildRecord(false) ] ]);
+
+      // Act
+      engine.forceRespawns(true);
+
+      // Assert
+      expect($gameSystem.clearAllRespawnRecords).toHaveBeenCalledWith(true);
+    });
+  });
+
   describe('respawnEnemy', () =>
   {
     /**
