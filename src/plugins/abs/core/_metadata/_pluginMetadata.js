@@ -119,8 +119,10 @@ class J_AbsPluginMetadata
     this.DefaultEnemyIsInvincible = Boolean(this.parsedPluginParameters['defaultEnemyIsInvincible'] === 'true');
     this.DefaultEnemyIsInanimate = Boolean(this.parsedPluginParameters['defaultEnemyIsInanimate'] === 'true');
 
-    // an empty method means the world default is "no respawn tracking at all", which preserves
-    // the pre-respawn behavior of every battler returning on map re-entry.
+    // the shipped default is a two-minute timer, because a world where the dead stay dead until the
+    // player power-cycles the map is a world that asks the player to manage it. an empty method is
+    // the deliberate opt-out, and it restores the pre-respawn behavior of every battler returning on
+    // map re-entry- so a project that wants no timers anywhere can still say exactly that.
     this.DefaultRespawnMethod = this.parsedPluginParameters['defaultRespawnMethod'] || String.empty;
     this.DefaultRespawnParam = this.parsedPluginParameters['defaultRespawnParam'] || String.empty;
     // older parameter sets predate this parameter entirely, so the parse falls back to "no animation".

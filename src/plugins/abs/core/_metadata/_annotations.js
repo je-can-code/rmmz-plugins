@@ -48,6 +48,21 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.19.0
+ *    Added the Force Respawn plugin command, which frees every pending respawn
+ *    record in the world at once regardless of the method each was scheduled
+ *    with. It is the counterpart to the respawn tags rather than a bypass of
+ *    them: a tag says how long a placement stays down if the player keeps
+ *    playing, and this says that something happened which moved the world on -
+ *    a night at an inn, a chapter break. Placements on the current map are
+ *    rebuilt immediately; every other map is freed and rebuilds on the next
+ *    visit. Permanence is honored unless the includePermanent argument
+ *    overrules it, since <noRespawn> usually marks a story beat rather than a
+ *    farmable placement.
+ *    The world-default respawn is now "seconds" at 120 rather than blank. A
+ *    world where the dead stay dead until the player power-cycles the map is a
+ *    world that asks the player to manage it; a blank method remains the
+ *    deliberate opt-out for projects that want no timers anywhere.
  * - 4.18.0
  *    Added respawn timers for defeated battlers. A defeated enemy may declare
  *    when it returns via the new <respawn:[METHOD, PARAM]> tag - resolved as
@@ -3145,14 +3160,14 @@
  * @type string
  * @text Default Respawn Method
  * @desc The world-default respawn method for defeated enemies. Leave blank for no respawn tracking at all.
- * @default
+ * @default seconds
  *
  * @param defaultRespawnParam
  * @parent enemyDefaultConfigs
  * @type string
  * @text Default Respawn Param
  * @desc The parameter fed to the world-default respawn method, such as the number of seconds.
- * @default
+ * @default 120
  *
  * @param defaultRespawnAnimationId
  * @parent enemyDefaultConfigs
@@ -3925,6 +3940,17 @@
  * @desc The animation to execute upon the newly spawned enemy.
  * By default, no animation will play.
  * @default 0
+ *
+ * @command forceRespawn
+ * @text Force Respawn
+ * @desc Frees every defeated battler in the world from its respawn timer at once, regardless of the method each was scheduled with.
+ * Use this for the beats that move the world on, such as sleeping at an inn.
+ * @arg includePermanent
+ * @type boolean
+ * @on Revive Permanent, Too
+ * @off Leave Permanent Dead
+ * @desc Whether placements tagged <noRespawn> are also forced back. Story-critical defeats usually should stay defeated.
+ * @default false
  */
 //=================================================================================================
 /*~struct~ElementalIconStruct:

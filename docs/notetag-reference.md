@@ -1861,8 +1861,10 @@ schedules when this battler returns to the map after defeat. Until the moment ar
 stays down — through map transitions, saves, and loads — then the battler reappears at its
 authored coordinates while the player watches (no re-entry required). Resolution order is
 `world default < enemy note < event comment`, so one particular placement can be rarer than its
-siblings without touching the enemy. Defeated enemies with no declaration anywhere behave exactly
-as they always have: back on the next map entry.
+siblings without touching the enemy. The world default ships as `seconds` / `120`, so an untagged
+enemy returns two minutes after it dies; blanking the Default Respawn Method plugin parameter turns
+the world default off, and untagged enemies go back to returning on the next map entry. Tagged
+battlers are unaffected by that switch- they carry their own declaration either way.
 
 METHOD names how the wait is measured; PARAM feeds that method. Core ships one method, and
 J-ABS-Time registers the calendar methods:

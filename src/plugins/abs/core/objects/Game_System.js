@@ -121,6 +121,58 @@ Game_System.prototype.clearRespawnRecord = function(mapId, eventId)
 };
 
 /**
+ * Clears respawn records across every map at once, freeing the battlers they were holding back.
+ *
+ * This is the world's reset lever- a night's sleep, a chapter break, whatever the project decides
+ * means "the world has moved on". Clearing a record is the whole job for a map the player is not
+ * standing on: its events are rebuilt from `$dataMap` on the next map load, and an untracked event
+ * converts freely.
+ *
+ * Permanence is honored by default, because `<noRespawn>` is usually somebody saying "this defeat
+ * was a story beat". Passing true overrules even that, which is what a debug reset wants.
+ * @param {boolean} includePermanent Whether permanent records are cleared alongside pending ones.
+ */
+Game_System.prototype.clearAllRespawnRecords = function(includePermanent)
+{
+  // overruling permanence too means nothing survives, and an empty registry is exactly that.
+  if (includePermanent === true)
+  {
+    this.respawnRegistry()
+      .clear();
+    return;
+  }
+
+  // collect the clearable pairs before touching anything- mutating the registry midway through
+  // walking it is a bug waiting for a quiet afternoon.
+  const clearable = [];
+
+  // walk every map's records looking for the ones permanence does not protect.
+  this.respawnRegistry()
+    .forEach((mapRecords, mapId) =>
+    {
+      // walk this one map's records.
+      mapRecords.forEach((record, eventId) =>
+      {
+        // permanence outranks the reset unless the caller said otherwise.
+        if (record.isPermanent()) return;
+
+        // this one goes.
+        clearable.push([ mapId, eventId ]);
+      });
+    });
+
+  // drop each one through the single-record path so emptied maps get pruned the same way.
+  clearable.forEach(pair =>
+  {
+    // shorthand the pair into variables.
+    const [ mapId, eventId ] = pair;
+
+    // clear it.
+    this.clearRespawnRecord(mapId, eventId);
+  });
+};
+
+/**
  * Gets all respawn records currently tracked for the given map.
  * @param {number} mapId The id of the map to fetch records for.
  * @returns {[number, JABS_RespawnRecord][]} The event-id-to-record pairs; possibly empty.

@@ -177,6 +177,75 @@ describe('J-ABS Game_System augments (direct src import)', () =>
     });
   });
 
+  describe('clearAllRespawnRecords', () =>
+  {
+    /**
+     * Builds a record stub carrying only the predicate the world-wide wipe consults.
+     * @param {boolean} permanent Whether this record declares permanence.
+     */
+    const buildRecord = permanent => ({ isPermanent: () => permanent });
+
+    it('empties the whole registry when permanence is overruled', () =>
+    {
+      // Arrange- a permanent record on a second map must go too, not just the pending one.
+      const system = buildSystem();
+      system.setRespawnRecord(1, 5, buildRecord(false));
+      system.setRespawnRecord(2, 6, buildRecord(true));
+
+      // Act
+      system.clearAllRespawnRecords(true);
+
+      // Assert
+      expect(system.respawnRegistry().size).toBe(0);
+    });
+
+    it('spares permanent records when permanence is honored', () =>
+    {
+      // Arrange
+      const system = buildSystem();
+      const permanent = buildRecord(true);
+      system.setRespawnRecord(1, 5, buildRecord(false));
+      system.setRespawnRecord(1, 6, permanent);
+
+      // Act
+      system.clearAllRespawnRecords(false);
+
+      // Assert
+      expect(system.respawnRecord(1, 5)).toBeNull();
+      expect(system.respawnRecord(1, 6)).toBe(permanent);
+    });
+
+    it('clears pending records across every tracked map, not only the first', () =>
+    {
+      // Arrange
+      const system = buildSystem();
+      system.setRespawnRecord(1, 5, buildRecord(false));
+      system.setRespawnRecord(2, 6, buildRecord(false));
+
+      // Act
+      system.clearAllRespawnRecords(false);
+
+      // Assert
+      expect(system.respawnRecord(1, 5)).toBeNull();
+      expect(system.respawnRecord(2, 6)).toBeNull();
+    });
+
+    it('drops a map from the registry once its last pending record clears', () =>
+    {
+      // Arrange- the sibling map keeps a permanent record, so it must survive the prune.
+      const system = buildSystem();
+      system.setRespawnRecord(1, 5, buildRecord(false));
+      system.setRespawnRecord(2, 6, buildRecord(true));
+
+      // Act
+      system.clearAllRespawnRecords(false);
+
+      // Assert
+      expect(system.respawnRegistry().has(1)).toBe(false);
+      expect(system.respawnRegistry().has(2)).toBe(true);
+    });
+  });
+
   describe('respawnRecordsForMap', () =>
   {
     it('returns an empty collection for an untracked map', () =>

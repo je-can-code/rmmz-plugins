@@ -60,7 +60,7 @@ describe('J-ABS plugin commands (direct src import)', () =>
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
 
-  it('registers all twelve commands under the J-ABS plugin name', () =>
+  it('registers all thirteen commands under the J-ABS plugin name', () =>
   {
     // Arrange/Act (registration happened in beforeAll)
 
@@ -78,6 +78,7 @@ describe('J-ABS plugin commands (direct src import)', () =>
       'Apply Global Cooldown',
       'Spawn Enemy',
       'Spawn Loot',
+      'forceRespawn',
     ]);
   });
 
@@ -518,6 +519,38 @@ describe('J-ABS plugin commands (direct src import)', () =>
 
       // Assert
       expect(lastDropped.requestAnimation).toHaveBeenCalledWith(9);
+    });
+  });
+
+  describe('forceRespawn', () =>
+  {
+    beforeEach(() =>
+    {
+      globalThis.$jabsEngine.forceRespawns = vi.fn();
+    });
+
+    it('overrules permanence when the toggle arrives as the string true', () =>
+    {
+      // Arrange
+      const args = { includePermanent: 'true' };
+
+      // Act
+      handlers['forceRespawn'](args);
+
+      // Assert
+      expect(globalThis.$jabsEngine.forceRespawns).toHaveBeenCalledWith(true);
+    });
+
+    it('honors permanence for any other string the toggle arrives as', () =>
+    {
+      // Arrange- RMMZ hands booleans over as text, so only the exact word counts as on.
+      const args = { includePermanent: 'false' };
+
+      // Act
+      handlers['forceRespawn'](args);
+
+      // Assert
+      expect(globalThis.$jabsEngine.forceRespawns).toHaveBeenCalledWith(false);
     });
   });
 });
