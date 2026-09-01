@@ -336,6 +336,29 @@ Sprite_Character.prototype.isEmptyCharacter = function()
 };
 
 /**
+ * The height an escription floats above this sprite's feet, in pixels.<br/>
+ * Both the text and the icon hang off this one number so they never drift apart.
+ *
+ * The thirty-two is the gap that reads as "labelled" rather than "collided", measured from the top
+ * of the character rather than guessed from its sheet. A `$` prefix means a sheet holds a single
+ * character, not that the character is tall - `$o_grass` is a `$` sheet with 47 pixel frames, and a
+ * height picked off that prefix buried its label sixty pixels up in the scenery while `$dragon`, at
+ * 120, wore its label inside its own silhouette.
+ *
+ * This is deliberately recomputed every frame rather than settled when the sprite is built.
+ * {@link Sprite_Character.patternHeight} divides the character bitmap's height, and escriptions are
+ * created from `setCharacterBitmap` - one line after the image is *requested*. On a cold load that
+ * bitmap has not decoded yet and reports a height of zero, so a value computed there is right only
+ * when the image happened to be cached. Reading it per frame costs one subtraction and is correct
+ * the moment the image lands, and again whenever a page change swaps the sprite for a taller one.
+ * @returns {number}
+ */
+Sprite_Character.prototype.escriptionBaseY = function()
+{
+  return -(this.patternHeight() + 32);
+};
+
+/**
  * Parses the event comments on the character that belongs to this sprite.
  */
 Sprite_Character.prototype.refreshCharacterEscription = function()
@@ -427,12 +450,6 @@ Sprite_Character.prototype.createDescribeTextSprite = function()
   this.setEscriptionText(describeText);
   this.setEscriptionTextProximity(describe.proximityTextRange());
 
-  // extract the x and character name from the underlying character.
-  const {
-    _realX,
-    _characterName
-  } = this.character();
-
   // build the text sprite.
   const sprite = new Sprite_BaseText()
     .setText(describeText)
@@ -440,14 +457,16 @@ Sprite_Character.prototype.createDescribeTextSprite = function()
     .setAlignment(Sprite_BaseText.Alignments.Center)
     .setColor("#ffffff");
 
-  // determine the location of the sprite.
-  const x = _realX - (sprite.width / 2);
-  const y = ImageManager.isBigCharacter(_characterName)
-    ? -128
-    : -80;
+  // this text sprite is a child of the character sprite, and a character sprite's origin already
+  // sits at the character's horizontal centre - so centring the label needs nothing but half its
+  // own width. the character's map coordinate has no business in this sum: it is measured in
+  // tiles, so folding it in shifted every label right by one pixel per tile from the map's left
+  // edge, which reads as "roughly centred" near the origin and drifts visibly across a wide map.
+  const x = -(sprite.width / 2);
 
-  // relocate the sprite.
-  sprite.move(x, y);
+  // relocate the sprite. the height is a first guess only - the update loop owns it from here,
+  // because the character bitmap it is measured from may not have loaded yet.
+  sprite.move(x, this.escriptionBaseY());
 
   // check if we need to handle proximity.
   if (this.escriptionTextProximity() > -1)
@@ -494,21 +513,15 @@ Sprite_Character.prototype.createDescribeIconSprite = function()
   this.setEscriptionIconIndex(describeIconIndex);
   this.setEscriptionIconProximity(describe.proximityIconRange());
 
-  // extract the x and character name from the underlying character.
-  const { _characterName } = this.character();
-
-  // determine the location of the sprite.
+  // determine the location of the sprite. the icon rides a further icon's-height above the text so
+  // the two stack rather than share a line when an event carries both.
   const x = 0 - (ImageManager.iconWidth / 2) - 4;
-  let y = ImageManager.isBigCharacter(_characterName)
-    ? -128
-    : -80;
-  y -= 32;
 
   // build the sprite.
   const sprite = new Sprite_Icon(describeIconIndex);
 
-  // relocate the sprite.
-  sprite.move(x, y);
+  // relocate the sprite. as with the text, the update loop owns the height from here.
+  sprite.move(x, this.escriptionBaseY() - 32);
 
   // check if we need to handle proximity.
   if (this.escriptionIconProximity() > -1)
@@ -646,11 +659,28 @@ Sprite_Character.prototype.removeEscriptionIconData = function()
  */
 Sprite_Character.prototype.updateEscribe = function()
 {
+  // keep both escriptions sitting above the character, whatever height it turned out to be.
+  this.updateEscriptionPositions();
+
   // update the text escribe data.
   this.updateTextEscribe();
 
   // update the icon escribe data.
   this.updateIconEscribe();
+};
+
+/**
+ * Parks the text and icon escriptions above the character sprite.
+ *
+ * See {@link Sprite_Character.escriptionBaseY} for why this is a per-frame job rather than
+ * something the sprites could have been built with.
+ */
+Sprite_Character.prototype.updateEscriptionPositions = function()
+{
+  const baseY = this.escriptionBaseY();
+
+  this.escriptionTextSprite().y = baseY;
+  this.escriptionIconSprite().y = baseY - 32;
 };
 
 /**
@@ -661,8 +691,11 @@ Sprite_Character.prototype.updateTextEscribe = function()
   // don't try to update text without any text.
   if (!this.escriptionText()) return;
 
-  // don't worry about updating for non-proximity-based describe texts.
-  if (this.escriptionIconProximity() < 0) return;
+  // don't worry about updating for non-proximity-based describe texts. this asks the text's own
+  // proximity, not the icon's - an event carrying proximity text and no icon has an icon
+  // proximity of -1, and reading that one here left the text parked at the opacity it was created
+  // with, which for proximity text is zero. it never faded in at all.
+  if (this.escriptionTextProximity() < 0) return;
 
   if (this.characterCanSeeText())
   {
