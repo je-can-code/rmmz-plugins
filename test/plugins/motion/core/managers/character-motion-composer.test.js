@@ -313,6 +313,11 @@ describe('CharacterMotionComposer', () =>
           return [ MotionChannels.SCALE_X ];
         }
 
+        isBaseline()
+        {
+          return false;
+        }
+
         applyTo(composition)
         {
           composition.contribute(this, MotionChannels.SCALE_X, 9);
@@ -396,6 +401,41 @@ describe('CharacterMotionComposer', () =>
       const claimant = composition.claimantFor(MotionChannels.SCALE_X);
       expect(claimant.declaration()
         .sourceKey()).toBe('combat:1');
+    });
+
+    it('composes a claimed channel with the baseline it was resting at', () =>
+    {
+      // Arrange- a breathe rides along on the same channel as the near miss. It is an ambient
+      // wobble rather than a baseline, so it must still be suppressed; only the held scale survives.
+      registerClaimingType('claimerR');
+      CharacterMotionComposer.declare(character, 'passive:301',
+        [ aDeclaration('scale', [ 150, 1 ], 'passive:301') ]);
+      CharacterMotionComposer.declare(character, 'page',
+        [ aDeclaration('breathe', [ 0.5, 100, 'sync' ], 'page') ]);
+      CharacterMotionComposer.declare(character, 'combat:1', [ aDeclaration('claimerR', [], 'combat:1') ]);
+
+      // Act
+      const composition = composeFor(character, 2);
+
+      // Assert- the claimant's 9, multiplied by the 1.5 it is modulating. A discarded baseline
+      // would read 9, and a surviving breathe would put it somewhere either side of 13.5.
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBeCloseTo(13.5, 10);
+    });
+
+    it('leaves an unclaimed channel of the same baseline alone', () =>
+    {
+      // Arrange- the claimant takes only SCALE_X, so SCALE_Y proves the baseline still composes
+      // normally where nothing contested it.
+      registerClaimingType('claimerS');
+      CharacterMotionComposer.declare(character, 'passive:301',
+        [ aDeclaration('scale', [ 150, 1 ], 'passive:301') ]);
+      CharacterMotionComposer.declare(character, 'combat:1', [ aDeclaration('claimerS', [], 'combat:1') ]);
+
+      // Act
+      const composition = composeFor(character, 2);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.SCALE_Y)).toBeCloseTo(1.5, 10);
     });
 
     it('gives the channel to an applied state over a passive one', () =>

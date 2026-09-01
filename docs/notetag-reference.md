@@ -5853,11 +5853,16 @@ listening, and never goes stale as a result:
 A stacked passive animates **once**. Three stacks of one state are still one thing the sprite is
 doing, and animating it three times would move the sprite three times as far as the tag asked for.
 
-**Which motion wins:** when two sources want the same thing from a sprite, the more fleeting one
-takes it, on the reasoning that the shorter something lasts the more likely it is the thing the
-player is meant to be reading. Weakest to strongest: event page, **passive**, applied state, plugin
-command, combat reaction. So an elite's permanent swell is overridden by the flicker of it catching
-fire, and returns when the fire goes out.
+**Which motion wins:** usually nothing does — motions compose. Two things scaling a sprite multiply,
+two things nudging it add, and motions on different channels never meet.
+
+Contests happen only where a motion **claims** a channel, which combat reactions do so a hit reads
+exactly as tuned rather than compounding with whatever ambient wobble the character had. Among
+claimants the ranking decides it, weakest to strongest: event page, **passive**, applied state,
+plugin command, combat reaction.
+
+A held size is not a wobble, so a claim does not suppress it. An enemy at 150% that gets hit squishes
+*around* its own size rather than snapping to normal for the length of the hit.
 
 ```
 <motion:[scale, 150]>

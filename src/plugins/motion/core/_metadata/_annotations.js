@@ -126,6 +126,13 @@
  * - 1.2.0
  *    Adds `passive` to the source ranking, between an event page and an applied
  *    state, for the motions J-Motion-Passive declares.
+ *    A claimed channel now composes with whatever was holding it rather than
+ *    discarding it, so a hit reaction on a character that is permanently scaled
+ *    or rotated modulates around that instead of snapping it back to normal for
+ *    the length of the reaction. Ambient wobbles are still suppressed by a
+ *    claim, which is what claiming was for.
+ *    Fixed a source declaring an empty set leaving its motions running forever,
+ *    which an event page changing to one with no motion tags does.
  * - 1.1.0
  *    Centred rotation now lifts the sprite instead of dropping it, and scales that
  *    lift by the sprite's own scale, so a character that spins while changing size

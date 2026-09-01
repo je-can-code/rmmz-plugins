@@ -164,6 +164,21 @@ class MotionEffect
   }
 
   /**
+   * Determines whether this effect states what a channel *is* rather than how it is wobbling.
+   *
+   * A claim exists to stop ambient motion compounding with a reaction that has to read exactly as
+   * tuned. That is the right treatment for a wobble and the wrong one for a baseline: an enemy at
+   * 150% is not decorating its size, it is that size, and a squish that discarded it would flatten
+   * a giant to the dimensions of a rat for the length of the hit. So a baseline survives a claim
+   * and composes with it, while everything else is still suppressed.
+   * @returns {boolean}
+   */
+  isBaseline()
+  {
+    return false;
+  }
+
+  /**
    * Writes this frame's contribution into the composition.
    * @param {MotionComposition} _composition The composition being built for this character.
    */

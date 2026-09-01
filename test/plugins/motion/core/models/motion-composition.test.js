@@ -22,12 +22,26 @@ describe('MotionComposition', () =>
   });
 
   /**
-   * A stand-in for an effect. The composition only ever compares these by identity, so a bare
-   * object is a truthful collaborator rather than a simplification.
+   * A stand-in for an effect. The composition compares these by identity and asks each one whether
+   * it is a baseline, so a bare object answering that is a truthful collaborator rather than a
+   * simplification.
    * @param {string} name A label, so a failing assertion says which one.
    * @returns {Object}
    */
-  const anEffect = name => ({ name });
+  const anEffect = name => ({
+    name,
+    isBaseline: () => false,
+  });
+
+  /**
+   * A stand-in for an effect that states what a channel rests at rather than how it wobbles.
+   * @param {string} name A label, so a failing assertion says which one.
+   * @returns {Object}
+   */
+  const aBaselineEffect = name => ({
+    name,
+    isBaseline: () => true,
+  });
 
   describe('construction', () =>
   {
@@ -111,6 +125,60 @@ describe('MotionComposition', () =>
       expect(composition.valueFor(MotionChannels.SCALE_Y)).toBe(1.4);
     });
 
+    it('keeps a baseline contribution to a channel somebody else has claimed', () =>
+    {
+      // Arrange- the breathe is the near miss: same channel, same claim, but a wobble rather than a
+      // baseline, so it must still be discarded while the held scale survives.
+      const composition = new MotionComposition();
+      const claimant = anEffect('squish');
+      const wobble = anEffect('breathe');
+      const held = aBaselineEffect('scale');
+      composition.awardClaim(MotionChannels.SCALE_Y, claimant);
+
+      // Act
+      composition.contribute(held, MotionChannels.SCALE_Y, 1.5);
+      composition.contribute(wobble, MotionChannels.SCALE_Y, 1.05);
+      composition.contribute(claimant, MotionChannels.SCALE_Y, 0.8);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.SCALE_Y)).toBeCloseTo(1.2, 10);
+    });
+
+    it('composes several baselines under one claim', () =>
+    {
+      // Arrange
+      const composition = new MotionComposition();
+      const claimant = anEffect('squish');
+      const held = aBaselineEffect('scale');
+      const alsoHeld = aBaselineEffect('otherScale');
+      composition.awardClaim(MotionChannels.SCALE_Y, claimant);
+
+      // Act
+      composition.contribute(held, MotionChannels.SCALE_Y, 1.5);
+      composition.contribute(alsoHeld, MotionChannels.SCALE_Y, 2.0);
+      composition.contribute(claimant, MotionChannels.SCALE_Y, 0.5);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.SCALE_Y)).toBeCloseTo(1.5, 10);
+    });
+
+    it('composes a baseline additively on a channel that sums', () =>
+    {
+      // Arrange- rotation sums rather than multiplying, so a held angle under a tilt's claim has to
+      // add to it rather than scale it.
+      const composition = new MotionComposition();
+      const claimant = anEffect('tilt');
+      const held = aBaselineEffect('angle');
+      composition.awardClaim(MotionChannels.ROTATION, claimant);
+
+      // Act
+      composition.contribute(held, MotionChannels.ROTATION, 0.5);
+      composition.contribute(claimant, MotionChannels.ROTATION, 0.25);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.ROTATION)).toBeCloseTo(0.75, 10);
+    });
+
     it('leaves a claimant\'s other channels open to everybody', () =>
     {
       // Arrange
@@ -181,6 +249,20 @@ describe('MotionComposition', () =>
 
       // Act
       const accepted = composition.accepts(anEffect('nobody-in-particular'), MotionChannels.ROTATION);
+
+      // Assert
+      expect(accepted).toBe(true);
+    });
+
+    it('takes a baseline even on a channel somebody else owns', () =>
+    {
+      // Arrange
+      const owner = anEffect('owner');
+      const composition = new MotionComposition();
+      composition.awardClaim(MotionChannels.ROTATION, owner);
+
+      // Act
+      const accepted = composition.accepts(aBaselineEffect('angle'), MotionChannels.ROTATION);
 
       // Assert
       expect(accepted).toBe(true);

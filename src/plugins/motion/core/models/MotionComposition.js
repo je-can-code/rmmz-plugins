@@ -27,6 +27,17 @@ class MotionComposition
   #claimants = new Map();
 
   /**
+   * What baseline effects contributed to channels somebody else had claimed.
+   *
+   * Only claimed channels ever reach this, because on an unclaimed one a baseline composes through
+   * the ordinary path like anything else. Left null until such a contribution actually arrives —
+   * a claim landing on a character that also holds a baseline is the uncommon case, and this class
+   * allocates one composition per sprite per frame.
+   * @type {Map<string, number|number[]>|null}
+   */
+  #baselines = null;
+
+  /**
    * Whether any contributing effect needs the sprite rotated about its middle rather than its feet.
    * @type {boolean}
    */
@@ -48,8 +59,17 @@ class MotionComposition
    */
   valueFor(channel)
   {
-    // hand back the composed value for this channel.
-    return this.#values.get(channel);
+    const composed = this.#values.get(channel);
+
+    // nothing was held underneath a claim, which is every channel on almost every character.
+    if (this.#baselines === null) return composed;
+
+    if (this.#baselines.has(channel) === false) return composed;
+
+    // the claimant decided the modulation; the baseline decides what it is modulating.
+    const baseline = this.#baselines.get(channel);
+
+    return MotionChannels.combine(channel, baseline, composed);
   }
 
   /**
@@ -104,11 +124,47 @@ class MotionComposition
       return;
     }
 
-    // somebody else owns this channel, so this contribution never lands.
-    if (claimant !== contributor) return;
+    // somebody else owns this channel. a baseline is kept anyway and folded back in when the
+    // channel is read, because a claim decides how a channel is being moved rather than deciding
+    // what it was resting at.
+    if (claimant !== contributor)
+    {
+      if (contributor.isBaseline() === true)
+      {
+        this.#recordBaseline(channel, contribution);
+      }
+
+      return;
+    }
 
     // the owner writes its value outright.
     this.#values.set(channel, contribution);
+  }
+
+  /**
+   * Folds a baseline contribution into what a claimed channel is resting at.
+   *
+   * Several baselines on one channel compose with each other exactly as they would have without a
+   * claim in the way, which is what keeps a claim from changing the answer for anyone but itself.
+   * @param {string} channel The claimed channel being held.
+   * @param {number|number[]} contribution The baseline's value this frame.
+   */
+  #recordBaseline(channel, contribution)
+  {
+    this.#baselines ??= new Map();
+
+    // the first baseline on this channel establishes it; later ones compose onto it.
+    if (this.#baselines.has(channel) === false)
+    {
+      this.#baselines.set(channel, contribution);
+
+      return;
+    }
+
+    const accumulated = this.#baselines.get(channel);
+    const combined = MotionChannels.combine(channel, accumulated, contribution);
+
+    this.#baselines.set(channel, combined);
   }
 
   /**
@@ -127,6 +183,9 @@ class MotionComposition
 
     // nobody owns this channel, so everything that reaches it composes.
     if (claimant === null) return true;
+
+    // a baseline lands whoever holds the channel, so it is never told to stand down.
+    if (contributor.isBaseline() === true) return true;
 
     return claimant === contributor;
   }
