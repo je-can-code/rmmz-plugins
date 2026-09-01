@@ -100,6 +100,16 @@ class TransitionMotionEffect
   }
 
   /**
+   * Overrides {@link MotionEffect#isBaseline}.<br/>
+   * A transition parks a channel and holds it, which is a statement about where the channel sits.
+   * @returns {boolean}
+   */
+  isBaseline()
+  {
+    return true;
+  }
+
+  /**
    * Writes this frame's position into the composition.
    * @param {MotionComposition} composition The composition being built for this character.
    */

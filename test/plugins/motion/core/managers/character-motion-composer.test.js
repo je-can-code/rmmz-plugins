@@ -196,6 +196,22 @@ describe('CharacterMotionComposer', () =>
       // Assert
       expect(composition.valueFor(MotionChannels.OFFSET_X)).toBeCloseTo(8, 10);
     });
+
+    it('stops the running motion when a source declares nothing at all', () =>
+    {
+      // Arrange- an event page changing to one with no motion tags declares an empty set rather
+      // than withdrawing, and every event on a map does this on any self-switch anywhere.
+      CharacterMotionComposer.declare(character, 'page', [ aDeclaration('float', [ 20, 100, 'sync' ], 'page') ]);
+      composeFor(character, 25);
+
+      // Act
+      CharacterMotionComposer.declare(character, 'page', []);
+      const composition = CharacterMotionComposer.compose(character);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.OFFSET_Y)).toBe(0);
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(false);
+    });
   });
 
   describe('removeDeclarations', () =>
@@ -297,6 +313,11 @@ describe('CharacterMotionComposer', () =>
           return [ MotionChannels.SCALE_X ];
         }
 
+        isBaseline()
+        {
+          return false;
+        }
+
         applyTo(composition)
         {
           composition.contribute(this, MotionChannels.SCALE_X, 9);
@@ -380,6 +401,79 @@ describe('CharacterMotionComposer', () =>
       const claimant = composition.claimantFor(MotionChannels.SCALE_X);
       expect(claimant.declaration()
         .sourceKey()).toBe('combat:1');
+    });
+
+    it('composes a claimed channel with the baseline it was resting at', () =>
+    {
+      // Arrange- a breathe rides along on the same channel as the near miss. It is an ambient
+      // wobble rather than a baseline, so it must still be suppressed; only the held scale survives.
+      registerClaimingType('claimerR');
+      CharacterMotionComposer.declare(character, 'passive:301',
+        [ aDeclaration('scale', [ 150, 1 ], 'passive:301') ]);
+      CharacterMotionComposer.declare(character, 'page',
+        [ aDeclaration('breathe', [ 0.5, 100, 'sync' ], 'page') ]);
+      CharacterMotionComposer.declare(character, 'combat:1', [ aDeclaration('claimerR', [], 'combat:1') ]);
+
+      // Act
+      const composition = composeFor(character, 2);
+
+      // Assert- the claimant's 9, multiplied by the 1.5 it is modulating. A discarded baseline
+      // would read 9, and a surviving breathe would put it somewhere either side of 13.5.
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBeCloseTo(13.5, 10);
+    });
+
+    it('leaves an unclaimed channel of the same baseline alone', () =>
+    {
+      // Arrange- the claimant takes only SCALE_X, so SCALE_Y proves the baseline still composes
+      // normally where nothing contested it.
+      registerClaimingType('claimerS');
+      CharacterMotionComposer.declare(character, 'passive:301',
+        [ aDeclaration('scale', [ 150, 1 ], 'passive:301') ]);
+      CharacterMotionComposer.declare(character, 'combat:1', [ aDeclaration('claimerS', [], 'combat:1') ]);
+
+      // Act
+      const composition = composeFor(character, 2);
+
+      // Assert
+      expect(composition.valueFor(MotionChannels.SCALE_Y)).toBeCloseTo(1.5, 10);
+    });
+
+    it('gives the channel to an applied state over a passive one', () =>
+    {
+      // Arrange — an affix swelling a creature is outranked by the affliction that just landed on
+      // it, because the transient thing is the thing the player is meant to be reading.
+      registerClaimingType('claimerP');
+      const passive = aDeclaration('claimerP', [], 'passive:301');
+      const applied = aDeclaration('claimerP', [], 'state:42');
+      CharacterMotionComposer.declare(character, 'passive:301', [ passive ]);
+      CharacterMotionComposer.declare(character, 'state:42', [ applied ]);
+
+      // Act
+      const composition = CharacterMotionComposer.compose(character);
+
+      // Assert
+      const claimant = composition.claimantFor(MotionChannels.SCALE_X);
+      expect(claimant.declaration()
+        .sourceKey()).toBe('state:42');
+    });
+
+    it('gives the channel to a passive over an event page', () =>
+    {
+      // Arrange — the passive is declared first, so winning cannot be an artifact of declaration
+      // order the way it would be between two sources of equal rank.
+      registerClaimingType('claimerQ');
+      const passive = aDeclaration('claimerQ', [], 'passive:301');
+      const ambient = aDeclaration('claimerQ', [], 'page');
+      CharacterMotionComposer.declare(character, 'passive:301', [ passive ]);
+      CharacterMotionComposer.declare(character, 'page', [ ambient ]);
+
+      // Act
+      const composition = CharacterMotionComposer.compose(character);
+
+      // Assert
+      const claimant = composition.claimantFor(MotionChannels.SCALE_X);
+      expect(claimant.declaration()
+        .sourceKey()).toBe('passive:301');
     });
 
     it('ranks an unrecognised source below every named one', () =>

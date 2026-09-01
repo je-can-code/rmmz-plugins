@@ -1,6 +1,8 @@
 //region plugins/time/core/_models/time-snapshot.test.js
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+// Time_Snapshot's import chain reaches Game_Time, which registers its save codec at import time.
+import '../../../../setup/install-serializable-registry-stub.js';
 import Time_Snapshot from '../../../../../src/plugins/time/core/_models/Time_Snapshot.js';
 
 describe('Time_Snapshot', () =>
@@ -583,6 +585,162 @@ describe('Time_Snapshot', () =>
 
       // Assert
       expect(result).toBe(2257);
+    });
+  });
+
+  describe('DaysOfWeekName', () =>
+  {
+    it.each([
+      [ 0, 'Monday' ],
+      [ 1, 'Tuesday' ],
+      [ 2, 'Wednesday' ],
+      [ 3, 'Thursday' ],
+      [ 4, 'Friday' ],
+      [ 5, 'Saturday' ],
+      [ 6, 'Sunday' ],
+    ])('names day %i %s', (dayOfWeekId, expectedName) =>
+    {
+      // Arrange & Act
+      const result = Time_Snapshot.DaysOfWeekName(dayOfWeekId);
+
+      // Assert
+      expect(result).toBe(expectedName);
+    });
+
+    it('reports an error and returns null for an unknown day id', () =>
+    {
+      // Arrange
+      const errorSpy = silenceError();
+
+      // Act
+      const result = Time_Snapshot.DaysOfWeekName(7);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(errorSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('DaysOfWeekId', () =>
+  {
+    it.each([
+      [ 'monday', 0 ],
+      [ 'tuesday', 1 ],
+      [ 'wednesday', 2 ],
+      [ 'thursday', 3 ],
+      [ 'friday', 4 ],
+      [ 'saturday', 5 ],
+      [ 'sunday', 6 ],
+    ])('resolves %s to id %i', (dayOfWeekName, expectedId) =>
+    {
+      // Arrange & Act
+      const result = Time_Snapshot.DaysOfWeekId(dayOfWeekName);
+
+      // Assert
+      expect(result).toBe(expectedId);
+    });
+
+    it('resolves names case-insensitively', () =>
+    {
+      // Arrange & Act
+      const result = Time_Snapshot.DaysOfWeekId('MONDAY');
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('reports an error and returns -1 for an unknown day name', () =>
+    {
+      // Arrange
+      const errorSpy = silenceError();
+
+      // Act
+      const result = Time_Snapshot.DaysOfWeekId('caturday');
+
+      // Assert
+      expect(result).toBe(-1);
+      expect(errorSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('dayOfWeekId', () =>
+  {
+    afterEach(() =>
+    {
+      delete globalThis.J;
+    });
+
+    it('declares the artificial epoch day a monday', () =>
+    {
+      // Arrange- day 1 of month 1 of year 0 is the documented anchor.
+      globalThis.J = { TIME: { Metadata: { UseRealTime: false } } };
+      const subject = snapshotAt({
+        days: 1,
+        months: 1,
+        years: 0,
+      });
+
+      // Act
+      const result = subject.dayOfWeekId();
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('cycles the artificial week across a 30-day month boundary', () =>
+    {
+      // Arrange- day 1 of month 2 of year 0 is 30 whole days in: 30 % 7 = 2, a wednesday.
+      globalThis.J = { TIME: { Metadata: { UseRealTime: false } } };
+      const subject = snapshotAt({
+        days: 1,
+        months: 2,
+        years: 0,
+      });
+
+      // Act
+      const result = subject.dayOfWeekId();
+
+      // Assert
+      expect(result).toBe(2);
+    });
+
+    it('asks the real calendar in real-time mode', () =>
+    {
+      // Arrange- 2026-08-31 is a real-world monday, which the artificial derivation would
+      // compute differently.
+      globalThis.J = { TIME: { Metadata: { UseRealTime: true } } };
+      const subject = snapshotAt({
+        days: 31,
+        months: 8,
+        years: 2026,
+      });
+
+      // Act
+      const result = subject.dayOfWeekId();
+
+      // Assert
+      expect(result).toBe(0);
+    });
+  });
+
+  describe('dayOfWeekName', () =>
+  {
+    it('describes its day of the week by name', () =>
+    {
+      // Arrange- day 2 of month 1 of year 0 is one day past the monday anchor.
+      globalThis.J = { TIME: { Metadata: { UseRealTime: false } } };
+      const subject = snapshotAt({
+        days: 2,
+        months: 1,
+        years: 0,
+      });
+
+      // Act
+      const result = subject.dayOfWeekName;
+
+      // Assert
+      expect(result).toBe('Tuesday');
+      delete globalThis.J;
     });
   });
 });

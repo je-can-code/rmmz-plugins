@@ -121,7 +121,7 @@ describe('J-Motion-ABS metadata (direct src import)', () =>
       await expect(importInitialization()).rejects.toThrow('Either missing J-Motion');
 
       // Cleanup- the umbrella is shared, so the lowered version has to be put back.
-      globalThis.J.MOTION.Metadata.version = { version: () => '1.1.0' };
+      globalThis.J.MOTION.Metadata.version = { version: () => '1.2.0' };
     });
 
     it('refuses to load against a J-ABS that is too old', async () =>

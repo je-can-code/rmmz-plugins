@@ -1,6 +1,8 @@
 //region plugins/time/_component/time-snapshot-direct.test.js
 import { describe, expect, it } from 'vitest';
 
+// Time_Snapshot's import chain reaches Game_Time, which registers its save codec at import time.
+import '../../../setup/install-serializable-registry-stub.js';
 import Time_Snapshot from '../../../../src/plugins/time/core/_models/Time_Snapshot.js';
 
 describe('Time_Snapshot (direct import)', () =>

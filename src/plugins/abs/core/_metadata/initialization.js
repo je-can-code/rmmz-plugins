@@ -888,6 +888,61 @@ J.ABS.RegExp = {
   MoveSpeed: /<moveSpeed:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/i,
   PrepareTime: /<prepare:[ ]?(\d+)>/i,
 
+  // respawn-related.
+  /**
+   * The respawn declaration for a defeated battler, as a method and its parameter.
+   * The method names how the return moment is measured; the parameter feeds that method.
+   * Core ships the "seconds" method; extensions may register additional methods.
+   *
+   * <pre>
+   * Structure:
+   *  <respawn:[METHOD, PARAM]>
+   *
+   * Example:
+   *  <respawn:[seconds, 90]>
+   *
+   * Translation:
+   *  This battler returns 90 seconds of playtime after its defeat.
+   * </pre>
+   * @type {RegExp}
+   */
+  Respawn: /<respawn:[ ]?(\[[\w-]+,[ ]?[\w-]+])>/i,
+
+  /**
+   * The declaration that a defeated battler never returns.
+   * The permanence is recorded at death and survives every save thereafter.
+   *
+   * <pre>
+   * Structure:
+   *  <noRespawn>
+   *
+   * Example:
+   *  <noRespawn>
+   *
+   * Translation:
+   *  Once defeated, this battler is gone for the rest of the playthrough.
+   * </pre>
+   * @type {RegExp}
+   */
+  NoRespawn: /<noRespawn>/i,
+
+  /**
+   * The animation to play on a battler's event when it respawns on the map.
+   *
+   * <pre>
+   * Structure:
+   *  <respawnAnimation:ANIMATION_ID>
+   *
+   * Example:
+   *  <respawnAnimation:12>
+   *
+   * Translation:
+   *  Animation 12 plays on the event as the battler returns.
+   * </pre>
+   * @type {RegExp}
+   */
+  RespawnAnimation: /<respawnAnimation:[ ]?(\d+)>/i,
+
   // bonus concepts.
   VisionMultiplier: /<visionMultiplier:[ ]?(-?\d+)>/i,
   ProjectileDurationMultiplier: /<projectileDuration:[ ]?(-?\d+)>/i,
@@ -1685,6 +1740,7 @@ J.ABS.Aliased = {
   Game_Map: new Map(),
   Game_Party: new Map(),
   Game_Player: new Map(),
+  Game_System: new Map(),
   Game_Unit: new Map(),
 
   RPG_Actor: new Map(),

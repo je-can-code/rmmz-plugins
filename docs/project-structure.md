@@ -67,6 +67,7 @@ Custom action battle system for RMMZ. The largest family in the repo.
 | `abs/ext/speed` | Enable modifying move speeds |
 | `abs/ext/star` | Converts random encounters into star battles. **Incomplete — see `CLAUDE.md`** |
 | `abs/ext/targeting` | Cursor-driven tactical targeting |
+| `abs/ext/time` | Calendar-based respawn methods, spoken against the J-TIME clock |
 | `abs/ext/timing` | Enable modifying cooldowns/casting for actions |
 | `abs/ext/tools` | Enable new tool-like tags for use with skills |
 

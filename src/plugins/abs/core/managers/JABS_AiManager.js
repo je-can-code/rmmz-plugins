@@ -5,6 +5,7 @@ import JABS_BattlerCoreData from '../models/JABS_BattlerCoreData.js';
 import JABS_Battler from '../models/JABS_Battler.js';
 import JABS_ActionOptions from '../models/JABS_ActionOptions.js';
 import JABS_Action from '../models/JABS_Action.js';
+import JABS_RespawnManager from './JABS_RespawnManager.js';
 /**
  * This static class tracks and manages all {@link JABS_Battler}s on the map.
  */
@@ -619,6 +620,10 @@ class JABS_AiManager
     // update the battler with the latest uuid.
     event.setJabsBattlerUuid(jabsBattler.getUuid());
 
+    // a successful conversion consumes any spent respawn record for this event; clearing an
+    // untracked event is a no-op, so every conversion may safely pass through here.
+    $gameSystem.clearRespawnRecord($gameMap.mapId(), event.eventId());
+
     // execute any post conversion mutation necessary.
     this.postConvertMutate(battler, jabsBattler);
 
@@ -662,8 +667,29 @@ class JABS_AiManager
     // if the event isn't a JABS battler, then don't try to convert it.
     if (!event.isJabsBattler()) return false;
 
+    // if the event is still waiting out its respawn- or never returns- don't convert it.
+    if (this.isRespawnPending(event)) return false;
+
     // convert it!
     return true;
+  }
+
+  /**
+   * Determines whether the given event is blocked from conversion by a respawn record.
+   * A record that has come due no longer blocks; the conversion consumes it instead.
+   * @param {Game_Event} event The event to check the registry for.
+   * @returns {boolean} True if a pending or permanent record blocks this event, false otherwise.
+   */
+  static isRespawnPending(event)
+  {
+    // grab any record tracked for this event's place in the world.
+    const record = $gameSystem.respawnRecord($gameMap.mapId(), event.eventId());
+
+    // an untracked event has nothing blocking it.
+    if (record === null) return false;
+
+    // a record blocks until its scheduled moment has passed; permanence never passes.
+    return !JABS_RespawnManager.isDue(record);
   }
 
   /**

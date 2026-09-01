@@ -48,6 +48,18 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.18.0
+ *    Added respawn timers for defeated battlers. A defeated enemy may declare
+ *    when it returns via the new <respawn:[METHOD, PARAM]> tag - resolved as
+ *    world default < enemy note < event comment - and until that moment its
+ *    event stays down through map transitions, saves, and loads. The battler
+ *    then reappears at its authored coordinates while the player watches,
+ *    optionally announced by <respawnAnimation:ID>. <noRespawn> makes a battler
+ *    permanent instead: defeated once, gone for the playthrough. Core ships the
+ *    "seconds" method (playtime-based); extensions can register richer methods
+ *    with the new JABS_RespawnManager. Battlers declaring nothing behave as
+ *    they always have. Dynamically-spawned clones are never tracked, since
+ *    their event ids do not survive a map setup.
  * - 4.17.5
  *    Fixed the Set JABS Skill plugin command assigning nothing when aimed at the
  *    tool or usable item slot. Plugin command arguments arrive as strings, so an
@@ -3127,6 +3139,27 @@
  * @text Default Enemy Is Inanimate
  * @desc Setting this to true will cause all enemies to be inanimate by default. USE WITH CAUTION.
  * @default false
+ *
+ * @param defaultRespawnMethod
+ * @parent enemyDefaultConfigs
+ * @type string
+ * @text Default Respawn Method
+ * @desc The world-default respawn method for defeated enemies. Leave blank for no respawn tracking at all.
+ * @default
+ *
+ * @param defaultRespawnParam
+ * @parent enemyDefaultConfigs
+ * @type string
+ * @text Default Respawn Param
+ * @desc The parameter fed to the world-default respawn method, such as the number of seconds.
+ * @default
+ *
+ * @param defaultRespawnAnimationId
+ * @parent enemyDefaultConfigs
+ * @type animation
+ * @text Default Respawn Animation
+ * @desc The default animation to play on an event when its battler respawns. Set to 0 for no animation.
+ * @default 0
  *
  * @param defaultConfigs
  * @text WHEN UNASSIGNED

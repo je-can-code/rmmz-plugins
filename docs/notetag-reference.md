@@ -1848,6 +1848,104 @@ This event behaves as a non-thinking, non-moving prop rather than a combatant.
 
 ---
 
+### `<respawn:[METHOD, PARAM]>`
+
+**Applies to:**
+Enemy events, Enemies (database default), World default (plugin parameter)
+
+**When:**
+the battler is defeated (the timer starts on death, immediately)
+
+**Effect:**
+schedules when this battler returns to the map after defeat. Until the moment arrives, the event
+stays down — through map transitions, saves, and loads — then the battler reappears at its
+authored coordinates while the player watches (no re-entry required). Resolution order is
+`world default < enemy note < event comment`, so one particular placement can be rarer than its
+siblings without touching the enemy. Defeated enemies with no declaration anywhere behave exactly
+as they always have: back on the next map entry.
+
+METHOD names how the wait is measured; PARAM feeds that method. Core ships one method, and
+J-ABS-Time registers the calendar methods:
+
+| Method | Ships in | PARAM | Returns |
+|---|---|---|---|
+| `seconds` | J-ABS | positive whole seconds | after PARAM seconds of playtime |
+| `game-minutes` | J-ABS-Time | positive whole minutes | after PARAM minutes on the game clock |
+| `time-of-day` | J-ABS-Time | `night`/`dawn`/`morning`/`afternoon`/`evening`/`twilight` | when that time of day next begins |
+| `next-day` | J-ABS-Time | clock time as HMM/HHMM (`830`, `1430`) | tomorrow, at that clock time |
+| `day-of-week` | J-ABS-Time | `monday` … `sunday` | midnight on the next such weekday |
+| `month` | J-ABS-Time | month number 1-12 | the first midnight of that month's next occurrence |
+| `season` | J-ABS-Time | `spring`/`summer`/`autumn`/`winter` | the first midnight of that season's next occurrence |
+
+**Two of these are durations, and they run on different clocks.** `seconds` counts playtime, which
+is dependency-free and pauses exactly when the game does; `game-minutes` counts the J-TIME clock,
+which runs at whatever rate that plugin is configured for and freezes whenever the clock is blocked.
+A cooldown-flavoured wait wants the first; "the mushrooms need an hour to grow" wants the second.
+
+Calendar methods always resolve to the start of the NEXT occurrence, strictly after the moment of
+death — dying during the morning schedules tomorrow's morning, not the one already underway. An
+unknown method (typo, or an uninstalled extension) warns via Diagnostics and tracks nothing.
+
+```
+<respawn:[seconds, 90]>
+```
+This battler returns 90 seconds of playtime after its defeat.
+
+```
+<respawn:[time-of-day, morning]>
+```
+This battler returns the next time morning begins after its defeat.
+
+**See also:** `<noRespawn>`, `<respawnAnimation>`
+
+---
+
+### `<noRespawn>`
+
+**Applies to:**
+Enemy events, Enemies (database default)
+
+**When:**
+the battler is defeated
+
+**Effect:**
+this battler never returns. The permanence is recorded at death and survives every save from then
+on — the world is allowed to be poorer for what the player did to it. Outranks any
+`<respawn:[...]>` declaration on the same battler. Use a switch instead when the *event itself*
+should become something else afterwards (a corpse, an empty throne); use this tag when a species
+should simply be finite with the bookkeeping handled for you.
+
+```
+<noRespawn>
+```
+Once defeated, this battler is gone for the rest of the playthrough.
+
+**See also:** `<respawn>`, `<respawnAnimation>`
+
+---
+
+### `<respawnAnimation:ANIMATION_ID>`
+
+**Applies to:**
+Enemy events, Enemies (database default), World default (plugin parameter)
+
+**When:**
+the battler respawns on the map
+
+**Effect:**
+plays animation ANIMATION_ID on the event as the battler returns, so a node shimmers back into
+existence rather than blinking. Resolution order is `world default < enemy note < event comment`.
+An id of 0 (the shipped default) plays nothing.
+
+```
+<respawnAnimation:12>
+```
+Animation 12 plays on this event as its battler returns.
+
+**See also:** `<respawn>`, `<noRespawn>`
+
+---
+
 ### `<actionId:EVENT_ID>`
 
 **Applies to:**
@@ -4218,7 +4316,7 @@ This skill's swing uses the `heavy` tilt/swing multiplier row instead of the inf
 ### `<motion:[squish]>` / `<motion:[tilt]>` / `<motion:[flip]>` / `<motion:[charge]>`
 
 **Applies to:**
-Anything that can declare a motion — event pages, states, plugin commands
+Anything that can declare a motion — event pages, states, passive states, plugin commands
 
 **When:**
 for as long as the declaration exists
@@ -4575,6 +4673,17 @@ pauses and a reticle appears for the player to aim before the skill executes.
 <targeted>
 ```
 This skill pauses combat and prompts for a target before executing.
+
+---
+
+## J-ABS-Time (`src/plugins/abs/ext/time/`)
+
+Teaches the JABS respawn system to speak in appointments rather than durations. Registers the
+calendar respawn methods — `game-minutes`, `time-of-day`, `next-day`, `day-of-week`, `month`,
+`season` — against
+core's `<respawn:[METHOD, PARAM]>` tag, resolving each to the start of the named moment's next
+occurrence on the J-TIME calendar. Requires J-ABS and J-TIME. Defines no tags of its own; the
+full method table lives with the `<respawn>` entry in the J-ABS section above.
 
 ---
 
@@ -5506,6 +5615,10 @@ This choice is only visible while switch 222 is ON.
 **Applies to:**
 Event page comments
 
+Three plugins read this one tag, and which you need depends on where you write it: **J-Motion** for an
+event page, **J-Motion-ABS** for an applied state, **J-Motion-Passive** for a passive state. Same
+syntax and same types in all three — only the trigger differs.
+
 **When:**
 the page becomes active, and for as long as it stays active
 
@@ -5556,6 +5669,7 @@ state drops, in both directions, with nothing extra written.
 That table is the roster core ships with, not the whole vocabulary: extensions register their own
 types and they are usable everywhere these are. J-Motion-ABS adds `collapse`, and J-ABS-Juice adds
 `squish`, `tilt`, `flip` and `charge` — each documented under the plugin that owns it.
+J-Motion-Passive adds no types of its own; it adds a place to write these.
 
 ```
 <motion:[breathe]>
@@ -5600,7 +5714,7 @@ worth knowing. Everything that only moves, scales or rotates costs nothing beyon
 ### `<motion:[TYPE, PARAM, ...]>` on a state
 
 **Applies to:**
-States
+States, when applied normally
 
 **When:**
 the state is applied, and for as long as it remains
@@ -5615,6 +5729,10 @@ Each state's motions are filed under that state alone, so one expiring never dis
 motion the creature was authored with, nor any other state's. A breathing enemy that catches fire is
 breathing *and* flickering, and stops flickering by itself when the fire goes out.
 
+**Passive states are a different plugin.** This extension animates states that were *applied*, and a
+passive is never applied — J-Passive grants it by another route entirely. The same tag on a passive
+needs **J-Motion-Passive**, below. That distinction matters most for affixes, which are passives.
+
 ```
 <motion:[flicker]>
 ```
@@ -5624,10 +5742,9 @@ Anything afflicted by this state flickers while it lasts.
 <motion:[scale, 150]>
 ```
 Anything afflicted by this state swells to half again its size, easing up as the state lands and
-settling back down when it drops. Both directions come free — this is what makes an `origin` or
-champion affix read at a glance.
+settling back down when it drops. Both directions come free.
 
-**See also:** `<deathMotion>`
+**See also:** `<deathMotion>`, `<motion:[TYPE]>` on a passive state
 
 ---
 
@@ -5706,6 +5823,59 @@ death the enemy asked for, and vice versa.
 This enemy handles its own death.
 
 **See also:** `<deathMotion>`
+
+---
+
+## J-Motion-Passive (`src/plugins/motion/ext/passive/`)
+
+### `<motion:[TYPE, PARAM, ...]>` on a passive state
+
+**Applies to:**
+States, when granted as passives
+
+**When:**
+the passive is granted, and for as long as the battler keeps it
+
+**Effect:**
+gives the battler's sprite a motion for as long as it carries the passive. Same tag, same parser,
+same types as everywhere else — see the J-Motion section above.
+
+This is a separate plugin from J-Motion-ABS because a passive is granted by a different mechanism
+than an applied state. An applied state announces its arrival and departure; a passive announces
+neither, being rebuilt wholesale from every source a battler owns. So this reconciles instead of
+listening, and never goes stale as a result:
+
+- an affix rolled onto an enemy at spawn animates from its first frame
+- a passive granted by a weapon starts and stops with the equipping
+- a passive gated on and off mid-fight by J-Passive-Conditional starts and stops with the gate
+- party cycling moves the leader's passive motions to whoever is leading now
+
+A stacked passive animates **once**. Three stacks of one state are still one thing the sprite is
+doing, and animating it three times would move the sprite three times as far as the tag asked for.
+
+**Which motion wins:** usually nothing does — motions compose. Two things scaling a sprite multiply,
+two things nudging it add, and motions on different channels never meet.
+
+Contests happen only where a motion **claims** a channel, which combat reactions do so a hit reads
+exactly as tuned rather than compounding with whatever ambient wobble the character had. Among
+claimants the ranking decides it, weakest to strongest: event page, **passive**, applied state,
+plugin command, combat reaction.
+
+A held size is not a wobble, so a claim does not suppress it. An enemy at 150% that gets hit squishes
+*around* its own size rather than snapping to normal for the length of the hit.
+
+```
+<motion:[scale, 150]>
+```
+On a champion affix state: anything wearing that affix is half again its usual size, for as long as
+it wears it. This is what makes an `origin` or champion affix read at a glance.
+
+```
+<motion:[throb, 80, 0, 0, 0, 90]>
+```
+On a passive granted by cursed equipment: the wearer pulses red continuously while it is equipped.
+
+**See also:** `<motion:[TYPE]>`, `<motion:[TYPE]>` on a state, `<passive:[STATE_IDS]>`
 
 ---
 

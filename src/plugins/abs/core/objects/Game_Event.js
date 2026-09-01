@@ -40,9 +40,34 @@ Game_Event.prototype.initMembers = function()
    */
   this._j._abs._castedDirection = 0;
 
+  /**
+   * Whether or not this event was cloned onto the map at runtime rather than authored in the
+   * editor. Dynamically-spawned events take appended indices that evaporate on the next map
+   * setup, so respawn tracking must never record them.
+   * @type {boolean}
+   */
+  this._j._abs._dynamicSpawn = false;
+
   // perform original logic.
   J.ABS.Aliased.Game_Event.get('initMembers')
     .call(this);
+};
+
+/**
+ * Flags this event as having been dynamically spawned onto the map at runtime.
+ */
+Game_Event.prototype.flagAsDynamicSpawn = function()
+{
+  this._j._abs._dynamicSpawn = true;
+};
+
+/**
+ * Gets whether or not this event was dynamically spawned onto the map at runtime.
+ * @returns {boolean}
+ */
+Game_Event.prototype.isDynamicSpawn = function()
+{
+  return this._j._abs._dynamicSpawn;
 };
 
 /**
@@ -524,6 +549,94 @@ Game_Event.prototype.getSightRangeOverrides = function()
 
   // return what we found.
   return sightRange;
+};
+
+/**
+ * Parses out the respawn declaration from a list of event commands.
+ * @returns {any[]|null} The found `[METHOD, PARAM]` pair, or null if not found.
+ */
+Game_Event.prototype.getRespawnOverrides = function()
+{
+  // respawn declarations are null by default.
+  let respawnData = null;
+
+  // check all the valid event commands to see if we have an override for respawning.
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
+
+      // check if the comment matches the regex.
+      const regexResult = J.ABS.RegExp.Respawn.exec(comment);
+
+      // if the comment didn't match, then don't try to parse it.
+      if (!regexResult) return;
+
+      // parse the value out of the regex capture group.
+      respawnData = JsonMapper.parseObject(regexResult[1]);
+    });
+
+  // return what we found.
+  return respawnData;
+};
+
+/**
+ * Parses out the no-respawn permanence flag from a list of event commands.
+ * @returns {boolean|null} True if this placement never respawns, or null if not found.
+ */
+Game_Event.prototype.getNoRespawnOverrides = function()
+{
+  // permanence is null by default so the caller can fall back to the enemy database.
+  let noRespawn = null;
+
+  // check all the valid event commands to see if we have an override for permanence.
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
+
+      // check if the comment matches the regex.
+      if (J.ABS.RegExp.NoRespawn.test(comment))
+      {
+        // flag the placement as permanent.
+        noRespawn = true;
+      }
+    });
+
+  // return what we found.
+  return noRespawn;
+};
+
+/**
+ * Parses out the respawn animation id from a list of event commands.
+ * @returns {number|null} The found animation id, or null if not found.
+ */
+Game_Event.prototype.getRespawnAnimationOverrides = function()
+{
+  // animation overrides are null by default.
+  let respawnAnimationId = null;
+
+  // check all the valid event commands to see if we have an override for the animation.
+  this.getValidCommentCommands()
+    .forEach(command =>
+    {
+      // shorthand the comment into a variable.
+      const [ comment, ] = command.parameters;
+
+      // check if the comment matches the regex.
+      const regexResult = J.ABS.RegExp.RespawnAnimation.exec(comment);
+
+      // if the comment didn't match, then don't try to parse it.
+      if (!regexResult) return;
+
+      // parse the value out of the regex capture group.
+      respawnAnimationId = parseInt(regexResult[1]);
+    });
+
+  // return what we found.
+  return respawnAnimationId;
 };
 
 /**

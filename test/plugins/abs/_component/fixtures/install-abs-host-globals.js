@@ -36,7 +36,7 @@ export function setPluginContextToJBase(sandbox = globalThis)
 export function setPluginContextToJAbs(sandbox = globalThis)
 {
   sandbox.__PLUGIN_NAME__ = 'J-ABS';
-  sandbox.__PLUGIN_VERSION__ = '4.13.0';
+  sandbox.__PLUGIN_VERSION__ = '4.18.0';
 }
 
 /**
