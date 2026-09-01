@@ -39,6 +39,18 @@
  * event is visible on the map.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.2
+ *    Text escriptions are now horizontally centered on their event. The map
+ *    coordinate was being added into a pixel offset, drifting every label one
+ *    pixel to the right per tile from the left edge of the map.
+ *    Escription height is now measured from the character sprite instead of
+ *    being picked from the sheet's "$" prefix, which is a single-character
+ *    marker rather than a tall-character one. Small "$" sheets floated their
+ *    labels far too high, and sheets taller than 96 pixels wore theirs inside
+ *    the sprite. Sheets 48 and 96 pixels tall are unaffected.
+ *    <proximityText:DISTANCE> now fades its text in. It was being gated on the
+ *    icon's proximity, so an event with proximity text and no icon never
+ *    showed the text at all.
  * - 1.0.1
  *    <proximityText>/<proximityIcon> now require an explicit DISTANCE; the
  *    no-argument form (implicit distance 0) is no longer supported- use
