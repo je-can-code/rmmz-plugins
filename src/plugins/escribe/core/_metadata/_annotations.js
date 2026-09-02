@@ -39,6 +39,11 @@
  * event is visible on the map.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Multiple <text> tags now render as multiple lines, rather than the last
+ *    one silently winning. An icon rides above the whole block.
+ *    Collapsed text and icons into one internal escription type.
+ *    Fixed unreachable opacity branches and a negative-zero offset.
  * - 1.0.2
  *    Text escriptions are now horizontally centered on their event. The map
  *    coordinate was being added into a pixel offset, drifting every label one

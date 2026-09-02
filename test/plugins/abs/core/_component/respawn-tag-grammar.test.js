@@ -47,14 +47,14 @@ describe('respawn tag grammar (real regexes, real JsonMapper)', () =>
     it('captures and parses a calendar declaration with a hyphenated method and word param', () =>
     {
       // Arrange
-      const comment = '<respawn:[day-of-week, monday]>';
+      const comment = '<respawn:[next-day-of-week, monday]>';
 
       // Act
       const match = globalThis.J.ABS.RegExp.Respawn.exec(comment);
       const parsed = JsonMapper.parseObject(match[1]);
 
       // Assert
-      expect(parsed).toEqual([ 'day-of-week', 'monday' ]);
+      expect(parsed).toEqual([ 'next-day-of-week', 'monday' ]);
     });
 
     it('does not match its respawn-animation sibling tag', () =>

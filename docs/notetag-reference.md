@@ -1873,27 +1873,28 @@ J-ABS-Time registers the calendar methods:
 |---|---|---|---|
 | `seconds` | J-ABS | positive whole seconds | after PARAM seconds of playtime |
 | `game-minutes` | J-ABS-Time | positive whole minutes | after PARAM minutes on the game clock |
-| `time-of-day` | J-ABS-Time | `night`/`dawn`/`morning`/`afternoon`/`evening`/`twilight` | when that time of day next begins |
-| `next-day` | J-ABS-Time | clock time as HMM/HHMM (`830`, `1430`) | tomorrow, at that clock time |
-| `day-of-week` | J-ABS-Time | `monday` … `sunday` | midnight on the next such weekday |
-| `month` | J-ABS-Time | month number 1-12 | the first midnight of that month's next occurrence |
-| `season` | J-ABS-Time | `spring`/`summer`/`autumn`/`winter` | the first midnight of that season's next occurrence |
+| `next-time` | J-ABS-Time | clock time as HMM/HHMM (`830`, `1430`) | the next time the clock reads that |
+| `next-time-of-day` | J-ABS-Time | `night`/`dawn`/`morning`/`afternoon`/`evening`/`twilight` | when that time of day next begins |
+| `next-day-of-week` | J-ABS-Time | `monday` … `sunday` | midnight on the next such weekday |
+| `next-month` | J-ABS-Time | month number 1-12 | the first midnight of that month's next occurrence |
+| `next-season` | J-ABS-Time | `spring`/`summer`/`autumn`/`winter` | the first midnight of that season's next occurrence |
 
 **Two of these are durations, and they run on different clocks.** `seconds` counts playtime, which
 is dependency-free and pauses exactly when the game does; `game-minutes` counts the J-TIME clock,
 which runs at whatever rate that plugin is configured for and freezes whenever the clock is blocked.
 A cooldown-flavoured wait wants the first; "the mushrooms need an hour to grow" wants the second.
 
-Calendar methods resolve to the start of the NEXT occurrence, strictly after the moment of death —
-dying during the morning schedules tomorrow's morning, not the one already underway.
+**The `next-` prefix is the grammar, not decoration.** Every method carrying it names a moment on
+the calendar and waits for that moment to come around again, strictly after the battler fell —
+dying during the morning schedules tomorrow's morning, not the one already underway, and dying at
+dawn schedules the morning a few hours later that same day. Every method *without* the prefix is a
+plain duration. So a reader looking at a tag in an event comment can tell which kind of statement
+it is without coming here to check, which is the entire reason the prefix exists.
 
-**`next-day` is the deliberate exception, and it is the one worth reading twice.** It always lands
-on TOMORROW at the given clock time, even when today's has not arrived yet. Dying at 2am with
-`next-day, 600` waits 28 hours for tomorrow's 6am rather than 4 hours for today's. That is the
-point of it — it says "the morning after this one" rather than "the next morning" — but it also
-means the wait varies with the hour of death, from as little as the target hour itself (dying just
-before midnight) to as much as a full day beyond it (dying just after). It never fires immediately,
-which is what separates it from `time-of-day`.
+`next-time` is the primitive the rest sit on: `next-time-of-day` resolves its phase name to the
+hour that phase begins on and asks the same question. Use `next-time` when the hour you want is not
+one of the six the phases start on — the phases tile the day in four-hour blocks from midnight, so
+6am has no name but is a perfectly good appointment.
 
 An unknown method (typo, or an uninstalled extension) warns via Diagnostics and tracks nothing.
 
@@ -1903,15 +1904,16 @@ An unknown method (typo, or an uninstalled extension) warns via Diagnostics and 
 This battler returns 90 seconds of playtime after its defeat.
 
 ```
-<respawn:[time-of-day, morning]>
+<respawn:[next-time-of-day, morning]>
 ```
 This battler returns the next time morning begins after its defeat. Defeated at 7:59am, it is back
 a minute later; defeated at 8:01am, it waits nearly a full day.
 
 ```
-<respawn:[next-day, 600]>
+<respawn:[next-time, 600]>
 ```
-This battler returns at 6am on the day after its defeat, whatever hour it fell.
+This battler returns the next time the clock reads 6am. Defeated at 4am, that is two hours later
+the same night; defeated at 7am, it is tomorrow.
 
 **See also:** `<noRespawn>`, `<respawnAnimation>`
 
@@ -4696,8 +4698,8 @@ This skill pauses combat and prompts for a target before executing.
 ## J-ABS-Time (`src/plugins/abs/ext/time/`)
 
 Teaches the JABS respawn system to speak in appointments rather than durations. Registers the
-calendar respawn methods — `game-minutes`, `time-of-day`, `next-day`, `day-of-week`, `month`,
-`season` — against
+calendar respawn methods — `game-minutes`, `next-time`, `next-time-of-day`, `next-day-of-week`,
+`next-month`, `next-season` — against
 core's `<respawn:[METHOD, PARAM]>` tag, resolving each to the start of the named moment's next
 occurrence on the J-TIME calendar. Requires J-ABS and J-TIME. Defines no tags of its own; the
 full method table lives with the `<respawn>` entry in the J-ABS section above.
@@ -5020,11 +5022,25 @@ always (subject to proximity gating if present)
 `text` shows EVENT_TEXT floating above the event; `icon` shows the icon at ICON_INDEX. Either or
 both can be present on the same event.
 
+**`text` may appear as many times as you like, and each one becomes its own line**, in the order
+written, reading top to bottom. RMMZ already stores a comment box as one command per line, so
+typing several tags into one box is the natural shape rather than a workaround. All the lines of a
+block share the single `proximityText` range, because they are one block of text rather than
+several independent labels. An `icon` rides above the whole block, so adding a line pushes the icon
+up with it instead of burying it mid-paragraph.
+
 ```
 <text:A rusty old chest.>
 <icon:208>
 ```
 This event shows both descriptive text and an icon above it.
+
+```
+<text:Here lies Viktor.>
+<text:He asked for a bigger sword.>
+<text:He received one.>
+```
+This event shows three lines above it, the first line highest.
 
 ---
 

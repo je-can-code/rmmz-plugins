@@ -283,7 +283,10 @@ describe('Sprite_Character motion application (direct src import)', () =>
     it('writes the colour channels for a tone motion', () =>
     {
       // Arrange
-      declareMotion('throb', [ 0, 0, 80, 0, 100 ]);
+      // Arrange- sync pins the phase offset to zero. without it the registry rolls a random start
+      // within the period, and fifty ticks into a hundred-tick cycle then lands wherever the roll
+      // put it- including exactly on the trough, where the rise is zero and this assertion fails.
+      declareMotion('throb', [ 0, 0, 80, 0, 100, 'sync' ]);
 
       // Act
       const ticks = 50;
@@ -293,14 +296,17 @@ describe('Sprite_Character motion application (direct src import)', () =>
       }
 
       // Assert
-      expect(sprite.appliedTone[2]).toBeGreaterThan(0);
+      // fifty ticks is the crest of a hundred-tick cycle, so the blue arrives at its full declared
+      // strength rather than merely at something above zero.
+      expect(sprite.appliedTone[2]).toBe(80);
       expect(sprite.isMotionColored()).toBe(true);
     });
 
     it('writes the colour channels for a flash motion', () =>
     {
-      // Arrange
-      declareMotion('flash', [ '#ff0000', 100 ]);
+      // Arrange- as with the throb above, sync is what stops the random phase roll from putting
+      // this fifty-tick sample on the trough of its own cycle.
+      declareMotion('flash', [ '#ff0000', 100, 'sync' ]);
 
       // Act
       const ticks = 50;
@@ -310,7 +316,8 @@ describe('Sprite_Character motion application (direct src import)', () =>
       }
 
       // Assert
-      expect(sprite.appliedBlendColor[3]).toBeGreaterThan(0);
+      // the crest of the cycle again, which for a flash is full alpha.
+      expect(sprite.appliedBlendColor[3]).toBe(255);
     });
 
     it('writes a tint as a packed colour', () =>

@@ -342,6 +342,14 @@ describe('J-TIME event page + choice conditionals (direct src import)', () =>
 
   describe('Game_Interpreter.shouldHideChoiceBranch', () =>
   {
+    // the page of whichever map event spawned the interpreter, staged as a near-miss on every case
+    // below. a choice inside a called common event runs on a child interpreter holding the caller's
+    // event id, so this page is always reachable and never the right answer; it carries no time tag,
+    // so anything that read it would show every branch unconditionally.
+    const spawningEventPage = () => ({
+      page: () => ({ list: [ { code: 108, indent: 0, parameters: [ '<spawner>' ] } ] }),
+    });
+
     describe('hourChoice tag', () =>
     {
       function interpreterWithCommand(comment)
@@ -349,9 +357,8 @@ describe('J-TIME event page + choice conditionals (direct src import)', () =>
         const interp = new globalThis.Game_Interpreter();
         interp.eventId = () => 1;
         interp.currentCommand = () => ({ indent: 0 });
-        globalThis.$gameMap = {
-          event: () => ({ page: () => ({ list: [ { code: 108, indent: 0, parameters: [ comment ] } ] }) }),
-        };
+        interp.list = () => [ { code: 108, indent: 0, parameters: [ comment ] } ];
+        globalThis.$gameMap = { event: spawningEventPage };
 
         return interp;
       }
@@ -390,9 +397,8 @@ describe('J-TIME event page + choice conditionals (direct src import)', () =>
         const interp = new globalThis.Game_Interpreter();
         interp.eventId = () => 1;
         interp.currentCommand = () => ({ indent: 0 });
-        globalThis.$gameMap = {
-          event: () => ({ page: () => ({ list: [ { code: 108, indent: 0, parameters: [ '<dayChoice:1>' ] } ] }) }),
-        };
+        interp.list = () => [ { code: 108, indent: 0, parameters: [ '<dayChoice:1>' ] } ];
+        globalThis.$gameMap = { event: spawningEventPage };
 
         return interp;
       }
@@ -431,11 +437,8 @@ describe('J-TIME event page + choice conditionals (direct src import)', () =>
         const interp = new globalThis.Game_Interpreter();
         interp.eventId = () => 1;
         interp.currentCommand = () => ({ indent: 0 });
-        globalThis.$gameMap = {
-          event: () => ({
-            page: () => ({ list: [ { code: 108, indent: 0, parameters: [ '<seasonOfYearChoice:summer>' ] } ] }),
-          }),
-        };
+        interp.list = () => [ { code: 108, indent: 0, parameters: [ '<seasonOfYearChoice:summer>' ] } ];
+        globalThis.$gameMap = { event: spawningEventPage };
 
         return interp;
       }

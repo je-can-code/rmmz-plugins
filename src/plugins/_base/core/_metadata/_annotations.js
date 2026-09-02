@@ -157,6 +157,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.8.0
+ *    Added Game_Event.commentNote, letting RPGManager read event comments.
+ *    Added Game_Interpreter.list, the commands actually being executed.
  * - 3.7.2
  *    parsePluginInt no longer pre-checks for a missing or blank value. Parsing one
  *    yields NaN, which the finite check below already turns into the fallback, so

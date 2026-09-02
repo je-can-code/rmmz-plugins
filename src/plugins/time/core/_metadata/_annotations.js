@@ -201,6 +201,9 @@
  *
  * =============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Fixed time choice conditionals not hiding branches inside called common
+ *    events.
  * - 1.2.0
  *    Added a day-of-week vocabulary to Time_Snapshot: DaysOfWeekName and
  *    DaysOfWeekId translate between names and ids (0-6 starting from Monday),

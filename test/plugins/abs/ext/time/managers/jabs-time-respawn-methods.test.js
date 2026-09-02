@@ -368,9 +368,24 @@ describe('JABS_TimeRespawnMethods (unit, all cross-ship globals stubbed)', () =>
       // Assert
       expect(due).toBe(expected);
     });
+
+    it('resolves the phase to its starting hour and defers to the clock-time scheduler', () =>
+    {
+      // Arrange- evening begins at 16:00, so the phase name must arrive as the clock time 1600.
+      const spy = vi.spyOn(JABS_TimeRespawnMethods, 'scheduleNextClockTime')
+        .mockReturnValue(1234);
+
+      // Act
+      const due = JABS_TimeRespawnMethods.scheduleTimeOfDay('evening');
+
+      // Assert
+      expect(spy).toHaveBeenCalledWith('1600');
+      expect(due).toBe(1234);
+      spy.mockRestore();
+    });
   });
 
-  describe('scheduleNextDay', () =>
+  describe('scheduleNextClockTime', () =>
   {
     it('schedules nothing for a non-numeric clock value', () =>
     {
@@ -378,7 +393,7 @@ describe('JABS_TimeRespawnMethods (unit, all cross-ship globals stubbed)', () =>
       const param = 'noonish';
 
       // Act
-      const due = JABS_TimeRespawnMethods.scheduleNextDay(param);
+      const due = JABS_TimeRespawnMethods.scheduleNextClockTime(param);
 
       // Assert
       expect(due).toBeNull();
@@ -390,7 +405,7 @@ describe('JABS_TimeRespawnMethods (unit, all cross-ship globals stubbed)', () =>
       const param = '-830';
 
       // Act
-      const due = JABS_TimeRespawnMethods.scheduleNextDay(param);
+      const due = JABS_TimeRespawnMethods.scheduleNextClockTime(param);
 
       // Assert
       expect(due).toBeNull();
@@ -402,7 +417,7 @@ describe('JABS_TimeRespawnMethods (unit, all cross-ship globals stubbed)', () =>
       const param = '2400';
 
       // Act
-      const due = JABS_TimeRespawnMethods.scheduleNextDay(param);
+      const due = JABS_TimeRespawnMethods.scheduleNextClockTime(param);
 
       // Assert
       expect(due).toBeNull();
@@ -414,19 +429,31 @@ describe('JABS_TimeRespawnMethods (unit, all cross-ship globals stubbed)', () =>
       const param = '1275';
 
       // Act
-      const due = JABS_TimeRespawnMethods.scheduleNextDay(param);
+      const due = JABS_TimeRespawnMethods.scheduleNextClockTime(param);
 
       // Assert
       expect(due).toBeNull();
     });
 
-    it('schedules tomorrow at the requested clock time', () =>
+    it('schedules today\'s occurrence when it is still ahead', () =>
     {
-      // Arrange- 830 reads as 8:30am on day 5, the day after now's day 4.
-      const expected = JABS_TimeRespawnMethods.epochOf(buildSnapshot(0, 30, 8, 5, 5, 2));
+      // Arrange- now is 9:15am on day 4; 2:30pm today has not arrived yet.
+      const expected = JABS_TimeRespawnMethods.epochOf(buildSnapshot(0, 30, 14, 4, 5, 2));
 
       // Act
-      const due = JABS_TimeRespawnMethods.scheduleNextDay('830');
+      const due = JABS_TimeRespawnMethods.scheduleNextClockTime('1430');
+
+      // Assert
+      expect(due).toBe(expected);
+    });
+
+    it('schedules tomorrow\'s occurrence when today\'s has already passed', () =>
+    {
+      // Arrange- now is 9:15am on day 4; 6am today is behind us, so day 5's is next.
+      const expected = JABS_TimeRespawnMethods.epochOf(buildSnapshot(0, 0, 6, 5, 5, 2));
+
+      // Act
+      const due = JABS_TimeRespawnMethods.scheduleNextClockTime('600');
 
       // Assert
       expect(due).toBe(expected);
@@ -614,20 +641,20 @@ describe('JABS_TimeRespawnMethods (unit, all cross-ship globals stubbed)', () =>
       // Act & Assert
       expect(registeredNames).toEqual([
         'game-minutes',
-        'time-of-day',
-        'next-day',
-        'day-of-week',
-        'month',
-        'season',
+        'next-time',
+        'next-time-of-day',
+        'next-day-of-week',
+        'next-month',
+        'next-season',
       ]);
     });
 
     describe.each([
       [ 'game-minutes', 'scheduleGameMinutes', '30' ],
-      [ 'time-of-day', 'scheduleTimeOfDay', 'morning' ],
-      [ 'next-day', 'scheduleNextDay', '830' ],
-      [ 'day-of-week', 'scheduleDayOfWeek', 'monday' ],
-      [ 'season', 'scheduleSeason', 'winter' ],
+      [ 'next-time', 'scheduleNextClockTime', '830' ],
+      [ 'next-time-of-day', 'scheduleTimeOfDay', 'morning' ],
+      [ 'next-day-of-week', 'scheduleDayOfWeek', 'monday' ],
+      [ 'next-season', 'scheduleSeason', 'winter' ],
     ])('%s', (methodName, schedulerName, sampleParam) =>
     {
       it('delegates scheduling to its scheduler', () =>
@@ -653,7 +680,7 @@ describe('JABS_TimeRespawnMethods (unit, all cross-ship globals stubbed)', () =>
         .mockReturnValue(1234);
 
       // Act
-      const due = registeredHandler('month').schedule('9');
+      const due = registeredHandler('next-month').schedule('9');
 
       // Assert
       expect(spy).toHaveBeenCalledWith(9);
@@ -663,11 +690,11 @@ describe('JABS_TimeRespawnMethods (unit, all cross-ship globals stubbed)', () =>
 
     describe.each([
       [ 'game-minutes' ],
-      [ 'time-of-day' ],
-      [ 'next-day' ],
-      [ 'day-of-week' ],
-      [ 'month' ],
-      [ 'season' ],
+      [ 'next-time' ],
+      [ 'next-time-of-day' ],
+      [ 'next-day-of-week' ],
+      [ 'next-month' ],
+      [ 'next-season' ],
     ])('%s', methodName =>
     {
       it('delegates its due check to the shared epoch comparison', () =>

@@ -9,10 +9,10 @@ import {
 import PluginMetadata from '../../../../../src/plugins/_base/core/models/PluginMetadata.js';
 
 /**
- * The escription state an event carries, and the proximity it recomputes every frame.
+ * The escriptions an event carries, and the proximity it recomputes every frame.
  *
  * The parsing half is covered by the component test next door; what is left here is the state
- * surface it writes through and the per-frame proximity update that reads it back. Both matter for
+ * surface it writes through and the per-frame proximity sweep that reads it back. Both matter for
  * the same reason: an escription that never turns off is a label that follows the player around the
  * map, and nothing about that failure looks like an error.
  */
@@ -37,15 +37,15 @@ describe('J-Escriptions Game_Event', () =>
   };
 
   /**
-   * Builds an event already holding describe data, standing a set distance from the player.
-   * @param {Escription} escription The describe data to hold.
-   * @param {number} distance How far the player is standing.
+   * Builds an event already describing things, standing a set distance from the player.
+   * @param {Escription[]} escriptions The escriptions to hold.
+   * @param {number} distance How far the player is standing, in tiles.
    * @returns {Game_Event} The event under test.
    */
-  const buildDescribedEvent = (escription, distance) =>
+  const buildDescribedEvent = (escriptions, distance) =>
   {
     const event = buildEvent({ distanceFromPlayer: () => distance });
-    event.setEscribeData(escription);
+    event.setEscriptions(escriptions);
 
     return event;
   };
@@ -59,6 +59,9 @@ describe('J-Escriptions Game_Event', () =>
 
     setPluginContextToJBase();
     await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
+
+    // the parse path reaches through the real note parser, so setupPage() needs it present.
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/core/managers/RPGManager.js'));
 
     setPluginContextToJEscribe();
     await import('../../../../../src/plugins/escribe/core/_metadata/initialization.js');
@@ -87,208 +90,115 @@ describe('J-Escriptions Game_Event', () =>
   //region the state an escription lives in
   describe('initMembers()', () =>
   {
-    it('seeds no describe data, because nothing has read the event\'s page yet', () =>
+    it('seeds an empty escription list, because nothing has read the event\'s page yet', () =>
     {
       // Arrange
+      const event = new Game_Event();
+
       // Act
-      const event = buildEvent();
+      event.initMembers();
 
       // Assert
-      expect(event.escribeData())
-        .toBeNull();
-      expect(event.hasEscribeData())
-        .toBe(false);
+      expect(event.escriptions()).toEqual([]);
     });
 
-    it('seeds both proximity flags unknown rather than false', () =>
+    it('always calls through to the original aliased implementation', () =>
     {
       // Arrange
-      // Act
-      const event = buildEvent();
+      const spy = vi.spyOn(globalThis.J.ESCRIBE.Aliased.Game_Event.get('initMembers'), 'call');
+      const event = new Game_Event();
 
-      // Assert: false would claim the player has been measured and found far away, which is a
-      // different statement than never having measured.
-      expect(event.getPlayerNearbyForText())
-        .toBeNull();
-      expect(event.getPlayerNearbyForIcon())
-        .toBeNull();
-    });
-
-    it('seeds neither pending flag, since there is nothing to add or remove yet', () =>
-    {
-      // Arrange
       // Act
-      const event = buildEvent();
+      event.initMembers();
 
       // Assert
-      expect(event.needsEscribeAdding())
-        .toBe(false);
-      expect(event.needsEscribeRemoval())
-        .toBe(false);
+      expect(spy).toHaveBeenCalledTimes(1);
+      spy.mockRestore();
     });
   });
 
-  describe('setEscribeData()', () =>
+  describe('setEscriptions()', () =>
   {
-    it('holds the describe data the parse produced', () =>
+    it('holds the escriptions the parse produced', () =>
     {
       // Arrange
       const event = buildEvent();
-      const escription = new Escription('Hello', 12, 2, 1);
+      const escription = new Escription(Escription.Kinds.Text, 'a rusty old chest', -1);
 
       // Act
-      event.setEscribeData(escription);
+      event.setEscriptions([ escription ]);
 
       // Assert
-      expect(event.escribeData())
-        .toBe(escription);
-      expect(event.hasEscribeData())
-        .toBe(true);
+      expect(event.escriptions()).toEqual([ escription ]);
     });
   });
 
-  describe('setPlayerNearbyForText()', () =>
+  describe('hasEscriptions()', () =>
   {
-    it('records whether the player is close enough to read the text', () =>
+    it('describes nothing while the list is empty', () =>
     {
       // Arrange
       const event = buildEvent();
 
       // Act
-      event.setPlayerNearbyForText(true);
+      const result = event.hasEscriptions();
 
       // Assert
-      expect(event.getPlayerNearbyForText())
-        .toBe(true);
+      expect(result).toBe(false);
     });
-  });
 
-  describe('setPlayerNearbyForIcon()', () =>
-  {
-    it('records whether the player is close enough to see the icon', () =>
+    it('describes something the moment the list holds one', () =>
     {
       // Arrange
       const event = buildEvent();
+      event.setEscriptions([ new Escription(Escription.Kinds.Icon, 208, -1) ]);
 
       // Act
-      event.setPlayerNearbyForIcon(true);
+      const result = event.hasEscriptions();
 
       // Assert
-      expect(event.getPlayerNearbyForIcon())
-        .toBe(true);
-    });
-  });
-
-  describe('flagForEscribeAddition()', () =>
-  {
-    it('marks the escription as owed to the map', () =>
-    {
-      // Arrange
-      const event = buildEvent();
-
-      // Act
-      event.flagForEscribeAddition();
-
-      // Assert
-      expect(event.needsEscribeAdding())
-        .toBe(true);
-    });
-  });
-
-  describe('acknowledgeEscribeAddition()', () =>
-  {
-    it('clears the flag once the map has taken the escription', () =>
-    {
-      // Arrange
-      const event = buildEvent();
-      event.flagForEscribeAddition();
-
-      // Act
-      event.acknowledgeEscribeAddition();
-
-      // Assert: leaving it set would have the map re-add the same escription every frame.
-      expect(event.needsEscribeAdding())
-        .toBe(false);
-    });
-  });
-
-  describe('flagForEscribeRemoval()', () =>
-  {
-    it('marks the escription as owed removal from the map', () =>
-    {
-      // Arrange
-      const event = buildEvent();
-
-      // Act
-      event.flagForEscribeRemoval();
-
-      // Assert
-      expect(event.needsEscribeRemoval())
-        .toBe(true);
-    });
-  });
-
-  describe('acknowledgeEscribeRemoval()', () =>
-  {
-    it('clears the flag once the map has dropped the escription', () =>
-    {
-      // Arrange
-      const event = buildEvent();
-      event.flagForEscribeRemoval();
-
-      // Act
-      event.acknowledgeEscribeRemoval();
-
-      // Assert
-      expect(event.needsEscribeRemoval())
-        .toBe(false);
+      expect(result).toBe(true);
     });
   });
   //endregion the state an escription lives in
 
-  //region when the page is allowed to be read at all
+  //region who is allowed to be read
   describe('canParseEscriptionComments()', () =>
   {
     it('reads an ordinary event standing on a real page', () =>
     {
       // Arrange
-      const event = buildEvent();
-      event._pageIndex = 0;
+      const event = buildEvent({ _pageIndex: 0 });
 
       // Act
-      const canParse = event.canParseEscriptionComments();
+      const result = event.canParseEscriptionComments();
 
       // Assert
-      expect(canParse)
-        .toBe(true);
+      expect(result).toBe(true);
     });
 
     it('refuses an event with no active page', () =>
     {
       // Arrange
-      const event = buildEvent();
-      event._pageIndex = -1;
+      const event = buildEvent({ _pageIndex: -1 });
 
       // Act
-      const canParse = event.canParseEscriptionComments();
+      const result = event.canParseEscriptionComments();
 
       // Assert
-      expect(canParse)
-        .toBe(false);
+      expect(result).toBe(false);
     });
 
     it('refuses an event whose page conditions are unmet', () =>
     {
       // Arrange
-      const event = buildEvent();
-      event._pageIndex = -2;
+      const event = buildEvent({ _pageIndex: -2 });
 
       // Act
-      const canParse = event.canParseEscriptionComments();
+      const result = event.canParseEscriptionComments();
 
       // Assert
-      expect(canParse)
-        .toBe(false);
+      expect(result).toBe(false);
     });
 
     it('refuses a JABS action, which is torn down before a label could ever be read', () =>
@@ -296,17 +206,16 @@ describe('J-Escriptions Game_Event', () =>
       // Arrange
       globalThis.J.ABS = {};
       const event = buildEvent({
+        _pageIndex: 0,
         isJabsAction: () => true,
         isJabsLoot: () => false,
       });
-      event._pageIndex = 0;
 
       // Act
-      const canParse = event.canParseEscriptionComments();
+      const result = event.canParseEscriptionComments();
 
       // Assert
-      expect(canParse)
-        .toBe(false);
+      expect(result).toBe(false);
     });
 
     it('refuses JABS loot, which carries its own presentation already', () =>
@@ -314,333 +223,160 @@ describe('J-Escriptions Game_Event', () =>
       // Arrange
       globalThis.J.ABS = {};
       const event = buildEvent({
+        _pageIndex: 0,
         isJabsAction: () => false,
         isJabsLoot: () => true,
       });
-      event._pageIndex = 0;
 
       // Act
-      const canParse = event.canParseEscriptionComments();
+      const result = event.canParseEscriptionComments();
 
       // Assert
-      expect(canParse)
-        .toBe(false);
+      expect(result).toBe(false);
     });
 
     it('reads an ordinary event even while JABS is installed', () =>
     {
-      // Arrange: with JABS present every event gets asked whether it is an action or loot, and a
-      // plain villager answers no to both - being asked must not cost it its label.
+      // Arrange
       globalThis.J.ABS = {};
       const event = buildEvent({
+        _pageIndex: 0,
         isJabsAction: () => false,
         isJabsLoot: () => false,
       });
-      event._pageIndex = 0;
 
       // Act
-      const canParse = event.canParseEscriptionComments();
+      const result = event.canParseEscriptionComments();
 
       // Assert
-      expect(canParse)
-        .toBe(true);
+      expect(result).toBe(true);
     });
 
     it('never asks about JABS objects when JABS is not installed', () =>
     {
-      // Arrange
+      // Arrange- the predicates would answer true if anything called them, so a passing read here
+      // proves the namespace check short-circuited before reaching them.
       const isJabsAction = vi.fn(() => true);
-      const event = buildEvent({ isJabsAction });
-      event._pageIndex = 0;
+      const event = buildEvent({
+        _pageIndex: 0,
+        isJabsAction,
+      });
 
       // Act
-      const canParse = event.canParseEscriptionComments();
+      const result = event.canParseEscriptionComments();
 
       // Assert
-      expect(isJabsAction)
-        .not.toHaveBeenCalled();
-      expect(canParse)
-        .toBe(true);
-    });
-  });
-
-  describe('parseEscriptionComments()', () =>
-  {
-    it('does nothing at all to an event it is not allowed to read', () =>
-    {
-      // Arrange
-      const event = buildEvent({ getValidCommentCommands: () => [ { parameters: [ '<text:Hello>' ] } ] });
-      event._pageIndex = -1;
-
-      // Act
-      event.parseEscriptionComments();
-
-      // Assert: not merely "produces nothing" - it must not clear or flag anything either.
-      expect(event.hasEscribeData())
-        .toBe(false);
-      expect(event.needsEscribeRemoval())
-        .toBe(false);
-    });
-
-    it('builds describe data from an icon alone, with no text beneath it', () =>
-    {
-      // Arrange: a bare icon floating over an event is a complete escription and a deliberate
-      // authoring choice, so the icon has to be able to carry the tag by itself.
-      const event = buildEvent({ getValidCommentCommands: () => [ { parameters: [ '<icon: 12>' ] } ] });
-      event._pageIndex = 0;
-
-      // Act
-      event.parseEscriptionComments();
-
-      // Assert
-      expect(event.escribeData()
-        .iconIndex())
-        .toBe(12);
-      expect(event.needsEscribeAdding())
-        .toBe(true);
+      expect(result).toBe(true);
+      expect(isJabsAction).not.toHaveBeenCalled();
     });
   });
 
   describe('setupPage()', () =>
   {
-    it('re-reads the escription, because a new page can describe something else entirely', () =>
+    it('re-reads the escriptions, because a new page can describe something else entirely', () =>
     {
       // Arrange
-      const event = buildEvent({ getValidCommentCommands: () => [ { parameters: [ '<text:Hello>' ] } ] });
-      event._pageIndex = 0;
+      const event = buildEvent({ _pageIndex: 0 });
+      const parse = vi.spyOn(event, 'parseEscriptionComments');
 
       // Act
       event.setupPage();
 
       // Assert
-      expect(event.escribeData()
-        .text())
-        .toBe('Hello');
+      expect(parse).toHaveBeenCalledTimes(1);
     });
   });
-  //endregion when the page is allowed to be read at all
+  //endregion who is allowed to be read
 
-  //region the proximity recomputed every frame
-  describe('hasProximityEscriptionData()', () =>
+  //region the per-frame proximity sweep
+  describe('updateEscriptionProximity()', () =>
   {
-    it('has none when the event has no describe data at all', () =>
+    it('measures nothing for an event that describes nothing', () =>
     {
       // Arrange
-      const event = buildEvent();
+      const distanceFromPlayer = vi.fn(() => 1);
+      const event = buildEvent({ distanceFromPlayer });
 
       // Act
-      const hasProximity = event.hasProximityEscriptionData();
+      event.updateEscriptionProximity();
 
       // Assert
-      expect(hasProximity)
-        .toBe(false);
+      expect(distanceFromPlayer).not.toHaveBeenCalled();
     });
 
-    it('has none when both ranges sit at the default', () =>
-    {
-      // Arrange: a describe with no proximity is always visible, so there is nothing to recompute.
-      const event = buildEvent();
-      event.setEscribeData(new Escription('Hello', 12, -1, -1));
-
-      // Act
-      const hasProximity = event.hasProximityEscriptionData();
-
-      // Assert
-      expect(hasProximity)
-        .toBe(false);
-    });
-
-    it('has some when only the text carries a range', () =>
+    it('measures nothing when every escription is always visible', () =>
     {
       // Arrange
-      const event = buildEvent();
-      event.setEscribeData(new Escription('Hello', 12, 3, -1));
+      const distanceFromPlayer = vi.fn(() => 1);
+      const event = buildEvent({ distanceFromPlayer });
+      event.setEscriptions([ new Escription(Escription.Kinds.Text, 'always', Escription.ALWAYS_VISIBLE) ]);
 
       // Act
-      const hasProximity = event.hasProximityEscriptionData();
+      event.updateEscriptionProximity();
 
       // Assert
-      expect(hasProximity)
-        .toBe(true);
+      expect(distanceFromPlayer).not.toHaveBeenCalled();
     });
 
-    it('has some when only the icon carries a range', () =>
+    it('marks the player near once they are inside the range', () =>
     {
-      // Arrange
-      const event = buildEvent();
-      event.setEscribeData(new Escription('Hello', 12, -1, 3));
+      // Arrange- the range is met exactly, which is the boundary the comparison is written on.
+      const gated = new Escription(Escription.Kinds.Text, 'gated', 3);
+      const event = buildDescribedEvent([ gated ], 3);
 
       // Act
-      const hasProximity = event.hasProximityEscriptionData();
+      event.updateEscriptionProximity();
 
       // Assert
-      expect(hasProximity)
-        .toBe(true);
-    });
-  });
-
-  describe('updateEscribeTextProximity()', () =>
-  {
-    it('leaves the flag untouched when the text is not proximity-gated', () =>
-    {
-      // Arrange
-      const event = buildDescribedEvent(new Escription('Hello', 12, -1, 3), 1);
-
-      // Act
-      event.updateEscribeTextProximity();
-
-      // Assert: a text with no range is always shown, and writing false here would hide it.
-      expect(event.getPlayerNearbyForText())
-        .toBeNull();
+      expect(gated.isPlayerNearby()).toBe(true);
     });
 
-    it('shows the text once the player is inside its range', () =>
+    it('marks the player away once they are outside the range', () =>
     {
       // Arrange
-      const event = buildDescribedEvent(new Escription('Hello', 12, 3, -1), 2);
+      const gated = new Escription(Escription.Kinds.Text, 'gated', 3);
+      gated.setPlayerNearby(true);
+      const event = buildDescribedEvent([ gated ], 4);
 
       // Act
-      event.updateEscribeTextProximity();
+      event.updateEscriptionProximity();
 
       // Assert
-      expect(event.getPlayerNearbyForText())
-        .toBe(true);
+      expect(gated.isPlayerNearby()).toBe(false);
     });
 
-    it('shows the text at exactly the range, rather than one tile short of it', () =>
+    it('leaves an always-visible sibling alone while updating a gated one', () =>
     {
-      // Arrange
-      const event = buildDescribedEvent(new Escription('Hello', 12, 3, -1), 3);
+      // Arrange- the ungated one has to survive the sweep untouched, or "updates the gated ones"
+      // and "updates everything" would be the same program.
+      const gated = new Escription(Escription.Kinds.Text, 'gated', 5);
+      const ungated = new Escription(Escription.Kinds.Icon, 208, Escription.ALWAYS_VISIBLE);
+      const event = buildDescribedEvent([ gated, ungated ], 2);
 
       // Act
-      event.updateEscribeTextProximity();
+      event.updateEscriptionProximity();
 
       // Assert
-      expect(event.getPlayerNearbyForText())
-        .toBe(true);
-    });
-
-    it('hides the text again once the player walks back out of range', () =>
-    {
-      // Arrange
-      const event = buildDescribedEvent(new Escription('Hello', 12, 3, -1), 9);
-      event.setPlayerNearbyForText(true);
-
-      // Act
-      event.updateEscribeTextProximity();
-
-      // Assert
-      expect(event.getPlayerNearbyForText())
-        .toBe(false);
-    });
-  });
-
-  describe('updateEscribeIconProximity()', () =>
-  {
-    it('leaves the flag untouched when the icon is not proximity-gated', () =>
-    {
-      // Arrange
-      const event = buildDescribedEvent(new Escription('Hello', 12, 3, -1), 1);
-
-      // Act
-      event.updateEscribeIconProximity();
-
-      // Assert
-      expect(event.getPlayerNearbyForIcon())
-        .toBeNull();
-    });
-
-    it('shows the icon once the player is inside its range', () =>
-    {
-      // Arrange
-      const event = buildDescribedEvent(new Escription('Hello', 12, -1, 3), 2);
-
-      // Act
-      event.updateEscribeIconProximity();
-
-      // Assert
-      expect(event.getPlayerNearbyForIcon())
-        .toBe(true);
-    });
-
-    it('hides the icon again once the player walks back out of range', () =>
-    {
-      // Arrange
-      const event = buildDescribedEvent(new Escription('Hello', 12, -1, 3), 9);
-      event.setPlayerNearbyForIcon(true);
-
-      // Act
-      event.updateEscribeIconProximity();
-
-      // Assert
-      expect(event.getPlayerNearbyForIcon())
-        .toBe(false);
+      expect(gated.isPlayerNearby()).toBe(true);
+      expect(ungated.isPlayerNearby()).toBe(false);
     });
   });
 
   describe('update()', () =>
   {
-    it('recomputes both proximities for an event that has any', () =>
+    it('sweeps proximity on top of the original update', () =>
     {
       // Arrange
-      const event = buildDescribedEvent(new Escription('Hello', 12, 3, 3), 1);
+      const event = buildEvent({ distanceFromPlayer: () => 1 });
+      const sweep = vi.spyOn(event, 'updateEscriptionProximity');
 
       // Act
       event.update();
 
       // Assert
-      expect(event.getPlayerNearbyForText())
-        .toBe(true);
-      expect(event.getPlayerNearbyForIcon())
-        .toBe(true);
-    });
-
-    it('skips the work entirely for an event with nothing proximity-gated', () =>
-    {
-      // Arrange: this runs for every event on the map, every frame, so the guard is the point.
-      const distanceFromPlayer = vi.fn(() => 1);
-      const event = buildEvent({ distanceFromPlayer });
-
-      // Act
-      event.update();
-
-      // Assert
-      expect(distanceFromPlayer)
-        .not.toHaveBeenCalled();
+      expect(sweep).toHaveBeenCalledTimes(1);
     });
   });
-  //endregion the proximity recomputed every frame
-
-  //region the abstract defaults every non-event character keeps
-  describe('Game_Character defaults', () =>
-  {
-    it('reports no escribe data, because only events can carry a description', () =>
-    {
-      // Arrange- the player, followers and vehicles all reach these. They exist so the map's own
-      // sweep can ask every character the same question without knowing which kind it is holding.
-      const character = new globalThis.Game_Character();
-
-      // Act
-      const hasData = character.hasEscribeData();
-
-      // Assert
-      expect(hasData)
-        .toBe(false);
-    });
-
-    it('parses nothing, since a non-event has no comment commands to read', () =>
-    {
-      // Arrange
-      const character = new globalThis.Game_Character();
-
-      // Act
-      const parse = () => character.parseEscriptionComments();
-
-      // Assert
-      expect(parse)
-        .not.toThrow();
-    });
-  });
-  //endregion the abstract defaults every non-event character keeps
+  //endregion the per-frame proximity sweep
 });
 //endregion plugins/escribe/core/objects/game-event.test.js

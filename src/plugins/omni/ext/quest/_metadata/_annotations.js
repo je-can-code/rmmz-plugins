@@ -140,6 +140,9 @@
  * This choice is only shown while objective 2 of that quest is completed.
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.3
+ *    Fixed quest choice conditionals not hiding branches inside called common
+ *    events. Dropped the dead commonEventId accessor.
  * - 2.0.2
  *    Routed every quest and objective warning and error through J-Base's new
  *    Diagnostics, so each names J-OMNI-Quests. Removed the console.log lines

@@ -141,6 +141,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.1
+ *    Fixed choice conditionals not hiding branches inside called common events.
  * - 1.3.0
  *    Added \param[PARAM_KEY] text code, pulling name/icon/color from the
  *    shared J-Base ParameterRegistry catalog. An unregistered key renders as
