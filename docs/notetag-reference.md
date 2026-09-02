@@ -1884,9 +1884,18 @@ is dependency-free and pauses exactly when the game does; `game-minutes` counts 
 which runs at whatever rate that plugin is configured for and freezes whenever the clock is blocked.
 A cooldown-flavoured wait wants the first; "the mushrooms need an hour to grow" wants the second.
 
-Calendar methods always resolve to the start of the NEXT occurrence, strictly after the moment of
-death — dying during the morning schedules tomorrow's morning, not the one already underway. An
-unknown method (typo, or an uninstalled extension) warns via Diagnostics and tracks nothing.
+Calendar methods resolve to the start of the NEXT occurrence, strictly after the moment of death —
+dying during the morning schedules tomorrow's morning, not the one already underway.
+
+**`next-day` is the deliberate exception, and it is the one worth reading twice.** It always lands
+on TOMORROW at the given clock time, even when today's has not arrived yet. Dying at 2am with
+`next-day, 600` waits 28 hours for tomorrow's 6am rather than 4 hours for today's. That is the
+point of it — it says "the morning after this one" rather than "the next morning" — but it also
+means the wait varies with the hour of death, from as little as the target hour itself (dying just
+before midnight) to as much as a full day beyond it (dying just after). It never fires immediately,
+which is what separates it from `time-of-day`.
+
+An unknown method (typo, or an uninstalled extension) warns via Diagnostics and tracks nothing.
 
 ```
 <respawn:[seconds, 90]>
@@ -1896,7 +1905,13 @@ This battler returns 90 seconds of playtime after its defeat.
 ```
 <respawn:[time-of-day, morning]>
 ```
-This battler returns the next time morning begins after its defeat.
+This battler returns the next time morning begins after its defeat. Defeated at 7:59am, it is back
+a minute later; defeated at 8:01am, it waits nearly a full day.
+
+```
+<respawn:[next-day, 600]>
+```
+This battler returns at 6am on the day after its defeat, whatever hour it fell.
 
 **See also:** `<noRespawn>`, `<respawnAnimation>`
 
