@@ -158,16 +158,8 @@
  * ============================================================================
  * CHANGELOG:
  * - 3.8.0
- *    Added Game_Event.commentNote, a note-shaped view of an event's comment
- *    lines. RPGManager parses a note string and nothing else, so an event able
- *    to present one inherits every getter that manager offers - plural
- *    captures, numbers, sums, the nullIfEmpty opt-in - rather than each caller
- *    hand-rolling a scan over the comment commands. The event's own note box is
- *    deliberately excluded, being event-global rather than per-page.
- *    Added Game_Interpreter.list, the commands an interpreter is currently
- *    executing. A child interpreter inherits the event id of whoever spawned
- *    it, so re-deriving a command list from that id lands on the parent's
- *    commands rather than the ones actually running.
+ *    Added Game_Event.commentNote, letting RPGManager read event comments.
+ *    Added Game_Interpreter.list, the commands actually being executed.
  * - 3.7.2
  *    parsePluginInt no longer pre-checks for a missing or blank value. Parsing one
  *    yields NaN, which the finite check below already turns into the fallback, so

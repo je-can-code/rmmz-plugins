@@ -202,10 +202,8 @@
  * =============================================================================
  * CHANGELOG:
  * - 1.2.1
- *    Fixed time-gated choice branches never hiding when the Show Choices sat
- *    inside a called common event, by sourcing the surrounding commands from
- *    J-Base's new Game_Interpreter.list rather than re-deriving them from an
- *    event id a child interpreter merely inherited.
+ *    Fixed time choice conditionals not hiding branches inside called common
+ *    events.
  * - 1.2.0
  *    Added a day-of-week vocabulary to Time_Snapshot: DaysOfWeekName and
  *    DaysOfWeekId translate between names and ids (0-6 starting from Monday),

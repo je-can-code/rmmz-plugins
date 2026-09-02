@@ -40,20 +40,10 @@
  * ============================================================================
  * CHANGELOG:
  * - 1.1.0
- *    Every <text> tag on a page is now its own line, reading top to bottom,
- *    where previously a second tag silently overwrote the first. RMMZ already
- *    stores a comment box as one command per line, so several tags in one box
- *    is the shape the data was in. The lines of a block share one
- *    proximityText, and an icon rides above the whole block rather than above
- *    the first line, so adding a line lifts the icon with it.
- *    Text and icons became one kind-tagged escription internally. They were the
- *    same feature written twice at every layer, and an event now holds a list
- *    of them so parsing, proximity, sprite construction, positioning and fading
- *    each happen once in a loop. The flag-and-acknowledge handshake between
- *    event and sprite is gone; the sprite compares what the character declares
- *    against what it last built from, which cannot desync.
- *    Fixed four unreachable opacity branches and two fade terminal checks that
- *    compared for equality against a value floating-point drift could step past.
+ *    Multiple <text> tags now render as multiple lines, rather than the last
+ *    one silently winning. An icon rides above the whole block.
+ *    Collapsed text and icons into one internal escription type.
+ *    Fixed unreachable opacity branches and a negative-zero offset.
  * - 1.0.2
  *    Text escriptions are now horizontally centered on their event. The map
  *    coordinate was being added into a pixel offset, drifting every label one
