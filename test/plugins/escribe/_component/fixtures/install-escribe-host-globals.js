@@ -45,6 +45,31 @@ export function installEscribeHostGlobals(sandbox = globalThis)
   sandbox.J = sandbox.J || {};
   sandbox.J.ABS = null;
 
+  // enough of a Sprite_Character for escribe's own file to evaluate against. the aliased methods
+  // are read off the prototype at import time, so they have to exist before that import runs.
+  function PlaceholderSpriteCharacter()
+  {
+  }
+
+  PlaceholderSpriteCharacter.prototype.initMembers = function()
+  {
+  };
+
+  PlaceholderSpriteCharacter.prototype.update = function()
+  {
+  };
+
+  PlaceholderSpriteCharacter.prototype.setCharacterBitmap = function()
+  {
+  };
+
+  PlaceholderSpriteCharacter.prototype.isEmptyCharacter = function()
+  {
+    return true;
+  };
+
+  sandbox.Sprite_Character = PlaceholderSpriteCharacter;
+
   sandbox.Game_Event.prototype.initMembers = function()
   {
   };

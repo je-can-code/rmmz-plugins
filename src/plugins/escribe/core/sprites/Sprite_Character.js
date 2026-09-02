@@ -185,13 +185,14 @@ Sprite_Character.prototype.escriptionOffsetY = function(escription, index, lineC
   if (escription.kind() === Escription.Kinds.Icon)
   {
     const topLine = Math.max(lineCount - 1, 0);
-    return -((topLine * ESCRIPTION_LINE_HEIGHT) + ESCRIPTION_ICON_GAP);
+    return 0 - ((topLine * ESCRIPTION_LINE_HEIGHT) + ESCRIPTION_ICON_GAP);
   }
 
   // text lines are declared before the icon, so a text escription's position in the list is also
-  // its line number- and the lines above it are what lift it off the base.
+  // its line number- and the lines above it are what lift it off the base. subtracting from zero
+  // rather than negating keeps the bottom line at a plain zero instead of a negative one.
   const linesAbove = lineCount - 1 - index;
-  return -(linesAbove * ESCRIPTION_LINE_HEIGHT);
+  return 0 - (linesAbove * ESCRIPTION_LINE_HEIGHT);
 };
 
 /**

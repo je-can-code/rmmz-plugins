@@ -528,10 +528,10 @@ Sprite_Character.prototype.escriptionLineCount = function(escriptions) {
 Sprite_Character.prototype.escriptionOffsetY = function(escription, index, lineCount) {
 	if (escription.kind() === Escription.Kinds.Icon) {
 		const topLine = Math.max(lineCount - 1, 0);
-		return -(topLine * ESCRIPTION_LINE_HEIGHT + ESCRIPTION_ICON_GAP);
+		return 0 - (topLine * ESCRIPTION_LINE_HEIGHT + ESCRIPTION_ICON_GAP);
 	}
 	const linesAbove = lineCount - 1 - index;
-	return -(linesAbove * ESCRIPTION_LINE_HEIGHT);
+	return 0 - linesAbove * ESCRIPTION_LINE_HEIGHT;
 };
 /**
 * Extends {@link Sprite_Character.isEmptyCharacter}.<br/>
