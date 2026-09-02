@@ -1,4 +1,7 @@
 //region Sprite_Character
+import Escription from './../_models/Escription.js';
+
+//region properties
 /**
  * Hooks into the initmembers function to add our properties.
  */
@@ -19,325 +22,106 @@ Sprite_Character.prototype.initMembers = function()
    */
   this._j._event = {
     /**
-     * A grouping of all properties associated with text-based escriptions.
+     * The sprites currently drawn for this character's escriptions, in the order the character
+     * declared them. This holds sprites and nothing else- what each one *means* is read back off
+     * the character every frame, so a page change can never leave this pointing at a stale model.
+     * @type {(Sprite_BaseText|Sprite_Icon)[]}
      */
-    _textDescribe: {
-      /**
-       * The text.
-       * @type {string}
-       */
-      _text: String.empty,
+    _escriptionSprites: [],
 
-      /**
-       * The text sprite.
-       * @type {Sprite_BaseText}
-       */
-      _sprite: null,
-
-      /**
-       * The proximity required to see this text.
-       * -1 proximity means the text will always be visible while the character exists.
-       * @type {number}
-       */
-      _proximity: -1,
-    },
     /**
-     * A grouping of all properties associated with icon-based escriptions.
+     * The signature of the escriptions the sprites above were built from.
+     *
+     * This is the whole of the change detection. Comparing what the character says now against
+     * what was built from replaces the flag-and-acknowledge handshake this plugin used to run
+     * across two objects- a handshake that could desync, where a comparison cannot.
+     * @type {string}
      */
-    _iconDescribe: {
-      /**
-       * The icon index.
-       * @type {number}
-       */
-      _iconIndex: -1,
-
-      /**
-       * The icon sprite.
-       * @type {Sprite_Icon}
-       */
-      _sprite: null,
-
-      /**
-       * The proximity required to see this icon.
-       * -1 proximity means the icon will always be visible while the character exists.
-       * @type {number}
-       */
-      _proximity: -1,
-    },
+    _escriptionKey: String.empty,
   };
 };
 
-//region properties
 /**
- * Gets the data related to the escription members.
+ * Gets the sprites currently drawn for this character's escriptions.
+ * @returns {(Sprite_BaseText|Sprite_Icon)[]}
  */
-Sprite_Character.prototype.allEscriptionData = function()
+Sprite_Character.prototype.escriptionSprites = function()
 {
-  return this._j._event;
-};
-
-//region text properties
-/**
- * Gets the data related to the text escription information.
- */
-Sprite_Character.prototype.escribeTextData = function()
-{
-  const escriptionData = this.allEscriptionData();
-  return escriptionData._textDescribe;
+  return this._j._event._escriptionSprites;
 };
 
 /**
- * Gets the text associated with the text escription.
+ * Sets the sprites currently drawn for this character's escriptions.
+ * @param {(Sprite_BaseText|Sprite_Icon)[]} sprites The sprites now being drawn.
+ */
+Sprite_Character.prototype.setEscriptionSprites = function(sprites)
+{
+  this._j._event._escriptionSprites = sprites;
+};
+
+/**
+ * Gets the signature of the escriptions the current sprites were built from.
  * @returns {string}
  */
-Sprite_Character.prototype.escriptionText = function()
+Sprite_Character.prototype.escriptionKey = function()
 {
-  const escriptionTextData = this.escribeTextData();
-  return escriptionTextData._text;
+  return this._j._event._escriptionKey;
 };
 
 /**
- * Sets the text associated with the text escription.
- * @params {string} text The new escription text.
+ * Sets the signature of the escriptions the current sprites were built from.
+ * @param {string} key The signature just built from.
  */
-Sprite_Character.prototype.setEscriptionText = function(text)
+Sprite_Character.prototype.setEscriptionKey = function(key)
 {
-  const escriptionTextData = this.escribeTextData();
-  escriptionTextData._text = text;
+  this._j._event._escriptionKey = key;
 };
-
-/**
- * Gets the sprite associated with the text escription.
- * @returns {Sprite_BaseText|null}
- */
-Sprite_Character.prototype.escriptionTextSprite = function()
-{
-  const escriptionTextData = this.escribeTextData();
-  return escriptionTextData._sprite;
-};
-
-/**
- * Sets the sprite associated with the text escription.
- * @param {Sprite_BaseText} textSprite The new sprite containing the text.
- */
-Sprite_Character.prototype.setEscriptionTextSprite = function(textSprite)
-{
-  const escriptionTextData = this.escribeTextData();
-  escriptionTextData._sprite = textSprite;
-};
-
-/**
- * Gets the distance the player must be within in order for the text to be rendered.
- * If the value is -1, then the text can be seen from any distance.
- * @returns {number}
- */
-Sprite_Character.prototype.escriptionTextProximity = function()
-{
-  const escriptionTextData = this.escribeTextData();
-  return escriptionTextData._proximity;
-};
-
-/**
- * Sets the distance the player must be within in order for the text to be rendered.
- * If the value is -1, then the text can be seen from any distance.
- * @param {number} textProximity The proximity to see this text.
- */
-Sprite_Character.prototype.setEscriptionTextProximity = function(textProximity)
-{
-  const escriptionTextData = this.escribeTextData();
-  escriptionTextData._proximity = textProximity;
-};
-//endregion text properties
-
-//region icon properties
-/**
- * Gets the data related to the icon escription information.
- */
-Sprite_Character.prototype.escribeIconData = function()
-{
-  const escriptionData = this.allEscriptionData();
-  return escriptionData._iconDescribe;
-};
-
-/**
- * Gets the icon index associated with the icon escription.
- * @returns {number}
- */
-Sprite_Character.prototype.escriptionIconIndex = function()
-{
-  const escriptionIconData = this.escribeIconData();
-  return escriptionIconData._iconIndex;
-};
-
-/**
- * Gets the icon index associated with the icon escription.
- * @param {number} iconIndex The new icon index.
- */
-Sprite_Character.prototype.setEscriptionIconIndex = function(iconIndex)
-{
-  const escriptionIconData = this.escribeIconData();
-  escriptionIconData._iconIndex = iconIndex;
-};
-
-/**
- * Gets the sprite associated with the icon escription.
- * @returns {Sprite_Icon|null}
- */
-Sprite_Character.prototype.escriptionIconSprite = function()
-{
-  const escriptionIconData = this.escribeIconData();
-  return escriptionIconData._sprite;
-};
-
-/**
- * Sets the sprite associated with the icon escription.
- * @param {Sprite_Icon} iconSprite The new sprite containing the icon.
- */
-Sprite_Character.prototype.setEscriptionIconSprite = function(iconSprite)
-{
-  const escriptionIconData = this.escribeIconData();
-  escriptionIconData._sprite = iconSprite;
-};
-
-/**
- * Gets whether or not the player is in proximity to view the icon portion of the escription.
- * @returns {number}
- */
-Sprite_Character.prototype.escriptionIconProximity = function()
-{
-  const escriptionIconData = this.escribeIconData();
-  return escriptionIconData._proximity;
-};
-
-/**
- * Sets whether or not the player is in proximity to view the icon portion of the escription.
- * @param {number} iconProximity The proximity to see this icon.
- */
-Sprite_Character.prototype.setEscriptionIconProximity = function(iconProximity)
-{
-  const escriptionIconData = this.escribeIconData();
-  escriptionIconData._proximity = iconProximity;
-};
-//endregion icon properties
 //endregion properties
 
 //region helpers
 /**
- * Checks whether or not this sprite has a character with escription data.
- * @returns {boolean}
+ * Gets the escriptions belonging to the character this sprite draws.
+ * @returns {Escription[]} The escriptions; empty when there is nothing to draw.
  */
-Sprite_Character.prototype.hasCharacterEscriptionData = function()
+Sprite_Character.prototype.characterEscriptions = function()
 {
   // grab the character.
   const character = this.character();
 
-  // if there is no character, then there is no escription data.
-  if (!character) return false;
-
-  // return the character's escription data.
-  return character.hasEscribeData();
-};
-
-Sprite_Character.prototype.needsEscribeAdding = function()
-{
-  // grab the character.
-  const character = this.character();
-
-  // you cannot escribe non-existant characters.
-  if (!character) return false;
+  // a sprite genuinely exists for a beat before the engine hands it a character.
+  if (!character) return [];
 
   // you cannot escribe non-events.
-  if (!character.isEvent()) return false;
+  if (!character.isEvent()) return [];
 
-  // return whether or not the character needs escription adding.
-  return character.needsEscribeAdding();
-};
-
-Sprite_Character.prototype.needsEscribeRemoval = function()
-{
-  // grab the character.
-  const character = this.character();
-
-  // if we no longer have a character and previously had escribe data, remove it.
-  if ((this.escribeTextData() || this.escribeIconData()) && !character) return true;
-
-  // if we no longer have a character, then remove it.
-  if (!character) return true;
-
-  // you cannot escribe non-events.
-  if (!character.isEvent()) return false;
-
-  // return whether or not the character needs escription removal.
-  return character.needsEscribeRemoval();
+  // whatever the character is currently saying.
+  return character.escriptions();
 };
 
 /**
- * Gets this sprite's underlying character's escription data.
- * @returns {Escription|null}
- */
-Sprite_Character.prototype.characterEscriptionData = function()
-{
-  // grab the character.
-  const character = this.character();
-
-  // if there is no character, then there is no escription data.
-  if (!character) return null;
-
-  // return the character's escription data.
-  return character.escribeData();
-};
-
-/**
- * Checks whether or not this sprite's text is visible based on the player's proximity.
+ * Whether the character this sprite draws currently describes anything.
  * @returns {boolean}
  */
-Sprite_Character.prototype.characterCanSeeText = function()
+Sprite_Character.prototype.hasCharacterEscriptions = function()
 {
-  // grab the character.
-  const character = this.character();
-
-  // if there is no character, then there is no text.
-  if (!character) return false;
-
-  // return based on proximity.
-  return character.getPlayerNearbyForText();
+  return this.characterEscriptions().length > 0;
 };
 
 /**
- * Checks whether or not this sprite's icon is visible based on the player's proximity.
- * @returns {boolean}
+ * Builds the signature of a collection of escriptions, for comparison against what was last built.
+ * @param {Escription[]} escriptions The escriptions to summarize.
+ * @returns {string}
  */
-Sprite_Character.prototype.characterCanSeeIcon = function()
+Sprite_Character.prototype.escriptionSignature = function(escriptions)
 {
-  // grab the character.
-  const character = this.character();
-
-  // if there is no character, then there is no icon.
-  if (!character) return false;
-
-  // return based on proximity.
-  return character.getPlayerNearbyForIcon();
-};
-
-/**
- * Extends {@link Sprite_Character.isEmptyCharacter}.<br/>
- * If the character has describe data, don't make it invisible for the time being.
- * @returns {boolean} True if the character should be drawn, false otherwise.
- */
-J.ESCRIBE.Aliased.Sprite_Character.set('isEmptyCharacter', Sprite_Character.prototype.isEmptyCharacter);
-Sprite_Character.prototype.isEmptyCharacter = function()
-{
-  // if we have describe data and the character is not erased, then we are not empty.
-  if (this.hasCharacterEscriptionData() && !this.isErased()) return false;
-
-  // perform original logic.
-  return J.ESCRIBE.Aliased.Sprite_Character.get('isEmptyCharacter')
-    .call(this);
+  return escriptions
+    .map(escription => escription.key())
+    .join('|');
 };
 
 /**
  * The height an escription floats above this sprite's feet, in pixels.<br/>
- * Both the text and the icon hang off this one number so they never drift apart.
+ * Every escription hangs off this one number so they never drift apart.
  *
  * The thirty-two is the gap that reads as "labelled" rather than "collided", measured from the top
  * of the character rather than guessed from its sheet. A `$` prefix means a sheet holds a single
@@ -359,28 +143,41 @@ Sprite_Character.prototype.escriptionBaseY = function()
 };
 
 /**
- * Parses the event comments on the character that belongs to this sprite.
+ * The offset from {@link Sprite_Character.escriptionBaseY} that a given kind of escription sits at.
+ * @param {Escription} escription The escription being placed.
+ * @returns {number}
  */
-Sprite_Character.prototype.refreshCharacterEscription = function()
+Sprite_Character.prototype.escriptionOffsetY = function(escription)
 {
-  // grab the character.
-  const character = this.character();
+  // an icon rides a further icon's-height up so the two stack rather than share a line when an
+  // event carries both.
+  if (escription.kind() === Escription.Kinds.Icon) return -32;
 
-  // if there is no character, then there is no data.
-  if (!character) return;
+  // text parks directly above the character.
+  return 0;
+};
 
-  // you cannot escribe non-events.
-  if (!character.isEvent()) return;
+/**
+ * Extends {@link Sprite_Character.isEmptyCharacter}.<br/>
+ * If the character describes something, don't make it invisible for the time being.
+ * @returns {boolean} True if the character should be drawn, false otherwise.
+ */
+J.ESCRIBE.Aliased.Sprite_Character.set('isEmptyCharacter', Sprite_Character.prototype.isEmptyCharacter);
+Sprite_Character.prototype.isEmptyCharacter = function()
+{
+  // if we describe something and the character is not erased, then we are not empty.
+  if (this.hasCharacterEscriptions() && !this.isErased()) return false;
 
-  // parse the comments if there are any.
-  character.refreshEscription();
+  // perform original logic.
+  return J.ESCRIBE.Aliased.Sprite_Character.get('isEmptyCharacter')
+    .call(this);
 };
 //endregion helpers
 
-//region setup describe sprites
+//region building escription sprites
 /**
  * Extends {@link Sprite_Character.setCharacterBitmap}.<br/>
- * Sets up the initial escription sprites and renders them as applicable.
+ * Also re-reads what the underlying character describes.
  */
 J.ESCRIBE.Aliased.Sprite_Character.set('setCharacterBitmap', Sprite_Character.prototype.setCharacterBitmap);
 Sprite_Character.prototype.setCharacterBitmap = function()
@@ -389,73 +186,98 @@ Sprite_Character.prototype.setCharacterBitmap = function()
   J.ESCRIBE.Aliased.Sprite_Character.get('setCharacterBitmap')
     .call(this);
 
-  // parse all the comments from the underlying sprite's character.
-  this.refreshCharacterEscription();
-
-  // check if they have describe data after parsing.
-  if (this.hasCharacterEscriptionData())
-  {
-    // then also setup their escription sprites.
-    this.setupEscribeSprites();
-  }
+  // a fresh bitmap means a fresh page, so re-read what this character has to say. nothing is built
+  // here on purpose- the update loop notices the difference on its next pass and rebuilds there,
+  // which keeps every path that changes an escription going through exactly one piece of code.
+  this.refreshCharacterEscriptions();
 };
 
 /**
- * Sets up the visual components of the describe for this event.
+ * Asks the underlying character to re-read its own event comments.
  */
-Sprite_Character.prototype.setupEscribeSprites = function()
+Sprite_Character.prototype.refreshCharacterEscriptions = function()
 {
-  // setup the escription text and icon.
-  this.setupDescribeText();
-  this.setupDescribeIcon();
-
   // grab the character.
   const character = this.character();
 
-  // acknowledge the addition of the escribe data.
-  character.acknowledgeEscribeAddition();
+  // a sprite genuinely exists for a beat before the engine hands it a character.
+  if (!character) return;
+
+  // you cannot escribe non-events.
+  if (!character.isEvent()) return;
+
+  // parse the comments if there are any.
+  character.parseEscriptionComments();
 };
 
 /**
- * Sets up the describe text for this event.
+ * Rebuilds this sprite's escription sprites, but only when what the character describes has
+ * actually changed since they were built.
  */
-Sprite_Character.prototype.setupDescribeText = function()
+Sprite_Character.prototype.refreshEscriptionSpritesIfNeeded = function()
 {
-  // check if we already have the sprite.
-  if (this.children.includes(this.escriptionTextSprite()))
+  // work out what the character is saying right now.
+  const escriptions = this.characterEscriptions();
+  const signature = this.escriptionSignature(escriptions);
+
+  // what is already on screen still says exactly that, so there is nothing to do.
+  if (signature === this.escriptionKey()) return;
+
+  // whatever was drawn belongs to a page, or an event, that has moved on.
+  this.removeEscriptionSprites();
+
+  // build one sprite per escription, in the order the character declared them.
+  const sprites = escriptions.map(escription => this.buildEscriptionSprite(escription));
+
+  // put them on screen.
+  sprites.forEach(sprite => this.addChild(sprite));
+
+  // remember both what is drawn and what it was drawn from.
+  this.setEscriptionSprites(sprites);
+  this.setEscriptionKey(signature);
+};
+
+/**
+ * Builds the sprite that draws a single escription.
+ * @param {Escription} escription The escription to build a sprite for.
+ * @returns {Sprite_BaseText|Sprite_Icon}
+ */
+Sprite_Character.prototype.buildEscriptionSprite = function(escription)
+{
+  // the kind decides what kind of sprite draws it.
+  let sprite = null;
+  if (escription.kind() === Escription.Kinds.Icon)
   {
-    // destroy it before creating anew.
-    this.removeEscriptionTextData();
+    sprite = this.buildEscriptionIconSprite(escription);
+  }
+  else
+  {
+    sprite = this.buildEscriptionTextSprite(escription);
   }
 
-  // create the sprite.
-  const sprite = this.createDescribeTextSprite();
+  // a proximity-gated escription is born invisible and fades in when the player arrives; an
+  // ungated one is simply on. this is the reason proximity belongs in the signature.
+  if (escription.hasProximity())
+  {
+    sprite.opacity = 0;
+  }
 
-  // set our sprite to this character.
-  this.setEscriptionTextSprite(sprite);
-
-  // add the sprite to tracking.
-  this.addChild(sprite);
+  return sprite;
 };
 
 /**
- * Creates the describe text sprite for this event.
+ * Builds the text sprite for a text escription.
+ * @param {Escription} escription The escription to build a sprite for.
  * @returns {Sprite_BaseText}
  */
-Sprite_Character.prototype.createDescribeTextSprite = function()
+Sprite_Character.prototype.buildEscriptionTextSprite = function(escription)
 {
-  // determine the describe data.
-  const describe = this.characterEscriptionData();
-  const describeText = describe.text();
-  this.setEscriptionText(describeText);
-  this.setEscriptionTextProximity(describe.proximityTextRange());
-
   // build the text sprite.
   const sprite = new Sprite_BaseText()
-    .setText(describeText)
+    .setText(escription.content())
     .setFontSize(14)
     .setAlignment(Sprite_BaseText.Alignments.Center)
-    .setColor("#ffffff");
+    .setColor('#ffffff');
 
   // this text sprite is a child of the character sprite, and a character sprite's origin already
   // sits at the character's horizontal centre - so centring the label needs nothing but half its
@@ -466,98 +288,55 @@ Sprite_Character.prototype.createDescribeTextSprite = function()
 
   // relocate the sprite. the height is a first guess only - the update loop owns it from here,
   // because the character bitmap it is measured from may not have loaded yet.
-  sprite.move(x, this.escriptionBaseY());
-
-  // check if we need to handle proximity.
-  if (this.escriptionTextProximity() > -1)
-  {
-    // turn the sprite invisible.
-    sprite.opacity = 0;
-  }
+  sprite.move(x, this.escriptionBaseY() + this.escriptionOffsetY(escription));
 
   // return the built sprite.
   return sprite;
 };
 
 /**
- * Sets up the describe icon for this event.
- */
-Sprite_Character.prototype.setupDescribeIcon = function()
-{
-  // check if we already have the sprite.
-  if (this.children.includes(this.escriptionIconSprite()))
-  {
-    // destroy it before creating anew.
-    this.removeEscriptionIconData();
-  }
-
-  // create the sprite.
-  const sprite = this.createDescribeIconSprite();
-
-  // set our sprite to this character.
-  this.setEscriptionIconSprite(sprite);
-
-  // add the sprite to tracking.
-  this.addChild(sprite);
-};
-
-/**
- * Creates the describe icon sprite for this event.
+ * Builds the icon sprite for an icon escription.
+ * @param {Escription} escription The escription to build a sprite for.
  * @returns {Sprite_Icon}
  */
-Sprite_Character.prototype.createDescribeIconSprite = function()
+Sprite_Character.prototype.buildEscriptionIconSprite = function(escription)
 {
-  // determine the describe data.
-  const describe = this.characterEscriptionData();
-  const describeIconIndex = describe.iconIndex();
-  this.setEscriptionIconIndex(describeIconIndex);
-  this.setEscriptionIconProximity(describe.proximityIconRange());
+  // build the sprite.
+  const sprite = new Sprite_Icon(escription.content());
 
-  // determine the location of the sprite. the icon rides a further icon's-height above the text so
-  // the two stack rather than share a line when an event carries both.
+  // an icon knows its own width up front, so centring it needs no measurement- the few extra
+  // pixels are the nudge that lines it up with the text below it.
   const x = 0 - (ImageManager.iconWidth / 2) - 4;
 
-  // build the sprite.
-  const sprite = new Sprite_Icon(describeIconIndex);
-
   // relocate the sprite. as with the text, the update loop owns the height from here.
-  sprite.move(x, this.escriptionBaseY() - 32);
-
-  // check if we need to handle proximity.
-  if (this.escriptionIconProximity() > -1)
-  {
-    // turn the sprite invisible.
-    sprite.opacity = 0;
-  }
+  sprite.move(x, this.escriptionBaseY() + this.escriptionOffsetY(escription));
 
   // return the built sprite.
   return sprite;
 };
-//endregion setup describe sprites
 
 /**
- * Refreshes the escription data for the underlying character's escription data.
+ * Removes every escription sprite currently drawn, and forgets what they were built from.
  */
-Sprite_Character.prototype.refreshEscriptionIfNeeded = function()
+Sprite_Character.prototype.removeEscriptionSprites = function()
 {
-  // check if this sprite needs to remove the escription data.
-  if (this.needsEscribeRemoval())
-  {
-    // remove it.
-    this.removeEscriptions();
-  }
+  // take them off the display and release them.
+  this.escriptionSprites()
+    .forEach(sprite =>
+    {
+      this.removeChild(sprite);
+      sprite.destroy();
+    });
 
-  // check if this sprite needs to be added based on its escription data.
-  if (this.needsEscribeAdding())
-  {
-    // add it.
-    this.setupEscribeSprites();
-  }
+  // nothing is drawn, and nothing was built from anything.
+  this.setEscriptionSprites([]);
+  this.setEscriptionKey(String.empty);
 };
+//endregion building escription sprites
 
-//region update describe sprites
+//region updating escription sprites
 /**
- * Hooks into the update function to update our describe sprites.
+ * Hooks into the update function to update our escription sprites.
  */
 J.ESCRIBE.Aliased.Sprite_Character.set('update', Sprite_Character.prototype.update);
 Sprite_Character.prototype.update = function()
@@ -566,234 +345,80 @@ Sprite_Character.prototype.update = function()
   J.ESCRIBE.Aliased.Sprite_Character.get('update')
     .call(this);
 
-  // manage the updates of the escriptions.
+  // manage the escriptions floating above this character.
   this.updateEscriptions();
 };
 
 /**
- * The update loop for managing the addition/removal/visibility of escriptions.
+ * The update loop for managing the addition, removal and visibility of escriptions.
  */
 Sprite_Character.prototype.updateEscriptions = function()
 {
-  // refresh the escription data tracked on this sprite.
-  this.refreshEscriptionIfNeeded();
+  // rebuild the sprites first, if what the character describes has changed.
+  this.refreshEscriptionSpritesIfNeeded();
 
-  // check if the character has escribe data.
-  if (this.hasCharacterEscriptionData())
-  {
-    // update the escription as-needed.
-    this.updateEscribe();
-  }
+  // then keep whatever is drawn parked and faded correctly.
+  this.updateEscriptionSprites();
 };
 
 /**
- * Removes all escription data from this character sprite.
+ * Keeps every escription sprite parked above the character and faded to match its proximity.
  */
-Sprite_Character.prototype.removeEscriptions = function()
+Sprite_Character.prototype.updateEscriptionSprites = function()
 {
-  // remove the text data.
-  this.removeEscriptionTextData();
+  // the sprites and the escriptions were built together and share an order, so one index reaches
+  // both. the escriptions are read fresh here rather than held, which is what keeps this correct
+  // through a page change that happens to declare exactly the same thing as the last one.
+  const escriptions = this.characterEscriptions();
+  const sprites = this.escriptionSprites();
 
-  // remove the icon data.
-  this.removeEscriptionIconData();
-
-  // grab the character.
-  const character = this.character();
-
-  // validate we have one before working on it.
-  if (character)
-  {
-    // acknowledge the removal.
-    character.acknowledgeEscribeRemoval();
-  }
-};
-
-/**
- * Removes all escription text data.
- */
-Sprite_Character.prototype.removeEscriptionTextData = function()
-{
-  // check if we already have the sprite.
-  if (this.escriptionTextSprite())
-  {
-    // destroy it before removal.
-    this.escriptionTextSprite()
-      .destroy();
-  }
-
-  // set the sprite back to null.
-  this.setEscriptionTextSprite(null);
-
-  // set the text to blank.
-  this.setEscriptionText(String.empty);
-
-  // set the proximity back to -1.
-  this.setEscriptionTextProximity(-1);
-};
-
-/**
- * Removes all escription icon data.
- */
-Sprite_Character.prototype.removeEscriptionIconData = function()
-{
-  // check if we already have the sprite.
-  if (this.escriptionIconSprite())
-  {
-    // destroy it before removal.
-    this.escriptionIconSprite()
-      .destroy();
-  }
-
-  // set the sprite back to null.
-  this.setEscriptionIconSprite(null);
-
-  // set the icon index back to default -1.
-  this.setEscriptionIconIndex(-1);
-
-  // set the proximity back to -1.
-  this.setEscriptionIconProximity(-1);
-};
-
-/**
- * Updates all describe sprites where applicable.
- */
-Sprite_Character.prototype.updateEscribe = function()
-{
-  // keep both escriptions sitting above the character, whatever height it turned out to be.
-  this.updateEscriptionPositions();
-
-  // update the text escribe data.
-  this.updateTextEscribe();
-
-  // update the icon escribe data.
-  this.updateIconEscribe();
-};
-
-/**
- * Parks the text and icon escriptions above the character sprite.
- *
- * See {@link Sprite_Character.escriptionBaseY} for why this is a per-frame job rather than
- * something the sprites could have been built with.
- */
-Sprite_Character.prototype.updateEscriptionPositions = function()
-{
+  // whatever height the character turned out to be this frame, everything hangs off it.
   const baseY = this.escriptionBaseY();
 
-  this.escriptionTextSprite().y = baseY;
-  this.escriptionIconSprite().y = baseY - 32;
+  // park and fade each one.
+  sprites.forEach((sprite, index) =>
+  {
+    // the escription this sprite is drawing.
+    const escription = escriptions.at(index);
+
+    // keep it parked above the character.
+    sprite.y = baseY + this.escriptionOffsetY(escription);
+
+    // something always visible has nothing to fade toward.
+    if (!escription.hasProximity()) return;
+
+    // everything else chases wherever the player currently is.
+    this.fadeEscriptionSprite(sprite, escription.isVisible());
+  });
 };
 
 /**
- * Manages the visibility of the describe text on this sprite's event.
+ * Steps a sprite's opacity one frame's worth toward visible, or toward gone.
+ *
+ * The terminal checks are inequalities rather than equalities on purpose. `Sprite.opacity` reads
+ * back as `alpha * 255` without rounding, and a step of seventeen does not land on a value the
+ * float can hold exactly, so an equality check would sail past the destination and keep writing
+ * forever. There is also no clamping to do here- the engine's own setter clamps to 0-255 before it
+ * stores anything, which is why an out-of-range opacity is not a state this can ever observe.
+ * @param {Sprite_BaseText|Sprite_Icon} sprite The sprite to fade.
+ * @param {boolean} visible True to fade it in, false to fade it out.
  */
-Sprite_Character.prototype.updateTextEscribe = function()
+Sprite_Character.prototype.fadeEscriptionSprite = function(sprite, visible)
 {
-  // don't try to update text without any text.
-  if (!this.escriptionText()) return;
-
-  // don't worry about updating for non-proximity-based describe texts. this asks the text's own
-  // proximity, not the icon's - an event carrying proximity text and no icon has an icon
-  // proximity of -1, and reading that one here left the text parked at the opacity it was created
-  // with, which for proximity text is zero. it never faded in at all.
-  if (this.escriptionTextProximity() < 0) return;
-
-  if (this.characterCanSeeText())
+  // fading toward fully drawn.
+  if (visible)
   {
-    this.fadeInEscribeText();
-  }
-  else
-  {
-    this.fadeOutEscribeText();
-  }
-};
+    // already there.
+    if (sprite.opacity >= 255) return;
 
-/**
- * Fades out the describe text.
- */
-Sprite_Character.prototype.fadeOutEscribeText = function()
-{
-  const sprite = this.escriptionTextSprite();
-  if (sprite.opacity === 0) return;
-
-  if (sprite.opacity < 0)
-  {
-    sprite.opacity = 0;
+    sprite.opacity += 17;
     return;
   }
+
+  // already gone.
+  if (sprite.opacity <= 0) return;
 
   sprite.opacity -= 17;
 };
-
-/**
- * Fades in the describe text.
- */
-Sprite_Character.prototype.fadeInEscribeText = function()
-{
-  const sprite = this.escriptionTextSprite();
-  if (sprite.opacity === 255) return;
-
-  if (sprite.opacity > 255)
-  {
-    sprite.opacity = 255;
-    return;
-  }
-
-  sprite.opacity += 17;
-};
-
-/**
- * Manages visibility of the describe icon on this sprite's event.
- */
-Sprite_Character.prototype.updateIconEscribe = function()
-{
-  // don't try to update icon without any icon.
-  if (this.escriptionIconIndex() < 0) return;
-
-  // don't worry about updating for non-proximity-based describe icons.
-  if (this.escriptionIconProximity() < 0) return;
-
-  if (this.characterCanSeeIcon())
-  {
-    this.fadeInEscribeIcon();
-  }
-  else
-  {
-    this.fadeOutEscribeIcon();
-  }
-};
-
-/**
- * Fades in the describe icon.
- */
-Sprite_Character.prototype.fadeOutEscribeIcon = function()
-{
-  const sprite = this.escriptionIconSprite();
-  if (sprite.opacity === 0) return;
-
-  if (sprite.opacity < 0)
-  {
-    sprite.opacity = 0;
-    return;
-  }
-
-  sprite.opacity -= 17;
-};
-
-/**
- * Fades out the describe icon.
- */
-Sprite_Character.prototype.fadeInEscribeIcon = function()
-{
-  const sprite = this.escriptionIconSprite();
-  if (sprite.opacity === 255) return;
-
-  if (sprite.opacity > 255)
-  {
-    sprite.opacity = 255;
-    return;
-  }
-
-  sprite.opacity += 17;
-};
-//endregion update describe sprites
+//endregion updating escription sprites
 //endregion Sprite_Character
