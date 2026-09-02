@@ -3727,8 +3727,7 @@ J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.set("shouldHideChoiceBranch", Game_Int
 Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandIndex) {
 	const defaultShow = J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.get("shouldHideChoiceBranch").call(this, subChoiceCommandIndex);
 	if (defaultShow) return true;
-	const eventMetadata = $gameMap.event(this.eventId());
-	const currentPageCommands = eventMetadata ? eventMetadata.page().list : $dataCommonEvents.at(this.commonEventId()).list;
+	const currentPageCommands = this.list();
 	const subEventCommand = currentPageCommands.at(subChoiceCommandIndex);
 	if (!Game_Event.filterInvalidEventCommand(subEventCommand)) return false;
 	if (!Game_Event.filterCommentCommandsByChoiceQuestConditional(subEventCommand)) return false;

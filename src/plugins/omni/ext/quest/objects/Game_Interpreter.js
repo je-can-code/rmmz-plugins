@@ -17,11 +17,8 @@ Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandInd
   // if there is another reason to hide this branch, then do not process quest reasons.
   if (defaultShow) return true;
 
-  // grab some metadata about the event.
-  const eventMetadata = $gameMap.event(this.eventId());
-  const currentPageCommands = eventMetadata
-    ? eventMetadata.page().list
-    : $dataCommonEvents.at(this.commonEventId()).list;
+  // grab the commands surrounding the choice being evaluated.
+  const currentPageCommands = this.list();
 
   // grab the event subcommand.
   const subEventCommand = currentPageCommands.at(subChoiceCommandIndex);

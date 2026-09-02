@@ -158,8 +158,20 @@ describe('J-Base tiny Game_* object patches (direct src import)', () =>
 
   describe('Game_Interpreter accessors', () =>
   {
-    // vanilla keeps these three on private-by-convention fields with no readers at all; plugins
+    // vanilla keeps these on private-by-convention fields with no readers at all; plugins
     // that need to reason about where an event is mid-execution have nowhere else to look.
+    it('reads back the list of commands being executed', () =>
+    {
+      // Arrange- the executing list is the only handle on "what surrounds the current command",
+      // because a child interpreter carries its spawner's event id rather than its own source.
+      const interpreter = new globalThis.Game_Interpreter();
+      const commands = [ { code: 102 }, { code: 402 } ];
+      interpreter._list = commands;
+
+      // Act & Assert
+      expect(interpreter.list()).toBe(commands);
+    });
+
     it('reads back the conditional branch results', () =>
     {
       // Arrange

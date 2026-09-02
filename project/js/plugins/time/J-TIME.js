@@ -2538,8 +2538,7 @@ J.TIME.Aliased.Game_Interpreter.set("shouldHideChoiceBranch", Game_Interpreter.p
 Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandIndex) {
 	const defaultShow = J.TIME.Aliased.Game_Interpreter.get("shouldHideChoiceBranch").call(this, subChoiceCommandIndex);
 	if (defaultShow) return true;
-	const eventMetadata = $gameMap.event(this.eventId());
-	const currentPageCommands = eventMetadata ? eventMetadata.page().list : $dataCommonEvents.at(this.commonEventId()).list;
+	const currentPageCommands = this.list();
 	const subEventCommand = currentPageCommands.at(subChoiceCommandIndex);
 	if (!Game_Event.filterInvalidEventCommand(subEventCommand)) return false;
 	if (!Game_Event.filterCommentCommandsByChoiceTimeConditional(subEventCommand)) return false;

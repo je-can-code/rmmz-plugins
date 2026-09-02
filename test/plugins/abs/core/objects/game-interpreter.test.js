@@ -51,7 +51,6 @@ describe('J-ABS Game_Interpreter (unit, all downstream dependencies mocked)', ()
     await import('../../../../../src/plugins/abs/core/objects/Game_Interpreter.js');
 
     // J-Base accessors the production code now reads through.
-    globalThis.Game_Interpreter.prototype.commonEventId = function() { return this._commonEventId; };
     globalThis.Game_Interpreter.prototype.index = function() { return this._index; };
     globalThis.Game_Interpreter.prototype.setIndex = function(v) { this._index = v; };
 

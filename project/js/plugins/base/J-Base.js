@@ -11789,6 +11789,17 @@ Game_Interpreter.prototype.indent = function() {
 	return this._indent;
 };
 /**
+* Gets the list of event commands this interpreter is currently executing.<br/>
+* This is the only trustworthy source for the surrounding commands of whatever is being executed right now. An
+* interpreter's list can originate from a map event page, a common event, or a troop page, and a child interpreter
+* inherits the event id of whoever spawned it- so re-deriving the list from {@link eventId} lands on the parent's
+* commands rather than the ones actually running.
+* @returns {RPG_EventListCommand[]} The list.
+*/
+Game_Interpreter.prototype.list = function() {
+	return this._list;
+};
+/**
 * Gets the index of the command being executed.
 * @returns {number} The index.
 */

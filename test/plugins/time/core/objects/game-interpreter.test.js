@@ -6,8 +6,8 @@ import { installTimeHostGlobals } from '../../_component/fixtures/install-time-h
 /**
  * The tag-matching outcomes- an hour or day or season choice being shown or hidden- are covered by
  * the component test that drives real comment tags through the whole chain. What is covered here is
- * the plumbing around that decision: the early exits, and where the command list is sourced from
- * when the choice belongs to a common event rather than a map event.
+ * the plumbing around that decision: the early exits, and the fact that the commands surrounding a
+ * choice are read off the list being executed rather than the page of the event that spawned it.
  */
 describe('Game_Interpreter ext/time augments (direct src import)', () =>
 {
@@ -36,33 +36,33 @@ describe('Game_Interpreter ext/time augments (direct src import)', () =>
   });
 
   /**
-   * Builds an interpreter positioned on a map event whose active page holds the given commands.
+   * The commands on the page of whichever map event spawned this interpreter. A choice inside a
+   * called common event runs on a child interpreter that inherited the caller's event id, so the
+   * map event behind it resolves to something real and entirely unrelated. Staged as a near-miss
+   * throughout: it carries a tag that would flip every outcome below if it were ever consulted.
    */
-  const interpreterOnEvent = commands =>
+  const spawningEventCommands = [
+    {
+      code: 108,
+      indent: 0,
+      parameters: [ '<hourChoice:23>' ],
+    } ];
+
+  /**
+   * Builds an interpreter executing the given commands on behalf of a map event whose own page
+   * holds something else entirely.
+   */
+  const interpreterExecuting = commands =>
   {
     globalThis.$gameMap = {
       event: () => ({
-        page: () => ({ list: commands }),
+        page: () => ({ list: spawningEventCommands }),
       }),
     };
 
     const interpreter = new globalThis.Game_Interpreter();
     interpreter.eventId = () => 1;
-
-    return interpreter;
-  };
-
-  /**
-   * Builds an interpreter running a common event, which has no map event behind it.
-   */
-  const interpreterOnCommonEvent = commands =>
-  {
-    globalThis.$gameMap = { event: () => null };
-    globalThis.$dataCommonEvents = [ null, { list: commands } ];
-
-    const interpreter = new globalThis.Game_Interpreter();
-    interpreter.eventId = () => 0;
-    interpreter.commonEventId = () => 1;
+    interpreter.list = () => commands;
 
     return interpreter;
   };
@@ -82,7 +82,7 @@ describe('Game_Interpreter ext/time augments (direct src import)', () =>
     {
       // Arrange
       globalThis.J.TIME.Aliased.Game_Interpreter.set('shouldHideChoiceBranch', () => true);
-      const interpreter = interpreterOnEvent([ comment('<hourChoice:9>') ]);
+      const interpreter = interpreterExecuting([ comment('<hourChoice:9>') ]);
 
       // Act
       const result = interpreter.shouldHideChoiceBranch(0);
@@ -95,7 +95,7 @@ describe('Game_Interpreter ext/time augments (direct src import)', () =>
     it('shows the branch when the command carries no comment to interpret', () =>
     {
       // Arrange
-      const interpreter = interpreterOnEvent([
+      const interpreter = interpreterExecuting([
         {
           code: 108,
           indent: 0,
@@ -113,7 +113,7 @@ describe('Game_Interpreter ext/time augments (direct src import)', () =>
     it('shows the branch when the comment is not a time conditional tag', () =>
     {
       // Arrange
-      const interpreter = interpreterOnEvent([ comment('<someUnrelatedTag:12>') ]);
+      const interpreter = interpreterExecuting([ comment('<someUnrelatedTag:12>') ]);
 
       // Act
       const result = interpreter.shouldHideChoiceBranch(0);
@@ -130,7 +130,7 @@ describe('Game_Interpreter ext/time augments (direct src import)', () =>
       // offered. the tagged hour deliberately disagrees with the clock, so anything that did treat
       // it as a choice conditional would hide this branch instead of showing it.
       globalThis.$gameTime.setTime(0, 0, 9, 1, 1, 2020);
-      const interpreter = interpreterOnEvent([ comment('<hourPage:17>') ]);
+      const interpreter = interpreterExecuting([ comment('<hourPage:17>') ]);
 
       // Act
       const result = interpreter.shouldHideChoiceBranch(0);
@@ -150,7 +150,7 @@ describe('Game_Interpreter ext/time augments (direct src import)', () =>
       globalThis.Game_Event.filterInvalidEventCommand = command => command.code === 108;
 
       globalThis.$gameTime.setTime(0, 0, 9, 1, 1, 2020);
-      const interpreter = interpreterOnEvent([
+      const interpreter = interpreterExecuting([
         {
           // 401 is a line of message text, not a comment.
           code: 401,
@@ -167,26 +167,27 @@ describe('Game_Interpreter ext/time augments (direct src import)', () =>
       expect(result).toBe(false);
     });
 
-    it('reads the command list off the common event when there is no map event', () =>
+    it('reads the executing command list rather than the spawning map event page', () =>
     {
       // Arrange
+      // the common-event-called-from-a-map-event shape. both lists carry a real hour choice tag, so
+      // the source is the only thing deciding the verdict: the executing list agrees with the clock,
+      // while the spawning event's page disagrees with it.
       globalThis.$gameTime.setTime(0, 0, 9, 1, 1, 2020);
-      const interpreter = interpreterOnCommonEvent([ comment('<hourChoice:9>') ]);
+      const interpreter = interpreterExecuting([ comment('<hourChoice:9>') ]);
 
       // Act
       const result = interpreter.shouldHideChoiceBranch(0);
 
       // Assert
-      // the tagged hour matches the clock, so the branch stays visible- which it could only work out
-      // by having found the command list on the common event.
       expect(result).toBe(false);
     });
 
-    it('hides a common event branch whose tagged hour does not match', () =>
+    it('hides a branch in a called common event whose tagged hour does not match', () =>
     {
       // Arrange
       globalThis.$gameTime.setTime(0, 0, 9, 1, 1, 2020);
-      const interpreter = interpreterOnCommonEvent([ comment('<hourChoice:17>') ]);
+      const interpreter = interpreterExecuting([ comment('<hourChoice:17>') ]);
 
       // Act
       const result = interpreter.shouldHideChoiceBranch(0);

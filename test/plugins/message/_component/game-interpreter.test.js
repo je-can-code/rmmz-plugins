@@ -21,6 +21,9 @@ describe('Game_Interpreter message augments (direct src import)', () =>
     StubGameInterpreter.prototype.setupChoices = originalSetupChoices;
     StubGameInterpreter.prototype.currentCommand = vi.fn();
     StubGameInterpreter.prototype.eventId = vi.fn();
+
+    // a J-Base accessor the production code reads through.
+    StubGameInterpreter.prototype.list = vi.fn();
     globalThis.Game_Interpreter = StubGameInterpreter;
 
     globalThis.Game_Event = {
@@ -45,9 +48,29 @@ describe('Game_Interpreter message augments (direct src import)', () =>
     globalThis.$dataCommonEvents = [];
   });
 
-  function makeEventWithPage(commandList)
+  /**
+   * The commands belonging to the map event that spawned the interpreter, which are never the
+   * commands a child interpreter is actually executing- a `Show Choices` inside a called common
+   * event runs on a child that inherited the caller's event id. Staged as a near-miss on every
+   * test below: anything that reaches for the map event's page picks these up instead.
+   */
+  const spawningEventCommands = [
+    { code: 108, indent: 0, parameters: [ '<spawner>' ] },
+    { code: 402, indent: 0 },
+    { code: 404, indent: 0 } ];
+
+  /**
+   * Builds an interpreter executing the given commands on behalf of a map event that holds entirely
+   * different ones.
+   */
+  function makeInterpreterExecuting(commandList)
   {
-    return { page: () => ({ list: commandList }) };
+    const interpreter = new Game_Interpreter();
+    interpreter.list.mockReturnValue(commandList);
+    interpreter.eventId.mockReturnValue(1);
+    globalThis.$gameMap.event.mockReturnValue({ page: () => ({ list: spawningEventCommands }) });
+
+    return interpreter;
   }
 
   describe('setupChoices', () =>
@@ -121,10 +144,8 @@ describe('Game_Interpreter message augments (direct src import)', () =>
         previousOption, previousEnd, beforeCommand, startCommand, optionA, subA, nestedEnd, optionB, subB,
         endCommand, afterCommand, nextOption ];
 
-      const interpreter = new Game_Interpreter();
+      const interpreter = makeInterpreterExecuting(commandList);
       interpreter.currentCommand.mockReturnValue(startCommand);
-      interpreter.eventId.mockReturnValue(1);
-      globalThis.$gameMap.event.mockReturnValue(makeEventWithPage(commandList));
 
       // optionA's sub-command index (5) reports hidden; optionB's (8) does not.
       const hideSpy = vi.spyOn(Game_Interpreter.prototype, 'shouldHideChoiceBranch')
@@ -146,22 +167,19 @@ describe('Game_Interpreter message augments (direct src import)', () =>
       hideSpy.mockRestore();
     });
 
-    it('falls back to the common event command list when there is no map event for this interpreter', () =>
+    it('walks the executing command list rather than the page of the map event that spawned it', () =>
     {
-      // Arrange
+      // Arrange- this is the common-event-called-from-a-map-event shape. the child interpreter
+      // carries the caller's event id, so the map event resolves to something real and wrong; its
+      // page holds no copy of the current command, which reduces the whole search window to nothing
+      // and silently leaves every choice visible.
       const startCommand = { code: 102, indent: 0 };
       const optionA = { code: 402, indent: 0 };
       const endCommand = { code: 404, indent: 0 };
       const commandList = [ startCommand, optionA, endCommand ];
 
-      const interpreter = new Game_Interpreter();
+      const interpreter = makeInterpreterExecuting(commandList);
       interpreter.currentCommand.mockReturnValue(startCommand);
-      interpreter.eventId.mockReturnValue(0);
-      interpreter._commonEventId = 5;
-      globalThis.$gameMap.event.mockReturnValue(null);
-      const commonEvents = [];
-      commonEvents[5] = { list: commandList };
-      globalThis.$dataCommonEvents = commonEvents;
 
       const hideSpy = vi.spyOn(Game_Interpreter.prototype, 'shouldHideChoiceBranch')
         .mockReturnValue(false);
@@ -169,8 +187,8 @@ describe('Game_Interpreter message augments (direct src import)', () =>
       // Act
       interpreter.hideSpecificChoiceBranches([]);
 
-      // Assert- the common event's own list was walked, producing the single option's group plus
-      // the terminator's always-empty one.
+      // Assert- the executing list was walked, producing the single option's group plus the
+      // terminator's always-empty one. reading the spawning event's page instead yields zero.
       expect(globalThis.$gameMessage.hideChoice).toHaveBeenNthCalledWith(1, 0, false);
       expect(globalThis.$gameMessage.hideChoice).toHaveBeenNthCalledWith(2, 1, false);
       expect(globalThis.$gameMessage.hideChoice).toHaveBeenCalledTimes(2);
@@ -181,21 +199,13 @@ describe('Game_Interpreter message augments (direct src import)', () =>
 
   describe('shouldHideChoiceBranch', () =>
   {
-    function makeInterpreter(commandList)
-    {
-      const interpreter = new Game_Interpreter();
-      interpreter.eventId.mockReturnValue(1);
-      globalThis.$gameMap.event.mockReturnValue(makeEventWithPage(commandList));
-      return interpreter;
-    }
-
     it('does not hide when the subcommand is not a valid event command', () =>
     {
       // Arrange- every later gate is armed to answer "hide it", so the only thing that can produce
       // a visible branch here is this validity check refusing to look any further. Left unarmed,
       // the conditional filter below would independently answer false and this test would pass
       // whether or not the validity check ran at all.
-      const interpreter = makeInterpreter([ { code: 108, indent: 1 } ]);
+      const interpreter = makeInterpreterExecuting([ { code: 108, indent: 1 } ]);
       globalThis.Game_Event.filterInvalidEventCommand.mockReturnValue(false);
       globalThis.Game_Event.filterCommentCommandsForBasicConditionals.mockReturnValue(true);
       globalThis.Game_Event.toBasicConditional.mockReturnValue({ isMet: () => false });
@@ -210,7 +220,7 @@ describe('Game_Interpreter message augments (direct src import)', () =>
     it('does not hide when the subcommand is not a basic conditional comment', () =>
     {
       // Arrange
-      const interpreter = makeInterpreter([ { code: 108, indent: 1 } ]);
+      const interpreter = makeInterpreterExecuting([ { code: 108, indent: 1 } ]);
       globalThis.Game_Event.filterInvalidEventCommand.mockReturnValue(true);
       globalThis.Game_Event.filterCommentCommandsForBasicConditionals.mockReturnValue(false);
 
@@ -224,7 +234,7 @@ describe('Game_Interpreter message augments (direct src import)', () =>
     it('does not hide when the parsed conditional is met', () =>
     {
       // Arrange
-      const interpreter = makeInterpreter([ { code: 108, indent: 1 } ]);
+      const interpreter = makeInterpreterExecuting([ { code: 108, indent: 1 } ]);
       globalThis.Game_Event.filterInvalidEventCommand.mockReturnValue(true);
       globalThis.Game_Event.filterCommentCommandsForBasicConditionals.mockReturnValue(true);
       globalThis.Game_Event.toBasicConditional.mockReturnValue({ isMet: () => true });
@@ -239,7 +249,7 @@ describe('Game_Interpreter message augments (direct src import)', () =>
     it('hides when the parsed conditional is not met', () =>
     {
       // Arrange
-      const interpreter = makeInterpreter([ { code: 108, indent: 1 } ]);
+      const interpreter = makeInterpreterExecuting([ { code: 108, indent: 1 } ]);
       globalThis.Game_Event.filterInvalidEventCommand.mockReturnValue(true);
       globalThis.Game_Event.filterCommentCommandsForBasicConditionals.mockReturnValue(true);
       globalThis.Game_Event.toBasicConditional.mockReturnValue({ isMet: () => false });
@@ -251,25 +261,22 @@ describe('Game_Interpreter message augments (direct src import)', () =>
       expect(result).toEqual(true);
     });
 
-    it('falls back to the common event command list when there is no map event for this interpreter', () =>
+    it('resolves the subcommand against the executing list, not the spawning map event page', () =>
     {
-      // Arrange
-      const subCommand = { code: 108, indent: 1 };
-      const interpreter = new Game_Interpreter();
-      interpreter.eventId.mockReturnValue(0);
-      interpreter._commonEventId = 5;
-      globalThis.$gameMap.event.mockReturnValue(null);
-      const commonEvents = [];
-      commonEvents[5] = { list: [ subCommand ] };
-      globalThis.$dataCommonEvents = commonEvents;
+      // Arrange- index 0 holds a different command in each list, so which one reaches the validity
+      // filter is the only thing that distinguishes the two sources.
+      const subCommand = { code: 108, indent: 1, parameters: [ '<executing>' ] };
+      const interpreter = makeInterpreterExecuting([ subCommand ]);
       globalThis.Game_Event.filterInvalidEventCommand.mockReturnValue(false);
 
       // Act
       const result = interpreter.shouldHideChoiceBranch(0);
 
-      // Assert- the command handed to the validity filter is the one that came out of the common
-      // event's own list, which is the only evidence the fallback was taken at all.
+      // Assert
       expect(globalThis.Game_Event.filterInvalidEventCommand).toHaveBeenCalledWith(subCommand);
+      expect(globalThis.Game_Event.filterInvalidEventCommand)
+        .not
+        .toHaveBeenCalledWith(spawningEventCommands.at(0));
       expect(result).toBe(false);
     });
   });

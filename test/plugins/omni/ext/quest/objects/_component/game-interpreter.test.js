@@ -29,7 +29,7 @@ describe('Game_Interpreter ext/quest augments (direct src import)', () =>
     await import('../../../../../../../src/plugins/omni/ext/quest/objects/Game_Interpreter.js');
 
     // J-Base accessors the production code now reads through.
-    globalThis.Game_Interpreter.prototype.commonEventId = function() { return this._commonEventId; };
+    globalThis.Game_Interpreter.prototype.list = function() { return this._list; };
     globalThis.Game_Interpreter.prototype.index = function() { return this._index; };
     ({ Game_Interpreter } = globalThis);
   });
@@ -41,9 +41,31 @@ describe('Game_Interpreter ext/quest augments (direct src import)', () =>
     globalThis.$dataCommonEvents = [];
   });
 
-  function makeEventWithPage(commandList)
+  /**
+   * The commands on the page of whichever map event spawned this interpreter. A choice inside a
+   * called common event runs on a child interpreter that inherited the caller's event id, so the
+   * map event behind it resolves to something real and entirely unrelated. Staged as a near-miss
+   * throughout: reaching for it instead of the executing list yields a different command.
+   */
+  const spawningEventCommands = [ { code: 108, parameters: [ '<spawner>' ] } ];
+
+  /**
+   * The command sitting at the evaluated index of the list actually being executed.
+   */
+  const executingCommand = { code: 108, parameters: [ '<executing>' ] };
+
+  /**
+   * Builds an interpreter executing the given commands on behalf of a map event whose own page
+   * holds something else entirely.
+   */
+  function makeInterpreterExecuting(commandList)
   {
-    return { page: () => ({ list: commandList }) };
+    const interpreter = new Game_Interpreter();
+    interpreter._list = commandList;
+    interpreter.eventId.mockReturnValue(1);
+    globalThis.$gameMap.event.mockReturnValue({ page: () => ({ list: spawningEventCommands }) });
+
+    return interpreter;
   }
 
   describe('shouldHideChoiceBranch', () =>
@@ -51,10 +73,8 @@ describe('Game_Interpreter ext/quest augments (direct src import)', () =>
     it('always calls through to the original aliased implementation', () =>
     {
       // Arrange
-      const interpreter = new Game_Interpreter();
+      const interpreter = makeInterpreterExecuting([ executingCommand ]);
       globalThis.J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.get('shouldHideChoiceBranch').mockReturnValue(false);
-      interpreter.eventId.mockReturnValue(1);
-      globalThis.$gameMap.event.mockReturnValue(makeEventWithPage([ {} ]));
       globalThis.Game_Event.filterInvalidEventCommand.mockReturnValue(false);
 
       // Act
@@ -73,9 +93,10 @@ describe('Game_Interpreter ext/quest augments (direct src import)', () =>
       // Act
       const result = interpreter.shouldHideChoiceBranch(0);
 
-      // Assert
+      // Assert- nothing downstream is staged, so the short-circuit is the only thing that can have
+      // produced a verdict here; the untouched validity filter is what proves it never looked.
       expect(result).toEqual(true);
-      expect(globalThis.$gameMap.event).not.toHaveBeenCalled();
+      expect(globalThis.Game_Event.filterInvalidEventCommand).not.toHaveBeenCalled();
     });
 
     it('does not hide when the subcommand is not a valid event command', () =>
@@ -84,10 +105,8 @@ describe('Game_Interpreter ext/quest augments (direct src import)', () =>
       // as a choice conditional and that conditional is unmet. Only the command not being a parsable
       // comment in the first place can keep the branch visible, which is the point- a line of
       // dialogue that happens to quote the tag is not a condition.
-      const interpreter = new Game_Interpreter();
+      const interpreter = makeInterpreterExecuting([ executingCommand ]);
       globalThis.J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.get('shouldHideChoiceBranch').mockReturnValue(false);
-      interpreter.eventId.mockReturnValue(1);
-      globalThis.$gameMap.event.mockReturnValue(makeEventWithPage([ {} ]));
       globalThis.Game_Event.filterInvalidEventCommand.mockReturnValue(false);
       globalThis.Game_Event.filterCommentCommandsByChoiceQuestConditional.mockReturnValue(true);
       globalThis.Game_Event.questConditionalMet.mockReturnValue(false);
@@ -103,10 +122,8 @@ describe('Game_Interpreter ext/quest augments (direct src import)', () =>
     it('does not hide when the subcommand is not a choice quest conditional', () =>
     {
       // Arrange
-      const interpreter = new Game_Interpreter();
+      const interpreter = makeInterpreterExecuting([ executingCommand ]);
       globalThis.J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.get('shouldHideChoiceBranch').mockReturnValue(false);
-      interpreter.eventId.mockReturnValue(1);
-      globalThis.$gameMap.event.mockReturnValue(makeEventWithPage([ {} ]));
       globalThis.Game_Event.filterInvalidEventCommand.mockReturnValue(true);
       globalThis.Game_Event.filterCommentCommandsByChoiceQuestConditional.mockReturnValue(false);
 
@@ -120,10 +137,8 @@ describe('Game_Interpreter ext/quest augments (direct src import)', () =>
     it('does not hide when the parsed quest conditional is met', () =>
     {
       // Arrange
-      const interpreter = new Game_Interpreter();
+      const interpreter = makeInterpreterExecuting([ executingCommand ]);
       globalThis.J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.get('shouldHideChoiceBranch').mockReturnValue(false);
-      interpreter.eventId.mockReturnValue(1);
-      globalThis.$gameMap.event.mockReturnValue(makeEventWithPage([ {} ]));
       globalThis.Game_Event.filterInvalidEventCommand.mockReturnValue(true);
       globalThis.Game_Event.filterCommentCommandsByChoiceQuestConditional.mockReturnValue(true);
       globalThis.Game_Event.questConditionalMet.mockReturnValue(true);
@@ -138,10 +153,8 @@ describe('Game_Interpreter ext/quest augments (direct src import)', () =>
     it('hides the branch when the parsed quest conditional is not met', () =>
     {
       // Arrange
-      const interpreter = new Game_Interpreter();
+      const interpreter = makeInterpreterExecuting([ executingCommand ]);
       globalThis.J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.get('shouldHideChoiceBranch').mockReturnValue(false);
-      interpreter.eventId.mockReturnValue(1);
-      globalThis.$gameMap.event.mockReturnValue(makeEventWithPage([ {} ]));
       globalThis.Game_Event.filterInvalidEventCommand.mockReturnValue(true);
       globalThis.Game_Event.filterCommentCommandsByChoiceQuestConditional.mockReturnValue(true);
       globalThis.Game_Event.questConditionalMet.mockReturnValue(false);
@@ -153,21 +166,24 @@ describe('Game_Interpreter ext/quest augments (direct src import)', () =>
       expect(result).toEqual(true);
     });
 
-    it('falls back to the common event command list when there is no map event for this interpreter', () =>
+    it('resolves the subcommand against the executing list, not the spawning map event page', () =>
     {
-      // Arrange
-      const interpreter = new Game_Interpreter();
+      // Arrange- the common-event-called-from-a-map-event shape. each list holds a different command
+      // at the evaluated index, so which one reaches the validity filter is the only thing that
+      // distinguishes the two sources.
+      const interpreter = makeInterpreterExecuting([ executingCommand ]);
       globalThis.J.OMNI.EXT.QUEST.Aliased.Game_Interpreter.get('shouldHideChoiceBranch').mockReturnValue(false);
-      interpreter.eventId.mockReturnValue(0);
-      interpreter._commonEventId = 5;
-      globalThis.$gameMap.event.mockReturnValue(null);
-      const commonEvents = [];
-      commonEvents[5] = { list: [ {} ] };
-      globalThis.$dataCommonEvents = commonEvents;
       globalThis.Game_Event.filterInvalidEventCommand.mockReturnValue(false);
 
-      // Act/Assert (no throw)
-      expect(() => interpreter.shouldHideChoiceBranch(0)).not.toThrow();
+      // Act
+      const result = interpreter.shouldHideChoiceBranch(0);
+
+      // Assert
+      expect(globalThis.Game_Event.filterInvalidEventCommand).toHaveBeenCalledWith(executingCommand);
+      expect(globalThis.Game_Event.filterInvalidEventCommand)
+        .not
+        .toHaveBeenCalledWith(spawningEventCommands.at(0));
+      expect(result).toEqual(false);
     });
   });
 });

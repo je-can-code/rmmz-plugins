@@ -356,8 +356,7 @@ Game_Interpreter.prototype.evaluateChoicesForVisibility = function(params) {
 */
 Game_Interpreter.prototype.hideSpecificChoiceBranches = function(params) {
 	const currentCommand = this.currentCommand();
-	const eventMetadata = $gameMap.event(this.eventId());
-	const currentPageCommands = eventMetadata ? eventMetadata.page().list : $dataCommonEvents.at(this.commonEventId()).list;
+	const currentPageCommands = this.list();
 	const startShowChoiceIndex = currentPageCommands.findIndex((item) => item === currentCommand);
 	const endShowChoiceIndex = currentPageCommands.findIndex((item, index) => index > startShowChoiceIndex && item.indent === currentCommand.indent && item.code === 404);
 	const showChoiceIndices = currentPageCommands.map((command, index) => {
@@ -388,8 +387,7 @@ Game_Interpreter.prototype.hideSpecificChoiceBranches = function(params) {
 * @returns {boolean}
 */
 Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandIndex) {
-	const eventMetadata = $gameMap.event(this.eventId());
-	const currentPageCommands = eventMetadata ? eventMetadata.page().list : $dataCommonEvents.at(this.commonEventId()).list;
+	const currentPageCommands = this.list();
 	const subEventCommand = currentPageCommands.at(subChoiceCommandIndex);
 	if (!Game_Event.filterInvalidEventCommand(subEventCommand)) return false;
 	if (!Game_Event.filterCommentCommandsForBasicConditionals(subEventCommand)) return false;
@@ -406,13 +404,6 @@ Game_Interpreter.prototype.shouldHideChoiceBranch = function(subChoiceCommandInd
 */
 Game_Interpreter.prototype.setChoiceHidden = function(choiceIndex, shouldHide = true) {
 	$gameMessage.hideChoice(choiceIndex, shouldHide);
-};
-/**
-* Gets the common event id.
-* @returns {number} The commonEventId.
-*/
-Game_Interpreter.prototype.commonEventId = function() {
-	return this._commonEventId;
 };
 
 //#endregion
