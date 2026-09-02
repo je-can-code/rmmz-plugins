@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.0 ABS-TIME] Calendar-based respawn methods for JABS.
+ * [v1.1.0 ABS-TIME] Calendar-based respawn methods for JABS.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-ABS
@@ -65,6 +65,21 @@
  *     Seasons begin in months 3, 6, 9, and 12 respectively.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Every calendar method now carries a "next-" prefix, and anything without
+ *    one is a plain duration. Four of the five already resolved to the next
+ *    occurrence of their moment; the prefix states that at the tag itself,
+ *    which is where an author is standing when they need to know it.
+ *    Added next-time, the next occurrence of an arbitrary HHMM clock time. The
+ *    phases tile the day in four-hour blocks, so an hour like 6am previously
+ *    had no way to be named at all. next-time-of-day now resolves its phase to
+ *    a starting hour and defers to it, leaving one implementation of the idea.
+ *    Retired next-day, which alone jumped a whole day unconditionally and was
+ *    misread because of it. Under this grammar it would have meant what
+ *    next-time means; a flat day is game-minutes at 1440.
+ *    Tag renames: time-of-day becomes next-time-of-day, day-of-week becomes
+ *    next-day-of-week, month becomes next-month, season becomes next-season.
+ *    This breaks any tag written against the old names.
  * - 1.0.0
  *    The initial release.
  * ============================================================================
@@ -107,7 +122,7 @@ J.ABS.EXT.TIME = {};
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.EXT.TIME.Metadata = new J_AbsTimePluginMetadata("J-ABS-Time", "1.0.0");
+J.ABS.EXT.TIME.Metadata = new J_AbsTimePluginMetadata("J-ABS-Time", "1.1.0");
 
 //#endregion
 //#region src/plugins/abs/ext/time/managers/JABS_TimeRespawnMethods.js

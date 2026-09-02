@@ -1,7 +1,7 @@
 //region Introduction
 /*:
  * @target MZ
- * @plugindesc [v1.2.0 TIME] A system for tracking time- real or artificial.
+ * @plugindesc [v1.2.1 TIME] A system for tracking time- real or artificial.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -201,6 +201,11 @@
  *
  * =============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Fixed time-gated choice branches never hiding when the Show Choices sat
+ *    inside a called common event, by sourcing the surrounding commands from
+ *    J-Base's new Game_Interpreter.list rather than re-deriving them from an
+ *    event id a child interpreter merely inherited.
  * - 1.2.0
  *    Added a day-of-week vocabulary to Time_Snapshot: DaysOfWeekName and
  *    DaysOfWeekId translate between names and ids (0-6 starting from Monday),
@@ -675,7 +680,7 @@ J.TIME = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.TIME.Metadata = new J_TIME_PluginMetadata("J-TIME", "1.2.0");
+J.TIME.Metadata = new J_TIME_PluginMetadata("J-TIME", "1.2.1");
 /**
 * A collection of all aliased methods for this plugin.
 */

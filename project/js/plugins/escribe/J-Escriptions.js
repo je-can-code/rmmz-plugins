@@ -1,7 +1,7 @@
 //region Introduction
 /*:
  * @target MZ
- * @plugindesc [v1.0.2 ESCRIBE] Enables "describing" the event with some text and/or an icon.
+ * @plugindesc [v1.1.0 ESCRIBE] Enables "describing" the event with some text and/or an icon.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -39,6 +39,21 @@
  * event is visible on the map.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Every <text> tag on a page is now its own line, reading top to bottom,
+ *    where previously a second tag silently overwrote the first. RMMZ already
+ *    stores a comment box as one command per line, so several tags in one box
+ *    is the shape the data was in. The lines of a block share one
+ *    proximityText, and an icon rides above the whole block rather than above
+ *    the first line, so adding a line lifts the icon with it.
+ *    Text and icons became one kind-tagged escription internally. They were the
+ *    same feature written twice at every layer, and an event now holds a list
+ *    of them so parsing, proximity, sprite construction, positioning and fading
+ *    each happen once in a loop. The flag-and-acknowledge handshake between
+ *    event and sprite is gone; the sprite compares what the character declares
+ *    against what it last built from, which cannot desync.
+ *    Fixed four unreachable opacity branches and two fade terminal checks that
+ *    compared for equality against a value floating-point drift could step past.
  * - 1.0.2
  *    Text escriptions are now horizontally centered on their event. The map
  *    coordinate was being added into a pixel offset, drifting every label one
@@ -92,7 +107,7 @@ J.ESCRIBE = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.ESCRIBE.Metadata = new J_EscriptionsPluginMetadata("J-Escriptions", "1.0.2");
+J.ESCRIBE.Metadata = new J_EscriptionsPluginMetadata("J-Escriptions", "1.1.0");
 /**
 * All regular expressions used by this plugin.
 */

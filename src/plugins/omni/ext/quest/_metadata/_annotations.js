@@ -140,6 +140,12 @@
  * This choice is only shown while objective 2 of that quest is completed.
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.3
+ *    Fixed quest-gated choice branches never hiding when the Show Choices sat
+ *    inside a called common event, by sourcing the surrounding commands from
+ *    J-Base's new Game_Interpreter.list rather than re-deriving them from an
+ *    event id a child interpreter merely inherited. Dropped the dead
+ *    commonEventId accessor, which read a field only Game_CommonEvent owns.
  * - 2.0.2
  *    Routed every quest and objective warning and error through J-Base's new
  *    Diagnostics, so each names J-OMNI-Quests. Removed the console.log lines

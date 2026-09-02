@@ -1,7 +1,7 @@
 //region Introduction
 /*:
  * @target MZ
- * @plugindesc [v1.3.0 MESSAGE] Gives access to more message window functionality.
+ * @plugindesc [v1.3.1 MESSAGE] Gives access to more message window functionality.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -141,6 +141,14 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.1
+ *    Fixed choice conditionals never hiding a branch when the Show Choices sat
+ *    inside a called common event. Such a choice runs on a child interpreter
+ *    that inherited the caller's event id, so re-deriving the command list from
+ *    that id landed on the calling map event's page instead. The current
+ *    command was never found in it, which collapsed the search window and left
+ *    every branch visible. The surrounding commands now come from J-Base's new
+ *    Game_Interpreter.list, which is the list actually being executed.
  * - 1.3.0
  *    Added \param[PARAM_KEY] text code, pulling name/icon/color from the
  *    shared J-Base ParameterRegistry catalog. An unregistered key renders as
@@ -186,7 +194,7 @@ J.MESSAGE = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.MESSAGE.Metadata = new J_MessageTextCodesPluginMetadata("J-MessageTextCodes", "1.3.0");
+J.MESSAGE.Metadata = new J_MessageTextCodesPluginMetadata("J-MessageTextCodes", "1.3.1");
 /**
 * A collection of all base aliases.
 */
