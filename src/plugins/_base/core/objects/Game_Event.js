@@ -16,6 +16,39 @@ Game_Event.prototype.getValidCommentCommands = function()
 };
 
 /**
+ * Builds a note-shaped view of this event's comment commands.
+ *
+ * {@link RPGManager} parses a `note` string and nothing else- every getter it offers bottoms out on
+ * splitting that string into lines- so an event able to present its comments as one inherits the
+ * whole family at once: plural captures, numbers, sums, the `nullIfEmpty` opt-in. That is a great
+ * deal more than {@link Game_Event.extractValueByRegex} beside it can offer, which reads a single
+ * value and silently keeps the last one when a tag appears twice.
+ *
+ * **The event's own note box is deliberately not folded in.** That box is event-global rather than
+ * per-page, so a tag written there would leak into every page of the event- and it is a single
+ * cramped line in the editor besides, which is why comments carry this plugin's tags to begin with.
+ *
+ * A fresh object comes back on every call rather than a remembered one. RPGManager keys its note
+ * cache weakly on whatever object it is handed and assumes that object's note never changes, which
+ * is true of a database row and emphatically untrue of an event that can turn its page. Handing it
+ * a throwaway keeps that assumption honest. A caller reading several tags at once should hold this
+ * result across the whole parse rather than calling once per tag, which is what lets the cache
+ * answer the second and later reads.
+ * @returns {{note: string}} The comment lines, shaped the way RPGManager's getters expect.
+ */
+Game_Event.prototype.commentNote = function()
+{
+  // every comment line on the active page, in the order the author wrote them.
+  const lines = this.getValidCommentCommands()
+    .map(command => command.parameters.at(0));
+
+  // RPGManager splits a note on its newlines, so joining on them is the whole of the translation.
+  const note = lines.join('\n');
+
+  return { note };
+};
+
+/**
  * Gets all valid-shaped comment event commands from a designated page.
  * @param {RPG_MapEventPage} page The event page to parse comments from.
  */

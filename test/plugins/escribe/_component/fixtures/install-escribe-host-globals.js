@@ -77,8 +77,20 @@ export function installEscribeHostGlobals(sandbox = globalThis)
     return [];
   };
 
+  // mirrors J-Base's Game_Event#commentNote: the page's comment lines joined into one note-shaped
+  // string, which is what lets RPGManager's note getters read an event at all. Stubbed rather than
+  // imported so the comment source stays the one seam these tests control- the real method's own
+  // filtering is covered next door in the J-Base component test.
+  sandbox.Game_Event.prototype.commentNote = function()
+  {
+    const lines = this.getValidCommentCommands()
+      .map(command => command.parameters.at(0));
+
+    return { note: lines.join('\n') };
+  };
+
   // real Game_Event#extractValueByRegex (vanilla engine) scans this event's comment commands for
-  // the first regex match; escribe's parseEscription*Value() methods all delegate to this.
+  // the first regex match; kept because other plugins' events still read through it.
   sandbox.Game_Event.prototype.extractValueByRegex = function(regex, defaultValue)
   {
     const commands = this.getValidCommentCommands();

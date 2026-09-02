@@ -313,22 +313,28 @@ Game_Event.prototype.canParseEscriptionComments = function() {
 /**
 * Parses the event comments to discern what this event describes, if anything.
 *
-* An event may declare a text, an icon, both, or neither, and each carries its own proximity- so
-* this produces between zero and two escriptions, in a fixed order. The order matters only in that
-* it is stable: the sprite layer pairs a sprite back to what it draws by index rather than by
-* holding the escription, so both sides have to agree on the sequence.
+* **Every `<text>` tag on the page is its own line**, in the order they were written. That falls out
+* of how RMMZ stores a comment box- one command per line- so an author writing three lines into one
+* box gets three lines above the event, which is the shape the data was already in.
+*
+* The text lines come first and the icon last, and that order is a contract rather than an
+* accident: the sprite layer pairs a sprite back to what it draws by index rather than by holding
+* the escription, so both sides have to agree on the sequence.
 */
 Game_Event.prototype.parseEscriptionComments = function() {
 	if (!this.canParseEscriptionComments()) return;
+	const commentNote = this.commentNote();
 	const escriptions = [];
-	const text = this.extractValueByRegex(J.ESCRIBE.RegExp.Text, String.empty);
-	if (text) {
-		const proximity = this.extractValueByRegex(J.ESCRIBE.RegExp.ProximityText, Escription.ALWAYS_VISIBLE);
-		escriptions.push(new Escription(Escription.Kinds.Text, text, proximity));
+	const lines = RPGManager.getStringsFromNoteByRegex(commentNote, J.ESCRIBE.RegExp.Text);
+	if (lines.length > 0) {
+		const declaredRange = RPGManager.getNumberFromNoteByRegex(commentNote, J.ESCRIBE.RegExp.ProximityText, true);
+		const proximity = declaredRange ?? Escription.ALWAYS_VISIBLE;
+		lines.forEach((line) => escriptions.push(new Escription(Escription.Kinds.Text, line, proximity)));
 	}
-	const iconIndex = this.extractValueByRegex(J.ESCRIBE.RegExp.IconIndex, -1);
-	if (iconIndex > -1) {
-		const proximity = this.extractValueByRegex(J.ESCRIBE.RegExp.ProximityIcon, Escription.ALWAYS_VISIBLE);
+	const iconIndex = RPGManager.getNumberFromNoteByRegex(commentNote, J.ESCRIBE.RegExp.IconIndex, true);
+	if (iconIndex !== null) {
+		const declaredRange = RPGManager.getNumberFromNoteByRegex(commentNote, J.ESCRIBE.RegExp.ProximityIcon, true);
+		const proximity = declaredRange ?? Escription.ALWAYS_VISIBLE;
 		escriptions.push(new Escription(Escription.Kinds.Icon, iconIndex, proximity));
 	}
 	this.setEscriptions(escriptions);
@@ -381,6 +387,18 @@ Game_Character.prototype.parseEscriptionComments = function() {};
 
 //#endregion
 //#region src/plugins/escribe/core/sprites/Sprite_Character.js
+/**
+* The vertical distance between two stacked lines of escription text, in pixels.
+* Two more than the font size, which is the leading that stops descenders in one line from
+* touching the capitals in the next.
+* @type {number}
+*/
+var ESCRIPTION_LINE_HEIGHT = 16;
+/**
+* The gap between the topmost line of escription text and an icon riding above it, in pixels.
+* @type {number}
+*/
+var ESCRIPTION_ICON_GAP = 32;
 /**
 * Hooks into the initmembers function to add our properties.
 */
@@ -488,13 +506,32 @@ Sprite_Character.prototype.escriptionBaseY = function() {
 	return -(this.patternHeight() + 32);
 };
 /**
-* The offset from {@link Sprite_Character.escriptionBaseY} that a given kind of escription sits at.
-* @param {Escription} escription The escription being placed.
+* How many text lines the given escriptions amount to.
+* @param {Escription[]} escriptions The escriptions to count through.
 * @returns {number}
 */
-Sprite_Character.prototype.escriptionOffsetY = function(escription) {
-	if (escription.kind() === Escription.Kinds.Icon) return -32;
-	return 0;
+Sprite_Character.prototype.escriptionLineCount = function(escriptions) {
+	return escriptions.filter((escription) => escription.kind() === Escription.Kinds.Text).length;
+};
+/**
+* The offset from {@link Sprite_Character.escriptionBaseY} that one escription sits at.
+*
+* Text lines stack **upward**, so the last line sits on the base and the first sits highest- a
+* block therefore reads top to bottom, and a single line lands exactly where a single line has
+* always landed. The icon clears the whole block rather than only the first line, so writing a
+* second line pushes the icon up with the text instead of burying it in the middle of it.
+* @param {Escription} escription The escription being placed.
+* @param {number} index Its position in the character's list.
+* @param {number} lineCount How many text lines the character declares in total.
+* @returns {number}
+*/
+Sprite_Character.prototype.escriptionOffsetY = function(escription, index, lineCount) {
+	if (escription.kind() === Escription.Kinds.Icon) {
+		const topLine = Math.max(lineCount - 1, 0);
+		return -(topLine * ESCRIPTION_LINE_HEIGHT + ESCRIPTION_ICON_GAP);
+	}
+	const linesAbove = lineCount - 1 - index;
+	return -(linesAbove * ESCRIPTION_LINE_HEIGHT);
 };
 /**
 * Extends {@link Sprite_Character.isEmptyCharacter}.<br/>
@@ -562,8 +599,7 @@ Sprite_Character.prototype.buildEscriptionSprite = function(escription) {
 */
 Sprite_Character.prototype.buildEscriptionTextSprite = function(escription) {
 	const sprite = new Sprite_BaseText().setText(escription.content()).setFontSize(14).setAlignment(Sprite_BaseText.Alignments.Center).setColor("#ffffff");
-	const x = -(sprite.width / 2);
-	sprite.move(x, this.escriptionBaseY() + this.escriptionOffsetY(escription));
+	sprite.x = -(sprite.width / 2);
 	return sprite;
 };
 /**
@@ -573,8 +609,7 @@ Sprite_Character.prototype.buildEscriptionTextSprite = function(escription) {
 */
 Sprite_Character.prototype.buildEscriptionIconSprite = function(escription) {
 	const sprite = new Sprite_Icon(escription.content());
-	const x = 0 - ImageManager.iconWidth / 2 - 4;
-	sprite.move(x, this.escriptionBaseY() + this.escriptionOffsetY(escription));
+	sprite.x = 0 - ImageManager.iconWidth / 2 - 4;
 	return sprite;
 };
 /**
@@ -610,9 +645,10 @@ Sprite_Character.prototype.updateEscriptionSprites = function() {
 	const escriptions = this.characterEscriptions();
 	const sprites = this.escriptionSprites();
 	const baseY = this.escriptionBaseY();
+	const lineCount = this.escriptionLineCount(escriptions);
 	sprites.forEach((sprite, index) => {
 		const escription = escriptions.at(index);
-		sprite.y = baseY + this.escriptionOffsetY(escription);
+		sprite.y = baseY + this.escriptionOffsetY(escription, index, lineCount);
 		if (!escription.hasProximity()) return;
 		this.fadeEscriptionSprite(sprite, escription.isVisible());
 	});

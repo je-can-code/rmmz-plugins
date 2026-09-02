@@ -1,6 +1,20 @@
 //region Sprite_Character
 import Escription from './../_models/Escription.js';
 
+/**
+ * The vertical distance between two stacked lines of escription text, in pixels.
+ * Two more than the font size, which is the leading that stops descenders in one line from
+ * touching the capitals in the next.
+ * @type {number}
+ */
+const ESCRIPTION_LINE_HEIGHT = 16;
+
+/**
+ * The gap between the topmost line of escription text and an icon riding above it, in pixels.
+ * @type {number}
+ */
+const ESCRIPTION_ICON_GAP = 32;
+
 //region properties
 /**
  * Hooks into the initmembers function to add our properties.
@@ -143,18 +157,41 @@ Sprite_Character.prototype.escriptionBaseY = function()
 };
 
 /**
- * The offset from {@link Sprite_Character.escriptionBaseY} that a given kind of escription sits at.
- * @param {Escription} escription The escription being placed.
+ * How many text lines the given escriptions amount to.
+ * @param {Escription[]} escriptions The escriptions to count through.
  * @returns {number}
  */
-Sprite_Character.prototype.escriptionOffsetY = function(escription)
+Sprite_Character.prototype.escriptionLineCount = function(escriptions)
 {
-  // an icon rides a further icon's-height up so the two stack rather than share a line when an
-  // event carries both.
-  if (escription.kind() === Escription.Kinds.Icon) return -32;
+  return escriptions.filter(escription => escription.kind() === Escription.Kinds.Text).length;
+};
 
-  // text parks directly above the character.
-  return 0;
+/**
+ * The offset from {@link Sprite_Character.escriptionBaseY} that one escription sits at.
+ *
+ * Text lines stack **upward**, so the last line sits on the base and the first sits highest- a
+ * block therefore reads top to bottom, and a single line lands exactly where a single line has
+ * always landed. The icon clears the whole block rather than only the first line, so writing a
+ * second line pushes the icon up with the text instead of burying it in the middle of it.
+ * @param {Escription} escription The escription being placed.
+ * @param {number} index Its position in the character's list.
+ * @param {number} lineCount How many text lines the character declares in total.
+ * @returns {number}
+ */
+Sprite_Character.prototype.escriptionOffsetY = function(escription, index, lineCount)
+{
+  // an icon rides above the topmost line of text- or above the character itself, when an event
+  // declares an icon and nothing to write beside it.
+  if (escription.kind() === Escription.Kinds.Icon)
+  {
+    const topLine = Math.max(lineCount - 1, 0);
+    return -((topLine * ESCRIPTION_LINE_HEIGHT) + ESCRIPTION_ICON_GAP);
+  }
+
+  // text lines are declared before the icon, so a text escription's position in the list is also
+  // its line number- and the lines above it are what lift it off the base.
+  const linesAbove = lineCount - 1 - index;
+  return -(linesAbove * ESCRIPTION_LINE_HEIGHT);
 };
 
 /**
@@ -284,11 +321,12 @@ Sprite_Character.prototype.buildEscriptionTextSprite = function(escription)
   // own width. the character's map coordinate has no business in this sum: it is measured in
   // tiles, so folding it in shifted every label right by one pixel per tile from the map's left
   // edge, which reads as "roughly centred" near the origin and drifts visibly across a wide map.
-  const x = -(sprite.width / 2);
+  sprite.x = -(sprite.width / 2);
 
-  // relocate the sprite. the height is a first guess only - the update loop owns it from here,
-  // because the character bitmap it is measured from may not have loaded yet.
-  sprite.move(x, this.escriptionBaseY() + this.escriptionOffsetY(escription));
+  // the height is deliberately left alone. it depends on the character bitmap, which may not have
+  // loaded, and on how many lines the block turned out to hold - so the update pass that runs in
+  // this same frame owns it, and owning it in one place is what keeps the stack from disagreeing
+  // with itself.
 
   // return the built sprite.
   return sprite;
@@ -306,10 +344,9 @@ Sprite_Character.prototype.buildEscriptionIconSprite = function(escription)
 
   // an icon knows its own width up front, so centring it needs no measurement- the few extra
   // pixels are the nudge that lines it up with the text below it.
-  const x = 0 - (ImageManager.iconWidth / 2) - 4;
+  sprite.x = 0 - (ImageManager.iconWidth / 2) - 4;
 
-  // relocate the sprite. as with the text, the update loop owns the height from here.
-  sprite.move(x, this.escriptionBaseY() + this.escriptionOffsetY(escription));
+  // as with the text, the update pass owns the height.
 
   // return the built sprite.
   return sprite;
@@ -375,6 +412,9 @@ Sprite_Character.prototype.updateEscriptionSprites = function()
   // whatever height the character turned out to be this frame, everything hangs off it.
   const baseY = this.escriptionBaseY();
 
+  // how tall the block of text is decides where every line and the icon above it sit.
+  const lineCount = this.escriptionLineCount(escriptions);
+
   // park and fade each one.
   sprites.forEach((sprite, index) =>
   {
@@ -382,7 +422,7 @@ Sprite_Character.prototype.updateEscriptionSprites = function()
     const escription = escriptions.at(index);
 
     // keep it parked above the character.
-    sprite.y = baseY + this.escriptionOffsetY(escription);
+    sprite.y = baseY + this.escriptionOffsetY(escription, index, lineCount);
 
     // something always visible has nothing to fade toward.
     if (!escription.hasProximity()) return;

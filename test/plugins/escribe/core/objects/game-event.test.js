@@ -60,6 +60,9 @@ describe('J-Escriptions Game_Event', () =>
     setPluginContextToJBase();
     await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
 
+    // the parse path reaches through the real note parser, so setupPage() needs it present.
+    ({ default: globalThis.RPGManager } = await import('../../../../../src/plugins/_base/core/managers/RPGManager.js'));
+
     setPluginContextToJEscribe();
     await import('../../../../../src/plugins/escribe/core/_metadata/initialization.js');
 

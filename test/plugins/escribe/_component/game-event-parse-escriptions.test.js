@@ -44,6 +44,9 @@ describe('J-Escriptions Game_Event escription parsing (direct src import)', () =
     setPluginContextToJBase();
     await import('../../../../src/plugins/_base/core/_metadata/initialization.js');
 
+    // the real note parser- these tests exercise escribe's tags through it rather than around it.
+    ({ default: globalThis.RPGManager } = await import('../../../../src/plugins/_base/core/managers/RPGManager.js'));
+
     setPluginContextToJEscribe();
     await import('../../../../src/plugins/escribe/core/_metadata/initialization.js');
 
@@ -76,6 +79,66 @@ describe('J-Escriptions Game_Event escription parsing (direct src import)', () =
     const escriptions = event.escriptions();
     expect(escriptions).toHaveLength(2);
     expect(escriptions.map(escription => escription.key())).toEqual([ 'text:Hello:2.5', 'icon:12:1' ]);
+  });
+
+  it('turns every text tag into its own line, in the order they were written', () =>
+  {
+    // Arrange- three lines in one comment box is how RMMZ already stores a multi-line comment.
+    const event = buildCommentedEvent([
+      '<text:Here lies Viktor.>',
+      '<text:He asked for a bigger sword.>',
+      '<text:He received one.>',
+    ]);
+
+    // Act
+    event.parseEscriptionComments();
+
+    // Assert
+    const contents = event.escriptions()
+      .map(escription => escription.content());
+    expect(contents).toEqual([ 'Here lies Viktor.', 'He asked for a bigger sword.', 'He received one.' ]);
+  });
+
+  it('gives every line of a block the one declared proximity', () =>
+  {
+    // Arrange
+    const event = buildCommentedEvent([ '<text:one>', '<text:two>', '<proximityText: 3>' ]);
+
+    // Act
+    event.parseEscriptionComments();
+
+    // Assert
+    const ranges = event.escriptions()
+      .map(escription => escription.proximityRange());
+    expect(ranges).toEqual([ 3, 3 ]);
+  });
+
+  it('keeps the icon last, after however many lines of text precede it', () =>
+  {
+    // Arrange- the sprite layer pairs by index, so this order is a contract rather than a detail.
+    const event = buildCommentedEvent([ '<text:one>', '<icon: 12>', '<text:two>' ]);
+
+    // Act
+    event.parseEscriptionComments();
+
+    // Assert
+    const kinds = event.escriptions()
+      .map(escription => escription.kind());
+    expect(kinds).toEqual([ Escription.Kinds.Text, Escription.Kinds.Text, Escription.Kinds.Icon ]);
+  });
+
+  it('reads icon zero as a real icon rather than as an absent one', () =>
+  {
+    // Arrange- zero is a legitimate index, which is why the parse asks for null-if-empty instead
+    // of accepting a numeric sentinel it could not tell apart from a declaration.
+    const event = buildCommentedEvent([ '<icon: 0>' ]);
+
+    // Act
+    event.parseEscriptionComments();
+
+    // Assert
+    expect(event.escriptions()).toHaveLength(1);
+    expect(event.escriptions().at(0).content()).toBe(0);
   });
 
   it('builds a text alone when no icon is declared', () =>

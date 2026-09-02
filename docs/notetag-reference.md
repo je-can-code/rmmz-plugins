@@ -5022,11 +5022,25 @@ always (subject to proximity gating if present)
 `text` shows EVENT_TEXT floating above the event; `icon` shows the icon at ICON_INDEX. Either or
 both can be present on the same event.
 
+**`text` may appear as many times as you like, and each one becomes its own line**, in the order
+written, reading top to bottom. RMMZ already stores a comment box as one command per line, so
+typing several tags into one box is the natural shape rather than a workaround. All the lines of a
+block share the single `proximityText` range, because they are one block of text rather than
+several independent labels. An `icon` rides above the whole block, so adding a line pushes the icon
+up with it instead of burying it mid-paragraph.
+
 ```
 <text:A rusty old chest.>
 <icon:208>
 ```
 This event shows both descriptive text and an icon above it.
+
+```
+<text:Here lies Viktor.>
+<text:He asked for a bigger sword.>
+<text:He received one.>
+```
+This event shows three lines above it, the first line highest.
 
 ---
 

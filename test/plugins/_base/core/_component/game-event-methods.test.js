@@ -128,6 +128,73 @@ describe('J-Base Game_Event methods (direct src import)', () =>
     });
   });
 
+  describe('commentNote', () =>
+  {
+    it('joins the page\'s comment lines into one note string', () =>
+    {
+      // Arrange
+      const event = buildEvent();
+      event.page = () => ({ list: [] });
+      event.list = () => [ commentCommand('<text:one>'), commentCommand('<text:two>') ];
+
+      // Act
+      const result = event.commentNote();
+
+      // Assert
+      expect(result).toEqual({ note: '<text:one>\n<text:two>' });
+    });
+
+    it('leaves out the comments that are not parsable tags', () =>
+    {
+      // Arrange- a plain author's note sits between two tags, same command code, and must not
+      // reach the note; otherwise "kept the tags" and "kept everything" are the same program.
+      const event = buildEvent();
+      event.page = () => ({ list: [] });
+      event.list = () => [
+        commentCommand('<text:one>'),
+        commentCommand('remember to rename this guy'),
+        commentCommand('<text:two>'),
+      ];
+
+      // Act
+      const result = event.commentNote();
+
+      // Assert
+      expect(result).toEqual({ note: '<text:one>\n<text:two>' });
+    });
+
+    it('produces an empty note for an event carrying no comments at all', () =>
+    {
+      // Arrange
+      const event = buildEvent();
+      event.page = () => ({ list: [] });
+      event.list = () => [];
+
+      // Act
+      const result = event.commentNote();
+
+      // Assert
+      expect(result).toEqual({ note: '' });
+    });
+
+    it('hands back a fresh object each call, because RPGManager caches on identity', () =>
+    {
+      // Arrange- an event can turn its page, so a remembered object would outlive the note it
+      // was built from and let the cache answer with a previous page's tags.
+      const event = buildEvent();
+      event.page = () => ({ list: [] });
+      event.list = () => [ commentCommand('<text:one>') ];
+
+      // Act
+      const first = event.commentNote();
+      const second = event.commentNote();
+
+      // Assert
+      expect(first).not.toBe(second);
+      expect(first).toEqual(second);
+    });
+  });
+
   describe('getValidCommentCommandsFromPage (static)', () =>
   {
     it('returns Array.empty when the page has no commands', () =>
