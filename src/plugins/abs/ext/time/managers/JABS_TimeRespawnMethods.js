@@ -159,40 +159,15 @@ class JABS_TimeRespawnMethods
   }
 
   /**
-   * Schedules the start of the next occurrence of a time of day, strictly after now.
-   * Dying during the morning schedules tomorrow's morning, not the one already underway.
-   * @param {string} param The name of the time of day, like "morning".
-   * @returns {number|null} The due scalar, or null for an unrecognized time of day.
-   */
-  static scheduleTimeOfDay(param)
-  {
-    // translate the name into the time of day id.
-    const timeOfDayId = Time_Snapshot.TimesOfDayId(param);
-
-    // an unrecognized name schedules nothing.
-    if (timeOfDayId === -1) return null;
-
-    // determine what hour that time of day begins at.
-    const startHour = $gameTime.startOfTimeOfDay(timeOfDayId);
-
-    // build today's occurrence of that moment.
-    const now = $gameTime.currentTime();
-    const todaysOccurrence = this.atClockTime(now, startHour, 0);
-
-    // if today's occurrence is still ahead of us, that is the next one.
-    if (this.epochOf(todaysOccurrence) > this.epochOf(now)) return this.epochOf(todaysOccurrence);
-
-    // otherwise the next occurrence is tomorrow's.
-    const tomorrowsOccurrence = this.addDays(todaysOccurrence, 1);
-    return this.epochOf(tomorrowsOccurrence);
-  }
-
-  /**
-   * Schedules tomorrow at a given clock time, expressed as an HMM/HHMM number like 830 or 1430.
+   * Schedules the next occurrence of a clock time, expressed as an HMM/HHMM number like 830 or 1430.
+   *
+   * This is the primitive every appointment on the clock reduces to, and "next" is meant strictly:
+   * a moment already underway is not one a battler can wait for, so asking for 8:30 at exactly 8:30
+   * schedules tomorrow's.
    * @param {string} param The clock time as an HHMM number.
    * @returns {number|null} The due scalar, or null for an invalid clock time.
    */
-  static scheduleNextDay(param)
+  static scheduleNextClockTime(param)
   {
     // translate the parameter into a number.
     const clockValue = parseInt(param);
@@ -207,13 +182,43 @@ class JABS_TimeRespawnMethods
     // a clock time that isn't on the clock schedules nothing.
     if (hours > 23 || minutes > 59) return null;
 
-    // build tomorrow at that clock time.
+    // build today's occurrence of that moment.
     const now = $gameTime.currentTime();
-    const todayAtClock = this.atClockTime(now, hours, minutes);
-    const tomorrowAtClock = this.addDays(todayAtClock, 1);
+    const todaysOccurrence = this.atClockTime(now, hours, minutes);
 
-    // that is the moment.
-    return this.epochOf(tomorrowAtClock);
+    // if today's occurrence is still ahead of us, that is the next one.
+    if (this.epochOf(todaysOccurrence) > this.epochOf(now)) return this.epochOf(todaysOccurrence);
+
+    // otherwise the next occurrence is tomorrow's.
+    const tomorrowsOccurrence = this.addDays(todaysOccurrence, 1);
+    return this.epochOf(tomorrowsOccurrence);
+  }
+
+  /**
+   * Schedules the start of the next occurrence of a time of day, strictly after now.
+   * Dying during the morning schedules tomorrow's morning, not the one already underway.
+   *
+   * A phase of the day is just a clock time wearing a name, so this resolves the name to the hour
+   * that phase begins on and hands the rest to {@link scheduleNextClockTime}.
+   * @param {string} param The name of the time of day, like "morning".
+   * @returns {number|null} The due scalar, or null for an unrecognized time of day.
+   */
+  static scheduleTimeOfDay(param)
+  {
+    // translate the name into the time of day id.
+    const timeOfDayId = Time_Snapshot.TimesOfDayId(param);
+
+    // an unrecognized name schedules nothing.
+    if (timeOfDayId === -1) return null;
+
+    // determine what hour that time of day begins at.
+    const startHour = $gameTime.startOfTimeOfDay(timeOfDayId);
+
+    // phases begin on the hour, so the clock time is that hour with no minutes beside it.
+    const clockTime = String(startHour * 100);
+
+    // the start of the next such phase is the next occurrence of that clock time.
+    return this.scheduleNextClockTime(clockTime);
   }
 
   /**
@@ -302,6 +307,12 @@ class JABS_TimeRespawnMethods
 /**
  * Register every calendar method with core's respawn registry. Each shares the single epoch-based
  * due check, because every scheduler above encodes into the same scalar space.
+ *
+ * The `next-` prefix is load-bearing rather than decorative. Every method carrying it answers the
+ * same question - "when does this moment come around again, strictly after now" - and every method
+ * without it is a plain duration. An author reading a tag in an event comment can therefore tell
+ * which kind they are looking at without leaving the file, which is the whole reason the prefix
+ * exists: the one method that used to break the pattern was misread by the person who wrote it.
  */
 JABS_RespawnManager.registerMethod('game-minutes', {
   /**
@@ -319,7 +330,23 @@ JABS_RespawnManager.registerMethod('game-minutes', {
   isDue: due => JABS_TimeRespawnMethods.isDue(due),
 });
 
-JABS_RespawnManager.registerMethod('time-of-day', {
+JABS_RespawnManager.registerMethod('next-time', {
+  /**
+   * Schedules the next occurrence of an HHMM clock time.
+   * @param {string} param The clock time as an HHMM number, like 830.
+   * @returns {number|null}
+   */
+  schedule: param => JABS_TimeRespawnMethods.scheduleNextClockTime(param),
+
+  /**
+   * Determines whether the scheduled calendar moment has passed.
+   * @param {number} due The due scalar for the scheduled moment.
+   * @returns {boolean}
+   */
+  isDue: due => JABS_TimeRespawnMethods.isDue(due),
+});
+
+JABS_RespawnManager.registerMethod('next-time-of-day', {
   /**
    * Schedules the start of the next occurrence of a time of day.
    * @param {string} param The name of the time of day, like "morning".
@@ -335,23 +362,7 @@ JABS_RespawnManager.registerMethod('time-of-day', {
   isDue: due => JABS_TimeRespawnMethods.isDue(due),
 });
 
-JABS_RespawnManager.registerMethod('next-day', {
-  /**
-   * Schedules tomorrow at a given HHMM clock time.
-   * @param {string} param The clock time as an HHMM number, like 830.
-   * @returns {number|null}
-   */
-  schedule: param => JABS_TimeRespawnMethods.scheduleNextDay(param),
-
-  /**
-   * Determines whether the scheduled calendar moment has passed.
-   * @param {number} due The due scalar for the scheduled moment.
-   * @returns {boolean}
-   */
-  isDue: due => JABS_TimeRespawnMethods.isDue(due),
-});
-
-JABS_RespawnManager.registerMethod('day-of-week', {
+JABS_RespawnManager.registerMethod('next-day-of-week', {
   /**
    * Schedules midnight of the next occurrence of a day of the week.
    * @param {string} param The name of the day of the week, like "monday".
@@ -367,7 +378,7 @@ JABS_RespawnManager.registerMethod('day-of-week', {
   isDue: due => JABS_TimeRespawnMethods.isDue(due),
 });
 
-JABS_RespawnManager.registerMethod('month', {
+JABS_RespawnManager.registerMethod('next-month', {
   /**
    * Schedules the start of the next occurrence of a month.
    * @param {string} param The month number, 1-12.
@@ -383,7 +394,7 @@ JABS_RespawnManager.registerMethod('month', {
   isDue: due => JABS_TimeRespawnMethods.isDue(due),
 });
 
-JABS_RespawnManager.registerMethod('season', {
+JABS_RespawnManager.registerMethod('next-season', {
   /**
    * Schedules the start of the next occurrence of a season.
    * @param {string} param The name of the season, like "winter".
