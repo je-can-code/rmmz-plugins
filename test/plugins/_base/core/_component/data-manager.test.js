@@ -282,6 +282,44 @@ describe('DataManager (direct src import)', () =>
       expect(clearSpy).toHaveBeenCalled();
       clearSpy.mockRestore();
     });
+
+    it('reserves the configured startup event for the first map to execute', () =>
+    {
+      // Arrange- a configured id, and a $gameTemp to catch what gets handed to the engine.
+      const originalId = globalThis.J.BASE.Metadata.newGameCommonEventId;
+      globalThis.J.BASE.Metadata.newGameCommonEventId = 60;
+      globalThis.$gameTemp = { reserveCommonEvent: vi.fn() };
+
+      // Act
+      globalThis.DataManager.setupNewGame();
+
+      // Assert- the configured id itself must arrive, not merely "a reservation happened".
+      expect(globalThis.$gameTemp.reserveCommonEvent).toHaveBeenCalledWith(60);
+
+      globalThis.J.BASE.Metadata.newGameCommonEventId = originalId;
+      globalThis.$gameTemp = undefined;
+    });
+
+    it('reserves nothing when the startup event sits at the disabled sentinel', () =>
+    {
+      // Arrange- 0 means this game bootstraps from its maps instead.
+      const originalId = globalThis.J.BASE.Metadata.newGameCommonEventId;
+      globalThis.J.BASE.Metadata.newGameCommonEventId = 0;
+      globalThis.$gameTemp = { reserveCommonEvent: vi.fn() };
+      const clearSpy = vi.spyOn(RPGManager, 'clearCache');
+
+      // Act
+      globalThis.DataManager.setupNewGame();
+
+      // Assert- the cache clear anchors that setup actually ran, so the absent reservation is the
+      // guard's doing rather than a method that never reached it.
+      expect(clearSpy).toHaveBeenCalled();
+      expect(globalThis.$gameTemp.reserveCommonEvent).not.toHaveBeenCalled();
+
+      clearSpy.mockRestore();
+      globalThis.J.BASE.Metadata.newGameCommonEventId = originalId;
+      globalThis.$gameTemp = undefined;
+    });
   });
 
   describe('extractSaveContents', () =>

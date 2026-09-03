@@ -157,6 +157,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.9.0
+ *    Added a plugin parameter for a common event to execute when a new game begins.
  * - 3.8.0
  *    Added Game_Event.commentNote, letting RPGManager read event comments.
  *    Added Game_Interpreter.list, the commands actually being executed.
@@ -376,5 +378,11 @@
  * @text Enemy Base TP Max
  * @desc The base TP for enemies is this amount. Any formulai add onto this.
  * @default 100
+ *
+ * @param newGameCommonEventId
+ * @type common_event
+ * @text New Game Common Event
+ * @desc A common event executed once when a new game begins, before the first map runs anything of its own. 0 disables it.
+ * @default 0
  *
  */
