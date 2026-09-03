@@ -40,6 +40,20 @@ J.BASE.Metadata.BaseTpMaxEnemies = Number(J.BASE.PluginParameters['enemyBaseTp']
  */
 J.BASE.Metadata.retainedSaveGenerations = Number(J.BASE.PluginParameters['retainedSaveGenerations'] ?? 3);
 
+/**
+ * The common event executed once at the start of a new game, or 0 to execute nothing.
+ *
+ * Bootstrapping a new game from a map event means every map that can be started on needs its own copy
+ * of that event, and a new test map silently starts without it- the failure mode is a playtest that
+ * looks fine until something much later depends on setup that never ran. Reserving the event from
+ * {@link DataManager.setupNewGame} instead makes it a property of starting a game rather than of
+ * standing on a particular tile, so it runs exactly once no matter where the player begins.
+ *
+ * Coalesces the same way {@link J.BASE.Metadata.retainedSaveGenerations} does, so a plugins.js that
+ * predates this parameter reads as "no startup event" instead of `NaN`.
+ */
+J.BASE.Metadata.newGameCommonEventId = Number(J.BASE.PluginParameters['newGameCommonEventId'] ?? 0);
+
 // TODO: plugin parameterize this and make it "show/minimal/hide".
 J.BASE.Metadata.ShowExternalFileLoadInfo = false;
 

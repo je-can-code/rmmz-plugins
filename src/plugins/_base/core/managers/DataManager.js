@@ -503,7 +503,8 @@ DataManager.isArmor = function(unidentified)
 //region caching
 /**
  * Extends {@link #setupNewGame}.<br/>
- * Also clears the RPGManager note cache for a fresh session.
+ * Also clears the RPGManager note cache for a fresh session, and reserves the configured startup
+ * common event so a new game bootstraps itself regardless of which map it begins on.
  */
 J.BASE.Aliased.DataManager.set('setupNewGame', DataManager.setupNewGame);
 DataManager.setupNewGame = function()
@@ -514,6 +515,26 @@ DataManager.setupNewGame = function()
   // perform original logic.
   J.BASE.Aliased.DataManager.get('setupNewGame')
     .call(this);
+
+  // hand off to the startup event, which the first map to load will execute.
+  this.reserveNewGameCommonEvent();
+};
+
+/**
+ * Reserves the configured startup common event for the first map of a new game to execute.
+ *
+ * The original logic above is what builds {@link $gameTemp}, so the reservation cannot be made any
+ * earlier than this. {@link Game_Map.setupStartingEvent} collects it when the starting map loads,
+ * which is why the event itself needs no trigger of its own- a reserved event runs on merit of
+ * having been reserved.
+ */
+DataManager.reserveNewGameCommonEvent = function()
+{
+  // a startup event is opt-in; the sentinel means this game bootstraps from its maps instead.
+  if (J.BASE.Metadata.newGameCommonEventId === 0) return;
+
+  // queue the event for the starting map to pick up.
+  $gameTemp.reserveCommonEvent(J.BASE.Metadata.newGameCommonEventId);
 };
 
 /**
