@@ -2089,6 +2089,48 @@ Game_Battler.prototype.getThicknessRate = function()
 };
 //endregion range modifiers
 
+//region loot magnet
+/**
+ * Gets the flat tile addition to this battler's loot magnet radius, before the rate is applied.
+ * @returns {number}
+ */
+Game_Battler.prototype.getLootMagnetBuff = function()
+{
+  // sum every lootMagnetBuff tag across all note sources.
+  return RPGManager.getSumFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.LootMagnetBuff);
+};
+
+/**
+ * Gets the multiplicative rate applied to this battler's loot magnet radius after the buff step.
+ * Accumulates as 1.0 + sum(each tag value - 1.0) so multiple tags stack additively.
+ * @returns {number}
+ */
+Game_Battler.prototype.getLootMagnetRate = function()
+{
+  // accumulate each lootMagnetRate tag's delta from 1.0, starting at 1.0.
+  const rates = RPGManager.getStringsFromAllNotesByRegex(this.getAllNotes(), J.ABS.RegExp.LootMagnetRate);
+  return rates.reduce((acc, rate) => acc + (Number(rate) - 1.0), 1.0);
+};
+
+/**
+ * Gets the distance in tiles from which this battler draws loot toward themselves.
+ * @returns {number}
+ */
+Game_Battler.prototype.getLootMagnetRadius = function()
+{
+  // the configured baseline every battler starts from.
+  const base = J.ABS.Metadata.Loot.magnetRadius;
+
+  // gear, states, and skills contribute a flat bonus and then a multiplier, matching how the
+  // action-geometry buffs already compose.
+  const buff = this.getLootMagnetBuff();
+  const rate = this.getLootMagnetRate();
+
+  // floor at 0 — a negative radius is not a smaller circle, it is a broken comparison.
+  return Math.max(0, (base + buff) * rate);
+};
+//endregion loot magnet
+
 /**
  * Checks all states to see if we have anything that grants parry ignore.
  * @returns {boolean}

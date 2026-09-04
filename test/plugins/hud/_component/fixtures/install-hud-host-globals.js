@@ -107,6 +107,16 @@ export function setPluginContextToJHudInput(sandbox = globalThis)
 }
 
 /**
+ * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-HUD-Dps's own identity.
+ * @param {object} [sandbox] Defaults to `globalThis`.
+ */
+export function setPluginContextToJHudDps(sandbox = globalThis)
+{
+  sandbox.__PLUGIN_NAME__ = 'J-HUD-Dps';
+  sandbox.__PLUGIN_VERSION__ = '1.0.0';
+}
+
+/**
  * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-HUD-PartyFrame's own identity.
  * @param {object} [sandbox] Defaults to `globalThis`.
  */

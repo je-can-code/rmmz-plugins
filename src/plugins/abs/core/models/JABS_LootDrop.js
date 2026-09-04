@@ -4,6 +4,42 @@
  */
 class JABS_LootDrop
 {
+  /**
+   * The lifecycle a loot drop moves through, in order.
+   *
+   * The distinction that matters is {@link WHIZZING}: a drop being drawn toward somebody has
+   * already been promised to them, so it stops aging out. Without that, loot could expire in
+   * mid-flight and vanish an item the player had visibly already earned.
+   */
+  static States = {
+    /**
+     * Sitting on the ground, bobbing, aging toward expiration.
+     */
+    Waiting: 'waiting',
+
+    /**
+     * In flight toward whoever is drawing it in. Claimed, and no longer expiring.
+     */
+    Whizzing: 'whizzing',
+
+    /**
+     * Arrived and granted. Awaiting removal from the map.
+     */
+    Collected: 'collected',
+  };
+
+  /**
+   * The distance in tiles at which a drop counts as having arrived and can be absorbed.
+   *
+   * This is not a reach stat- the magnet radius is what decides how far loot is collected from.
+   * This is only the "close enough to land" threshold, kept small so a drop is visibly on top of
+   * its collector before disappearing.
+   * @returns {number}
+   */
+  static arrivalDistance()
+  {
+    return 0.5;
+  }
 
   //region properties
   /**
@@ -47,6 +83,12 @@ class JABS_LootDrop
    * @type {RPG_EquipItem|RPG_Item|null}
    */
   _lootObject = null;
+
+  /**
+   * Where this drop currently sits in its lifecycle.
+   * @type {string}
+   */
+  _state = JABS_LootDrop.States.Waiting;
 
   constructor(object)
   {
@@ -136,6 +178,67 @@ class JABS_LootDrop
   }
 
   /**
+   * Gets the current lifecycle state of this loot drop.
+   * @returns {string}
+   */
+  state()
+  {
+    return this._state;
+  }
+
+  /**
+   * Sets the current lifecycle state of this loot drop.
+   * @param {string} newState The new state, from {@link JABS_LootDrop.States}.
+   */
+  setState(newState)
+  {
+    this._state = newState;
+  }
+
+  /**
+   * Whether or not this drop is still sitting on the ground unclaimed.
+   * @returns {boolean}
+   */
+  isWaiting()
+  {
+    return this.state() === JABS_LootDrop.States.Waiting;
+  }
+
+  /**
+   * Whether or not this drop is currently in flight toward whoever claimed it.
+   * @returns {boolean}
+   */
+  isWhizzing()
+  {
+    return this.state() === JABS_LootDrop.States.Whizzing;
+  }
+
+  /**
+   * Whether or not this drop has arrived and been granted.
+   * @returns {boolean}
+   */
+  isCollected()
+  {
+    return this.state() === JABS_LootDrop.States.Collected;
+  }
+
+  /**
+   * Claims this drop for whoever is drawing it in, starting its flight.
+   */
+  beginWhizzing()
+  {
+    this.setState(JABS_LootDrop.States.Whizzing);
+  }
+
+  /**
+   * Marks this drop as arrived and granted, leaving only its removal outstanding.
+   */
+  markCollected()
+  {
+    this.setState(JABS_LootDrop.States.Collected);
+  }
+
+  /**
    * Counts down the duration for this loot drop.
    */
   countdownDuration()
@@ -153,6 +256,10 @@ class JABS_LootDrop
   {
     // if already expired, do not countdown.
     if (!this.canExpire()) return false;
+
+    // a drop already claimed by somebody is spoken for; letting it age out mid-flight would
+    // delete an item the player has already watched themselves earn.
+    if (!this.isWaiting()) return false;
 
     // do not continue counting if duration has expired.
     if (this.duration() <= 0) return false;

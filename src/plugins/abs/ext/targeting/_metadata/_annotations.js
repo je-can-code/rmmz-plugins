@@ -44,6 +44,10 @@
  * This skill will pause combat and prompt for a target before executing.
  * ============================================================================
  * CHANGELOG:
+ * - 1.0.1
+ *    Relocating an action now copies its options through
+ *    JABS_ActionOptions.withLocation rather than rebuilding every field by hand,
+ *    so an option added later cannot be silently dropped on the way.
  * - 1.0.0
  *    The initial release.
  * ============================================================================

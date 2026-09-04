@@ -182,6 +182,27 @@ class JABS_ActionOptions
   }
 
   /**
+   * Produces a copy of these options carrying the given location, with every other option
+   * preserved exactly.<br/>
+   * Options are immutable once built, so a location learned later replaces the whole object.
+   * @param {JABS_Location} location The location the copy should carry.
+   * @returns {JABS_ActionOptions}
+   */
+  withLocation(location)
+  {
+    // rebuild from this instance's own values, swapping only the location.
+    return JABS_ActionOptions.Builder()
+      .setIsRetaliation(this.#isRetaliation)
+      .setCooldownKey(this.#cooldownKey)
+      .setLocation(location)
+      .setIsTerrainDamage(this.#terrainDamage)
+      .setSpawnOffset(this.#spawnOffsetX, this.#spawnOffsetY)
+      .setProjectileTravelAngleDegrees(this.#projectileTravelAngleDegrees)
+      .setRetaliationTarget(this.#retaliationTarget)
+      .build();
+  }
+
+  /**
    * A factory that generates {@link JABS_ActionOptions} with all default values.
    * @returns {JABS_ActionOptions}
    */

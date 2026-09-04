@@ -165,6 +165,9 @@
  * 1st tier charge skill as a result.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.2
+ *    The charge gauge now hangs off the character overlay, so it keeps its own size
+ *    and stays put through whatever the battler beneath it is animating.
  * - 1.1.1
  *    Adapted to the RPGManager array read signature.
  * - 1.1.0

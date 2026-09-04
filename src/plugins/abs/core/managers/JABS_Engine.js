@@ -2228,6 +2228,12 @@ class JABS_Engine
     // non-direct actions always create events; direct actions only do so if coords are provided.
     const shouldCreateEvent = (!action.isDirectAction()) || (x !== null && y !== null);
 
+    // a direct action generated at real coordinates is anchored to that tile; record it.
+    if (action.isDirectAction() && x !== null && y !== null)
+    {
+      this.anchorDirectActionToTile(action, x, y);
+    }
+
     // check if we determined we should create an event.
     if (shouldCreateEvent)
     {
@@ -2240,6 +2246,29 @@ class JABS_Engine
 
     // add the action to the tracker regardless of whether an event was created.
     this.addActionEvent(action, actionEventData);
+  }
+
+  /**
+   * Records the tile a direct action was generated at onto its own options, so the per-frame
+   * sprite sync leaves the hitbox there rather than body-anchoring it to the caster.
+   * @param {JABS_Action} action The direct action being anchored.
+   * @param {number} x The resolved `x` coordinate the action was generated at.
+   * @param {number} y The resolved `y` coordinate the action was generated at.
+   */
+  anchorDirectActionToTile(action, x, y)
+  {
+    // describe the tile this action was generated at.
+    const anchor = JABS_Location.Builder()
+      .setX(x)
+      .setY(y)
+      .build();
+
+    // swap it onto the options, preserving every other option already assigned.
+    const anchoredOptions = action.getActionOptions()
+      .withLocation(anchor);
+
+    // assign the anchored options back onto the action.
+    action.setActionOptions(anchoredOptions);
   }
 
   /**

@@ -76,8 +76,10 @@ Sprite_Character.prototype.setupShieldGauge = function()
   const y = 0;
   sprite.move(x, y);
 
-  // add to this character's sprite.
-  this.addChild(sprite);
+  // gauges live on the overlay layer, which keeps them their own size no matter what the character
+  // beneath them is animating.
+  this.characterOverlay()
+    .addChild(sprite);
 };
 
 /**

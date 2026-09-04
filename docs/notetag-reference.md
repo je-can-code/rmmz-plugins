@@ -377,7 +377,7 @@ for the same item — are each rolled independently.
 Three independent rolls: 65% chance at weapon 12, a separate 15% chance at another weapon 12, and a
 guaranteed (100%) armor 5.
 
-**See also:** `<dropMultiplier>`
+**See also:** `<dropMultiplier>`, `<dropUpgrade>`, `<dropQuantity>`
 
 ---
 
@@ -409,6 +409,111 @@ is 2, added on).
 Three stacked tags sum to +250% drop chance. A 40% drop becomes 140%; a 4% drop becomes 14%.
 
 **See also:** `<drops>`, `<dorBuffPlus>` family (below)
+
+---
+
+### `<dropUpgradeId:ID>`
+
+**Applies to:**
+Items, Weapons, Armors
+
+**When:**
+read once at boot, when the ladders are built
+
+**Effect:**
+declares a drop upgrade ladder — a chain of rows in ascending quality that `<dropUpgrade>` walks. The
+tag is authored on the **lower** row and names the row directly above it. Only the upward links are
+authored; the downgrade direction is derived by inverting them at boot, so the two directions can
+never disagree. ID is read against whichever table the tagged row lives in, which is what makes an
+armor incapable of promoting into an item.
+
+Three shapes fail at launch rather than at kill time, because a ladder defect discovered mid-battle is
+a drop that silently vanishes: an ID that is not a row in that table, two rows that both promote into
+the same row (which would fork the downgrade path), and a chain that loops back on itself.
+
+```
+<dropUpgradeId:307>
+```
+Placed on armor 306: promoting armor 306 once yields armor 307.
+
+```
+<dropUpgradeId:307>   (on armor 306)
+<dropUpgradeId:308>   (on armor 307)
+<dropUpgradeId:309>   (on armor 308)
+```
+A four-rung ladder, 306 → 309. An enemy that drops armor 306 can express the whole rarity tier without
+listing a single one of the rungs above it.
+
+**See also:** `<dropUpgrade>`, `<dropQuantity>`
+
+---
+
+### `<dropUpgrade:NUM>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, States, Enemies
+
+**When:**
+an enemy is defeated, after the drop rolls resolve and before `<dropQuantity>` is applied
+
+**Effect:**
+NUM is how many rungs to walk each dropped item along the ladder that claims it (see
+`<dropUpgradeId>` above). Summed across every note source on **both sides of the kill** — the slain
+enemy and its killer — so an affix graded onto the target and a harvesting tool carried by the killer
+add together rather than competing. Negative values walk the ladder downward. Over-promoting is not an
+error: the walk simply stops at the end of the chain. A row on no ladder at all is handed back
+unchanged, so panel unlocks and other synthetic loot need no special case.
+
+One authoring gotcha: an enemy's **ordinary applied states are already gone** by the time drops are
+made, because death clears them. Affixes survive because they are passive states held in an external
+source, not applied ones.
+
+```
+<dropUpgrade:2>
+```
+Drops from this kill are promoted two rungs up their ladder.
+
+```
+<dropUpgrade:1>
+<dropUpgrade:-3>
+```
+Two stacked tags sum to -2, walking each drop two rungs *down* its ladder.
+
+**See also:** `<dropUpgradeId>`, `<dropQuantity>`
+
+---
+
+### `<dropQuantity:NUM>`
+
+**Applies to:**
+Actors, Classes, Skills, Weapons, Armors, States, Enemies
+
+**When:**
+an enemy is defeated, after `<dropUpgrade>` has finished promoting the haul
+
+**Effect:**
+NUM extra copies of each **distinct item** that dropped. Sourced and summed exactly like
+`<dropUpgrade>` — both sides of the kill contribute. The bonus lands once per distinct row rather than
+once per drop entry: an enemy listing the same item four times has dropped one thing, and the bonus
+lands on the thing. Scaling by how the author happened to split their drop rows would make the same
+tag mean different amounts on identically-behaving enemies.
+
+Running after promotion is deliberate — two rows that both clamp onto the same top rung are one item
+by the time quantity counts them, which is the intended reading: you got one kind of thing, so you get
+more of that kind. Negative values remove copies and may remove the last one, which is what gives
+negative affixes teeth.
+
+```
+<dropQuantity:2>
+```
+Two extra copies of each distinct item dropped by this kill.
+
+```
+<dropQuantity:-1>
+```
+One fewer copy of each distinct item; a drop that yielded exactly one now yields none at all.
+
+**See also:** `<dropUpgrade>`, `<dropUpgradeId>`
 
 ---
 
@@ -2763,6 +2868,31 @@ them.
 <radiusRate:1.5>
 ```
 +2 tiles then 1.5x, but only on AoE splash radius — targeting reach and line/wall width untouched.
+
+**See also:** `<rangeBuff>`, `<rangeRate>`
+
+---
+
+### `<lootMagnetBuff:N>` / `<lootMagnetRate:N>`
+
+**Applies to:**
+Actors, Classes, Enemies, Weapons, Armors, States
+
+**When:**
+always — widens the radius from which the bearer draws loot drops toward themselves
+
+**Effect:**
+same stacking math as `<rangeBuff>`/`<rangeRate>`, applied to the loot magnet radius instead of
+action geometry: `finalRadius = max(0, (base + buffs) * (1.0 + sum(rate - 1.0)))`, where `base` is
+the `loot.magnetRadius` value in `data/config.jabs.json`. Deliberately named "magnet" rather than
+"radius" so it cannot be confused with `<radiusBuff>`, which scales AoE splash.
+
+Only the party leader's radius is consulted, since only the player collects loot.
+
+```
+<lootMagnetBuff:8>
+```
+An accessory granting this pulls loot from 8 tiles further out than the configured baseline.
 
 **See also:** `<rangeBuff>`, `<rangeRate>`
 

@@ -25,6 +25,7 @@ describe('J-Motion-ABS combat hooks (direct src import)', () =>
     globalThis.J.MOTION.EXT.ABS.Aliased = {
       Game_Battler: new Map(),
       JABS_Engine: new Map(),
+      Sprite_Character: new Map(),
     };
 
     // the engine surfaces this extension augments, in the shapes it actually augments them in.
@@ -52,6 +53,14 @@ describe('J-Motion-ABS combat hooks (direct src import)', () =>
       engineCalls.push('original-post-party-cycling');
     };
 
+    globalThis.Sprite_Character = function()
+    {
+    };
+    globalThis.Sprite_Character.prototype.handleLootDuration = function()
+    {
+      engineCalls.push('original-handle-loot-duration');
+    };
+
     // literal import paths, so Stryker can map mutants in these files back to this test file.
     await import('../../../../../../src/plugins/motion/ext/abs/core/registerCollapseMotionType.js');
     ({ default: CharacterMotionComposer } =
@@ -60,6 +69,7 @@ describe('J-Motion-ABS combat hooks (direct src import)', () =>
       await import('../../../../../../src/plugins/motion/core/core/MotionChannels.js'));
     await import('../../../../../../src/plugins/motion/ext/abs/objects/Game_Battler.js');
     await import('../../../../../../src/plugins/motion/ext/abs/managers/JABS_Engine.js');
+    await import('../../../../../../src/plugins/motion/ext/abs/sprites/Sprite_Character.js');
   });
 
   /** @type {Object} */
@@ -339,6 +349,65 @@ describe('J-Motion-ABS combat hooks (direct src import)', () =>
       // Act
       engine.postPartyCycling();
       composeFor(1);
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(false);
+    });
+  });
+
+  describe('handleLootDuration', () =>
+  {
+    /**
+     * Builds a loot sprite stand-in wired to the shared character.
+     * @param {number} duration How many frames of life the drop has left.
+     * @returns {Object} The Sprite_Character stand-in.
+     */
+    const aLootSprite = duration =>
+    {
+      character.getJabsLoot = () => ({
+        isWaiting: () => true,
+        canExpire: () => true,
+        duration: () => duration,
+      });
+
+      const sprite = new globalThis.Sprite_Character();
+      sprite.character = () => character;
+
+      return sprite;
+    };
+
+    it('still performs J-ABS\'s own duration handling', () =>
+    {
+      // Arrange- the countdown and the removal it triggers are J-ABS's business and stay that way;
+      // this extension only adds something to look at on the way there.
+      const sprite = aLootSprite(900);
+
+      // Act
+      sprite.handleLootDuration();
+
+      // Assert
+      expect(engineCalls).toEqual([ 'original-handle-loot-duration' ]);
+    });
+
+    it('starts a drop fading once it is close to timing out', () =>
+    {
+      // Arrange- 40 frames left, well inside the fixture's 300 frame warning window.
+      const sprite = aLootSprite(40);
+
+      // Act
+      sprite.handleLootDuration();
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(true);
+    });
+
+    it('leaves a drop with time in hand alone', () =>
+    {
+      // Arrange- the same sprite in every respect but its remaining life.
+      const sprite = aLootSprite(900);
+
+      // Act
+      sprite.handleLootDuration();
 
       // Assert
       expect(CharacterMotionComposer.hasMotion(character)).toBe(false);

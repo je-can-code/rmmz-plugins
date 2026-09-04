@@ -220,8 +220,19 @@ export function installBitmapMock()
 {
   globalThis.Bitmap = function(width, height)
   {
-    this.width = width || 0;
-    this.height = height || 0;
+    // dimensions are held the way the real `Bitmap` holds them - behind a canvas, read through an
+    // accessor - rather than as plain instance properties. J-Base redefines `width` and `height` as
+    // getter-only accessors over exactly this storage, and an instance property assigned in a
+    // constructor throws against a prototype getter with no setter.
+    this._canvas = {
+      width: width || 0,
+      height: height || 0,
+    };
+
+    // and this is the real `Bitmap`'s own default, seeded here because a mock constructor never
+    // reaches the `initialize` that would otherwise establish it.
+    this._deviceScale = 1;
+
     this.fontFace = '';
     this.fontSize = 0;
     this.fontBold = false;
@@ -238,9 +249,27 @@ export function installBitmapMock()
 
   bitmap.resize = function(width, height)
   {
-    this.width = width;
-    this.height = height;
+    this._canvas.width = width;
+    this._canvas.height = height;
   };
+
+  // present the same accessors the real `Bitmap` does, so the mock behaves the same whether or not
+  // a J-Base bundle has loaded over the top of it and redefined them identically.
+  Object.defineProperty(bitmap, 'width', {
+    get()
+    {
+      return this._canvas.width / this._deviceScale;
+    },
+    configurable: true,
+  });
+
+  Object.defineProperty(bitmap, 'height', {
+    get()
+    {
+      return this._canvas.height / this._deviceScale;
+    },
+    configurable: true,
+  });
 
   bitmap.drawText = function(text)
   {
@@ -270,11 +299,9 @@ export function installBitmapMock()
   Object.defineProperty(bitmap, 'canvas', {
     get()
     {
-      return {
-        width: this.width,
-        height: this.height,
-      };
+      return this._canvas;
     },
+    configurable: true,
   });
 
   // replacing the constructor wholesale drops the statics the real `Bitmap` carries, and this is the
@@ -305,7 +332,8 @@ function installGraphicsStub()
     [ 'boxWidth', 1920 ],
     [ 'boxHeight', 1080 ],
     [ 'frameCount', 0 ],
-    [ 'app', { renderer: { resize() {} } } ],
+    [ 'app', { renderer: { resize() {}, resolution: 1 } } ],
+    [ 'deviceScale', 1 ],
     [ 'effekseer', { setRestorationOfStatesFlag() {} } ],
     [ 'isWebGL', () => true ],
     [ 'setLoadingImage', () => {} ],

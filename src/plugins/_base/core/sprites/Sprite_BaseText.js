@@ -1,5 +1,6 @@
 //region Sprite_BaseText
 import Diagnostics from './../core/Diagnostics.js';
+import TextRasterMetrics from './../core/TextRasterMetrics.js';
 
 /**
  * A sprite that displays some text.
@@ -104,6 +105,20 @@ class Sprite_BaseText
      * @type {boolean}
      */
     this._j._disableManagedOpacity = false;
+
+    /**
+     * The transparent margin reserved on each side of the text for its outline.
+     * Established by {@link #configureBitmap} and consumed by {@link #renderText}.
+     * @type {number}
+     */
+    this._j._padding = 0;
+
+    /**
+     * The width of the area the text is drawn into.
+     * This is the bitmap's width less the padding on both sides.
+     * @type {number}
+     */
+    this._j._textWidth = 0;
   }
 
   //region properties
@@ -111,7 +126,7 @@ class Sprite_BaseText
    * Gets the j.
    * @returns {{_testBitmap: Bitmap, _text: string, _color: string, _alignment: string,
    * _italics: boolean, _bold: boolean, _fontFace: string, _fontSize: number, _minWidth: number,
-   * _disableManagedOpacity: boolean}} The j.
+   * _disableManagedOpacity: boolean, _padding: number, _textWidth: number}} The j.
    */
   j()
   {
@@ -125,35 +140,54 @@ class Sprite_BaseText
    */
   loadBitmap()
   {
-    // check if a bitmap is already defined.
-    if (this.bitmap)
-    {
-      // clear it if so.
-      this.bitmap.clear();
-    }
-
-    // generate a new bitmap based on width and height.
-    this.bitmap = new Bitmap(this.bitmapWidth(), this.bitmapHeight());
-
-    // setup the bitmap with the current configuration.
+    // building the bitmap and configuring it are the same act; the configuration decides the size.
     this.configureBitmap();
   }
 
   /**
-   * Configures the bitmap with the current settings and configuration.
+   * Builds this sprite's bitmap and configures it to draw text.
+   *
+   * Every measurement here is a logical pixel, exactly as it was before any of this cared about
+   * display resolution. The bitmap is then handed to {@link Bitmap.applyDeviceScale}, which is the
+   * one place in the codebase that knows how many real pixels sit behind a logical one - it grows
+   * the canvas and scales the drawing context so that everything below keeps speaking logically and
+   * simply rasterizes into more pixels.
+   *
+   * Doing it that way rather than measuring in device pixels here is not a style preference. A
+   * bitmap reports its logical size through `width` and `height`, and callers position things
+   * against those - the tier stripe beside a nameplate centres itself on the text's height. A sprite
+   * that sized its own bitmap in device pixels would have those callers reading a number half again
+   * too large, which is a misalignment nobody would think to trace back to a font.
    */
   configureBitmap()
   {
-    this.bitmap.clear();
-    this.bitmap = new Bitmap(this.bitmapWidth(), this.bitmapHeight());
+    const outlineWidth = TextRasterMetrics.outlineWidth(this.fontSize());
+    const padding = TextRasterMetrics.padding(outlineWidth);
+
+    // a caller may demand more room than the glyphs actually need.
+    const naturalWidth = this.measureTextWidth();
+    const textWidth = TextRasterMetrics.textWidth(Math.max(naturalWidth, this.minWidth()));
+
+    // the renderer needs both of these to know where its text area starts and how wide it runs.
+    this.setPadding(padding);
+    this.setTextAreaWidth(textWidth);
+
+    // build the canvas at the size this sprite occupies, outline margins included.
+    const canvasWidth = TextRasterMetrics.canvasWidth(textWidth, padding);
+    const canvasHeight = TextRasterMetrics.canvasHeight(this.fontSize());
+    this.bitmap = new Bitmap(canvasWidth, canvasHeight);
+
+    // and put the display's real pixels behind that area without changing what it reports.
+    this.bitmap.applyDeviceScale(Graphics.deviceScale);
+
+    // configure the canvas to draw the text itself.
     this.bitmap.fontFace = this.fontFace();
     this.bitmap.fontSize = this.fontSize();
     this.bitmap.fontBold = this.isBold();
     this.bitmap.fontItalic = this.isItalics();
     this.bitmap.textColor = this.color();
-
-    this.bitmap.outlineColor = '#000000'; // or a theme color
-    this.bitmap.outlineWidth = Math.max(2, Math.floor(this.fontSize() / 6));
+    this.bitmap.outlineColor = '#000000';
+    this.bitmap.outlineWidth = outlineWidth;
   }
 
   /**
@@ -162,50 +196,51 @@ class Sprite_BaseText
    */
   refresh()
   {
-    // check if we are missing a bitmap somehow.
-    if (!this.bitmap)
-    {
-      // load the bitmap if so.
-      this.loadBitmap();
-    }
-    else
-    {
-      // configure the bitmap based on current settings.
-      this.configureBitmap();
-    }
+    // the bitmap's size depends on the text it is about to hold, so it is rebuilt rather than reused.
+    this.configureBitmap();
 
     // render the text onto the bitmap.
     this.renderText();
   }
 
   /**
-   * The width of this bitmap.
-   * Uses the bitmap measuring of text based on the current configuration.
+   * The natural width of this sprite's text at its current configuration.
+   *
+   * Measured against a scratch canvas rather than the real one because the real one does not exist
+   * yet at the point this is needed - its width is what this measurement decides.
+   * @returns {number}
+   */
+  measureTextWidth()
+  {
+    // the scratch bitmap exists only to hold a configured canvas context to measure against.
+    const testBitmap = this.j()._testBitmap;
+    testBitmap.fontFace = this.fontFace();
+    testBitmap.fontSize = this.fontSize();
+    testBitmap.fontItalic = this.isItalics();
+    testBitmap.fontBold = this.isBold();
+
+    return testBitmap.measureTextWidth(this.text());
+  }
+
+  /**
+   * The width this sprite occupies on screen.
+   *
+   * The bitmap behind it may hold considerably more pixels than this on a scaled display, and
+   * deliberately does not say so - this is the size a caller laying the sprite out reasons about.
    * @returns {number}
    */
   bitmapWidth()
   {
-    // setup the test bitmap similar to the real one.
-    this.j()._testBitmap = new Bitmap(this.bitmap ? this.bitmap.width : 128, this.bitmapHeight());
-    this.j()._testBitmap.fontFace = this.fontFace();
-    this.j()._testBitmap.fontSize = this.fontSize();
-    this.j()._testBitmap.fontItalic = this.isItalics();
-    this.j()._testBitmap.fontBold = this.isBold();
-
-    // measure the text and respect a configured minimum width, if any.
-    const measured = this.j()._testBitmap.measureTextWidth(this.text());
-    const min = this.j()._minWidth;
-    return Math.max(measured, min);
+    return this.bitmap.width;
   }
 
   /**
-   * The height of this bitmap.
-   * This defaults to roughly 3 pixels per size of font.
+   * The height this sprite occupies on screen.
    * @returns {number}
    */
   bitmapHeight()
   {
-    return this.j()._fontSize * 3;
+    return this.bitmap.height;
   }
 
   /**
@@ -471,6 +506,50 @@ class Sprite_BaseText
   }
 
   /**
+   * The transparent margin reserved on each side of the text for its outline.
+   * @returns {number}
+   */
+  padding()
+  {
+    return this.j()._padding;
+  }
+
+  /**
+   * Sets the margin reserved on each side of the text for its outline.
+   * @param {number} padding The margin reserved on each side.
+   * @returns {this} Returns `this` for fluent-chaining.
+   */
+  setPadding(padding)
+  {
+    this.j()._padding = padding;
+
+    // return this for chaining if desired.
+    return this;
+  }
+
+  /**
+   * The width of the area the text is drawn into.
+   * @returns {number}
+   */
+  textAreaWidth()
+  {
+    return this.j()._textWidth;
+  }
+
+  /**
+   * Sets the width of the area the text is drawn into.
+   * @param {number} width The width of the text area.
+   * @returns {this} Returns `this` for fluent-chaining.
+   */
+  setTextAreaWidth(width)
+  {
+    this.j()._textWidth = width;
+
+    // return this for chaining if desired.
+    return this;
+  }
+
+  /**
    * Flags this sprite to disable the managed opacity automation.
    */
   selfManageOpacity()
@@ -500,13 +579,16 @@ class Sprite_BaseText
    */
   renderText()
   {
-    // always draw using the bitmap’s own width so alignment behaves predictably.
-    const drawWidth = this.bitmap
-      ? this.bitmap.width
-      : this.bitmapWidth();
+    // the text area begins inside the margin reserved for the outline, so the leading glyph's stroke
+    // has somewhere to land instead of being shaved off against the edge of the bitmap.
+    const originX = this.padding();
+
+    // the width promised to the canvas is never less than what the glyphs need, which is the whole
+    // reason the canvas does not condense them to fit it.
+    const drawWidth = this.textAreaWidth();
 
     // draw the text with the current settings onto the bitmap.
-    this.bitmap.drawText(this.text(), 0, 0, drawWidth, this.bitmapHeight(), this.alignment());
+    this.bitmap.drawText(this.text(), originX, 0, drawWidth, this.bitmap.height, this.alignment());
   }
 }
 

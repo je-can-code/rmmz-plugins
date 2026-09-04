@@ -107,6 +107,49 @@ describe('JABS_Location / JABS_ActionOptions / JABS_ActionOptionsBuilder (direct
     {
       expect(JABS_ActionOptions.Builder()).toBeInstanceOf(JABS_ActionOptionsBuilder);
     });
+
+    it('withLocation swaps the location while preserving every other option', () =>
+    {
+      // Arrange- every field is given a distinctive non-default value, so any one of them being
+      // dropped by the rebuild is visible rather than hiding behind a matching default.
+      const retaliationTarget = { tag: 'battler' };
+      const original = new JABS_ActionOptions(
+        true,
+        'special',
+        new JABS_Location(1, 1, 2),
+        true,
+        2,
+        3,
+        45,
+        retaliationTarget);
+
+      // Act
+      const swapped = original.withLocation(new JABS_Location(9, 8, 6));
+
+      // Assert
+      expect(swapped.getTargetLocation()).toMatchObject({ x: 9, y: 8, d: 6 });
+      expect(swapped.isActionRetaliation()).toBe(true);
+      expect(swapped.getCooldownKey()).toBe('special');
+      expect(swapped.isTerrainDamage()).toBe(true);
+      expect(swapped.getSpawnOffsetX()).toBe(2);
+      expect(swapped.getSpawnOffsetY()).toBe(3);
+      expect(swapped.getProjectileTravelAngleDegrees()).toBe(45);
+      expect(swapped.getRetaliationTarget()).toBe(retaliationTarget);
+    });
+
+    it('withLocation leaves the original options untouched', () =>
+    {
+      // Arrange- options are immutable once built; the swap must produce a copy rather than
+      // reach back into the instance it was called on.
+      const original = new JABS_ActionOptions(false, 'global', new JABS_Location(1, 1, 2), false);
+
+      // Act
+      const swapped = original.withLocation(new JABS_Location(9, 8, 6));
+
+      // Assert
+      expect(swapped).not.toBe(original);
+      expect(original.getTargetLocation()).toMatchObject({ x: 1, y: 1, d: 2 });
+    });
   });
 
   describe('JABS_ActionOptionsBuilder', () =>

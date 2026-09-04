@@ -74,6 +74,10 @@ describe('J-ABS-Charge Sprite_Character (unit, all downstream dependencies mocke
 
     // J-Base defines this accessor on every Sprite_Character; production code reads through it.
     Sprite_Character.prototype.character = function() { return this._character; };
+
+    // J-Base also gives every character an overlay layer, which is where gauges are parented so
+    // they keep their own size through whatever the character beneath them is animating.
+    Sprite_Character.prototype.characterOverlay = function() { return this._characterOverlay; };
     globalThis.Sprite_Character = Sprite_Character;
 
     await import('../../../../../../src/plugins/abs/ext/charge/sprites/Sprite_Character.js');
@@ -90,7 +94,7 @@ describe('J-ABS-Charge Sprite_Character (unit, all downstream dependencies mocke
   {
     const sprite = Object.create(globalThis.Sprite_Character.prototype);
     sprite._j = { _abs: { _gauges: {} } };
-    sprite.addChild = vi.fn();
+    sprite._characterOverlay = { addChild: vi.fn() };
     sprite.canUpdate = () => true;
     sprite.isJabsBattler = () => true;
     // stable references matter here- the source compares these across calls by identity.
@@ -138,9 +142,10 @@ describe('J-ABS-Charge Sprite_Character (unit, all downstream dependencies mocke
       sprite.setupChargeGauge();
 
       const gauge = sprite._j._abs._gauges._chargeGauge;
+      const overlayAddChild = sprite._characterOverlay.addChild;
       expect(gauge).toBeInstanceOf(FakeGauge);
       expect(gauge.activated).toBe(true);
-      expect(sprite.addChild).toHaveBeenCalledWith(gauge);
+      expect(overlayAddChild).toHaveBeenCalledWith(gauge);
     });
 
     it('rebinds and reactivates the existing gauge instead of creating a new one', () =>
@@ -148,13 +153,14 @@ describe('J-ABS-Charge Sprite_Character (unit, all downstream dependencies mocke
       const sprite = buildSprite();
       sprite.setupChargeGauge();
       const gauge = sprite._j._abs._gauges._chargeGauge;
-      sprite.addChild.mockClear();
+      const overlayAddChild = sprite._characterOverlay.addChild;
+      overlayAddChild.mockClear();
       const rebindSpy = vi.spyOn(gauge, 'setupJabs');
 
       sprite.setupChargeGauge();
 
       expect(rebindSpy).toHaveBeenCalledTimes(1);
-      expect(sprite.addChild).not.toHaveBeenCalled();
+      expect(overlayAddChild).not.toHaveBeenCalled();
       expect(sprite._j._abs._gauges._chargeGauge).toBe(gauge);
     });
   });

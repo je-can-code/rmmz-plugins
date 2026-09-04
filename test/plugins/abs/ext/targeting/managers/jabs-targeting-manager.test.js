@@ -5,8 +5,8 @@ import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
  * JABS_TargetingManager.js is a genuine ES `class` (static-only, never instantiated). Every
  * sibling model it imports is mocked per the "unit tier mocks all downstream file-external
  * dependencies" convention. JABS_GlobalCooldown, JABS_AiManager, JABS_Engine, JABS_Location,
- * JABS_ActionOptions, Input, and $jabsEngine are all bare globals this file reads (not imported),
- * stubbed directly. Every private method (#buildCycleCursor, #updateCursorMovement,
+ * Input, and $jabsEngine are all bare globals this file reads (not imported), stubbed directly.
+ * Every private method (#buildCycleCursor, #updateCursorMovement,
  * #updateCycleSelection, #readDpadStep, #readDirectionalInput, #syncSentinelPosition,
  * #confirmDirectLock, #resolveTargetXY, #endSession) is only reachable indirectly through the
  * public entry points (beginTargeting, update, confirm, cancel).
@@ -39,23 +39,6 @@ describe('JABS_TargetingManager (unit, all downstream dependencies mocked)', () 
           setX: vi.fn((v) => { built.x = v; return builder; }),
           setY: vi.fn((v) => { built.y = v; return builder; }),
           setDirection: vi.fn((v) => { built.direction = v; return builder; }),
-        };
-        builder.build = vi.fn(() => built);
-        return builder;
-      },
-    };
-    globalThis.JABS_ActionOptions = {
-      Builder: () =>
-      {
-        const built = {};
-        const builder = {
-          setIsRetaliation: vi.fn((v) => { built.isRetaliation = v; return builder; }),
-          setCooldownKey: vi.fn((v) => { built.cooldownKey = v; return builder; }),
-          setLocation: vi.fn((v) => { built.location = v; return builder; }),
-          setIsTerrainDamage: vi.fn((v) => { built.isTerrainDamage = v; return builder; }),
-          setSpawnOffset: vi.fn((x, y) => { built.spawnOffset = [ x, y ]; return builder; }),
-          setProjectileTravelAngleDegrees: vi.fn((v) => { built.travelAngle = v; return builder; }),
-          setRetaliationTarget: vi.fn((v) => { built.retaliationTarget = v; return builder; }),
         };
         builder.build = vi.fn(() => built);
         return builder;
@@ -196,14 +179,10 @@ describe('JABS_TargetingManager (unit, all downstream dependencies mocked)', () 
       isDirectAction: () => true,
       isSupportAction: () => false,
       getProximity: () => 5,
+      // options carry their own location swap, so the double only needs to hand back something
+      // that records which location it was asked to carry.
       getActionOptions: () => ({
-        isActionRetaliation: () => false,
-        getCooldownKey: () => 'gcd',
-        isTerrainDamage: () => false,
-        getSpawnOffsetX: () => 0,
-        getSpawnOffsetY: () => 0,
-        getProjectileTravelAngleDegrees: () => 0,
-        getRetaliationTarget: () => null,
+        withLocation: vi.fn(location => ({ location })),
       }),
       setActionOptions: vi.fn(),
       ...overrides,

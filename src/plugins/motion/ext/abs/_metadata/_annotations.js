@@ -98,8 +98,40 @@
  *
  * Durations are in frames, at 60 frames per second. Changing them retunes how
  * every death in the game feels, without rebuilding anything.
+ *
+ * ----------------------------------------------------------------------------
+ * Loot expiry pacing lives in the same file, under `loot`:
+ *
+ *   "loot": {
+ *     "expiryWarnFrames": 300,
+ *     "expiryFadeFrames": 120,
+ *     "flicker": { "min": 0.2, "max": 1.0, "interval": 8 }
+ *   }
+ *
+ * A loot drop that is about to time out blinks for its last `expiryWarnFrames`,
+ * then additionally dissolves over its last `expiryFadeFrames`, reaching
+ * invisible on the frame it would have vanished anyway. The fade window sits
+ * inside the warning one, so the closing stretch both blinks and dims.
+ *
+ * The blink comes first on purpose. A slow dim is something the eye adapts to
+ * rather than notices, and it makes the drop hardest to see during exactly the
+ * window it most needs finding. A blink returns to full opacity between beats
+ * while being impossible to miss.
+ *
+ * `flicker` is the shape of that blink: the opacity range it swings between and
+ * how many frames pass between re-rolls. A lower `min` reads as a harder blink.
+ *
+ * Loot being drawn toward somebody is exempt: it has been claimed, it has
+ * stopped expiring, and anything already fading on it is put back.
+ *
+ * Collection is deliberately not animated. A collected drop arrives at the
+ * player and goes there, which is already a moment with a visible cause.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    A loot drop about to expire now blinks, then dissolves over its closing frames,
+ *    so it stops vanishing without warning. Loot being drawn toward somebody is
+ *    exempt, and the pacing is configured in data/config.motion.json.
  * - 1.0.0
  *    The initial release.
  * ============================================================================

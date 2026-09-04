@@ -146,6 +146,102 @@ describe('JABS_LootDrop (unit, bare J.BASE.Helpers global stubbed)', () =>
 
       expect(drop.duration()).toEqual(0);
     });
+
+    it('does not count down while the drop is in flight', () =>
+    {
+      // Arrange- expiration is still enabled and the duration is still positive, so the whizzing
+      // state is the only thing that can stop the clock. A drop that aged out mid-flight would
+      // delete an item the player has already watched themselves earn.
+      const drop = new JABS_LootDrop(lootObject);
+      drop.beginWhizzing();
+
+      // Act
+      drop.countdownDuration();
+
+      // Assert
+      expect(drop.duration()).toEqual(900);
+    });
+
+    it('does not count down once the drop has been collected', () =>
+    {
+      // Arrange- the mirror of the case above for the far end of the lifecycle.
+      const drop = new JABS_LootDrop(lootObject);
+      drop.markCollected();
+
+      // Act
+      drop.countdownDuration();
+
+      // Assert
+      expect(drop.duration()).toEqual(900);
+    });
+  });
+
+  describe('lifecycle state', () =>
+  {
+    it('starts out waiting on the ground', () =>
+    {
+      // Arrange
+      const drop = new JABS_LootDrop(lootObject);
+
+      // Act & Assert
+      expect(drop.isWaiting()).toEqual(true);
+      expect(drop.isWhizzing()).toEqual(false);
+      expect(drop.isCollected()).toEqual(false);
+    });
+
+    it('reports whizzing once claimed, and nothing else', () =>
+    {
+      // Arrange
+      const drop = new JABS_LootDrop(lootObject);
+
+      // Act
+      drop.beginWhizzing();
+
+      // Assert- the two sibling predicates are what prove the state actually moved rather than
+      // a new flag simply being raised alongside the old one.
+      expect(drop.isWhizzing()).toEqual(true);
+      expect(drop.isWaiting()).toEqual(false);
+      expect(drop.isCollected()).toEqual(false);
+    });
+
+    it('reports collected once granted, and nothing else', () =>
+    {
+      // Arrange- claimed first, so this covers the real transition rather than a fresh drop
+      // jumping straight to the end.
+      const drop = new JABS_LootDrop(lootObject);
+      drop.beginWhizzing();
+
+      // Act
+      drop.markCollected();
+
+      // Assert
+      expect(drop.isCollected()).toEqual(true);
+      expect(drop.isWhizzing()).toEqual(false);
+      expect(drop.isWaiting()).toEqual(false);
+    });
+
+    it('exposes the raw state for callers that need it', () =>
+    {
+      // Arrange
+      const drop = new JABS_LootDrop(lootObject);
+
+      // Act
+      drop.setState(JABS_LootDrop.States.Collected);
+
+      // Assert
+      expect(drop.state()).toEqual(JABS_LootDrop.States.Collected);
+    });
+  });
+
+  describe('arrivalDistance', () =>
+  {
+    it('is a short absorb threshold rather than a reach stat', () =>
+    {
+      // Arrange- nothing to arrange; the threshold is a constant of the model.
+
+      // Act & Assert- half a tile, small enough that a drop is visibly underfoot before it goes.
+      expect(JABS_LootDrop.arrivalDistance()).toEqual(0.5);
+    });
   });
 
   describe('lootIcon', () =>

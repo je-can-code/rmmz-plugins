@@ -153,7 +153,14 @@ Sprite_Character.prototype.escriptionSignature = function(escriptions)
  */
 Sprite_Character.prototype.escriptionBaseY = function()
 {
-  return -(this.patternHeight() + 32);
+  // `patternHeight` is the raw frame height with no scale applied, and a character that has been
+  // scaled up extends upward from its feet - so the drawn body is taller than that number claims by
+  // exactly its own scale. The overlay layer these sprites hang from deliberately cancels that scale
+  // so captions keep their size and their alignment with each other, which means clearing a resized
+  // head is this sprite's own business rather than something the layer does on its behalf.
+  const drawnHeight = this.patternHeight() * this.scale.y;
+
+  return -(drawnHeight + 32);
 };
 
 /**
@@ -267,8 +274,10 @@ Sprite_Character.prototype.refreshEscriptionSpritesIfNeeded = function()
   // build one sprite per escription, in the order the character declared them.
   const sprites = escriptions.map(escription => this.buildEscriptionSprite(escription));
 
-  // put them on screen.
-  sprites.forEach(sprite => this.addChild(sprite));
+  // put them on screen, on the layer that insulates a caption from what its character is doing - an
+  // escription that stretched with a squash or tipped over with a spin would read as a bug.
+  const overlay = this.characterOverlay();
+  sprites.forEach(sprite => overlay.addChild(sprite));
 
   // remember both what is drawn and what it was drawn from.
   this.setEscriptionSprites(sprites);
@@ -322,7 +331,16 @@ Sprite_Character.prototype.buildEscriptionTextSprite = function(escription)
   // own width. the character's map coordinate has no business in this sum: it is measured in
   // tiles, so folding it in shifted every label right by one pixel per tile from the map's left
   // edge, which reads as "roughly centred" near the origin and drifts visibly across a wide map.
-  sprite.x = -(sprite.width / 2);
+  //
+  // half of a measured width is very rarely a whole number of pixels, and a glyph that starts on a
+  // fraction is sampled across two columns instead of filling one - so the centred result is landed
+  // on the display's own pixel grid rather than left wherever the division put it.
+  //
+  // the width is read off the bitmap rather than off the sprite, because the overlay layer this is
+  // about to be parented to writes a scale onto its children - and `Sprite.width` folds that scale
+  // in, so a label rebuilt while its character happened to be mid-squish would centre against a
+  // width that is not the one it draws at.
+  sprite.x = TextRasterMetrics.snap(-(sprite.bitmapWidth() / 2), Graphics.deviceScale);
 
   // the height is deliberately left alone. it depends on the character bitmap, which may not have
   // loaded, and on how many lines the block turned out to hold - so the update pass that runs in
@@ -362,7 +380,8 @@ Sprite_Character.prototype.removeEscriptionSprites = function()
   this.escriptionSprites()
     .forEach(sprite =>
     {
-      this.removeChild(sprite);
+      this.characterOverlay()
+        .removeChild(sprite);
       sprite.destroy();
     });
 

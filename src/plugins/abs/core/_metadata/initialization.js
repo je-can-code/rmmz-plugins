@@ -120,7 +120,8 @@ J.ABS.Helpers.PluginManager.TranslateElementalIcons = obj =>
  * Loads external JABS configuration from the project filesystem.
  *
  * This is the entry point for JABS moving configuration out of notes and into a centralized JSON blob.
- * The root blob must be an object; team configuration is extracted from the {@code teams} property.
+ * The root blob must be an object; team configuration is extracted from the {@code teams} property, and
+ * loot configuration from the {@code loot} property.
  *
  * External configuration is required for team rules; missing or invalid configuration will throw.
  * @param {string=} configPath The project-relative path to the external config.
@@ -145,6 +146,7 @@ J.ABS.Helpers.loadExternalConfig = (configPath = 'data/config.jabs.json') =>
 
   metadata.ExternalConfig = parsedConfig;
   metadata.Teams = parsedConfig.teams;
+  metadata.Loot = parsedConfig.loot;
 
   // return the parsed root blob.
   return parsedConfig;
@@ -1618,6 +1620,44 @@ J.ABS.RegExp = {
    * @type {RegExp}
    */
   ThisThicknessRate: /<thisThicknessRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
+
+  /**
+   * Flat tile addition to the bearer's loot magnet radius, before the rate multiplier.
+   * Signed decimal; negative values shrink the radius. Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <lootMagnetBuff:N>
+   *
+   * Example:
+   *  <lootMagnetBuff:8>
+   *
+   * Translation:
+   *  Adds 8 tiles flat to how far away this battler draws loot toward themselves.
+   * </pre>
+   * @type {RegExp}
+   */
+  LootMagnetBuff: /<lootMagnetBuff:[ ]?(-?(?:0|[1-9][0-9]*)(?:\.[0-9]+)?)>/gi,
+
+  /**
+   * Multiplicative rate applied to the bearer's loot magnet radius, after the buff step.
+   * Base-1.0 delta model: each tag contributes (N - 1.0) to the accumulator.
+   * Reads from getAllNotes().
+   *
+   * <pre>
+   * Structure:
+   *  <lootMagnetRate:N>
+   *
+   * Example:
+   *  <lootMagnetRate:1.5>
+   *
+   * Translation:
+   *  This battler's loot magnet radius is 1.5x.
+   *  A second <lootMagnetRate:1.5> stacks to 2.0x (each contributes +0.5 to the accumulator).
+   * </pre>
+   * @type {RegExp}
+   */
+  LootMagnetRate: /<lootMagnetRate:[ ]?((0|([1-9][0-9]*))(\.[0-9]+)?)>/gi,
 
   /**
    * Passive/state/equip skill history damage bonus.
