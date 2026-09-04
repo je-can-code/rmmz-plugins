@@ -157,6 +157,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.10.0
+ *    The renderer now runs at the display's own resolution, and every text surface
+ *    rasterizes at it, so glyphs are drawn with the pixels the screen will show them
+ *    with rather than magnified into them.
+ *    Added Sprite_CharacterOverlay, the layer a character's captions belong on.
  * - 3.9.0
  *    Added a plugin parameter for a common event to execute when a new game begins.
  * - 3.8.0

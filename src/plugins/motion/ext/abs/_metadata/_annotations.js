@@ -128,6 +128,10 @@
  * player and goes there, which is already a moment with a visible cause.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    A loot drop about to expire now blinks, then dissolves over its closing frames,
+ *    so it stops vanishing without warning. Loot being drawn toward somebody is
+ *    exempt, and the pacing is configured in data/config.motion.json.
  * - 1.0.0
  *    The initial release.
  * ============================================================================

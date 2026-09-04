@@ -39,6 +39,9 @@
  * event is visible on the map.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Escriptions now hang off the character overlay and centre on whole pixels, so
+ *    they no longer stretch with an animating character or blur on half of them.
  * - 1.1.0
  *    Multiple <text> tags now render as multiple lines, rather than the last
  *    one silently winning. An icon rides above the whole block.

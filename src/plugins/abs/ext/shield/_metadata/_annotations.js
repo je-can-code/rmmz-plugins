@@ -345,6 +345,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.3
+ *    The shield gauge now hangs off the character overlay, so it keeps its own size
+ *    and stays put through whatever the battler beneath it is animating.
  * - 1.1.2
  *    Routed the shield-formula error through J-Base's new Diagnostics, so it
  *    names J-ABS-Shield and shows the target, attacker and error as named keys

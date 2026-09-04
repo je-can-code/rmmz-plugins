@@ -48,6 +48,14 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.20.0
+ *    Loot drops are now drawn toward a battler within their magnet radius, tunable
+ *    per battler with <lootMagnetBuff:N> and <lootMagnetRate:N> and configured in
+ *    data/config.jabs.json.
+ *    Added JABS_ActionOptions.withLocation, which copies an options set with only
+ *    its location replaced.
+ *    Nameplates, gauges and affliction strips now hang off the character overlay,
+ *    so they no longer squash, spin or blur along with a battler that is animating.
  * - 4.19.0
  *    Added the Force Respawn plugin command, which frees every pending respawn
  *    record in the world at once regardless of the method each was scheduled
