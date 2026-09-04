@@ -760,8 +760,10 @@ Sprite_Character.prototype.setupHpGauge = function()
     // initialize the hp gauge as a generic map gauge.
     this._j._abs._gauges._hpGauge = sprite;
 
-    // add the sprite to tracking.
-    this.addChild(this._j._abs._gauges._hpGauge);
+    // a gauge describes a battler rather than depicting one, so it rides on the overlay layer and
+    // keeps its own size and orientation through whatever the body beneath it is animating.
+    this.characterOverlay()
+      .addChild(this._j._abs._gauges._hpGauge);
   }
 
   // bind the current battler to the hp gauge sprite.
@@ -819,8 +821,10 @@ Sprite_Character.prototype.setupCastGauge = function()
   const y = -28;
   sprite.move(x, y);
 
-  // add to this character's sprite.
-  this.addChild(sprite);
+  // add to the overlay layer rather than the character itself, so a cast bar stays readable on a
+  // caster that is mid-squish or spinning.
+  this.characterOverlay()
+    .addChild(sprite);
 };
 
 /**
@@ -875,7 +879,10 @@ Sprite_Character.prototype.setupAfflictionStrip = function()
     const strip = new Sprite_MapAfflictionStrip();
 
     this.setAfflictionStrip(strip);
-    this.addChild(strip);
+
+    // the strip is a readout about the battler, so it belongs on the overlay layer.
+    this.characterOverlay()
+      .addChild(strip);
   }
 
   this.afflictionStrip().setupBattler(this.getBattler());
@@ -1156,13 +1163,17 @@ Sprite_Character.prototype.setupBattlerName = function()
   // build and assign the battler name sprite.
   this.setBattlerName(this.createBattlerNameSprite());
 
+  // the nameplate and its stripe are captions about this battler, so both go on the overlay layer -
+  // a name that squashed with a hit reaction or spun with a spin attack would read as a glitch.
+  const overlay = this.characterOverlay();
+
   // add stripe behind the text so the name draws on top.
   if (this.battlerNameTierStripe())
   {
-    this.addChild(this.battlerNameTierStripe());
+    overlay.addChild(this.battlerNameTierStripe());
   }
 
-  this.addChild(this.battlerName());
+  overlay.addChild(this.battlerName());
 };
 
 /**
@@ -1194,7 +1205,12 @@ Sprite_Character.prototype.createBattlerNameSprite = function()
     const outerH = stripeSprite.bitmap.height;
     const GAP = 4;
     const stripeY = this.computeMapTierStripeY(textSprite, outerH);
-    stripeSprite.move(-70 - GAP - outerW, stripeY);
+
+    // the gap is measured from the first glyph rather than from the sprite's own edge, because a
+    // text sprite reserves a margin inside its bitmap for the outline it strokes around its
+    // letters - so its left edge and its leftmost visible pixel are not the same place.
+    const glyphX = textSprite.x + textSprite.padding();
+    stripeSprite.move(glyphX - GAP - outerW, stripeY);
     this.setBattlerNameTierStripe(stripeSprite);
   }
 
@@ -1478,13 +1494,39 @@ Sprite_Character.prototype.createLootSprite = function()
   // build the sprite from the icon.
   const sprite = new Sprite_Icon(iconIndex);
 
-  // relocate the loot a bit randomly.
-  const xOffset = J.BASE.Helpers.getRandomNumber(-30, 0);
-  const yOffset = J.BASE.Helpers.getRandomNumber(-90, -70);
+  // settle the icon over the tile the loot actually occupies.
+  const [ xOffset, yOffset ] = this.determineLootSpriteOffset();
   sprite.move(xOffset, yOffset);
 
   // return the built sprite.
   return sprite;
+};
+
+/**
+ * Determines the offset a loot icon is drawn at, centering it on the tile the loot occupies
+ * with a small random scatter.
+ * @returns {[number, number]} The `[x, y]` offset for the icon sprite.
+ */
+Sprite_Character.prototype.determineLootSpriteOffset = function()
+{
+  // an icon draws from its top-left corner, so half of it comes back off both axes.
+  const halfIconWidth = ImageManager.iconWidth / 2;
+  const halfIconHeight = ImageManager.iconHeight / 2;
+
+  // the sprite's origin is the character's feet, so the tile's middle is half a tile above it.
+  const halfTileHeight = $gameMap.tileHeight() / 2;
+
+  // small enough that the bobbing in lootFloat cannot push an icon off its own tile- pickup is
+  // measured against that tile, so an icon drawn over a neighbor is an icon that lies.
+  const scatter = 4;
+
+  // center the icon on the tile horizontally, then let it wander a little.
+  const x = -halfIconWidth + J.BASE.Helpers.getRandomNumber(-scatter, scatter);
+
+  // center the icon on the tile vertically, then let it wander a little.
+  const y = -halfTileHeight - halfIconHeight + J.BASE.Helpers.getRandomNumber(-scatter, scatter);
+
+  return [ x, y ];
 };
 
 /**

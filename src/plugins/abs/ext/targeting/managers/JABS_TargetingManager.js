@@ -555,19 +555,10 @@ class JABS_TargetingManager
     // per-action option (cooldown key, per-projectile spawn offsets, etc) untouched.
     actions.forEach(action =>
     {
-      // read this action's own existing options rather than assuming they all match.
-      const existing = action.getActionOptions();
-
-      // rebuild the options with only the location swapped out.
-      const rebuilt = JABS_ActionOptions.Builder()
-        .setIsRetaliation(existing.isActionRetaliation())
-        .setCooldownKey(existing.getCooldownKey())
-        .setLocation(location)
-        .setIsTerrainDamage(existing.isTerrainDamage())
-        .setSpawnOffset(existing.getSpawnOffsetX(), existing.getSpawnOffsetY())
-        .setProjectileTravelAngleDegrees(existing.getProjectileTravelAngleDegrees())
-        .setRetaliationTarget(existing.getRetaliationTarget())
-        .build();
+      // read this action's own existing options rather than assuming they all match, then
+      // rebuild them with only the location swapped out.
+      const rebuilt = action.getActionOptions()
+        .withLocation(location);
 
       // assign the rebuilt options back onto the action.
       action.setActionOptions(rebuilt);

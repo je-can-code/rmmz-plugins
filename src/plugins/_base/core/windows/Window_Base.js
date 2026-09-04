@@ -1019,4 +1019,33 @@ Window_Base.prototype.context = function()
   return this.contents.context;
 };
 //endregion properties
+
+/**
+ * Extends {@link Window_Base.createContents}.<br/>
+ * Also raises this window's drawing surfaces to the resolution of the display.
+ *
+ * Every glyph in a window is rasterized onto `contents` at the size the window believes it is,
+ * which on a scaled display is smaller than the area it will actually occupy - so the text is drawn
+ * short of the pixels it has and then magnified into them. Raising the surface here fixes that for
+ * every window in the ecosystem at once, without a single caller changing: the drawing context is
+ * scaled to match, so coordinates and measurements stay in the logical units they were written in.
+ *
+ * `contentsBack` is raised alongside it because the engine frames both sprites from their bitmaps'
+ * reported dimensions, and the two disagreeing would misalign the backdrop against its text.
+ */
+J.BASE.Aliased.Window_Base.set('createContents', Window_Base.prototype.createContents);
+Window_Base.prototype.createContents = function()
+{
+  // perform original logic.
+  J.BASE.Aliased.Window_Base.get('createContents')
+    .call(this);
+
+  const scale = Graphics.deviceScale;
+
+  // an unscaled display already renders every pixel it is given.
+  if (scale === 1) return;
+
+  this.contents.applyDeviceScale(scale);
+  this.contentsBack.applyDeviceScale(scale);
+};
 //endregion Window_Base

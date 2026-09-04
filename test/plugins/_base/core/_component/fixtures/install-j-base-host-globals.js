@@ -331,6 +331,26 @@ export function installJBaseHostGlobals(
   sandbox.Game_Actor.prototype.constructor = sandbox.Game_Actor;
   sandbox.Game_Enemy.prototype.constructor = sandbox.Game_Enemy;
 
+  // Every display object in RMMZ is a PIXI container, and J-Base's Sprite_Character attaches its
+  // overlay layer during initMembers - so a placeholder that cannot accept a child detonates at
+  // construction rather than at whatever the test was actually about.
+  sandbox.Sprite.prototype.addChild = function(child)
+  {
+    this.children ??= [];
+    this.children.push(child);
+
+    return child;
+  };
+  sandbox.Sprite.prototype.removeChild = function(child)
+  {
+    this.children ??= [];
+    this.children = this.children.filter(existing => existing !== child);
+
+    return child;
+  };
+  sandbox.Sprite_Character.prototype.addChild = sandbox.Sprite.prototype.addChild;
+  sandbox.Sprite_Character.prototype.removeChild = sandbox.Sprite.prototype.removeChild;
+
   // Provide no-op initMembers on BattlerBase so J.BASE.Aliased.Game_BattlerBase has a real
   // function to save (not undefined), preventing "cannot read .call of undefined" when
   // plugin alias chains invoke it.

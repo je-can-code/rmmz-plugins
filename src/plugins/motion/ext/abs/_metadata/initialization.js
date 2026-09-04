@@ -51,6 +51,7 @@ J.MOTION.EXT.ABS.Metadata = new J_MOTION_ABS_PluginMetadata(__PLUGIN_NAME__, __P
 J.MOTION.EXT.ABS.Aliased = {};
 J.MOTION.EXT.ABS.Aliased.Game_Battler = new Map();
 J.MOTION.EXT.ABS.Aliased.JABS_Engine = new Map();
+J.MOTION.EXT.ABS.Aliased.Sprite_Character = new Map();
 
 /**
  * All regular expressions used by this plugin.

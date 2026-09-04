@@ -333,6 +333,27 @@ describe('J-ABS Game_Character (unit, all downstream dependencies mocked)', () =
 
       expect(character.getLootNeedsRemoving()).toEqual(true);
     });
+
+    it('writes both coordinate pairs when repositioning loot', () =>
+    {
+      // Arrange- starting somewhere other than the destination on both axes, so a setter left out
+      // of the four leaves a stale coordinate behind rather than coincidentally matching.
+      const character = buildCharacter();
+      character.setRealX = vi.fn();
+      character.setRealY = vi.fn();
+      character.setX = vi.fn();
+      character.setY = vi.fn();
+
+      // Act
+      character.setLootPosition(4, 7);
+
+      // Assert- vanilla reads a disagreement between the logical and real pairs as "mid-step" and
+      // spends updateMove dragging the real pair back, undoing the magnet every frame.
+      expect(character.setRealX).toHaveBeenCalledWith(4);
+      expect(character.setRealY).toHaveBeenCalledWith(7);
+      expect(character.setX).toHaveBeenCalledWith(4);
+      expect(character.setY).toHaveBeenCalledWith(7);
+    });
   });
   //endregion JABS loot
 

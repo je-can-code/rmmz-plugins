@@ -190,6 +190,26 @@ class Sprite_MapGauge
   }
 
   /**
+   * Extends {@link #gaugeX}.<br/>
+   * Reserves nothing to the left of the bar when there is no label to put there.
+   *
+   * Vanilla's answer is the label's measured width plus six pixels of gap, and it adds that gap
+   * whether or not a label exists - so an unlabelled gauge draws its bar six pixels narrower than
+   * its bitmap and pinned to the right of it. A map gauge is positioned by centring its bitmap on
+   * the character it belongs to, which means those six unused pixels put the visible bar three
+   * pixels right of the battler for its entire life. Invisible until the day the text got sharp.
+   * @returns {number}
+   */
+  gaugeX()
+  {
+    // no label means no room to leave for one, and no gap to separate it from.
+    if (this.label() === String.empty) return 0;
+
+    // perform original logic.
+    return super.gaugeX();
+  }
+
+  /**
    * Gets the icon index of the gauge.
    * @returns {number}
    */

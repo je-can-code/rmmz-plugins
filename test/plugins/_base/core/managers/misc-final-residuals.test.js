@@ -7,14 +7,34 @@ describe('J-Base misc final residual coverage (direct src import)', () =>
   let J_Timer;
   let RPG_SoundEffect;
   let originalDrawText;
+  let originalSetupPixi;
+  let originalCreatePixiApp;
+  let originalUpdateAllElements;
 
   beforeAll(async () =>
   {
     String.empty = '';
 
-    globalThis.J = { BASE: { Aliased: { Bitmap: new Map() } } };
+    globalThis.J = { BASE: { Aliased: { Bitmap: new Map(), Graphics: new Map() } } };
 
-    globalThis.Graphics = { width: 820, height: 640, boxWidth: 816, boxHeight: 624 };
+    // the display the game believes it is running on, and the renderer it built for that display.
+    globalThis.window = { devicePixelRatio: 1.5 };
+    globalThis.PIXI = { settings: { FILTER_RESOLUTION: 1 } };
+
+    originalSetupPixi = vi.fn();
+    originalCreatePixiApp = vi.fn();
+    originalUpdateAllElements = vi.fn();
+
+    globalThis.Graphics = {
+      width: 820,
+      height: 640,
+      boxWidth: 816,
+      boxHeight: 624,
+      app: { renderer: { resolution: 1.5, resize: vi.fn() } },
+      _setupPixi: originalSetupPixi,
+      _createPixiApp: originalCreatePixiApp,
+      _updateAllElements: originalUpdateAllElements,
+    };
 
     globalThis.ImageManager = {
       loadBitmap: vi.fn(),
@@ -56,6 +76,155 @@ describe('J-Base misc final residual coverage (direct src import)', () =>
     it('boxOrigin destructures to [horizontalPadding, verticalPadding]', () =>
     {
       expect(globalThis.Graphics.boxOrigin).toEqual([ 4, 16 ]);
+    });
+
+    it('deviceScale reads the renderer resolution live rather than capturing it', () =>
+    {
+      // Arrange - a display at 150%, which is what the renderer would have been configured to.
+      expect(globalThis.Graphics.deviceScale).toBe(1.5);
+
+      // Act - the renderer is reconfigured, as it would be when the game window moves screens.
+      globalThis.Graphics.app.renderer.resolution = 2;
+
+      // Assert - anything that captured the old value at import time would still report 1.5 here.
+      expect(globalThis.Graphics.deviceScale).toBe(2);
+
+      // restore, so the shared stub is left exactly as the other tests in this file found it.
+      globalThis.Graphics.app.renderer.resolution = 1.5;
+    });
+
+    describe('desiredDeviceScale', () =>
+    {
+      it('reports the display ratio when it sits inside the supported range', () =>
+      {
+        // Arrange - a 4K panel at 150%, which is the case this whole seam exists for.
+        globalThis.window.devicePixelRatio = 1.5;
+
+        // Act.
+        const result = globalThis.Graphics.desiredDeviceScale();
+
+        // Assert.
+        expect(result).toBe(1.5);
+      });
+
+      it('lifts a display reporting less than one up to one', () =>
+      {
+        // Arrange - a zoomed-out browser, where rendering below logical size would only lose detail.
+        globalThis.window.devicePixelRatio = 0.75;
+
+        // Act.
+        const result = globalThis.Graphics.desiredDeviceScale();
+
+        // Assert.
+        expect(result).toBe(1);
+      });
+
+      it('caps an extreme display ratio at three', () =>
+      {
+        // Arrange - a phone-class ratio, where the memory cost outruns anything anyone can see.
+        globalThis.window.devicePixelRatio = 4;
+
+        // Act.
+        const result = globalThis.Graphics.desiredDeviceScale();
+
+        // Assert.
+        expect(result).toBe(3);
+
+        // restore the ratio the rest of this file expects.
+        globalThis.window.devicePixelRatio = 1.5;
+      });
+    });
+
+    describe('applyDeviceResolution', () =>
+    {
+      it('raises the renderer to the display scale and re-derives the backing store', () =>
+      {
+        // Arrange - a renderer still at the resolution RMMZ builds it with.
+        const { renderer } = globalThis.Graphics.app;
+        renderer.resolution = 1;
+        renderer.resize.mockClear();
+
+        // Act.
+        globalThis.Graphics.applyDeviceResolution();
+
+        // Assert - the resize carries the logical size, and the resolution is what expands it.
+        expect(renderer.resolution).toBe(1.5);
+        expect(renderer.resize).toHaveBeenCalledWith(820, 640);
+      });
+
+      it('does nothing when the renderer failed to build, which vanilla survives', () =>
+      {
+        // Arrange - what `_createPixiApp` leaves behind when WebGL is unavailable. The resize
+        // handler is registered before the app is built, so this really does get reached.
+        const { app } = globalThis.Graphics;
+        app.renderer.resize.mockClear();
+        globalThis.Graphics.app = null;
+
+        // Act.
+        globalThis.Graphics.applyDeviceResolution();
+
+        // Assert - a crash here would replace vanilla's error screen with a stack trace.
+        expect(app.renderer.resize).not.toHaveBeenCalled();
+
+        // restore the app the rest of this file expects.
+        globalThis.Graphics.app = app;
+      });
+    });
+
+    describe('_setupPixi', () =>
+    {
+      it('raises the filter resolution alongside the original setup', () =>
+      {
+        // Arrange - PIXI's own default, which would flatten the scene back down.
+        globalThis.PIXI.settings.FILTER_RESOLUTION = 1;
+        originalSetupPixi.mockClear();
+
+        // Act.
+        globalThis.Graphics._setupPixi();
+
+        // Assert.
+        expect(originalSetupPixi).toHaveBeenCalledTimes(1);
+        expect(globalThis.PIXI.settings.FILTER_RESOLUTION).toBe(1.5);
+      });
+    });
+
+    describe('_createPixiApp', () =>
+    {
+      it('applies the device resolution to the renderer the original just built', () =>
+      {
+        // Arrange.
+        const { renderer } = globalThis.Graphics.app;
+        renderer.resolution = 1;
+        renderer.resize.mockClear();
+        originalCreatePixiApp.mockClear();
+
+        // Act.
+        globalThis.Graphics._createPixiApp();
+
+        // Assert.
+        expect(originalCreatePixiApp).toHaveBeenCalledTimes(1);
+        expect(renderer.resolution).toBe(1.5);
+      });
+    });
+
+    describe('_updateAllElements', () =>
+    {
+      it('puts the resolution back after the original resets the canvas to logical pixels', () =>
+      {
+        // Arrange - exactly what `_updateCanvas` leaves behind on every window resize.
+        const { renderer } = globalThis.Graphics.app;
+        renderer.resolution = 1;
+        renderer.resize.mockClear();
+        originalUpdateAllElements.mockClear();
+
+        // Act.
+        globalThis.Graphics._updateAllElements();
+
+        // Assert.
+        expect(originalUpdateAllElements).toHaveBeenCalledTimes(1);
+        expect(renderer.resolution).toBe(1.5);
+        expect(renderer.resize).toHaveBeenCalledWith(820, 640);
+      });
     });
   });
 

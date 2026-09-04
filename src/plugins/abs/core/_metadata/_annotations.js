@@ -694,6 +694,29 @@
  * Where TEAM is the numeric id to assign to the battler.
  *
  * ============================================================================
+ * LOOT CONFIG:
+ * The same external file carries a `loot` block, also REQUIRED:
+ *  {
+ *    "loot": {
+ *      "magnetRadius": 2,
+ *      "magnetSpeed": 0.08,
+ *      "magnetAcceleration": 3.5
+ *    }
+ *  }
+ *
+ * `magnetRadius` is the baseline distance in tiles from which a battler draws
+ * loot drops toward themselves, before any <lootMagnetBuff:N> or
+ * <lootMagnetRate:N> the battler carries is applied.
+ *
+ * `magnetSpeed` is how fast a drop travels in tiles per frame at the very edge
+ * of that radius, and `magnetAcceleration` is how much faster it moves as it
+ * closes, so a drop snaps home rather than drifting the last half tile.
+ *
+ * Tune the radius against how the party actually fights: a value wide enough
+ * to reach a ranged kill collects loot the player never approached, which
+ * quietly removes the decision to go and get it.
+ *
+ * ============================================================================
  * CIRCUMSTANTIAL CONFIG OPTIONS:
  * A few more tags modify the base look or behavior of enemies. Add these
  * to the enemy (in the database or as an event comment override) to
@@ -987,6 +1010,16 @@
  *
  * Use this for skills that should feel guaranteed and inescapable, like
  * a debuff that snaps to the target even if they teleport mid-cast.
+ *
+ * NOTE ABOUT WHAT IS AND IS NOT AVOIDABLE:
+ * The placement is what cannot be dodged, not the aftermath. The hitbox
+ * drops onto wherever the target stands at the instant of firing, and then
+ * stays on that tile for the rest of the action's <duration:N>. A target
+ * that keeps moving cannot escape the drop, but can absolutely walk out
+ * of a lingering zone before it finishes ticking -- which is what makes
+ * this the right tag for telegraphed ground effects. Give the skill no
+ * <duration:N> and it resolves in a single burst instead, which is what
+ * you want for something that should simply always connect.
  *
  * NOTE: <directLock> and <direct> are mutually exclusive. If both are
  * present on a skill, <directLock> takes precedence.
@@ -1826,6 +1859,33 @@
  * Example:
  *  1.5x LINE/WALL width, radius and proximity unchanged:
  *    <thicknessRate:1.5>
+ *
+ * ----------------------------------------------------------------------------
+ * LOOT MAGNET BUFF (flat additive, loot pickup radius only):
+ * Adds N tiles to how far away the bearer draws loot drops toward themselves.
+ * The baseline it adds to is the `loot.magnetRadius` value in the external
+ * config file at `data/config.jabs.json`.
+ *
+ * Named "magnet" rather than "radius" so it cannot be mistaken for radiusBuff,
+ * which scales AoE splash. Only the party leader's radius is consulted, since
+ * only the player collects loot.
+ *    <lootMagnetBuff:N>
+ *  Where N is a signed decimal tile count.
+ *
+ * Example:
+ *  An accessory that inhales loot from well across the room:
+ *    <lootMagnetBuff:8>
+ *
+ * ----------------------------------------------------------------------------
+ * LOOT MAGNET RATE (multiplicative, loot pickup radius only):
+ * Adds (N - 1.0) to the rate accumulator for the loot magnet radius, applied
+ * after every lootMagnetBuff has been summed in.
+ *    <lootMagnetRate:N>
+ *  Where N is a non-negative decimal multiplier (1.0 = no change).
+ *
+ * Example:
+ *  1.5x loot pickup radius:
+ *    <lootMagnetRate:1.5>
  *
  * ============================================================================
  * STATE DAMAGE MULTIPLIERS:
@@ -3461,22 +3521,6 @@
  *
  * @param miscConfigs
  * @text MISCELLANEOUS SETUP
- *
- * @param lootPickupDistance
- * @parent miscConfigs
- * @type number
- * @text Loot Pickup Distance
- * @desc The distance of which the player must be to collect loot on the ground.
- * @decimals 2
- * @default 1.50
- *
- * @param lootPickupDistance
- * @parent miscConfigs
- * @type number
- * @decimals 2
- * @text Loot Pickup Distance
- * @desc The distance of which the player must be to collect loot on the ground.
- * @default 1.50
  *
  * @param allyRubberbandAdjustment
  * @parent miscConfigs

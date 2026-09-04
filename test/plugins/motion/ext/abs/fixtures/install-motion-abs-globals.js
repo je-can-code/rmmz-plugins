@@ -77,6 +77,14 @@ export const installDeathMetadata = (overrides = {}) =>
         : configured;
     },
     isKnownDeathStyle: style => durations[style] !== undefined,
+    lootExpiryWarnFrames: overrides.lootExpiryWarnFrames ?? 300,
+    lootExpiryFadeFrames: overrides.lootExpiryFadeFrames ?? 120,
+    lootExpiryFlicker: {
+      min: 0.2,
+      max: 1.0,
+      interval: 8,
+      ...overrides.lootExpiryFlicker,
+    },
   };
 };
 

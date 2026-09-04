@@ -2,10 +2,10 @@
 /**
  * The metadata for J-Motion-ABS.
  *
- * Death pacing is read from the same external config J-Motion core uses, under its own `death`
- * section. Keeping it there rather than in plugin parameters means the speed at which everything in
- * the game dies is one file a designer can open, which is the sort of thing that gets retuned by
- * feel rather than by reasoning.
+ * Death and loot pacing are read from the same external config J-Motion core uses, under their own
+ * `death` and `loot` sections. Keeping them there rather than in plugin parameters means the speed
+ * at which everything in the game dies or fades away is one file a designer can open, which is the
+ * sort of thing that gets retuned by feel rather than by reasoning.
  */
 class J_MOTION_ABS_PluginMetadata
   extends PluginMetadata
@@ -40,29 +40,62 @@ class J_MOTION_ABS_PluginMetadata
   }
 
   /**
+   * The loot expiry pacing used when the config says nothing at all.
+   *
+   * Frames, and the same numbers the shipped config carries. `warnFrames` is when the drop starts
+   * blinking and `fadeFrames` is when it additionally starts dissolving, so the fade window sits
+   * inside the warning one rather than beside it.
+   * @type {Object}
+   */
+  static FALLBACK_LOOT = {
+    warnFrames: 300,
+    fadeFrames: 120,
+    flicker: {
+      min: 0.2,
+      max: 1.0,
+      interval: 8,
+    },
+  };
+
+  /**
    * Extends {@link #postInitialize}.<br>
-   * Reads the death pacing out of the shared motion configuration.
+   * Reads the death and loot pacing out of the shared motion configuration.
    */
   postInitialize()
   {
     // perform original logic.
     super.postInitialize();
 
+    // read the file once and hand it to each section rather than re-reading it per section.
+    const parsedConfiguration = this.loadMotionConfiguration();
+
     // initialize the death pacing from configuration.
-    this.initializeDeathMetadata();
+    this.initializeDeathMetadata(parsedConfiguration);
+
+    // initialize the loot pacing from configuration.
+    this.initializeLootMetadata(parsedConfiguration);
   }
 
   /**
-   * Reads how long each death style lasts, and which one everything gets by default.
+   * Reads the shared motion configuration off disk.
+   * @returns {Object} The parsed configuration root.
    */
-  initializeDeathMetadata()
+  loadMotionConfiguration()
   {
     const options = ExternalJsonConfigLoaderOptions.Builder()
       .pluginName(__PLUGIN_NAME__)
       .configName('motion configuration')
       .build();
 
-    const parsedConfiguration = ExternalJsonConfigLoader.load(J_MOTION_ABS_PluginMetadata.CONFIG_PATH, options);
+    return ExternalJsonConfigLoader.load(J_MOTION_ABS_PluginMetadata.CONFIG_PATH, options);
+  }
+
+  /**
+   * Reads how long each death style lasts, and which one everything gets by default.
+   * @param {Object} parsedConfiguration The parsed motion configuration root.
+   */
+  initializeDeathMetadata(parsedConfiguration)
+  {
     const deathConfiguration = parsedConfiguration.death ?? {};
 
     /**
@@ -76,6 +109,34 @@ class J_MOTION_ABS_PluginMetadata
      * @type {string}
      */
     this.defaultDeathStyle = deathConfiguration.defaultStyle ?? 'swift';
+  }
+
+  /**
+   * Reads how a loot drop announces that it is running out of time.
+   * @param {Object} parsedConfiguration The parsed motion configuration root.
+   */
+  initializeLootMetadata(parsedConfiguration)
+  {
+    const lootConfiguration = parsedConfiguration.loot ?? {};
+    const fallback = J_MOTION_ABS_PluginMetadata.FALLBACK_LOOT;
+
+    /**
+     * How many frames before a loot drop expires it begins blinking.
+     * @type {number}
+     */
+    this.lootExpiryWarnFrames = lootConfiguration.expiryWarnFrames ?? fallback.warnFrames;
+
+    /**
+     * How many frames before a loot drop expires it additionally begins dissolving.
+     * @type {number}
+     */
+    this.lootExpiryFadeFrames = lootConfiguration.expiryFadeFrames ?? fallback.fadeFrames;
+
+    /**
+     * The shape of the blink: the opacity range it swings between and how often it re-rolls.
+     * @type {{min: number, max: number, interval: number}}
+     */
+    this.lootExpiryFlicker = { ...fallback.flicker, ...lootConfiguration.flicker };
   }
 
   /**

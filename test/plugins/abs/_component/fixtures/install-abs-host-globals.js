@@ -210,7 +210,10 @@ export function installAbsHostGlobals(sandbox = globalThis, jAbsPluginParameterS
   {
     if (path === 'data/config.jabs.json')
     {
-      return JSON.stringify({ teams: [] });
+      return JSON.stringify({
+        teams: [],
+        loot: { magnetRadius: 3 },
+      });
     }
 
     return null;

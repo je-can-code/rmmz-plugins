@@ -206,7 +206,6 @@ class J_AbsPluginMetadata
    */
   initializeMiscMovementMetadata()
   {
-    this.LootPickupRange = Number(this.parsedPluginParameters['lootPickupDistance']);
     this.AllyRubberbandAdjustment = Number(this.parsedPluginParameters['allyRubberbandAdjustment']);
     this.DashSpeedBoost = Number(this.parsedPluginParameters['dashSpeedBoost']);
     // assign hitbox overlays initially visible on this instance for callers.

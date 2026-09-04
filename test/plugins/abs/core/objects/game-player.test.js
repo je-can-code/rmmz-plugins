@@ -7,7 +7,7 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
   let originalCanMove;
   let originalIsDashing;
   let originalRefresh;
-  let originalUpdateMove;
+  let originalUpdate;
 
   beforeAll(async () =>
   {
@@ -16,7 +16,13 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
     globalThis.J = {
       ABS: {
         Aliased: { Game_Player: new Map() },
-        Metadata: { LootPickupRange: 1.5 },
+        Metadata: {
+          Loot: {
+            magnetRadius: 3,
+            magnetSpeed: 0.1,
+            magnetAcceleration: 4,
+          },
+        },
       },
     };
 
@@ -30,12 +36,12 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
     originalCanMove = vi.fn(() => true);
     originalIsDashing = vi.fn(() => true);
     originalRefresh = vi.fn();
-    originalUpdateMove = vi.fn();
+    originalUpdate = vi.fn();
     Game_Player.prototype.startMapEvent = originalStartMapEvent;
     Game_Player.prototype.canMove = originalCanMove;
     Game_Player.prototype.isDashing = originalIsDashing;
     Game_Player.prototype.refresh = originalRefresh;
-    Game_Player.prototype.updateMove = originalUpdateMove;
+    Game_Player.prototype.update = originalUpdate;
     globalThis.Game_Player = Game_Player;
 
     vi.doMock('../../../../../src/plugins/abs/core/models/JABS_Battler.js', () => ({ default: class {} }));
@@ -64,12 +70,15 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
     originalCanMove.mockClear();
     originalIsDashing.mockClear();
     originalRefresh.mockClear();
-    originalUpdateMove.mockClear();
+    originalUpdate.mockClear();
 
     globalThis.$jabsEngine = {
       absEnabled: false,
       absPause: false,
-      getPlayer1: vi.fn(() => ({ hasUninterruptibleMovementLock: vi.fn(() => false) })),
+      getPlayer1: vi.fn(() => ({
+        hasUninterruptibleMovementLock: vi.fn(() => false),
+        getBattler: vi.fn(() => ({ getLootMagnetRadius: vi.fn(() => 3) })),
+      })),
       initializePlayer1: vi.fn(),
       onItemPickedUp: vi.fn(),
       createLootLog: vi.fn(),
@@ -80,6 +89,10 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
       eventsXy: vi.fn(() => []),
       getJabsLootDrops: vi.fn(() => []),
       distance: vi.fn(() => 0),
+
+      // the real deltas account for map looping; straight subtraction is the non-looping case.
+      deltaX: vi.fn((x1, x2) => x1 - x2),
+      deltaY: vi.fn((y1, y2) => y1 - y2),
     };
     globalThis.$gameParty = {
       anyMemberInCombat: vi.fn(() => false),
@@ -318,20 +331,36 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
     });
   });
 
-  describe('updateMove', () =>
+  describe('update', () =>
   {
     it('performs the original logic then checks for loot', () =>
     {
-      // Arrange
+      // Arrange- the loot check hangs off `update` rather than `updateMove` because vanilla only
+      // calls the latter while isMoving() is true, which would strand a drop mid-flight the
+      // instant the player stood still and leave a player standing on a drop unable to take it.
       const player = buildPlayer();
       vi.spyOn(player, 'checkForLoot').mockImplementation(() => {});
 
       // Act
-      player.updateMove();
+      player.update(true);
 
       // Assert
-      expect(originalUpdateMove).toHaveBeenCalled();
+      expect(originalUpdate).toHaveBeenCalled();
       expect(player.checkForLoot).toHaveBeenCalled();
+    });
+
+    it('passes the scene-active flag through to the original logic', () =>
+    {
+      // Arrange- vanilla gates input handling on this argument, so dropping it would silently
+      // leave the player controllable during a scene transition.
+      const player = buildPlayer();
+      vi.spyOn(player, 'checkForLoot').mockImplementation(() => {});
+
+      // Act
+      player.update(false);
+
+      // Assert
+      expect(originalUpdate).toHaveBeenCalledWith(false);
     });
   });
 
@@ -358,6 +387,7 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
       const player = buildPlayer();
       const drops = [ {} ];
       globalThis.$gameMap.getJabsLootDrops.mockReturnValue(drops);
+      vi.spyOn(player, 'processLootMagnetism').mockImplementation(() => {});
       vi.spyOn(player, 'processLootCollection').mockImplementation(() => {});
 
       // Act
@@ -365,6 +395,254 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
 
       // Assert
       expect(player.processLootCollection).toHaveBeenCalledWith(drops);
+    });
+
+    it('draws loot inward before testing what has arrived', () =>
+    {
+      // Arrange- ordering is the behavior under test: pulling after collecting would leave a drop
+      // that lands this frame sitting on the player for an extra tick before being absorbed.
+      const player = buildPlayer();
+      globalThis.$gameMap.getJabsLootDrops.mockReturnValue([ {} ]);
+      const calls = [];
+      vi.spyOn(player, 'processLootMagnetism').mockImplementation(() => calls.push('magnetism'));
+      vi.spyOn(player, 'processLootCollection').mockImplementation(() => calls.push('collection'));
+
+      // Act
+      player.checkForLoot();
+
+      // Assert
+      expect(calls).toEqual([ 'magnetism', 'collection' ]);
+    });
+
+    it('does not draw loot inward when there are no drops on the map', () =>
+    {
+      // Arrange
+      const player = buildPlayer();
+      globalThis.$gameMap.getJabsLootDrops.mockReturnValue([]);
+      vi.spyOn(player, 'processLootMagnetism');
+
+      // Act
+      player.checkForLoot();
+
+      // Assert
+      expect(player.processLootMagnetism).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('processLootMagnetism', () =>
+  {
+    it('pulls every drop on the map toward the player', () =>
+    {
+      // Arrange- two drops, so a loop that only ever handled the first would be visible.
+      const player = buildPlayer();
+      const dropOne = { id: 'one' };
+      const dropTwo = { id: 'two' };
+      vi.spyOn(player, 'magnetizeLoot').mockImplementation(() => {});
+
+      // Act
+      player.processLootMagnetism([ dropOne, dropTwo ]);
+
+      // Assert
+      expect(player.magnetizeLoot).toHaveBeenCalledWith(dropOne, 3);
+      expect(player.magnetizeLoot).toHaveBeenCalledWith(dropTwo, 3);
+    });
+
+    it('pulls nothing when the resolved radius is zero', () =>
+    {
+      // Arrange- a battler stripped of magnetism entirely; loot still exists and is still nearby,
+      // so only the radius check can be what prevents the pull.
+      const player = buildPlayer();
+      vi.spyOn(player, 'getLootMagnetRadius').mockReturnValue(0);
+      vi.spyOn(player, 'magnetizeLoot').mockImplementation(() => {});
+
+      // Act
+      player.processLootMagnetism([ { id: 'one' } ]);
+
+      // Assert
+      expect(player.magnetizeLoot).not.toHaveBeenCalled();
+    });
+
+    it('resolves the radius once regardless of how many drops there are', () =>
+    {
+      // Arrange- the radius walks every note source on the leader, so repeating it per drop would
+      // be real work wasted. three drops, one resolution.
+      const player = buildPlayer();
+      vi.spyOn(player, 'getLootMagnetRadius');
+      vi.spyOn(player, 'magnetizeLoot').mockImplementation(() => {});
+
+      // Act
+      player.processLootMagnetism([ {}, {}, {} ]);
+
+      // Assert
+      expect(player.getLootMagnetRadius).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('getLootMagnetRadius', () =>
+  {
+    it('reads the radius off the leader battler', () =>
+    {
+      // Arrange- a value unlike the default so a hardcoded fallback would be caught.
+      const player = buildPlayer();
+      globalThis.$jabsEngine.getPlayer1.mockReturnValue({
+        getBattler: () => ({ getLootMagnetRadius: () => 11 }),
+      });
+
+      // Act & Assert
+      expect(player.getLootMagnetRadius()).toBe(11);
+    });
+  });
+
+  describe('magnetizeLoot', () =>
+  {
+    /**
+     * Builds a loot event double positioned at the given coordinates.
+     * @param {number} x The drop's x coordinate.
+     * @param {number} y The drop's y coordinate.
+     * @param {object} [lootOverrides] Overrides for the underlying loot drop double.
+     * @returns {object}
+     */
+    function buildLootEvent(x, y, lootOverrides = {})
+    {
+      const jabsLoot = {
+        isCollected: () => false,
+        beginWhizzing: vi.fn(),
+        ...lootOverrides,
+      };
+
+      return {
+        isErased: () => false,
+        getJabsLoot: () => jabsLoot,
+        realX: () => x,
+        realY: () => y,
+        setLootPosition: vi.fn(),
+        jabsLoot,
+      };
+    }
+
+    it('moves a drop that is inside the radius toward the player', () =>
+    {
+      // Arrange- player at origin, drop two tiles to the right and well inside a radius of 3.
+      const player = buildPlayer();
+      const lootEvent = buildLootEvent(2, 0);
+
+      // Act
+      player.magnetizeLoot(lootEvent, 3);
+
+      // Assert- it moved, and it moved leftward toward the player rather than away.
+      const [ [ nextX, nextY ] ] = lootEvent.setLootPosition.mock.calls;
+      expect(nextX).toBeLessThan(2);
+      expect(nextY).toBe(0);
+    });
+
+    it('claims a drop the moment it comes into range', () =>
+    {
+      // Arrange
+      const player = buildPlayer();
+      const lootEvent = buildLootEvent(2, 0);
+
+      // Act
+      player.magnetizeLoot(lootEvent, 3);
+
+      // Assert- claiming is what stops the expiration timer, so it must happen on the first frame
+      // of the pull rather than on arrival.
+      expect(lootEvent.jabsLoot.beginWhizzing).toHaveBeenCalled();
+    });
+
+    it('leaves a drop beyond the radius entirely alone', () =>
+    {
+      // Arrange- four tiles out against a radius of three.
+      const player = buildPlayer();
+      const lootEvent = buildLootEvent(4, 0);
+
+      // Act
+      player.magnetizeLoot(lootEvent, 3);
+
+      // Assert- neither moved nor claimed, so it keeps aging out normally.
+      expect(lootEvent.setLootPosition).not.toHaveBeenCalled();
+      expect(lootEvent.jabsLoot.beginWhizzing).not.toHaveBeenCalled();
+    });
+
+    it('claims but does not move a drop already within arrival distance', () =>
+    {
+      // Arrange- a fifth of a tile away, inside the 0.5 arrival threshold. Moving it would mean
+      // dividing by a near-zero distance to build a direction.
+      const player = buildPlayer();
+      const lootEvent = buildLootEvent(0.2, 0);
+
+      // Act
+      player.magnetizeLoot(lootEvent, 3);
+
+      // Assert
+      expect(lootEvent.jabsLoot.beginWhizzing).toHaveBeenCalled();
+      expect(lootEvent.setLootPosition).not.toHaveBeenCalled();
+    });
+
+    it('ignores a drop that has already been collected', () =>
+    {
+      // Arrange- a collected drop is mid-removal; it sits at a distance that would otherwise be
+      // well within range, so only the state check can be what stops the pull.
+      const player = buildPlayer();
+      const lootEvent = buildLootEvent(2, 0, { isCollected: () => true });
+
+      // Act
+      player.magnetizeLoot(lootEvent, 3);
+
+      // Assert
+      expect(lootEvent.setLootPosition).not.toHaveBeenCalled();
+    });
+
+    it('ignores a drop whose event has been erased', () =>
+    {
+      // Arrange- same in-range position, only the erased flag flipped.
+      const player = buildPlayer();
+      const lootEvent = buildLootEvent(2, 0);
+      lootEvent.isErased = () => true;
+
+      // Act
+      player.magnetizeLoot(lootEvent, 3);
+
+      // Assert
+      expect(lootEvent.setLootPosition).not.toHaveBeenCalled();
+    });
+
+    it('never steps further than the remaining gap', () =>
+    {
+      // Arrange- a drop just outside arrival distance, paired with a speed far larger than the gap
+      // so an unclamped step would sail past the player and land on the far side.
+      const player = buildPlayer();
+      globalThis.J.ABS.Metadata.Loot.magnetSpeed = 50;
+      const lootEvent = buildLootEvent(0.6, 0);
+
+      // Act
+      player.magnetizeLoot(lootEvent, 3);
+
+      // Assert- it lands exactly on the player rather than overshooting to a negative x.
+      const [ [ nextX ] ] = lootEvent.setLootPosition.mock.calls;
+      expect(nextX).toBe(0);
+
+      // Cleanup- this global is shared across the file.
+      globalThis.J.ABS.Metadata.Loot.magnetSpeed = 0.1;
+    });
+
+    it('moves a nearer drop further in one frame than a distant one', () =>
+    {
+      // Arrange- two drops inside the same radius at different distances. The acceleration curve
+      // is the only thing that could make their per-frame steps differ.
+      const player = buildPlayer();
+      const nearDrop = buildLootEvent(1, 0);
+      const farDrop = buildLootEvent(2.9, 0);
+
+      // Act
+      player.magnetizeLoot(nearDrop, 3);
+      player.magnetizeLoot(farDrop, 3);
+
+      // Assert
+      const [ [ nearNextX ] ] = nearDrop.setLootPosition.mock.calls;
+      const [ [ farNextX ] ] = farDrop.setLootPosition.mock.calls;
+      const nearStep = 1 - nearNextX;
+      const farStep = 2.9 - farNextX;
+      expect(nearStep).toBeGreaterThan(farStep);
     });
   });
 
@@ -498,26 +776,37 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
 
   describe('isTouchingLoot', () =>
   {
-    it('returns true when the distance is within the configured pickup range', () =>
+    it('returns true when the drop has arrived', () =>
     {
-      // Arrange
+      // Arrange- player at origin, drop a fifth of a tile away, inside the 0.5 arrival threshold.
       const player = buildPlayer();
-      globalThis.$gameMap.distance.mockReturnValue(1.5);
-      const lootDrop = { _realX: 5, _realY: 5 };
+      const lootDrop = { realX: () => 0.2, realY: () => 0 };
 
       // Act/Assert
       expect(player.isTouchingLoot(lootDrop)).toEqual(true);
     });
 
-    it('returns false when the distance exceeds the configured pickup range', () =>
+    it('returns false when the drop has not arrived yet', () =>
     {
-      // Arrange
+      // Arrange- still in flight at a full tile out.
       const player = buildPlayer();
-      globalThis.$gameMap.distance.mockReturnValue(1.6);
-      const lootDrop = { _realX: 5, _realY: 5 };
+      const lootDrop = { realX: () => 1, realY: () => 0 };
 
       // Act/Assert
       expect(player.isTouchingLoot(lootDrop)).toEqual(false);
+    });
+
+    it('measures diagonally rather than as the sum of both axes', () =>
+    {
+      // Arrange- 0.3 on each axis is 0.6 of manhattan distance, which the engine's own `distance`
+      // would reject against a 0.5 threshold, but only 0.42 in a straight line. A drop sitting
+      // diagonally underfoot has arrived, and this is the exact case the old manhattan check got
+      // wrong.
+      const player = buildPlayer();
+      const lootDrop = { realX: () => 0.3, realY: () => 0.3 };
+
+      // Act/Assert
+      expect(player.isTouchingLoot(lootDrop)).toEqual(true);
     });
   });
 
@@ -600,7 +889,10 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
       // Arrange
       const player = buildPlayer();
       const setLootNeedsRemoving = vi.fn();
-      const lootEvent = { setLootNeedsRemoving };
+      const lootEvent = {
+        setLootNeedsRemoving,
+        getJabsLoot: () => ({ markCollected: vi.fn() }),
+      };
 
       // Act
       player.removeLoot(lootEvent);
@@ -608,6 +900,24 @@ describe('J-ABS Game_Player (unit, all downstream dependencies mocked)', () =>
       // Assert
       expect(setLootNeedsRemoving).toHaveBeenCalledWith(true);
       expect(globalThis.$jabsEngine.requestClearLoot).toEqual(true);
+    });
+
+    it('retires the drop from the lifecycle before flagging its removal', () =>
+    {
+      // Arrange- a drop still mid-flight when it is granted; without this it would sit in the
+      // whizzing state forever and keep being pulled while it waits to be cleared.
+      const player = buildPlayer();
+      const markCollected = vi.fn();
+      const lootEvent = {
+        setLootNeedsRemoving: vi.fn(),
+        getJabsLoot: () => ({ markCollected }),
+      };
+
+      // Act
+      player.removeLoot(lootEvent);
+
+      // Assert
+      expect(markCollected).toHaveBeenCalled();
     });
   });
   //endregion loot

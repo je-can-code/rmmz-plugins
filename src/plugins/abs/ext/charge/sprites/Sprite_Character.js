@@ -70,8 +70,10 @@ Sprite_Character.prototype.setupChargeGauge = function()
   // position at the same slot as the cast gauge; only one is ever visible at a time.
   sprite.move(-Math.round(sprite.bitmapWidth() / 2), -28);
 
-  // add to this character's sprite.
-  this.addChild(sprite);
+  // gauges live on the overlay layer, which keeps them their own size no matter what the character
+  // beneath them is animating.
+  this.characterOverlay()
+    .addChild(sprite);
 };
 
 /**

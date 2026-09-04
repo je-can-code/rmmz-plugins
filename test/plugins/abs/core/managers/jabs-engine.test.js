@@ -2716,6 +2716,27 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       expect(engine.addActionEvent).toHaveBeenCalledWith(action, eventData);
     });
 
+    /**
+     * Builds a direct-action stub carrying the options plumbing the anchoring fork touches.
+     * @param {boolean} isDirect Whether the stub reports itself as a direct action.
+     * @returns {{isDirectAction: function, getActionOptions: function, setActionOptions: function}}
+     */
+    const buildAnchorableAction = isDirect =>
+    {
+      // the options the anchored copy is produced from; withLocation hands back a marked object
+      // so the test can prove the copy - not the original - is what gets assigned back.
+      const anchoredOptions = { id: 'anchored-options' };
+      const options = { withLocation: vi.fn(() => anchoredOptions) };
+
+      return {
+        isDirectAction: () => isDirect,
+        getActionOptions: () => options,
+        setActionOptions: vi.fn(),
+        anchoredOptions,
+        options,
+      };
+    };
+
     it('creates a map event for a direct action when coordinates are provided', () =>
     {
       const engine = new JABS_Engine();
@@ -2723,11 +2744,69 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
       engine.buildActionEventData = vi.fn(() => eventData);
       engine.addJabsActionToMap = vi.fn();
       engine.addActionEvent = vi.fn();
-      const action = { isDirectAction: () => true };
+      const action = buildAnchorableAction(true);
 
       engine.handleActionGeneration('caster', action, 3, 4);
 
       expect(engine.addJabsActionToMap).toHaveBeenCalledWith(eventData, action);
+    });
+
+    it('anchors a direct action to the tile it was generated at', () =>
+    {
+      // Arrange- the whole point of the anchor: a <directLock> action resolves its tile live at
+      // fire time and has no decision-time location, so unless generation records the tile here
+      // the per-frame sprite sync reads the empty location as "never resolved" and body-anchors
+      // the hitbox to the caster instead.
+      const engine = new JABS_Engine();
+      engine.buildActionEventData = vi.fn(() => ({ id: 'event-data' }));
+      engine.addJabsActionToMap = vi.fn();
+      engine.addActionEvent = vi.fn();
+      const action = buildAnchorableAction(true);
+
+      // Act
+      engine.handleActionGeneration('caster', action, 3, 4);
+
+      // Assert- the copy carrying the generated tile is what lands back on the action.
+      expect(action.setActionOptions).toHaveBeenCalledWith(action.anchoredOptions);
+      const [ [ anchor ] ] = action.options.withLocation.mock.calls;
+      expect(anchor.getX()).toBe(3);
+      expect(anchor.getY()).toBe(4);
+    });
+
+    it('does not anchor a direct action that resolved no coordinates', () =>
+    {
+      // Arrange- a direct action with no tile is the caster-glue case (forced guard and counter
+      // skills), which spawns on the caster and must keep following them. Anchoring it would
+      // pin the hitbox to wherever the caster happened to be standing at generation.
+      const engine = new JABS_Engine();
+      engine.buildActionEventData = vi.fn();
+      engine.addJabsActionToMap = vi.fn();
+      engine.addActionEvent = vi.fn();
+      const action = buildAnchorableAction(true);
+
+      // Act
+      engine.handleActionGeneration('caster', action, null, null);
+
+      // Assert
+      expect(action.setActionOptions).not.toHaveBeenCalled();
+    });
+
+    it('does not anchor a non-direct action given coordinates', () =>
+    {
+      // Arrange- the near-miss sibling of the anchoring case: identical coordinates, only the
+      // direct flag flipped. A projectile travels under its own move route and must never have
+      // a tile stamped onto it.
+      const engine = new JABS_Engine();
+      engine.buildActionEventData = vi.fn(() => ({ id: 'event-data' }));
+      engine.addJabsActionToMap = vi.fn();
+      engine.addActionEvent = vi.fn();
+      const action = buildAnchorableAction(false);
+
+      // Act
+      engine.handleActionGeneration('caster', action, 3, 4);
+
+      // Assert
+      expect(action.setActionOptions).not.toHaveBeenCalled();
     });
 
     it('does not create a map event for a direct action with no coordinates, but still tracks it', () =>

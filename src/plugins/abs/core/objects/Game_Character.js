@@ -382,6 +382,23 @@ Game_Character.prototype.setLootNeedsRemoving = function(needsRemoving = true)
 {
   this._j._abs._loot._needsRemoving = needsRemoving;
 };
+
+/**
+ * Places this loot character at the given continuous map coordinates.
+ *
+ * Both coordinate pairs are written because vanilla treats a disagreement between them as "this
+ * character is mid-step" and spends {@link Game_CharacterBase#updateMove} dragging the real pair
+ * back toward the logical one- which would undo a magnet's pull every frame it applied it.
+ * @param {number} x The continuous x coordinate to place this loot at.
+ * @param {number} y The continuous y coordinate to place this loot at.
+ */
+Game_Character.prototype.setLootPosition = function(x, y)
+{
+  this.setRealX(x);
+  this.setRealY(y);
+  this.setX(x);
+  this.setY(y);
+};
 //endregion JABS loot
 
 /**

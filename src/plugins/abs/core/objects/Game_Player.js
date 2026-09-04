@@ -1,5 +1,6 @@
 //region Game_Player
 import JABS_Battler from '../models/JABS_Battler.js';
+import JABS_LootDrop from '../models/JABS_LootDrop.js';
 /**
  * While JABS is enabled, don't try to interact with events if they are enemies.
  */
@@ -103,16 +104,19 @@ Game_Player.prototype.refresh = function()
 };
 
 /**
+ * Extends {@link #update}.<br/>
  * Checks whether or not the player is picking up loot drops.
  */
-J.ABS.Aliased.Game_Player.set('updateMove', Game_Player.prototype.updateMove);
-Game_Player.prototype.updateMove = function()
+J.ABS.Aliased.Game_Player.set('update', Game_Player.prototype.update);
+Game_Player.prototype.update = function(sceneActive)
 {
   // perform original logic.
-  J.ABS.Aliased.Game_Player.get('updateMove')
-    .call(this);
+  J.ABS.Aliased.Game_Player.get('update')
+    .call(this, sceneActive);
 
-  // monitor for loot while moving about as the player.
+  // loot is monitored on every frame the player exists rather than only on frames they are
+  // walking. a drop being drawn inward has to keep travelling after the player stops, and a
+  // player standing still on top of a drop has to be able to collect it.
 
   // TODO: lift this to Game_Character or something if wanting others to collect loot.
   this.checkForLoot();
@@ -129,11 +133,114 @@ Game_Player.prototype.checkForLoot = function()
   const lootDrops = $gameMap.getJabsLootDrops();
 
   // make sure we have any loot to work with before processing.
-  if (lootDrops.length)
-  {
-    // process the loot collection.
-    this.processLootCollection(lootDrops);
-  }
+  if (!lootDrops.length) return;
+
+  // draw nearby loot inward before asking what has arrived, so anything that lands this frame is
+  // collected this frame rather than sitting on top of the player for one extra tick.
+  this.processLootMagnetism(lootDrops);
+
+  // process the loot collection.
+  this.processLootCollection(lootDrops);
+};
+
+/**
+ * Draws every nearby loot drop toward the player.
+ * @param {Game_Event[]} lootDrops The list of all loot drops.
+ */
+Game_Player.prototype.processLootMagnetism = function(lootDrops)
+{
+  // resolve the radius once for the whole sweep. it is derived from every note source on the
+  // leader- actor, class, equips, states - which is far too much work to repeat per drop.
+  const radius = this.getLootMagnetRadius();
+
+  // a radius of zero draws nothing inward; walking onto a drop still collects it.
+  if (radius <= 0) return;
+
+  // pull each drop that is close enough to be claimed.
+  lootDrops.forEach(lootDrop => this.magnetizeLoot(lootDrop, radius), this);
+};
+
+/**
+ * Gets the distance in tiles from which the player draws loot toward themselves.
+ * @returns {number}
+ */
+Game_Player.prototype.getLootMagnetRadius = function()
+{
+  // only the leader ever collects loot, so only the leader's gear and states widen the reach.
+  return $jabsEngine.getPlayer1()
+    .getBattler()
+    .getLootMagnetRadius();
+};
+
+/**
+ * Draws a single loot drop one frame's worth of distance toward the player.
+ * @param {Game_Event} lootDrop The event representing the loot drop.
+ * @param {number} radius The player's current loot magnet radius, in tiles.
+ */
+Game_Player.prototype.magnetizeLoot = function(lootDrop, radius)
+{
+  // loot already on its way off the map is not worth chasing.
+  if (lootDrop.isErased()) return;
+
+  // grab the underlying loot drop for its lifecycle state.
+  const jabsLootDrop = lootDrop.getJabsLoot();
+
+  // a drop that already arrived stays put while it finishes being removed.
+  if (jabsLootDrop.isCollected()) return;
+
+  // measure the gap through the map's own deltas so a looping map does not read the short way
+  // around as an entire map's worth of distance.
+  const dx = $gameMap.deltaX(this.realX(), lootDrop.realX());
+  const dy = $gameMap.deltaY(this.realY(), lootDrop.realY());
+  const distance = Math.hypot(dx, dy);
+
+  // out of reach, so leave it bobbing where it landed.
+  if (distance > radius) return;
+
+  // claim it the instant it comes into range- that is what stops its expiration timer, and it
+  // has to happen even for a drop already close enough to skip the movement below.
+  jabsLootDrop.beginWhizzing();
+
+  // already on top of the player; collection takes it from here, and dividing by this distance
+  // to build a direction would not survive the arithmetic anyway.
+  if (distance <= JABS_LootDrop.arrivalDistance()) return;
+
+  // move it, then let the next frame re-measure.
+  const [ nextX, nextY ] = this.resolveMagnetizedLootPosition(lootDrop, dx, dy, distance, radius);
+  lootDrop.setLootPosition(nextX, nextY);
+};
+
+/**
+ * Resolves where a loot drop being drawn inward sits after one frame of travel.
+ *
+ * Speed rises as the gap closes rather than staying flat, so a drop visibly snaps home at the end
+ * instead of drifting the last half tile. The curve is derived from the current distance rather
+ * than accumulated onto the drop, which keeps the drop free of per-frame velocity state.
+ * @param {Game_Event} lootDrop The event representing the loot drop.
+ * @param {number} dx The x distance from the drop to the player, in tiles.
+ * @param {number} dy The y distance from the drop to the player, in tiles.
+ * @param {number} distance The straight-line gap between the two, in tiles.
+ * @param {number} radius The player's current loot magnet radius, in tiles.
+ * @returns {[number, number]} The `[x, y]` the drop should occupy next frame.
+ */
+Game_Player.prototype.resolveMagnetizedLootPosition = function(lootDrop, dx, dy, distance, radius)
+{
+  // 0 at the very edge of the radius, approaching 1 as the drop arrives.
+  const closeness = 1 - (distance / radius);
+
+  // the configured rim speed, scaled up by however close the drop already is.
+  const { magnetSpeed, magnetAcceleration } = J.ABS.Metadata.Loot;
+  const speed = magnetSpeed * (1 + (magnetAcceleration * closeness));
+
+  // never travel further than the gap itself, so a fast drop lands on the player instead of
+  // sailing past and being dragged back next frame.
+  const step = Math.min(speed, distance);
+
+  // convert the gap into a unit direction, then walk that far along it.
+  const nextX = lootDrop.realX() + ((dx / distance) * step);
+  const nextY = lootDrop.realY() + ((dy / distance) * step);
+
+  return [ nextX, nextY ];
 };
 
 /**
@@ -234,8 +341,15 @@ Game_Player.prototype.pickupLootCollection = function(lootCollected)
  */
 Game_Player.prototype.isTouchingLoot = function(lootDrop)
 {
-  const distance = $gameMap.distance(lootDrop._realX, lootDrop._realY, this.realX(), this.realY());
-  return distance <= J.ABS.Metadata.LootPickupRange;
+  // measured euclidean rather than through the engine's own `distance`, which is manhattan- a
+  // diamond-shaped absorption zone around a round icon is exactly the mismatch the magnet exists
+  // to remove, and at this scale it would refuse anything sitting diagonally underfoot.
+  const dx = $gameMap.deltaX(this.realX(), lootDrop.realX());
+  const dy = $gameMap.deltaY(this.realY(), lootDrop.realY());
+  const distance = Math.hypot(dx, dy);
+
+  // this asks "has it arrived", not "is it in reach"- reach is the magnet radius' job.
+  return distance <= JABS_LootDrop.arrivalDistance();
 };
 
 /**
@@ -281,6 +395,10 @@ Game_Player.prototype.storeOnPickup = function(lootData)
  */
 Game_Player.prototype.removeLoot = function(lootEvent)
 {
+  // the drop has been granted, so retire it from the lifecycle before flagging its removal.
+  lootEvent.getJabsLoot()
+    .markCollected();
+
   lootEvent.setLootNeedsRemoving(true);
   $jabsEngine.requestClearLoot = true;
 };
