@@ -1,5 +1,25 @@
 //region JABS_AiManager
 /**
+ * True when the game has reached the point where random affixes are allowed to roll.
+ *
+ * The switch is read at spawn time rather than cached, because the whole purpose of the gate is that
+ * a story event flips it partway through a playthrough. A spawn that already happened keeps whatever
+ * it rolled- affixes are decided once, when a battler is built from its event.
+ *
+ * A configured switch of zero means the project never opted into gating, so the answer is always yes.
+ * @returns {boolean}
+ */
+JABS_AiManager.isPassiveAffixRngUnlocked = function()
+{
+  const gateSwitchId = J.PASSIVE.EXT.AFFIX.Metadata.rngEnabledSwitch;
+
+  // no switch chosen means no gate, which is what every project had before the gate existed.
+  if (gateSwitchId === 0) return true;
+
+  return $gameSwitches.value(gateSwitchId);
+};
+
+/**
  * True when prefix affix RNG is blocked for this spawn (enemy note or event comments).
  * @param {Game_Event} character Spawning map event.
  * @param {RPG_Enemy} enemyData Database enemy row.
@@ -7,6 +27,9 @@
  */
 JABS_AiManager.shouldBlockPassivePrefixRng = function(character, enemyData)
 {
+  // the story gate outranks everything below it: until it opens, no spawn rolls anything.
+  if (JABS_AiManager.isPassiveAffixRngUnlocked() === false) return true;
+
   // database-level master switch: both affix slots refuse RNG when this tag is present.
   if (enemyData.noRngPassives) return true;
 
@@ -28,6 +51,9 @@ JABS_AiManager.shouldBlockPassivePrefixRng = function(character, enemyData)
  */
 JABS_AiManager.shouldBlockPassiveSuffixRng = function(character, enemyData)
 {
+  // the same story gate the prefix slot answers to; both pools open at the same moment.
+  if (JABS_AiManager.isPassiveAffixRngUnlocked() === false) return true;
+
   // same master switch as prefix — one tag on the enemy row turns off both random affix pools.
   if (enemyData.noRngPassives) return true;
 
@@ -58,9 +84,9 @@ JABS_AiManager.postConvertMutate = function(battler, jabsBattler)
   const character = jabsBattler.getCharacter();
   const passiveStateIds = character.getPassiveStateIds();
 
-  // check if the enemy has any explicit affixes.
-  const hasExplicitPassives = passiveStateIds.length > 0;
-  const hasExplicitAffixes = hasExplicitPassives && passiveStateIds
+  // check if the enemy has any explicit affixes. an empty list needs no length check of its own-
+  // some() over nothing is already false, so a guard in front of it could only ever agree with it.
+  const hasExplicitAffixes = passiveStateIds
     .some(id => J.PASSIVE.EXT.AFFIX.Metadata.isAffixStateId(id));
 
   // check if the event had any explicit state ids.

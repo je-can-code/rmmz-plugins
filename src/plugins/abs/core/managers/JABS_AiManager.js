@@ -607,6 +607,10 @@ class JABS_AiManager
       // if the battler has no id, it is likely being hidden/transformed to non-battler.
       event.setJabsBattlerUuid(String.empty);
 
+      // a placement waiting out its respawn is dead, so it leaves the map the way dying did rather
+      // than standing around unconvertable.
+      this.eraseRespawningEvent(event);
+
       // null is the default for non-enemies.
       return null;
     }
@@ -690,6 +694,28 @@ class JABS_AiManager
 
     // a record blocks until its scheduled moment has passed; permanence never passes.
     return !JABS_RespawnManager.isDue(record);
+  }
+
+  /**
+   * Erases an event that a respawn record is holding back, so the map is without it until it
+   * returns. The map rebuilds its events on every entry and on every load, so this is undone the
+   * moment the record comes due rather than being something the event carries around.
+   * @param {Game_Event} event The event that was refused conversion.
+   */
+  static eraseRespawningEvent(event)
+  {
+    // the refusal may have been about anything- only a battler placement gets erased for it, since
+    // a record is keyed by event id alone and a page that became a chest still matches.
+    if (!event.isJabsBattler()) return;
+
+    // erasing an already-erased event would bounce back through refresh and land here again.
+    if (event.isErased()) return;
+
+    // only the wait itself takes an event off the map.
+    if (!this.isRespawnPending(event)) return;
+
+    // take it off the map.
+    event.erase();
   }
 
   /**

@@ -39,6 +39,19 @@ class JPassiveAffix_PluginMetadata
      * @type {number}
      */
     this.defaultSuffixChance = parseFloat(this.parsedPluginParameters['default-suffix-chance']);
+
+    /**
+     * The switch that must be ON before random affixes will roll at all.
+     *
+     * Zero means no gate, which is both the default and the behavior every save had before this
+     * existed- a project that never picks a switch is never affected by this field.
+     *
+     * The gate deliberately covers only the random pools. An affix a designer wrote onto an event or
+     * an enemy row is a statement about that specific encounter, and holding those back until a story
+     * beat would silently unmake hand-authored fights.
+     * @type {number}
+     */
+    this.rngEnabledSwitch = parseInt(this.parsedPluginParameters['rng-enabled-switch']);
   }
 
   /**

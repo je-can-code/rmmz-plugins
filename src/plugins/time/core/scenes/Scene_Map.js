@@ -188,13 +188,11 @@ Scene_Map.prototype.onMapLoaded = function()
   {
     // handle the blockage of TIME as-needed.
     this.handleTimeBlock();
-
-    // re-resolve the tone for the map we just arrived on rather than merely flagging that one is
-    // due. the tone the clock is holding belongs to the map we left, and the two maps may disagree-
-    // stepping indoors suppresses the tone entirely, stepping back out restores it. recomputing
-    // here is what makes the flag meaningful; flagging alone would re-apply the old map's tone.
-    $gameTime.updateCurrentTone();
   }
+
+  // this is the first point at which $dataMap is the map being entered, so the tone gets resolved
+  // here for every kind of arrival- transfers, and save loads, which are not transfers.
+  $gameTime.updateCurrentTone();
 
   // perform original logic.
   J.TIME.Aliased.Scene_Map.get("onMapLoaded")

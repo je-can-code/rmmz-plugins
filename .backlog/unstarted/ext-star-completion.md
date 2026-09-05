@@ -32,6 +32,19 @@ Dynamic enemy generation via a separate enemy map is only partly implemented. Th
 - Throw or otherwise fail clearly in DataManager when the required enemy map is absent.
 - Finish any remaining star-flow gaps as a dedicated PR.
 
+## Definition of done
+
+- [ ] `generateStarEnemy` registers spawned enemies through `Game_Map`'s own APIs rather than
+      assigning into `$dataMap.events` directly
+- [ ] the DataManager load path fails loudly and by name when the enemy map is absent, instead of
+      producing an empty battle later
+- [ ] in-game: trigger a star battle from a map event. Every member of the troop appears, every one
+      is attackable, and both outcomes — winning and dying — return control to the map correctly
+- [ ] in-game: trigger a battle with a troop holding the same enemy twice. Two enemies appear. The
+      enemy battle map is keyed by database enemy id, so a duplicate is the case where two troop
+      members claim one key and the second quietly overwrites the first
+- [ ] `bun run hotfix` green
+
 ## Notes
 
 - Overlaps `cross-plugin-prototype-hook-surface.md` (`Scene_Map` / `Game_Map` star hooks vs core ABS).

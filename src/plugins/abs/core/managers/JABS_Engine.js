@@ -964,16 +964,17 @@ class JABS_Engine
     // materializes inside the player.
     if ($gamePlayer.pos(x, y)) return;
 
+    // spend the record before anything is rebuilt. the constructor below refreshes the event, which
+    // reaches the conversion gate- a record still sitting there would take the fresh event straight
+    // back off the map, which is precisely what forceRespawns asks not to happen.
+    $gameSystem.clearRespawnRecord(mapId, eventId);
+
     // rebuild the authored slot with a fresh event; the constructor locates it at the authored
     // coordinates and runs the page refresh that parses its battler comments.
     const freshEvent = new Game_Event(mapId, eventId);
 
     // replace- never null-then-add- so the hole-reuse in addEvent can't steal the authored id.
     $gameMap.setEventByIndex(eventId, freshEvent);
-
-    // the conversion gate would block a lingering record, and a page that stopped declaring a
-    // battler would otherwise leave this record due-and-swept forever; either way it is spent.
-    $gameSystem.clearRespawnRecord(mapId, eventId);
 
     // convert the freshly-rebuilt event into a battler again.
     $gameMap.refreshOneBattler(freshEvent);

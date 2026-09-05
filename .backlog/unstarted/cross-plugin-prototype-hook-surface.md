@@ -73,6 +73,20 @@ The monorepo relies on alias maps and consistent super-call ordering. There is n
 3. For the worst offenders, consider extracting collaborators (`jabs-engine-loot-action-director.md`) rather than growing `JABS_Engine` further.
 4. Optional long-term: formal “subscribe” hooks on `$jabsEngine` for cross-cutting concerns instead of N separate prototype files (high effort; only after inventory exists).
 
+## Definition of done
+
+- [ ] one command emits the inventory: engine class, patching plugin file, method name, alias
+      namespace
+- [ ] the inventory is **generated from source on every run, not committed as a hand-maintained
+      table**. A table someone has to remember to update is the same rot this folder's own README
+      rejected for its inventory, and it decays into a document nobody trusts the first time it is
+      wrong
+- [ ] the report flags every method with more than one overwriter and names the load order that
+      decides which wins
+- [ ] run against today's tree it finds the cases the Source section already lists by hand — that is
+      the only available proof the walker is complete rather than merely quiet
+- [ ] `bun run hotfix` green
+
 ## Notes
 
 - Relates to `game-action-battler-uuid-refactor.md` (identity and serialization touch `Game_Action` and battlers).

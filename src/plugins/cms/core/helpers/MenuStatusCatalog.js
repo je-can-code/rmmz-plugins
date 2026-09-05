@@ -89,6 +89,11 @@ class MenuStatusCatalog
    * A resource with no capacity reads as empty rather than as a division by zero. That is a real
    * state rather than a defensive one- an actor with no magic at all has an mmp of zero, and the row
    * still has to render something.
+   *
+   * The displayed amount is rounded because JABS regen and slip both apply fractional amounts every
+   * tick- that is how a sub-1 regen rate accumulates instead of truncating to nothing- so a battler
+   * genuinely holds 264.5999999999998 hp and would print it. The gauge keeps the exact value; only
+   * the number a player reads is rounded.
    * @param {string} key Which resource this is, being one of 'hp', 'mp', or 'tp'.
    * @param {string} label The abbreviation the database names this resource with.
    * @param {number} current How much of the resource the actor currently holds.
@@ -100,7 +105,7 @@ class MenuStatusCatalog
     return {
       key,
       label,
-      current,
+      current: Math.round(current),
       max,
       rate: max === 0 ? 0 : current / max,
     };

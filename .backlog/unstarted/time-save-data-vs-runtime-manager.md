@@ -28,6 +28,18 @@ On load: hydrate data blob → manager reads/writes through it → `updateCurren
 - Optional: static `Game_Time` API (`Game_Time.update()`, `Game_Time.currentSnapshot()`) with one live DTO on `$gameSystem` — aligns with “one clock per world” without serializing the manager.
 - Remove `globalThis.$gameTime` bootstrap when doing `$` cleanup.
 
+## Definition of done
+
+- [ ] dump the time slice out of a fresh save. It holds calendar fields only — no tick accumulator,
+      no HUD or tone latches, no `_blocked`. That inspection is the item: today the entire manager is
+      what gets written
+- [ ] `$gameTime` is gone from `LEGACY_GLOBAL_THIS_PROPERTIES` in `src/build-tools/verify-ships.js`
+- [ ] in-game: save at a specific hour on a specific day, reload, and both the clock and the screen
+      tone come back right. The tone is the load-bearing half — it proves the tone re-derived from
+      the persisted calendar rather than a manager field that happened to survive
+- [ ] a save written before the change still loads and reports the correct date, once
+- [ ] `bun run hotfix` green
+
 ## Notes
 
 - Pairs with `convert-saved-prototype-models-to-modern-classes.md` (prototype → class + registry).

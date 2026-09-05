@@ -33,6 +33,21 @@ Keep **one session singleton** in `createGameObjects`; behavior unchanged.
 - Update JSDoc and guidelines with “prototype lookup only” rule.
 - Remove `globalThis.$gameEnemies` bootstrap when doing broader `$` cleanup; shrink verify allowlist.
 
+## Definition of done
+
+- [ ] the class and its global carry the chosen factory name, and
+      `grep -rn 'gameEnemies' src/plugins/ --include=*.js` returns nothing outside `_annotations.js`
+      changelog text
+- [ ] the old name is gone from `LEGACY_GLOBAL_THIS_PROPERTIES` in `src/build-tools/verify-ships.js`
+- [ ] the PR names every call site it touched and says which category each one was: a stat lookup, a
+      preview, or a dummy caster. The audit **is** the item — the rename only pays off if it turns
+      out nobody was treating a cached row as a live map battler, and that answer has to be written
+      down rather than assumed
+- [ ] the class JSDoc states the prototype-lookup-only rule in its summary, not in a trailing note
+- [ ] in-game: open the Monsterpedia and a CMS skill detail, the two heaviest consumers. Stats render
+      exactly as before
+- [ ] `bun run hotfix` green
+
 ## Notes
 
 - Low urgency; high clarity payoff for Omnipedia, CMS previews, and new contributors.

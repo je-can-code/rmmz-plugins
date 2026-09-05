@@ -56,12 +56,33 @@
  * - Events (Comment commands on the pfage that spawns the enemy)
  *
  * POLICY / PRECEDENCE:
+ *  (0) If the "Random Affix Switch" parameter names a switch and that switch
+ *      is OFF, no random affix rolling occurs at all. Explicit affixes below
+ *      are unaffected by it.
  *  (1) If the event has an explicit `<passive:[...]>` list that contains any
  *      affix ids, then that list is applied and no random affix rolling
  *      occurs.
  *  (2) Otherwise, prefix and suffix are rolled independently by chance + pool.
  *  (3) Event comment overrides beat enemy note overrides, which beat the
  *      plugin defaults.
+ *
+ * ----------------------------------------------------------------------------
+ * GATING RANDOM AFFIXES BEHIND A SWITCH
+ * Have you ever wanted affixes to not exist yet? Perhaps the world is supposed
+ * to be ordinary until the story says otherwise, and an early rat wearing a
+ * suffix would give the whole thing away. Well now you can hold them back! Pick
+ * a switch in the "Random Affix Switch" plugin parameter, and no random affix
+ * rolls until that switch is ON.
+ *
+ * NOTES:
+ * - Leaving the parameter at 0 means no gate at all, which is how this plugin
+ *   behaved before the parameter existed. An unset switch changes nothing.
+ * - The gate covers ONLY the random pools. An affix written onto an event or
+ *   an enemy is a statement about that specific encounter, and those are
+ *   applied whether the switch is on or off.
+ * - The switch is read when a battler spawns. Enemies already standing on the
+ *   map when the switch flips keep whatever they rolled, so put the story
+ *   event somewhere the player leaves the map afterward.
  *
  * ----------------------------------------------------------------------------
  * BLOCKING RANDOM AFFIXES
@@ -246,6 +267,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Random affix rolling can be held behind a switch, so a world can stay ordinary
+ *    until the story says otherwise. Affixes written onto an event or an enemy are a
+ *    statement about that encounter and are applied regardless.
  * - 1.1.1
  *    The tier stripe colour resolver no longer tests for an empty string on top of
  *    testing the value itself. String.empty is falsy, so the first half of that
@@ -284,5 +309,12 @@
  * @text Default Suffix Affix Chance
  * @desc Percent chance to roll a random suffix affix when the slot is not blocked and no override applies.
  * @default 8
+ *
+ * @param rng-enabled-switch
+ * @parent parentConfigPassiveAffix
+ * @type switch
+ * @text Random Affix Switch
+ * @desc The switch that must be ON for random affixes to roll. Set to 0 to always roll. Authored affixes ignore this.
+ * @default 0
  */
 //endregion annotations

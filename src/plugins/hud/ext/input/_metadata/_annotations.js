@@ -34,6 +34,10 @@
  * slot/cooldown/cost data for display.
  * ============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Player interference is now resolved by the shared resolver in J-HUD instead of
+ *    by this frame's own test against the player's screen position, which had this
+ *    frame's corner written into it.
  * - 1.2.0
  *    Cooldown overlay icon: a configurable icon renders over skill slots that
  *    are currently on cooldown, making unavailability obvious at a glance.

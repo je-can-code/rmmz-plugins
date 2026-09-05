@@ -1,5 +1,5 @@
 //region plugins/passive/_component/j-passive-affix.test.js
-import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import {
   installPassiveHostGlobals,
@@ -184,6 +184,146 @@ describe('J-Passive-Affix (direct src import)', () =>
       expect(result).toBe(true);
     });
   });
+
+  describe('JABS_AiManager.isPassiveAffixRngUnlocked', () =>
+  {
+    /**
+     * The real metadata, put back by hand after every test in this block.
+     *
+     * Assigning over a bare-global plugin object leaks into later tests in the same file, so the
+     * restore is explicit rather than left to `restoreAllMocks`.
+     * @type {object}
+     */
+    let realMetadata;
+
+    /**
+     * The switch id these tests gate on, chosen away from any id another test uses.
+     * @type {number}
+     */
+    const GATE_SWITCH_ID = 42;
+
+    /**
+     * A neighbouring switch that must never be the one consulted.
+     * @type {number}
+     */
+    const DECOY_SWITCH_ID = 43;
+
+    beforeEach(() =>
+    {
+      realMetadata = globalThis.J.PASSIVE.EXT.AFFIX.Metadata;
+      globalThis.$gameSwitches.setValue(GATE_SWITCH_ID, false);
+      globalThis.$gameSwitches.setValue(DECOY_SWITCH_ID, false);
+    });
+
+    afterEach(() =>
+    {
+      globalThis.J.PASSIVE.EXT.AFFIX.Metadata = realMetadata;
+    });
+
+    /**
+     * Points the live metadata at a gate switch.
+     * @param {number} switchId The switch the gate should consult.
+     */
+    const gateOn = switchId =>
+    {
+      globalThis.J.PASSIVE.EXT.AFFIX.Metadata = buildCustomMetadata({
+        'default-prefix-chance': '33',
+        'default-suffix-chance': '33',
+        'rng-enabled-switch': `${switchId}`,
+      });
+    };
+
+    it('is unlocked when no gate switch was configured', () =>
+    {
+      // Arrange: zero is the shipped default, and means the project never opted into gating.
+      gateOn(0);
+
+      // Act
+      const result = globalThis.JABS_AiManager.isPassiveAffixRngUnlocked();
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('is locked while the configured switch is off', () =>
+    {
+      // Arrange: the decoy is off too, so nothing can pass by reading the wrong id.
+      gateOn(GATE_SWITCH_ID);
+
+      // Act
+      const result = globalThis.JABS_AiManager.isPassiveAffixRngUnlocked();
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('is unlocked once the configured switch is on', () =>
+    {
+      // Arrange: only the gate switch is flipped, so reading its neighbour would still answer false.
+      gateOn(GATE_SWITCH_ID);
+      globalThis.$gameSwitches.setValue(GATE_SWITCH_ID, true);
+
+      // Act
+      const result = globalThis.JABS_AiManager.isPassiveAffixRngUnlocked();
+
+      // Assert
+      expect(result).toBe(true);
+    });
+
+    it('stays locked when a different switch is the one that got flipped', () =>
+    {
+      // Arrange: the story flipped something else entirely.
+      gateOn(GATE_SWITCH_ID);
+      globalThis.$gameSwitches.setValue(DECOY_SWITCH_ID, true);
+
+      // Act
+      const result = globalThis.JABS_AiManager.isPassiveAffixRngUnlocked();
+
+      // Assert
+      expect(result).toBe(false);
+    });
+
+    it('blocks prefix rolls for an otherwise-eligible enemy while locked', () =>
+    {
+      // Arrange: an enemy carrying no blocking tags at all, so the gate is the only thing left.
+      gateOn(GATE_SWITCH_ID);
+      const enemyData = {
+        noRngPassives: false,
+        noRngPrefixes: false,
+      };
+      const character = { eventCommentsDisablePassiveAffixPrefixRng: () => false };
+
+      // Act
+      const blockedWhileLocked = globalThis.JABS_AiManager.shouldBlockPassivePrefixRng(character, enemyData);
+      globalThis.$gameSwitches.setValue(GATE_SWITCH_ID, true);
+      const blockedWhileUnlocked = globalThis.JABS_AiManager.shouldBlockPassivePrefixRng(character, enemyData);
+
+      // Assert: the same enemy on both sides of the switch proves the gate did it.
+      expect(blockedWhileLocked).toBe(true);
+      expect(blockedWhileUnlocked).toBe(false);
+    });
+
+    it('blocks suffix rolls for an otherwise-eligible enemy while locked', () =>
+    {
+      // Arrange
+      gateOn(GATE_SWITCH_ID);
+      const enemyData = {
+        noRngPassives: false,
+        noRngSuffixes: false,
+      };
+      const character = { eventCommentsDisablePassiveAffixSuffixRng: () => false };
+
+      // Act
+      const blockedWhileLocked = globalThis.JABS_AiManager.shouldBlockPassiveSuffixRng(character, enemyData);
+      globalThis.$gameSwitches.setValue(GATE_SWITCH_ID, true);
+      const blockedWhileUnlocked = globalThis.JABS_AiManager.shouldBlockPassiveSuffixRng(character, enemyData);
+
+      // Assert
+      expect(blockedWhileLocked).toBe(true);
+      expect(blockedWhileUnlocked).toBe(false);
+    });
+  });
+
 
   describe('J.PASSIVE.EXT.AFFIX.Helpers.resolvePassiveTierStripeColorHex', () =>
   {

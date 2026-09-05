@@ -26,6 +26,19 @@ Refinement already pushes traits and math onto equipment. A **socketing** layer 
 - **Interop**: avoid fighting J-SDP or vanilla param curves—socket bonuses should be explicit additive/multiplicative channels documented in plugin help.
 - Vitest or fixtures for socket apply/remove and save round-trip.
 
+## Definition of done
+
+- [ ] `src/plugins/jafting/ext/socket/` exists with its own vite config, and `bun run hotfix` is
+      green
+- [ ] every notetag the extension introduces has an entry in `docs/notetag-reference.md`, in the
+      same PR
+- [ ] in-game: take an eligible piece, open the socket UI, insert a gem, and the wearer's parameters
+      change by the documented amount — then remove it and they change back
+- [ ] in-game: socket a gem, save, reload. The socket and its contents survived, which is the proof
+      the runtime model actually registered with `SerializableRegistry` rather than merely existing
+- [ ] the salvage interaction in Notes is decided and written into the plugin help, even if the
+      answer is "sockets are destroyed"
+
 ## Notes
 
 - If salvage (`jafting-ext-salvage.md`) lands first, define policy for whether sockets are destroyed, refunded, or preserved when salvaging.

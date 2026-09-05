@@ -201,6 +201,10 @@
  *
  * =============================================================================
  * CHANGELOG:
+ * - 1.2.2
+ *    Loading a save on a map tagged <noToneChange> keeps that map's tone. The tone
+ *    was resolved only on transfer, and a load is not a transfer, so the screen
+ *    reverted to the clock's ordinary tone until the player left and came back.
  * - 1.2.1
  *    Fixed time choice conditionals not hiding branches inside called common
  *    events.

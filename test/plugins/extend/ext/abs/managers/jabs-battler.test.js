@@ -34,7 +34,7 @@ describe('JABS_Battler ext/extend-abs augments (direct src import)', () =>
       // Arrange
       const battler = new JABS_Battler();
       globalThis.J.EXTEND.EXT.ABS.Aliased.JABS_Battler.get('aiSkillFilter').mockReturnValue(true);
-      const skill = { isSkillExtender: false };
+      const skill = { isExtension: false };
 
       // Act
       battler.aiSkillFilter(skill);
@@ -48,7 +48,7 @@ describe('JABS_Battler ext/extend-abs augments (direct src import)', () =>
       // Arrange
       const battler = new JABS_Battler();
       globalThis.J.EXTEND.EXT.ABS.Aliased.JABS_Battler.get('aiSkillFilter').mockReturnValue(false);
-      const skill = { isSkillExtender: false };
+      const skill = { isExtension: false };
 
       // Act
       const result = battler.aiSkillFilter(skill);
@@ -62,7 +62,7 @@ describe('JABS_Battler ext/extend-abs augments (direct src import)', () =>
       // Arrange
       const battler = new JABS_Battler();
       globalThis.J.EXTEND.EXT.ABS.Aliased.JABS_Battler.get('aiSkillFilter').mockReturnValue(true);
-      const skill = { isSkillExtender: true };
+      const skill = { isExtension: true };
 
       // Act
       const result = battler.aiSkillFilter(skill);
@@ -76,7 +76,7 @@ describe('JABS_Battler ext/extend-abs augments (direct src import)', () =>
       // Arrange
       const battler = new JABS_Battler();
       globalThis.J.EXTEND.EXT.ABS.Aliased.JABS_Battler.get('aiSkillFilter').mockReturnValue(true);
-      const skill = { isSkillExtender: false };
+      const skill = { isExtension: false };
 
       // Act
       const result = battler.aiSkillFilter(skill);

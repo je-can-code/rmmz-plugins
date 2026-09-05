@@ -90,6 +90,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    Forced displacement - knockback, pull-forward, gap-close - is now clamped by the
+ *    same collision predicate the character's own movement obeys. J-ABS clamps it on
+ *    the tile grid, which under pixel movement reads a tile the body is not standing
+ *    in, and could park a battler inside terrain that then refused every way out.
  * - 1.0.8
  *    Corrected PLUGIN_NAME from J-ABS-Pixelistics to J-Pixel-ABS, matching the
  *    name the ship has always been built and shipped under. The old spelling

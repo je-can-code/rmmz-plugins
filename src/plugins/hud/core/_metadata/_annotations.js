@@ -75,6 +75,12 @@
  * plugin-command driven.
  * ============================================================================
  * CHANGELOG:
+ * - 2.3.0
+ *    Added HudInterferenceResolver, which decides how far a frame fades while the
+ *    player is standing on top of it. The geometry belongs to the family rather than
+ *    to any one frame: each used to carry its own inequality against the player's
+ *    screen position, which encoded that frame's corner and went quietly wrong the
+ *    moment somebody moved it.
  * - 2.2.0
  *    Routed the _hud namespace into its own save section, so HUD state lands
  *    in systems/hud.json rather than inside the system blob.

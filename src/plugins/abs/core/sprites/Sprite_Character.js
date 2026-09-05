@@ -1436,11 +1436,15 @@ Sprite_Character.prototype.handleLootSetup = function()
 
 /**
  * Whether or not we've drawn the child sprites that make up the loot.
+ *
+ * This asks the loot sprite itself rather than counting children, because the child list is no
+ * longer ours alone- every character sprite is built with an overlay layer already attached, so a
+ * count would answer "yes" for a drop whose icon has never been made.
  * @returns {boolean} True if we've already drawn the loot sprites, false otherwise.
  */
 Sprite_Character.prototype.hasLootDrawn = function()
 {
-  return this.children.length > 0;
+  return this.getLootSprite() !== null;
 };
 
 /**
@@ -1476,7 +1480,7 @@ Sprite_Character.prototype.getLootSprite = function()
 
 /**
  * Sets the loot sprite associated with this character.
- * @param {Sprite_Icon} sprite The icon sprite for this loot.
+ * @param {Sprite_Icon|null} sprite The icon sprite for this loot, or null once it has been removed.
  */
 Sprite_Character.prototype.setLootSprite = function(sprite)
 {
@@ -1567,14 +1571,23 @@ Sprite_Character.prototype.performLootDurationCountdown = function()
 };
 
 /**
- * Deletes all child loot sprites from the screen.
+ * Removes this character's loot icon from the screen.
+ *
+ * Only the icon goes. The character's other children- the overlay layer chief among them- belong to
+ * whoever attached them, and clearing the whole list would take those down with it. `removeChild` is
+ * used rather than editing the array directly so PIXI's own parent bookkeeping stays honest.
  */
 Sprite_Character.prototype.deleteLootSprite = function()
 {
-  if (this.children.length > 0)
-  {
-    this.children.splice(0, this.children.length);
-  }
+  const lootSprite = this.getLootSprite();
+
+  // nothing to remove if the icon was never built.
+  if (lootSprite === null) return;
+
+  this.removeChild(lootSprite);
+
+  // drop the reference too, so the drop reads as undrawn rather than as holding a detached sprite.
+  this.setLootSprite(null);
 };
 
 /**

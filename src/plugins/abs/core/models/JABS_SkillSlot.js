@@ -536,13 +536,18 @@ class JABS_SkillSlot
    * Supports retrieving combo skills via targetId.
    * Supports skill extended data via J-Extend.
    * @param {Game_Actor|null} user The user to get extended skill data for.
-   * @param {number|null} targetId The target id to get skill data for.
+   * @param {number|null} targetId The target id to get skill data for. Zero is the caller's
+   * "there is no skill" sentinel and yields null, same as an absent id.
    * @returns {RPG_UsableItem|RPG_Skill|null}
    */
   data(user = null, targetId = this.id)
   {
-    // if there is no target, then return null.
-    if (targetId === null) return null;
+    // a null target means the caller had no id to look up; a zero target means it looked and
+    // found none- Game_Battler#getResolvedSkillId hands back 0 whenever the battler carries no
+    // slot under that key. that gap is real: the HUD resolves an icon inside a bitmap load
+    // promise, so the world can move under it before the callback runs. both readings mean
+    // "no skill here", and every caller already handles the null.
+    if (targetId === null || targetId === 0) return null;
 
     // if this slot is empty, then return null.
     if (this.isEmpty()) return null;

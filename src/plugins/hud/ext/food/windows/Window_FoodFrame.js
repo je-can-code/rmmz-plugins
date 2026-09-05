@@ -167,6 +167,9 @@ class Window_FoodFrame
 
     // refresh the food chain display each frame so the bar drains in real time.
     this.refresh();
+
+    // fade toward or away from the player standing on top of this frame.
+    this.alpha = HudInterferenceResolver.nextFrameAlpha(this);
   }
 
   /**

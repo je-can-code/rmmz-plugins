@@ -8,6 +8,8 @@ import './managers/HudManager.js';
 
 import './managers/DataManager.js';
 
+import './services/HudInterferenceResolver.js';
+
 import './windows/Window_Frame.js';
 
 import './scenes/Scene_Map.js';

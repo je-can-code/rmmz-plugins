@@ -35,6 +35,18 @@ Future: tag controllers with `playerSlot` / battler uuid when `getPlayer2()` exi
 - Document “primary controller” convention in J-ABS input ext metadata / guidelines.
 - Audit charge ext and HUD input paths that assume `$jabsEngine.getPlayer1()` — unchanged for v1, but note co-op extension point.
 
+## Definition of done
+
+- [ ] `grep -rn '\$jabsController1' src/plugins/ --include=*.js` returns nothing outside
+      `_annotations.js` changelog text, and the name is gone from `LEGACY_GLOBAL_THIS_PROPERTIES`
+- [ ] the input extension's `JABS_Engine.updateInput` iterates `JABS_InputAdapter.controllers`
+      rather than naming a global
+- [ ] in-game: every combat input still fires — attack, dodge, guard, and each of the four skill
+      slots
+- [ ] in-game: cycle the party. This is the case the global existed for, since party cycle rebinds
+      the controller's battler; the new leader must respond to input and the old one must stop
+- [ ] `bun run hotfix` green
+
 ## Notes
 
 - Small/medium refactor; behavior should be identical for single-player.

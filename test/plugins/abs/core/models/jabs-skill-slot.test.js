@@ -442,6 +442,40 @@ describe('JABS_SkillSlot (direct src import)', () =>
       expect(slot.data()).toBeNull();
     });
 
+    it('returns null when the slot is empty but a non-zero targetId was supplied', () =>
+    {
+      // Arrange- the mirror of the zero-targetId case: the caller resolved a real id while this
+      // slot holds nothing. only isEmpty can refuse this one, since the targetId guard passes.
+      const skill = vi.fn(id => ({ id }));
+      const user = { skill };
+      const slot = new JABS_SkillSlot('mainhand', 0);
+
+      // Act
+      const result = slot.data(user, 5);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(skill).not.toHaveBeenCalled();
+    });
+
+    it('returns null when targetId is zero on a populated slot', () =>
+    {
+      // Arrange- getResolvedSkillId returns 0 when the battler has no slot under that key,
+      // which can disagree with a sprite still holding a populated slot of its own. the user
+      // is a real spy so a regression that resolves the skill anyway is visible as a call.
+      const skill = vi.fn(id => ({ id }));
+      const user = { skill };
+      const slot = new JABS_SkillSlot('mainhand', 5);
+
+      // Act
+      const result = slot.data(user, 0);
+
+      // Assert- the slot is deliberately non-empty, so isEmpty cannot be what returns the null.
+      expect(result).toBeNull();
+      expect(slot.isEmpty()).toBe(false);
+      expect(skill).not.toHaveBeenCalled();
+    });
+
     it('returns the item data for an item slot', () =>
     {
       const slot = new JABS_SkillSlot('tool', 7);

@@ -38,6 +38,20 @@ enabling skills to fire at e.g. 74 degrees rather than only the 8 cardinal/diago
 - J-Pixelistics `vectorMoveByAngle` method exists on `Game_CharacterBase` (done as of Phase E).
 - J-ABS `JABS_ActionOptions` extensibility pattern is already in place.
 
+## Definition of done
+
+- [ ] in-game: author a skill with `.setProjectileTravelAngleDegrees(74)` and fire it. The action
+      travels at 74 degrees rather than snapping to the nearest of the eight directions
+- [ ] in-game: stand a target off the dir8 grid along that bearing. It takes the hit — the action's
+      map position has to advance along the angle, or the visual and the collision disagree, which
+      is the specific risk in swapping route stepping for integrated motion
+- [ ] in-game: a skill with no angle set behaves exactly as today, route-driven and dir8
+- [ ] in-game: fire an angled projectile into open space and let it expire, then fire one into a
+      wall. Both clean up, same as a routed action — nothing sticks
+- [ ] unit tests cover the angle-to-delta math, including the four cardinal bearings where the
+      integrated path and the old routed path should agree
+- [ ] `bun run hotfix` green
+
 ## Notes
 
 - This is a non-trivial movement/collision extension; it should be a dedicated PR.

@@ -109,6 +109,23 @@ describe('Bitmap device scaling (direct src import)', () =>
       // Assert.
       expect(bitmap.deviceScale()).toBe(1);
     });
+
+    it('answers an unscaled one for a bitmap built before the augment existed', () =>
+    {
+      // Arrange - `ImageManager._emptyBitmap` is a `new Bitmap(1, 1)` evaluated at the top level of
+      // rmmz_managers.js, so it never runs the aliased initialize and holds no own `_deviceScale`.
+      const preexisting = Object.create(globalThis.Bitmap.prototype);
+      originalInitialize.call(preexisting, 1, 1);
+      delete preexisting._deviceScale;
+
+      // Act.
+      const result = preexisting.width;
+
+      // Assert - a missing scale divides to NaN, which reaches `pivot` and strands the sprite that
+      // wears this bitmap at a NaN world matrix while every visibility flag still reads true.
+      expect(preexisting.deviceScale()).toBe(1);
+      expect(result).toBe(1);
+    });
   });
 
   describe('setDeviceScale', () =>
