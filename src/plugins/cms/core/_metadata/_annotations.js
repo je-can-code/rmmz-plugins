@@ -29,6 +29,9 @@
  * redesign of the native main menu.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Resource amounts in the status list are rounded before being drawn. The gauge
+ *    still fills from the exact value, so only the label changed.
  * - 1.2.0
  *    The menu gold strip is now a currency strip: CurrencyDefinition describes
  *    a currency, registerCoreCurrencies declares gold, and Window_Currencies

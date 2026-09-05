@@ -108,12 +108,23 @@ can fall out of agreement with the first two.
 
 ## Definition of done
 
-- [ ] `src/plugins/omni/ext/stats/` exists with a vite config, and `bun run hotfix` is green
+The ownership question at the top of this file was settled the other way: both stores are
+authoritative for different shapes, and the pedia reads both. Metrics keeps the twenty-six lifetime
+counters in variables so events can branch on them for the Raevula trophy house; the model keeps the
+keyed breakdowns and superlatives, which have no variable form. So the original "no `gameVariables`
+in this ship" check has been replaced- reading them is now the design rather than a violation of it.
+
+- [x] `src/plugins/omni/ext/stats/` exists with a vite config, and `bun run hotfix` is green
+- [x] the ship is at 100% coverage with zero surviving mutants
+      (`bun run mutate src/plugins/omni/ext/stats`)
+- [x] no recording logic lives in a window: every number the detail panel draws arrives finished
+      from `StatistopediaService`, which is where the tests point
 - [ ] in-game: open the Omnipedia, a Statistopedia row sits beside Monsterpedia and Questopedia
-- [ ] in-game: kill something, save, reload, and the counter survived- proving the model persisted
-      rather than a variable being read
-- [ ] `grep -r 'gameVariables' src/plugins/omni/ext/stats/` returns nothing, per the ownership
-      decision above
+- [ ] in-game: press L2/R2 and the section changes, with the strip naming the one you are on
+- [ ] in-game: kill something, save, reload, and the per-enemy tally survived- proving the model
+      persisted rather than a variable being read
+- [ ] in-game: die somewhere, and that map is named as the deadliest place- proving the keyed
+      breakdowns the variables could never have held are the ones being written
 
 ## Notes
 

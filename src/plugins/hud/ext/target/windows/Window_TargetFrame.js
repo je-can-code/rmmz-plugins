@@ -388,6 +388,10 @@ class Window_TargetFrame
 
     // update the window logic.
     this.updateTarget();
+
+    // fade toward or away from the player standing on top of this frame. this rides on top of the
+    // inactivity fade rather than competing with it- that one owns opacity, this one owns alpha.
+    this.alpha = HudInterferenceResolver.nextFrameAlpha(this);
   }
 
   /**

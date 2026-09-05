@@ -24,9 +24,24 @@ export function installPassiveAffixHostGlobals(sandbox = globalThis, pluginParam
   const params = pluginParams ?? {
     'default-prefix-chance': '33',
     'default-suffix-chance': '33',
+    // 0 is the shipped default and means "no story gate", which is the state most tests want.
+    'rng-enabled-switch': '0',
   };
 
   installPluginManagerWithParams(sandbox, 'J-Passive-Affix', params);
+
+  // the affix gate reads a switch when one is configured; the engine owns this global normally.
+  sandbox.$gameSwitches ??= {
+    _data: {},
+    value(switchId)
+    {
+      return this._data[switchId] === true;
+    },
+    setValue(switchId, value)
+    {
+      this._data[switchId] = value;
+    },
+  };
 
   // real RMMZ engine method (rmmz_core.js)- Game_Event#getResolvedPassiveAffixPrefixChance relies on it.
   if (typeof sandbox.Number.prototype.clamp !== 'function')

@@ -1079,8 +1079,122 @@ describe('JABS_AiManager (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('eraseRespawningEvent()', () =>
+  {
+    it('erases a battler placement that is still waiting out its record', () =>
+    {
+      // Arrange
+      globalThis.$gameSystem = {
+        respawnRecord: () => ({ method: 'seconds' }),
+        clearRespawnRecord: vi.fn(),
+      };
+      respawnIsDueMock.mockReturnValue(false);
+      const event = {
+        isJabsBattler: () => true,
+        isErased: () => false,
+        eventId: () => 42,
+        erase: vi.fn(),
+      };
+
+      // Act
+      JABS_AiManager.eraseRespawningEvent(event);
+
+      // Assert
+      expect(event.erase).toHaveBeenCalledTimes(1);
+    });
+
+    it('leaves a non-battler placement alone even while a record names its id', () =>
+    {
+      // Arrange- the record matches this event id, so only the battler check spares it.
+      globalThis.$gameSystem = {
+        respawnRecord: () => ({ method: 'seconds' }),
+        clearRespawnRecord: vi.fn(),
+      };
+      respawnIsDueMock.mockReturnValue(false);
+      const event = {
+        isJabsBattler: () => false,
+        isErased: () => false,
+        eventId: () => 42,
+        erase: vi.fn(),
+      };
+
+      // Act
+      JABS_AiManager.eraseRespawningEvent(event);
+
+      // Assert
+      expect(event.erase).not.toHaveBeenCalled();
+    });
+
+    it('leaves an already-erased placement alone', () =>
+    {
+      // Arrange
+      globalThis.$gameSystem = {
+        respawnRecord: () => ({ method: 'seconds' }),
+        clearRespawnRecord: vi.fn(),
+      };
+      respawnIsDueMock.mockReturnValue(false);
+      const event = {
+        isJabsBattler: () => true,
+        isErased: () => true,
+        eventId: () => 42,
+        erase: vi.fn(),
+      };
+
+      // Act
+      JABS_AiManager.eraseRespawningEvent(event);
+
+      // Assert
+      expect(event.erase).not.toHaveBeenCalled();
+    });
+
+    it('leaves a battler alone when nothing is holding it back', () =>
+    {
+      // Arrange
+      globalThis.$gameSystem = {
+        respawnRecord: () => null,
+        clearRespawnRecord: vi.fn(),
+      };
+      const event = {
+        isJabsBattler: () => true,
+        isErased: () => false,
+        eventId: () => 42,
+        erase: vi.fn(),
+      };
+
+      // Act
+      JABS_AiManager.eraseRespawningEvent(event);
+
+      // Assert
+      expect(event.erase).not.toHaveBeenCalled();
+    });
+  });
+
   describe('convertEventToBattler()', () =>
   {
+    it('takes a refused battler off the map when its respawn record is what refused it', () =>
+    {
+      // Arrange
+      globalThis.$gameSystem = {
+        respawnRecord: () => ({ method: 'seconds' }),
+        clearRespawnRecord: vi.fn(),
+      };
+      respawnIsDueMock.mockReturnValue(false);
+      const event = {
+        isJabsBattler: () => true,
+        isErased: () => false,
+        setJabsBattlerUuid: vi.fn(),
+        eventId: () => 42,
+        erase: vi.fn(),
+      };
+
+      // Act
+      const result = JABS_AiManager.convertEventToBattler(event);
+
+      // Assert
+      expect(result).toBeNull();
+      expect(event.erase).toHaveBeenCalledTimes(1);
+    });
+
     it('clears the jabs battler uuid and returns null when the event is not convertable', () =>
     {
       const event = { isJabsBattler: () => false, setJabsBattlerUuid: vi.fn() };

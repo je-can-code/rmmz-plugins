@@ -34,9 +34,16 @@ changes without permanently reassigning the underlying team id:
   - optional `contexts` scoping (ex: `damage`, `healing`, `aggro`, `targeting`, `alert`)
 - `JABS_TeamRules` gains context-aware methods (or a single `relationship(source, target, context)` resolver).
 
-### Acceptance
+## Definition of done
 
-- Charm and summon mechanics can be implemented without changing the persisted primary team id.
-- Existing team config (`data/config.jabs.json`) remains valid; overlays are optional and do not affect behavior unless
-  set at runtime.
-- No “team set explosion” in call sites; callers still ask `JABS_TeamRules` the relationship question.
+- [ ] an effective-team resolver exists on `JABS_Battler`, and every relationship question still goes
+      through `JABS_TeamRules` — no caller compares raw numeric team ids to work around the overlay
+- [ ] the overlay is runtime-only: set one, save, reload, and the battler is back on its true team.
+      The whole design rests on the primary id staying the persisted truth, so a leak into the save
+      is the failure that matters
+- [ ] unit tests cover the resolver with an overlay on the source, an overlay on the target, and
+      neither
+- [ ] in-game: charm an enemy. Allies stop targeting it, it turns on its former teammates, and when
+      the charm ends both flip back
+- [ ] with no overlay set anywhere, behavior and `data/config.jabs.json` are unchanged — this has to
+      be inert until used

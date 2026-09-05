@@ -1,3 +1,8 @@
+---
+completed: 2026-08-24
+ship: J-Log 3.0.0
+---
+
 # Map log channel registry (one global, three managers)
 
 ## Source
@@ -53,3 +58,18 @@ Optional migration aliases on the registry (`get actionLog()`) or a short deprec
 
 - Does not merge the three feeds into one manager — channels stay separate instances.
 - Pairs with `$` singleton / verify cleanup in guidelines **J namespace bootstrap**.
+
+## Definition of done
+
+- [ ] `src/plugins/log/core/managers/MapLogRegistry.js` exists and owns all three channels
+- [ ] `grep -rn 'actionLogManager\|diaLogManager\|lootLogManager' src/plugins/ --include=*.js`
+      returns nothing outside `_metadata/_annotations.js` changelog text
+- [ ] `LEGACY_GLOBAL_THIS_PROPERTIES` in `src/build-tools/verify-ships.js` lists `$mapLogs` and none
+      of the three old names
+- [ ] in-game: take a hit, read a dialog line, pick up a drop — all three feeds still render on the map
+
+## Resolution
+
+Landed 2026-08-24 in "Replace the three map log globals with one registry" (#82), as a breaking J-Log
+3.0.0 change. Every consuming ship's `_annotations.js` carries the matching changelog line naming the
+globals that went away.

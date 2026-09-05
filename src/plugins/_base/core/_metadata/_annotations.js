@@ -157,6 +157,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.10.1
+ *    Bitmap carries a device scale of 1 on the prototype. The engine builds bitmaps
+ *    while its own scripts are still parsing, before any plugin can alias initialize,
+ *    and such a bitmap answered undefined - which divides into NaN rather than
+ *    throwing, and renders a sprite that reports itself visible while drawing nowhere.
  * - 3.10.0
  *    The renderer now runs at the display's own resolution, and every text surface
  *    rasterizes at it, so glyphs are drawn with the pixels the screen will show them

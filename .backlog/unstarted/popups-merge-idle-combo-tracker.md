@@ -33,6 +33,20 @@ After removing global strike flush on `ComboChainCleared`, **strike merge releas
 3. **Parameters:** caps, whether slip/mitigation/reward touches extend the same streak as strikes or stay separate (policy knobs).
 4. **Tests:** Vitest for streak math / idle boundaries where harness can simulate frame counts and merge ingress without full map scene.
 
+## Definition of done
+
+- [ ] a streak surface exists that a consumer reads without doing frame math of its own, and Chef
+      Adventure can render `COMBO xN` from it alone
+- [ ] unit tests cover the boundaries: the streak increments across merged strikes, survives a gap
+      shorter than `mergeIdleFlushFrames`, and breaks on a gap one frame longer
+- [ ] the policy knobs from Work step 3 are plugin parameters with documented defaults, so whether a
+      slip tick extends a streak is an authored answer rather than an emergent one
+- [ ] in-game: hit an enemy repeatedly, pause past the idle window, hit again — the counter restarts
+      rather than continuing
+- [ ] in-game: two enemies, alternating hits. Their streaks stay independent, which is what makes
+      this per-victim silence rather than a global combo timer
+- [ ] the global strike flush on `ComboChainCleared` is still gone
+
 ## Notes
 
 - Overlaps conceptually with `.backlog/unstarted/popups-combat-session-merge-coalesce.md` (broader merge/session UX); this item is **narrower**: **promote idle-merge timing into an explicit combo-tracker surface** for v1.1.

@@ -383,6 +383,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    The target frame fades while the player is standing on top of it, through the
+ *    shared resolver in J-HUD. This rides on top of the inactivity fade rather than
+ *    competing with it - that one owns opacity, this one owns alpha.
  * - 1.1.0
  *    Target frame now renders the shared dual-row state affliction
  *    presenter from J-HUD core, wired via a new patch file.

@@ -38,11 +38,18 @@ Player-facing skill detail today shows one **Raw Damage** number by evaluating t
 5. **Tests:** parser + formatter fixtures for weapon-band examples (tome baseline, simple ATK−DEF, flat `500 +`, failure cases with `Math.max`).
 6. **Follow-up (optional):** `jmz-data-editor` skill board preview reuses same utility.
 
-## Acceptance
+## Definition of done
 
-- Tome-style formula displays **Scaling** and **Mitigation** coefficient lines in CMS skill detail for the viewing actor.
-- Projected total still matches eval of full formula for the same `a, b, v, p`.
-- Non-conforming formulas degrade gracefully to existing behavior.
+- [ ] `DamageFormulaBreakdown` exists as a hoisted global with unit tests over the fixtures named in
+      Work step 5 — tome baseline, simple ATK−DEF, a flat `500 +` term, and the failure cases
+- [ ] in-game: open the skill detail for a tome skill and read coefficient lines rather than one
+      number, e.g. `5% MMP · 100% MAT · 200% MDF`
+- [ ] in-game: open a skill whose formula sits outside the grammar (anything with `Math.max`) — it
+      falls back to today's single Raw Damage row, with no error text and no console noise
+- [ ] the projected total for a conforming formula still equals a full eval of the same formula
+      against the same `a, b, v, p`, so the breakdown never disagrees with the number beside it
+- [ ] the grammar convention is written down where weapon formulas are authored, so an author knows
+      before writing one whether it will display
 
 ## Notes
 

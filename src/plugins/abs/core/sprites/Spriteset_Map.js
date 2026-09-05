@@ -483,33 +483,27 @@ Spriteset_Map.prototype.removeLootSprite = function (lootEvent)
   // if not found, attempt to resolve by loot uuid to cover reference mismatches.
   if (spriteIndex === -1)
   {
-    // extract the target uuid for matching.
-    const targetLoot = lootEvent.getJabsLoot();
-    const targetUuid = targetLoot
-      ? targetLoot.uuid
-      : null;
+    // extract the target uuid for matching. `uuid` is a method, and reading it without calling it
+    // yields the prototype's function - which compares equal against every other drop's, making
+    // this scan match the first loot sprite on the map and destroy a drop nobody asked about.
+    const targetUuid = lootEvent.getJabsLoot()
+      .uuid();
 
-    // only attempt uuid matching if one exists.
-    if (targetUuid)
+    // scan for a sprite whose underlying loot uuid matches.
+    spriteIndex = this.characterSprites().findIndex(sprite =>
     {
-      // scan for a sprite whose underlying loot uuid matches.
-      spriteIndex = this.characterSprites().findIndex(sprite =>
-      {
-        // get the character associated with this sprite, if any.
-        const character = sprite.character();
+      // get the character associated with this sprite, if any.
+      const character = sprite.character();
 
-        // ensure we have a character and that it is loot.
-        if (!character) return false;
-        if (!character.isJabsLoot()) return false;
+      // ensure we have a character and that it is loot.
+      if (!character) return false;
+      if (!character.isJabsLoot()) return false;
 
-        // retrieve the loot for this character.
-        const loot = character.getJabsLoot();
+      // retrieve the loot for this character and compare identities.
+      const loot = character.getJabsLoot();
 
-        // ensure loot exists and the uuid matches the target.
-        if (!loot) return false;
-        return loot.uuid === targetUuid;
-      });
-    }
+      return loot.uuid() === targetUuid;
+    });
   }
 
   // confirm we did indeed find the sprite's index for removal.

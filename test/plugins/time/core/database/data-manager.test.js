@@ -137,7 +137,7 @@ describe('DataManager ext/time augments (direct src import)', () =>
       expect(FakeGameTime.prototype.initMembers).not.toHaveBeenCalled();
     });
 
-    it('recomputes the screen tone for the hour that was loaded into', () =>
+    it('leaves the screen tone alone, since $dataMap is not yet the map being loaded into', () =>
     {
       // Arrange
       const contents = { time: new FakeGameTime() };
@@ -145,8 +145,10 @@ describe('DataManager ext/time augments (direct src import)', () =>
       // Act
       globalThis.DataManager.extractSaveContents(contents);
 
-      // Assert
-      expect(FakeGameTime.prototype.updateCurrentTone).toHaveBeenCalledTimes(1);
+      // Assert- the tone is resolved by `Scene_Map#onMapLoaded` instead, which is the first point
+      // where the map about to be entered is the one the tone gets asked about.
+      expect(FakeGameTime.prototype.updateCurrentTone).not.toHaveBeenCalled();
+      expect(globalThis.$gameTime).toBe(contents.time);
     });
 
     it('skips backfilling when there was no clock in the save to begin with', () =>

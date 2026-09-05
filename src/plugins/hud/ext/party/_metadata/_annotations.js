@@ -43,6 +43,10 @@
  * for display.
  * ============================================================================
  * CHANGELOG:
+ * - 1.4.0
+ *    Player interference is now resolved by the shared resolver in J-HUD instead of
+ *    by this frame's own test against the player's screen position, which had this
+ *    frame's corner written into it.
  * - 1.3.1
  *    Fixed boot and load failures left behind by the quick menu pare-down:
  *    Scene_Map#createJabsAbsMenu still called the six create-window methods

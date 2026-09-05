@@ -25,6 +25,9 @@
  * Those responsibilities belong to J-ABS-Food.
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    The food frame fades while the player is standing on top of it, through the
+ *    shared resolver in J-HUD.
  * - 1.0.2
  *    Corrected PLUGIN_NAME from J-HUD-FOOD to J-HUD-Food, matching the name the
  *    ship has always been built and shipped under.

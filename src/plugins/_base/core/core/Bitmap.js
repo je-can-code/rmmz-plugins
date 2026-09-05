@@ -44,6 +44,27 @@ Bitmap.prototype.drawText = function(text, x, y, maxWidth, lineHeight, align)
 };
 
 /**
+ * The scale every bitmap holds unless it is deliberately raised to the display's resolution.
+ *
+ * This lives on the prototype rather than only in `initialize`, and the reason is load order. The
+ * engine builds bitmaps while its own scripts are still parsing - `ImageManager._emptyBitmap` is a
+ * `new Bitmap(1, 1)` evaluated at the top level of `rmmz_managers.js`, long before any plugin has
+ * had the chance to alias anything. Such a bitmap never runs the `initialize` below, so it would
+ * carry no `_deviceScale` at all, and the `width` getter divides by whatever that answers.
+ *
+ * Undefined is the worst possible answer to divide by, because the result is `NaN` rather than a
+ * throw: `patternWidth` hands it to `setFrame`, the engine's `_refresh` derives `pivot` from the
+ * frame, and a sprite with a `NaN` pivot composes to a `NaN` world matrix. It then reports itself
+ * visible, opaque and correctly scaled while rendering nowhere at all - which is a genuinely
+ * horrible thing to debug, and was exactly the bug that produced this line.
+ *
+ * A prototype default is what makes that state unreachable. Every bitmap answers 1 from the moment
+ * it exists, and {@link Bitmap.setDeviceScale} shadows it per instance for the ones that grow.
+ * @type {number}
+ */
+Bitmap.prototype._deviceScale = 1;
+
+/**
  * Extends {@link Bitmap.initialize}.<br/>
  * Also establishes the scale at which this bitmap holds its pixels.
  *

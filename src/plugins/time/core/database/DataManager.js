@@ -42,13 +42,6 @@ DataManager.extractSaveContents = function(contents)
   {
     $gameTime = new Game_Time();
     Diagnostics.info(__PLUGIN_NAME__, 'no clock existed in the loaded save file; creating one anew.');
-
-    return;
   }
-
-  // initialization deliberately clears the screen tone, since that is derived display state rather
-  // than something worth trusting from a save. recompute it for the hour we actually loaded into so
-  // the map tints correctly instead of holding whatever tone it happened to boot with.
-  $gameTime.updateCurrentTone();
 };
 //endregion DataManager

@@ -18,6 +18,19 @@ This is **database-ish template data**, not a per-frame game object like `$gameP
 - Remove `globalThis.$actionMap` bootstrap; update call sites to the chosen accessor.
 - Shrink `LEGACY_GLOBAL_THIS_PROPERTIES` in `verify-ships.js` when done.
 
+## Definition of done
+
+- [ ] `grep -rn '\$actionMap' src/plugins/ --include=*.js` returns nothing outside `_annotations.js`
+      changelog text
+- [ ] `$actionMap` is gone from `LEGACY_GLOBAL_THIS_PROPERTIES` in `src/build-tools/verify-ships.js`
+- [ ] `bun run hotfix` green
+- [ ] in-game: new game, then immediately use a skill that spawns a projectile. The action event
+      appears, which is the whole load-ordering risk in this item — the master map has to be parsed
+      before the first clone is requested, and the old bootstrap guaranteed that by being awaited in
+      `createGameObjects`
+- [ ] in-game: load a save directly into a map and fire the same skill before doing anything else —
+      the load path has to reach the new accessor too, not only new-game
+
 ## Notes
 
 - Not urgent — current behavior is fine for shipping.

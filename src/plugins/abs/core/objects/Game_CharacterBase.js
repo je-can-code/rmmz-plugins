@@ -173,45 +173,39 @@ Game_CharacterBase.prototype.walkInDirectionClamped = function(direction, distan
   let realX = this.x;
   let realY = this.y;
 
-  // whether the most recent step landed on a passable tile.
-  let canPass = true;
-
   // how many whole tiles we've successfully stepped so far.
   let stepsTaken = 0;
 
   // the total number of tiles to attempt, rounded since distance may arrive as a float.
   const stepsToWalk = Math.round(distance);
 
-  // step one tile at a time, same technique the original knockback loop pioneered- probe the
-  // next tile, and if it isn't passable, back off and stop instead of clipping through it.
-  while (canPass && stepsTaken < stepsToWalk)
+  // step one tile at a time, probing before committing rather than after.
+  while (stepsTaken < stepsToWalk)
   {
+    // canPass asks "may the character leave the tile I name, heading this way", so it has to be
+    // asked from the tile we currently stand on. asked from the tile we hope to reach, it tests
+    // the step after the one being decided- which both permits landing on a tile that could never
+    // have been walked onto, and refuses a perfectly good tile because a wall sits beyond it.
+    if (!this.canPass(realX, realY, direction)) break;
+
+    // the step cleared, so commit to it.
     switch (direction)
     {
       case J.ABS.Directions.UP:
         realY--;
-        canPass = this.canPass(realX, realY, direction);
-        if (!canPass) realY++;
         break;
       case J.ABS.Directions.DOWN:
         realY++;
-        canPass = this.canPass(realX, realY, direction);
-        if (!canPass) realY--;
         break;
       case J.ABS.Directions.LEFT:
         realX--;
-        canPass = this.canPass(realX, realY, direction);
-        if (!canPass) realX++;
         break;
       case J.ABS.Directions.RIGHT:
         realX++;
-        canPass = this.canPass(realX, realY, direction);
-        if (!canPass) realX--;
         break;
     }
 
-    // only count the step if it actually landed somewhere new.
-    if (canPass) stepsTaken++;
+    stepsTaken++;
   }
 
   // report how far we actually got, relative to our starting tile.

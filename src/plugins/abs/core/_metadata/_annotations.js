@@ -48,6 +48,15 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.20.1
+ *    A respawn-pending battler is now erased when its placement is refused, so a
+ *    killed enemy no longer lingers on the map as an animating shell after a reload.
+ *    Forced displacement probes the tile it is standing on rather than the one it is
+ *    reaching for, so knockback and pull-forward stop at the correct tile.
+ *    A skill slot resolving to no skill returns nothing instead of throwing, which
+ *    could crash the HUD when a bitmap finished loading after a map transfer.
+ *    Removing a loot icon removes only that icon, and matches on the loot's uuid
+ *    rather than on the uuid method, which had destroyed an unrelated drop.
  * - 4.20.0
  *    Loot drops are now drawn toward a battler within their magnet radius, tunable
  *    per battler with <lootMagnetBuff:N> and <lootMagnetRate:N> and configured in

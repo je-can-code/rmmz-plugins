@@ -129,14 +129,48 @@ describe('J-ABS Game_CharacterBase.walkInDirectionClamped (direct src import)', 
 
   it('stops at the last passable tile when something blocks midway', () =>
   {
-    // Arrange- block everything from x=3 onward, allowing tiles 1 and 2.
-    const walker = buildWalker((x) => x < 3);
+    // Arrange- refuse the step out of x=2, making x=3 the wall and x=1/x=2 walkable.
+    const walker = buildWalker((x) => x < 2);
 
     // Act
     const [ dx, dy ] = walker.walkInDirectionClamped(globalThis.J.ABS.Directions.RIGHT, 10);
 
     // Assert
     expect([ dx, dy ]).toEqual([ 2, 0 ]);
+  });
+
+  it('refuses a landing tile whose own entry is blocked, even when the step beyond it is clear', () =>
+  {
+    // Arrange- only the step out of the origin is refused; every step further along is allowed,
+    // which is what a probe taken from the destination tile would have consulted instead.
+    const walker = buildWalker((x) => x !== 0);
+
+    // Act
+    const [ dx, dy ] = walker.walkInDirectionClamped(globalThis.J.ABS.Directions.RIGHT, 4);
+
+    // Assert
+    expect([ dx, dy ]).toEqual([ 0, 0 ]);
+  });
+
+  it('probes each step from the tile currently stood on', () =>
+  {
+    // Arrange- record every origin the walk consults across a three tile trip.
+    const probed = [];
+    const walker = buildWalker((x, y, direction) =>
+    {
+      probed.push([ x, y, direction ]);
+      return true;
+    });
+
+    // Act
+    walker.walkInDirectionClamped(globalThis.J.ABS.Directions.DOWN, 3);
+
+    // Assert
+    expect(probed).toEqual([
+      [ 0, 0, globalThis.J.ABS.Directions.DOWN ],
+      [ 0, 1, globalThis.J.ABS.Directions.DOWN ],
+      [ 0, 2, globalThis.J.ABS.Directions.DOWN ],
+    ]);
   });
 
   it('returns [0, 0] when immediately blocked', () =>

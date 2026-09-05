@@ -320,6 +320,48 @@ describe('MenuStatusCatalog (direct src import)', () =>
         .toBe(0.5);
     });
 
+    it('rounds a fractional amount for display', () =>
+    {
+      // Arrange - jabs regen accrues fractionally, so a real actor genuinely holds this.
+      const actor = buildResourcefulActor({
+        hp: 264.5999999999998,
+        mhp: 510,
+        mp: 0,
+        mmp: 100,
+        tp: 0,
+        maxTp: 100,
+      });
+
+      // Act
+      const rows = MenuStatusCatalog.resourceRows(actor);
+
+      // Assert
+      expect(rows[0].current)
+        .toBe(265);
+    });
+
+    it('keeps the exact amount in the fill rate rather than the rounded one', () =>
+    {
+      // Arrange - a rounded 128 against 510 would land on 0.25098, not a clean quarter.
+      const actor = buildResourcefulActor({
+        hp: 127.5,
+        mhp: 510,
+        mp: 0,
+        mmp: 100,
+        tp: 0,
+        maxTp: 100,
+      });
+
+      // Act
+      const rows = MenuStatusCatalog.resourceRows(actor);
+
+      // Assert
+      expect(rows[0].rate)
+        .toBe(0.25);
+      expect(rows[0].current)
+        .toBe(128);
+    });
+
     it('reads a resource with no capacity as empty rather than dividing by zero', () =>
     {
       // Arrange - an actor with no magic at all has a maximum of zero.

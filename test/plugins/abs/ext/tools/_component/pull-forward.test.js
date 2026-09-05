@@ -337,8 +337,8 @@ describe('J-ABS-Tools pull-forward (direct src import)', () =>
 
     it('stops at the last passable tile by default', () =>
     {
-      // Arrange
-      const target = buildCharacter({ x: 0, y: 0, canPass: (x) => x < 2 });
+      // Arrange- refuse the step out of x=1, making x=2 the wall the pull comes to rest against.
+      const target = buildCharacter({ x: 0, y: 0, canPass: (x) => x < 1 });
       const jabsTarget = buildJabsBattler(target);
       const jabsCaster = buildJabsBattler(buildCharacter({ x: 10, y: 0 }));
       const action = { getBaseSkill: () => buildSkillRow('<pullForward:5>') };

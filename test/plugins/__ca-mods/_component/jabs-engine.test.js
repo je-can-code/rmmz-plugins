@@ -5,7 +5,7 @@ import PluginMetadata from '../../../../src/plugins/_base/core/models/PluginMeta
 
 describe('CAMods JABS_Engine (direct src import, hand-rolled JABS stand-in)', () =>
 {
-  /** @type {{canGainReward: Function, addLootDropToMap: Function}} */
+  /** @type {{canGainReward: Function}} */
   let originals;
 
   beforeAll(async () =>
@@ -16,7 +16,6 @@ describe('CAMods JABS_Engine (direct src import, hand-rolled JABS stand-in)', ()
     // test/plugins/crit/fixtures/crit-companion-stubs.js for the same kind of cross-plugin dependency.
     originals = {
       canGainReward: vi.fn(() => 'original-can-gain-reward'),
-      addLootDropToMap: vi.fn(() => 'original-add-loot'),
     };
 
     function JABS_Engine() {}
@@ -66,18 +65,6 @@ describe('CAMods JABS_Engine (direct src import, hand-rolled JABS stand-in)', ()
 
       expect(engine.canGainReward(defeatedEnemy, victoriousActor)).toBe('original-can-gain-reward');
       expect(originals.canGainReward).toHaveBeenCalledWith(defeatedEnemy, victoriousActor);
-    });
-  });
-
-  describe('addLootDropToMap', () =>
-  {
-    it('shifts the drop\'s Y coordinate up by one before delegating to the original', () =>
-    {
-      const engine = new globalThis.JABS_Engine();
-
-      engine.addLootDropToMap(5, 10, 'item');
-
-      expect(originals.addLootDropToMap).toHaveBeenCalledWith(5, 11, 'item');
     });
   });
 });

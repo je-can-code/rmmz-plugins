@@ -87,4 +87,64 @@ Game_CharacterBase.prototype.getPixelAbsBattlerAabbModel = function()
   // non-event characters have no custom rectangular AABB.
   return null;
 };
+
+/**
+ * Overwrites {@link Game_CharacterBase.walkInDirectionClamped}.<br/>
+ * Re-decides forced displacement- knockback, pull-forward, gap-close- in the pixel movement
+ * model rather than the tile one.
+ *
+ * J-ABS clamps that displacement with `canPass`, which asks a tile-grid question: round the
+ * coordinates to a tile, then read that tile's direction bits. Neither half of that survives
+ * pixel movement. A character's `x`/`y` are fractional, and its body is an AABB hung off the
+ * collision pivot, so the rounded tile is routinely not the tile the body occupies- exactly the
+ * disagreement {@link Game_CharacterBase#occupiedTileY} exists to settle. A body straddling two
+ * columns is never asked about the second one at all. Both gaps fail the same direction: the walk
+ * approves a landing the physics would have refused, `jump` applies it without validating
+ * anything, and the character comes to rest inside terrain that then denies every way back out.
+ *
+ * `canPassStraight` is the same predicate the character's own movement obeys every frame, so
+ * routing the walk through it means forced displacement can only ever come to rest somewhere
+ * walking could have reached.
+ * @param {number} direction The numpad compass direction to walk in (2/4/6/8).
+ * @param {number} distance The maximum number of tiles to travel.
+ * @returns {[number, number]} The actual [dx, dy] reached, in whole tiles.
+ */
+Game_CharacterBase.prototype.walkInDirectionClamped = function(direction, distance)
+{
+  // the total number of tiles to attempt, rounded since distance may arrive as a float.
+  const stepsToWalk = Math.round(distance);
+
+  // how many whole tiles have cleared the probe so far.
+  let stepsTaken = 0;
+
+  // grow the probe one tile per pass instead of testing the whole distance in a single call.
+  // canPassStraight substeps terrain the entire way but applies character collision only at its
+  // landing point, so one long probe would sail straight over a battler standing mid-path.
+  // asking for one more tile at a time stops at the first obstruction of either kind, which is
+  // the walk-and-stop behavior the tile version being replaced here promised.
+  while (stepsTaken < stepsToWalk)
+  {
+    // ask whether the body could travel this far from where it currently stands.
+    if (this.canPassStraight(direction, stepsTaken + 1) === false) break;
+
+    // it could, so bank the tile and reach for one more.
+    stepsTaken++;
+  }
+
+  // translate the cleared tile count into the signed offset the caller jumps by.
+  switch (direction)
+  {
+    case J.PIXEL.Directions.UP:
+      return [ 0, -stepsTaken ];
+    case J.PIXEL.Directions.DOWN:
+      return [ 0, stepsTaken ];
+    case J.PIXEL.Directions.LEFT:
+      return [ -stepsTaken, 0 ];
+    case J.PIXEL.Directions.RIGHT:
+      return [ stepsTaken, 0 ];
+  }
+
+  // a direction with no cardinal meaning displaces nothing.
+  return [ 0, 0 ];
+};
 //endregion Game_CharacterBase

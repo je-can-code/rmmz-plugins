@@ -21,6 +21,19 @@ Sprite lifecycle flags on the character were candidates for removal, with owners
 
 Decide whether `JABS_Action` (and/or `Map_TextPop` / `TextPopSpriteManager`) should own sprite lifecycle flags; migrate call sites and remove from `Game_Character` if the design holds. Regression-test damage rings and loot popups on map.
 
+## Definition of done
+
+- [ ] `grep -rn 'needsAdding\|needsRemoving' src/plugins/abs/core/objects/Game_Character.js` returns
+      nothing — the flags live on whichever object the ownership decision named
+- [ ] the J-Popups map-layer files that touch the same character still build, and `bun run hotfix`
+      is green
+- [ ] in-game, with the console open: note
+      `SceneManager._scene._spriteset._characterSprites.length`, fire fifty-odd actions in a row on
+      one map, then read it again. It returns to the resting value. Sprite leaks are what this item
+      exists for, and they are invisible until the count is actually looked at
+- [ ] in-game: kill an enemy that drops loot, leave the map and come back — no orphaned loot sprite,
+      no orphaned damage ring
+
 ## Notes
 
 - Related: `textpop-builder-extension-placement.md` (presentation layer ownership).

@@ -1,3 +1,8 @@
+---
+completed: 2026-08-26
+ship: J-Base (Diagnostics), swept across every ship
+---
+
 # ABS: scrub placeholder / debug logging (`omg`, plugin commands, noisy warns)
 
 ## Severity
@@ -28,3 +33,19 @@ Some warns are valuable (formula eval failure, input adapter not registered). Ot
 ## Notes
 
 - Star extension `console.log` noise is out of scope here per Star exclusion unless you want a separate Star hygiene item.
+
+## Definition of done
+
+- [ ] `grep -rn 'console\.' src/plugins/ --include=*.js` returns nothing once
+      `abs/ext/star`, `utils`, `Diagnostics.js` and `_annotations.js` changelog text are excluded
+- [ ] `src/plugins/_base/core/core/Diagnostics.js` exists and exposes `warn` / `error` / `trace` / `info`
+- [ ] every surviving diagnostic names its ship via the build-time `__PLUGIN_NAME__` identifier rather
+      than a hardcoded string
+- [ ] `bun run hotfix` green
+
+## Resolution
+
+Landed 2026-08-26 in "Unify console reporting behind a Diagnostics channel" (#83). The item asked for
+a `[JABS]` prefix convention and a debug-verbosity flag; what shipped is broader and supersedes both —
+one `Diagnostics` class in J-Base, four severity methods, and a per-ship name substituted at build
+time. `console.warn('omg')` survives only as a line in the J-ABS changelog.

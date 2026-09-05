@@ -507,5 +507,156 @@ describe('J-ABS-Pixelistics Game_CharacterBase collision (direct src import)', (
       expect(result).toBe(false);
     });
   });
+
+  describe('walkInDirectionClamped', () =>
+  {
+    /**
+     * Builds a character whose pixel passability is described by a predicate over the probe
+     * distance, and records every distance the walk asks about.
+     * @param {(distance: number) => boolean} canPassImpl Whether a probe of that length clears.
+     * @returns {object} The character, carrying a `probed` array of the distances asked.
+     */
+    const buildWalker = canPassImpl =>
+    {
+      const probed = [];
+      const walker = buildCharacter({
+        canPassStraight: (direction, distance) =>
+        {
+          probed.push(distance);
+
+          return canPassImpl(distance);
+        },
+      });
+      walker.probed = probed;
+
+      return walker;
+    };
+
+    it('walks the full distance when every probe clears', () =>
+    {
+      // Arrange
+      const walker = buildWalker(() => true);
+
+      // Act
+      const result = walker.walkInDirectionClamped(globalThis.J.PIXEL.Directions.RIGHT, 4);
+
+      // Assert
+      expect(result).toEqual([ 4, 0 ]);
+    });
+
+    it('grows the probe one tile per pass rather than testing the whole distance once', () =>
+    {
+      // Arrange- character collision is only applied at a probe's landing point, so a single
+      // full-distance probe would sail over anything standing between here and there.
+      const walker = buildWalker(() => true);
+
+      // Act
+      walker.walkInDirectionClamped(globalThis.J.PIXEL.Directions.RIGHT, 3);
+
+      // Assert
+      expect(walker.probed).toEqual([ 1, 2, 3 ]);
+    });
+
+    it('stops at the last tile that cleared when a probe partway is refused', () =>
+    {
+      // Arrange- two tiles of room, and the third is a wall.
+      const walker = buildWalker(distance => distance <= 2);
+
+      // Act
+      const result = walker.walkInDirectionClamped(globalThis.J.PIXEL.Directions.RIGHT, 6);
+
+      // Assert
+      expect(result).toEqual([ 2, 0 ]);
+    });
+
+    it('abandons the walk at the first refusal instead of probing further', () =>
+    {
+      // Arrange- a wall at two tiles out, with open ground beyond it. Continuing past the refusal
+      // would find that open ground and teleport the character through the wall to reach it.
+      const walker = buildWalker(distance => distance !== 2);
+
+      // Act
+      const result = walker.walkInDirectionClamped(globalThis.J.PIXEL.Directions.RIGHT, 5);
+
+      // Assert
+      expect(result).toEqual([ 1, 0 ]);
+      expect(walker.probed).toEqual([ 1, 2 ]);
+    });
+
+    it('reports no displacement when the very first tile is refused', () =>
+    {
+      // Arrange
+      const walker = buildWalker(() => false);
+
+      // Act
+      const result = walker.walkInDirectionClamped(globalThis.J.PIXEL.Directions.RIGHT, 5);
+
+      // Assert- the [0, 0] here has to be earned, so the probe count proves the walk actually ran.
+      expect(result).toEqual([ 0, 0 ]);
+      expect(walker.probed).toEqual([ 1 ]);
+    });
+
+    it('never probes at all when the distance is zero', () =>
+    {
+      // Arrange
+      const walker = buildWalker(() => true);
+
+      // Act
+      const result = walker.walkInDirectionClamped(globalThis.J.PIXEL.Directions.RIGHT, 0);
+
+      // Assert
+      expect(result).toEqual([ 0, 0 ]);
+      expect(walker.probed).toEqual([]);
+    });
+
+    it('rounds a fractional distance before walking', () =>
+    {
+      // Arrange- knockback arrives pre-scaled by resistance and amplification, so it is rarely whole.
+      const walker = buildWalker(() => true);
+
+      // Act
+      const result = walker.walkInDirectionClamped(globalThis.J.PIXEL.Directions.RIGHT, 2.6);
+
+      // Assert
+      expect(result).toEqual([ 3, 0 ]);
+    });
+
+    // each cardinal owns one axis and one sign, and only one case per cardinal can tell them apart-
+    // a single direction's test passes just as happily against a walk hardcoded to that direction.
+    const cardinals = [
+      [ 'UP', [ 0, -2 ] ],
+      [ 'DOWN', [ 0, 2 ] ],
+      [ 'LEFT', [ -2, 0 ] ],
+      [ 'RIGHT', [ 2, 0 ] ],
+    ];
+
+    cardinals.forEach(([ cardinal, expected ]) =>
+    {
+      it(`signs the offset for ${cardinal}`, () =>
+      {
+        // Arrange
+        const walker = buildWalker(() => true);
+
+        // Act
+        const result = walker.walkInDirectionClamped(globalThis.J.PIXEL.Directions[cardinal], 2);
+
+        // Assert
+        expect(result).toEqual(expected);
+      });
+    });
+
+    it('displaces nothing for a direction with no cardinal meaning', () =>
+    {
+      // Arrange- diagonal facings reach here from action sprites; there is no single axis to
+      // clamp along, so the walk declines rather than guessing one.
+      const walker = buildWalker(() => true);
+
+      // Act
+      const result = walker.walkInDirectionClamped(7, 3);
+
+      // Assert
+      expect(result).toEqual([ 0, 0 ]);
+    });
+  });
 });
 //endregion plugins/pixel/ext/abs/_component/game-character-base-collision.test.js

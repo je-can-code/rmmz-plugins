@@ -442,18 +442,8 @@ class Window_InputFrame
     // handle interference from the message window popping up.
     this.handleMessageWindowInterference();
 
-    // check if the player is interfering with visibility.
-    if (this.playerInterference())
-    {
-      // if so, adjust opacity accordingly.
-      this.handlePlayerInterference();
-    }
-    // the player isn't interfering.
-    else
-    {
-      // undo the opacity changes.
-      this.revertInterferenceOpacity();
-    }
+    // fade toward or away from the player standing on top of this frame.
+    this.alpha = HudInterferenceResolver.nextFrameAlpha(this);
   }
 
   /**
@@ -480,49 +470,6 @@ class Window_InputFrame
       // just open the window.
       this.open();
     }
-  }
-
-  /**
-   * Determines whether or not the player is in the way (or near it) of this window.
-   * @returns {boolean} True if the player is in the way, false otherwise.
-   */
-  playerInterference()
-  {
-    const playerX = $gamePlayer.screenX();
-    const playerY = $gamePlayer.screenY();
-    return (playerX < this.width + 100) && (playerY < this.height + 100);
-  }
-
-  /**
-   * Manages opacity for all sprites while the player is interfering with the visibility.
-   */
-  handlePlayerInterference()
-  {
-    this.j()._spriteCache.forEach((sprite, _) =>
-    {
-      // if we are above 64, rapidly decrement by -15 until we get below 64.
-      if (sprite.opacity > 64)
-      {
-        sprite.opacity -= 15;
-      }// if we are below 64, increment by +1 until we get to 64.
-      else if (sprite.opacity < 64) sprite.opacity += 1;
-    });
-  }
-
-  /**
-   * Reverts the opacity changes associated with the player getting in the way.
-   */
-  revertInterferenceOpacity()
-  {
-    this.j()._spriteCache.forEach((sprite, _) =>
-    {
-      // if we are below 255, rapidly increment by +15 until we get to 255.
-      if (sprite.opacity < 255)
-      {
-        sprite.opacity += 15;
-      }// if we are above 255, set to 255.
-      else if (sprite.opacity > 255) sprite.opacity = 255;
-    });
   }
 
   //endregion visibility

@@ -57,6 +57,32 @@
 ### Phase 3 — 5.0 release
 - Version bump, CA hotfix, changelog, breaking-change notes for third-party J-ABS extensions (if any).
 
+## Definition of done
+
+Phased, because the item is. Each phase is checkable on its own.
+
+**Phase 0**
+- [ ] a design doc exists listing every current `JABS_Engine` field as persisted or transient, with
+      no field unclassified — the phase is the classification, so an incomplete table is the whole
+      deliverable missing
+
+**Phase 1**
+- [ ] in-game: toggle `absEnabled`, save, reload, transfer maps — it survives all three
+- [ ] the plugin parameters that `config.jabs.json` now owns are gone rather than merely ignored
+
+**Phase 2**
+- [ ] `grep -rn '\$jabsEngine' src/plugins/ --include=*.js` returns nothing outside `_annotations.js`
+      changelog text, and the name is gone from `LEGACY_GLOBAL_THIS_PROPERTIES`
+- [ ] in-game: fight on one map, transfer mid-combat, fight again. Request latches are false after
+      the transfer and no action, loot, or hitbox overlay from the first map renders on the second.
+      Static fields leaking between maps is the failure mode the static flip introduces, and it does
+      not show up anywhere except a transfer taken while things are in flight
+- [ ] `bun run hotfix` green with the ABS test fixtures migrated off the instance
+
+**Phase 3**
+- [ ] every touched ship has its version bump and changelog, and the breaking notes name each
+      removed global
+
 ## Notes
 
 - **Not** multi-engine — still one map-wide director; static ≠ multiple instances.
