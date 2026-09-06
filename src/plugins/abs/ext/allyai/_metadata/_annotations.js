@@ -94,6 +94,15 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.1.0
+ *    An ally backing away from its target now arcs around it toward the leader and
+ *    stops on arrival, rather than marching down a single axis until it is out of
+ *    the fight entirely.
+ *    The leash measures euclidean distance, matching everything else that measures a
+ *    battler against the world. Manhattan over-reported a diagonal by up to 41%, so
+ *    an ally walking one was hauled back from a gap a straight walk was allowed.
+ *    Leash multipliers climb with spacing rather than falling. A backline ally stands
+ *    furthest from the target and so needs the most rope, not the least.
  * - 3.0.3
  *    Routed the invalid-preset error through J-Base's new Diagnostics, so it
  *    names J-ABS-AllyAI in the console.

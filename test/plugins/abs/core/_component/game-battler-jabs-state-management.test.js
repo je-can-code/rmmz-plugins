@@ -721,7 +721,10 @@ describe('J-ABS Game_Battler JABS state management (direct src import)', () =>
       battler.addStateWithOverrides(5, { name: 'attacker' }, { duration: 100 });
 
       // Assert
-      expect(addStateSpy).toHaveBeenCalledWith(5);
+      // the source is named even on this path. with JABS off the application resolves to vanilla
+      // either way, so this pins the call shape rather than the routing- the routing is what the
+      // handleAddingJabsState assertion below covers.
+      expect(addStateSpy).toHaveBeenCalledWith(5, battler);
       expect(handleSpy).not.toHaveBeenCalled();
       addStateSpy.mockRestore();
       handleSpy.mockRestore();

@@ -57,10 +57,24 @@ describe('J-ABS-Pixelistics JABS integration (direct src import)', () =>
     const battler = new globalThis.JABS_Battler();
 
     // Act
-    battler.setDodgeSteps(3);
+    const result = battler.determineDodgeStepCount({ jabsDodgeSteps: 3 });
 
     // Assert
-    expect(battler.__lastDodgeSteps).toBe(12);
+    expect(result).toBe(12);
+  });
+
+  it('leaves the dodge step setter unscaled so the countdown can reach zero', () =>
+  {
+    // Arrange- the scaling must sit on the seeding seam only. On the setter it would also catch
+    // decrementDodgeSteps, which writes the remaining count back through it every step: 11 would
+    // be stored as 44, the count would climb instead of falling, and the dodge would never end.
+    const battler = new globalThis.JABS_Battler();
+
+    // Act
+    battler.setDodgeSteps(11);
+
+    // Assert
+    expect(battler.__lastDodgeSteps).toBe(11);
   });
 });
 //endregion plugins/pixel/ext/abs/_component/jabs-ai-and-dodge.test.js

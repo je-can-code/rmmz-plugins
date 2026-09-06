@@ -433,6 +433,10 @@
  * A three-state cycle: 12 -> 13 -> 14 -> 12 -> ..., one step per execution.
  * ============================================================================
  * CHANGELOG:
+ * - 1.8.0
+ *    Only a row the database does not contain is carried on the item now. A row the
+ *    engine can find by id stays a class plus an id, so a savefile holds a reference
+ *    to it rather than a frozen copy that never sees a rebalance.
  * - 1.7.3
  *    Adapted to the RPGManager array read signature.
  * - 1.7.2

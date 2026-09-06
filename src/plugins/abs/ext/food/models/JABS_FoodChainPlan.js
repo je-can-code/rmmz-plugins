@@ -101,6 +101,20 @@ class JABS_FoodChainPlan
   }
 
   /**
+   * Lists every chain type the boot-time walk actually registered.
+   *
+   * This exists for diagnostics rather than for gameplay: when an item declares a food group that
+   * resolves to nothing, the useful half of the report is not the key that missed but the set of
+   * keys that would have hit, because the gap between them is usually a typo or a chain whose
+   * entry state was never authored.
+   * @returns {string[]} The registered chain type keys.
+   */
+  static registeredChainTypes()
+  {
+    return Array.from(JABS_FoodChainPlan._registry.keys());
+  }
+
+  /**
    * Walks the natural-expiry chain starting at the given entry state id, producing an
    * ordered {@link JABS_FoodChainSegment} array.
    *

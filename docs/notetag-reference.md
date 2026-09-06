@@ -2213,6 +2213,11 @@ the maximum tile distance a battler-to-target gap can be for this skill to be at
 and — for `<direct>` skills — the search radius used to lock onto a target. Mandatory on every
 `<direct>` skill. `<proximity:0>` matches nothing, it is not "uncapped."
 
+Omitting the tag entirely is the opposite of `<proximity:0>`: it states no requirement, so the skill
+is castable from any distance. Note the asymmetry — an explicit `0` is the tightest bound there is
+and no caster ever satisfies it, because a battler can never share a tile with its target. An AI
+holding a skill bounded that way approaches its target forever and never fires.
+
 ```
 <proximity:3>
 <direct>

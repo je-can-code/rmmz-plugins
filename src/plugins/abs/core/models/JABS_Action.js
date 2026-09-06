@@ -23,6 +23,19 @@ class JABS_Action
   }
 
   /**
+   * The proximity value standing in for "this action has no proximity requirement at all".
+   *
+   * Proximity is consumed as a numeric threshold in both directions- an AI asks "am I closer than
+   * this yet" before it will cast, and a targeting cursor asks "how far may I reach". An absent
+   * requirement therefore has to be expressed as a distance nothing can exceed rather than as a
+   * zero, because zero is not the absence of a bound, it is the tightest bound there is: a battler
+   * can never occupy the same tile as its target, so a zero threshold is one no caster ever
+   * satisfies, and an AI holding one approaches forever without ever firing.
+   * @type {number}
+   */
+  static UnlimitedProximity = 9999;
+
+  /**
    * Constructor.
    * @param {Game_Action} gameAction The underlying action associated with this JABS action.
    * @param {JABS_Battler} caster The `JABS_Battler` who created this JABS action.
@@ -1736,12 +1749,15 @@ class JABS_Action
     if (this.isForSelf())
     {
       // proximity for usable skills of scope "user" is unlimited; skip modifiers.
-      return 9999;
+      return JABS_Action.UnlimitedProximity;
     }
 
-    // skills without an explicit proximity tag have no proximity requirement.
+    // an untagged skill states no proximity requirement, and the absence of a requirement is
+    // unlimited rather than zero- see JABS_Action.UnlimitedProximity for why the difference is
+    // the one between an ally who casts from where it stands and one who walks into its target
+    // and never fires. modifiers are skipped because there is no authored range to scale.
     const base = this.getBaseSkill().jabsProximity;
-    if (base === null) return 0;
+    if (base === null) return JABS_Action.UnlimitedProximity;
 
     // apply buff and rate modifiers sourced from the caster's battler getters.
     return this.applyProximityModifiers(base);

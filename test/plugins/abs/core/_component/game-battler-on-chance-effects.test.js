@@ -180,7 +180,11 @@ describe('J-ABS Game_Battler on-chance effects (direct src import)', () =>
 
       // Assert
       expect(addStateSpy).toHaveBeenCalledTimes(2);
-      expect(addStateSpy).toHaveBeenCalledWith(20);
+
+      // the evader names itself as the source. that argument is what routes the application
+      // through JABS rather than vanilla, so pinning the id alone would pass on a state that
+      // lands inert and never expires.
+      expect(addStateSpy).toHaveBeenCalledWith(20, battler);
       addStateSpy.mockRestore();
     });
   });
@@ -219,7 +223,10 @@ describe('J-ABS Game_Battler on-chance effects (direct src import)', () =>
 
       // Assert
       expect(attacker.addState).toHaveBeenCalledTimes(3);
-      expect(attacker.addState).toHaveBeenCalledWith(21);
+
+      // the evader is the source of the punishment landing on the attacker, and naming it is
+      // what routes the application through JABS rather than vanilla.
+      expect(attacker.addState).toHaveBeenCalledWith(21, battler);
     });
   });
 

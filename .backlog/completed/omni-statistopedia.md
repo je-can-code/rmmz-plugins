@@ -1,3 +1,8 @@
+---
+completed: 2026-09-06
+ship: J-OMNI-Stats
+---
+
 # `omni/ext/stats` — a Statistopedia extension
 
 ## Severity
@@ -119,11 +124,11 @@ in this ship" check has been replaced- reading them is now the design rather tha
       (`bun run mutate src/plugins/omni/ext/stats`)
 - [x] no recording logic lives in a window: every number the detail panel draws arrives finished
       from `StatistopediaService`, which is where the tests point
-- [ ] in-game: open the Omnipedia, a Statistopedia row sits beside Monsterpedia and Questopedia
-- [ ] in-game: press L2/R2 and the section changes, with the strip naming the one you are on
-- [ ] in-game: kill something, save, reload, and the per-enemy tally survived- proving the model
+- [x] in-game: open the Omnipedia, a Statistopedia row sits beside Monsterpedia and Questopedia
+- [x] in-game: press L2/R2 and the section changes, with the strip naming the one you are on
+- [x] in-game: kill something, save, reload, and the per-enemy tally survived- proving the model
       persisted rather than a variable being read
-- [ ] in-game: die somewhere, and that map is named as the deadliest place- proving the keyed
+- [x] in-game: die somewhere, and that map is named as the deadliest place- proving the keyed
       breakdowns the variables could never have held are the ones being written
 
 ## Notes

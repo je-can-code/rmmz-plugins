@@ -1904,20 +1904,22 @@ describe('JABS_Action (direct src import)', () =>
       expect(buildAction({ skill: buildSkill({ scope: 11 }) }).getProximity()).toBe(9999);
     });
 
-    it('returns 0 proximity when the skill has no proximity tag', () =>
+    it('returns unlimited proximity when the skill has no proximity tag', () =>
     {
-      // Arrange- a caster carrying a real range buff. With the fixture's all-zero buffs the
-      // modifier math returns 0 for an untagged skill anyway, so the untagged check could be
-      // skipped and an untagged skill would still report 0 by coincidence.
+      // Arrange- a caster carrying a real range buff, and a tagged sibling that has to survive
+      // the same call. Without the sibling, "reads the tag" and "ignores every tag" would be
+      // indistinguishable here.
       const gameBattler = buildGameBattler({ getRangeBuff: () => 4 });
       const caster = buildCaster({ getBattler: () => gameBattler });
       const untagged = buildAction({ caster, skill: buildSkill({ scope: 1, jabsProximity: null }) });
       const tagged = buildAction({ caster, skill: buildSkill({ scope: 1, jabsProximity: 5 }) });
 
-      // Act & Assert- the tagged case anchors that the buff really is reaching the math, so the
-      // 0 below is a genuine "no requirement" rather than a do-nothing return.
+      // Act & Assert- the tagged case anchors that the buff really is reaching the math. the
+      // untagged case must report a distance nothing exceeds: an absent requirement is unlimited,
+      // and a zero here is instead the tightest bound there is- one an approaching AI never
+      // satisfies, so it walks into its target and never fires.
       expect(tagged.getProximity()).toBe(9);
-      expect(untagged.getProximity()).toBe(0);
+      expect(untagged.getProximity()).toBe(9999);
     });
 
     it('applies proximity modifiers when the skill has a proximity tag', () =>

@@ -164,12 +164,15 @@ JABS_AiManager.allyFollowLeader = function(allyBattler)
  */
 JABS_AiManager.maintainLeashAndEngagement = function(allyBattler, leaderBattler)
 {
-  // compute distance from ally to leader using real coords.
-  const distanceToLeader = $gameMap.distance(
-    allyBattler.getCharacter()._realX,
-    allyBattler.getCharacter()._realY,
-    leaderBattler.getCharacter()._realX,
-    leaderBattler.getCharacter()._realY);
+  // compute distance from ally to leader.
+  //
+  // this is euclidean because everything else that measures a battler against the world- sight,
+  // pursuit, spacing, the AI management sweep- is euclidean. $gameMap.distance is manhattan, and
+  // mixing the two put the leash on a scale of its own: it over-reports a diagonal by up to 41%,
+  // so an ally walking a diagonal was hauled back from a distance a straight-line walk was allowed
+  // to keep. with diagonal movement being the common case, the leash read as far shorter than the
+  // number configuring it.
+  const distanceToLeader = allyBattler.distanceToDesignatedTarget(leaderBattler);
 
   // determine leash threshold (spacing-axis-scaled per ally).
   const leash = allyBattler.getAllyLeashRange();
@@ -425,7 +428,7 @@ JABS_AiManager.maintainSafeDistance = function(battler)
 
   if (distance <= closeDistance)
   {
-    battler.smartMoveAwayFromTarget();
+    this.repositionAllyToStandoff(battler);
   }
   else if (distance > farDistance)
   {
@@ -435,6 +438,101 @@ JABS_AiManager.maintainSafeDistance = function(battler)
   {
     // within the safe band: hold position.
   }
+};
+
+/**
+ * Moves an ally that is too close to its target back out to its standoff ring, arcing around the
+ * target toward the leader rather than retreating straight back.
+ *
+ * The vanilla retreat this replaces walks directly away from the target, and it does so on one
+ * cardinal axis at a time, choosing whichever axis currently dominates. That choice reinforces
+ * itself- a step that grows the horizontal gap makes horizontal dominate harder next frame- so an
+ * ally being pursued locks onto an axis and marches in a dead straight line for as long as the
+ * chase lasts. Nothing in it knows the party exists, so the line leads out of the fight.
+ *
+ * Steering toward a fixed point instead of a direction is what ends the march: a point is arrived
+ * at, and {@link JABS_Battler.smartMoveTowardCoordinates} stops on arrival. Biasing that point
+ * toward the leader is what keeps the ally in the fight while it backs off.
+ * @param {JABS_Battler} allyBattler The ally battler repositioning.
+ */
+JABS_AiManager.repositionAllyToStandoff = function(allyBattler)
+{
+  // the leader is what the standoff point is biased toward; player1 is the leader in JABS.
+  const leader = $jabsEngine.getPlayer1();
+  const target = allyBattler.getTarget();
+
+  // compute where the ally would rather be standing.
+  const standoffPoint = this.calculateAllyStandoffPoint(allyBattler, target, leader);
+  const [ standoffX, standoffY ] = standoffPoint;
+
+  // steer there using the ordinary pathing, so passability and pixel micro-routes still apply.
+  allyBattler.smartMoveTowardCoordinates(standoffX, standoffY);
+};
+
+/**
+ * Calculates the point an ally should back off to: on its own standoff ring around the target, on
+ * whichever side of that ring sits nearest the leader.
+ *
+ * The bearing is built from two pieces. The first is the ally's own bearing away from the target,
+ * which is what stops it cutting through the target to reach the other side. The second is the
+ * portion of the leader's bearing that runs perpendicular to it- the sideways pull, with the
+ * away-or-toward part removed. Adding a perpendicular vector to a unit vector can never cancel it
+ * out, so the result always points somewhere sane no matter where the leader is standing, which
+ * is the reason for taking only the perpendicular part rather than blending the two bearings.
+ * @param {JABS_Battler} allyBattler The ally battler repositioning.
+ * @param {JABS_Battler} target The battler being backed away from.
+ * @param {JABS_Battler} leader The battler the standoff point is biased toward.
+ * @returns {[number, number]} The [x, y] coordinates to back off to.
+ */
+JABS_AiManager.calculateAllyStandoffPoint = function(allyBattler, target, leader)
+{
+  const targetX = target.getX();
+  const targetY = target.getY();
+
+  // hold the middle of the spacing band rather than either edge, so arriving does not immediately
+  // trip the too-close or too-far test again and start the ally shuffling.
+  const closeDistance = allyBattler.getCloseDistance();
+  const farDistance = allyBattler.getFarDistance();
+  const standoffRadius = (closeDistance + farDistance) / 2;
+
+  // the ally's own bearing away from the target.
+  const awayBearing = this.normalizeVector(allyBattler.getX() - targetX, allyBattler.getY() - targetY);
+  const [ awayX, awayY ] = awayBearing;
+
+  // the leader's bearing from the target, reduced to only its sideways component.
+  const leaderBearing = this.normalizeVector(leader.getX() - targetX, leader.getY() - targetY);
+  const [ leaderX, leaderY ] = leaderBearing;
+  const alongAway = (leaderX * awayX) + (leaderY * awayY);
+  const sidewaysPull = this.normalizeVector(leaderX - (alongAway * awayX), leaderY - (alongAway * awayY));
+  const [ sidewaysX, sidewaysY ] = sidewaysPull;
+
+  // an equal blend of the two puts the ally a quarter-turn around the ring per decision, which
+  // reads as circling the target rather than either fleeing it or orbiting it.
+  const bearing = this.normalizeVector(awayX + sidewaysX, awayY + sidewaysY);
+  const [ bearingX, bearingY ] = bearing;
+
+  return [ targetX + (bearingX * standoffRadius), targetY + (bearingY * standoffRadius) ];
+};
+
+/**
+ * Reduces a vector to length one, or to the zero vector when it has no length to speak of.
+ *
+ * The zero case is real rather than defensive: two battlers standing on the same tile genuinely
+ * have no bearing between them, and a leader directly behind the ally genuinely has no sideways
+ * component. Both answer zero here, and the caller's addition then simply leaves the other term
+ * standing, which is the correct behavior in each case.
+ * @param {number} x The x component of the vector.
+ * @param {number} y The y component of the vector.
+ * @returns {[number, number]} The [x, y] components of the unit vector.
+ */
+JABS_AiManager.normalizeVector = function(x, y)
+{
+  const length = Math.hypot(x, y);
+
+  // below this the direction is numerical noise rather than a bearing anyone chose.
+  if (length < 0.01) return [ 0, 0 ];
+
+  return [ x / length, y / length ];
 };
 
 /**

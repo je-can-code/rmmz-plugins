@@ -181,10 +181,22 @@ class Window_LoadoutPicker
   }
 
   /**
+   * The occasion value for an item RMMZ considers usable anywhere.
+   * @type {number}
+   */
+  static OccasionAlways = 0;
+
+  /**
+   * The occasion value for an item RMMZ restricts to the battle screen.
+   * @type {number}
+   */
+  static OccasionBattle = 1;
+
+  /**
    * Determines whether an item may occupy a slot at all.
    *
-   * Mirrors the gates JABS applies elsewhere: the item must be a genuine always-usable item rather
-   * than a weapon or armor that happens to carry a tag, and must not have been explicitly hidden.
+   * Mirrors the gates JABS applies elsewhere: the item must be a genuine usable item rather than a
+   * weapon or armor that happens to carry a tag, and must not have been explicitly hidden.
    * @param {RPG_Item} item The item to evaluate.
    * @returns {boolean}
    */
@@ -197,8 +209,13 @@ class Window_LoadoutPicker
     if (DataManager.isItem(item) === false) return false;
     if (item.itypeId !== 1) return false;
 
-    // only always-usable items can be triggered from a slot mid-combat.
-    return item.occasion === 0;
+    // "always" and "battle screen" both qualify, because in an ABS the map is the battle. RMMZ's
+    // occasion split assumes a separate battle scene an item is either inside or outside of, and
+    // there is no such scene here- so an item authored as battle-only is making the strongest
+    // claim available that it belongs in a combat slot, not a weaker one. Menu-only and never
+    // stay out, which is the line this was actually reaching for.
+    return item.occasion === Window_LoadoutPicker.OccasionAlways
+      || item.occasion === Window_LoadoutPicker.OccasionBattle;
   }
 
   /**

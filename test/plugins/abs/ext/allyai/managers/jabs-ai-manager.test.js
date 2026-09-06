@@ -81,6 +81,10 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
    */
   function buildBattler(overrides = {})
   {
+    // one stable instance per battler: callers assert identity across separate getTarget() reads,
+    // and a fresh object literal each call would carry fresh function references that never match.
+    const targetDouble = { getX: () => 0, getY: () => 0 };
+
     return {
       isActor: () => true,
       isEnemy: () => false,
@@ -96,6 +100,15 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
       resetAllAggro: vi.fn(),
       getX: () => 5,
       getY: () => 5,
+      // mirrors the production euclidean measure rather than returning a constant, so the leash
+      // tests below stay driven by the coordinates they actually set on their characters.
+      distanceToDesignatedTarget(target)
+      {
+        const own = this.getCharacter();
+        const theirs = target.getCharacter();
+        const distance = Math.hypot(theirs._realX - own._realX, theirs._realY - own._realY);
+        return parseFloat(distance.toFixed(2));
+      },
       isDodging: () => false,
       guarding: () => false,
       smartMoveTowardCoordinates: vi.fn(),
@@ -106,7 +119,8 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
       smartMoveTowardTarget: vi.fn(),
       getAllyAiMode: () => ({ isDoNothing: () => false, decideAction: vi.fn(() => []) }),
       getBattler: () => ({ getValidSkillSlotsForAlly: () => [], findSlotForSkillId: () => ({ key: 'combat-1' }) }),
-      getTarget: () => ({}),
+      // the standoff math reads the target's position, so the double carries one.
+      getTarget: () => targetDouble,
       ...overrides,
     };
   }
@@ -613,13 +627,21 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
       expect(battler.smartMoveTowardTarget).not.toHaveBeenCalled();
     });
 
-    it('moves away when closer than the close distance', () =>
+    it('backs off to the standoff ring when closer than the close distance', () =>
     {
+      // Arrange
       const battler = buildBattler({ distanceToCurrentTarget: () => 1, getCloseDistance: () => 2, getFarDistance: () => 8 });
+      const spy = vi.spyOn(globalThis.JABS_AiManager, 'repositionAllyToStandoff').mockImplementation(() => {});
 
+      // Act
       globalThis.JABS_AiManager.maintainSafeDistance(battler);
 
-      expect(battler.smartMoveAwayFromTarget).toHaveBeenCalled();
+      // Assert
+      expect(spy).toHaveBeenCalledWith(battler);
+      // the straight-line retreat this replaced must not also fire; it is what marched allies
+      // out of the fight, and a standoff move that still called it would be no fix at all.
+      expect(battler.smartMoveAwayFromTarget).not.toHaveBeenCalled();
+      spy.mockRestore();
     });
 
     it('moves toward when farther than the far distance', () =>
@@ -629,6 +651,87 @@ describe('J-ABS-AllyAI JABS_AiManager (unit, all downstream dependencies stubbed
       globalThis.JABS_AiManager.maintainSafeDistance(battler);
 
       expect(battler.smartMoveTowardTarget).toHaveBeenCalled();
+    });
+  });
+
+  describe('normalizeVector()', () =>
+  {
+    it('returns the zero vector when the input has no meaningful length', () =>
+    {
+      // Arrange
+      // Act
+      const result = globalThis.JABS_AiManager.normalizeVector(0.005, -0.004);
+
+      // Assert
+      expect(result).toEqual([ 0, 0 ]);
+    });
+
+    it('reduces the vector to unit length otherwise', () =>
+    {
+      // Arrange
+      // Act
+      const result = globalThis.JABS_AiManager.normalizeVector(0, -4);
+
+      // Assert
+      // a sibling just over the zero threshold proves the guard is a threshold and not a floor on
+      // everything: 0.02 is small, real, and must survive normalization rather than be zeroed.
+      expect(result).toEqual([ 0, -1 ]);
+      expect(globalThis.JABS_AiManager.normalizeVector(0.02, 0)).toEqual([ 1, 0 ]);
+    });
+  });
+
+  describe('calculateAllyStandoffPoint()', () =>
+  {
+    it('places the point on the standoff ring, arced toward the leader', () =>
+    {
+      // Arrange
+      // ally is due south of the target; leader is due east of it, so the sideways pull is a
+      // clean quarter turn and the result must land on the southeast diagonal.
+      const ally = buildBattler({ getX: () => 10, getY: () => 12, getCloseDistance: () => 2, getFarDistance: () => 8 });
+      const target = { getX: () => 10, getY: () => 10 };
+      const leader = { getX: () => 14, getY: () => 10 };
+
+      // Act
+      const result = globalThis.JABS_AiManager.calculateAllyStandoffPoint(ally, target, leader);
+
+      // Assert
+      // the ring radius is the middle of the 2-8 band, so 5 tiles out at 45 degrees.
+      expect(result).toEqual([ 13.535533905932738, 13.535533905932738 ]);
+    });
+
+    it('backs directly toward the leader when the ally is standing on the target', () =>
+    {
+      // Arrange
+      // with no bearing away from the target, the sideways pull is the whole bearing.
+      const ally = buildBattler({ getX: () => 10, getY: () => 10, getCloseDistance: () => 2, getFarDistance: () => 8 });
+      const target = { getX: () => 10, getY: () => 10 };
+      const leader = { getX: () => 10, getY: () => 4 };
+
+      // Act
+      const result = globalThis.JABS_AiManager.calculateAllyStandoffPoint(ally, target, leader);
+
+      // Assert
+      // five tiles straight up the line to the leader, rather than the zero vector that a plain
+      // blend of the two bearings would have produced here.
+      expect(result).toEqual([ 10, 5 ]);
+    });
+  });
+
+  describe('repositionAllyToStandoff()', () =>
+  {
+    it('steers the ally toward the calculated standoff point', () =>
+    {
+      // Arrange
+      const battler = buildBattler();
+      const pointSpy = vi.spyOn(globalThis.JABS_AiManager, 'calculateAllyStandoffPoint')
+        .mockImplementation(() => [ 3, 7 ]);
+
+      // Act
+      globalThis.JABS_AiManager.repositionAllyToStandoff(battler);
+
+      // Assert
+      expect(battler.smartMoveTowardCoordinates).toHaveBeenCalledWith(3, 7);
+      pointSpy.mockRestore();
     });
   });
 

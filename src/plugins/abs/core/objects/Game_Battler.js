@@ -972,10 +972,11 @@ Game_Battler.prototype.processOnEvadeStateSelf = function()
     // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
     const procCount = stateEffect.resolveProcCount(positiveRolls, negativeRolls, this);
 
-    // apply the state to ourselves once per success — the evader gets the benefit.
+    // apply the state to ourselves once per success — the evader gets the benefit, and names
+    // itself as the source so the application routes through JABS rather than vanilla.
     for (let i = 0; i < procCount; i++)
     {
-      this.addState(stateEffect.skillId);
+      this.addState(stateEffect.skillId, this);
     }
   });
 };
@@ -1004,10 +1005,12 @@ Game_Battler.prototype.processOnEvadeStateAttacker = function(attacker)
     // resolve how many times this proc's action should execute (Accumulate Mode/Encore aware).
     const procCount = stateEffect.resolveProcCount(positiveRolls, negativeRolls, this);
 
-    // apply the state to the attacker once per success — they get punished for missing.
+    // apply the state to the attacker once per success — they get punished for missing. the
+    // evader is named as the source, both because the punishment is theirs and because that is
+    // what routes the application through JABS rather than vanilla.
     for (let i = 0; i < procCount; i++)
     {
-      attacker.addState(stateEffect.skillId);
+      attacker.addState(stateEffect.skillId, this);
     }
   });
 };
@@ -1610,8 +1613,10 @@ Game_Battler.prototype.addStateWithOverrides = function(stateId, attacker, overr
   // if JABS is disabled, fall back to vanilla state application since overrides are JABS-only.
   if (!$jabsEngine.absEnabled)
   {
-    // apply the state normally, discarding the overrides.
-    this.addState(stateId);
+    // apply the state normally, discarding the overrides. the source is named even though JABS is
+    // off and the application resolves to vanilla either way, because a call that omits it reads
+    // as an oversight rather than a decision- and the routing it controls is invisible from here.
+    this.addState(stateId, this);
 
     // stop processing.
     return;

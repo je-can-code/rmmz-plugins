@@ -90,6 +90,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.1
+ *    Dodge distance scaling moved onto J-ABS's determineDodgeStepCount seam. On the
+ *    step setter it also caught the per-step countdown, re-scaling what remained on
+ *    every step so the count climbed away from the zero the dodge waits for.
  * - 1.1.0
  *    Forced displacement - knockback, pull-forward, gap-close - is now clamped by the
  *    same collision predicate the character's own movement obeys. J-ABS clamps it on

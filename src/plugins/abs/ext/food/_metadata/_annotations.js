@@ -74,6 +74,12 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    The Well Fed entry state names the leader as its source, so it applies as a JABS
+ *    state and its expiry advances the chain. Without one it landed as an inert
+ *    vanilla state that never expired, and the arc never started.
+ *    An item declaring a food group nothing registered now warns and names the groups
+ *    that do exist, rather than being eaten to no effect in silence.
  * - 1.0.3
  *    Routed the missing-duration authoring warning through J-Base's new
  *    Diagnostics, so it names J-ABS-Food in the console rather than the

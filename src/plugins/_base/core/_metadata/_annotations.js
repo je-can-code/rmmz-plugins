@@ -157,6 +157,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.11.0
+ *    Diagnostics accepts a function in place of its message or its payload and builds
+ *    it behind a catch, so a defect while assembling a warning reports itself instead
+ *    of crashing the branch that was already reporting a problem.
  * - 3.10.1
  *    Bitmap carries a device scale of 1 on the prototype. The engine builds bitmaps
  *    while its own scripts are still parsing, before any plugin can alias initialize,

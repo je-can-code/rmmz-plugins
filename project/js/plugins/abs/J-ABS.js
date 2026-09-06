@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.20.1 ABS] Enables combat to be carried out on the map.
+ * [v4.21.0 ABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -48,6 +48,15 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.21.0
+ *    A skill carrying no <proximity> tag is now castable from any distance rather than
+ *    demanding the caster share a tile with its target, which nothing can do. An AI
+ *    holding such a skill approached its target forever and never fired.
+ *    Evade procs and the vanilla fallback in addStateWithOverrides now name their
+ *    source, so the application routes through JABS instead of landing as an inert
+ *    vanilla state that never expires.
+ *    Added determineDodgeStepCount, the seam a movement extension restates a dodge's
+ *    distance on. Aliasing the step setter instead also caught the per-step countdown.
  * - 4.20.1
  *    A respawn-pending battler is now erased when its placement is refused, so a
  *    killed enemy no longer lingers on the map as an animating shell after a reload.
@@ -4521,7 +4530,7 @@ J.ABS.Helpers.loadExternalConfig = (configPath = "data/config.jabs.json") => {
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.20.1");
+J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.21.0");
 J.ABS.Helpers.loadExternalConfig();
 /**
 * The various default values across the engine. Often configurable.
@@ -15371,6 +15380,24 @@ var JABS_Battler = class JABS_Battler {
 		this.setDodgeSteps(this.getDodgeSteps() - 1);
 	}
 	/**
+	* Determines how many steps a dodge skill should force-move this battler.
+	*
+	* This exists so movement extensions can restate a dodge's distance in their own units without
+	* touching {@link #setDodgeSteps}. A step means "one move command" and a move command does not
+	* cover a fixed distance in every movement scheme, so the tag's value is an intent that
+	* something may legitimately need to rescale.
+	*
+	* It has to happen here, once, at the moment the count is seeded. Rescaling inside the setter
+	* instead catches every later write to the same field- and the countdown that ends the dodge is
+	* one of those writes, so each decrement would be re-scaled into a larger number than it
+	* replaced and the count would climb away from zero instead of reaching it.
+	* @param {RPG_Skill} skill The dodge skill being executed.
+	* @returns {number} The number of steps to force-move.
+	*/
+	determineDodgeStepCount(skill) {
+		return skill.jabsDodgeSteps;
+	}
+	/**
 	* Gets the current frame of the dodge animation.
 	* @returns {number}
 	*/
@@ -15429,7 +15456,8 @@ var JABS_Battler = class JABS_Battler {
 		this.setDodgeIFrames(skill.jabsIFrames);
 		this.setInvincible(skill.jabsInvincibleDodge);
 		this.getCharacter().setDodgeModifier(skill.jabsDodgeSpeed);
-		this.setDodgeSteps(skill.jabsDodgeSteps);
+		const dodgeStepCount = this.determineDodgeStepCount(skill);
+		this.setDodgeSteps(dodgeStepCount);
 		let dodgeDirection;
 		if (forcedDirection8 !== undefined && forcedDirection8 !== null) {
 			dodgeDirection = forcedDirection8;
@@ -22253,6 +22281,18 @@ var JABS_Action = class JABS_Action {
 		return 8;
 	}
 	/**
+	* The proximity value standing in for "this action has no proximity requirement at all".
+	*
+	* Proximity is consumed as a numeric threshold in both directions- an AI asks "am I closer than
+	* this yet" before it will cast, and a targeting cursor asks "how far may I reach". An absent
+	* requirement therefore has to be expressed as a distance nothing can exceed rather than as a
+	* zero, because zero is not the absence of a bound, it is the tightest bound there is: a battler
+	* can never occupy the same tile as its target, so a zero threshold is one no caster ever
+	* satisfies, and an AI holding one approaches forever without ever firing.
+	* @type {number}
+	*/
+	static UnlimitedProximity = 9999;
+	/**
 	* Constructor.
 	* @param {Game_Action} gameAction The underlying action associated with this JABS action.
 	* @param {JABS_Battler} caster The `JABS_Battler` who created this JABS action.
@@ -23430,10 +23470,10 @@ var JABS_Action = class JABS_Action {
 	*/
 	getProximity() {
 		if (this.isForSelf()) {
-			return 9999;
+			return JABS_Action.UnlimitedProximity;
 		}
 		const base = this.getBaseSkill().jabsProximity;
-		if (base === null) return 0;
+		if (base === null) return JABS_Action.UnlimitedProximity;
 		return this.applyProximityModifiers(base);
 	}
 	/**
@@ -24610,7 +24650,7 @@ var StateAfflictionProvider = class StateAfflictionProvider {
 //#endregion
 //#region src/plugins/abs/core/_metadata/meta.js
 var PLUGIN_NAME = "J-ABS";
-var PLUGIN_VERSION = "4.20.1";
+var PLUGIN_VERSION = "4.21.0";
 var PLUGIN_DESC_TAG = "ABS";
 
 //#endregion
@@ -25294,9 +25334,9 @@ Object.defineProperty(RPG_Item.prototype, "jabsExpiration", { get: function() {
 * Whether this item is a JABS tool (hookshot, bomb, etc.) that belongs in the tool slot.<br/>
 * Tagged with {@code <jabsTool>}. Items without this tag are treated as consumables and land
 * in the usable-item slot instead.<br/>
-* Note: the tag alone is not sufficient — the loadout picker also enforces itypeId===1 and
-* occasion===0 as a safety rail, since only RPG_Item entries are ever iterated for either
-* slot's candidate list.
+* Note: the tag alone is not sufficient — the loadout picker also enforces itypeId===1 and an
+* occasion of always or battle-screen as a safety rail, since only RPG_Item entries are ever
+* iterated for either slot's candidate list.
 * @type {boolean}
 */
 Object.defineProperty(RPG_Item.prototype, "jabsTool", { get: function() {
@@ -29411,7 +29451,7 @@ Game_Battler.prototype.processOnEvadeStateSelf = function() {
 		const negativeRolls = this.getNegativeRollsForSkill(skill);
 		const procCount = stateEffect.resolveProcCount(positiveRolls, negativeRolls, this);
 		for (let i = 0; i < procCount; i++) {
-			this.addState(stateEffect.skillId);
+			this.addState(stateEffect.skillId, this);
 		}
 	});
 };
@@ -29428,7 +29468,7 @@ Game_Battler.prototype.processOnEvadeStateAttacker = function(attacker) {
 		const negativeRolls = attacker.getNegativeRolls();
 		const procCount = stateEffect.resolveProcCount(positiveRolls, negativeRolls, this);
 		for (let i = 0; i < procCount; i++) {
-			attacker.addState(stateEffect.skillId);
+			attacker.addState(stateEffect.skillId, this);
 		}
 	});
 };
@@ -29766,7 +29806,7 @@ Game_Battler.prototype.addJabsState = function(stateId, attacker, overrides = nu
 */
 Game_Battler.prototype.addStateWithOverrides = function(stateId, attacker, overrides, sourceSkill = null) {
 	if (!$jabsEngine.absEnabled) {
-		this.addState(stateId);
+		this.addState(stateId, this);
 		return;
 	}
 	this.handleAddingJabsState(stateId, attacker, overrides, sourceSkill);
@@ -31446,15 +31486,15 @@ Game_Event.prototype.page = function() {
 		return J.ABS.Aliased.Game_Event.get("page").call(this);
 	}
 	const { stack } = new Error();
-	Diagnostics.warn("J-ABS", "Game_Event#page: missing event data (race / teardown?).", {
+	Diagnostics.warn("J-ABS", "Game_Event#page: missing event data (race / teardown?).", () => ({
 		eventId: this.eventId(),
 		pageIndex: this.pageIndex(),
-		x: this.x(),
-		y: this.y(),
+		x: this.x,
+		y: this.y,
 		isJabsAction: this.isJabsAction(),
 		jabsActionUuid: this.getJabsActionUuid(),
 		stack
-	});
+	}));
 	return null;
 };
 /**

@@ -208,21 +208,26 @@ Game_Event.prototype.page = function()
       .call(this);
   }
 
-  // event data is gone (e.g. update after teardown). log only this event's own fields + stack — never dump whole
-  // maps (devtools cost).
-  const {stack} = new Error();
+  // event data is gone (e.g. update after teardown). log only this event's own fields + stack, never
+  // whole maps (devtools cost). the stack is captured out here rather than inside the thunk so it
+  // describes the caller that reached this branch instead of the frames that print it.
+  const { stack } = new Error();
+
+  // the payload is built behind Diagnostics rather than out here, because this branch exists for an
+  // event whose state is already wrong- the one situation where reading its own fields is least
+  // certain to succeed, and the one where a throw would replace a survivable warning with a crash.
   Diagnostics.warn(
-    'J-ABS',
+    __PLUGIN_NAME__,
     'Game_Event#page: missing event data (race / teardown?).',
-    {
+    () => ({
       eventId: this.eventId(),
       pageIndex: this.pageIndex(),
-      x: this.x(),
-      y: this.y(),
+      x: this.x,
+      y: this.y,
       isJabsAction: this.isJabsAction(),
       jabsActionUuid: this.getJabsActionUuid(),
       stack,
-    },
+    }),
   );
 
   // return null because... something went awry.
