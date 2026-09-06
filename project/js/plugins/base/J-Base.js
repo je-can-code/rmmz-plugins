@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v3.10.1 BASE] The base class for all J plugins.
+ * [v3.11.0 BASE] The base class for all J plugins.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -157,6 +157,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.11.0
+ *    Diagnostics accepts a function in place of its message or its payload and builds
+ *    it behind a catch, so a defect while assembling a warning reports itself instead
+ *    of crashing the branch that was already reporting a problem.
  * - 3.10.1
  *    Bitmap carries a device scale of 1 on the prototype. The engine builds bitmaps
  *    while its own scripts are still parsing, before any plugin can alias initialize,
@@ -626,22 +630,59 @@ var JCache = class JCache {
 * This is for anomalies only - a state that should not have been reachable, an input that failed
 * to parse, a contract a caller broke. Narrating normal operation is what this codebase means when
 * it says never ship logging.
+*
+* <h3>Why this one class catches, when the rest of the codebase must not</h3>
+*
+* Everywhere else, the correct response to a broken contract is a loud bug rather than a silent
+* filter. Here the loud bug *is* the product, and the catching exists so that reporting one anomaly
+* can never manufacture a second, larger one. A diagnostic runs only on a path that has already
+* gone wrong, which is the path least likely to have been played and most expensive to break: a
+* defect inside a warning sits invisible for as long as nothing goes wrong, then converts a handled
+* problem into a crashed game at the exact moment a developer most needed the warning.
+*
+* So `message` and `details` may each be handed over as a **thunk** - a function returning the
+* value - and anything that throws while being built is reported instead of propagating. The catch
+* wraps thunk invocation and nothing else. `console` itself is never guarded; guarding engine
+* globals is a thing this codebase does not do, and a `console` that fails is a broken runtime
+* rather than a case to carry on through.
+*
+* <h3>What this cannot protect, and why no version of it could</h3>
+*
+* An argument written out in full is evaluated by JavaScript at the **call site**, before this class
+* is ever entered. `Diagnostics.warn(name, `x: ${event.x()}`, { id: event.id() })` throws in the
+* caller's own frame, and nothing inside this file runs to intercept it. That is a property of the
+* language rather than a gap in this design, and the thunk form is the only shape that closes it:
+*
+* <pre>
+* Unprotected - the object is built before the call happens:
+*   Diagnostics.warn(__PLUGIN_NAME__, 'the thing broke.', { at: this.somethingRisky() });
+*
+* Protected - the object is built inside this class, behind the catch:
+*   Diagnostics.warn(__PLUGIN_NAME__, 'the thing broke.', () => ({ at: this.somethingRisky() }));
+* </pre>
+*
+* The cheapest safe payload is usually neither: hand over the object itself and let devtools do the
+* inspecting, as in `{ event: this }`. Nothing is evaluated, so nothing can throw.
 */
 var Diagnostics = class Diagnostics {
+	/**
+	* The text substituted for a message whose thunk threw while building it. The caller's real
+	* message is unavailable by definition, so this states what happened in its place and the error
+	* itself travels alongside it in the payload.
+	* @type {string}
+	*/
+	static MESSAGE_BUILD_FAILURE = "a diagnostic message threw while being built; see the payload.";
 	/**
 	* Reports something wrong that the game can carry on through, usually by falling back to a
 	* sentinel or skipping the work. The caller keeps running after this returns.
 	* @param {string} pluginName The emitting plugin's name; callers pass `__PLUGIN_NAME__`.
-	* @param {string} message What is wrong, stated so a reader who has never seen this code knows.
-	* @param {*} [details] One value worth inspecting, or an object naming several.
+	* @param {string|Function} message What is wrong, stated so a reader who has never seen this code
+	* knows. A function is invoked here to build it, which is the safe form when building it can throw.
+	* @param {*} [details] One value worth inspecting, or an object naming several. A function is
+	* invoked here to build it, which is the safe form when building it can throw.
 	*/
 	static warn(pluginName, message, details = null) {
-		const stamped = Diagnostics.format(pluginName, message);
-		if (details === null) {
-			console.warn(stamped);
-			return;
-		}
-		console.warn(stamped, details);
+		Diagnostics.emit(console.warn, pluginName, message, details);
 	}
 	/**
 	* Reports something that went *right* and is worth confirming - a config file that loaded, a
@@ -651,43 +692,111 @@ var Diagnostics = class Diagnostics {
 	* It is not a licence to narrate normal operation. The bar is that somebody opted in: a plugin
 	* passing a `logSummary` builder wants the confirmation, and a scene rendering a menu does not.
 	* @param {string} pluginName The emitting plugin's name; callers pass `__PLUGIN_NAME__`.
-	* @param {string} message What happened, stated so it is useful without the surrounding code.
-	* @param {*} [details] One value worth inspecting, or an object naming several.
+	* @param {string|Function} message What happened, stated so it is useful without the surrounding
+	* code. A function is invoked here to build it, which is the safe form when building it can throw.
+	* @param {*} [details] One value worth inspecting, or an object naming several. A function is
+	* invoked here to build it, which is the safe form when building it can throw.
 	*/
 	static info(pluginName, message, details = null) {
-		const stamped = Diagnostics.format(pluginName, message);
-		if (details === null) {
-			console.info(stamped);
-			return;
-		}
-		console.info(stamped, details);
+		Diagnostics.emit(console.info, pluginName, message, details);
 	}
 	/**
 	* Reports something wrong that the game cannot carry on through correctly, whether or not it is
 	* about to throw. Use this when the result is going to be incorrect rather than merely absent.
 	* @param {string} pluginName The emitting plugin's name; callers pass `__PLUGIN_NAME__`.
-	* @param {string} message What is wrong, stated so a reader who has never seen this code knows.
-	* @param {*} [details] One value worth inspecting, or an object naming several.
+	* @param {string|Function} message What is wrong, stated so a reader who has never seen this code
+	* knows. A function is invoked here to build it, which is the safe form when building it can throw.
+	* @param {*} [details] One value worth inspecting, or an object naming several. A function is
+	* invoked here to build it, which is the safe form when building it can throw.
 	*/
 	static error(pluginName, message, details = null) {
-		const stamped = Diagnostics.format(pluginName, message);
-		if (details === null) {
-			console.error(stamped);
-			return;
-		}
-		console.error(stamped, details);
+		Diagnostics.emit(console.error, pluginName, message, details);
 	}
 	/**
 	* Reports an anomaly whose *call path* is the diagnostic rather than its values - a method
 	* reached from somewhere it should never have been reached from, a static class someone tried
 	* to instantiate. The message alone cannot answer "who did this", so the stack comes with it.
 	* @param {string} pluginName The emitting plugin's name; callers pass `__PLUGIN_NAME__`.
-	* @param {string} message What is wrong, stated so a reader who has never seen this code knows.
-	* @param {*} [details] One value worth inspecting, or an object naming several.
+	* @param {string|Function} message What is wrong, stated so a reader who has never seen this code
+	* knows. A function is invoked here to build it, which is the safe form when building it can throw.
+	* @param {*} [details] One value worth inspecting, or an object naming several. A function is
+	* invoked here to build it, which is the safe form when building it can throw.
 	*/
 	static trace(pluginName, message, details = null) {
 		Diagnostics.warn(pluginName, message, details);
 		console.trace();
+	}
+	/**
+	* Builds the finished line and hands it to the requested console method.
+	*
+	* Every public method funnels through here so the thunk contract, the failure reporting and the
+	* "no trailing null" rule each exist once rather than four times.
+	* @param {Function} channel The `console` method to write with, called against `console` itself.
+	* @param {string} pluginName The emitting plugin's name; callers pass `__PLUGIN_NAME__`.
+	* @param {string|Function} message The message, or a thunk building it.
+	* @param {*} details The details, or a thunk building them.
+	*/
+	static emit(channel, pluginName, message, details) {
+		const resolvedMessage = Diagnostics.resolve(message);
+		const resolvedDetails = Diagnostics.resolve(details);
+		const text = resolvedMessage.error === null ? resolvedMessage.value : Diagnostics.MESSAGE_BUILD_FAILURE;
+		const stamped = Diagnostics.format(pluginName, text);
+		const payload = Diagnostics.payload(resolvedMessage, resolvedDetails);
+		if (payload === null) {
+			channel.call(console, stamped);
+			return;
+		}
+		channel.call(console, stamped, payload);
+	}
+	/**
+	* Produces the value a caller asked to report, invoking it first when it arrived as a thunk.
+	*
+	* This is the only place in the ecosystem that catches on purpose. A value written out in full
+	* was already evaluated in the caller's frame, so by the time it arrives here nothing about it
+	* can throw and it passes straight through. A thunk is the opposite: it arrives unevaluated,
+	* which is exactly what lets a payload that would have crashed the game be contained instead.
+	* @param {*} candidate The value to report, or a function returning it.
+	* @returns {{value: *, error: (Error|null)}} The built value, or the error that prevented it.
+	*/
+	static resolve(candidate) {
+		if (Function.prototype.isPrototypeOf(candidate) === false) {
+			return {
+				value: candidate,
+				error: null
+			};
+		}
+		try {
+			return {
+				value: candidate(),
+				error: null
+			};
+		} catch (error) {
+			return {
+				value: null,
+				error
+			};
+		}
+	}
+	/**
+	* Decides what gets printed beside the stamped message.
+	*
+	* The ordinary answer is whatever the caller passed. When either half failed to build, the answer
+	* becomes a report of that failure instead, so the console shows the original warning, which half
+	* of it is missing, and the error that explains why.
+	* @param {{value: *, error: (Error|null)}} resolvedMessage The outcome of building the message.
+	* @param {{value: *, error: (Error|null)}} resolvedDetails The outcome of building the details.
+	* @returns {*} The details to print, or a description of what stopped them being built.
+	*/
+	static payload(resolvedMessage, resolvedDetails) {
+		const messageError = resolvedMessage.error;
+		const detailsError = resolvedDetails.error;
+		if (messageError === null && detailsError === null) return resolvedDetails.value;
+		return {
+			diagnosticsPayloadFailed: true,
+			messageError,
+			detailsError,
+			details: resolvedDetails.value
+		};
 	}
 	/**
 	* Stamps the emitting plugin's name onto a message.
@@ -1917,7 +2026,7 @@ J.BASE.EXT = {};
 */
 J.BASE.Metadata = {};
 J.BASE.Metadata.Name = "J-Base";
-J.BASE.Metadata.Version = "3.10.1";
+J.BASE.Metadata.Version = "3.11.0";
 /**
 * The actual `plugin parameters` extracted from RMMZ.
 */

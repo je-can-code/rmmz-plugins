@@ -176,13 +176,20 @@ JABS_Battler.prototype._rollIdleDestination = function()
 };
 
 /**
- * Extends {@link #setDodgeSteps}.<br/>
+ * Extends {@link #determineDodgeStepCount}.<br/>
  * Scales the step count by the pixel collision density so dodge distance
  * covers the same visual distance as it would in tile-locked movement.
- * @param {number} stepCount The number of steps to dodge.
+ *
+ * A pixel step advances one subcell rather than one tile, so a dodge tagged for three steps would
+ * otherwise cover three subcells- a fraction of the distance the tag asks for. The scaling belongs
+ * here, on the seam that seeds the count from the skill, rather than on the setter: the setter is
+ * also what the per-step countdown writes through, and scaling that would grow the remaining count
+ * on every step instead of shrinking it.
+ * @param {RPG_Skill} skill The dodge skill being executed.
+ * @returns {number} The number of subcell steps to force-move.
  */
-J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set('setDodgeSteps', JABS_Battler.prototype.setDodgeSteps);
-JABS_Battler.prototype.setDodgeSteps = function(stepCount)
+J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set('determineDodgeStepCount', JABS_Battler.prototype.determineDodgeStepCount);
+JABS_Battler.prototype.determineDodgeStepCount = function(skill)
 {
   // ensure the collision manager is configured before reading its step count.
   if (PIXEL_CollisionManager.collisionStepCount === undefined)
@@ -191,12 +198,12 @@ JABS_Battler.prototype.setDodgeSteps = function(stepCount)
     PIXEL_CollisionManager.initConfig();
   }
 
-  // scale step count by the subcell density so dodge covers the intended tile distance.
-  const scaledStepCount = stepCount * PIXEL_CollisionManager.collisionStepCount;
+  // perform original logic.
+  const stepCount = J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get('determineDodgeStepCount')
+    .call(this, skill);
 
-  // perform original logic with the scaled step count.
-  J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get('setDodgeSteps')
-    .call(this, scaledStepCount);
+  // scale step count by the subcell density so dodge covers the intended tile distance.
+  return stepCount * PIXEL_CollisionManager.collisionStepCount;
 };
 
 /**

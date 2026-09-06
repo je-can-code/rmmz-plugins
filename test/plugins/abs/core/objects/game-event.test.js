@@ -215,8 +215,8 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       straighten: vi.fn(),
       refreshBushDepth: vi.fn(),
       setMoveSpeed: vi.fn(),
-      x: () => 0,
-      y: () => 0,
+      _x: 0,
+      _y: 0,
       _eventId: 1,
       _pageIndex: 0,
       ...overrides,
@@ -407,7 +407,19 @@ describe('J-ABS Game_Event (unit, all downstream dependencies mocked)', () =>
       const event = buildEvent({ event: () => null });
 
       expect(event.page()).toBeNull();
-      expect(console.warn).toHaveBeenCalled();
+
+      // pin the payload's own fields. this branch reports on an event whose data is already gone, so
+      // every value it reads must come from the event itself- x and y in particular are native
+      // properties on Game_CharacterBase rather than accessors. a payload that throws while being
+      // built is replaced wholesale by the Diagnostics failure report, so pinning the built fields is
+      // what proves this one was built rather than reported as broken.
+      const [ firstWarn ] = console.warn.mock.calls;
+      const [ , details ] = firstWarn;
+      expect(details.x).toEqual(0);
+      expect(details.y).toEqual(0);
+      expect(details.eventId).toEqual(1);
+      expect(details.pageIndex).toEqual(0);
+      expect(details.jabsActionUuid).toEqual('action-uuid');
 
       console.warn.mockRestore();
     });

@@ -132,8 +132,19 @@ class JABS_FoodChainResolver
     // look up the pre-built chain plan from the boot-time registry.
     const newPlan = JABS_FoodChainPlan.forChainType(foodType);
 
-    // no registered chain for this type — data is incomplete, abort silently.
-    if (!newPlan) return;
+    // no registered chain for this type. the item declared a food group that the boot-time walk
+    // never registered, which is an authoring mismatch rather than a state the game reaches
+    // normally- and it presents as food that is consumed and does nothing at all, so it has to
+    // say something or there is nothing to find it by.
+    if (!newPlan)
+    {
+      Diagnostics.warn(__PLUGIN_NAME__, `no food chain is registered for type: [ ${foodType} ].`, () => ({
+        itemId,
+        itemName: item.name,
+        registeredTypes: JABS_FoodChainPlan.registeredChainTypes(),
+      }));
+      return;
+    }
 
     const leader = $gameParty.leader();
     const members = $gameParty.battleMembers();
@@ -227,8 +238,13 @@ class JABS_FoodChainResolver
    */
   static #startFoodChain(leader, entryStateId, leaderUuid, plan)
   {
-    // apply the entry (Well Fed) state directly to the leader.
-    leader.addState(entryStateId);
+    // apply the entry (Well Fed) state directly to the leader, naming the leader as its own
+    // source. the second argument is not decoration- it is what routes the application through
+    // JABS rather than vanilla, and everything a food chain is made of lives on the JABS side:
+    // the frame-based <stateDuration>, and the on-expire link that walks Well Fed to its
+    // follow-ups. applied without it, the entry state lands as an inert vanilla state that never
+    // expires and therefore never advances the arc.
+    leader.addState(entryStateId, leader);
 
     // store the pre-built registry plan so the HUD can read it immediately.
     $jabsEngine.setFoodChainPlanByUuid(leaderUuid, plan);

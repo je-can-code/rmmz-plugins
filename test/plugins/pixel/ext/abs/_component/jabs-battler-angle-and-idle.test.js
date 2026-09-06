@@ -434,7 +434,7 @@ describe('J-ABS-Pixelistics JABS_Battler angle math and idle wander (direct src 
     });
   });
 
-  describe('setDodgeSteps', () =>
+  describe('determineDodgeStepCount', () =>
   {
     let previousStepCount;
 
@@ -456,10 +456,10 @@ describe('J-ABS-Pixelistics JABS_Battler angle math and idle wander (direct src 
       const battler = new globalThis.JABS_Battler();
 
       // Act
-      battler.setDodgeSteps(3);
+      const result = battler.determineDodgeStepCount({ jabsDodgeSteps: 3 });
 
       // Assert
-      expect(battler.__lastDodgeSteps).toBe(12);
+      expect(result).toBe(12);
     });
 
     it('initializes the collision config first when it has never been set up', () =>
@@ -471,11 +471,11 @@ describe('J-ABS-Pixelistics JABS_Battler angle math and idle wander (direct src 
       const battler = new globalThis.JABS_Battler();
 
       // Act
-      battler.setDodgeSteps(3);
+      const result = battler.determineDodgeStepCount({ jabsDodgeSteps: 3 });
 
       // Assert- the config is populated on demand and the resulting step count is a real number.
       expect(initConfigSpy).toHaveBeenCalled();
-      expect(Number.isNaN(battler.__lastDodgeSteps)).toBe(false);
+      expect(Number.isNaN(result)).toBe(false);
 
       initConfigSpy.mockRestore();
     });
@@ -491,11 +491,11 @@ describe('J-ABS-Pixelistics JABS_Battler angle math and idle wander (direct src 
       const battler = new globalThis.JABS_Battler();
 
       // Act
-      battler.setDodgeSteps(3);
+      const result = battler.determineDodgeStepCount({ jabsDodgeSteps: 3 });
 
       // Assert- the scaling still happened, which is what proves the method ran at all.
       expect(initConfigSpy).not.toHaveBeenCalled();
-      expect(battler.__lastDodgeSteps).toBe(12);
+      expect(result).toBe(12);
 
       initConfigSpy.mockRestore();
     });

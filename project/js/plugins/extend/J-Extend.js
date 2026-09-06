@@ -1,7 +1,7 @@
 //region Introduction
 /*:
  * @target MZ
- * @plugindesc [v1.7.3 EXTEND] Extends the capabilities of skills/actions.
+ * @plugindesc [v1.8.0 EXTEND] Extends the capabilities of skills/actions.
  * @base J-Base
  * @orderAfter J-Base
  * @author JE
@@ -433,6 +433,10 @@
  * A three-state cycle: 12 -> 13 -> 14 -> 12 -> ..., one step per execution.
  * ============================================================================
  * CHANGELOG:
+ * - 1.8.0
+ *    Only a row the database does not contain is carried on the item now. A row the
+ *    engine can find by id stays a class plus an id, so a savefile holds a reference
+ *    to it rather than a frozen copy that never sees a rebalance.
  * - 1.7.3
  *    Adapted to the RPGManager array read signature.
  * - 1.7.2
@@ -580,7 +584,7 @@ J.EXTEND = {};
 /**
 * The `metadata` associated with this plugin, such as version.
 */
-J.EXTEND.Metadata = new J_SkillExtendPluginMetadata("J-Extend", "1.7.3");
+J.EXTEND.Metadata = new J_SkillExtendPluginMetadata("J-Extend", "1.8.0");
 /**
 * A collection of all aliased methods for this plugin.
 */
@@ -2066,19 +2070,37 @@ Game_Item.prototype.underlyingObject = function() {
 	return this._item;
 };
 /**
+* Sets the underlying object this item carries.
+*
+* Only ever handed something the database does not contain; a row the engine can look up by id is
+* left uncarried on purpose. See {@link Game_Item.setObject} for why.
+* @param {RPG_UsableItem|RPG_EquipItem} obj The object to carry.
+*/
+Game_Item.prototype.setItem = function(obj) {
+	this._item = obj;
+};
+/**
 * Extends `setObject()` to enable setting custom skills and items.
+*
+* Only an object the database does not contain is carried. The engine's own `setObject` names a data
+* class by identity against `$dataSkills` and friends, so an empty class after it runs is precisely
+* the statement "this row is not in the database" - which is the only case that needs carrying, and
+* the case this extension exists for. Everything else stays a class plus an id, which is what keeps
+* a savefile holding a reference to a row rather than a frozen copy of one: a copy never sees a
+* rebalance, and nothing reports that it didn't.
 * @param {RPG_UsableItem|RPG_EquipItem} obj The database row or custom object being bound.
 */
 J.EXTEND.Aliased.Game_Item.set("setObject", Game_Item.prototype.setObject);
 Game_Item.prototype.setObject = function(obj) {
 	J.EXTEND.Aliased.Game_Item.get("setObject").call(this, obj);
 	if (!obj) return;
+	if (this.dataClass() !== String.empty) return;
 	if (obj.hasOwnProperty("stypeId")) {
 		this.setDataClass("skill");
-		this._item = obj;
+		this.setItem(obj);
 	} else if (obj.hasOwnProperty("itypeId")) {
 		this.setDataClass("item");
-		this._item = obj;
+		this.setItem(obj);
 	}
 };
 /**

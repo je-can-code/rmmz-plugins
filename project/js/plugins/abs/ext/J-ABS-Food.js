@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.0.3 ABS-FOOD] A JABS extension enabling food group chain states and a dedicated R2 food slot.
+ * [v1.1.0 ABS-FOOD] A JABS extension enabling food group chain states and a dedicated R2 food slot.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -74,6 +74,12 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.0
+ *    The Well Fed entry state names the leader as its source, so it applies as a JABS
+ *    state and its expiry advances the chain. Without one it landed as an inert
+ *    vanilla state that never expired, and the arc never started.
+ *    An item declaring a food group nothing registered now warns and names the groups
+ *    that do exist, rather than being eaten to no effect in silence.
  * - 1.0.3
  *    Routed the missing-duration authoring warning through J-Base's new
  *    Diagnostics, so it names J-ABS-Food in the console rather than the
@@ -159,7 +165,7 @@ J.ABS.EXT.FOOD ||= {};
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.EXT.FOOD.Metadata = new JFood_PluginMetadata("J-ABS-Food", "1.0.3");
+J.ABS.EXT.FOOD.Metadata = new JFood_PluginMetadata("J-ABS-Food", "1.1.0");
 /**
 * A collection of all aliased methods for this plugin.
 */
@@ -373,6 +379,18 @@ var JABS_FoodChainPlan = class JABS_FoodChainPlan {
 		return JABS_FoodChainPlan._registry.get(typeKey) ?? null;
 	}
 	/**
+	* Lists every chain type the boot-time walk actually registered.
+	*
+	* This exists for diagnostics rather than for gameplay: when an item declares a food group that
+	* resolves to nothing, the useful half of the report is not the key that missed but the set of
+	* keys that would have hit, because the gap between them is usually a typo or a chain whose
+	* entry state was never authored.
+	* @returns {string[]} The registered chain type keys.
+	*/
+	static registeredChainTypes() {
+		return Array.from(JABS_FoodChainPlan._registry.keys());
+	}
+	/**
 	* Walks the natural-expiry chain starting at the given entry state id, producing an
 	* ordered {@link JABS_FoodChainSegment} array.
 	*
@@ -561,7 +579,14 @@ var JABS_FoodChainResolver = class JABS_FoodChainResolver {
 		const foodType = item.jabsFoodType;
 		if (!foodType) return;
 		const newPlan = JABS_FoodChainPlan.forChainType(foodType);
-		if (!newPlan) return;
+		if (!newPlan) {
+			Diagnostics.warn("J-ABS-Food", `no food chain is registered for type: [ ${foodType} ].`, () => ({
+				itemId,
+				itemName: item.name,
+				registeredTypes: JABS_FoodChainPlan.registeredChainTypes()
+			}));
+			return;
+		}
 		const leader = $gameParty.leader();
 		const members = $gameParty.battleMembers();
 		JABS_FoodChainResolver.#applyFoodBuffetEffects(item, members, jabsBattler);
@@ -613,7 +638,7 @@ var JABS_FoodChainResolver = class JABS_FoodChainResolver {
 	* @param {JABS_FoodChainPlan} plan The pre-built registry plan for this food group.
 	*/
 	static #startFoodChain(leader, entryStateId, leaderUuid, plan) {
-		leader.addState(entryStateId);
+		leader.addState(entryStateId, leader);
 		$jabsEngine.setFoodChainPlanByUuid(leaderUuid, plan);
 	}
 	/**

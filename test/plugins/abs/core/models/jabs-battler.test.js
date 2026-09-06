@@ -5034,6 +5034,39 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       expect(jabsBattler.shouldEndDodge()).toBe(false);
     });
+
+    it('determineDodgeStepCount answers the skill tag value untouched', () =>
+    {
+      // Arrange
+      // this is the seam movement extensions rescale through, so the base answer has to be the
+      // tag's own number: anything applied here would be applied a second time on top of theirs.
+      const jabsBattler = buildBattler();
+
+      // Act
+      const result = jabsBattler.determineDodgeStepCount({ jabsDodgeSteps: 3 });
+
+      // Assert
+      expect(result).toBe(3);
+    });
+
+    it('the dodge step countdown reaches zero from a seeded count', () =>
+    {
+      // Arrange
+      // seeding and counting down are separate concerns that both write the same field, and an
+      // extension transforming the write rather than the seed turns this descent into a climb.
+      const jabsBattler = buildBattler();
+      jabsBattler.setDodgeSteps(jabsBattler.determineDodgeStepCount({ jabsDodgeSteps: 3 }));
+
+      // Act
+      jabsBattler.decrementDodgeSteps();
+      jabsBattler.decrementDodgeSteps();
+      const remainingBeforeLast = jabsBattler.getDodgeSteps();
+      jabsBattler.decrementDodgeSteps();
+
+      // Assert
+      expect(remainingBeforeLast).toBe(1);
+      expect(jabsBattler.getDodgeSteps()).toBe(0);
+    });
   });
 
   describe('endDodge', () =>

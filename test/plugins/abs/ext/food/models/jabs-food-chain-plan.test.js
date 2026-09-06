@@ -66,6 +66,25 @@ describe('J-ABS-Food JABS_FoodChainPlan (unit, all downstream dependencies mocke
       expect(plan.segments[0].stateId).toBe(1);
     });
 
+    it('lists every registered chain type and nothing that was only walked through', () =>
+    {
+      // Arrange- two distinct chains plus a mid-chain state, so a method that reported every
+      // food state rather than only the entries would be caught by the extra id.
+      globalThis.$dataStates = [
+        null,
+        buildState(1, { chainType: 'protein', expireStateId: 2 }),
+        buildState(2, { chainType: 'protein' }),
+        buildState(3, { chainType: 'vegetable' }),
+      ];
+
+      // Act
+      JABS_FoodChainPlan.buildRegistry();
+      const types = JABS_FoodChainPlan.registeredChainTypes();
+
+      // Assert- one key per chain, not per state.
+      expect(types).toEqual([ 'protein', 'vegetable' ]);
+    });
+
     it('walks a multi-state chain following applyStateOnExpire links', () =>
     {
       // Arrange

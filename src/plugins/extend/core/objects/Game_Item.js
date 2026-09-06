@@ -52,7 +52,26 @@ Game_Item.prototype.underlyingObject = function()
 };
 
 /**
+ * Sets the underlying object this item carries.
+ *
+ * Only ever handed something the database does not contain; a row the engine can look up by id is
+ * left uncarried on purpose. See {@link Game_Item.setObject} for why.
+ * @param {RPG_UsableItem|RPG_EquipItem} obj The object to carry.
+ */
+Game_Item.prototype.setItem = function(obj)
+{
+  this._item = obj;
+};
+
+/**
  * Extends `setObject()` to enable setting custom skills and items.
+ *
+ * Only an object the database does not contain is carried. The engine's own `setObject` names a data
+ * class by identity against `$dataSkills` and friends, so an empty class after it runs is precisely
+ * the statement "this row is not in the database" - which is the only case that needs carrying, and
+ * the case this extension exists for. Everything else stays a class plus an id, which is what keeps
+ * a savefile holding a reference to a row rather than a frozen copy of one: a copy never sees a
+ * rebalance, and nothing reports that it didn't.
  * @param {RPG_UsableItem|RPG_EquipItem} obj The database row or custom object being bound.
  */
 J.EXTEND.Aliased.Game_Item.set('setObject', Game_Item.prototype.setObject);
@@ -65,19 +84,22 @@ Game_Item.prototype.setObject = function(obj)
   // check to make sure we have something to work with.
   if (!obj) return;
 
+  // the engine recognized this row, so it is reachable by id and needs nothing carried.
+  if (this.dataClass() !== String.empty) return;
+
   // check to ensure it has a skill category property.
   if (obj.hasOwnProperty('stypeId'))
   {
     // assign the data.
     this.setDataClass('skill');
-    this._item = obj;
+    this.setItem(obj);
   }
   // check to ensure it has an item category property.
   else if (obj.hasOwnProperty('itypeId'))
   {
     // assign the data.
     this.setDataClass('item');
-    this._item = obj;
+    this.setItem(obj);
   }
 };
 

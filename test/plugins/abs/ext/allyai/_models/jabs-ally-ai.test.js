@@ -245,10 +245,23 @@ describe('JABS_AllyAI (unit, JABS_AI/RPGManager stubbed)', () =>
 
     it('getLeashMultiplier() returns the spacing-mapped multiplier otherwise', () =>
     {
+      // Arrange
       const ai = new JABS_AllyAI();
-      ai.applyPreset('medic'); // backline
 
-      expect(ai.getLeashMultiplier()).toEqual(0.6);
+      // Act
+      ai.applyPreset('guardian'); // frontline
+      const frontline = ai.getLeashMultiplier();
+      ai.applyPreset('cleric'); // midline
+      const midline = ai.getLeashMultiplier();
+      ai.applyPreset('medic'); // backline
+      const backline = ai.getLeashMultiplier();
+
+      // Assert
+      // all three tiers are pinned together because they sit within 0.05 of each other: given only
+      // one of them, a lookup that reached the wrong tier would still read as correct.
+      expect(frontline).toEqual(1.10);
+      expect(midline).toEqual(1.15);
+      expect(backline).toEqual(1.20);
     });
 
   });

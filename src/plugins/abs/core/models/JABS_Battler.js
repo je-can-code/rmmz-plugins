@@ -5008,6 +5008,26 @@ class JABS_Battler
   };
 
   /**
+   * Determines how many steps a dodge skill should force-move this battler.
+   *
+   * This exists so movement extensions can restate a dodge's distance in their own units without
+   * touching {@link #setDodgeSteps}. A step means "one move command" and a move command does not
+   * cover a fixed distance in every movement scheme, so the tag's value is an intent that
+   * something may legitimately need to rescale.
+   *
+   * It has to happen here, once, at the moment the count is seeded. Rescaling inside the setter
+   * instead catches every later write to the same field- and the countdown that ends the dodge is
+   * one of those writes, so each decrement would be re-scaled into a larger number than it
+   * replaced and the count would climb away from zero instead of reaching it.
+   * @param {RPG_Skill} skill The dodge skill being executed.
+   * @returns {number} The number of steps to force-move.
+   */
+  determineDodgeStepCount(skill)
+  {
+    return skill.jabsDodgeSteps;
+  };
+
+  /**
    * Gets the current frame of the dodge animation.
    * @returns {number}
    */
@@ -5101,7 +5121,8 @@ class JABS_Battler
       .setDodgeModifier(skill.jabsDodgeSpeed);
 
     // set the number of steps this dodge will move you.
-    this.setDodgeSteps(skill.jabsDodgeSteps);
+    const dodgeStepCount = this.determineDodgeStepCount(skill);
+    this.setDodgeSteps(dodgeStepCount);
 
     // set the direction to be dodging in.
     let dodgeDirection;

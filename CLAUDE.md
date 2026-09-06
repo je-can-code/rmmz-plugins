@@ -72,7 +72,7 @@ That is three phases, and it is more than a build:
 
 | Phase | What runs |
 |---|---|
-| `verify-pre-compile` | `lint`, then eleven source gates: `verify:docs`, `no-typeof`, `no-instanceof`, `no-optional-chaining`, `no-direct-property-getset`, `no-private-before-construction`, `no-late-window-command-state`, `no-self-calling-accessors`, `no-chained-call-arguments`, `no-phantom-calls`, `no-rest-parameters` |
+| `verify-pre-compile` | `lint`, then fourteen source gates: `verify:docs`, `no-typeof`, `no-instanceof`, `no-optional-chaining`, `no-direct-property-getset`, `no-private-before-construction`, `no-late-window-command-state`, `no-self-calling-accessors`, `no-transforming-setter-aliases`, `no-chained-call-arguments`, `no-phantom-calls`, `no-rest-parameters`, `no-sourceless-addstate`, `declared-dependencies` |
 | `compile` | `clean:out`, then `build:all` |
 | `verify-post-compile` | `verify:ships`, **the full test suite**, then `copy:to-all` |
 
@@ -527,6 +527,15 @@ State is shaped `this._j.<PLUGIN_ABBREVIATION>.<CONTAINER>.<NAME>` — for examp
 - **An accessor may never call itself** — that is unbounded recursion, and it is the natural failure
   mode of the rule above: the accessor is the one place that *must* touch the field directly. Enforced
   by `verify:no-self-calling-accessors`.
+- **An alias of a setter must forward its value unchanged.** Watching a value go by and firing a side
+  effect is fine; rewriting it on the way through is not. A setter is reached by *every* write to its
+  field, and that includes the read-modify-write a countdown performs — `setFrames(getFrames() - 1)`.
+  An alias that scales its argument therefore re-scales the remainder on every step, so a counter
+  seeded at 3 goes 12, then 44, then 172, climbing away from the zero something is waiting for.
+  **Transform where a value is seeded, not where it is stored**: give the owner a seam the extension
+  can alias instead, called once at the moment the transformation is meant to happen. Enforced by
+  `verify:no-transforming-setter-aliases`, which judges only `set[A-Z]` mutators — `setup` and friends
+  are behavior, not assignment, and rewriting what you pass those is ordinary.
 - Never mutate state outside a setter.
 - Boolean getters read `hasSomeState` / `isSomeState`; boolean setters read `flagSomeState` /
   `toggleSomeState`.
@@ -577,6 +586,25 @@ namespace is what broke.
 
 Supporting values are **one optional third argument**, not a variadic tail — `verify:no-rest-parameters`
 forbids the tail, and `{ target, attacker, error }` prints better in devtools than three positional blobs.
+
+**A payload that can throw goes in as a thunk.** Arguments written out in full are evaluated at the *call
+site*, before `Diagnostics` is entered — so a defect in a payload crashes the game from a branch that only
+runs when something has already gone wrong, which is the branch least likely to have ever been played.
+`message` and `details` may each be handed over as a function instead; `Diagnostics` invokes it behind a
+catch and reports anything that throws rather than letting it propagate. This is the one place in the
+codebase where catching is the product, and the catch wraps thunk invocation only — `console` is never
+guarded.
+
+```javascript
+// UNPROTECTED — the object is built before the call happens.
+Diagnostics.warn(__PLUGIN_NAME__, 'the thing broke.', { at: this.somethingRisky() });
+
+// PROTECTED — the object is built inside Diagnostics, behind the catch.
+Diagnostics.warn(__PLUGIN_NAME__, 'the thing broke.', () => ({ at: this.somethingRisky() }));
+```
+
+Cheapest of all is usually neither: hand over the object itself (`{ event: this }`) and let devtools do
+the inspecting. Nothing is evaluated, so nothing can throw.
 
 Two ships are exempt and stay that way: **`J-SystemUtilities`**, whose console output *is* its product
 (InputLog, map-click inspection, save dumps), and `abs/ext/star` under its standing exclusion.

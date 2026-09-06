@@ -58,7 +58,10 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
     const registryPlans = new Map();
     globalThis.__testRegistryPlans = registryPlans;
     vi.doMock('../../../../../../src/plugins/abs/ext/food/models/JABS_FoodChainPlan.js', () => ({
-      default: { forChainType: (type) => registryPlans.get(type) ?? null },
+      default: {
+        forChainType: (type) => registryPlans.get(type) ?? null,
+        registeredChainTypes: () => Array.from(registryPlans.keys()),
+      },
     }));
 
     ({ default: JABS_FoodChainResolver } = await import('../../../../../../src/plugins/abs/ext/food/models/JABS_FoodChainResolver.js'));
@@ -225,11 +228,29 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
       // no throw, and no registry lookups performed- nothing else to assert meaningfully here.
     });
 
-    it('does nothing when there is no registered plan for the tagged food type', () =>
+    it('warns and applies nothing when there is no registered plan for the tagged food type', () =>
     {
-      globalThis.$dataItems = { 5: { id: 5, jabsFoodType: 'unregistered' } };
-      globalThis.$gameParty = { leader: () => ({}), battleMembers: () => [] };
-      expect(() => JABS_FoodChainResolver.resolveEat(5, { getUuid: () => 'x' })).not.toThrow();
+      // Arrange- a food item whose group was never registered, alongside a leader who would
+      // visibly receive a state if the resolver carried on past the guard.
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const leader = { addState: vi.fn() };
+      globalThis.$dataItems = { 5: { id: 5, name: 'Mystery Loaf', jabsFoodType: 'unregistered' } };
+      globalThis.$gameParty = { leader: () => leader, battleMembers: () => [] };
+
+      // Act
+      JABS_FoodChainResolver.resolveEat(5, { getUuid: () => 'x' });
+
+      // Assert- the anomaly is reported rather than swallowed, and it names the type that missed.
+      // consumed-but-inert food is otherwise indistinguishable from food that simply has no
+      // effects, which is what made this shape of authoring mistake impossible to find.
+      const [ firstWarn ] = warnSpy.mock.calls;
+      const [ stamped ] = firstWarn;
+      expect(stamped).toContain('unregistered');
+
+      // and nothing was applied on the way out.
+      expect(leader.addState).not.toHaveBeenCalled();
+
+      warnSpy.mockRestore();
     });
 
     it('applies buffet effects skipping the Add State effect code', () =>
@@ -257,7 +278,7 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
 
       JABS_FoodChainResolver.resolveEat(5, jabsBattler);
 
-      expect(leader.addState).toHaveBeenCalledWith(10);
+      expect(leader.addState).toHaveBeenCalledWith(10, leader);
       expect(globalThis.$jabsEngine.setFoodChainPlanByUuid).toHaveBeenCalledWith('leader-uuid', expect.anything());
     });
 
@@ -270,7 +291,7 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
       JABS_FoodChainResolver.resolveEat(5, jabsBattler);
 
       expect(leader.removeState).toHaveBeenCalledWith(1);
-      expect(leader.addState).toHaveBeenCalledWith(10);
+      expect(leader.addState).toHaveBeenCalledWith(10, leader);
     });
 
     it('rescues into the new chain when Field Medic immunity is present, even mid-arc', () =>
@@ -282,7 +303,7 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
       JABS_FoodChainResolver.resolveEat(5, jabsBattler);
 
       expect(leader.removeState).toHaveBeenCalledWith(1);
-      expect(leader.addState).toHaveBeenCalledWith(10);
+      expect(leader.addState).toHaveBeenCalledWith(10, leader);
     });
 
     it('triggers the Overstuffed punishment when eating mid-arc without immunity', () =>
@@ -294,7 +315,11 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
       JABS_FoodChainResolver.resolveEat(5, jabsBattler);
 
       expect(leader.removeState).toHaveBeenCalledWith(1);
-      expect(leader.addState).toHaveBeenCalledWith(99);
+
+      // the second argument names the leader as its own source, which is what routes the state
+      // through JABS instead of vanilla. without it the entry state lands inert, so pinning the
+      // id alone would pass on a chain that can never advance.
+      expect(leader.addState).toHaveBeenCalledWith(99, leader);
     });
 
     it('aborts the Overstuffed punishment cleanly when no Overstuffed chain has been authored', () =>
@@ -307,7 +332,10 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
       JABS_FoodChainResolver.resolveEat(5, jabsBattler);
 
       expect(leader.removeState).toHaveBeenCalledWith(1);
-      expect(leader.addState).not.toHaveBeenCalledWith(99);
+
+      // matched against the full argument list the real call would make. pinning the id alone
+      // would pass no matter what the code did, since the real call carries a source alongside it.
+      expect(leader.addState).not.toHaveBeenCalledWith(99, leader);
     });
 
     it('auto-unequips the slot and logs when the party ran out of the item', () =>

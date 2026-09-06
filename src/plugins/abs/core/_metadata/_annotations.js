@@ -48,6 +48,15 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.21.0
+ *    A skill carrying no <proximity> tag is now castable from any distance rather than
+ *    demanding the caster share a tile with its target, which nothing can do. An AI
+ *    holding such a skill approached its target forever and never fired.
+ *    Evade procs and the vanilla fallback in addStateWithOverrides now name their
+ *    source, so the application routes through JABS instead of landing as an inert
+ *    vanilla state that never expires.
+ *    Added determineDodgeStepCount, the seam a movement extension restates a dodge's
+ *    distance on. Aliasing the step setter instead also caught the per-step countdown.
  * - 4.20.1
  *    A respawn-pending battler is now erased when its placement is refused, so a
  *    killed enemy no longer lingers on the map as an animating shell after a reload.

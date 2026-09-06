@@ -66,11 +66,21 @@ class JABS_AllyAI
   /**
    * The leash multiplier for each spacing axis value.
    * Applied to {@link JABS_Battler.allyRubberbandRange} to derive per-ally leash distance.
+   *
+   * These climb with spacing rather than falling, because spacing is measured from the ally's
+   * target while the leash is measured from the leader- and in a fight the leader is standing on
+   * the target. An ally told to hold seven tiles off the enemy is therefore also seven tiles off
+   * the player, so the tier that stands furthest back is the tier that needs the most rope.
+   *
+   * Every value here must resolve to less than {@link JABS_AiManager.maxAiRange}. Beyond that
+   * distance the ally falls out of the AI management sweep entirely, so the leash check that would
+   * have hauled them back never runs again- and with vanilla follower chasing suppressed, nothing
+   * else is left to bring them home. A leash above the sweep radius does not stretch, it snaps.
    */
   static LeashMultipliers = {
-    [JABS_AllyAI.Spacing.FRONTLINE]: 1.5,
-    [JABS_AllyAI.Spacing.MIDLINE]:   1.0,
-    [JABS_AllyAI.Spacing.BACKLINE]:  0.6,
+    [JABS_AllyAI.Spacing.FRONTLINE]: 1.10,
+    [JABS_AllyAI.Spacing.MIDLINE]:   1.15,
+    [JABS_AllyAI.Spacing.BACKLINE]:  1.20,
   };
 
   /**

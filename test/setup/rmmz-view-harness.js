@@ -296,6 +296,35 @@ export function installBitmapMock()
     callback(this);
   };
 
+// the real `Bitmap` exposes the canvas 2d context, and drawing code reaches straight through it to
+  // set things no mock would otherwise carry- `imageSmoothingEnabled` is the one J-CMS's walk-sprite
+  // drawing writes before every blt. Without this, merely constructing a `Window_MenuStatus` throws
+  // from inside a test about something else entirely, which is the same failure shape the inert
+  // filters above exist to prevent.
+  //
+  // Each bitmap gets its own, built on first read, so a write to one cannot be observed through
+  // another.
+  Object.defineProperty(bitmap, 'context', {
+    get()
+    {
+      this._context ||= {
+        imageSmoothingEnabled: true,
+        globalAlpha: 1,
+        globalCompositeOperation: 'source-over',
+        save() {}, restore() {}, clearRect() {}, fillRect() {}, drawImage() {}, clip() {},
+        putImageData() {}, setTransform() {}, translate() {}, scale() {}, rotate() {},
+        fillText() {}, strokeText() {}, beginPath() {}, closePath() {},
+        moveTo() {}, lineTo() {}, stroke() {}, fill() {},
+        measureText: text => ({ width: String(text).length * 10 }),
+        getImageData: () => ({ data: new Uint8ClampedArray(4) }),
+        createLinearGradient: () => ({ addColorStop() {} }),
+      };
+
+      return this._context;
+    },
+    configurable: true,
+  });
+
   Object.defineProperty(bitmap, 'canvas', {
     get()
     {
