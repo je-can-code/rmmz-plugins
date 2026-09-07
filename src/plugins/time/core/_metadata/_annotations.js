@@ -201,6 +201,10 @@
  *
  * =============================================================================
  * CHANGELOG:
+ * - 1.3.0
+ *    Time conditionals are resolved from TimeMapper.ConditionalKinds, an ordered list
+ *    a plugin can register its own conditional into, rather than from a hardcoded pair
+ *    of branches per tag.
  * - 1.2.2
  *    Loading a save on a map tagged <noToneChange> keeps that map's tone. The tone
  *    was resolved only on transfer, and a load is not a transfer, so the screen

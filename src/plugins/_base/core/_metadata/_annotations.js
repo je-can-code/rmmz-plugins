@@ -157,6 +157,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.12.0
+ *    Trait display text is rendered from RPG_Trait.NameFormatters and ValueFormatters,
+ *    so a plugin introducing a trait code registers both halves for it rather than this
+ *    class growing a case per plugin. Unrecognized codes route through unknownTraitName
+ *    and unknownTraitValue, which an owning plugin can alias.
  * - 3.11.0
  *    Diagnostics accepts a function in place of its message or its payload and builds
  *    it behind a catch, so a defect while assembling a warning reports itself instead

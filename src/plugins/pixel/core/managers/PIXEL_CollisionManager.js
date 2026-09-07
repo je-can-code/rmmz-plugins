@@ -371,6 +371,31 @@ class PIXEL_CollisionManager
   }
 
   /**
+   * Folds the four blocked-edge booleans into the single number that identifies their combination.
+   *
+   * Sixteen combinations exist and eleven of them name a tile shape, which is a lookup rather than
+   * a decision tree once the four booleans stop being four separate questions.
+   * @param {boolean} blockUp Whether the up edge is blocked.
+   * @param {boolean} blockDown Whether the down edge is blocked.
+   * @param {boolean} blockLeft Whether the left edge is blocked.
+   * @param {boolean} blockRight Whether the right edge is blocked.
+   * @returns {number} The UDLR bitmask.
+   */
+  static toEdgeMask(blockUp, blockDown, blockLeft, blockRight)
+  {
+    const { Up, Down, Left, Right } = this.EdgeBits;
+    let mask = 0;
+
+    // each edge contributes its own bit, so the four booleans survive as one addressable number.
+    if (blockUp) mask |= Up;
+    if (blockDown) mask |= Down;
+    if (blockLeft) mask |= Left;
+    if (blockRight) mask |= Right;
+
+    return mask;
+  }
+
+  /**
    * Merges directional edge blocks into a single code when only one subcell is used.
    * @param {boolean} blockUp Whether the up edge is blocked.
    * @param {boolean} blockDown Whether the down edge is blocked.
@@ -378,89 +403,13 @@ class PIXEL_CollisionManager
    * @param {boolean} blockRight Whether the right edge is blocked.
    * @returns {number} The representative collision code.
    */
-  // eslint-disable-next-line complexity
   static _mergeSingleTile(blockUp, blockDown, blockLeft, blockRight)
   {
-    // TODO: reduce complexity via UDLR bitmask -> code lookup table.
-    // If all edges are blocked, the tile is fully solid.
-    if (blockUp && blockDown && blockLeft && blockRight)
-    {
-      // Return the solid code.
-      return this.Codes.Solid;
-    }
+    const mask = this.toEdgeMask(blockUp, blockDown, blockLeft, blockRight);
 
-    // If vertical edges are blocked but horizontal are open, return a vertical line.
-    if (blockUp && blockDown && !blockLeft && !blockRight)
-    {
-      // Return the vertical line code.
-      return this.Codes.VerticalLine;
-    }
-
-    // If horizontal edges are blocked but vertical are open, return a horizontal line.
-    if (blockLeft && blockRight && !blockUp && !blockDown)
-    {
-      // Return the horizontal line code.
-      return this.Codes.HorizontalLine;
-    }
-
-    // If only the up edge is blocked, encode a top edge.
-    if (blockUp && !blockDown && !blockLeft && !blockRight)
-    {
-      // Return the top edge code.
-      return this.Codes.EdgeUp;
-    }
-
-    // If only the down edge is blocked, encode a bottom edge.
-    if (blockDown && !blockUp && !blockLeft && !blockRight)
-    {
-      // Return the bottom edge code.
-      return this.Codes.EdgeDown;
-    }
-
-    // If only the left edge is blocked, encode a left edge.
-    if (blockLeft && !blockRight && !blockUp && !blockDown)
-    {
-      // Return the left edge code.
-      return this.Codes.EdgeLeft;
-    }
-
-    // If only the right edge is blocked, encode a right edge.
-    if (blockRight && !blockLeft && !blockUp && !blockDown)
-    {
-      // Return the right edge code.
-      return this.Codes.EdgeRight;
-    }
-
-    // If up and left are blocked, encode a top-left corner.
-    if (blockUp && blockLeft && !blockRight && !blockDown)
-    {
-      // Return the top-left corner code.
-      return this.Codes.CornerTopLeft;
-    }
-
-    // If up and right are blocked, encode a top-right corner.
-    if (blockUp && blockRight && !blockLeft && !blockDown)
-    {
-      // Return the top-right corner code.
-      return this.Codes.CornerTopRight;
-    }
-
-    // If down and left are blocked, encode a bottom-left corner.
-    if (blockDown && blockLeft && !blockRight && !blockUp)
-    {
-      // Return the bottom-left corner code.
-      return this.Codes.CornerBottomLeft;
-    }
-
-    // If down and right are blocked, encode a bottom-right corner.
-    if (blockDown && blockRight && !blockLeft && !blockUp)
-    {
-      // Return the bottom-right corner code.
-      return this.Codes.CornerBottomRight;
-    }
-
-    // Default to open when no specific merge rule applies.
-    return this.Codes.Open;
+    // the five unclaimed combinations are the empty one and the four with exactly three edges
+    // blocked. No tile shape draws those, and an unclaimed combination is open rather than a fault.
+    return this.SingleTileMerges[mask] ?? this.Codes.Open;
   }
 
   /**
@@ -471,10 +420,8 @@ class PIXEL_CollisionManager
    * @param {2|4|6|8} d The entering direction.
    * @returns {boolean} True if passable, false otherwise.
    */
-  // eslint-disable-next-line complexity
   static isPositionPassable(px, py, d)
   {
-    // TODO: reduce complexity via code->predicate table (and shared direction helpers).
     // Apply the global lattice shift only for reads.
     const sx = px + this.GridShiftX;
     const sy = py + this.GridShiftY;
@@ -495,84 +442,13 @@ class PIXEL_CollisionManager
     // Acquire the stored code for this subcell (default to open if empty).
     const code = this.table()[this._index(sx, sy)] || this.Codes.Open;
 
-    // Open: always passable.
-    if (code === this.Codes.Open)
-    {
-      // Passable subcell.
-      return true;
-    }
+    const predicate = this.PassagePredicates[code];
 
-    // Solid: always blocked.
-    if (code === this.Codes.Solid)
-    {
-      // Impassable subcell.
-      return false;
-    }
+    // A code nothing registered a predicate for is one this manager does not know how to block on,
+    // and over-blocking strands a player far more visibly than under-blocking lets one clip a wall.
+    if (predicate === undefined) return true;
 
-    // Vertical line blocks vertical motion (UP/DOWN), allows horizontal.
-    if (code === this.Codes.VerticalLine)
-    {
-      // If moving vertically, then blocked.
-      if (d === J.PIXEL.Directions.UP || d === J.PIXEL.Directions.DOWN)
-      {
-        // Vertical movement collides with vertical blocker.
-        return false;
-      }
-
-      // Horizontal movement is allowed across the line.
-      return true;
-    }
-
-    // Horizontal line blocks horizontal motion (LEFT/RIGHT), allows vertical.
-    if (code === this.Codes.HorizontalLine)
-    {
-      // If moving horizontally, then blocked.
-      if (d === J.PIXEL.Directions.LEFT || d === J.PIXEL.Directions.RIGHT)
-      {
-        // Horizontal movement collides with horizontal blocker.
-        return false;
-      }
-
-      // Vertical movement is allowed across the line.
-      return true;
-    }
-
-    // One-way edge blockers.
-    if (code === this.Codes.EdgeLeft)
-    {
-      // Block entering from the LEFT.
-      return d !== J.PIXEL.Directions.LEFT;
-    }
-    if (code === this.Codes.EdgeRight)
-    {
-      // Block entering from the RIGHT.
-      return d !== J.PIXEL.Directions.RIGHT;
-    }
-    if (code === this.Codes.EdgeDown)
-    {
-      // Block entering from DOWN.
-      return d !== J.PIXEL.Directions.DOWN;
-    }
-    if (code === this.Codes.EdgeUp)
-    {
-      // Block entering from UP.
-      return d !== J.PIXEL.Directions.UP;
-    }
-
-    // Corner single-blockers: treat as fully blocked regardless of approach direction.
-    if (
-      code === this.Codes.CornerBottomLeft
-      || code === this.Codes.CornerBottomRight
-      || code === this.Codes.CornerTopLeft
-      || code === this.Codes.CornerTopRight
-    )
-    {
-      // Corners are fully blocked at that subcell.
-      return false;
-    }
-
-    // Unknown code: default to passable to avoid over-blocking.
-    return true;
+    return predicate(d);
   }
 }
 
@@ -617,6 +493,89 @@ PIXEL_CollisionManager.Codes =
 
     // A top-right corner blocker; a single blocked subcell in that corner.
     CornerTopRight: 19,
+  };
+
+/**
+ * The bit each blocked edge contributes to a tile's edge mask.
+ *
+ * Attached beside {@link PIXEL_CollisionManager.Codes} rather than declared in the class body,
+ * because {@link PIXEL_CollisionManager.SingleTileMerges} below reads the codes and a static field
+ * inside the class would be evaluated before either table exists.
+ * @type {{Up: number, Down: number, Left: number, Right: number}}
+ */
+PIXEL_CollisionManager.EdgeBits =
+  {
+    Up: 8,
+    Down: 4,
+    Left: 2,
+    Right: 1,
+  };
+
+/**
+ * The collision code each combination of blocked edges merges into, keyed by edge mask.
+ *
+ * Eleven of the sixteen combinations name a shape. The five absent ones are the empty mask and the
+ * four holding exactly three blocked edges, which no tile shape draws; those fall through to open.
+ *
+ * A plugin introducing a collision code of its own registers the mask that produces it here, rather
+ * than this manager growing a branch per shape somebody else invented.
+ * @type {Object<number, number>}
+ */
+PIXEL_CollisionManager.SingleTileMerges =
+  {
+    // every edge blocked; nothing gets through.
+    15: PIXEL_CollisionManager.Codes.Solid,
+
+    // opposing pairs read as a line through the subcell rather than as two edges.
+    12: PIXEL_CollisionManager.Codes.VerticalLine,
+    3: PIXEL_CollisionManager.Codes.HorizontalLine,
+
+    // a lone blocked edge is a one-way blocker facing that direction.
+    8: PIXEL_CollisionManager.Codes.EdgeUp,
+    4: PIXEL_CollisionManager.Codes.EdgeDown,
+    2: PIXEL_CollisionManager.Codes.EdgeLeft,
+    1: PIXEL_CollisionManager.Codes.EdgeRight,
+
+    // two adjacent edges meet at a corner, which blocks that single subcell outright.
+    10: PIXEL_CollisionManager.Codes.CornerTopLeft,
+    9: PIXEL_CollisionManager.Codes.CornerTopRight,
+    6: PIXEL_CollisionManager.Codes.CornerBottomLeft,
+    5: PIXEL_CollisionManager.Codes.CornerBottomRight,
+  };
+
+/**
+ * The predicates deciding whether a subcell may be entered, keyed by collision code.
+ *
+ * A predicate receives the entering direction and answers whether the move is allowed. Splitting
+ * the decision this way is what lets a plugin add a collision code and teach passability about it
+ * from its own tree, instead of every new shape needing another branch in
+ * {@link PIXEL_CollisionManager.isPositionPassable}. A code with no predicate is treated as
+ * passable there.
+ * @type {Object<number, function(number): boolean>}
+ */
+PIXEL_CollisionManager.PassagePredicates =
+  {
+    // an open subcell imposes nothing, and a solid one refuses everything.
+    [PIXEL_CollisionManager.Codes.Open]: () => true,
+    [PIXEL_CollisionManager.Codes.Solid]: () => false,
+
+    // a line blocks the axis it stands across and leaves the other axis alone.
+    [PIXEL_CollisionManager.Codes.VerticalLine]: direction => direction !== J.PIXEL.Directions.UP
+      && direction !== J.PIXEL.Directions.DOWN,
+    [PIXEL_CollisionManager.Codes.HorizontalLine]: direction => direction !== J.PIXEL.Directions.LEFT
+      && direction !== J.PIXEL.Directions.RIGHT,
+
+    // an edge blocker refuses only the one direction it faces, so it can be walked off but not onto.
+    [PIXEL_CollisionManager.Codes.EdgeLeft]: direction => direction !== J.PIXEL.Directions.LEFT,
+    [PIXEL_CollisionManager.Codes.EdgeRight]: direction => direction !== J.PIXEL.Directions.RIGHT,
+    [PIXEL_CollisionManager.Codes.EdgeDown]: direction => direction !== J.PIXEL.Directions.DOWN,
+    [PIXEL_CollisionManager.Codes.EdgeUp]: direction => direction !== J.PIXEL.Directions.UP,
+
+    // a corner occupies its subcell completely, so the approach direction does not change the answer.
+    [PIXEL_CollisionManager.Codes.CornerTopLeft]: () => false,
+    [PIXEL_CollisionManager.Codes.CornerTopRight]: () => false,
+    [PIXEL_CollisionManager.Codes.CornerBottomLeft]: () => false,
+    [PIXEL_CollisionManager.Codes.CornerBottomRight]: () => false,
   };
 
 /**

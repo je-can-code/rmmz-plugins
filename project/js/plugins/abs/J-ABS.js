@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.21.0 ABS] Enables combat to be carried out on the map.
+ * [v4.22.0 ABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -48,6 +48,14 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.22.0
+ *    Added JABS_Engine.toDisplacement, the shared conversion of a direction and a
+ *    distance into a tile offset, so knockback, pull-forward and gap-close stop each
+ *    carrying their own copy.
+ *    Added resolveKnockbackDistance, which a plugin can alias to introduce a knockback
+ *    modifier without touching how the movement is carried out.
+ *    Action sprite facing is resolved from CardinalAxes and DiagonalCardinalComponents,
+ *    a movement plugin's registration point for a different movement scheme.
  * - 4.21.0
  *    A skill carrying no <proximity> tag is now castable from any distance rather than
  *    demanding the caster share a tile with its target, which nothing can do. An AI
@@ -4530,7 +4538,7 @@ J.ABS.Helpers.loadExternalConfig = (configPath = "data/config.jabs.json") => {
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.21.0");
+J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.22.0");
 J.ABS.Helpers.loadExternalConfig();
 /**
 * The various default values across the engine. Often configurable.
@@ -18587,6 +18595,56 @@ SerializableRegistry.register(JABS_DeathContext, {
 */
 var JABS_Engine = class JABS_Engine {
 	/**
+	* The direction handed to an action sprite when nothing better can be worked out.
+	*
+	* Two is the row every RMMZ character sheet has, so it is the safe answer rather than a chosen
+	* one- a sprite pointed the wrong way reads as a bug, and a sprite pointed at a fractional row
+	* reads as a corrupted sheet.
+	* @type {2}
+	*/
+	static DefaultSpritePatternDirection = 2;
+	/**
+	* The axis each cardinal direction travels along, keyed by direction.
+	*
+	* Doubles as the test for "is this a cardinal at all", since the diagonals and direction five are
+	* simply absent from it.
+	* @type {Object<number, string>}
+	*/
+	static CardinalAxes = {
+		2: "vertical",
+		4: "horizontal",
+		6: "horizontal",
+		8: "vertical"
+	};
+	/**
+	* The cardinal a diagonal reduces to, keyed first by the axis being reduced onto and then by the
+	* diagonal itself.
+	*
+	* A diagonal carries one component on each axis, so choosing an axis chooses the component: a
+	* caster facing up or down keeps the vertical half of the diagonal, and one facing left or right
+	* keeps the horizontal half. That is why this is keyed by axis rather than by the caster's exact
+	* facing- up and down are the same question, and answering it twice is what made the original
+	* four nested switches look like sixteen unrelated cases.
+	*
+	* A movement plugin working in a different scheme registers its own axis and components here
+	* rather than reaching into the reduction itself.
+	* @type {Object<string, Object<number, number>>}
+	*/
+	static DiagonalCardinalComponents = {
+		vertical: {
+			1: 2,
+			3: 2,
+			7: 8,
+			9: 8
+		},
+		horizontal: {
+			1: 4,
+			7: 4,
+			3: 6,
+			9: 6
+		}
+	};
+	/**
 	* Gets the action events.
 	* @returns {JABS_Action[]} The actionEvents.
 	*/
@@ -20086,85 +20144,12 @@ var JABS_Engine = class JABS_Engine {
 	* @returns {2|4|6|8} A cardinal for {@link Game_Character#setDirection} on action sprites.
 	*/
 	actionTravelDirectionToSpritePatternDirection(travelDir, castedCardinal) {
-		if (travelDir === 2 || travelDir === 4 || travelDir === 6 || travelDir === 8) {
-			return travelDir;
-		}
-		const casted = castedCardinal;
-		const rev = (d) => {
-			if (d === 2) return 8;
-			if (d === 8) return 2;
-			if (d === 4) return 6;
-			return 4;
-		};
-		if (travelDir !== 1 && travelDir !== 3 && travelDir !== 7 && travelDir !== 9) {
-			if (casted === 2 || casted === 4 || casted === 6 || casted === 8) {
-				return casted;
-			}
-			return 2;
-		}
-		let result;
-		switch (casted) {
-			case 2: {
-				switch (travelDir) {
-					case 1:
-					case 3:
-						result = casted;
-						break;
-					case 7:
-					case 9:
-						result = rev(casted);
-						break;
-				}
-				break;
-			}
-			case 4: {
-				switch (travelDir) {
-					case 1:
-					case 7:
-						result = casted;
-						break;
-					case 3:
-					case 9:
-						result = rev(casted);
-						break;
-				}
-				break;
-			}
-			case 6: {
-				switch (travelDir) {
-					case 3:
-					case 9:
-						result = casted;
-						break;
-					case 1:
-					case 7:
-						result = rev(casted);
-						break;
-				}
-				break;
-			}
-			case 8: {
-				switch (travelDir) {
-					case 7:
-					case 9:
-						result = casted;
-						break;
-					case 1:
-					case 3:
-						result = rev(casted);
-						break;
-				}
-				break;
-			}
-			default: {
-				result = casted;
-				break;
-			}
-		}
-		if (result === 2 || result === 4 || result === 6 || result === 8) {
-			return result;
-		}
-		return 2;
+		if (JABS_Engine.CardinalAxes[travelDir] !== undefined) return travelDir;
+		const axis = JABS_Engine.CardinalAxes[castedCardinal];
+		if (axis === undefined) return JABS_Engine.DefaultSpritePatternDirection;
+		const component = JABS_Engine.DiagonalCardinalComponents[axis][travelDir];
+		if (component === undefined) return castedCardinal;
+		return component;
 	}
 	/**
 	* Resolves the projectile formation for a given skill.
@@ -20739,6 +20724,64 @@ var JABS_Engine = class JABS_Engine {
 		}
 	}
 	/**
+	* The displacement a single step of forced movement produces, keyed by direction.
+	*
+	* Built on demand rather than held in a static field, because the direction constants are seeded
+	* during plugin bootstrap and a field on this class would be evaluated before that has happened.
+	* @returns {Object<number, [number, number]>}
+	*/
+	static displacementVectors() {
+		const { UP, DOWN, LEFT, RIGHT } = J.ABS.Directions;
+		return {
+			[UP]: [0, -1],
+			[DOWN]: [0, 1],
+			[LEFT]: [-1, 0],
+			[RIGHT]: [1, 0]
+		};
+	}
+	/**
+	* Converts a direction and a distance into the displacement the two produce together.
+	*
+	* Shared rather than private because every kind of forced displacement asks this same question-
+	* knockback, pull-forward and terrain-respecting gap-close all need a direction turned into a
+	* tile offset, and each having its own copy is how they drift apart.
+	* @param {number} direction The direction being displaced along.
+	* @param {number} distance The distance being travelled, rounded up to whole tiles.
+	* @returns {[number, number]} The [x, y] tile offset.
+	*/
+	static toDisplacement(direction, distance) {
+		const vector = JABS_Engine.displacementVectors()[direction];
+		if (vector === undefined) return [0, 0];
+		const [unitX, unitY] = vector;
+		const tiles = Math.ceil(distance);
+		return [unitX * tiles, unitY * tiles];
+	}
+	/**
+	* Resolves how far an action should knock its target back, after the target's resistance and the
+	* caster's amplification have both been applied.
+	*
+	* Separated from the displacement itself so a plugin can alias this to introduce a knockback
+	* modifier of its own without touching how the resulting movement is carried out.
+	* @param {JABS_Action} action The action potentially knocking the target back.
+	* @param {JABS_Battler} target The map battler to potentially knockback.
+	* @returns {number|null} The distance, or null when the target should not move at all- which is
+	* deliberately distinct from a zero distance, since zero still hops in place.
+	*/
+	resolveKnockbackDistance(action, target) {
+		const targetNotes = target.getBattler().getAllNotes();
+		const targetKnockbackResist = RPGManager.getSumFromAllNotesByRegex(targetNotes, J.ABS.RegExp.KnockbackResist);
+		if (targetKnockbackResist >= 100) return null;
+		let knockback = action.getKnockback();
+		if (knockback === null) return null;
+		knockback *= (100 - targetKnockbackResist) / 100;
+		const caster = action.getCaster();
+		const totalAmpPct = this.getKnockbackAmplificationPct(caster, action);
+		if (totalAmpPct !== 0) {
+			knockback *= 1 + totalAmpPct / 100;
+		}
+		return knockback;
+	}
+	/**
 	* Forces the target hit to be knocked back.
 	* @param {JABS_Action} action The action potentially knocking the target back.
 	* @param {JABS_Battler} target The map battler to potentially knockback.
@@ -20746,17 +20789,8 @@ var JABS_Engine = class JABS_Engine {
 	checkKnockback(action, target) {
 		if (!this.canBeKnockedBack(action, target)) return;
 		if (action.isHealing()) return;
-		const targetNotes = target.getBattler().getAllNotes();
-		const targetKnockbackResist = RPGManager.getSumFromAllNotesByRegex(targetNotes, J.ABS.RegExp.KnockbackResist);
-		if (targetKnockbackResist >= 100) return;
-		let knockback = action.getKnockback();
+		const knockback = this.resolveKnockbackDistance(action, target);
 		if (knockback === null) return;
-		knockback *= (100 - targetKnockbackResist) / 100;
-		const caster = action.getCaster();
-		const totalAmpPct = this.getKnockbackAmplificationPct(caster, action);
-		if (totalAmpPct !== 0) {
-			knockback *= 1 + totalAmpPct / 100;
-		}
 		const targetSprite = target.getCharacter();
 		if (knockback === 0 || action.isDirectAction()) {
 			targetSprite.jump(0, 0);
@@ -20764,22 +20798,7 @@ var JABS_Engine = class JABS_Engine {
 		}
 		const actionSprite = action.getActionSprite();
 		const knockbackDirection = actionSprite.direction();
-		let xPlus = 0;
-		let yPlus = 0;
-		switch (knockbackDirection) {
-			case J.ABS.Directions.UP:
-				yPlus -= Math.ceil(knockback);
-				break;
-			case J.ABS.Directions.DOWN:
-				yPlus += Math.ceil(knockback);
-				break;
-			case J.ABS.Directions.LEFT:
-				xPlus -= Math.ceil(knockback);
-				break;
-			case J.ABS.Directions.RIGHT:
-				xPlus += Math.ceil(knockback);
-				break;
-		}
+		const [xPlus, yPlus] = JABS_Engine.toDisplacement(knockbackDirection, knockback);
 		if (action.getBaseSkill().jabsIgnoreTerrain) {
 			targetSprite.jump(xPlus, yPlus);
 			return;
@@ -24650,7 +24669,7 @@ var StateAfflictionProvider = class StateAfflictionProvider {
 //#endregion
 //#region src/plugins/abs/core/_metadata/meta.js
 var PLUGIN_NAME = "J-ABS";
-var PLUGIN_VERSION = "4.21.0";
+var PLUGIN_VERSION = "4.22.0";
 var PLUGIN_DESC_TAG = "ABS";
 
 //#endregion

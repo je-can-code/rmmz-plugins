@@ -46,6 +46,10 @@
  * entirely plugin-parameter driven.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.0
+ *    Subcell passability is decided by PIXEL_CollisionManager.PassagePredicates and
+ *    tile merging by SingleTileMerges, so a plugin adding a collision code teaches
+ *    passability about it from its own tree instead of editing the manager.
  * - 1.1.0
  *    Routed the _pixel namespace into its own save section, so pixel movement
  *    state lands in systems/pixel.json rather than inside the system blob.

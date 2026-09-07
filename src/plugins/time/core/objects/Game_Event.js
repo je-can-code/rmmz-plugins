@@ -151,84 +151,25 @@ Game_Event.filterCommentCommandsByChoiceTimeConditional = function(command)
  * @param {RPG_EventListCommand} commentCommand The comment command to parse into a conditional.
  * @returns {TimeConditional}
  */
-// eslint-disable-next-line complexity
 Game_Event.toTimeConditional = function(commentCommand)
 {
-  // TODO: reduce complexity via ordered [regex, mapper] handler table.
   // shorthand the comment into a variable.
   const [ comment, ] = commentCommand.parameters;
 
-  // use a switch block to identify which RegExp should be used to populate the conditional.
-  switch (true)
+  // the kinds of conditional, and the order they are tested in, belong to TimeMapper- it owns every
+  // mapper this used to name one by one, and it is where a plugin registers a conditional of its own.
+  const conditional = TimeMapper.toConditional(comment);
+
+  // a comment reaching here has already been identified as a TIME tag, so failing to parse it means
+  // the tag and the table that reads it have drifted apart. say so rather than silently handing back
+  // an empty conditional that would evaluate as an unmet requirement forever.
+  if (conditional === null)
   {
-    //region events
-    // FOR WHOLE EVENTS:
-    case J.TIME.RegExp.MinutePage.test(comment):
-      return TimeMapper.minuteToConditional(comment, J.TIME.RegExp.MinutePage);
-    case J.TIME.RegExp.HourPage.test(comment):
-      return TimeMapper.hourToConditional(comment, J.TIME.RegExp.HourPage);
-    case J.TIME.RegExp.DayPage.test(comment):
-      return TimeMapper.dayToConditional(comment, J.TIME.RegExp.DayPage);
-    case J.TIME.RegExp.MonthPage.test(comment):
-      return TimeMapper.monthToConditional(comment, J.TIME.RegExp.MonthPage);
-    case J.TIME.RegExp.YearPage.test(comment):
-      return TimeMapper.yearToConditional(comment, J.TIME.RegExp.YearPage);
-    case J.TIME.RegExp.TimeOfDayPage.test(comment):
-      return TimeMapper.timeOfDayToConditional(comment, J.TIME.RegExp.TimeOfDayPage);
-    case J.TIME.RegExp.SeasonOfYearPage.test(comment):
-      return TimeMapper.seasonOfYearToConditional(comment, J.TIME.RegExp.SeasonOfYearPage);
-    case J.TIME.RegExp.TimeRangePage.test(comment):
-      return TimeMapper.timeRangeToConditional(comment, J.TIME.RegExp.TimeRangePage);
-    case J.TIME.RegExp.FullDateRangePage.test(comment):
-      return TimeMapper.fullDateRangeToConditional(comment, J.TIME.RegExp.FullDateRangePage);
-    case J.TIME.RegExp.MinuteRangePage.test(comment):
-      return TimeMapper.minuteRangeToConditional(comment, J.TIME.RegExp.MinuteRangePage);
-    case J.TIME.RegExp.HourRangePage.test(comment):
-      return TimeMapper.hourRangeToConditional(comment, J.TIME.RegExp.HourRangePage);
-    case J.TIME.RegExp.DayRangePage.test(comment):
-      return TimeMapper.dayRangeToConditional(comment, J.TIME.RegExp.DayRangePage);
-    case J.TIME.RegExp.MonthRangePage.test(comment):
-      return TimeMapper.monthRangeToConditional(comment, J.TIME.RegExp.MonthRangePage);
-    case J.TIME.RegExp.YearRangePage.test(comment):
-      return TimeMapper.yearRangeToConditional(comment, J.TIME.RegExp.YearRangePage);
-      //endregion events
-
-    //region choices
-    // JUST FOR CHOICES:
-    case J.TIME.RegExp.MinuteChoice.test(comment):
-      return TimeMapper.minuteToConditional(comment, J.TIME.RegExp.MinuteChoice);
-    case J.TIME.RegExp.HourChoice.test(comment):
-      return TimeMapper.hourToConditional(comment, J.TIME.RegExp.HourChoice);
-    case J.TIME.RegExp.DayChoice.test(comment):
-      return TimeMapper.dayToConditional(comment, J.TIME.RegExp.DayChoice);
-    case J.TIME.RegExp.MonthChoice.test(comment):
-      return TimeMapper.monthToConditional(comment, J.TIME.RegExp.MonthChoice);
-    case J.TIME.RegExp.YearChoice.test(comment):
-      return TimeMapper.yearToConditional(comment, J.TIME.RegExp.YearChoice);
-    case J.TIME.RegExp.TimeOfDayChoice.test(comment):
-      return TimeMapper.timeOfDayToConditional(comment, J.TIME.RegExp.TimeOfDayChoice);
-    case J.TIME.RegExp.SeasonOfYearChoice.test(comment):
-      return TimeMapper.seasonOfYearToConditional(comment, J.TIME.RegExp.SeasonOfYearChoice);
-    case J.TIME.RegExp.TimeRangeChoice.test(comment):
-      return TimeMapper.timeRangeToConditional(comment, J.TIME.RegExp.TimeRangeChoice);
-    case J.TIME.RegExp.FullDateRangeChoice.test(comment):
-      return TimeMapper.fullDateRangeToConditional(comment, J.TIME.RegExp.FullDateRangeChoice);
-    case J.TIME.RegExp.MinuteRangeChoice.test(comment):
-      return TimeMapper.minuteRangeToConditional(comment, J.TIME.RegExp.MinuteRangeChoice);
-    case J.TIME.RegExp.HourRangeChoice.test(comment):
-      return TimeMapper.hourRangeToConditional(comment, J.TIME.RegExp.HourRangeChoice);
-    case J.TIME.RegExp.DayRangeChoice.test(comment):
-      return TimeMapper.dayRangeToConditional(comment, J.TIME.RegExp.DayRangeChoice);
-    case J.TIME.RegExp.MonthRangeChoice.test(comment):
-      return TimeMapper.monthRangeToConditional(comment, J.TIME.RegExp.MonthRangeChoice);
-    case J.TIME.RegExp.YearRangeChoice.test(comment):
-      return TimeMapper.yearRangeToConditional(comment, J.TIME.RegExp.YearRangeChoice);
-      //endregion choices
-
-    default:
-      Diagnostics.warn(__PLUGIN_NAME__, `a time conditional was not generated for an identified TIME tag; ${comment}`);
-      return new TimeConditional();
+    Diagnostics.warn(__PLUGIN_NAME__, `a time conditional was not generated for an identified TIME tag; ${comment}`);
+    return new TimeConditional();
   }
+
+  return conditional;
 };
 
 /**
