@@ -1,3 +1,8 @@
+---
+completed: 2026-09-06
+ship: J-Base, J-ABS, J-TIME, J-Pixelistics
+---
+
 # Complexity refactors (small, safe)
 
 ## Context
@@ -28,8 +33,15 @@ This item tracks converting those hotspots into simpler, table-driven code **wit
 - [x] `bun run mutate <file>` on each touched file reports no new survivors. A lookup table has
       fewer branches than the chain it replaced, so coverage can stay at 100% while the tests stop
       constraining anything — mutation is the only check that notices
-- [ ] in-game: watch the clock roll through a full day. Tones change at the same hours as before,
+- [x] in-game: watch the clock roll through a full day. Tones change at the same hours as before,
       which is the one hotspot here whose output a player can actually see
+
+      **Moot rather than performed.** This check existed because the item expected to refactor
+      `Game_Time#translateHourToTone`, the one hotspot with player-visible output. That hotspot
+      turned out to have been resolved already - it delegates to `TimeToneResolver`, which is
+      table-driven - so neither `Game_Time.js` nor `TimeToneResolver.js` was touched by the work
+      that closed this item. There is no change for the check to catch. Recorded rather than
+      quietly ticked, because a future reader deserves to know which of the two it was.
 
 ## Notes
 
