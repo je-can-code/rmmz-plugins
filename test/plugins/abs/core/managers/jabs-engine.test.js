@@ -4846,6 +4846,81 @@ describe('JABS_Engine (unit, all downstream dependencies mocked)', () =>
     });
   });
 
+  describe('toDisplacement', () =>
+  {
+    it('displaces upward as negative y when given the up direction', () =>
+    {
+      // Arrange
+      const { UP } = J.ABS.Directions;
+
+      // Act
+      const result = JABS_Engine.toDisplacement(UP, 3);
+
+      // Assert
+      expect(result).toEqual([ 0, -3 ]);
+    });
+
+    it('displaces downward as positive y when given the down direction', () =>
+    {
+      // Arrange
+      const { DOWN } = J.ABS.Directions;
+
+      // Act
+      const result = JABS_Engine.toDisplacement(DOWN, 3);
+
+      // Assert
+      expect(result).toEqual([ 0, 3 ]);
+    });
+
+    it('displaces leftward as negative x when given the left direction', () =>
+    {
+      // Arrange
+      const { LEFT } = J.ABS.Directions;
+
+      // Act
+      const result = JABS_Engine.toDisplacement(LEFT, 3);
+
+      // Assert
+      expect(result).toEqual([ -3, 0 ]);
+    });
+
+    it('displaces rightward as positive x when given the right direction', () =>
+    {
+      // Arrange
+      const { RIGHT } = J.ABS.Directions;
+
+      // Act
+      const result = JABS_Engine.toDisplacement(RIGHT, 3);
+
+      // Assert
+      expect(result).toEqual([ 3, 0 ]);
+    });
+
+    it('rounds a fractional distance up to whole tiles', () =>
+    {
+      // Arrange
+      const { RIGHT } = J.ABS.Directions;
+
+      // Act
+      const result = JABS_Engine.toDisplacement(RIGHT, 2.1);
+
+      // Assert
+      expect(result).toEqual([ 3, 0 ]);
+    });
+
+    it('displaces nothing when the direction has no vector of its own', () =>
+    {
+      // Arrange
+      const { UPPERLEFT } = J.ABS.Directions;
+
+      // Act
+      const result = JABS_Engine.toDisplacement(UPPERLEFT, 3);
+
+      // Assert
+      expect(result).toEqual([ 0, 0 ]);
+    });
+  });
+
   describe('checkKnockback', () =>
   {
     function buildEngine(overrides = {})

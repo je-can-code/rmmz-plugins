@@ -98,216 +98,323 @@ class RPG_Trait
   }
 
   /**
-   * Gets the underlying name of the trait as text.
-   * @return {string}
+   * Renders an amount that carries its own sign, prefixing a plus when it is not already negative.
+   *
+   * This is the shape a parameter delta takes: the number itself is the answer, and the sign is
+   * only there so a reader can tell a gain from a loss at a glance.
+   * @param {number} amount The already-signed amount to render.
+   * @returns {string}
    */
-  // eslint-disable-next-line complexity
-  textName()
+  static asDelta(amount)
   {
-    // TODO: reduce complexity via code->formatter table.
-    switch (this.code)
-    {
-      // first tab.
-      case 11:
-        return `${$dataSystem.elements[this.dataId]} dmg`;
-      case 12:
-        return `${TextManager.param(this.dataId)} debuff rate`;
-      case 13:
-        return `${$dataStates[this.dataId].name} resist`;
-      case 14:
-        return 'Immune to';
-
-      // second tab.
-      case 21:
-        return `${TextManager.param(this.dataId)}`;
-      case 22:
-        return `${TextManager.xparam(this.dataId)}`;
-      case 23:
-        return `${TextManager.sparam(this.dataId)}`;
-
-      // third tab.
-      case 31:
-        return 'Element:';
-      case 32:
-        return `${$dataStates[this.dataId].name} on-hit`;
-      case 33:
-        return 'Skill Speed';
-      case 34:
-        return 'Times';
-      case 35:
-        return 'Basic Attack w/';
-
-      // fourth tab.
-      case 41:
-        return `Unlock:`;
-      case 42:
-        return `Lock:`;
-      case 43:
-        return `Learn:`;
-      case 44:
-        return `Seal:`;
-
-      // fifth tab.
-      case 51:
-        return `${$dataSystem.weaponTypes[this.dataId]}`;
-      case 52:
-        return `${$dataSystem.armorTypes[this.dataId]}`;
-      case 53:
-        return `${$dataSystem.equipTypes[this.dataId]}`;
-      case 54:
-        return `${$dataSystem.equipTypes[this.dataId]}`;
-      case 55:
-        return `${this.dataId
-          ? "Enable"
-          : "Disable"}`;
-
-      // sixth tab.
-      case 61:
-        return 'Another turn chance:';
-      case 62:
-        return `${this.translateSpecialFlag()}`;
-      case 64:
-        return `${this.translatePartyAbility()}`;
-
-      case 63:
-        return 'TRANSFERABLE TRAITS';
-      default:
-        return 'Is this a custom trait?';
-    }
+    return `${amount >= 0
+      ? '+'
+      : ''}${amount}`;
   }
 
   /**
-   * Gets the underlying value of the trait as text.
-   * @return {*|string}
+   * Renders a signed amount as a percentage.
+   * @param {number} amount The already-signed amount to render.
+   * @returns {string}
    */
-  // eslint-disable-next-line complexity
+  static asDeltaPercent(amount)
+  {
+    const delta = RPG_Trait.asDelta(amount);
+
+    return `${delta}%`;
+  }
+
+  /**
+   * Renders a magnitude behind an explicitly chosen sign.
+   *
+   * Unlike {@link RPG_Trait.asDelta}, the sign here is a separate decision from the number: several
+   * trait codes compute a rate whose sign runs opposite the direction a player reads it in, so the
+   * caller decides which way it points and hands over the magnitude alone.
+   * @param {number} magnitude The amount to render, whose own sign is discarded.
+   * @param {boolean} isPositive Whether to render this as a gain rather than a loss.
+   * @returns {string}
+   */
+  static asSignedMagnitude(magnitude, isPositive)
+  {
+    return `${isPositive
+      ? '+'
+      : '-'}${Math.abs(magnitude)}`;
+  }
+
+  /**
+   * Renders a magnitude behind an explicitly chosen sign, as a percentage.
+   * @param {number} magnitude The amount to render, whose own sign is discarded.
+   * @param {boolean} isPositive Whether to render this as a gain rather than a loss.
+   * @returns {string}
+   */
+  static asSignedMagnitudePercent(magnitude, isPositive)
+  {
+    const signed = RPG_Trait.asSignedMagnitude(magnitude, isPositive);
+
+    return `${signed}%`;
+  }
+
+  /**
+   * The formatters rendering the name half of a trait, keyed by trait code.
+   *
+   * A formatter answers the noun that the value half then qualifies, and receives the trait rather
+   * than reading one from a closure, so it stays a plain function anything can call and test.
+   *
+   * This is an extension point rather than a private detail. A plugin introducing its own trait
+   * code registers a formatter for it from its own tree - `RPG_Trait.NameFormatters[70] = ...` -
+   * the same way popup types are added to {@link Map_TextPop.Types}, instead of this file growing a
+   * case for every plugin that ever ships. A code with no formatter falls to
+   * {@link RPG_Trait#unknownTraitName}.
+   * @type {Object<number, function(RPG_Trait): string>}
+   */
+  static NameFormatters = {
+    // first tab: elemental, parameter and state resistances.
+    11: trait => `${$dataSystem.elements[trait.dataId]} dmg`,
+    12: trait => `${TextManager.param(trait.dataId)} debuff rate`,
+    13: trait => `${$dataStates[trait.dataId].name} resist`,
+    14: () => 'Immune to',
+
+    // second tab: the three parameter families.
+    21: trait => `${TextManager.param(trait.dataId)}`,
+    22: trait => `${TextManager.xparam(trait.dataId)}`,
+    23: trait => `${TextManager.sparam(trait.dataId)}`,
+
+    // third tab: what an attack is made of.
+    31: () => 'Element:',
+    32: trait => `${$dataStates[trait.dataId].name} on-hit`,
+    33: () => 'Skill Speed',
+    34: () => 'Times',
+    35: () => 'Basic Attack w/',
+
+    // fourth tab: skill access. the four read as a matched set, which is why they are four verbs
+    // rather than four sentences - the value half names the skill or skill type being acted on.
+    41: () => 'Unlock:',
+    42: () => 'Lock:',
+    43: () => 'Learn:',
+    44: () => 'Seal:',
+
+    // fifth tab: equipment access. 53 and 54 read the same table on purpose, because both name an
+    // equip slot; the value half is what says whether it is locked or sealed.
+    51: trait => `${$dataSystem.weaponTypes[trait.dataId]}`,
+    52: trait => `${$dataSystem.armorTypes[trait.dataId]}`,
+    53: trait => `${$dataSystem.equipTypes[trait.dataId]}`,
+    54: trait => `${$dataSystem.equipTypes[trait.dataId]}`,
+
+    // this one is a toggle rather than a slot, so the dataId is read as truth rather than as an
+    // index into anything.
+    55: trait => (trait.dataId
+      ? 'Enable'
+      : 'Disable'),
+
+    // sixth tab: party-wide effects and the special flags. both are interpolated rather than
+    // returned bare because their translators answer undefined for a data id they do not name, and
+    // interpolating is what has always turned that into text instead of leaking the value onward.
+    61: () => 'Another turn chance:',
+    62: trait => `${trait.translateSpecialFlag()}`,
+    63: () => 'TRANSFERABLE TRAITS',
+    64: trait => `${trait.translatePartyAbility()}`,
+  };
+
+  /**
+   * Gets the underlying name of the trait as text.
+   * @returns {string}
+   */
+  textName()
+  {
+    const formatter = RPG_Trait.NameFormatters[this.code];
+
+    // a code nothing registered belongs to a plugin that introduced the trait without teaching this
+    // table how to render it, so say that rather than printing an empty half of a sentence.
+    if (formatter === undefined) return this.unknownTraitName();
+
+    return formatter(this);
+  }
+
+  /**
+   * The name given to a trait whose code no formatter claims.
+   *
+   * Its own method so a plugin that knows better about its own codes can alias it and answer
+   * something more useful than a shrug.
+   * @returns {string}
+   */
+  unknownTraitName()
+  {
+    return 'Is this a custom trait?';
+  }
+
+  /**
+   * The formatters rendering the value half of a trait, keyed by trait code.
+   *
+   * The counterpart to {@link RPG_Trait.NameFormatters} and extended the same way: a plugin owning
+   * a trait code registers both halves for it. A code with no formatter falls to
+   * {@link RPG_Trait#unknownTraitValue}.
+   * @type {Object<number, function(RPG_Trait): string>}
+   */
+  static ValueFormatters = {
+    // first tab.
+    11: trait =>
+    {
+      // a positive result is a resistance and a negative one a weakness, but a player reads this as
+      // damage taken- so the sign is flipped against the number on the way out.
+      const elementalRate = Math.round(100 - (trait.value * 100));
+      const isMoreDamage = elementalRate <= 0;
+
+      return RPG_Trait.asSignedMagnitudePercent(elementalRate, isMoreDamage);
+    },
+    12: trait =>
+    {
+      // positive is more susceptible to the debuff, negative is less.
+      const debuffRate = Math.round((trait.value * 100) - 100);
+      const isMoreSusceptible = debuffRate >= 0;
+
+      return RPG_Trait.asSignedMagnitudePercent(debuffRate, isMoreSusceptible);
+    },
+    13: trait =>
+    {
+      // positive is more resistant, meaning the state is less likely to land.
+      const stateRate = Math.round(100 - (trait.value * 100));
+      const isMoreResistant = stateRate > 0;
+
+      return RPG_Trait.asSignedMagnitudePercent(stateRate, isMoreResistant);
+    },
+    14: trait => $dataStates[trait.dataId].name,
+
+    // second tab.
+    21: trait =>
+    {
+      const bParamRate = Math.round((trait.value * 100) - 100);
+
+      return RPG_Trait.asDeltaPercent(bParamRate);
+    },
+    22: trait =>
+    {
+      const xParamRate = Math.round(trait.value * 100);
+
+      // accuracy (hit, dataId 0): the xparam base is 0, so value*100 IS the flat integer JABS
+      // reads. Same math as every other xparam- only the percent sign is omitted, because the
+      // number is not one.
+      if (trait.dataId === 0) return RPG_Trait.asDelta(xParamRate);
+
+      return RPG_Trait.asDeltaPercent(xParamRate);
+    },
+    23: trait =>
+    {
+      const sParamRate = Math.round((trait.value * 100) - 100);
+
+      // parry (grd, dataId 1): the sparam base is 1.0, so (value*100)-100 IS the flat integer JABS
+      // reads, on the same reasoning as accuracy above.
+      if (trait.dataId === 1) return RPG_Trait.asDelta(sParamRate);
+
+      return RPG_Trait.asDeltaPercent(sParamRate);
+    },
+
+    // third tab.
+    31: trait => `${$dataSystem.elements.at(trait.dataId)}`,
+    32: trait => `${(trait.value * 100)}%`,
+    33: trait => RPG_Trait.asSignedMagnitude(trait.value, trait.value >= 0),
+    34: trait => RPG_Trait.asSignedMagnitude(trait.value, trait.value >= 0),
+    35: trait => `${$dataSkills[trait.dataId].name}`,
+
+    // fourth tab.
+    41: trait => `${$dataSystem.skillTypes[trait.dataId]}`,
+    42: trait => `${$dataSystem.skillTypes[trait.dataId]}`,
+    43: trait => `${$dataSkills[trait.dataId].name}`,
+    44: trait => `${$dataSkills[trait.dataId].name}`,
+
+    // fifth tab.
+    51: () => 'proficiency',
+    52: () => 'proficiency',
+    53: () => 'is locked',
+    54: () => 'is sealed',
+    55: () => 'Dual-wield',
+
+    // sixth tab. the flag codes carry their whole meaning in the name half, so the value is empty
+    // rather than absent- a trailing sentinel keeps textNameAndValue from growing a dangling word.
+    61: trait => `${Math.round(trait.value * 100)}%`,
+    62: () => String.empty,
+    63: () => String.empty,
+    64: () => String.empty,
+  };
+
+  /**
+   * Gets the underlying value of the trait as text.
+   * @returns {string}
+   */
   textValue()
   {
-    // TODO: reduce complexity via code->formatter table.
-    switch (this.code)
-    {
-      // first tab.
-      case 11:
-        // positive = resistance (takes less damage), negative = weakness (takes more).
-        // use Math.abs to prevent double-signing when the calc result is already negative.
-        const calculatedElementalRate = Math.round(100 - (this.value * 100));
-        return `${calculatedElementalRate > 0 ? "-" : "+"}${Math.abs(calculatedElementalRate)}%`;
-      case 12:
-        // positive = more susceptible, negative = less susceptible.
-        const calculatedDebuffRate = Math.round((this.value * 100) - 100);
-        return `${calculatedDebuffRate >= 0 ? "+" : "-"}${Math.abs(calculatedDebuffRate)}%`;
-      case 13:
-        // positive = more resistant (state less likely to land), negative = more susceptible.
-        const calculatedStateRate = Math.round(100 - (this.value * 100));
-        return `${calculatedStateRate > 0 ? "+" : "-"}${Math.abs(calculatedStateRate)}%`;
-      case 14:
-        return $dataStates[this.dataId].name;
+    const formatter = RPG_Trait.ValueFormatters[this.code];
 
-      // second tab.
-      case 21:
-        const calculatedBParam = Math.round((this.value * 100) - 100);
-        return `${calculatedBParam >= 0 ? "+" : ""}${calculatedBParam}%`;
-      case 22:
-      {
-        const calculatedXParam = Math.round(this.value * 100);
+    // matches the name half: an unregistered code says so rather than rendering nothing.
+    if (formatter === undefined) return this.unknownTraitValue();
 
-        // accuracy (hit, dataId 0): xparam base is 0, so value*100 IS the flat integer JABS reads.
-        // same math as the standard xparam formula — only the percent sign is omitted.
-        if (this.dataId === 0) return `${calculatedXParam >= 0 ? "+" : ""}${calculatedXParam}`;
-
-        return `${calculatedXParam >= 0 ? "+" : ""}${calculatedXParam}%`;
-      }
-      case 23:
-      {
-        const calculatedSParam = Math.round((this.value * 100) - 100);
-
-        // parry (grd, dataId 1): sparam base is 1.0, so (value*100)-100 IS the flat integer JABS reads.
-        // same math as the standard sparam formula — only the percent sign is omitted.
-        if (this.dataId === 1) return `${calculatedSParam >= 0 ? "+" : ""}${calculatedSParam}`;
-
-        return `${calculatedSParam >= 0 ? "+" : ""}${calculatedSParam}%`;
-      }
-
-      // third tab.
-      case 31:
-        return `${$dataSystem.elements.at(this.dataId)}`;
-      case 32:
-        return `${(this.value * 100)}%`;
-      case 33:
-        return `${this.value >= 0 ? "+" : "-"}${Math.abs(this.value)}`;
-      case 34:
-        return `${this.value >= 0 ? "+" : "-"}${Math.abs(this.value)}`;
-      case 35:
-        return `${$dataSkills[this.dataId].name}`;
-
-      // fourth tab.
-      case 41:
-        return `${$dataSystem.skillTypes[this.dataId]}`;
-      case 42:
-        return `${$dataSystem.skillTypes[this.dataId]}`;
-      case 43:
-        return `${$dataSkills[this.dataId].name}`;
-      case 44:
-        return `${$dataSkills[this.dataId].name}`;
-
-      // fifth tab.
-      case 51:
-        return 'proficiency';
-      case 52:
-        return 'proficiency';
-      case 53:
-        return 'is locked';
-      case 54:
-        return 'is sealed';
-      case 55:
-        return 'Dual-wield';
-
-      // sixth tab.
-      case 61:
-        return `${Math.round(this.value * 100)}%`;
-      case 62:
-        return String.empty;
-      case 64:
-        return String.empty;
-      case 63:
-        return String.empty;
-      default:
-        return "is this a custom trait?";
-    }
+    return formatter(this);
   }
 
+  /**
+   * The value given to a trait whose code no formatter claims.
+   *
+   * Its own method for the same reason {@link RPG_Trait#unknownTraitName} is: a plugin that owns
+   * the code can alias it rather than reaching into the table.
+   * @returns {string}
+   */
+  unknownTraitValue()
+  {
+    return 'is this a custom trait?';
+  }
+
+  /**
+   * The names of the special flags a trait of code 62 can carry, keyed by data id.
+   *
+   * Extended the same way the formatter tables are, for a plugin introducing a special flag of
+   * its own.
+   * @type {Object<number, string>}
+   */
+  static SpecialFlagNames = {
+    0: 'Autobattle',
+    1: 'Empowered Guard',
+    2: 'Cover/Substitute',
+    3: 'Preserve TP',
+  };
+
+  /**
+   * The names of the party abilities a trait of code 64 can carry, keyed by data id.
+   *
+   * Extended the same way the formatter tables are, for a plugin introducing a party ability of
+   * its own.
+   * @type {Object<number, string>}
+   */
+  static PartyAbilityNames = {
+    0: 'Encounter Half',
+    1: 'Encounter None',
+    2: 'Prevent Surprise',
+    3: 'Frequent Pre-emptive',
+    4: 'Gold Dropped 2x',
+    5: 'Loot Drop Chance 2x',
+  };
+
+  /**
+   * Translates this trait's data id into the name of the special flag it sets.
+   *
+   * Answers undefined for a data id the table does not name, which is the one place in this class
+   * that does not answer a typed sentinel. That predates the table and is pinned by test, so it is
+   * preserved here rather than quietly corrected under a refactor.
+   * @returns {string|undefined}
+   */
   translateSpecialFlag()
   {
-    switch (this.dataId)
-    {
-      case 0:
-        return 'Autobattle';
-      case 1:
-        return 'Empowered Guard';
-      case 2:
-        return 'Cover/Substitute';
-      case 3:
-        return 'Preserve TP';
-    }
+    return RPG_Trait.SpecialFlagNames[this.dataId];
   }
 
+  /**
+   * Translates this trait's data id into the name of the party ability it grants.
+   *
+   * Answers undefined for an unnamed data id, on the same footing as
+   * {@link RPG_Trait#translateSpecialFlag}.
+   * @returns {string|undefined}
+   */
   translatePartyAbility()
   {
-    switch (this.dataId)
-    {
-      case 0:
-        return 'Encounter Half';
-      case 1:
-        return 'Encounter None';
-      case 2:
-        return 'Prevent Surprise';
-      case 3:
-        return 'Frequent Pre-emptive';
-      case 4:
-        return 'Gold Dropped 2x';
-      case 5:
-        return 'Loot Drop Chance 2x';
-    }
+    return RPG_Trait.PartyAbilityNames[this.dataId];
   }
 }
 

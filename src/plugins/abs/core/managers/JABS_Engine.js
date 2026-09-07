@@ -20,6 +20,58 @@ import JABS_RespawnManager from './JABS_RespawnManager.js';
  */
 class JABS_Engine
 {
+  /**
+   * The direction handed to an action sprite when nothing better can be worked out.
+   *
+   * Two is the row every RMMZ character sheet has, so it is the safe answer rather than a chosen
+   * one- a sprite pointed the wrong way reads as a bug, and a sprite pointed at a fractional row
+   * reads as a corrupted sheet.
+   * @type {2}
+   */
+  static DefaultSpritePatternDirection = 2;
+
+  /**
+   * The axis each cardinal direction travels along, keyed by direction.
+   *
+   * Doubles as the test for "is this a cardinal at all", since the diagonals and direction five are
+   * simply absent from it.
+   * @type {Object<number, string>}
+   */
+  static CardinalAxes = {
+    2: 'vertical',
+    4: 'horizontal',
+    6: 'horizontal',
+    8: 'vertical',
+  };
+
+  /**
+   * The cardinal a diagonal reduces to, keyed first by the axis being reduced onto and then by the
+   * diagonal itself.
+   *
+   * A diagonal carries one component on each axis, so choosing an axis chooses the component: a
+   * caster facing up or down keeps the vertical half of the diagonal, and one facing left or right
+   * keeps the horizontal half. That is why this is keyed by axis rather than by the caster's exact
+   * facing- up and down are the same question, and answering it twice is what made the original
+   * four nested switches look like sixteen unrelated cases.
+   *
+   * A movement plugin working in a different scheme registers its own axis and components here
+   * rather than reaching into the reduction itself.
+   * @type {Object<string, Object<number, number>>}
+   */
+  static DiagonalCardinalComponents = {
+    vertical: {
+      1: 2,
+      3: 2,
+      7: 8,
+      9: 8,
+    },
+    horizontal: {
+      1: 4,
+      7: 4,
+      3: 6,
+      9: 6,
+    },
+  };
 
   //region properties
   /**
@@ -2523,117 +2575,24 @@ class JABS_Engine
    * @param {number} castedCardinal The caster's facing at fire time (expects 2/4/6/8).
    * @returns {2|4|6|8} A cardinal for {@link Game_Character#setDirection} on action sprites.
    */
-  // eslint-disable-next-line complexity
   actionTravelDirectionToSpritePatternDirection(travelDir, castedCardinal)
   {
-    // TODO: reduce complexity via lookup matrix by castedCardinal+travelDir.
-    if (travelDir === 2 || travelDir === 4 || travelDir === 6 || travelDir === 8)
-    {
-      return travelDir;
-    }
+    // a cardinal already indexes a real row on the sheet, so it needs no translation at all.
+    if (JABS_Engine.CardinalAxes[travelDir] !== undefined) return travelDir;
 
-    const casted = castedCardinal;
+    const axis = JABS_Engine.CardinalAxes[castedCardinal];
 
-    // rev() is only ever invoked below with `casted`, which by that point is always one of
-    // 2/4/6/8 (see the outer switch's own default, which already returns before calling rev())-
-    // so every call here matches one of the four explicit cases; there is no unmatched `d`.
-    const rev = d =>
-    {
-      if (d === 2) return 8;
-      if (d === 8) return 2;
-      if (d === 4) return 6;
-      return 4;
-    };
+    // a caster facing something that is not a cardinal cannot say which half of a diagonal it
+    // meant, so fall back to the one row every character sheet is guaranteed to have.
+    if (axis === undefined) return JABS_Engine.DefaultSpritePatternDirection;
 
-    if (travelDir !== 1 && travelDir !== 3 && travelDir !== 7 && travelDir !== 9)
-    {
-      if (casted === 2 || casted === 4 || casted === 6 || casted === 8)
-      {
-        return casted;
-      }
+    const component = JABS_Engine.DiagonalCardinalComponents[axis][travelDir];
 
-      return 2;
-    }
+    // the travel direction was neither cardinal nor diagonal- direction 5, or something off the
+    // keypad entirely. the caster's own facing is the closest thing to an answer left.
+    if (component === undefined) return castedCardinal;
 
-    let result;
-    switch (casted)
-    {
-      // travelDir is already constrained to {1,3,7,9} by the outer guard above, and each case
-      // below's two branches together cover all four values- there is no unmatched travelDir,
-      // so no default arm is needed (nor reachable) in any of these four inner switches.
-      case 2:
-      {
-        switch (travelDir)
-        {
-          case 1:
-          case 3:
-            result = casted;
-            break;
-          case 7:
-          case 9:
-            result = rev(casted);
-            break;
-        }
-        break;
-      }
-      case 4:
-      {
-        switch (travelDir)
-        {
-          case 1:
-          case 7:
-            result = casted;
-            break;
-          case 3:
-          case 9:
-            result = rev(casted);
-            break;
-        }
-        break;
-      }
-      case 6:
-      {
-        switch (travelDir)
-        {
-          case 3:
-          case 9:
-            result = casted;
-            break;
-          case 1:
-          case 7:
-            result = rev(casted);
-            break;
-        }
-        break;
-      }
-      case 8:
-      {
-        switch (travelDir)
-        {
-          case 7:
-          case 9:
-            result = casted;
-            break;
-          case 1:
-          case 3:
-            result = rev(casted);
-            break;
-        }
-        break;
-      }
-      default:
-      {
-        result = casted;
-        break;
-      }
-    }
-
-    if (result === 2 || result === 4 || result === 6 || result === 8)
-    {
-      return result;
-    }
-
-    return 2;
+    return component;
   }
 
   /**
@@ -3654,19 +3613,66 @@ class JABS_Engine
   }
 
   /**
-   * Forces the target hit to be knocked back.
+   * The displacement a single step of forced movement produces, keyed by direction.
+   *
+   * Built on demand rather than held in a static field, because the direction constants are seeded
+   * during plugin bootstrap and a field on this class would be evaluated before that has happened.
+   * @returns {Object<number, [number, number]>}
+   */
+  static displacementVectors()
+  {
+    const {
+      UP,
+      DOWN,
+      LEFT,
+      RIGHT
+    } = J.ABS.Directions;
+
+    return {
+      [ UP ]: [ 0, -1 ],
+      [ DOWN ]: [ 0, 1 ],
+      [ LEFT ]: [ -1, 0 ],
+      [ RIGHT ]: [ 1, 0 ],
+    };
+  }
+
+  /**
+   * Converts a direction and a distance into the displacement the two produce together.
+   *
+   * Shared rather than private because every kind of forced displacement asks this same question-
+   * knockback, pull-forward and terrain-respecting gap-close all need a direction turned into a
+   * tile offset, and each having its own copy is how they drift apart.
+   * @param {number} direction The direction being displaced along.
+   * @param {number} distance The distance being travelled, rounded up to whole tiles.
+   * @returns {[number, number]} The [x, y] tile offset.
+   */
+  static toDisplacement(direction, distance)
+  {
+    const vector = JABS_Engine.displacementVectors()[direction];
+
+    // a direction with no vector is a diagonal or an unset facing, and displacing along a guessed
+    // axis is worse than not displacing at all.
+    if (vector === undefined) return [ 0, 0 ];
+
+    const [ unitX, unitY ] = vector;
+    const tiles = Math.ceil(distance);
+
+    return [ unitX * tiles, unitY * tiles ];
+  }
+
+  /**
+   * Resolves how far an action should knock its target back, after the target's resistance and the
+   * caster's amplification have both been applied.
+   *
+   * Separated from the displacement itself so a plugin can alias this to introduce a knockback
+   * modifier of its own without touching how the resulting movement is carried out.
    * @param {JABS_Action} action The action potentially knocking the target back.
    * @param {JABS_Battler} target The map battler to potentially knockback.
+   * @returns {number|null} The distance, or null when the target should not move at all- which is
+   * deliberately distinct from a zero distance, since zero still hops in place.
    */
-  // eslint-disable-next-line complexity
-  checkKnockback(action, target)
+  resolveKnockbackDistance(action, target)
   {
-    // if we can't be knocked back, don't process.
-    if (!this.canBeKnockedBack(action, target)) return;
-
-    // you cannot be knocked back by healing-exclusive actions.
-    if (action.isHealing()) return;
-
     const targetNotes = target.getBattler()
       .getAllNotes();
 
@@ -3675,13 +3681,13 @@ class JABS_Engine
 
     // don't even knock them up or around at all, they are immune to knockback.
     // having 100 or more resistance means they don't even hop in place.
-    if (targetKnockbackResist >= 100) return;
+    if (targetKnockbackResist >= 100) return null;
 
     // get the knockback value from the skill if applicable.
     let knockback = action.getKnockback();
 
     // check to make sure the skill has knockback before processing.
-    if (knockback === null) return;
+    if (knockback === null) return null;
 
     // multiply the knockback by the remaining effectiveness (100 - resistance).
     knockback *= ((100 - targetKnockbackResist) / 100);
@@ -3694,6 +3700,28 @@ class JABS_Engine
     {
       knockback *= (1 + (totalAmpPct / 100));
     }
+
+    return knockback;
+  }
+
+  /**
+   * Forces the target hit to be knocked back.
+   * @param {JABS_Action} action The action potentially knocking the target back.
+   * @param {JABS_Battler} target The map battler to potentially knockback.
+   */
+  checkKnockback(action, target)
+  {
+    // if we can't be knocked back, don't process.
+    if (!this.canBeKnockedBack(action, target)) return;
+
+    // you cannot be knocked back by healing-exclusive actions.
+    if (action.isHealing()) return;
+
+    const knockback = this.resolveKnockbackDistance(action, target);
+
+    // a null distance means either the skill grants no knockback or the target refuses all of it.
+    // both mean nothing moves at all, which is distinct from a zero that still hops in place.
+    if (knockback === null) return;
 
     const targetSprite = target.getCharacter();
 
@@ -3710,23 +3738,7 @@ class JABS_Engine
     // calculate where the knockback would send the target.
     const actionSprite = action.getActionSprite();
     const knockbackDirection = actionSprite.direction();
-    let xPlus = 0;
-    let yPlus = 0;
-    switch (knockbackDirection)
-    {
-      case J.ABS.Directions.UP:
-        yPlus -= Math.ceil(knockback);
-        break;
-      case J.ABS.Directions.DOWN:
-        yPlus += Math.ceil(knockback);
-        break;
-      case J.ABS.Directions.LEFT:
-        xPlus -= Math.ceil(knockback);
-        break;
-      case J.ABS.Directions.RIGHT:
-        xPlus += Math.ceil(knockback);
-        break;
-    }
+    const [ xPlus, yPlus ] = JABS_Engine.toDisplacement(knockbackDirection, knockback);
 
     // a skill tagged with <ignoreTerrain> sails straight to the computed destination,
     // crossing pits/gaps/whatever else would normally halt the tile-by-tile walk below.

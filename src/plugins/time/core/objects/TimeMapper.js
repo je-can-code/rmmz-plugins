@@ -194,6 +194,76 @@ class TimeMapper
     timeConditional.isFullDateRange = true;
     return timeConditional;
   }
+
+  /**
+   * The kinds of time conditional a comment can declare, in the order they are tested.
+   *
+   * Order is load-bearing rather than cosmetic. Several of these tags are prefixes of one another
+   * once their captures are stripped, so the first entry whose pattern matches wins and a kind
+   * moved up the list can shadow one below it.
+   *
+   * A kind names itself once and is tested against both regex families, because the whole-event
+   * tags and the choice-branch tags parse identically and differ only in which comment carries
+   * them. That is also the extension contract: **a kind's key must match entries named
+   * `<Key>Page` and `<Key>Choice` in {@link J.TIME.RegExp}**, and a plugin adding a time
+   * conditional of its own registers its regexes under that naming and pushes one entry here,
+   * rather than this list growing a hardcoded pair per tag.
+   * @type {{key: string, map: function(string, RegExp): TimeConditional}[]}
+   */
+  static ConditionalKinds = [
+    { key: 'Minute', map: TimeMapper.minuteToConditional },
+    { key: 'Hour', map: TimeMapper.hourToConditional },
+    { key: 'Day', map: TimeMapper.dayToConditional },
+    { key: 'Month', map: TimeMapper.monthToConditional },
+    { key: 'Year', map: TimeMapper.yearToConditional },
+    { key: 'TimeOfDay', map: TimeMapper.timeOfDayToConditional },
+    { key: 'SeasonOfYear', map: TimeMapper.seasonOfYearToConditional },
+    { key: 'TimeRange', map: TimeMapper.timeRangeToConditional },
+    { key: 'FullDateRange', map: TimeMapper.fullDateRangeToConditional },
+    { key: 'MinuteRange', map: TimeMapper.minuteRangeToConditional },
+    { key: 'HourRange', map: TimeMapper.hourRangeToConditional },
+    { key: 'DayRange', map: TimeMapper.dayRangeToConditional },
+    { key: 'MonthRange', map: TimeMapper.monthRangeToConditional },
+    { key: 'YearRange', map: TimeMapper.yearRangeToConditional },
+  ];
+
+  /**
+   * The regex families a conditional kind is looked up under, in the order they are tested.
+   *
+   * Whole-event tags are tested ahead of choice-branch tags, matching the order these were
+   * originally written in.
+   * @type {string[]}
+   */
+  static ConditionalFamilies = [ 'Page', 'Choice' ];
+
+  /**
+   * Parses a comment into the {@link TimeConditional} it declares.
+   *
+   * The regex table is read here rather than captured when this class is defined, because the
+   * table is populated during plugin bootstrap and a kind may be registered by an extension after
+   * that. Reading it per call is also what lets a plugin add a conditional at any point without
+   * this class knowing it happened.
+   * @param {string} comment The comment to parse.
+   * @returns {TimeConditional|null} The conditional declared, or null when the comment declares
+   * none. Null is meaningful here: the caller distinguishes an unparsed tag from a parsed one and
+   * reports it, which an empty conditional would hide.
+   */
+  static toConditional(comment)
+  {
+    // walk families before kinds, so every whole-event tag is tested ahead of every choice tag.
+    for (const family of TimeMapper.ConditionalFamilies)
+    {
+      for (const kind of TimeMapper.ConditionalKinds)
+      {
+        const regex = J.TIME.RegExp[`${kind.key}${family}`];
+
+        // the first pattern to match owns the comment; see ConditionalKinds on why order matters.
+        if (regex.test(comment)) return kind.map(comment, regex);
+      }
+    }
+
+    return null;
+  }
 }
 
 export default TimeMapper;

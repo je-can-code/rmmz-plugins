@@ -19,13 +19,13 @@ This item tracks converting those hotspots into simpler, table-driven code **wit
 
 ## Definition of done
 
-- [ ] each named hotspot is table-driven: `RPG_Trait#textName` / `textValue`, the `JAFTING_Trait`
+- [x] each named hotspot is table-driven: `RPG_Trait#textName` / `textValue`, the `JAFTING_Trait`
       name and value getters, `Game_Time#translateHourToTone`, `Game_Event.toTimeConditional`,
       `PIXEL_CollisionManager._mergeSingleTile` and `isPositionPassable`, and
       `JABS_Engine.actionTravelDirectionToSpritePatternDirection`
-- [ ] `grep -rn 'disable-next-line complexity' src/plugins/` no longer names any of those files
-- [ ] `bun run hotfix` green and coverage still 100%
-- [ ] `bun run mutate <file>` on each touched file reports no new survivors. A lookup table has
+- [x] `grep -rn 'disable-next-line complexity' src/plugins/` no longer names any of those files
+- [x] `bun run hotfix` green and coverage still 100%
+- [x] `bun run mutate <file>` on each touched file reports no new survivors. A lookup table has
       fewer branches than the chain it replaced, so coverage can stay at 100% while the tests stop
       constraining anything — mutation is the only check that notices
 - [ ] in-game: watch the clock roll through a full day. Tones change at the same hours as before,
@@ -34,4 +34,12 @@ This item tracks converting those hotspots into simpler, table-driven code **wit
 ## Notes
 
 - Goal is readability/maintainability, not “hit a magic number”.
+- Two of the named hotspots were already resolved before this pass and needed no work:
+  `JAFTING_Trait`'s name and value getters delegate to `RPG_Trait`, and
+  `Game_Time#translateHourToTone` delegates to `TimeToneResolver`, which is itself table-driven.
+  Neither carried a complexity disable.
+- `JABS_Engine.checkKnockback` was not a named hotspot but carried a disable in a named file, so it
+  was included to make the grep check honest. Its reusable half became `toDisplacement`.
+- Decomposition targeted extension points rather than line count: every table is a static a plugin
+  can register into from its own tree, and every `default` arm became a named, aliasable method.
 

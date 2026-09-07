@@ -48,6 +48,14 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.22.0
+ *    Added JABS_Engine.toDisplacement, the shared conversion of a direction and a
+ *    distance into a tile offset, so knockback, pull-forward and gap-close stop each
+ *    carrying their own copy.
+ *    Added resolveKnockbackDistance, which a plugin can alias to introduce a knockback
+ *    modifier without touching how the movement is carried out.
+ *    Action sprite facing is resolved from CardinalAxes and DiagonalCardinalComponents,
+ *    a movement plugin's registration point for a different movement scheme.
  * - 4.21.0
  *    A skill carrying no <proximity> tag is now castable from any distance rather than
  *    demanding the caster share a tile with its target, which nothing can do. An AI
