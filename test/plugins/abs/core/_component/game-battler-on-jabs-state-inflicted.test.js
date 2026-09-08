@@ -22,6 +22,7 @@ function buildMinimalBattler()
     resetStateCounts: vi.fn(),
     addJabsState: vi.fn(),
     onJabsStateInflicted: vi.fn(),
+    flagSkillSlotsForRefresh: vi.fn(),
     _result: { pushAddedState: vi.fn() },
   };
 

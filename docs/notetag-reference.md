@@ -4493,6 +4493,37 @@ everything else. `juiceDuration` overrides the swing animation length in frames 
 
 ---
 
+### `<castMotion:NAME>` / `<castMotionPeriod:N>` / `<castMotionIntensity:PERCENT>`
+
+**Applies to:**
+Skills
+
+**When:**
+every frame of this skill's cast, from the button press until the cast completes
+
+**Effect:**
+selects the caster's body motion for the *whole cast*, as opposed to `<juiceMotion>` which plays
+once at execution. The only NAME today is `squish`: a fixed-period squat (width swelling as height
+compresses) that runs for the length of the cast and reads as effort being spent rather than energy
+gathering. `castMotionPeriod` is frames per squat (default 8, about seven and a half a second);
+smaller is faster. `castMotionIntensity` is the peak deformation as a percent of true size (at the
+bottom of a 45 squat the sprite is 45% wider and correspondingly shorter); when omitted the
+`unarmedStrikeSquishIntensity` juice config value is used, which is tuned for a poke rather than a
+workout. Both knobs are only read when `castMotion` is set. Omit all three and the cast shows the
+default accelerating charge pulse.
+
+```
+<castMotion:squish>
+<castMotionPeriod:6>
+<castMotionIntensity:45>
+```
+The caster squats ten times a second, nearly half again as wide at the bottom of each one, for as
+long as this skill is being cast.
+
+**See also:** `<juiceMotion>`, `<castTime>`
+
+---
+
 ### `<juiceStabTipDegrees:N>` / `<juiceProfileGun>`
 
 **Applies to:**

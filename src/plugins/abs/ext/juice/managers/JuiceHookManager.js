@@ -379,11 +379,80 @@ class JuiceHookManager
     const md = J.ABS.EXT.JUICE.Metadata;
     const character = battler.getCharacter();
 
+    // a skill may ask for a different body motion for its cast than the default charge-up. the
+    // decided action is what is being cast, so it is where that request lives.
+    const castMotion = JuiceHookManager.#castMotionFor(battler);
+
+    // the squat: a fixed rapid squash for the whole cast, for skills that are spending something.
+    if (castMotion === 'squish')
+    {
+      const skill = battler.getDecidedAction()[0].getBaseSkill();
+
+      // zero is the getter's "nothing authored" sentinel, so the registered default period stands.
+      const period = skill.jabsJuiceCastMotionPeriod || JuiceHookManager.#castingSquishDefaultPeriodFrames;
+
+      JuiceMotionManager.scheduleCastingSquish(
+        character,
+        JuiceHookManager.#castingSquishIntensityFor(skill, md),
+        period,
+        JuiceHookManager.#castingHeartbeatFrames
+      );
+      return;
+    }
+
     JuiceMotionManager.scheduleCastingPulse(
       character,
       md.castingPulseAmplitude,
       JuiceHookManager.#castingHeartbeatFrames
     );
+  }
+
+  /**
+   * How many frames one casting squat takes when the skill does not say.
+   *
+   * Eight frames is seven and a half squats a second, which is the "rapidly" the design asked for
+   * without turning into a vibration.
+   * @type {number}
+   */
+  static #castingSquishDefaultPeriodFrames = 8;
+
+  /**
+   * How hard the casting squat deforms the sprite.
+   *
+   * A skill may author its own peak as a percent; a workout wants to read as a workout, and the
+   * config's unarmed strike squish is tuned for a poke. Zero is the getter's "nothing authored"
+   * sentinel, in which case that config value stands.
+   * @param {RPG_Skill} skill The skill being cast.
+   * @param {object} md This plugin's metadata, holding the config fallback.
+   * @returns {number} The peak deformation as a fraction of true size, ex: `0.45`.
+   */
+  static #castingSquishIntensityFor(skill, md)
+  {
+    const authoredPercent = skill.jabsJuiceCastMotionIntensity;
+
+    // nothing authored means the ordinary unarmed strike squish.
+    if (authoredPercent === 0) return md.unarmedStrikeSquishIntensity;
+
+    return authoredPercent / 100;
+  }
+
+  /**
+   * The cast motion the battler's in-flight skill asked for, if any.
+   *
+   * A battler mid-cast always has a decided action, but the tick can land on a frame where the
+   * decision has not been made yet or has already been cleared, and an empty answer there simply
+   * means the default charge-up.
+   * @param {JABS_Battler} battler The casting battler.
+   * @returns {string} The cast motion key, or an empty string for the default.
+   */
+  static #castMotionFor(battler)
+  {
+    const actions = battler.getDecidedAction();
+
+    // nothing decided means nothing authored to read.
+    if (!actions || actions.length === 0) return String.empty;
+
+    return actions[0].getBaseSkill().jabsJuiceCastMotion;
   }
 
   /**

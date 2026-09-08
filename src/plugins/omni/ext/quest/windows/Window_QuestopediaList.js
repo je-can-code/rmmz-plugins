@@ -1,6 +1,13 @@
 //region Window_QuestopediaList
 import OmniQuest from './../__models/OmniQuest.js';
+import QuestNameTruncator from './../managers/QuestNameTruncator.js';
 
+/**
+ * The list of quests in the category being browsed, one row per quest.
+ *
+ * Rows render a touch smaller than body copy: quest names are authored long, and the column has
+ * to leave room at its right edge for the tracking marker without the two ever meeting.
+ */
 class Window_QuestopediaList
   extends Window_Command
 {
@@ -13,6 +20,90 @@ class Window_QuestopediaList
   {
     // perform original logic, which seeds this window's members before building the list.
     super(rect);
+  }
+
+  /**
+   * Overrides {@link Window_Base.resetFontSize}.<br/>
+   * Every row of this list, marker included, renders a little smaller than body copy.
+   *
+   * This is the one seam that shrinks the name, the marker and the measurements together; wrapping
+   * each name in a size code would leave the marker at full size beside a smaller name.
+   */
+  resetFontSize()
+  {
+    this.contents.fontSize = $gameSystem.mainFontSize() - this.fontSizeReduction();
+  }
+
+  /**
+   * How much smaller than body copy this list renders.
+   * @returns {number}
+   */
+  fontSizeReduction()
+  {
+    return 4;
+  }
+
+  /**
+   * The text drawn at the right edge of a tracked quest's row.
+   * @returns {string}
+   */
+  trackedMarker()
+  {
+    return '🔍';
+  }
+
+  /**
+   * The width the command name is indented by to leave room for its icon.
+   *
+   * This mirrors the indent the shared command drawing applies before the name; it is not read from
+   * there because the drawing has no reason to expose it, and the name is fitted here before the
+   * drawing ever sees it.
+   * @returns {number}
+   */
+  commandNameIndent()
+  {
+    return 40;
+  }
+
+  /**
+   * The room reserved at the right edge of a row for the tracking marker, whether or not the row is
+   * tracked. Reserving it unconditionally keeps every name fitted to the same width, so tracking a
+   * quest never shortens its name.
+   * @returns {number}
+   */
+  markerGutterWidth()
+  {
+    // measured as escape-code text so the measurement runs at this list's own font size, which is
+    // what draws the marker.
+    const markerWidth = this.textSizeEx(this.trackedMarker()).width;
+
+    return markerWidth + this.itemPadding();
+  }
+
+  /**
+   * The width a quest name may occupy before it would reach the marker's gutter.
+   * @returns {number}
+   */
+  nameAvailableWidth()
+  {
+    const rowWidth = this.innerWidth - (this.itemPadding() * 2);
+
+    return rowWidth - this.commandNameIndent() - this.markerGutterWidth();
+  }
+
+  /**
+   * Fits a quest name into the room a row leaves for it.
+   * @param {string} name The name, possibly carrying escape codes.
+   * @returns {string}
+   */
+  fitQuestName(name)
+  {
+    const available = this.nameAvailableWidth();
+
+    // a candidate fits when its rendered width, escape codes included, stays short of the gutter.
+    const fits = candidate => this.textSizeEx(candidate).width <= available;
+
+    return QuestNameTruncator.fit(name, fits);
   }
 
   /**
@@ -110,13 +201,16 @@ class Window_QuestopediaList
   buildCommand(questopediaEntry)
   {
     // determine the name based on whether its known or not.
-    const questName = questopediaEntry.isKnown()
+    const rawName = questopediaEntry.isKnown()
       ? questopediaEntry.name()
       : J.BASE.Helpers.maskString(questopediaEntry.name());
 
+    // keep the name clear of the marker's gutter, tracked or not.
+    const questName = this.fitQuestName(rawName);
+
     // if the quest is being tracked already, add a little emoji to indicate such.
     const trackedText = questopediaEntry.isTracked()
-      ? "🔍"
+      ? this.trackedMarker()
       : String.empty;
 
     // check if the quest can actually be tracked in its current state.

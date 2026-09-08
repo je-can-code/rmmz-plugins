@@ -44,6 +44,42 @@ Object.defineProperty(RPG_Skill.prototype, 'jabsJuiceMotion', {
 });
 
 /**
+ * Skill note: the body motion shown for the whole of this skill's cast (`<castMotion:NAME>`).
+ * Empty when omitted, which means the default charge pulse.
+ * @type {string}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsJuiceCastMotion', {
+  get: function()
+  {
+    return RPGManager.getStringFromNoteByRegex(this, J.ABS.EXT.JUICE.RegExp.CastMotion, true) ?? String.empty;
+  },
+});
+
+/**
+ * Skill note: frames per repetition of the cast motion (`<castMotionPeriod:N>`).
+ * Zero when omitted, which lets the motion type's registered default period stand.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsJuiceCastMotionPeriod', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.EXT.JUICE.RegExp.CastMotionPeriod, true) ?? 0;
+  },
+});
+
+/**
+ * Skill note: peak deformation of the cast motion as a percent (`<castMotionIntensity:PERCENT>`).
+ * Zero when omitted, which lets the juice config's unarmed strike intensity stand.
+ * @type {number}
+ */
+Object.defineProperty(RPG_Skill.prototype, 'jabsJuiceCastMotionIntensity', {
+  get: function()
+  {
+    return RPGManager.getNumberFromNoteByRegex(this, J.ABS.EXT.JUICE.RegExp.CastMotionIntensity, true) ?? 0;
+  },
+});
+
+/**
  * Skill note: arc / arc-reverse span in degrees (`<juiceSpan:N>`). Omitted uses plugin default (120).
  * @type {number}
  */

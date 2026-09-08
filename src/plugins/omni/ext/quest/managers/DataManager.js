@@ -20,6 +20,11 @@ DataManager.createGameObjects = function()
  */
 DataManager.registerQuestopediaInputActions = function()
 {
+  // the action registry and the symbol it binds to both belong to J-ABS-InputManager, which this
+  // plugin only orders after rather than requires. without it there is nothing to register into,
+  // and the questopedia is reached through the menu instead.
+  if (!J.ABS || !J.ABS.EXT.INPUT) return;
+
   // register the logical action under the J.OMNI.QUEST namespace.
   Input.registerAction('J.OMNI.QUEST', {
     key: 'open-quest-log',

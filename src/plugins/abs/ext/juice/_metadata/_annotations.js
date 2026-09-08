@@ -147,6 +147,23 @@
  *   On healing skills, omitting juiceMotion keeps caster-only support squish; any juiceMotion
  *   tag opts into full strike juice.
  *
+ * <castMotion:NAME>
+ *   Selects the body motion shown for the WHOLE of this skill's cast, as opposed to
+ *   juiceMotion above, which plays once at execution. Valid values:
+ *   squish  - a fixed-period squat, width swelling as height compresses, for the length
+ *             of the cast. Reads as effort being spent rather than energy gathering.
+ *   When omitted, the cast shows the default accelerating charge pulse.
+ *
+ * <castMotionPeriod:N>
+ *   Frames per repetition of the cast motion (default 8, which is about seven squats a
+ *   second). Smaller is faster. Only read when castMotion is set.
+ *
+ * <castMotionIntensity:PERCENT>
+ *   Peak deformation of the cast motion as a percent of the sprite's true size: at the
+ *   bottom of a 45 squat the sprite is 45% wider and correspondingly shorter. When
+ *   omitted, the juice config's unarmedStrikeSquishIntensity is used, which is tuned for
+ *   a poke rather than a workout. Only read when castMotion is set.
+ *
  * <juiceSpan:N>
  *   Arc span in degrees for arc / arc-reverse / arc-oscillate (default 120; typical range 30–300).
  *

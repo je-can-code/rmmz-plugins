@@ -99,6 +99,59 @@ J.ABS.EXT.JUICE.RegExp = {
   JuiceDuration: /<juiceDuration:[ ]?(\d+)>/i,
 
   /**
+   * Skill: `<castMotion:NAME>` — selects the body motion shown for the whole of this skill's cast,
+   * as opposed to `<juiceMotion:>`, which plays once at execution. Currently: squish.
+   * When omitted, the cast shows the default accelerating charge pulse.
+   *
+   * <pre>
+   * Structure:
+   *  <castMotion:NAME>
+   *
+   * Example:
+   *  <castMotion:squish>
+   *
+   * Translation:
+   *  while this skill is being cast, the caster squats on a fixed rapid period
+   * </pre>
+   */
+  CastMotion: /<castMotion:[ ]?([a-zA-Z0-9_-]+)>/i,
+
+  /**
+   * Skill: `<castMotionPeriod:N>` — how many frames one repetition of the cast motion takes.
+   * Smaller is faster. When omitted, the motion type's registered default period is used.
+   *
+   * <pre>
+   * Structure:
+   *  <castMotionPeriod:FRAMES>
+   *
+   * Example:
+   *  <castMotionPeriod:6>
+   *
+   * Translation:
+   *  one squat every six frames, ten a second
+   * </pre>
+   */
+  CastMotionPeriod: /<castMotionPeriod:[ ]?(\d+)>/i,
+
+  /**
+   * Skill: `<castMotionIntensity:PERCENT>` — how far the body deforms at the peak of each repetition
+   * of the cast motion, as a percent of its true size. When omitted, the unarmed strike squish
+   * intensity from the juice config is used, which is tuned for a poke rather than a workout.
+   *
+   * <pre>
+   * Structure:
+   *  <castMotionIntensity:PERCENT>
+   *
+   * Example:
+   *  <castMotionIntensity:45>
+   *
+   * Translation:
+   *  at the bottom of each squat the sprite is 45% wider and correspondingly shorter
+   * </pre>
+   */
+  CastMotionIntensity: /<castMotionIntensity:[ ]?(\d+)>/i,
+
+  /**
    * Skill: `<juiceStabTipDegrees:N>` — tip/bore bearing from Pixi +x at rotation 0 (stab / bash / recoil; see help).
    */
   JuiceStabTipDegrees: /<juiceStabTipDegrees:[ ]?(-?\d+)>/i,

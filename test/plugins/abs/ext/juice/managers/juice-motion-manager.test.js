@@ -214,6 +214,81 @@ describe('JuiceMotionManager', () =>
     });
   });
 
+  describe('scheduleCastingSquish', () =>
+  {
+    it('starts the character squatting', () =>
+    {
+      // Act
+      JuiceMotionManager.scheduleCastingSquish(character, 0.14, 8, 4);
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(true);
+    });
+
+    it('lapses shortly after whatever was renewing it stops', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleCastingSquish(character, 0.14, 8, 4);
+
+      // Act
+      composeFrames(4);
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(false);
+    });
+
+    it('flattens as it widens at the peak of a squat', () =>
+    {
+      // Arrange- four elapsed frames into an 8-frame period is the top of the envelope, and the
+      // effect advances one frame per composition, so the fourth composition is the peak.
+      JuiceMotionManager.scheduleCastingSquish(character, 0.14, 8, 40);
+
+      // Act
+      let composition = null;
+      for (let index = 0; index < 4; index++)
+      {
+        JuiceMotionManager.scheduleCastingSquish(character, 0.14, 8, 40);
+        composition = composeFrames(1);
+      }
+
+      // Assert- width and height move in opposite directions, which a swell never does.
+      expect(composition.valueFor(MotionChannels.SCALE_X)).toBeCloseTo(1.14, 4);
+      expect(composition.valueFor(MotionChannels.SCALE_Y)).toBeCloseTo(1 / 1.14, 4);
+    });
+
+    it('replaces a running casting pulse rather than layering on top of it', () =>
+    {
+      // Arrange- a pulse is already declared on the casting key.
+      JuiceMotionManager.scheduleCastingPulse(character, 0.5, 40);
+      composeFrames(1);
+
+      // Act- a squat is declared on the same key, then composed at its own peak.
+      let composition = null;
+      for (let index = 0; index < 5; index++)
+      {
+        JuiceMotionManager.scheduleCastingSquish(character, 0.14, 8, 40);
+        composition = composeFrames(1);
+      }
+
+      // Assert- a surviving pulse would swell both axes together; the height went down.
+      expect(composition.valueFor(MotionChannels.SCALE_Y)).toBeLessThan(1);
+    });
+
+    it('is settled by cancelCastingPulse, since a cast makes exactly one casting motion', () =>
+    {
+      // Arrange
+      JuiceMotionManager.scheduleCastingSquish(character, 0.14, 8, 40);
+      composeFrames(1);
+
+      // Act
+      JuiceMotionManager.cancelCastingPulse(character);
+      composeFrames(1);
+
+      // Assert
+      expect(CharacterMotionComposer.hasMotion(character)).toBe(false);
+    });
+  });
+
   describe('scheduleCastingPulse', () =>
   {
     it('starts the character shimmering', () =>

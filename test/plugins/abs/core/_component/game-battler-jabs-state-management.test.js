@@ -57,6 +57,90 @@ describe('J-ABS Game_Battler JABS state management (direct src import)', () =>
     };
   });
 
+  describe('flagSkillSlotsForRefresh (slots re-resolve when transform sources change)', () =>
+  {
+    /**
+     * Builds a battler wired to a fake slot manager whose flag call is observable.
+     * @returns {{battler: object, manager: object}}
+     */
+    function buildBattlerWithSlots()
+    {
+      const battler = buildBattler();
+      const manager = { flagAllSkillSlotsForRefresh: vi.fn() };
+      battler.getSkillSlotManager = () => manager;
+      return { battler, manager };
+    }
+
+    it('does nothing when the battler has no slot manager', () =>
+    {
+      // Arrange- a battler that never had slots set up; nothing to flag and nothing to throw on.
+      const battler = buildBattler();
+      battler.getSkillSlotManager = () => null;
+
+      // Act + Assert- reaching a method on null would be the failure here.
+      expect(() => battler.flagSkillSlotsForRefresh()).not.toThrow();
+    });
+
+    it('flags every slot when the battler has a slot manager', () =>
+    {
+      // Arrange
+      const { battler, manager } = buildBattlerWithSlots();
+
+      // Act
+      battler.flagSkillSlotsForRefresh();
+
+      // Assert
+      expect(manager.flagAllSkillSlotsForRefresh).toHaveBeenCalledTimes(1);
+    });
+
+    it('flags the slots after a state is added down the vanilla path', () =>
+    {
+      // Arrange- no attacker, so JABS hands off to vanilla; the flag must still fire, since a
+      // cutscene-applied state can carry a slot transform just as well as a combat one.
+      const { battler, manager } = buildBattlerWithSlots();
+      globalThis.J.ABS.Aliased.Game_Battler.set('addState', vi.fn());
+
+      // Act
+      battler.addState(7, null);
+
+      // Assert
+      expect(manager.flagAllSkillSlotsForRefresh).toHaveBeenCalledTimes(1);
+    });
+
+    it('flags the slots after a state is added down the JABS path', () =>
+    {
+      // Arrange- every collaborator of the JABS add path stubbed to a no-op, so the only thing
+      // left to observe is whether the flag fires once the state is fully tracked.
+      const { battler, manager } = buildBattlerWithSlots();
+      battler.isStateAddable = () => true;
+      battler.isStateAffected = () => true;
+      battler.resetStateCounts = vi.fn();
+      battler.addJabsState = vi.fn();
+      battler.result = () => ({ pushAddedState: vi.fn() });
+
+      // Act
+      battler.handleAddingJabsState(7, { getUuid: () => 'attacker' });
+
+      // Assert
+      expect(manager.flagAllSkillSlotsForRefresh).toHaveBeenCalledTimes(1);
+    });
+
+    it('flags the slots after a state is removed', () =>
+    {
+      // Arrange- this is the half the HUD was missing: a food arc ending by removeState left the
+      // slot drawn as the burn it could no longer perform.
+      const { battler, manager } = buildBattlerWithSlots();
+      globalThis.J.ABS.Aliased.Game_Battler.set('removeState', vi.fn());
+      battler.getUuid = () => 'battler-uuid';
+
+      // Act
+      battler.removeState(7);
+
+      // Assert
+      expect(manager.flagAllSkillSlotsForRefresh).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('states (stacking override)', () =>
   {
     it('returns the original states unchanged when nothing is JABS-tracked', () =>

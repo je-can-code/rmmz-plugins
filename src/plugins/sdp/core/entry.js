@@ -10,7 +10,11 @@ import './models/StatDistributionPanelBuilder.js';
 import './models/PanelRanking.js';
 import './models/PanelTracking.js';
 
+import './managers/MasteryFormulaPhrase.js';
+import './managers/MasteryGatePhrase.js';
+import './managers/MasteryPayloadLocator.js';
 import './managers/MasteryProseResolver.js';
+import './managers/MasteryTagShapes.js';
 import './managers/SdpMasteryManager.js';
 
 import './_metadata/initialization.js';

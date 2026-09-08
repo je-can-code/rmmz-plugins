@@ -13,6 +13,9 @@ describe('J-ABS-Juice RPG_Skill (unit, all downstream dependencies mocked)', () 
     JuiceDuration: Symbol('JuiceDuration'),
     JuiceStabTipDegrees: Symbol('JuiceStabTipDegrees'),
     JuiceProfileGun: Symbol('JuiceProfileGun'),
+    CastMotion: Symbol('CastMotion'),
+    CastMotionPeriod: Symbol('CastMotionPeriod'),
+    CastMotionIntensity: Symbol('CastMotionIntensity'),
   };
 
   beforeAll(async () =>
@@ -60,6 +63,97 @@ describe('J-ABS-Juice RPG_Skill (unit, all downstream dependencies mocked)', () 
     {
       globalThis.RPGManager.checkForBooleanFromNoteByRegex.mockReturnValue(false);
       expect(buildSkill().jabsNoJuice).toBe(false);
+    });
+  });
+
+  describe('jabsJuiceCastMotion', () =>
+  {
+    it('returns the tagged cast motion key, read through the cast-motion regex', () =>
+    {
+      // Arrange
+      globalThis.RPGManager.getStringFromNoteByRegex.mockReturnValue('squish');
+      const skill = buildSkill();
+
+      // Act
+      const motion = skill.jabsJuiceCastMotion;
+
+      // Assert- the regex matters: the execution-time juiceMotion tag is a sibling that must not
+      // be the one consulted here.
+      expect(motion).toBe('squish');
+      expect(globalThis.RPGManager.getStringFromNoteByRegex)
+        .toHaveBeenCalledWith(skill, REGEX.CastMotion, true);
+    });
+
+    it('is an empty string when untagged, so the default charge pulse stands', () =>
+    {
+      // Arrange
+      globalThis.RPGManager.getStringFromNoteByRegex.mockReturnValue(null);
+
+      // Act
+      const motion = buildSkill().jabsJuiceCastMotion;
+
+      // Assert
+      expect(motion).toBe('');
+    });
+  });
+
+  describe('jabsJuiceCastMotionPeriod', () =>
+  {
+    it('returns the tagged period in frames', () =>
+    {
+      // Arrange
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(6);
+      const skill = buildSkill();
+
+      // Act
+      const period = skill.jabsJuiceCastMotionPeriod;
+
+      // Assert
+      expect(period).toBe(6);
+      expect(globalThis.RPGManager.getNumberFromNoteByRegex)
+        .toHaveBeenCalledWith(skill, REGEX.CastMotionPeriod, true);
+    });
+
+    it('is zero when untagged, which is the "use the registered default" sentinel', () =>
+    {
+      // Arrange
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(null);
+
+      // Act
+      const period = buildSkill().jabsJuiceCastMotionPeriod;
+
+      // Assert
+      expect(period).toBe(0);
+    });
+  });
+
+  describe('jabsJuiceCastMotionIntensity', () =>
+  {
+    it('returns the tagged intensity percent', () =>
+    {
+      // Arrange
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(45);
+      const skill = buildSkill();
+
+      // Act
+      const intensity = skill.jabsJuiceCastMotionIntensity;
+
+      // Assert- the regex matters; the period tag is a numeric sibling that must not be the one read.
+      expect(intensity).toBe(45);
+      expect(globalThis.RPGManager.getNumberFromNoteByRegex)
+        .toHaveBeenCalledWith(skill, REGEX.CastMotionIntensity, true);
+    });
+
+    it('is zero when untagged, which is the "use the config intensity" sentinel', () =>
+    {
+      // Arrange
+      globalThis.RPGManager.getNumberFromNoteByRegex.mockReturnValue(null);
+
+      // Act
+      const intensity = buildSkill().jabsJuiceCastMotionIntensity;
+
+      // Assert
+      expect(intensity).toBe(0);
     });
   });
 

@@ -7,6 +7,7 @@ import './core/Diagnostics.js';
 import './core/SerializableRegistry.js';
 import './core/ParameterFormat.js';
 import './core/ParameterDisplayPolicy.js';
+import './core/ParameterTraitMap.js';
 import './core/ParameterDisplaySentinel.js';
 import './core/ParameterGroups.js';
 import './core/ParameterKeys.js';
