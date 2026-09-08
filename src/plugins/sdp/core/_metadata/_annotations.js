@@ -366,6 +366,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.3.0
+ *    Mastery descriptions tint their live values by kind and honour an authored line
+ *    break, so a description turns over at a clause a person chose rather than
+ *    wherever the pixels ran out.
  * - 4.2.1
  *    Mastery description wrapping measures with textSizeEx, matching the drawTextEx
  *    that paints it, so escape codes are not counted as characters.

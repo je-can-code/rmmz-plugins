@@ -125,7 +125,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('Every cooldown runs {v.cdr} shorter.', 1470);
 
       // Assert
-      expect(result).toBe('Every cooldown runs +30% shorter.');
+      expect(result).toBe('Every cooldown runs \\C[3]+30%\\C[0] shorter.');
     });
 
     it('reads the declared magnitude rather than the last argument', () =>
@@ -137,7 +137,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('gain {v.skillHistoryBonus} damage', 1101);
 
       // Assert
-      expect(result).toBe('gain +4% damage');
+      expect(result).toBe('gain \\C[3]+4%\\C[0] damage');
     });
 
     it('reads the magnitude of a tag that carries it first', () =>
@@ -149,7 +149,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('returns {v.onSelfHpHealMp} as Magi', 1271);
 
       // Assert
-      expect(result).toBe('returns +10% as Magi');
+      expect(result).toBe('returns \\C[3]+10%\\C[0] as Magi');
     });
 
     it('reads a bare tag written without brackets', () =>
@@ -161,7 +161,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('{v.sdpMultiplier} more points', 1571);
 
       // Assert
-      expect(result).toBe('+3% more points');
+      expect(result).toBe('\\C[3]+3%\\C[0] more points');
     });
 
     it('reads a hyphenated tag through its camel spelling', () =>
@@ -173,7 +173,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('lands {v.bonusHitsBasic} more times', 1320);
 
       // Assert
-      expect(result).toBe('lands +2% more times');
+      expect(result).toBe('lands \\C[3]+2%\\C[0] more times');
     });
 
     it('renders a negative magnitude without inventing a plus sign', () =>
@@ -185,7 +185,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('slows by {v.speedBoost}', 1061);
 
       // Assert
-      expect(result).toBe('slows by -5%');
+      expect(result).toBe('slows by \\C[3]-5%\\C[0]');
     });
 
     it('phrases a tag holding a formula rather than a number', () =>
@@ -197,7 +197,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('climbs by {v.evaBuffPlus}', 1210);
 
       // Assert
-      expect(result).toBe('climbs by your level');
+      expect(result).toBe('climbs by \\C[3]your level\\C[0]');
     });
 
     it('refuses a bare token when occurrences disagree on their magnitude', () =>
@@ -221,7 +221,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('pierces {v.pierceElement}', 1554);
 
       // Assert
-      expect(result).toBe('pierces +25%');
+      expect(result).toBe('pierces \\C[3]+25%\\C[0]');
     });
 
     it('picks the occurrence a selector names, leaving its sibling alone', () =>
@@ -233,7 +233,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('Void strikes {v.boostElement[9]} harder', 1191);
 
       // Assert
-      expect(result).toBe('Void strikes +22% harder');
+      expect(result).toBe('Void strikes \\C[3]+22%\\C[0] harder');
     });
 
     it('reads a selector as an argument index when it names no occurrence', () =>
@@ -245,7 +245,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('within {v.spread[1]} tiles', 1421);
 
       // Assert
-      expect(result).toBe('within +2% tiles');
+      expect(result).toBe('within \\C[3]+2%\\C[0] tiles');
     });
 
     it('yields nothing when a selector matches neither an occurrence nor an index', () =>
@@ -298,7 +298,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('splashes {v.onSelfHpHealHp}', 1441);
 
       // Assert
-      expect(result).toBe('splashes your level');
+      expect(result).toBe('splashes \\C[3]your level\\C[0]');
     });
 
     it('ignores a declared reach that is not a number', () =>
@@ -315,7 +315,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('within {s.radius}', 1121);
 
       // Assert
-      expect(result).toBe('within 7 tiles');
+      expect(result).toBe('within \\C[6]7 tiles\\C[0]');
     });
 
     it('yields nothing for a tag carrying no arguments at all', () =>
@@ -345,7 +345,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('Endurance {p.def}', 1141);
 
       // Assert
-      expect(result).toBe('Endurance +6%');
+      expect(result).toBe('Endurance \\C[1]+6%\\C[0]');
     });
 
     it('reads the other trait of the same pair', () =>
@@ -358,7 +358,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('Max Life {p.mhp}', 1141);
 
       // Assert
-      expect(result).toBe('Max Life -2%');
+      expect(result).toBe('Max Life \\C[1]-2%\\C[0]');
     });
 
     it('reads a parameter from its buff-rate tag when no trait carries it', () =>
@@ -370,7 +370,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('Parry {p.grd}', 1144);
 
       // Assert
-      expect(result).toBe('Parry +10%');
+      expect(result).toBe('Parry \\C[1]+10%\\C[0]');
     });
 
     it('renders a flat buff without a percent sign', () =>
@@ -382,7 +382,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('Parry {p.grd}', 1180);
 
       // Assert
-      expect(result).toBe('Parry +1000');
+      expect(result).toBe('Parry \\C[1]+1000\\C[0]');
     });
 
     it('keeps the percentages inside a flat buff holding a formula', () =>
@@ -394,7 +394,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('Resist rises by {p.mdf}', 1090);
 
       // Assert
-      expect(result).toBe('Resist rises by 50% of your Endurance');
+      expect(result).toBe('Resist rises by \\C[1]50% of your Endurance\\C[0]');
     });
 
     it('reads a whole family of resistances as their shared magnitude', () =>
@@ -408,7 +408,7 @@ describe('MasteryProseResolver (direct src import)', () =>
 
       // Assert
       // the trait formatter flips the sign on purpose, so a resistance reads as damage taken.
-      expect(result).toBe('elements lose -33%');
+      expect(result).toBe('elements lose \\C[1]-33%\\C[0]');
     });
 
     it('refuses a family whose members disagree', () =>
@@ -461,7 +461,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('Power {d.atk}', 1131);
 
       // Assert
-      expect(result).toBe('Power +5%');
+      expect(result).toBe('Power \\C[1]+5%\\C[0]');
     });
 
     it('yields nothing when the payload is a skill, which carries no traits', () =>
@@ -494,7 +494,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('{p.lst} Lifesteal', 1420);
 
       // Assert
-      expect(result).toBe('+15% Lifesteal');
+      expect(result).toBe('\\C[1]+15%\\C[0] Lifesteal');
     });
 
     it('yields nothing for a trait family read off a skill payload', () =>
@@ -565,7 +565,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('spreads {v.spread}', 1421);
 
       // Assert
-      expect(result).toBe('spreads -5%');
+      expect(result).toBe('spreads \\C[3]-5%\\C[0]');
     });
   });
   //endregion remaining resolution paths
@@ -582,7 +582,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('While {s.gate}', 1161);
 
       // Assert
-      expect(result).toBe('While below 20% Life');
+      expect(result).toBe('While \\C[1]below 20% Life\\C[0]');
     });
 
     it('reads the cadence from its declared argument', () =>
@@ -594,7 +594,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('Every {s.interval}', 1121);
 
       // Assert
-      expect(result).toBe('Every 3 seconds');
+      expect(result).toBe('Every \\C[6]3 seconds\\C[0]');
     });
 
     it('finds the cadence in a shorter form of the same tag', () =>
@@ -606,7 +606,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('Every {s.interval}', 1281);
 
       // Assert
-      expect(result).toBe('Every 8 seconds');
+      expect(result).toBe('Every \\C[6]8 seconds\\C[0]');
     });
 
     it('reads a reach declared on the tag itself', () =>
@@ -618,7 +618,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('within {s.radius}', 1121);
 
       // Assert
-      expect(result).toBe('within 3 tiles');
+      expect(result).toBe('within \\C[6]3 tiles\\C[0]');
     });
 
     it('falls back to the payload for a reach the tag does not declare', () =>
@@ -634,7 +634,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('within {s.radius}', 1281);
 
       // Assert
-      expect(result).toBe('within 2.5 tiles');
+      expect(result).toBe('within \\C[6]2.5 tiles\\C[0]');
     });
 
     it('never reads a cadence as a reach', () =>
@@ -666,7 +666,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('for {s.duration}', 1241);
 
       // Assert
-      expect(result).toBe('for 1.5 seconds');
+      expect(result).toBe('for \\C[6]1.5 seconds\\C[0]');
     });
 
     it('reads the payload stack cap', () =>
@@ -682,7 +682,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('{s.stacks} layers', 1215);
 
       // Assert
-      expect(result).toBe('4 layers');
+      expect(result).toBe('\\C[3]4\\C[0] layers');
     });
 
     it('reads the history window from the tag that declares one', () =>
@@ -694,7 +694,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('in the last {s.window}', 1101);
 
       // Assert
-      expect(result).toBe('in the last 6 seconds');
+      expect(result).toBe('in the last \\C[6]6 seconds\\C[0]');
     });
 
     it('falls back to the gate for a window no tag declares', () =>
@@ -706,7 +706,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('For {s.window}', 1231);
 
       // Assert
-      expect(result).toBe('For 1 seconds');
+      expect(result).toBe('For \\C[6]1 seconds\\C[0]');
     });
 
     it('reads a chance declared by a tag', () =>
@@ -718,7 +718,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('{s.chance} to sink venom', 1151);
 
       // Assert
-      expect(result).toBe('50% to sink venom');
+      expect(result).toBe('\\C[3]50%\\C[0] to sink venom');
     });
 
     it('reads a chance from an on-hit trait when no tag declares one', () =>
@@ -730,7 +730,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('{s.chance} of your hits', 1471);
 
       // Assert
-      expect(result).toBe('10% of your hits');
+      expect(result).toBe('\\C[3]10%\\C[0] of your hits');
     });
 
     it('yields nothing for a chance nothing declares', () =>
@@ -754,7 +754,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('stripping {s.count} afflictions', 1345);
 
       // Assert
-      expect(result).toBe('stripping 2 afflictions');
+      expect(result).toBe('stripping \\C[3]2\\C[0] afflictions');
     });
 
     it('prefers a count declared on the mastery state over the wrapper', () =>
@@ -768,7 +768,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('stripping {s.count} afflictions', 1345);
 
       // Assert
-      expect(result).toBe('stripping 4 afflictions');
+      expect(result).toBe('stripping \\C[3]4\\C[0] afflictions');
     });
 
     it('reads a count declared on the mastery state', () =>
@@ -780,7 +780,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('taking {s.count} more', 1425);
 
       // Assert
-      expect(result).toBe('taking 3 more');
+      expect(result).toBe('taking \\C[3]3\\C[0] more');
     });
 
     it('reads a per-stack divisor from the state that declares it', () =>
@@ -792,7 +792,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('every {s.perStack} missing', 1131);
 
       // Assert
-      expect(result).toBe('every 4% missing');
+      expect(result).toBe('every \\C[3]4%\\C[0] missing');
     });
 
     it('reads a per-stack divisor from the wrapper skill instead', () =>
@@ -804,7 +804,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('every {s.perStack}', 1411);
 
       // Assert
-      expect(result).toBe('every 1%');
+      expect(result).toBe('every \\C[3]1%\\C[0]');
     });
 
     it('yields nothing for a per-stack divisor nothing declares', () =>
@@ -832,7 +832,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('bites for {s.payload}', 1121);
 
       // Assert
-      expect(result).toBe('bites for 3x your Force');
+      expect(result).toBe('bites for \\C[3]3x your Force\\C[0]');
     });
 
     it('prefers a shield formula tag over a damage formula', () =>
@@ -848,7 +848,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('a ward worth {s.payload}', 1111);
 
       // Assert
-      expect(result).toBe('a ward worth 5% of your Max Life');
+      expect(result).toBe('a ward worth \\C[3]5% of your Max Life\\C[0]');
     });
 
     it('phrases an hp formula tag when no shield is present', () =>
@@ -864,7 +864,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('draining {s.payload}', 1151);
 
       // Assert
-      expect(result).toBe('draining 1.5% of their Max Life');
+      expect(result).toBe('draining \\C[3]1.5% of their Max Life\\C[0]');
     });
 
     it('yields nothing for a payload carrying no formula at all', () =>
@@ -904,7 +904,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('{s.foodTypes} last longer', 1496);
 
       // Assert
-      expect(result).toBe('protein, veggie and fruit last longer');
+      expect(result).toBe('\\C[2]protein, veggie and fruit\\C[0] last longer');
     });
 
     it('lists a single food group without an and', () =>
@@ -916,7 +916,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('{s.foodTypes} last longer', 1494);
 
       // Assert
-      expect(result).toBe('protein last longer');
+      expect(result).toBe('\\C[2]protein\\C[0] last longer');
     });
 
     it('yields nothing for food groups when none are declared', () =>
@@ -945,7 +945,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('{s.statList} across the board', 1497);
 
       // Assert
-      expect(result).toBe('Power and Endurance across the board');
+      expect(result).toBe('\\C[2]Power and Endurance\\C[0] across the board');
     });
 
     it('yields nothing for a stat list when nothing is raised', () =>

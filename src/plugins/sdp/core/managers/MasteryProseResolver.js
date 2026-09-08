@@ -46,6 +46,40 @@ class MasteryProseResolver
   static FramesPerSecond = 60;
 
   /**
+   * The palette index each kind of resolved value is tinted with.
+   *
+   * A description is mostly authored words with a few live numbers threaded through it, and the eye
+   * needs to find those numbers without reading the sentence twice. Three colours rather than a dozen:
+   * a stat, a measure of time or distance, and everything else that is a quantity.
+   * @type {Object<string, number>}
+   */
+  static ValueColors = {
+    stat: 1,
+    measure: 6,
+    quantity: 3,
+    list: 2,
+  };
+
+  /**
+   * Which colour each structural field takes.
+   * @type {Object<string, string>}
+   */
+  static StructuralColorKinds = {
+    gate: 'stat',
+    interval: 'measure',
+    duration: 'measure',
+    window: 'measure',
+    radius: 'measure',
+    chance: 'quantity',
+    stacks: 'quantity',
+    count: 'quantity',
+    perStack: 'quantity',
+    payload: 'quantity',
+    foodTypes: 'list',
+    statList: 'list',
+  };
+
+  /**
    * The tags whose named argument carries a cadence, in the order they are tried.
    * @type {[ string, number ][]}
    */
@@ -95,7 +129,7 @@ class MasteryProseResolver
         return whole;
       }
 
-      return value;
+      return MasteryProseResolver.#tint(value, namespace, name);
     });
 
     if (resolvable === false) return String.empty;
@@ -113,6 +147,38 @@ class MasteryProseResolver
   static canResolve(template, masterySkillId)
   {
     return MasteryProseResolver.resolve(template, masterySkillId) !== String.empty;
+  }
+
+  /**
+   * Wraps a resolved value in the colour its kind is read in.
+   * @param {string} value The resolved value.
+   * @param {string} namespace One of p, d, s or v.
+   * @param {string} name The parameter key, structural field, or tag name.
+   * @returns {string}
+   */
+  static #tint(value, namespace, name)
+  {
+    const kind = namespace === 's'
+      ? MasteryProseResolver.StructuralColorKinds[name]
+      : MasteryProseResolver.#valueColorKind(namespace);
+
+    // every field that can resolve to a value has a declared colour: the structural switch answers
+    // null for anything not in that table, so a resolved value always has one to wear.
+    const colorIndex = MasteryProseResolver.ValueColors[kind];
+
+    return `\\C[${colorIndex}]${value}\\C[0]`;
+  }
+
+  /**
+   * The colour kind a non-structural namespace reads in.
+   * @param {string} namespace One of p, d or v.
+   * @returns {string}
+   */
+  static #valueColorKind(namespace)
+  {
+    if (namespace === 'v') return 'quantity';
+
+    return 'stat';
   }
 
   /**
