@@ -1,5 +1,5 @@
 //region ship-meta
 export const PLUGIN_NAME = 'J-SDP';
-export const PLUGIN_VERSION = '4.2.1';
+export const PLUGIN_VERSION = '4.3.0';
 export const PLUGIN_DESC_TAG = 'SDP';
 //endregion ship-meta

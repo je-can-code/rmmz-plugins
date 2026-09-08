@@ -93,6 +93,39 @@ class Window_SdpHeader
   }
 
   /**
+   * Splits a resolved description into the lines it will be drawn as.
+   *
+   * The break is authored, not calculated: a pipe in the template marks where the sentence should
+   * turn over, because a person picks a clause and a measurement picks whatever word the pixels ran
+   * out on. Wrapping is the safety net beneath that, for a line whose live values came out longer
+   * than whoever wrote it expected.
+   *
+   * Measured with textSizeEx rather than textWidth because the line is painted with drawTextEx: the
+   * former processes escape codes and answers the width that will actually appear, while the latter
+   * measures the raw string and counts the codes themselves as characters.
+   * @param {string} resolved The description, tokens already filled in.
+   * @returns {string[]}
+   */
+  proseLines(resolved)
+  {
+    const measure = text => this.textSizeEx(text).width;
+    const authored = resolved.split('|')
+      .map(segment => segment.trim())
+      .filter(segment => segment !== String.empty);
+
+    const budget = this.proseLineCount();
+
+    // an authored break that already fits is honoured exactly as written.
+    const everySegmentFits = authored.every(segment => measure(segment) <= this.innerWidth);
+
+    if (authored.length <= budget && everySegmentFits) return authored;
+
+    const rejoined = authored.join(' ');
+
+    return TextWrapper.wrapToLines(rejoined, this.innerWidth, budget, measure);
+  }
+
+  /**
    * How many lines the header reserves for the description beneath the identity row.
    * @returns {number}
    */
@@ -125,13 +158,7 @@ class Window_SdpHeader
 
     this.resetFontSettings();
 
-    // the header holds two lines beneath the identity row, and the prose is authored to fit them.
-    //
-    // measured with textSizeEx rather than textWidth because the line is drawn with drawTextEx: the
-    // former processes escape codes and answers the width that will actually be painted, while the
-    // latter measures the raw string and would count the codes themselves as characters.
-    const measure = text => this.textSizeEx(text).width;
-    const lines = TextWrapper.wrapToLines(resolved, this.innerWidth, this.proseLineCount(), measure);
+    const lines = this.proseLines(resolved);
 
     lines.forEach((line, index) =>
     {
