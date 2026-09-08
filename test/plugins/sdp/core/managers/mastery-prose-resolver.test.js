@@ -30,11 +30,21 @@ describe('MasteryProseResolver (direct src import)', () =>
 
     globalThis.$dataStates = [];
     globalThis.$dataSkills = [];
-    globalThis.TextManager = { param: id => [ 'Max Life', 'Max Magi', 'Power', 'Endurance' ][id] };
+    globalThis.TextManager = {
+      param: id => [ 'Max Life', 'Max Magi', 'Power', 'Endurance' ][id],
+      xparam: id => [ 'Accuracy', 'Grace' ][id],
+      sparam: id => [ 'Aggro', 'Parry' ][id],
+    };
     globalThis.RPG_Trait = (await import(
       '../../../../../src/plugins/_base/core/database/_data/RPG_Trait.js')).default;
     globalThis.ParameterTraitMap = (await import(
       '../../../../../src/plugins/_base/core/core/ParameterTraitMap.js')).default;
+
+    // the plugin-owned parameter keys, which is what the registry holds once every ship has
+    // registered. A tag naming one of these is a stat rather than an effect magnitude.
+    const registeredKeys = [ 'apr', 'cdm', 'cdr', 'cnt', 'ctr', 'dor', 'gdr', 'har', 'hcr', 'lst',
+      'mrf', 'msb', 'mst', 'mtp', 'per', 'prof', 'sar', 'sdr', 'ser', 'tst' ];
+    globalThis.ParameterRegistry = { has: key => registeredKeys.includes(key) };
 
     ({ default: MasteryProseResolver } = await import(
       '../../../../../src/plugins/sdp/core/managers/MasteryProseResolver.js'));
@@ -125,7 +135,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('Every cooldown runs {v.cdr} shorter.', 1470);
 
       // Assert
-      expect(result).toBe('Every cooldown runs \\C[3]+30%\\C[0] shorter.');
+      expect(result).toBe('Every cooldown runs \\C[1]+30%\\C[0] shorter.');
     });
 
     it('reads the declared magnitude rather than the last argument', () =>
@@ -197,7 +207,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       const result = MasteryProseResolver.resolve('climbs by {v.evaBuffPlus}', 1210);
 
       // Assert
-      expect(result).toBe('climbs by \\C[3]your level\\C[0]');
+      expect(result).toBe('climbs by \\C[1]your level\\C[0]');
     });
 
     it('refuses a bare token when occurrences disagree on their magnitude', () =>
@@ -569,6 +579,76 @@ describe('MasteryProseResolver (direct src import)', () =>
     });
   });
   //endregion remaining resolution paths
+
+  //region named tokens
+  describe('named tokens', () =>
+  {
+    it('names a base parameter alongside its value', () =>
+    {
+      // Arrange
+      const traits = [ { code: 21, dataId: 3, value: 1.06 }, { code: 21, dataId: 0, value: 0.98 } ];
+      install(state(1141, String.empty, traits), skill(1141, String.empty));
+
+      // Act
+      const result = MasteryProseResolver.resolve('{P.def}', 1141);
+
+      // Assert: the name is inside the tint, so it reads as one thing rather than two.
+      expect(result).toBe('\\C[1]Endurance +6%\\C[0]');
+    });
+
+    it('names an ex-parameter from its own catalogue', () =>
+    {
+      // Arrange
+      install(state(1361, '<hitBuffRate:[10]>'), skill(1361, String.empty));
+
+      // Act
+      const result = MasteryProseResolver.resolve('{P.hit}', 1361);
+
+      // Assert
+      expect(result).toBe('\\C[1]Accuracy +10%\\C[0]');
+    });
+
+    it('names an sp-parameter from its own catalogue', () =>
+    {
+      // Arrange: the near-miss sibling of the case above, in a different catalogue at the same index.
+      install(state(1144, '<grdBuffRate:[10]>'), skill(1144, String.empty));
+
+      // Act
+      const result = MasteryProseResolver.resolve('{P.grd}', 1144);
+
+      // Assert
+      expect(result).toBe('\\C[1]Parry +10%\\C[0]');
+    });
+
+    it('names a parameter read off the payload', () =>
+    {
+      // Arrange
+      globalThis.$dataStates = [];
+      globalThis.$dataSkills = [];
+      globalThis.$dataStates[1011] = state(1011, String.empty, [ { code: 21, dataId: 2, value: 1.05 } ]);
+      globalThis.$dataStates[1131] = state(1131, '<autoApplyState:[1011, time, 60]>');
+      globalThis.$dataSkills[1131] = skill(1131, String.empty);
+
+      // Act
+      const result = MasteryProseResolver.resolve('{D.atk}', 1131);
+
+      // Assert
+      expect(result).toBe('\\C[1]Power +5%\\C[0]');
+    });
+
+    it('fails closed when nothing names the key', () =>
+    {
+      // Arrange: lifesteal is a real parameter but no trait encodes it, so it has no catalogue entry.
+      install(state(1420, '<lst:15>'), skill(1420, String.empty));
+
+      // Act
+      const result = MasteryProseResolver.resolve('{P.lst}', 1420);
+
+      // Assert
+      expect(result).toBe(String.empty);
+    });
+  });
+  //endregion named tokens
 
   //region structural namespace
   describe('structural namespace', () =>

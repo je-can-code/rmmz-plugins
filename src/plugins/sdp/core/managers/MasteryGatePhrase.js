@@ -89,6 +89,33 @@ class MasteryGatePhrase
   }
 
   /**
+   * Which kind of value the gate's phrase turns out to be.
+   *
+   * A gate is not one kind of thing: "below 20% Life" is a threshold on a stat, while "3 seconds" and
+   * "6 tiles" are measures. Tinting every gate the same colour would put a distance and a percentage
+   * in the same ink, which is exactly the confusion the colours exist to prevent.
+   * @param {RPG_Skill} skill The mastery's wrapper skill.
+   * @returns {string} Either measure or stat.
+   */
+  static colorKindFor(skill)
+  {
+    const match = skill.note.match(/<passiveSourceRule:[ ]?\[([^\]]*)]>/i);
+
+    if (!match) return 'stat';
+
+    const [ kind ] = match[1].split(',')
+      .map(argument => argument.trim());
+
+    if (MasteryGatePhrase.ElapsedKinds.includes(kind)) return 'measure';
+
+    if (MasteryGatePhrase.WithinKinds.includes(kind)) return 'measure';
+
+    if (kind === 'alliesNearby') return 'measure';
+
+    return 'stat';
+  }
+
+  /**
    * Phrases a resource threshold, e.g. "below 20% Life".
    * @param {string} kind The gate kind, whose prefix names the resource.
    * @param {string} param The threshold percentage.
