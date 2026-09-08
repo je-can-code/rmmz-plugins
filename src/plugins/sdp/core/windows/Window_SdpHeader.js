@@ -86,7 +86,10 @@ class Window_SdpHeader
     this.resetFontSettings();
     const tintedSubgroup = this.colorizeText(14, subgroupName);
     const skillName = `\\Skill[${mastery.masterySkillId}]`;
-    const tierNote = this.colorizeText(8, `Tier ${mastery.subgroupTier} · Rank MAX`);
+    // the tier locates this panel in its strip, which differs panel to panel and is worth saying.
+    // What it does not say is "Rank MAX": every mastery in the game arrives at max rank, so a line
+    // repeating that on all five hundred panels teaches nothing after the first one a player reads.
+    const tierNote = this.colorizeText(8, `Tier ${mastery.subgroupTier}`);
     const identityLine = `${tintedSubgroup} · ${skillName} ${tierNote}`;
     this.drawTextEx(identityLine, 0, 0, this.innerWidth);
     this.resetFontSettings();

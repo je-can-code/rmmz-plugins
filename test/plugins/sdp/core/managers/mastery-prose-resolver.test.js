@@ -31,7 +31,7 @@ describe('MasteryProseResolver (direct src import)', () =>
     globalThis.$dataStates = [];
     globalThis.$dataSkills = [];
     globalThis.TextManager = {
-      param: id => [ 'Max Life', 'Max Magi', 'Power', 'Endurance' ][id],
+      param: id => [ 'Max Life', 'Max Magi', 'Power', 'Endurance', 'Force', 'Resist', 'Speed', 'Luck' ][id],
       xparam: id => [ 'Accuracy', 'Grace' ][id],
       sparam: id => [ 'Aggro', 'Parry' ][id],
     };
@@ -665,6 +665,60 @@ describe('MasteryProseResolver (direct src import)', () =>
     });
   });
   //endregion named tokens
+
+  //region name-only tokens
+  describe('name-only tokens', () =>
+  {
+    it('renders a parameter name with no value at all', () =>
+    {
+      // Arrange: the state carries no trait for luck, proving the name needs no value to resolve.
+      install(state(1210, '<evaBuffPlus:[a.level]>'), skill(1210, String.empty));
+
+      // Act
+      const result = MasteryProseResolver.resolve('{N.def}', 1210);
+
+      // Assert
+      expect(result).toBe('\\C[1]Endurance\\C[0]');
+    });
+
+    it('names a registry-owned parameter with no value either', () =>
+    {
+      // Arrange
+      install(state(1210, '<evaBuffPlus:[a.level]>'), skill(1210, String.empty));
+
+      // Act
+      const result = MasteryProseResolver.resolve('{N.lst}', 1210);
+
+      // Assert
+      expect(result).toBe('\\C[1]Lifesteal\\C[0]');
+    });
+
+    it('lets several names share one magnitude', () =>
+    {
+      // Arrange: the whole reason the form exists, so a value is not repeated after each name.
+      install(state(1210, '<evaBuffPlus:[a.level]>'), skill(1210, String.empty));
+
+      // Act
+      const result = MasteryProseResolver.resolve('{N.eva} and {N.luk} each climb by {v.evaBuffPlus}', 1210);
+
+      // Assert
+      expect(result).toBe(
+        '\\C[1]Grace\\C[0] and \\C[1]Luck\\C[0] each climb by \\C[1]your level\\C[0]');
+    });
+
+    it('fails closed when neither catalogue names the key', () =>
+    {
+      // Arrange
+      install(state(1520, '<radiusRate:1.5>'), skill(1520, String.empty));
+
+      // Act
+      const result = MasteryProseResolver.resolve('{N.radiusRate}', 1520);
+
+      // Assert
+      expect(result).toBe(String.empty);
+    });
+  });
+  //endregion name-only tokens
 
   //region structural namespace
   describe('structural namespace', () =>
