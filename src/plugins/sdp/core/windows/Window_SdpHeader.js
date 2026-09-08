@@ -126,7 +126,11 @@ class Window_SdpHeader
     this.resetFontSettings();
 
     // the header holds two lines beneath the identity row, and the prose is authored to fit them.
-    const measure = text => this.textWidth(text);
+    //
+    // measured with textSizeEx rather than textWidth because the line is drawn with drawTextEx: the
+    // former processes escape codes and answers the width that will actually be painted, while the
+    // latter measures the raw string and would count the codes themselves as characters.
+    const measure = text => this.textSizeEx(text).width;
     const lines = TextWrapper.wrapToLines(resolved, this.innerWidth, this.proseLineCount(), measure);
 
     lines.forEach((line, index) =>
