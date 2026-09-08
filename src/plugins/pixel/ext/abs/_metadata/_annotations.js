@@ -90,6 +90,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.2
+ *    Simplified how the pixel battler resolves its angle and idle state.
  * - 1.1.1
  *    Dodge distance scaling moved onto J-ABS's determineDodgeStepCount seam. On the
  *    step setter it also caught the per-step countdown, re-scaling what remained on

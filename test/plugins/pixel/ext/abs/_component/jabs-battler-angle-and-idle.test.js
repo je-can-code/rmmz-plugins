@@ -434,70 +434,26 @@ describe('J-ABS-Pixelistics JABS_Battler angle math and idle wander (direct src 
     });
   });
 
-  describe('determineDodgeStepCount', () =>
+  describe('dodgeStepDistance', () =>
   {
-    let previousStepCount;
-
-    beforeEach(() =>
+    it('charges one frame of travel per step, read fresh every time', () =>
     {
-      previousStepCount = globalThis.PIXEL_CollisionManager.collisionStepCount;
-    });
-
-    afterEach(() =>
-    {
-      globalThis.PIXEL_CollisionManager.collisionStepCount = previousStepCount;
-    });
-
-    it('scales the requested step count by the collision subcell density', () =>
-    {
-      // Arrange- pixel movement advances in subcells, so a dodge asking for 4 "steps" has to be
-      // multiplied up or it would cover a quarter of the intended distance.
-      globalThis.PIXEL_CollisionManager.collisionStepCount = 4;
+      // Arrange- a pixel dodge step is neither a tile nor a subcell: moveStraight travels
+      // distancePerFrame(), and that figure moves when dash or the dodge speed modifier lands on
+      // realMoveSpeed partway through a dodge. A cost baked in at execute time would go stale, so
+      // the same battler is asked twice across a speed change.
       const battler = new globalThis.JABS_Battler();
+      let perFrame = 1 / 16;
+      battler.getCharacter = () => ({ distancePerFrame: () => perFrame });
 
       // Act
-      const result = battler.determineDodgeStepCount({ jabsDodgeSteps: 3 });
+      const walking = battler.dodgeStepDistance();
+      perFrame = 1 / 4;
+      const boosted = battler.dodgeStepDistance();
 
       // Assert
-      expect(result).toBe(12);
-    });
-
-    it('initializes the collision config first when it has never been set up', () =>
-    {
-      // Arrange- a dodge can fire before anything else has touched the collision manager on a freshly
-      // loaded map, which would otherwise multiply the step count by undefined and yield NaN steps.
-      delete globalThis.PIXEL_CollisionManager.collisionStepCount;
-      const initConfigSpy = vi.spyOn(globalThis.PIXEL_CollisionManager, 'initConfig');
-      const battler = new globalThis.JABS_Battler();
-
-      // Act
-      const result = battler.determineDodgeStepCount({ jabsDodgeSteps: 3 });
-
-      // Assert- the config is populated on demand and the resulting step count is a real number.
-      expect(initConfigSpy).toHaveBeenCalled();
-      expect(Number.isNaN(result)).toBe(false);
-
-      initConfigSpy.mockRestore();
-    });
-
-    it('leaves an already configured collision manager alone', () =>
-    {
-      // Arrange- the guard exists to make initialization happen once, not every dodge. Re-running it
-      // would rebuild collision configuration mid-combat, and because the rebuild lands on the same
-      // defaults the scaled step count would look correct while the work happened anyway. Only the
-      // call count can tell the two apart.
-      globalThis.PIXEL_CollisionManager.collisionStepCount = 4;
-      const initConfigSpy = vi.spyOn(globalThis.PIXEL_CollisionManager, 'initConfig');
-      const battler = new globalThis.JABS_Battler();
-
-      // Act
-      const result = battler.determineDodgeStepCount({ jabsDodgeSteps: 3 });
-
-      // Assert- the scaling still happened, which is what proves the method ran at all.
-      expect(initConfigSpy).not.toHaveBeenCalled();
-      expect(result).toBe(12);
-
-      initConfigSpy.mockRestore();
+      expect(walking).toBe(0.0625);
+      expect(boosted).toBe(0.25);
     });
   });
 });

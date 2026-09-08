@@ -63,12 +63,6 @@ class StatDistributionPanelBuilder
     return this;
   }
 
-  flavorText(flavorText)
-  {
-    this.#identity.topFlavorText = flavorText;
-    return this;
-  }
-
   maxRank(maxRank)
   {
     this.#progression.maxRank = maxRank;

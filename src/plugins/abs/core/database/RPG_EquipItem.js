@@ -88,4 +88,25 @@ Object.defineProperty(RPG_EquipItem.prototype, 'jabsSkillTransforms', {
   },
 });
 //endregion skillTransforms
+
+//region slotTransforms
+/**
+ * The collection of slot transforms defined on this piece of equipment.
+ *
+ * Each entry is a two-element array in the form:
+ * [ slotKey, skillId ]
+ *
+ * While this equip is worn, the named slot executes {@code skillId} no matter what is sitting in
+ * it, including an item id or nothing at all. Neither of those is reachable by a skill transform,
+ * which has no base id to match in either case. The slot's stored contents are never mutated;
+ * unequipping restores the slot's own behavior.
+ * @type {[ string, number ][]}
+ */
+Object.defineProperty(RPG_EquipItem.prototype, 'jabsSlotTransforms', {
+  get: function()
+  {
+    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SlotTransform);
+  },
+});
+//endregion slotTransforms
 //endregion RPG_EquipItem

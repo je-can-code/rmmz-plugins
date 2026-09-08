@@ -220,6 +220,16 @@ class JABS_InputAdapter
    */
   static performUsableItemAction(jabsBattler)
   {
+    // a slot transform turns this button into a skill button for as long as its source is active.
+    // routing through the combat path rather than forcing the action is deliberate: only that path
+    // seeds the cast countdown, and the cast is what roots the battler in place while it resolves.
+    if (jabsBattler.getBattler()
+      .getSlotTransformSkillId(JABS_Button.UsableItem) !== 0)
+    {
+      JABS_InputAdapter.performCombatAction(JABS_Button.UsableItem, jabsBattler);
+      return;
+    }
+
     // if the usable-item action isn't ready, then do not perform.
     if (!this.#canPerformUsableItemAction(jabsBattler)) return;
 
@@ -314,8 +324,13 @@ class JABS_InputAdapter
     // if the battler can't use attacks, then do not perform.
     if (!jabsBattler.canBattlerUseSkills()) return false;
 
-    // if the slot is empty, then do not perform.
-    if (jabsBattler.getBattler()
+    // a slot transform supplies the skill itself, so an empty slot is still perfectly usable.
+    // the emptiness check below only means "nothing to execute" when nothing has claimed the slot.
+    const isSlotTransformed = jabsBattler.getBattler()
+      .getSlotTransformSkillId(slot) !== 0;
+
+    // if the slot is empty and nothing has claimed it, then do not perform.
+    if (!isSlotTransformed && jabsBattler.getBattler()
       .getSkillSlot(slot)
       .isEmpty())
     {
@@ -390,11 +405,20 @@ class JABS_InputAdapter
 
   /**
    * Determines whether or not the player can strafe and hold direction while moving.
+   *
+   * Strafe and a facing-holding dodge are two owners of one boolean, and strafe is the louder of
+   * the pair: it is polled every frame and writes its own answer whether or not the button state
+   * changed. Without this, a dodge's hold is overwritten the very frame after it is applied and
+   * never survives to affect anything. The dodge is the shorter-lived claim, so it wins, and the
+   * poll re-asserts whatever the trigger says the moment the dodge concludes.
    * @param {JABS_Battler} jabsBattler The battler performing the action.
    * @returns {boolean} True if they can, false otherwise.
    */
-  static _canPerformStrafe(_jabsBattler)
+  static _canPerformStrafe(jabsBattler)
   {
+    // a dodge that is holding facing owns the direction fix until it concludes.
+    if (jabsBattler.hasDodgeFacingHeld()) return false;
+
     return true;
   }
 

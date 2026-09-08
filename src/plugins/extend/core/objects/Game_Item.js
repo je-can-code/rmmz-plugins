@@ -55,8 +55,8 @@ Game_Item.prototype.underlyingObject = function()
  * Sets the underlying object this item carries.
  *
  * Only ever handed something the database does not contain; a row the engine can look up by id is
- * left uncarried on purpose. See {@link Game_Item.setObject} for why.
- * @param {RPG_UsableItem|RPG_EquipItem} obj The object to carry.
+ * left uncarried on purpose. See {@link Game_Item.carryWhenSynthetic} for why.
+ * @param {RPG_UsableItem|RPG_EquipItem} obj The object to carry, or null to carry nothing.
  */
 Game_Item.prototype.setItem = function(obj)
 {
@@ -64,14 +64,41 @@ Game_Item.prototype.setItem = function(obj)
 };
 
 /**
+ * Carries the given object only when its database does not already hold it at its own id.
+ *
+ * A row the database holds is reachable by id, so it stays a data class plus an id- which is what
+ * keeps a savefile referencing a row rather than freezing a copy of one that will never see a
+ * rebalance, with nothing reporting that it didn't. Anything else was synthesized (an overlay-merged
+ * skill, almost always) and exists nowhere the engine can look it up, so this wrapper is the only
+ * thing that can hold onto it.
+ *
+ * Clearing on a real row matters as much as carrying on a synthetic one. The wrapper outlives any
+ * single binding, so a carry left behind by a previous skill would answer for the next one bound
+ * here- silently handing back a skill nobody asked for.
+ * @param {RPG_UsableItem} obj The object being bound to this wrapper.
+ * @param {RPG_UsableItem[]} database The database that would hold it, if it came from one.
+ */
+Game_Item.prototype.carryWhenSynthetic = function(obj, database)
+{
+  // the database's own row needs nothing carried, and any carry left from a prior binding must go.
+  if (database[obj.id] === obj)
+  {
+    this.setItem(null);
+    return;
+  }
+
+  // nothing can look this one up by id, so the wrapper has to hold it directly.
+  this.setItem(obj);
+};
+
+/**
  * Extends `setObject()` to enable setting custom skills and items.
  *
- * Only an object the database does not contain is carried. The engine's own `setObject` names a data
- * class by identity against `$dataSkills` and friends, so an empty class after it runs is precisely
- * the statement "this row is not in the database" - which is the only case that needs carrying, and
- * the case this extension exists for. Everything else stays a class plus an id, which is what keeps
- * a savefile holding a reference to a row rather than a frozen copy of one: a copy never sees a
- * rebalance, and nothing reports that it didn't.
+ * Only an object the database does not contain is carried; everything else stays a data class plus
+ * an id. Whether a row came from the database is a question of provenance rather than of type- a
+ * merged clone is every bit as much an {@link RPG_Skill} as the row it was cloned from- so that
+ * question is asked of the database itself in {@link Game_Item.carryWhenSynthetic}. The type
+ * predicates here decide only which database is the one worth asking.
  * @param {RPG_UsableItem|RPG_EquipItem} obj The database row or custom object being bound.
  */
 J.EXTEND.Aliased.Game_Item.set('setObject', Game_Item.prototype.setObject);
@@ -84,22 +111,19 @@ Game_Item.prototype.setObject = function(obj)
   // check to make sure we have something to work with.
   if (!obj) return;
 
-  // the engine recognized this row, so it is reachable by id and needs nothing carried.
-  if (this.dataClass() !== String.empty) return;
-
-  // check to ensure it has a skill category property.
-  if (obj.hasOwnProperty('stypeId'))
+  // a skill is measured against the skill database.
+  if (obj.isSkill())
   {
     // assign the data.
     this.setDataClass('skill');
-    this.setItem(obj);
+    this.carryWhenSynthetic(obj, $dataSkills);
   }
-  // check to ensure it has an item category property.
-  else if (obj.hasOwnProperty('itypeId'))
+  // an item is measured against the item database.
+  else if (obj.isItem())
   {
     // assign the data.
     this.setDataClass('item');
-    this.setItem(obj);
+    this.carryWhenSynthetic(obj, $dataItems);
   }
 };
 

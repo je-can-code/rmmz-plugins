@@ -1,4 +1,32 @@
 //region JABS_Engine food extensions
+import JABS_FoodChainResolver from '../models/JABS_FoodChainResolver.js';
+
+//region onExecuteMapAction
+/**
+ * Extends {@link JABS_Engine.prototype.onExecuteMapAction}.<br>
+ * Ends the caster's food chain when the executed skill is tagged {@code <endFoodChain>}.
+ *
+ * This is the seam the whole metabolize loop hangs on. Core resolves the food slot to a skill and
+ * executes it like any other; the food extension never dispatches anything and so cannot know a
+ * burn happened- except here, where every executed action passes through. Reading the tag off the
+ * skill rather than tracking the dispatch is what lets an enemy attack take a meal away too.
+ * @param {JABS_Battler} caster The JABS battler executing the action.
+ * @param {JABS_Action} action The action being executed.
+ */
+J.ABS.EXT.FOOD.Aliased.JABS_Engine.set('onExecuteMapAction', JABS_Engine.prototype.onExecuteMapAction);
+JABS_Engine.prototype.onExecuteMapAction = function(caster, action)
+{
+  // perform original logic.
+  J.ABS.EXT.FOOD.Aliased.JABS_Engine.get('onExecuteMapAction')
+    .call(this, caster, action);
+
+  // only skills that declare it end an arc; everything else passes through untouched.
+  if (!action.getBaseSkill().jabsEndsFoodChain) return;
+
+  // hand the caster's underlying battler to the resolver, which owns the immunity decision.
+  JABS_FoodChainResolver.resolveEndFoodChain(caster.getBattler());
+};
+//endregion onExecuteMapAction
 
 //region initialize
 /**

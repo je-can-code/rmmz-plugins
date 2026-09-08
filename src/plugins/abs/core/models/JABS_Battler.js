@@ -645,6 +645,46 @@ class JABS_Battler
   }
 
   /**
+   * Gets the direction-fix setting stashed before the current dodge locked facing.
+   * @returns {boolean} The dodgePriorDirectionFix.
+   */
+  dodgePriorDirectionFix()
+  {
+    // hand back the stashed direction fix.
+    return this._dodgePriorDirectionFix;
+  }
+
+  /**
+   * Sets the direction-fix setting to restore when the current dodge concludes.
+   * @param {boolean} newDodgePriorDirectionFix The new dodgePriorDirectionFix.
+   */
+  setDodgePriorDirectionFix(newDodgePriorDirectionFix)
+  {
+    // assign the stashed direction fix.
+    this._dodgePriorDirectionFix = newDodgePriorDirectionFix;
+  }
+
+  /**
+   * Gets whether the dodge in progress is the thing currently holding facing.
+   * @returns {boolean} The dodgeFacingHeld.
+   */
+  hasDodgeFacingHeld()
+  {
+    // hand back whether the dodge is holding facing.
+    return this._dodgeFacingHeld;
+  }
+
+  /**
+   * Sets whether the dodge in progress is the thing currently holding facing.
+   * @param {boolean} newDodgeFacingHeld The new dodgeFacingHeld.
+   */
+  flagDodgeFacingHeld(newDodgeFacingHeld)
+  {
+    // assign whether the dodge is holding facing.
+    this._dodgeFacingHeld = newDodgeFacingHeld;
+  }
+
+  /**
    * Gets the guard flat reduction.
    * @returns {number} The guardFlatReduction.
    */
@@ -970,7 +1010,12 @@ class JABS_Battler
   initDodgeInfo()
   {
     /**
-     * The distance in steps/tiles/squares that the dodge will move the battler.
+     * The distance in tiles still owed to the dodge currently in progress.
+     *
+     * This is a budget rather than a count of move commands: each executed step subtracts however
+     * far that step actually travelled, per {@link #dodgeStepDistance}. A move command covers one
+     * tile under tile-locked movement and a fraction of one under pixel movement, so counting
+     * commands would make the same tag mean a different distance in each scheme.
      * @type {number}
      */
     this._dodgeSteps = 0;
@@ -999,6 +1044,26 @@ class JABS_Battler
      * @type {[number, number]|null}
      */
     this._dodgeIframes = null;
+
+    /**
+     * The character's direction-fix setting from before the current dodge locked it.
+     *
+     * A backward dodge holds facing so the battler keeps looking at whatever it is retreating from,
+     * which means clobbering a setting the map or an event page may have deliberately established.
+     * Stashing the previous value is what lets {@link #endDodge} hand it back rather than assuming
+     * everyone starts unfixed.
+     * @type {boolean}
+     */
+    this._dodgePriorDirectionFix = false;
+
+    /**
+     * Whether the dodge in progress is the thing currently holding facing.
+     *
+     * Without this, concluding a dodge that never held facing would still write the stashed value
+     * back over whatever the map had legitimately set in the meantime.
+     * @type {boolean}
+     */
+    this._dodgeFacingHeld = false;
   };
 
   /**
@@ -4477,7 +4542,7 @@ class JABS_Battler
     // if the battler cannot move, don't dodge move.
     if (!this.canBattlerMove()) return false;
 
-    // if we are out of dodge steps, don't dodge move.
+    // if the dodge distance is spent, don't dodge move.
     if (this.getDodgeSteps() <= 0) return false;
 
     // if we are not dodging, don't dodge move.
@@ -4514,8 +4579,9 @@ class JABS_Battler
    */
   handleDodgeEnd()
   {
-    // keep i‑frames evaluated every tick even if we didn’t step this frame.
-    this.updateDodgeIFrames();
+    // handleDodgeMovement ticks the i-frames every pass, ahead of its own early return, so they are
+    // already current by the time this runs. Ticking again here would count one frame twice and
+    // shut every window an <iframes:> tag asked for in half the time it stated.
 
     // check if we even should end the dodge.
     if (!this.shouldEndDodge()) return;
@@ -4530,7 +4596,7 @@ class JABS_Battler
    */
   shouldEndDodge()
   {
-    // if we are out of dodge steps and we're done moving, end the dodge.
+    // if the dodge distance is spent and we're done moving, end the dodge.
     if (this.getDodgeSteps() <= 0 && !this.getCharacter()
       .isMoving())
     {
@@ -4549,7 +4615,10 @@ class JABS_Battler
     // stop the dodge.
     this.setDodging(false);
 
-    // set dodge steps to 0 regardless of what they are.
+    // give facing back before anything else can start turning this battler again.
+    this.releaseDodgeFacingHold();
+
+    // set the remaining dodge distance to 0 regardless of what it is.
     this.setDodgeSteps(0);
 
     // disable the invincibility from dodging.
@@ -4562,8 +4631,8 @@ class JABS_Battler
     // reset the dodge frames.
     this.setDodgeFrame(0);
 
-    // reset the dodge Iframes.
-    this.setDodgeIFrames(0);
+    // clear the iframe window; null is what updateDodgeIFrames reads as "this dodge declared none".
+    this.setDodgeIFrames(null);
   };
 
   /**
@@ -4982,7 +5051,7 @@ class JABS_Battler
   };
 
   /**
-   * Gets the number of dodge steps remaining to be stepped whilst dodging.
+   * Gets the distance in tiles still owed to the dodge in progress.
    * @returns {number}
    */
   getDodgeSteps()
@@ -4991,8 +5060,8 @@ class JABS_Battler
   };
 
   /**
-   * Sets the number of steps that will be force-moved when dodging.
-   * @param {number} stepCount The number of steps to dodge.
+   * Sets the distance in tiles that will be force-moved when dodging.
+   * @param {number} stepCount The dodge distance in tiles.
    */
   setDodgeSteps(stepCount)
   {
@@ -5000,27 +5069,41 @@ class JABS_Battler
   };
 
   /**
-   * Decrements the dodge steps remaining.
+   * Charges one executed dodge step against the remaining dodge distance.
+   *
+   * A step that was blocked still spends its share of the budget. That is deliberate: the dodge
+   * ends when the budget runs out, so a step that cost nothing would let a battler pinned against
+   * a wall dodge forever.
    */
   decrementDodgeSteps()
   {
-    this.setDodgeSteps(this.getDodgeSteps() - 1);
+    this.setDodgeSteps(this.getDodgeSteps() - this.dodgeStepDistance());
   };
 
   /**
-   * Determines how many steps a dodge skill should force-move this battler.
+   * How far in tiles a single forced dodge step carries this battler.
    *
-   * This exists so movement extensions can restate a dodge's distance in their own units without
-   * touching {@link #setDodgeSteps}. A step means "one move command" and a move command does not
-   * cover a fixed distance in every movement scheme, so the tag's value is an intent that
-   * something may legitimately need to rescale.
+   * This is the seam a movement extension answers, and it is the reason the dodge budget is
+   * measured in tiles rather than in move commands. Tile-locked movement spends a whole tile per
+   * command; pixel movement spends one frame of travel, which is a fraction of a tile and changes
+   * with move speed, dashing, and the dodge speed modifier. Reading the cost fresh on every step
+   * is what keeps `<dodge:3>` meaning three tiles in either scheme no matter what the battler's
+   * speed did partway through.
+   * @returns {number}
+   */
+  dodgeStepDistance()
+  {
+    return 1;
+  };
+
+  /**
+   * Determines the distance in tiles a dodge skill should force-move this battler.
    *
-   * It has to happen here, once, at the moment the count is seeded. Rescaling inside the setter
-   * instead catches every later write to the same field- and the countdown that ends the dodge is
-   * one of those writes, so each decrement would be re-scaled into a larger number than it
-   * replaced and the count would climb away from zero instead of reaching it.
+   * The tag states an intent in tiles and this is where that intent is read, once, at the moment
+   * the budget is seeded. Nothing rescales it any more: {@link #dodgeStepDistance} states what a
+   * step costs instead, which is the half of the problem that actually varies per movement scheme.
    * @param {RPG_Skill} skill The dodge skill being executed.
-   * @returns {number} The number of steps to force-move.
+   * @returns {number} The distance in tiles to force-move.
    */
   determineDodgeStepCount(skill)
   {
@@ -5063,8 +5146,8 @@ class JABS_Battler
   };
 
   /**
-   * Sets the number of iframes the dodge has.
-   * @param {number} frames The number of iframes.
+   * Sets the iframe window for this dodge, or null when the skill declares none.
+   * @param {[number, number]|null} frames The start and end frames of the window.
    */
   setDodgeIFrames(frames)
   {
@@ -5110,7 +5193,7 @@ class JABS_Battler
       this.executeGuard(false);
     }
 
-    // set up any parsed i‑frame window; not applied yet pending semantics.
+    // set up the parsed i-frame window; updateDodgeIFrames applies it frame by frame.
     this.setDodgeIFrames(skill.jabsIFrames);
 
     // apply invincibility now if using the full‑duration flag.
@@ -5120,7 +5203,7 @@ class JABS_Battler
     this.getCharacter()
       .setDodgeModifier(skill.jabsDodgeSpeed);
 
-    // set the number of steps this dodge will move you.
+    // set the distance in tiles this dodge will move you.
     const dodgeStepCount = this.determineDodgeStepCount(skill);
     this.setDodgeSteps(dodgeStepCount);
 
@@ -5136,6 +5219,9 @@ class JABS_Battler
     }
 
     this.setDodgeDirection(dodgeDirection);
+
+    // hold facing if this dodge retreats, so the battler keeps its eyes on the threat.
+    this.applyDodgeFacingHold(skill.jabsMoveType);
 
     // also execute the mobility skill’s action payload.
     const actionOptions = JABS_ActionOptions.Builder()
@@ -5365,6 +5451,50 @@ class JABS_Battler
     }
 
     return character.direction();
+  };
+
+  /**
+   * Locks facing for the duration of a retreating dodge.
+   *
+   * A dodge is performed with ordinary move commands, and moving turns you to face where you went.
+   * That is right for a lunge and wrong for a retreat: a backward dodge would spin the battler
+   * around to face the way it is fleeing, which reads as running away rather than as backing off
+   * while keeping eyes on the threat. Direction fix is the engine's own "move without turning", so
+   * a retreat borrows it and {@link #releaseDodgeFacingHold} hands it back.
+   * @param {'forward'|'backward'|'directional'} moveType The move type of the dodge skill.
+   */
+  applyDodgeFacingHold(moveType)
+  {
+    // only a retreat has any reason to keep looking the other way.
+    if (moveType !== J.ABS.Notetags.MoveType.Backward) return;
+
+    const character = this.getCharacter();
+
+    // stash whatever the map or an event page had already established.
+    this.setDodgePriorDirectionFix(character.isDirectionFixed());
+
+    // remember that this dodge is the one holding facing, so only it releases the hold.
+    this.flagDodgeFacingHeld(true);
+
+    // hold the current facing for the rest of the dodge.
+    character.setDirectionFix(true);
+  };
+
+  /**
+   * Hands facing back to whatever owned it before this dodge locked it.
+   */
+  releaseDodgeFacingHold()
+  {
+    // a dodge that never held facing has no business writing to the setting at all.
+    if (!this.hasDodgeFacingHeld()) return;
+
+    // restore the setting exactly as it was found.
+    this.getCharacter()
+      .setDirectionFix(this.dodgePriorDirectionFix());
+
+    // the hold is over.
+    this.flagDodgeFacingHeld(false);
+    this.setDodgePriorDirectionFix(false);
   };
 
   /**
@@ -5973,9 +6103,17 @@ class JABS_Battler
       return true;
     }
 
+    const battler = this.getBattler();
+
+    // a slot transform grants its own permission, same as a skill transform does. it has to:
+    // the slot it claims may hold an item id or nothing at all, and hasSkill would refuse both.
+    if (battler.getSlotTransformSkillId(slot) !== 0)
+    {
+      return true;
+    }
+
     // for the base slot, check the raw equipped skill id so the transform target
     // does not require a separate hasSkill entry to be usable.
-    const battler = this.getBattler();
     const baseSkillId = battler.getEquippedSkillId(slot);
     return battler.hasSkill(baseSkillId);
   };

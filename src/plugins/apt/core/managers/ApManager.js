@@ -153,6 +153,41 @@ class ApManager
     }
   }
 
+  /**
+   * Resolves a `sourceKey` into the best available object for *display* purposes.
+   *
+   * Aptitude progress is persisted per source key and outlives the source itself- unequipping a
+   * weapon, losing a state, or reclassing all leave their earned progress behind. Those rows are
+   * still rendered (greyed, marked inactive), so anything reading a row's authored data needs an
+   * object even when the actor no longer carries the source.
+   *
+   * The actor's live copy is preferred, because a skill resolved through the actor has any
+   * extension overlays folded into it and therefore may teach more than the raw database row does.
+   * Only when the source is genuinely no longer on the actor do we fall back to the database.
+   *
+   * @param {Game_Actor} actor - The actor whose sources are searched first.
+   * @param {string} sourceKey - The stable key (e.g., "@base:usable:skill:17").
+   * @returns {RPG_Actor|RPG_Class|RPG_Skill|RPG_Weapon|RPG_Armor|RPG_State|RPG_Item|null} The
+   * resolved source, or null when the key names nothing that exists in the database anymore.
+   */
+  static resolveDisplaySourceByKey(actor, sourceKey)
+  {
+    // prefer the actor's live copy, which carries any extension overlays.
+    const live = this.resolveSourceByKey(actor, sourceKey);
+
+    // a live source is always the more accurate of the two.
+    if (live !== null) return live;
+
+    // the source is no longer active on the actor, so the database row is all that remains.
+    return this.resolveStaticSourceByKey(sourceKey);
+  }
+
+  /**
+   * Determines whether the given source key is currently active on the actor.
+   * @param {Game_Actor} actor The actor whose sources are searched.
+   * @param {string} sourceKey The stable key to look for.
+   * @returns {boolean} True if the actor currently carries the source, false otherwise.
+   */
   static isSourceActive(actor, sourceKey)
   {
     if (!actor) return false;

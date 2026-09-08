@@ -51,23 +51,11 @@ describe('J-ABS-Pixelistics JABS integration (direct src import)', () =>
     expect(result).toBe(true);
   });
 
-  it('scales dodge steps by the collision step count', () =>
+  it('leaves the dodge budget setter untransformed so the countdown can reach zero', () =>
   {
-    // Arrange
-    const battler = new globalThis.JABS_Battler();
-
-    // Act
-    const result = battler.determineDodgeStepCount({ jabsDodgeSteps: 3 });
-
-    // Assert
-    expect(result).toBe(12);
-  });
-
-  it('leaves the dodge step setter unscaled so the countdown can reach zero', () =>
-  {
-    // Arrange- the scaling must sit on the seeding seam only. On the setter it would also catch
-    // decrementDodgeSteps, which writes the remaining count back through it every step: 11 would
-    // be stored as 44, the count would climb instead of falling, and the dodge would never end.
+    // Arrange- the bridge states what a step costs, never what the remaining budget is. On the
+    // setter a transform would also catch decrementDodgeSteps, which writes the remainder back
+    // through it every step: the budget would climb instead of falling and the dodge never end.
     const battler = new globalThis.JABS_Battler();
 
     // Act

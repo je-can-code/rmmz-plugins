@@ -28,6 +28,9 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
           LOWERLEFT: 1, LOWERRIGHT: 3, UPPERLEFT: 7, UPPERRIGHT: 9,
         },
         RegExp: {},
+        Notetags: {
+          MoveType: { Forward: 'forward', Backward: 'backward', Directional: 'directional' },
+        },
       },
       LEVEL: false,
     };
@@ -4740,6 +4743,28 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.handleDodgeMovement).toHaveBeenCalledTimes(1);
       expect(jabsBattler.handleDodgeEnd).toHaveBeenCalledTimes(1);
     });
+
+    it('advances the dodge frame exactly once per pass', () =>
+    {
+      // Arrange
+      // handleDodgeMovement and handleDodgeEnd both run every pass, and only one of them may tick
+      // the iframes. If both do, the frame counter advances twice per update and every window an
+      // <iframes:> tag asks for opens and shuts in half the real time it states.
+      const jabsBattler = buildBattler();
+      jabsBattler.canUpdateDodge = () => true;
+      jabsBattler.handleDodgeCancel = vi.fn();
+      jabsBattler.isDodging = () => true;
+      jabsBattler.canDodgeMove = () => false;
+      jabsBattler.shouldEndDodge = () => false;
+      jabsBattler.getDodgeIFrames = () => null;
+      jabsBattler.setDodgeFrame(0);
+
+      // Act
+      jabsBattler.updateDodging();
+
+      // Assert
+      expect(jabsBattler.getDodgeFrame()).toBe(1);
+    });
   });
 
   describe('canUpdateDodge', () =>
@@ -4983,16 +5008,21 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
   describe('handleDodgeEnd / shouldEndDodge', () =>
   {
-    it('always re-evaluates iframes before checking whether to end', () =>
+    it('leaves the iframes alone, and does not end a dodge that should continue', () =>
     {
+      // Arrange
+      // handleDodgeMovement already ticked the iframes earlier in the same pass, ahead of its own
+      // early return, so ticking again here is a second advance of the same counter per frame.
       const jabsBattler = buildBattler();
       jabsBattler.updateDodgeIFrames = vi.fn();
       jabsBattler.shouldEndDodge = () => false;
       jabsBattler.endDodge = vi.fn();
 
+      // Act
       jabsBattler.handleDodgeEnd();
 
-      expect(jabsBattler.updateDodgeIFrames).toHaveBeenCalledTimes(1);
+      // Assert
+      expect(jabsBattler.updateDodgeIFrames).not.toHaveBeenCalled();
       expect(jabsBattler.endDodge).not.toHaveBeenCalled();
     });
 
@@ -5035,11 +5065,11 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.shouldEndDodge()).toBe(false);
     });
 
-    it('determineDodgeStepCount answers the skill tag value untouched', () =>
+    it('determineDodgeStepCount answers the skill tag value in tiles', () =>
     {
       // Arrange
-      // this is the seam movement extensions rescale through, so the base answer has to be the
-      // tag's own number: anything applied here would be applied a second time on top of theirs.
+      // the tag states a distance, and nothing rescales it any more- what varies per movement
+      // scheme is what a step costs, which dodgeStepDistance answers instead.
       const jabsBattler = buildBattler();
 
       // Act
@@ -5049,10 +5079,22 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(result).toBe(3);
     });
 
-    it('the dodge step countdown reaches zero from a seeded count', () =>
+    it('dodgeStepDistance charges a whole tile for a tile-locked step', () =>
     {
       // Arrange
-      // seeding and counting down are separate concerns that both write the same field, and an
+      const jabsBattler = buildBattler();
+
+      // Act
+      const result = jabsBattler.dodgeStepDistance();
+
+      // Assert
+      expect(result).toBe(1);
+    });
+
+    it('the dodge budget reaches zero from a seeded distance', () =>
+    {
+      // Arrange
+      // seeding and spending are separate concerns that both write the same field, and an
       // extension transforming the write rather than the seed turns this descent into a climb.
       const jabsBattler = buildBattler();
       jabsBattler.setDodgeSteps(jabsBattler.determineDodgeStepCount({ jabsDodgeSteps: 3 }));
@@ -5066,6 +5108,22 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       // Assert
       expect(remainingBeforeLast).toBe(1);
       expect(jabsBattler.getDodgeSteps()).toBe(0);
+    });
+
+    it('the dodge budget spends whatever a step actually costs', () =>
+    {
+      // Arrange
+      // a movement extension answers dodgeStepDistance with a fraction of a tile, and the same
+      // three-tile tag then has to buy proportionally more steps rather than ending three frames in.
+      const jabsBattler = buildBattler();
+      jabsBattler.dodgeStepDistance = () => 0.25;
+      jabsBattler.setDodgeSteps(jabsBattler.determineDodgeStepCount({ jabsDodgeSteps: 3 }));
+
+      // Act
+      jabsBattler.decrementDodgeSteps();
+
+      // Assert
+      expect(jabsBattler.getDodgeSteps()).toBe(2.75);
     });
   });
 
@@ -5089,8 +5147,80 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       expect(jabsBattler.setInvincible).toHaveBeenCalledWith(false);
       expect(setDodgeModifier).toHaveBeenCalledWith(0);
       expect(jabsBattler.setDodgeFrame).toHaveBeenCalledWith(0);
-      expect(jabsBattler.setDodgeIFrames).toHaveBeenCalledWith(0);
+      expect(jabsBattler.setDodgeIFrames).toHaveBeenCalledWith(null);
     });
+
+    it('hands facing back when the dodge was the thing holding it', () =>
+    {
+      // Arrange
+      // the prior setting is restored rather than cleared, because a map or event page may have
+      // fixed this character's direction long before any dodge went near it.
+      const setDirectionFix = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ setDodgeModifier: vi.fn(), setDirectionFix });
+      jabsBattler.flagDodgeFacingHeld(true);
+      jabsBattler.setDodgePriorDirectionFix(true);
+
+      // Act
+      jabsBattler.endDodge();
+
+      // Assert
+      expect(setDirectionFix).toHaveBeenCalledWith(true);
+      expect(jabsBattler.hasDodgeFacingHeld()).toBe(false);
+    });
+
+    it('does not touch facing when the dodge never held it', () =>
+    {
+      // Arrange
+      // a forward dodge never locks facing, so concluding one must not write the stashed default
+      // over whatever the map has legitimately set in the meantime.
+      const setDirectionFix = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ setDodgeModifier: vi.fn(), setDirectionFix });
+      jabsBattler.flagDodgeFacingHeld(false);
+
+      // Act
+      jabsBattler.endDodge();
+
+      // Assert
+      expect(setDirectionFix).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('applyDodgeFacingHold', () =>
+  {
+    it('locks facing and stashes the prior setting for a backward dodge', () =>
+    {
+      // Arrange
+      const setDirectionFix = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isDirectionFixed: () => true, setDirectionFix });
+
+      // Act
+      jabsBattler.applyDodgeFacingHold('backward');
+
+      // Assert
+      expect(setDirectionFix).toHaveBeenCalledWith(true);
+      expect(jabsBattler.hasDodgeFacingHeld()).toBe(true);
+      expect(jabsBattler.dodgePriorDirectionFix()).toBe(true);
+    });
+
+    it('leaves facing alone for a forward dodge', () =>
+    {
+      // Arrange
+      // a lunge should turn you to face where you went; only a retreat wants its eyes elsewhere.
+      const setDirectionFix = vi.fn();
+      const jabsBattler = buildBattler();
+      jabsBattler.getCharacter = () => ({ isDirectionFixed: () => false, setDirectionFix });
+
+      // Act
+      jabsBattler.applyDodgeFacingHold('forward');
+
+      // Assert
+      expect(setDirectionFix).not.toHaveBeenCalled();
+      expect(jabsBattler.hasDodgeFacingHeld()).toBe(false);
+    });
+
   });
 
   describe('updateDeathHandling', () =>
@@ -5934,8 +6064,11 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     it('infers the direction from move type when the forced direction is explicitly null', () =>
     {
       // Arrange
+      // a backward dodge also locks facing, so this character needs the direction-fix surface.
       const jabsBattler = buildDodgingBattler();
-      jabsBattler.getCharacter = () => ({ setDodgeModifier: vi.fn() });
+      jabsBattler.getCharacter = () => ({
+        setDodgeModifier: vi.fn(), isDirectionFixed: () => false, setDirectionFix: vi.fn(),
+      });
 
       // Act
       // a null forced direction is an absent one- it must never become the dodge direction.
@@ -5944,6 +6077,8 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       // Assert
       expect(jabsBattler.determineDodgeDirection).toHaveBeenCalledWith('backward');
       expect(jabsBattler.getDodgeDirection()).toBe(2);
+      // a backward move type must also reach the facing hold; nothing else in this file pins that.
+      expect(jabsBattler.hasDodgeFacingHeld()).toBe(true);
     });
 
     it('executes the built actions and flags the battler as dodging', () =>
@@ -6974,7 +7109,9 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
       const jabsBattler = buildBattler();
       jabsBattler.getComboNextActionId = () => 0;
       jabsBattler.getBattler = () => ({
-        getEquippedSkillId: () => 3, hasSkill: (id) => id === 3,
+        getEquippedSkillId: () => 3,
+        hasSkill: (id) => id === 3,
+        getSlotTransformSkillId: () => 0,
       });
 
       expect(jabsBattler.battlerHasPermissionForSlot('mainhand')).toBe(true);
@@ -6984,11 +7121,13 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
     {
       // Arrange
       const jabsBattler = buildBattler();
-      // no combo is armed, so the equipped-skill check is the only thing that can answer.
+      // no combo is armed and no slot transform applies, so the equipped-skill check is the
+      // only thing left that can answer.
       jabsBattler.getComboNextActionId = () => 0;
       jabsBattler.getBattler = () => ({
         getEquippedSkillId: () => 3,
-        hasSkill: () => false
+        hasSkill: () => false,
+        getSlotTransformSkillId: () => 0,
       });
 
       // Act
@@ -6996,6 +7135,26 @@ describe('JABS_Battler (unit, all downstream dependencies mocked)', () =>
 
       // Assert
       expect(hasPermission).toBe(false);
+    });
+
+    it('battlerHasPermissionForSlot is true when a slot transform claims the slot', () =>
+    {
+      // Arrange- no combo, and hasSkill refuses everything, so the transform is the only thing
+      // that can grant permission here. this is the food slot's situation exactly: the stored
+      // id is an item id, which hasSkill would never recognize.
+      const jabsBattler = buildBattler();
+      jabsBattler.getComboNextActionId = () => 0;
+      jabsBattler.getBattler = () => ({
+        getEquippedSkillId: () => 3,
+        hasSkill: () => false,
+        getSlotTransformSkillId: () => 512,
+      });
+
+      // Act
+      const hasPermission = jabsBattler.battlerHasPermissionForSlot('mainhand');
+
+      // Assert
+      expect(hasPermission).toBe(true);
     });
 
     it('getSkillIdForAction returns the queued combo id when present', () =>

@@ -5,7 +5,6 @@ import Window_SdpList from '../windows/Window_SdpList.js';
 import Window_SdpHeader from '../windows/Window_SdpHeader.js';
 import Window_SdpParameterList from '../windows/Window_SdpParameterList.js';
 import Window_SdpRewardList from '../windows/Window_SdpRewardList.js';
-import Window_SdpMastery from '../windows/Window_SdpMastery.js';
 import Window_SdpCart from '../windows/Window_SdpCart.js';
 import Window_SdpConfirmation from '../windows/Window_SdpConfirmation.js';
 import Window_SdpPoints from '../windows/Window_SdpPoints.js';
@@ -84,12 +83,6 @@ class Scene_SDP
     this._j._sdp._windows._sdpRewardList = null;
 
     /**
-     * Subgroup mastery summary for the hovered panel (separate from rank rewards).
-     * @type {Window_SdpMastery}
-     */
-    this._j._sdp._windows._sdpMastery = null;
-
-    /**
      * The shopping cart window for planned rank-ups.
      * @type {Window_SdpCart}
      */
@@ -135,7 +128,7 @@ class Scene_SDP
    * Gets the j.
    * @returns {{_sdp: {_windows: {_sdpList: Window_Base|null, _sdpHeader: Window_Base|null,
    * _sdpParameterList: Window_Base|null, _sdpRewardList: Window_Base|null,
-   * _sdpMastery: Window_Base|null, _sdpCart: Window_Base|null}}}} The j.
+   * _sdpCart: Window_Base|null}}}} The j.
    */
   j()
   {
@@ -193,7 +186,6 @@ class Scene_SDP
     // selectable data windows.
     this.createSdpListWindow();
     this.createSdpParameterListWindow();
-    this.createSdpMasteryWindow();
     this.createSdpRewardListWindow();
     this.createSdpCartWindow();
 
@@ -598,49 +590,6 @@ class Scene_SDP
 
   //endregion reward list window
 
-  //region mastery window
-  /**
-   * Creates the mastery summary window above rank rewards.
-   */
-  createSdpMasteryWindow()
-  {
-    const window = this.buildSdpMasteryWindow();
-
-    this.setSdpMasteryWindow(window);
-    this.addWindow(window);
-  }
-
-  /**
-   * Builds the read-only mastery strip for the hovered panel.
-   * @returns {Window_SdpMastery}
-   */
-  buildSdpMasteryWindow()
-  {
-    const rectangle = this.sdpMasteryRectangle();
-    const window = new Window_SdpMastery(rectangle);
-
-    return window;
-  }
-
-  /**
-   * Gets the tracked mastery window.
-   * @returns {Window_SdpMastery}
-   */
-  getSdpMasteryWindow()
-  {
-    return this.j()._sdp._windows._sdpMastery;
-  }
-
-  /**
-   * Sets the tracked mastery window.
-   * @param {Window_SdpMastery} masteryWindow The mastery window to track.
-   */
-  setSdpMasteryWindow(masteryWindow)
-  {
-    this.j()._sdp._windows._sdpMastery = masteryWindow;
-  }
-  //endregion mastery window
-
   //region cart window
   /**
    * Creates the window for planned ("cart") panel rankups.
@@ -710,9 +659,9 @@ class Scene_SDP
     const topY = headerRect.y + headerRect.height;
 
     // the cart's height is measured against the whole region rather than what is left after the header,
-    // so that giving the header more room takes it from the mastery and rewards windows instead. The
-    // cart shows what the player is about to spend and is the one thing here that must not get smaller.
-    const cartHeight = Math.floor((contentArea.height - gap) / 2);
+    // so that giving the header more room takes it from the rewards window instead. The cart shows what
+    // the player is about to spend and is the one thing here that must not get smaller.
+    const cartHeight = Math.floor((contentArea.height - gap) * this.sdpCartRegionRatio());
     const cartY = bottom - cartHeight;
     const topRegionHeight = cartY - topY - gap;
 
@@ -727,28 +676,7 @@ class Scene_SDP
     };
   }
 
-  /**
-   * Pixel height for the mastery summary strip (two text rows + chrome).
-   * @returns {number}
-   */
-  sdpMasteryWindowHeight()
-  {
-    // two rows: the subgroup this panel's mastery belongs to, and the skill it grants at max rank.
-    // derived rather than hardcoded, so every spare pixel falls through to the rewards list beneath it.
-    return this.calcWindowHeight(2, false);
-  }
 
-  /**
-   * Rectangle for the mastery window at the top of the right column.
-   * @returns {Rectangle}
-   */
-  sdpMasteryRectangle()
-  {
-    const metrics = this.sdpRightColumnMetrics();
-    const height = this.sdpMasteryWindowHeight();
-
-    return new Rectangle(metrics.x, metrics.topY, metrics.width, height);
-  }
 
   /**
    * Rectangle for the cart window, occupying the bottom half of the right column.
@@ -767,12 +695,25 @@ class Scene_SDP
    */
   sdpRewardListRectangle()
   {
+    // the mastery strip that used to sit above this was folded into the header, so rewards now begins
+    // at the top of the column rather than beneath it.
     const metrics = this.sdpRightColumnMetrics();
-    const masteryHeight = this.sdpMasteryWindowHeight();
-    const y = metrics.topY + masteryHeight + metrics.gap;
-    const height = metrics.cartY - y - metrics.gap;
+    const height = metrics.cartY - metrics.topY - metrics.gap;
 
-    return new Rectangle(metrics.x, y, metrics.width, height);
+    return new Rectangle(metrics.x, metrics.topY, metrics.width, height);
+  }
+
+  /**
+   * The share of the right column the cart occupies.
+   *
+   * Three fifths rather than half: folding the mastery strip into the header freed a band here, and
+   * the cart is where it earns the most- a player mid-purchase is reading what they are about to
+   * spend, and a cart that scrolls hides exactly the row they were checking.
+   * @returns {number}
+   */
+  sdpCartRegionRatio()
+  {
+    return 0.6;
   }
 
   /**
@@ -795,6 +736,27 @@ class Scene_SDP
   {
     // the window frames already create separation; keep the split tight.
     return 0;
+  }
+
+  /**
+   * Overrides {@link Scene_ActorFacetBase.actorRibbonWindowRect}.<br/>
+   * Confines the ribbon to the panel list column instead of spanning the full width.
+   *
+   * The base assumes a full-width band because most facet scenes have nothing worth promoting into
+   * that space. Here the mastery description does- it is the one thing on this screen a player cannot
+   * learn anywhere else before spending- so the ribbon caps the list it already sits above, and the
+   * header grows into what it gave up.
+   * @returns {Rectangle}
+   */
+  actorRibbonWindowRect()
+  {
+    const facetArea = this.facetAreaRect();
+
+    return new Rectangle(
+      facetArea.x,
+      facetArea.y,
+      this.sdpListColumnWidth(),
+      this.actorRibbonHeight());
   }
 
   //region header window
@@ -825,18 +787,21 @@ class Scene_SDP
    */
   sdpHeaderRectangle()
   {
-    // sit at the top of everything right of the panel list.
-    const contentArea = this.contentAreaRect();
-    const x = contentArea.x + this.sdpListColumnWidth();
+    // measured against the whole region rather than what the base leaves beneath the ribbon, because
+    // this scene's ribbon only caps the left column- see actorRibbonWindowRect. The header therefore
+    // starts at the very top and reclaims the band the ribbon gave up.
+    const facetArea = this.facetAreaRect();
+    const x = facetArea.x + this.sdpListColumnWidth();
 
-    // this header renders two full text rows.
-    const height = this.calcWindowHeight(2, false);
+    // three rows: the mastery this panel grants, then two of prose describing what it does. Two is a
+    // hard budget rather than a starting point- the prose is authored to fit it, so nothing scrolls.
+    const height = this.calcWindowHeight(3, false);
 
-    // it runs all the way to the right edge, across the mastery, rewards and cart windows. The panel's
-    // flavour text can be lengthy, and confining it to the parameter column beneath it clipped it.
-    const width = contentArea.x + contentArea.width - x;
+    // it runs all the way to the right edge, across the rewards and cart windows. What a mastery does
+    // is the reason to buy the strip at all, so it gets the widest measure on the screen.
+    const width = facetArea.x + facetArea.width - x;
 
-    return new Rectangle(x, contentArea.y, width, height);
+    return new Rectangle(x, facetArea.y, width, height);
   }
 
   /**
@@ -1374,11 +1339,6 @@ class Scene_SDP
     this.getSdpHeaderWindow()
       .refresh();
 
-    this.getSdpMasteryWindow()
-      .setPanel(null);
-    this.getSdpMasteryWindow()
-      .refresh();
-
     const parameterListWindow = this.getSdpParameterListWindow();
     parameterListWindow.setParameters(null);
     parameterListWindow.refresh();
@@ -1440,12 +1400,6 @@ class Scene_SDP
     const rewardListWindow = this.getSdpRewardListWindow();
     rewardListWindow.setRewards(currentPanel.panelRewards);
     rewardListWindow.refresh();
-
-    // update the mastery strip — subgroup tier skills, not panelRewards rows.
-    this.getSdpMasteryWindow()
-      .setPanel(currentPanel);
-    this.getSdpMasteryWindow()
-      .refresh();
 
     // update the cart window with current planned purchases.
     this.getSdpCartWindow()

@@ -549,6 +549,16 @@ class JABS_SkillSlot
     // "no skill here", and every caller already handles the null.
     if (targetId === null || targetId === 0) return null;
 
+    // a slot transform supplies a skill id no matter what this slot happens to store, so both
+    // questions below are the wrong ones to ask about it: emptiness would refuse an id that was
+    // never going to come from the slot, and the item check would look a skill id up in
+    // $dataItems and hand back an unrelated row. asking the user directly is what keeps the
+    // display honest about which of the two a target id actually is.
+    if (user && user.getSlotTransformSkillId(this.key) === targetId)
+    {
+      return user.skill(targetId);
+    }
+
     // if this slot is empty, then return null.
     if (this.isEmpty()) return null;
 

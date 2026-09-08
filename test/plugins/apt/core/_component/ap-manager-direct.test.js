@@ -233,6 +233,72 @@ describe('ApManager (direct src import)', () =>
     });
   });
 
+  describe('resolveDisplaySourceByKey', () =>
+  {
+    it('prefers the actor\'s live source when the key is still active', () =>
+    {
+      // Arrange- the database holds a differently-named row at the same id, so falling through to
+      // the static table would be visibly wrong rather than accidentally equivalent.
+      globalThis.$dataWeapons = [ null, null, null, null, null, {
+        id: 5,
+        name: 'Database Sword'
+      } ];
+      const otherSource = {
+        id: 6,
+        implementationType: () => '@base:weapon',
+        isSkill: () => false,
+      };
+      const liveSource = {
+        id: 5,
+        name: 'Live Sword',
+        implementationType: () => '@base:weapon',
+        isSkill: () => false,
+      };
+      const actor = { getAptitudeSources: () => [ otherSource, liveSource ] };
+
+      // Act
+      const resolved = ApManager.resolveDisplaySourceByKey(actor, '@base:weapon:5');
+
+      // Assert
+      expect(resolved.name).toBe('Live Sword');
+    });
+
+    it('falls back to the database row when the source is no longer active on the actor', () =>
+    {
+      // Arrange- the weapon was unequipped, so its persisted progress outlives it and only the
+      // saved key plus the database row remain to render the row with.
+      globalThis.$dataWeapons = [ null, null, null, null, null, {
+        id: 5,
+        name: 'Database Sword'
+      } ];
+      const otherSource = {
+        id: 6,
+        implementationType: () => '@base:weapon',
+        isSkill: () => false,
+      };
+      const actor = { getAptitudeSources: () => [ otherSource ] };
+
+      // Act
+      const resolved = ApManager.resolveDisplaySourceByKey(actor, '@base:weapon:5');
+
+      // Assert
+      expect(resolved.name).toBe('Database Sword');
+    });
+
+    it('returns null when the key names nothing the actor carries and nothing in the database', () =>
+    {
+      // Arrange- the row was deleted from the database between builds, leaving the saved key dangling.
+      globalThis.$dataWeapons = [ null ];
+      const actor = { getAptitudeSources: () => [] };
+
+      // Act
+      const resolved = ApManager.resolveDisplaySourceByKey(actor, '@base:weapon:5');
+
+      // Assert
+      expect(resolved).toBe(null);
+    });
+  });
+
   describe('isSourceActive', () =>
   {
     it('returns false when given no actor', () =>

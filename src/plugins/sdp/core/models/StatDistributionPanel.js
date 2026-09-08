@@ -103,15 +103,6 @@ class StatDistributionPanel
   }
 
   /**
-   * Short flavor line under the name in the details window.
-   * @returns {string}
-   */
-  get topFlavorText()
-  {
-    return this.identity.topFlavorText;
-  }
-
-  /**
    * Maximum rank for this SDP.
    * @returns {number}
    */

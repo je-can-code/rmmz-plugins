@@ -22,6 +22,7 @@ describe('RPG_Class (src/plugins/abs/core/database/RPG_Class.js)', () =>
           BonusHitsScopeBasic: /<bonusHitsBasic:[ ]?(-?\d+)>/i,
           BonusHitsScopeSkill: /<bonusHitsSkill:[ ]?(-?\d+)>/i,
           SkillTransform: /<skillTransform:(\[\d+,[ ]?\d+])>/gi,
+          SlotTransform: /<slotTransform:(\[[\w-]+,[ ]?\d+])>/gi,
         },
       },
     };
@@ -82,6 +83,27 @@ describe('RPG_Class (src/plugins/abs/core/database/RPG_Class.js)', () =>
     it('is an empty array when untagged', () =>
     {
       expect(classData('').jabsSkillTransforms).toEqual([]);
+    });
+  });
+
+  describe('jabsSlotTransforms', () =>
+  {
+    it('parses a list of [slotKey, skillId] pairs', () =>
+    {
+      // Arrange- two different slots, so the parse cannot be collapsing them into one entry.
+      const clazz = classData('<slotTransform:[UsableItem, 512]>\n<slotTransform:[Dodge, 7]>');
+
+      // Act & Assert
+      expect(clazz.jabsSlotTransforms).toEqual([ [ 'UsableItem', 512 ], [ 'Dodge', 7 ] ]);
+    });
+
+    it('is an empty array when untagged', () =>
+    {
+      // Arrange- a skill transform is present, so the two tags cannot be reading each other.
+      const clazz = classData('<skillTransform:[1, 2]>');
+
+      // Act & Assert
+      expect(clazz.jabsSlotTransforms).toEqual([]);
     });
   });
 });

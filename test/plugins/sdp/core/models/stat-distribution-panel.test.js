@@ -98,7 +98,6 @@ describe('StatDistributionPanel (direct src import)', () =>
       const panel = makePanel();
 
       // Assert
-      expect(panel.topFlavorText).toBe('Resilience.');
     });
   });
   //endregion identity surface

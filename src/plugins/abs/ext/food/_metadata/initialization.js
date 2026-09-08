@@ -76,22 +76,46 @@ J.ABS.EXT.FOOD.RegExp = {
   FoodGroupColor: /<foodGroupColor:[ ]?(#[0-9A-Fa-f]{6})>/i,
 
   /**
-   * Boolean tag: bearer is immune to triggering the Overstuffed chain on re-feed.
-   * May live on any note-bearing database object readable via getAllNotes().
+   * Boolean tag: executing this skill ends the caster's active food chain.
+   *
+   * This is what makes a metabolize skill cost the meal. Its absence is a design choice rather
+   * than an oversight. A skill that burns fuel without consuming the arc is an endurance move,
+   * bounded by the chain's own duration instead of by a single use.
+   *
+   * <pre>
+   * Structure:
+   *  <endFoodChain>
+   *
+   * Example:
+   *  <endFoodChain>
+   *
+   * Translation:
+   *  when this skill executes, whatever food arc the caster is in ends immediately
+   * </pre>
+   * @type {RegExp}
    */
-  OverstuffedImpervious: /<overstuffedImpervious>/i,
-};
+  EndFoodChain: /<endFoodChain>/i,
 
-/**
- * Canonical chain type key constants used throughout this plugin.
- * Using these constants avoids magic strings in the code.
- */
-J.ABS.EXT.FOOD.ChainType = {
   /**
-   * The chain type applied when a player eats mid-arc without overstuffed immunity.
-   * @type {'overstuffed'}
+   * Boolean tag: the bearer's food chains never end from {@link #EndFoodChain}.
+   *
+   * The bearer still executes the skill and still receives everything it does; they simply keep
+   * the arc they were in. May live on any note-bearing database object readable via
+   * {@code getAllNotes()}: passive, equip, state, class or the battler's own row.
+   *
+   * <pre>
+   * Structure:
+   *  <foodChainImpervious>
+   *
+   * Example:
+   *  <foodChainImpervious>
+   *
+   * Translation:
+   *  this bearer metabolizes without ever spending the meal
+   * </pre>
+   * @type {RegExp}
    */
-  Overstuffed: 'overstuffed',
+  FoodChainImpervious: /<foodChainImpervious>/i,
 };
 
 //endregion initialization

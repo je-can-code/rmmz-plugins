@@ -171,6 +171,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.4
+ *    The aggregate details window names its aptitude sources.
  * - 1.1.3
  *    Routed the missing-teachable warning through J-Base's new Diagnostics, so
  *    it names J-Aptitude-Typed in the console.

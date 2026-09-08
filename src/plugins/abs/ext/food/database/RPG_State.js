@@ -2,7 +2,7 @@
 //region jabsFoodChainType
 /**
  * The food group chain type this state belongs to, if any.<br/>
- * Returns the lower-cased type string (e.g. 'protein', 'overstuffed') or null
+ * Returns the lower-cased type string (e.g. 'protein', 'vegetable') or null
  * when the state is not part of any food chain arc.
  * @type {string|null}
  */

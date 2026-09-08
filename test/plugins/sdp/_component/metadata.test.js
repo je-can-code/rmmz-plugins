@@ -414,7 +414,6 @@ describe('J-SDP metadata (direct src import)', () =>
       rarity: 0,
       unlockedByDefault: true,
       description: 'test',
-      flavorText: 'test',
       maxRank: 5,
       baseCost: 10,
       flatGrowthCost: 1,

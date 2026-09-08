@@ -25,8 +25,11 @@ Window_AptitudeAggregateDetails.prototype.drawExtensionData = function(sourcePro
   // extract the teachable's skill id on this row.
   const skillId = sourceProgress.skillId();
 
-  // resolve the live source object for this actor by key (skill resolves to actor.skill(id)).
-  const source = ApManager.resolveSourceByKey(actor, sourceKey);
+  // resolve the source for display- a row whose source is no longer active on the actor still gets
+  // drawn (greyed and marked inactive), and it still deserves its badge. core's #drawSource already
+  // returned before reaching this hook when the key names nothing in the database at all, so what
+  // comes back here is always an object.
+  const source = ApManager.resolveDisplaySourceByKey(actor, sourceKey);
 
   // extract all teachables from the source.
   const teachables = source.aptitudeTeachings;

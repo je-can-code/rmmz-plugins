@@ -130,6 +130,28 @@ Object.defineProperty(RPG_State.prototype, 'jabsSkillTransforms', {
 });
 //endregion skillTransforms
 
+//region slotTransforms
+/**
+ * The collection of slot transforms defined on this state.
+ *
+ * Each entry is a two-element array in the form:
+ * [ slotKey, skillId ]
+ *
+ * While this state is applied, the named slot executes {@code skillId} regardless of what is
+ * equipped there, including an item id or nothing at all. Neither of those is reachable by a skill
+ * transform, which has no base id to match in either case. States outrank every other transform
+ * source, so this is how a temporary condition takes a button over and hands it back the moment
+ * the state lapses.
+ * @type {[ string, number ][]}
+ */
+Object.defineProperty(RPG_State.prototype, 'jabsSlotTransforms', {
+  get: function()
+  {
+    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SlotTransform);
+  },
+});
+//endregion slotTransforms
+
 //region reapplication type
 /**
  * The state reapplication strategy for this state in the context of JABS.<br/>

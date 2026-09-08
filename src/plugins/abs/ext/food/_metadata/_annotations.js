@@ -34,7 +34,7 @@
  * Tag every state that belongs to a food arc with the group name:
  *    <foodChain:TYPE>
  *  Where TYPE is a lower-case string (protein, vegetable, fruit, grain,
- *  dairy, confection, overstuffed, etc.). All states in one arc share TYPE.
+ *  dairy, confection, etc.). All states in one arc share TYPE.
  *
  * Chain progression is authored entirely via <applyStateOnExpire> (J-ABS
  * core). The Well Fed entry state expires into the peak, the peak expires
@@ -61,19 +61,42 @@
  *
  * A phase state with no color tag renders as a neutral grey segment instead.
  * ============================================================================
- * OVERSTUFFED IMMUNITY (FIELD MEDIC):
- * Any battler whose getAllNotes() sources include the following tag is treated
- * as having Field Medic mastery. This tag may appear on any passive state,
- * accessory, class, or other note-bearing database object.
+ * ENDING A CHAIN (METABOLIZE):
+ * Tag a skill so that executing it ends the caster's active food arc:
  *
- *    <overstuffedImpervious>
+ *    <endFoodChain>
  *
- * With this tag active on the leader, re-feeding during any phase (including
- * Well Fed and peak) snaps to the new Well Fed instead of triggering the
- * Overstuffed chain. Tail-phase behaviour is unchanged (always rescues).
+ * There is no tail phase and no consolation state; the arc is simply over.
+ * This is what makes a "metabolize" skill cost the meal that fuelled it.
+ *
+ * Pair it with J-ABS core's <slotTransform:[UsableItem, SKILL_ID]> on each
+ * phase state to turn the R2 button into that skill for as long as the arc
+ * runs — eat when empty, burn the meal when full. Because the tag is read off
+ * the executed skill rather than tracked through whatever dispatched it, an
+ * enemy attack may carry it too and take the player's meal away.
+ *
+ * OMITTING THE TAG IS A DESIGN CHOICE, NOT AN OVERSIGHT. A skill that burns
+ * fuel without spending the arc is an endurance move, bounded by the chain's
+ * own duration rather than by a single use. Nothing warns about its absence.
+ *
+ * ============================================================================
+ * FOOD CHAIN IMMUNITY:
+ * Any battler whose getAllNotes() sources include the following tag keeps
+ * their arc through a chain-ending skill. This tag may appear on any passive
+ * state, accessory, class, or other note-bearing database object.
+ *
+ *    <foodChainImpervious>
+ *
+ * The bearer still executes the skill and still receives everything it does;
+ * they simply do not spend the meal. This is the capstone form of food
+ * mastery — fullness stops being ammunition and becomes a standing condition.
  *
  * ============================================================================
  * CHANGELOG:
+ * - 2.0.0
+ *    Food chains gained a second type, an alternative to healing.
+ *    Retired Overstuffed along with it: <overstuffedImpervious> is gone, replaced by
+ *    <foodChainImpervious>, and <endFoodChain> now closes a chain outright.
  * - 1.1.0
  *    The Well Fed entry state names the leader as its source, so it applies as a JABS
  *    state and its expiry advances the chain. Without one it landed as an inert

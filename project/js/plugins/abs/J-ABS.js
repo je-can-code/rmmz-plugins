@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v4.22.0 ABS] Enables combat to be carried out on the map.
+ * [v4.23.0 ABS] Enables combat to be carried out on the map.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -48,6 +48,9 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.23.0
+ *    Added the jabsSlotTransforms notetag to actors, classes, equipment and states,
+ *    and Game_Battler#getSlotTransformSkillId to resolve one by slot.
  * - 4.22.0
  *    Added JABS_Engine.toDisplacement, the shared conversion of a direction and a
  *    distance into a tile offset, so knockback, pull-forward and gap-close stop each
@@ -2678,7 +2681,8 @@
  *  Where OVERRIDE is the skill id that executes and displays instead.
  *
  * This applies to ALL equipped skill slots (combat, dodge, offhand). The tool
- * slot is excluded because it stores item ids rather than skill ids.
+ * and usable-item slots are excluded because they store item ids rather than
+ * skill ids; use SLOT TRANSFORM below to reach those.
  *
  * PERMISSION: The battler does not need to have formally learned OVERRIDE.
  * The transform tag itself grants implicit permission; only the BASE slot
@@ -2697,6 +2701,37 @@
  *    <skillTransform:[151, 152]>
  * While this note is active on any source, any slot whose base skill id is
  * 151 will execute and display as skill 152 instead.
+ *
+ * ----------------------------------------------------------------------------
+ * SLOT TRANSFORM:
+ * Redirects an entire slot to a skill, regardless of what is equipped in it.
+ * Valid on the same sources as SKILL TRANSFORM above.
+ *    <slotTransform:[SLOT_KEY, SKILL_ID]>
+ *  Where SLOT_KEY is a JABS_Button value: Main, Offhand, Tool, Dodge,
+ *  UsableItem, or CombatSkill1 through CombatSkill4. Matched case-insensitively.
+ *  Where SKILL_ID is the skill that executes and displays for that slot.
+ *
+ * Where a skill transform asks "what is in this slot, and does anything
+ * replace it", a slot transform asks only "which slot is this". That is the
+ * whole difference, and it is what lets this reach two cases the other cannot:
+ * a slot holding an ITEM id (Tool, UsableItem), and a slot holding NOTHING.
+ * Neither offers a base skill id to match against.
+ *
+ * The slot's stored contents are never read and never written, so the redirect
+ * ends the instant its source does — a state lapsing hands the button straight
+ * back to whatever was always sitting in it.
+ *
+ * PERMISSION: as with skill transforms, the tag is its own permission grant.
+ * The battler need not have learned SKILL_ID.
+ *
+ * PRECEDENCE: identical to skill transforms (states by priority > equips >
+ * class > database row). A slot transform also beats a skill transform on the
+ * same slot, since naming the slot outright is the more specific statement.
+ *
+ * Example:
+ *    <slotTransform:[UsableItem, 512]>
+ * While this note is active, the R2 usable-item button executes skill 512
+ * rather than consuming whatever item is sitting in the slot.
  *
  * ----------------------------------------------------------------------------
  * ----------------------------------------------------------------------------
@@ -4538,7 +4573,7 @@ J.ABS.Helpers.loadExternalConfig = (configPath = "data/config.jabs.json") => {
 /**
 * The metadata associated with this plugin.
 */
-J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.22.0");
+J.ABS.Metadata = new J_AbsPluginMetadata("J-ABS", "4.23.0");
 J.ABS.Helpers.loadExternalConfig();
 /**
 * The various default values across the engine. Often configurable.
@@ -5071,6 +5106,27 @@ J.ABS.RegExp = {
 	RemoveOnConvert: /<removeOnConvert>/gi,
 	ConvertUsesCaster: /<convertUsesCaster>/gi,
 	SkillTransform: /<skillTransform:[ ]?(\[\d+,[ ]?\d+])>/gi,
+	/**
+	* Redirects an entire slot to a skill, regardless of what is equipped in it.
+	*
+	* Where {@link #SkillTransform} keys on the skill currently occupying a slot, this keys on the
+	* slot itself — which is the only way to reach a slot that holds an item id rather than a skill
+	* id, or one that is empty. The slot's stored contents are never mutated; resolution happens at
+	* execution and display time and reverts the instant the source note goes away.
+	*
+	* <pre>
+	* Structure:
+	*  <slotTransform:[SLOT_KEY, SKILL_ID]>
+	*
+	* Example:
+	*  <slotTransform:[UsableItem, 512]>
+	*
+	* Translation:
+	*  while this note source is active, the UsableItem (R2) slot executes skill 512
+	* </pre>
+	* @type {RegExp}
+	*/
+	SlotTransform: /<slotTransform:[ ]?(\[[\w-]+,[ ]?\d+])>/gi,
 	Paralyzed: /<paralyzed>/gi,
 	Rooted: /<rooted>/gi,
 	Disabled: /<disabled>/gi,
@@ -12011,6 +12067,9 @@ var JABS_SkillSlot = class {
 	*/
 	data(user = null, targetId = this.id) {
 		if (targetId === null || targetId === 0) return null;
+		if (user && user.getSlotTransformSkillId(this.key) === targetId) {
+			return user.skill(targetId);
+		}
 		if (this.isEmpty()) return null;
 		if (this.isItem()) {
 			return $dataItems[targetId];
@@ -12503,6 +12562,34 @@ var JABS_Battler = class JABS_Battler {
 		this._dodgeIframes = newDodgeIframes;
 	}
 	/**
+	* Gets the direction-fix setting stashed before the current dodge locked facing.
+	* @returns {boolean} The dodgePriorDirectionFix.
+	*/
+	dodgePriorDirectionFix() {
+		return this._dodgePriorDirectionFix;
+	}
+	/**
+	* Sets the direction-fix setting to restore when the current dodge concludes.
+	* @param {boolean} newDodgePriorDirectionFix The new dodgePriorDirectionFix.
+	*/
+	setDodgePriorDirectionFix(newDodgePriorDirectionFix) {
+		this._dodgePriorDirectionFix = newDodgePriorDirectionFix;
+	}
+	/**
+	* Gets whether the dodge in progress is the thing currently holding facing.
+	* @returns {boolean} The dodgeFacingHeld.
+	*/
+	hasDodgeFacingHeld() {
+		return this._dodgeFacingHeld;
+	}
+	/**
+	* Sets whether the dodge in progress is the thing currently holding facing.
+	* @param {boolean} newDodgeFacingHeld The new dodgeFacingHeld.
+	*/
+	flagDodgeFacingHeld(newDodgeFacingHeld) {
+		this._dodgeFacingHeld = newDodgeFacingHeld;
+	}
+	/**
 	* Gets the guard flat reduction.
 	* @returns {number} The guardFlatReduction.
 	*/
@@ -12757,7 +12844,12 @@ var JABS_Battler = class JABS_Battler {
 	*/
 	initDodgeInfo() {
 		/**
-		* The distance in steps/tiles/squares that the dodge will move the battler.
+		* The distance in tiles still owed to the dodge currently in progress.
+		*
+		* This is a budget rather than a count of move commands: each executed step subtracts however
+		* far that step actually travelled, per {@link #dodgeStepDistance}. A move command covers one
+		* tile under tile-locked movement and a fraction of one under pixel movement, so counting
+		* commands would make the same tag mean a different distance in each scheme.
 		* @type {number}
 		*/
 		this._dodgeSteps = 0;
@@ -12782,6 +12874,24 @@ var JABS_Battler = class JABS_Battler {
 		* @type {[number, number]|null}
 		*/
 		this._dodgeIframes = null;
+		/**
+		* The character's direction-fix setting from before the current dodge locked it.
+		*
+		* A backward dodge holds facing so the battler keeps looking at whatever it is retreating from,
+		* which means clobbering a setting the map or an event page may have deliberately established.
+		* Stashing the previous value is what lets {@link #endDodge} hand it back rather than assuming
+		* everyone starts unfixed.
+		* @type {boolean}
+		*/
+		this._dodgePriorDirectionFix = false;
+		/**
+		* Whether the dodge in progress is the thing currently holding facing.
+		*
+		* Without this, concluding a dodge that never held facing would still write the stashed value
+		* back over whatever the map had legitimately set in the meantime.
+		* @type {boolean}
+		*/
+		this._dodgeFacingHeld = false;
 	}
 	/**
 	* Initializes all properties that don't require input parameters.
@@ -15120,7 +15230,6 @@ var JABS_Battler = class JABS_Battler {
 	* Handles the conclusion of the dodging if necessary.
 	*/
 	handleDodgeEnd() {
-		this.updateDodgeIFrames();
 		if (!this.shouldEndDodge()) return;
 		this.endDodge();
 	}
@@ -15139,11 +15248,12 @@ var JABS_Battler = class JABS_Battler {
 	*/
 	endDodge() {
 		this.setDodging(false);
+		this.releaseDodgeFacingHold();
 		this.setDodgeSteps(0);
 		this.setInvincible(false);
 		this.getCharacter().setDodgeModifier(0);
 		this.setDodgeFrame(0);
-		this.setDodgeIFrames(0);
+		this.setDodgeIFrames(null);
 	}
 	/**
 	* Handles when this enemy battler is dying.
@@ -15368,39 +15478,51 @@ var JABS_Battler = class JABS_Battler {
 		this._dodgeDirection = direction;
 	}
 	/**
-	* Gets the number of dodge steps remaining to be stepped whilst dodging.
+	* Gets the distance in tiles still owed to the dodge in progress.
 	* @returns {number}
 	*/
 	getDodgeSteps() {
 		return this._dodgeSteps;
 	}
 	/**
-	* Sets the number of steps that will be force-moved when dodging.
-	* @param {number} stepCount The number of steps to dodge.
+	* Sets the distance in tiles that will be force-moved when dodging.
+	* @param {number} stepCount The dodge distance in tiles.
 	*/
 	setDodgeSteps(stepCount) {
 		this._dodgeSteps = stepCount;
 	}
 	/**
-	* Decrements the dodge steps remaining.
+	* Charges one executed dodge step against the remaining dodge distance.
+	*
+	* A step that was blocked still spends its share of the budget. That is deliberate: the dodge
+	* ends when the budget runs out, so a step that cost nothing would let a battler pinned against
+	* a wall dodge forever.
 	*/
 	decrementDodgeSteps() {
-		this.setDodgeSteps(this.getDodgeSteps() - 1);
+		this.setDodgeSteps(this.getDodgeSteps() - this.dodgeStepDistance());
 	}
 	/**
-	* Determines how many steps a dodge skill should force-move this battler.
+	* How far in tiles a single forced dodge step carries this battler.
 	*
-	* This exists so movement extensions can restate a dodge's distance in their own units without
-	* touching {@link #setDodgeSteps}. A step means "one move command" and a move command does not
-	* cover a fixed distance in every movement scheme, so the tag's value is an intent that
-	* something may legitimately need to rescale.
+	* This is the seam a movement extension answers, and it is the reason the dodge budget is
+	* measured in tiles rather than in move commands. Tile-locked movement spends a whole tile per
+	* command; pixel movement spends one frame of travel, which is a fraction of a tile and changes
+	* with move speed, dashing, and the dodge speed modifier. Reading the cost fresh on every step
+	* is what keeps `<dodge:3>` meaning three tiles in either scheme no matter what the battler's
+	* speed did partway through.
+	* @returns {number}
+	*/
+	dodgeStepDistance() {
+		return 1;
+	}
+	/**
+	* Determines the distance in tiles a dodge skill should force-move this battler.
 	*
-	* It has to happen here, once, at the moment the count is seeded. Rescaling inside the setter
-	* instead catches every later write to the same field- and the countdown that ends the dodge is
-	* one of those writes, so each decrement would be re-scaled into a larger number than it
-	* replaced and the count would climb away from zero instead of reaching it.
+	* The tag states an intent in tiles and this is where that intent is read, once, at the moment
+	* the budget is seeded. Nothing rescales it any more: {@link #dodgeStepDistance} states what a
+	* step costs instead, which is the half of the problem that actually varies per movement scheme.
 	* @param {RPG_Skill} skill The dodge skill being executed.
-	* @returns {number} The number of steps to force-move.
+	* @returns {number} The distance in tiles to force-move.
 	*/
 	determineDodgeStepCount(skill) {
 		return skill.jabsDodgeSteps;
@@ -15433,8 +15555,8 @@ var JABS_Battler = class JABS_Battler {
 		return this.dodgeIframes();
 	}
 	/**
-	* Sets the number of iframes the dodge has.
-	* @param {number} frames The number of iframes.
+	* Sets the iframe window for this dodge, or null when the skill declares none.
+	* @param {[number, number]|null} frames The start and end frames of the window.
 	*/
 	setDodgeIFrames(frames) {
 		this.setDodgeIframes(frames);
@@ -15473,6 +15595,7 @@ var JABS_Battler = class JABS_Battler {
 			dodgeDirection = this.determineDodgeDirection(skill.jabsMoveType);
 		}
 		this.setDodgeDirection(dodgeDirection);
+		this.applyDodgeFacingHold(skill.jabsMoveType);
 		const actionOptions = JABS_ActionOptions.Builder().setCooldownKey(JABS_Button.Dodge).build();
 		const actions = this.createJabsActionFromSkill(skill.id, actionOptions);
 		actions.forEach((a) => a.setCooldownType(JABS_Button.Dodge));
@@ -15635,6 +15758,32 @@ var JABS_Battler = class JABS_Battler {
 			return chosen;
 		}
 		return character.direction();
+	}
+	/**
+	* Locks facing for the duration of a retreating dodge.
+	*
+	* A dodge is performed with ordinary move commands, and moving turns you to face where you went.
+	* That is right for a lunge and wrong for a retreat: a backward dodge would spin the battler
+	* around to face the way it is fleeing, which reads as running away rather than as backing off
+	* while keeping eyes on the threat. Direction fix is the engine's own "move without turning", so
+	* a retreat borrows it and {@link #releaseDodgeFacingHold} hands it back.
+	* @param {'forward'|'backward'|'directional'} moveType The move type of the dodge skill.
+	*/
+	applyDodgeFacingHold(moveType) {
+		if (moveType !== J.ABS.Notetags.MoveType.Backward) return;
+		const character = this.getCharacter();
+		this.setDodgePriorDirectionFix(character.isDirectionFixed());
+		this.flagDodgeFacingHeld(true);
+		character.setDirectionFix(true);
+	}
+	/**
+	* Hands facing back to whatever owned it before this dodge locked it.
+	*/
+	releaseDodgeFacingHold() {
+		if (!this.hasDodgeFacingHeld()) return;
+		this.getCharacter().setDirectionFix(this.dodgePriorDirectionFix());
+		this.flagDodgeFacingHeld(false);
+		this.setDodgePriorDirectionFix(false);
 	}
 	/**
 	* Translates a dodge skill type into a direction to move.
@@ -16003,6 +16152,9 @@ var JABS_Battler = class JABS_Battler {
 			return true;
 		}
 		const battler = this.getBattler();
+		if (battler.getSlotTransformSkillId(slot) !== 0) {
+			return true;
+		}
 		const baseSkillId = battler.getEquippedSkillId(slot);
 		return battler.hasSkill(baseSkillId);
 	}
@@ -18299,6 +18451,10 @@ var JABS_InputAdapter = class JABS_InputAdapter {
 	* @param {JABS_Battler} jabsBattler The battler performing the action.
 	*/
 	static performUsableItemAction(jabsBattler) {
+		if (jabsBattler.getBattler().getSlotTransformSkillId(JABS_Button.UsableItem) !== 0) {
+			JABS_InputAdapter.performCombatAction(JABS_Button.UsableItem, jabsBattler);
+			return;
+		}
 		if (!this.#canPerformUsableItemAction(jabsBattler)) return;
 		const itemId = jabsBattler.getBattler().getEquippedSkillId(JABS_Button.UsableItem);
 		jabsBattler.applyUsableItemEffects(itemId);
@@ -18353,7 +18509,8 @@ var JABS_InputAdapter = class JABS_InputAdapter {
 	*/
 	static #canPerformCombatActionBySlot(slot, jabsBattler) {
 		if (!jabsBattler.canBattlerUseSkills()) return false;
-		if (jabsBattler.getBattler().getSkillSlot(slot).isEmpty()) {
+		const isSlotTransformed = jabsBattler.getBattler().getSlotTransformSkillId(slot) !== 0;
+		if (!isSlotTransformed && jabsBattler.getBattler().getSkillSlot(slot).isEmpty()) {
 			return false;
 		}
 		if (!jabsBattler.isSkillTypeCooldownReady(slot)) return false;
@@ -18398,10 +18555,17 @@ var JABS_InputAdapter = class JABS_InputAdapter {
 	}
 	/**
 	* Determines whether or not the player can strafe and hold direction while moving.
+	*
+	* Strafe and a facing-holding dodge are two owners of one boolean, and strafe is the louder of
+	* the pair: it is polled every frame and writes its own answer whether or not the button state
+	* changed. Without this, a dodge's hold is overwritten the very frame after it is applied and
+	* never survives to affect anything. The dodge is the shorter-lived claim, so it wins, and the
+	* poll re-asserts whatever the trigger says the moment the dodge concludes.
 	* @param {JABS_Battler} jabsBattler The battler performing the action.
 	* @returns {boolean} True if they can, false otherwise.
 	*/
-	static _canPerformStrafe(_jabsBattler) {
+	static _canPerformStrafe(jabsBattler) {
+		if (jabsBattler.hasDodgeFacingHeld()) return false;
 		return true;
 	}
 	/**
@@ -24669,7 +24833,7 @@ var StateAfflictionProvider = class StateAfflictionProvider {
 //#endregion
 //#region src/plugins/abs/core/_metadata/meta.js
 var PLUGIN_NAME = "J-ABS";
-var PLUGIN_VERSION = "4.22.0";
+var PLUGIN_VERSION = "4.23.0";
 var PLUGIN_DESC_TAG = "ABS";
 
 //#endregion
@@ -24867,6 +25031,20 @@ Object.defineProperty(RPG_BaseBattler.prototype, "jabsBonusHitsScopeSkill", { ge
 Object.defineProperty(RPG_BaseBattler.prototype, "jabsSkillTransforms", { get: function() {
 	return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform);
 } });
+/**
+* The collection of slot transforms defined on this battler's database entry.
+*
+* Each entry is a two-element array in the form:
+* [ slotKey, skillId ]
+*
+* Where a skill transform keys on what currently occupies a slot, this keys on the slot itself,
+* which is the only way to redirect a slot holding an item id or holding nothing at all. The
+* slot's stored contents are never mutated; the redirect lives exactly as long as this note does.
+* @type {[ string, number ][]}
+*/
+Object.defineProperty(RPG_BaseBattler.prototype, "jabsSlotTransforms", { get: function() {
+	return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SlotTransform);
+} });
 
 //#endregion
 //#region src/plugins/abs/core/database/RPG_Class.js
@@ -24904,6 +25082,21 @@ Object.defineProperty(RPG_Class.prototype, "jabsBonusHitsScopeSkill", { get: fun
 */
 Object.defineProperty(RPG_Class.prototype, "jabsSkillTransforms", { get: function() {
 	return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform);
+} });
+/**
+* The collection of slot transforms defined on this class.
+*
+* Each entry is a two-element array in the form:
+* [ slotKey, skillId ]
+*
+* While a battler uses this class, the named slot executes {@code skillId} regardless of what is
+* equipped there, including an item id or nothing at all. Neither of those is reachable by a skill
+* transform, which has no base id to match in either case. The slot's stored contents are never
+* mutated.
+* @type {[ string, number ][]}
+*/
+Object.defineProperty(RPG_Class.prototype, "jabsSlotTransforms", { get: function() {
+	return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SlotTransform);
 } });
 
 //#endregion
@@ -25324,6 +25517,21 @@ Object.defineProperty(RPG_EquipItem.prototype, "jabsExpiration", { get: function
 */
 Object.defineProperty(RPG_EquipItem.prototype, "jabsSkillTransforms", { get: function() {
 	return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform);
+} });
+/**
+* The collection of slot transforms defined on this piece of equipment.
+*
+* Each entry is a two-element array in the form:
+* [ slotKey, skillId ]
+*
+* While this equip is worn, the named slot executes {@code skillId} no matter what is sitting in
+* it, including an item id or nothing at all. Neither of those is reachable by a skill transform,
+* which has no base id to match in either case. The slot's stored contents are never mutated;
+* unequipping restores the slot's own behavior.
+* @type {[ string, number ][]}
+*/
+Object.defineProperty(RPG_EquipItem.prototype, "jabsSlotTransforms", { get: function() {
+	return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SlotTransform);
 } });
 
 //#endregion
@@ -26260,6 +26468,22 @@ Object.defineProperty(RPG_State.prototype, "jabsAggroLock", { get: function() {
 */
 Object.defineProperty(RPG_State.prototype, "jabsSkillTransforms", { get: function() {
 	return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SkillTransform);
+} });
+/**
+* The collection of slot transforms defined on this state.
+*
+* Each entry is a two-element array in the form:
+* [ slotKey, skillId ]
+*
+* While this state is applied, the named slot executes {@code skillId} regardless of what is
+* equipped there, including an item id or nothing at all. Neither of those is reachable by a skill
+* transform, which has no base id to match in either case. States outrank every other transform
+* source, so this is how a temporary condition takes a button over and hands it back the moment
+* the state lapses.
+* @type {[ string, number ][]}
+*/
+Object.defineProperty(RPG_State.prototype, "jabsSlotTransforms", { get: function() {
+	return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SlotTransform);
 } });
 /**
 * The state reapplication strategy for this state in the context of JABS.<br/>
@@ -30251,16 +30475,55 @@ Game_Battler.prototype.resolveEquippedSkillId = function(baseSkillId) {
 	return baseSkillId;
 };
 /**
+* Resolves a slot key to the skill any active note source has redirected that entire slot to.
+*
+* This is the slot-keyed sibling of {@link #resolveEquippedSkillId}. A skill transform asks
+* "what is in this slot, and does anything replace it" — which cannot answer for a slot that
+* holds an item id, or that holds nothing. A slot transform asks only "which slot is this",
+* so it reaches both. The slot's stored contents are never read and never written.
+*
+* Sources are evaluated in the order returned by {@link #getSkillTransformSources}, so an active
+* state outranks an equip, which outranks the class, which outranks the database row. Slot keys
+* are compared case-insensitively; a notetag should not have to match the casing of a constant
+* the author never sees.
+* @param {string} slot The slot key to resolve, per {@link JABS_Button}.
+* @returns {number} The skill id this slot has been redirected to, or 0 when none applies.
+*/
+Game_Battler.prototype.getSlotTransformSkillId = function(slot) {
+	if (!slot) return 0;
+	const targetKey = slot.toLowerCase();
+	const sources = this.getSkillTransformSources();
+	for (const source of sources) {
+		if (!source || !source.jabsSlotTransforms || source.jabsSlotTransforms.length === 0) {
+			continue;
+		}
+		const match = source.jabsSlotTransforms.find((transform) => {
+			const [transformSlotKey] = transform;
+			return String(transformSlotKey).toLowerCase() === targetKey;
+		});
+		if (match) {
+			const [, transformedSkillId] = match;
+			return transformedSkillId;
+		}
+	}
+	return 0;
+};
+/**
 * Gets the effective skill id for the given slot after applying any active skill transforms.
 *
 * This is the primary resolution point that all execution and display paths should call instead
-* of {@link #getEquippedSkillId} when the transformed (runtime) skill is needed. The tool slot
-* is intentionally excluded: it stores item ids, not skill ids, and transform logic does not
-* apply to it.
+* of {@link #getEquippedSkillId} when the transformed (runtime) skill is needed.
+*
+* Two kinds of transform are consulted, and the order matters. A slot transform claims the entire
+* slot and is checked first, which is what allows it to redirect the item-bearing slots. Only if
+* none applies do the item slots short-circuit out: they store item ids rather than skill ids, so
+* a skill transform has no base id to key on and must not run against them.
 * @param {string} slot The slot key to resolve.
 * @returns {number} The resolved skill id, or 0 when the slot is empty or does not exist.
 */
 Game_Battler.prototype.getResolvedSkillId = function(slot) {
+	const slotTransformSkillId = this.getSlotTransformSkillId(slot);
+	if (slotTransformSkillId) return slotTransformSkillId;
 	if (slot === JABS_Button.Tool || slot === JABS_Button.UsableItem) {
 		return this.getEquippedSkillId(slot);
 	}
