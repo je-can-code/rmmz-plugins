@@ -366,6 +366,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.2.1
+ *    Mastery description wrapping measures with textSizeEx, matching the drawTextEx
+ *    that paints it, so escape codes are not counted as characters.
  * - 4.2.0
  *    Mastery descriptions wrap across the two lines the header reserves instead of
  *    running off its right edge, and the reach token carries its own unit the way

@@ -2,7 +2,7 @@
  
 /*:
  * @target MZ
- * @plugindesc [v4.2.0 SDP] Enables the SDP system, aka Stat Distribution Panels.
+ * @plugindesc [v4.2.1 SDP] Enables the SDP system, aka Stat Distribution Panels.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -366,6 +366,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.2.1
+ *    Mastery description wrapping measures with textSizeEx, matching the drawTextEx
+ *    that paints it, so escape codes are not counted as characters.
  * - 4.2.0
  *    Mastery descriptions wrap across the two lines the header reserves instead of
  *    running off its right edge, and the reach token carries its own unit the way
@@ -3737,7 +3740,7 @@ J.SDP = {};
 /**
 * The metadata associated with this plugin.
 */
-J.SDP.Metadata = new J_SdpPluginMetadata("J-SDP", "4.2.0");
+J.SDP.Metadata = new J_SdpPluginMetadata("J-SDP", "4.2.1");
 /**
 * A collection of all aliased methods for this plugin.
 */
@@ -5339,7 +5342,7 @@ var Window_SdpHeader = class extends Window_Base {
 		const resolved = MasteryProseResolver.resolve(template, mastery.masterySkillId);
 		if (resolved === String.empty) return;
 		this.resetFontSettings();
-		const measure = (text) => this.textWidth(text);
+		const measure = (text) => this.textSizeEx(text).width;
 		const lines = TextWrapper.wrapToLines(resolved, this.innerWidth, this.proseLineCount(), measure);
 		lines.forEach((line, index) => {
 			const y = this.lineHeight() * (index + 1);
