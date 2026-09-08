@@ -56,7 +56,6 @@ class Window_SdpRewardList
   {
     const commands = [];
 
-    if (!this.panelRewards) return commands;
     if (this.panelRewards.length === 0)
     {
       const command = new WindowCommandBuilder('No rewards.')

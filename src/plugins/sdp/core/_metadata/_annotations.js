@@ -366,6 +366,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.6.0
+ *    A name-only mastery token names a parameter without its value, so one stated
+ *    magnitude can cover several stats. Clearing the panel detail windows hands them
+ *    an empty array rather than null, which is what threw when maxed panels were hidden.
  * - 4.5.0
  *    A named mastery token can name any parameter, reading a plugin-owned one's
  *    label from the parameter catalog when no trait encodes it.

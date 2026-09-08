@@ -508,12 +508,14 @@ class Scene_SDP
     // the header is wider than this column now, so take only this column's share of it.
     const width = Math.round(contentArea.width * this.sdpCenterColumnRatio());
 
-    // fill the rest of the center column beneath the header.
-    return new Rectangle(
-      headerRect.x,
-      headerRect.y + headerRect.height,
-      width,
-      contentArea.height - headerRect.height);
+    // measured to the bottom of the region rather than by subtracting the header from the region's
+    // height. Those were the same thing while the header started at the top of the content area; once
+    // it moved up into the ribbon's band they differ by the ribbon's height, and this column ended a
+    // row short of its neighbours.
+    const top = headerRect.y + headerRect.height;
+    const bottom = contentArea.y + contentArea.height;
+
+    return new Rectangle(headerRect.x, top, width, bottom - top);
   }
 
   /**
@@ -1339,12 +1341,15 @@ class Scene_SDP
     this.getSdpHeaderWindow()
       .refresh();
 
+    // cleared with the empty array rather than null: both windows declare these as arrays and read
+    // them as arrays, so handing over null asks them to describe a shape that cannot exist. Hiding
+    // maxed panels can empty the selection, which is how that reached the parameter list and threw.
     const parameterListWindow = this.getSdpParameterListWindow();
-    parameterListWindow.setParameters(null);
+    parameterListWindow.setParameters([]);
     parameterListWindow.refresh();
 
     const rewardListWindow = this.getSdpRewardListWindow();
-    rewardListWindow.setRewards(null);
+    rewardListWindow.setRewards([]);
     rewardListWindow.refresh();
 
     this.getSdpHelpWindow()

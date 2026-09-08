@@ -37,7 +37,7 @@ class MasteryProseResolver
    * </pre>
    * @type {RegExp}
    */
-  static TokenPattern = /\{([psdvPD])\.([a-zA-Z]+)(?:\[(\d+)])?}/g;
+  static TokenPattern = /\{([psdvPDN])\.([a-zA-Z]+)(?:\[(\d+)])?}/g;
 
   /**
    * How many frames make a second, for rendering cadences the player can feel.
@@ -120,6 +120,22 @@ class MasteryProseResolver
 
     const rendered = template.replace(MasteryProseResolver.TokenPattern, (whole, namespace, name, selector) =>
     {
+      // N asks for the parameter's name with no value at all, so a sentence can name several stats
+      // sharing one magnitude without repeating that magnitude after each of them.
+      if (namespace === 'N')
+      {
+        const onlyName = MasteryProseResolver.#parameterName(name);
+
+        if (onlyName === null)
+        {
+          resolvable = false;
+
+          return whole;
+        }
+
+        return MasteryProseResolver.#tint(onlyName, 'p', name, skill);
+      }
+
       // an uppercase namespace asks for the parameter's own name alongside its value, for the many
       // lines whose noun is simply the parameter. A line preferring friendlier wording than the
       // catalogue's - "damage taken" over "Phys Dmg Rate" - keeps the lowercase form and its own noun.
@@ -174,21 +190,30 @@ class MasteryProseResolver
    */
   static #withParameterName(value, parameterKey)
   {
+    const name = MasteryProseResolver.#parameterName(parameterKey);
+
+    if (name === null) return null;
+
+    return `${name} ${value}`;
+  }
+
+  /**
+   * The display name of a parameter, from whichever catalogue claims it.
+   * @param {string} parameterKey The parameter key being named.
+   * @returns {string|null} Null when neither catalogue names it, so the caller can fail closed.
+   */
+  static #parameterName(parameterKey)
+  {
     const mapping = ParameterTraitMap.forKey(parameterKey);
 
-    if (mapping !== null)
-    {
-      const traitLabel = MasteryProseResolver.#parameterLabel(mapping);
-
-      return `${traitLabel} ${value}`;
-    }
+    if (mapping !== null) return MasteryProseResolver.#parameterLabel(mapping);
 
     // a parameter a plugin owns rather than a trait - lifesteal, crit block - carries its own label.
     if (ParameterRegistry.has(parameterKey))
     {
       const definition = ParameterRegistry.get(parameterKey);
 
-      return `${definition.label()} ${value}`;
+      return definition.label();
     }
 
     return null;
