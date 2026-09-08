@@ -157,6 +157,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.14.0
+ *    Added TextWrapper, breaking a run of text into lines that fit a measured
+ *    width, so a window never decides where a sentence breaks inline.
  * - 3.13.0
  *    Added ParameterTraitMap, naming the trait code and data id that encodes each
  *    parameter key, for anything reading a parameter back off a database row.

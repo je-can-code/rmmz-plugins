@@ -707,6 +707,7 @@
     "TextPopManager": "writable",
     "TextPopSpriteManager": "writable",
     "TextRasterMetrics": "writable",
+    "TextWrapper": "writable",
     "Tilemap": "writable",
     "TilingSprite": "writable",
     "TimeConditional": "writable",

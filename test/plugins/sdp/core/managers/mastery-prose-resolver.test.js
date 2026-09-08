@@ -312,7 +312,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       globalThis.$dataSkills[1121] = skill(1121, String.empty);
 
       // Act
-      const result = MasteryProseResolver.resolve('within {s.radius} tiles', 1121);
+      const result = MasteryProseResolver.resolve('within {s.radius}', 1121);
 
       // Assert
       expect(result).toBe('within 7 tiles');
@@ -615,7 +615,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       install(state(1121, '<autoExecuteSkill:[1001, enemiesNearby, 1, 180, 3]>'), skill(1121, String.empty));
 
       // Act
-      const result = MasteryProseResolver.resolve('within {s.radius} tiles', 1121);
+      const result = MasteryProseResolver.resolve('within {s.radius}', 1121);
 
       // Assert
       expect(result).toBe('within 3 tiles');
@@ -631,7 +631,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       globalThis.$dataSkills[1281] = skill(1281, String.empty);
 
       // Act
-      const result = MasteryProseResolver.resolve('within {s.radius} tiles', 1281);
+      const result = MasteryProseResolver.resolve('within {s.radius}', 1281);
 
       // Assert
       expect(result).toBe('within 2.5 tiles');
@@ -647,7 +647,7 @@ describe('MasteryProseResolver (direct src import)', () =>
       globalThis.$dataSkills[1281] = skill(1281, String.empty);
 
       // Act
-      const result = MasteryProseResolver.resolve('within {s.radius} tiles', 1281);
+      const result = MasteryProseResolver.resolve('within {s.radius}', 1281);
 
       // Assert
       expect(result).toBe(String.empty);

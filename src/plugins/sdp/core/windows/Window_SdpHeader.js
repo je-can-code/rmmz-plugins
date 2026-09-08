@@ -93,6 +93,15 @@ class Window_SdpHeader
   }
 
   /**
+   * How many lines the header reserves for the description beneath the identity row.
+   * @returns {number}
+   */
+  proseLineCount()
+  {
+    return 2;
+  }
+
+  /**
    * Draws the two lines describing what the mastery actually does.
    *
    * Nothing is drawn when the subgroup has no authored prose, or when the prose still carries a token
@@ -115,8 +124,17 @@ class Window_SdpHeader
     if (resolved === String.empty) return;
 
     this.resetFontSettings();
-    const sized = this.modFontSizeForText(-1, resolved);
-    this.drawTextEx(sized, 0, this.lineHeight(), this.innerWidth);
+
+    // the header holds two lines beneath the identity row, and the prose is authored to fit them.
+    const measure = text => this.textWidth(text);
+    const lines = TextWrapper.wrapToLines(resolved, this.innerWidth, this.proseLineCount(), measure);
+
+    lines.forEach((line, index) =>
+    {
+      const y = this.lineHeight() * (index + 1);
+      this.drawTextEx(line, 0, y, this.innerWidth);
+    });
+
     this.resetFontSettings();
   }
 }

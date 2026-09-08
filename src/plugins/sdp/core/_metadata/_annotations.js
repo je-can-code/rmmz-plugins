@@ -366,6 +366,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.2.0
+ *    Mastery descriptions wrap across the two lines the header reserves instead of
+ *    running off its right edge, and the reach token carries its own unit the way
+ *    the cadence and duration tokens already did.
  * - 4.1.0
  *    Mastery descriptions now resolve in full. The prose resolver reads parameters
  *    from traits or buff tags, follows a mastery to the payload it delivers, phrases
