@@ -3,6 +3,7 @@ import JuiceSquishMotionEffect from '../models/JuiceSquishMotionEffect.js';
 import JuiceTiltMotionEffect from '../models/JuiceTiltMotionEffect.js';
 import JuiceFlipBodyMotionEffect from '../models/JuiceFlipBodyMotionEffect.js';
 import JuiceCastingPulseMotionEffect from '../models/JuiceCastingPulseMotionEffect.js';
+import JuiceCastingSquishMotionEffect from '../models/JuiceCastingSquishMotionEffect.js';
 
 /**
  * Teaches J-Motion the four shapes a battler makes when it does something.
@@ -57,6 +58,16 @@ MotionTypeRegistry.register('charge', {
   implementation: JuiceCastingPulseMotionEffect,
   parameterNames: [ 'amplitude' ],
   defaults: { amplitude: 0.04 },
+  phaseSpan: () => 0,
+});
+
+MotionTypeRegistry.register('castSquish', {
+  implementation: JuiceCastingSquishMotionEffect,
+  parameterNames: [ 'intensity', 'period' ],
+  defaults: {
+    intensity: 0.14,
+    period: 8,
+  },
   phaseSpan: () => 0,
 });
 //endregion registerJuiceMotionTypes

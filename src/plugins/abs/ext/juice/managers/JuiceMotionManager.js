@@ -119,6 +119,26 @@ class JuiceMotionManager
   }
 
   /**
+   * Keeps a battler squatting while it works something off mid-cast.
+   *
+   * The same heartbeat contract as {@link #scheduleCastingPulse}, on the same source key- a cast
+   * makes exactly one casting motion, so whichever of the two a skill asks for replaces the other,
+   * and {@link #cancelCastingPulse} settles either. Only the shape differs: a fixed-period squash
+   * rather than an accelerating swell.
+   * @param {Game_Character} character The character working it off.
+   * @param {number} intensity How far the body deforms at the peak of a squat, ex: `0.14`.
+   * @param {number} periodFrames How many frames one squat takes.
+   * @param {number} heartbeatFrames How long to keep squatting after the last call.
+   */
+  static scheduleCastingSquish(character, intensity, periodFrames, heartbeatFrames)
+  {
+    const sourceKey = JuiceMotionManager.CASTING_SOURCE_KEY;
+    const declaration = new MotionDeclaration('castSquish', [ intensity, periodFrames ], sourceKey);
+
+    CharacterMotionComposer.declare(character, sourceKey, [ declaration ], heartbeatFrames);
+  }
+
+  /**
    * Stops a battler's casting pulse.
    * @param {Game_Character} character The character to settle.
    */

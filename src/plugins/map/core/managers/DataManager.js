@@ -20,6 +20,11 @@ DataManager.createGameObjects = function()
  */
 DataManager.registerMinimapInputActions = function()
 {
+  // the action registry and the symbols it binds to both belong to J-ABS-InputManager, which this
+  // plugin only orders after rather than requires. without it there is nothing to register into,
+  // and the minimap is driven by its plugin command instead.
+  if (!J.ABS || !J.ABS.EXT.INPUT) return;
+
   // register logical actions under the J.MAP namespace.
   Input.registerAction('J.MAP', {
     key: 'minimap-toggle',

@@ -1126,12 +1126,32 @@ Game_Battler.prototype.addState = function(stateId, attacker, sourceSkill = null
     J.ABS.Aliased.Game_Battler.get('addState')
       .call(this, stateId);
 
+    // a state is a transform source, so the slots may now resolve to something else.
+    this.flagSkillSlotsForRefresh();
+
     // stop processing this state.
     return;
   }
 
   // hand-off the state handling to JABS.
   this.handleAddingJabsState(stateId, attacker, null, sourceSkill);
+};
+
+/**
+ * Flags every skill slot for a visual refresh, if this battler has any.
+ *
+ * States, equips and class are all transform sources, so whenever one of them changes the skill a
+ * slot resolves to may change with it- and the HUD only redraws a slot that has been flagged. The
+ * flags are booleans, so raising them on every state change costs nothing when nothing moved.
+ */
+Game_Battler.prototype.flagSkillSlotsForRefresh = function()
+{
+  // do nothing if we don't have a slot manager to work with.
+  if (!this.getSkillSlotManager()) return;
+
+  // raise the flags; the HUD compares and redraws only what actually differs.
+  this.getSkillSlotManager()
+    .flagAllSkillSlotsForRefresh();
 };
 
 //region state-application immunity
@@ -1313,6 +1333,9 @@ Game_Battler.prototype.handleAddingJabsState = function(stateId, attacker, overr
 
   // add the new state to the action result on this battler.
   this.result().pushAddedState(stateId);
+
+  // a state is a transform source, so the slots may now resolve to something else.
+  this.flagSkillSlotsForRefresh();
 };
 
 /**
@@ -1349,6 +1372,9 @@ Game_Battler.prototype.removeState = function(stateId)
     // delete the map entry so reapplication routes through the add path, not the update path.
     $jabsEngine.removeJabsStateByUuid(this.getUuid(), stateId);
   }
+
+  // a state is a transform source, so the slots may now resolve to something else.
+  this.flagSkillSlotsForRefresh();
 };
 
 /**

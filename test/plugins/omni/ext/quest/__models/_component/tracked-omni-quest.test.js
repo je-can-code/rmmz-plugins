@@ -472,13 +472,16 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
   {
     it('flagObjectiveAsMissed changes state and refreshes the quest', () =>
     {
+      // Arrange- the quest's only objective gets missed, so the refresh reads the whole quest as missed.
       const objective = fakeObjective(0, OmniObjective.States.Active);
       const quest = new TrackedOmniQuest('quest-key', 'main', [ objective ]);
 
+      // Act
       quest.flagObjectiveAsMissed(0);
 
+      // Assert
       expect(objective.state).toBe(OmniObjective.States.Missed);
-      expect(quest.state).toBe(OmniQuest.States.Completed);
+      expect(quest.state).toBe(OmniQuest.States.Missed);
     });
 
     it('changeTargetObjectiveState is a no-op when the objective is already the target state', () =>
@@ -525,15 +528,35 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
   {
     it('flagAsMissed misses every active/inactive objective, leaving finalized ones untouched', () =>
     {
+      // Arrange
       const active = fakeObjective(0, OmniObjective.States.Active);
-      const completed = fakeObjective(1, OmniObjective.States.Completed);
-      const quest = new TrackedOmniQuest('quest-key', 'main', [ active, completed ]);
+      const inactive = fakeObjective(1, OmniObjective.States.Inactive);
+      const completed = fakeObjective(2, OmniObjective.States.Completed);
+      const quest = new TrackedOmniQuest('quest-key', 'main', [ active, inactive, completed ]);
 
+      // Act
       quest.flagAsMissed();
 
+      // Assert
       expect(active.state).toBe(OmniObjective.States.Missed);
+      expect(inactive.state).toBe(OmniObjective.States.Missed);
       expect(completed.state).toBe(OmniObjective.States.Completed);
-      expect(quest.state).toBe(OmniQuest.States.Completed);
+    });
+
+    it('flagAsMissed misses the quest even when the player had already completed part of it', () =>
+    {
+      // Arrange- a completed objective is the sibling that must survive: deriving the state from the
+      // objectives would read completed-plus-missed as a finished quest, which is the bug this pins.
+      const completed = fakeObjective(0, OmniObjective.States.Completed);
+      const active = fakeObjective(1, OmniObjective.States.Active);
+      const quest = new TrackedOmniQuest('quest-key', 'main', [ completed, active ]);
+
+      // Act
+      quest.flagAsMissed();
+
+      // Assert
+      expect(quest.state).toBe(OmniQuest.States.Missed);
+      expect(quest.isCompleted()).toBe(false);
     });
 
     it('flagAsFailed fails every active/inactive objective', () =>
@@ -628,6 +651,22 @@ describe('TrackedOmniQuest (omni ext/quest, direct src import)', () =>
       quest.refreshState();
 
       expect(quest.state).toBe(OmniQuest.States.Active);
+    });
+
+    it('is Missed when every objective was missed and nothing was ever completed', () =>
+    {
+      // Arrange- two missed objectives and no completed sibling. the completed-plus-missed case in the
+      // next test is the near miss that has to land on Completed instead.
+      const quest = new TrackedOmniQuest('quest-key', 'main', [
+        fakeObjective(0, OmniObjective.States.Missed),
+        fakeObjective(1, OmniObjective.States.Missed),
+      ]);
+
+      // Act
+      quest.refreshState();
+
+      // Assert
+      expect(quest.state).toBe(OmniQuest.States.Missed);
     });
 
     it('is Completed when every objective is completed or missed', () =>

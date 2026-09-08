@@ -1,3 +1,13 @@
+//region Window_QuestopediaDescription
+import QuestOverviewWrapper from './../managers/QuestOverviewWrapper.js';
+
+/**
+ * The pane describing the highlighted quest: its name, recommended level, tags and overview.
+ *
+ * The objectives live in their own pane beneath this one, so this window never draws them. Keeping
+ * the two apart is what lets each be sized for its own content rather than one window guessing at
+ * where the other's text will end.
+ */
 class Window_QuestopediaDescription
   extends Window_Base
 {
@@ -34,11 +44,17 @@ class Window_QuestopediaDescription
     this._currentQuest = quest;
   }
 
+  /**
+   * Implements {@link Window_Base.drawContent}.<br/>
+   * Draws the name, recommended level, tags and overview of the current quest, top to bottom.
+   */
   drawContent()
   {
     // grab the current quest.
     const quest = this.getCurrentQuest();
-    if (!quest) return;
+
+    // nothing highlighted means nothing to describe.
+    if (quest === null) return;
 
     // define the origin x,y coordinates.
     const [ x, y ] = [ 0, 0 ];
@@ -60,10 +76,6 @@ class Window_QuestopediaDescription
     // draw the overview of the quest.
     const overviewY = y + (lh * 3);
     this.drawQuestOverview(x, overviewY);
-
-    // draw the various logs of the quest.
-    const logsY = y + (lh * 9);
-    this.drawQuestLogs(x, logsY);
   }
 
   /**
@@ -92,6 +104,12 @@ class Window_QuestopediaDescription
     this.drawTextEx(resizedText, x, y, textWidth);
   }
 
+  /**
+   * Renders the recommended level of the quest, masked while the quest is unknown or the level is
+   * deliberately unset.
+   * @param {number} x The origin x.
+   * @param {number} y The origin y.
+   */
   drawQuestRecommendedLevel(x, y)
   {
     // grab the current quest.
@@ -114,6 +132,11 @@ class Window_QuestopediaDescription
     this.drawTextEx(resizedText, x, y, textWidth);
   }
 
+  /**
+   * Renders one icon per tag on the quest, left to right, once the quest is known.
+   * @param {number} x The origin x.
+   * @param {number} y The origin y.
+   */
   drawQuestTagIcons(x, y)
   {
     // grab the current quest.
@@ -149,30 +172,20 @@ class Window_QuestopediaDescription
     // grab the current quest.
     const quest = this.getCurrentQuest();
 
-    // TODO: this may need adjustment to text height.
     // grab the text to display for the quest description.
-    let overview = quest.isKnown()
+    const overview = quest.isKnown()
       ? quest.overview()
       : quest.unknownHint();
 
-    // validate there was not an empty string.
+    // an authored blank is drawn as a visible question rather than as nothing at all.
     if (overview.length === 0)
     {
-      // no empty strings allowed!
-      overview = '???';
-
-      // measure accordingly.
-      const textWidth = this.textWidth(overview);
-
-      // draw the overview.
-      this.drawTextEx(overview, x, y, textWidth);
-
-      // done.
+      this.drawTextEx('???', x, y, this.innerWidth);
       return;
     }
 
-    // convert the quest overview into length-limited lines with words not sliced up.
-    const lines = this.buildQuestOverviewLines(overview, 128);
+    // break the overview into lines that fit this window at its current width and font.
+    const lines = this.buildQuestOverviewLines(overview);
 
     // the text lines for the overview should be tighter.
     const overviewLineHeight = this.lineHeight() - 10;
@@ -183,154 +196,27 @@ class Window_QuestopediaDescription
       // determine the y coordinate for the line.
       const lineY = y + (index * overviewLineHeight);
 
-      // measure accordingly.
-      const textWidth = this.textWidth(overview);
-
-      // draw the overview.
-      this.drawTextEx(line, x, lineY, textWidth);
+      // draw the line.
+      this.drawTextEx(line, x, lineY, this.innerWidth);
     });
   }
 
   /**
-   * Chops up the very long overview string into multiple lines based on the given max line length.
+   * Breaks the overview into lines no wider than this window's content area.
+   *
+   * The measurement is this window's own, so the same overview breaks differently in a narrower pane
+   * or a larger font, which is the whole point of measuring rather than counting characters.
    * @param {string} overview The overview to be chopped into lines.
-   * @param {number=} [maxLineLength=128] The maximum line length for any one line.
    * @returns {string[]} The overview chopped up into lines.
    */
-  buildQuestOverviewLines(overview, maxLineLength = 128)
+  buildQuestOverviewLines(overview)
   {
-    // split the text blob into words based on spaces.
-    const words = overview.split(/\s/);
+    // a candidate line fits when its rendered width, escape codes included, stays inside the pane.
+    const fits = line => this.textSizeEx(line).width <= this.innerWidth;
 
-    // start with an empty collection for the lines.
-    const lines = [];
-
-    // reduce the words into lines by size, and capture the final line.
-    const finalLine = words.reduce((currentLine, word) =>
-    {
-      // check if the word was translated to an empty string- the indicator it was a newline.
-      if (word === String.empty)
-      {
-        // check if we even have a current line currently.
-        if (currentLine.length > 0)
-        {
-          // finish the previous line.
-          lines.push(currentLine);
-        }
-
-        // arbitrary check to prevent two or more new lines in a row.
-        if (lines.length >= 2 && lines.at(-1) === String.empty)
-        {
-          return String.empty;
-        }
-
-        // manually add a new and empty line.
-        lines.push(String.empty);
-
-        // start a new line with the word- sans the new line indicators.
-        return String.empty;
-      }
-
-      // the first word of a line doesn't need a space in front of it.
-      if (currentLine.length === 0) return word;
-
-      // translate the word if necessary- as escape codes are shorter than most actual words.
-      const translatedWord = this.convertEscapeCharacters(word);
-
-      // check the current line with the new word to see if the line is too long.
-      const testLine = `${currentLine} ${translatedWord}`;
-
-      // if the line does not exceed 120 characters, then keep going.
-      if (testLine.length <= maxLineLength) return `${currentLine} ${word}`;
-
-      // adding the new word would go beyond the fixed length of 120, so capture the line.
-      lines.push(currentLine);
-
-      // and start a new line.
-      return word;
-
-      // start with an empty string.
-    }, String.empty);
-
-    // add the last line to the running list.
-    lines.push(finalLine);
-
-    // return the lines of the text.
-    return lines;
-  }
-
-  /**
-   * Renders the quest logs, the notes that the protagonist observes as they complete the objectives.
-   * @param {number} x The origin x.
-   * @param {number} y The origin y.
-   */
-  drawQuestLogs(x, y)
-  {
-    // grab the current quest.
-    const quest = this.getCurrentQuest();
-
-    // shorthand the lineHeight.
-    const lh = this.lineHeight();
-
-    quest.objectives
-      .filter(objective =>
-      {
-        // objectives that have had action are included.
-        if (objective.isKnown()) return true;
-
-        // un-hidden but inactive objectives are also included.
-        if (!objective.hidden && objective.isInactive()) return true;
-
-        // objectives still in the 'InActive' status and also hidden (default) are explicitly not rendered.
-        return false;
-      })
-      .forEach((objective, index) =>
-      {
-        // determine the y for the log.
-        const logY = y + ((lh * 2) * index);
-
-        // draw the log of the current state of fulfillment.
-        this.drawQuestObjectiveLog(objective, x, logY);
-      });
-  }
-
-  /**
-   * Renders the log of the objective based on its current state.
-   * @param {TrackedOmniObjective} objective The objective with the log to render.
-   * @param {number} x The origin x.
-   * @param {number} y The origin y.
-   */
-  drawQuestObjectiveLog(objective, x, y)
-  {
-    // the description is a header to the log.
-    const descriptionText = this.modFontSizeForText(-4, objective.description());
-    const description = `▫ ${descriptionText}`;
-    const descriptionWidth = this.textWidth(description);
-
-    // draw the log of the static description of the objective.
-    this.drawTextEx(description, x, y, descriptionWidth);
-
-    // the fulfillment text is a subheader to the log.
-    const fulfillmentText = this.modFontSizeForText(-4, objective.fulfillmentText());
-    const fulfillment = `    ${fulfillmentText}`;
-    const fulfillmentWidth = this.textWidth(fulfillment);
-
-    // draw the fulfillment text for the objective.
-    const fulfillmentY = y + (this.lineHeight() / 2);
-    this.drawTextEx(fulfillment, x, fulfillmentY, fulfillmentWidth);
-
-    // the log has no special sizing or anything, but is slightly indented.
-    const logText = objective.log();
-    const logWidth = this.textWidth(logText);
-
-    // draw the log of the current state of fulfillment.
-    const logX = x + 40;
-    const logY = y + this.lineHeight();
-    this.drawTextEx(logText, logX, logY, logWidth);
-
-    // and draw the icon indicating state.
-    this.drawIcon(objective.iconIndexByState(), x, logY);
+    return QuestOverviewWrapper.wrap(overview, fits);
   }
 }
 
 export default Window_QuestopediaDescription;
+//endregion Window_QuestopediaDescription

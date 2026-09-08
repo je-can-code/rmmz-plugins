@@ -48,10 +48,10 @@ describe('omni extension optional-sibling gates', () =>
 
       // the engine bases the questopedia's own scene/window graph is declared against; nothing here
       // constructs one, they only need to exist for the class declarations to evaluate.
-      globalThis.Window_HorzCommand = class {};
       globalThis.Window_Command = class {};
       globalThis.Window_Base = class {};
       globalThis.Scene_MenuBase = class {};
+      globalThis.Scene_MenuFacetBase = class {};
 
       // Act
       await import('../../../../../src/plugins/omni/ext/quest/managers/JABS_InputAdapter.js');

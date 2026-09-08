@@ -279,9 +279,10 @@ class TrackedOmniQuest
   }
   
   /**
-   * A {@link OmniQuest.States.Missed} quest is one that had one or more of its objectives placed into a missed state, and
-   * none of the objectives marked as completed. This most likely will happen to a quest that may or may not have a
-   * non-hidden objective to the player but the objective was never completed resulting in the quest being missed.
+   * A {@link OmniQuest.States.Missed} quest is one the world closed off before it could finish: every objective still
+   * open was placed into a missed state, either because nothing was ever completed (a quest the player walked past) or
+   * because it was finalized as missed outright (a questgiver gone for good). Objectives the player had already
+   * completed stay completed in the journal; the verdict on the quest is missed regardless.
    * @returns {boolean}
    */
   isMissed()
@@ -565,9 +566,11 @@ class TrackedOmniQuest
         objective.setState(OmniObjective.States.Missed);
       }
     });
-  
-    // refresh the state resulting in the quest becoming missed.
-    this.refreshState();
+
+    // missing a quest is a verdict rather than a derivation: objectives the player already completed stay completed
+    // in the journal, and reading the state back off them would call a half-finished quest completed instead of
+    // missed. the caller has already decided, so the state is set directly.
+    this.setState(OmniQuest.States.Missed);
   }
   
   /**
@@ -676,7 +679,17 @@ class TrackedOmniQuest
       return;
     }
   
-    // fourth handle the possibility that the quest is completed because all objectives are complete, or missed.
+    // fourth handle the possibility that the quest was missed outright: every objective was skipped and nothing was
+    // ever completed, which is what a quest the player walked straight past looks like. this has to be judged before
+    // the completion check below, because a missed objective also counts toward that.
+    const allMissed = this.objectives.every(objective => objective.isMissed());
+    if (allMissed)
+    {
+      this.setState(OmniQuest.States.Missed);
+      return;
+    }
+
+    // fifth handle the possibility that the quest is completed because all objectives are complete, or missed.
     const enoughComplete = this.objectives
       .every(objective => objective.isCompleted() || objective.isMissed());
     if (enoughComplete)

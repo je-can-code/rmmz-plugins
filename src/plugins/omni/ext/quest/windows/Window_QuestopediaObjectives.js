@@ -1,6 +1,12 @@
 //region Window_QuestopediaObjectives
-import OmniObjective from './../__models/OmniObjective.js';
-
+/**
+ * The pane listing the objectives of the highlighted quest that the player knows about.
+ *
+ * Each row is one objective: the state icon and the description on the first line, then how it is
+ * fulfilled and what the protagonists made of it beneath. The rows are read, never chosen- the scene
+ * keeps the cursor on the quest list- but a command window is still the right shape, because it
+ * already knows how to draw a block of lines per entry and to scroll when there are more than fit.
+ */
 class Window_QuestopediaObjectives
   extends Window_Command
 {
@@ -32,7 +38,8 @@ class Window_QuestopediaObjectives
 
   /**
    * Overwrites {@link #itemHeight}.<br/>
-   * Makes the command rows bigger so there can be additional lines.
+   * Each row carries the objective's description and two lines of subtext beneath it, so the row is
+   * two lines tall to hold the block once it is centered.
    * @returns {number}
    */
   itemHeight()
@@ -55,18 +62,19 @@ class Window_QuestopediaObjectives
    */
   setCurrentObjectives(questObjectives)
   {
-    this._currentObjectives = questObjectives ?? [];
+    this._currentObjectives = questObjectives;
   }
 
   /**
    * Implements {@link #makeCommandList}.<br/>
-   * Creates the command list of all known quests in this window.
+   * Creates one row per known objective, or a single row saying there are none.
    */
   makeCommandList()
   {
-    // grab all the omnipedia listings available.
+    // grab the rows for every objective the player knows about.
     const commands = this.buildCommands();
 
+    // a quest with nothing to show still says so, rather than presenting an empty pane.
     if (commands.length === 0)
     {
       commands.push(this.buildNoObjectivesCommand());
@@ -77,24 +85,21 @@ class Window_QuestopediaObjectives
   }
 
   /**
-   * Builds all commands for this command window.
-   * Adds all known quests to the list that are known.
+   * Builds the rows for every objective the player knows about.
+   *
+   * An objective is known once it has been activated, or when it was never hidden in the first
+   * place; a hidden objective that has not started yet is a spoiler and stays out of the pane.
    * @returns {BuiltWindowCommand[]}
    */
   buildCommands()
   {
     // grab the current quest objectives.
     const objectives = this.getCurrentObjectives();
-    if (objectives.length === 0) return [];
 
-    // compile the list of commands.
-    const commands = objectives
-      // if an objective is inactive, it shouldn't be rendered at all.
-      .filter(objective => objective.state !== OmniObjective.States.Inactive)
+    // keep only the objectives the player is allowed to see, in the order they resolve.
+    return objectives
+      .filter(objective => objective.isKnown())
       .map(this.buildCommand, this);
-
-    // return the compiled list of commands.
-    return commands;
   }
 
   /**
@@ -104,26 +109,29 @@ class Window_QuestopediaObjectives
    */
   buildCommand(questObjective)
   {
-    // fix the size a bit.
-    const text = this.modFontSizeForText(-4, questObjective.description());
+    // the description heads the row, a touch smaller so the fulfillment and log beneath read as its own.
+    const description = this.modFontSizeForText(-4, questObjective.description());
 
-    // build a command based on the enemy.
-    return new WindowCommandBuilder(text)
+    // build a row headed by the description, with the fulfillment and the log as subtext beneath it.
+    return new WindowCommandBuilder(description)
       .setSymbol(questObjective.id)
       .setExtensionData(questObjective)
       .setIconIndex(questObjective.iconIndexByState())
-      .addTextLine(questObjective.fulfillmentText() ?? String.empty)
-      .flagAsMultiline()
+      .addTextLine(questObjective.fulfillmentText())
+      .addTextLine(questObjective.log())
       .build();
   }
 
+  /**
+   * Builds the single row shown when the quest has no objectives the player knows about.
+   * @returns {BuiltWindowCommand}
+   */
   buildNoObjectivesCommand()
   {
     return new WindowCommandBuilder(String.empty)
       .setSymbol(0)
       .setExtensionData(null)
-      .addTextLine("No known objectives for this quest.")
-      .flagAsSubText()
+      .addTextLine('No known objectives for this quest.')
       .build();
   }
 }

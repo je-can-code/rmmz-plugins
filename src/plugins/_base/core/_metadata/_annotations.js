@@ -157,6 +157,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.13.0
+ *    Added ParameterTraitMap, naming the trait code and data id that encodes each
+ *    parameter key, for anything reading a parameter back off a database row.
  * - 3.12.0
  *    Trait display text is rendered from RPG_Trait.NameFormatters and ValueFormatters,
  *    so a plugin introducing a trait code registers both halves for it rather than this

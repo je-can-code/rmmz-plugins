@@ -366,6 +366,11 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.1.0
+ *    Mastery descriptions now resolve in full. The prose resolver reads parameters
+ *    from traits or buff tags, follows a mastery to the payload it delivers, phrases
+ *    gates and damage formulas, and consults a tag-shape table rather than guessing
+ *    which argument holds a magnitude. All 48 authored subgroups render every tier.
  * - 4.0.0
  *    The SDP header now names the mastery a panel grants and describes what it does,
  *    read from a new per-act prose block on each subgroup in config.sdp.json.

@@ -60,6 +60,7 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
       scheduleFlipBody: vi.fn(),
       scheduleTilt: vi.fn(),
       scheduleCastingPulse: vi.fn(),
+      scheduleCastingSquish: vi.fn(),
       cancelForCharacter: vi.fn(),
       cancelCastingPulse: vi.fn(),
     };
@@ -129,6 +130,7 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
       getCharacter: () => ({}),
       getBattler: () => ({ result: () => ({ parried: false, evaded: false }) }),
       isCasting: () => true,
+      getDecidedAction: () => null,
       ...overrides,
     };
   }
@@ -603,6 +605,119 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
 
       // Assert
       expect(JuiceMotionManagerMock.scheduleCastingPulse).toHaveBeenCalled();
+    });
+
+    /**
+     * Builds a casting battler whose decided action's base skill asks for the given cast motion.
+     * @param {string} castMotion The `<castMotion:>` value the skill carries.
+     * @param {number} period The `<castMotionPeriod:>` value the skill carries; 0 for unauthored.
+     * @param {number} [intensity=0] The `<castMotionIntensity:>` percent; 0 for unauthored.
+     * @returns {object} A fake battler mid-cast.
+     */
+    function buildCastingBattler(castMotion, period, intensity = 0)
+    {
+      const skill = {
+        jabsJuiceCastMotion: castMotion,
+        jabsJuiceCastMotionPeriod: period,
+        jabsJuiceCastMotionIntensity: intensity,
+      };
+      const action = { getBaseSkill: () => skill };
+      return buildBattler({ getDecidedAction: () => [ action ] });
+    }
+
+    it('squats instead of pulsing when the cast skill asks for squish', () =>
+    {
+      // Arrange
+      const battler = buildCastingBattler('squish', 0);
+
+      // Act
+      JuiceHookManager.tickCastingJuice(battler);
+
+      // Assert- the squat replaces the pulse outright; both running would fight over the key.
+      expect(JuiceMotionManagerMock.scheduleCastingSquish).toHaveBeenCalledTimes(1);
+      expect(JuiceMotionManagerMock.scheduleCastingPulse).not.toHaveBeenCalled();
+    });
+
+    it('squats at the unarmed strike intensity and the default period when none is authored', () =>
+    {
+      // Arrange- period 0 is the getter's "nothing authored" sentinel.
+      const battler = buildCastingBattler('squish', 0);
+
+      // Act
+      JuiceHookManager.tickCastingJuice(battler);
+
+      // Assert
+      expect(JuiceMotionManagerMock.scheduleCastingSquish).toHaveBeenCalledWith(
+        expect.anything(), 0.4, 8, 4
+      );
+    });
+
+    it('squats at the authored period when the skill names one', () =>
+    {
+      // Arrange
+      const battler = buildCastingBattler('squish', 5);
+
+      // Act
+      JuiceHookManager.tickCastingJuice(battler);
+
+      // Assert
+      expect(JuiceMotionManagerMock.scheduleCastingSquish).toHaveBeenCalledWith(
+        expect.anything(), 0.4, 5, 4
+      );
+    });
+
+    it('pulses when the cast skill names a motion it does not know', () =>
+    {
+      // Arrange- a near-miss: authored, but not the one branch that squats.
+      const battler = buildCastingBattler('flip', 0);
+
+      // Act
+      JuiceHookManager.tickCastingJuice(battler);
+
+      // Assert
+      expect(JuiceMotionManagerMock.scheduleCastingPulse).toHaveBeenCalledTimes(1);
+      expect(JuiceMotionManagerMock.scheduleCastingSquish).not.toHaveBeenCalled();
+    });
+
+    it('pulses when the decided action list is empty', () =>
+    {
+      // Arrange- decided but holding nothing, which is distinct from undecided.
+      const battler = buildBattler({ getDecidedAction: () => [] });
+
+      // Act
+      JuiceHookManager.tickCastingJuice(battler);
+
+      // Assert
+      expect(JuiceMotionManagerMock.scheduleCastingPulse).toHaveBeenCalledTimes(1);
+    });
+
+    it('squats at the authored intensity, read as a percent of true size', () =>
+    {
+      // Arrange- 45 must arrive as 0.45; passing the raw percent through would be a 45x squish.
+      const battler = buildCastingBattler('squish', 0, 45);
+
+      // Act
+      JuiceHookManager.tickCastingJuice(battler);
+
+      // Assert
+      expect(JuiceMotionManagerMock.scheduleCastingSquish).toHaveBeenCalledWith(
+        expect.anything(), 0.45, 8, 4
+      );
+    });
+
+    it('falls back to the config unarmed strike intensity when none is authored', () =>
+    {
+      // Arrange- intensity 0 is the getter's "nothing authored" sentinel, and the config value in
+      // this fixture is deliberately not a number a percent conversion could produce by accident.
+      const battler = buildCastingBattler('squish', 0, 0);
+
+      // Act
+      JuiceHookManager.tickCastingJuice(battler);
+
+      // Assert
+      expect(JuiceMotionManagerMock.scheduleCastingSquish).toHaveBeenCalledWith(
+        expect.anything(), 0.4, 8, 4
+      );
     });
   });
 

@@ -39,9 +39,13 @@ class Window_FilterStrip
 
   /**
    * The position this strip is currently naming.
+   *
+   * Deliberately not named `position`: every display object already has a `position` accessor for
+   * its transform, and PIXI reads `x` and `y` through it. A method by that name shadows the accessor,
+   * so the strip still renders where it was moved but answers `undefined` to anyone asking where it is.
    * @returns {{key: string, name: string, iconIndex: number}}
    */
-  position()
+  activePosition()
   {
     return this._position;
   }
@@ -55,7 +59,7 @@ class Window_FilterStrip
     const {
       name,
       iconIndex
-    } = this.position();
+    } = this.activePosition();
     const iconPad = 4;
 
     // a position may legitimately have no icon, in which case the label takes the whole strip.
