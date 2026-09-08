@@ -433,6 +433,9 @@
  * A three-state cycle: 12 -> 13 -> 14 -> 12 -> ..., one step per execution.
  * ============================================================================
  * CHANGELOG:
+ * - 1.9.0
+ *    Added Game_Item#carryWhenSynthetic, so a synthetic row keeps the fields a real
+ *    database row would have carried.
  * - 1.8.0
  *    Only a row the database does not contain is carried on the item now. A row the
  *    engine can find by id stays a class plus an id, so a savefile holds a reference

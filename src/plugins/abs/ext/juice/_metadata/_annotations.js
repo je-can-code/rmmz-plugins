@@ -179,6 +179,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Corrected which hook the juice manager reads when resolving a motion.
  * - 1.2.0
  *    Caster and target body motion is now declared on J-Motion's composer rather
  *    than written onto the sprite directly, which makes J-Motion a hard dependency.

@@ -2224,18 +2224,81 @@ Game_Battler.prototype.resolveEquippedSkillId = function(baseSkillId)
 };
 
 /**
+ * Resolves a slot key to the skill any active note source has redirected that entire slot to.
+ *
+ * This is the slot-keyed sibling of {@link #resolveEquippedSkillId}. A skill transform asks
+ * "what is in this slot, and does anything replace it" — which cannot answer for a slot that
+ * holds an item id, or that holds nothing. A slot transform asks only "which slot is this",
+ * so it reaches both. The slot's stored contents are never read and never written.
+ *
+ * Sources are evaluated in the order returned by {@link #getSkillTransformSources}, so an active
+ * state outranks an equip, which outranks the class, which outranks the database row. Slot keys
+ * are compared case-insensitively; a notetag should not have to match the casing of a constant
+ * the author never sees.
+ * @param {string} slot The slot key to resolve, per {@link JABS_Button}.
+ * @returns {number} The skill id this slot has been redirected to, or 0 when none applies.
+ */
+Game_Battler.prototype.getSlotTransformSkillId = function(slot)
+{
+  // without a slot key there is nothing to match against.
+  if (!slot) return 0;
+
+  // normalize once rather than per-comparison below.
+  const targetKey = slot.toLowerCase();
+
+  // grab the ordered note sources for this battler.
+  const sources = this.getSkillTransformSources();
+
+  // walk each source in precedence order and stop at the first matching transform.
+  for (const source of sources)
+  {
+    // skip sources that carry no slot transform tags at all.
+    if (!source || !source.jabsSlotTransforms || source.jabsSlotTransforms.length === 0)
+    {
+      continue;
+    }
+
+    // look for a transform pair whose slot key matches the one being resolved.
+    const match = source.jabsSlotTransforms
+      .find(transform =>
+      {
+        const [ transformSlotKey ] = transform;
+        return String(transformSlotKey).toLowerCase() === targetKey;
+      });
+
+    // first match wins — extract the redirect target and return immediately.
+    if (match)
+    {
+      const [ , transformedSkillId ] = match;
+      return transformedSkillId;
+    }
+  }
+
+  // no slot transform was found for this slot.
+  return 0;
+};
+
+/**
  * Gets the effective skill id for the given slot after applying any active skill transforms.
  *
  * This is the primary resolution point that all execution and display paths should call instead
- * of {@link #getEquippedSkillId} when the transformed (runtime) skill is needed. The tool slot
- * is intentionally excluded: it stores item ids, not skill ids, and transform logic does not
- * apply to it.
+ * of {@link #getEquippedSkillId} when the transformed (runtime) skill is needed.
+ *
+ * Two kinds of transform are consulted, and the order matters. A slot transform claims the entire
+ * slot and is checked first, which is what allows it to redirect the item-bearing slots. Only if
+ * none applies do the item slots short-circuit out: they store item ids rather than skill ids, so
+ * a skill transform has no base id to key on and must not run against them.
  * @param {string} slot The slot key to resolve.
  * @returns {number} The resolved skill id, or 0 when the slot is empty or does not exist.
  */
 Game_Battler.prototype.getResolvedSkillId = function(slot)
 {
-  // item-based slots store item ids, not skill ids; transforms do not apply to them.
+  // a slot transform claims the whole slot, so it is checked before anything reads the contents.
+  // this ordering is what lets it reach the item-based slots excluded immediately below.
+  const slotTransformSkillId = this.getSlotTransformSkillId(slot);
+  if (slotTransformSkillId) return slotTransformSkillId;
+
+  // item-based slots store item ids, not skill ids; skill transforms do not apply to them.
   if (slot === JABS_Button.Tool || slot === JABS_Button.UsableItem)
   {
     return this.getEquippedSkillId(slot);

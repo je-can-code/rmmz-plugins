@@ -445,9 +445,13 @@ describe('JABS_SkillSlot (direct src import)', () =>
     it('returns null when the slot is empty but a non-zero targetId was supplied', () =>
     {
       // Arrange- the mirror of the zero-targetId case: the caller resolved a real id while this
-      // slot holds nothing. only isEmpty can refuse this one, since the targetId guard passes.
+      // slot holds nothing, and no slot transform explains where that id came from. only isEmpty
+      // can refuse this one, since both guards above it pass.
       const skill = vi.fn(id => ({ id }));
-      const user = { skill };
+      const user = {
+        skill,
+        getSlotTransformSkillId: () => 0,
+      };
       const slot = new JABS_SkillSlot('mainhand', 0);
 
       // Act
@@ -485,7 +489,10 @@ describe('JABS_SkillSlot (direct src import)', () =>
     it('returns the user\'s combo skill when a user and combo id are present', () =>
     {
       const skill = vi.fn(id => ({ id }));
-      const user = { skill };
+      const user = {
+        skill,
+        getSlotTransformSkillId: () => 0,
+      };
       const slot = new JABS_SkillSlot('mainhand', 5);
       slot.setComboId(9);
 
@@ -498,13 +505,73 @@ describe('JABS_SkillSlot (direct src import)', () =>
     it('returns the user\'s target-id skill when a user is present with no combo id', () =>
     {
       const skill = vi.fn(id => ({ id }));
-      const user = { skill };
+      const user = {
+        skill,
+        getSlotTransformSkillId: () => 0,
+      };
       const slot = new JABS_SkillSlot('mainhand', 5);
 
       const result = slot.data(user);
 
       expect(skill).toHaveBeenCalledWith(5);
       expect(result).toEqual({ id: 5 });
+    });
+
+    it('returns the transform target as a skill even though the slot stores an item', () =>
+    {
+      // Arrange- a tool slot holding item 7, transformed to skill 512. looking 512 up the
+      // slot's own way would return $dataItems[512], an unrelated row, which is the exact
+      // wrong-icon bug this branch exists to prevent.
+      const skill = vi.fn(id => ({ id, isTheSkill: true }));
+      const user = {
+        skill,
+        getSlotTransformSkillId: (key) => (key === 'tool' ? 512 : 0),
+      };
+      const slot = new JABS_SkillSlot('tool', 7);
+
+      // Act
+      const result = slot.data(user, 512);
+
+      // Assert
+      expect(result).toEqual({ id: 512, isTheSkill: true });
+      expect(slot.isItem()).toBe(true);
+    });
+
+    it('returns the transform target as a skill even though the slot is empty', () =>
+    {
+      // Arrange- nothing equipped, which is what a food slot looks like once the last dish is
+      // eaten; the emptiness guard would otherwise refuse an id the slot never supplied.
+      const skill = vi.fn(id => ({ id }));
+      const user = {
+        skill,
+        getSlotTransformSkillId: () => 512,
+      };
+      const slot = new JABS_SkillSlot('item', 0);
+
+      // Act
+      const result = slot.data(user, 512);
+
+      // Assert
+      expect(result).toEqual({ id: 512 });
+      expect(slot.isEmpty()).toBe(true);
+    });
+
+    it('ignores a transform whose target is not the id being looked up', () =>
+    {
+      // Arrange- a transform is live but the caller asked about a different id, so the slot's
+      // own item/empty logic is still the right answer.
+      const user = {
+        skill: vi.fn(),
+        getSlotTransformSkillId: () => 512,
+      };
+      const slot = new JABS_SkillSlot('tool', 7);
+
+      // Act
+      const result = slot.data(user, 7);
+
+      // Assert
+      expect(result).toBe(globalThis.$dataItems[7]);
+      expect(user.skill).not.toHaveBeenCalled();
     });
 
     it('falls back to the raw database skill data when there is no user', () =>

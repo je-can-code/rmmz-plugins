@@ -34,7 +34,7 @@ class JABS_FoodChainResolver
 
   /**
    * Returns the first active food-chain type found on the given battler, or null.
-   * The type is a string like 'protein', 'overstuffed', etc. from the database tag.
+   * The type is a string like 'protein', 'vegetable', etc. from the database tag.
    * @param {Game_Actor} battler The battler to inspect for active food chain states.
    * @returns {string|null} The chain type string, or null if no food chain is active.
    */
@@ -52,11 +52,11 @@ class JABS_FoodChainResolver
 
   /**
    * Derives the current chain phase for a battler relative to a given plan.
-   * Returns 'wellFed', 'peak', 'tail', 'overstuffed', or null when no plan
-   * or no matching active state is found.
+   * Returns 'wellFed', 'peak', 'tail', or null when no plan or no matching
+   * active state is found.
    * @param {Game_Actor} battler The battler to inspect.
    * @param {JABS_FoodChainPlan} plan The plan to check phases against.
-   * @returns {'wellFed'|'peak'|'tail'|'overstuffed'|null} The current phase label.
+   * @returns {'wellFed'|'peak'|'tail'|null} The current phase label.
    */
   static getPhase(battler, plan)
   {
@@ -72,9 +72,6 @@ class JABS_FoodChainResolver
       // determine position within the plan to assign a phase label.
       const index = plan.indexOfState(segment.stateId);
 
-      // any overstuffed chain state gets its own distinct phase label.
-      if (segment.chainType === J.ABS.EXT.FOOD.ChainType.Overstuffed) return 'overstuffed';
-
       return plan.phaseAtIndex(index);
     }
 
@@ -83,21 +80,44 @@ class JABS_FoodChainResolver
   }
 
   /**
-   * Returns true when the leader's notes contain the overstuffedImpervious tag,
-   * granting Field Medic immunity to the Overstuffed chain on re-feed.
-   * @returns {boolean} True if the leader has Field Medic mastery, false otherwise.
+   * Returns true when the given battler's notes contain the foodChainImpervious tag.
+   *
+   * An impervious battler still executes a chain-ending skill and still receives everything it
+   * does- they simply keep the arc they were in. This is the capstone form of food mastery: the
+   * meal stops being the ammunition and becomes a standing condition.
+   * @param {Game_Actor} battler The battler to inspect for immunity.
+   * @returns {boolean} True if the battler keeps their chain through an ending skill.
    */
-  static leaderHasOverstuffedImpervious()
+  static hasFoodChainImpervious(battler)
   {
-    const leader = $gameParty.leader();
-
-    // no leader means no immunity.
-    if (!leader) return false;
+    // no battler means no immunity.
+    if (!battler) return false;
 
     // check all note sources (passives, equips, states, class, actor) for the tag.
-    const notes = leader.getAllNotes();
+    const notes = battler.getAllNotes();
 
-    return RPGManager.checkForBooleanFromAllNotesByRegex(notes, J.ABS.EXT.FOOD.RegExp.OverstuffedImpervious);
+    return RPGManager.checkForBooleanFromAllNotesByRegex(notes, J.ABS.EXT.FOOD.RegExp.FoodChainImpervious);
+  }
+
+  /**
+   * Ends the given battler's active food chain, as demanded by a skill tagged
+   * {@code <endFoodChain>}.
+   *
+   * This is the other half of metabolizing: the skill delivers whatever it delivers through the
+   * ordinary action pipeline, and this clears the arc that paid for it. Imperviousness is checked
+   * here rather than at the call site so that every future path into chain-ending inherits it.
+   * @param {Game_Actor} battler The battler whose chain should end.
+   */
+  static resolveEndFoodChain(battler)
+  {
+    // nothing to end without a battler to end it on.
+    if (!battler) return;
+
+    // an impervious battler burns the fuel but never spends the meal.
+    if (JABS_FoodChainResolver.hasFoodChainImpervious(battler)) return;
+
+    // strip the arc from this battler only- a chain is the leader's, not the party's.
+    JABS_FoodChainResolver.stripFoodChainStates([ battler ]);
   }
 
   /**
@@ -107,11 +127,8 @@ class JABS_FoodChainResolver
    *   - Always: heal/MP/TP/cure effects applied to all party members (skip code 21).
    *   - Resolve the food group type from the item's {@code <food:TYPE>} tag.
    *   - Look up the pre-built chain plan from the registry.
-   *   - Determine the leader's current chain phase.
    *   - No active chain → apply Well Fed entry state, store plan.
-   *   - Tail phase → strip all chains, apply new Well Fed, store plan.
-   *   - Field Medic immune → strip all chains, apply new Well Fed, store plan.
-   *   - Otherwise (well-fed or peak, no immunity) → strip all, apply Overstuffed.
+   *   - Any active chain → strip all chains, apply new Well Fed, store plan.
    *
    * @param {number} itemId The database id of the food item consumed.
    * @param {JABS_Battler} jabsBattler The JABS battler eating the item (the map leader).
@@ -158,35 +175,22 @@ class JABS_FoodChainResolver
     // read the leader's current food chain type before stripping anything.
     const currentChainType = JABS_FoodChainResolver.getActiveFoodChainType(leader);
 
-    // determine the leader's active plan so we can derive the phase.
+    // the uuid keys the plan registry the HUD reads from.
     const leaderUuid = jabsBattler.getUuid();
-    const existingPlan = $jabsEngine.getFoodChainPlanByUuid(leaderUuid);
 
-    // derive the current phase using the existing plan if one is available.
-    const currentPhase = existingPlan
-      ? JABS_FoodChainResolver.getPhase(leader, existingPlan)
-      : null;
-
-    // apply the appropriate chain transition based on phase and immunity.
+    // apply the appropriate chain transition based on whether an arc is already running.
     if (currentChainType === null)
     {
       // no active chain — simply start the new food arc.
       JABS_FoodChainResolver.#startFoodChain(leader, entryStateId, leaderUuid, newPlan);
     }
-    else if (currentPhase === 'tail')
-    {
-      // tail phase always rescues into the new arc, regardless of immunity.
-      JABS_FoodChainResolver.#stripAndStartFoodChain(members, leader, entryStateId, leaderUuid, newPlan);
-    }
-    else if (JABS_FoodChainResolver.leaderHasOverstuffedImpervious())
-    {
-      // Field Medic immunity — re-feed snaps to the new arc without Overstuffed penalty.
-      JABS_FoodChainResolver.#stripAndStartFoodChain(members, leader, entryStateId, leaderUuid, newPlan);
-    }
     else
     {
-      // eating mid-arc without immunity — trigger the Overstuffed punishment chain.
-      JABS_FoodChainResolver.#triggerOverstuffed(members, leader, leaderUuid);
+      // a chain is already running, so the new meal replaces it outright. eating is not the
+      // button while an arc is live- that input metabolizes instead- so reaching here at all
+      // means something other than the player's own R2 press fed them, and punishing an
+      // unreachable path would only ever fire on the paths nobody chose.
+      JABS_FoodChainResolver.#stripAndStartFoodChain(members, leader, entryStateId, leaderUuid, newPlan);
     }
   }
 
@@ -268,29 +272,6 @@ class JABS_FoodChainResolver
     JABS_FoodChainResolver.#startFoodChain(leader, entryStateId, leaderUuid, plan);
   }
 
-  /**
-   * Strips all food chain states and applies the Overstuffed entry state to the leader.
-   * The Overstuffed plan is looked up from the registry by its chain type constant.
-   * This is the punishment path for eating mid-arc without Field Medic immunity.
-   * @param {Game_Actor[]} members All party members to strip food states from.
-   * @param {Game_Actor} leader The party leader actor.
-   * @param {string} leaderUuid The UUID of the leader's JABS battler.
-   */
-  static #triggerOverstuffed(members, leader, leaderUuid)
-  {
-    // clear all food chain states across the party.
-    JABS_FoodChainResolver.stripFoodChainStates(members);
-
-    // look up the overstuffed chain from the boot-time registry.
-    const overstuffedPlan = JABS_FoodChainPlan.forChainType(J.ABS.EXT.FOOD.ChainType.Overstuffed);
-
-    // if the overstuffed chain hasn't been authored in the database yet, abort.
-    if (!overstuffedPlan) return;
-
-    // apply the Overstuffed entry state to the leader and store the plan.
-    const entryStateId = overstuffedPlan.getEntry().stateId;
-    JABS_FoodChainResolver.#startFoodChain(leader, entryStateId, leaderUuid, overstuffedPlan);
-  }
 }
 
 export default JABS_FoodChainResolver;

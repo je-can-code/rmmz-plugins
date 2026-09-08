@@ -3,7 +3,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v1.1.1 PIXEL-ABS] Bridges J-Pixelistics with J-ABS for combat-aware pixel movement.
+ * [v1.1.2 PIXEL-ABS] Bridges J-Pixelistics with J-ABS for combat-aware pixel movement.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @base J-Base
@@ -90,6 +90,8 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.1.2
+ *    Simplified how the pixel battler resolves its angle and idle state.
  * - 1.1.1
  *    Dodge distance scaling moved onto J-ABS's determineDodgeStepCount seam. On the
  *    step setter it also caught the per-step countdown, re-scaling what remained on
@@ -279,7 +281,7 @@ J.PIXEL.EXT.ABS = {};
 /**
 * The metadata associated with this plugin.
 */
-J.PIXEL.EXT.ABS.Metadata = new JAbsPixelistics_PluginMetadata("J-Pixel-ABS", "1.1.1");
+J.PIXEL.EXT.ABS.Metadata = new JAbsPixelistics_PluginMetadata("J-Pixel-ABS", "1.1.2");
 /**
 * A collection of regex patterns for this plugin.
 */
@@ -1147,25 +1149,18 @@ JABS_Battler.prototype._rollIdleDestination = function() {
 	return null;
 };
 /**
-* Extends {@link #determineDodgeStepCount}.<br/>
-* Scales the step count by the pixel collision density so dodge distance
-* covers the same visual distance as it would in tile-locked movement.
+* Overwrites {@link JABS_Battler#dodgeStepDistance}.<br/>
+* States what one forced dodge step costs under pixel movement.
 *
-* A pixel step advances one subcell rather than one tile, so a dodge tagged for three steps would
-* otherwise cover three subcells- a fraction of the distance the tag asks for. The scaling belongs
-* here, on the seam that seeds the count from the skill, rather than on the setter: the setter is
-* also what the per-step countdown writes through, and scaling that would grow the remaining count
-* on every step instead of shrinking it.
-* @param {RPG_Skill} skill The dodge skill being executed.
-* @returns {number} The number of subcell steps to force-move.
+* A pixel dodge step is not a tile and it is not a subcell either: `Game_CharacterBase#moveStraight`
+* travels `distancePerFrame()`, so one step is one frame of ordinary walking. That figure is read
+* fresh on every step rather than baked into a count up front, because `realMoveSpeed` folds in the
+* dash boost and the dodge speed modifier- both of which can come and go partway through a dodge,
+* and either of which would make a count computed at execute time cover the wrong distance.
+* @returns {number} The distance in tiles a single pixel dodge step covers.
 */
-J.PIXEL.EXT.ABS.Aliased.JABS_Battler.set("determineDodgeStepCount", JABS_Battler.prototype.determineDodgeStepCount);
-JABS_Battler.prototype.determineDodgeStepCount = function(skill) {
-	if (PIXEL_CollisionManager.collisionStepCount === undefined) {
-		PIXEL_CollisionManager.initConfig();
-	}
-	const stepCount = J.PIXEL.EXT.ABS.Aliased.JABS_Battler.get("determineDodgeStepCount").call(this, skill);
-	return stepCount * PIXEL_CollisionManager.collisionStepCount;
+JABS_Battler.prototype.dodgeStepDistance = function() {
+	return this.getCharacter().distancePerFrame();
 };
 /**
 * Extends {@link #destroy}.<br/>

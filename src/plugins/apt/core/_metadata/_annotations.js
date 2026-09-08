@@ -129,6 +129,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 1.4.0
+ *    Added ApManager#resolveDisplaySourceByKey, so a display can name where an
+ *    aptitude gain came from.
  * - 1.3.2
  *    Repointed AP gain and aptitude-growth logging at J-Log's new $mapLogs
  *    registry. The $actionLogManager and $diaLogManager globals these called

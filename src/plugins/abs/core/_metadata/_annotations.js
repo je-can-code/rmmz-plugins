@@ -48,6 +48,9 @@
  * for JABS lives at the top instead of the bottom.
  *
  * CHANGELOG:
+ * - 4.23.0
+ *    Added the jabsSlotTransforms notetag to actors, classes, equipment and states,
+ *    and Game_Battler#getSlotTransformSkillId to resolve one by slot.
  * - 4.22.0
  *    Added JABS_Engine.toDisplacement, the shared conversion of a direction and a
  *    distance into a tile offset, so knockback, pull-forward and gap-close stop each
@@ -2678,7 +2681,8 @@
  *  Where OVERRIDE is the skill id that executes and displays instead.
  *
  * This applies to ALL equipped skill slots (combat, dodge, offhand). The tool
- * slot is excluded because it stores item ids rather than skill ids.
+ * and usable-item slots are excluded because they store item ids rather than
+ * skill ids; use SLOT TRANSFORM below to reach those.
  *
  * PERMISSION: The battler does not need to have formally learned OVERRIDE.
  * The transform tag itself grants implicit permission; only the BASE slot
@@ -2697,6 +2701,37 @@
  *    <skillTransform:[151, 152]>
  * While this note is active on any source, any slot whose base skill id is
  * 151 will execute and display as skill 152 instead.
+ *
+ * ----------------------------------------------------------------------------
+ * SLOT TRANSFORM:
+ * Redirects an entire slot to a skill, regardless of what is equipped in it.
+ * Valid on the same sources as SKILL TRANSFORM above.
+ *    <slotTransform:[SLOT_KEY, SKILL_ID]>
+ *  Where SLOT_KEY is a JABS_Button value: Main, Offhand, Tool, Dodge,
+ *  UsableItem, or CombatSkill1 through CombatSkill4. Matched case-insensitively.
+ *  Where SKILL_ID is the skill that executes and displays for that slot.
+ *
+ * Where a skill transform asks "what is in this slot, and does anything
+ * replace it", a slot transform asks only "which slot is this". That is the
+ * whole difference, and it is what lets this reach two cases the other cannot:
+ * a slot holding an ITEM id (Tool, UsableItem), and a slot holding NOTHING.
+ * Neither offers a base skill id to match against.
+ *
+ * The slot's stored contents are never read and never written, so the redirect
+ * ends the instant its source does — a state lapsing hands the button straight
+ * back to whatever was always sitting in it.
+ *
+ * PERMISSION: as with skill transforms, the tag is its own permission grant.
+ * The battler need not have learned SKILL_ID.
+ *
+ * PRECEDENCE: identical to skill transforms (states by priority > equips >
+ * class > database row). A slot transform also beats a skill transform on the
+ * same slot, since naming the slot outright is the more specific statement.
+ *
+ * Example:
+ *    <slotTransform:[UsableItem, 512]>
+ * While this note is active, the R2 usable-item button executes skill 512
+ * rather than consuming whatever item is sitting in the slot.
  *
  * ----------------------------------------------------------------------------
  * ----------------------------------------------------------------------------

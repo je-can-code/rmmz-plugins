@@ -3368,10 +3368,14 @@ the dodge skill executes
 
 **Effect:**
 `moveType` sets dodge direction: `forward` (facing), `backward` (opposite facing), or
-`directional` (whatever direction is currently pressed). `dodge` is the forced-move distance in
-tiles. `dodgeSpeed` adds to (or, if negative, subtracts from) the player's current move speed
-during the dodge (decimal allowed). The dodge skill still runs through the full JABS action
-pipeline — it can deal damage, apply states, fire projectiles, etc., not just move.
+`directional` (whatever direction is currently pressed). A `backward` dodge also holds facing for
+its duration, so the battler retreats while still looking at whatever it is backing away from
+instead of spinning around to face its own escape route. `dodge` is the forced-move distance in
+tiles, and it means the same distance under tile-locked and pixel movement alike. `dodgeSpeed` adds
+to (or, if negative, subtracts from) the player's current move speed during the dodge (decimal
+allowed); move speed is exponential, so `+1` doubles travel per frame and `+2` quadruples it. The
+dodge skill still runs through the full JABS action pipeline — it can deal damage, apply states,
+fire projectiles, etc., not just move.
 
 ```
 <moveType:directional>
@@ -3638,7 +3642,38 @@ define a transform for the same BASE (first match wins): active states (highest 
 While this note is active anywhere, any slot whose base skill is 151 executes and displays as
 152 instead.
 
-**See also:** `<skillId>`, `<offhandSkillId>`
+**See also:** `<skillId>`, `<offhandSkillId>`, `<slotTransform>`
+
+---
+
+### `<slotTransform:[SLOT_KEY, SKILL_ID]>`
+
+**Applies to:**
+Actors, Enemies, Classes, Weapons, Armors, States
+
+**When:**
+the named slot is pressed, resolved, or displayed
+
+**Effect:**
+redirects an entire slot to SKILL_ID regardless of what is equipped in it. Where
+`<skillTransform>` keys on the skill currently occupying a slot, this keys on the slot itself,
+which is the only way to reach a slot holding an **item** id (Tool, UsableItem) or holding
+**nothing at all** — a skill transform has no base id to match in either case. The slot's stored
+contents are never mutated, and the redirect ends the instant the note source does. The tag is its
+own permission grant, so the battler need not have learned SKILL_ID. It also outranks a skill
+transform on the same slot: naming the slot explicitly is the more specific statement. Precedence
+between competing slot transforms (first match wins): active states (highest priority first) >
+equipped items (actors only) > current class (actors only) > actor/enemy database row. SLOT_KEY is
+a `JABS_Button` value (`Main`, `Offhand`, `Tool`, `Dodge`, `UsableItem`, `CombatSkill1`-`4`) and is
+matched case-insensitively.
+
+```
+<slotTransform:[UsableItem, 512]>
+```
+While this note is active, the R2 usable-item button executes skill 512 instead of consuming
+whatever item is sitting in the slot.
+
+**See also:** `<skillTransform>`, `<endFoodChain>`
 
 ---
 
@@ -4222,23 +4257,51 @@ This phase's segment renders in a green shade in the food chain bar.
 
 ---
 
-### `<overstuffedImpervious>`
+### `<endFoodChain>`
+
+**Applies to:**
+Skills
+
+**When:**
+the skill executes as a map action
+
+**Effect:**
+ends the caster's active food chain outright — no tail phase, no consolation state, the arc is
+simply over. This is what makes a metabolize skill cost the meal that fuelled it. Omitting the
+tag is a deliberate authoring choice rather than an oversight: a skill that burns fuel without
+spending the arc is an endurance move, bounded by the chain's own duration instead of by a single
+use. Nothing warns about its absence. The tag is read off the executed skill rather than tracked
+through the dispatcher, so an enemy attack can carry it too and take the player's meal away.
+Suppressed entirely by `<foodChainImpervious>` on the caster.
+
+```
+<endFoodChain>
+```
+Executing this skill ends whatever food arc the caster was in.
+
+**See also:** `<foodChainImpervious>`, `<slotTransform>`
+
+---
+
+### `<foodChainImpervious>`
 
 **Applies to:**
 Actors, Classes, Enemies, Weapons, Armors, States (any note-bearing source via `getAllNotes()`)
 
 **When:**
-re-feeding mid-arc
+a skill tagged `<endFoodChain>` executes on the bearer
 
 **Effect:**
-"Field Medic" mastery — with this tag active on the leader, re-feeding during any phase
-(including Well Fed and peak phases) snaps straight to a fresh Well Fed instead of triggering the
-Overstuffed chain. Tail-phase re-feeding always rescues regardless of this tag.
+the bearer's food chains never end from a chain-ending skill. They still execute the skill and
+still receive everything it does; they simply keep the arc they were in. This is the capstone form
+of food mastery — the meal stops being ammunition and becomes a standing condition.
 
 ```
-<overstuffedImpervious>
+<foodChainImpervious>
 ```
-This actor/passive prevents the Overstuffed chain from ever triggering on re-feed.
+This actor/passive metabolizes without ever spending the meal.
+
+**See also:** `<endFoodChain>`
 
 ---
 

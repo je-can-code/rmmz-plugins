@@ -11,9 +11,8 @@ class PanelIdentity
    * @param {number} iconIndex The icon index driving this step.
    * @param {boolean} unlockedByDefault The unlocked by default driving this step.
    * @param {string} description The description driving this step.
-   * @param {string} topFlavorText The top flavor text driving this step.
    */
-  constructor(name, iconIndex, unlockedByDefault, description, topFlavorText)
+  constructor(name, iconIndex, unlockedByDefault, description)
   {
     /**
      * Friendly name for this SDP.
@@ -38,12 +37,6 @@ class PanelIdentity
      * @type {string}
      */
     this.description = description;
-
-    /**
-     * Short flavor line under the name in the details window.
-     * @type {string}
-     */
-    this.topFlavorText = topFlavorText;
   }
 
   /**
@@ -72,7 +65,6 @@ class PanelIdentity
         PanelIdentity.#parseIntField(nested.iconIndex, 0),
         nested.unlockedByDefault === true,
         nested.description ?? String.empty,
-        nested.topFlavorText ?? String.empty
       );
     }
 
@@ -82,7 +74,6 @@ class PanelIdentity
       PanelIdentity.#parseIntField(parsedPanel.iconIndex, 0),
       parsedPanel.unlockedByDefault === true,
       parsedPanel.description ?? String.empty,
-      parsedPanel.topFlavorText ?? String.empty
     );
   }
 
@@ -110,7 +101,6 @@ class PanelIdentity
    *   iconIndex: number,
    *   unlockedByDefault: boolean,
    *   description: string,
-   *   topFlavorText: string
    * }}
    */
   toConfigJson()
@@ -120,7 +110,6 @@ class PanelIdentity
       iconIndex: this.iconIndex,
       unlockedByDefault: this.unlockedByDefault,
       description: this.description,
-      topFlavorText: this.topFlavorText,
     };
   }
 }

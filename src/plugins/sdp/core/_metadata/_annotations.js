@@ -366,6 +366,13 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.0.0
+ *    The SDP header now names the mastery a panel grants and describes what it does,
+ *    read from a new per-act prose block on each subgroup in config.sdp.json.
+ *    Window_SdpMastery is gone, folded into that header, and the actor ribbon now
+ *    caps only the panel list so the header can use the width.
+ *    Removed topFlavorText from panel identity; the header it fed is now the
+ *    mastery description.
  * - 3.3.4
  *    Removed the J.SDP namespace check from getSdpBonusForParameterKey. A plugin
  *    cannot be absent from itself, so that guard had no reachable false case.

@@ -37,7 +37,6 @@ describe('PanelIdentity (direct src import)', () =>
           iconIndex: 12,
           unlockedByDefault: true,
           description: 'Tough as nails.',
-          topFlavorText: 'A panel of resilience.',
         },
       };
 
@@ -55,7 +54,6 @@ describe('PanelIdentity (direct src import)', () =>
       const parsed = {
         identity: {
           description: 'Tough as nails.',
-          topFlavorText: 'A panel of resilience.',
         },
       };
 
@@ -63,8 +61,7 @@ describe('PanelIdentity (direct src import)', () =>
       const identity = PanelIdentity.fromConfigPanel(parsed);
 
       // Assert
-      expect([ identity.description, identity.topFlavorText ])
-        .toEqual([ 'Tough as nails.', 'A panel of resilience.' ]);
+      expect(identity.description).toBe('Tough as nails.');
     });
 
     it('falls back to blank prose when the nested fields are absent', () =>
@@ -76,8 +73,8 @@ describe('PanelIdentity (direct src import)', () =>
       const identity = PanelIdentity.fromConfigPanel(parsed);
 
       // Assert
-      expect([ identity.name, identity.description, identity.topFlavorText ])
-        .toEqual([ 'Ironhide', String.empty, String.empty ]);
+      expect([ identity.name, identity.description ])
+        .toEqual([ 'Ironhide', String.empty ]);
     });
 
     it('treats an absent name as blank rather than undefined', () =>
@@ -118,7 +115,6 @@ describe('PanelIdentity (direct src import)', () =>
         iconIndex: 12,
         unlockedByDefault: true,
         description: 'Tough as nails.',
-        topFlavorText: 'A panel of resilience.',
       };
 
       // Act
@@ -138,8 +134,7 @@ describe('PanelIdentity (direct src import)', () =>
       const identity = PanelIdentity.fromConfigPanel(parsed);
 
       // Assert
-      expect([ identity.description, identity.topFlavorText ])
-        .toEqual([ String.empty, String.empty ]);
+      expect(identity.description).toBe(String.empty);
     });
 
     it('treats an absent legacy name as blank', () =>

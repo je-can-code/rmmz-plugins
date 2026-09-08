@@ -3,6 +3,7 @@ import './_metadata/initialization.js';
 import './_metadata/_annotations.js';
 
 import './database/RPG_Item.js';
+import './database/RPG_Skill.js';
 import './database/RPG_State.js';
 
 import './models/JABS_FoodChainSegment.js';

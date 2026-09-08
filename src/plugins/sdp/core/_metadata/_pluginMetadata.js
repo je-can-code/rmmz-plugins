@@ -2,6 +2,7 @@
 import PanelFamily from '../models/PanelFamily.js';
 import PanelIdentity from '../models/PanelIdentity.js';
 import PanelMastery from '../models/PanelMastery.js';
+import PanelMasteryProse from '../models/PanelMasteryProse.js';
 import PanelParameter from '../models/PanelParameter.js';
 import PanelProgression from '../models/PanelProgression.js';
 import PanelRankupReward from '../models/PanelRankupReward.js';
@@ -91,12 +92,16 @@ class J_SdpPluginMetadata
       if (subgroupName.startsWith('--')) return;
       if (subgroupName.startsWith('__')) return;
 
+      // prose is hydrated separately so a config row predating the field still loads.
+      const prose = PanelMasteryProse.fromConfigSubgroup(parsedSubgroup);
+
       // construct subgroup for the next step in this routine.
       const subgroup = new PanelSubgroup(
         subgroupName,
         parsedSubgroup.key ?? String.empty,
         J.BASE.Helpers.parsePluginInt(parsedSubgroup.iconIndex, -1),
-        parsedSubgroup.description ?? String.empty
+        parsedSubgroup.description ?? String.empty,
+        prose
       );
 
       // Append the row to the working collection.

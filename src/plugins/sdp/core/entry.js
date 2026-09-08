@@ -10,6 +10,7 @@ import './models/StatDistributionPanelBuilder.js';
 import './models/PanelRanking.js';
 import './models/PanelTracking.js';
 
+import './managers/MasteryProseResolver.js';
 import './managers/SdpMasteryManager.js';
 
 import './_metadata/initialization.js';
@@ -37,7 +38,6 @@ import './windows/Window_SdpList.js';
 import './windows/Window_SdpHeader.js';
 import './windows/Window_SdpParameterList.js';
 import './windows/Window_SdpRewardList.js';
-import './windows/Window_SdpMastery.js';
 import './windows/Window_SdpCart.js';
 import './windows/Window_SdpConfirmation.js';
 import './windows/Window_SdpPoints.js';

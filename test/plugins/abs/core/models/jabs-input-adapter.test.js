@@ -54,6 +54,7 @@ describe('JABS_InputAdapter (direct src import)', () =>
       getBattler: () => ({
         getEquippedSkillId: () => 7,
         getSkillSlot: () => ({ isEmpty: () => false }),
+        getSlotTransformSkillId: () => 0,
       }),
       applyToolItemEffects: vi.fn(),
       applyUsableItemEffects: vi.fn(),
@@ -243,16 +244,67 @@ describe('JABS_InputAdapter (direct src import)', () =>
 
     it('does nothing when no item is equipped', () =>
     {
-      const battler = buildJabsBattler({ getBattler: () => ({ getEquippedSkillId: () => 0 }) });
+      const battler = buildJabsBattler({
+        getBattler: () => ({
+          getEquippedSkillId: () => 0,
+          getSlotTransformSkillId: () => 0,
+        }),
+      });
       JABS_InputAdapter.performUsableItemAction(battler);
       expect(battler.applyUsableItemEffects).not.toHaveBeenCalled();
     });
 
     it('applies the equipped item effects', () =>
     {
-      const battler = buildJabsBattler({ getBattler: () => ({ getEquippedSkillId: () => 9 }) });
+      const battler = buildJabsBattler({
+        getBattler: () => ({
+          getEquippedSkillId: () => 9,
+          getSlotTransformSkillId: () => 0,
+        }),
+      });
       JABS_InputAdapter.performUsableItemAction(battler);
       expect(battler.applyUsableItemEffects).toHaveBeenCalledWith(9);
+    });
+
+    it('executes the slot transform as a cast skill instead of consuming the item', () =>
+    {
+      // Arrange- an item is equipped *and* a transform claims the slot, so the two paths are
+      // both viable and only the priority decides which one runs.
+      const battler = buildJabsBattler({
+        getBattler: () => ({
+          getEquippedSkillId: () => 9,
+          getSkillSlot: () => ({ isEmpty: () => false }),
+          getSlotTransformSkillId: (slot) => (slot === JABS_Button.UsableItem ? 512 : 0),
+        }),
+      });
+
+      // Act
+      JABS_InputAdapter.performUsableItemAction(battler);
+
+      // Assert- routed through the combat path, which is the only one that seeds a cast
+      // countdown; the item was never consumed.
+      expect(battler.setDecidedAction).toHaveBeenCalled();
+      expect(battler.setCastCountdown).toHaveBeenCalled();
+      expect(battler.applyUsableItemEffects).not.toHaveBeenCalled();
+    });
+
+    it('ignores a slot transform that names a different slot', () =>
+    {
+      // Arrange- a transform exists but claims the dodge button, so the food slot is untouched.
+      const battler = buildJabsBattler({
+        getBattler: () => ({
+          getEquippedSkillId: () => 9,
+          getSkillSlot: () => ({ isEmpty: () => false }),
+          getSlotTransformSkillId: (slot) => (slot === JABS_Button.Dodge ? 512 : 0),
+        }),
+      });
+
+      // Act
+      JABS_InputAdapter.performUsableItemAction(battler);
+
+      // Assert
+      expect(battler.applyUsableItemEffects).toHaveBeenCalledWith(9);
+      expect(battler.setCastCountdown).not.toHaveBeenCalled();
     });
   });
 
@@ -292,10 +344,31 @@ describe('JABS_InputAdapter (direct src import)', () =>
     it('does nothing when the slot is empty', () =>
     {
       const battler = buildJabsBattler({
-        getBattler: () => ({ getSkillSlot: () => ({ isEmpty: () => true }) }),
+        getBattler: () => ({
+          getSkillSlot: () => ({ isEmpty: () => true }),
+          getSlotTransformSkillId: () => 0,
+        }),
       });
       JABS_InputAdapter.performCombatAction('slotA', battler);
       expect(battler.setDecidedAction).not.toHaveBeenCalled();
+    });
+
+    it('proceeds on an empty slot when a slot transform supplies the skill', () =>
+    {
+      // Arrange- the slot is genuinely empty, which is the exact case the emptiness guard
+      // exists to reject; only the transform can rescue it.
+      const battler = buildJabsBattler({
+        getBattler: () => ({
+          getSkillSlot: () => ({ isEmpty: () => true }),
+          getSlotTransformSkillId: () => 512,
+        }),
+      });
+
+      // Act
+      JABS_InputAdapter.performCombatAction('slotA', battler);
+
+      // Assert
+      expect(battler.setDecidedAction).toHaveBeenCalled();
     });
 
     it('does nothing when the slot cooldown is not ready', () =>
@@ -382,9 +455,28 @@ describe('JABS_InputAdapter (direct src import)', () =>
     it('sets direction-fix to match the strafing state', () =>
     {
       const setDirectionFix = vi.fn();
-      const battler = buildJabsBattler({ getCharacter: () => ({ setDirectionFix }) });
+      const battler = buildJabsBattler({
+        getCharacter: () => ({ setDirectionFix }), hasDodgeFacingHeld: () => false,
+      });
       JABS_InputAdapter.performStrafe(true, battler);
       expect(setDirectionFix).toHaveBeenCalledWith(true);
+    });
+
+    it('leaves direction-fix alone while a dodge is holding facing', () =>
+    {
+      // Arrange
+      // strafe is polled every frame and writes its answer unconditionally, so without this it
+      // overwrites a dodge's facing hold the frame after the dodge applied it.
+      const setDirectionFix = vi.fn();
+      const battler = buildJabsBattler({
+        getCharacter: () => ({ setDirectionFix }), hasDodgeFacingHeld: () => true,
+      });
+
+      // Act
+      JABS_InputAdapter.performStrafe(false, battler);
+
+      // Assert
+      expect(setDirectionFix).not.toHaveBeenCalled();
     });
 
     it('does nothing when strafing is not currently permitted', () =>

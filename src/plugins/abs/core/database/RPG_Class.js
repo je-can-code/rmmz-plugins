@@ -53,4 +53,25 @@ Object.defineProperty(RPG_Class.prototype, 'jabsSkillTransforms', {
   },
 });
 //endregion skillTransforms
+
+//region slotTransforms
+/**
+ * The collection of slot transforms defined on this class.
+ *
+ * Each entry is a two-element array in the form:
+ * [ slotKey, skillId ]
+ *
+ * While a battler uses this class, the named slot executes {@code skillId} regardless of what is
+ * equipped there, including an item id or nothing at all. Neither of those is reachable by a skill
+ * transform, which has no base id to match in either case. The slot's stored contents are never
+ * mutated.
+ * @type {[ string, number ][]}
+ */
+Object.defineProperty(RPG_Class.prototype, 'jabsSlotTransforms', {
+  get: function()
+  {
+    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SlotTransform);
+  },
+});
+//endregion slotTransforms
 //endregion RPG_Class

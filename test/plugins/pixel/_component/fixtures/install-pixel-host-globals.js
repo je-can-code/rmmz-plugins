@@ -777,12 +777,6 @@ export function installPixelAbsExtHostGlobals(sandbox = globalThis, extParams = 
     this.__lastDodgeSteps = stepCount;
   };
 
-  // mirrors the core seam the pixel bridge scales through; the base answer is the tag's own value.
-  JABS_Battler.prototype.determineDodgeStepCount = function(skill)
-  {
-    return skill.jabsDodgeSteps;
-  };
-
   JABS_Battler.prototype.getX = function()
   {
     return this.getCharacter().x;

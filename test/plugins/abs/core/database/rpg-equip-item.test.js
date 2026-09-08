@@ -23,6 +23,7 @@ describe('RPG_EquipItem (src/plugins/abs/core/database/RPG_EquipItem.js)', () =>
           GuardSkillId: /<guardSkillId:[ ]?(\d+)>/i,
           Expires: /<expires:[ ]?(\d+)>/i,
           SkillTransform: /<skillTransform:(\[\d+,[ ]?\d+])>/gi,
+          SlotTransform: /<slotTransform:(\[[\w-]+,[ ]?\d+])>/gi,
         },
       },
     };
@@ -120,6 +121,27 @@ describe('RPG_EquipItem (src/plugins/abs/core/database/RPG_EquipItem.js)', () =>
     it('is an empty array when untagged', () =>
     {
       expect(equipData('').jabsSkillTransforms).toEqual([]);
+    });
+  });
+
+  describe('jabsSlotTransforms', () =>
+  {
+    it('parses a list of [slotKey, skillId] pairs', () =>
+    {
+      // Arrange- two different slots, so the parse cannot be collapsing them into one entry.
+      const equip = equipData('<slotTransform:[UsableItem, 512]>\n<slotTransform:[Dodge, 7]>');
+
+      // Act & Assert
+      expect(equip.jabsSlotTransforms).toEqual([ [ 'UsableItem', 512 ], [ 'Dodge', 7 ] ]);
+    });
+
+    it('is an empty array when untagged', () =>
+    {
+      // Arrange- a skill transform is present, so the two tags cannot be reading each other.
+      const equip = equipData('<skillTransform:[1, 2]>');
+
+      // Act & Assert
+      expect(equip.jabsSlotTransforms).toEqual([]);
     });
   });
 });

@@ -52,4 +52,24 @@ Object.defineProperty(RPG_BaseBattler.prototype, 'jabsSkillTransforms', {
   },
 });
 //endregion skillTransforms
+
+//region slotTransforms
+/**
+ * The collection of slot transforms defined on this battler's database entry.
+ *
+ * Each entry is a two-element array in the form:
+ * [ slotKey, skillId ]
+ *
+ * Where a skill transform keys on what currently occupies a slot, this keys on the slot itself,
+ * which is the only way to redirect a slot holding an item id or holding nothing at all. The
+ * slot's stored contents are never mutated; the redirect lives exactly as long as this note does.
+ * @type {[ string, number ][]}
+ */
+Object.defineProperty(RPG_BaseBattler.prototype, 'jabsSlotTransforms', {
+  get: function()
+  {
+    return RPGManager.getArraysFromNotesByRegex(this, J.ABS.RegExp.SlotTransform);
+  },
+});
+//endregion slotTransforms
 //endregion RPG_BaseBattler

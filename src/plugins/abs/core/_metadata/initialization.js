@@ -835,6 +835,28 @@ J.ABS.RegExp = {
   ConvertUsesCaster: /<convertUsesCaster>/gi,
   SkillTransform: /<skillTransform:[ ]?(\[\d+,[ ]?\d+])>/gi,
 
+  /**
+   * Redirects an entire slot to a skill, regardless of what is equipped in it.
+   *
+   * Where {@link #SkillTransform} keys on the skill currently occupying a slot, this keys on the
+   * slot itself — which is the only way to reach a slot that holds an item id rather than a skill
+   * id, or one that is empty. The slot's stored contents are never mutated; resolution happens at
+   * execution and display time and reverts the instant the source note goes away.
+   *
+   * <pre>
+   * Structure:
+   *  <slotTransform:[SLOT_KEY, SKILL_ID]>
+   *
+   * Example:
+   *  <slotTransform:[UsableItem, 512]>
+   *
+   * Translation:
+   *  while this note source is active, the UsableItem (R2) slot executes skill 512
+   * </pre>
+   * @type {RegExp}
+   */
+  SlotTransform: /<slotTransform:[ ]?(\[[\w-]+,[ ]?\d+])>/gi,
+
   // jabs core ailment functionalities.
   Paralyzed: /<paralyzed>/gi,
   Rooted: /<rooted>/gi,

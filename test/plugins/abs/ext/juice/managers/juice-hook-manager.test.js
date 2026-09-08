@@ -289,7 +289,7 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
 
   describe('onExecuteMapAction()', () =>
   {
-    it('applies dodge juice and returns early for the dodge cooldown key', () =>
+    it('applies dodge juice and returns early for an unauthored dodge', () =>
     {
       const action = buildAction({ getCooldownType: () => 'Dodge' });
 
@@ -298,6 +298,24 @@ describe('JuiceHookManager (unit, all downstream dependencies mocked)', () =>
       expect(JuiceMotionManagerMock.scheduleSquish).toHaveBeenCalledWith(
         expect.anything(), 0.1, 8
       );
+    });
+
+    it('lets an authored motion win over the dodge default', () =>
+    {
+      // Arrange
+      // the dodge default used to short-circuit ahead of the motion dispatch, so every
+      // <juiceMotion:…> on a dodge skill was read by nothing and every dodge squished alike.
+      const action = buildAction({
+        getCooldownType: () => 'Dodge',
+        getBaseSkill: () => ({ jabsNoJuice: false, jabsJuiceMotion: 'flip' }),
+      });
+
+      // Act
+      JuiceHookManager.onExecuteMapAction(buildBattler(), action);
+
+      // Assert
+      expect(JuiceMotionManagerMock.scheduleFlipBody).toHaveBeenCalledWith(expect.anything(), 'cw', 20, 1);
+      expect(JuiceMotionManagerMock.scheduleSquish).not.toHaveBeenCalled();
     });
 
     it('does nothing when the skill declares <noJuice>', () =>

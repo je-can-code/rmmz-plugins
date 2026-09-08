@@ -1,8 +1,13 @@
 //region Window_SdpHeader
+import MasteryProseResolver from '../managers/MasteryProseResolver.js';
 import StatDistributionPanel from '../models/StatDistributionPanel.js';
 /**
- * A single-line, help-like header that summarizes the hovered panel.
- * Name + rarity + flavor in one readable sentence, controller-first.
+ * The header above the panel details, naming the mastery a panel grants and describing what it does.
+ *
+ * This is the only place a player can learn what a mastery does *before* buying it. The passives scene
+ * describes the same thing, but reaching it means already owning the mastery, which is exactly the
+ * wrong moment - a strip costs ten rank-ups, twenty at the capstone, and the mastery is the reason to
+ * spend them.
  */
 class Window_SdpHeader
   extends Window_Base
@@ -32,7 +37,7 @@ class Window_SdpHeader
 
   /**
    * Implements {@link Window_Base.drawContent}.<br/>
-   * Renders the single-line summary for the hovered panel.
+   * Renders the mastery identity, then the prose describing it.
    */
   drawContent()
   {
@@ -42,23 +47,76 @@ class Window_SdpHeader
       return;
     }
 
-    const { name } = panel;
-    const { topFlavorText: flavor } = panel;
+    const { mastery } = panel;
 
-    // line 1: the panel name should be the anchor and larger.
-    // for drawTextEx, we must use text wrappers (\\FS, \\C, \\*) instead of bitmap font mutation.
-    this.resetFontSettings();
-    const rarityCx = panel.getPanelRarityColorIndex();
-    const boldName = `\\*${name}\\*`;
-    const tintedName = this.colorizeText(rarityCx, boldName);
-    const sizedName = this.modFontSizeForText(2, tintedName);
-    this.drawTextEx(sizedName, 0, 0, this.innerWidth);
-    this.resetFontSettings();
+    // panels outside the mastery program still occupy this header, so say so rather than leaving the
+    // reader wondering whether something failed to load.
+    if (mastery.participates() === false)
+    {
+      this.drawNoMastery();
+      return;
+    }
 
-    // line 2: flavor text, slightly smaller, escape-code aware.
+    this.drawMasteryIdentity(mastery);
+    this.drawMasteryProse(mastery);
+  }
+
+  /**
+   * Draws the muted placeholder for a panel that grants no mastery.
+   */
+  drawNoMastery()
+  {
     this.resetFontSettings();
-    const sizedFlavor = this.modFontSizeForText(-1, flavor);
-    this.drawTextEx(sizedFlavor, 0, this.lineHeight(), this.innerWidth);
+    const mutedText = this.colorizeText(8, 'This panel grants no mastery.');
+    this.drawTextEx(mutedText, 0, 0, this.innerWidth);
+    this.resetFontSettings();
+  }
+
+  /**
+   * Draws the first line: which enemy subgroup this mastery belongs to, and the skill it grants.
+   * @param {PanelMastery} mastery The mastery enrollment of the hovered panel.
+   */
+  drawMasteryIdentity(mastery)
+  {
+    const subgroup = J.SDP.Metadata.subgroupsMap.get(mastery.subgroupKey);
+    const subgroupName = subgroup
+      ? subgroup.name
+      : mastery.subgroupKey;
+
+    this.resetFontSettings();
+    const tintedSubgroup = this.colorizeText(14, subgroupName);
+    const skillName = `\\Skill[${mastery.masterySkillId}]`;
+    const tierNote = this.colorizeText(8, `Tier ${mastery.subgroupTier} · Rank MAX`);
+    const identityLine = `${tintedSubgroup} · ${skillName} ${tierNote}`;
+    this.drawTextEx(identityLine, 0, 0, this.innerWidth);
+    this.resetFontSettings();
+  }
+
+  /**
+   * Draws the two lines describing what the mastery actually does.
+   *
+   * Nothing is drawn when the subgroup has no authored prose, or when the prose still carries a token
+   * this build cannot resolve. Showing a partly-filled sentence would be worse than showing none: the
+   * player would read a number that is not the number.
+   * @param {PanelMastery} mastery The mastery enrollment of the hovered panel.
+   */
+  drawMasteryProse(mastery)
+  {
+    const subgroup = J.SDP.Metadata.subgroupsMap.get(mastery.subgroupKey);
+
+    if (!subgroup) return;
+
+    const template = subgroup.prose.forTier(mastery.subgroupTier);
+
+    if (template === String.empty) return;
+
+    const resolved = MasteryProseResolver.resolve(template, mastery.masterySkillId);
+
+    if (resolved === String.empty) return;
+
+    this.resetFontSettings();
+    const sized = this.modFontSizeForText(-1, resolved);
+    this.drawTextEx(sized, 0, this.lineHeight(), this.innerWidth);
     this.resetFontSettings();
   }
 }

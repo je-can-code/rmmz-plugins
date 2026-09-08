@@ -136,12 +136,109 @@ describe('J-ABS Game_Battler skill transform resolution (direct src import)', ()
     });
   });
 
+  describe('getSlotTransformSkillId', () =>
+  {
+    /**
+     * Builds a battler whose transform sources are exactly the given note-bearing objects.
+     * @param {object[]} sources The ordered sources to expose.
+     * @returns {object}
+     */
+    function buildBattlerWithSources(sources)
+    {
+      const battler = buildBattler();
+      battler.getSkillTransformSources = () => sources;
+      return battler;
+    }
+
+    it('returns 0 when no slot key is supplied', () =>
+    {
+      // Arrange- a source that would match anything it was asked about, so only the guard
+      // can produce the zero.
+      const battler = buildBattlerWithSources([ { jabsSlotTransforms: [ [ 'UsableItem', 512 ] ] } ]);
+
+      // Act
+      const result = battler.getSlotTransformSkillId('');
+
+      // Assert
+      expect(result).toBe(0);
+    });
+
+    it('skips sources carrying no slot transforms at all', () =>
+    {
+      // Arrange- a null source, an empty-array source, and a bare object precede the real one.
+      const battler = buildBattlerWithSources([
+        null,
+        { jabsSlotTransforms: [] },
+        { id: 'no-tags-at-all' },
+        { jabsSlotTransforms: [ [ 'UsableItem', 512 ] ] },
+      ]);
+
+      // Act
+      const result = battler.getSlotTransformSkillId('UsableItem');
+
+      // Assert
+      expect(result).toBe(512);
+    });
+
+    it('matches the slot key without regard to casing', () =>
+    {
+      // Arrange
+      const battler = buildBattlerWithSources([ { jabsSlotTransforms: [ [ 'usable-ITEM', 512 ] ] } ]);
+
+      // Act
+      const result = battler.getSlotTransformSkillId('Usable-Item');
+
+      // Assert
+      expect(result).toBe(512);
+    });
+
+    it('returns the first matching source when several define the same slot', () =>
+    {
+      // Arrange- the loser also matches, so returning "a match" is not enough to pass; only
+      // returning the *first* one is.
+      const battler = buildBattlerWithSources([
+        { jabsSlotTransforms: [ [ 'UsableItem', 512 ] ] },
+        { jabsSlotTransforms: [ [ 'UsableItem', 999 ] ] },
+      ]);
+
+      // Act
+      const result = battler.getSlotTransformSkillId('UsableItem');
+
+      // Assert
+      expect(result).toBe(512);
+    });
+
+    it('returns 0 when a source has slot transforms but none name this slot', () =>
+    {
+      // Arrange- a near-miss sibling that must not be selected.
+      const battler = buildBattlerWithSources([ { jabsSlotTransforms: [ [ 'Dodge', 512 ] ] } ]);
+
+      // Act
+      const result = battler.getSlotTransformSkillId('UsableItem');
+
+      // Assert
+      expect(result).toBe(0);
+    });
+  });
+
   describe('getResolvedSkillId', () =>
   {
+    /**
+     * Builds a battler with no transform sources of any kind, which is the baseline the
+     * pre-existing skill-transform behavior was written against.
+     * @returns {object}
+     */
+    function buildUntransformedBattler()
+    {
+      const battler = buildBattler();
+      battler.getSkillTransformSources = () => [];
+      return battler;
+    }
+
     it('returns the raw equipped id for the tool slot, bypassing transform resolution', () =>
     {
       // Arrange
-      const battler = buildBattler();
+      const battler = buildUntransformedBattler();
       battler.getEquippedSkillId = () => 5;
       const resolveSpy = vi.spyOn(battler, 'resolveEquippedSkillId');
 
@@ -157,7 +254,7 @@ describe('J-ABS Game_Battler skill transform resolution (direct src import)', ()
     it('returns the raw equipped id for the usable-item slot, bypassing transform resolution', () =>
     {
       // Arrange
-      const battler = buildBattler();
+      const battler = buildUntransformedBattler();
       battler.getEquippedSkillId = () => 6;
       const resolveSpy = vi.spyOn(battler, 'resolveEquippedSkillId');
 
@@ -173,12 +270,58 @@ describe('J-ABS Game_Battler skill transform resolution (direct src import)', ()
     it('resolves the transformed skill id for any other slot', () =>
     {
       // Arrange
-      const battler = buildBattler();
+      const battler = buildUntransformedBattler();
       battler.getEquippedSkillId = () => 10;
       battler.resolveEquippedSkillId = baseSkillId => baseSkillId + 1;
 
       // Act & Assert
       expect(battler.getResolvedSkillId('mainhand')).toBe(11);
+    });
+
+    it('returns the slot transform target for an item slot, which skill transforms cannot reach', () =>
+    {
+      // Arrange- the slot holds an item id, and that id is deliberately different from the
+      // transform target so "returned the stored contents" cannot pass as success.
+      const battler = buildBattler();
+      battler.getSkillTransformSources = () => [ { jabsSlotTransforms: [ [ 'item', 512 ] ] } ];
+      battler.getEquippedSkillId = () => 6;
+
+      // Act
+      const result = battler.getResolvedSkillId('item');
+
+      // Assert
+      expect(result).toBe(512);
+    });
+
+    it('returns the slot transform target for an empty slot', () =>
+    {
+      // Arrange- nothing equipped anywhere, which is what a food slot looks like once the last
+      // dish is gone; the transform is the only thing that can supply a skill here.
+      const battler = buildBattler();
+      battler.getSkillTransformSources = () => [ { jabsSlotTransforms: [ [ 'item', 512 ] ] } ];
+      battler.getEquippedSkillId = () => 0;
+
+      // Act
+      const result = battler.getResolvedSkillId('item');
+
+      // Assert
+      expect(result).toBe(512);
+    });
+
+    it('prefers the slot transform over a skill transform on the same slot', () =>
+    {
+      // Arrange- both kinds of transform are live and they disagree; the slot-keyed one names
+      // the slot explicitly, so it is the more specific statement and wins.
+      const battler = buildBattler();
+      battler.getSkillTransformSources = () => [ { jabsSlotTransforms: [ [ 'mainhand', 512 ] ] } ];
+      battler.getEquippedSkillId = () => 10;
+      battler.resolveEquippedSkillId = () => 777;
+
+      // Act
+      const result = battler.getResolvedSkillId('mainhand');
+
+      // Assert
+      expect(result).toBe(512);
     });
   });
 

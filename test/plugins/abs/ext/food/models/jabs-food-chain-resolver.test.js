@@ -6,7 +6,7 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
   /** @type {typeof import('../../../../../../src/plugins/abs/ext/food/models/JABS_FoodChainResolver.js').default} */
   let JABS_FoodChainResolver;
 
-  const OVERSTUFFED_IMPERVIOUS_REGEX = Symbol('OverstuffedImpervious');
+  const FOOD_CHAIN_IMPERVIOUS_REGEX = Symbol('FoodChainImpervious');
 
   /** duck-typed stand-in for JABS_FoodChainPlan- exposes only what the resolver reads. */
   function buildPlan(segments)
@@ -33,8 +33,7 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
       ABS: {
         EXT: {
           FOOD: {
-            RegExp: { OverstuffedImpervious: OVERSTUFFED_IMPERVIOUS_REGEX },
-            ChainType: { Overstuffed: 'overstuffed' },
+            RegExp: { FoodChainImpervious: FOOD_CHAIN_IMPERVIOUS_REGEX },
           },
         },
       },
@@ -131,55 +130,121 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
       expect(JABS_FoodChainResolver.getPhase(battler, plan)).toBeNull();
     });
 
-    it('returns overstuffed for any active overstuffed-typed segment, regardless of position', () =>
+    it('returns the position-derived phase label for the active segment', () =>
     {
-      const plan = buildPlan([ { stateId: 1, chainType: 'overstuffed' } ]);
-      const battler = { isStateAffected: (id) => id === 1 };
-      expect(JABS_FoodChainResolver.getPhase(battler, plan)).toBe('overstuffed');
-    });
-
-    it('returns the position-derived phase label for a non-overstuffed active segment', () =>
-    {
+      // Arrange- three segments so the label cannot be right by accident; the active one is the
+      // middle, which is the only index that reads 'peak'.
       const plan = buildPlan([
         { stateId: 1, chainType: 'protein' },
         { stateId: 2, chainType: 'protein' },
+        { stateId: 3, chainType: 'protein' },
       ]);
       const battler = { isStateAffected: (id) => id === 2 };
-      expect(JABS_FoodChainResolver.getPhase(battler, plan)).toBe('tail');
+
+      // Act
+      const phase = JABS_FoodChainResolver.getPhase(battler, plan);
+
+      // Assert
+      expect(phase).toBe('peak');
     });
   });
 
-  describe('leaderHasOverstuffedImpervious', () =>
+  describe('hasFoodChainImpervious', () =>
   {
-    it('is false when there is no leader', () =>
+    it('is false when there is no battler', () =>
     {
-      globalThis.$gameParty = { leader: () => null };
-      expect(JABS_FoodChainResolver.leaderHasOverstuffedImpervious()).toBe(false);
-    });
-
-    it('checks all notes for the immunity tag when a leader exists', () =>
-    {
-      const leader = { getAllNotes: () => [ 'note1' ] };
-      globalThis.$gameParty = { leader: () => leader };
+      // Arrange- the tag lookup is armed to say yes, so a passing result can only come from
+      // the guard rather than from the delegate.
       globalThis.RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(true);
 
-      const result = JABS_FoodChainResolver.leaderHasOverstuffedImpervious();
+      // Act
+      const result = JABS_FoodChainResolver.hasFoodChainImpervious(null);
 
+      // Assert
+      expect(result).toBe(false);
+      expect(globalThis.RPGManager.checkForBooleanFromAllNotesByRegex).not.toHaveBeenCalled();
+    });
+
+    it('checks all notes for the immunity tag when a battler exists', () =>
+    {
+      // Arrange
+      const battler = { getAllNotes: () => [ 'note1' ] };
+      globalThis.RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(true);
+
+      // Act
+      const result = JABS_FoodChainResolver.hasFoodChainImpervious(battler);
+
+      // Assert- the exact regex matters; reading the wrong tag would still return true here.
       expect(globalThis.RPGManager.checkForBooleanFromAllNotesByRegex)
-        .toHaveBeenCalledWith([ 'note1' ], OVERSTUFFED_IMPERVIOUS_REGEX);
+        .toHaveBeenCalledWith([ 'note1' ], FOOD_CHAIN_IMPERVIOUS_REGEX);
       expect(result).toBe(true);
+    });
+  });
+
+  describe('resolveEndFoodChain', () =>
+  {
+    it('does nothing when there is no battler', () =>
+    {
+      // Arrange- immunity says no, so nothing but the guard can stop the strip.
+      globalThis.RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(false);
+
+      // Act + Assert- the absence of a battler must not reach the note lookup at all.
+      JABS_FoodChainResolver.resolveEndFoodChain(null);
+      expect(globalThis.RPGManager.checkForBooleanFromAllNotesByRegex).not.toHaveBeenCalled();
+    });
+
+    it('leaves the chain intact when the battler is impervious', () =>
+    {
+      // Arrange- a battler genuinely carrying a food state, so a strip would be observable.
+      const battler = {
+        getAllNotes: () => [ 'note1' ],
+        states: () => [ { id: 7, jabsFoodChainType: 'protein' } ],
+        removeState: vi.fn(),
+      };
+      globalThis.RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(true);
+
+      // Act
+      JABS_FoodChainResolver.resolveEndFoodChain(battler);
+
+      // Assert- the meal survives the burn, which is the entire capstone privilege.
+      expect(battler.removeState).not.toHaveBeenCalled();
+    });
+
+    it('strips the food chain when the battler is not impervious', () =>
+    {
+      // Arrange- a food state alongside a non-food state that must survive, so "strips food"
+      // and "strips everything" cannot both pass.
+      const battler = {
+        getAllNotes: () => [ 'note1' ],
+        states: () => [
+          { id: 7, jabsFoodChainType: 'protein' },
+          { id: 8, jabsFoodChainType: null },
+        ],
+        removeState: vi.fn(),
+      };
+      globalThis.RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(false);
+
+      // Act
+      JABS_FoodChainResolver.resolveEndFoodChain(battler);
+
+      // Assert
+      expect(battler.removeState).toHaveBeenCalledWith(7);
+      expect(battler.removeState).not.toHaveBeenCalledWith(8);
     });
   });
 
   describe('resolveEat', () =>
   {
     /** Builds the common $gameParty/$dataItems/$jabsEngine fixture for resolveEat tests. */
-    function buildEatFixture({ foodType = 'protein', currentChainType = null, currentPhase = null, immune = false } = {})
+    function buildEatFixture({ foodType = 'protein', currentChainType = null, currentPhase = null } = {})
     {
       const entrySegment = { stateId: 10, chainType: foodType };
       const plan = buildPlan([ entrySegment, { stateId: 11, chainType: foodType } ]);
       globalThis.__testRegistryPlans.set(foodType, plan);
-      globalThis.__testRegistryPlans.set('overstuffed', buildPlan([ { stateId: 99, chainType: 'overstuffed' } ]));
+
+      // a registered sibling group that must never be selected- with only one plan on file,
+      // "looks up the tagged type" and "grabs whatever is registered" are the same program.
+      globalThis.__testRegistryPlans.set('decoy', buildPlan([ { stateId: 99, chainType: 'decoy' } ]));
 
       const item = { id: 5, jabsFoodType: foodType, animationId: 3, effects: [] };
       globalThis.$dataItems = { 5: item };
@@ -203,8 +268,6 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
       };
       const members = [ leader ];
       globalThis.$gameParty = { leader: () => leader, battleMembers: () => members, items: () => [ item ] };
-      globalThis.RPGManager.checkForBooleanFromAllNotesByRegex.mockReturnValue(immune);
-
       const jabsBattler = { getUuid: () => 'leader-uuid', showAnimation: vi.fn() };
       globalThis.$jabsEngine = {
         getFoodChainPlanByUuid: vi.fn(() => (currentPhase !== null ? plan : null)),
@@ -282,60 +345,28 @@ describe('J-ABS-Food JABS_FoodChainResolver (unit, all downstream dependencies m
       expect(globalThis.$jabsEngine.setFoodChainPlanByUuid).toHaveBeenCalledWith('leader-uuid', expect.anything());
     });
 
-    it('rescues into the new chain when the leader is in the tail phase, regardless of immunity', () =>
+    it('replaces the running chain when the leader is already mid-arc', () =>
     {
-      const { leader, jabsBattler } = buildEatFixture({ currentChainType: 'protein', currentPhase: 'tail', immune: false });
+      // Arrange- a live protein arc alongside a non-food state that must survive the strip, so
+      // "clears the food chain" and "clears everything" cannot both pass.
+      const { leader, jabsBattler } = buildEatFixture({ currentChainType: 'protein', currentPhase: 'wellFed' });
       leader.removeState = vi.fn();
-      leader.states = () => [ { id: 1, jabsFoodChainType: 'protein' } ];
+      leader.states = () => [
+        { id: 1, jabsFoodChainType: 'protein' },
+        { id: 2, jabsFoodChainType: null },
+      ];
 
+      // Act
       JABS_FoodChainResolver.resolveEat(5, jabsBattler);
 
+      // Assert- the old arc goes, the bystander state stays, and the new arc starts.
       expect(leader.removeState).toHaveBeenCalledWith(1);
-      expect(leader.addState).toHaveBeenCalledWith(10, leader);
-    });
-
-    it('rescues into the new chain when Field Medic immunity is present, even mid-arc', () =>
-    {
-      const { leader, jabsBattler } = buildEatFixture({ currentChainType: 'protein', currentPhase: 'wellFed', immune: true });
-      leader.removeState = vi.fn();
-      leader.states = () => [ { id: 1, jabsFoodChainType: 'protein' } ];
-
-      JABS_FoodChainResolver.resolveEat(5, jabsBattler);
-
-      expect(leader.removeState).toHaveBeenCalledWith(1);
-      expect(leader.addState).toHaveBeenCalledWith(10, leader);
-    });
-
-    it('triggers the Overstuffed punishment when eating mid-arc without immunity', () =>
-    {
-      const { leader, jabsBattler } = buildEatFixture({ currentChainType: 'protein', currentPhase: 'wellFed', immune: false });
-      leader.removeState = vi.fn();
-      leader.states = () => [ { id: 1, jabsFoodChainType: 'protein' } ];
-
-      JABS_FoodChainResolver.resolveEat(5, jabsBattler);
-
-      expect(leader.removeState).toHaveBeenCalledWith(1);
+      expect(leader.removeState).not.toHaveBeenCalledWith(2);
 
       // the second argument names the leader as its own source, which is what routes the state
       // through JABS instead of vanilla. without it the entry state lands inert, so pinning the
       // id alone would pass on a chain that can never advance.
-      expect(leader.addState).toHaveBeenCalledWith(99, leader);
-    });
-
-    it('aborts the Overstuffed punishment cleanly when no Overstuffed chain has been authored', () =>
-    {
-      const { leader, jabsBattler } = buildEatFixture({ currentChainType: 'protein', currentPhase: 'wellFed', immune: false });
-      leader.removeState = vi.fn();
-      leader.states = () => [ { id: 1, jabsFoodChainType: 'protein' } ];
-      globalThis.__testRegistryPlans.delete('overstuffed');
-
-      JABS_FoodChainResolver.resolveEat(5, jabsBattler);
-
-      expect(leader.removeState).toHaveBeenCalledWith(1);
-
-      // matched against the full argument list the real call would make. pinning the id alone
-      // would pass no matter what the code did, since the real call carries a source alongside it.
-      expect(leader.addState).not.toHaveBeenCalledWith(99, leader);
+      expect(leader.addState).toHaveBeenCalledWith(10, leader);
     });
 
     it('auto-unequips the slot and logs when the party ran out of the item', () =>

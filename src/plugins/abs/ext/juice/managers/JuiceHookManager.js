@@ -116,12 +116,6 @@ class JuiceHookManager
     const cooldownKey = action.getCooldownType();
     const dodgeKey = JABS_Button.Dodge;
 
-    if (cooldownKey === dodgeKey)
-    {
-      JuiceHookManager.#applyDodgeJuice(caster);
-      return;
-    }
-
     // <noJuice> suppresses all caster motion for this skill.
     if (skill.jabsNoJuice === true)
     {
@@ -129,6 +123,15 @@ class JuiceHookManager
     }
 
     const motionKey = skill.jabsJuiceMotion;
+
+    // a dodge with nothing authored on it gets the dodge squish. An authored <juiceMotion:…> is a
+    // deliberate request, so it falls through to the same dispatch every other skill uses rather
+    // than being overruled by which slot the skill happens to sit in.
+    if (cooldownKey === dodgeKey && motionKey === String.empty)
+    {
+      JuiceHookManager.#applyDodgeJuice(caster);
+      return;
+    }
 
     // <juiceMotion:none> is an inline opt-out equivalent to <noJuice>.
     if (motionKey === 'none')

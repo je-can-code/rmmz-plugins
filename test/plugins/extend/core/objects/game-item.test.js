@@ -1,6 +1,32 @@
 //region plugins/extend/core/objects/game-item.test.js
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+/**
+ * Builds a database-row stand-in carrying the semantic predicates {@link RPG_Base} defines.
+ *
+ * Every predicate defaults to false there and the owning implementation flips exactly one to true,
+ * so a row built here answers the way a hydrated model does. The file under test asks these rather
+ * than inspecting fields, and the shape keys are kept alongside because vanilla's setObject still
+ * classifies by shape through J-Base's DataManager.
+ * @param {object} fields The row's own data, including its id and its type-bearing key.
+ * @param {string} truePredicate The single predicate this row answers true to.
+ * @returns {object}
+ */
+function buildRow(fields, truePredicate)
+{
+  const row = {
+    ...fields,
+    isSkill: () => false,
+    isItem: () => false,
+    isWeapon: () => false,
+    isArmor: () => false,
+  };
+
+  row[truePredicate] = () => true;
+
+  return row;
+}
+
 describe('Game_Item ext/extend augments (direct src import)', () =>
 {
   let Game_Item;
@@ -32,16 +58,27 @@ describe('Game_Item ext/extend augments (direct src import)', () =>
     {
       this.initMembers();
     });
-    // vanilla's own setObject, faithfully: it names a data class by *identity* against each
-    // database, and leaves the class empty for anything it does not find there. That empty string
-    // is the signal the extension under test reads, so a stub that assigns nothing would let the
-    // guard pass on `undefined` and never exercise the branch that matters.
+    // J-Base replaces the engine's DataManager type checks wholesale, and these are its real
+    // implementations. They matter here because vanilla's setObject delegates its entire
+    // classification to them: J-Base names a class by *shape*, so a merged clone of a skill is
+    // classified 'skill' exactly like the row it came from. A fixture that classified by identity
+    // against $dataSkills instead would let a clone fall through as unclassified and would report
+    // this file working for a reason the shipped game does not have.
+    globalThis.DataManager = {
+      isSkill: unidentified => unidentified && ('stypeId' in unidentified),
+      isItem: unidentified => unidentified && ('itypeId' in unidentified),
+      isWeapon: unidentified => unidentified && ('wtypeId' in unidentified),
+      isArmor: unidentified => unidentified && ('atypeId' in unidentified),
+    };
+
+    // vanilla's own setObject, verbatim from rmmz_objects.js: it delegates every classification
+    // decision to DataManager above rather than making one itself.
     StubGameItem.prototype.setObject = vi.fn(function(item)
     {
-      if (item && globalThis.$dataSkills.includes(item)) this._dataClass = 'skill';
-      else if (item && globalThis.$dataItems.includes(item)) this._dataClass = 'item';
-      else if (item && globalThis.$dataWeapons.includes(item)) this._dataClass = 'weapon';
-      else if (item && globalThis.$dataArmors.includes(item)) this._dataClass = 'armor';
+      if (globalThis.DataManager.isSkill(item)) this._dataClass = 'skill';
+      else if (globalThis.DataManager.isItem(item)) this._dataClass = 'item';
+      else if (globalThis.DataManager.isWeapon(item)) this._dataClass = 'weapon';
+      else if (globalThis.DataManager.isArmor(item)) this._dataClass = 'armor';
       else this._dataClass = '';
 
       this._itemId = item ? item.id : 0;
@@ -61,13 +98,21 @@ describe('Game_Item ext/extend augments (direct src import)', () =>
   {
     vi.clearAllMocks();
 
-    // each database holds one real row, so "found by identity" and "shaped like one but absent"
-    // are distinguishable- with an empty database every object looks synthetic and the guard
-    // under test would pass for the wrong reason.
-    globalThis.$dataSkills = [ null, { id: 1, stypeId: 1 } ];
-    globalThis.$dataItems = [ null, { id: 1, itypeId: 1 } ];
-    globalThis.$dataWeapons = [ null, { id: 1, wtypeId: 1 } ];
-    globalThis.$dataArmors = [ null, { id: 1, atypeId: 1 } ];
+    // each database holds two real rows, so "the row this database holds at this id" is a stricter
+    // claim than "a row this database holds somewhere". With a single row those two are the same
+    // statement, and a lookup that ignored the id entirely would still pass every assertion here.
+    globalThis.$dataSkills = [
+      null,
+      buildRow({ id: 1, stypeId: 1 }, 'isSkill'),
+      buildRow({ id: 2, stypeId: 1 }, 'isSkill'),
+    ];
+    globalThis.$dataItems = [
+      null,
+      buildRow({ id: 1, itypeId: 1 }, 'isItem'),
+      buildRow({ id: 2, itypeId: 1 }, 'isItem'),
+    ];
+    globalThis.$dataWeapons = [ null, buildRow({ id: 1, wtypeId: 1 }, 'isWeapon') ];
+    globalThis.$dataArmors = [ null, buildRow({ id: 1, atypeId: 1 }, 'isArmor') ];
   });
 
   describe('initMembers/underlyingObject', () =>
@@ -131,7 +176,7 @@ describe('Game_Item ext/extend augments (direct src import)', () =>
     {
       // Arrange
       const item = new Game_Item();
-      const obj = { stypeId: 1 };
+      const obj = buildRow({ id: 1, stypeId: 1 }, 'isSkill');
 
       // Act
       item.setObject(obj);
@@ -151,12 +196,13 @@ describe('Game_Item ext/extend augments (direct src import)', () =>
       expect(item._item).toEqual(undefined);
     });
 
-    it('binds a skill-shaped object (stypeId) the database does not hold', () =>
+    it('carries a skill the database does not hold at that id', () =>
     {
-      // Arrange- an extended skill is built by merging overlays, so it is a fresh object that no
-      // identity check against $dataSkills can find. Carrying it is the whole point of this file.
+      // Arrange- an extended skill is built by merging overlays onto a clone, so it answers isSkill
+      // exactly like a real row while being an object $dataSkills has never heard of. Carrying it is
+      // the whole reason this file exists: nothing else can look it up again.
       const item = new Game_Item();
-      const obj = { id: 1, stypeId: 1 };
+      const obj = buildRow({ id: 3, stypeId: 1 }, 'isSkill');
 
       // Act
       item.setObject(obj);
@@ -166,11 +212,11 @@ describe('Game_Item ext/extend augments (direct src import)', () =>
       expect(item._item).toBe(obj);
     });
 
-    it('binds an item-shaped object (itypeId) the database does not hold', () =>
+    it('carries an item the database does not hold at that id', () =>
     {
       // Arrange
       const item = new Game_Item();
-      const obj = { id: 1, itypeId: 1 };
+      const obj = buildRow({ id: 3, itypeId: 1 }, 'isItem');
 
       // Act
       item.setObject(obj);
@@ -180,36 +226,71 @@ describe('Game_Item ext/extend augments (direct src import)', () =>
       expect(item._item).toBe(obj);
     });
 
-    it('carries nothing for a skill the database already holds', () =>
+    it('carries a skill whose id collides with a real row but is a different object', () =>
     {
-      // Arrange- the engine found this row, so it round-trips through a save as a class plus an id.
+      // Arrange- the case the whole fix turns on. An overlay-merged skill keeps the base skill's id,
+      // so id equality is satisfied while the object is not the database's own. Anything that
+      // decided provenance from the id alone, or from the data class the engine stamped, would call
+      // this a database row and silently drop the merge.
       const item = new Game_Item();
-      const [ , obj ] = globalThis.$dataSkills;
+      const merged = buildRow({ id: 1, stypeId: 1 }, 'isSkill');
+
+      // Act
+      item.setObject(merged);
+
+      // Assert
+      expect(item._dataClass).toEqual('skill');
+      expect(item._item).toBe(merged);
+    });
+
+    it('carries nothing for the skill the database holds at that id', () =>
+    {
+      // Arrange- the engine can find this one again, so it round-trips a save as a class plus an id
+      // rather than as a frozen copy that would never see a rebalance.
+      const item = new Game_Item();
+      const [ , , obj ] = globalThis.$dataSkills;
 
       // Act
       item.setObject(obj);
 
-      // Assert- the class still lands, proving the engine ran and the early return is what stopped
-      // the copy rather than the whole method bailing out.
+      // Assert- the class still lands, proving the engine ran and that carrying is what was declined
+      // rather than the whole method bailing out early.
       expect(item._dataClass).toEqual('skill');
-      expect(item._item).toEqual(undefined);
+      expect(item._item).toBeNull();
     });
 
-    it('carries nothing for an item the database already holds', () =>
+    it('carries nothing for the item the database holds at that id', () =>
     {
       // Arrange- the shape this crashed on: $gameParty._lastItem holding an ordinary consumable.
       const item = new Game_Item();
-      const [ , obj ] = globalThis.$dataItems;
+      const [ , , obj ] = globalThis.$dataItems;
 
       // Act
       item.setObject(obj);
 
       // Assert
       expect(item._dataClass).toEqual('item');
-      expect(item._item).toEqual(undefined);
+      expect(item._item).toBeNull();
     });
 
-    it('carries nothing for a weapon, which is neither skill- nor item-shaped', () =>
+    it('clears a carry left behind when a real row is bound after a synthetic one', () =>
+    {
+      // Arrange- one wrapper outlives every skill bound to it, so the two bindings below are the
+      // ordinary life of a battler casting an extended skill and then a plain one. Without the
+      // clear, the second binding reports the first skill forever.
+      const item = new Game_Item();
+      const synthetic = buildRow({ id: 3, stypeId: 1 }, 'isSkill');
+      const [ , realRow ] = globalThis.$dataSkills;
+      item.setObject(synthetic);
+
+      // Act
+      item.setObject(realRow);
+
+      // Assert
+      expect(item._item).toBeNull();
+    });
+
+    it('carries nothing for a weapon, which answers neither predicate', () =>
     {
       // Arrange- equipment reaches setObject constantly and has no business being copied either.
       const item = new Game_Item();
@@ -218,16 +299,17 @@ describe('Game_Item ext/extend augments (direct src import)', () =>
       // Act
       item.setObject(obj);
 
-      // Assert
+      // Assert- untouched rather than cleared, because no branch claimed it at all.
       expect(item._dataClass).toEqual('weapon');
       expect(item._item).toEqual(undefined);
     });
 
-    it('does not bind an object with neither stypeId nor itypeId', () =>
+    it('carries nothing for a row that answers false to every predicate', () =>
     {
-      // Arrange
+      // Arrange- RPG_Base defaults every predicate to false, so a row whose implementation flips
+      // none of them is the honest floor case rather than a malformed object.
       const item = new Game_Item();
-      const obj = {};
+      const obj = buildRow({ id: 1 }, 'isState');
 
       // Act
       item.setObject(obj);

@@ -125,6 +125,29 @@ describe('J-ABS RPG_State effects (direct src import)', () =>
     });
   });
 
+  describe('jabsSlotTransforms', () =>
+  {
+    it('parses a list of [slotKey, skillId] pairs', () =>
+    {
+      // Arrange- a second entry naming a different slot proves the parse keeps them distinct
+      // rather than collapsing everything onto whichever line it read last.
+      const state = buildState('<slotTransform:[UsableItem, 512]>\n<slotTransform:[Dodge, 7]>');
+
+      // Act & Assert
+      expect(state.jabsSlotTransforms).toEqual([ [ 'UsableItem', 512 ], [ 'Dodge', 7 ] ]);
+    });
+
+    it('is an empty array when absent', () =>
+    {
+      // Arrange- a skill transform is present but a slot transform is not, so the two tags
+      // cannot be reading each other's lines.
+      const state = buildState('<skillTransform:[1, 2]>');
+
+      // Act & Assert
+      expect(state.jabsSlotTransforms).toEqual([]);
+    });
+  });
+
   describe('jabsStateReapplyType', () =>
   {
     it.each([ 'refresh', 'extend', 'stack' ])('accepts the recognized "%s" type', (type) =>
