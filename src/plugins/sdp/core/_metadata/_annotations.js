@@ -366,6 +366,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.5.0
+ *    A named mastery token can name any parameter, reading a plugin-owned one's
+ *    label from the parameter catalog when no trait encodes it.
  * - 4.4.0
  *    Mastery values are tinted by what they are rather than which namespace wrote
  *    them, so a distance and a percentage never share an ink. An uppercase token

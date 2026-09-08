@@ -44,7 +44,11 @@ describe('MasteryProseResolver (direct src import)', () =>
     // registered. A tag naming one of these is a stat rather than an effect magnitude.
     const registeredKeys = [ 'apr', 'cdm', 'cdr', 'cnt', 'ctr', 'dor', 'gdr', 'har', 'hcr', 'lst',
       'mrf', 'msb', 'mst', 'mtp', 'per', 'prof', 'sar', 'sdr', 'ser', 'tst' ];
-    globalThis.ParameterRegistry = { has: key => registeredKeys.includes(key) };
+    const registeredLabels = { lst: 'Lifesteal', ctr: 'Crit Block', cdr: 'Cooldown Rate' };
+    globalThis.ParameterRegistry = {
+      has: key => registeredKeys.includes(key),
+      get: key => ({ label: () => registeredLabels[key] }),
+    };
 
     ({ default: MasteryProseResolver } = await import(
       '../../../../../src/plugins/sdp/core/managers/MasteryProseResolver.js'));
@@ -636,13 +640,25 @@ describe('MasteryProseResolver (direct src import)', () =>
       expect(result).toBe('\\C[1]Power +5%\\C[0]');
     });
 
-    it('fails closed when nothing names the key', () =>
+    it('names a registry-owned parameter no trait encodes', () =>
     {
-      // Arrange: lifesteal is a real parameter but no trait encodes it, so it has no catalogue entry.
+      // Arrange: lifesteal lives in a notetag rather than a trait, and carries its own label.
       install(state(1420, '<lst:15>'), skill(1420, String.empty));
 
       // Act
       const result = MasteryProseResolver.resolve('{P.lst}', 1420);
+
+      // Assert
+      expect(result).toBe('\\C[1]Lifesteal +15%\\C[0]');
+    });
+
+    it('fails closed when neither catalogue names the key', () =>
+    {
+      // Arrange: a tag that resolves to a value but that no parameter catalogue claims.
+      install(state(1520, '<radiusRate:1.5>'), skill(1520, String.empty));
+
+      // Act
+      const result = MasteryProseResolver.resolve('{P.radiusRate}', 1520);
 
       // Assert
       expect(result).toBe(String.empty);

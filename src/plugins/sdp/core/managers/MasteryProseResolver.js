@@ -176,11 +176,22 @@ class MasteryProseResolver
   {
     const mapping = ParameterTraitMap.forKey(parameterKey);
 
-    if (mapping === null) return null;
+    if (mapping !== null)
+    {
+      const traitLabel = MasteryProseResolver.#parameterLabel(mapping);
 
-    const label = MasteryProseResolver.#parameterLabel(mapping);
+      return `${traitLabel} ${value}`;
+    }
 
-    return `${label} ${value}`;
+    // a parameter a plugin owns rather than a trait - lifesteal, crit block - carries its own label.
+    if (ParameterRegistry.has(parameterKey))
+    {
+      const definition = ParameterRegistry.get(parameterKey);
+
+      return `${definition.label()} ${value}`;
+    }
+
+    return null;
   }
 
   /**
