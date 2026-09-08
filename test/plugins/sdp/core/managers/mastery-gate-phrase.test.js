@@ -145,6 +145,71 @@ describe('MasteryGatePhrase (direct src import)', () =>
   });
   //endregion phraseFor
 
+  //region colorKindFor
+  describe('colorKindFor', () =>
+  {
+    it('calls an elapsed-time gate a measure', () =>
+    {
+      // Arrange
+      const skill = skillWithNote('<passiveSourceRule:[sinceLastMoved, 180]>');
+
+      // Act
+      const result = MasteryGatePhrase.colorKindFor(skill);
+
+      // Assert
+      expect(result).toBe('measure');
+    });
+
+    it('calls a recent-event gate a measure too', () =>
+    {
+      // Arrange
+      const skill = skillWithNote('<passiveSourceRule:[attackedWithin, 90]>');
+
+      // Act
+      const result = MasteryGatePhrase.colorKindFor(skill);
+
+      // Assert
+      expect(result).toBe('measure');
+    });
+
+    it('calls an ally-distance gate a measure', () =>
+    {
+      // Arrange
+      const skill = skillWithNote('<passiveSourceRule:[alliesNearby, 1, 6]>');
+
+      // Act
+      const result = MasteryGatePhrase.colorKindFor(skill);
+
+      // Assert
+      expect(result).toBe('measure');
+    });
+
+    it('calls a resource threshold a stat', () =>
+    {
+      // Arrange: the near-miss sibling, a gate that reads as a percentage rather than a distance.
+      const skill = skillWithNote('<passiveSourceRule:[hpBelow, 20]>');
+
+      // Act
+      const result = MasteryGatePhrase.colorKindFor(skill);
+
+      // Assert
+      expect(result).toBe('stat');
+    });
+
+    it('calls a skill carrying no gate a stat', () =>
+    {
+      // Arrange
+      const skill = skillWithNote('<passive:[1234]>');
+
+      // Act
+      const result = MasteryGatePhrase.colorKindFor(skill);
+
+      // Assert
+      expect(result).toBe('stat');
+    });
+  });
+  //endregion colorKindFor
+
   //region construction
   describe('construction', () =>
   {

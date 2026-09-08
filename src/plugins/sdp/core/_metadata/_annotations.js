@@ -366,6 +366,10 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.4.0
+ *    Mastery values are tinted by what they are rather than which namespace wrote
+ *    them, so a distance and a percentage never share an ink. An uppercase token
+ *    namespace names its parameter alongside its value.
  * - 4.3.0
  *    Mastery descriptions tint their live values by kind and honour an authored line
  *    break, so a description turns over at a clause a person chose rather than

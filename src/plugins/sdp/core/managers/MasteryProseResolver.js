@@ -37,7 +37,7 @@ class MasteryProseResolver
    * </pre>
    * @type {RegExp}
    */
-  static TokenPattern = /\{([psdv])\.([a-zA-Z]+)(?:\[(\d+)])?}/g;
+  static TokenPattern = /\{([psdvPD])\.([a-zA-Z]+)(?:\[(\d+)])?}/g;
 
   /**
    * How many frames make a second, for rendering cadences the player can feel.
@@ -120,7 +120,13 @@ class MasteryProseResolver
 
     const rendered = template.replace(MasteryProseResolver.TokenPattern, (whole, namespace, name, selector) =>
     {
-      const value = MasteryProseResolver.#resolveToken(state, skill, payload, namespace, name, selector);
+      // an uppercase namespace asks for the parameter's own name alongside its value, for the many
+      // lines whose noun is simply the parameter. A line preferring friendlier wording than the
+      // catalogue's - "damage taken" over "Phys Dmg Rate" - keeps the lowercase form and its own noun.
+      const named = namespace === namespace.toUpperCase();
+      const lowered = namespace.toLowerCase();
+
+      const value = MasteryProseResolver.#resolveToken(state, skill, payload, lowered, name, selector);
 
       if (value === null)
       {
@@ -129,7 +135,18 @@ class MasteryProseResolver
         return whole;
       }
 
-      return MasteryProseResolver.#tint(value, namespace, name);
+      const labelled = named
+        ? MasteryProseResolver.#withParameterName(value, name)
+        : value;
+
+      if (labelled === null)
+      {
+        resolvable = false;
+
+        return whole;
+      }
+
+      return MasteryProseResolver.#tint(labelled, lowered, name, skill);
     });
 
     if (resolvable === false) return String.empty;
@@ -150,17 +167,48 @@ class MasteryProseResolver
   }
 
   /**
+   * Prefixes a resolved value with the display name of the parameter it belongs to.
+   * @param {string} value The resolved value.
+   * @param {string} parameterKey The parameter key being named.
+   * @returns {string|null} Null when nothing names this key, so the caller can fail closed.
+   */
+  static #withParameterName(value, parameterKey)
+  {
+    const mapping = ParameterTraitMap.forKey(parameterKey);
+
+    if (mapping === null) return null;
+
+    const label = MasteryProseResolver.#parameterLabel(mapping);
+
+    return `${label} ${value}`;
+  }
+
+  /**
+   * The display name of a parameter, read from whichever catalogue its trait code belongs to.
+   * @param {{code: number, dataId: number}} mapping The trait encoding the parameter.
+   * @returns {string}
+   */
+  static #parameterLabel(mapping)
+  {
+    if (mapping.code === ParameterTraitMap.BaseParameterCode) return TextManager.param(mapping.dataId);
+
+    if (mapping.code === ParameterTraitMap.ExParameterCode) return TextManager.xparam(mapping.dataId);
+
+    return TextManager.sparam(mapping.dataId);
+  }
+
+  /**
    * Wraps a resolved value in the colour its kind is read in.
    * @param {string} value The resolved value.
    * @param {string} namespace One of p, d, s or v.
    * @param {string} name The parameter key, structural field, or tag name.
    * @returns {string}
    */
-  static #tint(value, namespace, name)
+  static #tint(value, namespace, name, skill)
   {
     const kind = namespace === 's'
-      ? MasteryProseResolver.StructuralColorKinds[name]
-      : MasteryProseResolver.#valueColorKind(namespace);
+      ? MasteryProseResolver.#structuralColorKind(name, skill)
+      : MasteryProseResolver.#valueColorKind(namespace, name);
 
     // every field that can resolve to a value has a declared colour: the structural switch answers
     // null for anything not in that table, so a resolved value always has one to wear.
@@ -170,15 +218,40 @@ class MasteryProseResolver
   }
 
   /**
-   * The colour kind a non-structural namespace reads in.
-   * @param {string} namespace One of p, d or v.
+   * The colour kind a structural field reads in.
+   * @param {string} field The structural field name.
+   * @param {RPG_Skill} skill The wrapper skill, which decides what a gate turned out to be.
    * @returns {string}
    */
-  static #valueColorKind(namespace)
+  static #structuralColorKind(field, skill)
   {
-    if (namespace === 'v') return 'quantity';
+    // a gate can be a threshold or a measure, and only the phrase itself knows which.
+    if (field === 'gate') return MasteryGatePhrase.colorKindFor(skill);
 
-    return 'stat';
+    return MasteryProseResolver.StructuralColorKinds[field];
+  }
+
+  /**
+   * The colour kind a non-structural namespace reads in.
+   *
+   * A tag naming a parameter is a stat however it was written: lifesteal arrives as its own tag and
+   * regeneration arrives as a trait, and a description quoting both in one breath should not paint
+   * them differently. Anything the parameter catalogs do not claim is an effect magnitude.
+   * @param {string} namespace One of p, d or v.
+   * @param {string} name The parameter key or tag name.
+   * @returns {string}
+   */
+  static #valueColorKind(namespace, name)
+  {
+    if (namespace !== 'v') return 'stat';
+
+    const base = name.replace(/Buff(Plus|Rate)$/, String.empty);
+
+    if (ParameterTraitMap.hasKey(base)) return 'stat';
+
+    if (ParameterRegistry.has(base)) return 'stat';
+
+    return 'quantity';
   }
 
   /**
