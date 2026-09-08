@@ -331,7 +331,7 @@ class MasteryProseResolver
     // a tag that carries its own reach wins, because it is the reach the mastery actually uses.
     const declared = MasteryProseResolver.#shapedArgument(state, 'radius');
 
-    if (declared !== null) return declared;
+    if (declared !== null) return `${declared} tiles`;
 
     const names = [ 'radius', 'proximity' ];
     const sources = [ payload, MasteryPayloadLocator.locateVehicle(state, skill) ];
@@ -342,7 +342,7 @@ class MasteryProseResolver
       {
         const value = MasteryProseResolver.#numberTag(source, name);
 
-        if (value !== null) return `${value}`;
+        if (value !== null) return `${value} tiles`;
       }
     }
 
