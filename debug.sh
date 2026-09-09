@@ -1,1 +1,0 @@
-$NWJS_EXE ./project/ "test" &>/dev/null &
