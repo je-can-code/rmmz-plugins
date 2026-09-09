@@ -14,13 +14,13 @@ class PanelMasteryProse
    * The highest tier still considered part of the beginning act.
    * @type {number}
    */
-  static BeginningActMaxTier = 3;
+  static BeginningActMaxTier = 2;
 
   /**
    * The highest tier still considered part of the middle act; anything beyond it is the capstone.
    * @type {number}
    */
-  static MiddleActMaxTier = 9;
+  static MiddleActMaxTier = 4;
 
   /**
    * @param {string} beginning The beginning act template driving this step.

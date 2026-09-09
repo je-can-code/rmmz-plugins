@@ -366,6 +366,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 4.7.0
+ *    Mastery prose acts now break at tiers 2 and 4 rather than 3 and 9, matching a
+ *    five-tier subgroup strip.
  * - 4.6.0
  *    A name-only mastery token names a parameter without its value, so one stated
  *    magnitude can cover several stats. Clearing the panel detail windows hands them

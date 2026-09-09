@@ -99,7 +99,7 @@ describe('PanelMasteryProse (direct src import)', () =>
       const prose = new PanelMasteryProse('beginning copy', 'middle copy', 'end copy');
 
       // Act
-      const result = prose.forTier(3);
+      const result = prose.forTier(2);
 
       // Assert
       expect(result).toBe('beginning copy');
@@ -111,7 +111,7 @@ describe('PanelMasteryProse (direct src import)', () =>
       const prose = new PanelMasteryProse('beginning copy', 'middle copy', 'end copy');
 
       // Act
-      const result = prose.forTier(4);
+      const result = prose.forTier(3);
 
       // Assert
       expect(result).toBe('middle copy');
@@ -123,7 +123,7 @@ describe('PanelMasteryProse (direct src import)', () =>
       const prose = new PanelMasteryProse('beginning copy', 'middle copy', 'end copy');
 
       // Act
-      const result = prose.forTier(9);
+      const result = prose.forTier(4);
 
       // Assert
       expect(result).toBe('middle copy');
@@ -135,7 +135,7 @@ describe('PanelMasteryProse (direct src import)', () =>
       const prose = new PanelMasteryProse('beginning copy', 'middle copy', 'end copy');
 
       // Act
-      const result = prose.forTier(10);
+      const result = prose.forTier(5);
 
       // Assert
       expect(result).toBe('end copy');
@@ -171,7 +171,7 @@ describe('PanelMasteryProse (direct src import)', () =>
       const prose = new PanelMasteryProse('beginning copy', String.empty, String.empty);
 
       // Act
-      const result = prose.forTier(6);
+      const result = prose.forTier(3);
 
       // Assert
       expect(result).toBe('beginning copy');
@@ -183,7 +183,7 @@ describe('PanelMasteryProse (direct src import)', () =>
       const prose = new PanelMasteryProse(String.empty, String.empty, 'end copy');
 
       // Act
-      const result = prose.forTier(6);
+      const result = prose.forTier(3);
 
       // Assert
       expect(result).toBe('end copy');
@@ -195,7 +195,7 @@ describe('PanelMasteryProse (direct src import)', () =>
       const prose = new PanelMasteryProse('beginning copy', 'middle copy', String.empty);
 
       // Act
-      const result = prose.forTier(10);
+      const result = prose.forTier(5);
 
       // Assert
       expect(result).toBe('middle copy');
@@ -207,7 +207,7 @@ describe('PanelMasteryProse (direct src import)', () =>
       const prose = new PanelMasteryProse('beginning copy', String.empty, String.empty);
 
       // Act
-      const result = prose.forTier(10);
+      const result = prose.forTier(5);
 
       // Assert
       expect(result).toBe('beginning copy');
