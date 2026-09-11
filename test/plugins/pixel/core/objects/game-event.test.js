@@ -1,19 +1,40 @@
 //region plugins/pixel/core/objects/game-event.test.js
 import { beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import {
+  installPixelCoreHostGlobals,
+  setPluginContextToJBase,
+  setPluginContextToJPixel,
+} from '../../_component/fixtures/install-pixel-host-globals.js';
+
 describe('Game_Event ext/pixel augments (direct src import)', () =>
 {
   let Game_Event;
+
+  /**
+   * What the placeholder engine `stopCountThreshold` answers, standing in for vanilla's
+   * frequency-derived value. Deliberately not a sentinel so the alias's two arms are told apart.
+   * @type {number}
+   */
+  const ENGINE_THRESHOLD = 90;
 
   beforeAll(async () =>
   {
     vi.resetModules();
 
-    function StubGameEvent()
-    {
-    }
+    installPixelCoreHostGlobals();
 
-    globalThis.Game_Event = StubGameEvent;
+    // real production code- the alias map the pixel Game_Event augments register into.
+    setPluginContextToJBase();
+    await import('../../../../../src/plugins/_base/core/_metadata/initialization.js');
+    setPluginContextToJPixel();
+    await import('../../../../../src/plugins/pixel/core/_metadata/initialization.js');
+
+    // the engine method the alias wraps; the fixture's placeholder event does not carry one.
+    globalThis.Game_Event.prototype.stopCountThreshold = function()
+    {
+      return ENGINE_THRESHOLD;
+    };
 
     await import('../../../../../src/plugins/pixel/core/objects/Game_Event.js');
     ({ Game_Event } = globalThis);
@@ -102,6 +123,35 @@ describe('Game_Event ext/pixel augments (direct src import)', () =>
 
       // Assert: called with the occupied tile's front, not a front tile derived from raw _y.
       expect(touchSpy).toHaveBeenCalledWith(3, 5);
+    });
+  });
+
+  describe('stopCountThreshold', () =>
+  {
+    it('reports no threshold while a route command is mid-repeat', () =>
+    {
+      // Arrange- the engine would answer 90 here, so a 0 can only have come from the alias's own arm.
+      const event = new Game_Event();
+      event.isRepeatMoveActive = () => true;
+
+      // Act
+      const threshold = event.stopCountThreshold();
+
+      // Assert
+      expect(threshold).toBe(0);
+    });
+
+    it('defers to the engine threshold between route commands', () =>
+    {
+      // Arrange
+      const event = new Game_Event();
+      event.isRepeatMoveActive = () => false;
+
+      // Act
+      const threshold = event.stopCountThreshold();
+
+      // Assert
+      expect(threshold).toBe(90);
     });
   });
 });

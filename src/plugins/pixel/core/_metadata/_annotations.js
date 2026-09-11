@@ -46,6 +46,9 @@
  * entirely plugin-parameter driven.
  * ============================================================================
  * CHANGELOG:
+ * - 1.2.1
+ *    Fixed a page-level move route pausing for its frequency after every pixel
+ *    step instead of once per command.
  * - 1.2.0
  *    Subcell passability is decided by PIXEL_CollisionManager.PassagePredicates and
  *    tile merging by SingleTileMerges, so a plugin adding a collision code teaches

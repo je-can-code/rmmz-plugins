@@ -157,6 +157,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.15.0
+ *    Added Game_Event#setSelfSwitch with the short ssw/sswOn/sswOff forms, so a
+ *    move route script row can flip a self-switch and still be read at a glance.
  * - 3.14.0
  *    Added TextWrapper, breaking a run of text into lines that fit a measured
  *    width, so a window never decides where a sentence breaks inline.

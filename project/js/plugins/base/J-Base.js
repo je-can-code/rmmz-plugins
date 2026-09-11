@@ -2,7 +2,7 @@
 /*:
  * @target MZ
  * @plugindesc
- * [v3.14.0 BASE] The base class for all J plugins.
+ * [v3.15.0 BASE] The base class for all J plugins.
  * @author JE
  * @url https://github.com/je-can-code/rmmz-plugins
  * @help
@@ -157,6 +157,9 @@
  *
  * ============================================================================
  * CHANGELOG:
+ * - 3.15.0
+ *    Added Game_Event#setSelfSwitch with the short ssw/sswOn/sswOff forms, so a
+ *    move route script row can flip a self-switch and still be read at a glance.
  * - 3.14.0
  *    Added TextWrapper, breaking a run of text into lines that fit a measured
  *    width, so a window never decides where a sentence breaks inline.
@@ -2037,7 +2040,7 @@ J.BASE.EXT = {};
 */
 J.BASE.Metadata = {};
 J.BASE.Metadata.Name = "J-Base";
-J.BASE.Metadata.Version = "3.14.0";
+J.BASE.Metadata.Version = "3.15.0";
 /**
 * The actual `plugin parameters` extracted from RMMZ.
 */
@@ -12421,6 +12424,13 @@ Game_Enemy.prototype.getBaseMaxTp = function() {
 //#endregion
 //#region src/plugins/_base/core/objects/Game_Event.js
 /**
+* Gets the map id this event is associated with.
+* @returns {integer}
+*/
+Game_Event.prototype.mapId = function() {
+	return this._mapId;
+};
+/**
 * Gets all valid-shaped comment event commands.
 * @returns {RPG_EventListCommand[]}
 */
@@ -12588,6 +12598,54 @@ Game_Event.prototype.pageIndex = function() {
 */
 Game_Event.prototype.setPageIndex = function(newPageIndex) {
 	this._pageIndex = newPageIndex;
+};
+/**
+* Sets one of this event's self-switches to a new value.<br/>
+* Passing no state toggles the switch to the opposite of whatever it currently is.<br/>
+* The switch id is mandatory; there is no "default" self-switch, and silently picking one would be a bug
+* that only ever surfaces as a page that failed to turn.
+* @param {'A'|'B'|'C'|'D'} switchId The self-switch to change.
+* @param {boolean|null} state The new state, or null (the default) to toggle the current state.
+*/
+Game_Event.prototype.setSelfSwitch = function(switchId, state = null) {
+	if (!switchId) {
+		throw new Error("setSelfSwitch requires a switch id (A, B, C, or D).");
+	}
+	const key = [
+		this.mapId(),
+		this.eventId(),
+		switchId
+	];
+	const currentState = $gameSelfSwitches.value(key);
+	const newState = state === null ? !currentState : state;
+	$gameSelfSwitches.setValue(key, newState);
+};
+/**
+* Turns one of this event's self-switches on.<br/>
+* Short on purpose: the move route editor clips a Script row after roughly seventeen characters, so a
+* call has to be legible in that window or the route cannot be read at a glance.
+* @param {'A'|'B'|'C'|'D'} switchId The self-switch to turn on.
+*/
+Game_Event.prototype.sswOn = function(switchId) {
+	this.setSelfSwitch(switchId, true);
+};
+/**
+* Turns one of this event's self-switches off.<br/>
+* Short on purpose: the move route editor clips a Script row after roughly seventeen characters, so a
+* call has to be legible in that window or the route cannot be read at a glance.
+* @param {'A'|'B'|'C'|'D'} switchId The self-switch to turn off.
+*/
+Game_Event.prototype.sswOff = function(switchId) {
+	this.setSelfSwitch(switchId, false);
+};
+/**
+* Toggles one of this event's self-switches to its opposite state.<br/>
+* Short on purpose: the move route editor clips a Script row after roughly seventeen characters, so a
+* call has to be legible in that window or the route cannot be read at a glance.
+* @param {'A'|'B'|'C'|'D'} switchId The self-switch to toggle.
+*/
+Game_Event.prototype.ssw = function(switchId) {
+	this.setSelfSwitch(switchId);
 };
 
 //#endregion
