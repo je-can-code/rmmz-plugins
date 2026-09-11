@@ -58,4 +58,29 @@ Game_Event.prototype.checkEventTriggerTouchFront = function(d)
   this.checkEventTriggerTouch(x2, y2);
 };
 
+/**
+ * Extends {@link Game_Event.stopCountThreshold}.<br/>
+ * Vanilla pauses a page-level custom move route between commands by making the event wait out
+ * the frequency threshold each time it comes to a stop, on the assumption that a stop means a
+ * command has finished. Under pixel movement a single "Move X" command is repeated once per pixel
+ * step to cover the tile ({@link Game_Character#handlePixelRoutineMove}), and every one of those
+ * steps ends in a stop, so the pause was landing sixteen times per tile instead of once. While a
+ * repeat cycle is active the command is still in progress, so the threshold is zero; once the
+ * cycle ends the frequency pause applies exactly as the editor implies, between commands.
+ * @returns {number}
+ */
+J.PIXEL.Aliased.Game_Event.set('stopCountThreshold', Game_Event.prototype.stopCountThreshold);
+Game_Event.prototype.stopCountThreshold = function()
+{
+  // a route command mid-repeat has not finished, so no pause belongs here.
+  if (this.isRepeatMoveActive())
+  {
+    return 0;
+  }
+
+  // perform original logic.
+  return J.PIXEL.Aliased.Game_Event.get('stopCountThreshold')
+    .call(this);
+};
+
 //endregion Game_Event

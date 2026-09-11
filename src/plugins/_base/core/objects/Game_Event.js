@@ -2,6 +2,15 @@
 import JsonMapper from './../_utilities/JsonMapper.js';
 
 /**
+ * Gets the map id this event is associated with.
+ * @returns {integer}
+ */
+Game_Event.prototype.mapId = function()
+{
+  return this._mapId;
+};
+
+/**
  * Gets all valid-shaped comment event commands.
  * @returns {RPG_EventListCommand[]}
  */
@@ -279,5 +288,69 @@ Game_Event.prototype.setPageIndex = function(newPageIndex)
 {
   // assign the index of the currently active event page.
   this._pageIndex = newPageIndex;
+};
+
+/**
+ * Sets one of this event's self-switches to a new value.<br/>
+ * Passing no state toggles the switch to the opposite of whatever it currently is.<br/>
+ * The switch id is mandatory; there is no "default" self-switch, and silently picking one would be a bug
+ * that only ever surfaces as a page that failed to turn.
+ * @param {'A'|'B'|'C'|'D'} switchId The self-switch to change.
+ * @param {boolean|null} state The new state, or null (the default) to toggle the current state.
+ */
+Game_Event.prototype.setSelfSwitch = function(switchId, state = null)
+{
+  // a self-switch call with nothing to flip is a contract violation, not a request for a default.
+  if (!switchId)
+  {
+    throw new Error('setSelfSwitch requires a switch id (A, B, C, or D).');
+  }
+
+  // the engine keys self-switches on the composite of map, event, and switch letter.
+  const key = [ this.mapId(), this.eventId(), switchId ];
+
+  // determine the current state of the self-switch.
+  const currentState = $gameSelfSwitches.value(key);
+
+  // null means "toggle", anything else is the explicit state the caller asked for.
+  const newState = state === null
+    ? !currentState
+    : state;
+
+  // set the state.
+  $gameSelfSwitches.setValue(key, newState);
+};
+
+/**
+ * Turns one of this event's self-switches on.<br/>
+ * Short on purpose: the move route editor clips a Script row after roughly seventeen characters, so a
+ * call has to be legible in that window or the route cannot be read at a glance.
+ * @param {'A'|'B'|'C'|'D'} switchId The self-switch to turn on.
+ */
+Game_Event.prototype.sswOn = function(switchId)
+{
+  this.setSelfSwitch(switchId, true);
+};
+
+/**
+ * Turns one of this event's self-switches off.<br/>
+ * Short on purpose: the move route editor clips a Script row after roughly seventeen characters, so a
+ * call has to be legible in that window or the route cannot be read at a glance.
+ * @param {'A'|'B'|'C'|'D'} switchId The self-switch to turn off.
+ */
+Game_Event.prototype.sswOff = function(switchId)
+{
+  this.setSelfSwitch(switchId, false);
+};
+
+/**
+ * Toggles one of this event's self-switches to its opposite state.<br/>
+ * Short on purpose: the move route editor clips a Script row after roughly seventeen characters, so a
+ * call has to be legible in that window or the route cannot be read at a glance.
+ * @param {'A'|'B'|'C'|'D'} switchId The self-switch to toggle.
+ */
+Game_Event.prototype.ssw = function(switchId)
+{
+  this.setSelfSwitch(switchId);
 };
 //endregion Game_Event

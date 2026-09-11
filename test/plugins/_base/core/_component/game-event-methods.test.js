@@ -550,5 +550,152 @@ describe('J-Base Game_Event methods (direct src import)', () =>
       expect(event.isErased()).toBe(true);
     });
   });
+
+  describe('mapId', () =>
+  {
+    it('reflects the underlying _mapId field', () =>
+    {
+      // Arrange
+      const event = buildEvent();
+      event._mapId = 7;
+
+      // Act & Assert
+      expect(event.mapId()).toBe(7);
+    });
+  });
+
+  /**
+   * Builds an event on map 7 with id 12 beside a stubbed `$gameSelfSwitches` whose current value is fixed.
+   * The ids are distinct so a key assembled in the wrong order fails the key assertion.
+   * @param {boolean} currentValue What `$gameSelfSwitches.value` reports for any key.
+   * @returns {{event: object, setValue: import('vitest').Mock}}
+   */
+  function buildSelfSwitchScenario(currentValue)
+  {
+    const event = buildEvent();
+    event._mapId = 7;
+    event.eventId = () => 12;
+
+    const setValue = vi.fn();
+    vi.stubGlobal('$gameSelfSwitches', {
+      value: () => currentValue,
+      setValue,
+    });
+
+    return { event, setValue };
+  }
+
+  describe('setSelfSwitch', () =>
+  {
+    it('throws when no switch id is passed', () =>
+    {
+      // Arrange
+      const { event, setValue } = buildSelfSwitchScenario(false);
+
+      // Act & Assert
+      expect(() => event.setSelfSwitch()).toThrow('setSelfSwitch requires a switch id (A, B, C, or D).');
+      expect(setValue).not.toHaveBeenCalled();
+    });
+
+    it('toggles an off switch on when no state is passed', () =>
+    {
+      // Arrange
+      const { event, setValue } = buildSelfSwitchScenario(false);
+
+      // Act
+      event.setSelfSwitch('B');
+
+      // Assert
+      expect(setValue).toHaveBeenCalledTimes(1);
+      expect(setValue).toHaveBeenCalledWith([ 7, 12, 'B' ], true);
+    });
+
+    it('toggles an on switch off when no state is passed', () =>
+    {
+      // Arrange
+      const { event, setValue } = buildSelfSwitchScenario(true);
+
+      // Act
+      event.setSelfSwitch('B');
+
+      // Assert
+      expect(setValue).toHaveBeenCalledTimes(1);
+      expect(setValue).toHaveBeenCalledWith([ 7, 12, 'B' ], false);
+    });
+
+    it('sets an explicit state unchanged rather than toggling', () =>
+    {
+      // Arrange- the switch is already on, so a toggle would have produced false.
+      const { event, setValue } = buildSelfSwitchScenario(true);
+
+      // Act
+      event.setSelfSwitch('C', true);
+
+      // Assert
+      expect(setValue).toHaveBeenCalledTimes(1);
+      expect(setValue).toHaveBeenCalledWith([ 7, 12, 'C' ], true);
+    });
+  });
+
+  describe('sswOn', () =>
+  {
+    it('turns the switch on', () =>
+    {
+      // Arrange- the switch is already on, so a toggle would have produced false.
+      const { event, setValue } = buildSelfSwitchScenario(true);
+
+      // Act
+      event.sswOn('B');
+
+      // Assert
+      expect(setValue).toHaveBeenCalledTimes(1);
+      expect(setValue).toHaveBeenCalledWith([ 7, 12, 'B' ], true);
+    });
+  });
+
+  describe('sswOff', () =>
+  {
+    it('turns the switch off', () =>
+    {
+      // Arrange- the switch is already off, so a toggle would have produced true.
+      const { event, setValue } = buildSelfSwitchScenario(false);
+
+      // Act
+      event.sswOff('A');
+
+      // Assert
+      expect(setValue).toHaveBeenCalledTimes(1);
+      expect(setValue).toHaveBeenCalledWith([ 7, 12, 'A' ], false);
+    });
+  });
+
+  describe('ssw', () =>
+  {
+    it('toggles an on switch off', () =>
+    {
+      // Arrange
+      const { event, setValue } = buildSelfSwitchScenario(true);
+
+      // Act
+      event.ssw('D');
+
+      // Assert
+      expect(setValue).toHaveBeenCalledTimes(1);
+      expect(setValue).toHaveBeenCalledWith([ 7, 12, 'D' ], false);
+    });
+
+    it('toggles an off switch on', () =>
+    {
+      // Arrange
+      const { event, setValue } = buildSelfSwitchScenario(false);
+
+      // Act
+      event.ssw('B');
+
+      // Assert
+      expect(setValue).toHaveBeenCalledTimes(1);
+      expect(setValue).toHaveBeenCalledWith([ 7, 12, 'B' ], true);
+    });
+  });
 });
 //endregion plugins/_base/_component/game-event-methods.test.js

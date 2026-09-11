@@ -28,6 +28,7 @@ J.PIXEL.Metadata = new JPixelistics_PluginMetadata(__PLUGIN_NAME__, __PLUGIN_VER
 J.PIXEL.Aliased = {
   Game_Character: new Map(),
   Game_CharacterBase: new Map(),
+  Game_Event: new Map(),
   Game_Follower: new Map(),
   Game_Map: new Map(),
   Game_Player: new Map(),
