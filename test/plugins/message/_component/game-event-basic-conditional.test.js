@@ -4,7 +4,7 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { installMessageHostGlobals, setPluginContextToJBase, setPluginContextToJMessage } from './fixtures/install-message-host-globals.js';
 import JsonMapper from '../../../../src/plugins/_base/core/_utilities/JsonMapper.js';
 
-describe('J-MessageTextCodes BasicChoiceConditional via Game_Event (direct src import)', () =>
+describe('J-Message BasicChoiceConditional via Game_Event (direct src import)', () =>
 {
   beforeAll(async () =>
   {

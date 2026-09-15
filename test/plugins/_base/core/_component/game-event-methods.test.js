@@ -250,6 +250,32 @@ describe('J-Base Game_Event methods (direct src import)', () =>
       // Assert
       expect(result).toBe(false);
     });
+
+    it('admits a tag carrying message effect codes', () =>
+    {
+      // Arrange & Act
+      // `~`, `%` and `=` are J-Message's effect codes. A tag holding message text has to be able to
+      // carry them, and before they were admitted the entire tag was dropped without a word.
+      const waving = globalThis.Game_Event.filterInvalidEventCommand(commentCommand('<line:she said \\~this\\~>'));
+      const trembling = globalThis.Game_Event.filterInvalidEventCommand(commentCommand('<line:\\%scared\\%>'));
+      const cycling = globalThis.Game_Event.filterInvalidEventCommand(commentCommand('<line:\\=shiny\\=>'));
+
+      // Assert
+      expect(waving).toBe(true);
+      expect(trembling).toBe(true);
+      expect(cycling).toBe(true);
+    });
+
+    it('still refuses a tag carrying characters the pattern does not admit', () =>
+    {
+      // Arrange & Act
+      // widening the class is not opening it: parentheses remain outside, so this stays a
+      // deliberate allowlist rather than "anything between angle brackets".
+      const result = globalThis.Game_Event.filterInvalidEventCommand(commentCommand('<line:no profile (default)>'));
+
+      // Assert
+      expect(result).toBe(false);
+    });
   });
 
   describe('matchesControlCode (static)', () =>

@@ -19,17 +19,17 @@ export function setPluginContextToJBase(sandbox = globalThis)
 }
 
 /**
- * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-MessageTextCodes's own identity.
+ * Flips the bare `__PLUGIN_NAME__`/`__PLUGIN_VERSION__` globals to J-Message's own identity.
  * @param {object} [sandbox] Defaults to `globalThis`.
  */
 export function setPluginContextToJMessage(sandbox = globalThis)
 {
-  sandbox.__PLUGIN_NAME__ = 'J-MessageTextCodes';
+  sandbox.__PLUGIN_NAME__ = 'J-Message';
   sandbox.__PLUGIN_VERSION__ = '1.0.0';
 }
 
 /**
- * Globals required for J-MessageTextCodes's Game_Event/Game_Message/Window_Base.js to evaluate when
+ * Globals required for J-Message's Game_Event/Game_Message/Window_Base.js to evaluate when
  * direct-imported into the real Vitest realm instead of a nested vm context.
  * @param {object} [sandbox] Defaults to `globalThis` so direct-import tests can call this with no target arg.
  */
@@ -47,7 +47,13 @@ export function installMessageHostGlobals(sandbox = globalThis)
   // message's own _pluginMetadata.js subclasses this real J-Base class as a bare global (no import).
   sandbox.PluginMetadata ??= PluginMetadata;
 
-  installPluginManagerWithParams(sandbox, 'J-MessageTextCodes', {});
+  installPluginManagerWithParams(sandbox, 'J-Message', {});
+
+  // the plugin's metadata reads its speaker profiles off the filesystem at load time. answering
+  // null is the "this project has not written any voices" path, which is what these tests want -
+  // they are about text codes and choices, and every speaker should sit on the default profile.
+  sandbox.StorageManager ??= {};
+  sandbox.StorageManager.fsReadFile ??= () => null;
 
   // Array.prototype.clone is a J-Base/vanilla RMMZ polyfill; Game_Message.js's backup/restore
   // choices rely on it.

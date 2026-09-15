@@ -6,3 +6,4 @@ import './objects/Game_Interpreter.js';
 import './objects/Game_Event.js';
 import './windows/Window_Base.js';
 import './windows/Window_ChoiceList.js';
+import './windows/Window_Message.js';

@@ -6275,7 +6275,7 @@ The minimap never renders on this map.
 
 ---
 
-## J-MessageTextCodes (`src/plugins/message/core/`)
+## J-Message (`src/plugins/message/core/`)
 
 Adds new `\Code[ID]` text codes for database entries (not covered here — this reference is for
 `<tag>` notetags only) and a family of `<tag>` conditionals for hiding/showing "Show Choices"
